@@ -61,7 +61,7 @@ export function LoginPage() {
   if (DEMO_MODE_ONLY) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
-        <div className="text-center" role="status" aria-live="polite">
+        <div className="text-center" role="status">
           <span className="text-6xl" aria-hidden="true">
             🏐
           </span>

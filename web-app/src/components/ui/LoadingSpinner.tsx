@@ -3,6 +3,8 @@ interface LoadingSpinnerProps {
   className?: string;
 }
 
+// Size classes for spinner dimensions and border widths
+// border-3 is a custom Tailwind class (3px) defined in tailwind.config
 const sizeClasses = {
   sm: "w-4 h-4 border-2",
   md: "w-8 h-8 border-3",
@@ -36,6 +38,7 @@ export function LoadingState({ message = "Loading..." }: LoadingStateProps) {
     <div
       className="flex flex-col items-center justify-center py-12 gap-4"
       role="status"
+      aria-label={message}
     >
       {/* Use visual-only spinner here since container has role="status" */}
       <div
