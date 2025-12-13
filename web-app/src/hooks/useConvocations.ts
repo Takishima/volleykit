@@ -22,6 +22,28 @@ import { useDemoStore } from "@/stores/demo";
 const DEFAULT_PAGE_SIZE = 100;
 const DEFAULT_DATE_RANGE_DAYS = 365;
 
+// Helper to create mock query results for demo mode
+// Type assertion is necessary because we're creating a partial mock of UseQueryResult
+// that satisfies the interface without all internal TanStack Query state
+function createDemoQueryResult<T>(
+  baseQuery: UseQueryResult<T, Error>,
+  data: T,
+  options: { isError?: boolean; error?: Error } = {},
+): UseQueryResult<T, Error> {
+  const isError = options.isError ?? false;
+  return {
+    ...baseQuery,
+    data,
+    isLoading: false,
+    isFetching: false,
+    isSuccess: !isError,
+    isError,
+    error: options.error ?? null,
+    status: isError ? "error" : "success",
+    fetchStatus: "idle",
+  } as UseQueryResult<T, Error>;
+}
+
 // Query keys
 export const queryKeys = {
   assignments: (config?: SearchConfiguration) =>
@@ -134,17 +156,7 @@ export function useAssignments(
         return period === "past" ? dateB - dateA : dateA - dateB;
       });
 
-    return {
-      ...query,
-      data: filteredData,
-      isLoading: false,
-      isFetching: false,
-      isSuccess: true,
-      isError: false,
-      error: null,
-      status: "success",
-      fetchStatus: "idle",
-    } as UseQueryResult<Assignment[], Error>;
+    return createDemoQueryResult(query, filteredData);
   }
 
   return query;
@@ -182,17 +194,10 @@ export function useAssignmentDetails(
       (a) => a.__identity === assignmentId,
     );
 
-    return {
-      ...query,
-      data: demoAssignment,
-      isLoading: false,
-      isFetching: false,
-      isSuccess: !!demoAssignment,
+    return createDemoQueryResult(query, demoAssignment as Assignment, {
       isError: !demoAssignment,
-      error: demoAssignment ? null : new Error("Assignment not found"),
-      status: demoAssignment ? "success" : "error",
-      fetchStatus: "idle",
-    } as UseQueryResult<Assignment, Error>;
+      error: demoAssignment ? undefined : new Error("Assignment not found"),
+    });
   }
 
   return query;
@@ -250,17 +255,7 @@ export function useCompensations(
         return dateB - dateA;
       });
 
-    return {
-      ...query,
-      data: filteredData,
-      isLoading: false,
-      isFetching: false,
-      isSuccess: true,
-      isError: false,
-      error: null,
-      status: "success",
-      fetchStatus: "idle",
-    } as UseQueryResult<CompensationRecord[], Error>;
+    return createDemoQueryResult(query, filteredData);
   }
 
   return query;
@@ -353,17 +348,7 @@ export function useGameExchanges(
         return dateA - dateB;
       });
 
-    return {
-      ...query,
-      data: filteredData,
-      isLoading: false,
-      isFetching: false,
-      isSuccess: true,
-      isError: false,
-      error: null,
-      status: "success",
-      fetchStatus: "idle",
-    } as UseQueryResult<GameExchange[], Error>;
+    return createDemoQueryResult(query, filteredData);
   }
 
   return query;
