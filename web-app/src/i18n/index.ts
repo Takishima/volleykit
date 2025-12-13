@@ -73,6 +73,7 @@ interface Translations {
     homeScore: string;
     awayScore: string;
     numberOfSets: string;
+    gameReportNotAvailable: string;
   };
   compensations: {
     title: string;
@@ -225,6 +226,8 @@ const en: Translations = {
     homeScore: "Home Score",
     awayScore: "Away Score",
     numberOfSets: "Number of Sets",
+    gameReportNotAvailable:
+      "Game reports are only available for NLA and NLB games.",
   },
   compensations: {
     title: "Compensations",
@@ -390,6 +393,8 @@ const de: Translations = {
     homeScore: "Heimscore",
     awayScore: "Gastscore",
     numberOfSets: "Anzahl Sätze",
+    gameReportNotAvailable:
+      "Spielberichte sind nur für NLA- und NLB-Spiele verfügbar.",
   },
   compensations: {
     title: "Entschädigungen",
@@ -557,6 +562,8 @@ const fr: Translations = {
     homeScore: "Score domicile",
     awayScore: "Score visiteur",
     numberOfSets: "Nombre de sets",
+    gameReportNotAvailable:
+      "Les rapports de match sont uniquement disponibles pour les matchs NLA et NLB.",
   },
   compensations: {
     title: "Indemnités",
@@ -724,6 +731,8 @@ const it: Translations = {
     homeScore: "Punteggio casa",
     awayScore: "Punteggio ospite",
     numberOfSets: "Numero di set",
+    gameReportNotAvailable:
+      "I rapporti delle partite sono disponibili solo per le partite NLA e NLB.",
   },
   compensations: {
     title: "Compensi",

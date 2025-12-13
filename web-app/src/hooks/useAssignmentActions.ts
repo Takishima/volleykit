@@ -2,7 +2,11 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import type { Assignment } from "@/api/client";
 import { downloadPDF } from "@/utils/assignment-actions";
 import { logger } from "@/utils/logger";
-import { getTeamNames, MODAL_CLEANUP_DELAY } from "@/utils/assignment-helpers";
+import {
+  getTeamNames,
+  isGameReportEligible,
+  MODAL_CLEANUP_DELAY,
+} from "@/utils/assignment-helpers";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 import { useSettingsStore } from "@/stores/settings";
@@ -103,6 +107,14 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
 
   const handleGenerateReport = useCallback(
     (assignment: Assignment) => {
+      if (!isGameReportEligible(assignment)) {
+        logger.debug(
+          "[useAssignmentActions] Game report not available for this league",
+        );
+        alert(t("assignments.gameReportNotAvailable"));
+        return;
+      }
+
       if (isDemoMode) {
         logger.debug("[useAssignmentActions] Demo mode: PDF download disabled");
         // TODO(#77): Replace alert with toast notification when notification system is implemented
@@ -133,7 +145,7 @@ This is a mock PDF report.`;
         assignment.__identity,
       );
     },
-    [isDemoMode],
+    [isDemoMode, t],
   );
 
   const handleAddToExchange = useCallback(
