@@ -153,7 +153,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { status, checkSession, isDemoMode } = useAuthStore();
   const { assignments, initializeDemoData } = useDemoStore();
   const [isVerifying, setIsVerifying] = useState(
-    () => status === "authenticated",
+    () => status === "authenticated" && !isDemoMode,
   );
   const [verifyError, setVerifyError] = useState<string | null>(null);
 
@@ -166,7 +166,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   // Verify persisted session is still valid on mount
   useEffect(() => {
-    if (!isVerifying) return;
+    if (!isVerifying || isDemoMode) return;
 
     let cancelled = false;
     checkSession()
@@ -185,7 +185,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [isVerifying, checkSession]);
+  }, [isVerifying, checkSession, isDemoMode]);
 
   // Show loading state while verifying session
   if (status === "loading" || isVerifying) {
