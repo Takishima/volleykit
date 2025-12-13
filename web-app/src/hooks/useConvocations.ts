@@ -14,6 +14,7 @@ import {
 } from "@/api/client";
 import { addDays, startOfDay, endOfDay, subDays } from "date-fns";
 import { useAuthStore } from "@/stores/auth";
+import { useDemoStore } from "@/stores/demo";
 
 // Pagination constants
 // Note: The API doesn't support cursor-based pagination, so we use a fixed limit.
@@ -83,6 +84,7 @@ export function useAssignments(
   customRange?: { from: Date; to: Date },
 ): UseQueryResult<Assignment[], Error> {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const demoAssignments = useDemoStore((state) => state.assignments);
   const dateRange = getDateRangeForPeriod(period, customRange);
 
   const config: SearchConfiguration = {
@@ -103,13 +105,49 @@ export function useAssignments(
     ],
   };
 
-  return useQuery({
+  const query = useQuery({
     queryKey: queryKeys.assignments(config),
     queryFn: () => api.searchAssignments(config),
     select: (data) => data.items || [],
     staleTime: 5 * 60 * 1000,
     enabled: !isDemoMode,
   });
+
+  if (isDemoMode) {
+    const fromDate = new Date(dateRange.from);
+    const toDate = new Date(dateRange.to);
+
+    const filteredData = demoAssignments
+      .filter((a) => {
+        const gameDate = a.refereeGame?.game?.startingDateTime;
+        if (!gameDate) return false;
+        const date = new Date(gameDate);
+        return date >= fromDate && date <= toDate;
+      })
+      .sort((a, b) => {
+        const dateA = new Date(
+          a.refereeGame?.game?.startingDateTime || 0,
+        ).getTime();
+        const dateB = new Date(
+          b.refereeGame?.game?.startingDateTime || 0,
+        ).getTime();
+        return period === "past" ? dateB - dateA : dateA - dateB;
+      });
+
+    return {
+      ...query,
+      data: filteredData,
+      isLoading: false,
+      isFetching: false,
+      isSuccess: true,
+      isError: false,
+      error: null,
+      status: "success",
+      fetchStatus: "idle",
+    } as UseQueryResult<Assignment[], Error>;
+  }
+
+  return query;
 }
 
 export function useUpcomingAssignments(): UseQueryResult<Assignment[], Error> {
@@ -124,8 +162,9 @@ export function useAssignmentDetails(
   assignmentId: string | null,
 ): UseQueryResult<Assignment, Error> {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const demoAssignments = useDemoStore((state) => state.assignments);
 
-  return useQuery({
+  const query = useQuery({
     queryKey: queryKeys.assignmentDetails(assignmentId || ""),
     queryFn: () =>
       api.getAssignmentDetails(assignmentId!, [
@@ -137,6 +176,26 @@ export function useAssignmentDetails(
     enabled: !!assignmentId && !isDemoMode,
     staleTime: 10 * 60 * 1000,
   });
+
+  if (isDemoMode && assignmentId) {
+    const demoAssignment = demoAssignments.find(
+      (a) => a.__identity === assignmentId,
+    );
+
+    return {
+      ...query,
+      data: demoAssignment,
+      isLoading: false,
+      isFetching: false,
+      isSuccess: !!demoAssignment,
+      isError: !demoAssignment,
+      error: demoAssignment ? null : new Error("Assignment not found"),
+      status: demoAssignment ? "success" : "error",
+      fetchStatus: "idle",
+    } as UseQueryResult<Assignment, Error>;
+  }
+
+  return query;
 }
 
 // Compensations hooks
@@ -144,6 +203,7 @@ export function useCompensations(
   paidFilter?: boolean,
 ): UseQueryResult<CompensationRecord[], Error> {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const demoCompensations = useDemoStore((state) => state.compensations);
 
   const config: SearchConfiguration = {
     offset: 0,
@@ -166,13 +226,44 @@ export function useCompensations(
     ],
   };
 
-  return useQuery({
+  const query = useQuery({
     queryKey: queryKeys.compensations(config),
     queryFn: () => api.searchCompensations(config),
     select: (data) => data.items || [],
     staleTime: 5 * 60 * 1000,
     enabled: !isDemoMode,
   });
+
+  if (isDemoMode) {
+    const filteredData = demoCompensations
+      .filter((c) => {
+        if (paidFilter === undefined) return true;
+        return c.convocationCompensation?.paymentDone === paidFilter;
+      })
+      .sort((a, b) => {
+        const dateA = new Date(
+          a.refereeGame?.game?.startingDateTime || 0,
+        ).getTime();
+        const dateB = new Date(
+          b.refereeGame?.game?.startingDateTime || 0,
+        ).getTime();
+        return dateB - dateA;
+      });
+
+    return {
+      ...query,
+      data: filteredData,
+      isLoading: false,
+      isFetching: false,
+      isSuccess: true,
+      isError: false,
+      error: null,
+      status: "success",
+      fetchStatus: "idle",
+    } as UseQueryResult<CompensationRecord[], Error>;
+  }
+
+  return query;
 }
 
 export function usePaidCompensations(): UseQueryResult<
@@ -220,6 +311,7 @@ export function useGameExchanges(
   status: ExchangeStatus = "all",
 ): UseQueryResult<GameExchange[], Error> {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const demoExchanges = useDemoStore((state) => state.exchanges);
 
   const config: SearchConfiguration = {
     offset: 0,
@@ -237,13 +329,44 @@ export function useGameExchanges(
     ],
   };
 
-  return useQuery({
+  const query = useQuery({
     queryKey: queryKeys.exchanges(config),
     queryFn: () => api.searchExchanges(config),
     select: (data) => data.items || [],
     staleTime: 2 * 60 * 1000,
     enabled: !isDemoMode,
   });
+
+  if (isDemoMode) {
+    const filteredData = demoExchanges
+      .filter((e) => {
+        if (status === "all") return true;
+        return e.status === status;
+      })
+      .sort((a, b) => {
+        const dateA = new Date(
+          a.refereeGame?.game?.startingDateTime || 0,
+        ).getTime();
+        const dateB = new Date(
+          b.refereeGame?.game?.startingDateTime || 0,
+        ).getTime();
+        return dateA - dateB;
+      });
+
+    return {
+      ...query,
+      data: filteredData,
+      isLoading: false,
+      isFetching: false,
+      isSuccess: true,
+      isError: false,
+      error: null,
+      status: "success",
+      fetchStatus: "idle",
+    } as UseQueryResult<GameExchange[], Error>;
+  }
+
+  return query;
 }
 
 export function useApplyForExchange(): UseMutationResult<void, Error, string> {

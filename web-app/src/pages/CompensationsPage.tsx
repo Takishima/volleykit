@@ -1,12 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   useCompensations,
   usePaidCompensations,
   useUnpaidCompensations,
   useCompensationTotals,
 } from "@/hooks/useConvocations";
-import { useAuthStore } from "@/stores/auth";
-import { useDemoStore } from "@/stores/demo";
 import { CompensationCard } from "@/components/features/CompensationCard";
 import { EditCompensationModal } from "@/components/features/EditCompensationModal";
 import { SwipeableCard } from "@/components/ui/SwipeableCard";
@@ -25,9 +23,7 @@ type FilterType = "all" | "paid" | "unpaid";
 
 export function CompensationsPage() {
   const [filter, setFilter] = useState<FilterType>("all");
-  const { isDemoMode } = useAuthStore();
   const { t } = useTranslation();
-  const { compensations: demoCompensations } = useDemoStore();
   const { editCompensationModal, handleGeneratePDF } = useCompensationActions();
 
   const {
@@ -49,45 +45,7 @@ export function CompensationsPage() {
     refetch: refetchUnpaid,
   } = useUnpaidCompensations();
 
-  const apiTotals = useCompensationTotals();
-
-  // Calculate demo totals
-  const demoTotals = useMemo(() => {
-    const paid = demoCompensations
-      .filter((c) => c.convocationCompensation?.paymentDone)
-      .reduce(
-        (sum, c) =>
-          sum +
-          (c.convocationCompensation?.gameCompensation || 0) +
-          (c.convocationCompensation?.travelExpenses || 0),
-        0,
-      );
-    const unpaid = demoCompensations
-      .filter((c) => !c.convocationCompensation?.paymentDone)
-      .reduce(
-        (sum, c) =>
-          sum +
-          (c.convocationCompensation?.gameCompensation || 0) +
-          (c.convocationCompensation?.travelExpenses || 0),
-        0,
-      );
-    return { paid, unpaid };
-  }, [demoCompensations]);
-
-  const totals = isDemoMode ? demoTotals : apiTotals;
-
-  // Filter demo data
-  const demoPaid = demoCompensations.filter(
-    (c) => c.convocationCompensation?.paymentDone,
-  );
-  const demoUnpaid = demoCompensations.filter(
-    (c) => !c.convocationCompensation?.paymentDone,
-  );
-  const demoDataMap = {
-    all: demoCompensations,
-    paid: demoPaid,
-    unpaid: demoUnpaid,
-  };
+  const totals = useCompensationTotals();
 
   const dataMap = { all: allData, paid: paidData, unpaid: unpaidData };
   const loadingMap = {
@@ -102,9 +60,9 @@ export function CompensationsPage() {
     unpaid: refetchUnpaid,
   };
 
-  const data = isDemoMode ? demoDataMap[filter] : dataMap[filter];
-  const isLoading = isDemoMode ? false : loadingMap[filter];
-  const error = isDemoMode ? null : errorMap[filter];
+  const data = dataMap[filter];
+  const isLoading = loadingMap[filter];
+  const error = errorMap[filter];
   const refetch = refetchMap[filter];
 
   const getSwipeConfig = (compensation: CompensationRecord): SwipeConfig => {
