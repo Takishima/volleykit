@@ -1,10 +1,13 @@
-import { useState, useRef, type FormEvent } from "react";
+import { useState, useRef, useEffect, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 import { useTranslation } from "@/hooks/useTranslation";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+
+// Demo-only mode restricts the app to demo mode (used in PR preview deployments)
+const DEMO_MODE_ONLY = import.meta.env.VITE_DEMO_MODE_ONLY === "true";
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -24,6 +27,14 @@ export function LoginPage() {
     navigate("/");
   }
 
+  // Auto-start demo mode in demo-only deployments (PR previews)
+  useEffect(() => {
+    if (DEMO_MODE_ONLY) {
+      handleDemoLogin();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
 
@@ -36,6 +47,24 @@ export function LoginPage() {
       }
       navigate("/");
     }
+  }
+
+  // In demo-only mode, show a loading state while auto-redirecting
+  if (DEMO_MODE_ONLY) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+        <div className="text-center">
+          <span className="text-6xl">🏐</span>
+          <h1 className="mt-4 text-3xl font-bold text-gray-900 dark:text-white">
+            VolleyKit
+          </h1>
+          <p className="mt-4 text-gray-500 dark:text-gray-400">
+            {t("auth.loadingDemo")}
+          </p>
+          <LoadingSpinner className="mt-4" />
+        </div>
+      </div>
+    );
   }
 
   return (
