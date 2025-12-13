@@ -16,11 +16,7 @@ interface ValidateGameModalProps {
   onClose: () => void;
 }
 
-type ValidationTabId =
-  | "home-roster"
-  | "away-roster"
-  | "scorer"
-  | "scoresheet";
+type ValidationTabId = "home-roster" | "away-roster" | "scorer" | "scoresheet";
 
 export function ValidateGameModal({
   assignment,
@@ -54,15 +50,6 @@ export function ValidateGameModal({
     },
     [handleClose],
   );
-
-  // Reset tab when modal is closed to ensure consistent UX on reopen
-  // This is intentional state synchronization with the isOpen prop
-  useEffect(() => {
-    if (!isOpen) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setActiveTab("home-roster");
-    }
-  }, [isOpen]);
 
   // Handle Escape key to close modal
   useEffect(() => {

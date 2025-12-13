@@ -45,9 +45,12 @@ export function AssignmentsPage() {
   } = useValidationClosedAssignments();
 
   const data = activeTab === "upcoming" ? upcomingData : validationClosedData;
-  const isLoading = activeTab === "upcoming" ? upcomingLoading : validationClosedLoading;
-  const error = activeTab === "upcoming" ? upcomingError : validationClosedError;
-  const refetch = activeTab === "upcoming" ? refetchUpcoming : refetchValidationClosed;
+  const isLoading =
+    activeTab === "upcoming" ? upcomingLoading : validationClosedLoading;
+  const error =
+    activeTab === "upcoming" ? upcomingError : validationClosedError;
+  const refetch =
+    activeTab === "upcoming" ? refetchUpcoming : refetchValidationClosed;
 
   const getSwipeConfig = useCallback(
     (assignment: Assignment) => {
@@ -141,8 +144,14 @@ export function AssignmentsPage() {
       {/* Content */}
       <div
         role="tabpanel"
-        id={activeTab === "upcoming" ? "upcoming-tabpanel" : "validation-closed-tabpanel"}
-        aria-labelledby={activeTab === "upcoming" ? "upcoming-tab" : "validation-closed-tab"}
+        id={
+          activeTab === "upcoming"
+            ? "upcoming-tabpanel"
+            : "validation-closed-tabpanel"
+        }
+        aria-labelledby={
+          activeTab === "upcoming" ? "upcoming-tab" : "validation-closed-tab"
+        }
         className="space-y-3"
       >
         {isLoading && <LoadingState message={t("assignments.loading")} />}
@@ -204,6 +213,7 @@ export function AssignmentsPage() {
 
       {validateGameModal.assignment && (
         <ValidateGameModal
+          key={validateGameModal.assignment.__identity}
           assignment={validateGameModal.assignment}
           isOpen={validateGameModal.isOpen}
           onClose={validateGameModal.close}

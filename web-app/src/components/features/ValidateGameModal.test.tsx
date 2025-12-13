@@ -3,9 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { ValidateGameModal } from "./ValidateGameModal";
 import type { Assignment } from "@/api/client";
 
-function createMockAssignment(
-  overrides: Partial<Assignment> = {},
-): Assignment {
+function createMockAssignment(overrides: Partial<Assignment> = {}): Assignment {
   return {
     __identity: "assignment-1",
     refereePosition: "head-one",
@@ -122,7 +120,9 @@ describe("ValidateGameModal", () => {
         />,
       );
       expect(
-        screen.getByText("Home team roster verification will be available here."),
+        screen.getByText(
+          "Home team roster verification will be available here.",
+        ),
       ).toBeInTheDocument();
     });
 
@@ -140,7 +140,9 @@ describe("ValidateGameModal", () => {
       );
 
       expect(
-        screen.getByText("Away team roster verification will be available here."),
+        screen.getByText(
+          "Away team roster verification will be available here.",
+        ),
       ).toBeInTheDocument();
     });
 
@@ -196,7 +198,9 @@ describe("ValidateGameModal", () => {
       fireEvent.keyDown(homeRosterTab, { key: "ArrowRight" });
 
       expect(
-        screen.getByText("Away team roster verification will be available here."),
+        screen.getByText(
+          "Away team roster verification will be available here.",
+        ),
       ).toBeInTheDocument();
     });
   });
@@ -239,7 +243,9 @@ describe("ValidateGameModal", () => {
         />,
       );
 
-      const backdrop = screen.getByRole("dialog", { hidden: true }).parentElement;
+      const backdrop = screen.getByRole("dialog", {
+        hidden: true,
+      }).parentElement;
       fireEvent.click(backdrop!);
       expect(mockOnClose).toHaveBeenCalledTimes(1);
     });
@@ -258,10 +264,12 @@ describe("ValidateGameModal", () => {
       expect(mockOnClose).not.toHaveBeenCalled();
     });
 
-    it("resets to first tab when modal is reopened", () => {
+    it("resets to first tab when modal is reopened with new key", () => {
+      const assignment = createMockAssignment();
       const { rerender } = render(
         <ValidateGameModal
-          assignment={createMockAssignment()}
+          key={assignment.__identity}
+          assignment={assignment}
           isOpen={true}
           onClose={mockOnClose}
         />,
@@ -275,27 +283,22 @@ describe("ValidateGameModal", () => {
         screen.getByText("Scoresheet upload will be available here."),
       ).toBeInTheDocument();
 
-      // Close modal
+      // Reopen modal with new key (simulates opening for different assignment)
+      const newAssignment = createMockAssignment({ __identity: "new-id" });
       rerender(
         <ValidateGameModal
-          assignment={createMockAssignment()}
-          isOpen={false}
-          onClose={mockOnClose}
-        />,
-      );
-
-      // Reopen modal
-      rerender(
-        <ValidateGameModal
-          assignment={createMockAssignment()}
+          key={newAssignment.__identity}
+          assignment={newAssignment}
           isOpen={true}
           onClose={mockOnClose}
         />,
       );
 
-      // Should be back to Home Roster
+      // Should be back to Home Roster (component remounted due to key change)
       expect(
-        screen.getByText("Home team roster verification will be available here."),
+        screen.getByText(
+          "Home team roster verification will be available here.",
+        ),
       ).toBeInTheDocument();
     });
   });

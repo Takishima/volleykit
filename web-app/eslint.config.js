@@ -34,9 +34,14 @@ export default tseslint.config(
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       // Security rules - prevent common vulnerabilities
       ...security.configs.recommended.rules,
-      // Disable overly strict security rules that produce false positives in TypeScript
-      'security/detect-object-injection': 'off', // Safe with TypeScript typing and fallback values
-      'security/detect-non-literal-fs-filename': 'off', // Safe in build config with controlled paths
+      // Disable security rules that produce false positives in TypeScript codebases:
+      // - detect-object-injection: TypeScript's type system ensures bracket notation
+      //   is only used with known keys (string literals, enums, typed arrays).
+      //   All dynamic access in this codebase uses typed keys with fallback values.
+      // - detect-non-literal-fs-filename: Only used in vite.config.ts with
+      //   controlled paths (import.meta.dirname, not user input).
+      'security/detect-object-injection': 'off',
+      'security/detect-non-literal-fs-filename': 'off',
       // XSS prevention - flag unsafe DOM manipulation
       'no-unsanitized/method': 'error',
       'no-unsanitized/property': 'error',

@@ -536,8 +536,8 @@ export function SwipeableCard({
       </div>
 
       {showActions && hasAnyAction && (
-        // Dialog backdrop that dismisses on click/key - contains interactive action buttons
-        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
+        // Dialog overlay with action buttons - backdrop dismisses on click
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Dialog backdrop needs click handler to dismiss
         <div
           role="dialog"
           aria-label="Card actions"
@@ -545,12 +545,12 @@ export function SwipeableCard({
           className="absolute inset-0 z-20 bg-black/50 rounded-xl flex items-center justify-center gap-2 p-4"
           onClick={() => setShowActions(false)}
           onKeyDown={(e) => {
-            if (e.key === "Escape" || e.key === "Enter") setShowActions(false);
+            if (e.key === "Escape") setShowActions(false);
           }}
-          tabIndex={-1}
         >
           {rightActions?.[0] && (
             <button
+              ref={(el) => el?.focus()}
               onClick={(e) => {
                 e.stopPropagation();
                 handleRightAction();
@@ -562,6 +562,9 @@ export function SwipeableCard({
           )}
           {leftActions?.[0] && (
             <button
+              ref={(el) => {
+                if (!rightActions?.[0]) el?.focus();
+              }}
               onClick={(e) => {
                 e.stopPropagation();
                 handleLeftAction();
