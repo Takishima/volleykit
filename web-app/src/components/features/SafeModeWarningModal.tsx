@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 
 interface SafeModeWarningModalProps {
@@ -13,6 +13,7 @@ export function SafeModeWarningModal({
   onConfirm,
 }: SafeModeWarningModalProps) {
   const { t } = useTranslation();
+  const isConfirmingRef = useRef(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -37,8 +38,14 @@ export function SafeModeWarningModal({
   );
 
   const handleConfirm = useCallback(() => {
-    onConfirm();
-    onClose();
+    if (isConfirmingRef.current) return;
+    isConfirmingRef.current = true;
+    try {
+      onConfirm();
+      onClose();
+    } finally {
+      isConfirmingRef.current = false;
+    }
   }, [onConfirm, onClose]);
 
   if (!isOpen) return null;

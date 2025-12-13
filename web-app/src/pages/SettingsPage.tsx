@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useAuthStore } from "@/stores/auth";
 import { useSettingsStore } from "@/stores/settings";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -13,17 +13,21 @@ export function SettingsPage() {
   const { t } = useTranslation();
   const [showSafeModeWarning, setShowSafeModeWarning] = useState(false);
 
-  const handleToggleSafeMode = () => {
+  const handleToggleSafeMode = useCallback(() => {
     if (isSafeModeEnabled) {
       setShowSafeModeWarning(true);
     } else {
       setSafeMode(true);
     }
-  };
+  }, [isSafeModeEnabled, setSafeMode]);
 
-  const handleConfirmDisableSafeMode = () => {
+  const handleCloseSafeModeWarning = useCallback(() => {
+    setShowSafeModeWarning(false);
+  }, []);
+
+  const handleConfirmDisableSafeMode = useCallback(() => {
     setSafeMode(false);
-  };
+  }, [setSafeMode]);
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -224,7 +228,7 @@ export function SettingsPage() {
       {/* Safe Mode Warning Modal */}
       <SafeModeWarningModal
         isOpen={showSafeModeWarning}
-        onClose={() => setShowSafeModeWarning(false)}
+        onClose={handleCloseSafeModeWarning}
         onConfirm={handleConfirmDisableSafeMode}
       />
     </div>
