@@ -12,6 +12,7 @@ import {
   ErrorState,
   EmptyState,
 } from "@/components/ui/LoadingSpinner";
+import { Tabs, TabPanel } from "@/components/ui/Tabs";
 import { TakeOverExchangeModal } from "@/components/features/TakeOverExchangeModal";
 import { RemoveFromExchangeModal } from "@/components/features/RemoveFromExchangeModal";
 import type { SwipeConfig } from "@/types/swipe";
@@ -56,7 +57,13 @@ export function ExchangePage() {
       // Lower gradation = higher level, so user.gradation <= required.gradation
       return userRefereeLevelGradationValue <= requiredGradation;
     });
-  }, [data, filterByLevel, statusFilter, isDemoMode, userRefereeLevelGradationValue]);
+  }, [
+    data,
+    filterByLevel,
+    statusFilter,
+    isDemoMode,
+    userRefereeLevelGradationValue,
+  ]);
 
   const {
     takeOverModal,
@@ -90,101 +97,101 @@ export function ExchangePage() {
     [takeOverModal.open, removeFromExchangeModal.open],
   );
 
-  const filterOptions: {
-    value: ExchangeStatus;
-    labelKey: "exchange.open" | "exchange.myApplications";
-  }[] = [
-    { value: "open", labelKey: "exchange.open" as const },
-    { value: "applied", labelKey: "exchange.myApplications" as const },
-  ];
+  const tabs = useMemo(
+    () => [
+      { id: "open" as const, label: t("exchange.open") },
+      { id: "applied" as const, label: t("exchange.myApplications") },
+    ],
+    [t],
+  );
+
+  const handleTabChange = useCallback((tabId: string) => {
+    setStatusFilter(tabId as ExchangeStatus);
+  }, []);
 
   // Determine if filter is available (demo mode with level set)
   const isLevelFilterAvailable = isDemoMode && userRefereeLevel !== null;
 
+  // Level filter toggle - only show on "Open" tab when available
+  const levelFilterContent =
+    statusFilter === "open" && isLevelFilterAvailable ? (
+      <LevelFilterToggle
+        checked={filterByLevel}
+        onChange={setFilterByLevel}
+        userLevel={userRefereeLevel}
+      />
+    ) : undefined;
+
+  const renderContent = () => {
+    if (isLoading) {
+      return <LoadingState message="Loading exchanges..." />;
+    }
+
+    if (error) {
+      return (
+        <ErrorState
+          message={
+            error instanceof Error ? error.message : "Failed to load exchanges"
+          }
+          onRetry={() => refetch()}
+        />
+      );
+    }
+
+    if (!filteredData || filteredData.length === 0) {
+      return (
+        <EmptyState
+          icon="🔄"
+          title={
+            statusFilter === "open"
+              ? t("exchange.noOpenExchangesTitle")
+              : t("exchange.noApplicationsTitle")
+          }
+          description={
+            statusFilter === "open"
+              ? filterByLevel
+                ? t("exchange.noExchangesAtLevel")
+                : t("exchange.noOpenExchangesDescription")
+              : t("exchange.noApplicationsDescription")
+          }
+        />
+      );
+    }
+
+    return (
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {filteredData.map((exchange) => (
+          <SwipeableCard
+            key={exchange.__identity}
+            swipeConfig={getSwipeConfig(exchange)}
+          >
+            {({ isDrawerOpen }) => (
+              <ExchangeCard
+                exchange={exchange}
+                disableExpansion={isDrawerOpen}
+              />
+            )}
+          </SwipeableCard>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-3">
-      {/* Filter tabs and level toggle */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
-        <div className="flex gap-2">
-          {filterOptions.map((option) => (
-            <button
-              key={option.value}
-              onClick={() => setStatusFilter(option.value)}
-              className={`
-                px-4 py-2 text-sm font-medium border-b-2 transition-colors
-                ${
-                  statusFilter === option.value
-                    ? "border-orange-500 text-orange-600 dark:text-orange-400"
-                    : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                }
-              `}
-            >
-              {t(option.labelKey)}
-            </button>
-          ))}
-        </div>
+      {/* Filter tabs with optional level toggle */}
+      <Tabs
+        tabs={tabs}
+        activeTab={statusFilter}
+        onTabChange={handleTabChange}
+        ariaLabel={t("exchange.title")}
+        endContent={levelFilterContent}
+      />
 
-        {/* Level filter toggle - only show on "Open" tab when available */}
-        {statusFilter === "open" && isLevelFilterAvailable && (
-          <LevelFilterToggle
-            checked={filterByLevel}
-            onChange={setFilterByLevel}
-            userLevel={userRefereeLevel}
-          />
-        )}
-      </div>
-
-      {/* Content */}
-      <div className="space-y-3">
-        {isLoading && <LoadingState message="Loading exchanges..." />}
-
-        {error && (
-          <ErrorState
-            message={
-              error instanceof Error
-                ? error.message
-                : "Failed to load exchanges"
-            }
-            onRetry={() => refetch()}
-          />
-        )}
-
-        {!isLoading && !error && filteredData && filteredData.length === 0 && (
-          <EmptyState
-            icon="🔄"
-            title={
-              statusFilter === "open"
-                ? t("exchange.noOpenExchangesTitle")
-                : t("exchange.noApplicationsTitle")
-            }
-            description={
-              statusFilter === "open"
-                ? filterByLevel
-                  ? t("exchange.noExchangesAtLevel")
-                  : t("exchange.noOpenExchangesDescription")
-                : t("exchange.noApplicationsDescription")
-            }
-          />
-        )}
-
-        {!isLoading && !error && filteredData && filteredData.length > 0 && (
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredData.map((exchange) => (
-              <SwipeableCard
-                key={exchange.__identity}
-                swipeConfig={getSwipeConfig(exchange)}
-              >
-                {({ isDrawerOpen }) => (
-                  <ExchangeCard
-                    exchange={exchange}
-                    disableExpansion={isDrawerOpen}
-                  />
-                )}
-              </SwipeableCard>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Content - single TabPanel since all tabs show same component with different data */}
+      <TabPanel tabId={statusFilter} activeTab={statusFilter}>
+        {renderContent()}
+      </TabPanel>
 
       {/* Modals - exchange is guaranteed non-null by conditional render */}
       {takeOverModal.exchange && (
