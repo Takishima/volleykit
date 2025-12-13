@@ -104,18 +104,18 @@ export function CompensationsPage() {
         </div>
       </div>
 
-      {/* Filter buttons */}
-      <div className="flex gap-2">
+      {/* Filter tabs */}
+      <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
         {(["all", "unpaid", "paid"] as FilterType[]).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
             className={`
-              px-4 py-2 rounded-full text-sm font-medium transition-colors
+              px-4 py-2 text-sm font-medium border-b-2 transition-colors
               ${
                 filter === f
-                  ? "bg-orange-500 text-white"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                  ? "border-orange-500 text-orange-600 dark:text-orange-400"
+                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
               }
             `}
           >
