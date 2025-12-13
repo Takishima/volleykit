@@ -128,6 +128,7 @@ This is a mock PDF report.`;
     (assignment: Assignment) => {
       const { homeTeam, awayTeam } = getTeamNames(assignment);
 
+      // Safe mode only applies to real API calls; demo mode is local-only and poses no risk
       if (!isDemoMode && isSafeModeEnabled) {
         logger.debug(
           "[useAssignmentActions] Safe mode: adding to exchange blocked",

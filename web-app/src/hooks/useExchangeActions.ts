@@ -104,6 +104,7 @@ export function useExchangeActions(): UseExchangeActionsResult {
 
   const handleTakeOver = useCallback(
     async (exchange: GameExchange) => {
+      // Safe mode only applies to real API calls; demo mode is local-only and poses no risk
       if (!isDemoMode && isSafeModeEnabled) {
         logger.debug(
           "[useExchangeActions] Safe mode: taking exchange blocked",
@@ -160,6 +161,7 @@ export function useExchangeActions(): UseExchangeActionsResult {
 
   const handleRemoveFromExchange = useCallback(
     async (exchange: GameExchange) => {
+      // Safe mode only applies to real API calls; demo mode is local-only and poses no risk
       if (!isDemoMode && isSafeModeEnabled) {
         logger.debug(
           "[useExchangeActions] Safe mode: withdrawing from exchange blocked",
