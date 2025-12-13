@@ -12,6 +12,11 @@ interface DemoState {
   compensations: CompensationRecord[];
   exchanges: GameExchange[];
 
+  // Demo user's referee level for filtering exchanges
+  // Level string (e.g., "N2") and gradation value (higher = more qualified)
+  userRefereeLevel: string | null;
+  userRefereeLevelGradationValue: number | null;
+
   // Data lifecycle actions
   initializeDemoData: () => void;
   clearDemoData: () => void;
@@ -664,10 +669,17 @@ function generateDummyData() {
   };
 }
 
+// Demo user referee level configuration
+// N2 level with gradation value 2 (can officiate N2+ and N3+ games, but not N1+)
+const DEMO_USER_REFEREE_LEVEL = "N2";
+const DEMO_USER_REFEREE_LEVEL_GRADATION_VALUE = 2;
+
 export const useDemoStore = create<DemoState>()((set) => ({
   assignments: [],
   compensations: [],
   exchanges: [],
+  userRefereeLevel: null,
+  userRefereeLevelGradationValue: null,
 
   initializeDemoData: () => {
     const data = generateDummyData();
@@ -675,6 +687,8 @@ export const useDemoStore = create<DemoState>()((set) => ({
       assignments: data.assignments,
       compensations: data.compensations,
       exchanges: data.exchanges,
+      userRefereeLevel: DEMO_USER_REFEREE_LEVEL,
+      userRefereeLevelGradationValue: DEMO_USER_REFEREE_LEVEL_GRADATION_VALUE,
     });
   },
 
@@ -683,6 +697,8 @@ export const useDemoStore = create<DemoState>()((set) => ({
       assignments: [],
       compensations: [],
       exchanges: [],
+      userRefereeLevel: null,
+      userRefereeLevelGradationValue: null,
     }),
 
   refreshData: () =>

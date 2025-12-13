@@ -99,6 +99,8 @@ interface Translations {
     removeTitle: string;
     removeConfirm: string;
     removeButton: string;
+    filterByLevel: string;
+    noExchangesAtLevel: string;
   };
   positions: {
     "head-one": string;
@@ -235,6 +237,8 @@ const en: Translations = {
     removeConfirm:
       "Are you sure you want to remove this assignment from the exchange?",
     removeButton: "Remove from Exchange",
+    filterByLevel: "My level only",
+    noExchangesAtLevel: "No exchanges available at your level.",
   },
   positions: {
     "head-one": "1st Referee",
@@ -380,6 +384,8 @@ const de: Translations = {
     removeConfirm:
       "Möchten Sie diesen Einsatz wirklich aus der Tauschbörse entfernen?",
     removeButton: "Aus Tauschbörse entfernen",
+    filterByLevel: "Nur mein Niveau",
+    noExchangesAtLevel: "Keine Tauschangebote auf Ihrem Niveau verfügbar.",
   },
   positions: {
     "head-one": "1. Schiedsrichter",
@@ -525,6 +531,8 @@ const fr: Translations = {
     removeConfirm:
       "Êtes-vous sûr de vouloir retirer cette désignation de la bourse?",
     removeButton: "Retirer de la bourse",
+    filterByLevel: "Mon niveau uniquement",
+    noExchangesAtLevel: "Aucun échange disponible à votre niveau.",
   },
   positions: {
     "head-one": "1er Arbitre",
@@ -670,6 +678,8 @@ const it: Translations = {
     removeConfirm:
       "Sei sicuro di voler rimuovere questa designazione dalla borsa?",
     removeButton: "Rimuovere dalla borsa",
+    filterByLevel: "Solo il mio livello",
+    noExchangesAtLevel: "Nessuno scambio disponibile al tuo livello.",
   },
   positions: {
     "head-one": "1° Arbitro",
