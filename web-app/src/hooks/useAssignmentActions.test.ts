@@ -11,7 +11,7 @@ vi.mock("@/stores/auth");
 vi.mock("@/stores/demo");
 vi.mock("@/stores/settings");
 
-function createMockAssignment(): Assignment {
+function createMockAssignment(leagueName = "NLA"): Assignment {
   return {
     __identity: "test-assignment-1",
     refereePosition: "head-one",
@@ -25,6 +25,15 @@ function createMockAssignment(): Assignment {
         },
         hall: {
           name: "Main Arena",
+        },
+        group: {
+          phase: {
+            league: {
+              leagueCategory: {
+                name: leagueName,
+              },
+            },
+          },
         },
       },
     },
@@ -182,7 +191,7 @@ describe("useAssignmentActions", () => {
     expect(result.current.editCompensationModal.assignment).toBeNull();
   });
 
-  it("should handle generate report action", () => {
+  it("should handle generate report action for NLA/NLB games", () => {
     const { result } = renderHook(() => useAssignmentActions());
 
     const createElementSpy = vi.spyOn(document, "createElement");
@@ -192,6 +201,25 @@ describe("useAssignmentActions", () => {
     });
 
     expect(createElementSpy).toHaveBeenCalledWith("a");
+  });
+
+  it("should block generate report for non-NLA/NLB games", () => {
+    const { result } = renderHook(() => useAssignmentActions());
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    const createElementSpy = vi.spyOn(document, "createElement");
+
+    const nonEligibleAssignment = createMockAssignment("1L");
+
+    act(() => {
+      result.current.handleGenerateReport(nonEligibleAssignment);
+    });
+
+    expect(alertSpy).toHaveBeenCalledWith(
+      "Game reports are only available for NLA and NLB games.",
+    );
+    expect(createElementSpy).not.toHaveBeenCalledWith("a");
+
+    alertSpy.mockRestore();
   });
 
   it("should handle add to exchange action", () => {

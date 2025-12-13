@@ -43,3 +43,19 @@ export function getTeamNamesFromCompensation(
 ): { homeTeam: string; awayTeam: string } {
   return extractTeamNames(compensation.refereeGame?.game);
 }
+
+/**
+ * League categories that are eligible for game report generation.
+ * Only NLA and NLB games support game reports.
+ */
+const GAME_REPORT_ELIGIBLE_LEAGUES = ["NLA", "NLB"];
+
+/**
+ * Checks if an assignment is eligible for game report generation.
+ * Only NLA and NLB games are eligible.
+ */
+export function isGameReportEligible(assignment: Assignment): boolean {
+  const leagueName =
+    assignment.refereeGame?.game?.group?.phase?.league?.leagueCategory?.name;
+  return leagueName !== undefined && GAME_REPORT_ELIGIBLE_LEAGUES.includes(leagueName);
+}
