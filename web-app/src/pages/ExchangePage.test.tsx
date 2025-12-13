@@ -178,9 +178,8 @@ describe("ExchangePage", () => {
 
       // Enable the filter
       const toggle = screen.getByText(/my level only/i).closest("label");
-      if (toggle) {
-        fireEvent.click(toggle);
-      }
+      expect(toggle).toBeInTheDocument();
+      fireEvent.click(toggle!);
 
       // N2 user should see N2+ and N3+ exchanges (gradation >= 2)
       // but not N1+ exchanges (gradation 1 requires higher qualification)
@@ -194,9 +193,8 @@ describe("ExchangePage", () => {
 
       // Enable the filter
       const toggle = screen.getByText(/my level only/i).closest("label");
-      if (toggle) {
-        fireEvent.click(toggle);
-      }
+      expect(toggle).toBeInTheDocument();
+      fireEvent.click(toggle!);
 
       // Should show (N2+) indicator
       expect(screen.getByText(/\(N2\+\)/)).toBeInTheDocument();
@@ -212,9 +210,8 @@ describe("ExchangePage", () => {
 
       // Enable the filter
       const toggle = screen.getByText(/my level only/i).closest("label");
-      if (toggle) {
-        fireEvent.click(toggle);
-      }
+      expect(toggle).toBeInTheDocument();
+      fireEvent.click(toggle!);
 
       // Should show filtered empty state message
       expect(

@@ -670,7 +670,9 @@ function generateDummyData() {
 }
 
 // Demo user referee level configuration
-// N2 level with gradation value 2 (can officiate N2+ and N3+ games, but not N1+)
+// Gradation scale: N1=1 (highest/most qualified), N2=2, N3=3 (lowest)
+// Lower gradation value = higher qualification level
+// N2 referee (gradation 2) can officiate N2+ and N3+ games, but not N1+
 const DEMO_USER_REFEREE_LEVEL = "N2";
 const DEMO_USER_REFEREE_LEVEL_GRADATION_VALUE = 2;
 

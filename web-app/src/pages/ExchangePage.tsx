@@ -153,14 +153,16 @@ export function ExchangePage() {
           <EmptyState
             icon="🔄"
             title={
-              statusFilter === "open" ? "No open exchanges" : "No applications"
+              statusFilter === "open"
+                ? t("exchange.noOpenExchangesTitle")
+                : t("exchange.noApplicationsTitle")
             }
             description={
               statusFilter === "open"
                 ? filterByLevel
                   ? t("exchange.noExchangesAtLevel")
-                  : "There are currently no referee positions available for exchange."
-                : "You haven't applied for any exchanges yet."
+                  : t("exchange.noOpenExchangesDescription")
+                : t("exchange.noApplicationsDescription")
             }
           />
         )}

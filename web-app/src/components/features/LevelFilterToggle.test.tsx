@@ -28,9 +28,8 @@ describe("LevelFilterToggle", () => {
     render(<LevelFilterToggle checked={false} onChange={onChange} />);
 
     const label = screen.getByText(/my level only/i).closest("label");
-    if (label) {
-      fireEvent.click(label);
-    }
+    expect(label).toBeInTheDocument();
+    fireEvent.click(label!);
 
     expect(onChange).toHaveBeenCalledOnce();
     expect(onChange).toHaveBeenCalledWith(true);
@@ -42,9 +41,8 @@ describe("LevelFilterToggle", () => {
     render(<LevelFilterToggle checked={true} onChange={onChange} />);
 
     const label = screen.getByText(/my level only/i).closest("label");
-    if (label) {
-      fireEvent.click(label);
-    }
+    expect(label).toBeInTheDocument();
+    fireEvent.click(label!);
 
     expect(onChange).toHaveBeenCalledOnce();
     expect(onChange).toHaveBeenCalledWith(false);
