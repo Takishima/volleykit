@@ -4,10 +4,12 @@ import { useAssignmentActions } from "./useAssignmentActions";
 import type { Assignment } from "@/api/client";
 import * as authStore from "@/stores/auth";
 import * as demoStore from "@/stores/demo";
+import * as settingsStore from "@/stores/settings";
 import { MODAL_CLEANUP_DELAY } from "@/utils/assignment-helpers";
 
 vi.mock("@/stores/auth");
 vi.mock("@/stores/demo");
+vi.mock("@/stores/settings");
 
 function createMockAssignment(): Assignment {
   return {
@@ -37,10 +39,16 @@ describe("useAssignmentActions", () => {
     vi.useFakeTimers();
     vi.clearAllMocks();
 
-    // Default: not in demo mode
+    // Default: not in demo mode, safe mode disabled
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
       selector({ isDemoMode: false } as ReturnType<
         typeof authStore.useAuthStore.getState
+      >),
+    );
+
+    vi.mocked(settingsStore.useSettingsStore).mockImplementation((selector) =>
+      selector({ isSafeModeEnabled: false } as ReturnType<
+        typeof settingsStore.useSettingsStore.getState
       >),
     );
 
@@ -241,6 +249,77 @@ describe("useAssignmentActions", () => {
         "PDF downloads are not available in demo mode",
       );
       expect(createElementSpy).not.toHaveBeenCalledWith("a");
+
+      alertSpy.mockRestore();
+    });
+  });
+
+  describe("safe mode guards", () => {
+    beforeEach(() => {
+      vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
+        selector({ isDemoMode: false } as ReturnType<
+          typeof authStore.useAuthStore.getState
+        >),
+      );
+      vi.mocked(settingsStore.useSettingsStore).mockImplementation((selector) =>
+        selector({ isSafeModeEnabled: true } as ReturnType<
+          typeof settingsStore.useSettingsStore.getState
+        >),
+      );
+    });
+
+    it("should block add to exchange when safe mode is enabled", () => {
+      const { result } = renderHook(() => useAssignmentActions());
+      const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+
+      act(() => {
+        result.current.handleAddToExchange(mockAssignment);
+      });
+
+      expect(mockAddAssignmentToExchange).not.toHaveBeenCalled();
+      expect(alertSpy).toHaveBeenCalledWith(
+        "This operation is blocked in safe mode. Disable safe mode in Settings to proceed.",
+      );
+
+      alertSpy.mockRestore();
+    });
+
+    it("should block validate game when safe mode is enabled", () => {
+      const { result } = renderHook(() => useAssignmentActions());
+      const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+
+      act(() => {
+        result.current.validateGameModal.open(mockAssignment);
+      });
+
+      expect(result.current.validateGameModal.isOpen).toBe(false);
+      expect(alertSpy).toHaveBeenCalledWith(
+        "This operation is blocked in safe mode. Disable safe mode in Settings to proceed.",
+      );
+
+      alertSpy.mockRestore();
+    });
+
+    it("should not block operations in demo mode even with safe mode enabled", () => {
+      vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
+        selector({ isDemoMode: true } as ReturnType<
+          typeof authStore.useAuthStore.getState
+        >),
+      );
+
+      const { result } = renderHook(() => useAssignmentActions());
+      const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+
+      act(() => {
+        result.current.handleAddToExchange(mockAssignment);
+      });
+
+      expect(mockAddAssignmentToExchange).toHaveBeenCalledWith(
+        mockAssignment.__identity,
+      );
+      expect(alertSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Check the Exchange tab"),
+      );
 
       alertSpy.mockRestore();
     });

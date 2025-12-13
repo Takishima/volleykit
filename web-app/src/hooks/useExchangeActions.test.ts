@@ -7,10 +7,12 @@ import type { UseMutationResult } from "@tanstack/react-query";
 import * as useConvocations from "./useConvocations";
 import * as authStore from "@/stores/auth";
 import * as demoStore from "@/stores/demo";
+import * as settingsStore from "@/stores/settings";
 
 vi.mock("./useConvocations");
 vi.mock("@/stores/auth");
 vi.mock("@/stores/demo");
+vi.mock("@/stores/settings");
 
 function createMockExchange(): GameExchange {
   return {
@@ -44,10 +46,16 @@ describe("useExchangeActions", () => {
     vi.clearAllMocks();
     vi.spyOn(window, "alert").mockImplementation(() => {});
 
-    // Default: not in demo mode
+    // Default: not in demo mode, safe mode disabled
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
       selector({ isDemoMode: false } as ReturnType<
         typeof authStore.useAuthStore.getState
+      >),
+    );
+
+    vi.mocked(settingsStore.useSettingsStore).mockImplementation((selector) =>
+      selector({ isSafeModeEnabled: false } as ReturnType<
+        typeof settingsStore.useSettingsStore.getState
       >),
     );
 
@@ -414,6 +422,73 @@ describe("useExchangeActions", () => {
       });
 
       expect(result.current.removeFromExchangeModal.isOpen).toBe(false);
+    });
+  });
+
+  describe("safe mode guards", () => {
+    beforeEach(() => {
+      vi.useRealTimers();
+      vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
+        selector({ isDemoMode: false } as ReturnType<
+          typeof authStore.useAuthStore.getState
+        >),
+      );
+      vi.mocked(settingsStore.useSettingsStore).mockImplementation((selector) =>
+        selector({ isSafeModeEnabled: true } as ReturnType<
+          typeof settingsStore.useSettingsStore.getState
+        >),
+      );
+    });
+
+    afterEach(() => {
+      vi.useFakeTimers();
+    });
+
+    it("should block take over when safe mode is enabled", async () => {
+      const { result } = renderHook(() => useExchangeActions());
+
+      await act(async () => {
+        await result.current.handleTakeOver(mockExchange);
+      });
+
+      expect(mockApplyMutate).not.toHaveBeenCalled();
+      expect(mockDemoApplyForExchange).not.toHaveBeenCalled();
+      expect(window.alert).toHaveBeenCalledWith(
+        "This operation is blocked in safe mode. Disable safe mode in Settings to proceed.",
+      );
+    });
+
+    it("should block remove from exchange when safe mode is enabled", async () => {
+      const { result } = renderHook(() => useExchangeActions());
+
+      await act(async () => {
+        await result.current.handleRemoveFromExchange(mockExchange);
+      });
+
+      expect(mockWithdrawMutate).not.toHaveBeenCalled();
+      expect(mockDemoWithdrawFromExchange).not.toHaveBeenCalled();
+      expect(window.alert).toHaveBeenCalledWith(
+        "This operation is blocked in safe mode. Disable safe mode in Settings to proceed.",
+      );
+    });
+
+    it("should not block operations in demo mode even with safe mode enabled", async () => {
+      vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
+        selector({ isDemoMode: true } as ReturnType<
+          typeof authStore.useAuthStore.getState
+        >),
+      );
+
+      const { result } = renderHook(() => useExchangeActions());
+
+      await act(async () => {
+        await result.current.handleTakeOver(mockExchange);
+      });
+
+      expect(mockDemoApplyForExchange).toHaveBeenCalledWith(
+        mockExchange.__identity,
+      );
+      expect(mockApplyMutate).not.toHaveBeenCalled();
     });
   });
 });

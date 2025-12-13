@@ -1,12 +1,33 @@
+import { useState, useCallback } from "react";
 import { useAuthStore } from "@/stores/auth";
+import { useSettingsStore } from "@/stores/settings";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { getOccupationLabelKey } from "@/utils/occupation-labels";
+import { SafeModeWarningModal } from "@/components/features/SafeModeWarningModal";
 
 export function SettingsPage() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, isDemoMode } = useAuthStore();
+  const { isSafeModeEnabled, setSafeMode } = useSettingsStore();
   const { t } = useTranslation();
+  const [showSafeModeWarning, setShowSafeModeWarning] = useState(false);
+
+  const handleToggleSafeMode = useCallback(() => {
+    if (isSafeModeEnabled) {
+      setShowSafeModeWarning(true);
+    } else {
+      setSafeMode(true);
+    }
+  }, [isSafeModeEnabled, setSafeMode]);
+
+  const handleCloseSafeModeWarning = useCallback(() => {
+    setShowSafeModeWarning(false);
+  }, []);
+
+  const handleConfirmDisableSafeMode = useCallback(() => {
+    setSafeMode(false);
+  }, [setSafeMode]);
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -74,6 +95,74 @@ export function SettingsPage() {
         </CardContent>
       </Card>
 
+      {/* Safe Mode section - only show in non-demo mode */}
+      {!isDemoMode && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <h2 className="font-semibold text-gray-900 dark:text-white">
+                {t("settings.safeMode")}
+              </h2>
+              {!isSafeModeEnabled && (
+                <svg
+                  className="w-5 h-5 text-yellow-600 dark:text-yellow-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {t("settings.safeModeDescription")}
+            </p>
+
+            <div className="flex items-center justify-between py-2">
+              <div className="flex-1">
+                <div className="text-sm font-medium text-gray-900 dark:text-white">
+                  {isSafeModeEnabled
+                    ? t("settings.safeModeEnabled")
+                    : t("settings.safeModeDisabled")}
+                </div>
+                {!isSafeModeEnabled && (
+                  <div className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+                    {t("settings.safeModeDangerous")}
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleToggleSafeMode}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
+                  isSafeModeEnabled
+                    ? "bg-green-600"
+                    : "bg-gray-200 dark:bg-gray-700"
+                }`}
+                role="switch"
+                aria-checked={isSafeModeEnabled}
+                aria-label={t("settings.safeMode")}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    isSafeModeEnabled ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Privacy */}
       <Card>
         <CardHeader>
@@ -135,6 +224,13 @@ export function SettingsPage() {
           {t("auth.logout")}
         </button>
       </div>
+
+      {/* Safe Mode Warning Modal */}
+      <SafeModeWarningModal
+        isOpen={showSafeModeWarning}
+        onClose={handleCloseSafeModeWarning}
+        onConfirm={handleConfirmDisableSafeMode}
+      />
     </div>
   );
 }
