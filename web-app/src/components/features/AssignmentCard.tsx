@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/Card";
 import { ExpandArrow } from "@/components/ui/ExpandArrow";
 import type { Assignment } from "@/api/client";
-import { t } from "@/i18n";
+import { useTranslation } from "@/hooks/useTranslation";
 import { useDateFormat } from "@/hooks/useDateFormat";
 import { useExpandable } from "@/hooks/useExpandable";
 
@@ -17,6 +17,7 @@ export function AssignmentCard({
   onClick,
   disableExpansion,
 }: AssignmentCardProps) {
+  const { t } = useTranslation();
   const { isExpanded, detailsId, handleToggle } = useExpandable({
     disabled: disableExpansion,
     onClick,

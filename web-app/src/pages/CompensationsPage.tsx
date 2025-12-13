@@ -19,13 +19,14 @@ import { useCompensationActions } from "@/hooks/useCompensationActions";
 import { createCompensationActions } from "@/utils/compensation-actions";
 import type { CompensationRecord } from "@/api/client";
 import type { SwipeConfig } from "@/types/swipe";
-import { t } from "@/i18n";
+import { useTranslation } from "@/hooks/useTranslation";
 
 type FilterType = "all" | "paid" | "unpaid";
 
 export function CompensationsPage() {
   const [filter, setFilter] = useState<FilterType>("all");
   const { isDemoMode } = useAuthStore();
+  const { t } = useTranslation();
   const { compensations: demoCompensations } = useDemoStore();
   const { editCompensationModal, handleGeneratePDF } = useCompensationActions();
 

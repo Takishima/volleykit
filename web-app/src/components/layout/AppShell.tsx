@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Outlet, NavLink, useLocation } from "react-router-dom";
 import { useAuthStore, type Occupation } from "@/stores/auth";
-import { t } from "@/i18n";
+import { useTranslation } from "@/hooks/useTranslation";
 import { getOccupationLabelKey } from "@/utils/occupation-labels";
 
 const navItems = [
@@ -15,23 +15,27 @@ const navItems = [
   { path: "/settings", labelKey: "nav.settings" as const, icon: "⚙️" },
 ];
 
-function getOccupationLabel(occupation: Occupation): string {
-  const labelKey = getOccupationLabelKey(occupation.type);
-  const baseLabel = t(labelKey);
-  if (occupation.clubName) {
-    return `${baseLabel} (${occupation.clubName})`;
-  }
-  if (occupation.associationCode) {
-    return `${baseLabel} (${occupation.associationCode})`;
-  }
-  return baseLabel;
-}
-
 export function AppShell() {
   const location = useLocation();
+  const { t } = useTranslation();
   const { status, user, logout, activeOccupationId, setActiveOccupation } =
     useAuthStore();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const getOccupationLabel = useCallback(
+    (occupation: Occupation): string => {
+      const labelKey = getOccupationLabelKey(occupation.type);
+      const baseLabel = t(labelKey);
+      if (occupation.clubName) {
+        return `${baseLabel} (${occupation.clubName})`;
+      }
+      if (occupation.associationCode) {
+        return `${baseLabel} (${occupation.associationCode})`;
+      }
+      return baseLabel;
+    },
+    [t],
+  );
   const dropdownRef = useRef<HTMLDivElement>(null);
   const isAuthenticated = status === "authenticated";
 
