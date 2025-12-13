@@ -42,7 +42,7 @@ jobs:
         # Chromium covers most issues; cross-browser bugs are rare in React apps
         run: npx playwright test --project=chromium
       - name: Upload test results
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
