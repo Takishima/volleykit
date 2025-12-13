@@ -12,7 +12,6 @@ import {
   type SearchConfiguration,
   type CompensationRecord,
   type Assignment,
-  type GameExchange,
   type AssociationSettings,
   type Season,
 } from "@/api/client";
@@ -69,20 +68,6 @@ function sortByGameDate<T extends WithGameDate>(
     const dateA = getGameTimestamp(a);
     const dateB = getGameTimestamp(b);
     return descending ? dateB - dateA : dateA - dateB;
-  });
-}
-
-// Helper to filter items by date range
-function filterByDateRange<T extends WithGameDate>(
-  items: T[],
-  fromDate: Date,
-  toDate: Date,
-): T[] {
-  return items.filter((item) => {
-    const gameDate = item.refereeGame?.game?.startingDateTime;
-    if (!gameDate) return false;
-    const date = new Date(gameDate);
-    return date >= fromDate && date <= toDate;
   });
 }
 

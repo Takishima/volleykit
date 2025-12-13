@@ -35,9 +35,10 @@ export function LoadingState({ message = "Loading..." }: LoadingStateProps) {
   return (
     <div
       className="flex flex-col items-center justify-center py-12 gap-4"
+      role="status"
       aria-live="polite"
     >
-      {/* Use visual-only spinner here since parent has role="status" */}
+      {/* Use visual-only spinner here since container has role="status" */}
       <div
         className={`
           ${sizeClasses.lg}

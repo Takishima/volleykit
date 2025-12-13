@@ -17,6 +17,8 @@ import type {
   AssignmentsResponse,
   CompensationsResponse,
   ExchangesResponse,
+  AssociationSettings,
+  Season,
 } from "./client";
 import { useDemoStore } from "@/stores/demo";
 
@@ -90,7 +92,9 @@ function applyFilters<T>(items: T[], filters?: PropertyFilter[]): T[] {
     return items;
   }
 
-  return items.filter((item) => filters.every((filter) => matchesFilter(item, filter)));
+  return items.filter((item) =>
+    filters.every((filter) => matchesFilter(item, filter)),
+  );
 }
 
 /**
@@ -281,6 +285,29 @@ export const mockApi = {
 
     const store = useDemoStore.getState();
     store.withdrawFromExchange(exchangeId);
+  },
+
+  async getAssociationSettings(): Promise<AssociationSettings> {
+    await delay(MOCK_NETWORK_DELAY_MS);
+
+    // Return mock settings with default validation deadline
+    return {
+      hoursAfterGameStartForRefereeToEditGameList: 6,
+    } as AssociationSettings;
+  },
+
+  async getActiveSeason(): Promise<Season> {
+    await delay(MOCK_NETWORK_DELAY_MS);
+
+    // Return mock season spanning current year
+    const now = new Date();
+    const seasonStart = new Date(now.getFullYear(), 8, 1); // September 1st
+    const seasonEnd = new Date(now.getFullYear() + 1, 5, 30); // June 30th next year
+
+    return {
+      seasonStartDate: seasonStart.toISOString(),
+      seasonEndDate: seasonEnd.toISOString(),
+    } as Season;
   },
 };
 
