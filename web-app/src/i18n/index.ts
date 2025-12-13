@@ -120,6 +120,17 @@ interface Translations {
     title: string;
     profile: string;
     language: string;
+    safeMode: string;
+    safeModeDescription: string;
+    safeModeEnabled: string;
+    safeModeDisabled: string;
+    safeModeWarningTitle: string;
+    safeModeWarningMessage: string;
+    safeModeWarningPoint1: string;
+    safeModeWarningPoint2: string;
+    safeModeWarningPoint3: string;
+    safeModeConfirmButton: string;
+    safeModeDangerous: string;
     privacy: string;
     privacyNoCollection: string;
     privacyDirectComm: string;
@@ -244,6 +255,22 @@ const en: Translations = {
     title: "Settings",
     profile: "Profile",
     language: "Language",
+    safeMode: "Safe Mode",
+    safeModeDescription:
+      "Safe mode restricts dangerous operations like adding/taking games from exchange or validating games. This helps prevent accidental modifications while the app is being tested.",
+    safeModeEnabled: "Safe mode is enabled",
+    safeModeDisabled: "Safe mode is disabled",
+    safeModeWarningTitle: "Disable Safe Mode?",
+    safeModeWarningMessage:
+      "You are about to disable safe mode, which will enable operations that modify your assignments and games.",
+    safeModeWarningPoint1:
+      "Disabling safe mode enables dangerous operations that modify state",
+    safeModeWarningPoint2:
+      "Always validate any changes with the official VolleyManager website",
+    safeModeWarningPoint3:
+      "The official website (volleymanager.volleyball.ch) is the only source of truth",
+    safeModeConfirmButton: "I Understand, Disable",
+    safeModeDangerous: "Dangerous operations are enabled",
     privacy: "Privacy",
     privacyNoCollection:
       "VolleyKit does not collect or store any personal data.",
@@ -371,6 +398,22 @@ const de: Translations = {
     title: "Einstellungen",
     profile: "Profil",
     language: "Sprache",
+    safeMode: "Sicherheitsmodus",
+    safeModeDescription:
+      "Der Sicherheitsmodus beschränkt gefährliche Operationen wie das Hinzufügen/Übernehmen von Spielen zur/von Tauschbörse oder das Validieren von Spielen. Dies hilft, versehentliche Änderungen während des Testens der App zu vermeiden.",
+    safeModeEnabled: "Sicherheitsmodus ist aktiviert",
+    safeModeDisabled: "Sicherheitsmodus ist deaktiviert",
+    safeModeWarningTitle: "Sicherheitsmodus deaktivieren?",
+    safeModeWarningMessage:
+      "Sie sind dabei, den Sicherheitsmodus zu deaktivieren, was Operationen ermöglicht, die Ihre Einsätze und Spiele ändern.",
+    safeModeWarningPoint1:
+      "Die Deaktivierung des Sicherheitsmodus ermöglicht gefährliche Operationen, die den Status ändern",
+    safeModeWarningPoint2:
+      "Überprüfen Sie alle Änderungen immer auf der offiziellen VolleyManager-Website",
+    safeModeWarningPoint3:
+      "Die offizielle Website (volleymanager.volleyball.ch) ist die einzige Quelle der Wahrheit",
+    safeModeConfirmButton: "Ich verstehe, deaktivieren",
+    safeModeDangerous: "Gefährliche Operationen sind aktiviert",
     privacy: "Datenschutz",
     privacyNoCollection:
       "VolleyKit sammelt oder speichert keine persönlichen Daten.",
@@ -498,6 +541,22 @@ const fr: Translations = {
     title: "Paramètres",
     profile: "Profil",
     language: "Langue",
+    safeMode: "Mode sécurisé",
+    safeModeDescription:
+      "Le mode sécurisé restreint les opérations dangereuses comme l'ajout/la prise de matchs depuis la bourse aux échanges ou la validation de matchs. Cela aide à éviter les modifications accidentelles pendant les tests de l'application.",
+    safeModeEnabled: "Le mode sécurisé est activé",
+    safeModeDisabled: "Le mode sécurisé est désactivé",
+    safeModeWarningTitle: "Désactiver le mode sécurisé?",
+    safeModeWarningMessage:
+      "Vous êtes sur le point de désactiver le mode sécurisé, ce qui activera des opérations qui modifient vos désignations et matchs.",
+    safeModeWarningPoint1:
+      "La désactivation du mode sécurisé active des opérations dangereuses qui modifient l'état",
+    safeModeWarningPoint2:
+      "Validez toujours les modifications avec le site officiel VolleyManager",
+    safeModeWarningPoint3:
+      "Le site officiel (volleymanager.volleyball.ch) est la seule source de vérité",
+    safeModeConfirmButton: "Je comprends, désactiver",
+    safeModeDangerous: "Les opérations dangereuses sont activées",
     privacy: "Confidentialité",
     privacyNoCollection:
       "VolleyKit ne collecte ni ne stocke aucune donnée personnelle.",
@@ -625,6 +684,22 @@ const it: Translations = {
     title: "Impostazioni",
     profile: "Profilo",
     language: "Lingua",
+    safeMode: "Modalità sicura",
+    safeModeDescription:
+      "La modalità sicura limita operazioni pericolose come l'aggiunta/assunzione di partite dalla borsa scambi o la convalida di partite. Questo aiuta a prevenire modifiche accidentali durante il test dell'app.",
+    safeModeEnabled: "La modalità sicura è attivata",
+    safeModeDisabled: "La modalità sicura è disattivata",
+    safeModeWarningTitle: "Disattivare la modalità sicura?",
+    safeModeWarningMessage:
+      "Stai per disattivare la modalità sicura, che attiverà operazioni che modificano le tue designazioni e partite.",
+    safeModeWarningPoint1:
+      "La disattivazione della modalità sicura abilita operazioni pericolose che modificano lo stato",
+    safeModeWarningPoint2:
+      "Convalida sempre le modifiche con il sito ufficiale VolleyManager",
+    safeModeWarningPoint3:
+      "Il sito ufficiale (volleymanager.volleyball.ch) è l'unica fonte di verità",
+    safeModeConfirmButton: "Ho capito, disattiva",
+    safeModeDangerous: "Le operazioni pericolose sono abilitate",
     privacy: "Privacy",
     privacyNoCollection:
       "VolleyKit non raccoglie né memorizza alcun dato personale.",
