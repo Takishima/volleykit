@@ -21,6 +21,45 @@ import { useDemoStore } from "@/stores/demo";
 // For users with >100 items, consider implementing "load more" or virtual scrolling.
 const DEFAULT_PAGE_SIZE = 100;
 const DEFAULT_DATE_RANGE_DAYS = 365;
+const EPOCH_TIMESTAMP = 0;
+
+// Helper type for items with game date
+type WithGameDate = {
+  refereeGame?: { game?: { startingDateTime?: string } };
+};
+
+// Helper to extract game timestamp for sorting
+function getGameTimestamp(item: WithGameDate): number {
+  return new Date(
+    item.refereeGame?.game?.startingDateTime || EPOCH_TIMESTAMP,
+  ).getTime();
+}
+
+// Helper to sort items by game date
+function sortByGameDate<T extends WithGameDate>(
+  items: T[],
+  descending: boolean,
+): T[] {
+  return [...items].sort((a, b) => {
+    const dateA = getGameTimestamp(a);
+    const dateB = getGameTimestamp(b);
+    return descending ? dateB - dateA : dateA - dateB;
+  });
+}
+
+// Helper to filter items by date range
+function filterByDateRange<T extends WithGameDate>(
+  items: T[],
+  fromDate: Date,
+  toDate: Date,
+): T[] {
+  return items.filter((item) => {
+    const gameDate = item.refereeGame?.game?.startingDateTime;
+    if (!gameDate) return false;
+    const date = new Date(gameDate);
+    return date >= fromDate && date <= toDate;
+  });
+}
 
 // Helper to create mock query results for demo mode
 // Type assertion is necessary because we're creating a partial mock of UseQueryResult
@@ -138,25 +177,9 @@ export function useAssignments(
   if (isDemoMode) {
     const fromDate = new Date(dateRange.from);
     const toDate = new Date(dateRange.to);
-
-    const filteredData = demoAssignments
-      .filter((a) => {
-        const gameDate = a.refereeGame?.game?.startingDateTime;
-        if (!gameDate) return false;
-        const date = new Date(gameDate);
-        return date >= fromDate && date <= toDate;
-      })
-      .sort((a, b) => {
-        const dateA = new Date(
-          a.refereeGame?.game?.startingDateTime || 0,
-        ).getTime();
-        const dateB = new Date(
-          b.refereeGame?.game?.startingDateTime || 0,
-        ).getTime();
-        return period === "past" ? dateB - dateA : dateA - dateB;
-      });
-
-    return createDemoQueryResult(query, filteredData);
+    const filtered = filterByDateRange(demoAssignments, fromDate, toDate);
+    const sorted = sortByGameDate(filtered, period === "past");
+    return createDemoQueryResult(query, sorted);
   }
 
   return query;
@@ -194,10 +217,14 @@ export function useAssignmentDetails(
       (a) => a.__identity === assignmentId,
     );
 
-    return createDemoQueryResult(query, demoAssignment as Assignment, {
-      isError: !demoAssignment,
-      error: demoAssignment ? undefined : new Error("Assignment not found"),
-    });
+    if (!demoAssignment) {
+      return createDemoQueryResult(query, undefined as unknown as Assignment, {
+        isError: true,
+        error: new Error("Assignment not found"),
+      });
+    }
+
+    return createDemoQueryResult(query, demoAssignment);
   }
 
   return query;
@@ -240,22 +267,14 @@ export function useCompensations(
   });
 
   if (isDemoMode) {
-    const filteredData = demoCompensations
-      .filter((c) => {
-        if (paidFilter === undefined) return true;
-        return c.convocationCompensation?.paymentDone === paidFilter;
-      })
-      .sort((a, b) => {
-        const dateA = new Date(
-          a.refereeGame?.game?.startingDateTime || 0,
-        ).getTime();
-        const dateB = new Date(
-          b.refereeGame?.game?.startingDateTime || 0,
-        ).getTime();
-        return dateB - dateA;
-      });
-
-    return createDemoQueryResult(query, filteredData);
+    const filtered =
+      paidFilter === undefined
+        ? demoCompensations
+        : demoCompensations.filter(
+            (c) => c.convocationCompensation?.paymentDone === paidFilter,
+          );
+    const sorted = sortByGameDate(filtered, true);
+    return createDemoQueryResult(query, sorted);
   }
 
   return query;
@@ -333,22 +352,12 @@ export function useGameExchanges(
   });
 
   if (isDemoMode) {
-    const filteredData = demoExchanges
-      .filter((e) => {
-        if (status === "all") return true;
-        return e.status === status;
-      })
-      .sort((a, b) => {
-        const dateA = new Date(
-          a.refereeGame?.game?.startingDateTime || 0,
-        ).getTime();
-        const dateB = new Date(
-          b.refereeGame?.game?.startingDateTime || 0,
-        ).getTime();
-        return dateA - dateB;
-      });
-
-    return createDemoQueryResult(query, filteredData);
+    const filtered =
+      status === "all"
+        ? demoExchanges
+        : demoExchanges.filter((e) => e.status === status);
+    const sorted = sortByGameDate(filtered, false);
+    return createDemoQueryResult(query, sorted);
   }
 
   return query;

@@ -760,3 +760,105 @@ describe("useConvocations - Demo Mode Data Filtering", () => {
     });
   });
 });
+
+describe("useConvocations - Null/Undefined Date Handling", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should filter out assignments with missing dates and sort remaining items", async () => {
+    const now = new Date();
+    const futureDate1 = addDays(now, 5).toISOString();
+    const futureDate2 = addDays(now, 10).toISOString();
+
+    const mockDemoAssignments = [
+      {
+        __identity: "valid-later",
+        refereeGame: { game: { startingDateTime: futureDate2 } },
+      },
+      {
+        __identity: "missing-date",
+        refereeGame: { game: {} },
+      },
+      {
+        __identity: "valid-sooner",
+        refereeGame: { game: { startingDateTime: futureDate1 } },
+      },
+      {
+        __identity: "null-refereeGame",
+        refereeGame: null,
+      },
+      {
+        __identity: "undefined-game",
+        refereeGame: { game: undefined },
+      },
+    ];
+
+    vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
+      selector({ isDemoMode: true } as ReturnType<
+        typeof authStore.useAuthStore.getState
+      >),
+    );
+
+    vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
+      selector({
+        assignments: mockDemoAssignments,
+        compensations: [],
+        exchanges: [],
+      } as unknown as ReturnType<typeof demoStore.useDemoStore.getState>),
+    );
+
+    const { result } = renderHook(() => useAssignments("upcoming"), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    expect(result.current.data).toHaveLength(2);
+    expect(result.current.data?.[0]?.__identity).toBe("valid-sooner");
+    expect(result.current.data?.[1]?.__identity).toBe("valid-later");
+  });
+
+  it("should handle items with undefined dates during sorting by treating them as epoch", async () => {
+    const mockDemoCompensations = [
+      {
+        __identity: "comp-with-date",
+        convocationCompensation: { paymentDone: true },
+        refereeGame: { game: { startingDateTime: "2025-01-15T10:00:00Z" } },
+      },
+      {
+        __identity: "comp-missing-date",
+        convocationCompensation: { paymentDone: true },
+        refereeGame: { game: {} },
+      },
+    ];
+
+    vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
+      selector({ isDemoMode: true } as ReturnType<
+        typeof authStore.useAuthStore.getState
+      >),
+    );
+
+    vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
+      selector({
+        assignments: [],
+        compensations: mockDemoCompensations,
+        exchanges: [],
+      } as unknown as ReturnType<typeof demoStore.useDemoStore.getState>),
+    );
+
+    const { result } = renderHook(() => useCompensations(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    expect(result.current.data).toHaveLength(2);
+    expect(result.current.data?.[0]?.__identity).toBe("comp-with-date");
+    expect(result.current.data?.[1]?.__identity).toBe("comp-missing-date");
+  });
+});
