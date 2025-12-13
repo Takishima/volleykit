@@ -37,8 +37,8 @@ jobs:
       - name: Build for PR Preview
         run: npm run build
         env:
-          # Set the proxy URL for production build (if configured)
-          VITE_API_PROXY_URL: ${{ vars.VITE_API_PROXY_URL }}
+          # PR previews run in demo-only mode (no real authentication)
+          VITE_DEMO_MODE_ONLY: 'true'
           # Set base path for PR preview - uses pr-{number} subdirectory
           VITE_BASE_PATH: /${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/
       - name: Add .nojekyll for GitHub Pages
@@ -80,7 +80,7 @@ jobs:
             const body = `## 🚀 PR Preview Deployed!\n\n` +
               `Your preview is ready at: ${previewUrl}\n\n` +
               `> This preview will be updated on each push to this PR.\n\n` +
-              `**Demo Mode Available:** Click "Try Demo Mode" on the login page to explore with sample data.`;
+              `**Demo Mode Only:** This preview runs in demo mode with sample data. Real authentication is disabled for security.`;
 
             // Check if comment already exists
             const { data: comments } = await github.rest.issues.listComments({

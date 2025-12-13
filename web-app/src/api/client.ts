@@ -6,6 +6,7 @@ import {
   exchangesResponseSchema,
   validateResponse,
 } from "./validation";
+import { mockApi } from "./mock-api";
 
 // Base URL configuration
 // - Development: Vite proxy (avoids CORS)
@@ -491,5 +492,23 @@ export const api = {
     );
   },
 };
+
+/**
+ * API interface type - shared between real and mock implementations.
+ * This ensures both implementations have the same method signatures.
+ */
+export type ApiClient = typeof api;
+
+/**
+ * Get the appropriate API client based on demo mode.
+ * In demo mode, uses the mock API that operates on local demo data.
+ * In production mode, uses the real API that makes network requests.
+ *
+ * @param isDemoMode - Whether the app is in demo mode
+ * @returns The API client (real or mock)
+ */
+export function getApiClient(isDemoMode: boolean): ApiClient {
+  return isDemoMode ? mockApi : api;
+}
 
 export default api;

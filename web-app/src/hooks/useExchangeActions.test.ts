@@ -6,12 +6,10 @@ import type { GameExchange } from "@/api/client";
 import type { UseMutationResult } from "@tanstack/react-query";
 import * as useConvocations from "./useConvocations";
 import * as authStore from "@/stores/auth";
-import * as demoStore from "@/stores/demo";
 import * as settingsStore from "@/stores/settings";
 
 vi.mock("./useConvocations");
 vi.mock("@/stores/auth");
-vi.mock("@/stores/demo");
 vi.mock("@/stores/settings");
 
 function createMockExchange(): GameExchange {
@@ -38,8 +36,6 @@ const mockExchange = createMockExchange();
 describe("useExchangeActions", () => {
   const mockApplyMutate = vi.fn();
   const mockWithdrawMutate = vi.fn();
-  const mockDemoApplyForExchange = vi.fn();
-  const mockDemoWithdrawFromExchange = vi.fn();
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -57,13 +53,6 @@ describe("useExchangeActions", () => {
       selector({ isSafeModeEnabled: false } as ReturnType<
         typeof settingsStore.useSettingsStore.getState
       >),
-    );
-
-    vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
-      selector({
-        applyForExchange: mockDemoApplyForExchange,
-        withdrawFromExchange: mockDemoWithdrawFromExchange,
-      } as unknown as ReturnType<typeof demoStore.useDemoStore.getState>),
     );
 
     vi.mocked(useConvocations.useApplyForExchange).mockReturnValue({
@@ -352,7 +341,7 @@ describe("useExchangeActions", () => {
     expect(result.current.removeFromExchangeModal.exchange).toBe(mockExchange);
   });
 
-  describe("demo mode guards", () => {
+  describe("demo mode behavior", () => {
     beforeEach(() => {
       vi.useRealTimers();
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
@@ -366,30 +355,28 @@ describe("useExchangeActions", () => {
       vi.useFakeTimers();
     });
 
-    it("should use demo store for take over in demo mode", async () => {
+    it("should use mutation for take over in demo mode (routed to mock API)", async () => {
       const { result } = renderHook(() => useExchangeActions());
 
       await act(async () => {
         await result.current.handleTakeOver(mockExchange);
       });
 
-      expect(mockDemoApplyForExchange).toHaveBeenCalledWith(
-        mockExchange.__identity,
-      );
-      expect(mockApplyMutate).not.toHaveBeenCalled();
+      // In the new architecture, demo mode uses the same mutations
+      // which are routed to the mock API via getApiClient
+      expect(mockApplyMutate).toHaveBeenCalledWith(mockExchange.__identity);
     });
 
-    it("should use demo store for remove from exchange in demo mode", async () => {
+    it("should use mutation for remove from exchange in demo mode (routed to mock API)", async () => {
       const { result } = renderHook(() => useExchangeActions());
 
       await act(async () => {
         await result.current.handleRemoveFromExchange(mockExchange);
       });
 
-      expect(mockDemoWithdrawFromExchange).toHaveBeenCalledWith(
-        mockExchange.__identity,
-      );
-      expect(mockWithdrawMutate).not.toHaveBeenCalled();
+      // In the new architecture, demo mode uses the same mutations
+      // which are routed to the mock API via getApiClient
+      expect(mockWithdrawMutate).toHaveBeenCalledWith(mockExchange.__identity);
     });
 
     it("should close modal after demo mode take over", async () => {
@@ -452,7 +439,6 @@ describe("useExchangeActions", () => {
       });
 
       expect(mockApplyMutate).not.toHaveBeenCalled();
-      expect(mockDemoApplyForExchange).not.toHaveBeenCalled();
       expect(window.alert).toHaveBeenCalledWith(
         "This operation is blocked in safe mode. Disable safe mode in Settings to proceed.",
       );
@@ -466,7 +452,6 @@ describe("useExchangeActions", () => {
       });
 
       expect(mockWithdrawMutate).not.toHaveBeenCalled();
-      expect(mockDemoWithdrawFromExchange).not.toHaveBeenCalled();
       expect(window.alert).toHaveBeenCalledWith(
         "This operation is blocked in safe mode. Disable safe mode in Settings to proceed.",
       );
@@ -485,10 +470,9 @@ describe("useExchangeActions", () => {
         await result.current.handleTakeOver(mockExchange);
       });
 
-      expect(mockDemoApplyForExchange).toHaveBeenCalledWith(
-        mockExchange.__identity,
-      );
-      expect(mockApplyMutate).not.toHaveBeenCalled();
+      // In demo mode, operations are allowed even with safe mode enabled
+      // because demo mode uses local data and poses no risk
+      expect(mockApplyMutate).toHaveBeenCalledWith(mockExchange.__identity);
     });
   });
 });

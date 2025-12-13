@@ -50,6 +50,7 @@ interface Translations {
     demoMode: string;
     loginInfo: string;
     privacyNote: string;
+    loadingDemo: string;
   };
   occupations: {
     referee: string;
@@ -217,6 +218,7 @@ const en: Translations = {
     demoMode: "Try Demo Mode",
     loginInfo: "Use your VolleyManager credentials to login.",
     privacyNote: "Your password is never stored.",
+    loadingDemo: "Loading demo mode...",
   },
   occupations: {
     referee: "Referee",
@@ -398,6 +400,7 @@ const de: Translations = {
     demoMode: "Demo-Modus ausprobieren",
     loginInfo: "Verwenden Sie Ihre VolleyManager-Anmeldeinformationen.",
     privacyNote: "Ihr Passwort wird niemals gespeichert.",
+    loadingDemo: "Demo-Modus wird geladen...",
   },
   occupations: {
     referee: "Schiedsrichter",
@@ -581,6 +584,7 @@ const fr: Translations = {
     demoMode: "Essayer le mode démo",
     loginInfo: "Utilisez vos identifiants VolleyManager pour vous connecter.",
     privacyNote: "Votre mot de passe n'est jamais stocké.",
+    loadingDemo: "Chargement du mode démo...",
   },
   occupations: {
     referee: "Arbitre",
@@ -764,6 +768,7 @@ const it: Translations = {
     demoMode: "Prova la modalità demo",
     loginInfo: "Usa le tue credenziali VolleyManager per accedere.",
     privacyNote: "La tua password non viene mai memorizzata.",
+    loadingDemo: "Caricamento modalità demo...",
   },
   occupations: {
     referee: "Arbitro",

@@ -38,8 +38,10 @@ describe("LoadingState", () => {
     expect(screen.getByText("Fetching data...")).toBeInTheDocument();
   });
 
-  it("includes spinner", () => {
+  it("includes spinner with status role", () => {
     render(<LoadingState />);
+    // LoadingSpinner inside LoadingState has role="status"
+    // The outer container uses aria-live="polite" without role to avoid redundancy
     expect(screen.getByRole("status")).toBeInTheDocument();
   });
 });
