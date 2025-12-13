@@ -3,10 +3,16 @@ import { render, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { useAuthStore } from "@/stores/auth";
+import { useDemoStore } from "@/stores/demo";
 
 // Mock the auth store
 vi.mock("@/stores/auth", () => ({
   useAuthStore: vi.fn(),
+}));
+
+// Mock the demo store
+vi.mock("@/stores/demo", () => ({
+  useDemoStore: vi.fn(),
 }));
 
 // Mock navigate function
@@ -20,7 +26,7 @@ vi.mock("react-router-dom", async () => {
 });
 
 // Import after mocks are set up
-import {
+import App, {
   isAuthError,
   classifyQueryError,
   isRetryableError,
@@ -319,5 +325,68 @@ describe("QueryErrorHandler", () => {
 
     // Error classification should still work
     expect(isAuthError(new Error("401 Unauthorized"))).toBe(true);
+  });
+});
+
+describe("ProtectedRoute", () => {
+  const mockCheckSession = vi.fn();
+  const mockLogout = vi.fn();
+  const mockInitializeDemoData = vi.fn();
+
+  beforeEach(() => {
+    mockCheckSession.mockClear();
+    mockLogout.mockClear();
+    mockInitializeDemoData.mockClear();
+    mockNavigate.mockClear();
+    mockCheckSession.mockResolvedValue(undefined);
+    mockLogout.mockResolvedValue(undefined);
+
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("does not call checkSession in demo mode", async () => {
+    vi.mocked(useAuthStore).mockReturnValue({
+      status: "authenticated",
+      checkSession: mockCheckSession,
+      isDemoMode: true,
+      logout: mockLogout,
+    } as ReturnType<typeof useAuthStore>);
+
+    vi.mocked(useDemoStore).mockReturnValue({
+      assignments: [{ id: "demo-1" }],
+      initializeDemoData: mockInitializeDemoData,
+    } as unknown as ReturnType<typeof useDemoStore>);
+
+    render(<App />);
+
+    // Wait for any potential async operations to complete
+    await waitFor(() => {
+      expect(mockCheckSession).not.toHaveBeenCalled();
+    });
+  });
+
+  it("calls checkSession when not in demo mode", async () => {
+    vi.mocked(useAuthStore).mockReturnValue({
+      status: "authenticated",
+      checkSession: mockCheckSession,
+      isDemoMode: false,
+      logout: mockLogout,
+    } as ReturnType<typeof useAuthStore>);
+
+    vi.mocked(useDemoStore).mockReturnValue({
+      assignments: [],
+      initializeDemoData: mockInitializeDemoData,
+    } as unknown as ReturnType<typeof useDemoStore>);
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(mockCheckSession).toHaveBeenCalled();
+    });
   });
 });
