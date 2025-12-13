@@ -50,19 +50,21 @@ export function ExchangeConfirmationModal({
     if (isSubmittingRef.current) return;
     isSubmittingRef.current = true;
     setIsSubmitting(true);
+
     try {
       await onConfirm();
-      onClose();
     } catch (error) {
-      // Don't close modal on error - let onConfirm handle error display
       logger.error(
         "[ExchangeConfirmationModal] Failed to confirm action:",
         error,
       );
+      return;
     } finally {
       isSubmittingRef.current = false;
       setIsSubmitting(false);
     }
+
+    onClose();
   }, [onConfirm, onClose]);
 
   if (!isOpen) return null;
