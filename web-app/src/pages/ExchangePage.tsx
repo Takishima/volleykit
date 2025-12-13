@@ -1,9 +1,12 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useGameExchanges, type ExchangeStatus } from "@/hooks/useConvocations";
 import { useExchangeActions } from "@/hooks/useExchangeActions";
+import { useDemoStore } from "@/stores/demo";
+import { useAuthStore } from "@/stores/auth";
 import { createExchangeActions } from "@/utils/exchange-actions";
 import { ExchangeCard } from "@/components/features/ExchangeCard";
 import { SwipeableCard } from "@/components/ui/SwipeableCard";
+import { LevelFilterToggle } from "@/components/features/LevelFilterToggle";
 import {
   LoadingState,
   ErrorState,
@@ -17,9 +20,43 @@ import { useTranslation } from "@/hooks/useTranslation";
 
 export function ExchangePage() {
   const [statusFilter, setStatusFilter] = useState<ExchangeStatus>("open");
+  const [filterByLevel, setFilterByLevel] = useState(false);
   const { t } = useTranslation();
 
+  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const { userRefereeLevel, userRefereeLevelGradationValue } = useDemoStore();
+
   const { data, isLoading, error, refetch } = useGameExchanges(statusFilter);
+
+  // Filter exchanges by user's referee level when filter is enabled
+  // Gradation values: N1=1 (highest), N2=2, N3=3 (lowest)
+  // Lower gradation = more qualified (can officiate more games)
+  const filteredData = useMemo(() => {
+    if (!data || !filterByLevel || statusFilter !== "open") {
+      return data;
+    }
+
+    // Only filter in demo mode for now (production would need user level from API)
+    if (!isDemoMode || userRefereeLevelGradationValue === null) {
+      return data;
+    }
+
+    return data.filter((exchange) => {
+      const requiredGradationStr = exchange.requiredRefereeLevelGradationValue;
+      // If no gradation value, show the exchange (conservative approach)
+      if (requiredGradationStr === undefined || requiredGradationStr === null) {
+        return true;
+      }
+      // Parse string to number for comparison (API returns string)
+      const requiredGradation = Number(requiredGradationStr);
+      if (isNaN(requiredGradation)) {
+        return true;
+      }
+      // User can officiate if their level meets or exceeds required level
+      // Lower gradation = higher level, so user.gradation <= required.gradation
+      return userRefereeLevelGradationValue <= requiredGradation;
+    });
+  }, [data, filterByLevel, statusFilter, isDemoMode, userRefereeLevelGradationValue]);
 
   const {
     takeOverModal,
@@ -61,26 +98,40 @@ export function ExchangePage() {
     { value: "applied", labelKey: "exchange.myApplications" as const },
   ];
 
+  // Determine if filter is available (demo mode with level set)
+  const isLevelFilterAvailable = isDemoMode && userRefereeLevel !== null;
+
   return (
     <div className="space-y-3">
-      {/* Filter tabs */}
-      <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
-        {filterOptions.map((option) => (
-          <button
-            key={option.value}
-            onClick={() => setStatusFilter(option.value)}
-            className={`
-              px-4 py-2 text-sm font-medium border-b-2 transition-colors
-              ${
-                statusFilter === option.value
-                  ? "border-orange-500 text-orange-600 dark:text-orange-400"
-                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-              }
-            `}
-          >
-            {t(option.labelKey)}
-          </button>
-        ))}
+      {/* Filter tabs and level toggle */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
+        <div className="flex gap-2">
+          {filterOptions.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => setStatusFilter(option.value)}
+              className={`
+                px-4 py-2 text-sm font-medium border-b-2 transition-colors
+                ${
+                  statusFilter === option.value
+                    ? "border-orange-500 text-orange-600 dark:text-orange-400"
+                    : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                }
+              `}
+            >
+              {t(option.labelKey)}
+            </button>
+          ))}
+        </div>
+
+        {/* Level filter toggle - only show on "Open" tab when available */}
+        {statusFilter === "open" && isLevelFilterAvailable && (
+          <LevelFilterToggle
+            checked={filterByLevel}
+            onChange={setFilterByLevel}
+            userLevel={userRefereeLevel}
+          />
+        )}
       </div>
 
       {/* Content */}
@@ -98,7 +149,7 @@ export function ExchangePage() {
           />
         )}
 
-        {!isLoading && !error && data && data.length === 0 && (
+        {!isLoading && !error && filteredData && filteredData.length === 0 && (
           <EmptyState
             icon="🔄"
             title={
@@ -106,15 +157,17 @@ export function ExchangePage() {
             }
             description={
               statusFilter === "open"
-                ? "There are currently no referee positions available for exchange."
+                ? filterByLevel
+                  ? t("exchange.noExchangesAtLevel")
+                  : "There are currently no referee positions available for exchange."
                 : "You haven't applied for any exchanges yet."
             }
           />
         )}
 
-        {!isLoading && !error && data && data.length > 0 && (
+        {!isLoading && !error && filteredData && filteredData.length > 0 && (
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {data.map((exchange) => (
+            {filteredData.map((exchange) => (
               <SwipeableCard
                 key={exchange.__identity}
                 swipeConfig={getSwipeConfig(exchange)}
