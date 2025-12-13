@@ -9,7 +9,7 @@ import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 export function LoginPage() {
   const navigate = useNavigate();
   const { login, status, error, setDemoAuthenticated } = useAuthStore();
-  const { enableDemoMode } = useDemoStore();
+  const { initializeDemoData } = useDemoStore();
   const { t } = useTranslation();
 
   const [username, setUsername] = useState("");
@@ -19,7 +19,7 @@ export function LoginPage() {
   const isLoading = status === "loading";
 
   function handleDemoLogin() {
-    enableDemoMode();
+    initializeDemoData();
     setDemoAuthenticated();
     navigate("/");
   }

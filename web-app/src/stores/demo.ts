@@ -7,13 +7,17 @@ import type {
 import { addDays, addHours, subDays } from "date-fns";
 
 interface DemoState {
-  isDemoMode: boolean;
+  // Data arrays - populated when demo mode is enabled via useAuthStore
   assignments: Assignment[];
   compensations: CompensationRecord[];
   exchanges: GameExchange[];
-  enableDemoMode: () => void;
-  disableDemoMode: () => void;
+
+  // Data lifecycle actions
+  initializeDemoData: () => void;
+  clearDemoData: () => void;
   refreshData: () => void;
+
+  // Demo mode operations (callers should verify isDemoMode from useAuthStore first)
   applyForExchange: (exchangeId: string) => void;
   withdrawFromExchange: (exchangeId: string) => void;
   addAssignmentToExchange: (assignmentId: string) => void;
@@ -630,35 +634,28 @@ function generateDummyData() {
 }
 
 export const useDemoStore = create<DemoState>()((set) => ({
-  isDemoMode: false,
   assignments: [],
   compensations: [],
   exchanges: [],
 
-  enableDemoMode: () => {
+  initializeDemoData: () => {
     const data = generateDummyData();
     set({
-      isDemoMode: true,
       assignments: data.assignments,
       compensations: data.compensations,
       exchanges: data.exchanges,
     });
   },
 
-  disableDemoMode: () =>
+  clearDemoData: () =>
     set({
-      isDemoMode: false,
       assignments: [],
       compensations: [],
       exchanges: [],
     }),
 
   refreshData: () =>
-    set((state) => {
-      // Only regenerate data if demo mode is enabled
-      if (!state.isDemoMode) {
-        return state;
-      }
+    set(() => {
       const newData = generateDummyData();
       return {
         assignments: newData.assignments,
@@ -669,8 +666,6 @@ export const useDemoStore = create<DemoState>()((set) => ({
 
   applyForExchange: (exchangeId: string) =>
     set((state) => {
-      if (!state.isDemoMode) return state;
-
       const now = new Date();
       return {
         exchanges: state.exchanges.map((exchange) =>
@@ -696,27 +691,21 @@ export const useDemoStore = create<DemoState>()((set) => ({
     }),
 
   withdrawFromExchange: (exchangeId: string) =>
-    set((state) => {
-      if (!state.isDemoMode) return state;
-
-      return {
-        exchanges: state.exchanges.map((exchange) =>
-          exchange.__identity === exchangeId
-            ? {
-                ...exchange,
-                status: "open" as const,
-                appliedAt: undefined,
-                appliedBy: undefined,
-              }
-            : exchange,
-        ),
-      };
-    }),
+    set((state) => ({
+      exchanges: state.exchanges.map((exchange) =>
+        exchange.__identity === exchangeId
+          ? {
+              ...exchange,
+              status: "open" as const,
+              appliedAt: undefined,
+              appliedBy: undefined,
+            }
+          : exchange,
+      ),
+    })),
 
   addAssignmentToExchange: (assignmentId: string) =>
     set((state) => {
-      if (!state.isDemoMode) return state;
-
       const assignment = state.assignments.find(
         (a) => a.__identity === assignmentId,
       );
@@ -748,25 +737,21 @@ export const useDemoStore = create<DemoState>()((set) => ({
     compensationId: string,
     data: { distanceInMetres?: number },
   ) =>
-    set((state) => {
-      if (!state.isDemoMode) return state;
-
-      return {
-        compensations: state.compensations.map((comp) =>
-          comp.__identity === compensationId
-            ? {
-                ...comp,
-                convocationCompensation: comp.convocationCompensation
-                  ? {
-                      ...comp.convocationCompensation,
-                      distanceInMetres:
-                        data.distanceInMetres ??
-                        comp.convocationCompensation.distanceInMetres,
-                    }
-                  : comp.convocationCompensation,
-              }
-            : comp,
-        ),
-      };
-    }),
+    set((state) => ({
+      compensations: state.compensations.map((comp) =>
+        comp.__identity === compensationId
+          ? {
+              ...comp,
+              convocationCompensation: comp.convocationCompensation
+                ? {
+                    ...comp.convocationCompensation,
+                    distanceInMetres:
+                      data.distanceInMetres ??
+                      comp.convocationCompensation.distanceInMetres,
+                  }
+                : comp.convocationCompensation,
+            }
+          : comp,
+      ),
+    })),
 }));

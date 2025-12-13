@@ -5,7 +5,6 @@ describe("useDemoStore", () => {
   beforeEach(() => {
     // Reset store state before each test
     useDemoStore.setState({
-      isDemoMode: false,
       assignments: [],
       compensations: [],
       exchanges: [],
@@ -13,12 +12,7 @@ describe("useDemoStore", () => {
   });
 
   describe("initial state", () => {
-    it("starts with isDemoMode false", () => {
-      const state = useDemoStore.getState();
-      expect(state.isDemoMode).toBe(false);
-    });
-
-    it("starts with empty data arrays (lazy loading)", () => {
+    it("starts with empty data arrays", () => {
       const state = useDemoStore.getState();
       expect(state.assignments).toHaveLength(0);
       expect(state.compensations).toHaveLength(0);
@@ -26,20 +20,15 @@ describe("useDemoStore", () => {
     });
   });
 
-  describe("enableDemoMode", () => {
-    it("sets isDemoMode to true", () => {
-      useDemoStore.getState().enableDemoMode();
-      expect(useDemoStore.getState().isDemoMode).toBe(true);
-    });
-
-    it("generates demo data only when enabled (lazy loading)", () => {
-      // Before enabling, data should be empty
+  describe("initializeDemoData", () => {
+    it("populates demo data arrays", () => {
+      // Before initializing, data should be empty
       expect(useDemoStore.getState().assignments).toHaveLength(0);
 
-      // Enable demo mode
-      useDemoStore.getState().enableDemoMode();
+      // Initialize demo data
+      useDemoStore.getState().initializeDemoData();
 
-      // After enabling, data should be populated
+      // After initializing, data should be populated
       const state = useDemoStore.getState();
       expect(state.assignments.length).toBeGreaterThan(0);
       expect(state.compensations.length).toBeGreaterThan(0);
@@ -47,7 +36,7 @@ describe("useDemoStore", () => {
     });
 
     it("generates valid assignment data", () => {
-      useDemoStore.getState().enableDemoMode();
+      useDemoStore.getState().initializeDemoData();
 
       const { assignments } = useDemoStore.getState();
       expect(assignments.length).toBeGreaterThan(0);
@@ -60,7 +49,7 @@ describe("useDemoStore", () => {
     });
 
     it("generates valid compensation data", () => {
-      useDemoStore.getState().enableDemoMode();
+      useDemoStore.getState().initializeDemoData();
 
       const { compensations } = useDemoStore.getState();
       expect(compensations.length).toBeGreaterThan(0);
@@ -74,7 +63,7 @@ describe("useDemoStore", () => {
     });
 
     it("generates valid exchange data", () => {
-      useDemoStore.getState().enableDemoMode();
+      useDemoStore.getState().initializeDemoData();
 
       const { exchanges } = useDemoStore.getState();
       expect(exchanges.length).toBeGreaterThan(0);
@@ -86,20 +75,14 @@ describe("useDemoStore", () => {
     });
   });
 
-  describe("disableDemoMode", () => {
-    it("sets isDemoMode to false", () => {
-      useDemoStore.getState().enableDemoMode();
-      useDemoStore.getState().disableDemoMode();
-      expect(useDemoStore.getState().isDemoMode).toBe(false);
-    });
-
-    it("clears demo data when disabled", () => {
-      // Enable and verify data exists
-      useDemoStore.getState().enableDemoMode();
+  describe("clearDemoData", () => {
+    it("clears all demo data", () => {
+      // Initialize and verify data exists
+      useDemoStore.getState().initializeDemoData();
       expect(useDemoStore.getState().assignments.length).toBeGreaterThan(0);
 
-      // Disable and verify data is cleared
-      useDemoStore.getState().disableDemoMode();
+      // Clear and verify data is empty
+      useDemoStore.getState().clearDemoData();
       const state = useDemoStore.getState();
       expect(state.assignments).toHaveLength(0);
       expect(state.compensations).toHaveLength(0);
@@ -109,7 +92,7 @@ describe("useDemoStore", () => {
 
   describe("refreshData", () => {
     it("regenerates demo data with fresh dates", () => {
-      useDemoStore.getState().enableDemoMode();
+      useDemoStore.getState().initializeDemoData();
       const initialAssignments = useDemoStore.getState().assignments;
 
       // Refresh data
@@ -120,18 +103,6 @@ describe("useDemoStore", () => {
       expect(refreshedAssignments.length).toBe(initialAssignments.length);
       // New instances should have new date values
       expect(refreshedAssignments).not.toBe(initialAssignments);
-    });
-
-    it("does nothing if demo mode is disabled", () => {
-      // Ensure we start with empty data
-      expect(useDemoStore.getState().assignments).toHaveLength(0);
-
-      // Try to refresh without enabling demo mode
-      useDemoStore.getState().refreshData();
-
-      // Data should still be empty
-      const { assignments } = useDemoStore.getState();
-      expect(assignments).toHaveLength(0);
     });
   });
 });
