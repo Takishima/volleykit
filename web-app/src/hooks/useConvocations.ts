@@ -91,10 +91,15 @@ function filterByValidationClosed(
 /**
  * Fetches all pages of assignments matching the search configuration.
  * Uses sequential fetching to avoid overwhelming the API.
- * Stops when all items are fetched or MAX_FETCH_ALL_PAGES is reached.
+ * Stops when all items are fetched, MAX_FETCH_ALL_PAGES is reached,
+ * or an empty page is returned (prevents infinite loops).
+ *
+ * @param config - Search configuration for the API
+ * @param signal - Optional AbortSignal for cancellation support
  */
 async function fetchAllAssignmentPages(
   config: SearchConfiguration,
+  signal?: AbortSignal,
 ): Promise<Assignment[]> {
   const allItems: Assignment[] = [];
   let offset = 0;
@@ -102,10 +107,23 @@ async function fetchAllAssignmentPages(
   let pagesFetched = 0;
 
   do {
+    // Check for cancellation before each request
+    if (signal?.aborted) {
+      throw new DOMException("Aborted", "AbortError");
+    }
+
     const pageConfig = { ...config, offset, limit: DEFAULT_PAGE_SIZE };
     const response = await api.searchAssignments(pageConfig);
 
-    allItems.push(...(response.items || []));
+    const pageItems = response.items || [];
+
+    // Guard against infinite loop: break if page returns no items
+    // This can happen if totalItemsCount is stale or API has issues
+    if (pageItems.length === 0) {
+      break;
+    }
+
+    allItems.push(...pageItems);
     totalCount = response.totalItemsCount || 0;
     offset += DEFAULT_PAGE_SIZE;
     pagesFetched++;
@@ -267,7 +285,9 @@ export function usePastAssignments(): UseQueryResult<Assignment[], Error> {
  * Features:
  * - Fetches all pages to ensure no games are missed (up to MAX_FETCH_ALL_PAGES)
  * - Waits for settings and season data before querying to avoid stale results
+ * - Falls back to defaults if settings/season queries fail
  * - Uses shared filtering logic between production and demo modes
+ * - Supports cancellation via AbortController
  */
 export function useValidationClosedAssignments(): UseQueryResult<
   Assignment[],
@@ -281,8 +301,16 @@ export function useValidationClosedAssignments(): UseQueryResult<
   // so settings and season will be undefined, causing fallback to defaults:
   // - deadlineHours falls back to DEFAULT_VALIDATION_DEADLINE_HOURS (6 hours)
   // - seasonStart falls back to 365 days ago
-  const { data: settings, isLoading: settingsLoading } = useAssociationSettings();
-  const { data: season, isLoading: seasonLoading } = useActiveSeason();
+  const {
+    data: settings,
+    isLoading: settingsLoading,
+    isError: settingsError,
+  } = useAssociationSettings();
+  const {
+    data: season,
+    isLoading: seasonLoading,
+    isError: seasonError,
+  } = useActiveSeason();
 
   // Calculate date range for the query
   // Use season dates if available, otherwise fall back to default range
@@ -295,10 +323,8 @@ export function useValidationClosedAssignments(): UseQueryResult<
     : now;
 
   // Query from season start to now (we only want past games)
-  const dateRange = {
-    from: startOfDay(seasonStart).toISOString(),
-    to: endOfDay(now < seasonEnd ? now : seasonEnd).toISOString(),
-  };
+  const fromDate = startOfDay(seasonStart).toISOString();
+  const toDate = endOfDay(now < seasonEnd ? now : seasonEnd).toISOString();
 
   const deadlineHours =
     settings?.hoursAfterGameStartForRefereeToEditGameList ??
@@ -308,7 +334,7 @@ export function useValidationClosedAssignments(): UseQueryResult<
     propertyFilters: [
       {
         propertyName: "refereeGame.game.startingDateTime",
-        dateRange,
+        dateRange: { from: fromDate, to: toDate },
       },
     ],
     propertyOrderings: [
@@ -321,14 +347,22 @@ export function useValidationClosedAssignments(): UseQueryResult<
   };
 
   // Wait for settings and season to load before making the main query.
-  // This prevents fetching with stale/default values, then refetching.
-  const isReady = !isDemoMode && !settingsLoading && !seasonLoading;
+  // If either query fails, proceed with defaults rather than blocking indefinitely.
+  const settingsResolved = !settingsLoading || settingsError;
+  const seasonResolved = !seasonLoading || seasonError;
+  const isReady = !isDemoMode && settingsResolved && seasonResolved;
 
   const query = useQuery({
-    queryKey: [...queryKeys.assignments(config), "validationClosed", deadlineHours],
-    queryFn: async () => {
+    queryKey: [
+      "assignments",
+      "validationClosed",
+      fromDate,
+      toDate,
+      deadlineHours,
+    ],
+    queryFn: async ({ signal }) => {
       // Fetch all pages to ensure we don't miss any games in the season
-      const allItems = await fetchAllAssignmentPages(config);
+      const allItems = await fetchAllAssignmentPages(config, signal);
       // Filter to only include assignments where validation is closed
       return filterByValidationClosed(allItems, deadlineHours);
     },
@@ -345,8 +379,8 @@ export function useValidationClosedAssignments(): UseQueryResult<
 
       const date = new Date(gameDate);
       return isWithinInterval(date, {
-        start: new Date(dateRange.from),
-        end: new Date(dateRange.to),
+        start: new Date(fromDate),
+        end: new Date(toDate),
       });
     });
     const filtered = filterByValidationClosed(inDateRange, deadlineHours);

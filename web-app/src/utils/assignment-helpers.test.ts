@@ -8,6 +8,9 @@ import {
 } from "./assignment-helpers";
 import type { Assignment } from "@/api/client";
 
+// Test constants
+const EXTENDED_VALIDATION_DEADLINE_HOURS = 24;
+
 describe("assignment-helpers", () => {
   describe("MODAL_CLEANUP_DELAY", () => {
     it("should be defined as 300ms", () => {
@@ -81,66 +84,66 @@ describe("assignment-helpers", () => {
     });
 
     it("should return true when validation deadline has passed", () => {
-      // Game started 10 hours ago, deadline is 6 hours
+      // Game started 10 hours ago, deadline is DEFAULT_VALIDATION_DEADLINE_HOURS
       const gameStart = new Date("2025-01-15T02:00:00Z").toISOString();
-      expect(isValidationClosed(gameStart, 6)).toBe(true);
+      expect(isValidationClosed(gameStart, DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(true);
     });
 
     it("should return false when within validation window", () => {
-      // Game started 3 hours ago, deadline is 6 hours
+      // Game started 3 hours ago, deadline is DEFAULT_VALIDATION_DEADLINE_HOURS
       const gameStart = new Date("2025-01-15T09:00:00Z").toISOString();
-      expect(isValidationClosed(gameStart, 6)).toBe(false);
+      expect(isValidationClosed(gameStart, DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(false);
     });
 
     it("should return false for future games", () => {
       // Game starts in 2 hours
       const gameStart = new Date("2025-01-15T14:00:00Z").toISOString();
-      expect(isValidationClosed(gameStart, 6)).toBe(false);
+      expect(isValidationClosed(gameStart, DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(false);
     });
 
     it("should return false exactly at the deadline boundary", () => {
-      // Game started exactly 6 hours ago - validation just closed
+      // Game started exactly DEFAULT_VALIDATION_DEADLINE_HOURS ago - validation just closed
       const gameStart = new Date("2025-01-15T06:00:00Z").toISOString();
-      // At exactly 6 hours, now > deadline is false (deadline = 12:00, now = 12:00)
-      expect(isValidationClosed(gameStart, 6)).toBe(false);
+      // At exactly the deadline, now > deadline is false (deadline = 12:00, now = 12:00)
+      expect(isValidationClosed(gameStart, DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(false);
     });
 
     it("should return true just after the deadline", () => {
-      // Game started 6 hours and 1 second ago
+      // Game started DEFAULT_VALIDATION_DEADLINE_HOURS and 1 second ago
       const gameStart = new Date("2025-01-15T05:59:59Z").toISOString();
-      expect(isValidationClosed(gameStart, 6)).toBe(true);
+      expect(isValidationClosed(gameStart, DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(true);
     });
 
     it("should use default deadline when not specified", () => {
-      // Game started 10 hours ago, default deadline is 6 hours
+      // Game started 10 hours ago, default deadline is DEFAULT_VALIDATION_DEADLINE_HOURS
       const gameStart = new Date("2025-01-15T02:00:00Z").toISOString();
       expect(isValidationClosed(gameStart)).toBe(true);
     });
 
     it("should return false for undefined gameStartTime", () => {
-      expect(isValidationClosed(undefined, 6)).toBe(false);
+      expect(isValidationClosed(undefined, DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(false);
     });
 
     it("should return false for null gameStartTime", () => {
-      expect(isValidationClosed(null, 6)).toBe(false);
+      expect(isValidationClosed(null, DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(false);
     });
 
     it("should return false for invalid date string", () => {
-      expect(isValidationClosed("not-a-date", 6)).toBe(false);
+      expect(isValidationClosed("not-a-date", DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(false);
     });
 
     it("should return false for empty string", () => {
-      expect(isValidationClosed("", 6)).toBe(false);
+      expect(isValidationClosed("", DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(false);
     });
 
     it("should handle custom deadline hours", () => {
-      // Game started 25 hours ago, deadline is 24 hours
+      // Game started 25 hours ago, deadline is EXTENDED_VALIDATION_DEADLINE_HOURS
       const gameStart = new Date("2025-01-14T11:00:00Z").toISOString();
-      expect(isValidationClosed(gameStart, 24)).toBe(true);
+      expect(isValidationClosed(gameStart, EXTENDED_VALIDATION_DEADLINE_HOURS)).toBe(true);
 
-      // Game started 23 hours ago, deadline is 24 hours
+      // Game started 23 hours ago, deadline is EXTENDED_VALIDATION_DEADLINE_HOURS
       const recentGame = new Date("2025-01-14T13:00:00Z").toISOString();
-      expect(isValidationClosed(recentGame, 24)).toBe(false);
+      expect(isValidationClosed(recentGame, EXTENDED_VALIDATION_DEADLINE_HOURS)).toBe(false);
     });
   });
 
