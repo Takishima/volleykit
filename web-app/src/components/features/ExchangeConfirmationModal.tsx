@@ -45,6 +45,14 @@ export function ExchangeConfirmationModal({
 
   const isSubmittingRef = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const ignoreRef = useRef(false);
+
+  useEffect(() => {
+    ignoreRef.current = false;
+    return () => {
+      ignoreRef.current = true;
+    };
+  }, []);
 
   const handleConfirm = useCallback(async () => {
     if (isSubmittingRef.current) return;
@@ -58,13 +66,18 @@ export function ExchangeConfirmationModal({
         "[ExchangeConfirmationModal] Failed to confirm action:",
         error,
       );
+      if (!ignoreRef.current) {
+        isSubmittingRef.current = false;
+        setIsSubmitting(false);
+      }
       return;
-    } finally {
-      isSubmittingRef.current = false;
-      setIsSubmitting(false);
     }
 
-    onClose();
+    if (!ignoreRef.current) {
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
+      onClose();
+    }
   }, [onConfirm, onClose]);
 
   if (!isOpen) return null;
