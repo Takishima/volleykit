@@ -33,7 +33,11 @@ interface LoadingStateProps {
 
 export function LoadingState({ message = "Loading..." }: LoadingStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 gap-4">
+    <div
+      className="flex flex-col items-center justify-center py-12 gap-4"
+      role="status"
+      aria-live="polite"
+    >
       <LoadingSpinner size="lg" />
       <p className="text-gray-500 dark:text-gray-400 text-sm">{message}</p>
     </div>

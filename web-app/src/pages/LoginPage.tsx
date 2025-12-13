@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, type FormEvent } from "react";
+import { useState, useRef, useEffect, useCallback, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
@@ -21,19 +21,18 @@ export function LoginPage() {
 
   const isLoading = status === "loading";
 
-  function handleDemoLogin() {
+  const handleDemoLogin = useCallback(() => {
     initializeDemoData();
     setDemoAuthenticated();
     navigate("/");
-  }
+  }, [initializeDemoData, setDemoAuthenticated, navigate]);
 
   // Auto-start demo mode in demo-only deployments (PR previews)
   useEffect(() => {
     if (DEMO_MODE_ONLY) {
       handleDemoLogin();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [handleDemoLogin]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();

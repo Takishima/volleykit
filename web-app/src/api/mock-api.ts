@@ -58,6 +58,10 @@ function matchesFilter<T>(item: T, filter: PropertyFilter): boolean {
     const date = new Date(value);
     const from = new Date(filter.dateRange.from);
     const to = new Date(filter.dateRange.to);
+    // Validate all dates are valid before comparing
+    if (isNaN(date.getTime()) || isNaN(from.getTime()) || isNaN(to.getTime())) {
+      return false;
+    }
     return date >= from && date <= to;
   }
 
@@ -67,11 +71,8 @@ function matchesFilter<T>(item: T, filter: PropertyFilter): boolean {
   }
 
   // Values filter (for boolean/string fields)
+  // Converts value to string for comparison (handles booleans, strings, numbers)
   if (filter.values && filter.values.length > 0) {
-    // Handle boolean values
-    if (typeof value === "boolean") {
-      return filter.values.includes(String(value));
-    }
     return filter.values.includes(String(value));
   }
 

@@ -40,7 +40,9 @@ describe("LoadingState", () => {
 
   it("includes spinner", () => {
     render(<LoadingState />);
-    expect(screen.getByRole("status")).toBeInTheDocument();
+    // LoadingState has role="status" with aria-live, and contains LoadingSpinner with role="status"
+    const statusElements = screen.getAllByRole("status");
+    expect(statusElements.length).toBeGreaterThanOrEqual(1);
   });
 });
 
