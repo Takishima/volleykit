@@ -86,9 +86,17 @@ export function AssignmentsPage() {
 
   return (
     <div className="space-y-3">
-      {/* Tabs */}
-      <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
+      {/* Tabs - WAI-ARIA tab pattern */}
+      <div
+        role="tablist"
+        aria-label={t("assignments.title")}
+        className="flex gap-2 border-b border-gray-200 dark:border-gray-700"
+      >
         <button
+          role="tab"
+          aria-selected={activeTab === "upcoming"}
+          aria-controls="upcoming-tabpanel"
+          id="upcoming-tab"
           onClick={() => setActiveTab("upcoming")}
           className={`
             px-4 py-2 text-sm font-medium border-b-2 transition-colors
@@ -107,6 +115,10 @@ export function AssignmentsPage() {
           )}
         </button>
         <button
+          role="tab"
+          aria-selected={activeTab === "validationClosed"}
+          aria-controls="validation-closed-tabpanel"
+          id="validation-closed-tab"
           onClick={() => setActiveTab("validationClosed")}
           className={`
             px-4 py-2 text-sm font-medium border-b-2 transition-colors
@@ -127,7 +139,12 @@ export function AssignmentsPage() {
       </div>
 
       {/* Content */}
-      <div className="space-y-3">
+      <div
+        role="tabpanel"
+        id={activeTab === "upcoming" ? "upcoming-tabpanel" : "validation-closed-tabpanel"}
+        aria-labelledby={activeTab === "upcoming" ? "upcoming-tab" : "validation-closed-tab"}
+        className="space-y-3"
+      >
         {isLoading && <LoadingState message="Loading assignments..." />}
 
         {error && (
@@ -143,7 +160,7 @@ export function AssignmentsPage() {
 
         {!isLoading && !error && data && data.length === 0 && (
           <EmptyState
-            icon={activeTab === "upcoming" ? "📅" : "✓"}
+            icon={activeTab === "upcoming" ? "📅" : "🔒"}
             title={
               activeTab === "upcoming"
                 ? t("assignments.noUpcomingTitle")

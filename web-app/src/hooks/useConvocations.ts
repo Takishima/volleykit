@@ -30,6 +30,11 @@ const DEFAULT_PAGE_SIZE = 100;
 const MAX_FETCH_ALL_PAGES = 10; // Maximum pages to fetch (1000 items)
 const DEFAULT_DATE_RANGE_DAYS = 365;
 
+// Cache duration for validation-closed assignments (15 minutes).
+// Longer than default because validation status changes infrequently
+// and fetching all pages is expensive.
+const VALIDATION_CLOSED_STALE_TIME_MS = 15 * 60 * 1000;
+
 // Fallback timestamp for items with missing dates - uses Unix epoch (1970-01-01)
 // Items with missing dates will sort as oldest when ascending, newest when descending
 const MISSING_DATE_FALLBACK_TIMESTAMP = 0;
@@ -70,6 +75,19 @@ function filterByDateRange<T extends WithGameDate>(
     const date = new Date(gameDate);
     return date >= fromDate && date <= toDate;
   });
+}
+
+/**
+ * Safely parses a date string, returning a fallback if invalid.
+ * Prevents Invalid Date objects from propagating through the system.
+ */
+function parseDateOrFallback(
+  dateString: string | undefined | null,
+  fallback: Date,
+): Date {
+  if (!dateString) return fallback;
+  const date = new Date(dateString);
+  return isNaN(date.getTime()) ? fallback : date;
 }
 
 /**
@@ -312,15 +330,14 @@ export function useValidationClosedAssignments(): UseQueryResult<
     isError: seasonError,
   } = useActiveSeason();
 
-  // Calculate date range for the query
-  // Use season dates if available, otherwise fall back to default range
+  // Calculate date range for the query.
+  // Season dates come from API; fallback to 365-day range if unavailable or invalid.
   const now = new Date();
-  const seasonStart = season?.seasonStartDate
-    ? new Date(season.seasonStartDate)
-    : subDays(now, DEFAULT_DATE_RANGE_DAYS);
-  const seasonEnd = season?.seasonEndDate
-    ? new Date(season.seasonEndDate)
-    : now;
+  const seasonStart = parseDateOrFallback(
+    season?.seasonStartDate,
+    subDays(now, DEFAULT_DATE_RANGE_DAYS),
+  );
+  const seasonEnd = parseDateOrFallback(season?.seasonEndDate, now);
 
   // Query from season start to now (we only want past games)
   const fromDate = startOfDay(seasonStart).toISOString();
@@ -361,12 +378,14 @@ export function useValidationClosedAssignments(): UseQueryResult<
       deadlineHours,
     ],
     queryFn: async ({ signal }) => {
-      // Fetch all pages to ensure we don't miss any games in the season
+      // Fetch all pages because API doesn't support server-side filtering
+      // by validation status - we must filter client-side after fetching.
       const allItems = await fetchAllAssignmentPages(config, signal);
-      // Filter to only include assignments where validation is closed
       return filterByValidationClosed(allItems, deadlineHours);
     },
-    staleTime: 5 * 60 * 1000,
+    // Longer cache time because validation status changes infrequently
+    // and fetching all pages is expensive (multiple API calls).
+    staleTime: VALIDATION_CLOSED_STALE_TIME_MS,
     enabled: isReady,
   });
 

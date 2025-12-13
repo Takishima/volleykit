@@ -92,9 +92,15 @@ export const DEFAULT_VALIDATION_DEADLINE_HOURS = 6;
  * This window is configured per association via `hoursAfterGameStartForRefereeToEditGameList`.
  * Once this window passes, the validation is considered "closed".
  *
+ * Note: Uses strict "greater than" comparison (now > deadline), meaning validation
+ * is open AT the exact deadline moment and closes strictly AFTER. For example,
+ * with a 6-hour deadline: at exactly 6 hours after game start, validation is still
+ * open; at 6 hours + 1 second, it's closed.
+ *
  * @param gameStartTime - ISO datetime string of when the game started
  * @param deadlineHours - Hours after game start when validation closes
- * @returns true if validation period has closed, false if still open or game hasn't started
+ * @returns true if validation period has closed (strictly after deadline),
+ *          false if still open, game hasn't started, or invalid date
  */
 export function isValidationClosed(
   gameStartTime: string | undefined | null,
