@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
 import ReloadPromptPWA from "./ReloadPromptPWA";
 import * as PWAContext from "@/contexts/PWAContext";
 
@@ -73,14 +73,92 @@ describe("ReloadPromptPWA", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("calls updateApp when reload button is clicked", () => {
+  it("calls updateApp when reload button is clicked", async () => {
+    mockUpdateApp.mockResolvedValue(undefined);
     setupMock(false, true);
     render(<ReloadPromptPWA />);
     const reloadButton = screen.getByRole("button", {
       name: /reload application/i,
     });
-    fireEvent.click(reloadButton);
+    await act(async () => {
+      fireEvent.click(reloadButton);
+    });
     expect(mockUpdateApp).toHaveBeenCalled();
+  });
+
+  it("disables reload button and shows loading text while updating", async () => {
+    let resolveUpdate: () => void;
+    mockUpdateApp.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveUpdate = resolve;
+        }),
+    );
+    setupMock(false, true);
+    render(<ReloadPromptPWA />);
+
+    const reloadButton = screen.getByRole("button", {
+      name: /reload application/i,
+    });
+    expect(reloadButton).not.toBeDisabled();
+    expect(reloadButton).toHaveTextContent("Reload");
+
+    // Start the update
+    act(() => {
+      fireEvent.click(reloadButton);
+    });
+
+    // Button should be disabled and show loading text
+    await waitFor(() => {
+      expect(reloadButton).toBeDisabled();
+      expect(reloadButton).toHaveTextContent("Reloading...");
+      expect(reloadButton).toHaveAttribute("aria-busy", "true");
+    });
+
+    // Resolve the update
+    await act(async () => {
+      resolveUpdate!();
+    });
+
+    // Button should return to normal
+    await waitFor(() => {
+      expect(reloadButton).not.toBeDisabled();
+      expect(reloadButton).toHaveTextContent("Reload");
+    });
+  });
+
+  it("prevents multiple clicks while updating", async () => {
+    let resolveUpdate: () => void;
+    mockUpdateApp.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveUpdate = resolve;
+        }),
+    );
+    setupMock(false, true);
+    render(<ReloadPromptPWA />);
+
+    const reloadButton = screen.getByRole("button", {
+      name: /reload application/i,
+    });
+
+    // Start first update
+    act(() => {
+      fireEvent.click(reloadButton);
+    });
+
+    // Try to click again while updating
+    act(() => {
+      fireEvent.click(reloadButton);
+    });
+
+    // Should only be called once
+    expect(mockUpdateApp).toHaveBeenCalledTimes(1);
+
+    // Cleanup
+    await act(async () => {
+      resolveUpdate!();
+    });
   });
 
   it("calls dismissPrompt when close button is clicked", () => {

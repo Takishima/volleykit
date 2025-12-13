@@ -1,11 +1,23 @@
+import { useState } from "react";
 import { usePWA } from "@/contexts/PWAContext";
 
 export default function ReloadPromptPWA() {
   const { offlineReady, needRefresh, updateApp, dismissPrompt } = usePWA();
+  const [isUpdating, setIsUpdating] = useState(false);
 
   if (!offlineReady && !needRefresh) {
     return null;
   }
+
+  const handleReload = async () => {
+    if (isUpdating) return;
+    setIsUpdating(true);
+    try {
+      await updateApp();
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   return (
     <div
@@ -30,11 +42,13 @@ export default function ReloadPromptPWA() {
       <div className="mt-3 flex gap-2">
         {needRefresh && (
           <button
-            onClick={() => updateApp()}
-            className="rounded-md bg-orange-600 px-3 py-2 text-sm font-medium text-white hover:bg-orange-700 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none"
+            onClick={handleReload}
+            disabled={isUpdating}
+            aria-busy={isUpdating}
+            className="rounded-md bg-orange-600 px-3 py-2 text-sm font-medium text-white hover:bg-orange-700 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Reload application to update to the latest version"
           >
-            Reload
+            {isUpdating ? "Reloading..." : "Reload"}
           </button>
         )}
         <button

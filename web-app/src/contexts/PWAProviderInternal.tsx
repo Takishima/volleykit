@@ -40,6 +40,12 @@ export default function PWAProviderInternal({
   const isCheckingRef = useRef(false);
 
   useEffect(() => {
+    // Cancellation flag pattern for async operations in React 18+.
+    // While React 18 safely handles setState on unmounted components (no-op instead of warning),
+    // we still use this pattern to:
+    // 1. Prevent unnecessary state updates after unmount
+    // 2. Avoid setting up intervals on unmounted components
+    // 3. Make the cleanup intent explicit for maintainability
     let cancelled = false;
 
     async function registerSW() {
