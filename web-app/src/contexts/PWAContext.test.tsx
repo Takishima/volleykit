@@ -15,6 +15,7 @@ function TestConsumer() {
     isChecking,
     lastChecked,
     checkError,
+    registrationError,
     checkForUpdate,
     updateApp,
     dismissPrompt,
@@ -27,6 +28,9 @@ function TestConsumer() {
       <span data-testid="isChecking">{String(isChecking)}</span>
       <span data-testid="lastChecked">{lastChecked?.toISOString() ?? "null"}</span>
       <span data-testid="checkError">{checkError?.message ?? "null"}</span>
+      <span data-testid="registrationError">
+        {registrationError?.message ?? "null"}
+      </span>
       <button data-testid="checkForUpdate" onClick={checkForUpdate}>
         Check
       </button>
@@ -157,6 +161,61 @@ describe("PWAContext", () => {
       });
 
       expect(screen.getByTestId("needRefresh")).toHaveTextContent("true");
+    });
+
+    it("sets registrationError when onRegisterError is called", async () => {
+      let onRegisterErrorCallback: ((error: Error) => void) | undefined;
+      const mockRegisterSW = vi.fn((options) => {
+        onRegisterErrorCallback = options?.onRegisterError;
+        return vi.fn();
+      });
+      const { registerSW } = await import("virtual:pwa-register");
+      vi.mocked(registerSW).mockImplementation(mockRegisterSW);
+
+      render(
+        <PWAProvider>
+          <TestConsumer />
+        </PWAProvider>,
+      );
+
+      await waitFor(() => {
+        expect(onRegisterErrorCallback).toBeDefined();
+      });
+
+      expect(screen.getByTestId("registrationError")).toHaveTextContent("null");
+
+      act(() => {
+        onRegisterErrorCallback?.(new Error("Registration failed"));
+      });
+
+      expect(screen.getByTestId("registrationError")).toHaveTextContent(
+        "Registration failed",
+      );
+    });
+
+    it("sets registrationError when registerSW throws", async () => {
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      const mockRegisterSW = vi.fn().mockImplementation(() => {
+        throw new Error("Import failed");
+      });
+      const { registerSW } = await import("virtual:pwa-register");
+      vi.mocked(registerSW).mockImplementation(mockRegisterSW);
+
+      render(
+        <PWAProvider>
+          <TestConsumer />
+        </PWAProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId("registrationError")).toHaveTextContent(
+          "Import failed",
+        );
+      });
+
+      consoleErrorSpy.mockRestore();
     });
 
     it("clears interval on unmount", async () => {

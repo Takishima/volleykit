@@ -7,6 +7,7 @@ export interface PWAContextType {
   isChecking: boolean;
   lastChecked: Date | null;
   checkError: Error | null;
+  registrationError: Error | null;
   checkForUpdate: () => Promise<void>;
   updateApp: () => Promise<void>;
   dismissPrompt: () => void;
@@ -62,6 +63,7 @@ export function usePWA(): PWAContextType {
       isChecking: false,
       lastChecked: null,
       checkError: null,
+      registrationError: null,
       checkForUpdate: async () => {},
       updateApp: async () => {},
       dismissPrompt: () => {},

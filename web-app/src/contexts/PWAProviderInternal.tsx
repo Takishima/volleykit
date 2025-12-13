@@ -26,10 +26,13 @@ export default function PWAProviderInternal({
   const [isChecking, setIsChecking] = useState(false);
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
   const [checkError, setCheckError] = useState<Error | null>(null);
+  const [registrationError, setRegistrationError] = useState<Error | null>(null);
 
   // Refs must be declared before useEffect to avoid race conditions
   const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
-  const intervalRef = useRef<number | undefined>(undefined);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(
+    undefined,
+  );
   const updateSWRef = useRef<((reloadPage?: boolean) => Promise<void>) | null>(
     null,
   );
@@ -51,12 +54,9 @@ export default function PWAProviderInternal({
             registrationRef.current = registration;
 
             // Check for updates periodically
-            intervalRef.current = setInterval(
-              () => {
-                registration.update();
-              },
-              UPDATE_CHECK_INTERVAL_MS,
-            ) as unknown as number;
+            intervalRef.current = setInterval(() => {
+              registration.update();
+            }, UPDATE_CHECK_INTERVAL_MS);
           },
           onOfflineReady() {
             if (!cancelled) {
@@ -70,6 +70,13 @@ export default function PWAProviderInternal({
           },
           onRegisterError(error) {
             console.error("Service worker registration error:", error);
+            if (!cancelled) {
+              const regError =
+                error instanceof Error
+                  ? error
+                  : new Error("Service worker registration failed");
+              setRegistrationError(regError);
+            }
           },
         });
 
@@ -79,6 +86,13 @@ export default function PWAProviderInternal({
         }
       } catch (error) {
         console.error("Failed to register service worker:", error);
+        if (!cancelled) {
+          const regError =
+            error instanceof Error
+              ? error
+              : new Error("Failed to register service worker");
+          setRegistrationError(regError);
+        }
       }
     }
 
@@ -133,6 +147,7 @@ export default function PWAProviderInternal({
     isChecking,
     lastChecked,
     checkError,
+    registrationError,
     checkForUpdate,
     updateApp,
     dismissPrompt,
