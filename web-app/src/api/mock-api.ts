@@ -20,6 +20,10 @@ import type {
 } from "./client";
 import { useDemoStore } from "@/stores/demo";
 
+// Network delay constants for realistic demo behavior
+const MOCK_NETWORK_DELAY_MS = 50;
+const MOCK_MUTATION_DELAY_MS = 100;
+
 /**
  * Get a nested property value from an object using dot notation.
  * @example getNestedValue({ a: { b: 1 } }, "a.b") // returns 1
@@ -87,8 +91,49 @@ function applyFilters<T>(items: T[], filters?: PropertyFilter[]): T[] {
 }
 
 /**
+ * Compare two values for sorting.
+ * Returns negative if a < b, positive if a > b, 0 if equal.
+ */
+function compareValues(
+  valueA: unknown,
+  valueB: unknown,
+  descending: boolean,
+): number {
+  // Handle missing values - sort to end
+  if (valueA === undefined || valueA === null) return 1;
+  if (valueB === undefined || valueB === null) return -1;
+
+  // Handle dates (ISO string format)
+  if (typeof valueA === "string" && typeof valueB === "string") {
+    const dateA = new Date(valueA);
+    const dateB = new Date(valueB);
+
+    if (!isNaN(dateA.getTime()) && !isNaN(dateB.getTime())) {
+      const diff = dateA.getTime() - dateB.getTime();
+      return descending ? -diff : diff;
+    }
+  }
+
+  // Handle numbers
+  if (typeof valueA === "number" && typeof valueB === "number") {
+    const diff = valueA - valueB;
+    return descending ? -diff : diff;
+  }
+
+  // Handle strings
+  const strA = String(valueA);
+  const strB = String(valueB);
+  const comparison = strA.localeCompare(strB);
+  return descending ? -comparison : comparison;
+}
+
+/**
  * Sort items based on property orderings from SearchConfiguration.
  * Implements the same sorting logic as the real API.
+ *
+ * Uses a single comparator that evaluates all orderings together,
+ * with earlier orderings taking priority (only used as tiebreakers
+ * when previous orderings are equal).
  */
 function applySorting<T>(items: T[], orderings?: PropertyOrdering[]): T[] {
   if (!orderings || orderings.length === 0) {
@@ -98,44 +143,22 @@ function applySorting<T>(items: T[], orderings?: PropertyOrdering[]): T[] {
   // Create a copy to avoid mutating the original
   const sorted = [...items];
 
-  // Apply orderings in reverse order so the first ordering has highest priority
-  for (let i = orderings.length - 1; i >= 0; i--) {
-    const ordering = orderings[i];
-    if (!ordering) continue;
-
-    sorted.sort((a, b) => {
+  // Single sort with multi-column comparator
+  sorted.sort((a, b) => {
+    for (const ordering of orderings) {
       const valueA = getNestedValue(a, ordering.propertyName);
       const valueB = getNestedValue(b, ordering.propertyName);
+      const comparison = compareValues(valueA, valueB, ordering.descending);
 
-      // Handle dates
-      if (typeof valueA === "string" && typeof valueB === "string") {
-        const dateA = new Date(valueA);
-        const dateB = new Date(valueB);
-
-        // Check if both are valid dates
-        if (!isNaN(dateA.getTime()) && !isNaN(dateB.getTime())) {
-          const diff = dateA.getTime() - dateB.getTime();
-          return ordering.descending ? -diff : diff;
-        }
+      // If values differ, return this comparison
+      if (comparison !== 0) {
+        return comparison;
       }
-
-      // Handle missing values - sort to end
-      if (valueA === undefined || valueA === null) return 1;
-      if (valueB === undefined || valueB === null) return -1;
-
-      // Handle numbers
-      if (typeof valueA === "number" && typeof valueB === "number") {
-        const diff = valueA - valueB;
-        return ordering.descending ? -diff : diff;
-      }
-
-      // Handle strings
-      const strA = String(valueA);
-      const strB = String(valueB);
-      const comparison = strA.localeCompare(strB);
-      return ordering.descending ? -comparison : comparison;
-    });
-  }
+      // If equal, continue to next ordering (tiebreaker)
+    }
+    // All orderings equal - maintain original order
+    return 0;
+  });
 
   return sorted;
 }
@@ -179,12 +202,13 @@ export const mockApi = {
   async searchAssignments(
     config: SearchConfiguration = {},
   ): Promise<AssignmentsResponse> {
-    // Simulate network delay for realistic behavior
-    await delay(50);
+    await delay(MOCK_NETWORK_DELAY_MS);
 
     const store = useDemoStore.getState();
     const { items, total } = processSearchRequest(store.assignments, config);
 
+    // Type assertion is safe: demo store assignments are typed as Assignment[]
+    // and processSearchRequest preserves the type through generic filtering
     return {
       items: items as Assignment[],
       totalItemsCount: total,
@@ -193,10 +217,11 @@ export const mockApi = {
 
   async getAssignmentDetails(
     convocationId: string,
-    // Properties parameter is accepted for API compatibility but not used in mock
+    // Parameter required for API interface compatibility but unused in mock
+    // since demo data already contains all properties
     _properties: string[], // eslint-disable-line @typescript-eslint/no-unused-vars
   ): Promise<Assignment> {
-    await delay(50);
+    await delay(MOCK_NETWORK_DELAY_MS);
 
     const store = useDemoStore.getState();
     const assignment = store.assignments.find(
@@ -213,11 +238,13 @@ export const mockApi = {
   async searchCompensations(
     config: SearchConfiguration = {},
   ): Promise<CompensationsResponse> {
-    await delay(50);
+    await delay(MOCK_NETWORK_DELAY_MS);
 
     const store = useDemoStore.getState();
     const { items, total } = processSearchRequest(store.compensations, config);
 
+    // Type assertion is safe: demo store compensations are typed as CompensationRecord[]
+    // and processSearchRequest preserves the type through generic filtering
     return {
       items: items as CompensationRecord[],
       totalItemsCount: total,
@@ -227,11 +254,13 @@ export const mockApi = {
   async searchExchanges(
     config: SearchConfiguration = {},
   ): Promise<ExchangesResponse> {
-    await delay(50);
+    await delay(MOCK_NETWORK_DELAY_MS);
 
     const store = useDemoStore.getState();
     const { items, total } = processSearchRequest(store.exchanges, config);
 
+    // Type assertion is safe: demo store exchanges are typed as GameExchange[]
+    // and processSearchRequest preserves the type through generic filtering
     return {
       items: items as GameExchange[],
       totalItemsCount: total,
@@ -239,14 +268,14 @@ export const mockApi = {
   },
 
   async applyForExchange(exchangeId: string): Promise<void> {
-    await delay(100);
+    await delay(MOCK_MUTATION_DELAY_MS);
 
     const store = useDemoStore.getState();
     store.applyForExchange(exchangeId);
   },
 
   async withdrawFromExchange(exchangeId: string): Promise<void> {
-    await delay(100);
+    await delay(MOCK_MUTATION_DELAY_MS);
 
     const store = useDemoStore.getState();
     store.withdrawFromExchange(exchangeId);
