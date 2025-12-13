@@ -37,8 +37,8 @@ export function ValidateGameModal({
     },
   ];
 
+  // Tab state resets automatically when parent changes key prop (remounts component)
   const handleClose = useCallback(() => {
-    setActiveTab("home-roster");
     onClose();
   }, [onClose]);
 
