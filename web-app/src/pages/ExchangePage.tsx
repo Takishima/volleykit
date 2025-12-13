@@ -1,7 +1,5 @@
 import { useState, useCallback } from "react";
 import { useGameExchanges, type ExchangeStatus } from "@/hooks/useConvocations";
-import { useAuthStore } from "@/stores/auth";
-import { useDemoStore } from "@/stores/demo";
 import { useExchangeActions } from "@/hooks/useExchangeActions";
 import { createExchangeActions } from "@/utils/exchange-actions";
 import { ExchangeCard } from "@/components/features/ExchangeCard";
@@ -19,16 +17,9 @@ import { useTranslation } from "@/hooks/useTranslation";
 
 export function ExchangePage() {
   const [statusFilter, setStatusFilter] = useState<ExchangeStatus>("open");
-  const { isDemoMode } = useAuthStore();
   const { t } = useTranslation();
-  const { exchanges: demoExchanges } = useDemoStore();
 
-  const {
-    data: apiData,
-    isLoading: apiLoading,
-    error: apiError,
-    refetch,
-  } = useGameExchanges(statusFilter);
+  const { data, isLoading, error, refetch } = useGameExchanges(statusFilter);
 
   const {
     takeOverModal,
@@ -36,13 +27,6 @@ export function ExchangePage() {
     handleTakeOver,
     handleRemoveFromExchange,
   } = useExchangeActions();
-
-  // Filter demo data by status
-  const demoFiltered = demoExchanges.filter((e) => e.status === statusFilter);
-
-  const data = isDemoMode ? demoFiltered : apiData;
-  const isLoading = isDemoMode ? false : apiLoading;
-  const error = isDemoMode ? null : apiError;
 
   const getSwipeConfig = useCallback(
     (exchange: GameExchange): SwipeConfig => {

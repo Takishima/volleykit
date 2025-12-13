@@ -14,12 +14,80 @@ import {
 } from "@/api/client";
 import { addDays, startOfDay, endOfDay, subDays } from "date-fns";
 import { useAuthStore } from "@/stores/auth";
+import { useDemoStore } from "@/stores/demo";
 
 // Pagination constants
 // Note: The API doesn't support cursor-based pagination, so we use a fixed limit.
 // For users with >100 items, consider implementing "load more" or virtual scrolling.
 const DEFAULT_PAGE_SIZE = 100;
 const DEFAULT_DATE_RANGE_DAYS = 365;
+
+// Fallback timestamp for items with missing dates - uses Unix epoch (1970-01-01)
+// Items with missing dates will sort as oldest when ascending, newest when descending
+const MISSING_DATE_FALLBACK_TIMESTAMP = 0;
+
+// Helper type for items with game date
+type WithGameDate = {
+  refereeGame?: { game?: { startingDateTime?: string } };
+};
+
+// Helper to extract game timestamp for sorting
+function getGameTimestamp(item: WithGameDate): number {
+  return new Date(
+    item.refereeGame?.game?.startingDateTime || MISSING_DATE_FALLBACK_TIMESTAMP,
+  ).getTime();
+}
+
+// Helper to sort items by game date
+function sortByGameDate<T extends WithGameDate>(
+  items: T[],
+  descending: boolean,
+): T[] {
+  return [...items].sort((a, b) => {
+    const dateA = getGameTimestamp(a);
+    const dateB = getGameTimestamp(b);
+    return descending ? dateB - dateA : dateA - dateB;
+  });
+}
+
+// Helper to filter items by date range
+function filterByDateRange<T extends WithGameDate>(
+  items: T[],
+  fromDate: Date,
+  toDate: Date,
+): T[] {
+  return items.filter((item) => {
+    const gameDate = item.refereeGame?.game?.startingDateTime;
+    if (!gameDate) return false;
+    const date = new Date(gameDate);
+    return date >= fromDate && date <= toDate;
+  });
+}
+
+// Helper to create mock query results for demo mode
+// Type assertion is necessary because we're creating a partial mock of UseQueryResult
+// that satisfies the interface without all internal TanStack Query state.
+// Limitations: refetch, dataUpdatedAt, and other internal query methods are inherited
+// from the disabled base query and won't function as expected. Consumers should check
+// isError before accessing data, as data may be undefined in error cases.
+function createDemoQueryResult<T>(
+  baseQuery: UseQueryResult<T, Error>,
+  data: T,
+  options: { isError?: boolean; error?: Error } = {},
+): UseQueryResult<T, Error> {
+  const isError = options.isError ?? false;
+  return {
+    ...baseQuery,
+    data,
+    isLoading: false,
+    isFetching: false,
+    isSuccess: !isError,
+    isError,
+    error: options.error ?? null,
+    status: isError ? "error" : "success",
+    fetchStatus: "idle",
+  } as UseQueryResult<T, Error>;
+}
 
 // Query keys
 export const queryKeys = {
@@ -83,6 +151,7 @@ export function useAssignments(
   customRange?: { from: Date; to: Date },
 ): UseQueryResult<Assignment[], Error> {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const demoAssignments = useDemoStore((state) => state.assignments);
   const dateRange = getDateRangeForPeriod(period, customRange);
 
   const config: SearchConfiguration = {
@@ -103,13 +172,25 @@ export function useAssignments(
     ],
   };
 
-  return useQuery({
+  // Create base query (disabled in demo mode but needed for result structure)
+  // The query object provides the UseQueryResult shape that createDemoQueryResult extends
+  const query = useQuery({
     queryKey: queryKeys.assignments(config),
     queryFn: () => api.searchAssignments(config),
     select: (data) => data.items || [],
     staleTime: 5 * 60 * 1000,
     enabled: !isDemoMode,
   });
+
+  if (isDemoMode) {
+    const fromDate = new Date(dateRange.from);
+    const toDate = new Date(dateRange.to);
+    const filtered = filterByDateRange(demoAssignments, fromDate, toDate);
+    const sorted = sortByGameDate(filtered, period === "past");
+    return createDemoQueryResult(query, sorted);
+  }
+
+  return query;
 }
 
 export function useUpcomingAssignments(): UseQueryResult<Assignment[], Error> {
@@ -124,8 +205,9 @@ export function useAssignmentDetails(
   assignmentId: string | null,
 ): UseQueryResult<Assignment, Error> {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const demoAssignments = useDemoStore((state) => state.assignments);
 
-  return useQuery({
+  const query = useQuery({
     queryKey: queryKeys.assignmentDetails(assignmentId || ""),
     queryFn: () =>
       api.getAssignmentDetails(assignmentId!, [
@@ -137,6 +219,23 @@ export function useAssignmentDetails(
     enabled: !!assignmentId && !isDemoMode,
     staleTime: 10 * 60 * 1000,
   });
+
+  if (isDemoMode && assignmentId) {
+    const demoAssignment = demoAssignments.find(
+      (a) => a.__identity === assignmentId,
+    );
+
+    if (!demoAssignment) {
+      return createDemoQueryResult(query, undefined as unknown as Assignment, {
+        isError: true,
+        error: new Error("Assignment not found"),
+      });
+    }
+
+    return createDemoQueryResult(query, demoAssignment);
+  }
+
+  return query;
 }
 
 // Compensations hooks
@@ -144,6 +243,7 @@ export function useCompensations(
   paidFilter?: boolean,
 ): UseQueryResult<CompensationRecord[], Error> {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const demoCompensations = useDemoStore((state) => state.compensations);
 
   const config: SearchConfiguration = {
     offset: 0,
@@ -166,13 +266,26 @@ export function useCompensations(
     ],
   };
 
-  return useQuery({
+  const query = useQuery({
     queryKey: queryKeys.compensations(config),
     queryFn: () => api.searchCompensations(config),
     select: (data) => data.items || [],
     staleTime: 5 * 60 * 1000,
     enabled: !isDemoMode,
   });
+
+  if (isDemoMode) {
+    const filtered =
+      paidFilter === undefined
+        ? demoCompensations
+        : demoCompensations.filter(
+            (c) => c.convocationCompensation?.paymentDone === paidFilter,
+          );
+    const sorted = sortByGameDate(filtered, true);
+    return createDemoQueryResult(query, sorted);
+  }
+
+  return query;
 }
 
 export function usePaidCompensations(): UseQueryResult<
@@ -220,6 +333,7 @@ export function useGameExchanges(
   status: ExchangeStatus = "all",
 ): UseQueryResult<GameExchange[], Error> {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const demoExchanges = useDemoStore((state) => state.exchanges);
 
   const config: SearchConfiguration = {
     offset: 0,
@@ -237,13 +351,24 @@ export function useGameExchanges(
     ],
   };
 
-  return useQuery({
+  const query = useQuery({
     queryKey: queryKeys.exchanges(config),
     queryFn: () => api.searchExchanges(config),
     select: (data) => data.items || [],
     staleTime: 2 * 60 * 1000,
     enabled: !isDemoMode,
   });
+
+  if (isDemoMode) {
+    const filtered =
+      status === "all"
+        ? demoExchanges
+        : demoExchanges.filter((e) => e.status === status);
+    const sorted = sortByGameDate(filtered, false);
+    return createDemoQueryResult(query, sorted);
+  }
+
+  return query;
 }
 
 export function useApplyForExchange(): UseMutationResult<void, Error, string> {

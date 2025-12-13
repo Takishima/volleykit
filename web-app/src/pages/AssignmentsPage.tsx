@@ -3,8 +3,6 @@ import {
   useUpcomingAssignments,
   usePastAssignments,
 } from "@/hooks/useConvocations";
-import { useAuthStore } from "@/stores/auth";
-import { useDemoStore } from "@/stores/demo";
 import { AssignmentCard } from "@/components/features/AssignmentCard";
 import { SwipeableCard } from "@/components/ui/SwipeableCard";
 import {
@@ -23,9 +21,7 @@ type TabType = "upcoming" | "past";
 
 export function AssignmentsPage() {
   const [activeTab, setActiveTab] = useState<TabType>("upcoming");
-  const { isDemoMode } = useAuthStore();
   const { t } = useTranslation();
-  const { assignments: demoAssignments } = useDemoStore();
 
   const {
     editCompensationModal,
@@ -48,34 +44,9 @@ export function AssignmentsPage() {
     refetch: refetchPast,
   } = usePastAssignments();
 
-  // Use demo data if in demo mode
-  const now = new Date();
-  const demoUpcoming = demoAssignments.filter((a) => {
-    const gameDate = a.refereeGame?.game?.startingDateTime;
-    return gameDate && new Date(gameDate) >= now;
-  });
-  const demoPast = demoAssignments.filter((a) => {
-    const gameDate = a.refereeGame?.game?.startingDateTime;
-    return gameDate && new Date(gameDate) < now;
-  });
-
-  const data = isDemoMode
-    ? activeTab === "upcoming"
-      ? demoUpcoming
-      : demoPast
-    : activeTab === "upcoming"
-      ? upcomingData
-      : pastData;
-  const isLoading = isDemoMode
-    ? false
-    : activeTab === "upcoming"
-      ? upcomingLoading
-      : pastLoading;
-  const error = isDemoMode
-    ? null
-    : activeTab === "upcoming"
-      ? upcomingError
-      : pastError;
+  const data = activeTab === "upcoming" ? upcomingData : pastData;
+  const isLoading = activeTab === "upcoming" ? upcomingLoading : pastLoading;
+  const error = activeTab === "upcoming" ? upcomingError : pastError;
   const refetch = activeTab === "upcoming" ? refetchUpcoming : refetchPast;
 
   const getSwipeConfig = useCallback(
