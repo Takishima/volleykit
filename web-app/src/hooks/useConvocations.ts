@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-query";
 import {
   api,
+  getApiClient,
   type SearchConfiguration,
   type CompensationRecord,
   type Assignment,
@@ -285,9 +286,9 @@ export function getDateRangeForPeriod(
 export function useAssignments(
   period: DatePeriod = "upcoming",
   customRange?: { from: Date; to: Date },
-): UseQueryResult<Assignment[], Error> {
+) {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
-  const demoAssignments = useDemoStore((state) => state.assignments);
+  const apiClient = getApiClient(isDemoMode);
   const dateRange = getDateRangeForPeriod(period, customRange);
 
   const config: SearchConfiguration = {
@@ -308,32 +309,19 @@ export function useAssignments(
     ],
   };
 
-  // Create base query (disabled in demo mode but needed for result structure)
-  // The query object provides the UseQueryResult shape that createDemoQueryResult extends
-  const query = useQuery({
+  return useQuery({
     queryKey: queryKeys.assignments(config),
-    queryFn: () => api.searchAssignments(config),
+    queryFn: () => apiClient.searchAssignments(config),
     select: (data) => data.items || [],
     staleTime: 5 * 60 * 1000,
-    enabled: !isDemoMode,
   });
-
-  if (isDemoMode) {
-    const fromDate = new Date(dateRange.from);
-    const toDate = new Date(dateRange.to);
-    const filtered = filterByDateRange(demoAssignments, fromDate, toDate);
-    const sorted = sortByGameDate(filtered, period === "past");
-    return createDemoQueryResult(query, sorted);
-  }
-
-  return query;
 }
 
-export function useUpcomingAssignments(): UseQueryResult<Assignment[], Error> {
+export function useUpcomingAssignments() {
   return useAssignments("upcoming");
 }
 
-export function usePastAssignments(): UseQueryResult<Assignment[], Error> {
+export function usePastAssignments() {
   return useAssignments("past");
 }
 
@@ -480,49 +468,28 @@ export function useValidationClosedAssignments(): UseQueryResult<
   return query;
 }
 
-export function useAssignmentDetails(
-  assignmentId: string | null,
-): UseQueryResult<Assignment, Error> {
+export function useAssignmentDetails(assignmentId: string | null) {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
-  const demoAssignments = useDemoStore((state) => state.assignments);
+  const apiClient = getApiClient(isDemoMode);
 
-  const query = useQuery({
+  return useQuery({
     queryKey: queryKeys.assignmentDetails(assignmentId || ""),
     queryFn: () =>
-      api.getAssignmentDetails(assignmentId!, [
+      apiClient.getAssignmentDetails(assignmentId!, [
         "refereeGame.game.encounter.teamHome",
         "refereeGame.game.encounter.teamAway",
         "refereeGame.game.hall",
         "refereeGame.game.hall.postalAddress",
       ]),
-    enabled: !!assignmentId && !isDemoMode,
+    enabled: !!assignmentId,
     staleTime: 10 * 60 * 1000,
   });
-
-  if (isDemoMode && assignmentId) {
-    const demoAssignment = demoAssignments.find(
-      (a) => a.__identity === assignmentId,
-    );
-
-    if (!demoAssignment) {
-      return createDemoQueryResult(query, undefined as unknown as Assignment, {
-        isError: true,
-        error: new Error("Assignment not found"),
-      });
-    }
-
-    return createDemoQueryResult(query, demoAssignment);
-  }
-
-  return query;
 }
 
 // Compensations hooks
-export function useCompensations(
-  paidFilter?: boolean,
-): UseQueryResult<CompensationRecord[], Error> {
+export function useCompensations(paidFilter?: boolean) {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
-  const demoCompensations = useDemoStore((state) => state.compensations);
+  const apiClient = getApiClient(isDemoMode);
 
   const config: SearchConfiguration = {
     offset: 0,
@@ -545,39 +512,19 @@ export function useCompensations(
     ],
   };
 
-  const query = useQuery({
+  return useQuery({
     queryKey: queryKeys.compensations(config),
-    queryFn: () => api.searchCompensations(config),
+    queryFn: () => apiClient.searchCompensations(config),
     select: (data) => data.items || [],
     staleTime: 5 * 60 * 1000,
-    enabled: !isDemoMode,
   });
-
-  if (isDemoMode) {
-    const filtered =
-      paidFilter === undefined
-        ? demoCompensations
-        : demoCompensations.filter(
-            (c) => c.convocationCompensation?.paymentDone === paidFilter,
-          );
-    const sorted = sortByGameDate(filtered, true);
-    return createDemoQueryResult(query, sorted);
-  }
-
-  return query;
 }
 
-export function usePaidCompensations(): UseQueryResult<
-  CompensationRecord[],
-  Error
-> {
+export function usePaidCompensations() {
   return useCompensations(true);
 }
 
-export function useUnpaidCompensations(): UseQueryResult<
-  CompensationRecord[],
-  Error
-> {
+export function useUnpaidCompensations() {
   return useCompensations(false);
 }
 
@@ -608,11 +555,9 @@ export function useCompensationTotals(): { paid: number; unpaid: number } {
 // Game exchanges hooks
 export type ExchangeStatus = "open" | "applied" | "closed" | "all";
 
-export function useGameExchanges(
-  status: ExchangeStatus = "all",
-): UseQueryResult<GameExchange[], Error> {
+export function useGameExchanges(status: ExchangeStatus = "all") {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
-  const demoExchanges = useDemoStore((state) => state.exchanges);
+  const apiClient = getApiClient(isDemoMode);
 
   const config: SearchConfiguration = {
     offset: 0,
@@ -630,41 +575,23 @@ export function useGameExchanges(
     ],
   };
 
-  const query = useQuery({
+  return useQuery({
     queryKey: queryKeys.exchanges(config),
-    queryFn: () => api.searchExchanges(config),
+    queryFn: () => apiClient.searchExchanges(config),
     select: (data) => data.items || [],
     staleTime: 2 * 60 * 1000,
-    enabled: !isDemoMode,
   });
-
-  if (isDemoMode) {
-    const filtered =
-      status === "all"
-        ? demoExchanges
-        : demoExchanges.filter((e) => e.status === status);
-    const sorted = sortByGameDate(filtered, false);
-    return createDemoQueryResult(query, sorted);
-  }
-
-  return query;
 }
 
 export function useApplyForExchange(): UseMutationResult<void, Error, string> {
   const queryClient = useQueryClient();
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const apiClient = getApiClient(isDemoMode);
 
   return useMutation({
-    mutationFn: (exchangeId: string) => {
-      if (isDemoMode) {
-        return Promise.resolve();
-      }
-      return api.applyForExchange(exchangeId);
-    },
+    mutationFn: (exchangeId: string) => apiClient.applyForExchange(exchangeId),
     onSuccess: () => {
-      if (!isDemoMode) {
-        queryClient.invalidateQueries({ queryKey: ["exchanges"] });
-      }
+      queryClient.invalidateQueries({ queryKey: ["exchanges"] });
     },
   });
 }
@@ -676,18 +603,13 @@ export function useWithdrawFromExchange(): UseMutationResult<
 > {
   const queryClient = useQueryClient();
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const apiClient = getApiClient(isDemoMode);
 
   return useMutation({
-    mutationFn: (exchangeId: string) => {
-      if (isDemoMode) {
-        return Promise.resolve();
-      }
-      return api.withdrawFromExchange(exchangeId);
-    },
+    mutationFn: (exchangeId: string) =>
+      apiClient.withdrawFromExchange(exchangeId),
     onSuccess: () => {
-      if (!isDemoMode) {
-        queryClient.invalidateQueries({ queryKey: ["exchanges"] });
-      }
+      queryClient.invalidateQueries({ queryKey: ["exchanges"] });
     },
   });
 }

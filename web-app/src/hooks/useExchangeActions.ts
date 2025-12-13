@@ -7,7 +7,6 @@ import {
 import { logger } from "@/utils/logger";
 import { MODAL_CLEANUP_DELAY } from "@/utils/assignment-helpers";
 import { useAuthStore } from "@/stores/auth";
-import { useDemoStore } from "@/stores/demo";
 import { useSettingsStore } from "@/stores/settings";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -33,10 +32,6 @@ export function useExchangeActions(): UseExchangeActionsResult {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
   const isSafeModeEnabled = useSettingsStore(
     (state) => state.isSafeModeEnabled,
-  );
-  const demoApplyForExchange = useDemoStore((state) => state.applyForExchange);
-  const demoWithdrawFromExchange = useDemoStore(
-    (state) => state.withdrawFromExchange,
   );
 
   const [takeOverOpen, setTakeOverOpen] = useState(false);
@@ -104,22 +99,12 @@ export function useExchangeActions(): UseExchangeActionsResult {
 
   const handleTakeOver = useCallback(
     async (exchange: GameExchange) => {
-      // Safe mode only applies to real API calls; demo mode is local-only and poses no risk
+      // Safe mode blocks dangerous operations; demo mode bypasses since it's local-only
       if (!isDemoMode && isSafeModeEnabled) {
         logger.debug(
           "[useExchangeActions] Safe mode: taking exchange blocked",
         );
         alert(t("settings.safeModeBlocked"));
-        return;
-      }
-
-      if (isDemoMode) {
-        logger.debug(
-          "[useExchangeActions] Demo mode: applying for exchange locally:",
-          exchange.__identity,
-        );
-        demoApplyForExchange(exchange.__identity);
-        closeTakeOver();
         return;
       }
 
@@ -136,7 +121,9 @@ export function useExchangeActions(): UseExchangeActionsResult {
         );
 
         // TODO(#110): Replace alert with toast notification when notification system is implemented
-        alert("Successfully applied for exchange");
+        if (!isDemoMode) {
+          alert("Successfully applied for exchange");
+        }
       } catch (error) {
         logger.error(
           "[useExchangeActions] Failed to apply for exchange:",
@@ -149,34 +136,17 @@ export function useExchangeActions(): UseExchangeActionsResult {
         isTakingOverRef.current = false;
       }
     },
-    [
-      isDemoMode,
-      isSafeModeEnabled,
-      demoApplyForExchange,
-      applyMutation,
-      closeTakeOver,
-      t,
-    ],
+    [isDemoMode, isSafeModeEnabled, applyMutation, closeTakeOver, t],
   );
 
   const handleRemoveFromExchange = useCallback(
     async (exchange: GameExchange) => {
-      // Safe mode only applies to real API calls; demo mode is local-only and poses no risk
+      // Safe mode blocks dangerous operations; demo mode bypasses since it's local-only
       if (!isDemoMode && isSafeModeEnabled) {
         logger.debug(
           "[useExchangeActions] Safe mode: withdrawing from exchange blocked",
         );
         alert(t("settings.safeModeBlocked"));
-        return;
-      }
-
-      if (isDemoMode) {
-        logger.debug(
-          "[useExchangeActions] Demo mode: withdrawing from exchange locally:",
-          exchange.__identity,
-        );
-        demoWithdrawFromExchange(exchange.__identity);
-        closeRemoveFromExchange();
         return;
       }
 
@@ -193,7 +163,9 @@ export function useExchangeActions(): UseExchangeActionsResult {
         );
 
         // TODO(#110): Replace alert with toast notification when notification system is implemented
-        alert("Successfully removed from exchange");
+        if (!isDemoMode) {
+          alert("Successfully removed from exchange");
+        }
       } catch (error) {
         logger.error(
           "[useExchangeActions] Failed to withdraw from exchange:",
@@ -206,14 +178,7 @@ export function useExchangeActions(): UseExchangeActionsResult {
         isRemovingRef.current = false;
       }
     },
-    [
-      isDemoMode,
-      isSafeModeEnabled,
-      demoWithdrawFromExchange,
-      withdrawMutation,
-      closeRemoveFromExchange,
-      t,
-    ],
+    [isDemoMode, isSafeModeEnabled, withdrawMutation, closeRemoveFromExchange, t],
   );
 
   return {
