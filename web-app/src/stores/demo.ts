@@ -29,6 +29,13 @@ interface DemoState {
 
 type Weekday = "Sun" | "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat";
 
+const TRAVEL_EXPENSE_RATE_PER_KM = 0.7;
+
+function calculateTravelExpenses(distanceInMetres: number): number {
+  const distanceInKm = distanceInMetres / 1000;
+  return Math.round(distanceInKm * TRAVEL_EXPENSE_RATE_PER_KM * 100) / 100;
+}
+
 function getWeekday(date: Date): Weekday {
   const days = [
     "Sun",
@@ -738,20 +745,25 @@ export const useDemoStore = create<DemoState>()((set) => ({
     data: { distanceInMetres?: number },
   ) =>
     set((state) => ({
-      compensations: state.compensations.map((comp) =>
-        comp.__identity === compensationId
-          ? {
-              ...comp,
-              convocationCompensation: comp.convocationCompensation
-                ? {
-                    ...comp.convocationCompensation,
-                    distanceInMetres:
-                      data.distanceInMetres ??
-                      comp.convocationCompensation.distanceInMetres,
-                  }
-                : comp.convocationCompensation,
-            }
-          : comp,
-      ),
+      compensations: state.compensations.map((comp) => {
+        if (comp.__identity !== compensationId) return comp;
+        if (!comp.convocationCompensation) return comp;
+
+        const newDistance =
+          data.distanceInMetres ??
+          comp.convocationCompensation.distanceInMetres;
+
+        return {
+          ...comp,
+          convocationCompensation: {
+            ...comp.convocationCompensation,
+            distanceInMetres: newDistance,
+            travelExpenses:
+              newDistance !== undefined
+                ? calculateTravelExpenses(newDistance)
+                : comp.convocationCompensation.travelExpenses,
+          },
+        };
+      }),
     })),
 }));
