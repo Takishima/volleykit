@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { useAuthStore } from "@/stores/auth";
 import { useSettingsStore } from "@/stores/settings";
 import { useTranslation } from "@/hooks/useTranslation";
+import { usePWA } from "@/contexts/PWAContext";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { getOccupationLabelKey } from "@/utils/occupation-labels";
@@ -10,8 +11,39 @@ import { SafeModeWarningModal } from "@/components/features/SafeModeWarningModal
 export function SettingsPage() {
   const { user, logout, isDemoMode } = useAuthStore();
   const { isSafeModeEnabled, setSafeMode } = useSettingsStore();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const {
+    needRefresh,
+    isChecking,
+    lastChecked,
+    checkError,
+    checkForUpdate,
+    updateApp,
+  } = usePWA();
   const [showSafeModeWarning, setShowSafeModeWarning] = useState(false);
+
+  const formatLastChecked = useCallback(
+    (date: Date) => {
+      const now = new Date();
+      const isToday = date.toDateString() === now.toDateString();
+
+      if (isToday) {
+        return date.toLocaleTimeString(locale, {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+
+      // Include date for non-today timestamps to avoid confusion
+      return date.toLocaleString(locale, {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    },
+    [locale],
+  );
 
   const handleToggleSafeMode = useCallback(() => {
     if (isSafeModeEnabled) {
@@ -176,6 +208,63 @@ export function SettingsPage() {
           <p>{t("settings.privacyNoAnalytics")}</p>
         </CardContent>
       </Card>
+
+      {/* Updates - only show when PWA is enabled */}
+      {__PWA_ENABLED__ && (
+        <Card>
+          <CardHeader>
+            <h2 className="font-semibold text-gray-900 dark:text-white">
+              {t("settings.updates")}
+            </h2>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div
+                  className="text-sm font-medium text-gray-900 dark:text-white"
+                  aria-live="polite"
+                >
+                  {needRefresh
+                    ? t("settings.updateAvailable")
+                    : t("settings.upToDate")}
+                </div>
+                {lastChecked && (
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {t("settings.lastChecked")}: {formatLastChecked(lastChecked)}
+                  </div>
+                )}
+                {checkError && (
+                  <div
+                    className="text-xs text-red-600 dark:text-red-400 mt-1"
+                    role="alert"
+                  >
+                    {t("settings.updateCheckFailed")}
+                  </div>
+                )}
+              </div>
+              {needRefresh ? (
+                <button
+                  onClick={updateApp}
+                  className="rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none"
+                  aria-label={t("settings.updateNow")}
+                >
+                  {t("settings.updateNow")}
+                </button>
+              ) : (
+                <button
+                  onClick={checkForUpdate}
+                  disabled={isChecking}
+                  aria-busy={isChecking}
+                  className="rounded-md bg-gray-100 dark:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label={t("settings.checkForUpdates")}
+                >
+                  {isChecking ? t("settings.checking") : t("settings.checkForUpdates")}
+                </button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* App info */}
       <Card>

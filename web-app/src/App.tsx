@@ -13,6 +13,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { LoadingState } from "@/components/ui/LoadingSpinner";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ReloadPrompt } from "@/components/ui/ReloadPrompt";
+import { PWAProvider } from "@/contexts/PWAContext";
 import { LoginPage } from "@/pages/LoginPage";
 import { AssignmentsPage } from "@/pages/AssignmentsPage";
 import { CompensationsPage } from "@/pages/CompensationsPage";
@@ -283,41 +284,43 @@ function QueryErrorHandler({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter basename={BASE_PATH}>
-          <QueryErrorHandler>
-            <Routes>
-              {/* Public routes */}
-              <Route
-                path="/login"
-                element={
-                  <PublicRoute>
-                    <LoginPage />
-                  </PublicRoute>
-                }
-              />
+      <PWAProvider>
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter basename={BASE_PATH}>
+            <QueryErrorHandler>
+              <Routes>
+                {/* Public routes */}
+                <Route
+                  path="/login"
+                  element={
+                    <PublicRoute>
+                      <LoginPage />
+                    </PublicRoute>
+                  }
+                />
 
-              {/* Protected routes */}
-              <Route
-                element={
-                  <ProtectedRoute>
-                    <AppShell />
-                  </ProtectedRoute>
-                }
-              >
-                <Route path="/" element={<AssignmentsPage />} />
-                <Route path="/compensations" element={<CompensationsPage />} />
-                <Route path="/exchange" element={<ExchangePage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-              </Route>
+                {/* Protected routes */}
+                <Route
+                  element={
+                    <ProtectedRoute>
+                      <AppShell />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route path="/" element={<AssignmentsPage />} />
+                  <Route path="/compensations" element={<CompensationsPage />} />
+                  <Route path="/exchange" element={<ExchangePage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                </Route>
 
-              {/* Fallback */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </QueryErrorHandler>
-        </BrowserRouter>
-        <ReloadPrompt />
-      </QueryClientProvider>
+                {/* Fallback */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </QueryErrorHandler>
+          </BrowserRouter>
+          <ReloadPrompt />
+        </QueryClientProvider>
+      </PWAProvider>
     </ErrorBoundary>
   );
 }
