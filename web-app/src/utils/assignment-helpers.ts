@@ -51,7 +51,9 @@ export function getTeamNamesFromCompensation(
  * - NLA: Nationalliga A (top tier, men's and women's)
  * - NLB: Nationalliga B (second tier, men's and women's)
  * - 1L: 1. Liga (third tier, national)
- * - 2L, 3L, 4L: Lower leagues (regional)
+ * - 2L-5L: Lower leagues (regional, depth varies by region)
+ * - Junior leagues: U14, U16, U18, U20, U23, SAR
+ *   (in French: M14, M16, M18, M20, M23)
  *
  * Game reports are only available for NLA and NLB games
  * as they require official documentation for Swiss Volley.
