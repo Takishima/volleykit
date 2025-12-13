@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { useTabNavigation } from "@/hooks/useTabNavigation";
 
 export interface Tab {
@@ -23,10 +22,8 @@ export function Tabs({
   ariaLabel,
   endContent,
 }: TabsProps) {
-  const tabIds = useMemo(() => tabs.map((tab) => tab.id), [tabs]);
-
   const { getTabProps } = useTabNavigation({
-    tabs: tabIds,
+    tabs: tabs.map((tab) => tab.id),
     activeTab,
     onTabChange,
   });

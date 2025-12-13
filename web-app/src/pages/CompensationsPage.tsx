@@ -67,9 +67,9 @@ export function CompensationsPage() {
   const refetch = refetchMap[filter];
 
   const tabs = [
-    { id: "all", label: t("compensations.all") },
-    { id: "unpaid", label: t("compensations.pending") },
-    { id: "paid", label: t("compensations.paid") },
+    { id: "all" as const, label: t("compensations.all") },
+    { id: "unpaid" as const, label: t("compensations.pending") },
+    { id: "paid" as const, label: t("compensations.paid") },
   ];
 
   const handleTabChange = useCallback((tabId: string) => {
@@ -176,14 +176,8 @@ export function CompensationsPage() {
         ariaLabel={t("compensations.title")}
       />
 
-      {/* Content - using TabPanel for proper ARIA association */}
-      <TabPanel tabId="all" activeTab={filter}>
-        {renderContent()}
-      </TabPanel>
-      <TabPanel tabId="unpaid" activeTab={filter}>
-        {renderContent()}
-      </TabPanel>
-      <TabPanel tabId="paid" activeTab={filter}>
+      {/* Content - single TabPanel since all tabs show same component with different data */}
+      <TabPanel tabId={filter} activeTab={filter}>
         {renderContent()}
       </TabPanel>
 

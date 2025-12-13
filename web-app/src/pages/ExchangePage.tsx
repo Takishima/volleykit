@@ -188,11 +188,8 @@ export function ExchangePage() {
         endContent={levelFilterContent}
       />
 
-      {/* Content - using TabPanel for proper ARIA association */}
-      <TabPanel tabId="open" activeTab={statusFilter}>
-        {renderContent()}
-      </TabPanel>
-      <TabPanel tabId="applied" activeTab={statusFilter}>
+      {/* Content - single TabPanel since all tabs show same component with different data */}
+      <TabPanel tabId={statusFilter} activeTab={statusFilter}>
         {renderContent()}
       </TabPanel>
 
