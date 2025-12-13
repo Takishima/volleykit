@@ -43,6 +43,9 @@ export function SafeModeWarningModal({
 
   if (!isOpen) return null;
 
+  // Backdrop pattern: aria-hidden="true" hides the backdrop from screen readers since it's
+  // purely decorative. Click-to-close is a convenience feature; keyboard users close via Escape.
+  // See CLAUDE.md Accessibility section for the canonical modal pattern.
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
