@@ -96,8 +96,33 @@ describe("SwipeableCard", () => {
       fireEvent.keyDown(wrapper, { key: "Enter" });
       expect(screen.getByRole("dialog")).toBeInTheDocument();
 
-      // Hide actions
-      fireEvent.keyDown(wrapper, { key: "Escape" });
+      // Hide actions using document-level keydown (not element-specific)
+      fireEvent.keyDown(document, { key: "Escape" });
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
+    it("hides action buttons on Escape key regardless of focus location", () => {
+      const onSwipeLeft = vi.fn();
+      const { container } = render(
+        <SwipeableCard onSwipeLeft={onSwipeLeft} leftActionLabel="Decline">
+          <div>Content</div>
+        </SwipeableCard>,
+      );
+
+      const wrapper = container.firstChild as HTMLElement;
+
+      // Show actions
+      fireEvent.keyDown(wrapper, { key: "Enter" });
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+      // Get the action button (which receives focus)
+      const actionButton = screen.getByText("Decline");
+      expect(actionButton).toHaveFocus();
+
+      // Press Escape while focus is on the button (document-level listener)
+      fireEvent.keyDown(document, { key: "Escape" });
+
+      // Dialog should be dismissed
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
 
