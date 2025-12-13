@@ -62,6 +62,10 @@ interface Translations {
     past: string;
     validationClosed: string;
     noAssignments: string;
+    noUpcomingTitle: string;
+    noUpcomingDescription: string;
+    noClosedTitle: string;
+    noClosedDescription: string;
     confirmed: string;
     pending: string;
     cancelled: string;
@@ -205,6 +209,10 @@ const en: Translations = {
     past: "Past",
     validationClosed: "Validation Closed",
     noAssignments: "No assignments found",
+    noUpcomingTitle: "No upcoming assignments",
+    noUpcomingDescription: "You have no upcoming referee assignments scheduled.",
+    noClosedTitle: "No closed assignments",
+    noClosedDescription: "No assignments with closed validation in this season.",
     confirmed: "Confirmed",
     pending: "Pending",
     cancelled: "Cancelled",
@@ -360,6 +368,10 @@ const de: Translations = {
     past: "Vergangen",
     validationClosed: "Validierung geschlossen",
     noAssignments: "Keine Einsätze gefunden",
+    noUpcomingTitle: "Keine bevorstehenden Einsätze",
+    noUpcomingDescription: "Sie haben keine bevorstehenden Schiedsrichtereinsätze geplant.",
+    noClosedTitle: "Keine abgeschlossenen Einsätze",
+    noClosedDescription: "Keine Einsätze mit abgeschlossener Validierung in dieser Saison.",
     confirmed: "Bestätigt",
     pending: "Ausstehend",
     cancelled: "Abgesagt",
@@ -516,6 +528,10 @@ const fr: Translations = {
     past: "Passées",
     validationClosed: "Validation fermée",
     noAssignments: "Aucune désignation trouvée",
+    noUpcomingTitle: "Aucune désignation à venir",
+    noUpcomingDescription: "Vous n'avez aucune désignation d'arbitre prévue.",
+    noClosedTitle: "Aucune désignation clôturée",
+    noClosedDescription: "Aucune désignation avec validation fermée cette saison.",
     confirmed: "Confirmé",
     pending: "En attente",
     cancelled: "Annulé",
@@ -672,6 +688,10 @@ const it: Translations = {
     past: "Passate",
     validationClosed: "Validazione chiusa",
     noAssignments: "Nessuna designazione trovata",
+    noUpcomingTitle: "Nessuna designazione in programma",
+    noUpcomingDescription: "Non hai designazioni arbitrali in programma.",
+    noClosedTitle: "Nessuna designazione chiusa",
+    noClosedDescription: "Nessuna designazione con validazione chiusa in questa stagione.",
     confirmed: "Confermato",
     pending: "In attesa",
     cancelled: "Annullato",

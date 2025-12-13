@@ -225,6 +225,10 @@ export function useValidationClosedAssignments(): UseQueryResult<
   const demoAssignments = useDemoStore((state) => state.assignments);
 
   // Fetch settings and season for filtering
+  // Note: In demo mode, these queries are disabled (enabled: !isDemoMode),
+  // so settings and season will be undefined, causing fallback to defaults:
+  // - deadlineHours falls back to DEFAULT_VALIDATION_DEADLINE_HOURS (6 hours)
+  // - seasonStart falls back to 365 days ago
   const { data: settings } = useAssociationSettings();
   const { data: season } = useActiveSeason();
 

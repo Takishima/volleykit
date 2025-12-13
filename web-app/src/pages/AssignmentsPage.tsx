@@ -146,13 +146,13 @@ export function AssignmentsPage() {
             icon={activeTab === "upcoming" ? "📅" : "✓"}
             title={
               activeTab === "upcoming"
-                ? "No upcoming assignments"
-                : "No closed assignments"
+                ? t("assignments.noUpcomingTitle")
+                : t("assignments.noClosedTitle")
             }
             description={
               activeTab === "upcoming"
-                ? "You have no upcoming referee assignments scheduled."
-                : "No assignments with closed validation in this season."
+                ? t("assignments.noUpcomingDescription")
+                : t("assignments.noClosedDescription")
             }
           />
         )}
