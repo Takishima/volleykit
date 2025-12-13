@@ -377,6 +377,9 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: async () => {
+        // Import here to avoid circular dependency at module load time
+        const { useDemoStore } = await import("./demo");
+
         try {
           // Call server logout endpoint to invalidate session
           // The server responds with 303 redirect to /login
@@ -387,6 +390,11 @@ export const useAuthStore = create<AuthState>()(
         } catch (error) {
           // Log but don't block logout - we still want to clear local state
           console.error("Logout request failed:", error);
+        }
+
+        // Clear demo data if exiting demo mode
+        if (get().isDemoMode) {
+          useDemoStore.getState().clearDemoData();
         }
 
         // Clear local state regardless of server response
