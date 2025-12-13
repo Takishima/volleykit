@@ -99,6 +99,12 @@ interface Translations {
     removeTitle: string;
     removeConfirm: string;
     removeButton: string;
+    filterByLevel: string;
+    noExchangesAtLevel: string;
+    noOpenExchangesTitle: string;
+    noOpenExchangesDescription: string;
+    noApplicationsTitle: string;
+    noApplicationsDescription: string;
   };
   positions: {
     "head-one": string;
@@ -235,6 +241,13 @@ const en: Translations = {
     removeConfirm:
       "Are you sure you want to remove this assignment from the exchange?",
     removeButton: "Remove from Exchange",
+    filterByLevel: "My level only",
+    noExchangesAtLevel: "No exchanges available at your level.",
+    noOpenExchangesTitle: "No open exchanges",
+    noOpenExchangesDescription:
+      "There are currently no referee positions available for exchange.",
+    noApplicationsTitle: "No applications",
+    noApplicationsDescription: "You haven't applied for any exchanges yet.",
   },
   positions: {
     "head-one": "1st Referee",
@@ -380,6 +393,14 @@ const de: Translations = {
     removeConfirm:
       "Möchten Sie diesen Einsatz wirklich aus der Tauschbörse entfernen?",
     removeButton: "Aus Tauschbörse entfernen",
+    filterByLevel: "Nur mein Niveau",
+    noExchangesAtLevel: "Keine Tauschangebote auf Ihrem Niveau verfügbar.",
+    noOpenExchangesTitle: "Keine offenen Tauschangebote",
+    noOpenExchangesDescription:
+      "Derzeit sind keine Schiedsrichterpositionen zum Tausch verfügbar.",
+    noApplicationsTitle: "Keine Bewerbungen",
+    noApplicationsDescription:
+      "Sie haben sich noch für keine Tauschangebote beworben.",
   },
   positions: {
     "head-one": "1. Schiedsrichter",
@@ -525,6 +546,14 @@ const fr: Translations = {
     removeConfirm:
       "Êtes-vous sûr de vouloir retirer cette désignation de la bourse?",
     removeButton: "Retirer de la bourse",
+    filterByLevel: "Mon niveau uniquement",
+    noExchangesAtLevel: "Aucun échange disponible à votre niveau.",
+    noOpenExchangesTitle: "Aucun échange ouvert",
+    noOpenExchangesDescription:
+      "Il n'y a actuellement aucun poste d'arbitre disponible pour échange.",
+    noApplicationsTitle: "Aucune candidature",
+    noApplicationsDescription:
+      "Vous n'avez pas encore postulé pour des échanges.",
   },
   positions: {
     "head-one": "1er Arbitre",
@@ -670,6 +699,13 @@ const it: Translations = {
     removeConfirm:
       "Sei sicuro di voler rimuovere questa designazione dalla borsa?",
     removeButton: "Rimuovere dalla borsa",
+    filterByLevel: "Solo il mio livello",
+    noExchangesAtLevel: "Nessuno scambio disponibile al tuo livello.",
+    noOpenExchangesTitle: "Nessuno scambio aperto",
+    noOpenExchangesDescription:
+      "Al momento non ci sono posizioni arbitrali disponibili per lo scambio.",
+    noApplicationsTitle: "Nessuna candidatura",
+    noApplicationsDescription: "Non hai ancora fatto domanda per nessuno scambio.",
   },
   positions: {
     "head-one": "1° Arbitro",
