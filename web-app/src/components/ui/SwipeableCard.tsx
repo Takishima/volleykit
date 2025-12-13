@@ -174,6 +174,20 @@ export function SwipeableCard({
     };
   }, []);
 
+  useEffect(() => {
+    if (!showActions) return;
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setShowActions(false);
+        closeDrawer();
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [showActions, closeDrawer]);
+
   const handleDragStart = useCallback(
     (clientX: number, clientY: number) => {
       startXRef.current = clientX;
@@ -367,18 +381,12 @@ export function SwipeableCard({
     [isDrawerOpen],
   );
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        setShowActions((prev) => !prev);
-      } else if (e.key === "Escape") {
-        setShowActions(false);
-        closeDrawer();
-      }
-    },
-    [closeDrawer],
-  );
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setShowActions((prev) => !prev);
+    }
+  }, []);
 
   const handleLeftAction = useCallback(() => {
     setShowActions(false);
@@ -538,16 +546,12 @@ export function SwipeableCard({
 
       {showActions && hasAnyAction && (
         // Dialog overlay with action buttons - backdrop dismisses on click
-        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Dialog backdrop needs click handler to dismiss
         <div
           role="dialog"
           aria-label="Card actions"
           aria-modal="true"
           className="absolute inset-0 z-20 bg-black/50 rounded-xl flex items-center justify-center gap-2 p-4"
           onClick={() => setShowActions(false)}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") setShowActions(false);
-          }}
         >
           {rightActions?.[0] && (
             <button
