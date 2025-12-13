@@ -1,43 +1,7 @@
-import { useRegisterSW } from "virtual:pwa-register/react";
-import { useEffect, useRef } from "react";
+import { usePWA } from "@/contexts/PWAContext";
 
 export default function ReloadPromptPWA() {
-  const intervalRef = useRef<number | undefined>(undefined);
-
-  const {
-    offlineReady: [offlineReady, setOfflineReady],
-    needRefresh: [needRefresh, setNeedRefresh],
-    updateServiceWorker,
-  } = useRegisterSW({
-    onRegistered(registration) {
-      if (registration) {
-        // Check for updates every hour
-        intervalRef.current = setInterval(
-          () => {
-            registration.update();
-          },
-          60 * 60 * 1000,
-        ) as unknown as number;
-      }
-    },
-    onRegisterError(error) {
-      console.error("Service worker registration error:", error);
-    },
-  });
-
-  // Clean up interval on unmount
-  useEffect(() => {
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, []);
-
-  const close = () => {
-    setOfflineReady(false);
-    setNeedRefresh(false);
-  };
+  const { offlineReady, needRefresh, updateApp, dismissPrompt } = usePWA();
 
   if (!offlineReady && !needRefresh) {
     return null;
@@ -66,7 +30,7 @@ export default function ReloadPromptPWA() {
       <div className="mt-3 flex gap-2">
         {needRefresh && (
           <button
-            onClick={() => updateServiceWorker(true)}
+            onClick={() => updateApp()}
             className="rounded-md bg-orange-600 px-3 py-2 text-sm font-medium text-white hover:bg-orange-700 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none"
             aria-label="Reload application to update to the latest version"
           >
@@ -74,7 +38,7 @@ export default function ReloadPromptPWA() {
           </button>
         )}
         <button
-          onClick={close}
+          onClick={dismissPrompt}
           className="rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none"
           aria-label={
             needRefresh ? "Dismiss update notification" : "Close notification"

@@ -149,6 +149,13 @@ interface Translations {
     roles: string;
     dataSource: string;
     disclaimer: string;
+    updates: string;
+    checkForUpdates: string;
+    checking: string;
+    upToDate: string;
+    updateAvailable: string;
+    lastChecked: string;
+    updateNow: string;
   };
 }
 
@@ -301,6 +308,13 @@ const en: Translations = {
     dataSource: "Data from volleymanager.volleyball.ch",
     disclaimer:
       "Unofficial app for personal use. All data is property of Swiss Volley.",
+    updates: "Updates",
+    checkForUpdates: "Check for Updates",
+    checking: "Checking...",
+    upToDate: "App is up to date",
+    updateAvailable: "Update available",
+    lastChecked: "Last checked",
+    updateNow: "Update Now",
   },
 };
 
@@ -454,6 +468,13 @@ const de: Translations = {
     dataSource: "Daten von volleymanager.volleyball.ch",
     disclaimer:
       "Inoffizielle App für den persönlichen Gebrauch. Alle Daten sind Eigentum von Swiss Volley.",
+    updates: "Updates",
+    checkForUpdates: "Nach Updates suchen",
+    checking: "Überprüfen...",
+    upToDate: "App ist aktuell",
+    updateAvailable: "Update verfügbar",
+    lastChecked: "Zuletzt geprüft",
+    updateNow: "Jetzt aktualisieren",
   },
 };
 
@@ -607,6 +628,13 @@ const fr: Translations = {
     dataSource: "Données de volleymanager.volleyball.ch",
     disclaimer:
       "Application non officielle pour usage personnel. Toutes les données sont la propriété de Swiss Volley.",
+    updates: "Mises à jour",
+    checkForUpdates: "Vérifier les mises à jour",
+    checking: "Vérification...",
+    upToDate: "L'application est à jour",
+    updateAvailable: "Mise à jour disponible",
+    lastChecked: "Dernière vérification",
+    updateNow: "Mettre à jour",
   },
 };
 
@@ -759,6 +787,13 @@ const it: Translations = {
     dataSource: "Dati da volleymanager.volleyball.ch",
     disclaimer:
       "App non ufficiale per uso personale. Tutti i dati sono proprietà di Swiss Volley.",
+    updates: "Aggiornamenti",
+    checkForUpdates: "Verifica aggiornamenti",
+    checking: "Verifica in corso...",
+    upToDate: "L'app è aggiornata",
+    updateAvailable: "Aggiornamento disponibile",
+    lastChecked: "Ultimo controllo",
+    updateNow: "Aggiorna ora",
   },
 };
 
