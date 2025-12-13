@@ -43,8 +43,15 @@ export function ExchangeConfirmationModal({
     [onClose],
   );
 
+  const isMountedRef = useRef(true);
   const isSubmittingRef = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const handleConfirm = useCallback(async () => {
     if (isSubmittingRef.current) return;
@@ -61,10 +68,14 @@ export function ExchangeConfirmationModal({
       return;
     } finally {
       isSubmittingRef.current = false;
-      setIsSubmitting(false);
+      if (isMountedRef.current) {
+        setIsSubmitting(false);
+      }
     }
 
-    onClose();
+    if (isMountedRef.current) {
+      onClose();
+    }
   }, [onConfirm, onClose]);
 
   if (!isOpen) return null;
