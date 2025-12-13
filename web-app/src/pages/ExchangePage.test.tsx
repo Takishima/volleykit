@@ -12,14 +12,26 @@ vi.mock("@/stores/auth");
 vi.mock("@/stores/demo");
 vi.mock("@/hooks/useExchangeActions", () => ({
   useExchangeActions: () => ({
-    takeOverModal: { isOpen: false, exchange: null, open: vi.fn(), close: vi.fn() },
-    removeFromExchangeModal: { isOpen: false, exchange: null, open: vi.fn(), close: vi.fn() },
+    takeOverModal: {
+      isOpen: false,
+      exchange: null,
+      open: vi.fn(),
+      close: vi.fn(),
+    },
+    removeFromExchangeModal: {
+      isOpen: false,
+      exchange: null,
+      open: vi.fn(),
+      close: vi.fn(),
+    },
     handleTakeOver: vi.fn(),
     handleRemoveFromExchange: vi.fn(),
   }),
 }));
 
-function createMockExchange(overrides: Partial<GameExchange> = {}): GameExchange {
+function createMockExchange(
+  overrides: Partial<GameExchange> = {},
+): GameExchange {
   return {
     __identity: `exchange-${Math.random()}`,
     status: "open",
@@ -224,8 +236,9 @@ describe("ExchangePage", () => {
     it("should default to Open tab", () => {
       render(<ExchangePage />);
 
-      const openTab = screen.getByRole("button", { name: /^open$/i });
+      const openTab = screen.getByRole("tab", { name: /^open$/i });
       expect(openTab).toHaveClass("border-orange-500");
+      expect(openTab).toHaveAttribute("aria-selected", "true");
     });
 
     it("should switch to My Applications tab when clicked", () => {
@@ -237,8 +250,9 @@ describe("ExchangePage", () => {
 
       fireEvent.click(screen.getByText(/my applications/i));
 
-      const myAppsTab = screen.getByRole("button", { name: /my applications/i });
+      const myAppsTab = screen.getByRole("tab", { name: /my applications/i });
       expect(myAppsTab).toHaveClass("border-orange-500");
+      expect(myAppsTab).toHaveAttribute("aria-selected", "true");
     });
   });
 });

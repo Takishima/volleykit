@@ -56,7 +56,13 @@ export function ExchangePage() {
       // Lower gradation = higher level, so user.gradation <= required.gradation
       return userRefereeLevelGradationValue <= requiredGradation;
     });
-  }, [data, filterByLevel, statusFilter, isDemoMode, userRefereeLevelGradationValue]);
+  }, [
+    data,
+    filterByLevel,
+    statusFilter,
+    isDemoMode,
+    userRefereeLevelGradationValue,
+  ]);
 
   const {
     takeOverModal,
@@ -103,12 +109,20 @@ export function ExchangePage() {
 
   return (
     <div className="space-y-3">
-      {/* Filter tabs and level toggle */}
+      {/* Filter tabs and level toggle - WAI-ARIA tab pattern */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
-        <div className="flex gap-2">
+        <div
+          role="tablist"
+          aria-label={t("exchange.title")}
+          className="flex gap-2"
+        >
           {filterOptions.map((option) => (
             <button
               key={option.value}
+              role="tab"
+              aria-selected={statusFilter === option.value}
+              aria-controls={`${option.value}-tabpanel`}
+              id={`${option.value}-tab`}
               onClick={() => setStatusFilter(option.value)}
               className={`
                 px-4 py-2 text-sm font-medium border-b-2 transition-colors
@@ -135,7 +149,12 @@ export function ExchangePage() {
       </div>
 
       {/* Content */}
-      <div className="space-y-3">
+      <div
+        role="tabpanel"
+        id={`${statusFilter}-tabpanel`}
+        aria-labelledby={`${statusFilter}-tab`}
+        className="space-y-3"
+      >
         {isLoading && <LoadingState message="Loading exchanges..." />}
 
         {error && (
