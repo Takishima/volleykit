@@ -34,9 +34,15 @@ const dateTimeSchema = z
   .datetime({ offset: true })
   .optional()
   .nullable();
+// Date schema that accepts:
+// - ISO date format: "2024-01-15"
+// - ISO datetime format: "2024-12-19T23:00:00.000000+00:00" (API returns this for paymentValueDate)
+// - null (API returns null for unpaid compensations)
 const dateSchema = z
   .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine((val) => /^\d{4}-\d{2}-\d{2}(T.*)?$/.test(val), {
+    message: "Invalid date format",
+  })
   .optional()
   .nullable();
 
