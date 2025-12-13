@@ -152,9 +152,8 @@ const queryClient = new QueryClient({
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { status, checkSession, isDemoMode } = useAuthStore();
   const { assignments, initializeDemoData } = useDemoStore();
-  const [isVerifying, setIsVerifying] = useState(
-    () => status === "authenticated",
-  );
+  const shouldVerifySession = status === "authenticated" && !isDemoMode;
+  const [isVerifying, setIsVerifying] = useState(() => shouldVerifySession);
   const [verifyError, setVerifyError] = useState<string | null>(null);
 
   // Regenerate demo data on page load if demo mode is enabled but data is empty
@@ -166,7 +165,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   // Verify persisted session is still valid on mount
   useEffect(() => {
-    if (!isVerifying) return;
+    if (!isVerifying || isDemoMode) return;
 
     let cancelled = false;
     checkSession()
@@ -185,7 +184,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [isVerifying, checkSession]);
+  }, [isVerifying, checkSession, isDemoMode]);
 
   // Show loading state while verifying session
   if (status === "loading" || isVerifying) {
