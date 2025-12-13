@@ -52,7 +52,9 @@ function getNestedValue(obj: unknown, path: string): unknown {
 function matchesFilter<T>(item: T, filter: PropertyFilter): boolean {
   const value = getNestedValue(item, filter.propertyName);
 
-  // Date range filter
+  // Date range filter - uses inclusive bounds (date >= from && date <= to)
+  // This matches the real API behavior where "to" timestamps are set to 22:59:59
+  // to include the entire end day (see docs/api/captures/assignments_request.txt)
   if (filter.dateRange) {
     if (typeof value !== "string") return false;
     const date = new Date(value);
@@ -208,8 +210,8 @@ export const mockApi = {
     const store = useDemoStore.getState();
     const { items, total } = processSearchRequest(store.assignments, config);
 
-    // Type assertion is safe: demo store assignments are typed as Assignment[]
-    // and processSearchRequest preserves the type through generic filtering
+    // Type assertion safe by design: store.assignments is Assignment[], and
+    // processSearchRequest only filters/sorts/paginates without type transformation
     return {
       items: items as Assignment[],
       totalItemsCount: total,
@@ -218,9 +220,8 @@ export const mockApi = {
 
   async getAssignmentDetails(
     convocationId: string,
-    // Parameter required for API interface compatibility but unused in mock
-    // since demo data already contains all properties
-    _properties: string[], // eslint-disable-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required for API interface compatibility; mock data already contains all properties
+    _properties: string[],
   ): Promise<Assignment> {
     await delay(MOCK_NETWORK_DELAY_MS);
 
@@ -244,8 +245,8 @@ export const mockApi = {
     const store = useDemoStore.getState();
     const { items, total } = processSearchRequest(store.compensations, config);
 
-    // Type assertion is safe: demo store compensations are typed as CompensationRecord[]
-    // and processSearchRequest preserves the type through generic filtering
+    // Type assertion safe by design: store.compensations is CompensationRecord[], and
+    // processSearchRequest only filters/sorts/paginates without type transformation
     return {
       items: items as CompensationRecord[],
       totalItemsCount: total,
@@ -260,8 +261,8 @@ export const mockApi = {
     const store = useDemoStore.getState();
     const { items, total } = processSearchRequest(store.exchanges, config);
 
-    // Type assertion is safe: demo store exchanges are typed as GameExchange[]
-    // and processSearchRequest preserves the type through generic filtering
+    // Type assertion safe by design: store.exchanges is GameExchange[], and
+    // processSearchRequest only filters/sorts/paginates without type transformation
     return {
       items: items as GameExchange[],
       totalItemsCount: total,
