@@ -34,12 +34,8 @@ export default function PWAProviderInternal({
   );
   // Ref-based guard to prevent duplicate concurrent update checks
   const isCheckingRef = useRef(false);
-  // Track if component is mounted to prevent state updates after unmount
-  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    isMountedRef.current = true;
-
     let cancelled = false;
 
     async function registerSW() {
@@ -89,7 +85,6 @@ export default function PWAProviderInternal({
 
     return () => {
       cancelled = true;
-      isMountedRef.current = false;
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
@@ -104,17 +99,12 @@ export default function PWAProviderInternal({
     setIsChecking(true);
     try {
       await registrationRef.current.update();
-      // Only update state if component is still mounted
-      if (isMountedRef.current) {
-        setLastChecked(new Date());
-      }
+      setLastChecked(new Date());
     } catch (error) {
       console.error("Failed to check for updates:", error);
     } finally {
       isCheckingRef.current = false;
-      if (isMountedRef.current) {
-        setIsChecking(false);
-      }
+      setIsChecking(false);
     }
   };
 
