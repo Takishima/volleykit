@@ -275,6 +275,106 @@ describe("ExchangeConfirmationModal", () => {
       expect(mockOnClose).not.toHaveBeenCalled();
       expect(screen.getByRole("dialog", { hidden: true })).toBeInTheDocument();
     });
+
+    it("allows retry after error (isSubmittingRef is properly reset)", async () => {
+      mockOnConfirm
+        .mockRejectedValueOnce(new Error("First attempt failed"))
+        .mockResolvedValueOnce(undefined);
+      render(
+        <ExchangeConfirmationModal
+          exchange={createMockExchange()}
+          isOpen={true}
+          onClose={mockOnClose}
+          onConfirm={mockOnConfirm}
+          variant="takeOver"
+        />,
+      );
+
+      const confirmButton = screen.getByText("Confirm Take Over");
+
+      // First attempt fails
+      fireEvent.click(confirmButton);
+      await waitFor(() => {
+        expect(mockOnConfirm).toHaveBeenCalledTimes(1);
+      });
+      expect(mockOnClose).not.toHaveBeenCalled();
+
+      // Button should be enabled again for retry
+      await waitFor(() => {
+        expect(confirmButton).not.toBeDisabled();
+      });
+
+      // Second attempt succeeds
+      fireEvent.click(confirmButton);
+      await waitFor(() => {
+        expect(mockOnConfirm).toHaveBeenCalledTimes(2);
+        expect(mockOnClose).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    it("handles unmount during async operation gracefully", async () => {
+      let resolveConfirm: () => void;
+      mockOnConfirm.mockImplementation(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveConfirm = resolve;
+          }),
+      );
+
+      const { unmount } = render(
+        <ExchangeConfirmationModal
+          exchange={createMockExchange()}
+          isOpen={true}
+          onClose={mockOnClose}
+          onConfirm={mockOnConfirm}
+          variant="takeOver"
+        />,
+      );
+
+      const confirmButton = screen.getByText("Confirm Take Over");
+      fireEvent.click(confirmButton);
+
+      // Unmount while async operation is in progress
+      unmount();
+
+      // Resolve the promise after unmount - should not cause errors
+      resolveConfirm!();
+
+      // onClose should not be called since component unmounted
+      expect(mockOnClose).not.toHaveBeenCalled();
+    });
+
+    it("handles unmount during async error gracefully", async () => {
+      let rejectConfirm: (error: Error) => void;
+      mockOnConfirm.mockImplementation(
+        () =>
+          new Promise<void>((_, reject) => {
+            rejectConfirm = reject;
+          }),
+      );
+
+      const { unmount } = render(
+        <ExchangeConfirmationModal
+          exchange={createMockExchange()}
+          isOpen={true}
+          onClose={mockOnClose}
+          onConfirm={mockOnConfirm}
+          variant="takeOver"
+        />,
+      );
+
+      const confirmButton = screen.getByText("Confirm Take Over");
+      fireEvent.click(confirmButton);
+
+      // Unmount while async operation is in progress
+      unmount();
+
+      // Reject the promise after unmount - should not cause errors
+      rejectConfirm!(new Error("Test error after unmount"));
+
+      // onClose should not be called since component unmounted
+      expect(mockOnClose).not.toHaveBeenCalled();
+    });
   });
 
   describe("accessibility", () => {
