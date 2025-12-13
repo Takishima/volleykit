@@ -1,0 +1,31 @@
+To: info@volleyball.ch
+Subject: VolleyKit - Inoffizielle mobile Anwendung für Schiedsrichter
+
+Sehr geehrte Damen und Herren,
+
+Ich erlaube mir, Sie bezüglich einer progressiven Web-Anwendung (PWA) zu kontaktieren, die ich für meinen persönlichen Gebrauch als Volleyball-Schiedsrichter entwickelt habe.
+
+**Über die Anwendung**
+
+VolleyKit ist eine für Mobilgeräte optimierte Benutzeroberfläche, die sich mit volleymanager.volleyball.ch verbindet, um Schiedsrichter-Aufgebote, Entschädigungen und die Spielbörse einzusehen. Die Anwendung speichert keine Daten lokal und nutzt ausschliesslich die bestehenden APIs von VolleyManager.
+
+**Wichtige Punkte**
+
+- Die Anwendung ist kostenlos und Open Source: https://github.com/Takishima/volleykit
+- Sie ist ausschliesslich für den persönlichen Gebrauch bestimmt
+- Sie zeigt deutlich an, dass alle Daten Eigentum von Swiss Volley sind
+- Es werden keine Logos, Bilder oder Markenzeichen von Swiss Volley verwendet
+- Sie identifiziert sich gegenüber Ihren Servern mit dem User-Agent: VolleyKit/1.0 (PWA; https://github.com/Takishima/volleykit)
+- Sie respektiert Ihre Server mit exponentiellen Wiederholungsverzögerungen und Handhabung von Anfragelimiten
+
+**Meine Anfrage**
+
+Ich möchte sicherstellen, dass diese Nutzung Ihren Bedingungen entspricht. Falls Sie besondere Anforderungen haben oder es bevorzugen, dass ich diese Nutzung einstelle, werde ich dem gerne nachkommen.
+
+Für Fragen oder zusätzliche Informationen stehe ich Ihnen gerne zur Verfügung.
+
+Mit freundlichen Grüssen,
+
+[Ihr Name]
+[Ihre E-Mail]
+[Ihre Schiedsrichter-Lizenznummer, falls zutreffend]

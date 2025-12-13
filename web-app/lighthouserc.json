@@ -1,0 +1,24 @@
+{
+  "$comment": "Note: Tests static dist locally, not production worker setup. Real-world performance may differ due to CORS proxy latency.",
+  "ci": {
+    "collect": {
+      "staticDistDir": "./web-app/dist",
+      "numberOfRuns": 3,
+      "settings": {
+        "preset": "desktop"
+      }
+    },
+    "assert": {
+      "assertions": {
+        "categories:performance": ["warn", { "minScore": 0.8 }],
+        "categories:accessibility": ["error", { "minScore": 0.9 }],
+        "categories:best-practices": ["warn", { "minScore": 0.8 }],
+        "categories:seo": ["warn", { "minScore": 0.8 }]
+      }
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": "./.lighthouseci"
+    }
+  }
+}

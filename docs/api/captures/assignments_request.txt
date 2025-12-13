@@ -1,0 +1,67 @@
+# Assignments Request Payload
+# Endpoint: POST /api/indoorvolleyball.refadmin/api\refereeconvocation/searchMyRefereeConvocations
+# Content-Type: application/x-www-form-urlencoded
+
+## Raw URL-encoded payload:
+searchConfiguration%5BpropertyFilters%5D%5B0%5D%5BpropertyName%5D=refereeGame.game.startingDateTime&searchConfiguration%5BpropertyFilters%5D%5B0%5D%5BdateRange%5D%5Bfrom%5D=2025-12-07T23%3A00%3A00.000Z&searchConfiguration%5BpropertyFilters%5D%5B0%5D%5BdateRange%5D%5Bto%5D=2025-12-15T22%3A59%3A59.000Z&searchConfiguration%5BcustomFilters%5D=&searchConfiguration%5BpropertyOrderings%5D%5B0%5D%5BpropertyName%5D=refereeGame.game.startingDateTime&searchConfiguration%5BpropertyOrderings%5D%5B0%5D%5Bdescending%5D=false&searchConfiguration%5BpropertyOrderings%5D%5B0%5D%5BisSetByUser%5D=true&searchConfiguration%5Boffset%5D=0&searchConfiguration%5Blimit%5D=10&searchConfiguration%5BtextSearchOperator%5D=AND&propertyRenderConfiguration%5B0%5D=refereeConvocationStatus&propertyRenderConfiguration%5B1%5D=refereeGame.game.startingDateTime&propertyRenderConfiguration%5B2%5D=refereeGame.game.playingWeekday&propertyRenderConfiguration%5B3%5D=isOpenEntryInRefereeGameExchange&propertyRenderConfiguration%5B4%5D=confirmationStatus&propertyRenderConfiguration%5B5%5D=confirmationDate&propertyRenderConfiguration%5B6%5D=hasLastMessageToReferee&propertyRenderConfiguration%5B7%5D=hasLinkedDoubleConvocation&propertyRenderConfiguration%5B8%5D=linkedDoubleConvocationGameNumberAndRefereePosition&propertyRenderConfiguration%5B9%5D=refereeGame.game.encounter.teamHome.name&propertyRenderConfiguration%5B10%5D=refereeGame.game.encounter.teamAway.name&propertyRenderConfiguration%5B11%5D=refereeGame.game.hasNominationListToReviewByReferee&propertyRenderConfiguration%5B12%5D=refereePosition&propertyRenderConfiguration%5B13%5D=refereeGame.game.number&propertyRenderConfiguration%5B14%5D=refereeGame.game.group.phase.league.leagueCategory.name&propertyRenderConfiguration%5B15%5D=refereeGame.game.group.phase.league.gender&propertyRenderConfiguration%5B16%5D=refereeGame.game.group.phase.name&propertyRenderConfiguration%5B17%5D=refereeGame.game.group.name&propertyRenderConfiguration%5B18%5D=refereeGame.activeRefereeConvocationFirstHeadReferee.indoorAssociationReferee.indoorReferee.person.displayName&propertyRenderConfiguration%5B19%5D=refereeGame.activeRefereeConvocationSecondHeadReferee.indoorAssociationReferee.indoorReferee.person.displayName&propertyRenderConfiguration%5B20%5D=refereeGame.activeRefereeConvocationFirstLinesman.indoorAssociationReferee.indoorReferee.person.displayName&propertyRenderConfiguration%5B21%5D=refereeGame.activeRefereeConvocationSecondLinesman.indoorAssociationReferee.indoorReferee.person.displayName&propertyRenderConfiguration%5B22%5D=refereeGame.activeRefereeConvocationThirdLinesman.indoorAssociationReferee.indoorReferee.person.displayName&propertyRenderConfiguration%5B23%5D=refereeGame.activeRefereeConvocationFourthLinesman.indoorAssociationReferee.indoorReferee.person.displayName&propertyRenderConfiguration%5B24%5D=refereeGame.activeRefereeConvocationStandbyHeadReferee.indoorAssociationReferee.indoorReferee.person.displayName&propertyRenderConfiguration%5B25%5D=refereeGame.activeRefereeConvocationStandbyLinesman.indoorAssociationReferee.indoorReferee.person.displayName&propertyRenderConfiguration%5B26%5D=refereeGame.game.hall.name&propertyRenderConfiguration%5B27%5D=refereeGame.game.hall.primaryPostalAddress.additionToAddress&propertyRenderConfiguration%5B28%5D=refereeGame.game.hall.primaryPostalAddress.combinedAddress&propertyRenderConfiguration%5B29%5D=refereeGame.game.hall.primaryPostalAddress.postalCode&propertyRenderConfiguration%5B30%5D=refereeGame.game.hall.primaryPostalAddress.city&propertyRenderConfiguration%5B31%5D=refereeGame.game.hall.primaryPostalAddress.geographicalLocation.plusCode&propertyRenderConfiguration%5B32%5D=refereeGame.game.lastPostponement.activeRefereeConvocationsAtTimeOfAcceptedPostponement.*.indoorAssociationReferee.indoorReferee.person&propertyRenderConfiguration%5B33%5D=refereeGame.game.lastPostponement.createdAt&propertyRenderConfiguration%5B34%5D=refereeGame.isGameInFuture&__csrfToken=<csrf-token>
+
+## Decoded Parameters:
+
+### Search Configuration
+searchConfiguration[propertyFilters][0][propertyName] = refereeGame.game.startingDateTime
+searchConfiguration[propertyFilters][0][dateRange][from] = 2025-12-07T23:00:00.000Z
+searchConfiguration[propertyFilters][0][dateRange][to] = 2025-12-15T22:59:59.000Z
+searchConfiguration[customFilters] = (empty)
+searchConfiguration[propertyOrderings][0][propertyName] = refereeGame.game.startingDateTime
+searchConfiguration[propertyOrderings][0][descending] = false
+searchConfiguration[propertyOrderings][0][isSetByUser] = true
+searchConfiguration[offset] = 0
+searchConfiguration[limit] = 10
+searchConfiguration[textSearchOperator] = AND
+
+### Property Render Configuration (fields to return)
+propertyRenderConfiguration[0] = refereeConvocationStatus
+propertyRenderConfiguration[1] = refereeGame.game.startingDateTime
+propertyRenderConfiguration[2] = refereeGame.game.playingWeekday
+propertyRenderConfiguration[3] = isOpenEntryInRefereeGameExchange
+propertyRenderConfiguration[4] = confirmationStatus
+propertyRenderConfiguration[5] = confirmationDate
+propertyRenderConfiguration[6] = hasLastMessageToReferee
+propertyRenderConfiguration[7] = hasLinkedDoubleConvocation
+propertyRenderConfiguration[8] = linkedDoubleConvocationGameNumberAndRefereePosition
+propertyRenderConfiguration[9] = refereeGame.game.encounter.teamHome.name
+propertyRenderConfiguration[10] = refereeGame.game.encounter.teamAway.name
+propertyRenderConfiguration[11] = refereeGame.game.hasNominationListToReviewByReferee
+propertyRenderConfiguration[12] = refereePosition
+propertyRenderConfiguration[13] = refereeGame.game.number
+propertyRenderConfiguration[14] = refereeGame.game.group.phase.league.leagueCategory.name
+propertyRenderConfiguration[15] = refereeGame.game.group.phase.league.gender
+propertyRenderConfiguration[16] = refereeGame.game.group.phase.name
+propertyRenderConfiguration[17] = refereeGame.game.group.name
+propertyRenderConfiguration[18] = refereeGame.activeRefereeConvocationFirstHeadReferee.indoorAssociationReferee.indoorReferee.person.displayName
+propertyRenderConfiguration[19] = refereeGame.activeRefereeConvocationSecondHeadReferee.indoorAssociationReferee.indoorReferee.person.displayName
+propertyRenderConfiguration[20] = refereeGame.activeRefereeConvocationFirstLinesman.indoorAssociationReferee.indoorReferee.person.displayName
+propertyRenderConfiguration[21] = refereeGame.activeRefereeConvocationSecondLinesman.indoorAssociationReferee.indoorReferee.person.displayName
+propertyRenderConfiguration[22] = refereeGame.activeRefereeConvocationThirdLinesman.indoorAssociationReferee.indoorReferee.person.displayName
+propertyRenderConfiguration[23] = refereeGame.activeRefereeConvocationFourthLinesman.indoorAssociationReferee.indoorReferee.person.displayName
+propertyRenderConfiguration[24] = refereeGame.activeRefereeConvocationStandbyHeadReferee.indoorAssociationReferee.indoorReferee.person.displayName
+propertyRenderConfiguration[25] = refereeGame.activeRefereeConvocationStandbyLinesman.indoorAssociationReferee.indoorReferee.person.displayName
+propertyRenderConfiguration[26] = refereeGame.game.hall.name
+propertyRenderConfiguration[27] = refereeGame.game.hall.primaryPostalAddress.additionToAddress
+propertyRenderConfiguration[28] = refereeGame.game.hall.primaryPostalAddress.combinedAddress
+propertyRenderConfiguration[29] = refereeGame.game.hall.primaryPostalAddress.postalCode
+propertyRenderConfiguration[30] = refereeGame.game.hall.primaryPostalAddress.city
+propertyRenderConfiguration[31] = refereeGame.game.hall.primaryPostalAddress.geographicalLocation.plusCode
+propertyRenderConfiguration[32] = refereeGame.game.lastPostponement.activeRefereeConvocationsAtTimeOfAcceptedPostponement.*.indoorAssociationReferee.indoorReferee.person
+propertyRenderConfiguration[33] = refereeGame.game.lastPostponement.createdAt
+propertyRenderConfiguration[34] = refereeGame.isGameInFuture
+
+### CSRF Token
+__csrfToken = <csrf-token>
+
+## Notes:
+- Date format: ISO 8601 with timezone (Z = UTC)
+- Date range is from evening before to evening after (accounts for timezone)
+- offset/limit for pagination (not page-based)
+- propertyRenderConfiguration tells the server which fields to include in response
+- The response includes MORE than just these fields (full nested objects)
