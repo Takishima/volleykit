@@ -44,6 +44,10 @@ export function ValidateGameModal({
   useEffect(() => {
     if (!isOpen) return;
 
+    // Reset to first tab when modal opens for consistent UX
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setActiveTab("home-roster");
+
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         onClose();

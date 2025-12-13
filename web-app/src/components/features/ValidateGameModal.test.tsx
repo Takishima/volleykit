@@ -108,7 +108,7 @@ describe("ValidateGameModal", () => {
         name: /Scoresheet/i,
         hidden: true,
       });
-      expect(scoresheetTab).toContainElement(optionalBadges[0] ?? null);
+      expect(scoresheetTab).toContainElement(optionalBadges[0]!);
     });
   });
 
@@ -256,6 +256,47 @@ describe("ValidateGameModal", () => {
       const dialog = screen.getByRole("dialog", { hidden: true });
       fireEvent.click(dialog);
       expect(mockOnClose).not.toHaveBeenCalled();
+    });
+
+    it("resets to first tab when modal is reopened", () => {
+      const { rerender } = render(
+        <ValidateGameModal
+          assignment={createMockAssignment()}
+          isOpen={true}
+          onClose={mockOnClose}
+        />,
+      );
+
+      // Switch to Scoresheet tab
+      fireEvent.click(
+        screen.getByRole("tab", { name: /Scoresheet/i, hidden: true }),
+      );
+      expect(
+        screen.getByText("Scoresheet upload will be available here."),
+      ).toBeInTheDocument();
+
+      // Close modal
+      rerender(
+        <ValidateGameModal
+          assignment={createMockAssignment()}
+          isOpen={false}
+          onClose={mockOnClose}
+        />,
+      );
+
+      // Reopen modal
+      rerender(
+        <ValidateGameModal
+          assignment={createMockAssignment()}
+          isOpen={true}
+          onClose={mockOnClose}
+        />,
+      );
+
+      // Should be back to Home Roster
+      expect(
+        screen.getByText("Home team roster verification will be available here."),
+      ).toBeInTheDocument();
     });
   });
 });
