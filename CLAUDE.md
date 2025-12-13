@@ -104,6 +104,17 @@ ESLint enforces these conventions:
 
 ## React Best Practices
 
+### Modern React (18+) Guidelines
+
+This project uses React 19 and follows modern React patterns. Avoid outdated patterns from React 16/17 era:
+
+- **No `isMountedRef` pattern** - React 18 removed the "state update on unmounted component" warning. Use `AbortController` to cancel async operations instead.
+- **Prefer Server Components patterns** where applicable (data fetching at component level via TanStack Query)
+- **Use concurrent features** - Transitions, Suspense boundaries for loading states
+- **Avoid class components** - Use function components with hooks exclusively
+
+Always check [react.dev](https://react.dev) for current best practices, as patterns evolve with each React version.
+
 ### Component Structure
 
 Keep components small and focused. Break large components into smaller, composable pieces.
@@ -190,6 +201,42 @@ const handleSubmit = async () => {
     isSubmittingRef.current = false;
   }
 };
+```
+
+### Outdated `isMountedRef` Pattern
+
+The `isMountedRef` pattern is obsolete in React 18+. React removed the warning about state updates on unmounted components. Use `AbortController` to cancel async operations instead:
+
+```typescript
+// Bad: Outdated isMountedRef pattern (React 16/17 era)
+const isMountedRef = useRef(true);
+useEffect(() => {
+  fetchData().then((data) => {
+    if (isMountedRef.current) {
+      setData(data);
+    }
+  });
+  return () => {
+    isMountedRef.current = false;
+  };
+}, []);
+
+// Good: Use AbortController to cancel fetch requests
+useEffect(() => {
+  const controller = new AbortController();
+  fetchData({ signal: controller.signal })
+    .then(setData)
+    .catch((error) => {
+      if (error.name !== 'AbortError') throw error;
+    });
+  return () => controller.abort();
+}, []);
+
+// Good: Use TanStack Query (preferred for this project)
+const { data } = useQuery({
+  queryKey: ['data'],
+  queryFn: fetchData,
+});
 ```
 
 ## Testing
