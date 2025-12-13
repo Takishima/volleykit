@@ -26,12 +26,13 @@ vi.mock("react-router-dom", async () => {
 });
 
 // Import after mocks are set up
-import App, {
+import App from "./App";
+import {
   isAuthError,
   classifyQueryError,
   isRetryableError,
   calculateRetryDelay,
-} from "./App";
+} from "@/utils/query-error-utils";
 
 describe("classifyQueryError", () => {
   it("classifies network errors", () => {
@@ -251,8 +252,7 @@ describe("QueryErrorHandler", () => {
     vi.mocked(useAuthStore).mockReturnValue({
       logout: mockLogout,
       isDemoMode: false,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any);
+    } as ReturnType<typeof useAuthStore>);
 
     // Create a query that will fail with 406
     const testQuery = {
@@ -282,8 +282,7 @@ describe("QueryErrorHandler", () => {
     vi.mocked(useAuthStore).mockReturnValue({
       logout: mockLogout,
       isDemoMode: false,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any);
+    } as ReturnType<typeof useAuthStore>);
 
     await waitFor(() => {
       expect(isAuthError(new Error("403 Forbidden"))).toBe(true);
@@ -294,8 +293,7 @@ describe("QueryErrorHandler", () => {
     vi.mocked(useAuthStore).mockReturnValue({
       logout: mockLogout,
       isDemoMode: true,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any);
+    } as ReturnType<typeof useAuthStore>);
 
     // Even with auth error, should not redirect in demo mode
     expect(isAuthError(new Error("401 Unauthorized"))).toBe(true);
@@ -306,8 +304,7 @@ describe("QueryErrorHandler", () => {
     vi.mocked(useAuthStore).mockReturnValue({
       logout: mockLogout,
       isDemoMode: false,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any);
+    } as ReturnType<typeof useAuthStore>);
 
     // Verify mutation errors are also auth errors
     expect(isAuthError(new Error("403 Forbidden"))).toBe(true);
@@ -320,8 +317,7 @@ describe("QueryErrorHandler", () => {
     vi.mocked(useAuthStore).mockReturnValue({
       logout: mockLogout,
       isDemoMode: false,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any);
+    } as ReturnType<typeof useAuthStore>);
 
     // Error classification should still work
     expect(isAuthError(new Error("401 Unauthorized"))).toBe(true);

@@ -66,7 +66,7 @@ describe("AwayRosterPanel", () => {
 
 describe("ScorerPanel", () => {
   it("renders without crashing", () => {
-    render(<ScorerPanel assignment={createMockAssignment()} />);
+    render(<ScorerPanel />);
     expect(
       screen.getByText("Scorer identification will be available here."),
     ).toBeInTheDocument();
@@ -75,7 +75,7 @@ describe("ScorerPanel", () => {
 
 describe("ScoresheetPanel", () => {
   it("renders without crashing", () => {
-    render(<ScoresheetPanel assignment={createMockAssignment()} />);
+    render(<ScoresheetPanel />);
     expect(
       screen.getByText("Scoresheet upload will be available here."),
     ).toBeInTheDocument();

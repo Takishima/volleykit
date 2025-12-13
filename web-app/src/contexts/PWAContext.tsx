@@ -1,19 +1,8 @@
-import { createContext, lazy, Suspense, useContext } from "react";
+import { lazy, Suspense, useContext } from "react";
 import type { ReactNode } from "react";
+import { PWAContext, type PWAContextType } from "./pwa-context-value";
 
-export interface PWAContextType {
-  offlineReady: boolean;
-  needRefresh: boolean;
-  isChecking: boolean;
-  lastChecked: Date | null;
-  checkError: Error | null;
-  registrationError: Error | null;
-  checkForUpdate: () => Promise<void>;
-  updateApp: () => Promise<void>;
-  dismissPrompt: () => void;
-}
-
-export const PWAContext = createContext<PWAContextType | null>(null);
+export type { PWAContextType } from "./pwa-context-value";
 
 interface PWAProviderProps {
   children: ReactNode;

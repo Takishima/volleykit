@@ -1,12 +1,6 @@
-import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 
-interface ScorerPanelProps {
-  assignment: Assignment;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function ScorerPanel(_props: ScorerPanelProps) {
+export function ScorerPanel() {
   const { t } = useTranslation();
 
   return (
