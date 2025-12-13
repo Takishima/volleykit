@@ -54,12 +54,6 @@ export function ValidateGameModal({
     }
   }, [isOpen, onClose]);
 
-  useEffect(() => {
-    if (!isOpen) {
-      setActiveTab("home-roster");
-    }
-  }, [isOpen]);
-
   const handleBackdropClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       if (e.target === e.currentTarget) {

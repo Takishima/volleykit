@@ -5,9 +5,8 @@ interface ScoresheetPanelProps {
   assignment: Assignment;
 }
 
-export function ScoresheetPanel({
-  assignment: _assignment,
-}: ScoresheetPanelProps) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function ScoresheetPanel(_props: ScoresheetPanelProps) {
   const { t } = useTranslation();
 
   return (

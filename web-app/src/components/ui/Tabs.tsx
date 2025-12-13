@@ -30,8 +30,10 @@ export function Tabs({ tabs, activeTab, onTabChange, ariaLabel }: TabsProps) {
 
       if (nextIndex !== null) {
         const nextTab = tabs[nextIndex];
-        onTabChange(nextTab.id);
-        tabRefs.current.get(nextTab.id)?.focus();
+        if (nextTab) {
+          onTabChange(nextTab.id);
+          tabRefs.current.get(nextTab.id)?.focus();
+        }
       }
     },
     [tabs, onTabChange],
