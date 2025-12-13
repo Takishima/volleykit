@@ -21,7 +21,10 @@ import { useDemoStore } from "@/stores/demo";
 // For users with >100 items, consider implementing "load more" or virtual scrolling.
 const DEFAULT_PAGE_SIZE = 100;
 const DEFAULT_DATE_RANGE_DAYS = 365;
-const EPOCH_TIMESTAMP = 0;
+
+// Fallback timestamp for items with missing dates - uses Unix epoch (1970-01-01)
+// Items with missing dates will sort as oldest when ascending, newest when descending
+const MISSING_DATE_FALLBACK_TIMESTAMP = 0;
 
 // Helper type for items with game date
 type WithGameDate = {
@@ -31,7 +34,7 @@ type WithGameDate = {
 // Helper to extract game timestamp for sorting
 function getGameTimestamp(item: WithGameDate): number {
   return new Date(
-    item.refereeGame?.game?.startingDateTime || EPOCH_TIMESTAMP,
+    item.refereeGame?.game?.startingDateTime || MISSING_DATE_FALLBACK_TIMESTAMP,
   ).getTime();
 }
 
@@ -63,7 +66,10 @@ function filterByDateRange<T extends WithGameDate>(
 
 // Helper to create mock query results for demo mode
 // Type assertion is necessary because we're creating a partial mock of UseQueryResult
-// that satisfies the interface without all internal TanStack Query state
+// that satisfies the interface without all internal TanStack Query state.
+// Limitations: refetch, dataUpdatedAt, and other internal query methods are inherited
+// from the disabled base query and won't function as expected. Consumers should check
+// isError before accessing data, as data may be undefined in error cases.
 function createDemoQueryResult<T>(
   baseQuery: UseQueryResult<T, Error>,
   data: T,
@@ -166,6 +172,8 @@ export function useAssignments(
     ],
   };
 
+  // Create base query (disabled in demo mode but needed for result structure)
+  // The query object provides the UseQueryResult shape that createDemoQueryResult extends
   const query = useQuery({
     queryKey: queryKeys.assignments(config),
     queryFn: () => api.searchAssignments(config),
