@@ -71,8 +71,12 @@ export function CompensationsPage() {
       onGeneratePDF: handleGeneratePDF,
     });
 
+    const isPaid = compensation.convocationCompensation?.paymentDone;
+
     return {
-      left: [actions.editCompensation, actions.generatePDF],
+      left: isPaid
+        ? [actions.generatePDF]
+        : [actions.editCompensation, actions.generatePDF],
     };
   };
 
