@@ -11,8 +11,14 @@ import {
   type CompensationRecord,
   type Assignment,
   type GameExchange,
+  type AssociationSettings,
+  type Season,
 } from "@/api/client";
-import { addDays, startOfDay, endOfDay, subDays } from "date-fns";
+import { addDays, startOfDay, endOfDay, subDays, isWithinInterval } from "date-fns";
+import {
+  isValidationClosed,
+  DEFAULT_VALIDATION_DEADLINE_HOURS,
+} from "@/utils/assignment-helpers";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 
@@ -97,6 +103,8 @@ export const queryKeys = {
   compensations: (config?: SearchConfiguration) =>
     ["compensations", config] as const,
   exchanges: (config?: SearchConfiguration) => ["exchanges", config] as const,
+  associationSettings: () => ["associationSettings"] as const,
+  activeSeason: () => ["activeSeason"] as const,
 };
 
 // Date period presets
@@ -199,6 +207,103 @@ export function useUpcomingAssignments(): UseQueryResult<Assignment[], Error> {
 
 export function usePastAssignments(): UseQueryResult<Assignment[], Error> {
   return useAssignments("past");
+}
+
+/**
+ * Hook to fetch assignments where validation period has closed.
+ *
+ * This fetches past games from the current season and filters them
+ * to only include games where the validation deadline has passed.
+ * The deadline is determined by the association settings field
+ * `hoursAfterGameStartForRefereeToEditGameList`.
+ */
+export function useValidationClosedAssignments(): UseQueryResult<
+  Assignment[],
+  Error
+> {
+  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const demoAssignments = useDemoStore((state) => state.assignments);
+
+  // Fetch settings and season for filtering
+  const { data: settings } = useAssociationSettings();
+  const { data: season } = useActiveSeason();
+
+  // Calculate date range for the query
+  // Use season dates if available, otherwise fall back to default range
+  const now = new Date();
+  const seasonStart = season?.seasonStartDate
+    ? new Date(season.seasonStartDate)
+    : subDays(now, DEFAULT_DATE_RANGE_DAYS);
+  const seasonEnd = season?.seasonEndDate
+    ? new Date(season.seasonEndDate)
+    : now;
+
+  // Query from season start to now (we only want past games)
+  const dateRange = {
+    from: startOfDay(seasonStart).toISOString(),
+    to: endOfDay(now < seasonEnd ? now : seasonEnd).toISOString(),
+  };
+
+  const deadlineHours =
+    settings?.hoursAfterGameStartForRefereeToEditGameList ??
+    DEFAULT_VALIDATION_DEADLINE_HOURS;
+
+  const config: SearchConfiguration = {
+    offset: 0,
+    limit: DEFAULT_PAGE_SIZE,
+    propertyFilters: [
+      {
+        propertyName: "refereeGame.game.startingDateTime",
+        dateRange,
+      },
+    ],
+    propertyOrderings: [
+      {
+        propertyName: "refereeGame.game.startingDateTime",
+        descending: true, // Most recent first
+        isSetByUser: true,
+      },
+    ],
+  };
+
+  const query = useQuery({
+    queryKey: [...queryKeys.assignments(config), "validationClosed", deadlineHours],
+    queryFn: () => api.searchAssignments(config),
+    select: (data) => {
+      // Filter to only include assignments where validation is closed
+      const items = data.items || [];
+      return items.filter((assignment) =>
+        isValidationClosed(
+          assignment.refereeGame?.game?.startingDateTime,
+          deadlineHours,
+        ),
+      );
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: !isDemoMode,
+  });
+
+  if (isDemoMode) {
+    // Filter demo assignments by date range and validation status
+    const filtered = demoAssignments.filter((assignment) => {
+      const gameDate = assignment.refereeGame?.game?.startingDateTime;
+      if (!gameDate) return false;
+
+      const date = new Date(gameDate);
+      const inDateRange = isWithinInterval(date, {
+        start: new Date(dateRange.from),
+        end: new Date(dateRange.to),
+      });
+
+      return (
+        inDateRange && isValidationClosed(gameDate, deadlineHours)
+      );
+    });
+    const sorted = sortByGameDate(filtered, true);
+    return createDemoQueryResult(query, sorted);
+  }
+
+  return query;
 }
 
 export function useAssignmentDetails(
@@ -410,5 +515,31 @@ export function useWithdrawFromExchange(): UseMutationResult<
         queryClient.invalidateQueries({ queryKey: ["exchanges"] });
       }
     },
+  });
+}
+
+// Settings hooks
+export function useAssociationSettings(): UseQueryResult<
+  AssociationSettings,
+  Error
+> {
+  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+
+  return useQuery({
+    queryKey: queryKeys.associationSettings(),
+    queryFn: () => api.getAssociationSettings(),
+    staleTime: 30 * 60 * 1000, // 30 minutes - settings rarely change
+    enabled: !isDemoMode,
+  });
+}
+
+export function useActiveSeason(): UseQueryResult<Season, Error> {
+  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+
+  return useQuery({
+    queryKey: queryKeys.activeSeason(),
+    queryFn: () => api.getActiveSeason(),
+    staleTime: 60 * 60 * 1000, // 1 hour - season rarely changes
+    enabled: !isDemoMode,
   });
 }

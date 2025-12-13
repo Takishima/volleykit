@@ -60,6 +60,7 @@ interface Translations {
     title: string;
     upcoming: string;
     past: string;
+    validationClosed: string;
     noAssignments: string;
     confirmed: string;
     pending: string;
@@ -202,6 +203,7 @@ const en: Translations = {
     title: "Assignments",
     upcoming: "Upcoming",
     past: "Past",
+    validationClosed: "Validation Closed",
     noAssignments: "No assignments found",
     confirmed: "Confirmed",
     pending: "Pending",
@@ -356,6 +358,7 @@ const de: Translations = {
     title: "Einsätze",
     upcoming: "Bevorstehend",
     past: "Vergangen",
+    validationClosed: "Validierung geschlossen",
     noAssignments: "Keine Einsätze gefunden",
     confirmed: "Bestätigt",
     pending: "Ausstehend",
@@ -511,6 +514,7 @@ const fr: Translations = {
     title: "Désignations",
     upcoming: "À venir",
     past: "Passées",
+    validationClosed: "Validation fermée",
     noAssignments: "Aucune désignation trouvée",
     confirmed: "Confirmé",
     pending: "En attente",
@@ -666,6 +670,7 @@ const it: Translations = {
     title: "Designazioni",
     upcoming: "In programma",
     past: "Passate",
+    validationClosed: "Validazione chiusa",
     noAssignments: "Nessuna designazione trovata",
     confirmed: "Confermato",
     pending: "In attesa",
