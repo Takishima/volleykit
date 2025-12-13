@@ -18,8 +18,14 @@ const navItems = [
 export function AppShell() {
   const location = useLocation();
   const { t } = useTranslation();
-  const { status, user, logout, activeOccupationId, setActiveOccupation } =
-    useAuthStore();
+  const {
+    status,
+    user,
+    logout,
+    activeOccupationId,
+    setActiveOccupation,
+    isDemoMode,
+  } = useAuthStore();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const getOccupationLabel = useCallback(
@@ -147,6 +153,21 @@ export function AppShell() {
           </div>
         </div>
       </header>
+
+      {/* Demo mode banner */}
+      {isDemoMode && (
+        <div
+          className="bg-amber-100 dark:bg-amber-900/50 border-b border-amber-200 dark:border-amber-800"
+          role="alert"
+          aria-live="polite"
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+            <p className="text-sm text-amber-800 dark:text-amber-200 text-center font-medium">
+              {t("common.demoModeBanner")}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Main content
           pb-16 (4rem/64px) provides padding to prevent content from being hidden
