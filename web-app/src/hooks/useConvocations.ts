@@ -110,11 +110,19 @@ function filterByValidationClosed(
 /**
  * Fetches all pages of assignments matching the search configuration.
  * Uses sequential fetching to avoid overwhelming the API.
- * Stops when all items are fetched, MAX_FETCH_ALL_PAGES is reached,
- * or an empty page is returned (prevents infinite loops).
  *
- * @param config - Search configuration for the API
+ * Stops fetching when any of these conditions are met:
+ * - All items fetched (allItems.length >= totalCount)
+ * - MAX_FETCH_ALL_PAGES reached (safety limit)
+ * - Empty page returned (API exhausted or issue)
+ * - Stalled response (totalCount unchanged between pages, indicating potential issue)
+ *
+ * Note: This function manages its own offset/limit pagination internally.
+ * The caller's config should NOT include offset/limit as they will be overwritten.
+ *
+ * @param config - Search configuration for the API (without offset/limit)
  * @param signal - Optional AbortSignal for cancellation support
+ * @returns Array of all fetched assignments
  */
 async function fetchAllAssignmentPages(
   config: SearchConfiguration,
@@ -123,6 +131,7 @@ async function fetchAllAssignmentPages(
   const allItems: Assignment[] = [];
   let offset = 0;
   let totalCount = 0;
+  let previousTotalCount = -1;
   let pagesFetched = 0;
 
   do {
@@ -143,7 +152,15 @@ async function fetchAllAssignmentPages(
     }
 
     allItems.push(...pageItems);
+    previousTotalCount = totalCount;
     totalCount = response.totalItemsCount || 0;
+
+    // Detect stalled responses: if totalCount hasn't changed after adding items,
+    // the API may be returning duplicate data or has a pagination issue
+    if (pagesFetched > 0 && totalCount === previousTotalCount && totalCount > 0) {
+      break;
+    }
+
     offset += DEFAULT_PAGE_SIZE;
     pagesFetched++;
   } while (
@@ -322,12 +339,12 @@ export function useValidationClosedAssignments(): UseQueryResult<
   // - seasonStart falls back to 365 days ago
   const {
     data: settings,
-    isLoading: settingsLoading,
+    isSuccess: settingsSuccess,
     isError: settingsError,
   } = useAssociationSettings();
   const {
     data: season,
-    isLoading: seasonLoading,
+    isSuccess: seasonSuccess,
     isError: seasonError,
   } = useActiveSeason();
 
@@ -372,10 +389,11 @@ export function useValidationClosedAssignments(): UseQueryResult<
   );
 
   // Wait for settings and season to load before making the main query.
+  // Use isSuccess for reliable state detection (avoids race conditions where
+  // isLoading is false but data hasn't arrived yet).
   // If either query fails, proceed with defaults rather than blocking indefinitely.
-  // Explicit null checks ensure data actually loaded, not just that loading finished.
-  const settingsResolved = (!settingsLoading && settings != null) || settingsError;
-  const seasonResolved = (!seasonLoading && season != null) || seasonError;
+  const settingsResolved = settingsSuccess || settingsError;
+  const seasonResolved = seasonSuccess || seasonError;
   const isReady = !isDemoMode && settingsResolved && seasonResolved;
 
   const query = useQuery({

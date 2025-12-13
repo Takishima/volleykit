@@ -62,6 +62,7 @@ interface Translations {
     upcoming: string;
     past: string;
     validationClosed: string;
+    loading: string;
     noAssignments: string;
     noUpcomingTitle: string;
     noUpcomingDescription: string;
@@ -220,6 +221,7 @@ const en: Translations = {
     upcoming: "Upcoming",
     past: "Past",
     validationClosed: "Validation Closed",
+    loading: "Loading assignments...",
     noAssignments: "No assignments found",
     noUpcomingTitle: "No upcoming assignments",
     noUpcomingDescription: "You have no upcoming referee assignments scheduled.",
@@ -392,6 +394,7 @@ const de: Translations = {
     upcoming: "Bevorstehend",
     past: "Vergangen",
     validationClosed: "Validierung geschlossen",
+    loading: "Einsätze werden geladen...",
     noAssignments: "Keine Einsätze gefunden",
     noUpcomingTitle: "Keine bevorstehenden Einsätze",
     noUpcomingDescription: "Sie haben keine bevorstehenden Schiedsrichtereinsätze geplant.",
@@ -566,6 +569,7 @@ const fr: Translations = {
     upcoming: "À venir",
     past: "Passées",
     validationClosed: "Validation fermée",
+    loading: "Chargement des désignations...",
     noAssignments: "Aucune désignation trouvée",
     noUpcomingTitle: "Aucune désignation à venir",
     noUpcomingDescription: "Vous n'avez aucune désignation d'arbitre prévue.",
@@ -740,6 +744,7 @@ const it: Translations = {
     upcoming: "In programma",
     past: "Passate",
     validationClosed: "Validazione chiusa",
+    loading: "Caricamento designazioni...",
     noAssignments: "Nessuna designazione trovata",
     noUpcomingTitle: "Nessuna designazione in programma",
     noUpcomingDescription: "Non hai designazioni arbitrali in programma.",

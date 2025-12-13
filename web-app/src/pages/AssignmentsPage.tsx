@@ -145,7 +145,7 @@ export function AssignmentsPage() {
         aria-labelledby={activeTab === "upcoming" ? "upcoming-tab" : "validation-closed-tab"}
         className="space-y-3"
       >
-        {isLoading && <LoadingState message="Loading assignments..." />}
+        {isLoading && <LoadingState message={t("assignments.loading")} />}
 
         {error && (
           <ErrorState
