@@ -105,4 +105,130 @@ describe("useDemoStore", () => {
       expect(refreshedAssignments).not.toBe(initialAssignments);
     });
   });
+
+  describe("updateCompensation", () => {
+    const TRAVEL_EXPENSE_RATE_PER_KM = 0.7;
+
+    it("updates distance and recalculates travel expenses", () => {
+      useDemoStore.getState().initializeDemoData();
+      const compensationId = "demo-comp-1";
+      const newDistanceInMetres = 50000;
+      const expectedTravelExpenses =
+        (newDistanceInMetres / 1000) * TRAVEL_EXPENSE_RATE_PER_KM;
+
+      useDemoStore.getState().updateCompensation(compensationId, {
+        distanceInMetres: newDistanceInMetres,
+      });
+
+      const updatedComp = useDemoStore
+        .getState()
+        .compensations.find((c) => c.__identity === compensationId);
+
+      expect(updatedComp?.convocationCompensation?.distanceInMetres).toBe(
+        newDistanceInMetres,
+      );
+      expect(updatedComp?.convocationCompensation?.travelExpenses).toBe(
+        expectedTravelExpenses,
+      );
+    });
+
+    it("calculates travel expenses at 0.7 CHF per kilometer", () => {
+      useDemoStore.getState().initializeDemoData();
+      const compensationId = "demo-comp-2";
+      const testCases = [
+        { distance: 10000, expected: 7.0 },
+        { distance: 25000, expected: 17.5 },
+        { distance: 100000, expected: 70.0 },
+        { distance: 15500, expected: 10.85 },
+      ];
+
+      for (const { distance, expected } of testCases) {
+        useDemoStore.getState().updateCompensation(compensationId, {
+          distanceInMetres: distance,
+        });
+
+        const updatedComp = useDemoStore
+          .getState()
+          .compensations.find((c) => c.__identity === compensationId);
+
+        expect(updatedComp?.convocationCompensation?.travelExpenses).toBe(
+          expected,
+        );
+      }
+    });
+
+    it("does not modify other compensations", () => {
+      useDemoStore.getState().initializeDemoData();
+      const targetId = "demo-comp-1";
+      const otherId = "demo-comp-2";
+
+      const originalOther = useDemoStore
+        .getState()
+        .compensations.find((c) => c.__identity === otherId);
+      const originalDistance =
+        originalOther?.convocationCompensation?.distanceInMetres;
+      const originalExpenses =
+        originalOther?.convocationCompensation?.travelExpenses;
+
+      useDemoStore.getState().updateCompensation(targetId, {
+        distanceInMetres: 99999,
+      });
+
+      const unchangedOther = useDemoStore
+        .getState()
+        .compensations.find((c) => c.__identity === otherId);
+
+      expect(unchangedOther?.convocationCompensation?.distanceInMetres).toBe(
+        originalDistance,
+      );
+      expect(unchangedOther?.convocationCompensation?.travelExpenses).toBe(
+        originalExpenses,
+      );
+    });
+
+    it("handles non-existent compensation ID gracefully", () => {
+      useDemoStore.getState().initializeDemoData();
+      const originalCompensations = useDemoStore.getState().compensations;
+
+      useDemoStore.getState().updateCompensation("non-existent-id", {
+        distanceInMetres: 50000,
+      });
+
+      const updatedCompensations = useDemoStore.getState().compensations;
+      expect(updatedCompensations).toEqual(originalCompensations);
+    });
+
+    it("preserves other compensation fields when updating distance", () => {
+      useDemoStore.getState().initializeDemoData();
+      const compensationId = "demo-comp-1";
+
+      const originalComp = useDemoStore
+        .getState()
+        .compensations.find((c) => c.__identity === compensationId);
+      const originalGameCompensation =
+        originalComp?.convocationCompensation?.gameCompensation;
+      const originalPaymentDone =
+        originalComp?.convocationCompensation?.paymentDone;
+      const originalTransportationMode =
+        originalComp?.convocationCompensation?.transportationMode;
+
+      useDemoStore.getState().updateCompensation(compensationId, {
+        distanceInMetres: 75000,
+      });
+
+      const updatedComp = useDemoStore
+        .getState()
+        .compensations.find((c) => c.__identity === compensationId);
+
+      expect(updatedComp?.convocationCompensation?.gameCompensation).toBe(
+        originalGameCompensation,
+      );
+      expect(updatedComp?.convocationCompensation?.paymentDone).toBe(
+        originalPaymentDone,
+      );
+      expect(updatedComp?.convocationCompensation?.transportationMode).toBe(
+        originalTransportationMode,
+      );
+    });
+  });
 });

@@ -36,6 +36,30 @@ function calculateTravelExpenses(distanceInMetres: number): number {
   return Math.round(distanceInKm * TRAVEL_EXPENSE_RATE_PER_KM * 100) / 100;
 }
 
+function updateCompensationRecord(
+  comp: CompensationRecord,
+  compensationId: string,
+  data: { distanceInMetres?: number },
+): CompensationRecord {
+  if (comp.__identity !== compensationId) return comp;
+  if (!comp.convocationCompensation) return comp;
+
+  const newDistance =
+    data.distanceInMetres ?? comp.convocationCompensation.distanceInMetres;
+
+  return {
+    ...comp,
+    convocationCompensation: {
+      ...comp.convocationCompensation,
+      distanceInMetres: newDistance,
+      travelExpenses:
+        newDistance !== undefined
+          ? calculateTravelExpenses(newDistance)
+          : comp.convocationCompensation.travelExpenses,
+    },
+  };
+}
+
 function getWeekday(date: Date): Weekday {
   const days = [
     "Sun",
@@ -264,7 +288,7 @@ function generateDummyData() {
         __identity: "demo-cc-1",
         paymentDone: true,
         gameCompensation: 100,
-        travelExpenses: 45.6,
+        travelExpenses: 33.6,
         distanceInMetres: 48000,
         transportationMode: "car",
       },
@@ -296,7 +320,7 @@ function generateDummyData() {
         __identity: "demo-cc-2",
         paymentDone: false,
         gameCompensation: 60,
-        travelExpenses: 32.5,
+        travelExpenses: 24.5,
         distanceInMetres: 35000,
         transportationMode: "car",
       },
@@ -328,7 +352,7 @@ function generateDummyData() {
         __identity: "demo-cc-3",
         paymentDone: true,
         gameCompensation: 80,
-        travelExpenses: 55.0,
+        travelExpenses: 43.4,
         distanceInMetres: 62000,
         transportationMode: "car",
       },
@@ -360,7 +384,7 @@ function generateDummyData() {
         __identity: "demo-cc-4",
         paymentDone: false,
         gameCompensation: 100,
-        travelExpenses: 78.3,
+        travelExpenses: 62.3,
         distanceInMetres: 89000,
         transportationMode: "car",
       },
@@ -392,7 +416,7 @@ function generateDummyData() {
         __identity: "demo-cc-5",
         paymentDone: true,
         gameCompensation: 50,
-        travelExpenses: 22.4,
+        travelExpenses: 16.8,
         distanceInMetres: 24000,
         transportationMode: "train",
       },
@@ -745,25 +769,8 @@ export const useDemoStore = create<DemoState>()((set) => ({
     data: { distanceInMetres?: number },
   ) =>
     set((state) => ({
-      compensations: state.compensations.map((comp) => {
-        if (comp.__identity !== compensationId) return comp;
-        if (!comp.convocationCompensation) return comp;
-
-        const newDistance =
-          data.distanceInMetres ??
-          comp.convocationCompensation.distanceInMetres;
-
-        return {
-          ...comp,
-          convocationCompensation: {
-            ...comp.convocationCompensation,
-            distanceInMetres: newDistance,
-            travelExpenses:
-              newDistance !== undefined
-                ? calculateTravelExpenses(newDistance)
-                : comp.convocationCompensation.travelExpenses,
-          },
-        };
-      }),
+      compensations: state.compensations.map((comp) =>
+        updateCompensationRecord(comp, compensationId, data),
+      ),
     })),
 }));
