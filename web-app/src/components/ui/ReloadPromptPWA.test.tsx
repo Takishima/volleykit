@@ -1,34 +1,27 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
 import ReloadPromptPWA from "./ReloadPromptPWA";
-
-// Mock the virtual:pwa-register/react module
-vi.mock("virtual:pwa-register/react", () => ({
-  useRegisterSW: vi.fn(),
-}));
-
-import { useRegisterSW } from "virtual:pwa-register/react";
+import * as PWAContext from "@/contexts/PWAContext";
 
 describe("ReloadPromptPWA", () => {
-  const mockUpdateServiceWorker = vi.fn();
-  const mockSetOfflineReady = vi.fn();
-  const mockSetNeedRefresh = vi.fn();
+  const mockUpdateApp = vi.fn();
+  const mockDismissPrompt = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
-    vi.useRealTimers();
   });
 
   const setupMock = (offlineReady: boolean, needRefresh: boolean) => {
-    vi.mocked(useRegisterSW).mockReturnValue({
-      offlineReady: [offlineReady, mockSetOfflineReady],
-      needRefresh: [needRefresh, mockSetNeedRefresh],
-      updateServiceWorker: mockUpdateServiceWorker,
+    vi.spyOn(PWAContext, "usePWA").mockReturnValue({
+      offlineReady,
+      needRefresh,
+      isChecking: false,
+      lastChecked: null,
+      checkError: null,
+      registrationError: null,
+      checkForUpdate: vi.fn(),
+      updateApp: mockUpdateApp,
+      dismissPrompt: mockDismissPrompt,
     });
   };
 
@@ -80,25 +73,102 @@ describe("ReloadPromptPWA", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("calls updateServiceWorker when reload button is clicked", () => {
+  it("calls updateApp when reload button is clicked", async () => {
+    mockUpdateApp.mockResolvedValue(undefined);
     setupMock(false, true);
     render(<ReloadPromptPWA />);
     const reloadButton = screen.getByRole("button", {
       name: /reload application/i,
     });
-    fireEvent.click(reloadButton);
-    expect(mockUpdateServiceWorker).toHaveBeenCalledWith(true);
+    await act(async () => {
+      fireEvent.click(reloadButton);
+    });
+    expect(mockUpdateApp).toHaveBeenCalled();
   });
 
-  it("closes notification when close button is clicked", () => {
+  it("disables reload button and shows loading text while updating", async () => {
+    let resolveUpdate: () => void;
+    mockUpdateApp.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveUpdate = resolve;
+        }),
+    );
+    setupMock(false, true);
+    render(<ReloadPromptPWA />);
+
+    const reloadButton = screen.getByRole("button", {
+      name: /reload application/i,
+    });
+    expect(reloadButton).not.toBeDisabled();
+    expect(reloadButton).toHaveTextContent("Reload");
+
+    // Start the update
+    act(() => {
+      fireEvent.click(reloadButton);
+    });
+
+    // Button should be disabled and show loading text
+    await waitFor(() => {
+      expect(reloadButton).toBeDisabled();
+      expect(reloadButton).toHaveTextContent("Reloading...");
+      expect(reloadButton).toHaveAttribute("aria-busy", "true");
+    });
+
+    // Resolve the update
+    await act(async () => {
+      resolveUpdate!();
+    });
+
+    // Button should return to normal
+    await waitFor(() => {
+      expect(reloadButton).not.toBeDisabled();
+      expect(reloadButton).toHaveTextContent("Reload");
+    });
+  });
+
+  it("prevents multiple clicks while updating", async () => {
+    let resolveUpdate: () => void;
+    mockUpdateApp.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveUpdate = resolve;
+        }),
+    );
+    setupMock(false, true);
+    render(<ReloadPromptPWA />);
+
+    const reloadButton = screen.getByRole("button", {
+      name: /reload application/i,
+    });
+
+    // Start first update
+    act(() => {
+      fireEvent.click(reloadButton);
+    });
+
+    // Try to click again while updating
+    act(() => {
+      fireEvent.click(reloadButton);
+    });
+
+    // Should only be called once
+    expect(mockUpdateApp).toHaveBeenCalledTimes(1);
+
+    // Cleanup
+    await act(async () => {
+      resolveUpdate!();
+    });
+  });
+
+  it("calls dismissPrompt when close button is clicked", () => {
     setupMock(false, true);
     render(<ReloadPromptPWA />);
     const dismissButton = screen.getByRole("button", {
       name: /dismiss update notification/i,
     });
     fireEvent.click(dismissButton);
-    expect(mockSetOfflineReady).toHaveBeenCalledWith(false);
-    expect(mockSetNeedRefresh).toHaveBeenCalledWith(false);
+    expect(mockDismissPrompt).toHaveBeenCalled();
   });
 
   it('shows "Dismiss" text when refresh is needed', () => {
@@ -111,111 +181,5 @@ describe("ReloadPromptPWA", () => {
     setupMock(true, false);
     render(<ReloadPromptPWA />);
     expect(screen.getByText("Close")).toBeInTheDocument();
-  });
-
-  it("sets up interval to check for updates on registration", () => {
-    const mockRegistration = {
-      update: vi.fn(),
-    };
-
-    let onRegisteredCallback:
-      | ((registration: ServiceWorkerRegistration) => void)
-      | undefined;
-
-    vi.mocked(useRegisterSW).mockImplementation((options) => {
-      onRegisteredCallback = options?.onRegistered;
-      return {
-        offlineReady: [false, mockSetOfflineReady],
-        needRefresh: [false, mockSetNeedRefresh],
-        updateServiceWorker: mockUpdateServiceWorker,
-      };
-    });
-
-    render(<ReloadPromptPWA />);
-
-    // Simulate service worker registration
-    if (onRegisteredCallback) {
-      onRegisteredCallback(
-        mockRegistration as unknown as ServiceWorkerRegistration,
-      );
-    }
-
-    // Fast-forward time by 1 hour
-    vi.advanceTimersByTime(60 * 60 * 1000);
-
-    expect(mockRegistration.update).toHaveBeenCalledTimes(1);
-
-    // Fast-forward another hour
-    vi.advanceTimersByTime(60 * 60 * 1000);
-
-    expect(mockRegistration.update).toHaveBeenCalledTimes(2);
-  });
-
-  it("cleans up interval on unmount", () => {
-    const mockRegistration = {
-      update: vi.fn(),
-    };
-
-    let onRegisteredCallback:
-      | ((registration: ServiceWorkerRegistration) => void)
-      | undefined;
-
-    vi.mocked(useRegisterSW).mockImplementation((options) => {
-      onRegisteredCallback = options?.onRegistered;
-      return {
-        offlineReady: [false, mockSetOfflineReady],
-        needRefresh: [false, mockSetNeedRefresh],
-        updateServiceWorker: mockUpdateServiceWorker,
-      };
-    });
-
-    const { unmount } = render(<ReloadPromptPWA />);
-
-    // Simulate service worker registration
-    if (onRegisteredCallback) {
-      onRegisteredCallback(
-        mockRegistration as unknown as ServiceWorkerRegistration,
-      );
-    }
-
-    // Unmount the component
-    unmount();
-
-    // Fast-forward time by 1 hour - update should NOT be called since interval was cleaned up
-    vi.advanceTimersByTime(60 * 60 * 1000);
-
-    expect(mockRegistration.update).not.toHaveBeenCalled();
-  });
-
-  it("logs error when service worker registration fails", () => {
-    const consoleErrorSpy = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
-    const mockError = new Error("Registration failed");
-
-    let onRegisterErrorCallback: ((error: Error) => void) | undefined;
-
-    vi.mocked(useRegisterSW).mockImplementation((options) => {
-      onRegisterErrorCallback = options?.onRegisterError;
-      return {
-        offlineReady: [false, mockSetOfflineReady],
-        needRefresh: [false, mockSetNeedRefresh],
-        updateServiceWorker: mockUpdateServiceWorker,
-      };
-    });
-
-    render(<ReloadPromptPWA />);
-
-    // Simulate registration error
-    if (onRegisterErrorCallback) {
-      onRegisterErrorCallback(mockError);
-    }
-
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "Service worker registration error:",
-      mockError,
-    );
-
-    consoleErrorSpy.mockRestore();
   });
 });
