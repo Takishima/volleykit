@@ -266,24 +266,26 @@ refactor/api-client
 
 ## Commands Reference
 
-### CI Validation (Run Before Committing)
+### CI Validation (Run Before Creating PRs)
 
-**IMPORTANT**: Always run these commands before committing to ensure CI will pass:
+**CRITICAL**: Always run the full CI validation before creating a pull request. This ensures CI will pass and avoids wasted review cycles.
 
 ```bash
 # Web App - Full CI validation (same as GitHub Actions)
 cd web-app
-npm run generate:api  # Generate API types first
+npm run generate:api  # Generate API types first (REQUIRED before lint/test/build)
 npm run lint          # Lint check
 npm test              # Run all tests
 npm run build         # Production build (includes tsc)
 npm run size          # Check bundle size
 
-# Worker - Full CI validation
+# Worker - Full CI validation (if worker/ files changed)
 cd worker
 npm run lint          # Lint check
 npm test              # Run all worker tests
 ```
+
+**Note**: The `npm run generate:api` step is required because CI runs it before tests. Running tests without it may pass locally (if types were previously generated) but fail in CI.
 
 ### Development
 
@@ -351,7 +353,6 @@ A feature is complete when:
 
 1. Implementation follows React/TypeScript best practices
 1. Tests cover business logic and interactions
-1. No TypeScript errors (`tsc --noEmit` passes)
-1. No lint warnings (`npm run lint` passes)
+1. **Full CI validation passes locally** (see "CI Validation" section above)
 1. Works across modern browsers (Chrome, Firefox, Safari)
 1. Accessible (keyboard navigation, screen reader compatible)
