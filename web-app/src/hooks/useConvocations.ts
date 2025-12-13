@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   useQuery,
   useMutation,
@@ -330,43 +331,51 @@ export function useValidationClosedAssignments(): UseQueryResult<
     isError: seasonError,
   } = useActiveSeason();
 
-  // Calculate date range for the query.
-  // Season dates come from API; fallback to 365-day range if unavailable or invalid.
-  const now = new Date();
-  const seasonStart = parseDateOrFallback(
-    season?.seasonStartDate,
-    subDays(now, DEFAULT_DATE_RANGE_DAYS),
-  );
-  const seasonEnd = parseDateOrFallback(season?.seasonEndDate, now);
+  // Memoize date calculations to prevent query key changes on every render.
+  // Only recalculate when season data actually changes.
+  const { fromDate, toDate } = useMemo(() => {
+    const now = new Date();
+    const seasonStart = parseDateOrFallback(
+      season?.seasonStartDate,
+      subDays(now, DEFAULT_DATE_RANGE_DAYS),
+    );
+    const seasonEnd = parseDateOrFallback(season?.seasonEndDate, now);
 
-  // Query from season start to now (we only want past games)
-  const fromDate = startOfDay(seasonStart).toISOString();
-  const toDate = endOfDay(now < seasonEnd ? now : seasonEnd).toISOString();
+    return {
+      fromDate: startOfDay(seasonStart).toISOString(),
+      toDate: endOfDay(now < seasonEnd ? now : seasonEnd).toISOString(),
+    };
+  }, [season?.seasonStartDate, season?.seasonEndDate]);
 
   const deadlineHours =
     settings?.hoursAfterGameStartForRefereeToEditGameList ??
     DEFAULT_VALIDATION_DEADLINE_HOURS;
 
-  const config: SearchConfiguration = {
-    propertyFilters: [
-      {
-        propertyName: "refereeGame.game.startingDateTime",
-        dateRange: { from: fromDate, to: toDate },
-      },
-    ],
-    propertyOrderings: [
-      {
-        propertyName: "refereeGame.game.startingDateTime",
-        descending: true, // Most recent first
-        isSetByUser: true,
-      },
-    ],
-  };
+  // Memoize config to prevent unnecessary object recreation
+  const config = useMemo<SearchConfiguration>(
+    () => ({
+      propertyFilters: [
+        {
+          propertyName: "refereeGame.game.startingDateTime",
+          dateRange: { from: fromDate, to: toDate },
+        },
+      ],
+      propertyOrderings: [
+        {
+          propertyName: "refereeGame.game.startingDateTime",
+          descending: true, // Most recent first
+          isSetByUser: true,
+        },
+      ],
+    }),
+    [fromDate, toDate],
+  );
 
   // Wait for settings and season to load before making the main query.
   // If either query fails, proceed with defaults rather than blocking indefinitely.
-  const settingsResolved = !settingsLoading || settingsError;
-  const seasonResolved = !seasonLoading || seasonError;
+  // Explicit null checks ensure data actually loaded, not just that loading finished.
+  const settingsResolved = (!settingsLoading && settings != null) || settingsError;
+  const seasonResolved = (!seasonLoading && season != null) || seasonError;
   const isReady = !isDemoMode && settingsResolved && seasonResolved;
 
   const query = useQuery({
@@ -389,9 +398,11 @@ export function useValidationClosedAssignments(): UseQueryResult<
     enabled: isReady,
   });
 
-  if (isDemoMode) {
-    // Filter demo assignments by date range and validation status
-    // Uses shared filterByValidationClosed helper to avoid duplication
+  // Memoize demo data filtering to prevent recalculation on every render.
+  // Only recompute when demo assignments, date range, or deadline changes.
+  const demoFilteredData = useMemo(() => {
+    if (!isDemoMode) return [];
+
     const inDateRange = demoAssignments.filter((assignment) => {
       const gameDate = assignment.refereeGame?.game?.startingDateTime;
       if (!gameDate) return false;
@@ -403,8 +414,11 @@ export function useValidationClosedAssignments(): UseQueryResult<
       });
     });
     const filtered = filterByValidationClosed(inDateRange, deadlineHours);
-    const sorted = sortByGameDate(filtered, true);
-    return createDemoQueryResult(query, sorted);
+    return sortByGameDate(filtered, true);
+  }, [isDemoMode, demoAssignments, fromDate, toDate, deadlineHours]);
+
+  if (isDemoMode) {
+    return createDemoQueryResult(query, demoFilteredData);
   }
 
   return query;
