@@ -4,11 +4,11 @@ import { PWAContext } from "./PWAContext";
 import type { PWAContextType } from "./PWAContext";
 
 /**
- * Interval for automatic update checks.
- * Set to 1 hour to balance between freshness and avoiding excessive network requests.
+ * Interval for automatic update checks (1 hour).
+ * Balances freshness with avoiding excessive network requests.
  * The service worker will also check for updates on page load.
  */
-const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000;
+const UPDATE_CHECK_INTERVAL_MS = 3_600_000;
 
 interface PWAProviderInternalProps {
   children: ReactNode;
@@ -25,6 +25,7 @@ export default function PWAProviderInternal({
   const [needRefresh, setNeedRefresh] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
+  const [checkError, setCheckError] = useState<Error | null>(null);
 
   // Refs must be declared before useEffect to avoid race conditions
   const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
@@ -87,6 +88,7 @@ export default function PWAProviderInternal({
       cancelled = true;
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
+        intervalRef.current = undefined;
       }
     };
   }, []);
@@ -97,11 +99,15 @@ export default function PWAProviderInternal({
 
     isCheckingRef.current = true;
     setIsChecking(true);
+    setCheckError(null);
     try {
       await registrationRef.current.update();
       setLastChecked(new Date());
     } catch (error) {
+      const updateError =
+        error instanceof Error ? error : new Error("Failed to check for updates");
       console.error("Failed to check for updates:", error);
+      setCheckError(updateError);
     } finally {
       isCheckingRef.current = false;
       setIsChecking(false);
@@ -111,6 +117,8 @@ export default function PWAProviderInternal({
   const updateApp = async () => {
     if (updateSWRef.current) {
       await updateSWRef.current(true);
+    } else {
+      console.warn("updateApp called but service worker is not ready");
     }
   };
 
@@ -124,6 +132,7 @@ export default function PWAProviderInternal({
     needRefresh,
     isChecking,
     lastChecked,
+    checkError,
     checkForUpdate,
     updateApp,
     dismissPrompt,

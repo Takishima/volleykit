@@ -157,6 +157,7 @@ interface Translations {
     updateAvailable: string;
     lastChecked: string;
     updateNow: string;
+    updateCheckFailed: string;
   };
 }
 
@@ -318,6 +319,7 @@ const en: Translations = {
     updateAvailable: "Update available",
     lastChecked: "Last checked",
     updateNow: "Update Now",
+    updateCheckFailed: "Update check failed",
   },
 };
 
@@ -480,6 +482,7 @@ const de: Translations = {
     updateAvailable: "Update verfügbar",
     lastChecked: "Zuletzt geprüft",
     updateNow: "Jetzt aktualisieren",
+    updateCheckFailed: "Update-Prüfung fehlgeschlagen",
   },
 };
 
@@ -642,6 +645,7 @@ const fr: Translations = {
     updateAvailable: "Mise à jour disponible",
     lastChecked: "Dernière vérification",
     updateNow: "Mettre à jour",
+    updateCheckFailed: "Échec de la vérification",
   },
 };
 
@@ -803,6 +807,7 @@ const it: Translations = {
     updateAvailable: "Aggiornamento disponibile",
     lastChecked: "Ultimo controllo",
     updateNow: "Aggiorna ora",
+    updateCheckFailed: "Verifica aggiornamenti fallita",
   },
 };
 

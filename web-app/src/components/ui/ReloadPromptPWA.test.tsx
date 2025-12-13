@@ -17,6 +17,7 @@ describe("ReloadPromptPWA", () => {
       needRefresh,
       isChecking: false,
       lastChecked: null,
+      checkError: null,
       checkForUpdate: vi.fn(),
       updateApp: mockUpdateApp,
       dismissPrompt: mockDismissPrompt,

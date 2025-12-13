@@ -12,8 +12,14 @@ export function SettingsPage() {
   const { user, logout, isDemoMode } = useAuthStore();
   const { isSafeModeEnabled, setSafeMode } = useSettingsStore();
   const { t, locale } = useTranslation();
-  const { needRefresh, isChecking, lastChecked, checkForUpdate, updateApp } =
-    usePWA();
+  const {
+    needRefresh,
+    isChecking,
+    lastChecked,
+    checkError,
+    checkForUpdate,
+    updateApp,
+  } = usePWA();
   const [showSafeModeWarning, setShowSafeModeWarning] = useState(false);
 
   const formatLastChecked = useCallback(
@@ -201,7 +207,10 @@ export function SettingsPage() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <div className="text-sm font-medium text-gray-900 dark:text-white">
+                <div
+                  className="text-sm font-medium text-gray-900 dark:text-white"
+                  aria-live="polite"
+                >
                   {needRefresh
                     ? t("settings.updateAvailable")
                     : t("settings.upToDate")}
@@ -209,6 +218,14 @@ export function SettingsPage() {
                 {lastChecked && (
                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     {t("settings.lastChecked")}: {formatLastChecked(lastChecked)}
+                  </div>
+                )}
+                {checkError && (
+                  <div
+                    className="text-xs text-red-600 dark:text-red-400 mt-1"
+                    role="alert"
+                  >
+                    {t("settings.updateCheckFailed")}
                   </div>
                 )}
               </div>

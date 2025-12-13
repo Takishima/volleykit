@@ -14,6 +14,7 @@ function TestConsumer() {
     needRefresh,
     isChecking,
     lastChecked,
+    checkError,
     checkForUpdate,
     updateApp,
     dismissPrompt,
@@ -25,6 +26,7 @@ function TestConsumer() {
       <span data-testid="needRefresh">{String(needRefresh)}</span>
       <span data-testid="isChecking">{String(isChecking)}</span>
       <span data-testid="lastChecked">{lastChecked?.toISOString() ?? "null"}</span>
+      <span data-testid="checkError">{checkError?.message ?? "null"}</span>
       <button data-testid="checkForUpdate" onClick={checkForUpdate}>
         Check
       </button>
@@ -319,6 +321,101 @@ describe("PWAContext", () => {
       expect(screen.getByTestId("lastChecked")).not.toHaveTextContent("null");
     });
 
+    it("sets checkError when update check fails", async () => {
+      const mockRegistration = {
+        update: vi.fn().mockRejectedValue(new Error("Network error")),
+      };
+
+      let onRegisteredSWCallback:
+        | ((url: string, reg: ServiceWorkerRegistration) => void)
+        | undefined;
+      const mockRegisterSW = vi.fn((options) => {
+        onRegisteredSWCallback = options?.onRegisteredSW;
+        return vi.fn();
+      });
+      const { registerSW } = await import("virtual:pwa-register");
+      vi.mocked(registerSW).mockImplementation(mockRegisterSW);
+
+      render(
+        <PWAProvider>
+          <TestConsumer />
+        </PWAProvider>,
+      );
+
+      await waitFor(() => {
+        expect(onRegisteredSWCallback).toBeDefined();
+      });
+
+      act(() => {
+        onRegisteredSWCallback?.(
+          "sw.js",
+          mockRegistration as unknown as ServiceWorkerRegistration,
+        );
+      });
+
+      expect(screen.getByTestId("checkError")).toHaveTextContent("null");
+
+      await act(async () => {
+        screen.getByTestId("checkForUpdate").click();
+      });
+
+      expect(screen.getByTestId("checkError")).toHaveTextContent("Network error");
+    });
+
+    it("clears checkError on next successful check", async () => {
+      let shouldFail = true;
+      const mockRegistration = {
+        update: vi.fn().mockImplementation(() => {
+          if (shouldFail) {
+            return Promise.reject(new Error("Network error"));
+          }
+          return Promise.resolve(undefined);
+        }),
+      };
+
+      let onRegisteredSWCallback:
+        | ((url: string, reg: ServiceWorkerRegistration) => void)
+        | undefined;
+      const mockRegisterSW = vi.fn((options) => {
+        onRegisteredSWCallback = options?.onRegisteredSW;
+        return vi.fn();
+      });
+      const { registerSW } = await import("virtual:pwa-register");
+      vi.mocked(registerSW).mockImplementation(mockRegisterSW);
+
+      render(
+        <PWAProvider>
+          <TestConsumer />
+        </PWAProvider>,
+      );
+
+      await waitFor(() => {
+        expect(onRegisteredSWCallback).toBeDefined();
+      });
+
+      act(() => {
+        onRegisteredSWCallback?.(
+          "sw.js",
+          mockRegistration as unknown as ServiceWorkerRegistration,
+        );
+      });
+
+      // First check fails
+      await act(async () => {
+        screen.getByTestId("checkForUpdate").click();
+      });
+
+      expect(screen.getByTestId("checkError")).toHaveTextContent("Network error");
+
+      // Second check succeeds
+      shouldFail = false;
+      await act(async () => {
+        screen.getByTestId("checkForUpdate").click();
+      });
+
+      expect(screen.getByTestId("checkError")).toHaveTextContent("null");
+    });
+
     it("prevents concurrent update checks (race condition guard)", async () => {
       let resolveUpdate: () => void;
       const mockRegistration = {
@@ -378,6 +475,33 @@ describe("PWAContext", () => {
   });
 
   describe("updateApp", () => {
+    it("logs warning when SW is not ready", async () => {
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      // Don't set up a proper registration - updateSWRef will be null
+      const mockRegisterSW = vi.fn().mockReturnValue(null);
+      const { registerSW } = await import("virtual:pwa-register");
+      vi.mocked(registerSW).mockImplementation(mockRegisterSW);
+
+      render(
+        <PWAProvider>
+          <TestConsumer />
+        </PWAProvider>,
+      );
+
+      await waitFor(() => {
+        expect(mockRegisterSW).toHaveBeenCalled();
+      });
+
+      await act(async () => {
+        screen.getByTestId("updateApp").click();
+      });
+
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        "updateApp called but service worker is not ready",
+      );
+      consoleWarnSpy.mockRestore();
+    });
+
     it("calls updateSW with true to reload page", async () => {
       const mockUpdateSW = vi.fn().mockResolvedValue(undefined);
       const mockRegisterSW = vi.fn().mockReturnValue(mockUpdateSW);
