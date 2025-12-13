@@ -46,13 +46,29 @@ export function getTeamNamesFromCompensation(
 
 /**
  * League categories that are eligible for game report generation.
- * Only NLA and NLB games support game reports.
+ *
+ * Swiss volleyball league hierarchy (top to bottom):
+ * - NLA: Nationalliga A (top tier, men's and women's)
+ * - NLB: Nationalliga B (second tier, men's and women's)
+ * - 1L: 1. Liga (third tier, national)
+ * - 2L, 3L, 4L: Lower leagues (regional)
+ *
+ * Game reports are only available for NLA and NLB games
+ * as they require official documentation for Swiss Volley.
  */
 const GAME_REPORT_ELIGIBLE_LEAGUES = ["NLA", "NLB"];
 
 /**
  * Checks if an assignment is eligible for game report generation.
- * Only NLA and NLB games are eligible.
+ *
+ * Game reports are only available for NLA (Nationalliga A) and NLB
+ * (Nationalliga B) games, the top two tiers of Swiss volleyball.
+ * Games in other leagues (1L and below) do not require official
+ * game reports through this system.
+ *
+ * @param assignment - The referee assignment to check
+ * @returns true if the assignment's league is NLA or NLB, false otherwise
+ *          (including when league data is undefined)
  */
 export function isGameReportEligible(assignment: Assignment): boolean {
   const leagueName =
