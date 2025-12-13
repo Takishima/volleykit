@@ -1,0 +1,5738 @@
+openapi: 3.0.3
+info:
+  title: VolleyManager Referee API
+  description: |
+    API documentation for the VolleyManager referee management system.
+    Captured from observing production behavior at volleymanager.volleyball.ch
+
+    ## Request Format
+    All POST endpoints use `application/x-www-form-urlencoded` with nested bracket notation:
+    ```
+    searchConfiguration[propertyFilters][0][propertyName]=refereeGame.game.startingDateTime
+    searchConfiguration[propertyFilters][0][dateRange][from]=2025-12-07T23:00:00.000Z
+    ```
+
+    ## Authentication
+    Uses cookie-based session authentication via `Neos_Flow_Session` cookie.
+    All requests require a `__csrfToken` parameter.
+
+    ## Pagination
+    Uses offset/limit (not page-based):
+    - `searchConfiguration[offset]` - Starting index (0-based)
+    - `searchConfiguration[limit]` - Number of items per page
+    - Response includes `totalItemsCount` for total available items
+
+    ## Backend Framework
+    Powered by Neos Flow framework. All entities have `__identity` UUID fields.
+  version: 1.0.0
+  contact:
+    name: API Documentation Project
+servers:
+  - url: https://volleymanager.volleyball.ch/api
+    description: Production server
+  - url: http://localhost:8080/api
+    description: Local mock server (for testing)
+security:
+  - cookieAuth: []
+tags:
+  - name: Authentication
+    description: Login, logout, and session management
+  - name: Assignments
+    description: Referee assignment/convocation management
+  - name: Compensations
+    description: Travel expenses and compensation tracking
+  - name: Exchanges
+    description: Game exchange and referee substitution marketplace
+  - name: Games
+    description: Game details and related information
+  - name: Profile
+    description: User profile and referee data management
+  - name: Settings
+    description: Configuration and metadata endpoints
+  - name: eScoresheet
+    description: Electronic scoresheet management for games
+  - name: NominationList
+    description: Team nomination list management for games
+  - name: Search
+    description: Person and entity search functionality
+  - name: Resources
+    description: File upload and resource management
+  - name: Notifications
+    description: In-app notification management
+  - name: Absences
+    description: Referee absence management
+paths:
+  # ==================== Authentication Endpoints ====================
+  /login:
+    get:
+      tags: [Authentication]
+      summary: Display login page
+      description: |
+        Returns the login page HTML. This is a browser-facing endpoint, not an API endpoint.
+        The login page contains:
+        - A login form with username/password fields
+        - Hidden fields for CSRF protection (__trustedProperties)
+        - Hidden referrer fields for redirect handling
+
+        Note: The session cookie `Neos_Flow_Session` is set on first visit.
+      operationId: getLoginPage
+      security: [] # No auth required
+      responses:
+        '200':
+          description: Login page HTML
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+              description: Sets initial session cookie (Neos_Flow_Session)
+          content:
+            text/html:
+              schema:
+                type: string
+  /sportmanager.security/authentication/authenticate:
+    post:
+      tags: [Authentication]
+      summary: Authenticate user
+      description: |
+        Authenticates a user with username and password.
+
+        **Flow:**
+        1. User visits `/login` page (GET) - receives initial session cookie
+        2. User submits credentials to this endpoint (POST)
+        3. On success: 303 redirect to `/sportmanager.volleyball/main/dashboard`
+        4. On failure: 303 redirect back to `/login` with error
+
+        **Important:** This uses Neos Flow's authentication token format.
+        The username/password are sent in a deeply nested structure:
+        `__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][username]`
+
+        **Session Handling:**
+        - On successful login, a new session cookie is issued
+        - The old session cookie is invalidated
+      operationId: authenticate
+      security: [] # No auth required (this IS the auth)
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AuthenticationRequest'
+      responses:
+        '303':
+          description: |
+            **Success:** Redirect to dashboard.
+            This response indicates successful authentication.
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Redirect to dashboard
+              example: "https://volleymanager.volleyball.ch/sportmanager.volleyball/main/dashboard"
+            Set-Cookie:
+              schema:
+                type: string
+              description: |
+                New session cookie.
+                Format: `Neos_Flow_Session=<session-id>; Path=/; HttpOnly`
+        '200':
+          description: |
+            **Failure:** Login page HTML with error message.
+            This response indicates failed authentication (invalid credentials).
+
+            The response body contains the full login page HTML with an embedded
+            Vuetify snackbar error component:
+            ```html
+            <v-snackbar :value="true" color="error" :timeout="5000">
+                Authentifizierung fehlgeschlagen!
+            </v-snackbar>
+            ```
+
+            Note: A new session cookie is still issued (session rotation on failure).
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+              description: New session cookie (rotated even on failure)
+          content:
+            text/html:
+              schema:
+                type: string
+                description: Login page HTML with embedded error message
+  /logout:
+    get:
+      tags: [Authentication]
+      summary: Log out user
+      description: |
+        Logs out the current user by invalidating their session.
+
+        **Flow:**
+        1. User visits `/logout` (GET) with session cookie
+        2. Server invalidates the session
+        3. Server responds with 303 redirect to `/login`
+
+        **Note:** The session cookie is NOT explicitly cleared in the response
+        (no `Set-Cookie` with expiry). The session is invalidated server-side.
+      operationId: logout
+      responses:
+        '303':
+          description: Redirect to login page after logout
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Always redirects to `/login`
+              example: "https://volleymanager.volleyball.ch/login"
+  # ==================== Notification Endpoints ====================
+  /sportmanager.notificationcenter/api\inappnotification/getCountOfUnreadNotificationsForActiveParty:
+    get:
+      tags: [Notifications]
+      summary: Get count of unread notifications
+      description: |
+        Returns the count of unread in-app notifications for the currently active party.
+        This endpoint is called periodically (every 15 seconds by default) to update the notification badge.
+      operationId: getCountOfUnreadNotifications
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    description: Number of unread notifications
+                    example: 0
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  # ==================== Assignment Endpoints ====================
+  /indoorvolleyball.refadmin/api\refereeconvocation/searchMyRefereeConvocations:
+    post:
+      tags: [Assignments]
+      summary: Search referee assignments
+      description: Returns list of referee assignments for the authenticated user
+      operationId: searchMyRefereeConvocations
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AssignmentsSearchRequest'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /indoorvolleyball.refadmin/api\refereeconvocationcompensation/search:
+    post:
+      tags: [Compensations]
+      summary: Search referee compensations
+      description: Returns list of compensation/travel expense records
+      operationId: searchCompensations
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CompensationsSearchRequest'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompensationsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /indoorvolleyball.refadmin/api\refereegameexchange/search:
+    post:
+      tags: [Exchanges]
+      summary: Search game exchanges
+      description: Returns list of available referee position exchanges
+      operationId: searchGameExchanges
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ExchangesSearchRequest'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExchangesResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /indoorvolleyball.refadmin/api\refereegameexchange:
+    put:
+      tags: [Exchanges]
+      summary: Apply for or withdraw from exchange
+      description: Apply to take over a referee position or withdraw an application
+      operationId: manageExchangeApplication
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [__identity, __csrfToken]
+              properties:
+                __identity:
+                  type: string
+                  format: uuid
+                  description: Exchange ID
+                __csrfToken:
+                  type: string
+                apply:
+                  type: string
+                  enum: ["1"]
+                  description: Set to "1" to apply for exchange
+                withdrawApplication:
+                  type: string
+                  enum: ["1"]
+                  description: Set to "1" to withdraw application
+      responses:
+        '200':
+          description: Operation successful
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /sportmanager.indoorvolleyball/api\cindoorseason/getActiveIndoorSeason:
+    get:
+      tags: [Settings]
+      summary: Get active indoor season
+      operationId: getActiveSeason
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Season'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /indoorvolleyball.refadmin/api\crefereeassociationsettings/getRefereeAssociationSettingsOfActiveParty:
+    get:
+      tags: [Settings]
+      summary: Get referee association settings
+      operationId: getAssociationSettings
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssociationSettings'
+  # ==================== Referee Convocation Endpoints ====================
+  /indoorvolleyball.refadmin/api\refereeconvocation/showWithNestedObjects:
+    get:
+      tags: [Assignments]
+      summary: Get referee convocation details with nested objects
+      description: |
+        Returns detailed convocation information with specified nested properties.
+        This endpoint provides MORE info than the game details endpoints, including:
+        - Referee dispatcher (convocateur) contact info
+        - Referee postal addresses
+        - Association IDs
+
+        Used by the "Informations de convocation" dialog in the Assignments tab.
+
+        Makes additional parallel calls to:
+        - getTeamContactInfosByGame
+        - getRefereeGameByGame
+      operationId: showRefereeConvocationWithNestedObjects
+      parameters:
+        - name: refereeConvocation[__identity]
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The convocation identifier
+          example: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+        - name: propertyRenderConfiguration
+          in: query
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+          description: |
+            List of property paths to include in response.
+
+            Common properties for each referee position (FirstHeadReferee, SecondHeadReferee, etc.):
+            - refereeGame.activeRefereeConvocation{Position}.indoorAssociationReferee.indoorReferee.person.primaryPostalAddress
+            - refereeGame.activeRefereeConvocation{Position}.indoorAssociationReferee.indoorReferee.person.primaryEmailAddress
+            - refereeGame.activeRefereeConvocation{Position}.indoorAssociationReferee.indoorReferee.person.primaryPhoneNumber
+
+            Referee dispatcher (convocateur):
+            - refereeSelectionBy.primaryEmailAddress
+            - refereeSelectionBy.primaryPhoneNumber
+
+            Other data:
+            - refereeMatchingStatistic
+            - referee.person.primaryPostalAddress.geographicalLocation
+            - refereeGame.game.hall.primaryPostalAddress.geographicalLocation
+            - refereeGame.game.startingDateTime
+            - refereeGame.game.encounter.teamHome
+            - refereeGame.game.encounter.teamAway
+            - refereeGame.game.group.phase.league.leagueCategory
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefereeConvocationDetails'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  # ==================== Compensation Edit Endpoints ====================
+  /indoorvolleyball.refadmin/api\refereeconvocation/findConvocationCompensationSettingsForRefereeConvocation:
+    get:
+      tags: [Compensations]
+      summary: Find compensation settings for a convocation
+      description: Gets the compensation settings specific to this convocation
+      operationId: findConvocationCompensationSettings
+      parameters:
+        - name: refereeConvocation
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The convocation identifier
+          example: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConvocationCompensationSettings'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /indoorvolleyball.refadmin/api\associationcompensationsettings/getAssociationCompensationSettingsByRefereeConvocation:
+    get:
+      tags: [Compensations]
+      summary: Get association compensation settings by convocation
+      description: Gets the association-level compensation settings that apply to this convocation
+      operationId: getAssociationCompensationSettingsByConvocation
+      parameters:
+        - name: refereeConvocation
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The convocation identifier
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssociationCompensationSettings'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /indoorvolleyball.refadmin/api\convocationcompensation/showWithNestedObjects:
+    get:
+      tags: [Compensations]
+      summary: Get compensation details with nested objects
+      description: Gets the current compensation record with its additional compensations
+      operationId: showConvocationCompensationWithNestedObjects
+      parameters:
+        - name: convocationCompensation[__identity]
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The compensation record identifier
+          example: "cccccccc-cccc-cccc-cccc-cccccccccccc"
+        - name: propertyRenderConfiguration
+          in: query
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+          description: |
+            Properties to include:
+            - additionalCompensations
+            - flexibleAdditionalCompensations
+            - lockPayoutCentralPayoutCompensationBy
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConvocationCompensationDetailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /indoorvolleyball.refadmin/api\flexibleadditionalcompensation/search:
+    post:
+      tags: [Compensations]
+      summary: Search flexible additional compensations
+      description: |
+        Searches for flexible additional compensation entries linked to a specific convocation compensation.
+        Used in the compensation edit dialog to display existing flexible compensations.
+      operationId: searchFlexibleAdditionalCompensations
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                searchConfiguration[propertyFilters][0][propertyName]:
+                  type: string
+                  description: Property to filter on
+                  example: "convocationCompensation.Persistence_Object_Identifier"
+                searchConfiguration[propertyFilters][0][values][0]:
+                  type: string
+                  format: uuid
+                  description: The convocation compensation ID to filter by
+                searchConfiguration[customFilters]:
+                  type: string
+                  description: Custom filter string (usually empty)
+                searchConfiguration[propertyOrderings][0][propertyName]:
+                  type: string
+                  description: Property to order by
+                  example: "name"
+                searchConfiguration[propertyOrderings][0][descending]:
+                  type: boolean
+                  example: false
+                searchConfiguration[propertyOrderings][0][isSetByUser]:
+                  type: boolean
+                  example: true
+                searchConfiguration[offset]:
+                  type: integer
+                  example: 0
+                searchConfiguration[limit]:
+                  type: integer
+                  example: 10
+                searchConfiguration[textSearchOperator]:
+                  type: string
+                  enum: [AND, OR]
+                  example: AND
+                propertyRenderConfiguration[0]:
+                  type: string
+                  example: "name"
+                propertyRenderConfiguration[1]:
+                  type: string
+                  example: "type"
+                propertyRenderConfiguration[2]:
+                  type: string
+                  example: "sumFormatted"
+                __csrfToken:
+                  type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlexibleCompensationsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /indoorvolleyball.refadmin/api\additionalcompensation:
+    get:
+      tags: [Compensations]
+      summary: Get additional compensation types
+      description: Returns list of available additional compensation types
+      operationId: getAdditionalCompensationTypes
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AdditionalCompensationType'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /indoorvolleyball.refadmin/api\convocationcompensation:
+    put:
+      tags: [Compensations]
+      summary: Update convocation compensation
+      description: |
+        Updates the compensation settings for a convocation.
+        Used by the "Editer les frais et l'indemnité" dialog save action.
+      operationId: updateConvocationCompensation
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [__identity, __csrfToken]
+              properties:
+                __identity:
+                  type: string
+                  format: uuid
+                  description: The compensation record identifier
+                  example: "cccccccc-cccc-cccc-cccc-cccccccccccc"
+                convocationCompensation[payTravelExpenses]:
+                  type: string
+                  enum: ["0", "1"]
+                  description: Whether travel expenses should be paid
+                convocationCompensation[travelExpensesPercentageWeighting]:
+                  type: number
+                  description: Percentage of travel expenses claimable (0-1)
+                  example: 1
+                __csrfToken:
+                  type: string
+      responses:
+        '200':
+          description: Compensation updated successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /indoorvolleyball.refadmin/refereestatementofexpenses/downloadrefereestatementofexpenses:
+    get:
+      tags: [Compensations]
+      summary: Download referee statement of expenses PDF
+      description: |
+        Downloads a PDF document containing the referee statement of expenses (Quittung) for a specific convocation.
+
+        The PDF includes:
+        - Match details (date, teams, league)
+        - Referee compensation amounts
+        - Travel expenses
+        - Additional compensations
+
+        **Response Headers:**
+        - `content-disposition: attachment; filename="YYYY-MM-DD_HH-MM_Quittung_fuer_Spiel_XXXXXX.pdf"`
+        - `content-type: application/pdf; charset=utf-8`
+
+        **Note:** This endpoint does NOT use the `/api/` prefix in the path unlike most other API endpoints.
+        The endpoint is accessed directly from the compensation index page.
+      operationId: downloadRefereeStatementOfExpenses
+      parameters:
+        - name: refereeConvocation
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The referee convocation identifier
+          example: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+      responses:
+        '200':
+          description: PDF document containing referee statement of expenses
+          headers:
+            content-disposition:
+              schema:
+                type: string
+              description: |
+                Attachment filename with timestamp and game number.
+                Format: `attachment; filename="YYYY-MM-DD_HH-MM_Quittung_fuer_Spiel_XXXXXX.pdf"`
+              example: 'attachment; filename="2025-01-15_14-30_Quittung_fuer_Spiel_123456.pdf"'
+            content-description:
+              schema:
+                type: string
+              description: Always "File Transfer"
+            content-transfer-encoding:
+              schema:
+                type: string
+              description: Always "binary"
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+                description: The PDF document binary data
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Convocation not found or user not authorized to access this convocation
+  # ==================== Game Details Endpoints ====================
+  /sportmanager.indoorvolleyball/api\game/getTeamContactInfosByGame:
+    get:
+      tags: [Games]
+      summary: Get team contact information
+      description: Returns team manager contact info (names, emails, phones) for both teams
+      operationId: getTeamContactInfosByGame
+      parameters:
+        - name: game
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The game identifier
+          example: "dddddddd-dddd-dddd-dddd-dddddddddddd"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamContactInfoResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /sportmanager.indoorvolleyball/api\game/getRefereeGameByGame:
+    get:
+      tags: [Games]
+      summary: Get referee game information
+      description: Returns referee assignment details for a specific game
+      operationId: getRefereeGameByGame
+      parameters:
+        - name: game
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The game identifier
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefereeGame'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /sportmanager.indoorvolleyball/api\game/showWithNestedObjects:
+    get:
+      tags: [Games]
+      summary: Get game details with nested objects
+      description: |
+        Returns detailed game information with specified nested properties.
+        Use propertyRenderConfiguration[] to specify which fields to include.
+      operationId: showGameWithNestedObjects
+      parameters:
+        - name: game[__identity]
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The game identifier
+        - name: propertyRenderConfiguration
+          in: query
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+          description: |
+            List of property paths to include in response.
+            Common properties:
+            - number
+            - group.phase.league.leagueCategory.displayNameWithManagingAssociationShortName
+            - group.phase.league.displayName
+            - group.phase.league.genderUnicodeSign
+            - startingDateTime
+            - hall.displayName
+            - hall.primaryPostalAddress.combinedAddress
+            - hall.primaryPostalAddress.geographicalLocation.plusCode
+            - encounter.teamHome.displayName
+            - encounter.teamAway.displayName
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameDetails'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  # ==================== Profile Endpoints ====================
+  /sportmanager.volleyball/api\person/showWithNestedObjects:
+    get:
+      tags: [Profile]
+      summary: Get person details with permissions
+      description: |
+        Retrieves the person data with their permissions.
+        Used on the profile page to load user personal data.
+      operationId: showPersonWithNestedObjects
+      parameters:
+        - name: person[__identity]
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The person identifier
+          example: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        - name: propertyRenderConfiguration
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+          description: Properties to include (e.g., "_permissions")
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonDetails'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /indoorvolleyball.refadmin/api\indoorreferee/getIndoorRefereeByActivePerson:
+    get:
+      tags: [Profile]
+      summary: Get referee data by person
+      description: Retrieves referee-specific data for the specified person
+      operationId: getIndoorRefereeByActivePerson
+      parameters:
+        - name: person
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The person identifier
+          example: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndoorReferee'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /sportmanager.core/api\country:
+    get:
+      tags: [Settings]
+      summary: Get country list
+      description: Returns list of countries (used for nationality dropdowns)
+      operationId: getCountries
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /indoorvolleyball.refadmin/api\refereeassociationsettings/isRefereeDataManagementAllowedForActiveParty:
+    get:
+      tags: [Profile]
+      summary: Check referee data management permission
+      description: Checks if the active user is allowed to manage referee data
+      operationId: isRefereeDataManagementAllowed
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: boolean
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /indoorvolleyball.refadmin/api\indoorassociationreferee/getIndoorAssociationRefereeOfActiveParty:
+    get:
+      tags: [Profile]
+      summary: Get association referee for active party
+      description: Gets the association referee record for the current user
+      operationId: getIndoorAssociationRefereeOfActiveParty
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndoorAssociationReferee'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /indoorvolleyball.refadmin/api\indoorassociationrefereeseasonalrefereedata/getForIndoorAssociationRefereeForCurrentSeason:
+    post:
+      tags: [Profile]
+      summary: Get seasonal referee data
+      description: Retrieves seasonal referee data for the current season
+      operationId: getSeasonalRefereeData
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                __csrfToken:
+                  type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeasonalRefereeData'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /indoorvolleyball.refadmin/api\refereemandate/getRefereeMandatesByManagingAssociation:
+    get:
+      tags: [Profile]
+      summary: Get referee mandates
+      description: Retrieves referee mandates for a specific managing association
+      operationId: getRefereeMandatesByManagingAssociation
+      parameters:
+        - name: managingAssociation
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The managing association identifier
+          example: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RefereeMandate'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  # ==================== eScoresheet Endpoints ====================
+  /sportmanager.indoorvolleyball/api\scoresheet:
+    put:
+      tags: [eScoresheet]
+      summary: Update scoresheet
+      description: |
+        Updates an existing scoresheet. Used to save scoresheet data before finalization.
+        The scoresheet must already exist (created when accessing the eScoresheet interface).
+      operationId: updateScoresheet
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ScoresheetUpdateRequest'
+      responses:
+        '200':
+          description: Scoresheet updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scoresheet'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /sportmanager.indoorvolleyball/api\scoresheet/validateScoresheet:
+    post:
+      tags: [eScoresheet]
+      summary: Validate scoresheet
+      description: |
+        Validates a scoresheet before finalization.
+        Returns validation issues that must be addressed.
+      operationId: validateScoresheet
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ScoresheetValidateRequest'
+      responses:
+        '200':
+          description: Validation results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScoresheetValidation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /sportmanager.indoorvolleyball/api\scoresheet/finalize:
+    post:
+      tags: [eScoresheet]
+      summary: Finalize scoresheet
+      description: |
+        Finalizes and closes a scoresheet after the game.
+        Once finalized, the scoresheet becomes read-only.
+        A PDF file must be attached before finalization.
+      operationId: finalizeScoresheet
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ScoresheetFinalizeRequest'
+      responses:
+        '200':
+          description: Scoresheet finalized successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scoresheet'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  # ==================== Nomination List Endpoints ====================
+  /sportmanager.indoorvolleyball/api\nominationlist:
+    put:
+      tags: [NominationList]
+      summary: Update nomination list
+      description: |
+        Updates an existing nomination list with player nominations, coach assignments, etc.
+        Used by team responsibles and referees to manage the team lineup for a game.
+      operationId: updateNominationList
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/NominationListUpdateRequest'
+      responses:
+        '200':
+          description: Nomination list updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NominationList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /sportmanager.indoorvolleyball/api\nominationlist/finalize:
+    post:
+      tags: [NominationList]
+      summary: Finalize nomination list
+      description: |
+        Finalizes and closes a nomination list.
+        Once finalized by the referee, the list becomes read-only for the team.
+      operationId: finalizeNominationList
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/NominationListFinalizeRequest'
+      responses:
+        '200':
+          description: Nomination list finalized successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NominationListFinalizeResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /sportmanager.indoorvolleyball/api\nominationlist/getPossibleIndoorPlayerNominationsForNominationList:
+    post:
+      tags: [NominationList]
+      summary: Get possible player nominations
+      description: |
+        Returns a list of players that can be nominated for the given nomination list.
+        Filters by team membership and gender based on the parameters.
+      operationId: getPossibleIndoorPlayerNominations
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [nominationList, __csrfToken]
+              properties:
+                nominationList:
+                  type: string
+                  format: uuid
+                  description: The nomination list identifier
+                onlyFromMyTeam:
+                  type: string
+                  enum: ["true", "false"]
+                  description: Only show players from the team
+                  example: "true"
+                onlyRelevantGender:
+                  type: string
+                  enum: ["true", "false"]
+                  description: Only show players matching the league gender
+                  example: "true"
+                __csrfToken:
+                  type: string
+      responses:
+        '200':
+          description: List of possible player nominations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PossibleNominationsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /sportmanager.indoorvolleyball/api\nominationlist/getPersonsWithValidatedPlayerOrCoachOrRefereeLicenseInActiveSeason:
+    get:
+      tags: [NominationList]
+      summary: Get persons with valid licenses
+      description: |
+        Returns all persons who have a validated player, coach, or referee license
+        in the active season. Used for autocomplete when adding coaches or referees.
+      operationId: getPersonsWithValidatedLicense
+      responses:
+        '200':
+          description: List of persons with valid licenses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PersonWithLicense'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  # ==================== Search Endpoints ====================
+  /sportmanager.core/api\elasticsearchperson/search:
+    get:
+      tags: [Search]
+      summary: Search persons
+      description: |
+        Searches for persons by association ID, name, or year of birth.
+        Uses Elasticsearch for fast fuzzy matching.
+        Used for autocomplete fields when adding referees or coaches.
+      operationId: searchPersons
+      parameters:
+        - name: searchConfiguration[propertyFilters][0][propertyName]
+          in: query
+          schema:
+            type: string
+          example: "associationId"
+        - name: searchConfiguration[propertyFilters][0][text]
+          in: query
+          schema:
+            type: string
+          description: Search text for association ID
+        - name: searchConfiguration[propertyFilters][1][propertyName]
+          in: query
+          schema:
+            type: string
+          example: "firstName"
+        - name: searchConfiguration[propertyFilters][1][text]
+          in: query
+          schema:
+            type: string
+          description: Search text for first name
+        - name: searchConfiguration[propertyFilters][2][propertyName]
+          in: query
+          schema:
+            type: string
+          example: "lastName"
+        - name: searchConfiguration[propertyFilters][2][text]
+          in: query
+          schema:
+            type: string
+          description: Search text for last name
+        - name: searchConfiguration[propertyFilters][3][propertyName]
+          in: query
+          schema:
+            type: string
+          example: "yearOfBirth"
+        - name: searchConfiguration[propertyFilters][3][text]
+          in: query
+          schema:
+            type: string
+          description: Search text for year of birth
+        - name: searchConfiguration[offset]
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: searchConfiguration[limit]
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: propertyRenderConfiguration
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+          description: Properties to include (e.g., "birthday")
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonSearchResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  # ==================== Resource Management Endpoints ====================
+  /sportmanager.resourcemanagement/api\persistentresource/upload:
+    post:
+      tags: [Resources]
+      summary: Upload file
+      description: |
+        Uploads a file (e.g., scoresheet PDF) and returns a resource reference.
+        The returned resource can be attached to entities like scoresheets.
+      operationId: uploadResource
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                resource:
+                  type: string
+                  format: binary
+                  description: The file to upload
+                __csrfToken:
+                  type: string
+      responses:
+        '200':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FileResource'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  # ==================== Filter Settings Endpoints ====================
+  /sportmanager.core/api\filtersettings/listFilterSettingsForCurrentList:
+    get:
+      tags: [Settings]
+      summary: Get filter settings for a data table
+      description: |
+        Returns saved filter settings for a specific data table.
+        Used to restore user's filter preferences.
+      operationId: getFilterSettings
+      parameters:
+        - name: dataTableId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: |
+            The data table identifier, e.g.:
+            - editNominationList.indoorPlayerNominations
+            - editNominationList.indoorPlayerNominationWhichCanBeAddedList
+          example: "editNominationList.indoorPlayerNominations"
+      responses:
+        '200':
+          description: Filter settings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FilterSetting'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  # ==================== Referee Absence Endpoints ====================
+  /indoorvolleyball.refadmin/api\refereeabsence/getForbiddenBlockageDateRanges:
+    get:
+      tags: [Absences]
+      summary: Get forbidden date ranges for absence creation
+      description: |
+        Returns the valid date range for creating absences and any forbidden date ranges.
+        Used to validate absence creation and show available dates in the calendar.
+      operationId: getForbiddenBlockageDateRanges
+      responses:
+        '200':
+          description: Forbidden blockage date ranges
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenBlockageDateRanges'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /indoorvolleyball.refadmin/api\refereeabsence/search:
+    post:
+      tags: [Absences]
+      summary: Search referee absences
+      description: |
+        Search for referee absences with pagination and filtering.
+        Returns a list of absence entries for the current referee.
+      operationId: searchRefereeAbsences
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                __csrfToken:
+                  type: string
+                  description: CSRF token for request validation
+                searchConfiguration[propertyFilters][0][propertyName]:
+                  type: string
+                  example: "fromDate"
+                searchConfiguration[offset]:
+                  type: integer
+                  example: 0
+                searchConfiguration[limit]:
+                  type: integer
+                  example: 25
+      responses:
+        '200':
+          description: Referee absences search result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefereeAbsenceSearchResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Neos_Flow_Session
+      description: Session cookie obtained after login
+  responses:
+    Unauthorized:
+      description: Not authenticated - session expired or invalid
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Session expired. Please log in again."
+    Forbidden:
+      description: Authenticated but not authorized for this resource
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Access denied"
+  schemas:
+    # ==================== Authentication Schemas ====================
+    AuthenticationRequest:
+      type: object
+      description: |
+        Login request using Neos Flow's authentication format.
+        All fields use nested bracket notation when URL-encoded.
+
+        **URL-encoded example:**
+        ```
+        __referrer%5B%40package%5D=SportManager.Volleyball&
+        __referrer%5B%40controller%5D=Public&
+        __referrer%5B%40action%5D=login&
+        __authentication%5BNeos%5D%5BFlow%5D%5BSecurity%5D%5BAuthentication%5D%5BToken%5D%5BUsernamePassword%5D%5Busername%5D=myuser&
+        __authentication%5BNeos%5D%5BFlow%5D%5BSecurity%5D%5BAuthentication%5D%5BToken%5D%5BUsernamePassword%5D%5Bpassword%5D=mypass
+        ```
+      required:
+        - __authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][username]
+        - __authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][password]
+      properties:
+        __referrer[@package]:
+          type: string
+          description: Referrer package name
+          example: "SportManager.Volleyball"
+        __referrer[@subpackage]:
+          type: string
+          description: Referrer subpackage (usually empty)
+          example: ""
+        __referrer[@controller]:
+          type: string
+          description: Referrer controller name
+          example: "Public"
+        __referrer[@action]:
+          type: string
+          description: Referrer action name
+          example: "login"
+        __referrer[arguments]:
+          type: string
+          description: |
+            Serialized referrer arguments with HMAC signature.
+            Format: Base64-encoded serialized array + HMAC hash.
+            This is generated by the login page and should be passed through unchanged.
+          example: "YTowOnt9<hmac-signature>"
+        __trustedProperties:
+          type: string
+          description: |
+            HMAC-signed list of trusted properties.
+            Generated by the login page for CSRF protection.
+            Format: Serialized PHP array + HMAC signature.
+          example: "a:0:{}<hmac-signature>"
+        __authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][username]:
+          type: string
+          description: User's login username
+          example: "my_username"
+        __authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][password]:
+          type: string
+          format: password
+          description: User's login password
+          example: "my_password"
+    # ==================== Request Schemas ====================
+    AssignmentsSearchRequest:
+      type: object
+      description: |
+        Search request for assignments. Uses nested bracket notation when URL-encoded.
+        Example: searchConfiguration[propertyFilters][0][propertyName]=refereeGame.game.startingDateTime
+      properties:
+        searchConfiguration:
+          $ref: '#/components/schemas/SearchConfiguration'
+        propertyRenderConfiguration:
+          type: array
+          description: List of property paths to include in response
+          items:
+            type: string
+          example:
+            - refereeConvocationStatus
+            - refereeGame.game.startingDateTime
+            - refereeGame.game.encounter.teamHome.name
+        __csrfToken:
+          type: string
+          description: CSRF token for request validation
+          example: "<csrf-token>"
+    CompensationsSearchRequest:
+      type: object
+      properties:
+        searchConfiguration:
+          allOf:
+            - $ref: '#/components/schemas/SearchConfiguration'
+            - type: object
+              properties:
+                customFilters:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        example: "archivedRefereeConvocations"
+        propertyRenderConfiguration:
+          type: array
+          items:
+            type: string
+        __csrfToken:
+          type: string
+    ExchangesSearchRequest:
+      type: object
+      properties:
+        searchConfiguration:
+          $ref: '#/components/schemas/SearchConfiguration'
+        propertyRenderConfiguration:
+          type: array
+          items:
+            type: string
+        __csrfToken:
+          type: string
+    SearchConfiguration:
+      type: object
+      properties:
+        propertyFilters:
+          type: array
+          items:
+            $ref: '#/components/schemas/PropertyFilter'
+        propertyOrderings:
+          type: array
+          items:
+            $ref: '#/components/schemas/PropertyOrdering'
+        offset:
+          type: integer
+          minimum: 0
+          default: 0
+          description: Starting index for pagination
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 10
+          description: Number of items to return
+        textSearchOperator:
+          type: string
+          enum: [AND, OR]
+          default: AND
+    PropertyFilter:
+      type: object
+      properties:
+        propertyName:
+          type: string
+          description: Dot-notation path to the property
+          example: "refereeGame.game.startingDateTime"
+        dateRange:
+          type: object
+          properties:
+            from:
+              type: string
+              format: date-time
+              example: "2025-12-07T23:00:00.000Z"
+            to:
+              type: string
+              format: date-time
+              example: "2025-12-15T22:59:59.000Z"
+        values:
+          type: array
+          description: Filter by specific values
+          items:
+            type: string
+          example: ["NOT_NULL"]
+        enumValues:
+          type: array
+          description: Filter by enum values (for status fields)
+          items:
+            type: string
+          example: ["open"]
+    PropertyOrdering:
+      type: object
+      properties:
+        propertyName:
+          type: string
+          example: "refereeGame.game.startingDateTime"
+        descending:
+          type: boolean
+          default: false
+        isSetByUser:
+          type: boolean
+          default: true
+    # ==================== Response Schemas ====================
+    AssignmentsResponse:
+      type: object
+      required: [items, totalItemsCount]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Assignment'
+        totalItemsCount:
+          type: integer
+          minimum: 0
+          example: 2
+    Assignment:
+      type: object
+      required: [__identity, refereeGame, refereeConvocationStatus, refereePosition]
+      properties:
+        __identity:
+          type: string
+          format: uuid
+          example: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+        refereeGame:
+          $ref: '#/components/schemas/RefereeGame'
+        refereeConvocationStatus:
+          type: string
+          enum: [active, cancelled, archived]
+          example: "active"
+        refereePosition:
+          $ref: '#/components/schemas/RefereePosition'
+        confirmationStatus:
+          type: string
+          nullable: true
+        confirmationDate:
+          type: string
+          format: date-time
+          nullable: true
+        isOpenEntryInRefereeGameExchange:
+          type: boolean
+        hasLastMessageToReferee:
+          type: boolean
+        hasLinkedDoubleConvocation:
+          type: boolean
+        linkedDoubleConvocationGameNumberAndRefereePosition:
+          type: string
+          nullable: true
+        _permissions:
+          $ref: '#/components/schemas/Permissions'
+    CompensationsResponse:
+      type: object
+      required: [items, totalItemsCount]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompensationRecord'
+        totalItemsCount:
+          type: integer
+          minimum: 0
+          example: 2
+    CompensationRecord:
+      type: object
+      required: [__identity, refereeGame, convocationCompensation, refereeConvocationStatus, refereePosition]
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        refereeGame:
+          $ref: '#/components/schemas/RefereeGame'
+        convocationCompensation:
+          $ref: '#/components/schemas/ConvocationCompensation'
+        indoorAssociationReferee:
+          $ref: '#/components/schemas/IndoorAssociationReferee'
+        refereeConvocationStatus:
+          type: string
+          enum: [active, cancelled, archived]
+        compensationDate:
+          type: string
+          format: date-time
+          description: Date used for compensation calculation (usually game start time)
+        refereePosition:
+          $ref: '#/components/schemas/RefereePosition'
+        _permissions:
+          $ref: '#/components/schemas/Permissions'
+    ConvocationCompensation:
+      type: object
+      description: Compensation details for a referee assignment
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        paymentDone:
+          type: boolean
+          description: Whether payment has been processed
+        payGameCompensation:
+          type: boolean
+          description: Whether game fee should be paid
+        gameCompensation:
+          type: integer
+          description: Game fee in CHF (integer)
+          example: 50
+        payTravelExpenses:
+          type: boolean
+        travelExpenses:
+          type: integer
+          description: Travel reimbursement in CHF (integer)
+          example: 20
+        publicTransportExpenses:
+          type: integer
+          nullable: true
+          description: Public transport costs if applicable
+        travelExpensesPercentageWeighting:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Weighting factor for travel expenses
+          example: 1
+        distanceInMetres:
+          type: integer
+          description: Calculated travel distance in metres
+          example: 96317
+        transportationMode:
+          type: string
+          enum: [car, train, other]
+          example: "car"
+        paymentValueDate:
+          type: string
+          format: date
+          nullable: true
+          description: Date when payment was made
+        paymentUpdatedByAssociation:
+          type: object
+          nullable: true
+          properties:
+            __identity:
+              type: string
+              format: uuid
+            name:
+              type: string
+        additionalCompensations:
+          type: array
+          items:
+            type: object
+        flexibleAdditionalCompensations:
+          type: array
+          items:
+            type: object
+        hasFlexibleGameCompensations:
+          type: boolean
+        gameCompensationFormatted:
+          type: string
+          description: Formatted game compensation with decimals
+          example: "50.00"
+        hasFlexibleTravelExpenses:
+          type: boolean
+        travelExpensesFormatted:
+          type: string
+          example: "20.00"
+        hasFlexibleOvernightStayExpenses:
+          type: boolean
+        overnightStayExpensesFormatted:
+          type: string
+          example: "0.00"
+        hasFlexibleCateringExpenses:
+          type: boolean
+        cateringExpensesFormatted:
+          type: string
+          example: "0.00"
+        costFormatted:
+          type: string
+          description: Total compensation formatted
+          example: "70.00"
+        distanceFormatted:
+          type: string
+          description: Distance in km with one decimal
+          example: "96.3"
+    ExchangesResponse:
+      type: object
+      required: [items, totalItemsCount]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/GameExchange'
+        totalItemsCount:
+          type: integer
+          minimum: 0
+          example: 7
+    GameExchange:
+      type: object
+      required: [__identity, refereeGame, status, submittedAt, submittedByPerson, submittingType, refereePosition]
+      properties:
+        __identity:
+          type: string
+          format: uuid
+          example: "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"
+        refereeGame:
+          $ref: '#/components/schemas/RefereeGameForExchange'
+        status:
+          type: string
+          enum: [open, applied, closed]
+          description: |
+            - open: Available for application
+            - applied: Someone has applied (waiting for assignment)
+            - closed: Exchange completed or cancelled
+          example: "open"
+        submittedAt:
+          type: string
+          format: date-time
+          example: "2025-12-07T23:17:47.000000+00:00"
+        submittedByPerson:
+          $ref: '#/components/schemas/PersonSummary'
+        submittingType:
+          type: string
+          enum: [referee, admin]
+          example: "referee"
+        refereePosition:
+          $ref: '#/components/schemas/RefereePosition'
+        requiredRefereeLevel:
+          $ref: '#/components/schemas/RefereeLevel'
+        requiredRefereeLevelGradationValue:
+          type: string
+          description: |
+            Gradation within the level:
+            - 1: Highest gradation for position
+            - 2: Second tier
+            - 3: Third tier
+          example: "1"
+        appliedBy:
+          type: object
+          nullable: true
+          description: Person who applied for this exchange (null if no applicant yet)
+          properties:
+            indoorReferee:
+              type: object
+              properties:
+                person:
+                  $ref: '#/components/schemas/PersonSummary'
+        appliedAt:
+          type: string
+          format: date-time
+          nullable: true
+        _permissions:
+          $ref: '#/components/schemas/Permissions'
+    # ==================== Shared Schemas ====================
+    RefereeGame:
+      type: object
+      description: A game with referee assignment context
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        game:
+          $ref: '#/components/schemas/Game'
+        isGameInFuture:
+          type: string
+          enum: ["0", "1"]
+          description: Boolean as string (quirk of the backend)
+        activeRefereeConvocationFirstHeadReferee:
+          $ref: '#/components/schemas/RefereeConvocationRef'
+        activeRefereeConvocationSecondHeadReferee:
+          $ref: '#/components/schemas/RefereeConvocationRef'
+        activeRefereeConvocationFirstLinesman:
+          $ref: '#/components/schemas/RefereeConvocationRef'
+        activeRefereeConvocationSecondLinesman:
+          $ref: '#/components/schemas/RefereeConvocationRef'
+        activeRefereeConvocationThirdLinesman:
+          $ref: '#/components/schemas/RefereeConvocationRef'
+        activeRefereeConvocationFourthLinesman:
+          $ref: '#/components/schemas/RefereeConvocationRef'
+        activeRefereeConvocationStandbyHeadReferee:
+          $ref: '#/components/schemas/RefereeConvocationRef'
+        activeRefereeConvocationStandbyLinesman:
+          $ref: '#/components/schemas/RefereeConvocationRef'
+    RefereeGameForExchange:
+      type: object
+      description: Referee game data as returned in exchange responses
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        game:
+          $ref: '#/components/schemas/Game'
+        dispositionConfiguration:
+          type: object
+          properties:
+            requiredRefereeLevelForFirstHead:
+              type: object
+              properties:
+                name:
+                  $ref: '#/components/schemas/RefereeLevel'
+            requiredRefereeLevelForSecondHead:
+              type: object
+              properties:
+                name:
+                  $ref: '#/components/schemas/RefereeLevel'
+            requiredRefereeLevelGradationValueForFirstHead:
+              type: integer
+            requiredRefereeLevelGradationValueForSecondHead:
+              type: integer
+        isGameInFuture:
+          type: string
+          enum: ["0", "1"]
+        activeFirstHeadRefereeName:
+          type: string
+          description: Display name of current first head referee
+          example: "Nick Leo Kunz"
+        activeSecondHeadRefereeName:
+          type: string
+          example: "Julija Saric"
+        activeFirstLinesmanRefereeName:
+          type: string
+        activeSecondLinesmanRefereeName:
+          type: string
+    Game:
+      type: object
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        startingDateTime:
+          type: string
+          format: date-time
+          example: "2025-12-08T19:30:00.000000+00:00"
+        number:
+          type: integer
+          description: Match number
+          example: 382417
+        playingWeekday:
+          type: string
+          enum: [Mon, Tue, Wed, Thu, Fri, Sat, Sun]
+          example: "Mon"
+        encounter:
+          $ref: '#/components/schemas/Encounter'
+        group:
+          $ref: '#/components/schemas/Group'
+        hall:
+          $ref: '#/components/schemas/Hall'
+        hasNominationListToReviewByReferee:
+          type: boolean
+        isVolleyCupGameWithoutNationalAssociationLeagueCategoryTeams:
+          type: boolean
+        displayName:
+          type: string
+          description: Full formatted display name for the game
+          example: "#382417 | 08.12.2025 20:30 | #3926 | Volley Uster H2 — #85 | VC Tornado Adliswil H1 (3L, ♂, Hin- und Rückrunde, Herren 3. Liga Gruppe B)"
+        lastPostponement:
+          type: object
+          nullable: true
+          properties:
+            createdAt:
+              type: string
+              format: date-time
+    Encounter:
+      type: object
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        teamHome:
+          $ref: '#/components/schemas/Team'
+        teamAway:
+          $ref: '#/components/schemas/Team'
+    Team:
+      type: object
+      description: A volleyball team within a club
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        persistenceObjectIdentifier:
+          type: string
+          format: uuid
+        identifier:
+          type: integer
+          description: Team identifier number
+          example: 59591
+        staticTeamIdentifier:
+          type: integer
+          description: Static identifier that doesn't change across seasons
+          example: 5459
+        name:
+          type: string
+          example: "VBC Züri Unterland"
+        displayName:
+          type: string
+          example: "#5459 | VB Therwil (1L, ♂, SV)"
+        clubDisplayName:
+          type: string
+          example: "#909740 | VB Therwil"
+        # Gender
+        gender:
+          type: string
+          enum: [m, f]
+        genderUnicodeSign:
+          type: string
+          example: "♂"
+        # Status
+        active:
+          type: boolean
+        teamRegistrationStatus:
+          type: string
+          enum: [pending, confirmed, cancelled]
+        teamRegistrationConfirmedBy:
+          type: object
+          nullable: true
+        reminderAboutNotCompletedTeamRegistrationSentAt:
+          type: string
+          format: date-time
+          nullable: true
+        # Settings
+        defaultPlayingWeekday:
+          type: integer
+          description: Default day of week (0=Sunday, 6=Saturday)
+        defaultPlayingTime:
+          type: string
+          description: Default playing time
+          example: "19:30"
+        strengthClass:
+          type: integer
+          nullable: true
+        # Flags
+        isTalentDevelopmentTeam:
+          type: boolean
+        isRegisteredForNationalCup:
+          type: boolean
+        isRegisteredForRegionalNJCQualificationTournaments:
+          type: boolean
+        registeredForRegionalCup:
+          type: boolean
+          nullable: true
+        hasTeamPicture:
+          type: boolean
+        # References
+        league:
+          $ref: '#/components/schemas/League'
+        leagueCategory:
+          $ref: '#/components/schemas/LeagueCategory'
+        season:
+          $ref: '#/components/schemas/SeasonReference'
+        club:
+          $ref: '#/components/schemas/Club'
+        defaultHall:
+          type: object
+          nullable: true
+        teamPicture:
+          type: object
+          nullable: true
+        # Translations
+        translations:
+          type: object
+          properties:
+            de:
+              type: object
+              properties:
+                name:
+                  type: string
+            fr:
+              type: object
+              properties:
+                name:
+                  type: string
+        # Permissions
+        _permissions:
+          $ref: '#/components/schemas/Permissions'
+        # Audit fields
+        createdBy:
+          type: string
+        createdByIpAddress:
+          type: string
+          nullable: true
+        createdByPersistenceIdentifier:
+          type: string
+        updatedBy:
+          type: string
+        updatedByIpAddress:
+          type: string
+          nullable: true
+        updatedByPersistenceIdentifier:
+          type: string
+        lastUpdatedByRealUser:
+          type: boolean
+          nullable: true
+    Club:
+      type: object
+      description: A volleyball club
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        persistenceObjectIdentifier:
+          type: string
+          format: uuid
+        identifier:
+          type: string
+          description: Club identifier code
+          example: "909020"
+        name:
+          type: string
+          example: "VBC Allschwil"
+        displayName:
+          type: string
+          example: "#909020 | VBC Allschwil"
+        shortName:
+          type: string
+          nullable: true
+        # Status
+        active:
+          type: boolean
+        activeInRegionalAssociationOnly:
+          type: boolean
+        accountActive:
+          type: boolean
+        hasAccount:
+          type: boolean
+        hasProfilePicture:
+          type: boolean
+        # Settings
+        language:
+          type: string
+          enum: [de, fr, it, en]
+          nullable: true
+        localeIdentifier:
+          type: string
+          example: "1"
+        username:
+          type: string
+          nullable: true
+        # Contact
+        mobilePhoneNumber:
+          type: string
+          nullable: true
+        primaryEmailAddress:
+          type: object
+          nullable: true
+        primaryPhoneNumber:
+          type: object
+          nullable: true
+        primaryPostalAddress:
+          type: object
+          nullable: true
+        profilePicture:
+          type: object
+          nullable: true
+        # Privacy
+        privacySettings:
+          type: object
+          nullable: true
+        # Active party fields
+        activeAttributeValue:
+          type: object
+          nullable: true
+        activeRoleIdentifier:
+          type: string
+        inflatedActiveAttributeValue:
+          type: object
+          nullable: true
+        initialAccessDataSendDate:
+          type: string
+          format: date-time
+          nullable: true
+        # Translations
+        translations:
+          type: object
+          properties:
+            de:
+              type: object
+              properties:
+                name:
+                  type: string
+                shortName:
+                  type: string
+        # Audit fields
+        createdBy:
+          type: string
+        createdByIpAddress:
+          type: string
+          nullable: true
+        createdByPersistenceIdentifier:
+          type: string
+        updatedBy:
+          type: string
+        updatedByIpAddress:
+          type: string
+          nullable: true
+        updatedByPersistenceIdentifier:
+          type: string
+        lastUpdatedByRealUser:
+          type: boolean
+          nullable: true
+    Group:
+      type: object
+      description: Competition group within a phase
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Herren 3. Liga Gruppe B"
+        phase:
+          $ref: '#/components/schemas/Phase'
+    Phase:
+      type: object
+      description: Competition phase within a league
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Hin- und Rückrunde"
+        league:
+          $ref: '#/components/schemas/League'
+    League:
+      type: object
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        leagueCategory:
+          $ref: '#/components/schemas/LeagueCategory'
+        gender:
+          type: string
+          enum: [m, f]
+          description: m = male, f = female
+    LeagueCategory:
+      type: object
+      description: |
+        League category (e.g., NLA, NLB, 3L, U23).
+        Categories determine compensation rates and referee requirements.
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        persistenceObjectIdentifier:
+          type: string
+          format: uuid
+        identifier:
+          type: integer
+          description: Numeric identifier for the league category
+          example: 2
+        name:
+          type: string
+          description: |
+            League tier name:
+            - NLA, NLB: National leagues
+            - 1L, 2L, 3L, 4L, 5L: Regional leagues
+            - Mobilière Volley Cup: Cup competition
+            - U23, U19, etc.: Junior categories
+          example: "NLB"
+        shortName:
+          type: string
+          description: Short abbreviation
+          example: "NLB"
+        displayName:
+          type: string
+          description: Display name with identifier prefix
+          example: "#2 | NLB"
+        displayNameWithManagingAssociationShortName:
+          type: string
+          description: Display name with association prefix
+          example: "SV | NLB"
+        translations:
+          type: object
+          properties:
+            de:
+              type: object
+              properties:
+                name:
+                  type: string
+            fr:
+              type: object
+              properties:
+                name:
+                  type: string
+        sorting:
+          type: integer
+          description: Sort order for display
+          example: 3
+        active:
+          type: boolean
+          description: Whether this category is currently active
+        # Category type flags
+        isJuniorLeagueCategory:
+          type: boolean
+          description: Whether this is a junior/youth category
+        isSeniorLeagueCategory:
+          type: boolean
+          description: Whether this is a senior category
+        isLeagueCategoryOfferedToApi:
+          type: boolean
+          description: Whether exposed via public API
+        isLeagueCategoryUsedForTeamLeaguesInClub:
+          type: boolean
+          description: Whether used for club team leagues
+        # Rules and requirements
+        allowedForDoubleLicense:
+          type: boolean
+          description: Whether double license is allowed
+        scoresheetUploadRequired:
+          type: boolean
+          description: Whether scoresheet upload is mandatory
+        writersCanUseSimpleScoresheetForThisLeagueCategory:
+          type: boolean
+          description: Whether simple scoresheet format is allowed
+        canBeUsedAsEquivalentNationalAssociationLeagueCategory:
+          type: boolean
+        equivalentNationalAssociationLeagueCategory:
+          type: object
+          nullable: true
+        definitiveTeamRegistrationRequired:
+          type: boolean
+        definitiveTeamRegistrationReminderDay:
+          type: integer
+          nullable: true
+        definitiveTeamRegistrationReminderMonth:
+          type: integer
+          nullable: true
+        definitiveTeamRegistrationReminderDayAndMonthFormatted:
+          type: string
+        numberOfRequiredRefereeMandatesPerTeam:
+          type: integer
+          nullable: true
+          description: Number of referee mandates required per team
+        numberOfStrenghtClasses:
+          type: integer
+          nullable: true
+        # Age restrictions
+        maximumAge:
+          type: integer
+          nullable: true
+          description: Maximum age for junior categories
+        minimumAge:
+          type: integer
+          nullable: true
+          description: Minimum age requirement
+        # Audit fields
+        createdBy:
+          type: string
+        createdByIpAddress:
+          type: string
+        createdByPersistenceIdentifier:
+          type: string
+        updatedBy:
+          type: string
+        updatedByIpAddress:
+          type: string
+        updatedByPersistenceIdentifier:
+          type: string
+        lastUpdatedByRealUser:
+          type: boolean
+          nullable: true
+    Hall:
+      type: object
+      description: Sports hall/venue
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Krämeracker 1-2"
+        primaryPostalAddress:
+          $ref: '#/components/schemas/PostalAddress'
+    PostalAddress:
+      type: object
+      description: Full postal address with geographical location
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        persistenceObjectIdentifier:
+          type: string
+          format: uuid
+        # Address components
+        street:
+          type: string
+          example: "Gartenstrasse"
+        houseNumber:
+          type: string
+          example: "9"
+        streetAndHouseNumber:
+          type: string
+          example: "Gartenstrasse 9"
+        postBox:
+          type: string
+          nullable: true
+        postalCode:
+          type: string
+          example: "8102"
+        city:
+          type: string
+          example: "Oberengstringen"
+        postalCodeAndCity:
+          type: string
+          example: "8102 Oberengstringen"
+        additionToAddress:
+          type: string
+          nullable: true
+        combinedAddress:
+          type: string
+          description: Full formatted address
+        asMultilineText:
+          type: string
+          description: Address formatted with HTML line breaks
+          example: "Gartenstrasse 9<br />8102 Oberengstringen<br />Suisse"
+        type:
+          type: string
+          enum: [full, address_only, po_box_only]
+          description: Type of address
+        # Status
+        isPrimary:
+          type: boolean
+        primary:
+          type: boolean
+        label:
+          type: string
+          nullable: true
+        usageType:
+          type: integer
+          description: Usage type (1 = primary, 2 = secondary, etc.)
+        # Validation
+        validated:
+          type: boolean
+        validationStatus:
+          type: string
+          enum: [unknown, validated, invalid]
+        lastValidation:
+          type: string
+          format: date-time
+          nullable: true
+        validationCodeFromSource:
+          type: string
+          nullable: true
+        validationSourceName:
+          type: string
+          nullable: true
+        # Geographic data
+        country:
+          $ref: '#/components/schemas/CountryDetailed'
+        countrySubdivision:
+          $ref: '#/components/schemas/CountrySubdivision'
+        geographicalLocation:
+          $ref: '#/components/schemas/GeographicalLocation'
+        # Legacy field
+        originId:
+          type: integer
+          nullable: true
+        # Audit fields
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+        createdByIpAddress:
+          type: string
+          nullable: true
+        createdByPersistenceIdentifier:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+        updatedBy:
+          type: string
+        updatedByIpAddress:
+          type: string
+          nullable: true
+        updatedByPersistenceIdentifier:
+          type: string
+        lastUpdatedByRealUser:
+          type: boolean
+    CountryDetailed:
+      type: object
+      description: Detailed country information
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        countryCode:
+          type: string
+          example: "CH"
+        countryName:
+          type: string
+          example: "Suisse"
+        countryFlag:
+          type: string
+          description: SVG representation of country flag
+        # ISO codes
+        isoAlpha3:
+          type: string
+          example: "CHE"
+        isoNumeric:
+          type: integer
+          example: 756
+        # Sports codes
+        fifaCode:
+          type: string
+          example: "SUI"
+        fipsCode:
+          type: string
+          example: "SZ"
+        iocCode:
+          type: string
+          example: "SUI"
+        iocCodeOrIsoAlpha3:
+          type: string
+          example: "SUI"
+        geonameId:
+          type: integer
+          example: 2658434
+        # Translations
+        translations:
+          type: object
+          properties:
+            de:
+              type: object
+              properties:
+                countryName:
+                  type: string
+            en:
+              type: object
+              properties:
+                countryName:
+                  type: string
+            fr:
+              type: object
+              properties:
+                countryName:
+                  type: string
+            it:
+              type: object
+              properties:
+                countryName:
+                  type: string
+    CountrySubdivision:
+      type: object
+      description: Country subdivision (canton, state, etc.)
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        adminCode1:
+          type: string
+          description: Administrative code (e.g., canton abbreviation)
+          example: "ZH"
+        adminName1:
+          type: string
+          description: Administrative name
+          example: "Zürich"
+        toponymName:
+          type: string
+          example: "Kanton Zürich"
+        geonameId:
+          type: integer
+        lat:
+          type: number
+          format: double
+        lng:
+          type: number
+          format: double
+        translations:
+          type: object
+          properties:
+            de:
+              type: object
+              properties:
+                adminName1:
+                  type: string
+                toponymName:
+                  type: string
+            fr:
+              type: object
+              properties:
+                adminName1:
+                  type: string
+                toponymName:
+                  type: string
+    GeographicalLocation:
+      type: object
+      description: Precise geographical coordinates
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        persistenceObjectIdentifier:
+          type: string
+          format: uuid
+        latitude:
+          type: number
+          format: double
+          example: 47.4088
+        longitude:
+          type: number
+          format: double
+          example: 8.4516
+        plusCode:
+          type: string
+          description: Google Plus Code for precise location
+          example: "8FVC9G4F+5H"
+        # Status
+        isPrimary:
+          type: boolean
+        primary:
+          type: boolean
+        label:
+          type: string
+          nullable: true
+        usageType:
+          type: integer
+        # Validation
+        validated:
+          type: boolean
+        validationStatus:
+          type: string
+          enum: [unknown, validated, invalid]
+        lastValidation:
+          type: string
+          format: date-time
+          nullable: true
+        validationCodeFromSource:
+          type: string
+          nullable: true
+        validationSourceName:
+          type: string
+          nullable: true
+        # Legacy
+        originId:
+          type: integer
+          nullable: true
+        # Audit fields
+        createdBy:
+          type: string
+        createdByIpAddress:
+          type: string
+          nullable: true
+        createdByPersistenceIdentifier:
+          type: string
+        updatedBy:
+          type: string
+        updatedByIpAddress:
+          type: string
+          nullable: true
+        updatedByPersistenceIdentifier:
+          type: string
+        lastUpdatedByRealUser:
+          type: boolean
+    RefereeConvocationRef:
+      type: object
+      description: Reference to a referee convocation with person details
+      nullable: true
+      properties:
+        indoorAssociationReferee:
+          type: object
+          properties:
+            indoorReferee:
+              type: object
+              properties:
+                person:
+                  $ref: '#/components/schemas/PersonSummary'
+    PersonSummary:
+      type: object
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+          example: "Nick Leo"
+        lastName:
+          type: string
+          example: "Kunz"
+        displayName:
+          type: string
+          example: "Nick Leo Kunz"
+    RefereePosition:
+      type: string
+      description: |
+        Internal referee position code:
+        - head-one: First head referee (displayed as "ARB 1")
+        - head-two: Second head referee (displayed as "ARB 2")
+        - linesman-one: First line judge (displayed as "JL 1")
+        - linesman-two: Second line judge (displayed as "JL 2")
+        - linesman-three: Third line judge (displayed as "JL 3")
+        - linesman-four: Fourth line judge (displayed as "JL 4")
+        - standby-head: Standby head referee
+        - standby-linesman: Standby line judge
+      enum:
+        - head-one
+        - head-two
+        - linesman-one
+        - linesman-two
+        - linesman-three
+        - linesman-four
+        - standby-head
+        - standby-linesman
+      example: "head-one"
+    RefereeLevel:
+      type: string
+      description: |
+        National referee level (qualification):
+        - N1: National level 1 (highest - NLA/NLB)
+        - N2: National level 2
+        - N3: National level 3
+        - N4: National level 4 (lowest - regional leagues)
+      enum: [N1, N2, N3, N4]
+      example: "N3"
+    Permissions:
+      type: object
+      description: Access control permissions for the current user
+      properties:
+        object:
+          type: object
+          properties:
+            delete:
+              type: boolean
+        properties:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              update:
+                type: boolean
+              create:
+                type: boolean
+          example:
+            convocationCompensation:
+              update: true
+              create: true
+            appliedBy:
+              update: true
+    Season:
+      type: object
+      description: |
+        Competition season (e.g., 2024/2025).
+        Returned by getActiveIndoorSeason endpoint with navigation to previous/next seasons.
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        persistenceObjectIdentifier:
+          type: string
+          format: uuid
+        name:
+          type: string
+          description: Season identifier year
+          example: "2025"
+        displayName:
+          type: string
+          description: Full display format
+          example: "2025/2026"
+        seasonStartDate:
+          type: string
+          format: date-time
+          description: Season start date with timezone
+          example: "2025-05-20T22:00:00.000000+00:00"
+        seasonEndDate:
+          type: string
+          format: date-time
+          description: Season end date with timezone
+          example: "2026-05-20T21:59:59.000000+00:00"
+        active:
+          type: boolean
+          description: Whether this is the current active season
+        publicApiActive:
+          type: boolean
+          description: Whether public API access is enabled for this season
+        ageCalculationYear:
+          type: integer
+          description: Year used for age calculations in junior categories
+          example: 2025
+        # Season navigation
+        previousSeason:
+          $ref: '#/components/schemas/SeasonReference'
+        nextSeason:
+          $ref: '#/components/schemas/SeasonReference'
+        # Audit fields
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+        createdByPersistenceIdentifier:
+          type: string
+          format: uuid
+        createdByIpAddress:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+        updatedBy:
+          type: string
+        updatedByPersistenceIdentifier:
+          type: string
+          format: uuid
+        updatedByIpAddress:
+          type: string
+        lastUpdatedByRealUser:
+          type: boolean
+    SeasonReference:
+      type: object
+      description: Reference to another season (for navigation)
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        persistenceObjectIdentifier:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "2024"
+        displayName:
+          type: string
+          example: "2024/2025"
+        active:
+          type: boolean
+        publicApiActive:
+          type: boolean
+        ageCalculationYear:
+          type: integer
+        seasonStartDate:
+          type: string
+          format: date-time
+        seasonEndDate:
+          type: string
+          format: date-time
+        previousSeason:
+          $ref: '#/components/schemas/SeasonReference'
+        nextSeason:
+          $ref: '#/components/schemas/SeasonReference'
+    AssociationSettings:
+      type: object
+      description: |
+        Referee association settings returned by getRefereeAssociationSettingsOfActiveParty.
+        Contains settings for game exchange, referee data management, and mandate allocation.
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        # Game Exchange Settings
+        usesGameExchange:
+          type: boolean
+          description: Whether game exchange system is enabled
+        allowGameExchangeCatchingOfFlaggedRefereeXHoursBeforeGameStart:
+          type: integer
+          description: Hours before game start when flagged referee can catch exchange
+          example: 96
+        allowOnlyEntireDoubleRefereeConvocationGameExchangeCreation:
+          type: boolean
+        allowOnlyEntireDoubleRefereeConvocationGameExchangePick:
+          type: boolean
+        allowedRefereeTypesForGameExchange:
+          type: array
+          items:
+            type: string
+            enum: [head-one, head-two, linesman-one, linesman-two]
+          example: ["head-one", "head-two"]
+        hoursBeforeGameStartIgnoringConvocationCriteriaInGameExchange:
+          type: integer
+          nullable: true
+        hoursBeforeGameStartToNotifyChampionshipOwnerAboutOpenExchange:
+          type: integer
+          example: 48
+        hoursBeforeGameStartToNotifySubmittingPersonAboutOpenExchange:
+          type: integer
+          example: 48
+        repeatIntervalToNotifyChampionshipOwnerAboutOpenExchange:
+          type: integer
+          example: 12
+        repeatIntervalToNotifySubmittingPersonAboutOpenExchange:
+          type: integer
+          example: 12
+        # Referee Data Management
+        isRefereeDataManagementAllowed:
+          type: boolean
+          description: Whether referees can manage their own data
+        refereeDataManagementStartDate:
+          type: string
+          format: date-time
+          description: Start of referee data management window
+        refereeDataManagementEndDate:
+          type: string
+          format: date-time
+          description: End of referee data management window
+        timeWindowForRefereePreRegistrationStartDate:
+          type: string
+          format: date-time
+          nullable: true
+        timeWindowForRefereePreRegistrationEndDate:
+          type: string
+          format: date-time
+          nullable: true
+        timeWindowForRefereeSeasonReportStartDate:
+          type: string
+          format: date-time
+        timeWindowForRefereeSeasonReportEndDate:
+          type: string
+          format: date-time
+        # Referee Settings Configuration
+        refereeDataSettings:
+          type: array
+          description: Configurable referee data fields with edit/view permissions
+          items:
+            $ref: '#/components/schemas/RefereeDataSetting'
+        # Mandate Settings
+        usesRefereeMandates:
+          type: boolean
+        usesRefereeWorkloads:
+          type: boolean
+        isRefereeAllowedToSetOwnMandates:
+          type: boolean
+        isRefereeAllowedToSetOwnWorkload:
+          type: boolean
+        isAllowedToSplitRefereeMandates:
+          type: boolean
+        refereeMandateAllocationType:
+          type: string
+          enum: [club, team]
+          description: How mandates are allocated
+        hasToSpecifyRootClubWhenLicensing:
+          type: boolean
+        # Game/Scoresheet Settings
+        hoursAfterGameStartForRefereeToEditGameList:
+          type: integer
+          description: Hours after game start when referee can still edit game list
+          example: 6
+        hoursBeforeDeadlineToNotifyFirstHeadRefereeAboutOpenScoresheetOrNominationList:
+          type: integer
+          example: 2
+        # Postponement Settings
+        inChargeOfRefereeConvocationForPostponedGames:
+          type: string
+          enum: [requesting_club_of_postponement, championship_owner, referee_dispatcher]
+        hoursBeforeGameStartToDisableRefereeRejectionOfPostponement:
+          type: integer
+          example: 48
+        hoursAfterPostponementToDisableRefereeRejectionOfPostponement:
+          type: integer
+          nullable: true
+        # Convocation Settings
+        basisToConsiderRefereeHome:
+          type: array
+          items:
+            type: string
+          description: Criteria to determine referee home location
+          example: ["", "officiatesForClub"]
+        maxDistanceInKmBetweenRefereeAndHall:
+          type: integer
+          nullable: true
+          description: Maximum distance for automatic convocation
+        # Audit fields
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdBy:
+          type: string
+        createdByIpAddress:
+          type: string
+        createdByPersistenceIdentifier:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+        updatedBy:
+          type: string
+        updatedByIpAddress:
+          type: string
+        updatedByPersistenceIdentifier:
+          type: string
+        lastUpdatedByRealUser:
+          type: boolean
+    RefereeDataSetting:
+      type: object
+      description: Configuration for a referee data field
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        propertyName:
+          type: string
+          description: Name of the property being configured
+          example: "hasRetirementWish"
+        active:
+          type: boolean
+          description: Whether this setting is active
+        refereeCanEdit:
+          type: boolean
+          description: Whether referee can edit this field
+        refereeCanView:
+          type: boolean
+          description: Whether referee can view this field
+        allowRefereeCanEdit:
+          type: boolean
+          description: Whether refereeCanEdit can be enabled
+        copyToNextSeason:
+          type: boolean
+          description: Whether value should be copied to next season
+        allowCopyToNextSeason:
+          type: boolean
+          description: Whether copyToNextSeason can be enabled
+    TeamContactInfoResponse:
+      type: object
+      description: Team contact information for both home and away teams
+      properties:
+        teamHome:
+          $ref: '#/components/schemas/TeamContacts'
+        teamAway:
+          $ref: '#/components/schemas/TeamContacts'
+    TeamContacts:
+      type: object
+      properties:
+        contacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactPerson'
+    ContactPerson:
+      type: object
+      description: Team manager or contact person
+      properties:
+        name:
+          type: string
+          example: "Bienz Nick"
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+          example: "contact@example.com"
+        phone:
+          type: string
+          example: "+41 XX XXX XX XX"
+        role:
+          type: string
+          description: Role/title of the contact (e.g., "Responsable d'équipe")
+    GameDetails:
+      type: object
+      description: Detailed game information from showWithNestedObjects
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        number:
+          type: integer
+          example: 382215
+        startingDateTime:
+          type: string
+          format: date-time
+        gameDayIndex:
+          type: integer
+          description: Match day number within the phase
+          example: 4
+        status:
+          type: string
+        group:
+          type: object
+          properties:
+            __identity:
+              type: string
+              format: uuid
+            displayName:
+              type: string
+              example: "#27106 | Herren 2. Liga"
+            phase:
+              type: object
+              properties:
+                __identity:
+                  type: string
+                  format: uuid
+                displayName:
+                  type: string
+                  example: "#13011 | Hin- und Rückrunde"
+                league:
+                  type: object
+                  properties:
+                    __identity:
+                      type: string
+                      format: uuid
+                    displayName:
+                      type: string
+                      example: "#6651 | 2L | ♂"
+                    genderUnicodeSign:
+                      type: string
+                      enum: ["♂", "♀"]
+                    leagueCategory:
+                      type: object
+                      properties:
+                        displayNameWithManagingAssociationShortName:
+                          type: string
+                          example: "SVRZ | 2L"
+        hall:
+          type: object
+          properties:
+            __identity:
+              type: string
+              format: uuid
+            displayName:
+              type: string
+              example: "#74 | Sporthalle Ruebisbach Halle 1-3 (A) | Talacherstrasse 2, 8302 Kloten"
+            primaryPostalAddress:
+              type: object
+              properties:
+                streetAndHouseNumber:
+                  type: string
+                  example: "Talacherstrasse 2"
+                combinedAddress:
+                  type: string
+                additionToAddress:
+                  type: string
+                  nullable: true
+                postalCodeAndCity:
+                  type: string
+                  example: "8302 Kloten"
+                geographicalLocation:
+                  type: object
+                  properties:
+                    plusCode:
+                      type: string
+                      example: "8FVCFH6H+V5"
+        encounter:
+          type: object
+          properties:
+            __identity:
+              type: string
+              format: uuid
+            teamHome:
+              type: object
+              properties:
+                __identity:
+                  type: string
+                  format: uuid
+                displayName:
+                  type: string
+                  example: "#2328 | VBC Züri Unterland H2 (2L, ♂, SVRZ)"
+            teamHomeDefinitive:
+              type: boolean
+            teamHomeGroupRankDisplayName:
+              type: string
+              nullable: true
+            teamAway:
+              type: object
+              properties:
+                __identity:
+                  type: string
+                  format: uuid
+                displayName:
+                  type: string
+                  example: "#12849 | RTG Volley Talents Rapperswil Jona (2L, ♂, SVRGSGL)"
+            teamAwayDefinitive:
+              type: boolean
+            teamAwayGroupRankDisplayName:
+              type: string
+              nullable: true
+        result:
+          type: object
+          nullable: true
+          properties:
+            summarizedResult:
+              type: string
+              description: Game result (e.g., "3:1")
+            summarizedSets:
+              type: string
+              description: Set scores (e.g., "25:20, 23:25, 25:18, 25:22")
+    RefereeConvocationDetails:
+      type: object
+      description: |
+        Detailed referee convocation information from showWithNestedObjects.
+        Includes referee dispatcher info and referee postal addresses not available
+        in the standard game details endpoints.
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        refereeConvocationStatus:
+          type: string
+          enum: [active, cancelled, archived]
+        refereePosition:
+          $ref: '#/components/schemas/RefereePosition'
+        refereeGame:
+          $ref: '#/components/schemas/RefereeGameDetailed'
+        refereeSelectionBy:
+          $ref: '#/components/schemas/RefereeDispatcher'
+        refereeMatchingStatistic:
+          type: object
+          description: Statistics for referee matching algorithm
+        referee:
+          type: object
+          description: The assigned referee details
+          properties:
+            person:
+              type: object
+              properties:
+                primaryPostalAddress:
+                  $ref: '#/components/schemas/PostalAddressDetailed'
+    RefereeGameDetailed:
+      type: object
+      description: Referee game with detailed convocation info for all positions
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        game:
+          $ref: '#/components/schemas/GameDetailed'
+        activeRefereeConvocationFirstHeadReferee:
+          $ref: '#/components/schemas/RefereeConvocationWithContact'
+        activeRefereeConvocationSecondHeadReferee:
+          $ref: '#/components/schemas/RefereeConvocationWithContact'
+        activeRefereeConvocationFirstLinesman:
+          $ref: '#/components/schemas/RefereeConvocationWithContact'
+        activeRefereeConvocationSecondLinesman:
+          $ref: '#/components/schemas/RefereeConvocationWithContact'
+        activeRefereeConvocationThirdLinesman:
+          $ref: '#/components/schemas/RefereeConvocationWithContact'
+        activeRefereeConvocationFourthLinesman:
+          $ref: '#/components/schemas/RefereeConvocationWithContact'
+        activeRefereeConvocationStandbyHeadReferee:
+          $ref: '#/components/schemas/RefereeConvocationWithContact'
+        activeRefereeConvocationStandbyLinesman:
+          $ref: '#/components/schemas/RefereeConvocationWithContact'
+    GameDetailed:
+      type: object
+      description: Game with full nested details for convocation dialog
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        number:
+          type: integer
+        startingDateTime:
+          type: string
+          format: date-time
+        hall:
+          type: object
+          properties:
+            __identity:
+              type: string
+              format: uuid
+            displayName:
+              type: string
+            primaryPostalAddress:
+              $ref: '#/components/schemas/PostalAddressDetailed'
+        encounter:
+          type: object
+          properties:
+            teamHome:
+              $ref: '#/components/schemas/Team'
+            teamAway:
+              $ref: '#/components/schemas/Team'
+        group:
+          type: object
+          properties:
+            phase:
+              type: object
+              properties:
+                league:
+                  type: object
+                  properties:
+                    leagueCategory:
+                      $ref: '#/components/schemas/LeagueCategory'
+    RefereeConvocationWithContact:
+      type: object
+      description: Referee convocation with full contact information
+      nullable: true
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        indoorAssociationReferee:
+          type: object
+          properties:
+            __identity:
+              type: string
+              format: uuid
+            indoorReferee:
+              type: object
+              properties:
+                __identity:
+                  type: string
+                  format: uuid
+                person:
+                  type: object
+                  properties:
+                    __identity:
+                      type: string
+                      format: uuid
+                    firstName:
+                      type: string
+                    lastName:
+                      type: string
+                    displayName:
+                      type: string
+                      example: "Thamayanth Kanagalingam"
+                    associationId:
+                      type: integer
+                      description: Swiss Volley referee association ID
+                      example: 87636
+                    primaryPostalAddress:
+                      $ref: '#/components/schemas/PostalAddressDetailed'
+                    primaryEmailAddress:
+                      $ref: '#/components/schemas/EmailAddressSimple'
+                    primaryPhoneNumber:
+                      $ref: '#/components/schemas/PhoneNumberSimple'
+    RefereeDispatcher:
+      type: object
+      description: Referee dispatcher (convocateur) who manages assignments
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+          example: "[First Name] [Middle Name]"
+        lastName:
+          type: string
+          example: "[Last Name]"
+        displayName:
+          type: string
+          example: "[First Name] [Middle Name] [Last Name]"
+        primaryEmailAddress:
+          $ref: '#/components/schemas/EmailAddressSimple'
+        primaryPhoneNumber:
+          $ref: '#/components/schemas/PhoneNumberSimple'
+    PostalAddressDetailed:
+      type: object
+      description: Full postal address with geographical location
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        streetAndHouseNumber:
+          type: string
+          example: "Zürichstr. 31"
+        postalCode:
+          type: string
+          example: "8610"
+        city:
+          type: string
+          example: "Uster"
+        postalCodeAndCity:
+          type: string
+          example: "8610 Uster"
+        combinedAddress:
+          type: string
+          example: "Zürichstr. 31, 8610 Uster"
+        additionToAddress:
+          type: string
+          nullable: true
+        country:
+          type: object
+          properties:
+            countryCode:
+              type: string
+              example: "CH"
+        geographicalLocation:
+          type: object
+          properties:
+            __identity:
+              type: string
+              format: uuid
+            plusCode:
+              type: string
+              description: Google Plus Code for precise location
+              example: "8FVC9P25+C9"
+            latitude:
+              type: number
+              format: double
+            longitude:
+              type: number
+              format: double
+    EmailAddressSimple:
+      type: object
+      description: Simple email address entity (used in team contact info)
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        mailAddress:
+          type: string
+          format: email
+          example: "dispatcher@example.com"
+    PhoneNumberSimple:
+      type: object
+      description: Simple phone number entity (used in team contact info)
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        formattedPhoneNumber:
+          type: string
+          example: "+41 XX XXX XX XX"
+    # ==================== Compensation Edit Schemas ====================
+    ConvocationCompensationSettings:
+      type: object
+      description: |
+        Compensation settings specific to a convocation, returned by findConvocationCompensationSettingsForRefereeConvocation.
+        Contains league-specific compensation rules, amounts, and disbursement methods.
+      properties:
+        convocationCompensationSettings:
+          type: object
+          description: Wrapper object containing the actual settings
+          properties:
+            __identity:
+              type: string
+              format: uuid
+            _permissions:
+              $ref: '#/components/schemas/Permissions'
+            # Game compensation amounts
+            amountHeadWeekdays:
+              type: number
+              description: Head referee compensation for weekday games (CHF)
+              example: 50
+            amountHeadWeekend:
+              type: number
+              description: Head referee compensation for weekend games (CHF)
+              example: 50
+            amountLinesmanWeekdays:
+              type: number
+              description: Linesman compensation for weekday games (CHF)
+              example: 0
+            amountLinesmanWeekend:
+              type: number
+              description: Linesman compensation for weekend games (CHF)
+              example: 0
+            amountStandbyHeadReferee:
+              type: number
+              description: Standby head referee compensation (CHF)
+              example: 0
+            amountStandbyLinesman:
+              type: number
+              description: Standby linesman compensation (CHF)
+              example: 0
+            # Travel flat rates
+            travelFlatRateHeadWeekdays:
+              type: number
+              nullable: true
+              description: Flat rate travel compensation for head referee on weekdays (CHF)
+              example: 20
+            travelFlatRateHeadWeekend:
+              type: number
+              nullable: true
+              description: Flat rate travel compensation for head referee on weekends (CHF)
+              example: 20
+            travelFlatRateLinesmanWeekdays:
+              type: number
+              nullable: true
+              description: Flat rate travel compensation for linesman on weekdays (CHF)
+            travelFlatRateLinesmanWeekend:
+              type: number
+              nullable: true
+              description: Flat rate travel compensation for linesman on weekends (CHF)
+            # Disbursement methods
+            methodOfDisbursementArbitration:
+              type: string
+              enum: [payout_on_site, central_payout]
+              description: How game compensation is paid
+              example: payout_on_site
+            methodOfDisbursementTravelCompensation:
+              type: string
+              enum: [payout_on_site, central_payout]
+              description: How travel compensation is paid
+              example: payout_on_site
+            methodOfDisbursementOvernightStayExpenses:
+              type: string
+              enum: [payout_on_site, central_payout]
+              description: How overnight stay expenses are paid
+              example: central_payout
+            methodOfDisbursementCateringExpenses:
+              type: string
+              enum: [payout_on_site, central_payout]
+              description: How catering expenses are paid
+              example: payout_on_site
+            # Expense allowances
+            overnightStayExpensesAllowed:
+              type: boolean
+              description: Whether overnight stay expenses can be claimed
+              example: false
+            cateringExpensesAllowed:
+              type: boolean
+              description: Whether catering expenses can be claimed
+              example: false
+            # Cost sharing
+            compensationShareTeamHome:
+              type: number
+              description: Share of compensation paid by home team (0-1)
+              example: 1
+            # Travel settings
+            currentTravelCompensationSetting:
+              $ref: '#/components/schemas/TravelCompensationSetting'
+            travelDistanceSettings:
+              type: array
+              description: Distance-based travel compensation thresholds
+              items:
+                $ref: '#/components/schemas/TravelDistanceSetting'
+            joinedTravelDistanceSettings:
+              type: string
+              description: Human-readable formatted travel distance settings
+              example: "ARB: à 50km: 30.00\nARB: à 100km: 70.00"
+            # Gender context
+            gender:
+              type: string
+              enum: [m, f]
+              description: Gender context for the league
+            genderUnicodeSign:
+              type: string
+              description: Unicode symbol for gender (♂ or ♀)
+              example: "♂"
+            # Related entities
+            leagueCategory:
+              $ref: '#/components/schemas/LeagueCategory'
+            managingAssociation:
+              $ref: '#/components/schemas/ManagingAssociation'
+            season:
+              $ref: '#/components/schemas/Season'
+            # Audit fields
+            createdAt:
+              type: string
+              format: date-time
+            createdBy:
+              type: string
+            createdByPersistenceIdentifier:
+              type: string
+              format: uuid
+            createdByIpAddress:
+              type: string
+            updatedAt:
+              type: string
+              format: date-time
+            updatedBy:
+              type: string
+            updatedByPersistenceIdentifier:
+              type: string
+              format: uuid
+            updatedByIpAddress:
+              type: string
+            lastUpdatedByRealUser:
+              type: boolean
+    AssociationCompensationSettings:
+      type: object
+      description: |
+        Association-level compensation settings returned by getAssociationCompensationSettingsByRefereeConvocation.
+        Contains settings that control what referees can edit and view, plus available travel compensation types.
+      properties:
+        items:
+          type: object
+          description: Wrapper object containing the actual settings
+          properties:
+            __identity:
+              type: string
+              format: uuid
+              description: Unique identifier (persistenceObjectIdentifier)
+            persistenceObjectIdentifier:
+              type: string
+              format: uuid
+            # Critical edit permissions
+            refereeCanEditHisExpenses:
+              type: boolean
+              description: Whether the referee is allowed to edit their own expenses
+              example: true
+            refereeCanViewPDFOfHisExpensens:
+              type: boolean
+              description: Whether the referee can view/download PDF receipts
+              example: true
+            # Travel compensation configuration
+            currentTravelCompensationSetting:
+              $ref: '#/components/schemas/TravelCompensationSetting'
+            travelCompensationSettings:
+              type: array
+              description: All available travel compensation types for this association
+              items:
+                $ref: '#/components/schemas/TravelCompensationSetting'
+            # Related entities
+            managingAssociation:
+              $ref: '#/components/schemas/ManagingAssociation'
+            # Audit fields
+            createdAt:
+              type: string
+              format: date-time
+            createdBy:
+              type: string
+            createdByPersistenceIdentifier:
+              type: string
+              format: uuid
+            createdByIpAddress:
+              type: string
+              nullable: true
+            updatedAt:
+              type: string
+              format: date-time
+            updatedBy:
+              type: string
+            updatedByPersistenceIdentifier:
+              type: string
+              format: uuid
+            updatedByIpAddress:
+              type: string
+              nullable: true
+            lastUpdatedByRealUser:
+              type: boolean
+    ConvocationCompensationDetailed:
+      type: object
+      description: |
+        Detailed compensation record returned by showWithNestedObjects.
+        Contains all compensation amounts, lock states, payment status, and edit history.
+
+        **Editability Logic:**
+        - Non-editable: lockPayoutOnSiteCompensation=true AND paymentDone=false
+        - Paid/closed: lockPayoutCentralPayoutCompensation=true AND paymentDone=true
+        - Editable: lockPayoutCentralPayoutCompensation=false AND paymentDone=false
+      properties:
+        convocationCompensation:
+          type: object
+          description: Wrapper object containing the compensation details
+          properties:
+            __identity:
+              type: string
+              format: uuid
+            # Payment status
+            paymentDone:
+              type: boolean
+              description: Whether payment has been completed
+              example: false
+            paymentInternalReference:
+              type: string
+              nullable: true
+              description: Internal reference for the payment (e.g., "1. Auszahlung")
+            paymentTransactionCreatedAt:
+              type: string
+              format: date-time
+              nullable: true
+              description: When the payment transaction was created
+            paymentUpdatedAt:
+              type: string
+              format: date-time
+              nullable: true
+              description: When payment info was last updated
+            paymentUpdatedByAssociation:
+              type: object
+              nullable: true
+            paymentUpdatedByPerson:
+              type: object
+              nullable: true
+            paymentValueDate:
+              type: string
+              format: date-time
+              nullable: true
+              description: Value date of the payment
+            # Lock states (critical for editability)
+            lockPayoutOnSiteCompensation:
+              type: boolean
+              description: Whether on-site payout is locked
+              example: true
+            lockPayoutOnSiteCompensationBy:
+              type: object
+              nullable: true
+              description: Who locked the on-site payout
+            lockPayoutOnSiteCompensationDate:
+              type: string
+              format: date-time
+              nullable: true
+              description: When on-site payout was locked
+            lockPayoutCentralPayoutCompensation:
+              type: boolean
+              description: Whether central payout is locked
+              example: false
+            lockPayoutCentralPayoutCompensationBy:
+              type: object
+              nullable: true
+              description: Who locked the central payout
+            lockPayoutCentralPayoutCompensationDate:
+              type: string
+              format: date-time
+              nullable: true
+              description: When central payout was locked
+            # Game compensation
+            payGameCompensation:
+              type: boolean
+              description: Whether game compensation should be paid
+              example: true
+            gameCompensation:
+              type: number
+              description: Actual game compensation amount (CHF)
+              example: 50
+            gameCompensationFormatted:
+              type: string
+              description: Formatted game compensation with decimals
+              example: "50.00"
+            calculatedGameCompensation:
+              type: number
+              description: System-calculated game compensation (CHF)
+              example: 50
+            # Travel expenses
+            payTravelExpenses:
+              type: boolean
+              description: Whether travel expenses should be paid
+              example: true
+            travelExpenses:
+              type: number
+              description: Actual travel expenses amount (CHF)
+              example: 20
+            travelExpensesFormatted:
+              type: string
+              description: Formatted travel expenses with decimals
+              example: "20.00"
+            calculatedTravelExpenses:
+              type: number
+              description: System-calculated travel expenses (CHF)
+              example: 20
+            travelExpensesPercentageWeighting:
+              type: number
+              description: Percentage of travel expenses claimable (0-1)
+              example: 1
+            publicTransportExpenses:
+              type: number
+              nullable: true
+              description: Public transport expenses if applicable (CHF)
+            publicTransportExpensesFormatted:
+              type: string
+              description: Formatted public transport expenses
+              example: "0.00"
+            # Distance and transportation
+            distanceInMetres:
+              type: integer
+              description: Distance to venue in metres
+              example: 88546
+            distanceFormatted:
+              type: string
+              description: Distance formatted in km
+              example: "88.5"
+            durationInSeconds:
+              type: integer
+              description: Travel duration in seconds
+              example: 3803
+            durationFormatted:
+              type: string
+              description: Travel duration formatted
+              example: "1 h 03 m"
+            transportationMode:
+              type: string
+              enum: [car, train, public_transport, other]
+              description: Mode of transportation
+              example: car
+            # Additional expenses
+            calculatedCateringExpenses:
+              type: number
+              description: System-calculated catering expenses (CHF)
+              example: 0
+            cateringExpensesFormatted:
+              type: string
+              example: "0.00"
+            calculatedOvernightStayExpenses:
+              type: number
+              description: System-calculated overnight stay expenses (CHF)
+              example: 0
+            overnightStayExpensesFormatted:
+              type: string
+              example: "0.00"
+            additionalExpensesFormatted:
+              type: string
+              description: Total additional expenses formatted
+              example: "0.00"
+            # Total cost
+            cost:
+              type: number
+              description: Total compensation cost (CHF)
+              example: 70
+            costFormatted:
+              type: string
+              description: Total cost formatted with decimals
+              example: "70.00"
+            compensationShareTeamHome:
+              type: number
+              description: Share paid by home team (0-1)
+              example: 1
+            # Disbursement methods
+            methodOfDisbursementArbitration:
+              type: string
+              enum: [payout_on_site, central_payout]
+            methodOfDisbursementTravelCompensation:
+              type: string
+              enum: [payout_on_site, central_payout]
+            methodOfDisbursementOvernightStayExpenses:
+              type: string
+              enum: [payout_on_site, central_payout]
+            methodOfDisbursementCateringExpenses:
+              type: string
+              enum: [payout_on_site, central_payout]
+            # Correction/edit history
+            hasRefereeHimselfCorrectedConvocationCompensation:
+              type: boolean
+              description: Whether the referee has made corrections
+              example: false
+            correctionReason:
+              type: string
+              nullable: true
+              description: Reason provided by referee for correction
+              example: "Ich wohne in Oberengstringen"
+            correctionTime:
+              type: string
+              format: date-time
+              nullable: true
+              description: When the correction was made
+            correctionUser:
+              type: string
+              nullable: true
+            # Flexible compensation flags
+            hasFlexibleCateringExpenses:
+              type: boolean
+              example: false
+            hasFlexibleGameCompensations:
+              type: boolean
+              example: false
+            hasFlexibleOvernightStayExpenses:
+              type: boolean
+              example: false
+            hasFlexibleTravelExpenses:
+              type: boolean
+              example: false
+            # Status flags
+            expensesApproved:
+              type: boolean
+              description: Whether expenses have been approved
+              example: false
+            excludedFromRefereeClubStatement:
+              type: boolean
+              description: Whether excluded from club statement
+              example: false
+            # Additional compensations
+            additionalCompensations:
+              type: array
+              description: Fixed additional compensation entries
+              items:
+                $ref: '#/components/schemas/AdditionalCompensationEntry'
+            flexibleAdditionalCompensations:
+              type: array
+              description: Variable additional compensation entries
+              items:
+                $ref: '#/components/schemas/FlexibleCompensationEntry'
+            # Audit fields
+            createdAt:
+              type: string
+              format: date-time
+            createdBy:
+              type: string
+            createdByPersistenceIdentifier:
+              type: string
+              format: uuid
+            createdByIpAddress:
+              type: string
+            updatedAt:
+              type: string
+              format: date-time
+            updatedBy:
+              type: string
+            updatedByPersistenceIdentifier:
+              type: string
+              format: uuid
+            updatedByIpAddress:
+              type: string
+              nullable: true
+            lastUpdatedByRealUser:
+              type: boolean
+    AdditionalCompensationEntry:
+      type: object
+      description: A fixed additional compensation entry
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        compensationType:
+          $ref: '#/components/schemas/AdditionalCompensationType'
+        amount:
+          type: number
+          description: Amount in CHF
+        note:
+          type: string
+          nullable: true
+    FlexibleCompensationEntry:
+      type: object
+      description: A flexible/variable additional compensation entry
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        flexibleCompensationType:
+          $ref: '#/components/schemas/FlexibleCompensationType'
+        amount:
+          type: number
+          description: Amount in CHF
+        note:
+          type: string
+          nullable: true
+    AdditionalCompensationType:
+      type: object
+      description: Type of additional compensation
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        name:
+          type: string
+          description: Name of the compensation type
+          example: "Frais de repas"
+        defaultAmount:
+          type: number
+          nullable: true
+    FlexibleCompensationType:
+      type: object
+      description: Type of flexible compensation
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Frais supplémentaires"
+    FlexibleCompensationsResponse:
+      type: object
+      description: Response from flexibleadditionalcompensation/search endpoint
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlexibleCompensationType'
+        totalItemsCount:
+          type: integer
+        entityTemplate:
+          type: object
+          description: Template for creating new flexible compensation entries
+          properties:
+            _permissions:
+              $ref: '#/components/schemas/Permissions'
+    # ==================== Travel Compensation Schemas ====================
+    TravelCompensationSetting:
+      type: object
+      description: Travel compensation type configuration
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        persistenceObjectIdentifier:
+          type: string
+          format: uuid
+        travelCompensationType:
+          type: string
+          enum: [flat_rate, threshold, per_km, train, free_amount, none]
+          description: |
+            Type of travel compensation calculation:
+            - flat_rate: Fixed amount regardless of distance
+            - threshold: Distance-based tiers (e.g., 0-50km: 30 CHF, 50-100km: 70 CHF)
+            - per_km: Amount per kilometer traveled
+            - train: Public transport/train ticket reimbursement
+            - free_amount: Referee enters custom amount
+            - none: No travel compensation
+          example: flat_rate
+        amountPerKm:
+          type: number
+          nullable: true
+          description: Amount per km (for per_km type)
+        maxAmount:
+          type: number
+          nullable: true
+          description: Maximum amount cap
+    TravelDistanceSetting:
+      type: object
+      description: Distance-based travel compensation threshold
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        distance:
+          type: integer
+          description: Distance threshold in km
+          example: 50
+        amount:
+          type: number
+          description: Compensation amount for this threshold (CHF)
+          example: 30
+        amountFormatted:
+          type: string
+          description: Formatted amount with decimals
+          example: "30.00"
+        refereeType:
+          type: string
+          enum: [head, linesman]
+          description: Which referee type this applies to
+          example: head
+    # ==================== Association/League Schemas ====================
+    ManagingAssociation:
+      type: object
+      description: Regional volleyball association (e.g., SVRZ, SV)
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        persistenceObjectIdentifier:
+          type: string
+          format: uuid
+        identifier:
+          type: string
+          description: Association identifier code
+          example: "912000"
+        name:
+          type: string
+          description: Full association name
+          example: "Swiss Volley Région Zurich"
+        displayName:
+          type: string
+          description: Display name (may be translated)
+          example: "Swiss Volley Région Zurich"
+        shortName:
+          type: string
+          description: Short abbreviation
+          example: "SVRZ"
+        translations:
+          type: object
+          properties:
+            de:
+              type: object
+              properties:
+                name:
+                  type: string
+                shortName:
+                  type: string
+            fr:
+              type: object
+              properties:
+                name:
+                  type: string
+                shortName:
+                  type: string
+        originId:
+          type: integer
+          description: Origin identifier
+          example: 12
+        localeIdentifier:
+          type: string
+          example: "1"
+        active:
+          type: boolean
+        accountActive:
+          type: boolean
+        hasAccount:
+          type: boolean
+        hasProfilePicture:
+          type: boolean
+        username:
+          type: string
+          nullable: true
+    # ==================== Profile Schemas ====================
+    PersonDetails:
+      type: object
+      description: |
+        Detailed person information for profile page.
+        This is the "active party" data embedded in page loads, containing the user's
+        association memberships and current context.
+      properties:
+        __identity:
+          type: string
+          format: uuid
+          example: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        persistenceObjectIdentifier:
+          type: string
+          format: uuid
+        # Basic identity
+        svNumber:
+          type: integer
+          description: Swiss Volley member number (associationId)
+          example: 12345
+        associationId:
+          type: integer
+          description: Swiss Volley member number
+          example: 12345
+        externalId:
+          type: string
+          description: External ID (same as associationId as string)
+          example: "12345"
+        uniqueId:
+          type: string
+          format: uuid
+        # Personal information
+        firstName:
+          type: string
+          example: "Jean"
+        lastName:
+          type: string
+          example: "Dupont"
+        displayName:
+          type: string
+          description: Full display name
+          example: "Jean Dupont"
+        fullName:
+          type: string
+          description: Full name (same as displayName)
+          example: "Jean Dupont"
+        gender:
+          type: string
+          enum: [m, f]
+          description: Gender (m = male, f = female)
+          example: "m"
+        genderNoun:
+          type: string
+          description: Localized gender noun
+          example: "Homme"
+        genderAdjective:
+          type: string
+          description: Localized gender adjective
+          example: "masculin"
+        birthday:
+          type: string
+          format: date-time
+          description: Birthday in ISO 8601 format
+          example: "1989-08-07T22:00:00.000000+00:00"
+        formattedAndTimezoneIndependentBirthday:
+          type: string
+          format: date
+          description: Birthday in YYYY-MM-DD format
+          example: "1989-08-08"
+        yearOfBirth:
+          type: integer
+          example: 1989
+        age:
+          type: integer
+          description: Current age
+          example: 36
+        bodyHeight:
+          type: integer
+          description: Height in cm
+          example: 190
+        nationality:
+          $ref: '#/components/schemas/Country'
+        correspondenceLanguage:
+          type: string
+          enum: [fr, de, it, en]
+          description: Preferred language for correspondence
+          example: "fr"
+        language:
+          type: string
+          nullable: true
+          description: UI language preference
+        # Account status
+        accountActive:
+          type: boolean
+          description: Whether the account is active
+          example: true
+        hasAccount:
+          type: boolean
+        hasProfilePicture:
+          type: boolean
+        profilePicture:
+          type: object
+          nullable: true
+        initialAccessDataSendDate:
+          type: string
+          format: date-time
+          nullable: true
+        # Contact information
+        emailAddresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailAddress'
+        primaryEmailAddress:
+          $ref: '#/components/schemas/EmailAddress'
+        phoneNumbers:
+          type: array
+          items:
+            $ref: '#/components/schemas/PhoneNumber'
+        primaryPhoneNumber:
+          $ref: '#/components/schemas/PhoneNumber'
+        postalAddresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/PostalAddress'
+        primaryPostalAddress:
+          $ref: '#/components/schemas/PostalAddress'
+        # Association context (critical for multi-association users)
+        activeAttributeValue:
+          $ref: '#/components/schemas/AttributeValue'
+        activeRoleIdentifier:
+          type: string
+          description: Current role identifier
+          example: "Indoorvolleyball.RefAdmin:Referee"
+        eligibleAttributeValues:
+          type: array
+          description: All association memberships/roles the user is eligible for
+          items:
+            $ref: '#/components/schemas/AttributeValue'
+        groupedEligibleAttributeValues:
+          type: array
+          description: Eligible attribute values grouped by role
+          items:
+            $ref: '#/components/schemas/AttributeValue'
+        groupedEligibleAttributeValuesWithoutHiddenRoles:
+          type: array
+          description: Visible eligible attribute values
+          items:
+            $ref: '#/components/schemas/AttributeValue'
+        eligibleRoles:
+          type: object
+          description: Map of role identifiers to role definitions
+          additionalProperties:
+            $ref: '#/components/schemas/RoleDefinition'
+        # Accounts
+        accounts:
+          type: array
+          items:
+            type: object
+            properties:
+              __identity:
+                type: string
+                format: uuid
+        primaryAccount:
+          type: object
+          nullable: true
+        # Privacy and settings
+        privacySettings:
+          type: object
+          nullable: true
+        # Legal guardians (for minors)
+        legalGuardians:
+          type: array
+          items:
+            type: object
+        firstLegalGuardian:
+          type: object
+          nullable: true
+        secondLegalGuardian:
+          type: object
+          nullable: true
+        # Synchronization
+        synchronizationReferences:
+          type: array
+          items:
+            $ref: '#/components/schemas/SynchronizationReference'
+        firstSynchronizationReference:
+          $ref: '#/components/schemas/SynchronizationReference'
+        # External identifiers (Abacus, etc.)
+        externalIdentifiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExternalIdentifier'
+        abacusCustomerNumberIdentifier:
+          type: string
+          nullable: true
+        abacusSupplierNumberIdentifier:
+          type: string
+          nullable: true
+        alternativeAbacusCustomerNumberIdentifier:
+          type: string
+          nullable: true
+        alternativeAbacusAddressNumberIdentifier:
+          type: string
+          nullable: true
+        youthAndSportIdentifier:
+          type: string
+          nullable: true
+        # Anonymization
+        isAnonymized:
+          type: boolean
+        anonymizedAt:
+          type: string
+          format: date-time
+          nullable: true
+        anonymizedByPersistenceIdentifier:
+          type: string
+          nullable: true
+        anonymizedByDisplayName:
+          type: string
+          nullable: true
+        deceased:
+          type: boolean
+        # Permissions
+        _permissions:
+          $ref: '#/components/schemas/Permissions'
+        # Audit fields
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+        createdByPersistenceIdentifier:
+          type: string
+        createdByIpAddress:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+        updatedBy:
+          type: string
+        updatedByPersistenceIdentifier:
+          type: string
+        updatedByIpAddress:
+          type: string
+        lastUpdatedByRealUser:
+          type: boolean
+          description: Whether last update was by a real user (vs system)
+        # User account details
+        username:
+          type: string
+          description: Login username
+          example: "jean_dupont"
+        localeIdentifier:
+          type: string
+          description: Locale identifier for UI preferences
+          example: "1"
+        lastLoginDate:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the user last logged in
+    AttributeValue:
+      type: object
+      description: |
+        Represents a user's membership/role in an association.
+        Used for switching between associations in multi-association contexts.
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        persistenceObjectIdentifier:
+          type: string
+          format: uuid
+        attributeIdentifier:
+          type: string
+          description: Type of attribute
+          example: "Indoorvolleyball.RefAdmin:AbstractAssociation"
+        roleIdentifier:
+          type: string
+          description: Role within this association
+          example: "Indoorvolleyball.RefAdmin:Referee"
+        type:
+          type: string
+          description: Domain model type
+          example: "SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation"
+        value:
+          type: string
+          format: uuid
+          description: Reference to the association entity
+        additionalRole:
+          type: boolean
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+        inflatedValue:
+          $ref: '#/components/schemas/ManagingAssociation'
+        lastUpdatedByRealUser:
+          type: boolean
+        # Audit fields
+        createdBy:
+          type: string
+        createdByIpAddress:
+          type: string
+          nullable: true
+        createdByPersistenceIdentifier:
+          type: string
+        updatedBy:
+          type: string
+        updatedByIpAddress:
+          type: string
+          nullable: true
+        updatedByPersistenceIdentifier:
+          type: string
+    RoleDefinition:
+      type: object
+      description: Definition of a user role
+      properties:
+        identifier:
+          type: string
+          example: "Indoorvolleyball.RefAdmin:Referee"
+        title:
+          type: string
+          description: Translation key for title
+          example: "attribute.Indoorvolleyball.RefAdmin:Referee.title"
+        description:
+          type: string
+          description: Translation key for description
+          example: "attribute.Indoorvolleyball.RefAdmin:Referee.description"
+        attribute:
+          type: boolean
+        userContextGranularity:
+          type: string
+          enum: [attribute, global]
+          example: "attribute"
+        userContextGroupByAttributeProperty:
+          type: string
+          nullable: true
+    PaymentConnection:
+      type: object
+      description: Bank or payment account for compensation payments
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [bank, postal]
+          description: Type of payment connection
+          example: "bank"
+        iban:
+          type: string
+          description: IBAN for bank transfers
+          example: "CH00 0000 0000 0000 0000 0"
+        name:
+          type: string
+          nullable: true
+          description: Account name/label
+        payee:
+          type: string
+          description: Name of the payee
+          example: "Jean Dupont"
+        financialInstitutionName:
+          type: string
+          nullable: true
+          description: Bank or financial institution name
+        isPrimaryPaymentConnection:
+          type: boolean
+          description: Whether this is the primary payment account
+        payeePostalAddress:
+          $ref: '#/components/schemas/PostalAddress'
+        # Audit fields
+        createdBy:
+          type: string
+        createdByIpAddress:
+          type: string
+          nullable: true
+        createdByPersistenceIdentifier:
+          type: string
+        updatedBy:
+          type: string
+        updatedByIpAddress:
+          type: string
+        updatedByPersistenceIdentifier:
+          type: string
+        lastUpdatedByRealUser:
+          type: boolean
+    EmailAddress:
+      type: object
+      description: Email address entry
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        persistenceObjectIdentifier:
+          type: string
+          format: uuid
+        emailAddress:
+          type: string
+          format: email
+          example: "user@example.com"
+        isPrimary:
+          type: boolean
+        primary:
+          type: boolean
+        label:
+          type: string
+          nullable: true
+        usageType:
+          type: integer
+          description: Usage type (1 = personal, etc.)
+        validated:
+          type: boolean
+          description: Whether email has been validated
+        validationStatus:
+          type: string
+          enum: [unknown, validated, invalid]
+        lastValidation:
+          type: string
+          format: date-time
+          nullable: true
+        validationCodeFromSource:
+          type: string
+          nullable: true
+        validationSourceName:
+          type: string
+          nullable: true
+        originId:
+          type: integer
+        # Audit fields
+        createdBy:
+          type: string
+        createdByIpAddress:
+          type: string
+          nullable: true
+        createdByPersistenceIdentifier:
+          type: string
+        updatedBy:
+          type: string
+        updatedByIpAddress:
+          type: string
+          nullable: true
+        updatedByPersistenceIdentifier:
+          type: string
+        lastUpdatedByRealUser:
+          type: boolean
+    PhoneNumber:
+      type: object
+      description: Phone number entry
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        persistenceObjectIdentifier:
+          type: string
+          format: uuid
+        phoneNumber:
+          type: string
+          example: "+41791234567"
+        formattedPhoneNumber:
+          type: string
+          example: "+41 79 123 45 67"
+        isPrimary:
+          type: boolean
+        primary:
+          type: boolean
+        label:
+          type: string
+          nullable: true
+        usageType:
+          type: integer
+        originId:
+          type: integer
+        # Audit fields
+        createdBy:
+          type: string
+        createdByIpAddress:
+          type: string
+          nullable: true
+        createdByPersistenceIdentifier:
+          type: string
+        updatedBy:
+          type: string
+        updatedByIpAddress:
+          type: string
+          nullable: true
+        updatedByPersistenceIdentifier:
+          type: string
+        lastUpdatedByRealUser:
+          type: boolean
+    SynchronizationReference:
+      type: object
+      description: Reference to external system synchronization
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        sourceName:
+          type: string
+          description: Name of the source system
+          example: "VolleyManager1"
+        externalId:
+          type: string
+          example: "18294"
+        entityClassPath:
+          type: string
+          example: "SportManagerCoreDomainModelPerson"
+        duplicate:
+          type: boolean
+        duplicateType:
+          type: string
+          enum: [not_duplicated, duplicated]
+        duplicateGroupId:
+          type: string
+          nullable: true
+        original:
+          type: object
+          nullable: true
+        # Audit fields
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdBy:
+          type: string
+          nullable: true
+        createdByIpAddress:
+          type: string
+          nullable: true
+        createdByPersistenceIdentifier:
+          type: string
+          nullable: true
+        updatedBy:
+          type: string
+        updatedByIpAddress:
+          type: string
+          nullable: true
+        updatedByPersistenceIdentifier:
+          type: string
+        lastUpdatedByRealUser:
+          type: boolean
+    ExternalIdentifier:
+      type: object
+      description: External system identifier (e.g., Abacus customer number)
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        systemName:
+          type: string
+          description: Name of the external system
+          example: "abacusCustomerNumber"
+        identifier:
+          type: string
+          description: The external identifier value
+          example: "1018294"
+        referenceIdentifier:
+          type: string
+          format: uuid
+          description: Reference to the entity this identifies
+        referenceType:
+          type: string
+          description: Type of entity being referenced
+          example: "SportManager\\Core\\Domain\\Model\\Person_Original"
+        # Audit fields
+        createdBy:
+          type: string
+        createdByIpAddress:
+          type: string
+          nullable: true
+        createdByPersistenceIdentifier:
+          type: string
+        updatedBy:
+          type: string
+        updatedByIpAddress:
+          type: string
+          nullable: true
+        updatedByPersistenceIdentifier:
+          type: string
+        lastUpdatedByRealUser:
+          type: boolean
+    IndoorReferee:
+      type: object
+      description: |
+        Indoor referee record linked to a person.
+        Contains referee-specific information like certifications, transportation mode, and contact info.
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        persistenceObjectIdentifier:
+          type: string
+          format: uuid
+        person:
+          $ref: '#/components/schemas/PersonDetails'
+        _permissions:
+          $ref: '#/components/schemas/Permissions'
+        # Referee identification
+        refereeLevel:
+          $ref: '#/components/schemas/RefereeLevel'
+        refereeNumber:
+          type: integer
+          description: Referee registration number
+        jerseyNumber:
+          type: integer
+          nullable: true
+        refereeInformation:
+          type: string
+          description: Formatted referee info string
+          example: "Jean Dupont (12345, 1989-08-08, )"
+        refereeSinceDate:
+          type: string
+          format: date
+          nullable: true
+        # Status flags
+        validated:
+          type: boolean
+          description: Whether referee is validated
+        isInternationalReferee:
+          type: boolean
+        hasLinesmanCertification:
+          type: boolean
+        hasNotes:
+          type: boolean
+        hasSubmittedCollectionForm:
+          type: boolean
+        hasPlusCode:
+          type: boolean
+          description: Whether referee has a Plus Code location
+        otherRefereeConvocationOnSameDay:
+          type: boolean
+        # Transportation
+        transportationMode:
+          type: string
+          enum: [car, train, public_transport, other]
+          description: Preferred transportation mode
+          example: car
+        # Contact info (formatted strings)
+        mobilePhoneNumbers:
+          type: string
+          description: Formatted mobile phone numbers
+          example: "+41 79 123 45 67"
+        fixnetPhoneNumbers:
+          type: string
+          description: Formatted landline numbers
+        privatePostalAddresses:
+          type: string
+          description: Formatted private postal addresses
+        businessPostalAddresses:
+          type: string
+          description: Formatted business postal addresses
+        # Certifications
+        dateOfFirstRefereeCertification:
+          type: string
+          format: date
+          nullable: true
+        dateOfFirstInternationalRefereeCertification:
+          type: string
+          format: date
+          nullable: true
+        linesmanCertifications:
+          type: array
+          items:
+            type: object
+        refereeCertifications:
+          type: array
+          items:
+            type: object
+        # Season data
+        numberOfPastActiveRefereeSeasonsUntil2022:
+          type: integer
+        activeSeasonalRefereeData:
+          type: object
+          nullable: true
+        seasonalRefereeDataCollection:
+          type: array
+          items:
+            type: object
+        # Payment settings
+        showPhoneNumberForTwintPaymentOnRefereeStatementOfExpenses:
+          type: boolean
+        paymentConnections:
+          type: array
+          description: Bank/payment accounts for compensation payments
+          items:
+            $ref: '#/components/schemas/PaymentConnection'
+        primaryPaymentConnection:
+          $ref: '#/components/schemas/PaymentConnection'
+        # Association
+        managingAssociation:
+          $ref: '#/components/schemas/ManagingAssociation'
+        communicationAssociation:
+          type: object
+          nullable: true
+        indoorAssociationReferees:
+          type: array
+          items:
+            type: object
+        # Mutation status
+        refereeMutationStatus:
+          type: string
+          nullable: true
+        # COVID-19 fields (legacy)
+        covid19CertificateAvailability:
+          type: string
+          nullable: true
+        covid19CertificateValidUntil:
+          type: string
+          format: date
+          nullable: true
+        lastCovid19VaccinationDate:
+          type: string
+          format: date
+          nullable: true
+        willingToGetTestedForCovid19Until:
+          type: string
+          format: date
+          nullable: true
+        # Bans
+        teamBan:
+          type: array
+          items:
+            type: object
+        clubBan:
+          type: array
+          items:
+            type: object
+        # Notes
+        notes:
+          type: string
+          nullable: true
+        # Audit fields
+        createdBy:
+          type: string
+        createdByIpAddress:
+          type: string
+        createdByPersistenceIdentifier:
+          type: string
+        updatedBy:
+          type: string
+        updatedByIpAddress:
+          type: string
+        updatedByPersistenceIdentifier:
+          type: string
+        lastUpdatedByRealUser:
+          type: boolean
+    IndoorAssociationReferee:
+      type: object
+      description: |
+        Association-specific referee record returned by getIndoorAssociationRefereeOfActiveParty.
+        Links a referee to a specific association with status flags.
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        persistenceObjectIdentifier:
+          type: string
+          format: uuid
+        indoorReferee:
+          $ref: '#/components/schemas/IndoorReferee'
+        # Status flags
+        isDispensed:
+          type: boolean
+          description: Whether referee is dispensed from duties
+        hasResigned:
+          type: boolean
+          description: Whether referee has resigned
+        hasFutureRefereeConvocations:
+          type: boolean
+          description: Whether referee has upcoming convocations
+        unconfirmedFutureRefereeConvocations:
+          type: boolean
+          description: Whether there are unconfirmed future convocations
+        # Legacy field
+        originId:
+          type: integer
+          nullable: true
+        # Timestamps
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+        # Audit fields
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+        createdByIpAddress:
+          type: string
+          nullable: true
+        createdByPersistenceIdentifier:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+        updatedBy:
+          type: string
+        updatedByIpAddress:
+          type: string
+          nullable: true
+        updatedByPersistenceIdentifier:
+          type: string
+        lastUpdatedByRealUser:
+          type: boolean
+    Country:
+      type: object
+      description: Country entity
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Suisse"
+        isoCode:
+          type: string
+          example: "CH"
+    SeasonalRefereeData:
+      type: object
+      description: |
+        Seasonal referee data returned by getForIndoorAssociationRefereeForCurrentSeason.
+        Contains season-specific preferences, wishes, and settings.
+      properties:
+        indoorAssociationReferee:
+          type: object
+          properties:
+            seasonalAssociationRefereeData:
+              $ref: '#/components/schemas/SeasonalAssociationRefereeData'
+    SeasonalAssociationRefereeData:
+      type: object
+      description: Detailed seasonal data for an association referee
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        # Level and workload
+        refereeLevelGradationValue:
+          type: integer
+          description: Referee level gradation (1-5)
+          example: 5
+        convocationPreferredWorkload:
+          $ref: '#/components/schemas/RefereeWorkload'
+        convocationFreeRangeMaxNumberOfGames:
+          type: integer
+          description: Max games for free range workload
+          example: 5
+        refereeGameCap:
+          type: integer
+          nullable: true
+          description: Maximum games limit
+        # Availability wishes
+        hasRetirementWish:
+          type: boolean
+          description: Whether referee wishes to retire
+        hasResigned:
+          type: boolean
+        hasDispensationWish:
+          type: boolean
+          description: Whether referee requests dispensation
+        isDispensedForCurrentSeason:
+          type: boolean
+        dispensedForCurrentSeasonAt:
+          type: string
+          format: date-time
+          nullable: true
+        # Promotion/Demotion
+        hasPromotionWish:
+          type: boolean
+        hasDowngradeWish:
+          type: boolean
+        hasSupervisionWish:
+          type: boolean
+        isToBePromoted:
+          type: boolean
+        isToBeDowngraded:
+          type: boolean
+        isToBeSupervised:
+          type: boolean
+        promotionRefereeLevel:
+          type: object
+          nullable: true
+        promotionRefereeLevelGradationValue:
+          type: integer
+          nullable: true
+        promotionGameLimit:
+          type: integer
+          nullable: true
+        # Training wishes
+        intendToAttendTrainingsCourseForLinesmen:
+          type: boolean
+        hasWishToOfficiateInNationalLeagueA:
+          type: boolean
+        # Double rounds
+        canOfficiateDoubleRounds:
+          type: boolean
+        breakAfterDoubleRoundWish:
+          type: boolean
+        # Gender restrictions
+        mayNotRefereeMensMatch:
+          type: boolean
+        mayNotRefereeWomensMatch:
+          type: boolean
+        # Availability
+        isAvailableAsRefereeForRegionalCupGames:
+          type: boolean
+        isAvailableAsLinesmanForNationalGames:
+          type: boolean
+        isAvailableAsLinesmanForNationalCupGames:
+          type: boolean
+        # Convocation settings
+        excludeFromAutomaticConvocation:
+          type: boolean
+        isCatchingGameFromGameExchangeSystematicallyDelayed:
+          type: boolean
+        # Bans and restrictions
+        clubsThisRefereeIsNotAllowedToArbitrate:
+          type: array
+          items:
+            $ref: '#/components/schemas/Club'
+        teamsThisRefereeIsNotAllowedToArbitrate:
+          type: array
+          items:
+            $ref: '#/components/schemas/Team'
+        reasonForRefereeBans:
+          type: string
+          nullable: true
+          description: Reason for club/team bans
+        # Mandate allocations
+        refereeMandateAllocations:
+          type: array
+          items:
+            $ref: '#/components/schemas/RefereeMandateAllocation'
+        # Address
+        refereeConvocationPostalAddress:
+          $ref: '#/components/schemas/PostalAddress'
+        # Statistics
+        numberOfOfficiatedUnofficialGames:
+          type: integer
+          nullable: true
+        # Notes
+        refereeNotesForAssociation:
+          type: string
+          description: Notes from referee to association
+        # Pre-registration
+        reminderAboutRefereePreRegistrationDataSent:
+          type: boolean
+        latestReminderAboutRefereePreRegistrationDataSentAt:
+          type: string
+          format: date-time
+          nullable: true
+        # Audit fields
+        createdBy:
+          type: string
+        createdByIpAddress:
+          type: string
+        createdByPersistenceIdentifier:
+          type: string
+        lastUpdatedByRealUser:
+          type: boolean
+    RefereeWorkload:
+      type: object
+      description: Referee workload configuration
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        name:
+          type: string
+          description: Workload name
+          example: "15. halbes Mandat (5 Schireinsätze)"
+        refereeWorkloadType:
+          type: string
+          enum: [free_range, fixed, minimum, maximum]
+          description: Type of workload
+        minimumNumberOfGames:
+          type: integer
+          example: 5
+        maximumNumberOfGames:
+          type: integer
+          example: 7
+        active:
+          type: boolean
+        managingAssociation:
+          $ref: '#/components/schemas/ManagingAssociation'
+        translations:
+          type: object
+          properties:
+            de:
+              type: object
+              properties:
+                name:
+                  type: string
+        # Audit fields
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+        createdByIpAddress:
+          type: string
+          nullable: true
+        createdByPersistenceIdentifier:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+        updatedBy:
+          type: string
+        updatedByIpAddress:
+          type: string
+        updatedByPersistenceIdentifier:
+          type: string
+        lastUpdatedByRealUser:
+          type: boolean
+          nullable: true
+    RefereeMandateAllocation:
+      type: object
+      description: Allocation of referee mandate to a club or team
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        persistenceObjectIdentifier:
+          type: string
+          format: uuid
+        allocatedRefereeMandates:
+          type: number
+          description: Number of mandates allocated (can be fractional)
+          example: 0.5
+        club:
+          $ref: '#/components/schemas/Club'
+        team:
+          $ref: '#/components/schemas/Team'
+        # Audit fields
+        createdBy:
+          type: string
+        createdByIpAddress:
+          type: string
+        createdByPersistenceIdentifier:
+          type: string
+        updatedBy:
+          type: string
+        updatedByIpAddress:
+          type: string
+        updatedByPersistenceIdentifier:
+          type: string
+        lastUpdatedByRealUser:
+          type: boolean
+    RefereeMandate:
+      type: object
+      description: A referee mandate/certification
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        mandateType:
+          type: string
+          description: Type of mandate
+        validFrom:
+          type: string
+          format: date
+        validUntil:
+          type: string
+          format: date
+          nullable: true
+        managingAssociation:
+          type: object
+          properties:
+            __identity:
+              type: string
+              format: uuid
+            shortName:
+              type: string
+              example: "SVRZ"
+    # ==================== eScoresheet Schemas ====================
+    Scoresheet:
+      type: object
+      description: Electronic scoresheet for a game
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        game:
+          type: object
+          properties:
+            __identity:
+              type: string
+              format: uuid
+        isSimpleScoresheet:
+          type: boolean
+          description: Whether this is a simplified scoresheet (for lower leagues)
+        writerPerson:
+          type: object
+          description: Person who is filling out the scoresheet
+          properties:
+            __identity:
+              type: string
+              format: uuid
+            displayName:
+              type: string
+        scoresheetValidation:
+          $ref: '#/components/schemas/ScoresheetValidation'
+        file:
+          $ref: '#/components/schemas/FileResource'
+          nullable: true
+        hasFile:
+          type: boolean
+          description: Whether a PDF file is attached
+        closedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the scoresheet was finalized
+        closedBy:
+          type: string
+          nullable: true
+          description: Who finalized the scoresheet (e.g., "referee")
+        reminderAboutOpenScoresheetSentAt:
+          type: string
+          format: date-time
+          nullable: true
+        notFoundButNominatedPersons:
+          type: array
+          description: Persons nominated but not found in the system
+          items:
+            $ref: '#/components/schemas/NotFoundPerson'
+        emergencySubstituteReferees:
+          type: array
+          description: Emergency substitute referees added to the scoresheet
+          items:
+            type: object
+            properties:
+              person:
+                $ref: '#/components/schemas/PersonSummary'
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+        updatedBy:
+          type: string
+        _permissions:
+          $ref: '#/components/schemas/Permissions'
+    ScoresheetUpdateRequest:
+      type: object
+      description: Request to update a scoresheet
+      required: ["scoresheet[__identity]", __csrfToken]
+      properties:
+        "scoresheet[__identity]":
+          type: string
+          format: uuid
+          description: The scoresheet identifier
+        "scoresheet[game][__identity]":
+          type: string
+          format: uuid
+        "scoresheet[isSimpleScoresheet]":
+          type: string
+          enum: ["true", "false"]
+        "scoresheet[writerPerson][__identity]":
+          type: string
+          format: uuid
+        "scoresheet[file][__identity]":
+          type: string
+          format: uuid
+          description: Reference to uploaded PDF file
+        "scoresheet[hasFile]":
+          type: string
+          enum: ["true", "false"]
+        "scoresheet[closedAt]":
+          type: string
+          format: date-time
+        "scoresheet[closedBy]":
+          type: string
+        __csrfToken:
+          type: string
+    ScoresheetValidateRequest:
+      type: object
+      description: Request to validate a scoresheet
+      required: [__csrfToken]
+      properties:
+        "scoresheet[game][__identity]":
+          type: string
+          format: uuid
+        "scoresheet[isSimpleScoresheet]":
+          type: string
+          enum: ["true", "false"]
+        "scoresheet[writerPerson][__identity]":
+          type: string
+          format: uuid
+        "scoresheet[scoresheetValidation]":
+          type: string
+          description: Empty string for initial validation
+        "scoresheet[notFoundButNominatedPersons]":
+          type: string
+          description: Empty string if none
+        "scoresheet[emergencySubstituteReferees]":
+          type: string
+          description: Empty string if none
+        "scoresheet[closedAt]":
+          type: string
+        "scoresheet[closedBy]":
+          type: string
+        "scoresheet[file]":
+          type: string
+        "scoresheet[hasFile]":
+          type: string
+          enum: ["true", "false"]
+        __csrfToken:
+          type: string
+    ScoresheetFinalizeRequest:
+      type: object
+      description: Request to finalize a scoresheet
+      required: ["scoresheet[__identity]", "scoresheet[file][__identity]", __csrfToken]
+      properties:
+        "scoresheet[__identity]":
+          type: string
+          format: uuid
+        "scoresheet[game][__identity]":
+          type: string
+          format: uuid
+        "scoresheet[isSimpleScoresheet]":
+          type: string
+          enum: ["true", "false"]
+        "scoresheet[writerPerson][__identity]":
+          type: string
+          format: uuid
+        "scoresheet[file][__identity]":
+          type: string
+          format: uuid
+          description: Reference to uploaded PDF file (required for finalization)
+        "scoresheet[hasFile]":
+          type: string
+          enum: ["true"]
+          description: Must be true for finalization
+        "scoresheet[scoresheetValidation][__identity]":
+          type: string
+          format: uuid
+        __csrfToken:
+          type: string
+    ScoresheetValidation:
+      type: object
+      description: Validation results for a scoresheet
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        hasValidationIssues:
+          type: boolean
+          description: Whether there are any validation issues
+        hasValidationIssuesForAssociationUserContext:
+          type: boolean
+          description: Whether there are validation issues visible to association users
+        hasValidationIssuesForClubUserContext:
+          type: boolean
+          description: Whether there are validation issues visible to club users
+        areValidationIssuesAddressedByChampionshipOperator:
+          type: boolean
+          description: Whether a championship operator has addressed the issues
+        scoresheetValidationIssues:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationIssue'
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+    ValidationIssue:
+      type: object
+      description: A single validation issue
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        validationIssueConfiguration:
+          type: object
+          properties:
+            __identity:
+              type: string
+              format: uuid
+            hideForUserContexts:
+              type: array
+              items:
+                type: string
+              description: User contexts for which this issue should be hidden
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+    # ==================== Nomination List Schemas ====================
+    NominationList:
+      type: object
+      description: Team nomination list for a game
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        game:
+          type: object
+          properties:
+            __identity:
+              type: string
+              format: uuid
+        team:
+          type: object
+          properties:
+            __identity:
+              type: string
+              format: uuid
+            displayName:
+              type: string
+        indoorPlayerNominations:
+          type: array
+          description: List of nominated players
+          items:
+            $ref: '#/components/schemas/IndoorPlayerNomination'
+        coachPerson:
+          $ref: '#/components/schemas/PersonSummary'
+          nullable: true
+        firstAssistantCoachPerson:
+          $ref: '#/components/schemas/PersonSummary'
+          nullable: true
+        secondAssistantCoachPerson:
+          $ref: '#/components/schemas/PersonSummary'
+          nullable: true
+        closed:
+          type: boolean
+          description: Whether the list is closed/finalized
+        closedAt:
+          type: string
+          format: date-time
+          nullable: true
+        closedBy:
+          type: string
+          nullable: true
+          description: Who closed the list (e.g., "referee", "team")
+        checked:
+          type: boolean
+          description: Whether the list has been checked by the referee
+        checkedAt:
+          type: string
+          format: date-time
+          nullable: true
+        checkedBy:
+          type: string
+          nullable: true
+        isClosedForTeam:
+          type: boolean
+          description: Whether the team can no longer modify the list
+        nominationListValidation:
+          $ref: '#/components/schemas/NominationListValidation'
+        notFoundButNominatedPersons:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotFoundPerson'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        _permissions:
+          $ref: '#/components/schemas/Permissions'
+    NominationListUpdateRequest:
+      type: object
+      description: Request to update a nomination list
+      required: ["nominationList[__identity]", __csrfToken]
+      properties:
+        "nominationList[__identity]":
+          type: string
+          format: uuid
+        "nominationList[game][__identity]":
+          type: string
+          format: uuid
+        "nominationList[team][__identity]":
+          type: string
+          format: uuid
+        "nominationList[coachPerson][__identity]":
+          type: string
+          format: uuid
+        "nominationList[firstAssistantCoachPerson][__identity]":
+          type: string
+          format: uuid
+        "nominationList[secondAssistantCoachPerson]":
+          type: string
+          description: Empty string to clear
+        "nominationList[indoorPlayerNominations][0][__identity]":
+          type: string
+          format: uuid
+          description: First player nomination (array indexed)
+        "nominationList[closed]":
+          type: string
+          enum: ["true", "false"]
+        "nominationList[closedAt]":
+          type: string
+        "nominationList[closedBy]":
+          type: string
+        "nominationList[checked]":
+          type: string
+          enum: ["true", "false"]
+        "nominationList[isClosedForTeam]":
+          type: string
+          enum: ["true", "false"]
+        __csrfToken:
+          type: string
+    NominationListFinalizeRequest:
+      type: object
+      description: Request to finalize a nomination list
+      required: ["nominationList[__identity]", __csrfToken]
+      properties:
+        "nominationList[__identity]":
+          type: string
+          format: uuid
+        "nominationList[game][__identity]":
+          type: string
+          format: uuid
+        "nominationList[team][__identity]":
+          type: string
+          format: uuid
+        "nominationList[coachPerson][__identity]":
+          type: string
+          format: uuid
+        "nominationList[firstAssistantCoachPerson][__identity]":
+          type: string
+          format: uuid
+        "nominationList[indoorPlayerNominations][0][__identity]":
+          type: string
+          format: uuid
+        "nominationList[closed]":
+          type: string
+          enum: ["false"]
+          description: Set to false before finalization
+        "nominationList[isClosedForTeam]":
+          type: string
+          enum: ["true"]
+          description: Must be true to finalize
+        "nominationList[nominationListValidation][__identity]":
+          type: string
+          format: uuid
+        __csrfToken:
+          type: string
+    NominationListFinalizeResponse:
+      type: object
+      description: Response after finalizing a nomination list
+      properties:
+        nominationList:
+          $ref: '#/components/schemas/NominationList'
+    NominationListValidation:
+      type: object
+      description: Validation results for a nomination list
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        hasValidationIssues:
+          type: boolean
+        nominationListValidationIssues:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationIssue'
+    IndoorPlayerNomination:
+      type: object
+      description: A single player nomination in the list
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        indoorPlayer:
+          type: object
+          properties:
+            __identity:
+              type: string
+              format: uuid
+            person:
+              $ref: '#/components/schemas/PersonSummary'
+        shirtNumber:
+          type: integer
+          description: Player's shirt number for the game
+        isCaptain:
+          type: boolean
+        isLibero:
+          type: boolean
+        indoorPlayerLicenseCategory:
+          type: object
+          properties:
+            __identity:
+              type: string
+              format: uuid
+            shortName:
+              type: string
+              description: License category abbreviation (e.g., "JUN", "SEN")
+        indoorPlayerNominationValidation:
+          type: object
+          properties:
+            __identity:
+              type: string
+              format: uuid
+            indoorPlayerNominationValidationIssues:
+              type: array
+              items:
+                $ref: '#/components/schemas/ValidationIssue'
+            gameOfOtherNominationOnSameDay:
+              type: object
+              nullable: true
+              description: If player is nominated for another game on the same day
+    PossibleNominationsResponse:
+      type: object
+      description: Response containing possible player nominations
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PossibleNomination'
+        totalItemsCount:
+          type: integer
+    PossibleNomination:
+      type: object
+      description: A player that can be nominated
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        indoorPlayer:
+          type: object
+          properties:
+            __identity:
+              type: string
+              format: uuid
+            person:
+              $ref: '#/components/schemas/PersonSummary'
+        licenseCategory:
+          type: string
+        isAlreadyNominated:
+          type: boolean
+    PersonWithLicense:
+      type: object
+      description: Person with a valid license
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+          example: "Jean Dupont"
+        associationId:
+          type: integer
+          description: Swiss Volley association ID
+          example: 12345
+        birthday:
+          type: string
+          format: date-time
+    NotFoundPerson:
+      type: object
+      description: Person nominated but not found in the system
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        birthday:
+          type: string
+          format: date-time
+          nullable: true
+        relatedPerson:
+          $ref: '#/components/schemas/PersonSummary'
+          nullable: true
+          description: Potentially matching person in the system
+    # ==================== Search Schemas ====================
+    PersonSearchResponse:
+      type: object
+      description: Person search results
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonSearchResult'
+        totalItemsCount:
+          type: integer
+    PersonSearchResult:
+      type: object
+      description: A person from search results
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        displayName:
+          type: string
+        associationId:
+          type: integer
+          description: Swiss Volley association ID
+        birthday:
+          type: string
+          format: date-time
+          nullable: true
+        gender:
+          type: string
+          enum: [m, f]
+        _permissions:
+          $ref: '#/components/schemas/Permissions'
+    # ==================== Resource Schemas ====================
+    FileResource:
+      type: object
+      description: An uploaded file resource
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        persistentResource:
+          type: object
+          properties:
+            __identity:
+              type: string
+              format: uuid
+            filename:
+              type: string
+              example: "scoresheet.pdf"
+            mediaType:
+              type: string
+              example: "application/pdf"
+            fileSize:
+              type: integer
+              description: File size in bytes
+        publicResourceUri:
+          type: string
+          format: uri
+          description: Public URL to access the file
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+        _permissions:
+          $ref: '#/components/schemas/Permissions'
+    FilterSetting:
+      type: object
+      description: Saved filter settings for a data table
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        dataTableId:
+          type: string
+          description: The data table this setting applies to
+        filterConfiguration:
+          type: object
+          description: The saved filter configuration
+        isDefault:
+          type: boolean
+          description: Whether this is the default filter
+    # ==================== Referee Absence Schemas ====================
+    ForbiddenBlockageDateRanges:
+      type: object
+      description: Date range constraints for absence creation
+      properties:
+        minimumDate:
+          type: string
+          format: date-time
+          description: Earliest date for which absences can be created
+          example: "2025-12-10T23:00:00.000000+00:00"
+        maximumDate:
+          type: string
+          format: date-time
+          description: Latest date for which absences can be created
+          example: "2026-05-20T21:59:59.000000+00:00"
+        forbiddenDateRanges:
+          type: array
+          description: List of date ranges where absences cannot be created
+          items:
+            $ref: '#/components/schemas/DateRange'
+    DateRange:
+      type: object
+      description: A date range with start and end dates
+      properties:
+        from:
+          type: string
+          format: date-time
+          description: Start date of the range
+        to:
+          type: string
+          format: date-time
+          description: End date of the range
+    RefereeAbsenceSearchResult:
+      type: object
+      description: Paginated result of referee absence search
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RefereeAbsence'
+        totalItemsCount:
+          type: integer
+          description: Total number of absences matching the search criteria
+          example: 5
+    RefereeAbsence:
+      type: object
+      description: A referee absence entry
+      properties:
+        __identity:
+          type: string
+          format: uuid
+          description: Unique identifier for the absence
+          example: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        fromDate:
+          type: string
+          format: date-time
+          description: Start date and time of the absence
+          example: "2025-10-17T04:00:00.000000+00:00"
+        toDate:
+          type: string
+          format: date-time
+          description: End date and time of the absence
+          example: "2025-11-02T22:59:59.000000+00:00"
+        detailedReason:
+          type: string
+          description: Optional detailed reason for the absence
+          example: ""
+        createdAt:
+          type: string
+          format: date-time
+          description: When the absence was created
+          example: "2025-05-25T15:25:00.000000+00:00"
+        createdBy:
+          type: string
+          description: Username of the creator
+          example: "jean_dupont"
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the absence was last updated
+          example: "2025-05-25T15:25:00.000000+00:00"
+        updatedBy:
+          type: string
+          description: Username of the last modifier
+          example: "jean_dupont"
+        _permissions:
+          $ref: '#/components/schemas/RefereeAbsencePermissions'
+    RefereeAbsencePermissions:
+      type: object
+      description: Permissions for a referee absence entry
+      properties:
+        object:
+          type: object
+          description: Object-level permissions
+          properties:
+            create:
+              type: boolean
+              description: Whether the user can create new absences
+            update:
+              type: boolean
+              description: Whether the user can update this absence
+            delete:
+              type: boolean
+              description: Whether the user can delete this absence
+        properties:
+          type: object
+          description: Property-level permissions
+          properties:
+            detailedReason:
+              type: object
+              properties:
+                read:
+                  type: boolean
+                  description: Whether the user can read the detailed reason

@@ -1,0 +1,82 @@
+# Compensations Request Payload
+# Endpoint: POST /api/indoorvolleyball.refadmin/api\refereeconvocationcompensation/search
+# Content-Type: application/x-www-form-urlencoded
+
+## Decoded Parameters:
+
+### Search Configuration - Property Filters
+searchConfiguration[propertyFilters][0][propertyName] = refereeGame.game.startingDateTime
+searchConfiguration[propertyFilters][0][dateRange][from] = 2025-12-07T23:00:00.000Z
+searchConfiguration[propertyFilters][0][dateRange][to] = 2025-12-22T22:59:59.000Z
+searchConfiguration[propertyFilters][1][propertyName] = convocationCompensation.paymentDone
+searchConfiguration[propertyFilters][1][values][0] = NOT_NULL
+
+### Custom Filters
+searchConfiguration[customFilters][0][name] = archivedRefereeConvocations
+
+### Property Orderings (Sorting)
+searchConfiguration[propertyOrderings][0][propertyName] = refereeGame.game.startingDateTime
+searchConfiguration[propertyOrderings][0][descending] = false
+searchConfiguration[propertyOrderings][0][isSetByUser] = true
+
+### Pagination
+searchConfiguration[offset] = 0
+searchConfiguration[limit] = 10
+searchConfiguration[textSearchOperator] = AND
+
+### Property Render Configuration (fields to return)
+propertyRenderConfiguration[0] = refereeConvocationStatus
+propertyRenderConfiguration[1] = compensationDate
+propertyRenderConfiguration[2] = refereeGame.game.startingDateTime
+propertyRenderConfiguration[3] = refereeGame.game.playingWeekday
+propertyRenderConfiguration[4] = refereeGame.game.number
+propertyRenderConfiguration[5] = refereeGame.game.group.phase.league.leagueCategory.name
+propertyRenderConfiguration[6] = refereeGame.game.group.name
+propertyRenderConfiguration[7] = refereeGame.game.group.phase.name
+propertyRenderConfiguration[8] = refereeGame.game.group.phase.league.gender
+propertyRenderConfiguration[9] = refereeGame.game.encounter.teamHome.name
+propertyRenderConfiguration[10] = refereeGame.game.encounter.teamAway.name
+propertyRenderConfiguration[11] = refereeGame.game.hall.name
+propertyRenderConfiguration[12] = refereeGame.game.hall.primaryPostalAddress.additionToAddress
+propertyRenderConfiguration[13] = refereeGame.game.hall.primaryPostalAddress.combinedAddress
+propertyRenderConfiguration[14] = refereeGame.game.hall.primaryPostalAddress.country.countryCode
+propertyRenderConfiguration[15] = refereeGame.game.hall.primaryPostalAddress.postalCode
+propertyRenderConfiguration[16] = refereeGame.game.hall.primaryPostalAddress.city
+propertyRenderConfiguration[17] = refereePosition
+propertyRenderConfiguration[18] = convocationCompensation.hasFlexibleGameCompensations
+propertyRenderConfiguration[19] = convocationCompensation.gameCompensationFormatted
+propertyRenderConfiguration[20] = convocationCompensation.hasFlexibleTravelExpenses
+propertyRenderConfiguration[21] = convocationCompensation.travelExpensesFormatted
+propertyRenderConfiguration[22] = convocationCompensation.hasFlexibleOvernightStayExpenses
+propertyRenderConfiguration[23] = convocationCompensation.overnightStayExpensesFormatted
+propertyRenderConfiguration[24] = convocationCompensation.hasFlexibleCateringExpenses
+propertyRenderConfiguration[25] = convocationCompensation.cateringExpensesFormatted
+propertyRenderConfiguration[26] = convocationCompensation.costFormatted
+propertyRenderConfiguration[27] = convocationCompensation.distanceFormatted
+propertyRenderConfiguration[28] = convocationCompensation.transportationMode
+propertyRenderConfiguration[29] = convocationCompensation.paymentDone
+propertyRenderConfiguration[30] = convocationCompensation.paymentValueDate
+propertyRenderConfiguration[31] = convocationCompensation.paymentUpdatedByAssociation.name
+propertyRenderConfiguration[32] = indoorAssociationReferee.indoorReferee.person.associationId
+propertyRenderConfiguration[33] = refereeGame.isGameInFuture
+propertyRenderConfiguration[34] = refereeGame.game.isVolleyCupGameWithoutNationalAssociationLeagueCategoryTeams
+propertyRenderConfiguration[35] = refereeGame.game.displayName
+
+### CSRF Token
+__csrfToken = <csrf-token>
+
+## Key Differences from Assignments:
+1. Uses `compensationDate` field for ordering
+2. Extra filter: `convocationCompensation.paymentDone = NOT_NULL` (only items with compensation data)
+3. Includes compensation-specific fields: gameCompensationFormatted, travelExpensesFormatted, etc.
+4. Custom filter: archivedRefereeConvocations
+
+## Compensation Fields in Response:
+- gameCompensation: integer (CHF, e.g., 50, 85)
+- travelExpenses: integer (CHF)
+- distanceInMetres: integer (e.g., 96317 = 96.3 km)
+- transportationMode: "car" | "train" | etc.
+- paymentDone: boolean
+- paymentValueDate: string | null
+- costFormatted: string (e.g., "70.00")
+- distanceFormatted: string (e.g., "96.3")

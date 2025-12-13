@@ -1,0 +1,92 @@
+# Exchanges Request Payload
+# Endpoint: POST /api/indoorvolleyball.refadmin/api\refereegameexchange/search
+# Content-Type: application/x-www-form-urlencoded
+
+## Decoded Parameters:
+
+### Search Configuration - Property Filters
+searchConfiguration[propertyFilters][0][propertyName] = refereeGame.game.startingDateTime
+searchConfiguration[propertyFilters][0][dateRange][from] = 2025-12-07T23:00:00.000Z
+searchConfiguration[propertyFilters][0][dateRange][to] = 2026-05-20T21:59:59.000Z
+searchConfiguration[propertyFilters][1][propertyName] = status
+searchConfiguration[propertyFilters][1][enumValues][0] = open
+
+### Custom Filters (empty)
+searchConfiguration[customFilters] = (empty)
+
+### Property Orderings (empty - no sorting specified)
+searchConfiguration[propertyOrderings] = (empty)
+
+### Pagination
+searchConfiguration[offset] = 0
+searchConfiguration[limit] = 10
+searchConfiguration[textSearchOperator] = AND
+
+### Property Render Configuration
+propertyRenderConfiguration[0] = refereeGame.game.startingDateTime
+propertyRenderConfiguration[1] = refereeGame.game.playingWeekday
+propertyRenderConfiguration[2] = submittedAt
+propertyRenderConfiguration[3] = submittedByPerson.displayName
+propertyRenderConfiguration[4] = submittingType
+propertyRenderConfiguration[5] = status
+propertyRenderConfiguration[6] = refereePosition
+propertyRenderConfiguration[7] = requiredRefereeLevel
+propertyRenderConfiguration[8] = requiredRefereeLevelGradationValue
+propertyRenderConfiguration[9] = appliedBy.indoorReferee.person.displayName
+propertyRenderConfiguration[10] = appliedAt
+propertyRenderConfiguration[11] = refereeGame.game.number
+propertyRenderConfiguration[12] = refereeGame.game.group.phase.league.leagueCategory.name
+propertyRenderConfiguration[13] = refereeGame.game.group.phase.league.gender
+propertyRenderConfiguration[14] = refereeGame.game.group.name
+propertyRenderConfiguration[15] = refereeGame.game.group.phase.name
+propertyRenderConfiguration[16] = refereeGame.game.encounter.teamHome.identifier
+propertyRenderConfiguration[17] = refereeGame.game.encounter.teamHome.name
+propertyRenderConfiguration[18] = refereeGame.game.encounter.teamAway.identifier
+propertyRenderConfiguration[19] = refereeGame.game.encounter.teamAway.name
+propertyRenderConfiguration[20] = refereeGame.game.hall.name
+propertyRenderConfiguration[21] = refereeGame.game.hall.primaryPostalAddress.additionToAddress
+propertyRenderConfiguration[22] = refereeGame.game.hall.primaryPostalAddress.combinedAddress
+propertyRenderConfiguration[23] = refereeGame.game.hall.primaryPostalAddress.postalCode
+propertyRenderConfiguration[24] = refereeGame.game.hall.primaryPostalAddress.city
+propertyRenderConfiguration[25] = refereeGame.game.hall.primaryPostalAddress.geographicalLocation.plusCode
+propertyRenderConfiguration[26] = refereeGame.activeFirstHeadRefereeName
+propertyRenderConfiguration[27] = refereeGame.openFirstHeadRefereeName
+propertyRenderConfiguration[28] = refereeGame.activeSecondHeadRefereeName
+propertyRenderConfiguration[29] = refereeGame.openSecondHeadRefereeName
+propertyRenderConfiguration[30] = refereeGame.activeFirstLinesmanRefereeName
+propertyRenderConfiguration[31] = refereeGame.openFirstLinesmanRefereeName
+propertyRenderConfiguration[32] = refereeGame.activeSecondLinesmanRefereeName
+propertyRenderConfiguration[33] = refereeGame.openSecondLinesmanRefereeName
+propertyRenderConfiguration[34] = refereeGame.activeThirdLinesmanRefereeName
+propertyRenderConfiguration[35] = refereeGame.openThirdLinesmanRefereeName
+propertyRenderConfiguration[36] = refereeGame.activeFourthLinesmanRefereeName
+propertyRenderConfiguration[37] = refereeGame.openFourthLinesmanRefereeName
+propertyRenderConfiguration[38] = latestReminderToChampionshipOwnerSentAt
+propertyRenderConfiguration[39] = latestReminderToSubmittingTypeSentAt
+propertyRenderConfiguration[40-47] = refereeGame.activeRefereeConvocation[Position]
+
+### CSRF Token
+__csrfToken = <csrf-token>
+
+## Key Differences from Other Endpoints:
+1. Uses enumValues filter for status: `status = open`
+2. No default sorting (propertyOrderings is empty)
+3. Longer date range (6 months ahead)
+4. Exchange-specific fields: submittedAt, submittedByPerson, appliedBy, requiredRefereeLevel
+5. Has "active" and "open" referee name fields for each position
+
+## Exchange Status Values:
+- open: Available for application
+- applied: Someone has applied (waiting for assignment)
+- closed: Exchange completed or cancelled
+
+## Referee Level Codes:
+- N1: National level 1 (highest)
+- N2: National level 2
+- N3: National level 3
+- N4: National level 4 (lowest)
+
+## Referee Level Gradation Values:
+- 1: Highest gradation for the position
+- 2: Second tier
+- 3: Third tier

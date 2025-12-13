@@ -1,0 +1,108 @@
+name: Deploy PR Preview
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'web-app/**'
+      - '.github/workflows/deploy-pr-preview.yml'
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web-app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web-app/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Generate API types
+        run: npm run generate:api
+      - name: Lint
+        run: npm run lint
+      - name: Test
+        run: npm test
+      - name: Build for PR Preview
+        run: npm run build
+        env:
+          # Set the proxy URL for production build (if configured)
+          VITE_API_PROXY_URL: ${{ vars.VITE_API_PROXY_URL }}
+          # Set base path for PR preview - uses pr-{number} subdirectory
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/
+      - name: Add .nojekyll for GitHub Pages
+        run: touch dist/.nojekyll
+      # Download existing gh-pages content to preserve main site and other PR previews
+      - name: Download existing gh-pages content
+        run: |
+          if git ls-remote --exit-code --heads origin gh-pages; then
+            echo "Cloning existing gh-pages branch..."
+            git clone --depth 1 --branch gh-pages \
+              https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git \
+              ${{ github.workspace }}/gh-pages-current
+          else
+            echo "gh-pages branch does not exist yet, starting fresh"
+          fi
+        working-directory: ${{ github.workspace }}
+      - name: Prepare deployment with PR preview
+        run: |
+          mkdir -p ${{ github.workspace }}/deploy
+          # Copy existing content (if any) preserving main site
+          if [ -d "${{ github.workspace }}/gh-pages-current" ]; then
+            rsync -a --exclude='.git' ${{ github.workspace }}/gh-pages-current/ ${{ github.workspace }}/deploy/
+          fi
+          # Add/update this PR's preview
+          mkdir -p ${{ github.workspace }}/deploy/pr-${{ github.event.pull_request.number }}
+          cp -r dist/* ${{ github.workspace }}/deploy/pr-${{ github.event.pull_request.number }}/
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ${{ github.workspace }}/deploy
+          keep_files: false
+          enable_jekyll: false
+      - name: Comment PR with preview link
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const previewUrl = `https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/`;
+            const body = `## 🚀 PR Preview Deployed!\n\n` +
+              `Your preview is ready at: ${previewUrl}\n\n` +
+              `> This preview will be updated on each push to this PR.\n\n` +
+              `**Demo Mode Available:** Click "Try Demo Mode" on the login page to explore with sample data.`;
+
+            // Check if comment already exists
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existingComment = comments.find(c => c.body.includes('PR Preview Deployed'));
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }

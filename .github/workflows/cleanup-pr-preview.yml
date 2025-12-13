@@ -1,0 +1,163 @@
+name: Cleanup PR Preview
+on:
+  # Daily cleanup of all closed PR previews (catches any missed cleanups)
+  schedule:
+    - cron: '0 3 * * *' # 3 AM UTC daily
+  # Allow manual cleanup (all closed PRs or specific PR)
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to clean up (leave empty to clean all closed PRs)'
+        required: false
+        type: string
+permissions:
+  contents: write
+# Concurrency group serializes all GitHub Pages deployments
+# cancel-in-progress: false ensures deployments queue rather than cancel each other
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Validate PR number input
+        if: github.event.inputs.pr_number != ''
+        run: |
+          pr_number="${{ inputs.pr_number }}"
+          if ! [[ "$pr_number" =~ ^[0-9]+$ ]]; then
+            echo "::error::PR number must be a positive integer, got '$pr_number'"
+            exit 1
+          fi
+          echo "✓ PR number validation passed: $pr_number"
+      - name: Download existing gh-pages content
+        id: download
+        run: |
+          if git ls-remote --exit-code --heads origin gh-pages; then
+            echo "Cloning existing gh-pages branch..."
+            git clone --depth 1 --branch gh-pages \
+              https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git \
+              gh-pages-current
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "gh-pages branch does not exist, nothing to clean up"
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Find PR previews to clean up
+        if: steps.download.outputs.exists == 'true'
+        id: find
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd gh-pages-current
+
+          # Find all pr-* directories (extract just the number)
+          pr_dirs=$(find . -maxdepth 1 -type d -name 'pr-*' | sed 's|./pr-||' | sort -n)
+
+          if [ -z "$pr_dirs" ]; then
+            echo "No PR preview directories found"
+            echo "to_remove=" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "Found PR preview directories: $pr_dirs"
+
+          # Determine which PRs to check
+          if [ -n "${{ inputs.pr_number }}" ]; then
+            # Manual trigger with specific PR number
+            prs_to_check="${{ inputs.pr_number }}"
+          else
+            # Scheduled or manual trigger without PR number - check all
+            prs_to_check="$pr_dirs"
+          fi
+
+          # Fetch all closed/merged PRs in one API call for efficiency
+          # Note: Limited to 500 most recent closed PRs. For repos with more closed PRs,
+          # older PR previews may need manual cleanup or the limit can be increased.
+          echo "Fetching closed PR list..."
+          if ! closed_prs=$(gh pr list --state closed --limit 500 --json number --jq '.[].number' | tr '\n' ' '); then
+            echo "::error::Failed to fetch closed PR list from GitHub API"
+            exit 1
+          fi
+
+          # Build associative array for O(1) lookup (avoids partial number matching)
+          declare -A closed_pr_set
+          for pr in $closed_prs; do
+            closed_pr_set[$pr]=1
+          done
+
+          to_remove=""
+          for pr_num in $prs_to_check; do
+            # Check if PR preview directory exists
+            if [ ! -d "pr-$pr_num" ]; then
+              echo "PR #$pr_num: no preview directory exists, skipping"
+              continue
+            fi
+
+            # Check if PR is in closed set (O(1) lookup, no partial matching)
+            if [[ -v closed_pr_set[$pr_num] ]]; then
+              echo "PR #$pr_num: closed/merged - will remove preview"
+              to_remove="$to_remove $pr_num"
+            else
+              # For PRs not in closed list, check if they exist at all
+              pr_state=$(gh pr view "$pr_num" --json state --jq '.state' 2>/dev/null || echo "NOT_FOUND")
+              if [ "$pr_state" = "NOT_FOUND" ]; then
+                echo "PR #$pr_num: not found (deleted?) - will remove preview"
+                to_remove="$to_remove $pr_num"
+              else
+                echo "PR #$pr_num: $pr_state - keeping preview"
+              fi
+            fi
+          done
+
+          to_remove=$(echo "$to_remove" | xargs)  # trim whitespace
+          echo "PR numbers to remove: ${to_remove:-none}"
+          echo "to_remove=$to_remove" >> $GITHUB_OUTPUT
+      - name: Remove PR previews and prepare deployment
+        if: steps.find.outputs.to_remove != ''
+        run: |
+          mkdir -p deploy
+
+          # Build rsync exclude arguments safely using proper array handling
+          # to_remove contains only validated numeric PR numbers (space-separated)
+          rsync_args=(-a --exclude='.git')
+          IFS=' ' read -ra prs <<< "${{ steps.find.outputs.to_remove }}"
+          for pr_num in "${prs[@]}"; do
+            rsync_args+=(--exclude="pr-$pr_num")
+          done
+
+          # Copy everything except .git and the PR previews being cleaned up
+          if ! rsync "${rsync_args[@]}" gh-pages-current/ deploy/; then
+            echo "::error::Failed to copy files with rsync"
+            exit 1
+          fi
+
+          # Ensure we have at least an index.html (main site must exist)
+          if [ ! -f "deploy/index.html" ]; then
+            echo "::error::No content to deploy after cleanup (missing index.html). Was the main site ever deployed?"
+            exit 1
+          fi
+
+          echo "✓ Prepared deployment without PR previews: ${{ steps.find.outputs.to_remove }}"
+      - name: Deploy to GitHub Pages
+        if: steps.find.outputs.to_remove != ''
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./deploy
+          keep_files: false
+          enable_jekyll: false
+      - name: Summary
+        run: |
+          echo "## Cleanup Summary" >> $GITHUB_STEP_SUMMARY
+          if [ -n "${{ steps.find.outputs.to_remove }}" ]; then
+            echo "Removed the following PR previews:" >> $GITHUB_STEP_SUMMARY
+            IFS=' ' read -ra prs <<< "${{ steps.find.outputs.to_remove }}"
+            for pr_num in "${prs[@]}"; do
+              echo "- \`pr-$pr_num\`" >> $GITHUB_STEP_SUMMARY
+            done
+          else
+            echo "No PR previews needed cleanup." >> $GITHUB_STEP_SUMMARY
+          fi

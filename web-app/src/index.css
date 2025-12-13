@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+/* Custom CSS variables for volleyball theme */
+@theme {
+  --color-volleyball-orange: #ff6b00;
+  --color-volleyball-blue: #003366;
+  --color-volleyball-light: #f5f5f5;
+
+  /* Swiss volleyball association colors */
+  --color-svv-red: #e30613;
+  --color-svv-white: #ffffff;
+}
+
+/* Base styles */
+@layer base {
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply min-h-screen bg-gray-50 text-gray-900;
+    @apply dark:bg-gray-900 dark:text-gray-100;
+  }
+
+  #root {
+    @apply min-h-screen flex flex-col;
+  }
+}
+
+/* Component styles */
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-colors;
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+
+  .btn-primary {
+    @apply bg-volleyball-orange text-white;
+    @apply hover:bg-orange-600 focus:ring-orange-500;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-800;
+    @apply hover:bg-gray-300 focus:ring-gray-500;
+    @apply dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-4;
+    @apply dark:bg-gray-800 dark:border-gray-700;
+  }
+
+  .input {
+    @apply w-full px-4 py-2 rounded-lg border border-gray-300;
+    @apply focus:outline-none focus:ring-2 focus:ring-volleyball-orange focus:border-transparent;
+    @apply dark:bg-gray-800 dark:border-gray-600 dark:text-white;
+  }
+}

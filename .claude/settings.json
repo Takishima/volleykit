@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(nix-build:*)",
+      "Bash(nix build:*)",
+      "Bash(nix-store --query:*)",
+      "Bash(nix-store --verify:*)",
+      "Bash(nix-store --dump:*)",
+      "Bash(nix-store --export:*)",
+      "Bash(nix show-derivation:*)",
+      "Bash(nix-instantiate:*)",
+      "Bash(nix-env:*)",
+      "Bash(nix search:*)",
+      "Bash(nix develop:*)",
+      "Bash(nix-shell:*)",
+      "Bash(nix flake:*)",
+      "Bash(nix profile:*)",
+      "Bash(nix run:*)",
+      "Bash(nix fmt:*)",
+      "Bash(devenv shell:*)",
+      "Read(/nix/store/*)",
+      "Bash(npm install:*)",
+      "Bash(npm ci:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run preview:*)",
+      "Bash(npm test:*)",
+      "Bash(npm run test:*)",
+      "Bash(npm run generate:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx vitest:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npx wrangler:*)"
+    ],
+    "deny": []
+  }
+}

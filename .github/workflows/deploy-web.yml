@@ -1,0 +1,105 @@
+name: Deploy Web App to GitHub Pages
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web-app/**'
+      - 'worker/**'
+      - '.github/workflows/deploy-web.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+jobs:
+  deploy-worker:
+    runs-on: ubuntu-latest
+    # Only deploy worker if Cloudflare secrets are configured
+    if: ${{ vars.CLOUDFLARE_ACCOUNT_ID != '' }}
+    defaults:
+      run:
+        working-directory: worker
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm ci
+      - name: Deploy to Cloudflare Workers
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    # Run build if worker succeeded, was skipped (Cloudflare not configured), or never ran
+    # Don't run if worker deployment failed or was cancelled
+    needs: [deploy-worker]
+    if: ${{ !failure() && !cancelled() }}
+    defaults:
+      run:
+        working-directory: web-app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web-app/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Generate API types
+        run: npm run generate:api
+      - name: Lint
+        run: npm run lint
+      - name: Test
+        run: npm test
+      - name: Build
+        run: npm run build
+        env:
+          # Set the proxy URL for production build
+          VITE_API_PROXY_URL: ${{ vars.VITE_API_PROXY_URL }}
+          # Set base path for GitHub Pages deployment
+          # Configure via repository variable, defaults to repo name pattern
+          VITE_BASE_PATH: ${{ vars.VITE_BASE_PATH || format('/{0}/', github.event.repository.name) }}
+      - name: Add .nojekyll for GitHub Pages
+        run: touch dist/.nojekyll
+      # Download existing gh-pages content to preserve PR previews
+      - name: Download existing gh-pages content
+        run: |
+          if git ls-remote --exit-code --heads origin gh-pages; then
+            echo "Cloning existing gh-pages branch..."
+            git clone --depth 1 --branch gh-pages \
+              https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git \
+              ${{ github.workspace }}/gh-pages-current
+          else
+            echo "gh-pages branch does not exist yet, starting fresh"
+          fi
+        working-directory: ${{ github.workspace }}
+      - name: Prepare deployment preserving PR previews
+        run: |
+          mkdir -p ${{ github.workspace }}/deploy
+          # Copy new main site build
+          cp -r dist/* ${{ github.workspace }}/deploy/
+          # Preserve existing PR preview subdirectories (if any)
+          if [ -d "${{ github.workspace }}/gh-pages-current" ]; then
+            shopt -s nullglob
+            for pr_dir in ${{ github.workspace }}/gh-pages-current/pr-*/; do
+              [ -d "$pr_dir" ] && cp -r "$pr_dir" ${{ github.workspace }}/deploy/
+            done
+          fi
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ${{ github.workspace }}/deploy
+          # Keep existing files not in this deployment (PR previews)
+          keep_files: false
+          # Enable for debugging
+          enable_jekyll: false
