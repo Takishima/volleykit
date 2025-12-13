@@ -34,6 +34,7 @@ interface Translations {
     position: string;
     requiredLevel: string;
     demoModeBanner: string;
+    optional: string;
   };
   auth: {
     login: string;
@@ -159,6 +160,16 @@ interface Translations {
     updateNow: string;
     updateCheckFailed: string;
   };
+  validation: {
+    homeRoster: string;
+    awayRoster: string;
+    scorer: string;
+    scoresheet: string;
+    homeRosterPlaceholder: string;
+    awayRosterPlaceholder: string;
+    scorerPlaceholder: string;
+    scoresheetPlaceholder: string;
+  };
 }
 
 // English translations (default/fallback)
@@ -184,6 +195,7 @@ const en: Translations = {
     position: "Position",
     requiredLevel: "Required Level",
     demoModeBanner: "Demo Mode - Viewing sample data",
+    optional: "Optional",
   },
   auth: {
     login: "Login",
@@ -321,6 +333,18 @@ const en: Translations = {
     updateNow: "Update Now",
     updateCheckFailed: "Update check failed",
   },
+  validation: {
+    homeRoster: "Home Roster",
+    awayRoster: "Away Roster",
+    scorer: "Scorer",
+    scoresheet: "Scoresheet",
+    homeRosterPlaceholder:
+      "Home team roster verification will be available here.",
+    awayRosterPlaceholder:
+      "Away team roster verification will be available here.",
+    scorerPlaceholder: "Scorer identification will be available here.",
+    scoresheetPlaceholder: "Scoresheet upload will be available here.",
+  },
 };
 
 // German translations
@@ -346,6 +370,7 @@ const de: Translations = {
     position: "Position",
     requiredLevel: "Erforderliches Niveau",
     demoModeBanner: "Demo-Modus - Beispieldaten werden angezeigt",
+    optional: "Optional",
   },
   auth: {
     login: "Anmelden",
@@ -484,6 +509,19 @@ const de: Translations = {
     updateNow: "Jetzt aktualisieren",
     updateCheckFailed: "Update-Prüfung fehlgeschlagen",
   },
+  validation: {
+    homeRoster: "Heimkader",
+    awayRoster: "Gastkader",
+    scorer: "Schreiber",
+    scoresheet: "Spielbericht",
+    homeRosterPlaceholder:
+      "Die Überprüfung des Heimkaders wird hier verfügbar sein.",
+    awayRosterPlaceholder:
+      "Die Überprüfung des Gastkaders wird hier verfügbar sein.",
+    scorerPlaceholder: "Die Schreiberidentifikation wird hier verfügbar sein.",
+    scoresheetPlaceholder:
+      "Der Upload des Spielberichts wird hier verfügbar sein.",
+  },
 };
 
 // French translations
@@ -509,6 +547,7 @@ const fr: Translations = {
     position: "Position",
     requiredLevel: "Niveau requis",
     demoModeBanner: "Mode Démo - Données d'exemple",
+    optional: "Optionnel",
   },
   auth: {
     login: "Connexion",
@@ -647,6 +686,19 @@ const fr: Translations = {
     updateNow: "Mettre à jour",
     updateCheckFailed: "Échec de la vérification",
   },
+  validation: {
+    homeRoster: "Effectif domicile",
+    awayRoster: "Effectif visiteur",
+    scorer: "Marqueur",
+    scoresheet: "Feuille de match",
+    homeRosterPlaceholder:
+      "La vérification de l'effectif domicile sera disponible ici.",
+    awayRosterPlaceholder:
+      "La vérification de l'effectif visiteur sera disponible ici.",
+    scorerPlaceholder: "L'identification du marqueur sera disponible ici.",
+    scoresheetPlaceholder:
+      "Le téléchargement de la feuille de match sera disponible ici.",
+  },
 };
 
 // Italian translations
@@ -672,6 +724,7 @@ const it: Translations = {
     position: "Posizione",
     requiredLevel: "Livello richiesto",
     demoModeBanner: "Modalità Demo - Dati di esempio",
+    optional: "Opzionale",
   },
   auth: {
     login: "Accesso",
@@ -808,6 +861,18 @@ const it: Translations = {
     lastChecked: "Ultimo controllo",
     updateNow: "Aggiorna ora",
     updateCheckFailed: "Verifica aggiornamenti fallita",
+  },
+  validation: {
+    homeRoster: "Rosa di casa",
+    awayRoster: "Rosa ospite",
+    scorer: "Segnapunti",
+    scoresheet: "Referto",
+    homeRosterPlaceholder:
+      "La verifica della rosa di casa sarà disponibile qui.",
+    awayRosterPlaceholder:
+      "La verifica della rosa ospite sarà disponibile qui.",
+    scorerPlaceholder: "L'identificazione del segnapunti sarà disponibile qui.",
+    scoresheetPlaceholder: "Il caricamento del referto sarà disponibile qui.",
   },
 };
 
