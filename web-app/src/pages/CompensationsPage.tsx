@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   useCompensations,
   usePaidCompensations,
@@ -13,6 +13,7 @@ import {
   ErrorState,
   EmptyState,
 } from "@/components/ui/LoadingSpinner";
+import { Tabs, TabPanel } from "@/components/ui/Tabs";
 import { useCompensationActions } from "@/hooks/useCompensationActions";
 import { createCompensationActions } from "@/utils/compensation-actions";
 import type { CompensationRecord } from "@/api/client";
@@ -65,6 +66,16 @@ export function CompensationsPage() {
   const error = errorMap[filter];
   const refetch = refetchMap[filter];
 
+  const tabs = [
+    { id: "all", label: t("compensations.all") },
+    { id: "unpaid", label: t("compensations.pending") },
+    { id: "paid", label: t("compensations.paid") },
+  ];
+
+  const handleTabChange = useCallback((tabId: string) => {
+    setFilter(tabId as FilterType);
+  }, []);
+
   const getSwipeConfig = (compensation: CompensationRecord): SwipeConfig => {
     const actions = createCompensationActions(compensation, {
       onEditCompensation: editCompensationModal.open,
@@ -78,6 +89,59 @@ export function CompensationsPage() {
         ? [actions.generatePDF]
         : [actions.editCompensation, actions.generatePDF],
     };
+  };
+
+  const renderContent = () => {
+    if (isLoading) {
+      return <LoadingState message="Loading compensations..." />;
+    }
+
+    if (error) {
+      return (
+        <ErrorState
+          message={
+            error instanceof Error
+              ? error.message
+              : "Failed to load compensations"
+          }
+          onRetry={() => refetch()}
+        />
+      );
+    }
+
+    if (!data || data.length === 0) {
+      return (
+        <EmptyState
+          icon="💰"
+          title="No compensations"
+          description={
+            filter === "all"
+              ? "You have no compensation records yet."
+              : filter === "paid"
+                ? "No paid compensations found."
+                : "No pending compensations. All caught up!"
+          }
+        />
+      );
+    }
+
+    return (
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {data.map((compensation) => (
+          <SwipeableCard
+            key={compensation.__identity}
+            swipeConfig={getSwipeConfig(compensation)}
+          >
+            {({ isDrawerOpen }) => (
+              <CompensationCard
+                compensation={compensation}
+                disableExpansion={isDrawerOpen}
+              />
+            )}
+          </SwipeableCard>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -104,90 +168,24 @@ export function CompensationsPage() {
         </div>
       </div>
 
-      {/* Filter tabs - WAI-ARIA tab pattern */}
-      <div
-        role="tablist"
-        aria-label={t("compensations.title")}
-        className="flex gap-2 border-b border-gray-200 dark:border-gray-700"
-      >
-        {(["all", "unpaid", "paid"] as FilterType[]).map((f) => (
-          <button
-            key={f}
-            role="tab"
-            aria-selected={filter === f}
-            aria-controls={`${f}-tabpanel`}
-            id={`${f}-tab`}
-            onClick={() => setFilter(f)}
-            className={`
-              px-4 py-2 text-sm font-medium border-b-2 transition-colors
-              ${
-                filter === f
-                  ? "border-orange-500 text-orange-600 dark:text-orange-400"
-                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-              }
-            `}
-          >
-            {f === "all"
-              ? t("compensations.all")
-              : f === "paid"
-                ? t("compensations.paid")
-                : t("compensations.pending")}
-          </button>
-        ))}
-      </div>
+      {/* Filter tabs with keyboard navigation */}
+      <Tabs
+        tabs={tabs}
+        activeTab={filter}
+        onTabChange={handleTabChange}
+        ariaLabel={t("compensations.title")}
+      />
 
-      {/* Content */}
-      <div
-        role="tabpanel"
-        id={`${filter}-tabpanel`}
-        aria-labelledby={`${filter}-tab`}
-        className="space-y-3"
-      >
-        {isLoading && <LoadingState message="Loading compensations..." />}
-
-        {error && (
-          <ErrorState
-            message={
-              error instanceof Error
-                ? error.message
-                : "Failed to load compensations"
-            }
-            onRetry={() => refetch()}
-          />
-        )}
-
-        {!isLoading && !error && data && data.length === 0 && (
-          <EmptyState
-            icon="💰"
-            title="No compensations"
-            description={
-              filter === "all"
-                ? "You have no compensation records yet."
-                : filter === "paid"
-                  ? "No paid compensations found."
-                  : "No pending compensations. All caught up!"
-            }
-          />
-        )}
-
-        {!isLoading && !error && data && data.length > 0 && (
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {data.map((compensation) => (
-              <SwipeableCard
-                key={compensation.__identity}
-                swipeConfig={getSwipeConfig(compensation)}
-              >
-                {({ isDrawerOpen }) => (
-                  <CompensationCard
-                    compensation={compensation}
-                    disableExpansion={isDrawerOpen}
-                  />
-                )}
-              </SwipeableCard>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Content - using TabPanel for proper ARIA association */}
+      <TabPanel tabId="all" activeTab={filter}>
+        {renderContent()}
+      </TabPanel>
+      <TabPanel tabId="unpaid" activeTab={filter}>
+        {renderContent()}
+      </TabPanel>
+      <TabPanel tabId="paid" activeTab={filter}>
+        {renderContent()}
+      </TabPanel>
 
       {/* Edit Compensation Modal */}
       {editCompensationModal.isOpen && editCompensationModal.compensation && (
