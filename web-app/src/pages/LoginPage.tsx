@@ -34,11 +34,14 @@ export function LoginPage() {
   }, [initializeDemoData, setDemoAuthenticated, navigate]);
 
   // Auto-start demo mode in demo-only deployments (PR previews)
+  // This runs once on mount - the functions are stable store actions
   useEffect(() => {
     if (DEMO_MODE_ONLY) {
-      handleDemoLogin();
+      initializeDemoData();
+      setDemoAuthenticated();
+      navigate("/");
     }
-  }, [handleDemoLogin]);
+  }, [initializeDemoData, setDemoAuthenticated, navigate]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
