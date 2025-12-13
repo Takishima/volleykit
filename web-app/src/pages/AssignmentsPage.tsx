@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import {
   useUpcomingAssignments,
-  usePastAssignments,
+  useValidationClosedAssignments,
 } from "@/hooks/useConvocations";
 import { AssignmentCard } from "@/components/features/AssignmentCard";
 import { SwipeableCard } from "@/components/ui/SwipeableCard";
@@ -17,7 +17,7 @@ import { ValidateGameModal } from "@/components/features/ValidateGameModal";
 import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 
-type TabType = "upcoming" | "past";
+type TabType = "upcoming" | "validationClosed";
 
 export function AssignmentsPage() {
   const [activeTab, setActiveTab] = useState<TabType>("upcoming");
@@ -38,16 +38,16 @@ export function AssignmentsPage() {
   } = useUpcomingAssignments();
 
   const {
-    data: pastData,
-    isLoading: pastLoading,
-    error: pastError,
-    refetch: refetchPast,
-  } = usePastAssignments();
+    data: validationClosedData,
+    isLoading: validationClosedLoading,
+    error: validationClosedError,
+    refetch: refetchValidationClosed,
+  } = useValidationClosedAssignments();
 
-  const data = activeTab === "upcoming" ? upcomingData : pastData;
-  const isLoading = activeTab === "upcoming" ? upcomingLoading : pastLoading;
-  const error = activeTab === "upcoming" ? upcomingError : pastError;
-  const refetch = activeTab === "upcoming" ? refetchUpcoming : refetchPast;
+  const data = activeTab === "upcoming" ? upcomingData : validationClosedData;
+  const isLoading = activeTab === "upcoming" ? upcomingLoading : validationClosedLoading;
+  const error = activeTab === "upcoming" ? upcomingError : validationClosedError;
+  const refetch = activeTab === "upcoming" ? refetchUpcoming : refetchValidationClosed;
 
   const getSwipeConfig = useCallback(
     (assignment: Assignment) => {
@@ -86,9 +86,17 @@ export function AssignmentsPage() {
 
   return (
     <div className="space-y-3">
-      {/* Tabs */}
-      <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
+      {/* Tabs - WAI-ARIA tab pattern */}
+      <div
+        role="tablist"
+        aria-label={t("assignments.title")}
+        className="flex gap-2 border-b border-gray-200 dark:border-gray-700"
+      >
         <button
+          role="tab"
+          aria-selected={activeTab === "upcoming"}
+          aria-controls="upcoming-tabpanel"
+          id="upcoming-tab"
           onClick={() => setActiveTab("upcoming")}
           className={`
             px-4 py-2 text-sm font-medium border-b-2 transition-colors
@@ -107,23 +115,37 @@ export function AssignmentsPage() {
           )}
         </button>
         <button
-          onClick={() => setActiveTab("past")}
+          role="tab"
+          aria-selected={activeTab === "validationClosed"}
+          aria-controls="validation-closed-tabpanel"
+          id="validation-closed-tab"
+          onClick={() => setActiveTab("validationClosed")}
           className={`
             px-4 py-2 text-sm font-medium border-b-2 transition-colors
             ${
-              activeTab === "past"
+              activeTab === "validationClosed"
                 ? "border-orange-500 text-orange-600 dark:text-orange-400"
                 : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             }
           `}
         >
-          {t("assignments.past")}
+          {t("assignments.validationClosed")}
+          {validationClosedData && validationClosedData.length > 0 && (
+            <span className="ml-2 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs">
+              {validationClosedData.length}
+            </span>
+          )}
         </button>
       </div>
 
       {/* Content */}
-      <div className="space-y-3">
-        {isLoading && <LoadingState message="Loading assignments..." />}
+      <div
+        role="tabpanel"
+        id={activeTab === "upcoming" ? "upcoming-tabpanel" : "validation-closed-tabpanel"}
+        aria-labelledby={activeTab === "upcoming" ? "upcoming-tab" : "validation-closed-tab"}
+        className="space-y-3"
+      >
+        {isLoading && <LoadingState message={t("assignments.loading")} />}
 
         {error && (
           <ErrorState
@@ -138,16 +160,16 @@ export function AssignmentsPage() {
 
         {!isLoading && !error && data && data.length === 0 && (
           <EmptyState
-            icon={activeTab === "upcoming" ? "📅" : "📜"}
+            icon={activeTab === "upcoming" ? "📅" : "🔒"}
             title={
               activeTab === "upcoming"
-                ? "No upcoming assignments"
-                : "No past assignments"
+                ? t("assignments.noUpcomingTitle")
+                : t("assignments.noClosedTitle")
             }
             description={
               activeTab === "upcoming"
-                ? "You have no upcoming referee assignments scheduled."
-                : "No past assignments found in the selected period."
+                ? t("assignments.noUpcomingDescription")
+                : t("assignments.noClosedDescription")
             }
           />
         )}

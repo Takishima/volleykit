@@ -61,7 +61,13 @@ interface Translations {
     title: string;
     upcoming: string;
     past: string;
+    validationClosed: string;
+    loading: string;
     noAssignments: string;
+    noUpcomingTitle: string;
+    noUpcomingDescription: string;
+    noClosedTitle: string;
+    noClosedDescription: string;
     confirmed: string;
     pending: string;
     cancelled: string;
@@ -222,7 +228,13 @@ const en: Translations = {
     title: "Assignments",
     upcoming: "Upcoming",
     past: "Past",
+    validationClosed: "Validation Closed",
+    loading: "Loading assignments...",
     noAssignments: "No assignments found",
+    noUpcomingTitle: "No upcoming assignments",
+    noUpcomingDescription: "You have no upcoming referee assignments scheduled.",
+    noClosedTitle: "No closed assignments",
+    noClosedDescription: "No assignments with closed validation in this season.",
     confirmed: "Confirmed",
     pending: "Pending",
     cancelled: "Cancelled",
@@ -397,7 +409,13 @@ const de: Translations = {
     title: "Einsätze",
     upcoming: "Bevorstehend",
     past: "Vergangen",
+    validationClosed: "Validierung geschlossen",
+    loading: "Einsätze werden geladen...",
     noAssignments: "Keine Einsätze gefunden",
+    noUpcomingTitle: "Keine bevorstehenden Einsätze",
+    noUpcomingDescription: "Sie haben keine bevorstehenden Schiedsrichtereinsätze geplant.",
+    noClosedTitle: "Keine abgeschlossenen Einsätze",
+    noClosedDescription: "Keine Einsätze mit abgeschlossener Validierung in dieser Saison.",
     confirmed: "Bestätigt",
     pending: "Ausstehend",
     cancelled: "Abgesagt",
@@ -574,7 +592,13 @@ const fr: Translations = {
     title: "Désignations",
     upcoming: "À venir",
     past: "Passées",
+    validationClosed: "Validation fermée",
+    loading: "Chargement des désignations...",
     noAssignments: "Aucune désignation trouvée",
+    noUpcomingTitle: "Aucune désignation à venir",
+    noUpcomingDescription: "Vous n'avez aucune désignation d'arbitre prévue.",
+    noClosedTitle: "Aucune désignation clôturée",
+    noClosedDescription: "Aucune désignation avec validation fermée cette saison.",
     confirmed: "Confirmé",
     pending: "En attente",
     cancelled: "Annulé",
@@ -751,7 +775,13 @@ const it: Translations = {
     title: "Designazioni",
     upcoming: "In programma",
     past: "Passate",
+    validationClosed: "Validazione chiusa",
+    loading: "Caricamento designazioni...",
     noAssignments: "Nessuna designazione trovata",
+    noUpcomingTitle: "Nessuna designazione in programma",
+    noUpcomingDescription: "Non hai designazioni arbitrali in programma.",
+    noClosedTitle: "Nessuna designazione chiusa",
+    noClosedDescription: "Nessuna designazione con validazione chiusa in questa stagione.",
     confirmed: "Confermato",
     pending: "In attesa",
     cancelled: "Annullato",

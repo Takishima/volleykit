@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   useQuery,
   useMutation,
@@ -11,16 +12,36 @@ import {
   type CompensationRecord,
   type Assignment,
   type GameExchange,
+  type AssociationSettings,
+  type Season,
 } from "@/api/client";
-import { addDays, startOfDay, endOfDay, subDays } from "date-fns";
+import {
+  addDays,
+  startOfDay,
+  endOfDay,
+  subDays,
+  isWithinInterval,
+} from "date-fns";
+import {
+  isValidationClosed,
+  DEFAULT_VALIDATION_DEADLINE_HOURS,
+} from "@/utils/assignment-helpers";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
+import { logger } from "@/utils/logger";
 
 // Pagination constants
-// Note: The API doesn't support cursor-based pagination, so we use a fixed limit.
-// For users with >100 items, consider implementing "load more" or virtual scrolling.
+// Note: The API doesn't support cursor-based pagination, so we use offset-based.
+// DEFAULT_PAGE_SIZE is used for regular queries where 100 items is typically sufficient.
+// MAX_FETCH_ALL_PAGES is a safety limit when fetching all pages to prevent runaway requests.
 const DEFAULT_PAGE_SIZE = 100;
+const MAX_FETCH_ALL_PAGES = 10; // Maximum pages to fetch (1000 items)
 const DEFAULT_DATE_RANGE_DAYS = 365;
+
+// Cache duration for validation-closed assignments (15 minutes).
+// Longer than default because validation status changes infrequently
+// and fetching all pages is expensive.
+const VALIDATION_CLOSED_STALE_TIME_MS = 15 * 60 * 1000;
 
 // Fallback timestamp for items with missing dates - uses Unix epoch (1970-01-01)
 // Items with missing dates will sort as oldest when ascending, newest when descending
@@ -64,6 +85,119 @@ function filterByDateRange<T extends WithGameDate>(
   });
 }
 
+/**
+ * Safely parses a date string, returning a fallback if invalid.
+ * Prevents Invalid Date objects from propagating through the system.
+ */
+function parseDateOrFallback(
+  dateString: string | undefined | null,
+  fallback: Date,
+): Date {
+  if (!dateString) return fallback;
+  const date = new Date(dateString);
+  return isNaN(date.getTime()) ? fallback : date;
+}
+
+/**
+ * Helper to filter assignments by validation closed status.
+ * Shared between demo mode and production code to avoid duplication.
+ */
+function filterByValidationClosed(
+  items: Assignment[],
+  deadlineHours: number,
+): Assignment[] {
+  return items.filter((assignment) =>
+    isValidationClosed(
+      assignment.refereeGame?.game?.startingDateTime,
+      deadlineHours,
+    ),
+  );
+}
+
+/**
+ * Fetches all pages of assignments matching the search configuration.
+ * Uses sequential fetching to avoid overwhelming the API.
+ *
+ * Stops fetching when any of these conditions are met:
+ * - All items fetched (allItems.length >= totalCount)
+ * - MAX_FETCH_ALL_PAGES reached (safety limit)
+ * - Empty page returned (API exhausted or issue)
+ * - Stalled response (totalCount unchanged between pages, indicating potential issue)
+ *
+ * Note: This function manages its own offset/limit pagination internally.
+ * The caller's config should NOT include offset/limit as they will be overwritten.
+ *
+ * @param config - Search configuration for the API (without offset/limit)
+ * @param signal - Optional AbortSignal for cancellation support
+ * @returns Array of all fetched assignments
+ */
+async function fetchAllAssignmentPages(
+  config: SearchConfiguration,
+  signal?: AbortSignal,
+): Promise<Assignment[]> {
+  const allItems: Assignment[] = [];
+  let offset = 0;
+  let totalCount = 0;
+  let previousTotalCount = -1;
+  let pagesFetched = 0;
+
+  do {
+    // Check for cancellation before each request
+    if (signal?.aborted) {
+      throw new DOMException("Aborted", "AbortError");
+    }
+
+    const pageConfig = { ...config, offset, limit: DEFAULT_PAGE_SIZE };
+    const response = await api.searchAssignments(pageConfig);
+
+    // Check for cancellation after async operation completes
+    // (request may have finished while abort was signaled)
+    if (signal?.aborted) {
+      throw new DOMException("Aborted", "AbortError");
+    }
+
+    const pageItems = response.items || [];
+
+    // Guard against infinite loop: break if page returns no items
+    // This can happen if totalItemsCount is stale or API has issues
+    if (pageItems.length === 0) {
+      break;
+    }
+
+    allItems.push(...pageItems);
+    previousTotalCount = totalCount;
+    totalCount = response.totalItemsCount || 0;
+
+    // Detect stalled responses: if totalCount hasn't changed after adding items,
+    // the API may be returning duplicate data or has a pagination issue
+    if (
+      pagesFetched > 0 &&
+      totalCount === previousTotalCount &&
+      totalCount > 0
+    ) {
+      break;
+    }
+
+    // Early exit when all items are fetched to avoid unnecessary loop iterations
+    if (allItems.length >= totalCount && totalCount > 0) {
+      break;
+    }
+
+    offset += DEFAULT_PAGE_SIZE;
+    pagesFetched++;
+  } while (allItems.length < totalCount && pagesFetched < MAX_FETCH_ALL_PAGES);
+
+  // Log warning if we hit the page limit before fetching all items
+  if (pagesFetched >= MAX_FETCH_ALL_PAGES && allItems.length < totalCount) {
+    logger.warn(
+      `[fetchAllAssignmentPages] Reached MAX_FETCH_ALL_PAGES limit (${MAX_FETCH_ALL_PAGES}). ` +
+        `Fetched ${allItems.length} of ${totalCount} total items. Some data may be missing.`,
+    );
+  }
+
+  return allItems;
+}
+
 // Helper to create mock query results for demo mode
 // Type assertion is necessary because we're creating a partial mock of UseQueryResult
 // that satisfies the interface without all internal TanStack Query state.
@@ -97,6 +231,8 @@ export const queryKeys = {
   compensations: (config?: SearchConfiguration) =>
     ["compensations", config] as const,
   exchanges: (config?: SearchConfiguration) => ["exchanges", config] as const,
+  associationSettings: () => ["associationSettings"] as const,
+  activeSeason: () => ["activeSeason"] as const,
 };
 
 // Date period presets
@@ -199,6 +335,149 @@ export function useUpcomingAssignments(): UseQueryResult<Assignment[], Error> {
 
 export function usePastAssignments(): UseQueryResult<Assignment[], Error> {
   return useAssignments("past");
+}
+
+/**
+ * Hook to fetch assignments where validation period has closed.
+ *
+ * This fetches past games from the current season and filters them
+ * to only include games where the validation deadline has passed.
+ * The deadline is determined by the association settings field
+ * `hoursAfterGameStartForRefereeToEditGameList`.
+ *
+ * Features:
+ * - Fetches all pages to ensure no games are missed (up to MAX_FETCH_ALL_PAGES)
+ * - Waits for settings and season data before querying to avoid stale results
+ * - Falls back to defaults if settings/season queries fail
+ * - Uses shared filtering logic between production and demo modes
+ * - Supports cancellation via AbortController
+ */
+export function useValidationClosedAssignments(): UseQueryResult<
+  Assignment[],
+  Error
+> {
+  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const demoAssignments = useDemoStore((state) => state.assignments);
+
+  // Fetch settings and season for filtering
+  // Note: In demo mode, these queries are disabled (enabled: !isDemoMode),
+  // so settings and season will be undefined, causing fallback to defaults:
+  // - deadlineHours falls back to DEFAULT_VALIDATION_DEADLINE_HOURS (6 hours)
+  // - seasonStart falls back to 365 days ago
+  const {
+    data: settings,
+    isSuccess: settingsSuccess,
+    isError: settingsError,
+  } = useAssociationSettings();
+  const {
+    data: season,
+    isSuccess: seasonSuccess,
+    isError: seasonError,
+  } = useActiveSeason();
+
+  // Memoize date calculations to prevent query key changes on every render.
+  // Only recalculate when season data actually changes.
+  const { fromDate, toDate } = useMemo(() => {
+    const now = new Date();
+    const seasonStart = parseDateOrFallback(
+      season?.seasonStartDate,
+      subDays(now, DEFAULT_DATE_RANGE_DAYS),
+    );
+    const seasonEnd = parseDateOrFallback(season?.seasonEndDate, now);
+
+    return {
+      fromDate: startOfDay(seasonStart).toISOString(),
+      toDate: endOfDay(now < seasonEnd ? now : seasonEnd).toISOString(),
+    };
+  }, [season?.seasonStartDate, season?.seasonEndDate]);
+
+  const deadlineHours =
+    settings?.hoursAfterGameStartForRefereeToEditGameList ??
+    DEFAULT_VALIDATION_DEADLINE_HOURS;
+
+  // Memoize config to prevent unnecessary object recreation
+  const config = useMemo<SearchConfiguration>(
+    () => ({
+      propertyFilters: [
+        {
+          propertyName: "refereeGame.game.startingDateTime",
+          dateRange: { from: fromDate, to: toDate },
+        },
+      ],
+      propertyOrderings: [
+        {
+          propertyName: "refereeGame.game.startingDateTime",
+          descending: true, // Most recent first
+          isSetByUser: true,
+        },
+      ],
+    }),
+    [fromDate, toDate],
+  );
+
+  // Wait for settings and season to load before making the main query.
+  // Use isSuccess for reliable state detection (avoids race conditions where
+  // isLoading is false but data hasn't arrived yet).
+  // If either query fails, proceed with defaults rather than blocking indefinitely.
+  // Extra checks: verify we have actual data when queries succeed to prevent
+  // race conditions where isSuccess is true but derived values use stale data.
+  const settingsResolved = settingsSuccess || settingsError;
+  const seasonResolved = seasonSuccess || seasonError;
+  const hasSettingsData = settingsSuccess ? settings !== undefined : true;
+  const hasSeasonDates = seasonSuccess
+    ? season?.seasonStartDate !== undefined
+    : true;
+  const isReady =
+    !isDemoMode &&
+    settingsResolved &&
+    seasonResolved &&
+    hasSettingsData &&
+    hasSeasonDates;
+
+  const query = useQuery({
+    queryKey: [
+      "assignments",
+      "validationClosed",
+      fromDate,
+      toDate,
+      deadlineHours,
+    ],
+    queryFn: async ({ signal }) => {
+      // Fetch all pages because API doesn't support server-side filtering
+      // by validation status - we must filter client-side after fetching.
+      const allItems = await fetchAllAssignmentPages(config, signal);
+      return filterByValidationClosed(allItems, deadlineHours);
+    },
+    // Longer cache time because validation status changes infrequently
+    // and fetching all pages is expensive (multiple API calls).
+    staleTime: VALIDATION_CLOSED_STALE_TIME_MS,
+    enabled: isReady,
+  });
+
+  // Memoize demo data filtering to prevent recalculation on every render.
+  // Only recompute when demo assignments, date range, or deadline changes.
+  const demoFilteredData = useMemo(() => {
+    if (!isDemoMode) return [];
+
+    const inDateRange = demoAssignments.filter((assignment) => {
+      const gameDate = assignment.refereeGame?.game?.startingDateTime;
+      if (!gameDate) return false;
+
+      const date = new Date(gameDate);
+      return isWithinInterval(date, {
+        start: new Date(fromDate),
+        end: new Date(toDate),
+      });
+    });
+    const filtered = filterByValidationClosed(inDateRange, deadlineHours);
+    return sortByGameDate(filtered, true);
+  }, [isDemoMode, demoAssignments, fromDate, toDate, deadlineHours]);
+
+  if (isDemoMode) {
+    return createDemoQueryResult(query, demoFilteredData);
+  }
+
+  return query;
 }
 
 export function useAssignmentDetails(
@@ -410,5 +689,31 @@ export function useWithdrawFromExchange(): UseMutationResult<
         queryClient.invalidateQueries({ queryKey: ["exchanges"] });
       }
     },
+  });
+}
+
+// Settings hooks
+export function useAssociationSettings(): UseQueryResult<
+  AssociationSettings,
+  Error
+> {
+  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+
+  return useQuery({
+    queryKey: queryKeys.associationSettings(),
+    queryFn: () => api.getAssociationSettings(),
+    staleTime: 30 * 60 * 1000, // 30 minutes - settings rarely change
+    enabled: !isDemoMode,
+  });
+}
+
+export function useActiveSeason(): UseQueryResult<Season, Error> {
+  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+
+  return useQuery({
+    queryKey: queryKeys.activeSeason(),
+    queryFn: () => api.getActiveSeason(),
+    staleTime: 60 * 60 * 1000, // 1 hour - season rarely changes
+    enabled: !isDemoMode,
   });
 }

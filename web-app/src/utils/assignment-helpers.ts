@@ -77,3 +77,60 @@ export function isGameReportEligible(assignment: Assignment): boolean {
     assignment.refereeGame?.game?.group?.phase?.league?.leagueCategory?.name;
   return leagueName !== undefined && GAME_REPORT_ELIGIBLE_LEAGUES.includes(leagueName);
 }
+
+/**
+ * Default validation deadline in hours after game start.
+ * Used as fallback when association settings are not available.
+ * Common values in Swiss volleyball: 6-24 hours.
+ */
+export const DEFAULT_VALIDATION_DEADLINE_HOURS = 6;
+
+/**
+ * Checks if the validation period for a game has closed.
+ *
+ * Referees have a limited window to validate game results after the game starts.
+ * This window is configured per association via `hoursAfterGameStartForRefereeToEditGameList`.
+ * Once this window passes, the validation is considered "closed".
+ *
+ * Note: Uses strict "greater than" comparison (now > deadline), meaning validation
+ * is open AT the exact deadline moment and closes strictly AFTER. For example,
+ * with a 6-hour deadline: at exactly 6 hours after game start, validation is still
+ * open; at 6 hours + 1 second, it's closed.
+ *
+ * @param gameStartTime - ISO datetime string of when the game started
+ * @param deadlineHours - Hours after game start when validation closes
+ * @returns true if validation period has closed (strictly after deadline),
+ *          false if still open, game hasn't started, or invalid date
+ */
+export function isValidationClosed(
+  gameStartTime: string | undefined | null,
+  deadlineHours: number = DEFAULT_VALIDATION_DEADLINE_HOURS,
+): boolean {
+  if (!gameStartTime) return false;
+
+  const gameStart = new Date(gameStartTime);
+  if (isNaN(gameStart.getTime())) return false;
+
+  const validationDeadline = new Date(
+    gameStart.getTime() + deadlineHours * 60 * 60 * 1000,
+  );
+
+  return new Date() > validationDeadline;
+}
+
+/**
+ * Checks if a game is in the past (has started).
+ *
+ * @param gameStartTime - ISO datetime string of when the game starts/started
+ * @returns true if game has started, false if still upcoming or invalid date
+ */
+export function isGamePast(
+  gameStartTime: string | undefined | null,
+): boolean {
+  if (!gameStartTime) return false;
+
+  const gameStart = new Date(gameStartTime);
+  if (isNaN(gameStart.getTime())) return false;
+
+  return new Date() > gameStart;
+}

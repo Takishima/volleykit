@@ -97,6 +97,8 @@ export type Team = Schemas["Team"];
 export type Hall = Schemas["Hall"];
 export type RefereeGame = Schemas["RefereeGame"];
 export type PersonSummary = Schemas["PersonSummary"];
+export type AssociationSettings = Schemas["AssociationSettings"];
+export type Season = Schemas["Season"];
 
 // API response types
 export type AssignmentsResponse = Schemas["AssignmentsResponse"];
@@ -473,6 +475,19 @@ export const api = {
       "/indoorvolleyball.refadmin/api%5crefereegameexchange",
       "PUT",
       { gameExchange: exchangeId, action: "withdraw" },
+    );
+  },
+
+  // Settings
+  async getAssociationSettings(): Promise<Schemas["AssociationSettings"]> {
+    return apiRequest(
+      "/indoorvolleyball.refadmin/api%5ccrefereeassociationsettings/getRefereeAssociationSettingsOfActiveParty",
+    );
+  },
+
+  async getActiveSeason(): Promise<Schemas["Season"]> {
+    return apiRequest(
+      "/sportmanager.indoorvolleyball/api%5ccindoorseason/getActiveIndoorSeason",
     );
   },
 };
