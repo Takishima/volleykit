@@ -11,7 +11,7 @@ vi.mock("@/stores/auth");
 vi.mock("@/stores/demo");
 vi.mock("@/stores/settings");
 
-function createMockAssignment(): Assignment {
+function createMockAssignment(leagueName = "NLA"): Assignment {
   return {
     __identity: "test-assignment-1",
     refereePosition: "head-one",
@@ -25,6 +25,15 @@ function createMockAssignment(): Assignment {
         },
         hall: {
           name: "Main Arena",
+        },
+        group: {
+          phase: {
+            league: {
+              leagueCategory: {
+                name: leagueName,
+              },
+            },
+          },
         },
       },
     },
@@ -182,7 +191,7 @@ describe("useAssignmentActions", () => {
     expect(result.current.editCompensationModal.assignment).toBeNull();
   });
 
-  it("should handle generate report action", () => {
+  it("should handle generate report action for NLA/NLB games", () => {
     const { result } = renderHook(() => useAssignmentActions());
 
     const createElementSpy = vi.spyOn(document, "createElement");
@@ -192,6 +201,72 @@ describe("useAssignmentActions", () => {
     });
 
     expect(createElementSpy).toHaveBeenCalledWith("a");
+  });
+
+  it("should block generate report for non-NLA/NLB games", () => {
+    const { result } = renderHook(() => useAssignmentActions());
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    const createElementSpy = vi.spyOn(document, "createElement");
+
+    const nonEligibleAssignment = createMockAssignment("1L");
+
+    act(() => {
+      result.current.handleGenerateReport(nonEligibleAssignment);
+    });
+
+    // Verify alert was called (translation key: assignments.gameReportNotAvailable)
+    expect(alertSpy).toHaveBeenCalledTimes(1);
+    expect(createElementSpy).not.toHaveBeenCalledWith("a");
+
+    alertSpy.mockRestore();
+  });
+
+  it("should handle generate report action for NLB games", () => {
+    const { result } = renderHook(() => useAssignmentActions());
+    const createElementSpy = vi.spyOn(document, "createElement");
+
+    const nlbAssignment = createMockAssignment("NLB");
+
+    act(() => {
+      result.current.handleGenerateReport(nlbAssignment);
+    });
+
+    expect(createElementSpy).toHaveBeenCalledWith("a");
+  });
+
+  it("should block generate report when league data is undefined", () => {
+    const { result } = renderHook(() => useAssignmentActions());
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    const createElementSpy = vi.spyOn(document, "createElement");
+
+    // Create assignment without league data
+    const assignmentWithoutLeague: Assignment = {
+      __identity: "test-assignment-1",
+      refereePosition: "head-one",
+      refereeConvocationStatus: "active",
+      refereeGame: {
+        game: {
+          startingDateTime: "2025-12-15T18:00:00Z",
+          encounter: {
+            teamHome: { name: "Team A" },
+            teamAway: { name: "Team B" },
+          },
+          hall: {
+            name: "Main Arena",
+          },
+        },
+      },
+    } as Assignment;
+
+    act(() => {
+      result.current.handleGenerateReport(assignmentWithoutLeague);
+    });
+
+    // Verify alert was called (translation key: assignments.gameReportNotAvailable)
+    expect(alertSpy).toHaveBeenCalledTimes(1);
+    expect(createElementSpy).not.toHaveBeenCalledWith("a");
+
+    alertSpy.mockRestore();
   });
 
   it("should handle add to exchange action", () => {
