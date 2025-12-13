@@ -213,6 +213,26 @@ See existing tests in `src/**/*.test.ts` for patterns.
 
 ## API Integration
 
+### SwissVolley API Documentation
+
+**IMPORTANT**: Before implementing any feature that interacts with the SwissVolley/VolleyManager API, consult the documentation in `docs/api/`:
+
+- **OpenAPI Spec**: `docs/api/volleymanager-openapi.yaml` - Complete API schema with request/response types
+- **Endpoint Documentation**: `docs/api/*.md` - Detailed documentation for each API area:
+  - `auth_api.md` - Authentication and session management
+  - `assignments_api.md` - Referee assignments/convocations
+  - `compensations_api.md` - Travel expenses and compensation
+  - `exchanges_api.md` - Game exchange/substitution requests
+- **Captured Examples**: `docs/api/captures/` - Real request/response examples captured from the production API
+
+This documentation reflects the actual behavior of the VolleyManager API and should be the source of truth for:
+
+- Request/response formats and field names
+- Required vs optional parameters
+- Authentication requirements
+- Error response formats
+- Pagination patterns
+
 ### Generated Types
 
 The API client is generated from the OpenAPI spec:
