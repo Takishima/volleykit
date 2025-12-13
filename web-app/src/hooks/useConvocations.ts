@@ -161,6 +161,11 @@ async function fetchAllAssignmentPages(
       break;
     }
 
+    // Early exit when all items are fetched to avoid unnecessary loop iterations
+    if (allItems.length >= totalCount && totalCount > 0) {
+      break;
+    }
+
     offset += DEFAULT_PAGE_SIZE;
     pagesFetched++;
   } while (
@@ -392,9 +397,14 @@ export function useValidationClosedAssignments(): UseQueryResult<
   // Use isSuccess for reliable state detection (avoids race conditions where
   // isLoading is false but data hasn't arrived yet).
   // If either query fails, proceed with defaults rather than blocking indefinitely.
+  // Extra checks: verify we have actual data when queries succeed to prevent
+  // race conditions where isSuccess is true but derived values use stale data.
   const settingsResolved = settingsSuccess || settingsError;
   const seasonResolved = seasonSuccess || seasonError;
-  const isReady = !isDemoMode && settingsResolved && seasonResolved;
+  const hasSettingsData = settingsSuccess ? settings !== undefined : true;
+  const hasSeasonDates = seasonSuccess ? season?.seasonStartDate !== undefined : true;
+  const isReady =
+    !isDemoMode && settingsResolved && seasonResolved && hasSettingsData && hasSeasonDates;
 
   const query = useQuery({
     queryKey: [
