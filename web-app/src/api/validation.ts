@@ -39,12 +39,19 @@ const dateTimeSchema = z
 // - ISO datetime format: "2024-12-19T23:00:00.000000+00:00" (API returns this for paymentValueDate)
 // - Empty string: "" (API returns this for unpaid compensations)
 // - null (API returns null for unpaid compensations)
-const DATE_PREFIX_PATTERN = /^\d{4}-\d{2}-\d{2}/;
+const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const DATETIME_PATTERN = /^\d{4}-\d{2}-\d{2}T[\d:.+-]+$/;
 export const dateSchema = z
   .string()
-  .refine((val) => val === "" || DATE_PREFIX_PATTERN.test(val), {
-    message: "Invalid date format",
-  })
+  .refine(
+    (val) =>
+      val === "" ||
+      DATE_ONLY_PATTERN.test(val) ||
+      DATETIME_PATTERN.test(val),
+    {
+      message: "Invalid date format",
+    },
+  )
   .optional()
   .nullable();
 

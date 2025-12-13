@@ -47,6 +47,21 @@ describe("dateSchema", () => {
     const result = dateSchema.safeParse("2024/01/15");
     expect(result.success).toBe(false);
   });
+
+  it("rejects date with invalid text after T", () => {
+    const result = dateSchema.safeParse("2024-01-15Thello world");
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects date with trailing garbage", () => {
+    const result = dateSchema.safeParse("2024-01-15extra");
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects date with space after date", () => {
+    const result = dateSchema.safeParse("2024-01-15 ");
+    expect(result.success).toBe(false);
+  });
 });
 
 describe("compensationRecordSchema with dateSchema", () => {
