@@ -1,11 +1,12 @@
 import { useAuthStore } from "@/stores/auth";
-import { t } from "@/i18n";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { getOccupationLabelKey } from "@/utils/occupation-labels";
 
 export function SettingsPage() {
   const { user, logout } = useAuthStore();
+  const { t } = useTranslation();
 
   return (
     <div className="space-y-6 max-w-2xl">
