@@ -101,6 +101,35 @@ describe("SwipeableCard", () => {
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
 
+    it("hides action buttons on Escape key when focus is on action button", () => {
+      const { container } = render(
+        <SwipeableCard
+          onSwipeLeft={() => {}}
+          onSwipeRight={() => {}}
+          leftActionLabel="Left"
+          rightActionLabel="Right"
+        >
+          <div>Content</div>
+        </SwipeableCard>,
+      );
+
+      const wrapper = container.firstChild as HTMLElement;
+
+      // Show actions
+      fireEvent.keyDown(wrapper, { key: "Enter" });
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+      // Get the action button and verify it has focus
+      const rightButton = screen.getByText("Right");
+      expect(rightButton).toHaveFocus();
+
+      // Press Escape while button has focus
+      fireEvent.keyDown(document, { key: "Escape" });
+
+      // Dialog should be dismissed
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
     it("calls onSwipeLeft when left action button is clicked", () => {
       const onSwipeLeft = vi.fn();
       const { container } = render(
