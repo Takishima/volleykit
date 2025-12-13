@@ -24,7 +24,7 @@ import {
   isRetryableError,
   calculateRetryDelay,
   isAuthError,
-  MAX_QUERY_RETRIES,
+  RETRY_CONFIG,
 } from "@/utils/query-error-utils";
 
 /**
@@ -55,7 +55,7 @@ const queryClient = new QueryClient({
     queries: {
       retry: (failureCount, error) => {
         if (!isRetryableError(error)) return false;
-        return failureCount < MAX_QUERY_RETRIES;
+        return failureCount < RETRY_CONFIG.MAX_QUERY_RETRIES;
       },
       // Use exponential backoff with jitter for retry delays
       retryDelay: calculateRetryDelay,
