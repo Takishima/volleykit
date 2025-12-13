@@ -58,6 +58,8 @@ export function AssignmentsPage() {
         onAddToExchange: handleAddToExchange,
       });
 
+      const isGameInFuture = assignment.refereeGame?.isGameInFuture === "1";
+
       // Action array ordering: first item = furthest from card = full swipe default
       // When swiping left, actions appear right-to-left from the card edge
       return {
@@ -70,7 +72,8 @@ export function AssignmentsPage() {
         ],
         // Swipe right reveals: card -> [Exchange]
         // Full swipe right triggers: addToExchange
-        right: [actions.addToExchange],
+        // Only show exchange action for upcoming assignments
+        right: isGameInFuture ? [actions.addToExchange] : [],
       };
     },
     [
