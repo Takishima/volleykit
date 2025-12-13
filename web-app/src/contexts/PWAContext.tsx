@@ -13,7 +13,12 @@ interface PWAContextType {
 
 const PWAContext = createContext<PWAContextType | null>(null);
 
-const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
+/**
+ * Interval for automatic update checks.
+ * Set to 1 hour to balance between freshness and avoiding excessive network requests.
+ * The service worker will also check for updates on page load.
+ */
+const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000;
 
 interface PWAProviderProps {
   children: ReactNode;
@@ -29,10 +34,20 @@ export function PWAProvider({ children }: PWAProviderProps) {
   const [isChecking, setIsChecking] = useState(false);
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
 
+  // Refs must be declared before useEffect to avoid race conditions
   const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
   const intervalRef = useRef<number | undefined>(undefined);
+  const updateSWRef = useRef<((reloadPage?: boolean) => Promise<void>) | null>(
+    null,
+  );
+  // Ref-based guard to prevent duplicate concurrent update checks
+  const isCheckingRef = useRef(false);
+  // Track if component is mounted to prevent state updates after unmount
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
+    isMountedRef.current = true;
+
     // Only register if PWA is enabled
     if (!__PWA_ENABLED__) return;
 
@@ -85,27 +100,32 @@ export function PWAProvider({ children }: PWAProviderProps) {
 
     return () => {
       cancelled = true;
+      isMountedRef.current = false;
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
     };
   }, []);
 
-  const updateSWRef = useRef<((reloadPage?: boolean) => Promise<void>) | null>(
-    null,
-  );
-
   const checkForUpdate = async () => {
-    if (!registrationRef.current || isChecking) return;
+    // Use ref-based guard to prevent race conditions with concurrent calls
+    if (!registrationRef.current || isCheckingRef.current) return;
 
+    isCheckingRef.current = true;
     setIsChecking(true);
     try {
       await registrationRef.current.update();
-      setLastChecked(new Date());
+      // Only update state if component is still mounted
+      if (isMountedRef.current) {
+        setLastChecked(new Date());
+      }
     } catch (error) {
       console.error("Failed to check for updates:", error);
     } finally {
-      setIsChecking(false);
+      isCheckingRef.current = false;
+      if (isMountedRef.current) {
+        setIsChecking(false);
+      }
     }
   };
 
