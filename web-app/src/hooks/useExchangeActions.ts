@@ -9,6 +9,7 @@ import { MODAL_CLEANUP_DELAY } from "@/utils/assignment-helpers";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 import { useSettingsStore } from "@/stores/settings";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface UseExchangeActionsResult {
   takeOverModal: {
@@ -28,6 +29,7 @@ interface UseExchangeActionsResult {
 }
 
 export function useExchangeActions(): UseExchangeActionsResult {
+  const { t } = useTranslation();
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
   const isSafeModeEnabled = useSettingsStore(
     (state) => state.isSafeModeEnabled,
@@ -106,9 +108,7 @@ export function useExchangeActions(): UseExchangeActionsResult {
         logger.debug(
           "[useExchangeActions] Safe mode: taking exchange blocked",
         );
-        alert(
-          "This operation is blocked in safe mode. Disable safe mode in Settings to proceed.",
-        );
+        alert(t("settings.safeModeBlocked"));
         return;
       }
 
@@ -154,6 +154,7 @@ export function useExchangeActions(): UseExchangeActionsResult {
       demoApplyForExchange,
       applyMutation,
       closeTakeOver,
+      t,
     ],
   );
 
@@ -163,9 +164,7 @@ export function useExchangeActions(): UseExchangeActionsResult {
         logger.debug(
           "[useExchangeActions] Safe mode: withdrawing from exchange blocked",
         );
-        alert(
-          "This operation is blocked in safe mode. Disable safe mode in Settings to proceed.",
-        );
+        alert(t("settings.safeModeBlocked"));
         return;
       }
 
@@ -211,6 +210,7 @@ export function useExchangeActions(): UseExchangeActionsResult {
       demoWithdrawFromExchange,
       withdrawMutation,
       closeRemoveFromExchange,
+      t,
     ],
   );
 

@@ -6,6 +6,7 @@ import { getTeamNames, MODAL_CLEANUP_DELAY } from "@/utils/assignment-helpers";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 import { useSettingsStore } from "@/stores/settings";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface UseAssignmentActionsResult {
   editCompensationModal: {
@@ -25,6 +26,7 @@ interface UseAssignmentActionsResult {
 }
 
 export function useAssignmentActions(): UseAssignmentActionsResult {
+  const { t } = useTranslation();
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
   const isSafeModeEnabled = useSettingsStore(
     (state) => state.isSafeModeEnabled,
@@ -130,9 +132,7 @@ This is a mock PDF report.`;
         logger.debug(
           "[useAssignmentActions] Safe mode: adding to exchange blocked",
         );
-        alert(
-          "This operation is blocked in safe mode. Disable safe mode in Settings to proceed.",
-        );
+        alert(t("settings.safeModeBlocked"));
         return;
       }
 
@@ -159,7 +159,7 @@ This is a mock PDF report.`;
         `Assignment "${homeTeam} vs ${awayTeam}" added to exchange list (mocked)`,
       );
     },
-    [isDemoMode, isSafeModeEnabled, addAssignmentToExchange],
+    [isDemoMode, isSafeModeEnabled, addAssignmentToExchange, t],
   );
 
   return {
