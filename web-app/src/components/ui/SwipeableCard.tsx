@@ -522,7 +522,6 @@ export function SwipeableCard({
         onMouseLeave={hasAnyAction ? handleMouseUp : undefined}
         onClickCapture={hasAnyAction ? handleClickCapture : undefined}
         role={hasAnyAction ? "button" : undefined}
-        tabIndex={hasAnyAction ? 0 : undefined}
         style={{
           transform: `translateX(${translateX}px)`,
           transition: isDragging

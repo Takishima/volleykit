@@ -63,6 +63,7 @@ const JITTER_FACTOR = 0.25;
  */
 export function calculateRetryDelay(
   attemptIndex: number,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _error?: unknown,
 ): number {
   const exponentialDelay = BASE_RETRY_DELAY_MS * Math.pow(2, attemptIndex);
