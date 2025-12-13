@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import type { Assignment, CompensationRecord } from "@/api/client";
-import { t } from "@/i18n";
+import { useTranslation } from "@/hooks/useTranslation";
 import { logger } from "@/utils/logger";
 import {
   getTeamNames,
@@ -22,6 +22,7 @@ export function EditCompensationModal({
   isOpen,
   onClose,
 }: EditCompensationModalProps) {
+  const { t } = useTranslation();
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
   const updateCompensation = useDemoStore((state) => state.updateCompensation);
 

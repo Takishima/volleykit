@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import type { Assignment } from "@/api/client";
-import { t } from "@/i18n";
+import { useTranslation } from "@/hooks/useTranslation";
 import { logger } from "@/utils/logger";
 import { getTeamNames } from "@/utils/assignment-helpers";
 
@@ -15,6 +15,7 @@ export function ValidateGameModal({
   isOpen,
   onClose,
 }: ValidateGameModalProps) {
+  const { t } = useTranslation();
   const [homeScore, setHomeScore] = useState("");
   const [awayScore, setAwayScore] = useState("");
   const [sets, setSets] = useState("");

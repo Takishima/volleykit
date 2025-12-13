@@ -15,11 +15,12 @@ import { TakeOverExchangeModal } from "@/components/features/TakeOverExchangeMod
 import { RemoveFromExchangeModal } from "@/components/features/RemoveFromExchangeModal";
 import type { SwipeConfig } from "@/types/swipe";
 import type { GameExchange } from "@/api/client";
-import { t } from "@/i18n";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function ExchangePage() {
   const [statusFilter, setStatusFilter] = useState<ExchangeStatus>("open");
   const { isDemoMode } = useAuthStore();
+  const { t } = useTranslation();
   const { exchanges: demoExchanges } = useDemoStore();
 
   const {

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { GameExchange } from "@/api/client";
-import { t } from "@/i18n";
+import { useTranslation } from "@/hooks/useTranslation";
 import { logger } from "@/utils/logger";
 import { formatDateTime } from "@/utils/date-helpers";
 
@@ -19,6 +19,8 @@ export function ExchangeConfirmationModal({
   onConfirm,
   variant,
 }: ExchangeConfirmationModalProps) {
+  const { t } = useTranslation();
+
   useEffect(() => {
     if (!isOpen) return;
 

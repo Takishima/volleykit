@@ -17,13 +17,14 @@ import { createAssignmentActions } from "@/utils/assignment-actions";
 import { EditCompensationModal } from "@/components/features/EditCompensationModal";
 import { ValidateGameModal } from "@/components/features/ValidateGameModal";
 import type { Assignment } from "@/api/client";
-import { t } from "@/i18n";
+import { useTranslation } from "@/hooks/useTranslation";
 
 type TabType = "upcoming" | "past";
 
 export function AssignmentsPage() {
   const [activeTab, setActiveTab] = useState<TabType>("upcoming");
   const { isDemoMode } = useAuthStore();
+  const { t } = useTranslation();
   const { assignments: demoAssignments } = useDemoStore();
 
   const {

@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { ExpandArrow } from "@/components/ui/ExpandArrow";
 import type { CompensationRecord } from "@/api/client";
 import { useExpandable } from "@/hooks/useExpandable";
-import { t } from "@/i18n";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface CompensationCardProps {
   compensation: CompensationRecord;
@@ -17,6 +17,7 @@ export function CompensationCard({
   onClick,
   disableExpansion,
 }: CompensationCardProps) {
+  const { t } = useTranslation();
   const { isExpanded, detailsId, handleToggle } = useExpandable({
     disabled: disableExpansion,
     onClick,
