@@ -15,13 +15,20 @@ import {
   type AssociationSettings,
   type Season,
 } from "@/api/client";
-import { addDays, startOfDay, endOfDay, subDays, isWithinInterval } from "date-fns";
+import {
+  addDays,
+  startOfDay,
+  endOfDay,
+  subDays,
+  isWithinInterval,
+} from "date-fns";
 import {
   isValidationClosed,
   DEFAULT_VALIDATION_DEADLINE_HOURS,
 } from "@/utils/assignment-helpers";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
+import { logger } from "@/utils/logger";
 
 // Pagination constants
 // Note: The API doesn't support cursor-based pagination, so we use offset-based.
@@ -143,6 +150,12 @@ async function fetchAllAssignmentPages(
     const pageConfig = { ...config, offset, limit: DEFAULT_PAGE_SIZE };
     const response = await api.searchAssignments(pageConfig);
 
+    // Check for cancellation after async operation completes
+    // (request may have finished while abort was signaled)
+    if (signal?.aborted) {
+      throw new DOMException("Aborted", "AbortError");
+    }
+
     const pageItems = response.items || [];
 
     // Guard against infinite loop: break if page returns no items
@@ -157,7 +170,11 @@ async function fetchAllAssignmentPages(
 
     // Detect stalled responses: if totalCount hasn't changed after adding items,
     // the API may be returning duplicate data or has a pagination issue
-    if (pagesFetched > 0 && totalCount === previousTotalCount && totalCount > 0) {
+    if (
+      pagesFetched > 0 &&
+      totalCount === previousTotalCount &&
+      totalCount > 0
+    ) {
       break;
     }
 
@@ -168,10 +185,15 @@ async function fetchAllAssignmentPages(
 
     offset += DEFAULT_PAGE_SIZE;
     pagesFetched++;
-  } while (
-    allItems.length < totalCount &&
-    pagesFetched < MAX_FETCH_ALL_PAGES
-  );
+  } while (allItems.length < totalCount && pagesFetched < MAX_FETCH_ALL_PAGES);
+
+  // Log warning if we hit the page limit before fetching all items
+  if (pagesFetched >= MAX_FETCH_ALL_PAGES && allItems.length < totalCount) {
+    logger.warn(
+      `[fetchAllAssignmentPages] Reached MAX_FETCH_ALL_PAGES limit (${MAX_FETCH_ALL_PAGES}). ` +
+        `Fetched ${allItems.length} of ${totalCount} total items. Some data may be missing.`,
+    );
+  }
 
   return allItems;
 }
@@ -402,9 +424,15 @@ export function useValidationClosedAssignments(): UseQueryResult<
   const settingsResolved = settingsSuccess || settingsError;
   const seasonResolved = seasonSuccess || seasonError;
   const hasSettingsData = settingsSuccess ? settings !== undefined : true;
-  const hasSeasonDates = seasonSuccess ? season?.seasonStartDate !== undefined : true;
+  const hasSeasonDates = seasonSuccess
+    ? season?.seasonStartDate !== undefined
+    : true;
   const isReady =
-    !isDemoMode && settingsResolved && seasonResolved && hasSettingsData && hasSeasonDates;
+    !isDemoMode &&
+    settingsResolved &&
+    seasonResolved &&
+    hasSettingsData &&
+    hasSeasonDates;
 
   const query = useQuery({
     queryKey: [
