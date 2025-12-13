@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Outlet, NavLink, useLocation } from "react-router-dom";
 import { useAuthStore, type Occupation } from "@/stores/auth";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -22,17 +22,20 @@ export function AppShell() {
     useAuthStore();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  function getOccupationLabel(occupation: Occupation): string {
-    const labelKey = getOccupationLabelKey(occupation.type);
-    const baseLabel = t(labelKey);
-    if (occupation.clubName) {
-      return `${baseLabel} (${occupation.clubName})`;
-    }
-    if (occupation.associationCode) {
-      return `${baseLabel} (${occupation.associationCode})`;
-    }
-    return baseLabel;
-  }
+  const getOccupationLabel = useCallback(
+    (occupation: Occupation): string => {
+      const labelKey = getOccupationLabelKey(occupation.type);
+      const baseLabel = t(labelKey);
+      if (occupation.clubName) {
+        return `${baseLabel} (${occupation.clubName})`;
+      }
+      if (occupation.associationCode) {
+        return `${baseLabel} (${occupation.associationCode})`;
+      }
+      return baseLabel;
+    },
+    [t],
+  );
   const dropdownRef = useRef<HTMLDivElement>(null);
   const isAuthenticated = status === "authenticated";
 
