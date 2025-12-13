@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { PWAContext } from "./PWAContext";
-import type { PWAContextType } from "./PWAContext";
+import { PWAContext, type PWAContextType } from "./pwa-context-value";
 
 /**
  * Interval for automatic update checks (1 hour).
@@ -26,7 +25,9 @@ export default function PWAProviderInternal({
   const [isChecking, setIsChecking] = useState(false);
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
   const [checkError, setCheckError] = useState<Error | null>(null);
-  const [registrationError, setRegistrationError] = useState<Error | null>(null);
+  const [registrationError, setRegistrationError] = useState<Error | null>(
+    null,
+  );
 
   // Refs must be declared before useEffect to avoid race conditions
   const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
@@ -125,7 +126,9 @@ export default function PWAProviderInternal({
       setLastChecked(new Date());
     } catch (error) {
       const updateError =
-        error instanceof Error ? error : new Error("Failed to check for updates");
+        error instanceof Error
+          ? error
+          : new Error("Failed to check for updates");
       console.error("Failed to check for updates:", error);
       setCheckError(updateError);
     } finally {
