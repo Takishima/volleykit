@@ -73,10 +73,22 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
     );
   }, []);
 
-  const openValidateGame = useCallback((assignment: Assignment) => {
-    setValidateGameAssignment(assignment);
-    setValidateGameOpen(true);
-  }, []);
+  const openValidateGame = useCallback(
+    (assignment: Assignment) => {
+      // Safe mode only applies to real API calls; demo mode is local-only and poses no risk
+      if (!isDemoMode && isSafeModeEnabled) {
+        logger.debug(
+          "[useAssignmentActions] Safe mode: game validation blocked",
+        );
+        alert(t("settings.safeModeBlocked"));
+        return;
+      }
+
+      setValidateGameAssignment(assignment);
+      setValidateGameOpen(true);
+    },
+    [isDemoMode, isSafeModeEnabled, t],
+  );
 
   const closeValidateGame = useCallback(() => {
     setValidateGameOpen(false);

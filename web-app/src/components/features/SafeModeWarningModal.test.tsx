@@ -113,4 +113,52 @@ describe("SafeModeWarningModal", () => {
       expect(onClose).toHaveBeenCalledOnce();
     }
   });
+
+  it("should clean up event listener when modal closes", () => {
+    const onClose = vi.fn();
+    const onConfirm = vi.fn();
+
+    const { rerender } = render(
+      <SafeModeWarningModal
+        isOpen={true}
+        onClose={onClose}
+        onConfirm={onConfirm}
+      />,
+    );
+
+    // Close the modal
+    rerender(
+      <SafeModeWarningModal
+        isOpen={false}
+        onClose={onClose}
+        onConfirm={onConfirm}
+      />,
+    );
+
+    // Escape key should not trigger onClose after modal is closed
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("should clean up event listener when unmounted", () => {
+    const onClose = vi.fn();
+    const onConfirm = vi.fn();
+
+    const { unmount } = render(
+      <SafeModeWarningModal
+        isOpen={true}
+        onClose={onClose}
+        onConfirm={onConfirm}
+      />,
+    );
+
+    // Unmount the component
+    unmount();
+
+    // Escape key should not trigger onClose after unmount
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(onClose).not.toHaveBeenCalled();
+  });
 });

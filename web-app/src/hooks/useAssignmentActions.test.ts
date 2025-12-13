@@ -284,6 +284,22 @@ describe("useAssignmentActions", () => {
       alertSpy.mockRestore();
     });
 
+    it("should block validate game when safe mode is enabled", () => {
+      const { result } = renderHook(() => useAssignmentActions());
+      const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+
+      act(() => {
+        result.current.validateGameModal.open(mockAssignment);
+      });
+
+      expect(result.current.validateGameModal.isOpen).toBe(false);
+      expect(alertSpy).toHaveBeenCalledWith(
+        "This operation is blocked in safe mode. Disable safe mode in Settings to proceed.",
+      );
+
+      alertSpy.mockRestore();
+    });
+
     it("should not block operations in demo mode even with safe mode enabled", () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
         selector({ isDemoMode: true } as ReturnType<
