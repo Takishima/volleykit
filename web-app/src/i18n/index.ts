@@ -33,6 +33,7 @@ interface Translations {
     location: string;
     position: string;
     requiredLevel: string;
+    demoModeBanner: string;
   };
   auth: {
     login: string;
@@ -155,6 +156,7 @@ const en: Translations = {
     location: "Location",
     position: "Position",
     requiredLevel: "Required Level",
+    demoModeBanner: "Demo Mode - Viewing sample data",
   },
   auth: {
     login: "Login",
@@ -281,6 +283,7 @@ const de: Translations = {
     location: "Ort",
     position: "Position",
     requiredLevel: "Erforderliches Niveau",
+    demoModeBanner: "Demo-Modus - Beispieldaten werden angezeigt",
   },
   auth: {
     login: "Anmelden",
@@ -407,6 +410,7 @@ const fr: Translations = {
     location: "Lieu",
     position: "Position",
     requiredLevel: "Niveau requis",
+    demoModeBanner: "Mode Démo - Données d'exemple",
   },
   auth: {
     login: "Connexion",
@@ -533,6 +537,7 @@ const it: Translations = {
     location: "Luogo",
     position: "Posizione",
     requiredLevel: "Livello richiesto",
+    demoModeBanner: "Modalità Demo - Dati di esempio",
   },
   auth: {
     login: "Accesso",
