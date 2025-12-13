@@ -1,4 +1,10 @@
-import { useState, useRef, useEffect, useCallback, type FormEvent } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  type FormEvent,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
@@ -52,15 +58,21 @@ export function LoginPage() {
   if (DEMO_MODE_ONLY) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
-        <div className="text-center">
-          <span className="text-6xl">🏐</span>
+        <div className="text-center" role="status" aria-live="polite">
+          <span className="text-6xl" aria-hidden="true">
+            🏐
+          </span>
           <h1 className="mt-4 text-3xl font-bold text-gray-900 dark:text-white">
             VolleyKit
           </h1>
           <p className="mt-4 text-gray-500 dark:text-gray-400">
             {t("auth.loadingDemo")}
           </p>
-          <LoadingSpinner className="mt-4" />
+          {/* Use visual-only spinner since parent has role="status" */}
+          <div
+            className="w-8 h-8 border-3 border-gray-200 border-t-orange-500 rounded-full animate-spin mt-4 mx-auto"
+            aria-hidden="true"
+          />
         </div>
       </div>
     );

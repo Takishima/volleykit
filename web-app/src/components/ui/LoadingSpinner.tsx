@@ -37,7 +37,15 @@ export function LoadingState({ message = "Loading..." }: LoadingStateProps) {
       className="flex flex-col items-center justify-center py-12 gap-4"
       aria-live="polite"
     >
-      <LoadingSpinner size="lg" />
+      {/* Use visual-only spinner here since parent has role="status" */}
+      <div
+        className={`
+          ${sizeClasses.lg}
+          border-gray-200 border-t-orange-500
+          rounded-full animate-spin
+        `}
+        aria-hidden="true"
+      />
       <p className="text-gray-500 dark:text-gray-400 text-sm">{message}</p>
     </div>
   );
