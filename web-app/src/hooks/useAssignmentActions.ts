@@ -5,6 +5,8 @@ import { logger } from "@/utils/logger";
 import { getTeamNames, MODAL_CLEANUP_DELAY } from "@/utils/assignment-helpers";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
+import { useSettingsStore } from "@/stores/settings";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface UseAssignmentActionsResult {
   editCompensationModal: {
@@ -24,7 +26,11 @@ interface UseAssignmentActionsResult {
 }
 
 export function useAssignmentActions(): UseAssignmentActionsResult {
+  const { t } = useTranslation();
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const isSafeModeEnabled = useSettingsStore(
+    (state) => state.isSafeModeEnabled,
+  );
   const addAssignmentToExchange = useDemoStore(
     (state) => state.addAssignmentToExchange,
   );
@@ -67,10 +73,22 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
     );
   }, []);
 
-  const openValidateGame = useCallback((assignment: Assignment) => {
-    setValidateGameAssignment(assignment);
-    setValidateGameOpen(true);
-  }, []);
+  const openValidateGame = useCallback(
+    (assignment: Assignment) => {
+      // Safe mode only applies to real API calls; demo mode is local-only and poses no risk
+      if (!isDemoMode && isSafeModeEnabled) {
+        logger.debug(
+          "[useAssignmentActions] Safe mode: game validation blocked",
+        );
+        alert(t("settings.safeModeBlocked"));
+        return;
+      }
+
+      setValidateGameAssignment(assignment);
+      setValidateGameOpen(true);
+    },
+    [isDemoMode, isSafeModeEnabled, t],
+  );
 
   const closeValidateGame = useCallback(() => {
     setValidateGameOpen(false);
@@ -122,6 +140,15 @@ This is a mock PDF report.`;
     (assignment: Assignment) => {
       const { homeTeam, awayTeam } = getTeamNames(assignment);
 
+      // Safe mode only applies to real API calls; demo mode is local-only and poses no risk
+      if (!isDemoMode && isSafeModeEnabled) {
+        logger.debug(
+          "[useAssignmentActions] Safe mode: adding to exchange blocked",
+        );
+        alert(t("settings.safeModeBlocked"));
+        return;
+      }
+
       if (isDemoMode) {
         addAssignmentToExchange(assignment.__identity);
         logger.debug(
@@ -145,7 +172,7 @@ This is a mock PDF report.`;
         `Assignment "${homeTeam} vs ${awayTeam}" added to exchange list (mocked)`,
       );
     },
-    [isDemoMode, addAssignmentToExchange],
+    [isDemoMode, isSafeModeEnabled, addAssignmentToExchange, t],
   );
 
   return {

@@ -8,6 +8,8 @@ import { logger } from "@/utils/logger";
 import { MODAL_CLEANUP_DELAY } from "@/utils/assignment-helpers";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
+import { useSettingsStore } from "@/stores/settings";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface UseExchangeActionsResult {
   takeOverModal: {
@@ -27,7 +29,11 @@ interface UseExchangeActionsResult {
 }
 
 export function useExchangeActions(): UseExchangeActionsResult {
+  const { t } = useTranslation();
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const isSafeModeEnabled = useSettingsStore(
+    (state) => state.isSafeModeEnabled,
+  );
   const demoApplyForExchange = useDemoStore((state) => state.applyForExchange);
   const demoWithdrawFromExchange = useDemoStore(
     (state) => state.withdrawFromExchange,
@@ -98,6 +104,15 @@ export function useExchangeActions(): UseExchangeActionsResult {
 
   const handleTakeOver = useCallback(
     async (exchange: GameExchange) => {
+      // Safe mode only applies to real API calls; demo mode is local-only and poses no risk
+      if (!isDemoMode && isSafeModeEnabled) {
+        logger.debug(
+          "[useExchangeActions] Safe mode: taking exchange blocked",
+        );
+        alert(t("settings.safeModeBlocked"));
+        return;
+      }
+
       if (isDemoMode) {
         logger.debug(
           "[useExchangeActions] Demo mode: applying for exchange locally:",
@@ -134,11 +149,27 @@ export function useExchangeActions(): UseExchangeActionsResult {
         isTakingOverRef.current = false;
       }
     },
-    [isDemoMode, demoApplyForExchange, applyMutation, closeTakeOver],
+    [
+      isDemoMode,
+      isSafeModeEnabled,
+      demoApplyForExchange,
+      applyMutation,
+      closeTakeOver,
+      t,
+    ],
   );
 
   const handleRemoveFromExchange = useCallback(
     async (exchange: GameExchange) => {
+      // Safe mode only applies to real API calls; demo mode is local-only and poses no risk
+      if (!isDemoMode && isSafeModeEnabled) {
+        logger.debug(
+          "[useExchangeActions] Safe mode: withdrawing from exchange blocked",
+        );
+        alert(t("settings.safeModeBlocked"));
+        return;
+      }
+
       if (isDemoMode) {
         logger.debug(
           "[useExchangeActions] Demo mode: withdrawing from exchange locally:",
@@ -177,9 +208,11 @@ export function useExchangeActions(): UseExchangeActionsResult {
     },
     [
       isDemoMode,
+      isSafeModeEnabled,
       demoWithdrawFromExchange,
       withdrawMutation,
       closeRemoveFromExchange,
+      t,
     ],
   );
 
