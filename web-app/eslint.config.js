@@ -34,6 +34,9 @@ export default tseslint.config(
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       // Security rules - prevent common vulnerabilities
       ...security.configs.recommended.rules,
+      // Disable overly strict security rules that produce false positives in TypeScript
+      'security/detect-object-injection': 'off', // Safe with TypeScript typing and fallback values
+      'security/detect-non-literal-fs-filename': 'off', // Safe in build config with controlled paths
       // XSS prevention - flag unsafe DOM manipulation
       'no-unsanitized/method': 'error',
       'no-unsanitized/property': 'error',

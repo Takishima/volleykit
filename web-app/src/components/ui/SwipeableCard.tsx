@@ -512,7 +512,6 @@ export function SwipeableCard({
         </div>
       )}
 
-      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- Swipe gestures are supplementary; keyboard access is provided via parent's onKeyDown */}
       <div
         onTouchStart={hasAnyAction ? handleTouchStart : undefined}
         onTouchMove={hasAnyAction ? handleTouchMove : undefined}
@@ -522,6 +521,8 @@ export function SwipeableCard({
         onMouseUp={hasAnyAction ? handleMouseUp : undefined}
         onMouseLeave={hasAnyAction ? handleMouseUp : undefined}
         onClickCapture={hasAnyAction ? handleClickCapture : undefined}
+        role={hasAnyAction ? "button" : undefined}
+        tabIndex={hasAnyAction ? 0 : undefined}
         style={{
           transform: `translateX(${translateX}px)`,
           transition: isDragging
@@ -536,16 +537,18 @@ export function SwipeableCard({
       </div>
 
       {showActions && hasAnyAction && (
-        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Dialog backdrop dismisses on click/key, interactive buttons inside handle actions
+        // Dialog backdrop that dismisses on click/key - contains interactive action buttons
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
         <div
+          role="dialog"
+          aria-label="Card actions"
+          aria-modal="true"
           className="absolute inset-0 z-20 bg-black/50 rounded-xl flex items-center justify-center gap-2 p-4"
           onClick={() => setShowActions(false)}
           onKeyDown={(e) => {
             if (e.key === "Escape" || e.key === "Enter") setShowActions(false);
           }}
-          role="dialog"
-          aria-label="Card actions"
-          aria-modal="true"
+          tabIndex={-1}
         >
           {rightActions?.[0] && (
             <button
@@ -564,7 +567,7 @@ export function SwipeableCard({
                 e.stopPropagation();
                 handleLeftAction();
               }}
-              className={`${leftActions[0].color} text-white px-4 py-2 rounded-lg font-medium text-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-white`}
+              className={`${leftActions[0].color} text-white px-4 py-2 rounded-lg font-medium text-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-white ml-2`}
             >
               {leftActions[0].label}
             </button>

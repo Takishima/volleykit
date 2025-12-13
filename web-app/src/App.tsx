@@ -19,89 +19,13 @@ import { AssignmentsPage } from "@/pages/AssignmentsPage";
 import { CompensationsPage } from "@/pages/CompensationsPage";
 import { ExchangePage } from "@/pages/ExchangePage";
 import { SettingsPage } from "@/pages/SettingsPage";
-
-/**
- * Classify error type for better logging and handling.
- * Exported for testing.
- */
-// eslint-disable-next-line react-refresh/only-export-components
-export function classifyQueryError(
-  message: string,
-): "network" | "auth" | "validation" | "rate_limit" | "unknown" {
-  const lowerMessage = message.toLowerCase();
-  if (
-    lowerMessage.includes("network") ||
-    lowerMessage.includes("failed to fetch") ||
-    lowerMessage.includes("timeout") ||
-    lowerMessage.includes("connection")
-  ) {
-    return "network";
-  }
-  if (
-    lowerMessage.includes("401") ||
-    lowerMessage.includes("403") ||
-    lowerMessage.includes("406") ||
-    lowerMessage.includes("unauthorized") ||
-    lowerMessage.includes("session expired")
-  ) {
-    return "auth";
-  }
-  if (
-    lowerMessage.includes("429") ||
-    lowerMessage.includes("too many requests")
-  ) {
-    return "rate_limit";
-  }
-  if (lowerMessage.includes("validation") || lowerMessage.includes("invalid")) {
-    return "validation";
-  }
-  return "unknown";
-}
-
-/**
- * Determine if an error should trigger a retry.
- * Network and rate limit errors are retryable; auth and validation errors are not.
- */
-// eslint-disable-next-line react-refresh/only-export-components
-export function isRetryableError(error: unknown): boolean {
-  if (!(error instanceof Error)) return false;
-  const errorType = classifyQueryError(error.message);
-  return errorType === "network" || errorType === "rate_limit";
-}
-
-// Retry configuration constants
-const MAX_RETRY_DELAY_MS = 30000;
-const BASE_RETRY_DELAY_MS = 1000;
-const JITTER_FACTOR = 0.25;
-const MAX_QUERY_RETRIES = 3;
-
-/**
- * Calculate retry delay with exponential backoff and jitter.
- *
- * @param attemptIndex - Zero-based retry attempt (0 = first retry)
- * @param _error - Error that triggered the retry (unused, required by TanStack Query)
- * @returns Delay in milliseconds before next retry
- */
-// eslint-disable-next-line react-refresh/only-export-components
-export function calculateRetryDelay(
-  attemptIndex: number,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _error?: unknown,
-): number {
-  const exponentialDelay = BASE_RETRY_DELAY_MS * Math.pow(2, attemptIndex);
-  const jitter = exponentialDelay * Math.random() * JITTER_FACTOR;
-  return Math.min(exponentialDelay + jitter, MAX_RETRY_DELAY_MS);
-}
-
-/**
- * Check if an error is an authentication error that requires redirect to login.
- * Exported for testing.
- */
-// eslint-disable-next-line react-refresh/only-export-components
-export function isAuthError(error: unknown): boolean {
-  if (!(error instanceof Error)) return false;
-  return classifyQueryError(error.message) === "auth";
-}
+import {
+  classifyQueryError,
+  isRetryableError,
+  calculateRetryDelay,
+  isAuthError,
+  MAX_QUERY_RETRIES,
+} from "@/utils/query-error-utils";
 
 /**
  * Global error handler for React Query mutations.

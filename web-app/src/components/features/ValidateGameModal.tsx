@@ -41,11 +41,27 @@ export function ValidateGameModal({
     },
   ];
 
-  // Reset to first tab when modal opens for consistent UX
-  useEffect(() => {
-    if (!isOpen) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+  const handleClose = useCallback(() => {
     setActiveTab("home-roster");
+    onClose();
+  }, [onClose]);
+
+  const handleBackdropClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (e.target === e.currentTarget) {
+        handleClose();
+      }
+    },
+    [handleClose],
+  );
+
+  // Reset tab when modal is closed to ensure consistent UX on reopen
+  // This is intentional state synchronization with the isOpen prop
+  useEffect(() => {
+    if (!isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setActiveTab("home-roster");
+    }
   }, [isOpen]);
 
   // Handle Escape key to close modal
@@ -54,22 +70,13 @@ export function ValidateGameModal({
 
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onClose();
+        handleClose();
       }
     };
 
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [isOpen, onClose]);
-
-  const handleBackdropClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (e.target === e.currentTarget) {
-        onClose();
-      }
-    },
-    [onClose],
-  );
+  }, [isOpen, handleClose]);
 
   const handleTabChange = useCallback((tabId: string) => {
     setActiveTab(tabId as ValidationTabId);
@@ -120,17 +127,17 @@ export function ValidateGameModal({
         </TabPanel>
 
         <TabPanel tabId="scorer" activeTab={activeTab}>
-          <ScorerPanel assignment={assignment} />
+          <ScorerPanel />
         </TabPanel>
 
         <TabPanel tabId="scoresheet" activeTab={activeTab}>
-          <ScoresheetPanel assignment={assignment} />
+          <ScoresheetPanel />
         </TabPanel>
 
         <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700 mt-4">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
           >
             {t("common.close")}
