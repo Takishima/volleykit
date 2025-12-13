@@ -104,11 +104,19 @@ export function CompensationsPage() {
         </div>
       </div>
 
-      {/* Filter tabs */}
-      <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
+      {/* Filter tabs - WAI-ARIA tab pattern */}
+      <div
+        role="tablist"
+        aria-label={t("compensations.title")}
+        className="flex gap-2 border-b border-gray-200 dark:border-gray-700"
+      >
         {(["all", "unpaid", "paid"] as FilterType[]).map((f) => (
           <button
             key={f}
+            role="tab"
+            aria-selected={filter === f}
+            aria-controls={`${f}-tabpanel`}
+            id={`${f}-tab`}
             onClick={() => setFilter(f)}
             className={`
               px-4 py-2 text-sm font-medium border-b-2 transition-colors
@@ -129,7 +137,12 @@ export function CompensationsPage() {
       </div>
 
       {/* Content */}
-      <div className="space-y-3">
+      <div
+        role="tabpanel"
+        id={`${filter}-tabpanel`}
+        aria-labelledby={`${filter}-tab`}
+        className="space-y-3"
+      >
         {isLoading && <LoadingState message="Loading compensations..." />}
 
         {error && (
