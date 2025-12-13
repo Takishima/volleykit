@@ -24,7 +24,20 @@ export function SettingsPage() {
 
   const formatLastChecked = useCallback(
     (date: Date) => {
-      return date.toLocaleTimeString(locale, {
+      const now = new Date();
+      const isToday = date.toDateString() === now.toDateString();
+
+      if (isToday) {
+        return date.toLocaleTimeString(locale, {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+
+      // Include date for non-today timestamps to avoid confusion
+      return date.toLocaleString(locale, {
+        month: "short",
+        day: "numeric",
         hour: "2-digit",
         minute: "2-digit",
       });
@@ -231,7 +244,7 @@ export function SettingsPage() {
               </div>
               {needRefresh ? (
                 <button
-                  onClick={() => updateApp()}
+                  onClick={updateApp}
                   className="rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none"
                   aria-label={t("settings.updateNow")}
                 >
@@ -241,6 +254,7 @@ export function SettingsPage() {
                 <button
                   onClick={checkForUpdate}
                   disabled={isChecking}
+                  aria-busy={isChecking}
                   className="rounded-md bg-gray-100 dark:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label={t("settings.checkForUpdates")}
                 >

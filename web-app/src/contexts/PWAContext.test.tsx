@@ -298,6 +298,33 @@ describe("PWAContext", () => {
   });
 
   describe("checkForUpdate", () => {
+    it("does nothing when called before SW registration completes", async () => {
+      // Mock that never calls onRegisteredSW (simulating slow registration)
+      const mockRegisterSW = vi.fn().mockReturnValue(vi.fn());
+      const { registerSW } = await import("virtual:pwa-register");
+      vi.mocked(registerSW).mockImplementation(mockRegisterSW);
+
+      render(
+        <PWAProvider>
+          <TestConsumer />
+        </PWAProvider>,
+      );
+
+      await waitFor(() => {
+        expect(mockRegisterSW).toHaveBeenCalled();
+      });
+
+      // Try to check for update before registration completes
+      // This should be a no-op since registrationRef is still null
+      await act(async () => {
+        screen.getByTestId("checkForUpdate").click();
+      });
+
+      // Verify isChecking never went true (no update attempt was made)
+      expect(screen.getByTestId("isChecking")).toHaveTextContent("false");
+      expect(screen.getByTestId("lastChecked")).toHaveTextContent("null");
+    });
+
     it("calls registration.update() when triggered", async () => {
       const mockRegistration = {
         update: vi.fn().mockResolvedValue(undefined),

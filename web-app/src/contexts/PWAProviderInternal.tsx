@@ -8,7 +8,7 @@ import type { PWAContextType } from "./PWAContext";
  * Balances freshness with avoiding excessive network requests.
  * The service worker will also check for updates on page load.
  */
-const UPDATE_CHECK_INTERVAL_MS = 3_600_000;
+const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000; // 1 hour in milliseconds
 
 interface PWAProviderInternalProps {
   children: ReactNode;
