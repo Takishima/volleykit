@@ -20,6 +20,9 @@ import type {
   AssociationSettings,
   Season,
   PossibleNominationsResponse,
+  PersonSearchFilter,
+  PersonSearchResponse,
+  PersonSearchResult,
 } from "./client";
 import { useDemoStore } from "@/stores/demo";
 
@@ -323,6 +326,44 @@ export const mockApi = {
     return {
       items: store.possiblePlayers,
       totalItemsCount: store.possiblePlayers.length,
+    };
+  },
+
+  async searchPersons(
+    filters: PersonSearchFilter,
+    options?: { offset?: number; limit?: number },
+  ): Promise<PersonSearchResponse> {
+    await delay(MOCK_NETWORK_DELAY_MS);
+
+    const store = useDemoStore.getState();
+    const { firstName, lastName, yearOfBirth } = filters;
+
+    const filtered = store.scorers.filter((scorer: PersonSearchResult) => {
+      const scorerFirstName = scorer.firstName?.toLowerCase() ?? "";
+      const scorerLastName = scorer.lastName?.toLowerCase() ?? "";
+      const scorerYear = scorer.birthday
+        ? new Date(scorer.birthday).getFullYear().toString()
+        : "";
+
+      if (firstName && !scorerFirstName.includes(firstName.toLowerCase())) {
+        return false;
+      }
+      if (lastName && !scorerLastName.includes(lastName.toLowerCase())) {
+        return false;
+      }
+      if (yearOfBirth && !scorerYear.includes(yearOfBirth)) {
+        return false;
+      }
+      return true;
+    });
+
+    const offset = options?.offset ?? 0;
+    const limit = options?.limit ?? 50;
+    const paginated = filtered.slice(offset, offset + limit);
+
+    return {
+      items: paginated,
+      totalItemsCount: filtered.length,
     };
   },
 };

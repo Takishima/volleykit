@@ -7,6 +7,23 @@ import * as useNominationListModule from "@/hooks/useNominationList";
 
 vi.mock("@/hooks/useNominationList");
 
+vi.mock("@/hooks/useScorerSearch", () => ({
+  useScorerSearch: vi.fn(() => ({
+    data: undefined,
+    isLoading: false,
+    isError: false,
+    error: null,
+  })),
+  parseSearchInput: vi.fn((input: string) => {
+    if (!input.trim()) return {};
+    return { lastName: input };
+  }),
+}));
+
+vi.mock("@/stores/auth", () => ({
+  useAuthStore: vi.fn((selector) => selector({ isDemoMode: false })),
+}));
+
 function createMockAssignment(
   overrides: Partial<Assignment> = {},
 ): Assignment {
@@ -192,8 +209,12 @@ describe("ValidateGameModal", () => {
         screen.getByRole("tab", { name: /Scorer/i, hidden: true }),
       );
 
+      // ScorerPanel now shows search input and no-selection message
       expect(
-        screen.getByText("Scorer identification will be available here."),
+        screen.getByPlaceholderText("Search scorer by name..."),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/No scorer selected/),
       ).toBeInTheDocument();
     });
 
