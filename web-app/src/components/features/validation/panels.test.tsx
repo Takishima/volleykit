@@ -10,9 +10,7 @@ import * as useNominationListModule from "@/hooks/useNominationList";
 
 vi.mock("@/hooks/useNominationList");
 
-function createMockAssignment(
-  overrides: Partial<Assignment> = {},
-): Assignment {
+function createMockAssignment(overrides: Partial<Assignment> = {}): Assignment {
   return {
     __identity: "assignment-1",
     refereePosition: "head-one",
@@ -161,9 +159,7 @@ describe("ScorerPanel", () => {
     expect(
       screen.getByPlaceholderText("Search scorer by name..."),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(/No scorer selected/),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/No scorer selected/)).toBeInTheDocument();
   });
 });
 
@@ -174,8 +170,8 @@ describe("ScoresheetPanel", () => {
 
   beforeEach(() => {
     vi.useFakeTimers();
-    global.URL.createObjectURL = mockCreateObjectURL;
-    global.URL.revokeObjectURL = mockRevokeObjectURL;
+    globalThis.URL.createObjectURL = mockCreateObjectURL;
+    globalThis.URL.revokeObjectURL = mockRevokeObjectURL;
   });
 
   afterEach(() => {
