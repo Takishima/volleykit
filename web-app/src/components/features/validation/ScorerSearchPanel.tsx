@@ -25,6 +25,9 @@ const FOCUS_DELAY_MS = 100;
 /** Unique ID for the scorer search listbox element, used for ARIA relationships. */
 const SCORER_LISTBOX_ID = "scorer-search-listbox";
 
+/** Unique ID for the search hint text, used for aria-describedby relationship. */
+const SCORER_SEARCH_HINT_ID = "scorer-search-hint";
+
 interface ScorerSearchPanelProps {
   selectedScorer?: ValidatedPersonSearchResult | null;
   onScorerSelect: (scorer: ValidatedPersonSearchResult | null) => void;
@@ -158,6 +161,7 @@ export function ScorerSearchPanel({
                   : undefined
               }
               aria-autocomplete="list"
+              aria-describedby={SCORER_SEARCH_HINT_ID}
               className="
                 w-full px-4 py-2 rounded-lg
                 bg-gray-100 dark:bg-gray-700
@@ -168,7 +172,10 @@ export function ScorerSearchPanel({
                 outline-none transition-colors
               "
             />
-            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            <p
+              id={SCORER_SEARCH_HINT_ID}
+              className="mt-2 text-xs text-gray-500 dark:text-gray-400"
+            >
               {t("validation.scorerSearch.searchHint")}
             </p>
           </div>
