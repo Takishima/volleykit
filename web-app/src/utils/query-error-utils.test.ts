@@ -4,12 +4,8 @@ import {
   isAuthError,
   isRetryableError,
   calculateRetryDelay,
-  MAX_QUERY_RETRIES,
+  RETRY_CONFIG,
 } from "./query-error-utils";
-
-const BASE_DELAY_MS = 1000;
-const MAX_DELAY_MS = 30000;
-const JITTER_FACTOR = 0.25;
 
 describe("query-error-utils", () => {
   describe("classifyQueryError", () => {
@@ -51,6 +47,11 @@ describe("query-error-utils", () => {
 
     it("should prioritize network errors over validation", () => {
       expect(classifyQueryError("Network timeout with invalid data")).toBe("network");
+    });
+
+    it("should handle edge cases", () => {
+      expect(classifyQueryError("")).toBe("unknown");
+      expect(classifyQueryError(" ")).toBe("unknown");
     });
   });
 
@@ -107,19 +108,25 @@ describe("query-error-utils", () => {
   });
 
   describe("calculateRetryDelay", () => {
-    it("should calculate exponential backoff", () => {
+    it("should use RETRY_CONFIG values for calculation", () => {
       const firstRetry = calculateRetryDelay(0);
       const secondRetry = calculateRetryDelay(1);
       const thirdRetry = calculateRetryDelay(2);
 
-      expect(firstRetry).toBeGreaterThanOrEqual(BASE_DELAY_MS);
-      expect(firstRetry).toBeLessThanOrEqual(BASE_DELAY_MS * (1 + JITTER_FACTOR));
+      expect(firstRetry).toBeGreaterThanOrEqual(RETRY_CONFIG.BASE_RETRY_DELAY_MS);
+      expect(firstRetry).toBeLessThanOrEqual(
+        RETRY_CONFIG.BASE_RETRY_DELAY_MS * (1 + RETRY_CONFIG.JITTER_FACTOR),
+      );
 
-      expect(secondRetry).toBeGreaterThanOrEqual(BASE_DELAY_MS * 2);
-      expect(secondRetry).toBeLessThanOrEqual(BASE_DELAY_MS * 2 * (1 + JITTER_FACTOR));
+      expect(secondRetry).toBeGreaterThanOrEqual(RETRY_CONFIG.BASE_RETRY_DELAY_MS * 2);
+      expect(secondRetry).toBeLessThanOrEqual(
+        RETRY_CONFIG.BASE_RETRY_DELAY_MS * 2 * (1 + RETRY_CONFIG.JITTER_FACTOR),
+      );
 
-      expect(thirdRetry).toBeGreaterThanOrEqual(BASE_DELAY_MS * 4);
-      expect(thirdRetry).toBeLessThanOrEqual(BASE_DELAY_MS * 4 * (1 + JITTER_FACTOR));
+      expect(thirdRetry).toBeGreaterThanOrEqual(RETRY_CONFIG.BASE_RETRY_DELAY_MS * 4);
+      expect(thirdRetry).toBeLessThanOrEqual(
+        RETRY_CONFIG.BASE_RETRY_DELAY_MS * 4 * (1 + RETRY_CONFIG.JITTER_FACTOR),
+      );
     });
 
     it("should include jitter to prevent thundering herd", () => {
@@ -128,10 +135,10 @@ describe("query-error-utils", () => {
       expect(uniqueDelays.size).toBeGreaterThan(1);
     });
 
-    it("should respect max delay cap", () => {
+    it("should respect MAX_RETRY_DELAY_MS cap", () => {
       const highAttempt = 10;
       const delay = calculateRetryDelay(highAttempt);
-      expect(delay).toBeLessThanOrEqual(MAX_DELAY_MS);
+      expect(delay).toBeLessThanOrEqual(RETRY_CONFIG.MAX_RETRY_DELAY_MS);
     });
 
     it("should accept optional error parameter for TanStack Query compatibility", () => {
@@ -139,8 +146,8 @@ describe("query-error-utils", () => {
       const delayWithError = calculateRetryDelay(0, error);
       const delayWithoutError = calculateRetryDelay(0);
 
-      expect(delayWithError).toBeGreaterThanOrEqual(BASE_DELAY_MS);
-      expect(delayWithoutError).toBeGreaterThanOrEqual(BASE_DELAY_MS);
+      expect(delayWithError).toBeGreaterThanOrEqual(RETRY_CONFIG.BASE_RETRY_DELAY_MS);
+      expect(delayWithoutError).toBeGreaterThanOrEqual(RETRY_CONFIG.BASE_RETRY_DELAY_MS);
     });
 
     it("should use real randomness for jitter", () => {
@@ -148,19 +155,40 @@ describe("query-error-utils", () => {
       const min = Math.min(...delays);
       const max = Math.max(...delays);
 
-      expect(min).toBeGreaterThanOrEqual(BASE_DELAY_MS);
-      expect(max).toBeLessThanOrEqual(BASE_DELAY_MS * (1 + JITTER_FACTOR));
+      expect(min).toBeGreaterThanOrEqual(RETRY_CONFIG.BASE_RETRY_DELAY_MS);
+      expect(max).toBeLessThanOrEqual(
+        RETRY_CONFIG.BASE_RETRY_DELAY_MS * (1 + RETRY_CONFIG.JITTER_FACTOR),
+      );
       expect(max - min).toBeGreaterThan(0);
+    });
+
+    it("should handle edge case of attempt 0", () => {
+      const delay = calculateRetryDelay(0);
+      expect(delay).toBeGreaterThanOrEqual(RETRY_CONFIG.BASE_RETRY_DELAY_MS);
+      expect(delay).toBeLessThanOrEqual(
+        RETRY_CONFIG.BASE_RETRY_DELAY_MS * (1 + RETRY_CONFIG.JITTER_FACTOR),
+      );
+    });
+
+    it("should cap extremely high attempt numbers", () => {
+      const delay = calculateRetryDelay(100);
+      expect(delay).toBeLessThanOrEqual(RETRY_CONFIG.MAX_RETRY_DELAY_MS);
     });
   });
 
-  describe("MAX_QUERY_RETRIES", () => {
-    it("should be defined as 3", () => {
-      expect(MAX_QUERY_RETRIES).toBe(3);
+  describe("RETRY_CONFIG", () => {
+    it("should have all required configuration values", () => {
+      expect(RETRY_CONFIG.MAX_RETRY_DELAY_MS).toBe(30000);
+      expect(RETRY_CONFIG.BASE_RETRY_DELAY_MS).toBe(1000);
+      expect(RETRY_CONFIG.JITTER_FACTOR).toBe(0.25);
+      expect(RETRY_CONFIG.MAX_QUERY_RETRIES).toBe(3);
     });
 
-    it("should be a number constant", () => {
-      expect(typeof MAX_QUERY_RETRIES).toBe("number");
+    it("should be a const object with correct types", () => {
+      expect(typeof RETRY_CONFIG.MAX_RETRY_DELAY_MS).toBe("number");
+      expect(typeof RETRY_CONFIG.BASE_RETRY_DELAY_MS).toBe("number");
+      expect(typeof RETRY_CONFIG.JITTER_FACTOR).toBe("number");
+      expect(typeof RETRY_CONFIG.MAX_QUERY_RETRIES).toBe("number");
     });
   });
 });
