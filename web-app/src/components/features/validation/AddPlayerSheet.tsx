@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import type { PossibleNomination } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
@@ -57,6 +57,11 @@ export function AddPlayerSheet({
     });
   }, [players, debouncedQuery, excludePlayerIds]);
 
+  const handleClose = useCallback(() => {
+    setSearchQuery("");
+    onClose();
+  }, [onClose]);
+
   // Focus search input when opened
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
@@ -68,7 +73,7 @@ export function AddPlayerSheet({
   }, [isOpen]);
 
   return (
-    <ResponsiveSheet isOpen={isOpen} onClose={onClose} titleId="add-player-title">
+    <ResponsiveSheet isOpen={isOpen} onClose={handleClose} titleId="add-player-title">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
           <h2
@@ -78,7 +83,7 @@ export function AddPlayerSheet({
             {t("validation.addPlayer")}
           </h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             aria-label={t("common.close")}
             className="
               p-2 -mr-2 rounded-lg
