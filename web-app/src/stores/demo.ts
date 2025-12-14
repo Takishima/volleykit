@@ -104,6 +104,40 @@ function getWeekday(date: Date): Weekday {
   return days[date.getDay()]!;
 }
 
+function toDateString(date: Date): string {
+  return date.toISOString().split("T")[0]!;
+}
+
+interface AddressParams {
+  id: string;
+  street?: string;
+  houseNumber?: string;
+  postalCode: string;
+  city: string;
+}
+
+function createAddress({
+  id,
+  street,
+  houseNumber,
+  postalCode,
+  city,
+}: AddressParams) {
+  const combinedAddress =
+    street && houseNumber
+      ? `${street} ${houseNumber}, ${postalCode} ${city}`
+      : `${postalCode} ${city}`;
+
+  return {
+    __identity: id,
+    ...(street && { street }),
+    ...(houseNumber && { houseNumber }),
+    postalCode,
+    city,
+    combinedAddress,
+  };
+}
+
 function generateDummyData() {
   const now = new Date();
 
@@ -140,14 +174,13 @@ function generateDummyData() {
           hall: {
             __identity: "hall-1",
             name: "Saalsporthalle Zürich",
-            primaryPostalAddress: {
-              __identity: "addr-1",
+            primaryPostalAddress: createAddress({
+              id: "addr-1",
               street: "Hardturmstrasse",
               houseNumber: "154",
               postalCode: "8005",
               city: "Zürich",
-              combinedAddress: "Hardturmstrasse 154, 8005 Zürich",
-            },
+            }),
           },
           group: {
             name: "Quali",
@@ -194,14 +227,13 @@ function generateDummyData() {
           hall: {
             __identity: "hall-2",
             name: "Aarehalle Schönenwerd",
-            primaryPostalAddress: {
-              __identity: "addr-2",
+            primaryPostalAddress: createAddress({
+              id: "addr-2",
               street: "Aarauerstrasse",
               houseNumber: "50",
               postalCode: "5012",
               city: "Schönenwerd",
-              combinedAddress: "Aarauerstrasse 50, 5012 Schönenwerd",
-            },
+            }),
           },
           group: {
             name: "Quali",
@@ -249,14 +281,13 @@ function generateDummyData() {
           hall: {
             __identity: "hall-3",
             name: "Lintharena Näfels",
-            primaryPostalAddress: {
-              __identity: "addr-3",
+            primaryPostalAddress: createAddress({
+              id: "addr-3",
               street: "Sportplatzstrasse",
               houseNumber: "1",
               postalCode: "8752",
               city: "Näfels",
-              combinedAddress: "Sportplatzstrasse 1, 8752 Näfels",
-            },
+            }),
           },
           group: {
             name: "Quali",
@@ -303,14 +334,13 @@ function generateDummyData() {
           hall: {
             __identity: "hall-4",
             name: "Sporthalle Kuspo Therwil",
-            primaryPostalAddress: {
-              __identity: "addr-4",
+            primaryPostalAddress: createAddress({
+              id: "addr-4",
               street: "Im Letten",
               houseNumber: "2",
               postalCode: "4106",
               city: "Therwil",
-              combinedAddress: "Im Letten 2, 4106 Therwil",
-            },
+            }),
           },
           group: {
             name: "Quali",
@@ -357,14 +387,13 @@ function generateDummyData() {
           hall: {
             __identity: "hall-5",
             name: "Weissenstein Halle",
-            primaryPostalAddress: {
-              __identity: "addr-5",
+            primaryPostalAddress: createAddress({
+              id: "addr-5",
               street: "Weissensteinstrasse",
               houseNumber: "80",
               postalCode: "3008",
               city: "Bern",
-              combinedAddress: "Weissensteinstrasse 80, 3008 Bern",
-            },
+            }),
           },
           group: {
             name: "Quali",
@@ -410,19 +439,20 @@ function generateDummyData() {
           hall: {
             __identity: "hall-c1",
             name: "Saalsporthalle Zürich",
-            primaryPostalAddress: {
-              __identity: "addr-c1",
+            primaryPostalAddress: createAddress({
+              id: "addr-c1",
+              street: "Hardturmstrasse",
+              houseNumber: "154",
               postalCode: "8005",
               city: "Zürich",
-              combinedAddress: "Hardturmstrasse 154, 8005 Zürich",
-            },
+            }),
           },
         },
       },
       convocationCompensation: {
         __identity: "demo-cc-1",
         paymentDone: true,
-        paymentValueDate: subDays(now, 2).toISOString().split("T")[0],
+        paymentValueDate: toDateString(subDays(now, 2)),
         gameCompensation: 100,
         gameCompensationFormatted: "100.00",
         travelExpenses: 33.6,
@@ -467,12 +497,13 @@ function generateDummyData() {
           hall: {
             __identity: "hall-c2",
             name: "Aarehalle Schönenwerd",
-            primaryPostalAddress: {
-              __identity: "addr-c2",
+            primaryPostalAddress: createAddress({
+              id: "addr-c2",
+              street: "Aarauerstrasse",
+              houseNumber: "50",
               postalCode: "5012",
               city: "Schönenwerd",
-              combinedAddress: "Aarauerstrasse 50, 5012 Schönenwerd",
-            },
+            }),
           },
         },
       },
@@ -523,19 +554,20 @@ function generateDummyData() {
           hall: {
             __identity: "hall-c3",
             name: "Lintharena Näfels",
-            primaryPostalAddress: {
-              __identity: "addr-c3",
+            primaryPostalAddress: createAddress({
+              id: "addr-c3",
+              street: "Sportplatzstrasse",
+              houseNumber: "1",
               postalCode: "8752",
               city: "Näfels",
-              combinedAddress: "Sportplatzstrasse 1, 8752 Näfels",
-            },
+            }),
           },
         },
       },
       convocationCompensation: {
         __identity: "demo-cc-3",
         paymentDone: true,
-        paymentValueDate: subDays(now, 14).toISOString().split("T")[0],
+        paymentValueDate: toDateString(subDays(now, 14)),
         gameCompensation: 80,
         gameCompensationFormatted: "80.00",
         travelExpenses: 43.4,
@@ -580,12 +612,13 @@ function generateDummyData() {
           hall: {
             __identity: "hall-c4",
             name: "Sporthalle Kuspo Therwil",
-            primaryPostalAddress: {
-              __identity: "addr-c4",
+            primaryPostalAddress: createAddress({
+              id: "addr-c4",
+              street: "Im Letten",
+              houseNumber: "2",
               postalCode: "4106",
               city: "Therwil",
-              combinedAddress: "Im Letten 2, 4106 Therwil",
-            },
+            }),
           },
         },
       },
@@ -636,19 +669,20 @@ function generateDummyData() {
           hall: {
             __identity: "hall-c5",
             name: "Weissenstein Halle",
-            primaryPostalAddress: {
-              __identity: "addr-c5",
+            primaryPostalAddress: createAddress({
+              id: "addr-c5",
+              street: "Weissensteinstrasse",
+              houseNumber: "80",
               postalCode: "3008",
               city: "Bern",
-              combinedAddress: "Weissensteinstrasse 80, 3008 Bern",
-            },
+            }),
           },
         },
       },
       convocationCompensation: {
         __identity: "demo-cc-5",
         paymentDone: true,
-        paymentValueDate: subDays(now, 21).toISOString().split("T")[0],
+        paymentValueDate: toDateString(subDays(now, 21)),
         gameCompensation: 50,
         gameCompensationFormatted: "50.00",
         travelExpenses: 16.8,
@@ -707,12 +741,13 @@ function generateDummyData() {
           hall: {
             __identity: "hall-6",
             name: "Saalsporthalle Zürich",
-            primaryPostalAddress: {
-              __identity: "addr-e1",
+            primaryPostalAddress: createAddress({
+              id: "addr-e1",
+              street: "Hardturmstrasse",
+              houseNumber: "154",
               postalCode: "8005",
               city: "Zürich",
-              combinedAddress: "Hardturmstrasse 154, 8005 Zürich",
-            },
+            }),
           },
           group: {
             name: "Quali",
@@ -767,12 +802,13 @@ function generateDummyData() {
           hall: {
             __identity: "hall-7",
             name: "Aarehalle Schönenwerd",
-            primaryPostalAddress: {
-              __identity: "addr-e2",
+            primaryPostalAddress: createAddress({
+              id: "addr-e2",
+              street: "Aarauerstrasse",
+              houseNumber: "50",
               postalCode: "5012",
               city: "Schönenwerd",
-              combinedAddress: "Aarauerstrasse 50, 5012 Schönenwerd",
-            },
+            }),
           },
           group: {
             name: "Quali",
@@ -837,12 +873,13 @@ function generateDummyData() {
           hall: {
             __identity: "hall-8",
             name: "Lintharena Näfels",
-            primaryPostalAddress: {
-              __identity: "addr-e3",
+            primaryPostalAddress: createAddress({
+              id: "addr-e3",
+              street: "Sportplatzstrasse",
+              houseNumber: "1",
               postalCode: "8752",
               city: "Näfels",
-              combinedAddress: "Sportplatzstrasse 1, 8752 Näfels",
-            },
+            }),
           },
           group: {
             name: "Quali",
@@ -896,12 +933,13 @@ function generateDummyData() {
           hall: {
             __identity: "hall-9",
             name: "Sporthalle Kuspo Therwil",
-            primaryPostalAddress: {
-              __identity: "addr-e4",
+            primaryPostalAddress: createAddress({
+              id: "addr-e4",
+              street: "Im Letten",
+              houseNumber: "2",
               postalCode: "4106",
               city: "Therwil",
-              combinedAddress: "Im Letten 2, 4106 Therwil",
-            },
+            }),
           },
           group: {
             name: "Quali",
@@ -956,12 +994,13 @@ function generateDummyData() {
           hall: {
             __identity: "hall-10",
             name: "Weissenstein Halle",
-            primaryPostalAddress: {
-              __identity: "addr-e5",
+            primaryPostalAddress: createAddress({
+              id: "addr-e5",
+              street: "Weissensteinstrasse",
+              houseNumber: "80",
               postalCode: "3008",
               city: "Bern",
-              combinedAddress: "Weissensteinstrasse 80, 3008 Bern",
-            },
+            }),
           },
           group: {
             name: "Quali",
