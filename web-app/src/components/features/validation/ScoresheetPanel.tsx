@@ -73,8 +73,6 @@ export function ScoresheetPanel({ onScoresheetChange }: ScoresheetPanelProps) {
       if (timers.timeout) {
         clearTimeout(timers.timeout);
       }
-      // Signal that upload was cancelled to prevent callbacks from firing
-      isUploadingRef.current = false;
     };
   }, []);
 
@@ -119,9 +117,6 @@ export function ScoresheetPanel({ onScoresheetChange }: ScoresheetPanelProps) {
     }, SIMULATED_UPLOAD_DURATION_MS / PROGRESS_STEPS);
 
     uploadTimersRef.current.timeout = setTimeout(() => {
-      // Guard against callbacks firing after unmount
-      if (!isUploadingRef.current) return;
-
       if (uploadTimersRef.current.interval) {
         clearInterval(uploadTimersRef.current.interval);
       }
