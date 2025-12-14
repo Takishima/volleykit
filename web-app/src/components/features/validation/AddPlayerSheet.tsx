@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import type { PossibleNomination } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { usePossiblePlayerNominations } from "@/hooks/usePlayerNominations";
@@ -75,6 +75,15 @@ export function AddPlayerSheet({
     }
   }, [isOpen]);
 
+  const handleBackdropClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (e.target === e.currentTarget) {
+        onClose();
+      }
+    },
+    [onClose],
+  );
+
   if (!isOpen) return null;
 
   return (
@@ -83,7 +92,7 @@ export function AddPlayerSheet({
       <div
         className="absolute inset-0 bg-black/50 transition-opacity"
         aria-hidden="true"
-        onClick={onClose}
+        onClick={handleBackdropClick}
       />
 
       {/* Sheet Container - bottom drawer on mobile, centered modal on desktop */}

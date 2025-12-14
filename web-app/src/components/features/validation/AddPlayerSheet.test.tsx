@@ -139,6 +139,18 @@ describe("AddPlayerSheet", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it("does not close when dialog content is clicked", () => {
+    const onClose = vi.fn();
+    render(<AddPlayerSheet {...defaultProps} onClose={onClose} />, {
+      wrapper: createWrapper(),
+    });
+
+    const dialog = screen.getByRole("dialog");
+    fireEvent.click(dialog);
+
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
   it("calls onClose when close button is clicked", () => {
     const onClose = vi.fn();
     render(<AddPlayerSheet {...defaultProps} onClose={onClose} />, {
