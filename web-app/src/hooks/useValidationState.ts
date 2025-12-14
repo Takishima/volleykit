@@ -62,13 +62,9 @@ export interface UseValidationStateResult {
   completionStatus: PanelCompletionStatus;
   /** Whether all required panels are complete */
   isAllRequiredComplete: boolean;
-  /** Mark the home roster as reviewed */
-  markHomeRosterReviewed: () => void;
-  /** Mark the away roster as reviewed */
-  markAwayRosterReviewed: () => void;
-  /** Update home roster modifications */
+  /** Update home roster modifications (auto-marks roster as reviewed) */
   setHomeRosterModifications: (modifications: RosterModifications) => void;
-  /** Update away roster modifications */
+  /** Update away roster modifications (auto-marks roster as reviewed) */
   setAwayRosterModifications: (modifications: RosterModifications) => void;
   /** Set the selected scorer */
   setScorer: (scorer: ValidatedPersonSearchResult | null) => void;
@@ -162,28 +158,6 @@ export function useValidationState(): UseValidationStateResult {
     );
   }, [state]);
 
-  // Mark home roster as reviewed
-  const markHomeRosterReviewed = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      homeRoster: {
-        ...prev.homeRoster,
-        reviewed: true,
-      },
-    }));
-  }, []);
-
-  // Mark away roster as reviewed
-  const markAwayRosterReviewed = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      awayRoster: {
-        ...prev.awayRoster,
-        reviewed: true,
-      },
-    }));
-  }, []);
-
   // Update home roster modifications
   const setHomeRosterModifications = useCallback(
     (modifications: RosterModifications) => {
@@ -250,8 +224,6 @@ export function useValidationState(): UseValidationStateResult {
     isDirty,
     completionStatus,
     isAllRequiredComplete,
-    markHomeRosterReviewed,
-    markAwayRosterReviewed,
     setHomeRosterModifications,
     setAwayRosterModifications,
     setScorer,

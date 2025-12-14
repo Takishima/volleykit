@@ -15,6 +15,8 @@ import { useValidationState } from "@/hooks/useValidationState";
 const Z_INDEX_MODAL = 50;
 /** Z-index for confirmation dialog (above main modal) */
 const Z_INDEX_CONFIRMATION_DIALOG = 60;
+/** Z-index for toast notification (above all dialogs) */
+const Z_INDEX_TOAST = 70;
 /** Simulated save operation duration in milliseconds */
 const SIMULATED_SAVE_DELAY_MS = 500;
 /** Duration to show success toast before auto-dismissing */
@@ -283,7 +285,7 @@ export function ValidateGameModal({
           role="status"
           aria-live="polite"
           className="fixed top-4 right-4 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2"
-          style={{ zIndex: Z_INDEX_CONFIRMATION_DIALOG + 10 }}
+          style={{ zIndex: Z_INDEX_TOAST }}
         >
           <svg
             viewBox="0 0 24 24"
