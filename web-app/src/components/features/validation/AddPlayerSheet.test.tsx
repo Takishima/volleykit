@@ -127,7 +127,7 @@ describe("AddPlayerSheet", () => {
     expect(screen.getByText("Anna Schmidt")).toBeInTheDocument();
   });
 
-  it("does not close when backdrop is clicked (accessibility)", () => {
+  it("calls onClose when backdrop is clicked", () => {
     const onClose = vi.fn();
     render(<AddPlayerSheet {...defaultProps} onClose={onClose} />, {
       wrapper: createWrapper(),
@@ -136,7 +136,7 @@ describe("AddPlayerSheet", () => {
     const backdrop = document.querySelector('[aria-hidden="true"]');
     fireEvent.click(backdrop!);
 
-    expect(onClose).not.toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it("calls onClose when close button is clicked", () => {

@@ -79,10 +79,11 @@ export function AddPlayerSheet({
 
   return (
     <div className="fixed inset-0 z-50">
-      {/* Backdrop - non-interactive, Escape key handles closing */}
+      {/* Backdrop - click to close */}
       <div
         className="absolute inset-0 bg-black/50 transition-opacity"
         aria-hidden="true"
+        onClick={onClose}
       />
 
       {/* Sheet Container - bottom drawer on mobile, centered modal on desktop */}
