@@ -1,4 +1,5 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import type { PossibleNomination } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   useNominationList,
@@ -6,6 +7,7 @@ import {
   type RosterModifications,
 } from "@/hooks/useNominationList";
 import { PlayerListItem } from "./PlayerListItem";
+import { AddPlayerSheet } from "./AddPlayerSheet";
 
 function UserPlusIcon({ className }: { className?: string }) {
   return (
@@ -80,26 +82,36 @@ export function RosterVerificationPanel({
   onModificationsChange,
 }: RosterVerificationPanelProps) {
   const { t } = useTranslation();
-  const { players, isLoading, isError, refetch } = useNominationList({
-    gameId,
-    team,
-  });
+  const { nominationList, players, isLoading, isError, refetch } =
+    useNominationList({
+      gameId,
+      team,
+    });
 
-  // Track locally added players (will integrate with AddPlayerSheet in issue #36)
-  const [addedPlayers] = useState<RosterPlayer[]>([]);
+  // Track locally added players
+  const [addedPlayers, setAddedPlayers] = useState<RosterPlayer[]>([]);
+
+  // Track AddPlayerSheet open state
+  const [isAddPlayerSheetOpen, setIsAddPlayerSheetOpen] = useState(false);
 
   // Track IDs of players marked for removal
   const [removedPlayerIds, setRemovedPlayerIds] = useState<Set<string>>(
     new Set(),
   );
 
-  // Notify parent when modifications change (fixes stale closure race condition)
+  // Use ref to avoid stale closure when callback isn't memoized by parent
+  const onModificationsChangeRef = useRef(onModificationsChange);
   useEffect(() => {
-    onModificationsChange?.({
+    onModificationsChangeRef.current = onModificationsChange;
+  }, [onModificationsChange]);
+
+  // Notify parent when modifications change
+  useEffect(() => {
+    onModificationsChangeRef.current?.({
       added: addedPlayers,
       removed: [...removedPlayerIds],
     });
-  }, [addedPlayers, removedPlayerIds, onModificationsChange]);
+  }, [addedPlayers, removedPlayerIds]);
 
   const handleRemovePlayer = useCallback((playerId: string) => {
     setRemovedPlayerIds((prev) => {
@@ -115,6 +127,24 @@ export function RosterVerificationPanel({
       newSet.delete(playerId);
       return newSet;
     });
+  }, []);
+
+  const handleAddPlayer = useCallback((nomination: PossibleNomination) => {
+    const playerId = nomination.indoorPlayer?.__identity;
+    if (!playerId) return;
+
+    const newPlayer: RosterPlayer = {
+      id: playerId,
+      shirtNumber: 0, // New players don't have a shirt number yet
+      displayName:
+        nomination.indoorPlayer?.person?.displayName ??
+        `${nomination.indoorPlayer?.person?.firstName ?? ""} ${nomination.indoorPlayer?.person?.lastName ?? ""}`.trim(),
+      licenseCategory: nomination.licenseCategory,
+      isNewlyAdded: true,
+    };
+
+    setAddedPlayers((prev) => [...prev, newPlayer]);
+    setIsAddPlayerSheetOpen(false);
   }, []);
 
   // Combine original players with added players
@@ -195,17 +225,29 @@ export function RosterVerificationPanel({
         </div>
       )}
 
-      {/* Add Player button - TODO(#36): Enable when AddPlayerSheet is implemented */}
+      {/* Add Player button */}
       <div className="mt-4">
         <button
           type="button"
-          disabled
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-not-allowed"
+          onClick={() => setIsAddPlayerSheetOpen(true)}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg border border-blue-200 dark:border-blue-800 transition-colors"
         >
           <UserPlusIcon className="w-4 h-4" />
           {t("validation.roster.addPlayer")}
         </button>
       </div>
+
+      {/* AddPlayerSheet */}
+      <AddPlayerSheet
+        isOpen={isAddPlayerSheetOpen}
+        onClose={() => setIsAddPlayerSheetOpen(false)}
+        nominationListId={nominationList?.__identity ?? ""}
+        excludePlayerIds={[
+          ...players.map((p) => p.id),
+          ...addedPlayers.map((p) => p.id),
+        ]}
+        onAddPlayer={handleAddPlayer}
+      />
     </div>
   );
 }

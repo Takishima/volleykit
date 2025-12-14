@@ -4,6 +4,7 @@ import type {
   CompensationRecord,
   GameExchange,
   NominationList,
+  PossibleNomination,
 } from "@/api/client";
 import { addDays, addHours, subDays } from "date-fns";
 
@@ -32,6 +33,7 @@ interface DemoState {
   compensations: CompensationRecord[];
   exchanges: GameExchange[];
   nominationLists: MockNominationLists;
+  possiblePlayers: PossibleNomination[];
 
   // Demo user's referee level for filtering exchanges
   // Level string (e.g., "N2") and gradation value (higher = more qualified)
@@ -683,10 +685,126 @@ function generateDummyData() {
     },
   ];
 
+  const dummyPossiblePlayers: PossibleNomination[] = [
+    {
+      __identity: "demo-possible-1",
+      indoorPlayer: {
+        __identity: "demo-player-1",
+        person: {
+          __identity: "demo-person-p1",
+          displayName: "Max Müller",
+          firstName: "Max",
+          lastName: "Müller",
+        },
+      },
+      licenseCategory: "SEN",
+      isAlreadyNominated: false,
+    },
+    {
+      __identity: "demo-possible-2",
+      indoorPlayer: {
+        __identity: "demo-player-2",
+        person: {
+          __identity: "demo-person-p2",
+          displayName: "Anna Schmidt",
+          firstName: "Anna",
+          lastName: "Schmidt",
+        },
+      },
+      licenseCategory: "SEN",
+      isAlreadyNominated: false,
+    },
+    {
+      __identity: "demo-possible-3",
+      indoorPlayer: {
+        __identity: "demo-player-3",
+        person: {
+          __identity: "demo-person-p3",
+          displayName: "Thomas Weber",
+          firstName: "Thomas",
+          lastName: "Weber",
+        },
+      },
+      licenseCategory: "JUN",
+      isAlreadyNominated: false,
+    },
+    {
+      __identity: "demo-possible-4",
+      indoorPlayer: {
+        __identity: "demo-player-4",
+        person: {
+          __identity: "demo-person-p4",
+          displayName: "Laura Keller",
+          firstName: "Laura",
+          lastName: "Keller",
+        },
+      },
+      licenseCategory: "SEN",
+      isAlreadyNominated: true,
+    },
+    {
+      __identity: "demo-possible-5",
+      indoorPlayer: {
+        __identity: "demo-player-5",
+        person: {
+          __identity: "demo-person-p5",
+          displayName: "Marco Rossi",
+          firstName: "Marco",
+          lastName: "Rossi",
+        },
+      },
+      licenseCategory: "JUN",
+      isAlreadyNominated: false,
+    },
+    {
+      __identity: "demo-possible-6",
+      indoorPlayer: {
+        __identity: "demo-player-6",
+        person: {
+          __identity: "demo-person-p6",
+          displayName: "Sophie Dubois",
+          firstName: "Sophie",
+          lastName: "Dubois",
+        },
+      },
+      licenseCategory: "SEN",
+      isAlreadyNominated: false,
+    },
+    {
+      __identity: "demo-possible-7",
+      indoorPlayer: {
+        __identity: "demo-player-7",
+        person: {
+          __identity: "demo-person-p7",
+          displayName: "Luca Bernasconi",
+          firstName: "Luca",
+          lastName: "Bernasconi",
+        },
+      },
+      licenseCategory: "JUN",
+      isAlreadyNominated: false,
+    },
+    {
+      __identity: "demo-possible-8",
+      indoorPlayer: {
+        __identity: "demo-player-8",
+        person: {
+          __identity: "demo-person-p8",
+          displayName: "Nina Hofmann",
+          firstName: "Nina",
+          lastName: "Hofmann",
+        },
+      },
+      licenseCategory: "SEN",
+      isAlreadyNominated: false,
+    },
+  ];
+
   return {
     assignments: dummyAssignments,
     compensations: dummyCompensations,
     exchanges: dummyExchanges,
+    possiblePlayers: dummyPossiblePlayers,
   };
 }
 
@@ -1209,6 +1327,7 @@ export const useDemoStore = create<DemoState>()((set) => ({
   compensations: [],
   exchanges: [],
   nominationLists: {},
+  possiblePlayers: [],
   userRefereeLevel: null,
   userRefereeLevelGradationValue: null,
 
@@ -1219,6 +1338,7 @@ export const useDemoStore = create<DemoState>()((set) => ({
       compensations: data.compensations,
       exchanges: data.exchanges,
       nominationLists: generateMockNominationLists(),
+      possiblePlayers: data.possiblePlayers,
       userRefereeLevel: DEMO_USER_REFEREE_LEVEL,
       userRefereeLevelGradationValue: DEMO_USER_REFEREE_LEVEL_GRADATION_VALUE,
     });
@@ -1230,6 +1350,7 @@ export const useDemoStore = create<DemoState>()((set) => ({
       compensations: [],
       exchanges: [],
       nominationLists: {},
+      possiblePlayers: [],
       userRefereeLevel: null,
       userRefereeLevelGradationValue: null,
     }),
@@ -1242,6 +1363,7 @@ export const useDemoStore = create<DemoState>()((set) => ({
         compensations: newData.compensations,
         exchanges: newData.exchanges,
         nominationLists: generateMockNominationLists(),
+        possiblePlayers: newData.possiblePlayers,
       };
     }),
 

@@ -36,14 +36,23 @@ interface UseNominationListResult {
   refetch: () => void;
 }
 
+function buildDisplayName(nomination: IndoorPlayerNomination): string {
+  const person = nomination.indoorPlayer?.person;
+  if (person?.displayName) {
+    return person.displayName;
+  }
+
+  const firstName = person?.firstName?.trim() ?? "";
+  const lastName = person?.lastName?.trim() ?? "";
+  return [firstName, lastName].filter(Boolean).join(" ");
+}
+
 function transformNominationToPlayer(
   nomination: IndoorPlayerNomination,
 ): RosterPlayer | null {
   const id = nomination.__identity;
   const shirtNumber = nomination.shirtNumber;
-  const displayName =
-    nomination.indoorPlayer?.person?.displayName ??
-    `${nomination.indoorPlayer?.person?.firstName ?? ""} ${nomination.indoorPlayer?.person?.lastName ?? ""}`.trim();
+  const displayName = buildDisplayName(nomination);
 
   if (!id || shirtNumber === undefined || !displayName) {
     return null;
