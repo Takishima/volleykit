@@ -179,6 +179,7 @@ interface Translations {
     addPlayer: string;
     searchPlayers: string;
     noPlayersFound: string;
+    loadPlayersError: string;
     playerAlreadyAdded: string;
     jerseyNumber: string;
     license: string;
@@ -367,6 +368,7 @@ const en: Translations = {
     addPlayer: "Add Player",
     searchPlayers: "Search players...",
     noPlayersFound: "No players found",
+    loadPlayersError: "Failed to load players",
     playerAlreadyAdded: "Already on roster",
     jerseyNumber: "Jersey #",
     license: "License",
@@ -557,6 +559,7 @@ const de: Translations = {
     addPlayer: "Spieler hinzufügen",
     searchPlayers: "Spieler suchen...",
     noPlayersFound: "Keine Spieler gefunden",
+    loadPlayersError: "Spieler konnten nicht geladen werden",
     playerAlreadyAdded: "Bereits im Kader",
     jerseyNumber: "Trikot #",
     license: "Lizenz",
@@ -747,6 +750,7 @@ const fr: Translations = {
     addPlayer: "Ajouter un joueur",
     searchPlayers: "Rechercher des joueurs...",
     noPlayersFound: "Aucun joueur trouvé",
+    loadPlayersError: "Échec du chargement des joueurs",
     playerAlreadyAdded: "Déjà dans l'effectif",
     jerseyNumber: "Maillot #",
     license: "Licence",
@@ -935,6 +939,7 @@ const it: Translations = {
     addPlayer: "Aggiungi giocatore",
     searchPlayers: "Cerca giocatori...",
     noPlayersFound: "Nessun giocatore trovato",
+    loadPlayersError: "Impossibile caricare i giocatori",
     playerAlreadyAdded: "Già nella rosa",
     jerseyNumber: "Maglia #",
     license: "Licenza",

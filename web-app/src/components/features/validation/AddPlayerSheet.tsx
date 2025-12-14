@@ -25,7 +25,7 @@ export function AddPlayerSheet({
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: players, isLoading } = usePossiblePlayerNominations({
+  const { data: players, isLoading, isError } = usePossiblePlayerNominations({
     nominationListId,
     enabled: isOpen && !!nominationListId,
   });
@@ -76,16 +76,11 @@ export function AddPlayerSheet({
 
   if (!isOpen) return null;
 
-  const handleAddPlayer = (player: PossibleNomination) => {
-    onAddPlayer(player);
-  };
-
   return (
     <div className="fixed inset-0 z-50">
-      {/* Backdrop */}
+      {/* Backdrop - non-interactive, Escape key handles closing */}
       <div
         className="absolute inset-0 bg-black/50 transition-opacity"
-        onClick={onClose}
         aria-hidden="true"
       />
 
@@ -165,6 +160,10 @@ export function AddPlayerSheet({
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
             </div>
+          ) : isError ? (
+            <div className="text-center py-8 text-red-500 dark:text-red-400">
+              {t("validation.loadPlayersError")}
+            </div>
           ) : filteredPlayers.length === 0 ? (
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
               {t("validation.noPlayersFound")}
@@ -174,7 +173,7 @@ export function AddPlayerSheet({
               {filteredPlayers.map((player) => (
                 <li key={player.__identity}>
                   <button
-                    onClick={() => handleAddPlayer(player)}
+                    onClick={() => onAddPlayer(player)}
                     className="
                       w-full flex items-center justify-between p-3 rounded-lg
                       text-left

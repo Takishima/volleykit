@@ -127,7 +127,7 @@ describe("AddPlayerSheet", () => {
     expect(screen.getByText("Anna Schmidt")).toBeInTheDocument();
   });
 
-  it("calls onClose when backdrop is clicked", async () => {
+  it("does not close when backdrop is clicked (accessibility)", () => {
     const onClose = vi.fn();
     render(<AddPlayerSheet {...defaultProps} onClose={onClose} />, {
       wrapper: createWrapper(),
@@ -136,7 +136,7 @@ describe("AddPlayerSheet", () => {
     const backdrop = document.querySelector('[aria-hidden="true"]');
     fireEvent.click(backdrop!);
 
-    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it("calls onClose when close button is clicked", () => {
@@ -241,5 +241,35 @@ describe("AddPlayerSheet - Loading State", () => {
     expect(
       document.querySelector(".animate-spin"),
     ).toBeInTheDocument();
+  });
+});
+
+describe("AddPlayerSheet - Error State", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("shows error message when data fetch fails", async () => {
+    const { usePossiblePlayerNominations } = await import(
+      "@/hooks/usePlayerNominations"
+    );
+    vi.mocked(usePossiblePlayerNominations).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+    } as ReturnType<typeof usePossiblePlayerNominations>);
+
+    render(
+      <AddPlayerSheet
+        isOpen={true}
+        onClose={vi.fn()}
+        nominationListId="nomination-123"
+        excludePlayerIds={[]}
+        onAddPlayer={vi.fn()}
+      />,
+      { wrapper: createWrapper() },
+    );
+
+    expect(screen.getByText("Failed to load players")).toBeInTheDocument();
   });
 });

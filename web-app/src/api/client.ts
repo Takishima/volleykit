@@ -498,6 +498,14 @@ export const api = {
     );
   },
 
+  /**
+   * Fetches possible player nominations for a nomination list.
+   * Returns players that can be added to a team's roster for a game.
+   *
+   * @param nominationListId - UUID of the nomination list
+   * @param options.onlyFromMyTeam - Filter to players from the team's roster (default: true)
+   * @param options.onlyRelevantGender - Filter to players matching the league's gender (default: true)
+   */
   async getPossiblePlayerNominations(
     nominationListId: string,
     options?: { onlyFromMyTeam?: boolean; onlyRelevantGender?: boolean },
