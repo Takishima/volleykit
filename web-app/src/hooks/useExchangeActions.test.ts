@@ -33,6 +33,8 @@ function createMockExchange(): GameExchange {
 
 const mockExchange = createMockExchange();
 
+const MOCK_ASYNC_OPERATION_DELAY_MS = 100;
+
 describe("useExchangeActions", () => {
   const mockApplyMutate = vi.fn();
   const mockWithdrawMutate = vi.fn();
@@ -201,7 +203,6 @@ describe("useExchangeActions", () => {
     expect(window.alert).toHaveBeenCalledWith(
       "Successfully applied for exchange",
     );
-    vi.useFakeTimers();
   });
 
   it("should handle take over action failure", async () => {
@@ -218,7 +219,6 @@ describe("useExchangeActions", () => {
     expect(window.alert).toHaveBeenCalledWith(
       "Failed to apply for exchange. Please try again.",
     );
-    vi.useFakeTimers();
   });
 
   it("should handle remove from exchange action successfully", async () => {
@@ -235,7 +235,6 @@ describe("useExchangeActions", () => {
     expect(window.alert).toHaveBeenCalledWith(
       "Successfully removed from exchange",
     );
-    vi.useFakeTimers();
   });
 
   it("should handle remove from exchange action failure", async () => {
@@ -252,57 +251,52 @@ describe("useExchangeActions", () => {
     expect(window.alert).toHaveBeenCalledWith(
       "Failed to remove from exchange. Please try again.",
     );
-    vi.useFakeTimers();
   });
 
   it("should prevent duplicate take over actions", async () => {
     vi.useRealTimers();
     mockApplyMutate.mockImplementation(
-      () => new Promise((resolve) => setTimeout(resolve, 100)),
+      () =>
+        new Promise((resolve) =>
+          setTimeout(resolve, MOCK_ASYNC_OPERATION_DELAY_MS),
+        ),
     );
 
     const { result } = renderHook(() => useExchangeActions());
 
-    // Start first action
-    const promise1 = act(async () => {
-      await result.current.handleTakeOver(mockExchange);
-    });
-
-    // Try to start second action before first completes
+    // Try to trigger action twice concurrently
     await act(async () => {
-      await result.current.handleTakeOver(mockExchange);
+      await Promise.all([
+        result.current.handleTakeOver(mockExchange),
+        result.current.handleTakeOver(mockExchange),
+      ]);
     });
-
-    await promise1;
 
     // Should only be called once
     expect(mockApplyMutate).toHaveBeenCalledTimes(1);
-    vi.useFakeTimers();
   });
 
   it("should prevent duplicate remove from exchange actions", async () => {
     vi.useRealTimers();
     mockWithdrawMutate.mockImplementation(
-      () => new Promise((resolve) => setTimeout(resolve, 100)),
+      () =>
+        new Promise((resolve) =>
+          setTimeout(resolve, MOCK_ASYNC_OPERATION_DELAY_MS),
+        ),
     );
 
     const { result } = renderHook(() => useExchangeActions());
 
-    // Start first action
-    const promise1 = act(async () => {
-      await result.current.handleRemoveFromExchange(mockExchange);
-    });
-
-    // Try to start second action before first completes
+    // Try to trigger action twice concurrently
     await act(async () => {
-      await result.current.handleRemoveFromExchange(mockExchange);
+      await Promise.all([
+        result.current.handleRemoveFromExchange(mockExchange),
+        result.current.handleRemoveFromExchange(mockExchange),
+      ]);
     });
-
-    await promise1;
 
     // Should only be called once
     expect(mockWithdrawMutate).toHaveBeenCalledTimes(1);
-    vi.useFakeTimers();
   });
 
   it("should handle rapid open/close cycles correctly", () => {
@@ -349,10 +343,6 @@ describe("useExchangeActions", () => {
           typeof authStore.useAuthStore.getState
         >),
       );
-    });
-
-    afterEach(() => {
-      vi.useFakeTimers();
     });
 
     it("should use mutation for take over in demo mode (routed to mock API)", async () => {
@@ -425,10 +415,6 @@ describe("useExchangeActions", () => {
           typeof settingsStore.useSettingsStore.getState
         >),
       );
-    });
-
-    afterEach(() => {
-      vi.useFakeTimers();
     });
 
     it("should block take over when safe mode is enabled", async () => {
