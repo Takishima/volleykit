@@ -4,9 +4,11 @@ import { useCompensationActions } from "./useCompensationActions";
 import type { CompensationRecord } from "@/api/client";
 import * as compensationActionsModule from "@/utils/compensation-actions";
 import * as authStore from "@/stores/auth";
+import * as settingsStore from "@/stores/settings";
 import { MODAL_CLEANUP_DELAY } from "@/utils/assignment-helpers";
 
 vi.mock("@/stores/auth");
+vi.mock("@/stores/settings");
 
 function createMockCompensation(): CompensationRecord {
   return {
@@ -38,6 +40,13 @@ describe("useCompensationActions", () => {
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
       selector({ isDemoMode: false } as ReturnType<
         typeof authStore.useAuthStore.getState
+      >),
+    );
+
+    // Default: safe mode disabled (allow operations)
+    vi.mocked(settingsStore.useSettingsStore).mockImplementation((selector) =>
+      selector({ isSafeModeEnabled: false } as ReturnType<
+        typeof settingsStore.useSettingsStore.getState
       >),
     );
   });
@@ -228,6 +237,55 @@ describe("useCompensationActions", () => {
       expect(alertSpy).toHaveBeenCalledWith(
         "PDF downloads are not available in demo mode",
       );
+
+      alertSpy.mockRestore();
+    });
+
+    it("should allow editing compensation in demo mode even with safe mode enabled", () => {
+      // Demo mode bypasses safe mode since changes are local-only
+      vi.mocked(settingsStore.useSettingsStore).mockImplementation((selector) =>
+        selector({ isSafeModeEnabled: true } as ReturnType<
+          typeof settingsStore.useSettingsStore.getState
+        >),
+      );
+
+      const { result } = renderHook(() => useCompensationActions());
+
+      act(() => {
+        result.current.editCompensationModal.open(mockCompensation);
+      });
+
+      expect(result.current.editCompensationModal.isOpen).toBe(true);
+    });
+  });
+
+  describe("safe mode guards", () => {
+    beforeEach(() => {
+      // Not in demo mode, safe mode enabled
+      vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
+        selector({ isDemoMode: false } as ReturnType<
+          typeof authStore.useAuthStore.getState
+        >),
+      );
+      vi.mocked(settingsStore.useSettingsStore).mockImplementation((selector) =>
+        selector({ isSafeModeEnabled: true } as ReturnType<
+          typeof settingsStore.useSettingsStore.getState
+        >),
+      );
+    });
+
+    it("should block editing compensation when safe mode is enabled", () => {
+      const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+
+      const { result } = renderHook(() => useCompensationActions());
+
+      act(() => {
+        result.current.editCompensationModal.open(mockCompensation);
+      });
+
+      expect(result.current.editCompensationModal.isOpen).toBe(false);
+      expect(result.current.editCompensationModal.compensation).toBeNull();
+      expect(alertSpy).toHaveBeenCalled();
 
       alertSpy.mockRestore();
     });
