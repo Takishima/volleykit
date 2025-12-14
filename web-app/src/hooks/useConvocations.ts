@@ -436,7 +436,7 @@ export function useValidationClosedAssignments(): UseQueryResult<
 
     // Defensive fallback: store initializes assignments as [], but during SSR/hydration
     // or in test environments, the store state may not be fully initialized yet.
-    const assignments = demoAssignments ?? [];
+    const assignments = Array.isArray(demoAssignments) ? demoAssignments : [];
     const inDateRange = assignments.filter((assignment) => {
       const gameDate = assignment.refereeGame?.game?.startingDateTime;
       if (!gameDate) return false;
