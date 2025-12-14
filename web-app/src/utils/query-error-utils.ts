@@ -54,10 +54,10 @@ export function isRetryableError(error: unknown): boolean {
  * Exported as a single config object for easier testing and modification.
  */
 export const RETRY_CONFIG = {
-  MAX_RETRY_DELAY_MS: 30000,
-  BASE_RETRY_DELAY_MS: 1000,
-  JITTER_FACTOR: 0.25,
-  MAX_QUERY_RETRIES: 3,
+  MAX_RETRY_DELAY_MS: 30000, // 30 seconds maximum delay between retries
+  BASE_RETRY_DELAY_MS: 1000, // Start with 1 second delay
+  JITTER_FACTOR: 0.25, // Add up to 25% random jitter to prevent thundering herd
+  MAX_QUERY_RETRIES: 3, // Maximum number of retry attempts
 } as const;
 
 /**
