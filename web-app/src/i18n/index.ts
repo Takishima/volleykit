@@ -176,6 +176,13 @@ interface Translations {
     awayRosterPlaceholder: string;
     scorerPlaceholder: string;
     scoresheetPlaceholder: string;
+    addPlayer: string;
+    searchPlayers: string;
+    noPlayersFound: string;
+    loadPlayersError: string;
+    playerAlreadyAdded: string;
+    jerseyNumber: string;
+    license: string;
   };
 }
 
@@ -358,6 +365,13 @@ const en: Translations = {
       "Away team roster verification will be available here.",
     scorerPlaceholder: "Scorer identification will be available here.",
     scoresheetPlaceholder: "Scoresheet upload will be available here.",
+    addPlayer: "Add Player",
+    searchPlayers: "Search players...",
+    noPlayersFound: "No players found",
+    loadPlayersError: "Failed to load players",
+    playerAlreadyAdded: "Already on roster",
+    jerseyNumber: "Jersey #",
+    license: "License",
   },
 };
 
@@ -542,6 +556,13 @@ const de: Translations = {
     scorerPlaceholder: "Die Schreiberidentifikation wird hier verfügbar sein.",
     scoresheetPlaceholder:
       "Der Upload des Spielberichts wird hier verfügbar sein.",
+    addPlayer: "Spieler hinzufügen",
+    searchPlayers: "Spieler suchen...",
+    noPlayersFound: "Keine Spieler gefunden",
+    loadPlayersError: "Spieler konnten nicht geladen werden",
+    playerAlreadyAdded: "Bereits im Kader",
+    jerseyNumber: "Trikot #",
+    license: "Lizenz",
   },
 };
 
@@ -726,6 +747,13 @@ const fr: Translations = {
     scorerPlaceholder: "L'identification du marqueur sera disponible ici.",
     scoresheetPlaceholder:
       "Le téléchargement de la feuille de match sera disponible ici.",
+    addPlayer: "Ajouter un joueur",
+    searchPlayers: "Rechercher des joueurs...",
+    noPlayersFound: "Aucun joueur trouvé",
+    loadPlayersError: "Échec du chargement des joueurs",
+    playerAlreadyAdded: "Déjà dans l'effectif",
+    jerseyNumber: "Maillot #",
+    license: "Licence",
   },
 };
 
@@ -908,6 +936,13 @@ const it: Translations = {
       "La verifica della rosa ospite sarà disponibile qui.",
     scorerPlaceholder: "L'identificazione del segnapunti sarà disponibile qui.",
     scoresheetPlaceholder: "Il caricamento del referto sarà disponibile qui.",
+    addPlayer: "Aggiungi giocatore",
+    searchPlayers: "Cerca giocatori...",
+    noPlayersFound: "Nessun giocatore trovato",
+    loadPlayersError: "Impossibile caricare i giocatori",
+    playerAlreadyAdded: "Già nella rosa",
+    jerseyNumber: "Maglia #",
+    license: "Licenza",
   },
 };
 

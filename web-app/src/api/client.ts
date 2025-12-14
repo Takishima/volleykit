@@ -106,6 +106,12 @@ export type AssignmentsResponse = Schemas["AssignmentsResponse"];
 export type CompensationsResponse = Schemas["CompensationsResponse"];
 export type ExchangesResponse = Schemas["ExchangesResponse"];
 
+// Nomination types
+export type NominationList = Schemas["NominationList"];
+export type IndoorPlayerNomination = Schemas["IndoorPlayerNomination"];
+export type PossibleNomination = Schemas["PossibleNomination"];
+export type PossibleNominationsResponse = Schemas["PossibleNominationsResponse"];
+
 // Request parameter types
 export interface SearchConfiguration {
   offset?: number;
@@ -489,6 +495,36 @@ export const api = {
   async getActiveSeason(): Promise<Schemas["Season"]> {
     return apiRequest(
       "/sportmanager.indoorvolleyball/api%5ccindoorseason/getActiveIndoorSeason",
+    );
+  },
+
+  /**
+   * Fetches possible player nominations for a nomination list.
+   * Returns players that can be added to a team's roster for a game.
+   *
+   * @param nominationListId - UUID of the nomination list
+   * @param options.onlyFromMyTeam - Filter to players from the team's roster (default: true)
+   * @param options.onlyRelevantGender - Filter to players matching the league's gender,
+   *   e.g., only female players for women's leagues (default: true)
+   * @returns List of possible player nominations with license info
+   * @example
+   * const players = await api.getPossiblePlayerNominations('uuid-123', {
+   *   onlyFromMyTeam: false,
+   *   onlyRelevantGender: true
+   * });
+   */
+  async getPossiblePlayerNominations(
+    nominationListId: string,
+    options?: { onlyFromMyTeam?: boolean; onlyRelevantGender?: boolean },
+  ): Promise<PossibleNominationsResponse> {
+    return apiRequest(
+      "/sportmanager.indoorvolleyball/api%5cnominationlist/getPossibleIndoorPlayerNominationsForNominationList",
+      "POST",
+      {
+        nominationList: nominationListId,
+        onlyFromMyTeam: options?.onlyFromMyTeam ?? true,
+        onlyRelevantGender: options?.onlyRelevantGender ?? true,
+      },
     );
   },
 };
