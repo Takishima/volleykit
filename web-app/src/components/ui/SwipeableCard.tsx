@@ -545,40 +545,45 @@ export function SwipeableCard({
       </div>
 
       {showActions && hasAnyAction && (
-        // Dialog overlay with action buttons - backdrop dismisses on click
+        // Modal overlay with action buttons - backdrop dismisses on click
+        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
         <div
-          role="dialog"
-          aria-label="Card actions"
-          aria-modal="true"
-          className="absolute inset-0 z-20 bg-black/50 rounded-xl flex items-center justify-center gap-2 p-4"
           onClick={() => setShowActions(false)}
+          className="absolute inset-0 z-20 bg-black/50 rounded-xl flex items-center justify-center gap-2 p-4"
         >
-          {rightActions?.[0] && (
-            <button
-              ref={(el) => el?.focus()}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleRightAction();
-              }}
-              className={`${rightActions[0].color} text-white px-4 py-2 rounded-lg font-medium text-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-white`}
-            >
-              {rightActions[0].label}
-            </button>
-          )}
-          {leftActions?.[0] && (
-            <button
-              ref={(el) => {
-                if (!rightActions?.[0]) el?.focus();
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleLeftAction();
-              }}
-              className={`${leftActions[0].color} text-white px-4 py-2 rounded-lg font-medium text-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-white ml-2`}
-            >
-              {leftActions[0].label}
-            </button>
-          )}
+          <div
+            role="dialog"
+            aria-label="Card actions"
+            aria-modal="true"
+            className="flex items-center justify-center gap-2"
+          >
+            {rightActions?.[0] && (
+              <button
+                ref={(el) => el?.focus()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRightAction();
+                }}
+                className={`${rightActions[0].color} text-white px-4 py-2 rounded-lg font-medium text-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-white`}
+              >
+                {rightActions[0].label}
+              </button>
+            )}
+            {leftActions?.[0] && (
+              <button
+                ref={(el) => {
+                  if (!rightActions?.[0]) el?.focus();
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleLeftAction();
+                }}
+                className={`${leftActions[0].color} text-white px-4 py-2 rounded-lg font-medium text-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-white ml-2`}
+              >
+                {leftActions[0].label}
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>
