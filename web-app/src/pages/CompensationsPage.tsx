@@ -1,10 +1,5 @@
-import { useState, useCallback } from "react";
-import {
-  useCompensations,
-  usePaidCompensations,
-  useUnpaidCompensations,
-  useCompensationTotals,
-} from "@/hooks/useConvocations";
+import { useState, useCallback, useMemo } from "react";
+import { useCompensations, useCompensationTotals } from "@/hooks/useConvocations";
 import { CompensationCard } from "@/components/features/CompensationCard";
 import { EditCompensationModal } from "@/components/features/EditCompensationModal";
 import { SwipeableCard } from "@/components/ui/SwipeableCard";
@@ -22,49 +17,28 @@ import { useTranslation } from "@/hooks/useTranslation";
 
 type FilterType = "all" | "paid" | "unpaid";
 
+// Convert tab filter to useCompensations parameter
+function filterToPaidFilter(filter: FilterType): boolean | undefined {
+  switch (filter) {
+    case "paid":
+      return true;
+    case "unpaid":
+      return false;
+    default:
+      return undefined;
+  }
+}
+
 export function CompensationsPage() {
   const [filter, setFilter] = useState<FilterType>("all");
   const { t } = useTranslation();
   const { editCompensationModal, handleGeneratePDF } = useCompensationActions();
 
-  const {
-    data: allData,
-    isLoading: allLoading,
-    error: allError,
-    refetch: refetchAll,
-  } = useCompensations();
-  const {
-    data: paidData,
-    isLoading: paidLoading,
-    error: paidError,
-    refetch: refetchPaid,
-  } = usePaidCompensations();
-  const {
-    data: unpaidData,
-    isLoading: unpaidLoading,
-    error: unpaidError,
-    refetch: refetchUnpaid,
-  } = useUnpaidCompensations();
+  // Single data fetch based on current filter (like ExchangePage pattern)
+  const paidFilter = useMemo(() => filterToPaidFilter(filter), [filter]);
+  const { data, isLoading, error, refetch } = useCompensations(paidFilter);
 
   const totals = useCompensationTotals();
-
-  const dataMap = { all: allData, paid: paidData, unpaid: unpaidData };
-  const loadingMap = {
-    all: allLoading,
-    paid: paidLoading,
-    unpaid: unpaidLoading,
-  };
-  const errorMap = { all: allError, paid: paidError, unpaid: unpaidError };
-  const refetchMap = {
-    all: refetchAll,
-    paid: refetchPaid,
-    unpaid: refetchUnpaid,
-  };
-
-  const data = dataMap[filter];
-  const isLoading = loadingMap[filter];
-  const error = errorMap[filter];
-  const refetch = refetchMap[filter];
 
   const tabs = [
     { id: "all" as const, label: t("compensations.all") },
