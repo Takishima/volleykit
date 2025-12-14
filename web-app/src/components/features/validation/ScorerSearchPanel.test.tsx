@@ -404,6 +404,29 @@ describe("ScorerSearchPanel - Keyboard Navigation", () => {
     expect(onScorerSelect).toHaveBeenCalledWith(mockScorers[0]);
   });
 
+  it("does not call onScorerSelect when Enter is pressed without highlight", async () => {
+    const onScorerSelect = vi.fn();
+    render(
+      <ScorerSearchPanel
+        selectedScorer={null}
+        onScorerSelect={onScorerSelect}
+      />,
+      { wrapper: createWrapper() },
+    );
+
+    const searchInput = screen.getByPlaceholderText("Search scorer by name...");
+    fireEvent.change(searchInput, { target: { value: "Müller" } });
+
+    act(() => {
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+    });
+
+    // Press Enter without navigating to any item
+    fireEvent.keyDown(searchInput, { key: "Enter" });
+
+    expect(onScorerSelect).not.toHaveBeenCalled();
+  });
+
   it("clears highlight with Escape key", async () => {
     render(
       <ScorerSearchPanel selectedScorer={null} onScorerSelect={vi.fn()} />,
