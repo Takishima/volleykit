@@ -162,7 +162,10 @@ export function AddPlayerSheet({
               <LoadingSpinner size="md" />
             </div>
           ) : isError ? (
-            <div className="text-center py-8 text-red-500 dark:text-red-400">
+            <div
+              role="alert"
+              className="text-center py-8 text-red-500 dark:text-red-400"
+            >
               {t("validation.loadPlayersError")}
             </div>
           ) : filteredPlayers.length === 0 ? (
