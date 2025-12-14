@@ -210,13 +210,11 @@ interface Translations {
       takePhoto: string;
       uploading: string;
       uploadComplete: string;
-      uploadError: string;
       replace: string;
       remove: string;
       fileTooLarge: string;
       invalidFileType: string;
-      fileName: string;
-      fileSize: string;
+      demoModeNote: string;
     };
   };
 }
@@ -434,13 +432,11 @@ const en: Translations = {
       takePhoto: "Take Photo",
       uploading: "Uploading...",
       uploadComplete: "Upload complete",
-      uploadError: "Upload failed. Please try again.",
       replace: "Replace",
       remove: "Remove",
       fileTooLarge: "File is too large. Maximum size is 10 MB.",
       invalidFileType: "Invalid file type. Please use JPEG, PNG, or PDF.",
-      fileName: "File name",
-      fileSize: "Size",
+      demoModeNote: "Demo mode: uploads are simulated",
     },
   },
 };
@@ -660,13 +656,11 @@ const de: Translations = {
       takePhoto: "Foto aufnehmen",
       uploading: "Wird hochgeladen...",
       uploadComplete: "Upload abgeschlossen",
-      uploadError: "Upload fehlgeschlagen. Bitte erneut versuchen.",
       replace: "Ersetzen",
       remove: "Entfernen",
       fileTooLarge: "Datei ist zu gross. Maximale Grösse ist 10 MB.",
       invalidFileType: "Ungültiger Dateityp. Bitte verwenden Sie JPEG, PNG oder PDF.",
-      fileName: "Dateiname",
-      fileSize: "Grösse",
+      demoModeNote: "Demo-Modus: Uploads werden simuliert",
     },
   },
 };
@@ -886,13 +880,11 @@ const fr: Translations = {
       takePhoto: "Prendre une photo",
       uploading: "Téléchargement...",
       uploadComplete: "Téléchargement terminé",
-      uploadError: "Échec du téléchargement. Veuillez réessayer.",
       replace: "Remplacer",
       remove: "Supprimer",
       fileTooLarge: "Le fichier est trop volumineux. Taille maximale: 10 Mo.",
       invalidFileType: "Type de fichier invalide. Veuillez utiliser JPEG, PNG ou PDF.",
-      fileName: "Nom du fichier",
-      fileSize: "Taille",
+      demoModeNote: "Mode démo: les téléchargements sont simulés",
     },
   },
 };
@@ -1110,13 +1102,11 @@ const it: Translations = {
       takePhoto: "Scatta foto",
       uploading: "Caricamento...",
       uploadComplete: "Caricamento completato",
-      uploadError: "Caricamento fallito. Riprova.",
       replace: "Sostituisci",
       remove: "Rimuovi",
       fileTooLarge: "Il file è troppo grande. Dimensione massima: 10 MB.",
       invalidFileType: "Tipo di file non valido. Usa JPEG, PNG o PDF.",
-      fileName: "Nome file",
-      fileSize: "Dimensione",
+      demoModeNote: "Modalità demo: i caricamenti sono simulati",
     },
   },
 };

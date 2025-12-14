@@ -179,4 +179,26 @@ describe("ScoresheetPanel", () => {
       screen.getByRole("button", { name: "Select File" }),
     ).toBeInTheDocument();
   });
+
+  it("renders Take Photo button", () => {
+    render(<ScoresheetPanel />, { wrapper: createWrapper() });
+    expect(
+      screen.getByRole("button", { name: "Take Photo" }),
+    ).toBeInTheDocument();
+  });
+
+  it("shows accepted formats info", () => {
+    render(<ScoresheetPanel />, { wrapper: createWrapper() });
+    expect(screen.getByText(/JPEG, PNG, or PDF/)).toBeInTheDocument();
+    expect(screen.getByText(/Max 10 MB/)).toBeInTheDocument();
+  });
+
+  it("has hidden file inputs for file and camera", () => {
+    render(<ScoresheetPanel />, { wrapper: createWrapper() });
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    expect(fileInputs).toHaveLength(2);
+    // Check one accepts all file types and one is for camera
+    const cameraInput = document.querySelector('input[capture="environment"]');
+    expect(cameraInput).toBeInTheDocument();
+  });
 });

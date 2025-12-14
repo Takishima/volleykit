@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuthStore } from "@/stores/auth";
 
@@ -7,7 +7,7 @@ const ACCEPTED_FILE_TYPES = ["image/jpeg", "image/png", "application/pdf"];
 const ACCEPTED_EXTENSIONS = ".jpg,.jpeg,.png,.pdf";
 const SIMULATED_UPLOAD_DURATION_MS = 1500;
 
-type UploadState = "idle" | "uploading" | "complete" | "error";
+type UploadState = "idle" | "uploading" | "complete";
 
 interface SelectedFile {
   file: File;
@@ -70,6 +70,23 @@ export function ScoresheetPanel() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const uploadTimersRef = useRef<{ interval?: ReturnType<typeof setInterval>; timeout?: ReturnType<typeof setTimeout> }>({});
+
+  // Cleanup preview URL and upload timers on unmount
+  useEffect(() => {
+    const timers = uploadTimersRef.current;
+    return () => {
+      if (selectedFile?.previewUrl) {
+        URL.revokeObjectURL(selectedFile.previewUrl);
+      }
+      if (timers.interval) {
+        clearInterval(timers.interval);
+      }
+      if (timers.timeout) {
+        clearTimeout(timers.timeout);
+      }
+    };
+  }, [selectedFile?.previewUrl]);
 
   const validateFile = useCallback(
     (file: File): string | null => {
@@ -85,13 +102,33 @@ export function ScoresheetPanel() {
   );
 
   const simulateUpload = useCallback(() => {
+    // Clear any existing timers
+    if (uploadTimersRef.current.interval) {
+      clearInterval(uploadTimersRef.current.interval);
+    }
+    if (uploadTimersRef.current.timeout) {
+      clearTimeout(uploadTimersRef.current.timeout);
+    }
+
     setUploadState("uploading");
     setUploadProgress(0);
-    const interval = setInterval(() => {
-      setUploadProgress((p) => (p >= 90 ? (clearInterval(interval), p) : p + 10));
+
+    uploadTimersRef.current.interval = setInterval(() => {
+      setUploadProgress((p) => {
+        if (p >= 90) {
+          if (uploadTimersRef.current.interval) {
+            clearInterval(uploadTimersRef.current.interval);
+          }
+          return p;
+        }
+        return p + 10;
+      });
     }, SIMULATED_UPLOAD_DURATION_MS / 10);
-    setTimeout(() => {
-      clearInterval(interval);
+
+    uploadTimersRef.current.timeout = setTimeout(() => {
+      if (uploadTimersRef.current.interval) {
+        clearInterval(uploadTimersRef.current.interval);
+      }
       setUploadProgress(100);
       setUploadState("complete");
     }, SIMULATED_UPLOAD_DURATION_MS);
@@ -125,6 +162,12 @@ export function ScoresheetPanel() {
 
   const resetState = useCallback(() => {
     if (selectedFile?.previewUrl) URL.revokeObjectURL(selectedFile.previewUrl);
+    if (uploadTimersRef.current.interval) {
+      clearInterval(uploadTimersRef.current.interval);
+    }
+    if (uploadTimersRef.current.timeout) {
+      clearTimeout(uploadTimersRef.current.timeout);
+    }
     setSelectedFile(null);
     setUploadState("idle");
     setUploadProgress(0);
@@ -218,13 +261,6 @@ export function ScoresheetPanel() {
               </div>
             )}
 
-            {uploadState === "error" && (
-              <div role="alert" className="mb-3 flex items-center gap-2 text-red-600 dark:text-red-400">
-                <Icon.Alert className="w-5 h-5" />
-                <span className="text-sm font-medium">{tKey("uploadError")}</span>
-              </div>
-            )}
-
             <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{selectedFile.file.name}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">{formatFileSize(selectedFile.file.size)}</p>
 
@@ -240,7 +276,7 @@ export function ScoresheetPanel() {
         </div>
       )}
 
-      {isDemoMode && <p className="mt-3 text-xs text-center text-gray-400 dark:text-gray-500">Demo mode: uploads are simulated</p>}
+      {isDemoMode && <p className="mt-3 text-xs text-center text-gray-400 dark:text-gray-500">{tKey("demoModeNote")}</p>}
     </div>
   );
 }
