@@ -201,6 +201,22 @@ interface Translations {
       searchError: string;
       noScorerSelected: string;
     };
+    scoresheetUpload: {
+      title: string;
+      description: string;
+      acceptedFormats: string;
+      maxFileSize: string;
+      selectFile: string;
+      takePhoto: string;
+      uploading: string;
+      uploadComplete: string;
+      replace: string;
+      remove: string;
+      fileTooLarge: string;
+      invalidFileType: string;
+      demoModeNote: string;
+      previewAlt: string;
+    };
   };
 }
 
@@ -407,6 +423,22 @@ const en: Translations = {
       searchHint: "Enter name (e.g., 'Müller' or 'Hans Müller') or add birth year (e.g., 'Müller 1985')",
       searchError: "Failed to search scorers",
       noScorerSelected: "No scorer selected. Use the search above to find and select a scorer.",
+    },
+    scoresheetUpload: {
+      title: "Upload Scoresheet",
+      description: "Upload a photo or scan of the physical scoresheet",
+      acceptedFormats: "JPEG, PNG, or PDF",
+      maxFileSize: "Max 10 MB",
+      selectFile: "Select File",
+      takePhoto: "Take Photo",
+      uploading: "Uploading...",
+      uploadComplete: "Upload complete",
+      replace: "Replace",
+      remove: "Remove",
+fileTooLarge: "File is too large. Maximum size is 10 MB.",
+      invalidFileType: "Invalid file type. Please use JPEG, PNG, or PDF.",
+      demoModeNote: "Demo mode: uploads are simulated",
+      previewAlt: "Scoresheet preview",
     },
   },
 };
@@ -617,6 +649,22 @@ const de: Translations = {
       searchError: "Schreibersuche fehlgeschlagen",
       noScorerSelected: "Kein Schreiber ausgewählt. Verwenden Sie die Suche oben, um einen Schreiber zu finden und auszuwählen.",
     },
+    scoresheetUpload: {
+      title: "Spielbericht hochladen",
+      description: "Laden Sie ein Foto oder einen Scan des physischen Spielberichts hoch",
+      acceptedFormats: "JPEG, PNG oder PDF",
+      maxFileSize: "Max. 10 MB",
+      selectFile: "Datei auswählen",
+      takePhoto: "Foto aufnehmen",
+      uploading: "Wird hochgeladen...",
+      uploadComplete: "Upload abgeschlossen",
+      replace: "Ersetzen",
+      remove: "Entfernen",
+fileTooLarge: "Datei ist zu gross. Maximale Grösse ist 10 MB.",
+      invalidFileType: "Ungültiger Dateityp. Bitte verwenden Sie JPEG, PNG oder PDF.",
+      demoModeNote: "Demo-Modus: Uploads werden simuliert",
+      previewAlt: "Spielbericht-Vorschau",
+    },
   },
 };
 
@@ -826,6 +874,22 @@ const fr: Translations = {
       searchError: "Échec de la recherche de marqueurs",
       noScorerSelected: "Aucun marqueur sélectionné. Utilisez la recherche ci-dessus pour trouver et sélectionner un marqueur.",
     },
+    scoresheetUpload: {
+      title: "Télécharger la feuille de match",
+      description: "Téléchargez une photo ou un scan de la feuille de match physique",
+      acceptedFormats: "JPEG, PNG ou PDF",
+      maxFileSize: "Max 10 Mo",
+      selectFile: "Sélectionner un fichier",
+      takePhoto: "Prendre une photo",
+      uploading: "Téléchargement...",
+      uploadComplete: "Téléchargement terminé",
+      replace: "Remplacer",
+      remove: "Supprimer",
+fileTooLarge: "Le fichier est trop volumineux. Taille maximale: 10 Mo.",
+      invalidFileType: "Type de fichier invalide. Veuillez utiliser JPEG, PNG ou PDF.",
+      demoModeNote: "Mode démo: les téléchargements sont simulés",
+      previewAlt: "Aperçu de la feuille de match",
+    },
   },
 };
 
@@ -1032,6 +1096,22 @@ const it: Translations = {
       searchHint: "Inserisci il nome (es. 'Müller' o 'Hans Müller') o aggiungi l'anno di nascita (es. 'Müller 1985')",
       searchError: "Ricerca segnapunti fallita",
       noScorerSelected: "Nessun segnapunti selezionato. Usa la ricerca sopra per trovare e selezionare un segnapunti.",
+    },
+    scoresheetUpload: {
+      title: "Carica referto",
+      description: "Carica una foto o una scansione del referto fisico",
+      acceptedFormats: "JPEG, PNG o PDF",
+      maxFileSize: "Max 10 MB",
+      selectFile: "Seleziona file",
+      takePhoto: "Scatta foto",
+      uploading: "Caricamento...",
+      uploadComplete: "Caricamento completato",
+      replace: "Sostituisci",
+      remove: "Rimuovi",
+fileTooLarge: "Il file è troppo grande. Dimensione massima: 10 MB.",
+      invalidFileType: "Tipo di file non valido. Usa JPEG, PNG o PDF.",
+      demoModeNote: "Modalità demo: i caricamenti sono simulati",
+      previewAlt: "Anteprima referto",
     },
   },
 };

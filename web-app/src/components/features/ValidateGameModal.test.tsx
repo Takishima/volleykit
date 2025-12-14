@@ -232,9 +232,7 @@ describe("ValidateGameModal", () => {
         screen.getByRole("tab", { name: /Scoresheet/i, hidden: true }),
       );
 
-      expect(
-        screen.getByText("Scoresheet upload will be available here."),
-      ).toBeInTheDocument();
+      expect(screen.getByText("Upload Scoresheet")).toBeInTheDocument();
     });
 
     it("navigates tabs with arrow keys", () => {
@@ -340,9 +338,7 @@ describe("ValidateGameModal", () => {
       fireEvent.click(
         screen.getByRole("tab", { name: /Scoresheet/i, hidden: true }),
       );
-      expect(
-        screen.getByText("Scoresheet upload will be available here."),
-      ).toBeInTheDocument();
+      expect(screen.getByText("Upload Scoresheet")).toBeInTheDocument();
 
       // Reopen modal with new key (simulates opening for different assignment)
       const newAssignment = createMockAssignment({ __identity: "new-id" });
