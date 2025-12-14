@@ -235,6 +235,7 @@ interface Translations {
       discardChanges: string;
       saveSuccess: string;
       saveError: string;
+      saveDisabledTooltip: string;
     };
   };
 }
@@ -483,6 +484,8 @@ const en: Translations = {
       discardChanges: "Discard Changes",
       saveSuccess: "Validation saved successfully",
       saveError: "Failed to save validation",
+      saveDisabledTooltip:
+        "Complete all required panels (Home Roster, Away Roster, Scorer) to save",
     },
   },
 };
@@ -735,6 +738,8 @@ const de: Translations = {
       discardChanges: "Änderungen verwerfen",
       saveSuccess: "Validierung erfolgreich gespeichert",
       saveError: "Validierung konnte nicht gespeichert werden",
+      saveDisabledTooltip:
+        "Füllen Sie alle erforderlichen Bereiche aus (Heimkader, Gastkader, Schreiber), um zu speichern",
     },
   },
 };
@@ -987,6 +992,8 @@ const fr: Translations = {
       discardChanges: "Abandonner les modifications",
       saveSuccess: "Validation enregistrée avec succès",
       saveError: "Échec de l'enregistrement de la validation",
+      saveDisabledTooltip:
+        "Complétez tous les panneaux requis (Effectif domicile, Effectif visiteur, Marqueur) pour enregistrer",
     },
   },
 };
@@ -1234,6 +1241,8 @@ const it: Translations = {
       discardChanges: "Scarta le modifiche",
       saveSuccess: "Validazione salvata con successo",
       saveError: "Impossibile salvare la validazione",
+      saveDisabledTooltip:
+        "Completa tutti i pannelli richiesti (Rosa di casa, Rosa ospite, Segnapunti) per salvare",
     },
   },
 };

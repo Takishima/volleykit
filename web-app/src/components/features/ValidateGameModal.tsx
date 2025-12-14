@@ -391,6 +391,11 @@ export function ValidateGameModal({
               type="button"
               onClick={handleSave}
               disabled={!isAllRequiredComplete || isSaving}
+              title={
+                !isAllRequiredComplete
+                  ? t("validation.state.saveDisabledTooltip")
+                  : undefined
+              }
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? t("common.loading") : t("common.save")}
