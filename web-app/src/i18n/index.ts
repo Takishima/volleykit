@@ -228,6 +228,14 @@ interface Translations {
       demoModeNote: string;
       previewAlt: string;
     };
+    state: {
+      unsavedChangesTitle: string;
+      unsavedChangesMessage: string;
+      continueEditing: string;
+      discardChanges: string;
+      saveSuccess: string;
+      saveError: string;
+    };
   };
 }
 
@@ -466,6 +474,15 @@ const en: Translations = {
       invalidFileType: "Invalid file type. Please use JPEG, PNG, or PDF.",
       demoModeNote: "Demo mode: uploads are simulated",
       previewAlt: "Scoresheet preview",
+    },
+    state: {
+      unsavedChangesTitle: "Unsaved Changes",
+      unsavedChangesMessage:
+        "You have unsaved changes. Are you sure you want to discard them?",
+      continueEditing: "Continue Editing",
+      discardChanges: "Discard Changes",
+      saveSuccess: "Validation saved successfully",
+      saveError: "Failed to save validation",
     },
   },
 };
@@ -710,6 +727,15 @@ const de: Translations = {
       demoModeNote: "Demo-Modus: Uploads werden simuliert",
       previewAlt: "Spielbericht-Vorschau",
     },
+    state: {
+      unsavedChangesTitle: "Ungespeicherte Änderungen",
+      unsavedChangesMessage:
+        "Sie haben ungespeicherte Änderungen. Möchten Sie diese wirklich verwerfen?",
+      continueEditing: "Weiter bearbeiten",
+      discardChanges: "Änderungen verwerfen",
+      saveSuccess: "Validierung erfolgreich gespeichert",
+      saveError: "Validierung konnte nicht gespeichert werden",
+    },
   },
 };
 
@@ -953,6 +979,15 @@ const fr: Translations = {
       demoModeNote: "Mode démo: les téléchargements sont simulés",
       previewAlt: "Aperçu de la feuille de match",
     },
+    state: {
+      unsavedChangesTitle: "Modifications non enregistrées",
+      unsavedChangesMessage:
+        "Vous avez des modifications non enregistrées. Êtes-vous sûr de vouloir les abandonner?",
+      continueEditing: "Continuer l'édition",
+      discardChanges: "Abandonner les modifications",
+      saveSuccess: "Validation enregistrée avec succès",
+      saveError: "Échec de l'enregistrement de la validation",
+    },
   },
 };
 
@@ -1190,6 +1225,15 @@ const it: Translations = {
       invalidFileType: "Tipo di file non valido. Usa JPEG, PNG o PDF.",
       demoModeNote: "Modalità demo: i caricamenti sono simulati",
       previewAlt: "Anteprima referto",
+    },
+    state: {
+      unsavedChangesTitle: "Modifiche non salvate",
+      unsavedChangesMessage:
+        "Hai modifiche non salvate. Sei sicuro di volerle scartare?",
+      continueEditing: "Continua a modificare",
+      discardChanges: "Scarta le modifiche",
+      saveSuccess: "Validazione salvata con successo",
+      saveError: "Impossibile salvare la validazione",
     },
   },
 };

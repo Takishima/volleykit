@@ -9,6 +9,11 @@ import {
   AlertIcon,
 } from "@/components/ui/icons";
 
+interface ScoresheetPanelProps {
+  /** Callback when scoresheet state changes */
+  onScoresheetChange?: (file: File | null, uploaded: boolean) => void;
+}
+
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 const ACCEPTED_FILE_TYPES = ["image/jpeg", "image/png", "application/pdf"];
 const ACCEPTED_EXTENSIONS = ".jpg,.jpeg,.png,.pdf";
@@ -31,9 +36,15 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function ScoresheetPanel() {
+export function ScoresheetPanel({ onScoresheetChange }: ScoresheetPanelProps) {
   const { t } = useTranslation();
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const onScoresheetChangeRef = useRef(onScoresheetChange);
+
+  // Keep ref in sync with prop
+  useEffect(() => {
+    onScoresheetChangeRef.current = onScoresheetChange;
+  }, [onScoresheetChange]);
 
   const [selectedFile, setSelectedFile] = useState<SelectedFile | null>(null);
   const [uploadState, setUploadState] = useState<UploadState>("idle");
@@ -78,7 +89,7 @@ export function ScoresheetPanel() {
     [t],
   );
 
-  const simulateUpload = useCallback(() => {
+  const simulateUpload = useCallback((file: File) => {
     // Clear any existing timers
     if (uploadTimersRef.current.interval) {
       clearInterval(uploadTimersRef.current.interval);
@@ -90,6 +101,8 @@ export function ScoresheetPanel() {
     isUploadingRef.current = true;
     setUploadState("uploading");
     setUploadProgress(0);
+    // Notify that file is selected but not yet uploaded
+    onScoresheetChangeRef.current?.(file, false);
 
     uploadTimersRef.current.interval = setInterval(() => {
       setUploadProgress((p) => {
@@ -110,6 +123,8 @@ export function ScoresheetPanel() {
       setUploadProgress(PROGRESS_COMPLETE);
       setUploadState("complete");
       isUploadingRef.current = false;
+      // Notify that upload is complete
+      onScoresheetChangeRef.current?.(file, true);
     }, SIMULATED_UPLOAD_DURATION_MS);
   }, []);
 
@@ -138,7 +153,7 @@ export function ScoresheetPanel() {
         file,
         previewUrl: newPreviewUrl,
       });
-      simulateUpload();
+      simulateUpload(file);
     },
     [validateFile, simulateUpload],
   );
@@ -168,6 +183,8 @@ export function ScoresheetPanel() {
     setUploadState("idle");
     setUploadProgress(0);
     setErrorMessage(null);
+    // Notify that scoresheet was removed
+    onScoresheetChangeRef.current?.(null, false);
   }, []);
 
   const handleReplace = useCallback(() => {
