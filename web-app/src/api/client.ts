@@ -106,6 +106,12 @@ export type AssignmentsResponse = Schemas["AssignmentsResponse"];
 export type CompensationsResponse = Schemas["CompensationsResponse"];
 export type ExchangesResponse = Schemas["ExchangesResponse"];
 
+// Nomination types
+export type NominationList = Schemas["NominationList"];
+export type IndoorPlayerNomination = Schemas["IndoorPlayerNomination"];
+export type PossibleNomination = Schemas["PossibleNomination"];
+export type PossibleNominationsResponse = Schemas["PossibleNominationsResponse"];
+
 // Request parameter types
 export interface SearchConfiguration {
   offset?: number;
@@ -489,6 +495,21 @@ export const api = {
   async getActiveSeason(): Promise<Schemas["Season"]> {
     return apiRequest(
       "/sportmanager.indoorvolleyball/api%5ccindoorseason/getActiveIndoorSeason",
+    );
+  },
+
+  async getPossiblePlayerNominations(
+    nominationListId: string,
+    options?: { onlyFromMyTeam?: boolean; onlyRelevantGender?: boolean },
+  ): Promise<PossibleNominationsResponse> {
+    return apiRequest(
+      "/sportmanager.indoorvolleyball/api%5cnominationlist/getPossibleIndoorPlayerNominationsForNominationList",
+      "POST",
+      {
+        nominationList: nominationListId,
+        onlyFromMyTeam: options?.onlyFromMyTeam ?? true,
+        onlyRelevantGender: options?.onlyRelevantGender ?? true,
+      },
     );
   },
 };

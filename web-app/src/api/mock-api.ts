@@ -19,6 +19,7 @@ import type {
   ExchangesResponse,
   AssociationSettings,
   Season,
+  PossibleNominationsResponse,
 } from "./client";
 import { useDemoStore } from "@/stores/demo";
 
@@ -308,6 +309,21 @@ export const mockApi = {
       seasonStartDate: seasonStart.toISOString(),
       seasonEndDate: seasonEnd.toISOString(),
     } as Season;
+  },
+
+  async getPossiblePlayerNominations(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required for API interface compatibility
+    _nominationListId: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required for API interface compatibility
+    _options?: { onlyFromMyTeam?: boolean; onlyRelevantGender?: boolean },
+  ): Promise<PossibleNominationsResponse> {
+    await delay(MOCK_NETWORK_DELAY_MS);
+
+    const store = useDemoStore.getState();
+    return {
+      items: store.possiblePlayers,
+      totalItemsCount: store.possiblePlayers.length,
+    };
   },
 };
 

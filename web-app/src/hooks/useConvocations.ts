@@ -219,6 +219,8 @@ export const queryKeys = {
   exchanges: (config?: SearchConfiguration) => ["exchanges", config] as const,
   associationSettings: () => ["associationSettings"] as const,
   activeSeason: () => ["activeSeason"] as const,
+  possibleNominations: (nominationListId: string) =>
+    ["possibleNominations", nominationListId] as const,
 };
 
 // Date period presets
