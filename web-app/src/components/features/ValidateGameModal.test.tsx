@@ -1,9 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ValidateGameModal } from "./ValidateGameModal";
 import type { Assignment } from "@/api/client";
+import * as useNominationListModule from "@/hooks/useNominationList";
 
-function createMockAssignment(overrides: Partial<Assignment> = {}): Assignment {
+vi.mock("@/hooks/useNominationList");
+
+function createMockAssignment(
+  overrides: Partial<Assignment> = {},
+): Assignment {
   return {
     __identity: "assignment-1",
     refereePosition: "head-one",
@@ -27,11 +33,35 @@ function createMockAssignment(overrides: Partial<Assignment> = {}): Assignment {
   } as Assignment;
 }
 
+function createWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+
+  return function Wrapper({ children }: { children: React.ReactNode }) {
+    return (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+  };
+}
+
 describe("ValidateGameModal", () => {
   const mockOnClose = vi.fn();
 
   beforeEach(() => {
     mockOnClose.mockClear();
+    vi.mocked(useNominationListModule.useNominationList).mockReturnValue({
+      nominationList: null,
+      players: [],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    });
   });
 
   describe("rendering", () => {
@@ -42,6 +72,7 @@ describe("ValidateGameModal", () => {
           isOpen={false}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
       expect(container.firstChild).toBeNull();
     });
@@ -53,6 +84,7 @@ describe("ValidateGameModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
       expect(screen.getByRole("dialog", { hidden: true })).toBeInTheDocument();
       expect(screen.getByText("Validate Game Details")).toBeInTheDocument();
@@ -65,6 +97,7 @@ describe("ValidateGameModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
       expect(screen.getByText("VBC Zürich vs VBC Basel")).toBeInTheDocument();
     });
@@ -76,6 +109,7 @@ describe("ValidateGameModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
       expect(
         screen.getByRole("tab", { name: /Home Roster/i, hidden: true }),
@@ -98,6 +132,7 @@ describe("ValidateGameModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
       const optionalBadges = screen.getAllByText("Optional");
       expect(optionalBadges).toHaveLength(1);
@@ -118,12 +153,11 @@ describe("ValidateGameModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
-      expect(
-        screen.getByText(
-          "Home team roster verification will be available here.",
-        ),
-      ).toBeInTheDocument();
+      // Home Roster panel shows team name and empty roster message
+      expect(screen.getByText("VBC Zürich")).toBeInTheDocument();
+      expect(screen.getByText("No players in roster")).toBeInTheDocument();
     });
 
     it("switches to Away Roster panel when tab is clicked", () => {
@@ -133,17 +167,15 @@ describe("ValidateGameModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       fireEvent.click(
         screen.getByRole("tab", { name: /Away Roster/i, hidden: true }),
       );
 
-      expect(
-        screen.getByText(
-          "Away team roster verification will be available here.",
-        ),
-      ).toBeInTheDocument();
+      // Away Roster panel shows team name
+      expect(screen.getByText("VBC Basel")).toBeInTheDocument();
     });
 
     it("switches to Scorer panel when tab is clicked", () => {
@@ -153,6 +185,7 @@ describe("ValidateGameModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       fireEvent.click(
@@ -171,6 +204,7 @@ describe("ValidateGameModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       fireEvent.click(
@@ -189,6 +223,7 @@ describe("ValidateGameModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       const homeRosterTab = screen.getByRole("tab", {
@@ -197,11 +232,8 @@ describe("ValidateGameModal", () => {
       });
       fireEvent.keyDown(homeRosterTab, { key: "ArrowRight" });
 
-      expect(
-        screen.getByText(
-          "Away team roster verification will be available here.",
-        ),
-      ).toBeInTheDocument();
+      // Away Roster panel shows team name
+      expect(screen.getByText("VBC Basel")).toBeInTheDocument();
     });
   });
 
@@ -213,6 +245,7 @@ describe("ValidateGameModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       fireEvent.click(
@@ -228,6 +261,7 @@ describe("ValidateGameModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       fireEvent.keyDown(document, { key: "Escape" });
@@ -241,6 +275,7 @@ describe("ValidateGameModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       const backdrop = screen.getByRole("dialog", {
@@ -257,6 +292,7 @@ describe("ValidateGameModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       const dialog = screen.getByRole("dialog", { hidden: true });
@@ -266,13 +302,16 @@ describe("ValidateGameModal", () => {
 
     it("resets to first tab when modal is reopened with new key", () => {
       const assignment = createMockAssignment();
+      const Wrapper = createWrapper();
       const { rerender } = render(
-        <ValidateGameModal
-          key={assignment.__identity}
-          assignment={assignment}
-          isOpen={true}
-          onClose={mockOnClose}
-        />,
+        <Wrapper>
+          <ValidateGameModal
+            key={assignment.__identity}
+            assignment={assignment}
+            isOpen={true}
+            onClose={mockOnClose}
+          />
+        </Wrapper>,
       );
 
       // Switch to Scoresheet tab
@@ -286,20 +325,19 @@ describe("ValidateGameModal", () => {
       // Reopen modal with new key (simulates opening for different assignment)
       const newAssignment = createMockAssignment({ __identity: "new-id" });
       rerender(
-        <ValidateGameModal
-          key={newAssignment.__identity}
-          assignment={newAssignment}
-          isOpen={true}
-          onClose={mockOnClose}
-        />,
+        <Wrapper>
+          <ValidateGameModal
+            key={newAssignment.__identity}
+            assignment={newAssignment}
+            isOpen={true}
+            onClose={mockOnClose}
+          />
+        </Wrapper>,
       );
 
       // Should be back to Home Roster (component remounted due to key change)
-      expect(
-        screen.getByText(
-          "Home team roster verification will be available here.",
-        ),
-      ).toBeInTheDocument();
+      expect(screen.getByText("VBC Zürich")).toBeInTheDocument();
+      expect(screen.getByText("No players in roster")).toBeInTheDocument();
     });
   });
 });

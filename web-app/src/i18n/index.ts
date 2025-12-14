@@ -183,6 +183,18 @@ interface Translations {
     playerAlreadyAdded: string;
     jerseyNumber: string;
     license: string;
+    roster: {
+      addPlayer: string;
+      removePlayer: string;
+      undoRemoval: string;
+      newlyAdded: string;
+      captain: string;
+      libero: string;
+      emptyRoster: string;
+      loadingRoster: string;
+      errorLoading: string;
+      playerCount: string;
+    };
   };
 }
 
@@ -372,6 +384,18 @@ const en: Translations = {
     playerAlreadyAdded: "Already on roster",
     jerseyNumber: "Jersey #",
     license: "License",
+    roster: {
+      addPlayer: "Add Player",
+      removePlayer: "Remove player",
+      undoRemoval: "Undo removal",
+      newlyAdded: "New",
+      captain: "Captain",
+      libero: "Libero",
+      emptyRoster: "No players in roster",
+      loadingRoster: "Loading roster...",
+      errorLoading: "Failed to load roster",
+      playerCount: "{count} players",
+    },
   },
 };
 
@@ -563,6 +587,18 @@ const de: Translations = {
     playerAlreadyAdded: "Bereits im Kader",
     jerseyNumber: "Trikot #",
     license: "Lizenz",
+    roster: {
+      addPlayer: "Spieler hinzufügen",
+      removePlayer: "Spieler entfernen",
+      undoRemoval: "Entfernung rückgängig",
+      newlyAdded: "Neu",
+      captain: "Kapitän",
+      libero: "Libero",
+      emptyRoster: "Keine Spieler im Kader",
+      loadingRoster: "Kader wird geladen...",
+      errorLoading: "Kader konnte nicht geladen werden",
+      playerCount: "{count} Spieler",
+    },
   },
 };
 
@@ -754,6 +790,18 @@ const fr: Translations = {
     playerAlreadyAdded: "Déjà dans l'effectif",
     jerseyNumber: "Maillot #",
     license: "Licence",
+    roster: {
+      addPlayer: "Ajouter un joueur",
+      removePlayer: "Retirer le joueur",
+      undoRemoval: "Annuler le retrait",
+      newlyAdded: "Nouveau",
+      captain: "Capitaine",
+      libero: "Libéro",
+      emptyRoster: "Aucun joueur dans l'effectif",
+      loadingRoster: "Chargement de l'effectif...",
+      errorLoading: "Échec du chargement de l'effectif",
+      playerCount: "{count} joueurs",
+    },
   },
 };
 
@@ -943,6 +991,18 @@ const it: Translations = {
     playerAlreadyAdded: "Già nella rosa",
     jerseyNumber: "Maglia #",
     license: "Licenza",
+    roster: {
+      addPlayer: "Aggiungi giocatore",
+      removePlayer: "Rimuovi giocatore",
+      undoRemoval: "Annulla rimozione",
+      newlyAdded: "Nuovo",
+      captain: "Capitano",
+      libero: "Libero",
+      emptyRoster: "Nessun giocatore nella rosa",
+      loadingRoster: "Caricamento rosa...",
+      errorLoading: "Caricamento rosa fallito",
+      playerCount: "{count} giocatori",
+    },
   },
 };
 
