@@ -6,6 +6,10 @@ const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 const ACCEPTED_FILE_TYPES = ["image/jpeg", "image/png", "application/pdf"];
 const ACCEPTED_EXTENSIONS = ".jpg,.jpeg,.png,.pdf";
 const SIMULATED_UPLOAD_DURATION_MS = 1500;
+const PROGRESS_INCREMENT_PERCENT = 10;
+const PROGRESS_STOP_THRESHOLD = 90;
+const PROGRESS_COMPLETE = 100;
+const PROGRESS_STEPS = 10;
 
 type UploadState = "idle" | "uploading" | "complete";
 
@@ -115,21 +119,21 @@ export function ScoresheetPanel() {
 
     uploadTimersRef.current.interval = setInterval(() => {
       setUploadProgress((p) => {
-        if (p >= 90) {
+        if (p >= PROGRESS_STOP_THRESHOLD) {
           if (uploadTimersRef.current.interval) {
             clearInterval(uploadTimersRef.current.interval);
           }
           return p;
         }
-        return p + 10;
+        return p + PROGRESS_INCREMENT_PERCENT;
       });
-    }, SIMULATED_UPLOAD_DURATION_MS / 10);
+    }, SIMULATED_UPLOAD_DURATION_MS / PROGRESS_STEPS);
 
     uploadTimersRef.current.timeout = setTimeout(() => {
       if (uploadTimersRef.current.interval) {
         clearInterval(uploadTimersRef.current.interval);
       }
-      setUploadProgress(100);
+      setUploadProgress(PROGRESS_COMPLETE);
       setUploadState("complete");
     }, SIMULATED_UPLOAD_DURATION_MS);
   }, []);
