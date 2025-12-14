@@ -1,9 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { AddPlayerSheet } from "./AddPlayerSheet";
 import type { PossibleNomination } from "@/api/client";
+
+const DEBOUNCE_DELAY_MS = 200;
 
 const mockPlayers: PossibleNomination[] = [
   {
@@ -91,6 +93,11 @@ describe("AddPlayerSheet", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("renders when isOpen is true", () => {
@@ -180,6 +187,10 @@ describe("AddPlayerSheet", () => {
     const searchInput = screen.getByPlaceholderText("Search players...");
     fireEvent.change(searchInput, { target: { value: "Anna" } });
 
+    act(() => {
+      vi.advanceTimersByTime(DEBOUNCE_DELAY_MS);
+    });
+
     expect(screen.getByText("Anna Schmidt")).toBeInTheDocument();
     expect(screen.queryByText("Max Müller")).not.toBeInTheDocument();
   });
@@ -190,6 +201,10 @@ describe("AddPlayerSheet", () => {
     const searchInput = screen.getByPlaceholderText("Search players...");
     fireEvent.change(searchInput, { target: { value: "ANNA" } });
 
+    act(() => {
+      vi.advanceTimersByTime(DEBOUNCE_DELAY_MS);
+    });
+
     expect(screen.getByText("Anna Schmidt")).toBeInTheDocument();
   });
 
@@ -199,7 +214,39 @@ describe("AddPlayerSheet", () => {
     const searchInput = screen.getByPlaceholderText("Search players...");
     fireEvent.change(searchInput, { target: { value: "XYZ NonExistent" } });
 
+    act(() => {
+      vi.advanceTimersByTime(DEBOUNCE_DELAY_MS);
+    });
+
     expect(screen.getByText("No players found")).toBeInTheDocument();
+  });
+
+  it("debounces search input", () => {
+    render(<AddPlayerSheet {...defaultProps} />, { wrapper: createWrapper() });
+
+    const searchInput = screen.getByPlaceholderText("Search players...");
+    fireEvent.change(searchInput, { target: { value: "Anna" } });
+
+    // Search should not be applied yet
+    expect(screen.getByText("Max Müller")).toBeInTheDocument();
+    expect(screen.getByText("Anna Schmidt")).toBeInTheDocument();
+
+    // Advance time by half the debounce delay
+    act(() => {
+      vi.advanceTimersByTime(DEBOUNCE_DELAY_MS / 2);
+    });
+
+    // Search should still not be applied
+    expect(screen.getByText("Max Müller")).toBeInTheDocument();
+
+    // Complete the debounce delay
+    act(() => {
+      vi.advanceTimersByTime(DEBOUNCE_DELAY_MS / 2);
+    });
+
+    // Now search should be applied
+    expect(screen.queryByText("Max Müller")).not.toBeInTheDocument();
+    expect(screen.getByText("Anna Schmidt")).toBeInTheDocument();
   });
 
   it("calls onAddPlayer when a player is selected", () => {
@@ -236,6 +283,11 @@ describe("AddPlayerSheet", () => {
 describe("AddPlayerSheet - Loading State", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("shows loading spinner when data is loading", async () => {
@@ -268,6 +320,11 @@ describe("AddPlayerSheet - Loading State", () => {
 describe("AddPlayerSheet - Error State", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("shows error message when data fetch fails", async () => {

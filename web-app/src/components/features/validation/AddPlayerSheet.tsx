@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import type { PossibleNomination } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { usePossiblePlayerNominations } from "@/hooks/usePlayerNominations";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 // Delay before focusing search input to ensure the sheet animation has started
@@ -24,6 +25,7 @@ export function AddPlayerSheet({
 }: AddPlayerSheetProps) {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebouncedValue(searchQuery);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const { data: players, isLoading, isError } = usePossiblePlayerNominations({
@@ -34,7 +36,7 @@ export function AddPlayerSheet({
   const filteredPlayers = useMemo(() => {
     if (!players) return [];
 
-    const query = searchQuery.toLowerCase();
+    const query = debouncedSearchQuery.toLowerCase();
     return players.filter((player) => {
       const playerId = player.indoorPlayer?.__identity ?? "";
       if (excludePlayerIds.includes(playerId)) {
@@ -49,7 +51,7 @@ export function AddPlayerSheet({
         player.indoorPlayer?.person?.displayName?.toLowerCase() ?? "";
       return name.includes(query);
     });
-  }, [players, searchQuery, excludePlayerIds]);
+  }, [players, debouncedSearchQuery, excludePlayerIds]);
 
   // Handle Escape key
   useEffect(() => {
