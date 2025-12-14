@@ -1,3 +1,9 @@
+/**
+ * Shared icon components for the VolleyKit application.
+ * Each icon is exported individually to support tree-shaking.
+ * All icons accept an optional className prop for styling.
+ */
+
 export interface IconProps {
   className?: string;
 }
