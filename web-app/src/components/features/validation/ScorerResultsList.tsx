@@ -8,6 +8,14 @@ interface ScorerResultsListProps {
   isLoading: boolean;
   isError: boolean;
   onSelect: (scorer: ValidatedPersonSearchResult) => void;
+  highlightedIndex?: number;
+  onHighlight?: (index: number) => void;
+  listboxId?: string;
+}
+
+/** Generates a unique ID for a scorer option element. */
+function getScorerOptionId(identity: string): string {
+  return `scorer-option-${identity}`;
 }
 
 /**
@@ -19,6 +27,9 @@ export function ScorerResultsList({
   isLoading,
   isError,
   onSelect,
+  highlightedIndex = -1,
+  onHighlight,
+  listboxId,
 }: ScorerResultsListProps) {
   const { t } = useTranslation();
 
@@ -52,47 +63,65 @@ export function ScorerResultsList({
   }
 
   return (
-    <ul className="space-y-1">
-      {results.map((scorer) => (
-        <li key={scorer.__identity}>
-          <button
-            onClick={() => onSelect(scorer)}
-            className="
-              w-full flex items-center justify-between p-3 rounded-lg
-              text-left
-              hover:bg-gray-100 dark:hover:bg-gray-700
-              transition-colors
-            "
+    <ul
+      id={listboxId}
+      role="listbox"
+      aria-label={t("validation.scorerSearch.searchResults")}
+      className="space-y-1"
+    >
+      {results.map((scorer, index) => {
+        const isHighlighted = index === highlightedIndex;
+        return (
+          <li
+            key={scorer.__identity}
+            id={getScorerOptionId(scorer.__identity)}
+            role="option"
+            aria-selected={isHighlighted}
           >
-            <div className="flex-1 min-w-0">
-              <div className="font-medium text-gray-900 dark:text-white truncate">
-                {scorer.displayName}
-              </div>
-              <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
-                {scorer.associationId && (
-                  <span>ID: {scorer.associationId}</span>
-                )}
-                {scorer.birthday && (
-                  <span>{formatBirthday(scorer.birthday)}</span>
-                )}
-              </div>
-            </div>
-            <svg
-              className="w-5 h-5 text-gray-400 flex-shrink-0 ml-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+            <button
+              onClick={() => onSelect(scorer)}
+              onMouseEnter={() => onHighlight?.(index)}
+              className={`
+                w-full flex items-center justify-between p-3 rounded-lg
+                text-left
+                transition-colors
+                ${
+                  isHighlighted
+                    ? "bg-blue-50 dark:bg-blue-900/30"
+                    : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                }
+              `}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
-        </li>
-      ))}
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-gray-900 dark:text-white truncate">
+                  {scorer.displayName}
+                </div>
+                <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+                  {scorer.associationId && (
+                    <span>ID: {scorer.associationId}</span>
+                  )}
+                  {scorer.birthday && (
+                    <span>{formatBirthday(scorer.birthday)}</span>
+                  )}
+                </div>
+              </div>
+              <svg
+                className="w-5 h-5 text-gray-400 flex-shrink-0 ml-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          </li>
+        );
+      })}
     </ul>
   );
 }

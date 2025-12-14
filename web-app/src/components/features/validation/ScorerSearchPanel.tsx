@@ -22,6 +22,9 @@ const SEARCH_DEBOUNCE_MS = 300;
  */
 const FOCUS_DELAY_MS = 100;
 
+/** Unique ID for the scorer search listbox element, used for ARIA relationships. */
+const SCORER_LISTBOX_ID = "scorer-search-listbox";
+
 interface ScorerSearchPanelProps {
   selectedScorer?: ValidatedPersonSearchResult | null;
   onScorerSelect: (scorer: ValidatedPersonSearchResult | null) => void;
@@ -37,6 +40,7 @@ export function ScorerSearchPanel({
 }: ScorerSearchPanelProps) {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const debouncedQuery = useDebouncedValue(searchQuery, SEARCH_DEBOUNCE_MS);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -45,27 +49,83 @@ export function ScorerSearchPanel({
 
   // Focus search input on mount and when scorer is cleared
   useEffect(() => {
-    if (!selectedScorer) {
-      const timeout = setTimeout(() => {
-        searchInputRef.current?.focus();
-      }, FOCUS_DELAY_MS);
-      return () => clearTimeout(timeout);
-    }
+    if (selectedScorer) return;
+
+    const timeout = setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, FOCUS_DELAY_MS);
+
+    return () => clearTimeout(timeout);
   }, [selectedScorer]);
+
+  // Scroll highlighted item into view when navigating with keyboard
+  useEffect(() => {
+    if (highlightedIndex >= 0 && results?.[highlightedIndex]) {
+      const optionId = `scorer-option-${results[highlightedIndex].__identity}`;
+      const element = document.getElementById(optionId);
+      // scrollIntoView may not be available in test environments (JSDOM)
+      if (element?.scrollIntoView) {
+        element.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      }
+    }
+  }, [highlightedIndex, results]);
 
   const handleSelect = useCallback(
     (scorer: ValidatedPersonSearchResult) => {
       onScorerSelect(scorer);
       setSearchQuery("");
+      setHighlightedIndex(-1);
     },
     [onScorerSelect],
+  );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (!results || results.length === 0) return;
+
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          setHighlightedIndex((prev) =>
+            prev < results.length - 1 ? prev + 1 : prev,
+          );
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : prev));
+          break;
+        case "Enter": {
+          const selectedResult = results[highlightedIndex];
+          if (highlightedIndex >= 0 && selectedResult) {
+            e.preventDefault();
+            handleSelect(selectedResult);
+          }
+          break;
+        }
+        case "Escape":
+          setHighlightedIndex(-1);
+          break;
+        case "Home":
+          e.preventDefault();
+          setHighlightedIndex(0);
+          break;
+        case "End":
+          e.preventDefault();
+          setHighlightedIndex(results.length - 1);
+          break;
+      }
+    },
+    [results, highlightedIndex, handleSelect],
   );
 
   const handleClear = useCallback(() => {
     onScorerSelect(null);
     setSearchQuery("");
+    setHighlightedIndex(-1);
     searchInputRef.current?.focus();
   }, [onScorerSelect]);
+
+  const hasResults = results && results.length > 0;
 
   const showResults = debouncedQuery.trim() && !selectedScorer;
 
@@ -82,9 +142,22 @@ export function ScorerSearchPanel({
               ref={searchInputRef}
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setHighlightedIndex(-1);
+              }}
+              onKeyDown={handleKeyDown}
               placeholder={t("validation.scorerSearch.searchPlaceholder")}
               aria-label={t("validation.scorerSearch.searchPlaceholder")}
+              role="combobox"
+              aria-expanded={hasResults && showResults ? "true" : "false"}
+              aria-controls={SCORER_LISTBOX_ID}
+              aria-activedescendant={
+                highlightedIndex >= 0 && results?.[highlightedIndex]
+                  ? `scorer-option-${results[highlightedIndex].__identity}`
+                  : undefined
+              }
+              aria-autocomplete="list"
               className="
                 w-full px-4 py-2 rounded-lg
                 bg-gray-100 dark:bg-gray-700
@@ -107,6 +180,9 @@ export function ScorerSearchPanel({
                 isLoading={isLoading}
                 isError={isError}
                 onSelect={handleSelect}
+                highlightedIndex={highlightedIndex}
+                onHighlight={setHighlightedIndex}
+                listboxId={SCORER_LISTBOX_ID}
               />
             </div>
           )}

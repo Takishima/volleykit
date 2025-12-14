@@ -83,10 +83,10 @@ describe("ScorerResultsList", () => {
     expect(onSelect).toHaveBeenCalledWith(mockScorers[0]);
   });
 
-  it("renders each scorer as a list item with unique key", () => {
+  it("renders each scorer as an option with unique key", () => {
     render(<ScorerResultsList {...defaultProps} />);
 
-    const listItems = screen.getAllByRole("listitem");
-    expect(listItems).toHaveLength(2);
+    const options = screen.getAllByRole("option");
+    expect(options).toHaveLength(2);
   });
 });
