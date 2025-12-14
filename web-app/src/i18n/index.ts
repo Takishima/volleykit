@@ -98,6 +98,7 @@ interface Translations {
     noPaidDescription: string;
     noUnpaidTitle: string;
     noUnpaidDescription: string;
+    errorLoading: string;
     pdfNotAvailableDemo: string;
     pdfDownloadFailed: string;
   };
@@ -284,9 +285,11 @@ const en: Translations = {
     loading: "Loading assignments...",
     noAssignments: "No assignments found",
     noUpcomingTitle: "No upcoming assignments",
-    noUpcomingDescription: "You have no upcoming referee assignments scheduled.",
+    noUpcomingDescription:
+      "You have no upcoming referee assignments scheduled.",
     noClosedTitle: "No closed assignments",
-    noClosedDescription: "No assignments with closed validation in this season.",
+    noClosedDescription:
+      "No assignments with closed validation in this season.",
     confirmed: "Confirmed",
     pending: "Pending",
     cancelled: "Cancelled",
@@ -317,6 +320,7 @@ const en: Translations = {
     noPaidDescription: "No paid compensations found.",
     noUnpaidTitle: "No pending compensations",
     noUnpaidDescription: "No pending compensations. All caught up!",
+    errorLoading: "Failed to load compensations",
     pdfNotAvailableDemo: "PDF downloads are not available in demo mode",
     pdfDownloadFailed:
       "Failed to download compensation PDF. Please try again later.",
@@ -517,9 +521,11 @@ const de: Translations = {
     loading: "Einsätze werden geladen...",
     noAssignments: "Keine Einsätze gefunden",
     noUpcomingTitle: "Keine bevorstehenden Einsätze",
-    noUpcomingDescription: "Sie haben keine bevorstehenden Schiedsrichtereinsätze geplant.",
+    noUpcomingDescription:
+      "Sie haben keine bevorstehenden Schiedsrichtereinsätze geplant.",
     noClosedTitle: "Keine abgeschlossenen Einsätze",
-    noClosedDescription: "Keine Einsätze mit abgeschlossener Validierung in dieser Saison.",
+    noClosedDescription:
+      "Keine Einsätze mit abgeschlossener Validierung in dieser Saison.",
     confirmed: "Bestätigt",
     pending: "Ausstehend",
     cancelled: "Abgesagt",
@@ -550,8 +556,8 @@ const de: Translations = {
     noPaidDescription: "Keine bezahlten Entschädigungen gefunden.",
     noUnpaidTitle: "Keine ausstehenden Entschädigungen",
     noUnpaidDescription: "Keine ausstehenden Entschädigungen. Alles erledigt!",
-    pdfNotAvailableDemo:
-      "PDF-Downloads sind im Demo-Modus nicht verfügbar",
+    errorLoading: "Entschädigungen konnten nicht geladen werden",
+    pdfNotAvailableDemo: "PDF-Downloads sind im Demo-Modus nicht verfügbar",
     pdfDownloadFailed:
       "PDF konnte nicht heruntergeladen werden. Bitte versuchen Sie es später erneut.",
   },
@@ -755,7 +761,8 @@ const fr: Translations = {
     noUpcomingTitle: "Aucune désignation à venir",
     noUpcomingDescription: "Vous n'avez aucune désignation d'arbitre prévue.",
     noClosedTitle: "Aucune désignation clôturée",
-    noClosedDescription: "Aucune désignation avec validation fermée cette saison.",
+    noClosedDescription:
+      "Aucune désignation avec validation fermée cette saison.",
     confirmed: "Confirmé",
     pending: "En attente",
     cancelled: "Annulé",
@@ -786,6 +793,7 @@ const fr: Translations = {
     noPaidDescription: "Aucune indemnité payée trouvée.",
     noUnpaidTitle: "Aucune indemnité en attente",
     noUnpaidDescription: "Aucune indemnité en attente. Tout est à jour!",
+    errorLoading: "Échec du chargement des indemnités",
     pdfNotAvailableDemo:
       "Les téléchargements PDF ne sont pas disponibles en mode démo",
     pdfDownloadFailed:
@@ -991,7 +999,8 @@ const it: Translations = {
     noUpcomingTitle: "Nessuna designazione in programma",
     noUpcomingDescription: "Non hai designazioni arbitrali in programma.",
     noClosedTitle: "Nessuna designazione chiusa",
-    noClosedDescription: "Nessuna designazione con validazione chiusa in questa stagione.",
+    noClosedDescription:
+      "Nessuna designazione con validazione chiusa in questa stagione.",
     confirmed: "Confermato",
     pending: "In attesa",
     cancelled: "Annullato",
@@ -1022,10 +1031,9 @@ const it: Translations = {
     noPaidDescription: "Nessun compenso pagato trovato.",
     noUnpaidTitle: "Nessun compenso in attesa",
     noUnpaidDescription: "Nessun compenso in attesa. Tutto aggiornato!",
-    pdfNotAvailableDemo:
-      "I download PDF non sono disponibili in modalità demo",
-    pdfDownloadFailed:
-      "Impossibile scaricare il PDF. Riprova più tardi.",
+    errorLoading: "Impossibile caricare i compensi",
+    pdfNotAvailableDemo: "I download PDF non sono disponibili in modalità demo",
+    pdfDownloadFailed: "Impossibile scaricare il PDF. Riprova più tardi.",
   },
   exchange: {
     title: "Borsa scambi",
@@ -1050,7 +1058,8 @@ const it: Translations = {
     noOpenExchangesDescription:
       "Al momento non ci sono posizioni arbitrali disponibili per lo scambio.",
     noApplicationsTitle: "Nessuna candidatura",
-    noApplicationsDescription: "Non hai ancora fatto domanda per nessuno scambio.",
+    noApplicationsDescription:
+      "Non hai ancora fatto domanda per nessuno scambio.",
   },
   positions: {
     "head-one": "1° Arbitro",

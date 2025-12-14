@@ -96,7 +96,7 @@ export function CompensationsPage() {
           message={
             error instanceof Error
               ? error.message
-              : t("compensations.noCompensations")
+              : t("compensations.errorLoading")
           }
           onRetry={() => refetch()}
         />
