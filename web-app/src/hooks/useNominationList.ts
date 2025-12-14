@@ -4,6 +4,8 @@ import type { NominationList, IndoorPlayerNomination } from "@/api/client";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 
+const NOMINATION_LIST_STALE_TIME_MS = 5 * 60 * 1000;
+
 export interface RosterPlayer {
   id: string;
   shirtNumber: number;
@@ -93,13 +95,12 @@ export function useNominationList({
 
   const query = useQuery({
     queryKey: ["nominationList", gameId, team],
+    // TODO(#37): Implement API fetch for nomination list
     queryFn: async (): Promise<NominationList | null> => {
-      // In a real implementation, this would fetch from the API
-      // For now, return null to indicate no data (demo mode handles its own data)
       return null;
     },
     enabled: enabled && !isDemoMode && !!gameId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: NOMINATION_LIST_STALE_TIME_MS,
   });
 
   const apiPlayers = useMemo(() => {

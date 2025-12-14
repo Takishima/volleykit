@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   useNominationList,
@@ -93,45 +93,28 @@ export function RosterVerificationPanel({
     new Set(),
   );
 
-  const handleRemovePlayer = useCallback(
-    (playerId: string) => {
-      setRemovedPlayerIds((prev) => {
-        const newSet = new Set(prev);
-        newSet.add(playerId);
-        return newSet;
-      });
+  // Notify parent when modifications change (fixes stale closure race condition)
+  useEffect(() => {
+    onModificationsChange?.({
+      added: addedPlayers,
+      removed: [...removedPlayerIds],
+    });
+  }, [addedPlayers, removedPlayerIds, onModificationsChange]);
 
-      // Notify parent of modifications
-      onModificationsChange?.({
-        added: addedPlayers,
-        removed: [...removedPlayerIds, playerId],
-      });
-    },
-    [addedPlayers, removedPlayerIds, onModificationsChange],
-  );
+  const handleRemovePlayer = useCallback((playerId: string) => {
+    setRemovedPlayerIds((prev) => {
+      const newSet = new Set(prev);
+      newSet.add(playerId);
+      return newSet;
+    });
+  }, []);
 
-  const handleUndoRemoval = useCallback(
-    (playerId: string) => {
-      setRemovedPlayerIds((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(playerId);
-        return newSet;
-      });
-
-      // Notify parent of modifications
-      const newRemovedIds = [...removedPlayerIds].filter(
-        (id) => id !== playerId,
-      );
-      onModificationsChange?.({
-        added: addedPlayers,
-        removed: newRemovedIds,
-      });
-    },
-    [addedPlayers, removedPlayerIds, onModificationsChange],
-  );
-
-  const handleAddPlayer = useCallback(() => {
-    // Placeholder for AddPlayerSheet integration (issue #36)
+  const handleUndoRemoval = useCallback((playerId: string) => {
+    setRemovedPlayerIds((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(playerId);
+      return newSet;
+    });
   }, []);
 
   // Combine original players with added players
@@ -212,12 +195,12 @@ export function RosterVerificationPanel({
         </div>
       )}
 
-      {/* Add Player button */}
+      {/* Add Player button - TODO(#36): Enable when AddPlayerSheet is implemented */}
       <div className="mt-4">
         <button
           type="button"
-          onClick={handleAddPlayer}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg border border-blue-200 dark:border-blue-800 transition-colors"
+          disabled
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-not-allowed"
         >
           <UserPlusIcon className="w-4 h-4" />
           {t("validation.roster.addPlayer")}
