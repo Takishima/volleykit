@@ -50,20 +50,23 @@ export function CompensationsPage() {
     setFilter(tabId as FilterType);
   }, []);
 
-  const getSwipeConfig = (compensation: CompensationRecord): SwipeConfig => {
-    const actions = createCompensationActions(compensation, {
-      onEditCompensation: editCompensationModal.open,
-      onGeneratePDF: handleGeneratePDF,
-    });
+  const getSwipeConfig = useCallback(
+    (compensation: CompensationRecord): SwipeConfig => {
+      const actions = createCompensationActions(compensation, {
+        onEditCompensation: editCompensationModal.open,
+        onGeneratePDF: handleGeneratePDF,
+      });
 
-    const isPaid = compensation.convocationCompensation?.paymentDone;
+      const isPaid = compensation.convocationCompensation?.paymentDone;
 
-    return {
-      left: isPaid
-        ? [actions.generatePDF]
-        : [actions.editCompensation, actions.generatePDF],
-    };
-  };
+      return {
+        left: isPaid
+          ? [actions.generatePDF]
+          : [actions.editCompensation, actions.generatePDF],
+      };
+    },
+    [editCompensationModal.open, handleGeneratePDF],
+  );
 
   const renderContent = () => {
     if (isLoading) {
@@ -155,8 +158,8 @@ export function CompensationsPage() {
         {renderContent()}
       </TabPanel>
 
-      {/* Edit Compensation Modal */}
-      {editCompensationModal.isOpen && editCompensationModal.compensation && (
+      {/* Edit Compensation Modal - compensation is guaranteed non-null by conditional render */}
+      {editCompensationModal.compensation && (
         <EditCompensationModal
           isOpen={editCompensationModal.isOpen}
           onClose={editCompensationModal.close}
