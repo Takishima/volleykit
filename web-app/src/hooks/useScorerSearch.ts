@@ -14,7 +14,13 @@ const scorerSearchKeys = {
     [...scorerSearchKeys.all, filters] as const,
 };
 
-// Cache duration: 5 minutes for search results
+/**
+ * Cache duration for search results.
+ * 5 minutes balances data freshness with reducing unnecessary requests:
+ * - Person data changes infrequently (names, IDs are stable)
+ * - Users often search for the same person multiple times in a session
+ * - Reduces load on the Elasticsearch backend
+ */
 const STALE_TIME_MS = 5 * 60 * 1000;
 
 /**

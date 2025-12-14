@@ -21,6 +21,13 @@ if (!import.meta.env.DEV && !API_BASE) {
   );
 }
 
+/**
+ * Default limit for search results when not explicitly specified.
+ * 50 balances comprehensive results with reasonable response times
+ * for typical Elasticsearch person searches.
+ */
+const DEFAULT_SEARCH_RESULTS_LIMIT = 50;
+
 // Backend error response schema
 const backendErrorSchema = z
   .object({
@@ -109,7 +116,8 @@ export type ExchangesResponse = Schemas["ExchangesResponse"];
 export type NominationList = Schemas["NominationList"];
 export type IndoorPlayerNomination = Schemas["IndoorPlayerNomination"];
 export type PossibleNomination = Schemas["PossibleNomination"];
-export type PossibleNominationsResponse = Schemas["PossibleNominationsResponse"];
+export type PossibleNominationsResponse =
+  Schemas["PossibleNominationsResponse"];
 
 // Person search types
 export type PersonSearchResult = Schemas["PersonSearchResult"];
@@ -588,19 +596,28 @@ export const api = {
     const propertyFilters: Array<{ propertyName: string; text: string }> = [];
 
     if (filters.firstName) {
-      propertyFilters.push({ propertyName: "firstName", text: filters.firstName });
+      propertyFilters.push({
+        propertyName: "firstName",
+        text: filters.firstName,
+      });
     }
     if (filters.lastName) {
-      propertyFilters.push({ propertyName: "lastName", text: filters.lastName });
+      propertyFilters.push({
+        propertyName: "lastName",
+        text: filters.lastName,
+      });
     }
     if (filters.yearOfBirth) {
-      propertyFilters.push({ propertyName: "yearOfBirth", text: filters.yearOfBirth });
+      propertyFilters.push({
+        propertyName: "yearOfBirth",
+        text: filters.yearOfBirth,
+      });
     }
 
     const searchConfig: Record<string, unknown> = {
       propertyFilters,
       offset: options?.offset ?? 0,
-      limit: options?.limit ?? 50,
+      limit: options?.limit ?? DEFAULT_SEARCH_RESULTS_LIMIT,
     };
 
     return apiRequest<PersonSearchResponse>(
