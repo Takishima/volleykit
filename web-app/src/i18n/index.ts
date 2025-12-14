@@ -195,6 +195,12 @@ interface Translations {
       errorLoading: string;
       playerCount: string;
     };
+    scorerSearch: {
+      searchPlaceholder: string;
+      searchHint: string;
+      searchError: string;
+      noScorerSelected: string;
+    };
   };
 }
 
@@ -395,6 +401,12 @@ const en: Translations = {
       loadingRoster: "Loading roster...",
       errorLoading: "Failed to load roster",
       playerCount: "{count} players",
+    },
+    scorerSearch: {
+      searchPlaceholder: "Search scorer by name...",
+      searchHint: "Enter name (e.g., 'Müller' or 'Hans Müller') or add birth year (e.g., 'Müller 1985')",
+      searchError: "Failed to search scorers",
+      noScorerSelected: "No scorer selected. Use the search above to find and select a scorer.",
     },
   },
 };
@@ -599,6 +611,12 @@ const de: Translations = {
       errorLoading: "Kader konnte nicht geladen werden",
       playerCount: "{count} Spieler",
     },
+    scorerSearch: {
+      searchPlaceholder: "Schreiber nach Name suchen...",
+      searchHint: "Namen eingeben (z.B. 'Müller' oder 'Hans Müller') oder Geburtsjahr hinzufügen (z.B. 'Müller 1985')",
+      searchError: "Schreibersuche fehlgeschlagen",
+      noScorerSelected: "Kein Schreiber ausgewählt. Verwenden Sie die Suche oben, um einen Schreiber zu finden und auszuwählen.",
+    },
   },
 };
 
@@ -802,6 +820,12 @@ const fr: Translations = {
       errorLoading: "Échec du chargement de l'effectif",
       playerCount: "{count} joueurs",
     },
+    scorerSearch: {
+      searchPlaceholder: "Rechercher un marqueur par nom...",
+      searchHint: "Entrez le nom (ex. 'Müller' ou 'Hans Müller') ou ajoutez l'année de naissance (ex. 'Müller 1985')",
+      searchError: "Échec de la recherche de marqueurs",
+      noScorerSelected: "Aucun marqueur sélectionné. Utilisez la recherche ci-dessus pour trouver et sélectionner un marqueur.",
+    },
   },
 };
 
@@ -1002,6 +1026,12 @@ const it: Translations = {
       loadingRoster: "Caricamento rosa...",
       errorLoading: "Caricamento rosa fallito",
       playerCount: "{count} giocatori",
+    },
+    scorerSearch: {
+      searchPlaceholder: "Cerca segnapunti per nome...",
+      searchHint: "Inserisci il nome (es. 'Müller' o 'Hans Müller') o aggiungi l'anno di nascita (es. 'Müller 1985')",
+      searchError: "Ricerca segnapunti fallita",
+      noScorerSelected: "Nessun segnapunti selezionato. Usa la ricerca sopra per trovare e selezionare un segnapunti.",
     },
   },
 };

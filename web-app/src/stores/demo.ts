@@ -5,6 +5,7 @@ import type {
   GameExchange,
   NominationList,
   PossibleNomination,
+  PersonSearchResult,
 } from "@/api/client";
 import { addDays, addHours, subDays } from "date-fns";
 
@@ -34,6 +35,7 @@ interface DemoState {
   exchanges: GameExchange[];
   nominationLists: MockNominationLists;
   possiblePlayers: PossibleNomination[];
+  scorers: PersonSearchResult[];
 
   // Demo user's referee level for filtering exchanges
   // Level string (e.g., "N2") and gradation value (higher = more qualified)
@@ -800,11 +802,105 @@ function generateDummyData() {
     },
   ];
 
+  const dummyScorers: PersonSearchResult[] = [
+    {
+      __identity: "demo-scorer-1",
+      firstName: "Hans",
+      lastName: "Müller",
+      displayName: "Hans Müller",
+      associationId: 12345,
+      birthday: "1985-03-15T00:00:00+00:00",
+      gender: "m",
+    },
+    {
+      __identity: "demo-scorer-2",
+      firstName: "Maria",
+      lastName: "Müller",
+      displayName: "Maria Müller",
+      associationId: 12346,
+      birthday: "1990-07-22T00:00:00+00:00",
+      gender: "f",
+    },
+    {
+      __identity: "demo-scorer-3",
+      firstName: "Peter",
+      lastName: "Schmidt",
+      displayName: "Peter Schmidt",
+      associationId: 23456,
+      birthday: "1978-11-08T00:00:00+00:00",
+      gender: "m",
+    },
+    {
+      __identity: "demo-scorer-4",
+      firstName: "Anna",
+      lastName: "Weber",
+      displayName: "Anna Weber",
+      associationId: 34567,
+      birthday: "1995-01-30T00:00:00+00:00",
+      gender: "f",
+    },
+    {
+      __identity: "demo-scorer-5",
+      firstName: "Thomas",
+      lastName: "Brunner",
+      displayName: "Thomas Brunner",
+      associationId: 45678,
+      birthday: "1982-09-12T00:00:00+00:00",
+      gender: "m",
+    },
+    {
+      __identity: "demo-scorer-6",
+      firstName: "Sandra",
+      lastName: "Keller",
+      displayName: "Sandra Keller",
+      associationId: 56789,
+      birthday: "1988-05-25T00:00:00+00:00",
+      gender: "f",
+    },
+    {
+      __identity: "demo-scorer-7",
+      firstName: "Marco",
+      lastName: "Meier",
+      displayName: "Marco Meier",
+      associationId: 67890,
+      birthday: "1992-12-03T00:00:00+00:00",
+      gender: "m",
+    },
+    {
+      __identity: "demo-scorer-8",
+      firstName: "Lisa",
+      lastName: "Fischer",
+      displayName: "Lisa Fischer",
+      associationId: 78901,
+      birthday: "1985-08-18T00:00:00+00:00",
+      gender: "f",
+    },
+    {
+      __identity: "demo-scorer-9",
+      firstName: "Stefan",
+      lastName: "Huber",
+      displayName: "Stefan Huber",
+      associationId: 89012,
+      birthday: "1975-04-07T00:00:00+00:00",
+      gender: "m",
+    },
+    {
+      __identity: "demo-scorer-10",
+      firstName: "Nicole",
+      lastName: "Steiner",
+      displayName: "Nicole Steiner",
+      associationId: 90123,
+      birthday: "1998-02-14T00:00:00+00:00",
+      gender: "f",
+    },
+  ];
+
   return {
     assignments: dummyAssignments,
     compensations: dummyCompensations,
     exchanges: dummyExchanges,
     possiblePlayers: dummyPossiblePlayers,
+    scorers: dummyScorers,
   };
 }
 
@@ -1328,6 +1424,7 @@ export const useDemoStore = create<DemoState>()((set) => ({
   exchanges: [],
   nominationLists: {},
   possiblePlayers: [],
+  scorers: [],
   userRefereeLevel: null,
   userRefereeLevelGradationValue: null,
 
@@ -1339,6 +1436,7 @@ export const useDemoStore = create<DemoState>()((set) => ({
       exchanges: data.exchanges,
       nominationLists: generateMockNominationLists(),
       possiblePlayers: data.possiblePlayers,
+      scorers: data.scorers,
       userRefereeLevel: DEMO_USER_REFEREE_LEVEL,
       userRefereeLevelGradationValue: DEMO_USER_REFEREE_LEVEL_GRADATION_VALUE,
     });
@@ -1351,6 +1449,7 @@ export const useDemoStore = create<DemoState>()((set) => ({
       exchanges: [],
       nominationLists: {},
       possiblePlayers: [],
+      scorers: [],
       userRefereeLevel: null,
       userRefereeLevelGradationValue: null,
     }),
@@ -1364,6 +1463,7 @@ export const useDemoStore = create<DemoState>()((set) => ({
         exchanges: newData.exchanges,
         nominationLists: generateMockNominationLists(),
         possiblePlayers: newData.possiblePlayers,
+        scorers: newData.scorers,
       };
     }),
 

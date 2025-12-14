@@ -111,6 +111,24 @@ export type IndoorPlayerNomination = Schemas["IndoorPlayerNomination"];
 export type PossibleNomination = Schemas["PossibleNomination"];
 export type PossibleNominationsResponse = Schemas["PossibleNominationsResponse"];
 
+// Person search types
+export type PersonSearchResult = Schemas["PersonSearchResult"];
+export type PersonSearchResponse = Schemas["PersonSearchResponse"];
+
+/**
+ * Search filters for person search endpoint.
+ * All filters use fuzzy matching via Elasticsearch.
+ * Results match persons where all provided filters match (AND logic).
+ */
+export interface PersonSearchFilter {
+  /** First name to search for (fuzzy match) */
+  firstName?: string;
+  /** Last name to search for (fuzzy match) */
+  lastName?: string;
+  /** Year of birth as 4-digit string (e.g., "1985") */
+  yearOfBirth?: string;
+}
+
 // Request parameter types
 export interface SearchConfiguration {
   offset?: number;
@@ -537,6 +555,58 @@ export const api = {
         nominationList: nominationListId,
         onlyFromMyTeam: options?.onlyFromMyTeam ?? true,
         onlyRelevantGender: options?.onlyRelevantGender ?? true,
+      },
+    );
+  },
+
+  /**
+   * Searches for persons by name or year of birth using Elasticsearch.
+   * Used for autocomplete when selecting scorers or other personnel.
+   *
+   * The search performs fuzzy matching on firstName, lastName, and yearOfBirth.
+   * Results include association ID, display name, and birthday.
+   *
+   * @param filters - Search filters (firstName, lastName, yearOfBirth)
+   * @param options - Pagination options (offset, limit)
+   * @returns Search results with person details
+   * @example
+   * // Search by last name
+   * const results = await api.searchPersons({ lastName: 'müller' });
+   *
+   * // Search by first and last name
+   * const results = await api.searchPersons({ firstName: 'hans', lastName: 'müller' });
+   *
+   * // Search by name and birth year
+   * const results = await api.searchPersons({ lastName: 'müller', yearOfBirth: '1985' });
+   */
+  async searchPersons(
+    filters: PersonSearchFilter,
+    options?: { offset?: number; limit?: number },
+  ): Promise<PersonSearchResponse> {
+    const propertyFilters: Array<{ propertyName: string; text: string }> = [];
+
+    if (filters.firstName) {
+      propertyFilters.push({ propertyName: "firstName", text: filters.firstName });
+    }
+    if (filters.lastName) {
+      propertyFilters.push({ propertyName: "lastName", text: filters.lastName });
+    }
+    if (filters.yearOfBirth) {
+      propertyFilters.push({ propertyName: "yearOfBirth", text: filters.yearOfBirth });
+    }
+
+    const searchConfig: Record<string, unknown> = {
+      propertyFilters,
+      offset: options?.offset ?? 0,
+      limit: options?.limit ?? 50,
+    };
+
+    return apiRequest<PersonSearchResponse>(
+      "/sportmanager.core/api%5celasticsearchperson/search",
+      "POST",
+      {
+        searchConfiguration: searchConfig,
+        propertyRenderConfiguration: ["birthday"],
       },
     );
   },

@@ -138,11 +138,31 @@ describe("AwayRosterPanel", () => {
   });
 });
 
+vi.mock("@/hooks/useScorerSearch", () => ({
+  useScorerSearch: vi.fn(() => ({
+    data: undefined,
+    isLoading: false,
+    isError: false,
+    error: null,
+  })),
+  parseSearchInput: vi.fn((input: string) => {
+    if (!input.trim()) return {};
+    return { lastName: input };
+  }),
+}));
+
+vi.mock("@/stores/auth", () => ({
+  useAuthStore: vi.fn((selector) => selector({ isDemoMode: false })),
+}));
+
 describe("ScorerPanel", () => {
   it("renders without crashing", () => {
-    render(<ScorerPanel />);
+    render(<ScorerPanel />, { wrapper: createWrapper() });
     expect(
-      screen.getByText("Scorer identification will be available here."),
+      screen.getByPlaceholderText("Search scorer by name..."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/No scorer selected/),
     ).toBeInTheDocument();
   });
 });

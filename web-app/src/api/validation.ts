@@ -232,6 +232,20 @@ export const gameExchangeSchema = z
   })
   .passthrough();
 
+// Person search result schema (for scorer search)
+export const personSearchResultSchema = z
+  .object({
+    __identity: uuidSchema,
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+    displayName: z.string().optional(),
+    associationId: z.number().optional().nullable(),
+    birthday: dateTimeSchema,
+    gender: z.enum(["m", "f"]).optional().nullable(),
+    _permissions: permissionsSchema,
+  })
+  .passthrough();
+
 // Response schemas
 export const assignmentsResponseSchema = z.object({
   items: z.array(assignmentSchema),
@@ -248,12 +262,20 @@ export const exchangesResponseSchema = z.object({
   totalItemsCount: z.number(),
 });
 
+export const personSearchResponseSchema = z.object({
+  items: z.array(personSearchResultSchema).optional(),
+  totalItemsCount: z.number().optional(),
+});
+
 // Type exports inferred from Zod schemas
 export type ValidatedAssignment = z.infer<typeof assignmentSchema>;
 export type ValidatedCompensationRecord = z.infer<
   typeof compensationRecordSchema
 >;
 export type ValidatedGameExchange = z.infer<typeof gameExchangeSchema>;
+export type ValidatedPersonSearchResult = z.infer<
+  typeof personSearchResultSchema
+>;
 export type ValidatedAssignmentsResponse = z.infer<
   typeof assignmentsResponseSchema
 >;
@@ -262,6 +284,9 @@ export type ValidatedCompensationsResponse = z.infer<
 >;
 export type ValidatedExchangesResponse = z.infer<
   typeof exchangesResponseSchema
+>;
+export type ValidatedPersonSearchResponse = z.infer<
+  typeof personSearchResponseSchema
 >;
 
 /**
