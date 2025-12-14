@@ -37,6 +37,7 @@ jobs:
             actions: read
           # Allow Claude to use npm commands for running tests, builds, and linting
           # Allow gh CLI for issue management (create, edit, list, comment)
+          # Allow MCP GitHub tools for issue management
           allowed_tools: |
             Bash(npm:*)
             Bash(gh issue create:*)
@@ -44,3 +45,9 @@ jobs:
             Bash(gh issue list:*)
             Bash(gh issue comment:*)
             Bash(gh issue view:*)
+            mcp__github__issue_read
+            mcp__github__issue_write
+            mcp__github__add_issue_comment
+            mcp__github__pull_request_read
+            mcp__github__pull_request_review_write
+            mcp__github__add_comment_to_pending_review
