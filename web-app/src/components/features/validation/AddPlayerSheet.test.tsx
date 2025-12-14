@@ -222,6 +222,23 @@ describe("AddPlayerSheet", () => {
     expect(screen.getByText("No players found")).toBeInTheDocument();
   });
 
+  it("clears search query when close button is clicked", () => {
+    const onClose = vi.fn();
+    render(<AddPlayerSheet {...defaultProps} onClose={onClose} />, {
+      wrapper: createWrapper(),
+    });
+
+    const searchInput = screen.getByPlaceholderText("Search players...");
+    fireEvent.change(searchInput, { target: { value: "Anna" } });
+    expect(searchInput).toHaveValue("Anna");
+
+    const closeButton = screen.getByRole("button", { name: /close/i });
+    fireEvent.click(closeButton);
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(searchInput).toHaveValue("");
+  });
+
   it("calls onAddPlayer when a player is selected", () => {
     const onAddPlayer = vi.fn();
     render(<AddPlayerSheet {...defaultProps} onAddPlayer={onAddPlayer} />, {
