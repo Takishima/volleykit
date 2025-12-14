@@ -1,10 +1,10 @@
 import { useState } from "react";
-import type { PersonSearchResult } from "@/api/client";
+import type { ValidatedPersonSearchResult } from "@/api/validation";
 import { ScorerSearchPanel } from "./ScorerSearchPanel";
 
 interface ScorerPanelProps {
-  onScorerChange?: (scorer: PersonSearchResult | null) => void;
-  initialScorer?: PersonSearchResult | null;
+  onScorerChange?: (scorer: ValidatedPersonSearchResult | null) => void;
+  initialScorer?: ValidatedPersonSearchResult | null;
 }
 
 /**
@@ -17,9 +17,9 @@ export function ScorerPanel({
   initialScorer = null,
 }: ScorerPanelProps) {
   const [selectedScorer, setSelectedScorer] =
-    useState<PersonSearchResult | null>(initialScorer);
+    useState<ValidatedPersonSearchResult | null>(initialScorer);
 
-  const handleScorerSelect = (scorer: PersonSearchResult | null) => {
+  const handleScorerSelect = (scorer: ValidatedPersonSearchResult | null) => {
     setSelectedScorer(scorer);
     onScorerChange?.(scorer);
   };

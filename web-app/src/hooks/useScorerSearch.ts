@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
+import { getApiClient, type PersonSearchFilter } from "@/api/client";
 import {
-  getApiClient,
-  type PersonSearchFilter,
-  type PersonSearchResult,
-} from "@/api/client";
+  validateResponse,
+  personSearchResponseSchema,
+  type ValidatedPersonSearchResult,
+} from "@/api/validation";
 import { useAuthStore } from "@/stores/auth";
 
 // Query key factory for scorer search
@@ -20,8 +21,13 @@ const STALE_TIME_MS = 5 * 60 * 1000;
  * Parses a search input string into search filters.
  * Supports flexible token parsing:
  * - Single word: treated as lastName
- * - Two words: treated as firstName and lastName (any order)
+ * - Two words: treated as firstName and lastName
  * - Four-digit number at end: treated as yearOfBirth
+ *
+ * Note: When two name tokens are provided, the first is treated as firstName
+ * and the second as lastName. This follows common Western conventions, but
+ * Elasticsearch's fuzzy matching typically handles reversed order (e.g.,
+ * "Müller Hans" vs "Hans Müller") well since both fields are searched.
  *
  * @example
  * parseSearchInput("müller") // { lastName: "müller" }
@@ -62,7 +68,7 @@ interface UseScorerSearchOptions {
 }
 
 interface UseScorerSearchResult {
-  data: PersonSearchResult[] | undefined;
+  data: ValidatedPersonSearchResult[] | undefined;
   isLoading: boolean;
   isError: boolean;
   error: Error | null;
@@ -93,7 +99,12 @@ export function useScorerSearch(
     queryKey: scorerSearchKeys.search(filters),
     queryFn: async () => {
       const response = await apiClient.searchPersons(filters);
-      return response.items ?? [];
+      const validated = validateResponse(
+        response,
+        personSearchResponseSchema,
+        "scorerSearch",
+      );
+      return validated.items ?? [];
     },
     enabled: options.enabled !== false && hasFilters,
     staleTime: STALE_TIME_MS,

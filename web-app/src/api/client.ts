@@ -115,10 +115,17 @@ export type PossibleNominationsResponse = Schemas["PossibleNominationsResponse"]
 export type PersonSearchResult = Schemas["PersonSearchResult"];
 export type PersonSearchResponse = Schemas["PersonSearchResponse"];
 
-// Search filter for person search endpoint
+/**
+ * Search filters for person search endpoint.
+ * All filters use fuzzy matching via Elasticsearch.
+ * Results match persons where all provided filters match (AND logic).
+ */
 export interface PersonSearchFilter {
+  /** First name to search for (fuzzy match) */
   firstName?: string;
+  /** Last name to search for (fuzzy match) */
   lastName?: string;
+  /** Year of birth as 4-digit string (e.g., "1985") */
   yearOfBirth?: string;
 }
 

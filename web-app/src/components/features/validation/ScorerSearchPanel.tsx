@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import type { PersonSearchResult } from "@/api/client";
+import type { ValidatedPersonSearchResult } from "@/api/validation";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useScorerSearch, parseSearchInput } from "@/hooks/useScorerSearch";
@@ -12,8 +12,8 @@ const SEARCH_DEBOUNCE_MS = 300;
 const FOCUS_DELAY_MS = 100;
 
 interface ScorerSearchPanelProps {
-  selectedScorer?: PersonSearchResult | null;
-  onScorerSelect: (scorer: PersonSearchResult | null) => void;
+  selectedScorer?: ValidatedPersonSearchResult | null;
+  onScorerSelect: (scorer: ValidatedPersonSearchResult | null) => void;
 }
 
 /**
@@ -43,16 +43,18 @@ export function ScorerSearchPanel({
   const searchFilters = parseSearchInput(debouncedQuery);
   const { data: results, isLoading, isError } = useScorerSearch(searchFilters);
 
-  // Focus search input on mount
+  // Focus search input on mount and when scorer is cleared
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      searchInputRef.current?.focus();
-    }, FOCUS_DELAY_MS);
-    return () => clearTimeout(timeout);
-  }, []);
+    if (!selectedScorer) {
+      const timeout = setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, FOCUS_DELAY_MS);
+      return () => clearTimeout(timeout);
+    }
+  }, [selectedScorer]);
 
   const handleSelect = useCallback(
-    (scorer: PersonSearchResult) => {
+    (scorer: ValidatedPersonSearchResult) => {
       onScorerSelect(scorer);
       setSearchQuery("");
     },

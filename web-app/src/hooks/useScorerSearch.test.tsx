@@ -126,7 +126,7 @@ describe("useScorerSearch", () => {
     const mockResponse: PersonSearchResponse = {
       items: [
         {
-          __identity: "scorer-1",
+          __identity: "a1111111-1111-4111-a111-111111111111",
           firstName: "Hans",
           lastName: "Müller",
           displayName: "Hans Müller",

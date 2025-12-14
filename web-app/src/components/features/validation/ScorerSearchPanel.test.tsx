@@ -3,11 +3,11 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { ScorerSearchPanel } from "./ScorerSearchPanel";
-import type { PersonSearchResult } from "@/api/client";
+import type { ValidatedPersonSearchResult } from "@/api/validation";
 
-const mockScorers: PersonSearchResult[] = [
+const mockScorers: ValidatedPersonSearchResult[] = [
   {
-    __identity: "scorer-1",
+    __identity: "a1111111-1111-4111-a111-111111111111",
     firstName: "Hans",
     lastName: "Müller",
     displayName: "Hans Müller",
@@ -16,7 +16,7 @@ const mockScorers: PersonSearchResult[] = [
     gender: "m",
   },
   {
-    __identity: "scorer-2",
+    __identity: "a2222222-2222-4222-a222-222222222222",
     firstName: "Maria",
     lastName: "Müller",
     displayName: "Maria Müller",
@@ -25,7 +25,7 @@ const mockScorers: PersonSearchResult[] = [
     gender: "f",
   },
   {
-    __identity: "scorer-3",
+    __identity: "a3333333-3333-4333-a333-333333333333",
     firstName: "Peter",
     lastName: "Schmidt",
     displayName: "Peter Schmidt",
