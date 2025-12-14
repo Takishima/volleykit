@@ -554,6 +554,22 @@ describe("ScorerSearchPanel - ARIA Attributes", () => {
     expect(searchInput).toBeInTheDocument();
   });
 
+  it("links search input to hint text via aria-describedby", () => {
+    render(
+      <ScorerSearchPanel selectedScorer={null} onScorerSelect={vi.fn()} />,
+      { wrapper: createWrapper() },
+    );
+
+    const searchInput = screen.getByRole("combobox");
+    const hintText = screen.getByText(/Enter name.*or add birth year/i);
+
+    expect(hintText).toHaveAttribute("id");
+    expect(searchInput).toHaveAttribute(
+      "aria-describedby",
+      hintText.getAttribute("id"),
+    );
+  });
+
   it("has listbox role on results list", async () => {
     render(
       <ScorerSearchPanel selectedScorer={null} onScorerSelect={vi.fn()} />,
