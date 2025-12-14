@@ -34,15 +34,22 @@ const dateTimeSchema = z
   .datetime({ offset: true })
   .optional()
   .nullable();
+
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
 // Date schema that accepts:
 // - ISO date format: "2024-01-15"
 // - ISO datetime format: "2024-12-19T23:00:00.000000+00:00" (API returns this for paymentValueDate)
 // - Empty string: "" (API returns this for unpaid compensations)
 // - null (API returns null for unpaid compensations)
+// Use z.union() with built-in validators instead of custom regex for:
+// - Better type safety (Zod's battle-tested datetime validation)
+// - Clearer intent (explicit format separation)
+// - Better error messages
 export const dateSchema = z
   .union([
     z.literal(""),
-    z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    z.string().regex(ISO_DATE_PATTERN),
     z.string().datetime({ offset: true }),
   ])
   .optional()
