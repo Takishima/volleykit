@@ -4,7 +4,7 @@ import {
   isAuthError,
   isRetryableError,
   calculateRetryDelay,
-  MAX_QUERY_RETRIES,
+  RETRY_CONFIG,
 } from "./query-error-utils";
 
 const BASE_DELAY_MS = 1000;
@@ -154,13 +154,13 @@ describe("query-error-utils", () => {
     });
   });
 
-  describe("MAX_QUERY_RETRIES", () => {
+  describe("RETRY_CONFIG.MAX_QUERY_RETRIES", () => {
     it("should be defined as 3", () => {
-      expect(MAX_QUERY_RETRIES).toBe(3);
+      expect(RETRY_CONFIG.MAX_QUERY_RETRIES).toBe(3);
     });
 
     it("should be a number constant", () => {
-      expect(typeof MAX_QUERY_RETRIES).toBe("number");
+      expect(typeof RETRY_CONFIG.MAX_QUERY_RETRIES).toBe("number");
     });
   });
 });
