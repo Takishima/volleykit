@@ -27,6 +27,12 @@ export function useTabNavigation<T extends string>({
       } else if (e.key === "ArrowLeft") {
         e.preventDefault();
         nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        nextIndex = 0;
+      } else if (e.key === "End") {
+        e.preventDefault();
+        nextIndex = tabs.length - 1;
       }
 
       if (nextIndex !== null) {
