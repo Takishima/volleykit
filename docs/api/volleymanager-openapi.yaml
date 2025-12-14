@@ -1837,20 +1837,84 @@ components:
           type: string
           enum: [Mon, Tue, Wed, Thu, Fri, Sat, Sun]
           example: "Mon"
+        status:
+          type: string
+          description: Game status (e.g., "approved", "scheduled", "completed")
+          example: "approved"
         encounter:
           $ref: '#/components/schemas/Encounter'
         group:
           $ref: '#/components/schemas/Group'
         hall:
           $ref: '#/components/schemas/Hall'
+        # Nomination list flags
         hasNominationListToReviewByReferee:
           type: boolean
+        hasNominationListOfTeamHomeOfActiveParty:
+          type: boolean
+          description: Whether active party has home team nomination list access
+        hasNominationListOfTeamAwayOfActiveParty:
+          type: boolean
+          description: Whether active party has away team nomination list access
+        hasNominationListOfTeamOfActiveParty:
+          type: boolean
+          description: Whether active party has any team nomination list access
+        # Nomination lists (for showWithNestedObjects)
+        nominationListOfTeamHome:
+          $ref: '#/components/schemas/NominationList'
+        nominationListOfTeamAway:
+          $ref: '#/components/schemas/NominationList'
+        scoresheet:
+          $ref: '#/components/schemas/Scoresheet'
+        # Game result flags
         isVolleyCupGameWithoutNationalAssociationLeagueCategoryTeams:
+          type: boolean
+        isForfeitGame:
+          type: boolean
+          description: Whether the game was forfeited
+        forfeitDecisionDateTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the forfeit decision was made
+        result:
+          type: object
+          nullable: true
+          description: Game result (null if not yet played)
+        bestOfSeriesResult:
+          type: object
+          nullable: true
+        pointSystem:
+          type: object
+          nullable: true
+        # Game result reports
+        hasGameResultReportFromHomeTeam:
+          type: boolean
+        hasGameResultReportFromAwayTeam:
+          type: boolean
+        hasGameResultReportFromReferee:
+          type: boolean
+        hasGameResultReportFromChampionshipOwner:
+          type: boolean
+        homeTeamGameResultReportDeadlineExceeded:
+          type: boolean
+        awayTeamGameResultReportDeadlineExceeded:
+          type: boolean
+        refereeGameResultReportDeadlineExceeded:
           type: boolean
         displayName:
           type: string
           description: Full formatted display name for the game
           example: "#382417 | 08.12.2025 20:30 | #3926 | Volley Uster H2 — #85 | VC Tornado Adliswil H1 (3L, ♂, Hin- und Rückrunde, Herren 3. Liga Gruppe B)"
+        shortDisplayName:
+          type: string
+        shortDisplayNameWithoutStartingDate:
+          type: string
+        gameDayIndex:
+          type: integer
+          description: Match day number in the season
+        onAWeekday:
+          type: boolean
         lastPostponement:
           type: object
           nullable: true
@@ -2105,6 +2169,32 @@ components:
         name:
           type: string
           example: "Herren 3. Liga Gruppe B"
+        displayName:
+          type: string
+          example: "#27106 | Herren 2. Liga"
+        shortName:
+          type: string
+        identifier:
+          type: string
+        isTournamentGroup:
+          type: boolean
+          description: Whether this is a tournament group (affects nomination workflow)
+        hasNoScoresheet:
+          type: boolean
+          description: Whether games in this group require no scoresheet
+        bestOfSeriesState:
+          type: string
+          nullable: true
+        considerForTopScorerRanking:
+          type: boolean
+        playingInterval:
+          type: string
+          nullable: true
+        playingModeType:
+          type: string
+        managingAssociationShortName:
+          type: string
+          description: Short name of the managing association (e.g., "SVRZ")
         phase:
           $ref: '#/components/schemas/Phase'
     Phase:
@@ -2567,6 +2657,7 @@ components:
                   $ref: '#/components/schemas/PersonSummary'
     PersonSummary:
       type: object
+      description: Basic person information (minimal fields)
       properties:
         __identity:
           type: string
@@ -2580,6 +2671,75 @@ components:
         displayName:
           type: string
           example: "Nick Leo Kunz"
+        fullName:
+          type: string
+          description: Full formatted name
+        birthday:
+          type: string
+          format: date-time
+          nullable: true
+        formattedAndTimezoneIndependentBirthday:
+          type: string
+          description: Birthday formatted without timezone issues
+        age:
+          type: integer
+          description: Calculated age
+        yearOfBirth:
+          type: integer
+        gender:
+          type: string
+          enum: [m, f]
+        associationId:
+          type: integer
+          description: Swiss Volley association ID
+        # Contact info (when expanded)
+        primaryPhoneNumber:
+          type: string
+          nullable: true
+        mobilePhoneNumber:
+          type: string
+          nullable: true
+        # For minors
+        firstLegalGuardian:
+          type: object
+          nullable: true
+          description: First legal guardian (for junior players)
+        secondLegalGuardian:
+          type: object
+          nullable: true
+          description: Second legal guardian (for junior players)
+        # Account status
+        hasAccount:
+          type: boolean
+        accountActive:
+          type: boolean
+        username:
+          type: string
+          nullable: true
+        # Profile
+        hasProfilePicture:
+          type: boolean
+        profilePicture:
+          type: object
+          nullable: true
+        bodyHeight:
+          type: integer
+          nullable: true
+          description: Height in centimeters
+        # Language
+        language:
+          type: string
+        correspondenceLanguage:
+          type: string
+        localeIdentifier:
+          type: string
+        # GDPR
+        isAnonymized:
+          type: boolean
+        anonymizedAt:
+          type: string
+          format: date-time
+          nullable: true
     RefereePosition:
       type: string
       description: |
@@ -5312,6 +5472,9 @@ components:
         isClosedForTeam:
           type: boolean
           description: Whether the team can no longer modify the list
+        isSubsequentGameForTeamInTournamentGroup:
+          type: boolean
+          description: Whether this is a subsequent game for the team in a tournament group (affects nomination requirements)
         nominationListValidation:
           $ref: '#/components/schemas/NominationListValidation'
         notFoundButNominatedPersons:
@@ -5431,13 +5594,7 @@ components:
           type: string
           format: uuid
         indoorPlayer:
-          type: object
-          properties:
-            __identity:
-              type: string
-              format: uuid
-            person:
-              $ref: '#/components/schemas/PersonSummary'
+          $ref: '#/components/schemas/IndoorPlayer'
         shirtNumber:
           type: integer
           description: Player's shirt number for the game
@@ -5445,6 +5602,19 @@ components:
           type: boolean
         isLibero:
           type: boolean
+        isEligible:
+          type: boolean
+          description: Whether the player is eligible to play in this game
+        doubleLicenseTeam:
+          type: object
+          nullable: true
+          description: Team reference if player has a double license
+          properties:
+            __identity:
+              type: string
+              format: uuid
+            displayName:
+              type: string
         indoorPlayerLicenseCategory:
           type: object
           properties:
@@ -5460,6 +5630,15 @@ components:
             __identity:
               type: string
               format: uuid
+            hasValidationIssues:
+              type: boolean
+            hasUnresolvedValidationIssues:
+              type: boolean
+              description: Whether there are unresolved validation issues
+            hasValidationIssuesForAssociationUserContext:
+              type: boolean
+            hasValidationIssuesForClubUserContext:
+              type: boolean
             indoorPlayerNominationValidationIssues:
               type: array
               items:
@@ -5468,6 +5647,41 @@ components:
               type: object
               nullable: true
               description: If player is nominated for another game on the same day
+    IndoorPlayer:
+      type: object
+      description: An indoor volleyball player
+      properties:
+        __identity:
+          type: string
+          format: uuid
+        person:
+          $ref: '#/components/schemas/PersonSummary'
+        hasAcceptedDopingDeclaration:
+          type: boolean
+          description: Whether the player has accepted the doping declaration
+        hasActivatedIndoorLicense:
+          type: boolean
+          description: Whether the indoor license is activated
+        hasValidatedIndoorLicense:
+          type: boolean
+          description: Whether the indoor license is validated
+        hasPlayerPicture:
+          type: boolean
+        playerPicture:
+          type: object
+          nullable: true
+        isClassifiedAsLocallyEducated:
+          type: boolean
+          description: Whether player is classified as locally educated (relevant for foreigner rules)
+        isClassifiedAsLocallyEducatedManuallySet:
+          type: boolean
+          description: Whether the locally educated classification was manually set
+        isForeignerRegardingGamePlay:
+          type: boolean
+          description: Whether player counts as a foreigner for game play rules
+        totalLicensesCount:
+          type: integer
+          description: Total number of licenses held by the player
     PossibleNominationsResponse:
       type: object
       description: Response containing possible player nominations

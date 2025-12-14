@@ -292,12 +292,29 @@ GET /api/sportmanager.indoorvolleyball/api\game/showWithNestedObjects
 | scoresheet.file.persistentResource | Attached PDF file info |
 | scoresheet.file.publicResourceUri | Public URL to the PDF |
 | scoresheet.closedAt | When scoresheet was finalized |
+| scoresheet.game.startingDateTime | Game start time |
 | scoresheet.scoresheetValidation.scoresheetValidationIssues.*.validationIssueConfiguration.hideForUserContexts | Which contexts hide this issue |
-| nominationListOfTeamHome.* | Home team nomination list |
-| nominationListOfTeamAway.\* | Away team nomination list |
-| nominationListOfTeamHome.indoorPlayerNominations.*.indoorPlayer.person.birthday | Player birthdates |
-| nominationListOfTeamHome.indoorPlayerNominations.*.indoorPlayerLicenseCategory.shortName | License categories |
+| scoresheet.notFoundButNominatedPersons.*.birthday | Birthdates of unmatched persons |
+| scoresheet.notFoundButNominatedPersons.*.relatedPerson | Potentially matching persons |
+| scoresheet.emergencySubstituteReferees.*.person.birthday | Emergency referee birthdates |
+| nominationListOfTeamHome/Away.\* | Team nomination lists |
+| nominationListOfTeamHome/Away.game.startingDateTime | Game start time |
+| nominationListOfTeamHome/Away.game.encounter.teamHomeDisplayName | Team display names |
+| nominationListOfTeamHome/Away.game.group.isTournamentGroup | Whether tournament group |
+| nominationListOfTeamHome/Away.team | Team reference |
+| nominationListOfTeamHome/Away.closedAt | When nomination list was closed |
+| nominationListOfTeamHome/Away.coachPerson.\* | Head coach details |
+| nominationListOfTeamHome/Away.firstAssistantCoachPerson.\* | First assistant coach details |
+| nominationListOfTeamHome/Away.secondAssistantCoachPerson.\* | Second assistant coach details |
+| nominationListOfTeamHome/Away.indoorPlayerNominations.*.indoorPlayer.person.birthday | Player birthdates |
+| nominationListOfTeamHome/Away.indoorPlayerNominations.*.indoorPlayerLicenseCategory.shortName | License categories |
+| nominationListOfTeamHome/Away.indoorPlayerNominations.*.indoorPlayerNominationValidation.indoorPlayerNominationValidationIssues.*.validationIssueConfiguration.hideForUserContexts | Validation issue visibility |
+| nominationListOfTeamHome/Away.indoorPlayerNominations.*.indoorPlayerNominationValidation.gameOfOtherNominationOnSameDay | Other game on same day |
+| nominationListOfTeamHome/Away.nominationListValidation.nominationListValidationIssues.*.validationIssueConfiguration.hideForUserContexts | List validation visibility |
+| nominationListOfTeamHome/Away.notFoundButNominatedPersons.*.birthday | Unmatched person birthdates |
+| nominationListOfTeamHome/Away.notFoundButNominatedPersons.*.relatedPerson | Potentially matching persons |
 | group.phase.league.leagueCategory.writersCanUseSimpleScoresheetForThisLeagueCategory | Whether simple scoresheet allowed |
+| group.phase.league.leagueCategory.managingAssociation | Managing association |
 
 ______________________________________________________________________
 

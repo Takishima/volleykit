@@ -203,9 +203,60 @@ The dialog displays:
 
 ______________________________________________________________________
 
+## Game Object Fields
+
+When retrieving full game details via `showWithNestedObjects`, the following fields are available:
+
+### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| \_\_identity | UUID | Game identifier |
+| number | integer | Match number |
+| status | string | Game status (e.g., "approved", "scheduled", "completed") |
+| startingDateTime | datetime | Game start date/time |
+| playingWeekday | string | Day of week |
+| gameDayIndex | integer | Match day number in the season |
+| displayName | string | Full formatted display name |
+| shortDisplayName | string | Short display name |
+
+### Nomination List Flags
+
+| Field | Type | Description |
+|-------|------|-------------|
+| hasNominationListToReviewByReferee | boolean | Whether referee needs to review nomination lists |
+| hasNominationListOfTeamHomeOfActiveParty | boolean | Whether active party has home team access |
+| hasNominationListOfTeamAwayOfActiveParty | boolean | Whether active party has away team access |
+| hasNominationListOfTeamOfActiveParty | boolean | Whether active party has any team access |
+
+### Game Result Flags
+
+| Field | Type | Description |
+|-------|------|-------------|
+| isForfeitGame | boolean | Whether the game was forfeited |
+| forfeitDecisionDateTime | datetime/null | When forfeit decision was made |
+| hasGameResultReportFromHomeTeam | boolean | Home team submitted result |
+| hasGameResultReportFromAwayTeam | boolean | Away team submitted result |
+| hasGameResultReportFromReferee | boolean | Referee submitted result |
+| hasGameResultReportFromChampionshipOwner | boolean | Owner submitted result |
+| homeTeamGameResultReportDeadlineExceeded | boolean | Home team deadline exceeded |
+| awayTeamGameResultReportDeadlineExceeded | boolean | Away team deadline exceeded |
+| refereeGameResultReportDeadlineExceeded | boolean | Referee deadline exceeded |
+
+### Group Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| group.isTournamentGroup | boolean | Whether this is a tournament group |
+| group.hasNoScoresheet | boolean | Whether games require no scoresheet |
+| group.managingAssociationShortName | string | Managing association (e.g., "SVRZ") |
+
+______________________________________________________________________
+
 ## Notes
 
 - The game UUID comes from the `refereeGame.game.__identity` field in the exchange/assignment response
 - All 3 endpoints are called in parallel when opening the dialog
 - The Plus code is linked to Google Maps: `https://maps.google.com/?q=[Plus Code]&hl=fr`
 - Contact info includes email (mailto: links) and phone (tel: links)
+- The `isTournamentGroup` flag affects nomination list requirements for subsequent games

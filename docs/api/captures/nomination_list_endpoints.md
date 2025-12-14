@@ -298,8 +298,26 @@ Each player nomination contains:
 | shirtNumber | integer | Jersey number for the game |
 | isCaptain | boolean | Team captain designation |
 | isLibero | boolean | Libero player designation |
+| isEligible | boolean | Whether the player is eligible to play |
+| doubleLicenseTeam | object/null | Team reference if player has a double license |
 | indoorPlayerLicenseCategory | object | License category (SEN, JUN, etc.) |
 | indoorPlayerNominationValidation | object | Validation issues for this player |
+
+### Indoor Player Fields
+
+The `indoorPlayer` object contains:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| \_\_identity | UUID | Player record ID |
+| person | object | Person details (name, birthday, etc.) |
+| hasAcceptedDopingDeclaration | boolean | Whether player accepted doping declaration |
+| hasActivatedIndoorLicense | boolean | Whether indoor license is activated |
+| hasValidatedIndoorLicense | boolean | Whether indoor license is validated |
+| hasPlayerPicture | boolean | Whether player has a profile picture |
+| isClassifiedAsLocallyEducated | boolean | Locally educated classification (foreigner rules) |
+| isForeignerRegardingGamePlay | boolean | Counts as foreigner for game play rules |
+| totalLicensesCount | integer | Total licenses held by the player |
 
 ### License Categories
 
@@ -322,6 +340,10 @@ Player nominations can have validation issues:
 {
   "indoorPlayerNominationValidation": {
     "__identity": "<validation-uuid>",
+    "hasValidationIssues": true,
+    "hasUnresolvedValidationIssues": true,
+    "hasValidationIssuesForAssociationUserContext": true,
+    "hasValidationIssuesForClubUserContext": false,
     "indoorPlayerNominationValidationIssues": [
       {
         "__identity": "<issue-uuid>",
@@ -356,3 +378,4 @@ ______________________________________________________________________
 - Referees control the final nomination at the venue
 - The `isClosedForTeam` flag prevents team modifications while allowing referee edits
 - `notFoundButNominatedPersons` handles cases where a person isn't in the system
+- `isSubsequentGameForTeamInTournamentGroup` is true for second/third games in a tournament group, which may have different nomination requirements
