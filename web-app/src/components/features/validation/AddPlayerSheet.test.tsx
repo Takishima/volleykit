@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { AddPlayerSheet } from "./AddPlayerSheet";
@@ -80,6 +80,9 @@ function createWrapper() {
   };
 }
 
+// Debounce delay used in AddPlayerSheet component
+const SEARCH_DEBOUNCE_MS = 200;
+
 describe("AddPlayerSheet", () => {
   const defaultProps = {
     isOpen: true,
@@ -91,6 +94,11 @@ describe("AddPlayerSheet", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("renders when isOpen is true", () => {
@@ -180,6 +188,10 @@ describe("AddPlayerSheet", () => {
     const searchInput = screen.getByPlaceholderText("Search players...");
     fireEvent.change(searchInput, { target: { value: "Anna" } });
 
+    act(() => {
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+    });
+
     expect(screen.getByText("Anna Schmidt")).toBeInTheDocument();
     expect(screen.queryByText("Max Müller")).not.toBeInTheDocument();
   });
@@ -190,6 +202,10 @@ describe("AddPlayerSheet", () => {
     const searchInput = screen.getByPlaceholderText("Search players...");
     fireEvent.change(searchInput, { target: { value: "ANNA" } });
 
+    act(() => {
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+    });
+
     expect(screen.getByText("Anna Schmidt")).toBeInTheDocument();
   });
 
@@ -198,6 +214,10 @@ describe("AddPlayerSheet", () => {
 
     const searchInput = screen.getByPlaceholderText("Search players...");
     fireEvent.change(searchInput, { target: { value: "XYZ NonExistent" } });
+
+    act(() => {
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+    });
 
     expect(screen.getByText("No players found")).toBeInTheDocument();
   });
