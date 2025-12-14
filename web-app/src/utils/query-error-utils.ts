@@ -49,10 +49,16 @@ export function isRetryableError(error: unknown): boolean {
   return errorType === "network" || errorType === "rate_limit";
 }
 
-// Retry configuration constants
-const MAX_RETRY_DELAY_MS = 30000;
-const BASE_RETRY_DELAY_MS = 1000;
-const JITTER_FACTOR = 0.25;
+/**
+ * Retry configuration for TanStack Query.
+ * Exported as a single config object for easier testing and modification.
+ */
+export const RETRY_CONFIG = {
+  MAX_RETRY_DELAY_MS: 30000,
+  BASE_RETRY_DELAY_MS: 1000,
+  JITTER_FACTOR: 0.25,
+  MAX_QUERY_RETRIES: 3,
+} as const;
 
 /**
  * Calculate retry delay with exponential backoff and jitter.
@@ -66,9 +72,10 @@ export function calculateRetryDelay(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _error?: unknown,
 ): number {
-  const exponentialDelay = BASE_RETRY_DELAY_MS * Math.pow(2, attemptIndex);
-  const jitter = exponentialDelay * Math.random() * JITTER_FACTOR;
-  return Math.min(exponentialDelay + jitter, MAX_RETRY_DELAY_MS);
+  const exponentialDelay =
+    RETRY_CONFIG.BASE_RETRY_DELAY_MS * Math.pow(2, attemptIndex);
+  const jitter = exponentialDelay * Math.random() * RETRY_CONFIG.JITTER_FACTOR;
+  return Math.min(exponentialDelay + jitter, RETRY_CONFIG.MAX_RETRY_DELAY_MS);
 }
 
 /**
@@ -78,8 +85,3 @@ export function isAuthError(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
   return classifyQueryError(error.message) === "auth";
 }
-
-/**
- * Maximum number of retry attempts for queries.
- */
-export const MAX_QUERY_RETRIES = 3;
