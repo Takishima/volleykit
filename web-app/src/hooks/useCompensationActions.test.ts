@@ -9,6 +9,12 @@ import { MODAL_CLEANUP_DELAY } from "@/utils/assignment-helpers";
 
 vi.mock("@/stores/auth");
 vi.mock("@/stores/settings");
+vi.mock("@/hooks/useTranslation", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    language: "en",
+  }),
+}));
 
 function createMockCompensation(): CompensationRecord {
   return {
@@ -174,9 +180,7 @@ describe("useCompensationActions", () => {
       await result.current.handleGeneratePDF(mockCompensation);
     });
 
-    expect(alertSpy).toHaveBeenCalledWith(
-      "Failed to download compensation PDF. Please try again later.",
-    );
+    expect(alertSpy).toHaveBeenCalledWith("compensations.pdfDownloadFailed");
 
     alertSpy.mockRestore();
   });
@@ -235,7 +239,7 @@ describe("useCompensationActions", () => {
 
       expect(downloadSpy).not.toHaveBeenCalled();
       expect(alertSpy).toHaveBeenCalledWith(
-        "PDF downloads are not available in demo mode",
+        "compensations.pdfNotAvailableDemo",
       );
 
       alertSpy.mockRestore();
