@@ -172,6 +172,15 @@ describe("AddPlayerSheet", () => {
     expect(screen.queryByText("Max Müller")).not.toBeInTheDocument();
   });
 
+  it("performs case-insensitive search", () => {
+    render(<AddPlayerSheet {...defaultProps} />, { wrapper: createWrapper() });
+
+    const searchInput = screen.getByPlaceholderText("Search players...");
+    fireEvent.change(searchInput, { target: { value: "ANNA" } });
+
+    expect(screen.getByText("Anna Schmidt")).toBeInTheDocument();
+  });
+
   it("shows no results message when search has no matches", () => {
     render(<AddPlayerSheet {...defaultProps} />, { wrapper: createWrapper() });
 

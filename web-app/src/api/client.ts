@@ -504,7 +504,14 @@ export const api = {
    *
    * @param nominationListId - UUID of the nomination list
    * @param options.onlyFromMyTeam - Filter to players from the team's roster (default: true)
-   * @param options.onlyRelevantGender - Filter to players matching the league's gender (default: true)
+   * @param options.onlyRelevantGender - Filter to players matching the league's gender,
+   *   e.g., only female players for women's leagues (default: true)
+   * @returns List of possible player nominations with license info
+   * @example
+   * const players = await api.getPossiblePlayerNominations('uuid-123', {
+   *   onlyFromMyTeam: false,
+   *   onlyRelevantGender: true
+   * });
    */
   async getPossiblePlayerNominations(
     nominationListId: string,

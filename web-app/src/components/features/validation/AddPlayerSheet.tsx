@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import type { PossibleNomination } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { usePossiblePlayerNominations } from "@/hooks/usePlayerNominations";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 // Delay before focusing search input to ensure the sheet animation has started
 const FOCUS_DELAY_MS = 100;
@@ -158,7 +159,7 @@ export function AddPlayerSheet({
         <div className="flex-1 overflow-y-auto p-2">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+              <LoadingSpinner size="md" />
             </div>
           ) : isError ? (
             <div className="text-center py-8 text-red-500 dark:text-red-400">
