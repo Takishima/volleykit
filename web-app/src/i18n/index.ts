@@ -210,6 +210,7 @@ interface Translations {
       searchHint: string;
       searchError: string;
       noScorerSelected: string;
+      searchResults: string;
     };
     scoresheetUpload: {
       title: string;
@@ -443,9 +444,12 @@ const en: Translations = {
     },
     scorerSearch: {
       searchPlaceholder: "Search scorer by name...",
-      searchHint: "Enter name (e.g., 'Müller' or 'Hans Müller') or add birth year (e.g., 'Müller 1985')",
+      searchHint:
+        "Enter name (e.g., 'Müller' or 'Hans Müller') or add birth year (e.g., 'Müller 1985')",
       searchError: "Failed to search scorers",
-      noScorerSelected: "No scorer selected. Use the search above to find and select a scorer.",
+      noScorerSelected:
+        "No scorer selected. Use the search above to find and select a scorer.",
+      searchResults: "Search results",
     },
     scoresheetUpload: {
       title: "Upload Scoresheet",
@@ -458,7 +462,7 @@ const en: Translations = {
       uploadComplete: "Upload complete",
       replace: "Replace",
       remove: "Remove",
-fileTooLarge: "File is too large. Maximum size is 10 MB.",
+      fileTooLarge: "File is too large. Maximum size is 10 MB.",
       invalidFileType: "Invalid file type. Please use JPEG, PNG, or PDF.",
       demoModeNote: "Demo mode: uploads are simulated",
       previewAlt: "Scoresheet preview",
@@ -681,13 +685,17 @@ const de: Translations = {
     },
     scorerSearch: {
       searchPlaceholder: "Schreiber nach Name suchen...",
-      searchHint: "Namen eingeben (z.B. 'Müller' oder 'Hans Müller') oder Geburtsjahr hinzufügen (z.B. 'Müller 1985')",
+      searchHint:
+        "Namen eingeben (z.B. 'Müller' oder 'Hans Müller') oder Geburtsjahr hinzufügen (z.B. 'Müller 1985')",
       searchError: "Schreibersuche fehlgeschlagen",
-      noScorerSelected: "Kein Schreiber ausgewählt. Verwenden Sie die Suche oben, um einen Schreiber zu finden und auszuwählen.",
+      noScorerSelected:
+        "Kein Schreiber ausgewählt. Verwenden Sie die Suche oben, um einen Schreiber zu finden und auszuwählen.",
+      searchResults: "Suchergebnisse",
     },
     scoresheetUpload: {
       title: "Spielbericht hochladen",
-      description: "Laden Sie ein Foto oder einen Scan des physischen Spielberichts hoch",
+      description:
+        "Laden Sie ein Foto oder einen Scan des physischen Spielberichts hoch",
       acceptedFormats: "JPEG, PNG oder PDF",
       maxFileSize: "Max. 10 MB",
       selectFile: "Datei auswählen",
@@ -696,8 +704,9 @@ const de: Translations = {
       uploadComplete: "Upload abgeschlossen",
       replace: "Ersetzen",
       remove: "Entfernen",
-fileTooLarge: "Datei ist zu gross. Maximale Grösse ist 10 MB.",
-      invalidFileType: "Ungültiger Dateityp. Bitte verwenden Sie JPEG, PNG oder PDF.",
+      fileTooLarge: "Datei ist zu gross. Maximale Grösse ist 10 MB.",
+      invalidFileType:
+        "Ungültiger Dateityp. Bitte verwenden Sie JPEG, PNG oder PDF.",
       demoModeNote: "Demo-Modus: Uploads werden simuliert",
       previewAlt: "Spielbericht-Vorschau",
     },
@@ -919,13 +928,17 @@ const fr: Translations = {
     },
     scorerSearch: {
       searchPlaceholder: "Rechercher un marqueur par nom...",
-      searchHint: "Entrez le nom (ex. 'Müller' ou 'Hans Müller') ou ajoutez l'année de naissance (ex. 'Müller 1985')",
+      searchHint:
+        "Entrez le nom (ex. 'Müller' ou 'Hans Müller') ou ajoutez l'année de naissance (ex. 'Müller 1985')",
       searchError: "Échec de la recherche de marqueurs",
-      noScorerSelected: "Aucun marqueur sélectionné. Utilisez la recherche ci-dessus pour trouver et sélectionner un marqueur.",
+      noScorerSelected:
+        "Aucun marqueur sélectionné. Utilisez la recherche ci-dessus pour trouver et sélectionner un marqueur.",
+      searchResults: "Résultats de recherche",
     },
     scoresheetUpload: {
       title: "Télécharger la feuille de match",
-      description: "Téléchargez une photo ou un scan de la feuille de match physique",
+      description:
+        "Téléchargez une photo ou un scan de la feuille de match physique",
       acceptedFormats: "JPEG, PNG ou PDF",
       maxFileSize: "Max 10 Mo",
       selectFile: "Sélectionner un fichier",
@@ -934,8 +947,9 @@ const fr: Translations = {
       uploadComplete: "Téléchargement terminé",
       replace: "Remplacer",
       remove: "Supprimer",
-fileTooLarge: "Le fichier est trop volumineux. Taille maximale: 10 Mo.",
-      invalidFileType: "Type de fichier invalide. Veuillez utiliser JPEG, PNG ou PDF.",
+      fileTooLarge: "Le fichier est trop volumineux. Taille maximale: 10 Mo.",
+      invalidFileType:
+        "Type de fichier invalide. Veuillez utiliser JPEG, PNG ou PDF.",
       demoModeNote: "Mode démo: les téléchargements sont simulés",
       previewAlt: "Aperçu de la feuille de match",
     },
@@ -1154,9 +1168,12 @@ const it: Translations = {
     },
     scorerSearch: {
       searchPlaceholder: "Cerca segnapunti per nome...",
-      searchHint: "Inserisci il nome (es. 'Müller' o 'Hans Müller') o aggiungi l'anno di nascita (es. 'Müller 1985')",
+      searchHint:
+        "Inserisci il nome (es. 'Müller' o 'Hans Müller') o aggiungi l'anno di nascita (es. 'Müller 1985')",
       searchError: "Ricerca segnapunti fallita",
-      noScorerSelected: "Nessun segnapunti selezionato. Usa la ricerca sopra per trovare e selezionare un segnapunti.",
+      noScorerSelected:
+        "Nessun segnapunti selezionato. Usa la ricerca sopra per trovare e selezionare un segnapunti.",
+      searchResults: "Risultati della ricerca",
     },
     scoresheetUpload: {
       title: "Carica referto",
@@ -1169,7 +1186,7 @@ const it: Translations = {
       uploadComplete: "Caricamento completato",
       replace: "Sostituisci",
       remove: "Rimuovi",
-fileTooLarge: "Il file è troppo grande. Dimensione massima: 10 MB.",
+      fileTooLarge: "Il file è troppo grande. Dimensione massima: 10 MB.",
       invalidFileType: "Tipo di file non valido. Usa JPEG, PNG o PDF.",
       demoModeNote: "Modalità demo: i caricamenti sono simulati",
       previewAlt: "Anteprima referto",

@@ -24,7 +24,7 @@
     {
       "name": "JS Bundle",
       "path": "dist/assets/*.js",
-      "limit": "160 kB",
+      "limit": "161 kB",
       "gzip": true
     },
     {

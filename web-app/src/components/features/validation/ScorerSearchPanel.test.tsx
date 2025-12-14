@@ -108,9 +108,7 @@ describe("ScorerSearchPanel", () => {
     render(<ScorerSearchPanel {...defaultProps} />, {
       wrapper: createWrapper(),
     });
-    expect(
-      screen.getByText(/No scorer selected/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/No scorer selected/i)).toBeInTheDocument();
   });
 
   it("displays search results when query is entered", async () => {
@@ -167,10 +165,7 @@ describe("ScorerSearchPanel", () => {
 
   it("displays selected scorer when one is provided", () => {
     render(
-      <ScorerSearchPanel
-        {...defaultProps}
-        selectedScorer={mockScorers[0]}
-      />,
+      <ScorerSearchPanel {...defaultProps} selectedScorer={mockScorers[0]} />,
       { wrapper: createWrapper() },
     );
 
@@ -242,10 +237,7 @@ describe("ScorerSearchPanel - Loading State", () => {
     });
 
     render(
-      <ScorerSearchPanel
-        selectedScorer={null}
-        onScorerSelect={vi.fn()}
-      />,
+      <ScorerSearchPanel selectedScorer={null} onScorerSelect={vi.fn()} />,
       { wrapper: createWrapper() },
     );
 
@@ -280,10 +272,7 @@ describe("ScorerSearchPanel - Error State", () => {
     });
 
     render(
-      <ScorerSearchPanel
-        selectedScorer={null}
-        onScorerSelect={vi.fn()}
-      />,
+      <ScorerSearchPanel selectedScorer={null} onScorerSelect={vi.fn()} />,
       { wrapper: createWrapper() },
     );
 
@@ -320,10 +309,7 @@ describe("ScorerSearchPanel - Empty Results", () => {
     });
 
     render(
-      <ScorerSearchPanel
-        selectedScorer={null}
-        onScorerSelect={vi.fn()}
-      />,
+      <ScorerSearchPanel selectedScorer={null} onScorerSelect={vi.fn()} />,
       { wrapper: createWrapper() },
     );
 
@@ -335,5 +321,331 @@ describe("ScorerSearchPanel - Empty Results", () => {
     });
 
     expect(screen.getByText("No players found")).toBeInTheDocument();
+  });
+});
+
+describe("ScorerSearchPanel - Keyboard Navigation", () => {
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+    const { useScorerSearch } = await import("@/hooks/useScorerSearch");
+    vi.mocked(useScorerSearch).mockReturnValue({
+      data: mockScorers,
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("navigates down with ArrowDown key", async () => {
+    render(
+      <ScorerSearchPanel selectedScorer={null} onScorerSelect={vi.fn()} />,
+      { wrapper: createWrapper() },
+    );
+
+    const searchInput = screen.getByPlaceholderText("Search scorer by name...");
+    fireEvent.change(searchInput, { target: { value: "Müller" } });
+
+    act(() => {
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+    });
+
+    fireEvent.keyDown(searchInput, { key: "ArrowDown" });
+
+    const firstOption = screen.getByRole("option", { name: /Hans Müller/i });
+    expect(firstOption).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("navigates up with ArrowUp key", async () => {
+    render(
+      <ScorerSearchPanel selectedScorer={null} onScorerSelect={vi.fn()} />,
+      { wrapper: createWrapper() },
+    );
+
+    const searchInput = screen.getByPlaceholderText("Search scorer by name...");
+    fireEvent.change(searchInput, { target: { value: "Müller" } });
+
+    act(() => {
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+    });
+
+    fireEvent.keyDown(searchInput, { key: "ArrowDown" });
+    fireEvent.keyDown(searchInput, { key: "ArrowDown" });
+    fireEvent.keyDown(searchInput, { key: "ArrowUp" });
+
+    const firstOption = screen.getByRole("option", { name: /Hans Müller/i });
+    expect(firstOption).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("selects highlighted item with Enter key", async () => {
+    const onScorerSelect = vi.fn();
+    render(
+      <ScorerSearchPanel
+        selectedScorer={null}
+        onScorerSelect={onScorerSelect}
+      />,
+      { wrapper: createWrapper() },
+    );
+
+    const searchInput = screen.getByPlaceholderText("Search scorer by name...");
+    fireEvent.change(searchInput, { target: { value: "Müller" } });
+
+    act(() => {
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+    });
+
+    fireEvent.keyDown(searchInput, { key: "ArrowDown" });
+    fireEvent.keyDown(searchInput, { key: "Enter" });
+
+    expect(onScorerSelect).toHaveBeenCalledWith(mockScorers[0]);
+  });
+
+  it("clears highlight with Escape key", async () => {
+    render(
+      <ScorerSearchPanel selectedScorer={null} onScorerSelect={vi.fn()} />,
+      { wrapper: createWrapper() },
+    );
+
+    const searchInput = screen.getByPlaceholderText("Search scorer by name...");
+    fireEvent.change(searchInput, { target: { value: "Müller" } });
+
+    act(() => {
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+    });
+
+    fireEvent.keyDown(searchInput, { key: "ArrowDown" });
+    fireEvent.keyDown(searchInput, { key: "Escape" });
+
+    const options = screen.getAllByRole("option");
+    options.forEach((option) => {
+      expect(option).toHaveAttribute("aria-selected", "false");
+    });
+  });
+
+  it("navigates to first item with Home key", async () => {
+    render(
+      <ScorerSearchPanel selectedScorer={null} onScorerSelect={vi.fn()} />,
+      { wrapper: createWrapper() },
+    );
+
+    const searchInput = screen.getByPlaceholderText("Search scorer by name...");
+    fireEvent.change(searchInput, { target: { value: "Müller" } });
+
+    act(() => {
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+    });
+
+    fireEvent.keyDown(searchInput, { key: "ArrowDown" });
+    fireEvent.keyDown(searchInput, { key: "ArrowDown" });
+    fireEvent.keyDown(searchInput, { key: "Home" });
+
+    const firstOption = screen.getByRole("option", { name: /Hans Müller/i });
+    expect(firstOption).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("navigates to last item with End key", async () => {
+    render(
+      <ScorerSearchPanel selectedScorer={null} onScorerSelect={vi.fn()} />,
+      { wrapper: createWrapper() },
+    );
+
+    const searchInput = screen.getByPlaceholderText("Search scorer by name...");
+    fireEvent.change(searchInput, { target: { value: "Müller" } });
+
+    act(() => {
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+    });
+
+    fireEvent.keyDown(searchInput, { key: "End" });
+
+    const lastOption = screen.getByRole("option", { name: /Peter Schmidt/i });
+    expect(lastOption).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("resets highlight when search query changes", async () => {
+    render(
+      <ScorerSearchPanel selectedScorer={null} onScorerSelect={vi.fn()} />,
+      { wrapper: createWrapper() },
+    );
+
+    const searchInput = screen.getByPlaceholderText("Search scorer by name...");
+    fireEvent.change(searchInput, { target: { value: "Müller" } });
+
+    act(() => {
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+    });
+
+    fireEvent.keyDown(searchInput, { key: "ArrowDown" });
+
+    fireEvent.change(searchInput, { target: { value: "Schmidt" } });
+
+    act(() => {
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+    });
+
+    const options = screen.getAllByRole("option");
+    options.forEach((option) => {
+      expect(option).toHaveAttribute("aria-selected", "false");
+    });
+  });
+
+  it("resets highlight when clearing scorer", async () => {
+    const onScorerSelect = vi.fn();
+    const { rerender } = render(
+      <ScorerSearchPanel
+        selectedScorer={mockScorers[0]}
+        onScorerSelect={onScorerSelect}
+      />,
+      { wrapper: createWrapper() },
+    );
+
+    const clearButton = screen.getByRole("button", { name: /close/i });
+    fireEvent.click(clearButton);
+
+    rerender(
+      <ScorerSearchPanel
+        selectedScorer={null}
+        onScorerSelect={onScorerSelect}
+      />,
+    );
+
+    const searchInput = screen.getByPlaceholderText("Search scorer by name...");
+    fireEvent.change(searchInput, { target: { value: "Müller" } });
+
+    act(() => {
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+    });
+
+    const options = screen.getAllByRole("option");
+    options.forEach((option) => {
+      expect(option).toHaveAttribute("aria-selected", "false");
+    });
+  });
+});
+
+describe("ScorerSearchPanel - ARIA Attributes", () => {
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+    const { useScorerSearch } = await import("@/hooks/useScorerSearch");
+    vi.mocked(useScorerSearch).mockReturnValue({
+      data: mockScorers,
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("has combobox role on search input", () => {
+    render(
+      <ScorerSearchPanel selectedScorer={null} onScorerSelect={vi.fn()} />,
+      { wrapper: createWrapper() },
+    );
+
+    const searchInput = screen.getByRole("combobox");
+    expect(searchInput).toBeInTheDocument();
+  });
+
+  it("has listbox role on results list", async () => {
+    render(
+      <ScorerSearchPanel selectedScorer={null} onScorerSelect={vi.fn()} />,
+      { wrapper: createWrapper() },
+    );
+
+    const searchInput = screen.getByPlaceholderText("Search scorer by name...");
+    fireEvent.change(searchInput, { target: { value: "Müller" } });
+
+    act(() => {
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+    });
+
+    const listbox = screen.getByRole("listbox");
+    expect(listbox).toBeInTheDocument();
+  });
+
+  it("has option role on each result item", async () => {
+    render(
+      <ScorerSearchPanel selectedScorer={null} onScorerSelect={vi.fn()} />,
+      { wrapper: createWrapper() },
+    );
+
+    const searchInput = screen.getByPlaceholderText("Search scorer by name...");
+    fireEvent.change(searchInput, { target: { value: "Müller" } });
+
+    act(() => {
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+    });
+
+    const options = screen.getAllByRole("option");
+    expect(options.length).toBe(mockScorers.length);
+  });
+
+  it("sets aria-expanded to true when results are shown", async () => {
+    render(
+      <ScorerSearchPanel selectedScorer={null} onScorerSelect={vi.fn()} />,
+      { wrapper: createWrapper() },
+    );
+
+    const searchInput = screen.getByRole("combobox");
+    expect(searchInput).toHaveAttribute("aria-expanded", "false");
+
+    fireEvent.change(searchInput, { target: { value: "Müller" } });
+
+    act(() => {
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+    });
+
+    expect(searchInput).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("updates aria-activedescendant on keyboard navigation", async () => {
+    render(
+      <ScorerSearchPanel selectedScorer={null} onScorerSelect={vi.fn()} />,
+      { wrapper: createWrapper() },
+    );
+
+    const searchInput = screen.getByRole("combobox");
+    fireEvent.change(searchInput, { target: { value: "Müller" } });
+
+    act(() => {
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+    });
+
+    expect(searchInput).not.toHaveAttribute("aria-activedescendant");
+
+    fireEvent.keyDown(searchInput, { key: "ArrowDown" });
+
+    expect(searchInput).toHaveAttribute("aria-activedescendant");
+    expect(searchInput.getAttribute("aria-activedescendant")).toContain(
+      mockScorers[0]!.__identity,
+    );
+  });
+
+  it("highlights item on mouse enter", async () => {
+    render(
+      <ScorerSearchPanel selectedScorer={null} onScorerSelect={vi.fn()} />,
+      { wrapper: createWrapper() },
+    );
+
+    const searchInput = screen.getByPlaceholderText("Search scorer by name...");
+    fireEvent.change(searchInput, { target: { value: "Müller" } });
+
+    act(() => {
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+    });
+
+    const secondOption = screen.getByRole("option", { name: /Maria Müller/i });
+    const button = secondOption.querySelector("button")!;
+    fireEvent.mouseEnter(button);
+
+    expect(secondOption).toHaveAttribute("aria-selected", "true");
   });
 });
