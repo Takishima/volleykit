@@ -268,7 +268,7 @@ describe("ValidateGameModal", () => {
       expect(mockOnClose).toHaveBeenCalledTimes(1);
     });
 
-    it("calls onClose when backdrop is clicked", () => {
+    it("does not close when clicking backdrop (accessibility fix: only Escape/button closes)", () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -278,11 +278,12 @@ describe("ValidateGameModal", () => {
         { wrapper: createWrapper() },
       );
 
+      // Click on backdrop (parent of dialog)
       const backdrop = screen.getByRole("dialog", {
         hidden: true,
       }).parentElement;
       fireEvent.click(backdrop!);
-      expect(mockOnClose).toHaveBeenCalledTimes(1);
+      expect(mockOnClose).not.toHaveBeenCalled();
     });
 
     it("does not close when clicking inside the modal", () => {
