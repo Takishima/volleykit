@@ -42,15 +42,6 @@ export function ValidateGameModal({
     onClose();
   }, [onClose]);
 
-  const handleBackdropClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (e.target === e.currentTarget) {
-        handleClose();
-      }
-    },
-    [handleClose],
-  );
-
   // Handle Escape key to close modal
   useEffect(() => {
     if (!isOpen) return;
@@ -76,7 +67,6 @@ export function ValidateGameModal({
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-      onClick={handleBackdropClick}
       aria-hidden="true"
     >
       <div
