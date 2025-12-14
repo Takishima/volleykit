@@ -72,7 +72,7 @@ export function useCompensationActions(): UseCompensationActionsResult {
           "[useCompensationActions] Demo mode: PDF download disabled",
         );
         // TODO(#77): Replace alert with toast notification when notification system is implemented
-        alert("PDF downloads are not available in demo mode");
+        alert(t("compensations.pdfNotAvailableDemo"));
         return;
       }
 
@@ -97,12 +97,12 @@ export function useCompensationActions(): UseCompensationActionsResult {
       } catch (error) {
         logger.error("[useCompensationActions] Failed to generate PDF:", error);
         // TODO(#77): Replace alert with toast notification when notification system is implemented
-        alert("Failed to download compensation PDF. Please try again later.");
+        alert(t("compensations.pdfDownloadFailed"));
       } finally {
         isDownloadingRef.current = false;
       }
     },
-    [isDemoMode],
+    [isDemoMode, t],
   );
 
   return {

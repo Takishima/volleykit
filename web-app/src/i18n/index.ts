@@ -91,6 +91,15 @@ interface Translations {
     total: string;
     all: string;
     received: string;
+    loading: string;
+    noCompensationsTitle: string;
+    noCompensationsDescription: string;
+    noPaidTitle: string;
+    noPaidDescription: string;
+    noUnpaidTitle: string;
+    noUnpaidDescription: string;
+    pdfNotAvailableDemo: string;
+    pdfDownloadFailed: string;
   };
   exchange: {
     title: string;
@@ -301,6 +310,16 @@ const en: Translations = {
     total: "Total",
     all: "All",
     received: "Received",
+    loading: "Loading compensations...",
+    noCompensationsTitle: "No compensations",
+    noCompensationsDescription: "You have no compensation records yet.",
+    noPaidTitle: "No paid compensations",
+    noPaidDescription: "No paid compensations found.",
+    noUnpaidTitle: "No pending compensations",
+    noUnpaidDescription: "No pending compensations. All caught up!",
+    pdfNotAvailableDemo: "PDF downloads are not available in demo mode",
+    pdfDownloadFailed:
+      "Failed to download compensation PDF. Please try again later.",
   },
   exchange: {
     title: "Exchange",
@@ -524,6 +543,17 @@ const de: Translations = {
     total: "Total",
     all: "Alle",
     received: "Erhalten",
+    loading: "Entschädigungen werden geladen...",
+    noCompensationsTitle: "Keine Entschädigungen",
+    noCompensationsDescription: "Sie haben noch keine Entschädigungseinträge.",
+    noPaidTitle: "Keine bezahlten Entschädigungen",
+    noPaidDescription: "Keine bezahlten Entschädigungen gefunden.",
+    noUnpaidTitle: "Keine ausstehenden Entschädigungen",
+    noUnpaidDescription: "Keine ausstehenden Entschädigungen. Alles erledigt!",
+    pdfNotAvailableDemo:
+      "PDF-Downloads sind im Demo-Modus nicht verfügbar",
+    pdfDownloadFailed:
+      "PDF konnte nicht heruntergeladen werden. Bitte versuchen Sie es später erneut.",
   },
   exchange: {
     title: "Tauschbörse",
@@ -749,6 +779,17 @@ const fr: Translations = {
     total: "Total",
     all: "Toutes",
     received: "Reçu",
+    loading: "Chargement des indemnités...",
+    noCompensationsTitle: "Aucune indemnité",
+    noCompensationsDescription: "Vous n'avez pas encore d'entrées d'indemnité.",
+    noPaidTitle: "Aucune indemnité payée",
+    noPaidDescription: "Aucune indemnité payée trouvée.",
+    noUnpaidTitle: "Aucune indemnité en attente",
+    noUnpaidDescription: "Aucune indemnité en attente. Tout est à jour!",
+    pdfNotAvailableDemo:
+      "Les téléchargements PDF ne sont pas disponibles en mode démo",
+    pdfDownloadFailed:
+      "Échec du téléchargement du PDF. Veuillez réessayer plus tard.",
   },
   exchange: {
     title: "Bourse aux échanges",
@@ -974,6 +1015,17 @@ const it: Translations = {
     total: "Totale",
     all: "Tutti",
     received: "Ricevuto",
+    loading: "Caricamento compensi...",
+    noCompensationsTitle: "Nessun compenso",
+    noCompensationsDescription: "Non hai ancora voci di compenso.",
+    noPaidTitle: "Nessun compenso pagato",
+    noPaidDescription: "Nessun compenso pagato trovato.",
+    noUnpaidTitle: "Nessun compenso in attesa",
+    noUnpaidDescription: "Nessun compenso in attesa. Tutto aggiornato!",
+    pdfNotAvailableDemo:
+      "I download PDF non sono disponibili in modalità demo",
+    pdfDownloadFailed:
+      "Impossibile scaricare il PDF. Riprova più tardi.",
   },
   exchange: {
     title: "Borsa scambi",

@@ -65,9 +65,29 @@ export function CompensationsPage() {
     };
   };
 
+  const getEmptyStateContent = () => {
+    switch (filter) {
+      case "paid":
+        return {
+          title: t("compensations.noPaidTitle"),
+          description: t("compensations.noPaidDescription"),
+        };
+      case "unpaid":
+        return {
+          title: t("compensations.noUnpaidTitle"),
+          description: t("compensations.noUnpaidDescription"),
+        };
+      default:
+        return {
+          title: t("compensations.noCompensationsTitle"),
+          description: t("compensations.noCompensationsDescription"),
+        };
+    }
+  };
+
   const renderContent = () => {
     if (isLoading) {
-      return <LoadingState message="Loading compensations..." />;
+      return <LoadingState message={t("compensations.loading")} />;
     }
 
     if (error) {
@@ -76,7 +96,7 @@ export function CompensationsPage() {
           message={
             error instanceof Error
               ? error.message
-              : "Failed to load compensations"
+              : t("compensations.noCompensations")
           }
           onRetry={() => refetch()}
         />
@@ -84,19 +104,8 @@ export function CompensationsPage() {
     }
 
     if (!data || data.length === 0) {
-      return (
-        <EmptyState
-          icon="💰"
-          title="No compensations"
-          description={
-            filter === "all"
-              ? "You have no compensation records yet."
-              : filter === "paid"
-                ? "No paid compensations found."
-                : "No pending compensations. All caught up!"
-          }
-        />
-      );
+      const { title, description } = getEmptyStateContent();
+      return <EmptyState icon="💰" title={title} description={description} />;
     }
 
     return (
