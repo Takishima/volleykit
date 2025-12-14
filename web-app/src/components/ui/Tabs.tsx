@@ -1,9 +1,44 @@
 import { useTabNavigation } from "@/hooks/useTabNavigation";
 
+/** Tab completion status for visual indicators */
+export type TabStatus = "complete" | "incomplete" | "optional";
+
 export interface Tab {
   id: string;
   label: string;
   badge?: string;
+  /** Completion status for visual indicator */
+  status?: TabStatus;
+}
+
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <polyline points="20,6 9,17 4,12" />
+    </svg>
+  );
+}
+
+function WarningDotIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="5" />
+    </svg>
+  );
 }
 
 interface TabsProps {
@@ -45,7 +80,7 @@ export function Tabs({
                 {...tabProps}
                 onClick={() => onTabChange(tab.id)}
                 className={`
-                  px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
+                  flex items-center px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
                   focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2
                   dark:focus-visible:ring-offset-gray-800
                   ${
@@ -55,6 +90,12 @@ export function Tabs({
                   }
                 `}
               >
+                {tab.status === "complete" && (
+                  <CheckIcon className="w-4 h-4 mr-1.5 text-green-600 dark:text-green-400" />
+                )}
+                {tab.status === "incomplete" && (
+                  <WarningDotIcon className="w-3 h-3 mr-1.5 text-amber-500 dark:text-amber-400" />
+                )}
                 {tab.label}
                 {tab.badge && (
                   <span className="ml-2 px-1.5 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">

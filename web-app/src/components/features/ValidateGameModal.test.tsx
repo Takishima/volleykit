@@ -24,9 +24,7 @@ vi.mock("@/stores/auth", () => ({
   useAuthStore: vi.fn((selector) => selector({ isDemoMode: false })),
 }));
 
-function createMockAssignment(
-  overrides: Partial<Assignment> = {},
-): Assignment {
+function createMockAssignment(overrides: Partial<Assignment> = {}): Assignment {
   return {
     __identity: "assignment-1",
     refereePosition: "head-one",
@@ -213,9 +211,7 @@ describe("ValidateGameModal", () => {
       expect(
         screen.getByPlaceholderText("Search scorer by name..."),
       ).toBeInTheDocument();
-      expect(
-        screen.getByText(/No scorer selected/),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/No scorer selected/)).toBeInTheDocument();
     });
 
     it("switches to Scoresheet panel when tab is clicked", () => {
@@ -257,7 +253,7 @@ describe("ValidateGameModal", () => {
   });
 
   describe("modal interactions", () => {
-    it("calls onClose when Close button is clicked", () => {
+    it("calls onClose when Cancel button is clicked (no unsaved changes)", () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -268,12 +264,12 @@ describe("ValidateGameModal", () => {
       );
 
       fireEvent.click(
-        screen.getByRole("button", { name: /Close/i, hidden: true }),
+        screen.getByRole("button", { name: /Cancel/i, hidden: true }),
       );
       expect(mockOnClose).toHaveBeenCalledTimes(1);
     });
 
-    it("calls onClose when Escape key is pressed", () => {
+    it("calls onClose when Escape key is pressed (no unsaved changes)", () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -287,7 +283,7 @@ describe("ValidateGameModal", () => {
       expect(mockOnClose).toHaveBeenCalledTimes(1);
     });
 
-    it("does not close when clicking backdrop (accessibility fix: only Escape/button closes)", () => {
+    it("closes when clicking backdrop (no unsaved changes)", () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -302,7 +298,7 @@ describe("ValidateGameModal", () => {
         hidden: true,
       }).parentElement;
       fireEvent.click(backdrop!);
-      expect(mockOnClose).not.toHaveBeenCalled();
+      expect(mockOnClose).toHaveBeenCalledTimes(1);
     });
 
     it("does not close when clicking inside the modal", () => {
@@ -356,6 +352,58 @@ describe("ValidateGameModal", () => {
       // Should be back to Home Roster (component remounted due to key change)
       expect(screen.getByText("VBC Zürich")).toBeInTheDocument();
       expect(screen.getByText("No players in roster")).toBeInTheDocument();
+    });
+  });
+
+  describe("validation state", () => {
+    it("renders Save button", () => {
+      render(
+        <ValidateGameModal
+          assignment={createMockAssignment()}
+          isOpen={true}
+          onClose={mockOnClose}
+        />,
+        { wrapper: createWrapper() },
+      );
+
+      expect(
+        screen.getByRole("button", { name: /Save/i, hidden: true }),
+      ).toBeInTheDocument();
+    });
+
+    it("disables Save button when required panels are incomplete", () => {
+      render(
+        <ValidateGameModal
+          assignment={createMockAssignment()}
+          isOpen={true}
+          onClose={mockOnClose}
+        />,
+        { wrapper: createWrapper() },
+      );
+
+      const saveButton = screen.getByRole("button", {
+        name: /Save/i,
+        hidden: true,
+      });
+      expect(saveButton).toBeDisabled();
+    });
+
+    it("renders both Cancel and Save buttons in footer", () => {
+      render(
+        <ValidateGameModal
+          assignment={createMockAssignment()}
+          isOpen={true}
+          onClose={mockOnClose}
+        />,
+        { wrapper: createWrapper() },
+      );
+
+      expect(
+        screen.getByRole("button", { name: /Cancel/i, hidden: true }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Save/i, hidden: true }),
+      ).toBeInTheDocument();
     });
   });
 });
