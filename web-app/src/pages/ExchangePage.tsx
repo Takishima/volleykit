@@ -97,13 +97,10 @@ export function ExchangePage() {
     [takeOverModal.open, removeFromExchangeModal.open],
   );
 
-  const tabs = useMemo(
-    () => [
-      { id: "open" as const, label: t("exchange.open") },
-      { id: "applied" as const, label: t("exchange.myApplications") },
-    ],
-    [t],
-  );
+  const tabs = [
+    { id: "open" as const, label: t("exchange.open") },
+    { id: "applied" as const, label: t("exchange.myApplications") },
+  ];
 
   const handleTabChange = useCallback((tabId: string) => {
     setStatusFilter(tabId as ExchangeStatus);

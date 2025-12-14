@@ -432,7 +432,10 @@ export function useValidationClosedAssignments(): UseQueryResult<
   const demoFilteredData = useMemo(() => {
     if (!isDemoMode) return [];
 
-    const inDateRange = demoAssignments.filter((assignment) => {
+    // Defensive fallback: store initializes assignments as [], but during SSR/hydration
+    // or in test environments, the store state may not be fully initialized yet.
+    const assignments = demoAssignments ?? [];
+    const inDateRange = assignments.filter((assignment) => {
       const gameDate = assignment.refereeGame?.game?.startingDateTime;
       if (!gameDate) return false;
 
