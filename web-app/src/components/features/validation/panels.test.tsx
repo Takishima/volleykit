@@ -183,6 +183,50 @@ describe("ScoresheetPanel", () => {
     vi.clearAllMocks();
   });
 
+  // Test setup helpers
+  function getFileInput(): HTMLInputElement {
+    const input = document.querySelector<HTMLInputElement>(
+      'input[type="file"]:not([capture])',
+    );
+    if (!input) {
+      throw new Error("File input not found in document");
+    }
+    return input;
+  }
+
+  function getCameraInput(): HTMLInputElement {
+    const input = document.querySelector<HTMLInputElement>(
+      'input[capture="environment"]',
+    );
+    if (!input) {
+      throw new Error("Camera input not found in document");
+    }
+    return input;
+  }
+
+  async function uploadTestFile(
+    fileInput: HTMLInputElement,
+    fileName = "test.jpg",
+    fileType = "image/jpeg",
+    content = "image content",
+  ): Promise<File> {
+    const file = new File([content], fileName, { type: fileType });
+    fireEvent.change(fileInput, { target: { files: [file] } });
+    await vi.runAllTimersAsync();
+    return file;
+  }
+
+  function selectFile(
+    fileInput: HTMLInputElement,
+    fileName = "test.jpg",
+    fileType = "image/jpeg",
+    content = "image content",
+  ): File {
+    const file = new File([content], fileName, { type: fileType });
+    fireEvent.change(fileInput, { target: { files: [file] } });
+    return file;
+  }
+
   it("renders without crashing", () => {
     render(<ScoresheetPanel />, { wrapper: createWrapper() });
     // Panel renders with upload UI
@@ -219,16 +263,7 @@ describe("ScoresheetPanel", () => {
 
   it("shows error for invalid file type", () => {
     render(<ScoresheetPanel />, { wrapper: createWrapper() });
-
-    const fileInput = document.querySelector(
-      'input[type="file"]:not([capture])',
-    ) as HTMLInputElement;
-
-    const invalidFile = new File(["content"], "test.txt", {
-      type: "text/plain",
-    });
-    fireEvent.change(fileInput, { target: { files: [invalidFile] } });
-
+    selectFile(getFileInput(), "test.txt", "text/plain", "content");
     expect(
       screen.getByText("Invalid file type. Please use JPEG, PNG, or PDF."),
     ).toBeInTheDocument();
@@ -236,18 +271,8 @@ describe("ScoresheetPanel", () => {
 
   it("shows error for file too large", () => {
     render(<ScoresheetPanel />, { wrapper: createWrapper() });
-
-    const fileInput = document.querySelector(
-      'input[type="file"]:not([capture])',
-    ) as HTMLInputElement;
-
-    // Create a file larger than 10MB (10 * 1024 * 1024 bytes)
     const largeContent = new Array(11 * 1024 * 1024).fill("a").join("");
-    const largeFile = new File([largeContent], "large.jpg", {
-      type: "image/jpeg",
-    });
-    fireEvent.change(fileInput, { target: { files: [largeFile] } });
-
+    selectFile(getFileInput(), "large.jpg", "image/jpeg", largeContent);
     expect(
       screen.getByText("File is too large. Maximum size is 10 MB."),
     ).toBeInTheDocument();
@@ -255,40 +280,18 @@ describe("ScoresheetPanel", () => {
 
   it("shows upload progress when valid file selected", async () => {
     render(<ScoresheetPanel />, { wrapper: createWrapper() });
+    const validFile = selectFile(getFileInput());
 
-    const fileInput = document.querySelector(
-      'input[type="file"]:not([capture])',
-    ) as HTMLInputElement;
-
-    const validFile = new File(["image content"], "test.jpg", {
-      type: "image/jpeg",
-    });
-    fireEvent.change(fileInput, { target: { files: [validFile] } });
-
-    // Should show uploading state
     expect(screen.getByText("Uploading...")).toBeInTheDocument();
     expect(mockCreateObjectURL).toHaveBeenCalledWith(validFile);
 
-    // Advance timers to complete upload (run all pending timers)
     await vi.runAllTimersAsync();
-
     expect(screen.getByText("Upload complete")).toBeInTheDocument();
   });
 
   it("shows replace and remove buttons after file selection", async () => {
     render(<ScoresheetPanel />, { wrapper: createWrapper() });
-
-    const fileInput = document.querySelector(
-      'input[type="file"]:not([capture])',
-    ) as HTMLInputElement;
-
-    const validFile = new File(["image content"], "test.jpg", {
-      type: "image/jpeg",
-    });
-    fireEvent.change(fileInput, { target: { files: [validFile] } });
-
-    // Advance timers to complete upload
-    await vi.runAllTimersAsync();
+    await uploadTestFile(getFileInput());
 
     expect(screen.getByRole("button", { name: "Replace" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Remove" })).toBeInTheDocument();
@@ -296,76 +299,38 @@ describe("ScoresheetPanel", () => {
 
   it("resets state when remove button clicked", async () => {
     render(<ScoresheetPanel />, { wrapper: createWrapper() });
-
-    const fileInput = document.querySelector(
-      'input[type="file"]:not([capture])',
-    ) as HTMLInputElement;
-
-    const validFile = new File(["image content"], "test.jpg", {
-      type: "image/jpeg",
-    });
-    fireEvent.change(fileInput, { target: { files: [validFile] } });
-
-    // Advance timers to complete upload
-    await vi.runAllTimersAsync();
-
+    await uploadTestFile(getFileInput());
     expect(screen.getByText("Upload complete")).toBeInTheDocument();
 
-    // Click remove button
     fireEvent.click(screen.getByRole("button", { name: "Remove" }));
 
-    // Should return to initial state
     expect(screen.getByText("Upload Scoresheet")).toBeInTheDocument();
     expect(mockRevokeObjectURL).toHaveBeenCalled();
   });
 
   it("displays PDF icon for PDF files instead of preview", () => {
     render(<ScoresheetPanel />, { wrapper: createWrapper() });
+    selectFile(getFileInput(), "test.pdf", "application/pdf", "pdf content");
 
-    const fileInput = document.querySelector(
-      'input[type="file"]:not([capture])',
-    ) as HTMLInputElement;
-
-    const pdfFile = new File(["pdf content"], "test.pdf", {
-      type: "application/pdf",
-    });
-    fireEvent.change(fileInput, { target: { files: [pdfFile] } });
-
-    // Should show PDF indicator text
     expect(screen.getByText("PDF")).toBeInTheDocument();
-    // Should NOT create object URL for PDF
     expect(mockCreateObjectURL).not.toHaveBeenCalled();
   });
 
   describe("User Interactions", () => {
     it("clicking Select File button triggers file input", () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
+      const clickSpy = vi.spyOn(getFileInput(), "click");
 
-      const fileInput = document.querySelector(
-        'input[type="file"]:not([capture])',
-      ) as HTMLInputElement;
-      const clickSpy = vi.spyOn(fileInput, "click");
-
-      const selectFileButton = screen.getByRole("button", {
-        name: "Select File",
-      });
-      fireEvent.click(selectFileButton);
+      fireEvent.click(screen.getByRole("button", { name: "Select File" }));
 
       expect(clickSpy).toHaveBeenCalled();
     });
 
     it("clicking Take Photo button triggers camera input", () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
+      const clickSpy = vi.spyOn(getCameraInput(), "click");
 
-      const cameraInput = document.querySelector(
-        'input[capture="environment"]',
-      ) as HTMLInputElement;
-      const clickSpy = vi.spyOn(cameraInput, "click");
-
-      const takePhotoButton = screen.getByRole("button", {
-        name: "Take Photo",
-      });
-      fireEvent.click(takePhotoButton);
+      fireEvent.click(screen.getByRole("button", { name: "Take Photo" }));
 
       expect(clickSpy).toHaveBeenCalled();
     });
@@ -374,86 +339,45 @@ describe("ScoresheetPanel", () => {
   describe("State Transitions", () => {
     it("verifies correct state during Replace flow", async () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
+      const fileInput = getFileInput();
+      await uploadTestFile(fileInput, "first.jpg");
 
-      const fileInput = document.querySelector(
-        'input[type="file"]:not([capture])',
-      ) as HTMLInputElement;
-
-      // Upload first file
-      const firstFile = new File(["content1"], "first.jpg", {
-        type: "image/jpeg",
-      });
-      fireEvent.change(fileInput, { target: { files: [firstFile] } });
-
-      await vi.runAllTimersAsync();
       expect(screen.getByText("Upload complete")).toBeInTheDocument();
       expect(screen.getByText("first.jpg")).toBeInTheDocument();
 
-      // Click Replace - should reset state and trigger file input
       const clickSpy = vi.spyOn(fileInput, "click");
       fireEvent.click(screen.getByRole("button", { name: "Replace" }));
 
       expect(mockRevokeObjectURL).toHaveBeenCalled();
       expect(clickSpy).toHaveBeenCalled();
 
-      // Select new file
-      const secondFile = new File(["content2"], "second.jpg", {
-        type: "image/jpeg",
-      });
-      fireEvent.change(fileInput, { target: { files: [secondFile] } });
-
-      await vi.runAllTimersAsync();
+      await uploadTestFile(fileInput, "second.jpg");
       expect(screen.getByText("second.jpg")).toBeInTheDocument();
     });
 
     it("prevents concurrent uploads during rapid file selections", async () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
+      const fileInput = getFileInput();
 
-      const fileInput = document.querySelector(
-        'input[type="file"]:not([capture])',
-      ) as HTMLInputElement;
-
-      const file1 = new File(["content1"], "file1.jpg", { type: "image/jpeg" });
-      const file2 = new File(["content2"], "file2.jpg", { type: "image/jpeg" });
-
-      // Select first file
-      fireEvent.change(fileInput, { target: { files: [file1] } });
+      selectFile(fileInput, "file1.jpg");
       expect(screen.getByText("Uploading...")).toBeInTheDocument();
-
-      // Verify createObjectURL was called once for first file
       const createObjectURLCalls = mockCreateObjectURL.mock.calls.length;
 
-      // Immediately try to select second file (should be ignored due to isUploadingRef guard)
-      fireEvent.change(fileInput, { target: { files: [file2] } });
-
-      // Verify createObjectURL wasn't called again (upload blocked by guard)
+      // Try second file - should be ignored due to isUploadingRef guard
+      selectFile(fileInput, "file2.jpg");
       expect(mockCreateObjectURL).toHaveBeenCalledTimes(createObjectURLCalls);
-
-      // First file should still be uploading
       expect(screen.getByText("file1.jpg")).toBeInTheDocument();
 
       await vi.runAllTimersAsync();
-      // After completion, still showing first file
       expect(screen.getByText("file1.jpg")).toBeInTheDocument();
     });
 
     it("verifies state reset after clicking Remove", async () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
-
-      const fileInput = document.querySelector(
-        'input[type="file"]:not([capture])',
-      ) as HTMLInputElement;
-
-      const validFile = new File(["image content"], "test.jpg", {
-        type: "image/jpeg",
-      });
-      fireEvent.change(fileInput, { target: { files: [validFile] } });
-
-      await vi.runAllTimersAsync();
+      await uploadTestFile(getFileInput());
 
       fireEvent.click(screen.getByRole("button", { name: "Remove" }));
 
-      // Should return to initial idle state
       expect(screen.getByText("Upload Scoresheet")).toBeInTheDocument();
       expect(
         screen.getByText("Upload a photo or scan of the physical scoresheet"),
@@ -471,20 +395,9 @@ describe("ScoresheetPanel", () => {
   describe("Cleanup Behavior", () => {
     it("calls URL.revokeObjectURL when replacing files", async () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
-
-      const fileInput = document.querySelector(
-        'input[type="file"]:not([capture])',
-      ) as HTMLInputElement;
-
-      const firstFile = new File(["content1"], "first.jpg", {
-        type: "image/jpeg",
-      });
-      fireEvent.change(fileInput, { target: { files: [firstFile] } });
-
-      await vi.runAllTimersAsync();
+      await uploadTestFile(getFileInput(), "first.jpg");
       mockRevokeObjectURL.mockClear();
 
-      // Replace triggers URL revocation
       fireEvent.click(screen.getByRole("button", { name: "Replace" }));
       expect(mockRevokeObjectURL).toHaveBeenCalledWith("blob:mock-url");
     });
@@ -496,20 +409,10 @@ describe("ScoresheetPanel", () => {
       const { unmount } = render(<ScoresheetPanel />, {
         wrapper: createWrapper(),
       });
+      selectFile(getFileInput());
 
-      const fileInput = document.querySelector(
-        'input[type="file"]:not([capture])',
-      ) as HTMLInputElement;
-
-      const validFile = new File(["image content"], "test.jpg", {
-        type: "image/jpeg",
-      });
-      fireEvent.change(fileInput, { target: { files: [validFile] } });
-
-      // Unmount while uploading
       unmount();
 
-      // Cleanup effect should clear timers
       expect(clearIntervalSpy).toHaveBeenCalled();
       expect(clearTimeoutSpy).toHaveBeenCalled();
 
@@ -521,17 +424,9 @@ describe("ScoresheetPanel", () => {
       const { unmount } = render(<ScoresheetPanel />, {
         wrapper: createWrapper(),
       });
-
-      const fileInput = document.querySelector(
-        'input[type="file"]:not([capture])',
-      ) as HTMLInputElement;
-
-      const validFile = new File(["image content"], "test.jpg", {
-        type: "image/jpeg",
-      });
-      fireEvent.change(fileInput, { target: { files: [validFile] } });
-
+      selectFile(getFileInput());
       mockRevokeObjectURL.mockClear();
+
       unmount();
 
       expect(mockRevokeObjectURL).toHaveBeenCalledWith("blob:mock-url");
@@ -541,41 +436,21 @@ describe("ScoresheetPanel", () => {
   describe("Accessibility", () => {
     it("has proper ARIA attributes on progress bar during upload", async () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
+      selectFile(getFileInput());
 
-      const fileInput = document.querySelector(
-        'input[type="file"]:not([capture])',
-      ) as HTMLInputElement;
-
-      const validFile = new File(["image content"], "test.jpg", {
-        type: "image/jpeg",
-      });
-      fireEvent.change(fileInput, { target: { files: [validFile] } });
-
-      // Progress bar should have proper ARIA attributes
       const progressBar = screen.getByRole("progressbar");
       expect(progressBar).toHaveAttribute("aria-valuemin", "0");
       expect(progressBar).toHaveAttribute("aria-valuemax", "100");
       expect(progressBar).toHaveAttribute("aria-valuenow");
       expect(progressBar).toHaveAttribute("aria-label", "Uploading...");
 
-      // After upload completes, progress bar should no longer be visible
       await vi.runAllTimersAsync();
       expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
     });
 
     it("announces upload completion via aria-live region", async () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
-
-      const fileInput = document.querySelector(
-        'input[type="file"]:not([capture])',
-      ) as HTMLInputElement;
-
-      const validFile = new File(["image content"], "test.jpg", {
-        type: "image/jpeg",
-      });
-      fireEvent.change(fileInput, { target: { files: [validFile] } });
-
-      await vi.runAllTimersAsync();
+      await uploadTestFile(getFileInput());
 
       const statusElement = screen.getByRole("status");
       expect(statusElement).toHaveAttribute("aria-live", "polite");
@@ -584,15 +459,7 @@ describe("ScoresheetPanel", () => {
 
     it("displays error with role alert", () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
-
-      const fileInput = document.querySelector(
-        'input[type="file"]:not([capture])',
-      ) as HTMLInputElement;
-
-      const invalidFile = new File(["content"], "test.txt", {
-        type: "text/plain",
-      });
-      fireEvent.change(fileInput, { target: { files: [invalidFile] } });
+      selectFile(getFileInput(), "test.txt", "text/plain", "content");
 
       const alert = screen.getByRole("alert");
       expect(alert).toBeInTheDocument();
@@ -604,30 +471,17 @@ describe("ScoresheetPanel", () => {
     it("has accessible labels on file inputs", () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
 
-      const fileInput = document.querySelector(
-        'input[type="file"]:not([capture])',
-      ) as HTMLInputElement;
-      const cameraInput = document.querySelector(
-        'input[capture="environment"]',
-      ) as HTMLInputElement;
-
-      expect(fileInput).toHaveAttribute("aria-label", "Select File");
-      expect(cameraInput).toHaveAttribute("aria-label", "Take Photo");
+      expect(getFileInput()).toHaveAttribute("aria-label", "Select File");
+      expect(getCameraInput()).toHaveAttribute("aria-label", "Take Photo");
     });
 
     it("supports keyboard activation of buttons", () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
-
-      const fileInput = document.querySelector(
-        'input[type="file"]:not([capture])',
-      ) as HTMLInputElement;
-      const clickSpy = vi.spyOn(fileInput, "click");
-
+      const clickSpy = vi.spyOn(getFileInput(), "click");
       const selectFileButton = screen.getByRole("button", {
         name: "Select File",
       });
 
-      // Simulate keyboard activation (Enter key)
       fireEvent.keyDown(selectFileButton, { key: "Enter" });
       fireEvent.click(selectFileButton);
 
@@ -657,49 +511,25 @@ describe("ScoresheetPanel", () => {
   describe("Edge Cases", () => {
     it("handles empty file list selection (user cancels file picker)", () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
+      fireEvent.change(getFileInput(), { target: { files: [] } });
 
-      const fileInput = document.querySelector(
-        'input[type="file"]:not([capture])',
-      ) as HTMLInputElement;
-
-      // Simulate user canceling file picker (empty file list)
-      fireEvent.change(fileInput, { target: { files: [] } });
-
-      // Should remain in idle state
       expect(screen.getByText("Upload Scoresheet")).toBeInTheDocument();
       expect(mockCreateObjectURL).not.toHaveBeenCalled();
     });
 
     it("handles null files property (user cancels file picker)", () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
+      fireEvent.change(getFileInput(), { target: { files: null } });
 
-      const fileInput = document.querySelector(
-        'input[type="file"]:not([capture])',
-      ) as HTMLInputElement;
-
-      // Simulate user canceling file picker (null files)
-      fireEvent.change(fileInput, { target: { files: null } });
-
-      // Should remain in idle state
       expect(screen.getByText("Upload Scoresheet")).toBeInTheDocument();
       expect(mockCreateObjectURL).not.toHaveBeenCalled();
     });
 
     it("displays file name with truncation class for long names", async () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
-
-      const fileInput = document.querySelector(
-        'input[type="file"]:not([capture])',
-      ) as HTMLInputElement;
-
       const longFileName =
         "this_is_a_very_long_file_name_that_should_be_truncated_in_the_ui.jpg";
-      const validFile = new File(["image content"], longFileName, {
-        type: "image/jpeg",
-      });
-      fireEvent.change(fileInput, { target: { files: [validFile] } });
-
-      await vi.runAllTimersAsync();
+      await uploadTestFile(getFileInput(), longFileName);
 
       const fileNameElement = screen.getByText(longFileName);
       expect(fileNameElement).toBeInTheDocument();
@@ -708,108 +538,63 @@ describe("ScoresheetPanel", () => {
 
     it("disables Replace and Remove buttons during upload", () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
+      selectFile(getFileInput());
 
-      const fileInput = document.querySelector(
-        'input[type="file"]:not([capture])',
-      ) as HTMLInputElement;
-
-      const validFile = new File(["image content"], "test.jpg", {
-        type: "image/jpeg",
-      });
-      fireEvent.change(fileInput, { target: { files: [validFile] } });
-
-      const replaceButton = screen.getByRole("button", { name: "Replace" });
-      const removeButton = screen.getByRole("button", { name: "Remove" });
-
-      expect(replaceButton).toBeDisabled();
-      expect(removeButton).toBeDisabled();
+      expect(screen.getByRole("button", { name: "Replace" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "Remove" })).toBeDisabled();
     });
 
     it("enables Replace and Remove buttons after upload complete", async () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
+      await uploadTestFile(getFileInput());
 
-      const fileInput = document.querySelector(
-        'input[type="file"]:not([capture])',
-      ) as HTMLInputElement;
-
-      const validFile = new File(["image content"], "test.jpg", {
-        type: "image/jpeg",
-      });
-      fireEvent.change(fileInput, { target: { files: [validFile] } });
-
-      await vi.runAllTimersAsync();
-
-      const replaceButton = screen.getByRole("button", { name: "Replace" });
-      const removeButton = screen.getByRole("button", { name: "Remove" });
-
-      expect(replaceButton).not.toBeDisabled();
-      expect(removeButton).not.toBeDisabled();
+      expect(
+        screen.getByRole("button", { name: "Replace" }),
+      ).not.toBeDisabled();
+      expect(screen.getByRole("button", { name: "Remove" })).not.toBeDisabled();
     });
 
     it("clears error when valid file is selected after invalid file", () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
+      const fileInput = getFileInput();
 
-      const fileInput = document.querySelector(
-        'input[type="file"]:not([capture])',
-      ) as HTMLInputElement;
-
-      // First select invalid file
-      const invalidFile = new File(["content"], "test.txt", {
-        type: "text/plain",
-      });
-      fireEvent.change(fileInput, { target: { files: [invalidFile] } });
+      selectFile(fileInput, "test.txt", "text/plain", "content");
       expect(screen.getByRole("alert")).toBeInTheDocument();
 
-      // Then select valid file
-      const validFile = new File(["image content"], "test.jpg", {
-        type: "image/jpeg",
-      });
-      fireEvent.change(fileInput, { target: { files: [validFile] } });
-
+      selectFile(fileInput);
       expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     });
 
     it("displays correct file size formatting for KB", async () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
-
-      const fileInput = document.querySelector(
-        'input[type="file"]:not([capture])',
-      ) as HTMLInputElement;
-
       const kbContent = new Array(TWO_KILOBYTES).fill("a").join("");
-      const kbFile = new File([kbContent], "small.jpg", { type: "image/jpeg" });
-      fireEvent.change(fileInput, { target: { files: [kbFile] } });
+      await uploadTestFile(
+        getFileInput(),
+        "small.jpg",
+        "image/jpeg",
+        kbContent,
+      );
 
-      await vi.runAllTimersAsync();
       expect(screen.getByText("2.0 KB")).toBeInTheDocument();
     });
 
     it("displays correct file size formatting for bytes", async () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
+      await uploadTestFile(getFileInput(), "tiny.jpg", "image/jpeg", "abc");
 
-      const fileInput = document.querySelector(
-        'input[type="file"]:not([capture])',
-      ) as HTMLInputElement;
-
-      const bytesFile = new File(["abc"], "tiny.jpg", { type: "image/jpeg" });
-      fireEvent.change(fileInput, { target: { files: [bytesFile] } });
-
-      await vi.runAllTimersAsync();
       expect(screen.getByText("3 B")).toBeInTheDocument();
     });
 
     it("displays correct file size formatting for MB", async () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
-
-      const fileInput = document.querySelector(
-        'input[type="file"]:not([capture])',
-      ) as HTMLInputElement;
-
       const mbContent = new Array(TWO_MEGABYTES).fill("a").join("");
-      const mbFile = new File([mbContent], "large.jpg", { type: "image/jpeg" });
-      fireEvent.change(fileInput, { target: { files: [mbFile] } });
+      await uploadTestFile(
+        getFileInput(),
+        "large.jpg",
+        "image/jpeg",
+        mbContent,
+      );
 
-      await vi.runAllTimersAsync();
       expect(screen.getByText("2.0 MB")).toBeInTheDocument();
     });
   });
