@@ -1,6 +1,10 @@
 import type { CompensationRecord } from "@/api/client";
 import type { SwipeAction } from "@/types/swipe";
 
+// Swipe action icons
+const ICON_EDIT = "💰";
+const ICON_PDF = "📄";
+
 export interface CompensationActionConfig {
   editCompensation: SwipeAction;
   generatePDF: SwipeAction;
@@ -21,7 +25,7 @@ export function createCompensationActions(
       label: "Edit Compensation",
       shortLabel: "Edit",
       color: "bg-blue-500",
-      icon: "💰",
+      icon: ICON_EDIT,
       onAction: () => handlers.onEditCompensation(compensation),
     },
     generatePDF: {
@@ -29,7 +33,7 @@ export function createCompensationActions(
       label: "Generate PDF",
       shortLabel: "PDF",
       color: "bg-orange-500",
-      icon: "📄",
+      icon: ICON_PDF,
       onAction: () => handlers.onGeneratePDF(compensation),
     },
   };

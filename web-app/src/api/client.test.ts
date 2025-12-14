@@ -280,7 +280,7 @@ describe("API Client", () => {
   });
 
   describe("applyForExchange", () => {
-    it("sends PUT request with exchange ID and action", async () => {
+    it("sends PUT request with __identity and apply=1 per OpenAPI spec", async () => {
       mockFetch.mockResolvedValueOnce(createMockResponse({}));
 
       await api.applyForExchange("exchange-123");
@@ -288,13 +288,13 @@ describe("API Client", () => {
       const [, options] = mockFetch.mock.calls[0]!;
       expect(options.method).toBe("PUT");
       const body = options.body as URLSearchParams;
-      expect(body.get("gameExchange")).toBe("exchange-123");
-      expect(body.get("action")).toBe("apply");
+      expect(body.get("__identity")).toBe("exchange-123");
+      expect(body.get("apply")).toBe("1");
     });
   });
 
   describe("withdrawFromExchange", () => {
-    it("sends PUT request with exchange ID and withdraw action", async () => {
+    it("sends PUT request with __identity and withdrawApplication=1 per OpenAPI spec", async () => {
       mockFetch.mockResolvedValueOnce(createMockResponse({}));
 
       await api.withdrawFromExchange("exchange-456");
@@ -302,8 +302,8 @@ describe("API Client", () => {
       const [, options] = mockFetch.mock.calls[0]!;
       expect(options.method).toBe("PUT");
       const body = options.body as URLSearchParams;
-      expect(body.get("gameExchange")).toBe("exchange-456");
-      expect(body.get("action")).toBe("withdraw");
+      expect(body.get("__identity")).toBe("exchange-456");
+      expect(body.get("withdrawApplication")).toBe("1");
     });
   });
 
