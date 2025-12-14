@@ -100,6 +100,8 @@ export type RefereeGame = Schemas["RefereeGame"];
 export type PersonSummary = Schemas["PersonSummary"];
 export type AssociationSettings = Schemas["AssociationSettings"];
 export type Season = Schemas["Season"];
+export type NominationList = Schemas["NominationList"];
+export type IndoorPlayerNomination = Schemas["IndoorPlayerNomination"];
 
 // API response types
 export type AssignmentsResponse = Schemas["AssignmentsResponse"];

@@ -176,13 +176,18 @@ interface Translations {
     awayRosterPlaceholder: string;
     scorerPlaceholder: string;
     scoresheetPlaceholder: string;
-    addPlayer: string;
-    searchPlayers: string;
-    noPlayersFound: string;
-    loadPlayersError: string;
-    playerAlreadyAdded: string;
-    jerseyNumber: string;
-    license: string;
+    roster: {
+      addPlayer: string;
+      removePlayer: string;
+      undoRemoval: string;
+      newlyAdded: string;
+      captain: string;
+      libero: string;
+      emptyRoster: string;
+      loadingRoster: string;
+      errorLoading: string;
+      playerCount: string;
+    };
   };
 }
 
@@ -365,13 +370,18 @@ const en: Translations = {
       "Away team roster verification will be available here.",
     scorerPlaceholder: "Scorer identification will be available here.",
     scoresheetPlaceholder: "Scoresheet upload will be available here.",
-    addPlayer: "Add Player",
-    searchPlayers: "Search players...",
-    noPlayersFound: "No players found",
-    loadPlayersError: "Failed to load players",
-    playerAlreadyAdded: "Already on roster",
-    jerseyNumber: "Jersey #",
-    license: "License",
+    roster: {
+      addPlayer: "Add Player",
+      removePlayer: "Remove player",
+      undoRemoval: "Undo removal",
+      newlyAdded: "New",
+      captain: "Captain",
+      libero: "Libero",
+      emptyRoster: "No players in roster",
+      loadingRoster: "Loading roster...",
+      errorLoading: "Failed to load roster",
+      playerCount: "{count} players",
+    },
   },
 };
 
@@ -556,13 +566,18 @@ const de: Translations = {
     scorerPlaceholder: "Die Schreiberidentifikation wird hier verfügbar sein.",
     scoresheetPlaceholder:
       "Der Upload des Spielberichts wird hier verfügbar sein.",
-    addPlayer: "Spieler hinzufügen",
-    searchPlayers: "Spieler suchen...",
-    noPlayersFound: "Keine Spieler gefunden",
-    loadPlayersError: "Spieler konnten nicht geladen werden",
-    playerAlreadyAdded: "Bereits im Kader",
-    jerseyNumber: "Trikot #",
-    license: "Lizenz",
+    roster: {
+      addPlayer: "Spieler hinzufügen",
+      removePlayer: "Spieler entfernen",
+      undoRemoval: "Entfernung rückgängig",
+      newlyAdded: "Neu",
+      captain: "Kapitän",
+      libero: "Libero",
+      emptyRoster: "Keine Spieler im Kader",
+      loadingRoster: "Kader wird geladen...",
+      errorLoading: "Kader konnte nicht geladen werden",
+      playerCount: "{count} Spieler",
+    },
   },
 };
 
@@ -747,13 +762,18 @@ const fr: Translations = {
     scorerPlaceholder: "L'identification du marqueur sera disponible ici.",
     scoresheetPlaceholder:
       "Le téléchargement de la feuille de match sera disponible ici.",
-    addPlayer: "Ajouter un joueur",
-    searchPlayers: "Rechercher des joueurs...",
-    noPlayersFound: "Aucun joueur trouvé",
-    loadPlayersError: "Échec du chargement des joueurs",
-    playerAlreadyAdded: "Déjà dans l'effectif",
-    jerseyNumber: "Maillot #",
-    license: "Licence",
+    roster: {
+      addPlayer: "Ajouter un joueur",
+      removePlayer: "Retirer le joueur",
+      undoRemoval: "Annuler le retrait",
+      newlyAdded: "Nouveau",
+      captain: "Capitaine",
+      libero: "Libéro",
+      emptyRoster: "Aucun joueur dans l'effectif",
+      loadingRoster: "Chargement de l'effectif...",
+      errorLoading: "Échec du chargement de l'effectif",
+      playerCount: "{count} joueurs",
+    },
   },
 };
 
@@ -936,13 +956,18 @@ const it: Translations = {
       "La verifica della rosa ospite sarà disponibile qui.",
     scorerPlaceholder: "L'identificazione del segnapunti sarà disponibile qui.",
     scoresheetPlaceholder: "Il caricamento del referto sarà disponibile qui.",
-    addPlayer: "Aggiungi giocatore",
-    searchPlayers: "Cerca giocatori...",
-    noPlayersFound: "Nessun giocatore trovato",
-    loadPlayersError: "Impossibile caricare i giocatori",
-    playerAlreadyAdded: "Già nella rosa",
-    jerseyNumber: "Maglia #",
-    license: "Licenza",
+    roster: {
+      addPlayer: "Aggiungi giocatore",
+      removePlayer: "Rimuovi giocatore",
+      undoRemoval: "Annulla rimozione",
+      newlyAdded: "Nuovo",
+      captain: "Capitano",
+      libero: "Libero",
+      emptyRoster: "Nessun giocatore nella rosa",
+      loadingRoster: "Caricamento rosa...",
+      errorLoading: "Caricamento rosa fallito",
+      playerCount: "{count} giocatori",
+    },
   },
 };
 
