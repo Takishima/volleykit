@@ -215,6 +215,7 @@ interface Translations {
       fileTooLarge: string;
       invalidFileType: string;
       demoModeNote: string;
+      previewAlt: string;
     };
   };
 }
@@ -434,9 +435,10 @@ const en: Translations = {
       uploadComplete: "Upload complete",
       replace: "Replace",
       remove: "Remove",
-      fileTooLarge: "File is too large. Maximum size is 10 MB.",
+fileTooLarge: "File is too large. Maximum size is 10 MB.",
       invalidFileType: "Invalid file type. Please use JPEG, PNG, or PDF.",
       demoModeNote: "Demo mode: uploads are simulated",
+      previewAlt: "Scoresheet preview",
     },
   },
 };
@@ -658,9 +660,10 @@ const de: Translations = {
       uploadComplete: "Upload abgeschlossen",
       replace: "Ersetzen",
       remove: "Entfernen",
-      fileTooLarge: "Datei ist zu gross. Maximale Grösse ist 10 MB.",
+fileTooLarge: "Datei ist zu gross. Maximale Grösse ist 10 MB.",
       invalidFileType: "Ungültiger Dateityp. Bitte verwenden Sie JPEG, PNG oder PDF.",
       demoModeNote: "Demo-Modus: Uploads werden simuliert",
+      previewAlt: "Spielbericht-Vorschau",
     },
   },
 };
@@ -882,9 +885,10 @@ const fr: Translations = {
       uploadComplete: "Téléchargement terminé",
       replace: "Remplacer",
       remove: "Supprimer",
-      fileTooLarge: "Le fichier est trop volumineux. Taille maximale: 10 Mo.",
+fileTooLarge: "Le fichier est trop volumineux. Taille maximale: 10 Mo.",
       invalidFileType: "Type de fichier invalide. Veuillez utiliser JPEG, PNG ou PDF.",
       demoModeNote: "Mode démo: les téléchargements sont simulés",
+      previewAlt: "Aperçu de la feuille de match",
     },
   },
 };
@@ -1104,9 +1108,10 @@ const it: Translations = {
       uploadComplete: "Caricamento completato",
       replace: "Sostituisci",
       remove: "Rimuovi",
-      fileTooLarge: "Il file è troppo grande. Dimensione massima: 10 MB.",
+fileTooLarge: "Il file è troppo grande. Dimensione massima: 10 MB.",
       invalidFileType: "Tipo di file non valido. Usa JPEG, PNG o PDF.",
       demoModeNote: "Modalità demo: i caricamenti sono simulati",
+      previewAlt: "Anteprima referto",
     },
   },
 };

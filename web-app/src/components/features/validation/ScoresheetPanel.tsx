@@ -75,13 +75,15 @@ export function ScoresheetPanel() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const uploadTimersRef = useRef<{ interval?: ReturnType<typeof setInterval>; timeout?: ReturnType<typeof setTimeout> }>({});
+  const previewUrlRef = useRef<string | null>(null);
+  const isUploadingRef = useRef(false);
 
   // Cleanup preview URL and upload timers on unmount
   useEffect(() => {
     const timers = uploadTimersRef.current;
     return () => {
-      if (selectedFile?.previewUrl) {
-        URL.revokeObjectURL(selectedFile.previewUrl);
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
       }
       if (timers.interval) {
         clearInterval(timers.interval);
@@ -90,7 +92,7 @@ export function ScoresheetPanel() {
         clearTimeout(timers.timeout);
       }
     };
-  }, [selectedFile?.previewUrl]);
+  }, []);
 
   const validateFile = useCallback(
     (file: File): string | null => {
@@ -114,6 +116,7 @@ export function ScoresheetPanel() {
       clearTimeout(uploadTimersRef.current.timeout);
     }
 
+    isUploadingRef.current = true;
     setUploadState("uploading");
     setUploadProgress(0);
 
@@ -135,20 +138,32 @@ export function ScoresheetPanel() {
       }
       setUploadProgress(PROGRESS_COMPLETE);
       setUploadState("complete");
+      isUploadingRef.current = false;
     }, SIMULATED_UPLOAD_DURATION_MS);
   }, []);
 
   const handleFileSelect = useCallback(
     (file: File) => {
+      // Prevent concurrent uploads
+      if (isUploadingRef.current) return;
+
       const error = validateFile(file);
       if (error) {
         setErrorMessage(error);
         return;
       }
+
+      // Revoke previous preview URL if exists
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+      }
+
       setErrorMessage(null);
+      const newPreviewUrl = file.type.startsWith("image/") ? URL.createObjectURL(file) : null;
+      previewUrlRef.current = newPreviewUrl;
       setSelectedFile({
         file,
-        previewUrl: file.type.startsWith("image/") ? URL.createObjectURL(file) : null,
+        previewUrl: newPreviewUrl,
       });
       simulateUpload();
     },
@@ -165,18 +180,22 @@ export function ScoresheetPanel() {
   );
 
   const resetState = useCallback(() => {
-    if (selectedFile?.previewUrl) URL.revokeObjectURL(selectedFile.previewUrl);
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
     if (uploadTimersRef.current.interval) {
       clearInterval(uploadTimersRef.current.interval);
     }
     if (uploadTimersRef.current.timeout) {
       clearTimeout(uploadTimersRef.current.timeout);
     }
+    isUploadingRef.current = false;
     setSelectedFile(null);
     setUploadState("idle");
     setUploadProgress(0);
     setErrorMessage(null);
-  }, [selectedFile]);
+  }, []);
 
   const handleReplace = useCallback(() => {
     resetState();
@@ -236,7 +255,7 @@ export function ScoresheetPanel() {
         <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
           {selectedFile.previewUrl ? (
             <div className="relative bg-gray-100 dark:bg-gray-800">
-              <img src={selectedFile.previewUrl} alt={selectedFile.file.name} className="w-full max-h-64 object-contain" />
+              <img src={selectedFile.previewUrl} alt={tKey("previewAlt")} className="w-full max-h-64 object-contain" />
             </div>
           ) : (
             <div className="bg-gray-100 dark:bg-gray-800 p-8 flex flex-col items-center justify-center">
