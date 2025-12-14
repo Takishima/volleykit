@@ -185,15 +185,23 @@ describe("ScoresheetPanel", () => {
 
   // Test setup helpers
   function getFileInput(): HTMLInputElement {
-    return document.querySelector(
+    const input = document.querySelector<HTMLInputElement>(
       'input[type="file"]:not([capture])',
-    ) as HTMLInputElement;
+    );
+    if (!input) {
+      throw new Error("File input not found in document");
+    }
+    return input;
   }
 
   function getCameraInput(): HTMLInputElement {
-    return document.querySelector(
+    const input = document.querySelector<HTMLInputElement>(
       'input[capture="environment"]',
-    ) as HTMLInputElement;
+    );
+    if (!input) {
+      throw new Error("Camera input not found in document");
+    }
+    return input;
   }
 
   async function uploadTestFile(
