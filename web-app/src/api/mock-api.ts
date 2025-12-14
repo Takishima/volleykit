@@ -30,6 +30,9 @@ import { useDemoStore } from "@/stores/demo";
 const MOCK_NETWORK_DELAY_MS = 50;
 const MOCK_MUTATION_DELAY_MS = 100;
 
+/** Default limit for person search pagination */
+const DEFAULT_PERSON_SEARCH_LIMIT = 50;
+
 /**
  * Normalize a string for accent-insensitive comparison.
  * Converts to lowercase, decomposes accented characters (NFD normalization),
@@ -396,7 +399,7 @@ export const mockApi = {
     });
 
     const offset = options?.offset ?? 0;
-    const limit = options?.limit ?? 50;
+    const limit = options?.limit ?? DEFAULT_PERSON_SEARCH_LIMIT;
     const paginated = filtered.slice(offset, offset + limit);
 
     return {
