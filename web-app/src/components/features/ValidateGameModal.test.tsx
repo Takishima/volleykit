@@ -354,4 +354,56 @@ describe("ValidateGameModal", () => {
       expect(screen.getByText("No players in roster")).toBeInTheDocument();
     });
   });
+
+  describe("validation state", () => {
+    it("renders Save button", () => {
+      render(
+        <ValidateGameModal
+          assignment={createMockAssignment()}
+          isOpen={true}
+          onClose={mockOnClose}
+        />,
+        { wrapper: createWrapper() },
+      );
+
+      expect(
+        screen.getByRole("button", { name: /Save/i, hidden: true }),
+      ).toBeInTheDocument();
+    });
+
+    it("disables Save button when required panels are incomplete", () => {
+      render(
+        <ValidateGameModal
+          assignment={createMockAssignment()}
+          isOpen={true}
+          onClose={mockOnClose}
+        />,
+        { wrapper: createWrapper() },
+      );
+
+      const saveButton = screen.getByRole("button", {
+        name: /Save/i,
+        hidden: true,
+      });
+      expect(saveButton).toBeDisabled();
+    });
+
+    it("renders both Cancel and Save buttons in footer", () => {
+      render(
+        <ValidateGameModal
+          assignment={createMockAssignment()}
+          isOpen={true}
+          onClose={mockOnClose}
+        />,
+        { wrapper: createWrapper() },
+      );
+
+      expect(
+        screen.getByRole("button", { name: /Cancel/i, hidden: true }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Save/i, hidden: true }),
+      ).toBeInTheDocument();
+    });
+  });
 });

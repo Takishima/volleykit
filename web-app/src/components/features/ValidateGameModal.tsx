@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getTeamNames } from "@/utils/assignment-helpers";
@@ -10,7 +10,15 @@ import {
   ScoresheetPanel,
 } from "@/components/features/validation";
 import { useValidationState } from "@/hooks/useValidationState";
-import { useAuthStore } from "@/stores/auth";
+
+/** Z-index for the main modal backdrop and dialog */
+const Z_INDEX_MODAL = 50;
+/** Z-index for confirmation dialog (above main modal) */
+const Z_INDEX_CONFIRMATION_DIALOG = 60;
+/** Simulated save operation duration in milliseconds */
+const SIMULATED_SAVE_DELAY_MS = 500;
+/** Duration to show success toast before auto-dismissing */
+const SUCCESS_TOAST_DURATION_MS = 3000;
 
 interface ValidateGameModalProps {
   assignment: Assignment;
@@ -36,7 +44,8 @@ function UnsavedChangesDialog({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+      style={{ zIndex: Z_INDEX_CONFIRMATION_DIALOG }}
       aria-hidden="true"
     >
       <div
@@ -85,11 +94,11 @@ export function ValidateGameModal({
   onClose,
 }: ValidateGameModalProps) {
   const { t } = useTranslation();
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
   const [activeTab, setActiveTab] = useState<ValidationTabId>("home-roster");
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [successToast, setSuccessToast] = useState<string | null>(null);
 
   const {
     isDirty,
@@ -102,11 +111,23 @@ export function ValidateGameModal({
     reset,
   } = useValidationState();
 
-  // Use refs to avoid stale closures in callbacks
+  // Refs to prevent race conditions and enable cleanup
   const isDirtyRef = useRef(isDirty);
+  const isSavingRef = useRef(false);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     isDirtyRef.current = isDirty;
   }, [isDirty]);
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+      if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    };
+  }, []);
 
   // Determine tab status based on completion
   const getTabStatus = useCallback(
@@ -128,35 +149,39 @@ export function ValidateGameModal({
     [completionStatus],
   );
 
-  const tabs = [
-    {
-      id: "home-roster",
-      label: t("validation.homeRoster"),
-      status: getTabStatus("home-roster"),
-    },
-    {
-      id: "away-roster",
-      label: t("validation.awayRoster"),
-      status: getTabStatus("away-roster"),
-    },
-    {
-      id: "scorer",
-      label: t("validation.scorer"),
-      status: getTabStatus("scorer"),
-    },
-    {
-      id: "scoresheet",
-      label: t("validation.scoresheet"),
-      badge: t("common.optional"),
-      status: getTabStatus("scoresheet"),
-    },
-  ];
+  const tabs = useMemo(
+    () => [
+      {
+        id: "home-roster",
+        label: t("validation.homeRoster"),
+        status: getTabStatus("home-roster"),
+      },
+      {
+        id: "away-roster",
+        label: t("validation.awayRoster"),
+        status: getTabStatus("away-roster"),
+      },
+      {
+        id: "scorer",
+        label: t("validation.scorer"),
+        status: getTabStatus("scorer"),
+      },
+      {
+        id: "scoresheet",
+        label: t("validation.scoresheet"),
+        badge: t("common.optional"),
+        status: getTabStatus("scoresheet"),
+      },
+    ],
+    [t, getTabStatus],
+  );
 
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
       setActiveTab("home-roster");
       setSaveError(null);
+      setSuccessToast(null);
       reset();
     }
   }, [isOpen, reset]);
@@ -190,36 +215,39 @@ export function ValidateGameModal({
     setActiveTab(tabId as ValidationTabId);
   }, []);
 
-  // Handle save action
+  // Handle save action with race condition protection
   const handleSave = useCallback(async () => {
-    if (!isAllRequiredComplete) return;
+    // Guard against concurrent save operations
+    if (!isAllRequiredComplete || isSavingRef.current) return;
 
+    isSavingRef.current = true;
     setIsSaving(true);
     setSaveError(null);
 
     try {
       // TODO(#40): Implement actual API call for saving validation data
       // For now, simulate a save operation
-      if (isDemoMode) {
-        // In demo mode, just simulate success after a brief delay
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        // Show success feedback
-        alert(t("validation.state.saveSuccess"));
-        onClose();
-      } else {
-        // In real mode, this would call the API
-        // For now, simulate success
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        alert(t("validation.state.saveSuccess"));
-        onClose();
-      }
+      await new Promise<void>((resolve) => {
+        saveTimeoutRef.current = setTimeout(resolve, SIMULATED_SAVE_DELAY_MS);
+      });
+
+      // Show success toast notification
+      setSuccessToast(t("validation.state.saveSuccess"));
+
+      // Auto-dismiss toast after delay
+      toastTimeoutRef.current = setTimeout(() => {
+        setSuccessToast(null);
+      }, SUCCESS_TOAST_DURATION_MS);
+
+      onClose();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to save";
       setSaveError(message);
     } finally {
+      isSavingRef.current = false;
       setIsSaving(false);
     }
-  }, [isAllRequiredComplete, isDemoMode, t, onClose]);
+  }, [isAllRequiredComplete, t, onClose]);
 
   // Confirm discard changes
   const handleConfirmDiscard = useCallback(() => {
@@ -249,10 +277,36 @@ export function ValidateGameModal({
 
   return (
     <>
-      {/* Backdrop - click handled via event target check */}
+      {/* Success toast notification */}
+      {successToast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed top-4 right-4 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2"
+          style={{ zIndex: Z_INDEX_CONFIRMATION_DIALOG + 10 }}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="w-5 h-5"
+            aria-hidden="true"
+          >
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22,4 12,14.01 9,11.01" />
+          </svg>
+          <span className="text-sm font-medium">{successToast}</span>
+        </div>
+      )}
+
+      {/* Backdrop click-to-close is intentional UX pattern. Keyboard close is handled via Escape key in useEffect. */}
       {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+        style={{ zIndex: Z_INDEX_MODAL }}
         onClick={handleBackdropClick}
       >
         <div

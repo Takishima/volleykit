@@ -1,9 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import type { ValidatedPersonSearchResult } from "@/api/validation";
-import type {
-  RosterPlayer,
-  RosterModifications,
-} from "@/hooks/useNominationList";
+import type { RosterModifications } from "@/hooks/useNominationList";
 
 /**
  * State for a roster panel (home or away team).
@@ -81,26 +78,25 @@ export interface UseValidationStateResult {
   reset: () => void;
 }
 
-const INITIAL_ROSTER_STATE: RosterPanelState = {
-  reviewed: false,
-  modifications: { added: [] as RosterPlayer[], removed: [] as string[] },
-};
-
-const INITIAL_SCORER_STATE: ScorerPanelState = {
-  selected: null,
-};
-
-const INITIAL_SCORESHEET_STATE: ScoresheetPanelState = {
-  file: null,
-  uploaded: false,
-};
-
-const INITIAL_STATE: ValidationState = {
-  homeRoster: { ...INITIAL_ROSTER_STATE },
-  awayRoster: { ...INITIAL_ROSTER_STATE },
-  scorer: { ...INITIAL_SCORER_STATE },
-  scoresheet: { ...INITIAL_SCORESHEET_STATE },
-};
+/**
+ * Creates a fresh initial validation state.
+ * Using a factory function ensures each call gets fresh array instances,
+ * preventing shared state bugs between multiple hook instances.
+ */
+function createInitialState(): ValidationState {
+  return {
+    homeRoster: {
+      reviewed: false,
+      modifications: { added: [], removed: [] },
+    },
+    awayRoster: {
+      reviewed: false,
+      modifications: { added: [], removed: [] },
+    },
+    scorer: { selected: null },
+    scoresheet: { file: null, uploaded: false },
+  };
+}
 
 /**
  * Check if roster has modifications (added or removed players).
@@ -123,19 +119,7 @@ function hasRosterModifications(modifications: RosterModifications): boolean {
  * - Scoresheet: Always complete (optional field)
  */
 export function useValidationState(): UseValidationStateResult {
-  const [state, setState] = useState<ValidationState>(() => ({
-    ...INITIAL_STATE,
-    homeRoster: {
-      ...INITIAL_ROSTER_STATE,
-      modifications: { added: [], removed: [] },
-    },
-    awayRoster: {
-      ...INITIAL_ROSTER_STATE,
-      modifications: { added: [], removed: [] },
-    },
-    scorer: { ...INITIAL_SCORER_STATE },
-    scoresheet: { ...INITIAL_SCORESHEET_STATE },
-  }));
+  const [state, setState] = useState<ValidationState>(createInitialState);
 
   // Calculate completion status
   const completionStatus = useMemo<PanelCompletionStatus>(
@@ -258,19 +242,7 @@ export function useValidationState(): UseValidationStateResult {
 
   // Reset all state
   const reset = useCallback(() => {
-    setState({
-      ...INITIAL_STATE,
-      homeRoster: {
-        ...INITIAL_ROSTER_STATE,
-        modifications: { added: [], removed: [] },
-      },
-      awayRoster: {
-        ...INITIAL_ROSTER_STATE,
-        modifications: { added: [], removed: [] },
-      },
-      scorer: { ...INITIAL_SCORER_STATE },
-      scoresheet: { ...INITIAL_SCORESHEET_STATE },
-    });
+    setState(createInitialState());
   }, []);
 
   return {
