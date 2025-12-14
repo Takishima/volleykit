@@ -211,6 +211,8 @@ interface Translations {
       searchError: string;
       noScorerSelected: string;
       searchResults: string;
+      resultsCount: string;
+      resultsCountOne: string;
     };
     scoresheetUpload: {
       title: string;
@@ -459,6 +461,8 @@ const en: Translations = {
       noScorerSelected:
         "No scorer selected. Use the search above to find and select a scorer.",
       searchResults: "Search results",
+      resultsCount: "{count} results found",
+      resultsCountOne: "1 result found",
     },
     scoresheetUpload: {
       title: "Upload Scoresheet",
@@ -711,6 +715,8 @@ const de: Translations = {
       noScorerSelected:
         "Kein Schreiber ausgewählt. Verwenden Sie die Suche oben, um einen Schreiber zu finden und auszuwählen.",
       searchResults: "Suchergebnisse",
+      resultsCount: "{count} Ergebnisse gefunden",
+      resultsCountOne: "1 Ergebnis gefunden",
     },
     scoresheetUpload: {
       title: "Spielbericht hochladen",
@@ -965,6 +971,8 @@ const fr: Translations = {
       noScorerSelected:
         "Aucun marqueur sélectionné. Utilisez la recherche ci-dessus pour trouver et sélectionner un marqueur.",
       searchResults: "Résultats de recherche",
+      resultsCount: "{count} résultats trouvés",
+      resultsCountOne: "1 résultat trouvé",
     },
     scoresheetUpload: {
       title: "Télécharger la feuille de match",
@@ -1216,6 +1224,8 @@ const it: Translations = {
       noScorerSelected:
         "Nessun segnapunti selezionato. Usa la ricerca sopra per trovare e selezionare un segnapunti.",
       searchResults: "Risultati della ricerca",
+      resultsCount: "{count} risultati trovati",
+      resultsCountOne: "1 risultato trovato",
     },
     scoresheetUpload: {
       title: "Carica referto",
@@ -1347,6 +1357,25 @@ export function t(key: TranslationKey): string {
   }
 
   return typeof result === "string" ? result : key;
+}
+
+/**
+ * Get translation with interpolation support.
+ * Replaces {placeholder} patterns in the translated string with provided values.
+ *
+ * @example
+ * // Translation: "Found {count} results"
+ * tInterpolate('search.results', { count: 5 }) // Returns "Found 5 results"
+ */
+export function tInterpolate(
+  key: TranslationKey,
+  values: Record<string, string | number>,
+): string {
+  let result = t(key);
+  for (const [placeholder, value] of Object.entries(values)) {
+    result = result.replace(`{${placeholder}}`, String(value));
+  }
+  return result;
 }
 
 // Initialize locale on module load

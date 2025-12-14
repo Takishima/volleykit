@@ -527,6 +527,153 @@ describe("ScorerSearchPanel - Keyboard Navigation", () => {
   });
 });
 
+describe("ScorerSearchPanel - Screen Reader Announcements", () => {
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+    const { useScorerSearch } = await import("@/hooks/useScorerSearch");
+    vi.mocked(useScorerSearch).mockReturnValue({
+      data: mockScorers,
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("has aria-live region for announcements", () => {
+    render(
+      <ScorerSearchPanel selectedScorer={null} onScorerSelect={vi.fn()} />,
+      { wrapper: createWrapper() },
+    );
+
+    const liveRegion = document.querySelector('[aria-live="polite"]');
+    expect(liveRegion).toBeInTheDocument();
+    expect(liveRegion).toHaveAttribute("aria-atomic", "true");
+    expect(liveRegion).toHaveClass("sr-only");
+  });
+
+  it("announces result count when results are shown (plural)", async () => {
+    render(
+      <ScorerSearchPanel selectedScorer={null} onScorerSelect={vi.fn()} />,
+      { wrapper: createWrapper() },
+    );
+
+    const searchInput = screen.getByPlaceholderText("Search scorer by name...");
+    fireEvent.change(searchInput, { target: { value: "Müller" } });
+
+    act(() => {
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+    });
+
+    const liveRegion = document.querySelector('[aria-live="polite"]');
+    expect(liveRegion).toHaveTextContent("3 results found");
+  });
+
+  it("announces singular result count", async () => {
+    const { useScorerSearch } = await import("@/hooks/useScorerSearch");
+    vi.mocked(useScorerSearch).mockReturnValue({
+      data: [mockScorers[0]!],
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
+    render(
+      <ScorerSearchPanel selectedScorer={null} onScorerSelect={vi.fn()} />,
+      { wrapper: createWrapper() },
+    );
+
+    const searchInput = screen.getByPlaceholderText("Search scorer by name...");
+    fireEvent.change(searchInput, { target: { value: "Hans" } });
+
+    act(() => {
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+    });
+
+    const liveRegion = document.querySelector('[aria-live="polite"]');
+    expect(liveRegion).toHaveTextContent("1 result found");
+  });
+
+  it("does not announce when loading", async () => {
+    const { useScorerSearch } = await import("@/hooks/useScorerSearch");
+    vi.mocked(useScorerSearch).mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isError: false,
+      error: null,
+    });
+
+    render(
+      <ScorerSearchPanel selectedScorer={null} onScorerSelect={vi.fn()} />,
+      { wrapper: createWrapper() },
+    );
+
+    const searchInput = screen.getByPlaceholderText("Search scorer by name...");
+    fireEvent.change(searchInput, { target: { value: "Müller" } });
+
+    act(() => {
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+    });
+
+    const liveRegion = document.querySelector('[aria-live="polite"]');
+    expect(liveRegion).toBeEmptyDOMElement();
+  });
+
+  it("does not announce when error occurs", async () => {
+    const { useScorerSearch } = await import("@/hooks/useScorerSearch");
+    vi.mocked(useScorerSearch).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new Error("Search failed"),
+    });
+
+    render(
+      <ScorerSearchPanel selectedScorer={null} onScorerSelect={vi.fn()} />,
+      { wrapper: createWrapper() },
+    );
+
+    const searchInput = screen.getByPlaceholderText("Search scorer by name...");
+    fireEvent.change(searchInput, { target: { value: "Müller" } });
+
+    act(() => {
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+    });
+
+    const liveRegion = document.querySelector('[aria-live="polite"]');
+    expect(liveRegion).toBeEmptyDOMElement();
+  });
+
+  it("announces zero results found", async () => {
+    const { useScorerSearch } = await import("@/hooks/useScorerSearch");
+    vi.mocked(useScorerSearch).mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
+    render(
+      <ScorerSearchPanel selectedScorer={null} onScorerSelect={vi.fn()} />,
+      { wrapper: createWrapper() },
+    );
+
+    const searchInput = screen.getByPlaceholderText("Search scorer by name...");
+    fireEvent.change(searchInput, { target: { value: "XYZ" } });
+
+    act(() => {
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+    });
+
+    const liveRegion = document.querySelector('[aria-live="polite"]');
+    expect(liveRegion).toHaveTextContent("0 results found");
+  });
+});
+
 describe("ScorerSearchPanel - ARIA Attributes", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
