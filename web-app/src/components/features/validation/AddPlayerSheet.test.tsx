@@ -127,7 +127,7 @@ describe("AddPlayerSheet", () => {
     expect(screen.getByText("Anna Schmidt")).toBeInTheDocument();
   });
 
-  it("does not close when backdrop is clicked (accessibility)", () => {
+  it("calls onClose when backdrop is clicked", () => {
     const onClose = vi.fn();
     render(<AddPlayerSheet {...defaultProps} onClose={onClose} />, {
       wrapper: createWrapper(),
@@ -135,6 +135,18 @@ describe("AddPlayerSheet", () => {
 
     const backdrop = document.querySelector('[aria-hidden="true"]');
     fireEvent.click(backdrop!);
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not close when dialog content is clicked", () => {
+    const onClose = vi.fn();
+    render(<AddPlayerSheet {...defaultProps} onClose={onClose} />, {
+      wrapper: createWrapper(),
+    });
+
+    const dialog = screen.getByRole("dialog");
+    fireEvent.click(dialog);
 
     expect(onClose).not.toHaveBeenCalled();
   });
