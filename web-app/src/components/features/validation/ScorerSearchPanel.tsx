@@ -41,7 +41,7 @@ export function ScorerSearchPanel({
   selectedScorer,
   onScorerSelect,
 }: ScorerSearchPanelProps) {
-  const { t } = useTranslation();
+  const { t, tInterpolate } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const debouncedQuery = useDebouncedValue(searchQuery, SEARCH_DEBOUNCE_MS);
@@ -193,6 +193,19 @@ export function ScorerSearchPanel({
               />
             </div>
           )}
+
+          {/* Screen reader announcement for result count */}
+          <div aria-live="polite" aria-atomic="true" className="sr-only">
+            {showResults && !isLoading && !isError && results && (
+              <span>
+                {results.length === 1
+                  ? t("validation.scorerSearch.resultsCountOne")
+                  : tInterpolate("validation.scorerSearch.resultsCount", {
+                      count: results.length,
+                    })}
+              </span>
+            )}
+          </div>
         </>
       )}
 
