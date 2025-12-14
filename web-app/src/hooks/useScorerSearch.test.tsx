@@ -172,9 +172,7 @@ describe("useScorerSearch", () => {
 
   it("handles API errors", async () => {
     const { getApiClient } = await import("@/api/client");
-    const mockSearchPersons = vi
-      .fn()
-      .mockRejectedValue(new Error("API Error"));
+    const mockSearchPersons = vi.fn().mockRejectedValue(new Error("API Error"));
     vi.mocked(getApiClient).mockReturnValue({
       searchPersons: mockSearchPersons,
     } as unknown as ReturnType<typeof getApiClient>);
@@ -189,5 +187,58 @@ describe("useScorerSearch", () => {
     });
 
     expect(result.current.error?.message).toBe("API Error");
+  });
+
+  it("catches malformed API responses via Zod validation", async () => {
+    const { getApiClient } = await import("@/api/client");
+    const malformedResponse = {
+      items: [
+        {
+          __identity: "not-a-valid-uuid",
+          firstName: "Hans",
+          lastName: "Müller",
+        },
+      ],
+      totalItemsCount: 1,
+    };
+    const mockSearchPersons = vi.fn().mockResolvedValue(malformedResponse);
+    vi.mocked(getApiClient).mockReturnValue({
+      searchPersons: mockSearchPersons,
+    } as unknown as ReturnType<typeof getApiClient>);
+
+    const { result } = renderHook(
+      () => useScorerSearch({ lastName: "müller" }),
+      { wrapper: createWrapper() },
+    );
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
+    });
+
+    expect(result.current.error?.message).toMatch(/Invalid API response/);
+    expect(result.current.error?.message).toMatch(/scorerSearch/);
+  });
+
+  it("validates response structure when items is not an array", async () => {
+    const { getApiClient } = await import("@/api/client");
+    const malformedResponse = {
+      items: "not-an-array",
+      totalItemsCount: 1,
+    };
+    const mockSearchPersons = vi.fn().mockResolvedValue(malformedResponse);
+    vi.mocked(getApiClient).mockReturnValue({
+      searchPersons: mockSearchPersons,
+    } as unknown as ReturnType<typeof getApiClient>);
+
+    const { result } = renderHook(
+      () => useScorerSearch({ lastName: "müller" }),
+      { wrapper: createWrapper() },
+    );
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
+    });
+
+    expect(result.current.error?.message).toMatch(/Invalid API response/);
   });
 });
