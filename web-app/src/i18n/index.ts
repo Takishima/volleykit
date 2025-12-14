@@ -210,6 +210,7 @@ interface Translations {
       searchHint: string;
       searchError: string;
       noScorerSelected: string;
+      noScorersFound: string;
       searchResults: string;
       resultsCount: string;
       resultsCountOne: string;
@@ -460,6 +461,7 @@ const en: Translations = {
       searchError: "Failed to search scorers",
       noScorerSelected:
         "No scorer selected. Use the search above to find and select a scorer.",
+      noScorersFound: "No scorers found",
       searchResults: "Search results",
       resultsCount: "{count} results found",
       resultsCountOne: "1 result found",
@@ -714,6 +716,7 @@ const de: Translations = {
       searchError: "Schreibersuche fehlgeschlagen",
       noScorerSelected:
         "Kein Schreiber ausgewählt. Verwenden Sie die Suche oben, um einen Schreiber zu finden und auszuwählen.",
+      noScorersFound: "Keine Schreiber gefunden",
       searchResults: "Suchergebnisse",
       resultsCount: "{count} Ergebnisse gefunden",
       resultsCountOne: "1 Ergebnis gefunden",
@@ -970,6 +973,7 @@ const fr: Translations = {
       searchError: "Échec de la recherche de marqueurs",
       noScorerSelected:
         "Aucun marqueur sélectionné. Utilisez la recherche ci-dessus pour trouver et sélectionner un marqueur.",
+      noScorersFound: "Aucun marqueur trouvé",
       searchResults: "Résultats de recherche",
       resultsCount: "{count} résultats trouvés",
       resultsCountOne: "1 résultat trouvé",
@@ -1223,6 +1227,7 @@ const it: Translations = {
       searchError: "Ricerca segnapunti fallita",
       noScorerSelected:
         "Nessun segnapunti selezionato. Usa la ricerca sopra per trovare e selezionare un segnapunti.",
+      noScorersFound: "Nessun segnapunti trovato",
       searchResults: "Risultati della ricerca",
       resultsCount: "{count} risultati trovati",
       resultsCountOne: "1 risultato trovato",

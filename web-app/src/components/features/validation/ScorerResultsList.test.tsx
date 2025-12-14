@@ -49,13 +49,13 @@ describe("ScorerResultsList", () => {
   it("displays no results message when results are empty", () => {
     render(<ScorerResultsList {...defaultProps} results={[]} />);
 
-    expect(screen.getByText("No players found")).toBeInTheDocument();
+    expect(screen.getByText("No scorers found")).toBeInTheDocument();
   });
 
   it("displays no results message when results are undefined", () => {
     render(<ScorerResultsList {...defaultProps} results={undefined} />);
 
-    expect(screen.getByText("No players found")).toBeInTheDocument();
+    expect(screen.getByText("No scorers found")).toBeInTheDocument();
   });
 
   it("displays list of scorers", () => {

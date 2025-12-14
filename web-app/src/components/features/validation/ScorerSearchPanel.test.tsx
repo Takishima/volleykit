@@ -320,7 +320,7 @@ describe("ScorerSearchPanel - Empty Results", () => {
       vi.advanceTimersByTime(300);
     });
 
-    expect(screen.getByText("No players found")).toBeInTheDocument();
+    expect(screen.getByText("No scorers found")).toBeInTheDocument();
   });
 });
 
