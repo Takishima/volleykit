@@ -169,9 +169,14 @@ describe("ScorerPanel", () => {
 
 describe("ScoresheetPanel", () => {
   it("renders without crashing", () => {
-    render(<ScoresheetPanel />);
+    render(<ScoresheetPanel />, { wrapper: createWrapper() });
+    // Panel renders with upload UI
+    expect(screen.getByText("Upload Scoresheet")).toBeInTheDocument();
     expect(
-      screen.getByText("Scoresheet upload will be available here."),
+      screen.getByText("Upload a photo or scan of the physical scoresheet"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Select File" }),
     ).toBeInTheDocument();
   });
 });
