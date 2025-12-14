@@ -221,6 +221,7 @@ function generateDummyData() {
       refereeConvocationStatus: "active",
       refereePosition: "head-two",
       confirmationStatus: "pending",
+      confirmationDate: null,
       isOpenEntryInRefereeGameExchange: false,
       hasLastMessageToReferee: false,
       hasLinkedDoubleConvocation: true,
