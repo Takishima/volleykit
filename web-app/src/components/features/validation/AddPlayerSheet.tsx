@@ -1,8 +1,9 @@
-import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import type { PossibleNomination } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { usePossiblePlayerNominations } from "@/hooks/usePlayerNominations";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { ResponsiveSheet } from "@/components/ui/ResponsiveSheet";
 
 // Delay before focusing search input to ensure the sheet animation has started
 const FOCUS_DELAY_MS = 100;
@@ -51,20 +52,6 @@ export function AddPlayerSheet({
     });
   }, [players, searchQuery, excludePlayerIds]);
 
-  // Handle Escape key
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [isOpen, onClose]);
-
   // Focus search input when opened
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
@@ -75,41 +62,8 @@ export function AddPlayerSheet({
     }
   }, [isOpen]);
 
-  const handleBackdropClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (e.target === e.currentTarget) {
-        onClose();
-      }
-    },
-    [onClose],
-  );
-
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50">
-      {/* Backdrop - click to close */}
-      <div
-        className="absolute inset-0 bg-black/50 transition-opacity"
-        aria-hidden="true"
-        onClick={handleBackdropClick}
-      />
-
-      {/* Sheet Container - bottom drawer on mobile, centered modal on desktop */}
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="add-player-title"
-        className="
-          fixed inset-x-0 bottom-0
-          md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2
-          max-h-[80vh] md:max-h-[70vh] md:max-w-lg md:w-full
-          bg-white dark:bg-gray-800 rounded-t-xl md:rounded-lg
-          shadow-xl flex flex-col
-          animate-in slide-in-from-bottom md:slide-in-from-bottom-0 md:fade-in
-          duration-200
-        "
-      >
+    <ResponsiveSheet isOpen={isOpen} onClose={onClose} titleId="add-player-title">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
           <h2
@@ -226,7 +180,6 @@ export function AddPlayerSheet({
             </ul>
           )}
         </div>
-      </div>
-    </div>
+    </ResponsiveSheet>
   );
 }
