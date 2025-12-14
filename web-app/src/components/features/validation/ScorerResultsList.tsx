@@ -57,7 +57,7 @@ export function ScorerResultsList({
   if (!hasResults) {
     return (
       <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-        {t("validation.noPlayersFound")}
+        {t("validation.scorerSearch.noScorersFound")}
       </div>
     );
   }

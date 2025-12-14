@@ -31,6 +31,20 @@ const MOCK_NETWORK_DELAY_MS = 50;
 const MOCK_MUTATION_DELAY_MS = 100;
 
 /**
+ * Normalize a string for accent-insensitive comparison.
+ * Converts to lowercase, decomposes accented characters (NFD normalization),
+ * then removes diacritical marks.
+ * @example normalizeForSearch("Müller") // returns "muller"
+ * @example normalizeForSearch("José") // returns "jose"
+ */
+function normalizeForSearch(str: string): string {
+  return str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+/**
  * Get a nested property value from an object using dot notation.
  * @example getNestedValue({ a: { b: 1 } }, "a.b") // returns 1
  */
@@ -338,19 +352,43 @@ export const mockApi = {
     const store = useDemoStore.getState();
     const { firstName, lastName, yearOfBirth } = filters;
 
+    // When only lastName is provided (single search term), search both
+    // firstName and lastName fields to mimic Elasticsearch fuzzy matching.
+    // The real API searches across both name fields for better UX.
+    const isSingleTermSearch = lastName && !firstName;
+
     const filtered = store.scorers.filter((scorer: PersonSearchResult) => {
-      const scorerFirstName = scorer.firstName?.toLowerCase() ?? "";
-      const scorerLastName = scorer.lastName?.toLowerCase() ?? "";
+      // Use accent-insensitive matching (e.g., "muller" matches "Müller")
+      const scorerFirstName = normalizeForSearch(scorer.firstName ?? "");
+      const scorerLastName = normalizeForSearch(scorer.lastName ?? "");
       const scorerYear = scorer.birthday
         ? new Date(scorer.birthday).getFullYear().toString()
         : "";
 
-      if (firstName && !scorerFirstName.includes(firstName.toLowerCase())) {
+      if (
+        firstName &&
+        !scorerFirstName.includes(normalizeForSearch(firstName))
+      ) {
         return false;
       }
-      if (lastName && !scorerLastName.includes(lastName.toLowerCase())) {
-        return false;
+
+      if (lastName) {
+        const searchTerm = normalizeForSearch(lastName);
+        if (isSingleTermSearch) {
+          // Single term: match against either firstName or lastName
+          const matchesFirstName = scorerFirstName.includes(searchTerm);
+          const matchesLastName = scorerLastName.includes(searchTerm);
+          if (!matchesFirstName && !matchesLastName) {
+            return false;
+          }
+        } else {
+          // Two terms provided: lastName must match lastName field
+          if (!scorerLastName.includes(searchTerm)) {
+            return false;
+          }
+        }
       }
+
       if (yearOfBirth && !scorerYear.includes(yearOfBirth)) {
         return false;
       }
