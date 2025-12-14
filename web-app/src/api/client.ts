@@ -501,16 +501,30 @@ export const api = {
    * Fetches possible player nominations for a nomination list.
    * Returns players that can be added to a team's roster for a game.
    *
-   * @param nominationListId - UUID of the nomination list
-   * @param options.onlyFromMyTeam - Filter to players from the team's roster (default: true)
-   * @param options.onlyRelevantGender - Filter to players matching the league's gender,
-   *   e.g., only female players for women's leagues (default: true)
-   * @returns List of possible player nominations with license info
+   * @param nominationListId - UUID of the nomination list to fetch possible players for
+   * @param options - Optional filtering parameters
+   * @param options.onlyFromMyTeam - When true, returns only players already on the team's
+   *   roster. When false, includes all players from the association who could potentially
+   *   be added. Defaults to true.
+   * @param options.onlyRelevantGender - When true, filters players to match the league's
+   *   gender requirements (e.g., only female players for women's leagues). When false,
+   *   returns players of all genders. Defaults to true.
+   * @returns List of possible player nominations including license numbers and player details
+   *
    * @example
-   * const players = await api.getPossiblePlayerNominations('uuid-123', {
-   *   onlyFromMyTeam: false,
-   *   onlyRelevantGender: true
-   * });
+   * // Get all eligible players from the association (not just team roster)
+   * // while still respecting gender requirements
+   * const allEligiblePlayers = await api.getPossiblePlayerNominations(
+   *   'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+   *   { onlyFromMyTeam: false, onlyRelevantGender: true }
+   * );
+   *
+   * @example
+   * // Get only players from the team's roster with default filtering
+   * // (both options default to true)
+   * const rosterPlayers = await api.getPossiblePlayerNominations(
+   *   'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+   * );
    */
   async getPossiblePlayerNominations(
     nominationListId: string,
