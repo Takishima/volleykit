@@ -4,6 +4,8 @@ import { downloadCompensationPDF } from "@/utils/compensation-actions";
 import { logger } from "@/utils/logger";
 import { MODAL_CLEANUP_DELAY } from "@/utils/assignment-helpers";
 import { useAuthStore } from "@/stores/auth";
+import { useSettingsStore } from "@/stores/settings";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface UseCompensationActionsResult {
   editCompensationModal: {
@@ -16,7 +18,11 @@ interface UseCompensationActionsResult {
 }
 
 export function useCompensationActions(): UseCompensationActionsResult {
+  const { t } = useTranslation();
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const isSafeModeEnabled = useSettingsStore(
+    (state) => state.isSafeModeEnabled,
+  );
   const [editCompensationOpen, setEditCompensationOpen] = useState(false);
   const [editCompensationRecord, setEditCompensationRecord] =
     useState<CompensationRecord | null>(null);
@@ -33,10 +39,19 @@ export function useCompensationActions(): UseCompensationActionsResult {
 
   const openEditCompensation = useCallback(
     (compensation: CompensationRecord) => {
+      // Safe mode blocks dangerous operations; demo mode bypasses since it's local-only
+      if (!isDemoMode && isSafeModeEnabled) {
+        logger.debug(
+          "[useCompensationActions] Safe mode: editing compensation blocked",
+        );
+        alert(t("settings.safeModeBlocked"));
+        return;
+      }
+
       setEditCompensationRecord(compensation);
       setEditCompensationOpen(true);
     },
-    [],
+    [isDemoMode, isSafeModeEnabled, t],
   );
 
   const closeEditCompensation = useCallback(() => {
