@@ -5,10 +5,20 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useScorerSearch, parseSearchInput } from "@/hooks/useScorerSearch";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
-// Debounce delay for search input as specified in issue #37
+/**
+ * Debounce delay for search input.
+ * 300ms balances responsiveness with avoiding excessive API calls:
+ * - Short enough that users don't perceive lag after typing
+ * - Long enough to batch rapid keystrokes into single requests
+ * Research suggests 200-400ms is optimal for search-as-you-type UX.
+ */
 const SEARCH_DEBOUNCE_MS = 300;
 
-// Delay before focusing search input to ensure UI has settled
+/**
+ * Delay before focusing search input after mount or state changes.
+ * 100ms allows React to complete rendering and DOM updates before
+ * attempting to focus, preventing focus failures on unmounted elements.
+ */
 const FOCUS_DELAY_MS = 100;
 
 interface ScorerSearchPanelProps {
