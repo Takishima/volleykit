@@ -307,6 +307,34 @@ describe("API Client", () => {
     });
   });
 
+  describe("searchPersons", () => {
+    const mockPersonSearchResponse = { items: [], totalItemsCount: 0 };
+
+    it("uses default limit when not specified", async () => {
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse(mockPersonSearchResponse),
+      );
+
+      await api.searchPersons({ lastName: "müller" });
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      const body = options.body as URLSearchParams;
+      expect(body.get("searchConfiguration[limit]")).toBe("50");
+    });
+
+    it("respects custom limit when provided", async () => {
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse(mockPersonSearchResponse),
+      );
+
+      await api.searchPersons({ lastName: "müller" }, { limit: 100 });
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      const body = options.body as URLSearchParams;
+      expect(body.get("searchConfiguration[limit]")).toBe("100");
+    });
+  });
+
   describe("request headers", () => {
     it("includes Accept: application/json header", async () => {
       mockFetch.mockResolvedValueOnce(
