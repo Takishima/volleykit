@@ -316,4 +316,55 @@ describe("RosterVerificationPanel", () => {
 
     expect(onModificationsChange).toHaveBeenCalled();
   });
+
+  it("sorts newly added players to end of list", () => {
+    const playersWithNewlyAdded: RosterPlayer[] = [
+      {
+        id: "player-existing-high",
+        shirtNumber: 15,
+        displayName: "High Number",
+        isNewlyAdded: false,
+      },
+      {
+        id: "player-new",
+        shirtNumber: 0,
+        displayName: "Newly Added Player",
+        isNewlyAdded: true,
+      },
+      {
+        id: "player-existing-low",
+        shirtNumber: 3,
+        displayName: "Low Number",
+        isNewlyAdded: false,
+      },
+    ];
+
+    vi.mocked(useNominationListModule.useNominationList).mockReturnValue({
+      nominationList: null,
+      players: playersWithNewlyAdded,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    render(
+      <RosterVerificationPanel
+        team="home"
+        teamName="Test Team"
+        gameId="game-1"
+      />,
+      { wrapper: createWrapper() },
+    );
+
+    const playerNames = screen
+      .getAllByText(/Low Number|High Number|Newly Added Player/)
+      .map((el) => el.textContent);
+
+    expect(playerNames).toEqual([
+      "Low Number",
+      "High Number",
+      "Newly Added Player",
+    ]);
+  });
 });
