@@ -112,10 +112,17 @@ function generateDummyData() {
       __identity: "demo-assignment-1",
       refereeConvocationStatus: "active",
       refereePosition: "head-one",
+      confirmationStatus: "confirmed",
+      confirmationDate: subDays(now, 5).toISOString(),
+      isOpenEntryInRefereeGameExchange: false,
+      hasLastMessageToReferee: false,
+      hasLinkedDoubleConvocation: false,
       refereeGame: {
         __identity: "demo-game-1",
+        isGameInFuture: "1",
         game: {
           __identity: "demo-g-1",
+          number: 382417,
           startingDateTime: addDays(now, 2).toISOString(),
           playingWeekday: getWeekday(addDays(now, 2)),
           encounter: {
@@ -130,7 +137,18 @@ function generateDummyData() {
               identifier: 59592,
             },
           },
-          hall: { __identity: "hall-1", name: "Saalsporthalle Zürich" },
+          hall: {
+            __identity: "hall-1",
+            name: "Saalsporthalle Zürich",
+            primaryPostalAddress: {
+              __identity: "addr-1",
+              street: "Hardturmstrasse",
+              houseNumber: "154",
+              postalCode: "8005",
+              city: "Zürich",
+              combinedAddress: "Hardturmstrasse 154, 8005 Zürich",
+            },
+          },
           group: {
             name: "Quali",
             phase: {
@@ -148,10 +166,17 @@ function generateDummyData() {
       __identity: "demo-assignment-2",
       refereeConvocationStatus: "active",
       refereePosition: "linesman-one",
+      confirmationStatus: "confirmed",
+      confirmationDate: subDays(now, 3).toISOString(),
+      isOpenEntryInRefereeGameExchange: false,
+      hasLastMessageToReferee: true,
+      hasLinkedDoubleConvocation: false,
       refereeGame: {
         __identity: "demo-game-2",
+        isGameInFuture: "1",
         game: {
           __identity: "demo-g-2",
+          number: 382418,
           startingDateTime: addHours(addDays(now, 0), 3).toISOString(),
           playingWeekday: getWeekday(now),
           encounter: {
@@ -166,7 +191,18 @@ function generateDummyData() {
               identifier: 59594,
             },
           },
-          hall: { __identity: "hall-2", name: "Aarehalle Schönenwerd" },
+          hall: {
+            __identity: "hall-2",
+            name: "Aarehalle Schönenwerd",
+            primaryPostalAddress: {
+              __identity: "addr-2",
+              street: "Aarauerstrasse",
+              houseNumber: "50",
+              postalCode: "5012",
+              city: "Schönenwerd",
+              combinedAddress: "Aarauerstrasse 50, 5012 Schönenwerd",
+            },
+          },
           group: {
             name: "Quali",
             phase: {
@@ -184,10 +220,17 @@ function generateDummyData() {
       __identity: "demo-assignment-3",
       refereeConvocationStatus: "active",
       refereePosition: "head-two",
+      confirmationStatus: "pending",
+      isOpenEntryInRefereeGameExchange: false,
+      hasLastMessageToReferee: false,
+      hasLinkedDoubleConvocation: true,
+      linkedDoubleConvocationGameNumberAndRefereePosition: "382420 / ARB 1",
       refereeGame: {
         __identity: "demo-game-3",
+        isGameInFuture: "1",
         game: {
           __identity: "demo-g-3",
+          number: 382419,
           startingDateTime: addDays(now, 5).toISOString(),
           playingWeekday: getWeekday(addDays(now, 5)),
           encounter: {
@@ -202,7 +245,18 @@ function generateDummyData() {
               identifier: 59596,
             },
           },
-          hall: { __identity: "hall-3", name: "Lintharena Näfels" },
+          hall: {
+            __identity: "hall-3",
+            name: "Lintharena Näfels",
+            primaryPostalAddress: {
+              __identity: "addr-3",
+              street: "Sportplatzstrasse",
+              houseNumber: "1",
+              postalCode: "8752",
+              city: "Näfels",
+              combinedAddress: "Sportplatzstrasse 1, 8752 Näfels",
+            },
+          },
           group: {
             name: "Quali",
             phase: {
@@ -220,10 +274,17 @@ function generateDummyData() {
       __identity: "demo-assignment-4",
       refereeConvocationStatus: "cancelled",
       refereePosition: "head-one",
+      confirmationStatus: "confirmed",
+      confirmationDate: subDays(now, 10).toISOString(),
+      isOpenEntryInRefereeGameExchange: true,
+      hasLastMessageToReferee: false,
+      hasLinkedDoubleConvocation: false,
       refereeGame: {
         __identity: "demo-game-4",
+        isGameInFuture: "1",
         game: {
           __identity: "demo-g-4",
+          number: 382420,
           startingDateTime: addDays(now, 7).toISOString(),
           playingWeekday: getWeekday(addDays(now, 7)),
           encounter: {
@@ -238,7 +299,18 @@ function generateDummyData() {
               identifier: 59598,
             },
           },
-          hall: { __identity: "hall-4", name: "Sporthalle Kuspo Therwil" },
+          hall: {
+            __identity: "hall-4",
+            name: "Sporthalle Kuspo Therwil",
+            primaryPostalAddress: {
+              __identity: "addr-4",
+              street: "Im Letten",
+              houseNumber: "2",
+              postalCode: "4106",
+              city: "Therwil",
+              combinedAddress: "Im Letten 2, 4106 Therwil",
+            },
+          },
           group: {
             name: "Quali",
             phase: {
@@ -256,10 +328,17 @@ function generateDummyData() {
       __identity: "demo-assignment-5",
       refereeConvocationStatus: "archived",
       refereePosition: "linesman-two",
+      confirmationStatus: "confirmed",
+      confirmationDate: subDays(now, 14).toISOString(),
+      isOpenEntryInRefereeGameExchange: false,
+      hasLastMessageToReferee: false,
+      hasLinkedDoubleConvocation: false,
       refereeGame: {
         __identity: "demo-game-5",
+        isGameInFuture: "0",
         game: {
           __identity: "demo-g-5",
+          number: 382421,
           startingDateTime: subDays(now, 3).toISOString(),
           playingWeekday: getWeekday(subDays(now, 3)),
           encounter: {
@@ -274,7 +353,18 @@ function generateDummyData() {
               identifier: 59600,
             },
           },
-          hall: { __identity: "hall-5", name: "Weissenstein Halle" },
+          hall: {
+            __identity: "hall-5",
+            name: "Weissenstein Halle",
+            primaryPostalAddress: {
+              __identity: "addr-5",
+              street: "Weissensteinstrasse",
+              houseNumber: "80",
+              postalCode: "3008",
+              city: "Bern",
+              combinedAddress: "Weissensteinstrasse 80, 3008 Bern",
+            },
+          },
           group: {
             name: "Quali",
             phase: {
@@ -295,11 +385,15 @@ function generateDummyData() {
       __identity: "demo-comp-1",
       refereeConvocationStatus: "active",
       refereePosition: "head-one",
+      compensationDate: subDays(now, 7).toISOString(),
       refereeGame: {
         __identity: "demo-comp-game-1",
+        isGameInFuture: "0",
         game: {
           __identity: "demo-cg-1",
+          number: 382500,
           startingDateTime: subDays(now, 7).toISOString(),
+          playingWeekday: getWeekday(subDays(now, 7)),
           encounter: {
             teamHome: {
               __identity: "team-11",
@@ -312,26 +406,51 @@ function generateDummyData() {
               identifier: 59602,
             },
           },
+          hall: {
+            __identity: "hall-c1",
+            name: "Saalsporthalle Zürich",
+            primaryPostalAddress: {
+              __identity: "addr-c1",
+              postalCode: "8005",
+              city: "Zürich",
+              combinedAddress: "Hardturmstrasse 154, 8005 Zürich",
+            },
+          },
         },
       },
       convocationCompensation: {
         __identity: "demo-cc-1",
         paymentDone: true,
+        paymentValueDate: subDays(now, 2).toISOString().split("T")[0],
         gameCompensation: 100,
+        gameCompensationFormatted: "100.00",
         travelExpenses: 33.6,
+        travelExpensesFormatted: "33.60",
         distanceInMetres: 48000,
+        distanceFormatted: "48.0",
+        costFormatted: "133.60",
         transportationMode: "car",
+        hasFlexibleGameCompensations: false,
+        hasFlexibleTravelExpenses: false,
+        hasFlexibleOvernightStayExpenses: false,
+        hasFlexibleCateringExpenses: false,
+        overnightStayExpensesFormatted: "0.00",
+        cateringExpensesFormatted: "0.00",
       },
     },
     {
       __identity: "demo-comp-2",
       refereeConvocationStatus: "active",
       refereePosition: "linesman-one",
+      compensationDate: subDays(now, 14).toISOString(),
       refereeGame: {
         __identity: "demo-comp-game-2",
+        isGameInFuture: "0",
         game: {
           __identity: "demo-cg-2",
+          number: 382501,
           startingDateTime: subDays(now, 14).toISOString(),
+          playingWeekday: getWeekday(subDays(now, 14)),
           encounter: {
             teamHome: {
               __identity: "team-13",
@@ -344,26 +463,50 @@ function generateDummyData() {
               identifier: 59604,
             },
           },
+          hall: {
+            __identity: "hall-c2",
+            name: "Aarehalle Schönenwerd",
+            primaryPostalAddress: {
+              __identity: "addr-c2",
+              postalCode: "5012",
+              city: "Schönenwerd",
+              combinedAddress: "Aarauerstrasse 50, 5012 Schönenwerd",
+            },
+          },
         },
       },
       convocationCompensation: {
         __identity: "demo-cc-2",
         paymentDone: false,
         gameCompensation: 60,
+        gameCompensationFormatted: "60.00",
         travelExpenses: 24.5,
+        travelExpensesFormatted: "24.50",
         distanceInMetres: 35000,
+        distanceFormatted: "35.0",
+        costFormatted: "84.50",
         transportationMode: "car",
+        hasFlexibleGameCompensations: false,
+        hasFlexibleTravelExpenses: false,
+        hasFlexibleOvernightStayExpenses: false,
+        hasFlexibleCateringExpenses: false,
+        overnightStayExpensesFormatted: "0.00",
+        cateringExpensesFormatted: "0.00",
       },
     },
     {
       __identity: "demo-comp-3",
       refereeConvocationStatus: "active",
       refereePosition: "head-two",
+      compensationDate: subDays(now, 21).toISOString(),
       refereeGame: {
         __identity: "demo-comp-game-3",
+        isGameInFuture: "0",
         game: {
           __identity: "demo-cg-3",
+          number: 382502,
           startingDateTime: subDays(now, 21).toISOString(),
+          playingWeekday: getWeekday(subDays(now, 21)),
           encounter: {
             teamHome: {
               __identity: "team-15",
@@ -376,26 +519,51 @@ function generateDummyData() {
               identifier: 59606,
             },
           },
+          hall: {
+            __identity: "hall-c3",
+            name: "Lintharena Näfels",
+            primaryPostalAddress: {
+              __identity: "addr-c3",
+              postalCode: "8752",
+              city: "Näfels",
+              combinedAddress: "Sportplatzstrasse 1, 8752 Näfels",
+            },
+          },
         },
       },
       convocationCompensation: {
         __identity: "demo-cc-3",
         paymentDone: true,
+        paymentValueDate: subDays(now, 14).toISOString().split("T")[0],
         gameCompensation: 80,
+        gameCompensationFormatted: "80.00",
         travelExpenses: 43.4,
+        travelExpensesFormatted: "43.40",
         distanceInMetres: 62000,
+        distanceFormatted: "62.0",
+        costFormatted: "123.40",
         transportationMode: "car",
+        hasFlexibleGameCompensations: false,
+        hasFlexibleTravelExpenses: false,
+        hasFlexibleOvernightStayExpenses: false,
+        hasFlexibleCateringExpenses: false,
+        overnightStayExpensesFormatted: "0.00",
+        cateringExpensesFormatted: "0.00",
       },
     },
     {
       __identity: "demo-comp-4",
       refereeConvocationStatus: "active",
       refereePosition: "head-one",
+      compensationDate: subDays(now, 5).toISOString(),
       refereeGame: {
         __identity: "demo-comp-game-4",
+        isGameInFuture: "0",
         game: {
           __identity: "demo-cg-4",
+          number: 382503,
           startingDateTime: subDays(now, 5).toISOString(),
+          playingWeekday: getWeekday(subDays(now, 5)),
           encounter: {
             teamHome: {
               __identity: "team-17",
@@ -408,26 +576,50 @@ function generateDummyData() {
               identifier: 59608,
             },
           },
+          hall: {
+            __identity: "hall-c4",
+            name: "Sporthalle Kuspo Therwil",
+            primaryPostalAddress: {
+              __identity: "addr-c4",
+              postalCode: "4106",
+              city: "Therwil",
+              combinedAddress: "Im Letten 2, 4106 Therwil",
+            },
+          },
         },
       },
       convocationCompensation: {
         __identity: "demo-cc-4",
         paymentDone: false,
         gameCompensation: 100,
+        gameCompensationFormatted: "100.00",
         travelExpenses: 62.3,
+        travelExpensesFormatted: "62.30",
         distanceInMetres: 89000,
+        distanceFormatted: "89.0",
+        costFormatted: "162.30",
         transportationMode: "car",
+        hasFlexibleGameCompensations: false,
+        hasFlexibleTravelExpenses: true,
+        hasFlexibleOvernightStayExpenses: false,
+        hasFlexibleCateringExpenses: false,
+        overnightStayExpensesFormatted: "0.00",
+        cateringExpensesFormatted: "0.00",
       },
     },
     {
       __identity: "demo-comp-5",
       refereeConvocationStatus: "active",
       refereePosition: "linesman-two",
+      compensationDate: subDays(now, 28).toISOString(),
       refereeGame: {
         __identity: "demo-comp-game-5",
+        isGameInFuture: "0",
         game: {
           __identity: "demo-cg-5",
+          number: 382504,
           startingDateTime: subDays(now, 28).toISOString(),
+          playingWeekday: getWeekday(subDays(now, 28)),
           encounter: {
             teamHome: {
               __identity: "team-19",
@@ -440,15 +632,36 @@ function generateDummyData() {
               identifier: 59610,
             },
           },
+          hall: {
+            __identity: "hall-c5",
+            name: "Weissenstein Halle",
+            primaryPostalAddress: {
+              __identity: "addr-c5",
+              postalCode: "3008",
+              city: "Bern",
+              combinedAddress: "Weissensteinstrasse 80, 3008 Bern",
+            },
+          },
         },
       },
       convocationCompensation: {
         __identity: "demo-cc-5",
         paymentDone: true,
+        paymentValueDate: subDays(now, 21).toISOString().split("T")[0],
         gameCompensation: 50,
+        gameCompensationFormatted: "50.00",
         travelExpenses: 16.8,
+        travelExpensesFormatted: "16.80",
         distanceInMetres: 24000,
+        distanceFormatted: "24.0",
+        costFormatted: "66.80",
         transportationMode: "train",
+        hasFlexibleGameCompensations: false,
+        hasFlexibleTravelExpenses: false,
+        hasFlexibleOvernightStayExpenses: false,
+        hasFlexibleCateringExpenses: false,
+        overnightStayExpensesFormatted: "0.00",
+        cateringExpensesFormatted: "0.00",
       },
     },
   ];
@@ -461,6 +674,7 @@ function generateDummyData() {
       submittingType: "referee",
       refereePosition: "head-one",
       requiredRefereeLevel: "N3",
+      requiredRefereeLevelGradationValue: "1",
       submittedByPerson: {
         __identity: "demo-person-1",
         firstName: "Max",
@@ -469,9 +683,14 @@ function generateDummyData() {
       },
       refereeGame: {
         __identity: "demo-ex-game-1",
+        isGameInFuture: "1",
+        activeFirstHeadRefereeName: "Max Müller",
+        activeSecondHeadRefereeName: "Lisa Weber",
         game: {
           __identity: "demo-exg-1",
+          number: 382600,
           startingDateTime: addDays(now, 4).toISOString(),
+          playingWeekday: getWeekday(addDays(now, 4)),
           encounter: {
             teamHome: {
               __identity: "team-21",
@@ -484,7 +703,16 @@ function generateDummyData() {
               identifier: 59612,
             },
           },
-          hall: { __identity: "hall-6", name: "Saalsporthalle Zürich" },
+          hall: {
+            __identity: "hall-6",
+            name: "Saalsporthalle Zürich",
+            primaryPostalAddress: {
+              __identity: "addr-e1",
+              postalCode: "8005",
+              city: "Zürich",
+              combinedAddress: "Hardturmstrasse 154, 8005 Zürich",
+            },
+          },
           group: {
             name: "Quali",
             phase: {
@@ -505,6 +733,7 @@ function generateDummyData() {
       submittingType: "referee",
       refereePosition: "linesman-one",
       requiredRefereeLevel: "N2",
+      requiredRefereeLevelGradationValue: "2",
       submittedByPerson: {
         __identity: "demo-person-2",
         firstName: "Anna",
@@ -513,9 +742,15 @@ function generateDummyData() {
       },
       refereeGame: {
         __identity: "demo-ex-game-2",
+        isGameInFuture: "1",
+        activeFirstHeadRefereeName: "Thomas Meier",
+        activeSecondHeadRefereeName: "Sandra Keller",
+        activeFirstLinesmanRefereeName: "Anna Schmidt",
         game: {
           __identity: "demo-exg-2",
+          number: 382601,
           startingDateTime: addDays(now, 6).toISOString(),
+          playingWeekday: getWeekday(addDays(now, 6)),
           encounter: {
             teamHome: {
               __identity: "team-23",
@@ -528,7 +763,16 @@ function generateDummyData() {
               identifier: 59614,
             },
           },
-          hall: { __identity: "hall-7", name: "Aarehalle Schönenwerd" },
+          hall: {
+            __identity: "hall-7",
+            name: "Aarehalle Schönenwerd",
+            primaryPostalAddress: {
+              __identity: "addr-e2",
+              postalCode: "5012",
+              city: "Schönenwerd",
+              combinedAddress: "Aarauerstrasse 50, 5012 Schönenwerd",
+            },
+          },
           group: {
             name: "Quali",
             phase: {
@@ -549,6 +793,7 @@ function generateDummyData() {
       submittingType: "referee",
       refereePosition: "head-two",
       requiredRefereeLevel: "N2",
+      requiredRefereeLevelGradationValue: "1",
       submittedByPerson: {
         __identity: "demo-person-3",
         firstName: "Peter",
@@ -568,9 +813,14 @@ function generateDummyData() {
       appliedAt: subDays(now, 3).toISOString(),
       refereeGame: {
         __identity: "demo-ex-game-3",
+        isGameInFuture: "1",
+        activeFirstHeadRefereeName: "Laura Brunner",
+        activeSecondHeadRefereeName: "Peter Weber",
         game: {
           __identity: "demo-exg-3",
+          number: 382602,
           startingDateTime: addDays(now, 8).toISOString(),
+          playingWeekday: getWeekday(addDays(now, 8)),
           encounter: {
             teamHome: {
               __identity: "team-25",
@@ -583,7 +833,16 @@ function generateDummyData() {
               identifier: 59616,
             },
           },
-          hall: { __identity: "hall-8", name: "Lintharena Näfels" },
+          hall: {
+            __identity: "hall-8",
+            name: "Lintharena Näfels",
+            primaryPostalAddress: {
+              __identity: "addr-e3",
+              postalCode: "8752",
+              city: "Näfels",
+              combinedAddress: "Sportplatzstrasse 1, 8752 Näfels",
+            },
+          },
           group: {
             name: "Quali",
             phase: {
@@ -604,6 +863,7 @@ function generateDummyData() {
       submittingType: "admin",
       refereePosition: "head-one",
       requiredRefereeLevel: "N1",
+      requiredRefereeLevelGradationValue: "1",
       submittedByPerson: {
         __identity: "demo-person-4",
         firstName: "Sara",
@@ -612,9 +872,14 @@ function generateDummyData() {
       },
       refereeGame: {
         __identity: "demo-ex-game-4",
+        isGameInFuture: "1",
+        activeFirstHeadRefereeName: "",
+        activeSecondHeadRefereeName: "Julia Hofer",
         game: {
           __identity: "demo-exg-4",
+          number: 382603,
           startingDateTime: addDays(now, 10).toISOString(),
+          playingWeekday: getWeekday(addDays(now, 10)),
           encounter: {
             teamHome: {
               __identity: "team-27",
@@ -627,7 +892,16 @@ function generateDummyData() {
               identifier: 59618,
             },
           },
-          hall: { __identity: "hall-9", name: "Sporthalle Kuspo Therwil" },
+          hall: {
+            __identity: "hall-9",
+            name: "Sporthalle Kuspo Therwil",
+            primaryPostalAddress: {
+              __identity: "addr-e4",
+              postalCode: "4106",
+              city: "Therwil",
+              combinedAddress: "Im Letten 2, 4106 Therwil",
+            },
+          },
           group: {
             name: "Quali",
             phase: {
@@ -648,6 +922,7 @@ function generateDummyData() {
       submittingType: "referee",
       refereePosition: "linesman-two",
       requiredRefereeLevel: "N3",
+      requiredRefereeLevelGradationValue: "3",
       submittedByPerson: {
         __identity: "demo-person-5",
         firstName: "Thomas",
@@ -656,9 +931,15 @@ function generateDummyData() {
       },
       refereeGame: {
         __identity: "demo-ex-game-5",
+        isGameInFuture: "0",
+        activeFirstHeadRefereeName: "Michael Fischer",
+        activeSecondHeadRefereeName: "Nina Baumann",
+        activeSecondLinesmanRefereeName: "Demo User",
         game: {
           __identity: "demo-exg-5",
+          number: 382604,
           startingDateTime: subDays(now, 2).toISOString(),
+          playingWeekday: getWeekday(subDays(now, 2)),
           encounter: {
             teamHome: {
               __identity: "team-29",
@@ -671,7 +952,16 @@ function generateDummyData() {
               identifier: 59620,
             },
           },
-          hall: { __identity: "hall-10", name: "Weissenstein Halle" },
+          hall: {
+            __identity: "hall-10",
+            name: "Weissenstein Halle",
+            primaryPostalAddress: {
+              __identity: "addr-e5",
+              postalCode: "3008",
+              city: "Bern",
+              combinedAddress: "Weissensteinstrasse 80, 3008 Bern",
+            },
+          },
           group: {
             name: "Quali",
             phase: {

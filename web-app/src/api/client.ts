@@ -487,18 +487,20 @@ export const api = {
   },
 
   async applyForExchange(exchangeId: string): Promise<void> {
+    // Format per OpenAPI spec: __identity=<uuid>&apply=1
     return apiRequest(
       "/indoorvolleyball.refadmin/api%5crefereegameexchange",
       "PUT",
-      { gameExchange: exchangeId, action: "apply" },
+      { __identity: exchangeId, apply: "1" },
     );
   },
 
   async withdrawFromExchange(exchangeId: string): Promise<void> {
+    // Format per OpenAPI spec: __identity=<uuid>&withdrawApplication=1
     return apiRequest(
       "/indoorvolleyball.refadmin/api%5crefereegameexchange",
       "PUT",
-      { gameExchange: exchangeId, action: "withdraw" },
+      { __identity: exchangeId, withdrawApplication: "1" },
     );
   },
 
