@@ -41,6 +41,15 @@ function UnsavedChangesDialog({
   onCancel: () => void;
 }) {
   const { t } = useTranslation();
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Focus first button when dialog opens for accessibility
+  useEffect(() => {
+    if (isOpen && dialogRef.current) {
+      const firstButton = dialogRef.current.querySelector("button");
+      firstButton?.focus();
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -51,6 +60,7 @@ function UnsavedChangesDialog({
       aria-hidden="true"
     >
       <div
+        ref={dialogRef}
         className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-sm w-full p-6"
         role="alertdialog"
         aria-modal="true"
