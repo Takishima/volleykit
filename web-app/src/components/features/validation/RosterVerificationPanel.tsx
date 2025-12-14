@@ -147,10 +147,11 @@ export function RosterVerificationPanel({
     setIsAddPlayerSheetOpen(false);
   }, []);
 
-  // Combine original players with added players
-  const allPlayers = [...players, ...addedPlayers].sort(
-    (a, b) => a.shirtNumber - b.shirtNumber,
-  );
+  const allPlayers = [...players, ...addedPlayers].sort((a, b) => {
+    if (a.isNewlyAdded && !b.isNewlyAdded) return 1;
+    if (!a.isNewlyAdded && b.isNewlyAdded) return -1;
+    return a.shirtNumber - b.shirtNumber;
+  });
 
   // Calculate visible player count (excluding removed)
   const visiblePlayerCount = allPlayers.filter(
