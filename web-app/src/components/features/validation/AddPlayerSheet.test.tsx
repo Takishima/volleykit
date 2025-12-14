@@ -279,6 +279,8 @@ describe("AddPlayerSheet - Error State", () => {
       { wrapper: createWrapper() },
     );
 
-    expect(screen.getByText("Failed to load players")).toBeInTheDocument();
+    const errorMessage = screen.getByText("Failed to load players");
+    expect(errorMessage).toBeInTheDocument();
+    expect(errorMessage).toHaveAttribute("role", "alert");
   });
 });
