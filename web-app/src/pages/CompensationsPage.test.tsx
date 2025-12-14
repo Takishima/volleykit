@@ -66,14 +66,8 @@ describe("CompensationsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Default mocks
+    // Default mocks - single useCompensations hook with dynamic filter
     vi.mocked(useConvocations.useCompensations).mockReturnValue(
-      createMockQueryResult([]),
-    );
-    vi.mocked(useConvocations.usePaidCompensations).mockReturnValue(
-      createMockQueryResult([]),
-    );
-    vi.mocked(useConvocations.useUnpaidCompensations).mockReturnValue(
       createMockQueryResult([]),
     );
     vi.mocked(useConvocations.useCompensationTotals).mockReturnValue({
@@ -199,6 +193,30 @@ describe("CompensationsPage", () => {
 
       expect(screen.getByText("CHF 150.00")).toBeInTheDocument();
       expect(screen.getByText("CHF 250.50")).toBeInTheDocument();
+    });
+  });
+
+  describe("Data Fetching", () => {
+    it("should call useCompensations with undefined for All tab", () => {
+      render(<CompensationsPage />);
+
+      expect(useConvocations.useCompensations).toHaveBeenCalledWith(undefined);
+    });
+
+    it("should call useCompensations with false for Pending tab", () => {
+      render(<CompensationsPage />);
+
+      fireEvent.click(screen.getByRole("tab", { name: /pending/i }));
+
+      expect(useConvocations.useCompensations).toHaveBeenCalledWith(false);
+    });
+
+    it("should call useCompensations with true for Paid tab", () => {
+      render(<CompensationsPage />);
+
+      fireEvent.click(screen.getByRole("tab", { name: /^paid$/i }));
+
+      expect(useConvocations.useCompensations).toHaveBeenCalledWith(true);
     });
   });
 });
