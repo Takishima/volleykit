@@ -76,11 +76,14 @@ function detectLocale(): Locale {
  * Note: Persistence is handled by the language store, this just detects the initial locale.
  */
 export function initLocale(): Locale {
-  currentLocale = detectLocale();
-  loadTranslations(currentLocale).then((translations) => {
-    currentTranslations = translations;
+  const detectedLocale = detectLocale();
+  currentLocale = detectedLocale;
+  loadTranslations(detectedLocale).then((translations) => {
+    if (currentLocale === detectedLocale) {
+      currentTranslations = translations;
+    }
   });
-  return currentLocale;
+  return detectedLocale;
 }
 
 /**
@@ -103,7 +106,10 @@ export async function setLocale(locale: Locale): Promise<void> {
     if (cached) {
       currentTranslations = cached;
     } else {
-      currentTranslations = await loadTranslations(locale);
+      const translations = await loadTranslations(locale);
+      if (currentLocale === locale) {
+        currentTranslations = translations;
+      }
     }
   }
 }
