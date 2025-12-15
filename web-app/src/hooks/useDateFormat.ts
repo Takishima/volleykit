@@ -11,6 +11,7 @@ import { type Locale as DateFnsLocale } from "date-fns/locale";
 import { enUS } from "date-fns/locale/en-US";
 import { t } from "@/i18n";
 import { useLanguageStore } from "@/stores/language";
+import { logger } from "@/utils/logger";
 
 const localeCache = new Map<string, DateFnsLocale>();
 // Pre-populate English as fallback to prevent FOUC
@@ -42,8 +43,8 @@ async function loadDateLocale(locale: string): Promise<DateFnsLocale> {
     const loadedLocale = await loader();
     localeCache.set(locale, loadedLocale);
     return loadedLocale;
-  } catch {
-    // Fallback to English if dynamic import fails
+  } catch (error) {
+    logger.error("[useDateFormat] Failed to load locale, falling back to English:", error);
     return enUS;
   }
 }

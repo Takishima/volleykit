@@ -11,6 +11,7 @@
 
 import type { Translations } from "./types";
 import en from "./locales/en";
+import { logger } from "@/utils/logger";
 
 export type { Translations };
 export type Locale = "de" | "fr" | "it" | "en";
@@ -36,8 +37,8 @@ async function loadTranslations(locale: Locale): Promise<Translations> {
     const translations = await localeLoaders[locale]();
     translationCache.set(locale, translations);
     return translations;
-  } catch {
-    // Fallback to English if dynamic import fails
+  } catch (error) {
+    logger.error("[i18n] Failed to load translations, falling back to English:", error);
     return en;
   }
 }
