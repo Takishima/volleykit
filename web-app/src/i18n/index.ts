@@ -89,11 +89,15 @@ export function initLocale(): Locale {
   const detectedLocale = detectLocale();
   const requestId = ++localeRequestId;
   currentLocale = detectedLocale;
-  loadTranslations(detectedLocale).then((translations) => {
-    if (requestId === localeRequestId) {
-      currentTranslations = translations;
-    }
-  });
+  loadTranslations(detectedLocale)
+    .then((translations) => {
+      if (requestId === localeRequestId) {
+        currentTranslations = translations;
+      }
+    })
+    .catch((error) => {
+      logger.error("[i18n] Failed to load initial translations:", error);
+    });
   return detectedLocale;
 }
 
@@ -141,11 +145,15 @@ export function setLocaleImmediate(locale: Locale): void {
     if (cached) {
       currentTranslations = cached;
     } else {
-      loadTranslations(locale).then((translations) => {
-        if (requestId === localeRequestId) {
-          currentTranslations = translations;
-        }
-      });
+      loadTranslations(locale)
+        .then((translations) => {
+          if (requestId === localeRequestId) {
+            currentTranslations = translations;
+          }
+        })
+        .catch((error) => {
+          logger.error("[i18n] Failed to load translations:", error);
+        });
     }
   }
 }
