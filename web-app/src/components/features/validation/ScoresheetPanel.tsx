@@ -58,6 +58,7 @@ export function ScoresheetPanel({ onScoresheetChange }: ScoresheetPanelProps) {
     timeout?: ReturnType<typeof setTimeout>;
   }>({});
   const previewUrlRef = useRef<string | null>(null);
+  // Prevent concurrent uploads (race condition prevention - not for unmount tracking)
   const isUploadingRef = useRef(false);
 
   // Cleanup preview URL and upload timers on unmount
