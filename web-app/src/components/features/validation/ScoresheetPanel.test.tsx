@@ -27,6 +27,14 @@ function getFileInput(): HTMLInputElement {
   return fileInput;
 }
 
+function getCameraInput(): HTMLInputElement {
+  const cameraInput = document.querySelector(
+    'input[type="file"][capture="environment"]',
+  ) as HTMLInputElement;
+  if (!cameraInput) throw new Error("Camera input not found");
+  return cameraInput;
+}
+
 describe("ScoresheetPanel - onScoresheetChange callback", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -662,5 +670,214 @@ describe("ScoresheetPanel - file validation", () => {
     // Upload state should remain idle
     expect(screen.queryByText("Uploading...")).not.toBeInTheDocument();
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+  });
+});
+
+describe("ScoresheetPanel - callback ref updates", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("uses updated callback when prop changes mid-upload", () => {
+    const firstCallback = vi.fn();
+    const secondCallback = vi.fn();
+
+    const { rerender } = render(
+      <ScoresheetPanel onScoresheetChange={firstCallback} />,
+    );
+
+    const fileInput = getFileInput();
+    const validFile = createValidFile();
+
+    // Start upload with first callback
+    fireEvent.change(fileInput, { target: { files: [validFile] } });
+    expect(firstCallback).toHaveBeenCalledWith(validFile, false);
+
+    // Change callback prop mid-upload
+    rerender(<ScoresheetPanel onScoresheetChange={secondCallback} />);
+
+    // Complete upload - should use the new callback
+    act(() => {
+      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS);
+    });
+
+    // Second callback should receive the completion
+    expect(secondCallback).toHaveBeenCalledWith(validFile, true);
+    // First callback should not receive completion
+    expect(firstCallback).not.toHaveBeenCalledWith(validFile, true);
+  });
+
+  it("uses updated callback for remove action after prop change", () => {
+    const firstCallback = vi.fn();
+    const secondCallback = vi.fn();
+
+    const { rerender } = render(
+      <ScoresheetPanel onScoresheetChange={firstCallback} />,
+    );
+
+    const fileInput = getFileInput();
+    const validFile = createValidFile();
+
+    // Complete upload with first callback
+    fireEvent.change(fileInput, { target: { files: [validFile] } });
+    act(() => {
+      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS);
+    });
+
+    // Change callback prop
+    rerender(<ScoresheetPanel onScoresheetChange={secondCallback} />);
+
+    // Remove file - should use the new callback
+    const removeButton = screen.getByRole("button", { name: /remove/i });
+    fireEvent.click(removeButton);
+
+    expect(secondCallback).toHaveBeenCalledWith(null, false);
+    expect(firstCallback).not.toHaveBeenCalledWith(null, false);
+  });
+});
+
+describe("ScoresheetPanel - camera input", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+    globalThis.URL.createObjectURL = vi.fn(() => "blob:mock-url");
+    globalThis.URL.revokeObjectURL = vi.fn();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("handles file selection via camera input", () => {
+    const onScoresheetChange = vi.fn();
+    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />);
+
+    const cameraInput = getCameraInput();
+    const photoFile = createValidFile("photo.jpg", "image/jpeg");
+
+    fireEvent.change(cameraInput, { target: { files: [photoFile] } });
+
+    expect(onScoresheetChange).toHaveBeenCalledWith(photoFile, false);
+    expect(screen.getByText("photo.jpg")).toBeInTheDocument();
+  });
+
+  it("completes upload from camera input", () => {
+    const onScoresheetChange = vi.fn();
+    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />);
+
+    const cameraInput = getCameraInput();
+    const photoFile = createValidFile("camera-photo.jpg", "image/jpeg");
+
+    fireEvent.change(cameraInput, { target: { files: [photoFile] } });
+
+    act(() => {
+      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS);
+    });
+
+    expect(onScoresheetChange).toHaveBeenLastCalledWith(photoFile, true);
+    expect(screen.getByRole("status")).toBeInTheDocument();
+  });
+
+  it("validates files from camera input", () => {
+    render(<ScoresheetPanel />);
+
+    const cameraInput = getCameraInput();
+    // Camera input accepts image/jpeg and image/png only
+    const largePhoto = createValidFile(
+      "large-photo.jpg",
+      "image/jpeg",
+      MAX_FILE_SIZE_BYTES + 1,
+    );
+
+    fireEvent.change(cameraInput, { target: { files: [largePhoto] } });
+
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+  });
+
+  it("camera input has correct accept attribute", () => {
+    render(<ScoresheetPanel />);
+
+    const cameraInput = getCameraInput();
+    expect(cameraInput).toHaveAttribute("accept", "image/jpeg,image/png");
+    expect(cameraInput).toHaveAttribute("capture", "environment");
+  });
+});
+
+describe("ScoresheetPanel - same file re-selection", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+    globalThis.URL.createObjectURL = vi.fn(() => "blob:mock-url");
+    globalThis.URL.revokeObjectURL = vi.fn();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("allows re-selecting the same file after removal", () => {
+    const onScoresheetChange = vi.fn();
+    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />);
+
+    const fileInput = getFileInput();
+    const file = createValidFile("document.jpg");
+
+    // First upload
+    fireEvent.change(fileInput, { target: { files: [file] } });
+    act(() => {
+      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS);
+    });
+
+    // Remove file
+    fireEvent.click(screen.getByRole("button", { name: /remove/i }));
+    onScoresheetChange.mockClear();
+
+    // Re-select the same file
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    expect(onScoresheetChange).toHaveBeenCalledWith(file, false);
+    expect(screen.getByText("document.jpg")).toBeInTheDocument();
+  });
+
+  it("clears input value after selection to allow same file re-selection", () => {
+    render(<ScoresheetPanel />);
+
+    const fileInput = getFileInput();
+    const file = createValidFile("test.jpg");
+
+    // Simulate file selection
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    // Input value should be cleared (component sets e.target.value = "")
+    // This allows the same file to trigger onChange again
+    expect(fileInput.value).toBe("");
+  });
+
+  it("allows replacing with the same file via replace button", () => {
+    const onScoresheetChange = vi.fn();
+    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />);
+
+    const fileInput = getFileInput();
+    const file = createValidFile("original.jpg");
+
+    // First upload
+    fireEvent.change(fileInput, { target: { files: [file] } });
+    act(() => {
+      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS);
+    });
+
+    // Click replace
+    fireEvent.click(screen.getByRole("button", { name: /replace/i }));
+    onScoresheetChange.mockClear();
+
+    // Re-select the same file
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    expect(onScoresheetChange).toHaveBeenCalledWith(file, false);
   });
 });
