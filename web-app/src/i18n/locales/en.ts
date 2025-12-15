@@ -247,8 +247,7 @@ const en: Translations = {
       discardAndClose: "Discard and Close",
       saveSuccess: "Validation saved successfully",
       saveError: "Failed to save validation",
-      saveDisabledTooltip:
-        "Complete all required panels (Home Roster, Away Roster, Scorer) to save",
+      markAllStepsTooltip: "Mark all required steps as reviewed to finish",
     },
     wizard: {
       previous: "Previous",
@@ -256,6 +255,7 @@ const en: Translations = {
       finish: "Finish",
       stepOf: "Step {current} of {total}",
       saving: "Saving...",
+      markAsReviewed: "Mark as reviewed",
     },
   },
 };

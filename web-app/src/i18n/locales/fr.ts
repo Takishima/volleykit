@@ -251,8 +251,8 @@ const fr: Translations = {
       discardAndClose: "Abandonner et fermer",
       saveSuccess: "Validation enregistrée avec succès",
       saveError: "Échec de l'enregistrement de la validation",
-      saveDisabledTooltip:
-        "Complétez tous les panneaux requis (Effectif domicile, Effectif visiteur, Marqueur) pour enregistrer",
+      markAllStepsTooltip:
+        "Marquez toutes les étapes requises comme vérifiées pour terminer",
     },
     wizard: {
       previous: "Précédent",
@@ -260,6 +260,7 @@ const fr: Translations = {
       finish: "Terminer",
       stepOf: "Étape {current} sur {total}",
       saving: "Enregistrement...",
+      markAsReviewed: "Marquer comme vérifié",
     },
   },
 };

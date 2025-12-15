@@ -251,8 +251,8 @@ const de: Translations = {
       discardAndClose: "Verwerfen und schliessen",
       saveSuccess: "Validierung erfolgreich gespeichert",
       saveError: "Validierung konnte nicht gespeichert werden",
-      saveDisabledTooltip:
-        "Füllen Sie alle erforderlichen Bereiche aus (Heimkader, Gastkader, Schreiber), um zu speichern",
+      markAllStepsTooltip:
+        "Markieren Sie alle erforderlichen Schritte als geprüft, um abzuschliessen",
     },
     wizard: {
       previous: "Zurück",
@@ -260,6 +260,7 @@ const de: Translations = {
       finish: "Abschliessen",
       stepOf: "Schritt {current} von {total}",
       saving: "Speichern...",
+      markAsReviewed: "Als geprüft markieren",
     },
   },
 };

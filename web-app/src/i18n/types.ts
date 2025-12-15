@@ -229,7 +229,7 @@ export interface Translations {
       discardAndClose: string;
       saveSuccess: string;
       saveError: string;
-      saveDisabledTooltip: string;
+      markAllStepsTooltip: string;
     };
     wizard: {
       previous: string;
@@ -237,6 +237,7 @@ export interface Translations {
       finish: string;
       stepOf: string;
       saving: string;
+      markAsReviewed: string;
     };
   };
 }

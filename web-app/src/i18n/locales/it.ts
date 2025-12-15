@@ -246,8 +246,8 @@ const it: Translations = {
       discardAndClose: "Scarta e chiudi",
       saveSuccess: "Validazione salvata con successo",
       saveError: "Impossibile salvare la validazione",
-      saveDisabledTooltip:
-        "Completa tutti i pannelli richiesti (Rosa di casa, Rosa ospite, Segnapunti) per salvare",
+      markAllStepsTooltip:
+        "Segna tutti i passaggi richiesti come verificati per terminare",
     },
     wizard: {
       previous: "Precedente",
@@ -255,6 +255,7 @@ const it: Translations = {
       finish: "Termina",
       stepOf: "Passo {current} di {total}",
       saving: "Salvataggio...",
+      markAsReviewed: "Segna come verificato",
     },
   },
 };

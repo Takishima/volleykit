@@ -35,6 +35,12 @@ export interface UseWizardNavigationResult<T extends WizardStep> {
   canGoNext: boolean;
   /** Check if can go back */
   canGoBack: boolean;
+  /** Set of step indices that user has marked as done */
+  stepsMarkedDone: ReadonlySet<number>;
+  /** Mark a step as done or not done */
+  setStepDone: (index: number, done: boolean) => void;
+  /** Whether all required steps have been marked as done */
+  allRequiredStepsDone: boolean;
 }
 
 /**
@@ -55,8 +61,15 @@ export function useWizardNavigation<T extends WizardStep>({
     throw new Error("useWizardNavigation: steps array cannot be empty");
   }
 
-  const [currentStepIndex, setCurrentStepIndex] = useState(
-    Math.max(0, Math.min(initialStepIndex, steps.length - 1)),
+  const clampedInitialIndex = Math.max(
+    0,
+    Math.min(initialStepIndex, steps.length - 1),
+  );
+
+  const [currentStepIndex, setCurrentStepIndex] = useState(clampedInitialIndex);
+
+  const [stepsMarkedDone, setStepsMarkedDone] = useState<Set<number>>(
+    () => new Set(),
   );
 
   const totalSteps = steps.length;
@@ -82,6 +95,20 @@ export function useWizardNavigation<T extends WizardStep>({
     [currentStepIndex, steps.length, onStepChange],
   );
 
+  const setStepDone = useCallback((index: number, done: boolean) => {
+    setStepsMarkedDone((prev) => {
+      if (done && prev.has(index)) return prev;
+      if (!done && !prev.has(index)) return prev;
+      const next = new Set(prev);
+      if (done) {
+        next.add(index);
+      } else {
+        next.delete(index);
+      }
+      return next;
+    });
+  }, []);
+
   const goNext = useCallback(() => {
     if (canGoNext) {
       goToStep(currentStepIndex + 1);
@@ -97,7 +124,19 @@ export function useWizardNavigation<T extends WizardStep>({
   // Stable function that resets to first step without depending on currentStepIndex
   const resetToStart = useCallback(() => {
     setCurrentStepIndex(0);
+    setStepsMarkedDone(new Set());
   }, []);
+
+  // Check if all required (non-optional) steps have been marked as done
+  const allRequiredStepsDone = useMemo(() => {
+    for (let i = 0; i < steps.length; i++) {
+      const step = steps[i];
+      if (!step?.isOptional && !stepsMarkedDone.has(i)) {
+        return false;
+      }
+    }
+    return true;
+  }, [steps, stepsMarkedDone]);
 
   return {
     currentStepIndex,
@@ -111,5 +150,8 @@ export function useWizardNavigation<T extends WizardStep>({
     resetToStart,
     canGoNext,
     canGoBack,
+    stepsMarkedDone,
+    setStepDone,
+    allRequiredStepsDone,
   };
 }

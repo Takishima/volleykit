@@ -124,7 +124,6 @@ export function ValidateGameModal({
   const {
     isDirty,
     completionStatus,
-    isAllRequiredComplete,
     setHomeRosterModifications,
     setAwayRosterModifications,
     setScorer,
@@ -157,6 +156,9 @@ export function ValidateGameModal({
     goBack,
     goToStep,
     resetToStart,
+    stepsMarkedDone,
+    setStepDone,
+    allRequiredStepsDone,
   } = useWizardNavigation<ValidationStep>({
     steps: wizardSteps,
   });
@@ -185,16 +187,24 @@ export function ValidateGameModal({
     };
   }, []);
 
-  // Build completion status map for step indicator
-  const stepCompletionStatus = useMemo(
-    () => ({
-      "home-roster": completionStatus.homeRoster,
-      "away-roster": completionStatus.awayRoster,
-      scorer: completionStatus.scorer,
-      scoresheet: completionStatus.scoresheet,
-    }),
-    [completionStatus],
-  );
+  const isCurrentStepDone = stepsMarkedDone.has(currentStepIndex);
+
+  // Scorer panel requires a scorer to be selected before marking as done
+  const canMarkCurrentStepDone = useMemo(() => {
+    const stepId = wizardSteps[currentStepIndex]?.id;
+    if (stepId === "scorer") return completionStatus.scorer;
+    return true;
+  }, [currentStepIndex, wizardSteps, completionStatus.scorer]);
+
+  const handleToggleCurrentStepDone = useCallback(() => {
+    if (!canMarkCurrentStepDone && !isCurrentStepDone) return;
+    setStepDone(currentStepIndex, !isCurrentStepDone);
+  }, [
+    currentStepIndex,
+    isCurrentStepDone,
+    setStepDone,
+    canMarkCurrentStepDone,
+  ]);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -239,8 +249,8 @@ export function ValidateGameModal({
 
   // Handle finish action (finalize validation)
   const handleFinish = useCallback(async () => {
-    // Guard against concurrent operations
-    if (!isAllRequiredComplete || isFinalizingRef.current) return;
+    // Guard against concurrent operations and incomplete state
+    if (!allRequiredStepsDone || isFinalizingRef.current) return;
 
     isFinalizingRef.current = true;
     setIsFinalizing(true);
@@ -269,7 +279,7 @@ export function ValidateGameModal({
       isFinalizingRef.current = false;
       setIsFinalizing(false);
     }
-  }, [isAllRequiredComplete, t, onClose]);
+  }, [allRequiredStepsDone, t, onClose]);
 
   // Confirm discard changes (for unsaved dialog)
   const handleConfirmDiscard = useCallback(() => {
@@ -364,7 +374,7 @@ export function ValidateGameModal({
             <WizardStepIndicator
               steps={wizardSteps}
               currentStepIndex={currentStepIndex}
-              completionStatus={stepCompletionStatus}
+              stepsMarkedDone={stepsMarkedDone}
               clickable={!isFinalizing}
               onStepClick={goToStep}
             />
@@ -406,6 +416,27 @@ export function ValidateGameModal({
               <ScoresheetPanel onScoresheetChange={setScoresheet} />
             )}
           </WizardStepContainer>
+
+          {!currentStep.isOptional && (
+            <label
+              className={`flex items-center gap-2 mt-4 select-none ${
+                canMarkCurrentStepDone && !isFinalizing
+                  ? "cursor-pointer"
+                  : "cursor-not-allowed opacity-60"
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={isCurrentStepDone}
+                onChange={handleToggleCurrentStepDone}
+                disabled={isFinalizing || !canMarkCurrentStepDone}
+                className="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 dark:focus:ring-green-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                {t("validation.wizard.markAsReviewed")}
+              </span>
+            </label>
+          )}
 
           {/* Error display with recovery options */}
           {saveError && (
@@ -473,10 +504,10 @@ export function ValidateGameModal({
                 <button
                   type="button"
                   onClick={() => handleFinish()}
-                  disabled={!isAllRequiredComplete || isFinalizing}
+                  disabled={!allRequiredStepsDone || isFinalizing}
                   title={
-                    !isAllRequiredComplete
-                      ? t("validation.state.saveDisabledTooltip")
+                    !allRequiredStepsDone
+                      ? t("validation.state.markAllStepsTooltip")
                       : undefined
                   }
                   className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"

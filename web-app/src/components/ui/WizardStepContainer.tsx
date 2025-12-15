@@ -51,6 +51,7 @@ export function WizardStepContainer({
   const [isDragging, setIsDragging] = useState(false);
   const [containerWidth, setContainerWidth] = useState<number | null>(null);
   const [animationPhase, setAnimationPhase] = useState<AnimationPhase>("idle");
+  const [isJumping, setIsJumping] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const startXRef = useRef(0);
@@ -104,6 +105,8 @@ export function WizardStepContainer({
       // Only animate if we're not already animating (swipe handles its own animation)
       if (animationPhase === "idle") {
         // Start from off-screen position (synchronous, before paint)
+        // Going forward: new panel enters from the right (carousel style)
+        // Going backward: new panel enters from the left
         // Disable lint warning - this is a legitimate animation pattern where we need
         // to set initial position synchronously before the browser paints
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -190,17 +193,22 @@ export function WizardStepContainer({
     [swipeEnabled, canSwipeNext, canSwipePrevious, threshold],
   );
 
-  // Start entrance animation after content switch
+  // Start entrance animation after content switch (swipe gestures)
   const startEntranceAnimation = useCallback(
     (goingNext: boolean, width: number) => {
-      // Position new content off-screen on arrival side
+      // Disable transition to instantly position new content
+      setIsJumping(true);
+      // Position new content on the OPPOSITE side from where current content exited
+      // When swiping left (goingNext=true): current exits left, new enters from right (+width)
+      // When swiping right (goingNext=false): current exits right, new enters from left (-width)
       setTranslateX(goingNext ? width : -width);
-      setAnimationPhase("entering");
 
-      // Double rAF ensures initial position renders before transition starts.
-      // First rAF: browser schedules paint, second rAF: transition begins after paint.
+      // First rAF: browser paints the new position without transition
+      // Second rAF: enable transition and animate to center
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
+          setIsJumping(false);
+          setAnimationPhase("entering");
           setTranslateX(0);
         });
       });
@@ -330,8 +338,9 @@ export function WizardStepContainer({
   }, [handleGestureEnd]);
 
   // Determine if transition should be animated
-  // Animate when: not dragging (either animating or snapping back)
-  const shouldAnimate = !isDragging;
+  // Animate when: not dragging AND not in an instant jump
+  // isJumping is true only during the instant position jump before entrance animation
+  const shouldAnimate = !isDragging && !isJumping;
 
   return (
     // Swipe gestures provide touch/mouse navigation as a supplement to button navigation.

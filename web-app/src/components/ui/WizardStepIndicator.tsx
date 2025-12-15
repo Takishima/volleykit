@@ -22,8 +22,8 @@ interface WizardStepIndicatorProps {
   steps: WizardStep[];
   /** Current step index (0-based) */
   currentStepIndex: number;
-  /** Map of step id to completion status */
-  completionStatus: Record<string, boolean>;
+  /** Set of step indices that user has marked as done */
+  stepsMarkedDone: ReadonlySet<number>;
   /** Optional callback when clicking a step indicator */
   onStepClick?: (index: number) => void;
   /** Whether step clicking is enabled */
@@ -41,7 +41,7 @@ interface WizardStepIndicatorProps {
 export function WizardStepIndicator({
   steps,
   currentStepIndex,
-  completionStatus,
+  stepsMarkedDone,
   onStepClick,
   clickable = false,
 }: WizardStepIndicatorProps) {
@@ -53,11 +53,10 @@ export function WizardStepIndicator({
     >
       {steps.map((step, index) => {
         const isCurrent = index === currentStepIndex;
-        const isComplete = completionStatus[step.id] === true;
-        const isPast = index < currentStepIndex;
+        const isMarkedDone = stepsMarkedDone.has(index);
 
-        // Determine if this step should show completion indicator
-        const showCompletion = !step.isOptional && (isComplete || isPast);
+        // Show checkmark if user has marked step as done (and it's not optional)
+        const showCompletion = !step.isOptional && isMarkedDone;
 
         const isDisabled = !clickable;
 
@@ -98,7 +97,7 @@ export function WizardStepIndicator({
               onKeyDown={handleKeyDown}
               aria-disabled={isDisabled}
               aria-current={isCurrent ? "step" : undefined}
-              aria-label={`${step.label}${isCurrent ? " (current)" : ""}${showCompletion ? " (complete)" : ""}`}
+              aria-label={`${step.label}${isCurrent ? " (current)" : ""}${showCompletion ? " (done)" : ""}`}
               className={`
                 relative flex items-center justify-center w-8 h-8 rounded-full
                 transition-all duration-200
