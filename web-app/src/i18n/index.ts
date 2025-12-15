@@ -123,9 +123,15 @@ export async function setLocale(locale: Locale): Promise<void> {
     if (cached) {
       currentTranslations = cached;
     } else {
-      const translations = await loadTranslations(locale);
-      if (requestId === localeRequestId) {
-        currentTranslations = translations;
+      try {
+        const translations = await loadTranslations(locale);
+        if (requestId === localeRequestId) {
+          currentTranslations = translations;
+        }
+      } catch (error) {
+        logger.error("[i18n] Failed to set locale:", error);
+        // Fall back to English if locale loading fails
+        currentTranslations = en;
       }
     }
   }

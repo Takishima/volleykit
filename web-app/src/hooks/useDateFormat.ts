@@ -112,17 +112,12 @@ export function useDateFormat(
 
   useEffect(() => {
     const requestId = ++requestIdRef.current;
-    let isCancelled = false;
 
     loadDateLocale(currentLocale).then((loadedLocale) => {
-      if (!isCancelled && requestId === requestIdRef.current) {
+      if (requestId === requestIdRef.current) {
         setLocale(loadedLocale);
       }
     });
-
-    return () => {
-      isCancelled = true;
-    };
   }, [currentLocale]);
 
   return useMemo(() => {
