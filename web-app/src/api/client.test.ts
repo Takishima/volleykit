@@ -333,6 +333,78 @@ describe("API Client", () => {
       const body = options.body as URLSearchParams;
       expect(body.get("searchConfiguration[limit]")).toBe("100");
     });
+
+    it("sends single-term search to both firstName and lastName for OR matching", async () => {
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse(mockPersonSearchResponse),
+      );
+
+      await api.searchPersons({ lastName: "müller" });
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      const body = options.body as URLSearchParams;
+
+      // Single term should be sent to both firstName and lastName
+      expect(body.get("searchConfiguration[propertyFilters][0][propertyName]")).toBe("firstName");
+      expect(body.get("searchConfiguration[propertyFilters][0][text]")).toBe("müller");
+      expect(body.get("searchConfiguration[propertyFilters][1][propertyName]")).toBe("lastName");
+      expect(body.get("searchConfiguration[propertyFilters][1][text]")).toBe("müller");
+    });
+
+    it("sends two-term search to separate firstName and lastName fields", async () => {
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse(mockPersonSearchResponse),
+      );
+
+      await api.searchPersons({ firstName: "hans", lastName: "müller" });
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      const body = options.body as URLSearchParams;
+
+      // Two terms should be sent to their respective fields
+      expect(body.get("searchConfiguration[propertyFilters][0][propertyName]")).toBe("firstName");
+      expect(body.get("searchConfiguration[propertyFilters][0][text]")).toBe("hans");
+      expect(body.get("searchConfiguration[propertyFilters][1][propertyName]")).toBe("lastName");
+      expect(body.get("searchConfiguration[propertyFilters][1][text]")).toBe("müller");
+    });
+
+    it("includes yearOfBirth filter when provided with single-term search", async () => {
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse(mockPersonSearchResponse),
+      );
+
+      await api.searchPersons({ lastName: "müller", yearOfBirth: "1985" });
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      const body = options.body as URLSearchParams;
+
+      // Single term + year: firstName, lastName, yearOfBirth
+      expect(body.get("searchConfiguration[propertyFilters][0][propertyName]")).toBe("firstName");
+      expect(body.get("searchConfiguration[propertyFilters][0][text]")).toBe("müller");
+      expect(body.get("searchConfiguration[propertyFilters][1][propertyName]")).toBe("lastName");
+      expect(body.get("searchConfiguration[propertyFilters][1][text]")).toBe("müller");
+      expect(body.get("searchConfiguration[propertyFilters][2][propertyName]")).toBe("yearOfBirth");
+      expect(body.get("searchConfiguration[propertyFilters][2][text]")).toBe("1985");
+    });
+
+    it("includes yearOfBirth filter when provided with two-term search", async () => {
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse(mockPersonSearchResponse),
+      );
+
+      await api.searchPersons({ firstName: "hans", lastName: "müller", yearOfBirth: "1985" });
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      const body = options.body as URLSearchParams;
+
+      // Two terms + year: firstName, lastName, yearOfBirth
+      expect(body.get("searchConfiguration[propertyFilters][0][propertyName]")).toBe("firstName");
+      expect(body.get("searchConfiguration[propertyFilters][0][text]")).toBe("hans");
+      expect(body.get("searchConfiguration[propertyFilters][1][propertyName]")).toBe("lastName");
+      expect(body.get("searchConfiguration[propertyFilters][1][text]")).toBe("müller");
+      expect(body.get("searchConfiguration[propertyFilters][2][propertyName]")).toBe("yearOfBirth");
+      expect(body.get("searchConfiguration[propertyFilters][2][text]")).toBe("1985");
+    });
   });
 
   describe("request headers", () => {

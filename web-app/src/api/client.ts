@@ -573,17 +573,19 @@ export const api = {
    * Searches for persons by name or year of birth using Elasticsearch.
    * Used for autocomplete when selecting scorers or other personnel.
    *
-   * The search performs fuzzy matching on firstName, lastName, and yearOfBirth.
-   * Results include association ID, display name, and birthday.
+   * The Elasticsearch API uses OR logic across property filters, allowing
+   * searches to match any of the specified fields. When only a lastName is
+   * provided (single-term search), we send it to both firstName and lastName
+   * fields so searches like "hans" match both first names and last names.
    *
    * @param filters - Search filters (firstName, lastName, yearOfBirth)
    * @param options - Pagination options (offset, limit)
    * @returns Search results with person details
    * @example
-   * // Search by last name
+   * // Single term search - matches firstName OR lastName
    * const results = await api.searchPersons({ lastName: 'müller' });
    *
-   * // Search by first and last name
+   * // Two terms - firstName matches firstName, lastName matches lastName
    * const results = await api.searchPersons({ firstName: 'hans', lastName: 'müller' });
    *
    * // Search by name and birth year
@@ -595,22 +597,39 @@ export const api = {
   ): Promise<PersonSearchResponse> {
     const propertyFilters: Array<{ propertyName: string; text: string }> = [];
 
-    if (filters.firstName) {
+    // Single-term search: send to both firstName and lastName for OR matching
+    // This enables searches like "hans" to find both first names and last names
+    const { firstName, lastName, yearOfBirth } = filters;
+    const isSingleTermSearch = lastName && !firstName;
+
+    if (isSingleTermSearch) {
       propertyFilters.push({
         propertyName: "firstName",
-        text: filters.firstName,
+        text: lastName,
       });
-    }
-    if (filters.lastName) {
       propertyFilters.push({
         propertyName: "lastName",
-        text: filters.lastName,
+        text: lastName,
       });
+    } else {
+      if (firstName) {
+        propertyFilters.push({
+          propertyName: "firstName",
+          text: firstName,
+        });
+      }
+      if (lastName) {
+        propertyFilters.push({
+          propertyName: "lastName",
+          text: lastName,
+        });
+      }
     }
-    if (filters.yearOfBirth) {
+
+    if (yearOfBirth) {
       propertyFilters.push({
         propertyName: "yearOfBirth",
-        text: filters.yearOfBirth,
+        text: yearOfBirth,
       });
     }
 
