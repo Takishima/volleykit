@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   format,
   parseISO,
@@ -102,20 +102,23 @@ export function useDateFormat(
   const [locale, setLocale] = useState<DateFnsLocale>(
     () => localeCache.get(currentLocale) ?? enUS,
   );
-  const requestIdRef = useRef(0);
 
   useEffect(() => {
-    const requestId = ++requestIdRef.current;
+    let ignore = false;
 
     loadDateLocale(currentLocale)
       .then((loadedLocale) => {
-        if (requestId === requestIdRef.current) {
+        if (!ignore) {
           setLocale(loadedLocale);
         }
       })
       .catch(() => {
         // loadDateLocale already logs errors and falls back to English
       });
+
+    return () => {
+      ignore = true;
+    };
   }, [currentLocale]);
 
   return useMemo(() => {
