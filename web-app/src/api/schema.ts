@@ -1265,16 +1265,53 @@ export interface components {
              * @enum {string}
              */
             playingWeekday?: "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
+            /**
+             * @description Game status (e.g., "approved", "scheduled", "completed")
+             * @example approved
+             */
+            status?: string;
             encounter?: components["schemas"]["Encounter"];
             group?: components["schemas"]["Group"];
             hall?: components["schemas"]["Hall"];
             hasNominationListToReviewByReferee?: boolean;
+            /** @description Whether active party has home team nomination list access */
+            hasNominationListOfTeamHomeOfActiveParty?: boolean;
+            /** @description Whether active party has away team nomination list access */
+            hasNominationListOfTeamAwayOfActiveParty?: boolean;
+            /** @description Whether active party has any team nomination list access */
+            hasNominationListOfTeamOfActiveParty?: boolean;
+            nominationListOfTeamHome?: components["schemas"]["NominationList"];
+            nominationListOfTeamAway?: components["schemas"]["NominationList"];
+            scoresheet?: components["schemas"]["Scoresheet"];
             isVolleyCupGameWithoutNationalAssociationLeagueCategoryTeams?: boolean;
+            /** @description Whether the game was forfeited */
+            isForfeitGame?: boolean;
+            /**
+             * Format: date-time
+             * @description When the forfeit decision was made
+             */
+            forfeitDecisionDateTime?: string | null;
+            /** @description Game result (null if not yet played) */
+            result?: Record<string, never> | null;
+            bestOfSeriesResult?: Record<string, never> | null;
+            pointSystem?: Record<string, never> | null;
+            hasGameResultReportFromHomeTeam?: boolean;
+            hasGameResultReportFromAwayTeam?: boolean;
+            hasGameResultReportFromReferee?: boolean;
+            hasGameResultReportFromChampionshipOwner?: boolean;
+            homeTeamGameResultReportDeadlineExceeded?: boolean;
+            awayTeamGameResultReportDeadlineExceeded?: boolean;
+            refereeGameResultReportDeadlineExceeded?: boolean;
             /**
              * @description Full formatted display name for the game
              * @example #382417 | 08.12.2025 20:30 | #3926 | Volley Uster H2 — #85 | VC Tornado Adliswil H1 (3L, ♂, Hin- und Rückrunde, Herren 3. Liga Gruppe B)
              */
             displayName?: string;
+            shortDisplayName?: string;
+            shortDisplayNameWithoutStartingDate?: string;
+            /** @description Match day number in the season */
+            gameDayIndex?: number;
+            onAWeekday?: boolean;
             lastPostponement?: {
                 /** Format: date-time */
                 createdAt?: string;
@@ -1411,6 +1448,20 @@ export interface components {
             __identity?: string;
             /** @example Herren 3. Liga Gruppe B */
             name?: string;
+            /** @example #27106 | Herren 2. Liga */
+            displayName?: string;
+            shortName?: string;
+            identifier?: string;
+            /** @description Whether this is a tournament group (affects nomination workflow) */
+            isTournamentGroup?: boolean;
+            /** @description Whether games in this group require no scoresheet */
+            hasNoScoresheet?: boolean;
+            bestOfSeriesState?: string | null;
+            considerForTopScorerRanking?: boolean;
+            playingInterval?: string | null;
+            playingModeType?: string;
+            /** @description Short name of the managing association (e.g., "SVRZ") */
+            managingAssociationShortName?: string;
             phase?: components["schemas"]["Phase"];
         };
         /** @description Competition phase within a league */
@@ -1707,6 +1758,7 @@ export interface components {
                 };
             };
         } | null;
+        /** @description Basic person information (minimal fields) */
         PersonSummary: {
             /** Format: uuid */
             __identity?: string;
@@ -1716,6 +1768,38 @@ export interface components {
             lastName?: string;
             /** @example Nick Leo Kunz */
             displayName?: string;
+            /** @description Full formatted name */
+            fullName?: string;
+            /** Format: date-time */
+            birthday?: string | null;
+            /** @description Birthday formatted without timezone issues */
+            formattedAndTimezoneIndependentBirthday?: string;
+            /** @description Calculated age */
+            age?: number;
+            yearOfBirth?: number;
+            /** @enum {string} */
+            gender?: "m" | "f";
+            /** @description Swiss Volley association ID */
+            associationId?: number;
+            primaryPhoneNumber?: string | null;
+            mobilePhoneNumber?: string | null;
+            /** @description First legal guardian (for junior players) */
+            firstLegalGuardian?: Record<string, never> | null;
+            /** @description Second legal guardian (for junior players) */
+            secondLegalGuardian?: Record<string, never> | null;
+            hasAccount?: boolean;
+            accountActive?: boolean;
+            username?: string | null;
+            hasProfilePicture?: boolean;
+            profilePicture?: Record<string, never> | null;
+            /** @description Height in centimeters */
+            bodyHeight?: number | null;
+            language?: string;
+            correspondenceLanguage?: string;
+            localeIdentifier?: string;
+            isAnonymized?: boolean;
+            /** Format: date-time */
+            anonymizedAt?: string | null;
         };
         /**
          * @description Internal referee position code:
@@ -3609,6 +3693,8 @@ export interface components {
             checkedBy?: string | null;
             /** @description Whether the team can no longer modify the list */
             isClosedForTeam?: boolean;
+            /** @description Whether this is a subsequent game for the team in a tournament group (affects nomination requirements) */
+            isSubsequentGameForTeamInTournamentGroup?: boolean;
             nominationListValidation?: components["schemas"]["NominationListValidation"];
             notFoundButNominatedPersons?: components["schemas"]["NotFoundPerson"][];
             /** Format: date-time */
@@ -3689,15 +3775,19 @@ export interface components {
         IndoorPlayerNomination: {
             /** Format: uuid */
             __identity?: string;
-            indoorPlayer?: {
-                /** Format: uuid */
-                __identity?: string;
-                person?: components["schemas"]["PersonSummary"];
-            };
+            indoorPlayer?: components["schemas"]["IndoorPlayer"];
             /** @description Player's shirt number for the game */
             shirtNumber?: number;
             isCaptain?: boolean;
             isLibero?: boolean;
+            /** @description Whether the player is eligible to play in this game */
+            isEligible?: boolean;
+            /** @description Team reference if player has a double license */
+            doubleLicenseTeam?: {
+                /** Format: uuid */
+                __identity?: string;
+                displayName?: string;
+            } | null;
             indoorPlayerLicenseCategory?: {
                 /** Format: uuid */
                 __identity?: string;
@@ -3707,10 +3797,37 @@ export interface components {
             indoorPlayerNominationValidation?: {
                 /** Format: uuid */
                 __identity?: string;
+                hasValidationIssues?: boolean;
+                /** @description Whether there are unresolved validation issues */
+                hasUnresolvedValidationIssues?: boolean;
+                hasValidationIssuesForAssociationUserContext?: boolean;
+                hasValidationIssuesForClubUserContext?: boolean;
                 indoorPlayerNominationValidationIssues?: components["schemas"]["ValidationIssue"][];
                 /** @description If player is nominated for another game on the same day */
                 gameOfOtherNominationOnSameDay?: Record<string, never> | null;
             };
+        };
+        /** @description An indoor volleyball player */
+        IndoorPlayer: {
+            /** Format: uuid */
+            __identity?: string;
+            person?: components["schemas"]["PersonSummary"];
+            /** @description Whether the player has accepted the doping declaration */
+            hasAcceptedDopingDeclaration?: boolean;
+            /** @description Whether the indoor license is activated */
+            hasActivatedIndoorLicense?: boolean;
+            /** @description Whether the indoor license is validated */
+            hasValidatedIndoorLicense?: boolean;
+            hasPlayerPicture?: boolean;
+            playerPicture?: Record<string, never> | null;
+            /** @description Whether player is classified as locally educated (relevant for foreigner rules) */
+            isClassifiedAsLocallyEducated?: boolean;
+            /** @description Whether the locally educated classification was manually set */
+            isClassifiedAsLocallyEducatedManuallySet?: boolean;
+            /** @description Whether player counts as a foreigner for game play rules */
+            isForeignerRegardingGamePlay?: boolean;
+            /** @description Total number of licenses held by the player */
+            totalLicensesCount?: number;
         };
         /** @description Response containing possible player nominations */
         PossibleNominationsResponse: {
