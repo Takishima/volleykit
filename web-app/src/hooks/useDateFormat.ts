@@ -104,13 +104,17 @@ export function useDateFormat(
 
   useEffect(() => {
     const targetLocale = currentLocale;
+    let aborted = false;
 
     loadDateLocale(targetLocale).then((loadedLocale) => {
-      // Only apply if locale hasn't changed during async load
-      if (useLanguageStore.getState().locale === targetLocale) {
+      if (!aborted && useLanguageStore.getState().locale === targetLocale) {
         setLocale(loadedLocale);
       }
     });
+
+    return () => {
+      aborted = true;
+    };
   }, [currentLocale]);
 
   return useMemo(() => {
