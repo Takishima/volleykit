@@ -153,24 +153,18 @@ describe("useAuthStore", () => {
       expect(error).toBe("Could not extract form fields from login page");
     });
 
-    it("successful login with 303 redirect", async () => {
+    it("successful login follows redirect and extracts CSRF token", async () => {
       // First fetch: login page with form fields
       mockFetch.mockResolvedValueOnce({
         ok: true,
         text: () => Promise.resolve(createLoginPageHtml()),
       });
 
-      // Second fetch: login POST returns redirect (success)
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 303,
-        type: "opaqueredirect",
-        redirected: false,
-      });
-
-      // Third fetch: dashboard to get CSRF token
+      // Second fetch: login POST follows redirect to dashboard
+      // (browser handles redirect automatically, returns final page)
       mockFetch.mockResolvedValueOnce({
         ok: true,
+        redirected: true,
         text: () =>
           Promise.resolve(
             createDashboardHtml("my-csrf-token-12345678901234567890"),
@@ -184,21 +178,23 @@ describe("useAuthStore", () => {
       expect(setCsrfToken).toHaveBeenCalledWith(
         "my-csrf-token-12345678901234567890",
       );
+      // Should only make 2 calls (login page + auth POST that follows redirect)
+      expect(mockFetch).toHaveBeenCalledTimes(2);
     });
 
-    it("failed login with 200 OK returns error", async () => {
+    it("failed login returns login page without CSRF token", async () => {
       // First fetch: login page with form fields
       mockFetch.mockResolvedValueOnce({
         ok: true,
         text: () => Promise.resolve(createLoginPageHtml()),
       });
 
-      // Second fetch: login POST returns 200 (failure - returns login page with error)
+      // Second fetch: login POST returns login page (no redirect, invalid credentials)
+      // The response is still 200 OK but contains the login page HTML without data-csrf-token
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        status: 200,
-        type: "basic",
         redirected: false,
+        text: () => Promise.resolve(createLoginPageHtml()), // Login page, not dashboard
       });
 
       const result = await useAuthStore.getState().login("user", "wrongpass");
@@ -220,18 +216,12 @@ describe("useAuthStore", () => {
       expect(error).toBe("Network failure");
     });
 
-    it("handles already authenticated user (login page redirects)", async () => {
-      // When user has existing valid session, /login redirects to / (dashboard)
-      // First fetch: login page returns redirect (user already authenticated)
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 303,
-        type: "opaqueredirect",
-      });
-
-      // Second fetch: dashboard to verify session and get CSRF token
+    it("handles already authenticated user (login page has CSRF token)", async () => {
+      // When user has existing valid session, /login redirects to authenticated page
+      // The browser follows the redirect, and we get a page with CSRF token
       mockFetch.mockResolvedValueOnce({
         ok: true,
+        redirected: true,
         text: () =>
           Promise.resolve(
             createDashboardHtml("existing-session-csrf-token-1234"),
@@ -245,46 +235,23 @@ describe("useAuthStore", () => {
       expect(setCsrfToken).toHaveBeenCalledWith(
         "existing-session-csrf-token-1234",
       );
-      // Should only have made 2 calls (no login POST needed)
-      expect(mockFetch).toHaveBeenCalledTimes(2);
+      // Should only have made 1 call (login page fetch detected existing session)
+      expect(mockFetch).toHaveBeenCalledTimes(1);
     });
 
-    it("handles stale session (redirect but dashboard fails)", async () => {
-      // First fetch: login page returns redirect (stale session cookie)
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 303,
-        type: "opaqueredirect",
-      });
-
-      // Second fetch: dashboard fails (session expired server-side)
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-      });
-
-      // Third fetch: logout to clear stale session
+    it("handles stale session by proceeding with normal login", async () => {
+      // With stale session cookie, /login returns login page (session invalid)
+      // First fetch: login page (browser followed redirect but session was invalid)
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        status: 303,
-      });
-
-      // Fourth fetch: fresh login page
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
+        redirected: true, // May have redirected but ended up at login
         text: () => Promise.resolve(createLoginPageHtml()),
       });
 
-      // Fifth fetch: login POST returns redirect (success)
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 303,
-        type: "opaqueredirect",
-      });
-
-      // Sixth fetch: dashboard to get CSRF token
+      // Second fetch: login POST follows redirect to dashboard (success)
       mockFetch.mockResolvedValueOnce({
         ok: true,
+        redirected: true,
         text: () =>
           Promise.resolve(createDashboardHtml("fresh-csrf-token-abcdef")),
       });
@@ -294,17 +261,18 @@ describe("useAuthStore", () => {
       expect(result).toBe(true);
       expect(useAuthStore.getState().status).toBe("authenticated");
       expect(setCsrfToken).toHaveBeenCalledWith("fresh-csrf-token-abcdef");
+      // 2 calls: login page fetch + auth POST
+      expect(mockFetch).toHaveBeenCalledTimes(2);
     });
 
-    it("fails immediately on non-auth dashboard errors (e.g., 500)", async () => {
-      // First fetch: login page returns redirect (existing session cookie)
+    it("fails when auth request returns non-ok response", async () => {
+      // First fetch: login page
       mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 303,
-        type: "opaqueredirect",
+        ok: true,
+        text: () => Promise.resolve(createLoginPageHtml()),
       });
 
-      // Second fetch: dashboard fails with server error (not auth failure)
+      // Second fetch: auth POST fails with server error
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
@@ -315,8 +283,7 @@ describe("useAuthStore", () => {
       expect(result).toBe(false);
       const { status, error } = useAuthStore.getState();
       expect(status).toBe("error");
-      expect(error).toBe("Session verification failed: 500");
-      // Should NOT have attempted logout/retry - only 2 fetch calls
+      expect(error).toBe("Authentication request failed");
       expect(mockFetch).toHaveBeenCalledTimes(2);
     });
 
@@ -327,11 +294,11 @@ describe("useAuthStore", () => {
         text: () => Promise.resolve(createLoginPageHtml("trusted-props-value")),
       });
 
-      // Second fetch: login POST (failure to simplify test)
+      // Second fetch: login POST (returns login page to simulate failure)
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        status: 200,
-        type: "basic",
+        redirected: false,
+        text: () => Promise.resolve(createLoginPageHtml()),
       });
 
       await useAuthStore.getState().login("testuser", "testpass");
@@ -343,6 +310,8 @@ describe("useAuthStore", () => {
       );
       expect(options.method).toBe("POST");
       expect(options.credentials).toBe("include");
+      // Should NOT use redirect: "manual" (allows browser to process cookies)
+      expect(options.redirect).toBeUndefined();
 
       const body = new URLSearchParams(options.body as string);
       expect(body.get("__trustedProperties")).toBe("trusted-props-value");

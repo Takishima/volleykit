@@ -168,6 +168,11 @@ type LoginResult =
 /**
  * Submit login credentials to the authentication endpoint.
  * This is the core login logic used after we have valid form fields.
+ *
+ * IMPORTANT: We do NOT use redirect: "manual" here because in cross-origin
+ * scenarios (production with CORS proxy), opaque redirect responses prevent
+ * the browser from processing Set-Cookie headers. By following the redirect,
+ * we ensure cookies are properly set before checking the session.
  */
 async function submitLoginCredentials(
   username: string,
@@ -197,45 +202,35 @@ async function submitLoginCredentials(
     password,
   );
 
-  // Submit to authentication endpoint
-  // - Success: 303 redirect to dashboard
-  // - Failure: 200 OK with login page HTML containing error
-  const loginResponse = await fetch(AUTH_URL, {
+  // Submit to authentication endpoint and follow redirects
+  // - Success: redirects to dashboard (final response has data-csrf-token)
+  // - Failure: returns login page HTML (no data-csrf-token, has error snackbar)
+  const response = await fetch(AUTH_URL, {
     method: "POST",
     credentials: "include",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: formData,
-    redirect: "manual",
+    // Let browser follow redirects to ensure Set-Cookie headers are processed
+    // This is critical for cross-origin requests through the CORS proxy
   });
 
-  // Success: 303/302 redirect or opaqueredirect
-  const isRedirect =
-    loginResponse.status === 303 ||
-    loginResponse.status === 302 ||
-    loginResponse.type === "opaqueredirect";
-
-  if (!isRedirect) {
-    return { success: false, error: "Invalid username or password" };
+  if (!response.ok) {
+    return { success: false, error: "Authentication request failed" };
   }
 
-  // Login successful - fetch dashboard to get CSRF token
-  const dashboardResponse = await fetch(
-    `${API_BASE}/sportmanager.volleyball/main/dashboard`,
-    { credentials: "include" },
-  );
+  // Parse response HTML to determine success/failure
+  const html = await response.text();
+  const csrfToken = extractCsrfTokenFromPage(html);
 
-  if (dashboardResponse.ok) {
-    const dashboardHtml = await dashboardResponse.text();
-    const csrfToken = extractCsrfTokenFromPage(dashboardHtml);
-
-    if (csrfToken) {
-      return { success: true, csrfToken };
-    }
+  // Success: Response contains data-csrf-token (we're on dashboard/authenticated page)
+  if (csrfToken) {
+    return { success: true, csrfToken };
   }
 
-  return { success: false, error: "Session verification failed" };
+  // Failure: No CSRF token means we're still on login page (auth failed)
+  return { success: false, error: "Invalid username or password" };
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -254,99 +249,31 @@ export const useAuthStore = create<AuthState>()(
 
         try {
           // Step 1: Fetch login page to get CSRF token and form fields
-          // Note: If user has an existing session cookie, backend may redirect /login to /
-          // We use redirect: "manual" to detect this case
+          // If user has an existing valid session, the server redirects to an
+          // authenticated page. We follow redirects to let the browser properly
+          // process any Set-Cookie headers (critical for cross-origin requests).
           const loginPageResponse = await fetch(LOGIN_PAGE_URL, {
             credentials: "include",
-            redirect: "manual",
+            // Let browser follow redirects to properly process cookies
           });
-
-          // If backend redirects (303/302), user already has a valid session
-          // This happens when session cookies are present and valid
-          const isAlreadyAuthenticated =
-            loginPageResponse.status === 303 ||
-            loginPageResponse.status === 302 ||
-            loginPageResponse.type === "opaqueredirect";
-
-          if (isAlreadyAuthenticated) {
-            // User is already logged in - verify session and extract CSRF token
-            const dashboardResponse = await fetch(
-              `${API_BASE}/sportmanager.volleyball/main/dashboard`,
-              { credentials: "include" },
-            );
-
-            if (dashboardResponse.ok) {
-              const dashboardHtml = await dashboardResponse.text();
-              const csrfToken = extractCsrfTokenFromPage(dashboardHtml);
-
-              if (csrfToken) {
-                setCsrfToken(csrfToken);
-                set({ status: "authenticated", csrfToken });
-                return true;
-              }
-            }
-
-            // Only retry login for authentication failures (401/403)
-            // Other errors (500, network issues) should fail immediately
-            const isAuthFailure =
-              dashboardResponse.status === 401 ||
-              dashboardResponse.status === 403;
-
-            if (!isAuthFailure) {
-              throw new Error(
-                `Session verification failed: ${dashboardResponse.status}`,
-              );
-            }
-
-            // Existing session is invalid (expired server-side) - logout and retry
-            await fetch(LOGOUT_URL, {
-              credentials: "include",
-              redirect: "manual",
-            });
-
-            // Retry getting the login page after clearing stale session
-            const retryResponse = await fetch(LOGIN_PAGE_URL, {
-              credentials: "include",
-            });
-
-            if (!retryResponse.ok) {
-              throw new Error(
-                "Failed to load login page after clearing stale session",
-              );
-            }
-
-            const retryHtml = await retryResponse.text();
-            const retryFormFields = extractLoginFormFields(retryHtml);
-
-            if (!retryFormFields) {
-              throw new Error("Could not extract form fields from login page");
-            }
-
-            // Continue with login using retry form fields
-            const retryResult = await submitLoginCredentials(
-              username,
-              password,
-              retryFormFields,
-            );
-
-            if (retryResult.success) {
-              setCsrfToken(retryResult.csrfToken);
-              set({
-                status: "authenticated",
-                csrfToken: retryResult.csrfToken,
-              });
-              return true;
-            }
-
-            set({ status: "error", error: retryResult.error });
-            return false;
-          }
 
           if (!loginPageResponse.ok) {
             throw new Error("Failed to load login page");
           }
 
           const html = await loginPageResponse.text();
+
+          // Check if we're already authenticated (page has CSRF token)
+          // This happens when session cookies are present and the server
+          // redirected us to an authenticated page instead of login form
+          const existingCsrfToken = extractCsrfTokenFromPage(html);
+          if (existingCsrfToken) {
+            setCsrfToken(existingCsrfToken);
+            set({ status: "authenticated", csrfToken: existingCsrfToken });
+            return true;
+          }
+
+          // Not authenticated - extract form fields from login page
           const formFields = extractLoginFormFields(html);
 
           if (!formFields) {
