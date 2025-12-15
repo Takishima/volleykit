@@ -6,17 +6,17 @@ export interface WizardStep {
   isOptional?: boolean;
 }
 
-export interface UseWizardNavigationOptions {
-  steps: WizardStep[];
+export interface UseWizardNavigationOptions<T extends WizardStep> {
+  steps: T[];
   initialStepIndex?: number;
   onStepChange?: (fromIndex: number, toIndex: number) => void;
 }
 
-export interface UseWizardNavigationResult {
+export interface UseWizardNavigationResult<T extends WizardStep> {
   /** Current step index (0-based) */
   currentStepIndex: number;
   /** Current step object */
-  currentStep: WizardStep;
+  currentStep: T;
   /** Total number of steps */
   totalSteps: number;
   /** Whether currently on the first step */
@@ -42,12 +42,14 @@ export interface UseWizardNavigationResult {
  *
  * Provides step state management with callbacks for step changes.
  * Use the `onStepChange` callback to trigger saves when navigating.
+ *
+ * @template T - The step type, must extend WizardStep
  */
-export function useWizardNavigation({
+export function useWizardNavigation<T extends WizardStep>({
   steps,
   initialStepIndex = 0,
   onStepChange,
-}: UseWizardNavigationOptions): UseWizardNavigationResult {
+}: UseWizardNavigationOptions<T>): UseWizardNavigationResult<T> {
   const [currentStepIndex, setCurrentStepIndex] = useState(
     Math.max(0, Math.min(initialStepIndex, steps.length - 1)),
   );

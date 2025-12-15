@@ -59,15 +59,17 @@ export function WizardStepIndicator({
         // Determine if this step should show completion indicator
         const showCompletion = !step.isOptional && (isComplete || isPast);
 
+        const isDisabled = !clickable;
+
         const handleClick = () => {
-          if (clickable && onStepClick) {
+          if (!isDisabled && onStepClick) {
             onStepClick(index);
           }
         };
 
         const handleKeyDown = (e: React.KeyboardEvent) => {
           if (
-            clickable &&
+            !isDisabled &&
             onStepClick &&
             (e.key === "Enter" || e.key === " ")
           ) {
@@ -89,12 +91,12 @@ export function WizardStepIndicator({
               />
             )}
 
-            {/* Step indicator */}
+            {/* Step indicator - use aria-disabled to keep in tab order for accessibility */}
             <button
               type="button"
               onClick={handleClick}
               onKeyDown={handleKeyDown}
-              disabled={!clickable}
+              aria-disabled={isDisabled}
               aria-current={isCurrent ? "step" : undefined}
               aria-label={`${step.label}${isCurrent ? " (current)" : ""}${showCompletion ? " (complete)" : ""}`}
               className={`
@@ -109,7 +111,7 @@ export function WizardStepIndicator({
                       : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
                 }
                 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800
-                disabled:cursor-default
+                aria-disabled:cursor-default aria-disabled:opacity-100
               `}
             >
               {showCompletion && !isCurrent ? (

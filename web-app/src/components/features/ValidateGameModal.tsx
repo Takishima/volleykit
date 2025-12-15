@@ -3,10 +3,7 @@ import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { logger } from "@/utils/logger";
 import { getTeamNames } from "@/utils/assignment-helpers";
-import {
-  useWizardNavigation,
-  type WizardStep,
-} from "@/hooks/useWizardNavigation";
+import { useWizardNavigation } from "@/hooks/useWizardNavigation";
 import { WizardStepContainer } from "@/components/ui/WizardStepContainer";
 import { WizardStepIndicator } from "@/components/ui/WizardStepIndicator";
 import {
@@ -35,6 +32,13 @@ interface ValidateGameModalProps {
 }
 
 type ValidationStepId = "home-roster" | "away-roster" | "scorer" | "scoresheet";
+
+/** Wizard step with typed id for validation panels */
+interface ValidationStep {
+  id: ValidationStepId;
+  label: string;
+  isOptional?: boolean;
+}
 
 /** Dialog for confirming close with unsaved changes */
 function UnsavedChangesDialog({
@@ -130,8 +134,8 @@ export function ValidateGameModal({
     isSaving,
   } = useValidationState();
 
-  // Define wizard steps
-  const wizardSteps = useMemo<WizardStep[]>(
+  // Define wizard steps with typed ids for type-safe panel switching
+  const wizardSteps = useMemo<ValidationStep[]>(
     () => [
       { id: "home-roster", label: t("validation.homeRoster") },
       { id: "away-roster", label: t("validation.awayRoster") },
@@ -160,7 +164,7 @@ export function ValidateGameModal({
     goBack,
     goToStep,
     resetToStart,
-  } = useWizardNavigation({
+  } = useWizardNavigation<ValidationStep>({
     steps: wizardSteps,
     onStepChange: handleStepChange,
   });
@@ -233,8 +237,7 @@ export function ValidateGameModal({
       // Don't close if unsaved dialog is showing
       if (showUnsavedDialog) return;
       if (e.key === "Escape") {
-        // attemptClose handles its own errors internally
-        void attemptClose();
+        attemptClose();
       }
     };
 
@@ -292,8 +295,7 @@ export function ValidateGameModal({
   const handleBackdropClick = useCallback(
     (e: React.MouseEvent) => {
       if (e.target === e.currentTarget) {
-        // attemptClose handles its own errors internally
-        void attemptClose();
+        attemptClose();
       }
     },
     [attemptClose],
@@ -314,7 +316,7 @@ export function ValidateGameModal({
   if (!isOpen) return null;
 
   const { homeTeam, awayTeam } = getTeamNames(assignment);
-  const currentStepId = currentStep.id as ValidationStepId;
+  const currentStepId = currentStep.id;
 
   return (
     <>
@@ -428,7 +430,7 @@ export function ValidateGameModal({
               </p>
               <button
                 type="button"
-                onClick={() => void handleFinish()}
+                onClick={() => handleFinish()}
                 className="mt-2 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
               >
                 {t("common.retry")}
@@ -450,7 +452,7 @@ export function ValidateGameModal({
               {isFirstStep ? (
                 <button
                   type="button"
-                  onClick={() => void attemptClose()}
+                  onClick={() => attemptClose()}
                   disabled={isFinalizing}
                   className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -473,7 +475,7 @@ export function ValidateGameModal({
               {isLastStep ? (
                 <button
                   type="button"
-                  onClick={() => void handleFinish()}
+                  onClick={() => handleFinish()}
                   disabled={!isAllRequiredComplete || isFinalizing}
                   title={
                     !isAllRequiredComplete
