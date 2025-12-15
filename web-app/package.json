@@ -24,7 +24,7 @@
     {
       "name": "JS Bundle",
       "path": "dist/assets/*.js",
-      "limit": "163 kB",
+      "limit": "164 kB",
       "gzip": true
     },
     {
@@ -35,15 +35,15 @@
     }
   ],
   "dependencies": {
-    "@tailwindcss/vite": "^4.1.17",
+    "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-query": "^5.90.12",
     "date-fns": "^4.1.0",
     "openapi-typescript-fetch": "^2.2.1",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "react-router-dom": "^7.10.1",
     "tailwindcss": "^4.1.17",
-    "zod": "^4.1.13",
+    "zod": "^4.2.0",
     "zustand": "^5.0.9"
   },
   "devDependencies": {
