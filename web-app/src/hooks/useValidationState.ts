@@ -248,6 +248,9 @@ export function useValidationState(): UseValidationStateResult {
         setTimeout(resolve, SIMULATED_SAVE_DELAY_MS),
       );
       logger.debug("[useValidationState] Save complete");
+    } catch (error) {
+      logger.error("[useValidationState] Save failed:", error);
+      throw error;
     } finally {
       isSavingRef.current = false;
       setIsSaving(false);

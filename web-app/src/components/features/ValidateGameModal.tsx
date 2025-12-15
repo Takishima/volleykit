@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
+import { logger } from "@/utils/logger";
 import { getTeamNames } from "@/utils/assignment-helpers";
 import {
   useWizardNavigation,
@@ -140,9 +141,13 @@ export function ValidateGameModal({
     [t],
   );
 
-  // Handle step change - save progress
+  // Handle step change - save progress (errors logged but don't block navigation)
   const handleStepChange = useCallback(async () => {
-    await saveProgress();
+    try {
+      await saveProgress();
+    } catch (error) {
+      logger.error("[ValidateGameModal] Error saving on step change:", error);
+    }
   }, [saveProgress]);
 
   const {
@@ -154,6 +159,7 @@ export function ValidateGameModal({
     goNext,
     goBack,
     goToStep,
+    resetToStart,
   } = useWizardNavigation({
     steps: wizardSteps,
     onStepChange: handleStepChange,
@@ -172,8 +178,14 @@ export function ValidateGameModal({
   // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
-      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-      if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = null;
+      }
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+        toastTimeoutRef.current = null;
+      }
     };
   }, []);
 
@@ -188,27 +200,15 @@ export function ValidateGameModal({
     [completionStatus],
   );
 
-  // Reset state when modal opens - use a separate state to track step reset
-  // to avoid infinite loop from goToStep dependency changes
-  const [stepResetKey, setStepResetKey] = useState(0);
-
+  // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
       setSaveError(null);
       setSuccessToast(null);
       reset();
-      // Trigger step reset by incrementing key
-      setStepResetKey((k) => k + 1);
+      resetToStart();
     }
-  }, [isOpen, reset]);
-
-  // Reset to step 0 when stepResetKey changes (modal reopened)
-  useEffect(() => {
-    if (stepResetKey > 0) {
-      goToStep(0);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stepResetKey]);
+  }, [isOpen, reset, resetToStart]);
 
   // Attempt to close - save progress first
   const attemptClose = useCallback(async () => {
@@ -227,7 +227,9 @@ export function ValidateGameModal({
       // Don't close if unsaved dialog is showing
       if (showUnsavedDialog) return;
       if (e.key === "Escape") {
-        void attemptClose();
+        attemptClose().catch((error: unknown) => {
+          logger.error("[ValidateGameModal] Error during close:", error);
+        });
       }
     };
 
@@ -285,7 +287,12 @@ export function ValidateGameModal({
   const handleBackdropClick = useCallback(
     (e: React.MouseEvent) => {
       if (e.target === e.currentTarget) {
-        void attemptClose();
+        attemptClose().catch((error: unknown) => {
+          logger.error(
+            "[ValidateGameModal] Error during backdrop close:",
+            error,
+          );
+        });
       }
     },
     [attemptClose],
@@ -367,6 +374,8 @@ export function ValidateGameModal({
               steps={wizardSteps}
               currentStepIndex={currentStepIndex}
               completionStatus={stepCompletionStatus}
+              clickable={!isFinalizing}
+              onStepClick={goToStep}
             />
             <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">
               {tInterpolate("validation.wizard.stepOf", {
@@ -440,7 +449,14 @@ export function ValidateGameModal({
               {isFirstStep ? (
                 <button
                   type="button"
-                  onClick={() => void attemptClose()}
+                  onClick={() =>
+                    attemptClose().catch((error: unknown) => {
+                      logger.error(
+                        "[ValidateGameModal] Error during cancel:",
+                        error,
+                      );
+                    })
+                  }
                   disabled={isFinalizing}
                   className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >

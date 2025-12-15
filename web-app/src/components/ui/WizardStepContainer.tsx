@@ -4,6 +4,7 @@ import {
   useRef,
   useCallback,
   useEffect,
+  useLayoutEffect,
 } from "react";
 
 /** Minimum horizontal swipe distance as ratio of container width to trigger navigation */
@@ -12,6 +13,9 @@ const SWIPE_THRESHOLD_RATIO = 0.3;
 const DIRECTION_THRESHOLD_PX = 10;
 /** Animation duration for step transitions in ms */
 const TRANSITION_DURATION_MS = 300;
+
+/** Animation phases for step transitions */
+type AnimationPhase = "idle" | "exiting" | "entering";
 
 interface WizardStepContainerProps {
   /** Current step index */
@@ -46,6 +50,7 @@ export function WizardStepContainer({
   const [translateX, setTranslateX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [containerWidth, setContainerWidth] = useState<number | null>(null);
+  const [animationPhase, setAnimationPhase] = useState<AnimationPhase>("idle");
 
   const containerRef = useRef<HTMLDivElement>(null);
   const startXRef = useRef(0);
@@ -53,6 +58,10 @@ export function WizardStepContainer({
   const directionRef = useRef<"horizontal" | "vertical" | null>(null);
   const touchActiveRef = useRef(false);
   const mouseActiveRef = useRef(false);
+  const prevStepRef = useRef(currentStep);
+  const animationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   // Track container width for threshold calculation
   useEffect(() => {
@@ -73,6 +82,49 @@ export function WizardStepContainer({
       resizeObserver.disconnect();
     };
   }, []);
+
+  // Cleanup animation timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+        animationTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
+  // Handle entrance animation when step changes (from button navigation)
+  // Using useLayoutEffect for synchronous visual updates before paint
+  useLayoutEffect(() => {
+    if (currentStep !== prevStepRef.current && containerWidth) {
+      // Determine direction: step increased = going forward = enter from right
+      const goingForward = currentStep > prevStepRef.current;
+      prevStepRef.current = currentStep;
+
+      // Only animate if we're not already animating (swipe handles its own animation)
+      if (animationPhase === "idle") {
+        // Start from off-screen position (synchronous, before paint)
+        // Disable lint warning - this is a legitimate animation pattern where we need
+        // to set initial position synchronously before the browser paints
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setTranslateX(goingForward ? containerWidth : -containerWidth);
+        setAnimationPhase("entering");
+
+        // Use requestAnimationFrame to ensure the initial position is applied first
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setTranslateX(0);
+          });
+        });
+
+        // Complete animation
+        animationTimeoutRef.current = setTimeout(() => {
+          setAnimationPhase("idle");
+          animationTimeoutRef.current = null;
+        }, TRANSITION_DURATION_MS);
+      }
+    }
+  }, [currentStep, containerWidth, animationPhase]);
 
   const threshold = containerWidth
     ? containerWidth * SWIPE_THRESHOLD_RATIO
@@ -135,15 +187,56 @@ export function WizardStepContainer({
     if (directionRef.current === "horizontal") {
       const swipeDistance = Math.abs(translateX);
 
-      if (swipeDistance > threshold) {
-        if (translateX < 0 && canSwipeNext) {
-          onSwipeNext?.();
-        } else if (translateX > 0 && canSwipePrevious) {
-          onSwipePrevious?.();
+      if (swipeDistance > threshold && containerWidth) {
+        const goingNext = translateX < 0;
+
+        if ((goingNext && canSwipeNext) || (!goingNext && canSwipePrevious)) {
+          // Animate off-screen in the swipe direction
+          setAnimationPhase("exiting");
+          setTranslateX(goingNext ? -containerWidth : containerWidth);
+
+          // After exit animation, trigger navigation and entrance animation
+          animationTimeoutRef.current = setTimeout(() => {
+            // Update prevStepRef before callback to track direction correctly
+            const expectedNextStep = goingNext
+              ? prevStepRef.current + 1
+              : prevStepRef.current - 1;
+            prevStepRef.current = expectedNextStep;
+
+            // Trigger navigation (this changes children)
+            if (goingNext) {
+              onSwipeNext?.();
+            } else {
+              onSwipePrevious?.();
+            }
+
+            // Start entrance animation: position new content off-screen on the arrival side
+            // Going next (left swipe) = new content enters from right
+            // Going previous (right swipe) = new content enters from left
+            setTranslateX(goingNext ? containerWidth : -containerWidth);
+            setAnimationPhase("entering");
+
+            // Animate to center
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                setTranslateX(0);
+              });
+            });
+
+            // Complete entrance animation
+            animationTimeoutRef.current = setTimeout(() => {
+              setAnimationPhase("idle");
+              animationTimeoutRef.current = null;
+            }, TRANSITION_DURATION_MS);
+          }, TRANSITION_DURATION_MS);
+
+          directionRef.current = null;
+          setIsDragging(false);
+          return;
         }
       }
 
-      // Reset position
+      // Swipe didn't exceed threshold - snap back to center
       setTranslateX(0);
     }
 
@@ -152,13 +245,25 @@ export function WizardStepContainer({
   }, [
     translateX,
     threshold,
+    containerWidth,
     canSwipeNext,
     canSwipePrevious,
     onSwipeNext,
     onSwipePrevious,
   ]);
 
-  // Touch event handlers
+  // Helper for gesture end that handles ref cleanup and calls shared logic
+  const handleGestureEnd = useCallback(
+    (activeRef: React.MutableRefObject<boolean>) => {
+      if (!activeRef.current) return;
+      activeRef.current = false;
+      setIsDragging(false);
+      handleDragEnd();
+    },
+    [handleDragEnd],
+  );
+
+  // Touch event handlers - refs accessed in event handlers (allowed by lint rules)
   const handleTouchStart = useCallback(
     (e: React.TouchEvent) => {
       if (!swipeEnabled) return;
@@ -181,12 +286,10 @@ export function WizardStepContainer({
   );
 
   const handleTouchEnd = useCallback(() => {
-    touchActiveRef.current = false;
-    setIsDragging(false);
-    handleDragEnd();
-  }, [handleDragEnd]);
+    handleGestureEnd(touchActiveRef);
+  }, [handleGestureEnd]);
 
-  // Mouse event handlers (for desktop)
+  // Mouse event handlers - refs accessed in event handlers (allowed by lint rules)
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
       if (!swipeEnabled) return;
@@ -205,11 +308,12 @@ export function WizardStepContainer({
   );
 
   const handleMouseUp = useCallback(() => {
-    if (!mouseActiveRef.current) return;
-    mouseActiveRef.current = false;
-    setIsDragging(false);
-    handleDragEnd();
-  }, [handleDragEnd]);
+    handleGestureEnd(mouseActiveRef);
+  }, [handleGestureEnd]);
+
+  // Determine if transition should be animated
+  // Animate when: not dragging (either animating or snapping back)
+  const shouldAnimate = !isDragging;
 
   return (
     // Swipe gestures for wizard navigation - keyboard navigation handled by parent buttons
@@ -228,9 +332,9 @@ export function WizardStepContainer({
       <div
         style={{
           transform: `translateX(${translateX}px)`,
-          transition: isDragging
-            ? "none"
-            : `transform ${TRANSITION_DURATION_MS}ms cubic-bezier(0.25, 0.1, 0.25, 1)`,
+          transition: shouldAnimate
+            ? `transform ${TRANSITION_DURATION_MS}ms cubic-bezier(0.25, 0.1, 0.25, 1)`
+            : "none",
           cursor: swipeEnabled ? (isDragging ? "grabbing" : "grab") : "default",
         }}
       >

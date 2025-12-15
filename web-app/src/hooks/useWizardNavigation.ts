@@ -29,6 +29,8 @@ export interface UseWizardNavigationResult {
   goBack: () => void;
   /** Go to specific step by index */
   goToStep: (index: number) => void;
+  /** Reset to first step (stable reference, safe to use in useEffect dependencies) */
+  resetToStart: () => void;
   /** Check if can go to next step */
   canGoNext: boolean;
   /** Check if can go back */
@@ -84,6 +86,11 @@ export function useWizardNavigation({
     }
   }, [canGoBack, currentStepIndex, goToStep]);
 
+  // Stable function that resets to first step without depending on currentStepIndex
+  const resetToStart = useCallback(() => {
+    setCurrentStepIndex(0);
+  }, []);
+
   return {
     currentStepIndex,
     currentStep,
@@ -93,6 +100,7 @@ export function useWizardNavigation({
     goNext,
     goBack,
     goToStep,
+    resetToStart,
     canGoNext,
     canGoBack,
   };
