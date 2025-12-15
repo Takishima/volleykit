@@ -573,17 +573,20 @@ export const api = {
    * Searches for persons by name or year of birth using Elasticsearch.
    * Used for autocomplete when selecting scorers or other personnel.
    *
-   * The Elasticsearch API uses OR logic across property filters, allowing
-   * searches to match any of the specified fields. When only a lastName is
-   * provided (single-term search), we send it to both firstName and lastName
-   * fields so searches like "hans" match both first names and last names.
+   * The Elasticsearch API uses OR logic across property filters. When only
+   * one name field is provided (single-term search), the term is sent to both
+   * firstName and lastName fields for broader matching. When both name fields
+   * are provided, each is sent to its respective field only.
    *
    * @param filters - Search filters (firstName, lastName, yearOfBirth)
    * @param options - Pagination options (offset, limit)
    * @returns Search results with person details
    * @example
-   * // Single term search - matches firstName OR lastName
+   * // Single term via lastName - matches firstName OR lastName
    * const results = await api.searchPersons({ lastName: 'müller' });
+   *
+   * // Single term via firstName - also matches firstName OR lastName
+   * const results = await api.searchPersons({ firstName: 'hans' });
    *
    * // Two terms - firstName matches firstName, lastName matches lastName
    * const results = await api.searchPersons({ firstName: 'hans', lastName: 'müller' });
@@ -597,21 +600,26 @@ export const api = {
   ): Promise<PersonSearchResponse> {
     const propertyFilters: Array<{ propertyName: string; text: string }> = [];
 
-    // Single-term search: send to both firstName and lastName for OR matching
-    // This enables searches like "hans" to find both first names and last names
     const { firstName, lastName, yearOfBirth } = filters;
-    const isSingleTermSearch = lastName && !firstName;
+
+    // Single-term search: send to both firstName and lastName for OR matching.
+    // This enables searches like "hans" to find matches in either name field.
+    const isSingleTermSearch =
+      (firstName && !lastName) || (lastName && !firstName);
 
     if (isSingleTermSearch) {
+      // One of firstName or lastName is guaranteed to be defined here
+      const searchTerm = (firstName ?? lastName)!;
       propertyFilters.push({
         propertyName: "firstName",
-        text: lastName,
+        text: searchTerm,
       });
       propertyFilters.push({
         propertyName: "lastName",
-        text: lastName,
+        text: searchTerm,
       });
     } else {
+      // Two-term search: send each to its respective field
       if (firstName) {
         propertyFilters.push({
           propertyName: "firstName",

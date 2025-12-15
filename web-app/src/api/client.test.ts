@@ -334,7 +334,7 @@ describe("API Client", () => {
       expect(body.get("searchConfiguration[limit]")).toBe("100");
     });
 
-    it("sends single-term search to both firstName and lastName for OR matching", async () => {
+    it("sends lastName-only search to both firstName and lastName for OR matching", async () => {
       mockFetch.mockResolvedValueOnce(
         createMockResponse(mockPersonSearchResponse),
       );
@@ -349,6 +349,23 @@ describe("API Client", () => {
       expect(body.get("searchConfiguration[propertyFilters][0][text]")).toBe("müller");
       expect(body.get("searchConfiguration[propertyFilters][1][propertyName]")).toBe("lastName");
       expect(body.get("searchConfiguration[propertyFilters][1][text]")).toBe("müller");
+    });
+
+    it("sends firstName-only search to both firstName and lastName for OR matching", async () => {
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse(mockPersonSearchResponse),
+      );
+
+      await api.searchPersons({ firstName: "hans" });
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      const body = options.body as URLSearchParams;
+
+      // Single term should be sent to both firstName and lastName
+      expect(body.get("searchConfiguration[propertyFilters][0][propertyName]")).toBe("firstName");
+      expect(body.get("searchConfiguration[propertyFilters][0][text]")).toBe("hans");
+      expect(body.get("searchConfiguration[propertyFilters][1][propertyName]")).toBe("lastName");
+      expect(body.get("searchConfiguration[propertyFilters][1][text]")).toBe("hans");
     });
 
     it("sends two-term search to separate firstName and lastName fields", async () => {
