@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import {
   format,
   parseISO,
@@ -13,8 +13,11 @@ import { t } from "@/i18n";
 import { useLanguageStore } from "@/stores/language";
 import { logger } from "@/utils/logger";
 
+/**
+ * In-memory cache for date-fns locales (max 4 entries: de, fr, it, en).
+ * English is pre-cached to prevent FOUC (Flash of Unstyled Content).
+ */
 const localeCache = new Map<string, DateFnsLocale>();
-// Pre-populate English as fallback to prevent FOUC
 localeCache.set("en", enUS);
 
 const localeLoaders: Record<string, () => Promise<DateFnsLocale>> = {
@@ -44,7 +47,10 @@ async function loadDateLocale(locale: string): Promise<DateFnsLocale> {
     localeCache.set(locale, loadedLocale);
     return loadedLocale;
   } catch (error) {
-    logger.error("[useDateFormat] Failed to load locale, falling back to English:", error);
+    logger.error(
+      "[useDateFormat] Failed to load locale, falling back to English:",
+      error,
+    );
     return enUS;
   }
 }
@@ -102,23 +108,16 @@ export function useDateFormat(
   const [locale, setLocale] = useState<DateFnsLocale>(
     () => localeCache.get(currentLocale) ?? enUS,
   );
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
-    let ignore = false;
+    const requestId = ++requestIdRef.current;
 
-    loadDateLocale(currentLocale)
-      .then((loadedLocale) => {
-        if (!ignore) {
-          setLocale(loadedLocale);
-        }
-      })
-      .catch(() => {
-        // loadDateLocale already logs errors and falls back to English
-      });
-
-    return () => {
-      ignore = true;
-    };
+    loadDateLocale(currentLocale).then((loadedLocale) => {
+      if (requestId === requestIdRef.current) {
+        setLocale(loadedLocale);
+      }
+    });
   }, [currentLocale]);
 
   return useMemo(() => {

@@ -16,11 +16,16 @@ import { logger } from "@/utils/logger";
 export type { Translations };
 export type Locale = "de" | "fr" | "it" | "en";
 
+/**
+ * In-memory cache for translations (max 4 entries: de, fr, it, en).
+ * English is pre-cached to prevent FOUC (Flash of Unstyled Content).
+ */
 const translationCache = new Map<Locale, Translations>();
 translationCache.set("en", en);
 
 let currentLocale: Locale = "en";
 let currentTranslations: Translations = en;
+let localeRequestId = 0;
 
 const localeLoaders: Record<Locale, () => Promise<Translations>> = {
   en: () => Promise.resolve(en),
@@ -38,7 +43,10 @@ async function loadTranslations(locale: Locale): Promise<Translations> {
     translationCache.set(locale, translations);
     return translations;
   } catch (error) {
-    logger.error("[i18n] Failed to load translations, falling back to English:", error);
+    logger.error(
+      "[i18n] Failed to load translations, falling back to English:",
+      error,
+    );
     return en;
   }
 }
@@ -75,19 +83,17 @@ function detectLocale(): Locale {
 /**
  * Initialize locale from stored preference or browser detection.
  * Note: Persistence is handled by the language store, this just detects the initial locale.
+ * Uses request ID to prevent race conditions if locale changes during initialization.
  */
 export function initLocale(): Locale {
   const detectedLocale = detectLocale();
+  const requestId = ++localeRequestId;
   currentLocale = detectedLocale;
-  loadTranslations(detectedLocale)
-    .then((translations) => {
-      if (currentLocale === detectedLocale) {
-        currentTranslations = translations;
-      }
-    })
-    .catch(() => {
-      // loadTranslations already falls back to English internally
-    });
+  loadTranslations(detectedLocale).then((translations) => {
+    if (requestId === localeRequestId) {
+      currentTranslations = translations;
+    }
+  });
   return detectedLocale;
 }
 
@@ -103,16 +109,18 @@ export function getLocale(): Locale {
  * Note: Persistence is handled by the language store.
  * Returns a promise that resolves when translations are loaded.
  * If translations are cached, they're set immediately before the promise returns.
+ * Uses request ID to prevent race conditions during rapid locale changes.
  */
 export async function setLocale(locale: Locale): Promise<void> {
   if (localeLoaders[locale]) {
+    const requestId = ++localeRequestId;
     currentLocale = locale;
     const cached = translationCache.get(locale);
     if (cached) {
       currentTranslations = cached;
     } else {
       const translations = await loadTranslations(locale);
-      if (currentLocale === locale) {
+      if (requestId === localeRequestId) {
         currentTranslations = translations;
       }
     }
@@ -123,16 +131,18 @@ export async function setLocale(locale: Locale): Promise<void> {
  * Set locale immediately without waiting for translations to load.
  * Use this for store hydration where we need to set locale before async operations complete.
  * If translations are cached, they're applied immediately. Otherwise, they load in the background.
+ * Uses request ID to prevent race conditions during rapid locale changes.
  */
 export function setLocaleImmediate(locale: Locale): void {
   if (localeLoaders[locale]) {
+    const requestId = ++localeRequestId;
     currentLocale = locale;
     const cached = translationCache.get(locale);
     if (cached) {
       currentTranslations = cached;
     } else {
       loadTranslations(locale).then((translations) => {
-        if (currentLocale === locale) {
+        if (requestId === localeRequestId) {
           currentTranslations = translations;
         }
       });
