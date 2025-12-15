@@ -126,14 +126,18 @@ export type PersonSearchResponse = Schemas["PersonSearchResponse"];
 /**
  * Search filters for person search endpoint.
  * All filters use fuzzy matching via Elasticsearch.
- * Results match persons where all provided filters match (AND logic).
+ *
+ * Search behavior:
+ * - Single name field (firstName OR lastName): searches both name fields (OR logic)
+ * - Both name fields: each searches its respective field only
+ * - yearOfBirth: AND logic with name fields
  */
 export interface PersonSearchFilter {
-  /** First name to search for (fuzzy match) */
+  /** First name to search for (fuzzy match). When provided alone, searches both name fields. */
   firstName?: string;
-  /** Last name to search for (fuzzy match) */
+  /** Last name to search for (fuzzy match). When provided alone, searches both name fields. */
   lastName?: string;
-  /** Year of birth as 4-digit string (e.g., "1985") */
+  /** Year of birth as 4-digit string (e.g., "1985"). Combined with name using AND logic. */
   yearOfBirth?: string;
 }
 
