@@ -8,39 +8,44 @@ import {
   isValid,
 } from "date-fns";
 import { type Locale as DateFnsLocale } from "date-fns/locale";
+import { enUS } from "date-fns/locale/en-US";
 import { t } from "@/i18n";
 import { useLanguageStore } from "@/stores/language";
 
 const localeCache = new Map<string, DateFnsLocale>();
+// Pre-populate English as fallback to prevent FOUC
+localeCache.set("en", enUS);
 
 const localeLoaders: Record<string, () => Promise<DateFnsLocale>> = {
   de: () => import("date-fns/locale/de").then((m) => m.de),
   fr: () => import("date-fns/locale/fr").then((m) => m.fr),
   it: () => import("date-fns/locale/it").then((m) => m.it),
-  en: () => import("date-fns/locale/en-US").then((m) => m.enUS),
+  en: () => Promise.resolve(enUS),
 };
 
-/**
- * Preload all date-fns locales. Useful for testing.
- */
 export async function preloadDateLocales(): Promise<void> {
   await Promise.all(
     Object.keys(localeLoaders).map((locale) => loadDateLocale(locale)),
   );
 }
 
-/**
- * Load a date-fns locale asynchronously.
- * Returns cached locale if already loaded.
- */
 async function loadDateLocale(locale: string): Promise<DateFnsLocale> {
   const cached = localeCache.get(locale);
   if (cached) return cached;
 
-  const loader = localeLoaders[locale] ?? localeLoaders.de;
-  const loadedLocale = await loader!();
-  localeCache.set(locale, loadedLocale);
-  return loadedLocale;
+  const loader = localeLoaders[locale];
+  if (!loader) {
+    return enUS;
+  }
+
+  try {
+    const loadedLocale = await loader();
+    localeCache.set(locale, loadedLocale);
+    return loadedLocale;
+  } catch {
+    // Fallback to English if dynamic import fails
+    return enUS;
+  }
 }
 
 /**
@@ -93,17 +98,20 @@ export function useDateFormat(
   formatPattern = "EEE, d. MMM",
 ): FormattedDate {
   const currentLocale = useLanguageStore((state) => state.locale);
-  const [locale, setLocale] = useState<DateFnsLocale | undefined>(
-    () => localeCache.get(currentLocale),
+  const [locale, setLocale] = useState<DateFnsLocale>(
+    () => localeCache.get(currentLocale) ?? enUS,
   );
 
   useEffect(() => {
+    const targetLocale = currentLocale;
     let cancelled = false;
-    loadDateLocale(currentLocale).then((loadedLocale) => {
+
+    loadDateLocale(targetLocale).then((loadedLocale) => {
       if (!cancelled) {
         setLocale(loadedLocale);
       }
     });
+
     return () => {
       cancelled = true;
     };
@@ -132,13 +140,13 @@ export function useDateFormat(
     } else if (tomorrowCheck) {
       dateLabel = t("common.tomorrow");
     } else {
-      dateLabel = format(date, formatPattern, locale ? { locale } : undefined);
+      dateLabel = format(date, formatPattern, { locale });
     }
 
     return {
       date,
       dateLabel,
-      timeLabel: format(date, "HH:mm", locale ? { locale } : undefined),
+      timeLabel: format(date, "HH:mm", { locale }),
       isToday: todayCheck,
       isTomorrow: tomorrowCheck,
       isPast: isPast(date),

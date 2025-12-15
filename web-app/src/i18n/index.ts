@@ -28,17 +28,18 @@ const localeLoaders: Record<Locale, () => Promise<Translations>> = {
   it: () => import("./locales/it").then((m) => m.default),
 };
 
-/**
- * Load translations for a locale asynchronously.
- * Returns cached translations if already loaded.
- */
 async function loadTranslations(locale: Locale): Promise<Translations> {
   const cached = translationCache.get(locale);
   if (cached) return cached;
 
-  const translations = await localeLoaders[locale]();
-  translationCache.set(locale, translations);
-  return translations;
+  try {
+    const translations = await localeLoaders[locale]();
+    translationCache.set(locale, translations);
+    return translations;
+  } catch {
+    // Fallback to English if dynamic import fails
+    return en;
+  }
 }
 
 /**
@@ -108,11 +109,11 @@ export async function setLocale(locale: Locale): Promise<void> {
 }
 
 /**
- * Set locale synchronously (for compatibility).
- * If translations are cached, they're set immediately.
- * Otherwise, translations are loaded asynchronously.
+ * Set locale immediately without waiting for translations to load.
+ * Use this for store hydration where we need to set locale before async operations complete.
+ * If translations are cached, they're applied immediately. Otherwise, they load in the background.
  */
-export function setLocaleSync(locale: Locale): void {
+export function setLocaleImmediate(locale: Locale): void {
   if (localeLoaders[locale]) {
     currentLocale = locale;
     const cached = translationCache.get(locale);
@@ -120,7 +121,9 @@ export function setLocaleSync(locale: Locale): void {
       currentTranslations = cached;
     } else {
       loadTranslations(locale).then((translations) => {
-        currentTranslations = translations;
+        if (currentLocale === locale) {
+          currentTranslations = translations;
+        }
       });
     }
   }
