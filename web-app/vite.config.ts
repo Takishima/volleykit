@@ -82,6 +82,18 @@ export default defineConfig(({ mode }) => {
       // Expose PWA enabled state to the app
       '__PWA_ENABLED__': JSON.stringify(!isPrPreview),
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'react-vendor': ['react', 'react-dom'],
+            'router': ['react-router-dom'],
+            'state': ['zustand', '@tanstack/react-query'],
+            'validation': ['zod'],
+          },
+        },
+      },
+    },
     plugins: [
       react(),
       tailwindcss(),

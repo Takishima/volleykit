@@ -22,9 +22,20 @@
   },
   "size-limit": [
     {
-      "name": "JS Bundle",
-      "path": "dist/assets/*.js",
-      "limit": "170 kB",
+      "name": "Main Bundle",
+      "path": "dist/assets/index-*.js",
+      "limit": "110 kB",
+      "gzip": true
+    },
+    {
+      "name": "Vendor Chunks",
+      "path": [
+        "dist/assets/react-vendor-*.js",
+        "dist/assets/router-*.js",
+        "dist/assets/state-*.js",
+        "dist/assets/validation-*.js"
+      ],
+      "limit": "50 kB",
       "gzip": true
     },
     {

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   format,
   parseISO,
@@ -7,29 +7,48 @@ import {
   isPast,
   isValid,
 } from "date-fns";
-import {
-  de,
-  fr,
-  it,
-  enUS,
-  type Locale as DateFnsLocale,
-} from "date-fns/locale";
+import { type Locale as DateFnsLocale } from "date-fns/locale";
 import { t } from "@/i18n";
 import { useLanguageStore } from "@/stores/language";
 
-// Map i18n locale to date-fns locale
-const dateLocales: Record<string, DateFnsLocale> = {
-  de: de,
-  fr: fr,
-  it: it,
-  en: enUS,
+const localeCache = new Map<string, DateFnsLocale>();
+
+const localeLoaders: Record<string, () => Promise<DateFnsLocale>> = {
+  de: () => import("date-fns/locale/de").then((m) => m.de),
+  fr: () => import("date-fns/locale/fr").then((m) => m.fr),
+  it: () => import("date-fns/locale/it").then((m) => m.it),
+  en: () => import("date-fns/locale/en-US").then((m) => m.enUS),
 };
 
 /**
- * Get the date-fns locale matching the given i18n locale.
+ * Preload all date-fns locales. Useful for testing.
  */
-export function getDateLocale(locale: string): DateFnsLocale {
-  return dateLocales[locale] || de;
+export async function preloadDateLocales(): Promise<void> {
+  await Promise.all(
+    Object.keys(localeLoaders).map((locale) => loadDateLocale(locale)),
+  );
+}
+
+/**
+ * Load a date-fns locale asynchronously.
+ * Returns cached locale if already loaded.
+ */
+async function loadDateLocale(locale: string): Promise<DateFnsLocale> {
+  const cached = localeCache.get(locale);
+  if (cached) return cached;
+
+  const loader = localeLoaders[locale] ?? localeLoaders.de;
+  const loadedLocale = await loader!();
+  localeCache.set(locale, loadedLocale);
+  return loadedLocale;
+}
+
+/**
+ * Get the date-fns locale matching the given i18n locale synchronously.
+ * Returns undefined if locale hasn't been loaded yet.
+ */
+export function getDateLocale(locale: string): DateFnsLocale | undefined {
+  return localeCache.get(locale);
 }
 
 /**
@@ -74,9 +93,23 @@ export function useDateFormat(
   formatPattern = "EEE, d. MMM",
 ): FormattedDate {
   const currentLocale = useLanguageStore((state) => state.locale);
+  const [locale, setLocale] = useState<DateFnsLocale | undefined>(
+    () => localeCache.get(currentLocale),
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    loadDateLocale(currentLocale).then((loadedLocale) => {
+      if (!cancelled) {
+        setLocale(loadedLocale);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentLocale]);
 
   return useMemo(() => {
-    const locale = getDateLocale(currentLocale);
     const date = safeParseISO(dateString);
 
     if (!date) {
@@ -99,16 +132,16 @@ export function useDateFormat(
     } else if (tomorrowCheck) {
       dateLabel = t("common.tomorrow");
     } else {
-      dateLabel = format(date, formatPattern, { locale });
+      dateLabel = format(date, formatPattern, locale ? { locale } : undefined);
     }
 
     return {
       date,
       dateLabel,
-      timeLabel: format(date, "HH:mm", { locale }),
+      timeLabel: format(date, "HH:mm", locale ? { locale } : undefined),
       isToday: todayCheck,
       isTomorrow: tomorrowCheck,
       isPast: isPast(date),
     };
-  }, [dateString, formatPattern, currentLocale]);
+  }, [dateString, formatPattern, locale]);
 }

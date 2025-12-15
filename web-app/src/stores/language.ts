@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { setLocale, getLocale, type Locale } from "@/i18n";
+import { setLocale, setLocaleSync, getLocale, type Locale } from "@/i18n";
 
 interface LanguageState {
   locale: Locale;
@@ -21,7 +21,7 @@ export const useLanguageStore = create<LanguageState>()(
       partialize: (state) => ({ locale: state.locale }),
       onRehydrateStorage: () => (state) => {
         if (state?.locale) {
-          setLocale(state.locale);
+          setLocaleSync(state.locale);
         }
       },
     },
