@@ -210,14 +210,20 @@ export function ValidateGameModal({
     }
   }, [isOpen, reset, resetToStart]);
 
-  // Attempt to close - save progress first
+  // Attempt to close - save progress first, show error if save fails
   const attemptClose = useCallback(async () => {
     if (isDirtyRef.current) {
-      // Save progress before asking about discard
-      await saveProgress();
+      try {
+        await saveProgress();
+      } catch (error) {
+        // Save failed - show error and keep modal open so user can retry or discard
+        logger.error("[ValidateGameModal] Save failed during close:", error);
+        setSaveError(t("validation.state.saveError"));
+        return; // Don't close modal - let user decide what to do
+      }
     }
     onClose();
-  }, [onClose, saveProgress]);
+  }, [onClose, saveProgress, t]);
 
   // Handle Escape key to close modal
   useEffect(() => {
@@ -227,9 +233,8 @@ export function ValidateGameModal({
       // Don't close if unsaved dialog is showing
       if (showUnsavedDialog) return;
       if (e.key === "Escape") {
-        attemptClose().catch((error: unknown) => {
-          logger.error("[ValidateGameModal] Error during close:", error);
-        });
+        // attemptClose handles its own errors internally
+        void attemptClose();
       }
     };
 
@@ -287,12 +292,8 @@ export function ValidateGameModal({
   const handleBackdropClick = useCallback(
     (e: React.MouseEvent) => {
       if (e.target === e.currentTarget) {
-        attemptClose().catch((error: unknown) => {
-          logger.error(
-            "[ValidateGameModal] Error during backdrop close:",
-            error,
-          );
-        });
+        // attemptClose handles its own errors internally
+        void attemptClose();
       }
     },
     [attemptClose],
@@ -449,14 +450,7 @@ export function ValidateGameModal({
               {isFirstStep ? (
                 <button
                   type="button"
-                  onClick={() =>
-                    attemptClose().catch((error: unknown) => {
-                      logger.error(
-                        "[ValidateGameModal] Error during cancel:",
-                        error,
-                      );
-                    })
-                  }
+                  onClick={() => void attemptClose()}
                   disabled={isFinalizing}
                   className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >

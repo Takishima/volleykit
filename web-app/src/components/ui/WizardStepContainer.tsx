@@ -110,7 +110,8 @@ export function WizardStepContainer({
         setTranslateX(goingForward ? containerWidth : -containerWidth);
         setAnimationPhase("entering");
 
-        // Use requestAnimationFrame to ensure the initial position is applied first
+        // Double rAF ensures initial position renders before transition starts.
+        // First rAF: browser schedules paint, second rAF: transition begins after paint.
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             setTranslateX(0);
@@ -183,60 +184,72 @@ export function WizardStepContainer({
     [swipeEnabled, canSwipeNext, canSwipePrevious, threshold],
   );
 
-  const handleDragEnd = useCallback(() => {
-    if (directionRef.current === "horizontal") {
-      const swipeDistance = Math.abs(translateX);
+  // Start entrance animation after content switch
+  const startEntranceAnimation = useCallback(
+    (goingNext: boolean, width: number) => {
+      // Position new content off-screen on arrival side
+      setTranslateX(goingNext ? width : -width);
+      setAnimationPhase("entering");
 
-      if (swipeDistance > threshold && containerWidth) {
-        const goingNext = translateX < 0;
+      // Double rAF ensures initial position renders before transition starts.
+      // First rAF: browser schedules paint, second rAF: transition begins after paint.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setTranslateX(0);
+        });
+      });
 
-        if ((goingNext && canSwipeNext) || (!goingNext && canSwipePrevious)) {
-          // Animate off-screen in the swipe direction
-          setAnimationPhase("exiting");
-          setTranslateX(goingNext ? -containerWidth : containerWidth);
+      // Complete entrance animation
+      animationTimeoutRef.current = setTimeout(() => {
+        setAnimationPhase("idle");
+        animationTimeoutRef.current = null;
+      }, TRANSITION_DURATION_MS);
+    },
+    [],
+  );
 
-          // After exit animation, trigger navigation and entrance animation
-          animationTimeoutRef.current = setTimeout(() => {
-            // Update prevStepRef before callback to track direction correctly
-            const expectedNextStep = goingNext
-              ? prevStepRef.current + 1
-              : prevStepRef.current - 1;
-            prevStepRef.current = expectedNextStep;
+  // Execute navigation after exit animation completes
+  const executeNavigationAndEnter = useCallback(
+    (goingNext: boolean, width: number) => {
+      // Update step tracking before callback
+      prevStepRef.current += goingNext ? 1 : -1;
 
-            // Trigger navigation (this changes children)
-            if (goingNext) {
-              onSwipeNext?.();
-            } else {
-              onSwipePrevious?.();
-            }
-
-            // Start entrance animation: position new content off-screen on the arrival side
-            // Going next (left swipe) = new content enters from right
-            // Going previous (right swipe) = new content enters from left
-            setTranslateX(goingNext ? containerWidth : -containerWidth);
-            setAnimationPhase("entering");
-
-            // Animate to center
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                setTranslateX(0);
-              });
-            });
-
-            // Complete entrance animation
-            animationTimeoutRef.current = setTimeout(() => {
-              setAnimationPhase("idle");
-              animationTimeoutRef.current = null;
-            }, TRANSITION_DURATION_MS);
-          }, TRANSITION_DURATION_MS);
-
-          directionRef.current = null;
-          setIsDragging(false);
-          return;
-        }
+      // Trigger navigation (changes children)
+      if (goingNext) {
+        onSwipeNext?.();
+      } else {
+        onSwipePrevious?.();
       }
 
-      // Swipe didn't exceed threshold - snap back to center
+      startEntranceAnimation(goingNext, width);
+    },
+    [onSwipeNext, onSwipePrevious, startEntranceAnimation],
+  );
+
+  // Handle swipe completion with threshold check
+  const handleDragEnd = useCallback(() => {
+    if (directionRef.current !== "horizontal") {
+      directionRef.current = null;
+      setIsDragging(false);
+      return;
+    }
+
+    const swipeDistance = Math.abs(translateX);
+    const goingNext = translateX < 0;
+    const canNavigate =
+      (goingNext && canSwipeNext) || (!goingNext && canSwipePrevious);
+
+    if (swipeDistance > threshold && containerWidth && canNavigate) {
+      // Start exit animation
+      setAnimationPhase("exiting");
+      setTranslateX(goingNext ? -containerWidth : containerWidth);
+
+      // After exit animation, navigate and enter
+      animationTimeoutRef.current = setTimeout(() => {
+        executeNavigationAndEnter(goingNext, containerWidth);
+      }, TRANSITION_DURATION_MS);
+    } else {
+      // Snap back to center
       setTranslateX(0);
     }
 
@@ -248,8 +261,7 @@ export function WizardStepContainer({
     containerWidth,
     canSwipeNext,
     canSwipePrevious,
-    onSwipeNext,
-    onSwipePrevious,
+    executeNavigationAndEnter,
   ]);
 
   // Helper for gesture end that handles ref cleanup and calls shared logic
