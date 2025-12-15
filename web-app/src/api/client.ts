@@ -604,33 +604,23 @@ export const api = {
 
     // Single-term search: send to both firstName and lastName for OR matching.
     // This enables searches like "hans" to find matches in either name field.
-    const isSingleTermSearch =
-      (firstName && !lastName) || (lastName && !firstName);
-
-    if (isSingleTermSearch) {
-      // One of firstName or lastName is guaranteed to be defined here
-      const searchTerm = (firstName ?? lastName)!;
-      propertyFilters.push({
-        propertyName: "firstName",
-        text: searchTerm,
-      });
-      propertyFilters.push({
-        propertyName: "lastName",
-        text: searchTerm,
-      });
+    if (firstName && !lastName) {
+      propertyFilters.push(
+        { propertyName: "firstName", text: firstName },
+        { propertyName: "lastName", text: firstName },
+      );
+    } else if (lastName && !firstName) {
+      propertyFilters.push(
+        { propertyName: "firstName", text: lastName },
+        { propertyName: "lastName", text: lastName },
+      );
     } else {
       // Two-term search: send each to its respective field
       if (firstName) {
-        propertyFilters.push({
-          propertyName: "firstName",
-          text: firstName,
-        });
+        propertyFilters.push({ propertyName: "firstName", text: firstName });
       }
       if (lastName) {
-        propertyFilters.push({
-          propertyName: "lastName",
-          text: lastName,
-        });
+        propertyFilters.push({ propertyName: "lastName", text: lastName });
       }
     }
 
