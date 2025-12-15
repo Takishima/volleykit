@@ -126,14 +126,18 @@ export type PersonSearchResponse = Schemas["PersonSearchResponse"];
 /**
  * Search filters for person search endpoint.
  * All filters use fuzzy matching via Elasticsearch.
- * Results match persons where all provided filters match (AND logic).
+ *
+ * Search behavior:
+ * - Single name field (firstName OR lastName): searches both name fields (OR logic)
+ * - Both name fields: each searches its respective field only
+ * - yearOfBirth: AND logic with name fields
  */
 export interface PersonSearchFilter {
-  /** First name to search for (fuzzy match) */
+  /** First name to search for (fuzzy match). When provided alone, searches both name fields. */
   firstName?: string;
-  /** Last name to search for (fuzzy match) */
+  /** Last name to search for (fuzzy match). When provided alone, searches both name fields. */
   lastName?: string;
-  /** Year of birth as 4-digit string (e.g., "1985") */
+  /** Year of birth as 4-digit string (e.g., "1985"). Combined with name using AND logic. */
   yearOfBirth?: string;
 }
 
@@ -573,17 +577,22 @@ export const api = {
    * Searches for persons by name or year of birth using Elasticsearch.
    * Used for autocomplete when selecting scorers or other personnel.
    *
-   * The search performs fuzzy matching on firstName, lastName, and yearOfBirth.
-   * Results include association ID, display name, and birthday.
+   * The Elasticsearch API uses OR logic across property filters. When only
+   * one name field is provided (single-term search), the term is sent to both
+   * firstName and lastName fields for broader matching. When both name fields
+   * are provided, each is sent to its respective field only.
    *
    * @param filters - Search filters (firstName, lastName, yearOfBirth)
    * @param options - Pagination options (offset, limit)
    * @returns Search results with person details
    * @example
-   * // Search by last name
+   * // Single term via lastName - matches firstName OR lastName
    * const results = await api.searchPersons({ lastName: 'müller' });
    *
-   * // Search by first and last name
+   * // Single term via firstName - also matches firstName OR lastName
+   * const results = await api.searchPersons({ firstName: 'hans' });
+   *
+   * // Two terms - firstName matches firstName, lastName matches lastName
    * const results = await api.searchPersons({ firstName: 'hans', lastName: 'müller' });
    *
    * // Search by name and birth year
@@ -595,22 +604,34 @@ export const api = {
   ): Promise<PersonSearchResponse> {
     const propertyFilters: Array<{ propertyName: string; text: string }> = [];
 
-    if (filters.firstName) {
-      propertyFilters.push({
-        propertyName: "firstName",
-        text: filters.firstName,
-      });
+    const { firstName, lastName, yearOfBirth } = filters;
+
+    // Single-term search: send to both firstName and lastName for OR matching.
+    // This enables searches like "hans" to find matches in either name field.
+    if (firstName && !lastName) {
+      propertyFilters.push(
+        { propertyName: "firstName", text: firstName },
+        { propertyName: "lastName", text: firstName },
+      );
+    } else if (lastName && !firstName) {
+      propertyFilters.push(
+        { propertyName: "firstName", text: lastName },
+        { propertyName: "lastName", text: lastName },
+      );
+    } else {
+      // Two-term search: send each to its respective field
+      if (firstName) {
+        propertyFilters.push({ propertyName: "firstName", text: firstName });
+      }
+      if (lastName) {
+        propertyFilters.push({ propertyName: "lastName", text: lastName });
+      }
     }
-    if (filters.lastName) {
-      propertyFilters.push({
-        propertyName: "lastName",
-        text: filters.lastName,
-      });
-    }
-    if (filters.yearOfBirth) {
+
+    if (yearOfBirth) {
       propertyFilters.push({
         propertyName: "yearOfBirth",
-        text: filters.yearOfBirth,
+        text: yearOfBirth,
       });
     }
 
