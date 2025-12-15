@@ -1,4 +1,12 @@
 import "@testing-library/jest-dom";
+import { beforeAll } from "vitest";
+import { preloadTranslations } from "@/i18n";
+import { preloadDateLocales } from "@/hooks/useDateFormat";
+
+// Preload all locales before tests run to ensure synchronous availability
+beforeAll(async () => {
+  await Promise.all([preloadTranslations(), preloadDateLocales()]);
+});
 
 globalThis.ResizeObserver = class ResizeObserver {
   private callback: ResizeObserverCallback;
