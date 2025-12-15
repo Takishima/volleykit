@@ -119,10 +119,16 @@ export function WizardStepContainer({
         });
 
         // Complete animation
-        animationTimeoutRef.current = setTimeout(() => {
+        const timeoutId = setTimeout(() => {
           setAnimationPhase("idle");
           animationTimeoutRef.current = null;
         }, TRANSITION_DURATION_MS);
+        animationTimeoutRef.current = timeoutId;
+
+        // Cleanup: cancel timeout if effect re-runs or component unmounts during animation
+        return () => {
+          clearTimeout(timeoutId);
+        };
       }
     }
   }, [currentStep, containerWidth, animationPhase]);
@@ -328,7 +334,12 @@ export function WizardStepContainer({
   const shouldAnimate = !isDragging;
 
   return (
-    // Swipe gestures for wizard navigation - keyboard navigation handled by parent buttons
+    // Swipe gestures provide touch/mouse navigation as a supplement to button navigation.
+    // The lint rule flags missing keyboard handlers, but this is intentional because:
+    // 1. Primary navigation is via Next/Previous buttons (fully keyboard accessible)
+    // 2. Swipe gestures enhance UX for touch/mouse users only
+    // 3. Child content (form panels) remains fully accessible to screen readers
+    // Adding keyboard handlers here would duplicate button functionality.
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <div
       ref={containerRef}

@@ -50,6 +50,11 @@ export function useWizardNavigation<T extends WizardStep>({
   initialStepIndex = 0,
   onStepChange,
 }: UseWizardNavigationOptions<T>): UseWizardNavigationResult<T> {
+  // Validate that steps array is not empty to prevent runtime errors
+  if (steps.length === 0) {
+    throw new Error("useWizardNavigation: steps array cannot be empty");
+  }
+
   const [currentStepIndex, setCurrentStepIndex] = useState(
     Math.max(0, Math.min(initialStepIndex, steps.length - 1)),
   );
@@ -60,10 +65,11 @@ export function useWizardNavigation<T extends WizardStep>({
   const canGoNext = !isLastStep;
   const canGoBack = !isFirstStep;
 
+  // Safe access: steps.length > 0 is validated above, and currentStepIndex is clamped
   const currentStep = useMemo(
-    () => steps[currentStepIndex] ?? steps[0]!,
+    () => steps[currentStepIndex] ?? steps[0],
     [steps, currentStepIndex],
-  );
+  ) as T;
 
   const goToStep = useCallback(
     (index: number) => {

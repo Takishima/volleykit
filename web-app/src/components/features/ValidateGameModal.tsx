@@ -145,15 +145,8 @@ export function ValidateGameModal({
     [t],
   );
 
-  // Handle step change - save progress (errors logged but don't block navigation)
-  const handleStepChange = useCallback(async () => {
-    try {
-      await saveProgress();
-    } catch (error) {
-      logger.error("[ValidateGameModal] Error saving on step change:", error);
-    }
-  }, [saveProgress]);
-
+  // Note: Step navigation doesn't auto-save. Data is saved on close/finish.
+  // This avoids race conditions since useWizardNavigation doesn't support async callbacks.
   const {
     currentStepIndex,
     currentStep,
@@ -166,7 +159,6 @@ export function ValidateGameModal({
     resetToStart,
   } = useWizardNavigation<ValidationStep>({
     steps: wizardSteps,
-    onStepChange: handleStepChange,
   });
 
   // Refs to prevent race conditions and enable cleanup
@@ -301,14 +293,10 @@ export function ValidateGameModal({
     [attemptClose],
   );
 
-  // Handle next button - save and advance
-  // Note: saveProgress is called via onStepChange callback, no need to await
   const handleNext = useCallback(() => {
     goNext();
   }, [goNext]);
 
-  // Handle back button - save and go back
-  // Note: saveProgress is called via onStepChange callback, no need to await
   const handleBack = useCallback(() => {
     goBack();
   }, [goBack]);
@@ -419,7 +407,7 @@ export function ValidateGameModal({
             )}
           </WizardStepContainer>
 
-          {/* Error display */}
+          {/* Error display with recovery options */}
           {saveError && (
             <div
               role="alert"
@@ -428,13 +416,22 @@ export function ValidateGameModal({
               <p className="text-sm text-red-700 dark:text-red-400">
                 {saveError}
               </p>
-              <button
-                type="button"
-                onClick={() => handleFinish()}
-                className="mt-2 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
-              >
-                {t("common.retry")}
-              </button>
+              <div className="mt-2 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleFinish()}
+                  className="text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                >
+                  {t("common.retry")}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmDiscard}
+                  className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                >
+                  {t("validation.state.discardAndClose")}
+                </button>
+              </div>
             </div>
           )}
 
