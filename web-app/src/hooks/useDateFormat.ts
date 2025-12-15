@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   format,
   parseISO,
@@ -51,10 +51,10 @@ async function loadDateLocale(locale: string): Promise<DateFnsLocale> {
 
 /**
  * Get the date-fns locale matching the given i18n locale synchronously.
- * Returns undefined if locale hasn't been loaded yet.
+ * Returns the cached locale if available, otherwise falls back to English.
  */
-export function getDateLocale(locale: string): DateFnsLocale | undefined {
-  return localeCache.get(locale);
+export function getDateLocale(locale: string): DateFnsLocale {
+  return localeCache.get(locale) ?? enUS;
 }
 
 /**
@@ -102,21 +102,23 @@ export function useDateFormat(
   const [locale, setLocale] = useState<DateFnsLocale>(
     () => localeCache.get(currentLocale) ?? enUS,
   );
-  const loadIdRef = useRef(0);
 
   useEffect(() => {
-    const loadId = ++loadIdRef.current;
+    let cancelled = false;
 
     loadDateLocale(currentLocale)
       .then((loadedLocale) => {
-        // Only apply if this is still the most recent load request
-        if (loadId === loadIdRef.current) {
+        if (!cancelled) {
           setLocale(loadedLocale);
         }
       })
       .catch(() => {
         // loadDateLocale already logs errors and falls back to English
       });
+
+    return () => {
+      cancelled = true;
+    };
   }, [currentLocale]);
 
   return useMemo(() => {
