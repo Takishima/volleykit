@@ -1,4 +1,5 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
+import { logger } from "@/utils/logger";
 import type { ValidatedPersonSearchResult } from "@/api/validation";
 import type { RosterModifications } from "@/hooks/useNominationList";
 
@@ -72,6 +73,10 @@ export interface UseValidationStateResult {
   setScoresheet: (file: File | null, uploaded: boolean) => void;
   /** Reset all state to initial values */
   reset: () => void;
+  /** Save current state to API (returns promise for async handling) */
+  saveProgress: () => Promise<void>;
+  /** Whether a save operation is in progress */
+  isSaving: boolean;
 }
 
 /**
@@ -114,8 +119,13 @@ function hasRosterModifications(modifications: RosterModifications): boolean {
  * - Scorer: Complete when a scorer is selected
  * - Scoresheet: Always complete (optional field)
  */
+/** Simulated save delay for demo mode */
+const SIMULATED_SAVE_DELAY_MS = 300;
+
 export function useValidationState(): UseValidationStateResult {
   const [state, setState] = useState<ValidationState>(createInitialState);
+  const [isSaving, setIsSaving] = useState(false);
+  const isSavingRef = useRef(false);
 
   // Calculate completion status
   const completionStatus = useMemo<PanelCompletionStatus>(
@@ -219,6 +229,31 @@ export function useValidationState(): UseValidationStateResult {
     setState(createInitialState());
   }, []);
 
+  // Save current progress to API
+  const saveProgress = useCallback(async (): Promise<void> => {
+    // Guard against concurrent saves
+    if (isSavingRef.current) {
+      logger.debug("[useValidationState] Save already in progress, skipping");
+      return;
+    }
+
+    isSavingRef.current = true;
+    setIsSaving(true);
+
+    try {
+      // TODO(#40): Implement actual API call for saving validation progress
+      // For now, simulate a save operation
+      logger.debug("[useValidationState] Saving validation progress:", state);
+      await new Promise<void>((resolve) =>
+        setTimeout(resolve, SIMULATED_SAVE_DELAY_MS),
+      );
+      logger.debug("[useValidationState] Save complete");
+    } finally {
+      isSavingRef.current = false;
+      setIsSaving(false);
+    }
+  }, [state]);
+
   return {
     state,
     isDirty,
@@ -229,5 +264,7 @@ export function useValidationState(): UseValidationStateResult {
     setScorer,
     setScoresheet,
     reset,
+    saveProgress,
+    isSaving,
   };
 }

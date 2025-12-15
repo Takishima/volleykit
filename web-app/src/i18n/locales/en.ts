@@ -244,10 +244,18 @@ const en: Translations = {
         "You have unsaved changes. Are you sure you want to discard them?",
       continueEditing: "Continue Editing",
       discardChanges: "Discard Changes",
+      discardAndClose: "Discard and Close",
       saveSuccess: "Validation saved successfully",
       saveError: "Failed to save validation",
       saveDisabledTooltip:
         "Complete all required panels (Home Roster, Away Roster, Scorer) to save",
+    },
+    wizard: {
+      previous: "Previous",
+      next: "Next",
+      finish: "Finish",
+      stepOf: "Step {current} of {total}",
+      saving: "Saving...",
     },
   },
 };

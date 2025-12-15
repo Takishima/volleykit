@@ -248,10 +248,18 @@ const de: Translations = {
         "Sie haben ungespeicherte Änderungen. Möchten Sie diese wirklich verwerfen?",
       continueEditing: "Weiter bearbeiten",
       discardChanges: "Änderungen verwerfen",
+      discardAndClose: "Verwerfen und schliessen",
       saveSuccess: "Validierung erfolgreich gespeichert",
       saveError: "Validierung konnte nicht gespeichert werden",
       saveDisabledTooltip:
         "Füllen Sie alle erforderlichen Bereiche aus (Heimkader, Gastkader, Schreiber), um zu speichern",
+    },
+    wizard: {
+      previous: "Zurück",
+      next: "Weiter",
+      finish: "Abschliessen",
+      stepOf: "Schritt {current} von {total}",
+      saving: "Speichern...",
     },
   },
 };

@@ -243,10 +243,18 @@ const it: Translations = {
         "Hai modifiche non salvate. Sei sicuro di volerle scartare?",
       continueEditing: "Continua a modificare",
       discardChanges: "Scarta le modifiche",
+      discardAndClose: "Scarta e chiudi",
       saveSuccess: "Validazione salvata con successo",
       saveError: "Impossibile salvare la validazione",
       saveDisabledTooltip:
         "Completa tutti i pannelli richiesti (Rosa di casa, Rosa ospite, Segnapunti) per salvare",
+    },
+    wizard: {
+      previous: "Precedente",
+      next: "Avanti",
+      finish: "Termina",
+      stepOf: "Passo {current} di {total}",
+      saving: "Salvataggio...",
     },
   },
 };

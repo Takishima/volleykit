@@ -248,10 +248,18 @@ const fr: Translations = {
         "Vous avez des modifications non enregistrées. Êtes-vous sûr de vouloir les abandonner?",
       continueEditing: "Continuer l'édition",
       discardChanges: "Abandonner les modifications",
+      discardAndClose: "Abandonner et fermer",
       saveSuccess: "Validation enregistrée avec succès",
       saveError: "Échec de l'enregistrement de la validation",
       saveDisabledTooltip:
         "Complétez tous les panneaux requis (Effectif domicile, Effectif visiteur, Marqueur) pour enregistrer",
+    },
+    wizard: {
+      previous: "Précédent",
+      next: "Suivant",
+      finish: "Terminer",
+      stepOf: "Étape {current} sur {total}",
+      saving: "Enregistrement...",
     },
   },
 };

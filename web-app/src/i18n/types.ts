@@ -226,9 +226,17 @@ export interface Translations {
       unsavedChangesMessage: string;
       continueEditing: string;
       discardChanges: string;
+      discardAndClose: string;
       saveSuccess: string;
       saveError: string;
       saveDisabledTooltip: string;
+    };
+    wizard: {
+      previous: string;
+      next: string;
+      finish: string;
+      stepOf: string;
+      saving: string;
     };
   };
 }
