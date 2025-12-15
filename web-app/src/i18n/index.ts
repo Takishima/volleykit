@@ -78,11 +78,15 @@ function detectLocale(): Locale {
 export function initLocale(): Locale {
   const detectedLocale = detectLocale();
   currentLocale = detectedLocale;
-  loadTranslations(detectedLocale).then((translations) => {
-    if (currentLocale === detectedLocale) {
-      currentTranslations = translations;
-    }
-  });
+  loadTranslations(detectedLocale)
+    .then((translations) => {
+      if (currentLocale === detectedLocale) {
+        currentTranslations = translations;
+      }
+    })
+    .catch(() => {
+      // loadTranslations already falls back to English internally
+    });
   return detectedLocale;
 }
 
