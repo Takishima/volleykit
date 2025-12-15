@@ -107,11 +107,15 @@ export function useDateFormat(
     const targetLocale = currentLocale;
     let aborted = false;
 
-    loadDateLocale(targetLocale).then((loadedLocale) => {
-      if (!aborted && useLanguageStore.getState().locale === targetLocale) {
-        setLocale(loadedLocale);
-      }
-    });
+    loadDateLocale(targetLocale)
+      .then((loadedLocale) => {
+        if (!aborted && useLanguageStore.getState().locale === targetLocale) {
+          setLocale(loadedLocale);
+        }
+      })
+      .catch(() => {
+        // loadDateLocale already logs errors and falls back to English
+      });
 
     return () => {
       aborted = true;
