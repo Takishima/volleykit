@@ -160,7 +160,7 @@ describe("ValidateGameModal", () => {
       ).toBeInTheDocument();
     });
 
-    it("shows Next button on first step", () => {
+    it("shows Validate button on first step", () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -170,11 +170,11 @@ describe("ValidateGameModal", () => {
         { wrapper: createWrapper() },
       );
       expect(
-        screen.getByRole("button", { name: /Next/i, hidden: true }),
+        screen.getByRole("button", { name: /Validate/i, hidden: true }),
       ).toBeInTheDocument();
     });
 
-    it("advances to Away Roster panel when Next is clicked", async () => {
+    it("advances to Away Roster panel when Validate is clicked", async () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -185,7 +185,7 @@ describe("ValidateGameModal", () => {
       );
 
       fireEvent.click(
-        screen.getByRole("button", { name: /Next/i, hidden: true }),
+        screen.getByRole("button", { name: /Validate/i, hidden: true }),
       );
 
       await waitFor(() => {
@@ -206,7 +206,7 @@ describe("ValidateGameModal", () => {
 
       // Go to step 2
       fireEvent.click(
-        screen.getByRole("button", { name: /Next/i, hidden: true }),
+        screen.getByRole("button", { name: /Validate/i, hidden: true }),
       );
 
       await waitFor(() => {
@@ -228,7 +228,7 @@ describe("ValidateGameModal", () => {
 
       // Go to step 2
       fireEvent.click(
-        screen.getByRole("button", { name: /Next/i, hidden: true }),
+        screen.getByRole("button", { name: /Validate/i, hidden: true }),
       );
 
       await waitFor(() => {
@@ -258,14 +258,14 @@ describe("ValidateGameModal", () => {
 
       // Navigate to step 3
       fireEvent.click(
-        screen.getByRole("button", { name: /Next/i, hidden: true }),
+        screen.getByRole("button", { name: /Validate/i, hidden: true }),
       );
       await waitFor(() =>
         expect(screen.getByText("Step 2 of 4")).toBeInTheDocument(),
       );
 
       fireEvent.click(
-        screen.getByRole("button", { name: /Next/i, hidden: true }),
+        screen.getByRole("button", { name: /Validate/i, hidden: true }),
       );
       await waitFor(() =>
         expect(screen.getByText("Step 3 of 4")).toBeInTheDocument(),
@@ -288,24 +288,13 @@ describe("ValidateGameModal", () => {
         { wrapper: createWrapper() },
       );
 
-      // Navigate to step 4
-      fireEvent.click(
-        screen.getByRole("button", { name: /Next/i, hidden: true }),
-      );
-      await waitFor(() =>
-        expect(screen.getByText("Step 2 of 4")).toBeInTheDocument(),
-      );
+      // Navigate to step 4 using step indicator (since Validate on step 3 is disabled without scorer)
+      const scoresheetStep = screen.getByRole("button", {
+        name: /Scoresheet/i,
+        hidden: true,
+      });
+      fireEvent.click(scoresheetStep);
 
-      fireEvent.click(
-        screen.getByRole("button", { name: /Next/i, hidden: true }),
-      );
-      await waitFor(() =>
-        expect(screen.getByText("Step 3 of 4")).toBeInTheDocument(),
-      );
-
-      fireEvent.click(
-        screen.getByRole("button", { name: /Next/i, hidden: true }),
-      );
       await waitFor(() =>
         expect(screen.getByText("Step 4 of 4")).toBeInTheDocument(),
       );
@@ -329,14 +318,14 @@ describe("ValidateGameModal", () => {
       expect(screen.getByText("Step 1 of 4")).toBeInTheDocument();
 
       fireEvent.click(
-        screen.getByRole("button", { name: /Next/i, hidden: true }),
+        screen.getByRole("button", { name: /Validate/i, hidden: true }),
       );
       await waitFor(() => {
         expect(screen.getByText("Step 2 of 4")).toBeInTheDocument();
       });
 
       fireEvent.click(
-        screen.getByRole("button", { name: /Next/i, hidden: true }),
+        screen.getByRole("button", { name: /Validate/i, hidden: true }),
       );
       await waitFor(() => {
         expect(screen.getByText("Step 3 of 4")).toBeInTheDocument();
@@ -431,24 +420,13 @@ describe("ValidateGameModal", () => {
         </Wrapper>,
       );
 
-      // Navigate to step 4
-      fireEvent.click(
-        screen.getByRole("button", { name: /Next/i, hidden: true }),
-      );
-      await waitFor(() =>
-        expect(screen.getByText("Step 2 of 4")).toBeInTheDocument(),
-      );
+      // Navigate to step 4 using step indicator
+      const scoresheetStep = screen.getByRole("button", {
+        name: /Scoresheet/i,
+        hidden: true,
+      });
+      fireEvent.click(scoresheetStep);
 
-      fireEvent.click(
-        screen.getByRole("button", { name: /Next/i, hidden: true }),
-      );
-      await waitFor(() =>
-        expect(screen.getByText("Step 3 of 4")).toBeInTheDocument(),
-      );
-
-      fireEvent.click(
-        screen.getByRole("button", { name: /Next/i, hidden: true }),
-      );
       await waitFor(() =>
         expect(screen.getByText("Step 4 of 4")).toBeInTheDocument(),
       );
@@ -486,24 +464,13 @@ describe("ValidateGameModal", () => {
         { wrapper: createWrapper() },
       );
 
-      // Navigate to last step
-      fireEvent.click(
-        screen.getByRole("button", { name: /Next/i, hidden: true }),
-      );
-      await waitFor(() =>
-        expect(screen.getByText("Step 2 of 4")).toBeInTheDocument(),
-      );
+      // Navigate to last step using step indicator
+      const scoresheetStep = screen.getByRole("button", {
+        name: /Scoresheet/i,
+        hidden: true,
+      });
+      fireEvent.click(scoresheetStep);
 
-      fireEvent.click(
-        screen.getByRole("button", { name: /Next/i, hidden: true }),
-      );
-      await waitFor(() =>
-        expect(screen.getByText("Step 3 of 4")).toBeInTheDocument(),
-      );
-
-      fireEvent.click(
-        screen.getByRole("button", { name: /Next/i, hidden: true }),
-      );
       await waitFor(() =>
         expect(screen.getByText("Step 4 of 4")).toBeInTheDocument(),
       );
@@ -513,7 +480,7 @@ describe("ValidateGameModal", () => {
       ).toBeInTheDocument();
     });
 
-    it("disables Finish button when required panels are incomplete", async () => {
+    it("disables Finish button when previous panels are not validated", async () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -523,24 +490,14 @@ describe("ValidateGameModal", () => {
         { wrapper: createWrapper() },
       );
 
-      // Navigate to last step
-      fireEvent.click(
-        screen.getByRole("button", { name: /Next/i, hidden: true }),
-      );
-      await waitFor(() =>
-        expect(screen.getByText("Step 2 of 4")).toBeInTheDocument(),
-      );
+      // Navigate to last step using step indicator (not Validate button)
+      // This allows us to reach the last step without validating previous steps
+      const scoresheetStep = screen.getByRole("button", {
+        name: /Scoresheet/i,
+        hidden: true,
+      });
+      fireEvent.click(scoresheetStep);
 
-      fireEvent.click(
-        screen.getByRole("button", { name: /Next/i, hidden: true }),
-      );
-      await waitFor(() =>
-        expect(screen.getByText("Step 3 of 4")).toBeInTheDocument(),
-      );
-
-      fireEvent.click(
-        screen.getByRole("button", { name: /Next/i, hidden: true }),
-      );
       await waitFor(() =>
         expect(screen.getByText("Step 4 of 4")).toBeInTheDocument(),
       );
@@ -552,7 +509,40 @@ describe("ValidateGameModal", () => {
       expect(finishButton).toBeDisabled();
     });
 
-    it("renders both Cancel and Next buttons on first step", () => {
+    it("disables Validate button on scorer panel when no scorer is selected", async () => {
+      render(
+        <ValidateGameModal
+          assignment={createMockAssignment()}
+          isOpen={true}
+          onClose={mockOnClose}
+        />,
+        { wrapper: createWrapper() },
+      );
+
+      // Validate first two panels to reach step 3
+      fireEvent.click(
+        screen.getByRole("button", { name: /Validate/i, hidden: true }),
+      );
+      await waitFor(() =>
+        expect(screen.getByText("Step 2 of 4")).toBeInTheDocument(),
+      );
+
+      fireEvent.click(
+        screen.getByRole("button", { name: /Validate/i, hidden: true }),
+      );
+      await waitFor(() =>
+        expect(screen.getByText("Step 3 of 4")).toBeInTheDocument(),
+      );
+
+      // Validate button should be disabled because no scorer is selected
+      const validateButton = screen.getByRole("button", {
+        name: /Validate/i,
+        hidden: true,
+      });
+      expect(validateButton).toBeDisabled();
+    });
+
+    it("renders both Cancel and Validate buttons on first step", () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -566,7 +556,7 @@ describe("ValidateGameModal", () => {
         screen.getByRole("button", { name: /Cancel/i, hidden: true }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: /Next/i, hidden: true }),
+        screen.getByRole("button", { name: /Validate/i, hidden: true }),
       ).toBeInTheDocument();
     });
   });
