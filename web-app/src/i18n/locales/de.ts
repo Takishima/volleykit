@@ -258,6 +258,7 @@ const de: Translations = {
     wizard: {
       previous: "Zurück",
       next: "Weiter",
+      validate: "Validieren",
       finish: "Abschliessen",
       stepOf: "Schritt {current} von {total}",
       saving: "Speichern...",

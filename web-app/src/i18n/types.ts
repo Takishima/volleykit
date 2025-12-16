@@ -235,6 +235,7 @@ export interface Translations {
     wizard: {
       previous: string;
       next: string;
+      validate: string;
       finish: string;
       stepOf: string;
       saving: string;

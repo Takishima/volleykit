@@ -172,7 +172,6 @@ export function ValidateGameModal({
     resetToStart,
     stepsMarkedDone,
     setStepDone,
-    allRequiredStepsDone,
   } = useWizardNavigation<ValidationStep>({
     steps: wizardSteps,
   });
@@ -201,8 +200,6 @@ export function ValidateGameModal({
     };
   }, []);
 
-  const isCurrentStepDone = stepsMarkedDone.has(currentStepIndex);
-
   // Scorer panel requires a scorer to be selected before marking as done
   const canMarkCurrentStepDone = useMemo(() => {
     const stepId = wizardSteps[currentStepIndex]?.id;
@@ -210,15 +207,16 @@ export function ValidateGameModal({
     return true;
   }, [currentStepIndex, wizardSteps, completionStatus.scorer]);
 
-  const handleToggleCurrentStepDone = useCallback(() => {
-    if (!canMarkCurrentStepDone && !isCurrentStepDone) return;
-    setStepDone(currentStepIndex, !isCurrentStepDone);
-  }, [
-    currentStepIndex,
-    isCurrentStepDone,
-    setStepDone,
-    canMarkCurrentStepDone,
-  ]);
+  // Check if all steps BEFORE the current one are done (for enabling Finish button)
+  const allPreviousRequiredStepsDone = useMemo(() => {
+    for (let i = 0; i < currentStepIndex; i++) {
+      const step = wizardSteps[i];
+      if (!step?.isOptional && !stepsMarkedDone.has(i)) {
+        return false;
+      }
+    }
+    return true;
+  }, [wizardSteps, currentStepIndex, stepsMarkedDone]);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -256,9 +254,22 @@ export function ValidateGameModal({
   }, [isOpen, attemptClose, showUnsavedDialog]);
 
   // Handle finish action (finalize validation)
+  // If the last step is not optional, it marks the last step as done before finalizing
   const handleFinish = useCallback(async () => {
-    // Guard against concurrent operations and incomplete state
-    if (!allRequiredStepsDone || isFinalizingRef.current) return;
+    // Guard against concurrent operations
+    if (isFinalizingRef.current) return;
+
+    // If last step is not optional, we need to be able to mark it as done
+    const lastStep = wizardSteps[wizardSteps.length - 1];
+    if (!lastStep?.isOptional && !canMarkCurrentStepDone) return;
+
+    // Check all previous steps are done
+    if (!allPreviousRequiredStepsDone) return;
+
+    // Mark last step as done if it's not optional
+    if (!lastStep?.isOptional) {
+      setStepDone(currentStepIndex, true);
+    }
 
     isFinalizingRef.current = true;
     setIsFinalizing(true);
@@ -287,7 +298,15 @@ export function ValidateGameModal({
       isFinalizingRef.current = false;
       setIsFinalizing(false);
     }
-  }, [allRequiredStepsDone, t, onClose]);
+  }, [
+    wizardSteps,
+    canMarkCurrentStepDone,
+    allPreviousRequiredStepsDone,
+    currentStepIndex,
+    setStepDone,
+    t,
+    onClose,
+  ]);
 
   // Save and close (for unsaved dialog)
   const handleSaveAndClose = useCallback(async () => {
@@ -327,6 +346,13 @@ export function ValidateGameModal({
   const handleNext = useCallback(() => {
     goNext();
   }, [goNext]);
+
+  // Handler for Validate button: marks step as done and advances
+  const handleValidateAndNext = useCallback(() => {
+    if (!canMarkCurrentStepDone) return;
+    setStepDone(currentStepIndex, true);
+    goNext();
+  }, [canMarkCurrentStepDone, setStepDone, currentStepIndex, goNext]);
 
   const handleBack = useCallback(() => {
     goBack();
@@ -415,49 +441,31 @@ export function ValidateGameModal({
             onSwipePrevious={handleBack}
             swipeEnabled={!isFinalizing}
           >
-            {currentStepId === "home-roster" && (
-              <HomeRosterPanel
-                assignment={assignment}
-                onModificationsChange={setHomeRosterModifications}
-              />
-            )}
+            <div className="max-h-80 overflow-y-auto">
+              {currentStepId === "home-roster" && (
+                <HomeRosterPanel
+                  assignment={assignment}
+                  onModificationsChange={setHomeRosterModifications}
+                />
+              )}
 
-            {currentStepId === "away-roster" && (
-              <AwayRosterPanel
-                assignment={assignment}
-                onModificationsChange={setAwayRosterModifications}
-              />
-            )}
+              {currentStepId === "away-roster" && (
+                <AwayRosterPanel
+                  assignment={assignment}
+                  onModificationsChange={setAwayRosterModifications}
+                />
+              )}
 
-            {currentStepId === "scorer" && (
-              <ScorerPanel onScorerChange={setScorer} />
-            )}
+              {currentStepId === "scorer" && (
+                <ScorerPanel onScorerChange={setScorer} />
+              )}
 
-            {currentStepId === "scoresheet" && (
-              <ScoresheetPanel onScoresheetChange={setScoresheet} />
-            )}
+              {currentStepId === "scoresheet" && (
+                <ScoresheetPanel onScoresheetChange={setScoresheet} />
+              )}
+            </div>
           </WizardStepContainer>
 
-          {!currentStep.isOptional && (
-            <label
-              className={`flex items-center gap-2 mt-4 select-none ${
-                canMarkCurrentStepDone && !isFinalizing
-                  ? "cursor-pointer"
-                  : "cursor-not-allowed opacity-60"
-              }`}
-            >
-              <input
-                type="checkbox"
-                checked={isCurrentStepDone}
-                onChange={handleToggleCurrentStepDone}
-                disabled={isFinalizing || !canMarkCurrentStepDone}
-                className="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 dark:focus:ring-green-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                {t("validation.wizard.markAsReviewed")}
-              </span>
-            </label>
-          )}
 
           {/* Error display with recovery options */}
           {saveError && (
@@ -519,19 +527,23 @@ export function ValidateGameModal({
               )}
             </div>
 
-            {/* Right side: Next button or Finish on last step */}
+            {/* Right side: Validate button (marks done + advances) or Finish on last step */}
             <div>
               {isLastStep ? (
                 <button
                   type="button"
                   onClick={() => handleFinish()}
-                  disabled={!allRequiredStepsDone || isFinalizing}
+                  disabled={
+                    isFinalizing ||
+                    !allPreviousRequiredStepsDone ||
+                    (!currentStep.isOptional && !canMarkCurrentStepDone)
+                  }
                   title={
-                    !allRequiredStepsDone
+                    !allPreviousRequiredStepsDone
                       ? t("validation.state.markAllStepsTooltip")
                       : undefined
                   }
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isFinalizing
                     ? t("common.loading")
@@ -540,11 +552,11 @@ export function ValidateGameModal({
               ) : (
                 <button
                   type="button"
-                  onClick={handleNext}
-                  disabled={isFinalizing}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleValidateAndNext}
+                  disabled={isFinalizing || !canMarkCurrentStepDone}
+                  className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {t("validation.wizard.next")}
+                  {t("validation.wizard.validate")}
                 </button>
               )}
             </div>
