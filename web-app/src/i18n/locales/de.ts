@@ -245,10 +245,11 @@ const de: Translations = {
     state: {
       unsavedChangesTitle: "Ungespeicherte Änderungen",
       unsavedChangesMessage:
-        "Sie haben ungespeicherte Änderungen. Möchten Sie diese wirklich verwerfen?",
+        "Sie haben ungespeicherte Änderungen. Was möchten Sie tun?",
       continueEditing: "Weiter bearbeiten",
-      discardChanges: "Änderungen verwerfen",
+      discardChanges: "Verwerfen",
       discardAndClose: "Verwerfen und schliessen",
+      saveAndClose: "Speichern und schliessen",
       saveSuccess: "Validierung erfolgreich gespeichert",
       saveError: "Validierung konnte nicht gespeichert werden",
       markAllStepsTooltip:

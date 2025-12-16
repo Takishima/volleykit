@@ -227,6 +227,7 @@ export interface Translations {
       continueEditing: string;
       discardChanges: string;
       discardAndClose: string;
+      saveAndClose: string;
       saveSuccess: string;
       saveError: string;
       markAllStepsTooltip: string;

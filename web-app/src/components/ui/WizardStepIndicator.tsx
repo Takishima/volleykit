@@ -1,5 +1,19 @@
 import type { WizardStep } from "@/hooks/useWizardNavigation";
 
+/** Returns the appropriate style classes based on step state */
+function getStepIndicatorStyle(
+  isCurrent: boolean,
+  showCompletion: boolean,
+): string {
+  if (isCurrent) {
+    return "bg-orange-500 text-white ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-800";
+  }
+  if (showCompletion) {
+    return "bg-green-500 text-white";
+  }
+  return "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400";
+}
+
 function CheckIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -102,13 +116,7 @@ export function WizardStepIndicator({
                 relative flex items-center justify-center w-8 h-8 rounded-full
                 transition-all duration-200
                 ${clickable ? "cursor-pointer hover:scale-110" : "cursor-default"}
-                ${
-                  isCurrent
-                    ? "bg-orange-500 text-white ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-800"
-                    : showCompletion
-                      ? "bg-green-500 text-white"
-                      : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
-                }
+                ${getStepIndicatorStyle(isCurrent, showCompletion)}
                 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800
                 aria-disabled:cursor-default aria-disabled:opacity-100
               `}

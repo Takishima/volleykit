@@ -241,10 +241,11 @@ const en: Translations = {
     state: {
       unsavedChangesTitle: "Unsaved Changes",
       unsavedChangesMessage:
-        "You have unsaved changes. Are you sure you want to discard them?",
+        "You have unsaved changes. What would you like to do?",
       continueEditing: "Continue Editing",
-      discardChanges: "Discard Changes",
+      discardChanges: "Discard",
       discardAndClose: "Discard and Close",
+      saveAndClose: "Save and Close",
       saveSuccess: "Validation saved successfully",
       saveError: "Failed to save validation",
       markAllStepsTooltip: "Mark all required steps as reviewed to finish",

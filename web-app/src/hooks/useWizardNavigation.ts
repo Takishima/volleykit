@@ -79,10 +79,16 @@ export function useWizardNavigation<T extends WizardStep>({
   const canGoBack = !isFirstStep;
 
   // Safe access: steps.length > 0 is validated above, and currentStepIndex is clamped
-  const currentStep = useMemo(
-    () => steps[currentStepIndex] ?? steps[0],
-    [steps, currentStepIndex],
-  ) as T;
+  // to valid range [0, steps.length-1], so the element is guaranteed to exist
+  const currentStep = useMemo((): T => {
+    const step = steps[currentStepIndex];
+    if (!step) {
+      throw new Error(
+        `useWizardNavigation: step at index ${currentStepIndex} not found`,
+      );
+    }
+    return step;
+  }, [steps, currentStepIndex]);
 
   const goToStep = useCallback(
     (index: number) => {
