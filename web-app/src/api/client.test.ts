@@ -422,6 +422,32 @@ describe("API Client", () => {
       expect(body.get("searchConfiguration[propertyFilters][2][propertyName]")).toBe("yearOfBirth");
       expect(body.get("searchConfiguration[propertyFilters][2][text]")).toBe("1985");
     });
+
+    it("requests all required properties for displaying search results", async () => {
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse(mockPersonSearchResponse),
+      );
+
+      await api.searchPersons({ lastName: "test" });
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      const body = options.body as URLSearchParams;
+
+      // These properties are required for ScorerResultsList to display results properly.
+      // Missing properties will cause search results to appear empty.
+      const requiredProperties = [
+        "displayName",
+        "firstName",
+        "lastName",
+        "associationId",
+        "birthday",
+        "gender",
+      ];
+
+      requiredProperties.forEach((prop, index) => {
+        expect(body.get(`propertyRenderConfiguration[${index}]`)).toBe(prop);
+      });
+    });
   });
 
   describe("request headers", () => {

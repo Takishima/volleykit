@@ -646,7 +646,14 @@ export const api = {
       "POST",
       {
         searchConfiguration: searchConfig,
-        propertyRenderConfiguration: ["birthday"],
+        propertyRenderConfiguration: [
+          "displayName",
+          "firstName",
+          "lastName",
+          "associationId",
+          "birthday",
+          "gender",
+        ],
       },
     );
   },
