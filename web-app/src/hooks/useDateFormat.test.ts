@@ -4,7 +4,8 @@ import { useDateFormat, getDateLocale, safeParseISO } from "./useDateFormat";
 import { useLanguageStore } from "@/stores/language";
 import { enUS } from "date-fns/locale/en-US";
 
-const TIME_FORMAT_PATTERN = /^\d{2}:\d{2}$/; // HH:mm format
+// Pattern for validating HH:mm time format (e.g., "14:30", "09:15")
+const TIME_FORMAT_PATTERN = /^\d{2}:\d{2}$/;
 
 describe("useDateFormat", () => {
   beforeEach(() => {
