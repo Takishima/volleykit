@@ -26,6 +26,7 @@ import {
   isAuthError,
   RETRY_CONFIG,
 } from "@/utils/query-error-utils";
+import { usePreloadLocales } from "@/hooks/usePreloadLocales";
 
 /**
  * Global error handler for React Query mutations.
@@ -206,6 +207,8 @@ function QueryErrorHandler({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  usePreloadLocales();
+
   return (
     <ErrorBoundary>
       <PWAProvider>
