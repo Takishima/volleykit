@@ -184,7 +184,16 @@ export function clearSession() {
 // e.g., searchConfiguration[offset] = 0, searchConfiguration[limit] = 10
 const MAX_DEPTH = 10;
 
-function buildFormData(data: Record<string, unknown>): URLSearchParams {
+interface BuildFormDataOptions {
+  /** Include CSRF token in params. Default true. Set false for GET requests. */
+  includeCsrfToken?: boolean;
+}
+
+function buildFormData(
+  data: Record<string, unknown>,
+  options: BuildFormDataOptions = {},
+): URLSearchParams {
+  const { includeCsrfToken = true } = options;
   const params = new URLSearchParams();
   // Track objects in current path to detect true circular references
   // Using Set<object> and removing after recursion allows shared references
@@ -233,7 +242,10 @@ function buildFormData(data: Record<string, unknown>): URLSearchParams {
     flatten(value, key, 0);
   });
 
-  if (csrfToken) {
+  // Only include CSRF token for state-changing requests (POST/PUT/DELETE).
+  // GET requests should not include CSRF tokens in URLs as they can leak
+  // through browser history, server logs, referer headers, and proxy logs.
+  if (includeCsrfToken && csrfToken) {
     params.append("__csrfToken", csrfToken);
   }
 
@@ -246,11 +258,17 @@ async function apiRequest<T>(
   method: "GET" | "POST" | "PUT" | "DELETE" = "GET",
   body?: Record<string, unknown>,
 ): Promise<T> {
-  const url = `${API_BASE}${endpoint}`;
+  let url = `${API_BASE}${endpoint}`;
 
   const headers: HeadersInit = {
     Accept: "application/json",
   };
+
+  // For GET requests, append parameters as query string (without CSRF token)
+  if (method === "GET" && body) {
+    const params = buildFormData(body, { includeCsrfToken: false });
+    url = `${url}?${params.toString()}`;
+  }
 
   if (method !== "GET" && body) {
     headers["Content-Type"] = "application/x-www-form-urlencoded";
@@ -643,7 +661,7 @@ export const api = {
 
     return apiRequest<PersonSearchResponse>(
       "/sportmanager.core/api%5celasticsearchperson/search",
-      "POST",
+      "GET",
       {
         searchConfiguration: searchConfig,
         propertyRenderConfiguration: [
