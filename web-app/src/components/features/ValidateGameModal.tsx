@@ -43,12 +43,16 @@ interface ValidationStep {
 /** Dialog for confirming close with unsaved changes */
 function UnsavedChangesDialog({
   isOpen,
-  onConfirm,
+  onSaveAndClose,
+  onDiscard,
   onCancel,
+  isSaving,
 }: {
   isOpen: boolean;
-  onConfirm: () => void;
+  onSaveAndClose: () => void;
+  onDiscard: () => void;
   onCancel: () => void;
+  isSaving: boolean;
 }) {
   const { t } = useTranslation();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -93,16 +97,26 @@ function UnsavedChangesDialog({
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            disabled={isSaving}
+            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50"
           >
             {t("validation.state.continueEditing")}
           </button>
           <button
             type="button"
-            onClick={onConfirm}
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+            onClick={onDiscard}
+            disabled={isSaving}
+            className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
           >
             {t("validation.state.discardChanges")}
+          </button>
+          <button
+            type="button"
+            onClick={onSaveAndClose}
+            disabled={isSaving}
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+          >
+            {isSaving ? t("common.loading") : t("validation.state.saveAndClose")}
           </button>
         </div>
       </div>
@@ -216,20 +230,14 @@ export function ValidateGameModal({
     }
   }, [isOpen, reset, resetToStart]);
 
-  // Attempt to close - save progress first, show error if save fails
-  const attemptClose = useCallback(async () => {
+  // Attempt to close - show confirmation dialog if there are unsaved changes
+  const attemptClose = useCallback(() => {
     if (isDirtyRef.current) {
-      try {
-        await saveProgress();
-      } catch (error) {
-        // Save failed - show error and keep modal open so user can retry or discard
-        logger.error("[ValidateGameModal] Save failed during close:", error);
-        setSaveError(t("validation.state.saveError"));
-        return; // Don't close modal - let user decide what to do
-      }
+      setShowUnsavedDialog(true);
+    } else {
+      onClose();
     }
-    onClose();
-  }, [onClose, saveProgress, t]);
+  }, [onClose]);
 
   // Handle Escape key to close modal
   useEffect(() => {
@@ -281,15 +289,28 @@ export function ValidateGameModal({
     }
   }, [allRequiredStepsDone, t, onClose]);
 
-  // Confirm discard changes (for unsaved dialog)
-  const handleConfirmDiscard = useCallback(() => {
+  // Save and close (for unsaved dialog)
+  const handleSaveAndClose = useCallback(async () => {
+    try {
+      await saveProgress();
+      setShowUnsavedDialog(false);
+      onClose();
+    } catch (error) {
+      logger.error("[ValidateGameModal] Save failed during close:", error);
+      setSaveError(t("validation.state.saveError"));
+      setShowUnsavedDialog(false);
+    }
+  }, [saveProgress, onClose, t]);
+
+  // Discard changes and close (for unsaved dialog)
+  const handleDiscardAndClose = useCallback(() => {
     setShowUnsavedDialog(false);
     reset();
     onClose();
   }, [reset, onClose]);
 
-  // Cancel discard
-  const handleCancelDiscard = useCallback(() => {
+  // Cancel close and continue editing
+  const handleCancelClose = useCallback(() => {
     setShowUnsavedDialog(false);
   }, []);
 
@@ -457,7 +478,7 @@ export function ValidateGameModal({
                 </button>
                 <button
                   type="button"
-                  onClick={handleConfirmDiscard}
+                  onClick={handleDiscardAndClose}
                   className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                 >
                   {t("validation.state.discardAndClose")}
@@ -534,8 +555,10 @@ export function ValidateGameModal({
       {/* Unsaved changes confirmation dialog */}
       <UnsavedChangesDialog
         isOpen={showUnsavedDialog}
-        onConfirm={handleConfirmDiscard}
-        onCancel={handleCancelDiscard}
+        onSaveAndClose={handleSaveAndClose}
+        onDiscard={handleDiscardAndClose}
+        onCancel={handleCancelClose}
+        isSaving={isSaving}
       />
     </>
   );

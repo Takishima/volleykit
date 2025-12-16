@@ -245,10 +245,11 @@ const fr: Translations = {
     state: {
       unsavedChangesTitle: "Modifications non enregistrées",
       unsavedChangesMessage:
-        "Vous avez des modifications non enregistrées. Êtes-vous sûr de vouloir les abandonner?",
+        "Vous avez des modifications non enregistrées. Que voulez-vous faire?",
       continueEditing: "Continuer l'édition",
-      discardChanges: "Abandonner les modifications",
+      discardChanges: "Abandonner",
       discardAndClose: "Abandonner et fermer",
+      saveAndClose: "Enregistrer et fermer",
       saveSuccess: "Validation enregistrée avec succès",
       saveError: "Échec de l'enregistrement de la validation",
       markAllStepsTooltip:

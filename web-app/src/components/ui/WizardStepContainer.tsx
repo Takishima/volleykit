@@ -7,11 +7,20 @@ import {
   useLayoutEffect,
 } from "react";
 
-/** Minimum horizontal swipe distance as ratio of container width to trigger navigation */
+/**
+ * Minimum horizontal swipe distance as ratio of container width to trigger navigation.
+ * 30% threshold balances ease of intentional swipes vs preventing accidental navigation.
+ */
 const SWIPE_THRESHOLD_RATIO = 0.3;
-/** Minimum movement in pixels to distinguish swipe from tap */
+/**
+ * Minimum movement in pixels before determining swipe direction.
+ * Prevents micro-movements from being interpreted as swipes.
+ */
 const DIRECTION_THRESHOLD_PX = 10;
-/** Animation duration for step transitions in ms */
+/**
+ * Animation duration for step transitions.
+ * 300ms provides smooth visual feedback without feeling sluggish.
+ */
 const TRANSITION_DURATION_MS = 300;
 
 /** Animation phases for step transitions */
@@ -107,8 +116,12 @@ export function WizardStepContainer({
         // Start from off-screen position (synchronous, before paint)
         // Going forward: new panel enters from the right (carousel style)
         // Going backward: new panel enters from the left
-        // Disable lint warning - this is a legitimate animation pattern where we need
-        // to set initial position synchronously before the browser paints
+        //
+        // ESLint disable rationale: This setState call is intentionally synchronous within
+        // useLayoutEffect to set the initial off-screen position BEFORE browser paint.
+        // This prevents a flash of content at position 0 before animating. The standard
+        // pattern of moving setState to an event handler doesn't work here because we need
+        // synchronous execution before paint when currentStep prop changes externally.
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setTranslateX(goingForward ? containerWidth : -containerWidth);
         setAnimationPhase("entering");
@@ -214,12 +227,14 @@ export function WizardStepContainer({
       });
 
       // Complete entrance animation
+      // Guard against component unmount by checking if container still exists
       animationTimeoutRef.current = setTimeout(() => {
+        if (!containerRef.current) return;
         setAnimationPhase("idle");
         animationTimeoutRef.current = null;
       }, TRANSITION_DURATION_MS);
     },
-    [],
+    [containerRef],
   );
 
   // Execute navigation after exit animation completes
@@ -259,7 +274,9 @@ export function WizardStepContainer({
       setTranslateX(goingNext ? -containerWidth : containerWidth);
 
       // After exit animation, navigate and enter
+      // Guard against component unmount by checking if container still exists
       animationTimeoutRef.current = setTimeout(() => {
+        if (!containerRef.current) return;
         executeNavigationAndEnter(goingNext, containerWidth);
       }, TRANSITION_DURATION_MS);
     } else {
