@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ValidateGameModal } from "./ValidateGameModal";
 import type { Assignment } from "@/api/client";
@@ -117,7 +117,7 @@ describe("ValidateGameModal", () => {
       expect(screen.getByText("VBC Zürich vs VBC Basel")).toBeInTheDocument();
     });
 
-    it("renders all 4 tabs", () => {
+    it("shows step indicator with 4 steps", () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -126,42 +126,13 @@ describe("ValidateGameModal", () => {
         />,
         { wrapper: createWrapper() },
       );
-      expect(
-        screen.getByRole("tab", { name: /Home Roster/i, hidden: true }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("tab", { name: /Away Roster/i, hidden: true }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("tab", { name: /Scorer/i, hidden: true }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("tab", { name: /Scoresheet/i, hidden: true }),
-      ).toBeInTheDocument();
-    });
-
-    it("shows Optional badge only on Scoresheet tab", () => {
-      render(
-        <ValidateGameModal
-          assignment={createMockAssignment()}
-          isOpen={true}
-          onClose={mockOnClose}
-        />,
-        { wrapper: createWrapper() },
-      );
-      const optionalBadges = screen.getAllByText("Optional");
-      expect(optionalBadges).toHaveLength(1);
-
-      const scoresheetTab = screen.getByRole("tab", {
-        name: /Scoresheet/i,
-        hidden: true,
-      });
-      expect(scoresheetTab).toContainElement(optionalBadges[0]!);
+      // Step indicator should show step 1 of 4
+      expect(screen.getByText("Step 1 of 4")).toBeInTheDocument();
     });
   });
 
-  describe("tab navigation", () => {
-    it("shows Home Roster panel by default", () => {
+  describe("wizard navigation", () => {
+    it("shows Home Roster panel by default (first step)", () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -175,7 +146,7 @@ describe("ValidateGameModal", () => {
       expect(screen.getByText("No players in roster")).toBeInTheDocument();
     });
 
-    it("switches to Away Roster panel when tab is clicked", () => {
+    it("shows Cancel button on first step", () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -184,16 +155,26 @@ describe("ValidateGameModal", () => {
         />,
         { wrapper: createWrapper() },
       );
-
-      fireEvent.click(
-        screen.getByRole("tab", { name: /Away Roster/i, hidden: true }),
-      );
-
-      // Away Roster panel shows team name
-      expect(screen.getByText("VBC Basel")).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Cancel/i, hidden: true }),
+      ).toBeInTheDocument();
     });
 
-    it("switches to Scorer panel when tab is clicked", () => {
+    it("shows Next button on first step", () => {
+      render(
+        <ValidateGameModal
+          assignment={createMockAssignment()}
+          isOpen={true}
+          onClose={mockOnClose}
+        />,
+        { wrapper: createWrapper() },
+      );
+      expect(
+        screen.getByRole("button", { name: /Next/i, hidden: true }),
+      ).toBeInTheDocument();
+    });
+
+    it("advances to Away Roster panel when Next is clicked", async () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -204,7 +185,90 @@ describe("ValidateGameModal", () => {
       );
 
       fireEvent.click(
-        screen.getByRole("tab", { name: /Scorer/i, hidden: true }),
+        screen.getByRole("button", { name: /Next/i, hidden: true }),
+      );
+
+      await waitFor(() => {
+        // Away Roster panel shows team name
+        expect(screen.getByText("VBC Basel")).toBeInTheDocument();
+      });
+    });
+
+    it("shows Previous button after first step", async () => {
+      render(
+        <ValidateGameModal
+          assignment={createMockAssignment()}
+          isOpen={true}
+          onClose={mockOnClose}
+        />,
+        { wrapper: createWrapper() },
+      );
+
+      // Go to step 2
+      fireEvent.click(
+        screen.getByRole("button", { name: /Next/i, hidden: true }),
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /Previous/i, hidden: true }),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("goes back to Home Roster when Previous is clicked from step 2", async () => {
+      render(
+        <ValidateGameModal
+          assignment={createMockAssignment()}
+          isOpen={true}
+          onClose={mockOnClose}
+        />,
+        { wrapper: createWrapper() },
+      );
+
+      // Go to step 2
+      fireEvent.click(
+        screen.getByRole("button", { name: /Next/i, hidden: true }),
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("VBC Basel")).toBeInTheDocument();
+      });
+
+      // Go back to step 1
+      fireEvent.click(
+        screen.getByRole("button", { name: /Previous/i, hidden: true }),
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("VBC Zürich")).toBeInTheDocument();
+        expect(screen.getByText("No players in roster")).toBeInTheDocument();
+      });
+    });
+
+    it("shows Scorer panel on step 3", async () => {
+      render(
+        <ValidateGameModal
+          assignment={createMockAssignment()}
+          isOpen={true}
+          onClose={mockOnClose}
+        />,
+        { wrapper: createWrapper() },
+      );
+
+      // Navigate to step 3
+      fireEvent.click(
+        screen.getByRole("button", { name: /Next/i, hidden: true }),
+      );
+      await waitFor(() =>
+        expect(screen.getByText("Step 2 of 4")).toBeInTheDocument(),
+      );
+
+      fireEvent.click(
+        screen.getByRole("button", { name: /Next/i, hidden: true }),
+      );
+      await waitFor(() =>
+        expect(screen.getByText("Step 3 of 4")).toBeInTheDocument(),
       );
 
       // ScorerPanel now shows search input and no-selection message
@@ -214,7 +278,7 @@ describe("ValidateGameModal", () => {
       expect(screen.getByText(/No scorer selected/)).toBeInTheDocument();
     });
 
-    it("switches to Scoresheet panel when tab is clicked", () => {
+    it("shows Scoresheet panel and Finish button on step 4", async () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -222,16 +286,37 @@ describe("ValidateGameModal", () => {
           onClose={mockOnClose}
         />,
         { wrapper: createWrapper() },
+      );
+
+      // Navigate to step 4
+      fireEvent.click(
+        screen.getByRole("button", { name: /Next/i, hidden: true }),
+      );
+      await waitFor(() =>
+        expect(screen.getByText("Step 2 of 4")).toBeInTheDocument(),
       );
 
       fireEvent.click(
-        screen.getByRole("tab", { name: /Scoresheet/i, hidden: true }),
+        screen.getByRole("button", { name: /Next/i, hidden: true }),
+      );
+      await waitFor(() =>
+        expect(screen.getByText("Step 3 of 4")).toBeInTheDocument(),
+      );
+
+      fireEvent.click(
+        screen.getByRole("button", { name: /Next/i, hidden: true }),
+      );
+      await waitFor(() =>
+        expect(screen.getByText("Step 4 of 4")).toBeInTheDocument(),
       );
 
       expect(screen.getByText("Upload Scoresheet")).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Finish/i, hidden: true }),
+      ).toBeInTheDocument();
     });
 
-    it("navigates tabs with arrow keys", () => {
+    it("updates step indicator when navigating", async () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -241,19 +326,26 @@ describe("ValidateGameModal", () => {
         { wrapper: createWrapper() },
       );
 
-      const homeRosterTab = screen.getByRole("tab", {
-        name: /Home Roster/i,
-        hidden: true,
-      });
-      fireEvent.keyDown(homeRosterTab, { key: "ArrowRight" });
+      expect(screen.getByText("Step 1 of 4")).toBeInTheDocument();
 
-      // Away Roster panel shows team name
-      expect(screen.getByText("VBC Basel")).toBeInTheDocument();
+      fireEvent.click(
+        screen.getByRole("button", { name: /Next/i, hidden: true }),
+      );
+      await waitFor(() => {
+        expect(screen.getByText("Step 2 of 4")).toBeInTheDocument();
+      });
+
+      fireEvent.click(
+        screen.getByRole("button", { name: /Next/i, hidden: true }),
+      );
+      await waitFor(() => {
+        expect(screen.getByText("Step 3 of 4")).toBeInTheDocument();
+      });
     });
   });
 
   describe("modal interactions", () => {
-    it("calls onClose when Cancel button is clicked (no unsaved changes)", () => {
+    it("calls onClose when Cancel button is clicked on first step", async () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -266,10 +358,13 @@ describe("ValidateGameModal", () => {
       fireEvent.click(
         screen.getByRole("button", { name: /Cancel/i, hidden: true }),
       );
-      expect(mockOnClose).toHaveBeenCalledTimes(1);
+
+      await waitFor(() => {
+        expect(mockOnClose).toHaveBeenCalled();
+      });
     });
 
-    it("calls onClose when Escape key is pressed (no unsaved changes)", () => {
+    it("calls onClose when Escape key is pressed", async () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -280,10 +375,13 @@ describe("ValidateGameModal", () => {
       );
 
       fireEvent.keyDown(document, { key: "Escape" });
-      expect(mockOnClose).toHaveBeenCalledTimes(1);
+
+      await waitFor(() => {
+        expect(mockOnClose).toHaveBeenCalled();
+      });
     });
 
-    it("closes when clicking backdrop (no unsaved changes)", () => {
+    it("closes when clicking backdrop", async () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -298,7 +396,10 @@ describe("ValidateGameModal", () => {
         hidden: true,
       }).parentElement;
       fireEvent.click(backdrop!);
-      expect(mockOnClose).toHaveBeenCalledTimes(1);
+
+      await waitFor(() => {
+        expect(mockOnClose).toHaveBeenCalled();
+      });
     });
 
     it("does not close when clicking inside the modal", () => {
@@ -316,7 +417,7 @@ describe("ValidateGameModal", () => {
       expect(mockOnClose).not.toHaveBeenCalled();
     });
 
-    it("resets to first tab when modal is reopened with new key", () => {
+    it("resets to first step when modal is reopened with new key", async () => {
       const assignment = createMockAssignment();
       const Wrapper = createWrapper();
       const { rerender } = render(
@@ -330,11 +431,27 @@ describe("ValidateGameModal", () => {
         </Wrapper>,
       );
 
-      // Switch to Scoresheet tab
+      // Navigate to step 4
       fireEvent.click(
-        screen.getByRole("tab", { name: /Scoresheet/i, hidden: true }),
+        screen.getByRole("button", { name: /Next/i, hidden: true }),
       );
-      expect(screen.getByText("Upload Scoresheet")).toBeInTheDocument();
+      await waitFor(() =>
+        expect(screen.getByText("Step 2 of 4")).toBeInTheDocument(),
+      );
+
+      fireEvent.click(
+        screen.getByRole("button", { name: /Next/i, hidden: true }),
+      );
+      await waitFor(() =>
+        expect(screen.getByText("Step 3 of 4")).toBeInTheDocument(),
+      );
+
+      fireEvent.click(
+        screen.getByRole("button", { name: /Next/i, hidden: true }),
+      );
+      await waitFor(() =>
+        expect(screen.getByText("Step 4 of 4")).toBeInTheDocument(),
+      );
 
       // Reopen modal with new key (simulates opening for different assignment)
       const newAssignment = createMockAssignment({ __identity: "new-id" });
@@ -349,14 +466,17 @@ describe("ValidateGameModal", () => {
         </Wrapper>,
       );
 
-      // Should be back to Home Roster (component remounted due to key change)
+      // Should be back to step 1 (component remounted due to key change)
+      await waitFor(() => {
+        expect(screen.getByText("Step 1 of 4")).toBeInTheDocument();
+      });
       expect(screen.getByText("VBC Zürich")).toBeInTheDocument();
       expect(screen.getByText("No players in roster")).toBeInTheDocument();
     });
   });
 
   describe("validation state", () => {
-    it("renders Save button", () => {
+    it("renders Finish button on last step", async () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -364,14 +484,36 @@ describe("ValidateGameModal", () => {
           onClose={mockOnClose}
         />,
         { wrapper: createWrapper() },
+      );
+
+      // Navigate to last step
+      fireEvent.click(
+        screen.getByRole("button", { name: /Next/i, hidden: true }),
+      );
+      await waitFor(() =>
+        expect(screen.getByText("Step 2 of 4")).toBeInTheDocument(),
+      );
+
+      fireEvent.click(
+        screen.getByRole("button", { name: /Next/i, hidden: true }),
+      );
+      await waitFor(() =>
+        expect(screen.getByText("Step 3 of 4")).toBeInTheDocument(),
+      );
+
+      fireEvent.click(
+        screen.getByRole("button", { name: /Next/i, hidden: true }),
+      );
+      await waitFor(() =>
+        expect(screen.getByText("Step 4 of 4")).toBeInTheDocument(),
       );
 
       expect(
-        screen.getByRole("button", { name: /Save/i, hidden: true }),
+        screen.getByRole("button", { name: /Finish/i, hidden: true }),
       ).toBeInTheDocument();
     });
 
-    it("disables Save button when required panels are incomplete", () => {
+    it("disables Finish button when required panels are incomplete", async () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -381,14 +523,36 @@ describe("ValidateGameModal", () => {
         { wrapper: createWrapper() },
       );
 
-      const saveButton = screen.getByRole("button", {
-        name: /Save/i,
+      // Navigate to last step
+      fireEvent.click(
+        screen.getByRole("button", { name: /Next/i, hidden: true }),
+      );
+      await waitFor(() =>
+        expect(screen.getByText("Step 2 of 4")).toBeInTheDocument(),
+      );
+
+      fireEvent.click(
+        screen.getByRole("button", { name: /Next/i, hidden: true }),
+      );
+      await waitFor(() =>
+        expect(screen.getByText("Step 3 of 4")).toBeInTheDocument(),
+      );
+
+      fireEvent.click(
+        screen.getByRole("button", { name: /Next/i, hidden: true }),
+      );
+      await waitFor(() =>
+        expect(screen.getByText("Step 4 of 4")).toBeInTheDocument(),
+      );
+
+      const finishButton = screen.getByRole("button", {
+        name: /Finish/i,
         hidden: true,
       });
-      expect(saveButton).toBeDisabled();
+      expect(finishButton).toBeDisabled();
     });
 
-    it("renders both Cancel and Save buttons in footer", () => {
+    it("renders both Cancel and Next buttons on first step", () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -402,7 +566,7 @@ describe("ValidateGameModal", () => {
         screen.getByRole("button", { name: /Cancel/i, hidden: true }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: /Save/i, hidden: true }),
+        screen.getByRole("button", { name: /Next/i, hidden: true }),
       ).toBeInTheDocument();
     });
   });

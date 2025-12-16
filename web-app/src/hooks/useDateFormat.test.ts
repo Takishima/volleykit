@@ -4,6 +4,9 @@ import { useDateFormat, getDateLocale, safeParseISO } from "./useDateFormat";
 import { useLanguageStore } from "@/stores/language";
 import { enUS } from "date-fns/locale/en-US";
 
+// Pattern for validating HH:mm time format (e.g., "14:30", "09:15")
+const TIME_FORMAT_PATTERN = /^\d{2}:\d{2}$/;
+
 describe("useDateFormat", () => {
   beforeEach(() => {
     act(() => {
@@ -19,7 +22,7 @@ describe("useDateFormat", () => {
 
       expect(result.current.date).toBeInstanceOf(Date);
       // Time is formatted in local timezone, so just check format pattern
-      expect(result.current.timeLabel).toMatch(/^\d{2}:\d{2}$/);
+      expect(result.current.timeLabel).toMatch(TIME_FORMAT_PATTERN);
       expect(result.current.dateLabel).toBeDefined();
     });
 
@@ -89,7 +92,7 @@ describe("useDateFormat", () => {
       // Date should still be valid and formatted
       expect(result.current.date).toBeInstanceOf(Date);
       // Time is formatted in local timezone, so just check format pattern
-      expect(result.current.timeLabel).toMatch(/^\d{2}:\d{2}$/);
+      expect(result.current.timeLabel).toMatch(TIME_FORMAT_PATTERN);
     });
   });
 

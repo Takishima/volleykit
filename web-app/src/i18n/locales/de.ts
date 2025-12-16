@@ -245,13 +245,23 @@ const de: Translations = {
     state: {
       unsavedChangesTitle: "Ungespeicherte Änderungen",
       unsavedChangesMessage:
-        "Sie haben ungespeicherte Änderungen. Möchten Sie diese wirklich verwerfen?",
+        "Sie haben ungespeicherte Änderungen. Was möchten Sie tun?",
       continueEditing: "Weiter bearbeiten",
-      discardChanges: "Änderungen verwerfen",
+      discardChanges: "Verwerfen",
+      discardAndClose: "Verwerfen und schliessen",
+      saveAndClose: "Speichern und schliessen",
       saveSuccess: "Validierung erfolgreich gespeichert",
       saveError: "Validierung konnte nicht gespeichert werden",
-      saveDisabledTooltip:
-        "Füllen Sie alle erforderlichen Bereiche aus (Heimkader, Gastkader, Schreiber), um zu speichern",
+      markAllStepsTooltip:
+        "Markieren Sie alle erforderlichen Schritte als geprüft, um abzuschliessen",
+    },
+    wizard: {
+      previous: "Zurück",
+      next: "Weiter",
+      finish: "Abschliessen",
+      stepOf: "Schritt {current} von {total}",
+      saving: "Speichern...",
+      markAsReviewed: "Als geprüft markieren",
     },
   },
 };

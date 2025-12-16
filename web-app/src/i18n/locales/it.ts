@@ -240,13 +240,23 @@ const it: Translations = {
     state: {
       unsavedChangesTitle: "Modifiche non salvate",
       unsavedChangesMessage:
-        "Hai modifiche non salvate. Sei sicuro di volerle scartare?",
+        "Hai modifiche non salvate. Cosa vuoi fare?",
       continueEditing: "Continua a modificare",
-      discardChanges: "Scarta le modifiche",
+      discardChanges: "Scarta",
+      discardAndClose: "Scarta e chiudi",
+      saveAndClose: "Salva e chiudi",
       saveSuccess: "Validazione salvata con successo",
       saveError: "Impossibile salvare la validazione",
-      saveDisabledTooltip:
-        "Completa tutti i pannelli richiesti (Rosa di casa, Rosa ospite, Segnapunti) per salvare",
+      markAllStepsTooltip:
+        "Segna tutti i passaggi richiesti come verificati per terminare",
+    },
+    wizard: {
+      previous: "Precedente",
+      next: "Avanti",
+      finish: "Termina",
+      stepOf: "Passo {current} di {total}",
+      saving: "Salvataggio...",
+      markAsReviewed: "Segna come verificato",
     },
   },
 };
