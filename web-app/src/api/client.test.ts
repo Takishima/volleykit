@@ -330,6 +330,24 @@ describe("API Client", () => {
       expect(options.body).toBeUndefined();
     });
 
+    it("does not include CSRF token in GET request URL", async () => {
+      // CSRF tokens in URLs can leak through browser history, server logs,
+      // referer headers, and proxy logs - only include for state-changing methods
+      setCsrfToken("test-csrf-token");
+
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse(mockPersonSearchResponse),
+      );
+
+      await api.searchPersons({ lastName: "müller" });
+
+      const params = getQueryParams();
+      expect(params.get("__csrfToken")).toBeNull();
+
+      // Clean up
+      setCsrfToken(null);
+    });
+
     it("uses default limit when not specified", async () => {
       mockFetch.mockResolvedValueOnce(
         createMockResponse(mockPersonSearchResponse),
