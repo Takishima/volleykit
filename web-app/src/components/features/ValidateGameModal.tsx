@@ -1,8 +1,11 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
+import { logger } from "@/utils/logger";
 import { getTeamNames } from "@/utils/assignment-helpers";
-import { Tabs, TabPanel, type TabStatus } from "@/components/ui/Tabs";
+import { useWizardNavigation } from "@/hooks/useWizardNavigation";
+import { WizardStepContainer } from "@/components/ui/WizardStepContainer";
+import { WizardStepIndicator } from "@/components/ui/WizardStepIndicator";
 import {
   HomeRosterPanel,
   AwayRosterPanel,
@@ -28,17 +31,28 @@ interface ValidateGameModalProps {
   onClose: () => void;
 }
 
-type ValidationTabId = "home-roster" | "away-roster" | "scorer" | "scoresheet";
+type ValidationStepId = "home-roster" | "away-roster" | "scorer" | "scoresheet";
+
+/** Wizard step with typed id for validation panels */
+interface ValidationStep {
+  id: ValidationStepId;
+  label: string;
+  isOptional?: boolean;
+}
 
 /** Dialog for confirming close with unsaved changes */
 function UnsavedChangesDialog({
   isOpen,
-  onConfirm,
+  onSaveAndClose,
+  onDiscard,
   onCancel,
+  isSaving,
 }: {
   isOpen: boolean;
-  onConfirm: () => void;
+  onSaveAndClose: () => void;
+  onDiscard: () => void;
   onCancel: () => void;
+  isSaving: boolean;
 }) {
   const { t } = useTranslation();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -83,16 +97,26 @@ function UnsavedChangesDialog({
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            disabled={isSaving}
+            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50"
           >
             {t("validation.state.continueEditing")}
           </button>
           <button
             type="button"
-            onClick={onConfirm}
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+            onClick={onDiscard}
+            disabled={isSaving}
+            className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
           >
             {t("validation.state.discardChanges")}
+          </button>
+          <button
+            type="button"
+            onClick={onSaveAndClose}
+            disabled={isSaving}
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+          >
+            {isSaving ? t("common.loading") : t("validation.state.saveAndClose")}
           </button>
         </div>
       </div>
@@ -105,27 +129,57 @@ export function ValidateGameModal({
   isOpen,
   onClose,
 }: ValidateGameModalProps) {
-  const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<ValidationTabId>("home-roster");
+  const { t, tInterpolate } = useTranslation();
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isFinalizing, setIsFinalizing] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [successToast, setSuccessToast] = useState<string | null>(null);
 
   const {
     isDirty,
     completionStatus,
-    isAllRequiredComplete,
     setHomeRosterModifications,
     setAwayRosterModifications,
     setScorer,
     setScoresheet,
     reset,
+    saveProgress,
+    isSaving,
   } = useValidationState();
+
+  // Define wizard steps with typed ids for type-safe panel switching
+  const wizardSteps = useMemo<ValidationStep[]>(
+    () => [
+      { id: "home-roster", label: t("validation.homeRoster") },
+      { id: "away-roster", label: t("validation.awayRoster") },
+      { id: "scorer", label: t("validation.scorer") },
+      { id: "scoresheet", label: t("validation.scoresheet"), isOptional: true },
+    ],
+    [t],
+  );
+
+  // Note: Step navigation doesn't auto-save. Data is saved on close/finish.
+  // This avoids race conditions since useWizardNavigation doesn't support async callbacks.
+  const {
+    currentStepIndex,
+    currentStep,
+    totalSteps,
+    isFirstStep,
+    isLastStep,
+    goNext,
+    goBack,
+    goToStep,
+    resetToStart,
+    stepsMarkedDone,
+    setStepDone,
+    allRequiredStepsDone,
+  } = useWizardNavigation<ValidationStep>({
+    steps: wizardSteps,
+  });
 
   // Refs to prevent race conditions and enable cleanup
   const isDirtyRef = useRef(isDirty);
-  const isSavingRef = useRef(false);
+  const isFinalizingRef = useRef(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -136,69 +190,47 @@ export function ValidateGameModal({
   // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
-      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-      if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = null;
+      }
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+        toastTimeoutRef.current = null;
+      }
     };
   }, []);
 
-  // Determine tab status based on completion
-  const getTabStatus = useCallback(
-    (tabId: ValidationTabId): TabStatus | undefined => {
-      switch (tabId) {
-        case "home-roster":
-          return completionStatus.homeRoster ? "complete" : "incomplete";
-        case "away-roster":
-          return completionStatus.awayRoster ? "complete" : "incomplete";
-        case "scorer":
-          return completionStatus.scorer ? "complete" : "incomplete";
-        case "scoresheet":
-          // Scoresheet is optional, so no indicator needed
-          return undefined;
-        default:
-          return undefined;
-      }
-    },
-    [completionStatus],
-  );
+  const isCurrentStepDone = stepsMarkedDone.has(currentStepIndex);
 
-  const tabs = useMemo(
-    () => [
-      {
-        id: "home-roster",
-        label: t("validation.homeRoster"),
-        status: getTabStatus("home-roster"),
-      },
-      {
-        id: "away-roster",
-        label: t("validation.awayRoster"),
-        status: getTabStatus("away-roster"),
-      },
-      {
-        id: "scorer",
-        label: t("validation.scorer"),
-        status: getTabStatus("scorer"),
-      },
-      {
-        id: "scoresheet",
-        label: t("validation.scoresheet"),
-        badge: t("common.optional"),
-        status: getTabStatus("scoresheet"),
-      },
-    ],
-    [t, getTabStatus],
-  );
+  // Scorer panel requires a scorer to be selected before marking as done
+  const canMarkCurrentStepDone = useMemo(() => {
+    const stepId = wizardSteps[currentStepIndex]?.id;
+    if (stepId === "scorer") return completionStatus.scorer;
+    return true;
+  }, [currentStepIndex, wizardSteps, completionStatus.scorer]);
+
+  const handleToggleCurrentStepDone = useCallback(() => {
+    if (!canMarkCurrentStepDone && !isCurrentStepDone) return;
+    setStepDone(currentStepIndex, !isCurrentStepDone);
+  }, [
+    currentStepIndex,
+    isCurrentStepDone,
+    setStepDone,
+    canMarkCurrentStepDone,
+  ]);
 
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
-      setActiveTab("home-roster");
       setSaveError(null);
       setSuccessToast(null);
       reset();
+      resetToStart();
     }
-  }, [isOpen, reset]);
+  }, [isOpen, reset, resetToStart]);
 
-  // Attempt to close - show dialog if dirty
+  // Attempt to close - show confirmation dialog if there are unsaved changes
   const attemptClose = useCallback(() => {
     if (isDirtyRef.current) {
       setShowUnsavedDialog(true);
@@ -223,21 +255,17 @@ export function ValidateGameModal({
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen, attemptClose, showUnsavedDialog]);
 
-  const handleTabChange = useCallback((tabId: string) => {
-    setActiveTab(tabId as ValidationTabId);
-  }, []);
+  // Handle finish action (finalize validation)
+  const handleFinish = useCallback(async () => {
+    // Guard against concurrent operations and incomplete state
+    if (!allRequiredStepsDone || isFinalizingRef.current) return;
 
-  // Handle save action with race condition protection
-  const handleSave = useCallback(async () => {
-    // Guard against concurrent save operations
-    if (!isAllRequiredComplete || isSavingRef.current) return;
-
-    isSavingRef.current = true;
-    setIsSaving(true);
+    isFinalizingRef.current = true;
+    setIsFinalizing(true);
     setSaveError(null);
 
     try {
-      // TODO(#40): Implement actual API call for saving validation data
+      // TODO(#40): Implement actual API call for finalizing validation
       // For now, simulate a save operation
       await new Promise<void>((resolve) => {
         saveTimeoutRef.current = setTimeout(resolve, SIMULATED_SAVE_DELAY_MS);
@@ -256,20 +284,33 @@ export function ValidateGameModal({
       const message = error instanceof Error ? error.message : "Failed to save";
       setSaveError(message);
     } finally {
-      isSavingRef.current = false;
-      setIsSaving(false);
+      isFinalizingRef.current = false;
+      setIsFinalizing(false);
     }
-  }, [isAllRequiredComplete, t, onClose]);
+  }, [allRequiredStepsDone, t, onClose]);
 
-  // Confirm discard changes
-  const handleConfirmDiscard = useCallback(() => {
+  // Save and close (for unsaved dialog)
+  const handleSaveAndClose = useCallback(async () => {
+    try {
+      await saveProgress();
+      setShowUnsavedDialog(false);
+      onClose();
+    } catch (error) {
+      logger.error("[ValidateGameModal] Save failed during close:", error);
+      setSaveError(t("validation.state.saveError"));
+      setShowUnsavedDialog(false);
+    }
+  }, [saveProgress, onClose, t]);
+
+  // Discard changes and close (for unsaved dialog)
+  const handleDiscardAndClose = useCallback(() => {
     setShowUnsavedDialog(false);
     reset();
     onClose();
   }, [reset, onClose]);
 
-  // Cancel discard
-  const handleCancelDiscard = useCallback(() => {
+  // Cancel close and continue editing
+  const handleCancelClose = useCallback(() => {
     setShowUnsavedDialog(false);
   }, []);
 
@@ -283,9 +324,18 @@ export function ValidateGameModal({
     [attemptClose],
   );
 
+  const handleNext = useCallback(() => {
+    goNext();
+  }, [goNext]);
+
+  const handleBack = useCallback(() => {
+    goBack();
+  }, [goBack]);
+
   if (!isOpen) return null;
 
   const { homeTeam, awayTeam } = getTeamNames(assignment);
+  const currentStepId = currentStep.id;
 
   return (
     <>
@@ -340,36 +390,76 @@ export function ValidateGameModal({
             </div>
           </div>
 
-          <Tabs
-            tabs={tabs}
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-            ariaLabel={t("assignments.validateGame")}
-          />
-
-          <TabPanel tabId="home-roster" activeTab={activeTab}>
-            <HomeRosterPanel
-              assignment={assignment}
-              onModificationsChange={setHomeRosterModifications}
+          {/* Step indicator */}
+          <div className="mb-4">
+            <WizardStepIndicator
+              steps={wizardSteps}
+              currentStepIndex={currentStepIndex}
+              stepsMarkedDone={stepsMarkedDone}
+              clickable={!isFinalizing}
+              onStepClick={goToStep}
             />
-          </TabPanel>
+            <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">
+              {tInterpolate("validation.wizard.stepOf", {
+                current: currentStepIndex + 1,
+                total: totalSteps,
+              })}
+            </p>
+          </div>
 
-          <TabPanel tabId="away-roster" activeTab={activeTab}>
-            <AwayRosterPanel
-              assignment={assignment}
-              onModificationsChange={setAwayRosterModifications}
-            />
-          </TabPanel>
+          {/* Step content with swipe support */}
+          <WizardStepContainer
+            currentStep={currentStepIndex}
+            totalSteps={totalSteps}
+            onSwipeNext={handleNext}
+            onSwipePrevious={handleBack}
+            swipeEnabled={!isFinalizing}
+          >
+            {currentStepId === "home-roster" && (
+              <HomeRosterPanel
+                assignment={assignment}
+                onModificationsChange={setHomeRosterModifications}
+              />
+            )}
 
-          <TabPanel tabId="scorer" activeTab={activeTab}>
-            <ScorerPanel onScorerChange={setScorer} />
-          </TabPanel>
+            {currentStepId === "away-roster" && (
+              <AwayRosterPanel
+                assignment={assignment}
+                onModificationsChange={setAwayRosterModifications}
+              />
+            )}
 
-          <TabPanel tabId="scoresheet" activeTab={activeTab}>
-            <ScoresheetPanel onScoresheetChange={setScoresheet} />
-          </TabPanel>
+            {currentStepId === "scorer" && (
+              <ScorerPanel onScorerChange={setScorer} />
+            )}
 
-          {/* Error display */}
+            {currentStepId === "scoresheet" && (
+              <ScoresheetPanel onScoresheetChange={setScoresheet} />
+            )}
+          </WizardStepContainer>
+
+          {!currentStep.isOptional && (
+            <label
+              className={`flex items-center gap-2 mt-4 select-none ${
+                canMarkCurrentStepDone && !isFinalizing
+                  ? "cursor-pointer"
+                  : "cursor-not-allowed opacity-60"
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={isCurrentStepDone}
+                onChange={handleToggleCurrentStepDone}
+                disabled={isFinalizing || !canMarkCurrentStepDone}
+                className="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 dark:focus:ring-green-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                {t("validation.wizard.markAsReviewed")}
+              </span>
+            </label>
+          )}
+
+          {/* Error display with recovery options */}
           {saveError && (
             <div
               role="alert"
@@ -378,38 +468,86 @@ export function ValidateGameModal({
               <p className="text-sm text-red-700 dark:text-red-400">
                 {saveError}
               </p>
-              <button
-                type="button"
-                onClick={handleSave}
-                className="mt-2 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
-              >
-                {t("common.retry")}
-              </button>
+              <div className="mt-2 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleFinish()}
+                  className="text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                >
+                  {t("common.retry")}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDiscardAndClose}
+                  className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                >
+                  {t("validation.state.discardAndClose")}
+                </button>
+              </div>
             </div>
           )}
 
-          {/* Footer with Cancel and Save buttons */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 mt-4">
-            <button
-              type="button"
-              onClick={attemptClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
-            >
-              {t("common.cancel")}
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={!isAllRequiredComplete || isSaving}
-              title={
-                !isAllRequiredComplete
-                  ? t("validation.state.saveDisabledTooltip")
-                  : undefined
-              }
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSaving ? t("common.loading") : t("common.save")}
-            </button>
+          {/* Saving indicator */}
+          {isSaving && (
+            <div className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
+              {t("validation.wizard.saving")}
+            </div>
+          )}
+
+          {/* Footer with navigation buttons */}
+          <div className="flex justify-between gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 mt-4">
+            {/* Left side: Back button or Cancel on first step */}
+            <div>
+              {isFirstStep ? (
+                <button
+                  type="button"
+                  onClick={() => attemptClose()}
+                  disabled={isFinalizing}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {t("common.cancel")}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  disabled={isFinalizing}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {t("validation.wizard.previous")}
+                </button>
+              )}
+            </div>
+
+            {/* Right side: Next button or Finish on last step */}
+            <div>
+              {isLastStep ? (
+                <button
+                  type="button"
+                  onClick={() => handleFinish()}
+                  disabled={!allRequiredStepsDone || isFinalizing}
+                  title={
+                    !allRequiredStepsDone
+                      ? t("validation.state.markAllStepsTooltip")
+                      : undefined
+                  }
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isFinalizing
+                    ? t("common.loading")
+                    : t("validation.wizard.finish")}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  disabled={isFinalizing}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {t("validation.wizard.next")}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -417,8 +555,10 @@ export function ValidateGameModal({
       {/* Unsaved changes confirmation dialog */}
       <UnsavedChangesDialog
         isOpen={showUnsavedDialog}
-        onConfirm={handleConfirmDiscard}
-        onCancel={handleCancelDiscard}
+        onSaveAndClose={handleSaveAndClose}
+        onDiscard={handleDiscardAndClose}
+        onCancel={handleCancelClose}
+        isSaving={isSaving}
       />
     </>
   );
