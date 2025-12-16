@@ -246,11 +246,17 @@ async function apiRequest<T>(
   method: "GET" | "POST" | "PUT" | "DELETE" = "GET",
   body?: Record<string, unknown>,
 ): Promise<T> {
-  const url = `${API_BASE}${endpoint}`;
+  let url = `${API_BASE}${endpoint}`;
 
   const headers: HeadersInit = {
     Accept: "application/json",
   };
+
+  // For GET requests, append parameters as query string
+  if (method === "GET" && body) {
+    const params = buildFormData(body);
+    url = `${url}?${params.toString()}`;
+  }
 
   if (method !== "GET" && body) {
     headers["Content-Type"] = "application/x-www-form-urlencoded";
@@ -643,7 +649,7 @@ export const api = {
 
     return apiRequest<PersonSearchResponse>(
       "/sportmanager.core/api%5celasticsearchperson/search",
-      "POST",
+      "GET",
       {
         searchConfiguration: searchConfig,
         propertyRenderConfiguration: [
