@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
@@ -240,5 +240,144 @@ describe("useScorerSearch", () => {
     });
 
     expect(result.current.error?.message).toMatch(/Invalid API response/);
+  });
+});
+
+/**
+ * Integration tests that test the full flow with the actual mock API.
+ * These tests verify that:
+ * 1. Demo data has valid UUIDs that pass Zod validation
+ * 2. The mock API returns properly structured data
+ * 3. The hook correctly processes the response
+ *
+ * These tests DO NOT mock getApiClient - they use the real implementation
+ * in demo mode to test the full integration.
+ */
+describe("useScorerSearch - integration with mock API", () => {
+  // Import the real modules for integration testing
+  let realGetApiClient: typeof import("@/api/client").getApiClient;
+  let realUseAuthStore: typeof import("@/stores/auth").useAuthStore;
+  let useDemoStore: typeof import("@/stores/demo").useDemoStore;
+
+  beforeEach(async () => {
+    vi.resetModules();
+    vi.clearAllMocks();
+
+    // Import real modules
+    const clientModule = await vi.importActual<typeof import("@/api/client")>(
+      "@/api/client",
+    );
+    realGetApiClient = clientModule.getApiClient;
+
+    const authModule = await vi.importActual<typeof import("@/stores/auth")>(
+      "@/stores/auth",
+    );
+    realUseAuthStore = authModule.useAuthStore;
+
+    const demoModule = await vi.importActual<typeof import("@/stores/demo")>(
+      "@/stores/demo",
+    );
+    useDemoStore = demoModule.useDemoStore;
+
+    // Initialize demo data
+    useDemoStore.getState().initializeDemoData();
+
+    // Mock to use real implementations with demo mode enabled
+    const { getApiClient } = await import("@/api/client");
+    vi.mocked(getApiClient).mockImplementation((isDemoMode: boolean) =>
+      realGetApiClient(isDemoMode),
+    );
+
+    const { useAuthStore } = await import("@/stores/auth");
+    vi.mocked(useAuthStore).mockImplementation((selector: unknown) => {
+      if (typeof selector === "function") {
+        return (selector as (state: { isDemoMode: boolean }) => boolean)({
+          isDemoMode: true,
+        });
+      }
+      return realUseAuthStore(selector as never);
+    });
+  });
+
+  afterEach(() => {
+    vi.resetModules();
+  });
+
+  it("returns results from mock API with valid UUIDs that pass Zod validation", async () => {
+    const { result } = renderHook(
+      () => useScorerSearch({ lastName: "Müller" }),
+      { wrapper: createWrapper() },
+    );
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.data).toBeDefined();
+    });
+
+    expect(result.current.isError).toBe(false);
+    expect(result.current.data!.length).toBeGreaterThan(0);
+    expect(result.current.data!.some((s) => s.lastName === "Müller")).toBe(
+      true,
+    );
+  });
+
+  it("handles single-term search correctly (searches firstName and lastName)", async () => {
+    const { result } = renderHook(
+      () => useScorerSearch({ lastName: "Hans" }),
+      { wrapper: createWrapper() },
+    );
+
+    await waitFor(() => {
+      expect(result.current.data).toBeDefined();
+    });
+
+    expect(result.current.isError).toBe(false);
+    // "Hans" is a firstName, should be found via single-term search
+    expect(result.current.data!.some((s) => s.firstName === "Hans")).toBe(true);
+  });
+
+  it("handles two-term search correctly", async () => {
+    const { result } = renderHook(
+      () => useScorerSearch({ firstName: "Hans", lastName: "Müller" }),
+      { wrapper: createWrapper() },
+    );
+
+    await waitFor(() => {
+      expect(result.current.data).toBeDefined();
+    });
+
+    expect(result.current.isError).toBe(false);
+    expect(result.current.data!.length).toBe(1);
+    expect(result.current.data![0]!.displayName).toBe("Hans Müller");
+  });
+
+  it("handles accent-insensitive search", async () => {
+    const { result } = renderHook(
+      () => useScorerSearch({ lastName: "muller" }),
+      { wrapper: createWrapper() },
+    );
+
+    await waitFor(() => {
+      expect(result.current.data).toBeDefined();
+    });
+
+    expect(result.current.isError).toBe(false);
+    expect(result.current.data!.some((s) => s.lastName === "Müller")).toBe(
+      true,
+    );
+  });
+
+  it("returns empty array for non-matching search", async () => {
+    const { result } = renderHook(
+      () => useScorerSearch({ lastName: "XYZNonexistent" }),
+      { wrapper: createWrapper() },
+    );
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.isError).toBe(false);
+    expect(result.current.data).toEqual([]);
   });
 });
