@@ -43,6 +43,12 @@
       "path": "dist/assets/*.css",
       "limit": "10 kB",
       "gzip": true
+    },
+    {
+      "name": "Total JS Bundle",
+      "path": "dist/assets/*.js",
+      "limit": "180 kB",
+      "gzip": true
     }
   ],
   "dependencies": {
