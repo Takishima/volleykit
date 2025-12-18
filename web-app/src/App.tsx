@@ -77,17 +77,19 @@ const queryClient = new QueryClient({
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { status, checkSession, isDemoMode } = useAuthStore();
-  const { assignments, initializeDemoData } = useDemoStore();
+  const { assignments, activeAssociationCode, initializeDemoData } =
+    useDemoStore();
   const shouldVerifySession = status === "authenticated" && !isDemoMode;
   const [isVerifying, setIsVerifying] = useState(() => shouldVerifySession);
   const [verifyError, setVerifyError] = useState<string | null>(null);
 
   // Regenerate demo data on page load if demo mode is enabled but data is empty
+  // Uses the stored association code or defaults to SV (Swiss Volley national)
   useEffect(() => {
     if (isDemoMode && assignments.length === 0) {
-      initializeDemoData();
+      initializeDemoData(activeAssociationCode ?? "SV");
     }
-  }, [isDemoMode, assignments.length, initializeDemoData]);
+  }, [isDemoMode, assignments.length, activeAssociationCode, initializeDemoData]);
 
   // Verify persisted session is still valid on mount
   useEffect(() => {

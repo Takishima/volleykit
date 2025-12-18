@@ -438,11 +438,15 @@ export const useAuthStore = create<AuthState>()(
       },
 
       setDemoAuthenticated: () => {
-        // Only include referee occupations - this app is designed for referee management
-        // Multiple occupations for referees who work across different associations
+        // Demo occupations with different regions:
+        // - SV (Swiss Volley): National level, handles NLA/NLB games, can edit compensation
+        // - SVRBA (Regional Basel): Regional level, handles up to 1L games, no compensation editing
+        // - SVRZ (Regional Zurich): Regional level, handles up to 1L games, no compensation editing
         const demoOccupations: Occupation[] = [
-          { id: "demo-referee-vd", type: "referee", associationCode: "AVL-VD" },
-          { id: "demo-referee-ge", type: "referee", associationCode: "AVL-GE" },
+          { id: "demo-referee-sv", type: "referee", associationCode: "SV" },
+          { id: "demo-referee-svrba", type: "referee", associationCode: "SVRBA" },
+          { id: "demo-referee-svrz", type: "referee", associationCode: "SVRZ" },
+          { id: "demo-player", type: "player", clubName: "VBC Demo" },
         ];
         set({
           status: "authenticated",

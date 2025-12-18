@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Outlet, NavLink, useLocation } from "react-router-dom";
 import { useAuthStore, type Occupation } from "@/stores/auth";
+import { useDemoStore, type DemoAssociationCode } from "@/stores/demo";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getOccupationLabelKey } from "@/utils/occupation-labels";
 
@@ -17,6 +18,13 @@ const navItems = [
   { path: "/settings", labelKey: "nav.settings" as const, icon: "⚙️" },
 ];
 
+// Valid association codes that can be used for demo mode data generation
+const DEMO_ASSOCIATION_CODES = new Set<DemoAssociationCode>(["SV", "SVRBA", "SVRZ"]);
+
+function isDemoAssociationCode(code: string | undefined): code is DemoAssociationCode {
+  return code !== undefined && DEMO_ASSOCIATION_CODES.has(code as DemoAssociationCode);
+}
+
 export function AppShell() {
   const location = useLocation();
   const { t } = useTranslation();
@@ -28,6 +36,7 @@ export function AppShell() {
     setActiveOccupation,
     isDemoMode,
   } = useAuthStore();
+  const { setActiveAssociation } = useDemoStore();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const getOccupationLabel = useCallback(
@@ -68,6 +77,17 @@ export function AppShell() {
   const handleOccupationSelect = (id: string) => {
     setActiveOccupation(id);
     setIsDropdownOpen(false);
+
+    // In demo mode, regenerate data based on the selected occupation's association
+    if (isDemoMode) {
+      const selectedOccupation = user?.occupations?.find((o) => o.id === id);
+      if (
+        selectedOccupation &&
+        isDemoAssociationCode(selectedOccupation.associationCode)
+      ) {
+        setActiveAssociation(selectedOccupation.associationCode);
+      }
+    }
   };
 
   return (
