@@ -32,6 +32,30 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            CRITICAL REQUIREMENT: Before doing ANY work, you MUST read and strictly follow the CLAUDE.md file in the repository root.
+
+            The CLAUDE.md file contains mandatory project guidelines including:
+            - Code philosophy and naming conventions
+            - React best practices (React 19 patterns, no outdated isMountedRef, etc.)
+            - Common anti-patterns to avoid (magic numbers, index keys, memory leaks, race conditions)
+            - Testing requirements
+            - API integration patterns
+            - Accessibility requirements
+            - CI validation commands that MUST pass
+            - Definition of Done criteria
+
+            VERIFICATION CHECKLIST - Before completing any task:
+            1. ✅ Read CLAUDE.md first
+            2. ✅ Follow all naming conventions (PascalCase components, camelCase hooks, etc.)
+            3. ✅ No magic numbers - use named constants
+            4. ✅ No array index as React keys
+            5. ✅ Clean up all intervals/timeouts/subscriptions
+            6. ✅ Use modern React 18+ patterns (no isMountedRef)
+            7. ✅ Run full CI validation: npm run generate:api && npm run lint && npm test && npm run build
+            8. ✅ Ensure accessibility (ARIA attributes, keyboard navigation)
+
+            If your changes don't meet these guidelines, fix them before completing the task.
           # This is an optional setting that allows Claude to read CI results on PRs
           additional_permissions: |
             actions: read
