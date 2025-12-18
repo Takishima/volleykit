@@ -1,3 +1,15 @@
+/**
+ * Occupation parsing utilities for API responses.
+ *
+ * NOTE: This utility is prepared for when real profile loading from the API
+ * is implemented. Currently, occupations are only set in demo mode. When
+ * PersonDetails.eligibleAttributeValues is fetched from the API, use
+ * parseOccupations() to filter to referee-only roles.
+ *
+ * @example
+ * // Future usage when profile loading is implemented:
+ * const occupations = parseOccupations(personDetails.eligibleAttributeValues);
+ */
 import type { Occupation } from "@/stores/auth";
 import type { components } from "@/api/schema";
 
@@ -47,11 +59,6 @@ export function parseOccupation(
   }
 
   if (!type) {
-    return null;
-  }
-
-  // For referee roles, we only support the referee type
-  if (refereeOnly && type !== "referee") {
     return null;
   }
 
