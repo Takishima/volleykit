@@ -438,9 +438,11 @@ export const useAuthStore = create<AuthState>()(
       },
 
       setDemoAuthenticated: () => {
+        // Only include referee occupations - this app is designed for referee management
+        // Multiple occupations for referees who work across different associations
         const demoOccupations: Occupation[] = [
-          { id: "demo-referee", type: "referee" },
-          { id: "demo-player", type: "player", clubName: "VBC Demo" },
+          { id: "demo-referee-vd", type: "referee", associationCode: "AVL-VD" },
+          { id: "demo-referee-ge", type: "referee", associationCode: "AVL-GE" },
         ];
         set({
           status: "authenticated",

@@ -39,7 +39,10 @@ const demoUser: UserProfile = {
   id: "demo-user",
   firstName: "Demo",
   lastName: "User",
-  occupations: [{ id: "demo-referee", type: "referee" }],
+  occupations: [
+    { id: "demo-referee-vd", type: "referee", associationCode: "AVL-VD" },
+    { id: "demo-referee-ge", type: "referee", associationCode: "AVL-GE" },
+  ],
 };
 
 const realUser: UserProfile = {
@@ -69,7 +72,7 @@ describe("AppShell", () => {
         createMockAuthStore({
           user: demoUser,
           isDemoMode: true,
-          activeOccupationId: "demo-referee",
+          activeOccupationId: "demo-referee-vd",
         }),
       );
 
@@ -101,7 +104,7 @@ describe("AppShell", () => {
         createMockAuthStore({
           user: demoUser,
           isDemoMode: true,
-          activeOccupationId: "demo-referee",
+          activeOccupationId: "demo-referee-vd",
         }),
       );
 
@@ -125,7 +128,7 @@ describe("AppShell", () => {
           createMockAuthStore({
             user: demoUser,
             isDemoMode: true,
-            activeOccupationId: "demo-referee",
+            activeOccupationId: "demo-referee-vd",
           }),
         );
 
@@ -134,5 +137,81 @@ describe("AppShell", () => {
         expect(screen.getByText(expected)).toBeInTheDocument();
       },
     );
+  });
+
+  describe("occupation dropdown", () => {
+    it("does NOT render dropdown when user has only one occupation", () => {
+      const singleOccupationUser: UserProfile = {
+        id: "user-1",
+        firstName: "John",
+        lastName: "Doe",
+        occupations: [{ id: "ref-1", type: "referee" }],
+      };
+
+      vi.mocked(useAuthStore).mockReturnValue(
+        createMockAuthStore({
+          user: singleOccupationUser,
+          activeOccupationId: "ref-1",
+        }),
+      );
+
+      renderAppShell();
+
+      // Dropdown button should not exist
+      expect(
+        screen.queryByRole("button", { name: /referee/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("renders dropdown when user has multiple occupations", () => {
+      const multiOccupationUser: UserProfile = {
+        id: "user-1",
+        firstName: "John",
+        lastName: "Doe",
+        occupations: [
+          { id: "ref-1", type: "referee" },
+          { id: "ref-2", type: "referee", associationCode: "VBC" },
+        ],
+      };
+
+      vi.mocked(useAuthStore).mockReturnValue(
+        createMockAuthStore({
+          user: multiOccupationUser,
+          activeOccupationId: "ref-1",
+        }),
+      );
+
+      renderAppShell();
+
+      // Dropdown button should exist with haspopup attribute
+      const dropdownButton = screen.getByRole("button", {
+        name: /referee/i,
+      });
+      expect(dropdownButton).toBeInTheDocument();
+      expect(dropdownButton).toHaveAttribute("aria-haspopup", "listbox");
+    });
+
+    it("does NOT render dropdown when user has no occupations", () => {
+      const noOccupationUser: UserProfile = {
+        id: "user-1",
+        firstName: "John",
+        lastName: "Doe",
+        occupations: [],
+      };
+
+      vi.mocked(useAuthStore).mockReturnValue(
+        createMockAuthStore({
+          user: noOccupationUser,
+          activeOccupationId: null,
+        }),
+      );
+
+      renderAppShell();
+
+      // No dropdown button should exist
+      expect(
+        screen.queryByRole("button", { name: /select role/i }),
+      ).not.toBeInTheDocument();
+    });
   });
 });
