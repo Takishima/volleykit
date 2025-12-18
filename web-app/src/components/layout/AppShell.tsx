@@ -4,6 +4,8 @@ import { useAuthStore, type Occupation } from "@/stores/auth";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getOccupationLabelKey } from "@/utils/occupation-labels";
 
+const MINIMUM_OCCUPATIONS_FOR_SWITCHER = 2;
+
 const navItems = [
   { path: "/", labelKey: "nav.assignments" as const, icon: "📋" },
   {
@@ -83,8 +85,8 @@ export function AppShell() {
 
             {isAuthenticated && (
               <div className="flex items-center gap-3">
-                {/* Occupation dropdown - only show when multiple occupations exist */}
-                {user?.occupations && user.occupations.length > 1 && (
+                {user?.occupations &&
+                  user.occupations.length >= MINIMUM_OCCUPATIONS_FOR_SWITCHER && (
                   <div className="relative" ref={dropdownRef}>
                     <button
                       onClick={() => setIsDropdownOpen(!isDropdownOpen)}
