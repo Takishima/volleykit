@@ -77,16 +77,20 @@ const queryClient = new QueryClient({
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { status, checkSession, isDemoMode } = useAuthStore();
-  const { assignments, initializeDemoData } = useDemoStore();
+  const { assignments, activeAssociationCode, initializeDemoData } =
+    useDemoStore();
   const shouldVerifySession = status === "authenticated" && !isDemoMode;
   const [isVerifying, setIsVerifying] = useState(() => shouldVerifySession);
   const [verifyError, setVerifyError] = useState<string | null>(null);
 
   // Regenerate demo data on page load if demo mode is enabled but data is empty
+  // This only runs once when data needs initialization, not on association changes
+  // (association changes are handled by AppShell when user switches occupation)
   useEffect(() => {
     if (isDemoMode && assignments.length === 0) {
-      initializeDemoData();
+      initializeDemoData(activeAssociationCode ?? "SV");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only run when data is empty, not on association changes
   }, [isDemoMode, assignments.length, initializeDemoData]);
 
   // Verify persisted session is still valid on mount

@@ -28,7 +28,9 @@ export function LoginPage() {
   const isLoading = status === "loading";
 
   const handleDemoLogin = useCallback(() => {
-    initializeDemoData();
+    // Initialize with SV (Swiss Volley national) association as default
+    // User can switch to other associations via the occupation dropdown
+    initializeDemoData("SV");
     setDemoAuthenticated();
     navigate("/");
   }, [initializeDemoData, setDemoAuthenticated, navigate]);
@@ -37,7 +39,7 @@ export function LoginPage() {
   // This runs once on mount - the functions are stable store actions
   useEffect(() => {
     if (DEMO_MODE_ONLY) {
-      initializeDemoData();
+      initializeDemoData("SV");
       setDemoAuthenticated();
       navigate("/");
     }
