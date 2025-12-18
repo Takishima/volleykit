@@ -6,6 +6,7 @@ import type {
   NominationList,
   PossibleNomination,
   PersonSearchResult,
+  RefereeGame,
 } from "@/api/client";
 import { addDays, addHours, subDays } from "date-fns";
 
@@ -436,7 +437,7 @@ function createRefereeGame({
   isGameInFuture,
   associationCode,
   idPrefix,
-}: RefereeGameParams) {
+}: RefereeGameParams): RefereeGame {
   const venues = getVenuesForAssociation(associationCode);
   const leagues = getLeaguesForAssociation(associationCode);
   const venue = venues[venueIndex % venues.length]!;
