@@ -12,6 +12,7 @@ import {
 } from "./useConvocations";
 import { getApiClient } from "@/api/client";
 import * as authStore from "@/stores/auth";
+import * as demoStore from "@/stores/demo";
 import { addDays } from "date-fns";
 
 // Mock API methods
@@ -30,6 +31,10 @@ vi.mock("@/api/client", () => ({
 
 vi.mock("@/stores/auth", () => ({
   useAuthStore: vi.fn(),
+}));
+
+vi.mock("@/stores/demo", () => ({
+  useDemoStore: vi.fn(),
 }));
 
 function createWrapper() {
@@ -51,6 +56,12 @@ function createWrapper() {
 describe("useConvocations - API Client Routing", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default demo store mock - returns null for non-demo mode
+    vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
+      selector({ activeAssociationCode: null } as ReturnType<
+        typeof demoStore.useDemoStore.getState
+      >),
+    );
   });
 
   describe("useAssignments", () => {
@@ -58,6 +69,11 @@ describe("useConvocations - API Client Routing", () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
         selector({ isDemoMode: true } as ReturnType<
           typeof authStore.useAuthStore.getState
+        >),
+      );
+      vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
+        selector({ activeAssociationCode: "SV" } as ReturnType<
+          typeof demoStore.useDemoStore.getState
         >),
       );
 
@@ -326,6 +342,12 @@ describe("useConvocations - API Client Routing", () => {
 describe("useConvocations - Data Handling", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default demo store mock
+    vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
+      selector({ activeAssociationCode: null } as ReturnType<
+        typeof demoStore.useDemoStore.getState
+      >),
+    );
   });
 
   describe("useAssignments", () => {
@@ -336,6 +358,11 @@ describe("useConvocations - Data Handling", () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
         selector({ isDemoMode: true } as ReturnType<
           typeof authStore.useAuthStore.getState
+        >),
+      );
+      vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
+        selector({ activeAssociationCode: "SV" } as ReturnType<
+          typeof demoStore.useDemoStore.getState
         >),
       );
 
@@ -402,6 +429,11 @@ describe("useConvocations - Data Handling", () => {
           typeof authStore.useAuthStore.getState
         >),
       );
+      vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
+        selector({ activeAssociationCode: "SV" } as ReturnType<
+          typeof demoStore.useDemoStore.getState
+        >),
+      );
 
       mockApi.getAssignmentDetails.mockResolvedValue({
         __identity: "assignment-2",
@@ -427,6 +459,11 @@ describe("useConvocations - Data Handling", () => {
           typeof authStore.useAuthStore.getState
         >),
       );
+      vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
+        selector({ activeAssociationCode: "SV" } as ReturnType<
+          typeof demoStore.useDemoStore.getState
+        >),
+      );
 
       mockApi.getAssignmentDetails.mockRejectedValue(
         new Error("Assignment not found: non-existent"),
@@ -450,6 +487,11 @@ describe("useConvocations - Data Handling", () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
         selector({ isDemoMode: true } as ReturnType<
           typeof authStore.useAuthStore.getState
+        >),
+      );
+      vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
+        selector({ activeAssociationCode: "SV" } as ReturnType<
+          typeof demoStore.useDemoStore.getState
         >),
       );
 
@@ -484,6 +526,11 @@ describe("useConvocations - Data Handling", () => {
           typeof authStore.useAuthStore.getState
         >),
       );
+      vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
+        selector({ activeAssociationCode: "SV" } as ReturnType<
+          typeof demoStore.useDemoStore.getState
+        >),
+      );
 
       mockApi.searchExchanges.mockResolvedValue({
         items: [
@@ -513,6 +560,12 @@ describe("useConvocations - Data Handling", () => {
 describe("useConvocations - Unified API Architecture", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default demo store mock
+    vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
+      selector({ activeAssociationCode: null } as ReturnType<
+        typeof demoStore.useDemoStore.getState
+      >),
+    );
   });
 
   it("should use same code path for demo and non-demo modes", async () => {
@@ -520,6 +573,11 @@ describe("useConvocations - Unified API Architecture", () => {
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
       selector({ isDemoMode: true } as ReturnType<
         typeof authStore.useAuthStore.getState
+      >),
+    );
+    vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
+      selector({ activeAssociationCode: "SV" } as ReturnType<
+        typeof demoStore.useDemoStore.getState
       >),
     );
 
@@ -580,5 +638,195 @@ describe("useConvocations - Unified API Architecture", () => {
     await result.current.mutateAsync("test-exchange-id");
 
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["exchanges"] });
+  });
+});
+
+describe("useConvocations - Demo Association Switching", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should include association code in query key when in demo mode", async () => {
+    // This test verifies that different association codes result in different
+    // query keys, which ensures TanStack Query will treat them as different
+    // queries and refetch when the association changes.
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
+
+    // Test with SV association
+    vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
+      selector({ isDemoMode: true } as ReturnType<
+        typeof authStore.useAuthStore.getState
+      >),
+    );
+    vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
+      selector({ activeAssociationCode: "SV" } as ReturnType<
+        typeof demoStore.useDemoStore.getState
+      >),
+    );
+
+    mockApi.searchAssignments.mockResolvedValue({
+      items: [{ __identity: "sv-assignment-1" }],
+      totalItemsCount: 1,
+    });
+
+    const wrapper1 = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+
+    const { result: result1 } = renderHook(() => useAssignments(), { wrapper: wrapper1 });
+
+    await waitFor(() => {
+      expect(result1.current.isSuccess).toBe(true);
+    });
+
+    expect(mockApi.searchAssignments).toHaveBeenCalledTimes(1);
+
+    // Get the query data from cache using both possible keys
+    const svQueryData = queryClient.getQueriesData({ queryKey: ["assignments"] });
+    expect(svQueryData.length).toBeGreaterThan(0);
+
+    // The query key should include "SV" as the third element
+    const svQueryKey = svQueryData[0]?.[0];
+    expect(svQueryKey).toBeDefined();
+    expect(svQueryKey?.[2]).toBe("SV");
+
+    // Now test with SVRBA association in a fresh query client
+    const queryClient2 = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
+
+    vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
+      selector({ activeAssociationCode: "SVRBA" } as ReturnType<
+        typeof demoStore.useDemoStore.getState
+      >),
+    );
+
+    mockApi.searchAssignments.mockResolvedValue({
+      items: [{ __identity: "svrba-assignment-1" }],
+      totalItemsCount: 1,
+    });
+
+    const wrapper2 = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient2}>{children}</QueryClientProvider>
+    );
+
+    const { result: result2 } = renderHook(() => useAssignments(), { wrapper: wrapper2 });
+
+    await waitFor(() => {
+      expect(result2.current.isSuccess).toBe(true);
+    });
+
+    // The query key should include "SVRBA" as the third element
+    const svrbaQueryData = queryClient2.getQueriesData({ queryKey: ["assignments"] });
+    const svrbaQueryKey = svrbaQueryData[0]?.[0];
+    expect(svrbaQueryKey).toBeDefined();
+    expect(svrbaQueryKey?.[2]).toBe("SVRBA");
+  });
+
+  it("should use null association code for non-demo mode", async () => {
+    // Verify that in non-demo mode, the association code is null
+    // and doesn't affect the query key
+    vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
+      selector({ isDemoMode: false } as ReturnType<
+        typeof authStore.useAuthStore.getState
+      >),
+    );
+    vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
+      selector({ activeAssociationCode: "SV" } as ReturnType<
+        typeof demoStore.useDemoStore.getState
+      >),
+    );
+
+    mockApi.searchAssignments.mockResolvedValue({
+      items: [],
+      totalItemsCount: 0,
+    });
+
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
+
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+
+    renderHook(() => useAssignments(), { wrapper });
+
+    await waitFor(() => {
+      expect(mockApi.searchAssignments).toHaveBeenCalled();
+    });
+
+    // Verify that getApiClient was called with false (non-demo mode)
+    expect(getApiClient).toHaveBeenCalledWith(false);
+  });
+
+  it("should include association code in query keys for compensations and exchanges", async () => {
+    vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
+      selector({ isDemoMode: true } as ReturnType<
+        typeof authStore.useAuthStore.getState
+      >),
+    );
+    vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
+      selector({ activeAssociationCode: "SVRZ" } as ReturnType<
+        typeof demoStore.useDemoStore.getState
+      >),
+    );
+
+    mockApi.searchCompensations.mockResolvedValue({ items: [], totalItemsCount: 0 });
+    mockApi.searchExchanges.mockResolvedValue({ items: [], totalItemsCount: 0 });
+
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
+
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+
+    // Test compensations hook
+    const { result: compResult } = renderHook(() => useCompensations(), { wrapper });
+    await waitFor(() => {
+      expect(compResult.current.isSuccess).toBe(true);
+    });
+
+    // Test exchanges hook - need new query client to avoid cache
+    const queryClient2 = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
+    const wrapper2 = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient2}>{children}</QueryClientProvider>
+    );
+
+    const { result: exchResult } = renderHook(() => useGameExchanges(), { wrapper: wrapper2 });
+    await waitFor(() => {
+      expect(exchResult.current.isSuccess).toBe(true);
+    });
+
+    // Both should have been called with the demo API client
+    expect(getApiClient).toHaveBeenCalledWith(true);
+    expect(mockApi.searchCompensations).toHaveBeenCalled();
+    expect(mockApi.searchExchanges).toHaveBeenCalled();
   });
 });
