@@ -174,8 +174,8 @@ export function RosterVerificationPanel({
   if (isError) {
     return (
       <div className="py-8 flex flex-col items-center justify-center">
-        <AlertCircleIcon className="w-10 h-10 text-red-500 mb-3" />
-        <p className="text-sm text-red-600 dark:text-red-400 mb-4">
+        <AlertCircleIcon className="w-10 h-10 text-danger-500 mb-3" />
+        <p className="text-sm text-danger-600 dark:text-danger-400 mb-4">
           {t("validation.roster.errorLoading")}
         </p>
         <button

@@ -73,11 +73,9 @@ export function LoginPage() {
           <p className="mt-4 text-text-muted dark:text-text-muted-dark">
             {t("auth.loadingDemo")}
           </p>
-          {/* Use visual-only spinner since parent has role="status" */}
-          <div
-            className="w-8 h-8 border-3 border-border-default border-t-primary-500 rounded-full animate-spin mt-4 mx-auto"
-            aria-hidden="true"
-          />
+          <div className="mt-4">
+            <LoadingSpinner size="md" />
+          </div>
         </div>
       </div>
     );
@@ -141,8 +139,8 @@ export function LoginPage() {
             </div>
 
             {error && (
-              <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-                <p className="text-sm text-red-600 dark:text-red-400">
+              <div className="p-3 rounded-lg bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800">
+                <p className="text-sm text-danger-600 dark:text-danger-400">
                   {error}
                 </p>
               </div>
