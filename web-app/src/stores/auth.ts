@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { setCsrfToken, clearSession } from "@/api/client";
+import { filterRefereeOccupations } from "@/utils/parseOccupations";
 
 export type AuthStatus = "idle" | "loading" | "authenticated" | "error";
 
@@ -438,15 +439,23 @@ export const useAuthStore = create<AuthState>()(
       },
 
       setDemoAuthenticated: () => {
-        // Demo occupations with different regions (referee-only for this referee-focused app):
+        // Raw demo occupations simulating what the API would return.
+        // This includes non-referee roles (player) that should be filtered out.
         // - SV (Swiss Volley): National level, handles NLA/NLB games, can edit compensation
         // - SVRBA (Regional Basel): Regional level, handles up to 1L games, no compensation editing
         // - SVRZ (Regional Zurich): Regional level, handles up to 1L games, no compensation editing
-        const demoOccupations: Occupation[] = [
+        // - Player: Non-referee role that gets filtered out by filterRefereeOccupations()
+        const rawDemoOccupations: Occupation[] = [
           { id: "demo-referee-sv", type: "referee", associationCode: "SV" },
           { id: "demo-referee-svrba", type: "referee", associationCode: "SVRBA" },
           { id: "demo-referee-svrz", type: "referee", associationCode: "SVRZ" },
+          { id: "demo-player", type: "player", clubName: "VBC Demo" },
         ];
+
+        // Filter to referee-only (this app is referee-focused).
+        // This same filtering will be applied when real API profile loading is implemented.
+        const demoOccupations = filterRefereeOccupations(rawDemoOccupations);
+
         set({
           status: "authenticated",
           isDemoMode: true,

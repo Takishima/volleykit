@@ -88,3 +88,26 @@ export function parseOccupations(
     .map((attr) => parseOccupation(attr, refereeOnly))
     .filter((occ): occ is Occupation => occ !== null);
 }
+
+/**
+ * Filters an array of Occupation objects to only include referee roles.
+ *
+ * This is used to filter occupations that are already in the Occupation format
+ * (e.g., from demo mode or cached data), as opposed to parseOccupations() which
+ * parses raw API AttributeValue objects.
+ *
+ * @param occupations - Array of Occupation objects to filter
+ * @returns Only occupations with type "referee"
+ *
+ * @example
+ * // Filter demo occupations to referee-only
+ * const allOccupations = [
+ *   { id: "1", type: "referee", associationCode: "SV" },
+ *   { id: "2", type: "player", clubName: "VBC Demo" },
+ * ];
+ * const refereeOnly = filterRefereeOccupations(allOccupations);
+ * // Returns: [{ id: "1", type: "referee", associationCode: "SV" }]
+ */
+export function filterRefereeOccupations(occupations: Occupation[]): Occupation[] {
+  return occupations.filter((occ) => occ.type === "referee");
+}
