@@ -86,6 +86,18 @@ const COMPENSATION_RATES = {
 
 const TRAVEL_EXPENSE_RATE_PER_KM = 0.7;
 
+// Sample distances in metres for demo compensation records
+const SAMPLE_DISTANCES = {
+  SHORT: 24000,
+  MEDIUM: 35000,
+  MEDIUM_LONG: 48000,
+  LONG: 62000,
+  VERY_LONG: 89000,
+} as const;
+
+// Starting team identifier for auto-incrementing IDs
+const BASE_TEAM_IDENTIFIER = 59591;
+
 function calculateTravelExpenses(distanceInMetres: number): number {
   const distanceInKm = distanceInMetres / 1000;
   return Math.round(distanceInKm * TRAVEL_EXPENSE_RATE_PER_KM * 100) / 100;
@@ -259,16 +271,221 @@ function getLeaguesForAssociation(
   return associationCode === "SV" ? SV_LEAGUES : REGIONAL_LEAGUES;
 }
 
-function generateDummyData(associationCode: DemoAssociationCode = "SV") {
-  const now = new Date();
+// Configuration for venue/team data based on association type
+interface VenueConfig {
+  teamHome: { name: string; identifier: number };
+  teamAway: { name: string; identifier: number };
+  hall: {
+    name: string;
+    street: string;
+    houseNumber: string;
+    postalCode: string;
+    city: string;
+  };
+}
+
+// Venue configurations for different associations
+const SV_VENUES: VenueConfig[] = [
+  {
+    teamHome: { name: "VBC Zürich Lions", identifier: BASE_TEAM_IDENTIFIER },
+    teamAway: { name: "Volley Luzern", identifier: BASE_TEAM_IDENTIFIER + 1 },
+    hall: {
+      name: "Saalsporthalle Zürich",
+      street: "Hardturmstrasse",
+      houseNumber: "154",
+      postalCode: "8005",
+      city: "Zürich",
+    },
+  },
+  {
+    teamHome: { name: "Schönenwerd Smash", identifier: BASE_TEAM_IDENTIFIER + 2 },
+    teamAway: { name: "Traktor Basel", identifier: BASE_TEAM_IDENTIFIER + 3 },
+    hall: {
+      name: "Aarehalle Schönenwerd",
+      street: "Aarauerstrasse",
+      houseNumber: "50",
+      postalCode: "5012",
+      city: "Schönenwerd",
+    },
+  },
+  {
+    teamHome: { name: "Volley Näfels", identifier: BASE_TEAM_IDENTIFIER + 4 },
+    teamAway: { name: "Volero Zürich", identifier: BASE_TEAM_IDENTIFIER + 5 },
+    hall: {
+      name: "Lintharena Näfels",
+      street: "Sportplatzstrasse",
+      houseNumber: "1",
+      postalCode: "8752",
+      city: "Näfels",
+    },
+  },
+  {
+    teamHome: { name: "VFM Therwil", identifier: BASE_TEAM_IDENTIFIER + 6 },
+    teamAway: { name: "Genève Volley", identifier: BASE_TEAM_IDENTIFIER + 7 },
+    hall: {
+      name: "Sporthalle Kuspo Therwil",
+      street: "Im Letten",
+      houseNumber: "2",
+      postalCode: "4106",
+      city: "Therwil",
+    },
+  },
+  {
+    teamHome: { name: "Volley Köniz", identifier: BASE_TEAM_IDENTIFIER + 8 },
+    teamAway: { name: "VC Kanti", identifier: BASE_TEAM_IDENTIFIER + 9 },
+    hall: {
+      name: "Weissenstein Halle",
+      street: "Weissensteinstrasse",
+      houseNumber: "80",
+      postalCode: "3008",
+      city: "Bern",
+    },
+  },
+];
+
+const REGIONAL_VENUES: VenueConfig[] = [
+  {
+    teamHome: { name: "VBC Bern", identifier: BASE_TEAM_IDENTIFIER },
+    teamAway: { name: "VC Münsingen", identifier: BASE_TEAM_IDENTIFIER + 1 },
+    hall: {
+      name: "Sporthalle Wankdorf",
+      street: "Papiermühlestrasse",
+      houseNumber: "71",
+      postalCode: "3014",
+      city: "Bern",
+    },
+  },
+  {
+    teamHome: { name: "TV Muri", identifier: BASE_TEAM_IDENTIFIER + 2 },
+    teamAway: { name: "VBC Langenthal", identifier: BASE_TEAM_IDENTIFIER + 3 },
+    hall: {
+      name: "Sporthalle Muri",
+      street: "Klosterweg",
+      houseNumber: "8",
+      postalCode: "5630",
+      city: "Muri AG",
+    },
+  },
+  {
+    teamHome: { name: "VBC Thun", identifier: BASE_TEAM_IDENTIFIER + 4 },
+    teamAway: { name: "VC Steffisburg", identifier: BASE_TEAM_IDENTIFIER + 5 },
+    hall: {
+      name: "Lachenhalle Thun",
+      street: "Pestalozzistrasse",
+      houseNumber: "1",
+      postalCode: "3600",
+      city: "Thun",
+    },
+  },
+  {
+    teamHome: { name: "VBC Solothurn", identifier: BASE_TEAM_IDENTIFIER + 6 },
+    teamAway: { name: "VC Burgdorf", identifier: BASE_TEAM_IDENTIFIER + 7 },
+    hall: {
+      name: "Stadtturnsaal Solothurn",
+      street: "Rossmarktplatz",
+      houseNumber: "2",
+      postalCode: "4500",
+      city: "Solothurn",
+    },
+  },
+  {
+    teamHome: { name: "VBC Aarau", identifier: BASE_TEAM_IDENTIFIER + 8 },
+    teamAway: { name: "TV Zofingen", identifier: BASE_TEAM_IDENTIFIER + 9 },
+    hall: {
+      name: "Schachen Halle Aarau",
+      street: "Schachenallee",
+      houseNumber: "29",
+      postalCode: "5000",
+      city: "Aarau",
+    },
+  },
+];
+
+function getVenuesForAssociation(
+  associationCode: DemoAssociationCode,
+): VenueConfig[] {
+  return associationCode === "SV" ? SV_VENUES : REGIONAL_VENUES;
+}
+
+interface RefereeGameParams {
+  gameId: string;
+  gameNumber: number;
+  gameDate: Date;
+  venueIndex: number;
+  leagueIndex: number;
+  gender: "m" | "f";
+  isGameInFuture: boolean;
+  associationCode: DemoAssociationCode;
+  idPrefix: string;
+}
+
+function createRefereeGame({
+  gameId,
+  gameNumber,
+  gameDate,
+  venueIndex,
+  leagueIndex,
+  gender,
+  isGameInFuture,
+  associationCode,
+  idPrefix,
+}: RefereeGameParams) {
+  const venues = getVenuesForAssociation(associationCode);
   const leagues = getLeaguesForAssociation(associationCode);
-  const isSV = associationCode === "SV";
+  const venue = venues[venueIndex % venues.length]!;
+  const league = leagues[leagueIndex % leagues.length]!;
 
-  // Helper to get a league from the available leagues for this association
-  const getLeague = (index: number): LeagueConfig =>
-    leagues[index % leagues.length]!;
+  return {
+    __identity: `${idPrefix}-game-${gameId}`,
+    isGameInFuture: isGameInFuture ? "1" : "0",
+    game: {
+      __identity: `${idPrefix}-g-${gameId}`,
+      number: gameNumber,
+      startingDateTime: gameDate.toISOString(),
+      playingWeekday: getWeekday(gameDate),
+      encounter: {
+        teamHome: {
+          __identity: `team-${idPrefix}-${venueIndex * 2 + 1}`,
+          name: venue.teamHome.name,
+          identifier: venue.teamHome.identifier,
+        },
+        teamAway: {
+          __identity: `team-${idPrefix}-${venueIndex * 2 + 2}`,
+          name: venue.teamAway.name,
+          identifier: venue.teamAway.identifier,
+        },
+      },
+      hall: {
+        __identity: `hall-${idPrefix}-${venueIndex + 1}`,
+        name: venue.hall.name,
+        primaryPostalAddress: createAddress({
+          id: `addr-${idPrefix}-${venueIndex + 1}`,
+          street: venue.hall.street,
+          houseNumber: venue.hall.houseNumber,
+          postalCode: venue.hall.postalCode,
+          city: venue.hall.city,
+        }),
+      },
+      group: {
+        name: "Quali",
+        managingAssociationShortName: associationCode,
+        phase: {
+          name: "Phase 1",
+          league: {
+            leagueCategory: league,
+            gender,
+          },
+        },
+      },
+    },
+  };
+}
 
-  const dummyAssignments: Assignment[] = [
+function generateAssignments(
+  associationCode: DemoAssociationCode,
+  now: Date,
+): Assignment[] {
+  return [
     {
       __identity: "demo-assignment-1",
       refereeConvocationStatus: "active",
@@ -278,50 +495,17 @@ function generateDummyData(associationCode: DemoAssociationCode = "SV") {
       isOpenEntryInRefereeGameExchange: false,
       hasLastMessageToReferee: false,
       hasLinkedDoubleConvocation: false,
-      refereeGame: {
-        __identity: "demo-game-1",
-        isGameInFuture: "1",
-        game: {
-          __identity: "demo-g-1",
-          number: 382417,
-          startingDateTime: addDays(now, 2).toISOString(),
-          playingWeekday: getWeekday(addDays(now, 2)),
-          encounter: {
-            teamHome: {
-              __identity: "team-1",
-              name: isSV ? "VBC Zürich Lions" : "VBC Bern",
-              identifier: 59591,
-            },
-            teamAway: {
-              __identity: "team-2",
-              name: isSV ? "Volley Luzern" : "VC Münsingen",
-              identifier: 59592,
-            },
-          },
-          hall: {
-            __identity: "hall-1",
-            name: isSV ? "Saalsporthalle Zürich" : "Sporthalle Wankdorf",
-            primaryPostalAddress: createAddress({
-              id: "addr-1",
-              street: isSV ? "Hardturmstrasse" : "Papiermühlestrasse",
-              houseNumber: isSV ? "154" : "71",
-              postalCode: isSV ? "8005" : "3014",
-              city: isSV ? "Zürich" : "Bern",
-            }),
-          },
-          group: {
-            name: "Quali",
-            managingAssociationShortName: associationCode,
-            phase: {
-              name: "Phase 1",
-              league: {
-                leagueCategory: getLeague(0),
-                gender: "m",
-              },
-            },
-          },
-        },
-      },
+      refereeGame: createRefereeGame({
+        gameId: "1",
+        gameNumber: 382417,
+        gameDate: addDays(now, 2),
+        venueIndex: 0,
+        leagueIndex: 0,
+        gender: "m",
+        isGameInFuture: true,
+        associationCode,
+        idPrefix: "demo",
+      }),
     },
     {
       __identity: "demo-assignment-2",
@@ -332,50 +516,17 @@ function generateDummyData(associationCode: DemoAssociationCode = "SV") {
       isOpenEntryInRefereeGameExchange: false,
       hasLastMessageToReferee: true,
       hasLinkedDoubleConvocation: false,
-      refereeGame: {
-        __identity: "demo-game-2",
-        isGameInFuture: "1",
-        game: {
-          __identity: "demo-g-2",
-          number: 382418,
-          startingDateTime: addHours(addDays(now, 0), 3).toISOString(),
-          playingWeekday: getWeekday(now),
-          encounter: {
-            teamHome: {
-              __identity: "team-3",
-              name: isSV ? "Schönenwerd Smash" : "TV Muri",
-              identifier: 59593,
-            },
-            teamAway: {
-              __identity: "team-4",
-              name: isSV ? "Traktor Basel" : "VBC Langenthal",
-              identifier: 59594,
-            },
-          },
-          hall: {
-            __identity: "hall-2",
-            name: isSV ? "Aarehalle Schönenwerd" : "Sporthalle Muri",
-            primaryPostalAddress: createAddress({
-              id: "addr-2",
-              street: isSV ? "Aarauerstrasse" : "Klosterweg",
-              houseNumber: isSV ? "50" : "8",
-              postalCode: isSV ? "5012" : "5630",
-              city: isSV ? "Schönenwerd" : "Muri AG",
-            }),
-          },
-          group: {
-            name: "Quali",
-            managingAssociationShortName: associationCode,
-            phase: {
-              name: "Phase 1",
-              league: {
-                leagueCategory: getLeague(1),
-                gender: "m",
-              },
-            },
-          },
-        },
-      },
+      refereeGame: createRefereeGame({
+        gameId: "2",
+        gameNumber: 382418,
+        gameDate: addHours(addDays(now, 0), 3),
+        venueIndex: 1,
+        leagueIndex: 1,
+        gender: "m",
+        isGameInFuture: true,
+        associationCode,
+        idPrefix: "demo",
+      }),
     },
     {
       __identity: "demo-assignment-3",
@@ -387,50 +538,17 @@ function generateDummyData(associationCode: DemoAssociationCode = "SV") {
       hasLastMessageToReferee: false,
       hasLinkedDoubleConvocation: true,
       linkedDoubleConvocationGameNumberAndRefereePosition: "382420 / ARB 1",
-      refereeGame: {
-        __identity: "demo-game-3",
-        isGameInFuture: "1",
-        game: {
-          __identity: "demo-g-3",
-          number: 382419,
-          startingDateTime: addDays(now, 5).toISOString(),
-          playingWeekday: getWeekday(addDays(now, 5)),
-          encounter: {
-            teamHome: {
-              __identity: "team-5",
-              name: isSV ? "Volley Näfels" : "VBC Thun",
-              identifier: 59595,
-            },
-            teamAway: {
-              __identity: "team-6",
-              name: isSV ? "Volero Zürich" : "VC Steffisburg",
-              identifier: 59596,
-            },
-          },
-          hall: {
-            __identity: "hall-3",
-            name: isSV ? "Lintharena Näfels" : "Lachenhalle Thun",
-            primaryPostalAddress: createAddress({
-              id: "addr-3",
-              street: isSV ? "Sportplatzstrasse" : "Pestalozzistrasse",
-              houseNumber: "1",
-              postalCode: isSV ? "8752" : "3600",
-              city: isSV ? "Näfels" : "Thun",
-            }),
-          },
-          group: {
-            name: "Quali",
-            managingAssociationShortName: associationCode,
-            phase: {
-              name: "Phase 1",
-              league: {
-                leagueCategory: getLeague(0),
-                gender: "f",
-              },
-            },
-          },
-        },
-      },
+      refereeGame: createRefereeGame({
+        gameId: "3",
+        gameNumber: 382419,
+        gameDate: addDays(now, 5),
+        venueIndex: 2,
+        leagueIndex: 0,
+        gender: "f",
+        isGameInFuture: true,
+        associationCode,
+        idPrefix: "demo",
+      }),
     },
     {
       __identity: "demo-assignment-4",
@@ -441,50 +559,17 @@ function generateDummyData(associationCode: DemoAssociationCode = "SV") {
       isOpenEntryInRefereeGameExchange: true,
       hasLastMessageToReferee: false,
       hasLinkedDoubleConvocation: false,
-      refereeGame: {
-        __identity: "demo-game-4",
-        isGameInFuture: "1",
-        game: {
-          __identity: "demo-g-4",
-          number: 382420,
-          startingDateTime: addDays(now, 7).toISOString(),
-          playingWeekday: getWeekday(addDays(now, 7)),
-          encounter: {
-            teamHome: {
-              __identity: "team-7",
-              name: isSV ? "VFM Therwil" : "VBC Solothurn",
-              identifier: 59597,
-            },
-            teamAway: {
-              __identity: "team-8",
-              name: isSV ? "Genève Volley" : "VC Burgdorf",
-              identifier: 59598,
-            },
-          },
-          hall: {
-            __identity: "hall-4",
-            name: isSV ? "Sporthalle Kuspo Therwil" : "Stadtturnsaal Solothurn",
-            primaryPostalAddress: createAddress({
-              id: "addr-4",
-              street: isSV ? "Im Letten" : "Rossmarktplatz",
-              houseNumber: "2",
-              postalCode: isSV ? "4106" : "4500",
-              city: isSV ? "Therwil" : "Solothurn",
-            }),
-          },
-          group: {
-            name: "Quali",
-            managingAssociationShortName: associationCode,
-            phase: {
-              name: "Phase 1",
-              league: {
-                leagueCategory: getLeague(1),
-                gender: "f",
-              },
-            },
-          },
-        },
-      },
+      refereeGame: createRefereeGame({
+        gameId: "4",
+        gameNumber: 382420,
+        gameDate: addDays(now, 7),
+        venueIndex: 3,
+        leagueIndex: 1,
+        gender: "f",
+        isGameInFuture: true,
+        associationCode,
+        idPrefix: "demo",
+      }),
     },
     {
       __identity: "demo-assignment-5",
@@ -495,111 +580,49 @@ function generateDummyData(associationCode: DemoAssociationCode = "SV") {
       isOpenEntryInRefereeGameExchange: false,
       hasLastMessageToReferee: false,
       hasLinkedDoubleConvocation: false,
-      refereeGame: {
-        __identity: "demo-game-5",
-        isGameInFuture: "0",
-        game: {
-          __identity: "demo-g-5",
-          number: 382421,
-          startingDateTime: subDays(now, 3).toISOString(),
-          playingWeekday: getWeekday(subDays(now, 3)),
-          encounter: {
-            teamHome: {
-              __identity: "team-9",
-              name: isSV ? "Volley Köniz" : "VBC Aarau",
-              identifier: 59599,
-            },
-            teamAway: {
-              __identity: "team-10",
-              name: isSV ? "VC Kanti" : "TV Zofingen",
-              identifier: 59600,
-            },
-          },
-          hall: {
-            __identity: "hall-5",
-            name: isSV ? "Weissenstein Halle" : "Schachen Halle Aarau",
-            primaryPostalAddress: createAddress({
-              id: "addr-5",
-              street: isSV ? "Weissensteinstrasse" : "Schachenallee",
-              houseNumber: isSV ? "80" : "29",
-              postalCode: isSV ? "3008" : "5000",
-              city: isSV ? "Bern" : "Aarau",
-            }),
-          },
-          group: {
-            name: "Quali",
-            managingAssociationShortName: associationCode,
-            phase: {
-              name: "Phase 1",
-              league: {
-                // Use a different league index for variety
-                leagueCategory: isSV ? getLeague(1) : getLeague(2),
-                gender: "m",
-              },
-            },
-          },
-        },
-      },
+      refereeGame: createRefereeGame({
+        gameId: "5",
+        gameNumber: 382421,
+        gameDate: subDays(now, 3),
+        venueIndex: 4,
+        leagueIndex: associationCode === "SV" ? 1 : 2,
+        gender: "m",
+        isGameInFuture: false,
+        associationCode,
+        idPrefix: "demo",
+      }),
     },
   ];
+}
 
-  // Compensations: Only SV (national) allows flexible expense editing
-  // Regional associations have fixed compensation rates
-  const dummyCompensations: CompensationRecord[] = [
+function generateCompensations(
+  associationCode: DemoAssociationCode,
+  now: Date,
+): CompensationRecord[] {
+  const isSV = associationCode === "SV";
+
+  return [
     {
       __identity: "demo-comp-1",
       refereeConvocationStatus: "active",
       refereePosition: "head-one",
       compensationDate: subDays(now, 7).toISOString(),
-      refereeGame: {
-        __identity: "demo-comp-game-1",
-        isGameInFuture: "0",
-        game: {
-          __identity: "demo-cg-1",
-          number: 382500,
-          startingDateTime: subDays(now, 7).toISOString(),
-          playingWeekday: getWeekday(subDays(now, 7)),
-          encounter: {
-            teamHome: {
-              __identity: "team-11",
-              name: isSV ? "VBC Zürich Lions" : "VBC Bern",
-              identifier: 59601,
-            },
-            teamAway: {
-              __identity: "team-12",
-              name: isSV ? "Volley Luzern" : "VC Münsingen",
-              identifier: 59602,
-            },
-          },
-          hall: {
-            __identity: "hall-c1",
-            name: isSV ? "Saalsporthalle Zürich" : "Sporthalle Wankdorf",
-            primaryPostalAddress: createAddress({
-              id: "addr-c1",
-              street: isSV ? "Hardturmstrasse" : "Papiermühlestrasse",
-              houseNumber: isSV ? "154" : "71",
-              postalCode: isSV ? "8005" : "3014",
-              city: isSV ? "Zürich" : "Bern",
-            }),
-          },
-          group: {
-            name: "Quali",
-            managingAssociationShortName: associationCode,
-            phase: {
-              name: "Phase 1",
-              league: {
-                leagueCategory: getLeague(0),
-                gender: "m",
-              },
-            },
-          },
-        },
-      },
+      refereeGame: createRefereeGame({
+        gameId: "1",
+        gameNumber: 382500,
+        gameDate: subDays(now, 7),
+        venueIndex: 0,
+        leagueIndex: 0,
+        gender: "m",
+        isGameInFuture: false,
+        associationCode,
+        idPrefix: "comp",
+      }),
       convocationCompensation: {
         __identity: "demo-cc-1",
         ...createCompensationData({
           position: "head-one",
-          distanceInMetres: 48000,
+          distanceInMetres: SAMPLE_DISTANCES.MEDIUM_LONG,
           isSV,
           paymentDone: true,
           paymentValueDate: toDateString(subDays(now, 2)),
@@ -611,55 +634,22 @@ function generateDummyData(associationCode: DemoAssociationCode = "SV") {
       refereeConvocationStatus: "active",
       refereePosition: "linesman-one",
       compensationDate: subDays(now, 14).toISOString(),
-      refereeGame: {
-        __identity: "demo-comp-game-2",
-        isGameInFuture: "0",
-        game: {
-          __identity: "demo-cg-2",
-          number: 382501,
-          startingDateTime: subDays(now, 14).toISOString(),
-          playingWeekday: getWeekday(subDays(now, 14)),
-          encounter: {
-            teamHome: {
-              __identity: "team-13",
-              name: isSV ? "Schönenwerd Smash" : "TV Muri",
-              identifier: 59603,
-            },
-            teamAway: {
-              __identity: "team-14",
-              name: isSV ? "Traktor Basel" : "VBC Langenthal",
-              identifier: 59604,
-            },
-          },
-          hall: {
-            __identity: "hall-c2",
-            name: isSV ? "Aarehalle Schönenwerd" : "Sporthalle Muri",
-            primaryPostalAddress: createAddress({
-              id: "addr-c2",
-              street: isSV ? "Aarauerstrasse" : "Klosterweg",
-              houseNumber: isSV ? "50" : "8",
-              postalCode: isSV ? "5012" : "5630",
-              city: isSV ? "Schönenwerd" : "Muri AG",
-            }),
-          },
-          group: {
-            name: "Quali",
-            managingAssociationShortName: associationCode,
-            phase: {
-              name: "Phase 1",
-              league: {
-                leagueCategory: getLeague(1),
-                gender: "m",
-              },
-            },
-          },
-        },
-      },
+      refereeGame: createRefereeGame({
+        gameId: "2",
+        gameNumber: 382501,
+        gameDate: subDays(now, 14),
+        venueIndex: 1,
+        leagueIndex: 1,
+        gender: "m",
+        isGameInFuture: false,
+        associationCode,
+        idPrefix: "comp",
+      }),
       convocationCompensation: {
         __identity: "demo-cc-2",
         ...createCompensationData({
           position: "linesman-one",
-          distanceInMetres: 35000,
+          distanceInMetres: SAMPLE_DISTANCES.MEDIUM,
           isSV,
           paymentDone: false,
         }),
@@ -670,55 +660,22 @@ function generateDummyData(associationCode: DemoAssociationCode = "SV") {
       refereeConvocationStatus: "active",
       refereePosition: "head-two",
       compensationDate: subDays(now, 21).toISOString(),
-      refereeGame: {
-        __identity: "demo-comp-game-3",
-        isGameInFuture: "0",
-        game: {
-          __identity: "demo-cg-3",
-          number: 382502,
-          startingDateTime: subDays(now, 21).toISOString(),
-          playingWeekday: getWeekday(subDays(now, 21)),
-          encounter: {
-            teamHome: {
-              __identity: "team-15",
-              name: isSV ? "Volley Näfels" : "VBC Thun",
-              identifier: 59605,
-            },
-            teamAway: {
-              __identity: "team-16",
-              name: isSV ? "Volero Zürich" : "VC Steffisburg",
-              identifier: 59606,
-            },
-          },
-          hall: {
-            __identity: "hall-c3",
-            name: isSV ? "Lintharena Näfels" : "Lachenhalle Thun",
-            primaryPostalAddress: createAddress({
-              id: "addr-c3",
-              street: isSV ? "Sportplatzstrasse" : "Pestalozzistrasse",
-              houseNumber: "1",
-              postalCode: isSV ? "8752" : "3600",
-              city: isSV ? "Näfels" : "Thun",
-            }),
-          },
-          group: {
-            name: "Quali",
-            managingAssociationShortName: associationCode,
-            phase: {
-              name: "Phase 1",
-              league: {
-                leagueCategory: getLeague(0),
-                gender: "f",
-              },
-            },
-          },
-        },
-      },
+      refereeGame: createRefereeGame({
+        gameId: "3",
+        gameNumber: 382502,
+        gameDate: subDays(now, 21),
+        venueIndex: 2,
+        leagueIndex: 0,
+        gender: "f",
+        isGameInFuture: false,
+        associationCode,
+        idPrefix: "comp",
+      }),
       convocationCompensation: {
         __identity: "demo-cc-3",
         ...createCompensationData({
           position: "head-two",
-          distanceInMetres: 62000,
+          distanceInMetres: SAMPLE_DISTANCES.LONG,
           isSV,
           paymentDone: true,
           paymentValueDate: toDateString(subDays(now, 14)),
@@ -730,55 +687,22 @@ function generateDummyData(associationCode: DemoAssociationCode = "SV") {
       refereeConvocationStatus: "active",
       refereePosition: "head-one",
       compensationDate: subDays(now, 5).toISOString(),
-      refereeGame: {
-        __identity: "demo-comp-game-4",
-        isGameInFuture: "0",
-        game: {
-          __identity: "demo-cg-4",
-          number: 382503,
-          startingDateTime: subDays(now, 5).toISOString(),
-          playingWeekday: getWeekday(subDays(now, 5)),
-          encounter: {
-            teamHome: {
-              __identity: "team-17",
-              name: isSV ? "VFM Therwil" : "VBC Solothurn",
-              identifier: 59607,
-            },
-            teamAway: {
-              __identity: "team-18",
-              name: isSV ? "Genève Volley" : "VC Burgdorf",
-              identifier: 59608,
-            },
-          },
-          hall: {
-            __identity: "hall-c4",
-            name: isSV ? "Sporthalle Kuspo Therwil" : "Stadtturnsaal Solothurn",
-            primaryPostalAddress: createAddress({
-              id: "addr-c4",
-              street: isSV ? "Im Letten" : "Rossmarktplatz",
-              houseNumber: "2",
-              postalCode: isSV ? "4106" : "4500",
-              city: isSV ? "Therwil" : "Solothurn",
-            }),
-          },
-          group: {
-            name: "Quali",
-            managingAssociationShortName: associationCode,
-            phase: {
-              name: "Phase 1",
-              league: {
-                leagueCategory: getLeague(1),
-                gender: "f",
-              },
-            },
-          },
-        },
-      },
+      refereeGame: createRefereeGame({
+        gameId: "4",
+        gameNumber: 382503,
+        gameDate: subDays(now, 5),
+        venueIndex: 3,
+        leagueIndex: 1,
+        gender: "f",
+        isGameInFuture: false,
+        associationCode,
+        idPrefix: "comp",
+      }),
       convocationCompensation: {
         __identity: "demo-cc-4",
         ...createCompensationData({
           position: "head-one",
-          distanceInMetres: 89000,
+          distanceInMetres: SAMPLE_DISTANCES.VERY_LONG,
           isSV,
           paymentDone: false,
         }),
@@ -789,55 +713,22 @@ function generateDummyData(associationCode: DemoAssociationCode = "SV") {
       refereeConvocationStatus: "active",
       refereePosition: "linesman-two",
       compensationDate: subDays(now, 28).toISOString(),
-      refereeGame: {
-        __identity: "demo-comp-game-5",
-        isGameInFuture: "0",
-        game: {
-          __identity: "demo-cg-5",
-          number: 382504,
-          startingDateTime: subDays(now, 28).toISOString(),
-          playingWeekday: getWeekday(subDays(now, 28)),
-          encounter: {
-            teamHome: {
-              __identity: "team-19",
-              name: isSV ? "Volley Köniz" : "VBC Aarau",
-              identifier: 59609,
-            },
-            teamAway: {
-              __identity: "team-20",
-              name: isSV ? "VC Kanti" : "TV Zofingen",
-              identifier: 59610,
-            },
-          },
-          hall: {
-            __identity: "hall-c5",
-            name: isSV ? "Weissenstein Halle" : "Schachen Halle Aarau",
-            primaryPostalAddress: createAddress({
-              id: "addr-c5",
-              street: isSV ? "Weissensteinstrasse" : "Schachenallee",
-              houseNumber: isSV ? "80" : "29",
-              postalCode: isSV ? "3008" : "5000",
-              city: isSV ? "Bern" : "Aarau",
-            }),
-          },
-          group: {
-            name: "Quali",
-            managingAssociationShortName: associationCode,
-            phase: {
-              name: "Phase 1",
-              league: {
-                leagueCategory: isSV ? getLeague(1) : getLeague(2),
-                gender: "m",
-              },
-            },
-          },
-        },
-      },
+      refereeGame: createRefereeGame({
+        gameId: "5",
+        gameNumber: 382504,
+        gameDate: subDays(now, 28),
+        venueIndex: 4,
+        leagueIndex: associationCode === "SV" ? 1 : 2,
+        gender: "m",
+        isGameInFuture: false,
+        associationCode,
+        idPrefix: "comp",
+      }),
       convocationCompensation: {
         __identity: "demo-cc-5",
         ...createCompensationData({
           position: "linesman-two",
-          distanceInMetres: 24000,
+          distanceInMetres: SAMPLE_DISTANCES.SHORT,
           isSV,
           paymentDone: true,
           paymentValueDate: toDateString(subDays(now, 21)),
@@ -846,8 +737,15 @@ function generateDummyData(associationCode: DemoAssociationCode = "SV") {
       },
     },
   ];
+}
 
-  const dummyExchanges: GameExchange[] = [
+function generateExchanges(
+  associationCode: DemoAssociationCode,
+  now: Date,
+): GameExchange[] {
+  const isSV = associationCode === "SV";
+
+  return [
     {
       __identity: "demo-exchange-1",
       status: "open",
@@ -863,50 +761,19 @@ function generateDummyData(associationCode: DemoAssociationCode = "SV") {
         displayName: "Max Müller",
       },
       refereeGame: {
-        __identity: "demo-ex-game-1",
-        isGameInFuture: "1",
+        ...createRefereeGame({
+          gameId: "1",
+          gameNumber: 382600,
+          gameDate: addDays(now, 4),
+          venueIndex: 0,
+          leagueIndex: 0,
+          gender: "m",
+          isGameInFuture: true,
+          associationCode,
+          idPrefix: "ex",
+        }),
         activeFirstHeadRefereeName: "Max Müller",
         activeSecondHeadRefereeName: "Lisa Weber",
-        game: {
-          __identity: "demo-exg-1",
-          number: 382600,
-          startingDateTime: addDays(now, 4).toISOString(),
-          playingWeekday: getWeekday(addDays(now, 4)),
-          encounter: {
-            teamHome: {
-              __identity: "team-21",
-              name: isSV ? "VBC Zürich Lions" : "VBC Bern",
-              identifier: 59611,
-            },
-            teamAway: {
-              __identity: "team-22",
-              name: isSV ? "Volley Luzern" : "VC Münsingen",
-              identifier: 59612,
-            },
-          },
-          hall: {
-            __identity: "hall-6",
-            name: isSV ? "Saalsporthalle Zürich" : "Sporthalle Wankdorf",
-            primaryPostalAddress: createAddress({
-              id: "addr-e1",
-              street: isSV ? "Hardturmstrasse" : "Papiermühlestrasse",
-              houseNumber: isSV ? "154" : "71",
-              postalCode: isSV ? "8005" : "3014",
-              city: isSV ? "Zürich" : "Bern",
-            }),
-          },
-          group: {
-            name: "Quali",
-            managingAssociationShortName: associationCode,
-            phase: {
-              name: "Phase 1",
-              league: {
-                leagueCategory: getLeague(0),
-                gender: "m",
-              },
-            },
-          },
-        },
       },
     },
     {
@@ -924,51 +791,20 @@ function generateDummyData(associationCode: DemoAssociationCode = "SV") {
         displayName: "Anna Schmidt",
       },
       refereeGame: {
-        __identity: "demo-ex-game-2",
-        isGameInFuture: "1",
+        ...createRefereeGame({
+          gameId: "2",
+          gameNumber: 382601,
+          gameDate: addDays(now, 6),
+          venueIndex: 1,
+          leagueIndex: 1,
+          gender: "m",
+          isGameInFuture: true,
+          associationCode,
+          idPrefix: "ex",
+        }),
         activeFirstHeadRefereeName: "Thomas Meier",
         activeSecondHeadRefereeName: "Sandra Keller",
         activeFirstLinesmanRefereeName: "Anna Schmidt",
-        game: {
-          __identity: "demo-exg-2",
-          number: 382601,
-          startingDateTime: addDays(now, 6).toISOString(),
-          playingWeekday: getWeekday(addDays(now, 6)),
-          encounter: {
-            teamHome: {
-              __identity: "team-23",
-              name: isSV ? "Schönenwerd Smash" : "TV Muri",
-              identifier: 59613,
-            },
-            teamAway: {
-              __identity: "team-24",
-              name: isSV ? "Traktor Basel" : "VBC Langenthal",
-              identifier: 59614,
-            },
-          },
-          hall: {
-            __identity: "hall-7",
-            name: isSV ? "Aarehalle Schönenwerd" : "Sporthalle Muri",
-            primaryPostalAddress: createAddress({
-              id: "addr-e2",
-              street: isSV ? "Aarauerstrasse" : "Klosterweg",
-              houseNumber: isSV ? "50" : "8",
-              postalCode: isSV ? "5012" : "5630",
-              city: isSV ? "Schönenwerd" : "Muri AG",
-            }),
-          },
-          group: {
-            name: "Quali",
-            managingAssociationShortName: associationCode,
-            phase: {
-              name: "Phase 1",
-              league: {
-                leagueCategory: getLeague(1),
-                gender: "m",
-              },
-            },
-          },
-        },
       },
     },
     {
@@ -997,50 +833,19 @@ function generateDummyData(associationCode: DemoAssociationCode = "SV") {
       },
       appliedAt: subDays(now, 3).toISOString(),
       refereeGame: {
-        __identity: "demo-ex-game-3",
-        isGameInFuture: "1",
+        ...createRefereeGame({
+          gameId: "3",
+          gameNumber: 382602,
+          gameDate: addDays(now, 8),
+          venueIndex: 2,
+          leagueIndex: 0,
+          gender: "f",
+          isGameInFuture: true,
+          associationCode,
+          idPrefix: "ex",
+        }),
         activeFirstHeadRefereeName: "Laura Brunner",
         activeSecondHeadRefereeName: "Peter Weber",
-        game: {
-          __identity: "demo-exg-3",
-          number: 382602,
-          startingDateTime: addDays(now, 8).toISOString(),
-          playingWeekday: getWeekday(addDays(now, 8)),
-          encounter: {
-            teamHome: {
-              __identity: "team-25",
-              name: isSV ? "Volley Näfels" : "VBC Thun",
-              identifier: 59615,
-            },
-            teamAway: {
-              __identity: "team-26",
-              name: isSV ? "Volero Zürich" : "VC Steffisburg",
-              identifier: 59616,
-            },
-          },
-          hall: {
-            __identity: "hall-8",
-            name: isSV ? "Lintharena Näfels" : "Lachenhalle Thun",
-            primaryPostalAddress: createAddress({
-              id: "addr-e3",
-              street: isSV ? "Sportplatzstrasse" : "Pestalozzistrasse",
-              houseNumber: "1",
-              postalCode: isSV ? "8752" : "3600",
-              city: isSV ? "Näfels" : "Thun",
-            }),
-          },
-          group: {
-            name: "Quali",
-            managingAssociationShortName: associationCode,
-            phase: {
-              name: "Phase 1",
-              league: {
-                leagueCategory: getLeague(0),
-                gender: "f",
-              },
-            },
-          },
-        },
       },
     },
     {
@@ -1058,50 +863,19 @@ function generateDummyData(associationCode: DemoAssociationCode = "SV") {
         displayName: "Sara Keller",
       },
       refereeGame: {
-        __identity: "demo-ex-game-4",
-        isGameInFuture: "1",
+        ...createRefereeGame({
+          gameId: "4",
+          gameNumber: 382603,
+          gameDate: addDays(now, 10),
+          venueIndex: 3,
+          leagueIndex: 1,
+          gender: "f",
+          isGameInFuture: true,
+          associationCode,
+          idPrefix: "ex",
+        }),
         activeFirstHeadRefereeName: "",
         activeSecondHeadRefereeName: "Julia Hofer",
-        game: {
-          __identity: "demo-exg-4",
-          number: 382603,
-          startingDateTime: addDays(now, 10).toISOString(),
-          playingWeekday: getWeekday(addDays(now, 10)),
-          encounter: {
-            teamHome: {
-              __identity: "team-27",
-              name: isSV ? "VFM Therwil" : "VBC Solothurn",
-              identifier: 59617,
-            },
-            teamAway: {
-              __identity: "team-28",
-              name: isSV ? "Genève Volley" : "VC Burgdorf",
-              identifier: 59618,
-            },
-          },
-          hall: {
-            __identity: "hall-9",
-            name: isSV ? "Sporthalle Kuspo Therwil" : "Stadtturnsaal Solothurn",
-            primaryPostalAddress: createAddress({
-              id: "addr-e4",
-              street: isSV ? "Im Letten" : "Rossmarktplatz",
-              houseNumber: "2",
-              postalCode: isSV ? "4106" : "4500",
-              city: isSV ? "Therwil" : "Solothurn",
-            }),
-          },
-          group: {
-            name: "Quali",
-            managingAssociationShortName: associationCode,
-            phase: {
-              name: "Phase 1",
-              league: {
-                leagueCategory: getLeague(1),
-                gender: "f",
-              },
-            },
-          },
-        },
       },
     },
     {
@@ -1119,56 +893,27 @@ function generateDummyData(associationCode: DemoAssociationCode = "SV") {
         displayName: "Thomas Huber",
       },
       refereeGame: {
-        __identity: "demo-ex-game-5",
-        isGameInFuture: "0",
+        ...createRefereeGame({
+          gameId: "5",
+          gameNumber: 382604,
+          gameDate: subDays(now, 2),
+          venueIndex: 4,
+          leagueIndex: associationCode === "SV" ? 1 : 2,
+          gender: "m",
+          isGameInFuture: false,
+          associationCode,
+          idPrefix: "ex",
+        }),
         activeFirstHeadRefereeName: "Michael Fischer",
         activeSecondHeadRefereeName: "Nina Baumann",
         activeSecondLinesmanRefereeName: "Demo User",
-        game: {
-          __identity: "demo-exg-5",
-          number: 382604,
-          startingDateTime: subDays(now, 2).toISOString(),
-          playingWeekday: getWeekday(subDays(now, 2)),
-          encounter: {
-            teamHome: {
-              __identity: "team-29",
-              name: isSV ? "Volley Köniz" : "VBC Aarau",
-              identifier: 59619,
-            },
-            teamAway: {
-              __identity: "team-30",
-              name: isSV ? "VC Kanti" : "TV Zofingen",
-              identifier: 59620,
-            },
-          },
-          hall: {
-            __identity: "hall-10",
-            name: isSV ? "Weissenstein Halle" : "Schachen Halle Aarau",
-            primaryPostalAddress: createAddress({
-              id: "addr-e5",
-              street: isSV ? "Weissensteinstrasse" : "Schachenallee",
-              houseNumber: isSV ? "80" : "29",
-              postalCode: isSV ? "3008" : "5000",
-              city: isSV ? "Bern" : "Aarau",
-            }),
-          },
-          group: {
-            name: "Quali",
-            managingAssociationShortName: associationCode,
-            phase: {
-              name: "Phase 1",
-              league: {
-                leagueCategory: isSV ? getLeague(1) : getLeague(2),
-                gender: "m",
-              },
-            },
-          },
-        },
       },
     },
   ];
+}
 
-  const dummyPossiblePlayers: PossibleNomination[] = [
+function generatePossiblePlayers(): PossibleNomination[] {
+  return [
     {
       __identity: "demo-possible-1",
       indoorPlayer: {
@@ -1282,8 +1027,10 @@ function generateDummyData(associationCode: DemoAssociationCode = "SV") {
       isAlreadyNominated: false,
     },
   ];
+}
 
-  const dummyScorers: PersonSearchResult[] = [
+function generateScorers(): PersonSearchResult[] {
+  return [
     {
       __identity: "d1111111-1111-4111-a111-111111111111",
       firstName: "Hans",
@@ -1375,13 +1122,17 @@ function generateDummyData(associationCode: DemoAssociationCode = "SV") {
       gender: "f",
     },
   ];
+}
+
+function generateDummyData(associationCode: DemoAssociationCode = "SV") {
+  const now = new Date();
 
   return {
-    assignments: dummyAssignments,
-    compensations: dummyCompensations,
-    exchanges: dummyExchanges,
-    possiblePlayers: dummyPossiblePlayers,
-    scorers: dummyScorers,
+    assignments: generateAssignments(associationCode, now),
+    compensations: generateCompensations(associationCode, now),
+    exchanges: generateExchanges(associationCode, now),
+    possiblePlayers: generatePossiblePlayers(),
+    scorers: generateScorers(),
   };
 }
 
