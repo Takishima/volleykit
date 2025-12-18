@@ -210,13 +210,17 @@ function createDemoQueryResult<T>(
 }
 
 // Query keys
+// Note: demoAssociationCode is included in query keys to ensure cache invalidation
+// when the user switches roles/associations in demo mode. Without this, TanStack Query
+// would return stale cached data even after the demo store regenerates data for the new association.
 export const queryKeys = {
-  assignments: (config?: SearchConfiguration) =>
-    ["assignments", config] as const,
+  assignments: (config?: SearchConfiguration, demoAssociationCode?: string | null) =>
+    ["assignments", config, demoAssociationCode] as const,
   assignmentDetails: (id: string) => ["assignment", id] as const,
-  compensations: (config?: SearchConfiguration) =>
-    ["compensations", config] as const,
-  exchanges: (config?: SearchConfiguration) => ["exchanges", config] as const,
+  compensations: (config?: SearchConfiguration, demoAssociationCode?: string | null) =>
+    ["compensations", config, demoAssociationCode] as const,
+  exchanges: (config?: SearchConfiguration, demoAssociationCode?: string | null) =>
+    ["exchanges", config, demoAssociationCode] as const,
   associationSettings: () => ["associationSettings"] as const,
   activeSeason: () => ["activeSeason"] as const,
   possibleNominations: (nominationListId: string) =>
@@ -275,6 +279,7 @@ export function useAssignments(
   customRange?: { from: Date; to: Date },
 ) {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const demoAssociationCode = useDemoStore((state) => state.activeAssociationCode);
   const apiClient = getApiClient(isDemoMode);
   const dateRange = getDateRangeForPeriod(period, customRange);
 
@@ -297,7 +302,7 @@ export function useAssignments(
   };
 
   return useQuery({
-    queryKey: queryKeys.assignments(config),
+    queryKey: queryKeys.assignments(config, isDemoMode ? demoAssociationCode : null),
     queryFn: () => apiClient.searchAssignments(config),
     select: (data) => data.items || [],
     staleTime: 5 * 60 * 1000,
@@ -479,6 +484,7 @@ export function useAssignmentDetails(assignmentId: string | null) {
 // Compensations hooks
 export function useCompensations(paidFilter?: boolean) {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const demoAssociationCode = useDemoStore((state) => state.activeAssociationCode);
   const apiClient = getApiClient(isDemoMode);
 
   const config: SearchConfiguration = {
@@ -503,7 +509,7 @@ export function useCompensations(paidFilter?: boolean) {
   };
 
   return useQuery({
-    queryKey: queryKeys.compensations(config),
+    queryKey: queryKeys.compensations(config, isDemoMode ? demoAssociationCode : null),
     queryFn: () => apiClient.searchCompensations(config),
     select: (data) => data.items || [],
     staleTime: 5 * 60 * 1000,
@@ -547,6 +553,7 @@ export type ExchangeStatus = "open" | "applied" | "closed" | "all";
 
 export function useGameExchanges(status: ExchangeStatus = "all") {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const demoAssociationCode = useDemoStore((state) => state.activeAssociationCode);
   const apiClient = getApiClient(isDemoMode);
 
   const config: SearchConfiguration = {
@@ -566,7 +573,7 @@ export function useGameExchanges(status: ExchangeStatus = "all") {
   };
 
   return useQuery({
-    queryKey: queryKeys.exchanges(config),
+    queryKey: queryKeys.exchanges(config, isDemoMode ? demoAssociationCode : null),
     queryFn: () => apiClient.searchExchanges(config),
     select: (data) => data.items || [],
     staleTime: 2 * 60 * 1000,
