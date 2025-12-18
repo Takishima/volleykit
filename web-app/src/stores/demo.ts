@@ -67,11 +67,99 @@ interface DemoState {
 
 type Weekday = "Sun" | "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat";
 
+// Compensation rates per association type (CHF)
+// SV (national) has higher rates than regional associations
+const COMPENSATION_RATES = {
+  SV: {
+    HEAD_REFEREE: 100,
+    SECOND_HEAD_REFEREE: 80,
+    LINESMAN: 60,
+    SECOND_LINESMAN: 50,
+  },
+  REGIONAL: {
+    HEAD_REFEREE: 60,
+    SECOND_HEAD_REFEREE: 50,
+    LINESMAN: 40,
+    SECOND_LINESMAN: 30,
+  },
+} as const;
+
 const TRAVEL_EXPENSE_RATE_PER_KM = 0.7;
 
 function calculateTravelExpenses(distanceInMetres: number): number {
   const distanceInKm = distanceInMetres / 1000;
   return Math.round(distanceInKm * TRAVEL_EXPENSE_RATE_PER_KM * 100) / 100;
+}
+
+function formatCurrency(amount: number): string {
+  return amount.toFixed(2);
+}
+
+function calculateTotalCost(
+  gameCompensation: number,
+  travelExpenses: number,
+): string {
+  return formatCurrency(gameCompensation + travelExpenses);
+}
+
+type RefereePosition = "head-one" | "head-two" | "linesman-one" | "linesman-two";
+
+function getCompensationForPosition(
+  position: RefereePosition,
+  isSV: boolean,
+): number {
+  const rates = isSV ? COMPENSATION_RATES.SV : COMPENSATION_RATES.REGIONAL;
+  switch (position) {
+    case "head-one":
+      return rates.HEAD_REFEREE;
+    case "head-two":
+      return rates.SECOND_HEAD_REFEREE;
+    case "linesman-one":
+      return rates.LINESMAN;
+    case "linesman-two":
+      return rates.SECOND_LINESMAN;
+  }
+}
+
+interface CompensationParams {
+  position: RefereePosition;
+  distanceInMetres: number;
+  isSV: boolean;
+  paymentDone: boolean;
+  paymentValueDate?: string;
+  transportationMode?: "car" | "train";
+}
+
+function createCompensationData({
+  position,
+  distanceInMetres,
+  isSV,
+  paymentDone,
+  paymentValueDate,
+  transportationMode = "car",
+}: CompensationParams) {
+  const gameCompensation = getCompensationForPosition(position, isSV);
+  const travelExpenses = calculateTravelExpenses(distanceInMetres);
+  const distanceInKm = distanceInMetres / 1000;
+
+  return {
+    gameCompensation,
+    gameCompensationFormatted: formatCurrency(gameCompensation),
+    travelExpenses,
+    travelExpensesFormatted: formatCurrency(travelExpenses),
+    distanceInMetres,
+    distanceFormatted: distanceInKm.toFixed(1),
+    costFormatted: calculateTotalCost(gameCompensation, travelExpenses),
+    transportationMode,
+    paymentDone,
+    ...(paymentDone && paymentValueDate && { paymentValueDate }),
+    hasFlexibleGameCompensations: false,
+    hasFlexibleTravelExpenses: isSV,
+    hasFlexibleOvernightStayExpenses: false,
+    hasFlexibleCateringExpenses: false,
+    overnightStayExpensesFormatted: "0.00",
+    cateringExpensesFormatted: "0.00",
+  };
 }
 
 function updateCompensationRecord(
@@ -509,22 +597,13 @@ function generateDummyData(associationCode: DemoAssociationCode = "SV") {
       },
       convocationCompensation: {
         __identity: "demo-cc-1",
-        paymentDone: true,
-        paymentValueDate: toDateString(subDays(now, 2)),
-        gameCompensation: isSV ? 100 : 60,
-        gameCompensationFormatted: isSV ? "100.00" : "60.00",
-        travelExpenses: 33.6,
-        travelExpensesFormatted: "33.60",
-        distanceInMetres: 48000,
-        distanceFormatted: "48.0",
-        costFormatted: isSV ? "133.60" : "93.60",
-        transportationMode: "car",
-        hasFlexibleGameCompensations: false,
-        hasFlexibleTravelExpenses: isSV,
-        hasFlexibleOvernightStayExpenses: false,
-        hasFlexibleCateringExpenses: false,
-        overnightStayExpensesFormatted: "0.00",
-        cateringExpensesFormatted: "0.00",
+        ...createCompensationData({
+          position: "head-one",
+          distanceInMetres: 48000,
+          isSV,
+          paymentDone: true,
+          paymentValueDate: toDateString(subDays(now, 2)),
+        }),
       },
     },
     {
@@ -578,21 +657,12 @@ function generateDummyData(associationCode: DemoAssociationCode = "SV") {
       },
       convocationCompensation: {
         __identity: "demo-cc-2",
-        paymentDone: false,
-        gameCompensation: isSV ? 60 : 40,
-        gameCompensationFormatted: isSV ? "60.00" : "40.00",
-        travelExpenses: 24.5,
-        travelExpensesFormatted: "24.50",
-        distanceInMetres: 35000,
-        distanceFormatted: "35.0",
-        costFormatted: isSV ? "84.50" : "64.50",
-        transportationMode: "car",
-        hasFlexibleGameCompensations: false,
-        hasFlexibleTravelExpenses: isSV,
-        hasFlexibleOvernightStayExpenses: false,
-        hasFlexibleCateringExpenses: false,
-        overnightStayExpensesFormatted: "0.00",
-        cateringExpensesFormatted: "0.00",
+        ...createCompensationData({
+          position: "linesman-one",
+          distanceInMetres: 35000,
+          isSV,
+          paymentDone: false,
+        }),
       },
     },
     {
@@ -646,22 +716,13 @@ function generateDummyData(associationCode: DemoAssociationCode = "SV") {
       },
       convocationCompensation: {
         __identity: "demo-cc-3",
-        paymentDone: true,
-        paymentValueDate: toDateString(subDays(now, 14)),
-        gameCompensation: isSV ? 80 : 50,
-        gameCompensationFormatted: isSV ? "80.00" : "50.00",
-        travelExpenses: 43.4,
-        travelExpensesFormatted: "43.40",
-        distanceInMetres: 62000,
-        distanceFormatted: "62.0",
-        costFormatted: isSV ? "123.40" : "93.40",
-        transportationMode: "car",
-        hasFlexibleGameCompensations: false,
-        hasFlexibleTravelExpenses: isSV,
-        hasFlexibleOvernightStayExpenses: false,
-        hasFlexibleCateringExpenses: false,
-        overnightStayExpensesFormatted: "0.00",
-        cateringExpensesFormatted: "0.00",
+        ...createCompensationData({
+          position: "head-two",
+          distanceInMetres: 62000,
+          isSV,
+          paymentDone: true,
+          paymentValueDate: toDateString(subDays(now, 14)),
+        }),
       },
     },
     {
@@ -715,21 +776,12 @@ function generateDummyData(associationCode: DemoAssociationCode = "SV") {
       },
       convocationCompensation: {
         __identity: "demo-cc-4",
-        paymentDone: false,
-        gameCompensation: isSV ? 100 : 60,
-        gameCompensationFormatted: isSV ? "100.00" : "60.00",
-        travelExpenses: 62.3,
-        travelExpensesFormatted: "62.30",
-        distanceInMetres: 89000,
-        distanceFormatted: "89.0",
-        costFormatted: isSV ? "162.30" : "122.30",
-        transportationMode: "car",
-        hasFlexibleGameCompensations: false,
-        hasFlexibleTravelExpenses: isSV,
-        hasFlexibleOvernightStayExpenses: false,
-        hasFlexibleCateringExpenses: false,
-        overnightStayExpensesFormatted: "0.00",
-        cateringExpensesFormatted: "0.00",
+        ...createCompensationData({
+          position: "head-one",
+          distanceInMetres: 89000,
+          isSV,
+          paymentDone: false,
+        }),
       },
     },
     {
@@ -783,22 +835,14 @@ function generateDummyData(associationCode: DemoAssociationCode = "SV") {
       },
       convocationCompensation: {
         __identity: "demo-cc-5",
-        paymentDone: true,
-        paymentValueDate: toDateString(subDays(now, 21)),
-        gameCompensation: isSV ? 50 : 30,
-        gameCompensationFormatted: isSV ? "50.00" : "30.00",
-        travelExpenses: 16.8,
-        travelExpensesFormatted: "16.80",
-        distanceInMetres: 24000,
-        distanceFormatted: "24.0",
-        costFormatted: isSV ? "66.80" : "46.80",
-        transportationMode: "train",
-        hasFlexibleGameCompensations: false,
-        hasFlexibleTravelExpenses: isSV,
-        hasFlexibleOvernightStayExpenses: false,
-        hasFlexibleCateringExpenses: false,
-        overnightStayExpensesFormatted: "0.00",
-        cateringExpensesFormatted: "0.00",
+        ...createCompensationData({
+          position: "linesman-two",
+          distanceInMetres: 24000,
+          isSV,
+          paymentDone: true,
+          paymentValueDate: toDateString(subDays(now, 21)),
+          transportationMode: "train",
+        }),
       },
     },
   ];

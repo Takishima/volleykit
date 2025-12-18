@@ -84,12 +84,14 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const [verifyError, setVerifyError] = useState<string | null>(null);
 
   // Regenerate demo data on page load if demo mode is enabled but data is empty
-  // Uses the stored association code or defaults to SV (Swiss Volley national)
+  // This only runs once when data needs initialization, not on association changes
+  // (association changes are handled by AppShell when user switches occupation)
   useEffect(() => {
     if (isDemoMode && assignments.length === 0) {
       initializeDemoData(activeAssociationCode ?? "SV");
     }
-  }, [isDemoMode, assignments.length, activeAssociationCode, initializeDemoData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only run when data is empty, not on association changes
+  }, [isDemoMode, assignments.length, initializeDemoData]);
 
   // Verify persisted session is still valid on mount
   useEffect(() => {
