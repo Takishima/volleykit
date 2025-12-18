@@ -1019,511 +1019,173 @@ function generateDummyData(associationCode: DemoAssociationCode = "SV") {
   };
 }
 
-function generateMockNominationLists(): MockNominationLists {
-  // Generate mock nomination lists for the first 3 demo games
-  // These correspond to demo-g-1, demo-g-2, demo-g-3 from the assignments
+// Player nomination configuration for nomination lists
+interface PlayerNominationConfig {
+  index: number;
+  shirtNumber: number;
+  firstName: string;
+  lastName: string;
+  licenseCategory: "SEN" | "JUN";
+  isCaptain?: boolean;
+  isLibero?: boolean;
+}
 
-  const nominationLists: MockNominationLists = {
-    "demo-g-1": {
-      home: {
-        __identity: "demo-nomlist-home-1",
-        game: { __identity: "demo-g-1" },
-        team: { __identity: "team-1", displayName: "VBC Zürich Lions" },
-        closed: false,
-        isClosedForTeam: false,
-        indoorPlayerNominations: [
-          {
-            __identity: "demo-nom-1-1",
-            shirtNumber: 1,
-            isCaptain: true,
-            isLibero: false,
-            indoorPlayer: {
-              __identity: "demo-player-1-1",
-              person: {
-                __identity: "demo-person-1-1",
-                firstName: "Marco",
-                lastName: "Meier",
-                displayName: "Marco Meier",
-              },
-            },
-            indoorPlayerLicenseCategory: {
-              __identity: "lic-sen",
-              shortName: "SEN",
-            },
-          },
-          {
-            __identity: "demo-nom-1-2",
-            shirtNumber: 7,
-            isCaptain: false,
-            isLibero: false,
-            indoorPlayer: {
-              __identity: "demo-player-1-2",
-              person: {
-                __identity: "demo-person-1-2",
-                firstName: "Lukas",
-                lastName: "Schneider",
-                displayName: "Lukas Schneider",
-              },
-            },
-            indoorPlayerLicenseCategory: {
-              __identity: "lic-sen",
-              shortName: "SEN",
-            },
-          },
-          {
-            __identity: "demo-nom-1-3",
-            shirtNumber: 12,
-            isCaptain: false,
-            isLibero: true,
-            indoorPlayer: {
-              __identity: "demo-player-1-3",
-              person: {
-                __identity: "demo-person-1-3",
-                firstName: "Noah",
-                lastName: "Weber",
-                displayName: "Noah Weber",
-              },
-            },
-            indoorPlayerLicenseCategory: {
-              __identity: "lic-jun",
-              shortName: "JUN",
-            },
-          },
-          {
-            __identity: "demo-nom-1-4",
-            shirtNumber: 5,
-            isCaptain: false,
-            isLibero: false,
-            indoorPlayer: {
-              __identity: "demo-player-1-4",
-              person: {
-                __identity: "demo-person-1-4",
-                firstName: "Felix",
-                lastName: "Keller",
-                displayName: "Felix Keller",
-              },
-            },
-            indoorPlayerLicenseCategory: {
-              __identity: "lic-sen",
-              shortName: "SEN",
-            },
-          },
-          {
-            __identity: "demo-nom-1-5",
-            shirtNumber: 9,
-            isCaptain: false,
-            isLibero: false,
-            indoorPlayer: {
-              __identity: "demo-player-1-5",
-              person: {
-                __identity: "demo-person-1-5",
-                firstName: "Tim",
-                lastName: "Fischer",
-                displayName: "Tim Fischer",
-              },
-            },
-            indoorPlayerLicenseCategory: {
-              __identity: "lic-sen",
-              shortName: "SEN",
-            },
-          },
-          {
-            __identity: "demo-nom-1-6",
-            shirtNumber: 14,
-            isCaptain: false,
-            isLibero: false,
-            indoorPlayer: {
-              __identity: "demo-player-1-6",
-              person: {
-                __identity: "demo-person-1-6",
-                firstName: "Jan",
-                lastName: "Brunner",
-                displayName: "Jan Brunner",
-              },
-            },
-            indoorPlayerLicenseCategory: {
-              __identity: "lic-sen",
-              shortName: "SEN",
-            },
-          },
-        ],
-      },
-      away: {
-        __identity: "demo-nomlist-away-1",
-        game: { __identity: "demo-g-1" },
-        team: { __identity: "team-2", displayName: "Volley Luzern" },
-        closed: false,
-        isClosedForTeam: false,
-        indoorPlayerNominations: [
-          {
-            __identity: "demo-nom-2-1",
-            shirtNumber: 3,
-            isCaptain: true,
-            isLibero: false,
-            indoorPlayer: {
-              __identity: "demo-player-2-1",
-              person: {
-                __identity: "demo-person-2-1",
-                firstName: "David",
-                lastName: "Steiner",
-                displayName: "David Steiner",
-              },
-            },
-            indoorPlayerLicenseCategory: {
-              __identity: "lic-sen",
-              shortName: "SEN",
-            },
-          },
-          {
-            __identity: "demo-nom-2-2",
-            shirtNumber: 8,
-            isCaptain: false,
-            isLibero: false,
-            indoorPlayer: {
-              __identity: "demo-player-2-2",
-              person: {
-                __identity: "demo-person-2-2",
-                firstName: "Simon",
-                lastName: "Frei",
-                displayName: "Simon Frei",
-              },
-            },
-            indoorPlayerLicenseCategory: {
-              __identity: "lic-sen",
-              shortName: "SEN",
-            },
-          },
-          {
-            __identity: "demo-nom-2-3",
-            shirtNumber: 11,
-            isCaptain: false,
-            isLibero: true,
-            indoorPlayer: {
-              __identity: "demo-player-2-3",
-              person: {
-                __identity: "demo-person-2-3",
-                firstName: "Luca",
-                lastName: "Gerber",
-                displayName: "Luca Gerber",
-              },
-            },
-            indoorPlayerLicenseCategory: {
-              __identity: "lic-jun",
-              shortName: "JUN",
-            },
-          },
-          {
-            __identity: "demo-nom-2-4",
-            shirtNumber: 6,
-            isCaptain: false,
-            isLibero: false,
-            indoorPlayer: {
-              __identity: "demo-player-2-4",
-              person: {
-                __identity: "demo-person-2-4",
-                firstName: "Yannick",
-                lastName: "Hofer",
-                displayName: "Yannick Hofer",
-              },
-            },
-            indoorPlayerLicenseCategory: {
-              __identity: "lic-sen",
-              shortName: "SEN",
-            },
-          },
-          {
-            __identity: "demo-nom-2-5",
-            shirtNumber: 10,
-            isCaptain: false,
-            isLibero: false,
-            indoorPlayer: {
-              __identity: "demo-player-2-5",
-              person: {
-                __identity: "demo-person-2-5",
-                firstName: "Nico",
-                lastName: "Baumann",
-                displayName: "Nico Baumann",
-              },
-            },
-            indoorPlayerLicenseCategory: {
-              __identity: "lic-sen",
-              shortName: "SEN",
-            },
-          },
-        ],
+function createPlayerNomination(
+  config: PlayerNominationConfig,
+  gameIndex: number,
+  teamIndex: number,
+) {
+  const identity = `demo-nom-${gameIndex}-${teamIndex}-${config.index}`;
+  const displayName = `${config.firstName} ${config.lastName}`;
+  return {
+    __identity: identity,
+    shirtNumber: config.shirtNumber,
+    isCaptain: config.isCaptain ?? false,
+    isLibero: config.isLibero ?? false,
+    indoorPlayer: {
+      __identity: `demo-player-${gameIndex}-${teamIndex}-${config.index}`,
+      person: {
+        __identity: `demo-person-${gameIndex}-${teamIndex}-${config.index}`,
+        firstName: config.firstName,
+        lastName: config.lastName,
+        displayName,
       },
     },
-    "demo-g-2": {
-      home: {
-        __identity: "demo-nomlist-home-2",
-        game: { __identity: "demo-g-2" },
-        team: { __identity: "team-3", displayName: "Schönenwerd Smash" },
-        closed: false,
-        isClosedForTeam: false,
-        indoorPlayerNominations: [
-          {
-            __identity: "demo-nom-3-1",
-            shirtNumber: 2,
-            isCaptain: true,
-            isLibero: false,
-            indoorPlayer: {
-              __identity: "demo-player-3-1",
-              person: {
-                __identity: "demo-person-3-1",
-                firstName: "Raphael",
-                lastName: "Widmer",
-                displayName: "Raphael Widmer",
-              },
-            },
-            indoorPlayerLicenseCategory: {
-              __identity: "lic-sen",
-              shortName: "SEN",
-            },
-          },
-          {
-            __identity: "demo-nom-3-2",
-            shirtNumber: 15,
-            isCaptain: false,
-            isLibero: true,
-            indoorPlayer: {
-              __identity: "demo-player-3-2",
-              person: {
-                __identity: "demo-person-3-2",
-                firstName: "Kevin",
-                lastName: "Bieri",
-                displayName: "Kevin Bieri",
-              },
-            },
-            indoorPlayerLicenseCategory: {
-              __identity: "lic-sen",
-              shortName: "SEN",
-            },
-          },
-          {
-            __identity: "demo-nom-3-3",
-            shirtNumber: 4,
-            isCaptain: false,
-            isLibero: false,
-            indoorPlayer: {
-              __identity: "demo-player-3-3",
-              person: {
-                __identity: "demo-person-3-3",
-                firstName: "Patrick",
-                lastName: "Moser",
-                displayName: "Patrick Moser",
-              },
-            },
-            indoorPlayerLicenseCategory: {
-              __identity: "lic-sen",
-              shortName: "SEN",
-            },
-          },
-        ],
-      },
-      away: {
-        __identity: "demo-nomlist-away-2",
-        game: { __identity: "demo-g-2" },
-        team: { __identity: "team-4", displayName: "Traktor Basel" },
-        closed: false,
-        isClosedForTeam: false,
-        indoorPlayerNominations: [
-          {
-            __identity: "demo-nom-4-1",
-            shirtNumber: 1,
-            isCaptain: false,
-            isLibero: false,
-            indoorPlayer: {
-              __identity: "demo-player-4-1",
-              person: {
-                __identity: "demo-person-4-1",
-                firstName: "Benjamin",
-                lastName: "Koch",
-                displayName: "Benjamin Koch",
-              },
-            },
-            indoorPlayerLicenseCategory: {
-              __identity: "lic-sen",
-              shortName: "SEN",
-            },
-          },
-          {
-            __identity: "demo-nom-4-2",
-            shirtNumber: 13,
-            isCaptain: true,
-            isLibero: false,
-            indoorPlayer: {
-              __identity: "demo-player-4-2",
-              person: {
-                __identity: "demo-person-4-2",
-                firstName: "Michael",
-                lastName: "Lang",
-                displayName: "Michael Lang",
-              },
-            },
-            indoorPlayerLicenseCategory: {
-              __identity: "lic-sen",
-              shortName: "SEN",
-            },
-          },
-          {
-            __identity: "demo-nom-4-3",
-            shirtNumber: 17,
-            isCaptain: false,
-            isLibero: true,
-            indoorPlayer: {
-              __identity: "demo-player-4-3",
-              person: {
-                __identity: "demo-person-4-3",
-                firstName: "Julian",
-                lastName: "Roth",
-                displayName: "Julian Roth",
-              },
-            },
-            indoorPlayerLicenseCategory: {
-              __identity: "lic-jun",
-              shortName: "JUN",
-            },
-          },
-        ],
-      },
-    },
-    "demo-g-3": {
-      home: {
-        __identity: "demo-nomlist-home-3",
-        game: { __identity: "demo-g-3" },
-        team: { __identity: "team-5", displayName: "Volley Näfels" },
-        closed: false,
-        isClosedForTeam: false,
-        indoorPlayerNominations: [
-          {
-            __identity: "demo-nom-5-1",
-            shirtNumber: 6,
-            isCaptain: true,
-            isLibero: false,
-            indoorPlayer: {
-              __identity: "demo-player-5-1",
-              person: {
-                __identity: "demo-person-5-1",
-                firstName: "Anna",
-                lastName: "Huber",
-                displayName: "Anna Huber",
-              },
-            },
-            indoorPlayerLicenseCategory: {
-              __identity: "lic-sen",
-              shortName: "SEN",
-            },
-          },
-          {
-            __identity: "demo-nom-5-2",
-            shirtNumber: 10,
-            isCaptain: false,
-            isLibero: true,
-            indoorPlayer: {
-              __identity: "demo-player-5-2",
-              person: {
-                __identity: "demo-person-5-2",
-                firstName: "Lisa",
-                lastName: "Meyer",
-                displayName: "Lisa Meyer",
-              },
-            },
-            indoorPlayerLicenseCategory: {
-              __identity: "lic-sen",
-              shortName: "SEN",
-            },
-          },
-          {
-            __identity: "demo-nom-5-3",
-            shirtNumber: 8,
-            isCaptain: false,
-            isLibero: false,
-            indoorPlayer: {
-              __identity: "demo-player-5-3",
-              person: {
-                __identity: "demo-person-5-3",
-                firstName: "Sara",
-                lastName: "Schmid",
-                displayName: "Sara Schmid",
-              },
-            },
-            indoorPlayerLicenseCategory: {
-              __identity: "lic-jun",
-              shortName: "JUN",
-            },
-          },
-        ],
-      },
-      away: {
-        __identity: "demo-nomlist-away-3",
-        game: { __identity: "demo-g-3" },
-        team: { __identity: "team-6", displayName: "Volero Zürich" },
-        closed: false,
-        isClosedForTeam: false,
-        indoorPlayerNominations: [
-          {
-            __identity: "demo-nom-6-1",
-            shirtNumber: 4,
-            isCaptain: true,
-            isLibero: false,
-            indoorPlayer: {
-              __identity: "demo-player-6-1",
-              person: {
-                __identity: "demo-person-6-1",
-                firstName: "Elena",
-                lastName: "Keller",
-                displayName: "Elena Keller",
-              },
-            },
-            indoorPlayerLicenseCategory: {
-              __identity: "lic-sen",
-              shortName: "SEN",
-            },
-          },
-          {
-            __identity: "demo-nom-6-2",
-            shirtNumber: 7,
-            isCaptain: false,
-            isLibero: false,
-            indoorPlayer: {
-              __identity: "demo-player-6-2",
-              person: {
-                __identity: "demo-person-6-2",
-                firstName: "Julia",
-                lastName: "Lehmann",
-                displayName: "Julia Lehmann",
-              },
-            },
-            indoorPlayerLicenseCategory: {
-              __identity: "lic-sen",
-              shortName: "SEN",
-            },
-          },
-          {
-            __identity: "demo-nom-6-3",
-            shirtNumber: 12,
-            isCaptain: false,
-            isLibero: true,
-            indoorPlayer: {
-              __identity: "demo-player-6-3",
-              person: {
-                __identity: "demo-person-6-3",
-                firstName: "Nina",
-                lastName: "Zimmermann",
-                displayName: "Nina Zimmermann",
-              },
-            },
-            indoorPlayerLicenseCategory: {
-              __identity: "lic-sen",
-              shortName: "SEN",
-            },
-          },
-        ],
-      },
+    indoorPlayerLicenseCategory: {
+      __identity: `lic-${config.licenseCategory.toLowerCase()}`,
+      shortName: config.licenseCategory,
     },
   };
+}
 
-  return nominationLists;
+// Nomination list configuration for a team in a game
+interface NominationListConfig {
+  gameId: string;
+  teamId: string;
+  teamDisplayName: string;
+  side: "home" | "away";
+  players: PlayerNominationConfig[];
+}
+
+function createNominationList(
+  config: NominationListConfig,
+  gameIndex: number,
+  teamIndex: number,
+): NominationList {
+  return {
+    __identity: `demo-nomlist-${config.side}-${gameIndex}`,
+    game: { __identity: config.gameId },
+    team: { __identity: config.teamId, displayName: config.teamDisplayName },
+    closed: false,
+    isClosedForTeam: false,
+    indoorPlayerNominations: config.players.map((player) =>
+      createPlayerNomination(player, gameIndex, teamIndex),
+    ),
+  };
+}
+
+// Game nomination configuration pairs (home and away teams)
+interface GameNominationConfig {
+  gameIndex: number;
+  gameId: string;
+  home: Omit<NominationListConfig, "gameId" | "side">;
+  away: Omit<NominationListConfig, "gameId" | "side">;
+}
+
+// Configuration data for mock nomination lists (3 games with home/away teams)
+const NOMINATION_LIST_CONFIGS: GameNominationConfig[] = [
+  {
+    gameIndex: 1,
+    gameId: "demo-g-1",
+    home: {
+      teamId: "team-1",
+      teamDisplayName: "VBC Zürich Lions",
+      players: [
+        { index: 1, shirtNumber: 1, firstName: "Marco", lastName: "Meier", licenseCategory: "SEN", isCaptain: true },
+        { index: 2, shirtNumber: 7, firstName: "Lukas", lastName: "Schneider", licenseCategory: "SEN" },
+        { index: 3, shirtNumber: 12, firstName: "Noah", lastName: "Weber", licenseCategory: "JUN", isLibero: true },
+        { index: 4, shirtNumber: 5, firstName: "Felix", lastName: "Keller", licenseCategory: "SEN" },
+        { index: 5, shirtNumber: 9, firstName: "Tim", lastName: "Fischer", licenseCategory: "SEN" },
+        { index: 6, shirtNumber: 14, firstName: "Jan", lastName: "Brunner", licenseCategory: "SEN" },
+      ],
+    },
+    away: {
+      teamId: "team-2",
+      teamDisplayName: "Volley Luzern",
+      players: [
+        { index: 1, shirtNumber: 3, firstName: "David", lastName: "Steiner", licenseCategory: "SEN", isCaptain: true },
+        { index: 2, shirtNumber: 8, firstName: "Simon", lastName: "Frei", licenseCategory: "SEN" },
+        { index: 3, shirtNumber: 11, firstName: "Luca", lastName: "Gerber", licenseCategory: "JUN", isLibero: true },
+        { index: 4, shirtNumber: 6, firstName: "Yannick", lastName: "Hofer", licenseCategory: "SEN" },
+        { index: 5, shirtNumber: 10, firstName: "Nico", lastName: "Baumann", licenseCategory: "SEN" },
+      ],
+    },
+  },
+  {
+    gameIndex: 2,
+    gameId: "demo-g-2",
+    home: {
+      teamId: "team-3",
+      teamDisplayName: "Schönenwerd Smash",
+      players: [
+        { index: 1, shirtNumber: 2, firstName: "Raphael", lastName: "Widmer", licenseCategory: "SEN", isCaptain: true },
+        { index: 2, shirtNumber: 15, firstName: "Kevin", lastName: "Bieri", licenseCategory: "SEN", isLibero: true },
+        { index: 3, shirtNumber: 4, firstName: "Patrick", lastName: "Moser", licenseCategory: "SEN" },
+      ],
+    },
+    away: {
+      teamId: "team-4",
+      teamDisplayName: "Traktor Basel",
+      players: [
+        { index: 1, shirtNumber: 1, firstName: "Benjamin", lastName: "Koch", licenseCategory: "SEN" },
+        { index: 2, shirtNumber: 13, firstName: "Michael", lastName: "Lang", licenseCategory: "SEN", isCaptain: true },
+        { index: 3, shirtNumber: 17, firstName: "Julian", lastName: "Roth", licenseCategory: "JUN", isLibero: true },
+      ],
+    },
+  },
+  {
+    gameIndex: 3,
+    gameId: "demo-g-3",
+    home: {
+      teamId: "team-5",
+      teamDisplayName: "Volley Näfels",
+      players: [
+        { index: 1, shirtNumber: 6, firstName: "Anna", lastName: "Huber", licenseCategory: "SEN", isCaptain: true },
+        { index: 2, shirtNumber: 10, firstName: "Lisa", lastName: "Meyer", licenseCategory: "SEN", isLibero: true },
+        { index: 3, shirtNumber: 8, firstName: "Sara", lastName: "Schmid", licenseCategory: "JUN" },
+      ],
+    },
+    away: {
+      teamId: "team-6",
+      teamDisplayName: "Volero Zürich",
+      players: [
+        { index: 1, shirtNumber: 4, firstName: "Elena", lastName: "Keller", licenseCategory: "SEN", isCaptain: true },
+        { index: 2, shirtNumber: 7, firstName: "Julia", lastName: "Lehmann", licenseCategory: "SEN" },
+        { index: 3, shirtNumber: 12, firstName: "Nina", lastName: "Zimmermann", licenseCategory: "SEN", isLibero: true },
+      ],
+    },
+  },
+];
+
+function generateMockNominationLists(): MockNominationLists {
+  const result: MockNominationLists = {};
+
+  for (const config of NOMINATION_LIST_CONFIGS) {
+    result[config.gameId] = {
+      home: createNominationList(
+        { ...config.home, gameId: config.gameId, side: "home" },
+        config.gameIndex,
+        1,
+      ),
+      away: createNominationList(
+        { ...config.away, gameId: config.gameId, side: "away" },
+        config.gameIndex,
+        2,
+      ),
+    };
+  }
+
+  return result;
 }
 
 // Demo user referee level configuration
