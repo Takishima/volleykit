@@ -6,7 +6,7 @@ function getStepIndicatorStyle(
   showCompletion: boolean,
 ): string {
   if (isCurrent) {
-    return "bg-primary-500 text-white ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-gray-800";
+    return "bg-primary-500 text-primary-950 ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-gray-800";
   }
   if (showCompletion) {
     return "bg-green-500 text-white";

@@ -4,6 +4,7 @@ import { useSettingsStore } from "@/stores/settings";
 import { useTranslation } from "@/hooks/useTranslation";
 import { usePWA } from "@/contexts/PWAContext";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { getOccupationLabelKey } from "@/utils/occupation-labels";
 import { SafeModeWarningModal } from "@/components/features/SafeModeWarningModal";
@@ -100,13 +101,10 @@ export function SettingsPage() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {user.occupations.map((occ) => (
-                    <span
-                      key={occ.id}
-                      className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-300"
-                    >
+                    <Badge key={occ.id} variant="neutral" className="rounded-full">
                       {t(getOccupationLabelKey(occ.type))}
                       {occ.associationCode && ` (${occ.associationCode})`}
-                    </span>
+                    </Badge>
                   ))}
                 </div>
               </div>
@@ -245,7 +243,7 @@ export function SettingsPage() {
               {needRefresh ? (
                 <button
                   onClick={updateApp}
-                  className="rounded-md bg-primary-500 px-4 py-2 text-sm font-medium text-white hover:bg-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none"
+                  className="rounded-md bg-primary-500 px-4 py-2 text-sm font-medium text-primary-950 hover:bg-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none"
                   aria-label={t("settings.updateNow")}
                 >
                   {t("settings.updateNow")}

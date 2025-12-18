@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/Card";
 import { ExpandArrow } from "@/components/ui/ExpandArrow";
+import { Badge } from "@/components/ui/Badge";
 import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDateFormat } from "@/hooks/useDateFormat";
@@ -63,17 +64,13 @@ export function AssignmentCard({
       ? positionLabelsMap[positionKey]
       : assignment.refereePosition || "Referee";
 
-  const statusColors: Record<string, string> = {
-    active: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-    cancelled: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-    archived: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
-  };
-
-  // Status labels from i18n
-  const statusLabels: Record<string, string> = {
-    active: t("assignments.confirmed"),
-    cancelled: t("assignments.cancelled"),
-    archived: "Archived",
+  const statusConfig: Record<
+    string,
+    { label: string; variant: "success" | "danger" | "neutral" }
+  > = {
+    active: { label: t("assignments.confirmed"), variant: "success" },
+    cancelled: { label: t("assignments.cancelled"), variant: "danger" },
+    archived: { label: "Archived", variant: "neutral" },
   };
 
   return (
@@ -163,11 +160,12 @@ export function AssignmentCard({
 
               {/* Status */}
               <div className="flex items-center gap-2 text-sm pt-1">
-                <span
-                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[status] || statusColors.active}`}
+                <Badge
+                  variant={statusConfig[status]?.variant || "success"}
+                  className="rounded-full"
                 >
-                  {statusLabels[status] || "Active"}
-                </span>
+                  {statusConfig[status]?.label || "Active"}
+                </Badge>
               </div>
 
               {/* Category/League */}

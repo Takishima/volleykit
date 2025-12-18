@@ -1,6 +1,7 @@
 import { format, parseISO } from "date-fns";
 import { Card, CardContent } from "@/components/ui/Card";
 import { ExpandArrow } from "@/components/ui/ExpandArrow";
+import { Badge } from "@/components/ui/Badge";
 import type { CompensationRecord } from "@/api/client";
 import { useExpandable } from "@/hooks/useExpandable";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -63,19 +64,13 @@ export function CompensationCard({
             {/* Amount & status */}
             <div className="flex items-center gap-2">
               <div
-                className={`text-sm font-bold ${isPaid ? "text-green-600 dark:text-green-400" : "text-orange-600 dark:text-orange-400"}`}
+                className={`text-sm font-bold ${isPaid ? "text-green-600 dark:text-green-400" : "text-amber-600 dark:text-amber-400"}`}
               >
                 {total.toFixed(0)}
               </div>
-              <span
-                className={`px-1.5 py-0.5 rounded text-xs ${
-                  isPaid
-                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                    : "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
-                }`}
-              >
+              <Badge variant={isPaid ? "success" : "warning"}>
                 {isPaid ? "✓" : "○"}
-              </span>
+              </Badge>
               {!disableExpansion && <ExpandArrow isExpanded={isExpanded} />}
             </div>
           </div>
@@ -96,7 +91,7 @@ export function CompensationCard({
                     Total:
                   </span>
                   <span
-                    className={`font-bold ${isPaid ? "text-green-600 dark:text-green-400" : "text-orange-600 dark:text-orange-400"}`}
+                    className={`font-bold ${isPaid ? "text-green-600 dark:text-green-400" : "text-amber-600 dark:text-amber-400"}`}
                   >
                     CHF {total.toFixed(2)}
                   </span>
@@ -142,7 +137,7 @@ export function CompensationCard({
                     className={
                       isPaid
                         ? "text-green-600 dark:text-green-400"
-                        : "text-orange-600 dark:text-orange-400"
+                        : "text-amber-600 dark:text-amber-400"
                     }
                   >
                     {isPaid

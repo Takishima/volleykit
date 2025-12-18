@@ -45,7 +45,7 @@ export default function ReloadPromptPWA() {
             onClick={handleReload}
             disabled={isUpdating}
             aria-busy={isUpdating}
-            className="rounded-md bg-primary-500 px-3 py-2 text-sm font-medium text-white hover:bg-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-md bg-primary-500 px-3 py-2 text-sm font-medium text-primary-950 hover:bg-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Reload application to update to the latest version"
           >
             {isUpdating ? "Reloading..." : "Reload"}

@@ -1,4 +1,5 @@
 import { useTranslation } from "@/hooks/useTranslation";
+import { Badge } from "@/components/ui/Badge";
 import type { RosterPlayer } from "@/hooks/useNominationList";
 
 function TrashIcon({ className }: { className?: string }) {
@@ -86,36 +87,28 @@ export function PlayerListItem({
         <div className="flex items-center gap-1.5 flex-shrink-0">
           {/* License category badge */}
           {player.licenseCategory && !isMarkedForRemoval && (
-            <span className="px-1.5 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
-              {player.licenseCategory}
-            </span>
+            <Badge variant="neutral">{player.licenseCategory}</Badge>
           )}
 
           {/* Captain badge */}
           {player.isCaptain && !isMarkedForRemoval && (
-            <span
-              className="px-1.5 py-0.5 rounded text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
-              title={t("validation.roster.captain")}
-            >
+            <Badge variant="neutral" title={t("validation.roster.captain")}>
               C
-            </span>
+            </Badge>
           )}
 
           {/* Libero badge */}
           {player.isLibero && !isMarkedForRemoval && (
-            <span
-              className="px-1.5 py-0.5 rounded text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200"
-              title={t("validation.roster.libero")}
-            >
+            <Badge variant="neutral" title={t("validation.roster.libero")}>
               L
-            </span>
+            </Badge>
           )}
 
           {/* Newly added badge */}
           {player.isNewlyAdded && !isMarkedForRemoval && (
-            <span className="px-1.5 py-0.5 rounded text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+            <Badge variant="success">
               {t("validation.roster.newlyAdded")}
-            </span>
+            </Badge>
           )}
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { format, parseISO } from "date-fns";
 import { Card, CardContent } from "@/components/ui/Card";
 import { ExpandArrow } from "@/components/ui/ExpandArrow";
+import { Badge } from "@/components/ui/Badge";
 import type { GameExchange } from "@/api/client";
 import { useExpandable } from "@/hooks/useExpandable";
 
@@ -30,28 +31,17 @@ export function ExchangeCard({
   const status = exchange.status;
   const requiredLevel = exchange.requiredRefereeLevel;
 
+  const defaultStatus = { label: "Open", variant: "warning" as const };
   const statusConfig = {
-    open: {
-      label: "Open",
-      color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-    },
-    applied: {
-      label: "Applied",
-      color:
-        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-    },
-    closed: {
-      label: "Closed",
-      color: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
-    },
-  } as const;
+    open: { label: "Open", variant: "warning" as const },
+    applied: { label: "Applied", variant: "success" as const },
+    closed: { label: "Closed", variant: "neutral" as const },
+  };
 
-  const defaultStatus = statusConfig.open;
   const currentStatus =
     status && status in statusConfig
       ? statusConfig[status as keyof typeof statusConfig]
       : defaultStatus;
-  const { label: statusLabel, color: statusColor } = currentStatus;
 
   return (
     <Card>
@@ -88,11 +78,9 @@ export function ExchangeCard({
 
             {/* Status & expand indicator */}
             <div className="flex items-center gap-2">
-              <span
-                className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor}`}
-              >
-                {statusLabel}
-              </span>
+              <Badge variant={currentStatus.variant} className="rounded-full">
+                {currentStatus.label}
+              </Badge>
               {!disableExpansion && <ExpandArrow isExpanded={isExpanded} />}
             </div>
           </div>

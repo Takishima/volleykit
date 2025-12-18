@@ -28,7 +28,7 @@ export function LanguageSwitcher({
     }
     return `px-3 py-1 rounded-lg text-sm transition-colors ${
       isActive
-        ? "bg-primary-500 text-white"
+        ? "bg-primary-500 text-primary-950"
         : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
     }`;
   };
