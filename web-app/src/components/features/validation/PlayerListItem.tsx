@@ -56,7 +56,7 @@ export function PlayerListItem({
 
   return (
     <div
-      className={`flex items-center justify-between py-3 px-2 border-b border-gray-100 dark:border-gray-700 last:border-b-0 ${
+      className={`flex items-center justify-between py-3 px-2 border-b border-border-subtle dark:border-border-subtle-dark last:border-b-0 ${
         isMarkedForRemoval ? "opacity-50" : ""
       }`}
     >
@@ -65,8 +65,8 @@ export function PlayerListItem({
         <span
           className={`font-mono text-sm font-medium w-8 text-center ${
             isMarkedForRemoval
-              ? "text-gray-400 dark:text-gray-500"
-              : "text-gray-700 dark:text-gray-300"
+              ? "text-text-subtle dark:text-text-subtle-dark"
+              : "text-text-secondary dark:text-text-secondary-dark"
           }`}
         >
           #{player.shirtNumber}
@@ -76,8 +76,8 @@ export function PlayerListItem({
         <span
           className={`text-sm truncate ${
             isMarkedForRemoval
-              ? "line-through text-gray-400 dark:text-gray-500"
-              : "text-gray-900 dark:text-white"
+              ? "line-through text-text-subtle dark:text-text-subtle-dark"
+              : "text-text-primary dark:text-text-primary-dark"
           }`}
         >
           {player.displayName}

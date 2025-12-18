@@ -93,7 +93,7 @@ export function AssignmentsPage() {
       <div
         role="tablist"
         aria-label={t("assignments.title")}
-        className="flex gap-2 border-b border-gray-200 dark:border-gray-700"
+        className="flex gap-2 border-b border-border-default dark:border-border-default-dark"
       >
         <button
           role="tab"
@@ -106,7 +106,7 @@ export function AssignmentsPage() {
             ${
               activeTab === "upcoming"
                 ? "border-primary-500 text-primary-600 dark:text-primary-400"
-                : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                : "border-transparent text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark"
             }
           `}
         >
@@ -128,13 +128,13 @@ export function AssignmentsPage() {
             ${
               activeTab === "validationClosed"
                 ? "border-primary-500 text-primary-600 dark:text-primary-400"
-                : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                : "border-transparent text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark"
             }
           `}
         >
           {t("assignments.validationClosed")}
           {validationClosedData && validationClosedData.length > 0 && (
-            <span className="ml-2 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs">
+            <span className="ml-2 px-2 py-0.5 rounded-full bg-surface-subtle dark:bg-surface-card-dark text-text-secondary dark:text-text-muted-dark text-xs">
               {validationClosedData.length}
             </span>
           )}

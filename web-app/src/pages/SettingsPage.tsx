@@ -64,7 +64,7 @@ export function SettingsPage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+      <h1 className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
         {t("settings.title")}
       </h1>
 
@@ -72,7 +72,7 @@ export function SettingsPage() {
       {user && (
         <Card>
           <CardHeader>
-            <h2 className="font-semibold text-gray-900 dark:text-white">
+            <h2 className="font-semibold text-text-primary dark:text-text-primary-dark">
               {t("settings.profile")}
             </h2>
           </CardHeader>
@@ -83,11 +83,11 @@ export function SettingsPage() {
                 {user.lastName.charAt(0)}
               </div>
               <div>
-                <div className="font-medium text-gray-900 dark:text-white">
+                <div className="font-medium text-text-primary dark:text-text-primary-dark">
                   {user.firstName} {user.lastName}
                 </div>
                 {user.email && (
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                  <div className="text-sm text-text-muted dark:text-text-muted-dark">
                     {user.email}
                   </div>
                 )}
@@ -95,8 +95,8 @@ export function SettingsPage() {
             </div>
 
             {user.occupations && user.occupations.length > 0 && (
-              <div className="border-t border-gray-100 dark:border-gray-700 pt-4">
-                <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+              <div className="border-t border-border-subtle dark:border-border-subtle-dark pt-4">
+                <div className="text-sm text-text-muted dark:text-text-muted-dark mb-2">
                   {t("settings.roles")}
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -116,7 +116,7 @@ export function SettingsPage() {
       {/* Language section */}
       <Card>
         <CardHeader>
-          <h2 className="font-semibold text-gray-900 dark:text-white">
+          <h2 className="font-semibold text-text-primary dark:text-text-primary-dark">
             {t("settings.language")}
           </h2>
         </CardHeader>
@@ -130,12 +130,12 @@ export function SettingsPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <h2 className="font-semibold text-gray-900 dark:text-white">
+              <h2 className="font-semibold text-text-primary dark:text-text-primary-dark">
                 {t("settings.safeMode")}
               </h2>
               {!isSafeModeEnabled && (
                 <svg
-                  className="w-5 h-5 text-yellow-600 dark:text-yellow-400"
+                  className="w-5 h-5 text-warning-600 dark:text-warning-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -152,19 +152,19 @@ export function SettingsPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-text-muted dark:text-text-muted-dark">
               {t("settings.safeModeDescription")}
             </p>
 
             <div className="flex items-center justify-between py-2">
               <div className="flex-1">
-                <div className="text-sm font-medium text-gray-900 dark:text-white">
+                <div className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
                   {isSafeModeEnabled
                     ? t("settings.safeModeEnabled")
                     : t("settings.safeModeDisabled")}
                 </div>
                 {!isSafeModeEnabled && (
-                  <div className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+                  <div className="text-xs text-warning-600 dark:text-warning-400 mt-1">
                     {t("settings.safeModeDangerous")}
                   </div>
                 )}
@@ -175,8 +175,8 @@ export function SettingsPage() {
                 onClick={handleToggleSafeMode}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
                   isSafeModeEnabled
-                    ? "bg-green-600"
-                    : "bg-gray-200 dark:bg-gray-700"
+                    ? "bg-success-600"
+                    : "bg-surface-muted dark:bg-surface-subtle-dark"
                 }`}
                 role="switch"
                 aria-checked={isSafeModeEnabled}
@@ -196,11 +196,11 @@ export function SettingsPage() {
       {/* Privacy */}
       <Card>
         <CardHeader>
-          <h2 className="font-semibold text-gray-900 dark:text-white">
+          <h2 className="font-semibold text-text-primary dark:text-text-primary-dark">
             {t("settings.privacy")}
           </h2>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm text-gray-500 dark:text-gray-400">
+        <CardContent className="space-y-2 text-sm text-text-muted dark:text-text-muted-dark">
           <p>{t("settings.privacyNoCollection")}</p>
           <p>{t("settings.privacyDirectComm")}</p>
           <p>{t("settings.privacyNoAnalytics")}</p>
@@ -211,7 +211,7 @@ export function SettingsPage() {
       {__PWA_ENABLED__ && (
         <Card>
           <CardHeader>
-            <h2 className="font-semibold text-gray-900 dark:text-white">
+            <h2 className="font-semibold text-text-primary dark:text-text-primary-dark">
               {t("settings.updates")}
             </h2>
           </CardHeader>
@@ -219,7 +219,7 @@ export function SettingsPage() {
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <div
-                  className="text-sm font-medium text-gray-900 dark:text-white"
+                  className="text-sm font-medium text-text-primary dark:text-text-primary-dark"
                   aria-live="polite"
                 >
                   {needRefresh
@@ -227,13 +227,13 @@ export function SettingsPage() {
                     : t("settings.upToDate")}
                 </div>
                 {lastChecked && (
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <div className="text-xs text-text-muted dark:text-text-muted-dark mt-1">
                     {t("settings.lastChecked")}: {formatLastChecked(lastChecked)}
                   </div>
                 )}
                 {checkError && (
                   <div
-                    className="text-xs text-red-600 dark:text-red-400 mt-1"
+                    className="text-xs text-danger-600 dark:text-danger-400 mt-1"
                     role="alert"
                   >
                     {t("settings.updateCheckFailed")}
@@ -253,7 +253,7 @@ export function SettingsPage() {
                   onClick={checkForUpdate}
                   disabled={isChecking}
                   aria-busy={isChecking}
-                  className="rounded-md bg-gray-100 dark:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="rounded-md bg-surface-subtle dark:bg-surface-subtle-dark px-4 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark hover:bg-gray-200 dark:hover:bg-gray-600 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label={t("settings.checkForUpdates")}
                 >
                   {isChecking ? t("settings.checking") : t("settings.checkForUpdates")}
@@ -267,24 +267,24 @@ export function SettingsPage() {
       {/* App info */}
       <Card>
         <CardHeader>
-          <h2 className="font-semibold text-gray-900 dark:text-white">
+          <h2 className="font-semibold text-text-primary dark:text-text-primary-dark">
             {t("settings.about")}
           </h2>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-gray-500 dark:text-gray-400">
+            <span className="text-text-muted dark:text-text-muted-dark">
               {t("settings.version")}
             </span>
-            <span className="text-gray-900 dark:text-white">1.0.0</span>
+            <span className="text-text-primary dark:text-text-primary-dark">1.0.0</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-500 dark:text-gray-400">
+            <span className="text-text-muted dark:text-text-muted-dark">
               {t("settings.platform")}
             </span>
-            <span className="text-gray-900 dark:text-white">Web</span>
+            <span className="text-text-primary dark:text-text-primary-dark">Web</span>
           </div>
-          <div className="border-t border-gray-100 dark:border-gray-700 pt-3 mt-3">
+          <div className="border-t border-border-subtle dark:border-border-subtle-dark pt-3 mt-3">
             <a
               href="https://volleymanager.volleyball.ch"
               target="_blank"
@@ -294,11 +294,11 @@ export function SettingsPage() {
               {t("settings.openWebsite")} →
             </a>
           </div>
-          <div className="border-t border-gray-100 dark:border-gray-700 pt-3 mt-3 space-y-2">
-            <p className="text-gray-500 dark:text-gray-400">
+          <div className="border-t border-border-subtle dark:border-border-subtle-dark pt-3 mt-3 space-y-2">
+            <p className="text-text-muted dark:text-text-muted-dark">
               {t("settings.dataSource")}
             </p>
-            <p className="text-xs text-gray-400 dark:text-gray-500">
+            <p className="text-xs text-text-subtle dark:text-text-subtle-dark">
               {t("settings.disclaimer")}
             </p>
           </div>
@@ -306,7 +306,7 @@ export function SettingsPage() {
       </Card>
 
       {/* Logout */}
-      <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="pt-4 border-t border-border-default dark:border-border-default-dark">
         <button onClick={logout} className="btn btn-secondary w-full sm:w-auto">
           {t("auth.logout")}
         </button>

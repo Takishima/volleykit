@@ -62,20 +62,20 @@ export function LoginPage() {
   // In demo-only mode, show a loading state while auto-redirecting
   if (DEMO_MODE_ONLY) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-surface-page dark:bg-surface-page-dark px-4">
         <div className="text-center" role="status">
           <span className="text-6xl" aria-hidden="true">
             🏐
           </span>
-          <h1 className="mt-4 text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="mt-4 text-3xl font-bold text-text-primary dark:text-text-primary-dark">
             VolleyKit
           </h1>
-          <p className="mt-4 text-gray-500 dark:text-gray-400">
+          <p className="mt-4 text-text-muted dark:text-text-muted-dark">
             {t("auth.loadingDemo")}
           </p>
           {/* Use visual-only spinner since parent has role="status" */}
           <div
-            className="w-8 h-8 border-3 border-gray-200 border-t-orange-500 rounded-full animate-spin mt-4 mx-auto"
+            className="w-8 h-8 border-3 border-border-default border-t-primary-500 rounded-full animate-spin mt-4 mx-auto"
             aria-hidden="true"
           />
         </div>
@@ -84,7 +84,7 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-surface-page dark:bg-surface-page-dark px-4">
       <div className="w-full max-w-md">
         {/* Language Switcher */}
         <LanguageSwitcher className="mb-6" />
@@ -92,10 +92,10 @@ export function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <span className="text-6xl">🏐</span>
-          <h1 className="mt-4 text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="mt-4 text-3xl font-bold text-text-primary dark:text-text-primary-dark">
             VolleyKit
           </h1>
-          <p className="mt-2 text-gray-500 dark:text-gray-400">
+          <p className="mt-2 text-text-muted dark:text-text-muted-dark">
             {t("auth.subtitle")}
           </p>
         </div>
@@ -106,7 +106,7 @@ export function LoginPage() {
             <div>
               <label
                 htmlFor="username"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                className="block text-sm font-medium text-text-secondary dark:text-text-secondary-dark mb-2"
               >
                 {t("auth.username")}
               </label>
@@ -125,7 +125,7 @@ export function LoginPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                className="block text-sm font-medium text-text-secondary dark:text-text-secondary-dark mb-2"
               >
                 {t("auth.password")}
               </label>
@@ -165,10 +165,10 @@ export function LoginPage() {
 
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+                <div className="w-full border-t border-border-strong dark:border-border-strong-dark" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="bg-white dark:bg-gray-800 px-2 text-gray-500 dark:text-gray-400">
+                <span className="bg-surface-card dark:bg-surface-card-dark px-2 text-text-muted dark:text-text-muted-dark">
                   {t("auth.or")}
                 </span>
               </div>
@@ -186,7 +186,7 @@ export function LoginPage() {
         </div>
 
         {/* Info */}
-        <p className="mt-6 text-center text-xs text-gray-400 dark:text-gray-500">
+        <p className="mt-6 text-center text-xs text-text-subtle dark:text-text-subtle-dark">
           {t("auth.loginInfo")}
           <br />
           {t("auth.privacyNote")}

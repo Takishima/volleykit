@@ -217,25 +217,25 @@ export function ScoresheetPanel({ onScoresheetChange }: ScoresheetPanelProps) {
       />
 
       {!selectedFile ? (
-        <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
-          <UploadIcon className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-500 mb-4" />
-          <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+        <div className="border-2 border-dashed border-border-strong dark:border-border-strong-dark rounded-lg p-6 text-center">
+          <UploadIcon className="w-12 h-12 mx-auto text-text-subtle dark:text-text-subtle-dark mb-4" />
+          <h3 className="text-sm font-medium text-text-primary dark:text-text-primary-dark mb-1">
             {tKey("title")}
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          <p className="text-sm text-text-muted dark:text-text-muted-dark mb-4">
             {tKey("description")}
           </p>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
+          <p className="text-xs text-text-subtle dark:text-text-subtle-dark mb-4">
             {tKey("acceptedFormats")} • {tKey("maxFileSize")}
           </p>
 
           {errorMessage && (
             <div
               role="alert"
-              className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2"
+              className="mb-4 p-3 bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800 rounded-lg flex items-center gap-2"
             >
-              <AlertIcon className="w-5 h-5 text-red-500 flex-shrink-0" />
-              <span className="text-sm text-red-700 dark:text-red-400">
+              <AlertIcon className="w-5 h-5 text-danger-500 flex-shrink-0" />
+              <span className="text-sm text-danger-700 dark:text-danger-400">
                 {errorMessage}
               </span>
             </div>
@@ -253,7 +253,7 @@ export function ScoresheetPanel({ onScoresheetChange }: ScoresheetPanelProps) {
             <button
               type="button"
               onClick={() => cameraInputRef.current?.click()}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark hover:bg-surface-muted dark:hover:bg-surface-muted-dark rounded-lg transition-colors"
             >
               <CameraIcon className="w-4 h-4" />
               {tKey("takePhoto")}
@@ -261,9 +261,9 @@ export function ScoresheetPanel({ onScoresheetChange }: ScoresheetPanelProps) {
           </div>
         </div>
       ) : (
-        <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+        <div className="border border-border-default dark:border-border-default-dark rounded-lg overflow-hidden">
           {selectedFile.previewUrl ? (
-            <div className="relative bg-gray-100 dark:bg-gray-800">
+            <div className="relative bg-surface-subtle dark:bg-surface-card-dark">
               <img
                 src={selectedFile.previewUrl}
                 alt={tKey("previewAlt")}
@@ -271,23 +271,23 @@ export function ScoresheetPanel({ onScoresheetChange }: ScoresheetPanelProps) {
               />
             </div>
           ) : (
-            <div className="bg-gray-100 dark:bg-gray-800 p-8 flex flex-col items-center justify-center">
-              <FileIcon className="w-16 h-16 text-gray-400 dark:text-gray-500 mb-2" />
-              <span className="text-sm text-gray-500 dark:text-gray-400">
+            <div className="bg-surface-subtle dark:bg-surface-card-dark p-8 flex flex-col items-center justify-center">
+              <FileIcon className="w-16 h-16 text-text-subtle dark:text-text-subtle-dark mb-2" />
+              <span className="text-sm text-text-muted dark:text-text-muted-dark">
                 PDF
               </span>
             </div>
           )}
 
-          <div className="p-4 bg-white dark:bg-gray-800">
+          <div className="p-4 bg-surface-card dark:bg-surface-card-dark">
             {uploadState === "uploading" && (
               <div className="mb-3">
-                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+                <div className="flex items-center justify-between text-xs text-text-muted dark:text-text-muted-dark mb-1">
                   <span>{tKey("uploading")}</span>
                   <span>{uploadProgress}%</span>
                 </div>
                 <div
-                  className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"
+                  className="h-2 bg-surface-muted dark:bg-surface-subtle-dark rounded-full overflow-hidden"
                   role="progressbar"
                   aria-valuenow={uploadProgress}
                   aria-valuemin={0}
@@ -315,10 +315,10 @@ export function ScoresheetPanel({ onScoresheetChange }: ScoresheetPanelProps) {
               </div>
             )}
 
-            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+            <p className="text-sm font-medium text-text-primary dark:text-text-primary-dark truncate">
               {selectedFile.file.name}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-text-muted dark:text-text-muted-dark">
               {formatFileSize(selectedFile.file.size)}
             </p>
 
@@ -327,7 +327,7 @@ export function ScoresheetPanel({ onScoresheetChange }: ScoresheetPanelProps) {
                 type="button"
                 onClick={handleReplace}
                 disabled={uploadState === "uploading"}
-                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark hover:bg-surface-muted dark:hover:bg-surface-muted-dark rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {tKey("replace")}
               </button>
@@ -345,7 +345,7 @@ export function ScoresheetPanel({ onScoresheetChange }: ScoresheetPanelProps) {
       )}
 
       {isDemoMode && (
-        <p className="mt-3 text-xs text-center text-gray-400 dark:text-gray-500">
+        <p className="mt-3 text-xs text-center text-text-subtle dark:text-text-subtle-dark">
           {tKey("demoModeNote")}
         </p>
       )}

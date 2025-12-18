@@ -47,7 +47,7 @@ export function ScorerResultsList({
     return (
       <div
         role="alert"
-        className="text-center py-8 text-red-500 dark:text-red-400"
+        className="text-center py-8 text-danger-500 dark:text-danger-400"
       >
         {t("validation.scorerSearch.searchError")}
       </div>
@@ -56,7 +56,7 @@ export function ScorerResultsList({
 
   if (!hasResults) {
     return (
-      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+      <div className="text-center py-8 text-text-muted dark:text-text-muted-dark">
         {t("validation.scorerSearch.noScorersFound")}
       </div>
     );
@@ -87,16 +87,16 @@ export function ScorerResultsList({
                 transition-colors
                 ${
                   isHighlighted
-                    ? "bg-blue-50 dark:bg-blue-900/30"
-                    : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                    ? "bg-primary-50 dark:bg-primary-900/30"
+                    : "hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark"
                 }
               `}
             >
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-gray-900 dark:text-white truncate">
+                <div className="font-medium text-text-primary dark:text-text-primary-dark truncate">
                   {scorer.displayName}
                 </div>
-                <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+                <div className="flex items-center gap-3 text-sm text-text-muted dark:text-text-muted-dark">
                   {scorer.associationId && (
                     <span>ID: {scorer.associationId}</span>
                   )}
@@ -106,7 +106,7 @@ export function ScorerResultsList({
                 </div>
               </div>
               <svg
-                className="w-5 h-5 text-gray-400 flex-shrink-0 ml-2"
+                className="w-5 h-5 text-text-subtle flex-shrink-0 ml-2"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

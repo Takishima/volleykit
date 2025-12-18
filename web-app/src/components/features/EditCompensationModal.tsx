@@ -130,20 +130,20 @@ export function EditCompensationModal({
       aria-hidden="true"
     >
       <div
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6"
+        className="bg-surface-card dark:bg-surface-card-dark rounded-lg shadow-xl max-w-md w-full p-6"
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-compensation-title"
       >
         <h2
           id="edit-compensation-title"
-          className="text-xl font-semibold text-gray-900 dark:text-white mb-4"
+          className="text-xl font-semibold text-text-primary dark:text-text-primary-dark mb-4"
         >
           {t("assignments.editCompensation")}
         </h2>
 
-        <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-          <div className="font-medium text-gray-900 dark:text-white">
+        <div className="mb-4 text-sm text-text-muted dark:text-text-muted-dark">
+          <div className="font-medium text-text-primary dark:text-text-primary-dark">
             {homeTeam} vs {awayTeam}
           </div>
         </div>
@@ -152,7 +152,7 @@ export function EditCompensationModal({
           <div>
             <label
               htmlFor="kilometers"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-text-secondary dark:text-text-secondary-dark mb-1"
             >
               {t("assignments.kilometers")}
             </label>
@@ -163,7 +163,7 @@ export function EditCompensationModal({
               step="0.1"
               value={kilometers}
               onChange={(e) => setKilometers(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 border border-border-strong dark:border-border-strong-dark rounded-md bg-surface-card dark:bg-surface-subtle-dark text-text-primary dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary-500"
               aria-invalid={errors.kilometers ? "true" : "false"}
               aria-describedby={
                 errors.kilometers ? "kilometers-error" : undefined
@@ -172,7 +172,7 @@ export function EditCompensationModal({
             {errors.kilometers && (
               <p
                 id="kilometers-error"
-                className="mt-1 text-sm text-red-600 dark:text-red-400"
+                className="mt-1 text-sm text-danger-600 dark:text-danger-400"
               >
                 {errors.kilometers}
               </p>
@@ -182,7 +182,7 @@ export function EditCompensationModal({
           <div>
             <label
               htmlFor="reason"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-text-secondary dark:text-text-secondary-dark mb-1"
             >
               {t("assignments.reason")}
             </label>
@@ -191,7 +191,7 @@ export function EditCompensationModal({
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 border border-border-strong dark:border-border-strong-dark rounded-md bg-surface-card dark:bg-surface-subtle-dark text-text-primary dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder={t("assignments.reasonPlaceholder")}
             />
           </div>
@@ -200,7 +200,7 @@ export function EditCompensationModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              className="flex-1 px-4 py-2 text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong"
             >
               {t("common.close")}
             </button>

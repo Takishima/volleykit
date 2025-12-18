@@ -60,7 +60,7 @@ export function SafeModeWarningModal({
       aria-hidden="true"
     >
       <div
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6"
+        className="bg-surface-card dark:bg-surface-card-dark rounded-lg shadow-xl max-w-md w-full p-6"
         role="dialog"
         aria-modal="true"
         aria-labelledby="safe-mode-warning-title"
@@ -84,18 +84,18 @@ export function SafeModeWarningModal({
           </div>
           <h2
             id="safe-mode-warning-title"
-            className="text-xl font-semibold text-gray-900 dark:text-white"
+            className="text-xl font-semibold text-text-primary dark:text-text-primary-dark"
           >
             {t("settings.safeModeWarningTitle")}
           </h2>
         </div>
 
         <div className="mb-6 space-y-3">
-          <p className="text-sm text-gray-700 dark:text-gray-300">
+          <p className="text-sm text-text-secondary dark:text-text-secondary-dark">
             {t("settings.safeModeWarningMessage")}
           </p>
 
-          <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+          <ul className="space-y-2 text-sm text-text-secondary dark:text-text-secondary-dark">
             <li className="flex items-start">
               <span className="text-yellow-600 dark:text-yellow-400 mr-2">
                 •
@@ -117,12 +117,12 @@ export function SafeModeWarningModal({
           </ul>
         </div>
 
-        <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+        <div className="border-t border-border-default dark:border-border-default-dark pt-4">
           <div className="flex gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              className="flex-1 px-4 py-2 text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong"
             >
               {t("common.cancel")}
             </button>

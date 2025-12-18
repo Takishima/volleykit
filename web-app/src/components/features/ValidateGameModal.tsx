@@ -75,7 +75,7 @@ function UnsavedChangesDialog({
     >
       <div
         ref={dialogRef}
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-sm w-full p-6"
+        className="bg-surface-card dark:bg-surface-card-dark rounded-lg shadow-xl max-w-sm w-full p-6"
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="unsaved-changes-title"
@@ -83,13 +83,13 @@ function UnsavedChangesDialog({
       >
         <h3
           id="unsaved-changes-title"
-          className="text-lg font-semibold text-gray-900 dark:text-white mb-2"
+          className="text-lg font-semibold text-text-primary dark:text-text-primary-dark mb-2"
         >
           {t("validation.state.unsavedChangesTitle")}
         </h3>
         <p
           id="unsaved-changes-description"
-          className="text-sm text-gray-600 dark:text-gray-400 mb-4"
+          className="text-sm text-text-muted dark:text-text-muted-dark mb-4"
         >
           {t("validation.state.unsavedChangesMessage")}
         </p>
@@ -98,7 +98,7 @@ function UnsavedChangesDialog({
             type="button"
             onClick={onCancel}
             disabled={isSaving}
-            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50"
+            className="px-4 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong disabled:opacity-50"
           >
             {t("validation.state.continueEditing")}
           </button>
@@ -398,20 +398,20 @@ export function ValidateGameModal({
         onClick={handleBackdropClick}
       >
         <div
-          className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full p-6"
+          className="bg-surface-card dark:bg-surface-card-dark rounded-lg shadow-xl max-w-lg w-full p-6"
           role="dialog"
           aria-modal="true"
           aria-labelledby="validate-game-title"
         >
           <h2
             id="validate-game-title"
-            className="text-xl font-semibold text-gray-900 dark:text-white mb-2"
+            className="text-xl font-semibold text-text-primary dark:text-text-primary-dark mb-2"
           >
             {t("assignments.validateGame")}
           </h2>
 
-          <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-            <div className="font-medium text-gray-900 dark:text-white">
+          <div className="mb-4 text-sm text-text-muted dark:text-text-muted-dark">
+            <div className="font-medium text-text-primary dark:text-text-primary-dark">
               {homeTeam} vs {awayTeam}
             </div>
           </div>
@@ -425,7 +425,7 @@ export function ValidateGameModal({
               clickable={!isFinalizing}
               onStepClick={goToStep}
             />
-            <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">
+            <p className="text-center text-xs text-text-muted dark:text-text-muted-dark mt-2">
               {tInterpolate("validation.wizard.stepOf", {
                 current: currentStepIndex + 1,
                 total: totalSteps,
@@ -471,23 +471,23 @@ export function ValidateGameModal({
           {saveError && (
             <div
               role="alert"
-              className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+              className="mt-4 p-3 bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800 rounded-lg"
             >
-              <p className="text-sm text-red-700 dark:text-red-400">
+              <p className="text-sm text-danger-700 dark:text-danger-400">
                 {saveError}
               </p>
               <div className="mt-2 flex gap-3">
                 <button
                   type="button"
                   onClick={() => handleFinish()}
-                  className="text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                  className="text-sm font-medium text-danger-600 dark:text-danger-400 hover:text-danger-700 dark:hover:text-danger-300"
                 >
                   {t("common.retry")}
                 </button>
                 <button
                   type="button"
                   onClick={handleDiscardAndClose}
-                  className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  className="text-sm font-medium text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark"
                 >
                   {t("validation.state.discardAndClose")}
                 </button>
@@ -497,13 +497,13 @@ export function ValidateGameModal({
 
           {/* Saving indicator */}
           {isSaving && (
-            <div className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
+            <div className="mt-4 text-center text-sm text-text-muted dark:text-text-muted-dark">
               {t("validation.wizard.saving")}
             </div>
           )}
 
           {/* Footer with navigation buttons */}
-          <div className="flex justify-between gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 mt-4">
+          <div className="flex justify-between gap-3 pt-4 border-t border-border-default dark:border-border-default-dark mt-4">
             {/* Left side: Back button or Cancel on first step */}
             <div>
               {isFirstStep ? (
@@ -511,7 +511,7 @@ export function ValidateGameModal({
                   type="button"
                   onClick={() => attemptClose()}
                   disabled={isFinalizing}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {t("common.cancel")}
                 </button>
@@ -520,7 +520,7 @@ export function ValidateGameModal({
                   type="button"
                   onClick={handleBack}
                   disabled={isFinalizing}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {t("validation.wizard.previous")}
                 </button>
