@@ -83,8 +83,8 @@ export function AppShell() {
 
             {isAuthenticated && (
               <div className="flex items-center gap-3">
-                {/* Occupation dropdown */}
-                {user?.occupations && user.occupations.length > 0 && (
+                {/* Occupation dropdown - only show when multiple occupations exist */}
+                {user?.occupations && user.occupations.length > 1 && (
                   <div className="relative" ref={dropdownRef}>
                     <button
                       onClick={() => setIsDropdownOpen(!isDropdownOpen)}
