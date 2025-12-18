@@ -34,10 +34,26 @@ jobs:
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
+            EVENT TYPE: ${{ github.event.action }}
 
             CRITICAL: You MUST read the CLAUDE.md file FIRST and strictly enforce all guidelines during this review.
 
-            Review this PR against the CLAUDE.md requirements. Flag violations of:
+            ## CONSISTENCY REQUIREMENTS
+
+            BEFORE reviewing, check for previous review comments on this PR:
+            1. Run `gh pr view ${{ github.event.pull_request.number }} --comments` to see all previous comments
+            2. Identify any previous Claude Code Review comments (they follow the format below)
+            3. Track which issues were previously raised
+
+            When re-reviewing (EVENT TYPE is "synchronize"):
+            - DO NOT repeat issues that are still present - only reference them briefly
+            - DO acknowledge issues that have been FIXED with "✅ Fixed: [issue]"
+            - DO flag any NEW issues introduced in the latest commits
+            - Focus your detailed comments on changes since the last review
+
+            ## REVIEW CHECKLIST (CLAUDE.md requirements)
+
+            Flag violations of:
             - Naming conventions (PascalCase components, camelCase hooks/variables, SCREAMING_SNAKE_CASE constants)
             - Magic numbers (must use named constants)
             - Array index as React key (must use unique identifiers)
@@ -52,6 +68,26 @@ jobs:
             - Performance considerations
             - Security concerns
             - Test coverage for business logic
+
+            ## OUTPUT FORMAT (use this exact structure for consistency)
+
+            ```
+            ## Claude Code Review
+
+            **Review type:** [Initial review | Re-review after changes]
+
+            ### Summary
+            [1-2 sentence overview]
+
+            ### Issues Found
+            [List issues with file:line references, or "No issues found"]
+
+            ### Fixed Since Last Review (re-reviews only)
+            [List resolved issues, or omit section for initial reviews]
+
+            ### Recommendations
+            [Optional suggestions for improvement]
+            ```
 
             Be constructive but firm - violations of CLAUDE.md guidelines should be explicitly called out.
 
