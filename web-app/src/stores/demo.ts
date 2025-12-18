@@ -1134,7 +1134,7 @@ function generateDummyData() {
 
   const dummyScorers: PersonSearchResult[] = [
     {
-      __identity: "demo-scorer-1",
+      __identity: "d1111111-1111-4111-a111-111111111111",
       firstName: "Hans",
       lastName: "Müller",
       displayName: "Hans Müller",
@@ -1143,7 +1143,7 @@ function generateDummyData() {
       gender: "m",
     },
     {
-      __identity: "demo-scorer-2",
+      __identity: "d2222222-2222-4222-a222-222222222222",
       firstName: "Maria",
       lastName: "Müller",
       displayName: "Maria Müller",
@@ -1152,7 +1152,7 @@ function generateDummyData() {
       gender: "f",
     },
     {
-      __identity: "demo-scorer-3",
+      __identity: "d3333333-3333-4333-a333-333333333333",
       firstName: "Peter",
       lastName: "Schmidt",
       displayName: "Peter Schmidt",
@@ -1161,7 +1161,7 @@ function generateDummyData() {
       gender: "m",
     },
     {
-      __identity: "demo-scorer-4",
+      __identity: "d4444444-4444-4444-a444-444444444444",
       firstName: "Anna",
       lastName: "Weber",
       displayName: "Anna Weber",
@@ -1170,7 +1170,7 @@ function generateDummyData() {
       gender: "f",
     },
     {
-      __identity: "demo-scorer-5",
+      __identity: "d5555555-5555-4555-a555-555555555555",
       firstName: "Thomas",
       lastName: "Brunner",
       displayName: "Thomas Brunner",
@@ -1179,7 +1179,7 @@ function generateDummyData() {
       gender: "m",
     },
     {
-      __identity: "demo-scorer-6",
+      __identity: "d6666666-6666-4666-a666-666666666666",
       firstName: "Sandra",
       lastName: "Keller",
       displayName: "Sandra Keller",
@@ -1188,7 +1188,7 @@ function generateDummyData() {
       gender: "f",
     },
     {
-      __identity: "demo-scorer-7",
+      __identity: "d7777777-7777-4777-a777-777777777777",
       firstName: "Marco",
       lastName: "Meier",
       displayName: "Marco Meier",
@@ -1197,7 +1197,7 @@ function generateDummyData() {
       gender: "m",
     },
     {
-      __identity: "demo-scorer-8",
+      __identity: "d8888888-8888-4888-a888-888888888888",
       firstName: "Lisa",
       lastName: "Fischer",
       displayName: "Lisa Fischer",
@@ -1206,7 +1206,7 @@ function generateDummyData() {
       gender: "f",
     },
     {
-      __identity: "demo-scorer-9",
+      __identity: "d9999999-9999-4999-a999-999999999999",
       firstName: "Stefan",
       lastName: "Huber",
       displayName: "Stefan Huber",
@@ -1215,7 +1215,7 @@ function generateDummyData() {
       gender: "m",
     },
     {
-      __identity: "demo-scorer-10",
+      __identity: "daaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa",
       firstName: "Nicole",
       lastName: "Steiner",
       displayName: "Nicole Steiner",
