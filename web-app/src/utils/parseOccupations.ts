@@ -42,13 +42,11 @@ export function parseOccupation(
     return null;
   }
 
-  // Determine the occupation type from roleIdentifier
   let type: Occupation["type"] | null = null;
 
   if (ROLE_PATTERNS.referee.test(roleIdentifier)) {
     type = "referee";
   } else if (!refereeOnly) {
-    // Only check non-referee types if refereeOnly is false
     if (ROLE_PATTERNS.player.test(roleIdentifier)) {
       type = "player";
     } else if (ROLE_PATTERNS.clubAdmin.test(roleIdentifier)) {
@@ -65,7 +63,6 @@ export function parseOccupation(
   return {
     id: attr.__identity,
     type,
-    // associationCode could be extracted from attributeIdentifier if needed
   };
 }
 
