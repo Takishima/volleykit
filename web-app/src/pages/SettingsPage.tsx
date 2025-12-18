@@ -77,7 +77,7 @@ export function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center text-2xl">
+              <div className="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-2xl">
                 {user.firstName.charAt(0)}
                 {user.lastName.charAt(0)}
               </div>
@@ -175,7 +175,7 @@ export function SettingsPage() {
               <button
                 type="button"
                 onClick={handleToggleSafeMode}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
                   isSafeModeEnabled
                     ? "bg-green-600"
                     : "bg-gray-200 dark:bg-gray-700"
@@ -245,7 +245,7 @@ export function SettingsPage() {
               {needRefresh ? (
                 <button
                   onClick={updateApp}
-                  className="rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none"
+                  className="rounded-md bg-primary-500 px-4 py-2 text-sm font-medium text-white hover:bg-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none"
                   aria-label={t("settings.updateNow")}
                 >
                   {t("settings.updateNow")}
@@ -291,7 +291,7 @@ export function SettingsPage() {
               href="https://volleymanager.volleyball.ch"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-orange-600 dark:text-orange-400 hover:underline"
+              className="text-primary-600 dark:text-primary-400 hover:underline"
             >
               {t("settings.openWebsite")} →
             </a>

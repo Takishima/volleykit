@@ -44,7 +44,7 @@ export function CompensationCard({
           onClick={handleToggle}
           aria-expanded={isExpanded}
           aria-controls={detailsId}
-          className="w-full text-left px-2 py-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset rounded-xl"
+          className="w-full text-left px-2 py-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset rounded-xl"
         >
           {/* Compact view - always visible */}
           <div className="flex items-center gap-3">

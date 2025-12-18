@@ -123,7 +123,7 @@ export function AddPlayerSheet({
               text-gray-900 dark:text-white
               placeholder-gray-500 dark:placeholder-gray-400
               border border-transparent
-              focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20
+              focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20
               outline-none transition-colors
             "
           />

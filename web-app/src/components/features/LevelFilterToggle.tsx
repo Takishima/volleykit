@@ -29,8 +29,8 @@ export function LevelFilterToggle({
       <span
         className={`
           relative w-9 h-5 rounded-full transition-colors
-          peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-orange-500 peer-focus:ring-offset-2
-          ${checked ? "bg-orange-500" : "bg-gray-200 dark:bg-gray-700"}
+          peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-500 peer-focus:ring-offset-2
+          ${checked ? "bg-primary-500" : "bg-gray-200 dark:bg-gray-700"}
         `}
       >
         <span

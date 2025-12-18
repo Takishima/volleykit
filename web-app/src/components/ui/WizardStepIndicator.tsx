@@ -6,7 +6,7 @@ function getStepIndicatorStyle(
   showCompletion: boolean,
 ): string {
   if (isCurrent) {
-    return "bg-orange-500 text-white ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-800";
+    return "bg-primary-500 text-white ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-gray-800";
   }
   if (showCompletion) {
     return "bg-green-500 text-white";
@@ -98,7 +98,7 @@ export function WizardStepIndicator({
               <div
                 className={`w-8 h-0.5 mx-1 transition-colors ${
                   index <= currentStepIndex
-                    ? "bg-orange-500"
+                    ? "bg-primary-500"
                     : "bg-gray-300 dark:bg-gray-600"
                 }`}
               />
@@ -117,7 +117,7 @@ export function WizardStepIndicator({
                 transition-all duration-200
                 ${clickable ? "cursor-pointer hover:scale-110" : "cursor-default"}
                 ${getStepIndicatorStyle(isCurrent, showCompletion)}
-                focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800
+                focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800
                 aria-disabled:cursor-default aria-disabled:opacity-100
               `}
             >

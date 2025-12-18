@@ -105,14 +105,14 @@ export function AssignmentsPage() {
             px-4 py-2 text-sm font-medium border-b-2 transition-colors
             ${
               activeTab === "upcoming"
-                ? "border-orange-500 text-orange-600 dark:text-orange-400"
+                ? "border-primary-500 text-primary-600 dark:text-primary-400"
                 : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             }
           `}
         >
           {t("assignments.upcoming")}
           {upcomingData && upcomingData.length > 0 && (
-            <span className="ml-2 px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-xs">
+            <span className="ml-2 px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200 text-xs">
               {upcomingData.length}
             </span>
           )}
@@ -127,7 +127,7 @@ export function AssignmentsPage() {
             px-4 py-2 text-sm font-medium border-b-2 transition-colors
             ${
               activeTab === "validationClosed"
-                ? "border-orange-500 text-orange-600 dark:text-orange-400"
+                ? "border-primary-500 text-primary-600 dark:text-primary-400"
                 : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             }
           `}

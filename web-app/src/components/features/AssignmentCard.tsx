@@ -85,14 +85,14 @@ export function AssignmentCard({
           onClick={handleToggle}
           aria-expanded={isExpanded}
           aria-controls={detailsId}
-          className="w-full text-left px-2 py-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset rounded-xl"
+          className="w-full text-left px-2 py-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset rounded-xl"
         >
           {/* Compact view - always visible */}
           <div className="flex items-center gap-3">
             {/* Date/Time - fixed width for alignment */}
             <div className="flex flex-col items-end w-14 shrink-0">
               <span
-                className={`text-xs font-medium ${isTodayDate ? "text-orange-600 dark:text-orange-400" : "text-gray-500 dark:text-gray-400"}`}
+                className={`text-xs font-medium ${isTodayDate ? "text-primary-600 dark:text-primary-400" : "text-gray-500 dark:text-gray-400"}`}
               >
                 {dateLabel}
               </span>
@@ -151,7 +151,7 @@ export function AssignmentCard({
                     href={googleMapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="truncate text-blue-600 dark:text-blue-400 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
+                    className="truncate text-primary-600 dark:text-primary-400 hover:underline focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {hallName}

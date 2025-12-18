@@ -114,7 +114,7 @@ function UnsavedChangesDialog({
             type="button"
             onClick={onSaveAndClose}
             disabled={isSaving}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            className="px-4 py-2 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
           >
             {isSaving ? t("common.loading") : t("validation.state.saveAndClose")}
           </button>

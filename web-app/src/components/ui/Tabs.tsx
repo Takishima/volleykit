@@ -81,11 +81,11 @@ export function Tabs({
                 onClick={() => onTabChange(tab.id)}
                 className={`
                   flex items-center px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
-                  focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2
                   dark:focus-visible:ring-offset-gray-800
                   ${
                     isActive
-                      ? "border-orange-500 text-orange-600 dark:text-orange-400"
+                      ? "border-primary-500 text-primary-600 dark:text-primary-400"
                       : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600"
                   }
                 `}

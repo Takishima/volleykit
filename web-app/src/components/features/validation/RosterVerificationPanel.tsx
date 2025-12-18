@@ -162,7 +162,7 @@ export function RosterVerificationPanel({
   if (isLoading) {
     return (
       <div className="py-8 flex flex-col items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400 mb-3" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 dark:border-primary-400 mb-3" />
         <p className="text-sm text-gray-500 dark:text-gray-400">
           {t("validation.roster.loadingRoster")}
         </p>
@@ -181,7 +181,7 @@ export function RosterVerificationPanel({
         <button
           type="button"
           onClick={() => refetch()}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
         >
           <RefreshIcon className="w-4 h-4" />
           {t("common.retry")}
@@ -231,7 +231,7 @@ export function RosterVerificationPanel({
         <button
           type="button"
           onClick={() => setIsAddPlayerSheetOpen(true)}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg border border-blue-200 dark:border-blue-800 transition-colors"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 rounded-lg border border-primary-200 dark:border-primary-800 transition-colors"
         >
           <UserPlusIcon className="w-4 h-4" />
           {t("validation.roster.addPlayer")}

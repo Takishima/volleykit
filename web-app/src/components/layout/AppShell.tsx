@@ -110,7 +110,7 @@ export function AppShell() {
                   <div className="relative" ref={dropdownRef}>
                     <button
                       onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                      className="flex items-center gap-1 px-2 py-1 text-sm font-medium text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/50 transition-colors"
+                      className="flex items-center gap-1 px-2 py-1 text-sm font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 rounded-lg hover:bg-primary-100 dark:hover:bg-primary-900/50 transition-colors"
                       aria-expanded={isDropdownOpen}
                       aria-haspopup="listbox"
                     >
@@ -145,7 +145,7 @@ export function AppShell() {
                             }
                             className={`w-full text-left px-3 py-2 text-sm transition-colors ${
                               occupation.id === activeOccupationId
-                                ? "bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"
+                                ? "bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400"
                                 : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                             }`}
                             role="option"
@@ -213,7 +213,7 @@ export function AppShell() {
                     transition-all duration-150 rounded-lg mx-1
                     ${
                       isActive
-                        ? "text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30"
+                        ? "text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30"
                         : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                     }
                   `}

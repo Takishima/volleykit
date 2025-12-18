@@ -245,7 +245,7 @@ export function ScoresheetPanel({ onScoresheetChange }: ScoresheetPanelProps) {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
             >
               <UploadIcon className="w-4 h-4" />
               {tKey("selectFile")}
@@ -295,7 +295,7 @@ export function ScoresheetPanel({ onScoresheetChange }: ScoresheetPanelProps) {
                   aria-label={tKey("uploading")}
                 >
                   <div
-                    className="h-full bg-blue-600 rounded-full transition-all duration-200"
+                    className="h-full bg-primary-500 rounded-full transition-all duration-200"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>

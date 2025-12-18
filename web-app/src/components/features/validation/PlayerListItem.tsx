@@ -126,7 +126,7 @@ export function PlayerListItem({
           <button
             type="button"
             onClick={onUndoRemoval}
-            className="p-1.5 rounded-full text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/50 transition-colors"
+            className="p-1.5 rounded-full text-primary-600 hover:bg-primary-50 dark:text-primary-400 dark:hover:bg-primary-900/50 transition-colors"
             aria-label={t("validation.roster.undoRemoval")}
             title={t("validation.roster.undoRemoval")}
           >
