@@ -139,7 +139,7 @@ export function CompensationsPage() {
             <div className="text-sm text-gray-500 dark:text-gray-400">
               {t("compensations.pending")}
             </div>
-            <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
+            <div className="text-lg font-bold text-warning-600 dark:text-warning-400">
               CHF {totals.unpaid.toFixed(2)}
             </div>
           </div>
@@ -147,7 +147,7 @@ export function CompensationsPage() {
             <div className="text-sm text-gray-500 dark:text-gray-400">
               {t("compensations.received")}
             </div>
-            <div className="text-lg font-bold text-green-600 dark:text-green-400">
+            <div className="text-lg font-bold text-success-600 dark:text-success-400">
               CHF {totals.paid.toFixed(2)}
             </div>
           </div>

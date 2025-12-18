@@ -9,7 +9,7 @@ function getStepIndicatorStyle(
     return "bg-primary-500 text-primary-950 ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-gray-800";
   }
   if (showCompletion) {
-    return "bg-green-500 text-white";
+    return "bg-success-500 text-white";
   }
   return "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400";
 }

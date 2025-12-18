@@ -33,6 +33,41 @@
   --color-primary-800: #526d07;
   --color-primary-900: #455c0b;
   --color-primary-950: #233400;
+
+  /* ==============================================
+   * SEMANTIC STATUS COLORS
+   * For states: success, warning, danger
+   * ============================================== */
+
+  /* Success color (teal - distinct from primary lime) */
+  --color-success-50: #f0fdfa;
+  --color-success-100: #ccfbf1;
+  --color-success-200: #99f6e4;
+  --color-success-400: #2dd4bf;
+  --color-success-500: #14b8a6;  /* Main success color */
+  --color-success-600: #0d9488;  /* Hover/emphasis */
+  --color-success-800: #115e59;
+  --color-success-900: #134e4a;
+
+  /* Warning color (orange - distinct from yellow-lime) */
+  --color-warning-50: #fff7ed;
+  --color-warning-100: #ffedd5;
+  --color-warning-200: #fed7aa;
+  --color-warning-400: #fb923c;
+  --color-warning-500: #f97316;  /* Main warning color */
+  --color-warning-600: #ea580c;  /* Hover/emphasis */
+  --color-warning-800: #9a3412;
+  --color-warning-900: #7c2d12;
+
+  /* Danger color (red - universal meaning) */
+  --color-danger-50: #fef2f2;
+  --color-danger-100: #fee2e2;
+  --color-danger-200: #fecaca;
+  --color-danger-400: #f87171;
+  --color-danger-500: #ef4444;  /* Main danger color */
+  --color-danger-600: #dc2626;  /* Hover/emphasis */
+  --color-danger-800: #991b1b;
+  --color-danger-900: #7f1d1d;
 }
 
 /* Base styles */
