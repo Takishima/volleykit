@@ -98,6 +98,13 @@ const SAMPLE_DISTANCES = {
 // Starting team identifier for auto-incrementing IDs
 const BASE_TEAM_IDENTIFIER = 59591;
 
+// Demo game numbers for assignments, compensations, and exchanges
+const DEMO_GAME_NUMBERS = {
+  ASSIGNMENTS: [382417, 382418, 382419, 382420, 382421] as const,
+  COMPENSATIONS: [382500, 382501, 382502, 382503, 382504] as const,
+  EXCHANGES: [382600, 382601, 382602, 382603, 382604] as const,
+} as const;
+
 function calculateTravelExpenses(distanceInMetres: number): number {
   const distanceInKm = distanceInMetres / 1000;
   return Math.round(distanceInKm * TRAVEL_EXPENSE_RATE_PER_KM * 100) / 100;
@@ -481,118 +488,120 @@ function createRefereeGame({
   };
 }
 
+interface AssignmentConfig {
+  index: number;
+  status: "active" | "cancelled" | "archived";
+  position: RefereePosition;
+  confirmationStatus: "confirmed" | "pending";
+  confirmationDaysAgo: number | null;
+  gameDate: Date;
+  venueIndex: number;
+  leagueIndex: number;
+  gender: "m" | "f";
+  isGameInFuture: boolean;
+  isOpenInExchange?: boolean;
+  hasMessage?: boolean;
+  linkedDouble?: string;
+}
+
+function createAssignment(
+  config: AssignmentConfig,
+  associationCode: DemoAssociationCode,
+  now: Date,
+): Assignment {
+  return {
+    __identity: `demo-assignment-${config.index}`,
+    refereeConvocationStatus: config.status,
+    refereePosition: config.position,
+    confirmationStatus: config.confirmationStatus,
+    confirmationDate:
+      config.confirmationDaysAgo !== null
+        ? subDays(now, config.confirmationDaysAgo).toISOString()
+        : null,
+    isOpenEntryInRefereeGameExchange: config.isOpenInExchange ?? false,
+    hasLastMessageToReferee: config.hasMessage ?? false,
+    hasLinkedDoubleConvocation: !!config.linkedDouble,
+    ...(config.linkedDouble && {
+      linkedDoubleConvocationGameNumberAndRefereePosition: config.linkedDouble,
+    }),
+    refereeGame: createRefereeGame({
+      gameId: String(config.index),
+      gameNumber: DEMO_GAME_NUMBERS.ASSIGNMENTS[config.index - 1]!,
+      gameDate: config.gameDate,
+      venueIndex: config.venueIndex,
+      leagueIndex: config.leagueIndex,
+      gender: config.gender,
+      isGameInFuture: config.isGameInFuture,
+      associationCode,
+      idPrefix: "demo",
+    }),
+  };
+}
+
 function generateAssignments(
   associationCode: DemoAssociationCode,
   now: Date,
 ): Assignment[] {
-  return [
-    {
-      __identity: "demo-assignment-1",
-      refereeConvocationStatus: "active",
-      refereePosition: "head-one",
-      confirmationStatus: "confirmed",
-      confirmationDate: subDays(now, 5).toISOString(),
-      isOpenEntryInRefereeGameExchange: false,
-      hasLastMessageToReferee: false,
-      hasLinkedDoubleConvocation: false,
-      refereeGame: createRefereeGame({
-        gameId: "1",
-        gameNumber: 382417,
-        gameDate: addDays(now, 2),
-        venueIndex: 0,
-        leagueIndex: 0,
-        gender: "m",
-        isGameInFuture: true,
-        associationCode,
-        idPrefix: "demo",
-      }),
-    },
-    {
-      __identity: "demo-assignment-2",
-      refereeConvocationStatus: "active",
-      refereePosition: "linesman-one",
-      confirmationStatus: "confirmed",
-      confirmationDate: subDays(now, 3).toISOString(),
-      isOpenEntryInRefereeGameExchange: false,
-      hasLastMessageToReferee: true,
-      hasLinkedDoubleConvocation: false,
-      refereeGame: createRefereeGame({
-        gameId: "2",
-        gameNumber: 382418,
-        gameDate: addHours(addDays(now, 0), 3),
-        venueIndex: 1,
-        leagueIndex: 1,
-        gender: "m",
-        isGameInFuture: true,
-        associationCode,
-        idPrefix: "demo",
-      }),
-    },
-    {
-      __identity: "demo-assignment-3",
-      refereeConvocationStatus: "active",
-      refereePosition: "head-two",
-      confirmationStatus: "pending",
-      confirmationDate: null,
-      isOpenEntryInRefereeGameExchange: false,
-      hasLastMessageToReferee: false,
-      hasLinkedDoubleConvocation: true,
-      linkedDoubleConvocationGameNumberAndRefereePosition: "382420 / ARB 1",
-      refereeGame: createRefereeGame({
-        gameId: "3",
-        gameNumber: 382419,
-        gameDate: addDays(now, 5),
-        venueIndex: 2,
-        leagueIndex: 0,
-        gender: "f",
-        isGameInFuture: true,
-        associationCode,
-        idPrefix: "demo",
-      }),
-    },
-    {
-      __identity: "demo-assignment-4",
-      refereeConvocationStatus: "cancelled",
-      refereePosition: "head-one",
-      confirmationStatus: "confirmed",
-      confirmationDate: subDays(now, 10).toISOString(),
-      isOpenEntryInRefereeGameExchange: true,
-      hasLastMessageToReferee: false,
-      hasLinkedDoubleConvocation: false,
-      refereeGame: createRefereeGame({
-        gameId: "4",
-        gameNumber: 382420,
-        gameDate: addDays(now, 7),
-        venueIndex: 3,
-        leagueIndex: 1,
-        gender: "f",
-        isGameInFuture: true,
-        associationCode,
-        idPrefix: "demo",
-      }),
-    },
-    {
-      __identity: "demo-assignment-5",
-      refereeConvocationStatus: "archived",
-      refereePosition: "linesman-two",
-      confirmationStatus: "confirmed",
-      confirmationDate: subDays(now, 14).toISOString(),
-      isOpenEntryInRefereeGameExchange: false,
-      hasLastMessageToReferee: false,
-      hasLinkedDoubleConvocation: false,
-      refereeGame: createRefereeGame({
-        gameId: "5",
-        gameNumber: 382421,
-        gameDate: subDays(now, 3),
-        venueIndex: 4,
-        leagueIndex: associationCode === "SV" ? 1 : 2,
-        gender: "m",
-        isGameInFuture: false,
-        associationCode,
-        idPrefix: "demo",
-      }),
-    },
+  const configs: AssignmentConfig[] = [
+    { index: 1, status: "active", position: "head-one", confirmationStatus: "confirmed", confirmationDaysAgo: 5, gameDate: addDays(now, 2), venueIndex: 0, leagueIndex: 0, gender: "m", isGameInFuture: true },
+    { index: 2, status: "active", position: "linesman-one", confirmationStatus: "confirmed", confirmationDaysAgo: 3, gameDate: addHours(now, 3), venueIndex: 1, leagueIndex: 1, gender: "m", isGameInFuture: true, hasMessage: true },
+    { index: 3, status: "active", position: "head-two", confirmationStatus: "pending", confirmationDaysAgo: null, gameDate: addDays(now, 5), venueIndex: 2, leagueIndex: 0, gender: "f", isGameInFuture: true, linkedDouble: "382420 / ARB 1" },
+    { index: 4, status: "cancelled", position: "head-one", confirmationStatus: "confirmed", confirmationDaysAgo: 10, gameDate: addDays(now, 7), venueIndex: 3, leagueIndex: 1, gender: "f", isGameInFuture: true, isOpenInExchange: true },
+    { index: 5, status: "archived", position: "linesman-two", confirmationStatus: "confirmed", confirmationDaysAgo: 14, gameDate: subDays(now, 3), venueIndex: 4, leagueIndex: associationCode === "SV" ? 1 : 2, gender: "m", isGameInFuture: false },
   ];
+
+  return configs.map((config) => createAssignment(config, associationCode, now));
+}
+
+interface CompensationConfig {
+  index: number;
+  position: RefereePosition;
+  daysAgo: number;
+  venueIndex: number;
+  leagueIndex: number;
+  gender: "m" | "f";
+  distance: keyof typeof SAMPLE_DISTANCES;
+  paymentDone: boolean;
+  paymentDaysAgo?: number;
+  transportationMode?: "car" | "train";
+}
+
+function createCompensationRecord(
+  config: CompensationConfig,
+  associationCode: DemoAssociationCode,
+  now: Date,
+  isSV: boolean,
+): CompensationRecord {
+  return {
+    __identity: `demo-comp-${config.index}`,
+    refereeConvocationStatus: "active",
+    refereePosition: config.position,
+    compensationDate: subDays(now, config.daysAgo).toISOString(),
+    refereeGame: createRefereeGame({
+      gameId: String(config.index),
+      gameNumber: DEMO_GAME_NUMBERS.COMPENSATIONS[config.index - 1]!,
+      gameDate: subDays(now, config.daysAgo),
+      venueIndex: config.venueIndex,
+      leagueIndex: config.leagueIndex,
+      gender: config.gender,
+      isGameInFuture: false,
+      associationCode,
+      idPrefix: "comp",
+    }),
+    convocationCompensation: {
+      __identity: `demo-cc-${config.index}`,
+      ...createCompensationData({
+        position: config.position,
+        distanceInMetres: SAMPLE_DISTANCES[config.distance],
+        isSV,
+        paymentDone: config.paymentDone,
+        ...(config.paymentDaysAgo !== undefined && {
+          paymentValueDate: toDateString(subDays(now, config.paymentDaysAgo)),
+        }),
+        transportationMode: config.transportationMode,
+      }),
+    },
+  };
 }
 
 function generateCompensations(
@@ -601,142 +610,15 @@ function generateCompensations(
 ): CompensationRecord[] {
   const isSV = associationCode === "SV";
 
-  return [
-    {
-      __identity: "demo-comp-1",
-      refereeConvocationStatus: "active",
-      refereePosition: "head-one",
-      compensationDate: subDays(now, 7).toISOString(),
-      refereeGame: createRefereeGame({
-        gameId: "1",
-        gameNumber: 382500,
-        gameDate: subDays(now, 7),
-        venueIndex: 0,
-        leagueIndex: 0,
-        gender: "m",
-        isGameInFuture: false,
-        associationCode,
-        idPrefix: "comp",
-      }),
-      convocationCompensation: {
-        __identity: "demo-cc-1",
-        ...createCompensationData({
-          position: "head-one",
-          distanceInMetres: SAMPLE_DISTANCES.MEDIUM_LONG,
-          isSV,
-          paymentDone: true,
-          paymentValueDate: toDateString(subDays(now, 2)),
-        }),
-      },
-    },
-    {
-      __identity: "demo-comp-2",
-      refereeConvocationStatus: "active",
-      refereePosition: "linesman-one",
-      compensationDate: subDays(now, 14).toISOString(),
-      refereeGame: createRefereeGame({
-        gameId: "2",
-        gameNumber: 382501,
-        gameDate: subDays(now, 14),
-        venueIndex: 1,
-        leagueIndex: 1,
-        gender: "m",
-        isGameInFuture: false,
-        associationCode,
-        idPrefix: "comp",
-      }),
-      convocationCompensation: {
-        __identity: "demo-cc-2",
-        ...createCompensationData({
-          position: "linesman-one",
-          distanceInMetres: SAMPLE_DISTANCES.MEDIUM,
-          isSV,
-          paymentDone: false,
-        }),
-      },
-    },
-    {
-      __identity: "demo-comp-3",
-      refereeConvocationStatus: "active",
-      refereePosition: "head-two",
-      compensationDate: subDays(now, 21).toISOString(),
-      refereeGame: createRefereeGame({
-        gameId: "3",
-        gameNumber: 382502,
-        gameDate: subDays(now, 21),
-        venueIndex: 2,
-        leagueIndex: 0,
-        gender: "f",
-        isGameInFuture: false,
-        associationCode,
-        idPrefix: "comp",
-      }),
-      convocationCompensation: {
-        __identity: "demo-cc-3",
-        ...createCompensationData({
-          position: "head-two",
-          distanceInMetres: SAMPLE_DISTANCES.LONG,
-          isSV,
-          paymentDone: true,
-          paymentValueDate: toDateString(subDays(now, 14)),
-        }),
-      },
-    },
-    {
-      __identity: "demo-comp-4",
-      refereeConvocationStatus: "active",
-      refereePosition: "head-one",
-      compensationDate: subDays(now, 5).toISOString(),
-      refereeGame: createRefereeGame({
-        gameId: "4",
-        gameNumber: 382503,
-        gameDate: subDays(now, 5),
-        venueIndex: 3,
-        leagueIndex: 1,
-        gender: "f",
-        isGameInFuture: false,
-        associationCode,
-        idPrefix: "comp",
-      }),
-      convocationCompensation: {
-        __identity: "demo-cc-4",
-        ...createCompensationData({
-          position: "head-one",
-          distanceInMetres: SAMPLE_DISTANCES.VERY_LONG,
-          isSV,
-          paymentDone: false,
-        }),
-      },
-    },
-    {
-      __identity: "demo-comp-5",
-      refereeConvocationStatus: "active",
-      refereePosition: "linesman-two",
-      compensationDate: subDays(now, 28).toISOString(),
-      refereeGame: createRefereeGame({
-        gameId: "5",
-        gameNumber: 382504,
-        gameDate: subDays(now, 28),
-        venueIndex: 4,
-        leagueIndex: associationCode === "SV" ? 1 : 2,
-        gender: "m",
-        isGameInFuture: false,
-        associationCode,
-        idPrefix: "comp",
-      }),
-      convocationCompensation: {
-        __identity: "demo-cc-5",
-        ...createCompensationData({
-          position: "linesman-two",
-          distanceInMetres: SAMPLE_DISTANCES.SHORT,
-          isSV,
-          paymentDone: true,
-          paymentValueDate: toDateString(subDays(now, 21)),
-          transportationMode: "train",
-        }),
-      },
-    },
+  const configs: CompensationConfig[] = [
+    { index: 1, position: "head-one", daysAgo: 7, venueIndex: 0, leagueIndex: 0, gender: "m", distance: "MEDIUM_LONG", paymentDone: true, paymentDaysAgo: 2 },
+    { index: 2, position: "linesman-one", daysAgo: 14, venueIndex: 1, leagueIndex: 1, gender: "m", distance: "MEDIUM", paymentDone: false },
+    { index: 3, position: "head-two", daysAgo: 21, venueIndex: 2, leagueIndex: 0, gender: "f", distance: "LONG", paymentDone: true, paymentDaysAgo: 14 },
+    { index: 4, position: "head-one", daysAgo: 5, venueIndex: 3, leagueIndex: 1, gender: "f", distance: "VERY_LONG", paymentDone: false },
+    { index: 5, position: "linesman-two", daysAgo: 28, venueIndex: 4, leagueIndex: associationCode === "SV" ? 1 : 2, gender: "m", distance: "SHORT", paymentDone: true, paymentDaysAgo: 21, transportationMode: "train" },
   ];
+
+  return configs.map((config) => createCompensationRecord(config, associationCode, now, isSV));
 }
 
 function generateExchanges(
