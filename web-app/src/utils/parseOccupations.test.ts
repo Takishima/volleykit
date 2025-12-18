@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseOccupation, parseOccupations } from "./parseOccupations";
+import { parseOccupation, parseOccupations, filterRefereeOccupations } from "./parseOccupations";
 
 describe("parseOccupations", () => {
   describe("parseOccupation", () => {
@@ -167,6 +167,63 @@ describe("parseOccupations", () => {
       expect(result).toHaveLength(2);
       expect(result[0]).toEqual({ id: "ref-1", type: "referee" });
       expect(result[1]).toEqual({ id: "player-1", type: "player" });
+    });
+  });
+
+  describe("filterRefereeOccupations", () => {
+    it("should keep only referee occupations", () => {
+      const occupations = [
+        { id: "ref-1", type: "referee" as const, associationCode: "SV" },
+        { id: "player-1", type: "player" as const, clubName: "VBC Demo" },
+        { id: "ref-2", type: "referee" as const, associationCode: "SVRBA" },
+      ];
+
+      const result = filterRefereeOccupations(occupations);
+
+      expect(result).toHaveLength(2);
+      expect(result[0]).toEqual({ id: "ref-1", type: "referee", associationCode: "SV" });
+      expect(result[1]).toEqual({ id: "ref-2", type: "referee", associationCode: "SVRBA" });
+    });
+
+    it("should filter out all non-referee roles", () => {
+      const occupations = [
+        { id: "ref-1", type: "referee" as const, associationCode: "SV" },
+        { id: "player-1", type: "player" as const, clubName: "VBC Demo" },
+        { id: "club-1", type: "clubAdmin" as const, clubName: "VBC Admin" },
+        { id: "assoc-1", type: "associationAdmin" as const, associationCode: "SV" },
+      ];
+
+      const result = filterRefereeOccupations(occupations);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({ id: "ref-1", type: "referee", associationCode: "SV" });
+    });
+
+    it("should return empty array when no referee occupations", () => {
+      const occupations = [
+        { id: "player-1", type: "player" as const, clubName: "VBC Demo" },
+      ];
+
+      const result = filterRefereeOccupations(occupations);
+
+      expect(result).toEqual([]);
+    });
+
+    it("should return empty array for empty input", () => {
+      const result = filterRefereeOccupations([]);
+
+      expect(result).toEqual([]);
+    });
+
+    it("should preserve all occupation properties", () => {
+      const occupations = [
+        { id: "ref-1", type: "referee" as const, associationCode: "SV", clubName: undefined },
+      ];
+
+      const result = filterRefereeOccupations(occupations);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({ id: "ref-1", type: "referee", associationCode: "SV", clubName: undefined });
     });
   });
 });
