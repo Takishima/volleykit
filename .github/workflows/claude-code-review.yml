@@ -35,17 +35,25 @@ jobs:
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
 
-            IMPORTANT: First, read the CLAUDE.md file to understand project conventions.
-            Pay special attention to the "Common Anti-patterns to Avoid" and "Accessibility" sections.
+            CRITICAL: You MUST read the CLAUDE.md file FIRST and strictly enforce all guidelines during this review.
 
-            Then review this pull request and provide feedback on:
-            - Code quality and best practices
+            Review this PR against the CLAUDE.md requirements. Flag violations of:
+            - Naming conventions (PascalCase components, camelCase hooks/variables, SCREAMING_SNAKE_CASE constants)
+            - Magic numbers (must use named constants)
+            - Array index as React key (must use unique identifiers)
+            - Memory leaks (intervals/timeouts/subscriptions not cleaned up)
+            - Outdated patterns (isMountedRef instead of AbortController)
+            - Missing accessibility (ARIA attributes, keyboard navigation)
+            - Functions over 20-30 lines or with more than 3-4 parameters
+            - Unnecessary comments (code should be self-documenting)
+
+            Also review for:
             - Potential bugs or issues
             - Performance considerations
             - Security concerns
-            - Test coverage
+            - Test coverage for business logic
 
-            Be constructive and helpful in your feedback.
+            Be constructive but firm - violations of CLAUDE.md guidelines should be explicitly called out.
 
             Use `gh pr comment` with your Bash tool to leave your review as a comment on the PR.
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
