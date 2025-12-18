@@ -89,32 +89,32 @@ export function AssignmentCard({
             {/* Date/Time - fixed width for alignment */}
             <div className="flex flex-col items-end w-14 shrink-0">
               <span
-                className={`text-xs font-medium ${isTodayDate ? "text-primary-600 dark:text-primary-400" : "text-gray-500 dark:text-gray-400"}`}
+                className={`text-xs font-medium ${isTodayDate ? "text-primary-600 dark:text-primary-400" : "text-text-muted dark:text-text-muted-dark"}`}
               >
                 {dateLabel}
               </span>
-              <span className="text-lg font-bold text-gray-900 dark:text-white">
+              <span className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
                 {timeLabel}
               </span>
             </div>
 
             {/* Teams and position */}
             <div className="flex-1 min-w-0">
-              <div className="font-medium text-gray-900 dark:text-white truncate">
+              <div className="font-medium text-text-primary dark:text-text-primary-dark truncate">
                 {homeTeam}
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400 truncate">
+              <div className="text-sm text-text-secondary dark:text-text-muted-dark truncate">
                 vs {awayTeam}
               </div>
               {/* Position shown in compact view */}
-              <div className="text-xs text-gray-400 dark:text-gray-500">
+              <div className="text-xs text-text-subtle dark:text-text-subtle-dark">
                 {position}
               </div>
             </div>
 
             {/* City & expand indicator */}
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500 dark:text-gray-400 truncate w-24">
+              <span className="text-xs text-text-muted dark:text-text-muted-dark truncate w-24">
                 {city || ""}
               </span>
               {!disableExpansion && (
@@ -132,9 +132,9 @@ export function AssignmentCard({
           }`}
         >
           <div className="overflow-hidden">
-            <div className="px-2 pb-2 pt-0 border-t border-gray-100 dark:border-gray-700 space-y-1">
+            <div className="px-2 pb-2 pt-0 border-t border-border-subtle dark:border-border-subtle-dark space-y-1">
               {/* Location */}
-              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 pt-2">
+              <div className="flex items-center gap-2 text-sm text-text-muted dark:text-text-muted-dark pt-2">
                 <svg
                   className="w-4 h-4 flex-shrink-0"
                   viewBox="0 0 24 24"
@@ -170,7 +170,7 @@ export function AssignmentCard({
 
               {/* Category/League */}
               {game?.group?.phase?.league?.leagueCategory?.name && (
-                <div className="text-xs text-gray-400 dark:text-gray-500">
+                <div className="text-xs text-text-subtle dark:text-text-subtle-dark">
                   {game.group.phase.league.leagueCategory.name}
                   {game.group.phase.league.gender &&
                     ` • ${game.group.phase.league.gender === "m" ? t("common.men") : t("common.women")}`}

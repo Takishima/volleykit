@@ -50,13 +50,13 @@ export function CompensationCard({
           {/* Compact view - always visible */}
           <div className="flex items-center gap-3">
             {/* Date */}
-            <div className="text-xs text-gray-500 dark:text-gray-400 min-w-[4rem]">
+            <div className="text-xs text-text-muted dark:text-text-muted-dark min-w-[4rem]">
               {startDate ? format(startDate, "MMM d") : "Date?"}
             </div>
 
             {/* Match info - truncated */}
             <div className="flex-1 min-w-0">
-              <div className="font-medium text-gray-900 dark:text-white truncate text-sm">
+              <div className="font-medium text-text-primary dark:text-text-primary-dark truncate text-sm">
                 {homeTeam} vs {awayTeam}
               </div>
             </div>
@@ -85,9 +85,9 @@ export function CompensationCard({
         >
           <div className="overflow-hidden">
             {comp && (
-              <div className="px-2 pb-2 pt-0 border-t border-gray-100 dark:border-gray-700 space-y-1 text-sm">
+              <div className="px-2 pb-2 pt-0 border-t border-border-subtle dark:border-border-subtle-dark space-y-1 text-sm">
                 <div className="flex justify-between pt-2">
-                  <span className="text-gray-500 dark:text-gray-400">
+                  <span className="text-text-muted dark:text-text-muted-dark">
                     Total:
                   </span>
                   <span
@@ -99,10 +99,10 @@ export function CompensationCard({
                 {comp.gameCompensation !== undefined &&
                   comp.gameCompensation > 0 && (
                     <div className="flex justify-between text-xs">
-                      <span className="text-gray-400 dark:text-gray-500">
+                      <span className="text-text-subtle dark:text-text-subtle-dark">
                         Game fee:
                       </span>
-                      <span className="text-gray-600 dark:text-gray-400">
+                      <span className="text-text-secondary dark:text-text-muted-dark">
                         CHF {comp.gameCompensation.toFixed(2)}
                       </span>
                     </div>
@@ -110,10 +110,10 @@ export function CompensationCard({
                 {comp.travelExpenses !== undefined &&
                   comp.travelExpenses > 0 && (
                     <div className="flex justify-between text-xs">
-                      <span className="text-gray-400 dark:text-gray-500">
+                      <span className="text-text-subtle dark:text-text-subtle-dark">
                         Travel:
                       </span>
-                      <span className="text-gray-600 dark:text-gray-400">
+                      <span className="text-text-secondary dark:text-text-muted-dark">
                         CHF {comp.travelExpenses.toFixed(2)}
                       </span>
                     </div>
@@ -121,16 +121,16 @@ export function CompensationCard({
                 {comp.distanceInMetres !== undefined &&
                   comp.distanceInMetres > 0 && (
                     <div className="flex justify-between text-xs">
-                      <span className="text-gray-400 dark:text-gray-500">
+                      <span className="text-text-subtle dark:text-text-subtle-dark">
                         Distance:
                       </span>
-                      <span className="text-gray-600 dark:text-gray-400">
+                      <span className="text-text-secondary dark:text-text-muted-dark">
                         {(comp.distanceInMetres / 1000).toFixed(1)} km
                       </span>
                     </div>
                   )}
                 <div className="flex justify-between text-xs pt-1">
-                  <span className="text-gray-400 dark:text-gray-500">
+                  <span className="text-text-subtle dark:text-text-subtle-dark">
                     Status:
                   </span>
                   <span

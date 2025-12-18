@@ -10,7 +10,7 @@ interface ExpandArrowProps {
 export function ExpandArrow({ isExpanded, className = "" }: ExpandArrowProps) {
   return (
     <svg
-      className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""} ${className}`}
+      className={`w-4 h-4 text-text-subtle transition-transform duration-200 ${isExpanded ? "rotate-180" : ""} ${className}`}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

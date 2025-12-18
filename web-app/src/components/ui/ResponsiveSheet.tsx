@@ -53,7 +53,7 @@ export function ResponsiveSheet({
           fixed inset-x-0 bottom-0
           md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2
           max-h-[80vh] md:max-h-[70vh] md:max-w-lg md:w-full
-          bg-white dark:bg-gray-800 rounded-t-xl md:rounded-lg
+          bg-surface-card dark:bg-surface-card-dark rounded-t-xl md:rounded-lg
           shadow-xl flex flex-col
           animate-in slide-in-from-bottom md:slide-in-from-bottom-0 md:fade-in
           duration-200

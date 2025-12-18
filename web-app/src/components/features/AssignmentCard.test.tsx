@@ -200,7 +200,7 @@ describe("AssignmentCard", () => {
       fireEvent.click(screen.getByRole("button"));
 
       const statusBadge = screen.getByText("Archived");
-      expect(statusBadge).toHaveClass("bg-gray-100");
+      expect(statusBadge).toHaveClass("bg-surface-subtle");
     });
   });
 

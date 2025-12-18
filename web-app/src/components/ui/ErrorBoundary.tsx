@@ -86,11 +86,11 @@ export class ErrorBoundary extends Component<Props, State> {
       const isNetworkError = this.state.errorType === "network";
 
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-          <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 text-center">
+        <div className="min-h-screen flex items-center justify-center bg-surface-page dark:bg-surface-page-dark p-4">
+          <div className="max-w-md w-full bg-surface-card dark:bg-surface-card-dark rounded-xl shadow-lg p-6 text-center">
             {/* SVG icons render consistently across all platforms */}
             <div
-              className="w-16 h-16 mx-auto mb-4 text-gray-400 dark:text-gray-500"
+              className="w-16 h-16 mx-auto mb-4 text-text-subtle dark:text-text-subtle-dark"
               aria-hidden="true"
             >
               {isNetworkError ? (
@@ -105,20 +105,20 @@ export class ErrorBoundary extends Component<Props, State> {
                 </svg>
               )}
             </div>
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-xl font-semibold text-text-primary dark:text-text-primary-dark mb-2">
               {isNetworkError ? "Connection Problem" : "Something went wrong"}
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-text-secondary dark:text-text-muted-dark mb-4">
               {isNetworkError
                 ? "Unable to connect to the server. Please check your internet connection and try again."
                 : "An unexpected error occurred. Please try refreshing the page."}
             </p>
             {this.state.error && (
               <details className="text-left mb-4">
-                <summary className="text-sm text-gray-500 dark:text-gray-400 cursor-pointer">
+                <summary className="text-sm text-text-muted dark:text-text-muted-dark cursor-pointer">
                   Error details
                 </summary>
-                <pre className="mt-2 p-2 bg-gray-100 dark:bg-gray-700 rounded text-xs overflow-auto">
+                <pre className="mt-2 p-2 bg-surface-subtle dark:bg-surface-subtle-dark rounded text-xs overflow-auto">
                   {this.state.error.message}
                 </pre>
               </details>
@@ -126,7 +126,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="flex gap-3 justify-center">
               <button
                 onClick={this.handleReset}
-                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                className="px-4 py-2 bg-surface-muted dark:bg-surface-subtle-dark text-text-primary dark:text-text-primary-dark rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
               >
                 Try Again
               </button>

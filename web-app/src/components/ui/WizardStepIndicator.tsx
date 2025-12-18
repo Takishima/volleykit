@@ -6,12 +6,12 @@ function getStepIndicatorStyle(
   showCompletion: boolean,
 ): string {
   if (isCurrent) {
-    return "bg-primary-500 text-primary-950 ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-gray-800";
+    return "bg-primary-500 text-primary-950 ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-surface-card-dark";
   }
   if (showCompletion) {
     return "bg-success-500 text-white";
   }
-  return "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400";
+  return "bg-surface-muted dark:bg-surface-subtle-dark text-text-muted dark:text-text-muted-dark";
 }
 
 function CheckIcon({ className }: { className?: string }) {
@@ -99,7 +99,7 @@ export function WizardStepIndicator({
                 className={`w-8 h-0.5 mx-1 transition-colors ${
                   index <= currentStepIndex
                     ? "bg-primary-500"
-                    : "bg-gray-300 dark:bg-gray-600"
+                    : "bg-border-strong dark:bg-border-strong-dark"
                 }`}
               />
             )}
@@ -117,7 +117,7 @@ export function WizardStepIndicator({
                 transition-all duration-200
                 ${clickable ? "cursor-pointer hover:scale-110" : "cursor-default"}
                 ${getStepIndicatorStyle(isCurrent, showCompletion)}
-                focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800
+                focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-surface-card-dark
                 aria-disabled:cursor-default aria-disabled:opacity-100
               `}
             >

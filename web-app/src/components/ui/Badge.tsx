@@ -6,7 +6,7 @@ interface BadgeProps {
 }
 
 const variantStyles = {
-  neutral: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
+  neutral: "bg-surface-subtle text-text-secondary dark:bg-surface-subtle-dark dark:text-text-secondary-dark",
   success: "bg-success-100 text-success-800 dark:bg-success-900 dark:text-success-200",
   warning: "bg-warning-100 text-warning-800 dark:bg-warning-900 dark:text-warning-200",
   danger: "bg-danger-100 text-danger-800 dark:bg-danger-900 dark:text-danger-200",
