@@ -6,8 +6,8 @@ import type { RosterModifications } from "@/hooks/useNominationList";
 import { getApiClient } from "@/api/client";
 import { useAuthStore } from "@/stores/auth";
 
-/** Stale time for game details query (5 minutes) */
-const GAME_DETAILS_STALE_TIME_MS = 5 * 60 * 1000;
+/** Stale time for game details query */
+const GAME_DETAILS_STALE_TIME_MS = 300000; // 5 minutes
 
 /**
  * State for a roster panel (home or away team).
@@ -118,6 +118,135 @@ function createInitialState(): ValidationState {
  */
 function hasRosterModifications(modifications: RosterModifications): boolean {
   return modifications.added.length > 0 || modifications.removed.length > 0;
+}
+
+/**
+ * Get player nomination IDs from a nomination list, applying modifications.
+ */
+function getPlayerNominationIds(
+  nominationList: { indoorPlayerNominations?: { __identity?: string }[] },
+  modifications: RosterModifications,
+): string[] {
+  const existingIds =
+    nominationList.indoorPlayerNominations
+      ?.map((n) => n.__identity)
+      .filter((id): id is string => !!id) ?? [];
+
+  const removedSet = new Set(modifications.removed);
+  const remainingIds = existingIds.filter((id) => !removedSet.has(id));
+  const addedIds = modifications.added.map((p) => p.id);
+
+  return [...remainingIds, ...addedIds];
+}
+
+/** Type for nomination list with required fields for API calls. */
+interface NominationListForApi {
+  __identity?: string;
+  team?: { __identity?: string };
+  indoorPlayerNominations?: { __identity?: string }[];
+  nominationListValidation?: { __identity?: string };
+}
+
+/** Type for scoresheet with required fields for API calls. */
+interface ScoresheetForApi {
+  __identity?: string;
+  isSimpleScoresheet?: boolean;
+  scoresheetValidation?: { __identity?: string };
+}
+
+/** Saves roster modifications for a single team. */
+async function saveRosterModifications(
+  apiClient: ReturnType<typeof getApiClient>,
+  gameId: string,
+  nomList: NominationListForApi | undefined,
+  modifications: RosterModifications,
+): Promise<void> {
+  if (
+    !hasRosterModifications(modifications) ||
+    !nomList?.__identity ||
+    !nomList.team?.__identity
+  ) {
+    return;
+  }
+
+  const playerIds = getPlayerNominationIds(nomList, modifications);
+  await apiClient.updateNominationList(
+    nomList.__identity,
+    gameId,
+    nomList.team.__identity,
+    playerIds,
+  );
+}
+
+/** Saves scoresheet with scorer selection. */
+async function saveScorerSelection(
+  apiClient: ReturnType<typeof getApiClient>,
+  gameId: string,
+  scoresheet: ScoresheetForApi | undefined,
+  scorerId: string | undefined,
+): Promise<void> {
+  if (!scorerId || !scoresheet?.__identity) {
+    return;
+  }
+
+  await apiClient.updateScoresheet(
+    scoresheet.__identity,
+    gameId,
+    scorerId,
+    scoresheet.isSimpleScoresheet ?? false,
+  );
+}
+
+/** Finalizes a single team's roster. */
+async function finalizeRoster(
+  apiClient: ReturnType<typeof getApiClient>,
+  gameId: string,
+  nomList: NominationListForApi | undefined,
+  modifications: RosterModifications,
+): Promise<void> {
+  if (!nomList?.__identity || !nomList.team?.__identity) {
+    return;
+  }
+
+  const playerIds = getPlayerNominationIds(nomList, modifications);
+  await apiClient.finalizeNominationList(
+    nomList.__identity,
+    gameId,
+    nomList.team.__identity,
+    playerIds,
+    nomList.nominationListValidation?.__identity,
+  );
+}
+
+/** Finalizes scoresheet with optional file upload. */
+async function finalizeScoresheetWithFile(
+  apiClient: ReturnType<typeof getApiClient>,
+  gameId: string,
+  scoresheet: ScoresheetForApi | undefined,
+  scorerId: string | undefined,
+  fileResourceId: string | undefined,
+): Promise<void> {
+  if (!scorerId || !scoresheet?.__identity) {
+    return;
+  }
+
+  if (fileResourceId) {
+    await apiClient.finalizeScoresheet(
+      scoresheet.__identity,
+      gameId,
+      scorerId,
+      fileResourceId,
+      scoresheet.scoresheetValidation?.__identity,
+      scoresheet.isSimpleScoresheet ?? false,
+    );
+  } else {
+    await apiClient.updateScoresheet(
+      scoresheet.__identity,
+      gameId,
+      scorerId,
+      scoresheet.isSimpleScoresheet ?? false,
+    );
+  }
 }
 
 /**
@@ -258,33 +387,8 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
     setState(createInitialState());
   }, []);
 
-  // Get player nomination IDs from a nomination list, applying modifications
-  const getPlayerNominationIds = useCallback(
-    (
-      nominationList: { indoorPlayerNominations?: { __identity?: string }[] },
-      modifications: RosterModifications,
-    ): string[] => {
-      // Start with existing player IDs
-      const existingIds =
-        nominationList.indoorPlayerNominations
-          ?.map((n) => n.__identity)
-          .filter((id): id is string => !!id) ?? [];
-
-      // Remove players that were removed
-      const removedSet = new Set(modifications.removed);
-      const remainingIds = existingIds.filter((id) => !removedSet.has(id));
-
-      // Add newly added players (they already have IDs from the player search)
-      const addedIds = modifications.added.map((p) => p.id);
-
-      return [...remainingIds, ...addedIds];
-    },
-    [],
-  );
-
   // Save current progress to API
   const saveProgress = useCallback(async (): Promise<void> => {
-    // Guard against concurrent saves
     if (isSavingRef.current) {
       logger.debug("[VS] save skip: in progress");
       return;
@@ -295,8 +399,6 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
 
     try {
       const gameDetails = gameDetailsQuery.data;
-
-      // If no game details, we can't make API calls
       if (!gameId || !gameDetails) {
         logger.warn("[VS] no game data for save");
         return;
@@ -304,60 +406,24 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
 
       logger.debug("[VS] saving:", state);
 
-      // Save home roster if modified
-      const homeNomList = gameDetails.nominationListOfTeamHome;
-      if (
-        hasRosterModifications(state.homeRoster.modifications) &&
-        homeNomList?.__identity &&
-        homeNomList.team?.__identity
-      ) {
-        const playerIds = getPlayerNominationIds(
-          homeNomList,
-          state.homeRoster.modifications,
-        );
-        await apiClient.updateNominationList(
-          homeNomList.__identity,
-          gameId,
-          homeNomList.team.__identity,
-          playerIds,
-        );
-        logger.debug("[VS] home roster saved");
-      }
-
-      // Save away roster if modified
-      const awayNomList = gameDetails.nominationListOfTeamAway;
-      if (
-        hasRosterModifications(state.awayRoster.modifications) &&
-        awayNomList?.__identity &&
-        awayNomList.team?.__identity
-      ) {
-        const playerIds = getPlayerNominationIds(
-          awayNomList,
-          state.awayRoster.modifications,
-        );
-        await apiClient.updateNominationList(
-          awayNomList.__identity,
-          gameId,
-          awayNomList.team.__identity,
-          playerIds,
-        );
-        logger.debug("[VS] away roster saved");
-      }
-
-      // Save scoresheet with scorer if scorer is selected
-      const scoresheet = gameDetails.scoresheet;
-      if (
-        state.scorer.selected?.__identity &&
-        scoresheet?.__identity
-      ) {
-        await apiClient.updateScoresheet(
-          scoresheet.__identity,
-          gameId,
-          state.scorer.selected.__identity,
-          scoresheet.isSimpleScoresheet ?? false,
-        );
-        logger.debug("[VS] scoresheet saved");
-      }
+      await saveRosterModifications(
+        apiClient,
+        gameId,
+        gameDetails.nominationListOfTeamHome,
+        state.homeRoster.modifications,
+      );
+      await saveRosterModifications(
+        apiClient,
+        gameId,
+        gameDetails.nominationListOfTeamAway,
+        state.awayRoster.modifications,
+      );
+      await saveScorerSelection(
+        apiClient,
+        gameId,
+        gameDetails.scoresheet,
+        state.scorer.selected?.__identity,
+      );
 
       logger.debug("[VS] save done");
     } catch (error) {
@@ -367,17 +433,10 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
       isSavingRef.current = false;
       setIsSaving(false);
     }
-  }, [
-    gameId,
-    gameDetailsQuery.data,
-    state,
-    apiClient,
-    getPlayerNominationIds,
-  ]);
+  }, [gameId, gameDetailsQuery.data, state, apiClient]);
 
   // Finalize validation (save + close nomination lists and scoresheet)
   const finalizeValidation = useCallback(async (): Promise<void> => {
-    // Guard against concurrent operations
     if (isFinalizingRef.current) {
       logger.debug("[VS] finalize skip: in progress");
       return;
@@ -388,8 +447,6 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
 
     try {
       const gameDetails = gameDetailsQuery.data;
-
-      // If no game details, we can't make API calls
       if (!gameId || !gameDetails) {
         logger.warn("[VS] no game data for finalize");
         return;
@@ -407,66 +464,25 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
         logger.debug("[VS] PDF uploaded:", fileResourceId);
       }
 
-      // Finalize home roster
-      const homeNomList = gameDetails.nominationListOfTeamHome;
-      if (homeNomList?.__identity && homeNomList.team?.__identity) {
-        const playerIds = getPlayerNominationIds(
-          homeNomList,
-          state.homeRoster.modifications,
-        );
-        await apiClient.finalizeNominationList(
-          homeNomList.__identity,
-          gameId,
-          homeNomList.team.__identity,
-          playerIds,
-          homeNomList.nominationListValidation?.__identity,
-        );
-        logger.debug("[VS] home finalized");
-      }
-
-      // Finalize away roster
-      const awayNomList = gameDetails.nominationListOfTeamAway;
-      if (awayNomList?.__identity && awayNomList.team?.__identity) {
-        const playerIds = getPlayerNominationIds(
-          awayNomList,
-          state.awayRoster.modifications,
-        );
-        await apiClient.finalizeNominationList(
-          awayNomList.__identity,
-          gameId,
-          awayNomList.team.__identity,
-          playerIds,
-          awayNomList.nominationListValidation?.__identity,
-        );
-        logger.debug("[VS] away finalized");
-      }
-
-      // Finalize scoresheet if scorer is selected and file is uploaded
-      const scoresheet = gameDetails.scoresheet;
-      if (
-        state.scorer.selected?.__identity &&
-        scoresheet?.__identity &&
-        fileResourceId
-      ) {
-        await apiClient.finalizeScoresheet(
-          scoresheet.__identity,
-          gameId,
-          state.scorer.selected.__identity,
-          fileResourceId,
-          scoresheet.scoresheetValidation?.__identity,
-          scoresheet.isSimpleScoresheet ?? false,
-        );
-        logger.debug("[VS] scoresheet finalized");
-      } else if (state.scorer.selected?.__identity && scoresheet?.__identity) {
-        // Update scoresheet with scorer even if no file is uploaded
-        await apiClient.updateScoresheet(
-          scoresheet.__identity,
-          gameId,
-          state.scorer.selected.__identity,
-          scoresheet.isSimpleScoresheet ?? false,
-        );
-        logger.debug("[VS] scoresheet saved (no file)");
-      }
+      await finalizeRoster(
+        apiClient,
+        gameId,
+        gameDetails.nominationListOfTeamHome,
+        state.homeRoster.modifications,
+      );
+      await finalizeRoster(
+        apiClient,
+        gameId,
+        gameDetails.nominationListOfTeamAway,
+        state.awayRoster.modifications,
+      );
+      await finalizeScoresheetWithFile(
+        apiClient,
+        gameId,
+        gameDetails.scoresheet,
+        state.scorer.selected?.__identity,
+        fileResourceId,
+      );
 
       logger.debug("[VS] finalize done");
     } catch (error) {
@@ -476,13 +492,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
       isFinalizingRef.current = false;
       setIsFinalizing(false);
     }
-  }, [
-    gameId,
-    gameDetailsQuery.data,
-    state,
-    apiClient,
-    getPlayerNominationIds,
-  ]);
+  }, [gameId, gameDetailsQuery.data, state, apiClient]);
 
   return {
     state,

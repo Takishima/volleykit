@@ -38,6 +38,12 @@ const MOCK_MUTATION_DELAY_MS = 100;
 /** Default limit for person search pagination */
 const DEFAULT_PERSON_SEARCH_LIMIT = 50;
 
+/** Maximum allowed file size for uploads (10 MB). */
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
+/** Allowed MIME types for scoresheet uploads. */
+const ALLOWED_FILE_TYPES = ["application/pdf"];
+
 /**
  * Normalize a string for accent-insensitive comparison.
  * Converts to lowercase, decomposes accented characters (NFD normalization),
@@ -537,6 +543,19 @@ export const mockApi = {
   },
 
   async uploadResource(file: File): Promise<FileResource[]> {
+    // Validate file type
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      throw new Error(
+        `Invalid file type: ${file.type || "unknown"}. Only PDF files are allowed.`,
+      );
+    }
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+      throw new Error(`File too large: ${sizeMB} MB. Maximum size is 10 MB.`);
+    }
+
     await delay(MOCK_MUTATION_DELAY_MS);
 
     // In demo mode, return a mock file resource
