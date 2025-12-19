@@ -284,6 +284,38 @@ describe("useAssignmentActions", () => {
     expect(result.current.pdfReportModal.isOpen).toBe(false);
   });
 
+  it("should block generate report for second referee (head-two)", () => {
+    const { result } = renderHook(() => useAssignmentActions());
+
+    const secondRefereeAssignment: Assignment = {
+      ...createMockAssignment("NLA"),
+      refereePosition: "head-two",
+    } as Assignment;
+
+    act(() => {
+      result.current.handleGenerateReport(secondRefereeAssignment);
+    });
+
+    expect(toast.info).toHaveBeenCalledWith("assignments.gameReportNotAvailable");
+    expect(result.current.pdfReportModal.isOpen).toBe(false);
+  });
+
+  it("should block generate report for linesman positions", () => {
+    const { result } = renderHook(() => useAssignmentActions());
+
+    const linesmanAssignment: Assignment = {
+      ...createMockAssignment("NLA"),
+      refereePosition: "linesman-one",
+    } as Assignment;
+
+    act(() => {
+      result.current.handleGenerateReport(linesmanAssignment);
+    });
+
+    expect(toast.info).toHaveBeenCalledWith("assignments.gameReportNotAvailable");
+    expect(result.current.pdfReportModal.isOpen).toBe(false);
+  });
+
   it("should open and close PDF report modal", () => {
     const { result } = renderHook(() => useAssignmentActions());
 

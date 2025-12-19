@@ -63,19 +63,25 @@ const GAME_REPORT_ELIGIBLE_LEAGUES = ["NLA", "NLB"];
 /**
  * Checks if an assignment is eligible for game report generation.
  *
- * Game reports are only available for NLA (Nationalliga A) and NLB
- * (Nationalliga B) games, the top two tiers of Swiss volleyball.
+ * Game reports are only available when:
+ * 1. The game is NLA (Nationalliga A) or NLB (Nationalliga B), the top two tiers
+ * 2. The referee is assigned as the first head referee (head-one position)
+ *
+ * Only the first head referee fills out the official game report.
  * Games in other leagues (1L and below) do not require official
  * game reports through this system.
  *
  * @param assignment - The referee assignment to check
- * @returns true if the assignment's league is NLA or NLB, false otherwise
- *          (including when league data is undefined)
+ * @returns true if the assignment is for an NLA/NLB game AND the referee
+ *          is in head-one position, false otherwise
  */
 export function isGameReportEligible(assignment: Assignment): boolean {
   const leagueName =
     assignment.refereeGame?.game?.group?.phase?.league?.leagueCategory?.name;
-  return leagueName !== undefined && GAME_REPORT_ELIGIBLE_LEAGUES.includes(leagueName);
+  const isEligibleLeague =
+    leagueName !== undefined && GAME_REPORT_ELIGIBLE_LEAGUES.includes(leagueName);
+  const isFirstReferee = assignment.refereePosition === "head-one";
+  return isEligibleLeague && isFirstReferee;
 }
 
 /**

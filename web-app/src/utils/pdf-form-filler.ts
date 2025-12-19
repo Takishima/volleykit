@@ -69,7 +69,7 @@ export function extractSportsHallReportData(assignment: Assignment): SportsHallR
   const firstReferee = getRefereeName(refereeGame?.activeRefereeConvocationFirstHeadReferee);
   const secondReferee = getRefereeName(refereeGame?.activeRefereeConvocationSecondHeadReferee);
 
-  return {
+  const reportData: SportsHallReportData = {
     gameNumber: game.number?.toString() ?? '',
     homeTeam: game.encounter?.teamHome?.name ?? '',
     awayTeam: game.encounter?.teamAway?.name ?? '',
@@ -80,6 +80,13 @@ export function extractSportsHallReportData(assignment: Assignment): SportsHallR
     firstRefereeName: firstReferee,
     secondRefereeName: secondReferee,
   };
+
+  // Debug logging for troubleshooting PDF generation
+  if (import.meta.env.DEV) {
+    console.debug('[pdf-form-filler] Extracted report data:', reportData);
+  }
+
+  return reportData;
 }
 
 export function getLeagueCategoryFromAssignment(assignment: Assignment): LeagueCategory | null {
@@ -137,6 +144,45 @@ function getPdfPath(leagueCategory: LeagueCategory, language: Language): string 
   return `${basePath}assets/pdf/sports-hall-report-${categoryPath}${language}.pdf`;
 }
 
+function trySetTextField(
+  form: ReturnType<Awaited<ReturnType<typeof import('pdf-lib')>['PDFDocument']['prototype']['getForm']>>,
+  fieldName: string,
+  value: string | undefined
+): void {
+  if (!value) return;
+  try {
+    form.getTextField(fieldName).setText(value);
+  } catch (error) {
+    console.warn(`Could not set text field "${fieldName}":`, error);
+  }
+}
+
+function trySelectRadioOption(
+  form: ReturnType<Awaited<ReturnType<typeof import('pdf-lib')>['PDFDocument']['prototype']['getForm']>>,
+  groupName: string,
+  option: string
+): void {
+  try {
+    const radioGroup = form.getRadioGroup(groupName);
+    try {
+      radioGroup.select(option);
+    } catch {
+      // Try fallback matching for different naming conventions
+      const options = radioGroup.getOptions();
+      const matchingOption = options.find(
+        (opt) => opt.toUpperCase().startsWith(option) || opt.includes(option)
+      );
+      if (matchingOption) {
+        radioGroup.select(matchingOption);
+      } else {
+        console.warn(`Could not find option "${option}" in radio group "${groupName}". Available: ${options.join(', ')}`);
+      }
+    }
+  } catch (error) {
+    console.warn(`Could not access radio group "${groupName}":`, error);
+  }
+}
+
 export async function fillSportsHallReportForm(
   data: SportsHallReportData,
   leagueCategory: LeagueCategory,
@@ -156,36 +202,21 @@ export async function fillSportsHallReportForm(
   const form = pdfDoc.getForm();
   const mapping = getFieldMapping(leagueCategory);
 
-  form.getTextField(mapping.gameNumber).setText(data.gameNumber);
-  form.getTextField(mapping.homeTeam).setText(data.homeTeam);
-  form.getTextField(mapping.awayTeam).setText(data.awayTeam);
-  form.getTextField(mapping.hallName).setText(data.hallName);
-  form.getTextField(mapping.location).setText(data.location);
-  form.getTextField(mapping.date).setText(data.date);
+  // Set basic game info fields
+  trySetTextField(form, mapping.gameNumber, data.gameNumber);
+  trySetTextField(form, mapping.homeTeam, data.homeTeam);
+  trySetTextField(form, mapping.awayTeam, data.awayTeam);
+  trySetTextField(form, mapping.hallName, data.hallName);
+  trySetTextField(form, mapping.location, data.location);
+  trySetTextField(form, mapping.date, data.date);
 
-  // Select gender radio button with fallback for different naming conventions
-  const genderRadio = form.getRadioGroup(mapping.genderRadio);
+  // Select gender radio button
   const genderOption = data.gender === 'm' ? 'M' : 'F';
-  try {
-    genderRadio.select(genderOption);
-  } catch {
-    const options = genderRadio.getOptions();
-    const matchingOption = options.find(
-      (opt) => opt.toUpperCase().startsWith(genderOption) || opt.includes(genderOption)
-    );
-    if (matchingOption) {
-      genderRadio.select(matchingOption);
-    } else {
-      console.warn(`Could not find gender option "${genderOption}" in PDF form`);
-    }
-  }
+  trySelectRadioOption(form, mapping.genderRadio, genderOption);
 
-  if (data.firstRefereeName) {
-    form.getTextField(mapping.firstRefereeName).setText(data.firstRefereeName);
-  }
-  if (data.secondRefereeName) {
-    form.getTextField(mapping.secondRefereeName).setText(data.secondRefereeName);
-  }
+  // Set referee names
+  trySetTextField(form, mapping.firstRefereeName, data.firstRefereeName);
+  trySetTextField(form, mapping.secondRefereeName, data.secondRefereeName);
 
   return pdfDoc.save();
 }
