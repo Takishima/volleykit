@@ -91,9 +91,15 @@ describe("EmptyState", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders custom icon", () => {
-    render(<EmptyState title="No items" icon="🎉" />);
-    expect(screen.getByText("🎉")).toBeInTheDocument();
+  it("renders icon from string name", () => {
+    const { container } = render(<EmptyState title="No items" icon="calendar" />);
+    // Calendar icon renders as SVG
+    expect(container.querySelector("svg")).toBeInTheDocument();
+  });
+
+  it("renders custom ReactNode icon", () => {
+    render(<EmptyState title="No items" icon={<span data-testid="custom-icon">Custom</span>} />);
+    expect(screen.getByTestId("custom-icon")).toBeInTheDocument();
   });
 
   it("renders action button when provided", () => {

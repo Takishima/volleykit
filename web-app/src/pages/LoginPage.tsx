@@ -11,6 +11,7 @@ import { useDemoStore } from "@/stores/demo";
 import { useTranslation } from "@/hooks/useTranslation";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+import { Volleyball } from "@/components/ui/icons";
 
 // Demo-only mode restricts the app to demo mode (used in PR preview deployments)
 const DEMO_MODE_ONLY = import.meta.env.VITE_DEMO_MODE_ONLY === "true";
@@ -64,9 +65,7 @@ export function LoginPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-surface-page dark:bg-surface-page-dark px-4">
         <div className="text-center" role="status">
-          <span className="text-6xl" aria-hidden="true">
-            🏐
-          </span>
+          <Volleyball className="w-16 h-16 text-primary-600 dark:text-primary-400 mx-auto" aria-hidden="true" />
           <h1 className="mt-4 text-3xl font-bold text-text-primary dark:text-text-primary-dark">
             VolleyKit
           </h1>
@@ -89,7 +88,7 @@ export function LoginPage() {
 
         {/* Logo */}
         <div className="text-center mb-8">
-          <span className="text-6xl">🏐</span>
+          <Volleyball className="w-16 h-16 text-primary-600 dark:text-primary-400 mx-auto" aria-hidden="true" />
           <h1 className="mt-4 text-3xl font-bold text-text-primary dark:text-text-primary-dark">
             VolleyKit
           </h1>
