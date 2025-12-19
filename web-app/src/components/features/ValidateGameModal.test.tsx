@@ -4,8 +4,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ValidateGameModal } from "./ValidateGameModal";
 import type { Assignment } from "@/api/client";
 import * as useNominationListModule from "@/hooks/useNominationList";
+import * as useValidationStateModule from "@/hooks/useValidationState";
 
 vi.mock("@/hooks/useNominationList");
+vi.mock("@/hooks/useValidationState");
 
 vi.mock("@/hooks/useScorerSearch", () => ({
   useScorerSearch: vi.fn(() => ({
@@ -22,36 +24,6 @@ vi.mock("@/hooks/useScorerSearch", () => ({
 
 vi.mock("@/stores/auth", () => ({
   useAuthStore: vi.fn((selector) => selector({ isDemoMode: false })),
-}));
-
-vi.mock("@/hooks/useValidationState", () => ({
-  useValidationState: vi.fn(() => ({
-    state: {
-      homeRoster: { reviewed: false, modifications: { added: [], removed: [] } },
-      awayRoster: { reviewed: false, modifications: { added: [], removed: [] } },
-      scorer: { selected: null },
-      scoresheet: { file: null, uploaded: false },
-    },
-    isDirty: false,
-    completionStatus: {
-      homeRoster: false,
-      awayRoster: false,
-      scorer: false,
-      scoresheet: true,
-    },
-    isAllRequiredComplete: false,
-    setHomeRosterModifications: vi.fn(),
-    setAwayRosterModifications: vi.fn(),
-    setScorer: vi.fn(),
-    setScoresheet: vi.fn(),
-    reset: vi.fn(),
-    saveProgress: vi.fn().mockResolvedValue(undefined),
-    finalizeValidation: vi.fn().mockResolvedValue(undefined),
-    isSaving: false,
-    isFinalizing: false,
-    isLoadingGameDetails: false,
-    gameDetailsError: null,
-  })),
 }));
 
 function createMockAssignment(overrides: Partial<Assignment> = {}): Assignment {
@@ -106,6 +78,33 @@ describe("ValidateGameModal", () => {
       isError: false,
       error: null,
       refetch: vi.fn(),
+    });
+    vi.mocked(useValidationStateModule.useValidationState).mockReturnValue({
+      state: {
+        homeRoster: { reviewed: false, modifications: { added: [], removed: [] } },
+        awayRoster: { reviewed: false, modifications: { added: [], removed: [] } },
+        scorer: { selected: null },
+        scoresheet: { file: null, uploaded: false },
+      },
+      isDirty: false,
+      completionStatus: {
+        homeRoster: false,
+        awayRoster: false,
+        scorer: false,
+        scoresheet: true,
+      },
+      isAllRequiredComplete: false,
+      setHomeRosterModifications: vi.fn(),
+      setAwayRosterModifications: vi.fn(),
+      setScorer: vi.fn(),
+      setScoresheet: vi.fn(),
+      reset: vi.fn(),
+      saveProgress: vi.fn().mockResolvedValue(undefined),
+      finalizeValidation: vi.fn().mockResolvedValue(undefined),
+      isSaving: false,
+      isFinalizing: false,
+      isLoadingGameDetails: false,
+      gameDetailsError: null,
     });
   });
 
