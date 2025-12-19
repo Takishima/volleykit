@@ -30,6 +30,7 @@ function formatDateForReport(isoString: string | undefined): string {
   try {
     return format(new Date(isoString), 'dd.MM.yyyy');
   } catch {
+    // Invalid date format - return empty string so form field shows blank
     return '';
   }
 }
