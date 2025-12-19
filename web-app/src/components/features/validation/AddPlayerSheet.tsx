@@ -191,6 +191,7 @@ export function AddPlayerSheet({
                     <button
                       onClick={() => handlePlayerClick(player)}
                       disabled={isAdded}
+                      aria-pressed={isAdded}
                       className={`
                         w-full flex items-center justify-between p-3 rounded-lg
                         text-left transition-colors
