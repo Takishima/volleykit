@@ -147,6 +147,8 @@ export function ValidateGameModal({
     finalizeValidation,
     isSaving,
     isFinalizing,
+    isLoadingGameDetails,
+    gameDetailsError,
   } = useValidationState(gameId);
 
   // Define wizard steps with typed ids for type-safe panel switching
@@ -432,29 +434,55 @@ export function ValidateGameModal({
             totalSteps={totalSteps}
             onSwipeNext={handleNext}
             onSwipePrevious={handleBack}
-            swipeEnabled={!isFinalizing}
+            swipeEnabled={!isFinalizing && !isLoadingGameDetails}
           >
             <div className="max-h-80 overflow-y-auto">
-              {currentStepId === "home-roster" && (
-                <HomeRosterPanel
-                  assignment={assignment}
-                  onModificationsChange={setHomeRosterModifications}
-                />
+              {/* Show loading state while fetching game details */}
+              {isLoadingGameDetails && (
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-sm text-text-muted dark:text-text-muted-dark">
+                    {t("common.loading")}
+                  </div>
+                </div>
               )}
 
-              {currentStepId === "away-roster" && (
-                <AwayRosterPanel
-                  assignment={assignment}
-                  onModificationsChange={setAwayRosterModifications}
-                />
+              {/* Show error if game details failed to load */}
+              {gameDetailsError && !isLoadingGameDetails && (
+                <div
+                  role="alert"
+                  className="p-3 bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800 rounded-lg"
+                >
+                  <p className="text-sm text-danger-700 dark:text-danger-400">
+                    {gameDetailsError.message}
+                  </p>
+                </div>
               )}
 
-              {currentStepId === "scorer" && (
-                <ScorerPanel onScorerChange={setScorer} />
-              )}
+              {/* Show panels when not loading and no error */}
+              {!isLoadingGameDetails && !gameDetailsError && (
+                <>
+                  {currentStepId === "home-roster" && (
+                    <HomeRosterPanel
+                      assignment={assignment}
+                      onModificationsChange={setHomeRosterModifications}
+                    />
+                  )}
 
-              {currentStepId === "scoresheet" && (
-                <ScoresheetPanel onScoresheetChange={setScoresheet} />
+                  {currentStepId === "away-roster" && (
+                    <AwayRosterPanel
+                      assignment={assignment}
+                      onModificationsChange={setAwayRosterModifications}
+                    />
+                  )}
+
+                  {currentStepId === "scorer" && (
+                    <ScorerPanel onScorerChange={setScorer} />
+                  )}
+
+                  {currentStepId === "scoresheet" && (
+                    <ScoresheetPanel onScoresheetChange={setScoresheet} />
+                  )}
+                </>
               )}
             </div>
           </WizardStepContainer>
@@ -528,6 +556,8 @@ export function ValidateGameModal({
                   onClick={() => handleFinish()}
                   disabled={
                     isFinalizing ||
+                    isLoadingGameDetails ||
+                    !!gameDetailsError ||
                     !allPreviousRequiredStepsDone ||
                     (!currentStep.isOptional && !canMarkCurrentStepDone)
                   }
@@ -546,7 +576,12 @@ export function ValidateGameModal({
                 <button
                   type="button"
                   onClick={handleValidateAndNext}
-                  disabled={isFinalizing || !canMarkCurrentStepDone}
+                  disabled={
+                    isFinalizing ||
+                    isLoadingGameDetails ||
+                    !!gameDetailsError ||
+                    !canMarkCurrentStepDone
+                  }
                   className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {t("validation.wizard.validate")}

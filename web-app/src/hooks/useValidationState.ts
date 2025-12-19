@@ -286,7 +286,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
   const saveProgress = useCallback(async (): Promise<void> => {
     // Guard against concurrent saves
     if (isSavingRef.current) {
-      logger.debug("[useValidationState] Save already in progress, skipping");
+      logger.debug("[VS] save skip: in progress");
       return;
     }
 
@@ -298,13 +298,11 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
 
       // If no game details, we can't make API calls
       if (!gameId || !gameDetails) {
-        logger.warn(
-          "[useValidationState] No game ID or game details available for save",
-        );
+        logger.warn("[VS] no game data for save");
         return;
       }
 
-      logger.debug("[useValidationState] Saving validation progress:", state);
+      logger.debug("[VS] saving:", state);
 
       // Save home roster if modified
       const homeNomList = gameDetails.nominationListOfTeamHome;
@@ -323,7 +321,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
           homeNomList.team.__identity,
           playerIds,
         );
-        logger.debug("[useValidationState] Home roster updated");
+        logger.debug("[VS] home roster saved");
       }
 
       // Save away roster if modified
@@ -343,7 +341,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
           awayNomList.team.__identity,
           playerIds,
         );
-        logger.debug("[useValidationState] Away roster updated");
+        logger.debug("[VS] away roster saved");
       }
 
       // Save scoresheet with scorer if scorer is selected
@@ -358,12 +356,12 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
           state.scorer.selected.__identity,
           scoresheet.isSimpleScoresheet ?? false,
         );
-        logger.debug("[useValidationState] Scoresheet updated with scorer");
+        logger.debug("[VS] scoresheet saved");
       }
 
-      logger.debug("[useValidationState] Save complete");
+      logger.debug("[VS] save done");
     } catch (error) {
-      logger.error("[useValidationState] Save failed:", error);
+      logger.error("[VS] save failed:", error);
       throw error;
     } finally {
       isSavingRef.current = false;
@@ -381,9 +379,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
   const finalizeValidation = useCallback(async (): Promise<void> => {
     // Guard against concurrent operations
     if (isFinalizingRef.current) {
-      logger.debug(
-        "[useValidationState] Finalize already in progress, skipping",
-      );
+      logger.debug("[VS] finalize skip: in progress");
       return;
     }
 
@@ -395,16 +391,11 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
 
       // If no game details, we can't make API calls
       if (!gameId || !gameDetails) {
-        logger.warn(
-          "[useValidationState] No game ID or game details available for finalize",
-        );
+        logger.warn("[VS] no game data for finalize");
         return;
       }
 
-      logger.debug(
-        "[useValidationState] Finalizing validation for game:",
-        gameId,
-      );
+      logger.debug("[VS] finalizing:", gameId);
 
       // Upload scoresheet PDF if provided
       let fileResourceId: string | undefined;
@@ -413,10 +404,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
           state.scoresheet.file,
         );
         fileResourceId = uploadResult[0]?.__identity;
-        logger.debug(
-          "[useValidationState] Scoresheet PDF uploaded:",
-          fileResourceId,
-        );
+        logger.debug("[VS] PDF uploaded:", fileResourceId);
       }
 
       // Finalize home roster
@@ -433,7 +421,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
           playerIds,
           homeNomList.nominationListValidation?.__identity,
         );
-        logger.debug("[useValidationState] Home roster finalized");
+        logger.debug("[VS] home finalized");
       }
 
       // Finalize away roster
@@ -450,7 +438,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
           playerIds,
           awayNomList.nominationListValidation?.__identity,
         );
-        logger.debug("[useValidationState] Away roster finalized");
+        logger.debug("[VS] away finalized");
       }
 
       // Finalize scoresheet if scorer is selected and file is uploaded
@@ -468,7 +456,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
           scoresheet.scoresheetValidation?.__identity,
           scoresheet.isSimpleScoresheet ?? false,
         );
-        logger.debug("[useValidationState] Scoresheet finalized");
+        logger.debug("[VS] scoresheet finalized");
       } else if (state.scorer.selected?.__identity && scoresheet?.__identity) {
         // Update scoresheet with scorer even if no file is uploaded
         await apiClient.updateScoresheet(
@@ -477,14 +465,12 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
           state.scorer.selected.__identity,
           scoresheet.isSimpleScoresheet ?? false,
         );
-        logger.debug(
-          "[useValidationState] Scoresheet updated (no file for finalization)",
-        );
+        logger.debug("[VS] scoresheet saved (no file)");
       }
 
-      logger.debug("[useValidationState] Finalization complete");
+      logger.debug("[VS] finalize done");
     } catch (error) {
-      logger.error("[useValidationState] Finalization failed:", error);
+      logger.error("[VS] finalize failed:", error);
       throw error;
     } finally {
       isFinalizingRef.current = false;

@@ -744,15 +744,8 @@ export const api = {
     );
   },
 
-  /**
-   * Fetches game details including scoresheet and nomination lists.
-   * Used during validation to get identifiers needed for API calls.
-   *
-   * @param gameId - UUID of the game
-   * @returns Game details with scoresheet and nomination list data
-   */
+  /** Fetches game details including scoresheet and nomination lists. */
   async getGameWithScoresheet(gameId: string): Promise<Schemas["GameDetails"]> {
-    // Properties needed for validation workflow
     const properties = [
       "scoresheet",
       "scoresheet.__identity",
@@ -792,16 +785,7 @@ export const api = {
     );
   },
 
-  /**
-   * Updates a nomination list with roster changes.
-   * Called when saving validation progress with roster modifications.
-   *
-   * @param nominationListId - UUID of the nomination list
-   * @param gameId - UUID of the game
-   * @param teamId - UUID of the team
-   * @param playerNominationIds - Array of player nomination UUIDs to include
-   * @returns Updated nomination list
-   */
+  /** Updates a nomination list with roster changes. */
   async updateNominationList(
     nominationListId: string,
     gameId: string,
@@ -829,17 +813,7 @@ export const api = {
     );
   },
 
-  /**
-   * Finalizes a nomination list (closes it for further modifications).
-   * Called when completing game validation.
-   *
-   * @param nominationListId - UUID of the nomination list
-   * @param gameId - UUID of the game
-   * @param teamId - UUID of the team
-   * @param playerNominationIds - Array of player nomination UUIDs to include
-   * @param validationId - Optional UUID of the nomination list validation record
-   * @returns Response with finalized nomination list
-   */
+  /** Finalizes a nomination list (closes it for further modifications). */
   async finalizeNominationList(
     nominationListId: string,
     gameId: string,
@@ -873,16 +847,7 @@ export const api = {
     );
   },
 
-  /**
-   * Updates a scoresheet with the selected scorer (writer person).
-   * Called when saving validation progress with scorer selection.
-   *
-   * @param scoresheetId - UUID of the scoresheet
-   * @param gameId - UUID of the game
-   * @param scorerPersonId - UUID of the person selected as scorer
-   * @param isSimpleScoresheet - Whether using simplified scoresheet format
-   * @returns Updated scoresheet
-   */
+  /** Updates a scoresheet with the selected scorer. */
   async updateScoresheet(
     scoresheetId: string,
     gameId: string,
@@ -902,18 +867,7 @@ export const api = {
     );
   },
 
-  /**
-   * Finalizes a scoresheet after the game.
-   * Requires a PDF file to be uploaded and attached first.
-   *
-   * @param scoresheetId - UUID of the scoresheet
-   * @param gameId - UUID of the game
-   * @param scorerPersonId - UUID of the person who filled out the scoresheet
-   * @param fileResourceId - UUID of the uploaded PDF file resource
-   * @param validationId - Optional UUID of the scoresheet validation record
-   * @param isSimpleScoresheet - Whether using simplified scoresheet format
-   * @returns Finalized scoresheet
-   */
+  /** Finalizes a scoresheet after the game. */
   async finalizeScoresheet(
     scoresheetId: string,
     gameId: string,
@@ -942,12 +896,7 @@ export const api = {
     );
   },
 
-  /**
-   * Uploads a file (e.g., scoresheet PDF) and returns a resource reference.
-   *
-   * @param file - The file to upload
-   * @returns Array containing the uploaded file resource
-   */
+  /** Uploads a file and returns a resource reference. */
   async uploadResource(file: File): Promise<FileResource[]> {
     const formData = new FormData();
     formData.append("resource", file);
