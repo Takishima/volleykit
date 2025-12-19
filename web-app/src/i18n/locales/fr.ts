@@ -119,6 +119,12 @@ const fr: Translations = {
     noApplicationsTitle: "Aucune candidature",
     noApplicationsDescription:
       "Vous n'avez pas encore postulé pour des échanges.",
+    applySuccess: "Candidature à l'échange réussie",
+    applyError: "Échec de la candidature. Veuillez réessayer.",
+    withdrawSuccess: "Retrait de l'échange réussi",
+    withdrawError: "Échec du retrait de l'échange. Veuillez réessayer.",
+    addedToExchangeSuccess: "Désignation ajoutée à la bourse aux échanges",
+    addedToExchangeError: "Impossible d'ajouter la désignation à la bourse",
   },
   positions: {
     "head-one": "1er Arbitre",

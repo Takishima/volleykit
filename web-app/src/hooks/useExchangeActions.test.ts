@@ -7,10 +7,25 @@ import type { UseMutationResult } from "@tanstack/react-query";
 import * as useConvocations from "./useConvocations";
 import * as authStore from "@/stores/auth";
 import * as settingsStore from "@/stores/settings";
+import { toast } from "@/stores/toast";
 
 vi.mock("./useConvocations");
 vi.mock("@/stores/auth");
 vi.mock("@/stores/settings");
+vi.mock("@/stores/toast", () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    warning: vi.fn(),
+  },
+}));
+vi.mock("@/hooks/useTranslation", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    language: "en",
+  }),
+}));
 
 function createMockExchange(): GameExchange {
   return {
@@ -42,7 +57,6 @@ describe("useExchangeActions", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.clearAllMocks();
-    vi.spyOn(window, "alert").mockImplementation(() => {});
 
     // Default: not in demo mode, safe mode disabled
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
@@ -200,9 +214,7 @@ describe("useExchangeActions", () => {
     });
 
     expect(mockApplyMutate).toHaveBeenCalledWith(mockExchange.__identity);
-    expect(window.alert).toHaveBeenCalledWith(
-      "Successfully applied for exchange",
-    );
+    expect(toast.success).toHaveBeenCalledWith("exchange.applySuccess");
   });
 
   it("should handle take over action failure", async () => {
@@ -216,9 +228,7 @@ describe("useExchangeActions", () => {
     });
 
     expect(mockApplyMutate).toHaveBeenCalledWith(mockExchange.__identity);
-    expect(window.alert).toHaveBeenCalledWith(
-      "Failed to apply for exchange. Please try again.",
-    );
+    expect(toast.error).toHaveBeenCalledWith("exchange.applyError");
   });
 
   it("should handle remove from exchange action successfully", async () => {
@@ -232,9 +242,7 @@ describe("useExchangeActions", () => {
     });
 
     expect(mockWithdrawMutate).toHaveBeenCalledWith(mockExchange.__identity);
-    expect(window.alert).toHaveBeenCalledWith(
-      "Successfully removed from exchange",
-    );
+    expect(toast.success).toHaveBeenCalledWith("exchange.withdrawSuccess");
   });
 
   it("should handle remove from exchange action failure", async () => {
@@ -248,9 +256,7 @@ describe("useExchangeActions", () => {
     });
 
     expect(mockWithdrawMutate).toHaveBeenCalledWith(mockExchange.__identity);
-    expect(window.alert).toHaveBeenCalledWith(
-      "Failed to remove from exchange. Please try again.",
-    );
+    expect(toast.error).toHaveBeenCalledWith("exchange.withdrawError");
   });
 
   it("should prevent duplicate take over actions", async () => {
@@ -425,9 +431,7 @@ describe("useExchangeActions", () => {
       });
 
       expect(mockApplyMutate).not.toHaveBeenCalled();
-      expect(window.alert).toHaveBeenCalledWith(
-        "This operation is blocked in safe mode. Disable safe mode in Settings to proceed.",
-      );
+      expect(toast.warning).toHaveBeenCalledWith("settings.safeModeBlocked");
     });
 
     it("should block remove from exchange when safe mode is enabled", async () => {
@@ -438,9 +442,7 @@ describe("useExchangeActions", () => {
       });
 
       expect(mockWithdrawMutate).not.toHaveBeenCalled();
-      expect(window.alert).toHaveBeenCalledWith(
-        "This operation is blocked in safe mode. Disable safe mode in Settings to proceed.",
-      );
+      expect(toast.warning).toHaveBeenCalledWith("settings.safeModeBlocked");
     });
 
     it("should not block operations in demo mode even with safe mode enabled", async () => {

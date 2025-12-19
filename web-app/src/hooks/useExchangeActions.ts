@@ -7,6 +7,7 @@ import {
 import { logger } from "@/utils/logger";
 import { MODAL_CLEANUP_DELAY } from "@/utils/assignment-helpers";
 import { useAuthStore } from "@/stores/auth";
+import { toast } from "@/stores/toast";
 import { useSettingsStore } from "@/stores/settings";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -104,7 +105,7 @@ export function useExchangeActions(): UseExchangeActionsResult {
         logger.debug(
           "[useExchangeActions] Safe mode: taking exchange blocked",
         );
-        alert(t("settings.safeModeBlocked"));
+        toast.warning(t("settings.safeModeBlocked"));
         return;
       }
 
@@ -120,9 +121,8 @@ export function useExchangeActions(): UseExchangeActionsResult {
           exchange.__identity,
         );
 
-        // TODO(#110): Replace alert with toast notification when notification system is implemented
         if (!isDemoMode) {
-          alert("Successfully applied for exchange");
+          toast.success(t("exchange.applySuccess"));
         }
       } catch (error) {
         logger.error(
@@ -130,8 +130,7 @@ export function useExchangeActions(): UseExchangeActionsResult {
           error,
         );
 
-        // TODO(#110): Replace alert with toast notification when notification system is implemented
-        alert("Failed to apply for exchange. Please try again.");
+        toast.error(t("exchange.applyError"));
       } finally {
         isTakingOverRef.current = false;
       }
@@ -146,7 +145,7 @@ export function useExchangeActions(): UseExchangeActionsResult {
         logger.debug(
           "[useExchangeActions] Safe mode: withdrawing from exchange blocked",
         );
-        alert(t("settings.safeModeBlocked"));
+        toast.warning(t("settings.safeModeBlocked"));
         return;
       }
 
@@ -162,9 +161,8 @@ export function useExchangeActions(): UseExchangeActionsResult {
           exchange.__identity,
         );
 
-        // TODO(#110): Replace alert with toast notification when notification system is implemented
         if (!isDemoMode) {
-          alert("Successfully removed from exchange");
+          toast.success(t("exchange.withdrawSuccess"));
         }
       } catch (error) {
         logger.error(
@@ -172,8 +170,7 @@ export function useExchangeActions(): UseExchangeActionsResult {
           error,
         );
 
-        // TODO(#110): Replace alert with toast notification when notification system is implemented
-        alert("Failed to remove from exchange. Please try again.");
+        toast.error(t("exchange.withdrawError"));
       } finally {
         isRemovingRef.current = false;
       }

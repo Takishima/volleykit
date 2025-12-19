@@ -10,6 +10,7 @@ import {
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 import { useSettingsStore } from "@/stores/settings";
+import { toast } from "@/stores/toast";
 import { useTranslation } from "@/hooks/useTranslation";
 
 interface UseAssignmentActionsResult {
@@ -84,7 +85,7 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
         logger.debug(
           "[useAssignmentActions] Safe mode: game validation blocked",
         );
-        alert(t("settings.safeModeBlocked"));
+        toast.warning(t("settings.safeModeBlocked"));
         return;
       }
 
@@ -111,14 +112,13 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
         logger.debug(
           "[useAssignmentActions] Game report not available for this league",
         );
-        alert(t("assignments.gameReportNotAvailable"));
+        toast.info(t("assignments.gameReportNotAvailable"));
         return;
       }
 
       if (isDemoMode) {
         logger.debug("[useAssignmentActions] Demo mode: PDF download disabled");
-        // TODO(#77): Replace alert with toast notification when notification system is implemented
-        alert("PDF downloads are not available in demo mode");
+        toast.info(t("compensations.pdfNotAvailableDemo"));
         return;
       }
 
@@ -157,7 +157,7 @@ This is a mock PDF report.`;
         logger.debug(
           "[useAssignmentActions] Safe mode: adding to exchange blocked",
         );
-        alert(t("settings.safeModeBlocked"));
+        toast.warning(t("settings.safeModeBlocked"));
         return;
       }
 
@@ -167,10 +167,7 @@ This is a mock PDF report.`;
           "[useAssignmentActions] Demo mode: added assignment to exchange:",
           assignment.__identity,
         );
-        // TODO(#77): Replace alert with toast notification when notification system is implemented
-        alert(
-          `Assignment "${homeTeam} vs ${awayTeam}" added to exchange list. Check the Exchange tab!`,
-        );
+        toast.success(t("exchange.addedToExchangeSuccess"));
         return;
       }
 
@@ -179,10 +176,7 @@ This is a mock PDF report.`;
         game: `${homeTeam} vs ${awayTeam}`,
       });
 
-      // TODO(#77): Replace alert with toast notification when notification system is implemented
-      alert(
-        `Assignment "${homeTeam} vs ${awayTeam}" added to exchange list (mocked)`,
-      );
+      toast.success(t("exchange.addedToExchangeSuccess"));
     },
     [isDemoMode, isSafeModeEnabled, addAssignmentToExchange, t],
   );

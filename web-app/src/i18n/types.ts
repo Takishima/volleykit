@@ -114,6 +114,12 @@ export interface Translations {
     noOpenExchangesDescription: string;
     noApplicationsTitle: string;
     noApplicationsDescription: string;
+    applySuccess: string;
+    applyError: string;
+    withdrawSuccess: string;
+    withdrawError: string;
+    addedToExchangeSuccess: string;
+    addedToExchangeError: string;
   };
   positions: {
     "head-one": string;
