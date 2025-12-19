@@ -20,6 +20,10 @@ import type {
   AssociationSettings,
   Season,
   NominationList,
+  NominationListFinalizeResponse,
+  Scoresheet,
+  FileResource,
+  GameDetails,
   PossibleNominationsResponse,
   PersonSearchFilter,
   PersonSearchResponse,
@@ -423,6 +427,131 @@ export const mockApi = {
       items: paginated,
       totalItemsCount: filtered.length,
     };
+  },
+
+  async getGameWithScoresheet(gameId: string): Promise<GameDetails> {
+    await delay(MOCK_NETWORK_DELAY_MS);
+
+    const store = useDemoStore.getState();
+    const gameNominations = store.nominationLists[gameId];
+
+    // Build mock game details with scoresheet and nomination lists
+    const gameDetails: GameDetails = {
+      __identity: gameId,
+      scoresheet: {
+        __identity: `scoresheet-${gameId}`,
+        game: { __identity: gameId },
+        isSimpleScoresheet: false,
+        hasFile: false,
+      },
+      nominationListOfTeamHome: gameNominations?.home ?? undefined,
+      nominationListOfTeamAway: gameNominations?.away ?? undefined,
+    };
+
+    return gameDetails;
+  },
+
+  async updateNominationList(
+    nominationListId: string,
+    gameId: string,
+    teamId: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required for API interface compatibility
+    _playerNominationIds: string[],
+  ): Promise<NominationList> {
+    await delay(MOCK_MUTATION_DELAY_MS);
+
+    // In demo mode, return a mock updated nomination list
+    return {
+      __identity: nominationListId,
+      game: { __identity: gameId },
+      team: { __identity: teamId },
+      closed: false,
+      isClosedForTeam: true,
+    };
+  },
+
+  async finalizeNominationList(
+    nominationListId: string,
+    gameId: string,
+    teamId: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required for API interface compatibility
+    _playerNominationIds: string[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required for API interface compatibility
+    _validationId?: string,
+  ): Promise<NominationListFinalizeResponse> {
+    await delay(MOCK_MUTATION_DELAY_MS);
+
+    // In demo mode, return a mock finalized nomination list
+    return {
+      nominationList: {
+        __identity: nominationListId,
+        game: { __identity: gameId },
+        team: { __identity: teamId },
+        closed: true,
+        closedAt: new Date().toISOString(),
+        closedBy: "referee",
+        isClosedForTeam: true,
+      },
+    };
+  },
+
+  async updateScoresheet(
+    scoresheetId: string,
+    gameId: string,
+    scorerPersonId: string,
+    isSimpleScoresheet: boolean = false,
+  ): Promise<Scoresheet> {
+    await delay(MOCK_MUTATION_DELAY_MS);
+
+    // In demo mode, return a mock updated scoresheet
+    return {
+      __identity: scoresheetId,
+      game: { __identity: gameId },
+      writerPerson: { __identity: scorerPersonId },
+      isSimpleScoresheet,
+      hasFile: false,
+    };
+  },
+
+  async finalizeScoresheet(
+    scoresheetId: string,
+    gameId: string,
+    scorerPersonId: string,
+    fileResourceId: string,
+    _validationId?: string,
+    isSimpleScoresheet: boolean = false,
+  ): Promise<Scoresheet> {
+    await delay(MOCK_MUTATION_DELAY_MS);
+
+    // In demo mode, return a mock finalized scoresheet
+    return {
+      __identity: scoresheetId,
+      game: { __identity: gameId },
+      writerPerson: { __identity: scorerPersonId },
+      isSimpleScoresheet,
+      hasFile: true,
+      file: { __identity: fileResourceId },
+      closedAt: new Date().toISOString(),
+      closedBy: "referee",
+    };
+  },
+
+  async uploadResource(file: File): Promise<FileResource[]> {
+    await delay(MOCK_MUTATION_DELAY_MS);
+
+    // In demo mode, return a mock file resource
+    const mockResourceId = `resource-${Date.now()}`;
+    return [
+      {
+        __identity: mockResourceId,
+        persistentResource: {
+          __identity: `persistent-${mockResourceId}`,
+          filename: file.name,
+          mediaType: file.type,
+          fileSize: file.size,
+        },
+      },
+    ];
   },
 };
 

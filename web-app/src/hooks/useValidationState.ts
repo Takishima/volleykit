@@ -1,7 +1,13 @@
 import { useState, useCallback, useMemo, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { logger } from "@/utils/logger";
 import type { ValidatedPersonSearchResult } from "@/api/validation";
 import type { RosterModifications } from "@/hooks/useNominationList";
+import { getApiClient } from "@/api/client";
+import { useAuthStore } from "@/stores/auth";
+
+/** Stale time for game details query (5 minutes) */
+const GAME_DETAILS_STALE_TIME_MS = 5 * 60 * 1000;
 
 /**
  * State for a roster panel (home or away team).
@@ -27,7 +33,7 @@ export interface ScorerPanelState {
 export interface ScoresheetPanelState {
   /** The selected file, or null if none */
   file: File | null;
-  /** Whether the file has been "uploaded" (simulated in demo mode) */
+  /** Whether the file has been "uploaded" */
   uploaded: boolean;
 }
 
@@ -75,8 +81,16 @@ export interface UseValidationStateResult {
   reset: () => void;
   /** Save current state to API (returns promise for async handling) */
   saveProgress: () => Promise<void>;
+  /** Finalize the validation (close nomination lists and scoresheet) */
+  finalizeValidation: () => Promise<void>;
   /** Whether a save operation is in progress */
   isSaving: boolean;
+  /** Whether a finalize operation is in progress */
+  isFinalizing: boolean;
+  /** Whether game details are being loaded */
+  isLoadingGameDetails: boolean;
+  /** Error from game details loading */
+  gameDetailsError: Error | null;
 }
 
 /**
@@ -118,14 +132,29 @@ function hasRosterModifications(modifications: RosterModifications): boolean {
  * - Home/Away Roster: Complete when reviewed (even if unchanged)
  * - Scorer: Complete when a scorer is selected
  * - Scoresheet: Always complete (optional field)
+ *
+ * @param gameId - Optional game ID for API operations. Required for save/finalize.
  */
-/** Simulated save delay for demo mode */
-const SIMULATED_SAVE_DELAY_MS = 300;
-
-export function useValidationState(): UseValidationStateResult {
+export function useValidationState(gameId?: string): UseValidationStateResult {
   const [state, setState] = useState<ValidationState>(createInitialState);
   const [isSaving, setIsSaving] = useState(false);
+  const [isFinalizing, setIsFinalizing] = useState(false);
   const isSavingRef = useRef(false);
+  const isFinalizingRef = useRef(false);
+
+  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const apiClient = getApiClient(isDemoMode);
+
+  // Fetch game details (scoresheet and nomination list IDs)
+  const gameDetailsQuery = useQuery({
+    queryKey: ["gameWithScoresheet", gameId],
+    queryFn: async () => {
+      if (!gameId) return null;
+      return apiClient.getGameWithScoresheet(gameId);
+    },
+    enabled: !!gameId,
+    staleTime: GAME_DETAILS_STALE_TIME_MS,
+  });
 
   // Calculate completion status
   const completionStatus = useMemo<PanelCompletionStatus>(
@@ -229,6 +258,30 @@ export function useValidationState(): UseValidationStateResult {
     setState(createInitialState());
   }, []);
 
+  // Get player nomination IDs from a nomination list, applying modifications
+  const getPlayerNominationIds = useCallback(
+    (
+      nominationList: { indoorPlayerNominations?: { __identity?: string }[] },
+      modifications: RosterModifications,
+    ): string[] => {
+      // Start with existing player IDs
+      const existingIds =
+        nominationList.indoorPlayerNominations
+          ?.map((n) => n.__identity)
+          .filter((id): id is string => !!id) ?? [];
+
+      // Remove players that were removed
+      const removedSet = new Set(modifications.removed);
+      const remainingIds = existingIds.filter((id) => !removedSet.has(id));
+
+      // Add newly added players (they already have IDs from the player search)
+      const addedIds = modifications.added.map((p) => p.id);
+
+      return [...remainingIds, ...addedIds];
+    },
+    [],
+  );
+
   // Save current progress to API
   const saveProgress = useCallback(async (): Promise<void> => {
     // Guard against concurrent saves
@@ -241,12 +294,73 @@ export function useValidationState(): UseValidationStateResult {
     setIsSaving(true);
 
     try {
-      // TODO(#171): Implement actual API call for saving validation progress
-      // For now, simulate a save operation
+      const gameDetails = gameDetailsQuery.data;
+
+      // If no game details, we can't make API calls
+      if (!gameId || !gameDetails) {
+        logger.warn(
+          "[useValidationState] No game ID or game details available for save",
+        );
+        return;
+      }
+
       logger.debug("[useValidationState] Saving validation progress:", state);
-      await new Promise<void>((resolve) =>
-        setTimeout(resolve, SIMULATED_SAVE_DELAY_MS),
-      );
+
+      // Save home roster if modified
+      const homeNomList = gameDetails.nominationListOfTeamHome;
+      if (
+        hasRosterModifications(state.homeRoster.modifications) &&
+        homeNomList?.__identity &&
+        homeNomList.team?.__identity
+      ) {
+        const playerIds = getPlayerNominationIds(
+          homeNomList,
+          state.homeRoster.modifications,
+        );
+        await apiClient.updateNominationList(
+          homeNomList.__identity,
+          gameId,
+          homeNomList.team.__identity,
+          playerIds,
+        );
+        logger.debug("[useValidationState] Home roster updated");
+      }
+
+      // Save away roster if modified
+      const awayNomList = gameDetails.nominationListOfTeamAway;
+      if (
+        hasRosterModifications(state.awayRoster.modifications) &&
+        awayNomList?.__identity &&
+        awayNomList.team?.__identity
+      ) {
+        const playerIds = getPlayerNominationIds(
+          awayNomList,
+          state.awayRoster.modifications,
+        );
+        await apiClient.updateNominationList(
+          awayNomList.__identity,
+          gameId,
+          awayNomList.team.__identity,
+          playerIds,
+        );
+        logger.debug("[useValidationState] Away roster updated");
+      }
+
+      // Save scoresheet with scorer if scorer is selected
+      const scoresheet = gameDetails.scoresheet;
+      if (
+        state.scorer.selected?.__identity &&
+        scoresheet?.__identity
+      ) {
+        await apiClient.updateScoresheet(
+          scoresheet.__identity,
+          gameId,
+          state.scorer.selected.__identity,
+          scoresheet.isSimpleScoresheet ?? false,
+        );
+        logger.debug("[useValidationState] Scoresheet updated with scorer");
+      }
+
       logger.debug("[useValidationState] Save complete");
     } catch (error) {
       logger.error("[useValidationState] Save failed:", error);
@@ -255,7 +369,134 @@ export function useValidationState(): UseValidationStateResult {
       isSavingRef.current = false;
       setIsSaving(false);
     }
-  }, [state]);
+  }, [
+    gameId,
+    gameDetailsQuery.data,
+    state,
+    apiClient,
+    getPlayerNominationIds,
+  ]);
+
+  // Finalize validation (save + close nomination lists and scoresheet)
+  const finalizeValidation = useCallback(async (): Promise<void> => {
+    // Guard against concurrent operations
+    if (isFinalizingRef.current) {
+      logger.debug(
+        "[useValidationState] Finalize already in progress, skipping",
+      );
+      return;
+    }
+
+    isFinalizingRef.current = true;
+    setIsFinalizing(true);
+
+    try {
+      const gameDetails = gameDetailsQuery.data;
+
+      // If no game details, we can't make API calls
+      if (!gameId || !gameDetails) {
+        logger.warn(
+          "[useValidationState] No game ID or game details available for finalize",
+        );
+        return;
+      }
+
+      logger.debug(
+        "[useValidationState] Finalizing validation for game:",
+        gameId,
+      );
+
+      // Upload scoresheet PDF if provided
+      let fileResourceId: string | undefined;
+      if (state.scoresheet.file) {
+        const uploadResult = await apiClient.uploadResource(
+          state.scoresheet.file,
+        );
+        fileResourceId = uploadResult[0]?.__identity;
+        logger.debug(
+          "[useValidationState] Scoresheet PDF uploaded:",
+          fileResourceId,
+        );
+      }
+
+      // Finalize home roster
+      const homeNomList = gameDetails.nominationListOfTeamHome;
+      if (homeNomList?.__identity && homeNomList.team?.__identity) {
+        const playerIds = getPlayerNominationIds(
+          homeNomList,
+          state.homeRoster.modifications,
+        );
+        await apiClient.finalizeNominationList(
+          homeNomList.__identity,
+          gameId,
+          homeNomList.team.__identity,
+          playerIds,
+          homeNomList.nominationListValidation?.__identity,
+        );
+        logger.debug("[useValidationState] Home roster finalized");
+      }
+
+      // Finalize away roster
+      const awayNomList = gameDetails.nominationListOfTeamAway;
+      if (awayNomList?.__identity && awayNomList.team?.__identity) {
+        const playerIds = getPlayerNominationIds(
+          awayNomList,
+          state.awayRoster.modifications,
+        );
+        await apiClient.finalizeNominationList(
+          awayNomList.__identity,
+          gameId,
+          awayNomList.team.__identity,
+          playerIds,
+          awayNomList.nominationListValidation?.__identity,
+        );
+        logger.debug("[useValidationState] Away roster finalized");
+      }
+
+      // Finalize scoresheet if scorer is selected and file is uploaded
+      const scoresheet = gameDetails.scoresheet;
+      if (
+        state.scorer.selected?.__identity &&
+        scoresheet?.__identity &&
+        fileResourceId
+      ) {
+        await apiClient.finalizeScoresheet(
+          scoresheet.__identity,
+          gameId,
+          state.scorer.selected.__identity,
+          fileResourceId,
+          scoresheet.scoresheetValidation?.__identity,
+          scoresheet.isSimpleScoresheet ?? false,
+        );
+        logger.debug("[useValidationState] Scoresheet finalized");
+      } else if (state.scorer.selected?.__identity && scoresheet?.__identity) {
+        // Update scoresheet with scorer even if no file is uploaded
+        await apiClient.updateScoresheet(
+          scoresheet.__identity,
+          gameId,
+          state.scorer.selected.__identity,
+          scoresheet.isSimpleScoresheet ?? false,
+        );
+        logger.debug(
+          "[useValidationState] Scoresheet updated (no file for finalization)",
+        );
+      }
+
+      logger.debug("[useValidationState] Finalization complete");
+    } catch (error) {
+      logger.error("[useValidationState] Finalization failed:", error);
+      throw error;
+    } finally {
+      isFinalizingRef.current = false;
+      setIsFinalizing(false);
+    }
+  }, [
+    gameId,
+    gameDetailsQuery.data,
+    state,
+    apiClient,
+    getPlayerNominationIds,
+  ]);
 
   return {
     state,
@@ -268,6 +509,10 @@ export function useValidationState(): UseValidationStateResult {
     setScoresheet,
     reset,
     saveProgress,
+    finalizeValidation,
     isSaving,
+    isFinalizing,
+    isLoadingGameDetails: gameDetailsQuery.isLoading,
+    gameDetailsError: gameDetailsQuery.error,
   };
 }

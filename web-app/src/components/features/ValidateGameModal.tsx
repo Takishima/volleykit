@@ -20,8 +20,6 @@ const Z_INDEX_MODAL = 50;
 const Z_INDEX_CONFIRMATION_DIALOG = 60;
 /** Z-index for toast notification (above all dialogs) */
 const Z_INDEX_TOAST = 70;
-/** Simulated save operation duration in milliseconds */
-const SIMULATED_SAVE_DELAY_MS = 500;
 /** Duration to show success toast before auto-dismissing */
 const SUCCESS_TOAST_DURATION_MS = 3000;
 
@@ -131,9 +129,11 @@ export function ValidateGameModal({
 }: ValidateGameModalProps) {
   const { t, tInterpolate } = useTranslation();
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
-  const [isFinalizing, setIsFinalizing] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [successToast, setSuccessToast] = useState<string | null>(null);
+
+  // Get game ID from assignment for API calls
+  const gameId = assignment.refereeGame?.game?.__identity;
 
   const {
     isDirty,
@@ -144,8 +144,10 @@ export function ValidateGameModal({
     setScoresheet,
     reset,
     saveProgress,
+    finalizeValidation,
     isSaving,
-  } = useValidationState();
+    isFinalizing,
+  } = useValidationState(gameId);
 
   // Define wizard steps with typed ids for type-safe panel switching
   const wizardSteps = useMemo<ValidationStep[]>(
@@ -179,7 +181,6 @@ export function ValidateGameModal({
   // Refs to prevent race conditions and enable cleanup
   const isDirtyRef = useRef(isDirty);
   const isFinalizingRef = useRef(false);
-  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -189,10 +190,6 @@ export function ValidateGameModal({
   // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-        saveTimeoutRef.current = null;
-      }
       if (toastTimeoutRef.current) {
         clearTimeout(toastTimeoutRef.current);
         toastTimeoutRef.current = null;
@@ -272,15 +269,11 @@ export function ValidateGameModal({
     }
 
     isFinalizingRef.current = true;
-    setIsFinalizing(true);
     setSaveError(null);
 
     try {
-      // TODO(#171): Implement actual API call for finalizing validation
-      // For now, simulate a save operation
-      await new Promise<void>((resolve) => {
-        saveTimeoutRef.current = setTimeout(resolve, SIMULATED_SAVE_DELAY_MS);
-      });
+      // Call the actual API to finalize validation
+      await finalizeValidation();
 
       // Show success toast notification
       setSuccessToast(t("validation.state.saveSuccess"));
@@ -296,7 +289,6 @@ export function ValidateGameModal({
       setSaveError(message);
     } finally {
       isFinalizingRef.current = false;
-      setIsFinalizing(false);
     }
   }, [
     wizardSteps,
@@ -304,6 +296,7 @@ export function ValidateGameModal({
     allPreviousRequiredStepsDone,
     currentStepIndex,
     setStepDone,
+    finalizeValidation,
     t,
     onClose,
   ]);

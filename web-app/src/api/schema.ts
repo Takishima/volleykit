@@ -2153,6 +2153,7 @@ export interface components {
             } | null;
             nominationListOfTeamHome?: components["schemas"]["NominationList"];
             nominationListOfTeamAway?: components["schemas"]["NominationList"];
+            scoresheet?: components["schemas"]["Scoresheet"];
         };
         /**
          * @description Detailed referee convocation information from showWithNestedObjects.
