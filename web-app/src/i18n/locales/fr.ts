@@ -71,6 +71,7 @@ const fr: Translations = {
     numberOfSets: "Nombre de sets",
     gameReportNotAvailable:
       "Les rapports de match sont uniquement disponibles pour les matchs NLA et NLB.",
+    reportGenerated: "Rapport généré avec succès",
   },
   compensations: {
     title: "Indemnités",

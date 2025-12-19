@@ -216,6 +216,7 @@ describe("useAssignmentActions", () => {
     });
 
     expect(createElementSpy).toHaveBeenCalledWith("a");
+    expect(toast.success).toHaveBeenCalledWith("assignments.reportGenerated");
   });
 
   it("should block generate report for non-NLA/NLB games", () => {
@@ -243,6 +244,7 @@ describe("useAssignmentActions", () => {
     });
 
     expect(createElementSpy).toHaveBeenCalledWith("a");
+    expect(toast.success).toHaveBeenCalledWith("assignments.reportGenerated");
   });
 
   it("should block generate report when league data is undefined", () => {
@@ -308,7 +310,7 @@ describe("useAssignmentActions", () => {
       expect(toast.success).toHaveBeenCalledWith("exchange.addedToExchangeSuccess");
     });
 
-    it("should not download PDF in demo mode", () => {
+    it("should generate PDF report in demo mode", () => {
       const { result } = renderHook(() => useAssignmentActions());
       const createElementSpy = vi.spyOn(document, "createElement");
 
@@ -316,8 +318,9 @@ describe("useAssignmentActions", () => {
         result.current.handleGenerateReport(mockAssignment);
       });
 
-      expect(toast.info).toHaveBeenCalledWith("compensations.pdfNotAvailableDemo");
-      expect(createElementSpy).not.toHaveBeenCalledWith("a");
+      // PDF generation should work in demo mode
+      expect(createElementSpy).toHaveBeenCalledWith("a");
+      expect(toast.success).toHaveBeenCalledWith("assignments.reportGenerated");
     });
   });
 

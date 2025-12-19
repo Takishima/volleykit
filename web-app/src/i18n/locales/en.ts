@@ -72,6 +72,7 @@ const en: Translations = {
     numberOfSets: "Number of Sets",
     gameReportNotAvailable:
       "Game reports are only available for NLA and NLB games.",
+    reportGenerated: "Report generated successfully",
   },
   compensations: {
     title: "Compensations",

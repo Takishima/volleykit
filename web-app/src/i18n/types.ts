@@ -71,6 +71,7 @@ export interface Translations {
     awayScore: string;
     numberOfSets: string;
     gameReportNotAvailable: string;
+    reportGenerated: string;
   };
   compensations: {
     title: string;
