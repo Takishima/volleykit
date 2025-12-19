@@ -6,8 +6,8 @@ import type { RosterModifications } from "@/hooks/useNominationList";
 import { getApiClient } from "@/api/client";
 import { useAuthStore } from "@/stores/auth";
 
-/** Stale time for game details query */
-const GAME_DETAILS_STALE_TIME_MS = 300000; // 5 minutes
+const MINUTES_TO_MS = 60 * 1000;
+const GAME_DETAILS_STALE_TIME_MS = 5 * MINUTES_TO_MS;
 
 /**
  * State for a roster panel (home or away team).
@@ -161,11 +161,12 @@ async function saveRosterModifications(
   nomList: NominationListForApi | undefined,
   modifications: RosterModifications,
 ): Promise<void> {
-  if (
-    !hasRosterModifications(modifications) ||
-    !nomList?.__identity ||
-    !nomList.team?.__identity
-  ) {
+  if (!hasRosterModifications(modifications)) {
+    logger.debug("[VS] skip roster save: no modifications");
+    return;
+  }
+  if (!nomList?.__identity || !nomList.team?.__identity) {
+    logger.debug("[VS] skip roster save: missing nomination list or team ID");
     return;
   }
 
@@ -186,6 +187,7 @@ async function saveScorerSelection(
   scorerId: string | undefined,
 ): Promise<void> {
   if (!scorerId || !scoresheet?.__identity) {
+    logger.debug("[VS] skip scorer save: no scorer or scoresheet ID");
     return;
   }
 
@@ -205,6 +207,7 @@ async function finalizeRoster(
   modifications: RosterModifications,
 ): Promise<void> {
   if (!nomList?.__identity || !nomList.team?.__identity) {
+    logger.debug("[VS] skip roster finalize: missing nomination list or team ID");
     return;
   }
 
@@ -227,6 +230,7 @@ async function finalizeScoresheetWithFile(
   fileResourceId: string | undefined,
 ): Promise<void> {
   if (!scorerId || !scoresheet?.__identity) {
+    logger.debug("[VS] skip scoresheet finalize: no scorer or scoresheet ID");
     return;
   }
 
