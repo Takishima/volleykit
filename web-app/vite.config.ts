@@ -106,12 +106,18 @@ export default defineConfig(({ mode }) => {
     build: {
       rollupOptions: {
         output: {
-          // Chunk names must match size-limit config in package.json
+          // Manual chunks for bundle splitting. Names must match size-limit config in package.json.
+          // Current sizes (gzipped) and limits:
+          //   - Main App Bundle (index-*.js):     ~115 kB, limit 120 kB (+5 kB headroom)
+          //   - Vendor Chunks (combined):         ~45 kB,  limit 50 kB  (+5 kB headroom)
+          //   - PDF Library (pdf-lib-*.js):       ~180 kB, limit 185 kB (+5 kB headroom) - lazy-loaded
+          //   - Total JS Bundle:                  ~360 kB, limit 400 kB (+40 kB headroom)
           manualChunks: {
             'react-vendor': ['react', 'react-dom'],
             'router': ['react-router-dom'],
             'state': ['zustand', '@tanstack/react-query'],
             'validation': ['zod'],
+            'pdf-lib': ['pdf-lib'],
           },
         },
       },

@@ -132,7 +132,9 @@ function getFieldMapping(leagueCategory: LeagueCategory): FieldMapping {
 
 function getPdfPath(leagueCategory: LeagueCategory, language: Language): string {
   const categoryPath = leagueCategory === 'NLA' ? 'nla-' : '';
-  return `/assets/pdf/sports-hall-report-${categoryPath}${language}.pdf`;
+  // Use import.meta.env.BASE_URL to handle deployment to subdirectories (e.g., /volleykit/)
+  const basePath = import.meta.env.BASE_URL || '/';
+  return `${basePath}assets/pdf/sports-hall-report-${categoryPath}${language}.pdf`;
 }
 
 export async function fillSportsHallReportForm(

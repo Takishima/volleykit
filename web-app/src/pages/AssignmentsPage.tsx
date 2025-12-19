@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, lazy, Suspense } from "react";
 import {
   useUpcomingAssignments,
   useValidationClosedAssignments,
@@ -17,6 +17,13 @@ import { ValidateGameModal } from "@/components/features/ValidateGameModal";
 import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 
+const PdfLanguageModal = lazy(
+  () =>
+    import("@/components/features/PdfLanguageModal").then((m) => ({
+      default: m.PdfLanguageModal,
+    })),
+);
+
 type TabType = "upcoming" | "validationClosed";
 
 export function AssignmentsPage() {
@@ -26,6 +33,7 @@ export function AssignmentsPage() {
   const {
     editCompensationModal,
     validateGameModal,
+    pdfReportModal,
     handleGenerateReport,
     handleAddToExchange,
   } = useAssignmentActions();
@@ -218,6 +226,18 @@ export function AssignmentsPage() {
           isOpen={validateGameModal.isOpen}
           onClose={validateGameModal.close}
         />
+      )}
+
+      {pdfReportModal.isOpen && (
+        <Suspense fallback={null}>
+          <PdfLanguageModal
+            isOpen={pdfReportModal.isOpen}
+            onClose={pdfReportModal.close}
+            onConfirm={pdfReportModal.onConfirm}
+            isLoading={pdfReportModal.isLoading}
+            defaultLanguage={pdfReportModal.defaultLanguage}
+          />
+        </Suspense>
       )}
     </div>
   );

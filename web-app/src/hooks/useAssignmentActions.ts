@@ -1,6 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import type { Assignment } from "@/api/client";
-import { downloadPDF, type ReportData } from "@/utils/assignment-actions";
 import { logger } from "@/utils/logger";
 import {
   getTeamNames,
@@ -9,9 +8,16 @@ import {
 } from "@/utils/assignment-helpers";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
+import { useLanguageStore } from "@/stores/language";
 import { useSettingsStore } from "@/stores/settings";
 import { toast } from "@/stores/toast";
 import { useTranslation } from "@/hooks/useTranslation";
+
+type PdfLanguage = "de" | "fr";
+
+function mapLocaleToPdfLanguage(appLocale: string): PdfLanguage {
+  return appLocale === "fr" || appLocale === "it" ? "fr" : "de";
+}
 
 interface UseAssignmentActionsResult {
   editCompensationModal: {
@@ -26,6 +32,15 @@ interface UseAssignmentActionsResult {
     open: (assignment: Assignment) => void;
     close: () => void;
   };
+  pdfReportModal: {
+    isOpen: boolean;
+    assignment: Assignment | null;
+    isLoading: boolean;
+    defaultLanguage: PdfLanguage;
+    open: (assignment: Assignment) => void;
+    close: () => void;
+    onConfirm: (language: PdfLanguage) => void;
+  };
   handleGenerateReport: (assignment: Assignment) => void;
   handleAddToExchange: (assignment: Assignment) => void;
 }
@@ -33,6 +48,7 @@ interface UseAssignmentActionsResult {
 export function useAssignmentActions(): UseAssignmentActionsResult {
   const { t } = useTranslation();
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const locale = useLanguageStore((state) => state.locale);
   const isSafeModeEnabled = useSettingsStore(
     (state) => state.isSafeModeEnabled,
   );
@@ -48,8 +64,14 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
   const [validateGameAssignment, setValidateGameAssignment] =
     useState<Assignment | null>(null);
 
+  const [pdfReportOpen, setPdfReportOpen] = useState(false);
+  const [pdfReportAssignment, setPdfReportAssignment] =
+    useState<Assignment | null>(null);
+  const [pdfReportLoading, setPdfReportLoading] = useState(false);
+
   const editCompensationCleanupRef = useRef<number | null>(null);
   const validateGameCleanupRef = useRef<number | null>(null);
+  const pdfReportCleanupRef = useRef<number | null>(null);
 
   useEffect(() => {
     return () => {
@@ -58,6 +80,9 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
       }
       if (validateGameCleanupRef.current) {
         clearTimeout(validateGameCleanupRef.current);
+      }
+      if (pdfReportCleanupRef.current) {
+        clearTimeout(pdfReportCleanupRef.current);
       }
     };
   }, []);
@@ -106,7 +131,7 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
     );
   }, []);
 
-  const handleGenerateReport = useCallback(
+  const openPdfReport = useCallback(
     (assignment: Assignment) => {
       if (!isGameReportEligible(assignment)) {
         logger.debug(
@@ -116,29 +141,76 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
         return;
       }
 
-      const { homeTeam, awayTeam } = getTeamNames(assignment);
-      const game = assignment.refereeGame?.game;
-      const hallName = game?.hall?.name || "Location TBD";
-      const date = game?.startingDateTime || new Date().toISOString();
-
-      const reportData: ReportData = {
-        title: "Sports Hall Report",
-        homeTeam,
-        awayTeam,
-        venue: hallName,
-        date: new Date(date).toLocaleDateString(),
-        position: assignment.refereePosition || "Unknown",
-      };
-
-      downloadPDF(reportData, `sports-hall-report-${assignment.__identity}.pdf`);
-
-      logger.debug(
-        "[useAssignmentActions] Generated PDF report for:",
-        assignment.__identity,
-      );
-      toast.success(t("assignments.reportGenerated"));
+      setPdfReportAssignment(assignment);
+      setPdfReportOpen(true);
     },
     [t],
+  );
+
+  const closePdfReport = useCallback(() => {
+    if (pdfReportLoading) return;
+    setPdfReportOpen(false);
+    if (pdfReportCleanupRef.current) {
+      clearTimeout(pdfReportCleanupRef.current);
+    }
+    pdfReportCleanupRef.current = setTimeout(
+      () => setPdfReportAssignment(null),
+      MODAL_CLEANUP_DELAY,
+    );
+  }, [pdfReportLoading]);
+
+  const handleConfirmPdfLanguage = useCallback(
+    async (language: PdfLanguage) => {
+      if (!pdfReportAssignment) return;
+
+      setPdfReportLoading(true);
+      try {
+        // Dynamic import to keep PDF utilities out of the main bundle
+        const {
+          extractSportsHallReportData,
+          getLeagueCategoryFromAssignment,
+          generateAndDownloadSportsHallReport,
+        } = await import("@/utils/pdf-form-filler");
+
+        const reportData = extractSportsHallReportData(pdfReportAssignment);
+        const leagueCategory =
+          getLeagueCategoryFromAssignment(pdfReportAssignment);
+
+        if (!reportData || !leagueCategory) {
+          logger.error(
+            "[useAssignmentActions] Failed to extract report data for:",
+            pdfReportAssignment.__identity,
+          );
+          toast.error(t("pdf.exportError"));
+          return;
+        }
+
+        await generateAndDownloadSportsHallReport(
+          reportData,
+          leagueCategory,
+          language,
+        );
+        logger.debug(
+          "[useAssignmentActions] Generated PDF report for:",
+          pdfReportAssignment.__identity,
+        );
+        toast.success(t("assignments.reportGenerated"));
+        closePdfReport();
+      } catch (error) {
+        logger.error("[useAssignmentActions] PDF generation failed:", error);
+        toast.error(t("pdf.exportError"));
+      } finally {
+        setPdfReportLoading(false);
+      }
+    },
+    [pdfReportAssignment, closePdfReport, t],
+  );
+
+  const handleGenerateReport = useCallback(
+    (assignment: Assignment) => {
+      openPdfReport(assignment);
+    },
+    [openPdfReport],
   );
 
   const handleAddToExchange = useCallback(
@@ -186,6 +258,15 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
       assignment: validateGameAssignment,
       open: openValidateGame,
       close: closeValidateGame,
+    },
+    pdfReportModal: {
+      isOpen: pdfReportOpen,
+      assignment: pdfReportAssignment,
+      isLoading: pdfReportLoading,
+      defaultLanguage: mapLocaleToPdfLanguage(locale),
+      open: openPdfReport,
+      close: closePdfReport,
+      onConfirm: handleConfirmPdfLanguage,
     },
     handleGenerateReport,
     handleAddToExchange,
