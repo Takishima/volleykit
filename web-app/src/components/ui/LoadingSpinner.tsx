@@ -19,7 +19,7 @@ export function LoadingSpinner({
     <div
       className={`
         ${sizeClasses[size]}
-        border-gray-200 border-t-orange-500
+        border-border-default border-t-primary-500
         rounded-full animate-spin
         ${className}
       `}
@@ -44,12 +44,12 @@ export function LoadingState({ message = "Loading..." }: LoadingStateProps) {
       <div
         className={`
           ${sizeClasses.lg}
-          border-gray-200 border-t-orange-500
+          border-border-default border-t-primary-500
           rounded-full animate-spin
         `}
         aria-hidden="true"
       />
-      <p className="text-gray-500 dark:text-gray-400 text-sm">{message}</p>
+      <p className="text-text-muted dark:text-text-muted-dark text-sm">{message}</p>
     </div>
   );
 }
@@ -63,7 +63,7 @@ export function ErrorState({ message, onRetry }: ErrorStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-12 gap-4">
       <div className="text-4xl">⚠️</div>
-      <p className="text-red-600 dark:text-red-400 text-center">{message}</p>
+      <p className="text-danger-600 dark:text-danger-400 text-center">{message}</p>
       {onRetry && (
         <button onClick={onRetry} className="btn btn-secondary">
           Try Again
@@ -92,11 +92,11 @@ export function EmptyState({
   return (
     <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
       <div className="text-5xl">{icon}</div>
-      <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+      <h3 className="text-lg font-medium text-text-primary dark:text-text-primary-dark">
         {title}
       </h3>
       {description && (
-        <p className="text-gray-500 dark:text-gray-400 text-sm max-w-md">
+        <p className="text-text-muted dark:text-text-muted-dark text-sm max-w-md">
           {description}
         </p>
       )}

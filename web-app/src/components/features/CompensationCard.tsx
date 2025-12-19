@@ -1,6 +1,7 @@
 import { format, parseISO } from "date-fns";
 import { Card, CardContent } from "@/components/ui/Card";
 import { ExpandArrow } from "@/components/ui/ExpandArrow";
+import { Badge } from "@/components/ui/Badge";
 import type { CompensationRecord } from "@/api/client";
 import { useExpandable } from "@/hooks/useExpandable";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -44,18 +45,18 @@ export function CompensationCard({
           onClick={handleToggle}
           aria-expanded={isExpanded}
           aria-controls={detailsId}
-          className="w-full text-left px-2 py-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset rounded-xl"
+          className="w-full text-left px-2 py-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset rounded-xl"
         >
           {/* Compact view - always visible */}
           <div className="flex items-center gap-3">
             {/* Date */}
-            <div className="text-xs text-gray-500 dark:text-gray-400 min-w-[4rem]">
+            <div className="text-xs text-text-muted dark:text-text-muted-dark min-w-[4rem]">
               {startDate ? format(startDate, "MMM d") : "Date?"}
             </div>
 
             {/* Match info - truncated */}
             <div className="flex-1 min-w-0">
-              <div className="font-medium text-gray-900 dark:text-white truncate text-sm">
+              <div className="font-medium text-text-primary dark:text-text-primary-dark truncate text-sm">
                 {homeTeam} vs {awayTeam}
               </div>
             </div>
@@ -63,19 +64,13 @@ export function CompensationCard({
             {/* Amount & status */}
             <div className="flex items-center gap-2">
               <div
-                className={`text-sm font-bold ${isPaid ? "text-green-600 dark:text-green-400" : "text-orange-600 dark:text-orange-400"}`}
+                className={`text-sm font-bold ${isPaid ? "text-success-600 dark:text-success-400" : "text-warning-600 dark:text-warning-400"}`}
               >
                 {total.toFixed(0)}
               </div>
-              <span
-                className={`px-1.5 py-0.5 rounded text-xs ${
-                  isPaid
-                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                    : "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
-                }`}
-              >
+              <Badge variant={isPaid ? "success" : "warning"}>
                 {isPaid ? "✓" : "○"}
-              </span>
+              </Badge>
               {!disableExpansion && <ExpandArrow isExpanded={isExpanded} />}
             </div>
           </div>
@@ -90,13 +85,13 @@ export function CompensationCard({
         >
           <div className="overflow-hidden">
             {comp && (
-              <div className="px-2 pb-2 pt-0 border-t border-gray-100 dark:border-gray-700 space-y-1 text-sm">
+              <div className="px-2 pb-2 pt-0 border-t border-border-subtle dark:border-border-subtle-dark space-y-1 text-sm">
                 <div className="flex justify-between pt-2">
-                  <span className="text-gray-500 dark:text-gray-400">
+                  <span className="text-text-muted dark:text-text-muted-dark">
                     Total:
                   </span>
                   <span
-                    className={`font-bold ${isPaid ? "text-green-600 dark:text-green-400" : "text-orange-600 dark:text-orange-400"}`}
+                    className={`font-bold ${isPaid ? "text-success-600 dark:text-success-400" : "text-warning-600 dark:text-warning-400"}`}
                   >
                     CHF {total.toFixed(2)}
                   </span>
@@ -104,10 +99,10 @@ export function CompensationCard({
                 {comp.gameCompensation !== undefined &&
                   comp.gameCompensation > 0 && (
                     <div className="flex justify-between text-xs">
-                      <span className="text-gray-400 dark:text-gray-500">
+                      <span className="text-text-subtle dark:text-text-subtle-dark">
                         Game fee:
                       </span>
-                      <span className="text-gray-600 dark:text-gray-400">
+                      <span className="text-text-secondary dark:text-text-muted-dark">
                         CHF {comp.gameCompensation.toFixed(2)}
                       </span>
                     </div>
@@ -115,10 +110,10 @@ export function CompensationCard({
                 {comp.travelExpenses !== undefined &&
                   comp.travelExpenses > 0 && (
                     <div className="flex justify-between text-xs">
-                      <span className="text-gray-400 dark:text-gray-500">
+                      <span className="text-text-subtle dark:text-text-subtle-dark">
                         Travel:
                       </span>
-                      <span className="text-gray-600 dark:text-gray-400">
+                      <span className="text-text-secondary dark:text-text-muted-dark">
                         CHF {comp.travelExpenses.toFixed(2)}
                       </span>
                     </div>
@@ -126,23 +121,23 @@ export function CompensationCard({
                 {comp.distanceInMetres !== undefined &&
                   comp.distanceInMetres > 0 && (
                     <div className="flex justify-between text-xs">
-                      <span className="text-gray-400 dark:text-gray-500">
+                      <span className="text-text-subtle dark:text-text-subtle-dark">
                         Distance:
                       </span>
-                      <span className="text-gray-600 dark:text-gray-400">
+                      <span className="text-text-secondary dark:text-text-muted-dark">
                         {(comp.distanceInMetres / 1000).toFixed(1)} km
                       </span>
                     </div>
                   )}
                 <div className="flex justify-between text-xs pt-1">
-                  <span className="text-gray-400 dark:text-gray-500">
+                  <span className="text-text-subtle dark:text-text-subtle-dark">
                     Status:
                   </span>
                   <span
                     className={
                       isPaid
-                        ? "text-green-600 dark:text-green-400"
-                        : "text-orange-600 dark:text-orange-400"
+                        ? "text-success-600 dark:text-success-400"
+                        : "text-warning-600 dark:text-warning-400"
                     }
                   >
                     {isPaid

@@ -22,14 +22,14 @@ export function LanguageSwitcher({
     if (variant === "grid") {
       return `flex items-center justify-center gap-2 p-3 rounded-lg border transition-colors ${
         isActive
-          ? "border-orange-500 bg-orange-50 dark:bg-orange-900/20"
-          : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+          ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
+          : "border-border-default dark:border-border-default-dark hover:bg-surface-page dark:hover:bg-surface-card-dark"
       }`;
     }
     return `px-3 py-1 rounded-lg text-sm transition-colors ${
       isActive
-        ? "bg-orange-500 text-white"
-        : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+        ? "bg-primary-500 text-primary-950"
+        : "bg-surface-muted dark:bg-surface-subtle-dark text-text-secondary dark:text-text-secondary-dark hover:bg-gray-300 dark:hover:bg-gray-600"
     }`;
   };
 
@@ -45,7 +45,7 @@ export function LanguageSwitcher({
           className={getButtonClass(locale === lang.code)}
         >
           {variant === "grid" ? (
-            <span className="text-sm text-gray-700 dark:text-gray-300">
+            <span className="text-sm text-text-secondary dark:text-text-secondary-dark">
               {lang.name}
             </span>
           ) : (

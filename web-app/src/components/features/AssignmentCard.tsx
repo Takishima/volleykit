@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/Card";
 import { ExpandArrow } from "@/components/ui/ExpandArrow";
+import { Badge } from "@/components/ui/Badge";
 import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDateFormat } from "@/hooks/useDateFormat";
@@ -63,17 +64,13 @@ export function AssignmentCard({
       ? positionLabelsMap[positionKey]
       : assignment.refereePosition || "Referee";
 
-  const statusColors: Record<string, string> = {
-    active: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-    cancelled: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-    archived: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
-  };
-
-  // Status labels from i18n
-  const statusLabels: Record<string, string> = {
-    active: t("assignments.confirmed"),
-    cancelled: t("assignments.cancelled"),
-    archived: "Archived",
+  const statusConfig: Record<
+    string,
+    { label: string; variant: "success" | "danger" | "neutral" }
+  > = {
+    active: { label: t("assignments.confirmed"), variant: "success" },
+    cancelled: { label: t("assignments.cancelled"), variant: "danger" },
+    archived: { label: "Archived", variant: "neutral" },
   };
 
   return (
@@ -85,39 +82,39 @@ export function AssignmentCard({
           onClick={handleToggle}
           aria-expanded={isExpanded}
           aria-controls={detailsId}
-          className="w-full text-left px-2 py-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset rounded-xl"
+          className="w-full text-left px-2 py-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset rounded-xl"
         >
           {/* Compact view - always visible */}
           <div className="flex items-center gap-3">
             {/* Date/Time - fixed width for alignment */}
             <div className="flex flex-col items-end w-14 shrink-0">
               <span
-                className={`text-xs font-medium ${isTodayDate ? "text-orange-600 dark:text-orange-400" : "text-gray-500 dark:text-gray-400"}`}
+                className={`text-xs font-medium ${isTodayDate ? "text-primary-600 dark:text-primary-400" : "text-text-muted dark:text-text-muted-dark"}`}
               >
                 {dateLabel}
               </span>
-              <span className="text-lg font-bold text-gray-900 dark:text-white">
+              <span className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
                 {timeLabel}
               </span>
             </div>
 
             {/* Teams and position */}
             <div className="flex-1 min-w-0">
-              <div className="font-medium text-gray-900 dark:text-white truncate">
+              <div className="font-medium text-text-primary dark:text-text-primary-dark truncate">
                 {homeTeam}
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400 truncate">
+              <div className="text-sm text-text-secondary dark:text-text-muted-dark truncate">
                 vs {awayTeam}
               </div>
               {/* Position shown in compact view */}
-              <div className="text-xs text-gray-400 dark:text-gray-500">
+              <div className="text-xs text-text-subtle dark:text-text-subtle-dark">
                 {position}
               </div>
             </div>
 
             {/* City & expand indicator */}
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500 dark:text-gray-400 truncate w-24">
+              <span className="text-xs text-text-muted dark:text-text-muted-dark truncate w-24">
                 {city || ""}
               </span>
               {!disableExpansion && (
@@ -135,9 +132,9 @@ export function AssignmentCard({
           }`}
         >
           <div className="overflow-hidden">
-            <div className="px-2 pb-2 pt-0 border-t border-gray-100 dark:border-gray-700 space-y-1">
+            <div className="px-2 pb-2 pt-0 border-t border-border-subtle dark:border-border-subtle-dark space-y-1">
               {/* Location */}
-              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 pt-2">
+              <div className="flex items-center gap-2 text-sm text-text-muted dark:text-text-muted-dark pt-2">
                 <svg
                   className="w-4 h-4 flex-shrink-0"
                   viewBox="0 0 24 24"
@@ -151,7 +148,7 @@ export function AssignmentCard({
                     href={googleMapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="truncate text-blue-600 dark:text-blue-400 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
+                    className="truncate text-primary-600 dark:text-primary-400 hover:underline focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {hallName}
@@ -163,16 +160,17 @@ export function AssignmentCard({
 
               {/* Status */}
               <div className="flex items-center gap-2 text-sm pt-1">
-                <span
-                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[status] || statusColors.active}`}
+                <Badge
+                  variant={statusConfig[status]?.variant || "success"}
+                  className="rounded-full"
                 >
-                  {statusLabels[status] || "Active"}
-                </span>
+                  {statusConfig[status]?.label || "Active"}
+                </Badge>
               </div>
 
               {/* Category/League */}
               {game?.group?.phase?.league?.leagueCategory?.name && (
-                <div className="text-xs text-gray-400 dark:text-gray-500">
+                <div className="text-xs text-text-subtle dark:text-text-subtle-dark">
                   {game.group.phase.league.leagueCategory.name}
                   {game.group.phase.league.gender &&
                     ` • ${game.group.phase.league.gender === "m" ? t("common.men") : t("common.women")}`}

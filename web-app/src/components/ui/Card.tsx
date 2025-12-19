@@ -22,9 +22,9 @@ export function Card({
   "aria-expanded": ariaExpanded,
 }: CardProps) {
   const baseClasses =
-    "bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/50";
+    "bg-surface-card dark:bg-surface-card-dark rounded-xl shadow-sm border border-border-subtle dark:border-border-subtle-dark/50";
   const interactiveClasses = onClick
-    ? "cursor-pointer hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+    ? "cursor-pointer hover:shadow-md hover:border-border-strong dark:hover:border-border-strong-dark transition-all focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-surface-page-dark"
     : "";
 
   return (
@@ -50,7 +50,7 @@ interface CardHeaderProps {
 export function CardHeader({ children, className = "" }: CardHeaderProps) {
   return (
     <div
-      className={`px-4 py-3 border-b border-gray-100 dark:border-gray-700 ${className}`}
+      className={`px-4 py-3 border-b border-border-subtle dark:border-border-subtle-dark ${className}`}
     >
       {children}
     </div>
@@ -74,7 +74,7 @@ interface CardFooterProps {
 export function CardFooter({ children, className = "" }: CardFooterProps) {
   return (
     <div
-      className={`px-4 py-3 border-t border-gray-100 dark:border-gray-700 ${className}`}
+      className={`px-4 py-3 border-t border-border-subtle dark:border-border-subtle-dark ${className}`}
     >
       {children}
     </div>

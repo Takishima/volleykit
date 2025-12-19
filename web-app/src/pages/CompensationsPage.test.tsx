@@ -81,7 +81,7 @@ describe("CompensationsPage", () => {
       render(<CompensationsPage />);
 
       const allTab = screen.getByRole("tab", { name: /^all$/i });
-      expect(allTab).toHaveClass("border-orange-500");
+      expect(allTab).toHaveClass("border-primary-500");
       expect(allTab).toHaveAttribute("aria-selected", "true");
     });
 
@@ -91,7 +91,7 @@ describe("CompensationsPage", () => {
       fireEvent.click(screen.getByRole("tab", { name: /pending/i }));
 
       const pendingTab = screen.getByRole("tab", { name: /pending/i });
-      expect(pendingTab).toHaveClass("border-orange-500");
+      expect(pendingTab).toHaveClass("border-primary-500");
       expect(pendingTab).toHaveAttribute("aria-selected", "true");
     });
 
@@ -101,7 +101,7 @@ describe("CompensationsPage", () => {
       fireEvent.click(screen.getByRole("tab", { name: /^paid$/i }));
 
       const paidTab = screen.getByRole("tab", { name: /^paid$/i });
-      expect(paidTab).toHaveClass("border-orange-500");
+      expect(paidTab).toHaveClass("border-primary-500");
       expect(paidTab).toHaveAttribute("aria-selected", "true");
     });
 

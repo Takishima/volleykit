@@ -168,7 +168,7 @@ describe("AssignmentCard", () => {
       fireEvent.click(screen.getByRole("button"));
 
       const statusBadge = screen.getByText("Confirmed");
-      expect(statusBadge).toHaveClass("bg-green-100");
+      expect(statusBadge).toHaveClass("bg-success-100");
     });
 
     it("shows red for cancelled status in expanded view", () => {
@@ -184,7 +184,7 @@ describe("AssignmentCard", () => {
       fireEvent.click(screen.getByRole("button"));
 
       const statusBadge = screen.getByText("Cancelled");
-      expect(statusBadge).toHaveClass("bg-red-100");
+      expect(statusBadge).toHaveClass("bg-danger-100");
     });
 
     it("shows gray for archived status in expanded view", () => {
@@ -200,7 +200,7 @@ describe("AssignmentCard", () => {
       fireEvent.click(screen.getByRole("button"));
 
       const statusBadge = screen.getByText("Archived");
-      expect(statusBadge).toHaveClass("bg-gray-100");
+      expect(statusBadge).toHaveClass("bg-surface-subtle");
     });
   });
 

@@ -164,17 +164,17 @@ export function ScorerSearchPanel({
               aria-describedby={SCORER_SEARCH_HINT_ID}
               className="
                 w-full px-4 py-2 rounded-lg
-                bg-gray-100 dark:bg-gray-700
-                text-gray-900 dark:text-white
-                placeholder-gray-500 dark:placeholder-gray-400
+                bg-surface-subtle dark:bg-surface-subtle-dark
+                text-text-primary dark:text-text-primary-dark
+                placeholder-text-muted dark:placeholder-text-muted-dark
                 border border-transparent
-                focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20
+                focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20
                 outline-none transition-colors
               "
             />
             <p
               id={SCORER_SEARCH_HINT_ID}
-              className="mt-2 text-xs text-gray-500 dark:text-gray-400"
+              className="mt-2 text-xs text-text-muted dark:text-text-muted-dark"
             >
               {t("validation.scorerSearch.searchHint")}
             </p>
@@ -210,7 +210,7 @@ export function ScorerSearchPanel({
       )}
 
       {!selectedScorer && !showResults && (
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-sm text-text-muted dark:text-text-muted-dark">
           {t("validation.scorerSearch.noScorerSelected")}
         </p>
       )}

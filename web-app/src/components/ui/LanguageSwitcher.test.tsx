@@ -45,7 +45,7 @@ describe("LanguageSwitcher", () => {
     it("applies active styles to current language", () => {
       render(<LanguageSwitcher />);
       const germanButton = screen.getByRole("button", { name: "Deutsch" });
-      expect(germanButton).toHaveClass("bg-orange-500", "text-white");
+      expect(germanButton).toHaveClass("bg-primary-500", "text-primary-950");
     });
 
     it("applies custom className", () => {
@@ -99,7 +99,7 @@ describe("LanguageSwitcher", () => {
     it("applies active styles to current language in grid variant", () => {
       render(<LanguageSwitcher variant="grid" />);
       const germanButton = screen.getByRole("button", { name: "Deutsch" });
-      expect(germanButton).toHaveClass("border-orange-500", "bg-orange-50");
+      expect(germanButton).toHaveClass("border-primary-500", "bg-primary-50");
     });
   });
 

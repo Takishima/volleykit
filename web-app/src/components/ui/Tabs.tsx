@@ -64,7 +64,7 @@ export function Tabs({
   });
 
   return (
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border-default dark:border-border-default-dark pb-2">
       <div
         className="overflow-x-auto scrollbar-hide"
         role="tablist"
@@ -81,24 +81,24 @@ export function Tabs({
                 onClick={() => onTabChange(tab.id)}
                 className={`
                   flex items-center px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
-                  focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2
-                  dark:focus-visible:ring-offset-gray-800
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2
+                  dark:focus-visible:ring-offset-surface-card-dark
                   ${
                     isActive
-                      ? "border-orange-500 text-orange-600 dark:text-orange-400"
-                      : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600"
+                      ? "border-primary-500 text-primary-600 dark:text-primary-400"
+                      : "border-transparent text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark hover:border-border-strong dark:hover:border-border-strong-dark"
                   }
                 `}
               >
                 {tab.status === "complete" && (
-                  <CheckIcon className="w-4 h-4 mr-1.5 text-green-600 dark:text-green-400" />
+                  <CheckIcon className="w-4 h-4 mr-1.5 text-success-600 dark:text-success-400" />
                 )}
                 {tab.status === "incomplete" && (
-                  <WarningDotIcon className="w-3 h-3 mr-1.5 text-amber-500 dark:text-amber-400" />
+                  <WarningDotIcon className="w-3 h-3 mr-1.5 text-warning-500 dark:text-warning-400" />
                 )}
                 {tab.label}
                 {tab.badge && (
-                  <span className="ml-2 px-1.5 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+                  <span className="ml-2 px-1.5 py-0.5 rounded text-xs bg-surface-subtle dark:bg-surface-subtle-dark text-text-secondary dark:text-text-muted-dark">
                     {tab.badge}
                   </span>
                 )}

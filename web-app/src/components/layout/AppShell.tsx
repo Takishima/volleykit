@@ -91,14 +91,14 @@ export function AppShell() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen flex flex-col bg-surface-page dark:bg-surface-page-dark">
       {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+      <header className="bg-surface-card dark:bg-surface-card-dark shadow-sm border-b border-border-default dark:border-border-default-dark">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14">
             <div className="flex items-center gap-2">
               <span className="text-xl">🏐</span>
-              <h1 className="text-lg font-bold text-gray-900 dark:text-white">
+              <h1 className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
                 VolleyKit
               </h1>
             </div>
@@ -110,7 +110,7 @@ export function AppShell() {
                   <div className="relative" ref={dropdownRef}>
                     <button
                       onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                      className="flex items-center gap-1 px-2 py-1 text-sm font-medium text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/50 transition-colors"
+                      className="flex items-center gap-1 px-2 py-1 text-sm font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 rounded-lg hover:bg-primary-100 dark:hover:bg-primary-900/50 transition-colors"
                       aria-expanded={isDropdownOpen}
                       aria-haspopup="listbox"
                     >
@@ -133,7 +133,7 @@ export function AppShell() {
 
                     {isDropdownOpen && (
                       <div
-                        className="absolute right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50"
+                        className="absolute right-0 mt-1 w-48 bg-surface-card dark:bg-surface-card-dark rounded-lg shadow-lg border border-border-default dark:border-border-default-dark py-1 z-50"
                         role="listbox"
                         aria-label="Select occupation"
                       >
@@ -145,8 +145,8 @@ export function AppShell() {
                             }
                             className={`w-full text-left px-3 py-2 text-sm transition-colors ${
                               occupation.id === activeOccupationId
-                                ? "bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"
-                                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                ? "bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400"
+                                : "text-text-secondary dark:text-text-secondary-dark hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark"
                             }`}
                             role="option"
                             aria-selected={occupation.id === activeOccupationId}
@@ -160,13 +160,13 @@ export function AppShell() {
                 )}
 
                 {user && (
-                  <span className="text-sm text-gray-600 dark:text-gray-300 hidden sm:block">
+                  <span className="text-sm text-text-muted dark:text-text-secondary-dark hidden sm:block">
                     {user.firstName}
                   </span>
                 )}
                 <button
                   onClick={logout}
-                  className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  className="text-sm text-text-muted hover:text-text-secondary dark:text-text-muted-dark dark:hover:text-text-secondary-dark"
                 >
                   {t("auth.logout")}
                 </button>
@@ -199,7 +199,7 @@ export function AppShell() {
       </main>
 
       {/* Bottom navigation (mobile-first) - fixed to always stay visible */}
-      <nav className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 fixed bottom-0 left-0 right-0 z-50 safe-area-inset-bottom">
+      <nav className="bg-surface-card dark:bg-surface-card-dark border-t border-border-default dark:border-border-default-dark fixed bottom-0 left-0 right-0 z-50 safe-area-inset-bottom">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-around">
             {navItems.map((item) => {
@@ -213,8 +213,8 @@ export function AppShell() {
                     transition-all duration-150 rounded-lg mx-1
                     ${
                       isActive
-                        ? "text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30"
-                        : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                        ? "text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30"
+                        : "text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark"
                     }
                   `}
                 >

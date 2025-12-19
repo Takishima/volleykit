@@ -83,7 +83,7 @@ describe("LevelFilterToggle", () => {
       <LevelFilterToggle checked={true} onChange={onChange} />,
     );
 
-    const toggle = container.querySelector(".bg-orange-500");
+    const toggle = container.querySelector(".bg-primary-500");
     expect(toggle).toBeInTheDocument();
   });
 

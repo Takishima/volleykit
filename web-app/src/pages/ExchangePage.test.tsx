@@ -237,7 +237,7 @@ describe("ExchangePage", () => {
       render(<ExchangePage />);
 
       const openTab = screen.getByRole("tab", { name: /^open$/i });
-      expect(openTab).toHaveClass("border-orange-500");
+      expect(openTab).toHaveClass("border-primary-500");
       expect(openTab).toHaveAttribute("aria-selected", "true");
     });
 
@@ -251,7 +251,7 @@ describe("ExchangePage", () => {
       fireEvent.click(screen.getByText(/my applications/i));
 
       const myAppsTab = screen.getByRole("tab", { name: /my applications/i });
-      expect(myAppsTab).toHaveClass("border-orange-500");
+      expect(myAppsTab).toHaveClass("border-primary-500");
       expect(myAppsTab).toHaveAttribute("aria-selected", "true");
     });
   });
