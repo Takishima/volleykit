@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { NominationList, IndoorPlayerNomination } from "@/api/client";
+import { getApiClient } from "@/api/client";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 
@@ -102,11 +103,12 @@ export function useNominationList({
     );
   }, [demoNominationList]);
 
+  const apiClient = getApiClient(isDemoMode);
+
   const query = useQuery({
     queryKey: ["nominationList", gameId, team],
-    // TODO(#37): Implement API fetch for nomination list
     queryFn: async (): Promise<NominationList | null> => {
-      return null;
+      return apiClient.getNominationList(gameId, team);
     },
     enabled: enabled && !isDemoMode && !!gameId,
     staleTime: NOMINATION_LIST_STALE_TIME_MS,

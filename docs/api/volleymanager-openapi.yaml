@@ -3231,6 +3231,11 @@ components:
             summarizedSets:
               type: string
               description: Set scores (e.g., "25:20, 23:25, 25:18, 25:22")
+        # Nomination lists (available when requested via showWithNestedObjects)
+        nominationListOfTeamHome:
+          $ref: '#/components/schemas/NominationList'
+        nominationListOfTeamAway:
+          $ref: '#/components/schemas/NominationList'
     RefereeConvocationDetails:
       type: object
       description: |

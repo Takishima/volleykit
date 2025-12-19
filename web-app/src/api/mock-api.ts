@@ -19,6 +19,7 @@ import type {
   ExchangesResponse,
   AssociationSettings,
   Season,
+  NominationList,
   PossibleNominationsResponse,
   PersonSearchFilter,
   PersonSearchResponse,
@@ -329,6 +330,22 @@ export const mockApi = {
       seasonStartDate: seasonStart.toISOString(),
       seasonEndDate: seasonEnd.toISOString(),
     } as Season;
+  },
+
+  async getNominationList(
+    gameId: string,
+    team: "home" | "away",
+  ): Promise<NominationList | null> {
+    await delay(MOCK_NETWORK_DELAY_MS);
+
+    const store = useDemoStore.getState();
+    const gameNominations = store.nominationLists[gameId];
+
+    if (!gameNominations) {
+      return null;
+    }
+
+    return gameNominations[team] ?? null;
   },
 
   async getPossiblePlayerNominations(
