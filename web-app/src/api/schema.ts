@@ -2151,6 +2151,8 @@ export interface components {
                 /** @description Set scores (e.g., "25:20, 23:25, 25:18, 25:22") */
                 summarizedSets?: string;
             } | null;
+            nominationListOfTeamHome?: components["schemas"]["NominationList"];
+            nominationListOfTeamAway?: components["schemas"]["NominationList"];
         };
         /**
          * @description Detailed referee convocation information from showWithNestedObjects.

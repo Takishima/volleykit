@@ -548,6 +548,64 @@ export const api = {
   },
 
   /**
+   * Fetches nomination list for a specific team in a game.
+   * Uses the game showWithNestedObjects endpoint to retrieve nomination data.
+   *
+   * @param gameId - UUID of the game
+   * @param team - Which team's nomination list to fetch ("home" or "away")
+   * @returns The nomination list for the specified team, or null if not available
+   */
+  async getNominationList(
+    gameId: string,
+    team: "home" | "away",
+  ): Promise<NominationList | null> {
+    const nominationProperty =
+      team === "home"
+        ? "nominationListOfTeamHome"
+        : "nominationListOfTeamAway";
+
+    // Request the nomination list with nested player details
+    const properties = [
+      nominationProperty,
+      `${nominationProperty}.__identity`,
+      `${nominationProperty}.team`,
+      `${nominationProperty}.indoorPlayerNominations`,
+      `${nominationProperty}.indoorPlayerNominations.*.__identity`,
+      `${nominationProperty}.indoorPlayerNominations.*.shirtNumber`,
+      `${nominationProperty}.indoorPlayerNominations.*.isCaptain`,
+      `${nominationProperty}.indoorPlayerNominations.*.isLibero`,
+      `${nominationProperty}.indoorPlayerNominations.*.indoorPlayer.person.displayName`,
+      `${nominationProperty}.indoorPlayerNominations.*.indoorPlayer.person.firstName`,
+      `${nominationProperty}.indoorPlayerNominations.*.indoorPlayer.person.lastName`,
+      `${nominationProperty}.indoorPlayerNominations.*.indoorPlayerLicenseCategory.shortName`,
+      `${nominationProperty}.coachPerson`,
+      `${nominationProperty}.firstAssistantCoachPerson`,
+      `${nominationProperty}.secondAssistantCoachPerson`,
+      `${nominationProperty}.closed`,
+      `${nominationProperty}.closedAt`,
+      `${nominationProperty}.checked`,
+      `${nominationProperty}.isClosedForTeam`,
+    ];
+
+    const response = await apiRequest<Schemas["GameDetails"]>(
+      "/sportmanager.indoorvolleyball/api%5cgame/showWithNestedObjects",
+      "GET",
+      {
+        "game[__identity]": gameId,
+        propertyRenderConfiguration: properties,
+      },
+    );
+
+    // Extract the nomination list from the response
+    const nominationList =
+      team === "home"
+        ? response.nominationListOfTeamHome
+        : response.nominationListOfTeamAway;
+
+    return nominationList ?? null;
+  },
+
+  /**
    * Fetches possible player nominations for a nomination list.
    * Returns players that can be added to a team's roster for a game.
    *

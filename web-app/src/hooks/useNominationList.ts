@@ -1,10 +1,14 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { NominationList, IndoorPlayerNomination } from "@/api/client";
+import { getApiClient } from "@/api/client";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 
-const NOMINATION_LIST_STALE_TIME_MS = 5 * 60 * 1000;
+const NOMINATION_LIST_STALE_TIME_MINUTES = 5;
+const MS_PER_MINUTE = 60 * 1000;
+const NOMINATION_LIST_STALE_TIME_MS =
+  NOMINATION_LIST_STALE_TIME_MINUTES * MS_PER_MINUTE;
 
 export interface RosterPlayer {
   id: string;
@@ -102,11 +106,12 @@ export function useNominationList({
     );
   }, [demoNominationList]);
 
+  const apiClient = getApiClient(isDemoMode);
+
   const query = useQuery({
     queryKey: ["nominationList", gameId, team],
-    // TODO(#37): Implement API fetch for nomination list
     queryFn: async (): Promise<NominationList | null> => {
-      return null;
+      return apiClient.getNominationList(gameId, team);
     },
     enabled: enabled && !isDemoMode && !!gameId,
     staleTime: NOMINATION_LIST_STALE_TIME_MS,
