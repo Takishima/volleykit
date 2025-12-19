@@ -144,45 +144,6 @@ function getPdfPath(leagueCategory: LeagueCategory, language: Language): string 
   return `${basePath}assets/pdf/sports-hall-report-${categoryPath}${language}.pdf`;
 }
 
-function trySetTextField(
-  form: ReturnType<Awaited<ReturnType<typeof import('pdf-lib')>['PDFDocument']['prototype']['getForm']>>,
-  fieldName: string,
-  value: string | undefined
-): void {
-  if (!value) return;
-  try {
-    form.getTextField(fieldName).setText(value);
-  } catch (error) {
-    console.warn(`Could not set text field "${fieldName}":`, error);
-  }
-}
-
-function trySelectRadioOption(
-  form: ReturnType<Awaited<ReturnType<typeof import('pdf-lib')>['PDFDocument']['prototype']['getForm']>>,
-  groupName: string,
-  option: string
-): void {
-  try {
-    const radioGroup = form.getRadioGroup(groupName);
-    try {
-      radioGroup.select(option);
-    } catch {
-      // Try fallback matching for different naming conventions
-      const options = radioGroup.getOptions();
-      const matchingOption = options.find(
-        (opt) => opt.toUpperCase().startsWith(option) || opt.includes(option)
-      );
-      if (matchingOption) {
-        radioGroup.select(matchingOption);
-      } else {
-        console.warn(`Could not find option "${option}" in radio group "${groupName}". Available: ${options.join(', ')}`);
-      }
-    }
-  } catch (error) {
-    console.warn(`Could not access radio group "${groupName}":`, error);
-  }
-}
-
 export async function fillSportsHallReportForm(
   data: SportsHallReportData,
   leagueCategory: LeagueCategory,
@@ -202,21 +163,54 @@ export async function fillSportsHallReportForm(
   const form = pdfDoc.getForm();
   const mapping = getFieldMapping(leagueCategory);
 
+  // Helper to safely set text fields with error handling
+  const trySetTextField = (fieldName: string, value: string | undefined): void => {
+    if (!value) return;
+    try {
+      form.getTextField(fieldName).setText(value);
+    } catch (error) {
+      console.warn(`Could not set text field "${fieldName}":`, error);
+    }
+  };
+
+  // Helper to safely select radio options with fallback matching
+  const trySelectRadioOption = (groupName: string, option: string): void => {
+    try {
+      const radioGroup = form.getRadioGroup(groupName);
+      try {
+        radioGroup.select(option);
+      } catch {
+        // Try fallback matching for different naming conventions
+        const options = radioGroup.getOptions();
+        const matchingOption = options.find(
+          (opt) => opt.toUpperCase().startsWith(option) || opt.includes(option)
+        );
+        if (matchingOption) {
+          radioGroup.select(matchingOption);
+        } else {
+          console.warn(`Could not find option "${option}" in radio group "${groupName}". Available: ${options.join(', ')}`);
+        }
+      }
+    } catch (error) {
+      console.warn(`Could not access radio group "${groupName}":`, error);
+    }
+  };
+
   // Set basic game info fields
-  trySetTextField(form, mapping.gameNumber, data.gameNumber);
-  trySetTextField(form, mapping.homeTeam, data.homeTeam);
-  trySetTextField(form, mapping.awayTeam, data.awayTeam);
-  trySetTextField(form, mapping.hallName, data.hallName);
-  trySetTextField(form, mapping.location, data.location);
-  trySetTextField(form, mapping.date, data.date);
+  trySetTextField(mapping.gameNumber, data.gameNumber);
+  trySetTextField(mapping.homeTeam, data.homeTeam);
+  trySetTextField(mapping.awayTeam, data.awayTeam);
+  trySetTextField(mapping.hallName, data.hallName);
+  trySetTextField(mapping.location, data.location);
+  trySetTextField(mapping.date, data.date);
 
   // Select gender radio button
   const genderOption = data.gender === 'm' ? 'M' : 'F';
-  trySelectRadioOption(form, mapping.genderRadio, genderOption);
+  trySelectRadioOption(mapping.genderRadio, genderOption);
 
   // Set referee names
-  trySetTextField(form, mapping.firstRefereeName, data.firstRefereeName);
-  trySetTextField(form, mapping.secondRefereeName, data.secondRefereeName);
+  trySetTextField(mapping.firstRefereeName, data.firstRefereeName);
+  trySetTextField(mapping.secondRefereeName, data.secondRefereeName);
 
   return pdfDoc.save();
 }
