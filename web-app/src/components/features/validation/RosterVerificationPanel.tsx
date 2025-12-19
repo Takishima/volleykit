@@ -86,7 +86,7 @@ export function RosterVerificationPanel({
     };
 
     setAddedPlayers((prev) => [...prev, newPlayer]);
-    setIsAddPlayerSheetOpen(false);
+    // Sheet stays open to allow adding multiple players
   }, []);
 
   const allPlayers = [...players, ...addedPlayers].sort((a, b) => {

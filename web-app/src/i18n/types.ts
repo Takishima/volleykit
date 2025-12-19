@@ -194,6 +194,7 @@ export interface Translations {
       removePlayer: string;
       undoRemoval: string;
       newlyAdded: string;
+      added: string;
       captain: string;
       libero: string;
       emptyRoster: string;

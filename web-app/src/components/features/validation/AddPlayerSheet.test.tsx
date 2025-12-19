@@ -333,3 +333,140 @@ describe("AddPlayerSheet - Error State", () => {
     expect(errorMessage).toHaveAttribute("role", "alert");
   });
 });
+
+describe("AddPlayerSheet - Multi-Player Selection", () => {
+  const defaultProps = {
+    isOpen: true,
+    onClose: vi.fn(),
+    nominationListId: "nomination-123",
+    excludePlayerIds: [] as string[],
+    onAddPlayer: vi.fn(),
+  };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+
+    // Reset mock to return proper data (in case previous test changed it)
+    const { usePossiblePlayerNominations } = await import(
+      "@/hooks/usePlayerNominations"
+    );
+    vi.mocked(usePossiblePlayerNominations).mockReturnValue({
+      data: mockPlayers,
+      isLoading: false,
+      isError: false,
+    } as ReturnType<typeof usePossiblePlayerNominations>);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("keeps modal open after adding a player", () => {
+    const onClose = vi.fn();
+    render(<AddPlayerSheet {...defaultProps} onClose={onClose} />, {
+      wrapper: createWrapper(),
+    });
+
+    const playerButton = screen.getByText("Max Müller").closest("button");
+    fireEvent.click(playerButton!);
+
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("shows checkmark on added player", () => {
+    render(<AddPlayerSheet {...defaultProps} />, { wrapper: createWrapper() });
+
+    const playerButton = screen.getByText("Max Müller").closest("button");
+    fireEvent.click(playerButton!);
+
+    expect(playerButton).toHaveAttribute("aria-pressed", "true");
+    expect(playerButton).toBeDisabled();
+  });
+
+  it("displays counter badge with number of added players", () => {
+    render(<AddPlayerSheet {...defaultProps} />, { wrapper: createWrapper() });
+
+    expect(screen.queryByText(/added/i)).not.toBeInTheDocument();
+
+    const maxButton = screen.getByText("Max Müller").closest("button");
+    fireEvent.click(maxButton!);
+
+    expect(screen.getByText("1 added")).toBeInTheDocument();
+
+    const annaButton = screen.getByText("Anna Schmidt").closest("button");
+    fireEvent.click(annaButton!);
+
+    expect(screen.getByText("2 added")).toBeInTheDocument();
+  });
+
+  it("allows adding multiple players", () => {
+    const onAddPlayer = vi.fn();
+    render(<AddPlayerSheet {...defaultProps} onAddPlayer={onAddPlayer} />, {
+      wrapper: createWrapper(),
+    });
+
+    const maxButton = screen.getByText("Max Müller").closest("button");
+    fireEvent.click(maxButton!);
+
+    const annaButton = screen.getByText("Anna Schmidt").closest("button");
+    fireEvent.click(annaButton!);
+
+    expect(onAddPlayer).toHaveBeenCalledTimes(2);
+    expect(onAddPlayer).toHaveBeenNthCalledWith(1, mockPlayers[0]);
+    expect(onAddPlayer).toHaveBeenNthCalledWith(2, mockPlayers[1]);
+  });
+
+  it("prevents adding the same player twice", () => {
+    const onAddPlayer = vi.fn();
+    render(<AddPlayerSheet {...defaultProps} onAddPlayer={onAddPlayer} />, {
+      wrapper: createWrapper(),
+    });
+
+    const playerButton = screen.getByText("Max Müller").closest("button");
+    fireEvent.click(playerButton!);
+    fireEvent.click(playerButton!);
+
+    expect(onAddPlayer).toHaveBeenCalledTimes(1);
+  });
+
+  it("resets session when modal is closed", () => {
+    const onClose = vi.fn();
+    const { rerender } = render(
+      <AddPlayerSheet {...defaultProps} onClose={onClose} />,
+      { wrapper: createWrapper() },
+    );
+
+    const playerButton = screen.getByText("Max Müller").closest("button");
+    fireEvent.click(playerButton!);
+
+    expect(screen.getByText("1 added")).toBeInTheDocument();
+
+    const closeButton = screen.getByRole("button", { name: /close/i });
+    fireEvent.click(closeButton);
+
+    rerender(<AddPlayerSheet {...defaultProps} onClose={onClose} isOpen={true} />);
+
+    expect(screen.queryByText(/added/i)).not.toBeInTheDocument();
+    const newPlayerButton = screen.getByText("Max Müller").closest("button");
+    expect(newPlayerButton).not.toBeDisabled();
+  });
+
+  it("keeps session-added players visible even when in excludePlayerIds", () => {
+    const { rerender } = render(
+      <AddPlayerSheet {...defaultProps} excludePlayerIds={[]} />,
+      { wrapper: createWrapper() },
+    );
+
+    const playerButton = screen.getByText("Max Müller").closest("button");
+    fireEvent.click(playerButton!);
+
+    rerender(
+      <AddPlayerSheet {...defaultProps} excludePlayerIds={["indoor-1"]} />,
+    );
+
+    expect(screen.getByText("Max Müller")).toBeInTheDocument();
+    expect(screen.getByText("Max Müller").closest("button")).toBeDisabled();
+  });
+});
