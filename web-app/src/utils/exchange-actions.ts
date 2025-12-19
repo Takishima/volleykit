@@ -1,9 +1,11 @@
+import { createElement } from "react";
 import type { GameExchange } from "@/api/client";
-import type { SwipeAction } from "@/types/swipe";
+import { type SwipeAction, SWIPE_ACTION_ICON_SIZE } from "@/types/swipe";
+import { Check, X } from "@/components/ui/icons";
 
-// Swipe action icons
-const ICON_CHECKMARK = "✓";
-const ICON_REMOVE = "✕";
+// Pre-created icon elements to avoid recreating on each function call
+const ICON_CHECK = createElement(Check, { size: SWIPE_ACTION_ICON_SIZE });
+const ICON_X = createElement(X, { size: SWIPE_ACTION_ICON_SIZE });
 
 export interface ExchangeActionConfig {
   takeOver: SwipeAction;
@@ -25,7 +27,7 @@ export function createExchangeActions(
       label: "Take Over",
       shortLabel: "Take Over",
       color: "bg-success-500",
-      icon: ICON_CHECKMARK,
+      icon: ICON_CHECK,
       onAction: () => handlers.onTakeOver(exchange),
     },
     removeFromExchange: {
@@ -33,7 +35,7 @@ export function createExchangeActions(
       label: "Remove",
       shortLabel: "Remove",
       color: "bg-danger-500",
-      icon: ICON_REMOVE,
+      icon: ICON_X,
       onAction: () => handlers.onRemoveFromExchange(exchange),
     },
   };

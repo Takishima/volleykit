@@ -1,9 +1,11 @@
+import { createElement } from "react";
 import type { CompensationRecord } from "@/api/client";
-import type { SwipeAction } from "@/types/swipe";
+import { type SwipeAction, SWIPE_ACTION_ICON_SIZE } from "@/types/swipe";
+import { Wallet, FileText } from "@/components/ui/icons";
 
-// Swipe action icons
-const ICON_EDIT = "💰";
-const ICON_PDF = "📄";
+// Pre-created icon elements to avoid recreating on each function call
+const ICON_WALLET = createElement(Wallet, { size: SWIPE_ACTION_ICON_SIZE });
+const ICON_FILE_TEXT = createElement(FileText, { size: SWIPE_ACTION_ICON_SIZE });
 
 export interface CompensationActionConfig {
   editCompensation: SwipeAction;
@@ -25,7 +27,7 @@ export function createCompensationActions(
       label: "Edit Compensation",
       shortLabel: "Edit",
       color: "bg-primary-500",
-      icon: ICON_EDIT,
+      icon: ICON_WALLET,
       onAction: () => handlers.onEditCompensation(compensation),
     },
     generatePDF: {
@@ -33,7 +35,7 @@ export function createCompensationActions(
       label: "Generate PDF",
       shortLabel: "PDF",
       color: "bg-warning-500",
-      icon: ICON_PDF,
+      icon: ICON_FILE_TEXT,
       onAction: () => handlers.onGeneratePDF(compensation),
     },
   };

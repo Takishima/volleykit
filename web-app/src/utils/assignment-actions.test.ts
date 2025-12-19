@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
+import { isValidElement } from "react";
 import { createAssignmentActions, downloadPDF } from "./assignment-actions";
 import type { Assignment } from "@/api/client";
 
@@ -73,12 +74,12 @@ describe("createAssignmentActions", () => {
     expect(actions.editCompensation.id).toBe("edit-compensation");
     expect(actions.editCompensation.label).toBe("Edit Compensation");
     expect(actions.editCompensation.color).toBe("bg-primary-500");
-    expect(actions.editCompensation.icon).toBe("💰");
+    expect(isValidElement(actions.editCompensation.icon)).toBe(true);
 
     expect(actions.validateGame.id).toBe("validate-game");
     expect(actions.validateGame.label).toBe("Validate Game");
     expect(actions.validateGame.color).toBe("bg-success-500");
-    expect(actions.validateGame.icon).toBe("✓");
+    expect(isValidElement(actions.validateGame.icon)).toBe(true);
   });
 });
 
