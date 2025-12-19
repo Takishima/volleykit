@@ -6,6 +6,13 @@ export type LeagueCategory = 'NLA' | 'NLB';
 export type Language = 'de' | 'fr';
 export type Gender = 'm' | 'f';
 
+export function mapAppLocaleToPdfLanguage(appLocale: string): Language {
+  if (appLocale === 'fr' || appLocale === 'it') {
+    return 'fr';
+  }
+  return 'de';
+}
+
 export interface SportsHallReportData {
   gameNumber: string;
   homeTeam: string;

@@ -188,6 +188,14 @@ const de: Translations = {
     updateNow: "Jetzt aktualisieren",
     updateCheckFailed: "Update-Prüfung fehlgeschlagen",
   },
+  pdf: {
+    exportTitle: "PDF exportieren",
+    selectLanguage: "Sprache für das PDF-Dokument auswählen:",
+    export: "Exportieren",
+    generating: "Wird erstellt...",
+    exportError: "PDF konnte nicht erstellt werden",
+    sportsHallReport: "Hallenrapport",
+  },
   validation: {
     homeRoster: "Heimkader",
     awayRoster: "Gastkader",

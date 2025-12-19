@@ -173,6 +173,14 @@ export interface Translations {
     updateNow: string;
     updateCheckFailed: string;
   };
+  pdf: {
+    exportTitle: string;
+    selectLanguage: string;
+    export: string;
+    generating: string;
+    exportError: string;
+    sportsHallReport: string;
+  };
   validation: {
     homeRoster: string;
     awayRoster: string;

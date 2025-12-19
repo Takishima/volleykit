@@ -185,6 +185,14 @@ const it: Translations = {
     updateNow: "Aggiorna ora",
     updateCheckFailed: "Verifica aggiornamenti fallita",
   },
+  pdf: {
+    exportTitle: "Esporta PDF",
+    selectLanguage: "Seleziona la lingua del documento PDF:",
+    export: "Esporta",
+    generating: "Generazione...",
+    exportError: "Generazione PDF fallita",
+    sportsHallReport: "Rapporto sala sportiva",
+  },
   validation: {
     homeRoster: "Rosa di casa",
     awayRoster: "Rosa ospite",

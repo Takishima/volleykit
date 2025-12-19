@@ -187,6 +187,14 @@ const fr: Translations = {
     updateNow: "Mettre à jour",
     updateCheckFailed: "Échec de la vérification",
   },
+  pdf: {
+    exportTitle: "Exporter PDF",
+    selectLanguage: "Sélectionner la langue du document PDF :",
+    export: "Exporter",
+    generating: "Génération...",
+    exportError: "Échec de la génération du PDF",
+    sportsHallReport: "Rapport de salle",
+  },
   validation: {
     homeRoster: "Effectif domicile",
     awayRoster: "Effectif visiteur",

@@ -186,6 +186,14 @@ const en: Translations = {
     updateNow: "Update Now",
     updateCheckFailed: "Update check failed",
   },
+  pdf: {
+    exportTitle: "Export PDF",
+    selectLanguage: "Select the language for the PDF document:",
+    export: "Export",
+    generating: "Generating...",
+    exportError: "Failed to generate PDF",
+    sportsHallReport: "Sports Hall Report",
+  },
   validation: {
     homeRoster: "Home Roster",
     awayRoster: "Away Roster",
