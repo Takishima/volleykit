@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { setCsrfToken, clearSession } from "@/api/client";
 import { filterRefereeOccupations } from "@/utils/parseOccupations";
+import { useDemoStore } from "./demo";
 
 export type AuthStatus = "idle" | "loading" | "authenticated" | "error";
 
@@ -305,9 +306,6 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: async () => {
-        // Import here to avoid circular dependency at module load time
-        const { useDemoStore } = await import("./demo");
-
         try {
           // Call server logout endpoint to invalidate session
           // The server responds with 303 redirect to /login
