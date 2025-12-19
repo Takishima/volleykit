@@ -1,9 +1,13 @@
 import { createElement } from "react";
 import type { Assignment } from "@/api/client";
-import type { SwipeAction } from "@/types/swipe";
+import { type SwipeAction, SWIPE_ACTION_ICON_SIZE } from "@/types/swipe";
 import { Wallet, Check, FileText, ArrowLeftRight } from "@/components/ui/icons";
 
-const ICON_SIZE = 20;
+// Pre-created icon elements to avoid recreating on each function call
+const ICON_WALLET = createElement(Wallet, { size: SWIPE_ACTION_ICON_SIZE });
+const ICON_CHECK = createElement(Check, { size: SWIPE_ACTION_ICON_SIZE });
+const ICON_FILE_TEXT = createElement(FileText, { size: SWIPE_ACTION_ICON_SIZE });
+const ICON_ARROW_LEFT_RIGHT = createElement(ArrowLeftRight, { size: SWIPE_ACTION_ICON_SIZE });
 
 export interface AssignmentActionConfig {
   editCompensation: SwipeAction;
@@ -29,7 +33,7 @@ export function createAssignmentActions(
       label: "Edit Compensation",
       shortLabel: "Edit",
       color: "bg-primary-500",
-      icon: createElement(Wallet, { size: ICON_SIZE }),
+      icon: ICON_WALLET,
       onAction: () => handlers.onEditCompensation(assignment),
     },
     validateGame: {
@@ -37,7 +41,7 @@ export function createAssignmentActions(
       label: "Validate Game",
       shortLabel: "Validate",
       color: "bg-success-500",
-      icon: createElement(Check, { size: ICON_SIZE }),
+      icon: ICON_CHECK,
       onAction: () => handlers.onValidateGame(assignment),
     },
     generateReport: {
@@ -45,7 +49,7 @@ export function createAssignmentActions(
       label: "Generate Report",
       shortLabel: "Report",
       color: "bg-warning-500",
-      icon: createElement(FileText, { size: ICON_SIZE }),
+      icon: ICON_FILE_TEXT,
       onAction: () => handlers.onGenerateReport(assignment),
     },
     addToExchange: {
@@ -53,7 +57,7 @@ export function createAssignmentActions(
       label: "Add to Exchange",
       shortLabel: "Exchange",
       color: "bg-success-500",
-      icon: createElement(ArrowLeftRight, { size: ICON_SIZE }),
+      icon: ICON_ARROW_LEFT_RIGHT,
       onAction: () => handlers.onAddToExchange(assignment),
     },
   };

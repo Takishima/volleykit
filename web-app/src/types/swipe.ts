@@ -36,3 +36,9 @@ export interface SwipeConfig {
 export const DRAWER_OPEN_RATIO = 0.3;
 export const FULL_SWIPE_RATIO = 0.7;
 export const MINIMUM_SWIPE_RATIO = 0.03;
+
+/**
+ * Standard icon size for swipe action buttons.
+ * Used consistently across all swipe action configurations.
+ */
+export const SWIPE_ACTION_ICON_SIZE = 20;
