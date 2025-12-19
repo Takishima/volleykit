@@ -119,6 +119,13 @@ const de: Translations = {
     noApplicationsTitle: "Keine Bewerbungen",
     noApplicationsDescription:
       "Sie haben sich noch für keine Tauschangebote beworben.",
+    applySuccess: "Erfolgreich für Tausch beworben",
+    applyError: "Bewerbung für Tausch fehlgeschlagen. Bitte erneut versuchen.",
+    withdrawSuccess: "Erfolgreich vom Tausch zurückgezogen",
+    withdrawError:
+      "Rückzug vom Tausch fehlgeschlagen. Bitte erneut versuchen.",
+    addedToExchangeSuccess: "Einsatz zur Tauschbörse hinzugefügt",
+    addedToExchangeError: "Einsatz konnte nicht zur Tauschbörse hinzugefügt werden",
   },
   positions: {
     "head-one": "1. Schiedsrichter",

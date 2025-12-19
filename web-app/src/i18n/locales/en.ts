@@ -118,6 +118,12 @@ const en: Translations = {
       "There are currently no referee positions available for exchange.",
     noApplicationsTitle: "No applications",
     noApplicationsDescription: "You haven't applied for any exchanges yet.",
+    applySuccess: "Successfully applied for exchange",
+    applyError: "Failed to apply for exchange. Please try again.",
+    withdrawSuccess: "Successfully removed from exchange",
+    withdrawError: "Failed to remove from exchange. Please try again.",
+    addedToExchangeSuccess: "Assignment added to exchange list",
+    addedToExchangeError: "Failed to add assignment to exchange",
   },
   positions: {
     "head-one": "1st Referee",

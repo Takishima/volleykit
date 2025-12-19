@@ -117,6 +117,12 @@ const it: Translations = {
     noApplicationsTitle: "Nessuna candidatura",
     noApplicationsDescription:
       "Non hai ancora fatto domanda per nessuno scambio.",
+    applySuccess: "Candidatura allo scambio riuscita",
+    applyError: "Candidatura fallita. Riprova.",
+    withdrawSuccess: "Ritiro dallo scambio riuscito",
+    withdrawError: "Ritiro dallo scambio fallito. Riprova.",
+    addedToExchangeSuccess: "Designazione aggiunta alla borsa scambi",
+    addedToExchangeError: "Impossibile aggiungere la designazione alla borsa",
   },
   positions: {
     "head-one": "1° Arbitro",

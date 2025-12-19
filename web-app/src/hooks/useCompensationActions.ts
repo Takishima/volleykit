@@ -5,6 +5,7 @@ import { logger } from "@/utils/logger";
 import { MODAL_CLEANUP_DELAY } from "@/utils/assignment-helpers";
 import { useAuthStore } from "@/stores/auth";
 import { useSettingsStore } from "@/stores/settings";
+import { toast } from "@/stores/toast";
 import { useTranslation } from "@/hooks/useTranslation";
 
 interface UseCompensationActionsResult {
@@ -44,7 +45,7 @@ export function useCompensationActions(): UseCompensationActionsResult {
         logger.debug(
           "[useCompensationActions] Safe mode: editing compensation blocked",
         );
-        alert(t("settings.safeModeBlocked"));
+        toast.warning(t("settings.safeModeBlocked"));
         return;
       }
 
@@ -71,8 +72,7 @@ export function useCompensationActions(): UseCompensationActionsResult {
         logger.debug(
           "[useCompensationActions] Demo mode: PDF download disabled",
         );
-        // TODO(#77): Replace alert with toast notification when notification system is implemented
-        alert(t("compensations.pdfNotAvailableDemo"));
+        toast.info(t("compensations.pdfNotAvailableDemo"));
         return;
       }
 
@@ -96,8 +96,7 @@ export function useCompensationActions(): UseCompensationActionsResult {
         );
       } catch (error) {
         logger.error("[useCompensationActions] Failed to generate PDF:", error);
-        // TODO(#77): Replace alert with toast notification when notification system is implemented
-        alert(t("compensations.pdfDownloadFailed"));
+        toast.error(t("compensations.pdfDownloadFailed"));
       } finally {
         isDownloadingRef.current = false;
       }

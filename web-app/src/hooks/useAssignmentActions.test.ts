@@ -5,11 +5,26 @@ import type { Assignment } from "@/api/client";
 import * as authStore from "@/stores/auth";
 import * as demoStore from "@/stores/demo";
 import * as settingsStore from "@/stores/settings";
+import { toast } from "@/stores/toast";
 import { MODAL_CLEANUP_DELAY } from "@/utils/assignment-helpers";
 
 vi.mock("@/stores/auth");
 vi.mock("@/stores/demo");
 vi.mock("@/stores/settings");
+vi.mock("@/stores/toast", () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    warning: vi.fn(),
+  },
+}));
+vi.mock("@/hooks/useTranslation", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    language: "en",
+  }),
+}));
 
 function createMockAssignment(leagueName = "NLA"): Assignment {
   return {
@@ -205,7 +220,6 @@ describe("useAssignmentActions", () => {
 
   it("should block generate report for non-NLA/NLB games", () => {
     const { result } = renderHook(() => useAssignmentActions());
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
     const createElementSpy = vi.spyOn(document, "createElement");
 
     const nonEligibleAssignment = createMockAssignment("1L");
@@ -214,11 +228,8 @@ describe("useAssignmentActions", () => {
       result.current.handleGenerateReport(nonEligibleAssignment);
     });
 
-    // Verify alert was called (translation key: assignments.gameReportNotAvailable)
-    expect(alertSpy).toHaveBeenCalledTimes(1);
+    expect(toast.info).toHaveBeenCalledWith("assignments.gameReportNotAvailable");
     expect(createElementSpy).not.toHaveBeenCalledWith("a");
-
-    alertSpy.mockRestore();
   });
 
   it("should handle generate report action for NLB games", () => {
@@ -236,7 +247,6 @@ describe("useAssignmentActions", () => {
 
   it("should block generate report when league data is undefined", () => {
     const { result } = renderHook(() => useAssignmentActions());
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
     const createElementSpy = vi.spyOn(document, "createElement");
 
     // Create assignment without league data
@@ -262,26 +272,18 @@ describe("useAssignmentActions", () => {
       result.current.handleGenerateReport(assignmentWithoutLeague);
     });
 
-    // Verify alert was called (translation key: assignments.gameReportNotAvailable)
-    expect(alertSpy).toHaveBeenCalledTimes(1);
+    expect(toast.info).toHaveBeenCalledWith("assignments.gameReportNotAvailable");
     expect(createElementSpy).not.toHaveBeenCalledWith("a");
-
-    alertSpy.mockRestore();
   });
 
   it("should handle add to exchange action", () => {
     const { result } = renderHook(() => useAssignmentActions());
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 
     act(() => {
       result.current.handleAddToExchange(mockAssignment);
     });
 
-    expect(alertSpy).toHaveBeenCalledWith(
-      expect.stringContaining("Team A vs Team B"),
-    );
-
-    alertSpy.mockRestore();
+    expect(toast.success).toHaveBeenCalledWith("exchange.addedToExchangeSuccess");
   });
 
   describe("demo mode guards", () => {
@@ -295,7 +297,6 @@ describe("useAssignmentActions", () => {
 
     it("should use demo store for add to exchange in demo mode", () => {
       const { result } = renderHook(() => useAssignmentActions());
-      const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 
       act(() => {
         result.current.handleAddToExchange(mockAssignment);
@@ -304,28 +305,19 @@ describe("useAssignmentActions", () => {
       expect(mockAddAssignmentToExchange).toHaveBeenCalledWith(
         mockAssignment.__identity,
       );
-      expect(alertSpy).toHaveBeenCalledWith(
-        expect.stringContaining("Check the Exchange tab"),
-      );
-
-      alertSpy.mockRestore();
+      expect(toast.success).toHaveBeenCalledWith("exchange.addedToExchangeSuccess");
     });
 
     it("should not download PDF in demo mode", () => {
       const { result } = renderHook(() => useAssignmentActions());
-      const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
       const createElementSpy = vi.spyOn(document, "createElement");
 
       act(() => {
         result.current.handleGenerateReport(mockAssignment);
       });
 
-      expect(alertSpy).toHaveBeenCalledWith(
-        "PDF downloads are not available in demo mode",
-      );
+      expect(toast.info).toHaveBeenCalledWith("compensations.pdfNotAvailableDemo");
       expect(createElementSpy).not.toHaveBeenCalledWith("a");
-
-      alertSpy.mockRestore();
     });
   });
 
@@ -345,34 +337,24 @@ describe("useAssignmentActions", () => {
 
     it("should block add to exchange when safe mode is enabled", () => {
       const { result } = renderHook(() => useAssignmentActions());
-      const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 
       act(() => {
         result.current.handleAddToExchange(mockAssignment);
       });
 
       expect(mockAddAssignmentToExchange).not.toHaveBeenCalled();
-      expect(alertSpy).toHaveBeenCalledWith(
-        "This operation is blocked in safe mode. Disable safe mode in Settings to proceed.",
-      );
-
-      alertSpy.mockRestore();
+      expect(toast.warning).toHaveBeenCalledWith("settings.safeModeBlocked");
     });
 
     it("should block validate game when safe mode is enabled", () => {
       const { result } = renderHook(() => useAssignmentActions());
-      const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 
       act(() => {
         result.current.validateGameModal.open(mockAssignment);
       });
 
       expect(result.current.validateGameModal.isOpen).toBe(false);
-      expect(alertSpy).toHaveBeenCalledWith(
-        "This operation is blocked in safe mode. Disable safe mode in Settings to proceed.",
-      );
-
-      alertSpy.mockRestore();
+      expect(toast.warning).toHaveBeenCalledWith("settings.safeModeBlocked");
     });
 
     it("should not block operations in demo mode even with safe mode enabled", () => {
@@ -383,7 +365,6 @@ describe("useAssignmentActions", () => {
       );
 
       const { result } = renderHook(() => useAssignmentActions());
-      const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 
       act(() => {
         result.current.handleAddToExchange(mockAssignment);
@@ -392,11 +373,7 @@ describe("useAssignmentActions", () => {
       expect(mockAddAssignmentToExchange).toHaveBeenCalledWith(
         mockAssignment.__identity,
       );
-      expect(alertSpy).toHaveBeenCalledWith(
-        expect.stringContaining("Check the Exchange tab"),
-      );
-
-      alertSpy.mockRestore();
+      expect(toast.success).toHaveBeenCalledWith("exchange.addedToExchangeSuccess");
     });
   });
 });

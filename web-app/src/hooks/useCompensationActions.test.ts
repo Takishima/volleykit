@@ -5,10 +5,19 @@ import type { CompensationRecord } from "@/api/client";
 import * as compensationActionsModule from "@/utils/compensation-actions";
 import * as authStore from "@/stores/auth";
 import * as settingsStore from "@/stores/settings";
+import { toast } from "@/stores/toast";
 import { MODAL_CLEANUP_DELAY } from "@/utils/assignment-helpers";
 
 vi.mock("@/stores/auth");
 vi.mock("@/stores/settings");
+vi.mock("@/stores/toast", () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    warning: vi.fn(),
+  },
+}));
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
     t: (key: string) => key,
@@ -172,17 +181,13 @@ describe("useCompensationActions", () => {
       "downloadCompensationPDF",
     ).mockRejectedValue(new Error("Network error"));
 
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
-
     const { result } = renderHook(() => useCompensationActions());
 
     await act(async () => {
       await result.current.handleGeneratePDF(mockCompensation);
     });
 
-    expect(alertSpy).toHaveBeenCalledWith("compensations.pdfDownloadFailed");
-
-    alertSpy.mockRestore();
+    expect(toast.error).toHaveBeenCalledWith("compensations.pdfDownloadFailed");
   });
 
   it("should prevent concurrent PDF downloads", async () => {
@@ -229,8 +234,6 @@ describe("useCompensationActions", () => {
         .spyOn(compensationActionsModule, "downloadCompensationPDF")
         .mockResolvedValue(undefined);
 
-      const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
-
       const { result } = renderHook(() => useCompensationActions());
 
       await act(async () => {
@@ -238,11 +241,7 @@ describe("useCompensationActions", () => {
       });
 
       expect(downloadSpy).not.toHaveBeenCalled();
-      expect(alertSpy).toHaveBeenCalledWith(
-        "compensations.pdfNotAvailableDemo",
-      );
-
-      alertSpy.mockRestore();
+      expect(toast.info).toHaveBeenCalledWith("compensations.pdfNotAvailableDemo");
     });
 
     it("should allow editing compensation in demo mode even with safe mode enabled", () => {
@@ -279,8 +278,6 @@ describe("useCompensationActions", () => {
     });
 
     it("should block editing compensation when safe mode is enabled", () => {
-      const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
-
       const { result } = renderHook(() => useCompensationActions());
 
       act(() => {
@@ -289,9 +286,7 @@ describe("useCompensationActions", () => {
 
       expect(result.current.editCompensationModal.isOpen).toBe(false);
       expect(result.current.editCompensationModal.compensation).toBeNull();
-      expect(alertSpy).toHaveBeenCalled();
-
-      alertSpy.mockRestore();
+      expect(toast.warning).toHaveBeenCalledWith("settings.safeModeBlocked");
     });
   });
 });

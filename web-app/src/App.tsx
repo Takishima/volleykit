@@ -13,6 +13,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { LoadingState } from "@/components/ui/LoadingSpinner";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ReloadPrompt } from "@/components/ui/ReloadPrompt";
+import { ToastContainer } from "@/components/ui/Toast";
 import { PWAProvider } from "@/contexts/PWAContext";
 import { LoginPage } from "@/pages/LoginPage";
 import { AssignmentsPage } from "@/pages/AssignmentsPage";
@@ -250,6 +251,7 @@ export default function App() {
             </QueryErrorHandler>
           </BrowserRouter>
           <ReloadPrompt />
+          <ToastContainer />
         </QueryClientProvider>
       </PWAProvider>
     </ErrorBoundary>
