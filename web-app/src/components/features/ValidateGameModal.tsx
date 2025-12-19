@@ -276,7 +276,7 @@ export function ValidateGameModal({
     setSaveError(null);
 
     try {
-      // TODO(#40): Implement actual API call for finalizing validation
+      // TODO(#171): Implement actual API call for finalizing validation
       // For now, simulate a save operation
       await new Promise<void>((resolve) => {
         saveTimeoutRef.current = setTimeout(resolve, SIMULATED_SAVE_DELAY_MS);
