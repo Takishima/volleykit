@@ -16,20 +16,21 @@ interface ToastState {
   clearToasts: () => void;
 }
 
-const DEFAULT_DURATION_MS = 5000;
-
-function generateId(): string {
-  return `toast-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-}
+export const DEFAULT_DURATION_MS = 5000;
+const MAX_TOASTS = 5;
 
 export const useToastStore = create<ToastState>()((set) => ({
   toasts: [],
 
   addToast: (toast) => {
-    const id = generateId();
-    set((state) => ({
-      toasts: [...state.toasts, { ...toast, id }],
-    }));
+    const id = crypto.randomUUID();
+    set((state) => {
+      const newToasts = [...state.toasts, { ...toast, id }];
+      if (newToasts.length > MAX_TOASTS) {
+        return { toasts: newToasts.slice(-MAX_TOASTS) };
+      }
+      return { toasts: newToasts };
+    });
     return id;
   },
 

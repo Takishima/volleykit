@@ -1,7 +1,11 @@
 import { useEffect, useRef } from "react";
-import { useToastStore, type Toast as ToastType } from "@/stores/toast";
+import {
+  useToastStore,
+  DEFAULT_DURATION_MS,
+  type Toast as ToastType,
+} from "@/stores/toast";
 
-const DEFAULT_DURATION_MS = 5000;
+const TOAST_CONTAINER_Z_INDEX = "z-[100]";
 
 const TOAST_STYLES: Record<
   ToastType["type"],
@@ -50,7 +54,7 @@ function ToastItem({ toast }: ToastItemProps) {
 
   useEffect(() => {
     const duration = toast.duration ?? DEFAULT_DURATION_MS;
-    timerRef.current = window.setTimeout(() => {
+    timerRef.current = setTimeout(() => {
       removeToast(toast.id);
     }, duration);
 
@@ -112,7 +116,7 @@ export function ToastContainer() {
 
   return (
     <div
-      className="fixed top-4 right-4 z-[100] flex flex-col gap-2 max-w-sm w-full pointer-events-none"
+      className={`fixed top-4 right-4 ${TOAST_CONTAINER_Z_INDEX} flex flex-col gap-2 max-w-sm w-full pointer-events-none`}
       aria-label="Notifications"
     >
       {toasts.map((toast) => (
