@@ -427,6 +427,38 @@ interface RefereeGameParams {
   idPrefix: string;
 }
 
+// Mock referee names for demo data
+const MOCK_REFEREES = [
+  { firstName: "Thomas", lastName: "Meier" },
+  { firstName: "Sandra", lastName: "Keller" },
+  { firstName: "Michael", lastName: "Fischer" },
+  { firstName: "Laura", lastName: "Brunner" },
+  { firstName: "Stefan", lastName: "Huber" },
+  { firstName: "Nina", lastName: "Baumann" },
+] as const;
+
+function createRefereeConvocation(
+  idPrefix: string,
+  gameId: string,
+  position: "first" | "second",
+  refereeIndex: number,
+) {
+  const referee = MOCK_REFEREES[refereeIndex % MOCK_REFEREES.length]!;
+  const displayName = `${referee.firstName} ${referee.lastName}`;
+  return {
+    indoorAssociationReferee: {
+      indoorReferee: {
+        person: {
+          __identity: `${idPrefix}-referee-${position}-${gameId}`,
+          firstName: referee.firstName,
+          lastName: referee.lastName,
+          displayName,
+        },
+      },
+    },
+  };
+}
+
 function createRefereeGame({
   gameId,
   gameNumber,
@@ -446,6 +478,18 @@ function createRefereeGame({
   return {
     __identity: `${idPrefix}-game-${gameId}`,
     isGameInFuture: isGameInFuture ? "1" : "0",
+    activeRefereeConvocationFirstHeadReferee: createRefereeConvocation(
+      idPrefix,
+      gameId,
+      "first",
+      venueIndex * 2,
+    ),
+    activeRefereeConvocationSecondHeadReferee: createRefereeConvocation(
+      idPrefix,
+      gameId,
+      "second",
+      venueIndex * 2 + 1,
+    ),
     game: {
       __identity: `${idPrefix}-g-${gameId}`,
       number: gameNumber,

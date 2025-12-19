@@ -22,9 +22,9 @@
   },
   "size-limit": [
     {
-      "name": "Main Bundle",
+      "name": "Main App Bundle",
       "path": "dist/assets/index-*.js",
-      "limit": "125 kB",
+      "limit": "120 kB",
       "gzip": true
     },
     {
@@ -39,6 +39,12 @@
       "gzip": true
     },
     {
+      "name": "PDF Library (lazy-loaded)",
+      "path": "dist/assets/pdf-lib-*.js",
+      "limit": "185 kB",
+      "gzip": true
+    },
+    {
       "name": "CSS Bundle",
       "path": "dist/assets/*.css",
       "limit": "10 kB",
@@ -47,7 +53,7 @@
     {
       "name": "Total JS Bundle",
       "path": "dist/assets/*.js",
-      "limit": "200 kB",
+      "limit": "400 kB",
       "gzip": true
     }
   ],

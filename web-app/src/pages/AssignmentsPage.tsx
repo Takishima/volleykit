@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, lazy, Suspense } from "react";
 import {
   useUpcomingAssignments,
   useValidationClosedAssignments,
@@ -12,10 +12,18 @@ import {
 } from "@/components/ui/LoadingSpinner";
 import { useAssignmentActions } from "@/hooks/useAssignmentActions";
 import { createAssignmentActions } from "@/utils/assignment-actions";
+import { isGameReportEligible } from "@/utils/assignment-helpers";
 import { EditCompensationModal } from "@/components/features/EditCompensationModal";
 import { ValidateGameModal } from "@/components/features/ValidateGameModal";
 import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
+
+const PdfLanguageModal = lazy(
+  () =>
+    import("@/components/features/PdfLanguageModal").then((m) => ({
+      default: m.PdfLanguageModal,
+    })),
+);
 
 type TabType = "upcoming" | "validationClosed";
 
@@ -26,6 +34,7 @@ export function AssignmentsPage() {
   const {
     editCompensationModal,
     validateGameModal,
+    pdfReportModal,
     handleGenerateReport,
     handleAddToExchange,
   } = useAssignmentActions();
@@ -62,17 +71,20 @@ export function AssignmentsPage() {
       });
 
       const isGameInFuture = assignment.refereeGame?.isGameInFuture === "1";
+      const canGenerateReport = isGameReportEligible(assignment);
 
       // Action array ordering: first item = furthest from card = full swipe default
       // When swiping left, actions appear right-to-left from the card edge
+      // Report action only shown for NLA/NLB games where user is first referee
+      const leftActions = [actions.validateGame, actions.editCompensation];
+      if (canGenerateReport) {
+        leftActions.push(actions.generateReport);
+      }
+
       return {
-        // Swipe left reveals: [Report] [Edit] [Validate] <- card
+        // Swipe left reveals: [Report?] [Edit] [Validate] <- card
         // Full swipe left triggers: validateGame (first in array = leftmost)
-        left: [
-          actions.validateGame,
-          actions.editCompensation,
-          actions.generateReport,
-        ],
+        left: leftActions,
         // Swipe right reveals: card -> [Exchange]
         // Full swipe right triggers: addToExchange
         // Only show exchange action for upcoming assignments
@@ -218,6 +230,18 @@ export function AssignmentsPage() {
           isOpen={validateGameModal.isOpen}
           onClose={validateGameModal.close}
         />
+      )}
+
+      {pdfReportModal.isOpen && (
+        <Suspense fallback={null}>
+          <PdfLanguageModal
+            isOpen={pdfReportModal.isOpen}
+            onClose={pdfReportModal.close}
+            onConfirm={pdfReportModal.onConfirm}
+            isLoading={pdfReportModal.isLoading}
+            defaultLanguage={pdfReportModal.defaultLanguage}
+          />
+        </Suspense>
       )}
     </div>
   );

@@ -4,12 +4,14 @@ import { useAssignmentActions } from "./useAssignmentActions";
 import type { Assignment } from "@/api/client";
 import * as authStore from "@/stores/auth";
 import * as demoStore from "@/stores/demo";
+import * as languageStore from "@/stores/language";
 import * as settingsStore from "@/stores/settings";
 import { toast } from "@/stores/toast";
 import { MODAL_CLEANUP_DELAY } from "@/utils/assignment-helpers";
 
 vi.mock("@/stores/auth");
 vi.mock("@/stores/demo");
+vi.mock("@/stores/language");
 vi.mock("@/stores/settings");
 vi.mock("@/stores/toast", () => ({
   toast: {
@@ -70,6 +72,12 @@ describe("useAssignmentActions", () => {
       >),
     );
 
+    vi.mocked(languageStore.useLanguageStore).mockImplementation((selector) =>
+      selector({ locale: "de" } as ReturnType<
+        typeof languageStore.useLanguageStore.getState
+      >),
+    );
+
     vi.mocked(settingsStore.useSettingsStore).mockImplementation((selector) =>
       selector({ isSafeModeEnabled: false } as ReturnType<
         typeof settingsStore.useSettingsStore.getState
@@ -94,6 +102,10 @@ describe("useAssignmentActions", () => {
     expect(result.current.editCompensationModal.assignment).toBeNull();
     expect(result.current.validateGameModal.isOpen).toBe(false);
     expect(result.current.validateGameModal.assignment).toBeNull();
+    expect(result.current.pdfReportModal.isOpen).toBe(false);
+    expect(result.current.pdfReportModal.assignment).toBeNull();
+    expect(result.current.pdfReportModal.isLoading).toBe(false);
+    expect(result.current.pdfReportModal.defaultLanguage).toBe("de");
   });
 
   it("should open and close edit compensation modal", () => {
@@ -206,22 +218,19 @@ describe("useAssignmentActions", () => {
     expect(result.current.editCompensationModal.assignment).toBeNull();
   });
 
-  it("should handle generate report action for NLA/NLB games", () => {
+  it("should open PDF report modal for NLA/NLB games", () => {
     const { result } = renderHook(() => useAssignmentActions());
-
-    const createElementSpy = vi.spyOn(document, "createElement");
 
     act(() => {
       result.current.handleGenerateReport(mockAssignment);
     });
 
-    expect(createElementSpy).toHaveBeenCalledWith("a");
-    expect(toast.success).toHaveBeenCalledWith("assignments.reportGenerated");
+    expect(result.current.pdfReportModal.isOpen).toBe(true);
+    expect(result.current.pdfReportModal.assignment).toBe(mockAssignment);
   });
 
   it("should block generate report for non-NLA/NLB games", () => {
     const { result } = renderHook(() => useAssignmentActions());
-    const createElementSpy = vi.spyOn(document, "createElement");
 
     const nonEligibleAssignment = createMockAssignment("1L");
 
@@ -230,12 +239,11 @@ describe("useAssignmentActions", () => {
     });
 
     expect(toast.info).toHaveBeenCalledWith("assignments.gameReportNotAvailable");
-    expect(createElementSpy).not.toHaveBeenCalledWith("a");
+    expect(result.current.pdfReportModal.isOpen).toBe(false);
   });
 
-  it("should handle generate report action for NLB games", () => {
+  it("should open PDF report modal for NLB games", () => {
     const { result } = renderHook(() => useAssignmentActions());
-    const createElementSpy = vi.spyOn(document, "createElement");
 
     const nlbAssignment = createMockAssignment("NLB");
 
@@ -243,15 +251,13 @@ describe("useAssignmentActions", () => {
       result.current.handleGenerateReport(nlbAssignment);
     });
 
-    expect(createElementSpy).toHaveBeenCalledWith("a");
-    expect(toast.success).toHaveBeenCalledWith("assignments.reportGenerated");
+    expect(result.current.pdfReportModal.isOpen).toBe(true);
+    expect(result.current.pdfReportModal.assignment).toBe(nlbAssignment);
   });
 
   it("should block generate report when league data is undefined", () => {
     const { result } = renderHook(() => useAssignmentActions());
-    const createElementSpy = vi.spyOn(document, "createElement");
 
-    // Create assignment without league data
     const assignmentWithoutLeague: Assignment = {
       __identity: "test-assignment-1",
       refereePosition: "head-one",
@@ -275,7 +281,62 @@ describe("useAssignmentActions", () => {
     });
 
     expect(toast.info).toHaveBeenCalledWith("assignments.gameReportNotAvailable");
-    expect(createElementSpy).not.toHaveBeenCalledWith("a");
+    expect(result.current.pdfReportModal.isOpen).toBe(false);
+  });
+
+  it("should block generate report for second referee (head-two)", () => {
+    const { result } = renderHook(() => useAssignmentActions());
+
+    const secondRefereeAssignment: Assignment = {
+      ...createMockAssignment("NLA"),
+      refereePosition: "head-two",
+    } as Assignment;
+
+    act(() => {
+      result.current.handleGenerateReport(secondRefereeAssignment);
+    });
+
+    expect(toast.info).toHaveBeenCalledWith("assignments.gameReportNotAvailable");
+    expect(result.current.pdfReportModal.isOpen).toBe(false);
+  });
+
+  it("should block generate report for linesman positions", () => {
+    const { result } = renderHook(() => useAssignmentActions());
+
+    const linesmanAssignment: Assignment = {
+      ...createMockAssignment("NLA"),
+      refereePosition: "linesman-one",
+    } as Assignment;
+
+    act(() => {
+      result.current.handleGenerateReport(linesmanAssignment);
+    });
+
+    expect(toast.info).toHaveBeenCalledWith("assignments.gameReportNotAvailable");
+    expect(result.current.pdfReportModal.isOpen).toBe(false);
+  });
+
+  it("should open and close PDF report modal", () => {
+    const { result } = renderHook(() => useAssignmentActions());
+
+    act(() => {
+      result.current.pdfReportModal.open(mockAssignment);
+    });
+
+    expect(result.current.pdfReportModal.isOpen).toBe(true);
+    expect(result.current.pdfReportModal.assignment).toBe(mockAssignment);
+
+    act(() => {
+      result.current.pdfReportModal.close();
+    });
+
+    expect(result.current.pdfReportModal.isOpen).toBe(false);
+
+    act(() => {
+      vi.advanceTimersByTime(MODAL_CLEANUP_DELAY);
+    });
+
+    expect(result.current.pdfReportModal.assignment).toBeNull();
   });
 
   it("should handle add to exchange action", () => {
@@ -310,17 +371,15 @@ describe("useAssignmentActions", () => {
       expect(toast.success).toHaveBeenCalledWith("exchange.addedToExchangeSuccess");
     });
 
-    it("should generate PDF report in demo mode", () => {
+    it("should open PDF report modal in demo mode", () => {
       const { result } = renderHook(() => useAssignmentActions());
-      const createElementSpy = vi.spyOn(document, "createElement");
 
       act(() => {
         result.current.handleGenerateReport(mockAssignment);
       });
 
-      // PDF generation should work in demo mode
-      expect(createElementSpy).toHaveBeenCalledWith("a");
-      expect(toast.success).toHaveBeenCalledWith("assignments.reportGenerated");
+      expect(result.current.pdfReportModal.isOpen).toBe(true);
+      expect(result.current.pdfReportModal.assignment).toBe(mockAssignment);
     });
   });
 
