@@ -205,7 +205,8 @@ export async function fillSportsHallReportForm(
   trySetTextField(mapping.date, data.date);
 
   // Select gender radio button
-  const genderOption = data.gender === 'm' ? 'M' : 'F';
+  // PDF radio options are 'Auswahl1' (M/Male) and 'Auswahl2' (F/Female)
+  const genderOption = data.gender === 'm' ? 'Auswahl1' : 'Auswahl2';
   trySelectRadioOption(mapping.genderRadio, genderOption);
 
   // Set referee names
