@@ -72,12 +72,12 @@ describe("createAssignmentActions", () => {
 
     expect(actions.editCompensation.id).toBe("edit-compensation");
     expect(actions.editCompensation.label).toBe("Edit Compensation");
-    expect(actions.editCompensation.color).toBe("bg-blue-500");
+    expect(actions.editCompensation.color).toBe("bg-primary-500");
     expect(actions.editCompensation.icon).toBe("💰");
 
     expect(actions.validateGame.id).toBe("validate-game");
     expect(actions.validateGame.label).toBe("Validate Game");
-    expect(actions.validateGame.color).toBe("bg-purple-500");
+    expect(actions.validateGame.color).toBe("bg-success-500");
     expect(actions.validateGame.icon).toBe("✓");
   });
 });

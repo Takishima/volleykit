@@ -61,12 +61,12 @@ describe("createCompensationActions", () => {
 
     expect(actions.editCompensation.id).toBe("edit-compensation");
     expect(actions.editCompensation.label).toBe("Edit Compensation");
-    expect(actions.editCompensation.color).toBe("bg-blue-500");
+    expect(actions.editCompensation.color).toBe("bg-primary-500");
     expect(actions.editCompensation.icon).toBe("💰");
 
     expect(actions.generatePDF.id).toBe("generate-pdf");
     expect(actions.generatePDF.label).toBe("Generate PDF");
-    expect(actions.generatePDF.color).toBe("bg-orange-500");
+    expect(actions.generatePDF.color).toBe("bg-warning-500");
     expect(actions.generatePDF.icon).toBe("📄");
   });
 });

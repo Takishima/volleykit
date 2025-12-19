@@ -69,7 +69,7 @@ describe("createExchangeActions", () => {
     expect(actions.takeOver.id).toBe("take-over");
     expect(actions.takeOver.label).toBe("Take Over");
     expect(actions.takeOver.shortLabel).toBe("Take Over");
-    expect(actions.takeOver.color).toBe("bg-green-500");
+    expect(actions.takeOver.color).toBe("bg-success-500");
     expect(actions.takeOver.icon).toBe("✓");
   });
 
@@ -84,7 +84,7 @@ describe("createExchangeActions", () => {
     expect(actions.removeFromExchange.id).toBe("remove-from-exchange");
     expect(actions.removeFromExchange.label).toBe("Remove");
     expect(actions.removeFromExchange.shortLabel).toBe("Remove");
-    expect(actions.removeFromExchange.color).toBe("bg-red-500");
+    expect(actions.removeFromExchange.color).toBe("bg-danger-500");
     expect(actions.removeFromExchange.icon).toBe("✕");
   });
 });
