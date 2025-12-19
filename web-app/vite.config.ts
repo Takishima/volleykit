@@ -3,9 +3,30 @@ import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { visualizer } from 'rollup-plugin-visualizer'
 import path from 'path'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { normalizeBasePath } from './src/utils/basePath'
+
+// Plugin to exclude Zod v4 locale files from the bundle.
+// Zod v4 includes ~50 locale files for i18n error messages that we don't use.
+// This saves ~12-15 KB gzipped. The app uses default English error messages.
+function zodLocalesStubPlugin(): Plugin {
+  const ZOD_LOCALES_INDEX = /[/\\]zod[/\\]v4[/\\]locales[/\\]index\.js$/;
+  const STUB_CODE = 'export {};'; // Empty module - only English locale is loaded by default
+
+  return {
+    name: 'zod-locales-stub',
+    enforce: 'pre',
+    load(id) {
+      // Replace zod's locales index with an empty module to exclude all non-English locales
+      if (ZOD_LOCALES_INDEX.test(id)) {
+        return STUB_CODE;
+      }
+      return null;
+    },
+  };
+}
 
 // Plugin to handle 404.html for GitHub Pages SPA routing
 function spaFallbackPlugin(basePath: string): Plugin {
@@ -96,6 +117,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     plugins: [
+      zodLocalesStubPlugin(),
       react(),
       tailwindcss(),
       // Disable PWA for PR previews to avoid service worker scope conflicts
@@ -178,6 +200,13 @@ export default defineConfig(({ mode }) => {
         },
       }),
       spaFallbackPlugin(basePath),
+      // Bundle analyzer - generates stats.html after build
+      visualizer({
+        filename: 'stats.html',
+        open: false,
+        gzipSize: true,
+        brotliSize: true,
+      }),
     ].filter(Boolean),
     // Base path for deployment - normalized from VITE_BASE_PATH env var
     base: basePath,
