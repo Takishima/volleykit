@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
+import { isValidElement } from "react";
 import { createExchangeActions } from "./exchange-actions";
 import type { GameExchange } from "@/api/client";
 
@@ -70,7 +71,7 @@ describe("createExchangeActions", () => {
     expect(actions.takeOver.label).toBe("Take Over");
     expect(actions.takeOver.shortLabel).toBe("Take Over");
     expect(actions.takeOver.color).toBe("bg-success-500");
-    expect(actions.takeOver.icon).toBe("✓");
+    expect(isValidElement(actions.takeOver.icon)).toBe(true);
   });
 
   it("should have correct remove from exchange action properties", () => {
@@ -85,6 +86,6 @@ describe("createExchangeActions", () => {
     expect(actions.removeFromExchange.label).toBe("Remove");
     expect(actions.removeFromExchange.shortLabel).toBe("Remove");
     expect(actions.removeFromExchange.color).toBe("bg-danger-500");
-    expect(actions.removeFromExchange.icon).toBe("✕");
+    expect(isValidElement(actions.removeFromExchange.icon)).toBe(true);
   });
 });

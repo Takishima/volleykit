@@ -27,6 +27,7 @@ export { Trash2 } from "lucide-react";
 export { Undo2 } from "lucide-react";
 export { ChevronDown } from "lucide-react";
 export { Circle } from "lucide-react";
+export { X } from "lucide-react";
 
 // Status icons
 export { CheckCircle } from "lucide-react";

@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 export interface SwipeAction {
   id: string;
   label: string;
@@ -5,7 +7,7 @@ export interface SwipeAction {
   shortLabel?: string;
   color: string;
   onAction: () => void;
-  icon?: string;
+  icon?: ReactNode;
 }
 
 export interface SwipeConfig {

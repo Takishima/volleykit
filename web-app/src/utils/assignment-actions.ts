@@ -1,5 +1,9 @@
+import { createElement } from "react";
 import type { Assignment } from "@/api/client";
 import type { SwipeAction } from "@/types/swipe";
+import { Wallet, Check, FileText, ArrowLeftRight } from "@/components/ui/icons";
+
+const ICON_SIZE = 20;
 
 export interface AssignmentActionConfig {
   editCompensation: SwipeAction;
@@ -25,7 +29,7 @@ export function createAssignmentActions(
       label: "Edit Compensation",
       shortLabel: "Edit",
       color: "bg-primary-500",
-      icon: "💰",
+      icon: createElement(Wallet, { size: ICON_SIZE }),
       onAction: () => handlers.onEditCompensation(assignment),
     },
     validateGame: {
@@ -33,7 +37,7 @@ export function createAssignmentActions(
       label: "Validate Game",
       shortLabel: "Validate",
       color: "bg-success-500",
-      icon: "✓",
+      icon: createElement(Check, { size: ICON_SIZE }),
       onAction: () => handlers.onValidateGame(assignment),
     },
     generateReport: {
@@ -41,7 +45,7 @@ export function createAssignmentActions(
       label: "Generate Report",
       shortLabel: "Report",
       color: "bg-warning-500",
-      icon: "📄",
+      icon: createElement(FileText, { size: ICON_SIZE }),
       onAction: () => handlers.onGenerateReport(assignment),
     },
     addToExchange: {
@@ -49,7 +53,7 @@ export function createAssignmentActions(
       label: "Add to Exchange",
       shortLabel: "Exchange",
       color: "bg-success-500",
-      icon: "↔",
+      icon: createElement(ArrowLeftRight, { size: ICON_SIZE }),
       onAction: () => handlers.onAddToExchange(assignment),
     },
   };

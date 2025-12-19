@@ -489,7 +489,7 @@ export function SwipeableCard({
                 }}
                 aria-label={action.label}
               >
-                {action.icon && <span className="text-xl">{action.icon}</span>}
+                {action.icon}
                 <span className="text-xs font-medium">
                   {action.shortLabel || action.label.split(" ")[0]}
                 </span>
