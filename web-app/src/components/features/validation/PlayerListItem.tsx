@@ -1,43 +1,7 @@
 import { useTranslation } from "@/hooks/useTranslation";
 import { Badge } from "@/components/ui/Badge";
 import type { RosterPlayer } from "@/hooks/useNominationList";
-
-function TrashIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M3 6h18" />
-      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-    </svg>
-  );
-}
-
-function UndoIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M3 7v6h6" />
-      <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
-    </svg>
-  );
-}
+import { Trash2, Undo2 } from "@/components/ui/icons";
 
 interface PlayerListItemProps {
   player: RosterPlayer;
@@ -123,7 +87,7 @@ export function PlayerListItem({
             aria-label={t("validation.roster.undoRemoval")}
             title={t("validation.roster.undoRemoval")}
           >
-            <UndoIcon className="w-4 h-4" />
+            <Undo2 className="w-4 h-4" aria-hidden="true" />
           </button>
         ) : (
           <button
@@ -133,7 +97,7 @@ export function PlayerListItem({
             aria-label={t("validation.roster.removePlayer")}
             title={t("validation.roster.removePlayer")}
           >
-            <TrashIcon className="w-4 h-4" />
+            <Trash2 className="w-4 h-4" aria-hidden="true" />
           </button>
         )}
       </div>

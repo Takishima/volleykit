@@ -169,7 +169,7 @@ export function AssignmentsPage() {
 
         {!isLoading && !error && data && data.length === 0 && (
           <EmptyState
-            icon={activeTab === "upcoming" ? "📅" : "🔒"}
+            icon={activeTab === "upcoming" ? "calendar" : "lock"}
             title={
               activeTab === "upcoming"
                 ? t("assignments.noUpcomingTitle")

@@ -108,7 +108,7 @@ export function CompensationsPage() {
 
     if (!data || data.length === 0) {
       const { title, description } = getEmptyStateContent();
-      return <EmptyState icon="💰" title={title} description={description} />;
+      return <EmptyState icon="wallet" title={title} description={description} />;
     }
 
     return (

@@ -4,18 +4,29 @@ import { useAuthStore, type Occupation } from "@/stores/auth";
 import { useDemoStore, type DemoAssociationCode } from "@/stores/demo";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getOccupationLabelKey } from "@/utils/occupation-labels";
+import {
+  Volleyball,
+  ClipboardList,
+  Wallet,
+  ArrowLeftRight,
+  Settings,
+  ChevronDown,
+} from "@/components/ui/icons";
+import type { LucideIcon } from "lucide-react";
 
 const MINIMUM_OCCUPATIONS_FOR_SWITCHER = 2;
 
-const navItems = [
-  { path: "/", labelKey: "nav.assignments" as const, icon: "📋" },
-  {
-    path: "/compensations",
-    labelKey: "nav.compensations" as const,
-    icon: "💰",
-  },
-  { path: "/exchange", labelKey: "nav.exchange" as const, icon: "🔄" },
-  { path: "/settings", labelKey: "nav.settings" as const, icon: "⚙️" },
+interface NavItem {
+  path: string;
+  labelKey: "nav.assignments" | "nav.compensations" | "nav.exchange" | "nav.settings";
+  icon: LucideIcon;
+}
+
+const navItems: NavItem[] = [
+  { path: "/", labelKey: "nav.assignments", icon: ClipboardList },
+  { path: "/compensations", labelKey: "nav.compensations", icon: Wallet },
+  { path: "/exchange", labelKey: "nav.exchange", icon: ArrowLeftRight },
+  { path: "/settings", labelKey: "nav.settings", icon: Settings },
 ];
 
 // Valid association codes that can be used for demo mode data generation
@@ -97,7 +108,7 @@ export function AppShell() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14">
             <div className="flex items-center gap-2">
-              <span className="text-xl">🏐</span>
+              <Volleyball className="w-6 h-6 text-primary-600 dark:text-primary-400" aria-hidden="true" />
               <h1 className="text-lg font-bold text-text-primary dark:text-text-primary-dark">
                 VolleyKit
               </h1>
@@ -119,16 +130,10 @@ export function AppShell() {
                           ? getOccupationLabel(activeOccupation)
                           : "Select role"}
                       </span>
-                      <svg
+                      <ChevronDown
                         className={`w-4 h-4 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
                         aria-hidden="true"
-                      >
-                        <path d="M6 9l6 6 6-6" />
-                      </svg>
+                      />
                     </button>
 
                     {isDropdownOpen && (
@@ -204,6 +209,7 @@ export function AppShell() {
           <div className="flex justify-around">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
+              const Icon = item.icon;
               return (
                 <NavLink
                   key={item.path}
@@ -218,11 +224,10 @@ export function AppShell() {
                     }
                   `}
                 >
-                  <span
-                    className={`text-lg leading-tight ${isActive ? "scale-110" : ""} transition-transform`}
-                  >
-                    {item.icon}
-                  </span>
+                  <Icon
+                    className={`w-5 h-5 ${isActive ? "scale-110" : ""} transition-transform`}
+                    aria-hidden="true"
+                  />
                   <span>{t(item.labelKey)}</span>
                 </NavLink>
               );

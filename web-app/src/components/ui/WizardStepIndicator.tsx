@@ -1,4 +1,5 @@
 import type { WizardStep } from "@/hooks/useWizardNavigation";
+import { Check } from "@/components/ui/icons";
 
 /** Returns the appropriate style classes based on step state */
 function getStepIndicatorStyle(
@@ -12,23 +13,6 @@ function getStepIndicatorStyle(
     return "bg-success-500 text-white";
   }
   return "bg-surface-muted dark:bg-surface-subtle-dark text-text-muted dark:text-text-muted-dark";
-}
-
-function CheckIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="3"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
-      <polyline points="20,6 9,17 4,12" />
-    </svg>
-  );
 }
 
 interface WizardStepIndicatorProps {
@@ -122,7 +106,7 @@ export function WizardStepIndicator({
               `}
             >
               {showCompletion && !isCurrent ? (
-                <CheckIcon className="w-4 h-4" />
+                <Check className="w-4 h-4" strokeWidth={3} aria-hidden="true" />
               ) : (
                 <span className="text-xs font-semibold">{index + 1}</span>
               )}

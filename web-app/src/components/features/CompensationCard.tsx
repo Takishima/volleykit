@@ -2,6 +2,7 @@ import { format, parseISO } from "date-fns";
 import { Card, CardContent } from "@/components/ui/Card";
 import { ExpandArrow } from "@/components/ui/ExpandArrow";
 import { Badge } from "@/components/ui/Badge";
+import { Check, Circle } from "@/components/ui/icons";
 import type { CompensationRecord } from "@/api/client";
 import { useExpandable } from "@/hooks/useExpandable";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -69,7 +70,11 @@ export function CompensationCard({
                 {total.toFixed(0)}
               </div>
               <Badge variant={isPaid ? "success" : "warning"}>
-                {isPaid ? "✓" : "○"}
+                {isPaid ? (
+                  <Check className="w-3 h-3" aria-hidden="true" />
+                ) : (
+                  <Circle className="w-3 h-3" aria-hidden="true" />
+                )}
               </Badge>
               {!disableExpansion && <ExpandArrow isExpanded={isExpanded} />}
             </div>

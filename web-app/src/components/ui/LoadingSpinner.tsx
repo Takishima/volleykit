@@ -1,3 +1,7 @@
+import type { ReactNode } from "react";
+import { AlertTriangle, Calendar, Lock, Inbox, Wallet, ArrowLeftRight } from "@/components/ui/icons";
+import type { LucideIcon } from "lucide-react";
+
 interface LoadingSpinnerProps {
   size?: "sm" | "md" | "lg";
   className?: string;
@@ -62,7 +66,7 @@ interface ErrorStateProps {
 export function ErrorState({ message, onRetry }: ErrorStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-12 gap-4">
-      <div className="text-4xl">⚠️</div>
+      <AlertTriangle className="w-10 h-10 text-warning-500" aria-hidden="true" />
       <p className="text-danger-600 dark:text-danger-400 text-center">{message}</p>
       {onRetry && (
         <button onClick={onRetry} className="btn btn-secondary">
@@ -73,8 +77,18 @@ export function ErrorState({ message, onRetry }: ErrorStateProps) {
   );
 }
 
+/** Map of icon names to Lucide components for EmptyState */
+const EMPTY_STATE_ICONS: Record<string, LucideIcon> = {
+  calendar: Calendar,
+  lock: Lock,
+  inbox: Inbox,
+  wallet: Wallet,
+  exchange: ArrowLeftRight,
+};
+
 interface EmptyStateProps {
-  icon?: string;
+  /** Icon identifier: 'calendar', 'lock', 'inbox', 'wallet', 'exchange', or a custom ReactNode */
+  icon?: string | ReactNode;
   title: string;
   description?: string;
   action?: {
@@ -84,14 +98,27 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({
-  icon = "📭",
+  icon = "inbox",
   title,
   description,
   action,
 }: EmptyStateProps) {
+  const renderIcon = () => {
+    if (typeof icon === "string") {
+      const IconComponent = EMPTY_STATE_ICONS[icon];
+      if (IconComponent) {
+        return <IconComponent className="w-12 h-12 text-text-muted dark:text-text-muted-dark" aria-hidden="true" />;
+      }
+      // Fallback for unknown string icons
+      return <Inbox className="w-12 h-12 text-text-muted dark:text-text-muted-dark" aria-hidden="true" />;
+    }
+    // Custom ReactNode passed directly
+    return icon;
+  };
+
   return (
     <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
-      <div className="text-5xl">{icon}</div>
+      {renderIcon()}
       <h3 className="text-lg font-medium text-text-primary dark:text-text-primary-dark">
         {title}
       </h3>

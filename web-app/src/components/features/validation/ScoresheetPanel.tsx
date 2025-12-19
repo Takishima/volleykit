@@ -2,11 +2,11 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuthStore } from "@/stores/auth";
 import {
-  UploadIcon,
-  CameraIcon,
-  CheckIcon,
-  FileIcon,
-  AlertIcon,
+  Upload,
+  Camera,
+  CheckCircle,
+  FileText,
+  AlertCircle,
 } from "@/components/ui/icons";
 
 interface ScoresheetPanelProps {
@@ -218,7 +218,7 @@ export function ScoresheetPanel({ onScoresheetChange }: ScoresheetPanelProps) {
 
       {!selectedFile ? (
         <div className="border-2 border-dashed border-border-strong dark:border-border-strong-dark rounded-lg p-6 text-center">
-          <UploadIcon className="w-12 h-12 mx-auto text-text-subtle dark:text-text-subtle-dark mb-4" />
+          <Upload className="w-12 h-12 mx-auto text-text-subtle dark:text-text-subtle-dark mb-4" aria-hidden="true" />
           <h3 className="text-sm font-medium text-text-primary dark:text-text-primary-dark mb-1">
             {tKey("title")}
           </h3>
@@ -234,7 +234,7 @@ export function ScoresheetPanel({ onScoresheetChange }: ScoresheetPanelProps) {
               role="alert"
               className="mb-4 p-3 bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800 rounded-lg flex items-center gap-2"
             >
-              <AlertIcon className="w-5 h-5 text-danger-500 flex-shrink-0" />
+              <AlertCircle className="w-5 h-5 text-danger-500 flex-shrink-0" aria-hidden="true" />
               <span className="text-sm text-danger-700 dark:text-danger-400">
                 {errorMessage}
               </span>
@@ -247,7 +247,7 @@ export function ScoresheetPanel({ onScoresheetChange }: ScoresheetPanelProps) {
               onClick={() => fileInputRef.current?.click()}
               className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
             >
-              <UploadIcon className="w-4 h-4" />
+              <Upload className="w-4 h-4" aria-hidden="true" />
               {tKey("selectFile")}
             </button>
             <button
@@ -255,7 +255,7 @@ export function ScoresheetPanel({ onScoresheetChange }: ScoresheetPanelProps) {
               onClick={() => cameraInputRef.current?.click()}
               className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark hover:bg-surface-muted dark:hover:bg-surface-muted-dark rounded-lg transition-colors"
             >
-              <CameraIcon className="w-4 h-4" />
+              <Camera className="w-4 h-4" aria-hidden="true" />
               {tKey("takePhoto")}
             </button>
           </div>
@@ -272,7 +272,7 @@ export function ScoresheetPanel({ onScoresheetChange }: ScoresheetPanelProps) {
             </div>
           ) : (
             <div className="bg-surface-subtle dark:bg-surface-card-dark p-8 flex flex-col items-center justify-center">
-              <FileIcon className="w-16 h-16 text-text-subtle dark:text-text-subtle-dark mb-2" />
+              <FileText className="w-16 h-16 text-text-subtle dark:text-text-subtle-dark mb-2" aria-hidden="true" />
               <span className="text-sm text-text-muted dark:text-text-muted-dark">
                 PDF
               </span>
@@ -308,7 +308,7 @@ export function ScoresheetPanel({ onScoresheetChange }: ScoresheetPanelProps) {
                 role="status"
                 aria-live="polite"
               >
-                <CheckIcon className="w-5 h-5" />
+                <CheckCircle className="w-5 h-5" aria-hidden="true" />
                 <span className="text-sm font-medium">
                   {tKey("uploadComplete")}
                 </span>

@@ -138,7 +138,7 @@ export function ExchangePage() {
     if (!filteredData || filteredData.length === 0) {
       return (
         <EmptyState
-          icon="🔄"
+          icon="exchange"
           title={
             statusFilter === "open"
               ? t("exchange.noOpenExchangesTitle")

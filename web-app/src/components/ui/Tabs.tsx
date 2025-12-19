@@ -1,4 +1,5 @@
 import { useTabNavigation } from "@/hooks/useTabNavigation";
+import { Check, Circle } from "@/components/ui/icons";
 
 /** Tab completion status for visual indicators */
 export type TabStatus = "complete" | "incomplete" | "optional";
@@ -9,36 +10,6 @@ export interface Tab {
   badge?: string;
   /** Completion status for visual indicator */
   status?: TabStatus;
-}
-
-function CheckIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
-      <polyline points="20,6 9,17 4,12" />
-    </svg>
-  );
-}
-
-function WarningDotIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="12" r="5" />
-    </svg>
-  );
 }
 
 interface TabsProps {
@@ -91,10 +62,10 @@ export function Tabs({
                 `}
               >
                 {tab.status === "complete" && (
-                  <CheckIcon className="w-4 h-4 mr-1.5 text-success-600 dark:text-success-400" />
+                  <Check className="w-4 h-4 mr-1.5 text-success-600 dark:text-success-400" aria-hidden="true" />
                 )}
                 {tab.status === "incomplete" && (
-                  <WarningDotIcon className="w-3 h-3 mr-1.5 text-warning-500 dark:text-warning-400" />
+                  <Circle className="w-3 h-3 mr-1.5 text-warning-500 dark:text-warning-400 fill-current" aria-hidden="true" />
                 )}
                 {tab.label}
                 {tab.badge && (
