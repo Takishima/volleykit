@@ -10,6 +10,8 @@ describe('pdf-form-filler', () => {
     it('extracts data from NLA assignment', () => {
       const assignment: Assignment = {
         __identity: 'test-id',
+        refereeConvocationStatus: 'active',
+        refereePosition: 'head-one',
         refereeGame: {
           __identity: 'referee-game-id',
           game: {
@@ -89,6 +91,8 @@ describe('pdf-form-filler', () => {
     it('returns null for non-NLA/NLB leagues', () => {
       const assignment: Assignment = {
         __identity: 'test-id',
+        refereeConvocationStatus: 'active',
+        refereePosition: 'head-one',
         refereeGame: {
           __identity: 'referee-game-id',
           game: {
@@ -117,6 +121,8 @@ describe('pdf-form-filler', () => {
     it('returns null when game is missing', () => {
       const assignment: Assignment = {
         __identity: 'test-id',
+        refereeConvocationStatus: 'active',
+        refereePosition: 'head-one',
         refereeGame: {
           __identity: 'referee-game-id',
         },
@@ -129,6 +135,8 @@ describe('pdf-form-filler', () => {
     it('handles female league', () => {
       const assignment: Assignment = {
         __identity: 'test-id',
+        refereeConvocationStatus: 'active',
+        refereePosition: 'head-two',
         refereeGame: {
           __identity: 'referee-game-id',
           game: {
@@ -161,6 +169,8 @@ describe('pdf-form-filler', () => {
     it('returns NLA for NLA league', () => {
       const assignment: Assignment = {
         __identity: 'test-id',
+        refereeConvocationStatus: 'active',
+        refereePosition: 'head-one',
         refereeGame: {
           __identity: 'rg-id',
           game: {
@@ -185,6 +195,8 @@ describe('pdf-form-filler', () => {
     it('returns NLB for NLB league', () => {
       const assignment: Assignment = {
         __identity: 'test-id',
+        refereeConvocationStatus: 'active',
+        refereePosition: 'head-one',
         refereeGame: {
           __identity: 'rg-id',
           game: {
@@ -209,6 +221,8 @@ describe('pdf-form-filler', () => {
     it('returns null for other leagues', () => {
       const assignment: Assignment = {
         __identity: 'test-id',
+        refereeConvocationStatus: 'active',
+        refereePosition: 'head-one',
         refereeGame: {
           __identity: 'rg-id',
           game: {
