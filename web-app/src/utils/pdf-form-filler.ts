@@ -1,4 +1,3 @@
-import { PDFDocument } from 'pdf-lib';
 import type { Assignment } from '@/api/client';
 import { format } from 'date-fns';
 
@@ -31,6 +30,7 @@ function formatDateForReport(isoString: string | undefined): string {
     return format(new Date(isoString), 'dd.MM.yyyy');
   } catch {
     // Invalid date format - return empty string so form field shows blank
+    console.warn('Failed to parse date for PDF report:', isoString);
     return '';
   }
 }
@@ -135,43 +135,22 @@ function getPdfPath(leagueCategory: LeagueCategory, language: Language): string 
   return `/assets/pdf/sports-hall-report-${categoryPath}${language}.pdf`;
 }
 
-async function loadPdfTemplate(pdfPath: string): Promise<PDFDocument> {
-  const response = await fetch(pdfPath);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch PDF template: ${response.statusText}`);
-  }
-  const pdfBytes = await response.arrayBuffer();
-  return PDFDocument.load(pdfBytes);
-}
-
-function selectGenderOption(
-  form: ReturnType<PDFDocument['getForm']>,
-  fieldName: string,
-  gender: Gender
-): void {
-  const genderRadio = form.getRadioGroup(fieldName);
-  const genderOption = gender === 'm' ? 'M' : 'F';
-  try {
-    genderRadio.select(genderOption);
-  } catch {
-    // PDF radio options may use different naming conventions
-    const options = genderRadio.getOptions();
-    const matchingOption = options.find(
-      (opt) => opt.toUpperCase().startsWith(genderOption) || opt.includes(genderOption)
-    );
-    if (matchingOption) {
-      genderRadio.select(matchingOption);
-    }
-  }
-}
-
 export async function fillSportsHallReportForm(
   data: SportsHallReportData,
   leagueCategory: LeagueCategory,
   language: Language
 ): Promise<Uint8Array> {
+  // Dynamic import to keep pdf-lib out of the main bundle
+  const { PDFDocument } = await import('pdf-lib');
+
   const pdfPath = getPdfPath(leagueCategory, language);
-  const pdfDoc = await loadPdfTemplate(pdfPath);
+  const response = await fetch(pdfPath);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch PDF template: ${response.statusText}`);
+  }
+  const pdfBytes = await response.arrayBuffer();
+  const pdfDoc = await PDFDocument.load(pdfBytes);
+
   const form = pdfDoc.getForm();
   const mapping = getFieldMapping(leagueCategory);
 
@@ -182,7 +161,22 @@ export async function fillSportsHallReportForm(
   form.getTextField(mapping.location).setText(data.location);
   form.getTextField(mapping.date).setText(data.date);
 
-  selectGenderOption(form, mapping.genderRadio, data.gender);
+  // Select gender radio button with fallback for different naming conventions
+  const genderRadio = form.getRadioGroup(mapping.genderRadio);
+  const genderOption = data.gender === 'm' ? 'M' : 'F';
+  try {
+    genderRadio.select(genderOption);
+  } catch {
+    const options = genderRadio.getOptions();
+    const matchingOption = options.find(
+      (opt) => opt.toUpperCase().startsWith(genderOption) || opt.includes(genderOption)
+    );
+    if (matchingOption) {
+      genderRadio.select(matchingOption);
+    } else {
+      console.warn(`Could not find gender option "${genderOption}" in PDF form`);
+    }
+  }
 
   if (data.firstRefereeName) {
     form.getTextField(mapping.firstRefereeName).setText(data.firstRefereeName);
