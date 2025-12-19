@@ -3236,6 +3236,9 @@ components:
           $ref: '#/components/schemas/NominationList'
         nominationListOfTeamAway:
           $ref: '#/components/schemas/NominationList'
+        # Scoresheet (available when requested via showWithNestedObjects)
+        scoresheet:
+          $ref: '#/components/schemas/Scoresheet'
     RefereeConvocationDetails:
       type: object
       description: |

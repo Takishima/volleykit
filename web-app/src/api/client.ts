@@ -28,6 +28,12 @@ if (!import.meta.env.DEV && !API_BASE) {
  */
 const DEFAULT_SEARCH_RESULTS_LIMIT = 50;
 
+/** Maximum allowed file size for uploads (10 MB). */
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
+/** Allowed MIME types for scoresheet uploads. */
+const ALLOWED_FILE_TYPES = ["application/pdf"];
+
 // Backend error response schema
 const backendErrorSchema = z
   .object({
@@ -118,6 +124,16 @@ export type IndoorPlayerNomination = Schemas["IndoorPlayerNomination"];
 export type PossibleNomination = Schemas["PossibleNomination"];
 export type PossibleNominationsResponse =
   Schemas["PossibleNominationsResponse"];
+export type NominationListFinalizeResponse =
+  Schemas["NominationListFinalizeResponse"];
+
+// Scoresheet types
+export type Scoresheet = Schemas["Scoresheet"];
+export type ScoresheetValidation = Schemas["ScoresheetValidation"];
+export type FileResource = Schemas["FileResource"];
+
+// Game details type (includes scoresheet and nomination lists)
+export type GameDetails = Schemas["GameDetails"];
 
 // Person search types
 export type PersonSearchResult = Schemas["PersonSearchResult"];
@@ -732,6 +748,201 @@ export const api = {
         ],
       },
     );
+  },
+
+  /** Fetches game details including scoresheet and nomination lists. */
+  async getGameWithScoresheet(gameId: string): Promise<Schemas["GameDetails"]> {
+    const properties = [
+      "scoresheet",
+      "scoresheet.__identity",
+      "scoresheet.game.__identity",
+      "scoresheet.isSimpleScoresheet",
+      "scoresheet.writerPerson",
+      "scoresheet.file",
+      "scoresheet.hasFile",
+      "scoresheet.closedAt",
+      "scoresheet.scoresheetValidation",
+      "nominationListOfTeamHome",
+      "nominationListOfTeamHome.__identity",
+      "nominationListOfTeamHome.game.__identity",
+      "nominationListOfTeamHome.team.__identity",
+      "nominationListOfTeamHome.closed",
+      "nominationListOfTeamHome.isClosedForTeam",
+      "nominationListOfTeamHome.nominationListValidation",
+      "nominationListOfTeamHome.indoorPlayerNominations.*.__identity",
+      "nominationListOfTeamAway",
+      "nominationListOfTeamAway.__identity",
+      "nominationListOfTeamAway.game.__identity",
+      "nominationListOfTeamAway.team.__identity",
+      "nominationListOfTeamAway.closed",
+      "nominationListOfTeamAway.isClosedForTeam",
+      "nominationListOfTeamAway.nominationListValidation",
+      "nominationListOfTeamAway.indoorPlayerNominations.*.__identity",
+      "group.phase.league.leagueCategory.writersCanUseSimpleScoresheetForThisLeagueCategory",
+    ];
+
+    return apiRequest<Schemas["GameDetails"]>(
+      "/sportmanager.indoorvolleyball/api%5cgame/showWithNestedObjects",
+      "GET",
+      {
+        "game[__identity]": gameId,
+        propertyRenderConfiguration: properties,
+      },
+    );
+  },
+
+  /** Updates a nomination list with roster changes. */
+  async updateNominationList(
+    nominationListId: string,
+    gameId: string,
+    teamId: string,
+    playerNominationIds: string[],
+  ): Promise<NominationList> {
+    const body: Record<string, unknown> = {
+      "nominationList[__identity]": nominationListId,
+      "nominationList[game][__identity]": gameId,
+      "nominationList[team][__identity]": teamId,
+      "nominationList[closed]": "false",
+      "nominationList[isClosedForTeam]": "true",
+    };
+
+    // Add player nominations as indexed array
+    playerNominationIds.forEach((id, index) => {
+      body[`nominationList[indoorPlayerNominations][${index}][__identity]`] =
+        id;
+    });
+
+    return apiRequest<NominationList>(
+      "/sportmanager.indoorvolleyball/api%5cnominationlist",
+      "PUT",
+      body,
+    );
+  },
+
+  /** Finalizes a nomination list (closes it for further modifications). */
+  async finalizeNominationList(
+    nominationListId: string,
+    gameId: string,
+    teamId: string,
+    playerNominationIds: string[],
+    validationId?: string,
+  ): Promise<NominationListFinalizeResponse> {
+    const body: Record<string, unknown> = {
+      "nominationList[__identity]": nominationListId,
+      "nominationList[game][__identity]": gameId,
+      "nominationList[team][__identity]": teamId,
+      "nominationList[closed]": "false",
+      "nominationList[isClosedForTeam]": "true",
+    };
+
+    // Add player nominations as indexed array
+    playerNominationIds.forEach((id, index) => {
+      body[`nominationList[indoorPlayerNominations][${index}][__identity]`] =
+        id;
+    });
+
+    if (validationId) {
+      body["nominationList[nominationListValidation][__identity]"] =
+        validationId;
+    }
+
+    return apiRequest<NominationListFinalizeResponse>(
+      "/sportmanager.indoorvolleyball/api%5cnominationlist/finalize",
+      "POST",
+      body,
+    );
+  },
+
+  /** Updates a scoresheet with the selected scorer. */
+  async updateScoresheet(
+    scoresheetId: string,
+    gameId: string,
+    scorerPersonId: string,
+    isSimpleScoresheet: boolean = false,
+  ): Promise<Scoresheet> {
+    return apiRequest<Scoresheet>(
+      "/sportmanager.indoorvolleyball/api%5cscoresheet",
+      "PUT",
+      {
+        "scoresheet[__identity]": scoresheetId,
+        "scoresheet[game][__identity]": gameId,
+        "scoresheet[writerPerson][__identity]": scorerPersonId,
+        "scoresheet[isSimpleScoresheet]": isSimpleScoresheet ? "true" : "false",
+        "scoresheet[hasFile]": "false",
+      },
+    );
+  },
+
+  /** Finalizes a scoresheet after the game. */
+  async finalizeScoresheet(
+    scoresheetId: string,
+    gameId: string,
+    scorerPersonId: string,
+    fileResourceId: string,
+    validationId?: string,
+    isSimpleScoresheet: boolean = false,
+  ): Promise<Scoresheet> {
+    const body: Record<string, unknown> = {
+      "scoresheet[__identity]": scoresheetId,
+      "scoresheet[game][__identity]": gameId,
+      "scoresheet[writerPerson][__identity]": scorerPersonId,
+      "scoresheet[file][__identity]": fileResourceId,
+      "scoresheet[hasFile]": "true",
+      "scoresheet[isSimpleScoresheet]": isSimpleScoresheet ? "true" : "false",
+    };
+
+    if (validationId) {
+      body["scoresheet[scoresheetValidation][__identity]"] = validationId;
+    }
+
+    return apiRequest<Scoresheet>(
+      "/sportmanager.indoorvolleyball/api%5cscoresheet/finalize",
+      "POST",
+      body,
+    );
+  },
+
+  /** Uploads a file and returns a resource reference. */
+  async uploadResource(file: File): Promise<FileResource[]> {
+    // Validate file type
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      throw new Error(
+        `Invalid file type: ${file.type || "unknown"}. Only PDF files are allowed.`,
+      );
+    }
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+      throw new Error(
+        `File too large: ${sizeMB} MB. Maximum size is 10 MB.`,
+      );
+    }
+
+    const formData = new FormData();
+    formData.append("resource", file);
+    if (csrfToken) {
+      formData.append("__csrfToken", csrfToken);
+    }
+
+    const url = `${API_BASE}/sportmanager.resourcemanagement/api%5cpersistentresource/upload`;
+
+    const response = await fetch(url, {
+      method: "POST",
+      credentials: "include",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        clearSession();
+        throw new Error("Session expired. Please log in again.");
+      }
+      const errorMessage = await parseErrorResponse(response);
+      throw new Error(`POST ${url}: ${errorMessage}`);
+    }
+
+    return response.json();
   },
 };
 

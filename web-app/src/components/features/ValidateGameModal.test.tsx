@@ -1,11 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ValidateGameModal } from "./ValidateGameModal";
 import type { Assignment } from "@/api/client";
 import * as useNominationListModule from "@/hooks/useNominationList";
+import * as useValidationStateModule from "@/hooks/useValidationState";
 
 vi.mock("@/hooks/useNominationList");
+vi.mock("@/hooks/useValidationState");
 
 vi.mock("@/hooks/useScorerSearch", () => ({
   useScorerSearch: vi.fn(() => ({
@@ -48,15 +50,10 @@ function createMockAssignment(overrides: Partial<Assignment> = {}): Assignment {
   } as Assignment;
 }
 
-function createWrapper() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  });
+// Shared QueryClient to avoid memory issues from creating many instances
+let queryClient: QueryClient;
 
+function createWrapper() {
   return function Wrapper({ children }: { children: React.ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -68,6 +65,13 @@ describe("ValidateGameModal", () => {
   const mockOnClose = vi.fn();
 
   beforeEach(() => {
+    // Create fresh QueryClient for each test
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+      },
+    });
+
     mockOnClose.mockClear();
     vi.mocked(useNominationListModule.useNominationList).mockReturnValue({
       nominationList: null,
@@ -77,6 +81,39 @@ describe("ValidateGameModal", () => {
       error: null,
       refetch: vi.fn(),
     });
+    vi.mocked(useValidationStateModule.useValidationState).mockReturnValue({
+      state: {
+        homeRoster: { reviewed: false, modifications: { added: [], removed: [] } },
+        awayRoster: { reviewed: false, modifications: { added: [], removed: [] } },
+        scorer: { selected: null },
+        scoresheet: { file: null, uploaded: false },
+      },
+      isDirty: false,
+      completionStatus: {
+        homeRoster: false,
+        awayRoster: false,
+        scorer: false,
+        scoresheet: true,
+      },
+      isAllRequiredComplete: false,
+      setHomeRosterModifications: vi.fn(),
+      setAwayRosterModifications: vi.fn(),
+      setScorer: vi.fn(),
+      setScoresheet: vi.fn(),
+      reset: vi.fn(),
+      saveProgress: vi.fn().mockResolvedValue(undefined),
+      finalizeValidation: vi.fn().mockResolvedValue(undefined),
+      isSaving: false,
+      isFinalizing: false,
+      isLoadingGameDetails: false,
+      gameDetailsError: null,
+    });
+  });
+
+  afterEach(() => {
+    // Clean up renders and clear QueryClient cache
+    cleanup();
+    queryClient.clear();
   });
 
   describe("rendering", () => {
