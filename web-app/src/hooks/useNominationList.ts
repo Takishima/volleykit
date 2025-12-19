@@ -5,7 +5,10 @@ import { getApiClient } from "@/api/client";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 
-const NOMINATION_LIST_STALE_TIME_MS = 5 * 60 * 1000;
+const NOMINATION_LIST_STALE_TIME_MINUTES = 5;
+const MS_PER_MINUTE = 60 * 1000;
+const NOMINATION_LIST_STALE_TIME_MS =
+  NOMINATION_LIST_STALE_TIME_MINUTES * MS_PER_MINUTE;
 
 export interface RosterPlayer {
   id: string;
