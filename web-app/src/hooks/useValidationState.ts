@@ -241,7 +241,7 @@ export function useValidationState(): UseValidationStateResult {
     setIsSaving(true);
 
     try {
-      // TODO(#40): Implement actual API call for saving validation progress
+      // TODO(#171): Implement actual API call for saving validation progress
       // For now, simulate a save operation
       logger.debug("[useValidationState] Saving validation progress:", state);
       await new Promise<void>((resolve) =>

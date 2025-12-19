@@ -56,7 +56,7 @@ export function createAssignmentActions(
 }
 
 export function downloadPDF(content: string, filename: string): void {
-  // TODO(#77): Replace with actual PDF generation when API is available
+  // TODO(#170): Replace with actual PDF generation when API is available
   // Currently creates a text file with mock content instead of a real PDF
   const blob = new Blob([content], { type: "text/plain" });
   const url = URL.createObjectURL(blob);
