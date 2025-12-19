@@ -71,6 +71,7 @@ const it: Translations = {
     numberOfSets: "Numero di set",
     gameReportNotAvailable:
       "I rapporti delle partite sono disponibili solo per le partite NLA e NLB.",
+    reportGenerated: "Rapporto generato con successo",
   },
   compensations: {
     title: "Compensi",

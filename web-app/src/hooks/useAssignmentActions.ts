@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import type { Assignment } from "@/api/client";
-import { downloadPDF } from "@/utils/assignment-actions";
+import { downloadPDF, type ReportData } from "@/utils/assignment-actions";
 import { logger } from "@/utils/logger";
 import {
   getTeamNames,
@@ -116,36 +116,29 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
         return;
       }
 
-      if (isDemoMode) {
-        logger.debug("[useAssignmentActions] Demo mode: PDF download disabled");
-        toast.info(t("compensations.pdfNotAvailableDemo"));
-        return;
-      }
-
       const { homeTeam, awayTeam } = getTeamNames(assignment);
       const game = assignment.refereeGame?.game;
       const hallName = game?.hall?.name || "Location TBD";
       const date = game?.startingDateTime || new Date().toISOString();
 
-      const mockPDFContent = `Sports Hall Report
-Game: ${homeTeam} vs ${awayTeam}
-Venue: ${hallName}
-Date: ${new Date(date).toLocaleDateString()}
-Position: ${assignment.refereePosition}
+      const reportData: ReportData = {
+        title: "Sports Hall Report",
+        homeTeam,
+        awayTeam,
+        venue: hallName,
+        date: new Date(date).toLocaleDateString(),
+        position: assignment.refereePosition || "Unknown",
+      };
 
-This is a mock PDF report.`;
-
-      downloadPDF(
-        mockPDFContent,
-        `sports-hall-report-${assignment.__identity}.pdf`,
-      );
+      downloadPDF(reportData, `sports-hall-report-${assignment.__identity}.pdf`);
 
       logger.debug(
-        "[useAssignmentActions] Generated mock PDF report for:",
+        "[useAssignmentActions] Generated PDF report for:",
         assignment.__identity,
       );
+      toast.success(t("assignments.reportGenerated"));
     },
-    [isDemoMode, t],
+    [t],
   );
 
   const handleAddToExchange = useCallback(

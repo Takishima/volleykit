@@ -72,6 +72,7 @@ const de: Translations = {
     numberOfSets: "Anzahl Sätze",
     gameReportNotAvailable:
       "Spielberichte sind nur für NLA- und NLB-Spiele verfügbar.",
+    reportGenerated: "Bericht erfolgreich erstellt",
   },
   compensations: {
     title: "Entschädigungen",
