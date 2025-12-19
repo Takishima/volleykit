@@ -212,6 +212,7 @@ const de: Translations = {
       removePlayer: "Spieler entfernen",
       undoRemoval: "Entfernung rückgängig",
       newlyAdded: "Neu",
+      added: "hinzugefügt",
       captain: "Kapitän",
       libero: "Libero",
       emptyRoster: "Keine Spieler im Kader",

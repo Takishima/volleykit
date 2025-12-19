@@ -208,6 +208,7 @@ const it: Translations = {
       removePlayer: "Rimuovi giocatore",
       undoRemoval: "Annulla rimozione",
       newlyAdded: "Nuovo",
+      added: "aggiunto/i",
       captain: "Capitano",
       libero: "Libero",
       emptyRoster: "Nessun giocatore nella rosa",

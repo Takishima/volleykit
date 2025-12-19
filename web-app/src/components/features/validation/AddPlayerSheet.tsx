@@ -5,6 +5,7 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { usePossiblePlayerNominations } from "@/hooks/usePlayerNominations";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ResponsiveSheet } from "@/components/ui/ResponsiveSheet";
+import { Check } from "@/components/ui/icons";
 
 // Delay before focusing search input to ensure the sheet animation has started
 const FOCUS_DELAY_MS = 100;
@@ -32,6 +33,9 @@ export function AddPlayerSheet({
   const debouncedQuery = useDebouncedValue(searchQuery, SEARCH_DEBOUNCE_MS);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Track players added during this session (allows adding multiple before closing)
+  const [sessionAddedIds, setSessionAddedIds] = useState<Set<string>>(new Set());
+
   const { data: players, isLoading, isError } = usePossiblePlayerNominations({
     nominationListId,
     enabled: isOpen && !!nominationListId,
@@ -43,7 +47,10 @@ export function AddPlayerSheet({
     const query = debouncedQuery.toLowerCase();
     return players.filter((player) => {
       const playerId = player.indoorPlayer?.__identity ?? "";
-      if (excludePlayerIds.includes(playerId)) {
+
+      // Exclude players that were already on the roster before opening the sheet
+      // But keep session-added players visible (they'll show with checkmarks)
+      if (excludePlayerIds.includes(playerId) && !sessionAddedIds.has(playerId)) {
         return false;
       }
 
@@ -55,12 +62,32 @@ export function AddPlayerSheet({
         player.indoorPlayer?.person?.displayName?.toLowerCase() ?? "";
       return name.includes(query);
     });
-  }, [players, debouncedQuery, excludePlayerIds]);
+  }, [players, debouncedQuery, excludePlayerIds, sessionAddedIds]);
 
   const handleClose = useCallback(() => {
     setSearchQuery("");
+    setSessionAddedIds(new Set());
     onClose();
   }, [onClose]);
+
+  const handlePlayerClick = useCallback(
+    (player: PossibleNomination) => {
+      const playerId = player.indoorPlayer?.__identity ?? "";
+
+      // Don't add if already added in this session
+      if (sessionAddedIds.has(playerId)) {
+        return;
+      }
+
+      setSessionAddedIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.add(playerId);
+        return newSet;
+      });
+      onAddPlayer(player);
+    },
+    [sessionAddedIds, onAddPlayer],
+  );
 
   // Focus search input when opened
   useEffect(() => {
@@ -76,12 +103,19 @@ export function AddPlayerSheet({
     <ResponsiveSheet isOpen={isOpen} onClose={handleClose} titleId="add-player-title">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border-default dark:border-border-default-dark">
-          <h2
-            id="add-player-title"
-            className="text-lg font-semibold text-text-primary dark:text-text-primary-dark"
-          >
-            {t("validation.addPlayer")}
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2
+              id="add-player-title"
+              className="text-lg font-semibold text-text-primary dark:text-text-primary-dark"
+            >
+              {t("validation.addPlayer")}
+            </h2>
+            {sessionAddedIds.size > 0 && (
+              <span className="px-2 py-0.5 text-sm font-medium text-success-700 dark:text-success-400 bg-success-100 dark:bg-success-900/30 rounded-full">
+                {sessionAddedIds.size} {t("validation.roster.added")}
+              </span>
+            )}
+          </div>
           <button
             onClick={handleClose}
             aria-label={t("common.close")}
@@ -148,45 +182,68 @@ export function AddPlayerSheet({
             </div>
           ) : (
             <ul className="space-y-1">
-              {filteredPlayers.map((player) => (
-                <li key={player.__identity}>
-                  <button
-                    onClick={() => onAddPlayer(player)}
-                    className="
-                      w-full flex items-center justify-between p-3 rounded-lg
-                      text-left
-                      hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark
-                      transition-colors
-                    "
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-text-primary dark:text-text-primary-dark truncate">
-                        {player.indoorPlayer?.person?.displayName ?? "Unknown"}
-                      </div>
-                      <div className="flex items-center gap-3 text-sm text-text-muted dark:text-text-muted-dark">
-                        {player.licenseCategory && (
-                          <span>
-                            {t("validation.license")}: {player.licenseCategory}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <svg
-                      className="w-5 h-5 text-text-subtle flex-shrink-0 ml-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+              {filteredPlayers.map((player) => {
+                const playerId = player.indoorPlayer?.__identity ?? "";
+                const isAdded = sessionAddedIds.has(playerId);
+
+                return (
+                  <li key={player.__identity}>
+                    <button
+                      onClick={() => handlePlayerClick(player)}
+                      disabled={isAdded}
+                      className={`
+                        w-full flex items-center justify-between p-3 rounded-lg
+                        text-left transition-colors
+                        ${
+                          isAdded
+                            ? "bg-success-50 dark:bg-success-900/20 cursor-default"
+                            : "hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark"
+                        }
+                      `}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4v16m8-8H4"
-                      />
-                    </svg>
-                  </button>
-                </li>
-              ))}
+                      <div className="flex-1 min-w-0">
+                        <div
+                          className={`font-medium truncate ${
+                            isAdded
+                              ? "text-success-700 dark:text-success-400"
+                              : "text-text-primary dark:text-text-primary-dark"
+                          }`}
+                        >
+                          {player.indoorPlayer?.person?.displayName ?? "Unknown"}
+                        </div>
+                        <div className="flex items-center gap-3 text-sm text-text-muted dark:text-text-muted-dark">
+                          {player.licenseCategory && (
+                            <span>
+                              {t("validation.license")}: {player.licenseCategory}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {isAdded ? (
+                        <Check
+                          className="w-5 h-5 text-success-600 dark:text-success-400 flex-shrink-0 ml-2"
+                          aria-label={t("validation.roster.added")}
+                        />
+                      ) : (
+                        <svg
+                          className="w-5 h-5 text-text-subtle flex-shrink-0 ml-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 4v16m8-8H4"
+                          />
+                        </svg>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
