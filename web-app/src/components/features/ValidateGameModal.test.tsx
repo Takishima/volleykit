@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ValidateGameModal } from "./ValidateGameModal";
 import type { Assignment } from "@/api/client";
@@ -50,15 +50,10 @@ function createMockAssignment(overrides: Partial<Assignment> = {}): Assignment {
   } as Assignment;
 }
 
-function createWrapper() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  });
+// Shared QueryClient to avoid memory issues from creating many instances
+let queryClient: QueryClient;
 
+function createWrapper() {
   return function Wrapper({ children }: { children: React.ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -70,6 +65,13 @@ describe("ValidateGameModal", () => {
   const mockOnClose = vi.fn();
 
   beforeEach(() => {
+    // Create fresh QueryClient for each test
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+      },
+    });
+
     mockOnClose.mockClear();
     vi.mocked(useNominationListModule.useNominationList).mockReturnValue({
       nominationList: null,
@@ -106,6 +108,12 @@ describe("ValidateGameModal", () => {
       isLoadingGameDetails: false,
       gameDetailsError: null,
     });
+  });
+
+  afterEach(() => {
+    // Clean up renders and clear QueryClient cache
+    cleanup();
+    queryClient.clear();
   });
 
   describe("rendering", () => {
