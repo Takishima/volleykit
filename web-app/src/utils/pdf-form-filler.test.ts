@@ -1,7 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   extractSportsHallReportData,
   getLeagueCategoryFromAssignment,
+  mapAppLocaleToPdfLanguage,
+  downloadPdf,
+  fillSportsHallReportForm,
+  type SportsHallReportData,
 } from './pdf-form-filler';
 import type { Assignment } from '@/api/client';
 
@@ -242,6 +246,118 @@ describe('pdf-form-filler', () => {
       };
 
       expect(getLeagueCategoryFromAssignment(assignment)).toBeNull();
+    });
+  });
+
+  describe('mapAppLocaleToPdfLanguage', () => {
+    it('returns de for German locale', () => {
+      expect(mapAppLocaleToPdfLanguage('de')).toBe('de');
+    });
+
+    it('returns fr for French locale', () => {
+      expect(mapAppLocaleToPdfLanguage('fr')).toBe('fr');
+    });
+
+    it('returns fr for Italian locale', () => {
+      expect(mapAppLocaleToPdfLanguage('it')).toBe('fr');
+    });
+
+    it('returns de for English locale (fallback)', () => {
+      expect(mapAppLocaleToPdfLanguage('en')).toBe('de');
+    });
+
+    it('returns de for unknown locale (fallback)', () => {
+      expect(mapAppLocaleToPdfLanguage('es')).toBe('de');
+    });
+  });
+
+  describe('downloadPdf', () => {
+    let mockCreateObjectURL: ReturnType<typeof vi.fn>;
+    let mockRevokeObjectURL: ReturnType<typeof vi.fn>;
+    let mockLink: { href: string; download: string; click: ReturnType<typeof vi.fn> };
+
+    beforeEach(() => {
+      mockCreateObjectURL = vi.fn(() => 'blob:test-url');
+      mockRevokeObjectURL = vi.fn();
+      mockLink = { href: '', download: '', click: vi.fn() };
+
+      vi.stubGlobal('URL', {
+        createObjectURL: mockCreateObjectURL,
+        revokeObjectURL: mockRevokeObjectURL,
+      });
+
+      vi.spyOn(document, 'createElement').mockReturnValue(mockLink as unknown as HTMLAnchorElement);
+      vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node);
+      vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node);
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('creates blob with correct type', () => {
+      const pdfBytes = new Uint8Array([1, 2, 3, 4]);
+
+      downloadPdf(pdfBytes, 'test.pdf');
+
+      expect(mockCreateObjectURL).toHaveBeenCalledWith(
+        expect.any(Blob)
+      );
+    });
+
+    it('sets download filename on link', () => {
+      const pdfBytes = new Uint8Array([1, 2, 3]);
+
+      downloadPdf(pdfBytes, 'my-report.pdf');
+
+      expect(mockLink.download).toBe('my-report.pdf');
+    });
+
+    it('triggers click to download', () => {
+      const pdfBytes = new Uint8Array([1, 2, 3]);
+
+      downloadPdf(pdfBytes, 'test.pdf');
+
+      expect(mockLink.click).toHaveBeenCalled();
+    });
+
+    it('cleans up by revoking URL', () => {
+      const pdfBytes = new Uint8Array([1, 2, 3]);
+
+      downloadPdf(pdfBytes, 'test.pdf');
+
+      expect(mockRevokeObjectURL).toHaveBeenCalledWith('blob:test-url');
+    });
+  });
+
+  describe('fillSportsHallReportForm', () => {
+    const mockReportData: SportsHallReportData = {
+      gameNumber: '12345',
+      homeTeam: 'VBC Home',
+      awayTeam: 'VBC Away',
+      gender: 'm',
+      hallName: 'Test Hall',
+      location: 'Test City',
+      date: '15.12.2025',
+      firstRefereeName: 'First Ref',
+      secondRefereeName: 'Second Ref',
+    };
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('throws error when PDF template fetch fails', async () => {
+      vi.stubGlobal('fetch', vi.fn(() =>
+        Promise.resolve({
+          ok: false,
+          statusText: 'Not Found',
+        })
+      ));
+
+      await expect(
+        fillSportsHallReportForm(mockReportData, 'NLA', 'de')
+      ).rejects.toThrow('Failed to fetch PDF template');
     });
   });
 });

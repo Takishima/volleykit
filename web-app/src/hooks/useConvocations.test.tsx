@@ -641,6 +641,57 @@ describe("useConvocations - Unified API Architecture", () => {
   });
 });
 
+describe("useConvocations - Compensation Totals", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
+      selector({ activeAssociationCode: null } as ReturnType<
+        typeof demoStore.useDemoStore.getState
+      >),
+    );
+  });
+
+  it("should fetch compensations successfully", async () => {
+    vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
+      selector({ isDemoMode: false } as ReturnType<
+        typeof authStore.useAuthStore.getState
+      >),
+    );
+
+    mockApi.searchCompensations.mockResolvedValue({
+      items: [
+        {
+          __identity: "comp-1",
+          convocationCompensation: {
+            paymentDone: true,
+            gameCompensation: 100,
+            travelExpenses: 50,
+          },
+        },
+        {
+          __identity: "comp-2",
+          convocationCompensation: {
+            paymentDone: false,
+            gameCompensation: 80,
+            travelExpenses: 20,
+          },
+        },
+      ],
+      totalItemsCount: 2,
+    });
+
+    const { result } = renderHook(() => useCompensations(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    expect(result.current.data).toHaveLength(2);
+  });
+});
+
 describe("useConvocations - Demo Association Switching", () => {
   beforeEach(() => {
     vi.clearAllMocks();
