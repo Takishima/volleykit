@@ -651,10 +651,7 @@ describe("useConvocations - Compensation Totals", () => {
     );
   });
 
-  // Import useCompensationTotals for this test
-  it("should calculate correct totals from compensations", async () => {
-    // This test would require importing useCompensationTotals
-    // The hook calculates paid and unpaid totals from compensation data
+  it("should fetch compensations successfully", async () => {
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
       selector({ isDemoMode: false } as ReturnType<
         typeof authStore.useAuthStore.getState
