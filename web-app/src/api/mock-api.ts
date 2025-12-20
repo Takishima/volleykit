@@ -13,6 +13,7 @@ import type {
   PropertyOrdering,
   Assignment,
   CompensationRecord,
+  ConvocationCompensationDetailed,
   GameExchange,
   AssignmentsResponse,
   CompensationsResponse,
@@ -43,6 +44,18 @@ const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
 /** Allowed MIME types for scoresheet uploads. */
 const ALLOWED_FILE_TYPES = ["application/pdf"];
+
+/**
+ * Extended compensation data type for demo mode.
+ * The demo store adds additional fields like correctionReason that aren't
+ * in the base ConvocationCompensation type (they're in ConvocationCompensationDetailed).
+ */
+interface DemoConvocationCompensation {
+  __identity?: string;
+  distanceInMetres?: number;
+  distanceFormatted?: string;
+  correctionReason?: string | null;
+}
 
 /**
  * Normalize a string for accent-insensitive comparison.
@@ -286,6 +299,35 @@ export const mockApi = {
     return {
       items: items as CompensationRecord[],
       totalItemsCount: total,
+    };
+  },
+
+  async getCompensationDetails(
+    compensationId: string,
+  ): Promise<ConvocationCompensationDetailed> {
+    await delay(MOCK_NETWORK_DELAY_MS);
+
+    const store = useDemoStore.getState();
+    const compensation = store.compensations.find(
+      (c) => c.convocationCompensation?.__identity === compensationId,
+    );
+
+    if (!compensation?.convocationCompensation) {
+      throw new Error(`Compensation not found: ${compensationId}`);
+    }
+
+    // Cast to extended type that includes demo-specific fields
+    const demoCompensation =
+      compensation.convocationCompensation as DemoConvocationCompensation;
+
+    // Return detailed compensation data matching the real API structure
+    return {
+      convocationCompensation: {
+        __identity: demoCompensation.__identity,
+        distanceInMetres: demoCompensation.distanceInMetres,
+        distanceFormatted: demoCompensation.distanceFormatted,
+        correctionReason: demoCompensation.correctionReason ?? null,
+      },
     };
   },
 
