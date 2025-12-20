@@ -62,7 +62,7 @@ export function Tabs({
                 `}
               >
                 {tab.status === "complete" && (
-                  <Check className="w-4 h-4 mr-1.5 text-success-600 dark:text-success-400" aria-hidden="true" />
+                  <Check className="w-4 h-4 mr-1.5 text-success-500 dark:text-success-400" aria-hidden="true" />
                 )}
                 {tab.status === "incomplete" && (
                   <Circle className="w-3 h-3 mr-1.5 text-warning-500 dark:text-warning-400 fill-current" aria-hidden="true" />
