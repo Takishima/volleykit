@@ -105,6 +105,8 @@ export type Schemas = components["schemas"];
 export type Assignment = Schemas["Assignment"];
 export type CompensationRecord = Schemas["CompensationRecord"];
 export type ConvocationCompensation = Schemas["ConvocationCompensation"];
+export type ConvocationCompensationDetailed =
+  Schemas["ConvocationCompensationDetailed"];
 export type GameExchange = Schemas["GameExchange"];
 export type Game = Schemas["Game"];
 export type Team = Schemas["Team"];
@@ -514,6 +516,28 @@ export const api = {
     // Validate response structure, then cast to expected type
     validateResponse(data, compensationsResponseSchema, "searchCompensations");
     return data as CompensationsResponse;
+  },
+
+  /**
+   * Fetches detailed compensation data including correctionReason.
+   * Used by the edit compensation modal to display existing correction reasons.
+   *
+   * @param compensationId - UUID of the convocation compensation record
+   * @returns Detailed compensation data with correction history
+   */
+  async getCompensationDetails(
+    compensationId: string,
+  ): Promise<ConvocationCompensationDetailed> {
+    const query = new URLSearchParams();
+    query.set("convocationCompensation[__identity]", compensationId);
+    // Request properties needed for the edit modal
+    query.append("propertyRenderConfiguration[]", "correctionReason");
+    query.append("propertyRenderConfiguration[]", "distanceInMetres");
+    query.append("propertyRenderConfiguration[]", "distanceFormatted");
+
+    return apiRequest<ConvocationCompensationDetailed>(
+      `/indoorvolleyball.refadmin/api%5cconvocationcompensation/showWithNestedObjects?${query}`,
+    );
   },
 
   // Game Exchanges

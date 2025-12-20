@@ -62,7 +62,7 @@ interface DemoState {
   addAssignmentToExchange: (assignmentId: string) => void;
   updateCompensation: (
     compensationId: string,
-    data: { distanceInMetres?: number },
+    data: { distanceInMetres?: number; correctionReason?: string },
   ) => void;
 }
 
@@ -148,6 +148,7 @@ interface CompensationParams {
   paymentDone: boolean;
   paymentValueDate?: string;
   transportationMode?: "car" | "train";
+  correctionReason?: string | null;
 }
 
 function createCompensationData({
@@ -157,6 +158,7 @@ function createCompensationData({
   paymentDone,
   paymentValueDate,
   transportationMode = "car",
+  correctionReason = null,
 }: CompensationParams) {
   const gameCompensation = getCompensationForPosition(position, isSV);
   const travelExpenses = calculateTravelExpenses(distanceInMetres);
@@ -172,6 +174,7 @@ function createCompensationData({
     costFormatted: calculateTotalCost(gameCompensation, travelExpenses),
     transportationMode,
     paymentDone,
+    correctionReason,
     ...(paymentDone && paymentValueDate && { paymentValueDate }),
     hasFlexibleGameCompensations: false,
     hasFlexibleTravelExpenses: isSV,
@@ -185,7 +188,7 @@ function createCompensationData({
 function updateCompensationRecord(
   comp: CompensationRecord,
   compensationId: string,
-  data: { distanceInMetres?: number },
+  data: { distanceInMetres?: number; correctionReason?: string },
 ): CompensationRecord {
   if (comp.__identity !== compensationId) return comp;
   if (!comp.convocationCompensation) return comp;
@@ -202,6 +205,9 @@ function updateCompensationRecord(
         newDistance !== undefined
           ? calculateTravelExpenses(newDistance)
           : comp.convocationCompensation.travelExpenses,
+      ...(data.correctionReason !== undefined && {
+        correctionReason: data.correctionReason,
+      }),
     },
   };
 }
@@ -609,6 +615,7 @@ interface CompensationConfig {
   paymentDone: boolean;
   paymentDaysAgo?: number;
   transportationMode?: "car" | "train";
+  correctionReason?: string | null;
 }
 
 function createCompensationRecord(
@@ -644,6 +651,7 @@ function createCompensationRecord(
           paymentValueDate: toDateString(subDays(now, config.paymentDaysAgo)),
         }),
         transportationMode: config.transportationMode,
+        correctionReason: config.correctionReason,
       }),
     },
   };
@@ -656,9 +664,9 @@ function generateCompensations(
   const isSV = associationCode === "SV";
 
   const configs: CompensationConfig[] = [
-    { index: 1, position: "head-one", daysAgo: 7, venueIndex: 0, leagueIndex: 0, gender: "m", distance: "MEDIUM_LONG", paymentDone: true, paymentDaysAgo: 2 },
+    { index: 1, position: "head-one", daysAgo: 7, venueIndex: 0, leagueIndex: 0, gender: "m", distance: "MEDIUM_LONG", paymentDone: true, paymentDaysAgo: 2, correctionReason: "Ich wohne in Oberengstringen" },
     { index: 2, position: "linesman-one", daysAgo: 14, venueIndex: 1, leagueIndex: 1, gender: "m", distance: "MEDIUM", paymentDone: false },
-    { index: 3, position: "head-two", daysAgo: 21, venueIndex: 2, leagueIndex: 0, gender: "f", distance: "LONG", paymentDone: true, paymentDaysAgo: 14 },
+    { index: 3, position: "head-two", daysAgo: 21, venueIndex: 2, leagueIndex: 0, gender: "f", distance: "LONG", paymentDone: true, paymentDaysAgo: 14, correctionReason: "Umweg wegen Baustelle" },
     { index: 4, position: "head-one", daysAgo: 5, venueIndex: 3, leagueIndex: 1, gender: "f", distance: "VERY_LONG", paymentDone: false },
     { index: 5, position: "linesman-two", daysAgo: 28, venueIndex: 4, leagueIndex: associationCode === "SV" ? 1 : 2, gender: "m", distance: "SHORT", paymentDone: true, paymentDaysAgo: 21, transportationMode: "train" },
   ];
@@ -1377,7 +1385,7 @@ export const useDemoStore = create<DemoState>()((set, get) => ({
 
   updateCompensation: (
     compensationId: string,
-    data: { distanceInMetres?: number },
+    data: { distanceInMetres?: number; correctionReason?: string },
   ) =>
     set((state) => ({
       compensations: state.compensations.map((comp) =>

@@ -13,6 +13,7 @@ import type {
   PropertyOrdering,
   Assignment,
   CompensationRecord,
+  ConvocationCompensationDetailed,
   GameExchange,
   AssignmentsResponse,
   CompensationsResponse,
@@ -286,6 +287,40 @@ export const mockApi = {
     return {
       items: items as CompensationRecord[],
       totalItemsCount: total,
+    };
+  },
+
+  async getCompensationDetails(
+    compensationId: string,
+  ): Promise<ConvocationCompensationDetailed> {
+    await delay(MOCK_NETWORK_DELAY_MS);
+
+    const store = useDemoStore.getState();
+    const compensation = store.compensations.find(
+      (c) => c.convocationCompensation?.__identity === compensationId,
+    );
+
+    if (!compensation?.convocationCompensation) {
+      throw new Error(`Compensation not found: ${compensationId}`);
+    }
+
+    // Access the extended demo data which includes correctionReason
+    // The demo store adds correctionReason to the compensation data
+    const demoCompensation = compensation.convocationCompensation as {
+      __identity?: string;
+      distanceInMetres?: number;
+      distanceFormatted?: string;
+      correctionReason?: string | null;
+    };
+
+    // Return detailed compensation data matching the real API structure
+    return {
+      convocationCompensation: {
+        __identity: demoCompensation.__identity,
+        distanceInMetres: demoCompensation.distanceInMetres,
+        distanceFormatted: demoCompensation.distanceFormatted,
+        correctionReason: demoCompensation.correctionReason ?? null,
+      },
     };
   },
 
