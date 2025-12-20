@@ -30,7 +30,7 @@ function filterToPaidFilter(filter: FilterType): boolean | undefined {
 }
 
 export function CompensationsPage() {
-  const [filter, setFilter] = useState<FilterType>("all");
+  const [filter, setFilter] = useState<FilterType>("unpaid");
   const { t } = useTranslation();
   const { editCompensationModal, handleGeneratePDF } = useCompensationActions();
 
@@ -41,9 +41,9 @@ export function CompensationsPage() {
   const totals = useCompensationTotals();
 
   const tabs = [
-    { id: "all" as const, label: t("compensations.all") },
     { id: "unpaid" as const, label: t("compensations.pending") },
     { id: "paid" as const, label: t("compensations.paid") },
+    { id: "all" as const, label: t("compensations.all") },
   ];
 
   const handleTabChange = useCallback((tabId: string) => {

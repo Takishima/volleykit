@@ -77,22 +77,22 @@ describe("CompensationsPage", () => {
   });
 
   describe("Tab Navigation", () => {
-    it("should default to All tab", () => {
+    it("should default to Pending tab", () => {
       render(<CompensationsPage />);
-
-      const allTab = screen.getByRole("tab", { name: /^all$/i });
-      expect(allTab).toHaveClass("border-primary-500");
-      expect(allTab).toHaveAttribute("aria-selected", "true");
-    });
-
-    it("should switch to Pending tab when clicked", () => {
-      render(<CompensationsPage />);
-
-      fireEvent.click(screen.getByRole("tab", { name: /pending/i }));
 
       const pendingTab = screen.getByRole("tab", { name: /pending/i });
       expect(pendingTab).toHaveClass("border-primary-500");
       expect(pendingTab).toHaveAttribute("aria-selected", "true");
+    });
+
+    it("should switch to All tab when clicked", () => {
+      render(<CompensationsPage />);
+
+      fireEvent.click(screen.getByRole("tab", { name: /^all$/i }));
+
+      const allTab = screen.getByRole("tab", { name: /^all$/i });
+      expect(allTab).toHaveClass("border-primary-500");
+      expect(allTab).toHaveAttribute("aria-selected", "true");
     });
 
     it("should switch to Paid tab when clicked", () => {
@@ -115,14 +115,8 @@ describe("CompensationsPage", () => {
     it("should support keyboard navigation with arrow keys", () => {
       render(<CompensationsPage />);
 
-      const allTab = screen.getByRole("tab", { name: /^all$/i });
-      allTab.focus();
-
-      // Press right arrow to go to Pending tab
-      fireEvent.keyDown(allTab, { key: "ArrowRight" });
-
       const pendingTab = screen.getByRole("tab", { name: /pending/i });
-      expect(pendingTab).toHaveAttribute("aria-selected", "true");
+      pendingTab.focus();
 
       // Press right arrow to go to Paid tab
       fireEvent.keyDown(pendingTab, { key: "ArrowRight" });
@@ -130,9 +124,15 @@ describe("CompensationsPage", () => {
       const paidTab = screen.getByRole("tab", { name: /^paid$/i });
       expect(paidTab).toHaveAttribute("aria-selected", "true");
 
-      // Press left arrow to go back to Pending tab
-      fireEvent.keyDown(paidTab, { key: "ArrowLeft" });
-      expect(pendingTab).toHaveAttribute("aria-selected", "true");
+      // Press right arrow to go to All tab
+      fireEvent.keyDown(paidTab, { key: "ArrowRight" });
+
+      const allTab = screen.getByRole("tab", { name: /^all$/i });
+      expect(allTab).toHaveAttribute("aria-selected", "true");
+
+      // Press left arrow to go back to Paid tab
+      fireEvent.keyDown(allTab, { key: "ArrowLeft" });
+      expect(paidTab).toHaveAttribute("aria-selected", "true");
     });
   });
 
@@ -167,7 +167,10 @@ describe("CompensationsPage", () => {
 
       render(<CompensationsPage />);
 
-      expect(screen.getByText(/no compensations/i)).toBeInTheDocument();
+      // Default tab is now Pending, so the empty state is for pending compensations
+      expect(
+        screen.getByRole("heading", { name: /no pending compensations/i }),
+      ).toBeInTheDocument();
     });
 
     it("should show compensations when data is available", () => {
@@ -197,18 +200,18 @@ describe("CompensationsPage", () => {
   });
 
   describe("Data Fetching", () => {
+    it("should call useCompensations with false for Pending tab (default)", () => {
+      render(<CompensationsPage />);
+
+      expect(useConvocations.useCompensations).toHaveBeenCalledWith(false);
+    });
+
     it("should call useCompensations with undefined for All tab", () => {
       render(<CompensationsPage />);
 
+      fireEvent.click(screen.getByRole("tab", { name: /^all$/i }));
+
       expect(useConvocations.useCompensations).toHaveBeenCalledWith(undefined);
-    });
-
-    it("should call useCompensations with false for Pending tab", () => {
-      render(<CompensationsPage />);
-
-      fireEvent.click(screen.getByRole("tab", { name: /pending/i }));
-
-      expect(useConvocations.useCompensations).toHaveBeenCalledWith(false);
     });
 
     it("should call useCompensations with true for Paid tab", () => {
