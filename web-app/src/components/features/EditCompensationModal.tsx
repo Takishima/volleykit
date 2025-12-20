@@ -247,9 +247,11 @@ export function EditCompensationModal({
                   id="kilometers"
                   type="text"
                   inputMode="decimal"
-                  pattern="[0-9]*[.,]?[0-9]*"
+                  pattern="[0-9]*\.?[0-9]*"
                   value={kilometers}
-                  onChange={(e) => setKilometers(e.target.value)}
+                  onChange={(e) =>
+                    setKilometers(e.target.value.replace(",", "."))
+                  }
                   className="w-full px-3 py-2 pr-10 border border-border-strong dark:border-border-strong-dark rounded-md bg-surface-card dark:bg-surface-subtle-dark text-text-primary dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary-500"
                   aria-invalid={errors.kilometers ? "true" : "false"}
                   aria-describedby={
