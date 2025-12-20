@@ -9,6 +9,7 @@ import type {
   RefereeGame,
 } from "@/api/client";
 import { addDays, addHours, subDays } from "date-fns";
+import { formatDistanceKm, metresToKilometres } from "@/utils/distance";
 
 // Mock player for roster display
 export interface MockRosterPlayer {
@@ -107,7 +108,7 @@ const DEMO_GAME_NUMBERS = {
 } as const;
 
 function calculateTravelExpenses(distanceInMetres: number): number {
-  const distanceInKm = distanceInMetres / 1000;
+  const distanceInKm = metresToKilometres(distanceInMetres);
   return Math.round(distanceInKm * TRAVEL_EXPENSE_RATE_PER_KM * 100) / 100;
 }
 
@@ -162,7 +163,6 @@ function createCompensationData({
 }: CompensationParams) {
   const gameCompensation = getCompensationForPosition(position, isSV);
   const travelExpenses = calculateTravelExpenses(distanceInMetres);
-  const distanceInKm = distanceInMetres / 1000;
 
   return {
     gameCompensation,
@@ -170,7 +170,7 @@ function createCompensationData({
     travelExpenses,
     travelExpensesFormatted: formatCurrency(travelExpenses),
     distanceInMetres,
-    distanceFormatted: distanceInKm.toFixed(1),
+    distanceFormatted: formatDistanceKm(distanceInMetres),
     costFormatted: calculateTotalCost(gameCompensation, travelExpenses),
     transportationMode,
     paymentDone,

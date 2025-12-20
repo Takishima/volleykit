@@ -6,6 +6,7 @@ import { Check, Circle } from "@/components/ui/icons";
 import type { CompensationRecord } from "@/api/client";
 import { useExpandable } from "@/hooks/useExpandable";
 import { useTranslation } from "@/hooks/useTranslation";
+import { formatDistanceKm } from "@/utils/distance";
 
 interface CompensationCardProps {
   compensation: CompensationRecord;
@@ -130,7 +131,7 @@ export function CompensationCard({
                         Distance:
                       </span>
                       <span className="text-text-secondary dark:text-text-muted-dark">
-                        {(comp.distanceInMetres / 1000).toFixed(1)} km
+                        {formatDistanceKm(comp.distanceInMetres)} km
                       </span>
                     </div>
                   )}

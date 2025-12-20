@@ -261,6 +261,71 @@ describe("API Client", () => {
     });
   });
 
+  describe("getCompensationDetails", () => {
+    it("sends GET request to showWithNestedObjects endpoint", async () => {
+      const mockDetailsResponse = {
+        convocationCompensation: {
+          __identity: "comp-123",
+          distanceInMetres: 48000,
+          correctionReason: "Test reason",
+        },
+      };
+      mockFetch.mockResolvedValueOnce(createMockResponse(mockDetailsResponse));
+
+      await api.getCompensationDetails("comp-123");
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "/indoorvolleyball.refadmin/api%5cconvocationcompensation/showWithNestedObjects",
+        ),
+        expect.objectContaining({ method: "GET" }),
+      );
+    });
+
+    it("includes compensation ID in query parameters", async () => {
+      const mockDetailsResponse = { convocationCompensation: {} };
+      mockFetch.mockResolvedValueOnce(createMockResponse(mockDetailsResponse));
+
+      await api.getCompensationDetails("test-comp-id");
+
+      const [url] = mockFetch.mock.calls[0]!;
+      expect(url).toContain(
+        "convocationCompensation%5B__identity%5D=test-comp-id",
+      );
+    });
+
+    it("requests correctionReason and distance properties", async () => {
+      const mockDetailsResponse = { convocationCompensation: {} };
+      mockFetch.mockResolvedValueOnce(createMockResponse(mockDetailsResponse));
+
+      await api.getCompensationDetails("comp-123");
+
+      const [url] = mockFetch.mock.calls[0]!;
+      expect(url).toContain("propertyRenderConfiguration");
+      expect(url).toContain("correctionReason");
+      expect(url).toContain("distanceInMetres");
+    });
+
+    it("returns detailed compensation data", async () => {
+      const mockDetailsResponse = {
+        convocationCompensation: {
+          __identity: "comp-123",
+          distanceInMetres: 48000,
+          distanceFormatted: "48.0",
+          correctionReason: "Ich wohne in Oberengstringen",
+        },
+      };
+      mockFetch.mockResolvedValueOnce(createMockResponse(mockDetailsResponse));
+
+      const result = await api.getCompensationDetails("comp-123");
+
+      expect(result.convocationCompensation?.distanceInMetres).toBe(48000);
+      expect(result.convocationCompensation?.correctionReason).toBe(
+        "Ich wohne in Oberengstringen",
+      );
+    });
+  });
+
   describe("searchExchanges", () => {
     it("sends POST request to correct endpoint", async () => {
       mockFetch.mockResolvedValueOnce(

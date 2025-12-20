@@ -7,6 +7,7 @@ import {
   getTeamNames,
   getTeamNamesFromCompensation,
 } from "@/utils/assignment-helpers";
+import { formatDistanceKm, kilometresToMetres } from "@/utils/distance";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 
@@ -31,6 +32,7 @@ export function EditCompensationModal({
   const [reason, setReason] = useState("");
   const [errors, setErrors] = useState<{ kilometers?: string }>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   // Get the compensation ID from the compensation record
   // Assignments don't have convocationCompensation, only CompensationRecord does
@@ -42,6 +44,7 @@ export function EditCompensationModal({
 
     const fetchDetails = async () => {
       setIsLoading(true);
+      setFetchError(null);
       try {
         const apiClient = getApiClient(isDemoMode);
         const details = await apiClient.getCompensationDetails(compensationId);
@@ -50,7 +53,7 @@ export function EditCompensationModal({
         const distanceInMetres =
           details.convocationCompensation?.distanceInMetres;
         if (distanceInMetres !== undefined && distanceInMetres > 0) {
-          setKilometers((distanceInMetres / 1000).toFixed(1));
+          setKilometers(formatDistanceKm(distanceInMetres));
         }
 
         const existingReason =
@@ -68,6 +71,9 @@ export function EditCompensationModal({
           "[EditCompensationModal] Failed to fetch compensation details:",
           error,
         );
+        setFetchError(
+          error instanceof Error ? error.message : "Failed to load data",
+        );
       } finally {
         setIsLoading(false);
       }
@@ -82,6 +88,7 @@ export function EditCompensationModal({
       setKilometers("");
       setReason("");
       setErrors({});
+      setFetchError(null);
     }
   }, [isOpen]);
 
@@ -116,7 +123,7 @@ export function EditCompensationModal({
           const updateData: { distanceInMetres?: number; correctionReason?: string } = {};
 
           if (kilometers) {
-            updateData.distanceInMetres = km * 1000;
+            updateData.distanceInMetres = kilometresToMetres(km);
           }
           if (reason) {
             updateData.correctionReason = reason;
@@ -208,6 +215,19 @@ export function EditCompensationModal({
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500" />
+          </div>
+        ) : fetchError ? (
+          <div className="py-6 text-center">
+            <p className="text-danger-600 dark:text-danger-400 mb-4">
+              {fetchError}
+            </p>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong"
+            >
+              {t("common.close")}
+            </button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">

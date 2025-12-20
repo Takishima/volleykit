@@ -46,6 +46,18 @@ const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_FILE_TYPES = ["application/pdf"];
 
 /**
+ * Extended compensation data type for demo mode.
+ * The demo store adds additional fields like correctionReason that aren't
+ * in the base ConvocationCompensation type (they're in ConvocationCompensationDetailed).
+ */
+interface DemoConvocationCompensation {
+  __identity?: string;
+  distanceInMetres?: number;
+  distanceFormatted?: string;
+  correctionReason?: string | null;
+}
+
+/**
  * Normalize a string for accent-insensitive comparison.
  * Converts to lowercase, decomposes accented characters (NFD normalization),
  * then removes diacritical marks.
@@ -304,14 +316,9 @@ export const mockApi = {
       throw new Error(`Compensation not found: ${compensationId}`);
     }
 
-    // Access the extended demo data which includes correctionReason
-    // The demo store adds correctionReason to the compensation data
-    const demoCompensation = compensation.convocationCompensation as {
-      __identity?: string;
-      distanceInMetres?: number;
-      distanceFormatted?: string;
-      correctionReason?: string | null;
-    };
+    // Cast to extended type that includes demo-specific fields
+    const demoCompensation =
+      compensation.convocationCompensation as DemoConvocationCompensation;
 
     // Return detailed compensation data matching the real API structure
     return {
