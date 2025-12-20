@@ -444,6 +444,7 @@ const COMPENSATION_PROPERTIES = [
   "convocationCompensation.hasFlexibleCateringExpenses",
   "convocationCompensation.cateringExpensesFormatted",
   "convocationCompensation.costFormatted",
+  "convocationCompensation.distanceInMetres",
   "convocationCompensation.distanceFormatted",
   "convocationCompensation.transportationMode",
   "convocationCompensation.paymentDone",
