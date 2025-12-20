@@ -6,11 +6,13 @@ import type { RosterModifications } from "@/hooks/useNominationList";
 interface HomeRosterPanelProps {
   assignment: Assignment;
   onModificationsChange?: (modifications: RosterModifications) => void;
+  onAddPlayerSheetOpenChange?: (isOpen: boolean) => void;
 }
 
 export function HomeRosterPanel({
   assignment,
   onModificationsChange,
+  onAddPlayerSheetOpenChange,
 }: HomeRosterPanelProps) {
   const { homeTeam } = getTeamNames(assignment);
   const gameId = assignment.refereeGame?.game?.__identity ?? "";
@@ -21,6 +23,7 @@ export function HomeRosterPanel({
       teamName={homeTeam}
       gameId={gameId}
       onModificationsChange={onModificationsChange}
+      onAddPlayerSheetOpenChange={onAddPlayerSheetOpenChange}
     />
   );
 }

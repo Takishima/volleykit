@@ -15,6 +15,7 @@ interface RosterVerificationPanelProps {
   teamName: string;
   gameId: string;
   onModificationsChange?: (modifications: RosterModifications) => void;
+  onAddPlayerSheetOpenChange?: (isOpen: boolean) => void;
 }
 
 export function RosterVerificationPanel({
@@ -22,6 +23,7 @@ export function RosterVerificationPanel({
   teamName,
   gameId,
   onModificationsChange,
+  onAddPlayerSheetOpenChange,
 }: RosterVerificationPanelProps) {
   const { t } = useTranslation();
   const { nominationList, players, isLoading, isError, refetch } =
@@ -54,6 +56,11 @@ export function RosterVerificationPanel({
       removed: [...removedPlayerIds],
     });
   }, [addedPlayers, removedPlayerIds]);
+
+  // Notify parent when AddPlayerSheet open state changes
+  useEffect(() => {
+    onAddPlayerSheetOpenChange?.(isAddPlayerSheetOpen);
+  }, [isAddPlayerSheetOpen, onAddPlayerSheetOpenChange]);
 
   const handleRemovePlayer = useCallback((playerId: string) => {
     setRemovedPlayerIds((prev) => {
