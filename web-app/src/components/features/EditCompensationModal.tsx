@@ -7,7 +7,12 @@ import {
   getTeamNames,
   getTeamNamesFromCompensation,
 } from "@/utils/assignment-helpers";
-import { formatDistanceKm, kilometresToMetres } from "@/utils/distance";
+import {
+  DECIMAL_INPUT_PATTERN,
+  formatDistanceKm,
+  kilometresToMetres,
+  parseLocalizedNumber,
+} from "@/utils/distance";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 
@@ -110,7 +115,7 @@ export function EditCompensationModal({
       e.preventDefault();
       setErrors({});
 
-      const km = parseFloat(kilometers);
+      const km = parseLocalizedNumber(kilometers);
       if (kilometers && (isNaN(km) || km < 0)) {
         setErrors({ kilometers: "Please enter a valid positive number" });
         return;
@@ -241,9 +246,9 @@ export function EditCompensationModal({
               <div className="relative">
                 <input
                   id="kilometers"
-                  type="number"
-                  min="0"
-                  step="0.1"
+                  type="text"
+                  inputMode="decimal"
+                  pattern={DECIMAL_INPUT_PATTERN}
                   value={kilometers}
                   onChange={(e) => setKilometers(e.target.value)}
                   className="w-full px-3 py-2 pr-10 border border-border-strong dark:border-border-strong-dark rounded-md bg-surface-card dark:bg-surface-subtle-dark text-text-primary dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary-500"
