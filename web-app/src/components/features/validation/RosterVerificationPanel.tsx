@@ -15,6 +15,7 @@ interface RosterVerificationPanelProps {
   teamName: string;
   gameId: string;
   onModificationsChange?: (modifications: RosterModifications) => void;
+  onAddPlayerSheetOpenChange?: (isOpen: boolean) => void;
 }
 
 export function RosterVerificationPanel({
@@ -22,6 +23,7 @@ export function RosterVerificationPanel({
   teamName,
   gameId,
   onModificationsChange,
+  onAddPlayerSheetOpenChange,
 }: RosterVerificationPanelProps) {
   const { t } = useTranslation();
   const { nominationList, players, isLoading, isError, refetch } =
@@ -55,6 +57,11 @@ export function RosterVerificationPanel({
     });
   }, [addedPlayers, removedPlayerIds]);
 
+  // Notify parent when AddPlayerSheet open state changes
+  useEffect(() => {
+    onAddPlayerSheetOpenChange?.(isAddPlayerSheetOpen);
+  }, [isAddPlayerSheetOpen, onAddPlayerSheetOpenChange]);
+
   const handleRemovePlayer = useCallback((playerId: string) => {
     setRemovedPlayerIds((prev) => {
       const newSet = new Set(prev);
@@ -75,18 +82,26 @@ export function RosterVerificationPanel({
     const playerId = nomination.indoorPlayer?.__identity;
     if (!playerId) return;
 
+    const person = nomination.indoorPlayer?.person;
     const newPlayer: RosterPlayer = {
       id: playerId,
       shirtNumber: 0, // New players don't have a shirt number yet
       displayName:
-        nomination.indoorPlayer?.person?.displayName ??
-        `${nomination.indoorPlayer?.person?.firstName ?? ""} ${nomination.indoorPlayer?.person?.lastName ?? ""}`.trim(),
+        person?.displayName ??
+        `${person?.firstName ?? ""} ${person?.lastName ?? ""}`.trim(),
+      firstName: person?.firstName,
+      lastName: person?.lastName,
+      birthday: person?.birthday,
       licenseCategory: nomination.licenseCategory,
       isNewlyAdded: true,
     };
 
     setAddedPlayers((prev) => [...prev, newPlayer]);
     // Sheet stays open to allow adding multiple players
+  }, []);
+
+  const handleRemoveAddedPlayer = useCallback((playerId: string) => {
+    setAddedPlayers((prev) => prev.filter((p) => p.id !== playerId));
   }, []);
 
   const allPlayers = [...players, ...addedPlayers].sort((a, b) => {
@@ -185,11 +200,9 @@ export function RosterVerificationPanel({
         isOpen={isAddPlayerSheetOpen}
         onClose={() => setIsAddPlayerSheetOpen(false)}
         nominationListId={nominationList?.__identity ?? ""}
-        excludePlayerIds={[
-          ...players.map((p) => p.id),
-          ...addedPlayers.map((p) => p.id),
-        ]}
+        excludePlayerIds={players.map((p) => p.id)}
         onAddPlayer={handleAddPlayer}
+        onRemovePlayer={handleRemoveAddedPlayer}
       />
     </div>
   );

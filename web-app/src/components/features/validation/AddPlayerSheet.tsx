@@ -6,6 +6,7 @@ import { usePossiblePlayerNominations } from "@/hooks/usePlayerNominations";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ResponsiveSheet } from "@/components/ui/ResponsiveSheet";
 import { Check } from "@/components/ui/icons";
+import { formatDOB } from "@/utils/date-helpers";
 
 // Delay before focusing search input to ensure the sheet animation has started
 const FOCUS_DELAY_MS = 100;
@@ -19,6 +20,7 @@ interface AddPlayerSheetProps {
   nominationListId: string;
   excludePlayerIds: string[];
   onAddPlayer: (player: PossibleNomination) => void;
+  onRemovePlayer: (playerId: string) => void;
 }
 
 export function AddPlayerSheet({
@@ -27,6 +29,7 @@ export function AddPlayerSheet({
   nominationListId,
   excludePlayerIds,
   onAddPlayer,
+  onRemovePlayer,
 }: AddPlayerSheetProps) {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
@@ -58,9 +61,10 @@ export function AddPlayerSheet({
         return false;
       }
 
-      const name =
-        player.indoorPlayer?.person?.displayName?.toLowerCase() ?? "";
-      return name.includes(query);
+      const lastName = player.indoorPlayer?.person?.lastName?.toLowerCase() ?? "";
+      const firstName = player.indoorPlayer?.person?.firstName?.toLowerCase() ?? "";
+      const fullName = `${lastName} ${firstName}`;
+      return fullName.includes(query) || firstName.includes(query) || lastName.includes(query);
     });
   }, [players, debouncedQuery, excludePlayerIds, sessionAddedIds]);
 
@@ -74,19 +78,24 @@ export function AddPlayerSheet({
     (player: PossibleNomination) => {
       const playerId = player.indoorPlayer?.__identity ?? "";
 
-      // Don't add if already added in this session
+      // Toggle: if already added, remove; otherwise add
       if (sessionAddedIds.has(playerId)) {
-        return;
+        setSessionAddedIds((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(playerId);
+          return newSet;
+        });
+        onRemovePlayer(playerId);
+      } else {
+        setSessionAddedIds((prev) => {
+          const newSet = new Set(prev);
+          newSet.add(playerId);
+          return newSet;
+        });
+        onAddPlayer(player);
       }
-
-      setSessionAddedIds((prev) => {
-        const newSet = new Set(prev);
-        newSet.add(playerId);
-        return newSet;
-      });
-      onAddPlayer(player);
     },
-    [sessionAddedIds, onAddPlayer],
+    [sessionAddedIds, onAddPlayer, onRemovePlayer],
   );
 
   // Focus search input when opened
@@ -102,7 +111,7 @@ export function AddPlayerSheet({
   return (
     <ResponsiveSheet isOpen={isOpen} onClose={handleClose} titleId="add-player-title">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border-default dark:border-border-default-dark">
+        <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-border-default dark:border-border-default-dark">
           <div className="flex items-center gap-2">
             <h2
               id="add-player-title"
@@ -143,7 +152,7 @@ export function AddPlayerSheet({
         </div>
 
         {/* Search Input */}
-        <div className="p-4 border-b border-border-default dark:border-border-default-dark">
+        <div className="flex-shrink-0 p-4 border-b border-border-default dark:border-border-default-dark">
           <input
             ref={searchInputRef}
             type="text"
@@ -164,7 +173,7 @@ export function AddPlayerSheet({
         </div>
 
         {/* Player List */}
-        <div className="flex-1 overflow-y-auto p-2">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-2 py-2">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <LoadingSpinner size="md" />
@@ -181,7 +190,7 @@ export function AddPlayerSheet({
               {t("validation.noPlayersFound")}
             </div>
           ) : (
-            <ul className="space-y-1">
+            <ul>
               {filteredPlayers.map((player) => {
                 const playerId = player.indoorPlayer?.__identity ?? "";
                 const isAdded = sessionAddedIds.has(playerId);
@@ -190,41 +199,56 @@ export function AddPlayerSheet({
                   <li key={player.__identity}>
                     <button
                       onClick={() => handlePlayerClick(player)}
-                      disabled={isAdded}
                       aria-pressed={isAdded}
                       className={`
-                        w-full flex items-center justify-between p-3 rounded-lg
+                        group w-full flex items-center justify-between py-2 px-3 rounded-lg
                         text-left transition-colors
                         ${
                           isAdded
-                            ? "bg-success-50 dark:bg-success-900/20 cursor-default"
+                            ? "bg-success-50 dark:bg-success-900/20 hover:bg-danger-50 dark:hover:bg-danger-900/20"
                             : "hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark"
                         }
                       `}
                     >
-                      <div className="flex-1 min-w-0">
-                        <div
+                      <div className="flex-1 min-w-0 flex items-center gap-2">
+                        <span
                           className={`font-medium truncate ${
                             isAdded
                               ? "text-success-700 dark:text-success-400"
                               : "text-text-primary dark:text-text-primary-dark"
                           }`}
                         >
-                          {player.indoorPlayer?.person?.displayName ?? "Unknown"}
-                        </div>
-                        <div className="flex items-center gap-3 text-sm text-text-muted dark:text-text-muted-dark">
-                          {player.licenseCategory && (
-                            <span>
-                              {t("validation.license")}: {player.licenseCategory}
-                            </span>
-                          )}
-                        </div>
+                          {player.indoorPlayer?.person?.lastName ?? ""}{" "}
+                          {player.indoorPlayer?.person?.firstName ?? ""}
+                        </span>
+                        <span className="text-xs text-text-muted dark:text-text-muted-dark flex-shrink-0">
+                          {formatDOB(player.indoorPlayer?.person?.birthday)}
+                        </span>
                       </div>
                       {isAdded ? (
-                        <Check
-                          className="w-5 h-5 text-success-600 dark:text-success-400 flex-shrink-0 ml-2"
-                          aria-label={t("validation.roster.added")}
-                        />
+                        <span className="relative flex-shrink-0 ml-2 w-5 h-5">
+                          {/* Checkmark shown by default, hidden on hover */}
+                          <Check
+                            className="w-5 h-5 text-success-600 dark:text-success-400 absolute inset-0 group-hover:opacity-0 transition-opacity"
+                            aria-hidden="true"
+                          />
+                          {/* X icon shown on hover */}
+                          <svg
+                            className="w-5 h-5 text-danger-500 dark:text-danger-400 absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                          <span className="sr-only">{t("validation.roster.added")}</span>
+                        </span>
                       ) : (
                         <svg
                           className="w-5 h-5 text-text-subtle flex-shrink-0 ml-2"
@@ -247,6 +271,24 @@ export function AddPlayerSheet({
               })}
             </ul>
           )}
+        </div>
+
+        {/* Footer with Done button */}
+        <div className="flex-shrink-0 p-4 border-t border-border-default dark:border-border-default-dark">
+          <button
+            type="button"
+            onClick={handleClose}
+            className="
+              w-full py-3 px-4 rounded-lg
+              text-sm font-medium
+              text-white bg-primary-500 hover:bg-primary-600
+              dark:bg-primary-600 dark:hover:bg-primary-700
+              transition-colors
+              focus:outline-none focus:ring-2 focus:ring-primary-500/50
+            "
+          >
+            {t("common.done")}
+          </button>
         </div>
     </ResponsiveSheet>
   );

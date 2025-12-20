@@ -8,6 +8,7 @@ const de: Translations = {
     cancel: "Abbrechen",
     save: "Speichern",
     close: "Schliessen",
+    done: "Fertig",
     confirm: "Bestätigen",
     noResults: "Keine Ergebnisse gefunden",
     today: "Heute",

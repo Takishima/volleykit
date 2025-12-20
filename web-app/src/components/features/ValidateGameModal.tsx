@@ -131,6 +131,7 @@ export function ValidateGameModal({
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [successToast, setSuccessToast] = useState<string | null>(null);
+  const [isAddPlayerSheetOpen, setIsAddPlayerSheetOpen] = useState(false);
 
   // Get game ID from assignment for API calls
   const gameId = assignment.refereeGame?.game?.__identity;
@@ -353,6 +354,11 @@ export function ValidateGameModal({
     goBack();
   }, [goBack]);
 
+  // Handler for AddPlayerSheet open state changes
+  const handleAddPlayerSheetOpenChange = useCallback((open: boolean) => {
+    setIsAddPlayerSheetOpen(open);
+  }, []);
+
   if (!isOpen) return null;
 
   const { homeTeam, awayTeam } = getTeamNames(assignment);
@@ -434,7 +440,7 @@ export function ValidateGameModal({
             totalSteps={totalSteps}
             onSwipeNext={handleNext}
             onSwipePrevious={handleBack}
-            swipeEnabled={!isFinalizing && !isLoadingGameDetails}
+            swipeEnabled={!isFinalizing && !isLoadingGameDetails && !isAddPlayerSheetOpen}
           >
             <div className="max-h-80 overflow-y-auto">
               {/* Show loading state while fetching game details */}
@@ -465,6 +471,7 @@ export function ValidateGameModal({
                     <HomeRosterPanel
                       assignment={assignment}
                       onModificationsChange={setHomeRosterModifications}
+                      onAddPlayerSheetOpenChange={handleAddPlayerSheetOpenChange}
                     />
                   )}
 
@@ -472,6 +479,7 @@ export function ValidateGameModal({
                     <AwayRosterPanel
                       assignment={assignment}
                       onModificationsChange={setAwayRosterModifications}
+                      onAddPlayerSheetOpenChange={handleAddPlayerSheetOpenChange}
                     />
                   )}
 

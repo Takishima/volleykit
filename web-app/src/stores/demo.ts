@@ -848,120 +848,50 @@ function generateExchanges(
 }
 
 function generatePossiblePlayers(): PossibleNomination[] {
-  return [
-    {
-      __identity: "demo-possible-1",
-      indoorPlayer: {
-        __identity: "demo-player-1",
-        person: {
-          __identity: "demo-person-p1",
-          displayName: "Max Müller",
-          firstName: "Max",
-          lastName: "Müller",
-        },
-      },
-      licenseCategory: "SEN",
-      isAlreadyNominated: false,
-    },
-    {
-      __identity: "demo-possible-2",
-      indoorPlayer: {
-        __identity: "demo-player-2",
-        person: {
-          __identity: "demo-person-p2",
-          displayName: "Anna Schmidt",
-          firstName: "Anna",
-          lastName: "Schmidt",
-        },
-      },
-      licenseCategory: "SEN",
-      isAlreadyNominated: false,
-    },
-    {
-      __identity: "demo-possible-3",
-      indoorPlayer: {
-        __identity: "demo-player-3",
-        person: {
-          __identity: "demo-person-p3",
-          displayName: "Thomas Weber",
-          firstName: "Thomas",
-          lastName: "Weber",
-        },
-      },
-      licenseCategory: "JUN",
-      isAlreadyNominated: false,
-    },
-    {
-      __identity: "demo-possible-4",
-      indoorPlayer: {
-        __identity: "demo-player-4",
-        person: {
-          __identity: "demo-person-p4",
-          displayName: "Laura Keller",
-          firstName: "Laura",
-          lastName: "Keller",
-        },
-      },
-      licenseCategory: "SEN",
-      isAlreadyNominated: true,
-    },
-    {
-      __identity: "demo-possible-5",
-      indoorPlayer: {
-        __identity: "demo-player-5",
-        person: {
-          __identity: "demo-person-p5",
-          displayName: "Marco Rossi",
-          firstName: "Marco",
-          lastName: "Rossi",
-        },
-      },
-      licenseCategory: "JUN",
-      isAlreadyNominated: false,
-    },
-    {
-      __identity: "demo-possible-6",
-      indoorPlayer: {
-        __identity: "demo-player-6",
-        person: {
-          __identity: "demo-person-p6",
-          displayName: "Sophie Dubois",
-          firstName: "Sophie",
-          lastName: "Dubois",
-        },
-      },
-      licenseCategory: "SEN",
-      isAlreadyNominated: false,
-    },
-    {
-      __identity: "demo-possible-7",
-      indoorPlayer: {
-        __identity: "demo-player-7",
-        person: {
-          __identity: "demo-person-p7",
-          displayName: "Luca Bernasconi",
-          firstName: "Luca",
-          lastName: "Bernasconi",
-        },
-      },
-      licenseCategory: "JUN",
-      isAlreadyNominated: false,
-    },
-    {
-      __identity: "demo-possible-8",
-      indoorPlayer: {
-        __identity: "demo-player-8",
-        person: {
-          __identity: "demo-person-p8",
-          displayName: "Nina Hofmann",
-          firstName: "Nina",
-          lastName: "Hofmann",
-        },
-      },
-      licenseCategory: "SEN",
-      isAlreadyNominated: false,
-    },
+  // Extended list of Swiss names for demo purposes
+  const players = [
+    { firstName: "Max", lastName: "Müller", birthday: "1995-03-15", category: "SEN" },
+    { firstName: "Anna", lastName: "Schmidt", birthday: "1998-07-22", category: "SEN" },
+    { firstName: "Thomas", lastName: "Weber", birthday: "2002-11-08", category: "JUN" },
+    { firstName: "Laura", lastName: "Keller", birthday: "1996-05-30", category: "SEN", nominated: true },
+    { firstName: "Marco", lastName: "Rossi", birthday: "2003-09-12", category: "JUN" },
+    { firstName: "Sophie", lastName: "Dubois", birthday: "1994-02-18", category: "SEN" },
+    { firstName: "Luca", lastName: "Bernasconi", birthday: "2001-06-25", category: "JUN" },
+    { firstName: "Nina", lastName: "Hofmann", birthday: "1997-12-03", category: "SEN" },
+    { firstName: "David", lastName: "Frei", birthday: "1999-04-17", category: "SEN" },
+    { firstName: "Sarah", lastName: "Brunner", birthday: "2000-08-29", category: "SEN" },
+    { firstName: "Fabian", lastName: "Gerber", birthday: "1993-01-11", category: "SEN" },
+    { firstName: "Julia", lastName: "Baumann", birthday: "2004-03-05", category: "JUN" },
+    { firstName: "Patrick", lastName: "Steiner", birthday: "1992-06-20", category: "SEN" },
+    { firstName: "Céline", lastName: "Moser", birthday: "1998-10-14", category: "SEN" },
+    { firstName: "Yannick", lastName: "Hofer", birthday: "2001-12-31", category: "JUN" },
+    { firstName: "Lea", lastName: "Zimmermann", birthday: "1997-02-08", category: "SEN" },
+    { firstName: "Nicolas", lastName: "Lehmann", birthday: "1995-09-23", category: "SEN" },
+    { firstName: "Vanessa", lastName: "Bieri", birthday: "2003-07-16", category: "JUN" },
+    { firstName: "Kevin", lastName: "Lang", birthday: "1994-11-02", category: "SEN" },
+    { firstName: "Melanie", lastName: "Roth", birthday: "1999-05-27", category: "SEN" },
+    { firstName: "Simon", lastName: "Koch", birthday: "2002-01-19", category: "JUN" },
+    { firstName: "Jasmin", lastName: "Widmer", birthday: "1996-08-12", category: "SEN" },
+    { firstName: "Florian", lastName: "Schmid", birthday: "1993-04-06", category: "SEN" },
+    { firstName: "Noemi", lastName: "Huber", birthday: "2000-10-25", category: "SEN" },
+    { firstName: "Sandro", lastName: "Meyer", birthday: "1998-03-09", category: "SEN" },
   ];
+
+  return players.map((player, index) => ({
+    __identity: `demo-possible-${index + 1}`,
+    indoorPlayer: {
+      __identity: `demo-player-${index + 1}`,
+      person: {
+        __identity: `demo-person-p${index + 1}`,
+        displayName: `${player.firstName} ${player.lastName}`,
+        firstName: player.firstName,
+        lastName: player.lastName,
+        birthday: player.birthday,
+      },
+    },
+    licenseCategory: player.category,
+    isAlreadyNominated: player.nominated ?? false,
+  }));
 }
 
 function generateScorers(): PersonSearchResult[] {
@@ -1089,6 +1019,11 @@ function createPlayerNomination(
 ) {
   const identity = `demo-nom-${gameIndex}-${teamIndex}-${config.index}`;
   const displayName = `${config.firstName} ${config.lastName}`;
+  // Generate a deterministic birthday based on indices
+  const birthYear = config.licenseCategory === "JUN" ? 2003 + (config.index % 3) : 1990 + (config.index % 8);
+  const birthMonth = ((config.index + teamIndex) % 12) + 1;
+  const birthDay = ((config.index + gameIndex) % 28) + 1;
+  const birthday = `${birthYear}-${String(birthMonth).padStart(2, "0")}-${String(birthDay).padStart(2, "0")}`;
   return {
     __identity: identity,
     shirtNumber: config.shirtNumber,
@@ -1101,6 +1036,7 @@ function createPlayerNomination(
         firstName: config.firstName,
         lastName: config.lastName,
         displayName,
+        birthday,
       },
     },
     indoorPlayerLicenseCategory: {

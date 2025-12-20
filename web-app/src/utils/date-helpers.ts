@@ -28,3 +28,20 @@ export function formatDateTime(isoString?: string): string {
     return "TBD";
   }
 }
+
+/**
+ * Formats a birthday string as DD.MM.YY (Swiss format).
+ * Returns empty string if the input is undefined, null, or invalid.
+ *
+ * @param birthday - ISO date string or date-like string
+ * @returns Formatted date as DD.MM.YY or empty string
+ */
+export function formatDOB(birthday: string | null | undefined): string {
+  if (!birthday) return "";
+  const date = new Date(birthday);
+  if (isNaN(date.getTime())) return "";
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = String(date.getFullYear()).slice(-2);
+  return `${day}.${month}.${year}`;
+}

@@ -2,6 +2,15 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Badge } from "@/components/ui/Badge";
 import type { RosterPlayer } from "@/hooks/useNominationList";
 import { Trash2, Undo2 } from "@/components/ui/icons";
+import { formatDOB } from "@/utils/date-helpers";
+
+/** Format player name as "LastName FirstName" */
+function formatPlayerName(player: RosterPlayer): string {
+  if (player.lastName && player.firstName) {
+    return `${player.lastName} ${player.firstName}`;
+  }
+  return player.displayName;
+}
 
 interface PlayerListItemProps {
   player: RosterPlayer;
@@ -36,7 +45,7 @@ export function PlayerListItem({
           #{player.shirtNumber}
         </span>
 
-        {/* Player name */}
+        {/* Player name and DOB */}
         <span
           className={`text-sm truncate ${
             isMarkedForRemoval
@@ -44,8 +53,13 @@ export function PlayerListItem({
               : "text-text-primary dark:text-text-primary-dark"
           }`}
         >
-          {player.displayName}
+          {formatPlayerName(player)}
         </span>
+        {player.birthday && !isMarkedForRemoval && (
+          <span className="text-xs text-text-muted dark:text-text-muted-dark flex-shrink-0">
+            {formatDOB(player.birthday)}
+          </span>
+        )}
 
         {/* Badges */}
         <div className="flex items-center gap-1.5 flex-shrink-0">

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatDateTime } from "./date-helpers";
+import { formatDateTime, formatDOB } from "./date-helpers";
 
 describe("formatDateTime", () => {
   it("returns TBD for undefined", () => {
@@ -37,5 +37,39 @@ describe("formatDateTime", () => {
 
   it("returns TBD for malformed dates that create Invalid Date", () => {
     expect(formatDateTime("2024-13-45T99:99:99Z")).toBe("TBD");
+  });
+});
+
+describe("formatDOB", () => {
+  it("returns empty string for undefined", () => {
+    expect(formatDOB(undefined)).toBe("");
+  });
+
+  it("returns empty string for null", () => {
+    expect(formatDOB(null)).toBe("");
+  });
+
+  it("returns empty string for empty string", () => {
+    expect(formatDOB("")).toBe("");
+  });
+
+  it("returns empty string for invalid date", () => {
+    expect(formatDOB("not-a-date")).toBe("");
+  });
+
+  it("formats valid ISO date as DD.MM.YY", () => {
+    expect(formatDOB("1990-05-15")).toBe("15.05.90");
+  });
+
+  it("formats ISO datetime as DD.MM.YY", () => {
+    expect(formatDOB("1985-12-03T10:30:00Z")).toBe("03.12.85");
+  });
+
+  it("pads single-digit day and month with zeros", () => {
+    expect(formatDOB("2000-01-05")).toBe("05.01.00");
+  });
+
+  it("handles dates from 2000s correctly", () => {
+    expect(formatDOB("2005-07-20")).toBe("20.07.05");
   });
 });
