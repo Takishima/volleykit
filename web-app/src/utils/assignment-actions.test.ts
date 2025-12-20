@@ -78,7 +78,7 @@ describe("createAssignmentActions", () => {
 
     expect(actions.validateGame.id).toBe("validate-game");
     expect(actions.validateGame.label).toBe("Validate Game");
-    expect(actions.validateGame.color).toBe("bg-success-500");
+    expect(actions.validateGame.color).toBe("bg-primary-500");
     expect(isValidElement(actions.validateGame.icon)).toBe(true);
   });
 });

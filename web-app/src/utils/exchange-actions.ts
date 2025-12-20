@@ -26,7 +26,7 @@ export function createExchangeActions(
       id: "take-over",
       label: "Take Over",
       shortLabel: "Take Over",
-      color: "bg-success-500",
+      color: "bg-primary-500",
       icon: ICON_CHECK,
       onAction: () => handlers.onTakeOver(exchange),
     },

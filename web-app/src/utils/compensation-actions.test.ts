@@ -67,7 +67,7 @@ describe("createCompensationActions", () => {
 
     expect(actions.generatePDF.id).toBe("generate-pdf");
     expect(actions.generatePDF.label).toBe("Generate PDF");
-    expect(actions.generatePDF.color).toBe("bg-warning-500");
+    expect(actions.generatePDF.color).toBe("bg-slate-500");
     expect(isValidElement(actions.generatePDF.icon)).toBe(true);
   });
 });
