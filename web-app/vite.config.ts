@@ -7,6 +7,7 @@ import { visualizer } from 'rollup-plugin-visualizer'
 import path from 'path'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { normalizeBasePath } from './src/utils/basePath'
+import packageJson from './package.json' with { type: 'json' }
 
 // Plugin to exclude Zod v4 locale files from the bundle.
 // Zod v4 includes ~50 locale files for i18n error messages that we don't use.
@@ -102,6 +103,8 @@ export default defineConfig(({ mode }) => {
     define: {
       // Expose PWA enabled state to the app
       '__PWA_ENABLED__': JSON.stringify(!isPrPreview),
+      // Expose app version from package.json
+      '__APP_VERSION__': JSON.stringify(packageJson.version),
     },
     build: {
       rollupOptions: {

@@ -276,7 +276,7 @@ export function SettingsPage() {
             <span className="text-text-muted dark:text-text-muted-dark">
               {t("settings.version")}
             </span>
-            <span className="text-text-primary dark:text-text-primary-dark">1.0.0</span>
+            <span className="text-text-primary dark:text-text-primary-dark">{__APP_VERSION__}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-text-muted dark:text-text-muted-dark">
