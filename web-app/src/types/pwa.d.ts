@@ -1,6 +1,8 @@
-// Global flag set by vite.config.ts to indicate if PWA is enabled
-// This is false for PR preview builds to avoid service worker scope conflicts
+// Global constants set by vite.config.ts at build time
+// __PWA_ENABLED__ is false for PR preview builds to avoid service worker scope conflicts
 declare const __PWA_ENABLED__: boolean;
+// __APP_VERSION__ is the version from package.json
+declare const __APP_VERSION__: string;
 
 // Type declarations for vite-plugin-pwa's vanilla register module
 declare module "virtual:pwa-register" {
