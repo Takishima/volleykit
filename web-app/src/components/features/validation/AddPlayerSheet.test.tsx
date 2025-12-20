@@ -90,6 +90,7 @@ describe("AddPlayerSheet", () => {
     nominationListId: "nomination-123",
     excludePlayerIds: [],
     onAddPlayer: vi.fn(),
+    onRemovePlayer: vi.fn(),
   };
 
   beforeEach(() => {
@@ -292,6 +293,7 @@ describe("AddPlayerSheet - Loading State", () => {
         nominationListId="nomination-123"
         excludePlayerIds={[]}
         onAddPlayer={vi.fn()}
+        onRemovePlayer={vi.fn()}
       />,
       { wrapper: createWrapper() },
     );
@@ -324,6 +326,7 @@ describe("AddPlayerSheet - Error State", () => {
         nominationListId="nomination-123"
         excludePlayerIds={[]}
         onAddPlayer={vi.fn()}
+        onRemovePlayer={vi.fn()}
       />,
       { wrapper: createWrapper() },
     );
@@ -341,6 +344,7 @@ describe("AddPlayerSheet - Multi-Player Selection", () => {
     nominationListId: "nomination-123",
     excludePlayerIds: [] as string[],
     onAddPlayer: vi.fn(),
+    onRemovePlayer: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -382,7 +386,8 @@ describe("AddPlayerSheet - Multi-Player Selection", () => {
     fireEvent.click(playerButton!);
 
     expect(playerButton).toHaveAttribute("aria-pressed", "true");
-    expect(playerButton).toBeDisabled();
+    // Button is still enabled to allow toggling (removal)
+    expect(playerButton).toBeEnabled();
   });
 
   it("displays counter badge with number of added players", () => {
@@ -418,17 +423,34 @@ describe("AddPlayerSheet - Multi-Player Selection", () => {
     expect(onAddPlayer).toHaveBeenNthCalledWith(2, mockPlayers[1]);
   });
 
-  it("prevents adding the same player twice", () => {
+  it("toggles player selection on repeated clicks", () => {
     const onAddPlayer = vi.fn();
-    render(<AddPlayerSheet {...defaultProps} onAddPlayer={onAddPlayer} />, {
-      wrapper: createWrapper(),
-    });
+    const onRemovePlayer = vi.fn();
+    render(
+      <AddPlayerSheet
+        {...defaultProps}
+        onAddPlayer={onAddPlayer}
+        onRemovePlayer={onRemovePlayer}
+      />,
+      { wrapper: createWrapper() },
+    );
 
     const playerButton = screen.getByText("Max Müller").closest("button");
-    fireEvent.click(playerButton!);
-    fireEvent.click(playerButton!);
 
+    // First click adds
+    fireEvent.click(playerButton!);
     expect(onAddPlayer).toHaveBeenCalledTimes(1);
+    expect(playerButton).toHaveAttribute("aria-pressed", "true");
+
+    // Second click removes
+    fireEvent.click(playerButton!);
+    expect(onRemovePlayer).toHaveBeenCalledTimes(1);
+    expect(onRemovePlayer).toHaveBeenCalledWith("indoor-1");
+    expect(playerButton).toHaveAttribute("aria-pressed", "false");
+
+    // Third click adds again
+    fireEvent.click(playerButton!);
+    expect(onAddPlayer).toHaveBeenCalledTimes(2);
   });
 
   it("resets session when modal is closed", () => {
@@ -467,6 +489,11 @@ describe("AddPlayerSheet - Multi-Player Selection", () => {
     );
 
     expect(screen.getByText("Max Müller")).toBeInTheDocument();
-    expect(screen.getByText("Max Müller").closest("button")).toBeDisabled();
+    // Button is still enabled to allow toggling (removal)
+    expect(screen.getByText("Max Müller").closest("button")).toBeEnabled();
+    expect(screen.getByText("Max Müller").closest("button")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
   });
 });

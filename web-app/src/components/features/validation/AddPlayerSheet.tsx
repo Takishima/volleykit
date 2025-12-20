@@ -19,6 +19,7 @@ interface AddPlayerSheetProps {
   nominationListId: string;
   excludePlayerIds: string[];
   onAddPlayer: (player: PossibleNomination) => void;
+  onRemovePlayer: (playerId: string) => void;
 }
 
 export function AddPlayerSheet({
@@ -27,6 +28,7 @@ export function AddPlayerSheet({
   nominationListId,
   excludePlayerIds,
   onAddPlayer,
+  onRemovePlayer,
 }: AddPlayerSheetProps) {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
@@ -74,19 +76,24 @@ export function AddPlayerSheet({
     (player: PossibleNomination) => {
       const playerId = player.indoorPlayer?.__identity ?? "";
 
-      // Don't add if already added in this session
+      // Toggle: if already added, remove; otherwise add
       if (sessionAddedIds.has(playerId)) {
-        return;
+        setSessionAddedIds((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(playerId);
+          return newSet;
+        });
+        onRemovePlayer(playerId);
+      } else {
+        setSessionAddedIds((prev) => {
+          const newSet = new Set(prev);
+          newSet.add(playerId);
+          return newSet;
+        });
+        onAddPlayer(player);
       }
-
-      setSessionAddedIds((prev) => {
-        const newSet = new Set(prev);
-        newSet.add(playerId);
-        return newSet;
-      });
-      onAddPlayer(player);
     },
-    [sessionAddedIds, onAddPlayer],
+    [sessionAddedIds, onAddPlayer, onRemovePlayer],
   );
 
   // Focus search input when opened
@@ -190,14 +197,13 @@ export function AddPlayerSheet({
                   <li key={player.__identity}>
                     <button
                       onClick={() => handlePlayerClick(player)}
-                      disabled={isAdded}
                       aria-pressed={isAdded}
                       className={`
                         w-full flex items-center justify-between p-3 rounded-lg
                         text-left transition-colors
                         ${
                           isAdded
-                            ? "bg-success-50 dark:bg-success-900/20 cursor-default"
+                            ? "bg-success-50 dark:bg-success-900/20 hover:bg-danger-50 dark:hover:bg-danger-900/20"
                             : "hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark"
                         }
                       `}

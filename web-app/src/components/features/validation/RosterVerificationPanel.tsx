@@ -89,6 +89,10 @@ export function RosterVerificationPanel({
     // Sheet stays open to allow adding multiple players
   }, []);
 
+  const handleRemoveAddedPlayer = useCallback((playerId: string) => {
+    setAddedPlayers((prev) => prev.filter((p) => p.id !== playerId));
+  }, []);
+
   const allPlayers = [...players, ...addedPlayers].sort((a, b) => {
     if (a.isNewlyAdded && !b.isNewlyAdded) return 1;
     if (!a.isNewlyAdded && b.isNewlyAdded) return -1;
@@ -185,11 +189,9 @@ export function RosterVerificationPanel({
         isOpen={isAddPlayerSheetOpen}
         onClose={() => setIsAddPlayerSheetOpen(false)}
         nominationListId={nominationList?.__identity ?? ""}
-        excludePlayerIds={[
-          ...players.map((p) => p.id),
-          ...addedPlayers.map((p) => p.id),
-        ]}
+        excludePlayerIds={players.map((p) => p.id)}
         onAddPlayer={handleAddPlayer}
+        onRemovePlayer={handleRemoveAddedPlayer}
       />
     </div>
   );
