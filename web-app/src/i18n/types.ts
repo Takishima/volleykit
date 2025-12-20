@@ -10,6 +10,7 @@ export interface Translations {
     cancel: string;
     save: string;
     close: string;
+    done: string;
     confirm: string;
     noResults: string;
     today: string;

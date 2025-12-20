@@ -8,6 +8,7 @@ const en: Translations = {
     cancel: "Cancel",
     save: "Save",
     close: "Close",
+    done: "Done",
     confirm: "Confirm",
     noResults: "No results found",
     today: "Today",

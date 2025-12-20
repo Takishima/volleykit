@@ -164,7 +164,7 @@ export function AddPlayerSheet({
         </div>
 
         {/* Player List */}
-        <div className="flex-1 overflow-y-auto p-2">
+        <div className="flex-1 overflow-y-auto px-2 py-3">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <LoadingSpinner size="md" />
@@ -247,6 +247,23 @@ export function AddPlayerSheet({
               })}
             </ul>
           )}
+        </div>
+
+        {/* Footer with Done button */}
+        <div className="p-4 border-t border-border-default dark:border-border-default-dark">
+          <button
+            onClick={handleClose}
+            className="
+              w-full py-3 px-4 rounded-lg
+              text-sm font-medium
+              text-white bg-primary-500 hover:bg-primary-600
+              dark:bg-primary-600 dark:hover:bg-primary-700
+              transition-colors
+              focus:outline-none focus:ring-2 focus:ring-primary-500/50
+            "
+          >
+            {t("common.done")}
+          </button>
         </div>
     </ResponsiveSheet>
   );
