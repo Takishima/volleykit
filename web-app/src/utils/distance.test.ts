@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   METRES_PER_KILOMETRE,
   DISTANCE_DISPLAY_PRECISION,
+  DECIMAL_INPUT_PATTERN,
   metresToKilometres,
   kilometresToMetres,
   formatDistanceKm,
@@ -16,6 +17,10 @@ describe("distance utilities", () => {
 
     it("DISTANCE_DISPLAY_PRECISION is 1", () => {
       expect(DISTANCE_DISPLAY_PRECISION).toBe(1);
+    });
+
+    it("DECIMAL_INPUT_PATTERN accepts period or comma as decimal separator", () => {
+      expect(DECIMAL_INPUT_PATTERN).toBe("[0-9]*[.,]?[0-9]*");
     });
   });
 
