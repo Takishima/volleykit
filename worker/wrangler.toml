@@ -47,7 +47,6 @@ compatibility_flags = ["nodejs_compat"]
 #   - Only change if you're proxying to a different backend
 # =============================================================================
 [vars]
-# TODO: Change this to your GitHub Pages URL or custom domain
 ALLOWED_ORIGINS = "https://takishima.github.io"
 TARGET_HOST = "https://volleymanager.volleyball.ch"
 
