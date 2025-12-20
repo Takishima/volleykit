@@ -28,9 +28,6 @@ jobs:
       - name: Audit dependencies
         # Check for high/critical vulnerabilities in production dependencies
         # Using --omit=dev to avoid false positives from dev dependencies
-        # TODO: Remove continue-on-error once existing vulnerabilities are addressed
-        # Using continue-on-error temporarily to not block PRs
-        continue-on-error: true
         run: npm audit --audit-level=high --omit=dev
   lint:
     name: Lint
