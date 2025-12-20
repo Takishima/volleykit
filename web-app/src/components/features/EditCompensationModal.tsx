@@ -218,19 +218,24 @@ export function EditCompensationModal({
               >
                 {t("assignments.kilometers")}
               </label>
-              <input
-                id="kilometers"
-                type="number"
-                min="0"
-                step="0.1"
-                value={kilometers}
-                onChange={(e) => setKilometers(e.target.value)}
-                className="w-full px-3 py-2 border border-border-strong dark:border-border-strong-dark rounded-md bg-surface-card dark:bg-surface-subtle-dark text-text-primary dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary-500"
-                aria-invalid={errors.kilometers ? "true" : "false"}
-                aria-describedby={
-                  errors.kilometers ? "kilometers-error" : undefined
-                }
-              />
+              <div className="relative">
+                <input
+                  id="kilometers"
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={kilometers}
+                  onChange={(e) => setKilometers(e.target.value)}
+                  className="w-full px-3 py-2 pr-10 border border-border-strong dark:border-border-strong-dark rounded-md bg-surface-card dark:bg-surface-subtle-dark text-text-primary dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  aria-invalid={errors.kilometers ? "true" : "false"}
+                  aria-describedby={
+                    errors.kilometers ? "kilometers-error" : undefined
+                  }
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted dark:text-text-muted-dark text-sm pointer-events-none">
+                  km
+                </span>
+              </div>
               {errors.kilometers && (
                 <p
                   id="kilometers-error"
