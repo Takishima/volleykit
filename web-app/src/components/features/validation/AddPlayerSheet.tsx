@@ -13,6 +13,17 @@ const FOCUS_DELAY_MS = 100;
 // Debounce delay for search input to avoid filtering on every keystroke
 const SEARCH_DEBOUNCE_MS = 200;
 
+/** Format birthday as DD.MM.YY */
+function formatDOB(birthday: string | null | undefined): string {
+  if (!birthday) return "";
+  const date = new Date(birthday);
+  if (isNaN(date.getTime())) return "";
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = String(date.getFullYear()).slice(-2);
+  return `${day}.${month}.${year}`;
+}
+
 interface AddPlayerSheetProps {
   isOpen: boolean;
   onClose: () => void;
@@ -60,9 +71,10 @@ export function AddPlayerSheet({
         return false;
       }
 
-      const name =
-        player.indoorPlayer?.person?.displayName?.toLowerCase() ?? "";
-      return name.includes(query);
+      const lastName = player.indoorPlayer?.person?.lastName?.toLowerCase() ?? "";
+      const firstName = player.indoorPlayer?.person?.firstName?.toLowerCase() ?? "";
+      const fullName = `${lastName} ${firstName}`;
+      return fullName.includes(query) || firstName.includes(query) || lastName.includes(query);
     });
   }, [players, debouncedQuery, excludePlayerIds, sessionAddedIds]);
 
@@ -171,7 +183,7 @@ export function AddPlayerSheet({
         </div>
 
         {/* Player List */}
-        <div className="flex-1 overflow-y-auto px-2 py-3">
+        <div className="flex-1 overflow-y-auto px-2 pt-1 pb-2">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <LoadingSpinner size="md" />
@@ -188,7 +200,7 @@ export function AddPlayerSheet({
               {t("validation.noPlayersFound")}
             </div>
           ) : (
-            <ul className="space-y-1">
+            <ul>
               {filteredPlayers.map((player) => {
                 const playerId = player.indoorPlayer?.__identity ?? "";
                 const isAdded = sessionAddedIds.has(playerId);
@@ -199,7 +211,7 @@ export function AddPlayerSheet({
                       onClick={() => handlePlayerClick(player)}
                       aria-pressed={isAdded}
                       className={`
-                        group w-full flex items-center justify-between p-3 rounded-lg
+                        group w-full flex items-center justify-between py-2 px-3 rounded-lg
                         text-left transition-colors
                         ${
                           isAdded
@@ -208,23 +220,20 @@ export function AddPlayerSheet({
                         }
                       `}
                     >
-                      <div className="flex-1 min-w-0">
-                        <div
+                      <div className="flex-1 min-w-0 flex items-center gap-2">
+                        <span
                           className={`font-medium truncate ${
                             isAdded
                               ? "text-success-700 dark:text-success-400"
                               : "text-text-primary dark:text-text-primary-dark"
                           }`}
                         >
-                          {player.indoorPlayer?.person?.displayName ?? "Unknown"}
-                        </div>
-                        <div className="flex items-center gap-3 text-sm text-text-muted dark:text-text-muted-dark">
-                          {player.licenseCategory && (
-                            <span>
-                              {t("validation.license")}: {player.licenseCategory}
-                            </span>
-                          )}
-                        </div>
+                          {player.indoorPlayer?.person?.lastName ?? ""}{" "}
+                          {player.indoorPlayer?.person?.firstName ?? ""}
+                        </span>
+                        <span className="text-xs text-text-muted dark:text-text-muted-dark flex-shrink-0">
+                          {formatDOB(player.indoorPlayer?.person?.birthday)}
+                        </span>
                       </div>
                       {isAdded ? (
                         <span className="relative flex-shrink-0 ml-2 w-5 h-5">

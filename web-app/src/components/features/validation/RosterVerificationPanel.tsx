@@ -75,12 +75,16 @@ export function RosterVerificationPanel({
     const playerId = nomination.indoorPlayer?.__identity;
     if (!playerId) return;
 
+    const person = nomination.indoorPlayer?.person;
     const newPlayer: RosterPlayer = {
       id: playerId,
       shirtNumber: 0, // New players don't have a shirt number yet
       displayName:
-        nomination.indoorPlayer?.person?.displayName ??
-        `${nomination.indoorPlayer?.person?.firstName ?? ""} ${nomination.indoorPlayer?.person?.lastName ?? ""}`.trim(),
+        person?.displayName ??
+        `${person?.firstName ?? ""} ${person?.lastName ?? ""}`.trim(),
+      firstName: person?.firstName,
+      lastName: person?.lastName,
+      birthday: person?.birthday,
       licenseCategory: nomination.licenseCategory,
       isNewlyAdded: true,
     };

@@ -858,6 +858,7 @@ function generatePossiblePlayers(): PossibleNomination[] {
           displayName: "Max Müller",
           firstName: "Max",
           lastName: "Müller",
+          birthday: "1995-03-15",
         },
       },
       licenseCategory: "SEN",
@@ -872,6 +873,7 @@ function generatePossiblePlayers(): PossibleNomination[] {
           displayName: "Anna Schmidt",
           firstName: "Anna",
           lastName: "Schmidt",
+          birthday: "1998-07-22",
         },
       },
       licenseCategory: "SEN",
@@ -886,6 +888,7 @@ function generatePossiblePlayers(): PossibleNomination[] {
           displayName: "Thomas Weber",
           firstName: "Thomas",
           lastName: "Weber",
+          birthday: "2002-11-08",
         },
       },
       licenseCategory: "JUN",
@@ -900,6 +903,7 @@ function generatePossiblePlayers(): PossibleNomination[] {
           displayName: "Laura Keller",
           firstName: "Laura",
           lastName: "Keller",
+          birthday: "1996-05-30",
         },
       },
       licenseCategory: "SEN",
@@ -914,6 +918,7 @@ function generatePossiblePlayers(): PossibleNomination[] {
           displayName: "Marco Rossi",
           firstName: "Marco",
           lastName: "Rossi",
+          birthday: "2003-09-12",
         },
       },
       licenseCategory: "JUN",
@@ -928,6 +933,7 @@ function generatePossiblePlayers(): PossibleNomination[] {
           displayName: "Sophie Dubois",
           firstName: "Sophie",
           lastName: "Dubois",
+          birthday: "1994-02-18",
         },
       },
       licenseCategory: "SEN",
@@ -942,6 +948,7 @@ function generatePossiblePlayers(): PossibleNomination[] {
           displayName: "Luca Bernasconi",
           firstName: "Luca",
           lastName: "Bernasconi",
+          birthday: "2001-06-25",
         },
       },
       licenseCategory: "JUN",
@@ -956,6 +963,7 @@ function generatePossiblePlayers(): PossibleNomination[] {
           displayName: "Nina Hofmann",
           firstName: "Nina",
           lastName: "Hofmann",
+          birthday: "1997-12-03",
         },
       },
       licenseCategory: "SEN",
@@ -1089,6 +1097,11 @@ function createPlayerNomination(
 ) {
   const identity = `demo-nom-${gameIndex}-${teamIndex}-${config.index}`;
   const displayName = `${config.firstName} ${config.lastName}`;
+  // Generate a deterministic birthday based on indices
+  const birthYear = config.licenseCategory === "JUN" ? 2003 + (config.index % 3) : 1990 + (config.index % 8);
+  const birthMonth = ((config.index + teamIndex) % 12) + 1;
+  const birthDay = ((config.index + gameIndex) % 28) + 1;
+  const birthday = `${birthYear}-${String(birthMonth).padStart(2, "0")}-${String(birthDay).padStart(2, "0")}`;
   return {
     __identity: identity,
     shirtNumber: config.shirtNumber,
@@ -1101,6 +1114,7 @@ function createPlayerNomination(
         firstName: config.firstName,
         lastName: config.lastName,
         displayName,
+        birthday,
       },
     },
     indoorPlayerLicenseCategory: {

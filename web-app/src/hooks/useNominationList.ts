@@ -14,6 +14,9 @@ export interface RosterPlayer {
   id: string;
   shirtNumber: number;
   displayName: string;
+  firstName?: string;
+  lastName?: string;
+  birthday?: string | null;
   licenseCategory?: string;
   isCaptain?: boolean;
   isLibero?: boolean;
@@ -57,6 +60,7 @@ function transformNominationToPlayer(
   const id = nomination.__identity;
   const shirtNumber = nomination.shirtNumber;
   const displayName = buildDisplayName(nomination);
+  const person = nomination.indoorPlayer?.person;
 
   if (!id || shirtNumber === undefined || !displayName) {
     return null;
@@ -66,6 +70,9 @@ function transformNominationToPlayer(
     id,
     shirtNumber,
     displayName,
+    firstName: person?.firstName,
+    lastName: person?.lastName,
+    birthday: person?.birthday,
     licenseCategory: nomination.indoorPlayerLicenseCategory?.shortName,
     isCaptain: nomination.isCaptain ?? false,
     isLibero: nomination.isLibero ?? false,
