@@ -6,23 +6,13 @@ import { usePossiblePlayerNominations } from "@/hooks/usePlayerNominations";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ResponsiveSheet } from "@/components/ui/ResponsiveSheet";
 import { Check } from "@/components/ui/icons";
+import { formatDOB } from "@/utils/date-helpers";
 
 // Delay before focusing search input to ensure the sheet animation has started
 const FOCUS_DELAY_MS = 100;
 
 // Debounce delay for search input to avoid filtering on every keystroke
 const SEARCH_DEBOUNCE_MS = 200;
-
-/** Format birthday as DD.MM.YY */
-function formatDOB(birthday: string | null | undefined): string {
-  if (!birthday) return "";
-  const date = new Date(birthday);
-  if (isNaN(date.getTime())) return "";
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = String(date.getFullYear()).slice(-2);
-  return `${day}.${month}.${year}`;
-}
 
 interface AddPlayerSheetProps {
   isOpen: boolean;
@@ -183,7 +173,7 @@ export function AddPlayerSheet({
         </div>
 
         {/* Player List */}
-        <div className="flex-1 overflow-y-auto px-2 pt-1 pb-2">
+        <div className="flex-1 overflow-y-auto overscroll-contain px-2 pt-1 pb-2">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <LoadingSpinner size="md" />

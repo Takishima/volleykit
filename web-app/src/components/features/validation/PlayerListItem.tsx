@@ -2,17 +2,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Badge } from "@/components/ui/Badge";
 import type { RosterPlayer } from "@/hooks/useNominationList";
 import { Trash2, Undo2 } from "@/components/ui/icons";
-
-/** Format birthday as DD.MM.YY */
-function formatDOB(birthday: string | null | undefined): string {
-  if (!birthday) return "";
-  const date = new Date(birthday);
-  if (isNaN(date.getTime())) return "";
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = String(date.getFullYear()).slice(-2);
-  return `${day}.${month}.${year}`;
-}
+import { formatDOB } from "@/utils/date-helpers";
 
 /** Format player name as "LastName FirstName" */
 function formatPlayerName(player: RosterPlayer): string {

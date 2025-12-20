@@ -13,6 +13,18 @@ export function ResponsiveSheet({
   titleId,
   children,
 }: ResponsiveSheetProps) {
+  // Lock body scroll when sheet is open
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isOpen]);
+
   useEffect(() => {
     if (!isOpen) return;
 
