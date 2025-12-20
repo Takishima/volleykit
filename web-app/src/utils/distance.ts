@@ -30,3 +30,14 @@ export function kilometresToMetres(kilometres: number): number {
 export function formatDistanceKm(metres: number): string {
   return metresToKilometres(metres).toFixed(DISTANCE_DISPLAY_PRECISION);
 }
+
+/**
+ * Parses a localized number string that may use either "." or "," as decimal separator.
+ * Always normalizes to use "." before parsing.
+ * @param value - String value that may contain "," or "." as decimal separator
+ * @returns Parsed number, or NaN if invalid
+ */
+export function parseLocalizedNumber(value: string): number {
+  const normalized = value.replace(",", ".");
+  return parseFloat(normalized);
+}

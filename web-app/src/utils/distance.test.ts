@@ -5,6 +5,7 @@ import {
   metresToKilometres,
   kilometresToMetres,
   formatDistanceKm,
+  parseLocalizedNumber,
 } from "./distance";
 
 describe("distance utilities", () => {
@@ -71,6 +72,36 @@ describe("distance utilities", () => {
     it("handles small distances", () => {
       expect(formatDistanceKm(100)).toBe("0.1");
       expect(formatDistanceKm(50)).toBe("0.1"); // rounds up
+    });
+  });
+
+  describe("parseLocalizedNumber", () => {
+    it("parses numbers with period as decimal separator", () => {
+      expect(parseLocalizedNumber("48.5")).toBe(48.5);
+      expect(parseLocalizedNumber("1.0")).toBe(1);
+      expect(parseLocalizedNumber("123.456")).toBe(123.456);
+    });
+
+    it("parses numbers with comma as decimal separator", () => {
+      expect(parseLocalizedNumber("48,5")).toBe(48.5);
+      expect(parseLocalizedNumber("1,0")).toBe(1);
+      expect(parseLocalizedNumber("123,456")).toBe(123.456);
+    });
+
+    it("parses integers without decimal separator", () => {
+      expect(parseLocalizedNumber("48")).toBe(48);
+      expect(parseLocalizedNumber("0")).toBe(0);
+      expect(parseLocalizedNumber("123")).toBe(123);
+    });
+
+    it("returns NaN for invalid input", () => {
+      expect(parseLocalizedNumber("")).toBeNaN();
+      expect(parseLocalizedNumber("abc")).toBeNaN();
+    });
+
+    it("parseFloat stops at invalid characters", () => {
+      // parseFloat stops at the second period, returning 12.34
+      expect(parseLocalizedNumber("12.34.56")).toBe(12.34);
     });
   });
 });
