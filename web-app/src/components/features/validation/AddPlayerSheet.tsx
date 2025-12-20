@@ -111,7 +111,7 @@ export function AddPlayerSheet({
   return (
     <ResponsiveSheet isOpen={isOpen} onClose={handleClose} titleId="add-player-title">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border-default dark:border-border-default-dark">
+        <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-border-default dark:border-border-default-dark">
           <div className="flex items-center gap-2">
             <h2
               id="add-player-title"
@@ -152,7 +152,7 @@ export function AddPlayerSheet({
         </div>
 
         {/* Search Input */}
-        <div className="p-4 border-b border-border-default dark:border-border-default-dark">
+        <div className="flex-shrink-0 p-4 border-b border-border-default dark:border-border-default-dark">
           <input
             ref={searchInputRef}
             type="text"
@@ -173,7 +173,7 @@ export function AddPlayerSheet({
         </div>
 
         {/* Player List */}
-        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-2 pt-1 pb-2">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-2 py-2">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <LoadingSpinner size="md" />
@@ -274,7 +274,7 @@ export function AddPlayerSheet({
         </div>
 
         {/* Footer with Done button */}
-        <div className="p-4 border-t border-border-default dark:border-border-default-dark">
+        <div className="flex-shrink-0 p-4 border-t border-border-default dark:border-border-default-dark">
           <button
             type="button"
             onClick={handleClose}
