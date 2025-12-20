@@ -25,33 +25,80 @@ __csrfToken: <token_value>
 
 ## Response Format
 
-JSON response with structure:
+JSON response with structure (see `docs/api/volleymanager-openapi.yaml` for full schema):
 
 ```json
 {
   "items": [
     {
-      // TODO: Capture actual response structure from browser
+      "__identity": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "refereeConvocationStatus": "active",
       "compensationDate": "2025-12-08T20:30:00+01:00",
-      "matchNumber": "382417",
-      "league": "3L",
-      "gender": "m",
-      "homeTeam": "Volley Uster H2",
       "refereePosition": "ARB 2",
-      "matchCompensation": 50.00,
-      "travelExpense": 20.00,
-      "accommodation": null,
-      "meal": null,
-      "totalCompensation": 70.00,
-      "calculatedDistance": 96.3,
-      "transportMethod": "car"
+      "refereeGame": {
+        "game": {
+          "startingDateTime": "2025-12-08T20:30:00+01:00",
+          "playingWeekday": "Sunday",
+          "number": "382417",
+          "displayName": "Volley Uster H2 vs VBC Münsingen H2",
+          "group": {
+            "name": "G1",
+            "phase": {
+              "name": "Regular Season",
+              "league": {
+                "gender": "m",
+                "leagueCategory": {
+                  "name": "3L"
+                }
+              }
+            }
+          },
+          "encounter": {
+            "teamHome": { "name": "Volley Uster H2" },
+            "teamAway": { "name": "VBC Münsingen H2" }
+          },
+          "hall": {
+            "name": "Sporthalle Example",
+            "primaryPostalAddress": {
+              "additionToAddress": null,
+              "combinedAddress": "Sportstrasse 1, 8000 Zürich",
+              "postalCode": "8000",
+              "city": "Zürich",
+              "country": { "countryCode": "CH" }
+            }
+          },
+          "isVolleyCupGameWithoutNationalAssociationLeagueCategoryTeams": false
+        },
+        "isGameInFuture": false
+      },
+      "convocationCompensation": {
+        "__identity": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+        "hasFlexibleGameCompensations": false,
+        "gameCompensationFormatted": "50.00",
+        "hasFlexibleTravelExpenses": false,
+        "travelExpensesFormatted": "20.00",
+        "hasFlexibleOvernightStayExpenses": false,
+        "overnightStayExpensesFormatted": "0.00",
+        "hasFlexibleCateringExpenses": false,
+        "cateringExpensesFormatted": "0.00",
+        "costFormatted": "70.00",
+        "distanceInMetres": 96317,
+        "distanceFormatted": "96.3 km",
+        "transportationMode": "car",
+        "paymentDone": true,
+        "paymentValueDate": "2025-12-15",
+        "paymentUpdatedByAssociation": { "name": "Volleyball Zürich" }
+      },
+      "indoorAssociationReferee": {
+        "indoorReferee": {
+          "person": {
+            "associationId": "12345"
+          }
+        }
+      }
     }
   ],
-  "pagination": {
-    "totalItems": 2,
-    "currentPage": 1,
-    "itemsPerPage": 50
-  }
+  "totalItemsCount": 2
 }
 ```
 
