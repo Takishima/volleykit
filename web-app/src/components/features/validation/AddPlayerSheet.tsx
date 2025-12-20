@@ -173,7 +173,7 @@ export function AddPlayerSheet({
         </div>
 
         {/* Player List */}
-        <div className="flex-1 overflow-y-auto overscroll-contain px-2 pt-1 pb-2">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-2 pt-1 pb-2">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <LoadingSpinner size="md" />
