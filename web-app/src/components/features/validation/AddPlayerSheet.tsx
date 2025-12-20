@@ -199,7 +199,7 @@ export function AddPlayerSheet({
                       onClick={() => handlePlayerClick(player)}
                       aria-pressed={isAdded}
                       className={`
-                        w-full flex items-center justify-between p-3 rounded-lg
+                        group w-full flex items-center justify-between p-3 rounded-lg
                         text-left transition-colors
                         ${
                           isAdded
@@ -227,10 +227,29 @@ export function AddPlayerSheet({
                         </div>
                       </div>
                       {isAdded ? (
-                        <Check
-                          className="w-5 h-5 text-success-600 dark:text-success-400 flex-shrink-0 ml-2"
-                          aria-label={t("validation.roster.added")}
-                        />
+                        <span className="relative flex-shrink-0 ml-2 w-5 h-5">
+                          {/* Checkmark shown by default, hidden on hover */}
+                          <Check
+                            className="w-5 h-5 text-success-600 dark:text-success-400 absolute inset-0 group-hover:opacity-0 transition-opacity"
+                            aria-hidden="true"
+                          />
+                          {/* X icon shown on hover */}
+                          <svg
+                            className="w-5 h-5 text-danger-500 dark:text-danger-400 absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                          <span className="sr-only">{t("validation.roster.added")}</span>
+                        </span>
                       ) : (
                         <svg
                           className="w-5 h-5 text-text-subtle flex-shrink-0 ml-2"
@@ -258,6 +277,7 @@ export function AddPlayerSheet({
         {/* Footer with Done button */}
         <div className="p-4 border-t border-border-default dark:border-border-default-dark">
           <button
+            type="button"
             onClick={handleClose}
             className="
               w-full py-3 px-4 rounded-lg
