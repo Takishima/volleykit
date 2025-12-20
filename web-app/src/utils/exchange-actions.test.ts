@@ -70,7 +70,7 @@ describe("createExchangeActions", () => {
     expect(actions.takeOver.id).toBe("take-over");
     expect(actions.takeOver.label).toBe("Take Over");
     expect(actions.takeOver.shortLabel).toBe("Take Over");
-    expect(actions.takeOver.color).toBe("bg-success-500");
+    expect(actions.takeOver.color).toBe("bg-primary-500");
     expect(isValidElement(actions.takeOver.icon)).toBe(true);
   });
 

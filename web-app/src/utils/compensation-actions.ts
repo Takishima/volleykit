@@ -34,7 +34,7 @@ export function createCompensationActions(
       id: "generate-pdf",
       label: "Generate PDF",
       shortLabel: "PDF",
-      color: "bg-warning-500",
+      color: "bg-slate-500",
       icon: ICON_FILE_TEXT,
       onAction: () => handlers.onGeneratePDF(compensation),
     },
