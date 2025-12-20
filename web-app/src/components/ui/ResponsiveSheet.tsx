@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 interface ResponsiveSheetProps {
   isOpen: boolean;
@@ -63,7 +64,7 @@ export function ResponsiveSheet({
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[55]">
       <div
         className="absolute inset-0 bg-black/50 transition-opacity"
@@ -87,6 +88,7 @@ export function ResponsiveSheet({
       >
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
