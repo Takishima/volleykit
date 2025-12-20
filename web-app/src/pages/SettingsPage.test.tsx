@@ -1,0 +1,129 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { SettingsPage } from "./SettingsPage";
+import * as authStore from "@/stores/auth";
+import * as settingsStore from "@/stores/settings";
+import * as pwaContext from "@/contexts/PWAContext";
+
+vi.mock("@/stores/auth");
+vi.mock("@/stores/settings");
+vi.mock("@/contexts/PWAContext");
+vi.mock("@/hooks/useTranslation", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    locale: "en",
+  }),
+}));
+
+// Disable PWA for tests by default
+vi.stubGlobal("__PWA_ENABLED__", false);
+
+const mockUser = {
+  id: "user-1",
+  firstName: "John",
+  lastName: "Doe",
+  email: "john.doe@example.com",
+  occupations: [
+    { id: "occ-1", type: "referee", associationCode: "SV" },
+  ],
+};
+
+const mockLogout = vi.fn();
+const mockSetSafeMode = vi.fn();
+
+function mockAuthStore(overrides = {}) {
+  const state = {
+    user: mockUser,
+    logout: mockLogout,
+    isDemoMode: false,
+    ...overrides,
+  };
+  vi.mocked(authStore.useAuthStore).mockReturnValue(state as any);
+}
+
+function mockSettingsStore(overrides = {}) {
+  const state = {
+    isSafeModeEnabled: true,
+    setSafeMode: mockSetSafeMode,
+    ...overrides,
+  };
+  vi.mocked(settingsStore.useSettingsStore).mockReturnValue(state as any);
+}
+
+describe("SettingsPage", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mockAuthStore();
+    mockSettingsStore();
+
+    vi.mocked(pwaContext.usePWA).mockReturnValue({
+      needRefresh: false,
+      isChecking: false,
+      lastChecked: null,
+      checkError: null,
+      checkForUpdate: vi.fn(),
+      updateApp: vi.fn(),
+      isInstallable: false,
+      installApp: vi.fn(),
+    });
+  });
+
+  describe("Profile Section", () => {
+    it("displays user name", () => {
+      render(<SettingsPage />);
+      expect(screen.getByText("John Doe")).toBeInTheDocument();
+    });
+
+    it("displays user initials", () => {
+      render(<SettingsPage />);
+      expect(screen.getByText("JD")).toBeInTheDocument();
+    });
+
+    it("displays user email", () => {
+      render(<SettingsPage />);
+      expect(screen.getByText("john.doe@example.com")).toBeInTheDocument();
+    });
+
+    it("does not render profile when user is null", () => {
+      mockAuthStore({ user: null });
+      render(<SettingsPage />);
+      expect(screen.queryByText("John Doe")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Language Section", () => {
+    it("renders language section with heading", () => {
+      render(<SettingsPage />);
+      // Language section header should be present
+      expect(screen.getByText("settings.language")).toBeInTheDocument();
+    });
+  });
+
+  describe("Safe Mode Section", () => {
+    it("hides safe mode section in demo mode", () => {
+      mockAuthStore({ isDemoMode: true });
+      render(<SettingsPage />);
+      expect(screen.queryByText("settings.safeMode")).not.toBeInTheDocument();
+    });
+
+    it("shows safe mode section when not in demo mode", () => {
+      render(<SettingsPage />);
+      expect(screen.getByText("settings.safeMode")).toBeInTheDocument();
+    });
+  });
+
+  describe("About Section", () => {
+    it("displays version info", () => {
+      render(<SettingsPage />);
+      expect(screen.getByText("1.0.0")).toBeInTheDocument();
+    });
+  });
+
+  describe("Logout", () => {
+    it("renders logout button", () => {
+      render(<SettingsPage />);
+      expect(screen.getByText("auth.logout")).toBeInTheDocument();
+    });
+  });
+});
