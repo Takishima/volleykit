@@ -1,5 +1,6 @@
 import type { Assignment } from '@/api/client';
 import { format } from 'date-fns';
+import { logger } from '@/utils/logger';
 
 export type LeagueCategory = 'NLA' | 'NLB';
 export type Language = 'de' | 'fr';
@@ -30,7 +31,7 @@ function formatDateForReport(isoString: string | undefined): string {
     return format(new Date(isoString), 'dd.MM.yyyy');
   } catch {
     // Invalid date format - return empty string so form field shows blank
-    console.warn('Failed to parse date for PDF report:', isoString);
+    logger.warn('Failed to parse date for PDF report:', isoString);
     return '';
   }
 }
@@ -82,9 +83,7 @@ export function extractSportsHallReportData(assignment: Assignment): SportsHallR
   };
 
   // Debug logging for troubleshooting PDF generation
-  if (import.meta.env.DEV) {
-    console.debug('[pdf-form-filler] Extracted report data:', reportData);
-  }
+  logger.debug('[pdf-form-filler] Extracted report data:', reportData);
 
   return reportData;
 }
@@ -169,7 +168,7 @@ export async function fillSportsHallReportForm(
     try {
       form.getTextField(fieldName).setText(value);
     } catch (error) {
-      console.warn(`Could not set text field "${fieldName}":`, error);
+      logger.warn(`Could not set text field "${fieldName}":`, error);
     }
   };
 
@@ -188,11 +187,11 @@ export async function fillSportsHallReportForm(
         if (matchingOption) {
           radioGroup.select(matchingOption);
         } else {
-          console.warn(`Could not find option "${option}" in radio group "${groupName}". Available: ${options.join(', ')}`);
+          logger.warn(`Could not find option "${option}" in radio group "${groupName}". Available: ${options.join(', ')}`);
         }
       }
     } catch (error) {
-      console.warn(`Could not access radio group "${groupName}":`, error);
+      logger.warn(`Could not access radio group "${groupName}":`, error);
     }
   };
 
