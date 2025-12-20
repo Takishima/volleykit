@@ -66,7 +66,7 @@ export function CompensationCard({
             {/* Amount & status */}
             <div className="flex items-center gap-2">
               <div
-                className={`text-sm font-bold ${isPaid ? "text-success-600 dark:text-success-400" : "text-warning-600 dark:text-warning-400"}`}
+                className={`text-sm font-bold ${isPaid ? "text-success-500 dark:text-success-400" : "text-warning-500 dark:text-warning-400"}`}
               >
                 {total.toFixed(0)}
               </div>
@@ -97,7 +97,7 @@ export function CompensationCard({
                     Total:
                   </span>
                   <span
-                    className={`font-bold ${isPaid ? "text-success-600 dark:text-success-400" : "text-warning-600 dark:text-warning-400"}`}
+                    className={`font-bold ${isPaid ? "text-success-500 dark:text-success-400" : "text-warning-500 dark:text-warning-400"}`}
                   >
                     CHF {total.toFixed(2)}
                   </span>
@@ -142,8 +142,8 @@ export function CompensationCard({
                   <span
                     className={
                       isPaid
-                        ? "text-success-600 dark:text-success-400"
-                        : "text-warning-600 dark:text-warning-400"
+                        ? "text-success-500 dark:text-success-400"
+                        : "text-warning-500 dark:text-warning-400"
                     }
                   >
                     {isPaid
