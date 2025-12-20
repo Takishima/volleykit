@@ -94,7 +94,7 @@ export function CompensationCard({
               <div className="px-2 pb-2 pt-0 border-t border-border-subtle dark:border-border-subtle-dark space-y-1 text-sm">
                 <div className="flex justify-between pt-2">
                   <span className="text-text-muted dark:text-text-muted-dark">
-                    Total:
+                    {t("compensations.total")}:
                   </span>
                   <span
                     className={`font-bold ${isPaid ? "text-success-500 dark:text-success-400" : "text-warning-500 dark:text-warning-400"}`}
@@ -106,7 +106,7 @@ export function CompensationCard({
                   comp.gameCompensation > 0 && (
                     <div className="flex justify-between text-xs">
                       <span className="text-text-subtle dark:text-text-subtle-dark">
-                        Game fee:
+                        {t("compensations.gameFee")}:
                       </span>
                       <span className="text-text-secondary dark:text-text-muted-dark">
                         CHF {comp.gameCompensation.toFixed(2)}
@@ -117,7 +117,7 @@ export function CompensationCard({
                   comp.travelExpenses > 0 && (
                     <div className="flex justify-between text-xs">
                       <span className="text-text-subtle dark:text-text-subtle-dark">
-                        Travel:
+                        {t("compensations.travel")}:
                       </span>
                       <span className="text-text-secondary dark:text-text-muted-dark">
                         CHF {comp.travelExpenses.toFixed(2)}
@@ -128,7 +128,7 @@ export function CompensationCard({
                   comp.distanceInMetres > 0 && (
                     <div className="flex justify-between text-xs">
                       <span className="text-text-subtle dark:text-text-subtle-dark">
-                        Distance:
+                        {t("compensations.distance")}:
                       </span>
                       <span className="text-text-secondary dark:text-text-muted-dark">
                         {formatDistanceKm(comp.distanceInMetres)} km
@@ -137,7 +137,7 @@ export function CompensationCard({
                   )}
                 <div className="flex justify-between text-xs pt-1">
                   <span className="text-text-subtle dark:text-text-subtle-dark">
-                    Status:
+                    {t("compensations.status")}:
                   </span>
                   <span
                     className={
