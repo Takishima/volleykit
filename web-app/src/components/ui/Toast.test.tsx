@@ -209,7 +209,7 @@ describe("ToastContainer", () => {
       });
 
       // Dismiss the first toast
-      fireEvent.click(dismissButtons[0]);
+      fireEvent.click(dismissButtons[0]!);
 
       expect(screen.queryByText("First toast")).not.toBeInTheDocument();
       expect(screen.getByText("Second toast")).toBeInTheDocument();

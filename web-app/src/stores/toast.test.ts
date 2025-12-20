@@ -32,8 +32,8 @@ describe("useToastStore", () => {
 
       const { toasts } = useToastStore.getState();
       expect(toasts).toHaveLength(1);
-      expect(toasts[0].message).toBe("Test message");
-      expect(toasts[0].type).toBe("success");
+      expect(toasts[0]!.message).toBe("Test message");
+      expect(toasts[0]!.type).toBe("success");
     });
 
     it("returns the toast id", () => {
@@ -60,7 +60,7 @@ describe("useToastStore", () => {
       addToast({ message: "Test", type: "warning", duration: 10000 });
 
       const { toasts } = useToastStore.getState();
-      expect(toasts[0].duration).toBe(10000);
+      expect(toasts[0]!.duration).toBe(10000);
     });
 
     it("limits toasts to MAX_TOASTS (5)", () => {
@@ -74,8 +74,8 @@ describe("useToastStore", () => {
       const { toasts } = useToastStore.getState();
       expect(toasts).toHaveLength(5);
       // Should keep the last 5 toasts
-      expect(toasts[0].message).toBe("Toast 2");
-      expect(toasts[4].message).toBe("Toast 6");
+      expect(toasts[0]!.message).toBe("Toast 2");
+      expect(toasts[4]!.message).toBe("Toast 6");
     });
   });
 
@@ -152,22 +152,22 @@ describe("toast convenience functions", () => {
 
       const { toasts } = useToastStore.getState();
       expect(toasts).toHaveLength(1);
-      expect(toasts[0].type).toBe("success");
-      expect(toasts[0].message).toBe("Operation successful");
+      expect(toasts[0]!.type).toBe("success");
+      expect(toasts[0]!.message).toBe("Operation successful");
     });
 
     it("uses default duration", () => {
       toast.success("Test");
 
       const { toasts } = useToastStore.getState();
-      expect(toasts[0].duration).toBe(DEFAULT_DURATION_MS);
+      expect(toasts[0]!.duration).toBe(DEFAULT_DURATION_MS);
     });
 
     it("accepts custom duration", () => {
       toast.success("Test", 3000);
 
       const { toasts } = useToastStore.getState();
-      expect(toasts[0].duration).toBe(3000);
+      expect(toasts[0]!.duration).toBe(3000);
     });
 
     it("returns the toast id", () => {
@@ -184,22 +184,22 @@ describe("toast convenience functions", () => {
 
       const { toasts } = useToastStore.getState();
       expect(toasts).toHaveLength(1);
-      expect(toasts[0].type).toBe("error");
-      expect(toasts[0].message).toBe("Something went wrong");
+      expect(toasts[0]!.type).toBe("error");
+      expect(toasts[0]!.message).toBe("Something went wrong");
     });
 
     it("uses default duration", () => {
       toast.error("Test");
 
       const { toasts } = useToastStore.getState();
-      expect(toasts[0].duration).toBe(DEFAULT_DURATION_MS);
+      expect(toasts[0]!.duration).toBe(DEFAULT_DURATION_MS);
     });
 
     it("accepts custom duration", () => {
       toast.error("Test", 10000);
 
       const { toasts } = useToastStore.getState();
-      expect(toasts[0].duration).toBe(10000);
+      expect(toasts[0]!.duration).toBe(10000);
     });
 
     it("returns the toast id", () => {
@@ -215,22 +215,22 @@ describe("toast convenience functions", () => {
 
       const { toasts } = useToastStore.getState();
       expect(toasts).toHaveLength(1);
-      expect(toasts[0].type).toBe("info");
-      expect(toasts[0].message).toBe("Information message");
+      expect(toasts[0]!.type).toBe("info");
+      expect(toasts[0]!.message).toBe("Information message");
     });
 
     it("uses default duration", () => {
       toast.info("Test");
 
       const { toasts } = useToastStore.getState();
-      expect(toasts[0].duration).toBe(DEFAULT_DURATION_MS);
+      expect(toasts[0]!.duration).toBe(DEFAULT_DURATION_MS);
     });
 
     it("accepts custom duration", () => {
       toast.info("Test", 2000);
 
       const { toasts } = useToastStore.getState();
-      expect(toasts[0].duration).toBe(2000);
+      expect(toasts[0]!.duration).toBe(2000);
     });
 
     it("returns the toast id", () => {
@@ -246,22 +246,22 @@ describe("toast convenience functions", () => {
 
       const { toasts } = useToastStore.getState();
       expect(toasts).toHaveLength(1);
-      expect(toasts[0].type).toBe("warning");
-      expect(toasts[0].message).toBe("Warning message");
+      expect(toasts[0]!.type).toBe("warning");
+      expect(toasts[0]!.message).toBe("Warning message");
     });
 
     it("uses default duration", () => {
       toast.warning("Test");
 
       const { toasts } = useToastStore.getState();
-      expect(toasts[0].duration).toBe(DEFAULT_DURATION_MS);
+      expect(toasts[0]!.duration).toBe(DEFAULT_DURATION_MS);
     });
 
     it("accepts custom duration", () => {
       toast.warning("Test", 7000);
 
       const { toasts } = useToastStore.getState();
-      expect(toasts[0].duration).toBe(7000);
+      expect(toasts[0]!.duration).toBe(7000);
     });
 
     it("returns the toast id", () => {

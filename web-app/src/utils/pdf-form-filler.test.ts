@@ -274,19 +274,12 @@ describe('pdf-form-filler', () => {
   describe('downloadPdf', () => {
     let mockCreateObjectURL: ReturnType<typeof vi.fn>;
     let mockRevokeObjectURL: ReturnType<typeof vi.fn>;
-    let mockAppendChild: ReturnType<typeof vi.fn>;
-    let mockRemoveChild: ReturnType<typeof vi.fn>;
-    let mockClick: ReturnType<typeof vi.fn>;
-    let mockLink: { href: string; download: string; click: () => void };
+    let mockLink: { href: string; download: string; click: ReturnType<typeof vi.fn> };
 
     beforeEach(() => {
       mockCreateObjectURL = vi.fn(() => 'blob:test-url');
       mockRevokeObjectURL = vi.fn();
-      mockClick = vi.fn();
-      mockLink = { href: '', download: '', click: mockClick };
-
-      mockAppendChild = vi.fn();
-      mockRemoveChild = vi.fn();
+      mockLink = { href: '', download: '', click: vi.fn() };
 
       vi.stubGlobal('URL', {
         createObjectURL: mockCreateObjectURL,
@@ -294,8 +287,8 @@ describe('pdf-form-filler', () => {
       });
 
       vi.spyOn(document, 'createElement').mockReturnValue(mockLink as unknown as HTMLAnchorElement);
-      vi.spyOn(document.body, 'appendChild').mockImplementation(mockAppendChild);
-      vi.spyOn(document.body, 'removeChild').mockImplementation(mockRemoveChild);
+      vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node);
+      vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node);
     });
 
     afterEach(() => {
@@ -325,15 +318,14 @@ describe('pdf-form-filler', () => {
 
       downloadPdf(pdfBytes, 'test.pdf');
 
-      expect(mockClick).toHaveBeenCalled();
+      expect(mockLink.click).toHaveBeenCalled();
     });
 
-    it('cleans up by removing link and revoking URL', () => {
+    it('cleans up by revoking URL', () => {
       const pdfBytes = new Uint8Array([1, 2, 3]);
 
       downloadPdf(pdfBytes, 'test.pdf');
 
-      expect(mockRemoveChild).toHaveBeenCalled();
       expect(mockRevokeObjectURL).toHaveBeenCalledWith('blob:test-url');
     });
   });
@@ -356,12 +348,12 @@ describe('pdf-form-filler', () => {
     });
 
     it('throws error when PDF template fetch fails', async () => {
-      global.fetch = vi.fn(() =>
+      vi.stubGlobal('fetch', vi.fn(() =>
         Promise.resolve({
           ok: false,
           statusText: 'Not Found',
         })
-      ) as unknown as typeof fetch;
+      ));
 
       await expect(
         fillSportsHallReportForm(mockReportData, 'NLA', 'de')

@@ -4,11 +4,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement, type ReactNode } from "react";
 import { useValidationState } from "./useValidationState";
 import type { ValidatedPersonSearchResult } from "@/api/validation";
-import type { IndoorPlayerNominationItem } from "@/api/schema";
+import type { RosterPlayer } from "@/hooks/useNominationList";
 import * as authStore from "@/stores/auth";
 import * as apiClient from "@/api/client";
-
-type PlayerItem = IndoorPlayerNominationItem["player"];
 
 vi.mock("@/stores/auth");
 vi.mock("@/api/client", async (importOriginal) => {
@@ -152,7 +150,7 @@ describe("useValidationState", () => {
         wrapper: createWrapper(),
       });
 
-      const newPlayer = { __identity: "new-player" } as PlayerItem;
+      const newPlayer: RosterPlayer = { id: "new-player", displayName: "New Player", shirtNumber: 1 };
       act(() => {
         result.current.setHomeRosterModifications({
           added: [newPlayer],
@@ -193,7 +191,7 @@ describe("useValidationState", () => {
 
       act(() => {
         result.current.setHomeRosterModifications({
-          added: [{ __identity: "player" } as PlayerItem],
+          added: [{ id: "player", displayName: "Player", shirtNumber: 1 }],
           removed: [],
         });
       });
@@ -344,7 +342,7 @@ describe("useValidationState", () => {
       // Make some changes
       act(() => {
         result.current.setHomeRosterModifications({
-          added: [{ __identity: "p1" } as PlayerItem],
+          added: [{ id: "p1", displayName: "Player 1", shirtNumber: 1 }],
           removed: [],
         });
         result.current.setScorer(mockScorer);
@@ -420,7 +418,7 @@ describe("useValidationState", () => {
       // Make modifications
       act(() => {
         result.current.setHomeRosterModifications({
-          added: [{ __identity: "new-player" } as PlayerItem],
+          added: [{ id: "new-player", displayName: "New Player", shirtNumber: 1 }],
           removed: ["player-1"],
         });
       });
@@ -473,7 +471,7 @@ describe("useValidationState", () => {
 
       act(() => {
         result.current.setHomeRosterModifications({
-          added: [{ __identity: "player" } as PlayerItem],
+          added: [{ id: "player", displayName: "Player", shirtNumber: 1 }],
           removed: [],
         });
       });
@@ -507,7 +505,7 @@ describe("useValidationState", () => {
 
       act(() => {
         result.current.setHomeRosterModifications({
-          added: [{ __identity: "player" } as PlayerItem],
+          added: [{ id: "player", displayName: "Player", shirtNumber: 1 }],
           removed: [],
         });
       });

@@ -62,14 +62,15 @@ describe("SettingsPage", () => {
     mockSettingsStore();
 
     vi.mocked(pwaContext.usePWA).mockReturnValue({
+      offlineReady: false,
       needRefresh: false,
       isChecking: false,
       lastChecked: null,
       checkError: null,
+      registrationError: null,
       checkForUpdate: vi.fn(),
       updateApp: vi.fn(),
-      isInstallable: false,
-      installApp: vi.fn(),
+      dismissPrompt: vi.fn(),
     });
   });
 
