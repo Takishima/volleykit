@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { LoginPage } from "./LoginPage";
 import * as authStore from "@/stores/auth";
@@ -31,13 +31,15 @@ function mockAuthStoreState(overrides = {}) {
     setDemoAuthenticated: mockSetDemoAuthenticated,
     ...overrides,
   };
-  vi.mocked(authStore.useAuthStore).mockReturnValue(state as any);
+  vi.mocked(authStore.useAuthStore).mockReturnValue(
+    state as ReturnType<typeof authStore.useAuthStore>,
+  );
 }
 
 function mockDemoStoreState() {
   vi.mocked(demoStore.useDemoStore).mockReturnValue({
     initializeDemoData: mockInitializeDemoData,
-  } as any);
+  } as ReturnType<typeof demoStore.useDemoStore>);
 }
 
 describe("LoginPage", () => {

@@ -4,8 +4,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement, type ReactNode } from "react";
 import { useValidationState } from "./useValidationState";
 import type { ValidatedPersonSearchResult } from "@/api/validation";
+import type { IndoorPlayerNominationItem } from "@/api/schema";
 import * as authStore from "@/stores/auth";
 import * as apiClient from "@/api/client";
+
+type PlayerItem = IndoorPlayerNominationItem["player"];
 
 vi.mock("@/stores/auth");
 vi.mock("@/api/client", async (importOriginal) => {
@@ -149,10 +152,10 @@ describe("useValidationState", () => {
         wrapper: createWrapper(),
       });
 
-      const newPlayer = { id: "new-player", displayName: "New Player" };
+      const newPlayer = { __identity: "new-player" } as PlayerItem;
       act(() => {
         result.current.setHomeRosterModifications({
-          added: [newPlayer as any],
+          added: [newPlayer],
           removed: [],
         });
       });
@@ -190,7 +193,7 @@ describe("useValidationState", () => {
 
       act(() => {
         result.current.setHomeRosterModifications({
-          added: [{ id: "player", displayName: "Player" } as any],
+          added: [{ __identity: "player" } as PlayerItem],
           removed: [],
         });
       });
@@ -341,7 +344,7 @@ describe("useValidationState", () => {
       // Make some changes
       act(() => {
         result.current.setHomeRosterModifications({
-          added: [{ id: "p1" } as any],
+          added: [{ __identity: "p1" } as PlayerItem],
           removed: [],
         });
         result.current.setScorer(mockScorer);
@@ -417,7 +420,7 @@ describe("useValidationState", () => {
       // Make modifications
       act(() => {
         result.current.setHomeRosterModifications({
-          added: [{ id: "new-player" } as any],
+          added: [{ __identity: "new-player" } as PlayerItem],
           removed: ["player-1"],
         });
       });
@@ -470,7 +473,7 @@ describe("useValidationState", () => {
 
       act(() => {
         result.current.setHomeRosterModifications({
-          added: [{ id: "player" } as any],
+          added: [{ __identity: "player" } as PlayerItem],
           removed: [],
         });
       });
@@ -504,7 +507,7 @@ describe("useValidationState", () => {
 
       act(() => {
         result.current.setHomeRosterModifications({
-          added: [{ id: "player" } as any],
+          added: [{ __identity: "player" } as PlayerItem],
           removed: [],
         });
       });

@@ -5,7 +5,6 @@ import {
   mapAppLocaleToPdfLanguage,
   downloadPdf,
   fillSportsHallReportForm,
-  generateAndDownloadSportsHallReport,
   type SportsHallReportData,
 } from './pdf-form-filler';
 import type { Assignment } from '@/api/client';

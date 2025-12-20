@@ -38,7 +38,9 @@ function mockAuthStore(overrides = {}) {
     isDemoMode: false,
     ...overrides,
   };
-  vi.mocked(authStore.useAuthStore).mockReturnValue(state as any);
+  vi.mocked(authStore.useAuthStore).mockReturnValue(
+    state as ReturnType<typeof authStore.useAuthStore>,
+  );
 }
 
 function mockSettingsStore(overrides = {}) {
@@ -47,7 +49,9 @@ function mockSettingsStore(overrides = {}) {
     setSafeMode: mockSetSafeMode,
     ...overrides,
   };
-  vi.mocked(settingsStore.useSettingsStore).mockReturnValue(state as any);
+  vi.mocked(settingsStore.useSettingsStore).mockReturnValue(
+    state as ReturnType<typeof settingsStore.useSettingsStore>,
+  );
 }
 
 describe("SettingsPage", () => {
