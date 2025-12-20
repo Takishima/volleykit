@@ -466,8 +466,9 @@ export function SwipeableCard({
             width: Math.abs(translateX),
           }}
         >
-          {currentActions.map((action) => {
+          {currentActions.map((action, index) => {
             const style = getActionStyle(currentActions.length);
+            const isFirstButton = index === 0;
 
             return (
               <button
@@ -477,7 +478,7 @@ export function SwipeableCard({
                   action.onAction();
                   closeDrawer();
                 }}
-                className={`${action.color} text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-white focus:ring-inset flex flex-col items-center justify-center gap-1 transition-transform overflow-hidden shrink-0`}
+                className={`${action.color} text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-white focus:ring-inset flex flex-col items-center justify-center gap-1 transition-transform overflow-hidden shrink-0 ${!isFirstButton ? "border-l border-white/25" : ""}`}
                 style={{
                   width: style.width,
                   opacity: style.opacity,
