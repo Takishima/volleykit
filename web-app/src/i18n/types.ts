@@ -81,6 +81,10 @@ export interface Translations {
     unpaid: string;
     pending: string;
     total: string;
+    gameFee: string;
+    travel: string;
+    distance: string;
+    status: string;
     all: string;
     received: string;
     loading: string;
