@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { setCsrfToken, clearSession } from "@/api/client";
 import { filterRefereeOccupations } from "@/utils/parseOccupations";
+import { logger } from "@/utils/logger";
 import { useDemoStore } from "./demo";
 
 export type AuthStatus = "idle" | "loading" | "authenticated" | "error";
@@ -80,7 +81,7 @@ function extractLoginFormFields(html: string): LoginFormFields | null {
     // Check for parsing errors
     const parserError = doc.querySelector("parsererror");
     if (parserError) {
-      console.error("DOMParser error:", parserError.textContent);
+      logger.error("DOMParser error:", parserError.textContent);
       return null;
     }
 
@@ -106,7 +107,7 @@ function extractLoginFormFields(html: string): LoginFormFields | null {
 
     // trustedProperties is required for CSRF protection
     if (!trustedProperties) {
-      console.error("Missing __trustedProperties field in login form");
+      logger.error("Missing __trustedProperties field in login form");
       return null;
     }
 
@@ -125,7 +126,7 @@ function extractLoginFormFields(html: string): LoginFormFields | null {
       referrerArguments: referrerArguments ?? "",
     };
   } catch (error) {
-    console.error("Failed to parse login page HTML:", error);
+    logger.error("Failed to parse login page HTML:", error);
     return null;
   }
 }
@@ -152,10 +153,10 @@ function extractCsrfTokenFromPage(html: string): string | null {
       return csrfToken;
     }
 
-    console.warn("Could not find data-csrf-token in page");
+    logger.warn("Could not find data-csrf-token in page");
     return null;
   } catch (error) {
-    console.error("Failed to extract CSRF token from page:", error);
+    logger.error("Failed to extract CSRF token from page:", error);
     return null;
   }
 }
@@ -315,7 +316,7 @@ export const useAuthStore = create<AuthState>()(
           });
         } catch (error) {
           // Log but don't block logout - we still want to clear local state
-          console.error("Logout request failed:", error);
+          logger.error("Logout request failed:", error);
         }
 
         // Clear demo data if exiting demo mode
@@ -412,7 +413,7 @@ export const useAuthStore = create<AuthState>()(
 
               // Check if this was a timeout abort
               if (error instanceof Error && error.name === "AbortError") {
-                console.error("Session check timed out");
+                logger.error("Session check timed out");
                 set({ status: "idle", user: null });
                 resolvePromise(false);
                 return;
@@ -421,7 +422,7 @@ export const useAuthStore = create<AuthState>()(
               throw error;
             }
           } catch (error) {
-            console.error("Session check failed:", error);
+            logger.error("Session check failed:", error);
             set({ status: "idle", user: null });
             resolvePromise(false);
           } finally {

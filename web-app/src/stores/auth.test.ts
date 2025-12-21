@@ -366,6 +366,7 @@ describe("useAuthStore", () => {
 
       expect(result).toBe(false);
       expect(consoleSpy).toHaveBeenCalledWith(
+        "[VolleyKit]",
         "Session check failed:",
         expect.any(Error),
       );
@@ -447,7 +448,10 @@ describe("useAuthStore", () => {
       expect(result).toBe(false);
       expect(useAuthStore.getState().status).toBe("idle");
       expect(useAuthStore.getState().user).toBeNull();
-      expect(consoleSpy).toHaveBeenCalledWith("Session check timed out");
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "[VolleyKit]",
+        "Session check timed out",
+      );
 
       consoleSpy.mockRestore();
       vi.useRealTimers();
