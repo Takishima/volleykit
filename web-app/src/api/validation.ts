@@ -26,6 +26,7 @@
  * - Prefer specific error messages over generic validation errors
  */
 import { z } from "zod";
+import { logger } from "@/utils/logger";
 
 // Common field schemas
 const uuidSchema = z.string().uuid();
@@ -305,7 +306,7 @@ export function validateResponse<T>(
       .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
       .join("; ");
 
-    console.error(`API validation error (${context}):`, result.error.issues);
+    logger.error(`API validation error (${context}):`, result.error.issues);
     throw new Error(`Invalid API response for ${context}: ${errorDetails}`);
   }
 
