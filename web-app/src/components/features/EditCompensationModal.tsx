@@ -77,7 +77,7 @@ export function EditCompensationModal({
           error,
         );
         setFetchError(
-          error instanceof Error ? error.message : "Failed to load data",
+          error instanceof Error ? error.message : t("assignments.failedToLoadData"),
         );
       } finally {
         setIsLoading(false);
@@ -85,7 +85,7 @@ export function EditCompensationModal({
     };
 
     fetchDetails();
-  }, [isOpen, compensationId, isDemoMode]);
+  }, [isOpen, compensationId, isDemoMode, t]);
 
   // Reset form when modal closes
   useEffect(() => {
@@ -117,7 +117,7 @@ export function EditCompensationModal({
 
       const km = parseLocalizedNumber(kilometers);
       if (kilometers && (isNaN(km) || km < 0)) {
-        setErrors({ kilometers: "Please enter a valid positive number" });
+        setErrors({ kilometers: t("assignments.invalidKilometers") });
         return;
       }
 
@@ -161,6 +161,7 @@ export function EditCompensationModal({
       isDemoMode,
       updateCompensation,
       onClose,
+      t,
     ],
   );
 

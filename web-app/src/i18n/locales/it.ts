@@ -75,6 +75,8 @@ const it: Translations = {
     gameReportNotAvailable:
       "I rapporti delle partite sono disponibili solo per le partite NLA e NLB.",
     reportGenerated: "Rapporto generato con successo",
+    invalidKilometers: "Inserisci un numero positivo valido",
+    failedToLoadData: "Impossibile caricare i dati",
   },
   compensations: {
     title: "Compensi",

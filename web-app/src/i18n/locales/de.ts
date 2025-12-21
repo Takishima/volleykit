@@ -76,6 +76,8 @@ const de: Translations = {
     gameReportNotAvailable:
       "Spielberichte sind nur für NLA- und NLB-Spiele verfügbar.",
     reportGenerated: "Bericht erfolgreich erstellt",
+    invalidKilometers: "Bitte geben Sie eine gültige positive Zahl ein",
+    failedToLoadData: "Daten konnten nicht geladen werden",
   },
   compensations: {
     title: "Entschädigungen",
