@@ -583,6 +583,7 @@ describe("PWAContext", () => {
       });
 
       expect(consoleWarnSpy).toHaveBeenCalledWith(
+        "[VolleyKit]",
         "updateApp called but service worker is not ready",
       );
       consoleWarnSpy.mockRestore();
