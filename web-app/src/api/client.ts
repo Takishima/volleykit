@@ -7,6 +7,7 @@ import {
   validateResponse,
 } from "./validation";
 import { mockApi } from "./mock-api";
+import { logger } from "@/utils/logger";
 
 // Base URL configuration
 // - Development: Vite proxy (avoids CORS)
@@ -16,7 +17,7 @@ const API_BASE =
 
 // Warn if proxy URL is not configured in production
 if (!import.meta.env.DEV && !API_BASE) {
-  console.warn(
+  logger.warn(
     "VITE_API_PROXY_URL is not configured for production. API calls will fail.",
   );
 }
