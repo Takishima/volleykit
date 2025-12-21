@@ -1,5 +1,6 @@
 import { Component, type ReactNode } from "react";
 import { ErrorFallbackUI } from "./ErrorFallbackUI";
+import { logger } from "../../utils/logger";
 
 interface Props {
   children: ReactNode;
@@ -49,7 +50,7 @@ function logError(
 ): void {
   // In production, send to monitoring service
   // Example: Sentry.captureException(error, { extra: { errorInfo, errorType } });
-  console.error("ErrorBoundary caught an error:", {
+  logger.error("ErrorBoundary caught an error:", {
     error,
     errorType,
     componentStack: errorInfo.componentStack,

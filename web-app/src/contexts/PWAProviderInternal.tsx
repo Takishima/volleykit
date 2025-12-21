@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { PWAContext, type PWAContextType } from "./pwa-context-value";
+import { logger } from "../utils/logger";
 
 /**
  * Interval for automatic update checks (1 hour).
@@ -76,7 +77,7 @@ export default function PWAProviderInternal({
             }
           },
           onRegisterError(error) {
-            console.error("Service worker registration error:", error);
+            logger.error("Service worker registration error:", error);
             if (!cancelled) {
               const regError =
                 error instanceof Error
@@ -92,7 +93,7 @@ export default function PWAProviderInternal({
           updateSWRef.current = updateSW;
         }
       } catch (error) {
-        console.error("Failed to register service worker:", error);
+        logger.error("Failed to register service worker:", error);
         if (!cancelled) {
           const regError =
             error instanceof Error
@@ -129,7 +130,7 @@ export default function PWAProviderInternal({
         error instanceof Error
           ? error
           : new Error("Failed to check for updates");
-      console.error("Failed to check for updates:", error);
+      logger.error("Failed to check for updates:", error);
       setCheckError(updateError);
     } finally {
       isCheckingRef.current = false;
@@ -141,7 +142,7 @@ export default function PWAProviderInternal({
     if (updateSWRef.current) {
       await updateSWRef.current(true);
     } else {
-      console.warn("updateApp called but service worker is not ready");
+      logger.warn("updateApp called but service worker is not ready");
     }
   };
 
