@@ -75,6 +75,8 @@ const fr: Translations = {
     gameReportNotAvailable:
       "Les rapports de match sont uniquement disponibles pour les matchs NLA et NLB.",
     reportGenerated: "Rapport généré avec succès",
+    invalidKilometers: "Veuillez entrer un nombre positif valide",
+    failedToLoadData: "Échec du chargement des données",
   },
   compensations: {
     title: "Indemnités",
