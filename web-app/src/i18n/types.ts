@@ -26,6 +26,8 @@ export interface Translations {
     requiredLevel: string;
     demoModeBanner: string;
     optional: string;
+    tbd: string;
+    locationTbd: string;
   };
   auth: {
     login: string;
@@ -126,6 +128,8 @@ export interface Translations {
     withdrawError: string;
     addedToExchangeSuccess: string;
     addedToExchangeError: string;
+    submittedBy: string;
+    levelRequired: string;
   };
   positions: {
     "head-one": string;

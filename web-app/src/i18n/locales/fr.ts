@@ -24,6 +24,8 @@ const fr: Translations = {
     requiredLevel: "Niveau requis",
     demoModeBanner: "Mode Démo - Données d'exemple",
     optional: "Optionnel",
+    tbd: "À déterminer",
+    locationTbd: "Lieu à déterminer",
   },
   auth: {
     login: "Connexion",
@@ -131,6 +133,8 @@ const fr: Translations = {
     withdrawError: "Échec du retrait de l'échange. Veuillez réessayer.",
     addedToExchangeSuccess: "Désignation ajoutée à la bourse aux échanges",
     addedToExchangeError: "Impossible d'ajouter la désignation à la bourse",
+    submittedBy: "Par :",
+    levelRequired: "Niveau {level}+",
   },
   positions: {
     "head-one": "1er Arbitre",

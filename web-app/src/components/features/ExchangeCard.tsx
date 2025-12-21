@@ -4,6 +4,7 @@ import { ExpandArrow } from "@/components/ui/ExpandArrow";
 import { Badge } from "@/components/ui/Badge";
 import type { GameExchange } from "@/api/client";
 import { useExpandable } from "@/hooks/useExpandable";
+import { t, tInterpolate } from "@/i18n";
 
 interface ExchangeCardProps {
   exchange: GameExchange;
@@ -24,18 +25,18 @@ export function ExchangeCard({
     ? parseISO(game.startingDateTime)
     : null;
 
-  const homeTeam = game?.encounter?.teamHome?.name || "TBD";
-  const awayTeam = game?.encounter?.teamAway?.name || "TBD";
-  const hallName = game?.hall?.name || "Location TBD";
+  const homeTeam = game?.encounter?.teamHome?.name || t("common.tbd");
+  const awayTeam = game?.encounter?.teamAway?.name || t("common.tbd");
+  const hallName = game?.hall?.name || t("common.locationTbd");
 
   const status = exchange.status;
   const requiredLevel = exchange.requiredRefereeLevel;
 
-  const defaultStatus = { label: "Open", variant: "warning" as const };
+  const defaultStatus = { label: t("exchange.open"), variant: "warning" as const };
   const statusConfig = {
-    open: { label: "Open", variant: "warning" as const },
-    applied: { label: "Applied", variant: "success" as const },
-    closed: { label: "Closed", variant: "neutral" as const },
+    open: { label: t("exchange.open"), variant: "warning" as const },
+    applied: { label: t("exchange.applied"), variant: "success" as const },
+    closed: { label: t("exchange.closed"), variant: "neutral" as const },
   };
 
   const currentStatus =
@@ -58,7 +59,7 @@ export function ExchangeCard({
           <div className="flex items-center gap-3">
             {/* Date/Time */}
             <div className="text-xs text-text-muted dark:text-text-muted-dark min-w-[4rem]">
-              {startDate ? format(startDate, "MMM d") : "TBD"}
+              {startDate ? format(startDate, "MMM d") : t("common.tbd")}
               <div className="font-medium text-text-secondary dark:text-text-secondary-dark">
                 {startDate ? format(startDate, "HH:mm") : ""}
               </div>
@@ -71,7 +72,7 @@ export function ExchangeCard({
               </div>
               {requiredLevel && (
                 <div className="text-xs text-text-subtle dark:text-text-subtle-dark">
-                  Level {requiredLevel}+
+                  {tInterpolate("exchange.levelRequired", { level: requiredLevel })}
                 </div>
               )}
             </div>
@@ -113,14 +114,14 @@ export function ExchangeCard({
                 <div className="text-xs text-text-subtle dark:text-text-subtle-dark">
                   {game.group.phase.league.leagueCategory.name}
                   {game.group.phase.league.gender &&
-                    ` • ${game.group.phase.league.gender === "m" ? "Men" : "Women"}`}
+                    ` • ${game.group.phase.league.gender === "m" ? t("common.men") : t("common.women")}`}
                 </div>
               )}
 
               {/* Submitter info */}
               {exchange.submittedByPerson && (
                 <div className="text-xs text-text-muted dark:text-text-muted-dark">
-                  By: {exchange.submittedByPerson.firstName}{" "}
+                  {t("exchange.submittedBy")} {exchange.submittedByPerson.firstName}{" "}
                   {exchange.submittedByPerson.lastName}
                 </div>
               )}
