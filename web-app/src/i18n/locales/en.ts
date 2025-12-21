@@ -206,6 +206,17 @@ const en: Translations = {
     exportError: "Failed to generate PDF",
     sportsHallReport: "Sports Hall Report",
   },
+  errorBoundary: {
+    connectionProblem: "Connection Problem",
+    somethingWentWrong: "Something went wrong",
+    networkErrorDescription:
+      "Unable to connect to the server. Please check your internet connection and try again.",
+    applicationErrorDescription:
+      "An unexpected error occurred. Please try refreshing the page.",
+    errorDetails: "Error details",
+    tryAgain: "Try Again",
+    refreshPage: "Refresh Page",
+  },
   validation: {
     homeRoster: "Home Roster",
     awayRoster: "Away Roster",

@@ -207,6 +207,17 @@ const fr: Translations = {
     exportError: "Échec de la génération du PDF",
     sportsHallReport: "Rapport de salle",
   },
+  errorBoundary: {
+    connectionProblem: "Problème de connexion",
+    somethingWentWrong: "Une erreur est survenue",
+    networkErrorDescription:
+      "Impossible de se connecter au serveur. Veuillez vérifier votre connexion internet et réessayer.",
+    applicationErrorDescription:
+      "Une erreur inattendue s'est produite. Veuillez actualiser la page.",
+    errorDetails: "Détails de l'erreur",
+    tryAgain: "Réessayer",
+    refreshPage: "Actualiser la page",
+  },
   validation: {
     homeRoster: "Effectif domicile",
     awayRoster: "Effectif visiteur",
