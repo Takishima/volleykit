@@ -49,7 +49,7 @@ function handleMutationError(
     errorType,
     variables: variables ? "[redacted]" : undefined, // Don't log sensitive data
     hasContext: context !== undefined,
-    stack,
+    stack: import.meta.env.DEV ? stack : undefined, // Only show stack in dev
   });
 }
 
