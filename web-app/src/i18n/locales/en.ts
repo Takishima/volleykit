@@ -24,6 +24,8 @@ const en: Translations = {
     requiredLevel: "Required Level",
     demoModeBanner: "Demo Mode - Viewing sample data",
     optional: "Optional",
+    tbd: "TBD",
+    locationTbd: "Location TBD",
   },
   auth: {
     login: "Login",
@@ -130,6 +132,8 @@ const en: Translations = {
     withdrawError: "Failed to remove from exchange. Please try again.",
     addedToExchangeSuccess: "Assignment added to exchange list",
     addedToExchangeError: "Failed to add assignment to exchange",
+    submittedBy: "By:",
+    levelRequired: "Level {level}+",
   },
   positions: {
     "head-one": "1st Referee",

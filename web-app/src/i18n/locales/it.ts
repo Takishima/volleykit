@@ -24,6 +24,8 @@ const it: Translations = {
     requiredLevel: "Livello richiesto",
     demoModeBanner: "Modalità Demo - Dati di esempio",
     optional: "Opzionale",
+    tbd: "Da definire",
+    locationTbd: "Luogo da definire",
   },
   auth: {
     login: "Accesso",
@@ -129,6 +131,8 @@ const it: Translations = {
     withdrawError: "Ritiro dallo scambio fallito. Riprova.",
     addedToExchangeSuccess: "Designazione aggiunta alla borsa scambi",
     addedToExchangeError: "Impossibile aggiungere la designazione alla borsa",
+    submittedBy: "Da:",
+    levelRequired: "Livello {level}+",
   },
   positions: {
     "head-one": "1° Arbitro",

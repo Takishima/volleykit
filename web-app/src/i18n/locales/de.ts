@@ -24,6 +24,8 @@ const de: Translations = {
     requiredLevel: "Erforderliches Niveau",
     demoModeBanner: "Demo-Modus - Beispieldaten werden angezeigt",
     optional: "Optional",
+    tbd: "TBD",
+    locationTbd: "Ort unbekannt",
   },
   auth: {
     login: "Anmelden",
@@ -132,6 +134,8 @@ const de: Translations = {
       "Rückzug vom Tausch fehlgeschlagen. Bitte erneut versuchen.",
     addedToExchangeSuccess: "Einsatz zur Tauschbörse hinzugefügt",
     addedToExchangeError: "Einsatz konnte nicht zur Tauschbörse hinzugefügt werden",
+    submittedBy: "Von:",
+    levelRequired: "Niveau {level}+",
   },
   positions: {
     "head-one": "1. Schiedsrichter",
