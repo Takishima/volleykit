@@ -28,6 +28,7 @@ import {
   RETRY_CONFIG,
 } from "@/utils/query-error-utils";
 import { usePreloadLocales } from "@/hooks/usePreloadLocales";
+import { logger } from "@/utils/logger";
 
 /**
  * Global error handler for React Query mutations.
@@ -43,7 +44,7 @@ function handleMutationError(
   const errorType = classifyQueryError(message);
   const stack = error instanceof Error ? error.stack : undefined;
 
-  console.error("Mutation error:", {
+  logger.error("Mutation error:", {
     message,
     errorType,
     variables: variables ? "[redacted]" : undefined, // Don't log sensitive data
@@ -124,7 +125,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   // If verification failed, redirect to login (session may be invalid)
   if (verifyError) {
-    console.warn("Session verification failed:", verifyError);
+    logger.warn("Session verification failed:", verifyError);
     return <Navigate to="/login" replace />;
   }
 
@@ -174,12 +175,9 @@ function QueryErrorHandler({ children }: { children: React.ReactNode }) {
 
       if (isAuthError(error)) {
         isRedirectingRef.current = true;
-        console.warn(
-          "Authentication error detected, redirecting to login:",
-          error,
-        );
+        logger.warn("Authentication error detected, redirecting to login:", error);
         logout()
-          .catch((err) => console.error("Logout failed during redirect:", err))
+          .catch((err) => logger.error("Logout failed during redirect:", err))
           .finally(() => {
             navigate("/login", { replace: true });
           });
