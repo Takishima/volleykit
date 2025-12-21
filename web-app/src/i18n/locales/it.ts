@@ -205,6 +205,17 @@ const it: Translations = {
     exportError: "Generazione PDF fallita",
     sportsHallReport: "Rapporto sala sportiva",
   },
+  errorBoundary: {
+    connectionProblem: "Problema di connessione",
+    somethingWentWrong: "Qualcosa è andato storto",
+    networkErrorDescription:
+      "Impossibile connettersi al server. Verifica la tua connessione internet e riprova.",
+    applicationErrorDescription:
+      "Si è verificato un errore imprevisto. Ricarica la pagina.",
+    errorDetails: "Dettagli errore",
+    tryAgain: "Riprova",
+    refreshPage: "Ricarica pagina",
+  },
   validation: {
     homeRoster: "Rosa di casa",
     awayRoster: "Rosa ospite",

@@ -208,6 +208,17 @@ const de: Translations = {
     exportError: "PDF konnte nicht erstellt werden",
     sportsHallReport: "Hallenrapport",
   },
+  errorBoundary: {
+    connectionProblem: "Verbindungsproblem",
+    somethingWentWrong: "Etwas ist schiefgelaufen",
+    networkErrorDescription:
+      "Verbindung zum Server nicht möglich. Bitte überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.",
+    applicationErrorDescription:
+      "Ein unerwarteter Fehler ist aufgetreten. Bitte laden Sie die Seite neu.",
+    errorDetails: "Fehlerdetails",
+    tryAgain: "Erneut versuchen",
+    refreshPage: "Seite neu laden",
+  },
   validation: {
     homeRoster: "Heimkader",
     awayRoster: "Gastkader",

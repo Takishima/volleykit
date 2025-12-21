@@ -193,6 +193,15 @@ export interface Translations {
     exportError: string;
     sportsHallReport: string;
   };
+  errorBoundary: {
+    connectionProblem: string;
+    somethingWentWrong: string;
+    networkErrorDescription: string;
+    applicationErrorDescription: string;
+    errorDetails: string;
+    tryAgain: string;
+    refreshPage: string;
+  };
   validation: {
     homeRoster: string;
     awayRoster: string;
