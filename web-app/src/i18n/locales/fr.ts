@@ -26,6 +26,8 @@ const fr: Translations = {
     optional: "Optionnel",
     tbd: "À déterminer",
     locationTbd: "Lieu à déterminer",
+    selectRole: "Sélectionner le rôle",
+    selectOccupation: "Sélectionner la fonction",
   },
   auth: {
     login: "Connexion",

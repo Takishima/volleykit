@@ -128,7 +128,7 @@ export function AppShell() {
                       <span className="max-w-[100px] truncate">
                         {activeOccupation
                           ? getOccupationLabel(activeOccupation)
-                          : "Select role"}
+                          : t("common.selectRole")}
                       </span>
                       <ChevronDown
                         className={`w-4 h-4 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
@@ -140,7 +140,7 @@ export function AppShell() {
                       <div
                         className="absolute right-0 mt-1 w-48 bg-surface-card dark:bg-surface-card-dark rounded-lg shadow-lg border border-border-default dark:border-border-default-dark py-1 z-50"
                         role="listbox"
-                        aria-label="Select occupation"
+                        aria-label={t("common.selectOccupation")}
                       >
                         {user?.occupations?.map((occupation) => (
                           <button

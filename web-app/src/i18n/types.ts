@@ -28,6 +28,8 @@ export interface Translations {
     optional: string;
     tbd: string;
     locationTbd: string;
+    selectRole: string;
+    selectOccupation: string;
   };
   auth: {
     login: string;

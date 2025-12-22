@@ -26,6 +26,8 @@ const it: Translations = {
     optional: "Opzionale",
     tbd: "Da definire",
     locationTbd: "Luogo da definire",
+    selectRole: "Seleziona ruolo",
+    selectOccupation: "Seleziona funzione",
   },
   auth: {
     login: "Accesso",
