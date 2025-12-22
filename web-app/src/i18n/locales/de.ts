@@ -202,6 +202,18 @@ const de: Translations = {
     updateNow: "Jetzt aktualisieren",
     updateCheckFailed: "Update-Prüfung fehlgeschlagen",
   },
+  pwa: {
+    offlineReady: "App bereit für Offline-Nutzung",
+    newVersionAvailable: "Neue Version verfügbar",
+    offlineReadyDescription: "Inhalte wurden für den Offline-Zugriff gespeichert.",
+    newVersionDescription: "Klicken Sie auf Neu laden, um auf die neueste Version zu aktualisieren.",
+    reload: "Neu laden",
+    reloading: "Wird neu geladen...",
+    dismiss: "Schliessen",
+    reloadAriaLabel: "Anwendung neu laden, um auf die neueste Version zu aktualisieren",
+    dismissAriaLabel: "Update-Benachrichtigung schliessen",
+    closeAriaLabel: "Benachrichtigung schliessen",
+  },
   pdf: {
     exportTitle: "PDF exportieren",
     selectLanguage: "Sprache für das PDF-Dokument auswählen:",

@@ -200,6 +200,18 @@ const en: Translations = {
     updateNow: "Update Now",
     updateCheckFailed: "Update check failed",
   },
+  pwa: {
+    offlineReady: "App ready for offline use",
+    newVersionAvailable: "New version available",
+    offlineReadyDescription: "Content has been cached for offline access.",
+    newVersionDescription: "Click reload to update to the latest version.",
+    reload: "Reload",
+    reloading: "Reloading...",
+    dismiss: "Dismiss",
+    reloadAriaLabel: "Reload application to update to the latest version",
+    dismissAriaLabel: "Dismiss update notification",
+    closeAriaLabel: "Close notification",
+  },
   pdf: {
     exportTitle: "Export PDF",
     selectLanguage: "Select the language for the PDF document:",

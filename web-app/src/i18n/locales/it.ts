@@ -199,6 +199,18 @@ const it: Translations = {
     updateNow: "Aggiorna ora",
     updateCheckFailed: "Verifica aggiornamenti fallita",
   },
+  pwa: {
+    offlineReady: "App pronta per l'uso offline",
+    newVersionAvailable: "Nuova versione disponibile",
+    offlineReadyDescription: "I contenuti sono stati salvati per l'accesso offline.",
+    newVersionDescription: "Clicca Ricarica per aggiornare all'ultima versione.",
+    reload: "Ricarica",
+    reloading: "Ricaricamento...",
+    dismiss: "Ignora",
+    reloadAriaLabel: "Ricarica l'applicazione per aggiornare all'ultima versione",
+    dismissAriaLabel: "Ignora notifica di aggiornamento",
+    closeAriaLabel: "Chiudi notifica",
+  },
   pdf: {
     exportTitle: "Esporta PDF",
     selectLanguage: "Seleziona la lingua del documento PDF:",
