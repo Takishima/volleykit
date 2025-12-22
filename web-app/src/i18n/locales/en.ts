@@ -26,6 +26,8 @@ const en: Translations = {
     optional: "Optional",
     tbd: "TBD",
     locationTbd: "Location TBD",
+    selectRole: "Select role",
+    selectOccupation: "Select occupation",
   },
   auth: {
     login: "Login",
