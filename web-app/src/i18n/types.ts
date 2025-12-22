@@ -187,6 +187,18 @@ export interface Translations {
     updateNow: string;
     updateCheckFailed: string;
   };
+  pwa: {
+    offlineReady: string;
+    newVersionAvailable: string;
+    offlineReadyDescription: string;
+    newVersionDescription: string;
+    reload: string;
+    reloading: string;
+    dismiss: string;
+    reloadAriaLabel: string;
+    dismissAriaLabel: string;
+    closeAriaLabel: string;
+  };
   pdf: {
     exportTitle: string;
     selectLanguage: string;

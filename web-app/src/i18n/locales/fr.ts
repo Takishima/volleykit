@@ -201,6 +201,18 @@ const fr: Translations = {
     updateNow: "Mettre à jour",
     updateCheckFailed: "Échec de la vérification",
   },
+  pwa: {
+    offlineReady: "Application prête pour le mode hors ligne",
+    newVersionAvailable: "Nouvelle version disponible",
+    offlineReadyDescription: "Le contenu a été mis en cache pour l'accès hors ligne.",
+    newVersionDescription: "Cliquez sur Recharger pour mettre à jour vers la dernière version.",
+    reload: "Recharger",
+    reloading: "Rechargement...",
+    dismiss: "Ignorer",
+    reloadAriaLabel: "Recharger l'application pour mettre à jour vers la dernière version",
+    dismissAriaLabel: "Ignorer la notification de mise à jour",
+    closeAriaLabel: "Fermer la notification",
+  },
   pdf: {
     exportTitle: "Exporter PDF",
     selectLanguage: "Sélectionner la langue du document PDF :",
