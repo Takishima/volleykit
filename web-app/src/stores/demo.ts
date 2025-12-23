@@ -92,6 +92,12 @@ export interface ValidatedGameData {
   awayRosterClosed: boolean;
 }
 
+// Pending scorer selection (saved before finalization)
+export interface PendingScorerData {
+  __identity: string;
+  displayName: string;
+}
+
 // Compensation edits for assignments (stored separately since assignments
 // don't have a convocationCompensation field like CompensationRecords do)
 export interface AssignmentCompensationEdit {
@@ -111,6 +117,9 @@ interface DemoState {
 
   // Validated games - keyed by game ID
   validatedGames: Record<string, ValidatedGameData>;
+
+  // Pending scorer selections - keyed by game ID (saved before finalization)
+  pendingScorers: Record<string, PendingScorerData>;
 
   // Assignment compensation edits - keyed by assignment ID
   // Stores compensation corrections made from the assignments tab
@@ -161,6 +170,12 @@ interface DemoState {
   ) => void;
   isGameValidated: (gameId: string) => boolean;
   getValidatedGameData: (gameId: string) => ValidatedGameData | null;
+  setPendingScorer: (
+    gameId: string,
+    scorer: { __identity: string; displayName: string },
+  ) => void;
+  getPendingScorer: (gameId: string) => PendingScorerData | null;
+  clearPendingScorer: (gameId: string) => void;
   updateNominationListClosed: (
     gameId: string,
     team: "home" | "away",
@@ -1265,6 +1280,7 @@ export const useDemoStore = create<DemoState>()(
       possiblePlayers: [],
       scorers: [],
       validatedGames: {},
+      pendingScorers: {},
       assignmentCompensations: {},
       activeAssociationCode: null,
       userRefereeLevel: null,
@@ -1307,6 +1323,7 @@ export const useDemoStore = create<DemoState>()(
           possiblePlayers: [],
           scorers: [],
           validatedGames: {},
+          pendingScorers: {},
           assignmentCompensations: {},
           activeAssociationCode: null,
           userRefereeLevel: null,
@@ -1471,6 +1488,28 @@ export const useDemoStore = create<DemoState>()(
         return get().validatedGames[gameId] ?? null;
       },
 
+      setPendingScorer: (
+        gameId: string,
+        scorer: { __identity: string; displayName: string },
+      ) =>
+        set((state) => ({
+          pendingScorers: {
+            ...state.pendingScorers,
+            [gameId]: scorer,
+          },
+        })),
+
+      getPendingScorer: (gameId: string) => {
+        return get().pendingScorers[gameId] ?? null;
+      },
+
+      clearPendingScorer: (gameId: string) =>
+        set((state) => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Destructuring to remove key
+          const { [gameId]: _removed, ...rest } = state.pendingScorers;
+          return { pendingScorers: rest };
+        }),
+
       updateNominationListClosed: (
         gameId: string,
         team: "home" | "away",
@@ -1563,6 +1602,7 @@ export const useDemoStore = create<DemoState>()(
         possiblePlayers: state.possiblePlayers,
         scorers: state.scorers,
         validatedGames: state.validatedGames,
+        pendingScorers: state.pendingScorers,
         assignmentCompensations: state.assignmentCompensations,
         activeAssociationCode: state.activeAssociationCode,
         userRefereeLevel: state.userRefereeLevel,
@@ -1579,10 +1619,11 @@ export const useDemoStore = create<DemoState>()(
 
         if (isStale) {
           // Return current (empty) state to trigger fresh data generation
-          // BUT preserve validatedGames and assignmentCompensations since those represent user actions
+          // BUT preserve validatedGames, pendingScorers, and assignmentCompensations since those represent user actions
           return {
             ...current,
             validatedGames: persistedState?.validatedGames ?? {},
+            pendingScorers: persistedState?.pendingScorers ?? {},
             assignmentCompensations: persistedState?.assignmentCompensations ?? {},
           };
         }

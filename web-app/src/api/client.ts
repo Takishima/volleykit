@@ -941,7 +941,7 @@ export const api = {
     scoresheetId: string,
     gameId: string,
     scorerPersonId: string,
-    fileResourceId: string,
+    fileResourceId?: string,
     validationId?: string,
     isSimpleScoresheet: boolean = false,
   ): Promise<Scoresheet> {
@@ -949,10 +949,13 @@ export const api = {
       "scoresheet[__identity]": scoresheetId,
       "scoresheet[game][__identity]": gameId,
       "scoresheet[writerPerson][__identity]": scorerPersonId,
-      "scoresheet[file][__identity]": fileResourceId,
-      "scoresheet[hasFile]": "true",
+      "scoresheet[hasFile]": fileResourceId ? "true" : "false",
       "scoresheet[isSimpleScoresheet]": isSimpleScoresheet ? "true" : "false",
     };
+
+    if (fileResourceId) {
+      body["scoresheet[file][__identity]"] = fileResourceId;
+    }
 
     if (validationId) {
       body["scoresheet[scoresheetValidation][__identity]"] = validationId;

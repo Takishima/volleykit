@@ -142,6 +142,7 @@ export function ValidateGameModal({
     completionStatus,
     isValidated,
     validatedInfo,
+    pendingScorer,
     setHomeRosterModifications,
     setAwayRosterModifications,
     setScorer,
@@ -513,9 +514,19 @@ export function ValidateGameModal({
 
                   {currentStepId === "scorer" && (
                     <ScorerPanel
+                      key={pendingScorer?.__identity ?? "no-pending-scorer"}
                       onScorerChange={setScorer}
                       readOnly={isValidated}
                       readOnlyScorerName={validatedInfo?.scorerName}
+                      initialScorer={
+                        pendingScorer
+                          ? {
+                              __identity: pendingScorer.__identity,
+                              displayName: pendingScorer.displayName,
+                              birthday: "", // Minimal required field
+                            }
+                          : null
+                      }
                     />
                   )}
 

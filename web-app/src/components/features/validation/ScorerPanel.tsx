@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ValidatedPersonSearchResult } from "@/api/validation";
 import { ScorerSearchPanel } from "./ScorerSearchPanel";
 
@@ -24,6 +24,15 @@ export function ScorerPanel({
 }: ScorerPanelProps) {
   const [selectedScorer, setSelectedScorer] =
     useState<ValidatedPersonSearchResult | null>(initialScorer);
+
+  // Notify parent of initial scorer on mount (so completionStatus is updated)
+  useEffect(() => {
+    if (initialScorer) {
+      onScorerChange?.(initialScorer);
+    }
+    // Only run on mount - when key changes, component remounts with new initialScorer
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleScorerSelect = (scorer: ValidatedPersonSearchResult | null) => {
     setSelectedScorer(scorer);
