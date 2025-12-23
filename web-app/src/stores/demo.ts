@@ -52,6 +52,9 @@ interface DemoState {
   userRefereeLevel: string | null;
   userRefereeLevelGradationValue: number | null;
 
+  // Timestamp when demo data was generated (for staleness check)
+  generatedAt: number | null;
+
   // Data lifecycle actions
   initializeDemoData: (associationCode?: DemoAssociationCode) => void;
   clearDemoData: () => void;
@@ -1184,6 +1187,9 @@ function generateMockNominationLists(): MockNominationLists {
 const DEMO_USER_REFEREE_LEVEL = "N2";
 const DEMO_USER_REFEREE_LEVEL_GRADATION_VALUE = 2;
 
+// Demo data is considered stale after 6 hours - regenerate fresh data on next load
+const DEMO_DATA_STALENESS_MS = 6 * 60 * 60 * 1000;
+
 export const useDemoStore = create<DemoState>()(
   persist(
     (set, get) => ({
@@ -1196,6 +1202,7 @@ export const useDemoStore = create<DemoState>()(
       activeAssociationCode: null,
       userRefereeLevel: null,
       userRefereeLevelGradationValue: null,
+      generatedAt: null,
 
       initializeDemoData: (associationCode: DemoAssociationCode = "SV") => {
         // Only regenerate if no data exists or association is changing
@@ -1220,6 +1227,7 @@ export const useDemoStore = create<DemoState>()(
           activeAssociationCode: associationCode,
           userRefereeLevel: DEMO_USER_REFEREE_LEVEL,
           userRefereeLevelGradationValue: DEMO_USER_REFEREE_LEVEL_GRADATION_VALUE,
+          generatedAt: Date.now(),
         });
       },
 
@@ -1234,6 +1242,7 @@ export const useDemoStore = create<DemoState>()(
           activeAssociationCode: null,
           userRefereeLevel: null,
           userRefereeLevelGradationValue: null,
+          generatedAt: null,
         }),
 
       refreshData: () =>
@@ -1247,6 +1256,7 @@ export const useDemoStore = create<DemoState>()(
             nominationLists: generateMockNominationLists(),
             possiblePlayers: newData.possiblePlayers,
             scorers: newData.scorers,
+            generatedAt: Date.now(),
           };
         }),
 
@@ -1261,6 +1271,7 @@ export const useDemoStore = create<DemoState>()(
           possiblePlayers: data.possiblePlayers,
           scorers: data.scorers,
           activeAssociationCode: associationCode,
+          generatedAt: Date.now(),
         });
       },
 
@@ -1356,7 +1367,27 @@ export const useDemoStore = create<DemoState>()(
         activeAssociationCode: state.activeAssociationCode,
         userRefereeLevel: state.userRefereeLevel,
         userRefereeLevelGradationValue: state.userRefereeLevelGradationValue,
+        generatedAt: state.generatedAt,
       }),
+      merge: (persisted, current) => {
+        const persistedState = persisted as Partial<DemoState> | undefined;
+
+        // Check if persisted data is stale (older than threshold)
+        const generatedAt = persistedState?.generatedAt;
+        const isStale =
+          !generatedAt || Date.now() - generatedAt > DEMO_DATA_STALENESS_MS;
+
+        if (isStale) {
+          // Return current (empty) state to trigger fresh data generation
+          return current;
+        }
+
+        // Data is fresh, merge persisted state
+        return {
+          ...current,
+          ...persistedState,
+        };
+      },
     },
   ),
 );
