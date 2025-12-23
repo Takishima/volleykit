@@ -6,7 +6,7 @@ This document outlines what we need to capture from the browser to build an accu
 
 ✅ Endpoints identified
 ✅ Test data samples collected
-❌ Exact request parameters
+✅ Exact request parameters (see `captures/*.txt`)
 ❌ Complete response structures
 ❌ CSRF token mechanism
 
@@ -39,27 +39,27 @@ For each endpoint, we need to capture:
 
 ### Assignments Endpoint
 
-- [ ] Request: Sorting parameters
-- [ ] Request: Exact date range format
-- [ ] Request: All filter options
+- [x] Request: Sorting parameters (`captures/assignments_request.txt`)
+- [x] Request: Exact date range format
+- [x] Request: All filter options
 - [ ] Response: Complete item structure
 - [ ] Response: Pagination details
 - [ ] Response: Status indicators
 
 ### Compensations Endpoint
 
-- [ ] Request: Sorting parameters
-- [ ] Request: Date property name
-- [ ] Request: Filter options (paid/unpaid, etc.)
+- [x] Request: Sorting parameters (`captures/compensations_request.txt`)
+- [x] Request: Date property name
+- [x] Request: Filter options (paid/unpaid, etc.)
 - [ ] Response: Complete item structure
 - [ ] Response: Payment status fields
 - [ ] Response: Calculation breakdowns
 
 ### Exchanges Endpoint
 
-- [ ] Request: Sorting parameters
-- [ ] Request: Date property name
-- [ ] Request: Status filters
+- [x] Request: Sorting parameters (`captures/exchanges_request.txt`)
+- [x] Request: Date property name
+- [x] Request: Status filters
 - [ ] Response: Complete item structure
 - [ ] Response: Qualification details
 - [ ] Response: Application status

@@ -13,13 +13,18 @@ Form-encoded POST body with the following parameters:
 ### Observed Parameters (from browser network logs)
 
 ```
-searchConfiguration[sorting][0][field]: TODO - capture from browser
-searchConfiguration[sorting][0][direction]: TODO - capture from browser
-searchConfiguration[dateRange][from]: YYYY-MM-DD
-searchConfiguration[dateRange][to]: YYYY-MM-DD
-searchConfiguration[dateProperty]: compensationDate
-pagination[page]: 1
-pagination[itemsPerPage]: 50
+searchConfiguration[propertyFilters][0][propertyName]: refereeGame.game.startingDateTime
+searchConfiguration[propertyFilters][0][dateRange][from]: YYYY-MM-DDTHH:MM:SS.000Z
+searchConfiguration[propertyFilters][0][dateRange][to]: YYYY-MM-DDTHH:MM:SS.000Z
+searchConfiguration[propertyFilters][1][propertyName]: convocationCompensation.paymentDone
+searchConfiguration[propertyFilters][1][values][0]: NOT_NULL
+searchConfiguration[customFilters][0][name]: archivedRefereeConvocations
+searchConfiguration[propertyOrderings][0][propertyName]: refereeGame.game.startingDateTime
+searchConfiguration[propertyOrderings][0][descending]: false
+searchConfiguration[propertyOrderings][0][isSetByUser]: true
+searchConfiguration[offset]: 0
+searchConfiguration[limit]: 10
+searchConfiguration[textSearchOperator]: AND
 __csrfToken: <token_value>
 ```
 
@@ -134,10 +139,12 @@ JSON response with structure (see `docs/api/volleymanager-openapi.yaml` for full
 
 ## Notes
 
-- The date property used for filtering is `compensationDate` (not the game date)
+- Date filtering uses `propertyFilters` with `refereeGame.game.startingDateTime`
+- Additional filter for payment status: `convocationCompensation.paymentDone = NOT_NULL`
+- Custom filter: `archivedRefereeConvocations`
+- Pagination uses `offset`/`limit` (not page-based)
 - Amounts are in Swiss Francs (CHF)
 - Distance is in kilometers
-- Payment status fields also exist but need to capture details
 
 ## PDF Download Endpoint
 

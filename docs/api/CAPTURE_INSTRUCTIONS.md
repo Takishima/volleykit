@@ -37,14 +37,17 @@ In the Network tab, look for the POST/GET request to the endpoint. Click on it t
 # In volleymanager-openapi.yaml, update the requestBody schema
 
 Example for Assignments:
+  searchConfiguration[propertyFilters][0][propertyName]: "refereeGame.game.startingDateTime"
+  searchConfiguration[propertyFilters][0][dateRange][from]: "2025-12-07T23:00:00.000Z"
+  searchConfiguration[propertyFilters][0][dateRange][to]: "2025-12-15T22:59:59.000Z"
+  searchConfiguration[customFilters]: ""
+  searchConfiguration[propertyOrderings][0][propertyName]: "refereeGame.game.startingDateTime"
+  searchConfiguration[propertyOrderings][0][descending]: false
+  searchConfiguration[propertyOrderings][0][isSetByUser]: true
+  searchConfiguration[offset]: 0
+  searchConfiguration[limit]: 10
+  searchConfiguration[textSearchOperator]: "AND"
   __csrfToken: "abc123..."
-  searchConfiguration[dateRange][from]: "2025-12-08"
-  searchConfiguration[dateRange][to]: "2026-05-20"
-  searchConfiguration[dateProperty]: "refereeConvocation.refereeGame.game.startingDateTime"
-  searchConfiguration[sorting][0][field]: "refereeGame.game.startingDateTime"
-  searchConfiguration[sorting][0][direction]: "asc"
-  pagination[page]: "1"
-  pagination[itemsPerPage]: "50"
 ```
 
 ### Step 4: Copy Response Data
@@ -116,35 +119,9 @@ copy(await (await fetch('/api/...')).text())
 
 This copies the response to clipboard.
 
-## What We Need for Each Endpoint
+## Capture Status
 
-✅ = Captured, ❌ = Still needed
-
-### Assignments (`searchMyRefereeConvocations`)
-
-- ❌ Complete request parameters
-- ❌ Complete response structure
-- ❌ Field descriptions
-- ❌ Error response examples
-
-### Compensations (`search`)
-
-- ❌ Complete request parameters
-- ❌ Complete response structure
-- ❌ Payment status field values
-- ❌ Additional expense types
-
-### Exchanges (`search`)
-
-- ❌ Complete request parameters
-- ❌ Complete response structure
-- ❌ Status field values
-- ❌ Referee level codes
-
-### Settings Endpoints
-
-- ❌ Active season response
-- ❌ Association settings response
+See [CAPTURE_PLAN.md](CAPTURE_PLAN.md) for the current capture checklist and status.
 
 ## Next Steps After Capture
 
