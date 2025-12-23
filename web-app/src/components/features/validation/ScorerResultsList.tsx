@@ -1,7 +1,7 @@
 import type { ValidatedPersonSearchResult } from "@/api/validation";
 import { useTranslation } from "@/hooks/useTranslation";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { formatBirthday } from "./format-birthday";
+import { formatDOB } from "@/utils/date-helpers";
 
 interface ScorerResultsListProps {
   results: ValidatedPersonSearchResult[] | undefined;
@@ -101,7 +101,7 @@ export function ScorerResultsList({
                     <span>ID: {scorer.associationId}</span>
                   )}
                   {scorer.birthday && (
-                    <span>{formatBirthday(scorer.birthday)}</span>
+                    <span>{formatDOB(scorer.birthday)}</span>
                   )}
                 </div>
               </div>
