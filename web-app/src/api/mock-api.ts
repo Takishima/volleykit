@@ -31,6 +31,13 @@ import type {
   PersonSearchResult,
 } from "./client";
 import { useDemoStore } from "@/stores/demo";
+import {
+  assignmentsResponseSchema,
+  compensationsResponseSchema,
+  exchangesResponseSchema,
+  personSearchResponseSchema,
+  validateResponse,
+} from "./validation";
 
 // Network delay constants for realistic demo behavior
 const MOCK_NETWORK_DELAY_MS = 50;
@@ -259,12 +266,15 @@ export const mockApi = {
     const store = useDemoStore.getState();
     const { items, total } = processSearchRequest(store.assignments, config);
 
-    // Type assertion safe by design: store.assignments is Assignment[], and
-    // processSearchRequest only filters/sorts/paginates without type transformation
-    return {
+    const response = {
       items: items as Assignment[],
       totalItemsCount: total,
     };
+
+    // Validate mock response matches real API schema, then cast back to expected type
+    // (validation ensures data structure is correct, cast preserves original type compatibility)
+    validateResponse(response, assignmentsResponseSchema, "mock:searchAssignments");
+    return response;
   },
 
   async getAssignmentDetails(
@@ -294,12 +304,14 @@ export const mockApi = {
     const store = useDemoStore.getState();
     const { items, total } = processSearchRequest(store.compensations, config);
 
-    // Type assertion safe by design: store.compensations is CompensationRecord[], and
-    // processSearchRequest only filters/sorts/paginates without type transformation
-    return {
+    const response = {
       items: items as CompensationRecord[],
       totalItemsCount: total,
     };
+
+    // Validate mock response matches real API schema, then cast back to expected type
+    validateResponse(response, compensationsResponseSchema, "mock:searchCompensations");
+    return response;
   },
 
   async getCompensationDetails(
@@ -339,12 +351,14 @@ export const mockApi = {
     const store = useDemoStore.getState();
     const { items, total } = processSearchRequest(store.exchanges, config);
 
-    // Type assertion safe by design: store.exchanges is GameExchange[], and
-    // processSearchRequest only filters/sorts/paginates without type transformation
-    return {
+    const response = {
       items: items as GameExchange[],
       totalItemsCount: total,
     };
+
+    // Validate mock response matches real API schema, then cast back to expected type
+    validateResponse(response, exchangesResponseSchema, "mock:searchExchanges");
+    return response;
   },
 
   async applyForExchange(exchangeId: string): Promise<void> {
@@ -471,10 +485,14 @@ export const mockApi = {
     const limit = options?.limit ?? DEFAULT_PERSON_SEARCH_LIMIT;
     const paginated = filtered.slice(offset, offset + limit);
 
-    return {
+    const response = {
       items: paginated,
       totalItemsCount: filtered.length,
     };
+
+    // Validate mock response matches real API schema, then cast back to expected type
+    validateResponse(response, personSearchResponseSchema, "mock:searchPersons");
+    return response;
   },
 
   async getGameWithScoresheet(gameId: string): Promise<GameDetails> {
