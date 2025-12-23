@@ -41,8 +41,9 @@ Example for Assignments:
   searchConfiguration[dateRange][from]: "2025-12-08"
   searchConfiguration[dateRange][to]: "2026-05-20"
   searchConfiguration[dateProperty]: "refereeConvocation.refereeGame.game.startingDateTime"
-  searchConfiguration[sorting][0][field]: "refereeGame.game.startingDateTime"
-  searchConfiguration[sorting][0][direction]: "asc"
+  searchConfiguration[propertyOrderings][0][propertyName]: "refereeGame.game.startingDateTime"
+  searchConfiguration[propertyOrderings][0][descending]: false
+  searchConfiguration[propertyOrderings][0][isSetByUser]: true
   pagination[page]: "1"
   pagination[itemsPerPage]: "50"
 ```

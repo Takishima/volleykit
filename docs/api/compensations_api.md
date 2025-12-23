@@ -13,8 +13,9 @@ Form-encoded POST body with the following parameters:
 ### Observed Parameters (from browser network logs)
 
 ```
-searchConfiguration[sorting][0][field]: TODO - capture from browser
-searchConfiguration[sorting][0][direction]: TODO - capture from browser
+searchConfiguration[propertyOrderings][0][propertyName]: refereeGame.game.startingDateTime
+searchConfiguration[propertyOrderings][0][descending]: false
+searchConfiguration[propertyOrderings][0][isSetByUser]: true
 searchConfiguration[dateRange][from]: YYYY-MM-DD
 searchConfiguration[dateRange][to]: YYYY-MM-DD
 searchConfiguration[dateProperty]: compensationDate

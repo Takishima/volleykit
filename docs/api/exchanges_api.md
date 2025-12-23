@@ -13,11 +13,12 @@ Form-encoded POST body with the following parameters:
 ### Observed Parameters (from browser network logs)
 
 ```
-searchConfiguration[sorting][0][field]: TODO - capture from browser
-searchConfiguration[sorting][0][direction]: TODO - capture from browser
-searchConfiguration[dateRange][from]: YYYY-MM-DD
-searchConfiguration[dateRange][to]: YYYY-MM-DD
-searchConfiguration[dateProperty]: TODO - capture from browser
+searchConfiguration[propertyFilters][0][propertyName]: refereeGame.game.startingDateTime
+searchConfiguration[propertyFilters][0][dateRange][from]: YYYY-MM-DDTHH:MM:SS.000Z
+searchConfiguration[propertyFilters][0][dateRange][to]: YYYY-MM-DDTHH:MM:SS.000Z
+searchConfiguration[propertyFilters][1][propertyName]: status
+searchConfiguration[propertyFilters][1][enumValues][0]: open
+searchConfiguration[propertyOrderings]: (not specified - no default sorting)
 pagination[page]: 1
 pagination[itemsPerPage]: 50
 __csrfToken: <token_value>
