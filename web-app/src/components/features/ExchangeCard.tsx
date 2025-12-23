@@ -2,6 +2,7 @@ import { format, parseISO } from "date-fns";
 import { Card, CardContent } from "@/components/ui/Card";
 import { ExpandArrow } from "@/components/ui/ExpandArrow";
 import { Badge } from "@/components/ui/Badge";
+import { MapPin } from "@/components/ui/icons";
 import type { GameExchange } from "@/api/client";
 import { useExpandable } from "@/hooks/useExpandable";
 import { useDateLocale } from "@/hooks/useDateFormat";
@@ -100,14 +101,7 @@ export function ExchangeCard({
             <div className="px-2 pb-2 pt-0 border-t border-border-subtle dark:border-border-subtle-dark space-y-1">
               {/* Location */}
               <div className="flex items-center gap-2 text-sm text-text-muted dark:text-text-muted-dark pt-2">
-                <svg
-                  className="w-4 h-4 flex-shrink-0"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-                </svg>
+                <MapPin className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
                 <span className="truncate">{hallName}</span>
               </div>
 

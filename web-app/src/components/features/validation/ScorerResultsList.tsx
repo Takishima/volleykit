@@ -2,6 +2,7 @@ import type { ValidatedPersonSearchResult } from "@/api/validation";
 import { useTranslation } from "@/hooks/useTranslation";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { formatDOB } from "@/utils/date-helpers";
+import { ChevronRight } from "@/components/ui/icons";
 
 interface ScorerResultsListProps {
   results: ValidatedPersonSearchResult[] | undefined;
@@ -105,19 +106,10 @@ export function ScorerResultsList({
                   )}
                 </div>
               </div>
-              <svg
+              <ChevronRight
                 className="w-5 h-5 text-text-subtle flex-shrink-0 ml-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
+                aria-hidden="true"
+              />
             </button>
           </li>
         );
