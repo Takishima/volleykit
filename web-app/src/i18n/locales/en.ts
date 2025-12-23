@@ -34,6 +34,11 @@ const en: Translations = {
     currencyChf: "CHF",
     distanceUnit: "km",
     dismissNotification: "Dismiss notification",
+    notifications: "Notifications",
+    cardActions: "Card actions",
+    wizardProgress: "Wizard progress",
+    stepIndicatorCurrent: "(current)",
+    stepIndicatorDone: "(done)",
   },
   auth: {
     login: "Login",

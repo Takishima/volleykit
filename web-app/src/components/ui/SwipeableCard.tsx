@@ -13,6 +13,7 @@ import {
   FULL_SWIPE_RATIO,
   MINIMUM_SWIPE_RATIO,
 } from "../../types/swipe";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // Layout constants for action buttons
 const ACTION_BUTTON_WIDTH = 72;
@@ -59,6 +60,7 @@ export function SwipeableCard({
   className = "",
   onDrawerOpen,
 }: SwipeableCardProps) {
+  const { t } = useTranslation();
   const [translateX, setTranslateX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [showActions, setShowActions] = useState(false);
@@ -554,7 +556,7 @@ export function SwipeableCard({
         >
           <div
             role="dialog"
-            aria-label="Card actions"
+            aria-label={t("common.cardActions")}
             aria-modal="true"
             className="flex items-center justify-center gap-2"
           >

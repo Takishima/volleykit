@@ -6,6 +6,7 @@ import { Check, Circle } from "@/components/ui/icons";
 import type { CompensationRecord } from "@/api/client";
 import { useExpandable } from "@/hooks/useExpandable";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useDateLocale } from "@/hooks/useDateFormat";
 import { formatDistanceKm } from "@/utils/distance";
 
 interface CompensationCardProps {
@@ -21,6 +22,7 @@ export function CompensationCard({
   disableExpansion,
 }: CompensationCardProps) {
   const { t } = useTranslation();
+  const dateLocale = useDateLocale();
   const { isExpanded, detailsId, handleToggle } = useExpandable({
     disabled: disableExpansion,
     onClick,
@@ -53,7 +55,7 @@ export function CompensationCard({
           <div className="flex items-center gap-3">
             {/* Date */}
             <div className="text-xs text-text-muted dark:text-text-muted-dark min-w-[4rem]">
-              {startDate ? format(startDate, "MMM d") : t("common.unknownDate")}
+              {startDate ? format(startDate, "MMM d", { locale: dateLocale }) : t("common.unknownDate")}
             </div>
 
             {/* Match info - truncated */}

@@ -110,6 +110,7 @@ function ToastItem({ toast }: ToastItemProps) {
 }
 
 export function ToastContainer() {
+  const { t } = useTranslation();
   const toasts = useToastStore((state) => state.toasts);
 
   if (toasts.length === 0) {
@@ -119,7 +120,7 @@ export function ToastContainer() {
   return (
     <div
       className={`fixed top-4 right-4 ${TOAST_CONTAINER_Z_INDEX} flex flex-col gap-2 max-w-sm w-full pointer-events-none`}
-      aria-label="Notifications"
+      aria-label={t("common.notifications")}
     >
       {toasts.map((toast) => (
         <div key={toast.id} className="pointer-events-auto">

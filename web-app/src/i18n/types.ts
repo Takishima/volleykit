@@ -36,6 +36,11 @@ export interface Translations {
     currencyChf: string;
     distanceUnit: string;
     dismissNotification: string;
+    notifications: string;
+    cardActions: string;
+    wizardProgress: string;
+    stepIndicatorCurrent: string;
+    stepIndicatorDone: string;
   };
   auth: {
     login: string;

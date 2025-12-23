@@ -15,7 +15,7 @@ describe("LoadingSpinner", () => {
 
   it("has accessible label", () => {
     render(<LoadingSpinner />);
-    expect(screen.getByLabelText("Loading")).toBeInTheDocument();
+    expect(screen.getByLabelText("Loading...")).toBeInTheDocument();
   });
 
   it("applies size classes", () => {

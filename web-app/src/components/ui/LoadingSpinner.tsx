@@ -6,6 +6,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 interface LoadingSpinnerProps {
   size?: "sm" | "md" | "lg";
   className?: string;
+  /** Optional aria-label override. Defaults to translated "Loading" */
+  ariaLabel?: string;
 }
 
 // Size classes for spinner dimensions and border widths
@@ -19,7 +21,10 @@ const sizeClasses = {
 export function LoadingSpinner({
   size = "md",
   className = "",
+  ariaLabel,
 }: LoadingSpinnerProps) {
+  const { t } = useTranslation();
+
   return (
     <div
       className={`
@@ -29,7 +34,7 @@ export function LoadingSpinner({
         ${className}
       `}
       role="status"
-      aria-label="Loading"
+      aria-label={ariaLabel ?? t("common.loading")}
     />
   );
 }
