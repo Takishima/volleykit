@@ -5,6 +5,7 @@ import { EditCompensationModal } from "./EditCompensationModal";
 import type { CompensationRecord, Assignment } from "@/api/client";
 import { getApiClient } from "@/api/client";
 import { useAuthStore } from "@/stores/auth";
+import { useDemoStore } from "@/stores/demo";
 import * as useConvocationsModule from "@/hooks/useConvocations";
 
 vi.mock("@/api/client", () => ({
@@ -15,8 +16,13 @@ vi.mock("@/stores/auth", () => ({
   useAuthStore: vi.fn(),
 }));
 
+vi.mock("@/stores/demo", () => ({
+  useDemoStore: vi.fn(),
+}));
+
 vi.mock("@/hooks/useConvocations", () => ({
   useUpdateCompensation: vi.fn(),
+  useUpdateAssignmentCompensation: vi.fn(),
 }));
 
 // Shared QueryClient for tests
@@ -85,7 +91,9 @@ async function waitForFormToLoad() {
 describe("EditCompensationModal", () => {
   const mockOnClose = vi.fn();
   const mockMutate = vi.fn();
+  const mockAssignmentMutate = vi.fn();
   const mockGetCompensationDetails = vi.fn();
+  const mockGetAssignmentCompensation = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -102,8 +110,34 @@ describe("EditCompensationModal", () => {
       selector({ isDemoMode: false }),
     );
 
+    // Mock useDemoStore to return getAssignmentCompensation
+    (useDemoStore as unknown as Mock).mockImplementation((selector) =>
+      selector({ getAssignmentCompensation: mockGetAssignmentCompensation }),
+    );
+
+    mockGetAssignmentCompensation.mockReturnValue(null);
+
     vi.mocked(useConvocationsModule.useUpdateCompensation).mockReturnValue({
       mutate: mockMutate,
+      mutateAsync: vi.fn(),
+      isPending: false,
+      isSuccess: false,
+      isError: false,
+      isIdle: true,
+      isPaused: false,
+      error: null,
+      data: undefined,
+      variables: undefined,
+      reset: vi.fn(),
+      context: undefined,
+      failureCount: 0,
+      failureReason: null,
+      status: "idle",
+      submittedAt: 0,
+    });
+
+    vi.mocked(useConvocationsModule.useUpdateAssignmentCompensation).mockReturnValue({
+      mutate: mockAssignmentMutate,
       mutateAsync: vi.fn(),
       isPending: false,
       isSuccess: false,
@@ -502,6 +536,9 @@ describe("EditCompensationModal", () => {
       (useAuthStore as unknown as Mock).mockImplementation((selector) =>
         selector({ isDemoMode: true }),
       );
+
+      // In demo mode, also mock getAssignmentCompensation with demo values
+      mockGetAssignmentCompensation.mockReturnValue(null);
     });
 
     it("calls updateCompensation mutation on submit", async () => {
@@ -524,9 +561,10 @@ describe("EditCompensationModal", () => {
       fireEvent.submit(form!);
 
       await waitFor(() => {
+        // compensationId comes from convocationCompensation.__identity, not record.__identity
         expect(mockMutate).toHaveBeenCalledWith(
           {
-            compensationId: "comp-1",
+            compensationId: "conv-comp-1",
             data: { distanceInMetres: 42000 },
           },
           expect.objectContaining({ onSuccess: expect.any(Function) }),
@@ -557,9 +595,10 @@ describe("EditCompensationModal", () => {
       fireEvent.submit(form!);
 
       await waitFor(() => {
+        // compensationId comes from convocationCompensation.__identity, not record.__identity
         expect(mockMutate).toHaveBeenCalledWith(
           {
-            compensationId: "comp-1",
+            compensationId: "conv-comp-1",
             data: {
               distanceInMetres: 25000,
               correctionReason: "Road work detour",
@@ -567,6 +606,44 @@ describe("EditCompensationModal", () => {
           },
           expect.objectContaining({ onSuccess: expect.any(Function) }),
         );
+      });
+    });
+
+    it("calls updateAssignmentCompensation mutation when editing an assignment", async () => {
+      render(
+        <EditCompensationModal
+          assignment={createMockAssignment()}
+          isOpen={true}
+          onClose={mockOnClose}
+        />,
+        { wrapper: createWrapper() },
+      );
+
+      // Form renders immediately for assignments (no API fetch needed)
+      const kmInput = screen.getByLabelText("Kilometers");
+      const reasonInput = screen.getByLabelText("Reason");
+
+      fireEvent.change(kmInput, { target: { value: "35" } });
+      fireEvent.change(reasonInput, { target: { value: "Construction detour" } });
+
+      // Submit form programmatically
+      const form = kmInput.closest("form");
+      fireEvent.submit(form!);
+
+      await waitFor(() => {
+        // Should call assignment mutation, not compensation mutation
+        expect(mockAssignmentMutate).toHaveBeenCalledWith(
+          {
+            assignmentId: "assignment-1",
+            data: {
+              distanceInMetres: 35000,
+              correctionReason: "Construction detour",
+            },
+          },
+          expect.objectContaining({ onSuccess: expect.any(Function) }),
+        );
+        // Compensation mutation should NOT be called
+        expect(mockMutate).not.toHaveBeenCalled();
       });
     });
   });

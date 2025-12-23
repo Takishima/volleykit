@@ -92,6 +92,14 @@ export interface ValidatedGameData {
   awayRosterClosed: boolean;
 }
 
+// Compensation edits for assignments (stored separately since assignments
+// don't have a convocationCompensation field like CompensationRecords do)
+export interface AssignmentCompensationEdit {
+  distanceInMetres?: number;
+  correctionReason?: string;
+  updatedAt: string;
+}
+
 interface DemoState {
   // Data arrays - populated when demo mode is enabled via useAuthStore
   assignments: Assignment[];
@@ -103,6 +111,10 @@ interface DemoState {
 
   // Validated games - keyed by game ID
   validatedGames: Record<string, ValidatedGameData>;
+
+  // Assignment compensation edits - keyed by assignment ID
+  // Stores compensation corrections made from the assignments tab
+  assignmentCompensations: Record<string, AssignmentCompensationEdit>;
 
   // Current active association code for region-specific data
   activeAssociationCode: DemoAssociationCode | null;
@@ -129,6 +141,15 @@ interface DemoState {
     compensationId: string,
     data: { distanceInMetres?: number; correctionReason?: string },
   ) => void;
+
+  // Assignment compensation operations (for edits from assignments tab)
+  updateAssignmentCompensation: (
+    assignmentId: string,
+    data: { distanceInMetres?: number; correctionReason?: string },
+  ) => void;
+  getAssignmentCompensation: (
+    assignmentId: string,
+  ) => AssignmentCompensationEdit | null;
 
   // Game validation operations
   markGameValidated: (
@@ -1239,6 +1260,7 @@ export const useDemoStore = create<DemoState>()(
       possiblePlayers: [],
       scorers: [],
       validatedGames: {},
+      assignmentCompensations: {},
       activeAssociationCode: null,
       userRefereeLevel: null,
       userRefereeLevelGradationValue: null,
@@ -1280,6 +1302,7 @@ export const useDemoStore = create<DemoState>()(
           possiblePlayers: [],
           scorers: [],
           validatedGames: {},
+          assignmentCompensations: {},
           activeAssociationCode: null,
           userRefereeLevel: null,
           userRefereeLevelGradationValue: null,
@@ -1396,6 +1419,25 @@ export const useDemoStore = create<DemoState>()(
           ),
         })),
 
+      updateAssignmentCompensation: (
+        assignmentId: string,
+        data: { distanceInMetres?: number; correctionReason?: string },
+      ) =>
+        set((state) => ({
+          assignmentCompensations: {
+            ...state.assignmentCompensations,
+            [assignmentId]: {
+              ...state.assignmentCompensations[assignmentId],
+              ...data,
+              updatedAt: new Date().toISOString(),
+            },
+          },
+        })),
+
+      getAssignmentCompensation: (assignmentId: string) => {
+        return get().assignmentCompensations[assignmentId] ?? null;
+      },
+
       markGameValidated: (
         gameId: string,
         data: {
@@ -1462,6 +1504,7 @@ export const useDemoStore = create<DemoState>()(
         possiblePlayers: state.possiblePlayers,
         scorers: state.scorers,
         validatedGames: state.validatedGames,
+        assignmentCompensations: state.assignmentCompensations,
         activeAssociationCode: state.activeAssociationCode,
         userRefereeLevel: state.userRefereeLevel,
         userRefereeLevelGradationValue: state.userRefereeLevelGradationValue,
@@ -1477,10 +1520,11 @@ export const useDemoStore = create<DemoState>()(
 
         if (isStale) {
           // Return current (empty) state to trigger fresh data generation
-          // BUT preserve validatedGames since those represent user actions
+          // BUT preserve validatedGames and assignmentCompensations since those represent user actions
           return {
             ...current,
             validatedGames: persistedState?.validatedGames ?? {},
+            assignmentCompensations: persistedState?.assignmentCompensations ?? {},
           };
         }
 

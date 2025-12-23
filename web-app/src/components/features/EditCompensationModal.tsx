@@ -2,7 +2,10 @@ import { useState, useCallback, useEffect } from "react";
 import type { Assignment, CompensationRecord } from "@/api/client";
 import { getApiClient } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useUpdateCompensation } from "@/hooks/useConvocations";
+import {
+  useUpdateCompensation,
+  useUpdateAssignmentCompensation,
+} from "@/hooks/useConvocations";
 import { logger } from "@/utils/logger";
 import {
   getTeamNames,
@@ -15,6 +18,7 @@ import {
   parseLocalizedNumber,
 } from "@/utils/distance";
 import { useAuthStore } from "@/stores/auth";
+import { useDemoStore } from "@/stores/demo";
 
 interface EditCompensationModalProps {
   assignment?: Assignment;
@@ -31,7 +35,11 @@ export function EditCompensationModal({
 }: EditCompensationModalProps) {
   const { t } = useTranslation();
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const getAssignmentCompensation = useDemoStore(
+    (state) => state.getAssignmentCompensation,
+  );
   const updateCompensationMutation = useUpdateCompensation();
+  const updateAssignmentCompensationMutation = useUpdateAssignmentCompensation();
 
   const [kilometers, setKilometers] = useState("");
   const [reason, setReason] = useState("");
@@ -39,13 +47,37 @@ export function EditCompensationModal({
   const [isLoading, setIsLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
+  // Determine if we're editing an assignment or a compensation record
+  const isAssignmentEdit = !!assignment && !compensation;
+
   // Get the compensation ID from the compensation record
   // Assignments don't have convocationCompensation, only CompensationRecord does
   const compensationId = compensation?.convocationCompensation?.__identity;
 
   // Fetch detailed compensation data when modal opens
   useEffect(() => {
-    if (!isOpen || !compensationId) return;
+    if (!isOpen) return;
+
+    // For assignment edits in demo mode, load from stored assignment compensations
+    if (isAssignmentEdit && isDemoMode && assignment) {
+      const storedData = getAssignmentCompensation(assignment.__identity);
+      if (storedData) {
+        if (storedData.distanceInMetres !== undefined && storedData.distanceInMetres > 0) {
+          setKilometers(formatDistanceKm(storedData.distanceInMetres));
+        }
+        if (storedData.correctionReason) {
+          setReason(storedData.correctionReason);
+        }
+        logger.debug(
+          "[EditCompensationModal] Loaded assignment compensation from store:",
+          storedData,
+        );
+      }
+      return;
+    }
+
+    // For compensation record edits, fetch from API
+    if (!compensationId) return;
 
     const fetchDetails = async () => {
       setIsLoading(true);
@@ -85,7 +117,7 @@ export function EditCompensationModal({
     };
 
     fetchDetails();
-  }, [isOpen, compensationId, isDemoMode, t]);
+  }, [isOpen, compensationId, isDemoMode, isAssignmentEdit, assignment, getAssignmentCompensation, t]);
 
   // Reset form when modal closes
   useEffect(() => {
@@ -121,26 +153,38 @@ export function EditCompensationModal({
         return;
       }
 
-      const recordId = assignment?.__identity || compensation?.__identity;
+      const updateData: { distanceInMetres?: number; correctionReason?: string } = {};
 
-      if (recordId) {
-        const updateData: { distanceInMetres?: number; correctionReason?: string } = {};
+      if (kilometers) {
+        updateData.distanceInMetres = kilometresToMetres(km);
+      }
+      if (reason) {
+        updateData.correctionReason = reason;
+      }
 
-        if (kilometers) {
-          updateData.distanceInMetres = kilometresToMetres(km);
-        }
-        if (reason) {
-          updateData.correctionReason = reason;
-        }
-
-        if (Object.keys(updateData).length > 0) {
+      if (Object.keys(updateData).length > 0) {
+        if (isAssignmentEdit && assignment) {
+          // Use assignment-specific mutation for assignments
+          updateAssignmentCompensationMutation.mutate(
+            { assignmentId: assignment.__identity, data: updateData },
+            {
+              onSuccess: () => {
+                logger.debug(
+                  "[EditCompensationModal] Updated assignment compensation:",
+                  { assignmentId: assignment.__identity, ...updateData },
+                );
+              },
+            },
+          );
+        } else if (compensationId) {
+          // Use compensation mutation for compensation records
           updateCompensationMutation.mutate(
-            { compensationId: recordId, data: updateData },
+            { compensationId, data: updateData },
             {
               onSuccess: () => {
                 logger.debug(
                   "[EditCompensationModal] Updated compensation:",
-                  { recordId, ...updateData },
+                  { compensationId, ...updateData },
                 );
               },
             },
@@ -152,9 +196,11 @@ export function EditCompensationModal({
     },
     [
       assignment,
-      compensation,
+      compensationId,
       kilometers,
       reason,
+      isAssignmentEdit,
+      updateAssignmentCompensationMutation,
       updateCompensationMutation,
       onClose,
       t,

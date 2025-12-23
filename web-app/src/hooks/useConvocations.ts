@@ -652,6 +652,48 @@ export function useUpdateCompensation(): UseMutationResult<
   });
 }
 
+// Assignment compensation update mutation
+// Used when editing compensation from the assignments tab (where we have an Assignment, not a CompensationRecord)
+export function useUpdateAssignmentCompensation(): UseMutationResult<
+  void,
+  Error,
+  { assignmentId: string; data: CompensationUpdateData }
+> {
+  const queryClient = useQueryClient();
+  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const updateAssignmentCompensation = useDemoStore(
+    (state) => state.updateAssignmentCompensation,
+  );
+
+  return useMutation({
+    mutationFn: async ({
+      assignmentId,
+      data,
+    }: {
+      assignmentId: string;
+      data: CompensationUpdateData;
+    }) => {
+      if (isDemoMode) {
+        // Demo mode: update the demo store directly
+        updateAssignmentCompensation(assignmentId, data);
+      } else {
+        // TODO(#231): Implement real API support for assignment compensation updates.
+        // The existing PUT /convocationcompensation endpoint requires a convocationCompensation.__identity,
+        // which only exists on CompensationRecord objects, not Assignment objects.
+        // Options: (1) Find corresponding CompensationRecord by game ID, or (2) new backend endpoint.
+        logger.debug("[useUpdateAssignmentCompensation] Non-demo mode update:", {
+          assignmentId,
+          data,
+        });
+      }
+    },
+    onSuccess: () => {
+      // Invalidate assignment queries to refetch fresh data
+      queryClient.invalidateQueries({ queryKey: ["assignments"] });
+    },
+  });
+}
+
 // Settings hooks
 export function useAssociationSettings(): UseQueryResult<
   AssociationSettings,
