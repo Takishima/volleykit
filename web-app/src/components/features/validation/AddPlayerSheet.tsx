@@ -5,7 +5,7 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { usePossiblePlayerNominations } from "@/hooks/usePlayerNominations";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ResponsiveSheet } from "@/components/ui/ResponsiveSheet";
-import { Check } from "@/components/ui/icons";
+import { Check, X, Plus } from "@/components/ui/icons";
 import { formatDOB } from "@/utils/date-helpers";
 
 // Delay before focusing search input to ensure the sheet animation has started
@@ -135,19 +135,7 @@ export function AddPlayerSheet({
               transition-colors
             "
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
@@ -233,37 +221,17 @@ export function AddPlayerSheet({
                             aria-hidden="true"
                           />
                           {/* X icon shown on hover */}
-                          <svg
+                          <X
                             className="w-5 h-5 text-danger-500 dark:text-danger-400 absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
                             aria-hidden="true"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
+                          />
                           <span className="sr-only">{t("validation.roster.added")}</span>
                         </span>
                       ) : (
-                        <svg
+                        <Plus
                           className="w-5 h-5 text-text-subtle flex-shrink-0 ml-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
                           aria-hidden="true"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 4v16m8-8H4"
-                          />
-                        </svg>
+                        />
                       )}
                     </button>
                   </li>
