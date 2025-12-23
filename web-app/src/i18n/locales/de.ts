@@ -201,6 +201,11 @@ const de: Translations = {
     lastChecked: "Zuletzt geprüft",
     updateNow: "Jetzt aktualisieren",
     updateCheckFailed: "Update-Prüfung fehlgeschlagen",
+    demoData: "Demo-Daten",
+    demoDataDescription:
+      "Ihre Demo-Daten werden im Browser gespeichert. Zurücksetzen, um mit neuen Demo-Daten zu starten.",
+    resetDemoData: "Demo-Daten zurücksetzen",
+    demoDataReset: "Demo-Daten wurden zurückgesetzt",
   },
   pwa: {
     offlineReady: "App bereit für Offline-Nutzung",

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import type {
   Assignment,
   CompensationRecord,
@@ -1183,34 +1184,9 @@ function generateMockNominationLists(): MockNominationLists {
 const DEMO_USER_REFEREE_LEVEL = "N2";
 const DEMO_USER_REFEREE_LEVEL_GRADATION_VALUE = 2;
 
-export const useDemoStore = create<DemoState>()((set, get) => ({
-  assignments: [],
-  compensations: [],
-  exchanges: [],
-  nominationLists: {},
-  possiblePlayers: [],
-  scorers: [],
-  activeAssociationCode: null,
-  userRefereeLevel: null,
-  userRefereeLevelGradationValue: null,
-
-  initializeDemoData: (associationCode: DemoAssociationCode = "SV") => {
-    const data = generateDummyData(associationCode);
-    set({
-      assignments: data.assignments,
-      compensations: data.compensations,
-      exchanges: data.exchanges,
-      nominationLists: generateMockNominationLists(),
-      possiblePlayers: data.possiblePlayers,
-      scorers: data.scorers,
-      activeAssociationCode: associationCode,
-      userRefereeLevel: DEMO_USER_REFEREE_LEVEL,
-      userRefereeLevelGradationValue: DEMO_USER_REFEREE_LEVEL_GRADATION_VALUE,
-    });
-  },
-
-  clearDemoData: () =>
-    set({
+export const useDemoStore = create<DemoState>()(
+  persist(
+    (set, get) => ({
       assignments: [],
       compensations: [],
       exchanges: [],
@@ -1220,112 +1196,167 @@ export const useDemoStore = create<DemoState>()((set, get) => ({
       activeAssociationCode: null,
       userRefereeLevel: null,
       userRefereeLevelGradationValue: null,
-    }),
 
-  refreshData: () =>
-    set(() => {
-      const currentAssociation = get().activeAssociationCode ?? "SV";
-      const newData = generateDummyData(currentAssociation);
-      return {
-        assignments: newData.assignments,
-        compensations: newData.compensations,
-        exchanges: newData.exchanges,
-        nominationLists: generateMockNominationLists(),
-        possiblePlayers: newData.possiblePlayers,
-        scorers: newData.scorers,
-      };
-    }),
+      initializeDemoData: (associationCode: DemoAssociationCode = "SV") => {
+        // Only regenerate if no data exists or association is changing
+        const currentState = get();
+        const hasExistingData = currentState.assignments.length > 0;
+        const isSameAssociation =
+          currentState.activeAssociationCode === associationCode;
 
-  setActiveAssociation: (associationCode: DemoAssociationCode) => {
-    // Regenerate all data for the new association
-    const data = generateDummyData(associationCode);
-    set({
-      assignments: data.assignments,
-      compensations: data.compensations,
-      exchanges: data.exchanges,
-      nominationLists: generateMockNominationLists(),
-      possiblePlayers: data.possiblePlayers,
-      scorers: data.scorers,
-      activeAssociationCode: associationCode,
-    });
-  },
+        if (hasExistingData && isSameAssociation) {
+          // Preserve existing modifications
+          return;
+        }
 
-  applyForExchange: (exchangeId: string) =>
-    set((state) => {
-      const now = new Date();
-      return {
-        exchanges: state.exchanges.map((exchange) =>
-          exchange.__identity === exchangeId
-            ? {
-                ...exchange,
-                status: "applied" as const,
-                appliedAt: now.toISOString(),
-                appliedBy: {
-                  indoorReferee: {
-                    person: {
-                      __identity: "demo-me",
-                      firstName: "Demo",
-                      lastName: "User",
-                      displayName: "Demo User",
+        const data = generateDummyData(associationCode);
+        set({
+          assignments: data.assignments,
+          compensations: data.compensations,
+          exchanges: data.exchanges,
+          nominationLists: generateMockNominationLists(),
+          possiblePlayers: data.possiblePlayers,
+          scorers: data.scorers,
+          activeAssociationCode: associationCode,
+          userRefereeLevel: DEMO_USER_REFEREE_LEVEL,
+          userRefereeLevelGradationValue: DEMO_USER_REFEREE_LEVEL_GRADATION_VALUE,
+        });
+      },
+
+      clearDemoData: () =>
+        set({
+          assignments: [],
+          compensations: [],
+          exchanges: [],
+          nominationLists: {},
+          possiblePlayers: [],
+          scorers: [],
+          activeAssociationCode: null,
+          userRefereeLevel: null,
+          userRefereeLevelGradationValue: null,
+        }),
+
+      refreshData: () =>
+        set(() => {
+          const currentAssociation = get().activeAssociationCode ?? "SV";
+          const newData = generateDummyData(currentAssociation);
+          return {
+            assignments: newData.assignments,
+            compensations: newData.compensations,
+            exchanges: newData.exchanges,
+            nominationLists: generateMockNominationLists(),
+            possiblePlayers: newData.possiblePlayers,
+            scorers: newData.scorers,
+          };
+        }),
+
+      setActiveAssociation: (associationCode: DemoAssociationCode) => {
+        // Regenerate all data for the new association
+        const data = generateDummyData(associationCode);
+        set({
+          assignments: data.assignments,
+          compensations: data.compensations,
+          exchanges: data.exchanges,
+          nominationLists: generateMockNominationLists(),
+          possiblePlayers: data.possiblePlayers,
+          scorers: data.scorers,
+          activeAssociationCode: associationCode,
+        });
+      },
+
+      applyForExchange: (exchangeId: string) =>
+        set((state) => {
+          const now = new Date();
+          return {
+            exchanges: state.exchanges.map((exchange) =>
+              exchange.__identity === exchangeId
+                ? {
+                    ...exchange,
+                    status: "applied" as const,
+                    appliedAt: now.toISOString(),
+                    appliedBy: {
+                      indoorReferee: {
+                        person: {
+                          __identity: "demo-me",
+                          firstName: "Demo",
+                          lastName: "User",
+                          displayName: "Demo User",
+                        },
+                      },
                     },
-                  },
-                },
-              }
-            : exchange,
-        ),
-      };
+                  }
+                : exchange,
+            ),
+          };
+        }),
+
+      withdrawFromExchange: (exchangeId: string) =>
+        set((state) => ({
+          exchanges: state.exchanges.map((exchange) =>
+            exchange.__identity === exchangeId
+              ? {
+                  ...exchange,
+                  status: "open" as const,
+                  appliedAt: undefined,
+                  appliedBy: undefined,
+                }
+              : exchange,
+          ),
+        })),
+
+      addAssignmentToExchange: (assignmentId: string) =>
+        set((state) => {
+          const assignment = state.assignments.find(
+            (a) => a.__identity === assignmentId,
+          );
+          if (!assignment) return state;
+
+          const now = new Date();
+          const newExchange: GameExchange = {
+            __identity: `demo-exchange-new-${Date.now()}`,
+            status: "open",
+            submittedAt: now.toISOString(),
+            submittingType: "referee",
+            refereePosition: assignment.refereePosition,
+            requiredRefereeLevel: "N3",
+            submittedByPerson: {
+              __identity: "demo-me",
+              firstName: "Demo",
+              lastName: "User",
+              displayName: "Demo User",
+            },
+            refereeGame: assignment.refereeGame,
+          };
+
+          return {
+            exchanges: [...state.exchanges, newExchange],
+          };
+        }),
+
+      updateCompensation: (
+        compensationId: string,
+        data: { distanceInMetres?: number; correctionReason?: string },
+      ) =>
+        set((state) => ({
+          compensations: state.compensations.map((comp) =>
+            updateCompensationRecord(comp, compensationId, data),
+          ),
+        })),
     }),
-
-  withdrawFromExchange: (exchangeId: string) =>
-    set((state) => ({
-      exchanges: state.exchanges.map((exchange) =>
-        exchange.__identity === exchangeId
-          ? {
-              ...exchange,
-              status: "open" as const,
-              appliedAt: undefined,
-              appliedBy: undefined,
-            }
-          : exchange,
-      ),
-    })),
-
-  addAssignmentToExchange: (assignmentId: string) =>
-    set((state) => {
-      const assignment = state.assignments.find(
-        (a) => a.__identity === assignmentId,
-      );
-      if (!assignment) return state;
-
-      const now = new Date();
-      const newExchange: GameExchange = {
-        __identity: `demo-exchange-new-${Date.now()}`,
-        status: "open",
-        submittedAt: now.toISOString(),
-        submittingType: "referee",
-        refereePosition: assignment.refereePosition,
-        requiredRefereeLevel: "N3",
-        submittedByPerson: {
-          __identity: "demo-me",
-          firstName: "Demo",
-          lastName: "User",
-          displayName: "Demo User",
-        },
-        refereeGame: assignment.refereeGame,
-      };
-
-      return {
-        exchanges: [...state.exchanges, newExchange],
-      };
-    }),
-
-  updateCompensation: (
-    compensationId: string,
-    data: { distanceInMetres?: number; correctionReason?: string },
-  ) =>
-    set((state) => ({
-      compensations: state.compensations.map((comp) =>
-        updateCompensationRecord(comp, compensationId, data),
-      ),
-    })),
-}));
+    {
+      name: "volleykit-demo",
+      partialize: (state) => ({
+        // Persist demo data arrays to preserve modifications across page refreshes
+        assignments: state.assignments,
+        compensations: state.compensations,
+        exchanges: state.exchanges,
+        nominationLists: state.nominationLists,
+        possiblePlayers: state.possiblePlayers,
+        scorers: state.scorers,
+        activeAssociationCode: state.activeAssociationCode,
+        userRefereeLevel: state.userRefereeLevel,
+        userRefereeLevelGradationValue: state.userRefereeLevelGradationValue,
+      }),
+    },
+  ),
+);

@@ -199,6 +199,11 @@ const en: Translations = {
     lastChecked: "Last checked",
     updateNow: "Update Now",
     updateCheckFailed: "Update check failed",
+    demoData: "Demo Data",
+    demoDataDescription:
+      "Your demo data modifications are saved in your browser. Reset to start fresh with new demo data.",
+    resetDemoData: "Reset Demo Data",
+    demoDataReset: "Demo data has been reset",
   },
   pwa: {
     offlineReady: "App ready for offline use",
