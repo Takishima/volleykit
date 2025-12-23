@@ -424,7 +424,10 @@ export function ValidateGameModal({
 
           {/* Validated status banner */}
           {isValidated && validatedInfo && (
-            <div className="mb-4 p-3 bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 rounded-lg">
+            <div
+              role="status"
+              className="mb-4 p-3 bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 rounded-lg"
+            >
               <p className="text-sm font-medium text-success-700 dark:text-success-400">
                 {t("validation.wizard.alreadyValidated")}
               </p>
