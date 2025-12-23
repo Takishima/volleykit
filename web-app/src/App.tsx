@@ -28,6 +28,7 @@ import {
   RETRY_CONFIG,
 } from "@/utils/query-error-utils";
 import { usePreloadLocales } from "@/hooks/usePreloadLocales";
+import { useTranslation } from "@/hooks/useTranslation";
 import { logger } from "@/utils/logger";
 
 /**
@@ -81,6 +82,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { status, checkSession, isDemoMode } = useAuthStore();
   const { assignments, activeAssociationCode, initializeDemoData } =
     useDemoStore();
+  const { t } = useTranslation();
   const shouldVerifySession = status === "authenticated" && !isDemoMode;
   const [isVerifying, setIsVerifying] = useState(() => shouldVerifySession);
   const [verifyError, setVerifyError] = useState<string | null>(null);
@@ -120,7 +122,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   // Show loading state while verifying session
   if (status === "loading" || isVerifying) {
-    return <LoadingState message="Checking session..." />;
+    return <LoadingState message={t("auth.checkingSession")} />;
   }
 
   // If verification failed, redirect to login (session may be invalid)

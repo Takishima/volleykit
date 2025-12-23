@@ -51,6 +51,7 @@ export interface Translations {
     loggingIn: string;
     invalidCredentials: string;
     sessionExpired: string;
+    checkingSession: string;
     subtitle: string;
     or: string;
     demoMode: string;
@@ -127,6 +128,7 @@ export interface Translations {
     closed: string;
     all: string;
     myApplications: string;
+    loading: string;
     takeOverTitle: string;
     takeOverConfirm: string;
     takeOverButton: string;
