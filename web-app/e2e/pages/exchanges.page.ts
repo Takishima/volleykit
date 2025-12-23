@@ -1,4 +1,10 @@
 import { type Page, type Locator, expect } from "@playwright/test";
+import {
+  PAGE_LOAD_TIMEOUT_MS,
+  TAB_SWITCH_TIMEOUT_MS,
+  LOADING_TIMEOUT_MS,
+  CONTENT_RENDER_DELAY_MS,
+} from "../constants";
 
 /**
  * Page Object Model for the Exchanges page.
@@ -21,9 +27,7 @@ export class ExchangesPage {
       name: /my applications|applied/i,
     });
     this.tabPanel = page.getByRole("tabpanel");
-    // Exchange cards are interactive buttons within the tabpanel
     this.exchangeCards = this.tabPanel.getByRole("button");
-    // Level filter toggle checkbox
     this.levelFilterToggle = page.getByRole("checkbox");
   }
 
@@ -37,31 +41,27 @@ export class ExchangesPage {
   }
 
   async switchToOpenTab() {
-    // Ensure tab is visible and interactable before clicking
     await this.openTab.waitFor({ state: "visible" });
     await this.openTab.click();
-    // Wait for React state to update
     await this.page.waitForFunction(
       () => {
         const tab = document.querySelector('[role="tab"][aria-selected="true"]');
         return tab?.textContent?.toLowerCase().includes("open");
       },
-      { timeout: 5000 },
+      { timeout: TAB_SWITCH_TIMEOUT_MS },
     );
   }
 
   async switchToMyApplicationsTab() {
-    // Ensure tab is visible and interactable before clicking
     await this.myApplicationsTab.waitFor({ state: "visible" });
     await this.myApplicationsTab.click();
-    // Wait for React state to update
     await this.page.waitForFunction(
       () => {
         const tab = document.querySelector('[role="tab"][aria-selected="true"]');
         const text = tab?.textContent?.toLowerCase() ?? "";
         return text.includes("application") || text.includes("applied");
       },
-      { timeout: 5000 },
+      { timeout: TAB_SWITCH_TIMEOUT_MS },
     );
   }
 
@@ -69,51 +69,20 @@ export class ExchangesPage {
     return await this.exchangeCards.count();
   }
 
-  async expectExchangesVisible() {
-    await expect(this.exchangeCards.first()).toBeVisible();
-  }
-
-  async clickFirstExchange() {
-    await this.exchangeCards.first().click();
-  }
-
-  /**
-   * Get an exchange card by its text content.
-   */
-  getExchangeByText(text: string): Locator {
-    return this.exchangeCards.filter({ hasText: text });
-  }
-
-  /**
-   * Toggle the level filter (only visible in demo mode).
-   */
-  async toggleLevelFilter() {
-    await this.levelFilterToggle.click();
-  }
-
-  /**
-   * Check if level filter is available (demo mode only).
-   */
   async isLevelFilterVisible(): Promise<boolean> {
     return (await this.levelFilterToggle.count()) > 0;
   }
 
-  /**
-   * Wait for exchanges to load.
-   */
   async waitForExchangesLoaded() {
-    // Wait for the tab panel to be visible
-    await expect(this.tabPanel).toBeVisible({ timeout: 10000 });
+    await expect(this.tabPanel).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT_MS });
 
-    // Wait for loading state to finish if present
     const loadingIndicator = this.page.getByText(/loading/i).first();
     await loadingIndicator
-      .waitFor({ state: "hidden", timeout: 5000 })
+      .waitFor({ state: "hidden", timeout: LOADING_TIMEOUT_MS })
       .catch(() => {
         // Loading may have already finished or not appeared
       });
 
-    // Give a moment for content to render
-    await this.page.waitForTimeout(500);
+    await this.page.waitForTimeout(CONTENT_RENDER_DELAY_MS);
   }
 }

@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { LoginPage, CompensationsPage, NavigationPage } from "./pages";
+import { ANIMATION_DELAY_MS } from "./constants";
 
 test.describe("Compensations Journey", () => {
   let loginPage: LoginPage;
@@ -11,7 +12,6 @@ test.describe("Compensations Journey", () => {
     compensationsPage = new CompensationsPage(page);
     navigation = new NavigationPage(page);
 
-    // Enter demo mode for consistent test data
     await loginPage.goto();
     await loginPage.enterDemoMode();
     await navigation.goToCompensations();
@@ -26,7 +26,6 @@ test.describe("Compensations Journey", () => {
     });
 
     test("loads compensation totals", async ({ page }) => {
-      // Should show CHF totals (there are 2: pending and received)
       await expect(page.getByText(/CHF/).first()).toBeVisible();
     });
 
@@ -40,36 +39,29 @@ test.describe("Compensations Journey", () => {
 
   test.describe("Tab Filtering", () => {
     test("can switch between pending, paid, and all tabs", async () => {
-      // Start on pending
       await expect(compensationsPage.pendingTab).toHaveAttribute(
         "aria-selected",
         "true",
       );
 
-      // Switch to paid
       await compensationsPage.switchToPaidTab();
       await compensationsPage.waitForCompensationsLoaded();
 
-      // Switch to all
       await compensationsPage.switchToAllTab();
       await compensationsPage.waitForCompensationsLoaded();
 
-      // Switch back to pending
       await compensationsPage.switchToPendingTab();
       await compensationsPage.waitForCompensationsLoaded();
     });
 
     test("different tabs show different data sets", async () => {
-      // Get count on pending
       await compensationsPage.waitForCompensationsLoaded();
       const pendingCount = await compensationsPage.getCompensationCount();
 
-      // Switch to all and check count
       await compensationsPage.switchToAllTab();
       await compensationsPage.waitForCompensationsLoaded();
       const allCount = await compensationsPage.getCompensationCount();
 
-      // All should have >= pending (unless no paid)
       expect(allCount).toBeGreaterThanOrEqual(pendingCount);
     });
   });
@@ -80,7 +72,6 @@ test.describe("Compensations Journey", () => {
       const count = await compensationsPage.getCompensationCount();
 
       if (count > 0) {
-        // Cards should show CHF amounts
         const firstCard = compensationsPage.compensationCards.first();
         await expect(firstCard).toBeVisible();
 
@@ -96,7 +87,7 @@ test.describe("Compensations Journey", () => {
       if (count > 0) {
         const firstCard = compensationsPage.compensationCards.first();
         await firstCard.click();
-        await page.waitForTimeout(300); // Animation time
+        await page.waitForTimeout(ANIMATION_DELAY_MS);
         await expect(firstCard).toBeVisible();
       }
     });
@@ -104,10 +95,8 @@ test.describe("Compensations Journey", () => {
 
   test.describe("Totals Display", () => {
     test("shows pending and received totals", async ({ page }) => {
-      // Should show both pending and received/paid totals
       const chfAmounts = page.locator("text=/CHF/");
       const count = await chfAmounts.count();
-      // At minimum, should have pending and received totals visible
       expect(count).toBeGreaterThanOrEqual(2);
     });
   });
@@ -116,11 +105,9 @@ test.describe("Compensations Journey", () => {
     test("can navigate between compensations and other pages", async ({
       page,
     }) => {
-      // Go to exchanges
       await navigation.goToExchange();
       await expect(page).toHaveURL("/exchange");
 
-      // Come back to compensations
       await navigation.goToCompensations();
       await expect(page).toHaveURL("/compensations");
       await compensationsPage.expectToBeLoaded();
@@ -141,7 +128,6 @@ test.describe("Compensations Journey", () => {
     });
 
     test("tab panel is associated with active tab", async () => {
-      // Tab panel should have aria-labelledby pointing to the active tab
       await expect(compensationsPage.tabPanel).toHaveAttribute(
         "aria-labelledby",
       );

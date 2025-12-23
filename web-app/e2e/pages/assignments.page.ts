@@ -1,4 +1,10 @@
 import { type Page, type Locator, expect } from "@playwright/test";
+import {
+  PAGE_LOAD_TIMEOUT_MS,
+  TAB_SWITCH_TIMEOUT_MS,
+  LOADING_TIMEOUT_MS,
+  CONTENT_RENDER_DELAY_MS,
+} from "../constants";
 
 /**
  * Page Object Model for the Assignments page.
@@ -20,8 +26,6 @@ export class AssignmentsPage {
       name: /validation/i,
     });
     this.tabPanel = page.getByRole("tabpanel");
-    // Assignment cards are interactive buttons within the tabpanel
-    // They're wrapped in SwipeableCard which contains Card with role="button"
     this.assignmentCards = this.tabPanel.getByRole("button");
   }
 
@@ -35,30 +39,26 @@ export class AssignmentsPage {
   }
 
   async switchToUpcomingTab() {
-    // Ensure tab is visible and interactable before clicking
     await this.upcomingTab.waitFor({ state: "visible" });
     await this.upcomingTab.click();
-    // Wait for React state to update
     await this.page.waitForFunction(
       () => {
         const tab = document.querySelector('[role="tab"][aria-selected="true"]');
         return tab?.textContent?.toLowerCase().includes("upcoming");
       },
-      { timeout: 5000 },
+      { timeout: TAB_SWITCH_TIMEOUT_MS },
     );
   }
 
   async switchToValidationClosedTab() {
-    // Ensure tab is visible and interactable before clicking
     await this.validationClosedTab.waitFor({ state: "visible" });
     await this.validationClosedTab.click();
-    // Wait for React state to update
     await this.page.waitForFunction(
       () => {
         const tab = document.querySelector('[role="tab"][aria-selected="true"]');
         return tab?.textContent?.toLowerCase().includes("validation");
       },
-      { timeout: 5000 },
+      { timeout: TAB_SWITCH_TIMEOUT_MS },
     );
   }
 
@@ -66,37 +66,16 @@ export class AssignmentsPage {
     return await this.assignmentCards.count();
   }
 
-  async expectAssignmentsVisible() {
-    await expect(this.assignmentCards.first()).toBeVisible();
-  }
-
-  async clickFirstAssignment() {
-    await this.assignmentCards.first().click();
-  }
-
-  /**
-   * Get an assignment card by its game number or team names.
-   */
-  getAssignmentByText(text: string): Locator {
-    return this.assignmentCards.filter({ hasText: text });
-  }
-
-  /**
-   * Wait for assignments to load (loading spinner to disappear).
-   */
   async waitForAssignmentsLoaded() {
-    // Wait for the tab panel to be visible and loading to complete
-    await expect(this.tabPanel).toBeVisible({ timeout: 10000 });
+    await expect(this.tabPanel).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT_MS });
 
-    // Wait for loading state to finish if present
     const loadingIndicator = this.page.getByText(/loading/i).first();
     await loadingIndicator
-      .waitFor({ state: "hidden", timeout: 5000 })
+      .waitFor({ state: "hidden", timeout: LOADING_TIMEOUT_MS })
       .catch(() => {
         // Loading may have already finished or not appeared
       });
 
-    // Give a moment for content to render
-    await this.page.waitForTimeout(500);
+    await this.page.waitForTimeout(CONTENT_RENDER_DELAY_MS);
   }
 }

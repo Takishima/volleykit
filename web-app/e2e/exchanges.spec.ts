@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { LoginPage, ExchangesPage, NavigationPage } from "./pages";
+import { ANIMATION_DELAY_MS } from "./constants";
 
 test.describe("Exchanges Journey", () => {
   let loginPage: LoginPage;
@@ -11,7 +12,6 @@ test.describe("Exchanges Journey", () => {
     exchangesPage = new ExchangesPage(page);
     navigation = new NavigationPage(page);
 
-    // Enter demo mode for consistent test data
     await loginPage.goto();
     await loginPage.enterDemoMode();
     await navigation.goToExchange();
@@ -33,7 +33,6 @@ test.describe("Exchanges Journey", () => {
 
     test("loads exchange data", async () => {
       await exchangesPage.waitForExchangesLoaded();
-      // Page should show either cards or empty state
       const hasCards = (await exchangesPage.getExchangeCount()) > 0;
       const hasEmptyState =
         (await exchangesPage.page.getByText(/no.*exchange/i).count()) > 0;
@@ -43,40 +42,41 @@ test.describe("Exchanges Journey", () => {
 
   test.describe("Tab Navigation", () => {
     test("can switch between open and my applications tabs", async () => {
-      // Start on open
       await expect(exchangesPage.openTab).toHaveAttribute(
         "aria-selected",
         "true",
       );
 
-      // Switch to my applications
       await exchangesPage.switchToMyApplicationsTab();
       await exchangesPage.waitForExchangesLoaded();
 
-      // Switch back to open
       await exchangesPage.switchToOpenTab();
       await exchangesPage.waitForExchangesLoaded();
     });
   });
 
   test.describe("Level Filter (Demo Mode)", () => {
-    test("level filter toggle is visible in demo mode", async () => {
-      // In demo mode on open tab, level filter should be visible
+    test("level filter is visible on open exchanges tab", async () => {
+      await exchangesPage.waitForExchangesLoaded();
       const isVisible = await exchangesPage.isLevelFilterVisible();
-      // This is demo mode specific - may or may not be visible
-      expect(typeof isVisible).toBe("boolean");
+      expect(isVisible).toBe(true);
     });
 
-    test("level filter is only shown on open tab", async () => {
-      // Switch to my applications - filter should not be shown
+    test("level filter is hidden on my applications tab", async () => {
+      const initiallyVisible = await exchangesPage.isLevelFilterVisible();
+      expect(initiallyVisible).toBe(true);
+
       await exchangesPage.switchToMyApplicationsTab();
+      await exchangesPage.waitForExchangesLoaded();
 
-      // Level filter should not be visible on my applications tab
-      // (The toggle is only shown for open exchanges)
-      await exchangesPage.page.waitForTimeout(300);
+      const visibleAfterSwitch = await exchangesPage.isLevelFilterVisible();
+      expect(visibleAfterSwitch).toBe(false);
 
-      // Switch back to open - filter should be visible again
       await exchangesPage.switchToOpenTab();
+      await exchangesPage.waitForExchangesLoaded();
+
+      const visibleAfterReturn = await exchangesPage.isLevelFilterVisible();
+      expect(visibleAfterReturn).toBe(true);
     });
   });
 
@@ -89,7 +89,6 @@ test.describe("Exchanges Journey", () => {
         const firstCard = exchangesPage.exchangeCards.first();
         await expect(firstCard).toBeVisible();
 
-        // Card should have content
         const cardText = await firstCard.textContent();
         expect(cardText).toBeTruthy();
         expect(cardText!.length).toBeGreaterThan(0);
@@ -103,7 +102,7 @@ test.describe("Exchanges Journey", () => {
       if (count > 0) {
         const firstCard = exchangesPage.exchangeCards.first();
         await firstCard.click();
-        await page.waitForTimeout(300);
+        await page.waitForTimeout(ANIMATION_DELAY_MS);
         await expect(firstCard).toBeVisible();
       }
     });
@@ -111,11 +110,9 @@ test.describe("Exchanges Journey", () => {
 
   test.describe("Navigation", () => {
     test("can navigate from exchange page to other pages", async ({ page }) => {
-      // Go to assignments
       await navigation.goToAssignments();
       await expect(page).toHaveURL("/");
 
-      // Come back to exchange
       await navigation.goToExchange();
       await expect(page).toHaveURL("/exchange");
       await exchangesPage.expectToBeLoaded();
