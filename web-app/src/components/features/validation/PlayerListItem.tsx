@@ -15,8 +15,10 @@ function formatPlayerName(player: RosterPlayer): string {
 interface PlayerListItemProps {
   player: RosterPlayer;
   isMarkedForRemoval: boolean;
-  onRemove: () => void;
-  onUndoRemoval: () => void;
+  onRemove?: () => void;
+  onUndoRemoval?: () => void;
+  /** When true, hides action buttons */
+  readOnly?: boolean;
 }
 
 export function PlayerListItem({
@@ -24,6 +26,7 @@ export function PlayerListItem({
   isMarkedForRemoval,
   onRemove,
   onUndoRemoval,
+  readOnly = false,
 }: PlayerListItemProps) {
   const { t } = useTranslation();
 
@@ -91,30 +94,32 @@ export function PlayerListItem({
         </div>
       </div>
 
-      {/* Action button */}
-      <div className="flex-shrink-0 ml-2">
-        {isMarkedForRemoval ? (
-          <button
-            type="button"
-            onClick={onUndoRemoval}
-            className="p-1.5 rounded-full text-primary-600 hover:bg-primary-50 dark:text-primary-400 dark:hover:bg-primary-900/50 transition-colors"
-            aria-label={t("validation.roster.undoRemoval")}
-            title={t("validation.roster.undoRemoval")}
-          >
-            <Undo2 className="w-4 h-4" aria-hidden="true" />
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={onRemove}
-            className="p-1.5 rounded-full text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/50 transition-colors"
-            aria-label={t("validation.roster.removePlayer")}
-            title={t("validation.roster.removePlayer")}
-          >
-            <Trash2 className="w-4 h-4" aria-hidden="true" />
-          </button>
-        )}
-      </div>
+      {/* Action button - hidden in read-only mode */}
+      {!readOnly && (
+        <div className="flex-shrink-0 ml-2">
+          {isMarkedForRemoval ? (
+            <button
+              type="button"
+              onClick={onUndoRemoval}
+              className="p-1.5 rounded-full text-primary-600 hover:bg-primary-50 dark:text-primary-400 dark:hover:bg-primary-900/50 transition-colors"
+              aria-label={t("validation.roster.undoRemoval")}
+              title={t("validation.roster.undoRemoval")}
+            >
+              <Undo2 className="w-4 h-4" aria-hidden="true" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onRemove}
+              className="p-1.5 rounded-full text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/50 transition-colors"
+              aria-label={t("validation.roster.removePlayer")}
+              title={t("validation.roster.removePlayer")}
+            >
+              <Trash2 className="w-4 h-4" aria-hidden="true" />
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

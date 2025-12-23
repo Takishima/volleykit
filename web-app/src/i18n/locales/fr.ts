@@ -311,6 +311,8 @@ const fr: Translations = {
         "Type de fichier invalide. Veuillez utiliser JPEG, PNG ou PDF.",
       demoModeNote: "Mode démo: les téléchargements sont simulés",
       previewAlt: "Aperçu de la feuille de match",
+      scoresheetUploaded: "Feuille de match téléchargée",
+      noScoresheet: "Aucune feuille de match téléchargée",
     },
     state: {
       unsavedChangesTitle: "Modifications non enregistrées",
@@ -333,6 +335,8 @@ const fr: Translations = {
       stepOf: "Étape {current} sur {total}",
       saving: "Enregistrement...",
       markAsReviewed: "Marquer comme vérifié",
+      alreadyValidated: "Ce match a déjà été validé",
+      validatedBy: "Marqueur: {scorer}",
     },
   },
 };

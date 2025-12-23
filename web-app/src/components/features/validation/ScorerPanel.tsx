@@ -5,6 +5,10 @@ import { ScorerSearchPanel } from "./ScorerSearchPanel";
 interface ScorerPanelProps {
   onScorerChange?: (scorer: ValidatedPersonSearchResult | null) => void;
   initialScorer?: ValidatedPersonSearchResult | null;
+  /** When true, shows scorer in view-only mode without edit controls */
+  readOnly?: boolean;
+  /** Scorer name to display in read-only mode when no scorer data is available */
+  readOnlyScorerName?: string;
 }
 
 /**
@@ -15,6 +19,8 @@ interface ScorerPanelProps {
 export function ScorerPanel({
   onScorerChange,
   initialScorer = null,
+  readOnly = false,
+  readOnlyScorerName,
 }: ScorerPanelProps) {
   const [selectedScorer, setSelectedScorer] =
     useState<ValidatedPersonSearchResult | null>(initialScorer);
@@ -28,6 +34,8 @@ export function ScorerPanel({
     <ScorerSearchPanel
       selectedScorer={selectedScorer}
       onScorerSelect={handleScorerSelect}
+      readOnly={readOnly}
+      readOnlyScorerName={readOnlyScorerName}
     />
   );
 }

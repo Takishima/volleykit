@@ -16,6 +16,8 @@ interface RosterVerificationPanelProps {
   gameId: string;
   onModificationsChange?: (modifications: RosterModifications) => void;
   onAddPlayerSheetOpenChange?: (isOpen: boolean) => void;
+  /** When true, shows roster in view-only mode without edit controls */
+  readOnly?: boolean;
 }
 
 export function RosterVerificationPanel({
@@ -24,6 +26,7 @@ export function RosterVerificationPanel({
   gameId,
   onModificationsChange,
   onAddPlayerSheetOpenChange,
+  readOnly = false,
 }: RosterVerificationPanelProps) {
   const { t } = useTranslation();
   const { nominationList, players, isLoading, isError, refetch } =
@@ -176,34 +179,39 @@ export function RosterVerificationPanel({
               key={player.id}
               player={player}
               isMarkedForRemoval={removedPlayerIds.has(player.id)}
-              onRemove={() => handleRemovePlayer(player.id)}
-              onUndoRemoval={() => handleUndoRemoval(player.id)}
+              onRemove={readOnly ? undefined : () => handleRemovePlayer(player.id)}
+              onUndoRemoval={readOnly ? undefined : () => handleUndoRemoval(player.id)}
+              readOnly={readOnly}
             />
           ))}
         </div>
       )}
 
-      {/* Add Player button */}
-      <div className="mt-4">
-        <button
-          type="button"
-          onClick={() => setIsAddPlayerSheetOpen(true)}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 rounded-lg border border-primary-200 dark:border-primary-800 transition-colors"
-        >
-          <UserPlus className="w-4 h-4" aria-hidden="true" />
-          {t("validation.roster.addPlayer")}
-        </button>
-      </div>
+      {/* Add Player button - hidden in read-only mode */}
+      {!readOnly && (
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={() => setIsAddPlayerSheetOpen(true)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 rounded-lg border border-primary-200 dark:border-primary-800 transition-colors"
+          >
+            <UserPlus className="w-4 h-4" aria-hidden="true" />
+            {t("validation.roster.addPlayer")}
+          </button>
+        </div>
+      )}
 
-      {/* AddPlayerSheet */}
-      <AddPlayerSheet
-        isOpen={isAddPlayerSheetOpen}
-        onClose={() => setIsAddPlayerSheetOpen(false)}
-        nominationListId={nominationList?.__identity ?? ""}
-        excludePlayerIds={players.map((p) => p.id)}
-        onAddPlayer={handleAddPlayer}
-        onRemovePlayer={handleRemoveAddedPlayer}
-      />
+      {/* AddPlayerSheet - only available in edit mode */}
+      {!readOnly && (
+        <AddPlayerSheet
+          isOpen={isAddPlayerSheetOpen}
+          onClose={() => setIsAddPlayerSheetOpen(false)}
+          nominationListId={nominationList?.__identity ?? ""}
+          excludePlayerIds={players.map((p) => p.id)}
+          onAddPlayer={handleAddPlayer}
+          onRemovePlayer={handleRemoveAddedPlayer}
+        />
+      )}
     </div>
   );
 }

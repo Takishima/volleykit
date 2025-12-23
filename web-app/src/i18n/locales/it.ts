@@ -306,6 +306,8 @@ const it: Translations = {
       invalidFileType: "Tipo di file non valido. Usa JPEG, PNG o PDF.",
       demoModeNote: "Modalità demo: i caricamenti sono simulati",
       previewAlt: "Anteprima referto",
+      scoresheetUploaded: "Referto caricato",
+      noScoresheet: "Nessun referto caricato",
     },
     state: {
       unsavedChangesTitle: "Modifiche non salvate",
@@ -328,6 +330,8 @@ const it: Translations = {
       stepOf: "Passo {current} di {total}",
       saving: "Salvataggio...",
       markAsReviewed: "Segna come verificato",
+      alreadyValidated: "Questa partita è già stata validata",
+      validatedBy: "Segnapunti: {scorer}",
     },
   },
 };

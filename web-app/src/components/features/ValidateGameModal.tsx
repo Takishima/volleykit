@@ -139,6 +139,8 @@ export function ValidateGameModal({
   const {
     isDirty,
     completionStatus,
+    isValidated,
+    validatedInfo,
     setHomeRosterModifications,
     setAwayRosterModifications,
     setScorer,
@@ -229,13 +231,16 @@ export function ValidateGameModal({
   }, [isOpen, reset, resetToStart]);
 
   // Attempt to close - show confirmation dialog if there are unsaved changes
+  // In read-only mode (validated game), always close directly
   const attemptClose = useCallback(() => {
-    if (isDirtyRef.current) {
+    if (isValidated) {
+      onClose();
+    } else if (isDirtyRef.current) {
       setShowUnsavedDialog(true);
     } else {
       onClose();
     }
-  }, [onClose]);
+  }, [onClose, isValidated]);
 
   // Handle Escape key to close modal
   useEffect(() => {
@@ -417,6 +422,20 @@ export function ValidateGameModal({
             </div>
           </div>
 
+          {/* Validated status banner */}
+          {isValidated && validatedInfo && (
+            <div className="mb-4 p-3 bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 rounded-lg">
+              <p className="text-sm font-medium text-success-700 dark:text-success-400">
+                {t("validation.wizard.alreadyValidated")}
+              </p>
+              <p className="text-xs text-success-600 dark:text-success-500 mt-1">
+                {tInterpolate("validation.wizard.validatedBy", {
+                  scorer: validatedInfo.scorerName,
+                })}
+              </p>
+            </div>
+          )}
+
           {/* Step indicator */}
           <div className="mb-4">
             <WizardStepIndicator
@@ -472,6 +491,7 @@ export function ValidateGameModal({
                       assignment={assignment}
                       onModificationsChange={setHomeRosterModifications}
                       onAddPlayerSheetOpenChange={handleAddPlayerSheetOpenChange}
+                      readOnly={isValidated}
                     />
                   )}
 
@@ -480,15 +500,24 @@ export function ValidateGameModal({
                       assignment={assignment}
                       onModificationsChange={setAwayRosterModifications}
                       onAddPlayerSheetOpenChange={handleAddPlayerSheetOpenChange}
+                      readOnly={isValidated}
                     />
                   )}
 
                   {currentStepId === "scorer" && (
-                    <ScorerPanel onScorerChange={setScorer} />
+                    <ScorerPanel
+                      onScorerChange={setScorer}
+                      readOnly={isValidated}
+                      readOnlyScorerName={validatedInfo?.scorerName}
+                    />
                   )}
 
                   {currentStepId === "scoresheet" && (
-                    <ScoresheetPanel onScoresheetChange={setScoresheet} />
+                    <ScoresheetPanel
+                      onScoresheetChange={setScoresheet}
+                      readOnly={isValidated}
+                      hasScoresheet={validatedInfo?.hasScoresheet}
+                    />
                   )}
                 </>
               )}
@@ -533,69 +562,107 @@ export function ValidateGameModal({
 
           {/* Footer with navigation buttons */}
           <div className="flex justify-between gap-3 pt-4 border-t border-border-default dark:border-border-default-dark mt-4">
-            {/* Left side: Back button or Cancel on first step */}
-            <div>
-              {isFirstStep ? (
-                <button
-                  type="button"
-                  onClick={() => attemptClose()}
-                  disabled={isFinalizing}
-                  className="px-4 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {t("common.cancel")}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleBack}
-                  disabled={isFinalizing}
-                  className="px-4 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {t("validation.wizard.previous")}
-                </button>
-              )}
-            </div>
+            {/* Read-only mode: simplified footer with just Close button */}
+            {isValidated ? (
+              <>
+                <div>
+                  {!isFirstStep && (
+                    <button
+                      type="button"
+                      onClick={handleBack}
+                      className="px-4 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong"
+                    >
+                      {t("validation.wizard.previous")}
+                    </button>
+                  )}
+                </div>
+                <div>
+                  {isLastStep ? (
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    >
+                      {t("common.close")}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleNext}
+                      className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    >
+                      {t("validation.wizard.next")}
+                    </button>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Left side: Back button or Cancel on first step */}
+                <div>
+                  {isFirstStep ? (
+                    <button
+                      type="button"
+                      onClick={() => attemptClose()}
+                      disabled={isFinalizing}
+                      className="px-4 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {t("common.cancel")}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleBack}
+                      disabled={isFinalizing}
+                      className="px-4 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {t("validation.wizard.previous")}
+                    </button>
+                  )}
+                </div>
 
-            {/* Right side: Validate button (marks done + advances) or Finish on last step */}
-            <div>
-              {isLastStep ? (
-                <button
-                  type="button"
-                  onClick={() => handleFinish()}
-                  disabled={
-                    isFinalizing ||
-                    isLoadingGameDetails ||
-                    !!gameDetailsError ||
-                    !allPreviousRequiredStepsDone ||
-                    (!currentStep.isOptional && !canMarkCurrentStepDone)
-                  }
-                  title={
-                    !allPreviousRequiredStepsDone
-                      ? t("validation.state.markAllStepsTooltip")
-                      : undefined
-                  }
-                  className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isFinalizing
-                    ? t("common.loading")
-                    : t("validation.wizard.finish")}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleValidateAndNext}
-                  disabled={
-                    isFinalizing ||
-                    isLoadingGameDetails ||
-                    !!gameDetailsError ||
-                    !canMarkCurrentStepDone
-                  }
-                  className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {t("validation.wizard.validate")}
-                </button>
-              )}
-            </div>
+                {/* Right side: Validate button (marks done + advances) or Finish on last step */}
+                <div>
+                  {isLastStep ? (
+                    <button
+                      type="button"
+                      onClick={() => handleFinish()}
+                      disabled={
+                        isFinalizing ||
+                        isLoadingGameDetails ||
+                        !!gameDetailsError ||
+                        !allPreviousRequiredStepsDone ||
+                        (!currentStep.isOptional && !canMarkCurrentStepDone)
+                      }
+                      title={
+                        !allPreviousRequiredStepsDone
+                          ? t("validation.state.markAllStepsTooltip")
+                          : undefined
+                      }
+                      className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isFinalizing
+                        ? t("common.loading")
+                        : t("validation.wizard.finish")}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleValidateAndNext}
+                      disabled={
+                        isFinalizing ||
+                        isLoadingGameDetails ||
+                        !!gameDetailsError ||
+                        !canMarkCurrentStepDone
+                      }
+                      className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {t("validation.wizard.validate")}
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
