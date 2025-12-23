@@ -608,6 +608,44 @@ describe("EditCompensationModal", () => {
         );
       });
     });
+
+    it("calls updateAssignmentCompensation mutation when editing an assignment", async () => {
+      render(
+        <EditCompensationModal
+          assignment={createMockAssignment()}
+          isOpen={true}
+          onClose={mockOnClose}
+        />,
+        { wrapper: createWrapper() },
+      );
+
+      // Form renders immediately for assignments (no API fetch needed)
+      const kmInput = screen.getByLabelText("Kilometers");
+      const reasonInput = screen.getByLabelText("Reason");
+
+      fireEvent.change(kmInput, { target: { value: "35" } });
+      fireEvent.change(reasonInput, { target: { value: "Construction detour" } });
+
+      // Submit form programmatically
+      const form = kmInput.closest("form");
+      fireEvent.submit(form!);
+
+      await waitFor(() => {
+        // Should call assignment mutation, not compensation mutation
+        expect(mockAssignmentMutate).toHaveBeenCalledWith(
+          {
+            assignmentId: "assignment-1",
+            data: {
+              distanceInMetres: 35000,
+              correctionReason: "Construction detour",
+            },
+          },
+          expect.objectContaining({ onSuccess: expect.any(Function) }),
+        );
+        // Compensation mutation should NOT be called
+        expect(mockMutate).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe("accessibility", () => {

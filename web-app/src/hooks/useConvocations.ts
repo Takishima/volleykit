@@ -677,7 +677,10 @@ export function useUpdateAssignmentCompensation(): UseMutationResult<
         // Demo mode: update the demo store directly
         updateAssignmentCompensation(assignmentId, data);
       } else {
-        // Non-demo mode: log for debugging until API endpoint is implemented
+        // TODO(#231): Implement real API support for assignment compensation updates.
+        // The existing PUT /convocationcompensation endpoint requires a convocationCompensation.__identity,
+        // which only exists on CompensationRecord objects, not Assignment objects.
+        // Options: (1) Find corresponding CompensationRecord by game ID, or (2) new backend endpoint.
         logger.debug("[useUpdateAssignmentCompensation] Non-demo mode update:", {
           assignmentId,
           data,
