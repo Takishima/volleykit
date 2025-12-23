@@ -171,7 +171,7 @@ describe("AssignmentsPage", () => {
 
       expect(screen.getByText(/failed to load/i)).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: /try again/i }),
+        screen.getByRole("button", { name: /retry/i }),
       ).toBeInTheDocument();
     });
 
@@ -293,7 +293,7 @@ describe("AssignmentsPage", () => {
       } as unknown as UseQueryResult<Assignment[], Error>);
 
       render(<AssignmentsPage />);
-      fireEvent.click(screen.getByRole("button", { name: /try again/i }));
+      fireEvent.click(screen.getByRole("button", { name: /retry/i }));
 
       expect(mockRefetch).toHaveBeenCalled();
     });
@@ -309,7 +309,7 @@ describe("AssignmentsPage", () => {
 
       render(<AssignmentsPage />);
       fireEvent.click(screen.getByRole("tab", { name: /validation closed/i }));
-      fireEvent.click(screen.getByRole("button", { name: /try again/i }));
+      fireEvent.click(screen.getByRole("button", { name: /retry/i }));
 
       expect(mockRefetch).toHaveBeenCalled();
     });

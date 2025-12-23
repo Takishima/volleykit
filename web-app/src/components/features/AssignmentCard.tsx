@@ -34,9 +34,9 @@ export function AssignmentCard({
     isPast: isGamePast,
   } = useDateFormat(game?.startingDateTime);
 
-  const homeTeam = game?.encounter?.teamHome?.name || "TBD";
-  const awayTeam = game?.encounter?.teamAway?.name || "TBD";
-  const hallName = game?.hall?.name || "Location TBD";
+  const homeTeam = game?.encounter?.teamHome?.name || t("common.tbd");
+  const awayTeam = game?.encounter?.teamAway?.name || t("common.tbd");
+  const hallName = game?.hall?.name || t("common.locationTbd");
   const plusCode =
     game?.hall?.primaryPostalAddress?.geographicalLocation?.plusCode;
   const googleMapsUrl = plusCode
@@ -62,7 +62,7 @@ export function AssignmentCard({
   const position =
     positionKey && positionKey in positionLabelsMap
       ? positionLabelsMap[positionKey]
-      : assignment.refereePosition || "Referee";
+      : assignment.refereePosition || t("occupations.referee");
 
   const statusConfig: Record<
     string,
@@ -70,7 +70,7 @@ export function AssignmentCard({
   > = {
     active: { label: t("assignments.confirmed"), variant: "success" },
     cancelled: { label: t("assignments.cancelled"), variant: "danger" },
-    archived: { label: "Archived", variant: "neutral" },
+    archived: { label: t("assignments.archived"), variant: "neutral" },
   };
 
   return (
@@ -104,7 +104,7 @@ export function AssignmentCard({
                 {homeTeam}
               </div>
               <div className="text-sm text-text-secondary dark:text-text-muted-dark truncate">
-                vs {awayTeam}
+                {t("common.vs")} {awayTeam}
               </div>
               {/* Position shown in compact view */}
               <div className="text-xs text-text-subtle dark:text-text-subtle-dark">
@@ -164,7 +164,7 @@ export function AssignmentCard({
                   variant={statusConfig[status]?.variant || "success"}
                   className="rounded-full"
                 >
-                  {statusConfig[status]?.label || "Active"}
+                  {statusConfig[status]?.label || t("assignments.active")}
                 </Badge>
               </div>
 

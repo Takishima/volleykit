@@ -184,8 +184,8 @@ export function EditCompensationModal({
     return null;
   }
 
-  let homeTeam = "TBD";
-  let awayTeam = "TBD";
+  let homeTeam = t("common.tbd");
+  let awayTeam = t("common.tbd");
 
   if (assignment) {
     ({ homeTeam, awayTeam } = getTeamNames(assignment));
@@ -214,7 +214,7 @@ export function EditCompensationModal({
 
         <div className="mb-4 text-sm text-text-muted dark:text-text-muted-dark">
           <div className="font-medium text-text-primary dark:text-text-primary-dark">
-            {homeTeam} vs {awayTeam}
+            {homeTeam} {t("common.vs")} {awayTeam}
           </div>
         </div>
 
@@ -259,7 +259,7 @@ export function EditCompensationModal({
                   }
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted dark:text-text-muted-dark text-sm pointer-events-none">
-                  km
+                  {t("common.distanceUnit")}
                 </span>
               </div>
               {errors.kilometers && (

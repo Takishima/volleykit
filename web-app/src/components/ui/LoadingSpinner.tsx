@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { AlertTriangle, Calendar, Lock, Inbox, Wallet, ArrowLeftRight } from "@/components/ui/icons";
 import type { LucideIcon } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface LoadingSpinnerProps {
   size?: "sm" | "md" | "lg";
@@ -37,12 +38,15 @@ interface LoadingStateProps {
   message?: string;
 }
 
-export function LoadingState({ message = "Loading..." }: LoadingStateProps) {
+export function LoadingState({ message }: LoadingStateProps) {
+  const { t } = useTranslation();
+  const displayMessage = message ?? t("common.loading");
+
   return (
     <div
       className="flex flex-col items-center justify-center py-12 gap-4"
       role="status"
-      aria-label={message}
+      aria-label={displayMessage}
     >
       {/* Use visual-only spinner here since container has role="status" */}
       <div
@@ -53,7 +57,7 @@ export function LoadingState({ message = "Loading..." }: LoadingStateProps) {
         `}
         aria-hidden="true"
       />
-      <p className="text-text-muted dark:text-text-muted-dark text-sm">{message}</p>
+      <p className="text-text-muted dark:text-text-muted-dark text-sm">{displayMessage}</p>
     </div>
   );
 }
@@ -64,13 +68,15 @@ interface ErrorStateProps {
 }
 
 export function ErrorState({ message, onRetry }: ErrorStateProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="flex flex-col items-center justify-center py-12 gap-4">
       <AlertTriangle className="w-10 h-10 text-warning-500" aria-hidden="true" />
       <p className="text-danger-600 dark:text-danger-400 text-center">{message}</p>
       {onRetry && (
         <button onClick={onRetry} className="btn btn-secondary">
-          Try Again
+          {t("common.retry")}
         </button>
       )}
     </div>

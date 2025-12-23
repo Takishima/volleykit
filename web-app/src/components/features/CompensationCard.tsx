@@ -32,8 +32,8 @@ export function CompensationCard({
     ? parseISO(game.startingDateTime)
     : null;
 
-  const homeTeam = game?.encounter?.teamHome?.name || "Unknown";
-  const awayTeam = game?.encounter?.teamAway?.name || "Unknown";
+  const homeTeam = game?.encounter?.teamHome?.name || t("common.unknown");
+  const awayTeam = game?.encounter?.teamAway?.name || t("common.unknown");
 
   const total = (comp?.gameCompensation || 0) + (comp?.travelExpenses || 0);
   const isPaid = comp?.paymentDone;
@@ -53,13 +53,13 @@ export function CompensationCard({
           <div className="flex items-center gap-3">
             {/* Date */}
             <div className="text-xs text-text-muted dark:text-text-muted-dark min-w-[4rem]">
-              {startDate ? format(startDate, "MMM d") : "Date?"}
+              {startDate ? format(startDate, "MMM d") : t("common.unknownDate")}
             </div>
 
             {/* Match info - truncated */}
             <div className="flex-1 min-w-0">
               <div className="font-medium text-text-primary dark:text-text-primary-dark truncate text-sm">
-                {homeTeam} vs {awayTeam}
+                {homeTeam} {t("common.vs")} {awayTeam}
               </div>
             </div>
 
@@ -99,7 +99,7 @@ export function CompensationCard({
                   <span
                     className={`font-bold ${isPaid ? "text-success-500 dark:text-success-400" : "text-warning-500 dark:text-warning-400"}`}
                   >
-                    CHF {total.toFixed(2)}
+                    {t("common.currencyChf")} {total.toFixed(2)}
                   </span>
                 </div>
                 {comp.gameCompensation !== undefined &&
@@ -109,7 +109,7 @@ export function CompensationCard({
                         {t("compensations.gameFee")}:
                       </span>
                       <span className="text-text-secondary dark:text-text-muted-dark">
-                        CHF {comp.gameCompensation.toFixed(2)}
+                        {t("common.currencyChf")} {comp.gameCompensation.toFixed(2)}
                       </span>
                     </div>
                   )}
@@ -120,7 +120,7 @@ export function CompensationCard({
                         {t("compensations.travel")}:
                       </span>
                       <span className="text-text-secondary dark:text-text-muted-dark">
-                        CHF {comp.travelExpenses.toFixed(2)}
+                        {t("common.currencyChf")} {comp.travelExpenses.toFixed(2)}
                       </span>
                     </div>
                   )}
@@ -131,7 +131,7 @@ export function CompensationCard({
                         {t("compensations.distance")}:
                       </span>
                       <span className="text-text-secondary dark:text-text-muted-dark">
-                        {formatDistanceKm(comp.distanceInMetres)} km
+                        {formatDistanceKm(comp.distanceInMetres)} {t("common.distanceUnit")}
                       </span>
                     </div>
                   )}

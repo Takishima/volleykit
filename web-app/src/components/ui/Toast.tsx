@@ -4,6 +4,7 @@ import {
   DEFAULT_DURATION_MS,
   type Toast as ToastType,
 } from "@/stores/toast";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const TOAST_CONTAINER_Z_INDEX = "z-[100]";
 
@@ -49,6 +50,7 @@ interface ToastItemProps {
 }
 
 function ToastItem({ toast }: ToastItemProps) {
+  const { t } = useTranslation();
   const removeToast = useToastStore((state) => state.removeToast);
   const timerRef = useRef<number | null>(null);
 
@@ -90,7 +92,7 @@ function ToastItem({ toast }: ToastItemProps) {
       <button
         onClick={() => removeToast(toast.id)}
         className={`flex-shrink-0 p-1 -m-1 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-colors ${styles.text}`}
-        aria-label="Dismiss notification"
+        aria-label={t("common.dismissNotification")}
       >
         <svg
           className="w-4 h-4"

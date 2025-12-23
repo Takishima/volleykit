@@ -56,14 +56,14 @@ describe("ErrorState", () => {
     const handleRetry = vi.fn();
     render(<ErrorState message="Error" onRetry={handleRetry} />);
     expect(
-      screen.getByRole("button", { name: "Try Again" }),
+      screen.getByRole("button", { name: "Retry" }),
     ).toBeInTheDocument();
   });
 
   it("calls onRetry when button is clicked", () => {
     const handleRetry = vi.fn();
     render(<ErrorState message="Error" onRetry={handleRetry} />);
-    fireEvent.click(screen.getByRole("button", { name: "Try Again" }));
+    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
     expect(handleRetry).toHaveBeenCalledTimes(1);
   });
 
