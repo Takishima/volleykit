@@ -119,35 +119,9 @@ copy(await (await fetch('/api/...')).text())
 
 This copies the response to clipboard.
 
-## What We Need for Each Endpoint
+## Capture Status
 
-✅ = Captured, ❌ = Still needed
-
-### Assignments (`searchMyRefereeConvocations`)
-
-- ❌ Complete request parameters
-- ❌ Complete response structure
-- ❌ Field descriptions
-- ❌ Error response examples
-
-### Compensations (`search`)
-
-- ❌ Complete request parameters
-- ❌ Complete response structure
-- ❌ Payment status field values
-- ❌ Additional expense types
-
-### Exchanges (`search`)
-
-- ❌ Complete request parameters
-- ❌ Complete response structure
-- ❌ Status field values
-- ❌ Referee level codes
-
-### Settings Endpoints
-
-- ❌ Active season response
-- ❌ Association settings response
+See [CAPTURE_PLAN.md](CAPTURE_PLAN.md) for the current capture checklist and status.
 
 ## Next Steps After Capture
 
