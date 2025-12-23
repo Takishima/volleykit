@@ -37,15 +37,17 @@ In the Network tab, look for the POST/GET request to the endpoint. Click on it t
 # In volleymanager-openapi.yaml, update the requestBody schema
 
 Example for Assignments:
-  __csrfToken: "abc123..."
-  searchConfiguration[dateRange][from]: "2025-12-08"
-  searchConfiguration[dateRange][to]: "2026-05-20"
-  searchConfiguration[dateProperty]: "refereeConvocation.refereeGame.game.startingDateTime"
+  searchConfiguration[propertyFilters][0][propertyName]: "refereeGame.game.startingDateTime"
+  searchConfiguration[propertyFilters][0][dateRange][from]: "2025-12-07T23:00:00.000Z"
+  searchConfiguration[propertyFilters][0][dateRange][to]: "2025-12-15T22:59:59.000Z"
+  searchConfiguration[customFilters]: ""
   searchConfiguration[propertyOrderings][0][propertyName]: "refereeGame.game.startingDateTime"
   searchConfiguration[propertyOrderings][0][descending]: false
   searchConfiguration[propertyOrderings][0][isSetByUser]: true
-  pagination[page]: "1"
-  pagination[itemsPerPage]: "50"
+  searchConfiguration[offset]: 0
+  searchConfiguration[limit]: 10
+  searchConfiguration[textSearchOperator]: "AND"
+  __csrfToken: "abc123..."
 ```
 
 ### Step 4: Copy Response Data

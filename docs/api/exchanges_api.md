@@ -18,9 +18,11 @@ searchConfiguration[propertyFilters][0][dateRange][from]: YYYY-MM-DDTHH:MM:SS.00
 searchConfiguration[propertyFilters][0][dateRange][to]: YYYY-MM-DDTHH:MM:SS.000Z
 searchConfiguration[propertyFilters][1][propertyName]: status
 searchConfiguration[propertyFilters][1][enumValues][0]: open
-searchConfiguration[propertyOrderings]: (not specified - no default sorting)
-pagination[page]: 1
-pagination[itemsPerPage]: 50
+searchConfiguration[customFilters]: (empty)
+searchConfiguration[propertyOrderings]: (empty - no default sorting)
+searchConfiguration[offset]: 0
+searchConfiguration[limit]: 10
+searchConfiguration[textSearchOperator]: AND
 __csrfToken: <token_value>
 ```
 
@@ -148,7 +150,10 @@ __csrfToken: <token>
 
 ## Notes
 
+- Date filtering uses `propertyFilters` with `refereeGame.game.startingDateTime`
+- Status filter uses `enumValues`: open, applied, closed
+- Pagination uses `offset`/`limit` (not page-based)
+- No default sorting (propertyOrderings is empty)
 - Shows exchanges where referees can take over positions
 - Filtered by required qualification level (referee can only see exchanges they're qualified for)
-- Status can be: open, applied, closed
 - Multiple referees can apply for the same exchange

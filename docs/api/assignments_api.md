@@ -13,14 +13,16 @@ Form-encoded POST body with the following parameters:
 ### Observed Parameters (from browser network logs)
 
 ```
+searchConfiguration[propertyFilters][0][propertyName]: refereeGame.game.startingDateTime
+searchConfiguration[propertyFilters][0][dateRange][from]: YYYY-MM-DDTHH:MM:SS.000Z
+searchConfiguration[propertyFilters][0][dateRange][to]: YYYY-MM-DDTHH:MM:SS.000Z
+searchConfiguration[customFilters]: (empty)
 searchConfiguration[propertyOrderings][0][propertyName]: refereeGame.game.startingDateTime
 searchConfiguration[propertyOrderings][0][descending]: false
 searchConfiguration[propertyOrderings][0][isSetByUser]: true
-searchConfiguration[dateRange][from]: YYYY-MM-DD
-searchConfiguration[dateRange][to]: YYYY-MM-DD
-searchConfiguration[dateProperty]: refereeConvocation.refereeGame.game.startingDateTime
-pagination[page]: 1
-pagination[itemsPerPage]: 50
+searchConfiguration[offset]: 0
+searchConfiguration[limit]: 10
+searchConfiguration[textSearchOperator]: AND
 __csrfToken: <token_value>
 ```
 
@@ -102,6 +104,7 @@ JSON response with structure:
 
 ## Notes
 
-- The date property used for filtering is `refereeConvocation.refereeGame.game.startingDateTime`
+- Date filtering uses `propertyFilters` with `refereeGame.game.startingDateTime`
+- Pagination uses `offset`/`limit` (not page-based)
 - Results are sorted by date/time by default (ascending)
 - Only returns assignments for the authenticated referee
