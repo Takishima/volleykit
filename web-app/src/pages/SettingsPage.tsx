@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 import { useSettingsStore } from "@/stores/settings";
@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/Badge";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { getOccupationLabelKey } from "@/utils/occupation-labels";
 import { SafeModeWarningModal } from "@/components/features/SafeModeWarningModal";
+
+const DEMO_RESET_MESSAGE_DURATION_MS = 3000;
 
 export function SettingsPage() {
   const { user, logout, isDemoMode } = useAuthStore();
@@ -25,12 +27,28 @@ export function SettingsPage() {
   } = usePWA();
   const [showSafeModeWarning, setShowSafeModeWarning] = useState(false);
   const [demoDataReset, setDemoDataReset] = useState(false);
+  const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup timeout on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (resetTimeoutRef.current) {
+        clearTimeout(resetTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleResetDemoData = useCallback(() => {
     refreshData();
     setDemoDataReset(true);
-    // Reset the success message after a few seconds
-    setTimeout(() => setDemoDataReset(false), 3000);
+    // Clear any existing timeout before setting a new one
+    if (resetTimeoutRef.current) {
+      clearTimeout(resetTimeoutRef.current);
+    }
+    resetTimeoutRef.current = setTimeout(
+      () => setDemoDataReset(false),
+      DEMO_RESET_MESSAGE_DURATION_MS,
+    );
   }, [refreshData]);
 
   const formatLastChecked = useCallback(
