@@ -13,16 +13,7 @@ A progressive web application (PWA) that provides an improved interface for voll
 - **React**: Check [react.dev](https://react.dev) for latest patterns and APIs
 - **TypeScript**: Review [typescriptlang.org](https://www.typescriptlang.org/docs/) for current features
 - **Vite**: Check [vite.dev](https://vite.dev) for build configuration
-- **Packages**: Always check package documentation on [npmjs.com](https://www.npmjs.com) for:
-  - Latest version compatibility
-  - Migration guides for breaking changes
-  - Current API usage patterns
-
-**Before implementing any feature:**
-
-1. Check if the framework/package has released newer versions with better patterns
-1. Review official migration guides if updating major versions
-1. Verify code examples in this document against current official documentation
+- **Packages**: Always check package documentation on [npmjs.com](https://www.npmjs.com) for latest version compatibility and migration guides
 
 ## Tech Stack
 
@@ -84,25 +75,8 @@ volleykit/
 
 ### Self-Documenting Code Over Comments
 
-Write code that explains itself. Comments are a last resort.
-
-```typescript
-// Bad: Comment explaining what code does
-// Check if user is logged in and redirect
-if (token !== null && !isExpired(token)) {
-  navigate('/home');
-}
-
-// Good: Self-explanatory code
-if (session.isAuthenticated) {
-  navigate('/home');
-}
-```
-
-**When comments ARE appropriate:**
-
-- Explaining *why* something non-obvious is necessary (workarounds, edge cases)
-- TODOs with ticket references: `// TODO(#123): Remove after API migration`
+Write code that explains itself. Comments are for explaining *why*, not *what*.
+Use TODOs with ticket references: `// TODO(#123): Remove after API migration`
 
 ### Naming Conventions
 
@@ -121,287 +95,83 @@ ESLint enforces these conventions:
 - Max 3-4 parameters (use object parameter if more)
 - Single responsibility - each function does one thing
 - Prefer early returns over deep nesting
-- Extract duplicate logic into shared helpers (e.g., touch/mouse handlers sharing gesture logic)
 
 ## React Best Practices
 
 ### Modern React (18+) Guidelines
 
-This project uses React 19 and follows modern React patterns. Avoid outdated patterns from React 16/17 era:
+This project uses React 19. Avoid outdated patterns:
 
-- **No `isMountedRef` pattern** - React 18 removed the "state update on unmounted component" warning. Use `AbortController` to cancel async operations instead.
-- **Prefer Server Components patterns** where applicable (data fetching at component level via TanStack Query)
+- **No `isMountedRef` pattern** - Use `AbortController` or TanStack Query instead
+- **Prefer TanStack Query** for data fetching (handles cancellation automatically)
 - **Use concurrent features** - Transitions, Suspense boundaries for loading states
 - **Avoid class components** - Use function components with hooks exclusively
 
-Always check [react.dev](https://react.dev) for current best practices, as patterns evolve with each React version.
-
-### Component Structure
-
-Keep components small and focused. Break large components into smaller, composable pieces.
-
 ### State Management
 
-- **Zustand** for global client state (auth, preferences) - see `src/stores/auth.ts`
-- **TanStack Query** for server state (API data) - see `src/hooks/useConvocations.ts`
-
-### Custom Hooks
-
-Encapsulate reusable logic in custom hooks. See examples in `src/hooks/`.
+- **Zustand** for global client state (auth, preferences) - see `src/stores/`
+- **TanStack Query** for server state (API data) - see `src/hooks/`
 
 ## Common Anti-patterns to Avoid
 
-### Magic Numbers
-
-Extract hardcoded values to named constants:
-
-```typescript
-// Bad: Magic numbers scattered in code
-if (Math.abs(translateX) > 20) { /* ... */ }
-setTimeout(cleanup, 300);
-
-// Good: Named constants
-const MINIMUM_SWIPE_VISIBILITY = 20;
-const MODAL_CLEANUP_DELAY_MS = 300;
-
-if (Math.abs(translateX) > MINIMUM_SWIPE_VISIBILITY) { /* ... */ }
-setTimeout(cleanup, MODAL_CLEANUP_DELAY_MS);
-```
-
-### React Keys
-
-Never use array index as `key` prop - it causes reconciliation issues:
-
-```typescript
-// Bad: Index as key
-{items.map((item, index) => <Item key={index} {...item} />)}
-
-// Good: Unique identifier
-interface ListItem {
-  id: string;  // Add id field to interfaces
-  // ...
-}
-{items.map((item) => <Item key={item.id} {...item} />)}
-```
-
-### Memory Leaks
-
-Always clean up intervals, timeouts, and subscriptions:
-
-```typescript
-// Bad: Interval never cleared
-useEffect(() => {
-  setInterval(() => checkForUpdates(), 60000);
-}, []);
-
-// Good: Cleanup function
-useEffect(() => {
-  const intervalId = setInterval(() => checkForUpdates(), 60000);
-  return () => clearInterval(intervalId);
-}, []);
-```
-
-### Race Conditions
-
-Use refs to prevent duplicate async operations:
-
-```typescript
-// Bad: Multiple rapid clicks trigger duplicate requests
-const handleSubmit = async () => {
-  await submitForm();
-};
-
-// Good: Guard against concurrent execution
-const isSubmittingRef = useRef(false);
-const handleSubmit = async () => {
-  if (isSubmittingRef.current) return;
-  isSubmittingRef.current = true;
-  try {
-    await submitForm();
-  } finally {
-    isSubmittingRef.current = false;
-  }
-};
-```
-
-### Outdated `isMountedRef` Pattern
-
-The `isMountedRef` pattern is obsolete in React 18+. React removed the warning about state updates on unmounted components. Use `AbortController` to cancel async operations instead:
-
-```typescript
-// Bad: Outdated isMountedRef pattern (React 16/17 era)
-const isMountedRef = useRef(true);
-useEffect(() => {
-  fetchData().then((data) => {
-    if (isMountedRef.current) {
-      setData(data);
-    }
-  });
-  return () => {
-    isMountedRef.current = false;
-  };
-}, []);
-
-// Good: Use AbortController to cancel fetch requests
-useEffect(() => {
-  const controller = new AbortController();
-  fetchData({ signal: controller.signal })
-    .then(setData)
-    .catch((error) => {
-      if (error.name !== 'AbortError') throw error;
-    });
-  return () => controller.abort();
-}, []);
-
-// Good: Use TanStack Query (preferred for this project)
-const { data } = useQuery({
-  queryKey: ['data'],
-  queryFn: fetchData,
-});
-```
+| Anti-pattern | Solution |
+|--------------|----------|
+| Magic numbers (`if (x > 20)`) | Named constants (`MINIMUM_SWIPE_VISIBILITY`) |
+| Array index as React key | Use unique `id` field from data |
+| Uncleared intervals/timeouts | Return cleanup function from `useEffect` |
+| Race conditions on rapid clicks | Guard with `useRef` flag or disable button |
+| `isMountedRef` pattern | Use `AbortController` or TanStack Query |
 
 ## Testing
 
 ### Test Philosophy
 
-**Test these:**
-
-- Business logic and data transformations
-- Custom hooks with complex logic
-- Component interactions (click handlers, form submissions)
-- Edge cases that have caused bugs
-
-**Skip these:**
-
-- Simple presentational components
-- Third-party library wrappers
-- Trivial getters/setters
+**Test**: Business logic, custom hooks, component interactions, edge cases that caused bugs.
+**Skip**: Simple presentational components, third-party wrappers, trivial getters/setters.
 
 See existing tests in `src/**/*.test.ts` for patterns.
 
 ### E2E Testing with Playwright
 
-E2E tests use Playwright with Page Object Models (POMs) for maintainability.
+E2E tests use Page Object Models (POMs) in `web-app/e2e/pages/`.
 
-**Test Location**: `web-app/e2e/`
-
-**Page Object Models** (`e2e/pages/`):
-- Encapsulate page-specific selectors and actions
-- Make tests readable and maintainable
-- Export from `e2e/pages/index.ts`
-
-```typescript
-// e2e/pages/assignments.page.ts
-export class AssignmentsPage {
-  constructor(private page: Page) {}
-
-  async goto() {
-    await this.page.goto('/assignments');
-  }
-
-  async getAssignmentCard(id: string) {
-    return this.page.getByTestId(`assignment-${id}`);
-  }
-}
-
-// e2e/assignments.spec.ts
-test('displays assignment list', async ({ page }) => {
-  const assignmentsPage = new AssignmentsPage(page);
-  await assignmentsPage.goto();
-  // ...
-});
-```
-
-**Cross-Browser Testing**:
-- Tests run on Chromium, Firefox, and WebKit
-- Mobile viewports tested (Pixel 5, iPhone 12)
-- CI runs Chromium and Firefox in parallel
-
-**Running E2E Tests**:
-```bash
-cd web-app
-npm run test:e2e           # Run all E2E tests
-npm run test:e2e:ui        # Interactive UI mode
-npx playwright test --project=chromium  # Single browser
-```
+**Cross-Browser Testing**: Chromium, Firefox, WebKit + mobile viewports (Pixel 5, iPhone 12).
 
 ## Internationalization (i18n)
 
 The app supports 4 languages: German (de), English (en), French (fr), Italian (it).
 
-**Translation Files**: `src/i18n/locales/{de,en,fr,it}.ts`
-
-**Usage**:
-```typescript
-import { useTranslation } from '@/hooks/useTranslation';
-
-function MyComponent() {
-  const { t } = useTranslation();
-  return <h1>{t('assignments.title')}</h1>;
-}
-```
+**Usage**: `const { t } = useTranslation(); t('assignments.title')`
 
 **Adding Translations**:
 1. Add the key to `src/i18n/types.ts` for type safety
-2. Add translations to all 4 locale files
-3. Use nested keys for organization: `section.subsection.key`
-
-**Test Setup**: Translations are preloaded in `src/test/setup.ts` to prevent async issues in tests.
+2. Add translations to all 4 locale files in `src/i18n/locales/`
+3. Use nested keys: `section.subsection.key`
 
 ## Demo Mode
 
-The app supports a demo mode for testing without API access.
+The app supports demo mode for testing without API access.
 
-**Enabling Demo Mode**:
-- Environment variable: `VITE_DEMO_MODE_ONLY=true`
-- PR preview builds use demo mode automatically
-- Demo data is deterministic (uses seeded UUIDs for reproducibility)
-
-**Demo Store** (`src/stores/demo.ts`):
-- Generates realistic sample data
-- Persists modifications across page refreshes (localStorage)
-- Deterministic UUID generation for consistent test data
-
-**Mock API** (`src/api/mock-api.ts`):
-- Simulates all API endpoints
-- Contract tests verify mock matches real API schema
-- Used for unit tests and demo mode
-
-**Contract Testing** (`src/api/contract.test.ts`):
-- Validates mock responses against OpenAPI schema
-- Ensures demo mode behavior matches production API
+- **Enable**: `VITE_DEMO_MODE_ONLY=true` (PR previews use this automatically)
+- **Demo Store** (`src/stores/demo.ts`): Deterministic sample data with seeded UUIDs
+- **Mock API** (`src/api/mock-api.ts`): Simulates all endpoints
+- **Contract Tests** (`src/api/contract.test.ts`): Verify mock matches real API schema
 
 ## API Integration
 
 ### SwissVolley API Documentation
 
-**IMPORTANT**: Before implementing any feature that interacts with the SwissVolley/VolleyManager API, consult the documentation in `docs/api/`:
+**IMPORTANT**: Before implementing API features, consult `docs/api/`:
 
-- **OpenAPI Spec**: `docs/api/volleymanager-openapi.yaml` - Complete API schema with request/response types
-- **Endpoint Documentation**: `docs/api/*.md` - Detailed documentation for each API area:
-  - `auth_api.md` - Authentication and session management
-  - `assignments_api.md` - Referee assignments/convocations
-  - `compensations_api.md` - Travel expenses and compensation
-  - `exchanges_api.md` - Game exchange/substitution requests
-- **Captured Examples**: `docs/api/captures/` - Real request/response examples captured from the production API
-
-This documentation reflects the actual behavior of the VolleyManager API and should be the source of truth for:
-
-- Request/response formats and field names
-- Required vs optional parameters
-- Authentication requirements
-- Error response formats
-- Pagination patterns
+- **OpenAPI Spec**: `docs/api/volleymanager-openapi.yaml`
+- **Endpoint Docs**: `auth_api.md`, `assignments_api.md`, `compensations_api.md`, `exchanges_api.md`
+- **Captured Examples**: `docs/api/captures/` - Real request/response examples
 
 ### Generated Types
 
-The API client is generated from the OpenAPI spec:
-
 ```bash
-npm run generate:api
+npm run generate:api  # Generates src/api/schema.ts from OpenAPI spec
 ```
-
-This generates `src/api/schema.ts` with all types from `docs/api/volleymanager-openapi.yaml`.
 
 ### CORS Handling
 
@@ -410,76 +180,39 @@ This generates `src/api/schema.ts` with all types from `docs/api/volleymanager-o
 
 ## Security
 
-### Authentication
-
 - Session cookies managed by the API
 - CSRF tokens included in requests
 - Never log credentials or tokens
-
-### Environment Variables
-
-```bash
-# .env.local (never commit)
-VITE_API_PROXY_URL=https://your-worker.workers.dev
-```
+- Environment variables in `.env.local` (never commit)
 
 ## Git Conventions
 
-### Commit Messages
+**Commit Messages**: `feat(scope): description`, `fix(scope): description`, `refactor`, `test`, `docs`, `chore`
 
-```
-feat(assignments): add filtering by date range
-fix(auth): handle session timeout correctly
-refactor(api): extract common fetch logic
-test(components): add AssignmentCard tests
-docs: update API documentation
-chore: upgrade dependencies
-```
-
-### Branch Naming
-
-```
-feature/assignment-filters
-bugfix/session-timeout
-refactor/api-client
-```
+**Branch Naming**: `feature/description`, `bugfix/description`, `refactor/description`
 
 ## Commands Reference
 
 ### CI Validation (Run Before Creating PRs)
 
-**CRITICAL**: Always run the full CI validation before creating a pull request. This ensures CI will pass and avoids wasted review cycles.
+**CRITICAL**: Always run full CI validation before creating a pull request.
 
 ```bash
-# Web App - Full CI validation (same as GitHub Actions)
 cd web-app
-npm run generate:api  # Generate API types first (REQUIRED before lint/test/build)
+npm run generate:api  # REQUIRED before lint/test/build
 npm run lint          # Lint check
 npm test              # Run all tests
 npm run build         # Production build (includes tsc)
 npm run size          # Check bundle size
-
-# Worker - Full CI validation (if worker/ files changed)
-cd worker
-npm run lint          # Lint check
-npm test              # Run all worker tests
 ```
-
-**Note**: The `npm run generate:api` step is required because CI runs it before tests. Running tests without it may pass locally (if types were previously generated) but fail in CI.
 
 ### Development
 
 ```bash
-# Web App
 cd web-app
 npm run dev           # Start dev server with hot reload
 npm run test:watch    # Watch mode for tests
 npm run test:coverage # Tests with coverage report
-
-# Worker (CORS proxy)
-cd worker
-npm run dev           # Local worker dev
-npx wrangler deploy   # Deploy to Cloudflare
 ```
 
 ### E2E Testing
@@ -488,87 +221,41 @@ npx wrangler deploy   # Deploy to Cloudflare
 cd web-app
 npm run test:e2e           # Run all E2E tests (requires build first)
 npm run test:e2e:ui        # Interactive Playwright UI mode
-npx playwright test --project=chromium  # Run single browser only
-npx playwright test assignments.spec.ts  # Run specific test file
+npx playwright test --project=chromium  # Single browser
 ```
 
-**Note**: E2E tests run against a production build (`npm run preview`), not the dev server.
+**Note**: E2E tests run against production build (`npm run preview`), not dev server.
 
-### Other Commands
+### Worker (CORS proxy)
 
 ```bash
-# Type checking only (web-app)
-cd web-app
-npx tsc --noEmit
-
-# Preview production build (web-app)
-cd web-app
-npm run preview
-
-# Install Playwright browsers (first time setup)
-cd web-app
-npx playwright install
+cd worker
+npm run dev           # Local worker dev
+npx wrangler deploy   # Deploy to Cloudflare
 ```
 
 ## Bundle Size Limits
 
-The project enforces bundle size limits to maintain performance. CI will fail if limits are exceeded.
+CI will fail if limits are exceeded (gzipped):
 
-**Limits** (gzipped):
-- Main App: 120 KB
-- Vendor Chunks: 50 KB each
-- PDF Library: 185 KB (lazy-loaded)
-- CSS: 10 KB
-- Total JS: 400 KB
+| Component | Limit |
+|-----------|-------|
+| Main App | 120 KB |
+| Vendor Chunks | 50 KB each |
+| PDF Library | 185 KB (lazy-loaded) |
+| CSS | 10 KB |
+| Total JS | 400 KB |
 
-**Checking Bundle Size**:
-```bash
-cd web-app
-npm run build && npm run size
-```
-
-If size limits are exceeded:
-1. Review new dependencies for size impact
-2. Consider lazy-loading large features
-3. Check for duplicate dependencies
-4. Use bundle analyzer: `npm run build -- --analyze`
+**Check size**: `npm run build && npm run size`
 
 ## Accessibility
 
-### Modal Patterns
-
-```typescript
-// Bad: Interactive backdrop
-<div role="button" tabIndex={0} onClick={onClose}>
-  <dialog>...</dialog>
-</div>
-
-// Good: Non-interactive backdrop with proper dialog
-<div onClick={onClose} aria-hidden="true">
-  <dialog role="dialog" aria-modal="true" aria-labelledby="modal-title">
-    ...
-  </dialog>
-</div>
-
-// Handle Escape key via useEffect, not on backdrop
-useEffect(() => {
-  const handleEscape = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') onClose();
-  };
-  document.addEventListener('keydown', handleEscape);
-  return () => document.removeEventListener('keydown', handleEscape);
-}, [onClose]);
-```
-
-### ARIA Attributes
-
-- Use `role="alert"` and `aria-live="polite"` for notifications/toasts
-- Add `aria-label` to icon-only buttons
+- Use `aria-label` on icon-only buttons
 - Use `aria-labelledby` to associate modal titles with dialogs
+- Handle Escape key for modals via `useEffect`, not on backdrop
+- Use `role="alert"` and `aria-live="polite"` for notifications
 
 ## Definition of Done
-
-A feature is complete when:
 
 1. Implementation follows React/TypeScript best practices
 1. Unit tests cover business logic and interactions
