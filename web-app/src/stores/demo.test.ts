@@ -109,14 +109,22 @@ describe("useDemoStore", () => {
   describe("updateCompensation", () => {
     const TRAVEL_EXPENSE_RATE_PER_KM = 0.7;
 
+    // Helper to get compensation ID from store by index (0-based)
+    const getCompensationId = (index: number) => {
+      const compensations = useDemoStore.getState().compensations;
+      return compensations[index]?.__identity;
+    };
+
     it("updates distance and recalculates travel expenses", () => {
       useDemoStore.getState().initializeDemoData();
-      const compensationId = "demo-comp-1";
+      const compensationId = getCompensationId(0);
+      expect(compensationId).toBeDefined();
+
       const newDistanceInMetres = 50000;
       const expectedTravelExpenses =
         (newDistanceInMetres / 1000) * TRAVEL_EXPENSE_RATE_PER_KM;
 
-      useDemoStore.getState().updateCompensation(compensationId, {
+      useDemoStore.getState().updateCompensation(compensationId!, {
         distanceInMetres: newDistanceInMetres,
       });
 
@@ -134,7 +142,9 @@ describe("useDemoStore", () => {
 
     it("calculates travel expenses at 0.7 CHF per kilometer", () => {
       useDemoStore.getState().initializeDemoData();
-      const compensationId = "demo-comp-2";
+      const compensationId = getCompensationId(1);
+      expect(compensationId).toBeDefined();
+
       const testCases = [
         { distance: 10000, expected: 7.0 },
         { distance: 25000, expected: 17.5 },
@@ -143,7 +153,7 @@ describe("useDemoStore", () => {
       ];
 
       for (const { distance, expected } of testCases) {
-        useDemoStore.getState().updateCompensation(compensationId, {
+        useDemoStore.getState().updateCompensation(compensationId!, {
           distanceInMetres: distance,
         });
 
@@ -159,8 +169,10 @@ describe("useDemoStore", () => {
 
     it("does not modify other compensations", () => {
       useDemoStore.getState().initializeDemoData();
-      const targetId = "demo-comp-1";
-      const otherId = "demo-comp-2";
+      const targetId = getCompensationId(0);
+      const otherId = getCompensationId(1);
+      expect(targetId).toBeDefined();
+      expect(otherId).toBeDefined();
 
       const originalOther = useDemoStore
         .getState()
@@ -170,7 +182,7 @@ describe("useDemoStore", () => {
       const originalExpenses =
         originalOther?.convocationCompensation?.travelExpenses;
 
-      useDemoStore.getState().updateCompensation(targetId, {
+      useDemoStore.getState().updateCompensation(targetId!, {
         distanceInMetres: 99999,
       });
 
@@ -200,7 +212,8 @@ describe("useDemoStore", () => {
 
     it("preserves other compensation fields when updating distance", () => {
       useDemoStore.getState().initializeDemoData();
-      const compensationId = "demo-comp-1";
+      const compensationId = getCompensationId(0);
+      expect(compensationId).toBeDefined();
 
       const originalComp = useDemoStore
         .getState()
@@ -212,7 +225,7 @@ describe("useDemoStore", () => {
       const originalTransportationMode =
         originalComp?.convocationCompensation?.transportationMode;
 
-      useDemoStore.getState().updateCompensation(compensationId, {
+      useDemoStore.getState().updateCompensation(compensationId!, {
         distanceInMetres: 75000,
       });
 

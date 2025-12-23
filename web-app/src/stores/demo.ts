@@ -12,6 +12,51 @@ import type {
 import { addDays, addHours, subDays } from "date-fns";
 import { formatDistanceKm, metresToKilometres } from "@/utils/distance";
 
+// Valid variant characters for UUID v4 (RFC 4122)
+const UUID_VARIANT_CHARS = ["8", "9", "a", "b"] as const;
+
+/** Hash a string to a 32-bit integer using djb2-like algorithm. */
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash = hash | 0;
+  }
+  return hash;
+}
+
+/** Hash a string in reverse for additional entropy. */
+function hashStringReverse(str: string): number {
+  let hash = 0;
+  for (let i = str.length - 1; i >= 0; i--) {
+    hash = (hash << 3) + hash + str.charCodeAt(i);
+    hash = hash | 0;
+  }
+  return hash;
+}
+
+/** Convert a number to an 8-character hex string. */
+function toHex8(n: number): string {
+  return Math.abs(n).toString(16).padStart(8, "0").slice(0, 8);
+}
+
+/**
+ * Generate a deterministic UUID v4 from a seed string.
+ * Uses hashing to create reproducible UUIDs for demo data,
+ * ensuring mock data passes UUID validation while remaining predictable.
+ */
+function generateDemoUuid(seed: string): string {
+  const h1 = hashString(seed);
+  const h2 = hashStringReverse(seed);
+  const hex1 = toHex8(h1);
+  const hex2 = toHex8(h2);
+  const hex3 = toHex8(h1 + h2);
+  const hex4 = toHex8(h1 * 2 + h2);
+  const variant = UUID_VARIANT_CHARS[Math.abs(h1) % 4];
+
+  return `${hex1}-${hex2.slice(0, 4)}-4${hex2.slice(5, 8)}-${variant}${hex3.slice(1, 4)}-${hex3.slice(4, 8)}${hex4.slice(0, 8)}`;
+}
+
 // Mock player for roster display
 export interface MockRosterPlayer {
   id: string;
@@ -459,7 +504,7 @@ function createRefereeConvocation(
     indoorAssociationReferee: {
       indoorReferee: {
         person: {
-          __identity: `${idPrefix}-referee-${position}-${gameId}`,
+          __identity: generateDemoUuid(`${idPrefix}-referee-${position}-${gameId}`),
           firstName: referee.firstName,
           lastName: referee.lastName,
           displayName,
@@ -486,7 +531,7 @@ function createRefereeGame({
   const league = leagues[leagueIndex % leagues.length]!;
 
   return {
-    __identity: `${idPrefix}-game-${gameId}`,
+    __identity: generateDemoUuid(`${idPrefix}-game-${gameId}`),
     isGameInFuture: isGameInFuture ? "1" : "0",
     activeRefereeConvocationFirstHeadReferee: createRefereeConvocation(
       idPrefix,
@@ -501,27 +546,27 @@ function createRefereeGame({
       venueIndex * 2 + 1,
     ),
     game: {
-      __identity: `${idPrefix}-g-${gameId}`,
+      __identity: generateDemoUuid(`${idPrefix}-g-${gameId}`),
       number: gameNumber,
       startingDateTime: gameDate.toISOString(),
       playingWeekday: getWeekday(gameDate),
       encounter: {
         teamHome: {
-          __identity: `team-${idPrefix}-${venueIndex * 2 + 1}`,
+          __identity: generateDemoUuid(`team-${idPrefix}-${venueIndex * 2 + 1}`),
           name: venue.teamHome.name,
           identifier: venue.teamHome.identifier,
         },
         teamAway: {
-          __identity: `team-${idPrefix}-${venueIndex * 2 + 2}`,
+          __identity: generateDemoUuid(`team-${idPrefix}-${venueIndex * 2 + 2}`),
           name: venue.teamAway.name,
           identifier: venue.teamAway.identifier,
         },
       },
       hall: {
-        __identity: `hall-${idPrefix}-${venueIndex + 1}`,
+        __identity: generateDemoUuid(`hall-${idPrefix}-${venueIndex + 1}`),
         name: venue.hall.name,
         primaryPostalAddress: createAddress({
-          id: `addr-${idPrefix}-${venueIndex + 1}`,
+          id: generateDemoUuid(`addr-${idPrefix}-${venueIndex + 1}`),
           street: venue.hall.street,
           houseNumber: venue.hall.houseNumber,
           postalCode: venue.hall.postalCode,
@@ -565,7 +610,7 @@ function createAssignment(
   now: Date,
 ): Assignment {
   return {
-    __identity: `demo-assignment-${config.index}`,
+    __identity: generateDemoUuid(`demo-assignment-${config.index}`),
     refereeConvocationStatus: config.status,
     refereePosition: config.position,
     confirmationStatus: config.confirmationStatus,
@@ -629,7 +674,7 @@ function createCompensationRecord(
   isSV: boolean,
 ): CompensationRecord {
   return {
-    __identity: `demo-comp-${config.index}`,
+    __identity: generateDemoUuid(`demo-comp-${config.index}`),
     refereeConvocationStatus: "active",
     refereePosition: config.position,
     compensationDate: subDays(now, config.daysAgo).toISOString(),
@@ -645,7 +690,7 @@ function createCompensationRecord(
       idPrefix: "comp",
     }),
     convocationCompensation: {
-      __identity: `demo-cc-${config.index}`,
+      __identity: generateDemoUuid(`demo-cc-${config.index}`),
       ...createCompensationData({
         position: config.position,
         distanceInMetres: SAMPLE_DISTANCES[config.distance],
@@ -686,7 +731,7 @@ function generateExchanges(
 
   return [
     {
-      __identity: "demo-exchange-1",
+      __identity: generateDemoUuid("demo-exchange-1"),
       status: "open",
       submittedAt: subDays(now, 2).toISOString(),
       submittingType: "referee",
@@ -694,7 +739,7 @@ function generateExchanges(
       requiredRefereeLevel: "N3",
       requiredRefereeLevelGradationValue: "1",
       submittedByPerson: {
-        __identity: "demo-person-1",
+        __identity: generateDemoUuid("demo-person-1"),
         firstName: "Max",
         lastName: "Müller",
         displayName: "Max Müller",
@@ -716,7 +761,7 @@ function generateExchanges(
       },
     },
     {
-      __identity: "demo-exchange-2",
+      __identity: generateDemoUuid("demo-exchange-2"),
       status: "open",
       submittedAt: subDays(now, 1).toISOString(),
       submittingType: "referee",
@@ -724,7 +769,7 @@ function generateExchanges(
       requiredRefereeLevel: "N2",
       requiredRefereeLevelGradationValue: "2",
       submittedByPerson: {
-        __identity: "demo-person-2",
+        __identity: generateDemoUuid("demo-person-2"),
         firstName: "Anna",
         lastName: "Schmidt",
         displayName: "Anna Schmidt",
@@ -747,7 +792,7 @@ function generateExchanges(
       },
     },
     {
-      __identity: "demo-exchange-3",
+      __identity: generateDemoUuid("demo-exchange-3"),
       status: "applied",
       submittedAt: subDays(now, 5).toISOString(),
       submittingType: "referee",
@@ -755,7 +800,7 @@ function generateExchanges(
       requiredRefereeLevel: "N2",
       requiredRefereeLevelGradationValue: "1",
       submittedByPerson: {
-        __identity: "demo-person-3",
+        __identity: generateDemoUuid("demo-person-3"),
         firstName: "Peter",
         lastName: "Weber",
         displayName: "Peter Weber",
@@ -763,7 +808,7 @@ function generateExchanges(
       appliedBy: {
         indoorReferee: {
           person: {
-            __identity: "demo-me",
+            __identity: generateDemoUuid("demo-me"),
             firstName: "Demo",
             lastName: "User",
             displayName: "Demo User",
@@ -788,7 +833,7 @@ function generateExchanges(
       },
     },
     {
-      __identity: "demo-exchange-4",
+      __identity: generateDemoUuid("demo-exchange-4"),
       status: "open",
       submittedAt: subDays(now, 3).toISOString(),
       submittingType: "admin",
@@ -796,7 +841,7 @@ function generateExchanges(
       requiredRefereeLevel: isSV ? "N1" : "N2",
       requiredRefereeLevelGradationValue: "1",
       submittedByPerson: {
-        __identity: "demo-person-4",
+        __identity: generateDemoUuid("demo-person-4"),
         firstName: "Sara",
         lastName: "Keller",
         displayName: "Sara Keller",
@@ -818,7 +863,7 @@ function generateExchanges(
       },
     },
     {
-      __identity: "demo-exchange-5",
+      __identity: generateDemoUuid("demo-exchange-5"),
       status: "closed",
       submittedAt: subDays(now, 10).toISOString(),
       submittingType: "referee",
@@ -826,7 +871,7 @@ function generateExchanges(
       requiredRefereeLevel: "N3",
       requiredRefereeLevelGradationValue: "3",
       submittedByPerson: {
-        __identity: "demo-person-5",
+        __identity: generateDemoUuid("demo-person-5"),
         firstName: "Thomas",
         lastName: "Huber",
         displayName: "Thomas Huber",
@@ -882,11 +927,11 @@ function generatePossiblePlayers(): PossibleNomination[] {
   ];
 
   return players.map((player, index) => ({
-    __identity: `demo-possible-${index + 1}`,
+    __identity: generateDemoUuid(`demo-possible-${index + 1}`),
     indoorPlayer: {
-      __identity: `demo-player-${index + 1}`,
+      __identity: generateDemoUuid(`demo-player-${index + 1}`),
       person: {
-        __identity: `demo-person-p${index + 1}`,
+        __identity: generateDemoUuid(`demo-person-p${index + 1}`),
         displayName: `${player.firstName} ${player.lastName}`,
         firstName: player.firstName,
         lastName: player.lastName,
