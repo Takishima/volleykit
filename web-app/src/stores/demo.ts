@@ -1121,21 +1121,23 @@ function createNominationList(
   };
 }
 
-// Game nomination configuration pairs (home and away teams)
-interface GameNominationConfig {
+// Configuration data for mock nomination lists
+// Note: gameIndex corresponds to assignment config indices (1-5)
+// Only games where the user is 1st referee (head-one) need rosters
+interface NominationListGameConfig {
   gameIndex: number;
-  gameId: string;
   home: Omit<NominationListConfig, "gameId" | "side">;
   away: Omit<NominationListConfig, "gameId" | "side">;
 }
 
-// Configuration data for mock nomination lists (3 games with home/away teams)
-const NOMINATION_LIST_CONFIGS: GameNominationConfig[] = [
+// Nomination list configs for games where user is 1st referee (head-one position)
+// Assignment index 1 has head-one position - this is the primary game for roster validation
+const NOMINATION_LIST_CONFIGS: NominationListGameConfig[] = [
   {
+    // Matches assignment index 1: head-one, VBC Zürich Lions vs Volley Luzern
     gameIndex: 1,
-    gameId: "demo-g-1",
     home: {
-      teamId: "team-1",
+      teamId: "team-demo-1",
       teamDisplayName: "VBC Zürich Lions",
       players: [
         { index: 1, shirtNumber: 1, firstName: "Marco", lastName: "Meier", licenseCategory: "SEN", isCaptain: true },
@@ -1147,7 +1149,7 @@ const NOMINATION_LIST_CONFIGS: GameNominationConfig[] = [
       ],
     },
     away: {
-      teamId: "team-2",
+      teamId: "team-demo-2",
       teamDisplayName: "Volley Luzern",
       players: [
         { index: 1, shirtNumber: 3, firstName: "David", lastName: "Steiner", licenseCategory: "SEN", isCaptain: true },
@@ -1158,64 +1160,25 @@ const NOMINATION_LIST_CONFIGS: GameNominationConfig[] = [
       ],
     },
   },
-  {
-    gameIndex: 2,
-    gameId: "demo-g-2",
-    home: {
-      teamId: "team-3",
-      teamDisplayName: "Schönenwerd Smash",
-      players: [
-        { index: 1, shirtNumber: 2, firstName: "Raphael", lastName: "Widmer", licenseCategory: "SEN", isCaptain: true },
-        { index: 2, shirtNumber: 15, firstName: "Kevin", lastName: "Bieri", licenseCategory: "SEN", isLibero: true },
-        { index: 3, shirtNumber: 4, firstName: "Patrick", lastName: "Moser", licenseCategory: "SEN" },
-      ],
-    },
-    away: {
-      teamId: "team-4",
-      teamDisplayName: "Traktor Basel",
-      players: [
-        { index: 1, shirtNumber: 1, firstName: "Benjamin", lastName: "Koch", licenseCategory: "SEN" },
-        { index: 2, shirtNumber: 13, firstName: "Michael", lastName: "Lang", licenseCategory: "SEN", isCaptain: true },
-        { index: 3, shirtNumber: 17, firstName: "Julian", lastName: "Roth", licenseCategory: "JUN", isLibero: true },
-      ],
-    },
-  },
-  {
-    gameIndex: 3,
-    gameId: "demo-g-3",
-    home: {
-      teamId: "team-5",
-      teamDisplayName: "Volley Näfels",
-      players: [
-        { index: 1, shirtNumber: 6, firstName: "Anna", lastName: "Huber", licenseCategory: "SEN", isCaptain: true },
-        { index: 2, shirtNumber: 10, firstName: "Lisa", lastName: "Meyer", licenseCategory: "SEN", isLibero: true },
-        { index: 3, shirtNumber: 8, firstName: "Sara", lastName: "Schmid", licenseCategory: "JUN" },
-      ],
-    },
-    away: {
-      teamId: "team-6",
-      teamDisplayName: "Volero Zürich",
-      players: [
-        { index: 1, shirtNumber: 4, firstName: "Elena", lastName: "Keller", licenseCategory: "SEN", isCaptain: true },
-        { index: 2, shirtNumber: 7, firstName: "Julia", lastName: "Lehmann", licenseCategory: "SEN" },
-        { index: 3, shirtNumber: 12, firstName: "Nina", lastName: "Zimmermann", licenseCategory: "SEN", isLibero: true },
-      ],
-    },
-  },
 ];
 
 function generateMockNominationLists(): MockNominationLists {
   const result: MockNominationLists = {};
 
   for (const config of NOMINATION_LIST_CONFIGS) {
-    result[config.gameId] = {
+    // Generate the same game UUID used by assignments
+    // This matches createRefereeGame which uses: generateDemoUuid(`${idPrefix}-g-${gameId}`)
+    // For assignment configs, idPrefix is "demo" and gameId is the config index
+    const gameUuid = generateDemoUuid(`demo-g-${config.gameIndex}`);
+
+    result[gameUuid] = {
       home: createNominationList(
-        { ...config.home, gameId: config.gameId, side: "home" },
+        { ...config.home, gameId: gameUuid, side: "home" },
         config.gameIndex,
         1,
       ),
       away: createNominationList(
-        { ...config.away, gameId: config.gameId, side: "away" },
+        { ...config.away, gameId: gameUuid, side: "away" },
         config.gameIndex,
         2,
       ),
