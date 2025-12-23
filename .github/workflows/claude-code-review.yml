@@ -36,7 +36,10 @@ jobs:
             PR NUMBER: ${{ github.event.pull_request.number }}
             EVENT TYPE: ${{ github.event.action }}
 
-            CRITICAL: You MUST read the CLAUDE.md file FIRST and strictly enforce all guidelines during this review.
+            CRITICAL: You MUST read these files FIRST and strictly enforce all guidelines during this review:
+            - CLAUDE.md (main guidelines)
+            - docs/SECURITY_CHECKLIST.md (security review)
+            - docs/CODE_PATTERNS.md (anti-patterns and examples)
 
             ## CONSISTENCY REQUIREMENTS
 
