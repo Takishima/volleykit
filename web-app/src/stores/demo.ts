@@ -11,44 +11,49 @@ import type {
 import { addDays, addHours, subDays } from "date-fns";
 import { formatDistanceKm, metresToKilometres } from "@/utils/distance";
 
+// Valid variant characters for UUID v4 (RFC 4122)
+const UUID_VARIANT_CHARS = ["8", "9", "a", "b"] as const;
+
+/** Hash a string to a 32-bit integer using djb2-like algorithm. */
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash = hash | 0;
+  }
+  return hash;
+}
+
+/** Hash a string in reverse for additional entropy. */
+function hashStringReverse(str: string): number {
+  let hash = 0;
+  for (let i = str.length - 1; i >= 0; i--) {
+    hash = (hash << 3) + hash + str.charCodeAt(i);
+    hash = hash | 0;
+  }
+  return hash;
+}
+
+/** Convert a number to an 8-character hex string. */
+function toHex8(n: number): string {
+  return Math.abs(n).toString(16).padStart(8, "0").slice(0, 8);
+}
+
 /**
  * Generate a deterministic UUID v4 from a seed string.
- * Uses a simple hash function to create reproducible UUIDs for demo data.
- * This ensures mock data passes UUID validation while remaining predictable.
+ * Uses hashing to create reproducible UUIDs for demo data,
+ * ensuring mock data passes UUID validation while remaining predictable.
  */
 function generateDemoUuid(seed: string): string {
-  // Simple string hash function
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    const char = seed.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32-bit integer
-  }
+  const h1 = hashString(seed);
+  const h2 = hashStringReverse(seed);
+  const hex1 = toHex8(h1);
+  const hex2 = toHex8(h2);
+  const hex3 = toHex8(h1 + h2);
+  const hex4 = toHex8(h1 * 2 + h2);
+  const variant = UUID_VARIANT_CHARS[Math.abs(h1) % 4];
 
-  // Create a second hash for more entropy
-  let hash2 = 0;
-  for (let i = seed.length - 1; i >= 0; i--) {
-    const char = seed.charCodeAt(i);
-    hash2 = (hash2 << 3) + hash2 + char;
-    hash2 = hash2 & hash2;
-  }
-
-  // Convert to hex strings with proper padding
-  const hex1 = Math.abs(hash).toString(16).padStart(8, "0").slice(0, 8);
-  const hex2 = Math.abs(hash2).toString(16).padStart(8, "0").slice(0, 8);
-  const hex3 = Math.abs(hash + hash2).toString(16).padStart(8, "0").slice(0, 8);
-  const hex4 = Math.abs(hash * 2 + hash2).toString(16).padStart(8, "0").slice(0, 8);
-
-  // Format as UUID v4 (with version 4 and variant bits set correctly)
-  // UUID format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
-  // where y is 8, 9, a, or b
-  const part1 = hex1;
-  const part2 = hex2.slice(0, 4);
-  const part3 = "4" + hex2.slice(5, 8); // version 4
-  const part4 = ["8", "9", "a", "b"][Math.abs(hash) % 4] + hex3.slice(1, 4); // variant
-  const part5 = hex3.slice(4, 8) + hex4.slice(0, 8);
-
-  return `${part1}-${part2}-${part3}-${part4}-${part5}`;
+  return `${hex1}-${hex2.slice(0, 4)}-4${hex2.slice(5, 8)}-${variant}${hex3.slice(1, 4)}-${hex3.slice(4, 8)}${hex4.slice(0, 8)}`;
 }
 
 // Mock player for roster display

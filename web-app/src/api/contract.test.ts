@@ -9,6 +9,7 @@
  * Run these tests before deploying to catch mock/API mismatches early.
  */
 import { describe, it, expect, beforeEach } from "vitest";
+import type { ZodError } from "zod";
 import { useDemoStore } from "@/stores/demo";
 import {
   assignmentSchema,
@@ -21,6 +22,28 @@ import {
   personSearchResponseSchema,
 } from "./validation";
 import { mockApi } from "./mock-api";
+
+/** Format Zod validation errors into a readable string. */
+function formatZodErrors(error: ZodError): string {
+  return error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("\n");
+}
+
+/** Create a validation error with context about the failed item. */
+function validationError(
+  label: string,
+  index: number,
+  error: ZodError,
+  data: unknown,
+): Error {
+  return new Error(
+    `${label} ${index} failed validation:\n${formatZodErrors(error)}\n\nData: ${JSON.stringify(data, null, 2)}`,
+  );
+}
+
+/** Create a validation error for API responses. */
+function responseValidationError(label: string, error: ZodError): Error {
+  return new Error(`${label} failed validation:\n${formatZodErrors(error)}`);
+}
 
 describe("Mock data contract tests", () => {
   beforeEach(() => {
@@ -36,12 +59,7 @@ describe("Mock data contract tests", () => {
       assignments.forEach((assignment, index) => {
         const result = assignmentSchema.safeParse(assignment);
         if (!result.success) {
-          const errors = result.error.issues
-            .map((i) => `${i.path.join(".")}: ${i.message}`)
-            .join("\n");
-          throw new Error(
-            `Assignment ${index} failed validation:\n${errors}\n\nData: ${JSON.stringify(assignment, null, 2)}`,
-          );
+          throw validationError("Assignment", index, result.error, assignment);
         }
         expect(result.success).toBe(true);
       });
@@ -52,10 +70,7 @@ describe("Mock data contract tests", () => {
 
       const result = assignmentsResponseSchema.safeParse(response);
       if (!result.success) {
-        const errors = result.error.issues
-          .map((i) => `${i.path.join(".")}: ${i.message}`)
-          .join("\n");
-        throw new Error(`Assignments response failed validation:\n${errors}`);
+        throw responseValidationError("Assignments response", result.error);
       }
       expect(result.success).toBe(true);
     });
@@ -82,11 +97,11 @@ describe("Mock data contract tests", () => {
       compensations.forEach((compensation, index) => {
         const result = compensationRecordSchema.safeParse(compensation);
         if (!result.success) {
-          const errors = result.error.issues
-            .map((i) => `${i.path.join(".")}: ${i.message}`)
-            .join("\n");
-          throw new Error(
-            `Compensation ${index} failed validation:\n${errors}\n\nData: ${JSON.stringify(compensation, null, 2)}`,
+          throw validationError(
+            "Compensation",
+            index,
+            result.error,
+            compensation,
           );
         }
         expect(result.success).toBe(true);
@@ -98,12 +113,7 @@ describe("Mock data contract tests", () => {
 
       const result = compensationsResponseSchema.safeParse(response);
       if (!result.success) {
-        const errors = result.error.issues
-          .map((i) => `${i.path.join(".")}: ${i.message}`)
-          .join("\n");
-        throw new Error(
-          `Compensations response failed validation:\n${errors}`,
-        );
+        throw responseValidationError("Compensations response", result.error);
       }
       expect(result.success).toBe(true);
     });
@@ -130,12 +140,7 @@ describe("Mock data contract tests", () => {
       exchanges.forEach((exchange, index) => {
         const result = gameExchangeSchema.safeParse(exchange);
         if (!result.success) {
-          const errors = result.error.issues
-            .map((i) => `${i.path.join(".")}: ${i.message}`)
-            .join("\n");
-          throw new Error(
-            `Exchange ${index} failed validation:\n${errors}\n\nData: ${JSON.stringify(exchange, null, 2)}`,
-          );
+          throw validationError("Exchange", index, result.error, exchange);
         }
         expect(result.success).toBe(true);
       });
@@ -146,10 +151,7 @@ describe("Mock data contract tests", () => {
 
       const result = exchangesResponseSchema.safeParse(response);
       if (!result.success) {
-        const errors = result.error.issues
-          .map((i) => `${i.path.join(".")}: ${i.message}`)
-          .join("\n");
-        throw new Error(`Exchanges response failed validation:\n${errors}`);
+        throw responseValidationError("Exchanges response", result.error);
       }
       expect(result.success).toBe(true);
     });
@@ -175,12 +177,7 @@ describe("Mock data contract tests", () => {
       scorers.forEach((scorer, index) => {
         const result = personSearchResultSchema.safeParse(scorer);
         if (!result.success) {
-          const errors = result.error.issues
-            .map((i) => `${i.path.join(".")}: ${i.message}`)
-            .join("\n");
-          throw new Error(
-            `Scorer ${index} failed validation:\n${errors}\n\nData: ${JSON.stringify(scorer, null, 2)}`,
-          );
+          throw validationError("Scorer", index, result.error, scorer);
         }
         expect(result.success).toBe(true);
       });
@@ -191,12 +188,7 @@ describe("Mock data contract tests", () => {
 
       const result = personSearchResponseSchema.safeParse(response);
       if (!result.success) {
-        const errors = result.error.issues
-          .map((i) => `${i.path.join(".")}: ${i.message}`)
-          .join("\n");
-        throw new Error(
-          `Person search response failed validation:\n${errors}`,
-        );
+        throw responseValidationError("Person search response", result.error);
       }
       expect(result.success).toBe(true);
     });
@@ -223,7 +215,6 @@ describe("Mock data contract tests", () => {
       expect(compensations.length).toBeGreaterThan(0);
       expect(exchanges.length).toBeGreaterThan(0);
 
-      // Validate first item of each type
       expect(assignmentSchema.safeParse(assignments[0]).success).toBe(true);
       expect(compensationRecordSchema.safeParse(compensations[0]).success).toBe(
         true,
@@ -240,7 +231,6 @@ describe("Mock data contract tests", () => {
       expect(compensations.length).toBeGreaterThan(0);
       expect(exchanges.length).toBeGreaterThan(0);
 
-      // Validate first item of each type
       expect(assignmentSchema.safeParse(assignments[0]).success).toBe(true);
       expect(compensationRecordSchema.safeParse(compensations[0]).success).toBe(
         true,
