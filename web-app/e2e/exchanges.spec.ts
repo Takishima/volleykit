@@ -57,26 +57,19 @@ test.describe("Exchanges Journey", () => {
 
   test.describe("Level Filter (Demo Mode)", () => {
     test("level filter is visible on open exchanges tab", async () => {
-      await exchangesPage.waitForExchangesLoaded();
+      await exchangesPage.waitForLevelFilterVisible();
       const isVisible = await exchangesPage.isLevelFilterVisible();
       expect(isVisible).toBe(true);
     });
 
-    test("level filter is hidden on my applications tab", async () => {
-      const initiallyVisible = await exchangesPage.isLevelFilterVisible();
-      expect(initiallyVisible).toBe(true);
+    test("level filter visibility changes with tab", async () => {
+      await exchangesPage.waitForLevelFilterVisible();
 
       await exchangesPage.switchToMyApplicationsTab();
-      await exchangesPage.waitForExchangesLoaded();
-
-      const visibleAfterSwitch = await exchangesPage.isLevelFilterVisible();
-      expect(visibleAfterSwitch).toBe(false);
+      await exchangesPage.waitForLevelFilterHidden();
 
       await exchangesPage.switchToOpenTab();
-      await exchangesPage.waitForExchangesLoaded();
-
-      const visibleAfterReturn = await exchangesPage.isLevelFilterVisible();
-      expect(visibleAfterReturn).toBe(true);
+      await exchangesPage.waitForLevelFilterVisible();
     });
   });
 

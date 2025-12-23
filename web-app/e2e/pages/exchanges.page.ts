@@ -73,6 +73,14 @@ export class ExchangesPage {
     return (await this.levelFilterToggle.count()) > 0;
   }
 
+  async waitForLevelFilterHidden() {
+    await this.levelFilterToggle.waitFor({ state: "detached", timeout: TAB_SWITCH_TIMEOUT_MS });
+  }
+
+  async waitForLevelFilterVisible() {
+    await this.levelFilterToggle.waitFor({ state: "attached", timeout: TAB_SWITCH_TIMEOUT_MS });
+  }
+
   async waitForExchangesLoaded() {
     await expect(this.tabPanel).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT_MS });
 
