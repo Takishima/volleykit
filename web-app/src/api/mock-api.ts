@@ -343,6 +343,16 @@ export const mockApi = {
     };
   },
 
+  async updateCompensation(
+    compensationId: string,
+    data: { distanceInMetres?: number; correctionReason?: string },
+  ): Promise<void> {
+    await delay(MOCK_MUTATION_DELAY_MS);
+
+    const store = useDemoStore.getState();
+    store.updateCompensation(compensationId, data);
+  },
+
   async searchExchanges(
     config: SearchConfiguration = {},
   ): Promise<ExchangesResponse> {

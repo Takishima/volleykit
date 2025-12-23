@@ -542,6 +542,42 @@ export const api = {
     );
   },
 
+  /**
+   * Updates compensation data for a convocation.
+   * Used by the edit compensation modal to save distance corrections.
+   *
+   * @param compensationId - UUID of the convocation compensation record
+   * @param data - Update data (distance in metres, correction reason)
+   */
+  async updateCompensation(
+    compensationId: string,
+    data: { distanceInMetres?: number; correctionReason?: string },
+  ): Promise<void> {
+    const requestBody: Record<string, unknown> = {
+      __identity: compensationId,
+    };
+
+    if (data.distanceInMetres !== undefined) {
+      requestBody["convocationCompensation"] = {
+        ...(requestBody["convocationCompensation"] as object),
+        distanceInMetres: data.distanceInMetres,
+      };
+    }
+
+    if (data.correctionReason !== undefined) {
+      requestBody["convocationCompensation"] = {
+        ...(requestBody["convocationCompensation"] as object),
+        correctionReason: data.correctionReason,
+      };
+    }
+
+    return apiRequest(
+      "/indoorvolleyball.refadmin/api%5cconvocationcompensation",
+      "PUT",
+      requestBody,
+    );
+  },
+
   // Game Exchanges
   async searchExchanges(
     config: SearchConfiguration = {},

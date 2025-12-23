@@ -326,6 +326,76 @@ describe("API Client", () => {
     });
   });
 
+  describe("updateCompensation", () => {
+    it("sends PUT request to correct endpoint", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse({}));
+
+      await api.updateCompensation("comp-123", { distanceInMetres: 50000 });
+
+      // Note: backslash in path is required by Neos/Flow backend
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "/indoorvolleyball.refadmin/api%5cconvocationcompensation",
+        ),
+        expect.objectContaining({ method: "PUT" }),
+      );
+    });
+
+    it("includes compensation ID in request body", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse({}));
+
+      await api.updateCompensation("comp-456", { distanceInMetres: 60000 });
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      const body = options.body as URLSearchParams;
+      expect(body.get("__identity")).toBe("comp-456");
+    });
+
+    it("includes distanceInMetres in nested convocationCompensation object", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse({}));
+
+      await api.updateCompensation("comp-789", { distanceInMetres: 75000 });
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      const body = options.body as URLSearchParams;
+      expect(body.get("convocationCompensation[distanceInMetres]")).toBe(
+        "75000",
+      );
+    });
+
+    it("includes correctionReason in nested convocationCompensation object", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse({}));
+
+      await api.updateCompensation("comp-abc", {
+        correctionReason: "Umweg wegen Baustelle",
+      });
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      const body = options.body as URLSearchParams;
+      expect(body.get("convocationCompensation[correctionReason]")).toBe(
+        "Umweg wegen Baustelle",
+      );
+    });
+
+    it("includes both distanceInMetres and correctionReason when provided", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse({}));
+
+      await api.updateCompensation("comp-xyz", {
+        distanceInMetres: 88000,
+        correctionReason: "Alternative route",
+      });
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      const body = options.body as URLSearchParams;
+      expect(body.get("convocationCompensation[distanceInMetres]")).toBe(
+        "88000",
+      );
+      expect(body.get("convocationCompensation[correctionReason]")).toBe(
+        "Alternative route",
+      );
+    });
+  });
+
   describe("searchExchanges", () => {
     it("sends POST request to correct endpoint", async () => {
       mockFetch.mockResolvedValueOnce(
