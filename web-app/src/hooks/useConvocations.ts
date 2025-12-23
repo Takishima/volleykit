@@ -638,8 +638,7 @@ export function useUpdateCompensation(): UseMutationResult<
         // Demo mode: update the demo store directly
         updateCompensation(compensationId, data);
       } else {
-        // Non-demo mode: API call would go here
-        // TODO: Implement real API call when endpoint is available
+        // Non-demo mode: log for debugging until API endpoint is implemented
         logger.debug("[useUpdateCompensation] Non-demo mode update:", {
           compensationId,
           data,
