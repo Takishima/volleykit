@@ -32,7 +32,8 @@ A progressive web application (PWA) that provides an improved interface for voll
 - **State Management**: Zustand (auth), TanStack Query (server state)
 - **Routing**: React Router v7
 - **API Client**: Generated from OpenAPI spec with openapi-typescript
-- **Testing**: Vitest + React Testing Library
+- **Testing**: Vitest + React Testing Library (unit/integration), Playwright (E2E)
+- **i18n**: Custom translation system (de, en, fr, it)
 - **CORS Proxy**: Cloudflare Workers (production)
 
 ## Project Structure
@@ -40,23 +41,43 @@ A progressive web application (PWA) that provides an improved interface for voll
 ```
 volleykit/
 ├── web-app/                    # React PWA
+│   ├── e2e/                   # Playwright E2E tests
+│   │   ├── *.spec.ts          # Test specifications
+│   │   └── pages/             # Page Object Models
+│   ├── public/                # Static PWA assets (icons, manifest)
 │   ├── src/
-│   │   ├── api/               # API client and generated types
+│   │   ├── api/               # API client, generated types, mock API
 │   │   ├── components/
 │   │   │   ├── features/      # Feature-specific components
+│   │   │   │   └── validation/# Game validation wizard components
 │   │   │   ├── layout/        # App shell, navigation
 │   │   │   └── ui/            # Reusable UI components
+│   │   ├── contexts/          # React context providers (PWA)
 │   │   ├── hooks/             # Custom React hooks
+│   │   ├── i18n/              # Internationalization (de, en, fr, it)
+│   │   │   └── locales/       # Translation files per language
 │   │   ├── pages/             # Route components
-│   │   ├── stores/            # Zustand stores
-│   │   ├── test/              # Test setup
-│   │   └── types/             # TypeScript types
+│   │   ├── stores/            # Zustand stores (auth, demo, settings)
+│   │   ├── test/              # Test setup and utilities
+│   │   ├── types/             # TypeScript types
+│   │   └── utils/             # Utility functions
+│   ├── playwright.config.ts   # E2E test configuration
 │   └── package.json
 ├── worker/                     # Cloudflare Worker CORS proxy
+│   └── src/
+│       └── index.ts           # Proxy with security, rate limiting
 ├── docs/                       # API documentation
 │   └── api/
-│       └── volleymanager-openapi.yaml
-└── devenv.nix                  # Development environment
+│       ├── volleymanager-openapi.yaml  # Complete OpenAPI spec
+│       ├── *_api.md           # Endpoint documentation
+│       └── captures/          # Real API request/response examples
+├── .github/workflows/         # CI/CD pipelines
+│   ├── ci-web.yml             # Lint, test, build
+│   ├── ci-worker.yml          # Worker validation
+│   ├── e2e.yml                # Cross-browser E2E tests
+│   ├── deploy-web.yml         # Production deployment
+│   └── deploy-pr-preview.yml  # PR preview builds
+└── devenv.nix                  # Nix development environment
 ```
 
 ## Code Philosophy
@@ -258,6 +279,98 @@ const { data } = useQuery({
 
 See existing tests in `src/**/*.test.ts` for patterns.
 
+### E2E Testing with Playwright
+
+E2E tests use Playwright with Page Object Models (POMs) for maintainability.
+
+**Test Location**: `web-app/e2e/`
+
+**Page Object Models** (`e2e/pages/`):
+- Encapsulate page-specific selectors and actions
+- Make tests readable and maintainable
+- Export from `e2e/pages/index.ts`
+
+```typescript
+// e2e/pages/assignments.page.ts
+export class AssignmentsPage {
+  constructor(private page: Page) {}
+
+  async goto() {
+    await this.page.goto('/assignments');
+  }
+
+  async getAssignmentCard(id: string) {
+    return this.page.getByTestId(`assignment-${id}`);
+  }
+}
+
+// e2e/assignments.spec.ts
+test('displays assignment list', async ({ page }) => {
+  const assignmentsPage = new AssignmentsPage(page);
+  await assignmentsPage.goto();
+  // ...
+});
+```
+
+**Cross-Browser Testing**:
+- Tests run on Chromium, Firefox, and WebKit
+- Mobile viewports tested (Pixel 5, iPhone 12)
+- CI runs Chromium and Firefox in parallel
+
+**Running E2E Tests**:
+```bash
+cd web-app
+npm run test:e2e           # Run all E2E tests
+npm run test:e2e:ui        # Interactive UI mode
+npx playwright test --project=chromium  # Single browser
+```
+
+## Internationalization (i18n)
+
+The app supports 4 languages: German (de), English (en), French (fr), Italian (it).
+
+**Translation Files**: `src/i18n/locales/{de,en,fr,it}.ts`
+
+**Usage**:
+```typescript
+import { useTranslation } from '@/hooks/useTranslation';
+
+function MyComponent() {
+  const { t } = useTranslation();
+  return <h1>{t('assignments.title')}</h1>;
+}
+```
+
+**Adding Translations**:
+1. Add the key to `src/i18n/types.ts` for type safety
+2. Add translations to all 4 locale files
+3. Use nested keys for organization: `section.subsection.key`
+
+**Test Setup**: Translations are preloaded in `src/test/setup.ts` to prevent async issues in tests.
+
+## Demo Mode
+
+The app supports a demo mode for testing without API access.
+
+**Enabling Demo Mode**:
+- Environment variable: `VITE_DEMO_MODE_ONLY=true`
+- PR preview builds use demo mode automatically
+- Demo data is deterministic (uses seeded UUIDs for reproducibility)
+
+**Demo Store** (`src/stores/demo.ts`):
+- Generates realistic sample data
+- Persists modifications across page refreshes (localStorage)
+- Deterministic UUID generation for consistent test data
+
+**Mock API** (`src/api/mock-api.ts`):
+- Simulates all API endpoints
+- Contract tests verify mock matches real API schema
+- Used for unit tests and demo mode
+
+**Contract Testing** (`src/api/contract.test.ts`):
+- Validates mock responses against OpenAPI schema
+- Ensures demo mode behavior matches production API
+
 ## API Integration
 
 ### SwissVolley API Documentation
@@ -369,6 +482,18 @@ npm run dev           # Local worker dev
 npx wrangler deploy   # Deploy to Cloudflare
 ```
 
+### E2E Testing
+
+```bash
+cd web-app
+npm run test:e2e           # Run all E2E tests (requires build first)
+npm run test:e2e:ui        # Interactive Playwright UI mode
+npx playwright test --project=chromium  # Run single browser only
+npx playwright test assignments.spec.ts  # Run specific test file
+```
+
+**Note**: E2E tests run against a production build (`npm run preview`), not the dev server.
+
 ### Other Commands
 
 ```bash
@@ -379,7 +504,34 @@ npx tsc --noEmit
 # Preview production build (web-app)
 cd web-app
 npm run preview
+
+# Install Playwright browsers (first time setup)
+cd web-app
+npx playwright install
 ```
+
+## Bundle Size Limits
+
+The project enforces bundle size limits to maintain performance. CI will fail if limits are exceeded.
+
+**Limits** (gzipped):
+- Main App: 120 KB
+- Vendor Chunks: 50 KB each
+- PDF Library: 185 KB (lazy-loaded)
+- CSS: 10 KB
+- Total JS: 400 KB
+
+**Checking Bundle Size**:
+```bash
+cd web-app
+npm run build && npm run size
+```
+
+If size limits are exceeded:
+1. Review new dependencies for size impact
+2. Consider lazy-loading large features
+3. Check for duplicate dependencies
+4. Use bundle analyzer: `npm run build -- --analyze`
 
 ## Accessibility
 
@@ -419,7 +571,10 @@ useEffect(() => {
 A feature is complete when:
 
 1. Implementation follows React/TypeScript best practices
-1. Tests cover business logic and interactions
+1. Unit tests cover business logic and interactions
+1. E2E tests added for critical user flows (if applicable)
+1. Translations added for all 4 languages (de, en, fr, it)
 1. **Full CI validation passes locally** (see "CI Validation" section above)
+1. Bundle size limits not exceeded
 1. Works across modern browsers (Chrome, Firefox, Safari)
 1. Accessible (keyboard navigation, screen reader compatible)
