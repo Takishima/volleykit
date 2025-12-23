@@ -186,6 +186,10 @@ export interface Translations {
     lastChecked: string;
     updateNow: string;
     updateCheckFailed: string;
+    demoData: string;
+    demoDataDescription: string;
+    resetDemoData: string;
+    demoDataReset: string;
   };
   pwa: {
     offlineReady: string;
