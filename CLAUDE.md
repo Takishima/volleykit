@@ -15,6 +15,13 @@ A progressive web application (PWA) that provides an improved interface for voll
 - **Vite**: Check [vite.dev](https://vite.dev) for build configuration
 - **Packages**: Always check package documentation on [npmjs.com](https://www.npmjs.com) for latest version compatibility and migration guides
 
+## Detailed Guides
+
+For code reviews and detailed examples, see:
+
+- **[Security Checklist](docs/SECURITY_CHECKLIST.md)** - Security review checklist (XSS, injection, auth)
+- **[Code Patterns](docs/CODE_PATTERNS.md)** - Detailed code examples and anti-patterns
+
 ## Tech Stack
 
 - **Framework**: React 19 with TypeScript
