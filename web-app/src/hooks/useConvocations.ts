@@ -652,6 +652,45 @@ export function useUpdateCompensation(): UseMutationResult<
   });
 }
 
+// Assignment compensation update mutation
+// Used when editing compensation from the assignments tab (where we have an Assignment, not a CompensationRecord)
+export function useUpdateAssignmentCompensation(): UseMutationResult<
+  void,
+  Error,
+  { assignmentId: string; data: CompensationUpdateData }
+> {
+  const queryClient = useQueryClient();
+  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const updateAssignmentCompensation = useDemoStore(
+    (state) => state.updateAssignmentCompensation,
+  );
+
+  return useMutation({
+    mutationFn: async ({
+      assignmentId,
+      data,
+    }: {
+      assignmentId: string;
+      data: CompensationUpdateData;
+    }) => {
+      if (isDemoMode) {
+        // Demo mode: update the demo store directly
+        updateAssignmentCompensation(assignmentId, data);
+      } else {
+        // Non-demo mode: log for debugging until API endpoint is implemented
+        logger.debug("[useUpdateAssignmentCompensation] Non-demo mode update:", {
+          assignmentId,
+          data,
+        });
+      }
+    },
+    onSuccess: () => {
+      // Invalidate assignment queries to refetch fresh data
+      queryClient.invalidateQueries({ queryKey: ["assignments"] });
+    },
+  });
+}
+
 // Settings hooks
 export function useAssociationSettings(): UseQueryResult<
   AssociationSettings,
