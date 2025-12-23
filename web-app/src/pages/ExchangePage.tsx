@@ -121,7 +121,7 @@ export function ExchangePage() {
 
   const renderContent = () => {
     if (isLoading) {
-      return <LoadingState message="Loading exchanges..." />;
+      return <LoadingState message={t("exchange.loading")} />;
     }
 
     if (error) {
