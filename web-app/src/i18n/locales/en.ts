@@ -151,6 +151,7 @@ const en: Translations = {
     addedToExchangeError: "Failed to add assignment to exchange",
     submittedBy: "By:",
     levelRequired: "Level {level}+",
+    errorLoading: "Failed to load exchanges",
   },
   positions: {
     "head-one": "1st Referee",

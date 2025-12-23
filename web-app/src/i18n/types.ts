@@ -147,6 +147,7 @@ export interface Translations {
     addedToExchangeError: string;
     submittedBy: string;
     levelRequired: string;
+    errorLoading: string;
   };
   positions: {
     "head-one": string;

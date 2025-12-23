@@ -152,6 +152,7 @@ const fr: Translations = {
     addedToExchangeError: "Impossible d'ajouter la désignation à la bourse",
     submittedBy: "Par :",
     levelRequired: "Niveau {level}+",
+    errorLoading: "Échec du chargement des échanges",
   },
   positions: {
     "head-one": "1er Arbitre",

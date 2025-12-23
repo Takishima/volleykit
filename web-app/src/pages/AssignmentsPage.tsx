@@ -180,7 +180,7 @@ export function AssignmentsPage() {
             message={
               error instanceof Error
                 ? error.message
-                : "Failed to load assignments"
+                : t("assignments.failedToLoadData")
             }
             onRetry={() => refetch()}
           />

@@ -150,6 +150,7 @@ const it: Translations = {
     addedToExchangeError: "Impossibile aggiungere la designazione alla borsa",
     submittedBy: "Da:",
     levelRequired: "Livello {level}+",
+    errorLoading: "Impossibile caricare gli scambi",
   },
   positions: {
     "head-one": "1° Arbitro",
