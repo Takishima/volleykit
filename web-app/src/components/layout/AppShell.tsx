@@ -102,7 +102,7 @@ export function AppShell() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-surface-page dark:bg-surface-page-dark">
+    <div className="flex flex-col flex-1 bg-surface-page dark:bg-surface-page-dark">
       {/* Header */}
       <header className="bg-surface-card dark:bg-surface-card-dark shadow-sm border-b border-border-default dark:border-border-default-dark">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
