@@ -85,6 +85,21 @@ export function isGameReportEligible(assignment: Assignment): boolean {
 }
 
 /**
+ * Checks if an assignment is eligible for game validation.
+ *
+ * Game validation is only available for referees assigned as the first
+ * head referee (head-one position), as they are responsible for validating
+ * game results. This applies to all game levels, unlike game reports which
+ * are restricted to NLA/NLB games.
+ *
+ * @param assignment - The referee assignment to check
+ * @returns true if the referee is in head-one position, false otherwise
+ */
+export function isValidationEligible(assignment: Assignment): boolean {
+  return assignment.refereePosition === "head-one";
+}
+
+/**
  * Default validation deadline in hours after game start.
  * Used as fallback when association settings are not available.
  * Common values in Swiss volleyball: 6-24 hours.

@@ -12,7 +12,10 @@ import {
 } from "@/components/ui/LoadingSpinner";
 import { useAssignmentActions } from "@/hooks/useAssignmentActions";
 import { createAssignmentActions } from "@/utils/assignment-actions";
-import { isGameReportEligible } from "@/utils/assignment-helpers";
+import {
+  isGameReportEligible,
+  isValidationEligible,
+} from "@/utils/assignment-helpers";
 import { EditCompensationModal } from "@/components/features/EditCompensationModal";
 import { ValidateGameModal } from "@/components/features/ValidateGameModal";
 import type { Assignment } from "@/api/client";
@@ -71,12 +74,16 @@ export function AssignmentsPage() {
       });
 
       const isGameInFuture = assignment.refereeGame?.isGameInFuture === "1";
+      const canValidateGame = isValidationEligible(assignment);
       const canGenerateReport = isGameReportEligible(assignment);
 
       // Action array ordering: first item = furthest from card = full swipe default
       // When swiping left, actions appear right-to-left from the card edge
+      // Validate action only shown for first referee (head-one position)
       // Report action only shown for NLA/NLB games where user is first referee
-      const leftActions = [actions.validateGame, actions.editCompensation];
+      const leftActions = canValidateGame
+        ? [actions.validateGame, actions.editCompensation]
+        : [actions.editCompensation];
       if (canGenerateReport) {
         leftActions.push(actions.generateReport);
       }
