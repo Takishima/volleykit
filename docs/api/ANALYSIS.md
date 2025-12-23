@@ -202,6 +202,6 @@ Our app must handle these gracefully.
 1. ✅ Capture assignments response
 1. ⏳ Capture compensations response
 1. ⏳ Capture exchanges response
-1. ⏳ Capture request payloads (form data)
+1. ✅ Capture request payloads (form data) - see `captures/*.txt`
 1. ⏳ Document minimal vs full schema
 1. ⏳ Build mock server with simplified schema
