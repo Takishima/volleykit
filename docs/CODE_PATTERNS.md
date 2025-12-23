@@ -169,12 +169,11 @@ useEffect(() => {
   }, 60000);
 }, []);
 
-// Good: Cleanup function clears interval
-useEffect(() => {
-  const intervalId = setInterval(() => {
-    checkForUpdates();
-  }, 60000);
+// Good: Named constant + cleanup function
+const CHECK_INTERVAL_MS = 60000;
 
+useEffect(() => {
+  const intervalId = setInterval(checkForUpdates, CHECK_INTERVAL_MS);
   return () => clearInterval(intervalId);
 }, []);
 ```
