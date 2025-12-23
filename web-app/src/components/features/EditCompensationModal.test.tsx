@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { EditCompensationModal } from "./EditCompensationModal";
 import type { CompensationRecord, Assignment } from "@/api/client";
 import { getApiClient } from "@/api/client";
 import { useAuthStore } from "@/stores/auth";
-import { useDemoStore } from "@/stores/demo";
+import * as useConvocationsModule from "@/hooks/useConvocations";
 
 vi.mock("@/api/client", () => ({
   getApiClient: vi.fn(),
@@ -14,9 +15,20 @@ vi.mock("@/stores/auth", () => ({
   useAuthStore: vi.fn(),
 }));
 
-vi.mock("@/stores/demo", () => ({
-  useDemoStore: vi.fn(),
+vi.mock("@/hooks/useConvocations", () => ({
+  useUpdateCompensation: vi.fn(),
 }));
+
+// Shared QueryClient for tests
+let queryClient: QueryClient;
+
+function createWrapper() {
+  return function Wrapper({ children }: { children: React.ReactNode }) {
+    return (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+  };
+}
 
 function createMockCompensation(
   overrides: Partial<CompensationRecord> = {},
@@ -72,19 +84,42 @@ async function waitForFormToLoad() {
 
 describe("EditCompensationModal", () => {
   const mockOnClose = vi.fn();
-  const mockUpdateCompensation = vi.fn();
+  const mockMutate = vi.fn();
   const mockGetCompensationDetails = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
 
+    // Create fresh QueryClient for each test
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+
     (useAuthStore as unknown as Mock).mockImplementation((selector) =>
       selector({ isDemoMode: false }),
     );
 
-    (useDemoStore as unknown as Mock).mockImplementation((selector) =>
-      selector({ updateCompensation: mockUpdateCompensation }),
-    );
+    vi.mocked(useConvocationsModule.useUpdateCompensation).mockReturnValue({
+      mutate: mockMutate,
+      mutateAsync: vi.fn(),
+      isPending: false,
+      isSuccess: false,
+      isError: false,
+      isIdle: true,
+      isPaused: false,
+      error: null,
+      data: undefined,
+      variables: undefined,
+      reset: vi.fn(),
+      context: undefined,
+      failureCount: 0,
+      failureReason: null,
+      status: "idle",
+      submittedAt: 0,
+    });
 
     (getApiClient as Mock).mockReturnValue({
       getCompensationDetails: mockGetCompensationDetails,
@@ -106,6 +141,7 @@ describe("EditCompensationModal", () => {
           isOpen={false}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
       expect(container.firstChild).toBeNull();
     });
@@ -117,6 +153,7 @@ describe("EditCompensationModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => {
@@ -135,6 +172,7 @@ describe("EditCompensationModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => {
@@ -153,6 +191,7 @@ describe("EditCompensationModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       // Form should render immediately without waiting for API
@@ -165,6 +204,7 @@ describe("EditCompensationModal", () => {
     it("returns null when neither assignment nor compensation provided", () => {
       const { container } = render(
         <EditCompensationModal isOpen={true} onClose={mockOnClose} />,
+        { wrapper: createWrapper() },
       );
       expect(container.firstChild).toBeNull();
     });
@@ -180,6 +220,7 @@ describe("EditCompensationModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       // Query with hidden: true because the backdrop has aria-hidden
@@ -198,6 +239,7 @@ describe("EditCompensationModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => {
@@ -219,6 +261,7 @@ describe("EditCompensationModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => {
@@ -239,6 +282,7 @@ describe("EditCompensationModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       await waitForFormToLoad();
@@ -264,6 +308,7 @@ describe("EditCompensationModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       await waitForFormToLoad();
@@ -289,6 +334,7 @@ describe("EditCompensationModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       await waitForFormToLoad();
@@ -314,6 +360,7 @@ describe("EditCompensationModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       await waitForFormToLoad();
@@ -329,6 +376,7 @@ describe("EditCompensationModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       await waitForFormToLoad();
@@ -345,6 +393,7 @@ describe("EditCompensationModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       await waitForFormToLoad();
@@ -361,6 +410,7 @@ describe("EditCompensationModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       await waitForFormToLoad();
@@ -376,6 +426,7 @@ describe("EditCompensationModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       await waitForFormToLoad();
@@ -403,12 +454,15 @@ describe("EditCompensationModal", () => {
         },
       });
 
+      const Wrapper = createWrapper();
       const { rerender } = render(
-        <EditCompensationModal
-          compensation={createMockCompensation()}
-          isOpen={true}
-          onClose={mockOnClose}
-        />,
+        <Wrapper>
+          <EditCompensationModal
+            compensation={createMockCompensation()}
+            isOpen={true}
+            onClose={mockOnClose}
+          />
+        </Wrapper>,
       );
 
       await waitForFormToLoad();
@@ -419,20 +473,24 @@ describe("EditCompensationModal", () => {
 
       // Close modal
       rerender(
-        <EditCompensationModal
-          compensation={createMockCompensation()}
-          isOpen={false}
-          onClose={mockOnClose}
-        />,
+        <Wrapper>
+          <EditCompensationModal
+            compensation={createMockCompensation()}
+            isOpen={false}
+            onClose={mockOnClose}
+          />
+        </Wrapper>,
       );
 
       // Reopen modal
       rerender(
-        <EditCompensationModal
-          compensation={createMockCompensation()}
-          isOpen={true}
-          onClose={mockOnClose}
-        />,
+        <Wrapper>
+          <EditCompensationModal
+            compensation={createMockCompensation()}
+            isOpen={true}
+            onClose={mockOnClose}
+          />
+        </Wrapper>,
       );
 
       await waitForFormToLoad();
@@ -446,13 +504,14 @@ describe("EditCompensationModal", () => {
       );
     });
 
-    it("calls updateCompensation in demo mode on submit", async () => {
+    it("calls updateCompensation mutation on submit", async () => {
       render(
         <EditCompensationModal
           compensation={createMockCompensation()}
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       await waitForFormToLoad();
@@ -465,19 +524,24 @@ describe("EditCompensationModal", () => {
       fireEvent.submit(form!);
 
       await waitFor(() => {
-        expect(mockUpdateCompensation).toHaveBeenCalledWith("comp-1", {
-          distanceInMetres: 42000,
-        });
+        expect(mockMutate).toHaveBeenCalledWith(
+          {
+            compensationId: "comp-1",
+            data: { distanceInMetres: 42000 },
+          },
+          expect.objectContaining({ onSuccess: expect.any(Function) }),
+        );
       });
     });
 
-    it("includes correction reason in demo mode update", async () => {
+    it("includes correction reason in mutation update", async () => {
       render(
         <EditCompensationModal
           compensation={createMockCompensation()}
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       await waitForFormToLoad();
@@ -493,10 +557,16 @@ describe("EditCompensationModal", () => {
       fireEvent.submit(form!);
 
       await waitFor(() => {
-        expect(mockUpdateCompensation).toHaveBeenCalledWith("comp-1", {
-          distanceInMetres: 25000,
-          correctionReason: "Road work detour",
-        });
+        expect(mockMutate).toHaveBeenCalledWith(
+          {
+            compensationId: "comp-1",
+            data: {
+              distanceInMetres: 25000,
+              correctionReason: "Road work detour",
+            },
+          },
+          expect.objectContaining({ onSuccess: expect.any(Function) }),
+        );
       });
     });
   });
@@ -509,6 +579,7 @@ describe("EditCompensationModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       await waitForFormToLoad();
@@ -529,6 +600,7 @@ describe("EditCompensationModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       await waitForFormToLoad();
@@ -556,6 +628,7 @@ describe("EditCompensationModal", () => {
           isOpen={true}
           onClose={mockOnClose}
         />,
+        { wrapper: createWrapper() },
       );
 
       await waitForFormToLoad();

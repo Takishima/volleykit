@@ -611,6 +611,48 @@ export function useWithdrawFromExchange(): UseMutationResult<
   });
 }
 
+// Compensation update mutation
+export interface CompensationUpdateData {
+  distanceInMetres?: number;
+  correctionReason?: string;
+}
+
+export function useUpdateCompensation(): UseMutationResult<
+  void,
+  Error,
+  { compensationId: string; data: CompensationUpdateData }
+> {
+  const queryClient = useQueryClient();
+  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const updateCompensation = useDemoStore((state) => state.updateCompensation);
+
+  return useMutation({
+    mutationFn: async ({
+      compensationId,
+      data,
+    }: {
+      compensationId: string;
+      data: CompensationUpdateData;
+    }) => {
+      if (isDemoMode) {
+        // Demo mode: update the demo store directly
+        updateCompensation(compensationId, data);
+      } else {
+        // Non-demo mode: API call would go here
+        // TODO: Implement real API call when endpoint is available
+        logger.debug("[useUpdateCompensation] Non-demo mode update:", {
+          compensationId,
+          data,
+        });
+      }
+    },
+    onSuccess: () => {
+      // Invalidate compensations queries to refetch fresh data
+      queryClient.invalidateQueries({ queryKey: ["compensations"] });
+    },
+  });
+}
+
 // Settings hooks
 export function useAssociationSettings(): UseQueryResult<
   AssociationSettings,
