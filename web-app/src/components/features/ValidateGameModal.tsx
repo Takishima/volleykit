@@ -137,6 +137,7 @@ export function ValidateGameModal({
   const gameId = assignment.refereeGame?.game?.__identity;
 
   const {
+    state: validationState,
     isDirty,
     completionStatus,
     isValidated,
@@ -496,6 +497,7 @@ export function ValidateGameModal({
                       onModificationsChange={setHomeRosterModifications}
                       onAddPlayerSheetOpenChange={handleAddPlayerSheetOpenChange}
                       readOnly={isValidated}
+                      initialModifications={validationState.homeRoster.modifications}
                     />
                   )}
 
@@ -505,6 +507,7 @@ export function ValidateGameModal({
                       onModificationsChange={setAwayRosterModifications}
                       onAddPlayerSheetOpenChange={handleAddPlayerSheetOpenChange}
                       readOnly={isValidated}
+                      initialModifications={validationState.awayRoster.modifications}
                     />
                   )}
 

@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { logger } from "@/utils/logger";
 import type { ValidatedPersonSearchResult } from "@/api/validation";
 import type { RosterModifications } from "@/hooks/useNominationList";
@@ -290,6 +290,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
 
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
   const apiClient = getApiClient(isDemoMode);
+  const queryClient = useQueryClient();
 
   // Fetch game details (scoresheet and nomination list IDs)
   const gameDetailsQuery = useQuery({
@@ -519,6 +520,11 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
         fileResourceId,
       );
 
+      // Invalidate game details cache so reopening shows validated state
+      await queryClient.invalidateQueries({
+        queryKey: ["gameWithScoresheet", gameId],
+      });
+
       logger.debug("[VS] finalize done");
     } catch (error) {
       logger.error("[VS] finalize failed:", error);
@@ -527,7 +533,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
       isFinalizingRef.current = false;
       setIsFinalizing(false);
     }
-  }, [gameId, gameDetailsQuery.data, state, apiClient]);
+  }, [gameId, gameDetailsQuery.data, state, apiClient, queryClient]);
 
   return {
     state,

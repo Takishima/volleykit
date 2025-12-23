@@ -9,6 +9,8 @@ interface HomeRosterPanelProps {
   onAddPlayerSheetOpenChange?: (isOpen: boolean) => void;
   /** When true, shows roster in view-only mode */
   readOnly?: boolean;
+  /** Initial modifications to restore state when remounting */
+  initialModifications?: RosterModifications;
 }
 
 export function HomeRosterPanel({
@@ -16,6 +18,7 @@ export function HomeRosterPanel({
   onModificationsChange,
   onAddPlayerSheetOpenChange,
   readOnly = false,
+  initialModifications,
 }: HomeRosterPanelProps) {
   const { homeTeam } = getTeamNames(assignment);
   const gameId = assignment.refereeGame?.game?.__identity ?? "";
@@ -28,6 +31,7 @@ export function HomeRosterPanel({
       onModificationsChange={onModificationsChange}
       onAddPlayerSheetOpenChange={onAddPlayerSheetOpenChange}
       readOnly={readOnly}
+      initialModifications={initialModifications}
     />
   );
 }
