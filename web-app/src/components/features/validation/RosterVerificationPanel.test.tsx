@@ -367,4 +367,170 @@ describe("RosterVerificationPanel", () => {
       "Newly Added Player",
     ]);
   });
+
+  describe("initialModifications state restoration", () => {
+    it("restores added players from initialModifications on mount", () => {
+      const addedPlayer: RosterPlayer = {
+        id: "added-player-1",
+        shirtNumber: 0,
+        displayName: "Previously Added Player",
+        isNewlyAdded: true,
+      };
+
+      vi.mocked(useNominationListModule.useNominationList).mockReturnValue({
+        nominationList: null,
+        players: mockPlayers,
+        isLoading: false,
+        isError: false,
+        error: null,
+        refetch: vi.fn(),
+      });
+
+      render(
+        <RosterVerificationPanel
+          team="home"
+          teamName="Test Team"
+          gameId="game-1"
+          initialModifications={{ added: [addedPlayer], removed: [] }}
+        />,
+        { wrapper: createWrapper() },
+      );
+
+      // Should show the added player
+      expect(screen.getByText("Previously Added Player")).toBeInTheDocument();
+      // Total count should include both base players and added player
+      expect(screen.getByText("4 players")).toBeInTheDocument();
+    });
+
+    it("restores removed players from initialModifications on mount", () => {
+      vi.mocked(useNominationListModule.useNominationList).mockReturnValue({
+        nominationList: null,
+        players: mockPlayers,
+        isLoading: false,
+        isError: false,
+        error: null,
+        refetch: vi.fn(),
+      });
+
+      render(
+        <RosterVerificationPanel
+          team="home"
+          teamName="Test Team"
+          gameId="game-1"
+          initialModifications={{ added: [], removed: ["player-1"] }}
+        />,
+        { wrapper: createWrapper() },
+      );
+
+      // Player count should be reduced (one removed)
+      expect(screen.getByText("2 players")).toBeInTheDocument();
+      // There should be an undo button for the removed player
+      expect(screen.getByRole("button", { name: /undo/i })).toBeInTheDocument();
+    });
+
+    it("persists state when component remounts with initialModifications", () => {
+      const addedPlayer: RosterPlayer = {
+        id: "added-player-1",
+        shirtNumber: 0,
+        displayName: "Previously Added Player",
+        isNewlyAdded: true,
+      };
+
+      const onModificationsChange = vi.fn();
+
+      vi.mocked(useNominationListModule.useNominationList).mockReturnValue({
+        nominationList: null,
+        players: mockPlayers,
+        isLoading: false,
+        isError: false,
+        error: null,
+        refetch: vi.fn(),
+      });
+
+      render(
+        <RosterVerificationPanel
+          team="home"
+          teamName="Test Team"
+          gameId="game-1"
+          onModificationsChange={onModificationsChange}
+          initialModifications={{ added: [addedPlayer], removed: ["player-1"] }}
+        />,
+        { wrapper: createWrapper() },
+      );
+
+      // Verify initial state is correct
+      expect(screen.getByText("Previously Added Player")).toBeInTheDocument();
+      expect(screen.getByText("3 players")).toBeInTheDocument(); // 3 - 1 removed + 1 added
+
+      // Simulate remounting by changing key (would force complete remount)
+      // or we can check that onModificationsChange was called with the correct values
+      expect(onModificationsChange).toHaveBeenCalledWith({
+        added: [addedPlayer],
+        removed: ["player-1"],
+      });
+    });
+
+    it("simulates wizard navigation: state persists after unmount/remount", () => {
+      const onModificationsChange = vi.fn();
+      let capturedModifications: { added: RosterPlayer[]; removed: string[] } = {
+        added: [],
+        removed: [],
+      };
+
+      // Track modifications as they're reported
+      onModificationsChange.mockImplementation((mods) => {
+        capturedModifications = mods;
+      });
+
+      vi.mocked(useNominationListModule.useNominationList).mockReturnValue({
+        nominationList: null,
+        players: mockPlayers,
+        isLoading: false,
+        isError: false,
+        error: null,
+        refetch: vi.fn(),
+      });
+
+      // Step 1: Initial render (empty modifications)
+      const { unmount } = render(
+        <RosterVerificationPanel
+          team="home"
+          teamName="Test Team"
+          gameId="game-1"
+          onModificationsChange={onModificationsChange}
+          initialModifications={{ added: [], removed: [] }}
+        />,
+        { wrapper: createWrapper() },
+      );
+
+      expect(screen.getByText("3 players")).toBeInTheDocument();
+
+      // Step 2: User removes a player
+      const removeButtons = screen.getAllByRole("button", { name: /remove/i });
+      fireEvent.click(removeButtons[0]!);
+
+      expect(screen.getByText("2 players")).toBeInTheDocument();
+      expect(capturedModifications.removed).toContain("player-1");
+
+      // Step 3: Simulate navigation to next wizard step (component unmounts)
+      unmount();
+
+      // Step 4: User navigates back (component remounts with saved modifications)
+      render(
+        <RosterVerificationPanel
+          team="home"
+          teamName="Test Team"
+          gameId="game-1"
+          onModificationsChange={onModificationsChange}
+          initialModifications={capturedModifications}
+        />,
+        { wrapper: createWrapper() },
+      );
+
+      // Step 5: Verify state was restored correctly
+      expect(screen.getByText("2 players")).toBeInTheDocument();
+      // The removed player should still be marked for removal (has undo button)
+      expect(screen.getByRole("button", { name: /undo/i })).toBeInTheDocument();
+    });
+  });
 });
