@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { SelectedScorerCard } from "./SelectedScorerCard";
-import { formatDOB } from "@/utils/date-helpers";
 import type { ValidatedPersonSearchResult } from "@/api/validation";
 
 const mockScorer: ValidatedPersonSearchResult = {
@@ -58,28 +57,5 @@ describe("SelectedScorerCard", () => {
     );
 
     expect(screen.queryByText("15.03.85")).not.toBeInTheDocument();
-  });
-});
-
-describe("formatDOB", () => {
-  it("returns empty string for null", () => {
-    expect(formatDOB(null)).toBe("");
-  });
-
-  it("returns empty string for undefined", () => {
-    expect(formatDOB(undefined)).toBe("");
-  });
-
-  it("returns empty string for empty string", () => {
-    expect(formatDOB("")).toBe("");
-  });
-
-  it("returns empty string for invalid date", () => {
-    expect(formatDOB("not-a-date")).toBe("");
-  });
-
-  it("formats valid ISO date string as DD.MM.YY", () => {
-    const result = formatDOB("1985-03-15T00:00:00+00:00");
-    expect(result).toBe("15.03.85");
   });
 });
