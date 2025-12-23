@@ -1531,9 +1531,12 @@ export const useDemoStore = create<DemoState>()(
           );
 
           // Build the new nominations list based on the provided IDs
+          // Type guard to filter out undefined values
           const newNominations = playerNominationIds
             .map((id) => existingById.get(id) ?? possiblePlayersById.get(id))
-            .filter(Boolean);
+            .filter(
+              (n): n is NonNullable<typeof n> => n !== undefined && n !== null,
+            );
 
           return {
             nominationLists: {
