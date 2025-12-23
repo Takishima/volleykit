@@ -1,6 +1,6 @@
 import type { ValidatedPersonSearchResult } from "@/api/validation";
 import { useTranslation } from "@/hooks/useTranslation";
-import { formatBirthday } from "./format-birthday";
+import { formatDOB } from "@/utils/date-helpers";
 
 interface SelectedScorerCardProps {
   scorer: ValidatedPersonSearchResult;
@@ -25,7 +25,7 @@ export function SelectedScorerCard({
           </div>
           <div className="flex items-center gap-3 text-sm text-text-muted dark:text-text-muted-dark">
             {scorer.associationId && <span>ID: {scorer.associationId}</span>}
-            {scorer.birthday && <span>{formatBirthday(scorer.birthday)}</span>}
+            {scorer.birthday && <span>{formatDOB(scorer.birthday)}</span>}
           </div>
         </div>
         <button

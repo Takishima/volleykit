@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { SelectedScorerCard } from "./SelectedScorerCard";
-import { formatBirthday } from "./format-birthday";
+import { formatDOB } from "@/utils/date-helpers";
 import type { ValidatedPersonSearchResult } from "@/api/validation";
 
 const mockScorer: ValidatedPersonSearchResult = {
@@ -30,8 +30,8 @@ describe("SelectedScorerCard", () => {
   it("displays formatted birthday", () => {
     render(<SelectedScorerCard scorer={mockScorer} onClear={vi.fn()} />);
 
-    // Date format varies by locale, check for year presence
-    expect(screen.getByText(/1985/)).toBeInTheDocument();
+    // formatDOB returns DD.MM.YY format (Swiss format)
+    expect(screen.getByText("15.03.85")).toBeInTheDocument();
   });
 
   it("calls onClear when clear button is clicked", () => {
@@ -57,31 +57,29 @@ describe("SelectedScorerCard", () => {
       <SelectedScorerCard scorer={scorerWithoutBirthday} onClear={vi.fn()} />,
     );
 
-    // Date format varies by locale, check year absence
-    expect(screen.queryByText(/1985/)).not.toBeInTheDocument();
+    expect(screen.queryByText("15.03.85")).not.toBeInTheDocument();
   });
 });
 
-describe("formatBirthday", () => {
+describe("formatDOB", () => {
   it("returns empty string for null", () => {
-    expect(formatBirthday(null)).toBe("");
+    expect(formatDOB(null)).toBe("");
   });
 
   it("returns empty string for undefined", () => {
-    expect(formatBirthday(undefined)).toBe("");
+    expect(formatDOB(undefined)).toBe("");
   });
 
   it("returns empty string for empty string", () => {
-    expect(formatBirthday("")).toBe("");
+    expect(formatDOB("")).toBe("");
   });
 
   it("returns empty string for invalid date", () => {
-    expect(formatBirthday("not-a-date")).toBe("");
+    expect(formatDOB("not-a-date")).toBe("");
   });
 
-  it("formats valid ISO date string", () => {
-    const result = formatBirthday("1985-03-15T00:00:00+00:00");
-    expect(result).toBeTruthy();
-    expect(result).toMatch(/1985/);
+  it("formats valid ISO date string as DD.MM.YY", () => {
+    const result = formatDOB("1985-03-15T00:00:00+00:00");
+    expect(result).toBe("15.03.85");
   });
 });
