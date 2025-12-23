@@ -624,7 +624,7 @@ export function useUpdateCompensation(): UseMutationResult<
 > {
   const queryClient = useQueryClient();
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
-  const updateCompensation = useDemoStore((state) => state.updateCompensation);
+  const apiClient = getApiClient(isDemoMode);
 
   return useMutation({
     mutationFn: async ({
@@ -634,22 +634,90 @@ export function useUpdateCompensation(): UseMutationResult<
       compensationId: string;
       data: CompensationUpdateData;
     }) => {
-      if (isDemoMode) {
-        // Demo mode: update the demo store directly
-        updateCompensation(compensationId, data);
-      } else {
-        // Non-demo mode: log for debugging until API endpoint is implemented
-        logger.debug("[useUpdateCompensation] Non-demo mode update:", {
-          compensationId,
-          data,
-        });
-      }
+      logger.debug("[useUpdateCompensation] Updating compensation:", {
+        compensationId,
+        data,
+        isDemoMode,
+      });
+      await apiClient.updateCompensation(compensationId, data);
     },
     onSuccess: () => {
       // Invalidate compensations queries to refetch fresh data
       queryClient.invalidateQueries({ queryKey: ["compensations"] });
     },
   });
+}
+
+/**
+ * Finds the corresponding compensation record for an assignment by matching game numbers.
+ * This is needed because assignments don't have the convocationCompensation.__identity
+ * required by the compensation update API.
+ *
+ * @param assignmentId - The assignment's __identity (convocation ID)
+ * @param queryClient - TanStack Query client for cache access
+ * @returns The matching CompensationRecord, or null if not found
+ */
+async function findCompensationForAssignment(
+  assignmentId: string,
+  queryClient: ReturnType<typeof useQueryClient>,
+): Promise<CompensationRecord | null> {
+  // First, try to find the assignment in the query cache to get its game number
+  const assignmentsCache = queryClient.getQueryData<{ items: Assignment[] }>(
+    queryKeys.assignments(),
+  );
+
+  const assignment = assignmentsCache?.items.find(
+    (a) => a.__identity === assignmentId,
+  );
+
+  if (!assignment?.refereeGame?.game?.number) {
+    logger.debug(
+      "[findCompensationForAssignment] Assignment not found in cache or missing game number:",
+      { assignmentId },
+    );
+    return null;
+  }
+
+  const gameNumber = assignment.refereeGame.game.number;
+
+  // Check if we have compensations in cache
+  const compensationsCache = queryClient.getQueryData<{
+    items: CompensationRecord[];
+  }>(queryKeys.compensations());
+
+  // Search in cache first
+  if (compensationsCache?.items) {
+    const matchingComp = compensationsCache.items.find(
+      (c) => c.refereeGame?.game?.number === gameNumber,
+    );
+    if (matchingComp) {
+      logger.debug(
+        "[findCompensationForAssignment] Found compensation in cache:",
+        { gameNumber, compensationId: matchingComp.convocationCompensation?.__identity },
+      );
+      return matchingComp;
+    }
+  }
+
+  // If not in cache, fetch compensations from API
+  logger.debug(
+    "[findCompensationForAssignment] Fetching compensations from API to find match:",
+    { gameNumber },
+  );
+  const compensations = await api.searchCompensations({ limit: 200 });
+
+  const matchingComp = compensations.items.find(
+    (c) => c.refereeGame?.game?.number === gameNumber,
+  );
+
+  if (matchingComp) {
+    logger.debug("[findCompensationForAssignment] Found compensation via API:", {
+      gameNumber,
+      compensationId: matchingComp.convocationCompensation?.__identity,
+    });
+  }
+
+  return matchingComp || null;
 }
 
 // Assignment compensation update mutation
@@ -676,20 +744,41 @@ export function useUpdateAssignmentCompensation(): UseMutationResult<
       if (isDemoMode) {
         // Demo mode: update the demo store directly
         updateAssignmentCompensation(assignmentId, data);
-      } else {
-        // TODO(#231): Implement real API support for assignment compensation updates.
-        // The existing PUT /convocationcompensation endpoint requires a convocationCompensation.__identity,
-        // which only exists on CompensationRecord objects, not Assignment objects.
-        // Options: (1) Find corresponding CompensationRecord by game ID, or (2) new backend endpoint.
-        logger.debug("[useUpdateAssignmentCompensation] Non-demo mode update:", {
-          assignmentId,
-          data,
-        });
+        return;
       }
+
+      // Non-demo mode: find the corresponding compensation record and update it via API
+      logger.debug("[useUpdateAssignmentCompensation] Looking up compensation for assignment:", {
+        assignmentId,
+        data,
+      });
+
+      const compensation = await findCompensationForAssignment(assignmentId, queryClient);
+
+      if (!compensation?.convocationCompensation?.__identity) {
+        logger.warn(
+          "[useUpdateAssignmentCompensation] Could not find compensation record for assignment. " +
+          "The compensation may not exist yet (game might be in the future).",
+          { assignmentId },
+        );
+        // For future games, compensation records might not exist yet.
+        // In this case, we log a warning but don't throw an error.
+        return;
+      }
+
+      const compensationId = compensation.convocationCompensation.__identity;
+      logger.debug("[useUpdateAssignmentCompensation] Updating compensation via API:", {
+        assignmentId,
+        compensationId,
+        data,
+      });
+
+      await api.updateCompensation(compensationId, data);
     },
     onSuccess: () => {
-      // Invalidate assignment queries to refetch fresh data
+      // Invalidate both assignment and compensation queries to refetch fresh data
       queryClient.invalidateQueries({ queryKey: ["assignments"] });
+      queryClient.invalidateQueries({ queryKey: ["compensations"] });
     },
   });
 }
