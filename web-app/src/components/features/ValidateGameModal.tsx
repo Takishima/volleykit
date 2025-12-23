@@ -288,7 +288,8 @@ export function ValidateGameModal({
 
       onClose();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to save";
+      const message =
+        error instanceof Error ? error.message : t("validation.state.saveError");
       setSaveError(message);
     } finally {
       isFinalizingRef.current = false;

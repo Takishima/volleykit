@@ -153,6 +153,7 @@ const de: Translations = {
     addedToExchangeError: "Einsatz konnte nicht zur Tauschbörse hinzugefügt werden",
     submittedBy: "Von:",
     levelRequired: "Niveau {level}+",
+    errorLoading: "Fehler beim Laden der Tauschangebote",
   },
   positions: {
     "head-one": "1. Schiedsrichter",
