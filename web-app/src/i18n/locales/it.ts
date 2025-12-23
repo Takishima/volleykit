@@ -211,6 +211,11 @@ const it: Translations = {
     lastChecked: "Ultimo controllo",
     updateNow: "Aggiorna ora",
     updateCheckFailed: "Verifica aggiornamenti fallita",
+    demoData: "Dati demo",
+    demoDataDescription:
+      "Le modifiche ai dati demo vengono salvate nel browser. Reimposta per ricominciare con nuovi dati demo.",
+    resetDemoData: "Reimposta dati demo",
+    demoDataReset: "I dati demo sono stati reimpostati",
   },
   pwa: {
     offlineReady: "App pronta per l'uso offline",

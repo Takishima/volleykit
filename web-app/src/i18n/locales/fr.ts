@@ -213,6 +213,11 @@ const fr: Translations = {
     lastChecked: "Dernière vérification",
     updateNow: "Mettre à jour",
     updateCheckFailed: "Échec de la vérification",
+    demoData: "Données de démonstration",
+    demoDataDescription:
+      "Vos modifications de démonstration sont enregistrées dans le navigateur. Réinitialisez pour repartir avec de nouvelles données.",
+    resetDemoData: "Réinitialiser les données",
+    demoDataReset: "Données de démonstration réinitialisées",
   },
   pwa: {
     offlineReady: "Application prête pour le mode hors ligne",

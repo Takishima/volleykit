@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useAuthStore } from "@/stores/auth";
+import { useDemoStore } from "@/stores/demo";
 import { useSettingsStore } from "@/stores/settings";
 import { useTranslation } from "@/hooks/useTranslation";
 import { usePWA } from "@/contexts/PWAContext";
@@ -9,8 +10,11 @@ import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { getOccupationLabelKey } from "@/utils/occupation-labels";
 import { SafeModeWarningModal } from "@/components/features/SafeModeWarningModal";
 
+const DEMO_RESET_MESSAGE_DURATION_MS = 3000;
+
 export function SettingsPage() {
   const { user, logout, isDemoMode } = useAuthStore();
+  const { activeAssociationCode, refreshData } = useDemoStore();
   const { isSafeModeEnabled, setSafeMode } = useSettingsStore();
   const { t, locale } = useTranslation();
   const {
@@ -22,6 +26,30 @@ export function SettingsPage() {
     updateApp,
   } = usePWA();
   const [showSafeModeWarning, setShowSafeModeWarning] = useState(false);
+  const [demoDataReset, setDemoDataReset] = useState(false);
+  const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup timeout on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (resetTimeoutRef.current) {
+        clearTimeout(resetTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleResetDemoData = useCallback(() => {
+    refreshData();
+    setDemoDataReset(true);
+    // Clear any existing timeout before setting a new one
+    if (resetTimeoutRef.current) {
+      clearTimeout(resetTimeoutRef.current);
+    }
+    resetTimeoutRef.current = setTimeout(
+      () => setDemoDataReset(false),
+      DEMO_RESET_MESSAGE_DURATION_MS,
+    );
+  }, [refreshData]);
 
   const formatLastChecked = useCallback(
     (date: Date) => {
@@ -124,6 +152,50 @@ export function SettingsPage() {
           <LanguageSwitcher variant="grid" />
         </CardContent>
       </Card>
+
+      {/* Demo Data section - only show in demo mode */}
+      {isDemoMode && (
+        <Card>
+          <CardHeader>
+            <h2 className="font-semibold text-text-primary dark:text-text-primary-dark">
+              {t("settings.demoData")}
+            </h2>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-text-muted dark:text-text-muted-dark">
+              {t("settings.demoDataDescription")}
+            </p>
+
+            <div className="flex items-center justify-between py-2">
+              <div className="flex-1">
+                {demoDataReset && (
+                  <div
+                    className="text-sm font-medium text-success-600 dark:text-success-400"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    {t("settings.demoDataReset")}
+                  </div>
+                )}
+                {activeAssociationCode && !demoDataReset && (
+                  <div className="text-sm text-text-muted dark:text-text-muted-dark">
+                    {activeAssociationCode}
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleResetDemoData}
+                className="rounded-md bg-surface-subtle dark:bg-surface-subtle-dark px-4 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark hover:bg-gray-200 dark:hover:bg-gray-600 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none"
+                aria-label={t("settings.resetDemoData")}
+              >
+                {t("settings.resetDemoData")}
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Safe Mode section - only show in non-demo mode */}
       {!isDemoMode && (
