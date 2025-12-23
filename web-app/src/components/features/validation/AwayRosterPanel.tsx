@@ -9,6 +9,8 @@ interface AwayRosterPanelProps {
   onAddPlayerSheetOpenChange?: (isOpen: boolean) => void;
   /** When true, shows roster in view-only mode */
   readOnly?: boolean;
+  /** Initial modifications to restore state when remounting */
+  initialModifications?: RosterModifications;
 }
 
 export function AwayRosterPanel({
@@ -16,6 +18,7 @@ export function AwayRosterPanel({
   onModificationsChange,
   onAddPlayerSheetOpenChange,
   readOnly = false,
+  initialModifications,
 }: AwayRosterPanelProps) {
   const { awayTeam } = getTeamNames(assignment);
   const gameId = assignment.refereeGame?.game?.__identity ?? "";
@@ -28,6 +31,7 @@ export function AwayRosterPanel({
       onModificationsChange={onModificationsChange}
       onAddPlayerSheetOpenChange={onAddPlayerSheetOpenChange}
       readOnly={readOnly}
+      initialModifications={initialModifications}
     />
   );
 }

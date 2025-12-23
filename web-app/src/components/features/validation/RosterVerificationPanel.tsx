@@ -18,6 +18,8 @@ interface RosterVerificationPanelProps {
   onAddPlayerSheetOpenChange?: (isOpen: boolean) => void;
   /** When true, shows roster in view-only mode without edit controls */
   readOnly?: boolean;
+  /** Initial modifications to restore state when remounting */
+  initialModifications?: RosterModifications;
 }
 
 export function RosterVerificationPanel({
@@ -27,6 +29,7 @@ export function RosterVerificationPanel({
   onModificationsChange,
   onAddPlayerSheetOpenChange,
   readOnly = false,
+  initialModifications,
 }: RosterVerificationPanelProps) {
   const { t } = useTranslation();
   const { nominationList, players, isLoading, isError, refetch } =
@@ -35,15 +38,17 @@ export function RosterVerificationPanel({
       team,
     });
 
-  // Track locally added players
-  const [addedPlayers, setAddedPlayers] = useState<RosterPlayer[]>([]);
+  // Track locally added players - initialize from props to restore state when remounting
+  const [addedPlayers, setAddedPlayers] = useState<RosterPlayer[]>(
+    () => initialModifications?.added ?? [],
+  );
 
   // Track AddPlayerSheet open state
   const [isAddPlayerSheetOpen, setIsAddPlayerSheetOpen] = useState(false);
 
-  // Track IDs of players marked for removal
+  // Track IDs of players marked for removal - initialize from props
   const [removedPlayerIds, setRemovedPlayerIds] = useState<Set<string>>(
-    new Set(),
+    () => new Set(initialModifications?.removed ?? []),
   );
 
   // Use ref to avoid stale closure when callback isn't memoized by parent
