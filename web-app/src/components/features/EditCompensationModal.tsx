@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import type { Assignment, CompensationRecord } from "@/api/client";
 import { getApiClient } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useUpdateCompensation } from "@/hooks/useConvocations";
 import { logger } from "@/utils/logger";
 import {
   getTeamNames,
@@ -14,7 +15,6 @@ import {
   parseLocalizedNumber,
 } from "@/utils/distance";
 import { useAuthStore } from "@/stores/auth";
-import { useDemoStore } from "@/stores/demo";
 
 interface EditCompensationModalProps {
   assignment?: Assignment;
@@ -31,7 +31,7 @@ export function EditCompensationModal({
 }: EditCompensationModalProps) {
   const { t } = useTranslation();
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
-  const updateCompensation = useDemoStore((state) => state.updateCompensation);
+  const updateCompensationMutation = useUpdateCompensation();
 
   const [kilometers, setKilometers] = useState("");
   const [reason, setReason] = useState("");
@@ -123,32 +123,29 @@ export function EditCompensationModal({
 
       const recordId = assignment?.__identity || compensation?.__identity;
 
-      if (isDemoMode) {
-        if (recordId) {
-          const updateData: { distanceInMetres?: number; correctionReason?: string } = {};
+      if (recordId) {
+        const updateData: { distanceInMetres?: number; correctionReason?: string } = {};
 
-          if (kilometers) {
-            updateData.distanceInMetres = kilometresToMetres(km);
-          }
-          if (reason) {
-            updateData.correctionReason = reason;
-          }
-
-          if (Object.keys(updateData).length > 0) {
-            updateCompensation(recordId, updateData);
-            logger.debug(
-              "[EditCompensationModal] Demo mode: updated compensation:",
-              { recordId, ...updateData },
-            );
-          }
+        if (kilometers) {
+          updateData.distanceInMetres = kilometresToMetres(km);
         }
-      } else {
-        // Non-demo mode: API call would go here
-        logger.debug("[EditCompensationModal] Submit:", {
-          recordId,
-          kilometers,
-          reason,
-        });
+        if (reason) {
+          updateData.correctionReason = reason;
+        }
+
+        if (Object.keys(updateData).length > 0) {
+          updateCompensationMutation.mutate(
+            { compensationId: recordId, data: updateData },
+            {
+              onSuccess: () => {
+                logger.debug(
+                  "[EditCompensationModal] Updated compensation:",
+                  { recordId, ...updateData },
+                );
+              },
+            },
+          );
+        }
       }
 
       onClose();
@@ -158,8 +155,7 @@ export function EditCompensationModal({
       compensation,
       kilometers,
       reason,
-      isDemoMode,
-      updateCompensation,
+      updateCompensationMutation,
       onClose,
       t,
     ],
