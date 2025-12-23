@@ -58,6 +58,15 @@ export interface PanelCompletionStatus {
 }
 
 /**
+ * Validated game data from a previously finalized validation.
+ */
+export interface ValidatedGameInfo {
+  validatedAt: string;
+  scorerName: string;
+  hasScoresheet: boolean;
+}
+
+/**
  * Result from the useValidationState hook.
  */
 export interface UseValidationStateResult {
@@ -69,6 +78,10 @@ export interface UseValidationStateResult {
   completionStatus: PanelCompletionStatus;
   /** Whether all required panels are complete */
   isAllRequiredComplete: boolean;
+  /** Whether the game has already been validated (read-only mode) */
+  isValidated: boolean;
+  /** Information about the validated game (if validated) */
+  validatedInfo: ValidatedGameInfo | null;
   /** Update home roster modifications (auto-marks roster as reviewed) */
   setHomeRosterModifications: (modifications: RosterModifications) => void;
   /** Update away roster modifications (auto-marks roster as reviewed) */
@@ -314,6 +327,24 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
     );
   }, [completionStatus]);
 
+  // Check if the game has already been validated (read-only mode)
+  const isValidated = useMemo(() => {
+    const scoresheet = gameDetailsQuery.data?.scoresheet;
+    return !!scoresheet?.closedAt;
+  }, [gameDetailsQuery.data]);
+
+  // Get validated game info if available
+  const validatedInfo = useMemo<ValidatedGameInfo | null>(() => {
+    const scoresheet = gameDetailsQuery.data?.scoresheet;
+    if (!scoresheet?.closedAt) return null;
+
+    return {
+      validatedAt: scoresheet.closedAt,
+      scorerName: scoresheet.writerPerson?.displayName ?? "Unknown",
+      hasScoresheet: !!scoresheet.hasFile,
+    };
+  }, [gameDetailsQuery.data]);
+
   // Calculate dirty state
   const isDirty = useMemo(() => {
     const hasHomeChanges = hasRosterModifications(
@@ -503,6 +534,8 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
     isDirty,
     completionStatus,
     isAllRequiredComplete,
+    isValidated,
+    validatedInfo,
     setHomeRosterModifications,
     setAwayRosterModifications,
     setScorer,

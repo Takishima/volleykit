@@ -31,6 +31,10 @@ const SCORER_SEARCH_HINT_ID = "scorer-search-hint";
 interface ScorerSearchPanelProps {
   selectedScorer?: ValidatedPersonSearchResult | null;
   onScorerSelect: (scorer: ValidatedPersonSearchResult | null) => void;
+  /** When true, shows scorer in view-only mode without edit controls */
+  readOnly?: boolean;
+  /** Scorer name to display in read-only mode when no scorer data is available */
+  readOnlyScorerName?: string;
 }
 
 /**
@@ -40,6 +44,8 @@ interface ScorerSearchPanelProps {
 export function ScorerSearchPanel({
   selectedScorer,
   onScorerSelect,
+  readOnly = false,
+  readOnlyScorerName,
 }: ScorerSearchPanelProps) {
   const { t, tInterpolate } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
@@ -131,6 +137,25 @@ export function ScorerSearchPanel({
   const hasResults = results && results.length > 0;
 
   const showResults = debouncedQuery.trim() && !selectedScorer;
+
+  // In read-only mode, show a simple display of the scorer
+  if (readOnly) {
+    return (
+      <div className="py-4">
+        {(selectedScorer || readOnlyScorerName) ? (
+          <SelectedScorerCard
+            scorer={selectedScorer}
+            displayName={readOnlyScorerName}
+            readOnly
+          />
+        ) : (
+          <p className="text-sm text-text-muted dark:text-text-muted-dark">
+            {t("validation.scorerSearch.noScorerSelected")}
+          </p>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="py-4">

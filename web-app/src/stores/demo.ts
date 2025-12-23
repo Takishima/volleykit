@@ -80,6 +80,18 @@ export type MockNominationLists = Record<
 // SV = Swiss Volley (national), SVRBA = Regional Basel, SVRZ = Regional Zurich
 export type DemoAssociationCode = "SV" | "SVRBA" | "SVRZ";
 
+// Validated game data stored after finalization
+export interface ValidatedGameData {
+  validatedAt: string;
+  scorer: {
+    __identity: string;
+    displayName: string;
+  };
+  scoresheetFileId?: string;
+  homeRosterClosed: boolean;
+  awayRosterClosed: boolean;
+}
+
 interface DemoState {
   // Data arrays - populated when demo mode is enabled via useAuthStore
   assignments: Assignment[];
@@ -88,6 +100,9 @@ interface DemoState {
   nominationLists: MockNominationLists;
   possiblePlayers: PossibleNomination[];
   scorers: PersonSearchResult[];
+
+  // Validated games - keyed by game ID
+  validatedGames: Record<string, ValidatedGameData>;
 
   // Current active association code for region-specific data
   activeAssociationCode: DemoAssociationCode | null;
@@ -113,6 +128,22 @@ interface DemoState {
   updateCompensation: (
     compensationId: string,
     data: { distanceInMetres?: number; correctionReason?: string },
+  ) => void;
+
+  // Game validation operations
+  markGameValidated: (
+    gameId: string,
+    data: {
+      scorer: { __identity: string; displayName: string };
+      scoresheetFileId?: string;
+    },
+  ) => void;
+  isGameValidated: (gameId: string) => boolean;
+  getValidatedGameData: (gameId: string) => ValidatedGameData | null;
+  updateNominationListClosed: (
+    gameId: string,
+    team: "home" | "away",
+    closed: boolean,
   ) => void;
 }
 
@@ -1207,6 +1238,7 @@ export const useDemoStore = create<DemoState>()(
       nominationLists: {},
       possiblePlayers: [],
       scorers: [],
+      validatedGames: {},
       activeAssociationCode: null,
       userRefereeLevel: null,
       userRefereeLevelGradationValue: null,
@@ -1247,6 +1279,7 @@ export const useDemoStore = create<DemoState>()(
           nominationLists: {},
           possiblePlayers: [],
           scorers: [],
+          validatedGames: {},
           activeAssociationCode: null,
           userRefereeLevel: null,
           userRefereeLevelGradationValue: null,
@@ -1257,6 +1290,7 @@ export const useDemoStore = create<DemoState>()(
         set(() => {
           const currentAssociation = get().activeAssociationCode ?? "SV";
           const newData = generateDummyData(currentAssociation);
+          // Note: validatedGames is preserved to maintain user's validation history
           return {
             assignments: newData.assignments,
             compensations: newData.compensations,
@@ -1361,6 +1395,61 @@ export const useDemoStore = create<DemoState>()(
             updateCompensationRecord(comp, compensationId, data),
           ),
         })),
+
+      markGameValidated: (
+        gameId: string,
+        data: {
+          scorer: { __identity: string; displayName: string };
+          scoresheetFileId?: string;
+        },
+      ) =>
+        set((state) => ({
+          validatedGames: {
+            ...state.validatedGames,
+            [gameId]: {
+              validatedAt: new Date().toISOString(),
+              scorer: data.scorer,
+              scoresheetFileId: data.scoresheetFileId,
+              homeRosterClosed: true,
+              awayRosterClosed: true,
+            },
+          },
+        })),
+
+      isGameValidated: (gameId: string) => {
+        return !!get().validatedGames[gameId];
+      },
+
+      getValidatedGameData: (gameId: string) => {
+        return get().validatedGames[gameId] ?? null;
+      },
+
+      updateNominationListClosed: (
+        gameId: string,
+        team: "home" | "away",
+        closed: boolean,
+      ) =>
+        set((state) => {
+          const gameNominations = state.nominationLists[gameId];
+          if (!gameNominations) return state;
+
+          return {
+            nominationLists: {
+              ...state.nominationLists,
+              [gameId]: {
+                ...gameNominations,
+                [team]: {
+                  ...gameNominations[team],
+                  closed,
+                  ...(closed && {
+                    closedAt: new Date().toISOString(),
+                    closedBy: "referee",
+                  }),
+                },
+              },
+            },
+          };
+        }),
     }),
     {
       name: "volleykit-demo",
@@ -1372,6 +1461,7 @@ export const useDemoStore = create<DemoState>()(
         nominationLists: state.nominationLists,
         possiblePlayers: state.possiblePlayers,
         scorers: state.scorers,
+        validatedGames: state.validatedGames,
         activeAssociationCode: state.activeAssociationCode,
         userRefereeLevel: state.userRefereeLevel,
         userRefereeLevelGradationValue: state.userRefereeLevelGradationValue,
@@ -1387,7 +1477,11 @@ export const useDemoStore = create<DemoState>()(
 
         if (isStale) {
           // Return current (empty) state to trigger fresh data generation
-          return current;
+          // BUT preserve validatedGames since those represent user actions
+          return {
+            ...current,
+            validatedGames: persistedState?.validatedGames ?? {},
+          };
         }
 
         // Data is fresh, merge persisted state

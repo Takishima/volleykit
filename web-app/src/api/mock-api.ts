@@ -500,6 +500,7 @@ export const mockApi = {
 
     const store = useDemoStore.getState();
     const gameNominations = store.nominationLists[gameId];
+    const validatedData = store.validatedGames[gameId];
 
     // Build mock game details with scoresheet and nomination lists
     const gameDetails: GameDetails = {
@@ -508,7 +509,15 @@ export const mockApi = {
         __identity: `scoresheet-${gameId}`,
         game: { __identity: gameId },
         isSimpleScoresheet: false,
-        hasFile: false,
+        hasFile: !!validatedData?.scoresheetFileId,
+        ...(validatedData && {
+          closedAt: validatedData.validatedAt,
+          closedBy: "referee",
+          writerPerson: {
+            __identity: validatedData.scorer.__identity,
+            displayName: validatedData.scorer.displayName,
+          },
+        }),
       },
       nominationListOfTeamHome: gameNominations?.home ?? undefined,
       nominationListOfTeamAway: gameNominations?.away ?? undefined,
@@ -546,6 +555,16 @@ export const mockApi = {
     _validationId?: string,
   ): Promise<NominationListFinalizeResponse> {
     await delay(MOCK_MUTATION_DELAY_MS);
+
+    const store = useDemoStore.getState();
+
+    // Determine which team (home or away) based on the nomination list
+    const gameNominations = store.nominationLists[gameId];
+    if (gameNominations) {
+      const team =
+        gameNominations.home?.__identity === nominationListId ? "home" : "away";
+      store.updateNominationListClosed(gameId, team, true);
+    }
 
     // In demo mode, return a mock finalized nomination list
     return {
@@ -588,6 +607,21 @@ export const mockApi = {
     isSimpleScoresheet: boolean = false,
   ): Promise<Scoresheet> {
     await delay(MOCK_MUTATION_DELAY_MS);
+
+    const store = useDemoStore.getState();
+
+    // Find the scorer's display name from the scorers list
+    const scorer = store.scorers.find((s) => s.__identity === scorerPersonId);
+    const scorerDisplayName = scorer?.displayName ?? "Unknown Scorer";
+
+    // Mark the game as validated in the store
+    store.markGameValidated(gameId, {
+      scorer: {
+        __identity: scorerPersonId,
+        displayName: scorerDisplayName,
+      },
+      scoresheetFileId: fileResourceId,
+    });
 
     // In demo mode, return a mock finalized scoresheet
     return {

@@ -308,6 +308,8 @@ const en: Translations = {
       invalidFileType: "Invalid file type. Please use JPEG, PNG, or PDF.",
       demoModeNote: "Demo mode: uploads are simulated",
       previewAlt: "Scoresheet preview",
+      scoresheetUploaded: "Scoresheet uploaded",
+      noScoresheet: "No scoresheet uploaded",
     },
     state: {
       unsavedChangesTitle: "Unsaved Changes",
@@ -329,6 +331,8 @@ const en: Translations = {
       stepOf: "Step {current} of {total}",
       saving: "Saving...",
       markAsReviewed: "Mark as reviewed",
+      alreadyValidated: "This game has already been validated",
+      validatedBy: "Scorer: {scorer}",
     },
   },
 };

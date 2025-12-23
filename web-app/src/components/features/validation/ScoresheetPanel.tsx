@@ -12,6 +12,10 @@ import {
 interface ScoresheetPanelProps {
   /** Callback when scoresheet state changes */
   onScoresheetChange?: (file: File | null, uploaded: boolean) => void;
+  /** When true, shows panel in view-only mode */
+  readOnly?: boolean;
+  /** Whether a scoresheet was uploaded (for read-only mode) */
+  hasScoresheet?: boolean;
 }
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
@@ -36,7 +40,11 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function ScoresheetPanel({ onScoresheetChange }: ScoresheetPanelProps) {
+export function ScoresheetPanel({
+  onScoresheetChange,
+  readOnly = false,
+  hasScoresheet = false,
+}: ScoresheetPanelProps) {
   const { t } = useTranslation();
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
   const onScoresheetChangeRef = useRef(onScoresheetChange);
@@ -195,6 +203,31 @@ export function ScoresheetPanel({ onScoresheetChange }: ScoresheetPanelProps) {
 
   const tKey = (key: string) =>
     t(`validation.scoresheetUpload.${key}` as Parameters<typeof t>[0]);
+
+  // In read-only mode, show a simple status display
+  if (readOnly) {
+    return (
+      <div className="py-4">
+        <div className="border border-border-default dark:border-border-default-dark rounded-lg p-4 text-center">
+          {hasScoresheet ? (
+            <>
+              <CheckCircle className="w-12 h-12 mx-auto text-green-500 mb-3" aria-hidden="true" />
+              <h3 className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
+                {t("validation.scoresheetUpload.scoresheetUploaded")}
+              </h3>
+            </>
+          ) : (
+            <>
+              <FileText className="w-12 h-12 mx-auto text-text-subtle dark:text-text-subtle-dark mb-3" aria-hidden="true" />
+              <h3 className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
+                {t("validation.scoresheetUpload.noScoresheet")}
+              </h3>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="py-4">

@@ -313,6 +313,8 @@ const de: Translations = {
         "Ungültiger Dateityp. Bitte verwenden Sie JPEG, PNG oder PDF.",
       demoModeNote: "Demo-Modus: Uploads werden simuliert",
       previewAlt: "Spielbericht-Vorschau",
+      scoresheetUploaded: "Spielbericht hochgeladen",
+      noScoresheet: "Kein Spielbericht hochgeladen",
     },
     state: {
       unsavedChangesTitle: "Ungespeicherte Änderungen",
@@ -335,6 +337,8 @@ const de: Translations = {
       stepOf: "Schritt {current} von {total}",
       saving: "Speichern...",
       markAsReviewed: "Als geprüft markieren",
+      alreadyValidated: "Dieses Spiel wurde bereits validiert",
+      validatedBy: "Schreiber: {scorer}",
     },
   },
 };

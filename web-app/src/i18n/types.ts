@@ -288,6 +288,8 @@ export interface Translations {
       invalidFileType: string;
       demoModeNote: string;
       previewAlt: string;
+      scoresheetUploaded: string;
+      noScoresheet: string;
     };
     state: {
       unsavedChangesTitle: string;
@@ -308,6 +310,8 @@ export interface Translations {
       stepOf: string;
       saving: string;
       markAsReviewed: string;
+      alreadyValidated: string;
+      validatedBy: string;
     };
   };
 }
