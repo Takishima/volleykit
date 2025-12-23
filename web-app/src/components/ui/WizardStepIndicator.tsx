@@ -1,5 +1,6 @@
 import type { WizardStep } from "@/hooks/useWizardNavigation";
 import { Check } from "@/components/ui/icons";
+import { useTranslation } from "@/hooks/useTranslation";
 
 /** Returns the appropriate style classes based on step state */
 function getStepIndicatorStyle(
@@ -43,11 +44,13 @@ export function WizardStepIndicator({
   onStepClick,
   clickable = false,
 }: WizardStepIndicatorProps) {
+  const { t } = useTranslation();
+
   return (
     <div
       className="flex items-center justify-center gap-2"
       role="navigation"
-      aria-label="Wizard progress"
+      aria-label={t("common.wizardProgress")}
     >
       {steps.map((step, index) => {
         const isCurrent = index === currentStepIndex;
@@ -95,7 +98,7 @@ export function WizardStepIndicator({
               onKeyDown={handleKeyDown}
               aria-disabled={isDisabled}
               aria-current={isCurrent ? "step" : undefined}
-              aria-label={`${step.label}${isCurrent ? " (current)" : ""}${showCompletion ? " (done)" : ""}`}
+              aria-label={`${step.label}${isCurrent ? ` ${t("common.stepIndicatorCurrent")}` : ""}${showCompletion ? ` ${t("common.stepIndicatorDone")}` : ""}`}
               className={`
                 relative flex items-center justify-center w-8 h-8 rounded-full
                 transition-all duration-200

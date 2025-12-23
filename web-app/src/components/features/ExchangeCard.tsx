@@ -4,6 +4,7 @@ import { ExpandArrow } from "@/components/ui/ExpandArrow";
 import { Badge } from "@/components/ui/Badge";
 import type { GameExchange } from "@/api/client";
 import { useExpandable } from "@/hooks/useExpandable";
+import { useDateLocale } from "@/hooks/useDateFormat";
 import { t, tInterpolate } from "@/i18n";
 
 interface ExchangeCardProps {
@@ -16,6 +17,7 @@ export function ExchangeCard({
   exchange,
   disableExpansion,
 }: ExchangeCardProps) {
+  const dateLocale = useDateLocale();
   const { isExpanded, detailsId, handleToggle } = useExpandable({
     disabled: disableExpansion,
   });
@@ -59,16 +61,16 @@ export function ExchangeCard({
           <div className="flex items-center gap-3">
             {/* Date/Time */}
             <div className="text-xs text-text-muted dark:text-text-muted-dark min-w-[4rem]">
-              {startDate ? format(startDate, "MMM d") : t("common.tbd")}
+              {startDate ? format(startDate, "MMM d", { locale: dateLocale }) : t("common.tbd")}
               <div className="font-medium text-text-secondary dark:text-text-secondary-dark">
-                {startDate ? format(startDate, "HH:mm") : ""}
+                {startDate ? format(startDate, "HH:mm", { locale: dateLocale }) : ""}
               </div>
             </div>
 
             {/* Teams - truncated */}
             <div className="flex-1 min-w-0">
               <div className="font-medium text-text-primary dark:text-text-primary-dark truncate text-sm">
-                {homeTeam} vs {awayTeam}
+                {homeTeam} {t("common.vs")} {awayTeam}
               </div>
               {requiredLevel && (
                 <div className="text-xs text-text-subtle dark:text-text-subtle-dark">

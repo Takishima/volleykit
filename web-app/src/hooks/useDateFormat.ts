@@ -64,6 +64,30 @@ export function getDateLocale(locale: string): DateFnsLocale {
 }
 
 /**
+ * Hook that provides the current date-fns locale based on user's language setting.
+ * Handles async loading of locale data.
+ */
+export function useDateLocale(): DateFnsLocale {
+  const currentLocale = useLanguageStore((state) => state.locale);
+  const [locale, setLocale] = useState<DateFnsLocale>(
+    () => localeCache.get(currentLocale) ?? enUS,
+  );
+  const requestIdRef = useRef(0);
+
+  useEffect(() => {
+    const requestId = ++requestIdRef.current;
+
+    loadDateLocale(currentLocale).then((loadedLocale) => {
+      if (requestId === requestIdRef.current) {
+        setLocale(loadedLocale);
+      }
+    });
+  }, [currentLocale]);
+
+  return locale;
+}
+
+/**
  * Safely parse an ISO date string, returning null if invalid.
  */
 export function safeParseISO(

@@ -413,7 +413,7 @@ export function ValidateGameModal({
 
           <div className="mb-4 text-sm text-text-muted dark:text-text-muted-dark">
             <div className="font-medium text-text-primary dark:text-text-primary-dark">
-              {homeTeam} vs {awayTeam}
+              {homeTeam} {t("common.vs")} {awayTeam}
             </div>
           </div>
 

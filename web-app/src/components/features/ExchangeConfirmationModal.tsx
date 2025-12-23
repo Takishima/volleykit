@@ -83,8 +83,8 @@ export function ExchangeConfirmationModal({
   if (!isOpen) return null;
 
   const game = exchange.refereeGame?.game;
-  const homeTeam = game?.encounter?.teamHome?.name || "TBD";
-  const awayTeam = game?.encounter?.teamAway?.name || "TBD";
+  const homeTeam = game?.encounter?.teamHome?.name || t("common.tbd");
+  const awayTeam = game?.encounter?.teamAway?.name || t("common.tbd");
   const position = exchange.refereePosition;
   const level = exchange.requiredRefereeLevel;
   const location = game?.hall?.name || game?.hall?.primaryPostalAddress?.city;
@@ -131,7 +131,7 @@ export function ExchangeConfirmationModal({
               {t("common.match")}
             </div>
             <div className="text-base text-text-primary dark:text-text-primary-dark font-medium">
-              {homeTeam} vs {awayTeam}
+              {homeTeam} {t("common.vs")} {awayTeam}
             </div>
           </div>
 

@@ -30,6 +30,17 @@ export interface Translations {
     locationTbd: string;
     selectRole: string;
     selectOccupation: string;
+    vs: string;
+    unknown: string;
+    unknownDate: string;
+    currencyChf: string;
+    distanceUnit: string;
+    dismissNotification: string;
+    notifications: string;
+    cardActions: string;
+    wizardProgress: string;
+    stepIndicatorCurrent: string;
+    stepIndicatorDone: string;
   };
   auth: {
     login: string;
@@ -67,6 +78,8 @@ export interface Translations {
     confirmed: string;
     pending: string;
     cancelled: string;
+    active: string;
+    archived: string;
     editCompensation: string;
     validateGame: string;
     kilometers: string;
