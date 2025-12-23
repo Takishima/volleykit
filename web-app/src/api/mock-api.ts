@@ -540,10 +540,20 @@ export const mockApi = {
     nominationListId: string,
     gameId: string,
     teamId: string,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required for API interface compatibility
-    _playerNominationIds: string[],
+    playerNominationIds: string[],
   ): Promise<NominationList> {
     await delay(MOCK_MUTATION_DELAY_MS);
+
+    const store = useDemoStore.getState();
+
+    // Determine which team (home or away) based on the nomination list
+    const gameNominations = store.nominationLists[gameId];
+    if (gameNominations) {
+      const team =
+        gameNominations.home?.__identity === nominationListId ? "home" : "away";
+      // Persist player changes to demo store
+      store.updateNominationListPlayers(gameId, team, playerNominationIds);
+    }
 
     // In demo mode, return a mock updated nomination list
     return {
@@ -559,8 +569,7 @@ export const mockApi = {
     nominationListId: string,
     gameId: string,
     teamId: string,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required for API interface compatibility
-    _playerNominationIds: string[],
+    playerNominationIds: string[],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required for API interface compatibility
     _validationId?: string,
   ): Promise<NominationListFinalizeResponse> {
@@ -573,6 +582,8 @@ export const mockApi = {
     if (gameNominations) {
       const team =
         gameNominations.home?.__identity === nominationListId ? "home" : "away";
+      // Persist player changes and mark as closed
+      store.updateNominationListPlayers(gameId, team, playerNominationIds);
       store.updateNominationListClosed(gameId, team, true);
     }
 

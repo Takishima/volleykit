@@ -166,6 +166,11 @@ interface DemoState {
     team: "home" | "away",
     closed: boolean,
   ) => void;
+  updateNominationListPlayers: (
+    gameId: string,
+    team: "home" | "away",
+    playerNominationIds: string[],
+  ) => void;
 }
 
 type Weekday = "Sun" | "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat";
@@ -1487,6 +1492,60 @@ export const useDemoStore = create<DemoState>()(
                     closedAt: new Date().toISOString(),
                     closedBy: "referee",
                   }),
+                },
+              },
+            },
+          };
+        }),
+
+      updateNominationListPlayers: (
+        gameId: string,
+        team: "home" | "away",
+        playerNominationIds: string[],
+      ) =>
+        set((state) => {
+          const gameNominations = state.nominationLists[gameId];
+          if (!gameNominations) return state;
+
+          const nominationList = gameNominations[team];
+          if (!nominationList) return state;
+
+          // Filter existing nominations to only include those in the new list
+          // and maintain order based on playerNominationIds
+          const existingNominations =
+            nominationList.indoorPlayerNominations ?? [];
+          const existingById = new Map(
+            existingNominations.map((n) => [n.__identity, n]),
+          );
+
+          // Also include nominations from possiblePlayers for newly added players
+          const possiblePlayersById = new Map(
+            state.possiblePlayers.map((p) => [
+              p.indoorPlayer?.__identity,
+              {
+                __identity: p.indoorPlayer?.__identity ?? "",
+                person: p.indoorPlayer?.person,
+                shirtNumber: 0, // New players don't have shirt numbers
+              },
+            ]),
+          );
+
+          // Build the new nominations list based on the provided IDs
+          // Type guard to filter out undefined values
+          const newNominations = playerNominationIds
+            .map((id) => existingById.get(id) ?? possiblePlayersById.get(id))
+            .filter(
+              (n): n is NonNullable<typeof n> => n !== undefined && n !== null,
+            );
+
+          return {
+            nominationLists: {
+              ...state.nominationLists,
+              [gameId]: {
+                ...gameNominations,
+                [team]: {
+                  ...nominationList,
+                  indoorPlayerNominations: newNominations,
                 },
               },
             },
