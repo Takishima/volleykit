@@ -351,6 +351,10 @@ export interface Translations {
         title: string;
         description: string;
       };
+      swipeExchange: {
+        title: string;
+        description: string;
+      };
       tapDetails: {
         title: string;
         description: string;
