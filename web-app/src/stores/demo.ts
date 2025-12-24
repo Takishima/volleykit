@@ -12,6 +12,18 @@ import type {
 import { addDays, addHours, subDays } from "date-fns";
 import { formatDistanceKm, metresToKilometres } from "@/utils/distance";
 
+/**
+ * Extended compensation data type for demo mode.
+ * The base ConvocationCompensation type doesn't include correctionReason,
+ * but demo mode stores and retrieves it (it's in ConvocationCompensationDetailed).
+ */
+interface DemoConvocationCompensation {
+  __identity?: string;
+  distanceInMetres?: number;
+  distanceFormatted?: string;
+  correctionReason?: string | null;
+}
+
 // Valid variant characters for UUID v4 (RFC 4122)
 const UUID_VARIANT_CHARS = ["8", "9", "a", "b"] as const;
 
@@ -311,11 +323,13 @@ function updateCompensationRecord(
   compensationId: string,
   data: { distanceInMetres?: number; correctionReason?: string },
 ): CompensationRecord {
-  if (comp.__identity !== compensationId) return comp;
-  if (!comp.convocationCompensation) return comp;
+  // Match by convocationCompensation.__identity, not comp.__identity
+  // The compensationId passed here is the convocationCompensation's identity
+  if (comp.convocationCompensation?.__identity !== compensationId) return comp;
 
-  const newDistance =
-    data.distanceInMetres ?? comp.convocationCompensation.distanceInMetres;
+  // Cast to extended type that includes correctionReason (from ConvocationCompensationDetailed)
+  const demoComp = comp.convocationCompensation as DemoConvocationCompensation;
+  const newDistance = data.distanceInMetres ?? demoComp.distanceInMetres;
 
   return {
     ...comp,

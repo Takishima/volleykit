@@ -109,15 +109,25 @@ describe("useDemoStore", () => {
   describe("updateCompensation", () => {
     const TRAVEL_EXPENSE_RATE_PER_KM = 0.7;
 
-    // Helper to get compensation ID from store by index (0-based)
-    const getCompensationId = (index: number) => {
+    // Helper to get convocationCompensation.__identity from store by index (0-based)
+    // Note: updateCompensation uses convocationCompensation.__identity, not CompensationRecord.__identity
+    const getConvocationCompensationId = (index: number) => {
       const compensations = useDemoStore.getState().compensations;
-      return compensations[index]?.__identity;
+      return compensations[index]?.convocationCompensation?.__identity;
+    };
+
+    // Helper to find compensation by convocationCompensation.__identity
+    const findCompensationById = (convocationCompId: string) => {
+      return useDemoStore
+        .getState()
+        .compensations.find(
+          (c) => c.convocationCompensation?.__identity === convocationCompId
+        );
     };
 
     it("updates distance and recalculates travel expenses", () => {
       useDemoStore.getState().initializeDemoData();
-      const compensationId = getCompensationId(0);
+      const compensationId = getConvocationCompensationId(0);
       expect(compensationId).toBeDefined();
 
       const newDistanceInMetres = 50000;
@@ -128,9 +138,7 @@ describe("useDemoStore", () => {
         distanceInMetres: newDistanceInMetres,
       });
 
-      const updatedComp = useDemoStore
-        .getState()
-        .compensations.find((c) => c.__identity === compensationId);
+      const updatedComp = findCompensationById(compensationId!);
 
       expect(updatedComp?.convocationCompensation?.distanceInMetres).toBe(
         newDistanceInMetres,
@@ -142,7 +150,7 @@ describe("useDemoStore", () => {
 
     it("calculates travel expenses at 0.7 CHF per kilometer", () => {
       useDemoStore.getState().initializeDemoData();
-      const compensationId = getCompensationId(1);
+      const compensationId = getConvocationCompensationId(1);
       expect(compensationId).toBeDefined();
 
       const testCases = [
@@ -157,9 +165,7 @@ describe("useDemoStore", () => {
           distanceInMetres: distance,
         });
 
-        const updatedComp = useDemoStore
-          .getState()
-          .compensations.find((c) => c.__identity === compensationId);
+        const updatedComp = findCompensationById(compensationId!);
 
         expect(updatedComp?.convocationCompensation?.travelExpenses).toBe(
           expected,
@@ -169,14 +175,12 @@ describe("useDemoStore", () => {
 
     it("does not modify other compensations", () => {
       useDemoStore.getState().initializeDemoData();
-      const targetId = getCompensationId(0);
-      const otherId = getCompensationId(1);
+      const targetId = getConvocationCompensationId(0);
+      const otherId = getConvocationCompensationId(1);
       expect(targetId).toBeDefined();
       expect(otherId).toBeDefined();
 
-      const originalOther = useDemoStore
-        .getState()
-        .compensations.find((c) => c.__identity === otherId);
+      const originalOther = findCompensationById(otherId!);
       const originalDistance =
         originalOther?.convocationCompensation?.distanceInMetres;
       const originalExpenses =
@@ -186,9 +190,7 @@ describe("useDemoStore", () => {
         distanceInMetres: 99999,
       });
 
-      const unchangedOther = useDemoStore
-        .getState()
-        .compensations.find((c) => c.__identity === otherId);
+      const unchangedOther = findCompensationById(otherId!);
 
       expect(unchangedOther?.convocationCompensation?.distanceInMetres).toBe(
         originalDistance,
@@ -212,12 +214,10 @@ describe("useDemoStore", () => {
 
     it("preserves other compensation fields when updating distance", () => {
       useDemoStore.getState().initializeDemoData();
-      const compensationId = getCompensationId(0);
+      const compensationId = getConvocationCompensationId(0);
       expect(compensationId).toBeDefined();
 
-      const originalComp = useDemoStore
-        .getState()
-        .compensations.find((c) => c.__identity === compensationId);
+      const originalComp = findCompensationById(compensationId!);
       const originalGameCompensation =
         originalComp?.convocationCompensation?.gameCompensation;
       const originalPaymentDone =
@@ -229,9 +229,7 @@ describe("useDemoStore", () => {
         distanceInMetres: 75000,
       });
 
-      const updatedComp = useDemoStore
-        .getState()
-        .compensations.find((c) => c.__identity === compensationId);
+      const updatedComp = findCompensationById(compensationId!);
 
       expect(updatedComp?.convocationCompensation?.gameCompensation).toBe(
         originalGameCompensation,
@@ -242,6 +240,52 @@ describe("useDemoStore", () => {
       expect(updatedComp?.convocationCompensation?.transportationMode).toBe(
         originalTransportationMode,
       );
+    });
+
+    it("updates correctionReason and persists it", () => {
+      useDemoStore.getState().initializeDemoData();
+      const compensationId = getConvocationCompensationId(0);
+      expect(compensationId).toBeDefined();
+
+      const testReason = "Detour due to road construction";
+
+      useDemoStore.getState().updateCompensation(compensationId!, {
+        correctionReason: testReason,
+      });
+
+      const updatedComp = findCompensationById(compensationId!);
+      // Cast to access correctionReason which is in ConvocationCompensationDetailed, not ConvocationCompensation
+      const compensation = updatedComp?.convocationCompensation as
+        | { correctionReason?: string | null }
+        | undefined;
+
+      expect(compensation?.correctionReason).toBe(testReason);
+    });
+
+    it("updates both distance and correctionReason together", () => {
+      useDemoStore.getState().initializeDemoData();
+      const compensationId = getConvocationCompensationId(0);
+      expect(compensationId).toBeDefined();
+
+      const newDistanceInMetres = 42000;
+      const testReason = "Alternative route taken";
+      const expectedTravelExpenses =
+        (newDistanceInMetres / 1000) * TRAVEL_EXPENSE_RATE_PER_KM;
+
+      useDemoStore.getState().updateCompensation(compensationId!, {
+        distanceInMetres: newDistanceInMetres,
+        correctionReason: testReason,
+      });
+
+      const updatedComp = findCompensationById(compensationId!);
+      // Cast to access correctionReason which is in ConvocationCompensationDetailed, not ConvocationCompensation
+      const compensation = updatedComp?.convocationCompensation as
+        | { correctionReason?: string | null; distanceInMetres?: number; travelExpenses?: number }
+        | undefined;
+
+      expect(compensation?.distanceInMetres).toBe(newDistanceInMetres);
+      expect(compensation?.travelExpenses).toBe(expectedTravelExpenses);
+      expect(compensation?.correctionReason).toBe(testReason);
     });
   });
 });
