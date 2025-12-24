@@ -21,6 +21,7 @@ import {
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 import { ModalErrorBoundary } from "@/components/ui/ModalErrorBoundary";
+import { ModalButton } from "@/components/ui/ModalButton";
 
 interface EditCompensationModalProps {
   assignment?: Assignment;
@@ -256,13 +257,9 @@ export function EditCompensationModal({
               <p className="text-danger-600 dark:text-danger-400 mb-4">
                 {fetchError}
               </p>
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong"
-              >
+              <ModalButton variant="secondary" onClick={onClose}>
                 {t("common.close")}
-              </button>
+              </ModalButton>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -319,19 +316,12 @@ export function EditCompensationModal({
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="flex-1 px-4 py-2 text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong"
-                >
+                <ModalButton variant="secondary" fullWidth onClick={onClose}>
                   {t("common.close")}
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 text-white bg-primary-500 rounded-md hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
+                </ModalButton>
+                <ModalButton variant="primary" fullWidth type="submit">
                   {t("common.save")}
-                </button>
+                </ModalButton>
               </div>
             </form>
           )}

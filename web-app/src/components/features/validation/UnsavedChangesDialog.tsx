@@ -1,5 +1,6 @@
 import { useRef, useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { ModalButton } from "@/components/ui/ModalButton";
 
 /** Z-index for confirmation dialog (above main modal) */
 const Z_INDEX_CONFIRMATION_DIALOG = 60;
@@ -63,30 +64,15 @@ export function UnsavedChangesDialog({
           {t("validation.state.unsavedChangesMessage")}
         </p>
         <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={isSaving}
-            className="px-4 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong disabled:opacity-50"
-          >
+          <ModalButton variant="secondary" onClick={onCancel} disabled={isSaving}>
             {t("validation.state.continueEditing")}
-          </button>
-          <button
-            type="button"
-            onClick={onDiscard}
-            disabled={isSaving}
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
-          >
+          </ModalButton>
+          <ModalButton variant="danger" onClick={onDiscard} disabled={isSaving}>
             {t("validation.state.discardChanges")}
-          </button>
-          <button
-            type="button"
-            onClick={onSaveAndClose}
-            disabled={isSaving}
-            className="px-4 py-2 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
-          >
+          </ModalButton>
+          <ModalButton variant="primary" onClick={onSaveAndClose} disabled={isSaving}>
             {isSaving ? t("common.loading") : t("validation.state.saveAndClose")}
-          </button>
+          </ModalButton>
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useModalDismissal } from '@/hooks/useModalDismissal';
 import { FileText } from 'lucide-react';
 import type { Language } from '@/utils/pdf-form-filler';
+import { ModalButton } from '@/components/ui/ModalButton';
 
 interface PdfLanguageModalProps {
   isOpen: boolean;
@@ -91,19 +92,15 @@ export function PdfLanguageModal({
         </div>
 
         <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isLoading}
-            className="flex-1 px-4 py-2 text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong disabled:opacity-50"
-          >
+          <ModalButton variant="secondary" fullWidth onClick={onClose} disabled={isLoading}>
             {t('common.cancel')}
-          </button>
-          <button
-            type="button"
+          </ModalButton>
+          <ModalButton
+            variant="blue"
+            fullWidth
             onClick={() => onConfirm(selected)}
             disabled={isLoading}
-            className="flex-1 px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <>
@@ -113,7 +110,7 @@ export function PdfLanguageModal({
             ) : (
               t('pdf.export')
             )}
-          </button>
+          </ModalButton>
         </div>
       </div>
     </div>

@@ -8,6 +8,7 @@ import { useWizardNavigation } from "@/hooks/useWizardNavigation";
 import { WizardStepContainer } from "@/components/ui/WizardStepContainer";
 import { WizardStepIndicator } from "@/components/ui/WizardStepIndicator";
 import { ModalErrorBoundary } from "@/components/ui/ModalErrorBoundary";
+import { ModalButton } from "@/components/ui/ModalButton";
 import {
   HomeRosterPanel,
   AwayRosterPanel,
@@ -418,32 +419,20 @@ export function ValidateGameModal({
               <>
                 <div>
                   {!isFirstStep && (
-                    <button
-                      type="button"
-                      onClick={handleBack}
-                      className="px-4 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong"
-                    >
+                    <ModalButton variant="secondary" onClick={handleBack}>
                       {t("validation.wizard.previous")}
-                    </button>
+                    </ModalButton>
                   )}
                 </div>
                 <div>
                   {isLastStep ? (
-                    <button
-                      type="button"
-                      onClick={onClose}
-                      className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    >
+                    <ModalButton variant="primary" onClick={onClose}>
                       {t("common.close")}
-                    </button>
+                    </ModalButton>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={handleNext}
-                      className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    >
+                    <ModalButton variant="primary" onClick={handleNext}>
                       {t("validation.wizard.next")}
-                    </button>
+                    </ModalButton>
                   )}
                 </div>
               </>
@@ -451,30 +440,28 @@ export function ValidateGameModal({
               <>
                 <div>
                   {isFirstStep ? (
-                    <button
-                      type="button"
+                    <ModalButton
+                      variant="secondary"
                       onClick={() => attemptClose()}
                       disabled={isFinalizing}
-                      className="px-4 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {t("common.cancel")}
-                    </button>
+                    </ModalButton>
                   ) : (
-                    <button
-                      type="button"
+                    <ModalButton
+                      variant="secondary"
                       onClick={handleBack}
                       disabled={isFinalizing}
-                      className="px-4 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {t("validation.wizard.previous")}
-                    </button>
+                    </ModalButton>
                   )}
                 </div>
 
                 <div>
                   {isLastStep ? (
-                    <button
-                      type="button"
+                    <ModalButton
+                      variant="success"
                       onClick={() => handleFinish()}
                       disabled={
                         isFinalizing ||
@@ -488,15 +475,14 @@ export function ValidateGameModal({
                           ? t("validation.state.markAllStepsTooltip")
                           : undefined
                       }
-                      className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isFinalizing
                         ? t("common.loading")
                         : t("validation.wizard.finish")}
-                    </button>
+                    </ModalButton>
                   ) : (
-                    <button
-                      type="button"
+                    <ModalButton
+                      variant="success"
                       onClick={handleValidateAndNext}
                       disabled={
                         isFinalizing ||
@@ -504,10 +490,9 @@ export function ValidateGameModal({
                         !!gameDetailsError ||
                         !canMarkCurrentStepDone
                       }
-                      className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {t("validation.wizard.validate")}
-                    </button>
+                    </ModalButton>
                   )}
                 </div>
               </>

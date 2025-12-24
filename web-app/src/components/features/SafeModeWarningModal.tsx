@@ -1,6 +1,7 @@
 import { useCallback, useRef } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModalDismissal } from "@/hooks/useModalDismissal";
+import { ModalButton } from "@/components/ui/ModalButton";
 
 interface SafeModeWarningModalProps {
   isOpen: boolean;
@@ -103,20 +104,12 @@ export function SafeModeWarningModal({
 
         <div className="border-t border-border-default dark:border-border-default-dark pt-4">
           <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong"
-            >
+            <ModalButton variant="secondary" fullWidth onClick={onClose}>
               {t("common.cancel")}
-            </button>
-            <button
-              type="button"
-              onClick={handleConfirm}
-              className="flex-1 px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
-            >
+            </ModalButton>
+            <ModalButton variant="danger" fullWidth onClick={handleConfirm}>
               {t("settings.safeModeConfirmButton")}
-            </button>
+            </ModalButton>
           </div>
         </div>
       </div>
