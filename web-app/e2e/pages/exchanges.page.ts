@@ -22,10 +22,9 @@ export class ExchangesPage {
   constructor(page: Page) {
     this.page = page;
     this.tablist = page.getByRole("tablist");
-    this.openTab = page.getByRole("tab", { name: /open/i });
-    this.myApplicationsTab = page.getByRole("tab", {
-      name: /my applications|applied/i,
-    });
+    // Use stable IDs for tabs (locale-independent)
+    this.openTab = page.locator('#tab-open');
+    this.myApplicationsTab = page.locator('#tab-applied');
     this.tabPanel = page.getByRole("tabpanel");
     this.exchangeCards = this.tabPanel.getByRole("button");
     this.levelFilterToggle = page.getByRole("checkbox");
@@ -43,10 +42,11 @@ export class ExchangesPage {
   async switchToOpenTab() {
     await this.openTab.waitFor({ state: "visible" });
     await this.openTab.click();
+    // Wait for the "open" tab to become selected using its stable ID (locale-independent)
     await this.page.waitForFunction(
       () => {
-        const tab = document.querySelector('[role="tab"][aria-selected="true"]');
-        return tab?.textContent?.toLowerCase().includes("open");
+        const tab = document.querySelector('#tab-open');
+        return tab?.getAttribute("aria-selected") === "true";
       },
       { timeout: TAB_SWITCH_TIMEOUT_MS },
     );
@@ -55,11 +55,11 @@ export class ExchangesPage {
   async switchToMyApplicationsTab() {
     await this.myApplicationsTab.waitFor({ state: "visible" });
     await this.myApplicationsTab.click();
+    // Wait for the "applied" tab to become selected using its stable ID (locale-independent)
     await this.page.waitForFunction(
       () => {
-        const tab = document.querySelector('[role="tab"][aria-selected="true"]');
-        const text = tab?.textContent?.toLowerCase() ?? "";
-        return text.includes("application") || text.includes("applied");
+        const tab = document.querySelector('#tab-applied');
+        return tab?.getAttribute("aria-selected") === "true";
       },
       { timeout: TAB_SWITCH_TIMEOUT_MS },
     );
