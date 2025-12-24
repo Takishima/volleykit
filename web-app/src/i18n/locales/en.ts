@@ -1,6 +1,99 @@
 import type { Translations } from "../types";
 
 const en: Translations = {
+  tour: {
+    banner: {
+      title: "Guided Tour",
+      subtitle: "Practice with example data",
+      exit: "Exit Tour",
+    },
+    badge: {
+      example: "Example",
+    },
+    actions: {
+      skip: "Skip",
+      next: "Next",
+      previous: "Back",
+      finish: "Finish",
+    },
+    stepCurrent: "Step {step} of {total}",
+    assignments: {
+      welcome: {
+        title: "Your Assignments",
+        description:
+          "This is where you'll see your upcoming referee assignments. Each card shows the game details.",
+      },
+      swipeValidate: {
+        title: "Swipe to Validate",
+        description:
+          "Swipe left on a card to reveal actions like validating the game or editing your compensation.",
+      },
+      tapDetails: {
+        title: "View Details",
+        description:
+          "Tap on a card to expand it and see more details about the assignment.",
+      },
+    },
+    compensations: {
+      overview: {
+        title: "Your Compensations",
+        description:
+          "Here you can see all your referee compensations, including game fees and travel expenses.",
+      },
+      tapEdit: {
+        title: "Edit Compensation",
+        description:
+          "Tap on a compensation to edit the distance or add a correction reason.",
+      },
+      downloadPdf: {
+        title: "Download PDF",
+        description:
+          "Download a PDF summary of your compensations for your records.",
+      },
+    },
+    exchange: {
+      browse: {
+        title: "Browse Exchanges",
+        description:
+          "See games that other referees have put up for exchange. You can take over assignments that match your level.",
+      },
+      apply: {
+        title: "Apply for Exchange",
+        description:
+          "Swipe right on a game to apply for the exchange and take over the assignment.",
+      },
+      filter: {
+        title: "Filter by Level",
+        description:
+          "Use this toggle to show only games that match your referee level.",
+      },
+    },
+    settings: {
+      language: {
+        title: "Change Language",
+        description:
+          "Select your preferred language. The app supports German, English, French, and Italian.",
+      },
+      complete: {
+        title: "Tour Complete!",
+        description:
+          "You've completed the guided tour. You can restart it anytime from the settings.",
+      },
+      tourSection: {
+        title: "Guided Tours",
+        description:
+          "Interactive tips that guide you through each section of the app using example data.",
+        restart: "Restart Tours",
+        statusCompleted: "Completed",
+        statusSkipped: "Skipped",
+        statusNotStarted: "Not started",
+      },
+    },
+    feedback: {
+      swipeSuccess: "Great swipe! You've got the hang of it.",
+      tapSuccess: "Perfect! Tap to explore more details.",
+    },
+  },
   common: {
     loading: "Loading...",
     error: "An error occurred",

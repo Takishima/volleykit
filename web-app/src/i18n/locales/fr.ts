@@ -1,6 +1,99 @@
 import type { Translations } from "../types";
 
 const fr: Translations = {
+  tour: {
+    banner: {
+      title: "Visite guidée",
+      subtitle: "Entraînez-vous avec des données d'exemple",
+      exit: "Quitter la visite",
+    },
+    badge: {
+      example: "Exemple",
+    },
+    actions: {
+      skip: "Passer",
+      next: "Suivant",
+      previous: "Retour",
+      finish: "Terminer",
+    },
+    stepCurrent: "Étape {step} sur {total}",
+    assignments: {
+      welcome: {
+        title: "Vos désignations",
+        description:
+          "Ici vous verrez vos prochaines désignations d'arbitre. Chaque carte affiche les détails du match.",
+      },
+      swipeValidate: {
+        title: "Glissez pour valider",
+        description:
+          "Glissez vers la gauche sur une carte pour révéler des actions comme valider le match ou modifier votre indemnité.",
+      },
+      tapDetails: {
+        title: "Voir les détails",
+        description:
+          "Appuyez sur une carte pour la développer et voir plus de détails sur la désignation.",
+      },
+    },
+    compensations: {
+      overview: {
+        title: "Vos indemnités",
+        description:
+          "Ici vous pouvez voir toutes vos indemnités d'arbitre, y compris les frais de match et les frais de déplacement.",
+      },
+      tapEdit: {
+        title: "Modifier l'indemnité",
+        description:
+          "Appuyez sur une indemnité pour modifier la distance ou ajouter un motif de correction.",
+      },
+      downloadPdf: {
+        title: "Télécharger le PDF",
+        description:
+          "Téléchargez un résumé PDF de vos indemnités pour vos archives.",
+      },
+    },
+    exchange: {
+      browse: {
+        title: "Parcourir les échanges",
+        description:
+          "Voyez les matchs que d'autres arbitres ont mis à l'échange. Vous pouvez reprendre des désignations correspondant à votre niveau.",
+      },
+      apply: {
+        title: "Postuler pour l'échange",
+        description:
+          "Glissez vers la droite sur un match pour postuler à l'échange et reprendre la désignation.",
+      },
+      filter: {
+        title: "Filtrer par niveau",
+        description:
+          "Utilisez ce bouton pour n'afficher que les matchs correspondant à votre niveau d'arbitre.",
+      },
+    },
+    settings: {
+      language: {
+        title: "Changer de langue",
+        description:
+          "Sélectionnez votre langue préférée. L'application prend en charge l'allemand, l'anglais, le français et l'italien.",
+      },
+      complete: {
+        title: "Visite terminée !",
+        description:
+          "Vous avez terminé la visite guidée. Vous pouvez la recommencer à tout moment depuis les paramètres.",
+      },
+      tourSection: {
+        title: "Visites guidées",
+        description:
+          "Conseils interactifs qui vous guident à travers chaque section de l'application avec des données d'exemple.",
+        restart: "Recommencer les visites",
+        statusCompleted: "Terminé",
+        statusSkipped: "Ignoré",
+        statusNotStarted: "Non commencé",
+      },
+    },
+    feedback: {
+      swipeSuccess: "Excellent glissement ! Vous avez compris le principe.",
+      tapSuccess: "Parfait ! Appuyez pour découvrir plus de détails.",
+    },
+  },
   common: {
     loading: "Chargement...",
     error: "Une erreur est survenue",

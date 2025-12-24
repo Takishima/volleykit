@@ -13,6 +13,7 @@ import {
   ChevronDown,
 } from "@/components/ui/icons";
 import type { LucideIcon } from "lucide-react";
+import { TourModeBanner } from "@/components/tour";
 
 const MINIMUM_OCCUPATIONS_FOR_SWITCHER = 2;
 
@@ -196,6 +197,9 @@ export function AppShell() {
           </div>
         </div>
       )}
+
+      {/* Tour mode banner */}
+      <TourModeBanner />
 
       {/* Main content
           pb-16 (4rem/64px) provides padding to prevent content from being hidden

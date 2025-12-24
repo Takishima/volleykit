@@ -12,12 +12,15 @@ interface CompensationCardProps {
   onClick?: () => void;
   /** When true, expansion is disabled and the arrow is hidden */
   disableExpansion?: boolean;
+  /** Optional data-tour attribute for guided tours */
+  dataTour?: string;
 }
 
 export function CompensationCard({
   compensation,
   onClick,
   disableExpansion,
+  dataTour,
 }: CompensationCardProps) {
   const { t } = useTranslation();
   const dateLocale = useDateLocale();
@@ -39,6 +42,7 @@ export function CompensationCard({
       data={compensation}
       onClick={onClick}
       disableExpansion={disableExpansion}
+      dataTour={dataTour}
       renderCompact={(_, { expandArrow }) => (
         <>
           {/* Date */}

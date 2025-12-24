@@ -1,6 +1,99 @@
 import type { Translations } from "../types";
 
 const de: Translations = {
+  tour: {
+    banner: {
+      title: "Einführung",
+      subtitle: "Üben Sie mit Beispieldaten",
+      exit: "Tour beenden",
+    },
+    badge: {
+      example: "Beispiel",
+    },
+    actions: {
+      skip: "Überspringen",
+      next: "Weiter",
+      previous: "Zurück",
+      finish: "Fertig",
+    },
+    stepCurrent: "Schritt {step} von {total}",
+    assignments: {
+      welcome: {
+        title: "Ihre Einsätze",
+        description:
+          "Hier sehen Sie Ihre bevorstehenden Schiedsrichtereinsätze. Jede Karte zeigt die Spieldetails.",
+      },
+      swipeValidate: {
+        title: "Wischen zum Validieren",
+        description:
+          "Wischen Sie auf einer Karte nach links, um Aktionen wie das Validieren des Spiels oder das Bearbeiten Ihrer Entschädigung anzuzeigen.",
+      },
+      tapDetails: {
+        title: "Details anzeigen",
+        description:
+          "Tippen Sie auf eine Karte, um sie zu erweitern und weitere Details zum Einsatz zu sehen.",
+      },
+    },
+    compensations: {
+      overview: {
+        title: "Ihre Entschädigungen",
+        description:
+          "Hier können Sie alle Ihre Schiedsrichterentschädigungen einsehen, einschliesslich Spielgebühren und Reisekosten.",
+      },
+      tapEdit: {
+        title: "Entschädigung bearbeiten",
+        description:
+          "Tippen Sie auf eine Entschädigung, um die Distanz zu bearbeiten oder einen Korrekturgrund hinzuzufügen.",
+      },
+      downloadPdf: {
+        title: "PDF herunterladen",
+        description:
+          "Laden Sie eine PDF-Zusammenfassung Ihrer Entschädigungen für Ihre Unterlagen herunter.",
+      },
+    },
+    exchange: {
+      browse: {
+        title: "Tauschbörse durchsuchen",
+        description:
+          "Sehen Sie Spiele, die andere Schiedsrichter zum Tausch angeboten haben. Sie können Einsätze übernehmen, die Ihrem Niveau entsprechen.",
+      },
+      apply: {
+        title: "Für Tausch bewerben",
+        description:
+          "Wischen Sie nach rechts, um sich für den Tausch zu bewerben und den Einsatz zu übernehmen.",
+      },
+      filter: {
+        title: "Nach Niveau filtern",
+        description:
+          "Verwenden Sie diesen Schalter, um nur Spiele anzuzeigen, die Ihrem Schiedsrichterniveau entsprechen.",
+      },
+    },
+    settings: {
+      language: {
+        title: "Sprache ändern",
+        description:
+          "Wählen Sie Ihre bevorzugte Sprache. Die App unterstützt Deutsch, Englisch, Französisch und Italienisch.",
+      },
+      complete: {
+        title: "Tour abgeschlossen!",
+        description:
+          "Sie haben die Einführung abgeschlossen. Sie können sie jederzeit in den Einstellungen neu starten.",
+      },
+      tourSection: {
+        title: "Einführungstouren",
+        description:
+          "Interaktive Tipps, die Sie mit Beispieldaten durch jeden Bereich der App führen.",
+        restart: "Touren neu starten",
+        statusCompleted: "Abgeschlossen",
+        statusSkipped: "Übersprungen",
+        statusNotStarted: "Nicht gestartet",
+      },
+    },
+    feedback: {
+      swipeSuccess: "Tolle Wischbewegung! Sie haben den Dreh raus.",
+      tapSuccess: "Perfekt! Tippen Sie, um mehr Details zu entdecken.",
+    },
+  },
   common: {
     loading: "Laden...",
     error: "Ein Fehler ist aufgetreten",

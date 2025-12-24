@@ -19,6 +19,8 @@ interface ExpandableCardProps<T> {
   onClick?: () => void;
   /** Additional className for Card wrapper */
   className?: string;
+  /** Optional data-tour attribute for guided tours */
+  dataTour?: string;
   /** Render function for compact view (always visible header) */
   renderCompact: (data: T, context: ExpandableCardRenderContext) => ReactNode;
   /** Render function for expanded details section */
@@ -43,6 +45,7 @@ export function ExpandableCard<T>({
   disableExpansion,
   onClick,
   className,
+  dataTour,
   renderCompact,
   renderDetails,
 }: ExpandableCardProps<T>) {
@@ -56,7 +59,7 @@ export function ExpandableCard<T>({
   );
 
   return (
-    <Card className={className}>
+    <Card className={className} data-tour={dataTour}>
       <CardContent className="p-0">
         {/* Clickable header region */}
         <button

@@ -16,6 +16,7 @@ import { PageErrorBoundary } from "@/components/ui/PageErrorBoundary";
 import { ReloadPrompt } from "@/components/ui/ReloadPrompt";
 import { ToastContainer } from "@/components/ui/Toast";
 import { PWAProvider } from "@/contexts/PWAContext";
+import { TourProvider } from "@/components/tour";
 import { LoginPage } from "@/pages/LoginPage";
 import { AssignmentsPage } from "@/pages/AssignmentsPage";
 import { CompensationsPage } from "@/pages/CompensationsPage";
@@ -243,7 +244,9 @@ export default function App() {
                 <Route
                   element={
                     <ProtectedRoute>
-                      <AppShell />
+                      <TourProvider>
+                        <AppShell />
+                      </TourProvider>
                     </ProtectedRoute>
                   }
                 >

@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 import { useSettingsStore } from "@/stores/settings";
+import { useTourStore, type TourId } from "@/stores/tour";
 import { useTranslation } from "@/hooks/useTranslation";
 import { usePWA } from "@/contexts/PWAContext";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
@@ -12,10 +13,13 @@ import { SafeModeWarningModal } from "@/components/features/SafeModeWarningModal
 
 const DEMO_RESET_MESSAGE_DURATION_MS = 3000;
 
+const TOUR_IDS: TourId[] = ["assignments", "compensations", "exchange", "settings"];
+
 export function SettingsPage() {
   const { user, logout, isDemoMode } = useAuthStore();
   const { activeAssociationCode, refreshData } = useDemoStore();
   const { isSafeModeEnabled, setSafeMode } = useSettingsStore();
+  const { getTourStatus, resetAllTours } = useTourStore();
   const { t, locale } = useTranslation();
   const {
     needRefresh,
@@ -148,8 +152,65 @@ export function SettingsPage() {
             {t("settings.language")}
           </h2>
         </CardHeader>
-        <CardContent>
+        <CardContent data-tour="language-switcher">
           <LanguageSwitcher variant="grid" />
+        </CardContent>
+      </Card>
+
+      {/* Guided Tours section */}
+      <Card data-tour="tour-reset">
+        <CardHeader>
+          <h2 className="font-semibold text-text-primary dark:text-text-primary-dark">
+            {t("tour.settings.tourSection.title")}
+          </h2>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-text-muted dark:text-text-muted-dark">
+            {t("tour.settings.tourSection.description")}
+          </p>
+
+          {/* Tour status list */}
+          <div className="space-y-2">
+            {TOUR_IDS.map((tourId) => {
+              const status = getTourStatus(tourId);
+              return (
+                <div
+                  key={tourId}
+                  className="flex items-center justify-between py-1"
+                >
+                  <span className="text-sm text-text-primary dark:text-text-primary-dark capitalize">
+                    {t(`nav.${tourId}` as Parameters<typeof t>[0])}
+                  </span>
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full ${
+                      status === "completed"
+                        ? "bg-success-100 text-success-700 dark:bg-success-900/50 dark:text-success-300"
+                        : status === "dismissed"
+                          ? "bg-warning-100 text-warning-700 dark:bg-warning-900/50 dark:text-warning-300"
+                          : "bg-surface-subtle text-text-muted dark:bg-surface-subtle-dark dark:text-text-muted-dark"
+                    }`}
+                  >
+                    {status === "completed"
+                      ? t("tour.settings.tourSection.statusCompleted")
+                      : status === "dismissed"
+                        ? t("tour.settings.tourSection.statusSkipped")
+                        : t("tour.settings.tourSection.statusNotStarted")}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Reset button */}
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={resetAllTours}
+              className="rounded-md bg-surface-subtle dark:bg-surface-subtle-dark px-4 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark hover:bg-gray-200 dark:hover:bg-gray-600 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none"
+            >
+              {t("tour.settings.tourSection.restart")}
+            </button>
+          </div>
         </CardContent>
       </Card>
 
