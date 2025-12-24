@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useModalDismissal } from "@/hooks/useModalDismissal";
 import { logger } from "@/utils/logger";
 import { getTeamNames } from "@/utils/assignment-helpers";
 import { useWizardNavigation } from "@/hooks/useWizardNavigation";
@@ -244,21 +245,13 @@ export function ValidateGameModal({
     }
   }, [onClose, isValidated]);
 
-  // Handle Escape key to close modal
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleEscape = (e: KeyboardEvent) => {
-      // Don't close if unsaved dialog is showing
-      if (showUnsavedDialog) return;
-      if (e.key === "Escape") {
-        attemptClose();
-      }
-    };
-
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [isOpen, attemptClose, showUnsavedDialog]);
+  // Handle Escape key and backdrop click dismissals
+  // Use showUnsavedDialog as isLoading to prevent dismissal when dialog is showing
+  const { handleBackdropClick } = useModalDismissal({
+    isOpen,
+    onClose: attemptClose,
+    isLoading: showUnsavedDialog,
+  });
 
   // Handle finish action (finalize validation)
   // If the last step is not optional, it marks the last step as done before finalizing
@@ -336,16 +329,6 @@ export function ValidateGameModal({
   const handleCancelClose = useCallback(() => {
     setShowUnsavedDialog(false);
   }, []);
-
-  // Handle backdrop click (only close if clicking the backdrop itself, not the dialog)
-  const handleBackdropClick = useCallback(
-    (e: React.MouseEvent) => {
-      if (e.target === e.currentTarget) {
-        attemptClose();
-      }
-    },
-    [attemptClose],
-  );
 
   const handleNext = useCallback(() => {
     goNext();

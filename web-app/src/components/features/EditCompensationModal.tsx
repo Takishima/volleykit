@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import type { Assignment, CompensationRecord } from "@/api/client";
 import { getApiClient } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useModalDismissal } from "@/hooks/useModalDismissal";
 import {
   useUpdateCompensation,
   useUpdateAssignmentCompensation,
@@ -129,18 +130,11 @@ export function EditCompensationModal({
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener("keydown", handleEscape);
-      return () => document.removeEventListener("keydown", handleEscape);
-    }
-  }, [isOpen, onClose]);
+  const { handleBackdropClick } = useModalDismissal({
+    isOpen,
+    onClose,
+    isLoading,
+  });
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -205,15 +199,6 @@ export function EditCompensationModal({
       onClose,
       t,
     ],
-  );
-
-  const handleBackdropClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (e.target === e.currentTarget) {
-        onClose();
-      }
-    },
-    [onClose],
   );
 
   if (!isOpen) return null;

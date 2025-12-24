@@ -1,5 +1,6 @@
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useModalDismissal } from "@/hooks/useModalDismissal";
 
 interface ResponsiveSheetProps {
   isOpen: boolean;
@@ -40,27 +41,10 @@ export function ResponsiveSheet({
     };
   }, [isOpen]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [isOpen, onClose]);
-
-  const handleBackdropClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (e.target === e.currentTarget) {
-        onClose();
-      }
-    },
-    [onClose],
-  );
+  const { handleBackdropClick } = useModalDismissal({
+    isOpen,
+    onClose,
+  });
 
   if (!isOpen) return null;
 
