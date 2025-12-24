@@ -4,6 +4,16 @@ import { type SwipeAction, SWIPE_ACTION_ICON_SIZE } from "@/types/swipe";
 import { Wallet, FileText } from "@/components/ui/icons";
 
 /**
+ * Extended compensation type that includes lock flags.
+ * The API returns these fields in ConvocationCompensationDetailed,
+ * and demo mode generates them for testing regional association behavior.
+ */
+interface ConvocationCompensationWithLockFlags {
+  paymentDone?: boolean;
+  lockPayoutOnSiteCompensation?: boolean;
+}
+
+/**
  * Checks if a compensation record can be edited.
  *
  * Editability rules:
@@ -12,16 +22,16 @@ import { Wallet, FileText } from "@/components/ui/icons";
  * - Editable: lockPayoutOnSiteCompensation=false AND paymentDone=false
  */
 export function isCompensationEditable(compensation: CompensationRecord): boolean {
-  const cc = compensation.convocationCompensation;
+  const cc = compensation.convocationCompensation as
+    | ConvocationCompensationWithLockFlags
+    | undefined;
   if (!cc) return false;
 
   // Already paid - not editable
   if (cc.paymentDone) return false;
 
-  // On-site payout locked - not editable
-  // Access the property dynamically since it's not in the base type
-  const lockOnSite = (cc as Record<string, unknown>).lockPayoutOnSiteCompensation;
-  if (lockOnSite === true) return false;
+  // On-site payout locked - not editable (regional associations)
+  if (cc.lockPayoutOnSiteCompensation === true) return false;
 
   return true;
 }
