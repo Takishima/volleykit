@@ -23,6 +23,7 @@ const TOOLTIP_OFFSET = 16;
 const ARROW_SIZE = 12;
 const VIEWPORT_MARGIN = 16;
 const MUTATION_OBSERVER_DEBOUNCE_MS = 100;
+const INITIAL_POSITION_DELAY_MS = 100;
 
 function calculateTargetRect(target: Element): TargetRect {
   const rect = target.getBoundingClientRect();
@@ -73,23 +74,16 @@ function calculateTooltipPosition(
   return { top, left };
 }
 
-// Get initial target rect for lazy state initialization
-function getInitialTargetRect(selector: string): TargetRect | null {
-  const target = document.querySelector(selector);
-  return target ? calculateTargetRect(target) : null;
-}
-
 export function TourSpotlight({
   targetSelector,
   placement,
   onDismiss,
   children,
 }: TourSpotlightProps) {
-  // Lazy initialize state with current target rect
-  const [targetRect, setTargetRect] = useState<TargetRect | null>(
-    () => getInitialTargetRect(targetSelector),
-  );
+  // Start with null - position will be set after mount when element is ready
+  const [targetRect, setTargetRect] = useState<TargetRect | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  const [isPositioned, setIsPositioned] = useState(false);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
   // Find target element and calculate positions
@@ -99,6 +93,7 @@ export function TourSpotlight({
 
     const paddedRect = calculateTargetRect(target);
     setTargetRect(paddedRect);
+    setIsPositioned(true);
 
     // Calculate tooltip position after render
     requestAnimationFrame(() => {
@@ -144,7 +139,7 @@ export function TourSpotlight({
   // Subscribe to scroll/resize events and trigger initial update
   useEffect(() => {
     // Initial position update after mount (allows layout to settle)
-    const initialTimer = setTimeout(updatePositions, 50);
+    const initialTimer = setTimeout(updatePositions, INITIAL_POSITION_DELAY_MS);
 
     const handleUpdate = () => updatePositions();
 
@@ -186,7 +181,8 @@ export function TourSpotlight({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [onDismiss]);
 
-  if (!targetRect) return null;
+  // Don't render until we have a valid position to prevent flashing at wrong location
+  if (!targetRect || !isPositioned) return null;
 
   // Generate clip-path polygon that cuts out the target area
   const clipPath = `polygon(
