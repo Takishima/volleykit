@@ -1,9 +1,8 @@
 import { Component, type ReactNode } from "react";
 import { AlertTriangle } from "@/components/ui/icons";
 import { useTranslation } from "@/hooks/useTranslation";
+import { classifyError, type ErrorType } from "@/utils/error-helpers";
 import { logger } from "../../utils/logger";
-
-type ErrorType = "network" | "application";
 
 interface ModalErrorBoundaryClassProps {
   children: ReactNode;
@@ -24,29 +23,6 @@ interface State {
   hasError: boolean;
   error: Error | null;
   errorType: ErrorType;
-}
-
-/**
- * Classify an error as network-related or application-related.
- */
-function classifyError(error: Error): ErrorType {
-  const message = error.message.toLowerCase();
-  const name = error.name.toLowerCase();
-
-  if (
-    (name === "typeerror" && message.includes("fetch")) ||
-    name === "networkerror" ||
-    message.includes("network") ||
-    message.includes("failed to fetch") ||
-    message.includes("connection") ||
-    message.includes("timeout") ||
-    message.includes("cors") ||
-    message.includes("offline")
-  ) {
-    return "network";
-  }
-
-  return "application";
 }
 
 /**

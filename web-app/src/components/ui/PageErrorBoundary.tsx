@@ -1,9 +1,8 @@
 import { Component, type ReactNode } from "react";
-import { AlertTriangle, Home } from "@/components/ui/icons";
+import { AlertTriangle } from "@/components/ui/icons";
 import { useTranslation } from "@/hooks/useTranslation";
+import { classifyError, type ErrorType } from "@/utils/error-helpers";
 import { logger } from "../../utils/logger";
-
-type ErrorType = "network" | "application";
 
 interface PageErrorBoundaryClassProps {
   children: ReactNode;
@@ -23,29 +22,6 @@ interface State {
   hasError: boolean;
   error: Error | null;
   errorType: ErrorType;
-}
-
-/**
- * Classify an error as network-related or application-related.
- */
-function classifyError(error: Error): ErrorType {
-  const message = error.message.toLowerCase();
-  const name = error.name.toLowerCase();
-
-  if (
-    (name === "typeerror" && message.includes("fetch")) ||
-    name === "networkerror" ||
-    message.includes("network") ||
-    message.includes("failed to fetch") ||
-    message.includes("connection") ||
-    message.includes("timeout") ||
-    message.includes("cors") ||
-    message.includes("offline")
-  ) {
-    return "network";
-  }
-
-  return "application";
 }
 
 /**
@@ -128,9 +104,8 @@ class PageErrorBoundaryClass extends Component<PageErrorBoundaryClassProps, Stat
               </button>
               <button
                 onClick={this.handleGoHome}
-                className="btn btn-primary flex items-center gap-2"
+                className="btn btn-primary"
               >
-                <Home className="w-4 h-4" aria-hidden="true" />
                 {translations.goHome}
               </button>
             </div>
