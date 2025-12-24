@@ -14,6 +14,7 @@ import {
   MINIMUM_SWIPE_RATIO,
 } from "../../types/swipe";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 
 // Layout constants for action buttons
 const ACTION_BUTTON_WIDTH = 72;
@@ -61,31 +62,13 @@ export function SwipeableCard({
   onDrawerOpen,
 }: SwipeableCardProps) {
   const { t } = useTranslation();
-  const [translateX, setTranslateX] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [containerWidth, setContainerWidth] = useState<number | null>(null);
   const [blockClicks, setBlockClicks] = useState(false);
 
-  const startXRef = useRef(0);
-  const startYRef = useRef(0);
-  const currentTranslateRef = useRef(0); // Track actual translation during drag
-  const directionRef = useRef<"horizontal" | "vertical" | null>(null);
-  const touchActiveRef = useRef(false);
-  const mouseActiveRef = useRef(false);
-  const containerRef = useRef<HTMLDivElement>(null);
   const hasDraggedRef = useRef(false);
   const clickBlockTimeoutRef = useRef<number | null>(null);
-
-  const thresholds = useMemo(() => {
-    if (containerWidth === null || containerWidth === 0) return null;
-    return {
-      drawerOpen: containerWidth * DRAWER_OPEN_RATIO,
-      full: containerWidth * FULL_SWIPE_RATIO,
-      minVisibility: containerWidth * MINIMUM_SWIPE_RATIO,
-    };
-  }, [containerWidth]);
+  const currentTranslateRef = useRef(0);
 
   const getSwipeActions = useCallback(
     (direction: "left" | "right"): SwipeAction[] | null => {
@@ -122,30 +105,110 @@ export function SwipeableCard({
   const rightActions = getSwipeActions("right");
   const hasAnyAction = leftActions !== null || rightActions !== null;
 
-  const closeDrawer = useCallback(() => {
-    setTranslateX(0);
+  // Use the swipe gesture hook
+  // Max swipe should allow full swipe (70%) with overshoot (1.2x)
+  // Since threshold defaults to 30% of container, multiplier = 0.7 * 1.2 / 0.3 = 2.8
+  const maxSwipeRatio = FULL_SWIPE_RATIO * SWIPE_OVERSHOOT_MULTIPLIER / DRAWER_OPEN_RATIO;
+  const {
+    containerRef,
+    translateX,
+    isDragging,
+    containerWidth,
+    setTranslateX,
+    resetPosition,
+    handlers,
+  } = useSwipeGesture({
+    enabled: hasAnyAction,
+    getInitialTranslateX: () => (isDrawerOpen ? currentTranslateRef.current : 0),
+    maxSwipeMultiplier: maxSwipeRatio,
+    canSwipe: (_diffX, direction) => {
+      const actions = getSwipeActions(direction);
+      return actions !== null;
+    },
+    onDragStart: () => {
+      if (isDrawerOpen) {
+        currentTranslateRef.current = translateX;
+      } else {
+        currentTranslateRef.current = 0;
+      }
+    },
+    onDragMove: () => {
+      hasDraggedRef.current = true;
+    },
+    onDragEnd: (currentTranslateX, width) => {
+      // Block clicks temporarily after a horizontal drag occurred
+      if (hasDraggedRef.current) {
+        setBlockClicks(true);
+        if (clickBlockTimeoutRef.current !== null) {
+          clearTimeout(clickBlockTimeoutRef.current);
+        }
+        clickBlockTimeoutRef.current = window.setTimeout(() => {
+          setBlockClicks(false);
+          hasDraggedRef.current = false;
+          clickBlockTimeoutRef.current = null;
+        }, CLICK_BLOCK_DELAY_MS);
+      }
+
+      const swipeAmount = Math.abs(currentTranslateX);
+      const swipeDirection = currentTranslateX > 0 ? "right" : "left";
+      const actions = getSwipeActions(swipeDirection);
+
+      const drawerThreshold = width * DRAWER_OPEN_RATIO;
+      const fullThreshold = width * FULL_SWIPE_RATIO;
+
+      // Full swipe - trigger the action furthest in swipe direction
+      if (actions && swipeAmount > fullThreshold) {
+        const defaultAction = actions[0];
+        if (defaultAction) {
+          defaultAction.onAction();
+        }
+        // Reset drawer state, hook handles position reset
+        currentTranslateRef.current = 0;
+        setIsDrawerOpen(false);
+        return false; // Hook resets position
+      }
+
+      // Partial swipe past threshold - open drawer fully
+      if (actions && swipeAmount > drawerThreshold) {
+        // Calculate drawer width based on number of actions
+        const drawerWidth = Math.min(
+          actions.length * ACTION_BUTTON_WIDTH +
+            (actions.length - 1) * ACTION_BUTTON_GAP +
+            DRAWER_PADDING,
+          width * MAX_DRAWER_WIDTH_RATIO,
+        );
+
+        const targetPosition =
+          swipeDirection === "left" ? -drawerWidth : drawerWidth;
+        setTranslateX(targetPosition);
+        currentTranslateRef.current = targetPosition;
+        setIsDrawerOpen(true);
+        onDrawerOpen?.();
+        return true; // Hook keeps position
+      }
+
+      // Below threshold - close drawer state, hook handles position reset
+      currentTranslateRef.current = 0;
+      setIsDrawerOpen(false);
+      return false; // Hook resets position
+    },
+  });
+
+  const thresholds = useMemo(() => {
+    if (containerWidth === null || containerWidth === 0) return null;
+    return {
+      drawerOpen: containerWidth * DRAWER_OPEN_RATIO,
+      full: containerWidth * FULL_SWIPE_RATIO,
+      minVisibility: containerWidth * MINIMUM_SWIPE_RATIO,
+    };
+  }, [containerWidth]);
+
+  // Not memoized: used in effects and handlers that already have stable identities
+  const closeDrawer = () => {
+    resetPosition();
     currentTranslateRef.current = 0;
     setIsDrawerOpen(false);
-  }, []);
-
-  useEffect(() => {
-    const updateWidth = () => {
-      if (containerRef.current) {
-        setContainerWidth(containerRef.current.offsetWidth);
-      }
-    };
-
-    updateWidth();
-
-    const resizeObserver = new ResizeObserver(updateWidth);
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current);
-    }
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, []);
+  };
 
   useEffect(() => {
     if (!isDrawerOpen) return;
@@ -155,7 +218,9 @@ export function SwipeableCard({
         containerRef.current &&
         !containerRef.current.contains(e.target as Node)
       ) {
-        closeDrawer();
+        resetPosition();
+        currentTranslateRef.current = 0;
+        setIsDrawerOpen(false);
       }
     };
 
@@ -166,7 +231,7 @@ export function SwipeableCard({
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("touchstart", handleClickOutside);
     };
-  }, [isDrawerOpen, closeDrawer]);
+  }, [isDrawerOpen, containerRef, resetPosition]);
 
   useEffect(() => {
     return () => {
@@ -182,197 +247,17 @@ export function SwipeableCard({
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setShowActions(false);
-        closeDrawer();
+        resetPosition();
+        currentTranslateRef.current = 0;
+        setIsDrawerOpen(false);
       }
     };
 
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [showActions, closeDrawer]);
-
-  const handleDragStart = useCallback(
-    (clientX: number, clientY: number) => {
-      startXRef.current = clientX;
-      startYRef.current = clientY;
-      directionRef.current = null;
-      hasDraggedRef.current = false;
-      setIsDragging(true);
-
-      // If drawer is open, start from current position
-      if (isDrawerOpen) {
-        currentTranslateRef.current = translateX;
-      } else {
-        currentTranslateRef.current = 0;
-      }
-    },
-    [isDrawerOpen, translateX],
-  );
-
-  const handleDragMove = useCallback(
-    (clientX: number, clientY: number, preventDefault: () => void) => {
-      if (!thresholds) return;
-
-      const diffX = clientX - startXRef.current;
-      const diffY = clientY - startYRef.current;
-
-      if (directionRef.current === null) {
-        if (Math.abs(diffX) > 10 || Math.abs(diffY) > 10) {
-          directionRef.current =
-            Math.abs(diffX) > Math.abs(diffY) ? "horizontal" : "vertical";
-        }
-      }
-
-      if (directionRef.current === "horizontal") {
-        const newTranslate = currentTranslateRef.current + diffX;
-        const swipeDirection = newTranslate > 0 ? "right" : "left";
-        const actions = getSwipeActions(swipeDirection);
-
-        if (!actions) {
-          return;
-        }
-
-        preventDefault();
-        hasDraggedRef.current = true;
-
-        // Apply resistance when pulling beyond bounds
-        const maxSwipe = thresholds.full * SWIPE_OVERSHOOT_MULTIPLIER;
-        const clampedTranslate = Math.max(
-          -maxSwipe,
-          Math.min(maxSwipe, newTranslate),
-        );
-
-        setTranslateX(clampedTranslate);
-      }
-    },
-    [getSwipeActions, thresholds],
-  );
-
-  const handleDragEnd = useCallback(() => {
-    if (!thresholds) return;
-
-    // Block clicks temporarily after a horizontal drag occurred
-    // Guard: only set up timeout if drag actually happened (prevents race conditions)
-    // Any existing timeout is cleared first to handle rapid drag operations
-    if (hasDraggedRef.current) {
-      setBlockClicks(true);
-      if (clickBlockTimeoutRef.current !== null) {
-        clearTimeout(clickBlockTimeoutRef.current);
-      }
-      clickBlockTimeoutRef.current = window.setTimeout(() => {
-        setBlockClicks(false);
-        hasDraggedRef.current = false;
-        clickBlockTimeoutRef.current = null;
-      }, CLICK_BLOCK_DELAY_MS);
-    }
-
-    if (directionRef.current === "horizontal") {
-      const currentSwipeAmount = Math.abs(translateX);
-      const swipeDirection = translateX > 0 ? "right" : "left";
-      const actions = getSwipeActions(swipeDirection);
-
-      // Full swipe - trigger the action furthest in swipe direction
-      // Swipe left: first action (leftmost, furthest left)
-      // Swipe right: first action (leftmost visually, but furthest right in swipe direction)
-      if (actions && currentSwipeAmount > thresholds.full) {
-        const defaultAction = actions[0];
-        if (defaultAction) {
-          defaultAction.onAction();
-        }
-        closeDrawer();
-        directionRef.current = null;
-        return;
-      }
-
-      // Partial swipe past threshold - open drawer fully
-      if (
-        actions &&
-        currentSwipeAmount > thresholds.drawerOpen &&
-        containerWidth
-      ) {
-        // Calculate drawer width based on number of actions (each ~80px + gaps)
-        const drawerWidth = Math.min(
-          actions.length * ACTION_BUTTON_WIDTH +
-            (actions.length - 1) * ACTION_BUTTON_GAP +
-            DRAWER_PADDING,
-          containerWidth * MAX_DRAWER_WIDTH_RATIO,
-        );
-
-        const targetPosition =
-          swipeDirection === "left" ? -drawerWidth : drawerWidth;
-        setTranslateX(targetPosition);
-        currentTranslateRef.current = targetPosition;
-        setIsDrawerOpen(true);
-        onDrawerOpen?.();
-        directionRef.current = null;
-        return;
-      }
-
-      // Below threshold - close
-      closeDrawer();
-    }
-
-    directionRef.current = null;
-  }, [
-    translateX,
-    getSwipeActions,
-    closeDrawer,
-    thresholds,
-    containerWidth,
-    onDrawerOpen,
-  ]);
-
-  const handleTouchStart = useCallback(
-    (e: React.TouchEvent) => {
-      const touch = e.touches[0];
-      if (!touch) return;
-      touchActiveRef.current = true;
-      handleDragStart(touch.clientX, touch.clientY);
-    },
-    [handleDragStart],
-  );
-
-  const handleTouchMove = useCallback(
-    (e: React.TouchEvent) => {
-      if (!touchActiveRef.current) return;
-      const touch = e.touches[0];
-      if (!touch) return;
-      handleDragMove(touch.clientX, touch.clientY, () => e.preventDefault());
-    },
-    [handleDragMove],
-  );
-
-  const handleTouchEnd = useCallback(() => {
-    touchActiveRef.current = false;
-    setIsDragging(false);
-    handleDragEnd();
-  }, [handleDragEnd]);
-
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      mouseActiveRef.current = true;
-      handleDragStart(e.clientX, e.clientY);
-    },
-    [handleDragStart],
-  );
-
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent) => {
-      if (!mouseActiveRef.current) return;
-      handleDragMove(e.clientX, e.clientY, () => e.preventDefault());
-    },
-    [handleDragMove],
-  );
-
-  const handleMouseUp = useCallback(() => {
-    if (!mouseActiveRef.current) return;
-    mouseActiveRef.current = false;
-    setIsDragging(false);
-    handleDragEnd();
-  }, [handleDragEnd]);
+  }, [showActions, resetPosition]);
 
   // Capture phase click handler prevents card expansion when drawer is open
-  // This is separate from post-drag blocking: drawer open = persistent block until closed,
-  // post-drag = temporary 150ms block via blockClicks state + pointerEvents: none
   const handleClickCapture = useCallback(
     (e: React.MouseEvent) => {
       if (isDrawerOpen) {
@@ -390,21 +275,21 @@ export function SwipeableCard({
     }
   }, []);
 
-  const handleLeftAction = useCallback(() => {
+  const handleLeftAction = () => {
     setShowActions(false);
     closeDrawer();
     if (leftActions?.[0]) {
       leftActions[0].onAction();
     }
-  }, [leftActions, closeDrawer]);
+  };
 
-  const handleRightAction = useCallback(() => {
+  const handleRightAction = () => {
     setShowActions(false);
     closeDrawer();
     if (rightActions?.[0]) {
       rightActions[0].onAction();
     }
-  }, [rightActions, closeDrawer]);
+  };
 
   // Determine which actions to show based on swipe direction
   const currentDirection = translateX > 0 ? "right" : "left";
@@ -414,38 +299,35 @@ export function SwipeableCard({
   const showProgressiveActions =
     thresholds && swipeAmount > thresholds.minVisibility && currentActions;
 
-  // Calculate action widths for progressive reveal
-  const getActionStyle = useCallback(
-    (totalActions: number) => {
-      if (!thresholds || !containerWidth) return {};
+  // Calculate action widths for progressive reveal (inline function for render-time values)
+  const getActionStyle = (totalActions: number) => {
+    if (!thresholds || !containerWidth) return {};
 
-      // Progressive reveal: actions expand from edge
-      const progress = Math.min(swipeAmount / thresholds.drawerOpen, 1);
+    // Progressive reveal: actions expand from edge
+    const progress = Math.min(swipeAmount / thresholds.drawerOpen, 1);
 
-      // Each action gets a portion of the revealed space
-      const revealedWidth = swipeAmount;
-      const actionShare = revealedWidth / totalActions;
+    // Each action gets a portion of the revealed space
+    const revealedWidth = swipeAmount;
+    const actionShare = revealedWidth / totalActions;
 
-      // Width grows from 0 to ACTION_BUTTON_WIDTH as swipe progresses
-      const width = Math.min(
-        actionShare - ACTION_BUTTON_GAP,
-        ACTION_BUTTON_WIDTH,
-      );
+    // Width grows from 0 to ACTION_BUTTON_WIDTH as swipe progresses
+    const width = Math.min(
+      actionShare - ACTION_BUTTON_GAP,
+      ACTION_BUTTON_WIDTH,
+    );
 
-      // Opacity fades in as action becomes visible
-      const opacity = Math.min(
-        (width / ACTION_BUTTON_WIDTH) * OPACITY_FADE_MULTIPLIER,
-        1,
-      );
+    // Opacity fades in as action becomes visible
+    const opacity = Math.min(
+      (width / ACTION_BUTTON_WIDTH) * OPACITY_FADE_MULTIPLIER,
+      1,
+    );
 
-      return {
-        width: isDrawerOpen ? ACTION_BUTTON_WIDTH : Math.max(0, width),
-        opacity: isDrawerOpen ? 1 : opacity,
-        transform: `scale(${isDrawerOpen ? 1 : SCALE_MIN + progress * SCALE_RANGE})`,
-      };
-    },
-    [thresholds, containerWidth, swipeAmount, isDrawerOpen],
-  );
+    return {
+      width: isDrawerOpen ? ACTION_BUTTON_WIDTH : Math.max(0, width),
+      opacity: isDrawerOpen ? 1 : opacity,
+      transform: `scale(${isDrawerOpen ? 1 : SCALE_MIN + progress * SCALE_RANGE})`,
+    };
+  };
 
   return (
     <div
@@ -524,13 +406,13 @@ export function SwipeableCard({
       )}
 
       <div
-        onTouchStart={hasAnyAction ? handleTouchStart : undefined}
-        onTouchMove={hasAnyAction ? handleTouchMove : undefined}
-        onTouchEnd={hasAnyAction ? handleTouchEnd : undefined}
-        onMouseDown={hasAnyAction ? handleMouseDown : undefined}
-        onMouseMove={hasAnyAction ? handleMouseMove : undefined}
-        onMouseUp={hasAnyAction ? handleMouseUp : undefined}
-        onMouseLeave={hasAnyAction ? handleMouseUp : undefined}
+        onTouchStart={hasAnyAction ? handlers.onTouchStart : undefined}
+        onTouchMove={hasAnyAction ? handlers.onTouchMove : undefined}
+        onTouchEnd={hasAnyAction ? handlers.onTouchEnd : undefined}
+        onMouseDown={hasAnyAction ? handlers.onMouseDown : undefined}
+        onMouseMove={hasAnyAction ? handlers.onMouseMove : undefined}
+        onMouseUp={hasAnyAction ? handlers.onMouseUp : undefined}
+        onMouseLeave={hasAnyAction ? handlers.onMouseLeave : undefined}
         onClickCapture={hasAnyAction ? handleClickCapture : undefined}
         role={hasAnyAction ? "button" : undefined}
         tabIndex={hasAnyAction ? -1 : undefined}
