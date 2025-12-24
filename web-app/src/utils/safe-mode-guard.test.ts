@@ -1,15 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { checkSafeMode } from "./safe-mode-guard";
-import { logger } from "@/utils/logger";
 import { toast } from "@/stores/toast";
 
+const mockLogDebug = vi.fn();
+
 vi.mock("@/utils/logger", () => ({
-  logger: {
-    debug: vi.fn(),
+  createLogger: () => ({
+    debug: (...args: unknown[]) => mockLogDebug(...args),
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
-  },
+  }),
 }));
 
 vi.mock("@/stores/toast", () => ({
@@ -39,11 +40,12 @@ describe("checkSafeMode", () => {
       const result = checkSafeMode({
         isDemoMode: true,
         isSafeModeEnabled: true,
-        context: "[test] operation",
+        context: "test",
+        action: "operation",
       });
 
       expect(result).toBe(false);
-      expect(logger.debug).not.toHaveBeenCalled();
+      expect(mockLogDebug).not.toHaveBeenCalled();
       expect(toast.warning).not.toHaveBeenCalled();
     });
 
@@ -51,11 +53,12 @@ describe("checkSafeMode", () => {
       const result = checkSafeMode({
         isDemoMode: true,
         isSafeModeEnabled: false,
-        context: "[test] operation",
+        context: "test",
+        action: "operation",
       });
 
       expect(result).toBe(false);
-      expect(logger.debug).not.toHaveBeenCalled();
+      expect(mockLogDebug).not.toHaveBeenCalled();
       expect(toast.warning).not.toHaveBeenCalled();
     });
   });
@@ -65,11 +68,12 @@ describe("checkSafeMode", () => {
       const result = checkSafeMode({
         isDemoMode: false,
         isSafeModeEnabled: false,
-        context: "[test] operation",
+        context: "test",
+        action: "operation",
       });
 
       expect(result).toBe(false);
-      expect(logger.debug).not.toHaveBeenCalled();
+      expect(mockLogDebug).not.toHaveBeenCalled();
       expect(toast.warning).not.toHaveBeenCalled();
     });
   });
@@ -79,24 +83,26 @@ describe("checkSafeMode", () => {
       const result = checkSafeMode({
         isDemoMode: false,
         isSafeModeEnabled: true,
-        context: "[useAssignmentActions] game validation",
+        context: "useAssignmentActions",
+        action: "game validation",
       });
 
       expect(result).toBe(true);
-      expect(logger.debug).toHaveBeenCalledWith(
+      expect(mockLogDebug).toHaveBeenCalledWith(
         "[useAssignmentActions] game validation blocked by safe mode",
       );
       expect(toast.warning).toHaveBeenCalledWith("settings.safeModeBlocked");
     });
 
-    it("should use provided context in log message", () => {
+    it("should use provided context and action in log message", () => {
       checkSafeMode({
         isDemoMode: false,
         isSafeModeEnabled: true,
-        context: "[useExchangeActions] take over",
+        context: "useExchangeActions",
+        action: "take over",
       });
 
-      expect(logger.debug).toHaveBeenCalledWith(
+      expect(mockLogDebug).toHaveBeenCalledWith(
         "[useExchangeActions] take over blocked by safe mode",
       );
     });
@@ -107,11 +113,12 @@ describe("checkSafeMode", () => {
       checkSafeMode({
         isDemoMode: false,
         isSafeModeEnabled: true,
-        context: "[custom] my action",
+        context: "custom",
+        action: "my action",
       });
 
-      expect(logger.debug).toHaveBeenCalledTimes(1);
-      expect(logger.debug).toHaveBeenCalledWith(
+      expect(mockLogDebug).toHaveBeenCalledTimes(1);
+      expect(mockLogDebug).toHaveBeenCalledWith(
         "[custom] my action blocked by safe mode",
       );
     });
@@ -120,10 +127,11 @@ describe("checkSafeMode", () => {
       checkSafeMode({
         isDemoMode: false,
         isSafeModeEnabled: false,
-        context: "[test] allowed operation",
+        context: "test",
+        action: "allowed operation",
       });
 
-      expect(logger.debug).not.toHaveBeenCalled();
+      expect(mockLogDebug).not.toHaveBeenCalled();
     });
   });
 
@@ -132,7 +140,8 @@ describe("checkSafeMode", () => {
       checkSafeMode({
         isDemoMode: false,
         isSafeModeEnabled: true,
-        context: "[test] blocked",
+        context: "test",
+        action: "blocked",
       });
 
       expect(toast.warning).toHaveBeenCalledTimes(1);
@@ -143,7 +152,8 @@ describe("checkSafeMode", () => {
       checkSafeMode({
         isDemoMode: true,
         isSafeModeEnabled: true,
-        context: "[test] allowed",
+        context: "test",
+        action: "allowed",
       });
 
       expect(toast.warning).not.toHaveBeenCalled();
@@ -155,7 +165,8 @@ describe("checkSafeMode", () => {
       const result = checkSafeMode({
         isDemoMode: false,
         isSafeModeEnabled: true,
-        context: "[test]",
+        context: "test",
+        action: "blocked",
       });
 
       expect(result).toBe(true);
@@ -165,7 +176,8 @@ describe("checkSafeMode", () => {
       const result = checkSafeMode({
         isDemoMode: false,
         isSafeModeEnabled: false,
-        context: "[test]",
+        context: "test",
+        action: "allowed",
       });
 
       expect(result).toBe(false);

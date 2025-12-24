@@ -366,7 +366,7 @@ describe("useAuthStore", () => {
 
       expect(result).toBe(false);
       expect(consoleSpy).toHaveBeenCalledWith(
-        "[VolleyKit]",
+        "[VolleyKit][App]",
         "Session check failed:",
         expect.any(Error),
       );
@@ -449,7 +449,7 @@ describe("useAuthStore", () => {
       expect(useAuthStore.getState().status).toBe("idle");
       expect(useAuthStore.getState().user).toBeNull();
       expect(consoleSpy).toHaveBeenCalledWith(
-        "[VolleyKit]",
+        "[VolleyKit][App]",
         "Session check timed out",
       );
 

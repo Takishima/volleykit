@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import type { Assignment } from "@/api/client";
-import { logger } from "@/utils/logger";
+import { createLogger } from "@/utils/logger";
 import { getTeamNames, isGameReportEligible } from "@/utils/assignment-helpers";
 import { checkSafeMode } from "@/utils/safe-mode-guard";
 import { useAuthStore } from "@/stores/auth";
@@ -10,6 +10,8 @@ import { useSettingsStore } from "@/stores/settings";
 import { toast } from "@/stores/toast";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModalState } from "./useModalState";
+
+const log = createLogger("useAssignmentActions");
 
 type PdfLanguage = "de" | "fr";
 
@@ -65,7 +67,8 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
         checkSafeMode({
           isDemoMode,
           isSafeModeEnabled,
-          context: "[useAssignmentActions] game validation",
+          context: "useAssignmentActions",
+          action: "game validation",
         })
       ) {
         return;
@@ -79,9 +82,7 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
   const openPdfReport = useCallback(
     (assignment: Assignment) => {
       if (!isGameReportEligible(assignment)) {
-        logger.debug(
-          "[useAssignmentActions] Game report not available for this league",
-        );
+        log.debug("Game report not available for this league");
         toast.info(t("assignments.gameReportNotAvailable"));
         return;
       }
@@ -115,8 +116,8 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
         );
 
         if (!reportData || !leagueCategory) {
-          logger.error(
-            "[useAssignmentActions] Failed to extract report data for:",
+          log.error(
+            "Failed to extract report data for:",
             pdfReportModal.data.__identity,
           );
           toast.error(t("pdf.exportError"));
@@ -128,14 +129,11 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
           leagueCategory,
           language,
         );
-        logger.debug(
-          "[useAssignmentActions] Generated PDF report for:",
-          pdfReportModal.data.__identity,
-        );
+        log.debug("Generated PDF report for:", pdfReportModal.data.__identity);
         toast.success(t("assignments.reportGenerated"));
         closePdfReport();
       } catch (error) {
-        logger.error("[useAssignmentActions] PDF generation failed:", error);
+        log.error("PDF generation failed:", error);
         toast.error(t("pdf.exportError"));
       } finally {
         setPdfReportLoading(false);
@@ -159,7 +157,8 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
         checkSafeMode({
           isDemoMode,
           isSafeModeEnabled,
-          context: "[useAssignmentActions] adding to exchange",
+          context: "useAssignmentActions",
+          action: "adding to exchange",
         })
       ) {
         return;
@@ -167,15 +166,15 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
 
       if (isDemoMode) {
         addAssignmentToExchange(assignment.__identity);
-        logger.debug(
-          "[useAssignmentActions] Demo mode: added assignment to exchange:",
+        log.debug(
+          "Demo mode: added assignment to exchange:",
           assignment.__identity,
         );
         toast.success(t("exchange.addedToExchangeSuccess"));
         return;
       }
 
-      logger.debug("[useAssignmentActions] Mock add to exchange:", {
+      log.debug("Mock add to exchange:", {
         assignmentId: assignment.__identity,
         game: `${homeTeam} vs ${awayTeam}`,
       });

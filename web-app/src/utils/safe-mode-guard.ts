@@ -1,11 +1,14 @@
-import { logger } from "@/utils/logger";
+import { createLogger } from "@/utils/logger";
 import { toast } from "@/stores/toast";
 import { t } from "@/i18n";
+
+const log = createLogger("SafeModeGuard");
 
 interface SafeModeGuardOptions {
   isDemoMode: boolean;
   isSafeModeEnabled: boolean;
   context: string;
+  action: string;
 }
 
 /**
@@ -20,15 +23,16 @@ interface SafeModeGuardOptions {
  * const isBlocked = checkSafeMode({
  *   isDemoMode: false,
  *   isSafeModeEnabled: true,
- *   context: "[useAssignmentActions] game validation",
+ *   context: "useAssignmentActions",
+ *   action: "game validation",
  * });
  * if (isBlocked) return;
  */
 export function checkSafeMode(options: SafeModeGuardOptions): boolean {
-  const { isDemoMode, isSafeModeEnabled, context } = options;
+  const { isDemoMode, isSafeModeEnabled, context, action } = options;
 
   if (!isDemoMode && isSafeModeEnabled) {
-    logger.debug(`${context} blocked by safe mode`);
+    log.debug(`[${context}] ${action} blocked by safe mode`);
     toast.warning(t("settings.safeModeBlocked"));
     return true;
   }

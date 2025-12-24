@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 import { preloadTranslations } from "@/i18n";
 import { preloadDateLocales } from "@/hooks/useDateFormat";
-import { logger } from "@/utils/logger";
+import { createLogger } from "@/utils/logger";
+
+const log = createLogger("usePreloadLocales");
 
 const PRELOAD_IDLE_TIMEOUT_MS = 1000;
 
@@ -15,7 +17,7 @@ export function usePreloadLocales(): void {
     const handlePreload = () => {
       Promise.all([preloadTranslations(), preloadDateLocales()]).catch(
         (error) => {
-          logger.error("[usePreloadLocales] Failed to preload locales:", error);
+          log.error("Failed to preload locales:", error);
         },
       );
     };

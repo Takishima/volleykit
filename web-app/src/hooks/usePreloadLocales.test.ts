@@ -23,11 +23,18 @@ vi.mock("@/hooks/useDateFormat", () => ({
   preloadDateLocales: vi.fn(),
 }));
 
-vi.mock("@/utils/logger", () => ({
-  logger: {
-    error: vi.fn(),
-  },
-}));
+const mockLogError = vi.fn();
+
+vi.mock("@/utils/logger", () => {
+  return {
+    createLogger: () => ({
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: (...args: unknown[]) => mockLogError(...args),
+    }),
+  };
+});
 
 describe("usePreloadLocales", () => {
   beforeEach(() => {
@@ -141,7 +148,6 @@ describe("usePreloadLocales", () => {
     it("handles preloadTranslations errors gracefully", async () => {
       const mockPreloadTranslations = vi.mocked(i18n.preloadTranslations);
       const mockPreloadDateLocales = vi.mocked(useDateFormat.preloadDateLocales);
-      const { logger } = await import("@/utils/logger");
 
       const testError = new Error("Translation load failed");
       mockPreloadTranslations.mockRejectedValue(testError);
@@ -157,8 +163,8 @@ describe("usePreloadLocales", () => {
       renderHook(() => usePreloadLocales());
 
       await vi.waitFor(() => {
-        expect(logger.error).toHaveBeenCalledWith(
-          "[usePreloadLocales] Failed to preload locales:",
+        expect(mockLogError).toHaveBeenCalledWith(
+          "Failed to preload locales:",
           testError,
         );
       });
@@ -167,7 +173,6 @@ describe("usePreloadLocales", () => {
     it("handles preloadDateLocales errors gracefully", async () => {
       const mockPreloadTranslations = vi.mocked(i18n.preloadTranslations);
       const mockPreloadDateLocales = vi.mocked(useDateFormat.preloadDateLocales);
-      const { logger } = await import("@/utils/logger");
 
       const testError = new Error("Date locale load failed");
       mockPreloadTranslations.mockResolvedValue();
@@ -183,8 +188,8 @@ describe("usePreloadLocales", () => {
       renderHook(() => usePreloadLocales());
 
       await vi.waitFor(() => {
-        expect(logger.error).toHaveBeenCalledWith(
-          "[usePreloadLocales] Failed to preload locales:",
+        expect(mockLogError).toHaveBeenCalledWith(
+          "Failed to preload locales:",
           testError,
         );
       });
@@ -193,7 +198,6 @@ describe("usePreloadLocales", () => {
     it("handles both preload functions failing", async () => {
       const mockPreloadTranslations = vi.mocked(i18n.preloadTranslations);
       const mockPreloadDateLocales = vi.mocked(useDateFormat.preloadDateLocales);
-      const { logger } = await import("@/utils/logger");
 
       const testError = new Error("All preloads failed");
       mockPreloadTranslations.mockRejectedValue(testError);
@@ -209,8 +213,8 @@ describe("usePreloadLocales", () => {
       renderHook(() => usePreloadLocales());
 
       await vi.waitFor(() => {
-        expect(logger.error).toHaveBeenCalledWith(
-          "[usePreloadLocales] Failed to preload locales:",
+        expect(mockLogError).toHaveBeenCalledWith(
+          "Failed to preload locales:",
           testError,
         );
       });
