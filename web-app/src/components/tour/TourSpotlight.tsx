@@ -21,6 +21,8 @@ interface TourSpotlightProps {
 const SPOTLIGHT_PADDING = 8;
 const TOOLTIP_OFFSET = 16;
 const ARROW_SIZE = 12;
+const VIEWPORT_MARGIN = 16;
+const MUTATION_OBSERVER_DEBOUNCE_MS = 100;
 
 function calculateTargetRect(target: Element): TargetRect {
   const rect = target.getBoundingClientRect();
@@ -65,9 +67,8 @@ function calculateTooltipPosition(
   }
 
   // Keep tooltip within viewport bounds
-  const margin = 16;
-  left = Math.max(margin, Math.min(left, viewportWidth - tooltipRect.width - margin));
-  top = Math.max(margin, Math.min(top, viewportHeight - tooltipRect.height - margin));
+  left = Math.max(VIEWPORT_MARGIN, Math.min(left, viewportWidth - tooltipRect.width - VIEWPORT_MARGIN));
+  top = Math.max(VIEWPORT_MARGIN, Math.min(top, viewportHeight - tooltipRect.height - VIEWPORT_MARGIN));
 
   return { top, left };
 }
@@ -146,13 +147,21 @@ export function TourSpotlight({
     window.addEventListener("scroll", handleUpdate, { passive: true });
     window.addEventListener("resize", handleUpdate, { passive: true });
 
+    // Debounce MutationObserver to avoid performance issues
+    let mutationTimeout: ReturnType<typeof setTimeout> | null = null;
+    const handleMutation = () => {
+      if (mutationTimeout) clearTimeout(mutationTimeout);
+      mutationTimeout = setTimeout(handleUpdate, MUTATION_OBSERVER_DEBOUNCE_MS);
+    };
+
     // Also observe DOM changes in case content shifts
-    const observer = new MutationObserver(handleUpdate);
+    const observer = new MutationObserver(handleMutation);
     observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
       window.removeEventListener("scroll", handleUpdate);
       window.removeEventListener("resize", handleUpdate);
+      if (mutationTimeout) clearTimeout(mutationTimeout);
       observer.disconnect();
     };
   }, [updatePositions]);

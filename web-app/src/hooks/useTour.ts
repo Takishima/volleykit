@@ -44,10 +44,19 @@ export function useTour(
   } = useTourStore();
 
   const hasAutoStarted = useRef(false);
+  const prevShouldShow = useRef(shouldShowTour(tourId));
 
   const isActive = isTourActive(tourId);
   const isTourMode = activeTour === tourId;
   const shouldShow = shouldShowTour(tourId);
+
+  // Reset hasAutoStarted when tours are reset (shouldShow changes from false to true)
+  useEffect(() => {
+    if (shouldShow && !prevShouldShow.current) {
+      hasAutoStarted.current = false;
+    }
+    prevShouldShow.current = shouldShow;
+  }, [shouldShow]);
 
   // Auto-start tour on first visit (if enabled and should show)
   useEffect(() => {

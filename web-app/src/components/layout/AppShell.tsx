@@ -13,7 +13,7 @@ import {
   ChevronDown,
 } from "@/components/ui/icons";
 import type { LucideIcon } from "lucide-react";
-import { TourModeBanner } from "@/components/tour";
+import { TourModeBanner } from "@/components/tour/TourModeBanner";
 
 const MINIMUM_OCCUPATIONS_FOR_SWITCHER = 2;
 

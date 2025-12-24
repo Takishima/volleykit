@@ -66,7 +66,7 @@ export function TourTooltip({
         <div className="flex items-center gap-1.5">
           {Array.from({ length: totalSteps }).map((_, index) => (
             <div
-              key={index}
+              key={`step-${index}`}
               className={`w-2 h-2 rounded-full transition-colors ${
                 index === currentStep
                   ? "bg-primary-500"
