@@ -1,10 +1,8 @@
 import { format, parseISO } from "date-fns";
-import { Card, CardContent } from "@/components/ui/Card";
-import { ExpandArrow } from "@/components/ui/ExpandArrow";
+import { ExpandableCard } from "@/components/ui/ExpandableCard";
 import { Badge } from "@/components/ui/Badge";
 import { MapPin } from "@/components/ui/icons";
 import type { GameExchange } from "@/api/client";
-import { useExpandable } from "@/hooks/useExpandable";
 import { useDateLocale } from "@/hooks/useDateFormat";
 import { t, tInterpolate } from "@/i18n";
 
@@ -19,9 +17,6 @@ export function ExchangeCard({
   disableExpansion,
 }: ExchangeCardProps) {
   const dateLocale = useDateLocale();
-  const { isExpanded, detailsId, handleToggle } = useExpandable({
-    disabled: disableExpansion,
-  });
 
   const game = exchange.refereeGame?.game;
   const startDate = game?.startingDateTime
@@ -35,7 +30,10 @@ export function ExchangeCard({
   const status = exchange.status;
   const requiredLevel = exchange.requiredRefereeLevel;
 
-  const defaultStatus = { label: t("exchange.open"), variant: "warning" as const };
+  const defaultStatus = {
+    label: t("exchange.open"),
+    variant: "warning" as const,
+  };
   const statusConfig = {
     open: { label: t("exchange.open"), variant: "warning" as const },
     applied: { label: t("exchange.applied"), variant: "success" as const },
@@ -48,83 +46,70 @@ export function ExchangeCard({
       : defaultStatus;
 
   return (
-    <Card>
-      <CardContent className="p-0">
-        {/* Clickable header region */}
-        <button
-          type="button"
-          onClick={handleToggle}
-          aria-expanded={isExpanded}
-          aria-controls={detailsId}
-          className="w-full text-left px-2 py-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset rounded-xl"
-        >
-          {/* Compact view - always visible */}
-          <div className="flex items-center gap-3">
-            {/* Date/Time */}
-            <div className="text-xs text-text-muted dark:text-text-muted-dark min-w-[4rem]">
-              {startDate ? format(startDate, "MMM d", { locale: dateLocale }) : t("common.tbd")}
-              <div className="font-medium text-text-secondary dark:text-text-secondary-dark">
-                {startDate ? format(startDate, "HH:mm", { locale: dateLocale }) : ""}
-              </div>
-            </div>
-
-            {/* Teams - truncated */}
-            <div className="flex-1 min-w-0">
-              <div className="font-medium text-text-primary dark:text-text-primary-dark truncate text-sm">
-                {homeTeam} {t("common.vs")} {awayTeam}
-              </div>
-              {requiredLevel && (
-                <div className="text-xs text-text-subtle dark:text-text-subtle-dark">
-                  {tInterpolate("exchange.levelRequired", { level: requiredLevel })}
-                </div>
-              )}
-            </div>
-
-            {/* Status & expand indicator */}
-            <div className="flex items-center gap-2">
-              <Badge variant={currentStatus.variant} className="rounded-full">
-                {currentStatus.label}
-              </Badge>
-              {!disableExpansion && <ExpandArrow isExpanded={isExpanded} />}
+    <ExpandableCard
+      data={exchange}
+      disableExpansion={disableExpansion}
+      renderCompact={(_, { expandArrow }) => (
+        <>
+          {/* Date/Time */}
+          <div className="text-xs text-text-muted dark:text-text-muted-dark min-w-[4rem]">
+            {startDate
+              ? format(startDate, "MMM d", { locale: dateLocale })
+              : t("common.tbd")}
+            <div className="font-medium text-text-secondary dark:text-text-secondary-dark">
+              {startDate
+                ? format(startDate, "HH:mm", { locale: dateLocale })
+                : ""}
             </div>
           </div>
-        </button>
 
-        {/* Expanded details - using CSS Grid for smooth animation */}
-        <div
-          id={detailsId}
-          className={`grid transition-[grid-template-rows] duration-200 ease-in-out ${
-            isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-          }`}
-        >
-          <div className="overflow-hidden">
-            <div className="px-2 pb-2 pt-0 border-t border-border-subtle dark:border-border-subtle-dark space-y-1">
-              {/* Location */}
-              <div className="flex items-center gap-2 text-sm text-text-muted dark:text-text-muted-dark pt-2">
-                <MapPin className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-                <span className="truncate">{hallName}</span>
-              </div>
-
-              {/* Category */}
-              {game?.group?.phase?.league?.leagueCategory?.name && (
-                <div className="text-xs text-text-subtle dark:text-text-subtle-dark">
-                  {game.group.phase.league.leagueCategory.name}
-                  {game.group.phase.league.gender &&
-                    ` • ${game.group.phase.league.gender === "m" ? t("common.men") : t("common.women")}`}
-                </div>
-              )}
-
-              {/* Submitter info */}
-              {exchange.submittedByPerson && (
-                <div className="text-xs text-text-muted dark:text-text-muted-dark">
-                  {t("exchange.submittedBy")} {exchange.submittedByPerson.firstName}{" "}
-                  {exchange.submittedByPerson.lastName}
-                </div>
-              )}
+          {/* Teams - truncated */}
+          <div className="flex-1 min-w-0">
+            <div className="font-medium text-text-primary dark:text-text-primary-dark truncate text-sm">
+              {homeTeam} {t("common.vs")} {awayTeam}
             </div>
+            {requiredLevel && (
+              <div className="text-xs text-text-subtle dark:text-text-subtle-dark">
+                {tInterpolate("exchange.levelRequired", { level: requiredLevel })}
+              </div>
+            )}
           </div>
+
+          {/* Status & expand indicator */}
+          <div className="flex items-center gap-2">
+            <Badge variant={currentStatus.variant} className="rounded-full">
+              {currentStatus.label}
+            </Badge>
+            {expandArrow}
+          </div>
+        </>
+      )}
+      renderDetails={() => (
+        <div className="px-2 pb-2 pt-0 border-t border-border-subtle dark:border-border-subtle-dark space-y-1">
+          {/* Location */}
+          <div className="flex items-center gap-2 text-sm text-text-muted dark:text-text-muted-dark pt-2">
+            <MapPin className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+            <span className="truncate">{hallName}</span>
+          </div>
+
+          {/* Category */}
+          {game?.group?.phase?.league?.leagueCategory?.name && (
+            <div className="text-xs text-text-subtle dark:text-text-subtle-dark">
+              {game.group.phase.league.leagueCategory.name}
+              {game.group.phase.league.gender &&
+                ` • ${game.group.phase.league.gender === "m" ? t("common.men") : t("common.women")}`}
+            </div>
+          )}
+
+          {/* Submitter info */}
+          {exchange.submittedByPerson && (
+            <div className="text-xs text-text-muted dark:text-text-muted-dark">
+              {t("exchange.submittedBy")} {exchange.submittedByPerson.firstName}{" "}
+              {exchange.submittedByPerson.lastName}
+            </div>
+          )}
         </div>
-      </CardContent>
-    </Card>
+      )}
+    />
   );
 }
