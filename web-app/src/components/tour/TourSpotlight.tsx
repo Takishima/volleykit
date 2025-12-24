@@ -18,6 +18,8 @@ interface TourSpotlightProps {
   children: React.ReactNode;
   /** When true, position updates are frozen (useful during swipe animations) */
   freezePosition?: boolean;
+  /** When true, disables backdrop blur so drawer buttons are clearly visible */
+  disableBlur?: boolean;
 }
 
 const SPOTLIGHT_PADDING = 8;
@@ -82,6 +84,7 @@ export function TourSpotlight({
   onDismiss,
   children,
   freezePosition = false,
+  disableBlur = false,
 }: TourSpotlightProps) {
   // Start with null - position will be set after mount when element is ready
   const [targetRect, setTargetRect] = useState<TargetRect | null>(null);
@@ -291,7 +294,7 @@ export function TourSpotlight({
     <div className="tour-spotlight" role="dialog" aria-modal="true" aria-label="Guided tour">
       {/* Backdrop overlay with blur and cutout */}
       <div
-        className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm transition-opacity"
+        className={`fixed inset-0 z-40 bg-black/70 transition-opacity ${disableBlur ? "" : "backdrop-blur-sm"}`}
         style={{ clipPath }}
         onClick={handleOverlayClick}
         aria-hidden="true"

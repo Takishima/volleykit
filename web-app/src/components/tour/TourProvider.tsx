@@ -130,6 +130,7 @@ export function TourProvider({ children }: TourProviderProps) {
         placement={currentStepData.placement}
         onDismiss={handleDismiss}
         freezePosition={isSwipeStep}
+        disableBlur={isSwipeStep}
       >
         <TourTooltip
           titleKey={currentStepData.titleKey}
