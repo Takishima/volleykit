@@ -63,10 +63,19 @@ export function CardHeader({ children, className = "" }: CardHeaderProps) {
 interface CardContentProps {
   children: ReactNode;
   className?: string;
+  "data-tour"?: string;
 }
 
-export function CardContent({ children, className = "" }: CardContentProps) {
-  return <div className={`p-4 ${className}`}>{children}</div>;
+export function CardContent({
+  children,
+  className = "",
+  "data-tour": dataTour,
+}: CardContentProps) {
+  return (
+    <div className={`p-4 ${className}`} data-tour={dataTour}>
+      {children}
+    </div>
+  );
 }
 
 interface CardFooterProps {
