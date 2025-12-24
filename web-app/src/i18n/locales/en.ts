@@ -45,15 +45,15 @@ const en: Translations = {
         description:
           "Here you can see all your referee compensations, including game fees and travel expenses.",
       },
-      tapEdit: {
-        title: "Edit Compensation",
+      swipeEdit: {
+        title: "Try Swiping Left",
         description:
-          "Tap on a compensation to edit the distance or add a correction reason.",
+          "Swipe left on a card to reveal action buttons: Edit (adjust distance or add correction reason) and PDF (download compensation summary).",
       },
-      downloadPdf: {
-        title: "Download PDF",
+      tapDetails: {
+        title: "View Details",
         description:
-          "Download a PDF summary of your compensations for your records.",
+          "Tap on a card to expand it and see the full breakdown of your compensation.",
       },
     },
     exchange: {

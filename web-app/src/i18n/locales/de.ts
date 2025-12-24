@@ -45,15 +45,15 @@ const de: Translations = {
         description:
           "Hier können Sie alle Ihre Schiedsrichterentschädigungen einsehen, einschliesslich Spielgebühren und Reisekosten.",
       },
-      tapEdit: {
-        title: "Entschädigung bearbeiten",
+      swipeEdit: {
+        title: "Nach links wischen",
         description:
-          "Tippen Sie auf eine Entschädigung, um die Distanz zu bearbeiten oder einen Korrekturgrund hinzuzufügen.",
+          "Wischen Sie nach links, um die Aktionsschaltflächen anzuzeigen: Bearbeiten (Distanz anpassen oder Korrekturgrund hinzufügen) und PDF (Entschädigungsübersicht herunterladen).",
       },
-      downloadPdf: {
-        title: "PDF herunterladen",
+      tapDetails: {
+        title: "Details anzeigen",
         description:
-          "Laden Sie eine PDF-Zusammenfassung Ihrer Entschädigungen für Ihre Unterlagen herunter.",
+          "Tippen Sie auf eine Karte, um sie zu erweitern und die vollständige Aufschlüsselung Ihrer Entschädigung zu sehen.",
       },
     },
     exchange: {

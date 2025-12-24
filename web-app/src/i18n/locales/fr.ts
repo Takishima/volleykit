@@ -45,15 +45,15 @@ const fr: Translations = {
         description:
           "Ici vous pouvez voir toutes vos indemnités d'arbitre, y compris les frais de match et les frais de déplacement.",
       },
-      tapEdit: {
-        title: "Modifier l'indemnité",
+      swipeEdit: {
+        title: "Glissez pour modifier",
         description:
-          "Appuyez sur une indemnité pour modifier la distance ou ajouter un motif de correction.",
+          "Glissez vers la gauche pour révéler le bouton de modification. Appuyez dessus pour ajuster la distance ou ajouter un motif de correction.",
       },
-      downloadPdf: {
-        title: "Télécharger le PDF",
+      tapDetails: {
+        title: "Voir les détails",
         description:
-          "Téléchargez un résumé PDF de vos indemnités pour vos archives.",
+          "Appuyez sur une carte pour la développer et voir plus de détails sur l'indemnité.",
       },
     },
     exchange: {

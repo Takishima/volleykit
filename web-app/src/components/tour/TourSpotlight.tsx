@@ -126,8 +126,8 @@ export function TourSpotlight({
     [targetSelector, placement, freezePosition, isPositioned],
   );
 
-  // Elevate target element above overlay using useLayoutEffect
-  // to apply styles before paint
+  // Elevate target element and its SwipeableCard container above overlay
+  // using useLayoutEffect to apply styles before paint
   useLayoutEffect(() => {
     const target = document.querySelector(targetSelector);
     if (!target) return;
@@ -141,10 +141,28 @@ export function TourSpotlight({
     element.style.position = "relative";
     element.style.zIndex = "45";
 
+    // Also elevate SwipeableCard container if target is inside one
+    // This ensures the swipe drawer actions are also above the overlay
+    const swipeableContainer = element.closest(".overflow-hidden") as HTMLElement | null;
+    let originalContainerPosition: string | undefined;
+    let originalContainerZIndex: string | undefined;
+
+    if (swipeableContainer && swipeableContainer !== element) {
+      originalContainerPosition = swipeableContainer.style.position;
+      originalContainerZIndex = swipeableContainer.style.zIndex;
+      swipeableContainer.style.position = "relative";
+      swipeableContainer.style.zIndex = "45";
+    }
+
     return () => {
       // Restore original styles
       element.style.position = originalPosition;
       element.style.zIndex = originalZIndex;
+
+      if (swipeableContainer && swipeableContainer !== element) {
+        swipeableContainer.style.position = originalContainerPosition ?? "";
+        swipeableContainer.style.zIndex = originalContainerZIndex ?? "";
+      }
     };
   }, [targetSelector]);
 

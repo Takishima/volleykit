@@ -45,15 +45,15 @@ const it: Translations = {
         description:
           "Qui puoi vedere tutti i tuoi compensi arbitrali, incluse le tariffe delle partite e le spese di viaggio.",
       },
-      tapEdit: {
-        title: "Modifica compenso",
+      swipeEdit: {
+        title: "Scorri per modificare",
         description:
-          "Tocca un compenso per modificare la distanza o aggiungere un motivo di correzione.",
+          "Scorri verso sinistra per rivelare il pulsante di modifica. Toccalo per regolare la distanza o aggiungere un motivo di correzione.",
       },
-      downloadPdf: {
-        title: "Scarica PDF",
+      tapDetails: {
+        title: "Visualizza dettagli",
         description:
-          "Scarica un riepilogo PDF dei tuoi compensi per i tuoi archivi.",
+          "Tocca una scheda per espanderla e vedere maggiori dettagli sul compenso.",
       },
     },
     exchange: {
