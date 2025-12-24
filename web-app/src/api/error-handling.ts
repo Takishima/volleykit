@@ -54,11 +54,14 @@ export async function parseErrorResponse(response: Response): Promise<string> {
     // Try to get text content for non-JSON responses
     if (contentType.includes("text/")) {
       const text = await response.text();
-      // Limit text length and strip HTML tags if present
-      const cleanText = text
-        .replace(/<[^>]*>/g, "")
-        .trim()
-        .slice(0, 200);
+      // Strip HTML tags repeatedly until no more remain (prevents nested tag bypass)
+      let cleanText = text;
+      let previousText: string;
+      do {
+        previousText = cleanText;
+        cleanText = cleanText.replace(/<[^>]*>/g, "");
+      } while (cleanText !== previousText);
+      cleanText = cleanText.trim().slice(0, 200);
       if (cleanText) {
         return cleanText;
       }
