@@ -1,12 +1,12 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useCallback, useRef } from "react";
 import type { CompensationRecord } from "@/api/client";
 import { downloadCompensationPDF } from "@/utils/compensation-actions";
 import { logger } from "@/utils/logger";
-import { MODAL_CLEANUP_DELAY } from "@/utils/assignment-helpers";
 import { useAuthStore } from "@/stores/auth";
 import { useSettingsStore } from "@/stores/settings";
 import { toast } from "@/stores/toast";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useModalState } from "./useModalState";
 
 interface UseCompensationActionsResult {
   editCompensationModal: {
@@ -24,19 +24,8 @@ export function useCompensationActions(): UseCompensationActionsResult {
   const isSafeModeEnabled = useSettingsStore(
     (state) => state.isSafeModeEnabled,
   );
-  const [editCompensationOpen, setEditCompensationOpen] = useState(false);
-  const [editCompensationRecord, setEditCompensationRecord] =
-    useState<CompensationRecord | null>(null);
-  const cleanupTimeoutRef = useRef<number | null>(null);
+  const editCompensationModal = useModalState<CompensationRecord>();
   const isDownloadingRef = useRef(false);
-
-  useEffect(() => {
-    return () => {
-      if (cleanupTimeoutRef.current) {
-        clearTimeout(cleanupTimeoutRef.current);
-      }
-    };
-  }, []);
 
   const openEditCompensation = useCallback(
     (compensation: CompensationRecord) => {
@@ -49,22 +38,10 @@ export function useCompensationActions(): UseCompensationActionsResult {
         return;
       }
 
-      setEditCompensationRecord(compensation);
-      setEditCompensationOpen(true);
+      editCompensationModal.open(compensation);
     },
-    [isDemoMode, isSafeModeEnabled, t],
+    [isDemoMode, isSafeModeEnabled, t, editCompensationModal],
   );
-
-  const closeEditCompensation = useCallback(() => {
-    setEditCompensationOpen(false);
-    if (cleanupTimeoutRef.current) {
-      clearTimeout(cleanupTimeoutRef.current);
-    }
-    cleanupTimeoutRef.current = setTimeout(
-      () => setEditCompensationRecord(null),
-      MODAL_CLEANUP_DELAY,
-    );
-  }, []);
 
   const handleGeneratePDF = useCallback(
     async (compensation: CompensationRecord) => {
@@ -106,10 +83,10 @@ export function useCompensationActions(): UseCompensationActionsResult {
 
   return {
     editCompensationModal: {
-      isOpen: editCompensationOpen,
-      compensation: editCompensationRecord,
+      isOpen: editCompensationModal.isOpen,
+      compensation: editCompensationModal.data,
       open: openEditCompensation,
-      close: closeEditCompensation,
+      close: editCompensationModal.close,
     },
     handleGeneratePDF,
   };

@@ -1,17 +1,14 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback } from "react";
 import type { Assignment } from "@/api/client";
 import { logger } from "@/utils/logger";
-import {
-  getTeamNames,
-  isGameReportEligible,
-  MODAL_CLEANUP_DELAY,
-} from "@/utils/assignment-helpers";
+import { getTeamNames, isGameReportEligible } from "@/utils/assignment-helpers";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 import { useLanguageStore } from "@/stores/language";
 import { useSettingsStore } from "@/stores/settings";
 import { toast } from "@/stores/toast";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useModalState } from "./useModalState";
 
 type PdfLanguage = "de" | "fr";
 
@@ -56,52 +53,10 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
     (state) => state.addAssignmentToExchange,
   );
 
-  const [editCompensationOpen, setEditCompensationOpen] = useState(false);
-  const [editCompensationAssignment, setEditCompensationAssignment] =
-    useState<Assignment | null>(null);
-
-  const [validateGameOpen, setValidateGameOpen] = useState(false);
-  const [validateGameAssignment, setValidateGameAssignment] =
-    useState<Assignment | null>(null);
-
-  const [pdfReportOpen, setPdfReportOpen] = useState(false);
-  const [pdfReportAssignment, setPdfReportAssignment] =
-    useState<Assignment | null>(null);
+  const editCompensationModal = useModalState<Assignment>();
+  const validateGameModal = useModalState<Assignment>();
+  const pdfReportModal = useModalState<Assignment>();
   const [pdfReportLoading, setPdfReportLoading] = useState(false);
-
-  const editCompensationCleanupRef = useRef<number | null>(null);
-  const validateGameCleanupRef = useRef<number | null>(null);
-  const pdfReportCleanupRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (editCompensationCleanupRef.current) {
-        clearTimeout(editCompensationCleanupRef.current);
-      }
-      if (validateGameCleanupRef.current) {
-        clearTimeout(validateGameCleanupRef.current);
-      }
-      if (pdfReportCleanupRef.current) {
-        clearTimeout(pdfReportCleanupRef.current);
-      }
-    };
-  }, []);
-
-  const openEditCompensation = useCallback((assignment: Assignment) => {
-    setEditCompensationAssignment(assignment);
-    setEditCompensationOpen(true);
-  }, []);
-
-  const closeEditCompensation = useCallback(() => {
-    setEditCompensationOpen(false);
-    if (editCompensationCleanupRef.current) {
-      clearTimeout(editCompensationCleanupRef.current);
-    }
-    editCompensationCleanupRef.current = setTimeout(
-      () => setEditCompensationAssignment(null),
-      MODAL_CLEANUP_DELAY,
-    );
-  }, []);
 
   const openValidateGame = useCallback(
     (assignment: Assignment) => {
@@ -114,22 +69,10 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
         return;
       }
 
-      setValidateGameAssignment(assignment);
-      setValidateGameOpen(true);
+      validateGameModal.open(assignment);
     },
-    [isDemoMode, isSafeModeEnabled, t],
+    [isDemoMode, isSafeModeEnabled, t, validateGameModal],
   );
-
-  const closeValidateGame = useCallback(() => {
-    setValidateGameOpen(false);
-    if (validateGameCleanupRef.current) {
-      clearTimeout(validateGameCleanupRef.current);
-    }
-    validateGameCleanupRef.current = setTimeout(
-      () => setValidateGameAssignment(null),
-      MODAL_CLEANUP_DELAY,
-    );
-  }, []);
 
   const openPdfReport = useCallback(
     (assignment: Assignment) => {
@@ -141,27 +84,19 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
         return;
       }
 
-      setPdfReportAssignment(assignment);
-      setPdfReportOpen(true);
+      pdfReportModal.open(assignment);
     },
-    [t],
+    [t, pdfReportModal],
   );
 
   const closePdfReport = useCallback(() => {
     if (pdfReportLoading) return;
-    setPdfReportOpen(false);
-    if (pdfReportCleanupRef.current) {
-      clearTimeout(pdfReportCleanupRef.current);
-    }
-    pdfReportCleanupRef.current = setTimeout(
-      () => setPdfReportAssignment(null),
-      MODAL_CLEANUP_DELAY,
-    );
-  }, [pdfReportLoading]);
+    pdfReportModal.close();
+  }, [pdfReportLoading, pdfReportModal]);
 
   const handleConfirmPdfLanguage = useCallback(
     async (language: PdfLanguage) => {
-      if (!pdfReportAssignment) return;
+      if (!pdfReportModal.data) return;
 
       setPdfReportLoading(true);
       try {
@@ -172,14 +107,15 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
           generateAndDownloadSportsHallReport,
         } = await import("@/utils/pdf-form-filler");
 
-        const reportData = extractSportsHallReportData(pdfReportAssignment);
-        const leagueCategory =
-          getLeagueCategoryFromAssignment(pdfReportAssignment);
+        const reportData = extractSportsHallReportData(pdfReportModal.data);
+        const leagueCategory = getLeagueCategoryFromAssignment(
+          pdfReportModal.data,
+        );
 
         if (!reportData || !leagueCategory) {
           logger.error(
             "[useAssignmentActions] Failed to extract report data for:",
-            pdfReportAssignment.__identity,
+            pdfReportModal.data.__identity,
           );
           toast.error(t("pdf.exportError"));
           return;
@@ -192,7 +128,7 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
         );
         logger.debug(
           "[useAssignmentActions] Generated PDF report for:",
-          pdfReportAssignment.__identity,
+          pdfReportModal.data.__identity,
         );
         toast.success(t("assignments.reportGenerated"));
         closePdfReport();
@@ -203,7 +139,7 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
         setPdfReportLoading(false);
       }
     },
-    [pdfReportAssignment, closePdfReport, t],
+    [pdfReportModal.data, closePdfReport, t],
   );
 
   const handleGenerateReport = useCallback(
@@ -248,20 +184,20 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
 
   return {
     editCompensationModal: {
-      isOpen: editCompensationOpen,
-      assignment: editCompensationAssignment,
-      open: openEditCompensation,
-      close: closeEditCompensation,
+      isOpen: editCompensationModal.isOpen,
+      assignment: editCompensationModal.data,
+      open: editCompensationModal.open,
+      close: editCompensationModal.close,
     },
     validateGameModal: {
-      isOpen: validateGameOpen,
-      assignment: validateGameAssignment,
+      isOpen: validateGameModal.isOpen,
+      assignment: validateGameModal.data,
       open: openValidateGame,
-      close: closeValidateGame,
+      close: validateGameModal.close,
     },
     pdfReportModal: {
-      isOpen: pdfReportOpen,
-      assignment: pdfReportAssignment,
+      isOpen: pdfReportModal.isOpen,
+      assignment: pdfReportModal.data,
       isLoading: pdfReportLoading,
       defaultLanguage: mapLocaleToPdfLanguage(locale),
       open: openPdfReport,

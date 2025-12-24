@@ -1,15 +1,15 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useCallback, useRef } from "react";
 import type { GameExchange } from "@/api/client";
 import {
   useApplyForExchange,
   useWithdrawFromExchange,
 } from "./useConvocations";
 import { logger } from "@/utils/logger";
-import { MODAL_CLEANUP_DELAY } from "@/utils/assignment-helpers";
 import { useAuthStore } from "@/stores/auth";
 import { toast } from "@/stores/toast";
 import { useSettingsStore } from "@/stores/settings";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useModalState } from "./useModalState";
 
 interface UseExchangeActionsResult {
   takeOverModal: {
@@ -35,14 +35,8 @@ export function useExchangeActions(): UseExchangeActionsResult {
     (state) => state.isSafeModeEnabled,
   );
 
-  const [takeOverOpen, setTakeOverOpen] = useState(false);
-  const [takeOverExchange, setTakeOverExchange] = useState<GameExchange | null>(
-    null,
-  );
-
-  const [removeFromExchangeOpen, setRemoveFromExchangeOpen] = useState(false);
-  const [removeFromExchangeExchange, setRemoveFromExchangeExchange] =
-    useState<GameExchange | null>(null);
+  const takeOverModal = useModalState<GameExchange>();
+  const removeFromExchangeModal = useModalState<GameExchange>();
 
   const applyMutation = useApplyForExchange();
   const withdrawMutation = useWithdrawFromExchange();
@@ -50,53 +44,6 @@ export function useExchangeActions(): UseExchangeActionsResult {
   // Race condition protection refs for async operations
   const isTakingOverRef = useRef(false);
   const isRemovingRef = useRef(false);
-
-  // Cleanup timeout refs to prevent memory leaks
-  const takeOverCleanupRef = useRef<number | null>(null);
-  const removeFromExchangeCleanupRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (takeOverCleanupRef.current) {
-        clearTimeout(takeOverCleanupRef.current);
-      }
-      if (removeFromExchangeCleanupRef.current) {
-        clearTimeout(removeFromExchangeCleanupRef.current);
-      }
-    };
-  }, []);
-
-  const openTakeOver = useCallback((exchange: GameExchange) => {
-    setTakeOverExchange(exchange);
-    setTakeOverOpen(true);
-  }, []);
-
-  const closeTakeOver = useCallback(() => {
-    setTakeOverOpen(false);
-    if (takeOverCleanupRef.current) {
-      clearTimeout(takeOverCleanupRef.current);
-    }
-    takeOverCleanupRef.current = setTimeout(
-      () => setTakeOverExchange(null),
-      MODAL_CLEANUP_DELAY,
-    );
-  }, []);
-
-  const openRemoveFromExchange = useCallback((exchange: GameExchange) => {
-    setRemoveFromExchangeExchange(exchange);
-    setRemoveFromExchangeOpen(true);
-  }, []);
-
-  const closeRemoveFromExchange = useCallback(() => {
-    setRemoveFromExchangeOpen(false);
-    if (removeFromExchangeCleanupRef.current) {
-      clearTimeout(removeFromExchangeCleanupRef.current);
-    }
-    removeFromExchangeCleanupRef.current = setTimeout(
-      () => setRemoveFromExchangeExchange(null),
-      MODAL_CLEANUP_DELAY,
-    );
-  }, []);
 
   const handleTakeOver = useCallback(
     async (exchange: GameExchange) => {
@@ -114,7 +61,7 @@ export function useExchangeActions(): UseExchangeActionsResult {
 
       try {
         await applyMutation.mutateAsync(exchange.__identity);
-        closeTakeOver();
+        takeOverModal.close();
 
         logger.debug(
           "[useExchangeActions] Successfully applied for exchange:",
@@ -135,7 +82,7 @@ export function useExchangeActions(): UseExchangeActionsResult {
         isTakingOverRef.current = false;
       }
     },
-    [isDemoMode, isSafeModeEnabled, applyMutation, closeTakeOver, t],
+    [isDemoMode, isSafeModeEnabled, applyMutation, takeOverModal, t],
   );
 
   const handleRemoveFromExchange = useCallback(
@@ -154,7 +101,7 @@ export function useExchangeActions(): UseExchangeActionsResult {
 
       try {
         await withdrawMutation.mutateAsync(exchange.__identity);
-        closeRemoveFromExchange();
+        removeFromExchangeModal.close();
 
         logger.debug(
           "[useExchangeActions] Successfully withdrawn from exchange:",
@@ -175,21 +122,21 @@ export function useExchangeActions(): UseExchangeActionsResult {
         isRemovingRef.current = false;
       }
     },
-    [isDemoMode, isSafeModeEnabled, withdrawMutation, closeRemoveFromExchange, t],
+    [isDemoMode, isSafeModeEnabled, withdrawMutation, removeFromExchangeModal, t],
   );
 
   return {
     takeOverModal: {
-      isOpen: takeOverOpen,
-      exchange: takeOverExchange,
-      open: openTakeOver,
-      close: closeTakeOver,
+      isOpen: takeOverModal.isOpen,
+      exchange: takeOverModal.data,
+      open: takeOverModal.open,
+      close: takeOverModal.close,
     },
     removeFromExchangeModal: {
-      isOpen: removeFromExchangeOpen,
-      exchange: removeFromExchangeExchange,
-      open: openRemoveFromExchange,
-      close: closeRemoveFromExchange,
+      isOpen: removeFromExchangeModal.isOpen,
+      exchange: removeFromExchangeModal.data,
+      open: removeFromExchangeModal.open,
+      close: removeFromExchangeModal.close,
     },
     handleTakeOver,
     handleRemoveFromExchange,
