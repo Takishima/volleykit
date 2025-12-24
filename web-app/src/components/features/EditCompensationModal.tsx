@@ -133,6 +133,7 @@ export function EditCompensationModal({
   const { handleBackdropClick } = useModalDismissal({
     isOpen,
     onClose,
+    isLoading,
   });
 
   const handleSubmit = useCallback(
