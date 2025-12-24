@@ -20,6 +20,7 @@ import { EditCompensationModal } from "@/components/features/EditCompensationMod
 import { ValidateGameModal } from "@/components/features/ValidateGameModal";
 import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useTour } from "@/hooks/useTour";
 
 const PdfLanguageModal = lazy(
   () =>
@@ -33,6 +34,9 @@ type TabType = "upcoming" | "validationClosed";
 export function AssignmentsPage() {
   const [activeTab, setActiveTab] = useState<TabType>("upcoming");
   const { t } = useTranslation();
+
+  // Initialize tour for this page (triggers auto-start on first visit)
+  useTour("assignments");
 
   const {
     editCompensationModal,

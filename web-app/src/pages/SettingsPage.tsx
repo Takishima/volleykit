@@ -4,6 +4,7 @@ import { useDemoStore } from "@/stores/demo";
 import { useSettingsStore } from "@/stores/settings";
 import { useTourStore, type TourId } from "@/stores/tour";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useTour } from "@/hooks/useTour";
 import { usePWA } from "@/contexts/PWAContext";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -21,6 +22,9 @@ export function SettingsPage() {
   const { isSafeModeEnabled, setSafeMode } = useSettingsStore();
   const { getTourStatus, resetAllTours } = useTourStore();
   const { t, locale } = useTranslation();
+
+  // Initialize tour for this page (triggers auto-start on first visit)
+  useTour("settings");
   const {
     needRefresh,
     isChecking,
