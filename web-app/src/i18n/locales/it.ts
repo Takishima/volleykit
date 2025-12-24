@@ -250,6 +250,20 @@ const it: Translations = {
     errorDetails: "Dettagli errore",
     tryAgain: "Riprova",
     refreshPage: "Ricarica pagina",
+    page: {
+      networkDescription:
+        "Impossibile caricare questa pagina a causa di un problema di connessione. Verifica la tua connessione internet.",
+      errorDescription:
+        "Questa pagina ha riscontrato un errore. Puoi riprovare o tornare alla home.",
+      goHome: "Vai alla home",
+    },
+    modal: {
+      networkDescription:
+        "Impossibile completare questa azione a causa di un problema di connessione.",
+      errorDescription:
+        "Qualcosa è andato storto con questa azione. Riprova.",
+      closeModal: "Chiudi",
+    },
   },
   validation: {
     homeRoster: "Rosa di casa",

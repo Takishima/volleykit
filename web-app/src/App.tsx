@@ -12,6 +12,7 @@ import { useDemoStore } from "@/stores/demo";
 import { AppShell } from "@/components/layout/AppShell";
 import { LoadingState } from "@/components/ui/LoadingSpinner";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { PageErrorBoundary } from "@/components/ui/PageErrorBoundary";
 import { ReloadPrompt } from "@/components/ui/ReloadPrompt";
 import { ToastContainer } from "@/components/ui/Toast";
 import { PWAProvider } from "@/contexts/PWAContext";
@@ -239,10 +240,10 @@ export default function App() {
                     </ProtectedRoute>
                   }
                 >
-                  <Route path="/" element={<AssignmentsPage />} />
-                  <Route path="/compensations" element={<CompensationsPage />} />
-                  <Route path="/exchange" element={<ExchangePage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/" element={<PageErrorBoundary pageName="AssignmentsPage"><AssignmentsPage /></PageErrorBoundary>} />
+                  <Route path="/compensations" element={<PageErrorBoundary pageName="CompensationsPage"><CompensationsPage /></PageErrorBoundary>} />
+                  <Route path="/exchange" element={<PageErrorBoundary pageName="ExchangePage"><ExchangePage /></PageErrorBoundary>} />
+                  <Route path="/settings" element={<PageErrorBoundary pageName="SettingsPage"><SettingsPage /></PageErrorBoundary>} />
                 </Route>
 
                 {/* Fallback */}

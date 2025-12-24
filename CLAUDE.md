@@ -247,7 +247,7 @@ CI will fail if limits are exceeded (gzipped):
 
 | Component | Limit |
 |-----------|-------|
-| Main App | 120 KB |
+| Main App | 122 KB |
 | Vendor Chunks | 50 KB each |
 | PDF Library | 185 KB (lazy-loaded) |
 | CSS | 10 KB |

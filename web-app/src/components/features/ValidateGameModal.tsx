@@ -7,6 +7,7 @@ import { getTeamNames } from "@/utils/assignment-helpers";
 import { useWizardNavigation } from "@/hooks/useWizardNavigation";
 import { WizardStepContainer } from "@/components/ui/WizardStepContainer";
 import { WizardStepIndicator } from "@/components/ui/WizardStepIndicator";
+import { ModalErrorBoundary } from "@/components/ui/ModalErrorBoundary";
 import {
   HomeRosterPanel,
   AwayRosterPanel,
@@ -328,7 +329,7 @@ export function ValidateGameModal({
               )}
 
               {!isLoadingGameDetails && !gameDetailsError && (
-                <>
+                <ModalErrorBoundary modalName="ValidateGameModal" onClose={onClose}>
                   {currentStepId === "home-roster" && (
                     <HomeRosterPanel
                       assignment={assignment}
@@ -374,7 +375,7 @@ export function ValidateGameModal({
                       hasScoresheet={validatedInfo?.hasScoresheet}
                     />
                   )}
-                </>
+                </ModalErrorBoundary>
               )}
             </div>
           </WizardStepContainer>
