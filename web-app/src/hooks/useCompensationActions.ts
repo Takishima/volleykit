@@ -2,6 +2,7 @@ import { useCallback, useRef } from "react";
 import type { CompensationRecord } from "@/api/client";
 import { downloadCompensationPDF } from "@/utils/compensation-actions";
 import { logger } from "@/utils/logger";
+import { checkSafeMode } from "@/utils/safe-mode-guard";
 import { useAuthStore } from "@/stores/auth";
 import { useSettingsStore } from "@/stores/settings";
 import { toast } from "@/stores/toast";
@@ -29,18 +30,19 @@ export function useCompensationActions(): UseCompensationActionsResult {
 
   const openEditCompensation = useCallback(
     (compensation: CompensationRecord) => {
-      // Safe mode blocks dangerous operations; demo mode bypasses since it's local-only
-      if (!isDemoMode && isSafeModeEnabled) {
-        logger.debug(
-          "[useCompensationActions] Safe mode: editing compensation blocked",
-        );
-        toast.warning(t("settings.safeModeBlocked"));
+      if (
+        checkSafeMode({
+          isDemoMode,
+          isSafeModeEnabled,
+          context: "[useCompensationActions] editing compensation",
+        })
+      ) {
         return;
       }
 
       editCompensationModal.open(compensation);
     },
-    [isDemoMode, isSafeModeEnabled, t, editCompensationModal],
+    [isDemoMode, isSafeModeEnabled, editCompensationModal],
   );
 
   const handleGeneratePDF = useCallback(
