@@ -16,6 +16,8 @@ interface TourSpotlightProps {
   placement: TooltipPlacement;
   onDismiss: () => void;
   children: React.ReactNode;
+  /** When true, position updates are frozen (useful during swipe animations) */
+  freezePosition?: boolean;
 }
 
 const SPOTLIGHT_PADDING = 8;
@@ -79,6 +81,7 @@ export function TourSpotlight({
   placement,
   onDismiss,
   children,
+  freezePosition = false,
 }: TourSpotlightProps) {
   // Start with null - position will be set after mount when element is ready
   const [targetRect, setTargetRect] = useState<TargetRect | null>(null);
@@ -86,24 +89,42 @@ export function TourSpotlight({
   const [isPositioned, setIsPositioned] = useState(false);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
+  // Handle overlay click - only dismiss if click is not on the target element
+  const handleOverlayClick = useCallback(
+    (e: React.MouseEvent) => {
+      const target = e.target as Element;
+      const clickedOnTarget = target.closest(targetSelector);
+      if (!clickedOnTarget) {
+        onDismiss();
+      }
+    },
+    [targetSelector, onDismiss],
+  );
+
   // Find target element and calculate positions
-  const updatePositions = useCallback(() => {
-    const target = document.querySelector(targetSelector);
-    if (!target) return;
+  const updatePositions = useCallback(
+    (force = false) => {
+      // Skip updates when position is frozen (during swipe animations)
+      if (freezePosition && isPositioned && !force) return;
 
-    const paddedRect = calculateTargetRect(target);
-    setTargetRect(paddedRect);
-    setIsPositioned(true);
+      const target = document.querySelector(targetSelector);
+      if (!target) return;
 
-    // Calculate tooltip position after render
-    requestAnimationFrame(() => {
-      if (!tooltipRef.current) return;
+      const paddedRect = calculateTargetRect(target);
+      setTargetRect(paddedRect);
+      setIsPositioned(true);
 
-      const tooltipRect = tooltipRef.current.getBoundingClientRect();
-      const position = calculateTooltipPosition(paddedRect, tooltipRect, placement);
-      setTooltipPosition(position);
-    });
-  }, [targetSelector, placement]);
+      // Calculate tooltip position after render
+      requestAnimationFrame(() => {
+        if (!tooltipRef.current) return;
+
+        const tooltipRect = tooltipRef.current.getBoundingClientRect();
+        const position = calculateTooltipPosition(paddedRect, tooltipRect, placement);
+        setTooltipPosition(position);
+      });
+    },
+    [targetSelector, placement, freezePosition, isPositioned],
+  );
 
   // Elevate target element above overlay using useLayoutEffect
   // to apply styles before paint
@@ -139,7 +160,8 @@ export function TourSpotlight({
   // Subscribe to scroll/resize events and trigger initial update
   useEffect(() => {
     // Initial position update after mount (allows layout to settle)
-    const initialTimer = setTimeout(updatePositions, INITIAL_POSITION_DELAY_MS);
+    // Use force=true to bypass freezePosition check for initial positioning
+    const initialTimer = setTimeout(() => updatePositions(true), INITIAL_POSITION_DELAY_MS);
 
     const handleUpdate = () => updatePositions();
 
@@ -253,7 +275,7 @@ export function TourSpotlight({
       <div
         className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm transition-opacity"
         style={{ clipPath }}
-        onClick={onDismiss}
+        onClick={handleOverlayClick}
         aria-hidden="true"
       />
 

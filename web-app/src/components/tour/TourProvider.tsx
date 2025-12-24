@@ -27,6 +27,9 @@ export function TourProvider({ children }: TourProviderProps) {
   const isLastStep = currentStep === totalSteps - 1;
   const isFirstStep = currentStep === 0;
 
+  // Freeze spotlight position during swipe steps to keep drawer visible
+  const isSwipeStep = currentStepData?.completionEvent?.type === "swipe";
+
   // Handle step completion
   const handleStepComplete = useCallback(() => {
     if (isLastStep) {
@@ -126,6 +129,7 @@ export function TourProvider({ children }: TourProviderProps) {
         targetSelector={currentStepData.targetSelector}
         placement={currentStepData.placement}
         onDismiss={handleDismiss}
+        freezePosition={isSwipeStep}
       >
         <TourTooltip
           titleKey={currentStepData.titleKey}
