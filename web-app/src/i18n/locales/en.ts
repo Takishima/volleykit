@@ -58,14 +58,14 @@ const en: Translations = {
     },
     exchange: {
       browse: {
-        title: "Take Over Assignments",
+        title: "Available Exchanges",
         description:
-          "Browse available exchange requests. Swipe right on any assignment to apply and take it over.",
+          "Here you can see assignments that other referees want to give away. Take one if it fits your schedule!",
       },
       apply: {
-        title: "Apply for Exchange",
+        title: "Swipe to Apply",
         description:
-          "Swipe right on a game to apply for the exchange and take over the assignment.",
+          "Swipe right on a card to apply for the exchange. You'll take over the assignment if approved.",
       },
       filter: {
         title: "Filter by Level",

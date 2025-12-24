@@ -120,6 +120,7 @@ export function ExchangePage() {
         checked={filterByLevel}
         onChange={setFilterByLevel}
         userLevel={userRefereeLevel}
+        dataTour="exchange-filter"
       />
     ) : undefined;
 

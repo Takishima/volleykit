@@ -4,12 +4,14 @@ interface LevelFilterToggleProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
   userLevel?: string | null;
+  dataTour?: string;
 }
 
 export function LevelFilterToggle({
   checked,
   onChange,
   userLevel,
+  dataTour,
 }: LevelFilterToggleProps) {
   const { t } = useTranslation();
 
@@ -18,7 +20,10 @@ export function LevelFilterToggle({
   };
 
   return (
-    <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+    <label
+      className="inline-flex items-center gap-2 cursor-pointer select-none"
+      data-tour={dataTour}
+    >
       <input
         type="checkbox"
         checked={checked}

@@ -58,14 +58,14 @@ const fr: Translations = {
     },
     exchange: {
       browse: {
-        title: "Reprendre des désignations",
+        title: "Échanges disponibles",
         description:
-          "Parcourez les demandes d'échange disponibles. Glissez vers la droite pour postuler et reprendre une désignation.",
+          "Ici vous voyez les désignations que d'autres arbitres souhaitent céder. Reprenez-en une si elle convient à votre emploi du temps !",
       },
       apply: {
-        title: "Postuler pour l'échange",
+        title: "Glissez pour postuler",
         description:
-          "Glissez vers la droite sur un match pour postuler à l'échange et reprendre la désignation.",
+          "Glissez vers la droite pour postuler à l'échange. Vous reprendrez la désignation si votre candidature est acceptée.",
       },
       filter: {
         title: "Filtrer par niveau",

@@ -58,14 +58,14 @@ const de: Translations = {
     },
     exchange: {
       browse: {
-        title: "Einsätze übernehmen",
+        title: "Verfügbare Tauschangebote",
         description:
-          "Durchsuchen Sie verfügbare Tauschangebote. Wischen Sie nach rechts, um sich zu bewerben und den Einsatz zu übernehmen.",
+          "Hier sehen Sie Einsätze, die andere Schiedsrichter abgeben möchten. Übernehmen Sie einen, wenn er in Ihren Zeitplan passt!",
       },
       apply: {
-        title: "Für Tausch bewerben",
+        title: "Wischen zum Bewerben",
         description:
-          "Wischen Sie nach rechts, um sich für den Tausch zu bewerben und den Einsatz zu übernehmen.",
+          "Wischen Sie nach rechts, um sich für den Tausch zu bewerben. Bei Genehmigung übernehmen Sie den Einsatz.",
       },
       filter: {
         title: "Nach Niveau filtern",

@@ -58,14 +58,14 @@ const it: Translations = {
     },
     exchange: {
       browse: {
-        title: "Assumi designazioni",
+        title: "Scambi disponibili",
         description:
-          "Sfoglia le richieste di scambio disponibili. Scorri verso destra per candidarti e assumere una designazione.",
+          "Qui puoi vedere le designazioni che altri arbitri vogliono cedere. Assumine una se si adatta ai tuoi impegni!",
       },
       apply: {
-        title: "Candidati per lo scambio",
+        title: "Scorri per candidarti",
         description:
-          "Scorri verso destra su una partita per candidarti allo scambio e assumere la designazione.",
+          "Scorri verso destra per candidarti allo scambio. Assumerai la designazione se approvato.",
       },
       filter: {
         title: "Filtra per livello",
