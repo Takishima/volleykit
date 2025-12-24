@@ -20,13 +20,14 @@ interface NavItem {
   path: string;
   labelKey: "nav.assignments" | "nav.compensations" | "nav.exchange" | "nav.settings";
   icon: LucideIcon;
+  testId: string;
 }
 
 const navItems: NavItem[] = [
-  { path: "/", labelKey: "nav.assignments", icon: ClipboardList },
-  { path: "/compensations", labelKey: "nav.compensations", icon: Wallet },
-  { path: "/exchange", labelKey: "nav.exchange", icon: ArrowLeftRight },
-  { path: "/settings", labelKey: "nav.settings", icon: Settings },
+  { path: "/", labelKey: "nav.assignments", icon: ClipboardList, testId: "nav-assignments" },
+  { path: "/compensations", labelKey: "nav.compensations", icon: Wallet, testId: "nav-compensations" },
+  { path: "/exchange", labelKey: "nav.exchange", icon: ArrowLeftRight, testId: "nav-exchange" },
+  { path: "/settings", labelKey: "nav.settings", icon: Settings, testId: "nav-settings" },
 ];
 
 // Valid association codes that can be used for demo mode data generation
@@ -214,6 +215,7 @@ export function AppShell() {
                 <NavLink
                   key={item.path}
                   to={item.path}
+                  data-testid={item.testId}
                   className={`
                     flex flex-col items-center py-2 px-4 text-[10px] font-medium
                     transition-all duration-150 rounded-lg mx-1

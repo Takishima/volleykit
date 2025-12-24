@@ -267,8 +267,9 @@ describe("AssignmentsPage", () => {
       render(<AssignmentsPage />);
 
       const tabpanel = screen.getByRole("tabpanel");
-      expect(tabpanel).toHaveAttribute("id", "upcoming-tabpanel");
-      expect(tabpanel).toHaveAttribute("aria-labelledby", "upcoming-tab");
+      // Tab IDs follow the pattern: tab-{tabId}, tabpanel-{tabId}
+      expect(tabpanel).toHaveAttribute("id", "tabpanel-upcoming");
+      expect(tabpanel).toHaveAttribute("aria-labelledby", "tab-upcoming");
     });
 
     it("should have proper tabpanel aria attributes for validation closed tab", () => {
@@ -276,10 +277,11 @@ describe("AssignmentsPage", () => {
       fireEvent.click(screen.getByRole("tab", { name: /validation closed/i }));
 
       const tabpanel = screen.getByRole("tabpanel");
-      expect(tabpanel).toHaveAttribute("id", "validation-closed-tabpanel");
+      // Tab IDs follow the pattern: tab-{tabId}, tabpanel-{tabId}
+      expect(tabpanel).toHaveAttribute("id", "tabpanel-validationClosed");
       expect(tabpanel).toHaveAttribute(
         "aria-labelledby",
-        "validation-closed-tab",
+        "tab-validationClosed",
       );
     });
   });

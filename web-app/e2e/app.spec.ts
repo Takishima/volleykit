@@ -8,26 +8,25 @@ test.describe("VolleyKit App", () => {
       // Check page title
       await expect(page).toHaveTitle(/VolleyKit/);
 
-      // Check login form elements are present
-      await expect(page.getByLabel(/username/i)).toBeVisible();
-      await expect(page.getByLabel(/password/i)).toBeVisible();
-      await expect(
-        page.getByRole("button", { name: /login|sign in/i }),
-      ).toBeVisible();
+      // Check login form elements are present using stable test IDs (locale-independent)
+      await expect(page.getByTestId("username-input")).toBeVisible();
+      await expect(page.getByTestId("password-input")).toBeVisible();
+      await expect(page.getByTestId("login-button")).toBeVisible();
     });
 
     test("shows demo mode option", async ({ page }) => {
       await page.goto("/login");
 
-      // Check demo mode button is present
-      await expect(page.getByRole("button", { name: /demo/i })).toBeVisible();
+      // Check demo mode button is present using stable test ID (locale-independent)
+      await expect(page.getByTestId("demo-button")).toBeVisible();
     });
 
     test("validates empty form submission", async ({ page }) => {
       await page.goto("/login");
 
-      const usernameInput = page.getByLabel(/username/i);
-      const loginButton = page.getByRole("button", { name: /login|sign in/i });
+      // Use stable test IDs (locale-independent)
+      const usernameInput = page.getByTestId("username-input");
+      const loginButton = page.getByTestId("login-button");
 
       // Verify the input has the required attribute for HTML5 validation
       const isRequired = await usernameInput.getAttribute("required");
@@ -53,8 +52,8 @@ test.describe("VolleyKit App", () => {
     test("can enter demo mode", async ({ page }) => {
       await page.goto("/login");
 
-      // Click demo mode button
-      await page.getByRole("button", { name: /demo/i }).click();
+      // Click demo mode button using stable test ID (locale-independent)
+      await page.getByTestId("demo-button").click();
 
       // Should navigate away from login page
       await expect(page).not.toHaveURL(/login/);
@@ -63,8 +62,8 @@ test.describe("VolleyKit App", () => {
     test("demo mode shows assignments page", async ({ page }) => {
       await page.goto("/login");
 
-      // Enter demo mode
-      await page.getByRole("button", { name: /demo/i }).click();
+      // Enter demo mode using stable test ID (locale-independent)
+      await page.getByTestId("demo-button").click();
 
       // Should show some content (assignments, dashboard, etc.)
       // Wait for navigation to complete
@@ -97,9 +96,9 @@ test.describe("VolleyKit App", () => {
     test("login form inputs have labels", async ({ page }) => {
       await page.goto("/login");
 
-      // Inputs should be accessible via labels
-      const usernameInput = page.getByLabel(/username/i);
-      const passwordInput = page.getByLabel(/password/i);
+      // Inputs should be accessible via stable test IDs (locale-independent)
+      const usernameInput = page.getByTestId("username-input");
+      const passwordInput = page.getByTestId("password-input");
 
       await expect(usernameInput).toBeVisible();
       await expect(passwordInput).toBeVisible();
@@ -111,10 +110,8 @@ test.describe("VolleyKit App", () => {
       await page.setViewportSize({ width: 375, height: 667 });
       await page.goto("/login");
 
-      // Form should still be visible
-      await expect(
-        page.getByRole("button", { name: /login|sign in/i }),
-      ).toBeVisible();
+      // Form should still be visible using stable test ID (locale-independent)
+      await expect(page.getByTestId("login-button")).toBeVisible();
     });
   });
 });

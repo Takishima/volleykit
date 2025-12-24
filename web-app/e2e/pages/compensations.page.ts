@@ -22,9 +22,10 @@ export class CompensationsPage {
   constructor(page: Page) {
     this.page = page;
     this.tablist = page.getByRole("tablist");
-    this.pendingTab = page.getByRole("tab", { name: /pending|unpaid/i });
-    this.paidTab = page.getByRole("tab", { name: /paid/i });
-    this.allTab = page.getByRole("tab", { name: /all/i });
+    // Use stable IDs for tabs (locale-independent)
+    this.pendingTab = page.locator("#tab-unpaid");
+    this.paidTab = page.locator("#tab-paid");
+    this.allTab = page.locator("#tab-all");
     this.tabPanel = page.getByRole("tabpanel");
     this.compensationCards = this.tabPanel.getByRole("button");
   }
@@ -40,11 +41,11 @@ export class CompensationsPage {
   async switchToPendingTab() {
     await this.pendingTab.waitFor({ state: "visible" });
     await this.pendingTab.click();
+    // Wait for the "unpaid" tab to become selected using its stable ID (locale-independent)
     await this.page.waitForFunction(
       () => {
-        const tab = document.querySelector('[role="tab"][aria-selected="true"]');
-        const text = tab?.textContent?.toLowerCase() ?? "";
-        return text.includes("pending") || text.includes("unpaid");
+        const tab = document.querySelector("#tab-unpaid");
+        return tab?.getAttribute("aria-selected") === "true";
       },
       { timeout: TAB_SWITCH_TIMEOUT_MS },
     );
@@ -53,10 +54,11 @@ export class CompensationsPage {
   async switchToPaidTab() {
     await this.paidTab.waitFor({ state: "visible" });
     await this.paidTab.click();
+    // Wait for the "paid" tab to become selected using its stable ID (locale-independent)
     await this.page.waitForFunction(
       () => {
-        const tab = document.querySelector('[role="tab"][aria-selected="true"]');
-        return tab?.textContent?.toLowerCase().includes("paid");
+        const tab = document.querySelector("#tab-paid");
+        return tab?.getAttribute("aria-selected") === "true";
       },
       { timeout: TAB_SWITCH_TIMEOUT_MS },
     );
@@ -65,10 +67,11 @@ export class CompensationsPage {
   async switchToAllTab() {
     await this.allTab.waitFor({ state: "visible" });
     await this.allTab.click();
+    // Wait for the "all" tab to become selected using its stable ID (locale-independent)
     await this.page.waitForFunction(
       () => {
-        const tab = document.querySelector('[role="tab"][aria-selected="true"]');
-        return tab?.textContent?.toLowerCase().includes("all");
+        const tab = document.querySelector("#tab-all");
+        return tab?.getAttribute("aria-selected") === "true";
       },
       { timeout: TAB_SWITCH_TIMEOUT_MS },
     );
@@ -81,7 +84,8 @@ export class CompensationsPage {
   async waitForCompensationsLoaded() {
     await expect(this.tabPanel).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT_MS });
 
-    const loadingIndicator = this.page.getByText(/loading/i).first();
+    // Use stable test ID for loading indicator (locale-independent)
+    const loadingIndicator = this.page.getByTestId("loading-state");
     await loadingIndicator
       .waitFor({ state: "hidden", timeout: LOADING_TIMEOUT_MS })
       .catch(() => {

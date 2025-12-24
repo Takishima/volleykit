@@ -15,15 +15,11 @@ export class NavigationPage {
   constructor(page: Page) {
     this.page = page;
     this.navigation = page.getByRole("navigation");
-    // Navigation links - match by accessible name patterns
-    this.assignmentsLink = page.getByRole("link", {
-      name: /assignment|home/i,
-    });
-    this.compensationsLink = page.getByRole("link", {
-      name: /compensation|wallet/i,
-    });
-    this.exchangeLink = page.getByRole("link", { name: /exchange/i });
-    this.settingsLink = page.getByRole("link", { name: /settings/i });
+    // Use stable test IDs for locale independence
+    this.assignmentsLink = page.getByTestId("nav-assignments");
+    this.compensationsLink = page.getByTestId("nav-compensations");
+    this.exchangeLink = page.getByTestId("nav-exchange");
+    this.settingsLink = page.getByTestId("nav-settings");
   }
 
   async expectToBeVisible() {
