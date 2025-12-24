@@ -4,6 +4,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useModalDismissal } from "@/hooks/useModalDismissal";
 import { logger } from "@/utils/logger";
 import { formatDateTime } from "@/utils/date-helpers";
+import { ModalErrorBoundary } from "@/components/ui/ModalErrorBoundary";
 
 interface ExchangeConfirmationModalProps {
   exchange: GameExchange;
@@ -102,93 +103,95 @@ export function ExchangeConfirmationModal({
         aria-modal="true"
         aria-labelledby={modalTitleId}
       >
-        <h2
-          id={modalTitleId}
-          className="text-xl font-semibold text-text-primary dark:text-text-primary-dark mb-4"
-        >
-          {t(titleKey)}
-        </h2>
+        <ModalErrorBoundary modalName="ExchangeConfirmationModal" onClose={onClose}>
+          <h2
+            id={modalTitleId}
+            className="text-xl font-semibold text-text-primary dark:text-text-primary-dark mb-4"
+          >
+            {t(titleKey)}
+          </h2>
 
-        <div className="mb-6 space-y-3">
-          <div>
-            <div className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
-              {t("common.match")}
+          <div className="mb-6 space-y-3">
+            <div>
+              <div className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
+                {t("common.match")}
+              </div>
+              <div className="text-base text-text-primary dark:text-text-primary-dark font-medium">
+                {homeTeam} {t("common.vs")} {awayTeam}
+              </div>
             </div>
-            <div className="text-base text-text-primary dark:text-text-primary-dark font-medium">
-              {homeTeam} {t("common.vs")} {awayTeam}
-            </div>
+
+            {dateTime && (
+              <div>
+                <div className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
+                  {t("common.dateTime")}
+                </div>
+                <div className="text-base text-text-primary dark:text-text-primary-dark">
+                  {formatDateTime(dateTime)}
+                </div>
+              </div>
+            )}
+
+            {location && (
+              <div>
+                <div className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
+                  {t("common.location")}
+                </div>
+                <div className="text-base text-text-primary dark:text-text-primary-dark">
+                  {location}
+                </div>
+              </div>
+            )}
+
+            {position && (
+              <div>
+                <div className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
+                  {t("common.position")}
+                </div>
+                <div className="text-base text-text-primary dark:text-text-primary-dark">
+                  {position}
+                </div>
+              </div>
+            )}
+
+            {level && (
+              <div>
+                <div className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
+                  {t("common.requiredLevel")}
+                </div>
+                <div className="text-base text-text-primary dark:text-text-primary-dark">
+                  {level}
+                </div>
+              </div>
+            )}
           </div>
 
-          {dateTime && (
-            <div>
-              <div className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
-                {t("common.dateTime")}
-              </div>
-              <div className="text-base text-text-primary dark:text-text-primary-dark">
-                {formatDateTime(dateTime)}
-              </div>
+          <div className="border-t border-border-default dark:border-border-default-dark pt-4">
+            <p className="text-sm text-text-muted dark:text-text-muted-dark mb-4">
+              {t(confirmKey)}
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isSubmitting}
+                className="flex-1 px-4 py-2 text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {t("common.cancel")}
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirm}
+                disabled={isSubmitting}
+                aria-busy={isSubmitting}
+                className={`flex-1 px-4 py-2 text-white rounded-md focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed ${buttonColorClass}`}
+              >
+                {isSubmitting ? t("common.loading") : t(buttonKey)}
+              </button>
             </div>
-          )}
-
-          {location && (
-            <div>
-              <div className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
-                {t("common.location")}
-              </div>
-              <div className="text-base text-text-primary dark:text-text-primary-dark">
-                {location}
-              </div>
-            </div>
-          )}
-
-          {position && (
-            <div>
-              <div className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
-                {t("common.position")}
-              </div>
-              <div className="text-base text-text-primary dark:text-text-primary-dark">
-                {position}
-              </div>
-            </div>
-          )}
-
-          {level && (
-            <div>
-              <div className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
-                {t("common.requiredLevel")}
-              </div>
-              <div className="text-base text-text-primary dark:text-text-primary-dark">
-                {level}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="border-t border-border-default dark:border-border-default-dark pt-4">
-          <p className="text-sm text-text-muted dark:text-text-muted-dark mb-4">
-            {t(confirmKey)}
-          </p>
-
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isSubmitting}
-              className="flex-1 px-4 py-2 text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {t("common.cancel")}
-            </button>
-            <button
-              type="button"
-              onClick={handleConfirm}
-              disabled={isSubmitting}
-              aria-busy={isSubmitting}
-              className={`flex-1 px-4 py-2 text-white rounded-md focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed ${buttonColorClass}`}
-            >
-              {isSubmitting ? t("common.loading") : t(buttonKey)}
-            </button>
           </div>
-        </div>
+        </ModalErrorBoundary>
       </div>
     </div>
   );

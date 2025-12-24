@@ -38,6 +38,7 @@ export { AlertTriangle } from "lucide-react";
 export { Calendar } from "lucide-react";
 export { Lock } from "lucide-react";
 export { Inbox } from "lucide-react";
+export { Home } from "lucide-react";
 
 // App branding - custom volleyball icon since Lucide doesn't have one
 export { CircleDot as Volleyball } from "lucide-react";

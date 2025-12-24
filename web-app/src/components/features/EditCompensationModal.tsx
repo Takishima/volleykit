@@ -20,6 +20,7 @@ import {
 } from "@/utils/distance";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
+import { ModalErrorBoundary } from "@/components/ui/ModalErrorBoundary";
 
 interface EditCompensationModalProps {
   assignment?: Assignment;
@@ -232,107 +233,109 @@ export function EditCompensationModal({
         aria-modal="true"
         aria-labelledby="edit-compensation-title"
       >
-        <h2
-          id="edit-compensation-title"
-          className="text-xl font-semibold text-text-primary dark:text-text-primary-dark mb-4"
-        >
-          {t("assignments.editCompensation")}
-        </h2>
+        <ModalErrorBoundary modalName="EditCompensationModal" onClose={onClose}>
+          <h2
+            id="edit-compensation-title"
+            className="text-xl font-semibold text-text-primary dark:text-text-primary-dark mb-4"
+          >
+            {t("assignments.editCompensation")}
+          </h2>
 
-        <div className="mb-4 text-sm text-text-muted dark:text-text-muted-dark">
-          <div className="font-medium text-text-primary dark:text-text-primary-dark">
-            {homeTeam} {t("common.vs")} {awayTeam}
-          </div>
-        </div>
-
-        {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500" />
-          </div>
-        ) : fetchError ? (
-          <div className="py-6 text-center">
-            <p className="text-danger-600 dark:text-danger-400 mb-4">
-              {fetchError}
-            </p>
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong"
-            >
-              {t("common.close")}
-            </button>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label
-                htmlFor="kilometers"
-                className="block text-sm font-medium text-text-secondary dark:text-text-secondary-dark mb-1"
-              >
-                {t("assignments.kilometers")}
-              </label>
-              <div className="relative">
-                <input
-                  id="kilometers"
-                  type="text"
-                  inputMode="decimal"
-                  pattern={DECIMAL_INPUT_PATTERN}
-                  value={kilometers}
-                  onChange={(e) => setKilometers(e.target.value)}
-                  className="w-full px-3 py-2 pr-10 border border-border-strong dark:border-border-strong-dark rounded-md bg-surface-card dark:bg-surface-subtle-dark text-text-primary dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  aria-invalid={errors.kilometers ? "true" : "false"}
-                  aria-describedby={
-                    errors.kilometers ? "kilometers-error" : undefined
-                  }
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted dark:text-text-muted-dark text-sm pointer-events-none">
-                  {t("common.distanceUnit")}
-                </span>
-              </div>
-              {errors.kilometers && (
-                <p
-                  id="kilometers-error"
-                  className="mt-1 text-sm text-danger-600 dark:text-danger-400"
-                >
-                  {errors.kilometers}
-                </p>
-              )}
+          <div className="mb-4 text-sm text-text-muted dark:text-text-muted-dark">
+            <div className="font-medium text-text-primary dark:text-text-primary-dark">
+              {homeTeam} {t("common.vs")} {awayTeam}
             </div>
+          </div>
 
-            <div>
-              <label
-                htmlFor="reason"
-                className="block text-sm font-medium text-text-secondary dark:text-text-secondary-dark mb-1"
-              >
-                {t("assignments.reason")}
-              </label>
-              <textarea
-                id="reason"
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                rows={4}
-                className="w-full px-3 py-2 border border-border-strong dark:border-border-strong-dark rounded-md bg-surface-card dark:bg-surface-subtle-dark text-text-primary dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary-500"
-                placeholder={t("assignments.reasonPlaceholder")}
-              />
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500" />
             </div>
-
-            <div className="flex gap-3 pt-2">
+          ) : fetchError ? (
+            <div className="py-6 text-center">
+              <p className="text-danger-600 dark:text-danger-400 mb-4">
+                {fetchError}
+              </p>
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2 text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong"
+                className="px-4 py-2 text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong"
               >
                 {t("common.close")}
               </button>
-              <button
-                type="submit"
-                className="flex-1 px-4 py-2 text-white bg-primary-500 rounded-md hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                {t("common.save")}
-              </button>
             </div>
-          </form>
-        )}
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="kilometers"
+                  className="block text-sm font-medium text-text-secondary dark:text-text-secondary-dark mb-1"
+                >
+                  {t("assignments.kilometers")}
+                </label>
+                <div className="relative">
+                  <input
+                    id="kilometers"
+                    type="text"
+                    inputMode="decimal"
+                    pattern={DECIMAL_INPUT_PATTERN}
+                    value={kilometers}
+                    onChange={(e) => setKilometers(e.target.value)}
+                    className="w-full px-3 py-2 pr-10 border border-border-strong dark:border-border-strong-dark rounded-md bg-surface-card dark:bg-surface-subtle-dark text-text-primary dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    aria-invalid={errors.kilometers ? "true" : "false"}
+                    aria-describedby={
+                      errors.kilometers ? "kilometers-error" : undefined
+                    }
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted dark:text-text-muted-dark text-sm pointer-events-none">
+                    {t("common.distanceUnit")}
+                  </span>
+                </div>
+                {errors.kilometers && (
+                  <p
+                    id="kilometers-error"
+                    className="mt-1 text-sm text-danger-600 dark:text-danger-400"
+                  >
+                    {errors.kilometers}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label
+                  htmlFor="reason"
+                  className="block text-sm font-medium text-text-secondary dark:text-text-secondary-dark mb-1"
+                >
+                  {t("assignments.reason")}
+                </label>
+                <textarea
+                  id="reason"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-border-strong dark:border-border-strong-dark rounded-md bg-surface-card dark:bg-surface-subtle-dark text-text-primary dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder={t("assignments.reasonPlaceholder")}
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 px-4 py-2 text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong"
+                >
+                  {t("common.close")}
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 text-white bg-primary-500 rounded-md hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                  {t("common.save")}
+                </button>
+              </div>
+            </form>
+          )}
+        </ModalErrorBoundary>
       </div>
     </div>
   );

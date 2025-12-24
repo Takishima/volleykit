@@ -253,6 +253,20 @@ const de: Translations = {
     errorDetails: "Fehlerdetails",
     tryAgain: "Erneut versuchen",
     refreshPage: "Seite neu laden",
+    page: {
+      networkDescription:
+        "Diese Seite konnte aufgrund eines Verbindungsproblems nicht geladen werden. Bitte überprüfen Sie Ihre Internetverbindung.",
+      errorDescription:
+        "Auf dieser Seite ist ein Fehler aufgetreten. Sie können es erneut versuchen oder zur Startseite zurückkehren.",
+      goHome: "Zur Startseite",
+    },
+    modal: {
+      networkDescription:
+        "Diese Aktion konnte aufgrund eines Verbindungsproblems nicht abgeschlossen werden.",
+      errorDescription:
+        "Bei dieser Aktion ist etwas schiefgelaufen. Bitte versuchen Sie es erneut.",
+      closeModal: "Schliessen",
+    },
   },
   validation: {
     homeRoster: "Heimkader",

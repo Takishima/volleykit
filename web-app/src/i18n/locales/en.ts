@@ -251,6 +251,20 @@ const en: Translations = {
     errorDetails: "Error details",
     tryAgain: "Try Again",
     refreshPage: "Refresh Page",
+    page: {
+      networkDescription:
+        "Unable to load this page due to a connection issue. Please check your internet connection.",
+      errorDescription:
+        "This page encountered an error. You can try again or return to the home page.",
+      goHome: "Go Home",
+    },
+    modal: {
+      networkDescription:
+        "Unable to complete this action due to a connection issue.",
+      errorDescription:
+        "Something went wrong with this action. Please try again.",
+      closeModal: "Close",
+    },
   },
   validation: {
     homeRoster: "Home Roster",

@@ -252,6 +252,20 @@ const fr: Translations = {
     errorDetails: "Détails de l'erreur",
     tryAgain: "Réessayer",
     refreshPage: "Actualiser la page",
+    page: {
+      networkDescription:
+        "Impossible de charger cette page en raison d'un problème de connexion. Veuillez vérifier votre connexion internet.",
+      errorDescription:
+        "Cette page a rencontré une erreur. Vous pouvez réessayer ou retourner à l'accueil.",
+      goHome: "Retour à l'accueil",
+    },
+    modal: {
+      networkDescription:
+        "Impossible de terminer cette action en raison d'un problème de connexion.",
+      errorDescription:
+        "Une erreur s'est produite avec cette action. Veuillez réessayer.",
+      closeModal: "Fermer",
+    },
   },
   validation: {
     homeRoster: "Effectif domicile",

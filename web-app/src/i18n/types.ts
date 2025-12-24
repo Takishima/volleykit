@@ -235,6 +235,16 @@ export interface Translations {
     errorDetails: string;
     tryAgain: string;
     refreshPage: string;
+    page: {
+      networkDescription: string;
+      errorDescription: string;
+      goHome: string;
+    };
+    modal: {
+      networkDescription: string;
+      errorDescription: string;
+      closeModal: string;
+    };
   };
   validation: {
     homeRoster: string;
