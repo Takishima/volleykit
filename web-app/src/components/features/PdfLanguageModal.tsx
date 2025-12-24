@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useModalDismissal } from '@/hooks/useModalDismissal';
 import { FileText } from 'lucide-react';
 import type { Language } from '@/utils/pdf-form-filler';
 
@@ -30,28 +31,18 @@ export function PdfLanguageModal({
     if (isOpen) setSelected(defaultLanguage); // eslint-disable-line react-hooks/set-state-in-effect
   }, [isOpen, defaultLanguage]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !isLoading) onClose();
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [isOpen, isLoading, onClose]);
-
-  const onBackdrop = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (e.target === e.currentTarget && !isLoading) onClose();
-    },
-    [isLoading, onClose]
-  );
+  const { handleBackdropClick } = useModalDismissal({
+    isOpen,
+    onClose,
+    isLoading,
+  });
 
   if (!isOpen) return null;
 
   return (
     <div
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-      onClick={onBackdrop}
+      onClick={handleBackdropClick}
       aria-hidden="true"
     >
       <div

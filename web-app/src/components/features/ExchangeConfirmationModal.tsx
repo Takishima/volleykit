@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { GameExchange } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useModalDismissal } from "@/hooks/useModalDismissal";
 import { logger } from "@/utils/logger";
 import { formatDateTime } from "@/utils/date-helpers";
 
@@ -21,27 +22,10 @@ export function ExchangeConfirmationModal({
 }: ExchangeConfirmationModalProps) {
   const { t } = useTranslation();
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [isOpen, onClose]);
-
-  const handleBackdropClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (e.target === e.currentTarget) {
-        onClose();
-      }
-    },
-    [onClose],
-  );
+  const { handleBackdropClick } = useModalDismissal({
+    isOpen,
+    onClose,
+  });
 
   const isSubmittingRef = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);

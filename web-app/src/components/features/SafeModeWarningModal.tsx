@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useRef } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useModalDismissal } from "@/hooks/useModalDismissal";
 
 interface SafeModeWarningModalProps {
   isOpen: boolean;
@@ -15,27 +16,10 @@ export function SafeModeWarningModal({
   const { t } = useTranslation();
   const isConfirmingRef = useRef(false);
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [isOpen, onClose]);
-
-  const handleBackdropClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (e.target === e.currentTarget) {
-        onClose();
-      }
-    },
-    [onClose],
-  );
+  const { handleBackdropClick } = useModalDismissal({
+    isOpen,
+    onClose,
+  });
 
   const handleConfirm = useCallback(() => {
     if (isConfirmingRef.current) return;
