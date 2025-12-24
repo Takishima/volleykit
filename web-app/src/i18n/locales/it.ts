@@ -58,9 +58,9 @@ const it: Translations = {
     },
     exchange: {
       browse: {
-        title: "Sfoglia gli scambi",
+        title: "Assumi designazioni",
         description:
-          "Vedi le partite che altri arbitri hanno messo in scambio. Puoi assumere designazioni che corrispondono al tuo livello.",
+          "Sfoglia le richieste di scambio disponibili. Scorri verso destra per candidarti e assumere una designazione.",
       },
       apply: {
         title: "Candidati per lo scambio",

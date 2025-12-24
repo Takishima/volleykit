@@ -361,11 +361,11 @@ export interface Translations {
         title: string;
         description: string;
       };
-      tapEdit: {
+      swipeEdit: {
         title: string;
         description: string;
       };
-      downloadPdf: {
+      tapDetails: {
         title: string;
         description: string;
       };

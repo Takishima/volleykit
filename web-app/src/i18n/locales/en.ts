@@ -58,9 +58,9 @@ const en: Translations = {
     },
     exchange: {
       browse: {
-        title: "Browse Exchanges",
+        title: "Take Over Assignments",
         description:
-          "See games that other referees have put up for exchange. You can take over assignments that match your level.",
+          "Browse available exchange requests. Swipe right on any assignment to apply and take it over.",
       },
       apply: {
         title: "Apply for Exchange",

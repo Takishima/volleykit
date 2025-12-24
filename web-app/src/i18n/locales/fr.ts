@@ -58,9 +58,9 @@ const fr: Translations = {
     },
     exchange: {
       browse: {
-        title: "Parcourir les échanges",
+        title: "Reprendre des désignations",
         description:
-          "Voyez les matchs que d'autres arbitres ont mis à l'échange. Vous pouvez reprendre des désignations correspondant à votre niveau.",
+          "Parcourez les demandes d'échange disponibles. Glissez vers la droite pour postuler et reprendre une désignation.",
       },
       apply: {
         title: "Postuler pour l'échange",

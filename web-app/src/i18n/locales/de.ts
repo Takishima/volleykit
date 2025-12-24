@@ -58,9 +58,9 @@ const de: Translations = {
     },
     exchange: {
       browse: {
-        title: "Tauschbörse durchsuchen",
+        title: "Einsätze übernehmen",
         description:
-          "Sehen Sie Spiele, die andere Schiedsrichter zum Tausch angeboten haben. Sie können Einsätze übernehmen, die Ihrem Niveau entsprechen.",
+          "Durchsuchen Sie verfügbare Tauschangebote. Wischen Sie nach rechts, um sich zu bewerben und den Einsatz zu übernehmen.",
       },
       apply: {
         title: "Für Tausch bewerben",
