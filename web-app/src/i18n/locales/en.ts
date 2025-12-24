@@ -119,6 +119,8 @@ const en: Translations = {
     pdfNotAvailableDemo: "PDF downloads are not available in demo mode",
     pdfDownloadFailed:
       "Failed to download compensation PDF. Please try again later.",
+    editingRestrictedByRegion:
+      "Editing is not available for this region. Compensation is paid on-site.",
   },
   exchange: {
     title: "Exchange",

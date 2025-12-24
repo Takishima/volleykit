@@ -117,6 +117,8 @@ const it: Translations = {
     errorLoading: "Impossibile caricare i compensi",
     pdfNotAvailableDemo: "I download PDF non sono disponibili in modalità demo",
     pdfDownloadFailed: "Impossibile scaricare il PDF. Riprova più tardi.",
+    editingRestrictedByRegion:
+      "La modifica non è disponibile per questa regione. Il compenso viene pagato sul posto.",
   },
   exchange: {
     title: "Borsa scambi",

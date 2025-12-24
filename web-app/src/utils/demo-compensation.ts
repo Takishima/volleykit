@@ -76,6 +76,10 @@ export interface CompensationParams {
   paymentValueDate?: string;
   transportationMode?: "car" | "train";
   correctionReason?: string | null;
+  /** When true, compensation is locked for on-site payout (non-editable) */
+  lockPayoutOnSiteCompensation?: boolean;
+  /** Disbursement method: payout_on_site or central_payout */
+  methodOfDisbursement?: "payout_on_site" | "central_payout";
 }
 
 export function createCompensationData({
@@ -86,6 +90,8 @@ export function createCompensationData({
   paymentValueDate,
   transportationMode = "car",
   correctionReason = null,
+  lockPayoutOnSiteCompensation = false,
+  methodOfDisbursement = "central_payout",
 }: CompensationParams) {
   const gameCompensation = getCompensationForPosition(position, isSV);
   const travelExpenses = calculateTravelExpenses(distanceInMetres);
@@ -108,5 +114,11 @@ export function createCompensationData({
     hasFlexibleCateringExpenses: false,
     overnightStayExpensesFormatted: "0.00",
     cateringExpensesFormatted: "0.00",
+    // Lock flags for editability
+    lockPayoutOnSiteCompensation,
+    lockPayoutCentralPayoutCompensation: paymentDone,
+    // Disbursement methods
+    methodOfDisbursementArbitration: methodOfDisbursement,
+    methodOfDisbursementTravelCompensation: methodOfDisbursement,
   };
 }

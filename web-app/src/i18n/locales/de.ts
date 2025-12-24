@@ -119,6 +119,8 @@ const de: Translations = {
     pdfNotAvailableDemo: "PDF-Downloads sind im Demo-Modus nicht verfügbar",
     pdfDownloadFailed:
       "PDF konnte nicht heruntergeladen werden. Bitte versuchen Sie es später erneut.",
+    editingRestrictedByRegion:
+      "Bearbeitung ist für diese Region nicht verfügbar. Die Entschädigung wird vor Ort ausgezahlt.",
   },
   exchange: {
     title: "Tauschbörse",

@@ -119,6 +119,8 @@ const fr: Translations = {
       "Les téléchargements PDF ne sont pas disponibles en mode démo",
     pdfDownloadFailed:
       "Échec du téléchargement du PDF. Veuillez réessayer plus tard.",
+    editingRestrictedByRegion:
+      "La modification n'est pas disponible pour cette région. L'indemnité est payée sur place.",
   },
   exchange: {
     title: "Bourse aux échanges",
