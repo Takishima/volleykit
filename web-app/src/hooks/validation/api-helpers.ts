@@ -1,0 +1,138 @@
+/**
+ * API helper functions for game validation operations.
+ */
+
+import { getApiClient } from "@/api/client";
+import { logger } from "@/utils/logger";
+import type { RosterModifications } from "@/hooks/useNominationList";
+
+/** Type for nomination list with required fields for API calls. */
+export interface NominationListForApi {
+  __identity?: string;
+  team?: { __identity?: string };
+  indoorPlayerNominations?: { __identity?: string }[];
+  nominationListValidation?: { __identity?: string };
+}
+
+/** Type for scoresheet with required fields for API calls. */
+export interface ScoresheetForApi {
+  __identity?: string;
+  isSimpleScoresheet?: boolean;
+  scoresheetValidation?: { __identity?: string };
+}
+
+/**
+ * Check if roster has modifications (added or removed players).
+ */
+export function hasRosterModifications(modifications: RosterModifications): boolean {
+  return modifications.added.length > 0 || modifications.removed.length > 0;
+}
+
+/**
+ * Get player nomination IDs from a nomination list, applying modifications.
+ */
+export function getPlayerNominationIds(
+  nominationList: { indoorPlayerNominations?: { __identity?: string }[] },
+  modifications: RosterModifications,
+): string[] {
+  const existingIds =
+    nominationList.indoorPlayerNominations
+      ?.map((n) => n.__identity)
+      .filter((id): id is string => !!id) ?? [];
+
+  const removedSet = new Set(modifications.removed);
+  const remainingIds = existingIds.filter((id) => !removedSet.has(id));
+  const addedIds = modifications.added.map((p) => p.id);
+
+  return [...remainingIds, ...addedIds];
+}
+
+/** Saves roster modifications for a single team. */
+export async function saveRosterModifications(
+  apiClient: ReturnType<typeof getApiClient>,
+  gameId: string,
+  nomList: NominationListForApi | undefined,
+  modifications: RosterModifications,
+): Promise<void> {
+  if (!hasRosterModifications(modifications)) {
+    logger.debug("[VS] skip roster save: no modifications");
+    return;
+  }
+  if (!nomList?.__identity || !nomList.team?.__identity) {
+    logger.debug("[VS] skip roster save: missing nomination list or team ID");
+    return;
+  }
+
+  const playerIds = getPlayerNominationIds(nomList, modifications);
+  await apiClient.updateNominationList(
+    nomList.__identity,
+    gameId,
+    nomList.team.__identity,
+    playerIds,
+  );
+}
+
+/** Saves scoresheet with scorer selection. */
+export async function saveScorerSelection(
+  apiClient: ReturnType<typeof getApiClient>,
+  gameId: string,
+  scoresheet: ScoresheetForApi | undefined,
+  scorerId: string | undefined,
+): Promise<void> {
+  if (!scorerId || !scoresheet?.__identity) {
+    logger.debug("[VS] skip scorer save: no scorer or scoresheet ID");
+    return;
+  }
+
+  await apiClient.updateScoresheet(
+    scoresheet.__identity,
+    gameId,
+    scorerId,
+    scoresheet.isSimpleScoresheet ?? false,
+  );
+}
+
+/** Finalizes a single team's roster. */
+export async function finalizeRoster(
+  apiClient: ReturnType<typeof getApiClient>,
+  gameId: string,
+  nomList: NominationListForApi | undefined,
+  modifications: RosterModifications,
+): Promise<void> {
+  if (!nomList?.__identity || !nomList.team?.__identity) {
+    logger.debug("[VS] skip roster finalize: missing nomination list or team ID");
+    return;
+  }
+
+  const playerIds = getPlayerNominationIds(nomList, modifications);
+  await apiClient.finalizeNominationList(
+    nomList.__identity,
+    gameId,
+    nomList.team.__identity,
+    playerIds,
+    nomList.nominationListValidation?.__identity,
+  );
+}
+
+/** Finalizes scoresheet with optional file upload. */
+export async function finalizeScoresheetWithFile(
+  apiClient: ReturnType<typeof getApiClient>,
+  gameId: string,
+  scoresheet: ScoresheetForApi | undefined,
+  scorerId: string | undefined,
+  fileResourceId: string | undefined,
+): Promise<void> {
+  if (!scorerId || !scoresheet?.__identity) {
+    logger.debug("[VS] skip scoresheet finalize: no scorer or scoresheet ID");
+    return;
+  }
+
+  await apiClient.finalizeScoresheet(
+    scoresheet.__identity,
+    gameId,
+    scorerId,
+    fileResourceId,
+    scoresheet.scoresheetValidation?.__identity,
+    scoresheet.isSimpleScoresheet ?? false,
+  );
+}

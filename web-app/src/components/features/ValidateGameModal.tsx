@@ -12,15 +12,13 @@ import {
   AwayRosterPanel,
   ScorerPanel,
   ScoresheetPanel,
+  UnsavedChangesDialog,
+  ValidationSuccessToast,
 } from "@/components/features/validation";
 import { useValidationState } from "@/hooks/useValidationState";
 
 /** Z-index for the main modal backdrop and dialog */
 const Z_INDEX_MODAL = 50;
-/** Z-index for confirmation dialog (above main modal) */
-const Z_INDEX_CONFIRMATION_DIALOG = 60;
-/** Z-index for toast notification (above all dialogs) */
-const Z_INDEX_TOAST = 70;
 /** Duration to show success toast before auto-dismissing */
 const SUCCESS_TOAST_DURATION_MS = 3000;
 
@@ -32,95 +30,10 @@ interface ValidateGameModalProps {
 
 type ValidationStepId = "home-roster" | "away-roster" | "scorer" | "scoresheet";
 
-/** Wizard step with typed id for validation panels */
 interface ValidationStep {
   id: ValidationStepId;
   label: string;
   isOptional?: boolean;
-}
-
-/** Dialog for confirming close with unsaved changes */
-function UnsavedChangesDialog({
-  isOpen,
-  onSaveAndClose,
-  onDiscard,
-  onCancel,
-  isSaving,
-}: {
-  isOpen: boolean;
-  onSaveAndClose: () => void;
-  onDiscard: () => void;
-  onCancel: () => void;
-  isSaving: boolean;
-}) {
-  const { t } = useTranslation();
-  const dialogRef = useRef<HTMLDivElement>(null);
-
-  // Focus first button when dialog opens for accessibility
-  useEffect(() => {
-    if (isOpen && dialogRef.current) {
-      const firstButton = dialogRef.current.querySelector("button");
-      firstButton?.focus();
-    }
-  }, [isOpen]);
-
-  if (!isOpen) return null;
-
-  return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
-      style={{ zIndex: Z_INDEX_CONFIRMATION_DIALOG }}
-      aria-hidden="true"
-    >
-      <div
-        ref={dialogRef}
-        className="bg-surface-card dark:bg-surface-card-dark rounded-lg shadow-xl max-w-sm w-full p-6"
-        role="alertdialog"
-        aria-modal="true"
-        aria-labelledby="unsaved-changes-title"
-        aria-describedby="unsaved-changes-description"
-      >
-        <h3
-          id="unsaved-changes-title"
-          className="text-lg font-semibold text-text-primary dark:text-text-primary-dark mb-2"
-        >
-          {t("validation.state.unsavedChangesTitle")}
-        </h3>
-        <p
-          id="unsaved-changes-description"
-          className="text-sm text-text-muted dark:text-text-muted-dark mb-4"
-        >
-          {t("validation.state.unsavedChangesMessage")}
-        </p>
-        <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={isSaving}
-            className="px-4 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong disabled:opacity-50"
-          >
-            {t("validation.state.continueEditing")}
-          </button>
-          <button
-            type="button"
-            onClick={onDiscard}
-            disabled={isSaving}
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
-          >
-            {t("validation.state.discardChanges")}
-          </button>
-          <button
-            type="button"
-            onClick={onSaveAndClose}
-            disabled={isSaving}
-            className="px-4 py-2 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
-          >
-            {isSaving ? t("common.loading") : t("validation.state.saveAndClose")}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 export function ValidateGameModal({
@@ -134,7 +47,6 @@ export function ValidateGameModal({
   const [successToast, setSuccessToast] = useState<string | null>(null);
   const [isAddPlayerSheetOpen, setIsAddPlayerSheetOpen] = useState(false);
 
-  // Get game ID from assignment for API calls
   const gameId = assignment.refereeGame?.game?.__identity;
 
   const {
@@ -157,7 +69,6 @@ export function ValidateGameModal({
     gameDetailsError,
   } = useValidationState(gameId);
 
-  // Define wizard steps with typed ids for type-safe panel switching
   const wizardSteps = useMemo<ValidationStep[]>(
     () => [
       { id: "home-roster", label: t("validation.homeRoster") },
@@ -168,8 +79,6 @@ export function ValidateGameModal({
     [t],
   );
 
-  // Note: Step navigation doesn't auto-save. Data is saved on close/finish.
-  // This avoids race conditions since useWizardNavigation doesn't support async callbacks.
   const {
     currentStepIndex,
     currentStep,
@@ -186,7 +95,6 @@ export function ValidateGameModal({
     steps: wizardSteps,
   });
 
-  // Refs to prevent race conditions and enable cleanup
   const isDirtyRef = useRef(isDirty);
   const isFinalizingRef = useRef(false);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -195,7 +103,6 @@ export function ValidateGameModal({
     isDirtyRef.current = isDirty;
   }, [isDirty]);
 
-  // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
       if (toastTimeoutRef.current) {
@@ -205,14 +112,12 @@ export function ValidateGameModal({
     };
   }, []);
 
-  // Scorer panel requires a scorer to be selected before marking as done
   const canMarkCurrentStepDone = useMemo(() => {
     const stepId = wizardSteps[currentStepIndex]?.id;
     if (stepId === "scorer") return completionStatus.scorer;
     return true;
   }, [currentStepIndex, wizardSteps, completionStatus.scorer]);
 
-  // Check if all steps BEFORE the current one are done (for enabling Finish button)
   const allPreviousRequiredStepsDone = useMemo(() => {
     for (let i = 0; i < currentStepIndex; i++) {
       const step = wizardSteps[i];
@@ -223,7 +128,6 @@ export function ValidateGameModal({
     return true;
   }, [wizardSteps, currentStepIndex, stepsMarkedDone]);
 
-  // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
       setSaveError(null);
@@ -233,8 +137,6 @@ export function ValidateGameModal({
     }
   }, [isOpen, reset, resetToStart]);
 
-  // Attempt to close - show confirmation dialog if there are unsaved changes
-  // In read-only mode (validated game), always close directly
   const attemptClose = useCallback(() => {
     if (isValidated) {
       onClose();
@@ -253,20 +155,13 @@ export function ValidateGameModal({
     isLoading: showUnsavedDialog,
   });
 
-  // Handle finish action (finalize validation)
-  // If the last step is not optional, it marks the last step as done before finalizing
   const handleFinish = useCallback(async () => {
-    // Guard against concurrent operations
     if (isFinalizingRef.current) return;
 
-    // If last step is not optional, we need to be able to mark it as done
     const lastStep = wizardSteps[wizardSteps.length - 1];
     if (!lastStep?.isOptional && !canMarkCurrentStepDone) return;
-
-    // Check all previous steps are done
     if (!allPreviousRequiredStepsDone) return;
 
-    // Mark last step as done if it's not optional
     if (!lastStep?.isOptional) {
       setStepDone(currentStepIndex, true);
     }
@@ -275,17 +170,11 @@ export function ValidateGameModal({
     setSaveError(null);
 
     try {
-      // Call the actual API to finalize validation
       await finalizeValidation();
-
-      // Show success toast notification
       setSuccessToast(t("validation.state.saveSuccess"));
-
-      // Auto-dismiss toast after delay
       toastTimeoutRef.current = setTimeout(() => {
         setSuccessToast(null);
       }, SUCCESS_TOAST_DURATION_MS);
-
       onClose();
     } catch (error) {
       const message =
@@ -305,7 +194,6 @@ export function ValidateGameModal({
     onClose,
   ]);
 
-  // Save and close (for unsaved dialog)
   const handleSaveAndClose = useCallback(async () => {
     try {
       await saveProgress();
@@ -318,14 +206,12 @@ export function ValidateGameModal({
     }
   }, [saveProgress, onClose, t]);
 
-  // Discard changes and close (for unsaved dialog)
   const handleDiscardAndClose = useCallback(() => {
     setShowUnsavedDialog(false);
     reset();
     onClose();
   }, [reset, onClose]);
 
-  // Cancel close and continue editing
   const handleCancelClose = useCallback(() => {
     setShowUnsavedDialog(false);
   }, []);
@@ -334,7 +220,6 @@ export function ValidateGameModal({
     goNext();
   }, [goNext]);
 
-  // Handler for Validate button: marks step as done and advances
   const handleValidateAndNext = useCallback(() => {
     if (!canMarkCurrentStepDone) return;
     setStepDone(currentStepIndex, true);
@@ -345,7 +230,6 @@ export function ValidateGameModal({
     goBack();
   }, [goBack]);
 
-  // Handler for AddPlayerSheet open state changes
   const handleAddPlayerSheetOpenChange = useCallback((open: boolean) => {
     setIsAddPlayerSheetOpen(open);
   }, []);
@@ -357,32 +241,8 @@ export function ValidateGameModal({
 
   return (
     <>
-      {/* Success toast notification */}
-      {successToast && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed top-4 right-4 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2"
-          style={{ zIndex: Z_INDEX_TOAST }}
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="w-5 h-5"
-            aria-hidden="true"
-          >
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-            <polyline points="22,4 12,14.01 9,11.01" />
-          </svg>
-          <span className="text-sm font-medium">{successToast}</span>
-        </div>
-      )}
+      {successToast && <ValidationSuccessToast message={successToast} />}
 
-      {/* Backdrop click-to-close is intentional UX pattern. Keyboard close is handled via Escape key in useEffect. */}
       {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
       <div
         className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
@@ -408,7 +268,6 @@ export function ValidateGameModal({
             </div>
           </div>
 
-          {/* Validated status banner */}
           {isValidated && validatedInfo && (
             <div
               role="status"
@@ -425,7 +284,6 @@ export function ValidateGameModal({
             </div>
           )}
 
-          {/* Step indicator */}
           <div className="mb-4">
             <WizardStepIndicator
               steps={wizardSteps}
@@ -442,7 +300,6 @@ export function ValidateGameModal({
             </p>
           </div>
 
-          {/* Step content with swipe support */}
           <WizardStepContainer
             currentStep={currentStepIndex}
             totalSteps={totalSteps}
@@ -451,7 +308,6 @@ export function ValidateGameModal({
             swipeEnabled={!isFinalizing && !isLoadingGameDetails && !isAddPlayerSheetOpen}
           >
             <div className="max-h-80 overflow-y-auto">
-              {/* Show loading state while fetching game details */}
               {isLoadingGameDetails && (
                 <div className="flex items-center justify-center py-8">
                   <div className="text-sm text-text-muted dark:text-text-muted-dark">
@@ -460,7 +316,6 @@ export function ValidateGameModal({
                 </div>
               )}
 
-              {/* Show error if game details failed to load */}
               {gameDetailsError && !isLoadingGameDetails && (
                 <div
                   role="alert"
@@ -472,7 +327,6 @@ export function ValidateGameModal({
                 </div>
               )}
 
-              {/* Show panels when not loading and no error */}
               {!isLoadingGameDetails && !gameDetailsError && (
                 <>
                   {currentStepId === "home-roster" && (
@@ -506,7 +360,7 @@ export function ValidateGameModal({
                           ? {
                               __identity: pendingScorer.__identity,
                               displayName: pendingScorer.displayName,
-                              birthday: "", // Minimal required field
+                              birthday: "",
                             }
                           : null
                       }
@@ -525,8 +379,6 @@ export function ValidateGameModal({
             </div>
           </WizardStepContainer>
 
-
-          {/* Error display with recovery options */}
           {saveError && (
             <div
               role="alert"
@@ -554,16 +406,13 @@ export function ValidateGameModal({
             </div>
           )}
 
-          {/* Saving indicator */}
           {isSaving && (
             <div className="mt-4 text-center text-sm text-text-muted dark:text-text-muted-dark">
               {t("validation.wizard.saving")}
             </div>
           )}
 
-          {/* Footer with navigation buttons */}
           <div className="flex justify-between gap-3 pt-4 border-t border-border-default dark:border-border-default-dark mt-4">
-            {/* Read-only mode: simplified footer with just Close button */}
             {isValidated ? (
               <>
                 <div>
@@ -599,7 +448,6 @@ export function ValidateGameModal({
               </>
             ) : (
               <>
-                {/* Left side: Back button or Cancel on first step */}
                 <div>
                   {isFirstStep ? (
                     <button
@@ -622,7 +470,6 @@ export function ValidateGameModal({
                   )}
                 </div>
 
-                {/* Right side: Validate button (marks done + advances) or Finish on last step */}
                 <div>
                   {isLastStep ? (
                     <button
@@ -668,7 +515,6 @@ export function ValidateGameModal({
         </div>
       </div>
 
-      {/* Unsaved changes confirmation dialog */}
       <UnsavedChangesDialog
         isOpen={showUnsavedDialog}
         onSaveAndClose={handleSaveAndClose}
