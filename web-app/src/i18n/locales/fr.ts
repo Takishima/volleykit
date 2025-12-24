@@ -65,7 +65,7 @@ const fr: Translations = {
       apply: {
         title: "Glissez pour postuler",
         description:
-          "Glissez vers la droite pour postuler à l'échange. Vous reprendrez la désignation si votre candidature est acceptée.",
+          "Glissez vers la gauche pour postuler à l'échange. Vous reprendrez la désignation si votre candidature est acceptée.",
       },
       filter: {
         title: "Filtrer par niveau",

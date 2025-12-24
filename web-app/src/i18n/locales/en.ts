@@ -65,7 +65,7 @@ const en: Translations = {
       apply: {
         title: "Swipe to Apply",
         description:
-          "Swipe right on a card to apply for the exchange. You'll take over the assignment if approved.",
+          "Swipe left on a card to apply for the exchange. You'll take over the assignment if approved.",
       },
       filter: {
         title: "Filter by Level",

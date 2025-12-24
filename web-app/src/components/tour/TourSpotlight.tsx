@@ -279,18 +279,23 @@ export function TourSpotlight({
   };
 
   return createPortal(
-    <div className="tour-spotlight" role="dialog" aria-modal="true" aria-label="Guided tour">
-      {/* Backdrop overlay with blur and cutout - no click dismiss to prevent accidental exits */}
+    <div
+      className="tour-spotlight pointer-events-none"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Guided tour"
+    >
+      {/* Backdrop overlay with blur and cutout - pointer-events-none to let clicks through */}
       <div
         className={`fixed inset-0 z-40 bg-black/70 transition-opacity ${disableBlur ? "" : "backdrop-blur-sm"}`}
         style={{ clipPath }}
         aria-hidden="true"
       />
 
-      {/* Tooltip */}
+      {/* Tooltip - needs pointer-events-auto to be interactive */}
       <div
         ref={tooltipRef}
-        className="fixed z-50 w-72 sm:w-80 bg-surface-card dark:bg-surface-card-dark rounded-xl shadow-2xl border border-border-subtle dark:border-border-subtle-dark/50 overflow-hidden"
+        className="fixed z-50 w-72 sm:w-80 bg-surface-card dark:bg-surface-card-dark rounded-xl shadow-2xl border border-border-subtle dark:border-border-subtle-dark/50 overflow-hidden pointer-events-auto"
         style={{
           top: tooltipPosition.top,
           left: tooltipPosition.left,

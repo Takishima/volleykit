@@ -65,7 +65,7 @@ const it: Translations = {
       apply: {
         title: "Scorri per candidarti",
         description:
-          "Scorri verso destra per candidarti allo scambio. Assumerai la designazione se approvato.",
+          "Scorri verso sinistra per candidarti allo scambio. Assumerai la designazione se approvato.",
       },
       filter: {
         title: "Filtra per livello",

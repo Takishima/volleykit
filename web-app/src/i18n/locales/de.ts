@@ -65,7 +65,7 @@ const de: Translations = {
       apply: {
         title: "Wischen zum Bewerben",
         description:
-          "Wischen Sie nach rechts, um sich für den Tausch zu bewerben. Bei Genehmigung übernehmen Sie den Einsatz.",
+          "Wischen Sie nach links, um sich für den Tausch zu bewerben. Bei Genehmigung übernehmen Sie den Einsatz.",
       },
       filter: {
         title: "Nach Niveau filtern",
