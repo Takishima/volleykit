@@ -511,6 +511,10 @@ export const mockApi = {
     const store = useDemoStore.getState();
     const gameNominations = store.nominationLists[gameId];
     const validatedData = store.validatedGames[gameId];
+    const pendingScorer = store.getPendingScorer(gameId);
+
+    // Determine the scorer to show: validated scorer takes precedence, then pending
+    const scorerToShow = validatedData?.scorer ?? pendingScorer;
 
     // Build mock game details with scoresheet and nomination lists
     const gameDetails: GameDetails = {
@@ -520,13 +524,17 @@ export const mockApi = {
         game: { __identity: gameId },
         isSimpleScoresheet: false,
         hasFile: !!validatedData?.scoresheetFileId,
+        // Include writerPerson for both validated and pending scorers
+        ...(scorerToShow && {
+          writerPerson: {
+            __identity: scorerToShow.__identity,
+            displayName: scorerToShow.displayName,
+          },
+        }),
+        // Only validated games have closedAt
         ...(validatedData && {
           closedAt: validatedData.validatedAt,
           closedBy: "referee",
-          writerPerson: {
-            __identity: validatedData.scorer.__identity,
-            displayName: validatedData.scorer.displayName,
-          },
         }),
       },
       nominationListOfTeamHome: gameNominations?.home ?? undefined,
@@ -609,6 +617,18 @@ export const mockApi = {
   ): Promise<Scoresheet> {
     await delay(MOCK_MUTATION_DELAY_MS);
 
+    const store = useDemoStore.getState();
+
+    // Find the scorer's display name from the scorers list
+    const scorer = store.scorers.find((s) => s.__identity === scorerPersonId);
+    const scorerDisplayName = scorer?.displayName ?? "Unknown Scorer";
+
+    // Persist pending scorer selection to demo store
+    store.setPendingScorer(gameId, {
+      __identity: scorerPersonId,
+      displayName: scorerDisplayName,
+    });
+
     // In demo mode, return a mock updated scoresheet
     return {
       __identity: scoresheetId,
@@ -623,7 +643,7 @@ export const mockApi = {
     scoresheetId: string,
     gameId: string,
     scorerPersonId: string,
-    fileResourceId: string,
+    fileResourceId?: string,
     _validationId?: string,
     isSimpleScoresheet: boolean = false,
   ): Promise<Scoresheet> {
@@ -644,14 +664,17 @@ export const mockApi = {
       scoresheetFileId: fileResourceId,
     });
 
+    // Clear pending scorer since game is now validated
+    store.clearPendingScorer(gameId);
+
     // In demo mode, return a mock finalized scoresheet
     return {
       __identity: scoresheetId,
       game: { __identity: gameId },
       writerPerson: { __identity: scorerPersonId },
       isSimpleScoresheet,
-      hasFile: true,
-      file: { __identity: fileResourceId },
+      hasFile: !!fileResourceId,
+      ...(fileResourceId && { file: { __identity: fileResourceId } }),
       closedAt: new Date().toISOString(),
       closedBy: "referee",
     };

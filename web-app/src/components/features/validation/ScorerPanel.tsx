@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ValidatedPersonSearchResult } from "@/api/validation";
 import { ScorerSearchPanel } from "./ScorerSearchPanel";
 
@@ -24,6 +24,14 @@ export function ScorerPanel({
 }: ScorerPanelProps) {
   const [selectedScorer, setSelectedScorer] =
     useState<ValidatedPersonSearchResult | null>(initialScorer);
+
+  // Notify parent of initial scorer on mount (so completionStatus is updated)
+  // Note: Component uses key={pendingScorer?.__identity} to force remount when scorer changes
+  useEffect(() => {
+    if (initialScorer) {
+      onScorerChange?.(initialScorer);
+    }
+  }, [initialScorer, onScorerChange]);
 
   const handleScorerSelect = (scorer: ValidatedPersonSearchResult | null) => {
     setSelectedScorer(scorer);

@@ -66,6 +66,12 @@ export interface ValidatedGameInfo {
   hasScoresheet: boolean;
 }
 
+// Use the same type definition as demo store for consistency
+import type { PendingScorerData } from "@/stores/demo";
+
+// Re-export for consumers of this hook
+export type { PendingScorerData as PendingScorerInfo } from "@/stores/demo";
+
 /**
  * Result from the useValidationState hook.
  */
@@ -82,6 +88,8 @@ export interface UseValidationStateResult {
   isValidated: boolean;
   /** Information about the validated game (if validated) */
   validatedInfo: ValidatedGameInfo | null;
+  /** Pending scorer from previous save (if any) */
+  pendingScorer: PendingScorerData | null;
   /** Update home roster modifications (auto-marks roster as reviewed) */
   setHomeRosterModifications: (modifications: RosterModifications) => void;
   /** Update away roster modifications (auto-marks roster as reviewed) */
@@ -247,23 +255,16 @@ async function finalizeScoresheetWithFile(
     return;
   }
 
-  if (fileResourceId) {
-    await apiClient.finalizeScoresheet(
-      scoresheet.__identity,
-      gameId,
-      scorerId,
-      fileResourceId,
-      scoresheet.scoresheetValidation?.__identity,
-      scoresheet.isSimpleScoresheet ?? false,
-    );
-  } else {
-    await apiClient.updateScoresheet(
-      scoresheet.__identity,
-      gameId,
-      scorerId,
-      scoresheet.isSimpleScoresheet ?? false,
-    );
-  }
+  // Always call finalizeScoresheet to mark the game as validated.
+  // The file is optional - when not provided, the API will finalize without a PDF.
+  await apiClient.finalizeScoresheet(
+    scoresheet.__identity,
+    gameId,
+    scorerId,
+    fileResourceId,
+    scoresheet.scoresheetValidation?.__identity,
+    scoresheet.isSimpleScoresheet ?? false,
+  );
 }
 
 /**
@@ -345,6 +346,20 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
       hasScoresheet: !!scoresheet.hasFile,
     };
   }, [gameDetailsQuery.data]);
+
+  // Get pending scorer from game details (if game is not validated but has a saved scorer)
+  const pendingScorer = useMemo<PendingScorerData | null>(() => {
+    // Don't show pending scorer if game is already validated
+    if (isValidated) return null;
+
+    const writerPerson = gameDetailsQuery.data?.scoresheet?.writerPerson;
+    if (!writerPerson?.__identity) return null;
+
+    return {
+      __identity: writerPerson.__identity,
+      displayName: writerPerson.displayName ?? "Unknown",
+    };
+  }, [gameDetailsQuery.data, isValidated]);
 
   // Calculate dirty state
   const isDirty = useMemo(() => {
@@ -542,6 +557,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
     isAllRequiredComplete,
     isValidated,
     validatedInfo,
+    pendingScorer,
     setHomeRosterModifications,
     setAwayRosterModifications,
     setScorer,
