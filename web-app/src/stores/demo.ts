@@ -1335,7 +1335,7 @@ export const useDemoStore = create<DemoState>()(
         set(() => {
           const currentAssociation = get().activeAssociationCode ?? "SV";
           const newData = generateDummyData(currentAssociation);
-          // Note: validatedGames is preserved to maintain user's validation history
+          // Reset all user-generated state including validated games
           return {
             assignments: newData.assignments,
             compensations: newData.compensations,
@@ -1343,6 +1343,9 @@ export const useDemoStore = create<DemoState>()(
             nominationLists: generateMockNominationLists(),
             possiblePlayers: newData.possiblePlayers,
             scorers: newData.scorers,
+            validatedGames: {},
+            pendingScorers: {},
+            assignmentCompensations: {},
             generatedAt: Date.now(),
           };
         }),
