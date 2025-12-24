@@ -84,7 +84,8 @@ export class ExchangesPage {
   async waitForExchangesLoaded() {
     await expect(this.tabPanel).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT_MS });
 
-    const loadingIndicator = this.page.getByText(/loading/i).first();
+    // Use stable test ID for loading indicator (locale-independent)
+    const loadingIndicator = this.page.getByTestId("loading-state");
     await loadingIndicator
       .waitFor({ state: "hidden", timeout: LOADING_TIMEOUT_MS })
       .catch(() => {

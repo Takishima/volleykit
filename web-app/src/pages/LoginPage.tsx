@@ -109,6 +109,7 @@ export function LoginPage() {
               </label>
               <input
                 id="username"
+                data-testid="username-input"
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -128,6 +129,7 @@ export function LoginPage() {
               </label>
               <input
                 id="password"
+                data-testid="password-input"
                 type="password"
                 ref={passwordRef}
                 autoComplete="current-password"
@@ -148,6 +150,7 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
+              data-testid="login-button"
               className="btn btn-primary w-full flex items-center justify-center gap-2"
             >
               {isLoading ? (
@@ -175,6 +178,7 @@ export function LoginPage() {
               type="button"
               onClick={handleDemoLogin}
               disabled={isLoading}
+              data-testid="demo-button"
               className="btn btn-secondary w-full"
             >
               {t("auth.demoMode")}

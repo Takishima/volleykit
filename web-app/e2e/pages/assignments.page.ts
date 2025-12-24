@@ -21,10 +21,9 @@ export class AssignmentsPage {
   constructor(page: Page) {
     this.page = page;
     this.tablist = page.getByRole("tablist");
-    this.upcomingTab = page.getByRole("tab", { name: /upcoming/i });
-    this.validationClosedTab = page.getByRole("tab", {
-      name: /validation/i,
-    });
+    // Use stable IDs for tabs (locale-independent)
+    this.upcomingTab = page.locator("#tab-upcoming");
+    this.validationClosedTab = page.locator("#tab-validationClosed");
     this.tabPanel = page.getByRole("tabpanel");
     this.assignmentCards = this.tabPanel.getByRole("button");
   }
@@ -41,10 +40,11 @@ export class AssignmentsPage {
   async switchToUpcomingTab() {
     await this.upcomingTab.waitFor({ state: "visible" });
     await this.upcomingTab.click();
+    // Wait for the "upcoming" tab to become selected using its stable ID (locale-independent)
     await this.page.waitForFunction(
       () => {
-        const tab = document.querySelector('[role="tab"][aria-selected="true"]');
-        return tab?.textContent?.toLowerCase().includes("upcoming");
+        const tab = document.querySelector("#tab-upcoming");
+        return tab?.getAttribute("aria-selected") === "true";
       },
       { timeout: TAB_SWITCH_TIMEOUT_MS },
     );
@@ -53,10 +53,11 @@ export class AssignmentsPage {
   async switchToValidationClosedTab() {
     await this.validationClosedTab.waitFor({ state: "visible" });
     await this.validationClosedTab.click();
+    // Wait for the "validationClosed" tab to become selected using its stable ID (locale-independent)
     await this.page.waitForFunction(
       () => {
-        const tab = document.querySelector('[role="tab"][aria-selected="true"]');
-        return tab?.textContent?.toLowerCase().includes("validation");
+        const tab = document.querySelector("#tab-validationClosed");
+        return tab?.getAttribute("aria-selected") === "true";
       },
       { timeout: TAB_SWITCH_TIMEOUT_MS },
     );
@@ -69,7 +70,8 @@ export class AssignmentsPage {
   async waitForAssignmentsLoaded() {
     await expect(this.tabPanel).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT_MS });
 
-    const loadingIndicator = this.page.getByText(/loading/i).first();
+    // Use stable test ID for loading indicator (locale-independent)
+    const loadingIndicator = this.page.getByTestId("loading-state");
     await loadingIndicator
       .waitFor({ state: "hidden", timeout: LOADING_TIMEOUT_MS })
       .catch(() => {

@@ -117,8 +117,8 @@ export function AssignmentsPage() {
         <button
           role="tab"
           aria-selected={activeTab === "upcoming"}
-          aria-controls="upcoming-tabpanel"
-          id="upcoming-tab"
+          aria-controls="tabpanel-upcoming"
+          id="tab-upcoming"
           onClick={() => setActiveTab("upcoming")}
           className={`
             px-4 py-2 text-sm font-medium border-b-2 transition-colors
@@ -139,8 +139,8 @@ export function AssignmentsPage() {
         <button
           role="tab"
           aria-selected={activeTab === "validationClosed"}
-          aria-controls="validation-closed-tabpanel"
-          id="validation-closed-tab"
+          aria-controls="tabpanel-validationClosed"
+          id="tab-validationClosed"
           onClick={() => setActiveTab("validationClosed")}
           className={`
             px-4 py-2 text-sm font-medium border-b-2 transition-colors
@@ -165,11 +165,11 @@ export function AssignmentsPage() {
         role="tabpanel"
         id={
           activeTab === "upcoming"
-            ? "upcoming-tabpanel"
-            : "validation-closed-tabpanel"
+            ? "tabpanel-upcoming"
+            : "tabpanel-validationClosed"
         }
         aria-labelledby={
-          activeTab === "upcoming" ? "upcoming-tab" : "validation-closed-tab"
+          activeTab === "upcoming" ? "tab-upcoming" : "tab-validationClosed"
         }
         className="space-y-3"
       >

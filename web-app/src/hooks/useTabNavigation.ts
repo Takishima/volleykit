@@ -61,6 +61,7 @@ export function useTabNavigation<T extends string>({
     (tabId: T, index: number) => ({
       ref: setTabRef(tabId),
       role: "tab" as const,
+      // ID format used by E2E tests for locale-independent tab selection
       id: `tab-${tabId}`,
       "aria-selected": activeTab === tabId,
       "aria-controls": `tabpanel-${tabId}`,

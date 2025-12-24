@@ -52,6 +52,7 @@ export function LoadingState({ message }: LoadingStateProps) {
       className="flex flex-col items-center justify-center py-12 gap-4"
       role="status"
       aria-label={displayMessage}
+      data-testid="loading-state"
     >
       {/* Use visual-only spinner here since container has role="status" */}
       <div
