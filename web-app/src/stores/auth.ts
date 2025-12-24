@@ -38,7 +38,7 @@ interface AuthState {
 
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
-  checkSession: () => Promise<boolean>;
+  checkSession: (signal?: AbortSignal) => Promise<boolean>;
   setUser: (user: UserProfile | null) => void;
   setDemoAuthenticated: () => void;
   setActiveOccupation: (id: string) => void;
@@ -128,13 +128,31 @@ export const useAuthStore = create<AuthState>()(
         });
       },
 
-      checkSession: async (): Promise<boolean> => {
+      checkSession: async (signal?: AbortSignal): Promise<boolean> => {
+        // Check if already aborted before starting
+        if (signal?.aborted) {
+          throw new DOMException("Aborted", "AbortError");
+        }
+
         if (get().isDemoMode) {
           return true;
         }
 
         const existingPromise = get()._checkSessionPromise;
         if (existingPromise) {
+          // If caller provided a signal, wrap the promise to handle abortion
+          if (signal) {
+            return new Promise<boolean>((resolve, reject) => {
+              const onAbort = () =>
+                reject(new DOMException("Aborted", "AbortError"));
+              signal.addEventListener("abort", onAbort, { once: true });
+
+              existingPromise
+                .then(resolve)
+                .catch(reject)
+                .finally(() => signal.removeEventListener("abort", onAbort));
+            });
+          }
           return existingPromise;
         }
 
@@ -147,13 +165,21 @@ export const useAuthStore = create<AuthState>()(
 
         (async () => {
           try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), SESSION_CHECK_TIMEOUT_MS);
+            const timeoutController = new AbortController();
+            const timeoutId = setTimeout(
+              () => timeoutController.abort(),
+              SESSION_CHECK_TIMEOUT_MS,
+            );
+
+            // Combine timeout signal with external signal if provided
+            const fetchSignal = signal
+              ? AbortSignal.any([timeoutController.signal, signal])
+              : timeoutController.signal;
 
             try {
               const response = await fetch(
                 `${API_BASE}/sportmanager.volleyball/main/dashboard`,
-                { credentials: "include", signal: controller.signal },
+                { credentials: "include", signal: fetchSignal },
               );
 
               clearTimeout(timeoutId);
@@ -178,6 +204,14 @@ export const useAuthStore = create<AuthState>()(
               clearTimeout(timeoutId);
 
               if (error instanceof Error && error.name === "AbortError") {
+                // Check if this was an external abort (not timeout)
+                if (signal?.aborted) {
+                  // External abort - don't log, don't update state
+                  // Let the caller handle it via the wrapped promise
+                  resolvePromise(false);
+                  return;
+                }
+                // Timeout abort
                 logger.error("Session check timed out");
                 set({ status: "idle", user: null });
                 resolvePromise(false);
@@ -194,6 +228,20 @@ export const useAuthStore = create<AuthState>()(
             set({ _checkSessionPromise: null });
           }
         })();
+
+        // If caller provided a signal, wrap the promise to handle abortion
+        if (signal) {
+          return new Promise<boolean>((resolve, reject) => {
+            const onAbort = () =>
+              reject(new DOMException("Aborted", "AbortError"));
+            signal.addEventListener("abort", onAbort, { once: true });
+
+            promise
+              .then(resolve)
+              .catch(reject)
+              .finally(() => signal.removeEventListener("abort", onAbort));
+          });
+        }
 
         return promise;
       },
