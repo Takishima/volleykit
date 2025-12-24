@@ -141,11 +141,18 @@ export function TourSpotlight({
     setTooltipPosition(position);
   }, [targetRect, placement]);
 
-  // Subscribe to scroll/resize events
+  // Subscribe to scroll/resize events and trigger initial update
   useEffect(() => {
+    // Initial position update after mount (allows layout to settle)
+    const initialTimer = setTimeout(updatePositions, 50);
+
     const handleUpdate = () => updatePositions();
-    window.addEventListener("scroll", handleUpdate, { passive: true });
+
+    // Listen on window for resize
     window.addEventListener("resize", handleUpdate, { passive: true });
+
+    // Listen on document with capture to catch all scroll events (including nested containers)
+    document.addEventListener("scroll", handleUpdate, { passive: true, capture: true });
 
     // Debounce MutationObserver to avoid performance issues
     let mutationTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -159,8 +166,9 @@ export function TourSpotlight({
     observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
-      window.removeEventListener("scroll", handleUpdate);
+      clearTimeout(initialTimer);
       window.removeEventListener("resize", handleUpdate);
+      document.removeEventListener("scroll", handleUpdate, { capture: true });
       if (mutationTimeout) clearTimeout(mutationTimeout);
       observer.disconnect();
     };
