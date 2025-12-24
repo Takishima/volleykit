@@ -102,22 +102,29 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isVerifying || isDemoMode) return;
 
-    let cancelled = false;
-    checkSession()
+    const controller = new AbortController();
+
+    checkSession(controller.signal)
       .catch((error: unknown) => {
-        if (!cancelled) {
-          const message =
-            error instanceof Error
-              ? error.message
-              : "Session verification failed";
-          setVerifyError(message);
+        // Ignore AbortError - this is expected when component unmounts
+        if (error instanceof Error && error.name === "AbortError") {
+          return;
         }
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Session verification failed";
+        setVerifyError(message);
       })
       .finally(() => {
-        if (!cancelled) setIsVerifying(false);
+        // Only update state if not aborted
+        if (!controller.signal.aborted) {
+          setIsVerifying(false);
+        }
       });
+
     return () => {
-      cancelled = true;
+      controller.abort();
     };
   }, [isVerifying, checkSession, isDemoMode]);
 
