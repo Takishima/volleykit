@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import type { Assignment } from "@/api/client";
 import { logger } from "@/utils/logger";
 import { getTeamNames, isGameReportEligible } from "@/utils/assignment-helpers";
+import { checkSafeMode } from "@/utils/safe-mode-guard";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 import { useLanguageStore } from "@/stores/language";
@@ -60,18 +61,19 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
 
   const openValidateGame = useCallback(
     (assignment: Assignment) => {
-      // Safe mode only applies to real API calls; demo mode is local-only and poses no risk
-      if (!isDemoMode && isSafeModeEnabled) {
-        logger.debug(
-          "[useAssignmentActions] Safe mode: game validation blocked",
-        );
-        toast.warning(t("settings.safeModeBlocked"));
+      if (
+        checkSafeMode({
+          isDemoMode,
+          isSafeModeEnabled,
+          context: "[useAssignmentActions] game validation",
+        })
+      ) {
         return;
       }
 
       validateGameModal.open(assignment);
     },
-    [isDemoMode, isSafeModeEnabled, t, validateGameModal],
+    [isDemoMode, isSafeModeEnabled, validateGameModal],
   );
 
   const openPdfReport = useCallback(
@@ -153,12 +155,13 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
     (assignment: Assignment) => {
       const { homeTeam, awayTeam } = getTeamNames(assignment);
 
-      // Safe mode only applies to real API calls; demo mode is local-only and poses no risk
-      if (!isDemoMode && isSafeModeEnabled) {
-        logger.debug(
-          "[useAssignmentActions] Safe mode: adding to exchange blocked",
-        );
-        toast.warning(t("settings.safeModeBlocked"));
+      if (
+        checkSafeMode({
+          isDemoMode,
+          isSafeModeEnabled,
+          context: "[useAssignmentActions] adding to exchange",
+        })
+      ) {
         return;
       }
 

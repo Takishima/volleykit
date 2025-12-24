@@ -5,6 +5,7 @@ import {
   useWithdrawFromExchange,
 } from "./useConvocations";
 import { logger } from "@/utils/logger";
+import { checkSafeMode } from "@/utils/safe-mode-guard";
 import { useAuthStore } from "@/stores/auth";
 import { toast } from "@/stores/toast";
 import { useSettingsStore } from "@/stores/settings";
@@ -47,12 +48,13 @@ export function useExchangeActions(): UseExchangeActionsResult {
 
   const handleTakeOver = useCallback(
     async (exchange: GameExchange) => {
-      // Safe mode blocks dangerous operations; demo mode bypasses since it's local-only
-      if (!isDemoMode && isSafeModeEnabled) {
-        logger.debug(
-          "[useExchangeActions] Safe mode: taking exchange blocked",
-        );
-        toast.warning(t("settings.safeModeBlocked"));
+      if (
+        checkSafeMode({
+          isDemoMode,
+          isSafeModeEnabled,
+          context: "[useExchangeActions] taking exchange",
+        })
+      ) {
         return;
       }
 
@@ -87,12 +89,13 @@ export function useExchangeActions(): UseExchangeActionsResult {
 
   const handleRemoveFromExchange = useCallback(
     async (exchange: GameExchange) => {
-      // Safe mode blocks dangerous operations; demo mode bypasses since it's local-only
-      if (!isDemoMode && isSafeModeEnabled) {
-        logger.debug(
-          "[useExchangeActions] Safe mode: withdrawing from exchange blocked",
-        );
-        toast.warning(t("settings.safeModeBlocked"));
+      if (
+        checkSafeMode({
+          isDemoMode,
+          isSafeModeEnabled,
+          context: "[useExchangeActions] withdrawing from exchange",
+        })
+      ) {
         return;
       }
 

@@ -24,6 +24,12 @@ vi.mock("@/hooks/useTranslation", () => ({
     language: "en",
   }),
 }));
+vi.mock("@/i18n", () => ({
+  t: (key: string) => key,
+  getLocale: () => "en",
+  setLocale: vi.fn(),
+  setLocaleImmediate: vi.fn(),
+}));
 
 function createMockCompensation(): CompensationRecord {
   return {
