@@ -161,7 +161,7 @@ export function ExchangePage() {
 
     return (
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredData.map((exchange) => (
+        {filteredData.map((exchange, index) => (
           <SwipeableCard
             key={exchange.__identity}
             swipeConfig={getSwipeConfig(exchange)}
@@ -170,6 +170,7 @@ export function ExchangePage() {
               <ExchangeCard
                 exchange={exchange}
                 disableExpansion={isDrawerOpen}
+                dataTour={index === 0 ? "exchange-card" : undefined}
               />
             )}
           </SwipeableCard>

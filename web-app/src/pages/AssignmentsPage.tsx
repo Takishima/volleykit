@@ -208,7 +208,7 @@ export function AssignmentsPage() {
 
         {!isLoading && !error && data && data.length > 0 && (
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {data.map((assignment) => (
+            {data.map((assignment, index) => (
               <SwipeableCard
                 key={assignment.__identity}
                 swipeConfig={getSwipeConfig(assignment)}
@@ -217,6 +217,7 @@ export function AssignmentsPage() {
                   <AssignmentCard
                     assignment={assignment}
                     disableExpansion={isDrawerOpen}
+                    dataTour={index === 0 ? "assignment-card" : undefined}
                   />
                 )}
               </SwipeableCard>

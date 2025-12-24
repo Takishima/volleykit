@@ -117,7 +117,7 @@ export function CompensationsPage() {
 
     return (
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {data.map((compensation) => (
+        {data.map((compensation, index) => (
           <SwipeableCard
             key={compensation.__identity}
             swipeConfig={getSwipeConfig(compensation)}
@@ -126,6 +126,7 @@ export function CompensationsPage() {
               <CompensationCard
                 compensation={compensation}
                 disableExpansion={isDrawerOpen}
+                dataTour={index === 0 ? "compensation-card" : undefined}
               />
             )}
           </SwipeableCard>
