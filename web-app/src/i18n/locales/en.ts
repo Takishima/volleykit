@@ -24,9 +24,14 @@ const en: Translations = {
           "This is where you'll see your upcoming referee assignments. Each card shows the game details.",
       },
       swipeValidate: {
-        title: "Swipe to Validate",
+        title: "Try Swiping Left",
         description:
-          "Swipe left on a card to reveal actions like validating the game or editing your compensation.",
+          "Swipe left on a card to reveal action buttons: Validate (confirm the game), Edit (adjust your compensation), and Report (generate sports hall report for NLA/NLB).",
+      },
+      swipeExchange: {
+        title: "Try Swiping Right",
+        description:
+          "Swipe right on a card to put the assignment up for exchange. Other referees can then take over the game.",
       },
       tapDetails: {
         title: "View Details",

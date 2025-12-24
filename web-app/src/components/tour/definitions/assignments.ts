@@ -20,6 +20,14 @@ export const assignmentsTour: TourDefinition = {
       completionEvent: { type: "swipe" },
     },
     {
+      id: "swipe-exchange",
+      targetSelector: "[data-tour='assignment-card']",
+      titleKey: "tour.assignments.swipeExchange.title",
+      descriptionKey: "tour.assignments.swipeExchange.description",
+      placement: "bottom",
+      completionEvent: { type: "swipe" },
+    },
+    {
       id: "tap-details",
       targetSelector: "[data-tour='assignment-card']",
       titleKey: "tour.assignments.tapDetails.title",

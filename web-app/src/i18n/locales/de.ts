@@ -24,9 +24,14 @@ const de: Translations = {
           "Hier sehen Sie Ihre bevorstehenden Schiedsrichtereinsätze. Jede Karte zeigt die Spieldetails.",
       },
       swipeValidate: {
-        title: "Wischen zum Validieren",
+        title: "Nach links wischen",
         description:
-          "Wischen Sie auf einer Karte nach links, um Aktionen wie das Validieren des Spiels oder das Bearbeiten Ihrer Entschädigung anzuzeigen.",
+          "Wischen Sie nach links, um die Aktionsschaltflächen anzuzeigen: Validieren (Spiel bestätigen), Bearbeiten (Entschädigung anpassen) und Bericht (Hallenrapport für NLA/NLB).",
+      },
+      swipeExchange: {
+        title: "Nach rechts wischen",
+        description:
+          "Wischen Sie nach rechts, um den Einsatz zur Börse anzubieten. Andere Schiedsrichter können das Spiel dann übernehmen.",
       },
       tapDetails: {
         title: "Details anzeigen",

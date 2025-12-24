@@ -24,9 +24,14 @@ const it: Translations = {
           "Qui vedrai le tue prossime designazioni arbitrali. Ogni scheda mostra i dettagli della partita.",
       },
       swipeValidate: {
-        title: "Scorri per validare",
+        title: "Scorri verso sinistra",
         description:
-          "Scorri verso sinistra su una scheda per rivelare azioni come validare la partita o modificare il tuo compenso.",
+          "Scorri verso sinistra per rivelare i pulsanti d'azione: Valida (conferma la partita), Modifica (regola il compenso) e Rapporto (genera il rapporto palestra per NLA/NLB).",
+      },
+      swipeExchange: {
+        title: "Scorri verso destra",
+        description:
+          "Scorri verso destra per offrire la designazione alla borsa. Altri arbitri potranno quindi prendere in carico la partita.",
       },
       tapDetails: {
         title: "Visualizza dettagli",
