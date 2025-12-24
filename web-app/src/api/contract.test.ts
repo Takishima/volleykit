@@ -281,3 +281,466 @@ describe("Mock API response structure matches real API", () => {
     expect(typeof response.totalItemsCount).toBe("number");
   });
 });
+
+describe("Assignment details endpoint", () => {
+  beforeEach(() => {
+    useDemoStore.getState().initializeDemoData();
+  });
+
+  it("getAssignmentDetails returns valid assignment", async () => {
+    const { assignments } = useDemoStore.getState();
+    const firstAssignment = assignments[0];
+    expect(firstAssignment).toBeDefined();
+
+    const details = await mockApi.getAssignmentDetails(
+      firstAssignment!.__identity,
+      ["refereeGame.game.startingDateTime"],
+    );
+
+    expect(details.__identity).toBe(firstAssignment!.__identity);
+    const result = assignmentSchema.safeParse(details);
+    expect(result.success).toBe(true);
+  });
+
+  it("getAssignmentDetails throws for non-existent assignment", async () => {
+    await expect(
+      mockApi.getAssignmentDetails("non-existent-id", []),
+    ).rejects.toThrow("Assignment not found");
+  });
+});
+
+describe("Compensation details endpoint", () => {
+  beforeEach(() => {
+    useDemoStore.getState().initializeDemoData();
+  });
+
+  it("getCompensationDetails returns valid detailed compensation", async () => {
+    const { compensations } = useDemoStore.getState();
+    const firstComp = compensations[0];
+    expect(firstComp?.convocationCompensation?.__identity).toBeDefined();
+
+    const details = await mockApi.getCompensationDetails(
+      firstComp!.convocationCompensation!.__identity!,
+    );
+
+    expect(details).toHaveProperty("convocationCompensation");
+    expect(details.convocationCompensation).toBeDefined();
+    expect(details.convocationCompensation).toHaveProperty("__identity");
+    expect(details.convocationCompensation).toHaveProperty("distanceInMetres");
+    // correctionReason can be null or string
+    expect("correctionReason" in details.convocationCompensation!).toBe(true);
+  });
+
+  it("getCompensationDetails throws for non-existent compensation", async () => {
+    await expect(
+      mockApi.getCompensationDetails("non-existent-id"),
+    ).rejects.toThrow("Compensation not found");
+  });
+
+  it("updateCompensation modifies compensation data", async () => {
+    const { compensations } = useDemoStore.getState();
+    const firstComp = compensations[0];
+    const compensationId = firstComp!.convocationCompensation!.__identity!;
+
+    await mockApi.updateCompensation(compensationId, {
+      distanceInMetres: 50000,
+      correctionReason: "Test correction",
+    });
+
+    // Verify the update was applied
+    const { compensations: updatedCompensations } = useDemoStore.getState();
+    const updated = updatedCompensations.find(
+      (c) => c.convocationCompensation?.__identity === compensationId,
+    );
+    expect(updated?.convocationCompensation?.distanceInMetres).toBe(50000);
+  });
+});
+
+describe("Exchange mutation endpoints", () => {
+  beforeEach(() => {
+    useDemoStore.getState().initializeDemoData();
+  });
+
+  it("applyForExchange changes status to applied", async () => {
+    const { exchanges } = useDemoStore.getState();
+    const openExchange = exchanges.find((e) => e.status === "open");
+    expect(openExchange).toBeDefined();
+
+    await mockApi.applyForExchange(openExchange!.__identity);
+
+    const { exchanges: updated } = useDemoStore.getState();
+    const applied = updated.find(
+      (e) => e.__identity === openExchange!.__identity,
+    );
+    expect(applied?.status).toBe("applied");
+    expect(applied?.appliedBy).toBeDefined();
+    expect(applied?.appliedAt).toBeDefined();
+  });
+
+  it("withdrawFromExchange changes status back to open", async () => {
+    const { exchanges } = useDemoStore.getState();
+    const appliedExchange = exchanges.find((e) => e.status === "applied");
+    expect(appliedExchange).toBeDefined();
+
+    await mockApi.withdrawFromExchange(appliedExchange!.__identity);
+
+    const { exchanges: updated } = useDemoStore.getState();
+    const withdrawn = updated.find(
+      (e) => e.__identity === appliedExchange!.__identity,
+    );
+    expect(withdrawn?.status).toBe("open");
+    expect(withdrawn?.appliedBy).toBeUndefined();
+  });
+});
+
+describe("Settings endpoints", () => {
+  beforeEach(() => {
+    useDemoStore.getState().initializeDemoData();
+  });
+
+  it("getAssociationSettings returns valid settings object", async () => {
+    const settings = await mockApi.getAssociationSettings();
+
+    expect(settings).toHaveProperty(
+      "hoursAfterGameStartForRefereeToEditGameList",
+    );
+    expect(
+      typeof settings.hoursAfterGameStartForRefereeToEditGameList,
+    ).toBe("number");
+  });
+
+  it("getActiveSeason returns valid season with date range", async () => {
+    const season = await mockApi.getActiveSeason();
+
+    expect(season).toHaveProperty("seasonStartDate");
+    expect(season).toHaveProperty("seasonEndDate");
+    expect(typeof season.seasonStartDate).toBe("string");
+    expect(typeof season.seasonEndDate).toBe("string");
+
+    // Verify dates are valid ISO strings
+    expect(() => new Date(season.seasonStartDate!)).not.toThrow();
+    expect(() => new Date(season.seasonEndDate!)).not.toThrow();
+
+    // Season end should be after season start
+    const start = new Date(season.seasonStartDate!);
+    const end = new Date(season.seasonEndDate!);
+    expect(end.getTime()).toBeGreaterThan(start.getTime());
+  });
+});
+
+describe("Nomination list endpoints", () => {
+  beforeEach(() => {
+    useDemoStore.getState().initializeDemoData();
+  });
+
+  it("getNominationList returns valid nomination list for home team", async () => {
+    const { nominationLists } = useDemoStore.getState();
+    const gameId = Object.keys(nominationLists)[0];
+    expect(gameId).toBeDefined();
+
+    const nominationList = await mockApi.getNominationList(gameId!, "home");
+
+    expect(nominationList).not.toBeNull();
+    expect(nominationList).toHaveProperty("__identity");
+    expect(nominationList).toHaveProperty("game");
+    expect(nominationList).toHaveProperty("team");
+    expect(nominationList).toHaveProperty("closed");
+    expect(nominationList).toHaveProperty("indoorPlayerNominations");
+    expect(Array.isArray(nominationList!.indoorPlayerNominations)).toBe(true);
+  });
+
+  it("getNominationList returns valid nomination list for away team", async () => {
+    const { nominationLists } = useDemoStore.getState();
+    const gameId = Object.keys(nominationLists)[0];
+    expect(gameId).toBeDefined();
+
+    const nominationList = await mockApi.getNominationList(gameId!, "away");
+
+    expect(nominationList).not.toBeNull();
+    expect(nominationList!.indoorPlayerNominations?.length).toBeGreaterThan(0);
+  });
+
+  it("getNominationList returns null for non-existent game", async () => {
+    const nominationList = await mockApi.getNominationList(
+      "non-existent-game",
+      "home",
+    );
+    expect(nominationList).toBeNull();
+  });
+
+  it("player nominations have required fields", async () => {
+    const { nominationLists } = useDemoStore.getState();
+    const gameId = Object.keys(nominationLists)[0];
+    const nominationList = await mockApi.getNominationList(gameId!, "home");
+
+    nominationList!.indoorPlayerNominations?.forEach((player) => {
+      expect(player.__identity).toBeDefined();
+      expect(player.shirtNumber).toBeDefined();
+      expect(player.indoorPlayer).toBeDefined();
+      expect(player.indoorPlayer?.person).toBeDefined();
+    });
+  });
+
+  it("getPossiblePlayerNominations returns valid nominations", async () => {
+    const { nominationLists } = useDemoStore.getState();
+    const gameId = Object.keys(nominationLists)[0];
+    const nominationList = nominationLists[gameId!]!.home;
+
+    const response = await mockApi.getPossiblePlayerNominations(
+      nominationList.__identity!,
+    );
+
+    expect(response).toHaveProperty("items");
+    expect(response).toHaveProperty("totalItemsCount");
+    expect(Array.isArray(response.items)).toBe(true);
+    expect(response.items!.length).toBeGreaterThan(0);
+
+    // Verify structure of possible nominations
+    response.items!.forEach((item) => {
+      expect(item.__identity).toBeDefined();
+      expect(item.indoorPlayer).toBeDefined();
+      expect(item.licenseCategory).toBeDefined();
+    });
+  });
+});
+
+describe("Nomination list mutation endpoints", () => {
+  beforeEach(() => {
+    useDemoStore.getState().initializeDemoData();
+  });
+
+  it("updateNominationList returns updated list", async () => {
+    const { nominationLists } = useDemoStore.getState();
+    const gameId = Object.keys(nominationLists)[0]!;
+    const nominationList = nominationLists[gameId]!.home;
+
+    const result = await mockApi.updateNominationList(
+      nominationList.__identity!,
+      gameId,
+      nominationList.team?.__identity ?? "team-id",
+      [],
+    );
+
+    expect(result).toHaveProperty("__identity");
+    expect(result).toHaveProperty("game");
+    expect(result).toHaveProperty("team");
+    expect(result.closed).toBe(false);
+  });
+
+  it("finalizeNominationList returns finalized list with closedAt", async () => {
+    const { nominationLists } = useDemoStore.getState();
+    const gameId = Object.keys(nominationLists)[0]!;
+    const nominationList = nominationLists[gameId]!.home;
+
+    const result = await mockApi.finalizeNominationList(
+      nominationList.__identity!,
+      gameId,
+      nominationList.team?.__identity ?? "team-id",
+      [],
+    );
+
+    expect(result).toHaveProperty("nominationList");
+    expect(result.nominationList!.closed).toBe(true);
+    expect(result.nominationList!.closedAt).toBeDefined();
+    expect(result.nominationList!.closedBy).toBe("referee");
+  });
+});
+
+describe("Scoresheet and game details endpoints", () => {
+  beforeEach(() => {
+    useDemoStore.getState().initializeDemoData();
+  });
+
+  it("getGameWithScoresheet returns valid game details", async () => {
+    const { nominationLists } = useDemoStore.getState();
+    const gameId = Object.keys(nominationLists)[0]!;
+
+    const gameDetails = await mockApi.getGameWithScoresheet(gameId);
+
+    expect(gameDetails).toHaveProperty("__identity");
+    expect(gameDetails.__identity).toBe(gameId);
+    expect(gameDetails).toHaveProperty("scoresheet");
+    expect(gameDetails.scoresheet).toHaveProperty("__identity");
+    expect(gameDetails.scoresheet).toHaveProperty("game");
+    expect(gameDetails.scoresheet).toHaveProperty("isSimpleScoresheet");
+    expect(gameDetails.scoresheet).toHaveProperty("hasFile");
+  });
+
+  it("getGameWithScoresheet includes nomination lists", async () => {
+    const { nominationLists } = useDemoStore.getState();
+    const gameId = Object.keys(nominationLists)[0]!;
+
+    const gameDetails = await mockApi.getGameWithScoresheet(gameId);
+
+    expect(gameDetails).toHaveProperty("nominationListOfTeamHome");
+    expect(gameDetails).toHaveProperty("nominationListOfTeamAway");
+    expect(gameDetails.nominationListOfTeamHome?.__identity).toBeDefined();
+    expect(gameDetails.nominationListOfTeamAway?.__identity).toBeDefined();
+  });
+
+  it("updateScoresheet returns updated scoresheet", async () => {
+    const { nominationLists, scorers } = useDemoStore.getState();
+    const gameId = Object.keys(nominationLists)[0]!;
+    const scorer = scorers[0]!;
+    expect(scorer.__identity).toBeDefined();
+    const scorerId = scorer.__identity!;
+
+    const result = await mockApi.updateScoresheet(
+      `scoresheet-${gameId}`,
+      gameId,
+      scorerId,
+      false,
+    );
+
+    expect(result).toHaveProperty("__identity");
+    expect(result).toHaveProperty("game");
+    expect(result).toHaveProperty("writerPerson");
+    expect(result.writerPerson?.__identity).toBe(scorerId);
+    expect(result.isSimpleScoresheet).toBe(false);
+    expect(result.hasFile).toBe(false);
+  });
+
+  it("finalizeScoresheet returns finalized scoresheet with closedAt", async () => {
+    const { nominationLists, scorers } = useDemoStore.getState();
+    const gameId = Object.keys(nominationLists)[0]!;
+    const scorer = scorers[0]!;
+    expect(scorer.__identity).toBeDefined();
+    const scorerId = scorer.__identity!;
+
+    const result = await mockApi.finalizeScoresheet(
+      `scoresheet-${gameId}`,
+      gameId,
+      scorerId,
+      "resource-123",
+      undefined,
+      false,
+    );
+
+    expect(result).toHaveProperty("__identity");
+    expect(result).toHaveProperty("closedAt");
+    expect(result.closedBy).toBe("referee");
+    expect(result.hasFile).toBe(true);
+  });
+
+  it("finalizeScoresheet marks game as validated in store", async () => {
+    const { nominationLists, scorers } = useDemoStore.getState();
+    const gameId = Object.keys(nominationLists)[0]!;
+    const scorer = scorers[0]!;
+    expect(scorer.__identity).toBeDefined();
+    const scorerId = scorer.__identity!;
+
+    await mockApi.finalizeScoresheet(
+      `scoresheet-${gameId}`,
+      gameId,
+      scorerId,
+      "resource-123",
+    );
+
+    const { validatedGames } = useDemoStore.getState();
+    expect(validatedGames[gameId]).toBeDefined();
+    expect(validatedGames[gameId]?.scorer.__identity).toBe(scorerId);
+    expect(validatedGames[gameId]?.scoresheetFileId).toBe("resource-123");
+  });
+});
+
+describe("File upload endpoint", () => {
+  it("uploadResource rejects invalid file types", async () => {
+    const invalidFile = new File(["test"], "test.txt", {
+      type: "text/plain",
+    });
+
+    await expect(mockApi.uploadResource(invalidFile)).rejects.toThrow(
+      "Invalid file type",
+    );
+  });
+
+  it("uploadResource rejects files that are too large", async () => {
+    // Create a mock file larger than 10MB
+    const largeContent = new Array(11 * 1024 * 1024).fill("x").join("");
+    const largeFile = new File([largeContent], "large.pdf", {
+      type: "application/pdf",
+    });
+
+    await expect(mockApi.uploadResource(largeFile)).rejects.toThrow(
+      "File too large",
+    );
+  });
+
+  it("uploadResource accepts valid PDF files", async () => {
+    const validFile = new File(["test content"], "test.pdf", {
+      type: "application/pdf",
+    });
+
+    const result = await mockApi.uploadResource(validFile);
+
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBe(1);
+    expect(result[0]).toHaveProperty("__identity");
+    expect(result[0]).toHaveProperty("persistentResource");
+    expect(result[0]?.persistentResource?.filename).toBe("test.pdf");
+    expect(result[0]?.persistentResource?.mediaType).toBe("application/pdf");
+  });
+});
+
+describe("Filtering and pagination", () => {
+  beforeEach(() => {
+    useDemoStore.getState().initializeDemoData();
+  });
+
+  it("searchAssignments respects limit parameter", async () => {
+    const response = await mockApi.searchAssignments({ limit: 2 });
+
+    expect(response.items.length).toBeLessThanOrEqual(2);
+    expect(response.totalItemsCount).toBeGreaterThan(0);
+  });
+
+  it("searchAssignments respects offset parameter", async () => {
+    const fullResponse = await mockApi.searchAssignments();
+    const offsetResponse = await mockApi.searchAssignments({ offset: 1 });
+
+    expect(offsetResponse.items.length).toBe(fullResponse.items.length - 1);
+    expect(offsetResponse.items[0]?.__identity).toBe(
+      fullResponse.items[1]?.__identity,
+    );
+  });
+
+  it("searchExchanges filters by status", async () => {
+    const response = await mockApi.searchExchanges({
+      propertyFilters: [{ propertyName: "status", enumValues: ["open"] }],
+    });
+
+    response.items.forEach((exchange) => {
+      expect(exchange.status).toBe("open");
+    });
+  });
+
+  it("searchCompensations sorts by date descending", async () => {
+    const response = await mockApi.searchCompensations({
+      propertyOrderings: [
+        { propertyName: "compensationDate", descending: true },
+      ],
+    });
+
+    // Verify dates are in descending order
+    for (let i = 1; i < response.items.length; i++) {
+      const prevDate = new Date(response.items[i - 1]!.compensationDate!);
+      const currDate = new Date(response.items[i]!.compensationDate!);
+      expect(prevDate.getTime()).toBeGreaterThanOrEqual(currDate.getTime());
+    }
+  });
+
+  it("searchPersons filters by lastName", async () => {
+    const response = await mockApi.searchPersons({ lastName: "Müller" });
+
+    expect(response.items).toBeDefined();
+    expect(response.items!.length).toBeGreaterThan(0);
+    // The mock API uses accent-insensitive search, normalizing "Müller" to "muller"
+    response.items!.forEach((person) => {
+      const normalize = (s: string) =>
+        s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const matchesFirst = normalize(person.firstName ?? "").includes("muller");
+      const matchesLast = normalize(person.lastName ?? "").includes("muller");
+      expect(matchesFirst || matchesLast).toBe(true);
+    });
+  });
+});
