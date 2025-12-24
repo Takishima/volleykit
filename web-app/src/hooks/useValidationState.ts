@@ -66,13 +66,11 @@ export interface ValidatedGameInfo {
   hasScoresheet: boolean;
 }
 
-/**
- * Pending scorer data from the game details (previously saved but not finalized).
- */
-export interface PendingScorerInfo {
-  __identity: string;
-  displayName: string;
-}
+// Use the same type definition as demo store for consistency
+import type { PendingScorerData } from "@/stores/demo";
+
+// Re-export for consumers of this hook
+export type { PendingScorerData as PendingScorerInfo } from "@/stores/demo";
 
 /**
  * Result from the useValidationState hook.
@@ -91,7 +89,7 @@ export interface UseValidationStateResult {
   /** Information about the validated game (if validated) */
   validatedInfo: ValidatedGameInfo | null;
   /** Pending scorer from previous save (if any) */
-  pendingScorer: PendingScorerInfo | null;
+  pendingScorer: PendingScorerData | null;
   /** Update home roster modifications (auto-marks roster as reviewed) */
   setHomeRosterModifications: (modifications: RosterModifications) => void;
   /** Update away roster modifications (auto-marks roster as reviewed) */
@@ -350,7 +348,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
   }, [gameDetailsQuery.data]);
 
   // Get pending scorer from game details (if game is not validated but has a saved scorer)
-  const pendingScorer = useMemo<PendingScorerInfo | null>(() => {
+  const pendingScorer = useMemo<PendingScorerData | null>(() => {
     // Don't show pending scorer if game is already validated
     if (isValidated) return null;
 

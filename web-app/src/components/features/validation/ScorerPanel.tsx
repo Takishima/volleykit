@@ -26,13 +26,12 @@ export function ScorerPanel({
     useState<ValidatedPersonSearchResult | null>(initialScorer);
 
   // Notify parent of initial scorer on mount (so completionStatus is updated)
+  // Note: Component uses key={pendingScorer?.__identity} to force remount when scorer changes
   useEffect(() => {
     if (initialScorer) {
       onScorerChange?.(initialScorer);
     }
-    // Only run on mount - when key changes, component remounts with new initialScorer
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [initialScorer, onScorerChange]);
 
   const handleScorerSelect = (scorer: ValidatedPersonSearchResult | null) => {
     setSelectedScorer(scorer);
