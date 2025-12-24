@@ -17,6 +17,7 @@ import {
 import type { CompensationRecord } from "@/api/client";
 import type { SwipeConfig } from "@/types/swipe";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useTour } from "@/hooks/useTour";
 
 type FilterType = "all" | "paid" | "unpaid";
 
@@ -36,6 +37,9 @@ export function CompensationsPage() {
   const [filter, setFilter] = useState<FilterType>("unpaid");
   const { t } = useTranslation();
   const { editCompensationModal, handleGeneratePDF } = useCompensationActions();
+
+  // Initialize tour for this page (triggers auto-start on first visit)
+  useTour("compensations");
 
   // Single data fetch based on current filter (like ExchangePage pattern)
   const paidFilter = useMemo(() => filterToPaidFilter(filter), [filter]);
@@ -116,7 +120,7 @@ export function CompensationsPage() {
 
     return (
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {data.map((compensation) => (
+        {data.map((compensation, index) => (
           <SwipeableCard
             key={compensation.__identity}
             swipeConfig={getSwipeConfig(compensation)}
@@ -125,6 +129,7 @@ export function CompensationsPage() {
               <CompensationCard
                 compensation={compensation}
                 disableExpansion={isDrawerOpen}
+                dataTour={index === 0 ? "compensation-card" : undefined}
               />
             )}
           </SwipeableCard>

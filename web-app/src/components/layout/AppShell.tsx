@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Outlet, NavLink, useLocation } from "react-router-dom";
 import { useAuthStore, type Occupation } from "@/stores/auth";
 import { useDemoStore, type DemoAssociationCode } from "@/stores/demo";
+import { useTourStore } from "@/stores/tour";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getOccupationLabelKey } from "@/utils/occupation-labels";
 import {
@@ -13,6 +14,7 @@ import {
   ChevronDown,
 } from "@/components/ui/icons";
 import type { LucideIcon } from "lucide-react";
+import { TourModeBanner } from "@/components/tour/TourModeBanner";
 
 const MINIMUM_OCCUPATIONS_FOR_SWITCHER = 2;
 
@@ -49,6 +51,7 @@ export function AppShell() {
     isDemoMode,
   } = useAuthStore();
   const { setActiveAssociation } = useDemoStore();
+  const activeTour = useTourStore((state) => state.activeTour);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const getOccupationLabel = useCallback(
@@ -197,6 +200,9 @@ export function AppShell() {
         </div>
       )}
 
+      {/* Tour mode banner */}
+      <TourModeBanner />
+
       {/* Main content
           pb-16 (4rem/64px) provides padding to prevent content from being hidden
           behind the fixed bottom nav. This matches the compact nav height. */}
@@ -211,20 +217,29 @@ export function AppShell() {
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
               const Icon = item.icon;
+              const isDisabled = activeTour !== null && !isActive;
               return (
                 <NavLink
                   key={item.path}
                   to={item.path}
                   data-testid={item.testId}
+                  onClick={(e) => {
+                    if (isDisabled) {
+                      e.preventDefault();
+                    }
+                  }}
                   className={`
                     flex flex-col items-center py-2 px-4 text-[10px] font-medium
                     transition-all duration-150 rounded-lg mx-1
                     ${
                       isActive
                         ? "text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30"
-                        : "text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark"
+                        : isDisabled
+                          ? "text-text-muted/50 dark:text-text-muted-dark/50 cursor-not-allowed"
+                          : "text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark"
                     }
                   `}
+                  aria-disabled={isDisabled}
                 >
                   <Icon
                     className={`w-5 h-5 ${isActive ? "scale-110" : ""} transition-transform`}

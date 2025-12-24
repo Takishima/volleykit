@@ -10,12 +10,15 @@ interface AssignmentCardProps {
   onClick?: () => void;
   /** When true, expansion is disabled and the arrow is hidden */
   disableExpansion?: boolean;
+  /** Optional data-tour attribute for guided tours */
+  dataTour?: string;
 }
 
 export function AssignmentCard({
   assignment,
   onClick,
   disableExpansion,
+  dataTour,
 }: AssignmentCardProps) {
   const { t } = useTranslation();
 
@@ -71,6 +74,7 @@ export function AssignmentCard({
       data={assignment}
       onClick={onClick}
       disableExpansion={disableExpansion}
+      dataTour={dataTour}
       className={isGamePast ? "opacity-75" : ""}
       renderCompact={(_, { expandArrow }) => (
         <>

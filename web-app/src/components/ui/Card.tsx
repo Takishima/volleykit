@@ -9,6 +9,7 @@ interface CardProps {
   tabIndex?: number;
   "aria-label"?: string;
   "aria-expanded"?: boolean;
+  "data-tour"?: string;
 }
 
 export function Card({
@@ -20,6 +21,7 @@ export function Card({
   tabIndex,
   "aria-label": ariaLabel,
   "aria-expanded": ariaExpanded,
+  "data-tour": dataTour,
 }: CardProps) {
   const baseClasses =
     "bg-surface-card dark:bg-surface-card-dark rounded-xl shadow-sm border border-border-subtle dark:border-border-subtle-dark/50";
@@ -36,6 +38,7 @@ export function Card({
       tabIndex={tabIndex ?? (onClick ? 0 : undefined)}
       aria-label={ariaLabel}
       aria-expanded={ariaExpanded}
+      data-tour={dataTour}
     >
       {children}
     </div>
@@ -60,10 +63,19 @@ export function CardHeader({ children, className = "" }: CardHeaderProps) {
 interface CardContentProps {
   children: ReactNode;
   className?: string;
+  "data-tour"?: string;
 }
 
-export function CardContent({ children, className = "" }: CardContentProps) {
-  return <div className={`p-4 ${className}`}>{children}</div>;
+export function CardContent({
+  children,
+  className = "",
+  "data-tour": dataTour,
+}: CardContentProps) {
+  return (
+    <div className={`p-4 ${className}`} data-tour={dataTour}>
+      {children}
+    </div>
+  );
 }
 
 interface CardFooterProps {

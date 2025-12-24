@@ -10,11 +10,14 @@ interface ExchangeCardProps {
   exchange: GameExchange;
   /** When true, expansion is disabled and the arrow is hidden */
   disableExpansion?: boolean;
+  /** Optional data-tour attribute for guided tours */
+  dataTour?: string;
 }
 
 export function ExchangeCard({
   exchange,
   disableExpansion,
+  dataTour,
 }: ExchangeCardProps) {
   const dateLocale = useDateLocale();
 
@@ -49,6 +52,7 @@ export function ExchangeCard({
     <ExpandableCard
       data={exchange}
       disableExpansion={disableExpansion}
+      dataTour={dataTour}
       renderCompact={(_, { expandArrow }) => (
         <>
           {/* Date/Time */}

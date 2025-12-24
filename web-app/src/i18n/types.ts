@@ -327,4 +327,89 @@ export interface Translations {
       validatedBy: string;
     };
   };
+  tour: {
+    banner: {
+      title: string;
+      subtitle: string;
+      exit: string;
+    };
+    badge: {
+      example: string;
+    };
+    actions: {
+      skip: string;
+      next: string;
+      previous: string;
+      finish: string;
+    };
+    stepCurrent: string;
+    assignments: {
+      welcome: {
+        title: string;
+        description: string;
+      };
+      swipeValidate: {
+        title: string;
+        description: string;
+      };
+      swipeExchange: {
+        title: string;
+        description: string;
+      };
+      tapDetails: {
+        title: string;
+        description: string;
+      };
+    };
+    compensations: {
+      overview: {
+        title: string;
+        description: string;
+      };
+      swipeEdit: {
+        title: string;
+        description: string;
+      };
+      tapDetails: {
+        title: string;
+        description: string;
+      };
+    };
+    exchange: {
+      browse: {
+        title: string;
+        description: string;
+      };
+      apply: {
+        title: string;
+        description: string;
+      };
+      filter: {
+        title: string;
+        description: string;
+      };
+    };
+    settings: {
+      language: {
+        title: string;
+        description: string;
+      };
+      complete: {
+        title: string;
+        description: string;
+      };
+      tourSection: {
+        title: string;
+        description: string;
+        restart: string;
+        statusCompleted: string;
+        statusSkipped: string;
+        statusNotStarted: string;
+      };
+    };
+    feedback: {
+      swipeSuccess: string;
+      tapSuccess: string;
+    };
+  };
 }

@@ -1,6 +1,104 @@
 import type { Translations } from "../types";
 
 const it: Translations = {
+  tour: {
+    banner: {
+      title: "Tour guidato",
+      subtitle: "Esercitati con dati di esempio",
+      exit: "Esci dal tour",
+    },
+    badge: {
+      example: "Esempio",
+    },
+    actions: {
+      skip: "Salta",
+      next: "Avanti",
+      previous: "Indietro",
+      finish: "Termina",
+    },
+    stepCurrent: "Passo {step} di {total}",
+    assignments: {
+      welcome: {
+        title: "Le tue designazioni",
+        description:
+          "Qui vedrai le tue prossime designazioni arbitrali. Ogni scheda mostra i dettagli della partita.",
+      },
+      swipeValidate: {
+        title: "Scorri verso sinistra",
+        description:
+          "Scorri verso sinistra per rivelare i pulsanti d'azione: Valida (conferma la partita), Modifica (regola il compenso) e Rapporto (genera il rapporto palestra per NLA/NLB).",
+      },
+      swipeExchange: {
+        title: "Scorri verso destra",
+        description:
+          "Scorri verso destra per offrire la designazione alla borsa. Altri arbitri potranno quindi prendere in carico la partita.",
+      },
+      tapDetails: {
+        title: "Visualizza dettagli",
+        description:
+          "Tocca una scheda per espanderla e vedere maggiori dettagli sulla designazione.",
+      },
+    },
+    compensations: {
+      overview: {
+        title: "I tuoi compensi",
+        description:
+          "Qui puoi vedere tutti i tuoi compensi arbitrali, incluse le tariffe delle partite e le spese di viaggio.",
+      },
+      swipeEdit: {
+        title: "Scorri per modificare",
+        description:
+          "Scorri verso sinistra per rivelare il pulsante di modifica. Toccalo per regolare la distanza o aggiungere un motivo di correzione.",
+      },
+      tapDetails: {
+        title: "Visualizza dettagli",
+        description:
+          "Tocca una scheda per espanderla e vedere maggiori dettagli sul compenso.",
+      },
+    },
+    exchange: {
+      browse: {
+        title: "Scambi disponibili",
+        description:
+          "Qui puoi vedere le designazioni che altri arbitri vogliono cedere. Assumine una se si adatta ai tuoi impegni!",
+      },
+      apply: {
+        title: "Scorri per candidarti",
+        description:
+          "Scorri verso sinistra per candidarti allo scambio. Assumerai la designazione se approvato.",
+      },
+      filter: {
+        title: "Filtra per livello",
+        description:
+          "Usa questo pulsante per mostrare solo le partite che corrispondono al tuo livello arbitrale.",
+      },
+    },
+    settings: {
+      language: {
+        title: "Cambia lingua",
+        description:
+          "Seleziona la tua lingua preferita. L'app supporta tedesco, inglese, francese e italiano.",
+      },
+      complete: {
+        title: "Tour completato!",
+        description:
+          "Hai completato il tour guidato. Puoi riavviarlo in qualsiasi momento dalle impostazioni.",
+      },
+      tourSection: {
+        title: "Tour guidati",
+        description:
+          "Suggerimenti interattivi che ti guidano attraverso ogni sezione dell'app usando dati di esempio.",
+        restart: "Riavvia tour",
+        statusCompleted: "Completato",
+        statusSkipped: "Saltato",
+        statusNotStarted: "Non iniziato",
+      },
+    },
+    feedback: {
+      swipeSuccess: "Ottimo scorrimento! Hai capito come funziona.",
+      tapSuccess: "Perfetto! Tocca per esplorare più dettagli.",
+    },
+  },
   common: {
     loading: "Caricamento...",
     error: "Si è verificato un errore",

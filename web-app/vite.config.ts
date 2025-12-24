@@ -109,9 +109,12 @@ export default defineConfig(({ mode }) => {
     build: {
       rollupOptions: {
         output: {
+          // Lazy-loaded chunks get "chunk-" prefix to distinguish from main "index-" bundle.
+          // This ensures size-limit's "index-*.js" pattern only matches the main bundle.
+          chunkFileNames: 'assets/chunk-[name]-[hash].js',
           // Manual chunks for bundle splitting. Names must match size-limit config in package.json.
           // Current sizes (gzipped) and limits:
-          //   - Main App Bundle (index-*.js):     ~115 kB, limit 120 kB (+5 kB headroom)
+          //   - Main App Bundle (index-*.js):     ~123 kB, limit 125 kB (+2 kB headroom)
           //   - Vendor Chunks (combined):         ~45 kB,  limit 50 kB  (+5 kB headroom)
           //   - PDF Library (pdf-lib-*.js):       ~180 kB, limit 185 kB (+5 kB headroom) - lazy-loaded
           //   - Total JS Bundle:                  ~360 kB, limit 400 kB (+40 kB headroom)

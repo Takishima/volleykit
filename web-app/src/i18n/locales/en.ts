@@ -1,6 +1,104 @@
 import type { Translations } from "../types";
 
 const en: Translations = {
+  tour: {
+    banner: {
+      title: "Guided Tour",
+      subtitle: "Practice with example data",
+      exit: "Exit Tour",
+    },
+    badge: {
+      example: "Example",
+    },
+    actions: {
+      skip: "Skip",
+      next: "Next",
+      previous: "Back",
+      finish: "Finish",
+    },
+    stepCurrent: "Step {step} of {total}",
+    assignments: {
+      welcome: {
+        title: "Your Assignments",
+        description:
+          "This is where you'll see your upcoming referee assignments. Each card shows the game details.",
+      },
+      swipeValidate: {
+        title: "Try Swiping Left",
+        description:
+          "Swipe left on a card to reveal action buttons: Validate (confirm the game), Edit (adjust your compensation), and Report (generate sports hall report for NLA/NLB).",
+      },
+      swipeExchange: {
+        title: "Try Swiping Right",
+        description:
+          "Swipe right on a card to put the assignment up for exchange. Other referees can then take over the game.",
+      },
+      tapDetails: {
+        title: "View Details",
+        description:
+          "Tap on a card to expand it and see more details about the assignment.",
+      },
+    },
+    compensations: {
+      overview: {
+        title: "Your Compensations",
+        description:
+          "Here you can see all your referee compensations, including game fees and travel expenses.",
+      },
+      swipeEdit: {
+        title: "Try Swiping Left",
+        description:
+          "Swipe left on a card to reveal action buttons: Edit (adjust distance or add correction reason) and PDF (download compensation summary).",
+      },
+      tapDetails: {
+        title: "View Details",
+        description:
+          "Tap on a card to expand it and see the full breakdown of your compensation.",
+      },
+    },
+    exchange: {
+      browse: {
+        title: "Available Exchanges",
+        description:
+          "Here you can see assignments that other referees want to give away. Take one if it fits your schedule!",
+      },
+      apply: {
+        title: "Swipe to Apply",
+        description:
+          "Swipe left on a card to apply for the exchange. You'll take over the assignment if approved.",
+      },
+      filter: {
+        title: "Filter by Level",
+        description:
+          "Use this toggle to show only games that match your referee level.",
+      },
+    },
+    settings: {
+      language: {
+        title: "Change Language",
+        description:
+          "Select your preferred language. The app supports German, English, French, and Italian.",
+      },
+      complete: {
+        title: "Tour Complete!",
+        description:
+          "You've completed the guided tour. You can restart it anytime from the settings.",
+      },
+      tourSection: {
+        title: "Guided Tours",
+        description:
+          "Interactive tips that guide you through each section of the app using example data.",
+        restart: "Restart Tours",
+        statusCompleted: "Completed",
+        statusSkipped: "Skipped",
+        statusNotStarted: "Not started",
+      },
+    },
+    feedback: {
+      swipeSuccess: "Great swipe! You've got the hang of it.",
+      tapSuccess: "Perfect! Tap to explore more details.",
+    },
+  },
   common: {
     loading: "Loading...",
     error: "An error occurred",

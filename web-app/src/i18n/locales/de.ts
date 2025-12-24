@@ -1,6 +1,104 @@
 import type { Translations } from "../types";
 
 const de: Translations = {
+  tour: {
+    banner: {
+      title: "Einführung",
+      subtitle: "Üben Sie mit Beispieldaten",
+      exit: "Tour beenden",
+    },
+    badge: {
+      example: "Beispiel",
+    },
+    actions: {
+      skip: "Überspringen",
+      next: "Weiter",
+      previous: "Zurück",
+      finish: "Fertig",
+    },
+    stepCurrent: "Schritt {step} von {total}",
+    assignments: {
+      welcome: {
+        title: "Ihre Einsätze",
+        description:
+          "Hier sehen Sie Ihre bevorstehenden Schiedsrichtereinsätze. Jede Karte zeigt die Spieldetails.",
+      },
+      swipeValidate: {
+        title: "Nach links wischen",
+        description:
+          "Wischen Sie nach links, um die Aktionsschaltflächen anzuzeigen: Validieren (Spiel bestätigen), Bearbeiten (Entschädigung anpassen) und Bericht (Hallenrapport für NLA/NLB).",
+      },
+      swipeExchange: {
+        title: "Nach rechts wischen",
+        description:
+          "Wischen Sie nach rechts, um den Einsatz zur Börse anzubieten. Andere Schiedsrichter können das Spiel dann übernehmen.",
+      },
+      tapDetails: {
+        title: "Details anzeigen",
+        description:
+          "Tippen Sie auf eine Karte, um sie zu erweitern und weitere Details zum Einsatz zu sehen.",
+      },
+    },
+    compensations: {
+      overview: {
+        title: "Ihre Entschädigungen",
+        description:
+          "Hier können Sie alle Ihre Schiedsrichterentschädigungen einsehen, einschliesslich Spielgebühren und Reisekosten.",
+      },
+      swipeEdit: {
+        title: "Nach links wischen",
+        description:
+          "Wischen Sie nach links, um die Aktionsschaltflächen anzuzeigen: Bearbeiten (Distanz anpassen oder Korrekturgrund hinzufügen) und PDF (Entschädigungsübersicht herunterladen).",
+      },
+      tapDetails: {
+        title: "Details anzeigen",
+        description:
+          "Tippen Sie auf eine Karte, um sie zu erweitern und die vollständige Aufschlüsselung Ihrer Entschädigung zu sehen.",
+      },
+    },
+    exchange: {
+      browse: {
+        title: "Verfügbare Tauschangebote",
+        description:
+          "Hier sehen Sie Einsätze, die andere Schiedsrichter abgeben möchten. Übernehmen Sie einen, wenn er in Ihren Zeitplan passt!",
+      },
+      apply: {
+        title: "Wischen zum Bewerben",
+        description:
+          "Wischen Sie nach links, um sich für den Tausch zu bewerben. Bei Genehmigung übernehmen Sie den Einsatz.",
+      },
+      filter: {
+        title: "Nach Niveau filtern",
+        description:
+          "Verwenden Sie diesen Schalter, um nur Spiele anzuzeigen, die Ihrem Schiedsrichterniveau entsprechen.",
+      },
+    },
+    settings: {
+      language: {
+        title: "Sprache ändern",
+        description:
+          "Wählen Sie Ihre bevorzugte Sprache. Die App unterstützt Deutsch, Englisch, Französisch und Italienisch.",
+      },
+      complete: {
+        title: "Tour abgeschlossen!",
+        description:
+          "Sie haben die Einführung abgeschlossen. Sie können sie jederzeit in den Einstellungen neu starten.",
+      },
+      tourSection: {
+        title: "Einführungstouren",
+        description:
+          "Interaktive Tipps, die Sie mit Beispieldaten durch jeden Bereich der App führen.",
+        restart: "Touren neu starten",
+        statusCompleted: "Abgeschlossen",
+        statusSkipped: "Übersprungen",
+        statusNotStarted: "Nicht gestartet",
+      },
+    },
+    feedback: {
+      swipeSuccess: "Tolle Wischbewegung! Sie haben den Dreh raus.",
+      tapSuccess: "Perfekt! Tippen Sie, um mehr Details zu entdecken.",
+    },
+  },
   common: {
     loading: "Laden...",
     error: "Ein Fehler ist aufgetreten",

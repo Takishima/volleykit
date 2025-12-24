@@ -18,11 +18,15 @@ import { RemoveFromExchangeModal } from "@/components/features/RemoveFromExchang
 import type { SwipeConfig } from "@/types/swipe";
 import type { GameExchange } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useTour } from "@/hooks/useTour";
 
 export function ExchangePage() {
   const [statusFilter, setStatusFilter] = useState<ExchangeStatus>("open");
   const [filterByLevel, setFilterByLevel] = useState(false);
   const { t } = useTranslation();
+
+  // Initialize tour for this page (triggers auto-start on first visit)
+  useTour("exchange");
 
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
   const { userRefereeLevel, userRefereeLevelGradationValue } = useDemoStore();
@@ -116,6 +120,7 @@ export function ExchangePage() {
         checked={filterByLevel}
         onChange={setFilterByLevel}
         userLevel={userRefereeLevel}
+        dataTour="exchange-filter"
       />
     ) : undefined;
 
@@ -157,7 +162,7 @@ export function ExchangePage() {
 
     return (
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredData.map((exchange) => (
+        {filteredData.map((exchange, index) => (
           <SwipeableCard
             key={exchange.__identity}
             swipeConfig={getSwipeConfig(exchange)}
@@ -166,6 +171,7 @@ export function ExchangePage() {
               <ExchangeCard
                 exchange={exchange}
                 disableExpansion={isDrawerOpen}
+                dataTour={index === 0 ? "exchange-card" : undefined}
               />
             )}
           </SwipeableCard>

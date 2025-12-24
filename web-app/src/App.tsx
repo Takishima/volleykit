@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, lazy, Suspense } from "react";
 import {
   BrowserRouter,
   Routes,
@@ -31,6 +31,11 @@ import {
 import { usePreloadLocales } from "@/hooks/usePreloadLocales";
 import { useTranslation } from "@/hooks/useTranslation";
 import { logger } from "@/utils/logger";
+
+// Lazy load TourProvider since it's only needed for first-time users
+const TourProvider = lazy(() =>
+  import("@/components/tour").then((m) => ({ default: m.TourProvider })),
+);
 
 /**
  * Global error handler for React Query mutations.
@@ -243,7 +248,11 @@ export default function App() {
                 <Route
                   element={
                     <ProtectedRoute>
-                      <AppShell />
+                      <Suspense fallback={null}>
+                        <TourProvider>
+                          <AppShell />
+                        </TourProvider>
+                      </Suspense>
                     </ProtectedRoute>
                   }
                 >
