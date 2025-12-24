@@ -30,17 +30,17 @@
     {
       "name": "Vendor Chunks",
       "path": [
-        "dist/assets/react-vendor-*.js",
-        "dist/assets/router-*.js",
-        "dist/assets/state-*.js",
-        "dist/assets/validation-*.js"
+        "dist/assets/chunk-react-vendor-*.js",
+        "dist/assets/chunk-router-*.js",
+        "dist/assets/chunk-state-*.js",
+        "dist/assets/chunk-validation-*.js"
       ],
       "limit": "50 kB",
       "gzip": true
     },
     {
       "name": "PDF Library (lazy-loaded)",
-      "path": "dist/assets/pdf-lib-*.js",
+      "path": "dist/assets/chunk-pdf-lib-*.js",
       "limit": "185 kB",
       "gzip": true
     },
