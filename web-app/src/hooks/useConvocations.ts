@@ -28,7 +28,9 @@ import {
 } from "@/utils/assignment-helpers";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
-import { logger } from "@/utils/logger";
+import { createLogger } from "@/utils/logger";
+
+const log = createLogger("useConvocations");
 
 // Pagination constants
 // Note: The API doesn't support cursor-based pagination, so we use offset-based.
@@ -180,8 +182,8 @@ async function fetchAllAssignmentPages(
 
   // Log warning if we hit the page limit before fetching all items
   if (pagesFetched >= MAX_FETCH_ALL_PAGES && allItems.length < totalCount) {
-    logger.warn(
-      `[fetchAllAssignmentPages] Reached MAX_FETCH_ALL_PAGES limit (${MAX_FETCH_ALL_PAGES}). ` +
+    log.warn(
+      `Reached MAX_FETCH_ALL_PAGES limit (${MAX_FETCH_ALL_PAGES}). ` +
         `Fetched ${allItems.length} of ${totalCount} total items. Some data may be missing.`,
     );
   }
@@ -639,7 +641,7 @@ export function useUpdateCompensation(): UseMutationResult<
       compensationId: string;
       data: CompensationUpdateData;
     }) => {
-      logger.debug("[useUpdateCompensation] Updating compensation:", {
+      log.debug("Updating compensation:", {
         compensationId,
         data,
         isDemoMode,
@@ -705,10 +707,7 @@ function findCompensationInCache(
 async function fetchCompensationByGameNumber(
   gameNumber: number,
 ): Promise<CompensationRecord | null> {
-  logger.debug(
-    "[fetchCompensationByGameNumber] Fetching compensations from API:",
-    { gameNumber },
-  );
+  log.debug("Fetching compensations from API:", { gameNumber });
 
   const compensations = await api.searchCompensations({
     limit: COMPENSATION_LOOKUP_LIMIT,
@@ -749,7 +748,7 @@ async function findCompensationForAssignment(
   // Try to find compensation in cache first
   const cachedComp = findCompensationInCache(gameNumber, queryClient);
   if (cachedComp) {
-    logger.debug("[findCompensationForAssignment] Found compensation in cache:", {
+    log.debug("Found compensation in cache:", {
       gameNumber,
       compensationId: cachedComp.convocationCompensation?.__identity,
     });
@@ -759,7 +758,7 @@ async function findCompensationForAssignment(
   // Fetch from API if not in cache
   const fetchedComp = await fetchCompensationByGameNumber(gameNumber);
   if (fetchedComp) {
-    logger.debug("[findCompensationForAssignment] Found compensation via API:", {
+    log.debug("Found compensation via API:", {
       gameNumber,
       compensationId: fetchedComp.convocationCompensation?.__identity,
     });
@@ -799,7 +798,7 @@ export function useUpdateAssignmentCompensation(): UseMutationResult<
       }
 
       // Non-demo mode: find the corresponding compensation record and update it via API
-      logger.debug("[useUpdateAssignmentCompensation] Looking up compensation for assignment:", {
+      log.debug("Looking up compensation for assignment:", {
         assignmentId,
         data,
       });
@@ -814,7 +813,7 @@ export function useUpdateAssignmentCompensation(): UseMutationResult<
         );
       }
 
-      logger.debug("[useUpdateAssignmentCompensation] Updating compensation via API:", {
+      log.debug("Updating compensation via API:", {
         assignmentId,
         compensationId,
         data,

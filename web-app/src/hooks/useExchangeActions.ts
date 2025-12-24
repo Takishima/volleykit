@@ -4,13 +4,15 @@ import {
   useApplyForExchange,
   useWithdrawFromExchange,
 } from "./useConvocations";
-import { logger } from "@/utils/logger";
+import { createLogger } from "@/utils/logger";
 import { checkSafeMode } from "@/utils/safe-mode-guard";
 import { useAuthStore } from "@/stores/auth";
 import { toast } from "@/stores/toast";
 import { useSettingsStore } from "@/stores/settings";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModalState } from "./useModalState";
+
+const log = createLogger("useExchangeActions");
 
 interface UseExchangeActionsResult {
   takeOverModal: {
@@ -52,7 +54,8 @@ export function useExchangeActions(): UseExchangeActionsResult {
         checkSafeMode({
           isDemoMode,
           isSafeModeEnabled,
-          context: "[useExchangeActions] taking exchange",
+          context: "useExchangeActions",
+          action: "taking exchange",
         })
       ) {
         return;
@@ -65,19 +68,13 @@ export function useExchangeActions(): UseExchangeActionsResult {
         await applyMutation.mutateAsync(exchange.__identity);
         takeOverModal.close();
 
-        logger.debug(
-          "[useExchangeActions] Successfully applied for exchange:",
-          exchange.__identity,
-        );
+        log.debug("Successfully applied for exchange:", exchange.__identity);
 
         if (!isDemoMode) {
           toast.success(t("exchange.applySuccess"));
         }
       } catch (error) {
-        logger.error(
-          "[useExchangeActions] Failed to apply for exchange:",
-          error,
-        );
+        log.error("Failed to apply for exchange:", error);
 
         toast.error(t("exchange.applyError"));
       } finally {
@@ -93,7 +90,8 @@ export function useExchangeActions(): UseExchangeActionsResult {
         checkSafeMode({
           isDemoMode,
           isSafeModeEnabled,
-          context: "[useExchangeActions] withdrawing from exchange",
+          context: "useExchangeActions",
+          action: "withdrawing from exchange",
         })
       ) {
         return;
@@ -106,19 +104,13 @@ export function useExchangeActions(): UseExchangeActionsResult {
         await withdrawMutation.mutateAsync(exchange.__identity);
         removeFromExchangeModal.close();
 
-        logger.debug(
-          "[useExchangeActions] Successfully withdrawn from exchange:",
-          exchange.__identity,
-        );
+        log.debug("Successfully withdrawn from exchange:", exchange.__identity);
 
         if (!isDemoMode) {
           toast.success(t("exchange.withdrawSuccess"));
         }
       } catch (error) {
-        logger.error(
-          "[useExchangeActions] Failed to withdraw from exchange:",
-          error,
-        );
+        log.error("Failed to withdraw from exchange:", error);
 
         toast.error(t("exchange.withdrawError"));
       } finally {
