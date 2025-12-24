@@ -3,6 +3,11 @@ import { persist } from "zustand/middleware";
 import { setCsrfToken, clearSession } from "@/api/client";
 import { filterRefereeOccupations } from "@/utils/parseOccupations";
 import { logger } from "@/utils/logger";
+import {
+  extractLoginFormFields,
+  extractCsrfTokenFromPage,
+  submitLoginCredentials,
+} from "@/utils/auth-parsers";
 import { useDemoStore } from "./demo";
 
 export type AuthStatus = "idle" | "loading" | "authenticated" | "error";
@@ -29,10 +34,8 @@ interface AuthState {
   csrfToken: string | null;
   isDemoMode: boolean;
   activeOccupationId: string | null;
-  // Internal: pending session check promise (for deduplication)
   _checkSessionPromise: Promise<boolean> | null;
 
-  // Actions
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   checkSession: () => Promise<boolean>;
@@ -41,200 +44,11 @@ interface AuthState {
   setActiveOccupation: (id: string) => void;
 }
 
-// API base URL (proxy in production, direct in dev via Vite proxy)
 const API_BASE = import.meta.env.VITE_API_PROXY_URL || "";
-
-// Authentication endpoints (based on captured HAR files)
 const LOGIN_PAGE_URL = `${API_BASE}/login`;
 const AUTH_URL = `${API_BASE}/sportmanager.security/authentication/authenticate`;
 const LOGOUT_URL = `${API_BASE}/logout`;
-
-// Session check timeout (10 seconds)
-// This prevents users from being stuck in a loading state if the API is slow
-// or unresponsive. After 10 seconds, the check will abort and return false,
-// allowing the user to retry or see an error state instead of infinite loading.
 const SESSION_CHECK_TIMEOUT_MS = 10_000;
-
-/**
- * Login form fields extracted from the login page HTML.
- * The Neos Flow framework requires these fields for CSRF protection.
- */
-interface LoginFormFields {
-  trustedProperties: string;
-  referrerPackage: string;
-  referrerSubpackage: string;
-  referrerController: string;
-  referrerAction: string;
-  referrerArguments: string;
-}
-
-/**
- * Extract required form fields from login page HTML using DOMParser.
- * The Neos Flow framework uses __trustedProperties for CSRF protection
- * and __referrer fields for redirect handling.
- */
-function extractLoginFormFields(html: string): LoginFormFields | null {
-  try {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, "text/html");
-
-    // Check for parsing errors
-    const parserError = doc.querySelector("parsererror");
-    if (parserError) {
-      logger.error("DOMParser error:", parserError.textContent);
-      return null;
-    }
-
-    // Extract all required hidden fields
-    const trustedProperties = doc
-      .querySelector('input[name="__trustedProperties"]')
-      ?.getAttribute("value");
-    const referrerPackage = doc
-      .querySelector('input[name="__referrer[@package]"]')
-      ?.getAttribute("value");
-    const referrerSubpackage = doc
-      .querySelector('input[name="__referrer[@subpackage]"]')
-      ?.getAttribute("value");
-    const referrerController = doc
-      .querySelector('input[name="__referrer[@controller]"]')
-      ?.getAttribute("value");
-    const referrerAction = doc
-      .querySelector('input[name="__referrer[@action]"]')
-      ?.getAttribute("value");
-    const referrerArguments = doc
-      .querySelector('input[name="__referrer[arguments]"]')
-      ?.getAttribute("value");
-
-    // trustedProperties is required for CSRF protection
-    if (!trustedProperties) {
-      logger.error("Missing __trustedProperties field in login form");
-      return null;
-    }
-
-    // NOTE: We use fallback values for referrer fields based on observed values
-    // from the actual login form. These are not arbitrary - they match the standard
-    // Neos Flow authentication setup. If the backend ever changes these values
-    // or validates them strictly, login will fail and we'll get an error,
-    // which is preferable to silently using incorrect values that might work
-    // but cause subtle issues later.
-    return {
-      trustedProperties,
-      referrerPackage: referrerPackage ?? "SportManager.Volleyball",
-      referrerSubpackage: referrerSubpackage ?? "",
-      referrerController: referrerController ?? "Public",
-      referrerAction: referrerAction ?? "login",
-      referrerArguments: referrerArguments ?? "",
-    };
-  } catch (error) {
-    logger.error("Failed to parse login page HTML:", error);
-    return null;
-  }
-}
-
-/**
- * Extract CSRF token from authenticated page HTML.
- * After login, the dashboard HTML contains data-csrf-token attribute
- * which is used as __csrfToken for subsequent API calls.
- *
- * Note: data-csrf-token is different from data-session-key.
- * - data-session-key: matches the Neos_Flow_Session cookie value
- * - data-csrf-token: the actual CSRF protection token for POST requests
- */
-function extractCsrfTokenFromPage(html: string): string | null {
-  try {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, "text/html");
-
-    // The CSRF token is in the <html> tag's data-csrf-token attribute
-    const htmlElement = doc.documentElement;
-    const csrfToken = htmlElement?.getAttribute("data-csrf-token");
-
-    if (csrfToken) {
-      return csrfToken;
-    }
-
-    logger.warn("Could not find data-csrf-token in page");
-    return null;
-  } catch (error) {
-    logger.error("Failed to extract CSRF token from page:", error);
-    return null;
-  }
-}
-
-/**
- * Result of submitting login credentials.
- */
-type LoginResult =
-  | { success: true; csrfToken: string }
-  | { success: false; error: string };
-
-/**
- * Submit login credentials to the authentication endpoint.
- * This is the core login logic used after we have valid form fields.
- *
- * IMPORTANT: We do NOT use redirect: "manual" here because in cross-origin
- * scenarios (production with CORS proxy), opaque redirect responses prevent
- * the browser from processing Set-Cookie headers. By following the redirect,
- * we ensure cookies are properly set before checking the session.
- */
-async function submitLoginCredentials(
-  username: string,
-  password: string,
-  formFields: LoginFormFields,
-): Promise<LoginResult> {
-  // Build form data with Neos Flow authentication token format
-  const formData = new URLSearchParams();
-
-  // Add referrer fields (required by Neos Flow)
-  formData.append("__referrer[@package]", formFields.referrerPackage);
-  formData.append("__referrer[@subpackage]", formFields.referrerSubpackage);
-  formData.append("__referrer[@controller]", formFields.referrerController);
-  formData.append("__referrer[@action]", formFields.referrerAction);
-  formData.append("__referrer[arguments]", formFields.referrerArguments);
-
-  // Add CSRF protection token
-  formData.append("__trustedProperties", formFields.trustedProperties);
-
-  // Add credentials with Neos Flow authentication token format
-  formData.append(
-    "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][username]",
-    username,
-  );
-  formData.append(
-    "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][password]",
-    password,
-  );
-
-  // Submit to authentication endpoint and follow redirects
-  // - Success: redirects to dashboard (final response has data-csrf-token)
-  // - Failure: returns login page HTML (no data-csrf-token, has error snackbar)
-  const response = await fetch(AUTH_URL, {
-    method: "POST",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: formData,
-    // Let browser follow redirects to ensure Set-Cookie headers are processed
-    // This is critical for cross-origin requests through the CORS proxy
-  });
-
-  if (!response.ok) {
-    return { success: false, error: "Authentication request failed" };
-  }
-
-  // Parse response HTML to determine success/failure
-  const html = await response.text();
-  const csrfToken = extractCsrfTokenFromPage(html);
-
-  // Success: Response contains data-csrf-token (we're on dashboard/authenticated page)
-  if (csrfToken) {
-    return { success: true, csrfToken };
-  }
-
-  // Failure: No CSRF token means we're still on login page (auth failed)
-  return { success: false, error: "Invalid username or password" };
-}
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -251,13 +65,8 @@ export const useAuthStore = create<AuthState>()(
         set({ status: "loading", error: null });
 
         try {
-          // Step 1: Fetch login page to get CSRF token and form fields
-          // If user has an existing valid session, the server redirects to an
-          // authenticated page. We follow redirects to let the browser properly
-          // process any Set-Cookie headers (critical for cross-origin requests).
           const loginPageResponse = await fetch(LOGIN_PAGE_URL, {
             credentials: "include",
-            // Let browser follow redirects to properly process cookies
           });
 
           if (!loginPageResponse.ok) {
@@ -265,30 +74,20 @@ export const useAuthStore = create<AuthState>()(
           }
 
           const html = await loginPageResponse.text();
-
-          // Check if we're already authenticated (page has CSRF token)
-          // This happens when session cookies are present and the server
-          // redirected us to an authenticated page instead of login form
           const existingCsrfToken = extractCsrfTokenFromPage(html);
+
           if (existingCsrfToken) {
             setCsrfToken(existingCsrfToken);
             set({ status: "authenticated", csrfToken: existingCsrfToken });
             return true;
           }
 
-          // Not authenticated - extract form fields from login page
           const formFields = extractLoginFormFields(html);
-
           if (!formFields) {
             throw new Error("Could not extract form fields from login page");
           }
 
-          // Step 2: Submit login credentials
-          const result = await submitLoginCredentials(
-            username,
-            password,
-            formFields,
-          );
+          const result = await submitLoginCredentials(AUTH_URL, username, password, formFields);
 
           if (result.success) {
             setCsrfToken(result.csrfToken);
@@ -299,8 +98,7 @@ export const useAuthStore = create<AuthState>()(
           set({ status: "error", error: result.error });
           return false;
         } catch (error) {
-          const message =
-            error instanceof Error ? error.message : "Login failed";
+          const message = error instanceof Error ? error.message : "Login failed";
           set({ status: "error", error: message });
           return false;
         }
@@ -308,23 +106,18 @@ export const useAuthStore = create<AuthState>()(
 
       logout: async () => {
         try {
-          // Call server logout endpoint to invalidate session
-          // The server responds with 303 redirect to /login
           await fetch(LOGOUT_URL, {
             credentials: "include",
-            redirect: "manual", // Don't follow redirect
+            redirect: "manual",
           });
         } catch (error) {
-          // Log but don't block logout - we still want to clear local state
           logger.error("Logout request failed:", error);
         }
 
-        // Clear demo data if exiting demo mode
         if (get().isDemoMode) {
           useDemoStore.getState().clearDemoData();
         }
 
-        // Clear local state regardless of server response
         clearSession();
         set({
           status: "idle",
@@ -336,63 +129,36 @@ export const useAuthStore = create<AuthState>()(
       },
 
       checkSession: async (): Promise<boolean> => {
-        // In demo mode, session is always valid
         if (get().isDemoMode) {
           return true;
         }
 
-        // Return existing promise if a check is already in progress (stored in store state)
         const existingPromise = get()._checkSessionPromise;
         if (existingPromise) {
           return existingPromise;
         }
 
-        // Create deferred promise to prevent race condition
-        // RACE CONDITION SAFETY: JavaScript's single-threaded event loop ensures
-        // this is safe. The sequence is:
-        // 1. Create promise (synchronous)
-        // 2. Call set() to store it (synchronous)
-        // 3. Execute async IIFE below
-        // Between steps 1-2, no other code can run because JS is single-threaded.
-        // Any concurrent call to checkSession() will see the stored promise in step 2
-        // and return it instead of creating a new one. The async work in step 3
-        // happens after the promise is already stored.
-        // Note: Using definite assignment assertion (!) because Promise executor runs synchronously
         let resolvePromise!: (value: boolean) => void;
         const promise = new Promise<boolean>((resolve) => {
           resolvePromise = resolve;
         });
 
-        // Set the promise BEFORE starting async work to prevent race condition
         set({ _checkSessionPromise: promise });
 
-        // Execute the session check
         (async () => {
           try {
-            // Create abort controller for timeout
             const controller = new AbortController();
-            const timeoutId = setTimeout(
-              () => controller.abort(),
-              SESSION_CHECK_TIMEOUT_MS,
-            );
+            const timeoutId = setTimeout(() => controller.abort(), SESSION_CHECK_TIMEOUT_MS);
 
             try {
-              // Try to fetch protected resource to validate session
-              // Using dashboard endpoint (same as post-login verification)
-              // This is lightweight and reliable for session validation
               const response = await fetch(
                 `${API_BASE}/sportmanager.volleyball/main/dashboard`,
-                {
-                  credentials: "include",
-                  signal: controller.signal,
-                },
+                { credentials: "include", signal: controller.signal },
               );
 
               clearTimeout(timeoutId);
 
               if (response.ok) {
-                // Extract CSRF token from dashboard page to ensure it's current
-                // This handles the case where user reloads the page with an existing session
                 const dashboardHtml = await response.text();
                 const csrfToken = extractCsrfTokenFromPage(dashboardHtml);
 
@@ -411,7 +177,6 @@ export const useAuthStore = create<AuthState>()(
             } catch (error) {
               clearTimeout(timeoutId);
 
-              // Check if this was a timeout abort
               if (error instanceof Error && error.name === "AbortError") {
                 logger.error("Session check timed out");
                 set({ status: "idle", user: null });
@@ -438,12 +203,6 @@ export const useAuthStore = create<AuthState>()(
       },
 
       setDemoAuthenticated: () => {
-        // Raw demo occupations simulating what the API would return.
-        // This includes non-referee roles (player) that should be filtered out.
-        // - SV (Swiss Volley): National level, handles NLA/NLB games, can edit compensation
-        // - SVRBA (Regional Basel): Regional level, handles up to 1L games, no compensation editing
-        // - SVRZ (Regional Zurich): Regional level, handles up to 1L games, no compensation editing
-        // - Player: Non-referee role that gets filtered out by filterRefereeOccupations()
         const rawDemoOccupations: Occupation[] = [
           { id: "demo-referee-sv", type: "referee", associationCode: "SV" },
           { id: "demo-referee-svrba", type: "referee", associationCode: "SVRBA" },
@@ -451,8 +210,6 @@ export const useAuthStore = create<AuthState>()(
           { id: "demo-player", type: "player", clubName: "VBC Demo" },
         ];
 
-        // Filter to referee-only (this app is referee-focused).
-        // This same filtering will be applied when real API profile loading is implemented.
         const demoOccupations = filterRefereeOccupations(rawDemoOccupations);
 
         set({
@@ -477,57 +234,15 @@ export const useAuthStore = create<AuthState>()(
     {
       name: "volleykit-auth",
       partialize: (state) => ({
-        // =======================================================================
-        // SECURITY ANALYSIS: localStorage Persistence
-        // =======================================================================
-        //
-        // WHAT WE PERSIST:
-        // - user: Name/ID only (firstName, lastName, id, occupations)
-        // - csrfToken: Required for POST requests (see CSRF TOKEN PERSISTENCE below)
-        // - _wasAuthenticated: Flag to restore UI state
-        //
-        // WHAT WE NEVER PERSIST (XSS-sensitive):
-        // - session cookies: HttpOnly, managed by browser
-        // - error/status: Transient UI state
-        //
-        // RISK ASSESSMENT:
-        // If XSS occurs, an attacker could read persisted user profile data.
-        // However, this data is:
-        // - Already visible in the UI (name, role)
-        // - Not sufficient for account takeover (no tokens/credentials)
-        // - Not PII beyond what's shown publicly during games
-        //
-        // CSRF TOKEN PERSISTENCE:
-        // CSRF tokens are persisted to fix the issue where session cookies persist
-        // across page reloads but CSRF tokens were lost, causing 403 errors on POST
-        // requests. CSRF tokens are less sensitive than session cookies because:
-        // - They're meant to be included in client-side requests
-        // - They're useless without the corresponding session cookie
-        // - The HttpOnly session cookie provides the actual authentication
-        // - CSRF tokens are already exposed in page HTML (data-session-key)
-        //
-        // TRADEOFF:
-        // We accept this limited risk in exchange for better UX:
-        // - Users see their name immediately on page load
-        // - Avoids flash of "loading" state on every refresh
-        // - POST requests work after page reload without re-login
-        // - Session validity is still verified server-side via checkSession()
-        //
-        // MITIGATIONS:
-        // - CSP headers on worker responses
-        // - Session verification on protected routes
-        // - HttpOnly cookies for actual session management
-        //
-        // ALTERNATIVE (more secure, worse UX):
-        // Set partialize to return {} to persist nothing.
-        // =======================================================================
+        // Persist minimal user data for UX (immediate name display).
+        // Session cookies are HttpOnly and managed by browser.
+        // CSRF token is persisted to enable POST requests after page reload.
         user: state.user,
         csrfToken: state.csrfToken,
         _wasAuthenticated: state.status === "authenticated",
         isDemoMode: state.isDemoMode,
         activeOccupationId: state.activeOccupationId,
       }),
-      // Merge persisted state, converting _wasAuthenticated back to status
       merge: (persisted, current) => {
         const persistedState = persisted as
           | {
@@ -539,7 +254,6 @@ export const useAuthStore = create<AuthState>()(
             }
           | undefined;
 
-        // Restore CSRF token to API client if available
         const restoredCsrfToken = persistedState?.csrfToken ?? null;
         if (restoredCsrfToken) {
           setCsrfToken(restoredCsrfToken);
@@ -549,12 +263,9 @@ export const useAuthStore = create<AuthState>()(
           ...current,
           user: persistedState?.user ?? null,
           csrfToken: restoredCsrfToken,
-          // If user was previously authenticated, set status to 'authenticated'
-          // ProtectedRoute will verify this is still valid via checkSession()
           status: persistedState?._wasAuthenticated ? "authenticated" : "idle",
           isDemoMode: persistedState?.isDemoMode ?? false,
           activeOccupationId: persistedState?.activeOccupationId ?? null,
-          // Ensure promise is always null on hydration (not serializable)
           _checkSessionPromise: null,
         };
       },
