@@ -117,6 +117,7 @@ export interface Translations {
     errorLoading: string;
     pdfNotAvailableDemo: string;
     pdfDownloadFailed: string;
+    editingRestrictedByRegion: string;
   };
   exchange: {
     title: string;

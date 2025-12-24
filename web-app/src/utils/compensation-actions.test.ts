@@ -3,6 +3,7 @@ import { isValidElement } from "react";
 import {
   createCompensationActions,
   downloadCompensationPDF,
+  isCompensationEditable,
 } from "./compensation-actions";
 import type { CompensationRecord } from "@/api/client";
 
@@ -302,5 +303,68 @@ describe("downloadCompensationPDF", () => {
 
     const fetchCall = mockFetch.mock.calls[0]?.[0] as string;
     expect(fetchCall).toContain(encodeURIComponent("   "));
+  });
+});
+
+describe("isCompensationEditable", () => {
+  it("returns true for unpaid compensation with central payout", () => {
+    const compensation = {
+      __identity: "test-1",
+      convocationCompensation: {
+        paymentDone: false,
+        lockPayoutOnSiteCompensation: false,
+      },
+      refereeGame: {},
+    } as unknown as CompensationRecord;
+
+    expect(isCompensationEditable(compensation)).toBe(true);
+  });
+
+  it("returns false for paid compensation", () => {
+    const compensation = {
+      __identity: "test-1",
+      convocationCompensation: {
+        paymentDone: true,
+        lockPayoutOnSiteCompensation: false,
+      },
+      refereeGame: {},
+    } as unknown as CompensationRecord;
+
+    expect(isCompensationEditable(compensation)).toBe(false);
+  });
+
+  it("returns false when on-site payout is locked (regional association)", () => {
+    const compensation = {
+      __identity: "test-1",
+      convocationCompensation: {
+        paymentDone: false,
+        lockPayoutOnSiteCompensation: true,
+      },
+      refereeGame: {},
+    } as unknown as CompensationRecord;
+
+    expect(isCompensationEditable(compensation)).toBe(false);
+  });
+
+  it("returns false when convocationCompensation is undefined", () => {
+    const compensation = {
+      __identity: "test-1",
+      refereeGame: {},
+    } as unknown as CompensationRecord;
+
+    expect(isCompensationEditable(compensation)).toBe(false);
+  });
+
+  it("returns true when lockPayoutOnSiteCompensation is undefined (defaults to editable)", () => {
+    const compensation = {
+      __identity: "test-1",
+      convocationCompensation: {
+        paymentDone: false,
+        // lockPayoutOnSiteCompensation not set
+      },
+      refereeGame: {},
+    } as unknown as CompensationRecord;
+
+    expect(isCompensationEditable(compensation)).toBe(true);
   });
 });

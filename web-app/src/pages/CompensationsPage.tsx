@@ -10,7 +10,10 @@ import {
 } from "@/components/ui/LoadingSpinner";
 import { Tabs, TabPanel } from "@/components/ui/Tabs";
 import { useCompensationActions } from "@/hooks/useCompensationActions";
-import { createCompensationActions } from "@/utils/compensation-actions";
+import {
+  createCompensationActions,
+  isCompensationEditable,
+} from "@/utils/compensation-actions";
 import type { CompensationRecord } from "@/api/client";
 import type { SwipeConfig } from "@/types/swipe";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -57,12 +60,12 @@ export function CompensationsPage() {
         onGeneratePDF: handleGeneratePDF,
       });
 
-      const isPaid = compensation.convocationCompensation?.paymentDone;
+      const canEdit = isCompensationEditable(compensation);
 
       return {
-        left: isPaid
-          ? [actions.generatePDF]
-          : [actions.editCompensation, actions.generatePDF],
+        left: canEdit
+          ? [actions.editCompensation, actions.generatePDF]
+          : [actions.generatePDF],
       };
     },
     [editCompensationModal.open, handleGeneratePDF],

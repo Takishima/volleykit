@@ -437,6 +437,8 @@ interface CompensationConfig {
   paymentDaysAgo?: number;
   transportationMode?: "car" | "train";
   correctionReason?: string | null;
+  /** Override the default lock behavior for this specific compensation */
+  lockPayoutOnSiteCompensation?: boolean;
 }
 
 function createCompensationRecord(
@@ -445,6 +447,12 @@ function createCompensationRecord(
   now: Date,
   isSV: boolean,
 ): CompensationRecord {
+  // Regional associations use on-site payout, which locks compensation editing
+  // unless explicitly overridden in config
+  const useOnSitePayout = !isSV;
+  const lockPayoutOnSiteCompensation =
+    config.lockPayoutOnSiteCompensation ?? useOnSitePayout;
+
   return {
     __identity: generateDemoUuid(`demo-comp-${config.index}`),
     refereeConvocationStatus: "active",
@@ -473,6 +481,8 @@ function createCompensationRecord(
         }),
         transportationMode: config.transportationMode,
         correctionReason: config.correctionReason,
+        lockPayoutOnSiteCompensation,
+        methodOfDisbursement: useOnSitePayout ? "payout_on_site" : "central_payout",
       }),
     },
   };

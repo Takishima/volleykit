@@ -1,11 +1,12 @@
 import { format, parseISO } from "date-fns";
 import { ExpandableCard } from "@/components/ui/ExpandableCard";
 import { Badge } from "@/components/ui/Badge";
-import { Check, Circle } from "@/components/ui/icons";
+import { Check, Circle, Lock } from "@/components/ui/icons";
 import type { CompensationRecord } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDateLocale } from "@/hooks/useDateFormat";
 import { formatDistanceKm } from "@/utils/distance";
+import { isCompensationEditable } from "@/utils/compensation-actions";
 
 interface CompensationCardProps {
   compensation: CompensationRecord;
@@ -33,6 +34,9 @@ export function CompensationCard({
 
   const total = (comp?.gameCompensation || 0) + (comp?.travelExpenses || 0);
   const isPaid = comp?.paymentDone;
+  const canEdit = isCompensationEditable(compensation);
+  // Show restriction notice when not editable due to on-site payout (not just paid status)
+  const showEditRestriction = !canEdit && !isPaid;
 
   return (
     <ExpandableCard
@@ -135,6 +139,12 @@ export function CompensationCard({
                   : t("compensations.pending")}
               </span>
             </div>
+            {showEditRestriction && (
+              <div className="flex items-center gap-1.5 text-xs pt-2 text-text-muted dark:text-text-muted-dark">
+                <Lock className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
+                <span>{t("compensations.editingRestrictedByRegion")}</span>
+              </div>
+            )}
           </div>
         )
       }
