@@ -203,7 +203,9 @@ export function SwipeableCard({
     };
   }, [containerWidth]);
 
-  // Not memoized: used in effects and handlers that already have stable identities
+  // Not memoized with useCallback: React Compiler cannot preserve memoization when
+  // closeDrawer depends on resetPosition (from hook), which creates a circular dependency.
+  // The effects using closeDrawer inline the logic directly to avoid this issue.
   const closeDrawer = () => {
     resetPosition();
     currentTranslateRef.current = 0;
@@ -275,6 +277,8 @@ export function SwipeableCard({
     }
   }, []);
 
+  // Not memoized: depends on non-memoized closeDrawer (see comment above).
+  // Only used for keyboard-accessible modal buttons, so re-creation on render is acceptable.
   const handleLeftAction = () => {
     setShowActions(false);
     closeDrawer();
@@ -283,6 +287,8 @@ export function SwipeableCard({
     }
   };
 
+  // Not memoized: depends on non-memoized closeDrawer (see comment above).
+  // Only used for keyboard-accessible modal buttons, so re-creation on render is acceptable.
   const handleRightAction = () => {
     setShowActions(false);
     closeDrawer();
@@ -299,7 +305,8 @@ export function SwipeableCard({
   const showProgressiveActions =
     thresholds && swipeAmount > thresholds.minVisibility && currentActions;
 
-  // Calculate action widths for progressive reveal (inline function for render-time values)
+  // Not memoized: intentionally recalculates each render using current swipeAmount,
+  // thresholds, containerWidth, and isDrawerOpen. All values change during drag animations.
   const getActionStyle = (totalActions: number) => {
     if (!thresholds || !containerWidth) return {};
 
