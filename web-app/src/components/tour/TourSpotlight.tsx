@@ -92,18 +92,6 @@ export function TourSpotlight({
   const [isPositioned, setIsPositioned] = useState(false);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
-  // Handle overlay click - only dismiss if click is not on the target element
-  const handleOverlayClick = useCallback(
-    (e: React.MouseEvent) => {
-      const target = e.target as Element;
-      const clickedOnTarget = target.closest(targetSelector);
-      if (!clickedOnTarget) {
-        onDismiss();
-      }
-    },
-    [targetSelector, onDismiss],
-  );
-
   // Find target element and calculate positions
   const updatePositions = useCallback(
     (force = false) => {
@@ -292,11 +280,10 @@ export function TourSpotlight({
 
   return createPortal(
     <div className="tour-spotlight" role="dialog" aria-modal="true" aria-label="Guided tour">
-      {/* Backdrop overlay with blur and cutout */}
+      {/* Backdrop overlay with blur and cutout - no click dismiss to prevent accidental exits */}
       <div
         className={`fixed inset-0 z-40 bg-black/70 transition-opacity ${disableBlur ? "" : "backdrop-blur-sm"}`}
         style={{ clipPath }}
-        onClick={handleOverlayClick}
         aria-hidden="true"
       />
 
