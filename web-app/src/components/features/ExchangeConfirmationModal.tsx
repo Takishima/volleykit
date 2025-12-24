@@ -5,6 +5,7 @@ import { useModalDismissal } from "@/hooks/useModalDismissal";
 import { logger } from "@/utils/logger";
 import { formatDateTime } from "@/utils/date-helpers";
 import { ModalErrorBoundary } from "@/components/ui/ModalErrorBoundary";
+import { ModalButton } from "@/components/ui/ModalButton";
 
 interface ExchangeConfirmationModalProps {
   exchange: GameExchange;
@@ -85,10 +86,7 @@ export function ExchangeConfirmationModal({
     variant === "takeOver"
       ? "exchange.takeOverButton"
       : "exchange.removeButton";
-  const buttonColorClass =
-    variant === "takeOver"
-      ? "bg-green-600 hover:bg-green-700 focus:ring-green-500"
-      : "bg-red-600 hover:bg-red-700 focus:ring-red-500";
+  const confirmVariant = variant === "takeOver" ? "success" : "danger";
   const modalTitleId = `${variant}-exchange-title`;
 
   return (
@@ -172,23 +170,23 @@ export function ExchangeConfirmationModal({
             </p>
 
             <div className="flex gap-3">
-              <button
-                type="button"
+              <ModalButton
+                variant="secondary"
+                fullWidth
                 onClick={onClose}
                 disabled={isSubmitting}
-                className="flex-1 px-4 py-2 text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark rounded-md hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:outline-none focus:ring-2 focus:ring-border-strong disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {t("common.cancel")}
-              </button>
-              <button
-                type="button"
+              </ModalButton>
+              <ModalButton
+                variant={confirmVariant}
+                fullWidth
                 onClick={handleConfirm}
                 disabled={isSubmitting}
                 aria-busy={isSubmitting}
-                className={`flex-1 px-4 py-2 text-white rounded-md focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed ${buttonColorClass}`}
               >
                 {isSubmitting ? t("common.loading") : t(buttonKey)}
-              </button>
+              </ModalButton>
             </div>
           </div>
         </ModalErrorBoundary>
