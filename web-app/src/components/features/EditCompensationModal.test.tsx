@@ -450,7 +450,9 @@ describe("EditCompensationModal", () => {
       await waitForFormToLoad();
 
       fireEvent.keyDown(document, { key: "Escape" });
-      expect(mockOnClose).toHaveBeenCalledTimes(1);
+      await waitFor(() => {
+        expect(mockOnClose).toHaveBeenCalledTimes(1);
+      });
     });
 
     it("submits form with valid data and closes modal", async () => {

@@ -36,6 +36,7 @@ describe("parseSearchInput", () => {
   it("returns empty object for empty input", () => {
     expect(parseSearchInput("")).toEqual({});
     expect(parseSearchInput("   ")).toEqual({});
+    expect(parseSearchInput("\t\n")).toEqual({});
   });
 
   it("parses single word as lastName", () => {
@@ -76,6 +77,12 @@ describe("parseSearchInput", () => {
     });
   });
 
+  it("returns only yearOfBirth when input is just a year", () => {
+    expect(parseSearchInput("1985")).toEqual({
+      yearOfBirth: "1985",
+    });
+  });
+
   it("does not parse non-4-digit numbers as year", () => {
     expect(parseSearchInput("müller 85")).toEqual({
       firstName: "müller",
@@ -84,6 +91,17 @@ describe("parseSearchInput", () => {
     expect(parseSearchInput("müller 19850")).toEqual({
       firstName: "müller",
       lastName: "19850",
+    });
+    expect(parseSearchInput("müller 198")).toEqual({
+      firstName: "müller",
+      lastName: "198",
+    });
+  });
+
+  it("only extracts year from the end position", () => {
+    expect(parseSearchInput("1985 müller")).toEqual({
+      firstName: "1985",
+      lastName: "müller",
     });
   });
 
@@ -96,6 +114,32 @@ describe("parseSearchInput", () => {
       firstName: "Hans",
       lastName: "Peter Müller",
       yearOfBirth: "1985",
+    });
+    expect(parseSearchInput("maria de la cruz 1990")).toEqual({
+      firstName: "maria",
+      lastName: "de la cruz",
+      yearOfBirth: "1990",
+    });
+  });
+
+  it("preserves accented characters", () => {
+    expect(parseSearchInput("josé garcía")).toEqual({
+      firstName: "josé",
+      lastName: "garcía",
+    });
+    expect(parseSearchInput("björn müller")).toEqual({
+      firstName: "björn",
+      lastName: "müller",
+    });
+  });
+
+  it("handles hyphenated names", () => {
+    expect(parseSearchInput("marie-claire")).toEqual({
+      lastName: "marie-claire",
+    });
+    expect(parseSearchInput("jean-pierre dupont")).toEqual({
+      firstName: "jean-pierre",
+      lastName: "dupont",
     });
   });
 });
