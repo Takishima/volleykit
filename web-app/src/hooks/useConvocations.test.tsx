@@ -637,7 +637,7 @@ describe("useConvocations - Unified API Architecture", () => {
 
     await result.current.mutateAsync("test-exchange-id");
 
-    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["exchanges"] });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["exchanges", "list"] });
   });
 });
 
