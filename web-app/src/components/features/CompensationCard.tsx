@@ -2,7 +2,7 @@ import { memo } from "react";
 import { format, parseISO } from "date-fns";
 import { ExpandableCard } from "@/components/ui/ExpandableCard";
 import { Badge } from "@/components/ui/Badge";
-import { Check, Circle, Lock } from "@/components/ui/icons";
+import { Check, Circle, Lock, MaleIcon, FemaleIcon } from "@/components/ui/icons";
 import type { CompensationRecord } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDateLocale } from "@/hooks/useDateFormat";
@@ -35,6 +35,8 @@ function CompensationCardComponent({
 
   const homeTeam = game?.encounter?.teamHome?.name || t("common.unknown");
   const awayTeam = game?.encounter?.teamAway?.name || t("common.unknown");
+  const gameNumber = game?.number;
+  const gender = game?.group?.phase?.league?.gender;
 
   const total = (comp?.gameCompensation || 0) + (comp?.travelExpenses || 0);
   const isPaid = comp?.paymentDone;
@@ -50,17 +52,38 @@ function CompensationCardComponent({
       dataTour={dataTour}
       renderCompact={(_, { expandArrow }) => (
         <>
-          {/* Date */}
+          {/* Date and game number */}
           <div className="text-xs text-text-muted dark:text-text-muted-dark min-w-[4rem]">
-            {startDate
-              ? format(startDate, "MMM d", { locale: dateLocale })
-              : t("common.unknownDate")}
+            <div>
+              {startDate
+                ? format(startDate, "MMM d", { locale: dateLocale })
+                : t("common.unknownDate")}
+            </div>
+            {gameNumber && (
+              <div className="text-text-subtle dark:text-text-subtle-dark">
+                #{gameNumber}
+              </div>
+            )}
           </div>
 
           {/* Match info - truncated */}
           <div className="flex-1 min-w-0">
-            <div className="font-medium text-text-primary dark:text-text-primary-dark truncate text-sm">
-              {homeTeam} {t("common.vs")} {awayTeam}
+            <div className="font-medium text-text-primary dark:text-text-primary-dark truncate text-sm flex items-center gap-1">
+              <span className="truncate">
+                {homeTeam} {t("common.vs")} {awayTeam}
+              </span>
+              {gender === "m" && (
+                <MaleIcon
+                  className="w-3 h-3 flex-shrink-0 text-blue-500 dark:text-blue-400"
+                  aria-label={t("common.men")}
+                />
+              )}
+              {gender === "f" && (
+                <FemaleIcon
+                  className="w-3 h-3 flex-shrink-0 text-pink-500 dark:text-pink-400"
+                  aria-label={t("common.women")}
+                />
+              )}
             </div>
           </div>
 
