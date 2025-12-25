@@ -128,6 +128,18 @@ export function ExchangePage() {
     setStatusFilter(tabId as ExchangeStatus);
   }, []);
 
+  const handleTakeOverConfirm = useCallback(() => {
+    if (takeOverModal.exchange) {
+      handleTakeOver(takeOverModal.exchange);
+    }
+  }, [takeOverModal.exchange, handleTakeOver]);
+
+  const handleRemoveConfirm = useCallback(() => {
+    if (removeFromExchangeModal.exchange) {
+      handleRemoveFromExchange(removeFromExchangeModal.exchange);
+    }
+  }, [removeFromExchangeModal.exchange, handleRemoveFromExchange]);
+
   // Determine if filter is available (demo mode with level set)
   const isLevelFilterAvailable = isDemoMode && userRefereeLevel !== null;
 
@@ -221,7 +233,7 @@ export function ExchangePage() {
             exchange={takeOverModal.exchange}
             isOpen={takeOverModal.isOpen}
             onClose={takeOverModal.close}
-            onConfirm={() => handleTakeOver(takeOverModal.exchange!)}
+            onConfirm={handleTakeOverConfirm}
           />
         </Suspense>
       )}
@@ -232,9 +244,7 @@ export function ExchangePage() {
             exchange={removeFromExchangeModal.exchange}
             isOpen={removeFromExchangeModal.isOpen}
             onClose={removeFromExchangeModal.close}
-            onConfirm={() =>
-              handleRemoveFromExchange(removeFromExchangeModal.exchange!)
-            }
+            onConfirm={handleRemoveConfirm}
           />
         </Suspense>
       )}
