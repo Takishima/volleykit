@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { ExpandableCard } from "@/components/ui/ExpandableCard";
 import { Badge } from "@/components/ui/Badge";
 import { MapPin } from "@/components/ui/icons";
@@ -14,7 +15,7 @@ interface AssignmentCardProps {
   dataTour?: string;
 }
 
-export function AssignmentCard({
+function AssignmentCardComponent({
   assignment,
   onClick,
   disableExpansion,
@@ -156,3 +157,5 @@ export function AssignmentCard({
     />
   );
 }
+
+export const AssignmentCard = memo(AssignmentCardComponent);
