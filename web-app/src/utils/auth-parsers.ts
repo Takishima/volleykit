@@ -111,6 +111,15 @@ export type LoginResult =
 /**
  * Submit login credentials to the authentication endpoint.
  * This is the core login logic used after we have valid form fields.
+ *
+ * Success detection:
+ * - The API returns 303 redirect to dashboard on success
+ * - Fetch follows the redirect, so we check response.url to detect success
+ * - Dashboard URL contains "/sportmanager.volleyball/main/dashboard"
+ *
+ * Failure detection:
+ * - The API returns 200 with login page HTML on failure
+ * - The login page contains a Vuetify snackbar with color="error"
  */
 export async function submitLoginCredentials(
   authUrl: string,
@@ -154,15 +163,46 @@ export async function submitLoginCredentials(
     return { success: false, error: "Authentication request failed" };
   }
 
-  // Parse response HTML to determine success/failure
+  // Parse response HTML
   const html = await response.text();
-  const csrfToken = extractCsrfTokenFromPage(html);
 
-  // Success: Response contains data-csrf-token
+  // Check if we were redirected to the dashboard (successful login)
+  // The API returns 303 redirect on success, fetch follows it automatically
+  const isOnDashboard =
+    response.redirected &&
+    response.url.includes("/sportmanager.volleyball/main/dashboard");
+
+  if (isOnDashboard) {
+    // Successfully redirected to dashboard - extract CSRF token
+    const csrfToken = extractCsrfTokenFromPage(html);
+    if (csrfToken) {
+      return { success: true, csrfToken };
+    }
+    // Redirected to dashboard but couldn't find CSRF token
+    // This is a parsing issue, not invalid credentials
+    logger.warn("Login succeeded but CSRF token not found in dashboard HTML");
+    return {
+      success: false,
+      error: "Login succeeded but session could not be established",
+    };
+  }
+
+  // Not redirected - check if we're on the login page with an error
+  // The Vuetify snackbar with color="error" indicates authentication failure
+  const hasAuthError =
+    html.includes('color="error"') || html.includes("color='error'");
+
+  if (hasAuthError) {
+    return { success: false, error: "Invalid username or password" };
+  }
+
+  // Fallback: Check if CSRF token exists (might be on dashboard without redirect flag)
+  const csrfToken = extractCsrfTokenFromPage(html);
   if (csrfToken) {
     return { success: true, csrfToken };
   }
 
-  // Failure: No CSRF token means we're still on login page
-  return { success: false, error: "Invalid username or password" };
+  // Unknown state - couldn't determine success or failure
+  logger.warn("Could not determine login result from response");
+  return { success: false, error: "Login failed - please try again" };
 }

@@ -13,7 +13,13 @@ const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
 
 // Helper to create valid login page HTML with form fields
-function createLoginPageHtml(trustedProperties = "a:0:{}abc123def456") {
+function createLoginPageHtml(
+  trustedProperties = "a:0:{}abc123def456",
+  options: { withError?: boolean } = {},
+) {
+  const errorSnackbar = options.withError
+    ? `<v-snackbar :value="true" color="error" :timeout="5000">Authentifizierung fehlgeschlagen!</v-snackbar>`
+    : "";
   return `
     <html>
       <body>
@@ -25,6 +31,7 @@ function createLoginPageHtml(trustedProperties = "a:0:{}abc123def456") {
           <input type='hidden' name='__referrer[@action]' value='login' />
           <input type='hidden' name='__referrer[arguments]' value='YTowOnt9abc123' />
         </form>
+        ${errorSnackbar}
       </body>
     </html>
   `;
@@ -165,6 +172,7 @@ describe("useAuthStore", () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         redirected: true,
+        url: "https://volleymanager.volleyball.ch/sportmanager.volleyball/main/dashboard",
         text: () =>
           Promise.resolve(
             createDashboardHtml("my-csrf-token-12345678901234567890"),
@@ -182,19 +190,22 @@ describe("useAuthStore", () => {
       expect(mockFetch).toHaveBeenCalledTimes(2);
     });
 
-    it("failed login returns login page without CSRF token", async () => {
+    it("failed login returns login page with error snackbar", async () => {
       // First fetch: login page with form fields
       mockFetch.mockResolvedValueOnce({
         ok: true,
         text: () => Promise.resolve(createLoginPageHtml()),
       });
 
-      // Second fetch: login POST returns login page (no redirect, invalid credentials)
-      // The response is still 200 OK but contains the login page HTML without data-csrf-token
+      // Second fetch: login POST returns login page with error (no redirect, invalid credentials)
+      // The response is still 200 OK but contains error snackbar
       mockFetch.mockResolvedValueOnce({
         ok: true,
         redirected: false,
-        text: () => Promise.resolve(createLoginPageHtml()), // Login page, not dashboard
+        text: () =>
+          Promise.resolve(
+            createLoginPageHtml("a:0:{}abc123def456", { withError: true }),
+          ),
       });
 
       const result = await useAuthStore.getState().login("user", "wrongpass");
@@ -203,6 +214,38 @@ describe("useAuthStore", () => {
       const { status, error } = useAuthStore.getState();
       expect(status).toBe("error");
       expect(error).toBe("Invalid username or password");
+    });
+
+    it("succeeds via fallback when redirected flag is missing but CSRF token present", async () => {
+      // Regression test: When proxy doesn't preserve redirect info,
+      // but the response contains a valid CSRF token (dashboard HTML),
+      // login should still succeed. The old code would fail with
+      // "Invalid username or password" in this case.
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: () => Promise.resolve(createLoginPageHtml()),
+      });
+
+      // Second fetch: login POST returns dashboard with CSRF token
+      // BUT redirected flag is false (e.g., due to proxy behavior)
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        redirected: false, // Proxy didn't preserve redirect info
+        url: "", // No URL info either
+        text: () =>
+          Promise.resolve(
+            createDashboardHtml("fallback-csrf-token-12345678901234"),
+          ),
+      });
+
+      const result = await useAuthStore.getState().login("user", "pass");
+
+      // Should succeed via the fallback CSRF token detection
+      expect(result).toBe(true);
+      expect(useAuthStore.getState().status).toBe("authenticated");
+      expect(setCsrfToken).toHaveBeenCalledWith(
+        "fallback-csrf-token-12345678901234",
+      );
     });
 
     it("handles network errors gracefully", async () => {
@@ -252,6 +295,7 @@ describe("useAuthStore", () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         redirected: true,
+        url: "https://volleymanager.volleyball.ch/sportmanager.volleyball/main/dashboard",
         text: () =>
           Promise.resolve(createDashboardHtml("fresh-csrf-token-abcdef")),
       });
@@ -294,11 +338,14 @@ describe("useAuthStore", () => {
         text: () => Promise.resolve(createLoginPageHtml("trusted-props-value")),
       });
 
-      // Second fetch: login POST (returns login page to simulate failure)
+      // Second fetch: login POST (returns login page with error to simulate failure)
       mockFetch.mockResolvedValueOnce({
         ok: true,
         redirected: false,
-        text: () => Promise.resolve(createLoginPageHtml()),
+        text: () =>
+          Promise.resolve(
+            createLoginPageHtml("trusted-props-value", { withError: true }),
+          ),
       });
 
       await useAuthStore.getState().login("testuser", "testpass");

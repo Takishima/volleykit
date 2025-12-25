@@ -256,6 +256,32 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         // Proxy all API calls during development to bypass CORS
+        // Authentication endpoints
+        '/login': {
+          target: 'https://volleymanager.volleyball.ch',
+          changeOrigin: true,
+          secure: true,
+          cookieDomainRewrite: 'localhost',
+        },
+        '/logout': {
+          target: 'https://volleymanager.volleyball.ch',
+          changeOrigin: true,
+          secure: true,
+          cookieDomainRewrite: 'localhost',
+        },
+        '/sportmanager.security': {
+          target: 'https://volleymanager.volleyball.ch',
+          changeOrigin: true,
+          secure: true,
+          cookieDomainRewrite: 'localhost',
+        },
+        '/sportmanager.volleyball': {
+          target: 'https://volleymanager.volleyball.ch',
+          changeOrigin: true,
+          secure: true,
+          cookieDomainRewrite: 'localhost',
+        },
+        // API endpoints
         '/neos': {
           target: 'https://volleymanager.volleyball.ch',
           changeOrigin: true,
