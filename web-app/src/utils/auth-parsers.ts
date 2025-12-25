@@ -18,6 +18,18 @@ const DASHBOARD_URL_PATTERN = "/sportmanager.volleyball/main/dashboard";
 const AUTH_ERROR_INDICATORS = ['color="error"', "color='error'"] as const;
 
 /**
+ * HTML patterns that indicate Two-Factor Authentication is required.
+ * These patterns match the Neos Flow TFA input page.
+ */
+const TFA_PAGE_INDICATORS = [
+  "secondFactorToken",
+  "SecondFactor",
+  "TwoFactorAuthentication",
+  "totp",
+  "TOTP",
+] as const;
+
+/**
  * Login form fields extracted from the login page HTML.
  * The Neos Flow framework requires these fields for CSRF protection.
  */
@@ -180,8 +192,9 @@ export async function submitLoginCredentials(
 
   // Check if we were redirected to the dashboard (successful login)
   // The API returns 303 redirect on success, fetch follows it automatically
-  const isOnDashboard =
-    response.redirected && response.url.includes(DASHBOARD_URL_PATTERN);
+  // Note: Some proxies may not preserve the redirected flag, so we check
+  // if the final URL contains the dashboard pattern regardless of redirect flag
+  const isOnDashboard = response.url?.includes(DASHBOARD_URL_PATTERN) ?? false;
 
   if (isOnDashboard) {
     // Successfully redirected to dashboard - extract CSRF token
@@ -208,6 +221,20 @@ export async function submitLoginCredentials(
     return { success: false, error: "Invalid username or password" };
   }
 
+  // Check if we're on a Two-Factor Authentication page
+  // TFA users see an OTP input form after valid credentials
+  const hasTfaPage = TFA_PAGE_INDICATORS.some((indicator) =>
+    html.includes(indicator),
+  );
+
+  if (hasTfaPage) {
+    logger.info("TFA page detected - user has two-factor authentication enabled");
+    return {
+      success: false,
+      error: "Two-factor authentication is not supported. Please disable it in your VolleyManager account settings to use this app.",
+    };
+  }
+
   // Fallback: Check if CSRF token exists (might be on dashboard without redirect flag)
   const csrfToken = extractCsrfTokenFromPage(html);
   if (csrfToken) {
@@ -215,6 +242,12 @@ export async function submitLoginCredentials(
   }
 
   // Unknown state - couldn't determine success or failure
-  logger.warn("Could not determine login result from response");
+  // Log diagnostic info to help debug login issues
+  logger.warn("Could not determine login result from response", {
+    redirected: response.redirected,
+    url: response.url ?? "(no url)",
+    htmlLength: html.length,
+    htmlPreview: html.slice(0, 500),
+  });
   return { success: false, error: "Login failed - please try again" };
 }

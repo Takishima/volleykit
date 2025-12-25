@@ -15,11 +15,25 @@ vi.stubGlobal("fetch", mockFetch);
 // Helper to create valid login page HTML with form fields
 function createLoginPageHtml(
   trustedProperties = "a:0:{}abc123def456",
-  options: { withError?: boolean } = {},
+  options: { withError?: boolean; withTfa?: boolean } = {},
 ) {
   const errorSnackbar = options.withError
     ? `<v-snackbar :value="true" color="error" :timeout="5000">Authentifizierung fehlgeschlagen!</v-snackbar>`
     : "";
+  // TFA page contains a secondFactorToken input for TOTP codes
+  if (options.withTfa) {
+    return `
+      <html>
+        <body>
+          <form>
+            <input type='hidden' name='__trustedProperties' value='${trustedProperties}' />
+            <input type='text' name='secondFactorToken' placeholder='Enter your 2FA code' />
+            <button type='submit'>Verify</button>
+          </form>
+        </body>
+      </html>
+    `;
+  }
   return `
     <html>
       <body>
@@ -329,6 +343,28 @@ describe("useAuthStore", () => {
       expect(status).toBe("error");
       expect(error).toBe("Authentication request failed");
       expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
+
+    it("detects TFA page and returns helpful error message", async () => {
+      // First fetch: login page with form fields
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: () => Promise.resolve(createLoginPageHtml()),
+      });
+
+      // Second fetch: login POST returns TFA page (valid credentials but TFA enabled)
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        redirected: false,
+        text: () => Promise.resolve(createLoginPageHtml("a:0:{}", { withTfa: true })),
+      });
+
+      const result = await useAuthStore.getState().login("user", "pass");
+
+      expect(result).toBe(false);
+      const { status, error } = useAuthStore.getState();
+      expect(status).toBe("error");
+      expect(error).toContain("Two-factor authentication is not supported");
     });
 
     it("sends correct form data to authentication endpoint", async () => {
