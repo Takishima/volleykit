@@ -37,6 +37,8 @@ function CompensationCardComponent({
   const awayTeam = game?.encounter?.teamAway?.name || t("common.unknown");
   const gameNumber = game?.number;
   const gender = game?.group?.phase?.league?.gender;
+  const leagueCategory = game?.group?.phase?.league?.leagueCategory?.name;
+  const position = compensation.refereePosition;
 
   const total = (comp?.gameCompensation || 0) + (comp?.travelExpenses || 0);
   const isPaid = comp?.paymentDone;
@@ -52,13 +54,18 @@ function CompensationCardComponent({
       dataTour={dataTour}
       renderCompact={(_, { expandArrow }) => (
         <>
-          {/* Date and game number */}
+          {/* Date, time and game number */}
           <div className="text-xs text-text-muted dark:text-text-muted-dark min-w-[4rem]">
             <div>
               {startDate
                 ? format(startDate, "MMM d", { locale: dateLocale })
                 : t("common.unknownDate")}
             </div>
+            {startDate && (
+              <div className="text-text-subtle dark:text-text-subtle-dark">
+                {format(startDate, "HH:mm")}
+              </div>
+            )}
             {gameNumber && (
               <div className="text-text-subtle dark:text-text-subtle-dark">
                 #{gameNumber}
@@ -108,6 +115,23 @@ function CompensationCardComponent({
       renderDetails={() =>
         comp && (
           <div className="px-2 pb-2 pt-0 border-t border-border-subtle dark:border-border-subtle-dark space-y-1 text-sm">
+            {/* Match details */}
+            <div className="pt-2 pb-1 border-b border-border-subtle dark:border-border-subtle-dark">
+              <div className="font-medium text-text-primary dark:text-text-primary-dark">
+                {homeTeam}
+              </div>
+              <div className="text-text-secondary dark:text-text-muted-dark">
+                {t("common.vs")} {awayTeam}
+              </div>
+              {(leagueCategory || position) && (
+                <div className="text-xs text-text-subtle dark:text-text-subtle-dark mt-1 flex items-center gap-1">
+                  {leagueCategory && <span>{leagueCategory}</span>}
+                  {leagueCategory && position && <span>•</span>}
+                  {position && <span>{position}</span>}
+                </div>
+              )}
+            </div>
+
             <div className="flex justify-between pt-2">
               <span className="text-text-muted dark:text-text-muted-dark">
                 {t("compensations.total")}:
