@@ -1,4 +1,4 @@
-import { useState, useCallback, lazy, Suspense } from "react";
+import { useState, useCallback, lazy, Suspense, memo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 
@@ -14,7 +14,7 @@ interface SafeModeSectionProps {
   onSetSafeMode: (enabled: boolean) => void;
 }
 
-export function SafeModeSection({ isSafeModeEnabled, onSetSafeMode }: SafeModeSectionProps) {
+function SafeModeSectionComponent({ isSafeModeEnabled, onSetSafeMode }: SafeModeSectionProps) {
   const { t } = useTranslation();
   const [showSafeModeWarning, setShowSafeModeWarning] = useState(false);
 
@@ -114,3 +114,5 @@ export function SafeModeSection({ isSafeModeEnabled, onSetSafeMode }: SafeModeSe
     </>
   );
 }
+
+export const SafeModeSection = memo(SafeModeSectionComponent);

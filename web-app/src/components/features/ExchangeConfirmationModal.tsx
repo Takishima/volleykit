@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, memo } from "react";
 import type { GameExchange } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { logger } from "@/utils/logger";
@@ -17,7 +17,7 @@ interface ExchangeConfirmationModalProps {
   variant: "takeOver" | "remove";
 }
 
-export function ExchangeConfirmationModal({
+function ExchangeConfirmationModalComponent({
   exchange,
   isOpen,
   onClose,
@@ -173,3 +173,5 @@ export function ExchangeConfirmationModal({
     </Modal>
   );
 }
+
+export const ExchangeConfirmationModal = memo(ExchangeConfirmationModalComponent);

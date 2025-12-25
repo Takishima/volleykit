@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getTeamNames } from "@/utils/assignment-helpers";
@@ -20,7 +21,7 @@ interface ValidateGameModalProps {
   onClose: () => void;
 }
 
-export function ValidateGameModal({
+function ValidateGameModalComponent({
   assignment,
   isOpen,
   onClose,
@@ -204,3 +205,5 @@ export function ValidateGameModal({
     </>
   );
 }
+
+export const ValidateGameModal = memo(ValidateGameModalComponent);

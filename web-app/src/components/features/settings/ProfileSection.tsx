@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -8,7 +9,7 @@ interface ProfileSectionProps {
   user: UserProfile;
 }
 
-export function ProfileSection({ user }: ProfileSectionProps) {
+function ProfileSectionComponent({ user }: ProfileSectionProps) {
   const { t } = useTranslation();
 
   return (
@@ -55,3 +56,5 @@ export function ProfileSection({ user }: ProfileSectionProps) {
     </Card>
   );
 }
+
+export const ProfileSection = memo(ProfileSectionComponent);

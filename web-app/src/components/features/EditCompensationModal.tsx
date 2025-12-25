@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, memo } from "react";
 import type { Assignment, CompensationRecord } from "@/api/client";
 import { getApiClient } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -35,7 +35,7 @@ interface EditCompensationModalProps {
   onClose: () => void;
 }
 
-export function EditCompensationModal({
+function EditCompensationModalComponent({
   assignment,
   compensation,
   isOpen,
@@ -328,3 +328,5 @@ export function EditCompensationModal({
     </Modal>
   );
 }
+
+export const EditCompensationModal = memo(EditCompensationModalComponent);
