@@ -88,6 +88,8 @@ const fr: Translations = {
         title: "Visites guidées",
         description:
           "Conseils interactifs qui vous guident à travers chaque section de l'application avec des données d'exemple.",
+        safeModeNote:
+          "Remarque : Le mode sécurisé est activé par défaut, ce qui bloque certaines opérations. Pour valider des matchs ou gérer les échanges, désactivez le mode sécurisé dans la section ci-dessous.",
         restart: "Recommencer les visites",
         statusCompleted: "Terminé",
         statusSkipped: "Ignoré",

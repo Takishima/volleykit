@@ -88,6 +88,8 @@ const de: Translations = {
         title: "Einführungstouren",
         description:
           "Interaktive Tipps, die Sie mit Beispieldaten durch jeden Bereich der App führen.",
+        safeModeNote:
+          "Hinweis: Der Sicherheitsmodus ist standardmässig aktiviert und blockiert bestimmte Aktionen. Um Spiele zu validieren oder Börsenaktionen durchzuführen, deaktivieren Sie den Sicherheitsmodus im Abschnitt unten.",
         restart: "Touren neu starten",
         statusCompleted: "Abgeschlossen",
         statusSkipped: "Übersprungen",
