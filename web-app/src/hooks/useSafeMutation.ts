@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { createLogger, type Logger } from "@/utils/logger";
 import { toast } from "@/stores/toast";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -38,6 +38,8 @@ interface UseSafeMutationOptions<TResult> {
 interface UseSafeMutationResult<TArg, TResult> {
   /** Execute the mutation with race condition protection */
   execute: (arg: TArg) => Promise<TResult | undefined>;
+  /** Whether a mutation is currently executing (for disabling UI elements) */
+  isExecuting: boolean;
 }
 
 /**
@@ -67,19 +69,27 @@ export function useSafeMutation<TArg, TResult = void>(
   const { t } = useTranslation();
   const { guard, isDemoMode } = useSafeModeGuard();
   const isExecutingRef = useRef(false);
-  const loggerRef = useRef<Logger | null>(null);
+  const [isExecuting, setIsExecuting] = useState(false);
 
-  // Lazy initialize logger to avoid creating on every render
-  if (!loggerRef.current) {
-    loggerRef.current = createLogger(options.logContext);
-  }
-  const log = loggerRef.current;
+  // Destructure options for stable dependency array
+  const {
+    logContext,
+    successMessage,
+    errorMessage,
+    safeGuard,
+    skipSuccessToastInDemoMode,
+    onSuccess,
+    onError,
+  } = options;
+
+  // Initialize logger with useMemo for idiomatic lazy initialization
+  const log = useMemo(() => createLogger(logContext), [logContext]);
 
   const execute = useCallback(
     async (arg: TArg): Promise<TResult | undefined> => {
       // Safe mode guard check
-      if (options.safeGuard) {
-        if (guard(options.safeGuard)) {
+      if (safeGuard) {
+        if (guard(safeGuard)) {
           return undefined;
         }
       }
@@ -91,32 +101,45 @@ export function useSafeMutation<TArg, TResult = void>(
       }
 
       isExecutingRef.current = true;
+      setIsExecuting(true);
 
       try {
         const result = await mutationFn(arg, log);
 
         // Success toast (skip in demo mode if configured)
-        if (options.successMessage) {
-          const shouldShowToast =
-            !options.skipSuccessToastInDemoMode || !isDemoMode;
+        if (successMessage) {
+          const shouldShowToast = !skipSuccessToastInDemoMode || !isDemoMode;
           if (shouldShowToast) {
-            toast.success(t(options.successMessage));
+            toast.success(t(successMessage));
           }
         }
 
-        options.onSuccess?.(result);
+        onSuccess?.(result);
         return result;
       } catch (error) {
         log.error("Operation failed:", error);
-        toast.error(t(options.errorMessage));
-        options.onError?.(error);
+        toast.error(t(errorMessage));
+        onError?.(error);
         return undefined;
       } finally {
         isExecutingRef.current = false;
+        setIsExecuting(false);
       }
     },
-    [guard, isDemoMode, mutationFn, options, t, log],
+    [
+      safeGuard,
+      guard,
+      log,
+      mutationFn,
+      successMessage,
+      skipSuccessToastInDemoMode,
+      isDemoMode,
+      t,
+      onSuccess,
+      errorMessage,
+      onError,
+    ],
   );
 
-  return { execute };
+  return { execute, isExecuting };
 }

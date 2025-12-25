@@ -46,7 +46,7 @@ export function useExchangeActions(): UseExchangeActionsResult {
     },
   );
 
-  const withdrawMutation2 = useSafeMutation(
+  const withdrawSafeMutation = useSafeMutation(
     async (exchange: GameExchange, log) => {
       await withdrawMutation.mutateAsync(exchange.__identity);
       log.debug("Successfully withdrawn from exchange:", exchange.__identity);
@@ -73,9 +73,9 @@ export function useExchangeActions(): UseExchangeActionsResult {
 
   const handleRemoveFromExchange = useCallback(
     async (exchange: GameExchange) => {
-      await withdrawMutation2.execute(exchange);
+      await withdrawSafeMutation.execute(exchange);
     },
-    [withdrawMutation2],
+    [withdrawSafeMutation],
   );
 
   return {

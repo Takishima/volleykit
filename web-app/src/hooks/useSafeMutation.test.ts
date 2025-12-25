@@ -381,4 +381,70 @@ describe("useSafeMutation", () => {
 
     expect(mutationFn).toHaveBeenCalledTimes(2);
   });
+
+  describe("isExecuting state", () => {
+    it("should initially be false", () => {
+      const mutationFn = vi.fn().mockResolvedValue(undefined);
+
+      const { result } = renderHook(() =>
+        useSafeMutation(mutationFn, {
+          logContext: "testContext",
+          errorMessage: TEST_ERROR,
+        }),
+      );
+
+      expect(result.current.isExecuting).toBe(false);
+    });
+
+    it("should be true during execution", async () => {
+      let resolveExecution: () => void;
+      const executionPromise = new Promise<void>((resolve) => {
+        resolveExecution = resolve;
+      });
+
+      const mutationFn = vi.fn().mockReturnValue(executionPromise);
+
+      const { result } = renderHook(() =>
+        useSafeMutation(mutationFn, {
+          logContext: "testContext",
+          errorMessage: TEST_ERROR,
+        }),
+      );
+
+      // Start execution without awaiting
+      let executePromise: Promise<void | undefined>;
+      act(() => {
+        executePromise = result.current.execute("arg");
+      });
+
+      // Should be true during execution
+      expect(result.current.isExecuting).toBe(true);
+
+      // Resolve and wait for completion
+      await act(async () => {
+        resolveExecution!();
+        await executePromise;
+      });
+
+      // Should be false after completion
+      expect(result.current.isExecuting).toBe(false);
+    });
+
+    it("should be false after error", async () => {
+      const mutationFn = vi.fn().mockRejectedValue(new Error("Test error"));
+
+      const { result } = renderHook(() =>
+        useSafeMutation(mutationFn, {
+          logContext: "testContext",
+          errorMessage: TEST_ERROR,
+        }),
+      );
+
+      await act(async () => {
+        await result.current.execute("arg");
+      });
+
+      expect(result.current.isExecuting).toBe(false);
+    });
+  });
 });
