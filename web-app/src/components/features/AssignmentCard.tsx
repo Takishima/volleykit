@@ -103,7 +103,6 @@ function AssignmentCardComponent({
     refereeGame?.activeRefereeConvocationFourthLinesman
   );
 
-  const headReferees = [headReferee1, headReferee2].filter(Boolean);
   const linesmen = [linesman1, linesman2, linesman3, linesman4].filter(Boolean);
 
   const statusConfig: Record<
@@ -220,14 +219,22 @@ function AssignmentCardComponent({
           )}
 
           {/* Referee names */}
-          {(headReferees.length > 0 || linesmen.length > 0) && (
+          {(headReferee1 || headReferee2 || linesmen.length > 0) && (
             <div className="text-xs text-text-subtle dark:text-text-subtle-dark pt-1 space-y-0.5">
-              {headReferees.length > 0 && (
+              {headReferee1 && (
                 <div>
                   <span className="font-medium">
-                    {t("occupations.referees")}:
+                    {t("positions.head-one")}:
                   </span>{" "}
-                  {headReferees.join(", ")}
+                  {headReferee1}
+                </div>
+              )}
+              {headReferee2 && (
+                <div>
+                  <span className="font-medium">
+                    {t("positions.head-two")}:
+                  </span>{" "}
+                  {headReferee2}
                 </div>
               )}
               {linesmen.length > 0 && (
