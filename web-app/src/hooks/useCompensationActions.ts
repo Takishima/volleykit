@@ -1,13 +1,11 @@
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 import type { CompensationRecord } from "@/api/client";
 import { downloadCompensationPDF } from "@/utils/compensation-actions";
-import { createLogger } from "@/utils/logger";
 import { toast } from "@/stores/toast";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModalState } from "./useModalState";
 import { useSafeModeGuard } from "./useSafeModeGuard";
-
-const log = createLogger("useCompensationActions");
+import { useSafeMutation } from "./useSafeMutation";
 
 interface UseCompensationActionsResult {
   editCompensationModal: {
@@ -23,7 +21,18 @@ export function useCompensationActions(): UseCompensationActionsResult {
   const { t } = useTranslation();
   const { guard, isDemoMode } = useSafeModeGuard();
   const editCompensationModal = useModalState<CompensationRecord>();
-  const isDownloadingRef = useRef(false);
+
+  const pdfMutation = useSafeMutation(
+    async (compensation: CompensationRecord, log) => {
+      log.debug("Generating PDF for:", compensation.__identity);
+      await downloadCompensationPDF(compensation.__identity);
+      log.debug("PDF downloaded successfully:", compensation.__identity);
+    },
+    {
+      logContext: "useCompensationActions",
+      errorMessage: "compensations.pdfDownloadFailed",
+    },
+  );
 
   const openEditCompensation = useCallback(
     (compensation: CompensationRecord) => {
@@ -43,30 +52,15 @@ export function useCompensationActions(): UseCompensationActionsResult {
 
   const handleGeneratePDF = useCallback(
     async (compensation: CompensationRecord) => {
+      // Demo mode blocks PDF download (requires real API)
       if (isDemoMode) {
-        log.debug("Demo mode: PDF download disabled");
         toast.info(t("compensations.pdfNotAvailableDemo"));
         return;
       }
 
-      if (isDownloadingRef.current) {
-        log.debug("PDF download already in progress, ignoring");
-        return;
-      }
-
-      isDownloadingRef.current = true;
-      try {
-        log.debug("Generating PDF for:", compensation.__identity);
-        await downloadCompensationPDF(compensation.__identity);
-        log.debug("PDF downloaded successfully:", compensation.__identity);
-      } catch (error) {
-        log.error("Failed to generate PDF:", error);
-        toast.error(t("compensations.pdfDownloadFailed"));
-      } finally {
-        isDownloadingRef.current = false;
-      }
+      await pdfMutation.execute(compensation);
     },
-    [isDemoMode, t],
+    [isDemoMode, t, pdfMutation],
   );
 
   return {
