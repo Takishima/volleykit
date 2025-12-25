@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/Badge";
 import { MapPin } from "@/components/ui/icons";
 import type { GameExchange } from "@/api/client";
 import { useDateLocale } from "@/hooks/useDateFormat";
-import { t, tInterpolate } from "@/i18n";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface ExchangeCardProps {
   exchange: GameExchange;
@@ -20,6 +20,7 @@ function ExchangeCardComponent({
   disableExpansion,
   dataTour,
 }: ExchangeCardProps) {
+  const { t, tInterpolate } = useTranslation();
   const dateLocale = useDateLocale();
 
   const game = exchange.refereeGame?.game;
