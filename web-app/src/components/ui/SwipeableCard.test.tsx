@@ -185,6 +185,28 @@ describe("SwipeableCard", () => {
       expect(screen.getByText("Left")).toBeInTheDocument();
       expect(screen.getByText("Right")).toBeInTheDocument();
     });
+
+    it("hides action buttons when clicking the backdrop", () => {
+      const { container } = render(
+        <SwipeableCard onSwipeLeft={() => {}} leftActionLabel="Decline">
+          <div>Content</div>
+        </SwipeableCard>,
+      );
+
+      const wrapper = container.firstChild as HTMLElement;
+
+      // Show actions
+      fireEvent.keyDown(wrapper, { key: "Enter" });
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+      // Click the backdrop (element with aria-hidden="true")
+      const backdrop = wrapper.querySelector('[aria-hidden="true"]');
+      expect(backdrop).toBeInTheDocument();
+      fireEvent.click(backdrop!);
+
+      // Dialog should be dismissed
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
   });
 
   describe("touch interactions", () => {
