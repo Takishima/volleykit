@@ -7,6 +7,7 @@ import { useTourStore, type TourId } from "@/stores/tour";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTour } from "@/hooks/useTour";
 import { usePWA } from "@/contexts/PWAContext";
+import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
@@ -242,13 +243,9 @@ export function SettingsPage() {
 
           {/* Reset button */}
           <div className="pt-2">
-            <button
-              type="button"
-              onClick={resetAllTours}
-              className="rounded-md bg-surface-subtle dark:bg-surface-subtle-dark px-4 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark hover:bg-gray-200 dark:hover:bg-gray-600 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none"
-            >
+            <Button variant="secondary" onClick={resetAllTours}>
               {t("tour.settings.tourSection.restart")}
-            </button>
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -284,14 +281,13 @@ export function SettingsPage() {
                 )}
               </div>
 
-              <button
-                type="button"
+              <Button
+                variant="secondary"
                 onClick={handleResetDemoData}
-                className="rounded-md bg-surface-subtle dark:bg-surface-subtle-dark px-4 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark hover:bg-gray-200 dark:hover:bg-gray-600 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none"
                 aria-label={t("settings.resetDemoData")}
               >
                 {t("settings.resetDemoData")}
-              </button>
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -413,23 +409,22 @@ export function SettingsPage() {
                 )}
               </div>
               {needRefresh ? (
-                <button
+                <Button
+                  variant="primary"
                   onClick={updateApp}
-                  className="rounded-md bg-primary-500 px-4 py-2 text-sm font-medium text-primary-950 hover:bg-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none"
                   aria-label={t("settings.updateNow")}
                 >
                   {t("settings.updateNow")}
-                </button>
+                </Button>
               ) : (
-                <button
+                <Button
+                  variant="secondary"
                   onClick={checkForUpdate}
-                  disabled={isChecking}
-                  aria-busy={isChecking}
-                  className="rounded-md bg-surface-subtle dark:bg-surface-subtle-dark px-4 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark hover:bg-gray-200 dark:hover:bg-gray-600 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                  loading={isChecking}
                   aria-label={t("settings.checkForUpdates")}
                 >
                   {isChecking ? t("settings.checking") : t("settings.checkForUpdates")}
-                </button>
+                </Button>
               )}
             </div>
           </CardContent>
@@ -479,9 +474,13 @@ export function SettingsPage() {
 
       {/* Logout */}
       <div className="pt-4 border-t border-border-default dark:border-border-default-dark">
-        <button onClick={logout} className="btn btn-secondary w-full sm:w-auto">
+        <Button
+          variant="secondary"
+          onClick={logout}
+          className="w-full sm:w-auto"
+        >
           {t("auth.logout")}
-        </button>
+        </Button>
       </div>
 
       {/* Safe Mode Warning Modal */}

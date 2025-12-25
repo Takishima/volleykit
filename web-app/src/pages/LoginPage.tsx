@@ -10,6 +10,7 @@ import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 import { useTranslation } from "@/hooks/useTranslation";
+import { Button } from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { Volleyball } from "@/components/ui/icons";
@@ -155,21 +156,15 @@ export function LoginPage() {
               </div>
             )}
 
-            <button
+            <Button
               type="submit"
-              disabled={isLoading}
+              variant="primary"
+              fullWidth
+              loading={isLoading}
               data-testid="login-button"
-              className="btn btn-primary w-full flex items-center justify-center gap-2"
             >
-              {isLoading ? (
-                <>
-                  <LoadingSpinner size="sm" />
-                  <span>{t("auth.loggingIn")}</span>
-                </>
-              ) : (
-                t("auth.loginButton")
-              )}
-            </button>
+              {isLoading ? t("auth.loggingIn") : t("auth.loginButton")}
+            </Button>
 
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
@@ -182,15 +177,15 @@ export function LoginPage() {
               </div>
             </div>
 
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               onClick={handleDemoLogin}
               disabled={isLoading}
+              fullWidth
               data-testid="demo-button"
-              className="btn btn-secondary w-full"
             >
               {t("auth.demoMode")}
-            </button>
+            </Button>
           </form>
         </div>
 

@@ -51,8 +51,9 @@ describe("ModalButton", () => {
     it("applies primary variant styles", () => {
       render(<ModalButton variant="primary">Save</ModalButton>);
       const button = screen.getByRole("button");
-      expect(button).toHaveClass("bg-primary-600");
-      expect(button).toHaveClass("text-white");
+      // Uses unified Button styling: primary-500 with dark text
+      expect(button).toHaveClass("bg-primary-500");
+      expect(button).toHaveClass("text-primary-950");
     });
 
     it("applies success variant styles", () => {
