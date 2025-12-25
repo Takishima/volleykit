@@ -243,7 +243,8 @@ function getVenuesForAssociation(
 }
 
 // Mock referee names for demo data
-// First 2 are used for head referees, rest for linesmen
+// First HEAD_REFEREE_COUNT are used for head referees, rest for linesmen
+const HEAD_REFEREE_COUNT = 2;
 const MOCK_REFEREES = [
   { firstName: "Thomas", lastName: "Meier" },
   { firstName: "Sandra", lastName: "Keller" },
@@ -333,14 +334,20 @@ function createRefereeGame({
     4: "activeRefereeConvocationFourthLinesman",
   };
 
+  const linesmanPositionLabels: Record<LinesmanPosition, "first" | "second"> = {
+    1: "first",
+    2: "second",
+    3: "first",
+    4: "second",
+  };
+
   for (const pos of linesmenPositions) {
     const field = linesmanFields[pos];
-    // Use referee indices 2-5 for linesmen (after the 2 head refs)
     linesmanConvocations[field] = createRefereeConvocation(
       idPrefix,
       gameId,
-      pos === 1 ? "first" : pos === 2 ? "second" : pos === 3 ? "first" : "second",
-      2 + pos, // Offset by 2 to use different referees than head refs
+      linesmanPositionLabels[pos],
+      HEAD_REFEREE_COUNT + pos,
     );
   }
 
