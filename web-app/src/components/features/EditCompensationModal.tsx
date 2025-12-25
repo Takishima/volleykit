@@ -22,6 +22,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 import { ModalErrorBoundary } from "@/components/ui/ModalErrorBoundary";
 import { ModalButton } from "@/components/ui/ModalButton";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 interface EditCompensationModalProps {
   assignment?: Assignment;
@@ -249,11 +250,15 @@ export function EditCompensationModal({
           </div>
 
           {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500" />
+            <div
+              className="flex items-center justify-center py-8"
+              role="status"
+              aria-live="polite"
+            >
+              <LoadingSpinner size="md" />
             </div>
           ) : fetchError ? (
-            <div className="py-6 text-center">
+            <div className="py-6 text-center" role="alert">
               <p className="text-danger-600 dark:text-danger-400 mb-4">
                 {fetchError}
               </p>
