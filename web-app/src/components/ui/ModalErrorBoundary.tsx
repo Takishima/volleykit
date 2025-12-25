@@ -1,5 +1,6 @@
 import { Component, type ReactNode } from "react";
 import { AlertTriangle } from "@/components/ui/icons";
+import { Button } from "@/components/ui/Button";
 import { useTranslation } from "@/hooks/useTranslation";
 import { classifyError, type ErrorType } from "@/utils/error-helpers";
 import { logger } from "../../utils/logger";
@@ -96,19 +97,13 @@ class ModalErrorBoundaryClass extends Component<ModalErrorBoundaryClassProps, St
             </details>
           )}
           <div className="flex gap-3 justify-center">
-            <button
-              onClick={this.handleReset}
-              className="btn btn-secondary"
-            >
+            <Button variant="secondary" onClick={this.handleReset}>
               {translations.tryAgain}
-            </button>
+            </Button>
             {onClose && (
-              <button
-                onClick={this.handleClose}
-                className="btn btn-primary"
-              >
+              <Button variant="primary" onClick={this.handleClose}>
                 {translations.closeModal}
-              </button>
+              </Button>
             )}
           </div>
         </div>

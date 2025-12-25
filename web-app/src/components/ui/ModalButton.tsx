@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { Button, type ButtonVariant } from "./Button";
 
 type ModalButtonVariant = "secondary" | "primary" | "success" | "danger" | "blue";
 
@@ -11,27 +12,22 @@ interface ModalButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
 }
 
-const variantClasses: Record<ModalButtonVariant, string> = {
-  secondary:
-    "text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:ring-border-strong",
-  primary:
-    "text-white bg-primary-600 hover:bg-primary-700 focus:ring-primary-500",
-  success: "text-white bg-green-600 hover:bg-green-700 focus:ring-green-500",
-  danger: "text-white bg-red-600 hover:bg-red-700 focus:ring-red-500",
-  blue: "text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-500",
-};
-
 /**
+ * @deprecated Use `Button` component instead. ModalButton will be removed in a future version.
+ *
  * Standardized button component for use in modals and dialogs.
- * Provides consistent styling, accessibility, and dark mode support.
+ * This is now a thin wrapper around the unified Button component.
  *
  * @example
  * ```tsx
+ * // Preferred: Use Button directly
+ * <Button variant="secondary" onClick={onClose}>
+ *   Cancel
+ * </Button>
+ *
+ * // Legacy: Still supported but deprecated
  * <ModalButton variant="secondary" onClick={onClose}>
  *   Cancel
- * </ModalButton>
- * <ModalButton variant="success" onClick={onConfirm} disabled={isLoading}>
- *   {isLoading ? "Saving..." : "Save"}
  * </ModalButton>
  * ```
  */
@@ -40,22 +36,18 @@ export function ModalButton({
   fullWidth = false,
   children,
   className = "",
-  disabled,
   ...props
 }: ModalButtonProps) {
-  const baseClasses =
-    "px-4 py-2 text-sm font-medium rounded-md focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed";
-  const widthClass = fullWidth ? "flex-1" : "";
-  const variantClass = variantClasses[variant];
+  // Modal-specific styling: smaller border radius and flex-1 for fullWidth
+  const modalClasses = `rounded-md ${fullWidth ? "flex-1" : ""} ${className}`.trim();
 
   return (
-    <button
-      type="button"
-      disabled={disabled}
-      className={`${baseClasses} ${variantClass} ${widthClass} ${className}`.trim()}
+    <Button
+      variant={variant as ButtonVariant}
+      className={modalClasses}
       {...props}
     >
       {children}
-    </button>
+    </Button>
   );
 }

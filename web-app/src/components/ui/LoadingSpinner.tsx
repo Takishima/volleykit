@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { AlertTriangle, Calendar, Lock, Inbox, Wallet, ArrowLeftRight } from "@/components/ui/icons";
 import type { LucideIcon } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import { useTranslation } from "@/hooks/useTranslation";
 
 interface LoadingSpinnerProps {
@@ -81,9 +82,9 @@ export function ErrorState({ message, onRetry }: ErrorStateProps) {
       <AlertTriangle className="w-10 h-10 text-warning-500" aria-hidden="true" />
       <p className="text-danger-600 dark:text-danger-400 text-center">{message}</p>
       {onRetry && (
-        <button onClick={onRetry} className="btn btn-secondary">
+        <Button variant="secondary" onClick={onRetry}>
           {t("common.retry")}
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -140,9 +141,9 @@ export function EmptyState({
         </p>
       )}
       {action && (
-        <button onClick={action.onClick} className="btn btn-primary mt-2">
+        <Button variant="primary" onClick={action.onClick} className="mt-2">
           {action.label}
-        </button>
+        </Button>
       )}
     </div>
   );

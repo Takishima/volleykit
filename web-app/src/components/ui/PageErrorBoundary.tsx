@@ -1,5 +1,6 @@
 import { Component, type ReactNode } from "react";
 import { AlertTriangle } from "@/components/ui/icons";
+import { Button } from "@/components/ui/Button";
 import { useTranslation } from "@/hooks/useTranslation";
 import { classifyError, type ErrorType } from "@/utils/error-helpers";
 import { logger } from "../../utils/logger";
@@ -96,18 +97,12 @@ class PageErrorBoundaryClass extends Component<PageErrorBoundaryClassProps, Stat
               </details>
             )}
             <div className="flex gap-3 justify-center">
-              <button
-                onClick={this.handleReset}
-                className="btn btn-secondary flex items-center gap-2"
-              >
+              <Button variant="secondary" onClick={this.handleReset}>
                 {translations.tryAgain}
-              </button>
-              <button
-                onClick={this.handleGoHome}
-                className="btn btn-primary"
-              >
+              </Button>
+              <Button variant="primary" onClick={this.handleGoHome}>
                 {translations.goHome}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
