@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect } from "react";
 import type { Assignment, CompensationRecord } from "@/api/client";
 import { getApiClient } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useModalDismissal } from "@/hooks/useModalDismissal";
 import {
   useUpdateCompensation,
   useUpdateAssignmentCompensation,
@@ -20,6 +19,9 @@ import {
 } from "@/utils/distance";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
+import { Modal } from "@/components/ui/Modal";
+import { ModalHeader } from "@/components/ui/ModalHeader";
+import { ModalFooter } from "@/components/ui/ModalFooter";
 import { ModalErrorBoundary } from "@/components/ui/ModalErrorBoundary";
 import { ModalButton } from "@/components/ui/ModalButton";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -133,12 +135,6 @@ export function EditCompensationModal({
     }
   }, [isOpen]);
 
-  const { handleBackdropClick } = useModalDismissal({
-    isOpen,
-    onClose,
-    isLoading,
-  });
-
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
@@ -204,10 +200,8 @@ export function EditCompensationModal({
     ],
   );
 
-  if (!isOpen) return null;
-
   // Type safety: Ensure at least one of assignment or compensation is provided
-  if (!assignment && !compensation) {
+  if (isOpen && !assignment && !compensation) {
     logger.error(
       "[EditCompensationModal] Modal opened without assignment or compensation",
     );
@@ -223,115 +217,106 @@ export function EditCompensationModal({
     ({ homeTeam, awayTeam } = getTeamNamesFromCompensation(compensation));
   }
 
+  const modalTitleId = "edit-compensation-title";
+  const subtitle = `${homeTeam} ${t("common.vs")} ${awayTeam}`;
+
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-      onClick={handleBackdropClick}
-      aria-hidden="true"
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      titleId={modalTitleId}
+      size="md"
+      isLoading={isLoading}
     >
-      <div
-        className="bg-surface-card dark:bg-surface-card-dark rounded-lg shadow-xl max-w-md w-full p-6"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="edit-compensation-title"
-      >
-        <ModalErrorBoundary modalName="EditCompensationModal" onClose={onClose}>
-          <h2
-            id="edit-compensation-title"
-            className="text-xl font-semibold text-text-primary dark:text-text-primary-dark mb-4"
+      <ModalErrorBoundary modalName="EditCompensationModal" onClose={onClose}>
+        <ModalHeader
+          title={t("assignments.editCompensation")}
+          titleId={modalTitleId}
+          subtitle={subtitle}
+        />
+
+        {isLoading ? (
+          <div
+            className="flex items-center justify-center py-8"
+            role="status"
+            aria-live="polite"
           >
-            {t("assignments.editCompensation")}
-          </h2>
-
-          <div className="mb-4 text-sm text-text-muted dark:text-text-muted-dark">
-            <div className="font-medium text-text-primary dark:text-text-primary-dark">
-              {homeTeam} {t("common.vs")} {awayTeam}
-            </div>
+            <LoadingSpinner size="md" />
           </div>
-
-          {isLoading ? (
-            <div
-              className="flex items-center justify-center py-8"
-              role="status"
-              aria-live="polite"
-            >
-              <LoadingSpinner size="md" />
+        ) : fetchError ? (
+          <div className="py-6 text-center" role="alert">
+            <p className="text-danger-600 dark:text-danger-400 mb-4">
+              {fetchError}
+            </p>
+            <ModalButton variant="secondary" onClick={onClose}>
+              {t("common.close")}
+            </ModalButton>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label
+                htmlFor="kilometers"
+                className="block text-sm font-medium text-text-secondary dark:text-text-secondary-dark mb-1"
+              >
+                {t("assignments.kilometers")}
+              </label>
+              <div className="relative">
+                <input
+                  id="kilometers"
+                  type="text"
+                  inputMode="decimal"
+                  pattern={DECIMAL_INPUT_PATTERN}
+                  value={kilometers}
+                  onChange={(e) => setKilometers(e.target.value)}
+                  className="w-full px-3 py-2 pr-10 border border-border-strong dark:border-border-strong-dark rounded-md bg-surface-card dark:bg-surface-subtle-dark text-text-primary dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  aria-invalid={errors.kilometers ? "true" : "false"}
+                  aria-describedby={
+                    errors.kilometers ? "kilometers-error" : undefined
+                  }
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted dark:text-text-muted-dark text-sm pointer-events-none">
+                  {t("common.distanceUnit")}
+                </span>
+              </div>
+              {errors.kilometers && (
+                <p
+                  id="kilometers-error"
+                  className="mt-1 text-sm text-danger-600 dark:text-danger-400"
+                >
+                  {errors.kilometers}
+                </p>
+              )}
             </div>
-          ) : fetchError ? (
-            <div className="py-6 text-center" role="alert">
-              <p className="text-danger-600 dark:text-danger-400 mb-4">
-                {fetchError}
-              </p>
-              <ModalButton variant="secondary" onClick={onClose}>
+
+            <div>
+              <label
+                htmlFor="reason"
+                className="block text-sm font-medium text-text-secondary dark:text-text-secondary-dark mb-1"
+              >
+                {t("assignments.reason")}
+              </label>
+              <textarea
+                id="reason"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                rows={4}
+                className="w-full px-3 py-2 border border-border-strong dark:border-border-strong-dark rounded-md bg-surface-card dark:bg-surface-subtle-dark text-text-primary dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder={t("assignments.reasonPlaceholder")}
+              />
+            </div>
+
+            <ModalFooter>
+              <ModalButton variant="secondary" fullWidth onClick={onClose}>
                 {t("common.close")}
               </ModalButton>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label
-                  htmlFor="kilometers"
-                  className="block text-sm font-medium text-text-secondary dark:text-text-secondary-dark mb-1"
-                >
-                  {t("assignments.kilometers")}
-                </label>
-                <div className="relative">
-                  <input
-                    id="kilometers"
-                    type="text"
-                    inputMode="decimal"
-                    pattern={DECIMAL_INPUT_PATTERN}
-                    value={kilometers}
-                    onChange={(e) => setKilometers(e.target.value)}
-                    className="w-full px-3 py-2 pr-10 border border-border-strong dark:border-border-strong-dark rounded-md bg-surface-card dark:bg-surface-subtle-dark text-text-primary dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    aria-invalid={errors.kilometers ? "true" : "false"}
-                    aria-describedby={
-                      errors.kilometers ? "kilometers-error" : undefined
-                    }
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted dark:text-text-muted-dark text-sm pointer-events-none">
-                    {t("common.distanceUnit")}
-                  </span>
-                </div>
-                {errors.kilometers && (
-                  <p
-                    id="kilometers-error"
-                    className="mt-1 text-sm text-danger-600 dark:text-danger-400"
-                  >
-                    {errors.kilometers}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label
-                  htmlFor="reason"
-                  className="block text-sm font-medium text-text-secondary dark:text-text-secondary-dark mb-1"
-                >
-                  {t("assignments.reason")}
-                </label>
-                <textarea
-                  id="reason"
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  rows={4}
-                  className="w-full px-3 py-2 border border-border-strong dark:border-border-strong-dark rounded-md bg-surface-card dark:bg-surface-subtle-dark text-text-primary dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  placeholder={t("assignments.reasonPlaceholder")}
-                />
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <ModalButton variant="secondary" fullWidth onClick={onClose}>
-                  {t("common.close")}
-                </ModalButton>
-                <ModalButton variant="primary" fullWidth type="submit">
-                  {t("common.save")}
-                </ModalButton>
-              </div>
-            </form>
-          )}
-        </ModalErrorBoundary>
-      </div>
-    </div>
+              <ModalButton variant="primary" fullWidth type="submit">
+                {t("common.save")}
+              </ModalButton>
+            </ModalFooter>
+          </form>
+        )}
+      </ModalErrorBoundary>
+    </Modal>
   );
 }

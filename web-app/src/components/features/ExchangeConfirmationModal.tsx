@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { GameExchange } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useModalDismissal } from "@/hooks/useModalDismissal";
 import { logger } from "@/utils/logger";
 import { formatDateTime } from "@/utils/date-helpers";
+import { Modal } from "@/components/ui/Modal";
+import { ModalHeader } from "@/components/ui/ModalHeader";
+import { ModalFooter } from "@/components/ui/ModalFooter";
 import { ModalErrorBoundary } from "@/components/ui/ModalErrorBoundary";
 import { ModalButton } from "@/components/ui/ModalButton";
 
@@ -23,11 +25,6 @@ export function ExchangeConfirmationModal({
   variant,
 }: ExchangeConfirmationModalProps) {
   const { t } = useTranslation();
-
-  const { handleBackdropClick } = useModalDismissal({
-    isOpen,
-    onClose,
-  });
 
   const isSubmittingRef = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -66,8 +63,6 @@ export function ExchangeConfirmationModal({
     }
   }, [onConfirm, onClose]);
 
-  if (!isOpen) return null;
-
   const game = exchange.refereeGame?.game;
   const homeTeam = game?.encounter?.teamHome?.name || t("common.tbd");
   const awayTeam = game?.encounter?.teamAway?.name || t("common.tbd");
@@ -90,107 +85,91 @@ export function ExchangeConfirmationModal({
   const modalTitleId = `${variant}-exchange-title`;
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-      onClick={handleBackdropClick}
-      aria-hidden="true"
-    >
-      <div
-        className="bg-surface-card dark:bg-surface-card-dark rounded-lg shadow-xl max-w-md w-full p-6"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={modalTitleId}
-      >
-        <ModalErrorBoundary modalName="ExchangeConfirmationModal" onClose={onClose}>
-          <h2
-            id={modalTitleId}
-            className="text-xl font-semibold text-text-primary dark:text-text-primary-dark mb-4"
-          >
-            {t(titleKey)}
-          </h2>
+    <Modal isOpen={isOpen} onClose={onClose} titleId={modalTitleId} size="md">
+      <ModalErrorBoundary modalName="ExchangeConfirmationModal" onClose={onClose}>
+        <ModalHeader title={t(titleKey)} titleId={modalTitleId} />
 
-          <div className="mb-6 space-y-3">
+        <div className="mb-6 space-y-3">
+          <div>
+            <div className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
+              {t("common.match")}
+            </div>
+            <div className="text-base text-text-primary dark:text-text-primary-dark font-medium">
+              {homeTeam} {t("common.vs")} {awayTeam}
+            </div>
+          </div>
+
+          {dateTime && (
             <div>
               <div className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
-                {t("common.match")}
+                {t("common.dateTime")}
               </div>
-              <div className="text-base text-text-primary dark:text-text-primary-dark font-medium">
-                {homeTeam} {t("common.vs")} {awayTeam}
+              <div className="text-base text-text-primary dark:text-text-primary-dark">
+                {formatDateTime(dateTime)}
               </div>
             </div>
+          )}
 
-            {dateTime && (
-              <div>
-                <div className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
-                  {t("common.dateTime")}
-                </div>
-                <div className="text-base text-text-primary dark:text-text-primary-dark">
-                  {formatDateTime(dateTime)}
-                </div>
+          {location && (
+            <div>
+              <div className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
+                {t("common.location")}
               </div>
-            )}
-
-            {location && (
-              <div>
-                <div className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
-                  {t("common.location")}
-                </div>
-                <div className="text-base text-text-primary dark:text-text-primary-dark">
-                  {location}
-                </div>
+              <div className="text-base text-text-primary dark:text-text-primary-dark">
+                {location}
               </div>
-            )}
-
-            {position && (
-              <div>
-                <div className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
-                  {t("common.position")}
-                </div>
-                <div className="text-base text-text-primary dark:text-text-primary-dark">
-                  {position}
-                </div>
-              </div>
-            )}
-
-            {level && (
-              <div>
-                <div className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
-                  {t("common.requiredLevel")}
-                </div>
-                <div className="text-base text-text-primary dark:text-text-primary-dark">
-                  {level}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="border-t border-border-default dark:border-border-default-dark pt-4">
-            <p className="text-sm text-text-muted dark:text-text-muted-dark mb-4">
-              {t(confirmKey)}
-            </p>
-
-            <div className="flex gap-3">
-              <ModalButton
-                variant="secondary"
-                fullWidth
-                onClick={onClose}
-                disabled={isSubmitting}
-              >
-                {t("common.cancel")}
-              </ModalButton>
-              <ModalButton
-                variant={confirmVariant}
-                fullWidth
-                onClick={handleConfirm}
-                disabled={isSubmitting}
-                aria-busy={isSubmitting}
-              >
-                {isSubmitting ? t("common.loading") : t(buttonKey)}
-              </ModalButton>
             </div>
-          </div>
-        </ModalErrorBoundary>
-      </div>
-    </div>
+          )}
+
+          {position && (
+            <div>
+              <div className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
+                {t("common.position")}
+              </div>
+              <div className="text-base text-text-primary dark:text-text-primary-dark">
+                {position}
+              </div>
+            </div>
+          )}
+
+          {level && (
+            <div>
+              <div className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
+                {t("common.requiredLevel")}
+              </div>
+              <div className="text-base text-text-primary dark:text-text-primary-dark">
+                {level}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-border-default dark:border-border-default-dark pt-4">
+          <p className="text-sm text-text-muted dark:text-text-muted-dark mb-4">
+            {t(confirmKey)}
+          </p>
+
+          <ModalFooter>
+            <ModalButton
+              variant="secondary"
+              fullWidth
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
+              {t("common.cancel")}
+            </ModalButton>
+            <ModalButton
+              variant={confirmVariant}
+              fullWidth
+              onClick={handleConfirm}
+              disabled={isSubmitting}
+              aria-busy={isSubmitting}
+            >
+              {isSubmitting ? t("common.loading") : t(buttonKey)}
+            </ModalButton>
+          </ModalFooter>
+        </div>
+      </ModalErrorBoundary>
+    </Modal>
   );
 }
