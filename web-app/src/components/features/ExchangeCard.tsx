@@ -1,8 +1,7 @@
 import { memo } from "react";
 import { format, parseISO } from "date-fns";
 import { ExpandableCard } from "@/components/ui/ExpandableCard";
-import { Badge } from "@/components/ui/Badge";
-import { MapPin } from "@/components/ui/icons";
+import { MapPin, MaleIcon, FemaleIcon } from "@/components/ui/icons";
 import type { GameExchange } from "@/api/client";
 import { useDateLocale } from "@/hooks/useDateFormat";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -31,24 +30,15 @@ function ExchangeCardComponent({
   const homeTeam = game?.encounter?.teamHome?.name || t("common.tbd");
   const awayTeam = game?.encounter?.teamAway?.name || t("common.tbd");
   const hallName = game?.hall?.name || t("common.locationTbd");
-
-  const status = exchange.status;
+  const plusCode =
+    game?.hall?.primaryPostalAddress?.geographicalLocation?.plusCode;
+  const googleMapsUrl = plusCode
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(plusCode)}`
+    : null;
   const requiredLevel = exchange.requiredRefereeLevel;
 
-  const defaultStatus = {
-    label: t("exchange.open"),
-    variant: "warning" as const,
-  };
-  const statusConfig = {
-    open: { label: t("exchange.open"), variant: "warning" as const },
-    applied: { label: t("exchange.applied"), variant: "success" as const },
-    closed: { label: t("exchange.closed"), variant: "neutral" as const },
-  };
-
-  const currentStatus =
-    status && status in statusConfig
-      ? statusConfig[status as keyof typeof statusConfig]
-      : defaultStatus;
+  const leagueCategory = game?.group?.phase?.league?.leagueCategory?.name;
+  const gender = game?.group?.phase?.league?.gender;
 
   return (
     <ExpandableCard
@@ -57,37 +47,48 @@ function ExchangeCardComponent({
       dataTour={dataTour}
       renderCompact={(_, { expandArrow }) => (
         <>
-          {/* Date/Time */}
-          <div className="text-xs text-text-muted dark:text-text-muted-dark min-w-[4rem]">
-            {startDate
-              ? format(startDate, "MMM d", { locale: dateLocale })
-              : t("common.tbd")}
-            <div className="font-medium text-text-secondary dark:text-text-secondary-dark">
-              {startDate
-                ? format(startDate, "HH:mm", { locale: dateLocale })
-                : ""}
-            </div>
-          </div>
-
-          {/* Teams - truncated */}
-          <div className="flex-1 min-w-0">
-            <div className="font-medium text-text-primary dark:text-text-primary-dark truncate text-sm">
-              {homeTeam} {t("common.vs")} {awayTeam}
-            </div>
-            {requiredLevel && (
-              <div className="text-xs text-text-subtle dark:text-text-subtle-dark">
-                {tInterpolate("exchange.levelRequired", { level: requiredLevel })}
-              </div>
+          {/* Day/Date/Time */}
+          <div className="text-xs text-text-muted dark:text-text-muted-dark min-w-[4.5rem] shrink-0">
+            {startDate ? (
+              <>
+                <div>
+                  {format(startDate, "EEE, MMM d", { locale: dateLocale })}
+                </div>
+                <div className="font-medium text-text-secondary dark:text-text-secondary-dark">
+                  {format(startDate, "HH:mm", { locale: dateLocale })}
+                </div>
+              </>
+            ) : (
+              t("common.tbd")
             )}
           </div>
 
-          {/* Status & expand indicator */}
-          <div className="flex items-center gap-2">
-            <Badge variant={currentStatus.variant} className="rounded-full">
-              {currentStatus.label}
-            </Badge>
-            {expandArrow}
+          {/* League/Gender + Teams */}
+          <div className="flex-1 min-w-0">
+            {leagueCategory && (
+              <div className="font-medium text-text-primary dark:text-text-primary-dark truncate text-sm flex items-center gap-1">
+                <span className="truncate">{leagueCategory}</span>
+                {gender === "m" && (
+                  <MaleIcon
+                    className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400 shrink-0"
+                    aria-label={t("common.men")}
+                  />
+                )}
+                {gender === "f" && (
+                  <FemaleIcon
+                    className="w-3.5 h-3.5 text-pink-500 dark:text-pink-400 shrink-0"
+                    aria-label={t("common.women")}
+                  />
+                )}
+              </div>
+            )}
+            <div className="text-xs text-text-muted dark:text-text-muted-dark truncate">
+              {homeTeam} {t("common.vs")} {awayTeam}
+            </div>
           </div>
+
+          {/* Expand indicator */}
+          <div className="flex items-center">{expandArrow}</div>
         </>
       )}
       renderDetails={() => (
@@ -95,15 +96,25 @@ function ExchangeCardComponent({
           {/* Location */}
           <div className="flex items-center gap-2 text-sm text-text-muted dark:text-text-muted-dark pt-2">
             <MapPin className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-            <span className="truncate">{hallName}</span>
+            {googleMapsUrl ? (
+              <a
+                href={googleMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="truncate text-primary-600 dark:text-primary-400 hover:underline focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {hallName}
+              </a>
+            ) : (
+              <span className="truncate">{hallName}</span>
+            )}
           </div>
 
-          {/* Category */}
-          {game?.group?.phase?.league?.leagueCategory?.name && (
+          {/* Required level */}
+          {requiredLevel && (
             <div className="text-xs text-text-subtle dark:text-text-subtle-dark">
-              {game.group.phase.league.leagueCategory.name}
-              {game.group.phase.league.gender &&
-                ` • ${game.group.phase.league.gender === "m" ? t("common.men") : t("common.women")}`}
+              {tInterpolate("exchange.levelRequired", { level: requiredLevel })}
             </div>
           )}
 
