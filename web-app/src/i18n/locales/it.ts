@@ -88,6 +88,8 @@ const it: Translations = {
         title: "Tour guidati",
         description:
           "Suggerimenti interattivi che ti guidano attraverso ogni sezione dell'app usando dati di esempio.",
+        safeModeNote:
+          "Nota: La modalità sicura è attiva per impostazione predefinita e blocca alcune operazioni. Per validare partite o gestire gli scambi, disattiva la modalità sicura nella sezione sottostante.",
         restart: "Riavvia tour",
         statusCompleted: "Completato",
         statusSkipped: "Saltato",

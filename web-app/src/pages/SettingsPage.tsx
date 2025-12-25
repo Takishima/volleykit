@@ -173,6 +173,13 @@ export function SettingsPage() {
             {t("tour.settings.tourSection.description")}
           </p>
 
+          {/* Safe mode note - only show outside demo mode */}
+          {!isDemoMode && (
+            <p className="text-sm text-warning-600 dark:text-warning-400">
+              {t("tour.settings.tourSection.safeModeNote")}
+            </p>
+          )}
+
           {/* Tour status list */}
           <div className="space-y-2">
             {TOUR_IDS.map((tourId) => {

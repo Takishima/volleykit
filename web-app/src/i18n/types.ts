@@ -403,6 +403,7 @@ export interface Translations {
       tourSection: {
         title: string;
         description: string;
+        safeModeNote: string;
         restart: string;
         statusCompleted: string;
         statusSkipped: string;
