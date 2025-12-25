@@ -1,16 +1,11 @@
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 import type { GameExchange } from "@/api/client";
 import {
   useApplyForExchange,
   useWithdrawFromExchange,
 } from "./useConvocations";
-import { createLogger } from "@/utils/logger";
-import { toast } from "@/stores/toast";
-import { useTranslation } from "@/hooks/useTranslation";
 import { useModalState } from "./useModalState";
-import { useSafeModeGuard } from "./useSafeModeGuard";
-
-const log = createLogger("useExchangeActions");
+import { useSafeMutation } from "./useSafeMutation";
 
 interface UseExchangeActionsResult {
   takeOverModal: {
@@ -30,85 +25,57 @@ interface UseExchangeActionsResult {
 }
 
 export function useExchangeActions(): UseExchangeActionsResult {
-  const { t } = useTranslation();
-  const { guard, isDemoMode } = useSafeModeGuard();
-
   const takeOverModal = useModalState<GameExchange>();
   const removeFromExchangeModal = useModalState<GameExchange>();
 
   const applyMutation = useApplyForExchange();
   const withdrawMutation = useWithdrawFromExchange();
 
-  // Race condition protection refs for async operations
-  const isTakingOverRef = useRef(false);
-  const isRemovingRef = useRef(false);
+  const takeOverMutation = useSafeMutation(
+    async (exchange: GameExchange, log) => {
+      await applyMutation.mutateAsync(exchange.__identity);
+      log.debug("Successfully applied for exchange:", exchange.__identity);
+    },
+    {
+      logContext: "useExchangeActions",
+      successMessage: "exchange.applySuccess",
+      errorMessage: "exchange.applyError",
+      safeGuard: { context: "useExchangeActions", action: "taking exchange" },
+      skipSuccessToastInDemoMode: true,
+      onSuccess: () => takeOverModal.close(),
+    },
+  );
+
+  const withdrawSafeMutation = useSafeMutation(
+    async (exchange: GameExchange, log) => {
+      await withdrawMutation.mutateAsync(exchange.__identity);
+      log.debug("Successfully withdrawn from exchange:", exchange.__identity);
+    },
+    {
+      logContext: "useExchangeActions",
+      successMessage: "exchange.withdrawSuccess",
+      errorMessage: "exchange.withdrawError",
+      safeGuard: {
+        context: "useExchangeActions",
+        action: "withdrawing from exchange",
+      },
+      skipSuccessToastInDemoMode: true,
+      onSuccess: () => removeFromExchangeModal.close(),
+    },
+  );
 
   const handleTakeOver = useCallback(
     async (exchange: GameExchange) => {
-      if (
-        guard({
-          context: "useExchangeActions",
-          action: "taking exchange",
-        })
-      ) {
-        return;
-      }
-
-      if (isTakingOverRef.current) return;
-      isTakingOverRef.current = true;
-
-      try {
-        await applyMutation.mutateAsync(exchange.__identity);
-        takeOverModal.close();
-
-        log.debug("Successfully applied for exchange:", exchange.__identity);
-
-        if (!isDemoMode) {
-          toast.success(t("exchange.applySuccess"));
-        }
-      } catch (error) {
-        log.error("Failed to apply for exchange:", error);
-
-        toast.error(t("exchange.applyError"));
-      } finally {
-        isTakingOverRef.current = false;
-      }
+      await takeOverMutation.execute(exchange);
     },
-    [guard, isDemoMode, applyMutation, takeOverModal, t],
+    [takeOverMutation],
   );
 
   const handleRemoveFromExchange = useCallback(
     async (exchange: GameExchange) => {
-      if (
-        guard({
-          context: "useExchangeActions",
-          action: "withdrawing from exchange",
-        })
-      ) {
-        return;
-      }
-
-      if (isRemovingRef.current) return;
-      isRemovingRef.current = true;
-
-      try {
-        await withdrawMutation.mutateAsync(exchange.__identity);
-        removeFromExchangeModal.close();
-
-        log.debug("Successfully withdrawn from exchange:", exchange.__identity);
-
-        if (!isDemoMode) {
-          toast.success(t("exchange.withdrawSuccess"));
-        }
-      } catch (error) {
-        log.error("Failed to withdraw from exchange:", error);
-
-        toast.error(t("exchange.withdrawError"));
-      } finally {
-        isRemovingRef.current = false;
-      }
+      await withdrawSafeMutation.execute(exchange);
     },
-    [guard, isDemoMode, withdrawMutation, removeFromExchangeModal, t],
+    [withdrawSafeMutation],
   );
 
   return {

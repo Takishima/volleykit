@@ -186,7 +186,7 @@ type PathKeys<T, Prefix extends string = ""> = T extends object
     }[keyof T]
   : never;
 
-type TranslationKey = PathKeys<Translations>;
+export type TranslationKey = PathKeys<Translations>;
 
 /**
  * Get translation by dot-notation key.
