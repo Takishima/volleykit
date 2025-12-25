@@ -1,13 +1,12 @@
 /**
  * Shared constants for E2E tests.
  * Centralizes timing values to avoid magic numbers throughout tests.
+ *
+ * Note: Avoid hardcoded delay waits (waitForTimeout). Instead, use
+ * Playwright's built-in auto-waiting via expect assertions and proper
+ * element state checks. These timeout values are for explicit waitFor
+ * calls when waiting for specific states.
  */
-
-/** Time to wait for UI animations to complete (ms) */
-export const ANIMATION_DELAY_MS = 300;
-
-/** Time to wait for content to render after loading (ms) */
-export const CONTENT_RENDER_DELAY_MS = 500;
 
 /** Timeout for page/component loading (ms) */
 export const PAGE_LOAD_TIMEOUT_MS = 10000;

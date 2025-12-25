@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
 import { LoginPage, ExchangesPage, NavigationPage } from "./pages";
-import { ANIMATION_DELAY_MS } from "./constants";
 
 test.describe("Exchanges Journey", () => {
   let loginPage: LoginPage;
@@ -88,14 +87,16 @@ test.describe("Exchanges Journey", () => {
       }
     });
 
-    test("can expand exchange card for details", async ({ page }) => {
+    test("can expand exchange card for details", async () => {
       await exchangesPage.waitForExchangesLoaded();
       const count = await exchangesPage.getExchangeCount();
 
       if (count > 0) {
         const firstCard = exchangesPage.exchangeCards.first();
+        // Ensure card is visible before clicking
+        await expect(firstCard).toBeVisible();
         await firstCard.click();
-        await page.waitForTimeout(ANIMATION_DELAY_MS);
+        // Verify card remains visible after click (Playwright auto-waits)
         await expect(firstCard).toBeVisible();
       }
     });

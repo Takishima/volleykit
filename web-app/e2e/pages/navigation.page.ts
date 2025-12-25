@@ -1,4 +1,5 @@
 import { type Page, type Locator, expect } from "@playwright/test";
+import { PAGE_LOAD_TIMEOUT_MS } from "../constants";
 
 /**
  * Page Object Model for app navigation.
@@ -28,21 +29,45 @@ export class NavigationPage {
 
   async goToAssignments() {
     await this.assignmentsLink.click();
-    await expect(this.page).toHaveURL("/");
+    await expect(this.page).toHaveURL("/", {
+      timeout: PAGE_LOAD_TIMEOUT_MS,
+    });
+    // Wait for main content area to be visible
+    await expect(this.page.getByRole("main")).toBeVisible({
+      timeout: PAGE_LOAD_TIMEOUT_MS,
+    });
   }
 
   async goToCompensations() {
     await this.compensationsLink.click();
-    await expect(this.page).toHaveURL("/compensations");
+    await expect(this.page).toHaveURL("/compensations", {
+      timeout: PAGE_LOAD_TIMEOUT_MS,
+    });
+    // Wait for main content area to be visible
+    await expect(this.page.getByRole("main")).toBeVisible({
+      timeout: PAGE_LOAD_TIMEOUT_MS,
+    });
   }
 
   async goToExchange() {
     await this.exchangeLink.click();
-    await expect(this.page).toHaveURL("/exchange");
+    await expect(this.page).toHaveURL("/exchange", {
+      timeout: PAGE_LOAD_TIMEOUT_MS,
+    });
+    // Wait for main content area to be visible
+    await expect(this.page.getByRole("main")).toBeVisible({
+      timeout: PAGE_LOAD_TIMEOUT_MS,
+    });
   }
 
   async goToSettings() {
     await this.settingsLink.click();
-    await expect(this.page).toHaveURL("/settings");
+    await expect(this.page).toHaveURL("/settings", {
+      timeout: PAGE_LOAD_TIMEOUT_MS,
+    });
+    // Wait for main content area to be visible
+    await expect(this.page.getByRole("main")).toBeVisible({
+      timeout: PAGE_LOAD_TIMEOUT_MS,
+    });
   }
 }

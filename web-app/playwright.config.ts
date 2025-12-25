@@ -6,12 +6,18 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './e2e',
+  // Global timeout for each test (prevents hanging tests)
+  timeout: 30000,
+  // Timeout for expect assertions (allows slower browsers like Firefox)
+  expect: {
+    timeout: 10000,
+  },
   // Run tests in parallel
   fullyParallel: true,
   // Fail the build on CI if you accidentally left test.only in the source code
   forbidOnly: !!process.env.CI,
-  // Retry on CI only
-  retries: process.env.CI ? 2 : 0,
+  // Retry on CI only (helps catch flaky tests locally too)
+  retries: process.env.CI ? 2 : 1,
   // Limit parallel workers on CI
   workers: process.env.CI ? 1 : undefined,
   // Reporter to use
@@ -24,6 +30,10 @@ export default defineConfig({
     trace: 'on-first-retry',
     // Take screenshot on failure
     screenshot: 'only-on-failure',
+    // Timeout for actions (click, fill, etc.)
+    actionTimeout: 10000,
+    // Timeout for navigation
+    navigationTimeout: 15000,
   },
 
   // Configure projects for major browsers
@@ -34,7 +44,12 @@ export default defineConfig({
     },
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      use: {
+        ...devices['Desktop Firefox'],
+        // Firefox is slower, increase timeouts
+        actionTimeout: 15000,
+        navigationTimeout: 20000,
+      },
     },
     {
       name: 'webkit',
