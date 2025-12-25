@@ -7,6 +7,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useDateLocale } from "@/hooks/useDateFormat";
 import { formatDistanceKm } from "@/utils/distance";
 import { isCompensationEditable } from "@/utils/compensation-actions";
+import { getPositionLabel } from "@/utils/position-labels";
 
 interface CompensationCardProps {
   compensation: CompensationRecord;
@@ -38,24 +39,7 @@ function CompensationCardComponent({
   const gender = game?.group?.phase?.league?.gender;
   const leagueCategory = game?.group?.phase?.league?.leagueCategory?.name;
 
-  // Translate position
-  const positionKey = compensation.refereePosition as
-    | keyof typeof positionLabelsMap
-    | undefined;
-  const positionLabelsMap = {
-    "head-one": t("positions.head-one"),
-    "head-two": t("positions.head-two"),
-    "linesman-one": t("positions.linesman-one"),
-    "linesman-two": t("positions.linesman-two"),
-    "linesman-three": t("positions.linesman-three"),
-    "linesman-four": t("positions.linesman-four"),
-    "standby-head": t("positions.standby-head"),
-    "standby-linesman": t("positions.standby-linesman"),
-  } as const;
-  const position =
-    positionKey && positionKey in positionLabelsMap
-      ? positionLabelsMap[positionKey]
-      : compensation.refereePosition;
+  const position = getPositionLabel(compensation.refereePosition, t);
 
   const total = (comp?.gameCompensation || 0) + (comp?.travelExpenses || 0);
   const isPaid = comp?.paymentDone;
