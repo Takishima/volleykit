@@ -4,6 +4,7 @@ import type { NominationList, IndoorPlayerNomination } from "@/api/client";
 import { getApiClient } from "@/api/client";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
+import { queryKeys } from "@/api/queryKeys";
 
 const NOMINATION_LIST_STALE_TIME_MINUTES = 5;
 const MS_PER_MINUTE = 60 * 1000;
@@ -116,7 +117,7 @@ export function useNominationList({
   const apiClient = getApiClient(isDemoMode);
 
   const query = useQuery({
-    queryKey: ["nominationList", gameId, team],
+    queryKey: queryKeys.nominations.list(gameId, team),
     queryFn: async (): Promise<NominationList | null> => {
       return apiClient.getNominationList(gameId, team);
     },

@@ -29,6 +29,7 @@ import {
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 import { createLogger } from "@/utils/logger";
+import { queryKeys } from "@/api/queryKeys";
 
 const log = createLogger("useConvocations");
 
@@ -216,23 +217,11 @@ function createDemoQueryResult<T>(
   } as UseQueryResult<T, Error>;
 }
 
-// Query keys
+// Re-export centralized query keys for backwards compatibility
 // Note: demoAssociationCode is included in query keys to ensure cache invalidation
 // when the user switches roles/associations in demo mode. Without this, TanStack Query
 // would return stale cached data even after the demo store regenerates data for the new association.
-export const queryKeys = {
-  assignments: (config?: SearchConfiguration, demoAssociationCode?: string | null) =>
-    ["assignments", config, demoAssociationCode] as const,
-  assignmentDetails: (id: string) => ["assignment", id] as const,
-  compensations: (config?: SearchConfiguration, demoAssociationCode?: string | null) =>
-    ["compensations", config, demoAssociationCode] as const,
-  exchanges: (config?: SearchConfiguration, demoAssociationCode?: string | null) =>
-    ["exchanges", config, demoAssociationCode] as const,
-  associationSettings: () => ["associationSettings"] as const,
-  activeSeason: () => ["activeSeason"] as const,
-  possibleNominations: (nominationListId: string) =>
-    ["possibleNominations", nominationListId] as const,
-};
+export { queryKeys } from "@/api/queryKeys";
 
 // Date period presets
 export type DatePeriod =
@@ -309,7 +298,7 @@ export function useAssignments(
   };
 
   return useQuery({
-    queryKey: queryKeys.assignments(config, isDemoMode ? demoAssociationCode : null),
+    queryKey: queryKeys.assignments.list(config, isDemoMode ? demoAssociationCode : null),
     queryFn: () => apiClient.searchAssignments(config),
     select: (data) => data.items || [],
     staleTime: 5 * 60 * 1000,
@@ -422,13 +411,7 @@ export function useValidationClosedAssignments(): UseQueryResult<
     hasSeasonDates;
 
   const query = useQuery({
-    queryKey: [
-      "assignments",
-      "validationClosed",
-      fromDate,
-      toDate,
-      deadlineHours,
-    ],
+    queryKey: queryKeys.assignments.validationClosed(fromDate, toDate, deadlineHours),
     queryFn: async ({ signal }) => {
       // Fetch all pages because API doesn't support server-side filtering
       // by validation status - we must filter client-side after fetching.
@@ -475,7 +458,7 @@ export function useAssignmentDetails(assignmentId: string | null) {
   const apiClient = getApiClient(isDemoMode);
 
   return useQuery({
-    queryKey: queryKeys.assignmentDetails(assignmentId || ""),
+    queryKey: queryKeys.assignments.detail(assignmentId || ""),
     queryFn: () =>
       apiClient.getAssignmentDetails(assignmentId!, [
         "refereeGame.game.encounter.teamHome",
@@ -516,7 +499,7 @@ export function useCompensations(paidFilter?: boolean) {
   };
 
   return useQuery({
-    queryKey: queryKeys.compensations(config, isDemoMode ? demoAssociationCode : null),
+    queryKey: queryKeys.compensations.list(config, isDemoMode ? demoAssociationCode : null),
     queryFn: () => apiClient.searchCompensations(config),
     select: (data) => data.items || [],
     staleTime: 5 * 60 * 1000,
@@ -580,7 +563,7 @@ export function useGameExchanges(status: ExchangeStatus = "all") {
   };
 
   return useQuery({
-    queryKey: queryKeys.exchanges(config, isDemoMode ? demoAssociationCode : null),
+    queryKey: queryKeys.exchanges.list(config, isDemoMode ? demoAssociationCode : null),
     queryFn: () => apiClient.searchExchanges(config),
     select: (data) => data.items || [],
     staleTime: 2 * 60 * 1000,
@@ -595,7 +578,7 @@ export function useApplyForExchange(): UseMutationResult<void, Error, string> {
   return useMutation({
     mutationFn: (exchangeId: string) => apiClient.applyForExchange(exchangeId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["exchanges"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.exchanges.all });
     },
   });
 }
@@ -613,7 +596,7 @@ export function useWithdrawFromExchange(): UseMutationResult<
     mutationFn: (exchangeId: string) =>
       apiClient.withdrawFromExchange(exchangeId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["exchanges"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.exchanges.all });
     },
   });
 }
@@ -650,7 +633,7 @@ export function useUpdateCompensation(): UseMutationResult<
     },
     onSuccess: () => {
       // Invalidate compensations queries to refetch fresh data
-      queryClient.invalidateQueries({ queryKey: ["compensations"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.compensations.all });
     },
   });
 }
@@ -665,7 +648,7 @@ function findAssignmentInCache(
 ): Assignment | null {
   // Get all cached queries that start with "assignments"
   const queries = queryClient.getQueriesData<{ items: Assignment[] }>({
-    queryKey: ["assignments"],
+    queryKey: queryKeys.assignments.all,
   });
 
   for (const [, data] of queries) {
@@ -687,7 +670,7 @@ function findCompensationInCache(
 ): CompensationRecord | null {
   // Get all cached queries that start with "compensations"
   const queries = queryClient.getQueriesData<{ items: CompensationRecord[] }>({
-    queryKey: ["compensations"],
+    queryKey: queryKeys.compensations.all,
   });
 
   for (const [, data] of queries) {
@@ -823,8 +806,8 @@ export function useUpdateAssignmentCompensation(): UseMutationResult<
     },
     onSuccess: () => {
       // Invalidate both assignment and compensation queries to refetch fresh data
-      queryClient.invalidateQueries({ queryKey: ["assignments"] });
-      queryClient.invalidateQueries({ queryKey: ["compensations"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.assignments.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.compensations.all });
     },
   });
 }
@@ -837,7 +820,7 @@ export function useAssociationSettings(): UseQueryResult<
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
 
   return useQuery({
-    queryKey: queryKeys.associationSettings(),
+    queryKey: queryKeys.settings.association(),
     queryFn: () => api.getAssociationSettings(),
     staleTime: 30 * 60 * 1000, // 30 minutes - settings rarely change
     enabled: !isDemoMode,
@@ -848,7 +831,7 @@ export function useActiveSeason(): UseQueryResult<Season, Error> {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
 
   return useQuery({
-    queryKey: queryKeys.activeSeason(),
+    queryKey: queryKeys.seasons.active(),
     queryFn: () => api.getActiveSeason(),
     staleTime: 60 * 60 * 1000, // 1 hour - season rarely changes
     enabled: !isDemoMode,

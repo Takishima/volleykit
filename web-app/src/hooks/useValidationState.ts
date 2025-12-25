@@ -20,6 +20,7 @@ import {
   finalizeRoster,
   finalizeScoresheetWithFile,
 } from "./validation/api-helpers";
+import { queryKeys } from "@/api/queryKeys";
 
 // Re-export types for consumers
 export type {
@@ -66,7 +67,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
 
   // Fetch game details (scoresheet and nomination list IDs)
   const gameDetailsQuery = useQuery({
-    queryKey: ["gameWithScoresheet", gameId],
+    queryKey: queryKeys.validation.gameDetail(gameId ?? ""),
     queryFn: async () => {
       if (!gameId) return null;
       return apiClient.getGameWithScoresheet(gameId);
@@ -211,7 +212,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
       await finalizeRoster(apiClient, gameId, gameDetails.nominationListOfTeamAway, state.awayRoster.modifications);
       await finalizeScoresheetWithFile(apiClient, gameId, gameDetails.scoresheet, state.scorer.selected?.__identity, fileResourceId);
 
-      await queryClient.invalidateQueries({ queryKey: ["gameWithScoresheet", gameId] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.validation.gameDetail(gameId!) });
       logger.debug("[VS] finalize done");
     } catch (error) {
       logger.error("[VS] finalize failed:", error);
