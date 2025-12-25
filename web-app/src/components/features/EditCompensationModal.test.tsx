@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { EditCompensationModal } from "./EditCompensationModal";
 import type { CompensationRecord, Assignment } from "@/api/client";
@@ -449,10 +449,13 @@ describe("EditCompensationModal", () => {
 
       await waitForFormToLoad();
 
-      fireEvent.keyDown(document, { key: "Escape" });
-      await waitFor(() => {
-        expect(mockOnClose).toHaveBeenCalledTimes(1);
+      // Wrap in act to ensure React has finished processing state updates
+      // and effect cleanup/re-registration before firing the event
+      await act(async () => {
+        fireEvent.keyDown(document, { key: "Escape" });
       });
+
+      expect(mockOnClose).toHaveBeenCalledTimes(1);
     });
 
     it("submits form with valid data and closes modal", async () => {
