@@ -1,8 +1,7 @@
 import { memo } from "react";
 import { format, parseISO } from "date-fns";
 import { ExpandableCard } from "@/components/ui/ExpandableCard";
-import { Badge } from "@/components/ui/Badge";
-import { Check, Circle, Lock, MaleIcon, FemaleIcon } from "@/components/ui/icons";
+import { Lock, MaleIcon, FemaleIcon } from "@/components/ui/icons";
 import type { CompensationRecord } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDateLocale } from "@/hooks/useDateFormat";
@@ -94,20 +93,13 @@ function CompensationCardComponent({
             </div>
           </div>
 
-          {/* Amount & status */}
+          {/* Amount */}
           <div className="flex items-center gap-2">
             <div
               className={`text-sm font-bold ${isPaid ? "text-success-500 dark:text-success-400" : "text-warning-500 dark:text-warning-400"}`}
             >
               {total.toFixed(0)}
             </div>
-            <Badge variant={isPaid ? "success" : "warning"}>
-              {isPaid ? (
-                <Check className="w-3 h-3" aria-hidden="true" />
-              ) : (
-                <Circle className="w-3 h-3" aria-hidden="true" />
-              )}
-            </Badge>
             {expandArrow}
           </div>
         </>
