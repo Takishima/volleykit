@@ -105,11 +105,18 @@ function AssignmentCardComponent({
             </div>
           </div>
 
-          {/* City & expand indicator */}
+          {/* City, game number & expand indicator */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-text-muted dark:text-text-muted-dark truncate w-24">
-              {city || ""}
-            </span>
+            <div className="flex flex-col items-end w-24">
+              <span className="text-xs text-text-muted dark:text-text-muted-dark truncate w-full text-right">
+                {city || ""}
+              </span>
+              {game?.number && (
+                <span className="text-xs text-text-subtle dark:text-text-subtle-dark">
+                  #{game.number}
+                </span>
+              )}
+            </div>
             {expandArrow}
           </div>
         </>
