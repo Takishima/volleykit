@@ -2088,6 +2088,10 @@ export interface components {
                 __identity?: string;
                 /** @example #27106 | Herren 2. Liga */
                 displayName?: string;
+                /** @description Whether this is a tournament group (affects nomination workflow) */
+                isTournamentGroup?: boolean;
+                /** @description Whether games in this group require no scoresheet upload */
+                hasNoScoresheet?: boolean;
                 phase?: {
                     /** Format: uuid */
                     __identity?: string;

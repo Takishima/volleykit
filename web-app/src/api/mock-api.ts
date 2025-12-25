@@ -513,12 +513,25 @@ export const mockApi = {
     const validatedData = store.validatedGames[gameId];
     const pendingScorer = store.getPendingScorer(gameId);
 
+    // Find the assignment with this game to get group info
+    const assignment = store.assignments.find(
+      (a) => a.refereeGame?.game?.__identity === gameId,
+    );
+    const group = assignment?.refereeGame?.game?.group;
+
     // Determine the scorer to show: validated scorer takes precedence, then pending
     const scorerToShow = validatedData?.scorer ?? pendingScorer;
 
     // Build mock game details with scoresheet and nomination lists
     const gameDetails: GameDetails = {
       __identity: gameId,
+      // Include group info for scoresheet requirements
+      ...(group && {
+        group: {
+          isTournamentGroup: group.isTournamentGroup ?? false,
+          hasNoScoresheet: group.hasNoScoresheet ?? false,
+        },
+      }),
       scoresheet: {
         __identity: `scoresheet-${gameId}`,
         game: { __identity: gameId },

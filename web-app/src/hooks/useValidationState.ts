@@ -115,6 +115,11 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
     };
   }, [gameDetailsQuery.data, isValidated]);
 
+  const scoresheetNotRequired = useMemo(
+    () => gameDetailsQuery.data?.group?.hasNoScoresheet ?? false,
+    [gameDetailsQuery.data],
+  );
+
   const isDirty = useMemo(() => {
     return (
       hasRosterModifications(state.homeRoster.modifications) ||
@@ -225,6 +230,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
     isValidated,
     validatedInfo,
     pendingScorer,
+    scoresheetNotRequired,
     setHomeRosterModifications,
     setAwayRosterModifications,
     setScorer,

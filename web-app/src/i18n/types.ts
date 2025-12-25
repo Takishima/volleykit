@@ -303,6 +303,8 @@ export interface Translations {
       previewAlt: string;
       scoresheetUploaded: string;
       noScoresheet: string;
+      notRequired: string;
+      notRequiredDescription: string;
     };
     state: {
       unsavedChangesTitle: string;

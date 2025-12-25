@@ -58,6 +58,7 @@ export function ValidateGameModal({
     isValidated,
     validatedInfo,
     pendingScorer,
+    scoresheetNotRequired,
     setHomeRosterModifications,
     setAwayRosterModifications,
     setScorer,
@@ -374,6 +375,7 @@ export function ValidateGameModal({
                       onScoresheetChange={setScoresheet}
                       readOnly={isValidated}
                       hasScoresheet={validatedInfo?.hasScoresheet}
+                      scoresheetNotRequired={scoresheetNotRequired}
                     />
                   )}
                 </ModalErrorBoundary>

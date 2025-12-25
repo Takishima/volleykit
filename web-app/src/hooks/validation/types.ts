@@ -88,6 +88,8 @@ export interface UseValidationStateResult {
   validatedInfo: ValidatedGameInfo | null;
   /** Pending scorer from previous save (if any) */
   pendingScorer: PendingScorerData | null;
+  /** Whether scoresheet upload is not required for this game's group */
+  scoresheetNotRequired: boolean;
   /** Update home roster modifications (auto-marks roster as reviewed) */
   setHomeRosterModifications: (modifications: RosterModifications) => void;
   /** Update away roster modifications (auto-marks roster as reviewed) */
