@@ -742,10 +742,11 @@ describe("useConvocations - Demo Association Switching", () => {
     const svQueryData = queryClient.getQueriesData({ queryKey: ["assignments"] });
     expect(svQueryData.length).toBeGreaterThan(0);
 
-    // The query key should include "SV" as the third element
+    // The query key should include "SV" as the fourth element
+    // (query key format: ["assignments", "list", config, demoAssociationCode])
     const svQueryKey = svQueryData[0]?.[0];
     expect(svQueryKey).toBeDefined();
-    expect(svQueryKey?.[2]).toBe("SV");
+    expect(svQueryKey?.[3]).toBe("SV");
 
     // Now test with SVRBA association in a fresh query client
     const queryClient2 = new QueryClient({
@@ -777,11 +778,12 @@ describe("useConvocations - Demo Association Switching", () => {
       expect(result2.current.isSuccess).toBe(true);
     });
 
-    // The query key should include "SVRBA" as the third element
+    // The query key should include "SVRBA" as the fourth element
+    // (query key format: ["assignments", "list", config, demoAssociationCode])
     const svrbaQueryData = queryClient2.getQueriesData({ queryKey: ["assignments"] });
     const svrbaQueryKey = svrbaQueryData[0]?.[0];
     expect(svrbaQueryKey).toBeDefined();
-    expect(svrbaQueryKey?.[2]).toBe("SVRBA");
+    expect(svrbaQueryKey?.[3]).toBe("SVRBA");
   });
 
   it("should use null association code for non-demo mode", async () => {

@@ -1,0 +1,159 @@
+/**
+ * Centralized Query Key Factory
+ *
+ * This module provides a single source of truth for all TanStack Query keys.
+ * Using a hierarchical structure enables:
+ * - Type-safe key generation with autocomplete
+ * - Hierarchical invalidation (invalidating parent keys invalidates all children)
+ * - Consistency across useQuery, useMutation, and cache invalidation calls
+ *
+ * Pattern:
+ * - `.all` - Base key for the entity, used for bulk invalidation
+ * - `.lists()` - Parent key for all list queries
+ * - `.list(params)` - Specific list query with parameters
+ * - `.details()` - Parent key for all detail queries
+ * - `.detail(id)` - Specific detail query
+ *
+ * @example
+ * // Invalidate all assignments (lists and details)
+ * queryClient.invalidateQueries({ queryKey: queryKeys.assignments.all })
+ *
+ * // Invalidate only assignment lists (not details)
+ * queryClient.invalidateQueries({ queryKey: queryKeys.assignments.lists() })
+ *
+ * // Query a specific assignment list
+ * useQuery({ queryKey: queryKeys.assignments.list(config, demoCode) })
+ */
+
+import type { SearchConfiguration, PersonSearchFilter } from "./client";
+
+export const queryKeys = {
+  /**
+   * Assignment query keys
+   */
+  assignments: {
+    /** Base key - invalidates ALL assignment queries */
+    all: ["assignments"] as const,
+    /** Parent key for all list queries */
+    lists: () => [...queryKeys.assignments.all, "list"] as const,
+    /** Specific list query with search configuration */
+    list: (
+      config?: SearchConfiguration,
+      demoAssociationCode?: string | null,
+    ) => [...queryKeys.assignments.lists(), config, demoAssociationCode] as const,
+    /** Parent key for all detail queries */
+    details: () => [...queryKeys.assignments.all, "detail"] as const,
+    /** Specific assignment detail query */
+    detail: (id: string) => [...queryKeys.assignments.details(), id] as const,
+    /** Validation-closed assignments query */
+    validationClosed: (
+      fromDate: string,
+      toDate: string,
+      deadlineHours: number,
+    ) =>
+      [
+        ...queryKeys.assignments.all,
+        "validationClosed",
+        fromDate,
+        toDate,
+        deadlineHours,
+      ] as const,
+  },
+
+  /**
+   * Compensation query keys
+   */
+  compensations: {
+    /** Base key - invalidates ALL compensation queries */
+    all: ["compensations"] as const,
+    /** Parent key for all list queries */
+    lists: () => [...queryKeys.compensations.all, "list"] as const,
+    /** Specific list query with search configuration */
+    list: (
+      config?: SearchConfiguration,
+      demoAssociationCode?: string | null,
+    ) => [...queryKeys.compensations.lists(), config, demoAssociationCode] as const,
+  },
+
+  /**
+   * Exchange query keys
+   */
+  exchanges: {
+    /** Base key - invalidates ALL exchange queries */
+    all: ["exchanges"] as const,
+    /** Parent key for all list queries */
+    lists: () => [...queryKeys.exchanges.all, "list"] as const,
+    /** Specific list query with search configuration */
+    list: (
+      config?: SearchConfiguration,
+      demoAssociationCode?: string | null,
+    ) => [...queryKeys.exchanges.lists(), config, demoAssociationCode] as const,
+  },
+
+  /**
+   * Season query keys
+   */
+  seasons: {
+    /** Base key - invalidates ALL season queries */
+    all: ["seasons"] as const,
+    /** Active season query */
+    active: () => [...queryKeys.seasons.all, "active"] as const,
+  },
+
+  /**
+   * Association settings query keys
+   */
+  settings: {
+    /** Base key - invalidates ALL settings queries */
+    all: ["settings"] as const,
+    /** Association settings query */
+    association: () => [...queryKeys.settings.all, "association"] as const,
+  },
+
+  /**
+   * Nomination query keys
+   */
+  nominations: {
+    /** Base key - invalidates ALL nomination queries */
+    all: ["nominations"] as const,
+    /** Parent key for nomination list queries */
+    lists: () => [...queryKeys.nominations.all, "list"] as const,
+    /** Specific nomination list for a game and team */
+    list: (gameId: string, team: "home" | "away") =>
+      [...queryKeys.nominations.lists(), gameId, team] as const,
+    /** Parent key for possible nomination queries */
+    possibles: () => [...queryKeys.nominations.all, "possible"] as const,
+    /** Possible nominations for a nomination list */
+    possible: (nominationListId: string) =>
+      [...queryKeys.nominations.possibles(), nominationListId] as const,
+  },
+
+  /**
+   * Validation/game details query keys
+   */
+  validation: {
+    /** Base key - invalidates ALL validation queries */
+    all: ["validation"] as const,
+    /** Parent key for game detail queries */
+    gameDetails: () => [...queryKeys.validation.all, "gameDetails"] as const,
+    /** Specific game details with scoresheet */
+    gameDetail: (gameId: string) =>
+      [...queryKeys.validation.gameDetails(), gameId] as const,
+  },
+
+  /**
+   * Scorer search query keys
+   */
+  scorerSearch: {
+    /** Base key - invalidates ALL scorer search queries */
+    all: ["scorerSearch"] as const,
+    /** Specific search query with filters */
+    search: (filters: PersonSearchFilter) =>
+      [...queryKeys.scorerSearch.all, filters] as const,
+  },
+} as const;
+
+/**
+ * Type helper to extract query key types
+ */
+export type QueryKeys = typeof queryKeys;

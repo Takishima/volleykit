@@ -5,7 +5,7 @@ import {
   type PossibleNominationsResponse,
 } from "@/api/client";
 import { useAuthStore } from "@/stores/auth";
-import { queryKeys } from "./useConvocations";
+import { queryKeys } from "@/api/queryKeys";
 
 interface UsePossiblePlayerNominationsOptions {
   nominationListId: string;
@@ -30,7 +30,7 @@ export function usePossiblePlayerNominations({
   const apiClient = getApiClient(isDemoMode);
 
   return useQuery({
-    queryKey: queryKeys.possibleNominations(nominationListId),
+    queryKey: queryKeys.nominations.possible(nominationListId),
     queryFn: async () => {
       const response: PossibleNominationsResponse =
         await apiClient.getPossiblePlayerNominations(nominationListId);

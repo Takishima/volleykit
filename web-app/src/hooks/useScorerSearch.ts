@@ -6,13 +6,7 @@ import {
   type ValidatedPersonSearchResult,
 } from "@/api/validation";
 import { useAuthStore } from "@/stores/auth";
-
-// Query key factory for scorer search
-const scorerSearchKeys = {
-  all: ["scorerSearch"] as const,
-  search: (filters: PersonSearchFilter) =>
-    [...scorerSearchKeys.all, filters] as const,
-};
+import { queryKeys } from "@/api/queryKeys";
 
 /**
  * Cache duration for search results.
@@ -102,7 +96,7 @@ export function useScorerSearch(
   );
 
   const query = useQuery({
-    queryKey: scorerSearchKeys.search(filters),
+    queryKey: queryKeys.scorerSearch.search(filters),
     queryFn: async () => {
       const response = await apiClient.searchPersons(filters);
       const validated = validateResponse(
