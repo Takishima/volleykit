@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { ExpandableCard } from "@/components/ui/ExpandableCard";
 import { Badge } from "@/components/ui/Badge";
-import { MapPin } from "@/components/ui/icons";
+import { MapPin, MaleIcon, FemaleIcon } from "@/components/ui/icons";
 import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDateFormat } from "@/hooks/useDateFormat";
@@ -80,7 +80,6 @@ function AssignmentCardComponent({
 
   // Gender indicator
   const gender = game?.group?.phase?.league?.gender;
-  const genderSymbol = gender === "m" ? "♂" : gender === "f" ? "♀" : null;
 
   // Referee names from the refereeGame
   const refereeGame = assignment.refereeGame;
@@ -146,19 +145,17 @@ function AssignmentCardComponent({
             {/* Position and gender shown in compact view */}
             <div className="text-xs text-text-subtle dark:text-text-subtle-dark flex items-center gap-1">
               <span>{position}</span>
-              {genderSymbol && (
-                <span
-                  className={`leading-none ${
-                    gender === "m"
-                      ? "text-blue-500 dark:text-blue-400"
-                      : "text-pink-500 dark:text-pink-400"
-                  }`}
-                  aria-label={
-                    gender === "m" ? t("common.men") : t("common.women")
-                  }
-                >
-                  {genderSymbol}
-                </span>
+              {gender === "m" && (
+                <MaleIcon
+                  className="w-3 h-3 text-blue-500 dark:text-blue-400"
+                  aria-label={t("common.men")}
+                />
+              )}
+              {gender === "f" && (
+                <FemaleIcon
+                  className="w-3 h-3 text-pink-500 dark:text-pink-400"
+                  aria-label={t("common.women")}
+                />
               )}
             </div>
           </div>

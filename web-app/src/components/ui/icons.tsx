@@ -42,3 +42,45 @@ export { Info } from "lucide-react";
 
 // App branding - custom volleyball icon since Lucide doesn't have one
 export { CircleDot as Volleyball } from "lucide-react";
+
+// Gender icons - custom SVGs since Lucide doesn't have Mars/Venus symbols
+import type { SVGProps } from "react";
+
+export function MaleIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <circle cx="10" cy="14" r="5" />
+      <path d="M14 10l6-6" />
+      <path d="M20 4v5" />
+      <path d="M15 4h5" />
+    </svg>
+  );
+}
+
+export function FemaleIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <circle cx="12" cy="9" r="5" />
+      <path d="M12 14v7" />
+      <path d="M9 18h6" />
+    </svg>
+  );
+}
