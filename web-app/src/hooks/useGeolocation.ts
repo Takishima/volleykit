@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 
 export interface GeolocationState {
   /** Current position coordinates, null if not yet obtained */
@@ -76,15 +76,8 @@ export function useGeolocation(
     isSupported: typeof navigator !== "undefined" && "geolocation" in navigator,
   }));
 
-  // Track if component is mounted to avoid state updates after unmount
-  const isMountedRef = useRef(true);
-
-  useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
+  // Note: In React 18+, setState on unmounted components is a no-op,
+  // so isMountedRef pattern is not needed for the geolocation callbacks.
 
   const requestLocation = useCallback(() => {
     if (!state.isSupported) {
@@ -99,44 +92,40 @@ export function useGeolocation(
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        if (isMountedRef.current) {
-          const position = {
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
-          };
-          setState((prev) => ({
-            ...prev,
-            position,
-            isLoading: false,
-            error: null,
-          }));
-          // Call onSuccess callback if provided
-          onSuccessRef.current?.(position);
-        }
+        const position = {
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+        };
+        setState((prev) => ({
+          ...prev,
+          position,
+          isLoading: false,
+          error: null,
+        }));
+        // Call onSuccess callback if provided
+        onSuccessRef.current?.(position);
       },
       (err) => {
-        if (isMountedRef.current) {
-          let errorMessage: string;
-          switch (err.code) {
-            case err.PERMISSION_DENIED:
-              errorMessage = "permission_denied";
-              break;
-            case err.POSITION_UNAVAILABLE:
-              errorMessage = "position_unavailable";
-              break;
-            case err.TIMEOUT:
-              errorMessage = "timeout";
-              break;
-            default:
-              errorMessage = "unknown_error";
-          }
-          setState((prev) => ({
-            ...prev,
-            position: null,
-            isLoading: false,
-            error: errorMessage,
-          }));
+        let errorMessage: string;
+        switch (err.code) {
+          case err.PERMISSION_DENIED:
+            errorMessage = "permission_denied";
+            break;
+          case err.POSITION_UNAVAILABLE:
+            errorMessage = "position_unavailable";
+            break;
+          case err.TIMEOUT:
+            errorMessage = "timeout";
+            break;
+          default:
+            errorMessage = "unknown_error";
         }
+        setState((prev) => ({
+          ...prev,
+          position: null,
+          isLoading: false,
+          error: errorMessage,
+        }));
       },
       {
         enableHighAccuracy,

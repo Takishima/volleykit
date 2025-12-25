@@ -1,6 +1,8 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 
 export interface GeocodedLocation {
+  /** Unique identifier from Nominatim */
+  placeId: number;
   latitude: number;
   longitude: number;
   displayName: string;
@@ -82,18 +84,8 @@ export function useGeocode(options: UseGeocodeOptions = {}): UseGeocodeResult {
     error: null,
   });
 
-  // Track if component is mounted and current request for cancellation
-  const isMountedRef = useRef(true);
+  // AbortController for cancelling pending requests
   const abortControllerRef = useRef<AbortController | null>(null);
-
-  useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-      // Cancel any pending request on unmount
-      abortControllerRef.current?.abort();
-    };
-  }, []);
 
   const search = useCallback(
     async (query: string) => {
@@ -132,31 +124,29 @@ export function useGeocode(options: UseGeocodeOptions = {}): UseGeocodeResult {
 
         const data: NominatimResult[] = await response.json();
 
-        if (isMountedRef.current) {
-          setState({
-            results: data.map((item) => ({
-              latitude: parseFloat(item.lat),
-              longitude: parseFloat(item.lon),
-              displayName: item.display_name,
-            })),
-            isLoading: false,
-            error: null,
-          });
-        }
+        // AbortController prevents this from running if aborted
+        setState({
+          results: data.map((item) => ({
+            placeId: item.place_id,
+            latitude: parseFloat(item.lat),
+            longitude: parseFloat(item.lon),
+            displayName: item.display_name,
+          })),
+          isLoading: false,
+          error: null,
+        });
       } catch (err) {
-        // Ignore abort errors (expected when cancelling)
+        // Ignore abort errors (expected when cancelling requests)
         if (err instanceof Error && err.name === "AbortError") {
           return;
         }
 
-        if (isMountedRef.current) {
-          setState((prev) => ({
-            ...prev,
-            results: [],
-            isLoading: false,
-            error: "geocode_failed",
-          }));
-        }
+        setState((prev) => ({
+          ...prev,
+          results: [],
+          isLoading: false,
+          error: "geocode_failed",
+        }));
       }
     },
     [countryCode, limit],

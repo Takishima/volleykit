@@ -23,13 +23,6 @@ function HomeLocationSectionComponent() {
   const [addressQuery, setAddressQuery] = useState("");
   const debouncedQuery = useDebouncedValue(addressQuery, GEOCODE_DEBOUNCE_MS);
 
-  // Store setAddressQuery in a ref for use in geolocation callback - intentionally no deps
-  const setAddressQueryRef = useRef(setAddressQuery);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    setAddressQueryRef.current = setAddressQuery;
-  });
-
   const {
     results: geocodeResults,
     isLoading: geocodeLoading,
@@ -38,9 +31,15 @@ function HomeLocationSectionComponent() {
     clear: geocodeClear,
   } = useGeocode();
 
-  // Store geocodeClear in a ref for use in geolocation callback
+  // Keep refs in sync with latest values for use in geolocation callback.
+  // These refs allow the callback to access the latest function references
+  // without needing to recreate the callback when these functions change.
+  // No dependency array: we intentionally want this to run on every render.
+  const setAddressQueryRef = useRef(setAddressQuery);
   const geocodeClearRef = useRef(geocodeClear);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Refs should sync on every render
   useEffect(() => {
+    setAddressQueryRef.current = setAddressQuery;
     geocodeClearRef.current = geocodeClear;
   });
 
@@ -256,7 +255,7 @@ function HomeLocationSectionComponent() {
           {geocodeResults.length > 0 && (
             <ul className="border border-border-default dark:border-border-default-dark rounded-lg overflow-hidden divide-y divide-border-subtle dark:divide-border-subtle-dark">
               {geocodeResults.map((result) => (
-                <li key={`${result.latitude}-${result.longitude}`}>
+                <li key={result.placeId}>
                   <button
                     type="button"
                     onClick={() => handleSelectGeocodedLocation(result)}
