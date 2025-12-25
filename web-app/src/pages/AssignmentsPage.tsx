@@ -16,8 +16,6 @@ import {
   isGameReportEligible,
   isValidationEligible,
 } from "@/utils/assignment-helpers";
-import { EditCompensationModal } from "@/components/features/EditCompensationModal";
-import { ValidateGameModal } from "@/components/features/ValidateGameModal";
 import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTour } from "@/hooks/useTour";
@@ -26,6 +24,20 @@ const PdfLanguageModal = lazy(
   () =>
     import("@/components/features/PdfLanguageModal").then((m) => ({
       default: m.PdfLanguageModal,
+    })),
+);
+
+const EditCompensationModal = lazy(
+  () =>
+    import("@/components/features/EditCompensationModal").then((m) => ({
+      default: m.EditCompensationModal,
+    })),
+);
+
+const ValidateGameModal = lazy(
+  () =>
+    import("@/components/features/ValidateGameModal").then((m) => ({
+      default: m.ValidateGameModal,
     })),
 );
 
@@ -228,20 +240,24 @@ export function AssignmentsPage() {
 
       {/* Modals */}
       {editCompensationModal.assignment && (
-        <EditCompensationModal
-          assignment={editCompensationModal.assignment}
-          isOpen={editCompensationModal.isOpen}
-          onClose={editCompensationModal.close}
-        />
+        <Suspense fallback={null}>
+          <EditCompensationModal
+            assignment={editCompensationModal.assignment}
+            isOpen={editCompensationModal.isOpen}
+            onClose={editCompensationModal.close}
+          />
+        </Suspense>
       )}
 
       {validateGameModal.assignment && (
-        <ValidateGameModal
-          key={validateGameModal.assignment.__identity}
-          assignment={validateGameModal.assignment}
-          isOpen={validateGameModal.isOpen}
-          onClose={validateGameModal.close}
-        />
+        <Suspense fallback={null}>
+          <ValidateGameModal
+            key={validateGameModal.assignment.__identity}
+            assignment={validateGameModal.assignment}
+            isOpen={validateGameModal.isOpen}
+            onClose={validateGameModal.close}
+          />
+        </Suspense>
       )}
 
       {pdfReportModal.isOpen && (

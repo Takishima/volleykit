@@ -1,7 +1,6 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, lazy, Suspense } from "react";
 import { useCompensations, useCompensationTotals } from "@/hooks/useConvocations";
 import { CompensationCard } from "@/components/features/CompensationCard";
-import { EditCompensationModal } from "@/components/features/EditCompensationModal";
 import { SwipeableCard } from "@/components/ui/SwipeableCard";
 import {
   LoadingState,
@@ -18,6 +17,13 @@ import type { CompensationRecord } from "@/api/client";
 import type { SwipeConfig } from "@/types/swipe";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTour } from "@/hooks/useTour";
+
+const EditCompensationModal = lazy(
+  () =>
+    import("@/components/features/EditCompensationModal").then((m) => ({
+      default: m.EditCompensationModal,
+    })),
+);
 
 type FilterType = "all" | "paid" | "unpaid";
 
@@ -177,11 +183,13 @@ export function CompensationsPage() {
 
       {/* Edit Compensation Modal - compensation is guaranteed non-null by conditional render */}
       {editCompensationModal.compensation && (
-        <EditCompensationModal
-          isOpen={editCompensationModal.isOpen}
-          onClose={editCompensationModal.close}
-          compensation={editCompensationModal.compensation}
-        />
+        <Suspense fallback={null}>
+          <EditCompensationModal
+            isOpen={editCompensationModal.isOpen}
+            onClose={editCompensationModal.close}
+            compensation={editCompensationModal.compensation}
+          />
+        </Suspense>
       )}
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, lazy, Suspense } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useGameExchanges, type ExchangeStatus } from "@/hooks/useConvocations";
 import { useExchangeActions } from "@/hooks/useExchangeActions";
@@ -14,12 +14,24 @@ import {
   EmptyState,
 } from "@/components/ui/LoadingSpinner";
 import { Tabs, TabPanel } from "@/components/ui/Tabs";
-import { TakeOverExchangeModal } from "@/components/features/TakeOverExchangeModal";
-import { RemoveFromExchangeModal } from "@/components/features/RemoveFromExchangeModal";
 import type { SwipeConfig } from "@/types/swipe";
 import type { GameExchange } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTour } from "@/hooks/useTour";
+
+const TakeOverExchangeModal = lazy(
+  () =>
+    import("@/components/features/TakeOverExchangeModal").then((m) => ({
+      default: m.TakeOverExchangeModal,
+    })),
+);
+
+const RemoveFromExchangeModal = lazy(
+  () =>
+    import("@/components/features/RemoveFromExchangeModal").then((m) => ({
+      default: m.RemoveFromExchangeModal,
+    })),
+);
 
 export function ExchangePage() {
   const [statusFilter, setStatusFilter] = useState<ExchangeStatus>("open");
@@ -204,23 +216,27 @@ export function ExchangePage() {
 
       {/* Modals - exchange is guaranteed non-null by conditional render */}
       {takeOverModal.exchange && (
-        <TakeOverExchangeModal
-          exchange={takeOverModal.exchange}
-          isOpen={takeOverModal.isOpen}
-          onClose={takeOverModal.close}
-          onConfirm={() => handleTakeOver(takeOverModal.exchange!)}
-        />
+        <Suspense fallback={null}>
+          <TakeOverExchangeModal
+            exchange={takeOverModal.exchange}
+            isOpen={takeOverModal.isOpen}
+            onClose={takeOverModal.close}
+            onConfirm={() => handleTakeOver(takeOverModal.exchange!)}
+          />
+        </Suspense>
       )}
 
       {removeFromExchangeModal.exchange && (
-        <RemoveFromExchangeModal
-          exchange={removeFromExchangeModal.exchange}
-          isOpen={removeFromExchangeModal.isOpen}
-          onClose={removeFromExchangeModal.close}
-          onConfirm={() =>
-            handleRemoveFromExchange(removeFromExchangeModal.exchange!)
-          }
-        />
+        <Suspense fallback={null}>
+          <RemoveFromExchangeModal
+            exchange={removeFromExchangeModal.exchange}
+            isOpen={removeFromExchangeModal.isOpen}
+            onClose={removeFromExchangeModal.close}
+            onConfirm={() =>
+              handleRemoveFromExchange(removeFromExchangeModal.exchange!)
+            }
+          />
+        </Suspense>
       )}
     </div>
   );

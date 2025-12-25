@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, lazy, Suspense } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
@@ -11,7 +11,13 @@ import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { getOccupationLabelKey } from "@/utils/occupation-labels";
-import { SafeModeWarningModal } from "@/components/features/SafeModeWarningModal";
+
+const SafeModeWarningModal = lazy(
+  () =>
+    import("@/components/features/SafeModeWarningModal").then((m) => ({
+      default: m.SafeModeWarningModal,
+    })),
+);
 
 const DEMO_RESET_MESSAGE_DURATION_MS = 3000;
 
@@ -472,11 +478,15 @@ export function SettingsPage() {
       </div>
 
       {/* Safe Mode Warning Modal */}
-      <SafeModeWarningModal
-        isOpen={showSafeModeWarning}
-        onClose={handleCloseSafeModeWarning}
-        onConfirm={handleConfirmDisableSafeMode}
-      />
+      {showSafeModeWarning && (
+        <Suspense fallback={null}>
+          <SafeModeWarningModal
+            isOpen={showSafeModeWarning}
+            onClose={handleCloseSafeModeWarning}
+            onConfirm={handleConfirmDisableSafeMode}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
