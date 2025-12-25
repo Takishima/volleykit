@@ -669,7 +669,7 @@ export interface paths {
          * Finalize scoresheet
          * @description Finalizes and closes a scoresheet after the game.
          *     Once finalized, the scoresheet becomes read-only.
-         *     A PDF file must be attached before finalization.
+         *     A scoresheet file (JPEG, PNG, or PDF) must be attached before finalization.
          */
         post: operations["finalizeScoresheet"];
         delete?: never;
@@ -795,8 +795,9 @@ export interface paths {
         put?: never;
         /**
          * Upload file
-         * @description Uploads a file (e.g., scoresheet PDF) and returns a resource reference.
+         * @description Uploads a file (scoresheet image or PDF) and returns a resource reference.
          *     The returned resource can be attached to entities like scoresheets.
+         *     Supported formats: JPEG, PNG, PDF. Maximum file size: 10 MB.
          */
         post: operations["uploadResource"];
         delete?: never;
@@ -3553,7 +3554,7 @@ export interface components {
             };
             scoresheetValidation?: components["schemas"]["ScoresheetValidation"];
             file?: components["schemas"]["FileResource"];
-            /** @description Whether a PDF file is attached */
+            /** @description Whether a scoresheet file is attached */
             hasFile?: boolean;
             /**
              * Format: date-time
@@ -3593,7 +3594,7 @@ export interface components {
             "scoresheet[writerPerson][__identity]"?: string;
             /**
              * Format: uuid
-             * @description Reference to uploaded PDF file
+             * @description Reference to uploaded file (JPEG, PNG, or PDF)
              */
             "scoresheet[file][__identity]"?: string;
             /** @enum {string} */
@@ -3636,7 +3637,7 @@ export interface components {
             "scoresheet[writerPerson][__identity]"?: string;
             /**
              * Format: uuid
-             * @description Reference to uploaded PDF file (required for finalization)
+             * @description Reference to uploaded file (required for finalization)
              */
             "scoresheet[file][__identity]": string;
             /**
@@ -3915,9 +3916,12 @@ export interface components {
             persistentResource?: {
                 /** Format: uuid */
                 __identity?: string;
-                /** @example scoresheet.pdf */
+                /** @example scoresheet.jpg */
                 filename?: string;
-                /** @example application/pdf */
+                /**
+                 * @description MIME type (image/jpeg, image/png, or application/pdf)
+                 * @example image/jpeg
+                 */
                 mediaType?: string;
                 /** @description File size in bytes */
                 fileSize?: number;

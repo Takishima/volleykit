@@ -1552,6 +1552,18 @@ components:
         linkedDoubleConvocationGameNumberAndRefereePosition:
           type: string
           nullable: true
+        convocationCompensation:
+          type: object
+          description: |
+            Compensation lock flags for editability check.
+            Only populated when convocationCompensation properties are requested.
+          properties:
+            paymentDone:
+              type: boolean
+              description: Whether payment has been processed
+            lockPayoutOnSiteCompensation:
+              type: boolean
+              description: Whether on-site payout is locked (regional associations)
         _permissions:
           $ref: '#/components/schemas/Permissions'
     CompensationsResponse:
