@@ -148,11 +148,11 @@ function AssignmentCardComponent({
               <span>{position}</span>
               {genderSymbol && (
                 <span
-                  className={
+                  className={`leading-none ${
                     gender === "m"
                       ? "text-blue-500 dark:text-blue-400"
                       : "text-pink-500 dark:text-pink-400"
-                  }
+                  }`}
                   aria-label={
                     gender === "m" ? t("common.men") : t("common.women")
                   }
