@@ -219,6 +219,101 @@ describe("Modal", () => {
     fireEvent.keyDown(document, { key: "Escape" });
     expect(onClose).not.toHaveBeenCalled();
   });
+
+  describe("focus trap", () => {
+    it("should wrap focus from last to first element on Tab", () => {
+      const onClose = vi.fn();
+
+      render(
+        <Modal isOpen={true} onClose={onClose} titleId="test-modal-title">
+          <ModalHeader title="Test Modal" titleId="test-modal-title" />
+          <ModalFooter>
+            <ModalButton variant="secondary">First</ModalButton>
+            <ModalButton variant="primary">Last</ModalButton>
+          </ModalFooter>
+        </Modal>,
+      );
+
+      const firstButton = screen.getByRole("button", { name: "First", hidden: true });
+      const lastButton = screen.getByRole("button", { name: "Last", hidden: true });
+
+      // Focus the last button
+      lastButton.focus();
+      expect(document.activeElement).toBe(lastButton);
+
+      // Press Tab - should wrap to first button
+      fireEvent.keyDown(document, { key: "Tab" });
+      expect(document.activeElement).toBe(firstButton);
+    });
+
+    it("should wrap focus from first to last element on Shift+Tab", () => {
+      const onClose = vi.fn();
+
+      render(
+        <Modal isOpen={true} onClose={onClose} titleId="test-modal-title">
+          <ModalHeader title="Test Modal" titleId="test-modal-title" />
+          <ModalFooter>
+            <ModalButton variant="secondary">First</ModalButton>
+            <ModalButton variant="primary">Last</ModalButton>
+          </ModalFooter>
+        </Modal>,
+      );
+
+      const firstButton = screen.getByRole("button", { name: "First", hidden: true });
+      const lastButton = screen.getByRole("button", { name: "Last", hidden: true });
+
+      // Focus the first button
+      firstButton.focus();
+      expect(document.activeElement).toBe(firstButton);
+
+      // Press Shift+Tab - should wrap to last button
+      fireEvent.keyDown(document, { key: "Tab", shiftKey: true });
+      expect(document.activeElement).toBe(lastButton);
+    });
+
+    it("should not prevent Tab when not on boundary element", () => {
+      const onClose = vi.fn();
+
+      render(
+        <Modal isOpen={true} onClose={onClose} titleId="test-modal-title">
+          <ModalHeader title="Test Modal" titleId="test-modal-title" />
+          <ModalFooter>
+            <ModalButton variant="secondary">First</ModalButton>
+            <ModalButton variant="primary">Middle</ModalButton>
+            <ModalButton variant="danger">Last</ModalButton>
+          </ModalFooter>
+        </Modal>,
+      );
+
+      const firstButton = screen.getByRole("button", { name: "First", hidden: true });
+      const middleButton = screen.getByRole("button", { name: "Middle", hidden: true });
+
+      // Focus the first button
+      firstButton.focus();
+      expect(document.activeElement).toBe(firstButton);
+
+      // Tab should not wrap since we're on the first, not the last
+      const event = new KeyboardEvent("keydown", { key: "Tab", bubbles: true });
+      const preventDefaultSpy = vi.spyOn(event, "preventDefault");
+      document.dispatchEvent(event);
+
+      // Since we're on first (not last), Tab should not be prevented
+      expect(preventDefaultSpy).not.toHaveBeenCalled();
+
+      // Focus middle button and press Shift+Tab
+      middleButton.focus();
+      const shiftTabEvent = new KeyboardEvent("keydown", {
+        key: "Tab",
+        shiftKey: true,
+        bubbles: true,
+      });
+      const shiftPreventDefaultSpy = vi.spyOn(shiftTabEvent, "preventDefault");
+      document.dispatchEvent(shiftTabEvent);
+
+      // Since we're on middle (not first), Shift+Tab should not be prevented
+      expect(shiftPreventDefaultSpy).not.toHaveBeenCalled();
+    });
+  });
 });
 
 describe("ModalHeader", () => {

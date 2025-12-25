@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+type TitleSize = "base" | "lg" | "xl";
+
 interface ModalHeaderProps {
   /** Modal title text */
   title: string;
@@ -10,10 +12,10 @@ interface ModalHeaderProps {
   /** Optional subtitle or additional content below the title */
   subtitle?: ReactNode;
   /** Title text size variant */
-  titleSize?: "base" | "lg" | "xl";
+  titleSize?: TitleSize;
 }
 
-const titleSizeClasses: Record<string, string> = {
+const titleSizeClasses: Record<TitleSize, string> = {
   base: "text-base",
   lg: "text-lg",
   xl: "text-xl",

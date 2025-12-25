@@ -3,6 +3,9 @@ import { useModalDismissal } from "@/hooks/useModalDismissal";
 
 export type ModalSize = "sm" | "md" | "lg" | "xl";
 
+/** Default z-index for modal overlays */
+const DEFAULT_Z_INDEX = 50;
+
 const sizeClasses: Record<ModalSize, string> = {
   sm: "max-w-sm",
   md: "max-w-md",
@@ -65,7 +68,7 @@ export function Modal({
   closeOnEscape = true,
   closeOnBackdrop = true,
   isLoading = false,
-  zIndex = 50,
+  zIndex = DEFAULT_Z_INDEX,
 }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
