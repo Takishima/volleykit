@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import {
   ProfileSection,
   LanguageSection,
+  HomeLocationSection,
   TourSection,
   DemoSection,
   SafeModeSection,
@@ -50,6 +51,8 @@ export function SettingsPage() {
       {user && <ProfileSection user={user} />}
 
       <LanguageSection />
+
+      <HomeLocationSection />
 
       <TourSection isDemoMode={isDemoMode} />
 

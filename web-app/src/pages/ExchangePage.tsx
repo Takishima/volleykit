@@ -4,10 +4,13 @@ import { useGameExchanges, type ExchangeStatus } from "@/hooks/useConvocations";
 import { useExchangeActions } from "@/hooks/useExchangeActions";
 import { useDemoStore } from "@/stores/demo";
 import { useAuthStore } from "@/stores/auth";
+import { useSettingsStore } from "@/stores/settings";
 import { createExchangeActions } from "@/utils/exchange-actions";
+import { calculateDistanceKm } from "@/utils/distance";
 import { ExchangeCard } from "@/components/features/ExchangeCard";
 import { SwipeableCard } from "@/components/ui/SwipeableCard";
 import { LevelFilterToggle } from "@/components/features/LevelFilterToggle";
+import { DistanceFilterToggle } from "@/components/features/DistanceFilterToggle";
 import {
   LoadingState,
   ErrorState,
@@ -48,43 +51,94 @@ export function ExchangePage() {
       userRefereeLevelGradationValue: state.userRefereeLevelGradationValue,
     })),
   );
+  const { homeLocation, distanceFilter, setDistanceFilterEnabled } =
+    useSettingsStore(
+      useShallow((state) => ({
+        homeLocation: state.homeLocation,
+        distanceFilter: state.distanceFilter,
+        setDistanceFilterEnabled: state.setDistanceFilterEnabled,
+      })),
+    );
 
   const { data, isLoading, error, refetch } = useGameExchanges(statusFilter);
 
-  // Filter exchanges by user's referee level when filter is enabled
-  // Gradation values: N1=1 (highest), N2=2, N3=3 (lowest)
-  // Lower gradation = more qualified (can officiate more games)
-  const filteredData = useMemo(() => {
-    if (!data || !filterByLevel || statusFilter !== "open") {
-      return data;
-    }
+  // Calculate distance for each exchange from user's home location
+  const exchangesWithDistance = useMemo(() => {
+    if (!data) return null;
+    if (!homeLocation) return data.map((e) => ({ exchange: e, distanceKm: null }));
 
-    // Only filter in demo mode for now (production would need user level from API)
-    if (!isDemoMode || userRefereeLevelGradationValue === null) {
-      return data;
-    }
+    return data.map((exchange) => {
+      const geoLocation =
+        exchange.refereeGame?.game?.hall?.primaryPostalAddress?.geographicalLocation;
+      const lat = geoLocation?.latitude;
+      const lon = geoLocation?.longitude;
 
-    return data.filter((exchange) => {
-      const requiredGradationStr = exchange.requiredRefereeLevelGradationValue;
-      // If no gradation value, show the exchange (conservative approach)
-      if (requiredGradationStr === undefined || requiredGradationStr === null) {
-        return true;
+      if (lat == null || lon == null) {
+        return { exchange, distanceKm: null };
       }
-      // Parse string to number for comparison (API returns string)
-      const requiredGradation = Number(requiredGradationStr);
-      if (isNaN(requiredGradation)) {
-        return true;
-      }
-      // User can officiate if their level meets or exceeds required level
-      // Lower gradation = higher level, so user.gradation <= required.gradation
-      return userRefereeLevelGradationValue <= requiredGradation;
+
+      const distanceKm = calculateDistanceKm(
+        { latitude: homeLocation.latitude, longitude: homeLocation.longitude },
+        { latitude: lat, longitude: lon },
+      );
+
+      return { exchange, distanceKm };
     });
+  }, [data, homeLocation]);
+
+  // Filter exchanges by user's referee level and distance when filters are enabled
+  const filteredData = useMemo(() => {
+    if (!exchangesWithDistance) return null;
+
+    let result = exchangesWithDistance;
+
+    // Apply level filter (only on "open" tab in demo mode)
+    if (
+      filterByLevel &&
+      statusFilter === "open" &&
+      isDemoMode &&
+      userRefereeLevelGradationValue !== null
+    ) {
+      result = result.filter(({ exchange }) => {
+        const requiredGradationStr = exchange.requiredRefereeLevelGradationValue;
+        // If no gradation value, show the exchange (conservative approach)
+        if (requiredGradationStr === undefined || requiredGradationStr === null) {
+          return true;
+        }
+        // Parse string to number for comparison (API returns string)
+        const requiredGradation = Number(requiredGradationStr);
+        if (isNaN(requiredGradation)) {
+          return true;
+        }
+        // User can officiate if their level meets or exceeds required level
+        // Lower gradation = higher level, so user.gradation <= required.gradation
+        return userRefereeLevelGradationValue <= requiredGradation;
+      });
+    }
+
+    // Apply distance filter (only on "open" tab when home location is set)
+    if (
+      distanceFilter.enabled &&
+      statusFilter === "open" &&
+      homeLocation
+    ) {
+      result = result.filter(({ distanceKm }) => {
+        // If no distance available, include the exchange (conservative)
+        if (distanceKm === null) return true;
+        return distanceKm <= distanceFilter.maxDistanceKm;
+      });
+    }
+
+    return result;
   }, [
-    data,
+    exchangesWithDistance,
     filterByLevel,
     statusFilter,
     isDemoMode,
     userRefereeLevelGradationValue,
+    distanceFilter.enabled,
+    distanceFilter.maxDistanceKm,
+    homeLocation,
   ]);
 
   const {
@@ -140,18 +194,32 @@ export function ExchangePage() {
     }
   }, [removeFromExchangeModal.exchange, handleRemoveFromExchange]);
 
-  // Determine if filter is available (demo mode with level set)
+  // Determine if filters are available
   const isLevelFilterAvailable = isDemoMode && userRefereeLevel !== null;
+  const isDistanceFilterAvailable = homeLocation !== null;
 
-  // Level filter toggle - only show on "Open" tab when available
-  const levelFilterContent =
-    statusFilter === "open" && isLevelFilterAvailable ? (
-      <LevelFilterToggle
-        checked={filterByLevel}
-        onChange={setFilterByLevel}
-        userLevel={userRefereeLevel}
-        dataTour="exchange-filter"
-      />
+  // Filter toggles - only show on "Open" tab when available
+  const filterContent =
+    statusFilter === "open" &&
+    (isLevelFilterAvailable || isDistanceFilterAvailable) ? (
+      <div className="flex items-center gap-3">
+        {isDistanceFilterAvailable && (
+          <DistanceFilterToggle
+            checked={distanceFilter.enabled}
+            onChange={setDistanceFilterEnabled}
+            maxDistanceKm={distanceFilter.maxDistanceKm}
+            dataTour="exchange-distance-filter"
+          />
+        )}
+        {isLevelFilterAvailable && (
+          <LevelFilterToggle
+            checked={filterByLevel}
+            onChange={setFilterByLevel}
+            userLevel={userRefereeLevel}
+            dataTour="exchange-filter"
+          />
+        )}
+      </div>
     ) : undefined;
 
   const renderContent = () => {
@@ -171,6 +239,7 @@ export function ExchangePage() {
     }
 
     if (!filteredData || filteredData.length === 0) {
+      const hasActiveFilters = filterByLevel || distanceFilter.enabled;
       return (
         <EmptyState
           icon="exchange"
@@ -181,8 +250,8 @@ export function ExchangePage() {
           }
           description={
             statusFilter === "open"
-              ? filterByLevel
-                ? t("exchange.noExchangesAtLevel")
+              ? hasActiveFilters
+                ? t("exchange.noExchangesWithFilters")
                 : t("exchange.noOpenExchangesDescription")
               : t("exchange.noApplicationsDescription")
           }
@@ -192,7 +261,7 @@ export function ExchangePage() {
 
     return (
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredData.map((exchange, index) => (
+        {filteredData.map(({ exchange, distanceKm }, index) => (
           <SwipeableCard
             key={exchange.__identity}
             swipeConfig={getSwipeConfig(exchange)}
@@ -202,6 +271,7 @@ export function ExchangePage() {
                 exchange={exchange}
                 disableExpansion={isDrawerOpen}
                 dataTour={index === 0 ? "exchange-card" : undefined}
+                distanceKm={homeLocation ? distanceKm : null}
               />
             )}
           </SwipeableCard>
@@ -212,13 +282,13 @@ export function ExchangePage() {
 
   return (
     <div className="space-y-3">
-      {/* Filter tabs with optional level toggle */}
+      {/* Filter tabs with optional filters */}
       <Tabs
         tabs={tabs}
         activeTab={statusFilter}
         onTabChange={handleTabChange}
         ariaLabel={t("exchange.title")}
-        endContent={levelFilterContent}
+        endContent={filterContent}
       />
 
       {/* Content - single TabPanel since all tabs show same component with different data */}

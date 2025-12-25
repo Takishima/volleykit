@@ -12,6 +12,14 @@ export const settingsTour: TourDefinition = {
       completionEvent: { type: "click" },
     },
     {
+      id: "homeLocation",
+      targetSelector: "[data-tour='home-location']",
+      titleKey: "tour.settings.homeLocation.title",
+      descriptionKey: "tour.settings.homeLocation.description",
+      placement: "bottom",
+      completionEvent: { type: "click" },
+    },
+    {
       id: "complete",
       targetSelector: "[data-tour='tour-reset']",
       titleKey: "tour.settings.complete.title",

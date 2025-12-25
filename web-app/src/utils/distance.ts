@@ -1,9 +1,25 @@
 /**
- * Distance conversion utilities for compensation calculations.
+ * Distance conversion and calculation utilities.
+ *
+ * Includes:
+ * - Unit conversions (metres <-> kilometres)
+ * - Haversine formula for straight-line distance between coordinates
+ * - Formatting utilities
  */
 
 /** Number of metres in one kilometre */
 export const METRES_PER_KILOMETRE = 1000;
+
+/** Earth's radius in metres for Haversine calculation */
+const EARTH_RADIUS_METRES = 6_371_000;
+
+/**
+ * Geographic coordinates for distance calculations.
+ */
+export interface Coordinates {
+  latitude: number;
+  longitude: number;
+}
 
 /** Number of decimal places to display for distance values */
 export const DISTANCE_DISPLAY_PRECISION = 1;
@@ -50,4 +66,69 @@ export function formatDistanceKm(metres: number): string {
 export function parseLocalizedNumber(value: string): number {
   const normalized = value.replace(",", ".");
   return parseFloat(normalized);
+}
+
+/**
+ * Converts degrees to radians.
+ */
+function degreesToRadians(degrees: number): number {
+  return degrees * (Math.PI / 180);
+}
+
+/**
+ * Calculates the straight-line distance between two geographic points using the Haversine formula.
+ *
+ * The Haversine formula determines the great-circle distance between two points on a sphere
+ * given their longitudes and latitudes. This is an approximation as Earth is not a perfect
+ * sphere, but is accurate enough for distances relevant to volleyball game filtering
+ * (typical error < 0.5% for distances under 100km).
+ *
+ * @param from - Starting coordinates
+ * @param to - Destination coordinates
+ * @returns Distance in metres
+ *
+ * @example
+ * ```ts
+ * const zurich = { latitude: 47.3769, longitude: 8.5417 };
+ * const bern = { latitude: 46.9480, longitude: 7.4474 };
+ * const distance = calculateHaversineDistance(zurich, bern);
+ * // Returns approximately 95,400 metres (95.4 km)
+ * ```
+ */
+export function calculateHaversineDistance(
+  from: Coordinates,
+  to: Coordinates,
+): number {
+  const lat1Rad = degreesToRadians(from.latitude);
+  const lat2Rad = degreesToRadians(to.latitude);
+  const deltaLat = degreesToRadians(to.latitude - from.latitude);
+  const deltaLon = degreesToRadians(to.longitude - from.longitude);
+
+  // Haversine formula
+  const a =
+    Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+    Math.cos(lat1Rad) *
+      Math.cos(lat2Rad) *
+      Math.sin(deltaLon / 2) *
+      Math.sin(deltaLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return EARTH_RADIUS_METRES * c;
+}
+
+/**
+ * Calculates straight-line distance and returns it in kilometres.
+ *
+ * Convenience wrapper around calculateHaversineDistance for common use cases.
+ *
+ * @param from - Starting coordinates
+ * @param to - Destination coordinates
+ * @returns Distance in kilometres
+ */
+export function calculateDistanceKm(
+  from: Coordinates,
+  to: Coordinates,
+): number {
+  return metresToKilometres(calculateHaversineDistance(from, to));
 }

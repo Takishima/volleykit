@@ -60,6 +60,8 @@ interface AddressParams {
   houseNumber?: string;
   postalCode: string;
   city: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 function createAddress({
@@ -68,6 +70,8 @@ function createAddress({
   houseNumber,
   postalCode,
   city,
+  latitude,
+  longitude,
 }: AddressParams) {
   const combinedAddress =
     street && houseNumber
@@ -81,6 +85,14 @@ function createAddress({
     postalCode,
     city,
     combinedAddress,
+    ...(latitude !== undefined &&
+      longitude !== undefined && {
+        geographicalLocation: {
+          __identity: `geo-${id}`,
+          latitude,
+          longitude,
+        },
+      }),
   };
 }
 
@@ -117,6 +129,8 @@ interface VenueConfig {
     houseNumber: string;
     postalCode: string;
     city: string;
+    latitude: number;
+    longitude: number;
   };
 }
 
@@ -130,6 +144,8 @@ const SV_VENUES: VenueConfig[] = [
       houseNumber: "154",
       postalCode: "8005",
       city: "Zürich",
+      latitude: 47.3907,
+      longitude: 8.5048,
     },
   },
   {
@@ -141,6 +157,8 @@ const SV_VENUES: VenueConfig[] = [
       houseNumber: "50",
       postalCode: "5012",
       city: "Schönenwerd",
+      latitude: 47.3678,
+      longitude: 7.9976,
     },
   },
   {
@@ -152,6 +170,8 @@ const SV_VENUES: VenueConfig[] = [
       houseNumber: "1",
       postalCode: "8752",
       city: "Näfels",
+      latitude: 47.0985,
+      longitude: 9.0643,
     },
   },
   {
@@ -163,6 +183,8 @@ const SV_VENUES: VenueConfig[] = [
       houseNumber: "2",
       postalCode: "4106",
       city: "Therwil",
+      latitude: 47.4989,
+      longitude: 7.5521,
     },
   },
   {
@@ -174,6 +196,8 @@ const SV_VENUES: VenueConfig[] = [
       houseNumber: "80",
       postalCode: "3008",
       city: "Bern",
+      latitude: 46.9519,
+      longitude: 7.4250,
     },
   },
 ];
@@ -188,6 +212,8 @@ const REGIONAL_VENUES: VenueConfig[] = [
       houseNumber: "71",
       postalCode: "3014",
       city: "Bern",
+      latitude: 46.9639,
+      longitude: 7.4662,
     },
   },
   {
@@ -199,6 +225,8 @@ const REGIONAL_VENUES: VenueConfig[] = [
       houseNumber: "8",
       postalCode: "5630",
       city: "Muri AG",
+      latitude: 47.2743,
+      longitude: 8.3396,
     },
   },
   {
@@ -210,6 +238,8 @@ const REGIONAL_VENUES: VenueConfig[] = [
       houseNumber: "1",
       postalCode: "3600",
       city: "Thun",
+      latitude: 46.7581,
+      longitude: 7.6313,
     },
   },
   {
@@ -221,6 +251,8 @@ const REGIONAL_VENUES: VenueConfig[] = [
       houseNumber: "2",
       postalCode: "4500",
       city: "Solothurn",
+      latitude: 47.2092,
+      longitude: 7.5334,
     },
   },
   {
@@ -232,6 +264,8 @@ const REGIONAL_VENUES: VenueConfig[] = [
       houseNumber: "29",
       postalCode: "5000",
       city: "Aarau",
+      latitude: 47.3897,
+      longitude: 8.0445,
     },
   },
 ];
@@ -393,6 +427,8 @@ function createRefereeGame({
           houseNumber: venue.hall.houseNumber,
           postalCode: venue.hall.postalCode,
           city: venue.hall.city,
+          latitude: venue.hall.latitude,
+          longitude: venue.hall.longitude,
         }),
       },
       group: {

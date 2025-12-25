@@ -79,6 +79,11 @@ const fr: Translations = {
         description:
           "Sélectionnez votre langue préférée. L'application prend en charge l'allemand, l'anglais, le français et l'italien.",
       },
+      homeLocation: {
+        title: "Définir l'emplacement",
+        description:
+          "Définissez votre emplacement pour filtrer les échanges par distance. Cela vous aide à trouver plus facilement des matchs près de chez vous.",
+      },
       complete: {
         title: "Visite terminée !",
         description:
@@ -248,7 +253,9 @@ const fr: Translations = {
       "Êtes-vous sûr de vouloir retirer cette désignation de la bourse?",
     removeButton: "Retirer de la bourse",
     filterByLevel: "Mon niveau uniquement",
+    filterByDistance: "Filtrer par distance",
     noExchangesAtLevel: "Aucun échange disponible à votre niveau.",
+    noExchangesWithFilters: "Aucun échange ne correspond à vos filtres.",
     noOpenExchangesTitle: "Aucun échange ouvert",
     noOpenExchangesDescription:
       "Il n'y a actuellement aucun poste d'arbitre disponible pour échange.",
@@ -285,6 +292,24 @@ const fr: Translations = {
     title: "Paramètres",
     profile: "Profil",
     language: "Langue",
+    homeLocation: {
+      title: "Emplacement domicile",
+      description:
+        "Définissez votre emplacement pour filtrer les échanges par distance.",
+      currentLocation: "Position actuelle",
+      useCurrentLocation: "Utiliser ma position actuelle",
+      locating: "Localisation en cours...",
+      searchLabel: "Ou saisir une adresse",
+      searchPlaceholder: "ex. Bahnhofstrasse 1, Zürich",
+      searchError: "La recherche d'adresse a échoué. Veuillez réessayer.",
+      noResults: "Aucun résultat trouvé.",
+      clear: "Effacer la position",
+      errorPermissionDenied:
+        "Accès à la position refusé. Veuillez autoriser l'accès dans les paramètres de votre navigateur.",
+      errorPositionUnavailable: "Position non disponible. Veuillez réessayer.",
+      errorTimeout: "La demande de position a expiré. Veuillez réessayer.",
+      errorUnknown: "Erreur inconnue lors de l'obtention de la position.",
+    },
     safeMode: "Mode sécurisé",
     safeModeDescription:
       "Le mode sécurisé restreint les opérations dangereuses comme l'ajout/la prise de matchs depuis la bourse aux échanges ou la validation de matchs. Cela aide à éviter les modifications accidentelles pendant les tests de l'application.",
