@@ -37,29 +37,23 @@ export class AssignmentsPage {
   }
 
   async switchToUpcomingTab() {
-    await this.upcomingTab.waitFor({ state: "visible" });
+    await expect(this.upcomingTab).toBeVisible();
     await this.upcomingTab.click();
-    // Wait for the "upcoming" tab to become selected using its stable ID (locale-independent)
-    await this.page.waitForFunction(
-      () => {
-        const tab = document.querySelector("#tab-upcoming");
-        return tab?.getAttribute("aria-selected") === "true";
-      },
-      { timeout: TAB_SWITCH_TIMEOUT_MS },
-    );
+    // Wait for tab to become selected using Playwright's built-in assertion
+    await expect(this.upcomingTab).toHaveAttribute("aria-selected", "true", {
+      timeout: TAB_SWITCH_TIMEOUT_MS,
+    });
     // Wait for tab panel content to stabilize
     await expect(this.tabPanel).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
   }
 
   async switchToValidationClosedTab() {
-    await this.validationClosedTab.waitFor({ state: "visible" });
+    await expect(this.validationClosedTab).toBeVisible();
     await this.validationClosedTab.click();
-    // Wait for the "validationClosed" tab to become selected using its stable ID (locale-independent)
-    await this.page.waitForFunction(
-      () => {
-        const tab = document.querySelector("#tab-validationClosed");
-        return tab?.getAttribute("aria-selected") === "true";
-      },
+    // Wait for tab to become selected using Playwright's built-in assertion
+    await expect(this.validationClosedTab).toHaveAttribute(
+      "aria-selected",
+      "true",
       { timeout: TAB_SWITCH_TIMEOUT_MS },
     );
     // Wait for tab panel content to stabilize

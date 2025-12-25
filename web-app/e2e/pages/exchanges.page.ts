@@ -39,29 +39,23 @@ export class ExchangesPage {
   }
 
   async switchToOpenTab() {
-    await this.openTab.waitFor({ state: "visible" });
+    await expect(this.openTab).toBeVisible();
     await this.openTab.click();
-    // Wait for the "open" tab to become selected using its stable ID (locale-independent)
-    await this.page.waitForFunction(
-      () => {
-        const tab = document.querySelector('#tab-open');
-        return tab?.getAttribute("aria-selected") === "true";
-      },
-      { timeout: TAB_SWITCH_TIMEOUT_MS },
-    );
+    // Wait for tab to become selected using Playwright's built-in assertion
+    await expect(this.openTab).toHaveAttribute("aria-selected", "true", {
+      timeout: TAB_SWITCH_TIMEOUT_MS,
+    });
     // Wait for tab panel content to stabilize
     await expect(this.tabPanel).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
   }
 
   async switchToMyApplicationsTab() {
-    await this.myApplicationsTab.waitFor({ state: "visible" });
+    await expect(this.myApplicationsTab).toBeVisible();
     await this.myApplicationsTab.click();
-    // Wait for the "applied" tab to become selected using its stable ID (locale-independent)
-    await this.page.waitForFunction(
-      () => {
-        const tab = document.querySelector('#tab-applied');
-        return tab?.getAttribute("aria-selected") === "true";
-      },
+    // Wait for tab to become selected using Playwright's built-in assertion
+    await expect(this.myApplicationsTab).toHaveAttribute(
+      "aria-selected",
+      "true",
       { timeout: TAB_SWITCH_TIMEOUT_MS },
     );
     // Wait for tab panel content to stabilize

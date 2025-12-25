@@ -38,46 +38,34 @@ export class CompensationsPage {
   }
 
   async switchToPendingTab() {
-    await this.pendingTab.waitFor({ state: "visible" });
+    await expect(this.pendingTab).toBeVisible();
     await this.pendingTab.click();
-    // Wait for the "unpaid" tab to become selected using its stable ID (locale-independent)
-    await this.page.waitForFunction(
-      () => {
-        const tab = document.querySelector("#tab-unpaid");
-        return tab?.getAttribute("aria-selected") === "true";
-      },
-      { timeout: TAB_SWITCH_TIMEOUT_MS },
-    );
+    // Wait for tab to become selected using Playwright's built-in assertion
+    await expect(this.pendingTab).toHaveAttribute("aria-selected", "true", {
+      timeout: TAB_SWITCH_TIMEOUT_MS,
+    });
     // Wait for tab panel content to stabilize
     await expect(this.tabPanel).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
   }
 
   async switchToPaidTab() {
-    await this.paidTab.waitFor({ state: "visible" });
+    await expect(this.paidTab).toBeVisible();
     await this.paidTab.click();
-    // Wait for the "paid" tab to become selected using its stable ID (locale-independent)
-    await this.page.waitForFunction(
-      () => {
-        const tab = document.querySelector("#tab-paid");
-        return tab?.getAttribute("aria-selected") === "true";
-      },
-      { timeout: TAB_SWITCH_TIMEOUT_MS },
-    );
+    // Wait for tab to become selected using Playwright's built-in assertion
+    await expect(this.paidTab).toHaveAttribute("aria-selected", "true", {
+      timeout: TAB_SWITCH_TIMEOUT_MS,
+    });
     // Wait for tab panel content to stabilize
     await expect(this.tabPanel).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
   }
 
   async switchToAllTab() {
-    await this.allTab.waitFor({ state: "visible" });
+    await expect(this.allTab).toBeVisible();
     await this.allTab.click();
-    // Wait for the "all" tab to become selected using its stable ID (locale-independent)
-    await this.page.waitForFunction(
-      () => {
-        const tab = document.querySelector("#tab-all");
-        return tab?.getAttribute("aria-selected") === "true";
-      },
-      { timeout: TAB_SWITCH_TIMEOUT_MS },
-    );
+    // Wait for tab to become selected using Playwright's built-in assertion
+    await expect(this.allTab).toHaveAttribute("aria-selected", "true", {
+      timeout: TAB_SWITCH_TIMEOUT_MS,
+    });
     // Wait for tab panel content to stabilize
     await expect(this.tabPanel).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
   }

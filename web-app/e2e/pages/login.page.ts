@@ -40,13 +40,19 @@ export class LoginPage {
    * Demo mode provides consistent mock data for reliable testing.
    */
   async enterDemoMode() {
-    // Ensure button is clickable before clicking
+    // Ensure button is visible and enabled before clicking
     await expect(this.demoButton).toBeVisible();
-    await this.demoButton.click();
-    // Wait for navigation away from login with explicit timeout
-    await expect(this.page).not.toHaveURL(/login/, {
-      timeout: PAGE_LOAD_TIMEOUT_MS,
-    });
+    await expect(this.demoButton).toBeEnabled();
+
+    // Click and wait for navigation simultaneously for reliability
+    // This ensures we capture the navigation even if it starts immediately
+    await Promise.all([
+      this.page.waitForURL((url) => !url.pathname.includes("/login"), {
+        timeout: PAGE_LOAD_TIMEOUT_MS,
+      }),
+      this.demoButton.click(),
+    ]);
+
     // Wait for main content to load
     await expect(this.page.getByRole("main")).toBeVisible({
       timeout: PAGE_LOAD_TIMEOUT_MS,
