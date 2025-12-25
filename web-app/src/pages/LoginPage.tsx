@@ -6,6 +6,7 @@ import {
   type FormEvent,
 } from "react";
 import { useNavigate } from "react-router-dom";
+import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -18,8 +19,15 @@ const DEMO_MODE_ONLY = import.meta.env.VITE_DEMO_MODE_ONLY === "true";
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { login, status, error, setDemoAuthenticated } = useAuthStore();
-  const { initializeDemoData } = useDemoStore();
+  const { login, status, error, setDemoAuthenticated } = useAuthStore(
+    useShallow((state) => ({
+      login: state.login,
+      status: state.status,
+      error: state.error,
+      setDemoAuthenticated: state.setDemoAuthenticated,
+    })),
+  );
+  const initializeDemoData = useDemoStore((state) => state.initializeDemoData);
   const { t } = useTranslation();
 
   const [username, setUsername] = useState("");

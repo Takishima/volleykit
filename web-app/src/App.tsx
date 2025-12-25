@@ -7,6 +7,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 import { AppShell } from "@/components/layout/AppShell";
@@ -85,9 +86,21 @@ const queryClient = new QueryClient({
 });
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { status, checkSession, isDemoMode } = useAuthStore();
+  const { status, checkSession, isDemoMode } = useAuthStore(
+    useShallow((state) => ({
+      status: state.status,
+      checkSession: state.checkSession,
+      isDemoMode: state.isDemoMode,
+    })),
+  );
   const { assignments, activeAssociationCode, initializeDemoData } =
-    useDemoStore();
+    useDemoStore(
+      useShallow((state) => ({
+        assignments: state.assignments,
+        activeAssociationCode: state.activeAssociationCode,
+        initializeDemoData: state.initializeDemoData,
+      })),
+    );
   const { t } = useTranslation();
   const shouldVerifySession = status === "authenticated" && !isDemoMode;
   const [isVerifying, setIsVerifying] = useState(() => shouldVerifySession);
@@ -153,7 +166,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { status } = useAuthStore();
+  const status = useAuthStore((state) => state.status);
 
   if (status === "authenticated") {
     return <Navigate to="/" replace />;

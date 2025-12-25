@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 import { useSettingsStore } from "@/stores/settings";
@@ -17,10 +18,31 @@ const DEMO_RESET_MESSAGE_DURATION_MS = 3000;
 const TOUR_IDS: TourId[] = ["assignments", "compensations", "exchange", "settings"];
 
 export function SettingsPage() {
-  const { user, logout, isDemoMode } = useAuthStore();
-  const { activeAssociationCode, refreshData } = useDemoStore();
-  const { isSafeModeEnabled, setSafeMode } = useSettingsStore();
-  const { getTourStatus, resetAllTours } = useTourStore();
+  const { user, logout, isDemoMode } = useAuthStore(
+    useShallow((state) => ({
+      user: state.user,
+      logout: state.logout,
+      isDemoMode: state.isDemoMode,
+    })),
+  );
+  const { activeAssociationCode, refreshData } = useDemoStore(
+    useShallow((state) => ({
+      activeAssociationCode: state.activeAssociationCode,
+      refreshData: state.refreshData,
+    })),
+  );
+  const { isSafeModeEnabled, setSafeMode } = useSettingsStore(
+    useShallow((state) => ({
+      isSafeModeEnabled: state.isSafeModeEnabled,
+      setSafeMode: state.setSafeMode,
+    })),
+  );
+  const { getTourStatus, resetAllTours } = useTourStore(
+    useShallow((state) => ({
+      getTourStatus: state.getTourStatus,
+      resetAllTours: state.resetAllTours,
+    })),
+  );
   const { t, locale } = useTranslation();
 
   // Initialize tour for this page (triggers auto-start on first visit)

@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useGameExchanges, type ExchangeStatus } from "@/hooks/useConvocations";
 import { useExchangeActions } from "@/hooks/useExchangeActions";
 import { useDemoStore } from "@/stores/demo";
@@ -29,7 +30,12 @@ export function ExchangePage() {
   useTour("exchange");
 
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
-  const { userRefereeLevel, userRefereeLevelGradationValue } = useDemoStore();
+  const { userRefereeLevel, userRefereeLevelGradationValue } = useDemoStore(
+    useShallow((state) => ({
+      userRefereeLevel: state.userRefereeLevel,
+      userRefereeLevelGradationValue: state.userRefereeLevelGradationValue,
+    })),
+  );
 
   const { data, isLoading, error, refetch } = useGameExchanges(statusFilter);
 

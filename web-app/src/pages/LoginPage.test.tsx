@@ -26,20 +26,29 @@ const mockInitializeDemoData = vi.fn();
 function mockAuthStoreState(overrides = {}) {
   const state = {
     login: mockLogin,
-    status: "idle",
+    status: "idle" as const,
     error: null,
     setDemoAuthenticated: mockSetDemoAuthenticated,
     ...overrides,
   };
-  vi.mocked(authStore.useAuthStore).mockReturnValue(
-    state as ReturnType<typeof authStore.useAuthStore>,
-  );
+  vi.mocked(authStore.useAuthStore).mockImplementation((selector?: unknown) => {
+    if (typeof selector === "function") {
+      return selector(state);
+    }
+    return state as ReturnType<typeof authStore.useAuthStore>;
+  });
 }
 
 function mockDemoStoreState() {
-  vi.mocked(demoStore.useDemoStore).mockReturnValue({
+  const state = {
     initializeDemoData: mockInitializeDemoData,
-  } as ReturnType<typeof demoStore.useDemoStore>);
+  };
+  vi.mocked(demoStore.useDemoStore).mockImplementation((selector?: unknown) => {
+    if (typeof selector === "function") {
+      return selector(state);
+    }
+    return state as ReturnType<typeof demoStore.useDemoStore>;
+  });
 }
 
 describe("LoginPage", () => {

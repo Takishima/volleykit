@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Outlet, NavLink, useLocation } from "react-router-dom";
+import { useShallow } from "zustand/react/shallow";
 import { useAuthStore, type Occupation } from "@/stores/auth";
 import { useDemoStore, type DemoAssociationCode } from "@/stores/demo";
 import { useTourStore } from "@/stores/tour";
@@ -49,8 +50,17 @@ export function AppShell() {
     activeOccupationId,
     setActiveOccupation,
     isDemoMode,
-  } = useAuthStore();
-  const { setActiveAssociation } = useDemoStore();
+  } = useAuthStore(
+    useShallow((state) => ({
+      status: state.status,
+      user: state.user,
+      logout: state.logout,
+      activeOccupationId: state.activeOccupationId,
+      setActiveOccupation: state.setActiveOccupation,
+      isDemoMode: state.isDemoMode,
+    })),
+  );
+  const setActiveAssociation = useDemoStore((state) => state.setActiveAssociation);
   const activeTour = useTourStore((state) => state.activeTour);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
