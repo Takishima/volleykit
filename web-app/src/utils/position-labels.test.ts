@@ -1,8 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { getPositionLabel, type PositionKey } from "./position-labels";
 
+type PositionTranslationKey = `positions.${PositionKey}`;
+
 describe("position-labels", () => {
-  const mockT = vi.fn((key: string): string => `translated:${key}`);
+  const mockT = vi.fn(
+    (key: PositionTranslationKey): string => `translated:${key}`,
+  );
 
   beforeEach(() => {
     mockT.mockClear();
