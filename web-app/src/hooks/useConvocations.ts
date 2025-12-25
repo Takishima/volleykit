@@ -14,6 +14,7 @@ import {
   type Assignment,
   type AssociationSettings,
   type Season,
+  type GameExchange,
 } from "@/api/client";
 import {
   addDays,
@@ -54,6 +55,13 @@ const VALIDATION_CLOSED_STALE_TIME_MS = 15 * 60 * 1000;
 // Fallback timestamp for items with missing dates - uses Unix epoch (1970-01-01)
 // Items with missing dates will sort as oldest when ascending, newest when descending
 const MISSING_DATE_FALLBACK_TIMESTAMP = 0;
+
+// Stable empty arrays for React Query selectors to prevent unnecessary re-renders.
+// Using `|| []` creates a new array reference on each render, while these constants
+// provide referential stability when data.items is nullish.
+const EMPTY_ASSIGNMENTS: Assignment[] = [];
+const EMPTY_COMPENSATIONS: CompensationRecord[] = [];
+const EMPTY_EXCHANGES: GameExchange[] = [];
 
 // Helper type for items with game date
 type WithGameDate = {
@@ -300,7 +308,7 @@ export function useAssignments(
   return useQuery({
     queryKey: queryKeys.assignments.list(config, isDemoMode ? demoAssociationCode : null),
     queryFn: () => apiClient.searchAssignments(config),
-    select: (data) => data.items || [],
+    select: (data) => data.items ?? EMPTY_ASSIGNMENTS,
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -501,7 +509,7 @@ export function useCompensations(paidFilter?: boolean) {
   return useQuery({
     queryKey: queryKeys.compensations.list(config, isDemoMode ? demoAssociationCode : null),
     queryFn: () => apiClient.searchCompensations(config),
-    select: (data) => data.items || [],
+    select: (data) => data.items ?? EMPTY_COMPENSATIONS,
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -565,7 +573,7 @@ export function useGameExchanges(status: ExchangeStatus = "all") {
   return useQuery({
     queryKey: queryKeys.exchanges.list(config, isDemoMode ? demoAssociationCode : null),
     queryFn: () => apiClient.searchExchanges(config),
-    select: (data) => data.items || [],
+    select: (data) => data.items ?? EMPTY_EXCHANGES,
     staleTime: 2 * 60 * 1000,
   });
 }
