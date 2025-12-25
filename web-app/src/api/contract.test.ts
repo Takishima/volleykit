@@ -680,6 +680,36 @@ describe("File upload endpoint", () => {
     expect(result[0]?.persistentResource?.filename).toBe("test.pdf");
     expect(result[0]?.persistentResource?.mediaType).toBe("application/pdf");
   });
+
+  it("uploadResource accepts valid JPEG files", async () => {
+    const validFile = new File(["test content"], "scoresheet.jpg", {
+      type: "image/jpeg",
+    });
+
+    const result = await mockApi.uploadResource(validFile);
+
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBe(1);
+    expect(result[0]).toHaveProperty("__identity");
+    expect(result[0]).toHaveProperty("persistentResource");
+    expect(result[0]?.persistentResource?.filename).toBe("scoresheet.jpg");
+    expect(result[0]?.persistentResource?.mediaType).toBe("image/jpeg");
+  });
+
+  it("uploadResource accepts valid PNG files", async () => {
+    const validFile = new File(["test content"], "scoresheet.png", {
+      type: "image/png",
+    });
+
+    const result = await mockApi.uploadResource(validFile);
+
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBe(1);
+    expect(result[0]).toHaveProperty("__identity");
+    expect(result[0]).toHaveProperty("persistentResource");
+    expect(result[0]?.persistentResource?.filename).toBe("scoresheet.png");
+    expect(result[0]?.persistentResource?.mediaType).toBe("image/png");
+  });
 });
 
 describe("Filtering and pagination", () => {

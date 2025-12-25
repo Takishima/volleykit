@@ -969,7 +969,7 @@ paths:
       description: |
         Finalizes and closes a scoresheet after the game.
         Once finalized, the scoresheet becomes read-only.
-        A PDF file must be attached before finalization.
+        A scoresheet file (JPEG, PNG, or PDF) must be attached before finalization.
       operationId: finalizeScoresheet
       requestBody:
         required: true
@@ -1184,8 +1184,9 @@ paths:
       tags: [Resources]
       summary: Upload file
       description: |
-        Uploads a file (e.g., scoresheet PDF) and returns a resource reference.
+        Uploads a file (scoresheet image or PDF) and returns a resource reference.
         The returned resource can be attached to entities like scoresheets.
+        Supported formats: JPEG, PNG, PDF. Maximum file size: 10 MB.
       operationId: uploadResource
       requestBody:
         required: true
@@ -5232,7 +5233,7 @@ components:
           nullable: true
         hasFile:
           type: boolean
-          description: Whether a PDF file is attached
+          description: Whether a scoresheet file is attached
         closedAt:
           type: string
           format: date-time
@@ -5292,7 +5293,7 @@ components:
         "scoresheet[file][__identity]":
           type: string
           format: uuid
-          description: Reference to uploaded PDF file
+          description: Reference to uploaded file (JPEG, PNG, or PDF)
         "scoresheet[hasFile]":
           type: string
           enum: ["true", "false"]
@@ -5357,7 +5358,7 @@ components:
         "scoresheet[file][__identity]":
           type: string
           format: uuid
-          description: Reference to uploaded PDF file (required for finalization)
+          description: Reference to uploaded file (required for finalization)
         "scoresheet[hasFile]":
           type: string
           enum: ["true"]
@@ -5807,10 +5808,11 @@ components:
               format: uuid
             filename:
               type: string
-              example: "scoresheet.pdf"
+              example: "scoresheet.jpg"
             mediaType:
               type: string
-              example: "application/pdf"
+              description: "MIME type (image/jpeg, image/png, or application/pdf)"
+              example: "image/jpeg"
             fileSize:
               type: integer
               description: File size in bytes
