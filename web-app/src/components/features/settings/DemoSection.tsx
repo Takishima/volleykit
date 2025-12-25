@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, memo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -10,7 +10,7 @@ interface DemoSectionProps {
   onRefreshData: () => void;
 }
 
-export function DemoSection({ activeAssociationCode, onRefreshData }: DemoSectionProps) {
+function DemoSectionComponent({ activeAssociationCode, onRefreshData }: DemoSectionProps) {
   const { t } = useTranslation();
   const [demoDataReset, setDemoDataReset] = useState(false);
   const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -79,3 +79,5 @@ export function DemoSection({ activeAssociationCode, onRefreshData }: DemoSectio
     </Card>
   );
 }
+
+export const DemoSection = memo(DemoSectionComponent);

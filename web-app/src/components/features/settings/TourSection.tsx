@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useTourStore, type TourId } from "@/stores/tour";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -10,7 +11,7 @@ interface TourSectionProps {
   isDemoMode: boolean;
 }
 
-export function TourSection({ isDemoMode }: TourSectionProps) {
+function TourSectionComponent({ isDemoMode }: TourSectionProps) {
   const { t } = useTranslation();
   const { getTourStatus, resetAllTours } = useTourStore(
     useShallow((state) => ({
@@ -80,3 +81,5 @@ export function TourSection({ isDemoMode }: TourSectionProps) {
     </Card>
   );
 }
+
+export const TourSection = memo(TourSectionComponent);
