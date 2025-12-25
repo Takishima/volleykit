@@ -2,12 +2,10 @@ import { useCallback, useRef } from "react";
 import type { CompensationRecord } from "@/api/client";
 import { downloadCompensationPDF } from "@/utils/compensation-actions";
 import { createLogger } from "@/utils/logger";
-import { checkSafeMode } from "@/utils/safe-mode-guard";
-import { useAuthStore } from "@/stores/auth";
-import { useSettingsStore } from "@/stores/settings";
 import { toast } from "@/stores/toast";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModalState } from "./useModalState";
+import { useSafeModeGuard } from "./useSafeModeGuard";
 
 const log = createLogger("useCompensationActions");
 
@@ -23,19 +21,14 @@ interface UseCompensationActionsResult {
 
 export function useCompensationActions(): UseCompensationActionsResult {
   const { t } = useTranslation();
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
-  const isSafeModeEnabled = useSettingsStore(
-    (state) => state.isSafeModeEnabled,
-  );
+  const { guard, isDemoMode } = useSafeModeGuard();
   const editCompensationModal = useModalState<CompensationRecord>();
   const isDownloadingRef = useRef(false);
 
   const openEditCompensation = useCallback(
     (compensation: CompensationRecord) => {
       if (
-        checkSafeMode({
-          isDemoMode,
-          isSafeModeEnabled,
+        guard({
           context: "useCompensationActions",
           action: "editing compensation",
         })
@@ -45,7 +38,7 @@ export function useCompensationActions(): UseCompensationActionsResult {
 
       editCompensationModal.open(compensation);
     },
-    [isDemoMode, isSafeModeEnabled, editCompensationModal],
+    [guard, editCompensationModal],
   );
 
   const handleGeneratePDF = useCallback(

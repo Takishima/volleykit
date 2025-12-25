@@ -2,14 +2,12 @@ import { useState, useCallback } from "react";
 import type { Assignment } from "@/api/client";
 import { createLogger } from "@/utils/logger";
 import { getTeamNames, isGameReportEligible } from "@/utils/assignment-helpers";
-import { checkSafeMode } from "@/utils/safe-mode-guard";
-import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 import { useLanguageStore } from "@/stores/language";
-import { useSettingsStore } from "@/stores/settings";
 import { toast } from "@/stores/toast";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModalState } from "./useModalState";
+import { useSafeModeGuard } from "./useSafeModeGuard";
 
 const log = createLogger("useAssignmentActions");
 
@@ -47,11 +45,8 @@ interface UseAssignmentActionsResult {
 
 export function useAssignmentActions(): UseAssignmentActionsResult {
   const { t } = useTranslation();
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const { guard, isDemoMode } = useSafeModeGuard();
   const locale = useLanguageStore((state) => state.locale);
-  const isSafeModeEnabled = useSettingsStore(
-    (state) => state.isSafeModeEnabled,
-  );
   const addAssignmentToExchange = useDemoStore(
     (state) => state.addAssignmentToExchange,
   );
@@ -64,9 +59,7 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
   const openValidateGame = useCallback(
     (assignment: Assignment) => {
       if (
-        checkSafeMode({
-          isDemoMode,
-          isSafeModeEnabled,
+        guard({
           context: "useAssignmentActions",
           action: "game validation",
         })
@@ -76,7 +69,7 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
 
       validateGameModal.open(assignment);
     },
-    [isDemoMode, isSafeModeEnabled, validateGameModal],
+    [guard, validateGameModal],
   );
 
   const openPdfReport = useCallback(
@@ -154,9 +147,7 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
       const { homeTeam, awayTeam } = getTeamNames(assignment);
 
       if (
-        checkSafeMode({
-          isDemoMode,
-          isSafeModeEnabled,
+        guard({
           context: "useAssignmentActions",
           action: "adding to exchange",
         })
@@ -181,7 +172,7 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
 
       toast.success(t("exchange.addedToExchangeSuccess"));
     },
-    [isDemoMode, isSafeModeEnabled, addAssignmentToExchange, t],
+    [guard, isDemoMode, addAssignmentToExchange, t],
   );
 
   return {
