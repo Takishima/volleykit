@@ -10,6 +10,15 @@ import {
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
 
+// Clear mocks before each test to prevent test pollution
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
+afterEach(() => {
+  vi.resetAllMocks();
+});
+
 // Helper to create login page HTML with all form fields
 function createLoginPageHtml(options: {
   trustedProperties?: string | null;
@@ -242,14 +251,6 @@ describe("submitLoginCredentials", () => {
     referrerAction: "login",
     referrerArguments: "YTowOnt9",
   };
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  afterEach(() => {
-    vi.resetAllMocks();
-  });
 
   describe("successful login", () => {
     it("returns success with CSRF token when redirected to dashboard", async () => {
