@@ -219,6 +219,12 @@ const it: Translations = {
     pdfDownloadFailed: "Impossibile scaricare il PDF. Riprova più tardi.",
     editingRestrictedByRegion:
       "La modifica non è disponibile per questa regione. Il compenso viene pagato sul posto.",
+    assignmentNotFoundInCache:
+      "Designazione non trovata nella cache. Aggiorna la pagina e riprova.",
+    compensationNotFound:
+      "Record di compenso non trovato. La partita potrebbe essere troppo lontana nel futuro.",
+    compensationMissingId:
+      "Il record di compenso non ha un identificatore. Riprova più tardi.",
   },
   exchange: {
     title: "Borsa scambi",

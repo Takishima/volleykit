@@ -221,6 +221,12 @@ const en: Translations = {
       "Failed to download compensation PDF. Please try again later.",
     editingRestrictedByRegion:
       "Editing is not available for this region. Compensation is paid on-site.",
+    assignmentNotFoundInCache:
+      "Assignment not found in cache. Please refresh the page and try again.",
+    compensationNotFound:
+      "Compensation record not found. The game may be too far in the future.",
+    compensationMissingId:
+      "Compensation record is missing an identifier. Please try again later.",
   },
   exchange: {
     title: "Exchange",

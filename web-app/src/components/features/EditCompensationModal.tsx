@@ -5,6 +5,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 import {
   useUpdateCompensation,
   useUpdateAssignmentCompensation,
+  COMPENSATION_ERROR_KEYS,
+  type CompensationErrorKey,
 } from "@/hooks/useConvocations";
 import { logger } from "@/utils/logger";
 import {
@@ -114,8 +116,14 @@ export function EditCompensationModal({
           "[EditCompensationModal] Failed to fetch compensation details:",
           error,
         );
+        // Check if error message is a known i18n key and translate it
+        const errorMessage = error instanceof Error ? error.message : "";
+        const knownErrorKeys = Object.values(COMPENSATION_ERROR_KEYS);
+        const isKnownErrorKey = knownErrorKeys.includes(errorMessage as CompensationErrorKey);
         setFetchError(
-          error instanceof Error ? error.message : t("assignments.failedToLoadData"),
+          isKnownErrorKey
+            ? t(errorMessage as CompensationErrorKey)
+            : (errorMessage || t("assignments.failedToLoadData")),
         );
       } finally {
         setIsLoading(false);

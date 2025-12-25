@@ -221,6 +221,12 @@ const fr: Translations = {
       "Échec du téléchargement du PDF. Veuillez réessayer plus tard.",
     editingRestrictedByRegion:
       "La modification n'est pas disponible pour cette région. L'indemnité est payée sur place.",
+    assignmentNotFoundInCache:
+      "Désignation introuvable dans le cache. Veuillez rafraîchir la page et réessayer.",
+    compensationNotFound:
+      "Enregistrement d'indemnité introuvable. Le match est peut-être trop éloigné dans le futur.",
+    compensationMissingId:
+      "L'enregistrement d'indemnité n'a pas d'identifiant. Veuillez réessayer plus tard.",
   },
   exchange: {
     title: "Bourse aux échanges",

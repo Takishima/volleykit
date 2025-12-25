@@ -23,6 +23,11 @@ vi.mock("@/stores/demo", () => ({
 vi.mock("@/hooks/useConvocations", () => ({
   useUpdateCompensation: vi.fn(),
   useUpdateAssignmentCompensation: vi.fn(),
+  COMPENSATION_ERROR_KEYS: {
+    ASSIGNMENT_NOT_FOUND: "compensations.assignmentNotFoundInCache",
+    COMPENSATION_NOT_FOUND: "compensations.compensationNotFound",
+    COMPENSATION_MISSING_ID: "compensations.compensationMissingId",
+  },
 }));
 
 // Shared QueryClient for tests

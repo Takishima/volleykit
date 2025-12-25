@@ -221,6 +221,12 @@ const de: Translations = {
       "PDF konnte nicht heruntergeladen werden. Bitte versuchen Sie es später erneut.",
     editingRestrictedByRegion:
       "Bearbeitung ist für diese Region nicht verfügbar. Die Entschädigung wird vor Ort ausgezahlt.",
+    assignmentNotFoundInCache:
+      "Einsatz nicht im Cache gefunden. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",
+    compensationNotFound:
+      "Entschädigungseintrag nicht gefunden. Das Spiel liegt möglicherweise zu weit in der Zukunft.",
+    compensationMissingId:
+      "Entschädigungseintrag hat keine Kennung. Bitte versuchen Sie es später erneut.",
   },
   exchange: {
     title: "Tauschbörse",

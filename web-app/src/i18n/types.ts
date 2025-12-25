@@ -118,6 +118,9 @@ export interface Translations {
     pdfNotAvailableDemo: string;
     pdfDownloadFailed: string;
     editingRestrictedByRegion: string;
+    assignmentNotFoundInCache: string;
+    compensationNotFound: string;
+    compensationMissingId: string;
   };
   exchange: {
     title: string;
