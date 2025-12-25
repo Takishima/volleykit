@@ -79,6 +79,11 @@ const de: Translations = {
         description:
           "Wählen Sie Ihre bevorzugte Sprache. Die App unterstützt Deutsch, Englisch, Französisch und Italienisch.",
       },
+      homeLocation: {
+        title: "Heimatstandort festlegen",
+        description:
+          "Legen Sie Ihren Heimatstandort fest, um Tauschangebote nach Entfernung zu filtern. So finden Sie leichter Spiele in Ihrer Nähe.",
+      },
       complete: {
         title: "Tour abgeschlossen!",
         description:
@@ -248,7 +253,9 @@ const de: Translations = {
       "Möchten Sie diesen Einsatz wirklich aus der Tauschbörse entfernen?",
     removeButton: "Aus Tauschbörse entfernen",
     filterByLevel: "Nur mein Niveau",
+    filterByDistance: "Nach Distanz filtern",
     noExchangesAtLevel: "Keine Tauschangebote auf Ihrem Niveau verfügbar.",
+    noExchangesWithFilters: "Keine Tauschangebote entsprechen Ihren Filtern.",
     noOpenExchangesTitle: "Keine offenen Tauschangebote",
     noOpenExchangesDescription:
       "Derzeit sind keine Schiedsrichterpositionen zum Tausch verfügbar.",
@@ -286,6 +293,24 @@ const de: Translations = {
     title: "Einstellungen",
     profile: "Profil",
     language: "Sprache",
+    homeLocation: {
+      title: "Heimatstandort",
+      description:
+        "Legen Sie Ihren Heimatstandort fest, um Tauschangebote nach Entfernung zu filtern.",
+      currentLocation: "Aktueller Standort",
+      useCurrentLocation: "Aktuellen Standort verwenden",
+      locating: "Standort wird ermittelt...",
+      searchLabel: "Oder Adresse eingeben",
+      searchPlaceholder: "z.B. Bahnhofstrasse 1, Zürich",
+      searchError: "Adresssuche fehlgeschlagen. Bitte erneut versuchen.",
+      noResults: "Keine Ergebnisse gefunden.",
+      clear: "Standort löschen",
+      errorPermissionDenied:
+        "Standortzugriff verweigert. Bitte erlauben Sie den Standortzugriff in Ihren Browsereinstellungen.",
+      errorPositionUnavailable: "Standort nicht verfügbar. Bitte erneut versuchen.",
+      errorTimeout: "Standortabfrage hat zu lange gedauert. Bitte erneut versuchen.",
+      errorUnknown: "Unbekannter Fehler beim Ermitteln des Standorts.",
+    },
     safeMode: "Sicherheitsmodus",
     safeModeDescription:
       "Der Sicherheitsmodus beschränkt gefährliche Operationen wie das Hinzufügen/Übernehmen von Spielen zur/von Tauschbörse oder das Validieren von Spielen. Dies hilft, versehentliche Änderungen während des Testens der App zu vermeiden.",

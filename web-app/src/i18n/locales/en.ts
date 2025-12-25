@@ -79,6 +79,11 @@ const en: Translations = {
         description:
           "Select your preferred language. The app supports German, English, French, and Italian.",
       },
+      homeLocation: {
+        title: "Set Home Location",
+        description:
+          "Set your home location to filter exchange offers by distance. This helps you find games near you more easily.",
+      },
       complete: {
         title: "Tour Complete!",
         description:
@@ -248,7 +253,9 @@ const en: Translations = {
       "Are you sure you want to remove this assignment from the exchange?",
     removeButton: "Remove from Exchange",
     filterByLevel: "My level only",
+    filterByDistance: "Filter by distance",
     noExchangesAtLevel: "No exchanges available at your level.",
+    noExchangesWithFilters: "No exchanges match your filters.",
     noOpenExchangesTitle: "No open exchanges",
     noOpenExchangesDescription:
       "There are currently no referee positions available for exchange.",
@@ -284,6 +291,24 @@ const en: Translations = {
     title: "Settings",
     profile: "Profile",
     language: "Language",
+    homeLocation: {
+      title: "Home Location",
+      description:
+        "Set your home location to filter exchange offers by distance.",
+      currentLocation: "Current location",
+      useCurrentLocation: "Use current location",
+      locating: "Getting location...",
+      searchLabel: "Or enter an address",
+      searchPlaceholder: "e.g. Bahnhofstrasse 1, Zürich",
+      searchError: "Address search failed. Please try again.",
+      noResults: "No results found.",
+      clear: "Clear location",
+      errorPermissionDenied:
+        "Location access denied. Please allow location access in your browser settings.",
+      errorPositionUnavailable: "Location unavailable. Please try again.",
+      errorTimeout: "Location request timed out. Please try again.",
+      errorUnknown: "Unknown error while getting location.",
+    },
     safeMode: "Safe Mode",
     safeModeDescription:
       "Safe mode restricts dangerous operations like adding/taking games from exchange or validating games. This helps prevent accidental modifications while the app is being tested.",

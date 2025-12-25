@@ -7,6 +7,9 @@ import {
   kilometresToMetres,
   formatDistanceKm,
   parseLocalizedNumber,
+  calculateHaversineDistance,
+  calculateDistanceKm,
+  type Coordinates,
 } from "./distance";
 
 describe("distance utilities", () => {
@@ -107,6 +110,73 @@ describe("distance utilities", () => {
     it("parseFloat stops at invalid characters", () => {
       // parseFloat stops at the second period, returning 12.34
       expect(parseLocalizedNumber("12.34.56")).toBe(12.34);
+    });
+  });
+
+  describe("calculateHaversineDistance", () => {
+    // Known Swiss cities for testing
+    const zurich: Coordinates = { latitude: 47.3769, longitude: 8.5417 };
+    const bern: Coordinates = { latitude: 46.948, longitude: 7.4474 };
+    const basel: Coordinates = { latitude: 47.5596, longitude: 7.5886 };
+    const geneva: Coordinates = { latitude: 46.2044, longitude: 6.1432 };
+
+    it("calculates distance between Zurich and Bern (~95km)", () => {
+      const distance = calculateHaversineDistance(zurich, bern);
+      // Actual distance is approximately 95.4 km
+      expect(distance).toBeGreaterThan(94000);
+      expect(distance).toBeLessThan(97000);
+    });
+
+    it("calculates distance between Zurich and Basel (~75km)", () => {
+      const distance = calculateHaversineDistance(zurich, basel);
+      // Actual distance is approximately 75 km
+      expect(distance).toBeGreaterThan(73000);
+      expect(distance).toBeLessThan(77000);
+    });
+
+    it("calculates distance between Zurich and Geneva (~224km)", () => {
+      const distance = calculateHaversineDistance(zurich, geneva);
+      // Actual distance is approximately 224 km
+      expect(distance).toBeGreaterThan(220000);
+      expect(distance).toBeLessThan(228000);
+    });
+
+    it("returns 0 for same location", () => {
+      const distance = calculateHaversineDistance(zurich, zurich);
+      expect(distance).toBe(0);
+    });
+
+    it("returns same distance regardless of direction", () => {
+      const distanceAB = calculateHaversineDistance(zurich, bern);
+      const distanceBA = calculateHaversineDistance(bern, zurich);
+      expect(distanceAB).toBeCloseTo(distanceBA, 10);
+    });
+
+    it("handles very short distances", () => {
+      const pointA: Coordinates = { latitude: 47.3769, longitude: 8.5417 };
+      const pointB: Coordinates = { latitude: 47.377, longitude: 8.5418 };
+      const distance = calculateHaversineDistance(pointA, pointB);
+      // Should be approximately 12-15 metres
+      expect(distance).toBeGreaterThan(10);
+      expect(distance).toBeLessThan(20);
+    });
+  });
+
+  describe("calculateDistanceKm", () => {
+    const zurich: Coordinates = { latitude: 47.3769, longitude: 8.5417 };
+    const bern: Coordinates = { latitude: 46.948, longitude: 7.4474 };
+
+    it("returns distance in kilometres", () => {
+      const distanceKm = calculateDistanceKm(zurich, bern);
+      // Approximately 95.4 km
+      expect(distanceKm).toBeGreaterThan(94);
+      expect(distanceKm).toBeLessThan(97);
+    });
+
+    it("is consistent with calculateHaversineDistance", () => {
+      const distanceMetres = calculateHaversineDistance(zurich, bern);
+      const distanceKm = calculateDistanceKm(zurich, bern);
+      expect(distanceKm).toBeCloseTo(distanceMetres / 1000, 10);
     });
   });
 });

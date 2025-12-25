@@ -141,7 +141,9 @@ export interface Translations {
     removeConfirm: string;
     removeButton: string;
     filterByLevel: string;
+    filterByDistance: string;
     noExchangesAtLevel: string;
+    noExchangesWithFilters: string;
     noOpenExchangesTitle: string;
     noOpenExchangesDescription: string;
     noApplicationsTitle: string;
@@ -176,6 +178,22 @@ export interface Translations {
     title: string;
     profile: string;
     language: string;
+    homeLocation: {
+      title: string;
+      description: string;
+      currentLocation: string;
+      useCurrentLocation: string;
+      locating: string;
+      searchLabel: string;
+      searchPlaceholder: string;
+      searchError: string;
+      noResults: string;
+      clear: string;
+      errorPermissionDenied: string;
+      errorPositionUnavailable: string;
+      errorTimeout: string;
+      errorUnknown: string;
+    };
     safeMode: string;
     safeModeDescription: string;
     safeModeEnabled: string;
@@ -397,6 +415,10 @@ export interface Translations {
     };
     settings: {
       language: {
+        title: string;
+        description: string;
+      };
+      homeLocation: {
         title: string;
         description: string;
       };

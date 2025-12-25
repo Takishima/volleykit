@@ -79,6 +79,11 @@ const it: Translations = {
         description:
           "Seleziona la tua lingua preferita. L'app supporta tedesco, inglese, francese e italiano.",
       },
+      homeLocation: {
+        title: "Imposta posizione",
+        description:
+          "Imposta la tua posizione per filtrare gli scambi per distanza. Questo ti aiuta a trovare più facilmente le partite vicino a te.",
+      },
       complete: {
         title: "Tour completato!",
         description:
@@ -246,7 +251,9 @@ const it: Translations = {
       "Sei sicuro di voler rimuovere questa designazione dalla borsa?",
     removeButton: "Rimuovere dalla borsa",
     filterByLevel: "Solo il mio livello",
+    filterByDistance: "Filtra per distanza",
     noExchangesAtLevel: "Nessuno scambio disponibile al tuo livello.",
+    noExchangesWithFilters: "Nessuno scambio corrisponde ai tuoi filtri.",
     noOpenExchangesTitle: "Nessuno scambio aperto",
     noOpenExchangesDescription:
       "Al momento non ci sono posizioni arbitrali disponibili per lo scambio.",
@@ -283,6 +290,24 @@ const it: Translations = {
     title: "Impostazioni",
     profile: "Profilo",
     language: "Lingua",
+    homeLocation: {
+      title: "Posizione casa",
+      description:
+        "Imposta la tua posizione per filtrare gli scambi per distanza.",
+      currentLocation: "Posizione attuale",
+      useCurrentLocation: "Usa la mia posizione attuale",
+      locating: "Localizzazione in corso...",
+      searchLabel: "Oppure inserisci un indirizzo",
+      searchPlaceholder: "es. Bahnhofstrasse 1, Zürich",
+      searchError: "Ricerca indirizzo fallita. Riprova.",
+      noResults: "Nessun risultato trovato.",
+      clear: "Cancella posizione",
+      errorPermissionDenied:
+        "Accesso alla posizione negato. Consenti l'accesso nelle impostazioni del browser.",
+      errorPositionUnavailable: "Posizione non disponibile. Riprova.",
+      errorTimeout: "Richiesta posizione scaduta. Riprova.",
+      errorUnknown: "Errore sconosciuto durante l'ottenimento della posizione.",
+    },
     safeMode: "Modalità sicura",
     safeModeDescription:
       "La modalità sicura limita operazioni pericolose come l'aggiunta/assunzione di partite dalla borsa scambi o la convalida di partite. Questo aiuta a prevenire modifiche accidentali durante il test dell'app.",

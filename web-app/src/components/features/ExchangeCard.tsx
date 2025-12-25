@@ -12,12 +12,15 @@ interface ExchangeCardProps {
   disableExpansion?: boolean;
   /** Optional data-tour attribute for guided tours */
   dataTour?: string;
+  /** Distance from user's home location in kilometres (if available) */
+  distanceKm?: number | null;
 }
 
 function ExchangeCardComponent({
   exchange,
   disableExpansion,
   dataTour,
+  distanceKm,
 }: ExchangeCardProps) {
   const { t, tInterpolate } = useTranslation();
   const dateLocale = useDateLocale();
@@ -86,6 +89,15 @@ function ExchangeCardComponent({
               {homeTeam} {t("common.vs")} {awayTeam}
             </div>
           </div>
+
+          {/* Distance badge */}
+          {distanceKm != null && (
+            <div className="flex items-center shrink-0">
+              <span className="text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 px-2 py-0.5 rounded-full">
+                {distanceKm.toFixed(0)} {t("common.distanceUnit")}
+              </span>
+            </div>
+          )}
 
           {/* Expand indicator */}
           <div className="flex items-center">{expandArrow}</div>

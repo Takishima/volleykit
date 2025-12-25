@@ -227,7 +227,7 @@ describe("ExchangePage", () => {
 
       // Should show filtered empty state message
       expect(
-        screen.getByText(/no exchanges available at your level/i),
+        screen.getByText(/no exchanges match your filters/i),
       ).toBeInTheDocument();
     });
   });
