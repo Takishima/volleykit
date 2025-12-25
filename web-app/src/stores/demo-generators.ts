@@ -393,6 +393,9 @@ function createAssignment(
   associationCode: DemoAssociationCode,
   now: Date,
 ): Assignment {
+  // Regional associations use on-site payout, which locks compensation editing
+  const lockPayoutOnSiteCompensation = associationCode !== "SV";
+
   return {
     __identity: generateDemoUuid(`demo-assignment-${config.index}`),
     refereeConvocationStatus: config.status,
@@ -408,6 +411,11 @@ function createAssignment(
     ...(config.linkedDouble && {
       linkedDoubleConvocationGameNumberAndRefereePosition: config.linkedDouble,
     }),
+    // Compensation lock flags for editability check
+    convocationCompensation: {
+      paymentDone: false,
+      lockPayoutOnSiteCompensation,
+    },
     refereeGame: createRefereeGame({
       gameId: String(config.index),
       gameNumber: DEMO_GAME_NUMBERS.ASSIGNMENTS[config.index - 1]!,

@@ -42,6 +42,9 @@ export const ASSIGNMENT_PROPERTIES = [
   "refereeGame.game.lastPostponement.activeRefereeConvocationsAtTimeOfAcceptedPostponement.*.indoorAssociationReferee.indoorReferee.person",
   "refereeGame.game.lastPostponement.createdAt",
   "refereeGame.isGameInFuture",
+  // Compensation lock flags for editability check
+  "convocationCompensation.paymentDone",
+  "convocationCompensation.lockPayoutOnSiteCompensation",
 ];
 
 /**
@@ -131,6 +134,7 @@ export const COMPENSATION_PROPERTIES = [
   "convocationCompensation.distanceFormatted",
   "convocationCompensation.transportationMode",
   "convocationCompensation.paymentDone",
+  "convocationCompensation.lockPayoutOnSiteCompensation",
   "convocationCompensation.paymentValueDate",
   "convocationCompensation.paymentUpdatedByAssociation.name",
   "indoorAssociationReferee.indoorReferee.person.associationId",

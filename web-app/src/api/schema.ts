@@ -1053,6 +1053,16 @@ export interface components {
             hasLastMessageToReferee?: boolean;
             hasLinkedDoubleConvocation?: boolean;
             linkedDoubleConvocationGameNumberAndRefereePosition?: string | null;
+            /**
+             * @description Compensation lock flags for editability check.
+             *     Only populated when convocationCompensation properties are requested.
+             */
+            convocationCompensation?: {
+                /** @description Whether payment has been processed */
+                paymentDone?: boolean;
+                /** @description Whether on-site payout is locked (regional associations) */
+                lockPayoutOnSiteCompensation?: boolean;
+            };
             _permissions?: components["schemas"]["Permissions"];
         };
         CompensationsResponse: {
