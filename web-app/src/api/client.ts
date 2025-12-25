@@ -31,7 +31,7 @@ if (!import.meta.env.DEV && !API_BASE) {
 
 const DEFAULT_SEARCH_RESULTS_LIMIT = 50;
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
-const ALLOWED_FILE_TYPES = ["application/pdf"];
+const ALLOWED_FILE_TYPES = ["application/pdf", "image/jpeg", "image/png"];
 
 // Re-export schema types
 export type Schemas = components["schemas"];
@@ -556,7 +556,7 @@ export const api = {
   async uploadResource(file: File): Promise<FileResource[]> {
     if (!ALLOWED_FILE_TYPES.includes(file.type)) {
       throw new Error(
-        `Invalid file type: ${file.type || "unknown"}. Only PDF files are allowed.`,
+        `Invalid file type: ${file.type || "unknown"}. Only JPEG, PNG, or PDF files are allowed.`,
       );
     }
 

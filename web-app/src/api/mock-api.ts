@@ -50,7 +50,7 @@ const DEFAULT_PERSON_SEARCH_LIMIT = 50;
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
 /** Allowed MIME types for scoresheet uploads. */
-const ALLOWED_FILE_TYPES = ["application/pdf"];
+const ALLOWED_FILE_TYPES = ["application/pdf", "image/jpeg", "image/png"];
 
 /**
  * Extended compensation data type for demo mode.
@@ -684,7 +684,7 @@ export const mockApi = {
     // Validate file type
     if (!ALLOWED_FILE_TYPES.includes(file.type)) {
       throw new Error(
-        `Invalid file type: ${file.type || "unknown"}. Only PDF files are allowed.`,
+        `Invalid file type: ${file.type || "unknown"}. Only JPEG, PNG, or PDF files are allowed.`,
       );
     }
 
