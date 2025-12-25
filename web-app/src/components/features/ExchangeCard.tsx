@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { format, parseISO } from "date-fns";
 import { ExpandableCard } from "@/components/ui/ExpandableCard";
 import { Badge } from "@/components/ui/Badge";
@@ -14,7 +15,7 @@ interface ExchangeCardProps {
   dataTour?: string;
 }
 
-export function ExchangeCard({
+function ExchangeCardComponent({
   exchange,
   disableExpansion,
   dataTour,
@@ -117,3 +118,5 @@ export function ExchangeCard({
     />
   );
 }
+
+export const ExchangeCard = memo(ExchangeCardComponent);

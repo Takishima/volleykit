@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { format, parseISO } from "date-fns";
 import { ExpandableCard } from "@/components/ui/ExpandableCard";
 import { Badge } from "@/components/ui/Badge";
@@ -17,7 +18,7 @@ interface CompensationCardProps {
   dataTour?: string;
 }
 
-export function CompensationCard({
+function CompensationCardComponent({
   compensation,
   onClick,
   disableExpansion,
@@ -155,3 +156,5 @@ export function CompensationCard({
     />
   );
 }
+
+export const CompensationCard = memo(CompensationCardComponent);
