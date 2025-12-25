@@ -586,7 +586,7 @@ export function useApplyForExchange(): UseMutationResult<void, Error, string> {
   return useMutation({
     mutationFn: (exchangeId: string) => apiClient.applyForExchange(exchangeId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.exchanges.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.exchanges.lists() });
     },
   });
 }
@@ -604,7 +604,7 @@ export function useWithdrawFromExchange(): UseMutationResult<
     mutationFn: (exchangeId: string) =>
       apiClient.withdrawFromExchange(exchangeId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.exchanges.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.exchanges.lists() });
     },
   });
 }
@@ -640,8 +640,8 @@ export function useUpdateCompensation(): UseMutationResult<
       await apiClient.updateCompensation(compensationId, data);
     },
     onSuccess: () => {
-      // Invalidate compensations queries to refetch fresh data
-      queryClient.invalidateQueries({ queryKey: queryKeys.compensations.all });
+      // Invalidate compensation lists (not details) to refetch fresh data
+      queryClient.invalidateQueries({ queryKey: queryKeys.compensations.lists() });
     },
   });
 }
@@ -812,10 +812,16 @@ export function useUpdateAssignmentCompensation(): UseMutationResult<
 
       await api.updateCompensation(compensationId, data);
     },
-    onSuccess: () => {
-      // Invalidate both assignment and compensation queries to refetch fresh data
-      queryClient.invalidateQueries({ queryKey: queryKeys.assignments.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.compensations.all });
+    onSuccess: (_data, variables) => {
+      // Invalidate targeted queries to refetch fresh data while avoiding unnecessary refetches
+      // 1. Invalidate the specific assignment detail (if cached)
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.assignments.detail(variables.assignmentId),
+      });
+      // 2. Invalidate assignment lists (compensation data is embedded in list items)
+      queryClient.invalidateQueries({ queryKey: queryKeys.assignments.lists() });
+      // 3. Invalidate compensation lists
+      queryClient.invalidateQueries({ queryKey: queryKeys.compensations.lists() });
     },
   });
 }
