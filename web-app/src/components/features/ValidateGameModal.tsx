@@ -6,11 +6,12 @@ import { Modal } from "@/components/ui/Modal";
 import { ModalHeader } from "@/components/ui/ModalHeader";
 import { WizardStepContainer } from "@/components/ui/WizardStepContainer";
 import { WizardStepIndicator } from "@/components/ui/WizardStepIndicator";
-import { ModalButton } from "@/components/ui/ModalButton";
 import {
   UnsavedChangesDialog,
   ValidationSuccessToast,
   StepRenderer,
+  ValidatedModeButtons,
+  EditModeButtons,
 } from "@/components/features/validation";
 
 interface ValidateGameModalProps {
@@ -35,6 +36,42 @@ export function ValidateGameModal({
   const { homeTeam, awayTeam } = getTeamNames(assignment);
   const modalTitleId = "validate-game-title";
   const subtitle = `${homeTeam} ${t("common.vs")} ${awayTeam}`;
+
+  const navigation = {
+    isFirstStep: wizard.isFirstStep,
+    isLastStep: wizard.isLastStep,
+  };
+
+  const editModeState = {
+    isFinalizing: wizard.isFinalizing,
+    isLoadingGameDetails: wizard.isLoadingGameDetails,
+    hasGameDetailsError: !!wizard.gameDetailsError,
+    canMarkCurrentStepDone: wizard.canMarkCurrentStepDone,
+    allPreviousRequiredStepsDone: wizard.allPreviousRequiredStepsDone,
+    currentStepIsOptional: wizard.currentStep.isOptional ?? false,
+  };
+
+  const loadingState = {
+    isLoading: wizard.isLoadingGameDetails,
+    error: wizard.gameDetailsError,
+  };
+
+  const validationInfo = {
+    isValidated: wizard.isValidated,
+    validatedInfo: wizard.validatedInfo,
+    pendingScorer: wizard.pendingScorer,
+    scoresheetNotRequired: wizard.scoresheetNotRequired,
+    state: wizard.validationState,
+  };
+
+  const stepHandlers = {
+    setHomeRosterModifications: wizard.setHomeRosterModifications,
+    setAwayRosterModifications: wizard.setAwayRosterModifications,
+    setScorer: wizard.setScorer,
+    setScoresheet: wizard.setScoresheet,
+    onAddPlayerSheetOpenChange: wizard.handleAddPlayerSheetOpenChange,
+    onClose,
+  };
 
   return (
     <>
@@ -88,27 +125,17 @@ export function ValidateGameModal({
         <WizardStepContainer
           currentStep={wizard.currentStepIndex}
           totalSteps={wizard.totalSteps}
-          onSwipeNext={wizard.handleNext}
-          onSwipePrevious={wizard.handleBack}
+          onSwipeNext={wizard.goNext}
+          onSwipePrevious={wizard.goBack}
           swipeEnabled={wizard.isSwipeEnabled}
         >
           <div className="max-h-80 overflow-y-auto">
             <StepRenderer
               currentStepId={wizard.currentStepId}
               assignment={assignment}
-              isLoadingGameDetails={wizard.isLoadingGameDetails}
-              gameDetailsError={wizard.gameDetailsError}
-              isValidated={wizard.isValidated}
-              validatedInfo={wizard.validatedInfo}
-              validationState={wizard.validationState}
-              pendingScorer={wizard.pendingScorer}
-              scoresheetNotRequired={wizard.scoresheetNotRequired}
-              setHomeRosterModifications={wizard.setHomeRosterModifications}
-              setAwayRosterModifications={wizard.setAwayRosterModifications}
-              setScorer={wizard.setScorer}
-              setScoresheet={wizard.setScoresheet}
-              onAddPlayerSheetOpenChange={wizard.handleAddPlayerSheetOpenChange}
-              onClose={onClose}
+              loading={loadingState}
+              validation={validationInfo}
+              handlers={stepHandlers}
             />
           </div>
         </WizardStepContainer>
@@ -149,24 +176,17 @@ export function ValidateGameModal({
         <div className="flex justify-between gap-3 pt-4 border-t border-border-default dark:border-border-default-dark mt-4">
           {wizard.isValidated ? (
             <ValidatedModeButtons
-              isFirstStep={wizard.isFirstStep}
-              isLastStep={wizard.isLastStep}
-              onBack={wizard.handleBack}
-              onNext={wizard.handleNext}
+              navigation={navigation}
+              onBack={wizard.goBack}
+              onNext={wizard.goNext}
               onClose={onClose}
             />
           ) : (
             <EditModeButtons
-              isFirstStep={wizard.isFirstStep}
-              isLastStep={wizard.isLastStep}
-              isFinalizing={wizard.isFinalizing}
-              isLoadingGameDetails={wizard.isLoadingGameDetails}
-              gameDetailsError={wizard.gameDetailsError}
-              canMarkCurrentStepDone={wizard.canMarkCurrentStepDone}
-              allPreviousRequiredStepsDone={wizard.allPreviousRequiredStepsDone}
-              currentStepIsOptional={wizard.currentStep.isOptional ?? false}
+              navigation={navigation}
+              state={editModeState}
               onAttemptClose={wizard.attemptClose}
-              onBack={wizard.handleBack}
+              onBack={wizard.goBack}
               onValidateAndNext={wizard.handleValidateAndNext}
               onFinish={wizard.handleFinish}
             />
@@ -181,141 +201,6 @@ export function ValidateGameModal({
         onCancel={wizard.handleCancelClose}
         isSaving={wizard.isSaving}
       />
-    </>
-  );
-}
-
-interface ValidatedModeButtonsProps {
-  isFirstStep: boolean;
-  isLastStep: boolean;
-  onBack: () => void;
-  onNext: () => void;
-  onClose: () => void;
-}
-
-function ValidatedModeButtons({
-  isFirstStep,
-  isLastStep,
-  onBack,
-  onNext,
-  onClose,
-}: ValidatedModeButtonsProps) {
-  const { t } = useTranslation();
-
-  return (
-    <>
-      <div>
-        {!isFirstStep && (
-          <ModalButton variant="secondary" onClick={onBack}>
-            {t("validation.wizard.previous")}
-          </ModalButton>
-        )}
-      </div>
-      <div>
-        {isLastStep ? (
-          <ModalButton variant="primary" onClick={onClose}>
-            {t("common.close")}
-          </ModalButton>
-        ) : (
-          <ModalButton variant="primary" onClick={onNext}>
-            {t("validation.wizard.next")}
-          </ModalButton>
-        )}
-      </div>
-    </>
-  );
-}
-
-interface EditModeButtonsProps {
-  isFirstStep: boolean;
-  isLastStep: boolean;
-  isFinalizing: boolean;
-  isLoadingGameDetails: boolean;
-  gameDetailsError: Error | null;
-  canMarkCurrentStepDone: boolean;
-  allPreviousRequiredStepsDone: boolean;
-  currentStepIsOptional: boolean;
-  onAttemptClose: () => void;
-  onBack: () => void;
-  onValidateAndNext: () => void;
-  onFinish: () => Promise<void>;
-}
-
-function EditModeButtons({
-  isFirstStep,
-  isLastStep,
-  isFinalizing,
-  isLoadingGameDetails,
-  gameDetailsError,
-  canMarkCurrentStepDone,
-  allPreviousRequiredStepsDone,
-  currentStepIsOptional,
-  onAttemptClose,
-  onBack,
-  onValidateAndNext,
-  onFinish,
-}: EditModeButtonsProps) {
-  const { t } = useTranslation();
-
-  return (
-    <>
-      <div>
-        {isFirstStep ? (
-          <ModalButton
-            variant="secondary"
-            onClick={onAttemptClose}
-            disabled={isFinalizing}
-          >
-            {t("common.cancel")}
-          </ModalButton>
-        ) : (
-          <ModalButton
-            variant="secondary"
-            onClick={onBack}
-            disabled={isFinalizing}
-          >
-            {t("validation.wizard.previous")}
-          </ModalButton>
-        )}
-      </div>
-
-      <div>
-        {isLastStep ? (
-          <ModalButton
-            variant="success"
-            onClick={() => onFinish()}
-            disabled={
-              isFinalizing ||
-              isLoadingGameDetails ||
-              !!gameDetailsError ||
-              !allPreviousRequiredStepsDone ||
-              (!currentStepIsOptional && !canMarkCurrentStepDone)
-            }
-            title={
-              !allPreviousRequiredStepsDone
-                ? t("validation.state.markAllStepsTooltip")
-                : undefined
-            }
-          >
-            {isFinalizing
-              ? t("common.loading")
-              : t("validation.wizard.finish")}
-          </ModalButton>
-        ) : (
-          <ModalButton
-            variant="success"
-            onClick={onValidateAndNext}
-            disabled={
-              isFinalizing ||
-              isLoadingGameDetails ||
-              !!gameDetailsError ||
-              !canMarkCurrentStepDone
-            }
-          >
-            {t("validation.wizard.validate")}
-          </ModalButton>
-        )}
-      </div>
     </>
   );
 }

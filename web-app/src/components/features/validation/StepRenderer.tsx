@@ -10,22 +10,34 @@ import {
   ScoresheetPanel,
 } from "@/components/features/validation";
 
-interface StepRendererProps {
-  currentStepId: ValidationStepId;
-  assignment: Assignment;
-  isLoadingGameDetails: boolean;
-  gameDetailsError: Error | null;
+interface LoadingState {
+  isLoading: boolean;
+  error: Error | null;
+}
+
+interface ValidationInfo {
   isValidated: boolean;
   validatedInfo: UseValidationStateResult["validatedInfo"];
-  validationState: UseValidationStateResult["state"];
   pendingScorer: UseValidationStateResult["pendingScorer"];
   scoresheetNotRequired: boolean;
+  state: UseValidationStateResult["state"];
+}
+
+interface StepHandlers {
   setHomeRosterModifications: UseValidationStateResult["setHomeRosterModifications"];
   setAwayRosterModifications: UseValidationStateResult["setAwayRosterModifications"];
   setScorer: UseValidationStateResult["setScorer"];
   setScoresheet: UseValidationStateResult["setScoresheet"];
   onAddPlayerSheetOpenChange: (open: boolean) => void;
   onClose: () => void;
+}
+
+interface StepRendererProps {
+  currentStepId: ValidationStepId;
+  assignment: Assignment;
+  loading: LoadingState;
+  validation: ValidationInfo;
+  handlers: StepHandlers;
 }
 
 /**
@@ -39,23 +51,13 @@ interface StepRendererProps {
 export function StepRenderer({
   currentStepId,
   assignment,
-  isLoadingGameDetails,
-  gameDetailsError,
-  isValidated,
-  validatedInfo,
-  validationState,
-  pendingScorer,
-  scoresheetNotRequired,
-  setHomeRosterModifications,
-  setAwayRosterModifications,
-  setScorer,
-  setScoresheet,
-  onAddPlayerSheetOpenChange,
-  onClose,
+  loading,
+  validation,
+  handlers,
 }: StepRendererProps) {
   const { t } = useTranslation();
 
-  if (isLoadingGameDetails) {
+  if (loading.isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
         <div className="text-sm text-text-muted dark:text-text-muted-dark">
@@ -65,52 +67,52 @@ export function StepRenderer({
     );
   }
 
-  if (gameDetailsError) {
+  if (loading.error) {
     return (
       <div
         role="alert"
         className="p-3 bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800 rounded-lg"
       >
         <p className="text-sm text-danger-700 dark:text-danger-400">
-          {gameDetailsError.message}
+          {loading.error.message}
         </p>
       </div>
     );
   }
 
   return (
-    <ModalErrorBoundary modalName="ValidateGameModal" onClose={onClose}>
+    <ModalErrorBoundary modalName="ValidateGameModal" onClose={handlers.onClose}>
       {currentStepId === "home-roster" && (
         <HomeRosterPanel
           assignment={assignment}
-          onModificationsChange={setHomeRosterModifications}
-          onAddPlayerSheetOpenChange={onAddPlayerSheetOpenChange}
-          readOnly={isValidated}
-          initialModifications={validationState.homeRoster.modifications}
+          onModificationsChange={handlers.setHomeRosterModifications}
+          onAddPlayerSheetOpenChange={handlers.onAddPlayerSheetOpenChange}
+          readOnly={validation.isValidated}
+          initialModifications={validation.state.homeRoster.modifications}
         />
       )}
 
       {currentStepId === "away-roster" && (
         <AwayRosterPanel
           assignment={assignment}
-          onModificationsChange={setAwayRosterModifications}
-          onAddPlayerSheetOpenChange={onAddPlayerSheetOpenChange}
-          readOnly={isValidated}
-          initialModifications={validationState.awayRoster.modifications}
+          onModificationsChange={handlers.setAwayRosterModifications}
+          onAddPlayerSheetOpenChange={handlers.onAddPlayerSheetOpenChange}
+          readOnly={validation.isValidated}
+          initialModifications={validation.state.awayRoster.modifications}
         />
       )}
 
       {currentStepId === "scorer" && (
         <ScorerPanel
-          key={pendingScorer?.__identity ?? "no-pending-scorer"}
-          onScorerChange={setScorer}
-          readOnly={isValidated}
-          readOnlyScorerName={validatedInfo?.scorerName}
+          key={validation.pendingScorer?.__identity ?? "no-pending-scorer"}
+          onScorerChange={handlers.setScorer}
+          readOnly={validation.isValidated}
+          readOnlyScorerName={validation.validatedInfo?.scorerName}
           initialScorer={
-            pendingScorer
+            validation.pendingScorer
               ? {
-                  __identity: pendingScorer.__identity,
-                  displayName: pendingScorer.displayName,
+                  __identity: validation.pendingScorer.__identity,
+                  displayName: validation.pendingScorer.displayName,
                   birthday: "",
                 }
               : null
@@ -120,10 +122,10 @@ export function StepRenderer({
 
       {currentStepId === "scoresheet" && (
         <ScoresheetPanel
-          onScoresheetChange={setScoresheet}
-          readOnly={isValidated}
-          hasScoresheet={validatedInfo?.hasScoresheet}
-          scoresheetNotRequired={scoresheetNotRequired}
+          onScoresheetChange={handlers.setScoresheet}
+          readOnly={validation.isValidated}
+          hasScoresheet={validation.validatedInfo?.hasScoresheet}
+          scoresheetNotRequired={validation.scoresheetNotRequired}
         />
       )}
     </ModalErrorBoundary>

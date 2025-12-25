@@ -68,9 +68,9 @@ export interface UseValidateGameWizardResult {
   handleSaveAndClose: () => Promise<void>;
   handleDiscardAndClose: () => void;
   handleCancelClose: () => void;
-  handleNext: () => void;
+  goNext: () => void;
   handleValidateAndNext: () => void;
-  handleBack: () => void;
+  goBack: () => void;
   handleAddPlayerSheetOpenChange: (open: boolean) => void;
 }
 
@@ -266,19 +266,11 @@ export function useValidateGameWizard({
     setShowUnsavedDialog(false);
   }, []);
 
-  const handleNext = useCallback(() => {
-    goNext();
-  }, [goNext]);
-
   const handleValidateAndNext = useCallback(() => {
     if (!canMarkCurrentStepDone) return;
     setStepDone(currentStepIndex, true);
     goNext();
   }, [canMarkCurrentStepDone, setStepDone, currentStepIndex, goNext]);
-
-  const handleBack = useCallback(() => {
-    goBack();
-  }, [goBack]);
 
   const handleAddPlayerSheetOpenChange = useCallback((open: boolean) => {
     setIsAddPlayerSheetOpen(open);
@@ -330,9 +322,9 @@ export function useValidateGameWizard({
     handleSaveAndClose,
     handleDiscardAndClose,
     handleCancelClose,
-    handleNext,
+    goNext,
     handleValidateAndNext,
-    handleBack,
+    goBack,
     handleAddPlayerSheetOpenChange,
   };
 }
