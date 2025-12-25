@@ -156,9 +156,11 @@ export async function fetchAllAssignmentPages(
 export function createDemoQueryResult<T>(
   baseQuery: UseQueryResult<T, Error>,
   data: T,
-  options: { isError?: boolean; error?: Error } = {},
+  options: { isError?: boolean; error?: Error | null } = {},
 ): UseQueryResult<T, Error> {
   const isError = options.isError ?? false;
+  // TanStack Query types error as TError | null, so null is the correct fallback
+  const error = options.error === undefined ? null : options.error;
   return {
     ...baseQuery,
     data,
@@ -166,7 +168,7 @@ export function createDemoQueryResult<T>(
     isFetching: false,
     isSuccess: !isError,
     isError,
-    error: options.error ?? null,
+    error,
     status: isError ? "error" : "success",
     fetchStatus: "idle",
   } as UseQueryResult<T, Error>;
