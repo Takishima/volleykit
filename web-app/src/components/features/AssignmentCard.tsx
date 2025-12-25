@@ -1,10 +1,27 @@
 import { memo } from "react";
 import { ExpandableCard } from "@/components/ui/ExpandableCard";
 import { Badge } from "@/components/ui/Badge";
-import { MapPin } from "@/components/ui/icons";
+import { MapPin, MaleIcon, FemaleIcon } from "@/components/ui/icons";
 import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDateFormat } from "@/hooks/useDateFormat";
+
+/** Helper to extract referee display name from deep nested structure */
+function getRefereeDisplayName(
+  convocation:
+    | {
+        indoorAssociationReferee?: {
+          indoorReferee?: {
+            person?: { displayName?: string };
+          };
+        };
+      }
+    | null
+    | undefined
+): string | undefined {
+  return convocation?.indoorAssociationReferee?.indoorReferee?.person
+    ?.displayName;
+}
 
 interface AssignmentCardProps {
   assignment: Assignment;
@@ -61,6 +78,32 @@ function AssignmentCardComponent({
       ? positionLabelsMap[positionKey]
       : assignment.refereePosition || t("occupations.referee");
 
+  // Gender indicator
+  const gender = game?.group?.phase?.league?.gender;
+
+  // Referee names from the refereeGame
+  const refereeGame = assignment.refereeGame;
+  const headReferee1 = getRefereeDisplayName(
+    refereeGame?.activeRefereeConvocationFirstHeadReferee
+  );
+  const headReferee2 = getRefereeDisplayName(
+    refereeGame?.activeRefereeConvocationSecondHeadReferee
+  );
+  const linesman1 = getRefereeDisplayName(
+    refereeGame?.activeRefereeConvocationFirstLinesman
+  );
+  const linesman2 = getRefereeDisplayName(
+    refereeGame?.activeRefereeConvocationSecondLinesman
+  );
+  const linesman3 = getRefereeDisplayName(
+    refereeGame?.activeRefereeConvocationThirdLinesman
+  );
+  const linesman4 = getRefereeDisplayName(
+    refereeGame?.activeRefereeConvocationFourthLinesman
+  );
+
+  const linesmen = [linesman1, linesman2, linesman3, linesman4].filter(Boolean);
+
   const statusConfig: Record<
     string,
     { label: string; variant: "success" | "danger" | "neutral" }
@@ -99,17 +142,36 @@ function AssignmentCardComponent({
             <div className="text-sm text-text-secondary dark:text-text-muted-dark truncate">
               {t("common.vs")} {awayTeam}
             </div>
-            {/* Position shown in compact view */}
-            <div className="text-xs text-text-subtle dark:text-text-subtle-dark">
-              {position}
+            {/* Position and gender shown in compact view */}
+            <div className="text-xs text-text-subtle dark:text-text-subtle-dark flex items-center gap-1">
+              <span>{position}</span>
+              {gender === "m" && (
+                <MaleIcon
+                  className="w-3 h-3 text-blue-500 dark:text-blue-400"
+                  aria-label={t("common.men")}
+                />
+              )}
+              {gender === "f" && (
+                <FemaleIcon
+                  className="w-3 h-3 text-pink-500 dark:text-pink-400"
+                  aria-label={t("common.women")}
+                />
+              )}
             </div>
           </div>
 
-          {/* City & expand indicator */}
+          {/* City, game number & expand indicator */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-text-muted dark:text-text-muted-dark truncate w-24">
-              {city || ""}
-            </span>
+            <div className="flex flex-col items-end w-24">
+              <span className="text-xs text-text-muted dark:text-text-muted-dark truncate w-full text-right">
+                {city || ""}
+              </span>
+              {game?.number && (
+                <span className="text-xs text-text-subtle dark:text-text-subtle-dark">
+                  #{game.number}
+                </span>
+              )}
+            </div>
             {expandArrow}
           </div>
         </>
@@ -150,6 +212,36 @@ function AssignmentCardComponent({
               {game.group.phase.league.leagueCategory.name}
               {game.group.phase.league.gender &&
                 ` • ${game.group.phase.league.gender === "m" ? t("common.men") : t("common.women")}`}
+            </div>
+          )}
+
+          {/* Referee names */}
+          {(headReferee1 || headReferee2 || linesmen.length > 0) && (
+            <div className="text-xs text-text-subtle dark:text-text-subtle-dark pt-1 space-y-0.5">
+              {headReferee1 && (
+                <div>
+                  <span className="font-medium">
+                    {t("positions.head-one")}:
+                  </span>{" "}
+                  {headReferee1}
+                </div>
+              )}
+              {headReferee2 && (
+                <div>
+                  <span className="font-medium">
+                    {t("positions.head-two")}:
+                  </span>{" "}
+                  {headReferee2}
+                </div>
+              )}
+              {linesmen.length > 0 && (
+                <div>
+                  <span className="font-medium">
+                    {t("occupations.linesmen")}:
+                  </span>{" "}
+                  {linesmen.join(", ")}
+                </div>
+              )}
             </div>
           )}
         </div>

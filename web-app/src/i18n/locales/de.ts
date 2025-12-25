@@ -159,6 +159,7 @@ const de: Translations = {
   },
   occupations: {
     referee: "Schiedsrichter",
+    linesmen: "Linienrichter",
     player: "Spieler",
     clubAdmin: "Vereinsadministrator",
     associationAdmin: "Verband",

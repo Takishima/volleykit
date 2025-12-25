@@ -1,8 +1,7 @@
 import { memo } from "react";
 import { format, parseISO } from "date-fns";
 import { ExpandableCard } from "@/components/ui/ExpandableCard";
-import { Badge } from "@/components/ui/Badge";
-import { Check, Circle, Lock } from "@/components/ui/icons";
+import { Lock, MaleIcon, FemaleIcon } from "@/components/ui/icons";
 import type { CompensationRecord } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDateLocale } from "@/hooks/useDateFormat";
@@ -35,6 +34,28 @@ function CompensationCardComponent({
 
   const homeTeam = game?.encounter?.teamHome?.name || t("common.unknown");
   const awayTeam = game?.encounter?.teamAway?.name || t("common.unknown");
+  const gameNumber = game?.number;
+  const gender = game?.group?.phase?.league?.gender;
+  const leagueCategory = game?.group?.phase?.league?.leagueCategory?.name;
+
+  // Translate position
+  const positionKey = compensation.refereePosition as
+    | keyof typeof positionLabelsMap
+    | undefined;
+  const positionLabelsMap = {
+    "head-one": t("positions.head-one"),
+    "head-two": t("positions.head-two"),
+    "linesman-one": t("positions.linesman-one"),
+    "linesman-two": t("positions.linesman-two"),
+    "linesman-three": t("positions.linesman-three"),
+    "linesman-four": t("positions.linesman-four"),
+    "standby-head": t("positions.standby-head"),
+    "standby-linesman": t("positions.standby-linesman"),
+  } as const;
+  const position =
+    positionKey && positionKey in positionLabelsMap
+      ? positionLabelsMap[positionKey]
+      : compensation.refereePosition;
 
   const total = (comp?.gameCompensation || 0) + (comp?.travelExpenses || 0);
   const isPaid = comp?.paymentDone;
@@ -50,34 +71,53 @@ function CompensationCardComponent({
       dataTour={dataTour}
       renderCompact={(_, { expandArrow }) => (
         <>
-          {/* Date */}
+          {/* Date, time and game number */}
           <div className="text-xs text-text-muted dark:text-text-muted-dark min-w-[4rem]">
-            {startDate
-              ? format(startDate, "MMM d", { locale: dateLocale })
-              : t("common.unknownDate")}
+            <div>
+              {startDate
+                ? format(startDate, "MMM d", { locale: dateLocale })
+                : t("common.unknownDate")}
+            </div>
+            {startDate && (
+              <div className="text-text-subtle dark:text-text-subtle-dark">
+                {format(startDate, "HH:mm")}
+              </div>
+            )}
+            {gameNumber && (
+              <div className="text-text-subtle dark:text-text-subtle-dark">
+                #{gameNumber}
+              </div>
+            )}
           </div>
 
           {/* Match info - truncated */}
           <div className="flex-1 min-w-0">
-            <div className="font-medium text-text-primary dark:text-text-primary-dark truncate text-sm">
-              {homeTeam} {t("common.vs")} {awayTeam}
+            <div className="font-medium text-text-primary dark:text-text-primary-dark truncate text-sm flex items-center gap-1">
+              <span className="truncate">
+                {homeTeam} {t("common.vs")} {awayTeam}
+              </span>
+              {gender === "m" && (
+                <MaleIcon
+                  className="w-3 h-3 flex-shrink-0 text-blue-500 dark:text-blue-400"
+                  aria-label={t("common.men")}
+                />
+              )}
+              {gender === "f" && (
+                <FemaleIcon
+                  className="w-3 h-3 flex-shrink-0 text-pink-500 dark:text-pink-400"
+                  aria-label={t("common.women")}
+                />
+              )}
             </div>
           </div>
 
-          {/* Amount & status */}
+          {/* Amount */}
           <div className="flex items-center gap-2">
             <div
               className={`text-sm font-bold ${isPaid ? "text-success-500 dark:text-success-400" : "text-warning-500 dark:text-warning-400"}`}
             >
               {total.toFixed(0)}
             </div>
-            <Badge variant={isPaid ? "success" : "warning"}>
-              {isPaid ? (
-                <Check className="w-3 h-3" aria-hidden="true" />
-              ) : (
-                <Circle className="w-3 h-3" aria-hidden="true" />
-              )}
-            </Badge>
             {expandArrow}
           </div>
         </>
@@ -85,6 +125,23 @@ function CompensationCardComponent({
       renderDetails={() =>
         comp && (
           <div className="px-2 pb-2 pt-0 border-t border-border-subtle dark:border-border-subtle-dark space-y-1 text-sm">
+            {/* Match details */}
+            <div className="pt-2 pb-1 border-b border-border-subtle dark:border-border-subtle-dark">
+              <div className="font-medium text-text-primary dark:text-text-primary-dark">
+                {homeTeam}
+              </div>
+              <div className="text-text-secondary dark:text-text-muted-dark">
+                {t("common.vs")} {awayTeam}
+              </div>
+              {(leagueCategory || position) && (
+                <div className="text-xs text-text-subtle dark:text-text-subtle-dark mt-1 flex items-center gap-1">
+                  {leagueCategory && <span>{leagueCategory}</span>}
+                  {leagueCategory && position && <span>•</span>}
+                  {position && <span>{position}</span>}
+                </div>
+              )}
+            </div>
+
             <div className="flex justify-between pt-2">
               <span className="text-text-muted dark:text-text-muted-dark">
                 {t("compensations.total")}:

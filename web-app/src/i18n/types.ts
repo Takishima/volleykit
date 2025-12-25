@@ -61,6 +61,7 @@ export interface Translations {
   };
   occupations: {
     referee: string;
+    linesmen: string;
     player: string;
     clubAdmin: string;
     associationAdmin: string;
