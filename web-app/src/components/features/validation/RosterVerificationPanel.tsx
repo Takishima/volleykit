@@ -9,6 +9,7 @@ import {
 import { PlayerListItem } from "./PlayerListItem";
 import { AddPlayerSheet } from "./AddPlayerSheet";
 import { UserPlus, AlertCircle, RefreshCw } from "@/components/ui/icons";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 interface RosterVerificationPanelProps {
   team: "home" | "away";
@@ -126,8 +127,12 @@ export function RosterVerificationPanel({
   // Loading state
   if (isLoading) {
     return (
-      <div className="py-8 flex flex-col items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 dark:border-primary-400 mb-3" />
+      <div
+        className="py-8 flex flex-col items-center justify-center"
+        role="status"
+        aria-live="polite"
+      >
+        <LoadingSpinner size="md" className="mb-3" />
         <p className="text-sm text-gray-500 dark:text-gray-400">
           {t("validation.roster.loadingRoster")}
         </p>
@@ -138,7 +143,7 @@ export function RosterVerificationPanel({
   // Error state
   if (isError) {
     return (
-      <div className="py-8 flex flex-col items-center justify-center">
+      <div className="py-8 flex flex-col items-center justify-center" role="alert">
         <AlertCircle className="w-10 h-10 text-danger-500 mb-3" aria-hidden="true" />
         <p className="text-sm text-danger-600 dark:text-danger-400 mb-4">
           {t("validation.roster.errorLoading")}

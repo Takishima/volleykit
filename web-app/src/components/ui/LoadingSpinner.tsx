@@ -77,7 +77,7 @@ export function ErrorState({ message, onRetry }: ErrorStateProps) {
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-col items-center justify-center py-12 gap-4">
+    <div className="flex flex-col items-center justify-center py-12 gap-4" role="alert">
       <AlertTriangle className="w-10 h-10 text-warning-500" aria-hidden="true" />
       <p className="text-danger-600 dark:text-danger-400 text-center">{message}</p>
       {onRetry && (
