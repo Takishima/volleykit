@@ -6,6 +6,23 @@ import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDateFormat } from "@/hooks/useDateFormat";
 
+/** Helper to extract referee display name from deep nested structure */
+function getRefereeDisplayName(
+  convocation:
+    | {
+        indoorAssociationReferee?: {
+          indoorReferee?: {
+            person?: { displayName?: string };
+          };
+        };
+      }
+    | null
+    | undefined
+): string | undefined {
+  return convocation?.indoorAssociationReferee?.indoorReferee?.person
+    ?.displayName;
+}
+
 interface AssignmentCardProps {
   assignment: Assignment;
   onClick?: () => void;
@@ -61,6 +78,34 @@ function AssignmentCardComponent({
       ? positionLabelsMap[positionKey]
       : assignment.refereePosition || t("occupations.referee");
 
+  // Gender indicator
+  const gender = game?.group?.phase?.league?.gender;
+  const genderSymbol = gender === "m" ? "♂" : gender === "f" ? "♀" : null;
+
+  // Referee names from the refereeGame
+  const refereeGame = assignment.refereeGame;
+  const headReferee1 = getRefereeDisplayName(
+    refereeGame?.activeRefereeConvocationFirstHeadReferee
+  );
+  const headReferee2 = getRefereeDisplayName(
+    refereeGame?.activeRefereeConvocationSecondHeadReferee
+  );
+  const linesman1 = getRefereeDisplayName(
+    refereeGame?.activeRefereeConvocationFirstLinesman
+  );
+  const linesman2 = getRefereeDisplayName(
+    refereeGame?.activeRefereeConvocationSecondLinesman
+  );
+  const linesman3 = getRefereeDisplayName(
+    refereeGame?.activeRefereeConvocationThirdLinesman
+  );
+  const linesman4 = getRefereeDisplayName(
+    refereeGame?.activeRefereeConvocationFourthLinesman
+  );
+
+  const headReferees = [headReferee1, headReferee2].filter(Boolean);
+  const linesmen = [linesman1, linesman2, linesman3, linesman4].filter(Boolean);
+
   const statusConfig: Record<
     string,
     { label: string; variant: "success" | "danger" | "neutral" }
@@ -99,9 +144,23 @@ function AssignmentCardComponent({
             <div className="text-sm text-text-secondary dark:text-text-muted-dark truncate">
               {t("common.vs")} {awayTeam}
             </div>
-            {/* Position shown in compact view */}
-            <div className="text-xs text-text-subtle dark:text-text-subtle-dark">
-              {position}
+            {/* Position and gender shown in compact view */}
+            <div className="text-xs text-text-subtle dark:text-text-subtle-dark flex items-center gap-1">
+              <span>{position}</span>
+              {genderSymbol && (
+                <span
+                  className={
+                    gender === "m"
+                      ? "text-blue-500 dark:text-blue-400"
+                      : "text-pink-500 dark:text-pink-400"
+                  }
+                  aria-label={
+                    gender === "m" ? t("common.men") : t("common.women")
+                  }
+                >
+                  {genderSymbol}
+                </span>
+              )}
             </div>
           </div>
 
@@ -157,6 +216,28 @@ function AssignmentCardComponent({
               {game.group.phase.league.leagueCategory.name}
               {game.group.phase.league.gender &&
                 ` • ${game.group.phase.league.gender === "m" ? t("common.men") : t("common.women")}`}
+            </div>
+          )}
+
+          {/* Referee names */}
+          {(headReferees.length > 0 || linesmen.length > 0) && (
+            <div className="text-xs text-text-subtle dark:text-text-subtle-dark pt-1 space-y-0.5">
+              {headReferees.length > 0 && (
+                <div>
+                  <span className="font-medium">
+                    {t("occupations.referees")}:
+                  </span>{" "}
+                  {headReferees.join(", ")}
+                </div>
+              )}
+              {linesmen.length > 0 && (
+                <div>
+                  <span className="font-medium">
+                    {t("occupations.linesmen")}:
+                  </span>{" "}
+                  {linesmen.join(", ")}
+                </div>
+              )}
             </div>
           )}
         </div>
