@@ -5,12 +5,10 @@ import {
   useWithdrawFromExchange,
 } from "./useConvocations";
 import { createLogger } from "@/utils/logger";
-import { checkSafeMode } from "@/utils/safe-mode-guard";
-import { useAuthStore } from "@/stores/auth";
 import { toast } from "@/stores/toast";
-import { useSettingsStore } from "@/stores/settings";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModalState } from "./useModalState";
+import { useSafeModeGuard } from "./useSafeModeGuard";
 
 const log = createLogger("useExchangeActions");
 
@@ -33,10 +31,7 @@ interface UseExchangeActionsResult {
 
 export function useExchangeActions(): UseExchangeActionsResult {
   const { t } = useTranslation();
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
-  const isSafeModeEnabled = useSettingsStore(
-    (state) => state.isSafeModeEnabled,
-  );
+  const { guard, isDemoMode } = useSafeModeGuard();
 
   const takeOverModal = useModalState<GameExchange>();
   const removeFromExchangeModal = useModalState<GameExchange>();
@@ -51,9 +46,7 @@ export function useExchangeActions(): UseExchangeActionsResult {
   const handleTakeOver = useCallback(
     async (exchange: GameExchange) => {
       if (
-        checkSafeMode({
-          isDemoMode,
-          isSafeModeEnabled,
+        guard({
           context: "useExchangeActions",
           action: "taking exchange",
         })
@@ -81,15 +74,13 @@ export function useExchangeActions(): UseExchangeActionsResult {
         isTakingOverRef.current = false;
       }
     },
-    [isDemoMode, isSafeModeEnabled, applyMutation, takeOverModal, t],
+    [guard, isDemoMode, applyMutation, takeOverModal, t],
   );
 
   const handleRemoveFromExchange = useCallback(
     async (exchange: GameExchange) => {
       if (
-        checkSafeMode({
-          isDemoMode,
-          isSafeModeEnabled,
+        guard({
           context: "useExchangeActions",
           action: "withdrawing from exchange",
         })
@@ -117,7 +108,7 @@ export function useExchangeActions(): UseExchangeActionsResult {
         isRemovingRef.current = false;
       }
     },
-    [isDemoMode, isSafeModeEnabled, withdrawMutation, removeFromExchangeModal, t],
+    [guard, isDemoMode, withdrawMutation, removeFromExchangeModal, t],
   );
 
   return {
