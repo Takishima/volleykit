@@ -430,6 +430,9 @@ const fr: Translations = {
       previewAlt: "Aperçu de la feuille de match",
       scoresheetUploaded: "Feuille de match téléchargée",
       noScoresheet: "Aucune feuille de match téléchargée",
+      notRequired: "Feuille de match non requise",
+      notRequiredDescription:
+        "Cette compétition ne nécessite pas de téléchargement de feuille de match.",
     },
     state: {
       unsavedChangesTitle: "Modifications non enregistrées",

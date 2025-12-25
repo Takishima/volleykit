@@ -99,6 +99,7 @@ describe("ValidateGameModal", () => {
       isValidated: false,
       validatedInfo: null,
       pendingScorer: null,
+      scoresheetNotRequired: false,
       setHomeRosterModifications: vi.fn(),
       setAwayRosterModifications: vi.fn(),
       setScorer: vi.fn(),

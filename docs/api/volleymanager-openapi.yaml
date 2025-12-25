@@ -3131,6 +3131,12 @@ components:
             displayName:
               type: string
               example: "#27106 | Herren 2. Liga"
+            isTournamentGroup:
+              type: boolean
+              description: Whether this is a tournament group (affects nomination workflow)
+            hasNoScoresheet:
+              type: boolean
+              description: Whether games in this group require no scoresheet upload
             phase:
               type: object
               properties:

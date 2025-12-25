@@ -426,6 +426,9 @@ const en: Translations = {
       previewAlt: "Scoresheet preview",
       scoresheetUploaded: "Scoresheet uploaded",
       noScoresheet: "No scoresheet uploaded",
+      notRequired: "Scoresheet not required",
+      notRequiredDescription:
+        "This competition does not require a scoresheet upload.",
     },
     state: {
       unsavedChangesTitle: "Unsaved Changes",

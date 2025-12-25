@@ -284,6 +284,10 @@ interface RefereeGameParams {
   isGameInFuture: boolean;
   associationCode: DemoAssociationCode;
   idPrefix: string;
+  /** Whether games in this group require no scoresheet upload */
+  hasNoScoresheet?: boolean;
+  /** Whether this is a tournament group */
+  isTournamentGroup?: boolean;
 }
 
 function createRefereeGame({
@@ -296,6 +300,8 @@ function createRefereeGame({
   isGameInFuture,
   associationCode,
   idPrefix,
+  hasNoScoresheet = false,
+  isTournamentGroup = false,
 }: RefereeGameParams): RefereeGame {
   const venues = getVenuesForAssociation(associationCode);
   const leagues = getLeaguesForAssociation(associationCode);
@@ -348,6 +354,8 @@ function createRefereeGame({
       group: {
         name: "Quali",
         managingAssociationShortName: associationCode,
+        isTournamentGroup,
+        hasNoScoresheet,
         phase: {
           name: "Phase 1",
           league: {
@@ -374,6 +382,10 @@ interface AssignmentConfig {
   isOpenInExchange?: boolean;
   hasMessage?: boolean;
   linkedDouble?: string;
+  /** Whether games in this group require no scoresheet upload */
+  hasNoScoresheet?: boolean;
+  /** Whether this is a tournament group */
+  isTournamentGroup?: boolean;
 }
 
 function createAssignment(
@@ -406,6 +418,8 @@ function createAssignment(
       isGameInFuture: config.isGameInFuture,
       associationCode,
       idPrefix: "demo",
+      hasNoScoresheet: config.hasNoScoresheet,
+      isTournamentGroup: config.isTournamentGroup,
     }),
   };
 }
@@ -416,7 +430,7 @@ export function generateAssignments(
 ): Assignment[] {
   const configs: AssignmentConfig[] = [
     { index: 1, status: "active", position: "head-one", confirmationStatus: "confirmed", confirmationDaysAgo: 5, gameDate: addDays(now, 2), venueIndex: 0, leagueIndex: 0, gender: "m", isGameInFuture: true },
-    { index: 2, status: "active", position: "linesman-one", confirmationStatus: "confirmed", confirmationDaysAgo: 3, gameDate: addHours(now, 3), venueIndex: 1, leagueIndex: 1, gender: "m", isGameInFuture: true, hasMessage: true },
+    { index: 2, status: "active", position: "linesman-one", confirmationStatus: "confirmed", confirmationDaysAgo: 3, gameDate: addHours(now, 3), venueIndex: 1, leagueIndex: 1, gender: "m", isGameInFuture: true, hasMessage: true, hasNoScoresheet: true },
     { index: 3, status: "active", position: "head-two", confirmationStatus: "pending", confirmationDaysAgo: null, gameDate: addDays(now, 5), venueIndex: 2, leagueIndex: 0, gender: "f", isGameInFuture: true, linkedDouble: "382420 / ARB 1" },
     { index: 4, status: "cancelled", position: "head-one", confirmationStatus: "confirmed", confirmationDaysAgo: 10, gameDate: addDays(now, 7), venueIndex: 3, leagueIndex: 1, gender: "f", isGameInFuture: true, isOpenInExchange: true },
     { index: 5, status: "archived", position: "linesman-two", confirmationStatus: "confirmed", confirmationDaysAgo: 14, gameDate: subDays(now, 3), venueIndex: 4, leagueIndex: associationCode === "SV" ? 1 : 2, gender: "m", isGameInFuture: false },

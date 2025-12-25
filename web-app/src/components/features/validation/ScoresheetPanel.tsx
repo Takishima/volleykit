@@ -7,6 +7,7 @@ import {
   CheckCircle,
   FileText,
   AlertCircle,
+  Info,
 } from "@/components/ui/icons";
 
 interface ScoresheetPanelProps {
@@ -16,6 +17,8 @@ interface ScoresheetPanelProps {
   readOnly?: boolean;
   /** Whether a scoresheet was uploaded (for read-only mode) */
   hasScoresheet?: boolean;
+  /** Whether scoresheet upload is not required for this game's group */
+  scoresheetNotRequired?: boolean;
 }
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
@@ -44,6 +47,7 @@ export function ScoresheetPanel({
   onScoresheetChange,
   readOnly = false,
   hasScoresheet = false,
+  scoresheetNotRequired = false,
 }: ScoresheetPanelProps) {
   const { t } = useTranslation();
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
@@ -203,6 +207,23 @@ export function ScoresheetPanel({
 
   const tKey = (key: string) =>
     t(`validation.scoresheetUpload.${key}` as Parameters<typeof t>[0]);
+
+  // When scoresheet is not required for this group, show informational message
+  if (scoresheetNotRequired) {
+    return (
+      <div className="py-4">
+        <div className="border border-info-200 dark:border-info-800 bg-info-50 dark:bg-info-900/20 rounded-lg p-4 text-center">
+          <Info className="w-12 h-12 mx-auto text-info-500 mb-3" aria-hidden="true" />
+          <h3 className="text-sm font-medium text-text-primary dark:text-text-primary-dark mb-1">
+            {t("validation.scoresheetUpload.notRequired")}
+          </h3>
+          <p className="text-sm text-text-muted dark:text-text-muted-dark">
+            {t("validation.scoresheetUpload.notRequiredDescription")}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // In read-only mode, show a simple status display
   if (readOnly) {

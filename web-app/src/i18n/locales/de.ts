@@ -431,6 +431,9 @@ const de: Translations = {
       previewAlt: "Spielbericht-Vorschau",
       scoresheetUploaded: "Spielbericht hochgeladen",
       noScoresheet: "Kein Spielbericht hochgeladen",
+      notRequired: "Spielbericht nicht erforderlich",
+      notRequiredDescription:
+        "Für diesen Wettbewerb ist kein Spielbericht erforderlich.",
     },
     state: {
       unsavedChangesTitle: "Ungespeicherte Änderungen",

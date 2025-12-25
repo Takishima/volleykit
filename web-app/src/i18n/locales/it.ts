@@ -425,6 +425,9 @@ const it: Translations = {
       previewAlt: "Anteprima referto",
       scoresheetUploaded: "Referto caricato",
       noScoresheet: "Nessun referto caricato",
+      notRequired: "Referto non richiesto",
+      notRequiredDescription:
+        "Questa competizione non richiede il caricamento del referto.",
     },
     state: {
       unsavedChangesTitle: "Modifiche non salvate",
