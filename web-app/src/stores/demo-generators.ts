@@ -243,6 +243,7 @@ function getVenuesForAssociation(
 }
 
 // Mock referee names for demo data
+// First 2 are used for head referees, rest for linesmen
 const MOCK_REFEREES = [
   { firstName: "Thomas", lastName: "Meier" },
   { firstName: "Sandra", lastName: "Keller" },
@@ -250,6 +251,8 @@ const MOCK_REFEREES = [
   { firstName: "Laura", lastName: "Brunner" },
   { firstName: "Stefan", lastName: "Huber" },
   { firstName: "Nina", lastName: "Baumann" },
+  { firstName: "Peter", lastName: "Schmid" },
+  { firstName: "Anna", lastName: "Weber" },
 ] as const;
 
 function createRefereeConvocation(
@@ -274,6 +277,9 @@ function createRefereeConvocation(
   };
 }
 
+/** Linesman position (1-4) */
+type LinesmanPosition = 1 | 2 | 3 | 4;
+
 interface RefereeGameParams {
   gameId: string;
   gameNumber: number;
@@ -288,6 +294,8 @@ interface RefereeGameParams {
   hasNoScoresheet?: boolean;
   /** Whether this is a tournament group */
   isTournamentGroup?: boolean;
+  /** Which linesman positions to populate (1-4) */
+  linesmenPositions?: LinesmanPosition[];
 }
 
 function createRefereeGame({
@@ -302,11 +310,39 @@ function createRefereeGame({
   idPrefix,
   hasNoScoresheet = false,
   isTournamentGroup = false,
+  linesmenPositions = [],
 }: RefereeGameParams): RefereeGame {
   const venues = getVenuesForAssociation(associationCode);
   const leagues = getLeaguesForAssociation(associationCode);
   const venue = venues[venueIndex % venues.length]!;
   const league = leagues[leagueIndex % leagues.length]!;
+
+  // Build linesman convocations based on specified positions
+  type LinesmanConvocations = Pick<
+    RefereeGame,
+    | "activeRefereeConvocationFirstLinesman"
+    | "activeRefereeConvocationSecondLinesman"
+    | "activeRefereeConvocationThirdLinesman"
+    | "activeRefereeConvocationFourthLinesman"
+  >;
+  const linesmanConvocations: Partial<LinesmanConvocations> = {};
+  const linesmanFields: Record<LinesmanPosition, keyof LinesmanConvocations> = {
+    1: "activeRefereeConvocationFirstLinesman",
+    2: "activeRefereeConvocationSecondLinesman",
+    3: "activeRefereeConvocationThirdLinesman",
+    4: "activeRefereeConvocationFourthLinesman",
+  };
+
+  for (const pos of linesmenPositions) {
+    const field = linesmanFields[pos];
+    // Use referee indices 2-5 for linesmen (after the 2 head refs)
+    linesmanConvocations[field] = createRefereeConvocation(
+      idPrefix,
+      gameId,
+      pos === 1 ? "first" : pos === 2 ? "second" : pos === 3 ? "first" : "second",
+      2 + pos, // Offset by 2 to use different referees than head refs
+    );
+  }
 
   return {
     __identity: generateDemoUuid(`${idPrefix}-game-${gameId}`),
@@ -323,6 +359,7 @@ function createRefereeGame({
       "second",
       venueIndex * 2 + 1,
     ),
+    ...linesmanConvocations,
     game: {
       __identity: generateDemoUuid(`${idPrefix}-g-${gameId}`),
       number: gameNumber,
@@ -386,6 +423,8 @@ interface AssignmentConfig {
   hasNoScoresheet?: boolean;
   /** Whether this is a tournament group */
   isTournamentGroup?: boolean;
+  /** Which linesman positions are assigned for this game (1-4) */
+  linesmenPositions?: LinesmanPosition[];
 }
 
 function createAssignment(
@@ -428,6 +467,7 @@ function createAssignment(
       idPrefix: "demo",
       hasNoScoresheet: config.hasNoScoresheet,
       isTournamentGroup: config.isTournamentGroup,
+      linesmenPositions: config.linesmenPositions,
     }),
   };
 }
@@ -438,10 +478,10 @@ export function generateAssignments(
 ): Assignment[] {
   const configs: AssignmentConfig[] = [
     { index: 1, status: "active", position: "head-one", confirmationStatus: "confirmed", confirmationDaysAgo: 5, gameDate: addDays(now, 2), venueIndex: 0, leagueIndex: 0, gender: "m", isGameInFuture: true },
-    { index: 2, status: "active", position: "linesman-one", confirmationStatus: "confirmed", confirmationDaysAgo: 3, gameDate: addHours(now, 3), venueIndex: 1, leagueIndex: 1, gender: "m", isGameInFuture: true, hasMessage: true, hasNoScoresheet: associationCode !== "SV" },
+    { index: 2, status: "active", position: "linesman-one", confirmationStatus: "confirmed", confirmationDaysAgo: 3, gameDate: addHours(now, 3), venueIndex: 1, leagueIndex: 1, gender: "m", isGameInFuture: true, hasMessage: true, hasNoScoresheet: associationCode !== "SV", linesmenPositions: [1, 2] },
     { index: 3, status: "active", position: "head-two", confirmationStatus: "pending", confirmationDaysAgo: null, gameDate: addDays(now, 5), venueIndex: 2, leagueIndex: 0, gender: "f", isGameInFuture: true, linkedDouble: "382420 / ARB 1" },
     { index: 4, status: "cancelled", position: "head-one", confirmationStatus: "confirmed", confirmationDaysAgo: 10, gameDate: addDays(now, 7), venueIndex: 3, leagueIndex: 1, gender: "f", isGameInFuture: true, isOpenInExchange: true },
-    { index: 5, status: "archived", position: "linesman-two", confirmationStatus: "confirmed", confirmationDaysAgo: 14, gameDate: subDays(now, 3), venueIndex: 4, leagueIndex: associationCode === "SV" ? 1 : 2, gender: "m", isGameInFuture: false },
+    { index: 5, status: "archived", position: "linesman-two", confirmationStatus: "confirmed", confirmationDaysAgo: 14, gameDate: subDays(now, 3), venueIndex: 4, leagueIndex: associationCode === "SV" ? 1 : 2, gender: "m", isGameInFuture: false, linesmenPositions: [1, 2, 3, 4] },
   ];
 
   return configs.map((config) => createAssignment(config, associationCode, now));
