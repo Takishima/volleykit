@@ -16,6 +16,7 @@ import {
   isGameReportEligible,
   isValidationEligible,
 } from "@/utils/assignment-helpers";
+import { isAssignmentCompensationEditable } from "@/utils/compensation-actions";
 import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTour } from "@/hooks/useTour";
@@ -92,14 +93,17 @@ export function AssignmentsPage() {
       const isGameInFuture = assignment.refereeGame?.isGameInFuture === "1";
       const canValidateGame = isValidationEligible(assignment);
       const canGenerateReport = isGameReportEligible(assignment);
+      const canEditCompensation = isAssignmentCompensationEditable(assignment);
 
       // Action array ordering: first item = furthest from card = full swipe default
       // When swiping left, actions appear right-to-left from the card edge
       // Validate action only shown for first referee (head-one position)
       // Report action only shown for NLA/NLB games where user is first referee
-      const leftActions = canValidateGame
-        ? [actions.validateGame, actions.editCompensation]
-        : [actions.editCompensation];
+      // Edit compensation action only shown if compensation is editable
+      const leftActions = canValidateGame ? [actions.validateGame] : [];
+      if (canEditCompensation) {
+        leftActions.push(actions.editCompensation);
+      }
       if (canGenerateReport) {
         leftActions.push(actions.generateReport);
       }

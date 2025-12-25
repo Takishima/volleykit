@@ -1,5 +1,5 @@
 import { createElement } from "react";
-import type { CompensationRecord } from "@/api/client";
+import type { Assignment, CompensationRecord } from "@/api/client";
 import { type SwipeAction, SWIPE_ACTION_ICON_SIZE } from "@/types/swipe";
 import { Wallet, FileText } from "@/components/ui/icons";
 
@@ -26,6 +26,30 @@ export function isCompensationEditable(compensation: CompensationRecord): boolea
     | ConvocationCompensationWithLockFlags
     | undefined;
   if (!cc) return false;
+
+  // Already paid - not editable
+  if (cc.paymentDone) return false;
+
+  // On-site payout locked - not editable (regional associations)
+  if (cc.lockPayoutOnSiteCompensation === true) return false;
+
+  return true;
+}
+
+/**
+ * Checks if an assignment's compensation can be edited.
+ *
+ * Editability rules (same as isCompensationEditable):
+ * - Non-editable: lockPayoutOnSiteCompensation=true AND paymentDone=false (on-site payout locked)
+ * - Non-editable: paymentDone=true (already paid)
+ * - Editable: lockPayoutOnSiteCompensation=false AND paymentDone=false
+ * - Editable: convocationCompensation not present (defaults to editable for backwards compatibility)
+ */
+export function isAssignmentCompensationEditable(assignment: Assignment): boolean {
+  const cc = assignment.convocationCompensation;
+  // If no compensation data, default to editable (for backwards compatibility
+  // and when the API doesn't return compensation properties)
+  if (!cc) return true;
 
   // Already paid - not editable
   if (cc.paymentDone) return false;
