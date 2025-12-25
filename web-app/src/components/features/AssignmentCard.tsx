@@ -5,6 +5,7 @@ import { MapPin, MaleIcon, FemaleIcon } from "@/components/ui/icons";
 import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDateFormat } from "@/hooks/useDateFormat";
+import { getPositionLabel } from "@/utils/position-labels";
 
 /** Helper to extract referee display name from deep nested structure */
 function getRefereeDisplayName(
@@ -60,23 +61,11 @@ function AssignmentCardComponent({
   const city = game?.hall?.primaryPostalAddress?.city;
   const status = assignment.refereeConvocationStatus;
 
-  const positionKey = assignment.refereePosition as
-    | keyof typeof positionLabelsMap
-    | undefined;
-  const positionLabelsMap = {
-    "head-one": t("positions.head-one"),
-    "head-two": t("positions.head-two"),
-    "linesman-one": t("positions.linesman-one"),
-    "linesman-two": t("positions.linesman-two"),
-    "linesman-three": t("positions.linesman-three"),
-    "linesman-four": t("positions.linesman-four"),
-    "standby-head": t("positions.standby-head"),
-    "standby-linesman": t("positions.standby-linesman"),
-  } as const;
-  const position =
-    positionKey && positionKey in positionLabelsMap
-      ? positionLabelsMap[positionKey]
-      : assignment.refereePosition || t("occupations.referee");
+  const position = getPositionLabel(
+    assignment.refereePosition,
+    t,
+    t("occupations.referee"),
+  );
 
   // Gender indicator
   const gender = game?.group?.phase?.league?.gender;
