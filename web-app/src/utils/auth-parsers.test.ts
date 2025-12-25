@@ -283,7 +283,9 @@ describe("submitLoginCredentials", () => {
         body: expect.any(URLSearchParams),
       });
 
-      const body = mockFetch.mock.calls[0][1].body as URLSearchParams;
+      const callArgs = mockFetch.mock.calls[0]?.[1] as { body: URLSearchParams } | undefined;
+      expect(callArgs).toBeDefined();
+      const body = callArgs!.body;
       expect(body.get("__trustedProperties")).toBe("test-trusted-props");
       expect(body.get("__referrer[@package]")).toBe("SportManager.Volleyball");
       expect(body.get("__referrer[@controller]")).toBe("Public");
