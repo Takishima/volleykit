@@ -1,4 +1,5 @@
 import { type Page, type Locator, expect } from "@playwright/test";
+import { PAGE_LOAD_TIMEOUT_MS } from "../constants";
 
 /**
  * Page Object Model for the Login page.
@@ -22,6 +23,10 @@ export class LoginPage {
 
   async goto() {
     await this.page.goto("/login");
+    // Wait for login form to be ready
+    await expect(this.loginButton).toBeVisible({
+      timeout: PAGE_LOAD_TIMEOUT_MS,
+    });
   }
 
   async login(username: string, password: string) {
@@ -35,9 +40,17 @@ export class LoginPage {
    * Demo mode provides consistent mock data for reliable testing.
    */
   async enterDemoMode() {
+    // Ensure button is clickable before clicking
+    await expect(this.demoButton).toBeVisible();
     await this.demoButton.click();
-    // Wait for navigation away from login
-    await expect(this.page).not.toHaveURL(/login/);
+    // Wait for navigation away from login with explicit timeout
+    await expect(this.page).not.toHaveURL(/login/, {
+      timeout: PAGE_LOAD_TIMEOUT_MS,
+    });
+    // Wait for main content to load
+    await expect(this.page.getByRole("main")).toBeVisible({
+      timeout: PAGE_LOAD_TIMEOUT_MS,
+    });
   }
 
   async expectToBeVisible() {

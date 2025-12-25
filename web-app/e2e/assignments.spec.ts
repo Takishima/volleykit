@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
 import { LoginPage, AssignmentsPage, NavigationPage } from "./pages";
-import { ANIMATION_DELAY_MS } from "./constants";
 
 test.describe("Assignments Journey", () => {
   let loginPage: LoginPage;
@@ -86,13 +85,14 @@ test.describe("Assignments Journey", () => {
       expect(cardText!.length).toBeGreaterThan(0);
     });
 
-    test("can expand assignment card for details", async ({ page }) => {
+    test("can expand assignment card for details", async () => {
       await assignmentsPage.waitForAssignmentsLoaded();
 
       const firstCard = assignmentsPage.assignmentCards.first();
+      // Ensure card is visible before clicking
+      await expect(firstCard).toBeVisible();
       await firstCard.click();
-      await page.waitForTimeout(ANIMATION_DELAY_MS);
-
+      // Verify card remains visible after click (Playwright auto-waits)
       await expect(firstCard).toBeVisible();
     });
   });

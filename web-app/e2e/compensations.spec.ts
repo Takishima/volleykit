@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
 import { LoginPage, CompensationsPage, NavigationPage } from "./pages";
-import { ANIMATION_DELAY_MS } from "./constants";
 
 test.describe("Compensations Journey", () => {
   let loginPage: LoginPage;
@@ -80,14 +79,16 @@ test.describe("Compensations Journey", () => {
       }
     });
 
-    test("can expand compensation card for details", async ({ page }) => {
+    test("can expand compensation card for details", async () => {
       await compensationsPage.waitForCompensationsLoaded();
       const count = await compensationsPage.getCompensationCount();
 
       if (count > 0) {
         const firstCard = compensationsPage.compensationCards.first();
+        // Ensure card is visible before clicking
+        await expect(firstCard).toBeVisible();
         await firstCard.click();
-        await page.waitForTimeout(ANIMATION_DELAY_MS);
+        // Verify card remains visible after click (Playwright auto-waits)
         await expect(firstCard).toBeVisible();
       }
     });

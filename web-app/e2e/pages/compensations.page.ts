@@ -3,7 +3,6 @@ import {
   PAGE_LOAD_TIMEOUT_MS,
   TAB_SWITCH_TIMEOUT_MS,
   LOADING_TIMEOUT_MS,
-  CONTENT_RENDER_DELAY_MS,
 } from "../constants";
 
 /**
@@ -49,6 +48,8 @@ export class CompensationsPage {
       },
       { timeout: TAB_SWITCH_TIMEOUT_MS },
     );
+    // Wait for tab panel content to stabilize
+    await expect(this.tabPanel).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
   }
 
   async switchToPaidTab() {
@@ -62,6 +63,8 @@ export class CompensationsPage {
       },
       { timeout: TAB_SWITCH_TIMEOUT_MS },
     );
+    // Wait for tab panel content to stabilize
+    await expect(this.tabPanel).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
   }
 
   async switchToAllTab() {
@@ -75,6 +78,8 @@ export class CompensationsPage {
       },
       { timeout: TAB_SWITCH_TIMEOUT_MS },
     );
+    // Wait for tab panel content to stabilize
+    await expect(this.tabPanel).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
   }
 
   async getCompensationCount(): Promise<number> {
@@ -84,14 +89,20 @@ export class CompensationsPage {
   async waitForCompensationsLoaded() {
     await expect(this.tabPanel).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT_MS });
 
-    // Use stable test ID for loading indicator (locale-independent)
+    // Wait for loading indicator to disappear (if it appears)
     const loadingIndicator = this.page.getByTestId("loading-state");
-    await loadingIndicator
-      .waitFor({ state: "hidden", timeout: LOADING_TIMEOUT_MS })
-      .catch(() => {
-        // Loading may have already finished or not appeared
+    const isLoadingVisible = await loadingIndicator.isVisible();
+    if (isLoadingVisible) {
+      await loadingIndicator.waitFor({
+        state: "hidden",
+        timeout: LOADING_TIMEOUT_MS,
       });
+    }
 
-    await this.page.waitForTimeout(CONTENT_RENDER_DELAY_MS);
+    // Wait for actual content: either cards are present or empty state is shown
+    const emptyState = this.page.getByTestId("empty-state");
+    await expect(this.compensationCards.first().or(emptyState)).toBeVisible({
+      timeout: LOADING_TIMEOUT_MS,
+    });
   }
 }
