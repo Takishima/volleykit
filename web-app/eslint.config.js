@@ -9,6 +9,25 @@ import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
   { ignores: ['dist', 'dev-dist', 'coverage', 'playwright-report'] },
+  // Enforce useTranslation hook in React components (issue #287)
+  {
+    files: ['**/*.tsx'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@/i18n',
+              importNames: ['t', 'tInterpolate'],
+              message:
+                'Use the useTranslation() hook instead of direct imports. Import { useTranslation } from "@/hooks/useTranslation".',
+            },
+          ],
+        },
+      ],
+    },
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],
