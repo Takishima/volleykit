@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { format, parseISO } from "date-fns";
 import { ExpandableCard } from "@/components/ui/ExpandableCard";
-import { MapPin } from "@/components/ui/icons";
+import { MapPin, MaleIcon, FemaleIcon } from "@/components/ui/icons";
 import type { GameExchange } from "@/api/client";
 import { useDateLocale } from "@/hooks/useDateFormat";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -30,6 +30,11 @@ function ExchangeCardComponent({
   const homeTeam = game?.encounter?.teamHome?.name || t("common.tbd");
   const awayTeam = game?.encounter?.teamAway?.name || t("common.tbd");
   const hallName = game?.hall?.name || t("common.locationTbd");
+  const plusCode =
+    game?.hall?.primaryPostalAddress?.geographicalLocation?.plusCode;
+  const googleMapsUrl = plusCode
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(plusCode)}`
+    : null;
   const requiredLevel = exchange.requiredRefereeLevel;
 
   const leagueCategory = game?.group?.phase?.league?.leagueCategory?.name;
@@ -61,13 +66,19 @@ function ExchangeCardComponent({
           {/* League/Gender + Teams */}
           <div className="flex-1 min-w-0">
             {leagueCategory && (
-              <div className="font-medium text-text-primary dark:text-text-primary-dark truncate text-sm">
-                {leagueCategory}
-                {gender && (
-                  <span className="text-text-muted dark:text-text-muted-dark font-normal">
-                    {" "}
-                    • {gender === "m" ? t("common.men") : t("common.women")}
-                  </span>
+              <div className="font-medium text-text-primary dark:text-text-primary-dark truncate text-sm flex items-center gap-1">
+                <span className="truncate">{leagueCategory}</span>
+                {gender === "m" && (
+                  <MaleIcon
+                    className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400 shrink-0"
+                    aria-label={t("common.men")}
+                  />
+                )}
+                {gender === "f" && (
+                  <FemaleIcon
+                    className="w-3.5 h-3.5 text-pink-500 dark:text-pink-400 shrink-0"
+                    aria-label={t("common.women")}
+                  />
                 )}
               </div>
             )}
@@ -85,7 +96,19 @@ function ExchangeCardComponent({
           {/* Location */}
           <div className="flex items-center gap-2 text-sm text-text-muted dark:text-text-muted-dark pt-2">
             <MapPin className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-            <span className="truncate">{hallName}</span>
+            {googleMapsUrl ? (
+              <a
+                href={googleMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="truncate text-primary-600 dark:text-primary-400 hover:underline focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {hallName}
+              </a>
+            ) : (
+              <span className="truncate">{hallName}</span>
+            )}
           </div>
 
           {/* Required level */}
