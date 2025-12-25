@@ -57,6 +57,26 @@ function spaFallbackPlugin(basePath: string): Plugin {
   };
 }
 
+// Target API server for development proxy
+const VOLLEYMANAGER_API = 'https://volleymanager.volleyball.ch';
+
+/**
+ * Creates proxy configuration for development server.
+ * All paths are proxied to the VolleyManager API with CORS bypass.
+ */
+function createDevProxy(paths: string[]): Record<string, object> {
+  const proxyConfig: Record<string, object> = {};
+  for (const path of paths) {
+    proxyConfig[path] = {
+      target: VOLLEYMANAGER_API,
+      changeOrigin: true,
+      secure: true,
+      cookieDomainRewrite: 'localhost',
+    };
+  }
+  return proxyConfig;
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   // Warn if proxy URL is not configured for production (runtime check in client.ts handles the actual failure)
@@ -254,53 +274,17 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      proxy: {
-        // Proxy all API calls during development to bypass CORS
+      proxy: createDevProxy([
         // Authentication endpoints
-        '/login': {
-          target: 'https://volleymanager.volleyball.ch',
-          changeOrigin: true,
-          secure: true,
-          cookieDomainRewrite: 'localhost',
-        },
-        '/logout': {
-          target: 'https://volleymanager.volleyball.ch',
-          changeOrigin: true,
-          secure: true,
-          cookieDomainRewrite: 'localhost',
-        },
-        '/sportmanager.security': {
-          target: 'https://volleymanager.volleyball.ch',
-          changeOrigin: true,
-          secure: true,
-          cookieDomainRewrite: 'localhost',
-        },
-        '/sportmanager.volleyball': {
-          target: 'https://volleymanager.volleyball.ch',
-          changeOrigin: true,
-          secure: true,
-          cookieDomainRewrite: 'localhost',
-        },
+        '/login',
+        '/logout',
+        '/sportmanager.security',
+        '/sportmanager.volleyball',
         // API endpoints
-        '/neos': {
-          target: 'https://volleymanager.volleyball.ch',
-          changeOrigin: true,
-          secure: true,
-          cookieDomainRewrite: 'localhost',
-        },
-        '/indoorvolleyball.refadmin': {
-          target: 'https://volleymanager.volleyball.ch',
-          changeOrigin: true,
-          secure: true,
-          cookieDomainRewrite: 'localhost',
-        },
-        '/sportmanager.indoorvolleyball': {
-          target: 'https://volleymanager.volleyball.ch',
-          changeOrigin: true,
-          secure: true,
-          cookieDomainRewrite: 'localhost',
-        },
-      },
+        '/neos',
+        '/indoorvolleyball.refadmin',
+        '/sportmanager.indoorvolleyball',
+      ]),
     },
   };
 })

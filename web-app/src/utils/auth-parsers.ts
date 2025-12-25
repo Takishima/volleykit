@@ -6,6 +6,18 @@
 import { logger } from "@/utils/logger";
 
 /**
+ * URL path pattern that indicates successful login redirect to dashboard.
+ * The API redirects to this path after successful authentication.
+ */
+const DASHBOARD_URL_PATTERN = "/sportmanager.volleyball/main/dashboard";
+
+/**
+ * HTML patterns that indicate authentication failure.
+ * The Vuetify snackbar uses these color attributes for error messages.
+ */
+const AUTH_ERROR_INDICATORS = ['color="error"', "color='error'"] as const;
+
+/**
  * Login form fields extracted from the login page HTML.
  * The Neos Flow framework requires these fields for CSRF protection.
  */
@@ -169,8 +181,7 @@ export async function submitLoginCredentials(
   // Check if we were redirected to the dashboard (successful login)
   // The API returns 303 redirect on success, fetch follows it automatically
   const isOnDashboard =
-    response.redirected &&
-    response.url.includes("/sportmanager.volleyball/main/dashboard");
+    response.redirected && response.url.includes(DASHBOARD_URL_PATTERN);
 
   if (isOnDashboard) {
     // Successfully redirected to dashboard - extract CSRF token
@@ -189,8 +200,9 @@ export async function submitLoginCredentials(
 
   // Not redirected - check if we're on the login page with an error
   // The Vuetify snackbar with color="error" indicates authentication failure
-  const hasAuthError =
-    html.includes('color="error"') || html.includes("color='error'");
+  const hasAuthError = AUTH_ERROR_INDICATORS.some((indicator) =>
+    html.includes(indicator),
+  );
 
   if (hasAuthError) {
     return { success: false, error: "Invalid username or password" };
