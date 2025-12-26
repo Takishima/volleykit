@@ -38,11 +38,12 @@ function TransportSectionComponent() {
   );
 
   // Calculate cache entry count - recalculates when cacheVersion changes
-  const cacheEntryCount = useMemo(() => {
-    // cacheVersion is used to trigger recalculation after clearing cache
-    void cacheVersion;
-    return transportEnabled ? getTravelTimeCacheStats().entryCount : 0;
-  }, [transportEnabled, cacheVersion]);
+  const cacheEntryCount = useMemo(
+    () => (transportEnabled ? getTravelTimeCacheStats().entryCount : 0),
+    // cacheVersion triggers recalculation after clearing cache
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [transportEnabled, cacheVersion],
+  );
 
   const handleToggleTransport = useCallback(() => {
     setTransportEnabled(!transportEnabled);

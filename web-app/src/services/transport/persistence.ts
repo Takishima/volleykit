@@ -8,12 +8,18 @@
 import { TRAVEL_TIME_STORAGE_KEY, TRAVEL_TIME_CACHE_TTL } from "./cache";
 import type { TravelTimeResult } from "./types";
 import type { DayType } from "./cache";
+import { logger } from "@/utils/logger";
 
 interface CachedTravelTime {
   result: TravelTimeResult;
   timestamp: number;
 }
 
+/**
+ * Cache structure with version for future migrations.
+ * When changing the cache format, increment version and add migration logic
+ * in loadCache() to handle upgrading old cache data.
+ */
 interface TravelTimeCache {
   version: 1;
   entries: Record<string, CachedTravelTime>;
@@ -59,8 +65,11 @@ function loadCache(): TravelTimeCache {
 function saveCache(cache: TravelTimeCache): void {
   try {
     localStorage.setItem(TRAVEL_TIME_STORAGE_KEY, JSON.stringify(cache));
-  } catch {
-    // localStorage might be full or disabled - ignore
+  } catch (error) {
+    // localStorage might be full or disabled - log for debugging but don't fail
+    if (error instanceof DOMException && error.name === "QuotaExceededError") {
+      logger.warn("Travel time cache: localStorage quota exceeded");
+    }
   }
 }
 
