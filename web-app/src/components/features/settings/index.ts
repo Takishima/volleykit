@@ -1,6 +1,8 @@
 export { ProfileSection } from "./ProfileSection";
 export { LanguageSection } from "./LanguageSection";
 export { HomeLocationSection } from "./HomeLocationSection";
+export { TransportSection } from "./TransportSection";
+export { DataRetentionSection } from "./DataRetentionSection";
 export { TourSection } from "./TourSection";
 export { DemoSection } from "./DemoSection";
 export { SafeModeSection } from "./SafeModeSection";

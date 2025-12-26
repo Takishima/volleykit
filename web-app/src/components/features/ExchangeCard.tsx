@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { format, parseISO } from "date-fns";
 import { ExpandableCard } from "@/components/ui/ExpandableCard";
+import { TravelTimeBadge } from "@/components/features/TravelTimeBadge";
 import { MapPin, MaleIcon, FemaleIcon, Home } from "@/components/ui/icons";
 import type { GameExchange } from "@/api/client";
 import { useDateLocale } from "@/hooks/useDateFormat";
@@ -14,6 +15,10 @@ interface ExchangeCardProps {
   dataTour?: string;
   /** Distance from user's home location in kilometres (if available) */
   distanceKm?: number | null;
+  /** Travel time in minutes (if available) */
+  travelTimeMinutes?: number | null;
+  /** Whether travel time is currently loading */
+  travelTimeLoading?: boolean;
 }
 
 function ExchangeCardComponent({
@@ -21,6 +26,8 @@ function ExchangeCardComponent({
   disableExpansion,
   dataTour,
   distanceKm,
+  travelTimeMinutes,
+  travelTimeLoading,
 }: ExchangeCardProps) {
   const { t, tInterpolate } = useTranslation();
   const dateLocale = useDateLocale();
@@ -90,13 +97,23 @@ function ExchangeCardComponent({
             </div>
           </div>
 
-          {/* Distance badge */}
-          {distanceKm != null && (
-            <div className="flex items-center shrink-0">
-              <span className="text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 px-2 py-0.5 rounded-full flex items-center gap-1">
-                <Home className="w-3 h-3" aria-hidden="true" />
-                {distanceKm.toFixed(0)} {t("common.distanceUnit")}
-              </span>
+          {/* Distance and travel time badges */}
+          {(distanceKm != null || travelTimeMinutes !== undefined || travelTimeLoading) && (
+            <div className="flex items-center gap-1 shrink-0">
+              {/* Travel time badge */}
+              {(travelTimeMinutes !== undefined || travelTimeLoading) && (
+                <TravelTimeBadge
+                  durationMinutes={travelTimeMinutes ?? undefined}
+                  isLoading={travelTimeLoading}
+                />
+              )}
+              {/* Distance badge */}
+              {distanceKm != null && (
+                <span className="text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <Home className="w-3 h-3" aria-hidden="true" />
+                  {distanceKm.toFixed(0)} {t("common.distanceUnit")}
+                </span>
+              )}
             </div>
           )}
 

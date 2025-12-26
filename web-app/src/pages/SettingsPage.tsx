@@ -9,6 +9,8 @@ import {
   ProfileSection,
   LanguageSection,
   HomeLocationSection,
+  TransportSection,
+  DataRetentionSection,
   TourSection,
   DemoSection,
   SafeModeSection,
@@ -53,6 +55,10 @@ export function SettingsPage() {
       <LanguageSection />
 
       <HomeLocationSection />
+
+      <TransportSection />
+
+      <DataRetentionSection />
 
       <TourSection isDemoMode={isDemoMode} />
 

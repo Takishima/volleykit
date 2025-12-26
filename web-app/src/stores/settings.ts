@@ -29,6 +29,19 @@ export interface DistanceFilter {
   maxDistanceKm: number;
 }
 
+/**
+ * Travel time filter configuration for exchanges.
+ * Uses Swiss public transport travel times.
+ */
+export interface TravelTimeFilter {
+  /** Whether travel time filtering is active */
+  enabled: boolean;
+  /** Maximum travel time in minutes */
+  maxTravelTimeMinutes: number;
+  /** Timestamp when cache was last invalidated (home location change) */
+  cacheInvalidatedAt: number | null;
+}
+
 interface SettingsState {
   // Safe mode
   isSafeModeEnabled: boolean;
@@ -42,10 +55,23 @@ interface SettingsState {
   distanceFilter: DistanceFilter;
   setDistanceFilterEnabled: (enabled: boolean) => void;
   setMaxDistanceKm: (km: number) => void;
+
+  // Transport feature toggle
+  transportEnabled: boolean;
+  setTransportEnabled: (enabled: boolean) => void;
+
+  // Travel time filter settings
+  travelTimeFilter: TravelTimeFilter;
+  setTravelTimeFilterEnabled: (enabled: boolean) => void;
+  setMaxTravelTimeMinutes: (minutes: number) => void;
+  invalidateTravelTimeCache: () => void;
 }
 
 /** Default max distance in kilometers */
 const DEFAULT_MAX_DISTANCE_KM = 50;
+
+/** Default max travel time in minutes */
+const DEFAULT_MAX_TRAVEL_TIME_MINUTES = 60;
 
 /**
  * Demo mode default location: Zurich main station area.
@@ -67,13 +93,26 @@ export const useSettingsStore = create<SettingsState>()(
         enabled: false,
         maxDistanceKm: DEFAULT_MAX_DISTANCE_KM,
       },
+      transportEnabled: false,
+      travelTimeFilter: {
+        enabled: false,
+        maxTravelTimeMinutes: DEFAULT_MAX_TRAVEL_TIME_MINUTES,
+        cacheInvalidatedAt: null,
+      },
 
       setSafeMode: (enabled: boolean) => {
         set({ isSafeModeEnabled: enabled });
       },
 
       setHomeLocation: (location: UserLocation | null) => {
-        set({ homeLocation: location });
+        // When home location changes, invalidate travel time cache
+        set((state) => ({
+          homeLocation: location,
+          travelTimeFilter: {
+            ...state.travelTimeFilter,
+            cacheInvalidatedAt: Date.now(),
+          },
+        }));
       },
 
       setDistanceFilterEnabled: (enabled: boolean) => {
@@ -87,6 +126,31 @@ export const useSettingsStore = create<SettingsState>()(
           distanceFilter: { ...state.distanceFilter, maxDistanceKm: km },
         }));
       },
+
+      setTransportEnabled: (enabled: boolean) => {
+        set({ transportEnabled: enabled });
+      },
+
+      setTravelTimeFilterEnabled: (enabled: boolean) => {
+        set((state) => ({
+          travelTimeFilter: { ...state.travelTimeFilter, enabled },
+        }));
+      },
+
+      setMaxTravelTimeMinutes: (minutes: number) => {
+        set((state) => ({
+          travelTimeFilter: { ...state.travelTimeFilter, maxTravelTimeMinutes: minutes },
+        }));
+      },
+
+      invalidateTravelTimeCache: () => {
+        set((state) => ({
+          travelTimeFilter: {
+            ...state.travelTimeFilter,
+            cacheInvalidatedAt: Date.now(),
+          },
+        }));
+      },
     }),
     {
       name: "volleykit-settings",
@@ -94,6 +158,8 @@ export const useSettingsStore = create<SettingsState>()(
         isSafeModeEnabled: state.isSafeModeEnabled,
         homeLocation: state.homeLocation,
         distanceFilter: state.distanceFilter,
+        transportEnabled: state.transportEnabled,
+        travelTimeFilter: state.travelTimeFilter,
       }),
     },
   ),

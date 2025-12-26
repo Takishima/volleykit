@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, lazy, Suspense } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useGameExchanges, type ExchangeStatus } from "@/hooks/useConvocations";
 import { useExchangeActions } from "@/hooks/useExchangeActions";
+import { useTravelTimeFilter } from "@/hooks/useTravelTimeFilter";
 import { useDemoStore } from "@/stores/demo";
 import { useAuthStore } from "@/stores/auth";
 import { useSettingsStore } from "@/stores/settings";
@@ -11,6 +12,7 @@ import { ExchangeCard } from "@/components/features/ExchangeCard";
 import { SwipeableCard } from "@/components/ui/SwipeableCard";
 import { LevelFilterToggle } from "@/components/features/LevelFilterToggle";
 import { DistanceFilterToggle } from "@/components/features/DistanceFilterToggle";
+import { TravelTimeFilterToggle } from "@/components/features/TravelTimeFilterToggle";
 import {
   LoadingState,
   ErrorState,
@@ -51,16 +53,29 @@ export function ExchangePage() {
       userRefereeLevelGradationValue: state.userRefereeLevelGradationValue,
     })),
   );
-  const { homeLocation, distanceFilter, setDistanceFilterEnabled } =
-    useSettingsStore(
-      useShallow((state) => ({
-        homeLocation: state.homeLocation,
-        distanceFilter: state.distanceFilter,
-        setDistanceFilterEnabled: state.setDistanceFilterEnabled,
-      })),
-    );
+  const {
+    homeLocation,
+    distanceFilter,
+    setDistanceFilterEnabled,
+    transportEnabled,
+    travelTimeFilter,
+    setTravelTimeFilterEnabled,
+  } = useSettingsStore(
+    useShallow((state) => ({
+      homeLocation: state.homeLocation,
+      distanceFilter: state.distanceFilter,
+      setDistanceFilterEnabled: state.setDistanceFilterEnabled,
+      transportEnabled: state.transportEnabled,
+      travelTimeFilter: state.travelTimeFilter,
+      setTravelTimeFilterEnabled: state.setTravelTimeFilterEnabled,
+    })),
+  );
 
   const { data, isLoading, error, refetch } = useGameExchanges(statusFilter);
+
+  // Get travel time data for exchanges
+  const { exchangesWithTravelTime, isAvailable: isTravelTimeAvailable } =
+    useTravelTimeFilter(data ?? null);
 
   // Calculate distance for each exchange from user's home location
   const exchangesWithDistance = useMemo(() => {
@@ -129,6 +144,26 @@ export function ExchangePage() {
       });
     }
 
+    // Apply travel time filter (only on "open" tab when transport is enabled)
+    if (
+      travelTimeFilter.enabled &&
+      statusFilter === "open" &&
+      transportEnabled &&
+      exchangesWithTravelTime
+    ) {
+      // Get travel times from exchangesWithTravelTime
+      const travelTimeMap = new Map(
+        exchangesWithTravelTime.map((e) => [e.item.__identity, e.travelTimeMinutes]),
+      );
+
+      result = result.filter(({ exchange }) => {
+        const travelTime = travelTimeMap.get(exchange.__identity);
+        // If no travel time available, include the exchange (conservative)
+        if (travelTime === null || travelTime === undefined) return true;
+        return travelTime <= travelTimeFilter.maxTravelTimeMinutes;
+      });
+    }
+
     return result;
   }, [
     exchangesWithDistance,
@@ -139,6 +174,10 @@ export function ExchangePage() {
     distanceFilter.enabled,
     distanceFilter.maxDistanceKm,
     homeLocation,
+    travelTimeFilter.enabled,
+    travelTimeFilter.maxTravelTimeMinutes,
+    transportEnabled,
+    exchangesWithTravelTime,
   ]);
 
   const {
@@ -197,12 +236,22 @@ export function ExchangePage() {
   // Determine if filters are available
   const isLevelFilterAvailable = isDemoMode && userRefereeLevel !== null;
   const isDistanceFilterAvailable = homeLocation !== null;
+  const isTravelTimeFilterAvailable =
+    transportEnabled && isTravelTimeAvailable && homeLocation !== null;
 
   // Filter toggles - only show on "Open" tab when available
   const filterContent =
     statusFilter === "open" &&
-    (isLevelFilterAvailable || isDistanceFilterAvailable) ? (
-      <div className="flex items-center gap-3">
+    (isLevelFilterAvailable || isDistanceFilterAvailable || isTravelTimeFilterAvailable) ? (
+      <div className="flex flex-wrap items-center gap-3">
+        {isTravelTimeFilterAvailable && (
+          <TravelTimeFilterToggle
+            checked={travelTimeFilter.enabled}
+            onChange={setTravelTimeFilterEnabled}
+            maxTravelTimeMinutes={travelTimeFilter.maxTravelTimeMinutes}
+            dataTour="exchange-travel-time-filter"
+          />
+        )}
         {isDistanceFilterAvailable && (
           <DistanceFilterToggle
             checked={distanceFilter.enabled}
@@ -239,7 +288,8 @@ export function ExchangePage() {
     }
 
     if (!filteredData || filteredData.length === 0) {
-      const hasActiveFilters = filterByLevel || distanceFilter.enabled;
+      const hasActiveFilters =
+        filterByLevel || distanceFilter.enabled || travelTimeFilter.enabled;
       return (
         <EmptyState
           icon="exchange"
@@ -259,23 +309,38 @@ export function ExchangePage() {
       );
     }
 
+    // Build travel time lookup map
+    const travelTimeMap = exchangesWithTravelTime
+      ? new Map(
+          exchangesWithTravelTime.map((e) => [
+            e.item.__identity,
+            { minutes: e.travelTimeMinutes, isLoading: e.isLoading },
+          ]),
+        )
+      : new Map();
+
     return (
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredData.map(({ exchange, distanceKm }, index) => (
-          <SwipeableCard
-            key={exchange.__identity}
-            swipeConfig={getSwipeConfig(exchange)}
-          >
-            {({ isDrawerOpen }) => (
-              <ExchangeCard
-                exchange={exchange}
-                disableExpansion={isDrawerOpen}
-                dataTour={index === 0 ? "exchange-card" : undefined}
-                distanceKm={homeLocation ? distanceKm : null}
-              />
-            )}
-          </SwipeableCard>
-        ))}
+        {filteredData.map(({ exchange, distanceKm }, index) => {
+          const travelTimeData = travelTimeMap.get(exchange.__identity);
+          return (
+            <SwipeableCard
+              key={exchange.__identity}
+              swipeConfig={getSwipeConfig(exchange)}
+            >
+              {({ isDrawerOpen }) => (
+                <ExchangeCard
+                  exchange={exchange}
+                  disableExpansion={isDrawerOpen}
+                  dataTour={index === 0 ? "exchange-card" : undefined}
+                  distanceKm={homeLocation ? distanceKm : null}
+                  travelTimeMinutes={travelTimeData?.minutes}
+                  travelTimeLoading={travelTimeData?.isLoading}
+                />
+              )}
+            </SwipeableCard>
+          );
+        })}
       </div>
     );
   };

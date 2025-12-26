@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 import { SettingsPage } from "./SettingsPage";
 import * as authStore from "@/stores/auth";
 import * as settingsStore from "@/stores/settings";
@@ -14,6 +16,20 @@ vi.mock("@/hooks/useTranslation", () => ({
     locale: "en",
   }),
 }));
+vi.mock("@/hooks/useTravelTime", () => ({
+  useTravelTimeAvailable: () => false,
+}));
+
+function createWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return function Wrapper({ children }: { children: ReactNode }) {
+    return (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+  };
+}
 
 // Disable PWA for tests by default
 vi.stubGlobal("__PWA_ENABLED__", false);
@@ -76,30 +92,30 @@ describe("SettingsPage", () => {
 
   describe("Profile Section", () => {
     it("displays user name", () => {
-      render(<SettingsPage />);
+      render(<SettingsPage />, { wrapper: createWrapper() });
       expect(screen.getByText("John Doe")).toBeInTheDocument();
     });
 
     it("displays user initials", () => {
-      render(<SettingsPage />);
+      render(<SettingsPage />, { wrapper: createWrapper() });
       expect(screen.getByText("JD")).toBeInTheDocument();
     });
 
     it("displays user email", () => {
-      render(<SettingsPage />);
+      render(<SettingsPage />, { wrapper: createWrapper() });
       expect(screen.getByText("john.doe@example.com")).toBeInTheDocument();
     });
 
     it("does not render profile when user is null", () => {
       mockAuthStore({ user: null });
-      render(<SettingsPage />);
+      render(<SettingsPage />, { wrapper: createWrapper() });
       expect(screen.queryByText("John Doe")).not.toBeInTheDocument();
     });
   });
 
   describe("Language Section", () => {
     it("renders language section with heading", () => {
-      render(<SettingsPage />);
+      render(<SettingsPage />, { wrapper: createWrapper() });
       // Language section header should be present
       expect(screen.getByText("settings.language")).toBeInTheDocument();
     });
@@ -108,26 +124,26 @@ describe("SettingsPage", () => {
   describe("Safe Mode Section", () => {
     it("hides safe mode section in demo mode", () => {
       mockAuthStore({ isDemoMode: true });
-      render(<SettingsPage />);
+      render(<SettingsPage />, { wrapper: createWrapper() });
       expect(screen.queryByText("settings.safeMode")).not.toBeInTheDocument();
     });
 
     it("shows safe mode section when not in demo mode", () => {
-      render(<SettingsPage />);
+      render(<SettingsPage />, { wrapper: createWrapper() });
       expect(screen.getByText("settings.safeMode")).toBeInTheDocument();
     });
   });
 
   describe("About Section", () => {
     it("displays version info", () => {
-      render(<SettingsPage />);
+      render(<SettingsPage />, { wrapper: createWrapper() });
       expect(screen.getByText("1.0.0")).toBeInTheDocument();
     });
   });
 
   describe("Logout", () => {
     it("renders logout button", () => {
-      render(<SettingsPage />);
+      render(<SettingsPage />, { wrapper: createWrapper() });
       expect(screen.getByText("auth.logout")).toBeInTheDocument();
     });
   });
