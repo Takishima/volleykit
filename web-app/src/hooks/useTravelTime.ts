@@ -72,9 +72,8 @@ export function useTravelTime(
     // Don't refetch on window focus since travel times are stable
     refetchOnWindowFocus: false,
 
-    // Retry with exponential backoff for transient failures
-    retry: 3,
-    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30000),
+    // Use TanStack Query defaults for retry (3 retries with exponential backoff)
+    // Not setting retry here allows tests to override via QueryClient defaults
   });
 }
 

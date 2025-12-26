@@ -118,15 +118,18 @@ export async function calculateTravelTime(
  * @returns Duration in minutes
  */
 function parseDurationToMinutes(duration: string): number {
-  // Match ISO 8601 duration format: PT[nH][nM][nS]
-  const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-  if (!match) {
+  if (!duration.startsWith("PT")) {
     return 0;
   }
 
-  const hours = parseInt(match[1] ?? "0", 10);
-  const minutes = parseInt(match[2] ?? "0", 10);
-  const seconds = parseInt(match[3] ?? "0", 10);
+  // Extract hours, minutes, seconds with simple patterns
+  const hoursMatch = duration.match(/(\d+)H/);
+  const minutesMatch = duration.match(/(\d+)M/);
+  const secondsMatch = duration.match(/(\d+)S/);
+
+  const hours = hoursMatch ? parseInt(hoursMatch[1]!, 10) : 0;
+  const minutes = minutesMatch ? parseInt(minutesMatch[1]!, 10) : 0;
+  const seconds = secondsMatch ? parseInt(secondsMatch[1]!, 10) : 0;
 
   return hours * 60 + minutes + Math.ceil(seconds / 60);
 }

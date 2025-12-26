@@ -262,7 +262,7 @@ describe("useTravelTime", () => {
   });
 
   describe("error handling", () => {
-    it("handles API errors gracefully", { timeout: 15000 }, async () => {
+    it("handles API errors gracefully", async () => {
       const { calculateMockTravelTime } = await import("@/services/transport");
       const { useAuthStore } = await import("@/stores/auth");
       const { useSettingsStore } = await import("@/stores/settings");
@@ -285,13 +285,10 @@ describe("useTravelTime", () => {
         { wrapper: createWrapper() },
       );
 
-      // Wait for all retries to complete (3 retries with exponential backoff: 1s + 2s + 4s = 7s)
-      await waitFor(
-        () => {
-          expect(result.current.isError).toBe(true);
-        },
-        { timeout: 10000 },
-      );
+      // QueryClient is configured with retry: false, so error surfaces immediately
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true);
+      });
 
       expect(result.current.error?.message).toBe("API error");
     });

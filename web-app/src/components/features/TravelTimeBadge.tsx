@@ -50,17 +50,9 @@ function TravelTimeBadgeComponent({
     return null;
   }
 
-  // Determine badge variant based on travel time
-  const variant =
-    durationMinutes <= 45
-      ? "success"
-      : durationMinutes <= 90
-        ? "warning"
-        : "danger";
-
   return (
     <Badge
-      variant={variant}
+      variant="neutral"
       className={className}
       title={t("exchange.travelTime")}
     >
