@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { format, parseISO } from "date-fns";
 import { ExpandableCard } from "@/components/ui/ExpandableCard";
-import { MapPin, MaleIcon, FemaleIcon } from "@/components/ui/icons";
+import { MapPin, MaleIcon, FemaleIcon, Home } from "@/components/ui/icons";
 import type { GameExchange } from "@/api/client";
 import { useDateLocale } from "@/hooks/useDateFormat";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -93,7 +93,8 @@ function ExchangeCardComponent({
           {/* Distance badge */}
           {distanceKm != null && (
             <div className="flex items-center shrink-0">
-              <span className="text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <Home className="w-3 h-3" aria-hidden="true" />
                 {distanceKm.toFixed(0)} {t("common.distanceUnit")}
               </span>
             </div>
