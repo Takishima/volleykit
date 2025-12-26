@@ -65,6 +65,9 @@ interface SettingsState {
   setTravelTimeFilterEnabled: (enabled: boolean) => void;
   setMaxTravelTimeMinutes: (minutes: number) => void;
   invalidateTravelTimeCache: () => void;
+
+  // Reset all settings to defaults (keeps safe mode)
+  resetLocationSettings: () => void;
 }
 
 /** Default max distance in kilometers */
@@ -150,6 +153,24 @@ export const useSettingsStore = create<SettingsState>()(
             cacheInvalidatedAt: Date.now(),
           },
         }));
+      },
+
+      resetLocationSettings: () => {
+        // Reset all location-related settings to defaults
+        // Keeps safe mode and language preferences unchanged
+        set({
+          homeLocation: null,
+          distanceFilter: {
+            enabled: false,
+            maxDistanceKm: DEFAULT_MAX_DISTANCE_KM,
+          },
+          transportEnabled: false,
+          travelTimeFilter: {
+            enabled: false,
+            maxTravelTimeMinutes: DEFAULT_MAX_TRAVEL_TIME_MINUTES,
+            cacheInvalidatedAt: null,
+          },
+        });
       },
     }),
     {

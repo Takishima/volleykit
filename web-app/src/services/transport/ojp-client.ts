@@ -150,17 +150,3 @@ function parseDurationToMinutes(duration: string): number {
 
   return hours * 60 + minutes + Math.ceil(seconds / 60);
 }
-
-/**
- * Hash a location to create a cache key component.
- * Rounds to ~100m precision to avoid cache misses from GPS drift.
- *
- * @param coords Coordinates to hash
- * @returns String hash suitable for use in cache keys
- */
-export function hashLocation(coords: Coordinates): string {
-  // Round to 3 decimal places (~100m precision)
-  const lat = Math.round(coords.latitude * 1000) / 1000;
-  const lon = Math.round(coords.longitude * 1000) / 1000;
-  return `${lat},${lon}`;
-}

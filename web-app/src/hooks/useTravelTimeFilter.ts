@@ -118,11 +118,22 @@ export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | nul
   });
 
   // Build a map of hall ID -> travel time result
+  // Uses explicit ID matching instead of index correlation for robustness
   const travelTimeMap = useMemo(() => {
     const map = new Map<string, { minutes: number | null; isLoading: boolean; isError: boolean }>();
 
-    hallInfos.forEach((hallInfo, index) => {
-      const query = queries[index];
+    // Create a lookup from query key to result
+    const queryByHallId = new Map<string, typeof queries[number]>();
+    queries.forEach((query, index) => {
+      const hallInfo = hallInfos[index];
+      if (hallInfo) {
+        queryByHallId.set(hallInfo.id, query);
+      }
+    });
+
+    // Build the result map using explicit ID matching
+    hallInfos.forEach((hallInfo) => {
+      const query = queryByHallId.get(hallInfo.id);
       map.set(hallInfo.id, {
         minutes: query?.data?.durationMinutes ?? null,
         isLoading: query?.isLoading ?? false,

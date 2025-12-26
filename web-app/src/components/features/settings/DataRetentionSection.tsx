@@ -12,13 +12,12 @@ function DataRetentionSectionComponent() {
   const queryClient = useQueryClient();
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const { homeLocation, transportEnabled, invalidateTravelTimeCache, setHomeLocation } =
+  const { homeLocation, transportEnabled, resetLocationSettings } =
     useSettingsStore(
       useShallow((state) => ({
         homeLocation: state.homeLocation,
         transportEnabled: state.transportEnabled,
-        invalidateTravelTimeCache: state.invalidateTravelTimeCache,
-        setHomeLocation: state.setHomeLocation,
+        resetLocationSettings: state.resetLocationSettings,
       })),
     );
 
@@ -26,17 +25,12 @@ function DataRetentionSectionComponent() {
     // Clear travel time cache from TanStack Query
     queryClient.removeQueries({ queryKey: queryKeys.travelTime.all });
 
-    // Invalidate cache timestamp in settings store
-    invalidateTravelTimeCache();
-
-    // Clear home location
-    setHomeLocation(null);
-
-    // Reset local storage settings (but keep safe mode and language)
-    localStorage.removeItem("volleykit-settings");
+    // Reset all location-related settings via Zustand store
+    // This properly updates state and persists through the middleware
+    resetLocationSettings();
 
     setShowConfirm(false);
-  }, [queryClient, invalidateTravelTimeCache, setHomeLocation]);
+  }, [queryClient, resetLocationSettings]);
 
   const handleShowConfirm = useCallback(() => {
     setShowConfirm(true);

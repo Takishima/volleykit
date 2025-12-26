@@ -77,6 +77,17 @@ export function ExchangePage() {
   const { exchangesWithTravelTime, isAvailable: isTravelTimeAvailable } =
     useTravelTimeFilter(data ?? null);
 
+  // Build travel time lookup map once for both filtering and rendering
+  const travelTimeMap = useMemo(() => {
+    if (!exchangesWithTravelTime) return new Map<string, { minutes: number | null; isLoading: boolean }>();
+    return new Map(
+      exchangesWithTravelTime.map((e) => [
+        e.item.__identity,
+        { minutes: e.travelTimeMinutes, isLoading: e.isLoading },
+      ]),
+    );
+  }, [exchangesWithTravelTime]);
+
   // Calculate distance for each exchange from user's home location
   const exchangesWithDistance = useMemo(() => {
     if (!data) return null;
@@ -149,18 +160,13 @@ export function ExchangePage() {
       travelTimeFilter.enabled &&
       statusFilter === "open" &&
       transportEnabled &&
-      exchangesWithTravelTime
+      travelTimeMap.size > 0
     ) {
-      // Get travel times from exchangesWithTravelTime
-      const travelTimeMap = new Map(
-        exchangesWithTravelTime.map((e) => [e.item.__identity, e.travelTimeMinutes]),
-      );
-
       result = result.filter(({ exchange }) => {
-        const travelTime = travelTimeMap.get(exchange.__identity);
+        const travelTimeData = travelTimeMap.get(exchange.__identity);
         // If no travel time available, include the exchange (conservative)
-        if (travelTime === null || travelTime === undefined) return true;
-        return travelTime <= travelTimeFilter.maxTravelTimeMinutes;
+        if (travelTimeData?.minutes === null || travelTimeData?.minutes === undefined) return true;
+        return travelTimeData.minutes <= travelTimeFilter.maxTravelTimeMinutes;
       });
     }
 
@@ -177,7 +183,7 @@ export function ExchangePage() {
     travelTimeFilter.enabled,
     travelTimeFilter.maxTravelTimeMinutes,
     transportEnabled,
-    exchangesWithTravelTime,
+    travelTimeMap,
   ]);
 
   const {
@@ -308,16 +314,6 @@ export function ExchangePage() {
         />
       );
     }
-
-    // Build travel time lookup map
-    const travelTimeMap = exchangesWithTravelTime
-      ? new Map(
-          exchangesWithTravelTime.map((e) => [
-            e.item.__identity,
-            { minutes: e.travelTimeMinutes, isLoading: e.isLoading },
-          ]),
-        )
-      : new Map();
 
     return (
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">

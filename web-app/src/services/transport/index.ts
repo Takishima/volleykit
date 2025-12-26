@@ -12,7 +12,7 @@ export type {
 
 export { TransportApiError } from "./types";
 
-export { calculateTravelTime, isOjpConfigured, hashLocation } from "./ojp-client";
+export { calculateTravelTime, isOjpConfigured } from "./ojp-client";
 
 export { calculateMockTravelTime, mockTransportApi } from "./mock-transport";
 
@@ -21,4 +21,5 @@ export {
   TRAVEL_TIME_STALE_TIME,
   TRAVEL_TIME_GC_TIME,
   getHallCacheKey,
+  hashLocation,
 } from "./cache";
