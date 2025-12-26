@@ -26,7 +26,8 @@ export class ExchangesPage {
     this.myApplicationsTab = page.locator('#tab-applied');
     this.tabPanel = page.getByRole("tabpanel");
     this.exchangeCards = this.tabPanel.getByRole("button");
-    this.levelFilterToggle = page.getByRole("checkbox");
+    // Use data-tour attribute to distinguish from distance filter checkbox
+    this.levelFilterToggle = page.locator('[data-tour="exchange-filter"]');
   }
 
   async goto() {
