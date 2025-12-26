@@ -104,8 +104,8 @@ export async function calculateTravelTime(
       throw new TransportApiError("No route found between locations", "NO_ROUTE");
     }
 
-    // Get the first (fastest) trip - safe access after length check
-    const trip = trips[0]!;
+    // Select the best trip based on target arrival time or take earliest departure
+    const trip = selectBestTrip(trips, options.targetArrivalTime);
 
     // Parse duration from ISO 8601 duration string (e.g., "PT1H30M")
     const durationMinutes = parseDurationToMinutes(trip.duration);
@@ -126,6 +126,67 @@ export async function calculateTravelTime(
     const message = error instanceof Error ? error.message : "Unknown transport API error";
     throw new TransportApiError(message, "API_ERROR");
   }
+}
+
+/**
+ * Subset of trip properties from ojp-sdk-next used for connection selection.
+ * Defined locally to avoid coupling to SDK internals and to type only what we need.
+ * If the SDK's Trip type changes, this interface should be updated accordingly.
+ */
+export interface OjpTrip {
+  duration: string;
+  startTime: string;
+  endTime: string;
+  transfers: number;
+}
+
+/**
+ * Select the best trip based on target arrival time.
+ *
+ * Selection criteria (in priority order):
+ * 1. Must arrive on time (before or at target arrival time)
+ * 2. Prefer fewer transfers (less stressful journey)
+ * 3. Prefer arrival closest to target time (minimize waiting)
+ *
+ * If no targetArrivalTime is provided, returns the first trip (earliest departure).
+ *
+ * @param trips Array of trips from OJP API
+ * @param targetArrivalTime Optional target arrival time
+ * @returns The best trip for the given criteria
+ */
+export function selectBestTrip(trips: OjpTrip[], targetArrivalTime?: Date): OjpTrip {
+  // If no target time, return first trip (earliest departure)
+  if (!targetArrivalTime) {
+    return trips[0]!;
+  }
+
+  const targetTime = targetArrivalTime.getTime();
+
+  // Find trips that arrive on time (before or at target)
+  const onTimeTrips = trips.filter((trip) => {
+    const arrivalTime = new Date(trip.endTime).getTime();
+    return arrivalTime <= targetTime;
+  });
+
+  // If no trips arrive on time, return the first trip (earliest arrival)
+  if (onTimeTrips.length === 0) {
+    return trips[0]!;
+  }
+
+  // Select best trip: fewer transfers first, then closest arrival to target
+  return onTimeTrips.reduce((best, trip) => {
+    // Prefer fewer transfers
+    if (trip.transfers < best.transfers) {
+      return trip;
+    }
+    if (trip.transfers > best.transfers) {
+      return best;
+    }
+    // Same transfers: prefer later arrival (closer to target time)
+    const bestArrival = new Date(best.endTime).getTime();
+    const tripArrival = new Date(trip.endTime).getTime();
+    return tripArrival > bestArrival ? trip : best;
+  });
 }
 
 /**

@@ -25,7 +25,10 @@ import type { GameExchange } from "@/api/client";
 interface HallInfo {
   id: string;
   coords: Coordinates | null;
+  /** Game start time for optimal connection selection */
+  gameStartTime: Date | null;
 }
+
 
 interface ExchangeWithTravelTime<T> {
   item: T;
@@ -45,9 +48,14 @@ function getHallInfo(exchange: GameExchange): HallInfo | null {
   const lat = geoLocation?.latitude;
   const lon = geoLocation?.longitude;
 
+  // Extract game start time for optimal connection selection
+  const startingDateTime = exchange.refereeGame?.game?.startingDateTime;
+  const gameStartTime = startingDateTime ? new Date(startingDateTime) : null;
+
   return {
     id: hall.__identity,
     coords: lat != null && lon != null ? { latitude: lat, longitude: lon } : null,
+    gameStartTime,
   };
 }
 
@@ -122,11 +130,19 @@ export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | nul
           longitude: homeLocation.longitude,
         };
 
+        // Calculate target arrival time (game start minus buffer from settings)
+        const arrivalBufferMs = travelTimeFilter.arrivalBufferMinutes * 60 * 1000;
+        const targetArrivalTime = hallInfo.gameStartTime
+          ? new Date(hallInfo.gameStartTime.getTime() - arrivalBufferMs)
+          : undefined;
+
         let result: TravelTimeResult;
         if (isDemoMode) {
           result = await calculateMockTravelTime(fromCoords, hallInfo.coords);
         } else {
-          result = await calculateTravelTime(fromCoords, hallInfo.coords);
+          result = await calculateTravelTime(fromCoords, hallInfo.coords, {
+            targetArrivalTime,
+          });
         }
 
         // Persist to localStorage

@@ -232,6 +232,7 @@ describe("useTravelTime", () => {
       expect(calculateTravelTime).toHaveBeenCalledWith(
         { latitude: mockHomeLocation.latitude, longitude: mockHomeLocation.longitude },
         mockHallCoords,
+        { targetArrivalTime: undefined },
       );
       expect(result.current.data?.durationMinutes).toBe(75);
     });

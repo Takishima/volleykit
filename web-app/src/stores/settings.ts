@@ -38,6 +38,8 @@ export interface TravelTimeFilter {
   enabled: boolean;
   /** Maximum travel time in minutes */
   maxTravelTimeMinutes: number;
+  /** Minutes before game start to arrive (buffer time) */
+  arrivalBufferMinutes: number;
   /** Timestamp when cache was last invalidated (home location change) */
   cacheInvalidatedAt: number | null;
 }
@@ -64,6 +66,7 @@ interface SettingsState {
   travelTimeFilter: TravelTimeFilter;
   setTravelTimeFilterEnabled: (enabled: boolean) => void;
   setMaxTravelTimeMinutes: (minutes: number) => void;
+  setArrivalBufferMinutes: (minutes: number) => void;
   invalidateTravelTimeCache: () => void;
 
   // Reset all settings to defaults (keeps safe mode)
@@ -73,8 +76,11 @@ interface SettingsState {
 /** Default max distance in kilometers */
 const DEFAULT_MAX_DISTANCE_KM = 50;
 
-/** Default max travel time in minutes */
-const DEFAULT_MAX_TRAVEL_TIME_MINUTES = 60;
+/** Default max travel time in minutes (2 hours) */
+const DEFAULT_MAX_TRAVEL_TIME_MINUTES = 120;
+
+/** Default arrival buffer (minutes before game start) */
+const DEFAULT_ARRIVAL_BUFFER_MINUTES = 30;
 
 /**
  * Demo mode default location: Zurich main station area.
@@ -100,6 +106,7 @@ export const useSettingsStore = create<SettingsState>()(
       travelTimeFilter: {
         enabled: false,
         maxTravelTimeMinutes: DEFAULT_MAX_TRAVEL_TIME_MINUTES,
+        arrivalBufferMinutes: DEFAULT_ARRIVAL_BUFFER_MINUTES,
         cacheInvalidatedAt: null,
       },
 
@@ -146,6 +153,12 @@ export const useSettingsStore = create<SettingsState>()(
         }));
       },
 
+      setArrivalBufferMinutes: (minutes: number) => {
+        set((state) => ({
+          travelTimeFilter: { ...state.travelTimeFilter, arrivalBufferMinutes: minutes },
+        }));
+      },
+
       invalidateTravelTimeCache: () => {
         set((state) => ({
           travelTimeFilter: {
@@ -168,6 +181,7 @@ export const useSettingsStore = create<SettingsState>()(
           travelTimeFilter: {
             enabled: false,
             maxTravelTimeMinutes: DEFAULT_MAX_TRAVEL_TIME_MINUTES,
+            arrivalBufferMinutes: DEFAULT_ARRIVAL_BUFFER_MINUTES,
             cacheInvalidatedAt: null,
           },
         });
