@@ -128,8 +128,12 @@ export async function calculateTravelTime(
   }
 }
 
-/** Trip type from OJP SDK */
-interface OjpTrip {
+/**
+ * Subset of trip properties from ojp-sdk-next used for connection selection.
+ * Defined locally to avoid coupling to SDK internals and to type only what we need.
+ * If the SDK's Trip type changes, this interface should be updated accordingly.
+ */
+export interface OjpTrip {
   duration: string;
   startTime: string;
   endTime: string;
@@ -150,7 +154,7 @@ interface OjpTrip {
  * @param targetArrivalTime Optional target arrival time
  * @returns The best trip for the given criteria
  */
-function selectBestTrip(trips: OjpTrip[], targetArrivalTime?: Date): OjpTrip {
+export function selectBestTrip(trips: OjpTrip[], targetArrivalTime?: Date): OjpTrip {
   // If no target time, return first trip (earliest departure)
   if (!targetArrivalTime) {
     return trips[0]!;

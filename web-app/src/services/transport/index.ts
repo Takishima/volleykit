@@ -12,7 +12,9 @@ export type {
 
 export { TransportApiError } from "./types";
 
-export { calculateTravelTime, isOjpConfigured } from "./ojp-client";
+export { calculateTravelTime, isOjpConfigured, selectBestTrip } from "./ojp-client";
+
+export type { OjpTrip } from "./ojp-client";
 
 export { calculateMockTravelTime, mockTransportApi } from "./mock-transport";
 

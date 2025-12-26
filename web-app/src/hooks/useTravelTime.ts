@@ -29,6 +29,8 @@ import {
 interface UseTravelTimeOptions {
   /** Date for the journey (used to determine day type). Defaults to today. */
   date?: Date;
+  /** Target arrival time - selects connection arriving closest to this time without being late */
+  targetArrivalTime?: Date;
 }
 
 /**
@@ -45,7 +47,7 @@ export function useTravelTime(
   hallCoords: Coordinates | null,
   options: UseTravelTimeOptions = {},
 ) {
-  const { date } = options;
+  const { date, targetArrivalTime } = options;
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
   const homeLocation = useSettingsStore((state) => state.homeLocation);
   const transportEnabled = useSettingsStore((state) => state.transportEnabled);
@@ -99,7 +101,9 @@ export function useTravelTime(
       if (isDemoMode) {
         result = await calculateMockTravelTime(fromCoords, hallCoords);
       } else {
-        result = await calculateTravelTime(fromCoords, hallCoords);
+        result = await calculateTravelTime(fromCoords, hallCoords, {
+          targetArrivalTime,
+        });
       }
 
       // Persist successful result to localStorage
