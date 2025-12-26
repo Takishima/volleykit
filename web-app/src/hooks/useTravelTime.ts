@@ -81,11 +81,11 @@ export function useTravelTime(
  * Format travel time duration for display.
  *
  * @param minutes Travel time in minutes
- * @returns Formatted string like "45m" or "1h 15m"
+ * @returns Formatted string like "45'" or "1h15'"
  */
 export function formatTravelTime(minutes: number): string {
   if (minutes < 60) {
-    return `${minutes}m`;
+    return `${minutes}'`;
   }
 
   const hours = Math.floor(minutes / 60);
@@ -95,7 +95,7 @@ export function formatTravelTime(minutes: number): string {
     return `${hours}h`;
   }
 
-  return `${hours}h ${remainingMinutes}m`;
+  return `${hours}h${remainingMinutes}'`;
 }
 
 /**
