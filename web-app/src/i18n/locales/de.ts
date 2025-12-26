@@ -324,6 +324,13 @@ const de: Translations = {
       requiresHomeLocation: "Legen Sie zuerst Ihren Heimatstandort fest",
       apiNotConfigured: "Transport-API ist nicht konfiguriert",
       maxTravelTime: "Maximale Reisezeit",
+      cacheInfo:
+        "Reisezeiten werden nach Tagestyp (Werktag/Samstag/Sonntag) für 30 Tage zwischengespeichert.",
+      cacheEntries: "{count} gespeicherte Routen",
+      refreshCache: "Cache leeren",
+      refreshCacheConfirm:
+        "Alle gespeicherten Reisezeiten löschen? Neue Berechnungen werden von der API abgerufen.",
+      cacheCleared: "Reisezeit-Cache geleert",
     },
     dataRetention: {
       title: "Daten & Datenschutz",
@@ -331,7 +338,7 @@ const de: Translations = {
         "Diese App speichert bestimmte Daten lokal in Ihrem Browser. Diese Daten verlassen Ihr Gerät nie und werden nicht an unsere Server übertragen.",
       homeLocation: "Ihr Heimatstandort (für Distanzfilterung)",
       filterPreferences: "Filtereinstellungen",
-      travelTimeCache: "Zwischengespeicherte Reisezeiten (läuft nach 7 Tagen ab)",
+      travelTimeCache: "Zwischengespeicherte Reisezeiten (läuft nach 30 Tagen ab)",
       languagePreference: "Spracheinstellung",
       clearData: "Lokale Daten löschen",
       clearDataConfirm:

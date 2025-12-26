@@ -1,16 +1,25 @@
-import { useCallback, memo } from "react";
+import { useCallback, memo, useState, useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSettingsStore } from "@/stores/settings";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTravelTimeAvailable } from "@/hooks/useTravelTime";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import { queryKeys } from "@/api/queryKeys";
+import {
+  clearTravelTimeCache,
+  getTravelTimeCacheStats,
+} from "@/services/transport";
 
 /** Travel time presets for the slider (in minutes) */
 const TRAVEL_TIME_PRESETS = [30, 45, 60, 90, 120];
 
 function TransportSectionComponent() {
-  const { t } = useTranslation();
+  const { t, tInterpolate } = useTranslation();
   const isAvailable = useTravelTimeAvailable();
+  const queryClient = useQueryClient();
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [cacheVersion, setCacheVersion] = useState(0);
 
   const {
     homeLocation,
@@ -28,6 +37,14 @@ function TransportSectionComponent() {
     })),
   );
 
+  // Calculate cache entry count - recalculates when cacheVersion changes
+  const cacheEntryCount = useMemo(
+    () => (transportEnabled ? getTravelTimeCacheStats().entryCount : 0),
+    // cacheVersion triggers recalculation after clearing cache
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [transportEnabled, cacheVersion],
+  );
+
   const handleToggleTransport = useCallback(() => {
     setTransportEnabled(!transportEnabled);
   }, [transportEnabled, setTransportEnabled]);
@@ -38,6 +55,16 @@ function TransportSectionComponent() {
     },
     [setMaxTravelTimeMinutes],
   );
+
+  const handleClearCache = useCallback(() => {
+    // Clear localStorage cache
+    clearTravelTimeCache();
+    // Invalidate TanStack Query cache
+    queryClient.invalidateQueries({ queryKey: queryKeys.travelTime.all });
+    // Trigger recalculation of cache stats
+    setCacheVersion((v) => v + 1);
+    setShowClearConfirm(false);
+  }, [queryClient]);
 
   const hasHomeLocation = Boolean(homeLocation);
   const canEnable = hasHomeLocation && isAvailable;
@@ -192,6 +219,49 @@ function TransportSectionComponent() {
                   {preset < 60 ? `${preset}m` : `${preset / 60}h`}
                 </span>
               ))}
+            </div>
+
+            {/* Cache management */}
+            <div className="mt-4 pt-3 border-t border-border-subtle dark:border-border-subtle-dark">
+              <p className="text-xs text-text-muted dark:text-text-muted-dark mb-2">
+                {t("settings.transport.cacheInfo")}
+              </p>
+
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-text-secondary dark:text-text-secondary-dark">
+                  {tInterpolate("settings.transport.cacheEntries", {
+                    count: cacheEntryCount,
+                  })}
+                </span>
+
+                {!showClearConfirm ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowClearConfirm(true)}
+                    disabled={cacheEntryCount === 0}
+                    className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {t("settings.transport.refreshCache")}
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowClearConfirm(false)}
+                      className="text-sm text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark"
+                    >
+                      {t("common.cancel")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleClearCache}
+                      className="text-sm text-error-600 dark:text-error-400 hover:text-error-700 dark:hover:text-error-300"
+                    >
+                      {t("common.confirm")}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

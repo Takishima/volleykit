@@ -322,6 +322,13 @@ const en: Translations = {
       requiresHomeLocation: "Set your home location first",
       apiNotConfigured: "Transport API is not configured",
       maxTravelTime: "Maximum travel time",
+      cacheInfo:
+        "Travel times are cached by day type (weekday/Saturday/Sunday) for 30 days.",
+      cacheEntries: "{count} cached routes",
+      refreshCache: "Clear Cache",
+      refreshCacheConfirm:
+        "Clear all cached travel times? New calculations will be fetched from the API.",
+      cacheCleared: "Travel time cache cleared",
     },
     dataRetention: {
       title: "Data & Privacy",
@@ -329,7 +336,7 @@ const en: Translations = {
         "This app stores certain data locally in your browser. This data never leaves your device and is not transmitted to our servers.",
       homeLocation: "Your home location (for distance filtering)",
       filterPreferences: "Filter preferences",
-      travelTimeCache: "Cached travel times (expires after 7 days)",
+      travelTimeCache: "Cached travel times (expires after 30 days)",
       languagePreference: "Language preference",
       clearData: "Clear Local Data",
       clearDataConfirm:

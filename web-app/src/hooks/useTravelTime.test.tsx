@@ -14,8 +14,12 @@ vi.mock("@/services/transport", () => ({
   calculateMockTravelTime: vi.fn(),
   isOjpConfigured: vi.fn(() => false),
   hashLocation: vi.fn((coords: Coordinates) => `${coords.latitude},${coords.longitude}`),
-  TRAVEL_TIME_STALE_TIME: 7 * 24 * 60 * 60 * 1000,
-  TRAVEL_TIME_GC_TIME: 7 * 24 * 60 * 60 * 1000,
+  getDayType: vi.fn(() => "weekday"),
+  getCachedTravelTime: vi.fn(() => null),
+  setCachedTravelTime: vi.fn(),
+  removeCachedTravelTime: vi.fn(),
+  TRAVEL_TIME_STALE_TIME: 30 * 24 * 60 * 60 * 1000,
+  TRAVEL_TIME_GC_TIME: 30 * 24 * 60 * 60 * 1000,
 }));
 
 // Mock the stores - using AnyFunction to avoid strict type checking in tests
@@ -362,5 +366,242 @@ describe("useTravelTimeAvailable", () => {
     const { result } = renderHook(() => useTravelTimeAvailable());
 
     expect(result.current).toBe(false);
+  });
+});
+
+describe("day type caching", () => {
+  const mockHallCoords: Coordinates = { latitude: 46.948, longitude: 7.4474 };
+  const mockHomeLocation = {
+    latitude: 47.3769,
+    longitude: 8.5417,
+    label: "Zürich HB",
+    source: "geocoded" as const,
+  };
+
+  const mockTravelTimeResult: TravelTimeResult = {
+    durationMinutes: 75,
+    departureTime: "2024-01-15T09:00:00Z",
+    arrivalTime: "2024-01-15T10:15:00Z",
+    transfers: 2,
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("uses getDayType to determine cache key", async () => {
+    const { getDayType, calculateMockTravelTime } = await import(
+      "@/services/transport"
+    );
+    const { useAuthStore } = await import("@/stores/auth");
+    const { useSettingsStore } = await import("@/stores/settings");
+
+    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
+      selector({ isDemoMode: true }),
+    );
+
+    vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
+      selector({
+        homeLocation: mockHomeLocation,
+        transportEnabled: true,
+      }),
+    );
+
+    vi.mocked(getDayType).mockReturnValue("saturday");
+    vi.mocked(calculateMockTravelTime).mockResolvedValue(mockTravelTimeResult);
+
+    const { result } = renderHook(
+      () => useTravelTime("hall-1", mockHallCoords),
+      { wrapper: createWrapper() },
+    );
+
+    await waitFor(() => {
+      expect(result.current.data).toBeDefined();
+    });
+
+    expect(getDayType).toHaveBeenCalled();
+    expect(result.current.dayType).toBe("saturday");
+  });
+
+  it("accepts date option for day type calculation", async () => {
+    const { getDayType, calculateMockTravelTime } = await import(
+      "@/services/transport"
+    );
+    const { useAuthStore } = await import("@/stores/auth");
+    const { useSettingsStore } = await import("@/stores/settings");
+
+    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
+      selector({ isDemoMode: true }),
+    );
+
+    vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
+      selector({
+        homeLocation: mockHomeLocation,
+        transportEnabled: true,
+      }),
+    );
+
+    vi.mocked(getDayType).mockReturnValue("sunday");
+    vi.mocked(calculateMockTravelTime).mockResolvedValue(mockTravelTimeResult);
+
+    const testDate = new Date("2024-01-14"); // A Sunday
+
+    const { result } = renderHook(
+      () => useTravelTime("hall-1", mockHallCoords, { date: testDate }),
+      { wrapper: createWrapper() },
+    );
+
+    await waitFor(() => {
+      expect(result.current.data).toBeDefined();
+    });
+
+    expect(getDayType).toHaveBeenCalledWith(testDate);
+  });
+});
+
+describe("localStorage persistence", () => {
+  const mockHallCoords: Coordinates = { latitude: 46.948, longitude: 7.4474 };
+  const mockHomeLocation = {
+    latitude: 47.3769,
+    longitude: 8.5417,
+    label: "Zürich HB",
+    source: "geocoded" as const,
+  };
+
+  const mockTravelTimeResult: TravelTimeResult = {
+    durationMinutes: 75,
+    departureTime: "2024-01-15T09:00:00Z",
+    arrivalTime: "2024-01-15T10:15:00Z",
+    transfers: 2,
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns cached result from localStorage without API call", async () => {
+    const { getCachedTravelTime, calculateMockTravelTime } = await import(
+      "@/services/transport"
+    );
+    const { useAuthStore } = await import("@/stores/auth");
+    const { useSettingsStore } = await import("@/stores/settings");
+
+    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
+      selector({ isDemoMode: true }),
+    );
+
+    vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
+      selector({
+        homeLocation: mockHomeLocation,
+        transportEnabled: true,
+      }),
+    );
+
+    // Return cached result
+    vi.mocked(getCachedTravelTime).mockReturnValue(mockTravelTimeResult);
+
+    const { result } = renderHook(
+      () => useTravelTime("hall-1", mockHallCoords),
+      { wrapper: createWrapper() },
+    );
+
+    await waitFor(() => {
+      expect(result.current.data).toBeDefined();
+    });
+
+    // Should use cached result, not call API
+    expect(getCachedTravelTime).toHaveBeenCalled();
+    expect(calculateMockTravelTime).not.toHaveBeenCalled();
+    expect(result.current.data?.durationMinutes).toBe(75);
+  });
+
+  it("persists API result to localStorage", async () => {
+    const {
+      getCachedTravelTime,
+      setCachedTravelTime,
+      calculateMockTravelTime,
+      getDayType,
+    } = await import("@/services/transport");
+    const { useAuthStore } = await import("@/stores/auth");
+    const { useSettingsStore } = await import("@/stores/settings");
+
+    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
+      selector({ isDemoMode: true }),
+    );
+
+    vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
+      selector({
+        homeLocation: mockHomeLocation,
+        transportEnabled: true,
+      }),
+    );
+
+    // Set up mocks
+    vi.mocked(getDayType).mockReturnValue("weekday");
+    vi.mocked(getCachedTravelTime).mockReturnValue(null);
+    vi.mocked(calculateMockTravelTime).mockResolvedValue(mockTravelTimeResult);
+
+    const { result } = renderHook(
+      () => useTravelTime("hall-1", mockHallCoords),
+      { wrapper: createWrapper() },
+    );
+
+    await waitFor(() => {
+      expect(result.current.data).toBeDefined();
+    });
+
+    // Should persist result to localStorage with the day type
+    expect(setCachedTravelTime).toHaveBeenCalledWith(
+      "hall-1",
+      expect.any(String),
+      expect.stringMatching(/^(weekday|saturday|sunday)$/),
+      mockTravelTimeResult,
+    );
+  });
+
+  it("provides refresh function that clears cache", async () => {
+    const {
+      getCachedTravelTime,
+      removeCachedTravelTime,
+      calculateMockTravelTime,
+      getDayType,
+    } = await import("@/services/transport");
+    const { useAuthStore } = await import("@/stores/auth");
+    const { useSettingsStore } = await import("@/stores/settings");
+
+    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
+      selector({ isDemoMode: true }),
+    );
+
+    vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
+      selector({
+        homeLocation: mockHomeLocation,
+        transportEnabled: true,
+      }),
+    );
+
+    // Set up mocks
+    vi.mocked(getDayType).mockReturnValue("weekday");
+    vi.mocked(getCachedTravelTime).mockReturnValue(null);
+    vi.mocked(calculateMockTravelTime).mockResolvedValue(mockTravelTimeResult);
+
+    const { result } = renderHook(
+      () => useTravelTime("hall-1", mockHallCoords),
+      { wrapper: createWrapper() },
+    );
+
+    await waitFor(() => {
+      expect(result.current.data).toBeDefined();
+    });
+
+    // Call refresh
+    result.current.refresh();
+
+    // Should remove from localStorage with the day type
+    expect(removeCachedTravelTime).toHaveBeenCalledWith(
+      "hall-1",
+      expect.any(String),
+      expect.stringMatching(/^(weekday|saturday|sunday)$/),
+    );
   });
 });

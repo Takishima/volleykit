@@ -12,6 +12,9 @@ import {
   calculateMockTravelTime,
   isOjpConfigured,
   hashLocation,
+  getDayType,
+  getCachedTravelTime,
+  setCachedTravelTime,
   TRAVEL_TIME_STALE_TIME,
   TRAVEL_TIME_GC_TIME,
   type Coordinates,
@@ -81,20 +84,37 @@ export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | nul
   // Home location hash for cache key stability
   const homeLocationHash = homeLocation ? hashLocation(homeLocation) : null;
 
+  // Determine day type for caching (based on today)
+  const dayType = getDayType();
+
   // Check if we should fetch travel times
   const canFetch = Boolean(
     transportEnabled &&
-    homeLocation &&
-    (isDemoMode || isOjpConfigured()),
+      homeLocation &&
+      (isDemoMode || isOjpConfigured()),
   );
 
   // Create queries for each unique hall
   const queries = useQueries({
     queries: hallInfos.map((hallInfo) => ({
-      queryKey: queryKeys.travelTime.hall(hallInfo.id, homeLocationHash ?? ""),
+      queryKey: queryKeys.travelTime.hall(
+        hallInfo.id,
+        homeLocationHash ?? "",
+        dayType,
+      ),
       queryFn: async (): Promise<TravelTimeResult> => {
         if (!homeLocation || !hallInfo.coords) {
           throw new Error("Missing location data");
+        }
+
+        // Check localStorage cache first
+        const cached = getCachedTravelTime(
+          hallInfo.id,
+          homeLocationHash ?? "",
+          dayType,
+        );
+        if (cached) {
+          return cached;
         }
 
         const fromCoords: Coordinates = {
@@ -102,11 +122,17 @@ export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | nul
           longitude: homeLocation.longitude,
         };
 
+        let result: TravelTimeResult;
         if (isDemoMode) {
-          return calculateMockTravelTime(fromCoords, hallInfo.coords);
+          result = await calculateMockTravelTime(fromCoords, hallInfo.coords);
+        } else {
+          result = await calculateTravelTime(fromCoords, hallInfo.coords);
         }
 
-        return calculateTravelTime(fromCoords, hallInfo.coords);
+        // Persist to localStorage
+        setCachedTravelTime(hallInfo.id, homeLocationHash ?? "", dayType, result);
+
+        return result;
       },
       enabled: canFetch && hallInfo.coords !== null,
       staleTime: TRAVEL_TIME_STALE_TIME,
