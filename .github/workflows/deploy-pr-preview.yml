@@ -41,6 +41,8 @@ jobs:
           VITE_DEMO_MODE_ONLY: 'true'
           # Set base path for PR preview - uses pr-{number} subdirectory
           VITE_BASE_PATH: /${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/
+          # OJP API key for Swiss public transport travel times
+          VITE_OJP_API_KEY: ${{ secrets.VITE_OJP_API_KEY }}
       - name: Add .nojekyll for GitHub Pages
         run: touch dist/.nojekyll
       # Download existing gh-pages content to preserve main site and other PR previews
