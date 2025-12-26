@@ -60,6 +60,13 @@ VITE_OJP_API_KEY=your_api_key_here
 | File Path | Purpose |
 |-----------|---------|
 | `src/components/features/settings/TransportSection.tsx` | Transport settings UI |
+| `src/components/features/settings/DataRetentionSection.tsx` | Data & privacy info + clear data |
+
+### Documentation
+
+| File Path | Purpose |
+|-----------|---------|
+| `docs/DATA_RETENTION.md` | Document all locally stored data |
 
 ### UI Components
 
@@ -79,9 +86,10 @@ VITE_OJP_API_KEY=your_api_key_here
 | `src/api/mock-api.ts` | Add mock travel time endpoint |
 | `src/pages/ExchangePage.tsx` | Integrate travel time filter |
 | `src/components/features/ExchangeCard.tsx` | Display travel time badge |
-| `src/pages/SettingsPage.tsx` | Add transport section |
+| `src/pages/SettingsPage.tsx` | Add transport section, add data retention section |
 | `src/i18n/types.ts` | New translation keys |
 | `src/i18n/locales/*.ts` | Translations for all 4 languages |
+| `docs/DATA_RETENTION.md` | **New**: Document locally stored data |
 
 ---
 
@@ -349,7 +357,127 @@ common.hoursUnit    // "h"
 
 ---
 
-## 11. Implementation Phases
+## 11. Data Retention Documentation
+
+### New File: `docs/DATA_RETENTION.md`
+
+Document all data stored locally in the browser:
+
+```markdown
+# Data Retention
+
+VolleyKit stores certain data locally in your browser to provide a better user experience.
+This data never leaves your device and is not transmitted to our servers.
+
+## What We Store
+
+### Settings (`volleykit-settings` in localStorage)
+
+| Data | Purpose | Retention |
+|------|---------|-----------|
+| Home location (coordinates + label) | Filter exchanges by distance/travel time | Until cleared by user |
+| Distance filter preferences | Remember your max distance setting | Until cleared by user |
+| Travel time filter preferences | Remember your max travel time setting | Until cleared by user |
+| Transport enabled toggle | Remember if you enabled public transport | Until cleared by user |
+| Language preference | Display app in your preferred language | Until cleared by user |
+| Safe mode setting | Prevent accidental actions | Until cleared by user |
+
+### Travel Time Cache (`volleykit-travel-time-cache` in localStorage)
+
+| Data | Purpose | Retention |
+|------|---------|-----------|
+| Travel times to sports halls | Avoid repeated API calls | 7 days, auto-expires |
+
+### Authentication (`volleykit-auth` in localStorage)
+
+| Data | Purpose | Retention |
+|------|---------|-----------|
+| Demo mode flag | Remember demo mode state | Until logout |
+| Association code | Multi-association support | Until logout |
+
+**Note**: Session credentials are stored in httpOnly cookies managed by the API,
+not in localStorage. We never store passwords or authentication tokens locally.
+
+## How to Clear Your Data
+
+1. Go to **Settings** in the app
+2. Scroll to **Data & Privacy**
+3. Tap **Clear Local Data**
+
+Or manually clear via browser:
+- Chrome: Settings → Privacy → Clear browsing data → Cookies and site data
+- Firefox: Settings → Privacy → Cookies and Site Data → Clear Data
+- Safari: Settings → Privacy → Manage Website Data → Remove
+
+## External Services
+
+When you enable public transport calculations, your home location coordinates
+are sent to the Swiss public transport API (opentransportdata.swiss) to calculate
+travel times. This is only done when:
+- You explicitly enable transport calculations in Settings
+- You have set a home location
+
+The transport API is operated by the Swiss Federal Office of Transport.
+See their privacy policy at: https://opentransportdata.swiss/en/terms-of-use/
+```
+
+### In-App Data Retention Section
+
+Add a new section to Settings page showing what data is stored:
+
+**File:** `src/components/features/settings/DataRetentionSection.tsx`
+
+```typescript
+export function DataRetentionSection() {
+  const { t } = useTranslation();
+  const clearAllData = useClearLocalData();
+
+  return (
+    <Card>
+      <CardHeader>
+        <h2>{t("settings.dataRetention.title")}</h2>
+      </CardHeader>
+      <CardContent>
+        <p>{t("settings.dataRetention.description")}</p>
+
+        <ul className="mt-4 space-y-2 text-sm">
+          <li>• {t("settings.dataRetention.homeLocation")}</li>
+          <li>• {t("settings.dataRetention.filterPreferences")}</li>
+          <li>• {t("settings.dataRetention.travelTimeCache")}</li>
+          <li>• {t("settings.dataRetention.languagePreference")}</li>
+        </ul>
+
+        <Button
+          variant="outline"
+          onClick={clearAllData}
+          className="mt-4"
+        >
+          {t("settings.dataRetention.clearData")}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+### New Translation Keys for Data Retention
+
+```typescript
+settings.dataRetention.title              // "Data & Privacy"
+settings.dataRetention.description        // "This app stores data locally..."
+settings.dataRetention.homeLocation       // "Your home location (for distance filtering)"
+settings.dataRetention.filterPreferences  // "Filter preferences"
+settings.dataRetention.travelTimeCache    // "Cached travel times (expires after 7 days)"
+settings.dataRetention.languagePreference // "Language preference"
+settings.dataRetention.clearData          // "Clear Local Data"
+settings.dataRetention.clearDataConfirm   // "This will reset all settings..."
+settings.dataRetention.externalServices   // "External Services"
+settings.dataRetention.transportApiNote   // "When enabled, travel time..."
+```
+
+---
+
+## 12. Implementation Phases
 
 ### Phase 1: Foundation (Day 1-2)
 - [ ] Add `ojp-sdk-next` package
@@ -357,6 +485,7 @@ common.hoursUnit    // "h"
 - [ ] Extend settings store with transport state
 - [ ] Add query keys
 - [ ] Add translations (all 4 locales)
+- [ ] Create `docs/DATA_RETENTION.md` documenting all locally stored data
 
 ### Phase 2: Core Service (Day 3-4)
 - [ ] Create OJP client with rate limiting
@@ -367,6 +496,8 @@ common.hoursUnit    // "h"
 
 ### Phase 3: UI Components (Day 5-6)
 - [ ] TransportSection settings component
+- [ ] DataRetentionSection settings component
+- [ ] `useClearLocalData` hook for clearing all localStorage
 - [ ] TravelTimeBadge component
 - [ ] TravelTimeFilterToggle component
 - [ ] Component tests
