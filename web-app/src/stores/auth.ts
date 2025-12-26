@@ -9,6 +9,7 @@ import {
   submitLoginCredentials,
 } from "@/utils/auth-parsers";
 import { useDemoStore } from "./demo";
+import { useSettingsStore, DEMO_HOME_LOCATION } from "./settings";
 
 export type AuthStatus = "idle" | "loading" | "authenticated" | "error";
 
@@ -259,6 +260,9 @@ export const useAuthStore = create<AuthState>()(
         ];
 
         const demoOccupations = filterRefereeOccupations(rawDemoOccupations);
+
+        // Set demo home location for distance filtering showcase
+        useSettingsStore.getState().setHomeLocation(DEMO_HOME_LOCATION);
 
         set({
           status: "authenticated",

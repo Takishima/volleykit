@@ -47,6 +47,17 @@ interface SettingsState {
 /** Default max distance in kilometers */
 const DEFAULT_MAX_DISTANCE_KM = 50;
 
+/**
+ * Demo mode default location: Zurich main station area.
+ * Provides a central location in Switzerland to showcase distance filtering.
+ */
+export const DEMO_HOME_LOCATION: UserLocation = {
+  latitude: 47.3769,
+  longitude: 8.5417,
+  label: "Zürich HB",
+  source: "geocoded",
+};
+
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
