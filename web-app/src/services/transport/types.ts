@@ -25,6 +25,8 @@ export interface TravelTimeResult {
 export interface TravelTimeOptions {
   /** Desired departure time (defaults to now) */
   departureTime?: Date;
+  /** Target arrival time - selects connection arriving closest to this time without being late */
+  targetArrivalTime?: Date;
   /** Include raw trip data in result (for future itinerary display) */
   includeTrips?: boolean;
 }
