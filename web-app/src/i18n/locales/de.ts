@@ -138,7 +138,7 @@ const de: Translations = {
     unknownDate: "Datum?",
     currencyChf: "CHF",
     distanceUnit: "km",
-    minutesUnit: "min",
+    minutesUnit: "'",
     hoursUnit: "h",
     dismissNotification: "Benachrichtigung schliessen",
     notifications: "Benachrichtigungen",

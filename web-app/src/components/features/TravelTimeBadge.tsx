@@ -2,6 +2,7 @@ import { memo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatTravelTime } from "@/hooks/useTravelTime";
 import { Badge } from "@/components/ui/Badge";
+import { TrainFront } from "@/components/ui/icons";
 
 interface TravelTimeBadgeProps {
   /** Travel time in minutes */
@@ -26,20 +27,7 @@ function TravelTimeBadgeComponent({
     return (
       <Badge variant="neutral" className={`animate-pulse ${className}`}>
         <span className="flex items-center gap-1">
-          <svg
-            className="w-3 h-3"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-            />
-          </svg>
+          <TrainFront className="w-3 h-3" aria-hidden="true" />
           <span>...</span>
         </span>
       </Badge>
@@ -57,20 +45,7 @@ function TravelTimeBadgeComponent({
       title={t("exchange.travelTime")}
     >
       <span className="flex items-center gap-1">
-        <svg
-          className="w-3 h-3"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-          />
-        </svg>
+        <TrainFront className="w-3 h-3" aria-hidden="true" />
         <span>{formatTravelTime(durationMinutes)}</span>
       </span>
     </Badge>

@@ -297,9 +297,9 @@ describe("useTravelTime", () => {
 
 describe("formatTravelTime", () => {
   it("formats minutes less than 60", () => {
-    expect(formatTravelTime(15)).toBe("15m");
-    expect(formatTravelTime(45)).toBe("45m");
-    expect(formatTravelTime(59)).toBe("59m");
+    expect(formatTravelTime(15)).toBe("15'");
+    expect(formatTravelTime(45)).toBe("45'");
+    expect(formatTravelTime(59)).toBe("59'");
   });
 
   it("formats exact hours", () => {
@@ -309,15 +309,15 @@ describe("formatTravelTime", () => {
   });
 
   it("formats hours and minutes", () => {
-    expect(formatTravelTime(75)).toBe("1h 15m");
-    expect(formatTravelTime(90)).toBe("1h 30m");
-    expect(formatTravelTime(145)).toBe("2h 25m");
+    expect(formatTravelTime(75)).toBe("1h15'");
+    expect(formatTravelTime(90)).toBe("1h30'");
+    expect(formatTravelTime(145)).toBe("2h25'");
   });
 
   it("handles edge cases", () => {
-    expect(formatTravelTime(0)).toBe("0m");
-    expect(formatTravelTime(1)).toBe("1m");
-    expect(formatTravelTime(61)).toBe("1h 1m");
+    expect(formatTravelTime(0)).toBe("0'");
+    expect(formatTravelTime(1)).toBe("1'");
+    expect(formatTravelTime(61)).toBe("1h1'");
   });
 });
 
