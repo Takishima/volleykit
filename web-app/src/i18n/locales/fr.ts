@@ -138,6 +138,8 @@ const fr: Translations = {
     unknownDate: "Date ?",
     currencyChf: "CHF",
     distanceUnit: "km",
+    minutesUnit: "min",
+    hoursUnit: "h",
     dismissNotification: "Ignorer la notification",
     notifications: "Notifications",
     cardActions: "Actions de la carte",
@@ -254,6 +256,9 @@ const fr: Translations = {
     removeButton: "Retirer de la bourse",
     filterByLevel: "Mon niveau uniquement",
     filterByDistance: "Filtrer par distance",
+    filterByTravelTime: "Filtrer par temps de trajet",
+    travelTime: "Temps de trajet",
+    calculatingTravelTime: "Calcul du temps de trajet...",
     noExchangesAtLevel: "Aucun échange disponible à votre niveau.",
     noExchangesWithFilters: "Aucun échange ne correspond à vos filtres.",
     noOpenExchangesTitle: "Aucun échange ouvert",
@@ -309,6 +314,30 @@ const fr: Translations = {
       errorPositionUnavailable: "Position non disponible. Veuillez réessayer.",
       errorTimeout: "La demande de position a expiré. Veuillez réessayer.",
       errorUnknown: "Erreur inconnue lors de l'obtention de la position.",
+    },
+    transport: {
+      title: "Transports publics",
+      description:
+        "Calculez les temps de trajet avec les transports publics suisses pour filtrer les échanges par temps de déplacement.",
+      enableCalculations: "Activer le calcul des temps de trajet",
+      requiresHomeLocation: "Définissez d'abord votre emplacement domicile",
+      apiNotConfigured: "L'API de transport n'est pas configurée",
+      maxTravelTime: "Temps de trajet maximum",
+    },
+    dataRetention: {
+      title: "Données et confidentialité",
+      description:
+        "Cette application stocke certaines données localement dans votre navigateur. Ces données ne quittent jamais votre appareil et ne sont pas transmises à nos serveurs.",
+      homeLocation: "Votre emplacement domicile (pour le filtrage par distance)",
+      filterPreferences: "Préférences de filtre",
+      travelTimeCache: "Temps de trajet en cache (expire après 7 jours)",
+      languagePreference: "Préférence de langue",
+      clearData: "Effacer les données locales",
+      clearDataConfirm:
+        "Cela réinitialisera tous les paramètres et effacera les données en cache. Continuer?",
+      externalServices: "Services externes",
+      transportApiNote:
+        "Lorsque le calcul des temps de trajet est activé, les coordonnées de votre domicile sont envoyées à l'API des transports publics suisses (opentransportdata.swiss).",
     },
     safeMode: "Mode sécurisé",
     safeModeDescription:

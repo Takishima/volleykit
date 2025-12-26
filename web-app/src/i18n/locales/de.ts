@@ -138,6 +138,8 @@ const de: Translations = {
     unknownDate: "Datum?",
     currencyChf: "CHF",
     distanceUnit: "km",
+    minutesUnit: "min",
+    hoursUnit: "h",
     dismissNotification: "Benachrichtigung schliessen",
     notifications: "Benachrichtigungen",
     cardActions: "Kartenaktionen",
@@ -254,6 +256,9 @@ const de: Translations = {
     removeButton: "Aus Tauschbörse entfernen",
     filterByLevel: "Nur mein Niveau",
     filterByDistance: "Nach Distanz filtern",
+    filterByTravelTime: "Nach Reisezeit filtern",
+    travelTime: "Reisezeit",
+    calculatingTravelTime: "Reisezeit wird berechnet...",
     noExchangesAtLevel: "Keine Tauschangebote auf Ihrem Niveau verfügbar.",
     noExchangesWithFilters: "Keine Tauschangebote entsprechen Ihren Filtern.",
     noOpenExchangesTitle: "Keine offenen Tauschangebote",
@@ -310,6 +315,30 @@ const de: Translations = {
       errorPositionUnavailable: "Standort nicht verfügbar. Bitte erneut versuchen.",
       errorTimeout: "Standortabfrage hat zu lange gedauert. Bitte erneut versuchen.",
       errorUnknown: "Unbekannter Fehler beim Ermitteln des Standorts.",
+    },
+    transport: {
+      title: "Öffentlicher Verkehr",
+      description:
+        "Berechnen Sie Reisezeiten mit dem Schweizer öffentlichen Verkehr, um Tauschangebote nach Anfahrtszeit zu filtern.",
+      enableCalculations: "Reisezeitberechnung aktivieren",
+      requiresHomeLocation: "Legen Sie zuerst Ihren Heimatstandort fest",
+      apiNotConfigured: "Transport-API ist nicht konfiguriert",
+      maxTravelTime: "Maximale Reisezeit",
+    },
+    dataRetention: {
+      title: "Daten & Datenschutz",
+      description:
+        "Diese App speichert bestimmte Daten lokal in Ihrem Browser. Diese Daten verlassen Ihr Gerät nie und werden nicht an unsere Server übertragen.",
+      homeLocation: "Ihr Heimatstandort (für Distanzfilterung)",
+      filterPreferences: "Filtereinstellungen",
+      travelTimeCache: "Zwischengespeicherte Reisezeiten (läuft nach 7 Tagen ab)",
+      languagePreference: "Spracheinstellung",
+      clearData: "Lokale Daten löschen",
+      clearDataConfirm:
+        "Dies setzt alle Einstellungen zurück und löscht zwischengespeicherte Daten. Fortfahren?",
+      externalServices: "Externe Dienste",
+      transportApiNote:
+        "Bei aktivierter Reisezeitberechnung werden Ihre Heimatstandort-Koordinaten an die Schweizer ÖV-API (opentransportdata.swiss) gesendet.",
     },
     safeMode: "Sicherheitsmodus",
     safeModeDescription:

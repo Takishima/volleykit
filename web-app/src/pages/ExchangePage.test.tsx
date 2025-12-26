@@ -10,6 +10,15 @@ import * as demoStore from "@/stores/demo";
 vi.mock("@/hooks/useConvocations");
 vi.mock("@/stores/auth");
 vi.mock("@/stores/demo");
+vi.mock("@/hooks/useTravelTimeFilter", () => ({
+  useTravelTimeFilter: () => ({
+    exchangesWithTravelTime: null,
+    filteredExchanges: null,
+    isLoading: false,
+    filterByTravelTime: () => true,
+    isAvailable: false,
+  }),
+}));
 vi.mock("@/hooks/useExchangeActions", () => ({
   useExchangeActions: () => ({
     takeOverModal: {

@@ -138,6 +138,8 @@ const en: Translations = {
     unknownDate: "Date?",
     currencyChf: "CHF",
     distanceUnit: "km",
+    minutesUnit: "min",
+    hoursUnit: "h",
     dismissNotification: "Dismiss notification",
     notifications: "Notifications",
     cardActions: "Card actions",
@@ -254,6 +256,9 @@ const en: Translations = {
     removeButton: "Remove from Exchange",
     filterByLevel: "My level only",
     filterByDistance: "Filter by distance",
+    filterByTravelTime: "Filter by travel time",
+    travelTime: "Travel time",
+    calculatingTravelTime: "Calculating travel time...",
     noExchangesAtLevel: "No exchanges available at your level.",
     noExchangesWithFilters: "No exchanges match your filters.",
     noOpenExchangesTitle: "No open exchanges",
@@ -308,6 +313,30 @@ const en: Translations = {
       errorPositionUnavailable: "Location unavailable. Please try again.",
       errorTimeout: "Location request timed out. Please try again.",
       errorUnknown: "Unknown error while getting location.",
+    },
+    transport: {
+      title: "Public Transport",
+      description:
+        "Calculate travel times using Swiss public transport to filter exchange offers by commute time.",
+      enableCalculations: "Enable travel time calculations",
+      requiresHomeLocation: "Set your home location first",
+      apiNotConfigured: "Transport API is not configured",
+      maxTravelTime: "Maximum travel time",
+    },
+    dataRetention: {
+      title: "Data & Privacy",
+      description:
+        "This app stores certain data locally in your browser. This data never leaves your device and is not transmitted to our servers.",
+      homeLocation: "Your home location (for distance filtering)",
+      filterPreferences: "Filter preferences",
+      travelTimeCache: "Cached travel times (expires after 7 days)",
+      languagePreference: "Language preference",
+      clearData: "Clear Local Data",
+      clearDataConfirm:
+        "This will reset all settings and clear cached data. Continue?",
+      externalServices: "External Services",
+      transportApiNote:
+        "When travel time calculations are enabled, your home location coordinates are sent to the Swiss public transport API (opentransportdata.swiss).",
     },
     safeMode: "Safe Mode",
     safeModeDescription:

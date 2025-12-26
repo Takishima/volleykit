@@ -68,6 +68,8 @@ jobs:
           # Set base path for GitHub Pages deployment
           # Configure via repository variable, defaults to repo name pattern
           VITE_BASE_PATH: ${{ vars.VITE_BASE_PATH || format('/{0}/', github.event.repository.name) }}
+          # OJP API key for Swiss public transport travel times
+          VITE_OJP_API_KEY: ${{ secrets.VITE_OJP_API_KEY }}
       - name: Add .nojekyll for GitHub Pages
         run: touch dist/.nojekyll
       # Download existing gh-pages content to preserve PR previews

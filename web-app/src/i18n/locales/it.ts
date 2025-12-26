@@ -138,6 +138,8 @@ const it: Translations = {
     unknownDate: "Data?",
     currencyChf: "CHF",
     distanceUnit: "km",
+    minutesUnit: "min",
+    hoursUnit: "h",
     dismissNotification: "Ignora notifica",
     notifications: "Notifiche",
     cardActions: "Azioni della scheda",
@@ -252,6 +254,9 @@ const it: Translations = {
     removeButton: "Rimuovere dalla borsa",
     filterByLevel: "Solo il mio livello",
     filterByDistance: "Filtra per distanza",
+    filterByTravelTime: "Filtra per tempo di viaggio",
+    travelTime: "Tempo di viaggio",
+    calculatingTravelTime: "Calcolo tempo di viaggio...",
     noExchangesAtLevel: "Nessuno scambio disponibile al tuo livello.",
     noExchangesWithFilters: "Nessuno scambio corrisponde ai tuoi filtri.",
     noOpenExchangesTitle: "Nessuno scambio aperto",
@@ -307,6 +312,30 @@ const it: Translations = {
       errorPositionUnavailable: "Posizione non disponibile. Riprova.",
       errorTimeout: "Richiesta posizione scaduta. Riprova.",
       errorUnknown: "Errore sconosciuto durante l'ottenimento della posizione.",
+    },
+    transport: {
+      title: "Trasporto pubblico",
+      description:
+        "Calcola i tempi di viaggio con i trasporti pubblici svizzeri per filtrare gli scambi per tempo di percorrenza.",
+      enableCalculations: "Abilita calcolo tempo di viaggio",
+      requiresHomeLocation: "Imposta prima la tua posizione casa",
+      apiNotConfigured: "API trasporti non configurata",
+      maxTravelTime: "Tempo di viaggio massimo",
+    },
+    dataRetention: {
+      title: "Dati e privacy",
+      description:
+        "Questa app memorizza alcuni dati localmente nel tuo browser. Questi dati non lasciano mai il tuo dispositivo e non vengono trasmessi ai nostri server.",
+      homeLocation: "La tua posizione casa (per il filtraggio per distanza)",
+      filterPreferences: "Preferenze di filtro",
+      travelTimeCache: "Tempi di viaggio in cache (scadono dopo 7 giorni)",
+      languagePreference: "Preferenza di lingua",
+      clearData: "Cancella dati locali",
+      clearDataConfirm:
+        "Questo resetterà tutte le impostazioni e cancellerà i dati in cache. Continuare?",
+      externalServices: "Servizi esterni",
+      transportApiNote:
+        "Quando il calcolo dei tempi di viaggio è abilitato, le coordinate della tua posizione casa vengono inviate all'API dei trasporti pubblici svizzeri (opentransportdata.swiss).",
     },
     safeMode: "Modalità sicura",
     safeModeDescription:

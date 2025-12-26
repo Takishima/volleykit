@@ -151,6 +151,19 @@ export const queryKeys = {
     search: (filters: PersonSearchFilter) =>
       [...queryKeys.scorerSearch.all, filters] as const,
   },
+
+  /**
+   * Travel time query keys for public transport routing
+   */
+  travelTime: {
+    /** Base key - invalidates ALL travel time queries */
+    all: ["travelTime"] as const,
+    /** Parent key for all hall travel time queries */
+    halls: () => [...queryKeys.travelTime.all, "hall"] as const,
+    /** Travel time to a specific hall from user's home location */
+    hall: (hallId: string, homeLocationHash: string) =>
+      [...queryKeys.travelTime.halls(), hallId, homeLocationHash] as const,
+  },
 } as const;
 
 /**

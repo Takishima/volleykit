@@ -35,6 +35,8 @@ export interface Translations {
     unknownDate: string;
     currencyChf: string;
     distanceUnit: string;
+    minutesUnit: string;
+    hoursUnit: string;
     dismissNotification: string;
     notifications: string;
     cardActions: string;
@@ -142,6 +144,9 @@ export interface Translations {
     removeButton: string;
     filterByLevel: string;
     filterByDistance: string;
+    filterByTravelTime: string;
+    travelTime: string;
+    calculatingTravelTime: string;
     noExchangesAtLevel: string;
     noExchangesWithFilters: string;
     noOpenExchangesTitle: string;
@@ -193,6 +198,26 @@ export interface Translations {
       errorPositionUnavailable: string;
       errorTimeout: string;
       errorUnknown: string;
+    };
+    transport: {
+      title: string;
+      description: string;
+      enableCalculations: string;
+      requiresHomeLocation: string;
+      apiNotConfigured: string;
+      maxTravelTime: string;
+    };
+    dataRetention: {
+      title: string;
+      description: string;
+      homeLocation: string;
+      filterPreferences: string;
+      travelTimeCache: string;
+      languagePreference: string;
+      clearData: string;
+      clearDataConfirm: string;
+      externalServices: string;
+      transportApiNote: string;
     };
     safeMode: string;
     safeModeDescription: string;
