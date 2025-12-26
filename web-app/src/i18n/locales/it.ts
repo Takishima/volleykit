@@ -321,6 +321,13 @@ const it: Translations = {
       requiresHomeLocation: "Imposta prima la tua posizione casa",
       apiNotConfigured: "API trasporti non configurata",
       maxTravelTime: "Tempo di viaggio massimo",
+      cacheInfo:
+        "I tempi di viaggio sono memorizzati in cache per tipo di giorno (feriale/sabato/domenica) per 30 giorni.",
+      cacheEntries: "{count} percorsi in cache",
+      refreshCache: "Svuota cache",
+      refreshCacheConfirm:
+        "Cancellare tutti i tempi di viaggio in cache? I nuovi calcoli verranno recuperati dall'API.",
+      cacheCleared: "Cache tempi di viaggio svuotata",
     },
     dataRetention: {
       title: "Dati e privacy",
@@ -328,7 +335,7 @@ const it: Translations = {
         "Questa app memorizza alcuni dati localmente nel tuo browser. Questi dati non lasciano mai il tuo dispositivo e non vengono trasmessi ai nostri server.",
       homeLocation: "La tua posizione casa (per il filtraggio per distanza)",
       filterPreferences: "Preferenze di filtro",
-      travelTimeCache: "Tempi di viaggio in cache (scadono dopo 7 giorni)",
+      travelTimeCache: "Tempi di viaggio in cache (scadono dopo 30 giorni)",
       languagePreference: "Preferenza di lingua",
       clearData: "Cancella dati locali",
       clearDataConfirm:

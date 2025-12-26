@@ -153,16 +153,27 @@ export const queryKeys = {
   },
 
   /**
-   * Travel time query keys for public transport routing
+   * Travel time query keys for public transport routing.
+   * Includes day type (weekday/saturday/sunday) since Swiss transport
+   * schedules differ between these day types.
    */
   travelTime: {
     /** Base key - invalidates ALL travel time queries */
     all: ["travelTime"] as const,
     /** Parent key for all hall travel time queries */
     halls: () => [...queryKeys.travelTime.all, "hall"] as const,
-    /** Travel time to a specific hall from user's home location */
-    hall: (hallId: string, homeLocationHash: string) =>
-      [...queryKeys.travelTime.halls(), hallId, homeLocationHash] as const,
+    /** Travel time to a specific hall from user's home location for a day type */
+    hall: (
+      hallId: string,
+      homeLocationHash: string,
+      dayType: "weekday" | "saturday" | "sunday",
+    ) =>
+      [
+        ...queryKeys.travelTime.halls(),
+        hallId,
+        homeLocationHash,
+        dayType,
+      ] as const,
   },
 } as const;
 

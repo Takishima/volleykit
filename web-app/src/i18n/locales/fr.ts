@@ -323,6 +323,13 @@ const fr: Translations = {
       requiresHomeLocation: "Définissez d'abord votre emplacement domicile",
       apiNotConfigured: "L'API de transport n'est pas configurée",
       maxTravelTime: "Temps de trajet maximum",
+      cacheInfo:
+        "Les temps de trajet sont mis en cache par type de jour (semaine/samedi/dimanche) pendant 30 jours.",
+      cacheEntries: "{count} trajets en cache",
+      refreshCache: "Vider le cache",
+      refreshCacheConfirm:
+        "Effacer tous les temps de trajet en cache ? Les nouveaux calculs seront récupérés depuis l'API.",
+      cacheCleared: "Cache des temps de trajet vidé",
     },
     dataRetention: {
       title: "Données et confidentialité",
@@ -330,7 +337,7 @@ const fr: Translations = {
         "Cette application stocke certaines données localement dans votre navigateur. Ces données ne quittent jamais votre appareil et ne sont pas transmises à nos serveurs.",
       homeLocation: "Votre emplacement domicile (pour le filtrage par distance)",
       filterPreferences: "Préférences de filtre",
-      travelTimeCache: "Temps de trajet en cache (expire après 7 jours)",
+      travelTimeCache: "Temps de trajet en cache (expire après 30 jours)",
       languagePreference: "Préférence de langue",
       clearData: "Effacer les données locales",
       clearDataConfirm:

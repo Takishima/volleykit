@@ -1,8 +1,12 @@
 /**
  * Hook for fetching travel time to a sports hall using Swiss public transport.
+ *
+ * Travel times are cached by day type (weekday/saturday/sunday) since Swiss
+ * public transport schedules are consistent within each day type.
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
 import { useAuthStore } from "@/stores/auth";
 import { useSettingsStore } from "@/stores/settings";
 import { queryKeys } from "@/api/queryKeys";
@@ -11,44 +15,78 @@ import {
   calculateMockTravelTime,
   isOjpConfigured,
   hashLocation,
+  getDayType,
+  getCachedTravelTime,
+  setCachedTravelTime,
+  removeCachedTravelTime,
   TRAVEL_TIME_STALE_TIME,
   TRAVEL_TIME_GC_TIME,
   type Coordinates,
   type TravelTimeResult,
+  type DayType,
 } from "@/services/transport";
+
+interface UseTravelTimeOptions {
+  /** Date for the journey (used to determine day type). Defaults to today. */
+  date?: Date;
+}
 
 /**
  * Hook to fetch travel time from user's home location to a sports hall.
+ * Caches results by day type (weekday/saturday/sunday) for efficiency.
  *
  * @param hallId Unique identifier for the sports hall (used for caching)
  * @param hallCoords Coordinates of the sports hall
- * @returns TanStack Query result with travel time data
+ * @param options Optional configuration including journey date
+ * @returns TanStack Query result with travel time data and refresh function
  */
 export function useTravelTime(
   hallId: string | undefined,
   hallCoords: Coordinates | null,
+  options: UseTravelTimeOptions = {},
 ) {
+  const { date } = options;
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
   const homeLocation = useSettingsStore((state) => state.homeLocation);
   const transportEnabled = useSettingsStore((state) => state.transportEnabled);
+  const queryClient = useQueryClient();
 
   // Create a hash of home location for cache key stability
   const homeLocationHash = homeLocation ? hashLocation(homeLocation) : null;
 
+  // Determine day type for cache key (weekday/saturday/sunday)
+  const dayType: DayType = getDayType(date);
+
   // Determine if we should fetch travel time
   const shouldFetch = Boolean(
     transportEnabled &&
-    homeLocation &&
-    hallCoords &&
-    hallId &&
-    (isDemoMode || isOjpConfigured()),
+      homeLocation &&
+      hallCoords &&
+      hallId &&
+      (isDemoMode || isOjpConfigured()),
   );
 
-  return useQuery<TravelTimeResult>({
-    queryKey: queryKeys.travelTime.hall(hallId ?? "", homeLocationHash ?? ""),
+  const queryKey = queryKeys.travelTime.hall(
+    hallId ?? "",
+    homeLocationHash ?? "",
+    dayType,
+  );
+
+  const query = useQuery<TravelTimeResult>({
+    queryKey,
     queryFn: async () => {
-      if (!homeLocation || !hallCoords) {
+      if (!homeLocation || !hallCoords || !hallId) {
         throw new Error("Missing home location or hall coordinates");
+      }
+
+      // Check localStorage cache first (survives browser sessions)
+      const cached = getCachedTravelTime(
+        hallId,
+        homeLocationHash ?? "",
+        dayType,
+      );
+      if (cached) {
+        return cached;
       }
 
       const fromCoords: Coordinates = {
@@ -57,11 +95,17 @@ export function useTravelTime(
       };
 
       // Use mock transport in demo mode, real API otherwise
+      let result: TravelTimeResult;
       if (isDemoMode) {
-        return calculateMockTravelTime(fromCoords, hallCoords);
+        result = await calculateMockTravelTime(fromCoords, hallCoords);
+      } else {
+        result = await calculateTravelTime(fromCoords, hallCoords);
       }
 
-      return calculateTravelTime(fromCoords, hallCoords);
+      // Persist successful result to localStorage
+      setCachedTravelTime(hallId, homeLocationHash ?? "", dayType, result);
+
+      return result;
     },
     enabled: shouldFetch,
 
@@ -75,6 +119,22 @@ export function useTravelTime(
     // Use TanStack Query defaults for retry (3 retries with exponential backoff)
     // Not setting retry here allows tests to override via QueryClient defaults
   });
+
+  // Function to manually refresh travel time (invalidates both caches)
+  const refresh = useCallback(() => {
+    if (hallId && homeLocationHash) {
+      // Remove from localStorage first
+      removeCachedTravelTime(hallId, homeLocationHash, dayType);
+    }
+    // Then invalidate TanStack Query cache to trigger refetch
+    queryClient.invalidateQueries({ queryKey });
+  }, [queryClient, queryKey, hallId, homeLocationHash, dayType]);
+
+  return {
+    ...query,
+    refresh,
+    dayType,
+  };
 }
 
 /**

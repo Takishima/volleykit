@@ -206,6 +206,11 @@ export interface Translations {
       requiresHomeLocation: string;
       apiNotConfigured: string;
       maxTravelTime: string;
+      cacheInfo: string;
+      cacheEntries: string;
+      refreshCache: string;
+      refreshCacheConfirm: string;
+      cacheCleared: string;
     };
     dataRetention: {
       title: string;
