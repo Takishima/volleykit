@@ -1,11 +1,25 @@
 /**
  * OJP 2.0 client for Swiss public transport routing.
  * Wraps the ojp-sdk-next package with rate limiting.
+ *
+ * The SDK is loaded lazily to reduce initial bundle size.
  */
 
-import { SDK, TripRequest, Place } from "ojp-sdk-next";
 import type { Coordinates, TravelTimeResult, TravelTimeOptions } from "./types";
 import { TransportApiError } from "./types";
+
+/** Lazily loaded OJP SDK module */
+let ojpSdk: typeof import("ojp-sdk-next") | null = null;
+
+/**
+ * Load the OJP SDK on demand.
+ */
+async function loadOjpSdk(): Promise<typeof import("ojp-sdk-next")> {
+  if (!ojpSdk) {
+    ojpSdk = await import("ojp-sdk-next");
+  }
+  return ojpSdk;
+}
 
 /** OJP 2.0 API endpoint */
 const OJP_API_ENDPOINT = "https://api.opentransportdata.swiss/ojp20";
@@ -62,6 +76,9 @@ export async function calculateTravelTime(
   await waitForRateLimit();
 
   try {
+    // Load SDK lazily
+    const { SDK, TripRequest, Place } = await loadOjpSdk();
+
     // Create SDK instance
     const sdk = new SDK("VolleyKit", { url: OJP_API_ENDPOINT, authToken: apiKey }, "de");
 
