@@ -45,6 +45,8 @@ export const ASSIGNMENT_PROPERTIES = [
   // Compensation lock flags for editability check
   "convocationCompensation.paymentDone",
   "convocationCompensation.lockPayoutOnSiteCompensation",
+  // Validation status for swipe button color
+  "refereeGame.game.scoresheet.closedAt",
 ];
 
 /**

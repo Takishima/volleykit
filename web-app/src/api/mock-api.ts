@@ -266,8 +266,30 @@ export const mockApi = {
     const store = useDemoStore.getState();
     const { items, total } = processSearchRequest(store.assignments, config);
 
+    // Enrich assignments with scoresheet.closedAt from validated games
+    const enrichedItems = items.map((assignment) => {
+      const gameId = assignment.refereeGame?.game?.__identity;
+      const validatedData = gameId ? store.validatedGames[gameId] : null;
+
+      if (validatedData && assignment.refereeGame?.game) {
+        return {
+          ...assignment,
+          refereeGame: {
+            ...assignment.refereeGame,
+            game: {
+              ...assignment.refereeGame.game,
+              scoresheet: {
+                closedAt: validatedData.validatedAt,
+              },
+            },
+          },
+        };
+      }
+      return assignment;
+    });
+
     const response = {
-      items: items as Assignment[],
+      items: enrichedItems as Assignment[],
       totalItemsCount: total,
     };
 

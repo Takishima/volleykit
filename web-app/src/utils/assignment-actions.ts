@@ -40,7 +40,9 @@ export function createAssignmentActions(
       id: "validate-game",
       label: "Validate Game",
       shortLabel: "Validate",
-      color: "bg-primary-500",
+      color: assignment.refereeGame?.game?.scoresheet?.closedAt
+        ? "bg-slate-500"
+        : "bg-primary-500",
       icon: ICON_CHECK,
       onAction: () => handlers.onValidateGame(assignment),
     },
