@@ -252,6 +252,7 @@ const it: Translations = {
     removeConfirm:
       "Sei sicuro di voler rimuovere questa designazione dalla borsa?",
     removeButton: "Rimuovere dalla borsa",
+    filters: "Filtri",
     filterByLevel: "Livello",
     filterByDistance: "Distanza",
     filterByTravelTime: "Viaggio",

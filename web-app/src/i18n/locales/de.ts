@@ -254,6 +254,7 @@ const de: Translations = {
     removeConfirm:
       "Möchten Sie diesen Einsatz wirklich aus der Tauschbörse entfernen?",
     removeButton: "Aus Tauschbörse entfernen",
+    filters: "Filter",
     filterByLevel: "Niveau",
     filterByDistance: "Distanz",
     filterByTravelTime: "Reisezeit",

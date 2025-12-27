@@ -10,9 +10,7 @@ import { createExchangeActions } from "@/utils/exchange-actions";
 import { calculateDistanceKm } from "@/utils/distance";
 import { ExchangeCard } from "@/components/features/ExchangeCard";
 import { SwipeableCard } from "@/components/ui/SwipeableCard";
-import { LevelFilterToggle } from "@/components/features/LevelFilterToggle";
-import { DistanceFilterToggle } from "@/components/features/DistanceFilterToggle";
-import { TravelTimeFilterToggle } from "@/components/features/TravelTimeFilterToggle";
+import { ExchangeFilters } from "@/components/features/ExchangeFilters";
 import {
   LoadingState,
   ErrorState,
@@ -40,7 +38,6 @@ const RemoveFromExchangeModal = lazy(
 
 export function ExchangePage() {
   const [statusFilter, setStatusFilter] = useState<ExchangeStatus>("open");
-  const [filterByLevel, setFilterByLevel] = useState(false);
   const { t } = useTranslation();
 
   // Initialize tour for this page (triggers auto-start on first visit)
@@ -60,6 +57,8 @@ export function ExchangePage() {
     transportEnabled,
     travelTimeFilter,
     setTravelTimeFilterEnabled,
+    levelFilterEnabled,
+    setLevelFilterEnabled,
   } = useSettingsStore(
     useShallow((state) => ({
       homeLocation: state.homeLocation,
@@ -68,6 +67,8 @@ export function ExchangePage() {
       transportEnabled: state.transportEnabled,
       travelTimeFilter: state.travelTimeFilter,
       setTravelTimeFilterEnabled: state.setTravelTimeFilterEnabled,
+      levelFilterEnabled: state.levelFilterEnabled,
+      setLevelFilterEnabled: state.setLevelFilterEnabled,
     })),
   );
 
@@ -120,7 +121,7 @@ export function ExchangePage() {
 
     // Apply level filter (only on "open" tab in demo mode)
     if (
-      filterByLevel &&
+      levelFilterEnabled &&
       statusFilter === "open" &&
       isDemoMode &&
       userRefereeLevelGradationValue !== null
@@ -173,7 +174,7 @@ export function ExchangePage() {
     return result;
   }, [
     exchangesWithDistance,
-    filterByLevel,
+    levelFilterEnabled,
     statusFilter,
     isDemoMode,
     userRefereeLevelGradationValue,
@@ -245,36 +246,35 @@ export function ExchangePage() {
   const isTravelTimeFilterAvailable =
     transportEnabled && isTravelTimeAvailable && homeLocation !== null;
 
-  // Filter toggles - only show on "Open" tab when available
+  // Filter dropdown - only show on "Open" tab when any filter is available
   const filterContent =
-    statusFilter === "open" &&
-    (isLevelFilterAvailable || isDistanceFilterAvailable || isTravelTimeFilterAvailable) ? (
-      <div className="flex flex-wrap items-center gap-3">
-        {isTravelTimeFilterAvailable && (
-          <TravelTimeFilterToggle
-            checked={travelTimeFilter.enabled}
-            onChange={setTravelTimeFilterEnabled}
-            maxTravelTimeMinutes={travelTimeFilter.maxTravelTimeMinutes}
-            dataTour="exchange-travel-time-filter"
-          />
-        )}
-        {isDistanceFilterAvailable && (
-          <DistanceFilterToggle
-            checked={distanceFilter.enabled}
-            onChange={setDistanceFilterEnabled}
-            maxDistanceKm={distanceFilter.maxDistanceKm}
-            dataTour="exchange-distance-filter"
-          />
-        )}
-        {isLevelFilterAvailable && (
-          <LevelFilterToggle
-            checked={filterByLevel}
-            onChange={setFilterByLevel}
-            userLevel={userRefereeLevel}
-            dataTour="exchange-filter"
-          />
-        )}
-      </div>
+    statusFilter === "open" ? (
+      <ExchangeFilters
+        dataTour="exchange-filter"
+        filters={{
+          travelTime: isTravelTimeFilterAvailable
+            ? {
+                enabled: travelTimeFilter.enabled,
+                maxTravelTimeMinutes: travelTimeFilter.maxTravelTimeMinutes,
+                onToggle: () => setTravelTimeFilterEnabled(!travelTimeFilter.enabled),
+              }
+            : undefined,
+          distance: isDistanceFilterAvailable
+            ? {
+                enabled: distanceFilter.enabled,
+                maxDistanceKm: distanceFilter.maxDistanceKm,
+                onToggle: () => setDistanceFilterEnabled(!distanceFilter.enabled),
+              }
+            : undefined,
+          level: isLevelFilterAvailable
+            ? {
+                enabled: levelFilterEnabled,
+                userLevel: userRefereeLevel,
+                onToggle: () => setLevelFilterEnabled(!levelFilterEnabled),
+              }
+            : undefined,
+        }}
+      />
     ) : undefined;
 
   const renderContent = () => {
@@ -295,7 +295,7 @@ export function ExchangePage() {
 
     if (!filteredData || filteredData.length === 0) {
       const hasActiveFilters =
-        filterByLevel || distanceFilter.enabled || travelTimeFilter.enabled;
+        levelFilterEnabled || distanceFilter.enabled || travelTimeFilter.enabled;
       return (
         <EmptyState
           icon="exchange"

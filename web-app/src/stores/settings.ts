@@ -69,6 +69,10 @@ interface SettingsState {
   setArrivalBufferMinutes: (minutes: number) => void;
   invalidateTravelTimeCache: () => void;
 
+  // Level filter (demo mode only)
+  levelFilterEnabled: boolean;
+  setLevelFilterEnabled: (enabled: boolean) => void;
+
   // Reset all settings to defaults (keeps safe mode)
   resetLocationSettings: () => void;
 }
@@ -109,6 +113,7 @@ export const useSettingsStore = create<SettingsState>()(
         arrivalBufferMinutes: DEFAULT_ARRIVAL_BUFFER_MINUTES,
         cacheInvalidatedAt: null,
       },
+      levelFilterEnabled: false,
 
       setSafeMode: (enabled: boolean) => {
         set({ isSafeModeEnabled: enabled });
@@ -168,6 +173,10 @@ export const useSettingsStore = create<SettingsState>()(
         }));
       },
 
+      setLevelFilterEnabled: (enabled: boolean) => {
+        set({ levelFilterEnabled: enabled });
+      },
+
       resetLocationSettings: () => {
         // Reset all location-related settings to defaults
         // Keeps safe mode and language preferences unchanged
@@ -184,6 +193,7 @@ export const useSettingsStore = create<SettingsState>()(
             arrivalBufferMinutes: DEFAULT_ARRIVAL_BUFFER_MINUTES,
             cacheInvalidatedAt: null,
           },
+          levelFilterEnabled: false,
         });
       },
     }),
@@ -195,6 +205,7 @@ export const useSettingsStore = create<SettingsState>()(
         distanceFilter: state.distanceFilter,
         transportEnabled: state.transportEnabled,
         travelTimeFilter: state.travelTimeFilter,
+        levelFilterEnabled: state.levelFilterEnabled,
       }),
     },
   ),

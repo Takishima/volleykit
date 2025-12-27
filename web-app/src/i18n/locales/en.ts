@@ -254,6 +254,7 @@ const en: Translations = {
     removeConfirm:
       "Are you sure you want to remove this assignment from the exchange?",
     removeButton: "Remove from Exchange",
+    filters: "Filters",
     filterByLevel: "Level",
     filterByDistance: "Distance",
     filterByTravelTime: "Travel",

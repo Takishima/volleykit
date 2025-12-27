@@ -142,6 +142,7 @@ export interface Translations {
     removeTitle: string;
     removeConfirm: string;
     removeButton: string;
+    filters: string;
     filterByLevel: string;
     filterByDistance: string;
     filterByTravelTime: string;

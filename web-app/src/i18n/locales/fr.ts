@@ -254,6 +254,7 @@ const fr: Translations = {
     removeConfirm:
       "Êtes-vous sûr de vouloir retirer cette désignation de la bourse?",
     removeButton: "Retirer de la bourse",
+    filters: "Filtres",
     filterByLevel: "Niveau",
     filterByDistance: "Distance",
     filterByTravelTime: "Trajet",
