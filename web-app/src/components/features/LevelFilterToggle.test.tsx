@@ -8,9 +8,9 @@ describe("LevelFilterToggle", () => {
 
     render(<LevelFilterToggle checked={false} onChange={onChange} />);
 
-    const checkbox = screen.getByRole("checkbox");
-    expect(checkbox).not.toBeChecked();
-    expect(screen.getByText(/my level only/i)).toBeInTheDocument();
+    const toggle = screen.getByRole("switch");
+    expect(toggle).toHaveAttribute("aria-checked", "false");
+    expect(toggle).toHaveAttribute("aria-label", "Level");
   });
 
   it("should render with checked state", () => {
@@ -18,8 +18,8 @@ describe("LevelFilterToggle", () => {
 
     render(<LevelFilterToggle checked={true} onChange={onChange} />);
 
-    const checkbox = screen.getByRole("checkbox");
-    expect(checkbox).toBeChecked();
+    const toggle = screen.getByRole("switch");
+    expect(toggle).toHaveAttribute("aria-checked", "true");
   });
 
   it("should call onChange with true when clicking unchecked toggle", () => {
@@ -27,9 +27,8 @@ describe("LevelFilterToggle", () => {
 
     render(<LevelFilterToggle checked={false} onChange={onChange} />);
 
-    const label = screen.getByText(/my level only/i).closest("label");
-    expect(label).toBeInTheDocument();
-    fireEvent.click(label!);
+    const toggle = screen.getByRole("switch");
+    fireEvent.click(toggle);
 
     expect(onChange).toHaveBeenCalledOnce();
     expect(onChange).toHaveBeenCalledWith(true);
@@ -40,9 +39,8 @@ describe("LevelFilterToggle", () => {
 
     render(<LevelFilterToggle checked={true} onChange={onChange} />);
 
-    const label = screen.getByText(/my level only/i).closest("label");
-    expect(label).toBeInTheDocument();
-    fireEvent.click(label!);
+    const toggle = screen.getByRole("switch");
+    fireEvent.click(toggle);
 
     expect(onChange).toHaveBeenCalledOnce();
     expect(onChange).toHaveBeenCalledWith(false);
@@ -55,7 +53,7 @@ describe("LevelFilterToggle", () => {
       <LevelFilterToggle checked={true} onChange={onChange} userLevel="N2" />,
     );
 
-    expect(screen.getByText(/\(N2\+\)/)).toBeInTheDocument();
+    expect(screen.getByText("N2+")).toBeInTheDocument();
   });
 
   it("should not display user level when unchecked", () => {
@@ -65,7 +63,9 @@ describe("LevelFilterToggle", () => {
       <LevelFilterToggle checked={false} onChange={onChange} userLevel="N2" />,
     );
 
-    expect(screen.queryByText(/\(N2\+\)/)).not.toBeInTheDocument();
+    // When unchecked, shows label instead of the level value
+    expect(screen.queryByText("N2+")).not.toBeInTheDocument();
+    expect(screen.getByText("Level")).toBeInTheDocument();
   });
 
   it("should not display user level when not provided", () => {
@@ -73,7 +73,8 @@ describe("LevelFilterToggle", () => {
 
     render(<LevelFilterToggle checked={true} onChange={onChange} />);
 
-    expect(screen.queryByText(/\(\w+\+\)/)).not.toBeInTheDocument();
+    // Shows label when no userLevel is provided
+    expect(screen.getByText("Level")).toBeInTheDocument();
   });
 
   it("should have correct visual styling when checked", () => {
@@ -83,7 +84,7 @@ describe("LevelFilterToggle", () => {
       <LevelFilterToggle checked={true} onChange={onChange} />,
     );
 
-    const toggle = container.querySelector(".bg-primary-500");
+    const toggle = container.querySelector(".bg-primary-100");
     expect(toggle).toBeInTheDocument();
   });
 
@@ -94,7 +95,7 @@ describe("LevelFilterToggle", () => {
       <LevelFilterToggle checked={false} onChange={onChange} />,
     );
 
-    const toggle = container.querySelector(".bg-gray-200");
+    const toggle = container.querySelector(".bg-gray-100");
     expect(toggle).toBeInTheDocument();
   });
 });

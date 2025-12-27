@@ -254,9 +254,9 @@ const fr: Translations = {
     removeConfirm:
       "Êtes-vous sûr de vouloir retirer cette désignation de la bourse?",
     removeButton: "Retirer de la bourse",
-    filterByLevel: "Mon niveau uniquement",
-    filterByDistance: "Filtrer par distance",
-    filterByTravelTime: "Filtrer par temps de trajet",
+    filterByLevel: "Niveau",
+    filterByDistance: "Distance",
+    filterByTravelTime: "Trajet",
     travelTime: "Temps de trajet",
     calculatingTravelTime: "Calcul du temps de trajet...",
     noExchangesAtLevel: "Aucun échange disponible à votre niveau.",

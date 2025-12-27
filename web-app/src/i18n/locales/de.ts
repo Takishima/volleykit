@@ -254,9 +254,9 @@ const de: Translations = {
     removeConfirm:
       "Möchten Sie diesen Einsatz wirklich aus der Tauschbörse entfernen?",
     removeButton: "Aus Tauschbörse entfernen",
-    filterByLevel: "Nur mein Niveau",
-    filterByDistance: "Nach Distanz filtern",
-    filterByTravelTime: "Nach Reisezeit filtern",
+    filterByLevel: "Niveau",
+    filterByDistance: "Distanz",
+    filterByTravelTime: "Reisezeit",
     travelTime: "Reisezeit",
     calculatingTravelTime: "Reisezeit wird berechnet...",
     noExchangesAtLevel: "Keine Tauschangebote auf Ihrem Niveau verfügbar.",

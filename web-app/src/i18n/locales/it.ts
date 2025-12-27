@@ -252,9 +252,9 @@ const it: Translations = {
     removeConfirm:
       "Sei sicuro di voler rimuovere questa designazione dalla borsa?",
     removeButton: "Rimuovere dalla borsa",
-    filterByLevel: "Solo il mio livello",
-    filterByDistance: "Filtra per distanza",
-    filterByTravelTime: "Filtra per tempo di viaggio",
+    filterByLevel: "Livello",
+    filterByDistance: "Distanza",
+    filterByTravelTime: "Viaggio",
     travelTime: "Tempo di viaggio",
     calculatingTravelTime: "Calcolo tempo di viaggio...",
     noExchangesAtLevel: "Nessuno scambio disponibile al tuo livello.",

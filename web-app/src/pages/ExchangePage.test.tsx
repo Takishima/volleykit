@@ -108,7 +108,9 @@ describe("ExchangePage", () => {
 
       render(<ExchangePage />);
 
-      expect(screen.queryByText(/my level only/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("switch", { name: /level/i }),
+      ).not.toBeInTheDocument();
     });
 
     it("should show level filter toggle when in demo mode with user level", () => {
@@ -125,7 +127,9 @@ describe("ExchangePage", () => {
 
       render(<ExchangePage />);
 
-      expect(screen.getByText(/my level only/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole("switch", { name: /level/i }),
+      ).toBeInTheDocument();
     });
 
     it("should not show level filter toggle on My Applications tab", () => {
@@ -145,7 +149,9 @@ describe("ExchangePage", () => {
       // Click on "My Applications" tab
       fireEvent.click(screen.getByText(/my applications/i));
 
-      expect(screen.queryByText(/my level only/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("switch", { name: /level/i }),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -198,27 +204,27 @@ describe("ExchangePage", () => {
       render(<ExchangePage />);
 
       // Enable the filter
-      const toggle = screen.getByText(/my level only/i).closest("label");
+      const toggle = screen.getByRole("switch", { name: /level/i });
       expect(toggle).toBeInTheDocument();
-      fireEvent.click(toggle!);
+      fireEvent.click(toggle);
 
       // N2 user should see N2+ and N3+ exchanges (gradation >= 2)
       // but not N1+ exchanges (gradation 1 requires higher qualification)
       // Note: The filtering happens but we can't easily assert specific exchanges
       // without more detailed DOM structure. Just verify the toggle works.
-      expect(screen.getByRole("checkbox")).toBeChecked();
+      expect(toggle).toHaveAttribute("aria-checked", "true");
     });
 
     it("should show user level indicator when filter is enabled", () => {
       render(<ExchangePage />);
 
       // Enable the filter
-      const toggle = screen.getByText(/my level only/i).closest("label");
+      const toggle = screen.getByRole("switch", { name: /level/i });
       expect(toggle).toBeInTheDocument();
-      fireEvent.click(toggle!);
+      fireEvent.click(toggle);
 
-      // Should show (N2+) indicator
-      expect(screen.getByText(/\(N2\+\)/)).toBeInTheDocument();
+      // Should show N2+ indicator in the chip
+      expect(screen.getByText("N2+")).toBeInTheDocument();
     });
 
     it("should show filtered empty state message when no exchanges match level", () => {
@@ -230,9 +236,9 @@ describe("ExchangePage", () => {
       render(<ExchangePage />);
 
       // Enable the filter
-      const toggle = screen.getByText(/my level only/i).closest("label");
+      const toggle = screen.getByRole("switch", { name: /level/i });
       expect(toggle).toBeInTheDocument();
-      fireEvent.click(toggle!);
+      fireEvent.click(toggle);
 
       // Should show filtered empty state message
       expect(

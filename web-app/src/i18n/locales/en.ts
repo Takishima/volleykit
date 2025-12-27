@@ -254,9 +254,9 @@ const en: Translations = {
     removeConfirm:
       "Are you sure you want to remove this assignment from the exchange?",
     removeButton: "Remove from Exchange",
-    filterByLevel: "My level only",
-    filterByDistance: "Filter by distance",
-    filterByTravelTime: "Filter by travel time",
+    filterByLevel: "Level",
+    filterByDistance: "Distance",
+    filterByTravelTime: "Travel",
     travelTime: "Travel time",
     calculatingTravelTime: "Calculating travel time...",
     noExchangesAtLevel: "No exchanges available at your level.",
