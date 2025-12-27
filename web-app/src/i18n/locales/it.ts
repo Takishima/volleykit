@@ -275,6 +275,12 @@ const it: Translations = {
     submittedBy: "Da:",
     levelRequired: "Livello {level}+",
     errorLoading: "Impossibile caricare gli scambi",
+    settings: {
+      title: "Impostazioni filtri",
+      maxDistance: "Distanza massima",
+      maxTravelTime: "Tempo di viaggio massimo",
+      description: "Queste impostazioni controllano le soglie dei filtri quando si filtrano le offerte di scambio.",
+    },
   },
   positions: {
     "head-one": "1° Arbitro",

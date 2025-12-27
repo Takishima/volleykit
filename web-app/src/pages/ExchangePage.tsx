@@ -13,6 +13,7 @@ import { SwipeableCard } from "@/components/ui/SwipeableCard";
 import { LevelFilterToggle } from "@/components/features/LevelFilterToggle";
 import { DistanceFilterToggle } from "@/components/features/DistanceFilterToggle";
 import { TravelTimeFilterToggle } from "@/components/features/TravelTimeFilterToggle";
+import { ExchangeSettingsSheet } from "@/components/features/ExchangeSettingsSheet";
 import {
   LoadingState,
   ErrorState,
@@ -251,10 +252,11 @@ export function ExchangePage() {
   const hasAnyFilter =
     isLevelFilterAvailable || isDistanceFilterAvailable || isTravelTimeFilterAvailable;
 
-  // Horizontal scrollable filter chips - only show on "Open" tab when any filter is available
+  // Horizontal scrollable filter chips with settings gear - only show on "Open" tab when any filter is available
   const filterContent =
     statusFilter === "open" && hasAnyFilter ? (
       <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+        <ExchangeSettingsSheet dataTour="exchange-settings" />
         {isTravelTimeFilterAvailable && (
           <TravelTimeFilterToggle
             checked={travelTimeFilter.enabled}

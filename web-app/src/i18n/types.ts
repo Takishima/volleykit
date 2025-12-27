@@ -163,6 +163,12 @@ export interface Translations {
     submittedBy: string;
     levelRequired: string;
     errorLoading: string;
+    settings: {
+      title: string;
+      maxDistance: string;
+      maxTravelTime: string;
+      description: string;
+    };
   };
   positions: {
     "head-one": string;

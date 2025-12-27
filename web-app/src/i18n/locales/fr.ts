@@ -277,6 +277,12 @@ const fr: Translations = {
     submittedBy: "Par :",
     levelRequired: "Niveau {level}+",
     errorLoading: "Échec du chargement des échanges",
+    settings: {
+      title: "Paramètres des filtres",
+      maxDistance: "Distance maximale",
+      maxTravelTime: "Temps de trajet maximal",
+      description: "Ces paramètres contrôlent les seuils des filtres lors du filtrage des offres d'échange.",
+    },
   },
   positions: {
     "head-one": "1er Arbitre",

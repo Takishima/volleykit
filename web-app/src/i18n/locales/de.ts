@@ -278,6 +278,12 @@ const de: Translations = {
     submittedBy: "Von:",
     levelRequired: "Niveau {level}+",
     errorLoading: "Fehler beim Laden der Tauschangebote",
+    settings: {
+      title: "Filtereinstellungen",
+      maxDistance: "Maximale Entfernung",
+      maxTravelTime: "Maximale Reisezeit",
+      description: "Diese Einstellungen steuern die Filterschwellen beim Filtern von Tauschangeboten.",
+    },
   },
   positions: {
     "head-one": "1. Schiedsrichter",
