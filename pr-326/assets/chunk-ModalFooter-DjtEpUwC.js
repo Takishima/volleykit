@@ -1,0 +1,1 @@
+import{j as r}from"./chunk-state-swGE7xtP.js";function a({children:e,divider:d=!1}){return r.jsx("div",{className:d?"border-t border-border-default dark:border-border-default-dark pt-4":void 0,children:r.jsx("div",{className:"flex gap-3",children:e})})}export{a as M};
