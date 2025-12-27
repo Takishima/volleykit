@@ -81,4 +81,30 @@ describe("createAssignmentActions", () => {
     expect(actions.validateGame.color).toBe("bg-primary-500");
     expect(isValidElement(actions.validateGame.icon)).toBe(true);
   });
+
+  it("should use success color for validate button when game is validated", () => {
+    const validatedAssignment: Assignment = {
+      ...mockAssignment,
+      refereeGame: {
+        ...mockAssignment.refereeGame,
+        game: {
+          ...mockAssignment.refereeGame?.game,
+          scoresheet: {
+            closedAt: "2025-12-15T20:00:00Z",
+          },
+        },
+      },
+    } as Assignment;
+
+    const handlers = {
+      onEditCompensation: vi.fn(),
+      onValidateGame: vi.fn(),
+      onGenerateReport: vi.fn(),
+      onAddToExchange: vi.fn(),
+    };
+
+    const actions = createAssignmentActions(validatedAssignment, handlers);
+
+    expect(actions.validateGame.color).toBe("bg-slate-500");
+  });
 });
