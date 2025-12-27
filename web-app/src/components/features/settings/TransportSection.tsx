@@ -14,7 +14,8 @@ import {
 /** Travel time presets for the slider (in minutes) */
 const TRAVEL_TIME_PRESETS = [30, 45, 60, 90, 120] as const;
 const MIN_TRAVEL_TIME = TRAVEL_TIME_PRESETS[0];
-const MAX_TRAVEL_TIME = TRAVEL_TIME_PRESETS[4];
+// Using at(-1)! since the array is a compile-time constant with known elements
+const MAX_TRAVEL_TIME = TRAVEL_TIME_PRESETS.at(-1)!;
 
 function TransportSectionComponent() {
   const { t, tInterpolate } = useTranslation();
