@@ -13,6 +13,7 @@ import { SwipeableCard } from "@/components/ui/SwipeableCard";
 import { LevelFilterToggle } from "@/components/features/LevelFilterToggle";
 import { DistanceFilterToggle } from "@/components/features/DistanceFilterToggle";
 import { TravelTimeFilterToggle } from "@/components/features/TravelTimeFilterToggle";
+import { ExchangeSettingsSheet } from "@/components/features/ExchangeSettingsSheet";
 import {
   LoadingState,
   ErrorState,
@@ -40,7 +41,6 @@ const RemoveFromExchangeModal = lazy(
 
 export function ExchangePage() {
   const [statusFilter, setStatusFilter] = useState<ExchangeStatus>("open");
-  const [filterByLevel, setFilterByLevel] = useState(false);
   const { t } = useTranslation();
 
   // Initialize tour for this page (triggers auto-start on first visit)
@@ -60,6 +60,8 @@ export function ExchangePage() {
     transportEnabled,
     travelTimeFilter,
     setTravelTimeFilterEnabled,
+    levelFilterEnabled,
+    setLevelFilterEnabled,
   } = useSettingsStore(
     useShallow((state) => ({
       homeLocation: state.homeLocation,
@@ -68,6 +70,8 @@ export function ExchangePage() {
       transportEnabled: state.transportEnabled,
       travelTimeFilter: state.travelTimeFilter,
       setTravelTimeFilterEnabled: state.setTravelTimeFilterEnabled,
+      levelFilterEnabled: state.levelFilterEnabled,
+      setLevelFilterEnabled: state.setLevelFilterEnabled,
     })),
   );
 
@@ -120,7 +124,7 @@ export function ExchangePage() {
 
     // Apply level filter (only on "open" tab in demo mode)
     if (
-      filterByLevel &&
+      levelFilterEnabled &&
       statusFilter === "open" &&
       isDemoMode &&
       userRefereeLevelGradationValue !== null
@@ -173,7 +177,7 @@ export function ExchangePage() {
     return result;
   }, [
     exchangesWithDistance,
-    filterByLevel,
+    levelFilterEnabled,
     statusFilter,
     isDemoMode,
     userRefereeLevelGradationValue,
@@ -245,11 +249,14 @@ export function ExchangePage() {
   const isTravelTimeFilterAvailable =
     transportEnabled && isTravelTimeAvailable && homeLocation !== null;
 
-  // Filter toggles - only show on "Open" tab when available
+  const hasAnyFilter =
+    isLevelFilterAvailable || isDistanceFilterAvailable || isTravelTimeFilterAvailable;
+
+  // Horizontal scrollable filter chips with settings gear - only show on "Open" tab when any filter is available
   const filterContent =
-    statusFilter === "open" &&
-    (isLevelFilterAvailable || isDistanceFilterAvailable || isTravelTimeFilterAvailable) ? (
-      <div className="flex flex-wrap items-center gap-3">
+    statusFilter === "open" && hasAnyFilter ? (
+      <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+        <ExchangeSettingsSheet dataTour="exchange-settings" />
         {isTravelTimeFilterAvailable && (
           <TravelTimeFilterToggle
             checked={travelTimeFilter.enabled}
@@ -268,8 +275,8 @@ export function ExchangePage() {
         )}
         {isLevelFilterAvailable && (
           <LevelFilterToggle
-            checked={filterByLevel}
-            onChange={setFilterByLevel}
+            checked={levelFilterEnabled}
+            onChange={setLevelFilterEnabled}
             userLevel={userRefereeLevel}
             dataTour="exchange-filter"
           />
@@ -295,7 +302,7 @@ export function ExchangePage() {
 
     if (!filteredData || filteredData.length === 0) {
       const hasActiveFilters =
-        filterByLevel || distanceFilter.enabled || travelTimeFilter.enabled;
+        levelFilterEnabled || distanceFilter.enabled || travelTimeFilter.enabled;
       return (
         <EmptyState
           icon="exchange"

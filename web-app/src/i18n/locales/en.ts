@@ -254,9 +254,10 @@ const en: Translations = {
     removeConfirm:
       "Are you sure you want to remove this assignment from the exchange?",
     removeButton: "Remove from Exchange",
-    filterByLevel: "My level only",
-    filterByDistance: "Filter by distance",
-    filterByTravelTime: "Filter by travel time",
+    filters: "Filters",
+    filterByLevel: "My level",
+    filterByDistance: "Max distance",
+    filterByTravelTime: "Travel time",
     travelTime: "Travel time",
     calculatingTravelTime: "Calculating travel time...",
     noExchangesAtLevel: "No exchanges available at your level.",
@@ -275,6 +276,12 @@ const en: Translations = {
     submittedBy: "By:",
     levelRequired: "Level {level}+",
     errorLoading: "Failed to load exchanges",
+    settings: {
+      title: "Filter Settings",
+      maxDistance: "Maximum distance",
+      maxTravelTime: "Maximum travel time",
+      description: "These settings control the filter thresholds when filtering exchange offers.",
+    },
   },
   positions: {
     "head-one": "1st Referee",

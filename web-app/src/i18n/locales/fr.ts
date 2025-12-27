@@ -254,9 +254,10 @@ const fr: Translations = {
     removeConfirm:
       "Êtes-vous sûr de vouloir retirer cette désignation de la bourse?",
     removeButton: "Retirer de la bourse",
-    filterByLevel: "Mon niveau uniquement",
-    filterByDistance: "Filtrer par distance",
-    filterByTravelTime: "Filtrer par temps de trajet",
+    filters: "Filtres",
+    filterByLevel: "Mon niveau",
+    filterByDistance: "Distance max",
+    filterByTravelTime: "Temps de trajet",
     travelTime: "Temps de trajet",
     calculatingTravelTime: "Calcul du temps de trajet...",
     noExchangesAtLevel: "Aucun échange disponible à votre niveau.",
@@ -276,6 +277,12 @@ const fr: Translations = {
     submittedBy: "Par :",
     levelRequired: "Niveau {level}+",
     errorLoading: "Échec du chargement des échanges",
+    settings: {
+      title: "Paramètres des filtres",
+      maxDistance: "Distance maximale",
+      maxTravelTime: "Temps de trajet maximal",
+      description: "Ces paramètres contrôlent les seuils des filtres lors du filtrage des offres d'échange.",
+    },
   },
   positions: {
     "head-one": "1er Arbitre",

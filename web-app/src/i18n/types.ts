@@ -142,6 +142,7 @@ export interface Translations {
     removeTitle: string;
     removeConfirm: string;
     removeButton: string;
+    filters: string;
     filterByLevel: string;
     filterByDistance: string;
     filterByTravelTime: string;
@@ -162,6 +163,12 @@ export interface Translations {
     submittedBy: string;
     levelRequired: string;
     errorLoading: string;
+    settings: {
+      title: string;
+      maxDistance: string;
+      maxTravelTime: string;
+      description: string;
+    };
   };
   positions: {
     "head-one": string;

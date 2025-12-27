@@ -33,6 +33,7 @@ export { Plus } from "lucide-react";
 export { MapPin } from "lucide-react";
 export { Home } from "lucide-react";
 export { TrainFront } from "lucide-react";
+export { SlidersHorizontal } from "lucide-react";
 
 // Status icons
 export { CheckCircle } from "lucide-react";

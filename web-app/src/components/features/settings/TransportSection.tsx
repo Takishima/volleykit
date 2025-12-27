@@ -11,12 +11,6 @@ import {
   getTravelTimeCacheStats,
 } from "@/services/transport";
 
-/** Travel time presets for the slider (in minutes) */
-const TRAVEL_TIME_PRESETS = [30, 45, 60, 90, 120] as const;
-const MIN_TRAVEL_TIME = TRAVEL_TIME_PRESETS[0];
-// Using at(-1)! since the array is a compile-time constant with known elements
-const MAX_TRAVEL_TIME = TRAVEL_TIME_PRESETS.at(-1)!;
-
 function TransportSectionComponent() {
   const { t, tInterpolate } = useTranslation();
   const isAvailable = useTravelTimeAvailable();
@@ -28,15 +22,11 @@ function TransportSectionComponent() {
     homeLocation,
     transportEnabled,
     setTransportEnabled,
-    travelTimeFilter,
-    setMaxTravelTimeMinutes,
   } = useSettingsStore(
     useShallow((state) => ({
       homeLocation: state.homeLocation,
       transportEnabled: state.transportEnabled,
       setTransportEnabled: state.setTransportEnabled,
-      travelTimeFilter: state.travelTimeFilter,
-      setMaxTravelTimeMinutes: state.setMaxTravelTimeMinutes,
     })),
   );
 
@@ -52,13 +42,6 @@ function TransportSectionComponent() {
     setTransportEnabled(!transportEnabled);
   }, [transportEnabled, setTransportEnabled]);
 
-  const handleTravelTimeChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setMaxTravelTimeMinutes(Number(e.target.value));
-    },
-    [setMaxTravelTimeMinutes],
-  );
-
   const handleClearCache = useCallback(() => {
     // Clear localStorage cache
     clearTravelTimeCache();
@@ -71,19 +54,6 @@ function TransportSectionComponent() {
 
   const hasHomeLocation = Boolean(homeLocation);
   const canEnable = hasHomeLocation && isAvailable;
-
-  // Format time for display
-  const formatTime = (minutes: number): string => {
-    if (minutes < 60) {
-      return `${minutes} ${t("common.minutesUnit")}`;
-    }
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    if (remainingMinutes === 0) {
-      return `${hours} ${t("common.hoursUnit")}`;
-    }
-    return `${hours} ${t("common.hoursUnit")} ${remainingMinutes} ${t("common.minutesUnit")}`;
-  };
 
   return (
     <Card>
@@ -189,92 +159,47 @@ function TransportSectionComponent() {
           </button>
         </div>
 
-        {/* Travel time slider */}
+        {/* Cache management - only show when transport is enabled */}
         {transportEnabled && (
-          <div className="space-y-3 pt-2 border-t border-border-subtle dark:border-border-subtle-dark">
+          <div className="pt-2 border-t border-border-subtle dark:border-border-subtle-dark">
+            <p className="text-xs text-text-muted dark:text-text-muted-dark mb-2">
+              {t("settings.transport.cacheInfo")}
+            </p>
+
             <div className="flex items-center justify-between">
-              <label
-                htmlFor="max-travel-time"
-                className="text-sm font-medium text-text-primary dark:text-text-primary-dark"
-              >
-                {t("settings.transport.maxTravelTime")}
-              </label>
-              <span className="text-sm font-semibold text-primary-600 dark:text-primary-400">
-                {formatTime(travelTimeFilter.maxTravelTimeMinutes)}
+              <span className="text-sm text-text-secondary dark:text-text-secondary-dark">
+                {tInterpolate("settings.transport.cacheEntries", {
+                  count: cacheEntryCount,
+                })}
               </span>
-            </div>
 
-            <input
-              id="max-travel-time"
-              type="range"
-              min={MIN_TRAVEL_TIME}
-              max={MAX_TRAVEL_TIME}
-              step={15}
-              value={travelTimeFilter.maxTravelTimeMinutes}
-              onChange={handleTravelTimeChange}
-              className="w-full h-2 bg-surface-muted dark:bg-surface-subtle-dark rounded-lg appearance-none cursor-pointer accent-primary-600"
-            />
-
-            {/* Preset labels - positioned at their actual percentage in the range */}
-            <div className="relative h-4 text-xs text-text-muted dark:text-text-muted-dark">
-              {TRAVEL_TIME_PRESETS.map((preset, index) => {
-                const percentage =
-                  ((preset - MIN_TRAVEL_TIME) / (MAX_TRAVEL_TIME - MIN_TRAVEL_TIME)) * 100;
-                const isFirst = index === 0;
-                const isLast = index === TRAVEL_TIME_PRESETS.length - 1;
-                return (
-                  <span
-                    key={preset}
-                    className={`absolute ${isFirst ? "" : isLast ? "-translate-x-full" : "-translate-x-1/2"}`}
-                    style={{ left: `${percentage}%` }}
-                  >
-                    {preset < 60 ? `${preset}m` : `${preset / 60}h`}
-                  </span>
-                );
-              })}
-            </div>
-
-            {/* Cache management */}
-            <div className="mt-4 pt-3 border-t border-border-subtle dark:border-border-subtle-dark">
-              <p className="text-xs text-text-muted dark:text-text-muted-dark mb-2">
-                {t("settings.transport.cacheInfo")}
-              </p>
-
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-text-secondary dark:text-text-secondary-dark">
-                  {tInterpolate("settings.transport.cacheEntries", {
-                    count: cacheEntryCount,
-                  })}
-                </span>
-
-                {!showClearConfirm ? (
+              {!showClearConfirm ? (
+                <button
+                  type="button"
+                  onClick={() => setShowClearConfirm(true)}
+                  disabled={cacheEntryCount === 0}
+                  className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {t("settings.transport.refreshCache")}
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => setShowClearConfirm(true)}
-                    disabled={cacheEntryCount === 0}
-                    className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => setShowClearConfirm(false)}
+                    className="text-sm text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark"
                   >
-                    {t("settings.transport.refreshCache")}
+                    {t("common.cancel")}
                   </button>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowClearConfirm(false)}
-                      className="text-sm text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark"
-                    >
-                      {t("common.cancel")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleClearCache}
-                      className="text-sm text-error-600 dark:text-error-400 hover:text-error-700 dark:hover:text-error-300"
-                    >
-                      {t("common.confirm")}
-                    </button>
-                  </div>
-                )}
-              </div>
+                  <button
+                    type="button"
+                    onClick={handleClearCache}
+                    className="text-sm text-error-600 dark:text-error-400 hover:text-error-700 dark:hover:text-error-300"
+                  >
+                    {t("common.confirm")}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}

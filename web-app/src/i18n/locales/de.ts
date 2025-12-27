@@ -254,9 +254,10 @@ const de: Translations = {
     removeConfirm:
       "Möchten Sie diesen Einsatz wirklich aus der Tauschbörse entfernen?",
     removeButton: "Aus Tauschbörse entfernen",
-    filterByLevel: "Nur mein Niveau",
-    filterByDistance: "Nach Distanz filtern",
-    filterByTravelTime: "Nach Reisezeit filtern",
+    filters: "Filter",
+    filterByLevel: "Mein Niveau",
+    filterByDistance: "Max. Distanz",
+    filterByTravelTime: "Reisezeit",
     travelTime: "Reisezeit",
     calculatingTravelTime: "Reisezeit wird berechnet...",
     noExchangesAtLevel: "Keine Tauschangebote auf Ihrem Niveau verfügbar.",
@@ -277,6 +278,12 @@ const de: Translations = {
     submittedBy: "Von:",
     levelRequired: "Niveau {level}+",
     errorLoading: "Fehler beim Laden der Tauschangebote",
+    settings: {
+      title: "Filtereinstellungen",
+      maxDistance: "Maximale Entfernung",
+      maxTravelTime: "Maximale Reisezeit",
+      description: "Diese Einstellungen steuern die Filterschwellen beim Filtern von Tauschangeboten.",
+    },
   },
   positions: {
     "head-one": "1. Schiedsrichter",

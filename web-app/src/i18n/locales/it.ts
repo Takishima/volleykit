@@ -252,9 +252,10 @@ const it: Translations = {
     removeConfirm:
       "Sei sicuro di voler rimuovere questa designazione dalla borsa?",
     removeButton: "Rimuovere dalla borsa",
-    filterByLevel: "Solo il mio livello",
-    filterByDistance: "Filtra per distanza",
-    filterByTravelTime: "Filtra per tempo di viaggio",
+    filters: "Filtri",
+    filterByLevel: "Il mio livello",
+    filterByDistance: "Distanza max",
+    filterByTravelTime: "Tempo di viaggio",
     travelTime: "Tempo di viaggio",
     calculatingTravelTime: "Calcolo tempo di viaggio...",
     noExchangesAtLevel: "Nessuno scambio disponibile al tuo livello.",
@@ -274,6 +275,12 @@ const it: Translations = {
     submittedBy: "Da:",
     levelRequired: "Livello {level}+",
     errorLoading: "Impossibile caricare gli scambi",
+    settings: {
+      title: "Impostazioni filtri",
+      maxDistance: "Distanza massima",
+      maxTravelTime: "Tempo di viaggio massimo",
+      description: "Queste impostazioni controllano le soglie dei filtri quando si filtrano le offerte di scambio.",
+    },
   },
   positions: {
     "head-one": "1° Arbitro",

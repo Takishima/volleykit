@@ -6,10 +6,12 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import * as useConvocations from "@/hooks/useConvocations";
 import * as authStore from "@/stores/auth";
 import * as demoStore from "@/stores/demo";
+import * as settingsStore from "@/stores/settings";
 
 vi.mock("@/hooks/useConvocations");
 vi.mock("@/stores/auth");
 vi.mock("@/stores/demo");
+vi.mock("@/stores/settings");
 vi.mock("@/hooks/useTravelTimeFilter", () => ({
   useTravelTimeFilter: () => ({
     exchangesWithTravelTime: null,
@@ -78,6 +80,8 @@ function createMockQueryResult(
 }
 
 describe("ExchangePage", () => {
+  const mockSetLevelFilterEnabled = vi.fn();
+
   beforeEach(() => {
     vi.clearAllMocks();
 
@@ -93,13 +97,30 @@ describe("ExchangePage", () => {
       userRefereeLevelGradationValue: null,
     });
 
+    // Default settings store mock
+    vi.mocked(settingsStore.useSettingsStore).mockReturnValue({
+      homeLocation: null,
+      distanceFilter: { enabled: false, maxDistanceKm: 50 },
+      setDistanceFilterEnabled: vi.fn(),
+      transportEnabled: false,
+      travelTimeFilter: {
+        enabled: false,
+        maxTravelTimeMinutes: 120,
+        arrivalBufferMinutes: 30,
+        cacheInvalidatedAt: null,
+      },
+      setTravelTimeFilterEnabled: vi.fn(),
+      levelFilterEnabled: false,
+      setLevelFilterEnabled: mockSetLevelFilterEnabled,
+    });
+
     vi.mocked(useConvocations.useGameExchanges).mockReturnValue(
       createMockQueryResult([]),
     );
   });
 
   describe("Level Filter Toggle", () => {
-    it("should not show level filter toggle when not in demo mode", () => {
+    it("should not show level filter when not in demo mode", () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
         selector({ isDemoMode: false } as ReturnType<
           typeof authStore.useAuthStore.getState
@@ -108,10 +129,13 @@ describe("ExchangePage", () => {
 
       render(<ExchangePage />);
 
-      expect(screen.queryByText(/my level only/i)).not.toBeInTheDocument();
+      // Level filter should not be visible when not in demo mode
+      expect(
+        screen.queryByRole("switch", { name: /level/i }),
+      ).not.toBeInTheDocument();
     });
 
-    it("should show level filter toggle when in demo mode with user level", () => {
+    it("should show level filter when in demo mode with user level", () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
         selector({ isDemoMode: true } as ReturnType<
           typeof authStore.useAuthStore.getState
@@ -125,10 +149,13 @@ describe("ExchangePage", () => {
 
       render(<ExchangePage />);
 
-      expect(screen.getByText(/my level only/i)).toBeInTheDocument();
+      // Level filter should be directly visible (no dropdown)
+      expect(
+        screen.getByRole("switch", { name: /level/i }),
+      ).toBeInTheDocument();
     });
 
-    it("should not show level filter toggle on My Applications tab", () => {
+    it("should not show level filter on My Applications tab", () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
         selector({ isDemoMode: true } as ReturnType<
           typeof authStore.useAuthStore.getState
@@ -145,7 +172,10 @@ describe("ExchangePage", () => {
       // Click on "My Applications" tab
       fireEvent.click(screen.getByText(/my applications/i));
 
-      expect(screen.queryByText(/my level only/i)).not.toBeInTheDocument();
+      // Level filter should not be visible on this tab
+      expect(
+        screen.queryByRole("switch", { name: /level/i }),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -194,31 +224,39 @@ describe("ExchangePage", () => {
       expect(exchanges).toHaveLength(3);
     });
 
-    it("should filter exchanges by level when filter is enabled", () => {
+    it("should toggle level filter when clicked", () => {
       render(<ExchangePage />);
 
-      // Enable the filter
-      const toggle = screen.getByText(/my level only/i).closest("label");
-      expect(toggle).toBeInTheDocument();
-      fireEvent.click(toggle!);
+      // Click the level filter directly (no dropdown)
+      const toggle = screen.getByRole("switch", { name: /level/i });
+      fireEvent.click(toggle);
 
-      // N2 user should see N2+ and N3+ exchanges (gradation >= 2)
-      // but not N1+ exchanges (gradation 1 requires higher qualification)
-      // Note: The filtering happens but we can't easily assert specific exchanges
-      // without more detailed DOM structure. Just verify the toggle works.
-      expect(screen.getByRole("checkbox")).toBeChecked();
+      // Should call the setter to enable the filter
+      expect(mockSetLevelFilterEnabled).toHaveBeenCalledWith(true);
     });
 
     it("should show user level indicator when filter is enabled", () => {
+      // Mock filter as already enabled
+      vi.mocked(settingsStore.useSettingsStore).mockReturnValue({
+        homeLocation: null,
+        distanceFilter: { enabled: false, maxDistanceKm: 50 },
+        setDistanceFilterEnabled: vi.fn(),
+        transportEnabled: false,
+        travelTimeFilter: {
+          enabled: false,
+          maxTravelTimeMinutes: 120,
+          arrivalBufferMinutes: 30,
+          cacheInvalidatedAt: null,
+        },
+        setTravelTimeFilterEnabled: vi.fn(),
+        levelFilterEnabled: true,
+        setLevelFilterEnabled: mockSetLevelFilterEnabled,
+      });
+
       render(<ExchangePage />);
 
-      // Enable the filter
-      const toggle = screen.getByText(/my level only/i).closest("label");
-      expect(toggle).toBeInTheDocument();
-      fireEvent.click(toggle!);
-
-      // Should show (N2+) indicator
-      expect(screen.getByText(/\(N2\+\)/)).toBeInTheDocument();
+      // Should show N2+ indicator in the chip (directly visible)
+      expect(screen.getByText("N2+")).toBeInTheDocument();
     });
 
     it("should show filtered empty state message when no exchanges match level", () => {
@@ -227,12 +265,24 @@ describe("ExchangePage", () => {
         createMockQueryResult([exchangeN1]),
       );
 
-      render(<ExchangePage />);
+      // Mock filter as enabled
+      vi.mocked(settingsStore.useSettingsStore).mockReturnValue({
+        homeLocation: null,
+        distanceFilter: { enabled: false, maxDistanceKm: 50 },
+        setDistanceFilterEnabled: vi.fn(),
+        transportEnabled: false,
+        travelTimeFilter: {
+          enabled: false,
+          maxTravelTimeMinutes: 120,
+          arrivalBufferMinutes: 30,
+          cacheInvalidatedAt: null,
+        },
+        setTravelTimeFilterEnabled: vi.fn(),
+        levelFilterEnabled: true,
+        setLevelFilterEnabled: mockSetLevelFilterEnabled,
+      });
 
-      // Enable the filter
-      const toggle = screen.getByText(/my level only/i).closest("label");
-      expect(toggle).toBeInTheDocument();
-      fireEvent.click(toggle!);
+      render(<ExchangePage />);
 
       // Should show filtered empty state message
       expect(
