@@ -212,13 +212,25 @@ function TransportSectionComponent() {
               className="w-full h-2 bg-surface-muted dark:bg-surface-subtle-dark rounded-lg appearance-none cursor-pointer accent-primary-600"
             />
 
-            {/* Preset labels */}
-            <div className="flex justify-between text-xs text-text-muted dark:text-text-muted-dark">
-              {TRAVEL_TIME_PRESETS.map((preset) => (
-                <span key={preset}>
-                  {preset < 60 ? `${preset}m` : `${preset / 60}h`}
-                </span>
-              ))}
+            {/* Preset labels - positioned at their actual percentage in the range */}
+            <div className="relative h-4 text-xs text-text-muted dark:text-text-muted-dark">
+              {TRAVEL_TIME_PRESETS.map((preset, index) => {
+                const minValue = TRAVEL_TIME_PRESETS[0];
+                const maxValue = TRAVEL_TIME_PRESETS[TRAVEL_TIME_PRESETS.length - 1];
+                const percentage =
+                  ((preset - minValue) / (maxValue - minValue)) * 100;
+                const isFirst = index === 0;
+                const isLast = index === TRAVEL_TIME_PRESETS.length - 1;
+                return (
+                  <span
+                    key={preset}
+                    className={`absolute ${isFirst ? "" : isLast ? "-translate-x-full" : "-translate-x-1/2"}`}
+                    style={{ left: `${percentage}%` }}
+                  >
+                    {preset < 60 ? `${preset}m` : `${preset / 60}h`}
+                  </span>
+                );
+              })}
             </div>
 
             {/* Cache management */}
