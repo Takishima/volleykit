@@ -1,5 +1,5 @@
 /** Minutes in one hour */
-const MINUTES_PER_HOUR = 60;
+export const MINUTES_PER_HOUR = 60;
 
 /**
  * Formats travel time in minutes to a display string.

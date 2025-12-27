@@ -5,6 +5,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useTravelTimeAvailable } from "@/hooks/useTravelTime";
 import { ResponsiveSheet } from "@/components/ui/ResponsiveSheet";
 import { Settings, X, MapPin, TrainFront } from "@/components/ui/icons";
+import { formatTravelTime, MINUTES_PER_HOUR } from "@/utils/format-travel-time";
 
 /** Distance presets for the slider (in kilometers) */
 const DISTANCE_PRESETS = [10, 25, 50, 75, 100];
@@ -68,17 +69,9 @@ function ExchangeSettingsSheetComponent({ dataTour }: ExchangeSettingsSheetProps
     return `${km} ${t("common.distanceUnit")}`;
   };
 
-  // Format time for display
-  const formatTime = (minutes: number): string => {
-    if (minutes < 60) {
-      return `${minutes} ${t("common.minutesUnit")}`;
-    }
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    if (remainingMinutes === 0) {
-      return `${hours} ${t("common.hoursUnit")}`;
-    }
-    return `${hours} ${t("common.hoursUnit")} ${remainingMinutes} ${t("common.minutesUnit")}`;
+  const timeUnits = {
+    minutesUnit: t("common.minutesUnit"),
+    hoursUnit: t("common.hoursUnit"),
   };
 
   return (
@@ -171,7 +164,7 @@ function ExchangeSettingsSheetComponent({ dataTour }: ExchangeSettingsSheetProps
                   {t("exchange.settings.maxTravelTime")}
                 </label>
                 <span className="ml-auto text-sm font-semibold text-primary-600 dark:text-primary-400">
-                  {formatTime(travelTimeFilter.maxTravelTimeMinutes)}
+                  {formatTravelTime(travelTimeFilter.maxTravelTimeMinutes, timeUnits)}
                 </span>
               </div>
 
@@ -190,7 +183,7 @@ function ExchangeSettingsSheetComponent({ dataTour }: ExchangeSettingsSheetProps
               <div className="flex justify-between text-xs text-text-muted dark:text-text-muted-dark">
                 {TRAVEL_TIME_PRESETS.map((preset) => (
                   <span key={preset}>
-                    {preset < 60 ? `${preset}m` : `${preset / 60}h`}
+                    {preset < MINUTES_PER_HOUR ? `${preset}m` : `${preset / MINUTES_PER_HOUR}h`}
                   </span>
                 ))}
               </div>
