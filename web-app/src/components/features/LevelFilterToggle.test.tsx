@@ -10,7 +10,7 @@ describe("LevelFilterToggle", () => {
 
     const toggle = screen.getByRole("switch");
     expect(toggle).toHaveAttribute("aria-checked", "false");
-    expect(toggle).toHaveAttribute("aria-label", "Level");
+    expect(toggle).toHaveAttribute("aria-label", "My level");
   });
 
   it("should render with checked state", () => {
@@ -65,7 +65,7 @@ describe("LevelFilterToggle", () => {
 
     // When unchecked, shows label instead of the level value
     expect(screen.queryByText("N2+")).not.toBeInTheDocument();
-    expect(screen.getByText("Level")).toBeInTheDocument();
+    expect(screen.getByText("My level")).toBeInTheDocument();
   });
 
   it("should not display user level when not provided", () => {
@@ -74,7 +74,7 @@ describe("LevelFilterToggle", () => {
     render(<LevelFilterToggle checked={true} onChange={onChange} />);
 
     // Shows label when no userLevel is provided
-    expect(screen.getByText("Level")).toBeInTheDocument();
+    expect(screen.getByText("My level")).toBeInTheDocument();
   });
 
   it("should have correct visual styling when checked", () => {

@@ -3,6 +3,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { ResponsiveSheet } from "@/components/ui/ResponsiveSheet";
 import { SlidersHorizontal, X, MapPin, TrainFront } from "@/components/ui/icons";
 import { FilterChip } from "@/components/ui/FilterChip";
+import { formatTravelTime } from "@/utils/format-travel-time";
 
 interface FilterConfig {
   travelTime?: {
@@ -46,17 +47,9 @@ export function ExchangeFilters({ filters, dataTour }: ExchangeFiltersProps) {
     return null;
   }
 
-  // Format travel time for display
-  const formatTravelTime = (minutes: number): string => {
-    if (minutes < 60) {
-      return `≤${minutes}${t("common.minutesUnit")}`;
-    }
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (mins === 0) {
-      return `≤${hours}${t("common.hoursUnit")}`;
-    }
-    return `≤${hours}${t("common.hoursUnit")} ${mins}${t("common.minutesUnit")}`;
+  const timeUnits = {
+    minutesUnit: t("common.minutesUnit"),
+    hoursUnit: t("common.hoursUnit"),
   };
 
   return (
@@ -101,7 +94,7 @@ export function ExchangeFilters({ filters, dataTour }: ExchangeFiltersProps) {
             type="button"
             onClick={() => setIsOpen(false)}
             className="p-2 -m-2 text-text-muted dark:text-text-muted-dark hover:text-text-primary dark:hover:text-text-primary-dark transition-colors"
-            aria-label="Close"
+            aria-label={t("common.close")}
           >
             <X className="w-5 h-5" />
           </button>
@@ -114,7 +107,11 @@ export function ExchangeFilters({ filters, dataTour }: ExchangeFiltersProps) {
               onToggle={filters.travelTime.onToggle}
               icon={<TrainFront className="w-full h-full" />}
               label={t("exchange.filterByTravelTime")}
-              activeValue={formatTravelTime(filters.travelTime.maxTravelTimeMinutes)}
+              activeValue={formatTravelTime(
+                filters.travelTime.maxTravelTimeMinutes,
+                timeUnits,
+                "≤",
+              )}
               showIconWhenActive
             />
           )}

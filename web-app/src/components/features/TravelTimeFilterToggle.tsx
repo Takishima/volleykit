@@ -2,6 +2,7 @@ import { memo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { FilterChip } from "@/components/ui/FilterChip";
 import { TrainFront } from "@/components/ui/icons";
+import { formatTravelTime } from "@/utils/format-travel-time";
 
 interface TravelTimeFilterToggleProps {
   checked: boolean;
@@ -22,17 +23,9 @@ function TravelTimeFilterToggleComponent({
     onChange(!checked);
   };
 
-  // Format time for display
-  const formatTime = (): string => {
-    if (maxTravelTimeMinutes < 60) {
-      return `≤${maxTravelTimeMinutes}${t("common.minutesUnit")}`;
-    }
-    const hours = Math.floor(maxTravelTimeMinutes / 60);
-    const minutes = maxTravelTimeMinutes % 60;
-    if (minutes === 0) {
-      return `≤${hours}${t("common.hoursUnit")}`;
-    }
-    return `≤${hours}${t("common.hoursUnit")} ${minutes}${t("common.minutesUnit")}`;
+  const timeUnits = {
+    minutesUnit: t("common.minutesUnit"),
+    hoursUnit: t("common.hoursUnit"),
   };
 
   return (
@@ -41,7 +34,7 @@ function TravelTimeFilterToggleComponent({
       onToggle={handleToggle}
       icon={<TrainFront className="w-full h-full" />}
       label={t("exchange.filterByTravelTime")}
-      activeValue={formatTime()}
+      activeValue={formatTravelTime(maxTravelTimeMinutes, timeUnits, "≤")}
       showIconWhenActive
       dataTour={dataTour}
     />
