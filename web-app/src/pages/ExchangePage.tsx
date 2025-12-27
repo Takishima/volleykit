@@ -10,7 +10,9 @@ import { createExchangeActions } from "@/utils/exchange-actions";
 import { calculateDistanceKm } from "@/utils/distance";
 import { ExchangeCard } from "@/components/features/ExchangeCard";
 import { SwipeableCard } from "@/components/ui/SwipeableCard";
-import { ExchangeFilters } from "@/components/features/ExchangeFilters";
+import { LevelFilterToggle } from "@/components/features/LevelFilterToggle";
+import { DistanceFilterToggle } from "@/components/features/DistanceFilterToggle";
+import { TravelTimeFilterToggle } from "@/components/features/TravelTimeFilterToggle";
 import {
   LoadingState,
   ErrorState,
@@ -246,35 +248,38 @@ export function ExchangePage() {
   const isTravelTimeFilterAvailable =
     transportEnabled && isTravelTimeAvailable && homeLocation !== null;
 
-  // Filter dropdown - only show on "Open" tab when any filter is available
+  const hasAnyFilter =
+    isLevelFilterAvailable || isDistanceFilterAvailable || isTravelTimeFilterAvailable;
+
+  // Horizontal scrollable filter chips - only show on "Open" tab when any filter is available
   const filterContent =
-    statusFilter === "open" ? (
-      <ExchangeFilters
-        dataTour="exchange-filter"
-        filters={{
-          travelTime: isTravelTimeFilterAvailable
-            ? {
-                enabled: travelTimeFilter.enabled,
-                maxTravelTimeMinutes: travelTimeFilter.maxTravelTimeMinutes,
-                onToggle: () => setTravelTimeFilterEnabled(!travelTimeFilter.enabled),
-              }
-            : undefined,
-          distance: isDistanceFilterAvailable
-            ? {
-                enabled: distanceFilter.enabled,
-                maxDistanceKm: distanceFilter.maxDistanceKm,
-                onToggle: () => setDistanceFilterEnabled(!distanceFilter.enabled),
-              }
-            : undefined,
-          level: isLevelFilterAvailable
-            ? {
-                enabled: levelFilterEnabled,
-                userLevel: userRefereeLevel,
-                onToggle: () => setLevelFilterEnabled(!levelFilterEnabled),
-              }
-            : undefined,
-        }}
-      />
+    statusFilter === "open" && hasAnyFilter ? (
+      <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+        {isTravelTimeFilterAvailable && (
+          <TravelTimeFilterToggle
+            checked={travelTimeFilter.enabled}
+            onChange={setTravelTimeFilterEnabled}
+            maxTravelTimeMinutes={travelTimeFilter.maxTravelTimeMinutes}
+            dataTour="exchange-travel-time-filter"
+          />
+        )}
+        {isDistanceFilterAvailable && (
+          <DistanceFilterToggle
+            checked={distanceFilter.enabled}
+            onChange={setDistanceFilterEnabled}
+            maxDistanceKm={distanceFilter.maxDistanceKm}
+            dataTour="exchange-distance-filter"
+          />
+        )}
+        {isLevelFilterAvailable && (
+          <LevelFilterToggle
+            checked={levelFilterEnabled}
+            onChange={setLevelFilterEnabled}
+            userLevel={userRefereeLevel}
+            dataTour="exchange-filter"
+          />
+        )}
+      </div>
     ) : undefined;
 
   const renderContent = () => {

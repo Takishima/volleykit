@@ -79,13 +79,6 @@ function createMockQueryResult(
   } as unknown as UseQueryResult<GameExchange[], Error>;
 }
 
-// Helper to open the filters dropdown and find a filter switch
-function openFiltersAndGetSwitch(name: RegExp) {
-  const filtersButton = screen.getByRole("button", { name: /filters/i });
-  fireEvent.click(filtersButton);
-  return screen.getByRole("switch", { name });
-}
-
 describe("ExchangePage", () => {
   const mockSetLevelFilterEnabled = vi.fn();
 
@@ -127,7 +120,7 @@ describe("ExchangePage", () => {
   });
 
   describe("Level Filter Toggle", () => {
-    it("should not show level filter in dropdown when not in demo mode", () => {
+    it("should not show level filter when not in demo mode", () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
         selector({ isDemoMode: false } as ReturnType<
           typeof authStore.useAuthStore.getState
@@ -136,13 +129,13 @@ describe("ExchangePage", () => {
 
       render(<ExchangePage />);
 
-      // Filters button should still be visible but level filter won't be inside
-      const filtersButton = screen.queryByRole("button", { name: /filters/i });
-      // When no filters available, button should not be shown
-      expect(filtersButton).not.toBeInTheDocument();
+      // Level filter should not be visible when not in demo mode
+      expect(
+        screen.queryByRole("switch", { name: /level/i }),
+      ).not.toBeInTheDocument();
     });
 
-    it("should show level filter in dropdown when in demo mode with user level", () => {
+    it("should show level filter when in demo mode with user level", () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
         selector({ isDemoMode: true } as ReturnType<
           typeof authStore.useAuthStore.getState
@@ -156,17 +149,13 @@ describe("ExchangePage", () => {
 
       render(<ExchangePage />);
 
-      // Open filters dropdown
-      const filtersButton = screen.getByRole("button", { name: /filters/i });
-      fireEvent.click(filtersButton);
-
-      // Level filter should be visible inside the dropdown
+      // Level filter should be directly visible (no dropdown)
       expect(
         screen.getByRole("switch", { name: /level/i }),
       ).toBeInTheDocument();
     });
 
-    it("should not show filters button on My Applications tab", () => {
+    it("should not show level filter on My Applications tab", () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
         selector({ isDemoMode: true } as ReturnType<
           typeof authStore.useAuthStore.getState
@@ -183,9 +172,9 @@ describe("ExchangePage", () => {
       // Click on "My Applications" tab
       fireEvent.click(screen.getByText(/my applications/i));
 
-      // Filters button should not be visible on this tab
+      // Level filter should not be visible on this tab
       expect(
-        screen.queryByRole("button", { name: /filters/i }),
+        screen.queryByRole("switch", { name: /level/i }),
       ).not.toBeInTheDocument();
     });
   });
@@ -238,8 +227,8 @@ describe("ExchangePage", () => {
     it("should toggle level filter when clicked", () => {
       render(<ExchangePage />);
 
-      // Open dropdown and click the level filter
-      const toggle = openFiltersAndGetSwitch(/level/i);
+      // Click the level filter directly (no dropdown)
+      const toggle = screen.getByRole("switch", { name: /level/i });
       fireEvent.click(toggle);
 
       // Should call the setter to enable the filter
@@ -266,11 +255,7 @@ describe("ExchangePage", () => {
 
       render(<ExchangePage />);
 
-      // Open filters dropdown
-      const filtersButton = screen.getByRole("button", { name: /filters/i });
-      fireEvent.click(filtersButton);
-
-      // Should show N2+ indicator in the chip
+      // Should show N2+ indicator in the chip (directly visible)
       expect(screen.getByText("N2+")).toBeInTheDocument();
     });
 
