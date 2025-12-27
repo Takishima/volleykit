@@ -12,7 +12,10 @@ import {
 } from "@/services/transport";
 
 /** Travel time presets for the slider (in minutes) */
-const TRAVEL_TIME_PRESETS = [30, 45, 60, 90, 120];
+const TRAVEL_TIME_PRESETS = [30, 45, 60, 90, 120] as const;
+const MIN_TRAVEL_TIME = TRAVEL_TIME_PRESETS[0];
+// Using at(-1)! since the array is a compile-time constant with known elements
+const MAX_TRAVEL_TIME = TRAVEL_TIME_PRESETS.at(-1)!;
 
 function TransportSectionComponent() {
   const { t, tInterpolate } = useTranslation();
@@ -204,21 +207,31 @@ function TransportSectionComponent() {
             <input
               id="max-travel-time"
               type="range"
-              min={TRAVEL_TIME_PRESETS[0]}
-              max={TRAVEL_TIME_PRESETS[TRAVEL_TIME_PRESETS.length - 1]}
+              min={MIN_TRAVEL_TIME}
+              max={MAX_TRAVEL_TIME}
               step={15}
               value={travelTimeFilter.maxTravelTimeMinutes}
               onChange={handleTravelTimeChange}
               className="w-full h-2 bg-surface-muted dark:bg-surface-subtle-dark rounded-lg appearance-none cursor-pointer accent-primary-600"
             />
 
-            {/* Preset labels */}
-            <div className="flex justify-between text-xs text-text-muted dark:text-text-muted-dark">
-              {TRAVEL_TIME_PRESETS.map((preset) => (
-                <span key={preset}>
-                  {preset < 60 ? `${preset}m` : `${preset / 60}h`}
-                </span>
-              ))}
+            {/* Preset labels - positioned at their actual percentage in the range */}
+            <div className="relative h-4 text-xs text-text-muted dark:text-text-muted-dark">
+              {TRAVEL_TIME_PRESETS.map((preset, index) => {
+                const percentage =
+                  ((preset - MIN_TRAVEL_TIME) / (MAX_TRAVEL_TIME - MIN_TRAVEL_TIME)) * 100;
+                const isFirst = index === 0;
+                const isLast = index === TRAVEL_TIME_PRESETS.length - 1;
+                return (
+                  <span
+                    key={preset}
+                    className={`absolute ${isFirst ? "" : isLast ? "-translate-x-full" : "-translate-x-1/2"}`}
+                    style={{ left: `${percentage}%` }}
+                  >
+                    {preset < 60 ? `${preset}m` : `${preset / 60}h`}
+                  </span>
+                );
+              })}
             </div>
 
             {/* Cache management */}
