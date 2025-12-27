@@ -99,7 +99,7 @@ function ExchangeCardComponent({
 
           {/* Distance and travel time badges */}
           {(distanceKm != null || travelTimeMinutes !== undefined || travelTimeLoading) && (
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="flex flex-col items-end gap-0.5 shrink-0">
               {/* Distance badge */}
               {distanceKm != null && (
                 <span className="text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 px-2 py-0.5 rounded-full flex items-center gap-1">
