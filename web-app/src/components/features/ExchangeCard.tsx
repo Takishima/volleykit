@@ -100,19 +100,19 @@ function ExchangeCardComponent({
           {/* Distance and travel time badges */}
           {(distanceKm != null || travelTimeMinutes !== undefined || travelTimeLoading) && (
             <div className="flex items-center gap-1 shrink-0">
-              {/* Travel time badge */}
-              {(travelTimeMinutes !== undefined || travelTimeLoading) && (
-                <TravelTimeBadge
-                  durationMinutes={travelTimeMinutes ?? undefined}
-                  isLoading={travelTimeLoading}
-                />
-              )}
               {/* Distance badge */}
               {distanceKm != null && (
                 <span className="text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 px-2 py-0.5 rounded-full flex items-center gap-1">
                   <Home className="w-3 h-3" aria-hidden="true" />
                   {distanceKm.toFixed(0)} {t("common.distanceUnit")}
                 </span>
+              )}
+              {/* Travel time badge */}
+              {(travelTimeMinutes !== undefined || travelTimeLoading) && (
+                <TravelTimeBadge
+                  durationMinutes={travelTimeMinutes ?? undefined}
+                  isLoading={travelTimeLoading}
+                />
               )}
             </div>
           )}
