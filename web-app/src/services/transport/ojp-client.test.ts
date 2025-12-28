@@ -367,6 +367,54 @@ describe("extractDestinationStation", () => {
     expect(result).toEqual({ id: "73232", name: "Kloten, Freienberg" });
   });
 
+  it("filters out PLATFORM_ACCESS_WITH_ASSISTANCE_WHEN_NOTIFIED from nameSuffix", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      leg: [
+        {
+          timedLeg: {
+            legBoard: {
+              stopPointRef: "ch:1:sloid:8503000",
+              stopPointName: { text: "Zürich HB" },
+            },
+            legAlight: {
+              stopPointRef: "ch:1:sloid:1121",
+              stopPointName: { text: "Pully" },
+              nameSuffix: { text: "PLATFORM_ACCESS_WITH_ASSISTANCE_WHEN_NOTIFIED" },
+            },
+          },
+        },
+      ],
+    };
+
+    const result = extractDestinationStation(trip);
+    expect(result).toEqual({ id: "1121", name: "Pully" });
+  });
+
+  it("filters out PLATFORM_ACCESS_WITHOUT_ASSISTANCE from nameSuffix", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      leg: [
+        {
+          timedLeg: {
+            legBoard: {
+              stopPointRef: "ch:1:sloid:8503000",
+              stopPointName: { text: "Zürich HB" },
+            },
+            legAlight: {
+              stopPointRef: "ch:1:sloid:2112",
+              stopPointName: { text: "Schönenwerd" },
+              nameSuffix: { text: "SO PLATFORM_ACCESS_WITHOUT_ASSISTANCE" },
+            },
+          },
+        },
+      ],
+    };
+
+    const result = extractDestinationStation(trip);
+    expect(result).toEqual({ id: "2112", name: "Schönenwerd SO" });
+  });
+
   it("removes accessibility keyword from end of nameSuffix", () => {
     const trip: OjpTrip = {
       ...baseTrip,
