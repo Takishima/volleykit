@@ -3,7 +3,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Modal } from "@/components/ui/Modal";
 import { ModalHeader } from "@/components/ui/ModalHeader";
 import { ModalFooter } from "@/components/ui/ModalFooter";
-import { ModalButton } from "@/components/ui/ModalButton";
+import { Button } from "@/components/ui/Button";
 
 const MODAL_TITLE_ID = "safe-mode-warning-title";
 
@@ -81,12 +81,12 @@ export function SafeModeWarningModal({
       </div>
 
       <ModalFooter divider>
-        <ModalButton variant="secondary" fullWidth onClick={onClose}>
+        <Button variant="secondary" className="flex-1 rounded-md" onClick={onClose}>
           {t("common.cancel")}
-        </ModalButton>
-        <ModalButton variant="danger" fullWidth onClick={handleConfirm}>
+        </Button>
+        <Button variant="danger" className="flex-1 rounded-md" onClick={handleConfirm}>
           {t("settings.safeModeConfirmButton")}
-        </ModalButton>
+        </Button>
       </ModalFooter>
     </Modal>
   );
