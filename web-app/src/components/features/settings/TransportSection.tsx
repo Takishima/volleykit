@@ -22,14 +22,16 @@ function TransportSectionComponent() {
   const {
     homeLocation,
     transportEnabled,
-    setTransportEnabled,
+    transportEnabledByAssociation,
+    setTransportEnabledForAssociation,
     arrivalBufferByAssociation,
     setArrivalBufferForAssociation,
   } = useSettingsStore(
     useShallow((state) => ({
       homeLocation: state.homeLocation,
       transportEnabled: state.transportEnabled,
-      setTransportEnabled: state.setTransportEnabled,
+      transportEnabledByAssociation: state.transportEnabledByAssociation,
+      setTransportEnabledForAssociation: state.setTransportEnabledForAssociation,
       arrivalBufferByAssociation: state.travelTimeFilter.arrivalBufferByAssociation,
       setArrivalBufferForAssociation: state.setArrivalBufferForAssociation,
     })),
@@ -45,6 +47,17 @@ function TransportSectionComponent() {
   const activeOccupation = user?.occupations?.find((o) => o.id === activeOccupationId) ?? user?.occupations?.[0];
   const associationCode = activeOccupation?.associationCode;
 
+  // Get current transport enabled state for this association
+  // Handle migration: if per-association setting exists, use it; otherwise fall back to global
+  const isTransportEnabled = useMemo(() => {
+    const enabledMap = transportEnabledByAssociation ?? {};
+    if (associationCode && enabledMap[associationCode] !== undefined) {
+      return enabledMap[associationCode];
+    }
+    // Fall back to global setting for migration
+    return transportEnabled;
+  }, [associationCode, transportEnabledByAssociation, transportEnabled]);
+
   // Get current arrival buffer for this association
   // Handle case where arrivalBufferByAssociation might be undefined (old storage migration)
   const currentArrivalBuffer = associationCode && arrivalBufferByAssociation?.[associationCode] !== undefined
@@ -53,15 +66,16 @@ function TransportSectionComponent() {
 
   // Calculate cache entry count - recalculates when cacheVersion changes
   const cacheEntryCount = useMemo(
-    () => (transportEnabled ? getTravelTimeCacheStats().entryCount : 0),
+    () => (isTransportEnabled ? getTravelTimeCacheStats().entryCount : 0),
     // cacheVersion triggers recalculation after clearing cache
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [transportEnabled, cacheVersion],
+    [isTransportEnabled, cacheVersion],
   );
 
   const handleToggleTransport = useCallback(() => {
-    setTransportEnabled(!transportEnabled);
-  }, [transportEnabled, setTransportEnabled]);
+    if (!associationCode) return;
+    setTransportEnabledForAssociation(associationCode, !isTransportEnabled);
+  }, [associationCode, isTransportEnabled, setTransportEnabledForAssociation]);
 
   const handleClearCache = useCallback(() => {
     // Clear localStorage cache
@@ -85,7 +99,8 @@ function TransportSectionComponent() {
   );
 
   const hasHomeLocation = Boolean(homeLocation);
-  const canEnable = hasHomeLocation && isAvailable;
+  const hasAssociation = Boolean(associationCode);
+  const canEnable = hasHomeLocation && isAvailable && hasAssociation;
 
   return (
     <Card>
@@ -163,8 +178,15 @@ function TransportSectionComponent() {
         {/* Enable toggle */}
         <div className="flex items-center justify-between py-2">
           <div className="flex-1">
-            <div className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
-              {t("settings.transport.enableCalculations")}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
+                {t("settings.transport.enableCalculations")}
+              </span>
+              {associationCode && (
+                <span className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300">
+                  {associationCode}
+                </span>
+              )}
             </div>
           </div>
 
@@ -175,24 +197,24 @@ function TransportSectionComponent() {
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
               !canEnable
                 ? "bg-surface-muted dark:bg-surface-subtle-dark cursor-not-allowed opacity-50"
-                : transportEnabled
+                : isTransportEnabled
                   ? "bg-primary-600"
                   : "bg-surface-muted dark:bg-surface-subtle-dark"
             }`}
             role="switch"
-            aria-checked={transportEnabled}
+            aria-checked={isTransportEnabled}
             aria-label={t("settings.transport.enableCalculations")}
           >
             <span
               className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                transportEnabled ? "translate-x-6" : "translate-x-1"
+                isTransportEnabled ? "translate-x-6" : "translate-x-1"
               }`}
             />
           </button>
         </div>
 
         {/* Arrival time setting - only show when transport is enabled */}
-        {transportEnabled && (
+        {isTransportEnabled && (
           <div className="pt-2 border-t border-border-subtle dark:border-border-subtle-dark" data-tour="arrival-time">
             <div className="flex items-center justify-between py-2">
               <div className="flex-1 pr-3">
@@ -229,7 +251,7 @@ function TransportSectionComponent() {
         )}
 
         {/* Cache management - only show when transport is enabled */}
-        {transportEnabled && (
+        {isTransportEnabled && (
           <div className="pt-2 border-t border-border-subtle dark:border-border-subtle-dark">
             <p className="text-xs text-text-muted dark:text-text-muted-dark mb-2">
               {t("settings.transport.cacheInfo")}

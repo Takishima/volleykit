@@ -66,10 +66,27 @@ function getHallInfo(exchange: GameExchange): HallInfo | null {
  * @returns Object with travel time data for each exchange and filter helper
  */
 export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | null) {
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
-  const homeLocation = useSettingsStore((state) => state.homeLocation);
-  const transportEnabled = useSettingsStore((state) => state.transportEnabled);
-  const travelTimeFilter = useSettingsStore((state) => state.travelTimeFilter);
+  const { isDemoMode, user, activeOccupationId } = useAuthStore((state) => ({
+    isDemoMode: state.isDemoMode,
+    user: state.user,
+    activeOccupationId: state.activeOccupationId,
+  }));
+  const { homeLocation, isTransportEnabledForAssociation, travelTimeFilter, getArrivalBufferForAssociation } = useSettingsStore((state) => ({
+    homeLocation: state.homeLocation,
+    isTransportEnabledForAssociation: state.isTransportEnabledForAssociation,
+    travelTimeFilter: state.travelTimeFilter,
+    getArrivalBufferForAssociation: state.getArrivalBufferForAssociation,
+  }));
+
+  // Get active association code
+  const activeOccupation = user?.occupations?.find((o) => o.id === activeOccupationId) ?? user?.occupations?.[0];
+  const associationCode = activeOccupation?.associationCode;
+
+  // Check if transport is enabled for current association
+  const transportEnabled = isTransportEnabledForAssociation(associationCode);
+
+  // Get arrival buffer for current association
+  const arrivalBufferMinutes = getArrivalBufferForAssociation(associationCode);
 
   // Get unique halls to query
   const hallInfos = useMemo(() => {
@@ -131,7 +148,7 @@ export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | nul
         };
 
         // Calculate target arrival time (game start minus buffer from settings)
-        const arrivalBufferMs = travelTimeFilter.arrivalBufferMinutes * 60 * 1000;
+        const arrivalBufferMs = arrivalBufferMinutes * 60 * 1000;
         const targetArrivalTime = hallInfo.gameStartTime
           ? new Date(hallInfo.gameStartTime.getTime() - arrivalBufferMs)
           : undefined;

@@ -77,9 +77,14 @@ interface SettingsState {
   setDistanceFilterEnabled: (enabled: boolean) => void;
   setMaxDistanceKm: (km: number) => void;
 
-  // Transport feature toggle
+  // Transport feature toggle (legacy global setting)
   transportEnabled: boolean;
   setTransportEnabled: (enabled: boolean) => void;
+
+  // Per-association transport enabled settings
+  transportEnabledByAssociation: Record<string, boolean>;
+  setTransportEnabledForAssociation: (associationCode: string, enabled: boolean) => void;
+  isTransportEnabledForAssociation: (associationCode: string | undefined) => boolean;
 
   // Travel time filter settings
   travelTimeFilter: TravelTimeFilter;
@@ -128,6 +133,7 @@ export const useSettingsStore = create<SettingsState>()(
         maxDistanceKm: DEFAULT_MAX_DISTANCE_KM,
       },
       transportEnabled: false,
+      transportEnabledByAssociation: {},
       travelTimeFilter: {
         enabled: false,
         maxTravelTimeMinutes: DEFAULT_MAX_TRAVEL_TIME_MINUTES,
@@ -166,6 +172,27 @@ export const useSettingsStore = create<SettingsState>()(
 
       setTransportEnabled: (enabled: boolean) => {
         set({ transportEnabled: enabled });
+      },
+
+      setTransportEnabledForAssociation: (associationCode: string, enabled: boolean) => {
+        set((state) => ({
+          transportEnabledByAssociation: {
+            ...state.transportEnabledByAssociation,
+            [associationCode]: enabled,
+          },
+        }));
+      },
+
+      isTransportEnabledForAssociation: (associationCode: string | undefined) => {
+        const state = get();
+        // Handle migration: if per-association setting exists, use it
+        // Otherwise fall back to global transportEnabled for backwards compatibility
+        const enabledMap = state.transportEnabledByAssociation ?? {};
+        if (associationCode && enabledMap[associationCode] !== undefined) {
+          return enabledMap[associationCode];
+        }
+        // Fall back to global setting for migration
+        return state.transportEnabled;
       },
 
       setTravelTimeFilterEnabled: (enabled: boolean) => {
@@ -231,6 +258,7 @@ export const useSettingsStore = create<SettingsState>()(
             maxDistanceKm: DEFAULT_MAX_DISTANCE_KM,
           },
           transportEnabled: false,
+          transportEnabledByAssociation: {},
           travelTimeFilter: {
             enabled: false,
             maxTravelTimeMinutes: DEFAULT_MAX_TRAVEL_TIME_MINUTES,
@@ -249,6 +277,7 @@ export const useSettingsStore = create<SettingsState>()(
         homeLocation: state.homeLocation,
         distanceFilter: state.distanceFilter,
         transportEnabled: state.transportEnabled,
+        transportEnabledByAssociation: state.transportEnabledByAssociation,
         travelTimeFilter: state.travelTimeFilter,
         levelFilterEnabled: state.levelFilterEnabled,
       }),

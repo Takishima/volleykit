@@ -25,7 +25,7 @@ vi.mock("@/services/transport", () => ({
 // Mock the stores - using AnyFunction to avoid strict type checking in tests
 vi.mock("@/stores/auth", () => ({
   useAuthStore: vi.fn((selector: AnyFunction) =>
-    selector({ isDemoMode: false }),
+    selector({ isDemoMode: false, user: null, activeOccupationId: null }),
   ),
 }));
 
@@ -34,6 +34,7 @@ vi.mock("@/stores/settings", () => ({
     selector({
       homeLocation: null,
       transportEnabled: false,
+      isTransportEnabledForAssociation: () => false,
     }),
   ),
 }));
@@ -87,6 +88,7 @@ describe("useTravelTime", () => {
         selector({
           homeLocation: mockHomeLocation,
           transportEnabled: false,
+          isTransportEnabledForAssociation: () => false,
         }),
       );
 
@@ -108,6 +110,7 @@ describe("useTravelTime", () => {
         selector({
           homeLocation: null,
           transportEnabled: true,
+          isTransportEnabledForAssociation: () => true,
         }),
       );
 
@@ -129,6 +132,7 @@ describe("useTravelTime", () => {
         selector({
           homeLocation: mockHomeLocation,
           transportEnabled: true,
+          isTransportEnabledForAssociation: () => true,
         }),
       );
 
@@ -150,6 +154,7 @@ describe("useTravelTime", () => {
         selector({
           homeLocation: mockHomeLocation,
           transportEnabled: true,
+          isTransportEnabledForAssociation: () => true,
         }),
       );
 
@@ -171,13 +176,14 @@ describe("useTravelTime", () => {
       const { useSettingsStore } = await import("@/stores/settings");
 
       vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-        selector({ isDemoMode: true }),
+        selector({ isDemoMode: true, user: null, activeOccupationId: null }),
       );
 
       vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
         selector({
           homeLocation: mockHomeLocation,
           transportEnabled: true,
+          isTransportEnabledForAssociation: () => true,
         }),
       );
 
@@ -214,6 +220,7 @@ describe("useTravelTime", () => {
         selector({
           homeLocation: mockHomeLocation,
           transportEnabled: true,
+          isTransportEnabledForAssociation: () => true,
         }),
       );
 
@@ -250,6 +257,7 @@ describe("useTravelTime", () => {
         selector({
           homeLocation: mockHomeLocation,
           transportEnabled: true,
+          isTransportEnabledForAssociation: () => true,
         }),
       );
 
@@ -273,13 +281,14 @@ describe("useTravelTime", () => {
       const { useSettingsStore } = await import("@/stores/settings");
 
       vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-        selector({ isDemoMode: true }),
+        selector({ isDemoMode: true, user: null, activeOccupationId: null }),
       );
 
       vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
         selector({
           homeLocation: mockHomeLocation,
           transportEnabled: true,
+          isTransportEnabledForAssociation: () => true,
         }),
       );
 
@@ -332,7 +341,7 @@ describe("useTravelTimeAvailable", () => {
     const { isOjpConfigured } = await import("@/services/transport");
 
     vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ isDemoMode: true }),
+      selector({ isDemoMode: true, user: null, activeOccupationId: null }),
     );
     vi.mocked(isOjpConfigured).mockReturnValue(false);
 
@@ -398,13 +407,14 @@ describe("day type caching", () => {
     const { useSettingsStore } = await import("@/stores/settings");
 
     vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ isDemoMode: true }),
+      selector({ isDemoMode: true, user: null, activeOccupationId: null }),
     );
 
     vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
       selector({
         homeLocation: mockHomeLocation,
         transportEnabled: true,
+        isTransportEnabledForAssociation: () => true,
       }),
     );
 
@@ -432,13 +442,14 @@ describe("day type caching", () => {
     const { useSettingsStore } = await import("@/stores/settings");
 
     vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ isDemoMode: true }),
+      selector({ isDemoMode: true, user: null, activeOccupationId: null }),
     );
 
     vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
       selector({
         homeLocation: mockHomeLocation,
         transportEnabled: true,
+        isTransportEnabledForAssociation: () => true,
       }),
     );
 
@@ -488,13 +499,14 @@ describe("localStorage persistence", () => {
     const { useSettingsStore } = await import("@/stores/settings");
 
     vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ isDemoMode: true }),
+      selector({ isDemoMode: true, user: null, activeOccupationId: null }),
     );
 
     vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
       selector({
         homeLocation: mockHomeLocation,
         transportEnabled: true,
+        isTransportEnabledForAssociation: () => true,
       }),
     );
 
@@ -527,13 +539,14 @@ describe("localStorage persistence", () => {
     const { useSettingsStore } = await import("@/stores/settings");
 
     vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ isDemoMode: true }),
+      selector({ isDemoMode: true, user: null, activeOccupationId: null }),
     );
 
     vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
       selector({
         homeLocation: mockHomeLocation,
         transportEnabled: true,
+        isTransportEnabledForAssociation: () => true,
       }),
     );
 
@@ -571,13 +584,14 @@ describe("localStorage persistence", () => {
     const { useSettingsStore } = await import("@/stores/settings");
 
     vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ isDemoMode: true }),
+      selector({ isDemoMode: true, user: null, activeOccupationId: null }),
     );
 
     vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
       selector({
         homeLocation: mockHomeLocation,
         transportEnabled: true,
+        isTransportEnabledForAssociation: () => true,
       }),
     );
 

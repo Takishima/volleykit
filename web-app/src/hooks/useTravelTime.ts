@@ -48,10 +48,23 @@ export function useTravelTime(
   options: UseTravelTimeOptions = {},
 ) {
   const { date, targetArrivalTime } = options;
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
-  const homeLocation = useSettingsStore((state) => state.homeLocation);
-  const transportEnabled = useSettingsStore((state) => state.transportEnabled);
+  const { isDemoMode, user, activeOccupationId } = useAuthStore((state) => ({
+    isDemoMode: state.isDemoMode,
+    user: state.user,
+    activeOccupationId: state.activeOccupationId,
+  }));
+  const { homeLocation, isTransportEnabledForAssociation } = useSettingsStore((state) => ({
+    homeLocation: state.homeLocation,
+    isTransportEnabledForAssociation: state.isTransportEnabledForAssociation,
+  }));
   const queryClient = useQueryClient();
+
+  // Get active association code
+  const activeOccupation = user?.occupations?.find((o) => o.id === activeOccupationId) ?? user?.occupations?.[0];
+  const associationCode = activeOccupation?.associationCode;
+
+  // Check if transport is enabled for current association
+  const transportEnabled = isTransportEnabledForAssociation(associationCode);
 
   // Create a hash of home location for cache key stability
   const homeLocationHash = homeLocation ? hashLocation(homeLocation) : null;
