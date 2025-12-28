@@ -130,7 +130,7 @@ export function useGeocode(options: UseGeocodeOptions = {}): UseGeocodeResult {
             placeId: item.place_id,
             latitude: parseFloat(item.lat),
             longitude: parseFloat(item.lon),
-            displayName: item.display_name,
+            displayName: formatSwissAddress(item),
           })),
           isLoading: false,
           error: null,
@@ -164,6 +164,23 @@ export function useGeocode(options: UseGeocodeOptions = {}): UseGeocodeResult {
   };
 }
 
+/** Nominatim address details structure */
+interface NominatimAddress {
+  house_number?: string;
+  road?: string;
+  pedestrian?: string;
+  footway?: string;
+  neighbourhood?: string;
+  suburb?: string;
+  city?: string;
+  town?: string;
+  village?: string;
+  municipality?: string;
+  state?: string;
+  postcode?: string;
+  country?: string;
+}
+
 /** Nominatim API response item */
 interface NominatimResult {
   lat: string;
@@ -172,4 +189,40 @@ interface NominatimResult {
   place_id: number;
   type: string;
   class: string;
+  address?: NominatimAddress;
+}
+
+/**
+ * Format a Nominatim address into Swiss SBB format.
+ * Swiss format: "{postalCode} {city}, {street} {houseNumber}"
+ * Example: "1009 Pully, Avenue des Roses 31"
+ *
+ * Falls back to display_name if structured address data is insufficient.
+ */
+function formatSwissAddress(result: NominatimResult): string {
+  const address = result.address;
+
+  if (!address) {
+    return result.display_name;
+  }
+
+  const houseNumber = address.house_number;
+  const street = address.road ?? address.pedestrian ?? address.footway;
+  const city = address.city ?? address.town ?? address.village ?? address.municipality;
+  const postcode = address.postcode;
+
+  // Need at least city and postcode for Swiss format
+  if (!city || !postcode) {
+    return result.display_name;
+  }
+
+  // Build the formatted address
+  const locationPart = `${postcode} ${city}`;
+
+  if (street) {
+    const streetPart = houseNumber ? `${street} ${houseNumber}` : street;
+    return `${locationPart}, ${streetPart}`;
+  }
+
+  return locationPart;
 }
