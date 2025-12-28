@@ -220,8 +220,25 @@ const SV_VENUES: VenueConfig[] = [
     },
   },
   {
-    teamHome: { name: "VFM Therwil", identifier: BASE_TEAM_IDENTIFIER + 6 },
-    teamAway: { name: "Genève Volley", identifier: BASE_TEAM_IDENTIFIER + 7 },
+    teamHome: { name: "BTV Aarau", identifier: BASE_TEAM_IDENTIFIER + 6 },
+    teamAway: { name: "TV Schönenwerd", identifier: BASE_TEAM_IDENTIFIER + 7 },
+    hall: {
+      name: "Berufsschule BSA",
+      street: "Tellistrasse",
+      houseNumber: "58",
+      postalCode: "5001",
+      city: "Aarau",
+      latitude: 47.396438,
+      longitude: 8.057063,
+      plusCode: "8FVC93W4+HR",
+    },
+  },
+];
+
+const SVRBA_VENUES: VenueConfig[] = [
+  {
+    teamHome: { name: "VFM Therwil", identifier: BASE_TEAM_IDENTIFIER },
+    teamAway: { name: "VBC Münchenstein", identifier: BASE_TEAM_IDENTIFIER + 1 },
     hall: {
       name: "99er Sporthalle",
       street: "Schulgasse",
@@ -234,90 +251,76 @@ const SV_VENUES: VenueConfig[] = [
     },
   },
   {
-    teamHome: { name: "Volley Köniz", identifier: BASE_TEAM_IDENTIFIER + 8 },
-    teamAway: { name: "VC Kanti", identifier: BASE_TEAM_IDENTIFIER + 9 },
+    teamHome: { name: "TV Riehen", identifier: BASE_TEAM_IDENTIFIER + 2 },
+    teamAway: { name: "VBC Binningen", identifier: BASE_TEAM_IDENTIFIER + 3 },
     hall: {
-      name: "Sporthallen Weissenstein",
-      street: "Könizstrasse",
-      houseNumber: "111",
-      postalCode: "3008",
-      city: "Bern",
-      latitude: 46.937687,
-      longitude: 7.417563,
-      plusCode: "8FR9WCQ9+32",
+      name: "Sporthalle Niederholz",
+      street: "Niederholzstrasse",
+      houseNumber: "95",
+      postalCode: "4125",
+      city: "Riehen",
+      latitude: 47.571562,
+      longitude: 7.635188,
+      plusCode: "8FV9HJCP+J3",
+    },
+  },
+  {
+    teamHome: { name: "VBC Basel", identifier: BASE_TEAM_IDENTIFIER + 4 },
+    teamAway: { name: "TV Liestal", identifier: BASE_TEAM_IDENTIFIER + 5 },
+    hall: {
+      name: "Margarethenhalle",
+      street: "Gempenstrasse",
+      houseNumber: "48",
+      postalCode: "4053",
+      city: "Basel",
+      latitude: 47.54375,
+      longitude: 7.58625,
+      plusCode: "8FV9GHVP+GF",
     },
   },
 ];
 
-const REGIONAL_VENUES: VenueConfig[] = [
+const SVRZ_VENUES: VenueConfig[] = [
   {
-    teamHome: { name: "VBC Bern", identifier: BASE_TEAM_IDENTIFIER },
-    teamAway: { name: "VC Münsingen", identifier: BASE_TEAM_IDENTIFIER + 1 },
+    teamHome: { name: "VBC Wiedikon", identifier: BASE_TEAM_IDENTIFIER },
+    teamAway: { name: "VBC Oerlikon", identifier: BASE_TEAM_IDENTIFIER + 1 },
     hall: {
-      name: "Sporthalle Wankdorf",
-      street: "Papiermühlestrasse",
-      houseNumber: "91",
-      postalCode: "3014",
-      city: "Bern",
-      latitude: 46.964687,
-      longitude: 7.466563,
-      plusCode: "8FR9XF78+VJ",
+      name: "Kantonsschule Wiedikon",
+      street: "Schrennengasse",
+      houseNumber: "7",
+      postalCode: "8003",
+      city: "Zürich",
+      latitude: 47.368437,
+      longitude: 8.516813,
+      plusCode: "8FVC9G98+9P",
     },
   },
   {
-    teamHome: { name: "TV Muri", identifier: BASE_TEAM_IDENTIFIER + 2 },
-    teamAway: { name: "VBC Langenthal", identifier: BASE_TEAM_IDENTIFIER + 3 },
+    teamHome: { name: "VBC ETH", identifier: BASE_TEAM_IDENTIFIER + 2 },
+    teamAway: { name: "VBC Winterthur", identifier: BASE_TEAM_IDENTIFIER + 3 },
     hall: {
-      name: "Sporthalle Bachmatten",
-      street: "Bachmatten",
-      houseNumber: "13",
-      postalCode: "5630",
-      city: "Muri",
-      latitude: 47.280313,
-      longitude: 8.345313,
-      plusCode: "8FVC78JW+44",
+      name: "ASVZ Sport Center Gloriarank",
+      street: "Gloriastrasse",
+      houseNumber: "32",
+      postalCode: "8006",
+      city: "Zürich",
+      latitude: 47.376812,
+      longitude: 8.553187,
+      plusCode: "8FVC9HG3+P7",
     },
   },
   {
-    teamHome: { name: "VBC Thun", identifier: BASE_TEAM_IDENTIFIER + 4 },
-    teamAway: { name: "VC Steffisburg", identifier: BASE_TEAM_IDENTIFIER + 5 },
+    teamHome: { name: "VBC Adliswil", identifier: BASE_TEAM_IDENTIFIER + 4 },
+    teamAway: { name: "VBC Thalwil", identifier: BASE_TEAM_IDENTIFIER + 5 },
     hall: {
-      name: "Lachenhalle",
-      street: "Gwattstrasse",
-      houseNumber: "25",
-      postalCode: "3604",
-      city: "Thun",
-      latitude: 46.736937,
-      longitude: 7.628188,
-      plusCode: "8FR9PJPH+Q7",
-    },
-  },
-  {
-    teamHome: { name: "VBC Solothurn", identifier: BASE_TEAM_IDENTIFIER + 6 },
-    teamAway: { name: "VC Burgdorf", identifier: BASE_TEAM_IDENTIFIER + 7 },
-    hall: {
-      name: "Stadtturnsaal Solothurn",
-      street: "Rossmarktplatz",
-      houseNumber: "2",
-      postalCode: "4500",
-      city: "Solothurn",
-      latitude: 47.2092,
-      longitude: 7.5334,
-      plusCode: "8FV96G5M+M9",
-    },
-  },
-  {
-    teamHome: { name: "VBC Aarau", identifier: BASE_TEAM_IDENTIFIER + 8 },
-    teamAway: { name: "TV Zofingen", identifier: BASE_TEAM_IDENTIFIER + 9 },
-    hall: {
-      name: "Schachen Halle Aarau",
-      street: "Schachenallee",
-      houseNumber: "29",
-      postalCode: "5000",
-      city: "Aarau",
-      latitude: 47.3897,
-      longitude: 8.0445,
-      plusCode: "8FVC92QV+VQ",
+      name: "Schulhaus Hofern",
+      street: "Sonnenbergstrasse",
+      houseNumber: "28",
+      postalCode: "8134",
+      city: "Adliswil",
+      latitude: 47.310688,
+      longitude: 8.519813,
+      plusCode: "8FVC8G69+7W",
     },
   },
 ];
@@ -325,7 +328,14 @@ const REGIONAL_VENUES: VenueConfig[] = [
 function getVenuesForAssociation(
   associationCode: DemoAssociationCode,
 ): VenueConfig[] {
-  return associationCode === "SV" ? SV_VENUES : REGIONAL_VENUES;
+  switch (associationCode) {
+    case "SV":
+      return SV_VENUES;
+    case "SVRBA":
+      return SVRBA_VENUES;
+    case "SVRZ":
+      return SVRZ_VENUES;
+  }
 }
 
 // Mock referee names for demo data
