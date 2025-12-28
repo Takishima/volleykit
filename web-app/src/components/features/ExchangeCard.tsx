@@ -7,11 +7,22 @@ import type { GameExchange } from "@/api/client";
 import { useDateLocale } from "@/hooks/useDateFormat";
 import { useTranslation } from "@/hooks/useTranslation";
 
+type RoleLabelKey = "positions.head-one" | "positions.head-two" | "positions.linesman-one" | "positions.linesman-two";
+
 interface RoleEntry {
-  labelKey: "positions.head-one" | "positions.head-two" | "positions.linesman-one" | "positions.linesman-two";
+  labelKey: RoleLabelKey;
   name: string;
   isSubmitter: boolean;
 }
+
+type RefereeGameFields = "activeFirstHeadRefereeName" | "activeSecondHeadRefereeName" | "activeFirstLinesmanRefereeName" | "activeSecondLinesmanRefereeName";
+
+const ROLE_CONFIG: Array<{ field: RefereeGameFields; labelKey: RoleLabelKey }> = [
+  { field: "activeFirstHeadRefereeName", labelKey: "positions.head-one" },
+  { field: "activeSecondHeadRefereeName", labelKey: "positions.head-two" },
+  { field: "activeFirstLinesmanRefereeName", labelKey: "positions.linesman-one" },
+  { field: "activeSecondLinesmanRefereeName", labelKey: "positions.linesman-two" },
+];
 
 interface ExchangeCardProps {
   exchange: GameExchange;
@@ -46,45 +57,16 @@ function ExchangeCardComponent({
   // Build list of role entries with submitter identification
   const roleEntries = useMemo((): RoleEntry[] => {
     const refereeGame = exchange.refereeGame;
-    const submitterFullName = exchange.submittedByPerson
-      ? `${exchange.submittedByPerson.firstName} ${exchange.submittedByPerson.lastName}`
-      : null;
+    const submitter = exchange.submittedByPerson;
+    const submitterFullName = submitter ? `${submitter.firstName} ${submitter.lastName}` : null;
 
-    const entries: RoleEntry[] = [];
-
-    if (refereeGame?.activeFirstHeadRefereeName) {
-      entries.push({
-        labelKey: "positions.head-one",
-        name: refereeGame.activeFirstHeadRefereeName,
-        isSubmitter: refereeGame.activeFirstHeadRefereeName === submitterFullName,
-      });
-    }
-
-    if (refereeGame?.activeSecondHeadRefereeName) {
-      entries.push({
-        labelKey: "positions.head-two",
-        name: refereeGame.activeSecondHeadRefereeName,
-        isSubmitter: refereeGame.activeSecondHeadRefereeName === submitterFullName,
-      });
-    }
-
-    if (refereeGame?.activeFirstLinesmanRefereeName) {
-      entries.push({
-        labelKey: "positions.linesman-one",
-        name: refereeGame.activeFirstLinesmanRefereeName,
-        isSubmitter: refereeGame.activeFirstLinesmanRefereeName === submitterFullName,
-      });
-    }
-
-    if (refereeGame?.activeSecondLinesmanRefereeName) {
-      entries.push({
-        labelKey: "positions.linesman-two",
-        name: refereeGame.activeSecondLinesmanRefereeName,
-        isSubmitter: refereeGame.activeSecondLinesmanRefereeName === submitterFullName,
-      });
-    }
-
-    return entries;
+    return ROLE_CONFIG
+      .filter(({ field }) => refereeGame?.[field])
+      .map(({ field, labelKey }) => ({
+        labelKey,
+        name: refereeGame![field]!,
+        isSubmitter: refereeGame![field] === submitterFullName,
+      }));
   }, [exchange.refereeGame, exchange.submittedByPerson]);
 
   const homeTeam = game?.encounter?.teamHome?.name || t("common.tbd");
