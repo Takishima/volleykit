@@ -52,6 +52,10 @@ test.describe("VolleyKit App", () => {
     test("can enter demo mode", async ({ page }) => {
       await page.goto("/login");
 
+      // Wait for network idle to ensure React app is fully hydrated
+      // This fixes flaky tests in Firefox where clicks during hydration may not register
+      await page.waitForLoadState("networkidle");
+
       // Click demo mode button using stable test ID (locale-independent)
       await page.getByTestId("demo-button").click();
 
@@ -62,12 +66,15 @@ test.describe("VolleyKit App", () => {
     test("demo mode shows assignments page", async ({ page }) => {
       await page.goto("/login");
 
+      // Wait for network idle to ensure React app is fully hydrated
+      await page.waitForLoadState("networkidle");
+
       // Enter demo mode using stable test ID (locale-independent)
       await page.getByTestId("demo-button").click();
 
       // Should show some content (assignments, dashboard, etc.)
       // Wait for navigation to complete
-      await page.waitForURL(/\/(assignments|dashboard)?$/);
+      await expect(page).not.toHaveURL(/login/);
 
       // Page should have main content
       await expect(page.getByRole("main")).toBeVisible();

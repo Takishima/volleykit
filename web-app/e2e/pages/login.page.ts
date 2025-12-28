@@ -44,16 +44,19 @@ export class LoginPage {
     await expect(this.demoButton).toBeVisible();
     await expect(this.demoButton).toBeEnabled();
 
-    // Click and wait for navigation simultaneously for reliability
-    // This ensures we capture the navigation even if it starts immediately
-    await Promise.all([
-      this.page.waitForURL((url) => !url.pathname.includes("/login"), {
-        timeout: PAGE_LOAD_TIMEOUT_MS,
-      }),
-      this.demoButton.click(),
-    ]);
+    // Wait for network to be idle to ensure React app is fully hydrated
+    // This fixes flaky tests in Firefox where clicks during hydration may not register
+    await this.page.waitForLoadState("networkidle");
 
-    // Wait for main content to load
+    // Click demo button
+    await this.demoButton.click();
+
+    // Wait for navigation away from login page
+    await expect(this.page).not.toHaveURL(/login/, {
+      timeout: PAGE_LOAD_TIMEOUT_MS,
+    });
+
+    // Wait for main content to appear on the destination page
     await expect(this.page.getByRole("main")).toBeVisible({
       timeout: PAGE_LOAD_TIMEOUT_MS,
     });
