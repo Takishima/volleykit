@@ -69,18 +69,22 @@ function TransportSectionComponent() {
   }, [associationCode, transportEnabledByAssociation, transportEnabled]);
 
   // Get current arrival buffer for this association from store
-  // Handle case where arrivalBufferByAssociation might be undefined (old storage migration)
-  const storeArrivalBuffer = associationCode && arrivalBufferByAssociation?.[associationCode] !== undefined
-    ? arrivalBufferByAssociation[associationCode]
-    : getDefaultArrivalBuffer(associationCode);
+  // Memoized to prevent recalculation on every render
+  const storeArrivalBuffer = useMemo(() => {
+    if (associationCode && arrivalBufferByAssociation?.[associationCode] !== undefined) {
+      return arrivalBufferByAssociation[associationCode];
+    }
+    return getDefaultArrivalBuffer(associationCode);
+  }, [associationCode, arrivalBufferByAssociation]);
 
   // Local state for immediate input feedback, synced with store via debounce
   const [localArrivalBuffer, setLocalArrivalBuffer] = useState(storeArrivalBuffer);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Sync local state when store value changes externally (e.g., association switch)
+  // Only update if the value actually differs to prevent loops
   useEffect(() => {
-    setLocalArrivalBuffer(storeArrivalBuffer);
+    setLocalArrivalBuffer((prev) => (prev !== storeArrivalBuffer ? storeArrivalBuffer : prev));
   }, [storeArrivalBuffer]);
 
   // Cleanup debounce timeout on unmount
