@@ -115,14 +115,16 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
             longitude: homeLocation.longitude,
           };
 
-          if (isDemoMode) {
-            tripResult = await calculateMockTravelTime(fromCoords, hallCoords, {
-              originLabel: homeLocation.label,
-              destinationLabel: city,
-            });
-          } else {
+          // Prefer real OJP if configured, fall back to mock transport
+          if (isOjpConfigured()) {
             tripResult = await calculateTravelTime(fromCoords, hallCoords, {
               targetArrivalTime: arrivalTime,
+            });
+          } else {
+            tripResult = await calculateMockTravelTime(fromCoords, hallCoords, {
+              // Use simple "Home" label instead of geocoded address for cleaner SBB URLs
+              originLabel: "Home",
+              destinationLabel: city,
             });
           }
 

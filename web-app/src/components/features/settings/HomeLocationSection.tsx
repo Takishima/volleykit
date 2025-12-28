@@ -3,7 +3,7 @@ import { useShallow } from "zustand/react/shallow";
 import { useSettingsStore, type UserLocation } from "@/stores/settings";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGeolocation } from "@/hooks/useGeolocation";
-import { useGeocode } from "@/hooks/useGeocode";
+import { useCombinedGeocode } from "@/hooks/useCombinedGeocode";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -29,7 +29,7 @@ function HomeLocationSectionComponent() {
     error: geocodeError,
     search: geocodeSearch,
     clear: geocodeClear,
-  } = useGeocode();
+  } = useCombinedGeocode();
 
   // Keep refs in sync with latest values for use in geolocation callback.
   // These refs allow the callback to access the latest function references
@@ -255,7 +255,7 @@ function HomeLocationSectionComponent() {
           {geocodeResults.length > 0 && (
             <ul className="border border-border-default dark:border-border-default-dark rounded-lg overflow-hidden divide-y divide-border-subtle dark:divide-border-subtle-dark">
               {geocodeResults.map((result) => (
-                <li key={result.placeId}>
+                <li key={result.id}>
                   <button
                     type="button"
                     onClick={() => handleSelectGeocodedLocation(result)}
