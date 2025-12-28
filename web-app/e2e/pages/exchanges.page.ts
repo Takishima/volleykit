@@ -4,13 +4,13 @@ import {
   TAB_SWITCH_TIMEOUT_MS,
   LOADING_TIMEOUT_MS,
 } from "../constants";
+import { BasePage } from "./base.page";
 
 /**
  * Page Object Model for the Exchanges page.
  * Provides helpers for interacting with exchange cards and filters.
  */
-export class ExchangesPage {
-  readonly page: Page;
+export class ExchangesPage extends BasePage {
   readonly tablist: Locator;
   readonly openTab: Locator;
   readonly myApplicationsTab: Locator;
@@ -19,7 +19,7 @@ export class ExchangesPage {
   readonly levelFilterToggle: Locator;
 
   constructor(page: Page) {
-    this.page = page;
+    super(page);
     this.tablist = page.getByRole("tablist");
     // Use stable IDs for tabs (locale-independent)
     this.openTab = page.locator('#tab-open');
@@ -37,36 +37,29 @@ export class ExchangesPage {
   async expectToBeLoaded() {
     await expect(this.tablist).toBeVisible();
     await expect(this.openTab).toBeVisible();
-    // Wait for network to be idle to ensure React has finished hydrating
-    await this.page.waitForLoadState("networkidle");
+    await this.waitForStableState();
   }
 
   async switchToOpenTab() {
     await expect(this.openTab).toBeVisible();
     await this.openTab.click();
-    // Wait for tab to become selected using Playwright's built-in assertion
     await expect(this.openTab).toHaveAttribute("aria-selected", "true", {
       timeout: TAB_SWITCH_TIMEOUT_MS,
     });
-    // Wait for tab panel content to stabilize
     await expect(this.tabPanel).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
-    // Wait for network to be idle to ensure React has finished updating
-    await this.page.waitForLoadState("networkidle");
+    await this.waitForStableState();
   }
 
   async switchToMyApplicationsTab() {
     await expect(this.myApplicationsTab).toBeVisible();
     await this.myApplicationsTab.click();
-    // Wait for tab to become selected using Playwright's built-in assertion
     await expect(this.myApplicationsTab).toHaveAttribute(
       "aria-selected",
       "true",
       { timeout: TAB_SWITCH_TIMEOUT_MS },
     );
-    // Wait for tab panel content to stabilize
     await expect(this.tabPanel).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
-    // Wait for network to be idle to ensure React has finished updating
-    await this.page.waitForLoadState("networkidle");
+    await this.waitForStableState();
   }
 
   async getExchangeCount(): Promise<number> {
@@ -106,7 +99,6 @@ export class ExchangesPage {
       timeout: LOADING_TIMEOUT_MS,
     });
 
-    // Wait for network to be idle to ensure React has finished rendering
-    await this.page.waitForLoadState("networkidle");
+    await this.waitForStableState();
   }
 }
