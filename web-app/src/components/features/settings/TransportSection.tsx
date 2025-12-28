@@ -26,6 +26,9 @@ function AssociationBadge({ code }: { code: string }) {
   );
 }
 
+/** Debounce delay for arrival buffer input to reduce localStorage writes */
+const ARRIVAL_BUFFER_DEBOUNCE_MS = 300;
+
 function TransportSectionComponent() {
   const { t, tInterpolate } = useTranslation();
   const isAvailable = useTravelTimeAvailable();
@@ -126,7 +129,7 @@ function TransportSectionComponent() {
         }
         debounceRef.current = setTimeout(() => {
           setArrivalBufferForAssociation(associationCode, value);
-        }, 300);
+        }, ARRIVAL_BUFFER_DEBOUNCE_MS);
       }
     },
     [associationCode, setArrivalBufferForAssociation],
