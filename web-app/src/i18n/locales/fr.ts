@@ -206,6 +206,7 @@ const fr: Translations = {
     reportGenerated: "Rapport généré avec succès",
     openSbbConnection: "Ouvrir la connexion transports publics",
     openInGoogleMaps: "Ouvrir dans Google Maps",
+    openAddressInMaps: "Ouvrir {address} dans les cartes",
     invalidKilometers: "Veuillez entrer un nombre positif valide",
     failedToLoadData: "Échec du chargement des données",
   },

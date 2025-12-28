@@ -96,6 +96,7 @@ export interface Translations {
     reportGenerated: string;
     openSbbConnection: string;
     openInGoogleMaps: string;
+    openAddressInMaps: string;
     invalidKilometers: string;
     failedToLoadData: string;
   };

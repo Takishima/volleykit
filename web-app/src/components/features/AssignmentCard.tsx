@@ -42,7 +42,7 @@ function AssignmentCardComponent({
   disableExpansion,
   dataTour,
 }: AssignmentCardProps) {
-  const { t, locale } = useTranslation();
+  const { t, tInterpolate, locale } = useTranslation();
   const associationCode = useActiveAssociationCode();
 
   const game = assignment.refereeGame?.game;
@@ -223,6 +223,7 @@ function AssignmentCardComponent({
                     href={geoUri}
                     className="text-primary-600 dark:text-primary-400 hover:underline focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded block"
                     onClick={(e) => e.stopPropagation()}
+                    aria-label={tInterpolate("assignments.openAddressInMaps", { address: fullAddress })}
                   >
                     {fullAddress}
                   </a>
