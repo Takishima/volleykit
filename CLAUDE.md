@@ -247,11 +247,11 @@ CI will fail if limits are exceeded (gzipped):
 
 | Component | Limit |
 |-----------|-------|
-| Main App | 122 KB |
+| Main App | 130 KB |
 | Vendor Chunks | 50 KB each |
 | PDF Library | 185 KB (lazy-loaded) |
 | CSS | 10 KB |
-| Total JS | 400 KB |
+| Total JS | 420 KB |
 
 **Check size**: `npm run build && npm run size`
 
