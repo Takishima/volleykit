@@ -27,47 +27,39 @@ export class NavigationPage {
     await expect(this.navigation).toBeVisible();
   }
 
-  async goToAssignments() {
-    await this.assignmentsLink.click();
-    await expect(this.page).toHaveURL("/", {
+  /**
+   * Helper to navigate to a page reliably.
+   * Waits for network idle before clicking to handle Firefox timing issues.
+   */
+  private async navigateTo(
+    link: Locator,
+    expectedUrl: string | RegExp,
+  ): Promise<void> {
+    // Wait for network to be idle before clicking to ensure app is fully hydrated
+    await this.page.waitForLoadState("networkidle");
+    await link.click();
+    await expect(this.page).toHaveURL(expectedUrl, {
       timeout: PAGE_LOAD_TIMEOUT_MS,
     });
     // Wait for main content area to be visible
     await expect(this.page.getByRole("main")).toBeVisible({
       timeout: PAGE_LOAD_TIMEOUT_MS,
     });
+  }
+
+  async goToAssignments() {
+    await this.navigateTo(this.assignmentsLink, "/");
   }
 
   async goToCompensations() {
-    await this.compensationsLink.click();
-    await expect(this.page).toHaveURL("/compensations", {
-      timeout: PAGE_LOAD_TIMEOUT_MS,
-    });
-    // Wait for main content area to be visible
-    await expect(this.page.getByRole("main")).toBeVisible({
-      timeout: PAGE_LOAD_TIMEOUT_MS,
-    });
+    await this.navigateTo(this.compensationsLink, "/compensations");
   }
 
   async goToExchange() {
-    await this.exchangeLink.click();
-    await expect(this.page).toHaveURL("/exchange", {
-      timeout: PAGE_LOAD_TIMEOUT_MS,
-    });
-    // Wait for main content area to be visible
-    await expect(this.page.getByRole("main")).toBeVisible({
-      timeout: PAGE_LOAD_TIMEOUT_MS,
-    });
+    await this.navigateTo(this.exchangeLink, "/exchange");
   }
 
   async goToSettings() {
-    await this.settingsLink.click();
-    await expect(this.page).toHaveURL("/settings", {
-      timeout: PAGE_LOAD_TIMEOUT_MS,
-    });
-    // Wait for main content area to be visible
-    await expect(this.page.getByRole("main")).toBeVisible({
-      timeout: PAGE_LOAD_TIMEOUT_MS,
-    });
+    await this.navigateTo(this.settingsLink, "/settings");
   }
 }
