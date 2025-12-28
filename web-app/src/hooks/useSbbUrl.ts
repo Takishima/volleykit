@@ -77,6 +77,9 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
     const gameDate = new Date(gameStartTime);
     const arrivalTime = calculateArrivalTime(gameDate, arrivalBuffer);
 
+    // Get fallback address for origin (used when station lookup fails)
+    const originAddress = homeLocation?.source === "geocoded" ? homeLocation.label : undefined;
+
     // If we already have cached station info, use it directly
     if (originStation && destinationStation) {
       const url = generateSbbUrl(
@@ -87,6 +90,7 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
           language,
           originStation,
           destinationStation,
+          originAddress,
         },
         sbbLinkTarget,
       );
@@ -149,6 +153,7 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
             language,
             originStation: tripResult.originStation,
             destinationStation: tripResult.destinationStation,
+            originAddress,
           },
           sbbLinkTarget,
         );
@@ -156,13 +161,14 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
       } catch (err) {
         setError(err instanceof Error ? err : new Error("Failed to fetch trip data"));
 
-        // Fall back to URL without station ID
+        // Fall back to URL without station ID but with address
         const url = generateSbbUrl(
           {
             destination: city,
             date: gameDate,
             arrivalTime,
             language,
+            originAddress,
           },
           sbbLinkTarget,
         );
@@ -171,13 +177,14 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
         setIsLoading(false);
       }
     } else {
-      // No trip data available, use city name only
+      // No trip data available, use city name and address fallbacks
       const url = generateSbbUrl(
         {
           destination: city,
           date: gameDate,
           arrivalTime,
           language,
+          originAddress,
         },
         sbbLinkTarget,
       );
