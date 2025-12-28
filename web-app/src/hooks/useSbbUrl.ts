@@ -117,7 +117,8 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
 
           if (isDemoMode) {
             tripResult = await calculateMockTravelTime(fromCoords, hallCoords, {
-              originLabel: homeLocation.label,
+              // Use simple "Home" label instead of geocoded address for cleaner SBB URLs
+              originLabel: "Home",
               destinationLabel: city,
             });
           } else {
