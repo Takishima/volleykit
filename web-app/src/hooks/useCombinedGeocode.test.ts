@@ -107,7 +107,7 @@ describe("useCombinedGeocode", () => {
         id: 2867655,
         latitude: 47.364768,
         longitude: 8.531177,
-        displayName: "bederstrasse 1 8002 zuerich",
+        displayName: "Bederstrasse 1 8002 Zürich",
         source: "swiss",
         swissData: {
           lv95X: 246566.03,

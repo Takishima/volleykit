@@ -207,7 +207,7 @@ async function searchSwiss(
     id: item.id,
     latitude: item.attrs.lat,
     longitude: item.attrs.lon,
-    displayName: item.attrs.detail,
+    displayName: stripHtmlTags(item.attrs.label),
     source: "swiss" as const,
     swissData: {
       lv95X: item.attrs.x,
@@ -253,6 +253,14 @@ async function searchNominatim(
     displayName: item.display_name,
     source: "nominatim" as const,
   }));
+}
+
+/**
+ * Strip HTML tags from a string.
+ * Used to clean geo.admin.ch label field which contains bold tags.
+ */
+function stripHtmlTags(html: string): string {
+  return html.replace(/<[^>]*>/g, "");
 }
 
 /** geo.admin.ch SearchServer API response */
