@@ -204,6 +204,7 @@ const fr: Translations = {
     gameReportNotAvailable:
       "Les rapports de match sont uniquement disponibles pour les matchs NLA et NLB.",
     reportGenerated: "Rapport généré avec succès",
+    openSbbConnection: "Ouvrir la connexion transports publics",
     invalidKilometers: "Veuillez entrer un nombre positif valide",
     failedToLoadData: "Échec du chargement des données",
   },
@@ -344,6 +345,10 @@ const fr: Translations = {
       refreshCacheConfirm:
         "Effacer tous les temps de trajet en cache ? Les nouveaux calculs seront récupérés depuis l'API.",
       cacheCleared: "Cache des temps de trajet vidé",
+      sbbLinkTarget: "Ouvrir les connexions dans",
+      sbbLinkTargetDescription: "Choisissez où ouvrir les liens horaires CFF",
+      sbbLinkTargetWebsite: "Site web CFF",
+      sbbLinkTargetApp: "App CFF",
     },
     dataRetention: {
       title: "Données et confidentialité",

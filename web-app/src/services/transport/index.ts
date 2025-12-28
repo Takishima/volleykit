@@ -8,11 +8,18 @@ export type {
   TravelTimeOptions,
   Coordinates,
   TransportConfig,
+  StationInfo,
 } from "./types";
 
 export { TransportApiError } from "./types";
 
-export { calculateTravelTime, isOjpConfigured, selectBestTrip } from "./ojp-client";
+export {
+  calculateTravelTime,
+  isOjpConfigured,
+  selectBestTrip,
+  extractOriginStation,
+  extractDestinationStation,
+} from "./ojp-client";
 
 export type { OjpTrip } from "./ojp-client";
 

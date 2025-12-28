@@ -4,6 +4,16 @@
  */
 
 /**
+ * Station information extracted from trip data.
+ */
+export interface StationInfo {
+  /** Didok station ID (e.g., "8507000" for Bern) */
+  id: string;
+  /** Station name */
+  name: string;
+}
+
+/**
  * Result of a travel time calculation.
  */
 export interface TravelTimeResult {
@@ -15,6 +25,10 @@ export interface TravelTimeResult {
   arrivalTime: string;
   /** Number of transfers required */
   transfers: number;
+  /** Origin station info for SBB deep linking */
+  originStation?: StationInfo;
+  /** Destination station info for SBB deep linking */
+  destinationStation?: StationInfo;
   /** Raw trip data for future itinerary display */
   tripData?: unknown;
 }
@@ -29,6 +43,10 @@ export interface TravelTimeOptions {
   targetArrivalTime?: Date;
   /** Include raw trip data in result (for future itinerary display) */
   includeTrips?: boolean;
+  /** Origin location label (for mock transport station names) */
+  originLabel?: string;
+  /** Destination location label (for mock transport station names) */
+  destinationLabel?: string;
 }
 
 /**

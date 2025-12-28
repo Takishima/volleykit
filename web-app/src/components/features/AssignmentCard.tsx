@@ -1,11 +1,14 @@
 import { memo } from "react";
 import { ExpandableCard } from "@/components/ui/ExpandableCard";
 import { Badge } from "@/components/ui/Badge";
-import { MapPin, MaleIcon, FemaleIcon } from "@/components/ui/icons";
+import { MapPin, MaleIcon, FemaleIcon, TrainFront, Loader2 } from "@/components/ui/icons";
 import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDateFormat } from "@/hooks/useDateFormat";
 import { getPositionLabel } from "@/utils/position-labels";
+import { useSettingsStore } from "@/stores/settings";
+import { useActiveAssociationCode } from "@/hooks/useActiveAssociation";
+import { useSbbUrl } from "@/hooks/useSbbUrl";
 
 /** Helper to extract referee display name from deep nested structure */
 function getRefereeDisplayName(
@@ -39,7 +42,8 @@ function AssignmentCardComponent({
   disableExpansion,
   dataTour,
 }: AssignmentCardProps) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const associationCode = useActiveAssociationCode();
 
   const game = assignment.refereeGame?.game;
 
@@ -92,6 +96,31 @@ function AssignmentCardComponent({
   );
 
   const linesmen = [linesman1, linesman2, linesman3, linesman4].filter(Boolean);
+
+  // Get transport settings for the association
+  const isTransportEnabled = useSettingsStore((state) =>
+    state.isTransportEnabledForAssociation(associationCode),
+  );
+
+  // Extract hall coordinates and ID for travel time queries
+  const geoLocation = game?.hall?.primaryPostalAddress?.geographicalLocation;
+  const hallCoords = geoLocation?.latitude !== undefined && geoLocation?.longitude !== undefined
+    ? { latitude: geoLocation.latitude, longitude: geoLocation.longitude }
+    : null;
+  const hallId = game?.hall?.__identity;
+  const gameStartingDateTime = game?.startingDateTime;
+
+  // Hook to fetch trip data on demand and generate SBB URL with station ID
+  const { isLoading: isSbbLoading, openSbbConnection } = useSbbUrl({
+    hallCoords,
+    hallId,
+    city,
+    gameStartTime: gameStartingDateTime,
+    language: locale,
+  });
+
+  // Show SBB button if transport is enabled and we have the required data
+  const showSbbButton = isTransportEnabled && city && gameStartingDateTime;
 
   const statusConfig: Record<
     string,
@@ -182,6 +211,25 @@ function AssignmentCardComponent({
               </a>
             ) : (
               <span className="truncate">{hallName}</span>
+            )}
+            {showSbbButton && (
+              <button
+                type="button"
+                className="flex-shrink-0 ml-2 p-1.5 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded-md transition-colors disabled:opacity-50"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  void openSbbConnection();
+                }}
+                disabled={isSbbLoading}
+                title={t("assignments.openSbbConnection")}
+                aria-label={t("assignments.openSbbConnection")}
+              >
+                {isSbbLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
+                ) : (
+                  <TrainFront className="w-5 h-5" aria-hidden="true" />
+                )}
+              </button>
             )}
           </div>
 

@@ -3,7 +3,7 @@
  * Provides realistic travel times based on straight-line distance.
  */
 
-import type { Coordinates, TravelTimeResult, TravelTimeOptions } from "./types";
+import type { Coordinates, TravelTimeResult, TravelTimeOptions, StationInfo } from "./types";
 
 /** Network delay for realistic demo behavior */
 const MOCK_DELAY_MS = 100;
@@ -72,6 +72,29 @@ function delay(ms: number): Promise<void> {
 }
 
 /**
+ * Generate a mock Didok station ID from coordinates.
+ * Uses a hash of the coordinates to create a realistic-looking ID.
+ */
+function generateMockStationId(coords: Coordinates): string {
+  // Create a deterministic ID from coordinates (Swiss Didok IDs are 7 digits starting with 85)
+  const latHash = Math.abs(Math.round(coords.latitude * 10000));
+  const lonHash = Math.abs(Math.round(coords.longitude * 1000));
+  const combined = (latHash + lonHash) % 100000;
+  return `85${String(combined).padStart(5, "0")}`;
+}
+
+/**
+ * Generate a mock station name from coordinates.
+ * In demo mode, we just use a generic name.
+ */
+function generateMockStationName(coords: Coordinates): string {
+  // Generate a simple name based on rounded coordinates
+  const latDeg = Math.round(coords.latitude * 10) / 10;
+  const lonDeg = Math.round(coords.longitude * 10) / 10;
+  return `Station ${latDeg}N ${lonDeg}E`;
+}
+
+/**
  * Calculate mock travel time between two coordinates.
  * Used in demo mode when the real OJP API is not available.
  *
@@ -97,11 +120,25 @@ export async function calculateMockTravelTime(
   const departureTime = options.departureTime ?? new Date();
   const arrivalTime = new Date(departureTime.getTime() + durationMinutes * 60 * 1000);
 
+  // Generate mock origin and destination stations for SBB deep linking
+  // Use provided labels if available, otherwise fall back to coordinate-based names
+  const originStation: StationInfo = {
+    id: generateMockStationId(from),
+    name: options.originLabel ?? generateMockStationName(from),
+  };
+
+  const destinationStation: StationInfo = {
+    id: generateMockStationId(to),
+    name: options.destinationLabel ?? generateMockStationName(to),
+  };
+
   return {
     durationMinutes,
     departureTime: departureTime.toISOString(),
     arrivalTime: arrivalTime.toISOString(),
     transfers,
+    originStation,
+    destinationStation,
     tripData: undefined,
   };
 }

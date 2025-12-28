@@ -205,6 +205,7 @@ const en: Translations = {
     gameReportNotAvailable:
       "Game reports are only available for NLA and NLB games.",
     reportGenerated: "Report generated successfully",
+    openSbbConnection: "Open public transport connection",
     invalidKilometers: "Please enter a valid positive number",
     failedToLoadData: "Failed to load data",
   },
@@ -343,6 +344,10 @@ const en: Translations = {
       refreshCacheConfirm:
         "Clear all cached travel times? New calculations will be fetched from the API.",
       cacheCleared: "Travel time cache cleared",
+      sbbLinkTarget: "Open connections in",
+      sbbLinkTargetDescription: "Choose where to open SBB timetable links",
+      sbbLinkTargetWebsite: "SBB website",
+      sbbLinkTargetApp: "SBB app",
     },
     dataRetention: {
       title: "Data & Privacy",

@@ -204,6 +204,7 @@ const it: Translations = {
     gameReportNotAvailable:
       "I rapporti delle partite sono disponibili solo per le partite NLA e NLB.",
     reportGenerated: "Rapporto generato con successo",
+    openSbbConnection: "Apri collegamento trasporti pubblici",
     invalidKilometers: "Inserisci un numero positivo valido",
     failedToLoadData: "Impossibile caricare i dati",
   },
@@ -342,6 +343,10 @@ const it: Translations = {
       refreshCacheConfirm:
         "Cancellare tutti i tempi di viaggio in cache? I nuovi calcoli verranno recuperati dall'API.",
       cacheCleared: "Cache tempi di viaggio svuotata",
+      sbbLinkTarget: "Apri connessioni in",
+      sbbLinkTargetDescription: "Scegli dove aprire i link orari FFS",
+      sbbLinkTargetWebsite: "Sito web FFS",
+      sbbLinkTargetApp: "App FFS",
     },
     dataRetention: {
       title: "Dati e privacy",
