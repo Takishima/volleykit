@@ -2,7 +2,7 @@ import type { Locale } from "@/i18n";
 import type { SbbLinkTarget } from "@/stores/settings";
 
 /**
- * Parameters for generating an SBB timetable URL.
+ * Parameters for generating a public transport timetable URL.
  */
 export interface SbbUrlParams {
   /** Destination location (city, station, or address) */
@@ -16,9 +16,9 @@ export interface SbbUrlParams {
 }
 
 /**
- * Format a date as DD.MM.YYYY for SBB URL parameters.
+ * Format a date as DD.MM.YYYY for timetable URL parameters.
  */
-function formatSbbDate(date: Date): string {
+function formatDate(date: Date): string {
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = date.getFullYear();
@@ -26,37 +26,23 @@ function formatSbbDate(date: Date): string {
 }
 
 /**
- * Format a time as HH:MM for SBB URL parameters.
+ * Format a time as HH:MM for timetable URL parameters.
  */
-function formatSbbTime(date: Date): string {
+function formatTime(date: Date): string {
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
   return `${hours}:${minutes}`;
 }
 
 /**
- * Get the SBB website path segment for a given language.
- */
-function getSbbLanguagePath(language: string): string {
-  switch (language) {
-    case "de":
-      return "de/kaufen";
-    case "fr":
-      return "fr/acheter";
-    case "it":
-      return "it/acquistare";
-    case "en":
-    default:
-      return "en/buying";
-  }
-}
-
-/**
- * Generate an SBB timetable URL for a given destination and arrival time.
+ * Generate a public transport timetable URL for a given destination and arrival time.
+ *
+ * Uses search.ch for website (reliable Swiss public transport timetable)
+ * and SBB mobile app universal link for app target.
  *
  * @param params - The parameters for generating the URL
  * @param target - Whether to generate a website or app URL
- * @returns The SBB timetable URL
+ * @returns The timetable URL
  *
  * @example
  * ```ts
@@ -64,43 +50,42 @@ function getSbbLanguagePath(language: string): string {
  *   destination: "Bern",
  *   date: new Date("2024-12-28"),
  *   arrivalTime: new Date("2024-12-28T14:30:00"),
- *   language: "de",
  * }, "website");
- * // Returns: https://www.sbb.ch/de/kaufen/pages/fahrplan/fahrplan.xhtml?nach=Bern&datum=28.12.2024&zeit=14:30&an=true&suche=true
+ * // Returns: https://search.ch/fahrplan/?to=Bern&date=28.12.2024&time=14:30&time_type=arrival
  * ```
  */
 export function generateSbbUrl(
   params: SbbUrlParams,
   target: SbbLinkTarget,
 ): string {
-  const { destination, date, arrivalTime, language = "en" } = params;
+  const { destination, date, arrivalTime } = params;
 
-  const formattedDate = formatSbbDate(date);
-  const formattedTime = formatSbbTime(arrivalTime);
+  const formattedDate = formatDate(date);
+  const formattedTime = formatTime(arrivalTime);
 
   if (target === "app") {
     // Use the SBB mobile app universal link
-    // This will open the app if installed, or fall back to the app store
+    // Format: sbbmobile://timetable?to=...&date=...&time=...&timeType=arrival
+    // Falls back to app store if app not installed
     const appParams = new URLSearchParams({
-      nach: destination,
-      datum: formattedDate,
-      zeit: formattedTime,
-      an: "true",
+      to: destination,
+      date: formattedDate,
+      time: formattedTime,
+      timeType: "arrival",
     });
     return `https://app.sbbmobile.ch/timetable?${appParams.toString()}`;
   }
 
-  // Website URL
-  const langPath = getSbbLanguagePath(language);
+  // Website URL - use search.ch which reliably supports deeplinks
+  // search.ch shows all Swiss public transport including SBB
   const websiteParams = new URLSearchParams({
-    nach: destination,
-    datum: formattedDate,
-    zeit: formattedTime,
-    an: "true",
-    suche: "true",
+    to: destination,
+    date: formattedDate,
+    time: formattedTime,
+    time_type: "arrival",
   });
 
-  return `https://www.sbb.ch/${langPath}/pages/fahrplan/fahrplan.xhtml?${websiteParams.toString()}`;
+  return `https://search.ch/fahrplan/?${websiteParams.toString()}`;
 }
 
 /**

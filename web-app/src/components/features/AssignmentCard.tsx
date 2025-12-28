@@ -226,12 +226,12 @@ function AssignmentCardComponent({
                 href={sbbUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-shrink-0 p-1 -m-1 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded"
+                className="flex-shrink-0 ml-2 p-1.5 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded-md transition-colors"
                 onClick={(e) => e.stopPropagation()}
                 title={t("assignments.openSbbConnection")}
                 aria-label={t("assignments.openSbbConnection")}
               >
-                <TrainFront className="w-4 h-4" aria-hidden="true" />
+                <TrainFront className="w-5 h-5" aria-hidden="true" />
               </a>
             )}
           </div>
