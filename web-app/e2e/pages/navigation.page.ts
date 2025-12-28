@@ -45,6 +45,8 @@ export class NavigationPage {
     await expect(this.page.getByRole("main")).toBeVisible({
       timeout: PAGE_LOAD_TIMEOUT_MS,
     });
+    // Wait for network to be idle after navigation to ensure React has finished rendering
+    await this.page.waitForLoadState("networkidle");
   }
 
   async goToAssignments() {

@@ -35,6 +35,8 @@ export class CompensationsPage {
 
   async expectToBeLoaded() {
     await expect(this.tablist).toBeVisible();
+    // Wait for network to be idle to ensure React has finished hydrating
+    await this.page.waitForLoadState("networkidle");
   }
 
   async switchToPendingTab() {
@@ -46,6 +48,8 @@ export class CompensationsPage {
     });
     // Wait for tab panel content to stabilize
     await expect(this.tabPanel).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
+    // Wait for network to be idle to ensure React has finished updating
+    await this.page.waitForLoadState("networkidle");
   }
 
   async switchToPaidTab() {
@@ -57,6 +61,8 @@ export class CompensationsPage {
     });
     // Wait for tab panel content to stabilize
     await expect(this.tabPanel).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
+    // Wait for network to be idle to ensure React has finished updating
+    await this.page.waitForLoadState("networkidle");
   }
 
   async switchToAllTab() {
@@ -68,6 +74,8 @@ export class CompensationsPage {
     });
     // Wait for tab panel content to stabilize
     await expect(this.tabPanel).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
+    // Wait for network to be idle to ensure React has finished updating
+    await this.page.waitForLoadState("networkidle");
   }
 
   async getCompensationCount(): Promise<number> {
@@ -92,5 +100,8 @@ export class CompensationsPage {
     await expect(this.compensationCards.first().or(emptyState)).toBeVisible({
       timeout: LOADING_TIMEOUT_MS,
     });
+
+    // Wait for network to be idle to ensure React has finished rendering
+    await this.page.waitForLoadState("networkidle");
   }
 }

@@ -34,6 +34,8 @@ export class AssignmentsPage {
   async expectToBeLoaded() {
     await expect(this.tablist).toBeVisible();
     await expect(this.upcomingTab).toBeVisible();
+    // Wait for network to be idle to ensure React has finished hydrating
+    await this.page.waitForLoadState("networkidle");
   }
 
   async switchToUpcomingTab() {
@@ -45,6 +47,8 @@ export class AssignmentsPage {
     });
     // Wait for tab panel content to stabilize
     await expect(this.tabPanel).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
+    // Wait for network to be idle to ensure React has finished updating
+    await this.page.waitForLoadState("networkidle");
   }
 
   async switchToValidationClosedTab() {
@@ -58,6 +62,8 @@ export class AssignmentsPage {
     );
     // Wait for tab panel content to stabilize
     await expect(this.tabPanel).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
+    // Wait for network to be idle to ensure React has finished updating
+    await this.page.waitForLoadState("networkidle");
   }
 
   async getAssignmentCount(): Promise<number> {
@@ -82,5 +88,8 @@ export class AssignmentsPage {
     await expect(this.assignmentCards.first().or(emptyState)).toBeVisible({
       timeout: LOADING_TIMEOUT_MS,
     });
+
+    // Wait for network to be idle to ensure React has finished rendering
+    await this.page.waitForLoadState("networkidle");
   }
 }

@@ -37,6 +37,8 @@ export class ExchangesPage {
   async expectToBeLoaded() {
     await expect(this.tablist).toBeVisible();
     await expect(this.openTab).toBeVisible();
+    // Wait for network to be idle to ensure React has finished hydrating
+    await this.page.waitForLoadState("networkidle");
   }
 
   async switchToOpenTab() {
@@ -48,6 +50,8 @@ export class ExchangesPage {
     });
     // Wait for tab panel content to stabilize
     await expect(this.tabPanel).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
+    // Wait for network to be idle to ensure React has finished updating
+    await this.page.waitForLoadState("networkidle");
   }
 
   async switchToMyApplicationsTab() {
@@ -61,6 +65,8 @@ export class ExchangesPage {
     );
     // Wait for tab panel content to stabilize
     await expect(this.tabPanel).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
+    // Wait for network to be idle to ensure React has finished updating
+    await this.page.waitForLoadState("networkidle");
   }
 
   async getExchangeCount(): Promise<number> {
@@ -72,11 +78,13 @@ export class ExchangesPage {
   }
 
   async waitForLevelFilterHidden() {
-    await this.levelFilterToggle.waitFor({ state: "detached", timeout: TAB_SWITCH_TIMEOUT_MS });
+    // Use expect with negation for more robust waiting
+    await expect(this.levelFilterToggle).not.toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
   }
 
   async waitForLevelFilterVisible() {
-    await this.levelFilterToggle.waitFor({ state: "attached", timeout: TAB_SWITCH_TIMEOUT_MS });
+    // Use expect for more robust waiting than waitFor
+    await expect(this.levelFilterToggle).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
   }
 
   async waitForExchangesLoaded() {
@@ -97,5 +105,8 @@ export class ExchangesPage {
     await expect(this.exchangeCards.first().or(emptyState)).toBeVisible({
       timeout: LOADING_TIMEOUT_MS,
     });
+
+    // Wait for network to be idle to ensure React has finished rendering
+    await this.page.waitForLoadState("networkidle");
   }
 }

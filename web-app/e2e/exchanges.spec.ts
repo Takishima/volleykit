@@ -56,12 +56,16 @@ test.describe("Exchanges Journey", () => {
 
   test.describe("Level Filter (Demo Mode)", () => {
     test("level filter is visible on open exchanges tab", async () => {
+      // Wait for page to be fully loaded before checking filter
+      await exchangesPage.expectToBeLoaded();
       await exchangesPage.waitForLevelFilterVisible();
       const isVisible = await exchangesPage.isLevelFilterVisible();
       expect(isVisible).toBe(true);
     });
 
     test("level filter visibility changes with tab", async () => {
+      // Wait for page to be fully loaded before checking filter
+      await exchangesPage.expectToBeLoaded();
       await exchangesPage.waitForLevelFilterVisible();
 
       await exchangesPage.switchToMyApplicationsTab();
@@ -74,6 +78,8 @@ test.describe("Exchanges Journey", () => {
 
   test.describe("Exchange Cards", () => {
     test("exchange cards display game information", async () => {
+      // Ensure page is loaded before waiting for exchanges
+      await exchangesPage.expectToBeLoaded();
       await exchangesPage.waitForExchangesLoaded();
       const count = await exchangesPage.getExchangeCount();
 
@@ -88,6 +94,8 @@ test.describe("Exchanges Journey", () => {
     });
 
     test("can expand exchange card for details", async () => {
+      // Ensure page is loaded before waiting for exchanges
+      await exchangesPage.expectToBeLoaded();
       await exchangesPage.waitForExchangesLoaded();
       const count = await exchangesPage.getExchangeCount();
 
@@ -115,12 +123,18 @@ test.describe("Exchanges Journey", () => {
 
   test.describe("Accessibility", () => {
     test("tabs follow WAI-ARIA tab pattern", async () => {
+      // Wait for page structure and data to be fully loaded
+      await exchangesPage.expectToBeLoaded();
+      await exchangesPage.waitForExchangesLoaded();
       await expect(exchangesPage.tablist).toHaveAttribute("role", "tablist");
       await expect(exchangesPage.openTab).toHaveAttribute("role", "tab");
       await expect(exchangesPage.tabPanel).toHaveAttribute("role", "tabpanel");
     });
 
     test("main content area is accessible", async ({ page }) => {
+      // Wait for page structure and data to be fully loaded
+      await exchangesPage.expectToBeLoaded();
+      await exchangesPage.waitForExchangesLoaded();
       const main = page.getByRole("main");
       await expect(main).toBeVisible();
     });

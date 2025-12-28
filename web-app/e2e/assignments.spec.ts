@@ -61,6 +61,9 @@ test.describe("Assignments Journey", () => {
     });
 
     test("tabs have proper ARIA attributes", async () => {
+      // Wait for page structure and data to be fully loaded
+      await assignmentsPage.expectToBeLoaded();
+      await assignmentsPage.waitForAssignmentsLoaded();
       await expect(assignmentsPage.tablist).toHaveAttribute(
         "role",
         "tablist",
@@ -75,6 +78,8 @@ test.describe("Assignments Journey", () => {
 
   test.describe("Assignment Cards", () => {
     test("assignment cards display game information", async () => {
+      // Wait for page structure and data to be fully loaded
+      await assignmentsPage.expectToBeLoaded();
       await assignmentsPage.waitForAssignmentsLoaded();
 
       const firstCard = assignmentsPage.assignmentCards.first();
@@ -86,6 +91,8 @@ test.describe("Assignments Journey", () => {
     });
 
     test("can expand assignment card for details", async () => {
+      // Wait for page structure and data to be fully loaded
+      await assignmentsPage.expectToBeLoaded();
       await assignmentsPage.waitForAssignmentsLoaded();
 
       const firstCard = assignmentsPage.assignmentCards.first();
@@ -110,12 +117,18 @@ test.describe("Assignments Journey", () => {
 
   test.describe("Accessibility", () => {
     test("tabs are keyboard navigable", async ({ page }) => {
+      // Wait for page structure and data to be fully loaded
+      await assignmentsPage.expectToBeLoaded();
+      await assignmentsPage.waitForAssignmentsLoaded();
       await assignmentsPage.upcomingTab.focus();
       await page.keyboard.press("Tab");
       await expect(assignmentsPage.upcomingTab).toBeVisible();
     });
 
     test("main content area is properly labeled", async ({ page }) => {
+      // Wait for page structure and data to be fully loaded
+      await assignmentsPage.expectToBeLoaded();
+      await assignmentsPage.waitForAssignmentsLoaded();
       const main = page.getByRole("main");
       await expect(main).toBeVisible();
     });
