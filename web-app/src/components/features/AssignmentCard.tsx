@@ -125,7 +125,7 @@ function AssignmentCardComponent({
         destination: city,
         date: gameDate,
         arrivalTime,
-        language: locale as "de" | "en" | "fr" | "it",
+        language: locale,
       },
       sbbLinkTarget,
     );
@@ -228,8 +228,8 @@ function AssignmentCardComponent({
                 rel="noopener noreferrer"
                 className="flex-shrink-0 p-1 -m-1 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded"
                 onClick={(e) => e.stopPropagation()}
-                title={t("exchange.travelTime")}
-                aria-label={t("exchange.travelTime")}
+                title={t("assignments.openSbbConnection")}
+                aria-label={t("assignments.openSbbConnection")}
               >
                 <TrainFront className="w-4 h-4" aria-hidden="true" />
               </a>

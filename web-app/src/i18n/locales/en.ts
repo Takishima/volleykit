@@ -205,6 +205,7 @@ const en: Translations = {
     gameReportNotAvailable:
       "Game reports are only available for NLA and NLB games.",
     reportGenerated: "Report generated successfully",
+    openSbbConnection: "Open public transport connection",
     invalidKilometers: "Please enter a valid positive number",
     failedToLoadData: "Failed to load data",
   },

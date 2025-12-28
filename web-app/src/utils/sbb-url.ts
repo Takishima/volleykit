@@ -1,3 +1,4 @@
+import type { Locale } from "@/i18n";
 import type { SbbLinkTarget } from "@/stores/settings";
 
 /**
@@ -10,8 +11,8 @@ export interface SbbUrlParams {
   date: Date;
   /** Target arrival time at destination */
   arrivalTime: Date;
-  /** Language code for the URL (de, en, fr, it) */
-  language?: "de" | "en" | "fr" | "it";
+  /** Language code for the URL */
+  language?: Locale;
 }
 
 /**

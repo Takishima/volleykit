@@ -94,6 +94,7 @@ export interface Translations {
     numberOfSets: string;
     gameReportNotAvailable: string;
     reportGenerated: string;
+    openSbbConnection: string;
     invalidKilometers: string;
     failedToLoadData: string;
   };
