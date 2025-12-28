@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { generateSbbUrl, calculateArrivalTime } from "./sbb-url";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { generateSbbUrl, calculateArrivalTime, openSbbUrl } from "./sbb-url";
 
 describe("sbb-url", () => {
   describe("generateSbbUrl", () => {
@@ -139,10 +139,11 @@ describe("sbb-url", () => {
     });
 
     describe("app target", () => {
-      it("generates same SBB URL format as website", () => {
+      it("generates same URL as website (sbbmobile:// not yet implemented)", () => {
         const url = generateSbbUrl(baseParams, "app");
 
-        // App also uses the SBB website URL (responsive, works on mobile)
+        // Currently uses website URL for app target too
+        // TODO: Update when sbbmobile:// deep links are implemented
         expect(url).toContain("https://www.sbb.ch/de?");
         expect(url).toContain("nach=Bern");
         expect(url).toContain("date=%222024-12-28%22");
@@ -222,6 +223,24 @@ describe("sbb-url", () => {
 
       expect(arrivalTime.getDate()).toBe(27);
       expect(arrivalTime.getHours()).toBe(23);
+    });
+  });
+
+  describe("openSbbUrl", () => {
+    beforeEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it("opens URL in new tab with security attributes", () => {
+      const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+
+      openSbbUrl("https://www.sbb.ch/de?nach=Bern");
+
+      expect(openSpy).toHaveBeenCalledWith(
+        "https://www.sbb.ch/de?nach=Bern",
+        "_blank",
+        "noopener,noreferrer"
+      );
     });
   });
 });

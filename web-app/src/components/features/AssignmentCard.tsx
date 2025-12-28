@@ -70,12 +70,21 @@ function AssignmentCardComponent({
       ? `${postalAddress.streetAndHouseNumber}, ${postalAddress.postalCodeAndCity}`
       : null);
 
-  // Geo URI for opening native maps apps on mobile
+  // Platform-specific maps URL: iOS uses maps: scheme, Android uses geo: URI
+  // Prefer address over coordinates for better accuracy
   const geoLat = postalAddress?.geographicalLocation?.latitude;
   const geoLon = postalAddress?.geographicalLocation?.longitude;
-  const geoUri = geoLat !== undefined && geoLon !== undefined
-    ? `geo:${geoLat},${geoLon}?q=${geoLat},${geoLon}(${encodeURIComponent(hallName)})`
-    : null;
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const hasCoords = geoLat !== undefined && geoLon !== undefined;
+  const addressMapsUrl = fullAddress
+    ? isIOS
+      ? `maps:?q=${encodeURIComponent(fullAddress)}`
+      : `geo:0,0?q=${encodeURIComponent(fullAddress)}`
+    : hasCoords
+      ? isIOS
+        ? `maps:?q=${geoLat},${geoLon}&ll=${geoLat},${geoLon}`
+        : `geo:${geoLat},${geoLon}?q=${geoLat},${geoLon}(${encodeURIComponent(hallName)})`
+      : null;
   const status = assignment.refereeConvocationStatus;
 
   const position = getPositionLabel(
@@ -216,11 +225,11 @@ function AssignmentCardComponent({
               <div className="font-medium text-text-primary dark:text-text-primary-dark">
                 {hallName}
               </div>
-              {/* Full address - clickable to open native maps app */}
+              {/* Full address - clickable to open in native maps app */}
               {fullAddress && (
-                geoUri ? (
+                addressMapsUrl ? (
                   <a
-                    href={geoUri}
+                    href={addressMapsUrl}
                     className="text-primary-600 dark:text-primary-400 hover:underline focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded block"
                     onClick={(e) => e.stopPropagation()}
                     aria-label={tInterpolate("assignments.openAddressInMaps", { address: fullAddress })}
@@ -233,13 +242,13 @@ function AssignmentCardComponent({
               )}
             </div>
             {/* Navigation buttons */}
-            <div className="flex items-center gap-1 flex-shrink-0">
+            <div className="flex items-center gap-1.5 flex-shrink-0">
               {googleMapsUrl && (
                 <a
                   href={googleMapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-1.5 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded-md transition-colors"
+                  className="p-2 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-800/40 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded-lg transition-colors"
                   onClick={(e) => e.stopPropagation()}
                   title={t("assignments.openInGoogleMaps")}
                   aria-label={t("assignments.openInGoogleMaps")}
@@ -250,7 +259,7 @@ function AssignmentCardComponent({
               {showSbbButton && (
                 <button
                   type="button"
-                  className="p-1.5 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded-md transition-colors disabled:opacity-50"
+                  className="p-2 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-800/40 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded-lg transition-colors disabled:opacity-50"
                   onClick={(e) => {
                     e.stopPropagation();
                     void openSbbConnection();
