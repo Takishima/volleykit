@@ -17,8 +17,8 @@ describe("sbb-url", () => {
         expect(url).toContain("https://www.sbb.ch/de?stops=");
         expect(url).toContain("date=2024-12-28");
         expect(url).toContain("time=14:30");
-        // Check that destination is in the encoded stops parameter
-        expect(url).toContain(encodeURIComponent('"label":"Bern"'));
+        // Check that destination is in the stops parameter (not URL-encoded per SBB spec)
+        expect(url).toContain('"label":"Bern"');
       });
 
       it("generates correct URL for French", () => {
@@ -46,20 +46,20 @@ describe("sbb-url", () => {
         expect(url).toContain("https://www.sbb.ch/de?stops=");
       });
 
-      it("URL-encodes special characters in destination", () => {
+      it("includes destination in stops JSON", () => {
         const params = {
           ...baseParams,
           destination: "Zürich HB",
         };
         const url = generateSbbUrl(params, "website");
-        // The destination should be inside the JSON stops parameter
-        expect(url).toContain(encodeURIComponent('"label":"Zürich HB"'));
+        // The destination should be inside the JSON stops parameter (not URL-encoded)
+        expect(url).toContain('"label":"Zürich HB"');
       });
 
       it("includes empty origin in stops array", () => {
         const url = generateSbbUrl(baseParams, "website");
         // First stop should be empty (origin)
-        expect(url).toContain(encodeURIComponent('{"value":"","type":"","label":""}'));
+        expect(url).toContain('{"value":"","type":"","label":""}');
       });
     });
 

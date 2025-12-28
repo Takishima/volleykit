@@ -76,9 +76,8 @@ export function generateSbbUrl(
   const stopsJson = JSON.stringify(stops);
 
   // Use the official SBB deep linking format
-  // The SBB website is responsive and works well on mobile
-  // Using this format ensures the destination is pre-filled
-  return `https://www.sbb.ch/${language}?stops=${encodeURIComponent(stopsJson)}&date=${formattedDate}&time=${formattedTime}`;
+  // Note: The JSON is NOT URL-encoded per SBB documentation examples
+  return `https://www.sbb.ch/${language}?stops=${stopsJson}&date=${formattedDate}&time=${formattedTime}`;
 }
 
 /**
