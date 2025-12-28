@@ -122,6 +122,44 @@ function getLeaguesForAssociation(
   return associationCode === "SV" ? SV_LEAGUES : REGIONAL_LEAGUES;
 }
 
+/**
+ * Determines the required officials for a game based on league and gender.
+ * - 3L women: only 1st referee
+ * - 3L men and above: 1st and 2nd referee
+ * - NLA: 1st and 2nd referee + 2 line judges
+ */
+interface RequiredOfficials {
+  hasSecondHeadReferee: boolean;
+  linesmenPositions: LinesmanPosition[];
+}
+
+function getRequiredOfficials(
+  leagueName: string,
+  gender: "m" | "f",
+): RequiredOfficials {
+  // NLA games have 2 head refs + 2 line judges
+  if (leagueName === "NLA") {
+    return {
+      hasSecondHeadReferee: true,
+      linesmenPositions: [1, 2],
+    };
+  }
+
+  // 3L women only have 1st referee
+  if (leagueName === "3L" && gender === "f") {
+    return {
+      hasSecondHeadReferee: false,
+      linesmenPositions: [],
+    };
+  }
+
+  // All other leagues (NLB, 1L, 2L, 3L men) have 2 head referees
+  return {
+    hasSecondHeadReferee: true,
+    linesmenPositions: [],
+  };
+}
+
 // Configuration for venue/team data based on association type
 interface VenueConfig {
   teamHome: { name: string; identifier: number };
@@ -343,6 +381,8 @@ interface RefereeGameParams {
   hasNoScoresheet?: boolean;
   /** Whether this is a tournament group */
   isTournamentGroup?: boolean;
+  /** Whether to include second head referee (defaults to true) */
+  hasSecondHeadReferee?: boolean;
   /** Which linesman positions to populate (1-4) */
   linesmenPositions?: LinesmanPosition[];
 }
@@ -359,6 +399,7 @@ function createRefereeGame({
   idPrefix,
   hasNoScoresheet = false,
   isTournamentGroup = false,
+  hasSecondHeadReferee = true,
   linesmenPositions = [],
 }: RefereeGameParams): RefereeGame {
   const venues = getVenuesForAssociation(associationCode);
@@ -408,12 +449,14 @@ function createRefereeGame({
       "first",
       venueIndex * 2,
     ),
-    activeRefereeConvocationSecondHeadReferee: createRefereeConvocation(
-      idPrefix,
-      gameId,
-      "second",
-      venueIndex * 2 + 1,
-    ),
+    ...(hasSecondHeadReferee && {
+      activeRefereeConvocationSecondHeadReferee: createRefereeConvocation(
+        idPrefix,
+        gameId,
+        "second",
+        venueIndex * 2 + 1,
+      ),
+    }),
     ...linesmanConvocations,
     game: {
       __identity: generateDemoUuid(`${idPrefix}-g-${gameId}`),
@@ -481,6 +524,8 @@ interface AssignmentConfig {
   hasNoScoresheet?: boolean;
   /** Whether this is a tournament group */
   isTournamentGroup?: boolean;
+  /** Whether to include second head referee */
+  hasSecondHeadReferee?: boolean;
   /** Which linesman positions are assigned for this game (1-4) */
   linesmenPositions?: LinesmanPosition[];
 }
@@ -525,6 +570,7 @@ function createAssignment(
       idPrefix: "demo",
       hasNoScoresheet: config.hasNoScoresheet,
       isTournamentGroup: config.isTournamentGroup,
+      hasSecondHeadReferee: config.hasSecondHeadReferee,
       linesmenPositions: config.linesmenPositions,
     }),
   };
@@ -534,15 +580,33 @@ export function generateAssignments(
   associationCode: DemoAssociationCode,
   now: Date,
 ): Assignment[] {
+  const leagues = getLeaguesForAssociation(associationCode);
+
+  // Helper to compute referee configuration for a config
+  const withOfficials = (config: AssignmentConfig): AssignmentConfig => {
+    const league = leagues[config.leagueIndex % leagues.length]!;
+    const officials = getRequiredOfficials(league.name, config.gender);
+    return {
+      ...config,
+      hasSecondHeadReferee: officials.hasSecondHeadReferee,
+      linesmenPositions: officials.linesmenPositions,
+    };
+  };
+
   const configs: AssignmentConfig[] = [
+    // NLA/1L men - head referee, with computed officials
     { index: 1, status: "active", position: "head-one", confirmationStatus: "confirmed", confirmationDaysAgo: 5, gameDate: addDays(now, 2), venueIndex: 0, leagueIndex: 0, gender: "m", isGameInFuture: true },
-    { index: 2, status: "active", position: "linesman-one", confirmationStatus: "confirmed", confirmationDaysAgo: 3, gameDate: addHours(now, 3), venueIndex: 1, leagueIndex: 1, gender: "m", isGameInFuture: true, hasMessage: true, hasNoScoresheet: associationCode !== "SV", linesmenPositions: [1, 2] },
+    // NLA for SV (linesman assignment), 1L for regional - linesman position only makes sense for NLA
+    { index: 2, status: "active", position: "linesman-one", confirmationStatus: "confirmed", confirmationDaysAgo: 3, gameDate: addHours(now, 3), venueIndex: 1, leagueIndex: 0, gender: "m", isGameInFuture: true, hasMessage: true, hasNoScoresheet: associationCode !== "SV" },
+    // NLA/1L women - head referee
     { index: 3, status: "active", position: "head-two", confirmationStatus: "pending", confirmationDaysAgo: null, gameDate: addDays(now, 5), venueIndex: 2, leagueIndex: 0, gender: "f", isGameInFuture: true, linkedDouble: "382420 / ARB 1" },
-    { index: 4, status: "cancelled", position: "head-one", confirmationStatus: "confirmed", confirmationDaysAgo: 10, gameDate: addDays(now, 7), venueIndex: 3, leagueIndex: 1, gender: "f", isGameInFuture: true, isOpenInExchange: true },
-    { index: 5, status: "archived", position: "linesman-two", confirmationStatus: "confirmed", confirmationDaysAgo: 14, gameDate: subDays(now, 3), venueIndex: 4, leagueIndex: associationCode === "SV" ? 1 : 2, gender: "m", isGameInFuture: false, linesmenPositions: [1, 2, 3, 4] },
+    // NLB for SV, 3L for regional - women (3L women have only 1st ref)
+    { index: 4, status: "cancelled", position: "head-one", confirmationStatus: "confirmed", confirmationDaysAgo: 10, gameDate: addDays(now, 7), venueIndex: 3, leagueIndex: associationCode === "SV" ? 1 : 2, gender: "f", isGameInFuture: true, isOpenInExchange: true },
+    // NLA for SV (linesman assignment), 3L for regional
+    { index: 5, status: "archived", position: "linesman-two", confirmationStatus: "confirmed", confirmationDaysAgo: 14, gameDate: subDays(now, 3), venueIndex: 4, leagueIndex: associationCode === "SV" ? 0 : 2, gender: "m", isGameInFuture: false },
   ];
 
-  return configs.map((config) => createAssignment(config, associationCode, now));
+  return configs.map((config) => createAssignment(withOfficials(config), associationCode, now));
 }
 
 interface CompensationConfig {
@@ -559,6 +623,10 @@ interface CompensationConfig {
   correctionReason?: string | null;
   /** Override the default lock behavior for this specific compensation */
   lockPayoutOnSiteCompensation?: boolean;
+  /** Whether to include second head referee */
+  hasSecondHeadReferee?: boolean;
+  /** Which linesman positions are assigned for this game (1-4) */
+  linesmenPositions?: LinesmanPosition[];
 }
 
 function createCompensationRecord(
@@ -588,6 +656,8 @@ function createCompensationRecord(
       isGameInFuture: false,
       associationCode,
       idPrefix: "comp",
+      hasSecondHeadReferee: config.hasSecondHeadReferee,
+      linesmenPositions: config.linesmenPositions,
     }),
     convocationCompensation: {
       __identity: generateDemoUuid(`demo-cc-${config.index}`),
@@ -613,16 +683,33 @@ export function generateCompensations(
   now: Date,
 ): CompensationRecord[] {
   const isSV = associationCode === "SV";
+  const leagues = getLeaguesForAssociation(associationCode);
+
+  // Helper to compute referee configuration for a config
+  const withOfficials = (config: CompensationConfig): CompensationConfig => {
+    const league = leagues[config.leagueIndex % leagues.length]!;
+    const officials = getRequiredOfficials(league.name, config.gender);
+    return {
+      ...config,
+      hasSecondHeadReferee: officials.hasSecondHeadReferee,
+      linesmenPositions: officials.linesmenPositions,
+    };
+  };
 
   const configs: CompensationConfig[] = [
+    // NLA/1L men - head referee
     { index: 1, position: "head-one", daysAgo: 7, venueIndex: 0, leagueIndex: 0, gender: "m", distance: "MEDIUM_LONG", paymentDone: true, paymentDaysAgo: 2, correctionReason: "Ich wohne in Oberengstringen" },
-    { index: 2, position: "linesman-one", daysAgo: 14, venueIndex: 1, leagueIndex: 1, gender: "m", distance: "MEDIUM", paymentDone: false },
+    // NLA for SV (linesman), 1L for regional
+    { index: 2, position: "linesman-one", daysAgo: 14, venueIndex: 1, leagueIndex: 0, gender: "m", distance: "MEDIUM", paymentDone: false },
+    // NLA/1L women - head referee
     { index: 3, position: "head-two", daysAgo: 21, venueIndex: 2, leagueIndex: 0, gender: "f", distance: "LONG", paymentDone: true, paymentDaysAgo: 14, correctionReason: "Umweg wegen Baustelle" },
-    { index: 4, position: "head-one", daysAgo: 5, venueIndex: 3, leagueIndex: 1, gender: "f", distance: "VERY_LONG", paymentDone: false },
-    { index: 5, position: "linesman-two", daysAgo: 28, venueIndex: 4, leagueIndex: associationCode === "SV" ? 1 : 2, gender: "m", distance: "SHORT", paymentDone: true, paymentDaysAgo: 21, transportationMode: "train" },
+    // NLB for SV, 3L for regional - women (3L women have only 1st ref)
+    { index: 4, position: "head-one", daysAgo: 5, venueIndex: 3, leagueIndex: associationCode === "SV" ? 1 : 2, gender: "f", distance: "VERY_LONG", paymentDone: false },
+    // NLA for SV (linesman), 3L for regional
+    { index: 5, position: "linesman-two", daysAgo: 28, venueIndex: 4, leagueIndex: associationCode === "SV" ? 0 : 2, gender: "m", distance: "SHORT", paymentDone: true, paymentDaysAgo: 21, transportationMode: "train" },
   ];
 
-  return configs.map((config) => createCompensationRecord(config, associationCode, now, isSV));
+  return configs.map((config) => createCompensationRecord(withOfficials(config), associationCode, now, isSV));
 }
 
 export function generateExchanges(
@@ -630,6 +717,26 @@ export function generateExchanges(
   now: Date,
 ): GameExchange[] {
   const isSV = associationCode === "SV";
+  const leagues = getLeaguesForAssociation(associationCode);
+
+  // Helper to get officials for a game
+  const getOfficials = (leagueIndex: number, gender: "m" | "f") => {
+    const league = leagues[leagueIndex % leagues.length]!;
+    return getRequiredOfficials(league.name, gender);
+  };
+
+  // Exchange 1: NLA/1L men - head referee
+  const ex1Officials = getOfficials(0, "m");
+  // Exchange 2: NLA for SV (linesman position), 1L for regional
+  const ex2Officials = getOfficials(0, "m");
+  // Exchange 3: NLA/1L women - head referee
+  const ex3Officials = getOfficials(0, "f");
+  // Exchange 4: NLB for SV, 3L for regional - women (3L women have only 1st ref)
+  const ex4LeagueIndex = isSV ? 1 : 2;
+  const ex4Officials = getOfficials(ex4LeagueIndex, "f");
+  // Exchange 5: NLA for SV (linesman position), 3L for regional
+  const ex5LeagueIndex = isSV ? 0 : 2;
+  const ex5Officials = getOfficials(ex5LeagueIndex, "m");
 
   return [
     {
@@ -657,6 +764,8 @@ export function generateExchanges(
           isGameInFuture: true,
           associationCode,
           idPrefix: "ex",
+          hasSecondHeadReferee: ex1Officials.hasSecondHeadReferee,
+          linesmenPositions: ex1Officials.linesmenPositions,
         }),
         activeFirstHeadRefereeName: "Max Müller",
         activeSecondHeadRefereeName: "Lisa Weber",
@@ -682,11 +791,13 @@ export function generateExchanges(
           gameNumber: 382601,
           gameDate: addDays(now, 6),
           venueIndex: 1,
-          leagueIndex: 1,
+          leagueIndex: 0,
           gender: "m",
           isGameInFuture: true,
           associationCode,
           idPrefix: "ex",
+          hasSecondHeadReferee: ex2Officials.hasSecondHeadReferee,
+          linesmenPositions: ex2Officials.linesmenPositions,
         }),
         activeFirstHeadRefereeName: "Thomas Meier",
         activeSecondHeadRefereeName: "Sandra Keller",
@@ -729,6 +840,8 @@ export function generateExchanges(
           isGameInFuture: true,
           associationCode,
           idPrefix: "ex",
+          hasSecondHeadReferee: ex3Officials.hasSecondHeadReferee,
+          linesmenPositions: ex3Officials.linesmenPositions,
         }),
         activeFirstHeadRefereeName: "Laura Brunner",
         activeSecondHeadRefereeName: "Peter Weber",
@@ -754,14 +867,19 @@ export function generateExchanges(
           gameNumber: 382603,
           gameDate: addDays(now, 10),
           venueIndex: 3,
-          leagueIndex: 1,
+          leagueIndex: ex4LeagueIndex,
           gender: "f",
           isGameInFuture: true,
           associationCode,
           idPrefix: "ex",
+          hasSecondHeadReferee: ex4Officials.hasSecondHeadReferee,
+          linesmenPositions: ex4Officials.linesmenPositions,
         }),
         activeFirstHeadRefereeName: "",
-        activeSecondHeadRefereeName: "Julia Hofer",
+        // For 3L women (regional), there's no second head referee
+        ...(ex4Officials.hasSecondHeadReferee && {
+          activeSecondHeadRefereeName: "Julia Hofer",
+        }),
       },
     },
     {
@@ -784,11 +902,13 @@ export function generateExchanges(
           gameNumber: 382604,
           gameDate: subDays(now, 2),
           venueIndex: 4,
-          leagueIndex: associationCode === "SV" ? 1 : 2,
+          leagueIndex: ex5LeagueIndex,
           gender: "m",
           isGameInFuture: false,
           associationCode,
           idPrefix: "ex",
+          hasSecondHeadReferee: ex5Officials.hasSecondHeadReferee,
+          linesmenPositions: ex5Officials.linesmenPositions,
         }),
         activeFirstHeadRefereeName: "Michael Fischer",
         activeSecondHeadRefereeName: "Nina Baumann",
