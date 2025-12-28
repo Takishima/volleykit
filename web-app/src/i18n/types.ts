@@ -95,6 +95,7 @@ export interface Translations {
     gameReportNotAvailable: string;
     reportGenerated: string;
     openSbbConnection: string;
+    openInGoogleMaps: string;
     invalidKilometers: string;
     failedToLoadData: string;
   };

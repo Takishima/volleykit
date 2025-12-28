@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { ExpandableCard } from "@/components/ui/ExpandableCard";
 import { Badge } from "@/components/ui/Badge";
-import { MapPin, MaleIcon, FemaleIcon, TrainFront, Loader2 } from "@/components/ui/icons";
+import { MapPin, MaleIcon, FemaleIcon, TrainFront, Loader2, Navigation } from "@/components/ui/icons";
 import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDateFormat } from "@/hooks/useDateFormat";
@@ -57,12 +57,25 @@ function AssignmentCardComponent({
   const homeTeam = game?.encounter?.teamHome?.name || t("common.tbd");
   const awayTeam = game?.encounter?.teamAway?.name || t("common.tbd");
   const hallName = game?.hall?.name || t("common.locationTbd");
-  const plusCode =
-    game?.hall?.primaryPostalAddress?.geographicalLocation?.plusCode;
+  const postalAddress = game?.hall?.primaryPostalAddress;
+  const plusCode = postalAddress?.geographicalLocation?.plusCode;
   const googleMapsUrl = plusCode
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(plusCode)}`
     : null;
-  const city = game?.hall?.primaryPostalAddress?.city;
+  const city = postalAddress?.city;
+
+  // Full address for display (street + postal code + city)
+  const fullAddress = postalAddress?.combinedAddress
+    || (postalAddress?.streetAndHouseNumber && postalAddress?.postalCodeAndCity
+      ? `${postalAddress.streetAndHouseNumber}, ${postalAddress.postalCodeAndCity}`
+      : null);
+
+  // Geo URI for opening native maps apps on mobile
+  const geoLat = postalAddress?.geographicalLocation?.latitude;
+  const geoLon = postalAddress?.geographicalLocation?.longitude;
+  const geoUri = geoLat !== undefined && geoLon !== undefined
+    ? `geo:${geoLat},${geoLon}?q=${geoLat},${geoLon}(${encodeURIComponent(hallName)})`
+    : null;
   const status = assignment.refereeConvocationStatus;
 
   const position = getPositionLabel(
@@ -196,41 +209,63 @@ function AssignmentCardComponent({
       )}
       renderDetails={() => (
         <div className="px-2 pb-2 pt-0 border-t border-border-subtle dark:border-border-subtle-dark space-y-1">
-          {/* Location */}
-          <div className="flex items-center gap-2 text-sm text-text-muted dark:text-text-muted-dark pt-2">
-            <MapPin className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-            {googleMapsUrl ? (
-              <a
-                href={googleMapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="truncate text-primary-600 dark:text-primary-400 hover:underline focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded"
-                onClick={(e) => e.stopPropagation()}
-              >
+          {/* Location - Hall name */}
+          <div className="flex items-start gap-2 text-sm text-text-muted dark:text-text-muted-dark pt-2">
+            <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" aria-hidden="true" />
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-text-primary dark:text-text-primary-dark">
                 {hallName}
-              </a>
-            ) : (
-              <span className="truncate">{hallName}</span>
-            )}
-            {showSbbButton && (
-              <button
-                type="button"
-                className="flex-shrink-0 ml-2 p-1.5 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded-md transition-colors disabled:opacity-50"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  void openSbbConnection();
-                }}
-                disabled={isSbbLoading}
-                title={t("assignments.openSbbConnection")}
-                aria-label={t("assignments.openSbbConnection")}
-              >
-                {isSbbLoading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
+              </div>
+              {/* Full address - clickable to open native maps app */}
+              {fullAddress && (
+                geoUri ? (
+                  <a
+                    href={geoUri}
+                    className="text-primary-600 dark:text-primary-400 hover:underline focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded block"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {fullAddress}
+                  </a>
                 ) : (
-                  <TrainFront className="w-5 h-5" aria-hidden="true" />
-                )}
-              </button>
-            )}
+                  <span>{fullAddress}</span>
+                )
+              )}
+            </div>
+            {/* Navigation buttons */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {googleMapsUrl && (
+                <a
+                  href={googleMapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1.5 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded-md transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                  title={t("assignments.openInGoogleMaps")}
+                  aria-label={t("assignments.openInGoogleMaps")}
+                >
+                  <Navigation className="w-5 h-5" aria-hidden="true" />
+                </a>
+              )}
+              {showSbbButton && (
+                <button
+                  type="button"
+                  className="p-1.5 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded-md transition-colors disabled:opacity-50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void openSbbConnection();
+                  }}
+                  disabled={isSbbLoading}
+                  title={t("assignments.openSbbConnection")}
+                  aria-label={t("assignments.openSbbConnection")}
+                >
+                  {isSbbLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <TrainFront className="w-5 h-5" aria-hidden="true" />
+                  )}
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Status */}

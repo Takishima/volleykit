@@ -205,6 +205,7 @@ const fr: Translations = {
       "Les rapports de match sont uniquement disponibles pour les matchs NLA et NLB.",
     reportGenerated: "Rapport généré avec succès",
     openSbbConnection: "Ouvrir la connexion transports publics",
+    openInGoogleMaps: "Ouvrir dans Google Maps",
     invalidKilometers: "Veuillez entrer un nombre positif valide",
     failedToLoadData: "Échec du chargement des données",
   },
