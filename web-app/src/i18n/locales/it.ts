@@ -84,6 +84,11 @@ const it: Translations = {
         description:
           "Imposta la tua posizione per filtrare gli scambi per distanza. Questo ti aiuta a trovare più facilmente le partite vicino a te.",
       },
+      arrivalTime: {
+        title: "Impostazione orario di arrivo",
+        description:
+          "Configura quanti minuti prima della partita vuoi arrivare. Questa impostazione viene salvata separatamente per ogni associazione.",
+      },
       complete: {
         title: "Tour completato!",
         description:
@@ -328,6 +333,8 @@ const it: Translations = {
       requiresHomeLocation: "Imposta prima la tua posizione casa",
       apiNotConfigured: "API trasporti non configurata",
       maxTravelTime: "Tempo di viaggio massimo",
+      arrivalTime: "Arrivo prima della partita",
+      arrivalTimeDescription: "Minuti di anticipo all'arrivo (per associazione)",
       cacheInfo:
         "I tempi di viaggio sono memorizzati in cache per tipo di giorno (feriale/sabato/domenica) per 30 giorni.",
       cacheEntries: "{count} percorsi in cache",

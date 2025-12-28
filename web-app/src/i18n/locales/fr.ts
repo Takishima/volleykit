@@ -84,6 +84,11 @@ const fr: Translations = {
         description:
           "Définissez votre emplacement pour filtrer les échanges par distance. Cela vous aide à trouver plus facilement des matchs près de chez vous.",
       },
+      arrivalTime: {
+        title: "Paramètre d'heure d'arrivée",
+        description:
+          "Configurez combien de minutes avant le match vous souhaitez arriver. Ce paramètre est enregistré séparément pour chaque association.",
+      },
       complete: {
         title: "Visite terminée !",
         description:
@@ -330,6 +335,8 @@ const fr: Translations = {
       requiresHomeLocation: "Définissez d'abord votre emplacement domicile",
       apiNotConfigured: "L'API de transport n'est pas configurée",
       maxTravelTime: "Temps de trajet maximum",
+      arrivalTime: "Arrivée avant le match",
+      arrivalTimeDescription: "Minutes d'arrivée avant le début du match (par association)",
       cacheInfo:
         "Les temps de trajet sont mis en cache par type de jour (semaine/samedi/dimanche) pendant 30 jours.",
       cacheEntries: "{count} trajets en cache",

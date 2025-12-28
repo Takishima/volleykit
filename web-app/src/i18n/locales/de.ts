@@ -84,6 +84,11 @@ const de: Translations = {
         description:
           "Legen Sie Ihren Heimatstandort fest, um Tauschangebote nach Entfernung zu filtern. So finden Sie leichter Spiele in Ihrer Nähe.",
       },
+      arrivalTime: {
+        title: "Ankunftszeit-Einstellung",
+        description:
+          "Legen Sie fest, wie viele Minuten vor dem Spiel Sie ankommen möchten. Diese Einstellung wird für jeden Verband separat gespeichert.",
+      },
       complete: {
         title: "Tour abgeschlossen!",
         description:
@@ -331,6 +336,8 @@ const de: Translations = {
       requiresHomeLocation: "Legen Sie zuerst Ihren Heimatstandort fest",
       apiNotConfigured: "Transport-API ist nicht konfiguriert",
       maxTravelTime: "Maximale Reisezeit",
+      arrivalTime: "Ankunft vor Spielbeginn",
+      arrivalTimeDescription: "Minuten vor Spielbeginn ankommen (pro Verband)",
       cacheInfo:
         "Reisezeiten werden nach Tagestyp (Werktag/Samstag/Sonntag) für 30 Tage zwischengespeichert.",
       cacheEntries: "{count} gespeicherte Routen",

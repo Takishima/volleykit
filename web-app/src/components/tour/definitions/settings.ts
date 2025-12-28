@@ -20,6 +20,14 @@ export const settingsTour: TourDefinition = {
       completionEvent: { type: "click" },
     },
     {
+      id: "arrivalTime",
+      targetSelector: "[data-tour='arrival-time']",
+      titleKey: "tour.settings.arrivalTime.title",
+      descriptionKey: "tour.settings.arrivalTime.description",
+      placement: "bottom",
+      completionEvent: { type: "click" },
+    },
+    {
       id: "complete",
       targetSelector: "[data-tour='tour-reset']",
       titleKey: "tour.settings.complete.title",

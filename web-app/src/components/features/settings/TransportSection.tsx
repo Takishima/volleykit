@@ -1,7 +1,8 @@
 import { useCallback, memo, useState, useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useQueryClient } from "@tanstack/react-query";
-import { useSettingsStore } from "@/stores/settings";
+import { useSettingsStore, getDefaultArrivalBuffer } from "@/stores/settings";
+import { useAuthStore } from "@/stores/auth";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTravelTimeAvailable } from "@/hooks/useTravelTime";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
@@ -22,13 +23,33 @@ function TransportSectionComponent() {
     homeLocation,
     transportEnabled,
     setTransportEnabled,
+    arrivalBufferByAssociation,
+    setArrivalBufferForAssociation,
   } = useSettingsStore(
     useShallow((state) => ({
       homeLocation: state.homeLocation,
       transportEnabled: state.transportEnabled,
       setTransportEnabled: state.setTransportEnabled,
+      arrivalBufferByAssociation: state.travelTimeFilter.arrivalBufferByAssociation,
+      setArrivalBufferForAssociation: state.setArrivalBufferForAssociation,
     })),
   );
+
+  // Get active occupation's association code
+  const { user, activeOccupationId } = useAuthStore(
+    useShallow((state) => ({
+      user: state.user,
+      activeOccupationId: state.activeOccupationId,
+    })),
+  );
+  const activeOccupation = user?.occupations?.find((o) => o.id === activeOccupationId) ?? user?.occupations?.[0];
+  const associationCode = activeOccupation?.associationCode;
+
+  // Get current arrival buffer for this association
+  // Handle case where arrivalBufferByAssociation might be undefined (old storage migration)
+  const currentArrivalBuffer = associationCode && arrivalBufferByAssociation?.[associationCode] !== undefined
+    ? arrivalBufferByAssociation[associationCode]
+    : getDefaultArrivalBuffer(associationCode);
 
   // Calculate cache entry count - recalculates when cacheVersion changes
   const cacheEntryCount = useMemo(
@@ -51,6 +72,17 @@ function TransportSectionComponent() {
     setCacheVersion((v) => v + 1);
     setShowClearConfirm(false);
   }, [queryClient]);
+
+  const handleArrivalBufferChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!associationCode) return;
+      const value = parseInt(e.target.value, 10);
+      if (!isNaN(value) && value >= 0) {
+        setArrivalBufferForAssociation(associationCode, value);
+      }
+    },
+    [associationCode, setArrivalBufferForAssociation],
+  );
 
   const hasHomeLocation = Boolean(homeLocation);
   const canEnable = hasHomeLocation && isAvailable;
@@ -158,6 +190,43 @@ function TransportSectionComponent() {
             />
           </button>
         </div>
+
+        {/* Arrival time setting - only show when transport is enabled */}
+        {transportEnabled && (
+          <div className="pt-2 border-t border-border-subtle dark:border-border-subtle-dark" data-tour="arrival-time">
+            <div className="flex items-center justify-between py-2">
+              <div className="flex-1 pr-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
+                    {t("settings.transport.arrivalTime")}
+                  </span>
+                  {associationCode && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300">
+                      {associationCode}
+                    </span>
+                  )}
+                </div>
+                <div className="text-xs text-text-muted dark:text-text-muted-dark mt-0.5">
+                  {t("settings.transport.arrivalTimeDescription")}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  max="180"
+                  value={currentArrivalBuffer}
+                  onChange={handleArrivalBufferChange}
+                  className="w-16 px-2 py-1 text-sm text-right border border-border-default dark:border-border-default-dark rounded-md bg-surface-card dark:bg-surface-card-dark text-text-primary dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  aria-label={t("settings.transport.arrivalTime")}
+                />
+                <span className="text-sm text-text-muted dark:text-text-muted-dark">
+                  {t("common.minutesUnit")}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Cache management - only show when transport is enabled */}
         {transportEnabled && (
