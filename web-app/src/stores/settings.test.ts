@@ -326,4 +326,114 @@ describe("useSettingsStore", () => {
       });
     });
   });
+
+  describe("persistence resilience", () => {
+    const testLocation: UserLocation = {
+      latitude: 47.3769,
+      longitude: 8.5417,
+      label: "Zürich, Switzerland",
+      source: "geocoded",
+    };
+
+    beforeEach(() => {
+      // Reset store to defaults before each persistence test
+      localStorage.clear();
+      useSettingsStore.setState({
+        isSafeModeEnabled: true,
+        homeLocation: null,
+        distanceFilter: { enabled: false, maxDistanceKm: 50 },
+        transportEnabled: false,
+        transportEnabledByAssociation: {},
+        travelTimeFilter: {
+          enabled: false,
+          maxTravelTimeMinutes: 120,
+          arrivalBufferMinutes: 30,
+          arrivalBufferByAssociation: {},
+          cacheInvalidatedAt: null,
+        },
+        levelFilterEnabled: false,
+      });
+    });
+
+    it("should preserve homeLocation when localStorage has partial data", () => {
+      // Simulate partial localStorage data (e.g., from an older app version)
+      const partialData = {
+        state: {
+          homeLocation: testLocation,
+          // Missing other fields that might be added in newer versions
+        },
+        version: 1,
+      };
+      localStorage.setItem("volleykit-settings", JSON.stringify(partialData));
+
+      // Trigger rehydration by calling persist rehydrate
+      useSettingsStore.persist.rehydrate();
+
+      const state = useSettingsStore.getState();
+      expect(state.homeLocation).toEqual(testLocation);
+      // Other fields should have defaults
+      expect(state.distanceFilter.enabled).toBe(false);
+      expect(state.distanceFilter.maxDistanceKm).toBe(50);
+    });
+
+    it("should preserve homeLocation when localStorage has extra unknown fields", () => {
+      // Simulate localStorage with extra fields (e.g., from a newer app version)
+      const dataWithExtraFields = {
+        state: {
+          homeLocation: testLocation,
+          isSafeModeEnabled: false,
+          distanceFilter: { enabled: true, maxDistanceKm: 30 },
+          someNewField: "unknown",
+          anotherNewFeature: { nested: true },
+        },
+        version: 1,
+      };
+      localStorage.setItem("volleykit-settings", JSON.stringify(dataWithExtraFields));
+
+      useSettingsStore.persist.rehydrate();
+
+      const state = useSettingsStore.getState();
+      expect(state.homeLocation).toEqual(testLocation);
+      expect(state.isSafeModeEnabled).toBe(false);
+      expect(state.distanceFilter.enabled).toBe(true);
+      expect(state.distanceFilter.maxDistanceKm).toBe(30);
+    });
+
+    it("should use defaults when localStorage data is completely corrupted", () => {
+      // Simulate corrupted data
+      localStorage.setItem("volleykit-settings", "not-valid-json{");
+
+      // This should not throw and should use defaults
+      useSettingsStore.persist.rehydrate();
+
+      const state = useSettingsStore.getState();
+      expect(state.homeLocation).toBeNull();
+      expect(state.isSafeModeEnabled).toBe(true);
+    });
+
+    it("should merge nested travelTimeFilter fields correctly", () => {
+      // Simulate older data missing new nested fields
+      const oldData = {
+        state: {
+          homeLocation: testLocation,
+          travelTimeFilter: {
+            enabled: true,
+            maxTravelTimeMinutes: 90,
+            // Missing arrivalBufferByAssociation which was added later
+          },
+        },
+        version: 1,
+      };
+      localStorage.setItem("volleykit-settings", JSON.stringify(oldData));
+
+      useSettingsStore.persist.rehydrate();
+
+      const state = useSettingsStore.getState();
+      expect(state.homeLocation).toEqual(testLocation);
+      expect(state.travelTimeFilter.enabled).toBe(true);
+      expect(state.travelTimeFilter.maxTravelTimeMinutes).toBe(90);
+      // New field should have default value
+      expect(state.travelTimeFilter.arrivalBufferByAssociation).toEqual({});
+    });
+  });
 });

@@ -278,6 +278,7 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: "volleykit-settings",
+      version: 1,
       partialize: (state) => ({
         isSafeModeEnabled: state.isSafeModeEnabled,
         homeLocation: state.homeLocation,
@@ -287,6 +288,35 @@ export const useSettingsStore = create<SettingsState>()(
         travelTimeFilter: state.travelTimeFilter,
         levelFilterEnabled: state.levelFilterEnabled,
       }),
+      merge: (persisted, current) => {
+        // Defensively merge persisted data with current defaults.
+        // This prevents data loss when the schema changes or data is corrupted.
+        const persistedState = persisted as Partial<SettingsState> | undefined;
+
+        return {
+          ...current,
+          // Preserve safe mode setting
+          isSafeModeEnabled: persistedState?.isSafeModeEnabled ?? current.isSafeModeEnabled,
+          // Preserve home location - critical user data
+          homeLocation: persistedState?.homeLocation ?? current.homeLocation,
+          // Merge distance filter with defaults for any missing fields
+          distanceFilter: {
+            ...current.distanceFilter,
+            ...(persistedState?.distanceFilter ?? {}),
+          },
+          // Preserve transport settings
+          transportEnabled: persistedState?.transportEnabled ?? current.transportEnabled,
+          transportEnabledByAssociation:
+            persistedState?.transportEnabledByAssociation ?? current.transportEnabledByAssociation,
+          // Merge travel time filter with defaults for any missing fields
+          travelTimeFilter: {
+            ...current.travelTimeFilter,
+            ...(persistedState?.travelTimeFilter ?? {}),
+          },
+          // Preserve level filter
+          levelFilterEnabled: persistedState?.levelFilterEnabled ?? current.levelFilterEnabled,
+        };
+      },
     },
   ),
 );
