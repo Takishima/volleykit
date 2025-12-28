@@ -131,13 +131,13 @@ const DEFAULT_MAX_TRAVEL_TIME_MINUTES = 120;
 const DEFAULT_ARRIVAL_BUFFER_MINUTES = 30;
 
 /**
- * Demo mode default location: Zurich main station area.
+ * Demo mode default location: Bern (central Switzerland).
  * Provides a central location in Switzerland to showcase distance filtering.
  */
 export const DEMO_HOME_LOCATION: UserLocation = {
-  latitude: 47.3769,
-  longitude: 8.5417,
-  label: "Zürich HB",
+  latitude: 46.949,
+  longitude: 7.4474,
+  label: "Bern",
   source: "geocoded",
 };
 

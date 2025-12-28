@@ -21,8 +21,8 @@ describe("sbb-url", () => {
         // Stops JSON should be fully URL-encoded (brackets, braces, quotes, colons, commas)
         expect(url).toContain("%5B%7B%22value%22"); // [{"value"
         expect(url).toContain("%22label%22%3A%22Bern%22%7D%5D"); // "label":"Bern"}]
-        // Should use arrival time mode
-        expect(url).toContain("moment=ARRIVAL");
+        // Should use arrival time mode (quoted like other params)
+        expect(url).toContain("moment=%22ARRIVAL%22");
       });
 
       it("generates correct URL for French", () => {

@@ -88,13 +88,13 @@ export function generateSbbUrl(
   ];
 
   // SBB expects full URL encoding for the stops JSON
-  // Date and time values must be quoted: date="2024-12-28"
+  // Date, time, and moment values must be quoted: date="2024-12-28"
   const stopsJson = encodeURIComponent(JSON.stringify(stops));
   const quotedDate = `%22${formattedDate}%22`;
   const quotedTime = `%22${formattedTime}%22`;
 
   // moment=ARRIVAL indicates arrival time (default is DEPARTURE)
-  return `https://www.sbb.ch/${language}?stops=${stopsJson}&date=${quotedDate}&time=${quotedTime}&moment=ARRIVAL`;
+  return `https://www.sbb.ch/${language}?stops=${stopsJson}&date=${quotedDate}&time=${quotedTime}&moment=%22ARRIVAL%22`;
 }
 
 /**
