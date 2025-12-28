@@ -25,6 +25,8 @@ export interface TravelTimeResult {
   arrivalTime: string;
   /** Number of transfers required */
   transfers: number;
+  /** Origin station info for SBB deep linking */
+  originStation?: StationInfo;
   /** Destination station info for SBB deep linking */
   destinationStation?: StationInfo;
   /** Raw trip data for future itinerary display */

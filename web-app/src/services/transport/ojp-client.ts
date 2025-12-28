@@ -110,7 +110,8 @@ export async function calculateTravelTime(
     // Parse duration from ISO 8601 duration string (e.g., "PT1H30M")
     const durationMinutes = parseDurationToMinutes(trip.duration);
 
-    // Extract destination station for SBB deep linking
+    // Extract origin and destination stations for SBB deep linking
+    const originStation = extractOriginStation(trip);
     const destinationStation = extractDestinationStation(trip);
 
     return {
@@ -118,6 +119,7 @@ export async function calculateTravelTime(
       departureTime: trip.startTime,
       arrivalTime: trip.endTime,
       transfers: trip.transfers,
+      originStation,
       destinationStation,
       tripData: options.includeTrips ? trip : undefined,
     };
@@ -154,6 +156,7 @@ export interface OjpTrip {
   startTime: string;
   endTime: string;
   transfers: number;
+  fromLocation?: OjpLocation;
   toLocation?: OjpLocation;
 }
 
@@ -179,31 +182,44 @@ function extractDidokId(ref: string | undefined): string | undefined {
 }
 
 /**
- * Extract destination station info from an OJP trip.
+ * Extract station info from an OJP location.
  */
-export function extractDestinationStation(trip: OjpTrip): StationInfo | undefined {
-  const toLocation = trip.toLocation;
-  if (!toLocation) return undefined;
+function extractStationFromLocation(location: OjpLocation | undefined): StationInfo | undefined {
+  if (!location) return undefined;
 
   // Try stopPlaceRef first (more reliable for SBB linking)
-  const stopPlaceId = extractDidokId(toLocation.stopPlace?.stopPlaceRef);
-  if (stopPlaceId && toLocation.stopPlace?.stopPlaceName) {
+  const stopPlaceId = extractDidokId(location.stopPlace?.stopPlaceRef);
+  if (stopPlaceId && location.stopPlace?.stopPlaceName) {
     return {
       id: stopPlaceId,
-      name: toLocation.stopPlace.stopPlaceName,
+      name: location.stopPlace.stopPlaceName,
     };
   }
 
   // Fall back to stopPointRef
-  const stopPointId = extractDidokId(toLocation.stopPointRef);
+  const stopPointId = extractDidokId(location.stopPointRef);
   if (stopPointId) {
     return {
       id: stopPointId,
-      name: toLocation.locationName ?? toLocation.stopPlace?.stopPlaceName ?? "",
+      name: location.locationName ?? location.stopPlace?.stopPlaceName ?? "",
     };
   }
 
   return undefined;
+}
+
+/**
+ * Extract origin station info from an OJP trip.
+ */
+export function extractOriginStation(trip: OjpTrip): StationInfo | undefined {
+  return extractStationFromLocation(trip.fromLocation);
+}
+
+/**
+ * Extract destination station info from an OJP trip.
+ */
+export function extractDestinationStation(trip: OjpTrip): StationInfo | undefined {
+  return extractStationFromLocation(trip.toLocation);
 }
 
 /**

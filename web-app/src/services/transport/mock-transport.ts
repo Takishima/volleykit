@@ -120,7 +120,12 @@ export async function calculateMockTravelTime(
   const departureTime = options.departureTime ?? new Date();
   const arrivalTime = new Date(departureTime.getTime() + durationMinutes * 60 * 1000);
 
-  // Generate mock destination station for SBB deep linking
+  // Generate mock origin and destination stations for SBB deep linking
+  const originStation: StationInfo = {
+    id: generateMockStationId(from),
+    name: generateMockStationName(from),
+  };
+
   const destinationStation: StationInfo = {
     id: generateMockStationId(to),
     name: generateMockStationName(to),
@@ -131,6 +136,7 @@ export async function calculateMockTravelTime(
     departureTime: departureTime.toISOString(),
     arrivalTime: arrivalTime.toISOString(),
     transfers,
+    originStation,
     destinationStation,
     tripData: undefined,
   };

@@ -14,6 +14,8 @@ export interface SbbUrlParams {
   arrivalTime: Date;
   /** Language code for the URL */
   language?: Locale;
+  /** Origin station info with Didok ID for precise routing */
+  originStation?: StationInfo;
   /** Destination station info with Didok ID for precise routing */
   destinationStation?: StationInfo;
 }
@@ -64,26 +66,30 @@ export function generateSbbUrl(
   // Target parameter kept for future use (e.g., if SBB provides app-specific deep links)
   void target;
 
-  const { destination, date, arrivalTime, language = "de", destinationStation } = params;
+  const { destination, date, arrivalTime, language = "de", originStation, destinationStation } = params;
 
   const formattedDate = formatDateSbb(date);
   const formattedTime = formatTime(arrivalTime);
 
   // Build the stops JSON array per SBB deep linking spec
-  // First element is origin (empty = user sets their starting point)
+  // First element is origin with station ID if available, empty otherwise
   // Second element is destination with Didok ID if available, or just label
+  const originStop = originStation
+    ? { value: originStation.id, type: "ID", label: originStation.name }
+    : { value: "", type: "", label: "" };
+
   const destinationStop = destinationStation
     ? { value: destinationStation.id, type: "ID", label: destinationStation.name }
     : { value: "", type: "", label: destination };
 
   const stops = [
-    { value: "", type: "", label: "" },
+    originStop,
     destinationStop,
   ];
 
-  // SBB expects: only quotes encoded (%22), brackets/colons literal
+  // SBB expects full URL encoding for the stops JSON
   // Date and time values must be quoted: date="2024-12-28"
-  const stopsJson = JSON.stringify(stops).replace(/"/g, "%22");
+  const stopsJson = encodeURIComponent(JSON.stringify(stops));
   const quotedDate = `%22${formattedDate}%22`;
   const quotedTime = `%22${formattedTime}%22`;
 

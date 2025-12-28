@@ -39,6 +39,8 @@ interface UseSbbUrlResult {
   isLoading: boolean;
   /** Error from fetching trip data */
   error: Error | null;
+  /** Cached origin station info (if available) */
+  originStation: StationInfo | undefined;
   /** Cached destination station info (if available) */
   destinationStation: StationInfo | undefined;
   /** Open the SBB connection in a new tab, fetching trip data if needed */
@@ -54,6 +56,7 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [originStation, setOriginStation] = useState<StationInfo | undefined>();
   const [destinationStation, setDestinationStation] = useState<StationInfo | undefined>();
 
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
@@ -75,13 +78,14 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
     const arrivalTime = calculateArrivalTime(gameDate, arrivalBuffer);
 
     // If we already have cached station info, use it directly
-    if (destinationStation) {
+    if (originStation && destinationStation) {
       const url = generateSbbUrl(
         {
           destination: city,
           date: gameDate,
           arrivalTime,
           language,
+          originStation,
           destinationStation,
         },
         sbbLinkTarget,
@@ -124,17 +128,21 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
         }
 
         // Update state with station info for future clicks
+        if (tripResult.originStation) {
+          setOriginStation(tripResult.originStation);
+        }
         if (tripResult.destinationStation) {
           setDestinationStation(tripResult.destinationStation);
         }
 
-        // Generate URL with station ID
+        // Generate URL with station IDs
         const url = generateSbbUrl(
           {
             destination: city,
             date: gameDate,
             arrivalTime,
             language,
+            originStation: tripResult.originStation,
             destinationStation: tripResult.destinationStation,
           },
           sbbLinkTarget,
@@ -174,6 +182,7 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
     city,
     gameStartTime,
     arrivalBuffer,
+    originStation,
     destinationStation,
     language,
     sbbLinkTarget,
@@ -186,6 +195,7 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
   return {
     isLoading,
     error,
+    originStation,
     destinationStation,
     openSbbConnection,
   };
