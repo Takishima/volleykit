@@ -39,6 +39,8 @@ export const ASSIGNMENT_PROPERTIES = [
   "refereeGame.game.hall.primaryPostalAddress.postalCode",
   "refereeGame.game.hall.primaryPostalAddress.city",
   "refereeGame.game.hall.primaryPostalAddress.geographicalLocation.plusCode",
+  "refereeGame.game.hall.primaryPostalAddress.geographicalLocation.latitude",
+  "refereeGame.game.hall.primaryPostalAddress.geographicalLocation.longitude",
   "refereeGame.game.lastPostponement.activeRefereeConvocationsAtTimeOfAcceptedPostponement.*.indoorAssociationReferee.indoorReferee.person",
   "refereeGame.game.lastPostponement.createdAt",
   "refereeGame.isGameInFuture",

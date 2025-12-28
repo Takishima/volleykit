@@ -23,6 +23,7 @@ export { FileText } from "lucide-react";
 export { AlertCircle } from "lucide-react";
 export { UserPlus } from "lucide-react";
 export { RefreshCw } from "lucide-react";
+export { Loader2 } from "lucide-react";
 export { Trash2 } from "lucide-react";
 export { Undo2 } from "lucide-react";
 export { ChevronDown } from "lucide-react";

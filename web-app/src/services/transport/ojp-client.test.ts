@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { selectBestTrip, type OjpTrip } from "./ojp-client";
+import { selectBestTrip, extractDestinationStation, type OjpTrip } from "./ojp-client";
 
 describe("selectBestTrip", () => {
   // Helper to create trip objects
@@ -115,5 +115,120 @@ describe("selectBestTrip", () => {
       expect(result.transfers).toBe(0);
       expect(result.endTime).toBe("2025-01-15T13:45:00Z");
     });
+  });
+});
+
+describe("extractDestinationStation", () => {
+  const baseTrip: OjpTrip = {
+    duration: "PT1H",
+    startTime: "2025-01-15T12:00:00Z",
+    endTime: "2025-01-15T13:00:00Z",
+    transfers: 0,
+  };
+
+  it("returns undefined when toLocation is missing", () => {
+    const result = extractDestinationStation(baseTrip);
+    expect(result).toBeUndefined();
+  });
+
+  it("extracts station from stopPlace with sloid format", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      toLocation: {
+        stopPlace: {
+          stopPlaceRef: "ch:1:sloid:8507000",
+          stopPlaceName: "Bern",
+        },
+      },
+    };
+
+    const result = extractDestinationStation(trip);
+    expect(result).toEqual({ id: "8507000", name: "Bern" });
+  });
+
+  it("extracts station from stopPointRef with sloid format", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      toLocation: {
+        stopPointRef: "ch:1:sloid:8503000",
+        locationName: "Zürich HB",
+      },
+    };
+
+    const result = extractDestinationStation(trip);
+    expect(result).toEqual({ id: "8503000", name: "Zürich HB" });
+  });
+
+  it("handles sloid format with additional segments", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      toLocation: {
+        stopPlace: {
+          stopPlaceRef: "ch:1:sloid:8507000:1:2",
+          stopPlaceName: "Bern, Gleis 1",
+        },
+      },
+    };
+
+    const result = extractDestinationStation(trip);
+    expect(result).toEqual({ id: "8507000", name: "Bern, Gleis 1" });
+  });
+
+  it("handles direct numeric ID", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      toLocation: {
+        stopPointRef: "8507000",
+        locationName: "Bern",
+      },
+    };
+
+    const result = extractDestinationStation(trip);
+    expect(result).toEqual({ id: "8507000", name: "Bern" });
+  });
+
+  it("prefers stopPlace over stopPointRef", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      toLocation: {
+        stopPointRef: "ch:1:sloid:8503000",
+        locationName: "Zürich HB",
+        stopPlace: {
+          stopPlaceRef: "ch:1:sloid:8507000",
+          stopPlaceName: "Bern",
+        },
+      },
+    };
+
+    const result = extractDestinationStation(trip);
+    expect(result).toEqual({ id: "8507000", name: "Bern" });
+  });
+
+  it("returns undefined for unrecognized ref format", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      toLocation: {
+        stopPointRef: "unknown:format:ref",
+        locationName: "Some Place",
+      },
+    };
+
+    const result = extractDestinationStation(trip);
+    expect(result).toBeUndefined();
+  });
+
+  it("uses stopPlaceName as fallback for stopPointRef name", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      toLocation: {
+        stopPointRef: "ch:1:sloid:8507000",
+        stopPlace: {
+          stopPlaceName: "Bern Hauptbahnhof",
+        },
+      },
+    };
+
+    const result = extractDestinationStation(trip);
+    expect(result).toEqual({ id: "8507000", name: "Bern Hauptbahnhof" });
   });
 });

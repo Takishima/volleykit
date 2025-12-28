@@ -1,5 +1,6 @@
 import type { Locale } from "@/i18n";
 import type { SbbLinkTarget } from "@/stores/settings";
+import type { StationInfo } from "@/services/transport/types";
 
 /**
  * Parameters for generating a public transport timetable URL.
@@ -13,6 +14,8 @@ export interface SbbUrlParams {
   arrivalTime: Date;
   /** Language code for the URL */
   language?: Locale;
+  /** Destination station info with Didok ID for precise routing */
+  destinationStation?: StationInfo;
 }
 
 /**
@@ -61,17 +64,21 @@ export function generateSbbUrl(
   // Target parameter kept for future use (e.g., if SBB provides app-specific deep links)
   void target;
 
-  const { destination, date, arrivalTime, language = "de" } = params;
+  const { destination, date, arrivalTime, language = "de", destinationStation } = params;
 
   const formattedDate = formatDateSbb(date);
   const formattedTime = formatTime(arrivalTime);
 
   // Build the stops JSON array per SBB deep linking spec
   // First element is origin (empty = user sets their starting point)
-  // Second element is destination with label
+  // Second element is destination with Didok ID if available, or just label
+  const destinationStop = destinationStation
+    ? { value: destinationStation.id, type: "ID", label: destinationStation.name }
+    : { value: "", type: "", label: destination };
+
   const stops = [
     { value: "", type: "", label: "" },
-    { value: "", type: "", label: destination },
+    destinationStop,
   ];
 
   // SBB expects: only quotes encoded (%22), brackets/colons literal

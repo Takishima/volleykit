@@ -1,14 +1,14 @@
-import { memo, useMemo } from "react";
+import { memo } from "react";
 import { ExpandableCard } from "@/components/ui/ExpandableCard";
 import { Badge } from "@/components/ui/Badge";
-import { MapPin, MaleIcon, FemaleIcon, TrainFront } from "@/components/ui/icons";
+import { MapPin, MaleIcon, FemaleIcon, TrainFront, Loader2 } from "@/components/ui/icons";
 import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDateFormat } from "@/hooks/useDateFormat";
 import { getPositionLabel } from "@/utils/position-labels";
 import { useSettingsStore } from "@/stores/settings";
 import { useActiveAssociationCode } from "@/hooks/useActiveAssociation";
-import { generateSbbUrl, calculateArrivalTime } from "@/utils/sbb-url";
+import { useSbbUrl } from "@/hooks/useSbbUrl";
 
 /** Helper to extract referee display name from deep nested structure */
 function getRefereeDisplayName(
@@ -101,35 +101,26 @@ function AssignmentCardComponent({
   const isTransportEnabled = useSettingsStore((state) =>
     state.isTransportEnabledForAssociation(associationCode),
   );
-  const sbbLinkTarget = useSettingsStore((state) =>
-    state.getSbbLinkTargetForAssociation(associationCode),
-  );
-  const arrivalBuffer = useSettingsStore((state) =>
-    state.getArrivalBufferForAssociation(associationCode),
-  );
 
-  // Extract startingDateTime for stable reference
+  // Extract hall coordinates and ID for travel time queries
+  const geoLocation = game?.hall?.primaryPostalAddress?.geographicalLocation;
+  const hallCoords = geoLocation?.latitude !== undefined && geoLocation?.longitude !== undefined
+    ? { latitude: geoLocation.latitude, longitude: geoLocation.longitude }
+    : null;
+  const hallId = game?.hall?.__identity;
   const gameStartingDateTime = game?.startingDateTime;
 
-  // Generate SBB URL if transport is enabled and we have the required data
-  const sbbUrl = useMemo(() => {
-    if (!isTransportEnabled || !city || !gameStartingDateTime) {
-      return null;
-    }
+  // Hook to fetch trip data on demand and generate SBB URL with station ID
+  const { isLoading: isSbbLoading, openSbbConnection } = useSbbUrl({
+    hallCoords,
+    hallId,
+    city,
+    gameStartTime: gameStartingDateTime,
+    language: locale,
+  });
 
-    const gameDate = new Date(gameStartingDateTime);
-    const arrivalTime = calculateArrivalTime(gameDate, arrivalBuffer);
-
-    return generateSbbUrl(
-      {
-        destination: city,
-        date: gameDate,
-        arrivalTime,
-        language: locale,
-      },
-      sbbLinkTarget,
-    );
-  }, [isTransportEnabled, city, gameStartingDateTime, arrivalBuffer, locale, sbbLinkTarget]);
+  // Show SBB button if transport is enabled and we have the required data
+  const showSbbButton = isTransportEnabled && city && gameStartingDateTime;
 
   const statusConfig: Record<
     string,
@@ -221,18 +212,24 @@ function AssignmentCardComponent({
             ) : (
               <span className="truncate">{hallName}</span>
             )}
-            {sbbUrl && (
-              <a
-                href={sbbUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-shrink-0 ml-2 p-1.5 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded-md transition-colors"
-                onClick={(e) => e.stopPropagation()}
+            {showSbbButton && (
+              <button
+                type="button"
+                className="flex-shrink-0 ml-2 p-1.5 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded-md transition-colors disabled:opacity-50"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  void openSbbConnection();
+                }}
+                disabled={isSbbLoading}
                 title={t("assignments.openSbbConnection")}
                 aria-label={t("assignments.openSbbConnection")}
               >
-                <TrainFront className="w-5 h-5" aria-hidden="true" />
-              </a>
+                {isSbbLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
+                ) : (
+                  <TrainFront className="w-5 h-5" aria-hidden="true" />
+                )}
+              </button>
             )}
           </div>
 

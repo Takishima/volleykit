@@ -62,6 +62,24 @@ describe("sbb-url", () => {
         // First stop should be empty (origin) with encoded quotes
         expect(url).toContain("{%22value%22:%22%22,%22type%22:%22%22,%22label%22:%22%22}");
       });
+
+      it("uses station ID when destinationStation is provided", () => {
+        const params = {
+          ...baseParams,
+          destinationStation: { id: "8507000", name: "Bern" },
+        };
+        const url = generateSbbUrl(params, "website");
+        // Should contain the Didok ID and type "ID"
+        expect(url).toContain("%22value%22:%228507000%22");
+        expect(url).toContain("%22type%22:%22ID%22");
+        expect(url).toContain("%22label%22:%22Bern%22");
+      });
+
+      it("uses destination label as fallback when no station ID", () => {
+        const url = generateSbbUrl(baseParams, "website");
+        // Should have empty value and type, but destination in label
+        expect(url).toContain("%22value%22:%22%22,%22type%22:%22%22,%22label%22:%22Bern%22");
+      });
     });
 
     describe("app target", () => {
