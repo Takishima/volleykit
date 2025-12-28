@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { format, parseISO } from "date-fns";
 import { ExpandableCard } from "@/components/ui/ExpandableCard";
 import { TravelTimeBadge } from "@/components/features/TravelTimeBadge";
@@ -6,6 +6,23 @@ import { MapPin, MaleIcon, FemaleIcon, Home } from "@/components/ui/icons";
 import type { GameExchange } from "@/api/client";
 import { useDateLocale } from "@/hooks/useDateFormat";
 import { useTranslation } from "@/hooks/useTranslation";
+
+type RoleLabelKey = "positions.head-one" | "positions.head-two" | "positions.linesman-one" | "positions.linesman-two";
+
+interface RoleEntry {
+  labelKey: RoleLabelKey;
+  name: string;
+  isSubmitter: boolean;
+}
+
+type RefereeGameFields = "activeFirstHeadRefereeName" | "activeSecondHeadRefereeName" | "activeFirstLinesmanRefereeName" | "activeSecondLinesmanRefereeName";
+
+const ROLE_CONFIG: Array<{ field: RefereeGameFields; labelKey: RoleLabelKey }> = [
+  { field: "activeFirstHeadRefereeName", labelKey: "positions.head-one" },
+  { field: "activeSecondHeadRefereeName", labelKey: "positions.head-two" },
+  { field: "activeFirstLinesmanRefereeName", labelKey: "positions.linesman-one" },
+  { field: "activeSecondLinesmanRefereeName", labelKey: "positions.linesman-two" },
+];
 
 interface ExchangeCardProps {
   exchange: GameExchange;
@@ -36,6 +53,21 @@ function ExchangeCardComponent({
   const startDate = game?.startingDateTime
     ? parseISO(game.startingDateTime)
     : null;
+
+  // Build list of role entries with submitter identification
+  const roleEntries = useMemo((): RoleEntry[] => {
+    const refereeGame = exchange.refereeGame;
+    const submitter = exchange.submittedByPerson;
+    const submitterFullName = submitter ? `${submitter.firstName} ${submitter.lastName}` : null;
+
+    return ROLE_CONFIG
+      .filter(({ field }) => refereeGame?.[field])
+      .map(({ field, labelKey }) => ({
+        labelKey,
+        name: refereeGame![field]!,
+        isSubmitter: refereeGame![field] === submitterFullName,
+      }));
+  }, [exchange.refereeGame, exchange.submittedByPerson]);
 
   const homeTeam = game?.encounter?.teamHome?.name || t("common.tbd");
   const awayTeam = game?.encounter?.teamAway?.name || t("common.tbd");
@@ -148,11 +180,19 @@ function ExchangeCardComponent({
             </div>
           )}
 
-          {/* Submitter info */}
-          {exchange.submittedByPerson && (
-            <div className="text-xs text-text-muted dark:text-text-muted-dark">
-              {t("exchange.submittedBy")} {exchange.submittedByPerson.firstName}{" "}
-              {exchange.submittedByPerson.lastName}
+          {/* Role assignments */}
+          {roleEntries.length > 0 && (
+            <div className="text-xs text-text-muted dark:text-text-muted-dark space-y-0.5 pt-1">
+              {roleEntries.map((entry) => (
+                <div key={entry.labelKey} className="flex gap-1">
+                  <span className="text-text-subtle dark:text-text-subtle-dark">
+                    {t(entry.labelKey)}:
+                  </span>
+                  <span className={entry.isSubmitter ? "font-semibold text-primary-600 dark:text-primary-400" : ""}>
+                    {entry.name}
+                  </span>
+                </div>
+              ))}
             </div>
           )}
         </div>
