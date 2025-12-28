@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 interface ModalFooterProps {
-  /** Footer content (typically ModalButton components) */
+  /** Footer content (typically Button components) */
   children: ReactNode;
   /** Whether to show a divider line above the footer */
   divider?: boolean;
@@ -13,12 +13,12 @@ interface ModalFooterProps {
  * @example
  * ```tsx
  * <ModalFooter divider>
- *   <ModalButton variant="secondary" fullWidth onClick={onClose}>
+ *   <Button variant="secondary" className="flex-1 rounded-md" onClick={onClose}>
  *     Cancel
- *   </ModalButton>
- *   <ModalButton variant="primary" fullWidth onClick={onConfirm}>
+ *   </Button>
+ *   <Button variant="primary" className="flex-1 rounded-md" onClick={onConfirm}>
  *     Confirm
- *   </ModalButton>
+ *   </Button>
  * </ModalFooter>
  * ```
  */
