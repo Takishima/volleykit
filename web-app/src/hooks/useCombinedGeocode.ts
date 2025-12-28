@@ -50,7 +50,6 @@ export interface UseCombinedGeocodeResult extends CombinedGeocodeState {
 interface UseCombinedGeocodeOptions {
   /** Maximum number of results to return (default: 5, max: 50) */
   limit?: number;
-  /** Debounce delay in ms to respect rate limits (default: handled externally) */
 }
 
 const GEOADMIN_API_URL =
@@ -126,7 +125,16 @@ export function useCombinedGeocode(
 
       try {
         // Try Swiss geocoding first (geo.admin.ch)
-        const swissResults = await searchSwiss(query, limit, signal);
+        let swissResults: GeocodedLocation[] = [];
+        try {
+          swissResults = await searchSwiss(query, limit, signal);
+        } catch (swissErr) {
+          // If Swiss API fails, we'll fall through to Nominatim
+          if (swissErr instanceof Error && swissErr.name === "AbortError") {
+            throw swissErr; // Re-throw abort errors
+          }
+          // Otherwise continue to Nominatim fallback
+        }
 
         if (swissResults.length > 0) {
           setState({
@@ -137,7 +145,7 @@ export function useCombinedGeocode(
           return;
         }
 
-        // Fall back to Nominatim if no Swiss results
+        // Fall back to Nominatim if no Swiss results or Swiss API failed
         const nominatimResults = await searchNominatim(query, limit, signal);
 
         setState({

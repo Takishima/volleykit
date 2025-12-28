@@ -205,11 +205,16 @@ describe("useCombinedGeocode", () => {
       expect(url).toContain("limit=10");
     });
 
-    it("handles HTTP error from Swiss API and falls back to Nominatim", async () => {
-      // Swiss API fails
+    it("falls back to Nominatim when Swiss API returns HTTP error", async () => {
+      // Swiss API fails with HTTP error
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
+      });
+      // Nominatim returns results
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockNominatimResults,
       });
 
       const { result } = renderHook(() => useCombinedGeocode());
@@ -219,13 +224,22 @@ describe("useCombinedGeocode", () => {
       });
 
       await waitFor(() => {
-        expect(result.current.error).toBe("geocode_failed");
+        expect(result.current.results).toHaveLength(1);
       });
-      expect(result.current.isLoading).toBe(false);
-      expect(result.current.results).toEqual([]);
+
+      // Should have fallen back to Nominatim
+      expect(result.current.results[0]?.source).toBe("nominatim");
+      expect(result.current.error).toBeNull();
+      expect(mockFetch).toHaveBeenCalledTimes(2);
     });
 
-    it("handles network error", async () => {
+    it("handles error when both APIs fail", async () => {
+      // Swiss API fails
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+      });
+      // Nominatim also fails
       mockFetch.mockRejectedValueOnce(new Error("Network error"));
 
       const { result } = renderHook(() => useCombinedGeocode());
