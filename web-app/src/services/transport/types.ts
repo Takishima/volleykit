@@ -43,6 +43,10 @@ export interface TravelTimeOptions {
   targetArrivalTime?: Date;
   /** Include raw trip data in result (for future itinerary display) */
   includeTrips?: boolean;
+  /** Origin location label (for mock transport station names) */
+  originLabel?: string;
+  /** Destination location label (for mock transport station names) */
+  destinationLabel?: string;
 }
 
 /**

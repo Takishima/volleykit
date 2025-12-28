@@ -116,7 +116,10 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
           };
 
           if (isDemoMode) {
-            tripResult = await calculateMockTravelTime(fromCoords, hallCoords);
+            tripResult = await calculateMockTravelTime(fromCoords, hallCoords, {
+              originLabel: homeLocation.label,
+              destinationLabel: city,
+            });
           } else {
             tripResult = await calculateTravelTime(fromCoords, hallCoords, {
               targetArrivalTime: arrivalTime,

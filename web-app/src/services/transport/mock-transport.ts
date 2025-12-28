@@ -121,14 +121,15 @@ export async function calculateMockTravelTime(
   const arrivalTime = new Date(departureTime.getTime() + durationMinutes * 60 * 1000);
 
   // Generate mock origin and destination stations for SBB deep linking
+  // Use provided labels if available, otherwise fall back to coordinate-based names
   const originStation: StationInfo = {
     id: generateMockStationId(from),
-    name: generateMockStationName(from),
+    name: options.originLabel ?? generateMockStationName(from),
   };
 
   const destinationStation: StationInfo = {
     id: generateMockStationId(to),
-    name: generateMockStationName(to),
+    name: options.destinationLabel ?? generateMockStationName(to),
   };
 
   return {
