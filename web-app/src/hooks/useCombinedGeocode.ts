@@ -258,9 +258,25 @@ async function searchNominatim(
 /**
  * Strip HTML tags from a string.
  * Used to clean geo.admin.ch label field which contains bold tags.
+ *
+ * Uses iterative replacement to handle malformed/nested tags safely.
+ * Limits iterations to prevent DoS from pathological input.
  */
 function stripHtmlTags(html: string): string {
-  return html.replace(/<[^>]*>/g, "");
+  const MAX_ITERATIONS = 10;
+
+  let result = html;
+  let previousResult = "";
+  let iteration = 0;
+
+  // Keep stripping until stable or max iterations reached
+  while (result !== previousResult && iteration < MAX_ITERATIONS) {
+    previousResult = result;
+    result = result.replace(/<[^>]*>/g, "");
+    iteration++;
+  }
+
+  return result;
 }
 
 /** geo.admin.ch SearchServer API response */
