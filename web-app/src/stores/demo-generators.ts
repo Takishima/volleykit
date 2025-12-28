@@ -296,8 +296,8 @@ const SVRZ_VENUES: VenueConfig[] = [
     },
   },
   {
-    teamHome: { name: "VBC ETH", identifier: BASE_TEAM_IDENTIFIER + 2 },
-    teamAway: { name: "VBC Winterthur", identifier: BASE_TEAM_IDENTIFIER + 3 },
+    teamHome: { name: "VBC Spada Academica", identifier: BASE_TEAM_IDENTIFIER + 2 },
+    teamAway: { name: "VBC Züri Unterland", identifier: BASE_TEAM_IDENTIFIER + 3 },
     hall: {
       name: "ASVZ Sport Center Gloriarank",
       street: "Gloriastrasse",
