@@ -5,7 +5,7 @@
 import { useMemo, useCallback } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { useAuthStore } from "@/stores/auth";
-import { useSettingsStore } from "@/stores/settings";
+import { useSettingsStore, getDefaultArrivalBuffer } from "@/stores/settings";
 import { useActiveAssociationCode } from "@/hooks/useActiveAssociation";
 import { queryKeys } from "@/api/queryKeys";
 import {
@@ -68,19 +68,41 @@ function getHallInfo(exchange: GameExchange): HallInfo | null {
  */
 export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | null) {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
-  const { homeLocation, isTransportEnabledForAssociation, travelTimeFilter, getArrivalBufferForAssociation } = useSettingsStore((state) => ({
-    homeLocation: state.homeLocation,
-    isTransportEnabledForAssociation: state.isTransportEnabledForAssociation,
-    travelTimeFilter: state.travelTimeFilter,
-    getArrivalBufferForAssociation: state.getArrivalBufferForAssociation,
-  }));
+  const homeLocation = useSettingsStore((state) => state.homeLocation);
+  const transportEnabled = useSettingsStore((state) => state.transportEnabled);
+  const transportEnabledByAssociation = useSettingsStore(
+    (state) => state.transportEnabledByAssociation,
+  );
+  // Select individual properties to prevent infinite re-renders from object reference changes
+  const travelTimeFilterEnabled = useSettingsStore(
+    (state) => state.travelTimeFilter.enabled,
+  );
+  const maxTravelTimeMinutes = useSettingsStore(
+    (state) => state.travelTimeFilter.maxTravelTimeMinutes,
+  );
+  const arrivalBufferByAssociation = useSettingsStore(
+    (state) => state.travelTimeFilter.arrivalBufferByAssociation,
+  );
   const associationCode = useActiveAssociationCode();
 
   // Check if transport is enabled for current association
-  const transportEnabled = isTransportEnabledForAssociation(associationCode);
+  // Use per-association setting if available, otherwise fall back to global
+  const isTransportEnabled = useMemo(() => {
+    const enabledMap = transportEnabledByAssociation ?? {};
+    if (associationCode && enabledMap[associationCode] !== undefined) {
+      return enabledMap[associationCode];
+    }
+    return transportEnabled;
+  }, [associationCode, transportEnabledByAssociation, transportEnabled]);
 
   // Get arrival buffer for current association
-  const arrivalBufferMinutes = getArrivalBufferForAssociation(associationCode);
+  const arrivalBufferMinutes = useMemo(() => {
+    const bufferMap = arrivalBufferByAssociation ?? {};
+    if (associationCode && bufferMap[associationCode] !== undefined) {
+      return bufferMap[associationCode];
+    }
+    return getDefaultArrivalBuffer(associationCode);
+  }, [associationCode, arrivalBufferByAssociation]);
 
   // Get unique halls to query
   const hallInfos = useMemo(() => {
@@ -108,7 +130,7 @@ export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | nul
 
   // Check if we should fetch travel times
   const canFetch = Boolean(
-    transportEnabled &&
+    isTransportEnabled &&
       homeLocation &&
       (isDemoMode || isOjpConfigured()),
   );
@@ -218,15 +240,15 @@ export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | nul
   const filterByTravelTime = useCallback(
     (exchangeWithTravelTime: ExchangeWithTravelTime<T>): boolean => {
       // If filtering is disabled, include all
-      if (!travelTimeFilter.enabled) return true;
+      if (!travelTimeFilterEnabled) return true;
 
       // If no travel time available, include (conservative approach)
       if (exchangeWithTravelTime.travelTimeMinutes === null) return true;
 
       // Apply the filter
-      return exchangeWithTravelTime.travelTimeMinutes <= travelTimeFilter.maxTravelTimeMinutes;
+      return exchangeWithTravelTime.travelTimeMinutes <= maxTravelTimeMinutes;
     },
-    [travelTimeFilter.enabled, travelTimeFilter.maxTravelTimeMinutes],
+    [travelTimeFilterEnabled, maxTravelTimeMinutes],
   );
 
   // Get filtered list

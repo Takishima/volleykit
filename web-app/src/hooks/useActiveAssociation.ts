@@ -2,6 +2,7 @@
  * Hook to get the active association code from the current user session.
  */
 
+import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "@/stores/auth";
 
 /**
@@ -11,10 +12,13 @@ import { useAuthStore } from "@/stores/auth";
  * @returns The association code (e.g., "SV", "SVRBA") or undefined if not available
  */
 export function useActiveAssociationCode(): string | undefined {
-  const { user, activeOccupationId } = useAuthStore((state) => ({
-    user: state.user,
-    activeOccupationId: state.activeOccupationId,
-  }));
+  // Use useShallow to prevent infinite re-renders from object selector
+  const { user, activeOccupationId } = useAuthStore(
+    useShallow((state) => ({
+      user: state.user,
+      activeOccupationId: state.activeOccupationId,
+    })),
+  );
 
   const activeOccupation =
     user?.occupations?.find((o) => o.id === activeOccupationId) ??
