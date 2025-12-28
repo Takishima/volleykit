@@ -16,13 +16,13 @@ export interface SbbUrlParams {
 }
 
 /**
- * Format a date as DD.MM.YYYY for timetable URL parameters.
+ * Format a date as YYYY-MM-DD for SBB URL parameters.
  */
-function formatDate(date: Date): string {
+function formatDateSbb(date: Date): string {
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = date.getFullYear();
-  return `${day}.${month}.${year}`;
+  return `${year}-${month}-${day}`;
 }
 
 /**
@@ -37,8 +37,8 @@ function formatTime(date: Date): string {
 /**
  * Generate a public transport timetable URL for a given destination and arrival time.
  *
- * Uses search.ch for website (reliable Swiss public transport timetable)
- * and SBB mobile app universal link for app target.
+ * Uses the official SBB deep linking format:
+ * https://www.sbb.ch/{lang}?stops=[{origin},{destination}]&date=YYYY-MM-DD&time=HH:MM
  *
  * @param params - The parameters for generating the URL
  * @param target - Whether to generate a website or app URL
@@ -47,45 +47,38 @@ function formatTime(date: Date): string {
  * @example
  * ```ts
  * const url = generateSbbUrl({
- *   destination: "Bern",
+ *   destination: "Basel",
  *   date: new Date("2024-12-28"),
  *   arrivalTime: new Date("2024-12-28T14:30:00"),
+ *   language: "de",
  * }, "website");
- * // Returns: https://search.ch/fahrplan/?to=Bern&date=28.12.2024&time=14:30&time_type=arrival
  * ```
  */
 export function generateSbbUrl(
   params: SbbUrlParams,
   target: SbbLinkTarget,
 ): string {
-  const { destination, date, arrivalTime } = params;
+  // Target parameter kept for future use (e.g., if SBB provides app-specific deep links)
+  void target;
 
-  const formattedDate = formatDate(date);
+  const { destination, date, arrivalTime, language = "de" } = params;
+
+  const formattedDate = formatDateSbb(date);
   const formattedTime = formatTime(arrivalTime);
 
-  if (target === "app") {
-    // Use the SBB mobile app universal link
-    // Format: sbbmobile://timetable?to=...&date=...&time=...&timeType=arrival
-    // Falls back to app store if app not installed
-    const appParams = new URLSearchParams({
-      to: destination,
-      date: formattedDate,
-      time: formattedTime,
-      timeType: "arrival",
-    });
-    return `https://app.sbbmobile.ch/timetable?${appParams.toString()}`;
-  }
+  // Build the stops JSON array per SBB deep linking spec
+  // First element is origin (empty = user sets their starting point)
+  // Second element is destination with label
+  const stops = [
+    { value: "", type: "", label: "" },
+    { value: "", type: "", label: destination },
+  ];
+  const stopsJson = JSON.stringify(stops);
 
-  // Website URL - use search.ch which reliably supports deeplinks
-  // search.ch shows all Swiss public transport including SBB
-  const websiteParams = new URLSearchParams({
-    to: destination,
-    date: formattedDate,
-    time: formattedTime,
-    time_type: "arrival",
-  });
-
-  return `https://search.ch/fahrplan/?${websiteParams.toString()}`;
+  // Use the official SBB deep linking format
+  // The SBB website is responsive and works well on mobile
+  // Using this format ensures the destination is pre-filled
+  return `https://www.sbb.ch/${language}?stops=${encodeURIComponent(stopsJson)}&date=${formattedDate}&time=${formattedTime}`;
 }
 
 /**

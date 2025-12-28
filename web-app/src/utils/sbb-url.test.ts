@@ -11,27 +11,39 @@ describe("sbb-url", () => {
     };
 
     describe("website target", () => {
-      it("generates correct search.ch URL", () => {
+      it("generates correct SBB URL with stops JSON parameter", () => {
         const url = generateSbbUrl(baseParams, "website");
 
-        expect(url).toContain("https://search.ch/fahrplan/");
-        expect(url).toContain("to=Bern");
-        expect(url).toContain("date=28.12.2024");
-        expect(url).toContain("time=14%3A30");
-        expect(url).toContain("time_type=arrival");
+        expect(url).toContain("https://www.sbb.ch/de?stops=");
+        expect(url).toContain("date=2024-12-28");
+        expect(url).toContain("time=14:30");
+        // Check that destination is in the encoded stops parameter
+        expect(url).toContain(encodeURIComponent('"label":"Bern"'));
       });
 
-      it("uses search.ch regardless of language", () => {
-        const urlDe = generateSbbUrl({ ...baseParams, language: "de" }, "website");
-        const urlFr = generateSbbUrl({ ...baseParams, language: "fr" }, "website");
-        const urlIt = generateSbbUrl({ ...baseParams, language: "it" }, "website");
-        const urlEn = generateSbbUrl({ ...baseParams, language: "en" }, "website");
+      it("generates correct URL for French", () => {
+        const url = generateSbbUrl({ ...baseParams, language: "fr" }, "website");
+        expect(url).toContain("https://www.sbb.ch/fr?stops=");
+      });
 
-        // All should use search.ch
-        expect(urlDe).toContain("https://search.ch/fahrplan/");
-        expect(urlFr).toContain("https://search.ch/fahrplan/");
-        expect(urlIt).toContain("https://search.ch/fahrplan/");
-        expect(urlEn).toContain("https://search.ch/fahrplan/");
+      it("generates correct URL for Italian", () => {
+        const url = generateSbbUrl({ ...baseParams, language: "it" }, "website");
+        expect(url).toContain("https://www.sbb.ch/it?stops=");
+      });
+
+      it("generates correct URL for English", () => {
+        const url = generateSbbUrl({ ...baseParams, language: "en" }, "website");
+        expect(url).toContain("https://www.sbb.ch/en?stops=");
+      });
+
+      it("defaults to German when no language specified", () => {
+        const params = {
+          destination: "Zürich",
+          date: new Date("2024-12-28T10:00:00"),
+          arrivalTime: new Date("2024-12-28T10:00:00"),
+        };
+        const url = generateSbbUrl(params, "website");
+        expect(url).toContain("https://www.sbb.ch/de?stops=");
       });
 
       it("URL-encodes special characters in destination", () => {
@@ -40,37 +52,37 @@ describe("sbb-url", () => {
           destination: "Zürich HB",
         };
         const url = generateSbbUrl(params, "website");
-        expect(url).toContain("to=Z%C3%BCrich+HB");
+        // The destination should be inside the JSON stops parameter
+        expect(url).toContain(encodeURIComponent('"label":"Zürich HB"'));
+      });
+
+      it("includes empty origin in stops array", () => {
+        const url = generateSbbUrl(baseParams, "website");
+        // First stop should be empty (origin)
+        expect(url).toContain(encodeURIComponent('{"value":"","type":"","label":""}'));
       });
     });
 
     describe("app target", () => {
-      it("generates correct SBB app URL", () => {
+      it("generates same SBB URL format as website", () => {
         const url = generateSbbUrl(baseParams, "app");
 
-        expect(url).toContain("https://app.sbbmobile.ch/timetable");
-        expect(url).toContain("to=Bern");
-        expect(url).toContain("date=28.12.2024");
-        expect(url).toContain("time=14%3A30");
-        expect(url).toContain("timeType=arrival");
-      });
-
-      it("does not include language path in app URL", () => {
-        const url = generateSbbUrl(baseParams, "app");
-        expect(url).not.toContain("/de/");
-        expect(url).not.toContain("/fr/");
+        // App also uses the SBB website URL (responsive, works on mobile)
+        expect(url).toContain("https://www.sbb.ch/de?stops=");
+        expect(url).toContain("date=2024-12-28");
+        expect(url).toContain("time=14:30");
       });
     });
 
     describe("date formatting", () => {
-      it("formats single-digit day with leading zero", () => {
+      it("formats date as YYYY-MM-DD with leading zeros", () => {
         const params = {
           ...baseParams,
           date: new Date("2024-01-05T10:00:00"),
           arrivalTime: new Date("2024-01-05T10:00:00"),
         };
         const url = generateSbbUrl(params, "website");
-        expect(url).toContain("date=05.01.2024");
+        expect(url).toContain("date=2024-01-05");
       });
 
       it("formats single-digit month with leading zero", () => {
@@ -80,7 +92,7 @@ describe("sbb-url", () => {
           arrivalTime: new Date("2024-03-15T10:00:00"),
         };
         const url = generateSbbUrl(params, "website");
-        expect(url).toContain("date=15.03.2024");
+        expect(url).toContain("date=2024-03-15");
       });
     });
 
@@ -91,7 +103,7 @@ describe("sbb-url", () => {
           arrivalTime: new Date("2024-12-28T09:05:00"),
         };
         const url = generateSbbUrl(params, "website");
-        expect(url).toContain("time=09%3A05");
+        expect(url).toContain("time=09:05");
       });
 
       it("formats midnight correctly", () => {
@@ -100,7 +112,7 @@ describe("sbb-url", () => {
           arrivalTime: new Date("2024-12-28T00:00:00"),
         };
         const url = generateSbbUrl(params, "website");
-        expect(url).toContain("time=00%3A00");
+        expect(url).toContain("time=00:00");
       });
     });
   });
