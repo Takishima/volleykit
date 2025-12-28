@@ -178,7 +178,7 @@ interface VenueConfig {
 
 const SV_VENUES: VenueConfig[] = [
   {
-    teamHome: { name: "Volley Kloten", identifier: BASE_TEAM_IDENTIFIER },
+    teamHome: { name: "NLZ Volleyball Academy", identifier: BASE_TEAM_IDENTIFIER },
     teamAway: { name: "Volley Luzern", identifier: BASE_TEAM_IDENTIFIER + 1 },
     hall: {
       name: "Sporthalle Ruebisbach",
@@ -192,7 +192,7 @@ const SV_VENUES: VenueConfig[] = [
     },
   },
   {
-    teamHome: { name: "Schönenwerd Smash", identifier: BASE_TEAM_IDENTIFIER + 2 },
+    teamHome: { name: "Volley Schönenwerd", identifier: BASE_TEAM_IDENTIFIER + 2 },
     teamAway: { name: "Traktor Basel", identifier: BASE_TEAM_IDENTIFIER + 3 },
     hall: {
       name: "Betoncoupe Arena",
@@ -237,7 +237,7 @@ const SV_VENUES: VenueConfig[] = [
 
 const SVRBA_VENUES: VenueConfig[] = [
   {
-    teamHome: { name: "VFM Therwil", identifier: BASE_TEAM_IDENTIFIER },
+    teamHome: { name: "VB Therwil", identifier: BASE_TEAM_IDENTIFIER },
     teamAway: { name: "VBC Münchenstein", identifier: BASE_TEAM_IDENTIFIER + 1 },
     hall: {
       name: "99er Sporthalle",
@@ -251,8 +251,8 @@ const SVRBA_VENUES: VenueConfig[] = [
     },
   },
   {
-    teamHome: { name: "TV Riehen", identifier: BASE_TEAM_IDENTIFIER + 2 },
-    teamAway: { name: "VBC Binningen", identifier: BASE_TEAM_IDENTIFIER + 3 },
+    teamHome: { name: "KTV Riehen", identifier: BASE_TEAM_IDENTIFIER + 2 },
+    teamAway: { name: "VB Binningen", identifier: BASE_TEAM_IDENTIFIER + 3 },
     hall: {
       name: "Sporthalle Niederholz",
       street: "Niederholzstrasse",
@@ -265,7 +265,7 @@ const SVRBA_VENUES: VenueConfig[] = [
     },
   },
   {
-    teamHome: { name: "VBC Basel", identifier: BASE_TEAM_IDENTIFIER + 4 },
+    teamHome: { name: "City Volley Basel", identifier: BASE_TEAM_IDENTIFIER + 4 },
     teamAway: { name: "TV Liestal", identifier: BASE_TEAM_IDENTIFIER + 5 },
     hall: {
       name: "Margarethenhalle",
@@ -282,8 +282,8 @@ const SVRBA_VENUES: VenueConfig[] = [
 
 const SVRZ_VENUES: VenueConfig[] = [
   {
-    teamHome: { name: "VBC Wiedikon", identifier: BASE_TEAM_IDENTIFIER },
-    teamAway: { name: "VBC Oerlikon", identifier: BASE_TEAM_IDENTIFIER + 1 },
+    teamHome: { name: "KSC Wiedikon", identifier: BASE_TEAM_IDENTIFIER },
+    teamAway: { name: "Volley Oerlikon", identifier: BASE_TEAM_IDENTIFIER + 1 },
     hall: {
       name: "Kantonsschule Wiedikon",
       street: "Schrennengasse",
@@ -310,7 +310,7 @@ const SVRZ_VENUES: VenueConfig[] = [
     },
   },
   {
-    teamHome: { name: "VBC Adliswil", identifier: BASE_TEAM_IDENTIFIER + 4 },
+    teamHome: { name: "VC Tornado Adliswil", identifier: BASE_TEAM_IDENTIFIER + 4 },
     teamAway: { name: "VBC Thalwil", identifier: BASE_TEAM_IDENTIFIER + 5 },
     hall: {
       name: "Schulhaus Hofern",
