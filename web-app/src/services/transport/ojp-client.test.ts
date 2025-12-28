@@ -294,6 +294,53 @@ describe("extractDestinationStation", () => {
     const result = extractDestinationStation(trip);
     expect(result).toEqual({ id: "8507000", name: "Bern" });
   });
+
+  it("combines stopPointName with nameSuffix when present", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      leg: [
+        {
+          timedLeg: {
+            legBoard: {
+              stopPointRef: "ch:1:sloid:8503000",
+              stopPointName: { text: "Zürich HB" },
+            },
+            legAlight: {
+              stopPointRef: "ch:1:sloid:8502206",
+              stopPointName: { text: "Schönenwerd" },
+              nameSuffix: { text: "SO, Bahnhof" },
+            },
+          },
+        },
+      ],
+    };
+
+    const result = extractDestinationStation(trip);
+    expect(result).toEqual({ id: "8502206", name: "Schönenwerd SO, Bahnhof" });
+  });
+
+  it("uses only stopPointName when nameSuffix is not present", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      leg: [
+        {
+          timedLeg: {
+            legBoard: {
+              stopPointRef: "ch:1:sloid:8503000",
+              stopPointName: { text: "Zürich HB" },
+            },
+            legAlight: {
+              stopPointRef: "ch:1:sloid:8507000",
+              stopPointName: { text: "Bern" },
+            },
+          },
+        },
+      ],
+    };
+
+    const result = extractDestinationStation(trip);
+    expect(result).toEqual({ id: "8507000", name: "Bern" });
+  });
 });
 
 describe("extractOriginStation", () => {
@@ -367,5 +414,29 @@ describe("extractOriginStation", () => {
 
     const result = extractOriginStation(trip);
     expect(result).toEqual({ id: "8503000", name: "Zürich HB" });
+  });
+
+  it("combines stopPointName with nameSuffix when present", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      leg: [
+        {
+          timedLeg: {
+            legBoard: {
+              stopPointRef: "ch:1:sloid:8502206",
+              stopPointName: { text: "Schönenwerd" },
+              nameSuffix: { text: "SO, Bahnhof" },
+            },
+            legAlight: {
+              stopPointRef: "ch:1:sloid:8507000",
+              stopPointName: { text: "Bern" },
+            },
+          },
+        },
+      ],
+    };
+
+    const result = extractOriginStation(trip);
+    expect(result).toEqual({ id: "8502206", name: "Schönenwerd SO, Bahnhof" });
   });
 });

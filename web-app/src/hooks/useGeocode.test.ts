@@ -15,7 +15,8 @@ describe("useGeocode", () => {
     globalThis.fetch = originalFetch;
   });
 
-  const mockNominatimResults = [
+  // Mock results without address details (fallback to display_name)
+  const mockNominatimResultsWithoutAddress = [
     {
       place_id: 12345,
       lat: "47.3769",
@@ -27,6 +28,40 @@ describe("useGeocode", () => {
       lat: "47.3667",
       lon: "8.55",
       display_name: "Zürich Hauptbahnhof, Switzerland",
+    },
+  ];
+
+  // Mock results with Swiss address details (formatted to Swiss SBB format)
+  const mockNominatimResultsWithAddress = [
+    {
+      place_id: 12345,
+      lat: "47.5183",
+      lon: "6.7847",
+      display_name: "31, Avenue des Roses, Château-Sec, Pully, District de Lavaux-Oron, Vaud, 1009, Suisse",
+      address: {
+        house_number: "31",
+        road: "Avenue des Roses",
+        neighbourhood: "Château-Sec",
+        city: "Pully",
+        county: "District de Lavaux-Oron",
+        state: "Vaud",
+        postcode: "1009",
+        country: "Suisse",
+        country_code: "ch",
+      },
+    },
+    {
+      place_id: 67890,
+      lat: "47.3667",
+      lon: "8.55",
+      display_name: "Bahnhofstrasse, Zürich, Switzerland",
+      address: {
+        road: "Bahnhofstrasse",
+        city: "Zürich",
+        postcode: "8001",
+        country: "Switzerland",
+        country_code: "ch",
+      },
     },
   ];
 
@@ -58,7 +93,7 @@ describe("useGeocode", () => {
     it("sets loading state when searching", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockNominatimResults,
+        json: async () => mockNominatimResultsWithoutAddress,
       });
 
       const { result } = renderHook(() => useGeocode());
@@ -70,10 +105,10 @@ describe("useGeocode", () => {
       expect(result.current.isLoading).toBe(true);
     });
 
-    it("returns geocoded results on success", async () => {
+    it("returns geocoded results with display_name when no address details", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockNominatimResults,
+        json: async () => mockNominatimResultsWithoutAddress,
       });
 
       const { result } = renderHook(() => useGeocode());
@@ -86,6 +121,7 @@ describe("useGeocode", () => {
         expect(result.current.results).toHaveLength(2);
       });
 
+      // Falls back to display_name when no address details
       expect(result.current.results[0]).toEqual({
         placeId: 12345,
         latitude: 47.3769,
@@ -100,6 +136,191 @@ describe("useGeocode", () => {
       });
       expect(result.current.isLoading).toBe(false);
       expect(result.current.error).toBeNull();
+    });
+
+    it("formats addresses in Swiss SBB format when address details available", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockNominatimResultsWithAddress,
+      });
+
+      const { result } = renderHook(() => useGeocode());
+
+      act(() => {
+        result.current.search("Avenue des Roses Pully");
+      });
+
+      await waitFor(() => {
+        expect(result.current.results).toHaveLength(2);
+      });
+
+      // Full address with house number: "1009 Pully, Avenue des Roses 31"
+      expect(result.current.results[0]).toEqual({
+        placeId: 12345,
+        latitude: 47.5183,
+        longitude: 6.7847,
+        displayName: "1009 Pully, Avenue des Roses 31",
+      });
+
+      // Street without house number: "8001 Zürich, Bahnhofstrasse"
+      expect(result.current.results[1]).toEqual({
+        placeId: 67890,
+        latitude: 47.3667,
+        longitude: 8.55,
+        displayName: "8001 Zürich, Bahnhofstrasse",
+      });
+    });
+
+    it("formats addresses with town instead of city", async () => {
+      const mockResultsWithTown = [
+        {
+          place_id: 11111,
+          lat: "47.3678",
+          lon: "7.9976",
+          display_name: "Betoncoupe Arena, Aarestrasse 20, Schönenwerd, Switzerland",
+          address: {
+            house_number: "20",
+            road: "Aarestrasse",
+            town: "Schönenwerd",
+            postcode: "5012",
+            country: "Switzerland",
+            country_code: "ch",
+          },
+        },
+      ];
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResultsWithTown,
+      });
+
+      const { result } = renderHook(() => useGeocode());
+
+      act(() => {
+        result.current.search("Betoncoupe Arena Schönenwerd");
+      });
+
+      await waitFor(() => {
+        expect(result.current.results).toHaveLength(1);
+      });
+
+      // Uses town when city is not available
+      expect(result.current.results[0]?.displayName).toBe("5012 Schönenwerd, Aarestrasse 20");
+    });
+
+    it("formats Meilen address correctly", async () => {
+      const mockResultsMeilen = [
+        {
+          place_id: 33333,
+          lat: "47.2705",
+          lon: "8.6423",
+          display_name: "93, Dorfstrasse, Fuchsloch, Obermeilen, Meilen, Bezirk Meilen, Zurich, 8706, Suisse",
+          address: {
+            house_number: "93",
+            road: "Dorfstrasse",
+            neighbourhood: "Fuchsloch",
+            village: "Meilen",
+            county: "Bezirk Meilen",
+            state: "Zurich",
+            postcode: "8706",
+            country: "Suisse",
+            country_code: "ch",
+          },
+        },
+      ];
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResultsMeilen,
+      });
+
+      const { result } = renderHook(() => useGeocode());
+
+      act(() => {
+        result.current.search("Dorfstrasse 93 Meilen");
+      });
+
+      await waitFor(() => {
+        expect(result.current.results).toHaveLength(1);
+      });
+
+      // Uses village when city is not available
+      expect(result.current.results[0]?.displayName).toBe("8706 Meilen, Dorfstrasse 93");
+    });
+
+    it("formats POI address correctly (ignores POI name)", async () => {
+      const mockResultsPOI = [
+        {
+          place_id: 44444,
+          lat: "47.2705",
+          lon: "8.6423",
+          display_name: "Credit Suisse, 93, Dorfstrasse, Fuchsloch, Obermeilen, Meilen, Bezirk Meilen, Zurich, 8706, Suisse",
+          address: {
+            house_number: "93",
+            road: "Dorfstrasse",
+            neighbourhood: "Fuchsloch",
+            village: "Meilen",
+            county: "Bezirk Meilen",
+            state: "Zurich",
+            postcode: "8706",
+            country: "Suisse",
+            country_code: "ch",
+          },
+        },
+      ];
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResultsPOI,
+      });
+
+      const { result } = renderHook(() => useGeocode());
+
+      act(() => {
+        result.current.search("Credit Suisse Meilen");
+      });
+
+      await waitFor(() => {
+        expect(result.current.results).toHaveLength(1);
+      });
+
+      // POI name is not included in formatted address
+      expect(result.current.results[0]?.displayName).toBe("8706 Meilen, Dorfstrasse 93");
+    });
+
+    it("returns only postcode and city when street is missing", async () => {
+      const mockResultsNoStreet = [
+        {
+          place_id: 22222,
+          lat: "47.3769",
+          lon: "8.5417",
+          display_name: "Zürich, Switzerland",
+          address: {
+            city: "Zürich",
+            postcode: "8000",
+            country: "Switzerland",
+            country_code: "ch",
+          },
+        },
+      ];
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResultsNoStreet,
+      });
+
+      const { result } = renderHook(() => useGeocode());
+
+      act(() => {
+        result.current.search("Zürich");
+      });
+
+      await waitFor(() => {
+        expect(result.current.results).toHaveLength(1);
+      });
+
+      // Returns just postcode and city when no street
+      expect(result.current.results[0]?.displayName).toBe("8000 Zürich");
     });
 
     it("makes request with correct parameters", async () => {
@@ -199,7 +420,7 @@ describe("useGeocode", () => {
               () =>
                 resolve({
                   ok: true,
-                  json: async () => mockNominatimResults,
+                  json: async () => mockNominatimResultsWithoutAddress,
                 }),
               1000,
             ),
@@ -244,7 +465,7 @@ describe("useGeocode", () => {
     it("clears results and error", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockNominatimResults,
+        json: async () => mockNominatimResultsWithoutAddress,
       });
 
       const { result } = renderHook(() => useGeocode());
