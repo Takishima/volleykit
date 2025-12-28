@@ -142,6 +142,9 @@ interface OjpStopPoint {
   stopPointName: {
     text: string;
   };
+  nameSuffix?: {
+    text: string;
+  };
 }
 
 /**
@@ -196,6 +199,20 @@ function extractDidokId(ref: string | undefined): string | undefined {
 }
 
 /**
+ * Build full station name by combining stopPointName and optional nameSuffix.
+ * Example: "Schönenwerd" + "SO, Bahnhof" -> "Schönenwerd SO, Bahnhof"
+ */
+function buildStationName(stopPoint: OjpStopPoint): string {
+  const baseName = stopPoint.stopPointName.text;
+  const suffix = stopPoint.nameSuffix?.text;
+
+  if (suffix) {
+    return `${baseName} ${suffix}`;
+  }
+  return baseName;
+}
+
+/**
  * Extract station info from a stop point.
  */
 function extractStationFromStopPoint(stopPoint: OjpStopPoint | undefined): StationInfo | undefined {
@@ -206,7 +223,7 @@ function extractStationFromStopPoint(stopPoint: OjpStopPoint | undefined): Stati
 
   return {
     id,
-    name: stopPoint.stopPointName.text,
+    name: buildStationName(stopPoint),
   };
 }
 
