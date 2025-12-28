@@ -8,19 +8,6 @@ import { persist } from "zustand/middleware";
 export type LocationSource = "geolocation" | "geocoded" | "manual";
 
 /**
- * Swiss-specific location data from geo.admin.ch.
- * Stored for potential future use with Swiss services.
- */
-export interface SwissLocationData {
-  /** Swiss LV95 X coordinate (easting) */
-  lv95X: number;
-  /** Swiss LV95 Y coordinate (northing) */
-  lv95Y: number;
-  /** geo.admin.ch feature ID for potential reverse lookups */
-  featureId?: number;
-}
-
-/**
  * User's home location for distance filtering.
  * This structure supports future extension to public transport routing.
  */
@@ -31,8 +18,6 @@ export interface UserLocation {
   label: string;
   /** How the location was obtained */
   source: LocationSource;
-  /** Swiss-specific data when geocoded via geo.admin.ch */
-  swissData?: SwissLocationData;
 }
 
 /**

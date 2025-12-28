@@ -78,18 +78,12 @@ function HomeLocationSectionComponent() {
   }, [debouncedQuery, geocodeSearch, geocodeClear]);
 
   const handleSelectGeocodedLocation = useCallback(
-    (result: {
-      latitude: number;
-      longitude: number;
-      displayName: string;
-      swissData?: { lv95X: number; lv95Y: number; featureId: number };
-    }) => {
+    (result: { latitude: number; longitude: number; displayName: string }) => {
       const location: UserLocation = {
         latitude: result.latitude,
         longitude: result.longitude,
         label: result.displayName,
         source: "geocoded",
-        swissData: result.swissData,
       };
       setHomeLocation(location);
       setAddressQuery("");
