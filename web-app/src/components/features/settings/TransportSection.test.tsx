@@ -91,7 +91,9 @@ function createMockAuthStore(
       id: "user-1",
       firstName: "John",
       lastName: "Doe",
-      occupations: [{ id: "ref-1", type: "referee", associationCode: "SV" }],
+      occupations: [
+        { id: "ref-1", type: "referee" as const, associationCode: "SV" },
+      ],
     },
     activeOccupationId: "ref-1",
     status: "authenticated" as const,
