@@ -73,11 +73,14 @@ export function generateSbbUrl(
     { value: "", type: "", label: "" },
     { value: "", type: "", label: destination },
   ];
-  const stopsJson = JSON.stringify(stops);
 
-  // Use the official SBB deep linking format
-  // Note: The JSON is NOT URL-encoded per SBB documentation examples
-  return `https://www.sbb.ch/${language}?stops=${stopsJson}&date=${formattedDate}&time=${formattedTime}`;
+  // SBB expects: only quotes encoded (%22), brackets/colons literal
+  // Date and time values must be quoted: date="2024-12-28"
+  const stopsJson = JSON.stringify(stops).replace(/"/g, "%22");
+  const quotedDate = `%22${formattedDate}%22`;
+  const quotedTime = `%22${formattedTime}%22`;
+
+  return `https://www.sbb.ch/${language}?stops=${stopsJson}&date=${quotedDate}&time=${quotedTime}`;
 }
 
 /**
