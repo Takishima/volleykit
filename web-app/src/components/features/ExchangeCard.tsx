@@ -188,7 +188,7 @@ function ExchangeCardComponent({
                   <span className="text-text-subtle dark:text-text-subtle-dark">
                     {t(entry.labelKey)}:
                   </span>
-                  <span className={entry.isSubmitter ? "font-semibold text-primary-600 dark:text-primary-400" : ""}>
+                  <span className={entry.isSubmitter ? "italic text-primary-600 dark:text-primary-400" : ""}>
                     {entry.name}
                   </span>
                 </div>
