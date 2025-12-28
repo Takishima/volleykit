@@ -52,6 +52,12 @@ export const DEFAULT_ARRIVAL_BUFFER_SV_MINUTES = 60;
 /** Default arrival buffer for regional associations - 45 minutes */
 export const DEFAULT_ARRIVAL_BUFFER_REGIONAL_MINUTES = 45;
 
+/** Minimum allowed arrival buffer in minutes */
+export const MIN_ARRIVAL_BUFFER_MINUTES = 0;
+
+/** Maximum allowed arrival buffer in minutes (3 hours) */
+export const MAX_ARRIVAL_BUFFER_MINUTES = 180;
+
 /**
  * Get the default arrival buffer for an association.
  * SV (Swiss Volley national) defaults to 60 minutes, others to 45 minutes.

@@ -9,6 +9,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useAuthStore } from "@/stores/auth";
 import { useSettingsStore } from "@/stores/settings";
+import { useActiveAssociationCode } from "@/hooks/useActiveAssociation";
 import { queryKeys } from "@/api/queryKeys";
 import {
   calculateTravelTime,
@@ -48,20 +49,13 @@ export function useTravelTime(
   options: UseTravelTimeOptions = {},
 ) {
   const { date, targetArrivalTime } = options;
-  const { isDemoMode, user, activeOccupationId } = useAuthStore((state) => ({
-    isDemoMode: state.isDemoMode,
-    user: state.user,
-    activeOccupationId: state.activeOccupationId,
-  }));
+  const isDemoMode = useAuthStore((state) => state.isDemoMode);
   const { homeLocation, isTransportEnabledForAssociation } = useSettingsStore((state) => ({
     homeLocation: state.homeLocation,
     isTransportEnabledForAssociation: state.isTransportEnabledForAssociation,
   }));
   const queryClient = useQueryClient();
-
-  // Get active association code
-  const activeOccupation = user?.occupations?.find((o) => o.id === activeOccupationId) ?? user?.occupations?.[0];
-  const associationCode = activeOccupation?.associationCode;
+  const associationCode = useActiveAssociationCode();
 
   // Check if transport is enabled for current association
   const transportEnabled = isTransportEnabledForAssociation(associationCode);

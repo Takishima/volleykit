@@ -1,9 +1,14 @@
 import { useCallback, memo, useState, useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useQueryClient } from "@tanstack/react-query";
-import { useSettingsStore, getDefaultArrivalBuffer } from "@/stores/settings";
-import { useAuthStore } from "@/stores/auth";
+import {
+  useSettingsStore,
+  getDefaultArrivalBuffer,
+  MIN_ARRIVAL_BUFFER_MINUTES,
+  MAX_ARRIVAL_BUFFER_MINUTES,
+} from "@/stores/settings";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useActiveAssociationCode } from "@/hooks/useActiveAssociation";
 import { useTravelTimeAvailable } from "@/hooks/useTravelTime";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { queryKeys } from "@/api/queryKeys";
@@ -11,6 +16,15 @@ import {
   clearTravelTimeCache,
   getTravelTimeCacheStats,
 } from "@/services/transport";
+
+/** Badge showing the current association code */
+function AssociationBadge({ code }: { code: string }) {
+  return (
+    <span className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300">
+      {code}
+    </span>
+  );
+}
 
 function TransportSectionComponent() {
   const { t, tInterpolate } = useTranslation();
@@ -37,15 +51,8 @@ function TransportSectionComponent() {
     })),
   );
 
-  // Get active occupation's association code
-  const { user, activeOccupationId } = useAuthStore(
-    useShallow((state) => ({
-      user: state.user,
-      activeOccupationId: state.activeOccupationId,
-    })),
-  );
-  const activeOccupation = user?.occupations?.find((o) => o.id === activeOccupationId) ?? user?.occupations?.[0];
-  const associationCode = activeOccupation?.associationCode;
+  // Get active association code
+  const associationCode = useActiveAssociationCode();
 
   // Get current transport enabled state for this association
   // Handle migration: if per-association setting exists, use it; otherwise fall back to global
@@ -91,7 +98,7 @@ function TransportSectionComponent() {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!associationCode) return;
       const value = parseInt(e.target.value, 10);
-      if (!isNaN(value) && value >= 0) {
+      if (!isNaN(value) && value >= MIN_ARRIVAL_BUFFER_MINUTES) {
         setArrivalBufferForAssociation(associationCode, value);
       }
     },
@@ -182,11 +189,7 @@ function TransportSectionComponent() {
               <span className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
                 {t("settings.transport.enableCalculations")}
               </span>
-              {associationCode && (
-                <span className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300">
-                  {associationCode}
-                </span>
-              )}
+              {associationCode && <AssociationBadge code={associationCode} />}
             </div>
           </div>
 
@@ -222,11 +225,7 @@ function TransportSectionComponent() {
                   <span className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
                     {t("settings.transport.arrivalTime")}
                   </span>
-                  {associationCode && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300">
-                      {associationCode}
-                    </span>
-                  )}
+                  {associationCode && <AssociationBadge code={associationCode} />}
                 </div>
                 <div className="text-xs text-text-muted dark:text-text-muted-dark mt-0.5">
                   {t("settings.transport.arrivalTimeDescription")}
@@ -235,8 +234,8 @@ function TransportSectionComponent() {
               <div className="flex items-center gap-2">
                 <input
                   type="number"
-                  min="0"
-                  max="180"
+                  min={MIN_ARRIVAL_BUFFER_MINUTES}
+                  max={MAX_ARRIVAL_BUFFER_MINUTES}
                   value={currentArrivalBuffer}
                   onChange={handleArrivalBufferChange}
                   className="w-16 px-2 py-1 text-sm text-right border border-border-default dark:border-border-default-dark rounded-md bg-surface-card dark:bg-surface-card-dark text-text-primary dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary-500"

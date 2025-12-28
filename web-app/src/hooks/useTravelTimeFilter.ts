@@ -6,6 +6,7 @@ import { useMemo, useCallback } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { useAuthStore } from "@/stores/auth";
 import { useSettingsStore } from "@/stores/settings";
+import { useActiveAssociationCode } from "@/hooks/useActiveAssociation";
 import { queryKeys } from "@/api/queryKeys";
 import {
   calculateTravelTime,
@@ -66,21 +67,14 @@ function getHallInfo(exchange: GameExchange): HallInfo | null {
  * @returns Object with travel time data for each exchange and filter helper
  */
 export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | null) {
-  const { isDemoMode, user, activeOccupationId } = useAuthStore((state) => ({
-    isDemoMode: state.isDemoMode,
-    user: state.user,
-    activeOccupationId: state.activeOccupationId,
-  }));
+  const isDemoMode = useAuthStore((state) => state.isDemoMode);
   const { homeLocation, isTransportEnabledForAssociation, travelTimeFilter, getArrivalBufferForAssociation } = useSettingsStore((state) => ({
     homeLocation: state.homeLocation,
     isTransportEnabledForAssociation: state.isTransportEnabledForAssociation,
     travelTimeFilter: state.travelTimeFilter,
     getArrivalBufferForAssociation: state.getArrivalBufferForAssociation,
   }));
-
-  // Get active association code
-  const activeOccupation = user?.occupations?.find((o) => o.id === activeOccupationId) ?? user?.occupations?.[0];
-  const associationCode = activeOccupation?.associationCode;
+  const associationCode = useActiveAssociationCode();
 
   // Check if transport is enabled for current association
   const transportEnabled = isTransportEnabledForAssociation(associationCode);
