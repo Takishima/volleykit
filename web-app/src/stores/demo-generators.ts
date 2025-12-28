@@ -178,17 +178,17 @@ interface VenueConfig {
 
 const SV_VENUES: VenueConfig[] = [
   {
-    teamHome: { name: "VBC Zürich Lions", identifier: BASE_TEAM_IDENTIFIER },
+    teamHome: { name: "Volley Kloten", identifier: BASE_TEAM_IDENTIFIER },
     teamAway: { name: "Volley Luzern", identifier: BASE_TEAM_IDENTIFIER + 1 },
     hall: {
-      name: "Saalsporthalle",
-      street: "Giesshübelstrasse",
-      houseNumber: "41",
-      postalCode: "8045",
-      city: "Zürich",
-      latitude: 47.356562,
-      longitude: 8.520188,
-      plusCode: "8FVC9G4C+J3",
+      name: "Sporthalle Ruebisbach",
+      street: "Talacherstrasse",
+      houseNumber: "2",
+      postalCode: "8302",
+      city: "Kloten",
+      latitude: 47.462187,
+      longitude: 8.577813,
+      plusCode: "8FVCFH6H+V4",
     },
   },
   {
