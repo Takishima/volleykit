@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { selectBestTrip, extractDestinationStation, type OjpTrip } from "./ojp-client";
+import { selectBestTrip, extractDestinationStation, extractOriginStation, type OjpTrip } from "./ojp-client";
 
 describe("selectBestTrip", () => {
   // Helper to create trip objects
@@ -17,6 +17,7 @@ describe("selectBestTrip", () => {
     startTime,
     endTime,
     transfers,
+    leg: [],
   });
 
   describe("without target arrival time", () => {
@@ -124,50 +125,63 @@ describe("extractDestinationStation", () => {
     startTime: "2025-01-15T12:00:00Z",
     endTime: "2025-01-15T13:00:00Z",
     transfers: 0,
+    leg: [],
   };
 
-  it("returns undefined when toLocation is missing", () => {
+  it("returns undefined when no timed legs exist", () => {
     const result = extractDestinationStation(baseTrip);
     expect(result).toBeUndefined();
   });
 
-  it("extracts station from stopPlace with sloid format", () => {
+  it("returns undefined when leg array is empty", () => {
     const trip: OjpTrip = {
       ...baseTrip,
-      toLocation: {
-        stopPlace: {
-          stopPlaceRef: "ch:1:sloid:8507000",
-          stopPlaceName: "Bern",
+      leg: [],
+    };
+    const result = extractDestinationStation(trip);
+    expect(result).toBeUndefined();
+  });
+
+  it("extracts station from last timed leg's legAlight with sloid format", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      leg: [
+        {
+          timedLeg: {
+            legBoard: {
+              stopPointRef: "ch:1:sloid:8503000",
+              stopPointName: { text: "Zürich HB" },
+            },
+            legAlight: {
+              stopPointRef: "ch:1:sloid:8507000",
+              stopPointName: { text: "Bern" },
+            },
+          },
         },
-      },
+      ],
     };
 
     const result = extractDestinationStation(trip);
     expect(result).toEqual({ id: "8507000", name: "Bern" });
   });
 
-  it("extracts station from stopPointRef with sloid format", () => {
-    const trip: OjpTrip = {
-      ...baseTrip,
-      toLocation: {
-        stopPointRef: "ch:1:sloid:8503000",
-        locationName: "Zürich HB",
-      },
-    };
-
-    const result = extractDestinationStation(trip);
-    expect(result).toEqual({ id: "8503000", name: "Zürich HB" });
-  });
-
   it("handles sloid format with additional segments", () => {
     const trip: OjpTrip = {
       ...baseTrip,
-      toLocation: {
-        stopPlace: {
-          stopPlaceRef: "ch:1:sloid:8507000:1:2",
-          stopPlaceName: "Bern, Gleis 1",
+      leg: [
+        {
+          timedLeg: {
+            legBoard: {
+              stopPointRef: "ch:1:sloid:8503000:1",
+              stopPointName: { text: "Zürich HB" },
+            },
+            legAlight: {
+              stopPointRef: "ch:1:sloid:8507000:2:3",
+              stopPointName: { text: "Bern, Gleis 1" },
+            },
+          },
         },
-      },
+      ],
     };
 
     const result = extractDestinationStation(trip);
@@ -177,27 +191,20 @@ describe("extractDestinationStation", () => {
   it("handles direct numeric ID", () => {
     const trip: OjpTrip = {
       ...baseTrip,
-      toLocation: {
-        stopPointRef: "8507000",
-        locationName: "Bern",
-      },
-    };
-
-    const result = extractDestinationStation(trip);
-    expect(result).toEqual({ id: "8507000", name: "Bern" });
-  });
-
-  it("prefers stopPlace over stopPointRef", () => {
-    const trip: OjpTrip = {
-      ...baseTrip,
-      toLocation: {
-        stopPointRef: "ch:1:sloid:8503000",
-        locationName: "Zürich HB",
-        stopPlace: {
-          stopPlaceRef: "ch:1:sloid:8507000",
-          stopPlaceName: "Bern",
+      leg: [
+        {
+          timedLeg: {
+            legBoard: {
+              stopPointRef: "8503000",
+              stopPointName: { text: "Zürich HB" },
+            },
+            legAlight: {
+              stopPointRef: "8507000",
+              stopPointName: { text: "Bern" },
+            },
+          },
         },
-      },
+      ],
     };
 
     const result = extractDestinationStation(trip);
@@ -207,28 +214,158 @@ describe("extractDestinationStation", () => {
   it("returns undefined for unrecognized ref format", () => {
     const trip: OjpTrip = {
       ...baseTrip,
-      toLocation: {
-        stopPointRef: "unknown:format:ref",
-        locationName: "Some Place",
-      },
+      leg: [
+        {
+          timedLeg: {
+            legBoard: {
+              stopPointRef: "unknown:format:ref",
+              stopPointName: { text: "Origin" },
+            },
+            legAlight: {
+              stopPointRef: "unknown:format:ref",
+              stopPointName: { text: "Some Place" },
+            },
+          },
+        },
+      ],
     };
 
     const result = extractDestinationStation(trip);
     expect(result).toBeUndefined();
   });
 
-  it("uses stopPlaceName as fallback for stopPointRef name", () => {
+  it("uses last timed leg when multiple legs exist", () => {
     const trip: OjpTrip = {
       ...baseTrip,
-      toLocation: {
-        stopPointRef: "ch:1:sloid:8507000",
-        stopPlace: {
-          stopPlaceName: "Bern Hauptbahnhof",
+      leg: [
+        {
+          timedLeg: {
+            legBoard: {
+              stopPointRef: "ch:1:sloid:8503000",
+              stopPointName: { text: "Zürich HB" },
+            },
+            legAlight: {
+              stopPointRef: "ch:1:sloid:8500218",
+              stopPointName: { text: "Olten" },
+            },
+          },
         },
-      },
+        {}, // Transfer leg (no timedLeg)
+        {
+          timedLeg: {
+            legBoard: {
+              stopPointRef: "ch:1:sloid:8500218",
+              stopPointName: { text: "Olten" },
+            },
+            legAlight: {
+              stopPointRef: "ch:1:sloid:8507000",
+              stopPointName: { text: "Bern" },
+            },
+          },
+        },
+      ],
     };
 
     const result = extractDestinationStation(trip);
-    expect(result).toEqual({ id: "8507000", name: "Bern Hauptbahnhof" });
+    expect(result).toEqual({ id: "8507000", name: "Bern" });
+  });
+
+  it("skips non-timed legs", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      leg: [
+        {}, // Walking leg (no timedLeg)
+        {
+          timedLeg: {
+            legBoard: {
+              stopPointRef: "ch:1:sloid:8503000",
+              stopPointName: { text: "Zürich HB" },
+            },
+            legAlight: {
+              stopPointRef: "ch:1:sloid:8507000",
+              stopPointName: { text: "Bern" },
+            },
+          },
+        },
+        {}, // Walking leg at end (no timedLeg)
+      ],
+    };
+
+    const result = extractDestinationStation(trip);
+    expect(result).toEqual({ id: "8507000", name: "Bern" });
+  });
+});
+
+describe("extractOriginStation", () => {
+  const baseTrip: OjpTrip = {
+    duration: "PT1H",
+    startTime: "2025-01-15T12:00:00Z",
+    endTime: "2025-01-15T13:00:00Z",
+    transfers: 0,
+    leg: [],
+  };
+
+  it("returns undefined when no timed legs exist", () => {
+    const result = extractOriginStation(baseTrip);
+    expect(result).toBeUndefined();
+  });
+
+  it("extracts station from first timed leg's legBoard", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      leg: [
+        {
+          timedLeg: {
+            legBoard: {
+              stopPointRef: "ch:1:sloid:8503000",
+              stopPointName: { text: "Zürich HB" },
+            },
+            legAlight: {
+              stopPointRef: "ch:1:sloid:8507000",
+              stopPointName: { text: "Bern" },
+            },
+          },
+        },
+      ],
+    };
+
+    const result = extractOriginStation(trip);
+    expect(result).toEqual({ id: "8503000", name: "Zürich HB" });
+  });
+
+  it("uses first timed leg when multiple legs exist", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      leg: [
+        {}, // Walking leg at start (no timedLeg)
+        {
+          timedLeg: {
+            legBoard: {
+              stopPointRef: "ch:1:sloid:8503000",
+              stopPointName: { text: "Zürich HB" },
+            },
+            legAlight: {
+              stopPointRef: "ch:1:sloid:8500218",
+              stopPointName: { text: "Olten" },
+            },
+          },
+        },
+        {
+          timedLeg: {
+            legBoard: {
+              stopPointRef: "ch:1:sloid:8500218",
+              stopPointName: { text: "Olten" },
+            },
+            legAlight: {
+              stopPointRef: "ch:1:sloid:8507000",
+              stopPointName: { text: "Bern" },
+            },
+          },
+        },
+      ],
+    };
+
+    const result = extractOriginStation(trip);
+    expect(result).toEqual({ id: "8503000", name: "Zürich HB" });
   });
 });

@@ -135,15 +135,30 @@ export async function calculateTravelTime(
 }
 
 /**
- * Location type from ojp-sdk-next for extracting station info.
+ * Stop point info from a timed leg's legBoard or legAlight.
  */
-interface OjpLocation {
-  stopPointRef?: string;
-  locationName?: string;
-  stopPlace?: {
-    stopPlaceRef?: string;
-    stopPlaceName?: string;
+interface OjpStopPoint {
+  stopPointRef: string;
+  stopPointName: {
+    text: string;
   };
+}
+
+/**
+ * Timed leg from OJP SDK representing a public transport segment.
+ */
+interface OjpTimedLeg {
+  legBoard: OjpStopPoint;
+  legAlight: OjpStopPoint;
+}
+
+/**
+ * Leg structure from OJP SDK. A trip consists of multiple legs.
+ * Each leg can be a timedLeg (public transport), transferLeg (walking between stations),
+ * or continuousLeg (walking to/from stations).
+ */
+interface OjpLeg {
+  timedLeg?: OjpTimedLeg;
 }
 
 /**
@@ -156,12 +171,11 @@ export interface OjpTrip {
   startTime: string;
   endTime: string;
   transfers: number;
-  fromLocation?: OjpLocation;
-  toLocation?: OjpLocation;
+  leg: OjpLeg[];
 }
 
 /**
- * Extract Didok station ID from OJP stopPointRef or stopPlaceRef.
+ * Extract Didok station ID from OJP stopPointRef.
  * Format: "ch:1:sloid:8507000" -> "8507000"
  */
 function extractDidokId(ref: string | undefined): string | undefined {
@@ -182,44 +196,61 @@ function extractDidokId(ref: string | undefined): string | undefined {
 }
 
 /**
- * Extract station info from an OJP location.
+ * Extract station info from a stop point.
  */
-function extractStationFromLocation(location: OjpLocation | undefined): StationInfo | undefined {
-  if (!location) return undefined;
+function extractStationFromStopPoint(stopPoint: OjpStopPoint | undefined): StationInfo | undefined {
+  if (!stopPoint) return undefined;
 
-  // Try stopPlaceRef first (more reliable for SBB linking)
-  const stopPlaceId = extractDidokId(location.stopPlace?.stopPlaceRef);
-  if (stopPlaceId && location.stopPlace?.stopPlaceName) {
-    return {
-      id: stopPlaceId,
-      name: location.stopPlace.stopPlaceName,
-    };
+  const id = extractDidokId(stopPoint.stopPointRef);
+  if (!id) return undefined;
+
+  return {
+    id,
+    name: stopPoint.stopPointName.text,
+  };
+}
+
+/**
+ * Find the first timed leg in a trip (first public transport segment).
+ */
+function findFirstTimedLeg(trip: OjpTrip): OjpTimedLeg | undefined {
+  for (const leg of trip.leg) {
+    if (leg.timedLeg) {
+      return leg.timedLeg;
+    }
   }
+  return undefined;
+}
 
-  // Fall back to stopPointRef
-  const stopPointId = extractDidokId(location.stopPointRef);
-  if (stopPointId) {
-    return {
-      id: stopPointId,
-      name: location.locationName ?? location.stopPlace?.stopPlaceName ?? "",
-    };
+/**
+ * Find the last timed leg in a trip (last public transport segment).
+ */
+function findLastTimedLeg(trip: OjpTrip): OjpTimedLeg | undefined {
+  for (let i = trip.leg.length - 1; i >= 0; i--) {
+    const leg = trip.leg[i];
+    if (leg?.timedLeg) {
+      return leg.timedLeg;
+    }
   }
-
   return undefined;
 }
 
 /**
  * Extract origin station info from an OJP trip.
+ * Gets the boarding station from the first timed leg.
  */
 export function extractOriginStation(trip: OjpTrip): StationInfo | undefined {
-  return extractStationFromLocation(trip.fromLocation);
+  const firstTimedLeg = findFirstTimedLeg(trip);
+  return extractStationFromStopPoint(firstTimedLeg?.legBoard);
 }
 
 /**
  * Extract destination station info from an OJP trip.
+ * Gets the alighting station from the last timed leg.
  */
 export function extractDestinationStation(trip: OjpTrip): StationInfo | undefined {
-  return extractStationFromLocation(trip.toLocation);
+  const lastTimedLeg = findLastTimedLeg(trip);
+  return extractStationFromStopPoint(lastTimedLeg?.legAlight);
 }
 
 /**
