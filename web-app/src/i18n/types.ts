@@ -213,6 +213,8 @@ export interface Translations {
       requiresHomeLocation: string;
       apiNotConfigured: string;
       maxTravelTime: string;
+      arrivalTime: string;
+      arrivalTimeDescription: string;
       cacheInfo: string;
       cacheEntries: string;
       refreshCache: string;
@@ -456,6 +458,10 @@ export interface Translations {
         description: string;
       };
       homeLocation: {
+        title: string;
+        description: string;
+      };
+      arrivalTime: {
         title: string;
         description: string;
       };

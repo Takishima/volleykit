@@ -84,6 +84,11 @@ const en: Translations = {
         description:
           "Set your home location to filter exchange offers by distance. This helps you find games near you more easily.",
       },
+      arrivalTime: {
+        title: "Arrival Time Setting",
+        description:
+          "Configure how many minutes before the game you want to arrive. This setting is saved separately for each association.",
+      },
       complete: {
         title: "Tour Complete!",
         description:
@@ -329,6 +334,8 @@ const en: Translations = {
       requiresHomeLocation: "Set your home location first",
       apiNotConfigured: "Transport API is not configured",
       maxTravelTime: "Maximum travel time",
+      arrivalTime: "Arrive before game",
+      arrivalTimeDescription: "Minutes to arrive before game start (per association)",
       cacheInfo:
         "Travel times are cached by day type (weekday/Saturday/Sunday) for 30 days.",
       cacheEntries: "{count} cached routes",

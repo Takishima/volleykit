@@ -6,9 +6,10 @@
  */
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useAuthStore } from "@/stores/auth";
 import { useSettingsStore } from "@/stores/settings";
+import { useActiveAssociationCode } from "@/hooks/useActiveAssociation";
 import { queryKeys } from "@/api/queryKeys";
 import {
   calculateTravelTime,
@@ -51,7 +52,21 @@ export function useTravelTime(
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
   const homeLocation = useSettingsStore((state) => state.homeLocation);
   const transportEnabled = useSettingsStore((state) => state.transportEnabled);
+  const transportEnabledByAssociation = useSettingsStore(
+    (state) => state.transportEnabledByAssociation,
+  );
   const queryClient = useQueryClient();
+  const associationCode = useActiveAssociationCode();
+
+  // Check if transport is enabled for current association
+  // Use per-association setting if available, otherwise fall back to global
+  const isTransportEnabled = useMemo(() => {
+    const enabledMap = transportEnabledByAssociation ?? {};
+    if (associationCode && enabledMap[associationCode] !== undefined) {
+      return enabledMap[associationCode];
+    }
+    return transportEnabled;
+  }, [associationCode, transportEnabledByAssociation, transportEnabled]);
 
   // Create a hash of home location for cache key stability
   const homeLocationHash = homeLocation ? hashLocation(homeLocation) : null;
@@ -61,7 +76,7 @@ export function useTravelTime(
 
   // Determine if we should fetch travel time
   const shouldFetch = Boolean(
-    transportEnabled &&
+    isTransportEnabled &&
       homeLocation &&
       hallCoords &&
       hallId &&

@@ -1,8 +1,14 @@
-import { useCallback, memo, useState, useMemo } from "react";
+import { useCallback, memo, useState, useMemo, useEffect, useRef } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useQueryClient } from "@tanstack/react-query";
-import { useSettingsStore } from "@/stores/settings";
+import {
+  useSettingsStore,
+  getDefaultArrivalBuffer,
+  MIN_ARRIVAL_BUFFER_MINUTES,
+  MAX_ARRIVAL_BUFFER_MINUTES,
+} from "@/stores/settings";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useActiveAssociationCode } from "@/hooks/useActiveAssociation";
 import { useTravelTimeAvailable } from "@/hooks/useTravelTime";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { queryKeys } from "@/api/queryKeys";
@@ -10,6 +16,18 @@ import {
   clearTravelTimeCache,
   getTravelTimeCacheStats,
 } from "@/services/transport";
+
+/** Badge showing the current association code */
+function AssociationBadge({ code }: { code: string }) {
+  return (
+    <span className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300">
+      {code}
+    </span>
+  );
+}
+
+/** Debounce delay for arrival buffer input to reduce localStorage writes */
+const ARRIVAL_BUFFER_DEBOUNCE_MS = 300;
 
 function TransportSectionComponent() {
   const { t, tInterpolate } = useTranslation();
@@ -21,26 +39,75 @@ function TransportSectionComponent() {
   const {
     homeLocation,
     transportEnabled,
-    setTransportEnabled,
+    transportEnabledByAssociation,
+    setTransportEnabledForAssociation,
+    arrivalBufferByAssociation,
+    setArrivalBufferForAssociation,
   } = useSettingsStore(
     useShallow((state) => ({
       homeLocation: state.homeLocation,
       transportEnabled: state.transportEnabled,
-      setTransportEnabled: state.setTransportEnabled,
+      transportEnabledByAssociation: state.transportEnabledByAssociation,
+      setTransportEnabledForAssociation: state.setTransportEnabledForAssociation,
+      arrivalBufferByAssociation: state.travelTimeFilter.arrivalBufferByAssociation,
+      setArrivalBufferForAssociation: state.setArrivalBufferForAssociation,
     })),
   );
 
+  // Get active association code
+  const associationCode = useActiveAssociationCode();
+
+  // Get current transport enabled state for this association
+  // Handle migration: if per-association setting exists, use it; otherwise fall back to global
+  const isTransportEnabled = useMemo(() => {
+    const enabledMap = transportEnabledByAssociation ?? {};
+    if (associationCode && enabledMap[associationCode] !== undefined) {
+      return enabledMap[associationCode];
+    }
+    // Fall back to global setting for migration
+    return transportEnabled;
+  }, [associationCode, transportEnabledByAssociation, transportEnabled]);
+
+  // Get current arrival buffer for this association from store
+  // Memoized to prevent recalculation on every render
+  const storeArrivalBuffer = useMemo(() => {
+    if (associationCode && arrivalBufferByAssociation?.[associationCode] !== undefined) {
+      return arrivalBufferByAssociation[associationCode];
+    }
+    return getDefaultArrivalBuffer(associationCode);
+  }, [associationCode, arrivalBufferByAssociation]);
+
+  // Local state for immediate input feedback, synced with store via debounce
+  const [localArrivalBuffer, setLocalArrivalBuffer] = useState(storeArrivalBuffer);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Sync local state when store value changes externally (e.g., association switch)
+  // Only update if the value actually differs to prevent loops
+  useEffect(() => {
+    setLocalArrivalBuffer((prev) => (prev !== storeArrivalBuffer ? storeArrivalBuffer : prev));
+  }, [storeArrivalBuffer]);
+
+  // Cleanup debounce timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, []);
+
   // Calculate cache entry count - recalculates when cacheVersion changes
   const cacheEntryCount = useMemo(
-    () => (transportEnabled ? getTravelTimeCacheStats().entryCount : 0),
+    () => (isTransportEnabled ? getTravelTimeCacheStats().entryCount : 0),
     // cacheVersion triggers recalculation after clearing cache
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [transportEnabled, cacheVersion],
+    [isTransportEnabled, cacheVersion],
   );
 
   const handleToggleTransport = useCallback(() => {
-    setTransportEnabled(!transportEnabled);
-  }, [transportEnabled, setTransportEnabled]);
+    if (!associationCode) return;
+    setTransportEnabledForAssociation(associationCode, !isTransportEnabled);
+  }, [associationCode, isTransportEnabled, setTransportEnabledForAssociation]);
 
   const handleClearCache = useCallback(() => {
     // Clear localStorage cache
@@ -52,8 +119,29 @@ function TransportSectionComponent() {
     setShowClearConfirm(false);
   }, [queryClient]);
 
+  const handleArrivalBufferChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!associationCode) return;
+      const value = parseInt(e.target.value, 10);
+      if (!isNaN(value) && value >= MIN_ARRIVAL_BUFFER_MINUTES) {
+        // Update local state immediately for responsive UI
+        setLocalArrivalBuffer(value);
+
+        // Debounce store update to reduce localStorage writes
+        if (debounceRef.current) {
+          clearTimeout(debounceRef.current);
+        }
+        debounceRef.current = setTimeout(() => {
+          setArrivalBufferForAssociation(associationCode, value);
+        }, ARRIVAL_BUFFER_DEBOUNCE_MS);
+      }
+    },
+    [associationCode, setArrivalBufferForAssociation],
+  );
+
   const hasHomeLocation = Boolean(homeLocation);
-  const canEnable = hasHomeLocation && isAvailable;
+  const hasAssociation = Boolean(associationCode);
+  const canEnable = hasHomeLocation && isAvailable && hasAssociation;
 
   return (
     <Card>
@@ -131,8 +219,11 @@ function TransportSectionComponent() {
         {/* Enable toggle */}
         <div className="flex items-center justify-between py-2">
           <div className="flex-1">
-            <div className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
-              {t("settings.transport.enableCalculations")}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
+                {t("settings.transport.enableCalculations")}
+              </span>
+              {associationCode && <AssociationBadge code={associationCode} />}
             </div>
           </div>
 
@@ -143,24 +234,57 @@ function TransportSectionComponent() {
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
               !canEnable
                 ? "bg-surface-muted dark:bg-surface-subtle-dark cursor-not-allowed opacity-50"
-                : transportEnabled
+                : isTransportEnabled
                   ? "bg-primary-600"
                   : "bg-surface-muted dark:bg-surface-subtle-dark"
             }`}
             role="switch"
-            aria-checked={transportEnabled}
+            aria-checked={isTransportEnabled}
             aria-label={t("settings.transport.enableCalculations")}
           >
             <span
               className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                transportEnabled ? "translate-x-6" : "translate-x-1"
+                isTransportEnabled ? "translate-x-6" : "translate-x-1"
               }`}
             />
           </button>
         </div>
 
+        {/* Arrival time setting - only show when transport is enabled */}
+        {isTransportEnabled && (
+          <div className="pt-2 border-t border-border-subtle dark:border-border-subtle-dark" data-tour="arrival-time">
+            <div className="flex items-center justify-between py-2">
+              <div className="flex-1 pr-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
+                    {t("settings.transport.arrivalTime")}
+                  </span>
+                  {associationCode && <AssociationBadge code={associationCode} />}
+                </div>
+                <div className="text-xs text-text-muted dark:text-text-muted-dark mt-0.5">
+                  {t("settings.transport.arrivalTimeDescription")}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={MIN_ARRIVAL_BUFFER_MINUTES}
+                  max={MAX_ARRIVAL_BUFFER_MINUTES}
+                  value={localArrivalBuffer}
+                  onChange={handleArrivalBufferChange}
+                  className="w-16 px-2 py-1 text-sm text-right border border-border-default dark:border-border-default-dark rounded-md bg-surface-card dark:bg-surface-card-dark text-text-primary dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  aria-label={t("settings.transport.arrivalTime")}
+                />
+                <span className="text-sm text-text-muted dark:text-text-muted-dark">
+                  {t("common.minutesUnit")}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Cache management - only show when transport is enabled */}
-        {transportEnabled && (
+        {isTransportEnabled && (
           <div className="pt-2 border-t border-border-subtle dark:border-border-subtle-dark">
             <p className="text-xs text-text-muted dark:text-text-muted-dark mb-2">
               {t("settings.transport.cacheInfo")}
