@@ -345,6 +345,10 @@ const de: Translations = {
       refreshCacheConfirm:
         "Alle gespeicherten Reisezeiten löschen? Neue Berechnungen werden von der API abgerufen.",
       cacheCleared: "Reisezeit-Cache geleert",
+      sbbLinkTarget: "Verbindungen öffnen in",
+      sbbLinkTargetDescription: "Wählen Sie, wo SBB-Fahrplanlinks geöffnet werden",
+      sbbLinkTargetWebsite: "SBB Webseite",
+      sbbLinkTargetApp: "SBB App",
     },
     dataRetention: {
       title: "Daten & Datenschutz",

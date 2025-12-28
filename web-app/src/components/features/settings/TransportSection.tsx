@@ -6,6 +6,7 @@ import {
   getDefaultArrivalBuffer,
   MIN_ARRIVAL_BUFFER_MINUTES,
   MAX_ARRIVAL_BUFFER_MINUTES,
+  type SbbLinkTarget,
 } from "@/stores/settings";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useActiveAssociationCode } from "@/hooks/useActiveAssociation";
@@ -43,6 +44,8 @@ function TransportSectionComponent() {
     setTransportEnabledForAssociation,
     arrivalBufferByAssociation,
     setArrivalBufferForAssociation,
+    sbbLinkTargetByAssociation,
+    setSbbLinkTargetForAssociation,
   } = useSettingsStore(
     useShallow((state) => ({
       homeLocation: state.homeLocation,
@@ -51,6 +54,8 @@ function TransportSectionComponent() {
       setTransportEnabledForAssociation: state.setTransportEnabledForAssociation,
       arrivalBufferByAssociation: state.travelTimeFilter.arrivalBufferByAssociation,
       setArrivalBufferForAssociation: state.setArrivalBufferForAssociation,
+      sbbLinkTargetByAssociation: state.sbbLinkTargetByAssociation,
+      setSbbLinkTargetForAssociation: state.setSbbLinkTargetForAssociation,
     })),
   );
 
@@ -76,6 +81,15 @@ function TransportSectionComponent() {
     }
     return getDefaultArrivalBuffer(associationCode);
   }, [associationCode, arrivalBufferByAssociation]);
+
+  // Get current SBB link target for this association
+  const currentSbbLinkTarget = useMemo((): SbbLinkTarget => {
+    const targetMap = sbbLinkTargetByAssociation ?? {};
+    if (associationCode && targetMap[associationCode] !== undefined) {
+      return targetMap[associationCode];
+    }
+    return "website";
+  }, [associationCode, sbbLinkTargetByAssociation]);
 
   // Local state for immediate input feedback, synced with store via debounce
   const [localArrivalBuffer, setLocalArrivalBuffer] = useState(storeArrivalBuffer);
@@ -137,6 +151,14 @@ function TransportSectionComponent() {
       }
     },
     [associationCode, setArrivalBufferForAssociation],
+  );
+
+  const handleSbbLinkTargetChange = useCallback(
+    (target: SbbLinkTarget) => {
+      if (!associationCode) return;
+      setSbbLinkTargetForAssociation(associationCode, target);
+    },
+    [associationCode, setSbbLinkTargetForAssociation],
   );
 
   const hasHomeLocation = Boolean(homeLocation);
@@ -278,6 +300,51 @@ function TransportSectionComponent() {
                 <span className="text-sm text-text-muted dark:text-text-muted-dark">
                   {t("common.minutesUnit")}
                 </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* SBB link target setting - only show when transport is enabled */}
+        {isTransportEnabled && (
+          <div className="pt-2 border-t border-border-subtle dark:border-border-subtle-dark">
+            <div className="flex items-center justify-between py-2">
+              <div className="flex-1 pr-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
+                    {t("settings.transport.sbbLinkTarget")}
+                  </span>
+                  {associationCode && <AssociationBadge code={associationCode} />}
+                </div>
+                <div className="text-xs text-text-muted dark:text-text-muted-dark mt-0.5">
+                  {t("settings.transport.sbbLinkTargetDescription")}
+                </div>
+              </div>
+              <div className="flex items-center gap-1 bg-surface-subtle dark:bg-surface-subtle-dark rounded-lg p-0.5">
+                <button
+                  type="button"
+                  onClick={() => handleSbbLinkTargetChange("website")}
+                  className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+                    currentSbbLinkTarget === "website"
+                      ? "bg-white dark:bg-surface-card-dark text-text-primary dark:text-text-primary-dark shadow-sm"
+                      : "text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark"
+                  }`}
+                  aria-pressed={currentSbbLinkTarget === "website"}
+                >
+                  {t("settings.transport.sbbLinkTargetWebsite")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSbbLinkTargetChange("app")}
+                  className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+                    currentSbbLinkTarget === "app"
+                      ? "bg-white dark:bg-surface-card-dark text-text-primary dark:text-text-primary-dark shadow-sm"
+                      : "text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark"
+                  }`}
+                  aria-pressed={currentSbbLinkTarget === "app"}
+                >
+                  {t("settings.transport.sbbLinkTargetApp")}
+                </button>
               </div>
             </div>
           </div>

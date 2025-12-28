@@ -46,6 +46,13 @@ export interface TravelTimeFilter {
   cacheInvalidatedAt: number | null;
 }
 
+/**
+ * Target for SBB timetable links.
+ * - 'website': Opens SBB website (works everywhere)
+ * - 'app': Opens SBB mobile app (requires app installed)
+ */
+export type SbbLinkTarget = "website" | "app";
+
 /** Default arrival buffer for SV (Swiss Volley national) - 60 minutes */
 export const DEFAULT_ARRIVAL_BUFFER_SV_MINUTES = 60;
 
@@ -101,6 +108,11 @@ interface SettingsState {
   getArrivalBufferForAssociation: (associationCode: string | undefined) => number;
   invalidateTravelTimeCache: () => void;
 
+  // SBB link target settings (per-association)
+  sbbLinkTargetByAssociation: Record<string, SbbLinkTarget>;
+  setSbbLinkTargetForAssociation: (associationCode: string, target: SbbLinkTarget) => void;
+  getSbbLinkTargetForAssociation: (associationCode: string | undefined) => SbbLinkTarget;
+
   // Level filter (demo mode only)
   levelFilterEnabled: boolean;
   setLevelFilterEnabled: (enabled: boolean) => void;
@@ -148,6 +160,7 @@ export const useSettingsStore = create<SettingsState>()(
         cacheInvalidatedAt: null,
       },
       levelFilterEnabled: false,
+      sbbLinkTargetByAssociation: {},
 
       setSafeMode: (enabled: boolean) => {
         set({ isSafeModeEnabled: enabled });
@@ -250,6 +263,25 @@ export const useSettingsStore = create<SettingsState>()(
         }));
       },
 
+      setSbbLinkTargetForAssociation: (associationCode: string, target: SbbLinkTarget) => {
+        set((state) => ({
+          sbbLinkTargetByAssociation: {
+            ...state.sbbLinkTargetByAssociation,
+            [associationCode]: target,
+          },
+        }));
+      },
+
+      getSbbLinkTargetForAssociation: (associationCode: string | undefined) => {
+        const state = get();
+        const targetMap = state.sbbLinkTargetByAssociation ?? {};
+        if (associationCode && targetMap[associationCode] !== undefined) {
+          return targetMap[associationCode];
+        }
+        // Default to website (works everywhere)
+        return "website";
+      },
+
       setLevelFilterEnabled: (enabled: boolean) => {
         set({ levelFilterEnabled: enabled });
       },
@@ -273,6 +305,7 @@ export const useSettingsStore = create<SettingsState>()(
             cacheInvalidatedAt: null,
           },
           levelFilterEnabled: false,
+          sbbLinkTargetByAssociation: {},
         });
       },
     }),
@@ -286,6 +319,7 @@ export const useSettingsStore = create<SettingsState>()(
         transportEnabledByAssociation: state.transportEnabledByAssociation,
         travelTimeFilter: state.travelTimeFilter,
         levelFilterEnabled: state.levelFilterEnabled,
+        sbbLinkTargetByAssociation: state.sbbLinkTargetByAssociation,
       }),
     },
   ),

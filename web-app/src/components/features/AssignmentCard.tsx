@@ -1,11 +1,14 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { ExpandableCard } from "@/components/ui/ExpandableCard";
 import { Badge } from "@/components/ui/Badge";
-import { MapPin, MaleIcon, FemaleIcon } from "@/components/ui/icons";
+import { MapPin, MaleIcon, FemaleIcon, TrainFront } from "@/components/ui/icons";
 import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDateFormat } from "@/hooks/useDateFormat";
 import { getPositionLabel } from "@/utils/position-labels";
+import { useSettingsStore } from "@/stores/settings";
+import { useActiveAssociationCode } from "@/hooks/useActiveAssociation";
+import { generateSbbUrl, calculateArrivalTime } from "@/utils/sbb-url";
 
 /** Helper to extract referee display name from deep nested structure */
 function getRefereeDisplayName(
@@ -39,7 +42,8 @@ function AssignmentCardComponent({
   disableExpansion,
   dataTour,
 }: AssignmentCardProps) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const associationCode = useActiveAssociationCode();
 
   const game = assignment.refereeGame?.game;
 
@@ -92,6 +96,40 @@ function AssignmentCardComponent({
   );
 
   const linesmen = [linesman1, linesman2, linesman3, linesman4].filter(Boolean);
+
+  // Get transport settings for the association
+  const isTransportEnabled = useSettingsStore((state) =>
+    state.isTransportEnabledForAssociation(associationCode),
+  );
+  const sbbLinkTarget = useSettingsStore((state) =>
+    state.getSbbLinkTargetForAssociation(associationCode),
+  );
+  const arrivalBuffer = useSettingsStore((state) =>
+    state.getArrivalBufferForAssociation(associationCode),
+  );
+
+  // Extract startingDateTime for stable reference
+  const gameStartingDateTime = game?.startingDateTime;
+
+  // Generate SBB URL if transport is enabled and we have the required data
+  const sbbUrl = useMemo(() => {
+    if (!isTransportEnabled || !city || !gameStartingDateTime) {
+      return null;
+    }
+
+    const gameDate = new Date(gameStartingDateTime);
+    const arrivalTime = calculateArrivalTime(gameDate, arrivalBuffer);
+
+    return generateSbbUrl(
+      {
+        destination: city,
+        date: gameDate,
+        arrivalTime,
+        language: locale as "de" | "en" | "fr" | "it",
+      },
+      sbbLinkTarget,
+    );
+  }, [isTransportEnabled, city, gameStartingDateTime, arrivalBuffer, locale, sbbLinkTarget]);
 
   const statusConfig: Record<
     string,
@@ -182,6 +220,19 @@ function AssignmentCardComponent({
               </a>
             ) : (
               <span className="truncate">{hallName}</span>
+            )}
+            {sbbUrl && (
+              <a
+                href={sbbUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-shrink-0 p-1 -m-1 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded"
+                onClick={(e) => e.stopPropagation()}
+                title={t("exchange.travelTime")}
+                aria-label={t("exchange.travelTime")}
+              >
+                <TrainFront className="w-4 h-4" aria-hidden="true" />
+              </a>
             )}
           </div>
 
