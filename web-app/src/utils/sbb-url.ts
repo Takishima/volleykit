@@ -87,7 +87,8 @@ export function generateSbbUrl(
   const quotedDate = `%22${formattedDate}%22`;
   const quotedTime = `%22${formattedTime}%22`;
 
-  return `https://www.sbb.ch/${language}?stops=${stopsJson}&date=${quotedDate}&time=${quotedTime}`;
+  // deparr=arr indicates arrival time (default is departure)
+  return `https://www.sbb.ch/${language}?stops=${stopsJson}&date=${quotedDate}&time=${quotedTime}&deparr=arr`;
 }
 
 /**
