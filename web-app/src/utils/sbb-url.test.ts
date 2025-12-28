@@ -21,7 +21,7 @@ describe("sbb-url", () => {
         // Quotes in stops JSON should be encoded as %22
         expect(url).toContain("%22label%22:%22Bern%22");
         // Should use arrival time mode
-        expect(url).toContain("deparr=arr");
+        expect(url).toContain("moment=ARRIVAL");
       });
 
       it("generates correct URL for French", () => {
