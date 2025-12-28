@@ -1,4 +1,4 @@
-import { useCallback, memo, useState, useMemo } from "react";
+import { useCallback, memo, useState, useMemo, useEffect, useRef } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -65,11 +65,29 @@ function TransportSectionComponent() {
     return transportEnabled;
   }, [associationCode, transportEnabledByAssociation, transportEnabled]);
 
-  // Get current arrival buffer for this association
+  // Get current arrival buffer for this association from store
   // Handle case where arrivalBufferByAssociation might be undefined (old storage migration)
-  const currentArrivalBuffer = associationCode && arrivalBufferByAssociation?.[associationCode] !== undefined
+  const storeArrivalBuffer = associationCode && arrivalBufferByAssociation?.[associationCode] !== undefined
     ? arrivalBufferByAssociation[associationCode]
     : getDefaultArrivalBuffer(associationCode);
+
+  // Local state for immediate input feedback, synced with store via debounce
+  const [localArrivalBuffer, setLocalArrivalBuffer] = useState(storeArrivalBuffer);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Sync local state when store value changes externally (e.g., association switch)
+  useEffect(() => {
+    setLocalArrivalBuffer(storeArrivalBuffer);
+  }, [storeArrivalBuffer]);
+
+  // Cleanup debounce timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, []);
 
   // Calculate cache entry count - recalculates when cacheVersion changes
   const cacheEntryCount = useMemo(
@@ -99,7 +117,16 @@ function TransportSectionComponent() {
       if (!associationCode) return;
       const value = parseInt(e.target.value, 10);
       if (!isNaN(value) && value >= MIN_ARRIVAL_BUFFER_MINUTES) {
-        setArrivalBufferForAssociation(associationCode, value);
+        // Update local state immediately for responsive UI
+        setLocalArrivalBuffer(value);
+
+        // Debounce store update to reduce localStorage writes
+        if (debounceRef.current) {
+          clearTimeout(debounceRef.current);
+        }
+        debounceRef.current = setTimeout(() => {
+          setArrivalBufferForAssociation(associationCode, value);
+        }, 300);
       }
     },
     [associationCode, setArrivalBufferForAssociation],
@@ -236,7 +263,7 @@ function TransportSectionComponent() {
                   type="number"
                   min={MIN_ARRIVAL_BUFFER_MINUTES}
                   max={MAX_ARRIVAL_BUFFER_MINUTES}
-                  value={currentArrivalBuffer}
+                  value={localArrivalBuffer}
                   onChange={handleArrivalBufferChange}
                   className="w-16 px-2 py-1 text-sm text-right border border-border-default dark:border-border-default-dark rounded-md bg-surface-card dark:bg-surface-card-dark text-text-primary dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary-500"
                   aria-label={t("settings.transport.arrivalTime")}
