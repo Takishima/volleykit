@@ -30,14 +30,55 @@ function createMockSettingsStore(
   overrides: Partial<ReturnType<typeof useSettingsStore>> = {},
 ) {
   return {
-    homeLocation: { lat: 46.9, lng: 7.4 },
+    // Safe mode
+    isSafeModeEnabled: false,
+    setSafeMode: vi.fn(),
+
+    // Home location
+    homeLocation: {
+      latitude: 46.9,
+      longitude: 7.4,
+      label: "Test Location",
+      source: "manual" as const,
+    },
+    setHomeLocation: vi.fn(),
+
+    // Distance filter
+    distanceFilter: { enabled: false, maxDistanceKm: 50 },
+    setDistanceFilterEnabled: vi.fn(),
+    setMaxDistanceKm: vi.fn(),
+
+    // Transport toggle (legacy global)
     transportEnabled: true,
+    setTransportEnabled: vi.fn(),
+
+    // Per-association transport
     transportEnabledByAssociation: {},
     setTransportEnabledForAssociation: vi.fn(),
+    isTransportEnabledForAssociation: vi.fn().mockReturnValue(true),
+
+    // Travel time filter
     travelTimeFilter: {
+      enabled: false,
+      maxTravelTimeMinutes: 120,
+      arrivalBufferMinutes: 30,
       arrivalBufferByAssociation: {},
+      cacheInvalidatedAt: null,
     },
+    setTravelTimeFilterEnabled: vi.fn(),
+    setMaxTravelTimeMinutes: vi.fn(),
+    setArrivalBufferMinutes: vi.fn(),
     setArrivalBufferForAssociation: vi.fn(),
+    getArrivalBufferForAssociation: vi.fn().mockReturnValue(60),
+    invalidateTravelTimeCache: vi.fn(),
+
+    // Level filter
+    levelFilterEnabled: false,
+    setLevelFilterEnabled: vi.fn(),
+
+    // Reset
+    resetLocationSettings: vi.fn(),
+
     ...overrides,
   };
 }
