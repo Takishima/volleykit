@@ -18,6 +18,8 @@ export interface SbbUrlParams {
   originStation?: StationInfo;
   /** Destination station info with Didok ID for precise routing */
   destinationStation?: StationInfo;
+  /** Fallback origin address when station lookup fails (e.g., "Zürich, Bahnhofstrasse 1") */
+  originAddress?: string;
 }
 
 /**
@@ -42,8 +44,9 @@ function formatTime(date: Date): string {
 /**
  * Generate a public transport timetable URL for a given destination and arrival time.
  *
- * Uses the official SBB deep linking format:
- * https://www.sbb.ch/{lang}?stops=[{origin},{destination}]&date=YYYY-MM-DD&time=HH:MM
+ * Uses two SBB deep linking formats:
+ * 1. When station IDs are available: https://www.sbb.ch/{lang}?stops=[{origin},{destination}]&date=...
+ * 2. For addresses without IDs: https://www.sbb.ch/{lang}?von=address&nach=address&date=...
  *
  * @param params - The parameters for generating the URL
  * @param target - Whether to generate a website or app URL
@@ -66,35 +69,39 @@ export function generateSbbUrl(
   // Target parameter kept for future use (e.g., if SBB provides app-specific deep links)
   void target;
 
-  const { destination, date, arrivalTime, language = "de", originStation, destinationStation } = params;
+  const { destination, date, arrivalTime, language = "de", originStation, destinationStation, originAddress } = params;
 
   const formattedDate = formatDateSbb(date);
   const formattedTime = formatTime(arrivalTime);
 
-  // Build the stops JSON array per SBB deep linking spec
-  // First element is origin with station ID if available, empty otherwise
-  // Second element is destination with Didok ID if available, or just label
-  const originStop = originStation
-    ? { value: originStation.id, type: "ID", label: originStation.name }
-    : { value: "", type: "", label: "" };
-
-  const destinationStop = destinationStation
-    ? { value: destinationStation.id, type: "ID", label: destinationStation.name }
-    : { value: "", type: "", label: destination };
-
-  const stops = [
-    originStop,
-    destinationStop,
-  ];
-
-  // SBB expects full URL encoding for the stops JSON
-  // Date, time, and moment values must be quoted: date="2024-12-28"
-  const stopsJson = encodeURIComponent(JSON.stringify(stops));
+  // Common time/date parameters (quoted per SBB spec)
   const quotedDate = `%22${formattedDate}%22`;
   const quotedTime = `%22${formattedTime}%22`;
+  const baseParams = `date=${quotedDate}&time=${quotedTime}&moment=%22ARRIVAL%22`;
 
-  // moment=ARRIVAL indicates arrival time (default is DEPARTURE)
-  return `https://www.sbb.ch/${language}?stops=${stopsJson}&date=${quotedDate}&time=${quotedTime}&moment=%22ARRIVAL%22`;
+  // When both stations have IDs, use the stops JSON format for precise routing
+  if (originStation && destinationStation) {
+    const stops = [
+      { value: originStation.id, type: "ID", label: originStation.name },
+      { value: destinationStation.id, type: "ID", label: destinationStation.name },
+    ];
+    const stopsJson = encodeURIComponent(JSON.stringify(stops));
+    return `https://www.sbb.ch/${language}?stops=${stopsJson}&${baseParams}`;
+  }
+
+  // For addresses without station IDs, use the simpler von/nach format
+  // SBB will geocode these addresses automatically
+  const origin = originStation?.name ?? originAddress;
+  const dest = destinationStation?.name ?? destination;
+
+  // Build URL with von/nach parameters
+  const urlParams = new URLSearchParams();
+  if (origin) {
+    urlParams.set("von", origin);
+  }
+  urlParams.set("nach", dest);
+
+  return `https://www.sbb.ch/${language}?${urlParams.toString()}&${baseParams}`;
 }
 
 /**

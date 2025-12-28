@@ -199,12 +199,51 @@ function extractDidokId(ref: string | undefined): string | undefined {
 }
 
 /**
+ * OJP accessibility keywords that should not be included in station names.
+ * These are transport mode or accessibility attributes, not location suffixes.
+ */
+const OJP_ACCESSIBILITY_KEYWORDS = [
+  "ALTERNATIVE_TRANSPORT",
+  "PLATFORM_ACCESS_WITH_ASSISTANCE",
+  "NO_WHEELCHAIR_ACCESS",
+  "WHEELCHAIR_ACCESS",
+  "SHUTTLE_BUS",
+  "RAIL_REPLACEMENT",
+] as const;
+
+/**
+ * Clean a station name suffix by removing OJP accessibility keywords.
+ * Returns undefined if the suffix is entirely an accessibility keyword.
+ */
+function cleanNameSuffix(suffix: string | undefined): string | undefined {
+  if (!suffix) return undefined;
+
+  // Check if the entire suffix is an accessibility keyword
+  if (OJP_ACCESSIBILITY_KEYWORDS.some((keyword) => suffix === keyword)) {
+    return undefined;
+  }
+
+  // Remove accessibility keywords that appear at the end of the suffix
+  let cleaned = suffix;
+  for (const keyword of OJP_ACCESSIBILITY_KEYWORDS) {
+    // Remove keyword with preceding space if at end
+    if (cleaned.endsWith(` ${keyword}`)) {
+      cleaned = cleaned.slice(0, -keyword.length - 1);
+    }
+  }
+
+  return cleaned.trim() || undefined;
+}
+
+/**
  * Build full station name by combining stopPointName and optional nameSuffix.
+ * Filters out OJP accessibility keywords from the suffix.
  * Example: "Schönenwerd" + "SO, Bahnhof" -> "Schönenwerd SO, Bahnhof"
+ * Example: "Paradies" + "ALTERNATIVE_TRANSPORT" -> "Paradies" (keyword filtered)
  */
 function buildStationName(stopPoint: OjpStopPoint): string {
   const baseName = stopPoint.stopPointName.text;
-  const suffix = stopPoint.nameSuffix?.text;
+  const suffix = cleanNameSuffix(stopPoint.nameSuffix?.text);
 
   if (suffix) {
     return `${baseName} ${suffix}`;

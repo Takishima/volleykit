@@ -319,6 +319,102 @@ describe("extractDestinationStation", () => {
     expect(result).toEqual({ id: "8502206", name: "Schönenwerd SO, Bahnhof" });
   });
 
+  it("filters out ALTERNATIVE_TRANSPORT from nameSuffix", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      leg: [
+        {
+          timedLeg: {
+            legBoard: {
+              stopPointRef: "ch:1:sloid:8503000",
+              stopPointName: { text: "Zürich HB" },
+            },
+            legAlight: {
+              stopPointRef: "ch:1:sloid:90727",
+              stopPointName: { text: "Oberengstringen, Paradies" },
+              nameSuffix: { text: "ALTERNATIVE_TRANSPORT" },
+            },
+          },
+        },
+      ],
+    };
+
+    const result = extractDestinationStation(trip);
+    expect(result).toEqual({ id: "90727", name: "Oberengstringen, Paradies" });
+  });
+
+  it("filters out PLATFORM_ACCESS_WITH_ASSISTANCE from nameSuffix", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      leg: [
+        {
+          timedLeg: {
+            legBoard: {
+              stopPointRef: "ch:1:sloid:8503000",
+              stopPointName: { text: "Zürich HB" },
+            },
+            legAlight: {
+              stopPointRef: "ch:1:sloid:73232",
+              stopPointName: { text: "Kloten, Freienberg" },
+              nameSuffix: { text: "PLATFORM_ACCESS_WITH_ASSISTANCE" },
+            },
+          },
+        },
+      ],
+    };
+
+    const result = extractDestinationStation(trip);
+    expect(result).toEqual({ id: "73232", name: "Kloten, Freienberg" });
+  });
+
+  it("removes accessibility keyword from end of nameSuffix", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      leg: [
+        {
+          timedLeg: {
+            legBoard: {
+              stopPointRef: "ch:1:sloid:8503000",
+              stopPointName: { text: "Zürich HB" },
+            },
+            legAlight: {
+              stopPointRef: "ch:1:sloid:8502206",
+              stopPointName: { text: "Schönenwerd" },
+              nameSuffix: { text: "SO, Bahnhof ALTERNATIVE_TRANSPORT" },
+            },
+          },
+        },
+      ],
+    };
+
+    const result = extractDestinationStation(trip);
+    expect(result).toEqual({ id: "8502206", name: "Schönenwerd SO, Bahnhof" });
+  });
+
+  it("removes multiple accessibility keywords from end of nameSuffix", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      leg: [
+        {
+          timedLeg: {
+            legBoard: {
+              stopPointRef: "ch:1:sloid:8503000",
+              stopPointName: { text: "Zürich HB" },
+            },
+            legAlight: {
+              stopPointRef: "ch:1:sloid:8502206",
+              stopPointName: { text: "Schönenwerd" },
+              nameSuffix: { text: "SO, Bahnhof WHEELCHAIR_ACCESS ALTERNATIVE_TRANSPORT" },
+            },
+          },
+        },
+      ],
+    };
+
+    const result = extractDestinationStation(trip);
+    expect(result).toEqual({ id: "8502206", name: "Schönenwerd SO, Bahnhof" });
+  });
+
   it("uses only stopPointName when nameSuffix is not present", () => {
     const trip: OjpTrip = {
       ...baseTrip,

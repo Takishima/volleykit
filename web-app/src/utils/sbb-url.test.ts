@@ -10,34 +10,53 @@ describe("sbb-url", () => {
       language: "de" as const,
     };
 
-    describe("website target", () => {
-      it("generates correct SBB URL with stops JSON parameter", () => {
+    describe("von/nach format (no station IDs)", () => {
+      it("uses von/nach parameters when no station IDs provided", () => {
         const url = generateSbbUrl(baseParams, "website");
 
-        expect(url).toContain("https://www.sbb.ch/de?stops=");
+        expect(url).toContain("https://www.sbb.ch/de?");
+        expect(url).toContain("nach=Bern");
         // Date and time should be quoted and encoded
         expect(url).toContain("date=%222024-12-28%22");
         expect(url).toContain("time=%2214:30%22");
-        // Stops JSON should be fully URL-encoded (brackets, braces, quotes, colons, commas)
-        expect(url).toContain("%5B%7B%22value%22"); // [{"value"
-        expect(url).toContain("%22label%22%3A%22Bern%22%7D%5D"); // "label":"Bern"}]
-        // Should use arrival time mode (quoted like other params)
+        // Should use arrival time mode
         expect(url).toContain("moment=%22ARRIVAL%22");
+        // Should NOT contain stops JSON
+        expect(url).not.toContain("stops=");
+      });
+
+      it("includes von when originAddress is provided", () => {
+        const params = {
+          ...baseParams,
+          originAddress: "Zürich, Bahnhofstrasse 1",
+        };
+        const url = generateSbbUrl(params, "website");
+
+        expect(url).toContain("von=Z%C3%BCrich%2C+Bahnhofstrasse+1");
+        expect(url).toContain("nach=Bern");
+      });
+
+      it("omits von when no origin provided", () => {
+        const url = generateSbbUrl(baseParams, "website");
+
+        expect(url).not.toContain("von=");
+        expect(url).toContain("nach=Bern");
       });
 
       it("generates correct URL for French", () => {
         const url = generateSbbUrl({ ...baseParams, language: "fr" }, "website");
-        expect(url).toContain("https://www.sbb.ch/fr?stops=");
+        expect(url).toContain("https://www.sbb.ch/fr?");
+        expect(url).toContain("nach=Bern");
       });
 
       it("generates correct URL for Italian", () => {
         const url = generateSbbUrl({ ...baseParams, language: "it" }, "website");
-        expect(url).toContain("https://www.sbb.ch/it?stops=");
+        expect(url).toContain("https://www.sbb.ch/it?");
       });
 
       it("generates correct URL for English", () => {
         const url = generateSbbUrl({ ...baseParams, language: "en" }, "website");
-        expect(url).toContain("https://www.sbb.ch/en?stops=");
+        expect(url).toContain("https://www.sbb.ch/en?");
       });
 
       it("defaults to German when no language specified", () => {
@@ -47,53 +66,75 @@ describe("sbb-url", () => {
           arrivalTime: new Date("2024-12-28T10:00:00"),
         };
         const url = generateSbbUrl(params, "website");
-        expect(url).toContain("https://www.sbb.ch/de?stops=");
+        expect(url).toContain("https://www.sbb.ch/de?");
+        expect(url).toContain("nach=Z%C3%BCrich");
       });
 
-      it("includes destination in stops JSON with full URL encoding", () => {
+      it("URL-encodes special characters in destination", () => {
         const params = {
           ...baseParams,
           destination: "Zürich HB",
         };
         const url = generateSbbUrl(params, "website");
-        // The destination should be fully URL-encoded
-        expect(url).toContain("%22label%22%3A%22Z%C3%BCrich%20HB%22");
+        expect(url).toContain("nach=Z%C3%BCrich+HB");
       });
 
-      it("includes empty origin in stops array when not provided", () => {
-        const url = generateSbbUrl(baseParams, "website");
-        // First stop should be empty (origin) - fully URL-encoded
-        expect(url).toContain("%7B%22value%22%3A%22%22%2C%22type%22%3A%22%22%2C%22label%22%3A%22%22%7D");
-      });
-
-      it("uses station ID when destinationStation is provided", () => {
+      it("uses von/nach when only destinationStation provided", () => {
         const params = {
           ...baseParams,
           destinationStation: { id: "8507000", name: "Bern" },
         };
         const url = generateSbbUrl(params, "website");
-        // Should contain the Didok ID and type "ID" - fully URL-encoded
-        expect(url).toContain("%22value%22%3A%228507000%22");
-        expect(url).toContain("%22type%22%3A%22ID%22");
-        expect(url).toContain("%22label%22%3A%22Bern%22");
+        // Should use von/nach because origin doesn't have station ID
+        expect(url).toContain("nach=Bern");
+        expect(url).not.toContain("stops=");
       });
 
-      it("uses destination label as fallback when no station ID", () => {
-        const url = generateSbbUrl(baseParams, "website");
-        // Should have empty value and type, but destination in label - fully URL-encoded
-        expect(url).toContain("%22value%22%3A%22%22%2C%22type%22%3A%22%22%2C%22label%22%3A%22Bern%22");
+      it("uses von/nach when only originStation provided", () => {
+        const params = {
+          ...baseParams,
+          originStation: { id: "8503000", name: "Zürich HB" },
+        };
+        const url = generateSbbUrl(params, "website");
+        // Should use von/nach because destination doesn't have station ID
+        expect(url).toContain("von=Z%C3%BCrich+HB");
+        expect(url).toContain("nach=Bern");
+        expect(url).not.toContain("stops=");
       });
+    });
 
-      it("includes origin station when provided", () => {
+    describe("stops JSON format (with station IDs)", () => {
+      it("uses stops JSON when both stations have IDs", () => {
         const params = {
           ...baseParams,
           originStation: { id: "8503000", name: "Zürich HB" },
           destinationStation: { id: "8507000", name: "Bern" },
         };
         const url = generateSbbUrl(params, "website");
+
+        expect(url).toContain("stops=");
+        expect(url).not.toContain("von=");
+        expect(url).not.toContain("nach=");
         // Origin should have station ID
         expect(url).toContain("%22value%22%3A%228503000%22");
         expect(url).toContain("%22label%22%3A%22Z%C3%BCrich%20HB%22");
+        // Destination should have station ID
+        expect(url).toContain("%22value%22%3A%228507000%22");
+        expect(url).toContain("%22label%22%3A%22Bern%22");
+      });
+
+      it("prefers originStation over originAddress when both stations have IDs", () => {
+        const params = {
+          ...baseParams,
+          originStation: { id: "8503000", name: "Zürich HB" },
+          originAddress: "Zürich, Bahnhofstrasse 1",
+          destinationStation: { id: "8507000", name: "Bern" },
+        };
+        const url = generateSbbUrl(params, "website");
+        // Should use stops format with station ID, not von/nach with address
+        expect(url).toContain("stops=");
+        expect(url).toContain("%22value%22%3A%228503000%22");
+        expect(url).not.toContain("Bahnhofstrasse");
       });
     });
 
@@ -102,7 +143,8 @@ describe("sbb-url", () => {
         const url = generateSbbUrl(baseParams, "app");
 
         // App also uses the SBB website URL (responsive, works on mobile)
-        expect(url).toContain("https://www.sbb.ch/de?stops=");
+        expect(url).toContain("https://www.sbb.ch/de?");
+        expect(url).toContain("nach=Bern");
         expect(url).toContain("date=%222024-12-28%22");
         expect(url).toContain("time=%2214:30%22");
       });
