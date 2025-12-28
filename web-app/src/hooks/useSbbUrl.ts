@@ -93,17 +93,6 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
     // If we can fetch trip data, try to get the station ID
     const canFetchTrip = homeLocation && hallCoords && hallId && (isDemoMode || isOjpConfigured());
 
-    // Log why we can or cannot fetch trip
-    console.log("[useSbbUrl] Can fetch trip:", {
-      canFetchTrip,
-      hasHomeLocation: !!homeLocation,
-      hasHallCoords: !!hallCoords,
-      hallCoords,
-      hasHallId: !!hallId,
-      isDemoMode,
-      isOjpConfigured: isOjpConfigured(),
-    });
-
     if (canFetchTrip) {
       setIsLoading(true);
       setError(null);
@@ -133,13 +122,6 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
           // Cache the result
           setCachedTravelTime(hallId, homeLocationHash, dayType, tripResult);
         }
-
-        // Update state with station info for future clicks
-        // Log trip result for debugging
-        console.log("[useSbbUrl] Trip result:", {
-          hasDestinationStation: !!tripResult.destinationStation,
-          destinationStation: tripResult.destinationStation,
-        });
 
         // Update state with station info for future clicks
         if (tripResult.destinationStation) {

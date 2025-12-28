@@ -107,15 +107,11 @@ export async function calculateTravelTime(
     // Select the best trip based on target arrival time or take earliest departure
     const trip = selectBestTrip(trips, options.targetArrivalTime);
 
-    // Log trip for debugging station extraction
-    console.log("[OJP] Selected trip toLocation:", JSON.stringify(trip.toLocation, null, 2));
-
     // Parse duration from ISO 8601 duration string (e.g., "PT1H30M")
     const durationMinutes = parseDurationToMinutes(trip.duration);
 
     // Extract destination station for SBB deep linking
     const destinationStation = extractDestinationStation(trip);
-    console.log("[OJP] Extracted destination station:", destinationStation);
 
     return {
       durationMinutes,
