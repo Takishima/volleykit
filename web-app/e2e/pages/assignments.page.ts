@@ -4,13 +4,13 @@ import {
   TAB_SWITCH_TIMEOUT_MS,
   LOADING_TIMEOUT_MS,
 } from "../constants";
+import { BasePage } from "./base.page";
 
 /**
  * Page Object Model for the Assignments page.
  * Provides helpers for interacting with assignment cards and tabs.
  */
-export class AssignmentsPage {
-  readonly page: Page;
+export class AssignmentsPage extends BasePage {
   readonly tablist: Locator;
   readonly upcomingTab: Locator;
   readonly validationClosedTab: Locator;
@@ -18,7 +18,7 @@ export class AssignmentsPage {
   readonly assignmentCards: Locator;
 
   constructor(page: Page) {
-    this.page = page;
+    super(page);
     this.tablist = page.getByRole("tablist");
     // Use stable IDs for tabs (locale-independent)
     this.upcomingTab = page.locator("#tab-upcoming");
@@ -34,30 +34,29 @@ export class AssignmentsPage {
   async expectToBeLoaded() {
     await expect(this.tablist).toBeVisible();
     await expect(this.upcomingTab).toBeVisible();
+    await this.waitForStableState();
   }
 
   async switchToUpcomingTab() {
     await expect(this.upcomingTab).toBeVisible();
     await this.upcomingTab.click();
-    // Wait for tab to become selected using Playwright's built-in assertion
     await expect(this.upcomingTab).toHaveAttribute("aria-selected", "true", {
       timeout: TAB_SWITCH_TIMEOUT_MS,
     });
-    // Wait for tab panel content to stabilize
     await expect(this.tabPanel).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
+    await this.waitForStableState();
   }
 
   async switchToValidationClosedTab() {
     await expect(this.validationClosedTab).toBeVisible();
     await this.validationClosedTab.click();
-    // Wait for tab to become selected using Playwright's built-in assertion
     await expect(this.validationClosedTab).toHaveAttribute(
       "aria-selected",
       "true",
       { timeout: TAB_SWITCH_TIMEOUT_MS },
     );
-    // Wait for tab panel content to stabilize
     await expect(this.tabPanel).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
+    await this.waitForStableState();
   }
 
   async getAssignmentCount(): Promise<number> {
@@ -82,5 +81,7 @@ export class AssignmentsPage {
     await expect(this.assignmentCards.first().or(emptyState)).toBeVisible({
       timeout: LOADING_TIMEOUT_MS,
     });
+
+    await this.waitForStableState();
   }
 }
