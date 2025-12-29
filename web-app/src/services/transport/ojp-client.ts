@@ -79,8 +79,8 @@ export async function calculateTravelTime(
     // Load SDK lazily
     const { SDK, TripRequest, Place } = await loadOjpSdk();
 
-    // Create SDK instance
-    const sdk = new SDK("VolleyKit", { url: OJP_API_ENDPOINT, authToken: apiKey }, "de");
+    // Create SDK instance using static factory method
+    const sdk = SDK.create("VolleyKit", { url: OJP_API_ENDPOINT, authToken: apiKey }, "de");
 
     // Create places from coordinates
     const fromPlace = Place.initWithCoords(from.longitude, from.latitude);
@@ -96,13 +96,22 @@ export async function calculateTravelTime(
     // Configure for public transport
     tripRequest.setPublicTransportRequest();
 
-    // Fetch trips
-    const trips = await sdk.fetchTrips(tripRequest);
+    // Fetch trips using the new SDK API pattern
+    const response = await tripRequest.fetchResponse(sdk);
 
-    // Check for results
-    if (!trips || trips.length === 0) {
+    // Check for errors
+    if (!response.ok) {
+      throw new TransportApiError(response.error.message, "API_ERROR");
+    }
+
+    // Extract trips from response
+    const tripResults = response.value.tripResult ?? [];
+    if (tripResults.length === 0) {
       throw new TransportApiError("No route found between locations", "NO_ROUTE");
     }
+
+    // Map trip results to our OjpTrip interface (each tripResult has a trip property)
+    const trips = tripResults.map((tr) => tr.trip as OjpTrip);
 
     // Select the best trip based on target arrival time or take earliest departure
     const trip = selectBestTrip(trips, options.targetArrivalTime);
