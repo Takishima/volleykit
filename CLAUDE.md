@@ -24,15 +24,20 @@ For code reviews and detailed examples, see:
 
 ## Tech Stack
 
-- **Framework**: React 19 with TypeScript
+- **Framework**: React 19 with TypeScript 5.9
 - **Build Tool**: Vite 7
 - **Styling**: Tailwind CSS 4
-- **State Management**: Zustand (auth), TanStack Query (server state)
+- **State Management**: Zustand 5 (client state), TanStack Query 5 (server state)
 - **Routing**: React Router v7
+- **Validation**: Zod 4
 - **API Client**: Generated from OpenAPI spec with openapi-typescript
-- **Testing**: Vitest + React Testing Library (unit/integration), Playwright (E2E)
+- **Testing**: Vitest 4 + React Testing Library (unit/integration), Playwright (E2E)
 - **i18n**: Custom translation system (de, en, fr, it)
 - **CORS Proxy**: Cloudflare Workers (production)
+- **Icons**: Lucide React
+- **Dates**: date-fns 4
+- **PDF**: pdf-lib (lazy-loaded)
+- **Transport**: OJP SDK (Swiss public transport)
 
 ## Project Structure
 
@@ -45,37 +50,109 @@ volleykit/
 │   ├── public/                # Static PWA assets (icons, manifest)
 │   ├── src/
 │   │   ├── api/               # API client, generated types, mock API
+│   │   │   ├── client.ts      # API fetch wrapper with error handling
+│   │   │   ├── mock-api.ts    # Demo mode API simulation
+│   │   │   ├── queryKeys.ts   # TanStack Query key definitions
+│   │   │   ├── schema.ts      # Generated OpenAPI types (do not edit)
+│   │   │   └── validation.ts  # Zod schemas for API responses
 │   │   ├── components/
 │   │   │   ├── features/      # Feature-specific components
-│   │   │   │   └── validation/# Game validation wizard components
+│   │   │   │   ├── validation/# Game validation wizard components
+│   │   │   │   └── settings/  # Settings page sections
 │   │   │   ├── layout/        # App shell, navigation
-│   │   │   └── ui/            # Reusable UI components
+│   │   │   └── ui/            # Reusable UI components (Button, Modal, Card, etc.)
 │   │   ├── contexts/          # React context providers (PWA)
 │   │   ├── hooks/             # Custom React hooks
-│   │   ├── i18n/              # Internationalization (de, en, fr, it)
-│   │   │   └── locales/       # Translation files per language
+│   │   │   ├── useAssignments.ts      # Assignment data fetching
+│   │   │   ├── useCompensations.ts    # Compensation data fetching
+│   │   │   ├── useExchanges.ts        # Exchange data fetching
+│   │   │   ├── useTranslation.ts      # i18n hook
+│   │   │   ├── useSwipeGesture.ts     # Touch gesture handling
+│   │   │   ├── useSafeMutation.ts     # Mutation with confirmation
+│   │   │   └── ...
+│   │   ├── i18n/              # Internationalization
+│   │   │   ├── types.ts       # Translation key types (edit this first)
+│   │   │   ├── index.ts       # Translation functions
+│   │   │   └── locales/       # Translation files (de, en, fr, it)
 │   │   ├── pages/             # Route components
-│   │   ├── stores/            # Zustand stores (auth, demo, settings)
+│   │   │   ├── AssignmentsPage.tsx
+│   │   │   ├── CompensationsPage.tsx
+│   │   │   ├── ExchangePage.tsx
+│   │   │   ├── LoginPage.tsx
+│   │   │   └── SettingsPage.tsx
+│   │   ├── stores/            # Zustand stores
+│   │   │   ├── auth.ts        # Authentication state
+│   │   │   ├── demo/          # Demo mode state (assignments, compensations, etc.)
+│   │   │   ├── language.ts    # Language preference
+│   │   │   ├── toast.ts       # Toast notifications
+│   │   │   └── tour.ts        # Onboarding tour state
 │   │   ├── test/              # Test setup and utilities
 │   │   ├── types/             # TypeScript types
 │   │   └── utils/             # Utility functions
+│   │       ├── assignment-actions.ts  # Assignment business logic
+│   │       ├── date-helpers.ts        # Date formatting
+│   │       ├── error-helpers.ts       # Error handling utilities
+│   │       └── ...
 │   ├── playwright.config.ts   # E2E test configuration
+│   ├── vite.config.ts         # Vite + PWA configuration
 │   └── package.json
 ├── worker/                     # Cloudflare Worker CORS proxy
 │   └── src/
 │       └── index.ts           # Proxy with security, rate limiting
-├── docs/                       # API documentation
-│   └── api/
-│       ├── volleymanager-openapi.yaml  # Complete OpenAPI spec
-│       ├── *_api.md           # Endpoint documentation
-│       └── captures/          # Real API request/response examples
+├── docs/                       # Documentation
+│   ├── api/                   # API documentation
+│   │   ├── volleymanager-openapi.yaml  # Complete OpenAPI spec
+│   │   ├── *_api.md           # Endpoint documentation
+│   │   └── captures/          # Real API request/response examples
+│   ├── SECURITY_CHECKLIST.md  # Security review guide
+│   ├── CODE_PATTERNS.md       # Code examples and patterns
+│   └── DATA_RETENTION.md      # Data handling documentation
 ├── .github/workflows/         # CI/CD pipelines
-│   ├── ci-web.yml             # Lint, test, build
+│   ├── ci-web.yml             # Lint, test, build, bundle size
 │   ├── ci-worker.yml          # Worker validation
 │   ├── e2e.yml                # Cross-browser E2E tests
 │   ├── deploy-web.yml         # Production deployment
-│   └── deploy-pr-preview.yml  # PR preview builds
+│   ├── deploy-pr-preview.yml  # PR preview builds
+│   ├── lighthouse.yml         # Performance audits
+│   ├── codeql.yml             # Security analysis
+│   └── claude*.yml            # AI code review
 └── devenv.nix                  # Nix development environment
+```
+
+## Development Environment
+
+### Nix/devenv (Recommended)
+
+The project uses [devenv](https://devenv.sh) for reproducible development environments:
+
+```bash
+# Enter development environment (auto-installs dependencies)
+devenv shell
+
+# Available commands
+dev            # Start dev server
+build          # Production build
+run-tests      # Run unit tests
+lint           # Run ESLint
+generate-api   # Generate API types from OpenAPI spec
+worker-dev     # Start Cloudflare Worker locally
+worker-deploy  # Deploy worker to Cloudflare
+```
+
+### Pre-commit Hooks (via devenv)
+
+Automatic checks on commit:
+- **treefmt**: Code formatting (Prettier, nixfmt, yamlfmt)
+- **ripsecrets**: Secret detection
+- **convco**: Conventional commit messages
+- **check-merge-conflicts**: Conflict markers
+- **check-yaml/json**: File validation
+
+### Without Nix
+
+```bash
+cd web-app && npm install
+cd worker && npm install
 ```
 
 ## Code Philosophy
@@ -105,7 +182,7 @@ ESLint enforces these conventions:
 
 ## React Best Practices
 
-### Modern React (18+) Guidelines
+### Modern React (19) Guidelines
 
 This project uses React 19. Avoid outdated patterns:
 
@@ -119,15 +196,33 @@ This project uses React 19. Avoid outdated patterns:
 - **Zustand** for global client state (auth, preferences) - see `src/stores/`
 - **TanStack Query** for server state (API data) - see `src/hooks/`
 
+### Query Keys Pattern
+
+Query keys are centralized in `src/api/queryKeys.ts`:
+
+```typescript
+// Using query keys
+import { queryKeys } from '@/api/queryKeys';
+
+useQuery({
+  queryKey: queryKeys.assignments.all(),
+  queryFn: fetchAssignments,
+});
+
+// Invalidating related queries
+queryClient.invalidateQueries({ queryKey: queryKeys.assignments.all() });
+```
+
 ## Common Anti-patterns to Avoid
 
 | Anti-pattern | Solution |
 |--------------|----------|
-| Magic numbers (`if (x > 20)`) | Named constants (`MINIMUM_SWIPE_VISIBILITY`) |
+| Magic numbers (`if (x > 20)`) | Named constants (`MINIMUM_SWIPE_DISTANCE_PX`) |
 | Array index as React key | Use unique `id` field from data |
 | Uncleared intervals/timeouts | Return cleanup function from `useEffect` |
 | Race conditions on rapid clicks | Guard with `useRef` flag or disable button |
 | `isMountedRef` pattern | Use `AbortController` or TanStack Query |
+| Direct `t()` import in .tsx | Use `useTranslation()` hook (ESLint enforced) |
 
 ## Testing
 
@@ -138,29 +233,54 @@ This project uses React 19. Avoid outdated patterns:
 
 See existing tests in `src/**/*.test.ts` for patterns.
 
+### Coverage Requirements
+
+Minimum thresholds enforced by Vitest (see `vite.config.ts`):
+- Lines: 50%
+- Functions: 70%
+- Branches: 70%
+- Statements: 50%
+
 ### E2E Testing with Playwright
 
 E2E tests use Page Object Models (POMs) in `web-app/e2e/pages/`.
 
 **Cross-Browser Testing**: Chromium, Firefox, WebKit + mobile viewports (Pixel 5, iPhone 12).
 
+**Configuration** (`playwright.config.ts`):
+- Test timeout: 30s
+- Expect timeout: 10s
+- Retries: 2 on CI, 1 locally
+- Screenshots on failure
+- Trace on first retry
+
 ## Internationalization (i18n)
 
 The app supports 4 languages: German (de), English (en), French (fr), Italian (it).
 
-**Usage**: `const { t } = useTranslation(); t('assignments.title')`
+**Usage in Components** (ESLint enforced):
+```typescript
+import { useTranslation } from '@/hooks/useTranslation';
+
+function MyComponent() {
+  const { t } = useTranslation();
+  return <span>{t('assignments.title')}</span>;
+}
+```
 
 **Adding Translations**:
 1. Add the key to `src/i18n/types.ts` for type safety
 2. Add translations to all 4 locale files in `src/i18n/locales/`
 3. Use nested keys: `section.subsection.key`
 
+**Note**: Direct imports of `t` from `@/i18n` in `.tsx` files are blocked by ESLint to ensure proper reactivity.
+
 ## Demo Mode
 
 The app supports demo mode for testing without API access.
 
 - **Enable**: `VITE_DEMO_MODE_ONLY=true` (PR previews use this automatically)
-- **Demo Store** (`src/stores/demo.ts`): Deterministic sample data with seeded UUIDs
+- **Demo Store** (`src/stores/demo/`): Modular demo data with seeded UUIDs
 - **Mock API** (`src/api/mock-api.ts`): Simulates all endpoints
 - **Contract Tests** (`src/api/contract.test.ts`): Verify mock matches real API schema
 
@@ -180,21 +300,43 @@ The app supports demo mode for testing without API access.
 npm run generate:api  # Generates src/api/schema.ts from OpenAPI spec
 ```
 
+**Important**: Always run this before lint/test/build. The `schema.ts` file is gitignored.
+
 ### CORS Handling
 
-- **Development**: Vite proxy handles CORS
+- **Development**: Vite proxy handles CORS (see `vite.config.ts` proxy config)
 - **Production**: Cloudflare Worker proxy at `worker/`
 
 ## Security
 
-- Session cookies managed by the API
+### ESLint Security Plugins
+
+- `eslint-plugin-security`: Detects common security issues
+- `eslint-plugin-no-unsanitized`: Prevents XSS via DOM manipulation
+
+### Best Practices
+
+- Session cookies managed by the API (httpOnly)
 - CSRF tokens included in requests
 - Never log credentials or tokens
 - Environment variables in `.env.local` (never commit)
+- Use `URLSearchParams` for query parameters (never string interpolation)
+
+### Files with Elevated Security Sensitivity
+
+- `worker/src/index.ts` - CORS proxy, origin validation
+- `src/api/client.ts` - API requests, credential handling
+- `src/stores/auth.ts` - Authentication state
 
 ## Git Conventions
 
-**Commit Messages**: `feat(scope): description`, `fix(scope): description`, `refactor`, `test`, `docs`, `chore`
+**Commit Messages** (enforced by convco pre-commit hook):
+- `feat(scope): description` - New features
+- `fix(scope): description` - Bug fixes
+- `refactor(scope): description` - Code refactoring
+- `test(scope): description` - Tests
+- `docs(scope): description` - Documentation
+- `chore(scope): description` - Maintenance
 
 **Branch Naming**: `feature/description`, `bugfix/description`, `refactor/description`
 
@@ -207,7 +349,7 @@ npm run generate:api  # Generates src/api/schema.ts from OpenAPI spec
 ```bash
 cd web-app
 npm run generate:api  # REQUIRED before lint/test/build
-npm run lint          # Lint check
+npm run lint          # Lint check (0 warnings allowed)
 npm test              # Run all tests
 npm run build         # Production build (includes tsc)
 npm run size          # Check bundle size
@@ -226,8 +368,9 @@ npm run test:coverage # Tests with coverage report
 
 ```bash
 cd web-app
-npm run test:e2e           # Run all E2E tests (requires build first)
-npm run test:e2e:ui        # Interactive Playwright UI mode
+npm run build                           # Build first (required)
+npm run test:e2e                        # Run all E2E tests
+npm run test:e2e:ui                     # Interactive Playwright UI mode
 npx playwright test --project=chromium  # Single browser
 ```
 
@@ -238,6 +381,8 @@ npx playwright test --project=chromium  # Single browser
 ```bash
 cd worker
 npm run dev           # Local worker dev
+npm run lint          # Lint worker code
+npm test              # Test worker
 npx wrangler deploy   # Deploy to Cloudflare
 ```
 
@@ -247,13 +392,24 @@ CI will fail if limits are exceeded (gzipped):
 
 | Component | Limit |
 |-----------|-------|
-| Main App | 130 KB |
-| Vendor Chunks | 50 KB each |
+| Main App Bundle | 130 KB |
+| Vendor Chunks (each) | 50 KB |
 | PDF Library | 185 KB (lazy-loaded) |
 | CSS | 10 KB |
 | Total JS | 420 KB |
 
 **Check size**: `npm run build && npm run size`
+
+**Bundle Analysis**: After build, open `stats.html` for detailed visualization.
+
+### Bundle Splitting
+
+Manual chunks defined in `vite.config.ts`:
+- `react-vendor`: React, React DOM
+- `router`: React Router
+- `state`: Zustand, TanStack Query
+- `validation`: Zod
+- `pdf-lib`: PDF generation (lazy-loaded)
 
 ## Accessibility
 
@@ -261,6 +417,18 @@ CI will fail if limits are exceeded (gzipped):
 - Use `aria-labelledby` to associate modal titles with dialogs
 - Handle Escape key for modals via `useEffect`, not on backdrop
 - Use `role="alert"` and `aria-live="polite"` for notifications
+- All interactive elements must be keyboard accessible
+
+ESLint plugin `jsx-a11y` enforces many accessibility rules.
+
+## PWA Features
+
+- **Service Worker**: Auto-updating, precaches app shell
+- **Offline Support**: NetworkFirst for API, CacheFirst for assets
+- **Install Prompt**: Handled via `PWAContext`
+- **Update Notification**: `ReloadPromptPWA` component
+
+**Note**: PWA is disabled for PR previews to avoid service worker scope conflicts.
 
 ## Definition of Done
 
@@ -272,3 +440,4 @@ CI will fail if limits are exceeded (gzipped):
 1. Bundle size limits not exceeded
 1. Works across modern browsers (Chrome, Firefox, Safari)
 1. Accessible (keyboard navigation, screen reader compatible)
+1. No ESLint warnings (`--max-warnings 0`)
