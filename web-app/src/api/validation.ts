@@ -141,8 +141,28 @@ const personSummarySchema = z
     firstName: z.string().optional(),
     lastName: z.string().optional(),
     shortName: z.string().optional().nullable(),
+    displayName: z.string().optional(),
   })
   .passthrough();
+
+// Referee convocation reference schema (for head referee assignments)
+// Structure: { indoorAssociationReferee: { indoorReferee: { person: PersonSummary } } }
+const refereeConvocationRefSchema = z
+  .object({
+    indoorAssociationReferee: z
+      .object({
+        indoorReferee: z
+          .object({
+            person: personSummarySchema.optional(),
+          })
+          .passthrough()
+          .optional(),
+      })
+      .passthrough()
+      .optional(),
+  })
+  .passthrough()
+  .nullable();
 
 // Referee game schema
 const refereeGameSchema = z
@@ -157,8 +177,25 @@ const refereeGameForExchangeSchema = z
   .object({
     __identity: uuidSchema.optional(),
     game: gameSchema.optional(),
-    activeRefereeConvocationFirstHeadReferee: z.any().optional(),
-    activeRefereeConvocationSecondHeadReferee: z.any().optional(),
+    // Head referees
+    activeRefereeConvocationFirstHeadReferee:
+      refereeConvocationRefSchema.optional(),
+    activeRefereeConvocationSecondHeadReferee:
+      refereeConvocationRefSchema.optional(),
+    // Linesmen (1-4)
+    activeRefereeConvocationFirstLinesman:
+      refereeConvocationRefSchema.optional(),
+    activeRefereeConvocationSecondLinesman:
+      refereeConvocationRefSchema.optional(),
+    activeRefereeConvocationThirdLinesman:
+      refereeConvocationRefSchema.optional(),
+    activeRefereeConvocationFourthLinesman:
+      refereeConvocationRefSchema.optional(),
+    // Standby referees
+    activeRefereeConvocationStandbyHeadReferee:
+      refereeConvocationRefSchema.optional(),
+    activeRefereeConvocationStandbyLinesman:
+      refereeConvocationRefSchema.optional(),
   })
   .passthrough();
 
