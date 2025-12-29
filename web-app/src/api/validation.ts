@@ -177,9 +177,24 @@ const refereeGameForExchangeSchema = z
   .object({
     __identity: uuidSchema.optional(),
     game: gameSchema.optional(),
+    // Head referees
     activeRefereeConvocationFirstHeadReferee:
       refereeConvocationRefSchema.optional(),
     activeRefereeConvocationSecondHeadReferee:
+      refereeConvocationRefSchema.optional(),
+    // Linesmen (1-4)
+    activeRefereeConvocationFirstLinesman:
+      refereeConvocationRefSchema.optional(),
+    activeRefereeConvocationSecondLinesman:
+      refereeConvocationRefSchema.optional(),
+    activeRefereeConvocationThirdLinesman:
+      refereeConvocationRefSchema.optional(),
+    activeRefereeConvocationFourthLinesman:
+      refereeConvocationRefSchema.optional(),
+    // Standby referees
+    activeRefereeConvocationStandbyHeadReferee:
+      refereeConvocationRefSchema.optional(),
+    activeRefereeConvocationStandbyLinesman:
       refereeConvocationRefSchema.optional(),
   })
   .passthrough();
