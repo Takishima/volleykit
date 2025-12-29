@@ -275,6 +275,15 @@ export default defineConfig(({ mode }) => {
       ],
       setupFiles: './src/test/setup.ts',
       include: ['src/**/*.{test,spec}.{ts,tsx}'],
+      // Performance: vmThreads is much faster than default forks
+      pool: 'vmThreads',
+      // Fix react-router ESM/CJS compatibility with vmThreads
+      server: {
+        deps: {
+          inline: [/react-router/],
+          fallbackCJS: true,
+        },
+      },
       coverage: {
         provider: 'v8',
         reporter: ['text', 'json', 'html'],
@@ -300,6 +309,9 @@ export default defineConfig(({ mode }) => {
       alias: {
         '@': path.resolve(__dirname, './src'),
       },
+      // Fix dual package hazard with react-router in Node v22.12+
+      // See: https://github.com/vitest-dev/vitest/issues/7692
+      conditions: ['module-sync'],
     },
     server: {
       proxy: createDevProxy([
