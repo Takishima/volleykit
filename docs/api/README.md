@@ -8,11 +8,12 @@ To create an accurate mock API for local testing that behaves exactly like the p
 
 ## Files
 
+- `auth_api.md` - Authentication and session management
 - `assignments_api.md` - Referee assignments/convocations endpoint
 - `compensations_api.md` - Compensation/travel expenses endpoint
 - `exchanges_api.md` - Game exchange/substitution endpoint
-- `auth_api.md` - Authentication and session management
-- `misc_api.md` - Other supporting endpoints (seasons, settings, etc.)
+- `volleymanager-openapi.yaml` - Complete OpenAPI specification
+- `captures/` - Real API request/response examples
 
 ## Base URL
 
