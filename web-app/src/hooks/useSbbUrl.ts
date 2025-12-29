@@ -62,9 +62,6 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
   const homeLocation = useSettingsStore((state) => state.homeLocation);
   const associationCode = useActiveAssociationCode();
-  const sbbLinkTarget = useSettingsStore((state) =>
-    state.getSbbLinkTargetForAssociation(associationCode),
-  );
   const arrivalBuffer = useSettingsStore((state) =>
     state.getArrivalBufferForAssociation(associationCode),
   );
@@ -82,18 +79,15 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
 
     // If we already have cached station info, use it directly
     if (originStation && destinationStation) {
-      const url = generateSbbUrl(
-        {
-          destination: city,
-          date: gameDate,
-          arrivalTime,
-          language,
-          originStation,
-          destinationStation,
-          originAddress,
-        },
-        sbbLinkTarget,
-      );
+      const url = generateSbbUrl({
+        destination: city,
+        date: gameDate,
+        arrivalTime,
+        language,
+        originStation,
+        destinationStation,
+        originAddress,
+      });
       openSbbUrl(url);
       return;
     }
@@ -145,49 +139,40 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
         }
 
         // Generate URL with station IDs
-        const url = generateSbbUrl(
-          {
-            destination: city,
-            date: gameDate,
-            arrivalTime,
-            language,
-            originStation: tripResult.originStation,
-            destinationStation: tripResult.destinationStation,
-            originAddress,
-          },
-          sbbLinkTarget,
-        );
+        const url = generateSbbUrl({
+          destination: city,
+          date: gameDate,
+          arrivalTime,
+          language,
+          originStation: tripResult.originStation,
+          destinationStation: tripResult.destinationStation,
+          originAddress,
+        });
         openSbbUrl(url);
       } catch (err) {
         setError(err instanceof Error ? err : new Error("Failed to fetch trip data"));
 
         // Fall back to URL without station ID but with address
-        const url = generateSbbUrl(
-          {
-            destination: city,
-            date: gameDate,
-            arrivalTime,
-            language,
-            originAddress,
-          },
-          sbbLinkTarget,
-        );
+        const url = generateSbbUrl({
+          destination: city,
+          date: gameDate,
+          arrivalTime,
+          language,
+          originAddress,
+        });
         openSbbUrl(url);
       } finally {
         setIsLoading(false);
       }
     } else {
       // No trip data available, use city name and address fallbacks
-      const url = generateSbbUrl(
-        {
-          destination: city,
-          date: gameDate,
-          arrivalTime,
-          language,
-          originAddress,
-        },
-        sbbLinkTarget,
-      );
+      const url = generateSbbUrl({
+        destination: city,
+        date: gameDate,
+        arrivalTime,
+        language,
+        originAddress,
+      });
       openSbbUrl(url);
     }
   }, [
@@ -197,7 +182,6 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
     originStation,
     destinationStation,
     language,
-    sbbLinkTarget,
     homeLocation,
     hallCoords,
     hallId,

@@ -16,7 +16,6 @@ vi.mock("@/stores/settings", () => ({
         label: "Zurich, Switzerland",
         source: "geocoded",
       },
-      getSbbLinkTargetForAssociation: () => "sbb",
       getArrivalBufferForAssociation: () => 30,
     })
   ),
@@ -228,8 +227,7 @@ describe("useSbbUrl", () => {
         language: "de",
         originStation: tripResult.originStation,
         destinationStation: tripResult.destinationStation,
-      }),
-      "sbb"
+      })
     );
   });
 });

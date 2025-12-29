@@ -76,11 +76,6 @@ function createMockSettingsStore(
     levelFilterEnabled: false,
     setLevelFilterEnabled: vi.fn(),
 
-    // SBB link target
-    sbbLinkTargetByAssociation: {},
-    setSbbLinkTargetForAssociation: vi.fn(),
-    getSbbLinkTargetForAssociation: vi.fn().mockReturnValue("website"),
-
     // Reset
     resetLocationSettings: vi.fn(),
 
