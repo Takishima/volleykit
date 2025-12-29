@@ -454,11 +454,13 @@ describe("EditCompensationModal", () => {
 
       await waitForFormToLoad();
 
-      // Wrap in act to ensure React has finished processing state updates
-      // and effect cleanup/re-registration before firing the event
+      // Flush pending effects to ensure the escape key handler is registered
+      // with the updated isLoading=false state before firing the event
       await act(async () => {
-        fireEvent.keyDown(document, { key: "Escape" });
+        await new Promise((resolve) => setTimeout(resolve, 0));
       });
+
+      fireEvent.keyDown(document, { key: "Escape" });
 
       expect(mockOnClose).toHaveBeenCalledTimes(1);
     });
