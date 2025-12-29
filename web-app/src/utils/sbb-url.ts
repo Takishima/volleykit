@@ -23,6 +23,34 @@ export interface SbbUrlParams {
 }
 
 /**
+ * Normalize a Swiss station ID to the full UIC format.
+ * SBB requires the "85" country prefix for Swiss stations.
+ * Swiss UIC codes are 7 digits in format 85XXXXX.
+ *
+ * @param id - Station ID that may or may not have the "85" prefix
+ * @returns The normalized 7-digit ID with "85" prefix
+ *
+ * @example
+ * normalizeSwissStationId("4000") // "8504000"
+ * normalizeSwissStationId("8504000") // "8504000"
+ * normalizeSwissStationId("73232") // "8573232"
+ */
+function normalizeSwissStationId(id: string): string {
+  // If the ID already starts with "85" and is 7 digits, it's already normalized
+  if (id.startsWith("85") && id.length === 7) {
+    return id;
+  }
+
+  // If it's a shorter numeric ID without "85" prefix, pad to 5 digits and add prefix
+  if (/^\d+$/.test(id) && !id.startsWith("85")) {
+    return `85${id.padStart(5, "0")}`;
+  }
+
+  // Return as-is if it doesn't match expected patterns
+  return id;
+}
+
+/**
  * Format a date as YYYY-MM-DD for SBB URL parameters.
  */
 function formatDateSbb(date: Date): string {
@@ -101,8 +129,8 @@ export function generateSbbUrl(
   // When both stations have IDs, use the stops JSON format for precise routing
   if (originStation && destinationStation) {
     const stops = [
-      { value: originStation.id, type: "ID", label: originStation.name },
-      { value: destinationStation.id, type: "ID", label: destinationStation.name },
+      { value: normalizeSwissStationId(originStation.id), type: "ID", label: originStation.name },
+      { value: normalizeSwissStationId(destinationStation.id), type: "ID", label: destinationStation.name },
     ];
     const stopsJson = encodeURIComponent(JSON.stringify(stops));
     return `https://www.sbb.ch/${language}?stops=${stopsJson}&${baseParams}`;
