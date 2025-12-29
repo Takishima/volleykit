@@ -16,12 +16,20 @@ interface CachedTravelTime {
 }
 
 /**
+ * Current cache version.
+ * Version history:
+ * - v1: Initial version
+ * - v2: Invalidate cache due to station name cleanup (fix for PLATFORM_NOT_WHEELCHAIR_ACCESSIBLE leak)
+ */
+const CACHE_VERSION = 2;
+
+/**
  * Cache structure with version for future migrations.
- * When changing the cache format, increment version and add migration logic
+ * When changing the cache format, increment CACHE_VERSION and add migration logic
  * in loadCache() to handle upgrading old cache data.
  */
 interface TravelTimeCache {
-  version: 1;
+  version: number;
   entries: Record<string, CachedTravelTime>;
 }
 
@@ -38,24 +46,25 @@ export function buildCacheKey(
 
 /**
  * Load the travel time cache from localStorage.
+ * Invalidates cache if version doesn't match current CACHE_VERSION.
  */
 function loadCache(): TravelTimeCache {
   try {
     const stored = localStorage.getItem(TRAVEL_TIME_STORAGE_KEY);
     if (!stored) {
-      return { version: 1, entries: {} };
+      return { version: CACHE_VERSION, entries: {} };
     }
 
     const parsed = JSON.parse(stored) as TravelTimeCache;
 
-    // Validate structure
-    if (parsed.version !== 1 || typeof parsed.entries !== "object") {
-      return { version: 1, entries: {} };
+    // Validate structure and version - invalidate old versions
+    if (parsed.version !== CACHE_VERSION || typeof parsed.entries !== "object") {
+      return { version: CACHE_VERSION, entries: {} };
     }
 
     return parsed;
   } catch {
-    return { version: 1, entries: {} };
+    return { version: CACHE_VERSION, entries: {} };
   }
 }
 
