@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ExchangeSettingsSheet } from "./ExchangeSettingsSheet";
 
@@ -44,18 +44,13 @@ vi.mock("@/hooks/useTravelTime", () => ({
 vi.mock("@/components/ui/ResponsiveSheet", () => ({
   ResponsiveSheet: ({
     isOpen,
-    onClose,
     children,
   }: {
     isOpen: boolean;
     onClose: () => void;
     children: React.ReactNode;
   }) =>
-    isOpen ? (
-      <div data-testid="responsive-sheet" onClick={onClose}>
-        {children}
-      </div>
-    ) : null,
+    isOpen ? <div data-testid="responsive-sheet">{children}</div> : null,
 }));
 
 describe("ExchangeSettingsSheet", () => {

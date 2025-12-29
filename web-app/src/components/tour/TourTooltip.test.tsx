@@ -17,7 +17,7 @@ vi.mock("@/hooks/useTranslation", () => ({
       };
       return translations[key] || key;
     },
-    tInterpolate: (key: string, values: Record<string, unknown>) =>
+    tInterpolate: (_key: string, values: Record<string, unknown>) =>
       `Step ${values.step} of ${values.total}`,
   }),
 }));

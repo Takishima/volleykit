@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, act, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen } from "@testing-library/react";
 import { TourProvider } from "./TourProvider";
 import { useTourStore } from "@/stores/tour";
 import type { TourDefinition } from "./definitions/types";
@@ -217,7 +216,7 @@ describe("TourProvider", () => {
 
   it("clears auto-advance timer on unmount", () => {
     useTourStore.setState({ activeTour: "assignments", currentStep: 2 });
-    const clearTimeoutSpy = vi.spyOn(global, "clearTimeout");
+    const clearTimeoutSpy = vi.spyOn(globalThis, "clearTimeout");
 
     const { unmount } = render(
       <TourProvider>
