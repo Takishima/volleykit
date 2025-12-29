@@ -136,6 +136,35 @@ describe("sbb-url", () => {
         expect(url).toContain("%22value%22%3A%228503000%22");
         expect(url).not.toContain("Bahnhofstrasse");
       });
+
+      it("normalizes station IDs without 85 prefix", () => {
+        const params = {
+          ...baseParams,
+          originStation: { id: "4000", name: "Pully-Nord" },
+          destinationStation: { id: "73232", name: "Kloten, Freienberg" },
+        };
+        const url = generateSbbUrl(params, "website");
+
+        // IDs should be normalized to include the 85 prefix
+        expect(url).toContain("%22value%22%3A%228504000%22");
+        expect(url).toContain("%22value%22%3A%228573232%22");
+      });
+
+      it("does not double-prefix station IDs that already have 85", () => {
+        const params = {
+          ...baseParams,
+          originStation: { id: "8504000", name: "Pully-Nord" },
+          destinationStation: { id: "8573232", name: "Kloten, Freienberg" },
+        };
+        const url = generateSbbUrl(params, "website");
+
+        // IDs should remain unchanged
+        expect(url).toContain("%22value%22%3A%228504000%22");
+        expect(url).toContain("%22value%22%3A%228573232%22");
+        // Should NOT have double prefix
+        expect(url).not.toContain("858504000");
+        expect(url).not.toContain("858573232");
+      });
     });
 
     describe("app target", () => {
