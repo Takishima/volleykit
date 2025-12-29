@@ -62,10 +62,10 @@
   ],
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",
-    "@tanstack/react-query": "^5.90.12",
+    "@tanstack/react-query": "^5.90.14",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.562.0",
-    "ojp-sdk-next": "^0.20.33",
+    "ojp-sdk-next": "^0.21.1",
     "openapi-typescript-fetch": "^2.2.1",
     "pdf-lib": "^1.17.1",
     "react": "^19.2.3",
