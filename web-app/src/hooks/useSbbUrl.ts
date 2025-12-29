@@ -18,7 +18,7 @@ import {
   type Coordinates,
   type StationInfo,
 } from "@/services/transport";
-import { generateSbbUrl, calculateArrivalTime } from "@/utils/sbb-url";
+import { generateSbbUrl, calculateArrivalTime, openSbbUrl } from "@/utils/sbb-url";
 import type { Locale } from "@/i18n";
 
 interface UseSbbUrlOptions {
@@ -94,7 +94,7 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
         },
         sbbLinkTarget,
       );
-      window.open(url, "_blank", "noopener,noreferrer");
+      openSbbUrl(url);
       return;
     }
 
@@ -157,7 +157,7 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
           },
           sbbLinkTarget,
         );
-        window.open(url, "_blank", "noopener,noreferrer");
+        openSbbUrl(url);
       } catch (err) {
         setError(err instanceof Error ? err : new Error("Failed to fetch trip data"));
 
@@ -172,7 +172,7 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
           },
           sbbLinkTarget,
         );
-        window.open(url, "_blank", "noopener,noreferrer");
+        openSbbUrl(url);
       } finally {
         setIsLoading(false);
       }
@@ -188,7 +188,7 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
         },
         sbbLinkTarget,
       );
-      window.open(url, "_blank", "noopener,noreferrer");
+      openSbbUrl(url);
     }
   }, [
     city,

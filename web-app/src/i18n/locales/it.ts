@@ -205,6 +205,8 @@ const it: Translations = {
       "I rapporti delle partite sono disponibili solo per le partite NLA e NLB.",
     reportGenerated: "Rapporto generato con successo",
     openSbbConnection: "Apri collegamento trasporti pubblici",
+    openInGoogleMaps: "Apri in Google Maps",
+    openAddressInMaps: "Apri {address} nelle mappe",
     invalidKilometers: "Inserisci un numero positivo valido",
     failedToLoadData: "Impossibile caricare i dati",
   },

@@ -206,6 +206,8 @@ const en: Translations = {
       "Game reports are only available for NLA and NLB games.",
     reportGenerated: "Report generated successfully",
     openSbbConnection: "Open public transport connection",
+    openInGoogleMaps: "Open in Google Maps",
+    openAddressInMaps: "Open {address} in maps",
     invalidKilometers: "Please enter a valid positive number",
     failedToLoadData: "Failed to load data",
   },

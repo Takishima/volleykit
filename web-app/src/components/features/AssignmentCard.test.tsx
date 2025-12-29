@@ -340,7 +340,7 @@ describe("AssignmentCard", () => {
   });
 
   describe("location link", () => {
-    it("renders clickable link when plusCode is available", () => {
+    it("renders Google Maps button when plusCode is available", () => {
       const assignment = createMockAssignment({
         refereeGame: {
           game: {
@@ -375,7 +375,11 @@ describe("AssignmentCard", () => {
       // Expand to see location
       fireEvent.click(screen.getByRole("button"));
 
-      const link = screen.getByRole("link", { name: "Sporthalle Zürich" });
+      // Hall name is displayed as text
+      expect(screen.getByText("Sporthalle Zürich")).toBeInTheDocument();
+
+      // Google Maps button is available
+      const link = screen.getByRole("link", { name: "Open in Google Maps" });
       expect(link).toBeInTheDocument();
       expect(link).toHaveAttribute(
         "href",
@@ -383,7 +387,7 @@ describe("AssignmentCard", () => {
       );
     });
 
-    it("renders plain text when plusCode is missing", () => {
+    it("hides Google Maps button when plusCode is missing", () => {
       const assignment = createMockAssignment({
         refereeGame: {
           game: {
@@ -414,12 +418,13 @@ describe("AssignmentCard", () => {
       // Expand to see location
       fireEvent.click(screen.getByRole("button"));
 
-      // Should not be a link
-      expect(
-        screen.queryByRole("link", { name: "Sporthalle Zürich" }),
-      ).not.toBeInTheDocument();
-      // Should be plain text
+      // Hall name is displayed as text
       expect(screen.getByText("Sporthalle Zürich")).toBeInTheDocument();
+
+      // No Google Maps button when plusCode is missing
+      expect(
+        screen.queryByRole("link", { name: "Open in Google Maps" }),
+      ).not.toBeInTheDocument();
     });
 
     it("has correct link attributes for security", () => {
@@ -457,12 +462,13 @@ describe("AssignmentCard", () => {
       // Expand to see location
       fireEvent.click(screen.getByRole("button"));
 
-      const link = screen.getByRole("link", { name: "Sporthalle Zürich" });
+      // Google Maps button is now a separate icon link
+      const link = screen.getByRole("link", { name: "Open in Google Maps" });
       expect(link).toHaveAttribute("target", "_blank");
       expect(link).toHaveAttribute("rel", "noopener noreferrer");
     });
 
-    it("does not expand card when clicking location link", () => {
+    it("does not expand card when clicking Google Maps link", () => {
       const assignment = createMockAssignment({
         refereeGame: {
           game: {
@@ -503,8 +509,8 @@ describe("AssignmentCard", () => {
       fireEvent.click(cardButton);
       expect(cardButton).toHaveAttribute("aria-expanded", "true");
 
-      // Click the location link
-      const link = screen.getByRole("link", { name: "Sporthalle Zürich" });
+      // Click the Google Maps link
+      const link = screen.getByRole("link", { name: "Open in Google Maps" });
       fireEvent.click(link);
 
       // Card should remain expanded (not toggle)
@@ -546,7 +552,8 @@ describe("AssignmentCard", () => {
       // Expand to see location
       fireEvent.click(screen.getByRole("button"));
 
-      const link = screen.getByRole("link", { name: "Sporthalle Zürich" });
+      // Google Maps button is now a separate icon link
+      const link = screen.getByRole("link", { name: "Open in Google Maps" });
       // + should be encoded as %2B
       expect(link).toHaveAttribute(
         "href",
