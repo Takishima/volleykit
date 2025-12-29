@@ -82,13 +82,13 @@ export function AssignmentsPage() {
   const refetch =
     activeTab === "upcoming" ? refetchUpcoming : refetchValidationClosed;
 
-  // When tour is active, prepend the standardized dummy assignment to showcase
-  // all available action buttons regardless of user's actual assignments
+  // When tour is active, prepend a dummy assignment to demonstrate all action buttons
   const data = useMemo(() => {
     if (!isTourMode || activeTab !== "upcoming") {
       return rawData;
     }
-    // Cast tour dummy assignment to Assignment type for display purposes
+    // Safe cast: TourDummyAssignment provides all fields used by AssignmentCard and
+    // eligibility checks (refereePosition, refereeGame, convocationCompensation)
     const tourAssignment = TOUR_DUMMY_ASSIGNMENT as unknown as Assignment;
     return rawData ? [tourAssignment, ...rawData] : [tourAssignment];
   }, [isTourMode, activeTab, rawData]);

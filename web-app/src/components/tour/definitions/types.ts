@@ -44,19 +44,25 @@ export interface TourDummyAssignment {
     game: {
       __identity: string;
       gameNumber: string;
-      plannedStartDateTime: string;
-      teamHome: {
+      startingDateTime: string;
+      encounter: {
         __identity: string;
-        name: string;
-      };
-      teamAway: {
-        __identity: string;
-        name: string;
+        teamHome: {
+          __identity: string;
+          name: string;
+        };
+        teamAway: {
+          __identity: string;
+          name: string;
+        };
       };
       hall: {
         __identity: string;
         name: string;
-        city: string;
+        primaryPostalAddress: {
+          __identity: string;
+          city: string;
+        };
       };
       // League category structure for game report eligibility
       group?: {

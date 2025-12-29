@@ -46,13 +46,7 @@ function getUpcomingDate(): string {
   return date.toISOString();
 }
 
-/**
- * Tour dummy assignment configured to showcase ALL available action buttons:
- * - Validate: requires refereePosition === "head-one" ✓
- * - Edit Compensation: requires !paymentDone && !lockPayoutOnSiteCompensation ✓
- * - Hall Report: requires NLA/NLB league + head-one position ✓
- * - Exchange: requires isGameInFuture === "1" ✓
- */
+// Configured to pass all eligibility checks so all action buttons are visible during the tour
 export const TOUR_DUMMY_ASSIGNMENT: TourDummyAssignment = {
   __identity: "tour-dummy-assignment",
   refereePosition: "head-one",
@@ -61,19 +55,25 @@ export const TOUR_DUMMY_ASSIGNMENT: TourDummyAssignment = {
     game: {
       __identity: "tour-dummy-game",
       gameNumber: "12345",
-      plannedStartDateTime: getUpcomingDate(),
-      teamHome: {
-        __identity: "tour-dummy-team-home",
-        name: "VBC Beispiel",
-      },
-      teamAway: {
-        __identity: "tour-dummy-team-away",
-        name: "SC Muster",
+      startingDateTime: getUpcomingDate(),
+      encounter: {
+        __identity: "tour-dummy-encounter",
+        teamHome: {
+          __identity: "tour-dummy-team-home",
+          name: "VBC Beispiel",
+        },
+        teamAway: {
+          __identity: "tour-dummy-team-away",
+          name: "SC Muster",
+        },
       },
       hall: {
         __identity: "tour-dummy-hall",
         name: "Musterhalle",
-        city: "Zürich",
+        primaryPostalAddress: {
+          __identity: "tour-dummy-address",
+          city: "Zürich",
+        },
       },
       // NLA league category to enable hall report generation
       group: {
