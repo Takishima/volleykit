@@ -6,6 +6,7 @@ import { MapPin, MaleIcon, FemaleIcon, Home, Navigation, TrainFront, Loader2 } f
 import type { GameExchange } from "@/api/client";
 import { useDateLocale } from "@/hooks/useDateFormat";
 import { useTranslation } from "@/hooks/useTranslation";
+import { buildMapsUrls } from "@/utils/maps-url";
 import { useSettingsStore } from "@/stores/settings";
 import { useActiveAssociationCode } from "@/hooks/useActiveAssociation";
 import { useSbbUrl } from "@/hooks/useSbbUrl";
@@ -77,32 +78,10 @@ function ExchangeCardComponent({
   const awayTeam = game?.encounter?.teamAway?.name || t("common.tbd");
   const hallName = game?.hall?.name || t("common.locationTbd");
   const postalAddress = game?.hall?.primaryPostalAddress;
-  const plusCode = postalAddress?.geographicalLocation?.plusCode;
-  const googleMapsUrl = plusCode
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(plusCode)}`
-    : null;
   const city = postalAddress?.city;
 
-  // Full address for display (street + postal code + city)
-  const fullAddress = postalAddress?.combinedAddress
-    || (postalAddress?.streetAndHouseNumber && postalAddress?.postalCodeAndCity
-      ? `${postalAddress.streetAndHouseNumber}, ${postalAddress.postalCodeAndCity}`
-      : null);
-
-  // Platform-specific maps URL: iOS uses maps: scheme, Android uses geo: URI
-  const geoLat = postalAddress?.geographicalLocation?.latitude;
-  const geoLon = postalAddress?.geographicalLocation?.longitude;
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const hasCoords = geoLat !== undefined && geoLon !== undefined;
-  const addressMapsUrl = fullAddress
-    ? isIOS
-      ? `maps:?q=${encodeURIComponent(fullAddress)}`
-      : `geo:0,0?q=${encodeURIComponent(fullAddress)}`
-    : hasCoords
-      ? isIOS
-        ? `maps:?q=${geoLat},${geoLon}&ll=${geoLat},${geoLon}`
-        : `geo:${geoLat},${geoLon}?q=${geoLat},${geoLon}(${encodeURIComponent(hallName)})`
-      : null;
+  // Build maps URLs using shared utility
+  const { googleMapsUrl, nativeMapsUrl: addressMapsUrl, fullAddress } = buildMapsUrls(postalAddress, hallName);
 
   const requiredLevel = exchange.requiredRefereeLevel;
 
