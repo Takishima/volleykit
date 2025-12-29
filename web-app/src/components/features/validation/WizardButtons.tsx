@@ -1,5 +1,5 @@
 import { useTranslation } from "@/hooks/useTranslation";
-import { ModalButton } from "@/components/ui/ModalButton";
+import { Button } from "@/components/ui/Button";
 
 interface WizardNavigationState {
   isFirstStep: boolean;
@@ -29,20 +29,20 @@ export function ValidatedModeButtons({
     <>
       <div>
         {!navigation.isFirstStep && (
-          <ModalButton variant="secondary" onClick={onBack}>
+          <Button variant="secondary" onClick={onBack}>
             {t("validation.wizard.previous")}
-          </ModalButton>
+          </Button>
         )}
       </div>
       <div>
         {navigation.isLastStep ? (
-          <ModalButton variant="primary" onClick={onClose}>
+          <Button variant="primary" onClick={onClose}>
             {t("common.close")}
-          </ModalButton>
+          </Button>
         ) : (
-          <ModalButton variant="primary" onClick={onNext}>
+          <Button variant="primary" onClick={onNext}>
             {t("validation.wizard.next")}
-          </ModalButton>
+          </Button>
         )}
       </div>
     </>
@@ -91,27 +91,27 @@ export function EditModeButtons({
     <>
       <div>
         {navigation.isFirstStep ? (
-          <ModalButton
+          <Button
             variant="secondary"
             onClick={onAttemptClose}
             disabled={state.isFinalizing}
           >
             {t("common.cancel")}
-          </ModalButton>
+          </Button>
         ) : (
-          <ModalButton
+          <Button
             variant="secondary"
             onClick={onBack}
             disabled={state.isFinalizing}
           >
             {t("validation.wizard.previous")}
-          </ModalButton>
+          </Button>
         )}
       </div>
 
       <div>
         {navigation.isLastStep ? (
-          <ModalButton
+          <Button
             variant="success"
             onClick={() => onFinish()}
             disabled={finishDisabled}
@@ -124,15 +124,15 @@ export function EditModeButtons({
             {state.isFinalizing
               ? t("common.loading")
               : t("validation.wizard.finish")}
-          </ModalButton>
+          </Button>
         ) : (
-          <ModalButton
+          <Button
             variant="success"
             onClick={onValidateAndNext}
             disabled={isDisabled || !state.canMarkCurrentStepDone}
           >
             {t("validation.wizard.validate")}
-          </ModalButton>
+          </Button>
         )}
       </div>
     </>

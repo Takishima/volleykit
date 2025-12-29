@@ -5,7 +5,7 @@ import type { Language } from '@/utils/pdf-form-filler';
 import { Modal } from '@/components/ui/Modal';
 import { ModalHeader } from '@/components/ui/ModalHeader';
 import { ModalFooter } from '@/components/ui/ModalFooter';
-import { ModalButton } from '@/components/ui/ModalButton';
+import { Button } from '@/components/ui/Button';
 
 const MODAL_TITLE_ID = 'pdf-lang-title';
 
@@ -86,15 +86,14 @@ export function PdfLanguageModal({
       </div>
 
       <ModalFooter>
-        <ModalButton variant="secondary" fullWidth onClick={onClose} disabled={isLoading}>
+        <Button variant="secondary" className="flex-1" onClick={onClose} disabled={isLoading}>
           {t('common.cancel')}
-        </ModalButton>
-        <ModalButton
+        </Button>
+        <Button
           variant="blue"
-          fullWidth
+          className="flex-1"
           onClick={() => onConfirm(selected)}
           disabled={isLoading}
-          className="flex items-center justify-center gap-2"
         >
           {isLoading ? (
             <>
@@ -104,7 +103,7 @@ export function PdfLanguageModal({
           ) : (
             t('pdf.export')
           )}
-        </ModalButton>
+        </Button>
       </ModalFooter>
     </Modal>
   );
