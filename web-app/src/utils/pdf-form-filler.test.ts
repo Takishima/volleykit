@@ -359,5 +359,261 @@ describe('pdf-form-filler', () => {
         fillSportsHallReportForm(mockReportData, 'NLA', 'de')
       ).rejects.toThrow('Failed to fetch PDF template');
     });
+
+    it('uses correct PDF path for NLA German', async () => {
+      const mockFetch = vi.fn(() =>
+        Promise.resolve({
+          ok: false,
+          statusText: 'Not Found',
+        })
+      );
+      vi.stubGlobal('fetch', mockFetch);
+
+      await expect(
+        fillSportsHallReportForm(mockReportData, 'NLA', 'de')
+      ).rejects.toThrow();
+
+      expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('sports-hall-report-nla-de.pdf'));
+    });
+
+    it('uses correct PDF path for NLB French', async () => {
+      const mockFetch = vi.fn(() =>
+        Promise.resolve({
+          ok: false,
+          statusText: 'Not Found',
+        })
+      );
+      vi.stubGlobal('fetch', mockFetch);
+
+      await expect(
+        fillSportsHallReportForm(mockReportData, 'NLB', 'fr')
+      ).rejects.toThrow();
+
+      // NLB uses path without "nla-" prefix
+      expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('sports-hall-report-fr.pdf'));
+    });
+  });
+
+  describe('extractSportsHallReportData - edge cases', () => {
+    it('handles missing encounter data gracefully', () => {
+      const assignment: Assignment = {
+        __identity: 'test-id',
+        refereeConvocationStatus: 'active',
+        refereePosition: 'head-one',
+        refereeGame: {
+          __identity: 'rg-id',
+          game: {
+            __identity: 'g-id',
+            number: 123,
+            group: {
+              __identity: 'gr-id',
+              phase: {
+                __identity: 'ph-id',
+                league: {
+                  __identity: 'l-id',
+                  leagueCategory: { __identity: 'lc-id', name: 'NLA' },
+                },
+              },
+            },
+          },
+        },
+      };
+
+      const result = extractSportsHallReportData(assignment);
+      expect(result?.homeTeam).toBe('');
+      expect(result?.awayTeam).toBe('');
+    });
+
+    it('handles missing hall data gracefully', () => {
+      const assignment: Assignment = {
+        __identity: 'test-id',
+        refereeConvocationStatus: 'active',
+        refereePosition: 'head-one',
+        refereeGame: {
+          __identity: 'rg-id',
+          game: {
+            __identity: 'g-id',
+            number: 123,
+            group: {
+              __identity: 'gr-id',
+              phase: {
+                __identity: 'ph-id',
+                league: {
+                  __identity: 'l-id',
+                  leagueCategory: { __identity: 'lc-id', name: 'NLB' },
+                },
+              },
+            },
+          },
+        },
+      };
+
+      const result = extractSportsHallReportData(assignment);
+      expect(result?.hallName).toBe('');
+      expect(result?.location).toBe('');
+    });
+
+    it('falls back to firstName/lastName when displayName missing', () => {
+      const assignment: Assignment = {
+        __identity: 'test-id',
+        refereeConvocationStatus: 'active',
+        refereePosition: 'head-one',
+        refereeGame: {
+          __identity: 'rg-id',
+          game: {
+            __identity: 'g-id',
+            number: 123,
+            group: {
+              __identity: 'gr-id',
+              phase: {
+                __identity: 'ph-id',
+                league: {
+                  __identity: 'l-id',
+                  leagueCategory: { __identity: 'lc-id', name: 'NLA' },
+                },
+              },
+            },
+          },
+          activeRefereeConvocationFirstHeadReferee: {
+            indoorAssociationReferee: {
+              indoorReferee: {
+                person: {
+                  __identity: 'p1',
+                  firstName: 'John',
+                  lastName: 'Doe',
+                  // displayName is undefined
+                },
+              },
+            },
+          },
+        },
+      };
+
+      const result = extractSportsHallReportData(assignment);
+      expect(result?.firstRefereeName).toBe('John Doe');
+    });
+
+    it('returns undefined for referee when person is missing', () => {
+      const assignment: Assignment = {
+        __identity: 'test-id',
+        refereeConvocationStatus: 'active',
+        refereePosition: 'head-one',
+        refereeGame: {
+          __identity: 'rg-id',
+          game: {
+            __identity: 'g-id',
+            number: 123,
+            group: {
+              __identity: 'gr-id',
+              phase: {
+                __identity: 'ph-id',
+                league: {
+                  __identity: 'l-id',
+                  leagueCategory: { __identity: 'lc-id', name: 'NLA' },
+                },
+              },
+            },
+          },
+          activeRefereeConvocationFirstHeadReferee: {
+            indoorAssociationReferee: {
+              indoorReferee: {
+                // person is missing
+              },
+            },
+          },
+        },
+      };
+
+      const result = extractSportsHallReportData(assignment);
+      expect(result?.firstRefereeName).toBeUndefined();
+    });
+
+    it('handles undefined startingDateTime', () => {
+      const assignment: Assignment = {
+        __identity: 'test-id',
+        refereeConvocationStatus: 'active',
+        refereePosition: 'head-one',
+        refereeGame: {
+          __identity: 'rg-id',
+          game: {
+            __identity: 'g-id',
+            number: 123,
+            // startingDateTime is undefined
+            group: {
+              __identity: 'gr-id',
+              phase: {
+                __identity: 'ph-id',
+                league: {
+                  __identity: 'l-id',
+                  leagueCategory: { __identity: 'lc-id', name: 'NLA' },
+                },
+              },
+            },
+          },
+        },
+      };
+
+      const result = extractSportsHallReportData(assignment);
+      expect(result?.date).toBe('');
+    });
+
+    it('handles invalid date format', () => {
+      const assignment: Assignment = {
+        __identity: 'test-id',
+        refereeConvocationStatus: 'active',
+        refereePosition: 'head-one',
+        refereeGame: {
+          __identity: 'rg-id',
+          game: {
+            __identity: 'g-id',
+            number: 123,
+            startingDateTime: 'invalid-date-format',
+            group: {
+              __identity: 'gr-id',
+              phase: {
+                __identity: 'ph-id',
+                league: {
+                  __identity: 'l-id',
+                  leagueCategory: { __identity: 'lc-id', name: 'NLA' },
+                },
+              },
+            },
+          },
+        },
+      };
+
+      const result = extractSportsHallReportData(assignment);
+      // Should return empty string for invalid date
+      expect(result?.date).toBe('');
+    });
+
+    it('defaults to male gender when not specified', () => {
+      const assignment: Assignment = {
+        __identity: 'test-id',
+        refereeConvocationStatus: 'active',
+        refereePosition: 'head-one',
+        refereeGame: {
+          __identity: 'rg-id',
+          game: {
+            __identity: 'g-id',
+            number: 123,
+            group: {
+              __identity: 'gr-id',
+              phase: {
+                __identity: 'ph-id',
+                league: {
+                  __identity: 'l-id',
+                  // gender is missing
+                  leagueCategory: { __identity: 'lc-id', name: 'NLA' },
+                },
+              },
+            },
+          },
+        },
+      };
+
+      const result = extractSportsHallReportData(assignment);
+      expect(result?.gender).toBe('m');
+    });
   });
 });
