@@ -72,7 +72,11 @@ jobs:
             - Security concerns
             - Test coverage for business logic
 
-            ## OUTPUT FORMAT (use this exact structure for consistency)
+            ## OUTPUT FORMAT
+
+            IMPORTANT: Output your review as a raw markdown code block (wrapped in triple backticks) that can be copy-pasted directly into GitHub. Do NOT output already-rendered/formatted text.
+
+            Use this exact structure:
 
             ```
             ## Claude Code Review
