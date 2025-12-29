@@ -638,4 +638,475 @@ describe("API Client", () => {
       expect(options.credentials).toBe("include");
     });
   });
+
+  describe("uploadResource", () => {
+    function createMockFile(
+      name: string,
+      type: string,
+      size: number = 1024,
+    ): File {
+      const content = new Uint8Array(size);
+      return new File([content], name, { type });
+    }
+
+    it("rejects invalid file types", async () => {
+      const invalidFile = createMockFile("test.txt", "text/plain");
+
+      await expect(api.uploadResource(invalidFile)).rejects.toThrow(
+        "Invalid file type: text/plain. Only JPEG, PNG, or PDF files are allowed.",
+      );
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it("rejects files with unknown type", async () => {
+      const noTypeFile = createMockFile("test", "");
+
+      await expect(api.uploadResource(noTypeFile)).rejects.toThrow(
+        "Invalid file type: unknown. Only JPEG, PNG, or PDF files are allowed.",
+      );
+    });
+
+    it("rejects files larger than 10MB", async () => {
+      const largeFile = createMockFile(
+        "large.pdf",
+        "application/pdf",
+        11 * 1024 * 1024,
+      );
+
+      await expect(api.uploadResource(largeFile)).rejects.toThrow(
+        "File too large: 11.0 MB. Maximum size is 10 MB.",
+      );
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it("accepts PDF files", async () => {
+      const pdfFile = createMockFile("doc.pdf", "application/pdf");
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse([{ __identity: "res-1" }]),
+      );
+
+      await api.uploadResource(pdfFile);
+
+      expect(mockFetch).toHaveBeenCalled();
+    });
+
+    it("accepts JPEG files", async () => {
+      const jpegFile = createMockFile("photo.jpg", "image/jpeg");
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse([{ __identity: "res-1" }]),
+      );
+
+      await api.uploadResource(jpegFile);
+
+      expect(mockFetch).toHaveBeenCalled();
+    });
+
+    it("accepts PNG files", async () => {
+      const pngFile = createMockFile("image.png", "image/png");
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse([{ __identity: "res-1" }]),
+      );
+
+      await api.uploadResource(pngFile);
+
+      expect(mockFetch).toHaveBeenCalled();
+    });
+
+    it("sends POST request with FormData", async () => {
+      const pdfFile = createMockFile("doc.pdf", "application/pdf");
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse([{ __identity: "res-1" }]),
+      );
+
+      await api.uploadResource(pdfFile);
+
+      const [url, options] = mockFetch.mock.calls[0]!;
+      expect(url).toContain("persistentresource/upload");
+      expect(options.method).toBe("POST");
+      expect(options.body).toBeInstanceOf(FormData);
+      expect(options.credentials).toBe("include");
+    });
+
+    it("includes CSRF token in FormData when available", async () => {
+      setCsrfToken("upload-csrf-token");
+      const pdfFile = createMockFile("doc.pdf", "application/pdf");
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse([{ __identity: "res-1" }]),
+      );
+
+      await api.uploadResource(pdfFile);
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      const formData = options.body as FormData;
+      expect(formData.get("__csrfToken")).toBe("upload-csrf-token");
+    });
+
+    it("does not include CSRF token when not set", async () => {
+      clearSession();
+      const pdfFile = createMockFile("doc.pdf", "application/pdf");
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse([{ __identity: "res-1" }]),
+      );
+
+      await api.uploadResource(pdfFile);
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      const formData = options.body as FormData;
+      expect(formData.get("__csrfToken")).toBeNull();
+    });
+
+    it("returns file resources array on success", async () => {
+      const pdfFile = createMockFile("doc.pdf", "application/pdf");
+      const expectedResponse = [
+        { __identity: "res-123", filename: "doc.pdf" },
+      ];
+      mockFetch.mockResolvedValueOnce(createMockResponse(expectedResponse));
+
+      const result = await api.uploadResource(pdfFile);
+
+      expect(result).toEqual(expectedResponse);
+    });
+
+    it("clears session and throws on 401 response", async () => {
+      setCsrfToken("some-token");
+      const pdfFile = createMockFile("doc.pdf", "application/pdf");
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        statusText: "Unauthorized",
+        headers: { get: () => null },
+        text: () => Promise.resolve(""),
+      });
+
+      await expect(api.uploadResource(pdfFile)).rejects.toThrow(
+        "Session expired. Please log in again.",
+      );
+    });
+
+    it("clears session and throws on 403 response", async () => {
+      const pdfFile = createMockFile("doc.pdf", "application/pdf");
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        statusText: "Forbidden",
+        headers: { get: () => null },
+        text: () => Promise.resolve(""),
+      });
+
+      await expect(api.uploadResource(pdfFile)).rejects.toThrow(
+        "Session expired. Please log in again.",
+      );
+    });
+
+    it("throws error with parsed message on other failures", async () => {
+      const pdfFile = createMockFile("doc.pdf", "application/pdf");
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: "Internal Server Error",
+        headers: { get: () => null },
+        text: () => Promise.resolve(""),
+      });
+
+      await expect(api.uploadResource(pdfFile)).rejects.toThrow(
+        /POST.*persistentresource\/upload.*500 Internal Server Error/,
+      );
+    });
+  });
+
+  describe("getAssignmentDetails", () => {
+    it("sends GET request with convocation ID", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse({}));
+
+      await api.getAssignmentDetails("conv-123", ["refereeGame.game"]);
+
+      const [url, options] = mockFetch.mock.calls[0]!;
+      expect(options.method).toBe("GET");
+      expect(url).toContain("convocation=conv-123");
+    });
+
+    it("includes nested property names in query", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse({}));
+
+      await api.getAssignmentDetails("conv-123", ["prop1", "prop2", "prop3"]);
+
+      const [url] = mockFetch.mock.calls[0]!;
+      expect(url).toContain("nestedPropertyNames%5B0%5D=prop1");
+      expect(url).toContain("nestedPropertyNames%5B1%5D=prop2");
+      expect(url).toContain("nestedPropertyNames%5B2%5D=prop3");
+    });
+  });
+
+  describe("getNominationList", () => {
+    it("requests home team nomination list", async () => {
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({ nominationListOfTeamHome: { __identity: "nl-1" } }),
+      );
+
+      const result = await api.getNominationList("game-123", "home");
+
+      expect(result).toEqual({ __identity: "nl-1" });
+      const [url] = mockFetch.mock.calls[0]!;
+      expect(url).toContain("nominationListOfTeamHome");
+    });
+
+    it("requests away team nomination list", async () => {
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({ nominationListOfTeamAway: { __identity: "nl-2" } }),
+      );
+
+      const result = await api.getNominationList("game-123", "away");
+
+      expect(result).toEqual({ __identity: "nl-2" });
+      const [url] = mockFetch.mock.calls[0]!;
+      expect(url).toContain("nominationListOfTeamAway");
+    });
+
+    it("returns null when nomination list is missing", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse({}));
+
+      const result = await api.getNominationList("game-123", "home");
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("getPossiblePlayerNominations", () => {
+    it("sends POST request with nomination list ID", async () => {
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({ items: [], totalItemsCount: 0 }),
+      );
+
+      await api.getPossiblePlayerNominations("nl-123");
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      expect(options.method).toBe("POST");
+      const body = options.body as URLSearchParams;
+      expect(body.get("nominationList")).toBe("nl-123");
+    });
+
+    it("uses default options when not specified", async () => {
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({ items: [], totalItemsCount: 0 }),
+      );
+
+      await api.getPossiblePlayerNominations("nl-123");
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      const body = options.body as URLSearchParams;
+      expect(body.get("onlyFromMyTeam")).toBe("true");
+      expect(body.get("onlyRelevantGender")).toBe("true");
+    });
+
+    it("respects custom options", async () => {
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({ items: [], totalItemsCount: 0 }),
+      );
+
+      await api.getPossiblePlayerNominations("nl-123", {
+        onlyFromMyTeam: false,
+        onlyRelevantGender: false,
+      });
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      const body = options.body as URLSearchParams;
+      expect(body.get("onlyFromMyTeam")).toBe("false");
+      expect(body.get("onlyRelevantGender")).toBe("false");
+    });
+  });
+
+  describe("updateNominationList", () => {
+    it("sends PUT request with all required fields", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse({}));
+
+      await api.updateNominationList("nl-1", "game-1", "team-1", [
+        "player-1",
+        "player-2",
+      ]);
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      expect(options.method).toBe("PUT");
+      const body = options.body as URLSearchParams;
+      expect(body.get("nominationList[__identity]")).toBe("nl-1");
+      expect(body.get("nominationList[game][__identity]")).toBe("game-1");
+      expect(body.get("nominationList[team][__identity]")).toBe("team-1");
+      expect(body.get("nominationList[closed]")).toBe("false");
+      expect(body.get("nominationList[isClosedForTeam]")).toBe("true");
+    });
+
+    it("includes player nomination IDs with indexed keys", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse({}));
+
+      await api.updateNominationList("nl-1", "game-1", "team-1", [
+        "p1",
+        "p2",
+        "p3",
+      ]);
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      const body = options.body as URLSearchParams;
+      expect(
+        body.get("nominationList[indoorPlayerNominations][0][__identity]"),
+      ).toBe("p1");
+      expect(
+        body.get("nominationList[indoorPlayerNominations][1][__identity]"),
+      ).toBe("p2");
+      expect(
+        body.get("nominationList[indoorPlayerNominations][2][__identity]"),
+      ).toBe("p3");
+    });
+  });
+
+  describe("finalizeNominationList", () => {
+    it("sends POST request to finalize endpoint", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse({}));
+
+      await api.finalizeNominationList("nl-1", "game-1", "team-1", ["p1"]);
+
+      const [url, options] = mockFetch.mock.calls[0]!;
+      expect(url).toContain("nominationlist/finalize");
+      expect(options.method).toBe("POST");
+    });
+
+    it("includes validation ID when provided", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse({}));
+
+      await api.finalizeNominationList(
+        "nl-1",
+        "game-1",
+        "team-1",
+        ["p1"],
+        "validation-1",
+      );
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      const body = options.body as URLSearchParams;
+      expect(
+        body.get("nominationList[nominationListValidation][__identity]"),
+      ).toBe("validation-1");
+    });
+  });
+
+  describe("updateScoresheet", () => {
+    it("sends PUT request with scoresheet data", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse({}));
+
+      await api.updateScoresheet("ss-1", "game-1", "scorer-1", false);
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      expect(options.method).toBe("PUT");
+      const body = options.body as URLSearchParams;
+      expect(body.get("scoresheet[__identity]")).toBe("ss-1");
+      expect(body.get("scoresheet[game][__identity]")).toBe("game-1");
+      expect(body.get("scoresheet[writerPerson][__identity]")).toBe("scorer-1");
+      expect(body.get("scoresheet[isSimpleScoresheet]")).toBe("false");
+      expect(body.get("scoresheet[hasFile]")).toBe("false");
+    });
+
+    it("supports simple scoresheet flag", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse({}));
+
+      await api.updateScoresheet("ss-1", "game-1", "scorer-1", true);
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      const body = options.body as URLSearchParams;
+      expect(body.get("scoresheet[isSimpleScoresheet]")).toBe("true");
+    });
+  });
+
+  describe("finalizeScoresheet", () => {
+    it("sends POST request to finalize endpoint", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse({}));
+
+      await api.finalizeScoresheet("ss-1", "game-1", "scorer-1");
+
+      const [url, options] = mockFetch.mock.calls[0]!;
+      expect(url).toContain("scoresheet/finalize");
+      expect(options.method).toBe("POST");
+    });
+
+    it("includes file resource ID when provided", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse({}));
+
+      await api.finalizeScoresheet(
+        "ss-1",
+        "game-1",
+        "scorer-1",
+        "file-res-1",
+      );
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      const body = options.body as URLSearchParams;
+      expect(body.get("scoresheet[file][__identity]")).toBe("file-res-1");
+      expect(body.get("scoresheet[hasFile]")).toBe("true");
+    });
+
+    it("includes validation ID when provided", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse({}));
+
+      await api.finalizeScoresheet(
+        "ss-1",
+        "game-1",
+        "scorer-1",
+        undefined,
+        "val-1",
+      );
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      const body = options.body as URLSearchParams;
+      expect(
+        body.get("scoresheet[scoresheetValidation][__identity]"),
+      ).toBe("val-1");
+    });
+
+    it("sets hasFile to false when no file provided", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse({}));
+
+      await api.finalizeScoresheet("ss-1", "game-1", "scorer-1");
+
+      const [, options] = mockFetch.mock.calls[0]!;
+      const body = options.body as URLSearchParams;
+      expect(body.get("scoresheet[hasFile]")).toBe("false");
+    });
+  });
+
+  describe("getGameWithScoresheet", () => {
+    it("requests game with scoresheet and nomination list properties", async () => {
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({ __identity: "game-1" }),
+      );
+
+      await api.getGameWithScoresheet("game-123");
+
+      const [url] = mockFetch.mock.calls[0]!;
+      expect(url).toContain("game%5B__identity%5D=game-123");
+      expect(url).toContain("scoresheet");
+      expect(url).toContain("nominationListOfTeamHome");
+      expect(url).toContain("nominationListOfTeamAway");
+    });
+  });
+
+  describe("getAssociationSettings", () => {
+    it("sends GET request to correct endpoint", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse({}));
+
+      await api.getAssociationSettings();
+
+      const [url, options] = mockFetch.mock.calls[0]!;
+      expect(url).toContain("getRefereeAssociationSettingsOfActiveParty");
+      expect(options.method).toBe("GET");
+    });
+  });
+
+  describe("getActiveSeason", () => {
+    it("sends GET request to correct endpoint", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse({}));
+
+      await api.getActiveSeason();
+
+      const [url, options] = mockFetch.mock.calls[0]!;
+      expect(url).toContain("getActiveIndoorSeason");
+      expect(options.method).toBe("GET");
+    });
+  });
 });
