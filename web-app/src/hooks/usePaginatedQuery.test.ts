@@ -106,17 +106,17 @@ describe("sortByGameDate", () => {
   it("sorts ascending by default (oldest first)", () => {
     const sorted = sortByGameDate(items, false);
 
-    expect(sorted[0].__identity).toBe("earliest");
-    expect(sorted[1].__identity).toBe("middle");
-    expect(sorted[2].__identity).toBe("latest");
+    expect(sorted[0]!.__identity).toBe("earliest");
+    expect(sorted[1]!.__identity).toBe("middle");
+    expect(sorted[2]!.__identity).toBe("latest");
   });
 
   it("sorts descending when specified (newest first)", () => {
     const sorted = sortByGameDate(items, true);
 
-    expect(sorted[0].__identity).toBe("latest");
-    expect(sorted[1].__identity).toBe("middle");
-    expect(sorted[2].__identity).toBe("earliest");
+    expect(sorted[0]!.__identity).toBe("latest");
+    expect(sorted[1]!.__identity).toBe("middle");
+    expect(sorted[2]!.__identity).toBe("earliest");
   });
 
   it("does not mutate original array", () => {
@@ -134,13 +134,13 @@ describe("sortByGameDate", () => {
 
     const sortedAsc = sortByGameDate(mixedItems, false);
     // Item without date should sort first (timestamp 0)
-    expect(sortedAsc[0].__identity).toBe("without-date");
-    expect(sortedAsc[1].__identity).toBe("with-date");
+    expect(sortedAsc[0]!.__identity).toBe("without-date");
+    expect(sortedAsc[1]!.__identity).toBe("with-date");
 
     const sortedDesc = sortByGameDate(mixedItems, true);
     // Item with date should sort first when descending
-    expect(sortedDesc[0].__identity).toBe("with-date");
-    expect(sortedDesc[1].__identity).toBe("without-date");
+    expect(sortedDesc[0]!.__identity).toBe("with-date");
+    expect(sortedDesc[1]!.__identity).toBe("without-date");
   });
 
   it("handles empty array", () => {
@@ -153,7 +153,7 @@ describe("sortByGameDate", () => {
     const sorted = sortByGameDate(single, false);
 
     expect(sorted.length).toBe(1);
-    expect(sorted[0].__identity).toBe("only");
+    expect(sorted[0]!.__identity).toBe("only");
   });
 });
 

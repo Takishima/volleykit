@@ -137,7 +137,7 @@ describe("useTravelTimeFilter", () => {
       });
 
       expect(result.current.exchangesWithTravelTime).toHaveLength(1);
-      expect(result.current.exchangesWithTravelTime![0].travelTimeMinutes).toBeNull();
+      expect(result.current.exchangesWithTravelTime![0]!.travelTimeMinutes).toBeNull();
       expect(result.current.isAvailable).toBe(false);
     });
   });
@@ -191,7 +191,7 @@ describe("useTravelTimeFilter", () => {
       expect(result.current.isAvailable).toBe(true);
 
       await waitFor(() => {
-        expect(result.current.exchangesWithTravelTime![0].travelTimeMinutes).toBe(45);
+        expect(result.current.exchangesWithTravelTime![0]!.travelTimeMinutes).toBe(45);
       });
     });
 
@@ -221,7 +221,7 @@ describe("useTravelTimeFilter", () => {
       });
 
       await waitFor(() => {
-        expect(result.current.exchangesWithTravelTime![0].travelTimeMinutes).toBe(30);
+        expect(result.current.exchangesWithTravelTime![0]!.travelTimeMinutes).toBe(30);
       });
 
       expect(calculateMockTravelTime).toHaveBeenCalled();
@@ -238,7 +238,7 @@ describe("useTravelTimeFilter", () => {
 
       // Should not throw, just have null travel time
       expect(result.current.exchangesWithTravelTime).toHaveLength(1);
-      expect(result.current.exchangesWithTravelTime![0].travelTimeMinutes).toBeNull();
+      expect(result.current.exchangesWithTravelTime![0]!.travelTimeMinutes).toBeNull();
     });
 
     it("returns same travel time for exchanges at the same hall", async () => {
@@ -255,8 +255,8 @@ describe("useTravelTimeFilter", () => {
 
       // Both exchanges should have the same travel time (same hall)
       await waitFor(() => {
-        const first = result.current.exchangesWithTravelTime![0].travelTimeMinutes;
-        const second = result.current.exchangesWithTravelTime![1].travelTimeMinutes;
+        const first = result.current.exchangesWithTravelTime![0]!.travelTimeMinutes;
+        const second = result.current.exchangesWithTravelTime![1]!.travelTimeMinutes;
         expect(first).toBe(second);
       });
     });
@@ -321,7 +321,7 @@ describe("useTravelTimeFilter", () => {
       });
 
       // Only hall-1 (30 min) should be included, hall-2 (90 min) exceeds 60 min limit
-      expect(result.current.filteredExchanges![0].item.__identity).toBe("exchange-hall-1");
+      expect(result.current.filteredExchanges![0]!.item.__identity).toBe("exchange-hall-1");
     });
 
     it("includes exchanges without travel time when filtering", async () => {
@@ -347,7 +347,7 @@ describe("useTravelTimeFilter", () => {
       await waitFor(() => {
         // hall-1 (no travel time) should be included, hall-2 (90 min) excluded
         expect(result.current.filteredExchanges).toHaveLength(1);
-        expect(result.current.filteredExchanges![0].item.__identity).toBe("exchange-hall-1");
+        expect(result.current.filteredExchanges![0]!.item.__identity).toBe("exchange-hall-1");
       });
     });
 
@@ -390,7 +390,7 @@ describe("useTravelTimeFilter", () => {
       });
 
       await waitFor(() => {
-        expect(result.current.exchangesWithTravelTime![0].travelTimeMinutes).toBe(90);
+        expect(result.current.exchangesWithTravelTime![0]!.travelTimeMinutes).toBe(90);
       });
 
       // All exchanges should be included when filter disabled
@@ -415,12 +415,14 @@ describe("useTravelTimeFilter", () => {
         }),
       );
 
-      const { result } = renderHook(() => useTravelTimeFilter([]), {
-        wrapper: createWrapper(),
-      });
+      const mockExchange = createMockExchange("hall-1");
+      const { result } = renderHook(
+        () => useTravelTimeFilter([mockExchange]),
+        { wrapper: createWrapper() },
+      );
 
       const underLimit = {
-        item: createMockExchange("hall-1"),
+        item: mockExchange,
         travelTimeMinutes: 30,
         isLoading: false,
         isError: false,
@@ -445,12 +447,14 @@ describe("useTravelTimeFilter", () => {
         }),
       );
 
-      const { result } = renderHook(() => useTravelTimeFilter([]), {
-        wrapper: createWrapper(),
-      });
+      const mockExchange = createMockExchange("hall-1");
+      const { result } = renderHook(
+        () => useTravelTimeFilter([mockExchange]),
+        { wrapper: createWrapper() },
+      );
 
       const overLimit = {
-        item: createMockExchange("hall-1"),
+        item: mockExchange,
         travelTimeMinutes: 90,
         isLoading: false,
         isError: false,
@@ -475,12 +479,14 @@ describe("useTravelTimeFilter", () => {
         }),
       );
 
-      const { result } = renderHook(() => useTravelTimeFilter([]), {
-        wrapper: createWrapper(),
-      });
+      const mockExchange = createMockExchange("hall-1");
+      const { result } = renderHook(
+        () => useTravelTimeFilter([mockExchange]),
+        { wrapper: createWrapper() },
+      );
 
       const noTravelTime = {
-        item: createMockExchange("hall-1"),
+        item: mockExchange,
         travelTimeMinutes: null,
         isLoading: false,
         isError: false,
