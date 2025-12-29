@@ -208,35 +208,30 @@ function extractDidokId(ref: string | undefined): string | undefined {
 }
 
 /**
- * OJP accessibility keywords that should not be included in station names.
+ * Regex patterns for OJP accessibility keywords that should be filtered from station names.
  * These are transport mode or accessibility attributes, not location suffixes.
- */
-const OJP_ACCESSIBILITY_KEYWORDS = [
-  "ALTERNATIVE_TRANSPORT",
-  "SHUTTLE_BUS",
-  "RAIL_REPLACEMENT",
-] as const;
-
-/**
- * Regex patterns for OJP accessibility keywords that should be filtered.
+ *
+ * Patterns:
  * - PLATFORM_* keywords (e.g., PLATFORM_ACCESS_WITH_ASSISTANCE, PLATFORM_NOT_WHEELCHAIR_ACCESSIBLE)
  * - *WHEELCHAIR* keywords (e.g., WHEELCHAIR_ACCESS, NO_WHEELCHAIR_ACCESS)
+ * - Explicit keywords: ALTERNATIVE_TRANSPORT, SHUTTLE_BUS, RAIL_REPLACEMENT
  */
 const OJP_ACCESSIBILITY_PATTERNS = [
   /\bPLATFORM_[A-Z_]+\b/g, // Matches PLATFORM_ACCESS_*, PLATFORM_NOT_*, etc.
   /\b[A-Z_]*WHEELCHAIR[A-Z_]*\b/g, // Matches *WHEELCHAIR* keywords
+  /\bALTERNATIVE_TRANSPORT\b/g,
+  /\bSHUTTLE_BUS\b/g,
+  /\bRAIL_REPLACEMENT\b/g,
 ];
 
 /**
- * Check if a string is an OJP accessibility keyword.
+ * Check if a string is entirely an OJP accessibility keyword.
  */
 function isAccessibilityKeyword(text: string): boolean {
-  if (OJP_ACCESSIBILITY_KEYWORDS.includes(text as (typeof OJP_ACCESSIBILITY_KEYWORDS)[number])) {
-    return true;
-  }
   return OJP_ACCESSIBILITY_PATTERNS.some((pattern) => {
     pattern.lastIndex = 0; // Reset regex state
-    return pattern.test(text) && text.match(pattern)?.[0] === text;
+    const match = text.match(pattern);
+    return match !== null && match[0] === text;
   });
 }
 
@@ -254,16 +249,9 @@ function cleanNameSuffix(suffix: string | undefined): string | undefined {
 
   // Remove accessibility keywords from the suffix
   let cleaned = suffix;
-
-  // Remove pattern-matched keywords (PLATFORM_*, *WHEELCHAIR*)
   for (const pattern of OJP_ACCESSIBILITY_PATTERNS) {
     pattern.lastIndex = 0;
     cleaned = cleaned.replace(pattern, "");
-  }
-
-  // Remove explicit keywords
-  for (const keyword of OJP_ACCESSIBILITY_KEYWORDS) {
-    cleaned = cleaned.replace(new RegExp(`\\b${keyword}\\b`, "g"), "");
   }
 
   // Clean up multiple spaces and trim
