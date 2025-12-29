@@ -208,19 +208,32 @@ function extractDidokId(ref: string | undefined): string | undefined {
 }
 
 /**
- * OJP accessibility keywords that should not be included in station names.
+ * Regex patterns for OJP accessibility keywords that should be filtered from station names.
  * These are transport mode or accessibility attributes, not location suffixes.
+ *
+ * Patterns:
+ * - PLATFORM_* keywords (e.g., PLATFORM_ACCESS_WITH_ASSISTANCE, PLATFORM_NOT_WHEELCHAIR_ACCESSIBLE)
+ * - *WHEELCHAIR* keywords (e.g., WHEELCHAIR_ACCESS, NO_WHEELCHAIR_ACCESS)
+ * - Explicit keywords: ALTERNATIVE_TRANSPORT, SHUTTLE_BUS, RAIL_REPLACEMENT
  */
-const OJP_ACCESSIBILITY_KEYWORDS = [
-  "ALTERNATIVE_TRANSPORT",
-  "PLATFORM_ACCESS_WITH_ASSISTANCE_WHEN_NOTIFIED",
-  "PLATFORM_ACCESS_WITH_ASSISTANCE",
-  "PLATFORM_ACCESS_WITHOUT_ASSISTANCE",
-  "NO_WHEELCHAIR_ACCESS",
-  "WHEELCHAIR_ACCESS",
-  "SHUTTLE_BUS",
-  "RAIL_REPLACEMENT",
-] as const;
+const OJP_ACCESSIBILITY_PATTERNS = [
+  /\bPLATFORM_[A-Z_]+\b/g, // Matches PLATFORM_ACCESS_*, PLATFORM_NOT_*, etc.
+  /\b[A-Z_]*WHEELCHAIR[A-Z_]*\b/g, // Matches *WHEELCHAIR* keywords
+  /\bALTERNATIVE_TRANSPORT\b/g,
+  /\bSHUTTLE_BUS\b/g,
+  /\bRAIL_REPLACEMENT\b/g,
+];
+
+/**
+ * Check if a string is entirely an OJP accessibility keyword.
+ */
+function isAccessibilityKeyword(text: string): boolean {
+  return OJP_ACCESSIBILITY_PATTERNS.some((pattern) => {
+    pattern.lastIndex = 0; // Reset regex state
+    const match = text.match(pattern);
+    return match !== null && match[0] === text;
+  });
+}
 
 /**
  * Clean a station name suffix by removing OJP accessibility keywords.
@@ -230,20 +243,21 @@ function cleanNameSuffix(suffix: string | undefined): string | undefined {
   if (!suffix) return undefined;
 
   // Check if the entire suffix is an accessibility keyword
-  if (OJP_ACCESSIBILITY_KEYWORDS.some((keyword) => suffix === keyword)) {
+  if (isAccessibilityKeyword(suffix)) {
     return undefined;
   }
 
-  // Remove accessibility keywords that appear at the end of the suffix
+  // Remove accessibility keywords from the suffix
   let cleaned = suffix;
-  for (const keyword of OJP_ACCESSIBILITY_KEYWORDS) {
-    // Remove keyword with preceding space if at end
-    if (cleaned.endsWith(` ${keyword}`)) {
-      cleaned = cleaned.slice(0, -keyword.length - 1);
-    }
+  for (const pattern of OJP_ACCESSIBILITY_PATTERNS) {
+    pattern.lastIndex = 0;
+    cleaned = cleaned.replace(pattern, "");
   }
 
-  return cleaned.trim() || undefined;
+  // Clean up multiple spaces and trim
+  cleaned = cleaned.replace(/\s+/g, " ").trim();
+
+  return cleaned || undefined;
 }
 
 /**
