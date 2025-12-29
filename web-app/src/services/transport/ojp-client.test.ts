@@ -415,6 +415,30 @@ describe("extractDestinationStation", () => {
     expect(result).toEqual({ id: "2112", name: "Schönenwerd SO" });
   });
 
+  it("filters out PLATFORM_NOT_WHEELCHAIR_ACCESSIBLE from nameSuffix", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      leg: [
+        {
+          timedLeg: {
+            legBoard: {
+              stopPointRef: "ch:1:sloid:8501121",
+              stopPointName: { text: "Pully" },
+            },
+            legAlight: {
+              stopPointRef: "ch:1:sloid:8502113",
+              stopPointName: { text: "Aarau" },
+              nameSuffix: { text: "PLATFORM_NOT_WHEELCHAIR_ACCESSIBLE" },
+            },
+          },
+        },
+      ],
+    };
+
+    const result = extractDestinationStation(trip);
+    expect(result).toEqual({ id: "8502113", name: "Aarau" });
+  });
+
   it("removes accessibility keyword from end of nameSuffix", () => {
     const trip: OjpTrip = {
       ...baseTrip,
