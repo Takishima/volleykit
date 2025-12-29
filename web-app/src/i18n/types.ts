@@ -223,10 +223,6 @@ export interface Translations {
       refreshCache: string;
       refreshCacheConfirm: string;
       cacheCleared: string;
-      sbbLinkTarget: string;
-      sbbLinkTargetDescription: string;
-      sbbLinkTargetWebsite: string;
-      sbbLinkTargetApp: string;
     };
     dataRetention: {
       title: string;

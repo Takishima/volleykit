@@ -345,10 +345,6 @@ const it: Translations = {
       refreshCacheConfirm:
         "Cancellare tutti i tempi di viaggio in cache? I nuovi calcoli verranno recuperati dall'API.",
       cacheCleared: "Cache tempi di viaggio svuotata",
-      sbbLinkTarget: "Apri connessioni in",
-      sbbLinkTargetDescription: "Scegli dove aprire i link orari FFS",
-      sbbLinkTargetWebsite: "Sito web FFS",
-      sbbLinkTargetApp: "App FFS",
     },
     dataRetention: {
       title: "Dati e privacy",

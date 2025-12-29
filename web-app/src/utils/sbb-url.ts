@@ -1,5 +1,4 @@
 import type { Locale } from "@/i18n";
-import type { SbbLinkTarget } from "@/stores/settings";
 import type { StationInfo } from "@/services/transport/types";
 
 /**
@@ -77,7 +76,6 @@ function formatTime(date: Date): string {
  * 2. For addresses without IDs: https://www.sbb.ch/{lang}?von=address&nach=address&date=...
  *
  * @param params - The parameters for generating the URL
- * @param target - Whether to generate a website or app URL
  * @returns The timetable URL
  *
  * @example
@@ -87,17 +85,10 @@ function formatTime(date: Date): string {
  *   date: new Date("2024-12-28"),
  *   arrivalTime: new Date("2024-12-28T14:30:00"),
  *   language: "de",
- * }, "website");
+ * });
  * ```
  */
-export function generateSbbUrl(
-  params: SbbUrlParams,
-  target: SbbLinkTarget,
-): string {
-  // TODO: Implement sbbmobile:// deep links when we figure out the correct URL format
-  // For now, always use the website URL (works on mobile too)
-  void target;
-
+export function generateSbbUrl(params: SbbUrlParams): string {
   const { destination, date, arrivalTime, language = "de", originStation, destinationStation, originAddress } = params;
 
   const formattedDate = formatDateSbb(date);
@@ -106,19 +97,6 @@ export function generateSbbUrl(
   // Determine origin and destination names
   const origin = originStation?.name ?? originAddress;
   const dest = destinationStation?.name ?? destination;
-
-  // Generate SBB mobile app deep link (commented out - needs correct URL format)
-  // if (target === "app") {
-  //   const appParams = new URLSearchParams();
-  //   if (origin) {
-  //     appParams.set("von", origin);
-  //   }
-  //   appParams.set("nach", dest);
-  //   appParams.set("date", formattedDate);
-  //   appParams.set("time", formattedTime);
-  //   appParams.set("arriving", "true");
-  //   return `sbbmobile://timetable?${appParams.toString()}`;
-  // }
 
   // Generate SBB website URL
   // Common time/date parameters (quoted per SBB spec)
@@ -171,10 +149,5 @@ export function calculateArrivalTime(
  * @param url - The SBB URL to open
  */
 export function openSbbUrl(url: string): void {
-  // TODO: Handle sbbmobile:// deep links when implemented
-  // if (url.startsWith("sbbmobile://")) {
-  //   window.location.href = url;
-  // } else {
   window.open(url, "_blank", "noopener,noreferrer");
-  // }
 }

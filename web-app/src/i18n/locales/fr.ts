@@ -347,10 +347,6 @@ const fr: Translations = {
       refreshCacheConfirm:
         "Effacer tous les temps de trajet en cache ? Les nouveaux calculs seront récupérés depuis l'API.",
       cacheCleared: "Cache des temps de trajet vidé",
-      sbbLinkTarget: "Ouvrir les connexions dans",
-      sbbLinkTargetDescription: "Choisissez où ouvrir les liens horaires CFF",
-      sbbLinkTargetWebsite: "Site web CFF",
-      sbbLinkTargetApp: "App CFF",
     },
     dataRetention: {
       title: "Données et confidentialité",

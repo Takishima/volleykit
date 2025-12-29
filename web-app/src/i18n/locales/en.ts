@@ -346,10 +346,6 @@ const en: Translations = {
       refreshCacheConfirm:
         "Clear all cached travel times? New calculations will be fetched from the API.",
       cacheCleared: "Travel time cache cleared",
-      sbbLinkTarget: "Open connections in",
-      sbbLinkTargetDescription: "Choose where to open SBB timetable links",
-      sbbLinkTargetWebsite: "SBB website",
-      sbbLinkTargetApp: "SBB app",
     },
     dataRetention: {
       title: "Data & Privacy",
