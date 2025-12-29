@@ -1,4 +1,4 @@
-import { useState, useCallback, lazy, Suspense } from "react";
+import { useState, useCallback, useMemo, lazy, Suspense } from "react";
 import {
   useUpcomingAssignments,
   useValidationClosedAssignments,
@@ -20,6 +20,7 @@ import { isAssignmentCompensationEditable } from "@/utils/compensation-actions";
 import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTour } from "@/hooks/useTour";
+import { TOUR_DUMMY_ASSIGNMENT } from "@/components/tour/definitions/assignments";
 
 const PdfLanguageModal = lazy(
   () =>
@@ -49,7 +50,7 @@ export function AssignmentsPage() {
   const { t } = useTranslation();
 
   // Initialize tour for this page (triggers auto-start on first visit)
-  useTour("assignments");
+  const { isTourMode } = useTour("assignments");
 
   const {
     editCompensationModal,
@@ -73,13 +74,24 @@ export function AssignmentsPage() {
     refetch: refetchValidationClosed,
   } = useValidationClosedAssignments();
 
-  const data = activeTab === "upcoming" ? upcomingData : validationClosedData;
+  const rawData = activeTab === "upcoming" ? upcomingData : validationClosedData;
   const isLoading =
     activeTab === "upcoming" ? upcomingLoading : validationClosedLoading;
   const error =
     activeTab === "upcoming" ? upcomingError : validationClosedError;
   const refetch =
     activeTab === "upcoming" ? refetchUpcoming : refetchValidationClosed;
+
+  // When tour is active, prepend the standardized dummy assignment to showcase
+  // all available action buttons regardless of user's actual assignments
+  const data = useMemo(() => {
+    if (!isTourMode || activeTab !== "upcoming") {
+      return rawData;
+    }
+    // Cast tour dummy assignment to Assignment type for display purposes
+    const tourAssignment = TOUR_DUMMY_ASSIGNMENT as unknown as Assignment;
+    return rawData ? [tourAssignment, ...rawData] : [tourAssignment];
+  }, [isTourMode, activeTab, rawData]);
 
   const getSwipeConfig = useCallback(
     (assignment: Assignment) => {

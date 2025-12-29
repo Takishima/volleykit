@@ -21,17 +21,17 @@ const fr: Translations = {
       welcome: {
         title: "Vos désignations",
         description:
-          "Ici vous verrez vos prochaines désignations d'arbitre. Chaque carte affiche les détails du match.",
+          "Ici vous verrez vos prochaines désignations d'arbitre. Chaque carte affiche les détails du match. Cet exemple montre toutes les actions disponibles.",
       },
       swipeValidate: {
         title: "Glissez vers la gauche",
         description:
-          "Glissez vers la gauche pour révéler les boutons d'action: Valider (confirmer le match), Modifier (ajuster l'indemnité) et Rapport (générer le rapport de salle pour NLA/NLB).",
+          "Glissez vers la gauche pour révéler les boutons d'action. Valider apparaît pour le 1er arbitre, Modifier pour les indemnités modifiables, et Rapport pour les matchs NLA/NLB. Vos matchs réels peuvent afficher moins de boutons selon votre rôle et vos permissions.",
       },
       swipeExchange: {
         title: "Glissez vers la droite",
         description:
-          "Glissez vers la droite pour proposer la désignation à la bourse. D'autres arbitres pourront alors reprendre le match.",
+          "Glissez vers la droite pour proposer la désignation à la bourse. D'autres arbitres pourront alors reprendre le match. Disponible pour tous les matchs à venir.",
       },
       tapDetails: {
         title: "Voir les détails",

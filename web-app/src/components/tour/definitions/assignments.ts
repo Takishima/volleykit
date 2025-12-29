@@ -46,6 +46,13 @@ function getUpcomingDate(): string {
   return date.toISOString();
 }
 
+/**
+ * Tour dummy assignment configured to showcase ALL available action buttons:
+ * - Validate: requires refereePosition === "head-one" ✓
+ * - Edit Compensation: requires !paymentDone && !lockPayoutOnSiteCompensation ✓
+ * - Hall Report: requires NLA/NLB league + head-one position ✓
+ * - Exchange: requires isGameInFuture === "1" ✓
+ */
 export const TOUR_DUMMY_ASSIGNMENT: TourDummyAssignment = {
   __identity: "tour-dummy-assignment",
   refereePosition: "head-one",
@@ -68,6 +75,20 @@ export const TOUR_DUMMY_ASSIGNMENT: TourDummyAssignment = {
         name: "Musterhalle",
         city: "Zürich",
       },
+      // NLA league category to enable hall report generation
+      group: {
+        __identity: "tour-dummy-group",
+        phase: {
+          __identity: "tour-dummy-phase",
+          league: {
+            __identity: "tour-dummy-league",
+            leagueCategory: {
+              __identity: "tour-dummy-league-category",
+              name: "NLA",
+            },
+          },
+        },
+      },
     },
     isGameInFuture: "1",
   },
@@ -75,5 +96,8 @@ export const TOUR_DUMMY_ASSIGNMENT: TourDummyAssignment = {
     __identity: "tour-dummy-compensation",
     distanceInMetres: 25000,
     distanceFormatted: "25 km",
+    // Compensation is editable (not paid, not locked)
+    paymentDone: false,
+    lockPayoutOnSiteCompensation: false,
   },
 };
