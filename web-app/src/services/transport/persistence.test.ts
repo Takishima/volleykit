@@ -165,5 +165,29 @@ describe("persistence", () => {
       const cached = getCachedTravelTime("hall-123", "47.377,8.542", "weekday");
       expect(cached).toBeNull();
     });
+
+    it("invalidates old cache versions", () => {
+      // Simulate old v1 cache with dirty station names
+      const oldCache = {
+        version: 1,
+        entries: {
+          "hall-123:47.377,8.542:weekday": {
+            result: {
+              ...mockResult,
+              destinationStation: {
+                id: "8502113",
+                name: "Aarau PLATFORM_NOT_WHEELCHAIR_ACCESSIBLE",
+              },
+            },
+            timestamp: Date.now(),
+          },
+        },
+      };
+      localStorage.setItem(TRAVEL_TIME_STORAGE_KEY, JSON.stringify(oldCache));
+
+      // Old cache should be invalidated due to version mismatch
+      const cached = getCachedTravelTime("hall-123", "47.377,8.542", "weekday");
+      expect(cached).toBeNull();
+    });
   });
 });
