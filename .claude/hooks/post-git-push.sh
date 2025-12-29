@@ -1,17 +1,24 @@
 #!/bin/bash
 # Hook: Generate PR description after git push (Claude Code web only)
 
-set -e
-
 # Only run in Claude Code web sessions
 if [ "$CLAUDE_CODE_REMOTE" != "true" ]; then
   exit 0
 fi
 
-# Parse input from Claude Code
+# Check jq is available
+if ! command -v jq &> /dev/null; then
+  exit 0
+fi
+
+# Read and validate input
 input=$(cat)
-tool_input=$(echo "$input" | jq -r '.tool_input // {}')
-command=$(echo "$tool_input" | jq -r '.command // ""')
+if ! echo "$input" | jq -e . &> /dev/null; then
+  exit 0
+fi
+
+# Parse command from input
+command=$(echo "$input" | jq -r '.tool_input.command // ""')
 
 # Detect successful git push
 if [[ "$command" == *"git push"* ]]; then
