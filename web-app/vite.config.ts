@@ -262,9 +262,28 @@ export default defineConfig(({ mode }) => {
     base: basePath,
     test: {
       globals: true,
-      environment: 'jsdom',
+      // Default to happy-dom, but pure unit tests use faster node environment
+      environment: 'happy-dom',
+      environmentMatchGlobs: [
+        // Pure unit tests don't need DOM - run in faster node environment
+        ['src/api/**/*.test.ts', 'node'],
+        ['src/i18n/**/*.test.ts', 'node'],
+        ['src/stores/**/*.test.ts', 'node'],
+        ['src/utils/**/*.test.ts', 'node'],
+        ['src/services/**/*.test.ts', 'node'],
+        ['src/test/**/*.test.ts', 'node'],
+      ],
       setupFiles: './src/test/setup.ts',
       include: ['src/**/*.{test,spec}.{ts,tsx}'],
+      // Performance: vmThreads is much faster than default forks
+      pool: 'vmThreads',
+      // Fix react-router ESM/CJS compatibility with vmThreads
+      server: {
+        deps: {
+          inline: [/react-router/],
+          fallbackCJS: true,
+        },
+      },
       coverage: {
         provider: 'v8',
         reporter: ['text', 'json', 'html'],
@@ -290,6 +309,9 @@ export default defineConfig(({ mode }) => {
       alias: {
         '@': path.resolve(__dirname, './src'),
       },
+      // Fix dual package hazard with react-router in Node v22.12+
+      // See: https://github.com/vitest-dev/vitest/issues/7692
+      conditions: ['module-sync'],
     },
     server: {
       proxy: createDevProxy([

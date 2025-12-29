@@ -3,7 +3,8 @@ import { beforeAll } from "vitest";
 import { preloadTranslations } from "@/i18n";
 import { preloadDateLocales } from "@/hooks/useDateFormat";
 
-// Preload all locales before tests run to ensure synchronous availability
+// Preload all translations and date locales before each test file runs.
+// This ensures synchronous availability of localized strings during tests.
 beforeAll(async () => {
   await Promise.all([preloadTranslations(), preloadDateLocales()]);
 });
