@@ -58,6 +58,20 @@ export interface TourDummyAssignment {
         name: string;
         city: string;
       };
+      // League category structure for game report eligibility
+      group?: {
+        __identity: string;
+        phase?: {
+          __identity: string;
+          league?: {
+            __identity: string;
+            leagueCategory?: {
+              __identity: string;
+              name: string;
+            };
+          };
+        };
+      };
     };
     isGameInFuture: string;
   };
@@ -65,6 +79,9 @@ export interface TourDummyAssignment {
     __identity: string;
     distanceInMetres: number;
     distanceFormatted: string;
+    // Compensation editability flags
+    paymentDone?: boolean;
+    lockPayoutOnSiteCompensation?: boolean;
   };
 }
 
