@@ -11,7 +11,7 @@ import {
   useUpdateAssignmentCompensation,
   COMPENSATION_ERROR_KEYS,
 } from "./useCompensations";
-import type { CompensationRecord, Assignment } from "@/api/client";
+import type { CompensationRecord } from "@/api/client";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyFunction = (...args: any[]) => any;

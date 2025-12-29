@@ -9,7 +9,6 @@ import {
   useValidationClosedAssignments,
   useAssignmentDetails,
   getDateRangeForPeriod,
-  type DatePeriod,
 } from "./useAssignments";
 import type { Assignment } from "@/api/client";
 
