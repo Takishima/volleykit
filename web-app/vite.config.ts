@@ -262,7 +262,9 @@ export default defineConfig(({ mode }) => {
     base: basePath,
     test: {
       globals: true,
-      environment: 'jsdom',
+      // Use happy-dom instead of jsdom for faster test execution
+      // happy-dom is ~2-3x faster for DOM operations
+      environment: 'happy-dom',
       setupFiles: './src/test/setup.ts',
       include: ['src/**/*.{test,spec}.{ts,tsx}'],
       coverage: {
