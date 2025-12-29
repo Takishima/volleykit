@@ -34,5 +34,18 @@
       "Bash(npx wrangler:*)"
     ],
     "deny": []
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/post-git-push.sh"
+          }
+        ]
+      }
+    ]
   }
 }
