@@ -22,6 +22,10 @@ For code reviews and detailed examples, see:
 - **[Security Checklist](docs/SECURITY_CHECKLIST.md)** - Security review checklist (XSS, injection, auth)
 - **[Code Patterns](docs/CODE_PATTERNS.md)** - Detailed code examples and anti-patterns
 
+## Claude Code Web Sessions
+
+@docs/CLAUDE_WEB.md
+
 ## Tech Stack
 
 - **Framework**: React 19 with TypeScript 5.9
