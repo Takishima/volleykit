@@ -7,7 +7,7 @@ import { Modal } from "@/components/ui/Modal";
 import { ModalHeader } from "@/components/ui/ModalHeader";
 import { ModalFooter } from "@/components/ui/ModalFooter";
 import { ModalErrorBoundary } from "@/components/ui/ModalErrorBoundary";
-import { ModalButton } from "@/components/ui/ModalButton";
+import { Button } from "@/components/ui/Button";
 
 interface ExchangeConfirmationModalProps {
   exchange: GameExchange;
@@ -150,23 +150,23 @@ function ExchangeConfirmationModalComponent({
           </p>
 
           <ModalFooter>
-            <ModalButton
+            <Button
               variant="secondary"
-              fullWidth
+              className="flex-1"
               onClick={onClose}
               disabled={isSubmitting}
             >
               {t("common.cancel")}
-            </ModalButton>
-            <ModalButton
+            </Button>
+            <Button
               variant={confirmVariant}
-              fullWidth
+              className="flex-1"
               onClick={handleConfirm}
               disabled={isSubmitting}
               aria-busy={isSubmitting}
             >
               {isSubmitting ? t("common.loading") : t(buttonKey)}
-            </ModalButton>
+            </Button>
           </ModalFooter>
         </div>
       </ModalErrorBoundary>

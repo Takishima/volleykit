@@ -1,6 +1,6 @@
 import { useRef, useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { ModalButton } from "@/components/ui/ModalButton";
+import { Button } from "@/components/ui/Button";
 
 /** Z-index for confirmation dialog (above main modal) */
 const Z_INDEX_CONFIRMATION_DIALOG = 60;
@@ -64,15 +64,15 @@ export function UnsavedChangesDialog({
           {t("validation.state.unsavedChangesMessage")}
         </p>
         <div className="flex justify-end gap-3">
-          <ModalButton variant="secondary" onClick={onCancel} disabled={isSaving}>
+          <Button variant="secondary" onClick={onCancel} disabled={isSaving}>
             {t("validation.state.continueEditing")}
-          </ModalButton>
-          <ModalButton variant="danger" onClick={onDiscard} disabled={isSaving}>
+          </Button>
+          <Button variant="danger" onClick={onDiscard} disabled={isSaving}>
             {t("validation.state.discardChanges")}
-          </ModalButton>
-          <ModalButton variant="primary" onClick={onSaveAndClose} disabled={isSaving}>
+          </Button>
+          <Button variant="primary" onClick={onSaveAndClose} disabled={isSaving}>
             {isSaving ? t("common.loading") : t("validation.state.saveAndClose")}
-          </ModalButton>
+          </Button>
         </div>
       </div>
     </div>

@@ -53,8 +53,8 @@ interface ModalProps {
  *   <ModalHeader title="My Modal" titleId="my-modal-title" />
  *   <div className="mb-6">Modal content here</div>
  *   <ModalFooter>
- *     <ModalButton variant="secondary" onClick={handleClose}>Cancel</ModalButton>
- *     <ModalButton variant="primary" onClick={handleConfirm}>Confirm</ModalButton>
+ *     <Button variant="secondary" className="flex-1" onClick={handleClose}>Cancel</Button>
+ *     <Button variant="primary" className="flex-1" onClick={handleConfirm}>Confirm</Button>
  *   </ModalFooter>
  * </Modal>
  * ```

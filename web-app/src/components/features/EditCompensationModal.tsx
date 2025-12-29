@@ -25,7 +25,7 @@ import { Modal } from "@/components/ui/Modal";
 import { ModalHeader } from "@/components/ui/ModalHeader";
 import { ModalFooter } from "@/components/ui/ModalFooter";
 import { ModalErrorBoundary } from "@/components/ui/ModalErrorBoundary";
-import { ModalButton } from "@/components/ui/ModalButton";
+import { Button } from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 interface EditCompensationModalProps {
@@ -256,9 +256,9 @@ function EditCompensationModalComponent({
             <p className="text-danger-600 dark:text-danger-400 mb-4">
               {fetchError}
             </p>
-            <ModalButton variant="secondary" onClick={onClose}>
+            <Button variant="secondary" onClick={onClose}>
               {t("common.close")}
-            </ModalButton>
+            </Button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -315,12 +315,12 @@ function EditCompensationModalComponent({
             </div>
 
             <ModalFooter>
-              <ModalButton variant="secondary" fullWidth onClick={onClose}>
+              <Button variant="secondary" className="flex-1" onClick={onClose}>
                 {t("common.close")}
-              </ModalButton>
-              <ModalButton variant="primary" fullWidth type="submit">
+              </Button>
+              <Button variant="primary" className="flex-1" type="submit">
                 {t("common.save")}
-              </ModalButton>
+              </Button>
             </ModalFooter>
           </form>
         )}

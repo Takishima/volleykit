@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { Modal } from "./Modal";
 import { ModalHeader } from "./ModalHeader";
 import { ModalFooter } from "./ModalFooter";
-import { ModalButton } from "./ModalButton";
+import { Button } from "./Button";
 
 describe("Modal", () => {
   it("should not render when closed", () => {
@@ -228,8 +228,8 @@ describe("Modal", () => {
         <Modal isOpen={true} onClose={onClose} titleId="test-modal-title">
           <ModalHeader title="Test Modal" titleId="test-modal-title" />
           <ModalFooter>
-            <ModalButton variant="secondary">First</ModalButton>
-            <ModalButton variant="primary">Last</ModalButton>
+            <Button variant="secondary">First</Button>
+            <Button variant="primary">Last</Button>
           </ModalFooter>
         </Modal>,
       );
@@ -253,8 +253,8 @@ describe("Modal", () => {
         <Modal isOpen={true} onClose={onClose} titleId="test-modal-title">
           <ModalHeader title="Test Modal" titleId="test-modal-title" />
           <ModalFooter>
-            <ModalButton variant="secondary">First</ModalButton>
-            <ModalButton variant="primary">Last</ModalButton>
+            <Button variant="secondary">First</Button>
+            <Button variant="primary">Last</Button>
           </ModalFooter>
         </Modal>,
       );
@@ -278,9 +278,9 @@ describe("Modal", () => {
         <Modal isOpen={true} onClose={onClose} titleId="test-modal-title">
           <ModalHeader title="Test Modal" titleId="test-modal-title" />
           <ModalFooter>
-            <ModalButton variant="secondary">First</ModalButton>
-            <ModalButton variant="primary">Middle</ModalButton>
-            <ModalButton variant="danger">Last</ModalButton>
+            <Button variant="secondary">First</Button>
+            <Button variant="primary">Middle</Button>
+            <Button variant="danger">Last</Button>
           </ModalFooter>
         </Modal>,
       );
@@ -367,8 +367,8 @@ describe("ModalFooter", () => {
   it("should render children", () => {
     render(
       <ModalFooter>
-        <ModalButton variant="secondary">Cancel</ModalButton>
-        <ModalButton variant="primary">Confirm</ModalButton>
+        <Button variant="secondary">Cancel</Button>
+        <Button variant="primary">Confirm</Button>
       </ModalFooter>,
     );
 
@@ -379,7 +379,7 @@ describe("ModalFooter", () => {
   it("should render divider when divider prop is true", () => {
     const { container } = render(
       <ModalFooter divider>
-        <ModalButton variant="primary">Action</ModalButton>
+        <Button variant="primary">Action</Button>
       </ModalFooter>,
     );
 
@@ -389,7 +389,7 @@ describe("ModalFooter", () => {
   it("should not render divider when divider prop is false", () => {
     const { container } = render(
       <ModalFooter divider={false}>
-        <ModalButton variant="primary">Action</ModalButton>
+        <Button variant="primary">Action</Button>
       </ModalFooter>,
     );
 
