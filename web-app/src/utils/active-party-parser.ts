@@ -6,6 +6,7 @@
  * eligibleRoles which are needed to determine if a user has multiple associations.
  */
 
+import { z } from "zod";
 import { logger } from "@/utils/logger";
 
 /**
@@ -44,12 +45,49 @@ export interface ActiveParty {
   groupedEligibleAttributeValues?: AttributeValue[];
 }
 
+// Zod schemas for runtime validation of parsed JSON
+const InflatedValueSchema = z.object({
+  __identity: z.string(),
+  name: z.string().optional(),
+  shortName: z.string().optional(),
+});
+
+const AttributeValueSchema = z.object({
+  __identity: z.string(),
+  attributeIdentifier: z.string(),
+  roleIdentifier: z.string(),
+  inflatedValue: InflatedValueSchema.optional(),
+});
+
+const RoleDefinitionSchema = z.object({
+  identifier: z.string(),
+  name: z.string().optional(),
+  packageKey: z.string().optional(),
+});
+
+const ActivePartySchema = z
+  .object({
+    __identity: z.string().optional(),
+    eligibleAttributeValues: z.array(AttributeValueSchema).optional(),
+    eligibleRoles: z.record(z.string(), RoleDefinitionSchema).optional(),
+    activeAttributeValue: AttributeValueSchema.optional(),
+    activeRoleIdentifier: z.string().optional(),
+    groupedEligibleAttributeValues: z.array(AttributeValueSchema).optional(),
+  })
+  .passthrough(); // Allow additional unknown properties from the API
+
 /**
  * Regex pattern to match window.activeParty = JSON.parse('...') in HTML.
  * Captures the JSON string inside the parse() call.
- * Uses (?:[^'\\]|\\.)+ to handle escaped characters including \' within the string.
+ * Uses (?:[^'\\]|\\.)* to handle escaped characters including \' within the string.
+ *
+ * ReDoS safety: This pattern uses a non-overlapping alternation [^'\\] | \\. where each
+ * character is consumed by exactly one branch, preventing catastrophic backtracking.
+ * The outer * quantifier cannot cause exponential behavior because the inner alternation
+ * is mutually exclusive (either a non-special char OR an escape sequence).
  */
-const ACTIVE_PARTY_PATTERN = /window\.activeParty\s*=\s*JSON\.parse\s*\(\s*'((?:[^'\\]|\\.)*)'\s*\)/;
+const ACTIVE_PARTY_PATTERN =
+  /window\.activeParty\s*=\s*JSON\.parse\s*\(\s*'((?:[^'\\]|\\.)*)'\s*\)/;
 
 /**
  * Decode HTML entities in a string.
@@ -100,15 +138,16 @@ export function extractActivePartyFromHtml(html: string): ActiveParty | null {
     const encodedJson = match[1];
     const decodedJson = decodeHtmlEntities(encodedJson);
 
-    const parsed = JSON.parse(decodedJson) as unknown;
+    const parsed: unknown = JSON.parse(decodedJson);
 
-    // Basic validation that we got an object
-    if (typeof parsed !== "object" || parsed === null) {
-      logger.warn("activeParty parsed but is not an object");
+    // Validate with Zod schema
+    const result = ActivePartySchema.safeParse(parsed);
+    if (!result.success) {
+      logger.warn("activeParty validation failed:", result.error.issues);
       return null;
     }
 
-    return parsed as ActiveParty;
+    return result.data;
   } catch (error) {
     logger.warn("Failed to parse activeParty from HTML:", error);
     return null;
