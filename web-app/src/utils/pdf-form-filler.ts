@@ -28,7 +28,7 @@ export interface SportsHallReportData {
 function formatDateForReport(isoString: string | undefined): string {
   if (!isoString) return '';
   try {
-    return format(new Date(isoString), 'dd.MM.yyyy');
+    return format(new Date(isoString), 'dd.MM.yy');
   } catch {
     // Invalid date format - return empty string so form field shows blank
     logger.warn('Failed to parse date for PDF report:', isoString);
@@ -123,11 +123,11 @@ const NLA_FIELD_MAPPING: FieldMapping = {
 const NLB_FIELD_MAPPING: FieldMapping = {
   gameNumber: 'Text9',
   homeTeam: 'Text10',
-  awayTeam: 'Text11',
+  awayTeam: 'Text12',
   genderRadio: 'Gruppe15',
-  hallName: 'Text12',
+  hallName: 'Text14',
   location: 'Text13',
-  date: 'Text14',
+  date: 'Text11',
   firstRefereeName: 'Text23',
   secondRefereeName: 'Text24',
 };
