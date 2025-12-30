@@ -253,7 +253,7 @@ describe("submitLoginCredentials", () => {
   };
 
   describe("successful login", () => {
-    it("returns success with CSRF token when redirected to dashboard", async () => {
+    it("returns success with CSRF token and dashboard HTML when redirected to dashboard", async () => {
       const dashboardHtml = createDashboardHtml("success-csrf-token");
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -263,7 +263,11 @@ describe("submitLoginCredentials", () => {
 
       const result = await submitLoginCredentials(authUrl, username, password, formFields);
 
-      expect(result).toEqual({ success: true, csrfToken: "success-csrf-token" });
+      expect(result).toEqual({
+        success: true,
+        csrfToken: "success-csrf-token",
+        dashboardHtml,
+      });
     });
 
     it("sends correct form data", async () => {
@@ -314,7 +318,11 @@ describe("submitLoginCredentials", () => {
 
       const result = await submitLoginCredentials(authUrl, username, password, formFields);
 
-      expect(result).toEqual({ success: true, csrfToken: "fallback-token" });
+      expect(result).toEqual({
+        success: true,
+        csrfToken: "fallback-token",
+        dashboardHtml: htmlWithCsrf,
+      });
     });
   });
 

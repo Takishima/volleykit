@@ -789,7 +789,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PersonDetails'
+                type: object
+                properties:
+                  person:
+                    $ref: '#/components/schemas/PersonDetails'
+                required:
+                  - person
         '401':
           $ref: '#/components/responses/Unauthorized'
   /indoorvolleyball.refadmin/api\indoorreferee/getIndoorRefereeByActivePerson:
@@ -4147,9 +4152,10 @@ components:
     PersonDetails:
       type: object
       description: |
-        Detailed person information for profile page.
-        This is the "active party" data embedded in page loads, containing the user's
-        association memberships and current context.
+        Detailed person information returned by the profile API.
+        Note: The following fields are only available in embedded HTML data,
+        not in the API response: eligibleAttributeValues, eligibleRoles,
+        groupedEligibleAttributeValues, activeAttributeValue.
       properties:
         __identity:
           type: string
@@ -4269,33 +4275,11 @@ components:
             $ref: '#/components/schemas/PostalAddress'
         primaryPostalAddress:
           $ref: '#/components/schemas/PostalAddress'
-        # Association context (critical for multi-association users)
-        activeAttributeValue:
-          $ref: '#/components/schemas/AttributeValue'
+        # Association context
         activeRoleIdentifier:
           type: string
           description: Current role identifier
           example: "Indoorvolleyball.RefAdmin:Referee"
-        eligibleAttributeValues:
-          type: array
-          description: All association memberships/roles the user is eligible for
-          items:
-            $ref: '#/components/schemas/AttributeValue'
-        groupedEligibleAttributeValues:
-          type: array
-          description: Eligible attribute values grouped by role
-          items:
-            $ref: '#/components/schemas/AttributeValue'
-        groupedEligibleAttributeValuesWithoutHiddenRoles:
-          type: array
-          description: Visible eligible attribute values
-          items:
-            $ref: '#/components/schemas/AttributeValue'
-        eligibleRoles:
-          type: object
-          description: Map of role identifiers to role definitions
-          additionalProperties:
-            $ref: '#/components/schemas/RoleDefinition'
         # Accounts
         accounts:
           type: array
@@ -4875,6 +4859,14 @@ components:
           type: string
           nullable: true
         # Audit fields
+        createdAt:
+          type: string
+          format: date-time
+          description: When the referee record was created
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the referee record was last updated
         createdBy:
           type: string
         createdByIpAddress:

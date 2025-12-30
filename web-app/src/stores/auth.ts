@@ -8,6 +8,12 @@ import {
   extractCsrfTokenFromPage,
   submitLoginCredentials,
 } from "@/utils/auth-parsers";
+import {
+  extractActivePartyFromHtml,
+  hasMultipleAssociations,
+  type AttributeValue,
+  type RoleDefinition,
+} from "@/utils/active-party-parser";
 import { useDemoStore } from "./demo";
 import { useSettingsStore, DEMO_HOME_LOCATION } from "./settings";
 
@@ -36,6 +42,9 @@ interface AuthState {
   isDemoMode: boolean;
   activeOccupationId: string | null;
   _checkSessionPromise: Promise<boolean> | null;
+  // Active party data from embedded HTML (contains association memberships)
+  eligibleAttributeValues: AttributeValue[] | null;
+  eligibleRoles: Record<string, RoleDefinition> | null;
 
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
@@ -43,6 +52,7 @@ interface AuthState {
   setUser: (user: UserProfile | null) => void;
   setDemoAuthenticated: () => void;
   setActiveOccupation: (id: string) => void;
+  hasMultipleAssociations: () => boolean;
 }
 
 const API_BASE = import.meta.env.VITE_API_PROXY_URL || "";
@@ -61,6 +71,8 @@ export const useAuthStore = create<AuthState>()(
       isDemoMode: false,
       activeOccupationId: null,
       _checkSessionPromise: null,
+      eligibleAttributeValues: null,
+      eligibleRoles: null,
 
       login: async (username: string, password: string): Promise<boolean> => {
         set({ status: "loading", error: null });
@@ -78,8 +90,15 @@ export const useAuthStore = create<AuthState>()(
           const existingCsrfToken = extractCsrfTokenFromPage(html);
 
           if (existingCsrfToken) {
+            // Already logged in - parse activeParty from current page
+            const activeParty = extractActivePartyFromHtml(html);
             setCsrfToken(existingCsrfToken);
-            set({ status: "authenticated", csrfToken: existingCsrfToken });
+            set({
+              status: "authenticated",
+              csrfToken: existingCsrfToken,
+              eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
+              eligibleRoles: activeParty?.eligibleRoles ?? null,
+            });
             return true;
           }
 
@@ -91,8 +110,15 @@ export const useAuthStore = create<AuthState>()(
           const result = await submitLoginCredentials(AUTH_URL, username, password, formFields);
 
           if (result.success) {
+            // Parse activeParty from dashboard HTML after successful login
+            const activeParty = extractActivePartyFromHtml(result.dashboardHtml);
             setCsrfToken(result.csrfToken);
-            set({ status: "authenticated", csrfToken: result.csrfToken });
+            set({
+              status: "authenticated",
+              csrfToken: result.csrfToken,
+              eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
+              eligibleRoles: activeParty?.eligibleRoles ?? null,
+            });
             return true;
           }
 
@@ -126,6 +152,8 @@ export const useAuthStore = create<AuthState>()(
           error: null,
           csrfToken: null,
           isDemoMode: false,
+          eligibleAttributeValues: null,
+          eligibleRoles: null,
         });
       },
 
@@ -188,12 +216,22 @@ export const useAuthStore = create<AuthState>()(
               if (response.ok) {
                 const dashboardHtml = await response.text();
                 const csrfToken = extractCsrfTokenFromPage(dashboardHtml);
+                const activeParty = extractActivePartyFromHtml(dashboardHtml);
 
                 if (csrfToken) {
                   setCsrfToken(csrfToken);
-                  set({ status: "authenticated", csrfToken });
+                  set({
+                    status: "authenticated",
+                    csrfToken,
+                    eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
+                    eligibleRoles: activeParty?.eligibleRoles ?? null,
+                  });
                 } else {
-                  set({ status: "authenticated" });
+                  set({
+                    status: "authenticated",
+                    eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
+                    eligibleRoles: activeParty?.eligibleRoles ?? null,
+                  });
                 }
                 resolvePromise(true);
                 return;
@@ -282,6 +320,10 @@ export const useAuthStore = create<AuthState>()(
       setActiveOccupation: (id: string) => {
         set({ activeOccupationId: id });
       },
+
+      hasMultipleAssociations: () => {
+        return hasMultipleAssociations(get().eligibleAttributeValues);
+      },
     }),
     {
       name: "volleykit-auth",
@@ -289,11 +331,13 @@ export const useAuthStore = create<AuthState>()(
         // Persist minimal user data for UX (immediate name display).
         // Session cookies are HttpOnly and managed by browser.
         // CSRF token is persisted to enable POST requests after page reload.
+        // eligibleAttributeValues persisted for hasMultipleAssociations() on refresh.
         user: state.user,
         csrfToken: state.csrfToken,
         _wasAuthenticated: state.status === "authenticated",
         isDemoMode: state.isDemoMode,
         activeOccupationId: state.activeOccupationId,
+        eligibleAttributeValues: state.eligibleAttributeValues,
       }),
       merge: (persisted, current) => {
         const persistedState = persisted as
@@ -303,6 +347,7 @@ export const useAuthStore = create<AuthState>()(
               _wasAuthenticated?: boolean;
               isDemoMode?: boolean;
               activeOccupationId?: string | null;
+              eligibleAttributeValues?: AttributeValue[] | null;
             }
           | undefined;
 
@@ -318,6 +363,7 @@ export const useAuthStore = create<AuthState>()(
           status: persistedState?._wasAuthenticated ? "authenticated" : "idle",
           isDemoMode: persistedState?.isDemoMode ?? false,
           activeOccupationId: persistedState?.activeOccupationId ?? null,
+          eligibleAttributeValues: persistedState?.eligibleAttributeValues ?? null,
           _checkSessionPromise: null,
         };
       },

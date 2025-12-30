@@ -105,12 +105,15 @@ function createMockAuthStore(
     csrfToken: null,
     isDemoMode: false,
     _checkSessionPromise: null,
+    eligibleAttributeValues: null,
+    eligibleRoles: null,
     login: vi.fn(),
     logout: vi.fn(),
     checkSession: vi.fn(),
     setUser: vi.fn(),
     setDemoAuthenticated: vi.fn(),
     setActiveOccupation: vi.fn(),
+    hasMultipleAssociations: vi.fn().mockReturnValue(false),
     ...overrides,
   };
 }

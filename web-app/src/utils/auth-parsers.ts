@@ -127,9 +127,10 @@ export function extractCsrfTokenFromPage(html: string): string | null {
 
 /**
  * Result of submitting login credentials.
+ * On success, includes the dashboard HTML for extracting additional data like activeParty.
  */
 export type LoginResult =
-  | { success: true; csrfToken: string }
+  | { success: true; csrfToken: string; dashboardHtml: string }
   | { success: false; error: string };
 
 /**
@@ -200,7 +201,7 @@ export async function submitLoginCredentials(
     // Successfully redirected to dashboard - extract CSRF token
     const csrfToken = extractCsrfTokenFromPage(html);
     if (csrfToken) {
-      return { success: true, csrfToken };
+      return { success: true, csrfToken, dashboardHtml: html };
     }
     // Redirected to dashboard but couldn't find CSRF token
     // This is a parsing issue, not invalid credentials
@@ -238,7 +239,7 @@ export async function submitLoginCredentials(
   // Fallback: Check if CSRF token exists (might be on dashboard without redirect flag)
   const csrfToken = extractCsrfTokenFromPage(html);
   if (csrfToken) {
-    return { success: true, csrfToken };
+    return { success: true, csrfToken, dashboardHtml: html };
   }
 
   // Unknown state - couldn't determine success or failure
