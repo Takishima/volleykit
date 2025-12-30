@@ -1,5 +1,4 @@
 import { type Page, type Locator, expect } from "@playwright/test";
-import { PAGE_LOAD_TIMEOUT_MS } from "../constants";
 
 /**
  * Page Object Model for the Login page.
@@ -24,9 +23,7 @@ export class LoginPage {
   async goto() {
     await this.page.goto("/login");
     // Wait for login form to be ready
-    await expect(this.loginButton).toBeVisible({
-      timeout: PAGE_LOAD_TIMEOUT_MS,
-    });
+    await expect(this.loginButton).toBeVisible();
   }
 
   async login(username: string, password: string) {
@@ -40,26 +37,12 @@ export class LoginPage {
    * Demo mode provides consistent mock data for reliable testing.
    */
   async enterDemoMode() {
-    // Ensure button is visible and enabled before clicking
-    await expect(this.demoButton).toBeVisible();
-    await expect(this.demoButton).toBeEnabled();
-
-    // Wait for network to be idle to ensure React app is fully hydrated
-    // This fixes flaky tests in Firefox where clicks during hydration may not register
-    await this.page.waitForLoadState("networkidle");
-
-    // Click demo button
+    // Playwright auto-waits for the button to be actionable (visible + enabled)
     await this.demoButton.click();
 
-    // Wait for navigation away from login page
-    await expect(this.page).not.toHaveURL(/login/, {
-      timeout: PAGE_LOAD_TIMEOUT_MS,
-    });
-
-    // Wait for main content to appear on the destination page
-    await expect(this.page.getByRole("main")).toBeVisible({
-      timeout: PAGE_LOAD_TIMEOUT_MS,
-    });
+    // Wait for navigation away from login page and main content to appear
+    await expect(this.page).not.toHaveURL(/login/);
+    await expect(this.page.getByRole("main")).toBeVisible();
   }
 
   async expectToBeVisible() {

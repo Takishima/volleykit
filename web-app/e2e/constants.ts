@@ -1,18 +1,16 @@
 /**
  * Shared constants for E2E tests.
- * Centralizes timing values to avoid magic numbers throughout tests.
  *
- * Note: Avoid hardcoded delay waits (waitForTimeout). Instead, use
- * Playwright's built-in auto-waiting via expect assertions and proper
- * element state checks. These timeout values are for explicit waitFor
- * calls when waiting for specific states.
+ * PHILOSOPHY: Prefer element-based waits over time-based waits.
+ * These timeouts are only fallbacks for maximum wait times, not delays.
+ * Playwright's auto-waiting handles most cases automatically.
  */
 
-/** Timeout for page/component loading (ms) */
-export const PAGE_LOAD_TIMEOUT_MS = 10000;
+/** Maximum timeout for page/component loading (ms) - fallback only */
+export const PAGE_LOAD_TIMEOUT_MS = 5000;
 
-/** Timeout for tab state changes and React updates (ms) */
-export const TAB_SWITCH_TIMEOUT_MS = 5000;
+/** Maximum timeout for tab state changes (ms) - fallback only */
+export const TAB_SWITCH_TIMEOUT_MS = 2000;
 
-/** Timeout for loading indicators to disappear (ms) */
-export const LOADING_TIMEOUT_MS = 5000;
+/** Maximum timeout for loading indicators to disappear (ms) - fallback only */
+export const LOADING_TIMEOUT_MS = 2000;

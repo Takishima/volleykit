@@ -1,9 +1,5 @@
 import { type Page, type Locator, expect } from "@playwright/test";
-import {
-  PAGE_LOAD_TIMEOUT_MS,
-  TAB_SWITCH_TIMEOUT_MS,
-  LOADING_TIMEOUT_MS,
-} from "../constants";
+import { TAB_SWITCH_TIMEOUT_MS } from "../constants";
 import { BasePage } from "./base.page";
 
 /**
@@ -17,17 +13,19 @@ export class ExchangesPage extends BasePage {
   readonly tabPanel: Locator;
   readonly exchangeCards: Locator;
   readonly levelFilterToggle: Locator;
+  private readonly emptyState: Locator;
 
   constructor(page: Page) {
     super(page);
     this.tablist = page.getByRole("tablist");
     // Use stable IDs for tabs (locale-independent)
-    this.openTab = page.locator('#tab-open');
-    this.myApplicationsTab = page.locator('#tab-applied');
+    this.openTab = page.locator("#tab-open");
+    this.myApplicationsTab = page.locator("#tab-applied");
     this.tabPanel = page.getByRole("tabpanel");
     this.exchangeCards = this.tabPanel.getByRole("button");
     // Use data-tour attribute to distinguish from distance filter checkbox
     this.levelFilterToggle = page.locator('[data-tour="exchange-filter"]');
+    this.emptyState = page.getByTestId("empty-state");
   }
 
   async goto() {
@@ -37,29 +35,24 @@ export class ExchangesPage extends BasePage {
   async expectToBeLoaded() {
     await expect(this.tablist).toBeVisible();
     await expect(this.openTab).toBeVisible();
-    await this.waitForStableState();
   }
 
   async switchToOpenTab() {
-    await expect(this.openTab).toBeVisible();
     await this.openTab.click();
     await expect(this.openTab).toHaveAttribute("aria-selected", "true", {
       timeout: TAB_SWITCH_TIMEOUT_MS,
     });
-    await expect(this.tabPanel).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
-    await this.waitForStableState();
+    await expect(this.tabPanel).toBeVisible();
   }
 
   async switchToMyApplicationsTab() {
-    await expect(this.myApplicationsTab).toBeVisible();
     await this.myApplicationsTab.click();
     await expect(this.myApplicationsTab).toHaveAttribute(
       "aria-selected",
       "true",
       { timeout: TAB_SWITCH_TIMEOUT_MS },
     );
-    await expect(this.tabPanel).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
-    await this.waitForStableState();
+    await expect(this.tabPanel).toBeVisible();
   }
 
   async getExchangeCount(): Promise<number> {
@@ -71,34 +64,15 @@ export class ExchangesPage extends BasePage {
   }
 
   async waitForLevelFilterHidden() {
-    // Use expect with negation for more robust waiting
-    await expect(this.levelFilterToggle).not.toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
+    await expect(this.levelFilterToggle).not.toBeVisible();
   }
 
   async waitForLevelFilterVisible() {
-    // Use expect for more robust waiting than waitFor
-    await expect(this.levelFilterToggle).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
+    await expect(this.levelFilterToggle).toBeVisible();
   }
 
   async waitForExchangesLoaded() {
-    await expect(this.tabPanel).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT_MS });
-
-    // Wait for loading indicator to disappear (if it appears)
-    const loadingIndicator = this.page.getByTestId("loading-state");
-    const isLoadingVisible = await loadingIndicator.isVisible();
-    if (isLoadingVisible) {
-      await loadingIndicator.waitFor({
-        state: "hidden",
-        timeout: LOADING_TIMEOUT_MS,
-      });
-    }
-
-    // Wait for actual content: either cards are present or empty state is shown
-    const emptyState = this.page.getByTestId("empty-state");
-    await expect(this.exchangeCards.first().or(emptyState)).toBeVisible({
-      timeout: LOADING_TIMEOUT_MS,
-    });
-
-    await this.waitForStableState();
+    await expect(this.tabPanel).toBeVisible();
+    await this.waitForContentReady(this.exchangeCards, this.emptyState);
   }
 }
