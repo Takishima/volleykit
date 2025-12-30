@@ -102,21 +102,22 @@ jobs:
           cache-dependency-path: web-app/package-lock.json
       - name: Install dependencies
         run: npm ci
-      - name: Cache generated API types
-        id: api-cache
-        uses: actions/cache@v4
-        with:
-          path: web-app/src/api/schema.ts
-          key: api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'web-app/package-lock.json') }}
-      - name: Generate API types
-        if: steps.api-cache.outputs.cache-hit != 'true'
-        run: npm run generate:api
       - name: Cache build output
         id: build-cache
         uses: actions/cache@v4
         with:
           path: web-app/dist
           key: build-${{ hashFiles('web-app/src/**', 'web-app/public/**', 'web-app/package-lock.json', 'web-app/vite.config.ts', 'web-app/index.html', 'web-app/tsconfig.json', 'docs/api/volleymanager-openapi.yaml') }}
+      - name: Cache generated API types
+        if: steps.build-cache.outputs.cache-hit != 'true'
+        id: api-cache
+        uses: actions/cache@v4
+        with:
+          path: web-app/src/api/schema.ts
+          key: api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'web-app/package-lock.json') }}
+      - name: Generate API types
+        if: steps.build-cache.outputs.cache-hit != 'true' && steps.api-cache.outputs.cache-hit != 'true'
+        run: npm run generate:api
       - name: Build
         if: steps.build-cache.outputs.cache-hit != 'true'
         run: npm run build
