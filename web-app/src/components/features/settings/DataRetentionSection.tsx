@@ -64,6 +64,16 @@ function DataRetentionSectionComponent() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Privacy statements */}
+        <div className="space-y-2 text-sm text-text-muted dark:text-text-muted-dark">
+          <p>{t("settings.privacyNoCollection")}</p>
+          <p>{t("settings.privacyDirectComm")}</p>
+          <p>{t("settings.privacyNoAnalytics")}</p>
+        </div>
+
+        {/* Separator */}
+        <div className="border-t border-border-subtle dark:border-border-subtle-dark" />
+
         <p className="text-sm text-text-muted dark:text-text-muted-dark">
           {t("settings.dataRetention.description")}
         </p>
