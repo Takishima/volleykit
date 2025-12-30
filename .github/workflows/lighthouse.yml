@@ -29,7 +29,14 @@ jobs:
         run: npm ci
       - name: Generate API types
         run: npm run generate:api
+      - name: Cache build output
+        id: build-cache
+        uses: actions/cache@v4
+        with:
+          path: web-app/dist
+          key: build-${{ hashFiles('web-app/src/**', 'web-app/package-lock.json', 'web-app/vite.config.ts', 'web-app/index.html') }}
       - name: Build application
+        if: steps.build-cache.outputs.cache-hit != 'true'
         run: npm run build
       - name: Run Lighthouse CI
         uses: treosh/lighthouse-ci-action@v12
