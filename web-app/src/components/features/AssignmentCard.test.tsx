@@ -74,13 +74,11 @@ describe("AssignmentCard", () => {
       expect(screen.getByText("Confirmed")).toBeInTheDocument();
     });
 
-    it("renders league category in expanded view", () => {
+    it("renders league category in compact view", () => {
       render(<AssignmentCard assignment={createMockAssignment()} />);
 
-      // Click to expand
-      fireEvent.click(screen.getByRole("button"));
-
-      expect(screen.getByText(/NLA/)).toBeInTheDocument();
+      // League category is visible in compact view (no expansion needed)
+      expect(screen.getByText("NLA")).toBeInTheDocument();
     });
 
     it("renders city in compact view when available", () => {
