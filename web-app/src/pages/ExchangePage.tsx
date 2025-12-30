@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, lazy, Suspense } from "react";
+import { useState, useCallback, useMemo, lazy, Suspense, Fragment } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useGameExchanges, type ExchangeStatus } from "@/hooks/useConvocations";
 import { useExchangeActions } from "@/hooks/useExchangeActions";
@@ -10,6 +10,8 @@ import { createExchangeActions } from "@/utils/exchange-actions";
 import { calculateDistanceKm } from "@/utils/distance";
 import { ExchangeCard } from "@/components/features/ExchangeCard";
 import { SwipeableCard } from "@/components/ui/SwipeableCard";
+import { WeekSeparator } from "@/components/ui/WeekSeparator";
+import { groupByWeek } from "@/utils/date-helpers";
 import { LevelFilterToggle } from "@/components/features/LevelFilterToggle";
 import { DistanceFilterToggle } from "@/components/features/DistanceFilterToggle";
 import { TravelTimeFilterToggle } from "@/components/features/TravelTimeFilterToggle";
@@ -190,6 +192,15 @@ export function ExchangePage() {
     travelTimeMap,
   ]);
 
+  // Group exchanges by week for visual separation
+  const groupedData = useMemo(() => {
+    if (!filteredData || filteredData.length === 0) return [];
+    return groupByWeek(
+      filteredData,
+      (item) => item.exchange.refereeGame?.game?.startingDateTime,
+    );
+  }, [filteredData]);
+
   const {
     takeOverModal,
     removeFromExchangeModal,
@@ -300,7 +311,7 @@ export function ExchangePage() {
       );
     }
 
-    if (!filteredData || filteredData.length === 0) {
+    if (groupedData.length === 0) {
       const hasActiveFilters =
         levelFilterEnabled || distanceFilter.enabled || travelTimeFilter.enabled;
       return (
@@ -324,24 +335,43 @@ export function ExchangePage() {
 
     return (
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredData.map(({ exchange, distanceKm }, index) => {
-          const travelTimeData = travelTimeMap.get(exchange.__identity);
+        {groupedData.map((group, groupIndex) => {
+          // Track global item index for tour data attribute
+          const itemsBeforeThisGroup = groupedData
+            .slice(0, groupIndex)
+            .reduce((sum, g) => sum + g.items.length, 0);
+
           return (
-            <SwipeableCard
-              key={exchange.__identity}
-              swipeConfig={getSwipeConfig(exchange)}
-            >
-              {({ isDrawerOpen }) => (
-                <ExchangeCard
-                  exchange={exchange}
-                  disableExpansion={isDrawerOpen}
-                  dataTour={index === 0 ? "exchange-card" : undefined}
-                  distanceKm={homeLocation ? distanceKm : null}
-                  travelTimeMinutes={travelTimeData?.minutes}
-                  travelTimeLoading={travelTimeData?.isLoading}
-                />
+            <Fragment key={group.week.key}>
+              {/* Only show separator if there's more than one week */}
+              {groupedData.length > 1 && (
+                <WeekSeparator week={group.week} />
               )}
-            </SwipeableCard>
+              {group.items.map(({ exchange, distanceKm }, itemIndex) => {
+                const travelTimeData = travelTimeMap.get(exchange.__identity);
+                return (
+                  <SwipeableCard
+                    key={exchange.__identity}
+                    swipeConfig={getSwipeConfig(exchange)}
+                  >
+                    {({ isDrawerOpen }) => (
+                      <ExchangeCard
+                        exchange={exchange}
+                        disableExpansion={isDrawerOpen}
+                        dataTour={
+                          itemsBeforeThisGroup + itemIndex === 0
+                            ? "exchange-card"
+                            : undefined
+                        }
+                        distanceKm={homeLocation ? distanceKm : null}
+                        travelTimeMinutes={travelTimeData?.minutes}
+                        travelTimeLoading={travelTimeData?.isLoading}
+                      />
+                    )}
+                  </SwipeableCard>
+                );
+              })}
+            </Fragment>
           );
         })}
       </div>

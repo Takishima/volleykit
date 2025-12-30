@@ -1,7 +1,9 @@
-import { useState, useCallback, useMemo, lazy, Suspense } from "react";
+import { useState, useCallback, useMemo, lazy, Suspense, Fragment } from "react";
 import { useCompensations, useCompensationTotals } from "@/hooks/useConvocations";
 import { CompensationCard } from "@/components/features/CompensationCard";
 import { SwipeableCard } from "@/components/ui/SwipeableCard";
+import { WeekSeparator } from "@/components/ui/WeekSeparator";
+import { groupByWeek } from "@/utils/date-helpers";
 import {
   LoadingState,
   ErrorState,
@@ -50,6 +52,12 @@ export function CompensationsPage() {
   // Single data fetch based on current filter (like ExchangePage pattern)
   const paidFilter = useMemo(() => filterToPaidFilter(filter), [filter]);
   const { data, isLoading, error, refetch } = useCompensations(paidFilter);
+
+  // Group compensations by week for visual separation
+  const groupedData = useMemo(() => {
+    if (!data || data.length === 0) return [];
+    return groupByWeek(data, (c) => c.refereeGame?.game?.startingDateTime);
+  }, [data]);
 
   const totals = useCompensationTotals();
 
@@ -119,27 +127,46 @@ export function CompensationsPage() {
       );
     }
 
-    if (!data || data.length === 0) {
+    if (groupedData.length === 0) {
       const { title, description } = getEmptyStateContent();
       return <EmptyState icon="wallet" title={title} description={description} />;
     }
 
     return (
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {data.map((compensation, index) => (
-          <SwipeableCard
-            key={compensation.__identity}
-            swipeConfig={getSwipeConfig(compensation)}
-          >
-            {({ isDrawerOpen }) => (
-              <CompensationCard
-                compensation={compensation}
-                disableExpansion={isDrawerOpen}
-                dataTour={index === 0 ? "compensation-card" : undefined}
-              />
-            )}
-          </SwipeableCard>
-        ))}
+        {groupedData.map((group, groupIndex) => {
+          // Track global item index for tour data attribute
+          const itemsBeforeThisGroup = groupedData
+            .slice(0, groupIndex)
+            .reduce((sum, g) => sum + g.items.length, 0);
+
+          return (
+            <Fragment key={group.week.key}>
+              {/* Only show separator if there's more than one week */}
+              {groupedData.length > 1 && (
+                <WeekSeparator week={group.week} />
+              )}
+              {group.items.map((compensation, itemIndex) => (
+                <SwipeableCard
+                  key={compensation.__identity}
+                  swipeConfig={getSwipeConfig(compensation)}
+                >
+                  {({ isDrawerOpen }) => (
+                    <CompensationCard
+                      compensation={compensation}
+                      disableExpansion={isDrawerOpen}
+                      dataTour={
+                        itemsBeforeThisGroup + itemIndex === 0
+                          ? "compensation-card"
+                          : undefined
+                      }
+                    />
+                  )}
+                </SwipeableCard>
+              ))}
+            </Fragment>
+          );
+        })}
       </div>
     );
   };
