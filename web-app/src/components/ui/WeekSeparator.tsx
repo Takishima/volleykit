@@ -6,24 +6,16 @@ interface WeekSeparatorProps {
   week: WeekInfo;
 }
 
-/**
- * A subtle separator displaying a week date range (Mon-Sun).
- * Formats the date range intelligently based on whether dates span months/years.
- */
 export function WeekSeparator({ week }: WeekSeparatorProps) {
   const locale = useDateLocale();
   const { weekStart, weekEnd } = week;
 
-  // Format dates based on whether they span months or years
   let dateRange: string;
   if (isSameMonth(weekStart, weekEnd)) {
-    // Same month: "Dec 30 - 5"
     dateRange = `${format(weekStart, "MMM d", { locale })} – ${format(weekEnd, "d", { locale })}`;
   } else if (isSameYear(weekStart, weekEnd)) {
-    // Same year, different months: "Dec 30 - Jan 5"
     dateRange = `${format(weekStart, "MMM d", { locale })} – ${format(weekEnd, "MMM d", { locale })}`;
   } else {
-    // Different years: "Dec 30, 2024 - Jan 5, 2025"
     dateRange = `${format(weekStart, "MMM d, yyyy", { locale })} – ${format(weekEnd, "MMM d, yyyy", { locale })}`;
   }
 

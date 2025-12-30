@@ -94,14 +94,12 @@ export function groupByWeek<T>(
     const date = parseISO(dateString);
     if (!isValid(date)) continue;
 
-    // Get week boundaries (Monday as start of week)
     const weekStart = startOfWeek(date, { weekStartsOn: 1 });
     const weekEnd = endOfWeek(date, { weekStartsOn: 1 });
     const weekNumber = getISOWeek(date);
     const year = getYear(weekStart);
     const weekKey = `${year}-W${String(weekNumber).padStart(2, "0")}`;
 
-    // Check if we need a new group
     if (!currentGroup || currentGroup.week.key !== weekKey) {
       currentGroup = {
         week: {
