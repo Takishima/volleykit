@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuthStore } from "@/stores/auth";
+import { MAX_FILE_SIZE_BYTES, ALLOWED_FILE_TYPES } from "@/api/client";
 import {
   Upload,
   Camera,
@@ -21,8 +22,6 @@ interface ScoresheetPanelProps {
   scoresheetNotRequired?: boolean;
 }
 
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
-const ACCEPTED_FILE_TYPES = ["image/jpeg", "image/png", "application/pdf"];
 const ACCEPTED_EXTENSIONS = ".jpg,.jpeg,.png,.pdf";
 const SIMULATED_UPLOAD_DURATION_MS = 1500;
 const PROGRESS_INCREMENT_PERCENT = 10;
@@ -91,7 +90,7 @@ export function ScoresheetPanel({
 
   const validateFile = useCallback(
     (file: File): string | null => {
-      if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
+      if (!ALLOWED_FILE_TYPES.includes(file.type)) {
         return t("validation.scoresheetUpload.invalidFileType");
       }
       if (file.size > MAX_FILE_SIZE_BYTES) {
