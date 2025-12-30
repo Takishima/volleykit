@@ -45,8 +45,8 @@ export { Lock } from "lucide-react";
 export { Inbox } from "lucide-react";
 export { Info } from "lucide-react";
 
-// App branding - custom volleyball icon since Lucide doesn't have one
-export { CircleDot as Volleyball } from "lucide-react";
+// App branding
+export { Volleyball } from "lucide-react";
 
 // Gender icons - custom SVGs since Lucide doesn't have Mars/Venus symbols
 import type { SVGProps } from "react";
