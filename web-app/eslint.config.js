@@ -89,13 +89,10 @@ export default tseslint.config(
       'sonarjs/no-nested-functions': 'off',
       'sonarjs/no-unused-vars': 'off',
       'sonarjs/pseudo-random': 'off',
-      // Disabled for initial integration - consider enabling as errors in future:
-      // - cognitive-complexity: Flags overly complex functions (5 functions exceed threshold)
-      // - slow-regex: Flags regex patterns vulnerable to backtracking (5 patterns)
-      // - no-identical-functions: Flags duplicate code (1 duplicate helper function)
-      'sonarjs/cognitive-complexity': 'off',
-      'sonarjs/slow-regex': 'off',
-      'sonarjs/no-identical-functions': 'off',
+      // Code quality rules - enabled to catch complexity and potential issues
+      // cognitive-complexity threshold set to 25 to accommodate complex React patterns
+      // (gesture handlers, async hooks with caching). Default of 15 is too strict for React.
+      'sonarjs/cognitive-complexity': ['error', 25],
     },
   },
   // Relaxed rules for test files - testing patterns require different constraints

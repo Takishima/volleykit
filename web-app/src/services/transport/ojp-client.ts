@@ -384,6 +384,26 @@ export function selectBestTrip(trips: OjpTrip[], targetArrivalTime?: Date): OjpT
 }
 
 /**
+ * Extract numeric value before a unit character from ISO 8601 duration.
+ * Uses string methods instead of regex to avoid backtracking concerns.
+ */
+function extractDurationComponent(duration: string, unit: string): number {
+  const unitIndex = duration.indexOf(unit);
+  if (unitIndex === -1) return 0;
+
+  // Find the start of the number by scanning backwards
+  let startIndex = unitIndex - 1;
+  while (startIndex >= 0 && duration[startIndex]! >= "0" && duration[startIndex]! <= "9") {
+    startIndex--;
+  }
+  startIndex++; // Move back to first digit
+
+  if (startIndex >= unitIndex) return 0;
+
+  return parseInt(duration.substring(startIndex, unitIndex), 10) || 0;
+}
+
+/**
  * Parse ISO 8601 duration string to minutes.
  *
  * @param duration ISO 8601 duration string (e.g., "PT1H30M")
@@ -394,14 +414,9 @@ function parseDurationToMinutes(duration: string): number {
     return 0;
   }
 
-  // Extract hours, minutes, seconds with simple patterns
-  const hoursMatch = duration.match(/(\d+)H/);
-  const minutesMatch = duration.match(/(\d+)M/);
-  const secondsMatch = duration.match(/(\d+)S/);
-
-  const hours = hoursMatch ? parseInt(hoursMatch[1]!, 10) : 0;
-  const minutes = minutesMatch ? parseInt(minutesMatch[1]!, 10) : 0;
-  const seconds = secondsMatch ? parseInt(secondsMatch[1]!, 10) : 0;
+  const hours = extractDurationComponent(duration, "H");
+  const minutes = extractDurationComponent(duration, "M");
+  const seconds = extractDurationComponent(duration, "S");
 
   return hours * 60 + minutes + Math.ceil(seconds / 60);
 }

@@ -160,6 +160,28 @@ function getRequiredOfficials(
   };
 }
 
+/** Base interface for configs that can have officials added */
+interface ConfigWithOfficials {
+  leagueIndex: number;
+  gender: "m" | "f";
+  hasSecondHeadReferee?: boolean;
+  linesmenPositions?: LinesmanPosition[];
+}
+
+/** Add official configuration (refs/linesmen) to a config based on league requirements */
+function addOfficialsToConfig<T extends ConfigWithOfficials>(
+  config: T,
+  leagues: readonly LeagueConfig[],
+): T {
+  const league = leagues[config.leagueIndex % leagues.length]!;
+  const officials = getRequiredOfficials(league.name, config.gender);
+  return {
+    ...config,
+    hasSecondHeadReferee: officials.hasSecondHeadReferee,
+    linesmenPositions: officials.linesmenPositions,
+  };
+}
+
 // Configuration for venue/team data based on association type
 interface VenueConfig {
   teamHome: { name: string; identifier: number };
@@ -592,17 +614,6 @@ export function generateAssignments(
 ): Assignment[] {
   const leagues = getLeaguesForAssociation(associationCode);
 
-  // Helper to compute referee configuration for a config
-  const withOfficials = (config: AssignmentConfig): AssignmentConfig => {
-    const league = leagues[config.leagueIndex % leagues.length]!;
-    const officials = getRequiredOfficials(league.name, config.gender);
-    return {
-      ...config,
-      hasSecondHeadReferee: officials.hasSecondHeadReferee,
-      linesmenPositions: officials.linesmenPositions,
-    };
-  };
-
   const configs: AssignmentConfig[] = [
     // NLA/1L men - head referee, with computed officials
     { index: 1, status: "active", position: "head-one", confirmationStatus: "confirmed", confirmationDaysAgo: 5, gameDate: addDays(now, 2), venueIndex: 0, leagueIndex: 0, gender: "m", isGameInFuture: true },
@@ -616,7 +627,9 @@ export function generateAssignments(
     { index: 5, status: "archived", position: "linesman-two", confirmationStatus: "confirmed", confirmationDaysAgo: 14, gameDate: subDays(now, 3), venueIndex: 4, leagueIndex: associationCode === "SV" ? 0 : 2, gender: "m", isGameInFuture: false },
   ];
 
-  return configs.map((config) => createAssignment(withOfficials(config), associationCode, now));
+  return configs.map((config) =>
+    createAssignment(addOfficialsToConfig(config, leagues), associationCode, now),
+  );
 }
 
 interface CompensationConfig {
@@ -695,17 +708,6 @@ export function generateCompensations(
   const isSV = associationCode === "SV";
   const leagues = getLeaguesForAssociation(associationCode);
 
-  // Helper to compute referee configuration for a config
-  const withOfficials = (config: CompensationConfig): CompensationConfig => {
-    const league = leagues[config.leagueIndex % leagues.length]!;
-    const officials = getRequiredOfficials(league.name, config.gender);
-    return {
-      ...config,
-      hasSecondHeadReferee: officials.hasSecondHeadReferee,
-      linesmenPositions: officials.linesmenPositions,
-    };
-  };
-
   const configs: CompensationConfig[] = [
     // NLA/1L men - head referee
     { index: 1, position: "head-one", daysAgo: 7, venueIndex: 0, leagueIndex: 0, gender: "m", distance: "MEDIUM_LONG", paymentDone: true, paymentDaysAgo: 2, correctionReason: "Ich wohne in Oberengstringen" },
@@ -719,7 +721,9 @@ export function generateCompensations(
     { index: 5, position: "linesman-two", daysAgo: 28, venueIndex: 4, leagueIndex: associationCode === "SV" ? 0 : 2, gender: "m", distance: "SHORT", paymentDone: true, paymentDaysAgo: 21, transportationMode: "train" },
   ];
 
-  return configs.map((config) => createCompensationRecord(withOfficials(config), associationCode, now, isSV));
+  return configs.map((config) =>
+    createCompensationRecord(addOfficialsToConfig(config, leagues), associationCode, now, isSV),
+  );
 }
 
 export function generateExchanges(

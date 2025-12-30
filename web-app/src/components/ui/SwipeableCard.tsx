@@ -31,6 +31,35 @@ const SCALE_RANGE = 0.2; // Scale grows from 0.8 to 1.0
 // 150ms provides margin for click event to fire after mouseup
 const CLICK_BLOCK_DELAY_MS = 150;
 
+/** Calculate drawer width based on number of actions */
+function calculateDrawerWidth(actionsCount: number, containerWidth: number): number {
+  return Math.min(
+    actionsCount * ACTION_BUTTON_WIDTH +
+      (actionsCount - 1) * ACTION_BUTTON_GAP +
+      DRAWER_PADDING,
+    containerWidth * MAX_DRAWER_WIDTH_RATIO,
+  );
+}
+
+/** Normalize swipe config actions to array format */
+function normalizeActions(
+  actions: SwipeAction | SwipeAction[] | undefined,
+): SwipeAction[] | null {
+  if (!actions) return null;
+  return Array.isArray(actions) ? actions : [actions];
+}
+
+/** Build legacy action from props */
+function buildLegacyAction(
+  direction: "left" | "right",
+  onAction: (() => void) | undefined,
+  label: string,
+  color: string,
+): SwipeAction[] | null {
+  if (!onAction) return null;
+  return [{ id: `legacy-${direction}`, label, color, onAction }];
+}
+
 interface SwipeableCardRenderProps {
   isDrawerOpen: boolean;
 }
@@ -73,22 +102,15 @@ export function SwipeableCard({
   const getSwipeActions = useCallback(
     (direction: "left" | "right"): SwipeAction[] | null => {
       if (swipeConfig) {
-        const actions = swipeConfig[direction];
-        if (!actions) return null;
-        return Array.isArray(actions) ? actions : [actions];
+        return normalizeActions(swipeConfig[direction]);
       }
-
-      const legacyAction = direction === "left" ? onSwipeLeft : onSwipeRight;
-      if (!legacyAction) return null;
-
-      return [
-        {
-          id: `legacy-${direction}`,
-          label: direction === "left" ? leftActionLabel : rightActionLabel,
-          color: direction === "left" ? leftActionColor : rightActionColor,
-          onAction: legacyAction,
-        },
-      ];
+      const isLeft = direction === "left";
+      return buildLegacyAction(
+        direction,
+        isLeft ? onSwipeLeft : onSwipeRight,
+        isLeft ? leftActionLabel : rightActionLabel,
+        isLeft ? leftActionColor : rightActionColor,
+      );
     },
     [
       swipeConfig,
@@ -152,45 +174,35 @@ export function SwipeableCard({
       const swipeAmount = Math.abs(currentTranslateX);
       const swipeDirection = currentTranslateX > 0 ? "right" : "left";
       const actions = getSwipeActions(swipeDirection);
-
       const drawerThreshold = width * DRAWER_OPEN_RATIO;
       const fullThreshold = width * FULL_SWIPE_RATIO;
 
-      // Full swipe - trigger the action furthest in swipe direction
-      if (actions && swipeAmount > fullThreshold) {
-        const defaultAction = actions[0];
-        if (defaultAction) {
-          defaultAction.onAction();
-        }
-        // Reset drawer state, hook handles position reset
+      // Helper to reset drawer state
+      const closeAndReset = () => {
         currentTranslateRef.current = 0;
         setIsDrawerOpen(false);
         return false; // Hook resets position
+      };
+
+      // No actions or below threshold - close drawer
+      if (!actions || swipeAmount <= drawerThreshold) {
+        return closeAndReset();
+      }
+
+      // Full swipe - trigger the primary action
+      if (swipeAmount > fullThreshold) {
+        actions[0]?.onAction();
+        return closeAndReset();
       }
 
       // Partial swipe past threshold - open drawer fully
-      if (actions && swipeAmount > drawerThreshold) {
-        // Calculate drawer width based on number of actions
-        const drawerWidth = Math.min(
-          actions.length * ACTION_BUTTON_WIDTH +
-            (actions.length - 1) * ACTION_BUTTON_GAP +
-            DRAWER_PADDING,
-          width * MAX_DRAWER_WIDTH_RATIO,
-        );
-
-        const targetPosition =
-          swipeDirection === "left" ? -drawerWidth : drawerWidth;
-        setTranslateX(targetPosition);
-        currentTranslateRef.current = targetPosition;
-        setIsDrawerOpen(true);
-        onDrawerOpen?.();
-        return true; // Hook keeps position
-      }
-
-      // Below threshold - close drawer state, hook handles position reset
-      currentTranslateRef.current = 0;
-      setIsDrawerOpen(false);
-      return false; // Hook resets position
+      const drawerWidth = calculateDrawerWidth(actions.length, width);
+      const targetPosition = swipeDirection === "left" ? -drawerWidth : drawerWidth;
+      setTranslateX(targetPosition);
+      currentTranslateRef.current = targetPosition;
+      setIsDrawerOpen(true);
+      onDrawerOpen?.();
+      return true; // Hook keeps position
     },
   });
 

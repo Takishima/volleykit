@@ -5,6 +5,27 @@
 
 import { z } from "zod";
 
+/**
+ * Strips HTML tags from text using character-by-character parsing.
+ * This approach avoids regex backtracking issues while safely handling nested tags.
+ */
+function stripHtmlTags(html: string): string {
+  let result = "";
+  let inTag = false;
+
+  for (const char of html) {
+    if (char === "<") {
+      inTag = true;
+    } else if (char === ">") {
+      inTag = false;
+    } else if (!inTag) {
+      result += char;
+    }
+  }
+
+  return result;
+}
+
 // Backend error response schema
 const backendErrorSchema = z
   .object({
@@ -54,14 +75,7 @@ export async function parseErrorResponse(response: Response): Promise<string> {
     // Try to get text content for non-JSON responses
     if (contentType.includes("text/")) {
       const text = await response.text();
-      // Strip HTML tags repeatedly until no more remain (prevents nested tag bypass)
-      let cleanText = text;
-      let previousText: string;
-      do {
-        previousText = cleanText;
-        cleanText = cleanText.replace(/<[^>]*>/g, "");
-      } while (cleanText !== previousText);
-      cleanText = cleanText.trim().slice(0, 200);
+      const cleanText = stripHtmlTags(text).trim().slice(0, 200);
       if (cleanText) {
         return cleanText;
       }
