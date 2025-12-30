@@ -28,7 +28,6 @@ function ExchangeSettingsSheetComponent({ dataTour }: ExchangeSettingsSheetProps
     homeLocation,
     distanceFilter,
     setMaxDistanceKm,
-    isTransportEnabledForAssociation,
     travelTimeFilter,
     setMaxTravelTimeMinutes,
   } = useSettingsStore(
@@ -36,10 +35,14 @@ function ExchangeSettingsSheetComponent({ dataTour }: ExchangeSettingsSheetProps
       homeLocation: state.homeLocation,
       distanceFilter: state.distanceFilter,
       setMaxDistanceKm: state.setMaxDistanceKm,
-      isTransportEnabledForAssociation: state.isTransportEnabledForAssociation,
       travelTimeFilter: state.travelTimeFilter,
       setMaxTravelTimeMinutes: state.setMaxTravelTimeMinutes,
     })),
+  );
+
+  // Get function separately - functions don't need shallow comparison
+  const isTransportEnabledForAssociation = useSettingsStore(
+    (state) => state.isTransportEnabledForAssociation,
   );
 
   const handleDistanceChange = useCallback(
