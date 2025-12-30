@@ -59,7 +59,6 @@ export function ExchangePage() {
     homeLocation,
     distanceFilter,
     setDistanceFilterEnabled,
-    transportEnabled,
     travelTimeFilter,
     setTravelTimeFilterEnabled,
     levelFilterEnabled,
@@ -69,7 +68,6 @@ export function ExchangePage() {
       homeLocation: state.homeLocation,
       distanceFilter: state.distanceFilter,
       setDistanceFilterEnabled: state.setDistanceFilterEnabled,
-      transportEnabled: state.transportEnabled,
       travelTimeFilter: state.travelTimeFilter,
       setTravelTimeFilterEnabled: state.setTravelTimeFilterEnabled,
       levelFilterEnabled: state.levelFilterEnabled,
@@ -161,11 +159,11 @@ export function ExchangePage() {
       });
     }
 
-    // Apply travel time filter (only on "open" tab when transport is enabled)
+    // Apply travel time filter (only on "open" tab when transport is available)
     if (
       travelTimeFilter.enabled &&
       statusFilter === "open" &&
-      transportEnabled &&
+      isTravelTimeAvailable &&
       travelTimeMap.size > 0
     ) {
       result = result.filter(({ exchange }) => {
@@ -188,7 +186,7 @@ export function ExchangePage() {
     homeLocation,
     travelTimeFilter.enabled,
     travelTimeFilter.maxTravelTimeMinutes,
-    transportEnabled,
+    isTravelTimeAvailable,
     travelTimeMap,
   ]);
 
@@ -257,8 +255,8 @@ export function ExchangePage() {
   // Determine if filters are available
   const isLevelFilterAvailable = isDemoMode && userRefereeLevel !== null;
   const isDistanceFilterAvailable = homeLocation !== null;
-  const isTravelTimeFilterAvailable =
-    transportEnabled && isTravelTimeAvailable && homeLocation !== null;
+  // isTravelTimeAvailable from hook already includes association-specific transport check and homeLocation
+  const isTravelTimeFilterAvailable = isTravelTimeAvailable;
 
   const hasAnyFilter =
     isLevelFilterAvailable || isDistanceFilterAvailable || isTravelTimeFilterAvailable;

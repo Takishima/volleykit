@@ -1,6 +1,7 @@
 import { useState, useCallback, memo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useSettingsStore } from "@/stores/settings";
+import { useActiveAssociationCode } from "@/hooks/useActiveAssociation";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTravelTimeAvailable } from "@/hooks/useTravelTime";
 import { ResponsiveSheet } from "@/components/ui/ResponsiveSheet";
@@ -21,12 +22,12 @@ function ExchangeSettingsSheetComponent({ dataTour }: ExchangeSettingsSheetProps
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const isTravelTimeAvailable = useTravelTimeAvailable();
+  const associationCode = useActiveAssociationCode();
 
   const {
     homeLocation,
     distanceFilter,
     setMaxDistanceKm,
-    transportEnabled,
     travelTimeFilter,
     setMaxTravelTimeMinutes,
   } = useSettingsStore(
@@ -34,10 +35,14 @@ function ExchangeSettingsSheetComponent({ dataTour }: ExchangeSettingsSheetProps
       homeLocation: state.homeLocation,
       distanceFilter: state.distanceFilter,
       setMaxDistanceKm: state.setMaxDistanceKm,
-      transportEnabled: state.transportEnabled,
       travelTimeFilter: state.travelTimeFilter,
       setMaxTravelTimeMinutes: state.setMaxTravelTimeMinutes,
     })),
+  );
+
+  // Get function separately - functions don't need shallow comparison
+  const isTransportEnabledForAssociation = useSettingsStore(
+    (state) => state.isTransportEnabledForAssociation,
   );
 
   const handleDistanceChange = useCallback(
@@ -57,7 +62,9 @@ function ExchangeSettingsSheetComponent({ dataTour }: ExchangeSettingsSheetProps
   // Determine which settings are available
   const hasHomeLocation = Boolean(homeLocation);
   const canShowDistanceSlider = hasHomeLocation;
-  const canShowTravelTimeSlider = hasHomeLocation && transportEnabled && isTravelTimeAvailable;
+  // Use association-specific transport check for consistency with ExchangePage
+  const isTransportEnabled = isTransportEnabledForAssociation(associationCode);
+  const canShowTravelTimeSlider = hasHomeLocation && isTransportEnabled && isTravelTimeAvailable;
 
   // Don't show the gear icon if no settings are available
   if (!canShowDistanceSlider && !canShowTravelTimeSlider) {

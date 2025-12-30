@@ -12,6 +12,12 @@ vi.mock("@/hooks/useConvocations");
 vi.mock("@/stores/auth");
 vi.mock("@/stores/demo");
 vi.mock("@/stores/settings");
+vi.mock("@/hooks/useActiveAssociation", () => ({
+  useActiveAssociationCode: () => "TEST",
+}));
+vi.mock("@/hooks/useTravelTime", () => ({
+  useTravelTimeAvailable: () => false,
+}));
 vi.mock("@/hooks/useTravelTimeFilter", () => ({
   useTravelTimeFilter: () => ({
     exchangesWithTravelTime: null,
@@ -97,12 +103,14 @@ describe("ExchangePage", () => {
       userRefereeLevelGradationValue: null,
     });
 
-    // Default settings store mock
-    vi.mocked(settingsStore.useSettingsStore).mockReturnValue({
+    // Default settings store mock - use mockImplementation to handle selectors
+    const defaultState = {
       homeLocation: null,
       distanceFilter: { enabled: false, maxDistanceKm: 50 },
       setDistanceFilterEnabled: vi.fn(),
       transportEnabled: false,
+      isTransportEnabledForAssociation: () => false,
+      getArrivalBufferForAssociation: () => 30,
       travelTimeFilter: {
         enabled: false,
         maxTravelTimeMinutes: 120,
@@ -110,9 +118,15 @@ describe("ExchangePage", () => {
         cacheInvalidatedAt: null,
       },
       setTravelTimeFilterEnabled: vi.fn(),
+      setMaxDistanceKm: vi.fn(),
+      setMaxTravelTimeMinutes: vi.fn(),
       levelFilterEnabled: false,
       setLevelFilterEnabled: mockSetLevelFilterEnabled,
-    });
+    };
+    vi.mocked(settingsStore.useSettingsStore).mockImplementation(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (selector?: (state: any) => any) => selector ? selector(defaultState) : defaultState,
+    );
 
     vi.mocked(useConvocations.useGameExchanges).mockReturnValue(
       createMockQueryResult([]),
@@ -237,11 +251,13 @@ describe("ExchangePage", () => {
 
     it("should show user level indicator when filter is enabled", () => {
       // Mock filter as already enabled
-      vi.mocked(settingsStore.useSettingsStore).mockReturnValue({
+      const stateWithFilter = {
         homeLocation: null,
         distanceFilter: { enabled: false, maxDistanceKm: 50 },
         setDistanceFilterEnabled: vi.fn(),
         transportEnabled: false,
+        isTransportEnabledForAssociation: () => false,
+        getArrivalBufferForAssociation: () => 30,
         travelTimeFilter: {
           enabled: false,
           maxTravelTimeMinutes: 120,
@@ -249,9 +265,15 @@ describe("ExchangePage", () => {
           cacheInvalidatedAt: null,
         },
         setTravelTimeFilterEnabled: vi.fn(),
+        setMaxDistanceKm: vi.fn(),
+        setMaxTravelTimeMinutes: vi.fn(),
         levelFilterEnabled: true,
         setLevelFilterEnabled: mockSetLevelFilterEnabled,
-      });
+      };
+      vi.mocked(settingsStore.useSettingsStore).mockImplementation(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (selector?: (state: any) => any) => selector ? selector(stateWithFilter) : stateWithFilter,
+      );
 
       render(<ExchangePage />);
 
@@ -266,11 +288,13 @@ describe("ExchangePage", () => {
       );
 
       // Mock filter as enabled
-      vi.mocked(settingsStore.useSettingsStore).mockReturnValue({
+      const stateWithFilter = {
         homeLocation: null,
         distanceFilter: { enabled: false, maxDistanceKm: 50 },
         setDistanceFilterEnabled: vi.fn(),
         transportEnabled: false,
+        isTransportEnabledForAssociation: () => false,
+        getArrivalBufferForAssociation: () => 30,
         travelTimeFilter: {
           enabled: false,
           maxTravelTimeMinutes: 120,
@@ -278,9 +302,15 @@ describe("ExchangePage", () => {
           cacheInvalidatedAt: null,
         },
         setTravelTimeFilterEnabled: vi.fn(),
+        setMaxDistanceKm: vi.fn(),
+        setMaxTravelTimeMinutes: vi.fn(),
         levelFilterEnabled: true,
         setLevelFilterEnabled: mockSetLevelFilterEnabled,
-      });
+      };
+      vi.mocked(settingsStore.useSettingsStore).mockImplementation(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (selector?: (state: any) => any) => selector ? selector(stateWithFilter) : stateWithFilter,
+      );
 
       render(<ExchangePage />);
 
