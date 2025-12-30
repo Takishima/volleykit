@@ -96,9 +96,9 @@ describe("groupByWeek", () => {
     const result = groupByWeek(items, getDate);
 
     expect(result).toHaveLength(1);
-    expect(result[0].week.key).toBe("2025-W02");
-    expect(result[0].items).toHaveLength(3);
-    expect(result[0].items.map((i) => i.id)).toEqual(["1", "2", "3"]);
+    expect(result[0]!.week.key).toBe("2025-W02");
+    expect(result[0]!.items).toHaveLength(3);
+    expect(result[0]!.items.map((i) => i.id)).toEqual(["1", "2", "3"]);
   });
 
   it("groups items spanning multiple weeks into separate groups", () => {
@@ -111,12 +111,12 @@ describe("groupByWeek", () => {
     const result = groupByWeek(items, getDate);
 
     expect(result).toHaveLength(3);
-    expect(result[0].week.key).toBe("2025-W02");
-    expect(result[1].week.key).toBe("2025-W03");
-    expect(result[2].week.key).toBe("2025-W04");
-    expect(result[0].items[0].id).toBe("1");
-    expect(result[1].items[0].id).toBe("2");
-    expect(result[2].items[0].id).toBe("3");
+    expect(result[0]!.week.key).toBe("2025-W02");
+    expect(result[1]!.week.key).toBe("2025-W03");
+    expect(result[2]!.week.key).toBe("2025-W04");
+    expect(result[0]!.items[0]!.id).toBe("1");
+    expect(result[1]!.items[0]!.id).toBe("2");
+    expect(result[2]!.items[0]!.id).toBe("3");
   });
 
   it("skips items with null dates", () => {
@@ -129,8 +129,8 @@ describe("groupByWeek", () => {
     const result = groupByWeek(items, getDate);
 
     expect(result).toHaveLength(1);
-    expect(result[0].items).toHaveLength(2);
-    expect(result[0].items.map((i) => i.id)).toEqual(["1", "3"]);
+    expect(result[0]!.items).toHaveLength(2);
+    expect(result[0]!.items.map((i) => i.id)).toEqual(["1", "3"]);
   });
 
   it("skips items with undefined dates", () => {
@@ -143,7 +143,7 @@ describe("groupByWeek", () => {
     const result = groupByWeek(items, getDate);
 
     expect(result).toHaveLength(1);
-    expect(result[0].items).toHaveLength(2);
+    expect(result[0]!.items).toHaveLength(2);
   });
 
   it("skips items with invalid date strings", () => {
@@ -156,7 +156,7 @@ describe("groupByWeek", () => {
     const result = groupByWeek(items, getDate);
 
     expect(result).toHaveLength(1);
-    expect(result[0].items).toHaveLength(2);
+    expect(result[0]!.items).toHaveLength(2);
   });
 
   it("handles cross-year week boundaries correctly", () => {
@@ -168,8 +168,8 @@ describe("groupByWeek", () => {
     const result = groupByWeek(items, getDate);
 
     expect(result).toHaveLength(1);
-    expect(result[0].week.weekNumber).toBe(1);
-    expect(result[0].items).toHaveLength(2);
+    expect(result[0]!.week.weekNumber).toBe(1);
+    expect(result[0]!.items).toHaveLength(2);
   });
 
   it("sets correct week start and end dates", () => {
@@ -181,8 +181,8 @@ describe("groupByWeek", () => {
 
     expect(result).toHaveLength(1);
     // Week starts on Monday (Jan 6) and ends on Sunday (Jan 12)
-    expect(result[0].week.weekStart.getDate()).toBe(6);
-    expect(result[0].week.weekEnd.getDate()).toBe(12);
+    expect(result[0]!.week.weekStart.getDate()).toBe(6);
+    expect(result[0]!.week.weekEnd.getDate()).toBe(12);
   });
 
   it("returns empty array when all items have invalid dates", () => {
