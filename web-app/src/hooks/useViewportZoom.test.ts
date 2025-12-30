@@ -305,4 +305,192 @@ describe("useViewportZoom - iOS touch event handling", () => {
     // Should NOT have called preventDefault for single touch
     expect(mockEventWithSingleTouch.preventDefault).not.toHaveBeenCalled();
   });
+
+  it("prevents default on touchmove events with scale !== 1 (iOS zoom detection)", () => {
+    mockPreventZoom.mockReturnValue(true);
+
+    renderHook(() => useViewportZoom());
+
+    // Find the touchmove handler that was registered
+    const touchMoveCall = addEventListenerSpy.mock.calls.find(
+      (call) => call[0] === "touchmove"
+    );
+    expect(touchMoveCall).toBeDefined();
+
+    const handler = touchMoveCall![1] as (event: TouchEvent) => void;
+
+    // Create a mock event with scale !== 1 (iOS provides this during zoom)
+    const mockEventWithScale = {
+      preventDefault: vi.fn(),
+      touches: { length: 1 },
+      scale: 1.5, // Zooming in
+    } as unknown as TouchEvent;
+
+    handler(mockEventWithScale);
+
+    expect(mockEventWithScale.preventDefault).toHaveBeenCalled();
+  });
+
+  it("does not prevent default on touchmove events with scale === 1", () => {
+    mockPreventZoom.mockReturnValue(true);
+
+    renderHook(() => useViewportZoom());
+
+    // Find the touchmove handler that was registered
+    const touchMoveCall = addEventListenerSpy.mock.calls.find(
+      (call) => call[0] === "touchmove"
+    );
+    expect(touchMoveCall).toBeDefined();
+
+    const handler = touchMoveCall![1] as (event: TouchEvent) => void;
+
+    // Create a mock event with scale === 1 (no zoom)
+    const mockEventWithNoZoom = {
+      preventDefault: vi.fn(),
+      touches: { length: 1 },
+      scale: 1,
+    } as unknown as TouchEvent;
+
+    handler(mockEventWithNoZoom);
+
+    // Should NOT have called preventDefault when scale is 1
+    expect(mockEventWithNoZoom.preventDefault).not.toHaveBeenCalled();
+  });
+});
+
+describe("useViewportZoom - CSS touch-action", () => {
+  beforeEach(() => {
+    // Create viewport meta for the hook to work
+    const viewportMeta = document.createElement("meta");
+    viewportMeta.name = "viewport";
+    viewportMeta.content = "width=device-width, initial-scale=1.0, viewport-fit=cover";
+    document.head.appendChild(viewportMeta);
+
+    // Reset touch-action style
+    document.documentElement.style.touchAction = "";
+
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    // Clean up viewport meta
+    const viewportMeta = document.querySelector('meta[name="viewport"]');
+    viewportMeta?.parentNode?.removeChild(viewportMeta);
+
+    // Reset touch-action style
+    document.documentElement.style.touchAction = "";
+  });
+
+  it("sets touch-action to 'pan-x pan-y' when preventZoom is true", () => {
+    mockPreventZoom.mockReturnValue(true);
+
+    renderHook(() => useViewportZoom());
+
+    expect(document.documentElement.style.touchAction).toBe("pan-x pan-y");
+  });
+
+  it("sets touch-action to 'auto' when preventZoom is false", () => {
+    mockPreventZoom.mockReturnValue(false);
+
+    renderHook(() => useViewportZoom());
+
+    expect(document.documentElement.style.touchAction).toBe("auto");
+  });
+
+  it("restores touch-action to 'auto' on unmount", () => {
+    mockPreventZoom.mockReturnValue(true);
+
+    const { unmount } = renderHook(() => useViewportZoom());
+
+    expect(document.documentElement.style.touchAction).toBe("pan-x pan-y");
+
+    unmount();
+
+    expect(document.documentElement.style.touchAction).toBe("auto");
+  });
+
+  it("updates touch-action when preventZoom changes", () => {
+    mockPreventZoom.mockReturnValue(false);
+
+    const { rerender } = renderHook(() => useViewportZoom());
+
+    expect(document.documentElement.style.touchAction).toBe("auto");
+
+    mockPreventZoom.mockReturnValue(true);
+    rerender();
+
+    expect(document.documentElement.style.touchAction).toBe("pan-x pan-y");
+  });
+});
+
+describe("useViewportZoom - page reload on enable", () => {
+  let reloadSpy: Mock;
+
+  beforeEach(() => {
+    // Create viewport meta for the hook to work
+    const viewportMeta = document.createElement("meta");
+    viewportMeta.name = "viewport";
+    viewportMeta.content = "width=device-width, initial-scale=1.0, viewport-fit=cover";
+    document.head.appendChild(viewportMeta);
+
+    // Mock window.location.reload
+    reloadSpy = vi.fn();
+    Object.defineProperty(window, "location", {
+      value: { reload: reloadSpy },
+      writable: true,
+    });
+
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    // Clean up viewport meta
+    const viewportMeta = document.querySelector('meta[name="viewport"]');
+    viewportMeta?.parentNode?.removeChild(viewportMeta);
+  });
+
+  it("does not reload on initial mount when preventZoom is false", () => {
+    mockPreventZoom.mockReturnValue(false);
+
+    renderHook(() => useViewportZoom());
+
+    expect(reloadSpy).not.toHaveBeenCalled();
+  });
+
+  it("does not reload on initial mount when preventZoom is true", () => {
+    mockPreventZoom.mockReturnValue(true);
+
+    renderHook(() => useViewportZoom());
+
+    expect(reloadSpy).not.toHaveBeenCalled();
+  });
+
+  it("reloads when preventZoom changes from false to true", () => {
+    mockPreventZoom.mockReturnValue(false);
+
+    const { rerender } = renderHook(() => useViewportZoom());
+
+    expect(reloadSpy).not.toHaveBeenCalled();
+
+    // Enable prevent zoom
+    mockPreventZoom.mockReturnValue(true);
+    rerender();
+
+    expect(reloadSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not reload when preventZoom changes from true to false", () => {
+    mockPreventZoom.mockReturnValue(true);
+
+    const { rerender } = renderHook(() => useViewportZoom());
+
+    expect(reloadSpy).not.toHaveBeenCalled();
+
+    // Disable prevent zoom
+    mockPreventZoom.mockReturnValue(false);
+    rerender();
+
+    // Should not reload when disabling
+    expect(reloadSpy).not.toHaveBeenCalled();
+  });
 });
