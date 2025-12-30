@@ -74,11 +74,10 @@ jobs:
 
             ## OUTPUT FORMAT
 
-            IMPORTANT: Output your review as a raw markdown code block (wrapped in triple backticks) that can be copy-pasted directly into GitHub. Do NOT output already-rendered/formatted text.
+            Output your review as plain markdown (NOT wrapped in code blocks). GitHub will render the markdown formatting automatically when posted via `gh pr comment`.
 
-            Use this exact structure:
+            Use this structure:
 
-            ```
             ## Claude Code Review
 
             **Review type:** [Initial review | Re-review after changes]
@@ -94,11 +93,12 @@ jobs:
 
             ### Recommendations
             [Optional suggestions for improvement]
-            ```
+
+            ---
 
             Be constructive but firm - violations of CLAUDE.md guidelines should be explicitly called out.
 
-            Use `gh pr comment` with your Bash tool to leave your review as a comment on the PR.
+            Use `gh pr comment` with your Bash tool to leave your review as a comment on the PR. Pass the markdown content directly without wrapping in code blocks.
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
           claude_args: '--model opus --allowed-tools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"'
