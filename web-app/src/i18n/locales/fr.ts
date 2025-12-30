@@ -363,6 +363,16 @@ const fr: Translations = {
       transportApiNote:
         "Lorsque le calcul des temps de trajet est activé, les coordonnées de votre domicile sont envoyées à l'API des transports publics suisses (opentransportdata.swiss).",
     },
+    accessibility: {
+      title: "Accessibilité",
+      description:
+        "Ajustez les paramètres d'accessibilité pour personnaliser votre expérience.",
+      preventZoom: "Empêcher le zoom du navigateur",
+      preventZoomDescription:
+        "Désactive le pincement pour zoomer et le double appui pour zoomer sur les appareils tactiles. Cela peut aider à éviter les zooms accidentels.",
+      preventZoomEnabled: "La prévention du zoom est activée",
+      preventZoomDisabled: "La prévention du zoom est désactivée",
+    },
     safeMode: "Mode sécurisé",
     safeModeDescription:
       "Le mode sécurisé restreint les opérations dangereuses comme l'ajout/la prise de matchs depuis la bourse aux échanges ou la validation de matchs. Cela aide à éviter les modifications accidentelles pendant les tests de l'application.",

@@ -362,6 +362,16 @@ const en: Translations = {
       transportApiNote:
         "When travel time calculations are enabled, your home location coordinates are sent to the Swiss public transport API (opentransportdata.swiss).",
     },
+    accessibility: {
+      title: "Accessibility",
+      description:
+        "Adjust accessibility settings to customize your experience.",
+      preventZoom: "Prevent browser zoom",
+      preventZoomDescription:
+        "Disable pinch-to-zoom and double-tap zoom on touch devices. This can help prevent accidental zooming.",
+      preventZoomEnabled: "Zoom prevention is enabled",
+      preventZoomDisabled: "Zoom prevention is disabled",
+    },
     safeMode: "Safe Mode",
     safeModeDescription:
       "Safe mode restricts dangerous operations like adding/taking games from exchange or validating games. This helps prevent accidental modifications while the app is being tested.",

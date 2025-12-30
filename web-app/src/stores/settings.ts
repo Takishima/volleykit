@@ -74,6 +74,10 @@ interface SettingsState {
   isSafeModeEnabled: boolean;
   setSafeMode: (enabled: boolean) => void;
 
+  // Accessibility settings
+  preventZoom: boolean;
+  setPreventZoom: (enabled: boolean) => void;
+
   // Home location for distance filtering
   homeLocation: UserLocation | null;
   setHomeLocation: (location: UserLocation | null) => void;
@@ -133,6 +137,7 @@ export const useSettingsStore = create<SettingsState>()(
   persist(
     (set, get) => ({
       isSafeModeEnabled: true,
+      preventZoom: false,
       homeLocation: null,
       distanceFilter: {
         enabled: false,
@@ -151,6 +156,10 @@ export const useSettingsStore = create<SettingsState>()(
 
       setSafeMode: (enabled: boolean) => {
         set({ isSafeModeEnabled: enabled });
+      },
+
+      setPreventZoom: (enabled: boolean) => {
+        set({ preventZoom: enabled });
       },
 
       setHomeLocation: (location: UserLocation | null) => {
@@ -281,6 +290,7 @@ export const useSettingsStore = create<SettingsState>()(
       version: 1,
       partialize: (state) => ({
         isSafeModeEnabled: state.isSafeModeEnabled,
+        preventZoom: state.preventZoom,
         homeLocation: state.homeLocation,
         distanceFilter: state.distanceFilter,
         transportEnabled: state.transportEnabled,
@@ -297,6 +307,8 @@ export const useSettingsStore = create<SettingsState>()(
           ...current,
           // Preserve safe mode setting
           isSafeModeEnabled: persistedState?.isSafeModeEnabled ?? current.isSafeModeEnabled,
+          // Preserve accessibility settings
+          preventZoom: persistedState?.preventZoom ?? current.preventZoom,
           // Preserve home location - critical user data
           homeLocation: persistedState?.homeLocation ?? current.homeLocation,
           // Merge distance filter with defaults for any missing fields
