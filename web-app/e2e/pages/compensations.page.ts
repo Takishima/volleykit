@@ -1,9 +1,5 @@
 import { type Page, type Locator, expect } from "@playwright/test";
-import {
-  PAGE_LOAD_TIMEOUT_MS,
-  TAB_SWITCH_TIMEOUT_MS,
-  LOADING_TIMEOUT_MS,
-} from "../constants";
+import { TAB_SWITCH_TIMEOUT_MS } from "../constants";
 import { BasePage } from "./base.page";
 
 /**
@@ -17,6 +13,7 @@ export class CompensationsPage extends BasePage {
   readonly allTab: Locator;
   readonly tabPanel: Locator;
   readonly compensationCards: Locator;
+  private readonly emptyState: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -27,6 +24,7 @@ export class CompensationsPage extends BasePage {
     this.allTab = page.locator("#tab-all");
     this.tabPanel = page.getByRole("tabpanel");
     this.compensationCards = this.tabPanel.getByRole("button");
+    this.emptyState = page.getByTestId("empty-state");
   }
 
   async goto() {
@@ -35,37 +33,30 @@ export class CompensationsPage extends BasePage {
 
   async expectToBeLoaded() {
     await expect(this.tablist).toBeVisible();
-    await this.waitForStableState();
   }
 
   async switchToPendingTab() {
-    await expect(this.pendingTab).toBeVisible();
     await this.pendingTab.click();
     await expect(this.pendingTab).toHaveAttribute("aria-selected", "true", {
       timeout: TAB_SWITCH_TIMEOUT_MS,
     });
-    await expect(this.tabPanel).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
-    await this.waitForStableState();
+    await expect(this.tabPanel).toBeVisible();
   }
 
   async switchToPaidTab() {
-    await expect(this.paidTab).toBeVisible();
     await this.paidTab.click();
     await expect(this.paidTab).toHaveAttribute("aria-selected", "true", {
       timeout: TAB_SWITCH_TIMEOUT_MS,
     });
-    await expect(this.tabPanel).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
-    await this.waitForStableState();
+    await expect(this.tabPanel).toBeVisible();
   }
 
   async switchToAllTab() {
-    await expect(this.allTab).toBeVisible();
     await this.allTab.click();
     await expect(this.allTab).toHaveAttribute("aria-selected", "true", {
       timeout: TAB_SWITCH_TIMEOUT_MS,
     });
-    await expect(this.tabPanel).toBeVisible({ timeout: TAB_SWITCH_TIMEOUT_MS });
-    await this.waitForStableState();
+    await expect(this.tabPanel).toBeVisible();
   }
 
   async getCompensationCount(): Promise<number> {
@@ -73,24 +64,7 @@ export class CompensationsPage extends BasePage {
   }
 
   async waitForCompensationsLoaded() {
-    await expect(this.tabPanel).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT_MS });
-
-    // Wait for loading indicator to disappear (if it appears)
-    const loadingIndicator = this.page.getByTestId("loading-state");
-    const isLoadingVisible = await loadingIndicator.isVisible();
-    if (isLoadingVisible) {
-      await loadingIndicator.waitFor({
-        state: "hidden",
-        timeout: LOADING_TIMEOUT_MS,
-      });
-    }
-
-    // Wait for actual content: either cards are present or empty state is shown
-    const emptyState = this.page.getByTestId("empty-state");
-    await expect(this.compensationCards.first().or(emptyState)).toBeVisible({
-      timeout: LOADING_TIMEOUT_MS,
-    });
-
-    await this.waitForStableState();
+    await expect(this.tabPanel).toBeVisible();
+    await this.waitForContentReady(this.compensationCards, this.emptyState);
   }
 }

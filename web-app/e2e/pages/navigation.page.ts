@@ -1,5 +1,4 @@
 import { type Page, type Locator, expect } from "@playwright/test";
-import { PAGE_LOAD_TIMEOUT_MS } from "../constants";
 import { BasePage } from "./base.page";
 
 /**
@@ -28,22 +27,18 @@ export class NavigationPage extends BasePage {
   }
 
   /**
-   * Helper to navigate to a page reliably.
-   * Waits for stable state before and after clicking to handle timing issues.
+   * Navigate to a page via bottom nav.
+   * Uses element-based waits for reliability.
    */
   private async navigateTo(
     link: Locator,
     expectedUrl: string | RegExp,
   ): Promise<void> {
-    await this.waitForStableState();
+    // Playwright auto-waits for the link to be actionable before clicking
     await link.click();
-    await expect(this.page).toHaveURL(expectedUrl, {
-      timeout: PAGE_LOAD_TIMEOUT_MS,
-    });
-    await expect(this.page.getByRole("main")).toBeVisible({
-      timeout: PAGE_LOAD_TIMEOUT_MS,
-    });
-    await this.waitForStableState();
+    // Wait for URL and main content - no explicit delays needed
+    await expect(this.page).toHaveURL(expectedUrl);
+    await expect(this.page.getByRole("main")).toBeVisible();
   }
 
   async goToAssignments() {

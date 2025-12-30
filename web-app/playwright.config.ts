@@ -18,8 +18,9 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   // Retry on CI only (helps catch flaky tests locally too)
   retries: process.env.CI ? 2 : 1,
-  // Limit parallel workers on CI
-  workers: process.env.CI ? 1 : undefined,
+  // Use multiple workers for parallel execution
+  // 4 workers balances parallelism with resource usage across 5 browser projects
+  workers: process.env.CI ? 4 : undefined,
   // Reporter to use
   reporter: process.env.CI ? 'github' : 'html',
   // Shared settings for all the projects below
