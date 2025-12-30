@@ -13,7 +13,19 @@
         "categories:performance": ["warn", { "minScore": 0.8 }],
         "categories:accessibility": ["error", { "minScore": 0.9 }],
         "categories:best-practices": ["warn", { "minScore": 0.8 }],
-        "categories:seo": ["warn", { "minScore": 0.8 }]
+        "categories:seo": ["warn", { "minScore": 0.8 }],
+
+        "largest-contentful-paint": ["warn", { "maxNumericValue": 2500 }],
+        "cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }],
+        "total-blocking-time": ["warn", { "maxNumericValue": 300 }],
+
+        "installable-manifest": "error",
+        "service-worker": "error",
+        "maskable-icon": "warn",
+
+        "unused-javascript": ["warn", { "maxNumericValue": 150000 }],
+        "uses-text-compression": "error",
+        "render-blocking-resources": "warn"
       }
     },
     "upload": {
