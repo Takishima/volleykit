@@ -21,6 +21,7 @@ export { Camera } from "lucide-react";
 export { Check } from "lucide-react";
 export { FileText } from "lucide-react";
 export { AlertCircle } from "lucide-react";
+export { User } from "lucide-react";
 export { UserPlus } from "lucide-react";
 export { RefreshCw } from "lucide-react";
 export { Loader2 } from "lucide-react";
