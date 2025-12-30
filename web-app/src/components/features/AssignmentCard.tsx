@@ -185,9 +185,9 @@ function AssignmentCardComponent({
               <span className="text-xs text-text-muted dark:text-text-muted-dark truncate w-full text-right">
                 {city || ""}
               </span>
-              {game?.number && (
-                <span className="text-xs text-text-subtle dark:text-text-subtle-dark">
-                  #{game.number}
+              {game?.group?.phase?.league?.leagueCategory?.name && (
+                <span className="text-xs text-text-subtle dark:text-text-subtle-dark truncate w-full text-right">
+                  {game.group.phase.league.leagueCategory.name}
                 </span>
               )}
             </div>
@@ -266,6 +266,13 @@ function AssignmentCardComponent({
               {statusConfig[status]?.label || t("assignments.active")}
             </Badge>
           </div>
+
+          {/* Game number */}
+          {game?.number && (
+            <div className="text-xs text-text-subtle dark:text-text-subtle-dark">
+              #{game.number}
+            </div>
+          )}
 
           {/* Category/League */}
           {game?.group?.phase?.league?.leagueCategory?.name && (
