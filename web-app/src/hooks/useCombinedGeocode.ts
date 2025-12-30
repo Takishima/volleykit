@@ -256,24 +256,22 @@ async function searchNominatim(
 }
 
 /**
- * Strip HTML tags from a string.
+ * Strip HTML tags from a string using character-by-character parsing.
  * Used to clean geo.admin.ch label field which contains bold tags.
- *
- * Uses iterative replacement to handle malformed/nested tags safely.
- * Limits iterations to prevent DoS from pathological input.
+ * This approach avoids regex backtracking issues while safely handling nested tags.
  */
 function stripHtmlTags(html: string): string {
-  const MAX_ITERATIONS = 10;
+  let result = "";
+  let inTag = false;
 
-  let result = html;
-  let previousResult = "";
-  let iteration = 0;
-
-  // Keep stripping until stable or max iterations reached
-  while (result !== previousResult && iteration < MAX_ITERATIONS) {
-    previousResult = result;
-    result = result.replace(/<[^>]*>/g, "");
-    iteration++;
+  for (const char of html) {
+    if (char === "<") {
+      inTag = true;
+    } else if (char === ">") {
+      inTag = false;
+    } else if (!inTag) {
+      result += char;
+    }
   }
 
   return result;
