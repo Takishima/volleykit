@@ -38,19 +38,15 @@ import {
   personSearchResponseSchema,
   validateResponse,
 } from "./validation";
+import {
+  MAX_FILE_SIZE_BYTES,
+  ALLOWED_FILE_TYPES,
+  DEFAULT_SEARCH_RESULTS_LIMIT,
+} from "./constants";
 
 // Network delay constants for realistic demo behavior
 const MOCK_NETWORK_DELAY_MS = 50;
 const MOCK_MUTATION_DELAY_MS = 100;
-
-/** Default limit for person search pagination */
-const DEFAULT_PERSON_SEARCH_LIMIT = 50;
-
-/** Maximum allowed file size for uploads (10 MB). */
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
-
-/** Allowed MIME types for scoresheet uploads. */
-const ALLOWED_FILE_TYPES = ["application/pdf", "image/jpeg", "image/png"];
 
 /**
  * Extended compensation data type for demo mode.
@@ -514,7 +510,7 @@ export const mockApi = {
     });
 
     const offset = options?.offset ?? 0;
-    const limit = options?.limit ?? DEFAULT_PERSON_SEARCH_LIMIT;
+    const limit = options?.limit ?? DEFAULT_SEARCH_RESULTS_LIMIT;
     const paginated = filtered.slice(offset, offset + limit);
 
     const response = {
