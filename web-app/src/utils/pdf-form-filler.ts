@@ -123,11 +123,11 @@ const NLA_FIELD_MAPPING: FieldMapping = {
 const NLB_FIELD_MAPPING: FieldMapping = {
   gameNumber: 'Text9',
   homeTeam: 'Text10',
-  awayTeam: 'Text11',
+  awayTeam: 'Text12',
   genderRadio: 'Gruppe15',
-  hallName: 'Text12',
+  hallName: 'Text14',
   location: 'Text13',
-  date: 'Text14',
+  date: 'Text11',
   firstRefereeName: 'Text23',
   secondRefereeName: 'Text24',
 };
