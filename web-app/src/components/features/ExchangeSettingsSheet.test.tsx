@@ -40,6 +40,11 @@ vi.mock("@/hooks/useTravelTime", () => ({
   useTravelTimeAvailable: () => mockUseTravelTimeAvailable(),
 }));
 
+// Mock useActiveAssociationCode hook
+vi.mock("@/hooks/useActiveAssociation", () => ({
+  useActiveAssociationCode: () => "TEST",
+}));
+
 // Mock ResponsiveSheet component
 vi.mock("@/components/ui/ResponsiveSheet", () => ({
   ResponsiveSheet: ({
@@ -58,7 +63,7 @@ describe("ExchangeSettingsSheet", () => {
     homeLocation: { lat: 47.3769, lng: 8.5417, name: "Zurich" },
     distanceFilter: { maxDistanceKm: 50, enabled: true },
     setMaxDistanceKm: vi.fn(),
-    transportEnabled: true,
+    isTransportEnabledForAssociation: () => true,
     travelTimeFilter: { maxTravelTimeMinutes: 60, enabled: true },
     setMaxTravelTimeMinutes: vi.fn(),
   };
@@ -139,7 +144,7 @@ describe("ExchangeSettingsSheet", () => {
   it("hides travel time slider when transport is disabled", async () => {
     mockSettingsState.mockReturnValue({
       ...defaultSettingsState,
-      transportEnabled: false,
+      isTransportEnabledForAssociation: () => false,
     });
     const user = userEvent.setup();
 
