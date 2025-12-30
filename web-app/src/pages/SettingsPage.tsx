@@ -14,7 +14,6 @@ import {
   TourSection,
   DemoSection,
   SafeModeSection,
-  PrivacySection,
   UpdateSection,
   AboutSection,
 } from "@/components/features/settings";
@@ -75,8 +74,6 @@ export function SettingsPage() {
           onSetSafeMode={setSafeMode}
         />
       )}
-
-      <PrivacySection />
 
       {__PWA_ENABLED__ && <UpdateSection />}
 
