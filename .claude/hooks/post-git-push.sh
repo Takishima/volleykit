@@ -25,7 +25,7 @@ if [[ "$command" == *"git push"* ]]; then
   cat <<'EOF'
 {
   "decision": "block",
-  "reason": "Code pushed successfully.\n\nYou MUST now output the updated PR description inside a markdown code block so the user can copy it.\n\nOutput format (use EXACTLY this structure):\n\nHere is the updated PR description:\n\n```\n## Summary\n\n- [bullet points summarizing what was done]\n\n## Changes\n\n- [list of specific changes made]\n\n## Test Plan\n\n- [ ] [checklist items for testing]\n```\n\nThe triple backtick code block is REQUIRED so the user can easily copy the entire PR description."
+  "reason": "Code pushed successfully.\n\nYou MUST now output the updated PR description inside a markdown code block so the user can copy it.\n\nOutput format (use EXACTLY this structure):\n\nHere is the updated PR description:\n\n```\n## Summary\n\n- [bullet points summarizing what was done]\n\n## Changes\n\n- [list of specific changes made]\n\n## Test Plan\n\n- [ ] [checklist items for testing]\n```\n\nIMPORTANT:\n- The outer triple backtick code block is REQUIRED so the user can easily copy the entire PR description.\n- Any code snippets INSIDE the PR description must use 4-space indentation, NOT triple backticks (to avoid breaking the outer code block)."
 }
 EOF
   exit 0
