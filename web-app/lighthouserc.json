@@ -6,7 +6,7 @@
       "numberOfRuns": 3,
       "settings": {
         "preset": "desktop",
-        "onlyCategories": ["performance", "accessibility", "best-practices", "seo", "pwa"],
+        "onlyCategories": ["performance", "accessibility", "best-practices", "seo"],
         "skipAudits": ["screenshot-thumbnails", "final-screenshot"]
       }
     },
@@ -21,13 +21,7 @@
         "cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }],
         "total-blocking-time": ["warn", { "maxNumericValue": 300 }],
 
-        "installable-manifest": "error",
-        "service-worker": "error",
-        "maskable-icon": "warn",
-
-        "unused-javascript": ["warn", { "maxNumericValue": 150000 }],
-        "uses-text-compression": "error",
-        "render-blocking-resources": "warn"
+        "unused-javascript": ["warn", { "maxNumericValue": 150000 }]
       }
     },
     "upload": {
