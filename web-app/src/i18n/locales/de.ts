@@ -370,7 +370,7 @@ const de: Translations = {
         "Passen Sie die Barrierefreiheitseinstellungen an, um Ihr Erlebnis zu personalisieren.",
       preventZoom: "Browser-Zoom verhindern",
       preventZoomDescription:
-        "Deaktiviert Pinch-to-Zoom und Doppeltippen zum Zoomen auf Touch-Geräten. Dies kann versehentliches Zoomen verhindern.",
+        "Deaktiviert Pinch-to-Zoom und Doppeltippen zum Zoomen auf Touch-Geräten. Dies kann versehentliches Zoomen verhindern. Hinweis: Einige Benutzer sind auf Zoom für die Barrierefreiheit angewiesen, verwenden Sie diese Einstellung daher mit Bedacht.",
       preventZoomEnabled: "Zoom-Verhinderung ist aktiviert",
       preventZoomDisabled: "Zoom-Verhinderung ist deaktiviert",
     },

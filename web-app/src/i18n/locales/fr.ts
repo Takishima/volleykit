@@ -369,7 +369,7 @@ const fr: Translations = {
         "Ajustez les paramètres d'accessibilité pour personnaliser votre expérience.",
       preventZoom: "Empêcher le zoom du navigateur",
       preventZoomDescription:
-        "Désactive le pincement pour zoomer et le double appui pour zoomer sur les appareils tactiles. Cela peut aider à éviter les zooms accidentels.",
+        "Désactive le pincement pour zoomer et le double appui pour zoomer sur les appareils tactiles. Cela peut aider à éviter les zooms accidentels. Remarque: Certains utilisateurs dépendent du zoom pour l'accessibilité, utilisez donc ce paramètre avec discernement.",
       preventZoomEnabled: "La prévention du zoom est activée",
       preventZoomDisabled: "La prévention du zoom est désactivée",
     },

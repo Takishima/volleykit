@@ -368,7 +368,7 @@ const en: Translations = {
         "Adjust accessibility settings to customize your experience.",
       preventZoom: "Prevent browser zoom",
       preventZoomDescription:
-        "Disable pinch-to-zoom and double-tap zoom on touch devices. This can help prevent accidental zooming.",
+        "Disable pinch-to-zoom and double-tap zoom on touch devices. This can help prevent accidental zooming. Note: Some users rely on zoom for accessibility, so use this setting thoughtfully.",
       preventZoomEnabled: "Zoom prevention is enabled",
       preventZoomDisabled: "Zoom prevention is disabled",
     },
