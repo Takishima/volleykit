@@ -5,7 +5,9 @@
       "staticDistDir": "./web-app/dist",
       "numberOfRuns": 3,
       "settings": {
-        "preset": "desktop"
+        "preset": "desktop",
+        "onlyCategories": ["performance", "accessibility", "best-practices", "seo", "pwa"],
+        "skipAudits": ["screenshot-thumbnails", "final-screenshot"]
       }
     },
     "assert": {
