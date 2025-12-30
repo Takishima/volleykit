@@ -98,8 +98,7 @@ export function createCompensationActions(
   };
 }
 
-const API_BASE =
-  import.meta.env.VITE_API_PROXY_URL || (import.meta.env.DEV ? "" : "");
+const API_BASE = import.meta.env.VITE_API_PROXY_URL || "";
 
 export async function downloadCompensationPDF(
   compensationId: string,

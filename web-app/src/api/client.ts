@@ -24,9 +24,8 @@ import {
   DEFAULT_SEARCH_RESULTS_LIMIT,
 } from "./constants";
 
-// Base URL configuration
-const API_BASE =
-  import.meta.env.VITE_API_PROXY_URL || (import.meta.env.DEV ? "" : "");
+// Base URL configuration - uses proxy URL if set, otherwise empty string for relative URLs
+const API_BASE = import.meta.env.VITE_API_PROXY_URL || "";
 
 if (!import.meta.env.DEV && !API_BASE) {
   console.warn(
