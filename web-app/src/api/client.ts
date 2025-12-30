@@ -30,8 +30,12 @@ if (!import.meta.env.DEV && !API_BASE) {
 }
 
 const DEFAULT_SEARCH_RESULTS_LIMIT = 50;
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
-const ALLOWED_FILE_TYPES = ["application/pdf", "image/jpeg", "image/png"];
+
+/** Maximum file size for uploads (10 MB) */
+export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
+/** Allowed MIME types for file uploads */
+export const ALLOWED_FILE_TYPES = ["application/pdf", "image/jpeg", "image/png"];
 
 // Re-export schema types
 export type Schemas = components["schemas"];
