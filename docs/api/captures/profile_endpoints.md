@@ -44,6 +44,55 @@ GET ...person/showWithNestedObjects
   &person[__identity]=<person-uuid>
 ```
 
+**Response Structure:**
+
+```json
+{
+  "person": {
+    "__identity": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "persistenceObjectIdentifier": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "svNumber": 12345,
+    "associationId": 12345,
+    "externalId": "12345",
+    "firstName": "Jean",
+    "lastName": "Dupont",
+    "displayName": "Jean Dupont",
+    "fullName": "Jean Dupont",
+    "gender": "m",
+    "genderNoun": "Homme",
+    "genderAdjective": "masculin",
+    "birthday": "1989-08-07T22:00:00.000000+00:00",
+    "formattedAndTimezoneIndependentBirthday": "1989-08-08",
+    "yearOfBirth": 1989,
+    "age": 36,
+    "correspondenceLanguage": "fr",
+    "accountActive": true,
+    "hasAccount": true,
+    "hasProfilePicture": true,
+    "activeRoleIdentifier": "Indoorvolleyball.RefAdmin:Referee",
+    "nationality": {
+      "__identity": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+      "isoCode2": "CH",
+      "isoCode3": "CHE",
+      "translations": {
+        "de": { "name": "Schweiz" },
+        "fr": { "name": "Suisse" }
+      }
+    },
+    "_permissions": {
+      "properties": {
+        "firstName": { "create": true, "read": true, "update": true },
+        "lastName": { "create": true, "read": true, "update": true },
+        "correspondenceLanguage": { "create": true, "read": true, "update": true }
+      },
+      "object": { "create": true, "update": true, "delete": false }
+    },
+    "createdAt": "2020-01-15T10:30:00.000000+00:00",
+    "updatedAt": "2024-06-20T14:45:00.000000+00:00"
+  }
+}
+```
+
 ______________________________________________________________________
 
 ### 2. Get Indoor Referee by Active Person
@@ -63,6 +112,54 @@ GET /api/indoorvolleyball.refadmin/api\indoorreferee/getIndoorRefereeByActivePer
 
 ```
 GET ...getIndoorRefereeByActivePerson?person=<person-uuid>
+```
+
+**Response Structure:**
+
+```json
+{
+  "__identity": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+  "persistenceObjectIdentifier": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+  "person": {
+    "__identity": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "firstName": "Jean",
+    "lastName": "Dupont",
+    "displayName": "Jean Dupont"
+  },
+  "refereeLevel": {
+    "__identity": "dddddddd-dddd-dddd-dddd-dddddddddddd",
+    "name": "National A",
+    "shortName": "NA"
+  },
+  "refereeNumber": 12345,
+  "jerseyNumber": null,
+  "refereeInformation": "Jean Dupont (12345, 1989-08-08, )",
+  "refereeSinceDate": "2015-09-01",
+  "validated": true,
+  "isInternationalReferee": false,
+  "hasLinesmanCertification": true,
+  "hasNotes": false,
+  "transportationMode": "car",
+  "mobilePhoneNumbers": "+41 79 123 45 67",
+  "fixnetPhoneNumbers": "",
+  "privatePostalAddresses": "Rue Example 1, 1000 Lausanne",
+  "managingAssociation": {
+    "__identity": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+    "name": "Association Vaudoise de Volleyball",
+    "shortName": "AVV"
+  },
+  "_permissions": {
+    "properties": {
+      "transportationMode": { "create": true, "read": true, "update": true },
+      "notes": { "create": true, "read": true, "update": true }
+    },
+    "object": { "create": true, "update": true, "delete": false }
+  },
+  "createdAt": "2015-09-01T08:00:00.000000+00:00",
+  "updatedAt": "2024-08-15T16:30:00.000000+00:00",
+  "createdBy": "system",
+  "updatedBy": "Jean Dupont"
+}
 ```
 
 ______________________________________________________________________
