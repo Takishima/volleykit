@@ -81,6 +81,41 @@ describe("AssignmentCard", () => {
       expect(screen.getByText("NLA")).toBeInTheDocument();
     });
 
+    it("renders game number and league with gender in expanded view", () => {
+      const assignment = createMockAssignment({
+        refereeGame: {
+          game: {
+            id: "game-1",
+            number: 123456,
+            startingDateTime: "2025-12-15T14:00:00Z",
+            encounter: {
+              teamHome: { name: "VBC Zürich" },
+              teamAway: { name: "VBC Basel" },
+            },
+            hall: { name: "Sporthalle Zürich" },
+            group: {
+              phase: {
+                league: {
+                  leagueCategory: { name: "NLA" },
+                  gender: "m",
+                },
+              },
+            },
+          },
+        },
+      } as Partial<Assignment>);
+
+      render(<AssignmentCard assignment={assignment} />);
+
+      // Click to expand
+      fireEvent.click(screen.getByRole("button"));
+
+      // Game number is in expanded view
+      expect(screen.getByText("#123456")).toBeInTheDocument();
+      // League with gender is in expanded view
+      expect(screen.getByText(/NLA • Men/)).toBeInTheDocument();
+    });
+
     it("renders city in compact view when available", () => {
       const assignment = createMockAssignment({
         refereeGame: {

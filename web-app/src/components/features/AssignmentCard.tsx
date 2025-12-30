@@ -185,11 +185,6 @@ function AssignmentCardComponent({
               <span className="text-xs text-text-muted dark:text-text-muted-dark truncate w-full text-right">
                 {city || ""}
               </span>
-              {game?.number && (
-                <span className="text-xs text-text-subtle dark:text-text-subtle-dark">
-                  #{game.number}
-                </span>
-              )}
               {game?.group?.phase?.league?.leagueCategory?.name && (
                 <span className="text-xs text-text-subtle dark:text-text-subtle-dark truncate w-full text-right">
                   {game.group.phase.league.leagueCategory.name}
@@ -271,6 +266,22 @@ function AssignmentCardComponent({
               {statusConfig[status]?.label || t("assignments.active")}
             </Badge>
           </div>
+
+          {/* Game number */}
+          {game?.number && (
+            <div className="text-xs text-text-subtle dark:text-text-subtle-dark">
+              #{game.number}
+            </div>
+          )}
+
+          {/* Category/League */}
+          {game?.group?.phase?.league?.leagueCategory?.name && (
+            <div className="text-xs text-text-subtle dark:text-text-subtle-dark">
+              {game.group.phase.league.leagueCategory.name}
+              {game.group.phase.league.gender &&
+                ` • ${game.group.phase.league.gender === "m" ? t("common.men") : t("common.women")}`}
+            </div>
+          )}
 
           {/* Referee names */}
           {(headReferee1 || headReferee2 || linesmen.length > 0) && (
