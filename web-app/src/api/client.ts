@@ -18,6 +18,11 @@ import {
   EXCHANGE_PROPERTIES,
   COMPENSATION_PROPERTIES,
 } from "./property-configs";
+import {
+  MAX_FILE_SIZE_BYTES,
+  ALLOWED_FILE_TYPES,
+  DEFAULT_SEARCH_RESULTS_LIMIT,
+} from "./constants";
 
 // Base URL configuration
 const API_BASE =
@@ -28,14 +33,6 @@ if (!import.meta.env.DEV && !API_BASE) {
     "VITE_API_PROXY_URL is not configured for production. API calls will fail.",
   );
 }
-
-const DEFAULT_SEARCH_RESULTS_LIMIT = 50;
-
-/** Maximum file size for uploads (10 MB) */
-export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
-
-/** Allowed MIME types for file uploads */
-export const ALLOWED_FILE_TYPES = ["application/pdf", "image/jpeg", "image/png"];
 
 // Re-export schema types
 export type Schemas = components["schemas"];

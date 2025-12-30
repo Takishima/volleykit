@@ -106,6 +106,19 @@ export function isValidationEligible(assignment: Assignment): boolean {
  */
 export const DEFAULT_VALIDATION_DEADLINE_HOURS = 6;
 
+/** Milliseconds per hour constant for time calculations. */
+const MS_PER_HOUR = 60 * 60 * 1000;
+
+/**
+ * Parses a game start time string into a Date object.
+ * Returns null for invalid or missing input.
+ */
+function parseGameStartTime(gameStartTime: string | undefined | null): Date | null {
+  if (!gameStartTime) return null;
+  const date = new Date(gameStartTime);
+  return isNaN(date.getTime()) ? null : date;
+}
+
 /**
  * Checks if the validation period for a game has closed.
  *
@@ -127,15 +140,10 @@ export function isValidationClosed(
   gameStartTime: string | undefined | null,
   deadlineHours: number = DEFAULT_VALIDATION_DEADLINE_HOURS,
 ): boolean {
-  if (!gameStartTime) return false;
+  const gameStart = parseGameStartTime(gameStartTime);
+  if (!gameStart) return false;
 
-  const gameStart = new Date(gameStartTime);
-  if (isNaN(gameStart.getTime())) return false;
-
-  const validationDeadline = new Date(
-    gameStart.getTime() + deadlineHours * 60 * 60 * 1000,
-  );
-
+  const validationDeadline = new Date(gameStart.getTime() + deadlineHours * MS_PER_HOUR);
   return new Date() > validationDeadline;
 }
 
@@ -145,13 +153,7 @@ export function isValidationClosed(
  * @param gameStartTime - ISO datetime string of when the game starts/started
  * @returns true if game has started, false if still upcoming or invalid date
  */
-export function isGamePast(
-  gameStartTime: string | undefined | null,
-): boolean {
-  if (!gameStartTime) return false;
-
-  const gameStart = new Date(gameStartTime);
-  if (isNaN(gameStart.getTime())) return false;
-
-  return new Date() > gameStart;
+export function isGamePast(gameStartTime: string | undefined | null): boolean {
+  const gameStart = parseGameStartTime(gameStartTime);
+  return gameStart !== null && new Date() > gameStart;
 }

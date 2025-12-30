@@ -1,7 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuthStore } from "@/stores/auth";
-import { MAX_FILE_SIZE_BYTES, ALLOWED_FILE_TYPES } from "@/api/client";
 import {
   Upload,
   Camera,
@@ -10,6 +9,7 @@ import {
   AlertCircle,
   Info,
 } from "@/components/ui/icons";
+import { MAX_FILE_SIZE_BYTES, ALLOWED_FILE_TYPES } from "@/api/constants";
 
 interface ScoresheetPanelProps {
   /** Callback when scoresheet state changes */
