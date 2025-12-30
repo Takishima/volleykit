@@ -1,10 +1,11 @@
-import { useState, useCallback, useMemo, lazy, Suspense } from "react";
+import { useState, useCallback, useMemo, lazy, Suspense, Fragment } from "react";
 import {
   useUpcomingAssignments,
   useValidationClosedAssignments,
 } from "@/hooks/useConvocations";
 import { AssignmentCard } from "@/components/features/AssignmentCard";
 import { SwipeableCard } from "@/components/ui/SwipeableCard";
+import { WeekSeparator } from "@/components/ui/WeekSeparator";
 import {
   LoadingState,
   ErrorState,
@@ -17,6 +18,7 @@ import {
   isValidationEligible,
 } from "@/utils/assignment-helpers";
 import { isAssignmentCompensationEditable } from "@/utils/compensation-actions";
+import { groupByWeek } from "@/utils/date-helpers";
 import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTour } from "@/hooks/useTour";
@@ -92,6 +94,12 @@ export function AssignmentsPage() {
     const tourAssignment = TOUR_DUMMY_ASSIGNMENT as unknown as Assignment;
     return rawData ? [tourAssignment, ...rawData] : [tourAssignment];
   }, [isTourMode, activeTab, rawData]);
+
+  // Group assignments by week for visual separation
+  const groupedData = useMemo(() => {
+    if (!data || data.length === 0) return [];
+    return groupByWeek(data, (a) => a.refereeGame?.game?.startingDateTime);
+  }, [data]);
 
   const getSwipeConfig = useCallback(
     (assignment: Assignment) => {
@@ -234,22 +242,41 @@ export function AssignmentsPage() {
           />
         )}
 
-        {!isLoading && !error && data && data.length > 0 && (
+        {!isLoading && !error && groupedData.length > 0 && (
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {data.map((assignment, index) => (
-              <SwipeableCard
-                key={assignment.__identity}
-                swipeConfig={getSwipeConfig(assignment)}
-              >
-                {({ isDrawerOpen }) => (
-                  <AssignmentCard
-                    assignment={assignment}
-                    disableExpansion={isDrawerOpen}
-                    dataTour={index === 0 ? "assignment-card" : undefined}
-                  />
-                )}
-              </SwipeableCard>
-            ))}
+            {groupedData.map((group, groupIndex) => {
+              // Track global item index for tour data attribute
+              const itemsBeforeThisGroup = groupedData
+                .slice(0, groupIndex)
+                .reduce((sum, g) => sum + g.items.length, 0);
+
+              return (
+                <Fragment key={group.week.key}>
+                  {/* Only show separator if there's more than one week */}
+                  {groupedData.length > 1 && (
+                    <WeekSeparator week={group.week} />
+                  )}
+                  {group.items.map((assignment, itemIndex) => (
+                    <SwipeableCard
+                      key={assignment.__identity}
+                      swipeConfig={getSwipeConfig(assignment)}
+                    >
+                      {({ isDrawerOpen }) => (
+                        <AssignmentCard
+                          assignment={assignment}
+                          disableExpansion={isDrawerOpen}
+                          dataTour={
+                            itemsBeforeThisGroup + itemIndex === 0
+                              ? "assignment-card"
+                              : undefined
+                          }
+                        />
+                      )}
+                    </SwipeableCard>
+                  ))}
+                </Fragment>
+              );
+            })}
           </div>
         )}
       </div>
