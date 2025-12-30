@@ -86,7 +86,7 @@ describe('pdf-form-filler', () => {
         gender: 'm',
         hallName: 'Sporthalle Hardau',
         location: 'Zürich',
-        date: '15.12.2025',
+        date: '15.12.25',
         firstRefereeName: 'Max Mustermann',
         secondRefereeName: 'Anna Schmidt',
       });
@@ -338,7 +338,7 @@ describe('pdf-form-filler', () => {
       gender: 'm',
       hallName: 'Test Hall',
       location: 'Test City',
-      date: '15.12.2025',
+      date: '15.12.25',
       firstRefereeName: 'First Ref',
       secondRefereeName: 'Second Ref',
     };

@@ -28,7 +28,7 @@ export interface SportsHallReportData {
 function formatDateForReport(isoString: string | undefined): string {
   if (!isoString) return '';
   try {
-    return format(new Date(isoString), 'dd.MM.yyyy');
+    return format(new Date(isoString), 'dd.MM.yy');
   } catch {
     // Invalid date format - return empty string so form field shows blank
     logger.warn('Failed to parse date for PDF report:', isoString);
