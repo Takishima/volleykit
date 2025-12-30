@@ -32,7 +32,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Cache generated API types
+        id: api-cache
+        uses: actions/cache@v4
+        with:
+          path: web-app/src/api/schema.ts
+          key: api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'web-app/package-lock.json') }}
+
       - name: Generate API types
+        if: steps.api-cache.outputs.cache-hit != 'true'
         run: npm run generate:api
 
       - name: Build application
@@ -78,8 +86,24 @@ jobs:
           name: web-app-build
           path: web-app/dist
 
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(npm ls @playwright/test --json | jq -r '.dependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ matrix.browser }}-${{ steps.playwright-version.outputs.version }}
+
       - name: Install Playwright browser
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Install Playwright browser dependencies (for cached browsers)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps ${{ matrix.browser }}
 
       - name: Run E2E tests
         run: npx playwright test --project=${{ matrix.browser }}
