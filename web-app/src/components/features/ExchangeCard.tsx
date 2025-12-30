@@ -2,11 +2,12 @@ import { memo, useMemo } from "react";
 import { format, parseISO } from "date-fns";
 import { ExpandableCard } from "@/components/ui/ExpandableCard";
 import { TravelTimeBadge } from "@/components/features/TravelTimeBadge";
-import { MapPin, MaleIcon, FemaleIcon, Home, Navigation, TrainFront, Loader2 } from "@/components/ui/icons";
+import { MapPin, MaleIcon, FemaleIcon, Home, Navigation, TrainFront, Loader2, User } from "@/components/ui/icons";
 import type { GameExchange } from "@/api/client";
 import { useDateLocale } from "@/hooks/useDateFormat";
 import { useTranslation } from "@/hooks/useTranslation";
 import { buildMapsUrls } from "@/utils/maps-url";
+import { getPositionLabel } from "@/utils/position-labels";
 import { useSettingsStore } from "@/stores/settings";
 import { useActiveAssociationCode } from "@/hooks/useActiveAssociation";
 import { useSbbUrl } from "@/hooks/useSbbUrl";
@@ -84,6 +85,9 @@ function ExchangeCardComponent({
   const { googleMapsUrl, nativeMapsUrl: addressMapsUrl, fullAddress } = buildMapsUrls(postalAddress, hallName);
 
   const requiredLevel = exchange.requiredRefereeLevel;
+
+  // Get the translated position label for the exchange
+  const positionLabel = getPositionLabel(exchange.refereePosition, t);
 
   const leagueCategory = game?.group?.phase?.league?.leagueCategory?.name;
   const gender = game?.group?.phase?.league?.gender;
@@ -245,6 +249,17 @@ function ExchangeCardComponent({
               )}
             </div>
           </div>
+
+          {/* Position being exchanged */}
+          {positionLabel && (
+            <div className="flex items-center gap-2 text-sm text-text-muted dark:text-text-muted-dark">
+              <User className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+              <div>
+                <span className="text-text-subtle dark:text-text-subtle-dark">{t("common.position")}: </span>
+                <span className="font-medium text-text-primary dark:text-text-primary-dark">{positionLabel}</span>
+              </div>
+            </div>
+          )}
 
           {/* Required level */}
           {requiredLevel && (
