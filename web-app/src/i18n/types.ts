@@ -236,6 +236,14 @@ export interface Translations {
       externalServices: string;
       transportApiNote: string;
     };
+    accessibility: {
+      title: string;
+      description: string;
+      preventZoom: string;
+      preventZoomDescription: string;
+      preventZoomEnabled: string;
+      preventZoomDisabled: string;
+    };
     safeMode: string;
     safeModeDescription: string;
     safeModeEnabled: string;

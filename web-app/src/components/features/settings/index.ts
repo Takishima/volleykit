@@ -5,6 +5,7 @@ export { TransportSection } from "./TransportSection";
 export { DataRetentionSection } from "./DataRetentionSection";
 export { TourSection } from "./TourSection";
 export { DemoSection } from "./DemoSection";
+export { AccessibilitySection } from "./AccessibilitySection";
 export { SafeModeSection } from "./SafeModeSection";
 export { UpdateSection } from "./UpdateSection";
 export { AboutSection } from "./AboutSection";

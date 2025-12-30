@@ -34,6 +34,10 @@ function createMockSettingsStore(
     isSafeModeEnabled: false,
     setSafeMode: vi.fn(),
 
+    // Accessibility
+    preventZoom: false,
+    setPreventZoom: vi.fn(),
+
     // Home location
     homeLocation: {
       latitude: 46.9,

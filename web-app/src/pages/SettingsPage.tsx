@@ -13,6 +13,7 @@ import {
   DataRetentionSection,
   TourSection,
   DemoSection,
+  AccessibilitySection,
   SafeModeSection,
   UpdateSection,
   AboutSection,
@@ -32,10 +33,12 @@ export function SettingsPage() {
       refreshData: state.refreshData,
     })),
   );
-  const { isSafeModeEnabled, setSafeMode } = useSettingsStore(
+  const { isSafeModeEnabled, setSafeMode, preventZoom, setPreventZoom } = useSettingsStore(
     useShallow((state) => ({
       isSafeModeEnabled: state.isSafeModeEnabled,
       setSafeMode: state.setSafeMode,
+      preventZoom: state.preventZoom,
+      setPreventZoom: state.setPreventZoom,
     })),
   );
   const { t } = useTranslation();
@@ -60,6 +63,11 @@ export function SettingsPage() {
       <DataRetentionSection />
 
       <TourSection isDemoMode={isDemoMode} />
+
+      <AccessibilitySection
+        preventZoom={preventZoom}
+        onSetPreventZoom={setPreventZoom}
+      />
 
       {isDemoMode && (
         <DemoSection

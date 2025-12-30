@@ -31,6 +31,7 @@ import {
 } from "@/utils/query-error-utils";
 import { usePreloadLocales } from "@/hooks/usePreloadLocales";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useViewportZoom } from "@/hooks/useViewportZoom";
 import { logger } from "@/utils/logger";
 
 // Lazy load TourProvider since it's only needed for first-time users
@@ -239,6 +240,7 @@ function QueryErrorHandler({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   usePreloadLocales();
+  useViewportZoom();
 
   return (
     <ErrorBoundary>

@@ -364,6 +364,16 @@ const de: Translations = {
       transportApiNote:
         "Bei aktivierter Reisezeitberechnung werden Ihre Heimatstandort-Koordinaten an die Schweizer ÖV-API (opentransportdata.swiss) gesendet.",
     },
+    accessibility: {
+      title: "Barrierefreiheit",
+      description:
+        "Passen Sie die Barrierefreiheitseinstellungen an, um Ihr Erlebnis zu personalisieren.",
+      preventZoom: "Browser-Zoom verhindern",
+      preventZoomDescription:
+        "Deaktiviert Pinch-to-Zoom und Doppeltippen zum Zoomen auf Touch-Geräten. Dies kann versehentliches Zoomen verhindern. Hinweis: Einige Benutzer sind auf Zoom für die Barrierefreiheit angewiesen, verwenden Sie diese Einstellung daher mit Bedacht.",
+      preventZoomEnabled: "Zoom-Verhinderung ist aktiviert",
+      preventZoomDisabled: "Zoom-Verhinderung ist deaktiviert",
+    },
     safeMode: "Sicherheitsmodus",
     safeModeDescription:
       "Der Sicherheitsmodus beschränkt gefährliche Operationen wie das Hinzufügen/Übernehmen von Spielen zur/von Tauschbörse oder das Validieren von Spielen. Dies hilft, versehentliche Änderungen während des Testens der App zu vermeiden.",

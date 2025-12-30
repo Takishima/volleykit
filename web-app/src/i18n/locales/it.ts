@@ -361,6 +361,16 @@ const it: Translations = {
       transportApiNote:
         "Quando il calcolo dei tempi di viaggio è abilitato, le coordinate della tua posizione casa vengono inviate all'API dei trasporti pubblici svizzeri (opentransportdata.swiss).",
     },
+    accessibility: {
+      title: "Accessibilità",
+      description:
+        "Regola le impostazioni di accessibilità per personalizzare la tua esperienza.",
+      preventZoom: "Impedisci zoom del browser",
+      preventZoomDescription:
+        "Disabilita il pizzico per zoomare e il doppio tocco per zoomare sui dispositivi touch. Questo può aiutare a prevenire zoom accidentali. Nota: Alcuni utenti dipendono dallo zoom per l'accessibilità, quindi usa questa impostazione con attenzione.",
+      preventZoomEnabled: "La prevenzione dello zoom è attivata",
+      preventZoomDisabled: "La prevenzione dello zoom è disattivata",
+    },
     safeMode: "Modalità sicura",
     safeModeDescription:
       "La modalità sicura limita operazioni pericolose come l'aggiunta/assunzione di partite dalla borsa scambi o la convalida di partite. Questo aiuta a prevenire modifiche accidentali durante il test dell'app.",
