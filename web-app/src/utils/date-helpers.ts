@@ -119,3 +119,146 @@ export function groupByWeek<T>(
 
   return groups;
 }
+
+/**
+ * Player data for roster formatting.
+ */
+export interface RosterPlayerData {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  birthday?: string | null;
+}
+
+/**
+ * Formatted player entry with abbreviated first name.
+ */
+export interface FormattedRosterEntry {
+  lastName: string;
+  firstInitial: string;
+  dob: string;
+  displayString: string;
+}
+
+/**
+ * Computes the minimum number of first name letters needed to distinguish
+ * players with the same last name.
+ *
+ * @param players - Array of players with the same last name
+ * @returns Map of player ID to required initial length
+ */
+function computeInitialLengths(
+  players: RosterPlayerData[],
+): Map<string, number> {
+  const result = new Map<string, number>();
+
+  // Start with 1 character for everyone
+  for (const player of players) {
+    result.set(player.id, 1);
+  }
+
+  // If only one player or no duplicates possible, we're done
+  if (players.length <= 1) {
+    return result;
+  }
+
+  // Group by first letter to find conflicts
+  const byFirstLetter = new Map<string, RosterPlayerData[]>();
+  for (const player of players) {
+    const firstLetter = (player.firstName ?? "").charAt(0).toUpperCase();
+    const existing = byFirstLetter.get(firstLetter) ?? [];
+    existing.push(player);
+    byFirstLetter.set(firstLetter, existing);
+  }
+
+  // For groups with conflicts, use 2 letters
+  for (const group of byFirstLetter.values()) {
+    if (group.length > 1) {
+      for (const player of group) {
+        result.set(player.id, 2);
+      }
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Formats player roster entries with abbreviated first names and DOB.
+ * Uses 1 letter for first name by default, 2 letters if there are duplicate
+ * last names with the same first initial.
+ *
+ * Format: "LastName X. dd.mm.yy" or "LastName Xy. dd.mm.yy" for duplicates
+ *
+ * @param players - Array of players to format
+ * @returns Map of player ID to formatted entry data
+ */
+export function formatRosterEntries(
+  players: RosterPlayerData[],
+): Map<string, FormattedRosterEntry> {
+  const result = new Map<string, FormattedRosterEntry>();
+
+  // Group players by last name (case-insensitive)
+  const byLastName = new Map<string, RosterPlayerData[]>();
+  for (const player of players) {
+    const lastName = (player.lastName ?? "").toLowerCase();
+    const existing = byLastName.get(lastName) ?? [];
+    existing.push(player);
+    byLastName.set(lastName, existing);
+  }
+
+  // Compute required initial lengths for each group
+  const initialLengths = new Map<string, number>();
+  for (const group of byLastName.values()) {
+    const groupLengths = computeInitialLengths(group);
+    for (const [id, length] of groupLengths) {
+      initialLengths.set(id, length);
+    }
+  }
+
+  // Format each player
+  for (const player of players) {
+    const lastName = player.lastName ?? "";
+    const firstName = player.firstName ?? "";
+    const initialLength = initialLengths.get(player.id) ?? 1;
+    const firstInitial =
+      firstName.length > 0
+        ? firstName.slice(0, initialLength).charAt(0).toUpperCase() +
+          firstName.slice(1, initialLength).toLowerCase() +
+          "."
+        : "";
+    const dob = formatDOB(player.birthday);
+
+    const displayString = [lastName, firstInitial, dob]
+      .filter(Boolean)
+      .join(" ");
+
+    result.set(player.id, {
+      lastName,
+      firstInitial,
+      dob,
+      displayString,
+    });
+  }
+
+  return result;
+}
+
+/**
+ * Calculates the maximum last name width from formatted roster entries.
+ * Used for column alignment in player lists.
+ *
+ * @param entries - Map of formatted roster entries
+ * @returns Maximum last name character length
+ */
+export function getMaxLastNameWidth(
+  entries: Map<string, FormattedRosterEntry>,
+): number {
+  let maxLen = 0;
+  for (const entry of entries.values()) {
+    if (entry.lastName.length > maxLen) {
+      maxLen = entry.lastName.length;
+    }
+  }
+  return maxLen;
+}

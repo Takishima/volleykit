@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import type { PossibleNomination, NominationList } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
@@ -10,6 +10,7 @@ import { PlayerListItem } from "./PlayerListItem";
 import { AddPlayerSheet } from "./AddPlayerSheet";
 import { UserPlus, AlertCircle, RefreshCw } from "@/components/ui/icons";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { formatRosterEntries, getMaxLastNameWidth } from "@/utils/date-helpers";
 
 interface RosterVerificationPanelProps {
   team: "home" | "away";
@@ -122,6 +123,18 @@ export function RosterVerificationPanel({
     return a.displayName.localeCompare(b.displayName);
   });
 
+  // Compute formatted display data for all players (handles duplicate detection)
+  const formattedEntries = useMemo(
+    () => formatRosterEntries(allPlayers),
+    [allPlayers],
+  );
+
+  // Calculate max last name width for column alignment
+  const maxLastNameWidth = useMemo(
+    () => getMaxLastNameWidth(formattedEntries),
+    [formattedEntries],
+  );
+
   // Calculate visible player count (excluding removed)
   const visiblePlayerCount = allPlayers.filter(
     (p) => !removedPlayerIds.has(p.id),
@@ -187,16 +200,25 @@ export function RosterVerificationPanel({
         </div>
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          {allPlayers.map((player) => (
-            <PlayerListItem
-              key={player.id}
-              player={player}
-              isMarkedForRemoval={removedPlayerIds.has(player.id)}
-              onRemove={readOnly ? undefined : () => handleRemovePlayer(player.id)}
-              onUndoRemoval={readOnly ? undefined : () => handleUndoRemoval(player.id)}
-              readOnly={readOnly}
-            />
-          ))}
+          {allPlayers.map((player) => {
+            const entry = formattedEntries.get(player.id);
+            return (
+              <PlayerListItem
+                key={player.id}
+                player={player}
+                displayData={{
+                  lastName: entry?.lastName || player.lastName || player.displayName,
+                  firstInitial: entry?.firstInitial || "",
+                  dob: entry?.dob || "",
+                }}
+                maxLastNameWidth={maxLastNameWidth}
+                isMarkedForRemoval={removedPlayerIds.has(player.id)}
+                onRemove={readOnly ? undefined : () => handleRemovePlayer(player.id)}
+                onUndoRemoval={readOnly ? undefined : () => handleUndoRemoval(player.id)}
+                readOnly={readOnly}
+              />
+            );
+          })}
         </div>
       )}
 

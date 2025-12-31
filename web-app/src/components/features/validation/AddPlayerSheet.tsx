@@ -6,7 +6,7 @@ import { usePossiblePlayerNominations } from "@/hooks/usePlayerNominations";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ResponsiveSheet } from "@/components/ui/ResponsiveSheet";
 import { Check, X, Plus } from "@/components/ui/icons";
-import { formatDOB } from "@/utils/date-helpers";
+import { formatRosterEntries, getMaxLastNameWidth } from "@/utils/date-helpers";
 
 // Delay before focusing search input to ensure the sheet animation has started
 const FOCUS_DELAY_MS = 100;
@@ -67,6 +67,23 @@ export function AddPlayerSheet({
       return fullName.includes(query) || firstName.includes(query) || lastName.includes(query);
     });
   }, [players, debouncedQuery, excludePlayerIds, sessionAddedIds]);
+
+  // Compute formatted display data for filtered players (handles duplicate detection)
+  const formattedEntries = useMemo(() => {
+    const playersData = filteredPlayers.map((player) => ({
+      id: player.indoorPlayer?.__identity ?? "",
+      firstName: player.indoorPlayer?.person?.firstName,
+      lastName: player.indoorPlayer?.person?.lastName,
+      birthday: player.indoorPlayer?.person?.birthday,
+    }));
+    return formatRosterEntries(playersData);
+  }, [filteredPlayers]);
+
+  // Calculate max last name width for column alignment
+  const maxLastNameWidth = useMemo(
+    () => getMaxLastNameWidth(formattedEntries),
+    [formattedEntries],
+  );
 
   const handleClose = useCallback(() => {
     setSearchQuery("");
@@ -182,6 +199,16 @@ export function AddPlayerSheet({
               {filteredPlayers.map((player) => {
                 const playerId = player.indoorPlayer?.__identity ?? "";
                 const isAdded = sessionAddedIds.has(playerId);
+                const entry = formattedEntries.get(playerId);
+                const lastName =
+                  entry?.lastName ||
+                  player.indoorPlayer?.person?.lastName ||
+                  "";
+                const firstInitial = entry?.firstInitial || "";
+                const dob = entry?.dob || "";
+                const textColorClass = isAdded
+                  ? "text-success-700 dark:text-success-400"
+                  : "text-text-primary dark:text-text-primary-dark";
 
                 return (
                   <li key={player.__identity}>
@@ -198,20 +225,21 @@ export function AddPlayerSheet({
                         }
                       `}
                     >
-                      <div className="flex-1 min-w-0 flex items-center gap-2">
-                        <span
-                          className={`font-medium truncate ${
-                            isAdded
-                              ? "text-success-700 dark:text-success-400"
-                              : "text-text-primary dark:text-text-primary-dark"
-                          }`}
-                        >
-                          {player.indoorPlayer?.person?.lastName ?? ""}{" "}
-                          {player.indoorPlayer?.person?.firstName ?? ""}
-                        </span>
-                        <span className="text-xs text-text-muted dark:text-text-muted-dark flex-shrink-0">
-                          {formatDOB(player.indoorPlayer?.person?.birthday)}
-                        </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline text-sm font-mono">
+                          <span
+                            className={`font-medium ${textColorClass}`}
+                            style={{ minWidth: `${maxLastNameWidth}ch` }}
+                          >
+                            {lastName}
+                          </span>
+                          <span className={`ml-2 w-[3ch] ${textColorClass}`}>
+                            {firstInitial}
+                          </span>
+                          <span className="ml-2 text-text-muted dark:text-text-muted-dark tabular-nums">
+                            {dob}
+                          </span>
+                        </div>
                       </div>
                       {isAdded ? (
                         <span className="relative flex-shrink-0 ml-2 w-5 h-5">

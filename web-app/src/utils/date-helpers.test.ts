@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { formatDateTime, formatDOB, groupByWeek } from "./date-helpers";
+import {
+  formatDateTime,
+  formatDOB,
+  groupByWeek,
+  formatRosterEntries,
+  getMaxLastNameWidth,
+} from "./date-helpers";
 
 describe("formatDateTime", () => {
   it("returns TBD for undefined", () => {
@@ -195,5 +201,201 @@ describe("groupByWeek", () => {
     const result = groupByWeek(items, getDate);
 
     expect(result).toEqual([]);
+  });
+});
+
+describe("formatRosterEntries", () => {
+  it("returns empty map for empty array", () => {
+    const result = formatRosterEntries([]);
+    expect(result.size).toBe(0);
+  });
+
+  it("formats single player with all fields", () => {
+    const players = [
+      { id: "1", firstName: "Max", lastName: "Müller", birthday: "1990-05-15" },
+    ];
+
+    const result = formatRosterEntries(players);
+
+    expect(result.size).toBe(1);
+    const entry = result.get("1");
+    expect(entry).toBeDefined();
+    expect(entry!.lastName).toBe("Müller");
+    expect(entry!.firstInitial).toBe("M.");
+    expect(entry!.dob).toBe("15.05.90");
+    expect(entry!.displayString).toBe("Müller M. 15.05.90");
+  });
+
+  it("uses 1 letter initial by default", () => {
+    const players = [
+      { id: "1", firstName: "Max", lastName: "Müller", birthday: "1990-05-15" },
+      { id: "2", firstName: "Anna", lastName: "Schmidt", birthday: "1995-08-22" },
+    ];
+
+    const result = formatRosterEntries(players);
+
+    expect(result.get("1")!.firstInitial).toBe("M.");
+    expect(result.get("2")!.firstInitial).toBe("A.");
+  });
+
+  it("uses 2 letters when same last name and same first letter", () => {
+    const players = [
+      { id: "1", firstName: "Max", lastName: "Müller", birthday: "1990-05-15" },
+      { id: "2", firstName: "Maria", lastName: "Müller", birthday: "1992-03-10" },
+    ];
+
+    const result = formatRosterEntries(players);
+
+    expect(result.get("1")!.firstInitial).toBe("Ma.");
+    expect(result.get("2")!.firstInitial).toBe("Ma.");
+  });
+
+  it("uses 1 letter when same last name but different first letters", () => {
+    const players = [
+      { id: "1", firstName: "Max", lastName: "Müller", birthday: "1990-05-15" },
+      { id: "2", firstName: "Anna", lastName: "Müller", birthday: "1992-03-10" },
+    ];
+
+    const result = formatRosterEntries(players);
+
+    expect(result.get("1")!.firstInitial).toBe("M.");
+    expect(result.get("2")!.firstInitial).toBe("A.");
+  });
+
+  it("handles missing first name", () => {
+    const players = [{ id: "1", lastName: "Müller", birthday: "1990-05-15" }];
+
+    const result = formatRosterEntries(players);
+
+    expect(result.get("1")!.firstInitial).toBe("");
+    expect(result.get("1")!.displayString).toBe("Müller 15.05.90");
+  });
+
+  it("handles missing last name", () => {
+    const players = [{ id: "1", firstName: "Max", birthday: "1990-05-15" }];
+
+    const result = formatRosterEntries(players);
+
+    expect(result.get("1")!.lastName).toBe("");
+    expect(result.get("1")!.displayString).toBe("M. 15.05.90");
+  });
+
+  it("handles missing birthday", () => {
+    const players = [{ id: "1", firstName: "Max", lastName: "Müller" }];
+
+    const result = formatRosterEntries(players);
+
+    expect(result.get("1")!.dob).toBe("");
+    expect(result.get("1")!.displayString).toBe("Müller M.");
+  });
+
+  it("handles null birthday", () => {
+    const players = [
+      { id: "1", firstName: "Max", lastName: "Müller", birthday: null },
+    ];
+
+    const result = formatRosterEntries(players);
+
+    expect(result.get("1")!.dob).toBe("");
+  });
+
+  it("handles player with only id", () => {
+    const players = [{ id: "1" }];
+
+    const result = formatRosterEntries(players);
+
+    expect(result.get("1")!.lastName).toBe("");
+    expect(result.get("1")!.firstInitial).toBe("");
+    expect(result.get("1")!.dob).toBe("");
+    expect(result.get("1")!.displayString).toBe("");
+  });
+
+  it("is case-insensitive for last name grouping", () => {
+    const players = [
+      { id: "1", firstName: "Max", lastName: "MÜLLER", birthday: "1990-05-15" },
+      { id: "2", firstName: "Maria", lastName: "müller", birthday: "1992-03-10" },
+    ];
+
+    const result = formatRosterEntries(players);
+
+    // Both should have 2-letter initials since they share the same last name (case-insensitive)
+    // and the same first letter
+    expect(result.get("1")!.firstInitial).toBe("Ma.");
+    expect(result.get("2")!.firstInitial).toBe("Ma.");
+  });
+
+  it("preserves original last name casing in output", () => {
+    const players = [
+      { id: "1", firstName: "Max", lastName: "MÜLLER", birthday: "1990-05-15" },
+    ];
+
+    const result = formatRosterEntries(players);
+
+    expect(result.get("1")!.lastName).toBe("MÜLLER");
+  });
+
+  it("formats first initial with proper casing (first letter upper, rest lower)", () => {
+    const players = [
+      { id: "1", firstName: "MAXIMILIAN", lastName: "Müller", birthday: "1990-05-15" },
+      { id: "2", firstName: "MARIA", lastName: "Müller", birthday: "1992-03-10" },
+    ];
+
+    const result = formatRosterEntries(players);
+
+    // 2 letters because same last name and same first letter
+    expect(result.get("1")!.firstInitial).toBe("Ma.");
+    expect(result.get("2")!.firstInitial).toBe("Ma.");
+  });
+
+  it("handles multiple groups with duplicates correctly", () => {
+    const players = [
+      { id: "1", firstName: "Max", lastName: "Müller", birthday: "1990-05-15" },
+      { id: "2", firstName: "Maria", lastName: "Müller", birthday: "1992-03-10" },
+      { id: "3", firstName: "Anna", lastName: "Schmidt", birthday: "1995-08-22" },
+      { id: "4", firstName: "Peter", lastName: "Weber", birthday: "1988-12-01" },
+    ];
+
+    const result = formatRosterEntries(players);
+
+    // Müller group has conflict (both start with M) -> 2 letters
+    expect(result.get("1")!.firstInitial).toBe("Ma.");
+    expect(result.get("2")!.firstInitial).toBe("Ma.");
+    // Schmidt and Weber have no conflicts -> 1 letter
+    expect(result.get("3")!.firstInitial).toBe("A.");
+    expect(result.get("4")!.firstInitial).toBe("P.");
+  });
+});
+
+describe("getMaxLastNameWidth", () => {
+  it("returns 0 for empty map", () => {
+    const entries = new Map();
+    expect(getMaxLastNameWidth(entries)).toBe(0);
+  });
+
+  it("returns length of single entry", () => {
+    const entries = formatRosterEntries([
+      { id: "1", firstName: "Max", lastName: "Müller", birthday: "1990-05-15" },
+    ]);
+
+    expect(getMaxLastNameWidth(entries)).toBe(6); // "Müller" = 6 chars
+  });
+
+  it("returns maximum length among multiple entries", () => {
+    const entries = formatRosterEntries([
+      { id: "1", firstName: "Max", lastName: "Li", birthday: "1990-05-15" },
+      { id: "2", firstName: "Anna", lastName: "Schmidt", birthday: "1995-08-22" },
+      { id: "3", firstName: "Peter", lastName: "Weber", birthday: "1988-12-01" },
+    ]);
+
+    expect(getMaxLastNameWidth(entries)).toBe(7); // "Schmidt" = 7 chars
+  });
+
+  it("handles empty last names", () => {
+    const entries = formatRosterEntries([
+      { id: "1", firstName: "Max" },
+      { id: "2", lastName: "Test" },
+    ]);
+
+    expect(getMaxLastNameWidth(entries)).toBe(4); // "Test" = 4 chars
   });
 });

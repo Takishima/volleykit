@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { PlayerListItem } from "./PlayerListItem";
+import { PlayerListItem, type PlayerDisplayData } from "./PlayerListItem";
 import type { RosterPlayer } from "@/hooks/useNominationList";
 
 function createMockPlayer(overrides: Partial<RosterPlayer> = {}): RosterPlayer {
@@ -13,13 +13,25 @@ function createMockPlayer(overrides: Partial<RosterPlayer> = {}): RosterPlayer {
   };
 }
 
+function createDisplayData(overrides: Partial<PlayerDisplayData> = {}): PlayerDisplayData {
+  return {
+    lastName: "Doe",
+    firstInitial: "J.",
+    dob: "01.01.90",
+    ...overrides,
+  };
+}
+
 describe("PlayerListItem", () => {
-  it("renders player name", () => {
+  it("renders player name in aligned columns", () => {
     const player = createMockPlayer({ displayName: "Max" });
+    const displayData = createDisplayData({ lastName: "Max", firstInitial: "M.", dob: "01.01.90" });
 
     render(
       <PlayerListItem
         player={player}
+        displayData={displayData}
+        maxLastNameWidth={10}
         isMarkedForRemoval={false}
         onRemove={vi.fn()}
         onUndoRemoval={vi.fn()}
@@ -27,6 +39,8 @@ describe("PlayerListItem", () => {
     );
 
     expect(screen.getByText("Max")).toBeInTheDocument();
+    expect(screen.getByText("M.")).toBeInTheDocument();
+    expect(screen.getByText("01.01.90")).toBeInTheDocument();
   });
 
   it("shows license category badge when provided", () => {
@@ -35,6 +49,8 @@ describe("PlayerListItem", () => {
     render(
       <PlayerListItem
         player={player}
+        displayData={createDisplayData()}
+        maxLastNameWidth={10}
         isMarkedForRemoval={false}
         onRemove={vi.fn()}
         onUndoRemoval={vi.fn()}
@@ -50,6 +66,8 @@ describe("PlayerListItem", () => {
     render(
       <PlayerListItem
         player={player}
+        displayData={createDisplayData()}
+        maxLastNameWidth={10}
         isMarkedForRemoval={false}
         onRemove={vi.fn()}
         onUndoRemoval={vi.fn()}
@@ -66,6 +84,8 @@ describe("PlayerListItem", () => {
     render(
       <PlayerListItem
         player={player}
+        displayData={createDisplayData()}
+        maxLastNameWidth={10}
         isMarkedForRemoval={false}
         onRemove={onRemove}
         onUndoRemoval={vi.fn()}
@@ -84,6 +104,8 @@ describe("PlayerListItem", () => {
     render(
       <PlayerListItem
         player={player}
+        displayData={createDisplayData()}
+        maxLastNameWidth={10}
         isMarkedForRemoval={true}
         onRemove={vi.fn()}
         onUndoRemoval={vi.fn()}
@@ -100,6 +122,8 @@ describe("PlayerListItem", () => {
     render(
       <PlayerListItem
         player={player}
+        displayData={createDisplayData()}
+        maxLastNameWidth={10}
         isMarkedForRemoval={true}
         onRemove={vi.fn()}
         onUndoRemoval={onUndoRemoval}
@@ -114,18 +138,21 @@ describe("PlayerListItem", () => {
 
   it("applies strikethrough styling when marked for removal", () => {
     const player = createMockPlayer();
+    const displayData = createDisplayData({ lastName: "Doe" });
 
     render(
       <PlayerListItem
         player={player}
+        displayData={displayData}
+        maxLastNameWidth={10}
         isMarkedForRemoval={true}
         onRemove={vi.fn()}
         onUndoRemoval={vi.fn()}
       />,
     );
 
-    const nameElement = screen.getByText(player.displayName);
-    expect(nameElement).toHaveClass("line-through");
+    const lastNameElement = screen.getByText("Doe");
+    expect(lastNameElement).toHaveClass("line-through");
   });
 
   it("hides badges when marked for removal", () => {
@@ -136,6 +163,8 @@ describe("PlayerListItem", () => {
     render(
       <PlayerListItem
         player={player}
+        displayData={createDisplayData()}
+        maxLastNameWidth={10}
         isMarkedForRemoval={true}
         onRemove={vi.fn()}
         onUndoRemoval={vi.fn()}
@@ -143,5 +172,24 @@ describe("PlayerListItem", () => {
     );
 
     expect(screen.queryByText("SEN")).not.toBeInTheDocument();
+  });
+
+  it("aligns last names based on maxLastNameWidth", () => {
+    const player = createMockPlayer();
+    const displayData = createDisplayData({ lastName: "Doe" });
+
+    render(
+      <PlayerListItem
+        player={player}
+        displayData={displayData}
+        maxLastNameWidth={12}
+        isMarkedForRemoval={false}
+        onRemove={vi.fn()}
+        onUndoRemoval={vi.fn()}
+      />,
+    );
+
+    const lastNameElement = screen.getByText("Doe");
+    expect(lastNameElement).toHaveStyle({ minWidth: "12ch" });
   });
 });
