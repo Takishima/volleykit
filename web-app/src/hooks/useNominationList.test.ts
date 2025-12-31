@@ -17,9 +17,6 @@ const mockNominationList: NominationList = {
   indoorPlayerNominations: [
     {
       __identity: "test-nom-1",
-      shirtNumber: 1,
-      isCaptain: true,
-      isLibero: false,
       indoorPlayer: {
         __identity: "test-player-1",
         person: {
@@ -37,9 +34,6 @@ const mockNominationList: NominationList = {
     },
     {
       __identity: "test-nom-2",
-      shirtNumber: 7,
-      isCaptain: false,
-      isLibero: true,
       indoorPlayer: {
         __identity: "test-player-2",
         person: {
@@ -112,30 +106,24 @@ describe("useNominationList", () => {
 
       const players = result.current.players;
 
-      // Players should be sorted by shirt number
+      // Players should be sorted by displayName
       expect(players[0]).toEqual({
-        id: "test-nom-1",
-        shirtNumber: 1,
-        displayName: "John Doe",
-        firstName: "John",
-        lastName: "Doe",
-        birthday: "1995-03-15",
-        licenseCategory: "SEN",
-        isCaptain: true,
-        isLibero: false,
-        isNewlyAdded: false,
-      });
-
-      expect(players[1]).toEqual({
         id: "test-nom-2",
-        shirtNumber: 7,
         displayName: "Jane Smith",
         firstName: "Jane",
         lastName: "Smith",
         birthday: "2002-07-22",
         licenseCategory: "JUN",
-        isCaptain: false,
-        isLibero: true,
+        isNewlyAdded: false,
+      });
+
+      expect(players[1]).toEqual({
+        id: "test-nom-1",
+        displayName: "John Doe",
+        firstName: "John",
+        lastName: "Doe",
+        birthday: "1995-03-15",
+        licenseCategory: "SEN",
         isNewlyAdded: false,
       });
     });
@@ -275,8 +263,9 @@ describe("useNominationList", () => {
 
       const players = result.current.players;
       expect(players).toHaveLength(2);
-      expect(players[0]!.displayName).toBe("John Doe");
-      expect(players[1]!.displayName).toBe("Jane Smith");
+      // Players are sorted alphabetically by displayName
+      expect(players[0]!.displayName).toBe("Jane Smith");
+      expect(players[1]!.displayName).toBe("John Doe");
     });
   });
 

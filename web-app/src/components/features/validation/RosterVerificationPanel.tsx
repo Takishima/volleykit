@@ -98,7 +98,6 @@ export function RosterVerificationPanel({
     const person = nomination.indoorPlayer?.person;
     const newPlayer: RosterPlayer = {
       id: playerId,
-      shirtNumber: 0, // New players don't have a shirt number yet
       displayName:
         person?.displayName ??
         `${person?.firstName ?? ""} ${person?.lastName ?? ""}`.trim(),
@@ -120,7 +119,7 @@ export function RosterVerificationPanel({
   const allPlayers = [...players, ...addedPlayers].sort((a, b) => {
     if (a.isNewlyAdded && !b.isNewlyAdded) return 1;
     if (!a.isNewlyAdded && b.isNewlyAdded) return -1;
-    return a.shirtNumber - b.shirtNumber;
+    return a.displayName.localeCompare(b.displayName);
   });
 
   // Calculate visible player count (excluding removed)

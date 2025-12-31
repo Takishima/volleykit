@@ -3789,17 +3789,19 @@ export interface components {
             hasValidationIssues?: boolean;
             nominationListValidationIssues?: components["schemas"]["ValidationIssue"][];
         };
-        /** @description A single player nomination in the list */
+        /**
+         * @description A single player nomination in the list.
+         *
+         *     **Important:** This API omits fields with null/undefined values rather than
+         *     returning them as `null`. Client code should treat missing fields as null
+         *     and provide appropriate defaults.
+         */
         IndoorPlayerNomination: {
             /** Format: uuid */
             __identity?: string;
             indoorPlayer?: components["schemas"]["IndoorPlayer"];
-            /** @description Player's shirt number for the game */
-            shirtNumber?: number;
-            isCaptain?: boolean;
-            isLibero?: boolean;
-            /** @description Whether the player is eligible to play in this game */
-            isEligible?: boolean;
+            /** @description Whether the player is eligible to play in this game. May be omitted. */
+            isEligible?: boolean | null;
             /** @description Team reference if player has a double license */
             doubleLicenseTeam?: {
                 /** Format: uuid */

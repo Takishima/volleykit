@@ -1,8 +1,8 @@
-import { useTranslation } from "@/hooks/useTranslation";
 import { Badge } from "@/components/ui/Badge";
 import type { RosterPlayer } from "@/hooks/useNominationList";
 import { Trash2, Undo2 } from "@/components/ui/icons";
 import { formatDOB } from "@/utils/date-helpers";
+import { useTranslation } from "@/hooks/useTranslation";
 
 /** Format player name as "LastName FirstName" */
 function formatPlayerName(player: RosterPlayer): string {
@@ -37,17 +37,6 @@ export function PlayerListItem({
       }`}
     >
       <div className="flex items-center gap-3 min-w-0 flex-1">
-        {/* Shirt number */}
-        <span
-          className={`font-mono text-sm font-medium w-8 text-center ${
-            isMarkedForRemoval
-              ? "text-text-subtle dark:text-text-subtle-dark"
-              : "text-text-secondary dark:text-text-secondary-dark"
-          }`}
-        >
-          #{player.shirtNumber}
-        </span>
-
         {/* Player name and DOB */}
         <span
           className={`text-sm truncate ${
@@ -69,20 +58,6 @@ export function PlayerListItem({
           {/* License category badge */}
           {player.licenseCategory && !isMarkedForRemoval && (
             <Badge variant="neutral">{player.licenseCategory}</Badge>
-          )}
-
-          {/* Captain badge */}
-          {player.isCaptain && !isMarkedForRemoval && (
-            <Badge variant="neutral" title={t("validation.roster.captain")}>
-              C
-            </Badge>
-          )}
-
-          {/* Libero badge */}
-          {player.isLibero && !isMarkedForRemoval && (
-            <Badge variant="neutral" title={t("validation.roster.libero")}>
-              L
-            </Badge>
           )}
 
           {/* Newly added badge */}

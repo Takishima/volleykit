@@ -10,29 +10,20 @@ vi.mock("@/hooks/useNominationList");
 const mockPlayers: RosterPlayer[] = [
   {
     id: "player-1",
-    shirtNumber: 1,
-    displayName: "John Doe",
+    displayName: "Bob Wilson",
     licenseCategory: "SEN",
-    isCaptain: true,
-    isLibero: false,
     isNewlyAdded: false,
   },
   {
     id: "player-2",
-    shirtNumber: 7,
     displayName: "Jane Smith",
     licenseCategory: "JUN",
-    isCaptain: false,
-    isLibero: true,
     isNewlyAdded: false,
   },
   {
     id: "player-3",
-    shirtNumber: 12,
-    displayName: "Bob Wilson",
+    displayName: "John Doe",
     licenseCategory: "SEN",
-    isCaptain: false,
-    isLibero: false,
     isNewlyAdded: false,
   },
 ];
@@ -129,29 +120,6 @@ describe("RosterVerificationPanel", () => {
     );
 
     expect(screen.getByText("3 players")).toBeInTheDocument();
-  });
-
-  it("shows captain and libero indicators", () => {
-    vi.mocked(useNominationListModule.useNominationList).mockReturnValue({
-      nominationList: null,
-      players: mockPlayers,
-      isLoading: false,
-      isError: false,
-      error: null,
-      refetch: vi.fn(),
-    });
-
-    render(
-      <RosterVerificationPanel
-        team="home"
-        teamName="Test Team"
-        gameId="game-1"
-      />,
-      { wrapper: createWrapper() },
-    );
-
-    expect(screen.getByText("C")).toBeInTheDocument();
-    expect(screen.getByText("L")).toBeInTheDocument();
   });
 
   it("shows error state with retry button", () => {
@@ -321,19 +289,16 @@ describe("RosterVerificationPanel", () => {
     const playersWithNewlyAdded: RosterPlayer[] = [
       {
         id: "player-existing-high",
-        shirtNumber: 15,
         displayName: "High Number",
         isNewlyAdded: false,
       },
       {
         id: "player-new",
-        shirtNumber: 0,
         displayName: "Newly Added Player",
         isNewlyAdded: true,
       },
       {
         id: "player-existing-low",
-        shirtNumber: 3,
         displayName: "Low Number",
         isNewlyAdded: false,
       },
@@ -361,9 +326,10 @@ describe("RosterVerificationPanel", () => {
       .getAllByText(/Low Number|High Number|Newly Added Player/)
       .map((el) => el.textContent);
 
+    // Sorted alphabetically, then newly added at the end
     expect(playerNames).toEqual([
-      "Low Number",
       "High Number",
+      "Low Number",
       "Newly Added Player",
     ]);
   });
@@ -372,7 +338,6 @@ describe("RosterVerificationPanel", () => {
     it("restores added players from initialModifications on mount", () => {
       const addedPlayer: RosterPlayer = {
         id: "added-player-1",
-        shirtNumber: 0,
         displayName: "Previously Added Player",
         isNewlyAdded: true,
       };
@@ -431,7 +396,6 @@ describe("RosterVerificationPanel", () => {
     it("persists state when component remounts with initialModifications", () => {
       const addedPlayer: RosterPlayer = {
         id: "added-player-1",
-        shirtNumber: 0,
         displayName: "Previously Added Player",
         isNewlyAdded: true,
       };
