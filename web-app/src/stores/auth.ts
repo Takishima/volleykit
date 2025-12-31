@@ -76,6 +76,32 @@ const AUTH_URL = `${API_BASE}/sportmanager.security/authentication/authenticate`
 const LOGOUT_URL = `${API_BASE}/logout`;
 const SESSION_CHECK_TIMEOUT_MS = 10_000;
 
+/**
+ * Derives user occupations and active occupation ID from active party data.
+ * Used during login and session restoration to populate the association dropdown.
+ */
+function deriveUserWithOccupations(
+  activeParty: { groupedEligibleAttributeValues?: AttributeValue[] | null } | null,
+  currentUser: UserProfile | null,
+  currentActiveOccupationId: string | null,
+): { user: UserProfile; activeOccupationId: string | null } {
+  const occupations = parseOccupationsFromActiveParty(
+    activeParty?.groupedEligibleAttributeValues,
+  );
+  const activeOccupationId = currentActiveOccupationId ?? occupations[0]?.id ?? null;
+
+  const user = currentUser
+    ? { ...currentUser, occupations }
+    : {
+        id: "user",
+        firstName: "",
+        lastName: "",
+        occupations,
+      };
+
+  return { user, activeOccupationId };
+}
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
@@ -110,13 +136,12 @@ export const useAuthStore = create<AuthState>()(
             const activeParty = extractActivePartyFromHtml(html);
             setCsrfToken(existingCsrfToken);
 
-            // Derive occupations from active party data for the dropdown
-            const occupations = parseOccupationsFromActiveParty(
-              activeParty?.groupedEligibleAttributeValues,
-            );
             const currentState = get();
-            const activeOccupationId =
-              currentState.activeOccupationId ?? occupations[0]?.id ?? null;
+            const { user, activeOccupationId } = deriveUserWithOccupations(
+              activeParty,
+              currentState.user,
+              currentState.activeOccupationId,
+            );
 
             set({
               status: "authenticated",
@@ -124,14 +149,7 @@ export const useAuthStore = create<AuthState>()(
               eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
               groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
               eligibleRoles: activeParty?.eligibleRoles ?? null,
-              user: currentState.user
-                ? { ...currentState.user, occupations }
-                : {
-                    id: "user",
-                    firstName: "",
-                    lastName: "",
-                    occupations,
-                  },
+              user,
               activeOccupationId,
             });
             return true;
@@ -149,13 +167,12 @@ export const useAuthStore = create<AuthState>()(
             const activeParty = extractActivePartyFromHtml(result.dashboardHtml);
             setCsrfToken(result.csrfToken);
 
-            // Derive occupations from active party data for the dropdown
-            const occupations = parseOccupationsFromActiveParty(
-              activeParty?.groupedEligibleAttributeValues,
-            );
             const currentState = get();
-            const activeOccupationId =
-              currentState.activeOccupationId ?? occupations[0]?.id ?? null;
+            const { user, activeOccupationId } = deriveUserWithOccupations(
+              activeParty,
+              currentState.user,
+              currentState.activeOccupationId,
+            );
 
             set({
               status: "authenticated",
@@ -163,14 +180,7 @@ export const useAuthStore = create<AuthState>()(
               eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
               groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
               eligibleRoles: activeParty?.eligibleRoles ?? null,
-              user: currentState.user
-                ? { ...currentState.user, occupations }
-                : {
-                    id: "user",
-                    firstName: "",
-                    lastName: "",
-                    occupations,
-                  },
+              user,
               activeOccupationId,
             });
             return true;
@@ -273,13 +283,12 @@ export const useAuthStore = create<AuthState>()(
                 const csrfToken = extractCsrfTokenFromPage(dashboardHtml);
                 const activeParty = extractActivePartyFromHtml(dashboardHtml);
 
-                // Derive occupations from active party data for the dropdown
-                const occupations = parseOccupationsFromActiveParty(
-                  activeParty?.groupedEligibleAttributeValues,
-                );
                 const currentState = get();
-                const activeOccupationId =
-                  currentState.activeOccupationId ?? occupations[0]?.id ?? null;
+                const { user, activeOccupationId } = deriveUserWithOccupations(
+                  activeParty,
+                  currentState.user,
+                  currentState.activeOccupationId,
+                );
 
                 if (csrfToken) {
                   setCsrfToken(csrfToken);
@@ -291,14 +300,7 @@ export const useAuthStore = create<AuthState>()(
                   eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
                   groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
                   eligibleRoles: activeParty?.eligibleRoles ?? null,
-                  user: currentState.user
-                    ? { ...currentState.user, occupations }
-                    : {
-                        id: "user",
-                        firstName: "",
-                        lastName: "",
-                        occupations,
-                      },
+                  user,
                   activeOccupationId,
                 });
                 resolvePromise(true);
