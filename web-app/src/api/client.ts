@@ -286,61 +286,6 @@ export const api = {
   },
 
   // Nominations
-  /**
-   * Fetches the nomination list for a single team.
-   *
-   * @deprecated Prefer using `getGameWithScoresheet()` which fetches both team rosters
-   * in a single API call. This method is kept for backwards compatibility and as a
-   * fallback when prefetched data is not available.
-   */
-  async getNominationList(
-    gameId: string,
-    team: "home" | "away",
-  ): Promise<NominationList | null> {
-    const nominationProperty =
-      team === "home"
-        ? "nominationListOfTeamHome"
-        : "nominationListOfTeamAway";
-
-    const properties = [
-      nominationProperty,
-      `${nominationProperty}.__identity`,
-      `${nominationProperty}.team`,
-      `${nominationProperty}.indoorPlayerNominations`,
-      `${nominationProperty}.indoorPlayerNominations.*.__identity`,
-      `${nominationProperty}.indoorPlayerNominations.*.shirtNumber`,
-      `${nominationProperty}.indoorPlayerNominations.*.isCaptain`,
-      `${nominationProperty}.indoorPlayerNominations.*.isLibero`,
-      `${nominationProperty}.indoorPlayerNominations.*.indoorPlayer.person.displayName`,
-      `${nominationProperty}.indoorPlayerNominations.*.indoorPlayer.person.firstName`,
-      `${nominationProperty}.indoorPlayerNominations.*.indoorPlayer.person.lastName`,
-      `${nominationProperty}.indoorPlayerNominations.*.indoorPlayerLicenseCategory.shortName`,
-      `${nominationProperty}.coachPerson`,
-      `${nominationProperty}.firstAssistantCoachPerson`,
-      `${nominationProperty}.secondAssistantCoachPerson`,
-      `${nominationProperty}.closed`,
-      `${nominationProperty}.closedAt`,
-      `${nominationProperty}.checked`,
-      `${nominationProperty}.isClosedForTeam`,
-    ];
-
-    const response = await apiRequest<{ game: Schemas["GameDetails"] }>(
-      "/sportmanager.indoorvolleyball/api%5cgame/showWithNestedObjects",
-      "GET",
-      {
-        "game[__identity]": gameId,
-        propertyRenderConfiguration: properties,
-      },
-    );
-
-    const nominationList =
-      team === "home"
-        ? response.game.nominationListOfTeamHome
-        : response.game.nominationListOfTeamAway;
-
-    return nominationList ?? null;
-  },
-
   async getPossiblePlayerNominations(
     nominationListId: string,
     options?: { onlyFromMyTeam?: boolean; onlyRelevantGender?: boolean },

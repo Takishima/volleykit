@@ -426,22 +426,6 @@ export const mockApi = {
     } as Season;
   },
 
-  async getNominationList(
-    gameId: string,
-    team: "home" | "away",
-  ): Promise<NominationList | null> {
-    await delay(MOCK_NETWORK_DELAY_MS);
-
-    const store = useDemoStore.getState();
-    const gameNominations = store.nominationLists[gameId];
-
-    if (!gameNominations) {
-      return null;
-    }
-
-    return gameNominations[team] ?? null;
-  },
-
   async getPossiblePlayerNominations(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required for API interface compatibility
     _nominationListId: string,

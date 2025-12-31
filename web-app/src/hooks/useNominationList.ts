@@ -1,15 +1,7 @@
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import type { NominationList, IndoorPlayerNomination } from "@/api/client";
-import { getApiClient } from "@/api/client";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
-import { queryKeys } from "@/api/queryKeys";
-
-const NOMINATION_LIST_STALE_TIME_MINUTES = 5;
-const MS_PER_MINUTE = 60 * 1000;
-const NOMINATION_LIST_STALE_TIME_MS =
-  NOMINATION_LIST_STALE_TIME_MINUTES * MS_PER_MINUTE;
 
 export interface RosterPlayer {
   id: string;
@@ -32,8 +24,10 @@ export interface RosterModifications {
 interface UseNominationListOptions {
   gameId: string;
   team: "home" | "away";
-  enabled?: boolean;
-  /** Pre-fetched nomination list data. When provided, skips API query. */
+  /**
+   * Pre-fetched nomination list data from getGameWithScoresheet().
+   * Required when not in demo mode.
+   */
   prefetchedData?: NominationList | null;
 }
 
@@ -94,10 +88,24 @@ function transformNominationsToPlayers(
     .sort((a, b) => a.shirtNumber - b.shirtNumber);
 }
 
+/**
+ * Hook to access nomination list data for a team.
+ *
+ * Data sources (in priority order):
+ * 1. Pre-fetched data from getGameWithScoresheet() - preferred
+ * 2. Demo mode data from useDemoStore
+ *
+ * @example
+ * // In validation wizard with pre-fetched data
+ * const { players } = useNominationList({
+ *   gameId,
+ *   team: "home",
+ *   prefetchedData: homeNominationList,
+ * });
+ */
 export function useNominationList({
   gameId,
   team,
-  enabled = true,
   prefetchedData,
 }: UseNominationListOptions): UseNominationListResult {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
@@ -123,22 +131,6 @@ export function useNominationList({
       demoNominationList.indoorPlayerNominations,
     );
   }, [demoNominationList]);
-
-  const apiClient = getApiClient(isDemoMode);
-
-  const query = useQuery({
-    queryKey: queryKeys.nominations.list(gameId, team),
-    queryFn: async (): Promise<NominationList | null> => {
-      return apiClient.getNominationList(gameId, team);
-    },
-    enabled: enabled && !isDemoMode && !!gameId && !hasPrefetchedData,
-    staleTime: NOMINATION_LIST_STALE_TIME_MS,
-  });
-
-  const apiPlayers = useMemo(() => {
-    if (!query.data) return [];
-    return transformNominationsToPlayers(query.data.indoorPlayerNominations);
-  }, [query.data]);
 
   // Return prefetched data if provided
   if (hasPrefetchedData) {
@@ -168,13 +160,15 @@ export function useNominationList({
     };
   }
 
-  // Return API data
+  // No data available - prefetchedData is required when not in demo mode
   return {
-    nominationList: query.data ?? null,
-    players: apiPlayers,
-    isLoading: query.isLoading,
-    isError: query.isError,
-    error: query.error,
-    refetch: query.refetch,
+    nominationList: null,
+    players: [],
+    isLoading: true,
+    isError: false,
+    error: null,
+    refetch: () => {
+      // No-op - data should be provided via prefetchedData
+    },
   };
 }

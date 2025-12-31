@@ -837,40 +837,6 @@ describe("API Client", () => {
     });
   });
 
-  describe("getNominationList", () => {
-    it("requests home team nomination list", async () => {
-      mockFetch.mockResolvedValueOnce(
-        createMockResponse({ game: { nominationListOfTeamHome: { __identity: "nl-1" } } }),
-      );
-
-      const result = await api.getNominationList("game-123", "home");
-
-      expect(result).toEqual({ __identity: "nl-1" });
-      const [url] = mockFetch.mock.calls[0]!;
-      expect(url).toContain("nominationListOfTeamHome");
-    });
-
-    it("requests away team nomination list", async () => {
-      mockFetch.mockResolvedValueOnce(
-        createMockResponse({ game: { nominationListOfTeamAway: { __identity: "nl-2" } } }),
-      );
-
-      const result = await api.getNominationList("game-123", "away");
-
-      expect(result).toEqual({ __identity: "nl-2" });
-      const [url] = mockFetch.mock.calls[0]!;
-      expect(url).toContain("nominationListOfTeamAway");
-    });
-
-    it("returns null when nomination list is missing", async () => {
-      mockFetch.mockResolvedValueOnce(createMockResponse({ game: {} }));
-
-      const result = await api.getNominationList("game-123", "home");
-
-      expect(result).toBeNull();
-    });
-  });
-
   describe("getPossiblePlayerNominations", () => {
     it("sends POST request with nomination list ID", async () => {
       mockFetch.mockResolvedValueOnce(
