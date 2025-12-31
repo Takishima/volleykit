@@ -87,6 +87,9 @@ jobs:
       - name: Install OCR PoC dependencies
         run: npm ci
         working-directory: ocr-poc
+      - name: Lint OCR PoC
+        run: npm run lint
+        working-directory: ocr-poc
       - name: Build OCR PoC
         run: npm run build
         working-directory: ocr-poc

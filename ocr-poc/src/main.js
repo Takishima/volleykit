@@ -6,16 +6,11 @@
  * - Photo capture of scoresheets
  * - OCR processing to extract text
  * - Comparison against reference player lists
+ *
+ * Note: Service worker registration is handled automatically by vite-plugin-pwa
  */
 
-// Register service worker for PWA functionality
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/ocr-poc/sw.js').catch((error) => {
-      console.log('Service worker registration skipped:', error.message);
-    });
-  });
-}
+import './style.css';
 
 /**
  * Initialize the application
@@ -38,10 +33,10 @@ function init() {
         </p>
 
         <div class="flex flex-col gap-md">
-          <button class="btn btn-primary btn-block btn-lg" id="btn-capture" disabled>
+          <button class="btn btn-primary btn-block btn-lg" id="btn-capture" disabled aria-label="Capture Scoresheet - coming soon">
             Capture Scoresheet
           </button>
-          <button class="btn btn-secondary btn-block" id="btn-reference" disabled>
+          <button class="btn btn-secondary btn-block" id="btn-reference" disabled aria-label="Load Reference List - coming soon">
             Load Reference List
           </button>
         </div>

@@ -5,6 +5,10 @@ import { VitePWA } from 'vite-plugin-pwa';
 // In production, this app is served from /volleykit/ocr-poc/
 const BASE_PATH = process.env.VITE_BASE_PATH || '/ocr-poc/';
 
+// Cache expiration constants
+const SECONDS_PER_DAY = 60 * 60 * 24;
+const CACHE_MAX_AGE_DAYS = 7;
+
 export default defineConfig({
   base: BASE_PATH,
   plugins: [
@@ -26,7 +30,7 @@ export default defineConfig({
               cacheName: 'ocr-poc-assets',
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+                maxAgeSeconds: SECONDS_PER_DAY * CACHE_MAX_AGE_DAYS,
               },
             },
           },
