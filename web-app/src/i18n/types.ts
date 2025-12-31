@@ -280,6 +280,13 @@ export interface Translations {
     demoDataDescription: string;
     resetDemoData: string;
     demoDataReset: string;
+    experimental: {
+      title: string;
+      description: string;
+      ocrPoc: string;
+      ocrPocDescription: string;
+      openOcrPoc: string;
+    };
   };
   pwa: {
     offlineReady: string;

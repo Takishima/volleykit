@@ -16,6 +16,7 @@ import {
   AccessibilitySection,
   SafeModeSection,
   UpdateSection,
+  ExperimentalSection,
   AboutSection,
 } from "@/components/features/settings";
 
@@ -84,6 +85,8 @@ export function SettingsPage() {
       )}
 
       {__PWA_ENABLED__ && <UpdateSection />}
+
+      <ExperimentalSection />
 
       <AboutSection />
 

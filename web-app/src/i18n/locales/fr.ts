@@ -419,6 +419,13 @@ const fr: Translations = {
       "Vos modifications de démonstration sont enregistrées dans le navigateur. Réinitialisez pour repartir avec de nouvelles données.",
     resetDemoData: "Réinitialiser les données",
     demoDataReset: "Données de démonstration réinitialisées",
+    experimental: {
+      title: "Expérimental",
+      description: "Fonctionnalités en développement. Peut être instable.",
+      ocrPoc: "Scanner de feuille de match",
+      ocrPocDescription: "Outil OCR pour scanner les feuilles de match de volleyball",
+      openOcrPoc: "Ouvrir le scanner",
+    },
   },
   pwa: {
     offlineReady: "Application prête pour le mode hors ligne",

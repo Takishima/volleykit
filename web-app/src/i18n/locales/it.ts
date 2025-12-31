@@ -417,6 +417,13 @@ const it: Translations = {
       "Le modifiche ai dati demo vengono salvate nel browser. Reimposta per ricominciare con nuovi dati demo.",
     resetDemoData: "Reimposta dati demo",
     demoDataReset: "I dati demo sono stati reimpostati",
+    experimental: {
+      title: "Sperimentale",
+      description: "Funzionalità in sviluppo. Potrebbe essere instabile.",
+      ocrPoc: "Scanner foglio partita",
+      ocrPocDescription: "Strumento OCR per la scansione dei fogli partita di pallavolo",
+      openOcrPoc: "Apri scanner",
+    },
   },
   pwa: {
     offlineReady: "App pronta per l'uso offline",
