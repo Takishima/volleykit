@@ -136,34 +136,42 @@ export class TesseractOCR {
 
     this.#reportProgress('recognizing', 0);
 
-    const result = await this.#worker.recognize(imageBlob);
+    // Request blocks output to get words and lines (disabled by default in v6+)
+    const result = await this.#worker.recognize(imageBlob, {}, { blocks: true });
 
     // Transform Tesseract result into our structured format
-    const words = result.data.words.map((word) => ({
-      text: word.text,
-      confidence: word.confidence,
-      bbox: {
-        x0: word.bbox.x0,
-        y0: word.bbox.y0,
-        x1: word.bbox.x1,
-        y1: word.bbox.y1,
-      },
-    }));
+    // Extract words and lines from blocks structure
+    const words = [];
+    const lines = [];
 
-    const lines = result.data.lines.map((line) => ({
-      text: line.text,
-      confidence: line.confidence,
-      words: line.words.map((word) => ({
-        text: word.text,
-        confidence: word.confidence,
-        bbox: {
-          x0: word.bbox.x0,
-          y0: word.bbox.y0,
-          x1: word.bbox.x1,
-          y1: word.bbox.y1,
-        },
-      })),
-    }));
+    if (result.data.blocks) {
+      for (const block of result.data.blocks) {
+        for (const paragraph of block.paragraphs || []) {
+          for (const line of paragraph.lines || []) {
+            const lineWords = [];
+            for (const word of line.words || []) {
+              const wordData = {
+                text: word.text,
+                confidence: word.confidence,
+                bbox: {
+                  x0: word.bbox.x0,
+                  y0: word.bbox.y0,
+                  x1: word.bbox.x1,
+                  y1: word.bbox.y1,
+                },
+              };
+              words.push(wordData);
+              lineWords.push(wordData);
+            }
+            lines.push({
+              text: line.text,
+              confidence: line.confidence,
+              words: lineWords,
+            });
+          }
+        }
+      }
+    }
 
     this.#reportProgress('recognizing', 1);
 
