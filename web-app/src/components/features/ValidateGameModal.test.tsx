@@ -111,6 +111,8 @@ describe("ValidateGameModal", () => {
       isFinalizing: false,
       isLoadingGameDetails: false,
       gameDetailsError: null,
+      homeNominationList: null,
+      awayNominationList: null,
     });
   });
 

@@ -121,6 +121,16 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
     [gameDetailsQuery.data],
   );
 
+  const homeNominationList = useMemo(
+    () => gameDetailsQuery.data?.nominationListOfTeamHome ?? null,
+    [gameDetailsQuery.data?.nominationListOfTeamHome],
+  );
+
+  const awayNominationList = useMemo(
+    () => gameDetailsQuery.data?.nominationListOfTeamAway ?? null,
+    [gameDetailsQuery.data?.nominationListOfTeamAway],
+  );
+
   const isDirty = useMemo(() => {
     return (
       hasRosterModifications(state.homeRoster.modifications) ||
@@ -243,5 +253,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
     isFinalizing,
     isLoadingGameDetails: gameDetailsQuery.isLoading,
     gameDetailsError: gameDetailsQuery.error,
+    homeNominationList,
+    awayNominationList,
   };
 }

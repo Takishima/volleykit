@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
-import type { Assignment } from "@/api/client";
+import type { Assignment, NominationList } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { logger } from "@/utils/logger";
 import { useWizardNavigation } from "@/hooks/useWizardNavigation";
@@ -50,6 +50,8 @@ export interface UseValidateGameWizardResult {
   isFinalizing: boolean;
   isLoadingGameDetails: boolean;
   gameDetailsError: Error | null;
+  homeNominationList: NominationList | null;
+  awayNominationList: NominationList | null;
 
   // UI state
   showUnsavedDialog: boolean;
@@ -117,6 +119,8 @@ export function useValidateGameWizard({
     isFinalizing,
     isLoadingGameDetails,
     gameDetailsError,
+    homeNominationList,
+    awayNominationList,
   } = useValidationState(gameId);
 
   const wizardSteps = useMemo<ValidationStep[]>(
@@ -304,6 +308,8 @@ export function useValidateGameWizard({
     isFinalizing,
     isLoadingGameDetails,
     gameDetailsError,
+    homeNominationList,
+    awayNominationList,
 
     // UI state
     showUnsavedDialog,

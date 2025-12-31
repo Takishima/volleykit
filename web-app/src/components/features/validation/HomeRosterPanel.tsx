@@ -1,4 +1,4 @@
-import type { Assignment } from "@/api/client";
+import type { Assignment, NominationList } from "@/api/client";
 import { getTeamNames } from "@/utils/assignment-helpers";
 import { RosterVerificationPanel } from "./RosterVerificationPanel";
 import type { RosterModifications } from "@/hooks/useNominationList";
@@ -11,6 +11,8 @@ interface HomeRosterPanelProps {
   readOnly?: boolean;
   /** Initial modifications to restore state when remounting */
   initialModifications?: RosterModifications;
+  /** Pre-fetched nomination list data to avoid duplicate API calls */
+  prefetchedNominationList?: NominationList | null;
 }
 
 export function HomeRosterPanel({
@@ -19,6 +21,7 @@ export function HomeRosterPanel({
   onAddPlayerSheetOpenChange,
   readOnly = false,
   initialModifications,
+  prefetchedNominationList,
 }: HomeRosterPanelProps) {
   const { homeTeam } = getTeamNames(assignment);
   const gameId = assignment.refereeGame?.game?.__identity ?? "";
@@ -32,6 +35,7 @@ export function HomeRosterPanel({
       onAddPlayerSheetOpenChange={onAddPlayerSheetOpenChange}
       readOnly={readOnly}
       initialModifications={initialModifications}
+      prefetchedNominationList={prefetchedNominationList}
     />
   );
 }

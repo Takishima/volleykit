@@ -4,6 +4,7 @@
 
 import type { ValidatedPersonSearchResult } from "@/api/validation";
 import type { RosterModifications } from "@/hooks/useNominationList";
+import type { NominationList } from "@/api/client";
 
 /**
  * State for a roster panel (home or away team).
@@ -112,6 +113,10 @@ export interface UseValidationStateResult {
   isLoadingGameDetails: boolean;
   /** Error from game details loading */
   gameDetailsError: Error | null;
+  /** Pre-fetched home team nomination list from game details */
+  homeNominationList: NominationList | null;
+  /** Pre-fetched away team nomination list from game details */
+  awayNominationList: NominationList | null;
 }
 
 /**

@@ -33,6 +33,8 @@ interface UseNominationListOptions {
   gameId: string;
   team: "home" | "away";
   enabled?: boolean;
+  /** Pre-fetched nomination list data. When provided, skips API query. */
+  prefetchedData?: NominationList | null;
 }
 
 interface UseNominationListResult {
@@ -96,16 +98,24 @@ export function useNominationList({
   gameId,
   team,
   enabled = true,
+  prefetchedData,
 }: UseNominationListOptions): UseNominationListResult {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
   const nominationLists = useDemoStore((state) => state.nominationLists);
+  const hasPrefetchedData = prefetchedData !== undefined;
+
+  // Transform prefetched data if provided
+  const prefetchedPlayers = useMemo(() => {
+    if (!hasPrefetchedData) return [];
+    return transformNominationsToPlayers(prefetchedData?.indoorPlayerNominations);
+  }, [hasPrefetchedData, prefetchedData]);
 
   const demoNominationList = useMemo(() => {
-    if (!isDemoMode || !gameId) return null;
+    if (hasPrefetchedData || !isDemoMode || !gameId) return null;
     const gameNominations = nominationLists[gameId];
     if (!gameNominations) return null;
     return gameNominations[team] ?? null;
-  }, [isDemoMode, gameId, team, nominationLists]);
+  }, [hasPrefetchedData, isDemoMode, gameId, team, nominationLists]);
 
   const demoPlayers = useMemo(() => {
     if (!demoNominationList) return [];
@@ -121,7 +131,7 @@ export function useNominationList({
     queryFn: async (): Promise<NominationList | null> => {
       return apiClient.getNominationList(gameId, team);
     },
-    enabled: enabled && !isDemoMode && !!gameId,
+    enabled: enabled && !isDemoMode && !!gameId && !hasPrefetchedData,
     staleTime: NOMINATION_LIST_STALE_TIME_MS,
   });
 
@@ -130,6 +140,21 @@ export function useNominationList({
     return transformNominationsToPlayers(query.data.indoorPlayerNominations);
   }, [query.data]);
 
+  // Return prefetched data if provided
+  if (hasPrefetchedData) {
+    return {
+      nominationList: prefetchedData,
+      players: prefetchedPlayers,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: () => {
+        // No-op when using prefetched data
+      },
+    };
+  }
+
+  // Return demo data if in demo mode
   if (isDemoMode) {
     return {
       nominationList: demoNominationList,
@@ -143,6 +168,7 @@ export function useNominationList({
     };
   }
 
+  // Return API data
   return {
     nominationList: query.data ?? null,
     players: apiPlayers,
