@@ -62,10 +62,11 @@ const LANGUAGES = 'deu+fra+ita';
 
 /**
  * Page Segmentation Modes (PSM) - see Tesseract documentation
- * PSM 6 = Single uniform block of text (good for forms/tables)
- * PSM 3 = Fully automatic page segmentation (default)
+ * PSM 3 = Fully automatic page segmentation (best for tables with multiple columns)
+ * PSM 4 = Single column of text of variable sizes
+ * PSM 6 = Single uniform block of text
  */
-const PSM_SINGLE_BLOCK = '6';
+const PSM_AUTO = '3';
 
 /**
  * Border padding in pixels to add around the image
@@ -195,11 +196,8 @@ export class TesseractOCR {
 
     // Configure Tesseract parameters for better accuracy on scoresheets
     await this.#worker.setParameters({
-      // PSM 6 = Single uniform block of text (good for tabular data)
-      tessedit_pageseg_mode: PSM_SINGLE_BLOCK,
-      // Disable dictionary-based corrections for names (they're not in dictionaries)
-      load_system_dawg: '0',
-      load_freq_dawg: '0',
+      // PSM 3 = Automatic page segmentation (best for tables with multiple columns)
+      tessedit_pageseg_mode: PSM_AUTO,
       // Preserve interword spaces (important for table structure)
       preserve_interword_spaces: '1',
     });

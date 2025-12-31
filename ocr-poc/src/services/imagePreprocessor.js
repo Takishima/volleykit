@@ -200,14 +200,16 @@ export async function preprocessImage(imageBlob, options = {}) {
 
 /**
  * Preprocess options optimized for printed/electronic scoresheets
+ * Minimal processing - electronic sheets are already high contrast
+ * Over-processing can degrade quality on clean printed text
  * @type {PreprocessOptions}
  */
 export const ELECTRONIC_PRESET = {
-  grayscale: true,
-  enhanceContrast: true,
+  grayscale: false,
+  enhanceContrast: false,
   binarize: false,
-  contrastFactor: 1.4,
-  brightnessDelta: 15,
+  contrastFactor: 1.0,
+  brightnessDelta: 0,
 };
 
 /**
