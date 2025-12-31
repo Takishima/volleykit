@@ -23,8 +23,18 @@ type SwipeDirection = "horizontal" | "vertical" | null;
 /**
  * Checks if an element or any of its parents (up to container) is a scrollable element
  * that can scroll in the given vertical direction.
+ *
+ * Used to determine whether a vertical swipe gesture should be captured for dismiss
+ * or allowed to pass through for native scrolling.
+ *
+ * @param element - The target element where the gesture started
+ * @param container - The container element (boundary for the search)
+ * @param direction - The scroll direction to check ("up" or "down")
+ * @returns true if the element or an ancestor can scroll in the given direction
+ *
+ * @internal Exported for testing purposes
  */
-function canElementScroll(
+export function canElementScroll(
   element: EventTarget | null,
   container: HTMLElement | null,
   direction: "up" | "down",
@@ -125,11 +135,14 @@ export function useVerticalSwipeDismiss(
   } = options;
 
   const [translateY, setTranslateY] = useState(0);
+  // Only true when actively dragging in the vertical direction
   const [isDragging, setIsDragging] = useState(false);
 
-  // Use external ref if provided, otherwise create internal one
+  // Only create internal ref when no external ref is provided
+  // This avoids creating an unused ref object when sharing refs between hooks
   const internalContainerRef = useRef<HTMLDivElement | null>(null);
   const containerRef = externalContainerRef ?? internalContainerRef;
+
   const startXRef = useRef(0);
   const startYRef = useRef(0);
   const directionRef = useRef<SwipeDirection>(null);
@@ -140,6 +153,8 @@ export function useVerticalSwipeDismiss(
   const touchTargetRef = useRef<EventTarget | null>(null);
   // Track if we've decided to let the browser handle scrolling
   const isScrollingRef = useRef(false);
+  // Track if gesture has started (before direction is determined)
+  const gestureActiveRef = useRef(false);
 
   const resetPosition = useCallback(() => {
     setTranslateY(0);
@@ -156,14 +171,17 @@ export function useVerticalSwipeDismiss(
       currentTranslateRef.current = 0;
       touchTargetRef.current = target;
       isScrollingRef.current = false;
-      setIsDragging(true);
+      gestureActiveRef.current = true;
+      // Don't set isDragging yet - wait until direction is confirmed as vertical
+      // This prevents both hooks from showing isDragging=true simultaneously
     },
     [enabled],
   );
 
   const handleDragMove = useCallback(
     (clientX: number, clientY: number, preventDefault: () => void) => {
-      if (!enabled || isScrollingRef.current) return;
+      if (!enabled || isScrollingRef.current || !gestureActiveRef.current)
+        return;
 
       const diffX = clientX - startXRef.current;
       const diffY = clientY - startYRef.current;
@@ -189,9 +207,11 @@ export function useVerticalSwipeDismiss(
               )
             ) {
               isScrollingRef.current = true;
-              setIsDragging(false);
+              gestureActiveRef.current = false;
               return;
             }
+            // Direction confirmed as vertical and not scrolling - now set isDragging
+            setIsDragging(true);
           }
         }
       }
@@ -216,13 +236,15 @@ export function useVerticalSwipeDismiss(
   );
 
   const handleDragEnd = useCallback(() => {
-    // Reset scrolling flag
+    // Reset gesture tracking flags
+    gestureActiveRef.current = false;
     isScrollingRef.current = false;
     touchTargetRef.current = null;
 
     if (directionRef.current !== "vertical") {
       directionRef.current = null;
-      setIsDragging(false);
+      // Only reset isDragging if it was set (i.e., direction was vertical)
+      // For horizontal gestures, isDragging was never set to true
       return;
     }
 
