@@ -66,9 +66,8 @@ export default defineConfig({
             },
           },
           {
-            // Cache Tesseract traineddata files (language models)
-            urlPattern:
-              /^https:\/\/cdn\.jsdelivr\.net\/npm\/@aspect-build\/aspect_rules_tesseract.*\.traineddata/,
+            // Cache Tesseract traineddata files (language models) from projectnaptha
+            urlPattern: /^https:\/\/tessdata\.projectnaptha\.com\//,
             handler: 'CacheFirst',
             options: {
               cacheName: 'tesseract-traineddata',

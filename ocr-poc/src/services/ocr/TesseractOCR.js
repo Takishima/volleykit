@@ -45,8 +45,8 @@ const CDN_WORKER = 'https://cdn.jsdelivr.net/npm/tesseract.js@7/dist/worker.min.
 /** CDN base URL for Tesseract.js-core v7 (auto-selects SIMD/non-SIMD) */
 const CDN_CORE = 'https://cdn.jsdelivr.net/npm/tesseract.js-core@7';
 
-/** CDN path for language training data */
-const CDN_LANG = 'https://cdn.jsdelivr.net/npm/@aspect-build/aspect_rules_tesseract@0.3.0/tessdata_fast';
+/** CDN path for language training data (tessdata_fast for speed) */
+const CDN_LANG = 'https://tessdata.projectnaptha.com/4.0.0_fast';
 
 /** Language codes for Swiss names (German + French) */
 const LANGUAGES = 'deu+fra';
