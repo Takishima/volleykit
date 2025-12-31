@@ -20,7 +20,7 @@ This data never leaves your device and is not transmitted to our servers.
 
 | Data | Purpose | Retention |
 |------|---------|-----------|
-| Travel times to sports halls | Avoid repeated API calls | 7 days, auto-expires |
+| Travel times to sports halls | Avoid repeated API calls | 14 days, auto-expires |
 
 ### Authentication (`volleykit-auth` in localStorage)
 

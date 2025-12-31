@@ -14,10 +14,16 @@ import type { Coordinates } from "./types";
 /** Day types for Swiss public transport schedules */
 export type DayType = "weekday" | "saturday" | "sunday";
 
-/** Cache TTL: 30 days in milliseconds */
-export const TRAVEL_TIME_CACHE_TTL = 30 * 24 * 60 * 60 * 1000;
+/**
+ * Cache TTL: 14 days in milliseconds.
+ *
+ * Note: Using 14 days instead of 30 to stay within JavaScript's 32-bit
+ * signed integer limit for setTimeout (~24.8 days max). Values above
+ * ~2.147 billion ms cause silent clamping to 1ms.
+ */
+export const TRAVEL_TIME_CACHE_TTL = 14 * 24 * 60 * 60 * 1000;
 
-/** Cache stale time: 30 days (TanStack Query config) */
+/** Cache stale time: 14 days (TanStack Query config) */
 export const TRAVEL_TIME_STALE_TIME = TRAVEL_TIME_CACHE_TTL;
 
 /** Garbage collection time: same as TTL */

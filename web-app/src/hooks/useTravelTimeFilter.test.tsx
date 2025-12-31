@@ -20,8 +20,8 @@ vi.mock("@/services/transport", () => ({
   getDayType: vi.fn(() => "weekday"),
   getCachedTravelTime: vi.fn(() => null),
   setCachedTravelTime: vi.fn(),
-  TRAVEL_TIME_STALE_TIME: 30 * 24 * 60 * 60 * 1000,
-  TRAVEL_TIME_GC_TIME: 30 * 24 * 60 * 60 * 1000,
+  TRAVEL_TIME_STALE_TIME: 14 * 24 * 60 * 60 * 1000,
+  TRAVEL_TIME_GC_TIME: 14 * 24 * 60 * 60 * 1000,
 }));
 
 vi.mock("@/stores/auth", () => ({
