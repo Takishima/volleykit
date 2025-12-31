@@ -3,10 +3,19 @@ import type { RosterPlayer } from "@/hooks/useNominationList";
 import { Trash2, Undo2 } from "@/components/ui/icons";
 import { useTranslation } from "@/hooks/useTranslation";
 
+/** Structured player display data for aligned columns */
+export interface PlayerDisplayData {
+  lastName: string;
+  firstInitial: string;
+  dob: string;
+}
+
 interface PlayerListItemProps {
   player: RosterPlayer;
-  /** Pre-formatted display string (e.g., "Müller M. 01.01.90") */
-  formattedDisplay: string;
+  /** Structured display data for column alignment */
+  displayData: PlayerDisplayData;
+  /** Maximum last name width in the list (for alignment) */
+  maxLastNameWidth: number;
   isMarkedForRemoval: boolean;
   onRemove?: () => void;
   onUndoRemoval?: () => void;
@@ -16,13 +25,18 @@ interface PlayerListItemProps {
 
 export function PlayerListItem({
   player,
-  formattedDisplay,
+  displayData,
+  maxLastNameWidth,
   isMarkedForRemoval,
   onRemove,
   onUndoRemoval,
   readOnly = false,
 }: PlayerListItemProps) {
   const { t } = useTranslation();
+
+  const textColorClass = isMarkedForRemoval
+    ? "line-through text-text-subtle dark:text-text-subtle-dark"
+    : "text-text-primary dark:text-text-primary-dark";
 
   return (
     <div
@@ -31,16 +45,25 @@ export function PlayerListItem({
       }`}
     >
       <div className="flex items-center gap-3 min-w-0 flex-1">
-        {/* Player name and DOB in aligned format */}
-        <span
-          className={`text-sm truncate ${
-            isMarkedForRemoval
-              ? "line-through text-text-subtle dark:text-text-subtle-dark"
-              : "text-text-primary dark:text-text-primary-dark"
-          }`}
-        >
-          {formattedDisplay}
-        </span>
+        {/* Player name and DOB in aligned columns using tabular numbers */}
+        <div className="flex items-baseline text-sm font-mono">
+          <span
+            className={textColorClass}
+            style={{ minWidth: `${maxLastNameWidth}ch` }}
+          >
+            {displayData.lastName}
+          </span>
+          <span className={`ml-2 w-[3ch] ${textColorClass}`}>
+            {displayData.firstInitial}
+          </span>
+          <span
+            className={`ml-2 text-text-muted dark:text-text-muted-dark tabular-nums ${
+              isMarkedForRemoval ? "line-through" : ""
+            }`}
+          >
+            {displayData.dob}
+          </span>
+        </div>
 
         {/* Badges */}
         <div className="flex items-center gap-1.5 flex-shrink-0">

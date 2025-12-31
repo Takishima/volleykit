@@ -68,7 +68,7 @@ export function AddPlayerSheet({
     });
   }, [players, debouncedQuery, excludePlayerIds, sessionAddedIds]);
 
-  // Compute formatted display strings for filtered players (handles duplicate detection)
+  // Compute formatted display data for filtered players (handles duplicate detection)
   const formattedEntries = useMemo(() => {
     const playersData = filteredPlayers.map((player) => ({
       id: player.indoorPlayer?.__identity ?? "",
@@ -78,6 +78,17 @@ export function AddPlayerSheet({
     }));
     return formatRosterEntries(playersData);
   }, [filteredPlayers]);
+
+  // Calculate max last name width for column alignment
+  const maxLastNameWidth = useMemo(() => {
+    let maxLen = 0;
+    for (const entry of formattedEntries.values()) {
+      if (entry.lastName.length > maxLen) {
+        maxLen = entry.lastName.length;
+      }
+    }
+    return maxLen;
+  }, [formattedEntries]);
 
   const handleClose = useCallback(() => {
     setSearchQuery("");
@@ -210,16 +221,31 @@ export function AddPlayerSheet({
                       `}
                     >
                       <div className="flex-1 min-w-0">
-                        <span
-                          className={`font-medium truncate ${
-                            isAdded
-                              ? "text-success-700 dark:text-success-400"
-                              : "text-text-primary dark:text-text-primary-dark"
-                          }`}
-                        >
-                          {formattedEntries.get(playerId)?.displayString ||
-                            `${player.indoorPlayer?.person?.lastName ?? ""} ${player.indoorPlayer?.person?.firstName ?? ""}`}
-                        </span>
+                        {(() => {
+                          const entry = formattedEntries.get(playerId);
+                          const lastName = entry?.lastName || player.indoorPlayer?.person?.lastName || "";
+                          const firstInitial = entry?.firstInitial || "";
+                          const dob = entry?.dob || "";
+                          const textColorClass = isAdded
+                            ? "text-success-700 dark:text-success-400"
+                            : "text-text-primary dark:text-text-primary-dark";
+                          return (
+                            <div className="flex items-baseline text-sm font-mono">
+                              <span
+                                className={`font-medium ${textColorClass}`}
+                                style={{ minWidth: `${maxLastNameWidth}ch` }}
+                              >
+                                {lastName}
+                              </span>
+                              <span className={`ml-2 w-[3ch] ${textColorClass}`}>
+                                {firstInitial}
+                              </span>
+                              <span className="ml-2 text-text-muted dark:text-text-muted-dark tabular-nums">
+                                {dob}
+                              </span>
+                            </div>
+                          );
+                        })()}
                       </div>
                       {isAdded ? (
                         <span className="relative flex-shrink-0 ml-2 w-5 h-5">

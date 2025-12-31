@@ -123,11 +123,22 @@ export function RosterVerificationPanel({
     return a.displayName.localeCompare(b.displayName);
   });
 
-  // Compute formatted display strings for all players (handles duplicate detection)
+  // Compute formatted display data for all players (handles duplicate detection)
   const formattedEntries = useMemo(
     () => formatRosterEntries(allPlayers),
     [allPlayers],
   );
+
+  // Calculate max last name width for column alignment
+  const maxLastNameWidth = useMemo(() => {
+    let maxLen = 0;
+    for (const entry of formattedEntries.values()) {
+      if (entry.lastName.length > maxLen) {
+        maxLen = entry.lastName.length;
+      }
+    }
+    return maxLen;
+  }, [formattedEntries]);
 
   // Calculate visible player count (excluding removed)
   const visiblePlayerCount = allPlayers.filter(
@@ -194,20 +205,25 @@ export function RosterVerificationPanel({
         </div>
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          {allPlayers.map((player) => (
-            <PlayerListItem
-              key={player.id}
-              player={player}
-              formattedDisplay={
-                formattedEntries.get(player.id)?.displayString ||
-                player.displayName
-              }
-              isMarkedForRemoval={removedPlayerIds.has(player.id)}
-              onRemove={readOnly ? undefined : () => handleRemovePlayer(player.id)}
-              onUndoRemoval={readOnly ? undefined : () => handleUndoRemoval(player.id)}
-              readOnly={readOnly}
-            />
-          ))}
+          {allPlayers.map((player) => {
+            const entry = formattedEntries.get(player.id);
+            return (
+              <PlayerListItem
+                key={player.id}
+                player={player}
+                displayData={{
+                  lastName: entry?.lastName || player.lastName || player.displayName,
+                  firstInitial: entry?.firstInitial || "",
+                  dob: entry?.dob || "",
+                }}
+                maxLastNameWidth={maxLastNameWidth}
+                isMarkedForRemoval={removedPlayerIds.has(player.id)}
+                onRemove={readOnly ? undefined : () => handleRemovePlayer(player.id)}
+                onUndoRemoval={readOnly ? undefined : () => handleUndoRemoval(player.id)}
+                readOnly={readOnly}
+              />
+            );
+          })}
         </div>
       )}
 
