@@ -1084,6 +1084,23 @@ describe("API Client", () => {
       expect(url).toContain("nominationListOfTeamHome");
       expect(url).toContain("nominationListOfTeamAway");
     });
+
+    it("requests group base property before nested group properties", async () => {
+      // The 'group' base property must be requested before nested properties like
+      // 'group.phase.league...' to avoid 500 errors when group is null
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({ __identity: "game-1" }),
+      );
+
+      await api.getGameWithScoresheet("game-123");
+
+      const [url] = mockFetch.mock.calls[0]!;
+      // Verify 'group' appears as a standalone property (not just nested)
+      // propertyRenderConfiguration[N]=group (URL encoded as group)
+      expect(url).toMatch(/propertyRenderConfiguration%5B\d+%5D=group(?:&|$)/);
+      // Verify the nested property is also present
+      expect(url).toContain("writersCanUseSimpleScoresheetForThisLeagueCategory");
+    });
   });
 
   describe("getAssociationSettings", () => {

@@ -435,6 +435,9 @@ export const api = {
       "nominationListOfTeamAway.isClosedForTeam",
       "nominationListOfTeamAway.nominationListValidation",
       "nominationListOfTeamAway.indoorPlayerNominations.*.__identity",
+      // Group must be requested before nested properties to avoid 500 errors
+      // when group is null (e.g., for already validated games)
+      "group",
       "group.phase.league.leagueCategory.writersCanUseSimpleScoresheetForThisLeagueCategory",
     ];
 
