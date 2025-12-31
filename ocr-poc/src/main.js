@@ -64,6 +64,9 @@ let ocrEngine = null;
 /** @type {string | null} Object URL for results state preview image */
 let resultsPreviewUrl = null;
 
+/** @type {boolean} Guard flag to prevent concurrent OCR operations */
+let isOCRRunning = false;
+
 /* ==============================================
  * STATE MACHINE
  * ============================================== */
@@ -222,13 +225,36 @@ function renderProcessingState(container) {
 }
 
 /**
+ * Get error message from unknown error type
+ * @param {unknown} error
+ * @returns {string}
+ */
+function getErrorMessage(error) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
+  return 'Unknown error occurred';
+}
+
+/**
  * Run OCR processing on the captured image
  */
 async function runOCR() {
+  // Guard against concurrent OCR operations
+  if (isOCRRunning) {
+    console.warn('OCR already running, ignoring duplicate request');
+    return;
+  }
+
   if (!appContext.capturedImage || !appContext.sheetType) {
     console.error('Missing image or sheet type for OCR');
     return;
   }
+
+  isOCRRunning = true;
 
   try {
     // Create OCR engine with progress callback
@@ -255,13 +281,15 @@ async function runOCR() {
     transition('results', { ocrResult: result });
   } catch (error) {
     console.error('OCR Error:', error);
-    ocrProgress?.showError(`OCR failed: ${error.message}`);
+    ocrProgress?.showError(`OCR failed: ${getErrorMessage(error)}`);
 
     // Clean up engine on error
     if (ocrEngine) {
       await ocrEngine.terminate();
       ocrEngine = null;
     }
+  } finally {
+    isOCRRunning = false;
   }
 }
 
@@ -389,6 +417,7 @@ async function handleCancelOCR() {
     await ocrEngine.terminate();
     ocrEngine = null;
   }
+  isOCRRunning = false;
   transition('capture', { capturedImage: null, sheetType: null, ocrResult: null });
 }
 

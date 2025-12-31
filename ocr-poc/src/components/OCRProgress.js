@@ -80,6 +80,7 @@ export class OCRProgress {
             type="button"
             class="btn btn-secondary ocr-progress__cancel"
             id="btn-cancel-ocr"
+            aria-label="Cancel OCR processing"
           >
             Cancel
           </button>
@@ -125,13 +126,6 @@ export class OCRProgress {
     if (percentageEl) {
       percentageEl.textContent = `${progress}%`;
     }
-  }
-
-  /**
-   * Show completion state
-   */
-  showComplete() {
-    this.updateProgress({ status: 'Complete!', progress: 100 });
   }
 
   /**

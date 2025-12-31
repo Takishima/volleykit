@@ -8,6 +8,7 @@ const BASE_PATH = process.env.VITE_BASE_PATH || '/ocr-poc/';
 // Cache expiration constants
 const SECONDS_PER_DAY = 60 * 60 * 24;
 const CACHE_MAX_AGE_DAYS = 7;
+const CDN_CACHE_DAYS = 30;
 
 export default defineConfig({
   base: BASE_PATH,
@@ -35,14 +36,29 @@ export default defineConfig({
             },
           },
           {
-            // Cache Tesseract.js assets from jsDelivr CDN (worker, core, WASM)
-            urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/npm\/tesseract\.js/,
+            // Cache Tesseract.js v7 assets from jsDelivr CDN (worker scripts)
+            urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/npm\/tesseract\.js@7\//,
             handler: 'CacheFirst',
             options: {
               cacheName: 'tesseract-js-cdn',
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: SECONDS_PER_DAY * 30, // Cache for 30 days
+                maxAgeSeconds: SECONDS_PER_DAY * CDN_CACHE_DAYS,
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            // Cache Tesseract.js-core v7 assets (WASM binaries)
+            urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/npm\/tesseract\.js-core@7\//,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'tesseract-core-cdn',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: SECONDS_PER_DAY * CDN_CACHE_DAYS,
               },
               cacheableResponse: {
                 statuses: [0, 200],
@@ -58,7 +74,7 @@ export default defineConfig({
               cacheName: 'tesseract-traineddata',
               expiration: {
                 maxEntries: 5,
-                maxAgeSeconds: SECONDS_PER_DAY * 30, // Cache for 30 days
+                maxAgeSeconds: SECONDS_PER_DAY * CDN_CACHE_DAYS,
               },
               cacheableResponse: {
                 statuses: [0, 200],

@@ -39,8 +39,14 @@ import Tesseract from 'tesseract.js';
  * @param {OCRProgress} progress
  */
 
-/** CDN base URL for Tesseract.js assets */
-const CDN_BASE = 'https://cdn.jsdelivr.net/npm/tesseract.js@5';
+/** CDN base URL for Tesseract.js v7 worker */
+const CDN_WORKER = 'https://cdn.jsdelivr.net/npm/tesseract.js@7/dist/worker.min.js';
+
+/** CDN base URL for Tesseract.js-core v7 (auto-selects SIMD/non-SIMD) */
+const CDN_CORE = 'https://cdn.jsdelivr.net/npm/tesseract.js-core@7';
+
+/** CDN path for language training data */
+const CDN_LANG = 'https://cdn.jsdelivr.net/npm/@aspect-build/aspect_rules_tesseract@0.3.0/tessdata_fast';
 
 /** Language codes for Swiss names (German + French) */
 const LANGUAGES = 'deu+fra';
@@ -105,9 +111,9 @@ export class TesseractOCR {
     this.#reportProgress('loading', 0);
 
     this.#worker = await Tesseract.createWorker(LANGUAGES, 1, {
-      workerPath: `${CDN_BASE}/dist/worker.min.js`,
-      corePath: `${CDN_BASE}/dist/tesseract-core-simd.wasm.js`,
-      langPath: 'https://cdn.jsdelivr.net/npm/@aspect-build/aspect_rules_tesseract@0.3.0/tessdata_fast',
+      workerPath: CDN_WORKER,
+      corePath: CDN_CORE,
+      langPath: CDN_LANG,
       logger: (message) => {
         if (message.status && typeof message.progress === 'number') {
           this.#reportProgress(message.status, message.progress);
