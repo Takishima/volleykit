@@ -14,8 +14,10 @@ import './style.css';
 import { ImageCapture } from './components/ImageCapture.js';
 
 /** @type {ImageCapture | null} */
-// eslint-disable-next-line no-unused-vars -- Retained for potential cleanup via destroy()
 let imageCapture = null;
+
+/** @type {string | null} */
+let currentPreviewUrl = null;
 
 /**
  * Initialize the application
@@ -87,24 +89,35 @@ function handleImageCapture(blob) {
   const previewImage = document.getElementById('preview-image');
 
   if (previewContainer && previewImage) {
-    // Revoke previous object URL if exists
-    if (previewImage.src && previewImage.src.startsWith('blob:')) {
-      URL.revokeObjectURL(previewImage.src);
+    // Revoke previous object URL to prevent memory leak
+    if (currentPreviewUrl) {
+      URL.revokeObjectURL(currentPreviewUrl);
     }
 
-    // Create new object URL and display
-    const objectUrl = URL.createObjectURL(blob);
-    previewImage.src = objectUrl;
+    currentPreviewUrl = URL.createObjectURL(blob);
+    previewImage.src = currentPreviewUrl;
     previewContainer.removeAttribute('hidden');
   }
 }
 
-/**
- * Handle reference list loading (placeholder)
- */
 function handleLoadReference() {
   console.log('Reference list loading not yet implemented');
 }
+
+/** Clean up resources to prevent memory leaks */
+function cleanup() {
+  if (currentPreviewUrl) {
+    URL.revokeObjectURL(currentPreviewUrl);
+    currentPreviewUrl = null;
+  }
+  if (imageCapture) {
+    imageCapture.destroy();
+    imageCapture = null;
+  }
+}
+
+// Clean up on page unload
+window.addEventListener('pagehide', cleanup);
 
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {

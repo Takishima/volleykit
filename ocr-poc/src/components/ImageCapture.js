@@ -15,6 +15,12 @@
  * @property {(blob: Blob) => void} onCapture - Callback when image is captured
  */
 
+/** How long to display the permission denied message */
+const PERMISSION_MESSAGE_DISPLAY_MS = 5000;
+
+/** JPEG quality for captured photos (0-1 scale) */
+const JPEG_QUALITY = 0.92;
+
 export class ImageCapture {
   /** @type {HTMLElement} */
   #container;
@@ -34,10 +40,7 @@ export class ImageCapture {
   /** @type {boolean} */
   #cameraPermissionDenied = false;
 
-  /**
-   * Ideal video constraints for high-resolution capture
-   * 1920x1080 provides good OCR quality while being widely supported
-   */
+  /** 1920x1080 provides good OCR quality while being widely supported */
   static VIDEO_CONSTRAINTS = {
     facingMode: 'environment',
     width: { ideal: 1920 },
@@ -53,9 +56,6 @@ export class ImageCapture {
     this.#render();
   }
 
-  /**
-   * Render the component UI
-   */
   #render() {
     this.#container.innerHTML = `
       <div class="image-capture">
@@ -140,9 +140,6 @@ export class ImageCapture {
     this.#bindEvents();
   }
 
-  /**
-   * Bind event listeners to UI elements
-   */
   #bindEvents() {
     const cameraBtn = this.#container.querySelector('#btn-camera');
     const uploadBtn = this.#container.querySelector('#btn-upload');
@@ -157,9 +154,6 @@ export class ImageCapture {
     takePhotoBtn?.addEventListener('click', () => this.#capturePhoto());
   }
 
-  /**
-   * Open the camera and start the preview
-   */
   async #openCamera() {
     if (this.#cameraPermissionDenied) {
       this.#showPermissionMessage();
@@ -190,10 +184,7 @@ export class ImageCapture {
     }
   }
 
-  /**
-   * Handle camera access errors
-   * @param {Error} error
-   */
+  /** @param {Error} error */
   #handleCameraError(error) {
     if (
       error.name === 'NotAllowedError' ||
@@ -210,22 +201,15 @@ export class ImageCapture {
     }
   }
 
-  /**
-   * Show the permission denied message
-   */
   #showPermissionMessage() {
     const message = this.#container.querySelector('#permission-message');
     message?.removeAttribute('hidden');
 
-    // Hide message after 5 seconds
     setTimeout(() => {
       message?.setAttribute('hidden', '');
-    }, 5000);
+    }, PERMISSION_MESSAGE_DISPLAY_MS);
   }
 
-  /**
-   * Close the camera and stop the stream
-   */
   #closeCamera() {
     if (this.#stream) {
       this.#stream.getTracks().forEach((track) => track.stop());
@@ -244,9 +228,6 @@ export class ImageCapture {
     this.#isCameraActive = false;
   }
 
-  /**
-   * Capture a photo from the video stream
-   */
   async #capturePhoto() {
     if (!this.#videoElement || !this.#isCameraActive) {
       return;
@@ -267,7 +248,6 @@ export class ImageCapture {
 
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // Convert to blob with high quality JPEG
     canvas.toBlob(
       (blob) => {
         if (blob) {
@@ -276,14 +256,11 @@ export class ImageCapture {
         }
       },
       'image/jpeg',
-      0.92
+      JPEG_QUALITY
     );
   }
 
-  /**
-   * Handle file selection from input
-   * @param {Event} event
-   */
+  /** @param {Event} event */
   #handleFileSelect(event) {
     const input = event.target;
     if (!(input instanceof HTMLInputElement) || !input.files?.length) {
@@ -304,9 +281,6 @@ export class ImageCapture {
     input.value = '';
   }
 
-  /**
-   * Clean up resources when component is destroyed
-   */
   destroy() {
     this.#closeCamera();
     this.#container.innerHTML = '';
