@@ -17,9 +17,6 @@ const mockNominationList: NominationList = {
   indoorPlayerNominations: [
     {
       __identity: "test-nom-1",
-      shirtNumber: 1,
-      isCaptain: true,
-      isLibero: false,
       indoorPlayer: {
         __identity: "test-player-1",
         person: {
@@ -37,9 +34,6 @@ const mockNominationList: NominationList = {
     },
     {
       __identity: "test-nom-2",
-      shirtNumber: 7,
-      isCaptain: false,
-      isLibero: true,
       indoorPlayer: {
         __identity: "test-player-2",
         person: {
@@ -112,96 +106,26 @@ describe("useNominationList", () => {
 
       const players = result.current.players;
 
-      // Players should be sorted by shirt number
+      // Players should be sorted by displayName
       expect(players[0]).toEqual({
-        id: "test-nom-1",
-        shirtNumber: 1,
-        displayName: "John Doe",
-        firstName: "John",
-        lastName: "Doe",
-        birthday: "1995-03-15",
-        licenseCategory: "SEN",
-        isCaptain: true,
-        isLibero: false,
-        isNewlyAdded: false,
-      });
-
-      expect(players[1]).toEqual({
         id: "test-nom-2",
-        shirtNumber: 7,
         displayName: "Jane Smith",
         firstName: "Jane",
         lastName: "Smith",
         birthday: "2002-07-22",
         licenseCategory: "JUN",
-        isCaptain: false,
-        isLibero: true,
         isNewlyAdded: false,
       });
-    });
 
-    it("handles players without shirtNumber", () => {
-      const listWithoutShirtNumbers: NominationList = {
-        __identity: "test-nomlist-1",
-        game: { __identity: "test-game-1" },
-        team: { __identity: "test-team-1", displayName: "Test Team" },
-        closed: false,
-        isClosedForTeam: false,
-        indoorPlayerNominations: [
-          {
-            __identity: "test-nom-1",
-            // No shirtNumber - API doesn't return this field
-            isCaptain: true,
-            isLibero: false,
-            indoorPlayer: {
-              __identity: "test-player-1",
-              person: {
-                __identity: "test-person-1",
-                firstName: "John",
-                lastName: "Doe",
-                displayName: "John Doe",
-              },
-            },
-          },
-          {
-            __identity: "test-nom-2",
-            // No shirtNumber - API doesn't return this field
-            isCaptain: false,
-            isLibero: true,
-            indoorPlayer: {
-              __identity: "test-player-2",
-              person: {
-                __identity: "test-person-2",
-                firstName: "Jane",
-                lastName: "Smith",
-                displayName: "Jane Smith",
-              },
-            },
-          },
-        ],
-      };
-
-      vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
-        selector({
-          nominationLists: {
-            "test-game-1": {
-              home: listWithoutShirtNumbers,
-              away: listWithoutShirtNumbers,
-            },
-          },
-        } as unknown as ReturnType<typeof demoStore.useDemoStore.getState>),
-      );
-
-      const { result } = renderHook(() =>
-        useNominationList({ gameId: "test-game-1", team: "home" }),
-      );
-
-      // Should include all players even without shirtNumber
-      expect(result.current.players).toHaveLength(2);
-      expect(result.current.players[0]!.displayName).toBe("John Doe");
-      expect(result.current.players[0]!.shirtNumber).toBeUndefined();
-      expect(result.current.players[1]!.displayName).toBe("Jane Smith");
-      expect(result.current.players[1]!.shirtNumber).toBeUndefined();
+      expect(players[1]).toEqual({
+        id: "test-nom-1",
+        displayName: "John Doe",
+        firstName: "John",
+        lastName: "Doe",
+        birthday: "1995-03-15",
+        licenseCategory: "SEN",
+        isNewlyAdded: false,
+      });
     });
 
     it("returns empty data when game not found in demo mode", () => {
@@ -339,8 +263,9 @@ describe("useNominationList", () => {
 
       const players = result.current.players;
       expect(players).toHaveLength(2);
-      expect(players[0]!.displayName).toBe("John Doe");
-      expect(players[1]!.displayName).toBe("Jane Smith");
+      // Players are sorted alphabetically by displayName
+      expect(players[0]!.displayName).toBe("Jane Smith");
+      expect(players[1]!.displayName).toBe("John Doe");
     });
   });
 

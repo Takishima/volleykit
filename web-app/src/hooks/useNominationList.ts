@@ -5,14 +5,11 @@ import { useDemoStore } from "@/stores/demo";
 
 export interface RosterPlayer {
   id: string;
-  shirtNumber?: number;
   displayName: string;
   firstName?: string;
   lastName?: string;
   birthday?: string | null;
   licenseCategory?: string;
-  isCaptain?: boolean;
-  isLibero?: boolean;
   isNewlyAdded?: boolean;
 }
 
@@ -55,7 +52,6 @@ function transformNominationToPlayer(
   nomination: IndoorPlayerNomination,
 ): RosterPlayer | null {
   const id = nomination.__identity;
-  const shirtNumber = nomination.shirtNumber;
   const displayName = buildDisplayName(nomination);
   const person = nomination.indoorPlayer?.person;
 
@@ -65,14 +61,11 @@ function transformNominationToPlayer(
 
   return {
     id,
-    shirtNumber,
     displayName,
     firstName: person?.firstName,
     lastName: person?.lastName,
     birthday: person?.birthday,
     licenseCategory: nomination.indoorPlayerLicenseCategory?.shortName,
-    isCaptain: nomination.isCaptain ?? false,
-    isLibero: nomination.isLibero ?? false,
     isNewlyAdded: false,
   };
 }
@@ -85,7 +78,7 @@ function transformNominationsToPlayers(
   return nominations
     .map(transformNominationToPlayer)
     .filter((player): player is RosterPlayer => player !== null)
-    .sort((a, b) => (a.shirtNumber ?? Infinity) - (b.shirtNumber ?? Infinity));
+    .sort((a, b) => a.displayName.localeCompare(b.displayName));
 }
 
 /**
