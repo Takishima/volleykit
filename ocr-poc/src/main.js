@@ -11,6 +11,13 @@
  */
 
 import './style.css';
+import { ImageCapture } from './components/ImageCapture.js';
+
+/** @type {ImageCapture | null} */
+let imageCapture = null;
+
+/** @type {string | null} */
+let currentPreviewUrl = null;
 
 /**
  * Initialize the application
@@ -27,15 +34,19 @@ function init() {
   app.innerHTML = `
     <div class="container">
       <div class="card">
-        <h2 class="text-center mb-md">Welcome</h2>
+        <h2 class="text-center mb-md">Capture Scoresheet</h2>
         <p class="text-muted text-center mb-lg">
-          This app will help you scan volleyball scoresheets and extract player information.
+          Take a photo or upload an image of the scoresheet to extract player information.
         </p>
 
-        <div class="flex flex-col gap-md">
-          <button class="btn btn-primary btn-block btn-lg" id="btn-capture" disabled aria-label="Capture Scoresheet - coming soon">
-            Capture Scoresheet
-          </button>
+        <div id="image-capture-container"></div>
+
+        <div id="preview-container" class="image-capture__preview mt-lg" hidden>
+          <img id="preview-image" class="image-capture__thumbnail" alt="Captured scoresheet preview" />
+          <span class="image-capture__preview-label">Captured image preview</span>
+        </div>
+
+        <div class="mt-lg">
           <button class="btn btn-secondary btn-block" id="btn-reference" disabled aria-label="Load Reference List - coming soon">
             Load Reference List
           </button>
@@ -48,32 +59,65 @@ function init() {
     </div>
   `;
 
-  // Set up event listeners for future functionality
-  const captureBtn = document.getElementById('btn-capture');
-  const referenceBtn = document.getElementById('btn-reference');
-
-  if (captureBtn) {
-    captureBtn.addEventListener('click', handleCapture);
+  // Initialize ImageCapture component
+  const captureContainer = document.getElementById('image-capture-container');
+  if (captureContainer) {
+    imageCapture = new ImageCapture({
+      container: captureContainer,
+      onCapture: handleImageCapture,
+    });
   }
 
+  // Set up event listeners for future functionality
+  const referenceBtn = document.getElementById('btn-reference');
   if (referenceBtn) {
     referenceBtn.addEventListener('click', handleLoadReference);
   }
 }
 
 /**
- * Handle scoresheet capture (placeholder)
+ * Handle captured image
+ * @param {Blob} blob - The captured image as a Blob
  */
-function handleCapture() {
-  console.log('Capture functionality not yet implemented');
+function handleImageCapture(blob) {
+  console.log('Image captured:', blob);
+  console.log('  Type:', blob.type);
+  console.log('  Size:', (blob.size / 1024).toFixed(2), 'KB');
+
+  // Show thumbnail preview
+  const previewContainer = document.getElementById('preview-container');
+  const previewImage = document.getElementById('preview-image');
+
+  if (previewContainer && previewImage) {
+    // Revoke previous object URL to prevent memory leak
+    if (currentPreviewUrl) {
+      URL.revokeObjectURL(currentPreviewUrl);
+    }
+
+    currentPreviewUrl = URL.createObjectURL(blob);
+    previewImage.src = currentPreviewUrl;
+    previewContainer.removeAttribute('hidden');
+  }
 }
 
-/**
- * Handle reference list loading (placeholder)
- */
 function handleLoadReference() {
   console.log('Reference list loading not yet implemented');
 }
+
+/** Clean up resources to prevent memory leaks */
+function cleanup() {
+  if (currentPreviewUrl) {
+    URL.revokeObjectURL(currentPreviewUrl);
+    currentPreviewUrl = null;
+  }
+  if (imageCapture) {
+    imageCapture.destroy();
+    imageCapture = null;
+  }
+}
+
+// Clean up on page unload
+window.addEventListener('pagehide', cleanup);
 
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
