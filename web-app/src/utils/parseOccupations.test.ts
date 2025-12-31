@@ -5,6 +5,7 @@ import {
   filterRefereeOccupations,
   parseOccupationFromActiveParty,
   parseOccupationsFromActiveParty,
+  deriveAssociationCodeFromName,
 } from "./parseOccupations";
 import type { AttributeValue } from "./active-party-parser";
 
@@ -380,6 +381,84 @@ describe("parseOccupations", () => {
       const result = parseOccupationsFromActiveParty([]);
 
       expect(result).toEqual([]);
+    });
+
+    it("should derive association code from name when shortName is missing", () => {
+      const attrs: AttributeValue[] = [
+        {
+          __identity: "attr-1",
+          attributeIdentifier: "memberOfAssociation",
+          roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+          inflatedValue: {
+            __identity: "assoc-1",
+            name: "Swiss Volley Région Zurich",
+            // shortName is missing
+          },
+        },
+      ];
+
+      const result = parseOccupationsFromActiveParty(attrs);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]?.associationCode).toBe("SVRZ");
+    });
+
+    it("should prefer shortName over derived name", () => {
+      const attrs: AttributeValue[] = [
+        {
+          __identity: "attr-1",
+          attributeIdentifier: "memberOfAssociation",
+          roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+          inflatedValue: {
+            __identity: "assoc-1",
+            name: "Swiss Volley Région Zurich",
+            shortName: "CUSTOM",
+          },
+        },
+      ];
+
+      const result = parseOccupationsFromActiveParty(attrs);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]?.associationCode).toBe("CUSTOM");
+    });
+  });
+
+  describe("deriveAssociationCodeFromName", () => {
+    it("should extract initials from Swiss Volley", () => {
+      expect(deriveAssociationCodeFromName("Swiss Volley")).toBe("SV");
+    });
+
+    it("should extract initials from Swiss Volley Région Zurich", () => {
+      expect(deriveAssociationCodeFromName("Swiss Volley Région Zurich")).toBe("SVRZ");
+    });
+
+    it("should exclude common prepositions", () => {
+      expect(deriveAssociationCodeFromName("Association Vaudoise de Volleyball")).toBe("AVV");
+    });
+
+    it("should exclude French articles", () => {
+      expect(deriveAssociationCodeFromName("Fédération de la Région")).toBe("FR");
+    });
+
+    it("should exclude German articles", () => {
+      expect(deriveAssociationCodeFromName("Verband und Region")).toBe("VR");
+    });
+
+    it("should return undefined for empty string", () => {
+      expect(deriveAssociationCodeFromName("")).toBeUndefined();
+    });
+
+    it("should return undefined for undefined input", () => {
+      expect(deriveAssociationCodeFromName(undefined)).toBeUndefined();
+    });
+
+    it("should return undefined if all words are excluded", () => {
+      expect(deriveAssociationCodeFromName("de la le")).toBeUndefined();
+    });
+
+    it("should handle single word", () => {
+      expect(deriveAssociationCodeFromName("Volleyball")).toBe("V");
     });
   });
 });

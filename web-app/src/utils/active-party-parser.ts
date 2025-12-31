@@ -114,6 +114,19 @@ const ACTIVE_PARTY_PATTERN =
   /window\.activeParty\s*=\s*JSON\.parse\s*\(\s*'((?:[^'\\]|\\.)*)'\s*\)/;
 
 /**
+ * Regex pattern to match Vue component attribute :active-party="$convertFromBackendToFrontend({...})".
+ * This is the format used in production VolleyManager pages.
+ * Captures the JSON object inside the $convertFromBackendToFrontend() call.
+ *
+ * Uses greedy matching because the JSON object contains nested braces.
+ * The pattern is safe because:
+ * - Quotes inside JSON are HTML-encoded as &quot;, so )" only appears at the end
+ * - The /s flag allows . to match newlines
+ */
+const VUE_ACTIVE_PARTY_PATTERN =
+  /:active-party="\$convertFromBackendToFrontend\((\{.+\})\)"/s;
+
+/**
  * Decode HTML entities in a string.
  * The embedded JSON uses HTML entities like &quot; for quotes.
  */
@@ -141,8 +154,9 @@ function decodeHtmlEntities(str: string): string {
 /**
  * Extract the activeParty JSON data from HTML page content.
  *
- * The VolleyManager app embeds user context in script tags like:
- * window.activeParty = JSON.parse('{"eligibleAttributeValues":[...],...}')
+ * Supports two formats:
+ * 1. Script tag: window.activeParty = JSON.parse('{"eligibleAttributeValues":[...],...}')
+ * 2. Vue component: <main-layout :active-party="$convertFromBackendToFrontend({...})" ...>
  *
  * @param html - The HTML page content
  * @returns The parsed ActiveParty object, or null if parsing fails
@@ -153,25 +167,36 @@ export function extractActivePartyFromHtml(html: string): ActiveParty | null {
   }
 
   try {
-    const match = ACTIVE_PARTY_PATTERN.exec(html);
-    if (!match?.[1]) {
-      // activeParty not found in HTML - this is normal for login pages
-      return null;
+    // Try the script tag pattern first (legacy format)
+    let match = ACTIVE_PARTY_PATTERN.exec(html);
+    if (match?.[1]) {
+      const encodedJson = match[1];
+      const decodedJson = decodeHtmlEntities(encodedJson);
+      const parsed: unknown = JSON.parse(decodedJson);
+
+      const result = ActivePartySchema.safeParse(parsed);
+      if (result.success) {
+        return result.data;
+      }
+      logger.warn("activeParty validation failed (script format):", result.error.issues);
     }
 
-    const encodedJson = match[1];
-    const decodedJson = decodeHtmlEntities(encodedJson);
+    // Try the Vue component attribute pattern (production format)
+    match = VUE_ACTIVE_PARTY_PATTERN.exec(html);
+    if (match?.[1]) {
+      const encodedJson = match[1];
+      const decodedJson = decodeHtmlEntities(encodedJson);
+      const parsed: unknown = JSON.parse(decodedJson);
 
-    const parsed: unknown = JSON.parse(decodedJson);
-
-    // Validate with Zod schema
-    const result = ActivePartySchema.safeParse(parsed);
-    if (!result.success) {
-      logger.warn("activeParty validation failed:", result.error.issues);
-      return null;
+      const result = ActivePartySchema.safeParse(parsed);
+      if (result.success) {
+        return result.data;
+      }
+      logger.warn("activeParty validation failed (Vue format):", result.error.issues);
     }
 
-    return result.data;
+    // activeParty not found in HTML - this is normal for login pages
+    return null;
   } catch (error) {
     logger.warn("Failed to parse activeParty from HTML:", error);
     return null;
