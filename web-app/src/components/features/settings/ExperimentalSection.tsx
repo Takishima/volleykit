@@ -2,7 +2,10 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
-const OCR_POC_URL = "/ocr-poc/";
+// Build OCR POC URL relative to the app's base path
+// In dev: BASE_URL is "/" → "/ocr-poc/"
+// In PR preview: BASE_URL is "/volleykit/pr-123/" → "/volleykit/pr-123/ocr-poc/"
+const OCR_POC_URL = `${import.meta.env.BASE_URL}ocr-poc/`;
 
 export function ExperimentalSection() {
   const { t } = useTranslation();
