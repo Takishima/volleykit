@@ -66,8 +66,8 @@ For each endpoint, we need to capture:
 
 ### Supporting Endpoints
 
-- [ ] Active season: `/api/sportmanager.indoorvolleyball/api\cindoorseason/getActiveIndoorSeason`
-- [ ] Association settings: `/api/indoorvolleyball.refadmin/api\crefereeassociationsettings/getRefereeAssociationSettingsOfActiveParty`
+- [ ] Active season: `/api/sportmanager.indoorvolleyball/api\indoorseason/getActiveIndoorSeason`
+- [ ] Association settings: `/api/indoorvolleyball.refadmin/api\refereeassociationsettings/getRefereeAssociationSettingsOfActiveParty`
 - [ ] Additional compensation: `/api/indoorvolleyball.refadmin/api\cadditionalcompensation`
 
 ## How to Capture

@@ -554,7 +554,7 @@ describe("Path Safety (Traversal Prevention)", () => {
     ).toBe(true);
     expect(
       isPathSafe(
-        "/indoorvolleyball.refadmin/api\\crefereeassociationsettings/get",
+        "/indoorvolleyball.refadmin/api\\refereeassociationsettings/get",
       ),
     ).toBe(true);
   });

@@ -53,25 +53,35 @@ function validateEnv(env: Env): void {
 }
 
 // Paths that should be proxied (matches volleymanager.volleyball.ch API structure)
-// Authentication endpoints (Neos Flow):
+// Authentication endpoints (Neos Flow) - these are NOT prefixed with /api/:
 // - /: Homepage (backend redirects /login here, contains login form)
 // - /login: Login redirect target (redirects to / which has the actual form)
 // - /sportmanager.security/authentication/authenticate: Submit credentials (POST)
 // - /logout: Logout endpoint (GET)
 // - /sportmanager.volleyball/: Dashboard and other authenticated pages
-// API endpoints:
+// API endpoints - these ARE prefixed with /api/:
 // - /indoorvolleyball.refadmin/: Referee admin API (assignments, compensations)
 // - /sportmanager.indoorvolleyball/: Game exchange marketplace API
+// - /sportmanager.core/: Core API (search, countries)
+// - /sportmanager.resourcemanagement/: Resource upload API
+// - /sportmanager.notificationcenter/: Notifications API
 
-// Exact match paths (no subpaths allowed)
+// Exact match paths (no subpaths allowed) - NOT prefixed with /api/
 const ALLOWED_EXACT_PATHS = ["/", "/login", "/logout"];
 
-// Prefix match paths (subpaths allowed)
-const ALLOWED_PREFIX_PATHS = [
+// Prefix match paths that are NOT prefixed with /api/ (auth and dashboard)
+const ALLOWED_PREFIX_PATHS_NO_API = [
   "/sportmanager.security/",
   "/sportmanager.volleyball/",
+];
+
+// Prefix match paths that ARE prefixed with /api/ (API endpoints)
+const ALLOWED_PREFIX_PATHS_WITH_API = [
   "/indoorvolleyball.refadmin/",
   "/sportmanager.indoorvolleyball/",
+  "/sportmanager.core/",
+  "/sportmanager.resourcemanagement/",
+  "/sportmanager.notificationcenter/",
 ];
 
 // The correct authentication endpoint
@@ -87,8 +97,21 @@ function isAllowedPath(pathname: string): boolean {
   if (ALLOWED_EXACT_PATHS.includes(pathname)) {
     return true;
   }
-  // Check prefix matches
-  return ALLOWED_PREFIX_PATHS.some((prefix) => pathname.startsWith(prefix));
+  // Check prefix matches (both with and without /api/ prefix)
+  return (
+    ALLOWED_PREFIX_PATHS_NO_API.some((prefix) => pathname.startsWith(prefix)) ||
+    ALLOWED_PREFIX_PATHS_WITH_API.some((prefix) => pathname.startsWith(prefix))
+  );
+}
+
+/**
+ * Check if a path requires the /api/ prefix when forwarding to the target host.
+ * API endpoints need this prefix, while auth/dashboard endpoints do not.
+ */
+function requiresApiPrefix(pathname: string): boolean {
+  return ALLOWED_PREFIX_PATHS_WITH_API.some((prefix) =>
+    pathname.startsWith(prefix),
+  );
 }
 
 /**
@@ -217,7 +240,7 @@ function isAllowedOrigin(
  * Note: Backslashes (\) are ALLOWED because the TYPO3 Neos/Flow backend uses
  * them as namespace separators in controller paths. For example:
  * - /indoorvolleyball.refadmin/api\refereeconvocation/search
- * - /indoorvolleyball.refadmin/api\crefereeassociationsettings/get
+ * - /indoorvolleyball.refadmin/api\refereeassociationsettings/get
  *
  * The backslash is not a path traversal risk here because:
  * 1. It's used as a literal character in the URL path, not as a directory separator
@@ -454,7 +477,14 @@ export default {
       }
     }
 
-    const targetUrl = new URL(rawPathAndSearch, env.TARGET_HOST);
+    // Prepend /api/ prefix for API endpoints
+    // Note: We check the original pathname, not rawPathAndSearch, because iOS Safari
+    // workaround may have rewritten rawPathAndSearch to AUTH_ENDPOINT
+    const needsApiPrefix = requiresApiPrefix(url.pathname);
+    const finalPath = needsApiPrefix
+      ? `/api${rawPathAndSearch}`
+      : rawPathAndSearch;
+    const targetUrl = new URL(finalPath, env.TARGET_HOST);
 
     // Forward the request
     // If we already read the body for iOS workaround detection, use it directly
