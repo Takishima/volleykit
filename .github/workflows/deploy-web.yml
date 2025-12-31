@@ -5,6 +5,7 @@ on:
     paths:
       - 'web-app/**'
       - 'worker/**'
+      - 'ocr-poc/**'
       - '.github/workflows/deploy-web.yml'
   workflow_dispatch:
 permissions:
@@ -81,6 +82,19 @@ jobs:
           VITE_OJP_API_KEY: ${{ secrets.VITE_OJP_API_KEY }}
       - name: Add .nojekyll for GitHub Pages
         run: touch dist/.nojekyll
+
+      # Build OCR PoC subdirectory app
+      - name: Install OCR PoC dependencies
+        run: npm ci
+        working-directory: ocr-poc
+      - name: Lint OCR PoC
+        run: npm run lint
+        working-directory: ocr-poc
+      - name: Build OCR PoC
+        run: npm run build
+        working-directory: ocr-poc
+        env:
+          VITE_BASE_PATH: ${{ vars.VITE_BASE_PATH || format('/{0}/', github.event.repository.name) }}ocr-poc/
       # Download existing gh-pages content to preserve PR previews
       - name: Download existing gh-pages content
         run: |
@@ -98,6 +112,9 @@ jobs:
           mkdir -p ${{ github.workspace }}/deploy
           # Copy new main site build
           cp -r dist/* ${{ github.workspace }}/deploy/
+          # Copy OCR PoC build to subdirectory
+          mkdir -p ${{ github.workspace }}/deploy/ocr-poc
+          cp -r ${{ github.workspace }}/ocr-poc/dist/* ${{ github.workspace }}/deploy/ocr-poc/
           # Preserve existing PR preview subdirectories (if any)
           if [ -d "${{ github.workspace }}/gh-pages-current" ]; then
             shopt -s nullglob
