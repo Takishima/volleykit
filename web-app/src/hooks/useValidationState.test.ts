@@ -150,7 +150,7 @@ describe("useValidationState", () => {
         wrapper: createWrapper(),
       });
 
-      const newPlayer: RosterPlayer = { id: "new-player", displayName: "New Player", shirtNumber: 1 };
+      const newPlayer: RosterPlayer = { id: "new-player", displayName: "New Player" };
       act(() => {
         result.current.setHomeRosterModifications({
           added: [newPlayer],
@@ -191,7 +191,7 @@ describe("useValidationState", () => {
 
       act(() => {
         result.current.setHomeRosterModifications({
-          added: [{ id: "player", displayName: "Player", shirtNumber: 1 }],
+          added: [{ id: "player", displayName: "Player" }],
           removed: [],
         });
       });
@@ -342,7 +342,7 @@ describe("useValidationState", () => {
       // Make some changes
       act(() => {
         result.current.setHomeRosterModifications({
-          added: [{ id: "p1", displayName: "Player 1", shirtNumber: 1 }],
+          added: [{ id: "p1", displayName: "Player 1" }],
           removed: [],
         });
         result.current.setScorer(mockScorer);
@@ -418,7 +418,7 @@ describe("useValidationState", () => {
       // Make modifications
       act(() => {
         result.current.setHomeRosterModifications({
-          added: [{ id: "new-player", displayName: "New Player", shirtNumber: 1 }],
+          added: [{ id: "new-player", displayName: "New Player" }],
           removed: ["player-1"],
         });
       });
@@ -471,7 +471,7 @@ describe("useValidationState", () => {
 
       act(() => {
         result.current.setHomeRosterModifications({
-          added: [{ id: "player", displayName: "Player", shirtNumber: 1 }],
+          added: [{ id: "player", displayName: "Player" }],
           removed: [],
         });
       });
@@ -505,7 +505,7 @@ describe("useValidationState", () => {
 
       act(() => {
         result.current.setHomeRosterModifications({
-          added: [{ id: "player", displayName: "Player", shirtNumber: 1 }],
+          added: [{ id: "player", displayName: "Player" }],
           removed: [],
         });
       });

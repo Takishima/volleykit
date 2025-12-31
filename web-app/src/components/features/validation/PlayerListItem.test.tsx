@@ -6,19 +6,16 @@ import type { RosterPlayer } from "@/hooks/useNominationList";
 function createMockPlayer(overrides: Partial<RosterPlayer> = {}): RosterPlayer {
   return {
     id: "player-1",
-    shirtNumber: 7,
     displayName: "John Doe",
     licenseCategory: "SEN",
-    isCaptain: false,
-    isLibero: false,
     isNewlyAdded: false,
     ...overrides,
   };
 }
 
 describe("PlayerListItem", () => {
-  it("renders player number and name", () => {
-    const player = createMockPlayer({ shirtNumber: 12, displayName: "Max" });
+  it("renders player name", () => {
+    const player = createMockPlayer({ displayName: "Max" });
 
     render(
       <PlayerListItem
@@ -29,7 +26,6 @@ describe("PlayerListItem", () => {
       />,
     );
 
-    expect(screen.getByText("#12")).toBeInTheDocument();
     expect(screen.getByText("Max")).toBeInTheDocument();
   });
 
@@ -46,36 +42,6 @@ describe("PlayerListItem", () => {
     );
 
     expect(screen.getByText("JUN")).toBeInTheDocument();
-  });
-
-  it("shows captain indicator when isCaptain is true", () => {
-    const player = createMockPlayer({ isCaptain: true });
-
-    render(
-      <PlayerListItem
-        player={player}
-        isMarkedForRemoval={false}
-        onRemove={vi.fn()}
-        onUndoRemoval={vi.fn()}
-      />,
-    );
-
-    expect(screen.getByText("C")).toBeInTheDocument();
-  });
-
-  it("shows libero indicator when isLibero is true", () => {
-    const player = createMockPlayer({ isLibero: true });
-
-    render(
-      <PlayerListItem
-        player={player}
-        isMarkedForRemoval={false}
-        onRemove={vi.fn()}
-        onUndoRemoval={vi.fn()}
-      />,
-    );
-
-    expect(screen.getByText("L")).toBeInTheDocument();
   });
 
   it("shows newly added badge when isNewlyAdded is true", () => {
@@ -164,8 +130,6 @@ describe("PlayerListItem", () => {
 
   it("hides badges when marked for removal", () => {
     const player = createMockPlayer({
-      isCaptain: true,
-      isLibero: false,
       licenseCategory: "SEN",
     });
 
@@ -178,37 +142,6 @@ describe("PlayerListItem", () => {
       />,
     );
 
-    expect(screen.queryByText("C")).not.toBeInTheDocument();
     expect(screen.queryByText("SEN")).not.toBeInTheDocument();
-  });
-
-  it("does not show captain indicator when not captain", () => {
-    const player = createMockPlayer({ isCaptain: false });
-
-    render(
-      <PlayerListItem
-        player={player}
-        isMarkedForRemoval={false}
-        onRemove={vi.fn()}
-        onUndoRemoval={vi.fn()}
-      />,
-    );
-
-    expect(screen.queryByText("C")).not.toBeInTheDocument();
-  });
-
-  it("does not show libero indicator when not libero", () => {
-    const player = createMockPlayer({ isLibero: false });
-
-    render(
-      <PlayerListItem
-        player={player}
-        isMarkedForRemoval={false}
-        onRemove={vi.fn()}
-        onUndoRemoval={vi.fn()}
-      />,
-    );
-
-    expect(screen.queryByText("L")).not.toBeInTheDocument();
   });
 });
