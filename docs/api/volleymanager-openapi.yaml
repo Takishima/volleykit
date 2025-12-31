@@ -304,7 +304,7 @@ paths:
           description: Operation successful
         '401':
           $ref: '#/components/responses/Unauthorized'
-  /sportmanager.indoorvolleyball/api\cindoorseason/getActiveIndoorSeason:
+  /sportmanager.indoorvolleyball/api\indoorseason/getActiveIndoorSeason:
     get:
       tags: [Settings]
       summary: Get active indoor season
@@ -318,7 +318,7 @@ paths:
                 $ref: '#/components/schemas/Season'
         '401':
           $ref: '#/components/responses/Unauthorized'
-  /indoorvolleyball.refadmin/api\crefereeassociationsettings/getRefereeAssociationSettingsOfActiveParty:
+  /indoorvolleyball.refadmin/api\refereeassociationsettings/getRefereeAssociationSettingsOfActiveParty:
     get:
       tags: [Settings]
       summary: Get referee association settings

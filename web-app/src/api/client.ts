@@ -275,13 +275,13 @@ export const api = {
   // Settings
   async getAssociationSettings(): Promise<Schemas["AssociationSettings"]> {
     return apiRequest(
-      "/indoorvolleyball.refadmin/api%5ccrefereeassociationsettings/getRefereeAssociationSettingsOfActiveParty",
+      "/indoorvolleyball.refadmin/api%5crefereeassociationsettings/getRefereeAssociationSettingsOfActiveParty",
     );
   },
 
   async getActiveSeason(): Promise<Schemas["Season"]> {
     return apiRequest(
-      "/sportmanager.indoorvolleyball/api%5ccindoorseason/getActiveIndoorSeason",
+      "/sportmanager.indoorvolleyball/api%5cindoorseason/getActiveIndoorSeason",
     );
   },
 

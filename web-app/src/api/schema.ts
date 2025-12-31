@@ -193,7 +193,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/sportmanager.indoorvolleyball/api\\cindoorseason/getActiveIndoorSeason": {
+    "/sportmanager.indoorvolleyball/api\\indoorseason/getActiveIndoorSeason": {
         parameters: {
             query?: never;
             header?: never;
@@ -210,7 +210,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/indoorvolleyball.refadmin/api\\crefereeassociationsettings/getRefereeAssociationSettingsOfActiveParty": {
+    "/indoorvolleyball.refadmin/api\\refereeassociationsettings/getRefereeAssociationSettingsOfActiveParty": {
         parameters: {
             query?: never;
             header?: never;

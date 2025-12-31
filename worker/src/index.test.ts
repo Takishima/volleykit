@@ -53,15 +53,22 @@ function isAllowedOrigin(
   );
 }
 
-// Exact match paths (no subpaths allowed)
+// Exact match paths (no subpaths allowed) - NOT prefixed with /api/
 const ALLOWED_EXACT_PATHS = ["/", "/login", "/logout"];
 
-// Prefix match paths (subpaths allowed)
-const ALLOWED_PREFIX_PATHS = [
+// Prefix match paths that are NOT prefixed with /api/ (auth and dashboard)
+const ALLOWED_PREFIX_PATHS_NO_API = [
   "/sportmanager.security/",
   "/sportmanager.volleyball/",
+];
+
+// Prefix match paths that ARE prefixed with /api/ (API endpoints)
+const ALLOWED_PREFIX_PATHS_WITH_API = [
   "/indoorvolleyball.refadmin/",
   "/sportmanager.indoorvolleyball/",
+  "/sportmanager.core/",
+  "/sportmanager.resourcemanagement/",
+  "/sportmanager.notificationcenter/",
 ];
 
 function isAllowedPath(pathname: string): boolean {
@@ -69,8 +76,21 @@ function isAllowedPath(pathname: string): boolean {
   if (ALLOWED_EXACT_PATHS.includes(pathname)) {
     return true;
   }
-  // Check prefix matches
-  return ALLOWED_PREFIX_PATHS.some((prefix) => pathname.startsWith(prefix));
+  // Check prefix matches (both with and without /api/ prefix)
+  return (
+    ALLOWED_PREFIX_PATHS_NO_API.some((prefix) => pathname.startsWith(prefix)) ||
+    ALLOWED_PREFIX_PATHS_WITH_API.some((prefix) => pathname.startsWith(prefix))
+  );
+}
+
+/**
+ * Check if a path requires the /api/ prefix when forwarding to the target host.
+ * API endpoints need this prefix, while auth/dashboard endpoints do not.
+ */
+function requiresApiPrefix(pathname: string): boolean {
+  return ALLOWED_PREFIX_PATHS_WITH_API.some((prefix) =>
+    pathname.startsWith(prefix),
+  );
 }
 
 function rewriteCookie(cookie: string): string {
@@ -287,6 +307,76 @@ describe("Path Filtering", () => {
     it("rejects paths that look similar but are not allowed", () => {
       expect(isAllowedPath("/loginpage")).toBe(false); // not exactly /login
       expect(isAllowedPath("/logoutuser")).toBe(false); // not exactly /logout
+    });
+
+    it("allows core API paths", () => {
+      expect(isAllowedPath("/sportmanager.core/api/test")).toBe(true);
+    });
+
+    it("allows resource management API paths", () => {
+      expect(isAllowedPath("/sportmanager.resourcemanagement/api/upload")).toBe(
+        true,
+      );
+    });
+
+    it("allows notification center API paths", () => {
+      expect(
+        isAllowedPath("/sportmanager.notificationcenter/api/notifications"),
+      ).toBe(true);
+    });
+  });
+
+  describe("requiresApiPrefix", () => {
+    it("returns true for referee admin API paths", () => {
+      expect(requiresApiPrefix("/indoorvolleyball.refadmin/api/test")).toBe(
+        true,
+      );
+    });
+
+    it("returns true for indoor volleyball API paths", () => {
+      expect(
+        requiresApiPrefix("/sportmanager.indoorvolleyball/api/game"),
+      ).toBe(true);
+    });
+
+    it("returns true for core API paths", () => {
+      expect(requiresApiPrefix("/sportmanager.core/api/search")).toBe(true);
+    });
+
+    it("returns true for resource management API paths", () => {
+      expect(
+        requiresApiPrefix("/sportmanager.resourcemanagement/api/upload"),
+      ).toBe(true);
+    });
+
+    it("returns true for notification center API paths", () => {
+      expect(
+        requiresApiPrefix("/sportmanager.notificationcenter/api/test"),
+      ).toBe(true);
+    });
+
+    it("returns false for authentication endpoint", () => {
+      expect(
+        requiresApiPrefix("/sportmanager.security/authentication/authenticate"),
+      ).toBe(false);
+    });
+
+    it("returns false for dashboard path", () => {
+      expect(requiresApiPrefix("/sportmanager.volleyball/main/dashboard")).toBe(
+        false,
+      );
+    });
+
+    it("returns false for login path", () => {
+      expect(requiresApiPrefix("/login")).toBe(false);
+    });
+
+    it("returns false for logout path", () => {
+      expect(requiresApiPrefix("/logout")).toBe(false);
+    });
+
+    it("returns false for root path", () => {
+      expect(requiresApiPrefix("/")).toBe(false);
     });
   });
 });
@@ -554,7 +644,7 @@ describe("Path Safety (Traversal Prevention)", () => {
     ).toBe(true);
     expect(
       isPathSafe(
-        "/indoorvolleyball.refadmin/api\\crefereeassociationsettings/get",
+        "/indoorvolleyball.refadmin/api\\refereeassociationsettings/get",
       ),
     ).toBe(true);
   });
