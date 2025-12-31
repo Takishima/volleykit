@@ -427,6 +427,41 @@ describe("useAuthStore", () => {
       expect(useAuthStore.getState().csrfToken).toBe("renewed-csrf-token");
     });
 
+    it("preserves existing occupations when dashboard has no activeParty data", async () => {
+      // Set up state with existing occupations from a previous session
+      const existingOccupations = [
+        { id: "ref-1", type: "referee" as const, associationCode: "SV" },
+        { id: "ref-2", type: "referee" as const, associationCode: "SVRZ" },
+        { id: "ref-3", type: "referee" as const, associationCode: "SVRBA" },
+      ];
+      useAuthStore.setState({
+        status: "authenticated",
+        user: {
+          id: "user-1",
+          firstName: "Test",
+          lastName: "User",
+          occupations: existingOccupations,
+        },
+        activeOccupationId: "ref-1",
+      });
+
+      // Mock dashboard response WITHOUT activeParty data (just CSRF token)
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: () => Promise.resolve(createDashboardHtml("new-csrf-token")),
+      });
+
+      const result = await useAuthStore.getState().checkSession();
+
+      expect(result).toBe(true);
+      const state = useAuthStore.getState();
+      // Occupations should be preserved, not wiped out
+      expect(state.user?.occupations).toHaveLength(3);
+      expect(state.user?.occupations).toEqual(existingOccupations);
+      // Active occupation ID should also be preserved
+      expect(state.activeOccupationId).toBe("ref-1");
+    });
+
     it("returns false and sets idle on failed API call", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,

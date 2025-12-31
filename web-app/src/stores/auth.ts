@@ -83,6 +83,10 @@ const SESSION_CHECK_TIMEOUT_MS = 10_000;
  * Uses groupedEligibleAttributeValues as the primary source for associations.
  * Falls back to eligibleAttributeValues if groupedEligibleAttributeValues is empty,
  * which can happen on some pages or with certain user configurations.
+ *
+ * IMPORTANT: Preserves existing occupations if new parsing returns empty.
+ * This prevents the association dropdown from disappearing when loading a page
+ * that doesn't have complete activeParty data embedded in the HTML.
  */
 function deriveUserWithOccupations(
   activeParty: {
@@ -98,7 +102,16 @@ function deriveUserWithOccupations(
       ? activeParty.groupedEligibleAttributeValues
       : activeParty?.eligibleAttributeValues ?? null;
 
-  const occupations = parseOccupationsFromActiveParty(attributeValues);
+  const parsedOccupations = parseOccupationsFromActiveParty(attributeValues);
+
+  // Preserve existing occupations if parsing returns empty
+  // This prevents the dropdown from disappearing when navigating to pages
+  // that don't have complete activeParty data
+  const occupations =
+    parsedOccupations.length > 0
+      ? parsedOccupations
+      : (currentUser?.occupations ?? []);
+
   const activeOccupationId = currentActiveOccupationId ?? occupations[0]?.id ?? null;
 
   const user = currentUser
