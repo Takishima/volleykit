@@ -5614,9 +5614,6 @@ components:
           format: uuid
         indoorPlayer:
           $ref: '#/components/schemas/IndoorPlayer'
-        shirtNumber:
-          type: integer
-          description: Player's shirt number for the game
         isCaptain:
           type: boolean
         isLibero:

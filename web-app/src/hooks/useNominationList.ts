@@ -5,7 +5,7 @@ import { useDemoStore } from "@/stores/demo";
 
 export interface RosterPlayer {
   id: string;
-  shirtNumber: number;
+  shirtNumber?: number;
   displayName: string;
   firstName?: string;
   lastName?: string;
@@ -59,7 +59,7 @@ function transformNominationToPlayer(
   const displayName = buildDisplayName(nomination);
   const person = nomination.indoorPlayer?.person;
 
-  if (!id || shirtNumber === undefined || !displayName) {
+  if (!id || !displayName) {
     return null;
   }
 
@@ -85,7 +85,7 @@ function transformNominationsToPlayers(
   return nominations
     .map(transformNominationToPlayer)
     .filter((player): player is RosterPlayer => player !== null)
-    .sort((a, b) => a.shirtNumber - b.shirtNumber);
+    .sort((a, b) => (a.shirtNumber ?? Infinity) - (b.shirtNumber ?? Infinity));
 }
 
 /**

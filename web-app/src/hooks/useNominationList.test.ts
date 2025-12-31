@@ -140,6 +140,70 @@ describe("useNominationList", () => {
       });
     });
 
+    it("handles players without shirtNumber", () => {
+      const listWithoutShirtNumbers: NominationList = {
+        __identity: "test-nomlist-1",
+        game: { __identity: "test-game-1" },
+        team: { __identity: "test-team-1", displayName: "Test Team" },
+        closed: false,
+        isClosedForTeam: false,
+        indoorPlayerNominations: [
+          {
+            __identity: "test-nom-1",
+            // No shirtNumber - API doesn't return this field
+            isCaptain: true,
+            isLibero: false,
+            indoorPlayer: {
+              __identity: "test-player-1",
+              person: {
+                __identity: "test-person-1",
+                firstName: "John",
+                lastName: "Doe",
+                displayName: "John Doe",
+              },
+            },
+          },
+          {
+            __identity: "test-nom-2",
+            // No shirtNumber - API doesn't return this field
+            isCaptain: false,
+            isLibero: true,
+            indoorPlayer: {
+              __identity: "test-player-2",
+              person: {
+                __identity: "test-person-2",
+                firstName: "Jane",
+                lastName: "Smith",
+                displayName: "Jane Smith",
+              },
+            },
+          },
+        ],
+      };
+
+      vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
+        selector({
+          nominationLists: {
+            "test-game-1": {
+              home: listWithoutShirtNumbers,
+              away: listWithoutShirtNumbers,
+            },
+          },
+        } as unknown as ReturnType<typeof demoStore.useDemoStore.getState>),
+      );
+
+      const { result } = renderHook(() =>
+        useNominationList({ gameId: "test-game-1", team: "home" }),
+      );
+
+      // Should include all players even without shirtNumber
+      expect(result.current.players).toHaveLength(2);
+      expect(result.current.players[0]!.displayName).toBe("John Doe");
+      expect(result.current.players[0]!.shirtNumber).toBeUndefined();
+      expect(result.current.players[1]!.displayName).toBe("Jane Smith");
+      expect(result.current.players[1]!.shirtNumber).toBeUndefined();
+    });
+
     it("returns empty data when game not found in demo mode", () => {
       vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
         selector({

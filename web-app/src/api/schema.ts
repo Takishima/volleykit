@@ -3794,8 +3794,6 @@ export interface components {
             /** Format: uuid */
             __identity?: string;
             indoorPlayer?: components["schemas"]["IndoorPlayer"];
-            /** @description Player's shirt number for the game */
-            shirtNumber?: number;
             isCaptain?: boolean;
             isLibero?: boolean;
             /** @description Whether the player is eligible to play in this game */
