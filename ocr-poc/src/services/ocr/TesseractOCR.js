@@ -111,24 +111,23 @@ const STATUS_CORRECTIONS = {
   LFR: 'LFP',
   UFP: 'LFP',
   IFP: 'LFP',
+  LP: 'LFP',
   'L.FP': 'LFP',
+  LrFP: 'LFP',
   // NOT variations
   NÖT: 'NOT',
   NOI: 'NOT',
   N0T: 'NOT',
+  woT: 'NOT',
+  wor: 'NOT',
   'N.OT': 'NOT',
-  // Single character errors
-  Pr: 'LFP',
-  iFF: 'LFP',
-  te: 'LFP',
-  im: 'LFP',
-  ip: 'LFP',
-  ire: 'LFP',
-  vr: 'LFP',
-  gu: 'LFP',
-  Le: 'LFP',
-  FF: 'LFP',
 };
+
+/**
+ * Patterns that look like garbled status codes (to be removed or replaced)
+ * These appear at the end of lines and are typically 1-4 characters
+ */
+const GARBLED_STATUS_PATTERN = /\s+(?:ur|ir|mr|Fr|vP|wur|we|weil?|"P|LP|LrFP|vPi?\d*|\|?\d*|[a-z]{1,3})$/gi;
 
 /**
  * Post-process OCR text to fix common errors
@@ -155,6 +154,27 @@ function postProcessText(text) {
   result = result.replace(/Name\s+o[rf]t?n?e?p?i?a?y?r?/gi, 'Name of the player');
 
   return result;
+}
+
+/**
+ * Clean up a player line by removing garbled status codes
+ * and normalizing the format
+ * @param {string} line - Raw line text
+ * @returns {string} Cleaned line
+ */
+function cleanPlayerLine(line) {
+  let cleaned = line;
+
+  // Remove common garbled status codes at end of line
+  cleaned = cleaned.replace(GARBLED_STATUS_PATTERN, '');
+
+  // Remove pipe characters often misread
+  cleaned = cleaned.replace(/\|/g, '');
+
+  // Clean up multiple spaces
+  cleaned = cleaned.replace(/\s{2,}/g, ' ').trim();
+
+  return cleaned;
 }
 
 /**
@@ -343,8 +363,10 @@ export class TesseractOCR {
               lineWords.push(wordData);
             }
             // Apply post-processing to line text
+            // First clean up garbled status codes, then fix remaining errors
+            const cleanedLine = cleanPlayerLine(postProcessText(line.text));
             lines.push({
-              text: postProcessText(line.text),
+              text: cleanedLine,
               confidence: line.confidence,
               words: lineWords,
             });
@@ -355,8 +377,14 @@ export class TesseractOCR {
 
     this.#reportProgress('recognizing', 1);
 
+    // Clean up the full text - apply line cleaning to each line
+    const cleanedFullText = result.data.text
+      .split('\n')
+      .map((line) => cleanPlayerLine(postProcessText(line)))
+      .join('\n');
+
     return {
-      fullText: postProcessText(result.data.text),
+      fullText: cleanedFullText,
       lines,
       words,
     };
