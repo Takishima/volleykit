@@ -34,6 +34,9 @@ export function LoginPage() {
   const [username, setUsername] = useState("");
   // Use ref for password to minimize memory exposure (avoids re-renders with password in state)
   const passwordRef = useRef<HTMLInputElement>(null);
+  // Ref to prevent race condition with double submission
+  // State updates are async, so we need a synchronous guard
+  const isSubmittingRef = useRef(false);
 
   const isLoading = status === "loading";
 
@@ -65,16 +68,22 @@ export function LoginPage() {
   }
 
   async function performLogin() {
-    if (isLoading) return; // Prevent double submission
+    // Use ref for synchronous double-submit prevention (state updates are async)
+    if (isSubmittingRef.current || isLoading) return;
+    isSubmittingRef.current = true;
 
-    const password = passwordRef.current?.value || "";
-    const success = await login(username, password);
-    if (success) {
-      // Clear password field after successful login
-      if (passwordRef.current) {
-        passwordRef.current.value = "";
+    try {
+      const password = passwordRef.current?.value || "";
+      const success = await login(username, password);
+      if (success) {
+        // Clear password field after successful login
+        if (passwordRef.current) {
+          passwordRef.current.value = "";
+        }
+        navigate("/");
       }
-      navigate("/");
+    } finally {
+      isSubmittingRef.current = false;
     }
   }
 

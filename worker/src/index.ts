@@ -437,7 +437,7 @@ export default {
         requestBody = await clonedRequest.text();
 
         if (hasAuthCredentials(requestBody)) {
-          console.log("iOS auth workaround: Rewriting POST /login to auth endpoint");
+          // Rewrite to correct auth endpoint (iOS Safari workaround)
           rawPathAndSearch = AUTH_ENDPOINT;
           requestBody = transformAuthFormData(requestBody);
         }
@@ -446,7 +446,7 @@ export default {
         // or with postData attached to GET (invalid HTTP, but Safari does it)
         const queryBody = url.search.slice(1); // Remove leading '?'
         if (hasAuthCredentials(queryBody)) {
-          console.log("iOS auth workaround: Converting GET /login to POST auth endpoint");
+          // Convert GET to POST and rewrite to correct auth endpoint (iOS Safari workaround)
           rawPathAndSearch = AUTH_ENDPOINT;
           requestBody = transformAuthFormData(queryBody);
           methodOverride = "POST";
