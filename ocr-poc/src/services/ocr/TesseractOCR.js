@@ -57,8 +57,11 @@ const CDN_CORE = 'https://cdn.jsdelivr.net/npm/tesseract.js-core@7';
  */
 const CDN_LANG = 'https://tessdata.projectnaptha.com/4.0.0_best';
 
-/** Language codes for Swiss names (German + French + Italian) */
-const LANGUAGES = 'deu+fra+ita';
+/**
+ * Language code - using German only to reduce ambiguity
+ * Multiple languages can confuse OCR on short text like "LFP", "NOT"
+ */
+const LANGUAGES = 'deu';
 
 /**
  * Page Segmentation Modes (PSM) - see Tesseract documentation

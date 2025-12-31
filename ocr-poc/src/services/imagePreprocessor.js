@@ -200,16 +200,16 @@ export async function preprocessImage(imageBlob, options = {}) {
 
 /**
  * Preprocess options optimized for printed/electronic scoresheets
- * Minimal processing - electronic sheets are already high contrast
- * Over-processing can degrade quality on clean printed text
+ * Light processing - grayscale helps Tesseract focus on text
+ * Photos of screens need some enhancement due to moiré/reflections
  * @type {PreprocessOptions}
  */
 export const ELECTRONIC_PRESET = {
-  grayscale: false,
-  enhanceContrast: false,
+  grayscale: true,
+  enhanceContrast: true,
   binarize: false,
-  contrastFactor: 1.0,
-  brightnessDelta: 0,
+  contrastFactor: 1.2,
+  brightnessDelta: 5,
 };
 
 /**
