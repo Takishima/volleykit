@@ -286,6 +286,13 @@ export const api = {
   },
 
   // Nominations
+  /**
+   * Fetches the nomination list for a single team.
+   *
+   * @deprecated Prefer using `getGameWithScoresheet()` which fetches both team rosters
+   * in a single API call. This method is kept for backwards compatibility and as a
+   * fallback when prefetched data is not available.
+   */
   async getNominationList(
     gameId: string,
     team: "home" | "away",
