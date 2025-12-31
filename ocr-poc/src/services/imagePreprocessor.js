@@ -101,10 +101,14 @@ function applyBinarization(imageData) {
 
   for (let t = 0; t < 256; t++) {
     wB += histogram[t];
-    if (wB === 0) continue;
+    if (wB === 0) {
+      continue;
+    }
 
     const wF = totalPixels - wB;
-    if (wF === 0) break;
+    if (wF === 0) {
+      break;
+    }
 
     sumB += t * histogram[t];
     const mB = sumB / wB;
@@ -138,55 +142,60 @@ export async function preprocessImage(imageBlob, options = {}) {
   // Load image
   const imageBitmap = await loadImage(imageBlob);
 
-  // Create canvas with image dimensions
-  const canvas = document.createElement('canvas');
-  canvas.width = imageBitmap.width;
-  canvas.height = imageBitmap.height;
+  try {
+    // Create canvas with image dimensions
+    const canvas = document.createElement('canvas');
+    canvas.width = imageBitmap.width;
+    canvas.height = imageBitmap.height;
 
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  if (!ctx) {
-    throw new Error('Could not get canvas context');
-  }
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) {
+      throw new Error('Could not get canvas context');
+    }
 
-  // Draw original image
-  ctx.drawImage(imageBitmap, 0, 0);
+    // Draw original image
+    ctx.drawImage(imageBitmap, 0, 0);
 
-  // Get image data for manipulation
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    // Get image data for manipulation
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-  // Apply preprocessing steps in order
-  if (opts.grayscale) {
-    applyGrayscale(imageData);
-  }
-
-  if (opts.enhanceContrast) {
-    applyContrastBrightness(imageData, opts.contrastFactor, opts.brightnessDelta);
-  }
-
-  if (opts.binarize) {
-    // Note: binarization works best on grayscale images
-    if (!opts.grayscale) {
+    // Apply preprocessing steps in order
+    if (opts.grayscale) {
       applyGrayscale(imageData);
     }
-    applyBinarization(imageData);
+
+    if (opts.enhanceContrast) {
+      applyContrastBrightness(imageData, opts.contrastFactor, opts.brightnessDelta);
+    }
+
+    if (opts.binarize) {
+      // Note: binarization works best on grayscale images
+      if (!opts.grayscale) {
+        applyGrayscale(imageData);
+      }
+      applyBinarization(imageData);
+    }
+
+    // Put processed data back
+    ctx.putImageData(imageData, 0, 0);
+
+    // Convert to blob (use PNG for lossless quality after processing)
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('Failed to create blob from canvas'));
+          }
+        },
+        'image/png'
+      );
+    });
+  } finally {
+    // Release ImageBitmap memory to prevent memory leaks
+    imageBitmap.close();
   }
-
-  // Put processed data back
-  ctx.putImageData(imageData, 0, 0);
-
-  // Convert to blob (use PNG for lossless quality after processing)
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (blob) {
-          resolve(blob);
-        } else {
-          reject(new Error('Failed to create blob from canvas'));
-        }
-      },
-      'image/png'
-    );
-  });
 }
 
 /**

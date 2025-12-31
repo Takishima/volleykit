@@ -100,34 +100,39 @@ function getStatusMessage(status) {
 async function addBorderPadding(imageBlob, padding) {
   const imageBitmap = await createImageBitmap(imageBlob);
 
-  const canvas = document.createElement('canvas');
-  canvas.width = imageBitmap.width + padding * 2;
-  canvas.height = imageBitmap.height + padding * 2;
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = imageBitmap.width + padding * 2;
+    canvas.height = imageBitmap.height + padding * 2;
 
-  const ctx = canvas.getContext('2d');
-  if (!ctx) {
-    throw new Error('Could not get canvas context');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      throw new Error('Could not get canvas context');
+    }
+
+    // Fill with white background
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw image centered with padding
+    ctx.drawImage(imageBitmap, padding, padding);
+
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('Failed to create blob'));
+          }
+        },
+        'image/png'
+      );
+    });
+  } finally {
+    // Release ImageBitmap memory to prevent memory leaks
+    imageBitmap.close();
   }
-
-  // Fill with white background
-  ctx.fillStyle = 'white';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  // Draw image centered with padding
-  ctx.drawImage(imageBitmap, padding, padding);
-
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (blob) {
-          resolve(blob);
-        } else {
-          reject(new Error('Failed to create blob'));
-        }
-      },
-      'image/png'
-    );
-  });
 }
 
 export class TesseractOCR {
