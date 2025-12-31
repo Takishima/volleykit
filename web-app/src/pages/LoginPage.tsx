@@ -61,6 +61,11 @@ export function LoginPage() {
     // bypassing React's event handling in some cases
     e.preventDefault();
     e.stopPropagation();
+    await performLogin();
+  }
+
+  async function performLogin() {
+    if (isLoading) return; // Prevent double submission
 
     const password = passwordRef.current?.value || "";
     const success = await login(username, password);
@@ -70,6 +75,15 @@ export function LoginPage() {
         passwordRef.current.value = "";
       }
       navigate("/");
+    }
+  }
+
+  // Handle Enter key on password field to trigger login
+  // This provides keyboard submit without relying on form submission
+  function handlePasswordKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter" && !isLoading) {
+      e.preventDefault();
+      performLogin();
     }
   }
 
@@ -112,7 +126,8 @@ export function LoginPage() {
 
         {/* Login form */}
         <div className="card p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          {/* method="post" is defensive fallback if native submission somehow occurs */}
+          <form onSubmit={handleSubmit} method="post" className="space-y-6">
             <div>
               <label
                 htmlFor="username"
@@ -148,6 +163,7 @@ export function LoginPage() {
                 autoComplete="current-password"
                 required
                 disabled={isLoading}
+                onKeyDown={handlePasswordKeyDown}
                 className="input"
               />
             </div>
@@ -161,10 +177,11 @@ export function LoginPage() {
             )}
 
             <Button
-              type="submit"
+              type="button"
               variant="primary"
               fullWidth
               loading={isLoading}
+              onClick={performLogin}
               data-testid="login-button"
             >
               {isLoading ? t("auth.loggingIn") : t("auth.loginButton")}

@@ -418,26 +418,39 @@ export default {
     let rawPathAndSearch =
       pathStart >= 0 ? requestUrlStr.substring(pathStart) : "/";
 
-    // iOS Safari workaround: Detect POST to /login with auth credentials
-    // iOS password autofill can trigger native form submission to /login
-    // instead of the correct auth endpoint. This rewrites such requests.
-    // See: https://bugs.webkit.org/show_bug.cgi?id=XXXXX (iOS autofill behavior)
+    // iOS Safari workaround: Detect requests to /login with auth credentials
+    // iOS Safari can trigger form submission with incorrect method (GET instead of POST)
+    // or send to wrong endpoint. This rewrites such requests to the correct auth endpoint.
     let requestBody: string | null = null;
+    let methodOverride: string | null = null;
     if (
-      request.method === "POST" &&
       url.pathname === "/login" &&
-      request.headers.get("Content-Type")?.includes("application/x-www-form-urlencoded")
+      (request.method === "POST" || request.method === "GET")
     ) {
-      // Clone the request to read the body (body can only be read once)
-      const clonedRequest = request.clone();
-      requestBody = await clonedRequest.text();
+      // Check for auth credentials in body (POST) or query params (GET)
+      if (
+        request.method === "POST" &&
+        request.headers.get("Content-Type")?.includes("application/x-www-form-urlencoded")
+      ) {
+        // Clone the request to read the body (body can only be read once)
+        const clonedRequest = request.clone();
+        requestBody = await clonedRequest.text();
 
-      if (hasAuthCredentials(requestBody)) {
-        // Rewrite path to the correct authentication endpoint
-        console.log("iOS auth workaround: Rewriting POST /login to auth endpoint");
-        rawPathAndSearch = AUTH_ENDPOINT + url.search;
-        // Transform form fields if they're in simple HTML format
-        requestBody = transformAuthFormData(requestBody);
+        if (hasAuthCredentials(requestBody)) {
+          console.log("iOS auth workaround: Rewriting POST /login to auth endpoint");
+          rawPathAndSearch = AUTH_ENDPOINT;
+          requestBody = transformAuthFormData(requestBody);
+        }
+      } else if (request.method === "GET" && url.search) {
+        // iOS Safari bug: form may submit as GET with credentials in query string
+        // or with postData attached to GET (invalid HTTP, but Safari does it)
+        const queryBody = url.search.slice(1); // Remove leading '?'
+        if (hasAuthCredentials(queryBody)) {
+          console.log("iOS auth workaround: Converting GET /login to POST auth endpoint");
+          rawPathAndSearch = AUTH_ENDPOINT;
+          requestBody = transformAuthFormData(queryBody);
+          methodOverride = "POST";
+        }
       }
     }
 
@@ -445,12 +458,18 @@ export default {
 
     // Forward the request
     // If we already read the body for iOS workaround detection, use it directly
+    // methodOverride is used when converting GET to POST for iOS auth workaround
     const proxyRequest = new Request(targetUrl.toString(), {
-      method: request.method,
+      method: methodOverride ?? request.method,
       headers: request.headers,
       body: requestBody ?? request.body,
       redirect: "manual", // Handle redirects manually to preserve cookies
     });
+
+    // If we're overriding to POST, ensure Content-Type is set
+    if (methodOverride === "POST" && requestBody) {
+      proxyRequest.headers.set("Content-Type", "application/x-www-form-urlencoded");
+    }
 
     // Remove headers that shouldn't be forwarded
     proxyRequest.headers.delete("Host");
