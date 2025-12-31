@@ -34,6 +34,37 @@ export default defineConfig({
               },
             },
           },
+          {
+            // Cache Tesseract.js assets from jsDelivr CDN (worker, core, WASM)
+            urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/npm\/tesseract\.js/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'tesseract-js-cdn',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: SECONDS_PER_DAY * 30, // Cache for 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            // Cache Tesseract traineddata files (language models)
+            urlPattern:
+              /^https:\/\/cdn\.jsdelivr\.net\/npm\/@aspect-build\/aspect_rules_tesseract.*\.traineddata/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'tesseract-traineddata',
+              expiration: {
+                maxEntries: 5,
+                maxAgeSeconds: SECONDS_PER_DAY * 30, // Cache for 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
         ],
       },
       manifest: {
