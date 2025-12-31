@@ -503,31 +503,4 @@ describe("hasMultipleAssociations", () => {
     expect(hasMultipleAssociations(attributeValues)).toBe(false);
   });
 
-  // Backward compatibility test for old data without type field
-  it("returns false for old data format without type field", () => {
-    const attributeValues: AttributeValue[] = [
-      {
-        __identity: "attr-1",
-        attributeIdentifier: "Indoorvolleyball.RefAdmin:AbstractAssociation",
-        roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
-        // No type field - old format
-        inflatedValue: {
-          __identity: "assoc-1",
-          name: "Swiss Volley",
-        },
-      },
-      {
-        __identity: "attr-2",
-        attributeIdentifier: "Indoorvolleyball.RefAdmin:AbstractAssociation",
-        roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
-        // No type field - old format
-        inflatedValue: {
-          __identity: "assoc-2",
-          name: "SVRZ",
-        },
-      },
-    ];
-    // Without type field, filterRefereeAssociations will filter them out
-    expect(hasMultipleAssociations(attributeValues)).toBe(false);
-  });
 });

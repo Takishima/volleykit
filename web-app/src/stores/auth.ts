@@ -17,6 +17,16 @@ import {
 import { useDemoStore } from "./demo";
 import { useSettingsStore, DEMO_HOME_LOCATION } from "./settings";
 
+/**
+ * Storage version for the auth store.
+ * Increment this to invalidate all cached auth state and force re-login.
+ *
+ * Version history:
+ * - 1: Initial version (pre-groupedEligibleAttributeValues)
+ * - 2: Added groupedEligibleAttributeValues for multi-association detection
+ */
+const AUTH_STORE_VERSION = 2;
+
 export type AuthStatus = "idle" | "loading" | "authenticated" | "error";
 
 export interface UserProfile {
@@ -330,14 +340,13 @@ export const useAuthStore = create<AuthState>()(
       },
 
       hasMultipleAssociations: () => {
-        // Use groupedEligibleAttributeValues which contains all associations
-        // Fall back to eligibleAttributeValues for backwards compatibility
-        const attributeValues = get().groupedEligibleAttributeValues ?? get().eligibleAttributeValues;
-        return hasMultipleAssociations(attributeValues);
+        // Use groupedEligibleAttributeValues which contains all user associations
+        return hasMultipleAssociations(get().groupedEligibleAttributeValues);
       },
     }),
     {
       name: "volleykit-auth",
+      version: AUTH_STORE_VERSION,
       partialize: (state) => ({
         // Persist minimal user data for UX (immediate name display).
         // Session cookies are HttpOnly and managed by browser.
@@ -351,6 +360,15 @@ export const useAuthStore = create<AuthState>()(
         eligibleAttributeValues: state.eligibleAttributeValues,
         groupedEligibleAttributeValues: state.groupedEligibleAttributeValues,
       }),
+      // Clean break: invalidate old cached state when version changes
+      // Users will need to re-login to get fresh association data
+      migrate: (persistedState, version) => {
+        if (version < AUTH_STORE_VERSION) {
+          // Return undefined to use defaults (forces re-login)
+          return undefined;
+        }
+        return persistedState;
+      },
       merge: (persisted, current) => {
         const persistedState = persisted as
           | {
