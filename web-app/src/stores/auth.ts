@@ -79,15 +79,26 @@ const SESSION_CHECK_TIMEOUT_MS = 10_000;
 /**
  * Derives user occupations and active occupation ID from active party data.
  * Used during login and session restoration to populate the association dropdown.
+ *
+ * Uses groupedEligibleAttributeValues as the primary source for associations.
+ * Falls back to eligibleAttributeValues if groupedEligibleAttributeValues is empty,
+ * which can happen on some pages or with certain user configurations.
  */
 function deriveUserWithOccupations(
-  activeParty: { groupedEligibleAttributeValues?: AttributeValue[] | null } | null,
+  activeParty: {
+    groupedEligibleAttributeValues?: AttributeValue[] | null;
+    eligibleAttributeValues?: AttributeValue[] | null;
+  } | null,
   currentUser: UserProfile | null,
   currentActiveOccupationId: string | null,
 ): { user: UserProfile; activeOccupationId: string | null } {
-  const occupations = parseOccupationsFromActiveParty(
-    activeParty?.groupedEligibleAttributeValues,
-  );
+  // Use groupedEligibleAttributeValues first, fall back to eligibleAttributeValues
+  const attributeValues =
+    activeParty?.groupedEligibleAttributeValues?.length
+      ? activeParty.groupedEligibleAttributeValues
+      : activeParty?.eligibleAttributeValues ?? null;
+
+  const occupations = parseOccupationsFromActiveParty(attributeValues);
   const activeOccupationId = currentActiveOccupationId ?? occupations[0]?.id ?? null;
 
   const user = currentUser
