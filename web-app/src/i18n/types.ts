@@ -43,6 +43,7 @@ export interface Translations {
     wizardProgress: string;
     stepIndicatorCurrent: string;
     stepIndicatorDone: string;
+    dob: string;
   };
   auth: {
     login: string;

@@ -102,7 +102,9 @@ export function ScorerResultsList({
                     <span>ID: {scorer.associationId}</span>
                   )}
                   {scorer.birthday && (
-                    <span>{formatDOB(scorer.birthday)}</span>
+                    <span>
+                      {t("common.dob")}: {formatDOB(scorer.birthday)}
+                    </span>
                   )}
                 </div>
               </div>

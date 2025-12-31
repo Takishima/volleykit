@@ -151,6 +151,7 @@ const de: Translations = {
     wizardProgress: "Assistentenfortschritt",
     stepIndicatorCurrent: "(aktuell)",
     stepIndicatorDone: "(erledigt)",
+    dob: "Geb.",
   },
   auth: {
     login: "Anmelden",

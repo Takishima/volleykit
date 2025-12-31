@@ -38,7 +38,11 @@ export function SelectedScorerCard({
           {scorer && (
             <div className="flex items-center gap-3 text-sm text-text-muted dark:text-text-muted-dark">
               {scorer.associationId && <span>ID: {scorer.associationId}</span>}
-              {scorer.birthday && <span>{formatDOB(scorer.birthday)}</span>}
+              {scorer.birthday && (
+                <span>
+                  {t("common.dob")}: {formatDOB(scorer.birthday)}
+                </span>
+              )}
             </div>
           )}
         </div>
