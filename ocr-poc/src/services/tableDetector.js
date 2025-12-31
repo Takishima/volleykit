@@ -342,6 +342,9 @@ export async function cropToRegion(imageBlob, region, padding = 5) {
  * @param {Blob} imageBlob - Source image
  * @returns {Promise<{ croppedImage: Blob, regions: TableRegions } | null>}
  */
+/** Padding around detected table region (pixels) */
+const TABLE_CROP_PADDING = 30;
+
 export async function cropToTable(imageBlob) {
   const regions = await detectTableRegions(imageBlob);
 
@@ -349,11 +352,11 @@ export async function cropToTable(imageBlob) {
     return null;
   }
 
-  const croppedImage = await cropToRegion(imageBlob, regions.table, 10);
+  const croppedImage = await cropToRegion(imageBlob, regions.table, TABLE_CROP_PADDING);
 
   // Adjust column/row coordinates relative to cropped image
-  const offsetX = regions.table.x - 10;
-  const offsetY = regions.table.y - 10;
+  const offsetX = regions.table.x - TABLE_CROP_PADDING;
+  const offsetY = regions.table.y - TABLE_CROP_PADDING;
 
   const adjustedColumns = regions.columns.map((col) => ({
     ...col,
@@ -370,7 +373,12 @@ export async function cropToTable(imageBlob) {
   return {
     croppedImage,
     regions: {
-      table: { x: 10, y: 10, width: regions.table.width, height: regions.table.height },
+      table: {
+        x: TABLE_CROP_PADDING,
+        y: TABLE_CROP_PADDING,
+        width: regions.table.width,
+        height: regions.table.height,
+      },
       columns: adjustedColumns,
       rows: adjustedRows,
     },

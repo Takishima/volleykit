@@ -68,9 +68,9 @@ const LANGUAGES = 'deu';
  * Page Segmentation Modes (PSM) - see Tesseract documentation
  * PSM 3 = Fully automatic page segmentation (best for tables with multiple columns)
  * PSM 4 = Single column of text of variable sizes
- * PSM 6 = Single uniform block of text
+ * PSM 6 = Single uniform block of text (good after table cropping)
  */
-const PSM_AUTO = '3';
+const PSM_SINGLE_BLOCK = '6';
 
 /**
  * Border padding in pixels to add around the image
@@ -262,7 +262,7 @@ export class TesseractOCR {
     // Configure Tesseract parameters for better accuracy on scoresheets
     await this.#worker.setParameters({
       // PSM 3 = Automatic page segmentation (best for tables with multiple columns)
-      tessedit_pageseg_mode: PSM_AUTO,
+      tessedit_pageseg_mode: PSM_SINGLE_BLOCK,
       // Preserve interword spaces (important for table structure)
       preserve_interword_spaces: '1',
     });
