@@ -243,3 +243,22 @@ export function formatRosterEntries(
 
   return result;
 }
+
+/**
+ * Calculates the maximum last name width from formatted roster entries.
+ * Used for column alignment in player lists.
+ *
+ * @param entries - Map of formatted roster entries
+ * @returns Maximum last name character length
+ */
+export function getMaxLastNameWidth(
+  entries: Map<string, FormattedRosterEntry>,
+): number {
+  let maxLen = 0;
+  for (const entry of entries.values()) {
+    if (entry.lastName.length > maxLen) {
+      maxLen = entry.lastName.length;
+    }
+  }
+  return maxLen;
+}

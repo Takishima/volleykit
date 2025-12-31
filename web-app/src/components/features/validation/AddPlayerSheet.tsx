@@ -6,7 +6,7 @@ import { usePossiblePlayerNominations } from "@/hooks/usePlayerNominations";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ResponsiveSheet } from "@/components/ui/ResponsiveSheet";
 import { Check, X, Plus } from "@/components/ui/icons";
-import { formatRosterEntries } from "@/utils/date-helpers";
+import { formatRosterEntries, getMaxLastNameWidth } from "@/utils/date-helpers";
 
 // Delay before focusing search input to ensure the sheet animation has started
 const FOCUS_DELAY_MS = 100;
@@ -80,15 +80,10 @@ export function AddPlayerSheet({
   }, [filteredPlayers]);
 
   // Calculate max last name width for column alignment
-  const maxLastNameWidth = useMemo(() => {
-    let maxLen = 0;
-    for (const entry of formattedEntries.values()) {
-      if (entry.lastName.length > maxLen) {
-        maxLen = entry.lastName.length;
-      }
-    }
-    return maxLen;
-  }, [formattedEntries]);
+  const maxLastNameWidth = useMemo(
+    () => getMaxLastNameWidth(formattedEntries),
+    [formattedEntries],
+  );
 
   const handleClose = useCallback(() => {
     setSearchQuery("");
@@ -204,6 +199,16 @@ export function AddPlayerSheet({
               {filteredPlayers.map((player) => {
                 const playerId = player.indoorPlayer?.__identity ?? "";
                 const isAdded = sessionAddedIds.has(playerId);
+                const entry = formattedEntries.get(playerId);
+                const lastName =
+                  entry?.lastName ||
+                  player.indoorPlayer?.person?.lastName ||
+                  "";
+                const firstInitial = entry?.firstInitial || "";
+                const dob = entry?.dob || "";
+                const textColorClass = isAdded
+                  ? "text-success-700 dark:text-success-400"
+                  : "text-text-primary dark:text-text-primary-dark";
 
                 return (
                   <li key={player.__identity}>
@@ -221,31 +226,20 @@ export function AddPlayerSheet({
                       `}
                     >
                       <div className="flex-1 min-w-0">
-                        {(() => {
-                          const entry = formattedEntries.get(playerId);
-                          const lastName = entry?.lastName || player.indoorPlayer?.person?.lastName || "";
-                          const firstInitial = entry?.firstInitial || "";
-                          const dob = entry?.dob || "";
-                          const textColorClass = isAdded
-                            ? "text-success-700 dark:text-success-400"
-                            : "text-text-primary dark:text-text-primary-dark";
-                          return (
-                            <div className="flex items-baseline text-sm font-mono">
-                              <span
-                                className={`font-medium ${textColorClass}`}
-                                style={{ minWidth: `${maxLastNameWidth}ch` }}
-                              >
-                                {lastName}
-                              </span>
-                              <span className={`ml-2 w-[3ch] ${textColorClass}`}>
-                                {firstInitial}
-                              </span>
-                              <span className="ml-2 text-text-muted dark:text-text-muted-dark tabular-nums">
-                                {dob}
-                              </span>
-                            </div>
-                          );
-                        })()}
+                        <div className="flex items-baseline text-sm font-mono">
+                          <span
+                            className={`font-medium ${textColorClass}`}
+                            style={{ minWidth: `${maxLastNameWidth}ch` }}
+                          >
+                            {lastName}
+                          </span>
+                          <span className={`ml-2 w-[3ch] ${textColorClass}`}>
+                            {firstInitial}
+                          </span>
+                          <span className="ml-2 text-text-muted dark:text-text-muted-dark tabular-nums">
+                            {dob}
+                          </span>
+                        </div>
                       </div>
                       {isAdded ? (
                         <span className="relative flex-shrink-0 ml-2 w-5 h-5">

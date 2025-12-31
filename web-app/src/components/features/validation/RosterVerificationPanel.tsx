@@ -10,7 +10,7 @@ import { PlayerListItem } from "./PlayerListItem";
 import { AddPlayerSheet } from "./AddPlayerSheet";
 import { UserPlus, AlertCircle, RefreshCw } from "@/components/ui/icons";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { formatRosterEntries } from "@/utils/date-helpers";
+import { formatRosterEntries, getMaxLastNameWidth } from "@/utils/date-helpers";
 
 interface RosterVerificationPanelProps {
   team: "home" | "away";
@@ -130,15 +130,10 @@ export function RosterVerificationPanel({
   );
 
   // Calculate max last name width for column alignment
-  const maxLastNameWidth = useMemo(() => {
-    let maxLen = 0;
-    for (const entry of formattedEntries.values()) {
-      if (entry.lastName.length > maxLen) {
-        maxLen = entry.lastName.length;
-      }
-    }
-    return maxLen;
-  }, [formattedEntries]);
+  const maxLastNameWidth = useMemo(
+    () => getMaxLastNameWidth(formattedEntries),
+    [formattedEntries],
+  );
 
   // Calculate visible player count (excluding removed)
   const visiblePlayerCount = allPlayers.filter(
