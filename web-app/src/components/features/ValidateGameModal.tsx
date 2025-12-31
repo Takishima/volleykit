@@ -130,6 +130,7 @@ function ValidateGameModalComponent({
           totalSteps={wizard.totalSteps}
           onSwipeNext={wizard.goNext}
           onSwipePrevious={wizard.goBack}
+          onDismiss={wizard.attemptClose}
           swipeEnabled={wizard.isSwipeEnabled}
         >
           <div className="max-h-80 overflow-y-auto">

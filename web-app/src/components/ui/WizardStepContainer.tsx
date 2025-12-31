@@ -7,6 +7,7 @@ import {
   useLayoutEffect,
 } from "react";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
+import { useVerticalSwipeDismiss } from "@/hooks/useVerticalSwipeDismiss";
 
 /**
  * Minimum horizontal swipe distance as ratio of container width to trigger navigation.
@@ -18,6 +19,18 @@ const SWIPE_THRESHOLD_RATIO = 0.3;
  * 300ms provides smooth visual feedback without feeling sluggish.
  */
 const TRANSITION_DURATION_MS = 300;
+
+/**
+ * Minimum opacity during dismiss swipe gesture.
+ * Prevents content from becoming invisible while still providing visual feedback.
+ */
+const MINIMUM_DISMISS_OPACITY = 0.3;
+
+/**
+ * Distance in pixels at which opacity reaches minimum during dismiss swipe.
+ * Higher values = slower opacity reduction; lower values = faster reduction.
+ */
+const OPACITY_REDUCTION_DISTANCE_PX = 200;
 
 /** Animation phases for step transitions */
 type AnimationPhase = "idle" | "exiting" | "entering";
@@ -31,6 +44,8 @@ interface WizardStepContainerProps {
   onSwipeNext?: () => void;
   /** Callback when user swipes to go to previous step */
   onSwipePrevious?: () => void;
+  /** Callback when user swipes vertically to dismiss the wizard */
+  onDismiss?: () => void;
   /** Whether swipe navigation is enabled */
   swipeEnabled?: boolean;
   /** Children are rendered for the current step */
@@ -49,6 +64,7 @@ export function WizardStepContainer({
   totalSteps,
   onSwipeNext,
   onSwipePrevious,
+  onDismiss,
   swipeEnabled = true,
   children,
 }: WizardStepContainerProps) {
@@ -146,6 +162,52 @@ export function WizardStepContainer({
     },
   });
 
+  // Use vertical swipe dismiss hook
+  // Allows users to swipe up/down on step content to dismiss the wizard
+  // Share containerRef with horizontal swipe hook for scroll detection
+  const {
+    translateY,
+    isDragging: isDraggingVertical,
+    handlers: verticalHandlers,
+  } = useVerticalSwipeDismiss({
+    enabled: swipeEnabled && !!onDismiss,
+    onDismiss,
+    containerRef,
+  });
+
+  // Combine horizontal and vertical gesture handlers
+  // Each gesture is either horizontal OR vertical (determined early in the gesture)
+  const combinedHandlers = {
+    onTouchStart: (e: React.TouchEvent) => {
+      handlers.onTouchStart(e);
+      verticalHandlers.onTouchStart(e);
+    },
+    onTouchMove: (e: React.TouchEvent) => {
+      handlers.onTouchMove(e);
+      verticalHandlers.onTouchMove(e);
+    },
+    onTouchEnd: () => {
+      handlers.onTouchEnd();
+      verticalHandlers.onTouchEnd();
+    },
+    onMouseDown: (e: React.MouseEvent) => {
+      handlers.onMouseDown(e);
+      verticalHandlers.onMouseDown(e);
+    },
+    onMouseMove: (e: React.MouseEvent) => {
+      handlers.onMouseMove(e);
+      verticalHandlers.onMouseMove(e);
+    },
+    onMouseUp: () => {
+      handlers.onMouseUp();
+      verticalHandlers.onMouseUp();
+    },
+    onMouseLeave: () => {
+      handlers.onMouseLeave();
+      verticalHandlers.onMouseLeave();
+    },
+  };
+
   // Cleanup animation timeout on unmount
   useEffect(() => {
     return () => {
@@ -202,21 +264,35 @@ export function WizardStepContainer({
   // Determine if transition should be animated
   // Animate when: not dragging AND not in an instant jump
   // isJumping is true only during the instant position jump before entrance animation
-  const shouldAnimate = !isDragging && !isJumping;
+  const shouldAnimate = !isDragging && !isDraggingVertical && !isJumping;
+
+  // Calculate opacity reduction during vertical swipe (visual dismiss feedback)
+  // Full opacity at translateY=0, reducing as user swipes further
+  const dismissOpacity = isDraggingVertical
+    ? Math.max(
+        MINIMUM_DISMISS_OPACITY,
+        1 - Math.abs(translateY) / OPACITY_REDUCTION_DISTANCE_PX,
+      )
+    : 1;
 
   return (
     <div
       ref={containerRef}
       className="relative overflow-hidden"
-      {...handlers}
+      {...combinedHandlers}
     >
       <div
         style={{
-          transform: `translateX(${translateX}px)`,
+          transform: `translate(${translateX}px, ${translateY}px)`,
+          opacity: dismissOpacity,
           transition: shouldAnimate
-            ? `transform ${TRANSITION_DURATION_MS}ms cubic-bezier(0.25, 0.1, 0.25, 1)`
+            ? `transform ${TRANSITION_DURATION_MS}ms cubic-bezier(0.25, 0.1, 0.25, 1), opacity ${TRANSITION_DURATION_MS}ms ease-out`
             : "none",
-          cursor: swipeEnabled ? (isDragging ? "grabbing" : "grab") : "default",
+          cursor: swipeEnabled
+            ? isDragging || isDraggingVertical
+              ? "grabbing"
+              : "grab"
+            : "default",
         }}
       >
         {children}
