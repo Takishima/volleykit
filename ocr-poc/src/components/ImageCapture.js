@@ -40,11 +40,15 @@ export class ImageCapture {
   /** @type {boolean} */
   #cameraPermissionDenied = false;
 
-  /** 1920x1080 provides good OCR quality while being widely supported */
+  /**
+   * Camera constraints optimized for OCR
+   * Higher resolution = better OCR accuracy (Tesseract works best at 300+ DPI)
+   * 4K (3840x2160) if available, fallback to lower resolutions
+   */
   static VIDEO_CONSTRAINTS = {
     facingMode: 'environment',
-    width: { ideal: 1920 },
-    height: { ideal: 1080 },
+    width: { ideal: 3840, min: 1920 },
+    height: { ideal: 2160, min: 1080 },
   };
 
   /**
@@ -96,13 +100,24 @@ export class ImageCapture {
         />
 
         <div id="camera-container" class="image-capture__camera" hidden>
-          <video
-            id="camera-preview"
-            class="image-capture__video"
-            autoplay
-            playsinline
-            muted
-          ></video>
+          <div class="image-capture__video-wrapper">
+            <video
+              id="camera-preview"
+              class="image-capture__video"
+              autoplay
+              playsinline
+              muted
+            ></video>
+            <div class="image-capture__guide" aria-hidden="true">
+              <div class="image-capture__guide-frame">
+                <div class="image-capture__guide-corner image-capture__guide-corner--tl"></div>
+                <div class="image-capture__guide-corner image-capture__guide-corner--tr"></div>
+                <div class="image-capture__guide-corner image-capture__guide-corner--bl"></div>
+                <div class="image-capture__guide-corner image-capture__guide-corner--br"></div>
+              </div>
+              <p class="image-capture__guide-text">Align scoresheet within frame</p>
+            </div>
+          </div>
           <div class="image-capture__camera-controls">
             <button
               type="button"

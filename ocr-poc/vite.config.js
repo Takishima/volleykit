@@ -67,12 +67,14 @@ export default defineConfig({
           },
           {
             // Cache Tesseract traineddata files (language models) from projectnaptha
+            // Using tessdata_best for higher accuracy (larger files ~15MB each)
             urlPattern: /^https:\/\/tessdata\.projectnaptha\.com\//,
             handler: 'CacheFirst',
             options: {
               cacheName: 'tesseract-traineddata',
               expiration: {
-                maxEntries: 5,
+                // Allow 10 entries for multiple languages (deu, fra, ita + best variants)
+                maxEntries: 10,
                 maxAgeSeconds: SECONDS_PER_DAY * CDN_CACHE_DAYS,
               },
               cacheableResponse: {

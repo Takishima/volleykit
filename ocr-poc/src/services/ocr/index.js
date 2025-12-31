@@ -26,13 +26,13 @@ export const OCRFactory = {
    * @returns {TesseractOCR} The OCR engine instance
    */
   create(type, onProgress) {
-    // For now, both types use TesseractOCR
+    // For now, both types use TesseractOCR with different preprocessing
     // In the future, 'handwritten' could use TrOCR for better handwriting recognition
     switch (type) {
       case 'electronic':
       case 'handwritten':
       default:
-        return new TesseractOCR(onProgress);
+        return new TesseractOCR(type, onProgress);
     }
   },
 };
