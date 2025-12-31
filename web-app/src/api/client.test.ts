@@ -837,40 +837,6 @@ describe("API Client", () => {
     });
   });
 
-  describe("getNominationList", () => {
-    it("requests home team nomination list", async () => {
-      mockFetch.mockResolvedValueOnce(
-        createMockResponse({ nominationListOfTeamHome: { __identity: "nl-1" } }),
-      );
-
-      const result = await api.getNominationList("game-123", "home");
-
-      expect(result).toEqual({ __identity: "nl-1" });
-      const [url] = mockFetch.mock.calls[0]!;
-      expect(url).toContain("nominationListOfTeamHome");
-    });
-
-    it("requests away team nomination list", async () => {
-      mockFetch.mockResolvedValueOnce(
-        createMockResponse({ nominationListOfTeamAway: { __identity: "nl-2" } }),
-      );
-
-      const result = await api.getNominationList("game-123", "away");
-
-      expect(result).toEqual({ __identity: "nl-2" });
-      const [url] = mockFetch.mock.calls[0]!;
-      expect(url).toContain("nominationListOfTeamAway");
-    });
-
-    it("returns null when nomination list is missing", async () => {
-      mockFetch.mockResolvedValueOnce(createMockResponse({}));
-
-      const result = await api.getNominationList("game-123", "home");
-
-      expect(result).toBeNull();
-    });
-  });
-
   describe("getPossiblePlayerNominations", () => {
     it("sends POST request with nomination list ID", async () => {
       mockFetch.mockResolvedValueOnce(
@@ -1073,7 +1039,7 @@ describe("API Client", () => {
   describe("getGameWithScoresheet", () => {
     it("requests game with scoresheet and nomination list properties", async () => {
       mockFetch.mockResolvedValueOnce(
-        createMockResponse({ __identity: "game-1" }),
+        createMockResponse({ game: { __identity: "game-1" } }),
       );
 
       await api.getGameWithScoresheet("game-123");
@@ -1089,7 +1055,7 @@ describe("API Client", () => {
       // The 'group' base property must be requested before nested properties like
       // 'group.phase.league...' to avoid 500 errors when group is null
       mockFetch.mockResolvedValueOnce(
-        createMockResponse({ __identity: "game-1" }),
+        createMockResponse({ game: { __identity: "game-1" } }),
       );
 
       await api.getGameWithScoresheet("game-123");
@@ -1100,6 +1066,22 @@ describe("API Client", () => {
       expect(url).toMatch(/propertyRenderConfiguration%5B\d+%5D=group(?:&|$)/);
       // Verify the nested property is also present
       expect(url).toContain("writersCanUseSimpleScoresheetForThisLeagueCategory");
+    });
+
+    it("returns the game object from the response wrapper", async () => {
+      const gameData = {
+        __identity: "game-1",
+        scoresheet: { __identity: "ss-1", closedAt: null },
+        nominationListOfTeamHome: { __identity: "nl-home" },
+        nominationListOfTeamAway: { __identity: "nl-away" },
+      };
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({ game: gameData }),
+      );
+
+      const result = await api.getGameWithScoresheet("game-123");
+
+      expect(result).toEqual(gameData);
     });
   });
 

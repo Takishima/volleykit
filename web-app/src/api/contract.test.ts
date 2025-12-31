@@ -433,54 +433,6 @@ describe("Nomination list endpoints", () => {
     useDemoStore.getState().initializeDemoData();
   });
 
-  it("getNominationList returns valid nomination list for home team", async () => {
-    const { nominationLists } = useDemoStore.getState();
-    const gameId = Object.keys(nominationLists)[0];
-    expect(gameId).toBeDefined();
-
-    const nominationList = await mockApi.getNominationList(gameId!, "home");
-
-    expect(nominationList).not.toBeNull();
-    expect(nominationList).toHaveProperty("__identity");
-    expect(nominationList).toHaveProperty("game");
-    expect(nominationList).toHaveProperty("team");
-    expect(nominationList).toHaveProperty("closed");
-    expect(nominationList).toHaveProperty("indoorPlayerNominations");
-    expect(Array.isArray(nominationList!.indoorPlayerNominations)).toBe(true);
-  });
-
-  it("getNominationList returns valid nomination list for away team", async () => {
-    const { nominationLists } = useDemoStore.getState();
-    const gameId = Object.keys(nominationLists)[0];
-    expect(gameId).toBeDefined();
-
-    const nominationList = await mockApi.getNominationList(gameId!, "away");
-
-    expect(nominationList).not.toBeNull();
-    expect(nominationList!.indoorPlayerNominations?.length).toBeGreaterThan(0);
-  });
-
-  it("getNominationList returns null for non-existent game", async () => {
-    const nominationList = await mockApi.getNominationList(
-      "non-existent-game",
-      "home",
-    );
-    expect(nominationList).toBeNull();
-  });
-
-  it("player nominations have required fields", async () => {
-    const { nominationLists } = useDemoStore.getState();
-    const gameId = Object.keys(nominationLists)[0];
-    const nominationList = await mockApi.getNominationList(gameId!, "home");
-
-    nominationList!.indoorPlayerNominations?.forEach((player) => {
-      expect(player.__identity).toBeDefined();
-      expect(player.shirtNumber).toBeDefined();
-      expect(player.indoorPlayer).toBeDefined();
-      expect(player.indoorPlayer?.person).toBeDefined();
-    });
-  });
-
   it("getPossiblePlayerNominations returns valid nominations", async () => {
     const { nominationLists } = useDemoStore.getState();
     const gameId = Object.keys(nominationLists)[0];

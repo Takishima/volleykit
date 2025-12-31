@@ -1,4 +1,4 @@
-import type { Assignment } from "@/api/client";
+import type { Assignment, NominationList } from "@/api/client";
 import type { ValidationStepId } from "@/hooks/useValidateGameWizard";
 import type { UseValidationStateResult } from "@/hooks/useValidationState";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -21,6 +21,8 @@ interface ValidationInfo {
   pendingScorer: UseValidationStateResult["pendingScorer"];
   scoresheetNotRequired: boolean;
   state: UseValidationStateResult["state"];
+  homeNominationList: NominationList | null;
+  awayNominationList: NominationList | null;
 }
 
 interface StepHandlers {
@@ -89,6 +91,7 @@ export function StepRenderer({
           onAddPlayerSheetOpenChange={handlers.onAddPlayerSheetOpenChange}
           readOnly={validation.isValidated}
           initialModifications={validation.state.homeRoster.modifications}
+          prefetchedNominationList={validation.homeNominationList}
         />
       )}
 
@@ -99,6 +102,7 @@ export function StepRenderer({
           onAddPlayerSheetOpenChange={handlers.onAddPlayerSheetOpenChange}
           readOnly={validation.isValidated}
           initialModifications={validation.state.awayRoster.modifications}
+          prefetchedNominationList={validation.awayNominationList}
         />
       )}
 

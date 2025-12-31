@@ -63,6 +63,8 @@ function ValidateGameModalComponent({
     pendingScorer: wizard.pendingScorer,
     scoresheetNotRequired: wizard.scoresheetNotRequired,
     state: wizard.validationState,
+    homeNominationList: wizard.homeNominationList,
+    awayNominationList: wizard.awayNominationList,
   };
 
   const stepHandlers = {

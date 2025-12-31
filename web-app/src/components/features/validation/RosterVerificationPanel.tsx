@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import type { PossibleNomination } from "@/api/client";
+import type { PossibleNomination, NominationList } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   useNominationList,
@@ -21,6 +21,8 @@ interface RosterVerificationPanelProps {
   readOnly?: boolean;
   /** Initial modifications to restore state when remounting */
   initialModifications?: RosterModifications;
+  /** Pre-fetched nomination list data to avoid duplicate API calls */
+  prefetchedNominationList?: NominationList | null;
 }
 
 export function RosterVerificationPanel({
@@ -31,12 +33,14 @@ export function RosterVerificationPanel({
   onAddPlayerSheetOpenChange,
   readOnly = false,
   initialModifications,
+  prefetchedNominationList,
 }: RosterVerificationPanelProps) {
   const { t } = useTranslation();
   const { nominationList, players, isLoading, isError, refetch } =
     useNominationList({
       gameId,
       team,
+      prefetchedData: prefetchedNominationList,
     });
 
   // Track locally added players - initialize from props to restore state when remounting

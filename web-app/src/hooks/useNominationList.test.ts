@@ -1,23 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createElement, type ReactNode } from "react";
+import { renderHook } from "@testing-library/react";
 import { useNominationList } from "./useNominationList";
 import * as authStore from "@/stores/auth";
 import * as demoStore from "@/stores/demo";
-import * as apiClient from "@/api/client";
 import type { NominationList } from "@/api/client";
 
 vi.mock("@/stores/auth");
 vi.mock("@/stores/demo");
-vi.mock("@/api/client", async (importOriginal) => {
-  const original =
-    await importOriginal<typeof import("@/api/client")>();
-  return {
-    ...original,
-    getApiClient: vi.fn(),
-  };
-});
 
 const mockNominationList: NominationList = {
   __identity: "test-nomlist-1",
@@ -69,24 +58,6 @@ const mockNominationList: NominationList = {
   ],
 };
 
-function createWrapper() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  });
-
-  return function Wrapper({ children }: { children: ReactNode }) {
-    return createElement(
-      QueryClientProvider,
-      { client: queryClient },
-      children,
-    );
-  };
-}
-
 describe("useNominationList", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -113,9 +84,8 @@ describe("useNominationList", () => {
         } as unknown as ReturnType<typeof demoStore.useDemoStore.getState>),
       );
 
-      const { result } = renderHook(
-        () => useNominationList({ gameId: "test-game-1", team: "home" }),
-        { wrapper: createWrapper() },
+      const { result } = renderHook(() =>
+        useNominationList({ gameId: "test-game-1", team: "home" }),
       );
 
       expect(result.current.isLoading).toBe(false);
@@ -136,9 +106,8 @@ describe("useNominationList", () => {
         } as unknown as ReturnType<typeof demoStore.useDemoStore.getState>),
       );
 
-      const { result } = renderHook(
-        () => useNominationList({ gameId: "test-game-1", team: "home" }),
-        { wrapper: createWrapper() },
+      const { result } = renderHook(() =>
+        useNominationList({ gameId: "test-game-1", team: "home" }),
       );
 
       const players = result.current.players;
@@ -178,9 +147,8 @@ describe("useNominationList", () => {
         } as unknown as ReturnType<typeof demoStore.useDemoStore.getState>),
       );
 
-      const { result } = renderHook(
-        () => useNominationList({ gameId: "nonexistent-game", team: "home" }),
-        { wrapper: createWrapper() },
+      const { result } = renderHook(() =>
+        useNominationList({ gameId: "nonexistent-game", team: "home" }),
       );
 
       expect(result.current.nominationList).toBeNull();
@@ -211,24 +179,48 @@ describe("useNominationList", () => {
         } as unknown as ReturnType<typeof demoStore.useDemoStore.getState>),
       );
 
-      const { result: homeResult } = renderHook(
-        () => useNominationList({ gameId: "test-game-1", team: "home" }),
-        { wrapper: createWrapper() },
+      const { result: homeResult } = renderHook(() =>
+        useNominationList({ gameId: "test-game-1", team: "home" }),
       );
 
-      const { result: awayResult } = renderHook(
-        () => useNominationList({ gameId: "test-game-1", team: "away" }),
-        { wrapper: createWrapper() },
+      const { result: awayResult } = renderHook(() =>
+        useNominationList({ gameId: "test-game-1", team: "away" }),
       );
 
       expect(homeResult.current.nominationList?.__identity).toBe("home-list");
       expect(awayResult.current.nominationList?.__identity).toBe("away-list");
     });
+
+    it("prefers prefetched data over demo data", () => {
+      const prefetchedList: NominationList = {
+        ...mockNominationList,
+        __identity: "prefetched-list",
+      };
+
+      vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
+        selector({
+          nominationLists: {
+            "test-game-1": {
+              home: mockNominationList,
+              away: mockNominationList,
+            },
+          },
+        } as unknown as ReturnType<typeof demoStore.useDemoStore.getState>),
+      );
+
+      const { result } = renderHook(() =>
+        useNominationList({
+          gameId: "test-game-1",
+          team: "home",
+          prefetchedData: prefetchedList,
+        }),
+      );
+
+      expect(result.current.nominationList?.__identity).toBe("prefetched-list");
+    });
   });
 
-  describe("production mode", () => {
-    const mockGetNominationList = vi.fn();
-
+  describe("prefetched data", () => {
     beforeEach(() => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
         selector({ isDemoMode: false } as ReturnType<
@@ -241,106 +233,81 @@ describe("useNominationList", () => {
           nominationLists: {},
         } as unknown as ReturnType<typeof demoStore.useDemoStore.getState>),
       );
-
-      // Mock the API client
-      vi.mocked(apiClient.getApiClient).mockReturnValue({
-        getNominationList: mockGetNominationList,
-      } as unknown as ReturnType<typeof apiClient.getApiClient>);
     });
 
-    it("fetches nomination list from API in production mode", async () => {
-      mockGetNominationList.mockResolvedValue(mockNominationList);
-
-      const { result } = renderHook(
-        () => useNominationList({ gameId: "test-game-1", team: "home" }),
-        { wrapper: createWrapper() },
+    it("returns prefetched data when provided", () => {
+      const { result } = renderHook(() =>
+        useNominationList({
+          gameId: "test-game-1",
+          team: "home",
+          prefetchedData: mockNominationList,
+        }),
       );
 
-      // Should start loading
-      expect(result.current.isLoading).toBe(true);
-
-      // Wait for the query to complete
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      // Should have called the API with correct params
-      expect(mockGetNominationList).toHaveBeenCalledWith("test-game-1", "home");
-      expect(result.current.nominationList).toEqual(mockNominationList);
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.isError).toBe(false);
+      expect(result.current.nominationList).toBe(mockNominationList);
       expect(result.current.players).toHaveLength(2);
     });
 
-    it("fetches away team nomination list correctly", async () => {
-      mockGetNominationList.mockResolvedValue(mockNominationList);
-
-      const { result } = renderHook(
-        () => useNominationList({ gameId: "test-game-1", team: "away" }),
-        { wrapper: createWrapper() },
+    it("handles null prefetched data", () => {
+      const { result } = renderHook(() =>
+        useNominationList({
+          gameId: "test-game-1",
+          team: "home",
+          prefetchedData: null,
+        }),
       );
 
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      expect(mockGetNominationList).toHaveBeenCalledWith("test-game-1", "away");
-    });
-
-    it("handles API returning null", async () => {
-      mockGetNominationList.mockResolvedValue(null);
-
-      const { result } = renderHook(
-        () => useNominationList({ gameId: "test-game-1", team: "home" }),
-        { wrapper: createWrapper() },
-      );
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
+      expect(result.current.isLoading).toBe(false);
       expect(result.current.nominationList).toBeNull();
       expect(result.current.players).toHaveLength(0);
     });
 
-    it("handles API errors", async () => {
-      mockGetNominationList.mockRejectedValue(new Error("API Error"));
-
-      const { result } = renderHook(
-        () => useNominationList({ gameId: "test-game-1", team: "home" }),
-        { wrapper: createWrapper() },
+    it("transforms prefetched nominations to players correctly", () => {
+      const { result } = renderHook(() =>
+        useNominationList({
+          gameId: "test-game-1",
+          team: "home",
+          prefetchedData: mockNominationList,
+        }),
       );
 
-      await waitFor(() => {
-        expect(result.current.isError).toBe(true);
-      });
+      const players = result.current.players;
+      expect(players).toHaveLength(2);
+      expect(players[0]!.displayName).toBe("John Doe");
+      expect(players[1]!.displayName).toBe("Jane Smith");
+    });
+  });
 
-      expect(result.current.error?.message).toBe("API Error");
+  describe("no data available", () => {
+    beforeEach(() => {
+      vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
+        selector({ isDemoMode: false } as ReturnType<
+          typeof authStore.useAuthStore.getState
+        >),
+      );
+
+      vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
+        selector({
+          nominationLists: {},
+        } as unknown as ReturnType<typeof demoStore.useDemoStore.getState>),
+      );
     });
 
-    it("respects enabled option", () => {
-      const { result } = renderHook(
-        () =>
-          useNominationList({
-            gameId: "test-game-1",
-            team: "home",
-            enabled: false,
-          }),
-        { wrapper: createWrapper() },
+    it("returns error state when no prefetched data and not in demo mode", () => {
+      const { result } = renderHook(() =>
+        useNominationList({ gameId: "test-game-1", team: "home" }),
       );
 
-      // Query should be idle when disabled
       expect(result.current.isLoading).toBe(false);
+      expect(result.current.isError).toBe(true);
+      expect(result.current.error).toBeInstanceOf(Error);
+      expect(result.current.error?.message).toContain(
+        "Nomination list data not available",
+      );
       expect(result.current.nominationList).toBeNull();
-      expect(mockGetNominationList).not.toHaveBeenCalled();
-    });
-
-    it("does not fetch when gameId is empty", () => {
-      const { result } = renderHook(
-        () => useNominationList({ gameId: "", team: "home" }),
-        { wrapper: createWrapper() },
-      );
-
-      expect(result.current.isLoading).toBe(false);
-      expect(mockGetNominationList).not.toHaveBeenCalled();
+      expect(result.current.players).toHaveLength(0);
     });
   });
 });

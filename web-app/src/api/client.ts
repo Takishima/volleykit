@@ -286,54 +286,6 @@ export const api = {
   },
 
   // Nominations
-  async getNominationList(
-    gameId: string,
-    team: "home" | "away",
-  ): Promise<NominationList | null> {
-    const nominationProperty =
-      team === "home"
-        ? "nominationListOfTeamHome"
-        : "nominationListOfTeamAway";
-
-    const properties = [
-      nominationProperty,
-      `${nominationProperty}.__identity`,
-      `${nominationProperty}.team`,
-      `${nominationProperty}.indoorPlayerNominations`,
-      `${nominationProperty}.indoorPlayerNominations.*.__identity`,
-      `${nominationProperty}.indoorPlayerNominations.*.shirtNumber`,
-      `${nominationProperty}.indoorPlayerNominations.*.isCaptain`,
-      `${nominationProperty}.indoorPlayerNominations.*.isLibero`,
-      `${nominationProperty}.indoorPlayerNominations.*.indoorPlayer.person.displayName`,
-      `${nominationProperty}.indoorPlayerNominations.*.indoorPlayer.person.firstName`,
-      `${nominationProperty}.indoorPlayerNominations.*.indoorPlayer.person.lastName`,
-      `${nominationProperty}.indoorPlayerNominations.*.indoorPlayerLicenseCategory.shortName`,
-      `${nominationProperty}.coachPerson`,
-      `${nominationProperty}.firstAssistantCoachPerson`,
-      `${nominationProperty}.secondAssistantCoachPerson`,
-      `${nominationProperty}.closed`,
-      `${nominationProperty}.closedAt`,
-      `${nominationProperty}.checked`,
-      `${nominationProperty}.isClosedForTeam`,
-    ];
-
-    const response = await apiRequest<Schemas["GameDetails"]>(
-      "/sportmanager.indoorvolleyball/api%5cgame/showWithNestedObjects",
-      "GET",
-      {
-        "game[__identity]": gameId,
-        propertyRenderConfiguration: properties,
-      },
-    );
-
-    const nominationList =
-      team === "home"
-        ? response.nominationListOfTeamHome
-        : response.nominationListOfTeamAway;
-
-    return nominationList ?? null;
-  },
-
   async getPossiblePlayerNominations(
     nominationListId: string,
     options?: { onlyFromMyTeam?: boolean; onlyRelevantGender?: boolean },
@@ -410,6 +362,7 @@ export const api = {
   // Game details and scoresheet
   async getGameWithScoresheet(gameId: string): Promise<Schemas["GameDetails"]> {
     const properties = [
+      // Scoresheet properties
       "scoresheet",
       "scoresheet.__identity",
       "scoresheet.game.__identity",
@@ -419,29 +372,57 @@ export const api = {
       "scoresheet.hasFile",
       "scoresheet.closedAt",
       "scoresheet.scoresheetValidation",
+      // Home team nomination list with full player details
       "nominationListOfTeamHome",
       "nominationListOfTeamHome.__identity",
       "nominationListOfTeamHome.game.__identity",
-      "nominationListOfTeamHome.team.__identity",
+      "nominationListOfTeamHome.team",
       "nominationListOfTeamHome.closed",
+      "nominationListOfTeamHome.closedAt",
+      "nominationListOfTeamHome.checked",
       "nominationListOfTeamHome.isClosedForTeam",
       "nominationListOfTeamHome.nominationListValidation",
+      "nominationListOfTeamHome.indoorPlayerNominations",
       "nominationListOfTeamHome.indoorPlayerNominations.*.__identity",
+      "nominationListOfTeamHome.indoorPlayerNominations.*.shirtNumber",
+      "nominationListOfTeamHome.indoorPlayerNominations.*.isCaptain",
+      "nominationListOfTeamHome.indoorPlayerNominations.*.isLibero",
+      "nominationListOfTeamHome.indoorPlayerNominations.*.indoorPlayer.person.displayName",
+      "nominationListOfTeamHome.indoorPlayerNominations.*.indoorPlayer.person.firstName",
+      "nominationListOfTeamHome.indoorPlayerNominations.*.indoorPlayer.person.lastName",
+      "nominationListOfTeamHome.indoorPlayerNominations.*.indoorPlayerLicenseCategory.shortName",
+      "nominationListOfTeamHome.coachPerson",
+      "nominationListOfTeamHome.firstAssistantCoachPerson",
+      "nominationListOfTeamHome.secondAssistantCoachPerson",
+      // Away team nomination list with full player details
       "nominationListOfTeamAway",
       "nominationListOfTeamAway.__identity",
       "nominationListOfTeamAway.game.__identity",
-      "nominationListOfTeamAway.team.__identity",
+      "nominationListOfTeamAway.team",
       "nominationListOfTeamAway.closed",
+      "nominationListOfTeamAway.closedAt",
+      "nominationListOfTeamAway.checked",
       "nominationListOfTeamAway.isClosedForTeam",
       "nominationListOfTeamAway.nominationListValidation",
+      "nominationListOfTeamAway.indoorPlayerNominations",
       "nominationListOfTeamAway.indoorPlayerNominations.*.__identity",
+      "nominationListOfTeamAway.indoorPlayerNominations.*.shirtNumber",
+      "nominationListOfTeamAway.indoorPlayerNominations.*.isCaptain",
+      "nominationListOfTeamAway.indoorPlayerNominations.*.isLibero",
+      "nominationListOfTeamAway.indoorPlayerNominations.*.indoorPlayer.person.displayName",
+      "nominationListOfTeamAway.indoorPlayerNominations.*.indoorPlayer.person.firstName",
+      "nominationListOfTeamAway.indoorPlayerNominations.*.indoorPlayer.person.lastName",
+      "nominationListOfTeamAway.indoorPlayerNominations.*.indoorPlayerLicenseCategory.shortName",
+      "nominationListOfTeamAway.coachPerson",
+      "nominationListOfTeamAway.firstAssistantCoachPerson",
+      "nominationListOfTeamAway.secondAssistantCoachPerson",
       // Group must be requested before nested properties to avoid 500 errors
       // when group is null (e.g., for already validated games)
       "group",
       "group.phase.league.leagueCategory.writersCanUseSimpleScoresheetForThisLeagueCategory",
     ];
 
-    return apiRequest<Schemas["GameDetails"]>(
+    const response = await apiRequest<{ game: Schemas["GameDetails"] }>(
       "/sportmanager.indoorvolleyball/api%5cgame/showWithNestedObjects",
       "GET",
       {
@@ -449,6 +430,8 @@ export const api = {
         propertyRenderConfiguration: properties,
       },
     );
+
+    return response.game;
   },
 
   async updateNominationList(

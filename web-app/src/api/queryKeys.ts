@@ -116,11 +116,6 @@ export const queryKeys = {
   nominations: {
     /** Base key - invalidates ALL nomination queries */
     all: ["nominations"] as const,
-    /** Parent key for nomination list queries */
-    lists: () => [...queryKeys.nominations.all, "list"] as const,
-    /** Specific nomination list for a game and team */
-    list: (gameId: string, team: "home" | "away") =>
-      [...queryKeys.nominations.lists(), gameId, team] as const,
     /** Parent key for possible nomination queries */
     possibles: () => [...queryKeys.nominations.all, "possible"] as const,
     /** Possible nominations for a nomination list */
