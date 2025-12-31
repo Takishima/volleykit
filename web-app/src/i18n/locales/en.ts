@@ -340,7 +340,7 @@ const en: Translations = {
       arrivalTime: "Arrive before game",
       arrivalTimeDescription: "Minutes to arrive before game start (per association)",
       cacheInfo:
-        "Travel times are cached by day type (weekday/Saturday/Sunday) for 30 days.",
+        "Travel times are cached by day type (weekday/Saturday/Sunday) for 14 days.",
       cacheEntries: "{count} cached routes",
       refreshCache: "Clear Cache",
       refreshCacheConfirm:
@@ -353,7 +353,7 @@ const en: Translations = {
         "This app stores certain data locally in your browser. This data never leaves your device and is not transmitted to our servers.",
       homeLocation: "Your home location (for distance filtering)",
       filterPreferences: "Filter preferences",
-      travelTimeCache: "Cached travel times (expires after 30 days)",
+      travelTimeCache: "Cached travel times (expires after 14 days)",
       languagePreference: "Language preference",
       clearData: "Clear Local Data",
       clearDataConfirm:

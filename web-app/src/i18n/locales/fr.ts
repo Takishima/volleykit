@@ -341,7 +341,7 @@ const fr: Translations = {
       arrivalTime: "Arrivée avant le match",
       arrivalTimeDescription: "Minutes d'arrivée avant le début du match (par association)",
       cacheInfo:
-        "Les temps de trajet sont mis en cache par type de jour (semaine/samedi/dimanche) pendant 30 jours.",
+        "Les temps de trajet sont mis en cache par type de jour (semaine/samedi/dimanche) pendant 14 jours.",
       cacheEntries: "{count} trajets en cache",
       refreshCache: "Vider le cache",
       refreshCacheConfirm:
@@ -354,7 +354,7 @@ const fr: Translations = {
         "Cette application stocke certaines données localement dans votre navigateur. Ces données ne quittent jamais votre appareil et ne sont pas transmises à nos serveurs.",
       homeLocation: "Votre emplacement domicile (pour le filtrage par distance)",
       filterPreferences: "Préférences de filtre",
-      travelTimeCache: "Temps de trajet en cache (expire après 30 jours)",
+      travelTimeCache: "Temps de trajet en cache (expire après 14 jours)",
       languagePreference: "Préférence de langue",
       clearData: "Effacer les données locales",
       clearDataConfirm:

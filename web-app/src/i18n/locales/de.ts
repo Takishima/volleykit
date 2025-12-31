@@ -342,7 +342,7 @@ const de: Translations = {
       arrivalTime: "Ankunft vor Spielbeginn",
       arrivalTimeDescription: "Minuten vor Spielbeginn ankommen (pro Verband)",
       cacheInfo:
-        "Reisezeiten werden nach Tagestyp (Werktag/Samstag/Sonntag) für 30 Tage zwischengespeichert.",
+        "Reisezeiten werden nach Tagestyp (Werktag/Samstag/Sonntag) für 14 Tage zwischengespeichert.",
       cacheEntries: "{count} gespeicherte Routen",
       refreshCache: "Cache leeren",
       refreshCacheConfirm:
@@ -355,7 +355,7 @@ const de: Translations = {
         "Diese App speichert bestimmte Daten lokal in Ihrem Browser. Diese Daten verlassen Ihr Gerät nie und werden nicht an unsere Server übertragen.",
       homeLocation: "Ihr Heimatstandort (für Distanzfilterung)",
       filterPreferences: "Filtereinstellungen",
-      travelTimeCache: "Zwischengespeicherte Reisezeiten (läuft nach 30 Tagen ab)",
+      travelTimeCache: "Zwischengespeicherte Reisezeiten (läuft nach 14 Tagen ab)",
       languagePreference: "Spracheinstellung",
       clearData: "Lokale Daten löschen",
       clearDataConfirm:
