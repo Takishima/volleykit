@@ -74,6 +74,14 @@ const ALLOWED_PREFIX_PATHS = [
   "/sportmanager.indoorvolleyball/",
 ];
 
+// The correct authentication endpoint
+const AUTH_ENDPOINT = "/sportmanager.security/authentication/authenticate";
+
+// Form field name that indicates authentication credentials are present
+// This is the Neos Flow authentication token username field
+const AUTH_USERNAME_FIELD =
+  "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][username]";
+
 function isAllowedPath(pathname: string): boolean {
   // Check exact matches first
   if (ALLOWED_EXACT_PATHS.includes(pathname)) {
@@ -81,6 +89,83 @@ function isAllowedPath(pathname: string): boolean {
   }
   // Check prefix matches
   return ALLOWED_PREFIX_PATHS.some((prefix) => pathname.startsWith(prefix));
+}
+
+/**
+ * Check if request body contains authentication credentials.
+ * This detects when iOS Safari's password autofill triggers a native form
+ * submission to /login instead of the correct /sportmanager.security/authentication/authenticate endpoint.
+ *
+ * Checks for both:
+ * 1. Neos Flow format: __authentication[Neos][Flow]...[username]=value
+ * 2. Simple HTML form format: username=value (from native form submission)
+ *
+ * @param body The request body as text
+ * @returns true if the body contains authentication credentials
+ */
+function hasAuthCredentials(body: string): boolean {
+  // Check for Neos Flow format (from React fetch)
+  const encodedField = encodeURIComponent(AUTH_USERNAME_FIELD);
+  if (body.includes(AUTH_USERNAME_FIELD) || body.includes(encodedField)) {
+    return true;
+  }
+
+  // Check for simple HTML form format (from iOS native form submission)
+  // Look for username=...&password=... pattern
+  const params = new URLSearchParams(body);
+  return params.has("username") && params.has("password");
+}
+
+/**
+ * Transform simple form fields to Neos Flow authentication format.
+ * This converts native HTML form submission (username/password) to the
+ * format expected by the VolleyManager authentication endpoint.
+ *
+ * @param body The original form body
+ * @returns Transformed body with Neos Flow field names, or original if already in correct format
+ */
+function transformAuthFormData(body: string): string {
+  // Check if already in Neos Flow format
+  const encodedField = encodeURIComponent(AUTH_USERNAME_FIELD);
+  if (body.includes(AUTH_USERNAME_FIELD) || body.includes(encodedField)) {
+    return body; // Already in correct format
+  }
+
+  // Parse simple form fields
+  const params = new URLSearchParams(body);
+  const username = params.get("username");
+  const password = params.get("password");
+
+  if (!username || !password) {
+    return body; // Not a valid login form, return unchanged
+  }
+
+  // Build Neos Flow format form data
+  // Note: The __trustedProperties and __referrer fields are required by Neos Flow
+  // but we can't generate them here as they contain HMAC signatures.
+  // This transformation will allow the auth to proceed, but it may fail server-side
+  // if the CSRF protection rejects it. The real fix is in the PWA to prevent
+  // native form submission, but this provides a fallback.
+  const neosParams = new URLSearchParams();
+
+  // Add authentication credentials in Neos Flow format
+  neosParams.set(
+    "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][username]",
+    username,
+  );
+  neosParams.set(
+    "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][password]",
+    password,
+  );
+
+  // Copy any other fields that might be present (e.g., __trustedProperties if included)
+  for (const [key, value] of params.entries()) {
+    if (key !== "username" && key !== "password") {
+      neosParams.set(key, value);
+    }
+  }
+
+  return neosParams.toString();
 }
 
 function parseAllowedOrigins(allowedOrigins: string): string[] {
@@ -330,21 +415,85 @@ export default {
       "/",
       requestUrlStr.indexOf("://") + 3,
     );
-    const rawPathAndSearch =
+    let rawPathAndSearch =
       pathStart >= 0 ? requestUrlStr.substring(pathStart) : "/";
+
+    // iOS Safari workaround: Detect requests to /login with auth credentials
+    // iOS Safari can trigger form submission with incorrect method (GET instead of POST)
+    // or send to wrong endpoint. This rewrites such requests to the correct auth endpoint.
+    let requestBody: string | null = null;
+    let methodOverride: string | null = null;
+    if (
+      url.pathname === "/login" &&
+      (request.method === "POST" || request.method === "GET")
+    ) {
+      // Check for auth credentials in body (POST) or query params (GET)
+      if (
+        request.method === "POST" &&
+        request.headers.get("Content-Type")?.includes("application/x-www-form-urlencoded")
+      ) {
+        // Clone the request to read the body (body can only be read once)
+        const clonedRequest = request.clone();
+        requestBody = await clonedRequest.text();
+
+        if (hasAuthCredentials(requestBody)) {
+          // Rewrite to correct auth endpoint (iOS Safari workaround)
+          rawPathAndSearch = AUTH_ENDPOINT;
+          requestBody = transformAuthFormData(requestBody);
+        }
+      } else if (request.method === "GET" && url.search) {
+        // iOS Safari bug: form may submit as GET with credentials in query string
+        // or with postData attached to GET (invalid HTTP, but Safari does it)
+        const queryBody = url.search.slice(1); // Remove leading '?'
+        if (hasAuthCredentials(queryBody)) {
+          // Convert GET to POST and rewrite to correct auth endpoint (iOS Safari workaround)
+          rawPathAndSearch = AUTH_ENDPOINT;
+          requestBody = transformAuthFormData(queryBody);
+          methodOverride = "POST";
+        }
+      }
+    }
+
     const targetUrl = new URL(rawPathAndSearch, env.TARGET_HOST);
 
     // Forward the request
+    // If we already read the body for iOS workaround detection, use it directly
+    // methodOverride is used when converting GET to POST for iOS auth workaround
     const proxyRequest = new Request(targetUrl.toString(), {
-      method: request.method,
+      method: methodOverride ?? request.method,
       headers: request.headers,
-      body: request.body,
+      body: requestBody ?? request.body,
       redirect: "manual", // Handle redirects manually to preserve cookies
     });
 
+    // If we're overriding to POST, ensure Content-Type is set
+    if (methodOverride === "POST" && requestBody) {
+      proxyRequest.headers.set("Content-Type", "application/x-www-form-urlencoded");
+    }
+
     // Remove headers that shouldn't be forwarded
     proxyRequest.headers.delete("Host");
-    proxyRequest.headers.set("Host", new URL(env.TARGET_HOST).host);
+    const targetHostUrl = new URL(env.TARGET_HOST);
+    const targetHost = targetHostUrl.host;
+    const targetOrigin = targetHostUrl.origin;
+    proxyRequest.headers.set("Host", targetHost);
+
+    // Rewrite Origin and Referer to match target host
+    // The upstream Neos Flow server validates these for CSRF protection
+    proxyRequest.headers.set("Origin", targetOrigin);
+
+    const originalReferer = proxyRequest.headers.get("Referer");
+    if (originalReferer) {
+      try {
+        const refererUrl = new URL(originalReferer);
+        refererUrl.protocol = targetHostUrl.protocol;
+        refererUrl.host = targetHost;
+        proxyRequest.headers.set("Referer", refererUrl.toString());
+      } catch {
+        // If Referer is malformed, set a safe default
+        proxyRequest.headers.set("Referer", targetOrigin + "/");
+      }
+    }
 
     proxyRequest.headers.set("User-Agent", VOLLEYKIT_USER_AGENT);
 
@@ -370,17 +519,19 @@ export default {
         responseHeaders.delete("Set-Cookie");
 
         for (const cookie of cookies) {
-          // Remove Domain, Secure, and SameSite - we'll add them back explicitly
+          // Remove Domain, Secure, SameSite, and Partitioned - we'll add them back explicitly
           // This ensures consistent behavior regardless of original cookie format
           const modifiedCookie = cookie
             .replace(/Domain=[^;]+;?\s*/gi, "")
             .replace(/;\s*Secure\s*(;|$)/gi, "$1")
-            .replace(/SameSite=[^;]+;?\s*/gi, "");
+            .replace(/SameSite=[^;]+;?\s*/gi, "")
+            .replace(/;\s*Partitioned\s*(;|$)/gi, "$1");
 
-          // Always add SameSite=None and Secure for cross-origin compatibility
+          // Add SameSite=None, Secure, and Partitioned for cross-origin compatibility
+          // Partitioned (CHIPS) is required for iOS Safari's ITP to allow third-party cookies
           responseHeaders.append(
             "Set-Cookie",
-            `${modifiedCookie}; SameSite=None; Secure`,
+            `${modifiedCookie}; SameSite=None; Secure; Partitioned`,
           );
         }
       }

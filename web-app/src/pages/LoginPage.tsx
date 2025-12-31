@@ -34,6 +34,11 @@ export function LoginPage() {
   const [username, setUsername] = useState("");
   // Use ref for password to minimize memory exposure (avoids re-renders with password in state)
   const passwordRef = useRef<HTMLInputElement>(null);
+  // Form ref for manual validation trigger (needed since button is type="button")
+  const formRef = useRef<HTMLFormElement>(null);
+  // Ref to prevent race condition with double submission
+  // State updates are async, so we need a synchronous guard
+  const isSubmittingRef = useRef(false);
 
   const isLoading = status === "loading";
 
@@ -56,16 +61,47 @@ export function LoginPage() {
   }, [initializeDemoData, setDemoAuthenticated, navigate]);
 
   async function handleSubmit(e: FormEvent) {
+    // Prevent native form submission - critical for iOS autofill compatibility
+    // iOS Safari's password autofill can trigger native form submission,
+    // bypassing React's event handling in some cases
     e.preventDefault();
+    e.stopPropagation();
+    await performLogin();
+  }
 
-    const password = passwordRef.current?.value || "";
-    const success = await login(username, password);
-    if (success) {
-      // Clear password field after successful login
-      if (passwordRef.current) {
-        passwordRef.current.value = "";
+  async function performLogin() {
+    // Use ref for synchronous double-submit prevention (state updates are async)
+    if (isSubmittingRef.current || isLoading) return;
+
+    // Trigger HTML5 form validation (needed since button is type="button")
+    // reportValidity() shows validation messages and returns false if invalid
+    if (formRef.current && !formRef.current.reportValidity()) {
+      return;
+    }
+
+    isSubmittingRef.current = true;
+
+    try {
+      const password = passwordRef.current?.value || "";
+      const success = await login(username, password);
+      if (success) {
+        // Clear password field after successful login
+        if (passwordRef.current) {
+          passwordRef.current.value = "";
+        }
+        navigate("/");
       }
-      navigate("/");
+    } finally {
+      isSubmittingRef.current = false;
+    }
+  }
+
+  // Handle Enter key on password field to trigger login
+  // This provides keyboard submit without relying on form submission
+  function handlePasswordKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter" && !isLoading) {
+      e.preventDefault();
+      performLogin();
     }
   }
 
@@ -108,7 +144,8 @@ export function LoginPage() {
 
         {/* Login form */}
         <div className="card p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          {/* method="post" is defensive fallback if native submission somehow occurs */}
+          <form ref={formRef} onSubmit={handleSubmit} method="post" className="space-y-6">
             <div>
               <label
                 htmlFor="username"
@@ -144,6 +181,7 @@ export function LoginPage() {
                 autoComplete="current-password"
                 required
                 disabled={isLoading}
+                onKeyDown={handlePasswordKeyDown}
                 className="input"
               />
             </div>
@@ -157,10 +195,11 @@ export function LoginPage() {
             )}
 
             <Button
-              type="submit"
+              type="button"
               variant="primary"
               fullWidth
               loading={isLoading}
+              onClick={performLogin}
               data-testid="login-button"
             >
               {isLoading ? t("auth.loggingIn") : t("auth.loginButton")}

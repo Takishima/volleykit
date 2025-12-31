@@ -191,6 +191,10 @@ export default defineConfig(({ mode }) => {
             /\/neos/,
             /\/indoorvolleyball\.refadmin/,
             /\/sportmanager\.indoorvolleyball/,
+            // Don't intercept security/auth routes - critical for login flow
+            /\/sportmanager\.security/,
+            /\/login$/,
+            /\/logout$/,
             // Don't intercept PR preview routes - let them load their own assets
             /\/pr-\d+/,
           ],

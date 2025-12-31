@@ -78,8 +78,74 @@ function rewriteCookie(cookie: string): string {
     cookie
       .replace(/Domain=[^;]+;?\s*/gi, "")
       .replace(/;\s*Secure\s*(;|$)/gi, "$1")
-      .replace(/SameSite=[^;]+;?\s*/gi, "") + "; SameSite=None; Secure"
+      .replace(/SameSite=[^;]+;?\s*/gi, "")
+      .replace(/;\s*Partitioned\s*(;|$)/gi, "$1") +
+    "; SameSite=None; Secure; Partitioned"
   );
+}
+
+// The correct authentication endpoint
+const AUTH_ENDPOINT = "/sportmanager.security/authentication/authenticate";
+
+// Form field name that indicates authentication credentials are present
+const AUTH_USERNAME_FIELD =
+  "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][username]";
+
+/**
+ * Check if request body contains authentication credentials.
+ */
+function hasAuthCredentials(body: string): boolean {
+  // Check for Neos Flow format (from React fetch)
+  const encodedField = encodeURIComponent(AUTH_USERNAME_FIELD);
+  if (body.includes(AUTH_USERNAME_FIELD) || body.includes(encodedField)) {
+    return true;
+  }
+
+  // Check for simple HTML form format (from iOS native form submission)
+  const params = new URLSearchParams(body);
+  return params.has("username") && params.has("password");
+}
+
+/**
+ * Transform simple form fields to Neos Flow authentication format.
+ */
+function transformAuthFormData(body: string): string {
+  // Check if already in Neos Flow format
+  const encodedField = encodeURIComponent(AUTH_USERNAME_FIELD);
+  if (body.includes(AUTH_USERNAME_FIELD) || body.includes(encodedField)) {
+    return body; // Already in correct format
+  }
+
+  // Parse simple form fields
+  const params = new URLSearchParams(body);
+  const username = params.get("username");
+  const password = params.get("password");
+
+  if (!username || !password) {
+    return body; // Not a valid login form, return unchanged
+  }
+
+  // Build Neos Flow format form data
+  const neosParams = new URLSearchParams();
+
+  // Add authentication credentials in Neos Flow format
+  neosParams.set(
+    "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][username]",
+    username,
+  );
+  neosParams.set(
+    "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][password]",
+    password,
+  );
+
+  // Copy any other fields that might be present
+  for (const [key, value] of params.entries()) {
+    if (key !== "username" && key !== "password") {
+      neosParams.set(key, value);
+    }
+  }
+
+  return neosParams.toString();
 }
 
 describe("Origin Validation", () => {
@@ -227,11 +293,12 @@ describe("Path Filtering", () => {
 
 describe("Cookie Rewriting", () => {
   describe("rewriteCookie", () => {
-    it("adds SameSite=None and Secure", () => {
+    it("adds SameSite=None, Secure, and Partitioned", () => {
       const cookie = "session=abc123; Path=/";
       const result = rewriteCookie(cookie);
       expect(result).toContain("SameSite=None");
       expect(result).toContain("Secure");
+      expect(result).toContain("Partitioned");
     });
 
     it("removes existing Domain attribute", () => {
@@ -249,6 +316,14 @@ describe("Cookie Rewriting", () => {
       expect(secureCount).toBe(1);
     });
 
+    it("removes existing Partitioned attribute", () => {
+      const cookie = "session=abc123; Partitioned; Path=/";
+      const result = rewriteCookie(cookie);
+      // Should only have one Partitioned (the one we add)
+      const partitionedCount = (result.match(/Partitioned/g) || []).length;
+      expect(partitionedCount).toBe(1);
+    });
+
     it("removes existing SameSite attribute", () => {
       const cookie = "session=abc123; SameSite=Strict; Path=/";
       const result = rewriteCookie(cookie);
@@ -263,7 +338,127 @@ describe("Cookie Rewriting", () => {
       expect(result).not.toContain("Domain=");
       expect(result).toContain("SameSite=None");
       expect(result).toContain("Secure");
+      expect(result).toContain("Partitioned");
       expect(result).toContain("HttpOnly");
+    });
+
+    it("handles cookies with all attributes already present", () => {
+      const cookie =
+        "session=abc; Domain=.example.com; Secure; SameSite=Strict; Partitioned; HttpOnly";
+      const result = rewriteCookie(cookie);
+      // Should remove Domain and replace attributes with our values
+      expect(result).not.toContain("Domain=");
+      expect(result).not.toContain("SameSite=Strict");
+      expect(result).toContain("SameSite=None");
+      // Should only have one of each
+      const secureCount = (result.match(/Secure/g) || []).length;
+      const partitionedCount = (result.match(/Partitioned/g) || []).length;
+      expect(secureCount).toBe(1);
+      expect(partitionedCount).toBe(1);
+    });
+  });
+});
+
+describe("iOS Authentication Workaround", () => {
+  describe("hasAuthCredentials", () => {
+    it("detects Neos Flow format credentials", () => {
+      const body =
+        "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][username]=testuser&" +
+        "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][password]=testpass";
+      expect(hasAuthCredentials(body)).toBe(true);
+    });
+
+    it("detects URL-encoded Neos Flow format credentials", () => {
+      const body =
+        "__authentication%5BNeos%5D%5BFlow%5D%5BSecurity%5D%5BAuthentication%5D%5BToken%5D%5BUsernamePassword%5D%5Busername%5D=testuser&" +
+        "__authentication%5BNeos%5D%5BFlow%5D%5BSecurity%5D%5BAuthentication%5D%5BToken%5D%5BUsernamePassword%5D%5Bpassword%5D=testpass";
+      expect(hasAuthCredentials(body)).toBe(true);
+    });
+
+    it("detects simple HTML form format credentials", () => {
+      const body = "username=testuser&password=testpass";
+      expect(hasAuthCredentials(body)).toBe(true);
+    });
+
+    it("returns false for body without credentials", () => {
+      const body = "search=test&filter=active";
+      expect(hasAuthCredentials(body)).toBe(false);
+    });
+
+    it("returns false for body with only username", () => {
+      const body = "username=testuser&filter=active";
+      expect(hasAuthCredentials(body)).toBe(false);
+    });
+
+    it("returns false for body with only password", () => {
+      const body = "password=testpass&filter=active";
+      expect(hasAuthCredentials(body)).toBe(false);
+    });
+
+    it("returns false for empty body", () => {
+      expect(hasAuthCredentials("")).toBe(false);
+    });
+  });
+
+  describe("transformAuthFormData", () => {
+    it("transforms simple form fields to Neos Flow format", () => {
+      const body = "username=testuser&password=testpass";
+      const result = transformAuthFormData(body);
+      expect(result).toContain(
+        "__authentication%5BNeos%5D%5BFlow%5D%5BSecurity%5D%5BAuthentication%5D%5BToken%5D%5BUsernamePassword%5D%5Busername%5D=testuser",
+      );
+      expect(result).toContain(
+        "__authentication%5BNeos%5D%5BFlow%5D%5BSecurity%5D%5BAuthentication%5D%5BToken%5D%5BUsernamePassword%5D%5Bpassword%5D=testpass",
+      );
+    });
+
+    it("returns body unchanged if already in Neos Flow format", () => {
+      const body =
+        "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][username]=testuser&" +
+        "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][password]=testpass";
+      const result = transformAuthFormData(body);
+      expect(result).toBe(body);
+    });
+
+    it("returns body unchanged if URL-encoded Neos Flow format", () => {
+      const body =
+        "__authentication%5BNeos%5D%5BFlow%5D%5BSecurity%5D%5BAuthentication%5D%5BToken%5D%5BUsernamePassword%5D%5Busername%5D=testuser";
+      const result = transformAuthFormData(body);
+      expect(result).toBe(body);
+    });
+
+    it("preserves additional fields when transforming", () => {
+      const body = "username=testuser&password=testpass&rememberMe=true";
+      const result = transformAuthFormData(body);
+      expect(result).toContain("rememberMe=true");
+    });
+
+    it("returns body unchanged if missing username", () => {
+      const body = "password=testpass&filter=active";
+      const result = transformAuthFormData(body);
+      expect(result).toBe(body);
+    });
+
+    it("returns body unchanged if missing password", () => {
+      const body = "username=testuser&filter=active";
+      const result = transformAuthFormData(body);
+      expect(result).toBe(body);
+    });
+
+    it("handles special characters in credentials", () => {
+      const body = "username=test%40user.com&password=pass%26word%3D123";
+      const result = transformAuthFormData(body);
+      // URLSearchParams decodes then re-encodes, so check decoded values are preserved
+      expect(result).toContain("test%40user.com");
+      expect(result).toContain("pass%26word%3D123");
+    });
+  });
+
+  describe("AUTH_ENDPOINT constant", () => {
+    it("points to correct authentication endpoint", () => {
+      expect(AUTH_ENDPOINT).toBe(
+        "/sportmanager.security/authentication/authenticate",
+      );
     });
   });
 });
