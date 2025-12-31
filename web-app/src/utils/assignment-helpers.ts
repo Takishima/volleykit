@@ -157,3 +157,16 @@ export function isGamePast(gameStartTime: string | undefined | null): boolean {
   const gameStart = parseGameStartTime(gameStartTime);
   return gameStart !== null && new Date() > gameStart;
 }
+
+/**
+ * Checks if a game has already been validated (scoresheet closed).
+ *
+ * A validated game has its scoresheet's closedAt field set, indicating
+ * that validation was completed and the game data is now read-only.
+ *
+ * @param assignment - The referee assignment to check
+ * @returns true if the game has been validated (closedAt is set), false otherwise
+ */
+export function isGameAlreadyValidated(assignment: Assignment): boolean {
+  return !!assignment.refereeGame?.game?.scoresheet?.closedAt;
+}
