@@ -111,14 +111,15 @@ export function useTravelTime(
         longitude: homeLocation.longitude,
       };
 
-      // Use mock transport in demo mode, real API otherwise
+      // Prefer real OJP API when configured, fall back to mock transport
+      // This matches the logic in useSbbUrl for consistency
       let result: TravelTimeResult;
-      if (isDemoMode) {
-        result = await calculateMockTravelTime(fromCoords, hallCoords);
-      } else {
+      if (isOjpConfigured()) {
         result = await calculateTravelTime(fromCoords, hallCoords, {
           targetArrivalTime,
         });
+      } else {
+        result = await calculateMockTravelTime(fromCoords, hallCoords);
       }
 
       // Persist successful result to localStorage
