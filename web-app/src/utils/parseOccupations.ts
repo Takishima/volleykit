@@ -112,10 +112,45 @@ export function filterRefereeOccupations(occupations: Occupation[]): Occupation[
 }
 
 /**
+ * Words to exclude when deriving association code from name.
+ * These are common prepositions/articles that shouldn't be part of the abbreviation.
+ */
+const EXCLUDED_WORDS = new Set(["de", "du", "des", "la", "le", "les", "et", "und", "of", "the"]);
+
+/**
+ * Derives an association code from the full name by extracting first letters.
+ * Excludes common prepositions/articles (de, du, la, le, etc.).
+ *
+ * @example
+ * "Swiss Volley" → "SV"
+ * "Swiss Volley Région Zurich" → "SVRZ"
+ * "Association Vaudoise de Volleyball" → "AVV"
+ *
+ * @param name - The full association name
+ * @returns A derived abbreviation, or undefined if name is empty/missing
+ */
+export function deriveAssociationCodeFromName(name: string | undefined): string | undefined {
+  if (!name) {
+    return undefined;
+  }
+
+  const words = name.split(/\s+/);
+  const initials = words
+    .filter((word) => !EXCLUDED_WORDS.has(word.toLowerCase()))
+    .map((word) => word.charAt(0).toUpperCase())
+    .join("");
+
+  return initials || undefined;
+}
+
+/**
  * Parses an ActiveParty AttributeValue into an Occupation with association code.
  *
  * The activeParty data from embedded HTML includes inflatedValue which contains
  * the association's shortName (e.g., "SVRZ", "SV") that we use as the associationCode.
+ *
+ * If shortName is not available, derives the code from the name field by extracting
+ * first letters of each word (excluding common prepositions).
  *
  * @param attr - The AttributeValue from activeParty.groupedEligibleAttributeValues
  * @returns Occupation with associationCode, or null if not a referee role
@@ -133,8 +168,9 @@ export function parseOccupationFromActiveParty(
     return null;
   }
 
-  // Extract association code from inflatedValue.shortName
-  const associationCode = attr.inflatedValue?.shortName;
+  // Extract association code: prefer shortName, fall back to derived from name
+  const associationCode =
+    attr.inflatedValue?.shortName ?? deriveAssociationCodeFromName(attr.inflatedValue?.name);
 
   return {
     id: attr.__identity,

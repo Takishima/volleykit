@@ -26,6 +26,25 @@ function createHtmlWithActiveParty(activePartyJson: string): string {
   `;
 }
 
+// Helper to create HTML with Vue component format (production format)
+function createHtmlWithVueActiveParty(activePartyJson: string): string {
+  // The JSON is HTML-entity encoded in the actual pages
+  // Order matters: encode & first, then quotes
+  const encodedJson = activePartyJson
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;");
+
+  return `
+    <html>
+      <body>
+        <main-layout :active-party="$convertFromBackendToFrontend(${encodedJson})" :other-prop="test">
+          Content
+        </main-layout>
+      </body>
+    </html>
+  `;
+}
+
 describe("extractActivePartyFromHtml", () => {
   describe("successful extraction", () => {
     it("extracts activeParty with eligibleAttributeValues", () => {
@@ -139,6 +158,78 @@ describe("extractActivePartyFromHtml", () => {
         name: "Test & Demo",
         symbol: "<test>",
       });
+    });
+
+    it("extracts activeParty from Vue component attribute format", () => {
+      const activePartyData = {
+        eligibleAttributeValues: [
+          {
+            __identity: "attr-1",
+            attributeIdentifier: "Indoorvolleyball.RefAdmin:AbstractAssociation",
+            roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+          },
+        ],
+        groupedEligibleAttributeValues: [
+          {
+            __identity: "attr-1",
+            attributeIdentifier: "Indoorvolleyball.RefAdmin:AbstractAssociation",
+            roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+            inflatedValue: {
+              __identity: "assoc-1",
+              name: "Swiss Volley Région Zurich",
+              shortName: "SVRZ",
+            },
+          },
+        ],
+      };
+
+      const html = createHtmlWithVueActiveParty(JSON.stringify(activePartyData));
+      const result = extractActivePartyFromHtml(html);
+
+      expect(result?.groupedEligibleAttributeValues).toHaveLength(1);
+      expect(result?.groupedEligibleAttributeValues?.[0]?.inflatedValue?.shortName).toBe("SVRZ");
+    });
+
+    it("extracts activeParty from Vue format with nested objects", () => {
+      // Simulates real production data with deeply nested structures
+      const activePartyData = {
+        __identity: "user-id",
+        firstName: "Test",
+        lastName: "User",
+        groupedEligibleAttributeValues: [
+          {
+            __identity: "attr-1",
+            attributeIdentifier: "Indoorvolleyball.RefAdmin:AbstractAssociation",
+            roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+            inflatedValue: {
+              __identity: "assoc-svrz",
+              name: "Swiss Volley Région Zurich",
+              shortName: "SVRZ",
+              translations: {
+                de: { name: "Swiss Volley Region Zürich", shortName: "SVRZ" },
+                fr: { name: "Swiss Volley Région Zurich", shortName: "SVRZ" },
+              },
+            },
+          },
+          {
+            __identity: "attr-2",
+            attributeIdentifier: "Indoorvolleyball.RefAdmin:AbstractAssociation",
+            roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+            inflatedValue: {
+              __identity: "assoc-sv",
+              name: "Swiss Volley",
+              shortName: "SV",
+            },
+          },
+        ],
+      };
+
+      const html = createHtmlWithVueActiveParty(JSON.stringify(activePartyData));
+      const result = extractActivePartyFromHtml(html);
+
+      expect(result?.groupedEligibleAttributeValues).toHaveLength(2);
+      expect(result?.groupedEligibleAttributeValues?.[0]?.inflatedValue?.shortName).toBe("SVRZ");
+      expect(result?.groupedEligibleAttributeValues?.[1]?.inflatedValue?.shortName).toBe("SV");
     });
   });
 
