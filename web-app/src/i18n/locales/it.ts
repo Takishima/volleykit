@@ -151,6 +151,7 @@ const it: Translations = {
     wizardProgress: "Progresso procedura guidata",
     stepIndicatorCurrent: "(corrente)",
     stepIndicatorDone: "(completato)",
+    dob: "DDN",
   },
   auth: {
     login: "Accesso",

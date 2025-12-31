@@ -26,11 +26,11 @@ describe("SelectedScorerCard", () => {
     expect(screen.getByText("ID: 12345")).toBeInTheDocument();
   });
 
-  it("displays formatted birthday", () => {
+  it("displays formatted birthday with DOB label", () => {
     render(<SelectedScorerCard scorer={mockScorer} onClear={vi.fn()} />);
 
-    // formatDOB returns DD.MM.YY format (Swiss format)
-    expect(screen.getByText("15.03.85")).toBeInTheDocument();
+    // formatDOB returns DD.MM.YY format (Swiss format) with DOB label
+    expect(screen.getByText("DOB: 15.03.85")).toBeInTheDocument();
   });
 
   it("calls onClear when clear button is clicked", () => {
