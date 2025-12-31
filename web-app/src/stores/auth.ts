@@ -1,7 +1,10 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { setCsrfToken, clearSession } from "@/api/client";
-import { filterRefereeOccupations } from "@/utils/parseOccupations";
+import {
+  filterRefereeOccupations,
+  parseOccupationsFromActiveParty,
+} from "@/utils/parseOccupations";
 import { logger } from "@/utils/logger";
 import {
   extractLoginFormFields,
@@ -106,12 +109,30 @@ export const useAuthStore = create<AuthState>()(
             // Already logged in - parse activeParty from current page
             const activeParty = extractActivePartyFromHtml(html);
             setCsrfToken(existingCsrfToken);
+
+            // Derive occupations from active party data for the dropdown
+            const occupations = parseOccupationsFromActiveParty(
+              activeParty?.groupedEligibleAttributeValues,
+            );
+            const currentState = get();
+            const activeOccupationId =
+              currentState.activeOccupationId ?? occupations[0]?.id ?? null;
+
             set({
               status: "authenticated",
               csrfToken: existingCsrfToken,
               eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
               groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
               eligibleRoles: activeParty?.eligibleRoles ?? null,
+              user: currentState.user
+                ? { ...currentState.user, occupations }
+                : {
+                    id: "user",
+                    firstName: "",
+                    lastName: "",
+                    occupations,
+                  },
+              activeOccupationId,
             });
             return true;
           }
@@ -127,12 +148,30 @@ export const useAuthStore = create<AuthState>()(
             // Parse activeParty from dashboard HTML after successful login
             const activeParty = extractActivePartyFromHtml(result.dashboardHtml);
             setCsrfToken(result.csrfToken);
+
+            // Derive occupations from active party data for the dropdown
+            const occupations = parseOccupationsFromActiveParty(
+              activeParty?.groupedEligibleAttributeValues,
+            );
+            const currentState = get();
+            const activeOccupationId =
+              currentState.activeOccupationId ?? occupations[0]?.id ?? null;
+
             set({
               status: "authenticated",
               csrfToken: result.csrfToken,
               eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
               groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
               eligibleRoles: activeParty?.eligibleRoles ?? null,
+              user: currentState.user
+                ? { ...currentState.user, occupations }
+                : {
+                    id: "user",
+                    firstName: "",
+                    lastName: "",
+                    occupations,
+                  },
+              activeOccupationId,
             });
             return true;
           }
@@ -234,23 +273,34 @@ export const useAuthStore = create<AuthState>()(
                 const csrfToken = extractCsrfTokenFromPage(dashboardHtml);
                 const activeParty = extractActivePartyFromHtml(dashboardHtml);
 
+                // Derive occupations from active party data for the dropdown
+                const occupations = parseOccupationsFromActiveParty(
+                  activeParty?.groupedEligibleAttributeValues,
+                );
+                const currentState = get();
+                const activeOccupationId =
+                  currentState.activeOccupationId ?? occupations[0]?.id ?? null;
+
                 if (csrfToken) {
                   setCsrfToken(csrfToken);
-                  set({
-                    status: "authenticated",
-                    csrfToken,
-                    eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
-                    groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
-                    eligibleRoles: activeParty?.eligibleRoles ?? null,
-                  });
-                } else {
-                  set({
-                    status: "authenticated",
-                    eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
-                    groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
-                    eligibleRoles: activeParty?.eligibleRoles ?? null,
-                  });
                 }
+
+                set({
+                  status: "authenticated",
+                  csrfToken: csrfToken ?? currentState.csrfToken,
+                  eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
+                  groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
+                  eligibleRoles: activeParty?.eligibleRoles ?? null,
+                  user: currentState.user
+                    ? { ...currentState.user, occupations }
+                    : {
+                        id: "user",
+                        firstName: "",
+                        lastName: "",
+                        occupations,
+                      },
+                  activeOccupationId,
+                });
                 resolvePromise(true);
                 return;
               }

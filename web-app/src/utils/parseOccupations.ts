@@ -1,17 +1,16 @@
 /**
- * Occupation parsing utilities for API responses.
+ * Occupation parsing utilities for API responses and active party data.
  *
- * NOTE: This utility is prepared for when real profile loading from the API
- * is implemented. Currently, occupations are only set in demo mode. When
- * PersonDetails.eligibleAttributeValues is fetched from the API, use
- * parseOccupations() to filter to referee-only roles.
+ * Two parsing modes are supported:
+ * 1. parseOccupations() - Parse from API PersonDetails.eligibleAttributeValues
+ * 2. parseOccupationsFromActiveParty() - Parse from HTML-embedded activeParty data
  *
- * @example
- * // Future usage when profile loading is implemented:
- * const occupations = parseOccupations(personDetails.eligibleAttributeValues);
+ * The activeParty mode includes inflatedValue with association short names (e.g., "SVRZ")
+ * which are used to set the associationCode on occupations.
  */
 import type { Occupation } from "@/stores/auth";
 import type { components } from "@/api/schema";
+import type { AttributeValue as ActivePartyAttributeValue } from "@/utils/active-party-parser";
 
 type AttributeValue = components["schemas"]["AttributeValue"];
 
@@ -110,4 +109,58 @@ export function parseOccupations(
  */
 export function filterRefereeOccupations(occupations: Occupation[]): Occupation[] {
   return occupations.filter((occ) => occ.type === "referee");
+}
+
+/**
+ * Parses an ActiveParty AttributeValue into an Occupation with association code.
+ *
+ * The activeParty data from embedded HTML includes inflatedValue which contains
+ * the association's shortName (e.g., "SVRZ", "SV") that we use as the associationCode.
+ *
+ * @param attr - The AttributeValue from activeParty.groupedEligibleAttributeValues
+ * @returns Occupation with associationCode, or null if not a referee role
+ */
+export function parseOccupationFromActiveParty(
+  attr: ActivePartyAttributeValue,
+): Occupation | null {
+  const roleIdentifier = attr.roleIdentifier;
+  if (!roleIdentifier || !attr.__identity) {
+    return null;
+  }
+
+  // Only parse referee roles
+  if (!ROLE_PATTERNS.referee.test(roleIdentifier)) {
+    return null;
+  }
+
+  // Extract association code from inflatedValue.shortName
+  const associationCode = attr.inflatedValue?.shortName;
+
+  return {
+    id: attr.__identity,
+    type: "referee",
+    associationCode,
+  };
+}
+
+/**
+ * Parses groupedEligibleAttributeValues from activeParty HTML data
+ * into an array of referee Occupations with association codes.
+ *
+ * This is used during login and session restoration to populate
+ * user.occupations from the embedded HTML data.
+ *
+ * @param attributeValues - Array from activeParty.groupedEligibleAttributeValues
+ * @returns Array of referee Occupations with association codes
+ */
+export function parseOccupationsFromActiveParty(
+  attributeValues: ActivePartyAttributeValue[] | null | undefined,
+): Occupation[] {
+  if (!attributeValues || attributeValues.length === 0) {
+    return [];
+  }
+
+  return attributeValues
+    .map((attr) => parseOccupationFromActiveParty(attr))
+    .filter((occ): occ is Occupation => occ !== null);
 }
