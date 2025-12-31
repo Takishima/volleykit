@@ -110,7 +110,8 @@ export function useNominationList({
 }: UseNominationListOptions): UseNominationListResult {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
   const nominationLists = useDemoStore((state) => state.nominationLists);
-  const hasPrefetchedData = prefetchedData !== undefined;
+  // Check for both null and undefined - API may return null for some validated games
+  const hasPrefetchedData = prefetchedData != null;
 
   // Transform prefetched data if provided
   const prefetchedPlayers = useMemo(() => {

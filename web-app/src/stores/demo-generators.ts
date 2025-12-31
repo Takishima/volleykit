@@ -1122,7 +1122,8 @@ export function generateMockNominationLists(): MockNominationLists {
   const result: MockNominationLists = {};
 
   for (const config of NOMINATION_LIST_CONFIGS) {
-    const gameUuid = generateDemoUuid(`demo-g-${config.gameIndex}`);
+    // Use same seed pattern as createRefereeGame to ensure game IDs match
+    const gameUuid = generateDemoUuid(`demo-game-${config.gameIndex}`);
 
     result[gameUuid] = {
       home: createNominationList(
