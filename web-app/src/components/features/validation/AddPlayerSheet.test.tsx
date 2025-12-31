@@ -118,16 +118,18 @@ describe("AddPlayerSheet", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("displays player list", () => {
+  it("displays player list with formatted names", () => {
     render(<AddPlayerSheet {...defaultProps} />, { wrapper: createWrapper() });
-    expect(screen.getByText("Müller Max")).toBeInTheDocument();
-    expect(screen.getByText("Schmidt Anna")).toBeInTheDocument();
+    // Players are shown as "LastName Initial. dd.mm.yy"
+    expect(screen.getByText("Müller M. 15.05.90")).toBeInTheDocument();
+    expect(screen.getByText("Schmidt A. 22.08.95")).toBeInTheDocument();
   });
 
   it("filters out already nominated players", () => {
     render(<AddPlayerSheet {...defaultProps} />, { wrapper: createWrapper() });
-    expect(screen.getByText("Müller Max")).toBeInTheDocument();
-    expect(screen.queryByText("Weber Thomas")).not.toBeInTheDocument();
+    expect(screen.getByText("Müller M. 15.05.90")).toBeInTheDocument();
+    // Weber Thomas is already nominated, so should not appear
+    expect(screen.queryByText(/Weber/)).not.toBeInTheDocument();
   });
 
   it("filters out excluded players", () => {
@@ -135,8 +137,8 @@ describe("AddPlayerSheet", () => {
       <AddPlayerSheet {...defaultProps} excludePlayerIds={["indoor-1"]} />,
       { wrapper: createWrapper() },
     );
-    expect(screen.queryByText("Müller Max")).not.toBeInTheDocument();
-    expect(screen.getByText("Schmidt Anna")).toBeInTheDocument();
+    expect(screen.queryByText(/Müller/)).not.toBeInTheDocument();
+    expect(screen.getByText("Schmidt A. 22.08.95")).toBeInTheDocument();
   });
 
   it("calls onClose when backdrop is clicked", () => {
@@ -196,8 +198,8 @@ describe("AddPlayerSheet", () => {
       vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
     });
 
-    expect(screen.getByText("Schmidt Anna")).toBeInTheDocument();
-    expect(screen.queryByText("Müller Max")).not.toBeInTheDocument();
+    expect(screen.getByText("Schmidt A. 22.08.95")).toBeInTheDocument();
+    expect(screen.queryByText(/Müller/)).not.toBeInTheDocument();
   });
 
   it("performs case-insensitive search", () => {
@@ -210,7 +212,7 @@ describe("AddPlayerSheet", () => {
       vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
     });
 
-    expect(screen.getByText("Schmidt Anna")).toBeInTheDocument();
+    expect(screen.getByText("Schmidt A. 22.08.95")).toBeInTheDocument();
   });
 
   it("shows no results message when search has no matches", () => {
@@ -249,18 +251,18 @@ describe("AddPlayerSheet", () => {
       wrapper: createWrapper(),
     });
 
-    const playerButton = screen.getByText("Müller Max").closest("button");
+    const playerButton = screen.getByText("Müller M. 15.05.90").closest("button");
     fireEvent.click(playerButton!);
 
     expect(onAddPlayer).toHaveBeenCalledTimes(1);
     expect(onAddPlayer).toHaveBeenCalledWith(mockPlayers[0]);
   });
 
-  it("displays date of birth for players", () => {
+  it("displays formatted player info with date of birth", () => {
     render(<AddPlayerSheet {...defaultProps} />, { wrapper: createWrapper() });
-    // DOB is shown in DD.MM.YY format
-    expect(screen.getByText("15.05.90")).toBeInTheDocument();
-    expect(screen.getByText("22.08.95")).toBeInTheDocument();
+    // Players are displayed as "LastName Initial. dd.mm.yy"
+    expect(screen.getByText("Müller M. 15.05.90")).toBeInTheDocument();
+    expect(screen.getByText("Schmidt A. 22.08.95")).toBeInTheDocument();
   });
 
   it("has proper accessibility attributes", () => {
@@ -376,7 +378,7 @@ describe("AddPlayerSheet - Multi-Player Selection", () => {
       wrapper: createWrapper(),
     });
 
-    const playerButton = screen.getByText("Müller Max").closest("button");
+    const playerButton = screen.getByText("Müller M. 15.05.90").closest("button");
     fireEvent.click(playerButton!);
 
     expect(onClose).not.toHaveBeenCalled();
@@ -386,7 +388,7 @@ describe("AddPlayerSheet - Multi-Player Selection", () => {
   it("shows checkmark on added player", () => {
     render(<AddPlayerSheet {...defaultProps} />, { wrapper: createWrapper() });
 
-    const playerButton = screen.getByText("Müller Max").closest("button");
+    const playerButton = screen.getByText("Müller M. 15.05.90").closest("button");
     fireEvent.click(playerButton!);
 
     expect(playerButton).toHaveAttribute("aria-pressed", "true");
@@ -399,12 +401,12 @@ describe("AddPlayerSheet - Multi-Player Selection", () => {
 
     expect(screen.queryByText(/added/i)).not.toBeInTheDocument();
 
-    const maxButton = screen.getByText("Müller Max").closest("button");
+    const maxButton = screen.getByText("Müller M. 15.05.90").closest("button");
     fireEvent.click(maxButton!);
 
     expect(screen.getByText("1 added")).toBeInTheDocument();
 
-    const annaButton = screen.getByText("Schmidt Anna").closest("button");
+    const annaButton = screen.getByText("Schmidt A. 22.08.95").closest("button");
     fireEvent.click(annaButton!);
 
     expect(screen.getByText("2 added")).toBeInTheDocument();
@@ -416,10 +418,10 @@ describe("AddPlayerSheet - Multi-Player Selection", () => {
       wrapper: createWrapper(),
     });
 
-    const maxButton = screen.getByText("Müller Max").closest("button");
+    const maxButton = screen.getByText("Müller M. 15.05.90").closest("button");
     fireEvent.click(maxButton!);
 
-    const annaButton = screen.getByText("Schmidt Anna").closest("button");
+    const annaButton = screen.getByText("Schmidt A. 22.08.95").closest("button");
     fireEvent.click(annaButton!);
 
     expect(onAddPlayer).toHaveBeenCalledTimes(2);
@@ -439,7 +441,7 @@ describe("AddPlayerSheet - Multi-Player Selection", () => {
       { wrapper: createWrapper() },
     );
 
-    const playerButton = screen.getByText("Müller Max").closest("button");
+    const playerButton = screen.getByText("Müller M. 15.05.90").closest("button");
 
     // First click adds
     fireEvent.click(playerButton!);
@@ -464,7 +466,7 @@ describe("AddPlayerSheet - Multi-Player Selection", () => {
       { wrapper: createWrapper() },
     );
 
-    const playerButton = screen.getByText("Müller Max").closest("button");
+    const playerButton = screen.getByText("Müller M. 15.05.90").closest("button");
     fireEvent.click(playerButton!);
 
     expect(screen.getByText("1 added")).toBeInTheDocument();
@@ -475,7 +477,7 @@ describe("AddPlayerSheet - Multi-Player Selection", () => {
     rerender(<AddPlayerSheet {...defaultProps} onClose={onClose} isOpen={true} />);
 
     expect(screen.queryByText(/added/i)).not.toBeInTheDocument();
-    const newPlayerButton = screen.getByText("Müller Max").closest("button");
+    const newPlayerButton = screen.getByText("Müller M. 15.05.90").closest("button");
     expect(newPlayerButton).not.toBeDisabled();
   });
 
@@ -485,17 +487,17 @@ describe("AddPlayerSheet - Multi-Player Selection", () => {
       { wrapper: createWrapper() },
     );
 
-    const playerButton = screen.getByText("Müller Max").closest("button");
+    const playerButton = screen.getByText("Müller M. 15.05.90").closest("button");
     fireEvent.click(playerButton!);
 
     rerender(
       <AddPlayerSheet {...defaultProps} excludePlayerIds={["indoor-1"]} />,
     );
 
-    expect(screen.getByText("Müller Max")).toBeInTheDocument();
+    expect(screen.getByText("Müller M. 15.05.90")).toBeInTheDocument();
     // Button is still enabled to allow toggling (removal)
-    expect(screen.getByText("Müller Max").closest("button")).toBeEnabled();
-    expect(screen.getByText("Müller Max").closest("button")).toHaveAttribute(
+    expect(screen.getByText("Müller M. 15.05.90").closest("button")).toBeEnabled();
+    expect(screen.getByText("Müller M. 15.05.90").closest("button")).toHaveAttribute(
       "aria-pressed",
       "true",
     );

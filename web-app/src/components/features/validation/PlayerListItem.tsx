@@ -1,19 +1,12 @@
 import { Badge } from "@/components/ui/Badge";
 import type { RosterPlayer } from "@/hooks/useNominationList";
 import { Trash2, Undo2 } from "@/components/ui/icons";
-import { formatDOB } from "@/utils/date-helpers";
 import { useTranslation } from "@/hooks/useTranslation";
-
-/** Format player name as "LastName FirstName" */
-function formatPlayerName(player: RosterPlayer): string {
-  if (player.lastName && player.firstName) {
-    return `${player.lastName} ${player.firstName}`;
-  }
-  return player.displayName;
-}
 
 interface PlayerListItemProps {
   player: RosterPlayer;
+  /** Pre-formatted display string (e.g., "Müller M. 01.01.90") */
+  formattedDisplay: string;
   isMarkedForRemoval: boolean;
   onRemove?: () => void;
   onUndoRemoval?: () => void;
@@ -23,6 +16,7 @@ interface PlayerListItemProps {
 
 export function PlayerListItem({
   player,
+  formattedDisplay,
   isMarkedForRemoval,
   onRemove,
   onUndoRemoval,
@@ -37,7 +31,7 @@ export function PlayerListItem({
       }`}
     >
       <div className="flex items-center gap-3 min-w-0 flex-1">
-        {/* Player name and DOB */}
+        {/* Player name and DOB in aligned format */}
         <span
           className={`text-sm truncate ${
             isMarkedForRemoval
@@ -45,13 +39,8 @@ export function PlayerListItem({
               : "text-text-primary dark:text-text-primary-dark"
           }`}
         >
-          {formatPlayerName(player)}
+          {formattedDisplay}
         </span>
-        {player.birthday && !isMarkedForRemoval && (
-          <span className="text-xs text-text-muted dark:text-text-muted-dark flex-shrink-0">
-            {formatDOB(player.birthday)}
-          </span>
-        )}
 
         {/* Badges */}
         <div className="flex items-center gap-1.5 flex-shrink-0">

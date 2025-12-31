@@ -20,13 +20,14 @@ describe("PlayerListItem", () => {
     render(
       <PlayerListItem
         player={player}
+        formattedDisplay="Max M. 01.01.90"
         isMarkedForRemoval={false}
         onRemove={vi.fn()}
         onUndoRemoval={vi.fn()}
       />,
     );
 
-    expect(screen.getByText("Max")).toBeInTheDocument();
+    expect(screen.getByText("Max M. 01.01.90")).toBeInTheDocument();
   });
 
   it("shows license category badge when provided", () => {
@@ -35,6 +36,7 @@ describe("PlayerListItem", () => {
     render(
       <PlayerListItem
         player={player}
+        formattedDisplay="Doe J. 01.01.90"
         isMarkedForRemoval={false}
         onRemove={vi.fn()}
         onUndoRemoval={vi.fn()}
@@ -50,6 +52,7 @@ describe("PlayerListItem", () => {
     render(
       <PlayerListItem
         player={player}
+        formattedDisplay="Doe J. 01.01.90"
         isMarkedForRemoval={false}
         onRemove={vi.fn()}
         onUndoRemoval={vi.fn()}
@@ -66,6 +69,7 @@ describe("PlayerListItem", () => {
     render(
       <PlayerListItem
         player={player}
+        formattedDisplay="Doe J. 01.01.90"
         isMarkedForRemoval={false}
         onRemove={onRemove}
         onUndoRemoval={vi.fn()}
@@ -84,6 +88,7 @@ describe("PlayerListItem", () => {
     render(
       <PlayerListItem
         player={player}
+        formattedDisplay="Doe J. 01.01.90"
         isMarkedForRemoval={true}
         onRemove={vi.fn()}
         onUndoRemoval={vi.fn()}
@@ -100,6 +105,7 @@ describe("PlayerListItem", () => {
     render(
       <PlayerListItem
         player={player}
+        formattedDisplay="Doe J. 01.01.90"
         isMarkedForRemoval={true}
         onRemove={vi.fn()}
         onUndoRemoval={onUndoRemoval}
@@ -114,17 +120,19 @@ describe("PlayerListItem", () => {
 
   it("applies strikethrough styling when marked for removal", () => {
     const player = createMockPlayer();
+    const formattedDisplay = "Doe J. 01.01.90";
 
     render(
       <PlayerListItem
         player={player}
+        formattedDisplay={formattedDisplay}
         isMarkedForRemoval={true}
         onRemove={vi.fn()}
         onUndoRemoval={vi.fn()}
       />,
     );
 
-    const nameElement = screen.getByText(player.displayName);
+    const nameElement = screen.getByText(formattedDisplay);
     expect(nameElement).toHaveClass("line-through");
   });
 
@@ -136,6 +144,7 @@ describe("PlayerListItem", () => {
     render(
       <PlayerListItem
         player={player}
+        formattedDisplay="Doe J. 01.01.90"
         isMarkedForRemoval={true}
         onRemove={vi.fn()}
         onUndoRemoval={vi.fn()}

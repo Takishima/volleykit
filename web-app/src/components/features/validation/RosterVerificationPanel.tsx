@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import type { PossibleNomination, NominationList } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
@@ -10,6 +10,7 @@ import { PlayerListItem } from "./PlayerListItem";
 import { AddPlayerSheet } from "./AddPlayerSheet";
 import { UserPlus, AlertCircle, RefreshCw } from "@/components/ui/icons";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { formatRosterEntries } from "@/utils/date-helpers";
 
 interface RosterVerificationPanelProps {
   team: "home" | "away";
@@ -122,6 +123,12 @@ export function RosterVerificationPanel({
     return a.displayName.localeCompare(b.displayName);
   });
 
+  // Compute formatted display strings for all players (handles duplicate detection)
+  const formattedEntries = useMemo(
+    () => formatRosterEntries(allPlayers),
+    [allPlayers],
+  );
+
   // Calculate visible player count (excluding removed)
   const visiblePlayerCount = allPlayers.filter(
     (p) => !removedPlayerIds.has(p.id),
@@ -191,6 +198,10 @@ export function RosterVerificationPanel({
             <PlayerListItem
               key={player.id}
               player={player}
+              formattedDisplay={
+                formattedEntries.get(player.id)?.displayString ||
+                player.displayName
+              }
               isMarkedForRemoval={removedPlayerIds.has(player.id)}
               onRemove={readOnly ? undefined : () => handleRemovePlayer(player.id)}
               onUndoRemoval={readOnly ? undefined : () => handleUndoRemoval(player.id)}
