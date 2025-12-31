@@ -150,8 +150,12 @@ export function parseOccupationFromActiveParty(
  * This is used during login and session restoration to populate
  * user.occupations from the embedded HTML data.
  *
- * @param attributeValues - Array from activeParty.groupedEligibleAttributeValues
- * @returns Array of referee Occupations with association codes
+ * Deduplicates by association identity (inflatedValue.__identity) to ensure
+ * each association appears only once, even if present multiple times in the
+ * attribute values (which can happen with eligibleAttributeValues fallback).
+ *
+ * @param attributeValues - Array from activeParty.groupedEligibleAttributeValues or eligibleAttributeValues
+ * @returns Array of unique referee Occupations with association codes
  */
 export function parseOccupationsFromActiveParty(
   attributeValues: ActivePartyAttributeValue[] | null | undefined,
@@ -160,7 +164,20 @@ export function parseOccupationsFromActiveParty(
     return [];
   }
 
-  return attributeValues
+  const occupations = attributeValues
     .map((attr) => parseOccupationFromActiveParty(attr))
     .filter((occ): occ is Occupation => occ !== null);
+
+  // Deduplicate by association code (same association = same dropdown entry)
+  // Keep the first occurrence of each unique association
+  const seen = new Set<string>();
+  return occupations.filter((occ) => {
+    // Use association code for deduplication, fall back to id if no code
+    const key = occ.associationCode ?? occ.id;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
 }
