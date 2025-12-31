@@ -420,6 +420,13 @@ const de: Translations = {
       "Ihre Demo-Daten werden im Browser gespeichert. Zurücksetzen, um mit neuen Demo-Daten zu starten.",
     resetDemoData: "Demo-Daten zurücksetzen",
     demoDataReset: "Demo-Daten wurden zurückgesetzt",
+    experimental: {
+      title: "Experimentell",
+      description: "Funktionen in Entwicklung. Kann instabil sein.",
+      ocrPoc: "Spielberichts-Scanner",
+      ocrPocDescription: "OCR-Tool zum Scannen von Volleyball-Spielberichten",
+      openOcrPoc: "Scanner öffnen",
+    },
   },
   pwa: {
     offlineReady: "App bereit für Offline-Nutzung",

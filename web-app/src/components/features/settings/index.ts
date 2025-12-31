@@ -9,3 +9,4 @@ export { AccessibilitySection } from "./AccessibilitySection";
 export { SafeModeSection } from "./SafeModeSection";
 export { UpdateSection } from "./UpdateSection";
 export { AboutSection } from "./AboutSection";
+export { ExperimentalSection } from "./ExperimentalSection";

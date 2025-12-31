@@ -4,6 +4,7 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - 'web-app/**'
+      - 'ocr-poc/**'
       - '.github/workflows/deploy-pr-preview.yml'
 permissions:
   contents: write
@@ -25,7 +26,9 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: web-app/package-lock.json
+          cache-dependency-path: |
+            web-app/package-lock.json
+            ocr-poc/package-lock.json
       - name: Install dependencies
         run: npm ci
       - name: Cache generated API types
@@ -52,6 +55,18 @@ jobs:
           VITE_OJP_API_KEY: ${{ secrets.VITE_OJP_API_KEY }}
       - name: Add .nojekyll for GitHub Pages
         run: touch dist/.nojekyll
+      # Build OCR POC
+      - name: Install OCR POC dependencies
+        run: npm ci
+        working-directory: ocr-poc
+      - name: Lint OCR POC
+        run: npm run lint
+        working-directory: ocr-poc
+      - name: Build OCR POC
+        run: npm run build
+        working-directory: ocr-poc
+        env:
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/ocr-poc/
       # Download existing gh-pages content to preserve main site and other PR previews
       - name: Download existing gh-pages content
         run: |
@@ -71,9 +86,12 @@ jobs:
           if [ -d "${{ github.workspace }}/gh-pages-current" ]; then
             rsync -a --exclude='.git' ${{ github.workspace }}/gh-pages-current/ ${{ github.workspace }}/deploy/
           fi
-          # Add/update this PR's preview
+          # Add/update this PR's preview (web-app)
           mkdir -p ${{ github.workspace }}/deploy/pr-${{ github.event.pull_request.number }}
           cp -r dist/* ${{ github.workspace }}/deploy/pr-${{ github.event.pull_request.number }}/
+          # Add/update OCR POC preview
+          mkdir -p ${{ github.workspace }}/deploy/pr-${{ github.event.pull_request.number }}/ocr-poc
+          cp -r ${{ github.workspace }}/ocr-poc/dist/* ${{ github.workspace }}/deploy/pr-${{ github.event.pull_request.number }}/ocr-poc/
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
@@ -86,8 +104,10 @@ jobs:
         with:
           script: |
             const previewUrl = `https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/`;
+            const ocrPocUrl = `${previewUrl}ocr-poc/`;
             const body = `## 🚀 PR Preview Deployed!\n\n` +
               `Your preview is ready at: ${previewUrl}\n\n` +
+              `**OCR POC:** ${ocrPocUrl}\n\n` +
               `> This preview will be updated on each push to this PR.\n\n` +
               `**Demo Mode Only:** This preview runs in demo mode with sample data. Real authentication is disabled for security.`;
 
