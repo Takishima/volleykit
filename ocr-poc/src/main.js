@@ -47,6 +47,9 @@ let imageCapture = null;
 /** @type {SheetTypeSelector | null} */
 let sheetTypeSelector = null;
 
+/** @type {string | null} Object URL for processing state preview image */
+let processingPreviewUrl = null;
+
 /* ==============================================
  * STATE MACHINE
  * ============================================== */
@@ -90,7 +93,10 @@ function cleanupState(state) {
       }
       break;
     case 'processing':
-      // Future: Clean up OCR processing
+      if (processingPreviewUrl) {
+        URL.revokeObjectURL(processingPreviewUrl);
+        processingPreviewUrl = null;
+      }
       break;
   }
 }
@@ -102,6 +108,7 @@ function cleanupState(state) {
 function renderState(state) {
   const contentContainer = document.getElementById('content-container');
   if (!contentContainer) {
+    console.error('Content container not found, cannot render state:', state);
     return;
   }
 
@@ -192,7 +199,8 @@ function renderProcessingState(container) {
   // Show the captured image
   const preview = document.getElementById('result-preview');
   if (preview && appContext.capturedImage) {
-    preview.src = URL.createObjectURL(appContext.capturedImage);
+    processingPreviewUrl = URL.createObjectURL(appContext.capturedImage);
+    preview.src = processingPreviewUrl;
   }
 
   // Bind start over button
@@ -231,11 +239,7 @@ function handleSheetTypeSelect(selection) {
  * Handle going back to capture from type selection
  */
 function handleBackToCapture() {
-  // Revoke the captured image URL to prevent memory leak
-  if (appContext.capturedImage) {
-    // Note: The SheetTypeSelector component handles its own URL cleanup
-  }
-
+  // SheetTypeSelector component handles its own URL cleanup via destroy()
   transition('capture', { capturedImage: null, sheetType: null });
 }
 
