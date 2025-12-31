@@ -59,11 +59,15 @@ interface UseVerticalSwipeDismissOptions {
   enabled?: boolean;
   /** Called when dismiss gesture is triggered */
   onDismiss?: () => void;
+  /**
+   * External container ref to use for scroll detection and height measurement.
+   * When provided, the hook uses this ref instead of creating its own.
+   * This enables sharing the same container ref with other gesture hooks.
+   */
+  containerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 interface UseVerticalSwipeDismissReturn {
-  /** Ref to attach to the swipeable container element */
-  containerRef: React.RefObject<HTMLDivElement | null>;
   /** Current vertical translation in pixels */
   translateY: number;
   /** Whether user is currently dragging vertically */
@@ -86,11 +90,16 @@ interface UseVerticalSwipeDismissReturn {
  * Allows users to swipe up or down on content to dismiss a modal or wizard.
  * Works alongside horizontal swipe gestures (each gesture is either horizontal OR vertical).
  *
+ * When used with other gesture hooks (like useSwipeGesture), pass the shared
+ * containerRef to enable scroll detection within that container.
+ *
  * @example
  * ```tsx
  * function MyDismissableContent({ onClose }) {
- *   const { containerRef, translateY, isDragging, handlers } = useVerticalSwipeDismiss({
+ *   const containerRef = useRef<HTMLDivElement>(null);
+ *   const { translateY, isDragging, handlers } = useVerticalSwipeDismiss({
  *     onDismiss: onClose,
+ *     containerRef,
  *   });
  *
  *   return (
@@ -109,12 +118,18 @@ interface UseVerticalSwipeDismissReturn {
 export function useVerticalSwipeDismiss(
   options: UseVerticalSwipeDismissOptions = {},
 ): UseVerticalSwipeDismissReturn {
-  const { enabled = true, onDismiss } = options;
+  const {
+    enabled = true,
+    onDismiss,
+    containerRef: externalContainerRef,
+  } = options;
 
   const [translateY, setTranslateY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  // Use external ref if provided, otherwise create internal one
+  const internalContainerRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = externalContainerRef ?? internalContainerRef;
   const startXRef = useRef(0);
   const startYRef = useRef(0);
   const directionRef = useRef<SwipeDirection>(null);
@@ -197,7 +212,7 @@ export function useVerticalSwipeDismiss(
         setTranslateY(clampedTranslate);
       }
     },
-    [enabled],
+    [enabled, containerRef],
   );
 
   const handleDragEnd = useCallback(() => {
@@ -224,7 +239,7 @@ export function useVerticalSwipeDismiss(
     resetPosition();
     directionRef.current = null;
     setIsDragging(false);
-  }, [onDismiss, resetPosition]);
+  }, [containerRef, onDismiss, resetPosition]);
 
   // Touch event handlers
   const handleTouchStart = useCallback(
@@ -277,7 +292,6 @@ export function useVerticalSwipeDismiss(
   }, [handleDragEnd]);
 
   return {
-    containerRef,
     translateY,
     isDragging,
     handlers: {

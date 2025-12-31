@@ -20,6 +20,18 @@ const SWIPE_THRESHOLD_RATIO = 0.3;
  */
 const TRANSITION_DURATION_MS = 300;
 
+/**
+ * Minimum opacity during dismiss swipe gesture.
+ * Prevents content from becoming invisible while still providing visual feedback.
+ */
+const MINIMUM_DISMISS_OPACITY = 0.3;
+
+/**
+ * Distance in pixels at which opacity reaches minimum during dismiss swipe.
+ * Higher values = slower opacity reduction; lower values = faster reduction.
+ */
+const OPACITY_REDUCTION_DISTANCE_PX = 200;
+
 /** Animation phases for step transitions */
 type AnimationPhase = "idle" | "exiting" | "entering";
 
@@ -152,6 +164,7 @@ export function WizardStepContainer({
 
   // Use vertical swipe dismiss hook
   // Allows users to swipe up/down on step content to dismiss the wizard
+  // Share containerRef with horizontal swipe hook for scroll detection
   const {
     translateY,
     isDragging: isDraggingVertical,
@@ -159,6 +172,7 @@ export function WizardStepContainer({
   } = useVerticalSwipeDismiss({
     enabled: swipeEnabled && !!onDismiss,
     onDismiss,
+    containerRef,
   });
 
   // Combine horizontal and vertical gesture handlers
@@ -255,7 +269,10 @@ export function WizardStepContainer({
   // Calculate opacity reduction during vertical swipe (visual dismiss feedback)
   // Full opacity at translateY=0, reducing as user swipes further
   const dismissOpacity = isDraggingVertical
-    ? Math.max(0.3, 1 - Math.abs(translateY) / 200)
+    ? Math.max(
+        MINIMUM_DISMISS_OPACITY,
+        1 - Math.abs(translateY) / OPACITY_REDUCTION_DISTANCE_PX,
+      )
     : 1;
 
   return (
