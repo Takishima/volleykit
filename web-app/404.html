@@ -13,6 +13,13 @@
         const search = window.location.search;
         const hash = window.location.hash;
 
+        // Don't redirect for subdirectory apps - they have their own index.html
+        // The ocr-poc is a separate Vite app deployed as a subdirectory
+        if (fullPath.includes('/ocr-poc/') || fullPath.endsWith('/ocr-poc')) {
+          // Let the browser handle this normally (will 404 or load the actual ocr-poc app)
+          return;
+        }
+
         // Detect the base path from the current URL
         // For PR previews: /volleykit/pr-123/some-route -> base is /volleykit/pr-123/
         // For main site: /volleykit/some-route -> base is /volleykit/

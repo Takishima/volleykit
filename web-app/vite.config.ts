@@ -197,6 +197,8 @@ export default defineConfig(({ mode }) => {
             /\/logout$/,
             // Don't intercept PR preview routes - let them load their own assets
             /\/pr-\d+/,
+            // Don't intercept OCR POC routes - it's a separate app
+            /\/ocr-poc/,
           ],
           // Runtime caching for API responses
           runtimeCaching: [
