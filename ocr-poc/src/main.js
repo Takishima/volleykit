@@ -14,13 +14,19 @@
 import './style.css';
 import { ImageCapture } from './components/ImageCapture.js';
 import { SheetTypeSelector } from './components/SheetTypeSelector.js';
+import { OCRProgress } from './components/OCRProgress.js';
+import { OCRFactory } from './services/ocr/index.js';
 
 /* ==============================================
  * APPLICATION STATE
  * ============================================== */
 
 /**
- * @typedef {'capture' | 'select-type' | 'processing'} AppState
+ * @typedef {'capture' | 'select-type' | 'processing' | 'results'} AppState
+ */
+
+/**
+ * @typedef {import('./services/ocr/TesseractOCR.js').OCRResult} OCRResult
  */
 
 /**
@@ -28,6 +34,7 @@ import { SheetTypeSelector } from './components/SheetTypeSelector.js';
  * @property {AppState} state - Current application state
  * @property {Blob | null} capturedImage - The captured image blob
  * @property {'electronic' | 'handwritten' | null} sheetType - Selected sheet type
+ * @property {OCRResult | null} ocrResult - OCR processing result
  */
 
 /** @type {AppContext} */
@@ -35,6 +42,7 @@ const appContext = {
   state: 'capture',
   capturedImage: null,
   sheetType: null,
+  ocrResult: null,
 };
 
 /* ==============================================
@@ -47,8 +55,17 @@ let imageCapture = null;
 /** @type {SheetTypeSelector | null} */
 let sheetTypeSelector = null;
 
-/** @type {string | null} Object URL for processing state preview image */
-let processingPreviewUrl = null;
+/** @type {OCRProgress | null} */
+let ocrProgress = null;
+
+/** @type {import('./services/ocr/TesseractOCR.js').TesseractOCR | null} */
+let ocrEngine = null;
+
+/** @type {string | null} Object URL for results state preview image */
+let resultsPreviewUrl = null;
+
+/** @type {boolean} Guard flag to prevent concurrent OCR operations */
+let isOCRRunning = false;
 
 /* ==============================================
  * STATE MACHINE
@@ -93,9 +110,16 @@ function cleanupState(state) {
       }
       break;
     case 'processing':
-      if (processingPreviewUrl) {
-        URL.revokeObjectURL(processingPreviewUrl);
-        processingPreviewUrl = null;
+      if (ocrProgress) {
+        ocrProgress.destroy();
+        ocrProgress = null;
+      }
+      // Note: ocrEngine is terminated after OCR completes or on cancel
+      break;
+    case 'results':
+      if (resultsPreviewUrl) {
+        URL.revokeObjectURL(resultsPreviewUrl);
+        resultsPreviewUrl = null;
       }
       break;
   }
@@ -121,6 +145,9 @@ function renderState(state) {
       break;
     case 'processing':
       renderProcessingState(contentContainer);
+      break;
+    case 'results':
+      renderResultsState(contentContainer);
       break;
   }
 }
@@ -173,25 +200,146 @@ function renderSelectTypeState(container) {
 }
 
 /**
- * Render the processing state (placeholder for future OCR)
+ * Render the processing state with OCR progress
  * @param {HTMLElement} container
  */
 function renderProcessingState(container) {
   container.innerHTML = `
-    <h2 class="text-center mb-md">Processing...</h2>
+    <h2 class="text-center mb-md">Processing Scoresheet</h2>
     <p class="text-muted text-center mb-lg">
-      OCR functionality coming soon. Selected type: <strong>${appContext.sheetType}</strong>
+      Extracting text using ${appContext.sheetType === 'electronic' ? 'print' : 'handwriting'} recognition...
     </p>
-    <div class="sheet-type-selector__preview">
+    <div id="ocr-progress-container"></div>
+  `;
+
+  const progressContainer = document.getElementById('ocr-progress-container');
+  if (progressContainer) {
+    ocrProgress = new OCRProgress({
+      container: progressContainer,
+      onCancel: handleCancelOCR,
+    });
+
+    // Start OCR processing
+    runOCR();
+  }
+}
+
+/**
+ * Get error message from unknown error type
+ * @param {unknown} error
+ * @returns {string}
+ */
+function getErrorMessage(error) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
+  return 'Unknown error occurred';
+}
+
+/**
+ * Run OCR processing on the captured image
+ */
+async function runOCR() {
+  // Guard against concurrent OCR operations
+  if (isOCRRunning) {
+    console.warn('OCR already running, ignoring duplicate request');
+    return;
+  }
+
+  if (!appContext.capturedImage || !appContext.sheetType) {
+    console.error('Missing image or sheet type for OCR');
+    return;
+  }
+
+  isOCRRunning = true;
+
+  try {
+    // Create OCR engine with progress callback
+    ocrEngine = OCRFactory.create(appContext.sheetType, (progress) => {
+      ocrProgress?.updateProgress(progress);
+    });
+
+    // Initialize and run OCR
+    await ocrEngine.initialize();
+    const result = await ocrEngine.recognize(appContext.capturedImage);
+
+    // Log results to console
+    console.log('=== OCR Results ===');
+    console.log('Full text:', result.fullText);
+    console.log('Lines:', result.lines.length);
+    console.log('Words:', result.words.length);
+    console.log('Detailed results:', result);
+
+    // Clean up engine
+    await ocrEngine.terminate();
+    ocrEngine = null;
+
+    // Transition to results state
+    transition('results', { ocrResult: result });
+  } catch (error) {
+    console.error('OCR Error:', error);
+    ocrProgress?.showError(`OCR failed: ${getErrorMessage(error)}`);
+
+    // Clean up engine on error
+    if (ocrEngine) {
+      await ocrEngine.terminate();
+      ocrEngine = null;
+    }
+  } finally {
+    isOCRRunning = false;
+  }
+}
+
+/**
+ * Render the results state showing OCR output
+ * @param {HTMLElement} container
+ */
+function renderResultsState(container) {
+  const result = appContext.ocrResult;
+  const wordCount = result?.words.length || 0;
+  const lineCount = result?.lines.length || 0;
+  const avgConfidence =
+    wordCount > 0
+      ? Math.round(result.words.reduce((sum, w) => sum + w.confidence, 0) / wordCount)
+      : 0;
+
+  container.innerHTML = `
+    <h2 class="text-center mb-md">OCR Complete</h2>
+
+    <div class="ocr-results__stats mb-lg">
+      <div class="ocr-results__stat">
+        <span class="ocr-results__stat-value">${lineCount}</span>
+        <span class="ocr-results__stat-label">Lines</span>
+      </div>
+      <div class="ocr-results__stat">
+        <span class="ocr-results__stat-value">${wordCount}</span>
+        <span class="ocr-results__stat-label">Words</span>
+      </div>
+      <div class="ocr-results__stat">
+        <span class="ocr-results__stat-value">${avgConfidence}%</span>
+        <span class="ocr-results__stat-label">Confidence</span>
+      </div>
+    </div>
+
+    <div class="sheet-type-selector__preview mb-md">
       <img
         id="result-preview"
         class="sheet-type-selector__thumbnail"
-        alt="Captured scoresheet"
+        alt="Processed scoresheet"
       />
     </div>
-    <div class="mt-lg">
-      <button class="btn btn-secondary btn-block" id="btn-start-over">
-        ← Start Over
+
+    <details class="ocr-results__details mb-lg">
+      <summary class="ocr-results__summary">View Extracted Text</summary>
+      <pre class="ocr-results__text">${escapeHtml(result?.fullText || 'No text extracted')}</pre>
+    </details>
+
+    <div class="flex flex-col gap-md">
+      <button class="btn btn-primary btn-block" id="btn-new-scan">
+        Scan Another Sheet
       </button>
     </div>
   `;
@@ -199,13 +347,24 @@ function renderProcessingState(container) {
   // Show the captured image
   const preview = document.getElementById('result-preview');
   if (preview && appContext.capturedImage) {
-    processingPreviewUrl = URL.createObjectURL(appContext.capturedImage);
-    preview.src = processingPreviewUrl;
+    resultsPreviewUrl = URL.createObjectURL(appContext.capturedImage);
+    preview.src = resultsPreviewUrl;
   }
 
-  // Bind start over button
-  const startOverBtn = document.getElementById('btn-start-over');
-  startOverBtn?.addEventListener('click', handleStartOver);
+  // Bind buttons
+  const newScanBtn = document.getElementById('btn-new-scan');
+  newScanBtn?.addEventListener('click', handleStartOver);
+}
+
+/**
+ * Escape HTML to prevent XSS
+ * @param {string} text
+ * @returns {string}
+ */
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
 
 /* ==============================================
@@ -244,10 +403,22 @@ function handleBackToCapture() {
 }
 
 /**
- * Handle starting over from processing state
+ * Handle starting over from any state
  */
 function handleStartOver() {
-  transition('capture', { capturedImage: null, sheetType: null });
+  transition('capture', { capturedImage: null, sheetType: null, ocrResult: null });
+}
+
+/**
+ * Handle canceling OCR processing
+ */
+async function handleCancelOCR() {
+  if (ocrEngine) {
+    await ocrEngine.terminate();
+    ocrEngine = null;
+  }
+  isOCRRunning = false;
+  transition('capture', { capturedImage: null, sheetType: null, ocrResult: null });
 }
 
 /* ==============================================
