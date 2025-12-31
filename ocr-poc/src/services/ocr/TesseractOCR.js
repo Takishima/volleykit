@@ -11,6 +11,7 @@ import {
   ELECTRONIC_PRESET,
   HANDWRITTEN_PRESET,
 } from '../imagePreprocessor.js';
+import { cropToTable } from '../tableDetector.js';
 
 /**
  * @typedef {Object} OCRWord
@@ -91,8 +92,69 @@ function getStatusMessage(status) {
     'initializing api': 'Preparing OCR...',
     recognizing: 'Recognizing text...',
     preprocessing: 'Preprocessing image...',
+    'detecting table': 'Detecting table structure...',
+    'post-processing': 'Cleaning up results...',
   };
   return statusMessages[status] || status;
+}
+
+/**
+ * Common OCR corrections for scoresheet-specific patterns
+ * Maps common misreadings to correct values
+ */
+const STATUS_CORRECTIONS = {
+  // LFP variations
+  LR: 'LFP',
+  LFF: 'LFP',
+  LPP: 'LFP',
+  LEP: 'LFP',
+  LFR: 'LFP',
+  UFP: 'LFP',
+  IFP: 'LFP',
+  'L.FP': 'LFP',
+  // NOT variations
+  NÖT: 'NOT',
+  NOI: 'NOT',
+  N0T: 'NOT',
+  'N.OT': 'NOT',
+  // Single character errors
+  Pr: 'LFP',
+  iFF: 'LFP',
+  te: 'LFP',
+  im: 'LFP',
+  ip: 'LFP',
+  ire: 'LFP',
+  vr: 'LFP',
+  gu: 'LFP',
+  Le: 'LFP',
+  FF: 'LFP',
+};
+
+/**
+ * Post-process OCR text to fix common errors
+ * @param {string} text - Raw OCR text
+ * @returns {string} Corrected text
+ */
+function postProcessText(text) {
+  let result = text;
+
+  // Fix status codes (case-insensitive replacement)
+  for (const [wrong, correct] of Object.entries(STATUS_CORRECTIONS)) {
+    // Match as whole word with word boundaries
+    const regex = new RegExp(`\\b${wrong}\\b`, 'gi');
+    result = result.replace(regex, correct);
+  }
+
+  // Fix common number OCR errors in player numbers
+  // |1 or l1 -> 1, etc.
+  result = result.replace(/\|1\b/g, '1');
+  result = result.replace(/\bl1\b/g, '11');
+  result = result.replace(/\bI1\b/g, '11');
+
+  // Fix "Name of the player" header variations
+  result = result.replace(/Name\s+o[rf]t?n?e?p?i?a?y?r?/gi, 'Name of the player');
+
+  return result;
 }
 
 /**
@@ -218,23 +280,41 @@ export class TesseractOCR {
       throw new Error('TesseractOCR not initialized. Call initialize() first.');
     }
 
-    // Step 1: Preprocess the image for better OCR results
+    let imageToProcess = imageBlob;
+
+    // Step 1: Try to detect and crop to table region (electronic sheets only)
+    if (this.#sheetType === 'electronic') {
+      this.#reportProgress('detecting table', 0.05);
+      try {
+        const tableResult = await cropToTable(imageBlob);
+        if (tableResult) {
+          imageToProcess = tableResult.croppedImage;
+        }
+      } catch {
+        // Table detection failed, continue with full image
+      }
+    }
+
+    // Step 2: Preprocess the image for better OCR results
     this.#reportProgress('preprocessing', 0.1);
 
     const preprocessOptions =
       this.#sheetType === 'handwritten' ? HANDWRITTEN_PRESET : ELECTRONIC_PRESET;
 
-    let processedImage = await preprocessImage(imageBlob, preprocessOptions);
+    let processedImage = await preprocessImage(imageToProcess, preprocessOptions);
 
-    // Step 2: Add border padding (Tesseract has issues with text at edges)
+    // Step 3: Add border padding (Tesseract has issues with text at edges)
     this.#reportProgress('preprocessing', 0.2);
     processedImage = await addBorderPadding(processedImage, BORDER_PADDING_PX);
 
-    // Step 3: Perform OCR
+    // Step 4: Perform OCR
     this.#reportProgress('recognizing', 0.3);
 
     // Request blocks output to get words and lines (disabled by default in v6+)
     const result = await this.#worker.recognize(processedImage, {}, { blocks: true });
+
+    // Step 5: Post-process the text to fix common OCR errors
+    this.#reportProgress('post-processing', 0.9);
 
     // Transform Tesseract result into our structured format
     // Extract words and lines from blocks structure
@@ -247,8 +327,10 @@ export class TesseractOCR {
           for (const line of paragraph.lines || []) {
             const lineWords = [];
             for (const word of line.words || []) {
+              // Apply post-processing to each word
+              const correctedText = postProcessText(word.text);
               const wordData = {
-                text: word.text,
+                text: correctedText,
                 confidence: word.confidence,
                 bbox: {
                   x0: word.bbox.x0,
@@ -260,8 +342,9 @@ export class TesseractOCR {
               words.push(wordData);
               lineWords.push(wordData);
             }
+            // Apply post-processing to line text
             lines.push({
-              text: line.text,
+              text: postProcessText(line.text),
               confidence: line.confidence,
               words: lineWords,
             });
@@ -273,7 +356,7 @@ export class TesseractOCR {
     this.#reportProgress('recognizing', 1);
 
     return {
-      fullText: result.data.text,
+      fullText: postProcessText(result.data.text),
       lines,
       words,
     };
