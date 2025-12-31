@@ -10,17 +10,37 @@ import { z } from "zod";
 import { logger } from "@/utils/logger";
 
 /**
+ * Represents an inflated association value with full details.
+ */
+export interface InflatedAssociationValue {
+  __identity: string;
+  name?: string;
+  shortName?: string;
+  /** Association identifier code (e.g., "912000" for SVRZ) */
+  identifier?: string;
+  /**
+   * Origin ID to distinguish regional vs national associations.
+   * 0 = national (Swiss Volley), >0 = regional (e.g., 12 for SVRZ)
+   */
+  originId?: number;
+}
+
+/**
  * Represents an association that a user is a member of.
  */
 export interface AttributeValue {
   __identity: string;
   attributeIdentifier: string;
   roleIdentifier: string;
-  inflatedValue?: {
-    __identity: string;
-    name?: string;
-    shortName?: string;
-  };
+  /**
+   * Domain model type - used to distinguish association memberships from boolean flags.
+   * For associations: "SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation"
+   * For player roles: "boolean"
+   */
+  type?: string;
+  /** UUID reference to the association entity */
+  value?: string;
+  inflatedValue?: InflatedAssociationValue;
 }
 
 /**
@@ -50,12 +70,16 @@ const InflatedValueSchema = z.object({
   __identity: z.string(),
   name: z.string().optional(),
   shortName: z.string().optional(),
+  identifier: z.string().optional(),
+  originId: z.number().optional(),
 });
 
 const AttributeValueSchema = z.object({
   __identity: z.string(),
   attributeIdentifier: z.string(),
   roleIdentifier: z.string(),
+  type: z.string().optional(),
+  value: z.string().optional(),
   inflatedValue: InflatedValueSchema.optional(),
 });
 
@@ -154,22 +178,48 @@ export function extractActivePartyFromHtml(html: string): ActiveParty | null {
   }
 }
 
+/** Role identifier for referee role in the VolleyManager system */
+const REFEREE_ROLE_IDENTIFIER = "Indoorvolleyball.RefAdmin:Referee";
+
+/** Type suffix for association memberships (vs boolean player roles) */
+const ASSOCIATION_TYPE_SUFFIX = "AbstractAssociation";
+
+/**
+ * Filter attribute values to only include referee association memberships.
+ * Excludes boolean player roles and other non-association attributes.
+ *
+ * @param attributeValues - The user's attribute values (from activeParty)
+ * @returns Filtered array containing only referee association memberships
+ */
+export function filterRefereeAssociations(
+  attributeValues: AttributeValue[] | null | undefined,
+): AttributeValue[] {
+  if (!attributeValues) {
+    return [];
+  }
+
+  return attributeValues.filter(
+    (av) =>
+      av.roleIdentifier === REFEREE_ROLE_IDENTIFIER &&
+      av.type?.includes(ASSOCIATION_TYPE_SUFFIX),
+  );
+}
+
 /**
  * Check if a user has access to multiple associations based on their eligible attribute values.
+ * Only counts referee association memberships (excludes player roles and other attributes).
  *
- * @param eligibleAttributeValues - The user's eligible attribute values (from activeParty or store)
- * @returns true if the user has multiple eligible associations
+ * @param attributeValues - The user's eligible attribute values (from activeParty or store)
+ * @returns true if the user has multiple eligible referee associations
  */
 export function hasMultipleAssociations(
-  eligibleAttributeValues: AttributeValue[] | null | undefined,
+  attributeValues: AttributeValue[] | null | undefined,
 ): boolean {
-  if (!eligibleAttributeValues) {
-    return false;
-  }
+  const refereeAssociations = filterRefereeAssociations(attributeValues);
 
   // Count unique associations by their identity
   const uniqueAssociations = new Set(
-    eligibleAttributeValues
+    refereeAssociations
       .map((av) => av.inflatedValue?.__identity)
       .filter(Boolean),
   );

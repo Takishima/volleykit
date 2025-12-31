@@ -106,6 +106,7 @@ function createMockAuthStore(
     isDemoMode: false,
     _checkSessionPromise: null,
     eligibleAttributeValues: null,
+    groupedEligibleAttributeValues: null,
     eligibleRoles: null,
     login: vi.fn(),
     logout: vi.fn(),

@@ -2875,9 +2875,10 @@ export interface components {
             username?: string | null;
         };
         /**
-         * @description Detailed person information for profile page.
-         *     This is the "active party" data embedded in page loads, containing the user's
-         *     association memberships and current context.
+         * @description Detailed person information returned by the profile API.
+         *     Note: The following fields are only available in embedded HTML data,
+         *     not in the API response: eligibleAttributeValues, eligibleRoles,
+         *     groupedEligibleAttributeValues, activeAttributeValue.
          */
         PersonDetails: {
             /**
@@ -2983,22 +2984,11 @@ export interface components {
             primaryPhoneNumber?: components["schemas"]["PhoneNumber"];
             postalAddresses?: components["schemas"]["PostalAddress"][];
             primaryPostalAddress?: components["schemas"]["PostalAddress"];
-            activeAttributeValue?: components["schemas"]["AttributeValue"];
             /**
              * @description Current role identifier
              * @example Indoorvolleyball.RefAdmin:Referee
              */
             activeRoleIdentifier?: string;
-            /** @description All association memberships/roles the user is eligible for */
-            eligibleAttributeValues?: components["schemas"]["AttributeValue"][];
-            /** @description Eligible attribute values grouped by role */
-            groupedEligibleAttributeValues?: components["schemas"]["AttributeValue"][];
-            /** @description Visible eligible attribute values */
-            groupedEligibleAttributeValuesWithoutHiddenRoles?: components["schemas"]["AttributeValue"][];
-            /** @description Map of role identifiers to role definitions */
-            eligibleRoles?: {
-                [key: string]: components["schemas"]["RoleDefinition"];
-            };
             accounts?: {
                 /** Format: uuid */
                 __identity?: string;
@@ -3340,6 +3330,16 @@ export interface components {
             teamBan?: Record<string, never>[];
             clubBan?: Record<string, never>[];
             notes?: string | null;
+            /**
+             * Format: date-time
+             * @description When the referee record was created
+             */
+            createdAt?: string;
+            /**
+             * Format: date-time
+             * @description When the referee record was last updated
+             */
+            updatedAt?: string;
             createdBy?: string;
             createdByIpAddress?: string;
             createdByPersistenceIdentifier?: string;
@@ -4795,7 +4795,9 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PersonDetails"];
+                    "application/json": {
+                        person: components["schemas"]["PersonDetails"];
+                    };
                 };
             };
             401: components["responses"]["Unauthorized"];

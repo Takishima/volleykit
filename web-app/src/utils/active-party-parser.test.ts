@@ -2,7 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   extractActivePartyFromHtml,
   hasMultipleAssociations,
-  type ActiveParty,
+  filterRefereeAssociations,
+  type AttributeValue,
 } from "./active-party-parser";
 
 // Helper to create HTML with embedded activeParty JSON
@@ -207,6 +208,97 @@ describe("extractActivePartyFromHtml", () => {
   });
 });
 
+describe("filterRefereeAssociations", () => {
+  it("returns empty array for null", () => {
+    expect(filterRefereeAssociations(null)).toEqual([]);
+  });
+
+  it("returns empty array for undefined", () => {
+    expect(filterRefereeAssociations(undefined)).toEqual([]);
+  });
+
+  it("returns empty array for empty array", () => {
+    expect(filterRefereeAssociations([])).toEqual([]);
+  });
+
+  it("filters to only referee associations", () => {
+    const attributeValues: AttributeValue[] = [
+      {
+        __identity: "attr-1",
+        attributeIdentifier: "Indoorvolleyball.RefAdmin:AbstractAssociation",
+        roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+        type: "SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation",
+        value: "uuid-1",
+        inflatedValue: {
+          __identity: "assoc-1",
+          name: "Swiss Volley",
+          shortName: "SV",
+          identifier: "900000",
+          originId: 0,
+        },
+      },
+      {
+        __identity: "attr-2",
+        attributeIdentifier: "Indoorvolleyball.RefAdmin:AbstractAssociation",
+        roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+        type: "SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation",
+        value: "uuid-2",
+        inflatedValue: {
+          __identity: "assoc-2",
+          name: "Swiss Volley Région Zurich",
+          shortName: "SVRZ",
+          identifier: "912000",
+          originId: 12,
+        },
+      },
+      {
+        __identity: "attr-3",
+        attributeIdentifier: "SportManager.Indoorvolleyball:IndoorPlayer",
+        roleIdentifier: "SportManager.Indoorvolleyball:IndoorPlayer",
+        type: "boolean",
+        value: "1",
+      },
+    ];
+
+    const result = filterRefereeAssociations(attributeValues);
+    expect(result).toHaveLength(2);
+    expect(result[0]?.inflatedValue?.shortName).toBe("SV");
+    expect(result[1]?.inflatedValue?.shortName).toBe("SVRZ");
+  });
+
+  it("excludes non-referee roles", () => {
+    const attributeValues: AttributeValue[] = [
+      {
+        __identity: "attr-1",
+        attributeIdentifier: "SportManager.Core:AbstractClub",
+        roleIdentifier: "SportManager.Core:ClubAdmin",
+        type: "SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation",
+        value: "uuid-1",
+        inflatedValue: {
+          __identity: "assoc-1",
+          name: "Swiss Volley",
+        },
+      },
+    ];
+
+    expect(filterRefereeAssociations(attributeValues)).toEqual([]);
+  });
+
+  it("excludes boolean types (player roles)", () => {
+    const attributeValues: AttributeValue[] = [
+      {
+        __identity: "attr-1",
+        attributeIdentifier: "SportManager.Indoorvolleyball:IndoorPlayer",
+        roleIdentifier: "Indoorvolleyball.RefAdmin:Referee", // Even with referee roleIdentifier
+        type: "boolean",
+        value: "1",
+      },
+    ];
+
+    expect(filterRefereeAssociations(attributeValues)).toEqual([]);
+  });
+});
+
 describe("hasMultipleAssociations", () => {
   it("returns false for null", () => {
     expect(hasMultipleAssociations(null)).toBe(false);
@@ -220,27 +312,31 @@ describe("hasMultipleAssociations", () => {
     expect(hasMultipleAssociations([])).toBe(false);
   });
 
-  it("returns false for single association", () => {
-    const eligibleAttributeValues: ActiveParty["eligibleAttributeValues"] = [
+  it("returns false for single referee association", () => {
+    const attributeValues: AttributeValue[] = [
       {
         __identity: "attr-1",
         attributeIdentifier: "Indoorvolleyball.RefAdmin:AbstractAssociation",
         roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+        type: "SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation",
+        value: "uuid-1",
         inflatedValue: {
           __identity: "assoc-1",
           name: "Swiss Volley",
         },
       },
     ];
-    expect(hasMultipleAssociations(eligibleAttributeValues)).toBe(false);
+    expect(hasMultipleAssociations(attributeValues)).toBe(false);
   });
 
-  it("returns true for multiple different associations", () => {
-    const eligibleAttributeValues: ActiveParty["eligibleAttributeValues"] = [
+  it("returns true for multiple different referee associations", () => {
+    const attributeValues: AttributeValue[] = [
       {
         __identity: "attr-1",
         attributeIdentifier: "Indoorvolleyball.RefAdmin:AbstractAssociation",
         roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+        type: "SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation",
+        value: "uuid-1",
         inflatedValue: {
           __identity: "assoc-1",
           name: "Swiss Volley",
@@ -250,21 +346,119 @@ describe("hasMultipleAssociations", () => {
         __identity: "attr-2",
         attributeIdentifier: "Indoorvolleyball.RefAdmin:AbstractAssociation",
         roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+        type: "SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation",
+        value: "uuid-2",
         inflatedValue: {
           __identity: "assoc-2",
           name: "Volleyball Romandie",
         },
       },
     ];
-    expect(hasMultipleAssociations(eligibleAttributeValues)).toBe(true);
+    expect(hasMultipleAssociations(attributeValues)).toBe(true);
   });
 
-  it("returns false for same association with multiple roles", () => {
-    const eligibleAttributeValues: ActiveParty["eligibleAttributeValues"] = [
+  it("returns true for real-world example with 3 associations", () => {
+    // Based on real API response: SVRZ, SVRBA, SV
+    const attributeValues: AttributeValue[] = [
       {
         __identity: "attr-1",
         attributeIdentifier: "Indoorvolleyball.RefAdmin:AbstractAssociation",
         roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+        type: "SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation",
+        value: "286bd004-75a6-4b0f-bef6-ab9f27e53354",
+        inflatedValue: {
+          __identity: "assoc-svrz",
+          name: "Swiss Volley Région Zurich",
+          shortName: "SVRZ",
+          identifier: "912000",
+          originId: 12,
+        },
+      },
+      {
+        __identity: "attr-2",
+        attributeIdentifier: "Indoorvolleyball.RefAdmin:AbstractAssociation",
+        roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+        type: "SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation",
+        value: "7f5bdfa5-7d0c-46e1-a5db-5fc7e74d2af0",
+        inflatedValue: {
+          __identity: "assoc-svrba",
+          name: "Swiss Volley Région Bâle",
+          shortName: "SVRBA",
+          identifier: "909000",
+          originId: 9,
+        },
+      },
+      {
+        __identity: "attr-3",
+        attributeIdentifier: "Indoorvolleyball.RefAdmin:AbstractAssociation",
+        roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+        type: "SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation",
+        value: "c66f9f31-241e-49a5-b1e3-24c0f35d34c1",
+        inflatedValue: {
+          __identity: "assoc-sv",
+          name: "Swiss Volley",
+          shortName: "SV",
+          identifier: "900000",
+          originId: 0,
+        },
+      },
+      // This boolean player role should be ignored
+      {
+        __identity: "attr-4",
+        attributeIdentifier: "SportManager.Indoorvolleyball:IndoorPlayer",
+        roleIdentifier: "SportManager.Indoorvolleyball:IndoorPlayer",
+        type: "boolean",
+        value: "1",
+      },
+    ];
+    expect(hasMultipleAssociations(attributeValues)).toBe(true);
+  });
+
+  it("returns false when only one referee association among other roles", () => {
+    const attributeValues: AttributeValue[] = [
+      {
+        __identity: "attr-1",
+        attributeIdentifier: "Indoorvolleyball.RefAdmin:AbstractAssociation",
+        roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+        type: "SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation",
+        value: "uuid-1",
+        inflatedValue: {
+          __identity: "assoc-1",
+          name: "Swiss Volley",
+        },
+      },
+      // Player role - not a referee association
+      {
+        __identity: "attr-2",
+        attributeIdentifier: "SportManager.Indoorvolleyball:IndoorPlayer",
+        roleIdentifier: "SportManager.Indoorvolleyball:IndoorPlayer",
+        type: "boolean",
+        value: "1",
+      },
+      // Club admin - not a referee role
+      {
+        __identity: "attr-3",
+        attributeIdentifier: "SportManager.Core:AbstractClub",
+        roleIdentifier: "SportManager.Core:ClubAdmin",
+        type: "SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation",
+        value: "uuid-2",
+        inflatedValue: {
+          __identity: "assoc-2",
+          name: "Some Club",
+        },
+      },
+    ];
+    expect(hasMultipleAssociations(attributeValues)).toBe(false);
+  });
+
+  it("returns false for same association with multiple roles", () => {
+    const attributeValues: AttributeValue[] = [
+      {
+        __identity: "attr-1",
+        attributeIdentifier: "Indoorvolleyball.RefAdmin:AbstractAssociation",
+        roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+        type: "SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation",
+        value: "uuid-1",
         inflatedValue: {
           __identity: "assoc-1",
           name: "Swiss Volley",
@@ -274,33 +468,66 @@ describe("hasMultipleAssociations", () => {
         __identity: "attr-2",
         attributeIdentifier: "SportManager.Core:AbstractClub",
         roleIdentifier: "SportManager.Core:ClubAdmin",
+        type: "SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation",
+        value: "uuid-2",
         inflatedValue: {
           __identity: "assoc-1", // Same association
           name: "Swiss Volley",
         },
       },
     ];
-    expect(hasMultipleAssociations(eligibleAttributeValues)).toBe(false);
+    // Only one referee association, the club admin is filtered out
+    expect(hasMultipleAssociations(attributeValues)).toBe(false);
   });
 
   it("handles attribute values without inflatedValue", () => {
-    const eligibleAttributeValues: ActiveParty["eligibleAttributeValues"] = [
+    const attributeValues: AttributeValue[] = [
       {
         __identity: "attr-1",
-        attributeIdentifier: "test",
-        roleIdentifier: "test",
+        attributeIdentifier: "Indoorvolleyball.RefAdmin:AbstractAssociation",
+        roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+        type: "SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation",
         // no inflatedValue
       },
       {
         __identity: "attr-2",
-        attributeIdentifier: "test",
-        roleIdentifier: "test",
+        attributeIdentifier: "Indoorvolleyball.RefAdmin:AbstractAssociation",
+        roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+        type: "SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation",
         inflatedValue: {
           __identity: "assoc-1",
         },
       },
     ];
     // Only one has a valid inflatedValue.__identity
-    expect(hasMultipleAssociations(eligibleAttributeValues)).toBe(false);
+    expect(hasMultipleAssociations(attributeValues)).toBe(false);
+  });
+
+  // Backward compatibility test for old data without type field
+  it("returns false for old data format without type field", () => {
+    const attributeValues: AttributeValue[] = [
+      {
+        __identity: "attr-1",
+        attributeIdentifier: "Indoorvolleyball.RefAdmin:AbstractAssociation",
+        roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+        // No type field - old format
+        inflatedValue: {
+          __identity: "assoc-1",
+          name: "Swiss Volley",
+        },
+      },
+      {
+        __identity: "attr-2",
+        attributeIdentifier: "Indoorvolleyball.RefAdmin:AbstractAssociation",
+        roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+        // No type field - old format
+        inflatedValue: {
+          __identity: "assoc-2",
+          name: "SVRZ",
+        },
+      },
+    ];
+    // Without type field, filterRefereeAssociations will filter them out
+    expect(hasMultipleAssociations(attributeValues)).toBe(false);
   });
 });

@@ -44,6 +44,8 @@ interface AuthState {
   _checkSessionPromise: Promise<boolean> | null;
   // Active party data from embedded HTML (contains association memberships)
   eligibleAttributeValues: AttributeValue[] | null;
+  /** All associations the user belongs to, grouped by role - use this for multi-association detection */
+  groupedEligibleAttributeValues: AttributeValue[] | null;
   eligibleRoles: Record<string, RoleDefinition> | null;
 
   login: (username: string, password: string) => Promise<boolean>;
@@ -72,6 +74,7 @@ export const useAuthStore = create<AuthState>()(
       activeOccupationId: null,
       _checkSessionPromise: null,
       eligibleAttributeValues: null,
+      groupedEligibleAttributeValues: null,
       eligibleRoles: null,
 
       login: async (username: string, password: string): Promise<boolean> => {
@@ -97,6 +100,7 @@ export const useAuthStore = create<AuthState>()(
               status: "authenticated",
               csrfToken: existingCsrfToken,
               eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
+              groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
               eligibleRoles: activeParty?.eligibleRoles ?? null,
             });
             return true;
@@ -117,6 +121,7 @@ export const useAuthStore = create<AuthState>()(
               status: "authenticated",
               csrfToken: result.csrfToken,
               eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
+              groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
               eligibleRoles: activeParty?.eligibleRoles ?? null,
             });
             return true;
@@ -153,6 +158,7 @@ export const useAuthStore = create<AuthState>()(
           csrfToken: null,
           isDemoMode: false,
           eligibleAttributeValues: null,
+          groupedEligibleAttributeValues: null,
           eligibleRoles: null,
         });
       },
@@ -224,12 +230,14 @@ export const useAuthStore = create<AuthState>()(
                     status: "authenticated",
                     csrfToken,
                     eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
+                    groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
                     eligibleRoles: activeParty?.eligibleRoles ?? null,
                   });
                 } else {
                   set({
                     status: "authenticated",
                     eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
+                    groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
                     eligibleRoles: activeParty?.eligibleRoles ?? null,
                   });
                 }
@@ -322,7 +330,10 @@ export const useAuthStore = create<AuthState>()(
       },
 
       hasMultipleAssociations: () => {
-        return hasMultipleAssociations(get().eligibleAttributeValues);
+        // Use groupedEligibleAttributeValues which contains all associations
+        // Fall back to eligibleAttributeValues for backwards compatibility
+        const attributeValues = get().groupedEligibleAttributeValues ?? get().eligibleAttributeValues;
+        return hasMultipleAssociations(attributeValues);
       },
     }),
     {
@@ -331,13 +342,14 @@ export const useAuthStore = create<AuthState>()(
         // Persist minimal user data for UX (immediate name display).
         // Session cookies are HttpOnly and managed by browser.
         // CSRF token is persisted to enable POST requests after page reload.
-        // eligibleAttributeValues persisted for hasMultipleAssociations() on refresh.
+        // groupedEligibleAttributeValues persisted for hasMultipleAssociations() on refresh.
         user: state.user,
         csrfToken: state.csrfToken,
         _wasAuthenticated: state.status === "authenticated",
         isDemoMode: state.isDemoMode,
         activeOccupationId: state.activeOccupationId,
         eligibleAttributeValues: state.eligibleAttributeValues,
+        groupedEligibleAttributeValues: state.groupedEligibleAttributeValues,
       }),
       merge: (persisted, current) => {
         const persistedState = persisted as
@@ -348,6 +360,7 @@ export const useAuthStore = create<AuthState>()(
               isDemoMode?: boolean;
               activeOccupationId?: string | null;
               eligibleAttributeValues?: AttributeValue[] | null;
+              groupedEligibleAttributeValues?: AttributeValue[] | null;
             }
           | undefined;
 
@@ -364,6 +377,7 @@ export const useAuthStore = create<AuthState>()(
           isDemoMode: persistedState?.isDemoMode ?? false,
           activeOccupationId: persistedState?.activeOccupationId ?? null,
           eligibleAttributeValues: persistedState?.eligibleAttributeValues ?? null,
+          groupedEligibleAttributeValues: persistedState?.groupedEligibleAttributeValues ?? null,
           _checkSessionPromise: null,
         };
       },
