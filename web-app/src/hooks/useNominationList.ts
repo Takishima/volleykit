@@ -164,9 +164,11 @@ export function useNominationList({
   return {
     nominationList: null,
     players: [],
-    isLoading: true,
-    isError: false,
-    error: null,
+    isLoading: false,
+    isError: true,
+    error: new Error(
+      "Nomination list data not available. Ensure prefetchedData is provided from getGameWithScoresheet().",
+    ),
     refetch: () => {
       // No-op - data should be provided via prefetchedData
     },

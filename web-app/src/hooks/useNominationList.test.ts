@@ -295,12 +295,17 @@ describe("useNominationList", () => {
       );
     });
 
-    it("returns loading state when no prefetched data and not in demo mode", () => {
+    it("returns error state when no prefetched data and not in demo mode", () => {
       const { result } = renderHook(() =>
         useNominationList({ gameId: "test-game-1", team: "home" }),
       );
 
-      expect(result.current.isLoading).toBe(true);
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.isError).toBe(true);
+      expect(result.current.error).toBeInstanceOf(Error);
+      expect(result.current.error?.message).toContain(
+        "Nomination list data not available",
+      );
       expect(result.current.nominationList).toBeNull();
       expect(result.current.players).toHaveLength(0);
     });
