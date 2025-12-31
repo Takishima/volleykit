@@ -5,6 +5,7 @@ import {
   DEFAULT_VALIDATION_DEADLINE_HOURS,
   isValidationClosed,
   isGamePast,
+  isGameAlreadyValidated,
 } from "./assignment-helpers";
 import type { Assignment } from "@/api/client";
 
@@ -199,6 +200,72 @@ describe("assignment-helpers", () => {
     it("should return true for games from yesterday", () => {
       const gameStart = new Date("2025-01-14T18:00:00Z").toISOString();
       expect(isGamePast(gameStart)).toBe(true);
+    });
+  });
+
+  describe("isGameAlreadyValidated", () => {
+    it("should return true when scoresheet has closedAt set", () => {
+      const assignment: Partial<Assignment> = {
+        refereeGame: {
+          game: {
+            scoresheet: {
+              closedAt: "2025-01-15T20:00:00Z",
+            },
+          },
+        },
+      } as Assignment;
+
+      expect(isGameAlreadyValidated(assignment as Assignment)).toBe(true);
+    });
+
+    it("should return false when scoresheet closedAt is null", () => {
+      const assignment: Partial<Assignment> = {
+        refereeGame: {
+          game: {
+            scoresheet: {
+              closedAt: null,
+            },
+          },
+        },
+      } as Assignment;
+
+      expect(isGameAlreadyValidated(assignment as Assignment)).toBe(false);
+    });
+
+    it("should return false when scoresheet closedAt is undefined", () => {
+      const assignment: Partial<Assignment> = {
+        refereeGame: {
+          game: {
+            scoresheet: {},
+          },
+        },
+      } as Assignment;
+
+      expect(isGameAlreadyValidated(assignment as Assignment)).toBe(false);
+    });
+
+    it("should return false when scoresheet is missing", () => {
+      const assignment: Partial<Assignment> = {
+        refereeGame: {
+          game: {},
+        },
+      } as Assignment;
+
+      expect(isGameAlreadyValidated(assignment as Assignment)).toBe(false);
+    });
+
+    it("should return false when game is missing", () => {
+      const assignment: Partial<Assignment> = {
+        refereeGame: {},
+      } as Assignment;
+
+      expect(isGameAlreadyValidated(assignment as Assignment)).toBe(false);
+    });
+
+    it("should return false when refereeGame is missing", () => {
+      const assignment: Partial<Assignment> = {} as Assignment;
+
+      expect(isGameAlreadyValidated(assignment as Assignment)).toBe(false);
     });
   });
 });

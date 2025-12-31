@@ -414,7 +414,7 @@ describe("useAssignmentActions", () => {
       expect(toast.warning).toHaveBeenCalledWith("settings.safeModeBlocked");
     });
 
-    it("should block validate game when safe mode is enabled", () => {
+    it("should block validate game when safe mode is enabled for unvalidated games", () => {
       const { result } = renderHook(() => useAssignmentActions());
 
       act(() => {
@@ -423,6 +423,31 @@ describe("useAssignmentActions", () => {
 
       expect(result.current.validateGameModal.isOpen).toBe(false);
       expect(toast.warning).toHaveBeenCalledWith("settings.safeModeBlocked");
+    });
+
+    it("should allow validate game when safe mode is enabled for already validated games", () => {
+      const validatedAssignment: Assignment = {
+        ...mockAssignment,
+        refereeGame: {
+          ...mockAssignment.refereeGame,
+          game: {
+            ...mockAssignment.refereeGame?.game,
+            scoresheet: {
+              closedAt: "2025-12-15T20:00:00Z",
+            },
+          },
+        },
+      } as Assignment;
+
+      const { result } = renderHook(() => useAssignmentActions());
+
+      act(() => {
+        result.current.validateGameModal.open(validatedAssignment);
+      });
+
+      expect(result.current.validateGameModal.isOpen).toBe(true);
+      expect(result.current.validateGameModal.assignment).toBe(validatedAssignment);
+      expect(toast.warning).not.toHaveBeenCalled();
     });
 
     it("should not block operations in demo mode even with safe mode enabled", () => {

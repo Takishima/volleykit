@@ -1,7 +1,11 @@
 import { useState, useCallback } from "react";
 import type { Assignment } from "@/api/client";
 import { createLogger } from "@/utils/logger";
-import { getTeamNames, isGameReportEligible } from "@/utils/assignment-helpers";
+import {
+  getTeamNames,
+  isGameReportEligible,
+  isGameAlreadyValidated,
+} from "@/utils/assignment-helpers";
 import { useDemoStore } from "@/stores/demo";
 import { useLanguageStore } from "@/stores/language";
 import { toast } from "@/stores/toast";
@@ -58,7 +62,10 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
 
   const openValidateGame = useCallback(
     (assignment: Assignment) => {
+      // Allow viewing already validated games in safe mode (read-only)
+      const isAlreadyValidated = isGameAlreadyValidated(assignment);
       if (
+        !isAlreadyValidated &&
         guard({
           context: "useAssignmentActions",
           action: "game validation",
