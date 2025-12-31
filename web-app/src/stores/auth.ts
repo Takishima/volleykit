@@ -17,6 +17,16 @@ import {
 import { useDemoStore } from "./demo";
 import { useSettingsStore, DEMO_HOME_LOCATION } from "./settings";
 
+/**
+ * Storage version for the auth store.
+ * Increment this to invalidate all cached auth state and force re-login.
+ *
+ * Version history:
+ * - 1: Initial version (pre-groupedEligibleAttributeValues)
+ * - 2: Added groupedEligibleAttributeValues for multi-association detection
+ */
+const AUTH_STORE_VERSION = 2;
+
 export type AuthStatus = "idle" | "loading" | "authenticated" | "error";
 
 export interface UserProfile {
@@ -44,6 +54,8 @@ interface AuthState {
   _checkSessionPromise: Promise<boolean> | null;
   // Active party data from embedded HTML (contains association memberships)
   eligibleAttributeValues: AttributeValue[] | null;
+  /** All associations the user belongs to, grouped by role - use this for multi-association detection */
+  groupedEligibleAttributeValues: AttributeValue[] | null;
   eligibleRoles: Record<string, RoleDefinition> | null;
 
   login: (username: string, password: string) => Promise<boolean>;
@@ -72,6 +84,7 @@ export const useAuthStore = create<AuthState>()(
       activeOccupationId: null,
       _checkSessionPromise: null,
       eligibleAttributeValues: null,
+      groupedEligibleAttributeValues: null,
       eligibleRoles: null,
 
       login: async (username: string, password: string): Promise<boolean> => {
@@ -97,6 +110,7 @@ export const useAuthStore = create<AuthState>()(
               status: "authenticated",
               csrfToken: existingCsrfToken,
               eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
+              groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
               eligibleRoles: activeParty?.eligibleRoles ?? null,
             });
             return true;
@@ -117,6 +131,7 @@ export const useAuthStore = create<AuthState>()(
               status: "authenticated",
               csrfToken: result.csrfToken,
               eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
+              groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
               eligibleRoles: activeParty?.eligibleRoles ?? null,
             });
             return true;
@@ -153,6 +168,7 @@ export const useAuthStore = create<AuthState>()(
           csrfToken: null,
           isDemoMode: false,
           eligibleAttributeValues: null,
+          groupedEligibleAttributeValues: null,
           eligibleRoles: null,
         });
       },
@@ -224,12 +240,14 @@ export const useAuthStore = create<AuthState>()(
                     status: "authenticated",
                     csrfToken,
                     eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
+                    groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
                     eligibleRoles: activeParty?.eligibleRoles ?? null,
                   });
                 } else {
                   set({
                     status: "authenticated",
                     eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
+                    groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
                     eligibleRoles: activeParty?.eligibleRoles ?? null,
                   });
                 }
@@ -322,23 +340,35 @@ export const useAuthStore = create<AuthState>()(
       },
 
       hasMultipleAssociations: () => {
-        return hasMultipleAssociations(get().eligibleAttributeValues);
+        // Use groupedEligibleAttributeValues which contains all user associations
+        return hasMultipleAssociations(get().groupedEligibleAttributeValues);
       },
     }),
     {
       name: "volleykit-auth",
+      version: AUTH_STORE_VERSION,
       partialize: (state) => ({
         // Persist minimal user data for UX (immediate name display).
         // Session cookies are HttpOnly and managed by browser.
         // CSRF token is persisted to enable POST requests after page reload.
-        // eligibleAttributeValues persisted for hasMultipleAssociations() on refresh.
+        // groupedEligibleAttributeValues persisted for hasMultipleAssociations() on refresh.
         user: state.user,
         csrfToken: state.csrfToken,
         _wasAuthenticated: state.status === "authenticated",
         isDemoMode: state.isDemoMode,
         activeOccupationId: state.activeOccupationId,
         eligibleAttributeValues: state.eligibleAttributeValues,
+        groupedEligibleAttributeValues: state.groupedEligibleAttributeValues,
       }),
+      // Clean break: invalidate old cached state when version changes
+      // Users will need to re-login to get fresh association data
+      migrate: (persistedState, version) => {
+        if (version < AUTH_STORE_VERSION) {
+          // Return undefined to use defaults (forces re-login)
+          return undefined;
+        }
+        return persistedState;
+      },
       merge: (persisted, current) => {
         const persistedState = persisted as
           | {
@@ -348,6 +378,7 @@ export const useAuthStore = create<AuthState>()(
               isDemoMode?: boolean;
               activeOccupationId?: string | null;
               eligibleAttributeValues?: AttributeValue[] | null;
+              groupedEligibleAttributeValues?: AttributeValue[] | null;
             }
           | undefined;
 
@@ -364,6 +395,7 @@ export const useAuthStore = create<AuthState>()(
           isDemoMode: persistedState?.isDemoMode ?? false,
           activeOccupationId: persistedState?.activeOccupationId ?? null,
           eligibleAttributeValues: persistedState?.eligibleAttributeValues ?? null,
+          groupedEligibleAttributeValues: persistedState?.groupedEligibleAttributeValues ?? null,
           _checkSessionPromise: null,
         };
       },
