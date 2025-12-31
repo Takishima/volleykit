@@ -473,7 +473,27 @@ export default {
 
     // Remove headers that shouldn't be forwarded
     proxyRequest.headers.delete("Host");
-    proxyRequest.headers.set("Host", new URL(env.TARGET_HOST).host);
+    const targetHostUrl = new URL(env.TARGET_HOST);
+    const targetHost = targetHostUrl.host;
+    const targetOrigin = targetHostUrl.origin;
+    proxyRequest.headers.set("Host", targetHost);
+
+    // Rewrite Origin and Referer to match target host
+    // The upstream Neos Flow server validates these for CSRF protection
+    proxyRequest.headers.set("Origin", targetOrigin);
+
+    const originalReferer = proxyRequest.headers.get("Referer");
+    if (originalReferer) {
+      try {
+        const refererUrl = new URL(originalReferer);
+        refererUrl.protocol = targetHostUrl.protocol;
+        refererUrl.host = targetHost;
+        proxyRequest.headers.set("Referer", refererUrl.toString());
+      } catch {
+        // If Referer is malformed, set a safe default
+        proxyRequest.headers.set("Referer", targetOrigin + "/");
+      }
+    }
 
     proxyRequest.headers.set("User-Agent", VOLLEYKIT_USER_AGENT);
 
@@ -499,17 +519,19 @@ export default {
         responseHeaders.delete("Set-Cookie");
 
         for (const cookie of cookies) {
-          // Remove Domain, Secure, and SameSite - we'll add them back explicitly
+          // Remove Domain, Secure, SameSite, and Partitioned - we'll add them back explicitly
           // This ensures consistent behavior regardless of original cookie format
           const modifiedCookie = cookie
             .replace(/Domain=[^;]+;?\s*/gi, "")
             .replace(/;\s*Secure\s*(;|$)/gi, "$1")
-            .replace(/SameSite=[^;]+;?\s*/gi, "");
+            .replace(/SameSite=[^;]+;?\s*/gi, "")
+            .replace(/;\s*Partitioned\s*(;|$)/gi, "$1");
 
-          // Always add SameSite=None and Secure for cross-origin compatibility
+          // Add SameSite=None, Secure, and Partitioned for cross-origin compatibility
+          // Partitioned (CHIPS) is required for iOS Safari's ITP to allow third-party cookies
           responseHeaders.append(
             "Set-Cookie",
-            `${modifiedCookie}; SameSite=None; Secure`,
+            `${modifiedCookie}; SameSite=None; Secure; Partitioned`,
           );
         }
       }
