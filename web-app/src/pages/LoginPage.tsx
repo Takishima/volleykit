@@ -34,6 +34,8 @@ export function LoginPage() {
   const [username, setUsername] = useState("");
   // Use ref for password to minimize memory exposure (avoids re-renders with password in state)
   const passwordRef = useRef<HTMLInputElement>(null);
+  // Form ref for manual validation trigger (needed since button is type="button")
+  const formRef = useRef<HTMLFormElement>(null);
   // Ref to prevent race condition with double submission
   // State updates are async, so we need a synchronous guard
   const isSubmittingRef = useRef(false);
@@ -70,6 +72,13 @@ export function LoginPage() {
   async function performLogin() {
     // Use ref for synchronous double-submit prevention (state updates are async)
     if (isSubmittingRef.current || isLoading) return;
+
+    // Trigger HTML5 form validation (needed since button is type="button")
+    // reportValidity() shows validation messages and returns false if invalid
+    if (formRef.current && !formRef.current.reportValidity()) {
+      return;
+    }
+
     isSubmittingRef.current = true;
 
     try {
@@ -136,7 +145,7 @@ export function LoginPage() {
         {/* Login form */}
         <div className="card p-6">
           {/* method="post" is defensive fallback if native submission somehow occurs */}
-          <form onSubmit={handleSubmit} method="post" className="space-y-6">
+          <form ref={formRef} onSubmit={handleSubmit} method="post" className="space-y-6">
             <div>
               <label
                 htmlFor="username"
