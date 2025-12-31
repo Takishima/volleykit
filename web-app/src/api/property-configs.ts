@@ -47,7 +47,10 @@ export const ASSIGNMENT_PROPERTIES = [
   // Compensation lock flags for editability check
   "convocationCompensation.paymentDone",
   "convocationCompensation.lockPayoutOnSiteCompensation",
-  // Validation status for swipe button color
+  // Validation status for swipe button color.
+  // Parent object must be requested before nested property to ensure
+  // the API populates the nested structure correctly.
+  "refereeGame.game.scoresheet",
   "refereeGame.game.scoresheet.closedAt",
 ];
 
