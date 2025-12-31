@@ -74,6 +74,14 @@ const ALLOWED_PREFIX_PATHS = [
   "/sportmanager.indoorvolleyball/",
 ];
 
+// The correct authentication endpoint
+const AUTH_ENDPOINT = "/sportmanager.security/authentication/authenticate";
+
+// Form field name that indicates authentication credentials are present
+// This is the Neos Flow authentication token username field
+const AUTH_USERNAME_FIELD =
+  "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][username]";
+
 function isAllowedPath(pathname: string): boolean {
   // Check exact matches first
   if (ALLOWED_EXACT_PATHS.includes(pathname)) {
@@ -81,6 +89,83 @@ function isAllowedPath(pathname: string): boolean {
   }
   // Check prefix matches
   return ALLOWED_PREFIX_PATHS.some((prefix) => pathname.startsWith(prefix));
+}
+
+/**
+ * Check if request body contains authentication credentials.
+ * This detects when iOS Safari's password autofill triggers a native form
+ * submission to /login instead of the correct /sportmanager.security/authentication/authenticate endpoint.
+ *
+ * Checks for both:
+ * 1. Neos Flow format: __authentication[Neos][Flow]...[username]=value
+ * 2. Simple HTML form format: username=value (from native form submission)
+ *
+ * @param body The request body as text
+ * @returns true if the body contains authentication credentials
+ */
+function hasAuthCredentials(body: string): boolean {
+  // Check for Neos Flow format (from React fetch)
+  const encodedField = encodeURIComponent(AUTH_USERNAME_FIELD);
+  if (body.includes(AUTH_USERNAME_FIELD) || body.includes(encodedField)) {
+    return true;
+  }
+
+  // Check for simple HTML form format (from iOS native form submission)
+  // Look for username=...&password=... pattern
+  const params = new URLSearchParams(body);
+  return params.has("username") && params.has("password");
+}
+
+/**
+ * Transform simple form fields to Neos Flow authentication format.
+ * This converts native HTML form submission (username/password) to the
+ * format expected by the VolleyManager authentication endpoint.
+ *
+ * @param body The original form body
+ * @returns Transformed body with Neos Flow field names, or original if already in correct format
+ */
+function transformAuthFormData(body: string): string {
+  // Check if already in Neos Flow format
+  const encodedField = encodeURIComponent(AUTH_USERNAME_FIELD);
+  if (body.includes(AUTH_USERNAME_FIELD) || body.includes(encodedField)) {
+    return body; // Already in correct format
+  }
+
+  // Parse simple form fields
+  const params = new URLSearchParams(body);
+  const username = params.get("username");
+  const password = params.get("password");
+
+  if (!username || !password) {
+    return body; // Not a valid login form, return unchanged
+  }
+
+  // Build Neos Flow format form data
+  // Note: The __trustedProperties and __referrer fields are required by Neos Flow
+  // but we can't generate them here as they contain HMAC signatures.
+  // This transformation will allow the auth to proceed, but it may fail server-side
+  // if the CSRF protection rejects it. The real fix is in the PWA to prevent
+  // native form submission, but this provides a fallback.
+  const neosParams = new URLSearchParams();
+
+  // Add authentication credentials in Neos Flow format
+  neosParams.set(
+    "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][username]",
+    username,
+  );
+  neosParams.set(
+    "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][password]",
+    password,
+  );
+
+  // Copy any other fields that might be present (e.g., __trustedProperties if included)
+  for (const [key, value] of params.entries()) {
+    if (key !== "username" && key !== "password") {
+      neosParams.set(key, value);
+    }
+  }
+
+  return neosParams.toString();
 }
 
 function parseAllowedOrigins(allowedOrigins: string): string[] {
@@ -330,15 +415,40 @@ export default {
       "/",
       requestUrlStr.indexOf("://") + 3,
     );
-    const rawPathAndSearch =
+    let rawPathAndSearch =
       pathStart >= 0 ? requestUrlStr.substring(pathStart) : "/";
+
+    // iOS Safari workaround: Detect POST to /login with auth credentials
+    // iOS password autofill can trigger native form submission to /login
+    // instead of the correct auth endpoint. This rewrites such requests.
+    // See: https://bugs.webkit.org/show_bug.cgi?id=XXXXX (iOS autofill behavior)
+    let requestBody: string | null = null;
+    if (
+      request.method === "POST" &&
+      url.pathname === "/login" &&
+      request.headers.get("Content-Type")?.includes("application/x-www-form-urlencoded")
+    ) {
+      // Clone the request to read the body (body can only be read once)
+      const clonedRequest = request.clone();
+      requestBody = await clonedRequest.text();
+
+      if (hasAuthCredentials(requestBody)) {
+        // Rewrite path to the correct authentication endpoint
+        console.log("iOS auth workaround: Rewriting POST /login to auth endpoint");
+        rawPathAndSearch = AUTH_ENDPOINT + url.search;
+        // Transform form fields if they're in simple HTML format
+        requestBody = transformAuthFormData(requestBody);
+      }
+    }
+
     const targetUrl = new URL(rawPathAndSearch, env.TARGET_HOST);
 
     // Forward the request
+    // If we already read the body for iOS workaround detection, use it directly
     const proxyRequest = new Request(targetUrl.toString(), {
       method: request.method,
       headers: request.headers,
-      body: request.body,
+      body: requestBody ?? request.body,
       redirect: "manual", // Handle redirects manually to preserve cookies
     });
 

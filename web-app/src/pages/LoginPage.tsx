@@ -56,7 +56,11 @@ export function LoginPage() {
   }, [initializeDemoData, setDemoAuthenticated, navigate]);
 
   async function handleSubmit(e: FormEvent) {
+    // Prevent native form submission - critical for iOS autofill compatibility
+    // iOS Safari's password autofill can trigger native form submission,
+    // bypassing React's event handling in some cases
     e.preventDefault();
+    e.stopPropagation();
 
     const password = passwordRef.current?.value || "";
     const success = await login(username, password);
