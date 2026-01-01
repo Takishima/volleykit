@@ -27,9 +27,13 @@ export default defineConfig({
     alias: nodePolyfills,
   },
   define: {
-    // Provide process.env for packages that expect it
+    // Provide globals for packages that expect Node.js/Emscripten environment
     'process.env': {},
     global: 'globalThis',
+  },
+  optimizeDeps: {
+    // Exclude PaddleOCR from optimization - it has special WASM handling
+    exclude: ['@paddle-js-models/ocr', '@paddlejs/paddlejs-core', '@paddlejs/paddlejs-backend-webgl'],
   },
   plugins: [
     VitePWA({

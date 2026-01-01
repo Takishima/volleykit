@@ -11,6 +11,9 @@
  * Note: Service worker registration is handled automatically by vite-plugin-pwa
  */
 
+// Polyfills must be imported first
+import './polyfills/emscripten.js';
+
 import './style.css';
 import { ImageCapture } from './components/ImageCapture.js';
 import { SheetTypeSelector } from './components/SheetTypeSelector.js';
