@@ -19,6 +19,7 @@ import type { CompensationRecord } from "@/api/client";
 import type { SwipeConfig } from "@/types/swipe";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTour } from "@/hooks/useTour";
+import { TOUR_DUMMY_COMPENSATION } from "@/components/tour/definitions/compensations";
 
 const EditCompensationModal = lazy(
   () =>
@@ -47,11 +48,22 @@ export function CompensationsPage() {
   const { editCompensationModal, handleGeneratePDF } = useCompensationActions();
 
   // Initialize tour for this page (triggers auto-start on first visit)
-  useTour("compensations");
+  const { isTourMode } = useTour("compensations");
 
   // Single data fetch based on current filter (like ExchangePage pattern)
   const paidFilter = useMemo(() => filterToPaidFilter(filter), [filter]);
-  const { data, isLoading, error, refetch } = useCompensations(paidFilter);
+  const { data: rawData, isLoading, error, refetch } = useCompensations(paidFilter);
+
+  // When tour is active, show ONLY the dummy compensation to ensure tour works
+  // regardless of whether tabs have real data
+  const data = useMemo(() => {
+    if (isTourMode) {
+      // Safe cast: TourDummyCompensation provides all fields used by CompensationCard
+      const tourCompensation = TOUR_DUMMY_COMPENSATION as unknown as CompensationRecord;
+      return [tourCompensation];
+    }
+    return rawData;
+  }, [isTourMode, rawData]);
 
   // Group compensations by week for visual separation
   const groupedData = useMemo(() => {

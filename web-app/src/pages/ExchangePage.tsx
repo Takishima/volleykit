@@ -26,6 +26,7 @@ import type { SwipeConfig } from "@/types/swipe";
 import type { GameExchange } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTour } from "@/hooks/useTour";
+import { TOUR_DUMMY_EXCHANGE } from "@/components/tour/definitions/exchange";
 
 const TakeOverExchangeModal = lazy(
   () =>
@@ -46,7 +47,7 @@ export function ExchangePage() {
   const { t } = useTranslation();
 
   // Initialize tour for this page (triggers auto-start on first visit)
-  useTour("exchange");
+  const { isTourMode } = useTour("exchange");
 
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
   const { userRefereeLevel, userRefereeLevelGradationValue } = useDemoStore(
@@ -118,6 +119,14 @@ export function ExchangePage() {
 
   // Filter exchanges by user's referee level and distance when filters are enabled
   const filteredData = useMemo(() => {
+    // When tour is active, show ONLY the dummy exchange to ensure tour works
+    // regardless of whether tabs have real data
+    if (isTourMode) {
+      // Safe cast: TourDummyExchange provides all fields used by ExchangeCard
+      const tourExchange = TOUR_DUMMY_EXCHANGE as unknown as GameExchange;
+      return [{ exchange: tourExchange, distanceKm: null }];
+    }
+
     if (!exchangesWithDistance) return null;
 
     let result = exchangesWithDistance;
@@ -176,6 +185,7 @@ export function ExchangePage() {
 
     return result;
   }, [
+    isTourMode,
     exchangesWithDistance,
     levelFilterEnabled,
     statusFilter,
