@@ -36,31 +36,6 @@ import {
 // provides referential stability when data.items is nullish.
 const EMPTY_ASSIGNMENTS: Assignment[] = [];
 
-/**
- * Get the managing association short name from an assignment.
- * Returns undefined if the field is not available.
- */
-function getAssignmentAssociationCode(assignment: Assignment): string | undefined {
-  return assignment.refereeGame?.game?.group?.managingAssociationShortName;
-}
-
-/**
- * Filter assignments by the active association code.
- * If associationCode is undefined, returns all assignments.
- */
-function filterByAssociation(
-  assignments: Assignment[],
-  associationCode: string | null | undefined,
-): Assignment[] {
-  if (!associationCode) return assignments;
-  return assignments.filter((assignment) => {
-    const gameAssociation = getAssignmentAssociationCode(assignment);
-    // Include games without association info (conservative approach)
-    if (!gameAssociation) return true;
-    return gameAssociation === associationCode;
-  });
-}
-
 // Date period presets
 export type DatePeriod =
   | "upcoming"
@@ -139,20 +114,11 @@ export function useAssignments(
 ): UseQueryResult<Assignment[], Error> {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
   const activeOccupationId = useAuthStore((state) => state.activeOccupationId);
-  const user = useAuthStore((state) => state.user);
   const demoAssignments = useDemoStore((state) => state.assignments);
   const demoAssociationCode = useDemoStore(
     (state) => state.activeAssociationCode,
   );
   const apiClient = getApiClient(isDemoMode);
-
-  // Get the active occupation's association code for client-side filtering
-  const activeOccupation = user?.occupations?.find(
-    (o) => o.id === activeOccupationId,
-  );
-  const activeAssociationCode = isDemoMode
-    ? demoAssociationCode
-    : activeOccupation?.associationCode;
 
   // Use appropriate key for cache invalidation when switching associations
   const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId;
@@ -213,12 +179,7 @@ export function useAssignments(
   const query = useQuery({
     queryKey: queryKeys.assignments.list(config, associationKey),
     queryFn: () => apiClient.searchAssignments(config),
-    select: (data) => {
-      const items = data.items ?? EMPTY_ASSIGNMENTS;
-      // Filter by active association in production mode
-      // (demo mode already generates data per association)
-      return filterByAssociation(items, activeAssociationCode);
-    },
+    select: (data) => data.items ?? EMPTY_ASSIGNMENTS,
     staleTime: 5 * 60 * 1000,
     // Disable query in demo mode - we read directly from the store
     enabled: !isDemoMode,
@@ -267,19 +228,10 @@ export function useValidationClosedAssignments(): UseQueryResult<
 > {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
   const activeOccupationId = useAuthStore((state) => state.activeOccupationId);
-  const user = useAuthStore((state) => state.user);
   const demoAssignments = useDemoStore((state) => state.assignments);
   const demoAssociationCode = useDemoStore(
     (state) => state.activeAssociationCode,
   );
-
-  // Get the active occupation's association code for client-side filtering
-  const activeOccupation = user?.occupations?.find(
-    (o) => o.id === activeOccupationId,
-  );
-  const activeAssociationCode = isDemoMode
-    ? demoAssociationCode
-    : activeOccupation?.associationCode;
 
   // Use appropriate key for cache invalidation when switching associations
   const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId;
@@ -370,9 +322,8 @@ export function useValidationClosedAssignments(): UseQueryResult<
       // Fetch all pages because API doesn't support server-side filtering
       // by validation status - we must filter client-side after fetching.
       const allItems = await fetchAllAssignmentPages(config, signal);
-      // Filter by validation closed status, then by active association
-      const validationFiltered = filterByValidationClosed(allItems, deadlineHours);
-      return filterByAssociation(validationFiltered, activeAssociationCode);
+      // Filter by validation closed status
+      return filterByValidationClosed(allItems, deadlineHours);
     },
     // Longer cache time because validation status changes infrequently
     // and fetching all pages is expensive (multiple API calls).
