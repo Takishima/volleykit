@@ -831,7 +831,7 @@ function LiveDashboardFetch() {
 
           {!result.activeParty && result.rawMatch && (
             <div style={{ marginTop: "8px" }}>
-              <strong>Raw Match (first 500 chars):</strong>
+              <strong>Raw Match (first {RAW_MATCH_PREVIEW_LENGTH} chars):</strong>
               <pre
                 style={{
                   fontSize: "8px",
