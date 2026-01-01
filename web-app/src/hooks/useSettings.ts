@@ -8,15 +8,17 @@ import { queryKeys } from "@/api/queryKeys";
  * Settings include deadline hours for validation and other configuration.
  *
  * Note: Disabled in demo mode as demo data doesn't need these settings.
+ * Includes activeOccupationId in the query key to refetch when switching associations.
  */
 export function useAssociationSettings(): UseQueryResult<
   AssociationSettings,
   Error
 > {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const activeOccupationId = useAuthStore((state) => state.activeOccupationId);
 
   return useQuery({
-    queryKey: queryKeys.settings.association(),
+    queryKey: queryKeys.settings.association(activeOccupationId),
     queryFn: () => api.getAssociationSettings(),
     staleTime: 30 * 60 * 1000, // 30 minutes - settings rarely change
     enabled: !isDemoMode,
@@ -28,12 +30,14 @@ export function useAssociationSettings(): UseQueryResult<
  * Used to determine date ranges for assignment queries.
  *
  * Note: Disabled in demo mode as demo data uses fixed date ranges.
+ * Includes activeOccupationId in the query key to refetch when switching associations.
  */
 export function useActiveSeason(): UseQueryResult<Season, Error> {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const activeOccupationId = useAuthStore((state) => state.activeOccupationId);
 
   return useQuery({
-    queryKey: queryKeys.seasons.active(),
+    queryKey: queryKeys.seasons.active(activeOccupationId),
     queryFn: () => api.getActiveSeason(),
     staleTime: 60 * 60 * 1000, // 1 hour - season rarely changes
     enabled: !isDemoMode,

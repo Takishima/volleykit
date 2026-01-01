@@ -27,10 +27,14 @@ export type ExchangeStatus = "open" | "applied" | "closed" | "all";
  */
 export function useGameExchanges(status: ExchangeStatus = "all") {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const activeOccupationId = useAuthStore((state) => state.activeOccupationId);
   const demoAssociationCode = useDemoStore(
     (state) => state.activeAssociationCode,
   );
   const apiClient = getApiClient(isDemoMode);
+
+  // Use appropriate key for cache invalidation when switching associations
+  const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId;
 
   const config: SearchConfiguration = {
     offset: 0,
@@ -49,10 +53,7 @@ export function useGameExchanges(status: ExchangeStatus = "all") {
   };
 
   return useQuery({
-    queryKey: queryKeys.exchanges.list(
-      config,
-      isDemoMode ? demoAssociationCode : null,
-    ),
+    queryKey: queryKeys.exchanges.list(config, associationKey),
     queryFn: () => apiClient.searchExchanges(config),
     select: (data) => data.items ?? EMPTY_EXCHANGES,
     staleTime: 2 * 60 * 1000,

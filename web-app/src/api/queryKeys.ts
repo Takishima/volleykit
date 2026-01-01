@@ -36,11 +36,16 @@ export const queryKeys = {
     all: ["assignments"] as const,
     /** Parent key for all list queries */
     lists: () => [...queryKeys.assignments.all, "list"] as const,
-    /** Specific list query with search configuration */
+    /**
+     * Specific list query with search configuration.
+     * @param config - Search configuration filters and sorting
+     * @param associationKey - In demo mode: demoAssociationCode. In production: activeOccupationId.
+     *                         This ensures cache invalidation when switching associations.
+     */
     list: (
       config?: SearchConfiguration,
-      demoAssociationCode?: string | null,
-    ) => [...queryKeys.assignments.lists(), config, demoAssociationCode] as const,
+      associationKey?: string | null,
+    ) => [...queryKeys.assignments.lists(), config, associationKey] as const,
     /** Parent key for all detail queries */
     details: () => [...queryKeys.assignments.all, "detail"] as const,
     /** Specific assignment detail query */
@@ -68,11 +73,15 @@ export const queryKeys = {
     all: ["compensations"] as const,
     /** Parent key for all list queries */
     lists: () => [...queryKeys.compensations.all, "list"] as const,
-    /** Specific list query with search configuration */
+    /**
+     * Specific list query with search configuration.
+     * @param config - Search configuration filters and sorting
+     * @param associationKey - In demo mode: demoAssociationCode. In production: activeOccupationId.
+     */
     list: (
       config?: SearchConfiguration,
-      demoAssociationCode?: string | null,
-    ) => [...queryKeys.compensations.lists(), config, demoAssociationCode] as const,
+      associationKey?: string | null,
+    ) => [...queryKeys.compensations.lists(), config, associationKey] as const,
   },
 
   /**
@@ -83,11 +92,15 @@ export const queryKeys = {
     all: ["exchanges"] as const,
     /** Parent key for all list queries */
     lists: () => [...queryKeys.exchanges.all, "list"] as const,
-    /** Specific list query with search configuration */
+    /**
+     * Specific list query with search configuration.
+     * @param config - Search configuration filters and sorting
+     * @param associationKey - In demo mode: demoAssociationCode. In production: activeOccupationId.
+     */
     list: (
       config?: SearchConfiguration,
-      demoAssociationCode?: string | null,
-    ) => [...queryKeys.exchanges.lists(), config, demoAssociationCode] as const,
+      associationKey?: string | null,
+    ) => [...queryKeys.exchanges.lists(), config, associationKey] as const,
   },
 
   /**
@@ -96,8 +109,12 @@ export const queryKeys = {
   seasons: {
     /** Base key - invalidates ALL season queries */
     all: ["seasons"] as const,
-    /** Active season query */
-    active: () => [...queryKeys.seasons.all, "active"] as const,
+    /**
+     * Active season query.
+     * @param associationKey - In demo mode: demoAssociationCode. In production: activeOccupationId.
+     */
+    active: (associationKey?: string | null) =>
+      [...queryKeys.seasons.all, "active", associationKey] as const,
   },
 
   /**
@@ -106,8 +123,12 @@ export const queryKeys = {
   settings: {
     /** Base key - invalidates ALL settings queries */
     all: ["settings"] as const,
-    /** Association settings query */
-    association: () => [...queryKeys.settings.all, "association"] as const,
+    /**
+     * Association settings query.
+     * @param associationKey - In demo mode: demoAssociationCode. In production: activeOccupationId.
+     */
+    association: (associationKey?: string | null) =>
+      [...queryKeys.settings.all, "association", associationKey] as const,
   },
 
   /**
