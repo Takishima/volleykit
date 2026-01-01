@@ -10,11 +10,6 @@ const SECONDS_PER_DAY = 60 * 60 * 24;
 const CACHE_MAX_AGE_DAYS = 7;
 const CDN_CACHE_DAYS = 30;
 
-// Build size constants (ONNX runtime + OpenCV are large ML dependencies)
-const MAX_PRECACHE_FILE_SIZE_MB = 30;
-const MAX_PRECACHE_FILE_SIZE_BYTES = MAX_PRECACHE_FILE_SIZE_MB * 1024 * 1024;
-const CHUNK_SIZE_WARNING_LIMIT_KB = 15000;
-
 export default defineConfig({
   base: BASE_PATH,
   plugins: [
@@ -24,44 +19,30 @@ export default defineConfig({
         enabled: true,
       },
       workbox: {
-        // Precache app shell assets (exclude WASM files - they're too large)
-        globPatterns: ['**/*.{css,html,ico,png,svg,woff,woff2}'],
-        // Allow larger files for precaching (ONNX runtime is ~24MB)
-        maximumFileSizeToCacheInBytes: MAX_PRECACHE_FILE_SIZE_BYTES,
+        // Precache app shell assets
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
         // Runtime caching strategies
         runtimeCaching: [
           {
-            // Cache same-origin JS files (including large ONNX runtime)
-            urlPattern: /\.js$/,
+            // Cache same-origin requests (assets, etc.)
+            urlPattern: ({ sameOrigin }) => sameOrigin,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'ocr-poc-js',
+              cacheName: 'ocr-poc-assets',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: SECONDS_PER_DAY * CACHE_MAX_AGE_DAYS,
+              },
+            },
+          },
+          {
+            // Cache Paddle.js model files from CDN
+            urlPattern: /^https:\/\/paddlejs\.cdn\.bcebos\.com\//,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'paddlejs-models',
               expiration: {
                 maxEntries: 20,
-                maxAgeSeconds: SECONDS_PER_DAY * CACHE_MAX_AGE_DAYS,
-              },
-            },
-          },
-          {
-            // Cache WASM files (ONNX runtime)
-            urlPattern: /\.wasm$/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'ocr-poc-wasm',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: SECONDS_PER_DAY * CACHE_MAX_AGE_DAYS,
-              },
-            },
-          },
-          {
-            // Cache PaddleOCR ONNX models from Hugging Face
-            urlPattern: /^https:\/\/huggingface\.co\/.*\.(onnx|txt)$/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'paddleocr-models',
-              expiration: {
-                maxEntries: 10,
                 maxAgeSeconds: SECONDS_PER_DAY * CDN_CACHE_DAYS,
               },
               cacheableResponse: {
@@ -106,20 +87,5 @@ export default defineConfig({
     outDir: 'dist',
     // Generate source maps for debugging
     sourcemap: false,
-    // Increase chunk size warning limit for ONNX runtime
-    chunkSizeWarningLimit: CHUNK_SIZE_WARNING_LIMIT_KB,
-    rollupOptions: {
-      output: {
-        // Split large dependencies into separate chunks
-        manualChunks: {
-          'onnx-runtime': ['onnxruntime-web'],
-          'opencv': ['@techstark/opencv-js'],
-        },
-      },
-    },
-  },
-  // Optimize dependency handling
-  optimizeDeps: {
-    exclude: ['onnxruntime-web'],
   },
 });

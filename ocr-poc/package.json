@@ -17,6 +17,6 @@
     "workbox-window": "^7.3.0"
   },
   "dependencies": {
-    "@gutenye/ocr-browser": "^1.2.0"
+    "@paddlejs-models/ocr": "^1.1.0"
   }
 }

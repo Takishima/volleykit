@@ -1,12 +1,12 @@
 /**
  * PaddleOCR Service
  *
- * Wrapper around @gutenye/ocr-browser for OCR processing.
- * Uses PP-OCRv3 detection and Latin recognition for Swiss volleyball scoresheets
- * with German, French, and Italian language support.
+ * Wrapper around @paddlejs-models/ocr for OCR processing.
+ * Uses WebGL-based Paddle.js for lightweight browser inference.
+ * Supports Chinese, English, and numbers recognition.
  */
 
-import Ocr from '@gutenye/ocr-browser';
+import * as ocr from '@paddlejs-models/ocr';
 
 /**
  * @typedef {Object} OCRWord
@@ -40,20 +40,7 @@ import Ocr from '@gutenye/ocr-browser';
  * @param {OCRProgress} progress
  */
 
-/** Hugging Face CDN base URL for paddleocr-onnx models */
-const HF_CDN_BASE = 'https://huggingface.co/monkt/paddleocr-onnx/resolve/main';
-
-/** Model paths - using PP-OCRv3 detection (smaller) and Latin recognition */
-const MODEL_PATHS = {
-  detectionPath: `${HF_CDN_BASE}/detection/v3/det.onnx`,
-  recognitionPath: `${HF_CDN_BASE}/languages/latin/rec.onnx`,
-  dictionaryPath: `${HF_CDN_BASE}/languages/latin/dict.txt`,
-};
-
 export class PaddleOCR {
-  /** @type {Ocr | null} */
-  #ocr = null;
-
   /** @type {boolean} */
   #initialized = false;
 
@@ -82,7 +69,7 @@ export class PaddleOCR {
   }
 
   /**
-   * Initialize the PaddleOCR engine with model data
+   * Initialize the PaddleOCR engine
    * @returns {Promise<void>}
    */
   async initialize() {
@@ -93,13 +80,14 @@ export class PaddleOCR {
     this.#reportProgress('Loading OCR models...', 0);
 
     try {
-      this.#ocr = await Ocr.create({
-        models: MODEL_PATHS,
-      });
+      console.log('[PaddleOCR] Initializing OCR engine...');
+      await ocr.init();
+      console.log('[PaddleOCR] OCR engine initialized');
 
       this.#initialized = true;
       this.#reportProgress('OCR engine ready', 0.5);
     } catch (error) {
+      console.error('[PaddleOCR] Initialization error:', error);
       this.#reportProgress('Failed to load OCR models', 0);
       throw error;
     }
@@ -111,53 +99,62 @@ export class PaddleOCR {
    * @returns {Promise<OCRResult>}
    */
   async recognize(imageBlob) {
-    if (!this.#ocr) {
+    if (!this.#initialized) {
       throw new Error('PaddleOCR not initialized. Call initialize() first.');
     }
 
     this.#reportProgress('Recognizing text...', 0.5);
 
-    // Create object URL for the image (as shown in @gutenye/ocr-browser examples)
-    const objectUrl = URL.createObjectURL(imageBlob);
+    // Load the blob as an HTMLImageElement (required by @paddlejs-models/ocr)
+    const imageElement = await this.#blobToImageElement(imageBlob);
 
     try {
-      // Run OCR detection with object URL string
-      console.log('[PaddleOCR] Starting detection on image URL:', objectUrl);
-      const result = await this.#ocr.detect(objectUrl);
-      console.log('[PaddleOCR] Detection result:', result);
+      console.log('[PaddleOCR] Starting recognition on image:', imageElement.width, 'x', imageElement.height);
+      const result = await ocr.recognize(imageElement);
+      console.log('[PaddleOCR] Recognition result:', result);
 
       this.#reportProgress('Processing results...', 0.9);
 
-      // Transform PaddleOCR result into our structured format
-      // PaddleOCR returns { texts: TextLine[], resizedImageWidth, resizedImageHeight }
-      // Each TextLine has { text, score, frame: { top, left, width, height } }
+      // Transform result into our structured format
+      // @paddlejs-models/ocr returns { text: string[][], points: number[][][] }
+      // text is array of text regions, each region is array of lines
       const words = [];
       const lines = [];
 
-      // Access result.texts (not result directly)
-      const textLines = result?.texts || [];
+      // Flatten the text array structure
+      const textLines = Array.isArray(result?.text) ? result.text.flat() : [];
+      const pointsData = result?.points || [];
 
-      for (const textLine of textLines) {
+      for (let i = 0; i < textLines.length; i++) {
+        const lineText = textLines[i];
+        if (!lineText) {
+          continue;
+        }
+
+        // Get bounding box from points if available
+        const linePoints = pointsData[i] || [];
+        const bbox = this.#pointsToBbox(linePoints);
+
         // Split text into words
-        const lineWords = textLine.text.split(/\s+/).filter((w) => w.length > 0);
-        const wordWidth = textLine.frame.width / Math.max(lineWords.length, 1);
+        const lineWords = lineText.split(/\s+/).filter((w) => w.length > 0);
+        const wordWidth = bbox.width / Math.max(lineWords.length, 1);
 
         const ocrWords = lineWords.map((word, idx) => ({
           text: word,
-          confidence: textLine.score * 100, // Convert 0-1 to 0-100
+          confidence: 95, // @paddlejs-models/ocr doesn't provide confidence scores
           bbox: {
-            x0: textLine.frame.left + idx * wordWidth,
-            y0: textLine.frame.top,
-            x1: textLine.frame.left + (idx + 1) * wordWidth,
-            y1: textLine.frame.top + textLine.frame.height,
+            x0: bbox.x0 + idx * wordWidth,
+            y0: bbox.y0,
+            x1: bbox.x0 + (idx + 1) * wordWidth,
+            y1: bbox.y1,
           },
         }));
 
         words.push(...ocrWords);
 
         lines.push({
-          text: textLine.text,
-          confidence: textLine.score * 100,
+          text: lineText,
+          confidence: 95,
           words: ocrWords,
         });
       }
@@ -173,12 +170,54 @@ export class PaddleOCR {
         words,
       };
     } catch (error) {
-      console.error('[PaddleOCR] Detection error:', error);
+      console.error('[PaddleOCR] Recognition error:', error);
       throw error;
-    } finally {
-      // Always revoke the object URL to prevent memory leaks
-      URL.revokeObjectURL(objectUrl);
     }
+  }
+
+  /**
+   * Convert a Blob to an HTMLImageElement
+   * @param {Blob} blob
+   * @returns {Promise<HTMLImageElement>}
+   */
+  #blobToImageElement(blob) {
+    return new Promise((resolve, reject) => {
+      const objectUrl = URL.createObjectURL(blob);
+      const img = new Image();
+
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(img);
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('Failed to load image'));
+      };
+
+      img.src = objectUrl;
+    });
+  }
+
+  /**
+   * Convert polygon points to bounding box
+   * @param {number[][]} points - Array of [x, y] points
+   * @returns {{ x0: number, y0: number, x1: number, y1: number, width: number, height: number }}
+   */
+  #pointsToBbox(points) {
+    if (!points || points.length === 0) {
+      return { x0: 0, y0: 0, x1: 0, y1: 0, width: 0, height: 0 };
+    }
+
+    const xs = points.map((p) => p[0]);
+    const ys = points.map((p) => p[1]);
+
+    const x0 = Math.min(...xs);
+    const y0 = Math.min(...ys);
+    const x1 = Math.max(...xs);
+    const y1 = Math.max(...ys);
+
+    return { x0, y0, x1, y1, width: x1 - x0, height: y1 - y0 };
   }
 
   /**
@@ -186,9 +225,8 @@ export class PaddleOCR {
    * @returns {Promise<void>}
    */
   async terminate() {
-    // @gutenye/ocr-browser doesn't have an explicit terminate method
-    // Just clear references for garbage collection
-    this.#ocr = null;
+    // @paddlejs-models/ocr doesn't have an explicit terminate method
+    // Just reset state
     this.#initialized = false;
   }
 }
