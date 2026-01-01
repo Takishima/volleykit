@@ -143,9 +143,21 @@ async function apiRequest<T>(
   // Detect stale session: when the API returns HTML instead of JSON with status 200,
   // it means the session expired and the server is returning a login page.
   // This commonly happens with TYPO3 Neos/Flow backends that don't return proper 401.
+  // Only treat as stale if we were actually redirected to a login page, to avoid
+  // false positives on valid sessions that happen to receive HTML responses.
   if (contentType.includes("text/html")) {
-    clearSession();
-    throw new Error("Session expired. Please log in again.");
+    // Check if pathname ends with "/login" to avoid false positives on paths
+    // like "/api/v2/login-history" or "/user/login-preferences"
+    const pathname = new URL(response.url).pathname.toLowerCase();
+    const isLoginPage = pathname === "/login" || pathname.endsWith("/login");
+    if (isLoginPage) {
+      clearSession();
+      throw new Error("Session expired. Please log in again.");
+    }
+    // Non-login HTML response - treat as an API error, not auth failure
+    throw new Error(
+      `${method} ${endpoint}: Unexpected HTML response (expected JSON)`,
+    );
   }
 
   try {
