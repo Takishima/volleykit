@@ -1,5 +1,4 @@
 import { type Page, type Locator, expect } from "@playwright/test";
-import { LOADING_TIMEOUT_MS } from "../constants";
 
 /**
  * Base Page Object Model with shared utilities.
@@ -7,6 +6,8 @@ import { LOADING_TIMEOUT_MS } from "../constants";
  *
  * PHILOSOPHY: Prefer element-based waits over time-based waits.
  * Playwright auto-waits for elements, so explicit waits are rarely needed.
+ * We rely on the Playwright config's expect.timeout (10s) rather than
+ * hardcoded timeouts, which accommodates slower browsers like Firefox.
  */
 export class BasePage {
   readonly page: Page;
@@ -18,6 +19,7 @@ export class BasePage {
   /**
    * Wait for any loading indicators to disappear and content to be ready.
    * This is more reliable than networkidle for demo mode where there's no real network.
+   * Uses Playwright's configured expect.timeout for browser compatibility.
    */
   protected async waitForContentReady(
     contentLocator: Locator,
@@ -25,20 +27,13 @@ export class BasePage {
   ) {
     // Wait for loading indicator to disappear (if present)
     const loadingIndicator = this.page.getByTestId("loading-state");
-    await loadingIndicator.waitFor({
-      state: "hidden",
-      timeout: LOADING_TIMEOUT_MS,
-    });
+    await loadingIndicator.waitFor({ state: "hidden" });
 
     // Wait for content or empty state to be visible
     if (emptyStateLocator) {
-      await expect(contentLocator.first().or(emptyStateLocator)).toBeVisible({
-        timeout: LOADING_TIMEOUT_MS,
-      });
+      await expect(contentLocator.first().or(emptyStateLocator)).toBeVisible();
     } else {
-      await expect(contentLocator.first()).toBeVisible({
-        timeout: LOADING_TIMEOUT_MS,
-      });
+      await expect(contentLocator.first()).toBeVisible();
     }
   }
 }

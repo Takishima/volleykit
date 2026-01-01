@@ -1,5 +1,4 @@
 import { type Page, type Locator, expect } from "@playwright/test";
-import { TAB_SWITCH_TIMEOUT_MS } from "../constants";
 import { BasePage } from "./base.page";
 
 /**
@@ -39,9 +38,7 @@ export class ExchangesPage extends BasePage {
 
   async switchToOpenTab() {
     await this.openTab.click();
-    await expect(this.openTab).toHaveAttribute("aria-selected", "true", {
-      timeout: TAB_SWITCH_TIMEOUT_MS,
-    });
+    await expect(this.openTab).toHaveAttribute("aria-selected", "true");
     await expect(this.tabPanel).toBeVisible();
   }
 
@@ -50,7 +47,6 @@ export class ExchangesPage extends BasePage {
     await expect(this.myApplicationsTab).toHaveAttribute(
       "aria-selected",
       "true",
-      { timeout: TAB_SWITCH_TIMEOUT_MS },
     );
     await expect(this.tabPanel).toBeVisible();
   }
