@@ -160,15 +160,22 @@ describe("API Client", () => {
 
     it("treats HTML response as stale session when redirected to login page", async () => {
       // When session expires, SwissVolley API returns HTML login page with status 200
-      // instead of a proper 401. We detect this by checking Content-Type and URL.
+      // instead of a proper 401. We detect this by checking Content-Type and URL
+      // after JSON parsing fails.
       setCsrfToken("some-token");
 
-      mockFetch.mockResolvedValueOnce(
-        createMockResponse("<html>Login page</html>", {
-          contentType: "text/html; charset=UTF-8",
-          url: "https://example.com/login",
-        }),
-      );
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        url: "https://example.com/login",
+        headers: {
+          get: (name: string) =>
+            name.toLowerCase() === "content-type"
+              ? "text/html; charset=UTF-8"
+              : null,
+        },
+        json: () => Promise.reject(new SyntaxError("Unexpected token <")),
+      });
 
       await expect(api.searchAssignments({})).rejects.toThrow(
         "Session expired. Please log in again.",
@@ -180,15 +187,21 @@ describe("API Client", () => {
       // not auth failures - this prevents false positives on valid sessions.
       setCsrfToken("some-token");
 
-      mockFetch.mockResolvedValueOnce(
-        createMockResponse("<html>Some error page</html>", {
-          contentType: "text/html; charset=UTF-8",
-          url: "https://example.com/api/assignments",
-        }),
-      );
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        url: "https://example.com/api/assignments",
+        headers: {
+          get: (name: string) =>
+            name.toLowerCase() === "content-type"
+              ? "text/html; charset=UTF-8"
+              : null,
+        },
+        json: () => Promise.reject(new SyntaxError("Unexpected token <")),
+      });
 
       await expect(api.searchAssignments({})).rejects.toThrow(
-        "Unexpected HTML response (expected JSON)",
+        "Invalid JSON response (Content-Type: text/html; charset=UTF-8, status: 200)",
       );
     });
 
@@ -197,16 +210,42 @@ describe("API Client", () => {
       // be treated as login page redirects - only exact /login matches should.
       setCsrfToken("some-token");
 
-      mockFetch.mockResolvedValueOnce(
-        createMockResponse("<html>Login history page</html>", {
-          contentType: "text/html; charset=UTF-8",
-          url: "https://example.com/api/v2/login-history",
-        }),
-      );
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        url: "https://example.com/api/v2/login-history",
+        headers: {
+          get: (name: string) =>
+            name.toLowerCase() === "content-type"
+              ? "text/html; charset=UTF-8"
+              : null,
+        },
+        json: () => Promise.reject(new SyntaxError("Unexpected token <")),
+      });
 
       await expect(api.searchAssignments({})).rejects.toThrow(
-        "Unexpected HTML response (expected JSON)",
+        "Invalid JSON response (Content-Type: text/html; charset=UTF-8, status: 200)",
       );
+    });
+
+    it("accepts JSON response with incorrect Content-Type header", async () => {
+      // VolleyManager API sometimes returns JSON with Content-Type: text/html
+      // We should parse it successfully instead of rejecting based on Content-Type
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        url: "https://example.com/api/endpoint",
+        headers: {
+          get: (name: string) =>
+            name.toLowerCase() === "content-type"
+              ? "text/html; charset=UTF-8"
+              : null,
+        },
+        json: () => Promise.resolve(mockAssignmentsResponse),
+      });
+
+      const result = await api.searchAssignments({});
+      expect(result).toEqual(mockAssignmentsResponse);
     });
   });
 
