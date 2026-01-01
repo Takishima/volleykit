@@ -2,17 +2,17 @@
  * OCR Factory
  *
  * Factory for creating OCR engine instances.
- * Currently supports Tesseract.js, with TrOCR support planned for handwritten text.
+ * Uses PaddleOCR (PP-OCRv3) for high-accuracy text recognition.
  */
 
-import { TesseractOCR } from './TesseractOCR.js';
+import { PaddleOCR } from './PaddleOCR.js';
 
 /**
  * @typedef {'electronic' | 'handwritten'} OCREngineType
  */
 
 /**
- * @typedef {import('./TesseractOCR.js').OnProgressCallback} OnProgressCallback
+ * @typedef {import('./PaddleOCR.js').OnProgressCallback} OnProgressCallback
  */
 
 /**
@@ -23,19 +23,19 @@ export const OCRFactory = {
    * Create an OCR engine instance based on the sheet type
    * @param {OCREngineType} type - The type of OCR engine to create
    * @param {OnProgressCallback} [onProgress] - Optional progress callback
-   * @returns {TesseractOCR} The OCR engine instance
+   * @returns {PaddleOCR} The OCR engine instance
    */
   create(type, onProgress) {
-    // For now, both types use TesseractOCR
-    // In the future, 'handwritten' could use TrOCR for better handwriting recognition
+    // Both types use PaddleOCR with Latin recognition model
+    // The Latin model supports German, French, Italian and other European languages
     switch (type) {
       case 'electronic':
       case 'handwritten':
       default:
-        return new TesseractOCR(onProgress);
+        return new PaddleOCR(onProgress);
     }
   },
 };
 
 // Re-export types and classes for convenience
-export { TesseractOCR } from './TesseractOCR.js';
+export { PaddleOCR } from './PaddleOCR.js';

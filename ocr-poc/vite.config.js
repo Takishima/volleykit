@@ -19,60 +19,44 @@ export default defineConfig({
         enabled: true,
       },
       workbox: {
-        // Precache app shell assets
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        // Precache app shell assets (exclude WASM files - they're too large)
+        globPatterns: ['**/*.{css,html,ico,png,svg,woff,woff2}'],
+        // Allow larger files for precaching (ONNX runtime is ~24MB)
+        maximumFileSizeToCacheInBytes: 30 * 1024 * 1024, // 30MB
         // Runtime caching strategies
         runtimeCaching: [
           {
-            // Cache same-origin requests (assets, etc.)
-            urlPattern: ({ sameOrigin }) => sameOrigin,
+            // Cache same-origin JS files (including large ONNX runtime)
+            urlPattern: /\.js$/,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'ocr-poc-assets',
+              cacheName: 'ocr-poc-js',
               expiration: {
-                maxEntries: 50,
+                maxEntries: 20,
                 maxAgeSeconds: SECONDS_PER_DAY * CACHE_MAX_AGE_DAYS,
               },
             },
           },
           {
-            // Cache Tesseract.js v7 assets from jsDelivr CDN (worker scripts)
-            urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/npm\/tesseract\.js@7\//,
+            // Cache WASM files (ONNX runtime)
+            urlPattern: /\.wasm$/,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'tesseract-js-cdn',
+              cacheName: 'ocr-poc-wasm',
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: SECONDS_PER_DAY * CDN_CACHE_DAYS,
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
+                maxAgeSeconds: SECONDS_PER_DAY * CACHE_MAX_AGE_DAYS,
               },
             },
           },
           {
-            // Cache Tesseract.js-core v7 assets (WASM binaries)
-            urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/npm\/tesseract\.js-core@7\//,
+            // Cache PaddleOCR ONNX models from Hugging Face
+            urlPattern: /^https:\/\/huggingface\.co\/.*\.(onnx|txt)$/,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'tesseract-core-cdn',
+              cacheName: 'paddleocr-models',
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: SECONDS_PER_DAY * CDN_CACHE_DAYS,
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-          {
-            // Cache Tesseract traineddata files (language models) from projectnaptha
-            urlPattern: /^https:\/\/tessdata\.projectnaptha\.com\//,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'tesseract-traineddata',
-              expiration: {
-                maxEntries: 5,
                 maxAgeSeconds: SECONDS_PER_DAY * CDN_CACHE_DAYS,
               },
               cacheableResponse: {
@@ -117,5 +101,20 @@ export default defineConfig({
     outDir: 'dist',
     // Generate source maps for debugging
     sourcemap: false,
+    // Increase chunk size warning limit for ONNX runtime
+    chunkSizeWarningLimit: 15000, // 15MB
+    rollupOptions: {
+      output: {
+        // Split large dependencies into separate chunks
+        manualChunks: {
+          'onnx-runtime': ['onnxruntime-web'],
+          'opencv': ['@techstark/opencv-js'],
+        },
+      },
+    },
+  },
+  // Optimize dependency handling
+  optimizeDeps: {
+    exclude: ['onnxruntime-web'],
   },
 });
