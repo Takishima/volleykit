@@ -261,7 +261,7 @@ async function runOCR() {
 
   try {
     // Create OCR engine with progress callback
-    ocrEngine = OCRFactory.create(
+    ocrEngine = await OCRFactory.create(
       appContext.sheetType,
       (progress) => {
         ocrProgress?.updateProgress(progress);

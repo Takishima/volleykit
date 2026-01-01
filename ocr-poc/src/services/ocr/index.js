@@ -6,7 +6,6 @@
  */
 
 import { TesseractOCR } from './TesseractOCR.js';
-import { PaddleOCR } from './PaddleOCR.js';
 
 /**
  * @typedef {'electronic' | 'handwritten'} SheetType
@@ -37,12 +36,15 @@ export const OCRFactory = {
    * @param {SheetType} sheetType - The type of scoresheet (electronic/handwritten)
    * @param {OnProgressCallback} [onProgress] - Optional progress callback
    * @param {OCREngine} [engine='tesseract'] - OCR engine to use
-   * @returns {TesseractOCR | PaddleOCR} The OCR engine instance
+   * @returns {Promise<TesseractOCR>} The OCR engine instance
    */
-  create(sheetType, onProgress, engine = 'tesseract') {
+  async create(sheetType, onProgress, engine = 'tesseract') {
     switch (engine) {
-      case 'paddle':
+      case 'paddle': {
+        // Dynamic import to avoid loading PaddleOCR unless needed
+        const { PaddleOCR } = await import('./PaddleOCR.js');
         return new PaddleOCR(sheetType, onProgress);
+      }
       case 'tesseract':
       default:
         return new TesseractOCR(sheetType, onProgress);
@@ -52,4 +54,3 @@ export const OCRFactory = {
 
 // Re-export types and classes for convenience
 export { TesseractOCR } from './TesseractOCR.js';
-export { PaddleOCR } from './PaddleOCR.js';
