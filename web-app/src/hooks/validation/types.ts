@@ -60,6 +60,7 @@ export interface PanelCompletionStatus {
 export interface ValidatedGameInfo {
   validatedAt: string;
   scorerName: string;
+  scorerBirthday?: string;
   hasScoresheet: boolean;
 }
 
@@ -69,6 +70,7 @@ export interface ValidatedGameInfo {
 export interface PendingScorerData {
   __identity: string;
   displayName: string;
+  birthday?: string;
 }
 
 /**

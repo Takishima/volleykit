@@ -35,6 +35,8 @@ interface ScorerSearchPanelProps {
   readOnly?: boolean;
   /** Scorer name to display in read-only mode when no scorer data is available */
   readOnlyScorerName?: string;
+  /** Scorer birthday to display in read-only mode when no scorer data is available */
+  readOnlyScorerBirthday?: string;
 }
 
 /**
@@ -46,6 +48,7 @@ export function ScorerSearchPanel({
   onScorerSelect,
   readOnly = false,
   readOnlyScorerName,
+  readOnlyScorerBirthday,
 }: ScorerSearchPanelProps) {
   const { t, tInterpolate } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
@@ -146,6 +149,7 @@ export function ScorerSearchPanel({
           <SelectedScorerCard
             scorer={selectedScorer}
             displayName={readOnlyScorerName}
+            displayBirthday={readOnlyScorerBirthday}
             readOnly
           />
         ) : (

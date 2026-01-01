@@ -112,12 +112,13 @@ export function StepRenderer({
           onScorerChange={handlers.setScorer}
           readOnly={validation.isValidated}
           readOnlyScorerName={validation.validatedInfo?.scorerName}
+          readOnlyScorerBirthday={validation.validatedInfo?.scorerBirthday}
           initialScorer={
             validation.pendingScorer
               ? {
                   __identity: validation.pendingScorer.__identity,
                   displayName: validation.pendingScorer.displayName,
-                  birthday: "",
+                  birthday: validation.pendingScorer.birthday ?? "",
                 }
               : null
           }

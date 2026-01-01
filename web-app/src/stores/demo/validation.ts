@@ -15,7 +15,7 @@ export interface ValidationSlice extends DemoValidationState {
   markGameValidated: (
     gameId: string,
     data: {
-      scorer: { __identity: string; displayName: string };
+      scorer: { __identity: string; displayName: string; birthday?: string };
       scoresheetFileId?: string;
     },
   ) => void;
@@ -23,7 +23,7 @@ export interface ValidationSlice extends DemoValidationState {
   getValidatedGameData: (gameId: string) => ValidatedGameData | null;
   setPendingScorer: (
     gameId: string,
-    scorer: { __identity: string; displayName: string },
+    scorer: { __identity: string; displayName: string; birthday?: string },
   ) => void;
   getPendingScorer: (gameId: string) => PendingScorerData | null;
   clearPendingScorer: (gameId: string) => void;
@@ -41,7 +41,7 @@ export const createValidationSlice: StateCreator<
   markGameValidated: (
     gameId: string,
     data: {
-      scorer: { __identity: string; displayName: string };
+      scorer: { __identity: string; displayName: string; birthday?: string };
       scoresheetFileId?: string;
     },
   ) =>
@@ -68,7 +68,7 @@ export const createValidationSlice: StateCreator<
 
   setPendingScorer: (
     gameId: string,
-    scorer: { __identity: string; displayName: string },
+    scorer: { __identity: string; displayName: string; birthday?: string },
   ) =>
     set((state) => ({
       pendingScorers: {

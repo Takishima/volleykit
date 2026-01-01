@@ -525,7 +525,8 @@ export const mockApi = {
     const scorerToShow = validatedData?.scorer ?? pendingScorer;
 
     // Build mock game details with scoresheet and nomination lists
-    const gameDetails: GameDetails = {
+    // Cast to allow extended writerPerson type with birthday (demo mode only)
+    const gameDetails = {
       __identity: gameId,
       // Include group info for scoresheet requirements
       ...(group && {
@@ -544,6 +545,7 @@ export const mockApi = {
           writerPerson: {
             __identity: scorerToShow.__identity,
             displayName: scorerToShow.displayName,
+            birthday: scorerToShow.birthday,
           },
         }),
         // Only validated games have closedAt
@@ -554,7 +556,7 @@ export const mockApi = {
       },
       nominationListOfTeamHome: gameNominations?.home ?? undefined,
       nominationListOfTeamAway: gameNominations?.away ?? undefined,
-    };
+    } as GameDetails;
 
     return gameDetails;
   },
@@ -634,14 +636,17 @@ export const mockApi = {
 
     const store = useDemoStore.getState();
 
-    // Find the scorer's display name from the scorers list
+    // Find the scorer's info from the scorers list
     const scorer = store.scorers.find((s) => s.__identity === scorerPersonId);
     const scorerDisplayName = scorer?.displayName ?? "Unknown Scorer";
+    // Convert null to undefined for type compatibility
+    const scorerBirthday = scorer?.birthday ?? undefined;
 
     // Persist pending scorer selection to demo store
     store.setPendingScorer(gameId, {
       __identity: scorerPersonId,
       displayName: scorerDisplayName,
+      birthday: scorerBirthday,
     });
 
     // In demo mode, return a mock updated scoresheet
@@ -666,15 +671,18 @@ export const mockApi = {
 
     const store = useDemoStore.getState();
 
-    // Find the scorer's display name from the scorers list
+    // Find the scorer's info from the scorers list
     const scorer = store.scorers.find((s) => s.__identity === scorerPersonId);
     const scorerDisplayName = scorer?.displayName ?? "Unknown Scorer";
+    // Convert null to undefined for type compatibility
+    const scorerBirthday = scorer?.birthday ?? undefined;
 
     // Mark the game as validated in the store
     store.markGameValidated(gameId, {
       scorer: {
         __identity: scorerPersonId,
         displayName: scorerDisplayName,
+        birthday: scorerBirthday,
       },
       scoresheetFileId: fileResourceId,
     });
