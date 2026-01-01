@@ -273,7 +273,10 @@ function tryVuePatternMatches(
   let match: RegExpExecArray | null;
 
   while ((match = pattern.exec(html)) !== null) {
-    const activeParty = tryParseMatch(match[1], result, "vue", true);
+    const encodedJson = match[1];
+    if (!encodedJson) continue;
+
+    const activeParty = tryParseMatch(encodedJson, result, "vue", true);
     if (activeParty) {
       return activeParty;
     }
@@ -369,8 +372,10 @@ export function extractActivePartyFromHtml(html: string): ActiveParty | null {
     VUE_ACTIVE_PARTY_PATTERN.lastIndex = 0;
 
     while ((vueMatch = VUE_ACTIVE_PARTY_PATTERN.exec(html)) !== null) {
+      const encodedJson = vueMatch[1];
+      if (!encodedJson) continue;
+
       try {
-        const encodedJson = vueMatch[1];
         const decodedJson = decodeHtmlEntities(encodedJson);
         const parsed: unknown = JSON.parse(decodedJson);
 
@@ -391,8 +396,10 @@ export function extractActivePartyFromHtml(html: string): ActiveParty | null {
     VUE_PARTY_PATTERN.lastIndex = 0;
 
     while ((vueMatch = VUE_PARTY_PATTERN.exec(html)) !== null) {
+      const encodedJson = vueMatch[1];
+      if (!encodedJson) continue;
+
       try {
-        const encodedJson = vueMatch[1];
         const decodedJson = decodeHtmlEntities(encodedJson);
         const parsed: unknown = JSON.parse(decodedJson);
 
