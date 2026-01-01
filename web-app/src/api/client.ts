@@ -138,10 +138,19 @@ async function apiRequest<T>(
     throw new Error(`${method} ${endpoint}: ${errorMessage}`);
   }
 
+  const contentType = response.headers.get("Content-Type") || "";
+
+  // Detect stale session: when the API returns HTML instead of JSON with status 200,
+  // it means the session expired and the server is returning a login page.
+  // This commonly happens with TYPO3 Neos/Flow backends that don't return proper 401.
+  if (contentType.includes("text/html")) {
+    clearSession();
+    throw new Error("Session expired. Please log in again.");
+  }
+
   try {
     return await response.json();
   } catch {
-    const contentType = response.headers.get("Content-Type") || "";
     throw new Error(
       `${method} ${endpoint}: Invalid JSON response (Content-Type: ${contentType || "unknown"}, status: ${response.status})`,
     );
