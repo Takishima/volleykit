@@ -113,11 +113,15 @@ export function useAssignments(
   customRange?: { from: Date; to: Date },
 ): UseQueryResult<Assignment[], Error> {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const activeOccupationId = useAuthStore((state) => state.activeOccupationId);
   const demoAssignments = useDemoStore((state) => state.assignments);
   const demoAssociationCode = useDemoStore(
     (state) => state.activeAssociationCode,
   );
   const apiClient = getApiClient(isDemoMode);
+
+  // Use appropriate key for cache invalidation when switching associations
+  const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId;
   const dateRange = getDateRangeForPeriod(period, customRange);
 
   // Memoize date range values to prevent query key changes on every render.
@@ -173,10 +177,7 @@ export function useAssignments(
   }, [isDemoMode, demoAssignments, fromDate, toDate, period]);
 
   const query = useQuery({
-    queryKey: queryKeys.assignments.list(
-      config,
-      isDemoMode ? demoAssociationCode : null,
-    ),
+    queryKey: queryKeys.assignments.list(config, associationKey),
     queryFn: () => apiClient.searchAssignments(config),
     select: (data) => data.items ?? EMPTY_ASSIGNMENTS,
     staleTime: 5 * 60 * 1000,

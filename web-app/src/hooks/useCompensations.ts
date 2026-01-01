@@ -43,10 +43,14 @@ export type CompensationErrorKey =
  */
 export function useCompensations(paidFilter?: boolean) {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const activeOccupationId = useAuthStore((state) => state.activeOccupationId);
   const demoAssociationCode = useDemoStore(
     (state) => state.activeAssociationCode,
   );
   const apiClient = getApiClient(isDemoMode);
+
+  // Use appropriate key for cache invalidation when switching associations
+  const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId;
 
   const config: SearchConfiguration = {
     offset: 0,
@@ -70,10 +74,7 @@ export function useCompensations(paidFilter?: boolean) {
   };
 
   return useQuery({
-    queryKey: queryKeys.compensations.list(
-      config,
-      isDemoMode ? demoAssociationCode : null,
-    ),
+    queryKey: queryKeys.compensations.list(config, associationKey),
     queryFn: () => apiClient.searchCompensations(config),
     select: (data) => data.items ?? EMPTY_COMPENSATIONS,
     staleTime: 5 * 60 * 1000,
