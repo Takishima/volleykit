@@ -3,8 +3,17 @@ import {
   extractActivePartyFromHtml,
   hasMultipleAssociations,
   filterRefereeAssociations,
+  isInflatedObject,
   type AttributeValue,
+  type InflatedAssociationValue,
 } from "./active-party-parser";
+
+/** Helper to safely get shortName from an inflatedValue that may be a primitive */
+function getShortName(
+  inflatedValue: InflatedAssociationValue | boolean | null | string | number | undefined,
+): string | undefined {
+  return isInflatedObject(inflatedValue) ? inflatedValue.shortName : undefined;
+}
 
 // Helper to create HTML with embedded activeParty JSON
 function createHtmlWithActiveParty(activePartyJson: string): string {
@@ -187,7 +196,7 @@ describe("extractActivePartyFromHtml", () => {
       const result = extractActivePartyFromHtml(html);
 
       expect(result?.groupedEligibleAttributeValues).toHaveLength(1);
-      expect(result?.groupedEligibleAttributeValues?.[0]?.inflatedValue?.shortName).toBe("SVRZ");
+      expect(getShortName(result?.groupedEligibleAttributeValues?.[0]?.inflatedValue)).toBe("SVRZ");
     });
 
     it("extracts activeParty from Vue format with nested objects", () => {
@@ -228,8 +237,8 @@ describe("extractActivePartyFromHtml", () => {
       const result = extractActivePartyFromHtml(html);
 
       expect(result?.groupedEligibleAttributeValues).toHaveLength(2);
-      expect(result?.groupedEligibleAttributeValues?.[0]?.inflatedValue?.shortName).toBe("SVRZ");
-      expect(result?.groupedEligibleAttributeValues?.[1]?.inflatedValue?.shortName).toBe("SV");
+      expect(getShortName(result?.groupedEligibleAttributeValues?.[0]?.inflatedValue)).toBe("SVRZ");
+      expect(getShortName(result?.groupedEligibleAttributeValues?.[1]?.inflatedValue)).toBe("SV");
     });
 
     it("parses arrays containing items with missing fields", () => {
@@ -272,7 +281,97 @@ describe("extractActivePartyFromHtml", () => {
       expect(result).not.toBeNull();
       expect(result?.groupedEligibleAttributeValues).toHaveLength(3);
       // First item should have all fields
-      expect(result?.groupedEligibleAttributeValues?.[0]?.inflatedValue?.shortName).toBe("SVRZ");
+      expect(getShortName(result?.groupedEligibleAttributeValues?.[0]?.inflatedValue)).toBe("SVRZ");
+    });
+
+    it("parses arrays where inflatedValue is a primitive (boolean, null, string, number)", () => {
+      // Real API data can have inflatedValue as a primitive for certain attribute types
+      // (e.g., boolean flags for player roles). The schema should accept these values.
+      const activePartyData = {
+        groupedEligibleAttributeValues: [
+          {
+            // Association with object inflatedValue
+            __identity: "attr-1",
+            attributeIdentifier: "Indoorvolleyball.RefAdmin:AbstractAssociation",
+            roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+            type: "SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation",
+            inflatedValue: {
+              __identity: "assoc-1",
+              shortName: "SVRZ",
+            },
+          },
+          {
+            // Boolean flag with false inflatedValue
+            __identity: "attr-2",
+            attributeIdentifier: "SportManager.Indoorvolleyball:IndoorPlayer",
+            roleIdentifier: "SportManager.Indoorvolleyball:IndoorPlayer",
+            type: "boolean",
+            inflatedValue: false,
+          },
+          {
+            // Attribute with null inflatedValue
+            __identity: "attr-3",
+            attributeIdentifier: "some.identifier",
+            roleIdentifier: "some.role",
+            type: "boolean",
+            inflatedValue: null,
+          },
+          {
+            // Attribute with true inflatedValue
+            __identity: "attr-4",
+            attributeIdentifier: "another.identifier",
+            roleIdentifier: "another.role",
+            type: "boolean",
+            inflatedValue: true,
+          },
+        ],
+        eligibleAttributeValues: [
+          {
+            __identity: "attr-5",
+            roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+            type: "SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation",
+            inflatedValue: {
+              __identity: "assoc-2",
+              shortName: "SV",
+            },
+          },
+          {
+            // String inflatedValue
+            __identity: "attr-6",
+            roleIdentifier: "some.role",
+            type: "string",
+            inflatedValue: "some-string-value",
+          },
+          {
+            // Number inflatedValue
+            __identity: "attr-7",
+            roleIdentifier: "some.role",
+            type: "number",
+            inflatedValue: 42,
+          },
+        ],
+      };
+
+      const html = createHtmlWithVueActiveParty(JSON.stringify(activePartyData));
+      const result = extractActivePartyFromHtml(html);
+
+      // Should parse successfully with primitive inflatedValues
+      expect(result).not.toBeNull();
+      expect(result?.groupedEligibleAttributeValues).toHaveLength(4);
+      expect(result?.eligibleAttributeValues).toHaveLength(3);
+
+      // Object inflatedValue should be accessible
+      expect(result?.groupedEligibleAttributeValues?.[0]?.inflatedValue).toEqual({
+        __identity: "assoc-1",
+        shortName: "SVRZ",
+      });
+
+      // Primitive inflatedValues should be preserved
+      expect(result?.groupedEligibleAttributeValues?.[1]?.inflatedValue).toBe(false);
+      expect(result?.groupedEligibleAttributeValues?.[2]?.inflatedValue).toBe(null);
+      expect(result?.groupedEligibleAttributeValues?.[3]?.inflatedValue).toBe(true);
+      expect(result?.eligibleAttributeValues?.[1]?.inflatedValue).toBe("some-string-value");
+      expect(result?.eligibleAttributeValues?.[2]?.inflatedValue).toBe(42);
     });
 
     it("skips non-activeParty :active-party attributes and finds the correct one", () => {
@@ -327,7 +426,7 @@ describe("extractActivePartyFromHtml", () => {
 
       expect(result).not.toBeNull();
       expect(result?.groupedEligibleAttributeValues).toHaveLength(1);
-      expect(result?.groupedEligibleAttributeValues?.[0]?.inflatedValue?.shortName).toBe("SVRZ");
+      expect(getShortName(result?.groupedEligibleAttributeValues?.[0]?.inflatedValue)).toBe("SVRZ");
     });
   });
 
@@ -451,8 +550,8 @@ describe("filterRefereeAssociations", () => {
 
     const result = filterRefereeAssociations(attributeValues);
     expect(result).toHaveLength(2);
-    expect(result[0]?.inflatedValue?.shortName).toBe("SV");
-    expect(result[1]?.inflatedValue?.shortName).toBe("SVRZ");
+    expect(getShortName(result[0]?.inflatedValue)).toBe("SV");
+    expect(getShortName(result[1]?.inflatedValue)).toBe("SVRZ");
   });
 
   it("excludes non-referee roles", () => {
@@ -692,4 +791,36 @@ describe("hasMultipleAssociations", () => {
     expect(hasMultipleAssociations(attributeValues)).toBe(false);
   });
 
+});
+
+describe("isInflatedObject", () => {
+  it("returns true for objects", () => {
+    expect(isInflatedObject({ __identity: "test" })).toBe(true);
+    expect(isInflatedObject({ name: "Test", shortName: "T" })).toBe(true);
+    expect(isInflatedObject({})).toBe(true);
+  });
+
+  it("returns false for null", () => {
+    expect(isInflatedObject(null)).toBe(false);
+  });
+
+  it("returns false for undefined", () => {
+    expect(isInflatedObject(undefined)).toBe(false);
+  });
+
+  it("returns false for boolean values", () => {
+    expect(isInflatedObject(false)).toBe(false);
+    expect(isInflatedObject(true)).toBe(false);
+  });
+
+  it("returns false for strings", () => {
+    expect(isInflatedObject("test")).toBe(false);
+    expect(isInflatedObject("")).toBe(false);
+  });
+
+  it("returns false for numbers", () => {
+    expect(isInflatedObject(42)).toBe(false);
+    expect(isInflatedObject(0)).toBe(false);
+    expect(isInflatedObject(-1)).toBe(false);
+  });
 });

@@ -14,6 +14,7 @@ import {
   type AttributeValue,
   type ActivePartyDiagnostic,
   extractActivePartyWithDiagnostics,
+  isInflatedObject,
   ACTIVE_PARTY_PATTERN,
   VUE_ACTIVE_PARTY_PATTERN,
 } from "@/utils/active-party-parser";
@@ -539,7 +540,7 @@ function GroupedValuesTable({ values }: { values: AttributeValue[] | null }) {
                 <td style={{ padding: "2px" }}>{index}</td>
                 <td style={{ padding: "2px" }}>{av.__identity?.substring(0, 12) ?? "(none)"}</td>
                 <td style={{ padding: "2px" }}>{av.roleIdentifier?.split(":").pop() ?? "(none)"}</td>
-                <td style={{ padding: "2px", color: "#00d4ff" }}>{av.inflatedValue?.shortName ?? "(none)"}</td>
+                <td style={{ padding: "2px", color: "#00d4ff" }}>{isInflatedObject(av.inflatedValue) ? av.inflatedValue.shortName : "(none)"}</td>
                 <td style={{ padding: "2px" }}>{isAssoc ? "Assoc" : (av.type?.substring(0, 15) ?? "(none)")}</td>
                 <td style={{ padding: "2px" }}>{isValid ? "✓" : "✗"}</td>
               </tr>
