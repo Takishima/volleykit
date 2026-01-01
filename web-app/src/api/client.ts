@@ -368,6 +368,8 @@ export const api = {
       "scoresheet.game.__identity",
       "scoresheet.isSimpleScoresheet",
       "scoresheet.writerPerson",
+      "scoresheet.writerPerson.displayName",
+      "scoresheet.writerPerson.birthday",
       "scoresheet.file",
       "scoresheet.hasFile",
       "scoresheet.closedAt",
