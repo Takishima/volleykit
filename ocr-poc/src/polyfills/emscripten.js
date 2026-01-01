@@ -2,23 +2,58 @@
  * Emscripten WASM polyfills for browser
  *
  * Provides the global Module object that Emscripten-compiled
- * WebAssembly modules expect to exist.
+ * WebAssembly modules (like OpenCV.js used by PaddleOCR) expect.
  */
 
-// Create Module global if it doesn't exist
-if (typeof window !== 'undefined' && typeof window.Module === 'undefined') {
-  window.Module = {
-    // Emscripten module configuration
-    locateFile: (path) => path,
-    onRuntimeInitialized: () => {},
-    print: (...args) => console.log(...args),
-    printErr: (...args) => console.error(...args),
-  };
+// Create a comprehensive Module object that Emscripten expects
+const EmscriptenModule = {
+  // File location
+  locateFile: (path, prefix) => {
+    // Return the path as-is for CDN loading
+    return prefix ? prefix + path : path;
+  },
+
+  // Runtime callbacks
+  onRuntimeInitialized: () => {
+    console.log('[Emscripten] Runtime initialized');
+  },
+  onAbort: (what) => {
+    console.error('[Emscripten] Aborted:', what);
+  },
+
+  // Console output
+  print: (...args) => console.log('[Emscripten]', ...args),
+  printErr: (...args) => console.error('[Emscripten]', ...args),
+
+  // Memory configuration
+  INITIAL_MEMORY: 134217728, // 128MB
+
+  // Prevent automatic running
+  noInitialRun: true,
+  noExitRuntime: true,
+};
+
+// Set up global Module before any Emscripten code runs
+if (typeof window !== 'undefined') {
+  // Only set if not already defined
+  if (typeof window.Module === 'undefined') {
+    window.Module = EmscriptenModule;
+  }
+
+  // Also set cv for OpenCV.js
+  if (typeof window.cv === 'undefined') {
+    window.cv = EmscriptenModule;
+  }
 }
 
-// Ensure global is available
-if (typeof globalThis !== 'undefined' && typeof globalThis.Module === 'undefined') {
-  globalThis.Module = window.Module;
+// Set on globalThis as well
+if (typeof globalThis !== 'undefined') {
+  if (typeof globalThis.Module === 'undefined') {
+    globalThis.Module = EmscriptenModule;
+  }
+  if (typeof globalThis.cv === 'undefined') {
+    globalThis.cv = EmscriptenModule;
+  }
 }
 
-export default window.Module;
+export default EmscriptenModule;

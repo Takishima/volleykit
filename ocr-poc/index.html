@@ -16,6 +16,21 @@
     <link rel="apple-touch-icon" href="./pwa-192x192.svg" />
 
     <title>Scoresheet Scanner</title>
+
+    <!-- Emscripten/OpenCV.js Module polyfill - MUST run before any modules -->
+    <script>
+      // Create Module global for Emscripten-compiled WebAssembly (used by PaddleOCR/OpenCV.js)
+      window.Module = window.Module || {
+        locateFile: function(path, prefix) { return prefix ? prefix + path : path; },
+        onRuntimeInitialized: function() { console.log('[Emscripten] Ready'); },
+        print: function() { console.log.apply(console, arguments); },
+        printErr: function() { console.error.apply(console, arguments); },
+        INITIAL_MEMORY: 134217728,
+        noInitialRun: true,
+        noExitRuntime: true
+      };
+      window.cv = window.cv || window.Module;
+    </script>
   </head>
   <body>
     <div class="app-shell">
