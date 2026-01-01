@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { EditCompensationModal } from "./EditCompensationModal";
 import type { CompensationRecord, Assignment } from "@/api/client";
 import { getApiClient } from "@/api/client";
+import { COMPENSATION_LOOKUP_LIMIT } from "@/hooks/usePaginatedQuery";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 import * as useConvocationsModule from "@/hooks/useConvocations";
@@ -265,7 +266,7 @@ describe("EditCompensationModal", () => {
       expect(reasonInput).toHaveValue("Detour via highway");
 
       // Verify the API was called correctly
-      expect(mockSearchCompensations).toHaveBeenCalledWith({ limit: 100 });
+      expect(mockSearchCompensations).toHaveBeenCalledWith({ limit: COMPENSATION_LOOKUP_LIMIT });
       expect(mockGetCompensationDetails).toHaveBeenCalledWith("found-comp-id");
     });
 

@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { Assignment, CompensationRecord } from "@/api/client";
 import { getApiClient } from "@/api/client";
 import { queryKeys } from "@/api/queryKeys";
+import { COMPENSATION_LOOKUP_LIMIT } from "@/hooks/usePaginatedQuery";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   useUpdateCompensation,
@@ -119,9 +120,13 @@ function EditCompensationModalComponent({
         return;
       }
 
+      let cancelled = false;
+
       const fetchDetailsForAssignment = async () => {
         setIsLoading(true);
         setFetchError(null);
+        const apiClient = getApiClient(isDemoMode);
+
         try {
           // Try to find compensation in cache first
           let foundCompensationId = findCompensationInCache(gameNumber, queryClient)
@@ -129,8 +134,11 @@ function EditCompensationModalComponent({
 
           // If not in cache, fetch compensations from API
           if (!foundCompensationId) {
-            const apiClient = getApiClient(isDemoMode);
-            const compensations = await apiClient.searchCompensations({ limit: 100 });
+            const compensations = await apiClient.searchCompensations({
+              limit: COMPENSATION_LOOKUP_LIMIT,
+            });
+            if (cancelled) return;
+
             const matchingComp = compensations.items.find(
               (c) => c.refereeGame?.game?.number === gameNumber,
             );
@@ -148,8 +156,8 @@ function EditCompensationModalComponent({
           }
 
           // Fetch detailed compensation data
-          const apiClient = getApiClient(isDemoMode);
           const details = await apiClient.getCompensationDetails(foundCompensationId);
+          if (cancelled) return;
 
           const distanceInMetres =
             details.convocationCompensation?.distanceInMetres;
@@ -168,6 +176,8 @@ function EditCompensationModalComponent({
             details,
           );
         } catch (error) {
+          if (cancelled) return;
+
           logger.error(
             "[EditCompensationModal] Failed to fetch compensation details for assignment:",
             error,
@@ -181,23 +191,31 @@ function EditCompensationModalComponent({
               : (errorMessage || t("assignments.failedToLoadData")),
           );
         } finally {
-          setIsLoading(false);
+          if (!cancelled) {
+            setIsLoading(false);
+          }
         }
       };
 
       fetchDetailsForAssignment();
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
 
     // For compensation record edits, fetch from API using the compensation ID directly
     if (!compensationId) return;
 
+    let cancelled = false;
+
     const fetchDetails = async () => {
       setIsLoading(true);
       setFetchError(null);
+      const apiClient = getApiClient(isDemoMode);
+
       try {
-        const apiClient = getApiClient(isDemoMode);
         const details = await apiClient.getCompensationDetails(compensationId);
+        if (cancelled) return;
 
         // Pre-fill form with existing values
         const distanceInMetres =
@@ -217,6 +235,8 @@ function EditCompensationModalComponent({
           details,
         );
       } catch (error) {
+        if (cancelled) return;
+
         logger.error(
           "[EditCompensationModal] Failed to fetch compensation details:",
           error,
@@ -231,11 +251,16 @@ function EditCompensationModalComponent({
             : (errorMessage || t("assignments.failedToLoadData")),
         );
       } finally {
-        setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchDetails();
+    return () => {
+      cancelled = true;
+    };
   }, [isOpen, compensationId, isDemoMode, isAssignmentEdit, assignment, getAssignmentCompensation, queryClient, t]);
 
   // Reset form when modal closes
