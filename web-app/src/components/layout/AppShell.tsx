@@ -6,7 +6,7 @@ import { useAuthStore, type Occupation } from "@/stores/auth";
 import { useTourStore } from "@/stores/tour";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getOccupationLabelKey } from "@/utils/occupation-labels";
-import { api } from "@/api/client";
+import { getApiClient } from "@/api/client";
 import {
   Volleyball,
   ClipboardList,
@@ -115,7 +115,8 @@ export function AppShell() {
       // Call API to switch association (works for both demo and production mode)
       // In demo mode, the mock API handles regenerating demo data
       // In production mode, this switches the server-side active party
-      await api.switchRoleAndAttribute(id);
+      const apiClient = getApiClient(isDemoMode);
+      await apiClient.switchRoleAndAttribute(id);
 
       // Update local state
       setActiveOccupation(id);
