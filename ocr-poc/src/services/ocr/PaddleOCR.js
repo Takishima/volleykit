@@ -117,47 +117,49 @@ export class PaddleOCR {
 
     this.#reportProgress('Recognizing text...', 0.5);
 
-    // Load the blob as an HTMLImageElement (required by @gutenye/ocr-browser)
-    const imageElement = await this.#blobToImageElement(imageBlob);
+    // Create object URL for the image (as shown in @gutenye/ocr-browser examples)
+    const objectUrl = URL.createObjectURL(imageBlob);
 
     try {
-      // Run OCR detection with HTMLImageElement
-      console.log('[PaddleOCR] Starting detection on image:', imageElement.width, 'x', imageElement.height);
-      const result = await this.#ocr.detect(imageElement);
+      // Run OCR detection with object URL string
+      console.log('[PaddleOCR] Starting detection on image URL:', objectUrl);
+      const result = await this.#ocr.detect(objectUrl);
       console.log('[PaddleOCR] Detection result:', result);
 
       this.#reportProgress('Processing results...', 0.9);
 
       // Transform PaddleOCR result into our structured format
-      // PaddleOCR returns TextLine[] with { text, score, frame }
+      // PaddleOCR returns { texts: TextLine[], resizedImageWidth, resizedImageHeight }
+      // Each TextLine has { text, score, frame: { top, left, width, height } }
       const words = [];
       const lines = [];
 
-      if (Array.isArray(result)) {
-        for (const textLine of result) {
-          // Split text into words
-          const lineWords = textLine.text.split(/\s+/).filter((w) => w.length > 0);
-          const wordWidth = textLine.frame.width / Math.max(lineWords.length, 1);
+      // Access result.texts (not result directly)
+      const textLines = result?.texts || [];
 
-          const ocrWords = lineWords.map((word, idx) => ({
-            text: word,
-            confidence: textLine.score * 100, // Convert 0-1 to 0-100
-            bbox: {
-              x0: textLine.frame.left + idx * wordWidth,
-              y0: textLine.frame.top,
-              x1: textLine.frame.left + (idx + 1) * wordWidth,
-              y1: textLine.frame.top + textLine.frame.height,
-            },
-          }));
+      for (const textLine of textLines) {
+        // Split text into words
+        const lineWords = textLine.text.split(/\s+/).filter((w) => w.length > 0);
+        const wordWidth = textLine.frame.width / Math.max(lineWords.length, 1);
 
-          words.push(...ocrWords);
+        const ocrWords = lineWords.map((word, idx) => ({
+          text: word,
+          confidence: textLine.score * 100, // Convert 0-1 to 0-100
+          bbox: {
+            x0: textLine.frame.left + idx * wordWidth,
+            y0: textLine.frame.top,
+            x1: textLine.frame.left + (idx + 1) * wordWidth,
+            y1: textLine.frame.top + textLine.frame.height,
+          },
+        }));
 
-          lines.push({
-            text: textLine.text,
-            confidence: textLine.score * 100,
-            words: ocrWords,
-          });
-        }
+        words.push(...ocrWords);
+
+        lines.push({
+          text: textLine.text,
+          confidence: textLine.score * 100,
+          words: ocrWords,
+        });
       }
 
       // Combine all text
@@ -173,31 +175,10 @@ export class PaddleOCR {
     } catch (error) {
       console.error('[PaddleOCR] Detection error:', error);
       throw error;
+    } finally {
+      // Always revoke the object URL to prevent memory leaks
+      URL.revokeObjectURL(objectUrl);
     }
-  }
-
-  /**
-   * Convert a Blob to an HTMLImageElement
-   * @param {Blob} blob
-   * @returns {Promise<HTMLImageElement>}
-   */
-  #blobToImageElement(blob) {
-    return new Promise((resolve, reject) => {
-      const objectUrl = URL.createObjectURL(blob);
-      const img = new Image();
-
-      img.onload = () => {
-        URL.revokeObjectURL(objectUrl);
-        resolve(img);
-      };
-
-      img.onerror = () => {
-        URL.revokeObjectURL(objectUrl);
-        reject(new Error('Failed to load image'));
-      };
-
-      img.src = objectUrl;
-    });
   }
 
   /**
