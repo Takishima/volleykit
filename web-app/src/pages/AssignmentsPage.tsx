@@ -84,16 +84,17 @@ export function AssignmentsPage() {
   const refetch =
     activeTab === "upcoming" ? refetchUpcoming : refetchValidationClosed;
 
-  // When tour is active, prepend a dummy assignment to demonstrate all action buttons
+  // When tour is active, show ONLY the dummy assignment to ensure tour works
+  // regardless of whether tabs have real data
   const data = useMemo(() => {
-    if (!isTourMode || activeTab !== "upcoming") {
-      return rawData;
+    if (isTourMode) {
+      // Safe cast: TourDummyAssignment provides all fields used by AssignmentCard and
+      // eligibility checks (refereePosition, refereeGame, convocationCompensation)
+      const tourAssignment = TOUR_DUMMY_ASSIGNMENT as unknown as Assignment;
+      return [tourAssignment];
     }
-    // Safe cast: TourDummyAssignment provides all fields used by AssignmentCard and
-    // eligibility checks (refereePosition, refereeGame, convocationCompensation)
-    const tourAssignment = TOUR_DUMMY_ASSIGNMENT as unknown as Assignment;
-    return rawData ? [tourAssignment, ...rawData] : [tourAssignment];
-  }, [isTourMode, activeTab, rawData]);
+    return rawData;
+  }, [isTourMode, rawData]);
 
   // Group assignments by week for visual separation
   const groupedData = useMemo(() => {
