@@ -718,13 +718,21 @@ function LiveDashboardFetch() {
       );
 
       const html = await response.text();
+
+      // Reset lastIndex for global regexes before each use
+      ACTIVE_PARTY_PATTERN.lastIndex = 0;
+      VUE_ACTIVE_PARTY_PATTERN.lastIndex = 0;
+
       const hasScriptPattern = ACTIVE_PARTY_PATTERN.test(html);
       const hasVuePattern = VUE_ACTIVE_PARTY_PATTERN.test(html);
 
       // Use diagnostic extraction for detailed info
       const diagnostic = extractActivePartyWithDiagnostics(html);
 
-      // Get raw match for debugging
+      // Get raw match for debugging - reset lastIndex again after .test() advanced it
+      ACTIVE_PARTY_PATTERN.lastIndex = 0;
+      VUE_ACTIVE_PARTY_PATTERN.lastIndex = 0;
+
       let rawMatch: string | undefined;
       const scriptMatch = ACTIVE_PARTY_PATTERN.exec(html);
       const vueMatch = VUE_ACTIVE_PARTY_PATTERN.exec(html);
@@ -848,8 +856,8 @@ function LiveDashboardFetch() {
                 <div style={{ marginBottom: "4px", color: "#ff6b6b" }}>
                   <strong>Validation Errors:</strong>
                   <ul style={{ margin: "4px 0", paddingLeft: "16px" }}>
-                    {result.diagnostic.zodValidationErrors.map((err, i) => (
-                      <li key={i}>{err}</li>
+                    {result.diagnostic.zodValidationErrors.map((err) => (
+                      <li key={err}>{err}</li>
                     ))}
                   </ul>
                 </div>
