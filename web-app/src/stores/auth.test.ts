@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { useAuthStore } from "./auth";
+import { useAuthStore, NO_REFEREE_ROLE_ERROR_KEY } from "./auth";
 import { setCsrfToken, clearSession } from "@/api/client";
 
 // Mock the API client
@@ -512,7 +512,7 @@ describe("useAuthStore", () => {
       expect(result).toBe(false);
       const { status, error } = useAuthStore.getState();
       expect(status).toBe("error");
-      expect(error).toContain("This app is for referees only");
+      expect(error).toBe(NO_REFEREE_ROLE_ERROR_KEY);
       expect(clearSession).toHaveBeenCalled();
       // Should have made 3 calls: login page + auth POST + logout
       expect(mockFetch).toHaveBeenCalledTimes(3);
@@ -545,7 +545,7 @@ describe("useAuthStore", () => {
       expect(result).toBe(false);
       const { status, error } = useAuthStore.getState();
       expect(status).toBe("error");
-      expect(error).toContain("no referee role");
+      expect(error).toBe(NO_REFEREE_ROLE_ERROR_KEY);
       expect(clearSession).toHaveBeenCalled();
     });
 

@@ -77,11 +77,31 @@ const LOGOUT_URL = `${API_BASE}/logout`;
 const SESSION_CHECK_TIMEOUT_MS = 10_000;
 
 /**
- * Error message for users without a referee role.
- * This app is designed for referees only - users with only player/admin roles cannot use it.
+ * Error key for users without a referee role.
+ * This key is used by LoginPage to display a translated error message.
+ * The actual translations are in i18n/locales under auth.noRefereeRole.
  */
-const NO_REFEREE_ROLE_ERROR =
-  "This app is for referees only. Your account has no referee role in VolleyManager.";
+export const NO_REFEREE_ROLE_ERROR_KEY = "auth.noRefereeRole";
+
+/**
+ * Rejects a login attempt for users without a referee role.
+ * Invalidates the server session and clears local state.
+ *
+ * @returns false to indicate login was rejected
+ */
+async function rejectNonRefereeUser(
+  set: (state: Partial<AuthState>) => void,
+): Promise<false> {
+  // Invalidate the server session
+  try {
+    await fetch(LOGOUT_URL, { credentials: "include", redirect: "manual" });
+  } catch {
+    // Ignore logout errors - we're rejecting the login anyway
+  }
+  clearSession();
+  set({ status: "error", error: NO_REFEREE_ROLE_ERROR_KEY });
+  return false;
+}
 
 /**
  * Derives user occupations and active occupation ID from active party data.
@@ -187,15 +207,7 @@ export const useAuthStore = create<AuthState>()(
 
             // Reject users without referee role - this app is for referees only
             if (user.occupations.length === 0) {
-              // Invalidate the server session
-              try {
-                await fetch(LOGOUT_URL, { credentials: "include", redirect: "manual" });
-              } catch {
-                // Ignore logout errors - we're rejecting the login anyway
-              }
-              clearSession();
-              set({ status: "error", error: NO_REFEREE_ROLE_ERROR });
-              return false;
+              return rejectNonRefereeUser(set);
             }
 
             set({
@@ -231,15 +243,7 @@ export const useAuthStore = create<AuthState>()(
 
             // Reject users without referee role - this app is for referees only
             if (user.occupations.length === 0) {
-              // Invalidate the server session
-              try {
-                await fetch(LOGOUT_URL, { credentials: "include", redirect: "manual" });
-              } catch {
-                // Ignore logout errors - we're rejecting the login anyway
-              }
-              clearSession();
-              set({ status: "error", error: NO_REFEREE_ROLE_ERROR });
-              return false;
+              return rejectNonRefereeUser(set);
             }
 
             set({
