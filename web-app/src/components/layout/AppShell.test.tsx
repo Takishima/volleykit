@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppShell } from "./AppShell";
 import { useAuthStore, type UserProfile } from "@/stores/auth";
 import { setLocale, type Locale } from "@/i18n";
@@ -59,10 +60,19 @@ describe("AppShell", () => {
   });
 
   function renderAppShell() {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
     return render(
-      <MemoryRouter>
-        <AppShell />
-      </MemoryRouter>,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <AppShell />
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
   }
 

@@ -50,11 +50,19 @@ export const queryKeys = {
     details: () => [...queryKeys.assignments.all, "detail"] as const,
     /** Specific assignment detail query */
     detail: (id: string) => [...queryKeys.assignments.details(), id] as const,
-    /** Validation-closed assignments query */
+    /**
+     * Validation-closed assignments query.
+     * @param fromDate - Start date filter (ISO string)
+     * @param toDate - End date filter (ISO string)
+     * @param deadlineHours - Validation deadline hours after game start
+     * @param associationKey - In demo mode: demoAssociationCode. In production: activeOccupationId.
+     *                         This ensures cache invalidation when switching associations.
+     */
     validationClosed: (
       fromDate: string,
       toDate: string,
       deadlineHours: number,
+      associationKey?: string | null,
     ) =>
       [
         ...queryKeys.assignments.all,
@@ -62,6 +70,7 @@ export const queryKeys = {
         fromDate,
         toDate,
         deadlineHours,
+        associationKey,
       ] as const,
   },
 

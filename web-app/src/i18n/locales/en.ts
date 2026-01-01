@@ -138,6 +138,7 @@ const en: Translations = {
     locationTbd: "Location TBD",
     selectRole: "Select role",
     selectOccupation: "Select occupation",
+    switchAssociationFailed: "Failed to switch association. Please try again.",
     vs: "vs",
     unknown: "Unknown",
     unknownDate: "Date?",

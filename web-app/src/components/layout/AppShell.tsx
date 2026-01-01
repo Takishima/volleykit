@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect, useCallback, lazy, Suspense } from "react";
 import { Outlet, NavLink, useLocation } from "react-router-dom";
 import { useShallow } from "zustand/react/shallow";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore, type Occupation } from "@/stores/auth";
-import { useDemoStore, type DemoAssociationCode } from "@/stores/demo";
 import { useTourStore } from "@/stores/tour";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getOccupationLabelKey } from "@/utils/occupation-labels";
+import { getApiClient } from "@/api/client";
+import { toast } from "@/stores/toast";
 import {
   Volleyball,
   ClipboardList,
@@ -40,16 +42,10 @@ const navItems: NavItem[] = [
   { path: "/settings", labelKey: "nav.settings", icon: Settings, testId: "nav-settings" },
 ];
 
-// Valid association codes that can be used for demo mode data generation
-const DEMO_ASSOCIATION_CODES = new Set<DemoAssociationCode>(["SV", "SVRBA", "SVRZ"]);
-
-function isDemoAssociationCode(code: string | undefined): code is DemoAssociationCode {
-  return code !== undefined && DEMO_ASSOCIATION_CODES.has(code as DemoAssociationCode);
-}
-
 export function AppShell() {
   const location = useLocation();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const {
     status,
     user,
@@ -67,9 +63,13 @@ export function AppShell() {
       isDemoMode: state.isDemoMode,
     })),
   );
-  const setActiveAssociation = useDemoStore((state) => state.setActiveAssociation);
   const activeTour = useTourStore((state) => state.activeTour);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isSwitching, setIsSwitching] = useState(false);
+
+  // Track the latest switch request to handle race conditions
+  // when user rapidly clicks different associations
+  const switchCounterRef = useRef(0);
 
   const getOccupationLabel = useCallback(
     (occupation: Occupation): string => {
@@ -106,18 +106,52 @@ export function AppShell() {
     user?.occupations?.find((o) => o.id === activeOccupationId) ??
     user?.occupations?.[0];
 
-  const handleOccupationSelect = (id: string) => {
-    setActiveOccupation(id);
+  const handleOccupationSelect = async (id: string) => {
+    // Don't switch if selecting the same occupation
+    if (id === activeOccupationId) {
+      setIsDropdownOpen(false);
+      return;
+    }
+
+    // Increment counter to track this specific switch request
+    // This handles race conditions when user rapidly clicks different associations
+    const currentSwitch = ++switchCounterRef.current;
+    const previousOccupationId = activeOccupationId;
+
+    setIsSwitching(true);
     setIsDropdownOpen(false);
 
-    // In demo mode, regenerate data based on the selected occupation's association
-    if (isDemoMode) {
-      const selectedOccupation = user?.occupations?.find((o) => o.id === id);
-      if (
-        selectedOccupation &&
-        isDemoAssociationCode(selectedOccupation.associationCode)
-      ) {
-        setActiveAssociation(selectedOccupation.associationCode);
+    // Optimistic UI update - immediately show the new selection
+    setActiveOccupation(id);
+
+    try {
+      // Call API to switch association (works for both demo and production mode)
+      // In demo mode, the mock API handles regenerating demo data
+      // In production mode, this switches the server-side active party
+      const apiClient = getApiClient(isDemoMode);
+      await apiClient.switchRoleAndAttribute(id);
+
+      // Check if this is still the latest switch request (race condition protection)
+      if (currentSwitch !== switchCounterRef.current) {
+        // A newer switch was initiated, don't invalidate queries
+        return;
+      }
+
+      // Invalidate all queries to refetch data for the new association
+      await queryClient.invalidateQueries();
+    } catch (error) {
+      // Check if this is still the latest switch request before reverting
+      if (currentSwitch === switchCounterRef.current) {
+        // Revert optimistic update on error
+        setActiveOccupation(previousOccupationId ?? id);
+        // Show error toast to user
+        toast.error(t("common.switchAssociationFailed"));
+        console.error("Failed to switch association:", error);
+      }
+    } finally {
+      // Only clear switching state if this is still the latest request
+      if (currentSwitch === switchCounterRef.current) {
+        setIsSwitching(false);
       }
     }
   };
@@ -142,7 +176,12 @@ export function AppShell() {
                   <div className="relative" ref={dropdownRef}>
                     <button
                       onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                      className="flex items-center gap-1 px-2 py-1 text-sm font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 rounded-lg hover:bg-primary-100 dark:hover:bg-primary-900/50 transition-colors"
+                      disabled={isSwitching}
+                      className={`flex items-center gap-1 px-2 py-1 text-sm font-medium rounded-lg transition-colors ${
+                        isSwitching
+                          ? "text-text-muted dark:text-text-muted-dark bg-surface-subtle dark:bg-surface-subtle-dark cursor-wait"
+                          : "text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50"
+                      }`}
                       aria-expanded={isDropdownOpen}
                       aria-haspopup="listbox"
                     >

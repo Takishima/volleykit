@@ -227,7 +227,14 @@ export function useValidationClosedAssignments(): UseQueryResult<
   Error
 > {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const activeOccupationId = useAuthStore((state) => state.activeOccupationId);
   const demoAssignments = useDemoStore((state) => state.assignments);
+  const demoAssociationCode = useDemoStore(
+    (state) => state.activeAssociationCode,
+  );
+
+  // Use appropriate key for cache invalidation when switching associations
+  const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId;
 
   // Fetch settings and season for filtering
   // Note: In demo mode, these queries are disabled (enabled: !isDemoMode),
@@ -309,11 +316,13 @@ export function useValidationClosedAssignments(): UseQueryResult<
       fromDate,
       toDate,
       deadlineHours,
+      associationKey,
     ),
     queryFn: async ({ signal }) => {
       // Fetch all pages because API doesn't support server-side filtering
       // by validation status - we must filter client-side after fetching.
       const allItems = await fetchAllAssignmentPages(config, signal);
+      // Filter by validation closed status
       return filterByValidationClosed(allItems, deadlineHours);
     },
     // Longer cache time because validation status changes infrequently

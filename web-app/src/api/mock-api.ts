@@ -733,6 +733,32 @@ export const mockApi = {
       },
     ];
   },
+
+  /**
+   * Switch the active role/association.
+   * In demo mode, looks up the occupation by ID and regenerates demo data
+   * for the corresponding association code.
+   */
+  async switchRoleAndAttribute(attributeValueId: string): Promise<void> {
+    await delay(MOCK_MUTATION_DELAY_MS);
+
+    // Import stores dynamically to avoid circular dependencies
+    const { useAuthStore } = await import("@/stores/auth");
+
+    // Find the occupation by ID to get its association code
+    const user = useAuthStore.getState().user;
+    const occupation = user?.occupations?.find((o) => o.id === attributeValueId);
+
+    if (occupation?.associationCode) {
+      const validCodes = ["SV", "SVRBA", "SVRZ"] as const;
+      type DemoCode = (typeof validCodes)[number];
+
+      if (validCodes.includes(occupation.associationCode as DemoCode)) {
+        const store = useDemoStore.getState();
+        store.setActiveAssociation(occupation.associationCode as DemoCode);
+      }
+    }
+  },
 };
 
 /**

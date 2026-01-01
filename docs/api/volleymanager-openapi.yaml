@@ -182,6 +182,56 @@ paths:
                 type: string
               description: Always redirects to `/login`
               example: "https://volleymanager.volleyball.ch/login"
+  # ==================== Party/Association Switching ====================
+  /sportmanager.security/api\party/switchRoleAndAttribute:
+    put:
+      tags: [Authentication]
+      summary: Switch active association/role
+      description: |
+        Switches the user's active association (party) on the server.
+        This changes which association's data is returned by subsequent API calls.
+
+        **How it works:**
+        1. User has multiple associations (e.g., referee for SV, SVRBA, SVRZ)
+        2. Client sends the AttributeValue UUID of the desired association
+        3. Server updates the session's active party
+        4. Subsequent API calls return data for the new association
+
+        **Usage in VolleyKit:**
+        Called when user selects a different association in the dropdown.
+        After switching, all cached queries should be invalidated to refetch data.
+      operationId: switchRoleAndAttribute
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - attributeValueAsArray[0]
+                - __csrfToken
+              properties:
+                attributeValueAsArray[0]:
+                  type: string
+                  format: uuid
+                  description: The __identity UUID of the AttributeValue (occupation) to switch to
+                  example: "00000000-0000-0000-0000-000000000001"
+                __csrfToken:
+                  type: string
+                  description: CSRF token from the session
+                  example: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      responses:
+        '200':
+          description: Successfully switched association
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Empty response or updated party data
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Forbidden - invalid AttributeValue or not allowed to switch
   # ==================== Notification Endpoints ====================
   /sportmanager.notificationcenter/api\inappnotification/getCountOfUnreadNotificationsForActiveParty:
     get:

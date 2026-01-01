@@ -92,6 +92,37 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sportmanager.security/api\\party/switchRoleAndAttribute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Switch active association/role
+         * @description Switches the user's active association (party) on the server.
+         *     This changes which association's data is returned by subsequent API calls.
+         *
+         *     **How it works:**
+         *     1. User has multiple associations (e.g., referee for SV, SVRBA, SVRZ)
+         *     2. Client sends the AttributeValue UUID of the desired association
+         *     3. Server updates the session's active party
+         *     4. Subsequent API calls return data for the new association
+         *
+         *     **Usage in VolleyKit:**
+         *     Called when user selects a different association in the dropdown.
+         *     After switching, all cached queries should be invalidated to refetch data.
+         */
+        put: operations["switchRoleAndAttribute"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sportmanager.notificationcenter/api\\inappnotification/getCountOfUnreadNotificationsForActiveParty": {
         parameters: {
             query?: never;
@@ -4190,6 +4221,50 @@ export interface operations {
                      * @example https://volleymanager.volleyball.ch/login
                      */
                     Location?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    switchRoleAndAttribute: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": {
+                    /**
+                     * Format: uuid
+                     * @description The __identity UUID of the AttributeValue (occupation) to switch to
+                     * @example 00000000-0000-0000-0000-000000000001
+                     */
+                    "attributeValueAsArray[0]": string;
+                    /**
+                     * @description CSRF token from the session
+                     * @example xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                     */
+                    __csrfToken: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successfully switched association */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            /** @description Forbidden - invalid AttributeValue or not allowed to switch */
+            403: {
+                headers: {
                     [name: string]: unknown;
                 };
                 content?: never;

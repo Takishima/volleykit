@@ -30,6 +30,7 @@ export interface Translations {
     locationTbd: string;
     selectRole: string;
     selectOccupation: string;
+    switchAssociationFailed: string;
     vs: string;
     unknown: string;
     unknownDate: string;
