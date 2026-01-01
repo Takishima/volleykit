@@ -276,9 +276,18 @@ describe("useAuthStore", () => {
     it("handles already authenticated user (login page has CSRF token)", async () => {
       // When user has existing valid session, /login redirects to authenticated page
       // The browser follows the redirect, and we get a page with CSRF token
+      // First fetch: login page (with existing CSRF token)
       mockFetch.mockResolvedValueOnce({
         ok: true,
         redirected: true,
+        text: () =>
+          Promise.resolve(
+            createDashboardHtml("existing-session-csrf-token-1234"),
+          ),
+      });
+      // Second fetch: dashboard to get activeParty data
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
         text: () =>
           Promise.resolve(
             createDashboardHtml("existing-session-csrf-token-1234"),
@@ -292,8 +301,8 @@ describe("useAuthStore", () => {
       expect(setCsrfToken).toHaveBeenCalledWith(
         "existing-session-csrf-token-1234",
       );
-      // Should only have made 1 call (login page fetch detected existing session)
-      expect(mockFetch).toHaveBeenCalledTimes(1);
+      // Should have made 2 calls: login page fetch + dashboard fetch for activeParty
+      expect(mockFetch).toHaveBeenCalledTimes(2);
     });
 
     it("handles stale session by proceeding with normal login", async () => {

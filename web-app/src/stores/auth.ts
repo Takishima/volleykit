@@ -156,8 +156,19 @@ export const useAuthStore = create<AuthState>()(
           const existingCsrfToken = extractCsrfTokenFromPage(html);
 
           if (existingCsrfToken) {
-            // Already logged in - parse activeParty from current page
-            const activeParty = extractActivePartyFromHtml(html);
+            // Already logged in - the login page redirect doesn't contain activeParty data
+            // We need to fetch the dashboard explicitly to get the user's associations
+            const dashboardResponse = await fetch(
+              `${API_BASE}/sportmanager.volleyball/main/dashboard`,
+              { credentials: "include" },
+            );
+
+            let activeParty = null;
+            if (dashboardResponse.ok) {
+              const dashboardHtml = await dashboardResponse.text();
+              activeParty = extractActivePartyFromHtml(dashboardHtml);
+            }
+
             setCsrfToken(existingCsrfToken);
 
             const currentState = get();
