@@ -114,8 +114,10 @@ const ActivePartySchema = z
  * character is consumed by exactly one branch, preventing catastrophic backtracking.
  * The outer * quantifier cannot cause exponential behavior because the inner alternation
  * is mutually exclusive (either a non-special char OR an escape sequence).
+ *
+ * @internal Exported for use in debug panel diagnostics
  */
-const ACTIVE_PARTY_PATTERN =
+export const ACTIVE_PARTY_PATTERN =
   /window\.activeParty\s*=\s*JSON\.parse\s*\(\s*'((?:[^'\\]|\\.)*)'\s*\)/;
 
 /**
@@ -128,8 +130,10 @@ const ACTIVE_PARTY_PATTERN =
  * - Quotes inside JSON are HTML-encoded as &quot;, so }" cannot appear inside JSON string values
  * - The /s flag allows . to match newlines for multi-line JSON
  * - Greedy matching would incorrectly extend to later })" sequences elsewhere in the HTML
+ *
+ * @internal Exported for use in debug panel diagnostics
  */
-const VUE_ACTIVE_PARTY_PATTERN =
+export const VUE_ACTIVE_PARTY_PATTERN =
   /:active-party="\$convertFromBackendToFrontend\((\{.+?\})\)"/s;
 
 /**
