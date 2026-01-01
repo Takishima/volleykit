@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/icons";
 import type { LucideIcon } from "lucide-react";
 import { TourModeBanner } from "@/components/tour/TourModeBanner";
+import { AssociationDebugPanel } from "@/components/debug/AssociationDebugPanel";
 
 const MINIMUM_OCCUPATIONS_FOR_SWITCHER = 2;
 
@@ -265,6 +266,9 @@ export function AppShell() {
           </div>
         </div>
       </nav>
+
+      {/* Debug panel for association dropdown issues - toggle via ?debug=associations or bookmarklet */}
+      <AssociationDebugPanel />
     </div>
   );
 }
