@@ -28,6 +28,7 @@ import {
   parseDateOrFallback,
   sortByGameDate,
   createDemoQueryResult,
+  getGameTimestamp,
 } from "./usePaginatedQuery";
 
 // Stable empty array for React Query selectors to prevent unnecessary re-renders.
@@ -100,39 +101,78 @@ function filterByValidationClosed(
 /**
  * Hook to fetch assignments with date-based filtering.
  *
+ * In demo mode, this hook bypasses React Query's cache and reads directly
+ * from the demo store. This ensures assignments update immediately when
+ * switching associations, without cache staleness issues.
+ *
  * @param period - Date period preset for filtering
  * @param customRange - Custom date range when period is 'custom'
  */
 export function useAssignments(
   period: DatePeriod = "upcoming",
   customRange?: { from: Date; to: Date },
-) {
+): UseQueryResult<Assignment[], Error> {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const demoAssignments = useDemoStore((state) => state.assignments);
   const demoAssociationCode = useDemoStore(
     (state) => state.activeAssociationCode,
   );
   const apiClient = getApiClient(isDemoMode);
   const dateRange = getDateRangeForPeriod(period, customRange);
 
-  const config: SearchConfiguration = {
-    offset: 0,
-    limit: DEFAULT_PAGE_SIZE,
-    propertyFilters: [
-      {
-        propertyName: "refereeGame.game.startingDateTime",
-        dateRange,
-      },
-    ],
-    propertyOrderings: [
-      {
-        propertyName: "refereeGame.game.startingDateTime",
-        descending: period === "past",
-        isSetByUser: true,
-      },
-    ],
-  };
+  // Memoize date range values to prevent query key changes on every render.
+  // getDateRangeForPeriod returns new objects each time, but the ISO strings
+  // are stable within the same day due to startOfDay/endOfDay normalization.
+  const { fromDate, toDate } = useMemo(() => {
+    return {
+      fromDate: dateRange.from,
+      toDate: dateRange.to,
+    };
+  }, [dateRange.from, dateRange.to]);
 
-  return useQuery({
+  const config = useMemo<SearchConfiguration>(
+    () => ({
+      offset: 0,
+      limit: DEFAULT_PAGE_SIZE,
+      propertyFilters: [
+        {
+          propertyName: "refereeGame.game.startingDateTime",
+          dateRange: { from: fromDate, to: toDate },
+        },
+      ],
+      propertyOrderings: [
+        {
+          propertyName: "refereeGame.game.startingDateTime",
+          descending: period === "past",
+          isSetByUser: true,
+        },
+      ],
+    }),
+    [fromDate, toDate, period],
+  );
+
+  // Filter demo assignments client-side to match API behavior.
+  // This bypasses React Query's cache to ensure immediate updates
+  // when switching associations.
+  const demoFilteredData = useMemo(() => {
+    if (!isDemoMode) return [];
+
+    const assignments = Array.isArray(demoAssignments) ? demoAssignments : [];
+    const from = new Date(fromDate);
+    const to = new Date(toDate);
+
+    const filtered = assignments.filter((assignment) => {
+      const timestamp = getGameTimestamp(assignment);
+      // Skip items with missing dates (timestamp would be 0 from epoch fallback)
+      if (timestamp === 0) return false;
+      const gameDate = new Date(timestamp);
+      return gameDate >= from && gameDate <= to;
+    });
+
+    return sortByGameDate(filtered, period === "past");
+  }, [isDemoMode, demoAssignments, fromDate, toDate, period]);
+
+  const query = useQuery({
     queryKey: queryKeys.assignments.list(
       config,
       isDemoMode ? demoAssociationCode : null,
@@ -140,7 +180,16 @@ export function useAssignments(
     queryFn: () => apiClient.searchAssignments(config),
     select: (data) => data.items ?? EMPTY_ASSIGNMENTS,
     staleTime: 5 * 60 * 1000,
+    // Disable query in demo mode - we read directly from the store
+    enabled: !isDemoMode,
   });
+
+  // In demo mode, return store data directly to bypass React Query cache
+  if (isDemoMode) {
+    return createDemoQueryResult(query, demoFilteredData);
+  }
+
+  return query;
 }
 
 /**
