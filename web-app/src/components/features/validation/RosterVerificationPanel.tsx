@@ -120,7 +120,9 @@ export function RosterVerificationPanel({
   const allPlayers = [...players, ...addedPlayers].sort((a, b) => {
     if (a.isNewlyAdded && !b.isNewlyAdded) return 1;
     if (!a.isNewlyAdded && b.isNewlyAdded) return -1;
-    return a.displayName.localeCompare(b.displayName);
+    const lastNameA = a.lastName ?? a.displayName;
+    const lastNameB = b.lastName ?? b.displayName;
+    return lastNameA.localeCompare(lastNameB);
   });
 
   // Compute formatted display data for all players (handles duplicate detection)
