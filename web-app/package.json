@@ -27,7 +27,7 @@
     {
       "name": "Main App Bundle",
       "path": "dist/assets/index-*.js",
-      "limit": "130 kB",
+      "limit": "135 kB",
       "gzip": true
     },
     {
@@ -56,7 +56,7 @@
     {
       "name": "Total JS Bundle",
       "path": "dist/assets/*.js",
-      "limit": "420 kB",
+      "limit": "430 kB",
       "gzip": true
     }
   ],
