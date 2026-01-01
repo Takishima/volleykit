@@ -191,6 +191,23 @@ describe("API Client", () => {
         "Unexpected HTML response (expected JSON)",
       );
     });
+
+    it("does not treat HTML response as stale session for login-like paths", async () => {
+      // Paths like /api/v2/login-history or /user/login-preferences should NOT
+      // be treated as login page redirects - only exact /login matches should.
+      setCsrfToken("some-token");
+
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse("<html>Login history page</html>", {
+          contentType: "text/html; charset=UTF-8",
+          url: "https://example.com/api/v2/login-history",
+        }),
+      );
+
+      await expect(api.searchAssignments({})).rejects.toThrow(
+        "Unexpected HTML response (expected JSON)",
+      );
+    });
   });
 
   describe("searchAssignments", () => {

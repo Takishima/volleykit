@@ -146,7 +146,10 @@ async function apiRequest<T>(
   // Only treat as stale if we were actually redirected to a login page, to avoid
   // false positives on valid sessions that happen to receive HTML responses.
   if (contentType.includes("text/html")) {
-    const isLoginPage = response.url.toLowerCase().includes("/login");
+    // Check if pathname ends with "/login" to avoid false positives on paths
+    // like "/api/v2/login-history" or "/user/login-preferences"
+    const pathname = new URL(response.url).pathname.toLowerCase();
+    const isLoginPage = pathname === "/login" || pathname.endsWith("/login");
     if (isLoginPage) {
       clearSession();
       throw new Error("Session expired. Please log in again.");
