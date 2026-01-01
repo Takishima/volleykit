@@ -1,5 +1,16 @@
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// Node.js polyfills for browser compatibility (required by PaddleOCR)
+const nodePolyfills = {
+  path: 'path-browserify',
+  fs: resolve(__dirname, 'src/polyfills/empty.js'),
+  crypto: resolve(__dirname, 'src/polyfills/empty.js'),
+};
 
 // Base path for GitHub Pages subdirectory deployment
 // In production, this app is served from /volleykit/ocr-poc/
@@ -12,6 +23,14 @@ const CDN_CACHE_DAYS = 30;
 
 export default defineConfig({
   base: BASE_PATH,
+  resolve: {
+    alias: nodePolyfills,
+  },
+  define: {
+    // Provide process.env for packages that expect it
+    'process.env': {},
+    global: 'globalThis',
+  },
   plugins: [
     VitePWA({
       registerType: 'autoUpdate',
