@@ -1,6 +1,9 @@
 import { useState, useCallback, useEffect, memo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import type { Assignment, CompensationRecord } from "@/api/client";
 import { getApiClient } from "@/api/client";
+import { queryKeys } from "@/api/queryKeys";
+import { COMPENSATION_LOOKUP_LIMIT } from "@/hooks/usePaginatedQuery";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   useUpdateCompensation,
@@ -35,6 +38,28 @@ interface EditCompensationModalProps {
   onClose: () => void;
 }
 
+/**
+ * Searches cached compensation queries to find a compensation matching the game number.
+ */
+function findCompensationInCache(
+  gameNumber: number,
+  queryClient: ReturnType<typeof useQueryClient>,
+): CompensationRecord | null {
+  const queries = queryClient.getQueriesData<{ items: CompensationRecord[] }>({
+    queryKey: queryKeys.compensations.all,
+  });
+
+  for (const [, data] of queries) {
+    const comp = data?.items?.find(
+      (c) => c.refereeGame?.game?.number === gameNumber,
+    );
+    if (comp) {
+      return comp;
+    }
+  }
+  return null;
+}
+
 function EditCompensationModalComponent({
   assignment,
   compensation,
@@ -42,6 +67,7 @@ function EditCompensationModalComponent({
   onClose,
 }: EditCompensationModalProps) {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
   const getAssignmentCompensation = useDemoStore(
     (state) => state.getAssignmentCompensation,
@@ -84,15 +110,112 @@ function EditCompensationModalComponent({
       return;
     }
 
-    // For compensation record edits, fetch from API
+    // For assignment edits in production mode, find compensation by game number
+    if (isAssignmentEdit && !isDemoMode && assignment) {
+      const gameNumber = assignment.refereeGame?.game?.number;
+      if (!gameNumber) {
+        logger.debug(
+          "[EditCompensationModal] Assignment has no game number, cannot fetch compensation",
+        );
+        return;
+      }
+
+      let cancelled = false;
+
+      const fetchDetailsForAssignment = async () => {
+        setIsLoading(true);
+        setFetchError(null);
+        const apiClient = getApiClient(isDemoMode);
+
+        try {
+          // Try to find compensation in cache first
+          let foundCompensationId = findCompensationInCache(gameNumber, queryClient)
+            ?.convocationCompensation?.__identity;
+
+          // If not in cache, fetch compensations from API
+          if (!foundCompensationId) {
+            const compensations = await apiClient.searchCompensations({
+              limit: COMPENSATION_LOOKUP_LIMIT,
+            });
+            if (cancelled) return;
+
+            const matchingComp = compensations.items.find(
+              (c) => c.refereeGame?.game?.number === gameNumber,
+            );
+            foundCompensationId = matchingComp?.convocationCompensation?.__identity;
+          }
+
+          if (!foundCompensationId) {
+            // No compensation found for this assignment - this is OK for future games
+            // that haven't had compensation recorded yet
+            logger.debug(
+              "[EditCompensationModal] No compensation found for game number:",
+              gameNumber,
+            );
+            return;
+          }
+
+          // Fetch detailed compensation data
+          const details = await apiClient.getCompensationDetails(foundCompensationId);
+          if (cancelled) return;
+
+          const distanceInMetres =
+            details.convocationCompensation?.distanceInMetres;
+          if (distanceInMetres !== undefined && distanceInMetres > 0) {
+            setKilometers(formatDistanceKm(distanceInMetres));
+          }
+
+          const existingReason =
+            details.convocationCompensation?.correctionReason;
+          if (existingReason) {
+            setReason(existingReason);
+          }
+
+          logger.debug(
+            "[EditCompensationModal] Loaded compensation details for assignment:",
+            details,
+          );
+        } catch (error) {
+          if (cancelled) return;
+
+          logger.error(
+            "[EditCompensationModal] Failed to fetch compensation details for assignment:",
+            error,
+          );
+          const errorMessage = error instanceof Error ? error.message : "";
+          const knownErrorKeys = Object.values(COMPENSATION_ERROR_KEYS);
+          const isKnownErrorKey = knownErrorKeys.includes(errorMessage as CompensationErrorKey);
+          setFetchError(
+            isKnownErrorKey
+              ? t(errorMessage as CompensationErrorKey)
+              : (errorMessage || t("assignments.failedToLoadData")),
+          );
+        } finally {
+          if (!cancelled) {
+            setIsLoading(false);
+          }
+        }
+      };
+
+      fetchDetailsForAssignment();
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    // For compensation record edits, fetch from API using the compensation ID directly
     if (!compensationId) return;
+
+    let cancelled = false;
 
     const fetchDetails = async () => {
       setIsLoading(true);
       setFetchError(null);
+      const apiClient = getApiClient(isDemoMode);
+
       try {
-        const apiClient = getApiClient(isDemoMode);
         const details = await apiClient.getCompensationDetails(compensationId);
+        if (cancelled) return;
 
         // Pre-fill form with existing values
         const distanceInMetres =
@@ -112,6 +235,8 @@ function EditCompensationModalComponent({
           details,
         );
       } catch (error) {
+        if (cancelled) return;
+
         logger.error(
           "[EditCompensationModal] Failed to fetch compensation details:",
           error,
@@ -126,12 +251,17 @@ function EditCompensationModalComponent({
             : (errorMessage || t("assignments.failedToLoadData")),
         );
       } finally {
-        setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchDetails();
-  }, [isOpen, compensationId, isDemoMode, isAssignmentEdit, assignment, getAssignmentCompensation, t]);
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, compensationId, isDemoMode, isAssignmentEdit, assignment, getAssignmentCompensation, queryClient, t]);
 
   // Reset form when modal closes
   useEffect(() => {
