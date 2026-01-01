@@ -17,9 +17,6 @@ import { SheetTypeSelector } from './components/SheetTypeSelector.js';
 import { OCRProgress } from './components/OCRProgress.js';
 import { OCRFactory } from './services/ocr/index.js';
 
-/** Which OCR engine to use - 'tesseract' or 'paddle' */
-const OCR_ENGINE = 'paddle';
-
 /* ==============================================
  * APPLICATION STATE
  * ============================================== */
@@ -261,13 +258,9 @@ async function runOCR() {
 
   try {
     // Create OCR engine with progress callback
-    ocrEngine = await OCRFactory.create(
-      appContext.sheetType,
-      (progress) => {
-        ocrProgress?.updateProgress(progress);
-      },
-      OCR_ENGINE
-    );
+    ocrEngine = OCRFactory.create(appContext.sheetType, (progress) => {
+      ocrProgress?.updateProgress(progress);
+    });
 
     // Initialize and run OCR
     await ocrEngine.initialize();
