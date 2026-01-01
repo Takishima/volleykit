@@ -21,6 +21,7 @@ For code reviews and detailed examples, see:
 
 - **[Security Checklist](docs/SECURITY_CHECKLIST.md)** - Security review checklist (XSS, injection, auth)
 - **[Code Patterns](docs/CODE_PATTERNS.md)** - Detailed code examples and anti-patterns
+- **[Testing Strategy](docs/TESTING_STRATEGY.md)** - When to use unit, integration, and E2E tests
 
 ## Tech Stack
 
