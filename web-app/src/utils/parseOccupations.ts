@@ -10,7 +10,10 @@
  */
 import type { Occupation } from "@/stores/auth";
 import type { components } from "@/api/schema";
-import type { AttributeValue as ActivePartyAttributeValue } from "@/utils/active-party-parser";
+import {
+  isInflatedObject,
+  type AttributeValue as ActivePartyAttributeValue,
+} from "@/utils/active-party-parser";
 
 type AttributeValue = components["schemas"]["AttributeValue"];
 
@@ -169,8 +172,10 @@ export function parseOccupationFromActiveParty(
   }
 
   // Extract association code: prefer shortName, fall back to derived from name
+  // inflatedValue can be an object or primitive (boolean/null/string/number)
+  const inflated = isInflatedObject(attr.inflatedValue) ? attr.inflatedValue : undefined;
   const associationCode =
-    attr.inflatedValue?.shortName ?? deriveAssociationCodeFromName(attr.inflatedValue?.name);
+    inflated?.shortName ?? deriveAssociationCodeFromName(inflated?.name);
 
   return {
     id: attr.__identity,

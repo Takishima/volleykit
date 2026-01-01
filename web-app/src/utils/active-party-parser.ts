@@ -42,7 +42,12 @@ export interface AttributeValue {
   type?: string;
   /** UUID reference to the association entity */
   value?: string;
-  inflatedValue?: InflatedAssociationValue;
+  /**
+   * Inflated value containing association details.
+   * Can be an object with association info, or a primitive value (boolean, null, string, number)
+   * for certain attribute types like boolean player flags.
+   */
+  inflatedValue?: InflatedAssociationValue | boolean | null | string | number;
 }
 
 /**
@@ -68,13 +73,26 @@ export interface ActiveParty {
 }
 
 // Zod schemas for runtime validation of parsed JSON
-const InflatedValueSchema = z.object({
-  __identity: z.string().optional(), // Some inflatedValue objects don't have __identity
-  name: z.string().optional(),
-  shortName: z.string().optional(),
-  identifier: z.string().optional(),
-  originId: z.number().optional(),
-});
+// The inflatedValue can be an object with association details, or a primitive value
+// (e.g., false, null) for some attribute types like boolean flags
+const InflatedValueObjectSchema = z
+  .object({
+    __identity: z.string().optional(), // Some inflatedValue objects don't have __identity
+    name: z.string().optional(),
+    shortName: z.string().optional(),
+    identifier: z.string().optional(),
+    originId: z.number().optional(),
+  })
+  .passthrough(); // Allow additional unknown properties from the API
+
+// inflatedValue can be an object, boolean, null, string, or number depending on the attribute type
+const InflatedValueSchema = z.union([
+  InflatedValueObjectSchema,
+  z.boolean(),
+  z.null(),
+  z.string(),
+  z.number(),
+]);
 
 const AttributeValueSchema = z.object({
   // All fields are optional to handle incomplete items in the array.
@@ -430,6 +448,16 @@ const REFEREE_ROLE_IDENTIFIER = "Indoorvolleyball.RefAdmin:Referee";
 const ASSOCIATION_TYPE_SUFFIX = "AbstractAssociation";
 
 /**
+ * Type guard to check if inflatedValue is an object (InflatedAssociationValue).
+ * Returns false for primitive values (boolean, null, string, number).
+ */
+export function isInflatedObject(
+  value: InflatedAssociationValue | boolean | null | string | number | undefined,
+): value is InflatedAssociationValue {
+  return value !== null && typeof value === "object";
+}
+
+/**
  * Filter attribute values to only include referee association memberships.
  * Excludes boolean player roles and other non-association attributes.
  *
@@ -465,7 +493,7 @@ export function hasMultipleAssociations(
   // Count unique associations by their identity
   const uniqueAssociations = new Set(
     refereeAssociations
-      .map((av) => av.inflatedValue?.__identity)
+      .map((av) => (isInflatedObject(av.inflatedValue) ? av.inflatedValue.__identity : undefined))
       .filter(Boolean),
   );
 
