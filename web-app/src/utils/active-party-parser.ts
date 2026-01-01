@@ -13,7 +13,7 @@ import { logger } from "@/utils/logger";
  * Represents an inflated association value with full details.
  */
 export interface InflatedAssociationValue {
-  __identity: string;
+  __identity?: string; // Some inflatedValue objects don't have __identity
   name?: string;
   shortName?: string;
   /** Association identifier code (e.g., "912000" for SVRZ) */
@@ -67,7 +67,7 @@ export interface ActiveParty {
 
 // Zod schemas for runtime validation of parsed JSON
 const InflatedValueSchema = z.object({
-  __identity: z.string(),
+  __identity: z.string().optional(), // Some inflatedValue objects don't have __identity
   name: z.string().optional(),
   shortName: z.string().optional(),
   identifier: z.string().optional(),
