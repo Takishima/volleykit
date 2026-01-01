@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, lazy, Suspense } from "react";
 import { Outlet, NavLink, useLocation } from "react-router-dom";
 import { useShallow } from "zustand/react/shallow";
 import { useAuthStore, type Occupation } from "@/stores/auth";
@@ -16,6 +16,13 @@ import {
 } from "@/components/ui/icons";
 import type { LucideIcon } from "lucide-react";
 import { TourModeBanner } from "@/components/tour/TourModeBanner";
+
+// Lazy-load debug panel to avoid bundle size impact in production
+const AssociationDebugPanel = lazy(() =>
+  import("@/components/debug/AssociationDebugPanel").then((m) => ({
+    default: m.AssociationDebugPanel,
+  })),
+);
 
 const MINIMUM_OCCUPATIONS_FOR_SWITCHER = 2;
 
@@ -265,6 +272,11 @@ export function AppShell() {
           </div>
         </div>
       </nav>
+
+      {/* Debug panel for association dropdown issues - toggle via ?debug=associations or bookmarklet */}
+      <Suspense fallback={null}>
+        <AssociationDebugPanel />
+      </Suspense>
     </div>
   );
 }

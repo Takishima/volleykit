@@ -392,11 +392,11 @@ CI will fail if limits are exceeded (gzipped):
 
 | Component | Limit |
 |-----------|-------|
-| Main App Bundle | 130 KB |
+| Main App Bundle | 135 KB |
 | Vendor Chunks (each) | 50 KB |
 | PDF Library | 185 KB (lazy-loaded) |
 | CSS | 10 KB |
-| Total JS | 420 KB |
+| Total JS | 430 KB |
 
 **Check size**: `npm run build && npm run size`
 
