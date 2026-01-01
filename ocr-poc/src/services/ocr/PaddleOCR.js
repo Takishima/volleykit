@@ -117,68 +117,61 @@ export class PaddleOCR {
 
     this.#reportProgress('Recognizing text...', 0.5);
 
-    // Convert blob to data URL for PaddleOCR
-    const imageUrl = await this.#blobToDataUrl(imageBlob);
+    // Create object URL for the image (more reliable than data URL for large images)
+    const objectUrl = URL.createObjectURL(imageBlob);
 
-    // Run OCR detection
-    const result = await this.#ocr.detect(imageUrl);
+    try {
+      // Run OCR detection
+      const result = await this.#ocr.detect(objectUrl);
 
-    this.#reportProgress('Processing results...', 0.9);
+      this.#reportProgress('Processing results...', 0.9);
 
-    // Transform PaddleOCR result into our structured format
-    // PaddleOCR returns TextLine[] with { text, score, frame }
-    const words = [];
-    const lines = [];
+      // Transform PaddleOCR result into our structured format
+      // PaddleOCR returns TextLine[] with { text, score, frame }
+      const words = [];
+      const lines = [];
 
-    for (const textLine of result) {
-      // Split text into words
-      const lineWords = textLine.text.split(/\s+/).filter((w) => w.length > 0);
-      const wordWidth = textLine.frame.width / Math.max(lineWords.length, 1);
+      if (Array.isArray(result)) {
+        for (const textLine of result) {
+          // Split text into words
+          const lineWords = textLine.text.split(/\s+/).filter((w) => w.length > 0);
+          const wordWidth = textLine.frame.width / Math.max(lineWords.length, 1);
 
-      const ocrWords = lineWords.map((word, idx) => ({
-        text: word,
-        confidence: textLine.score * 100, // Convert 0-1 to 0-100
-        bbox: {
-          x0: textLine.frame.left + idx * wordWidth,
-          y0: textLine.frame.top,
-          x1: textLine.frame.left + (idx + 1) * wordWidth,
-          y1: textLine.frame.top + textLine.frame.height,
-        },
-      }));
+          const ocrWords = lineWords.map((word, idx) => ({
+            text: word,
+            confidence: textLine.score * 100, // Convert 0-1 to 0-100
+            bbox: {
+              x0: textLine.frame.left + idx * wordWidth,
+              y0: textLine.frame.top,
+              x1: textLine.frame.left + (idx + 1) * wordWidth,
+              y1: textLine.frame.top + textLine.frame.height,
+            },
+          }));
 
-      words.push(...ocrWords);
+          words.push(...ocrWords);
 
-      lines.push({
-        text: textLine.text,
-        confidence: textLine.score * 100,
-        words: ocrWords,
-      });
+          lines.push({
+            text: textLine.text,
+            confidence: textLine.score * 100,
+            words: ocrWords,
+          });
+        }
+      }
+
+      // Combine all text
+      const fullText = lines.map((l) => l.text).join('\n');
+
+      this.#reportProgress('Recognition complete', 1);
+
+      return {
+        fullText,
+        lines,
+        words,
+      };
+    } finally {
+      // Always revoke the object URL to prevent memory leaks
+      URL.revokeObjectURL(objectUrl);
     }
-
-    // Combine all text
-    const fullText = lines.map((l) => l.text).join('\n');
-
-    this.#reportProgress('Recognition complete', 1);
-
-    return {
-      fullText,
-      lines,
-      words,
-    };
-  }
-
-  /**
-   * Convert a Blob to a data URL
-   * @param {Blob} blob
-   * @returns {Promise<string>}
-   */
-  #blobToDataUrl(blob) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(/** @type {string} */ (reader.result));
-      reader.onerror = () => reject(new Error('Failed to read image blob'));
-      reader.readAsDataURL(blob);
-    });
   }
 
   /**

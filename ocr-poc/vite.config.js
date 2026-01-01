@@ -10,6 +10,11 @@ const SECONDS_PER_DAY = 60 * 60 * 24;
 const CACHE_MAX_AGE_DAYS = 7;
 const CDN_CACHE_DAYS = 30;
 
+// Build size constants (ONNX runtime + OpenCV are large ML dependencies)
+const MAX_PRECACHE_FILE_SIZE_MB = 30;
+const MAX_PRECACHE_FILE_SIZE_BYTES = MAX_PRECACHE_FILE_SIZE_MB * 1024 * 1024;
+const CHUNK_SIZE_WARNING_LIMIT_KB = 15000;
+
 export default defineConfig({
   base: BASE_PATH,
   plugins: [
@@ -22,7 +27,7 @@ export default defineConfig({
         // Precache app shell assets (exclude WASM files - they're too large)
         globPatterns: ['**/*.{css,html,ico,png,svg,woff,woff2}'],
         // Allow larger files for precaching (ONNX runtime is ~24MB)
-        maximumFileSizeToCacheInBytes: 30 * 1024 * 1024, // 30MB
+        maximumFileSizeToCacheInBytes: MAX_PRECACHE_FILE_SIZE_BYTES,
         // Runtime caching strategies
         runtimeCaching: [
           {
@@ -102,7 +107,7 @@ export default defineConfig({
     // Generate source maps for debugging
     sourcemap: false,
     // Increase chunk size warning limit for ONNX runtime
-    chunkSizeWarningLimit: 15000, // 15MB
+    chunkSizeWarningLimit: CHUNK_SIZE_WARNING_LIMIT_KB,
     rollupOptions: {
       output: {
         // Split large dependencies into separate chunks
