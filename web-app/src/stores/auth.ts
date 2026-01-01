@@ -321,9 +321,17 @@ export const useAuthStore = create<AuthState>()(
                 set({
                   status: "authenticated",
                   csrfToken: csrfToken ?? currentState.csrfToken,
-                  eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
-                  groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
-                  eligibleRoles: activeParty?.eligibleRoles ?? null,
+                  // Preserve existing attribute values if new values are missing
+                  // This prevents the association dropdown from disappearing when
+                  // checkSession fetches a page without activeParty data
+                  eligibleAttributeValues:
+                    activeParty?.eligibleAttributeValues ??
+                    currentState.eligibleAttributeValues,
+                  groupedEligibleAttributeValues:
+                    activeParty?.groupedEligibleAttributeValues ??
+                    currentState.groupedEligibleAttributeValues,
+                  eligibleRoles:
+                    activeParty?.eligibleRoles ?? currentState.eligibleRoles,
                   user,
                   activeOccupationId,
                 });

@@ -462,6 +462,47 @@ describe("useAuthStore", () => {
       expect(state.activeOccupationId).toBe("ref-1");
     });
 
+    it("preserves groupedEligibleAttributeValues when dashboard has no activeParty data", async () => {
+      // Set up state with existing attribute values from login
+      const existingGroupedValues = [
+        { __identity: "attr-1", roleIdentifier: "Referee", type: "AbstractAssociation" },
+        { __identity: "attr-2", roleIdentifier: "Referee", type: "AbstractAssociation" },
+      ];
+      const existingEligibleValues = [
+        { __identity: "attr-3", roleIdentifier: "Referee" },
+      ];
+      const existingEligibleRoles = {
+        "Indoorvolleyball.RefAdmin:Referee": { identifier: "Indoorvolleyball.RefAdmin:Referee" },
+      };
+      useAuthStore.setState({
+        status: "authenticated",
+        user: {
+          id: "user-1",
+          firstName: "Test",
+          lastName: "User",
+          occupations: [{ id: "ref-1", type: "referee" as const, associationCode: "SV" }],
+        },
+        groupedEligibleAttributeValues: existingGroupedValues,
+        eligibleAttributeValues: existingEligibleValues,
+        eligibleRoles: existingEligibleRoles,
+      });
+
+      // Mock dashboard response WITHOUT activeParty data (just CSRF token)
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: () => Promise.resolve(createDashboardHtml("new-csrf-token")),
+      });
+
+      const result = await useAuthStore.getState().checkSession();
+
+      expect(result).toBe(true);
+      const state = useAuthStore.getState();
+      // groupedEligibleAttributeValues should be preserved, not set to null
+      expect(state.groupedEligibleAttributeValues).toEqual(existingGroupedValues);
+      expect(state.eligibleAttributeValues).toEqual(existingEligibleValues);
+      expect(state.eligibleRoles).toEqual(existingEligibleRoles);
+    });
+
     it("returns false and sets idle on failed API call", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
