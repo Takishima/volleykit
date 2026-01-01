@@ -10,6 +10,21 @@
  * @typedef {(progress: {status: string, progress: number}) => void} OnProgressCallback
  */
 
+/** Initialization timeout in milliseconds */
+const INIT_TIMEOUT_MS = 60000;
+
+/**
+ * Create a promise that rejects after a timeout
+ * @param {number} ms - Timeout in milliseconds
+ * @param {string} message - Error message
+ * @returns {Promise<never>}
+ */
+function timeout(ms, message) {
+  return new Promise((_, reject) => {
+    setTimeout(() => reject(new Error(message)), ms);
+  });
+}
+
 /**
  * PaddleOCR engine wrapper
  */
@@ -47,19 +62,27 @@ export class PaddleOCR {
     this.#reportProgress('Initializing PaddleOCR...', 0);
 
     try {
+      console.log('[PaddleOCR] Starting dynamic import...');
+
       // Dynamic import to avoid loading unless needed
       const paddleOcr = await import('@paddle-js-models/ocr');
 
-      this.#reportProgress('Loading OCR models...', 0.2);
+      console.log('[PaddleOCR] Import successful, starting init...');
+      this.#reportProgress('Loading OCR models (this may take a minute)...', 0.2);
 
-      // Initialize the OCR engine
-      await paddleOcr.init();
+      // Initialize with timeout
+      await Promise.race([
+        paddleOcr.init(),
+        timeout(INIT_TIMEOUT_MS, `PaddleOCR initialization timed out after ${INIT_TIMEOUT_MS / 1000}s`),
+      ]);
+
+      console.log('[PaddleOCR] Init complete');
       this.#ocr = paddleOcr;
       this.#initialized = true;
 
       this.#reportProgress('PaddleOCR ready', 1);
     } catch (error) {
-      console.error('Failed to initialize PaddleOCR:', error);
+      console.error('[PaddleOCR] Failed to initialize:', error);
       throw new Error(`PaddleOCR initialization failed: ${error.message}`);
     }
   }
@@ -84,6 +107,7 @@ export class PaddleOCR {
     // Run OCR recognition
     const result = await this.#ocr.recognize(img);
 
+    console.log('[PaddleOCR] Raw result:', result);
     this.#reportProgress('Processing results...', 0.9);
 
     // Transform result to match our expected format
@@ -124,30 +148,34 @@ export class PaddleOCR {
    * @returns {{fullText: string, lines: string[], words: Array<{text: string, confidence: number}>}}
    */
   #transformResult(result) {
-    // PaddleOCR returns an array of text blocks with text and confidence
+    // PaddleOCR returns { text: string[], points: number[][][] }
     const words = [];
     const lines = [];
     let fullText = '';
 
-    if (Array.isArray(result)) {
-      for (const item of result) {
-        if (item.text) {
+    if (result && result.text && Array.isArray(result.text)) {
+      for (const text of result.text) {
+        if (text) {
           words.push({
-            text: item.text,
-            confidence: item.confidence || 0.9,
+            text: text,
+            confidence: 0.9,
           });
-          lines.push(item.text);
-          fullText += item.text + '\n';
+          lines.push(text);
+          fullText += text + '\n';
         }
       }
-    } else if (result && result.text) {
-      // Single result
-      words.push({
-        text: result.text,
-        confidence: result.confidence || 0.9,
-      });
-      lines.push(result.text);
-      fullText = result.text;
+    } else if (Array.isArray(result)) {
+      for (const item of result) {
+        const text = typeof item === 'string' ? item : item?.text;
+        if (text) {
+          words.push({
+            text: text,
+            confidence: item?.confidence || 0.9,
+          });
+          lines.push(text);
+          fullText += text + '\n';
+        }
+      }
     }
 
     return {
