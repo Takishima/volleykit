@@ -10,7 +10,12 @@
  * 3. Ensure styles work regardless of app theme/CSS state
  */
 import { useAuthStore, type Occupation } from "@/stores/auth";
-import { type AttributeValue, extractActivePartyFromHtml } from "@/utils/active-party-parser";
+import {
+  type AttributeValue,
+  extractActivePartyFromHtml,
+  ACTIVE_PARTY_PATTERN,
+  VUE_ACTIVE_PARTY_PATTERN,
+} from "@/utils/active-party-parser";
 import { useShallow } from "zustand/react/shallow";
 import { useState, useEffect, useCallback, useId } from "react";
 
@@ -685,9 +690,8 @@ function HydrationTimeline({
   );
 }
 
-/** Regex patterns from active-party-parser.ts */
-const ACTIVE_PARTY_PATTERN = /window\.activeParty\s*=\s*JSON\.parse\s*\(\s*'((?:[^'\\]|\\.)*)'\s*\)/;
-const VUE_ACTIVE_PARTY_PATTERN = /:active-party="\$convertFromBackendToFrontend\((\{.+?\})\)"/s;
+/** Maximum characters to show in raw match preview */
+const RAW_MATCH_PREVIEW_LENGTH = 500;
 
 interface FetchResult {
   status: "idle" | "loading" | "success" | "error";
@@ -724,9 +728,9 @@ function LiveDashboardFetch() {
       const scriptMatch = ACTIVE_PARTY_PATTERN.exec(html);
       const vueMatch = VUE_ACTIVE_PARTY_PATTERN.exec(html);
       if (scriptMatch?.[1]) {
-        rawMatch = scriptMatch[1].substring(0, 500);
+        rawMatch = scriptMatch[1].substring(0, RAW_MATCH_PREVIEW_LENGTH);
       } else if (vueMatch?.[1]) {
-        rawMatch = vueMatch[1].substring(0, 500);
+        rawMatch = vueMatch[1].substring(0, RAW_MATCH_PREVIEW_LENGTH);
       }
 
       setResult({
@@ -752,6 +756,7 @@ function LiveDashboardFetch() {
         <button
           onClick={handleFetch}
           disabled={result.status === "loading"}
+          aria-busy={result.status === "loading"}
           style={{
             padding: "6px 12px",
             fontSize: "10px",
