@@ -274,6 +274,61 @@ describe("extractActivePartyFromHtml", () => {
       // First item should have all fields
       expect(result?.groupedEligibleAttributeValues?.[0]?.inflatedValue?.shortName).toBe("SVRZ");
     });
+
+    it("skips non-activeParty :active-party attributes and finds the correct one", () => {
+      // Simulates a page with multiple :active-party attributes:
+      // 1. Form permissions (should be skipped)
+      // 2. Actual activeParty data (should be extracted)
+      const formPermissions = {
+        _permissions: {
+          object: { create: true, update: false },
+          properties: {
+            associationId: { create: true, read: true },
+            fullName: { create: true, read: true },
+          },
+        },
+      };
+
+      const actualActiveParty = {
+        __identity: "user-id",
+        groupedEligibleAttributeValues: [
+          {
+            __identity: "attr-1",
+            roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+            inflatedValue: {
+              __identity: "assoc-1",
+              shortName: "SVRZ",
+            },
+          },
+        ],
+      };
+
+      // HTML with two :active-party attributes - first one is form permissions
+      const encodedPermissions = JSON.stringify(formPermissions)
+        .replaceAll("&", "&amp;")
+        .replaceAll('"', "&quot;");
+      const encodedActiveParty = JSON.stringify(actualActiveParty)
+        .replaceAll("&", "&amp;")
+        .replaceAll('"', "&quot;");
+
+      const html = `
+        <html>
+          <body>
+            <form-component :active-party="$convertFromBackendToFrontend(${encodedPermissions})">
+            </form-component>
+            <main-layout :active-party="$convertFromBackendToFrontend(${encodedActiveParty})">
+              Content
+            </main-layout>
+          </body>
+        </html>
+      `;
+
+      const result = extractActivePartyFromHtml(html);
+
+      expect(result).not.toBeNull();
+      expect(result?.groupedEligibleAttributeValues).toHaveLength(1);
+      expect(result?.groupedEligibleAttributeValues?.[0]?.inflatedValue?.shortName).toBe("SVRZ");
+    });
   });
 
   describe("graceful failure", () => {
