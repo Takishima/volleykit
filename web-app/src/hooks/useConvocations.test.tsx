@@ -65,14 +65,15 @@ describe("useConvocations - API Client Routing", () => {
   });
 
   describe("useAssignments", () => {
-    it("should call getApiClient with isDemoMode value", async () => {
+    it("should call getApiClient with isDemoMode value in non-demo mode", async () => {
+      // In non-demo mode, the API should be called
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: true } as ReturnType<
+        selector({ isDemoMode: false } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
       vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
-        selector({ activeAssociationCode: "SV" } as ReturnType<
+        selector({ activeAssociationCode: null, assignments: [] } as unknown as ReturnType<
           typeof demoStore.useDemoStore.getState
         >),
       );
@@ -90,8 +91,47 @@ describe("useConvocations - API Client Routing", () => {
         expect(result.current.isFetching).toBe(false);
       });
 
-      expect(getApiClient).toHaveBeenCalledWith(true);
+      expect(getApiClient).toHaveBeenCalledWith(false);
       expect(mockApi.searchAssignments).toHaveBeenCalled();
+    });
+
+    it("should read from demo store in demo mode instead of calling API", async () => {
+      const futureDate = addDays(new Date(), 1).toISOString();
+
+      vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
+        selector({ isDemoMode: true } as ReturnType<
+          typeof authStore.useAuthStore.getState
+        >),
+      );
+      vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
+        selector({
+          activeAssociationCode: "SV",
+          assignments: [
+            {
+              __identity: "demo-assignment-1",
+              refereeGame: {
+                game: {
+                  __identity: "game-1",
+                  startingDateTime: futureDate,
+                },
+              },
+            },
+          ],
+        } as ReturnType<typeof demoStore.useDemoStore.getState>),
+      );
+
+      const { result } = renderHook(() => useAssignments(), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      // In demo mode, data comes from the store, not the API
+      expect(mockApi.searchAssignments).not.toHaveBeenCalled();
+      expect(result.current.data).toHaveLength(1);
+      expect(result.current.data?.[0]?.__identity).toBe("demo-assignment-1");
     });
 
     it("should call API with correct search configuration", async () => {
@@ -351,17 +391,17 @@ describe("useConvocations - Data Handling", () => {
   });
 
   describe("useAssignments", () => {
-    it("should return filtered assignments from API response", async () => {
+    it("should return filtered assignments from API response in non-demo mode", async () => {
       const now = new Date();
       const futureDate = addDays(now, 5).toISOString();
 
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: true } as ReturnType<
+        selector({ isDemoMode: false } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
       vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
-        selector({ activeAssociationCode: "SV" } as ReturnType<
+        selector({ activeAssociationCode: null, assignments: [] } as unknown as ReturnType<
           typeof demoStore.useDemoStore.getState
         >),
       );
@@ -384,6 +424,41 @@ describe("useConvocations - Data Handling", () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
+      expect(result.current.data).toHaveLength(1);
+      expect(result.current.data?.[0]?.__identity).toBe("future-1");
+    });
+
+    it("should return filtered assignments from demo store in demo mode", async () => {
+      const now = new Date();
+      const futureDate = addDays(now, 5).toISOString();
+
+      vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
+        selector({ isDemoMode: true } as ReturnType<
+          typeof authStore.useAuthStore.getState
+        >),
+      );
+      vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
+        selector({
+          activeAssociationCode: "SV",
+          assignments: [
+            {
+              __identity: "future-1",
+              refereeGame: { game: { startingDateTime: futureDate } },
+            },
+          ],
+        } as ReturnType<typeof demoStore.useDemoStore.getState>),
+      );
+
+      const { result } = renderHook(() => useAssignments("upcoming"), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      // In demo mode, data comes from the store
+      expect(mockApi.searchAssignments).not.toHaveBeenCalled();
       expect(result.current.data).toHaveLength(1);
       expect(result.current.data?.[0]?.__identity).toBe("future-1");
     });
@@ -562,44 +637,47 @@ describe("useConvocations - Unified API Architecture", () => {
     vi.clearAllMocks();
     // Default demo store mock
     vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
-      selector({ activeAssociationCode: null } as ReturnType<
+      selector({ activeAssociationCode: null, assignments: [] } as unknown as ReturnType<
         typeof demoStore.useDemoStore.getState
       >),
     );
   });
 
-  it("should use same code path for demo and non-demo modes", async () => {
-    // Test demo mode
+  it("should use different code paths for demo and non-demo modes", async () => {
+    // In demo mode, data comes from the store (no API call)
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
       selector({ isDemoMode: true } as ReturnType<
         typeof authStore.useAuthStore.getState
       >),
     );
     vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
-      selector({ activeAssociationCode: "SV" } as ReturnType<
+      selector({ activeAssociationCode: "SV", assignments: [] } as unknown as ReturnType<
         typeof demoStore.useDemoStore.getState
       >),
     );
-
-    mockApi.searchAssignments.mockResolvedValue({ items: [], totalItemsCount: 0 });
 
     const { result: demoResult } = renderHook(() => useAssignments(), {
       wrapper: createWrapper(),
     });
 
     await waitFor(() => {
-      expect(demoResult.current.isFetching).toBe(false);
+      expect(demoResult.current.isSuccess).toBe(true);
     });
 
-    expect(getApiClient).toHaveBeenCalledWith(true);
-    expect(mockApi.searchAssignments).toHaveBeenCalled();
+    // Demo mode reads from store, not API
+    expect(mockApi.searchAssignments).not.toHaveBeenCalled();
 
     vi.clearAllMocks();
 
-    // Test non-demo mode
+    // In non-demo mode, data comes from the API
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
       selector({ isDemoMode: false } as ReturnType<
         typeof authStore.useAuthStore.getState
+      >),
+    );
+    vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
+      selector({ activeAssociationCode: null, assignments: [] } as unknown as ReturnType<
+        typeof demoStore.useDemoStore.getState
       >),
     );
 
@@ -697,10 +775,11 @@ describe("useConvocations - Demo Association Switching", () => {
     vi.clearAllMocks();
   });
 
-  it("should include association code in query key when in demo mode", async () => {
-    // This test verifies that different association codes result in different
-    // query keys, which ensures TanStack Query will treat them as different
-    // queries and refetch when the association changes.
+  it("should return data from store when association changes in demo mode", async () => {
+    // In demo mode, data comes directly from the store (not the API).
+    // This test verifies that different associations return different data.
+    const futureDate = addDays(new Date(), 1).toISOString();
+
     const queryClient = new QueryClient({
       defaultOptions: {
         queries: {
@@ -716,15 +795,16 @@ describe("useConvocations - Demo Association Switching", () => {
       >),
     );
     vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
-      selector({ activeAssociationCode: "SV" } as ReturnType<
-        typeof demoStore.useDemoStore.getState
-      >),
+      selector({
+        activeAssociationCode: "SV",
+        assignments: [
+          {
+            __identity: "sv-assignment-1",
+            refereeGame: { game: { startingDateTime: futureDate } },
+          },
+        ],
+      } as ReturnType<typeof demoStore.useDemoStore.getState>),
     );
-
-    mockApi.searchAssignments.mockResolvedValue({
-      items: [{ __identity: "sv-assignment-1" }],
-      totalItemsCount: 1,
-    });
 
     const wrapper1 = ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -736,17 +816,10 @@ describe("useConvocations - Demo Association Switching", () => {
       expect(result1.current.isSuccess).toBe(true);
     });
 
-    expect(mockApi.searchAssignments).toHaveBeenCalledTimes(1);
-
-    // Get the query data from cache using both possible keys
-    const svQueryData = queryClient.getQueriesData({ queryKey: ["assignments"] });
-    expect(svQueryData.length).toBeGreaterThan(0);
-
-    // The query key should include "SV" as the fourth element
-    // (query key format: ["assignments", "list", config, demoAssociationCode])
-    const svQueryKey = svQueryData[0]?.[0];
-    expect(svQueryKey).toBeDefined();
-    expect(svQueryKey?.[3]).toBe("SV");
+    // Demo mode reads from store, not API
+    expect(mockApi.searchAssignments).not.toHaveBeenCalled();
+    expect(result1.current.data).toHaveLength(1);
+    expect(result1.current.data?.[0]?.__identity).toBe("sv-assignment-1");
 
     // Now test with SVRBA association in a fresh query client
     const queryClient2 = new QueryClient({
@@ -758,15 +831,16 @@ describe("useConvocations - Demo Association Switching", () => {
     });
 
     vi.mocked(demoStore.useDemoStore).mockImplementation((selector) =>
-      selector({ activeAssociationCode: "SVRBA" } as ReturnType<
-        typeof demoStore.useDemoStore.getState
-      >),
+      selector({
+        activeAssociationCode: "SVRBA",
+        assignments: [
+          {
+            __identity: "svrba-assignment-1",
+            refereeGame: { game: { startingDateTime: futureDate } },
+          },
+        ],
+      } as ReturnType<typeof demoStore.useDemoStore.getState>),
     );
-
-    mockApi.searchAssignments.mockResolvedValue({
-      items: [{ __identity: "svrba-assignment-1" }],
-      totalItemsCount: 1,
-    });
 
     const wrapper2 = ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={queryClient2}>{children}</QueryClientProvider>
@@ -778,12 +852,10 @@ describe("useConvocations - Demo Association Switching", () => {
       expect(result2.current.isSuccess).toBe(true);
     });
 
-    // The query key should include "SVRBA" as the fourth element
-    // (query key format: ["assignments", "list", config, demoAssociationCode])
-    const svrbaQueryData = queryClient2.getQueriesData({ queryKey: ["assignments"] });
-    const svrbaQueryKey = svrbaQueryData[0]?.[0];
-    expect(svrbaQueryKey).toBeDefined();
-    expect(svrbaQueryKey?.[3]).toBe("SVRBA");
+    // Different association returns different data from store
+    expect(mockApi.searchAssignments).not.toHaveBeenCalled();
+    expect(result2.current.data).toHaveLength(1);
+    expect(result2.current.data?.[0]?.__identity).toBe("svrba-assignment-1");
   });
 
   it("should use null association code for non-demo mode", async () => {

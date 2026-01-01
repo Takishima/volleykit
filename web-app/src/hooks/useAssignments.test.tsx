@@ -271,21 +271,34 @@ describe("useAssignments", () => {
   });
 
   it("uses demo association code in query key when in demo mode", async () => {
+    // In demo mode, the hook reads directly from the store instead of calling the API.
+    // This test verifies that demo mode returns data from the store.
     const { useAuthStore } = await import("@/stores/auth");
+    const { useDemoStore } = await import("@/stores/demo");
+
     vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
       selector({ isDemoMode: true }),
     );
 
-    const mockSearchAssignments = vi.fn().mockResolvedValue({
-      items: [createMockAssignment()],
-      totalItemsCount: 1,
-    });
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 1);
 
-    const { getApiClient } = await import("@/api/client");
-    vi.mocked(getApiClient).mockReturnValue({
-      searchAssignments: mockSearchAssignments,
-      getAssignmentDetails: vi.fn(),
-    } as unknown as ReturnType<typeof getApiClient>);
+    vi.mocked(useDemoStore).mockImplementation((selector: AnyFunction) =>
+      selector({
+        activeAssociationCode: "SV",
+        assignments: [
+          createMockAssignment({
+            __identity: "demo-assignment-1",
+            refereeGame: {
+              game: {
+                __identity: "game-1",
+                startingDateTime: futureDate.toISOString(),
+              },
+            },
+          }),
+        ],
+      }),
+    );
 
     const { result } = renderHook(() => useAssignments(), {
       wrapper: createWrapper(),
@@ -295,11 +308,22 @@ describe("useAssignments", () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    expect(getApiClient).toHaveBeenCalledWith(true);
+    // In demo mode, data comes from the store, not the API
+    expect(result.current.data).toHaveLength(1);
+    expect(result.current.data?.[0]?.__identity).toBe("demo-assignment-1");
   });
 });
 
 describe("useUpcomingAssignments", () => {
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    // Reset to non-demo mode for API tests
+    const { useAuthStore } = await import("@/stores/auth");
+    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
+      selector({ isDemoMode: false }),
+    );
+  });
+
   it("is a convenience wrapper for useAssignments with upcoming period", async () => {
     const mockSearchAssignments = vi.fn().mockResolvedValue({
       items: [],
@@ -333,6 +357,15 @@ describe("useUpcomingAssignments", () => {
 });
 
 describe("usePastAssignments", () => {
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    // Reset to non-demo mode for API tests
+    const { useAuthStore } = await import("@/stores/auth");
+    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
+      selector({ isDemoMode: false }),
+    );
+  });
+
   it("is a convenience wrapper for useAssignments with past period", async () => {
     const mockSearchAssignments = vi.fn().mockResolvedValue({
       items: [],
