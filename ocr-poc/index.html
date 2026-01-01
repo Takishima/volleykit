@@ -20,6 +20,7 @@
     <!-- Emscripten/OpenCV.js Module polyfill - MUST run before any modules -->
     <script>
       // Create Module global for Emscripten-compiled WebAssembly (used by PaddleOCR/OpenCV.js)
+      // Note: Do NOT set window.cv here - PaddleOCR bundles its own OpenCV and will set cv
       window.Module = window.Module || {
         locateFile: function(path, prefix) { return prefix ? prefix + path : path; },
         onRuntimeInitialized: function() { console.log('[Emscripten] Ready'); },
@@ -29,7 +30,6 @@
         noInitialRun: true,
         noExitRuntime: true
       };
-      window.cv = window.cv || window.Module;
     </script>
   </head>
   <body>

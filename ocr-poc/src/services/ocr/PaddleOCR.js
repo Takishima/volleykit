@@ -13,6 +13,9 @@
 /** Initialization timeout in milliseconds */
 const INIT_TIMEOUT_MS = 60000;
 
+/** PaddleOCR model CDN base URL */
+const MODEL_CDN_BASE = 'https://js-models.bj.bcebos.com/PaddleOCR/PP-OCRv3';
+
 /**
  * Create a promise that rejects after a timeout
  * @param {number} ms - Timeout in milliseconds
@@ -23,6 +26,51 @@ function timeout(ms, message) {
   return new Promise((_, reject) => {
     setTimeout(() => reject(new Error(message)), ms);
   });
+}
+
+/**
+ * Check if WebGL is available in the browser
+ * @returns {{ available: boolean, version: number }}
+ */
+function checkWebGL() {
+  try {
+    const canvas = document.createElement('canvas');
+    const gl2 = canvas.getContext('webgl2');
+    if (gl2) {
+      return { available: true, version: 2 };
+    }
+    const gl1 = canvas.getContext('webgl');
+    if (gl1) {
+      return { available: true, version: 1 };
+    }
+    return { available: false, version: 0 };
+  } catch {
+    return { available: false, version: 0 };
+  }
+}
+
+/**
+ * Test connectivity to PaddleOCR model server
+ * @returns {Promise<boolean>}
+ */
+async function testModelServerConnectivity() {
+  try {
+    const modelUrl = `${MODEL_CDN_BASE}/ch_PP-OCRv3_det_infer_js_960/model.json`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    const response = await fetch(modelUrl, {
+      method: 'HEAD',
+      mode: 'cors',
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+    return response.ok;
+  } catch (error) {
+    console.warn('[PaddleOCR] Model server connectivity test failed:', error.message);
+    return false;
+  }
 }
 
 /**
@@ -59,22 +107,54 @@ export class PaddleOCR {
       return;
     }
 
-    this.#reportProgress('Initializing PaddleOCR...', 0);
+    this.#reportProgress('Checking browser capabilities...', 0);
 
     try {
+      // Check WebGL availability
+      const webgl = checkWebGL();
+      console.log('[PaddleOCR] WebGL check:', webgl);
+      if (!webgl.available) {
+        throw new Error('WebGL is not available. PaddleOCR requires WebGL support.');
+      }
+
+      this.#reportProgress('Testing model server connectivity...', 0.05);
+
+      // Test connectivity to model server
+      const canConnect = await testModelServerConnectivity();
+      console.log('[PaddleOCR] Model server connectivity:', canConnect);
+      if (!canConnect) {
+        console.warn('[PaddleOCR] Cannot connect to model server, will try anyway...');
+      }
+
+      this.#reportProgress('Loading PaddleOCR library...', 0.1);
       console.log('[PaddleOCR] Starting dynamic import...');
+      console.log('[PaddleOCR] window.Module:', typeof window.Module);
 
       // Dynamic import to avoid loading unless needed
-      const paddleOcr = await import('@paddle-js-models/ocr');
+      let paddleOcr;
+      try {
+        paddleOcr = await import('@paddle-js-models/ocr');
+        console.log('[PaddleOCR] Import successful');
+        console.log('[PaddleOCR] Module exports:', Object.keys(paddleOcr));
+        console.log('[PaddleOCR] window.cv after import:', typeof window.cv);
+      } catch (importError) {
+        console.error('[PaddleOCR] Import failed:', importError);
+        throw new Error(`Failed to import PaddleOCR: ${importError.message}`);
+      }
 
-      console.log('[PaddleOCR] Import successful, starting init...');
       this.#reportProgress('Loading OCR models (this may take a minute)...', 0.2);
+      console.log('[PaddleOCR] Starting init...');
 
       // Initialize with timeout
-      await Promise.race([
-        paddleOcr.init(),
-        timeout(INIT_TIMEOUT_MS, `PaddleOCR initialization timed out after ${INIT_TIMEOUT_MS / 1000}s`),
-      ]);
+      try {
+        await Promise.race([
+          paddleOcr.init(),
+          timeout(INIT_TIMEOUT_MS, `PaddleOCR initialization timed out after ${INIT_TIMEOUT_MS / 1000}s`),
+        ]);
+      } catch (initError) {
+        console.error('[PaddleOCR] Init failed:', initError);
+        throw new Error(`PaddleOCR init() failed: ${initError.message}`);
+      }
 
       console.log('[PaddleOCR] Init complete');
       this.#ocr = paddleOcr;

@@ -34,15 +34,11 @@ const EmscriptenModule = {
 };
 
 // Set up global Module before any Emscripten code runs
+// Note: Do NOT set window.cv here - PaddleOCR bundles its own OpenCV and will set cv
 if (typeof window !== 'undefined') {
   // Only set if not already defined
   if (typeof window.Module === 'undefined') {
     window.Module = EmscriptenModule;
-  }
-
-  // Also set cv for OpenCV.js
-  if (typeof window.cv === 'undefined') {
-    window.cv = EmscriptenModule;
   }
 }
 
@@ -50,9 +46,6 @@ if (typeof window !== 'undefined') {
 if (typeof globalThis !== 'undefined') {
   if (typeof globalThis.Module === 'undefined') {
     globalThis.Module = EmscriptenModule;
-  }
-  if (typeof globalThis.cv === 'undefined') {
-    globalThis.cv = EmscriptenModule;
   }
 }
 
