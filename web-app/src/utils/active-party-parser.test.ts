@@ -231,6 +231,49 @@ describe("extractActivePartyFromHtml", () => {
       expect(result?.groupedEligibleAttributeValues?.[0]?.inflatedValue?.shortName).toBe("SVRZ");
       expect(result?.groupedEligibleAttributeValues?.[1]?.inflatedValue?.shortName).toBe("SV");
     });
+
+    it("parses arrays containing items with missing fields", () => {
+      // Real API data can include items missing __identity, roleIdentifier, etc.
+      // The Zod schema should accept these items (downstream code filters them)
+      const activePartyData = {
+        groupedEligibleAttributeValues: [
+          {
+            // Complete item
+            __identity: "attr-1",
+            attributeIdentifier: "Indoorvolleyball.RefAdmin:AbstractAssociation",
+            roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+            type: "SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation",
+            inflatedValue: {
+              __identity: "assoc-1",
+              shortName: "SVRZ",
+            },
+          },
+          {
+            // Item missing __identity (caused PR #423 issue)
+            attributeIdentifier: "some.identifier",
+            roleIdentifier: "some.role",
+            inflatedValue: {
+              name: "Incomplete Association",
+            },
+          },
+          {
+            // Item missing roleIdentifier
+            __identity: "attr-3",
+            attributeIdentifier: "another.identifier",
+            inflatedValue: {},
+          },
+        ],
+      };
+
+      const html = createHtmlWithVueActiveParty(JSON.stringify(activePartyData));
+      const result = extractActivePartyFromHtml(html);
+
+      // Should parse successfully even with incomplete items
+      expect(result).not.toBeNull();
+      expect(result?.groupedEligibleAttributeValues).toHaveLength(3);
+      // First item should have all fields
+      expect(result?.groupedEligibleAttributeValues?.[0]?.inflatedValue?.shortName).toBe("SVRZ");
+    });
   });
 
   describe("graceful failure", () => {
