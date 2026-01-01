@@ -155,16 +155,20 @@ describe("API Client", () => {
       );
     });
 
-    it("parses JSON even when content type is text/html", async () => {
-      // TYPO3 Neos/Flow backend sometimes returns JSON with text/html Content-Type
+    it("treats HTML response as stale session (server returns login page)", async () => {
+      // When session expires, SwissVolley API returns HTML login page with status 200
+      // instead of a proper 401. We detect this by checking Content-Type.
+      setCsrfToken("some-token");
+
       mockFetch.mockResolvedValueOnce(
-        createMockResponse(mockAssignmentsResponse, {
-          contentType: "text/html",
+        createMockResponse("<html>Login page</html>", {
+          contentType: "text/html; charset=UTF-8",
         }),
       );
 
-      const result = await api.searchAssignments({});
-      expect(result).toEqual(mockAssignmentsResponse);
+      await expect(api.searchAssignments({})).rejects.toThrow(
+        "Session expired. Please log in again.",
+      );
     });
   });
 
