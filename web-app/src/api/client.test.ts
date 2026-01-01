@@ -13,6 +13,7 @@ function createMockResponse(
     status?: number;
     statusText?: string;
     contentType?: string;
+    url?: string;
   } = {},
 ) {
   const {
@@ -20,11 +21,13 @@ function createMockResponse(
     status = 200,
     statusText = "OK",
     contentType = "application/json",
+    url = "https://example.com/api/endpoint",
   } = options;
   return {
     ok,
     status,
     statusText,
+    url,
     headers: {
       get: (name: string) =>
         name.toLowerCase() === "content-type" ? contentType : null,
@@ -155,19 +158,37 @@ describe("API Client", () => {
       );
     });
 
-    it("treats HTML response as stale session (server returns login page)", async () => {
+    it("treats HTML response as stale session when redirected to login page", async () => {
       // When session expires, SwissVolley API returns HTML login page with status 200
-      // instead of a proper 401. We detect this by checking Content-Type.
+      // instead of a proper 401. We detect this by checking Content-Type and URL.
       setCsrfToken("some-token");
 
       mockFetch.mockResolvedValueOnce(
         createMockResponse("<html>Login page</html>", {
           contentType: "text/html; charset=UTF-8",
+          url: "https://example.com/login",
         }),
       );
 
       await expect(api.searchAssignments({})).rejects.toThrow(
         "Session expired. Please log in again.",
+      );
+    });
+
+    it("does not treat HTML response as stale session if not a login page", async () => {
+      // HTML responses from non-login URLs should be treated as API errors,
+      // not auth failures - this prevents false positives on valid sessions.
+      setCsrfToken("some-token");
+
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse("<html>Some error page</html>", {
+          contentType: "text/html; charset=UTF-8",
+          url: "https://example.com/api/assignments",
+        }),
+      );
+
+      await expect(api.searchAssignments({})).rejects.toThrow(
+        "Unexpected HTML response (expected JSON)",
       );
     });
   });
