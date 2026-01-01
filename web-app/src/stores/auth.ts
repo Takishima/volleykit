@@ -77,6 +77,13 @@ const LOGOUT_URL = `${API_BASE}/logout`;
 const SESSION_CHECK_TIMEOUT_MS = 10_000;
 
 /**
+ * Error message for users without a referee role.
+ * This app is designed for referees only - users with only player/admin roles cannot use it.
+ */
+const NO_REFEREE_ROLE_ERROR =
+  "This app is for referees only. Your account has no referee role in VolleyManager.";
+
+/**
  * Derives user occupations and active occupation ID from active party data.
  * Used during login and session restoration to populate the association dropdown.
  *
@@ -178,6 +185,19 @@ export const useAuthStore = create<AuthState>()(
               currentState.activeOccupationId,
             );
 
+            // Reject users without referee role - this app is for referees only
+            if (user.occupations.length === 0) {
+              // Invalidate the server session
+              try {
+                await fetch(LOGOUT_URL, { credentials: "include", redirect: "manual" });
+              } catch {
+                // Ignore logout errors - we're rejecting the login anyway
+              }
+              clearSession();
+              set({ status: "error", error: NO_REFEREE_ROLE_ERROR });
+              return false;
+            }
+
             set({
               status: "authenticated",
               csrfToken: existingCsrfToken,
@@ -208,6 +228,19 @@ export const useAuthStore = create<AuthState>()(
               currentState.user,
               currentState.activeOccupationId,
             );
+
+            // Reject users without referee role - this app is for referees only
+            if (user.occupations.length === 0) {
+              // Invalidate the server session
+              try {
+                await fetch(LOGOUT_URL, { credentials: "include", redirect: "manual" });
+              } catch {
+                // Ignore logout errors - we're rejecting the login anyway
+              }
+              clearSession();
+              set({ status: "error", error: NO_REFEREE_ROLE_ERROR });
+              return false;
+            }
 
             set({
               status: "authenticated",

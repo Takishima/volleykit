@@ -56,6 +56,67 @@ function createDashboardHtml(csrfToken = "abcd1234efgh5678ijkl9012mnop3456") {
   return `<html data-csrf-token='${csrfToken}'><body>Dashboard</body></html>`;
 }
 
+// Helper to create dashboard HTML with activeParty data containing only non-referee roles
+function createDashboardHtmlWithPlayerOnly(csrfToken = "abcd1234efgh5678ijkl9012mnop3456") {
+  // This activeParty has only player roles, no referee roles
+  const activeParty = {
+    __identity: "party-1",
+    eligibleAttributeValues: [
+      {
+        __identity: "attr-1",
+        roleIdentifier: "Indoorvolleyball.ClubAdmin:Player",
+        type: "boolean",
+        value: "true",
+        inflatedValue: true,
+      },
+    ],
+    groupedEligibleAttributeValues: [
+      {
+        __identity: "attr-2",
+        roleIdentifier: "Indoorvolleyball.ClubAdmin:Player",
+        type: "boolean",
+        value: "true",
+        inflatedValue: true,
+      },
+    ],
+    eligibleRoles: {
+      "Indoorvolleyball.ClubAdmin:Player": { identifier: "Indoorvolleyball.ClubAdmin:Player" },
+    },
+  };
+  const encodedActiveParty = JSON.stringify(activeParty).replace(/"/g, "&quot;");
+  return `<html data-csrf-token='${csrfToken}'><body><main-layout :active-party="$convertFromBackendToFrontend(${encodedActiveParty})"></main-layout></body></html>`;
+}
+
+// Helper to create dashboard HTML with activeParty containing referee roles
+function createDashboardHtmlWithReferee(csrfToken = "abcd1234efgh5678ijkl9012mnop3456") {
+  const activeParty = {
+    __identity: "party-1",
+    eligibleAttributeValues: [
+      {
+        __identity: "attr-1",
+        roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+        type: "SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation",
+        value: "assoc-uuid-1",
+        inflatedValue: { __identity: "assoc-1", shortName: "SV" },
+      },
+    ],
+    groupedEligibleAttributeValues: [
+      {
+        __identity: "attr-1",
+        roleIdentifier: "Indoorvolleyball.RefAdmin:Referee",
+        type: "SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation",
+        value: "assoc-uuid-1",
+        inflatedValue: { __identity: "assoc-1", shortName: "SV" },
+      },
+    ],
+    eligibleRoles: {
+      "Indoorvolleyball.RefAdmin:Referee": { identifier: "Indoorvolleyball.RefAdmin:Referee" },
+    },
+  };
+  const encodedActiveParty = JSON.stringify(activeParty).replace(/"/g, "&quot;");
+  return `<html data-csrf-token='${csrfToken}'><body><main-layout :active-party="$convertFromBackendToFrontend(${encodedActiveParty})"></main-layout></body></html>`;
+}
+
 describe("useAuthStore", () => {
   beforeEach(() => {
     // Reset store state before each test
@@ -183,13 +244,14 @@ describe("useAuthStore", () => {
 
       // Second fetch: login POST follows redirect to dashboard
       // (browser handles redirect automatically, returns final page)
+      // Must include referee role to pass the no-referee-role check
       mockFetch.mockResolvedValueOnce({
         ok: true,
         redirected: true,
         url: "https://volleymanager.volleyball.ch/sportmanager.volleyball/main/dashboard",
         text: () =>
           Promise.resolve(
-            createDashboardHtml("my-csrf-token-12345678901234567890"),
+            createDashboardHtmlWithReferee("my-csrf-token-12345678901234567890"),
           ),
       });
 
@@ -242,13 +304,14 @@ describe("useAuthStore", () => {
 
       // Second fetch: login POST returns dashboard with CSRF token
       // BUT redirected flag is false (e.g., due to proxy behavior)
+      // Must include referee role to pass the no-referee-role check
       mockFetch.mockResolvedValueOnce({
         ok: true,
         redirected: false, // Proxy didn't preserve redirect info
         url: "", // No URL info either
         text: () =>
           Promise.resolve(
-            createDashboardHtml("fallback-csrf-token-12345678901234"),
+            createDashboardHtmlWithReferee("fallback-csrf-token-12345678901234"),
           ),
       });
 
@@ -282,15 +345,16 @@ describe("useAuthStore", () => {
         redirected: true,
         text: () =>
           Promise.resolve(
-            createDashboardHtml("existing-session-csrf-token-1234"),
+            createDashboardHtmlWithReferee("existing-session-csrf-token-1234"),
           ),
       });
       // Second fetch: dashboard to get activeParty data
+      // Must include referee role to pass the no-referee-role check
       mockFetch.mockResolvedValueOnce({
         ok: true,
         text: () =>
           Promise.resolve(
-            createDashboardHtml("existing-session-csrf-token-1234"),
+            createDashboardHtmlWithReferee("existing-session-csrf-token-1234"),
           ),
       });
 
@@ -315,12 +379,13 @@ describe("useAuthStore", () => {
       });
 
       // Second fetch: login POST follows redirect to dashboard (success)
+      // Must include referee role to pass the no-referee-role check
       mockFetch.mockResolvedValueOnce({
         ok: true,
         redirected: true,
         url: "https://volleymanager.volleyball.ch/sportmanager.volleyball/main/dashboard",
         text: () =>
-          Promise.resolve(createDashboardHtml("fresh-csrf-token-abcdef")),
+          Promise.resolve(createDashboardHtmlWithReferee("fresh-csrf-token-abcdef")),
       });
 
       const result = await useAuthStore.getState().login("user", "pass");
@@ -418,6 +483,95 @@ describe("useAuthStore", () => {
           "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][password]",
         ),
       ).toBe("testpass");
+    });
+
+    it("rejects login when user has no referee role", async () => {
+      // First fetch: login page with form fields
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: () => Promise.resolve(createLoginPageHtml()),
+      });
+
+      // Second fetch: login POST follows redirect to dashboard with player-only roles
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        redirected: true,
+        url: "https://volleymanager.volleyball.ch/sportmanager.volleyball/main/dashboard",
+        text: () => Promise.resolve(createDashboardHtmlWithPlayerOnly("valid-csrf-token")),
+      });
+
+      // Third fetch: logout to invalidate session
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 303,
+        type: "opaqueredirect",
+      });
+
+      const result = await useAuthStore.getState().login("player-user", "pass");
+
+      expect(result).toBe(false);
+      const { status, error } = useAuthStore.getState();
+      expect(status).toBe("error");
+      expect(error).toContain("This app is for referees only");
+      expect(clearSession).toHaveBeenCalled();
+      // Should have made 3 calls: login page + auth POST + logout
+      expect(mockFetch).toHaveBeenCalledTimes(3);
+    });
+
+    it("rejects already-authenticated user without referee role", async () => {
+      // When user has existing valid session but no referee role
+      // First fetch: login page redirects to authenticated page with CSRF token
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        redirected: true,
+        text: () => Promise.resolve(createDashboardHtmlWithPlayerOnly("existing-csrf-token")),
+      });
+
+      // Second fetch: dashboard to get activeParty data
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: () => Promise.resolve(createDashboardHtmlWithPlayerOnly("existing-csrf-token")),
+      });
+
+      // Third fetch: logout to invalidate session
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 303,
+        type: "opaqueredirect",
+      });
+
+      const result = await useAuthStore.getState().login("player-user", "pass");
+
+      expect(result).toBe(false);
+      const { status, error } = useAuthStore.getState();
+      expect(status).toBe("error");
+      expect(error).toContain("no referee role");
+      expect(clearSession).toHaveBeenCalled();
+    });
+
+    it("accepts login when user has referee role", async () => {
+      // First fetch: login page with form fields
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: () => Promise.resolve(createLoginPageHtml()),
+      });
+
+      // Second fetch: login POST follows redirect to dashboard with referee role
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        redirected: true,
+        url: "https://volleymanager.volleyball.ch/sportmanager.volleyball/main/dashboard",
+        text: () => Promise.resolve(createDashboardHtmlWithReferee("valid-csrf-token")),
+      });
+
+      const result = await useAuthStore.getState().login("referee-user", "pass");
+
+      expect(result).toBe(true);
+      expect(useAuthStore.getState().status).toBe("authenticated");
+      expect(useAuthStore.getState().user?.occupations).toHaveLength(1);
+      expect(useAuthStore.getState().user?.occupations?.[0]?.type).toBe("referee");
+      // Should only make 2 calls (no logout needed)
+      expect(mockFetch).toHaveBeenCalledTimes(2);
     });
   });
 

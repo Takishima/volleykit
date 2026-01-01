@@ -169,6 +169,7 @@ const en: Translations = {
     loginInfo: "Use your VolleyManager credentials to login.",
     privacyNote: "Your password is never stored.",
     loadingDemo: "Loading demo mode...",
+    noRefereeRole: "This app is for referees only. Your account has no referee role in VolleyManager.",
   },
   occupations: {
     referee: "Referee",

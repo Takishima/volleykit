@@ -169,6 +169,7 @@ const de: Translations = {
     loginInfo: "Verwenden Sie Ihre VolleyManager-Anmeldeinformationen.",
     privacyNote: "Ihr Passwort wird niemals gespeichert.",
     loadingDemo: "Demo-Modus wird geladen...",
+    noRefereeRole: "Diese App ist nur für Schiedsrichter. Ihr Konto hat keine Schiedsrichter-Rolle im VolleyManager.",
   },
   occupations: {
     referee: "Schiedsrichter",
