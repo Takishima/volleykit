@@ -10,11 +10,14 @@
  * @typedef {(progress: {status: string, progress: number}) => void} OnProgressCallback
  */
 
-/** Initialization timeout in milliseconds */
-const INIT_TIMEOUT_MS = 60000;
+/** Initialization timeout in milliseconds (2 minutes for slow connections) */
+const INIT_TIMEOUT_MS = 120000;
 
 /** PaddleOCR model CDN base URL */
 const MODEL_CDN_BASE = 'https://js-models.bj.bcebos.com/PaddleOCR/PP-OCRv3';
+
+/** Progress update interval during model loading (ms) */
+const PROGRESS_INTERVAL_MS = 500;
 
 /**
  * Create a promise that rejects after a timeout
@@ -142,15 +145,12 @@ export class PaddleOCR {
         throw new Error(`Failed to import PaddleOCR: ${importError.message}`);
       }
 
-      this.#reportProgress('Loading OCR models (this may take a minute)...', 0.2);
+      this.#reportProgress('Downloading OCR models...', 0.2);
       console.log('[PaddleOCR] Starting init...');
 
-      // Initialize with timeout
+      // Initialize with timeout and progress simulation
       try {
-        await Promise.race([
-          paddleOcr.init(),
-          timeout(INIT_TIMEOUT_MS, `PaddleOCR initialization timed out after ${INIT_TIMEOUT_MS / 1000}s`),
-        ]);
+        await this.#initWithProgress(paddleOcr);
       } catch (initError) {
         console.error('[PaddleOCR] Init failed:', initError);
         throw new Error(`PaddleOCR init() failed: ${initError.message}`);
@@ -263,6 +263,43 @@ export class PaddleOCR {
       lines,
       words,
     };
+  }
+
+  /**
+   * Initialize PaddleOCR with simulated progress updates
+   * Since PaddleOCR doesn't expose download progress, we simulate it
+   * @param {any} paddleOcr - The PaddleOCR module
+   * @returns {Promise<void>}
+   */
+  async #initWithProgress(paddleOcr) {
+    let currentProgress = 0.2;
+    const maxProgress = 0.95;
+    const progressIncrement = 0.02;
+    let intervalId = null;
+
+    // Start progress ticker
+    intervalId = setInterval(() => {
+      if (currentProgress < maxProgress) {
+        currentProgress += progressIncrement;
+        // Slow down as we approach the max
+        if (currentProgress > 0.7) {
+          currentProgress += progressIncrement * 0.3;
+        }
+        this.#reportProgress('Downloading OCR models...', Math.min(currentProgress, maxProgress));
+      }
+    }, PROGRESS_INTERVAL_MS);
+
+    try {
+      await Promise.race([
+        paddleOcr.init(),
+        timeout(INIT_TIMEOUT_MS, `Model download timed out after ${INIT_TIMEOUT_MS / 1000}s. Check your network connection.`),
+      ]);
+    } finally {
+      // Always clear the interval
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    }
   }
 
   /**
