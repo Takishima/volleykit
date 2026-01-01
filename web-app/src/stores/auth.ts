@@ -77,6 +77,33 @@ const LOGOUT_URL = `${API_BASE}/logout`;
 const SESSION_CHECK_TIMEOUT_MS = 10_000;
 
 /**
+ * Error key for users without a referee role.
+ * This key is used by LoginPage to display a translated error message.
+ * The actual translations are in i18n/locales under auth.noRefereeRole.
+ */
+export const NO_REFEREE_ROLE_ERROR_KEY = "auth.noRefereeRole";
+
+/**
+ * Rejects a login attempt for users without a referee role.
+ * Invalidates the server session and clears local state.
+ *
+ * @returns false to indicate login was rejected
+ */
+async function rejectNonRefereeUser(
+  set: (state: Partial<AuthState>) => void,
+): Promise<false> {
+  // Invalidate the server session
+  try {
+    await fetch(LOGOUT_URL, { credentials: "include", redirect: "manual" });
+  } catch {
+    // Ignore logout errors - we're rejecting the login anyway
+  }
+  clearSession();
+  set({ status: "error", error: NO_REFEREE_ROLE_ERROR_KEY });
+  return false;
+}
+
+/**
  * Derives user occupations and active occupation ID from active party data.
  * Used during login and session restoration to populate the association dropdown.
  *
@@ -178,6 +205,11 @@ export const useAuthStore = create<AuthState>()(
               currentState.activeOccupationId,
             );
 
+            // Reject users without referee role - this app is for referees only
+            if (user.occupations.length === 0) {
+              return rejectNonRefereeUser(set);
+            }
+
             set({
               status: "authenticated",
               csrfToken: existingCsrfToken,
@@ -208,6 +240,11 @@ export const useAuthStore = create<AuthState>()(
               currentState.user,
               currentState.activeOccupationId,
             );
+
+            // Reject users without referee role - this app is for referees only
+            if (user.occupations.length === 0) {
+              return rejectNonRefereeUser(set);
+            }
 
             set({
               status: "authenticated",

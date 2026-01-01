@@ -61,6 +61,7 @@ export interface Translations {
     loginInfo: string;
     privacyNote: string;
     loadingDemo: string;
+    noRefereeRole: string;
   };
   occupations: {
     referee: string;

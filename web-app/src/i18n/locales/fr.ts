@@ -169,6 +169,7 @@ const fr: Translations = {
     loginInfo: "Utilisez vos identifiants VolleyManager pour vous connecter.",
     privacyNote: "Votre mot de passe n'est jamais stocké.",
     loadingDemo: "Chargement du mode démo...",
+    noRefereeRole: "Cette application est réservée aux arbitres. Votre compte n'a pas de rôle d'arbitre dans VolleyManager.",
   },
   occupations: {
     referee: "Arbitre",

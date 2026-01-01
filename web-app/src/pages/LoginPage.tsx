@@ -7,7 +7,7 @@ import {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import { useShallow } from "zustand/react/shallow";
-import { useAuthStore } from "@/stores/auth";
+import { useAuthStore, NO_REFEREE_ROLE_ERROR_KEY } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/Button";
@@ -189,7 +189,9 @@ export function LoginPage() {
             {error && (
               <div className="p-3 rounded-lg bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800">
                 <p className="text-sm text-danger-600 dark:text-danger-400">
-                  {error}
+                  {error === NO_REFEREE_ROLE_ERROR_KEY
+                    ? t("auth.noRefereeRole")
+                    : error}
                 </p>
               </div>
             )}
