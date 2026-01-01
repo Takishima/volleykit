@@ -10,9 +10,11 @@
  * 3. Ensure styles work regardless of app theme/CSS state
  */
 import { useAuthStore, type Occupation } from "@/stores/auth";
-import { type AttributeValue } from "@/utils/active-party-parser";
+import { type AttributeValue, extractActivePartyFromHtml } from "@/utils/active-party-parser";
 import { useShallow } from "zustand/react/shallow";
 import { useState, useEffect, useCallback, useId } from "react";
+
+const API_BASE = import.meta.env.VITE_API_PROXY_URL || "";
 
 const STORAGE_KEY = "volleykit-auth";
 const EXPECTED_VERSION = 2; // AUTH_STORE_VERSION from auth.ts
@@ -320,6 +322,15 @@ export function AssociationDebugPanel() {
           persistedOccupationsCount={persistedOccupationsCount}
           occupationsCount={occupationsCount}
         />
+      </Section>
+
+      <Section
+        id="liveFetch"
+        title="Live Dashboard Fetch"
+        expanded={expandedSections.has("liveFetch")}
+        onToggle={() => toggleSection("liveFetch")}
+      >
+        <LiveDashboardFetch />
       </Section>
     </div>
   );
@@ -670,6 +681,179 @@ function HydrationTimeline({
           Dropdown condition met: {occupationsCount >= MINIMUM_OCCUPATIONS_FOR_DROPDOWN ? "✓ Yes" : `✗ No (need ≥${MINIMUM_OCCUPATIONS_FOR_DROPDOWN})`}
         </li>
       </ol>
+    </div>
+  );
+}
+
+/** Regex patterns from active-party-parser.ts */
+const ACTIVE_PARTY_PATTERN = /window\.activeParty\s*=\s*JSON\.parse\s*\(\s*'((?:[^'\\]|\\.)*)'\s*\)/;
+const VUE_ACTIVE_PARTY_PATTERN = /:active-party="\$convertFromBackendToFrontend\((\{.+?\})\)"/s;
+
+interface FetchResult {
+  status: "idle" | "loading" | "success" | "error";
+  httpStatus?: number;
+  htmlLength?: number;
+  hasScriptPattern?: boolean;
+  hasVuePattern?: boolean;
+  activeParty?: unknown;
+  rawMatch?: string;
+  error?: string;
+}
+
+function LiveDashboardFetch() {
+  const [result, setResult] = useState<FetchResult>({ status: "idle" });
+
+  const handleFetch = async () => {
+    setResult({ status: "loading" });
+
+    try {
+      const response = await fetch(
+        `${API_BASE}/sportmanager.volleyball/main/dashboard`,
+        { credentials: "include" }
+      );
+
+      const html = await response.text();
+      const hasScriptPattern = ACTIVE_PARTY_PATTERN.test(html);
+      const hasVuePattern = VUE_ACTIVE_PARTY_PATTERN.test(html);
+
+      // Try to extract activeParty
+      const activeParty = extractActivePartyFromHtml(html);
+
+      // Get raw match for debugging
+      let rawMatch: string | undefined;
+      const scriptMatch = ACTIVE_PARTY_PATTERN.exec(html);
+      const vueMatch = VUE_ACTIVE_PARTY_PATTERN.exec(html);
+      if (scriptMatch?.[1]) {
+        rawMatch = scriptMatch[1].substring(0, 500);
+      } else if (vueMatch?.[1]) {
+        rawMatch = vueMatch[1].substring(0, 500);
+      }
+
+      setResult({
+        status: "success",
+        httpStatus: response.status,
+        htmlLength: html.length,
+        hasScriptPattern,
+        hasVuePattern,
+        activeParty,
+        rawMatch,
+      });
+    } catch (error) {
+      setResult({
+        status: "error",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  };
+
+  return (
+    <div>
+      <div style={{ marginBottom: "8px" }}>
+        <button
+          onClick={handleFetch}
+          disabled={result.status === "loading"}
+          style={{
+            padding: "6px 12px",
+            fontSize: "10px",
+            cursor: result.status === "loading" ? "wait" : "pointer",
+            backgroundColor: "#1a3a1a",
+            border: "1px solid #2a5a2a",
+            color: "#4eff4e",
+            borderRadius: "4px",
+          }}
+        >
+          {result.status === "loading" ? "Fetching..." : "Fetch Dashboard Now"}
+        </button>
+      </div>
+
+      {result.status === "error" && (
+        <div style={{ color: "#ff6b6b", padding: "4px" }}>
+          Error: {result.error}
+        </div>
+      )}
+
+      {result.status === "success" && (
+        <div style={{ fontSize: "9px" }}>
+          <div style={{ marginBottom: "4px" }}>
+            <strong>HTTP Status:</strong>{" "}
+            <span style={{ color: result.httpStatus === 200 ? "#4eff4e" : "#ff6b6b" }}>
+              {result.httpStatus}
+            </span>
+          </div>
+          <div style={{ marginBottom: "4px" }}>
+            <strong>HTML Length:</strong> {result.htmlLength?.toLocaleString()} chars
+          </div>
+          <div style={{ marginBottom: "4px" }}>
+            <strong>Script Pattern Found:</strong>{" "}
+            <span style={{ color: result.hasScriptPattern ? "#4eff4e" : "#ff6b6b" }}>
+              {result.hasScriptPattern ? "✓ YES" : "✗ NO"}
+            </span>
+          </div>
+          <div style={{ marginBottom: "4px" }}>
+            <strong>Vue Pattern Found:</strong>{" "}
+            <span style={{ color: result.hasVuePattern ? "#4eff4e" : "#ff6b6b" }}>
+              {result.hasVuePattern ? "✓ YES" : "✗ NO"}
+            </span>
+          </div>
+          <div style={{ marginBottom: "4px" }}>
+            <strong>activeParty Parsed:</strong>{" "}
+            <span style={{ color: result.activeParty ? "#4eff4e" : "#ff6b6b" }}>
+              {result.activeParty ? "✓ YES" : "✗ NO"}
+            </span>
+          </div>
+
+          {result.activeParty != null && (
+            <div style={{ marginTop: "8px" }}>
+              <strong>Parsed activeParty:</strong>
+              <pre
+                style={{
+                  fontSize: "8px",
+                  color: "#888",
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-all",
+                  maxHeight: "150px",
+                  overflow: "auto",
+                  backgroundColor: "#0a0a15",
+                  padding: "4px",
+                  borderRadius: "4px",
+                  marginTop: "4px",
+                }}
+              >
+                {JSON.stringify(result.activeParty, null, 2)}
+              </pre>
+            </div>
+          )}
+
+          {!result.activeParty && result.rawMatch && (
+            <div style={{ marginTop: "8px" }}>
+              <strong>Raw Match (first 500 chars):</strong>
+              <pre
+                style={{
+                  fontSize: "8px",
+                  color: "#ffaa00",
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-all",
+                  maxHeight: "100px",
+                  overflow: "auto",
+                  backgroundColor: "#1a1a00",
+                  padding: "4px",
+                  borderRadius: "4px",
+                  marginTop: "4px",
+                }}
+              >
+                {result.rawMatch}
+              </pre>
+            </div>
+          )}
+
+          {!result.activeParty && !result.rawMatch && (
+            <div style={{ marginTop: "8px", color: "#ff6b6b" }}>
+              ⚠️ Neither pattern matched. The dashboard HTML may not contain activeParty data.
+              This can happen if the session is not fully authenticated or the user has no associations.
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
