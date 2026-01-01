@@ -2,13 +2,18 @@
  * OCR Factory
  *
  * Factory for creating OCR engine instances.
- * Currently supports Tesseract.js, with TrOCR support planned for handwritten text.
+ * Supports Tesseract.js and PaddleOCR engines.
  */
 
 import { TesseractOCR } from './TesseractOCR.js';
+import { PaddleOCR } from './PaddleOCR.js';
 
 /**
- * @typedef {'electronic' | 'handwritten'} OCREngineType
+ * @typedef {'electronic' | 'handwritten'} SheetType
+ */
+
+/**
+ * @typedef {'tesseract' | 'paddle'} OCREngine
  */
 
 /**
@@ -16,26 +21,35 @@ import { TesseractOCR } from './TesseractOCR.js';
  */
 
 /**
+ * Available OCR engines
+ */
+export const OCR_ENGINES = {
+  TESSERACT: 'tesseract',
+  PADDLE: 'paddle',
+};
+
+/**
  * Factory for creating OCR engine instances
  */
 export const OCRFactory = {
   /**
-   * Create an OCR engine instance based on the sheet type
-   * @param {OCREngineType} type - The type of OCR engine to create
+   * Create an OCR engine instance
+   * @param {SheetType} sheetType - The type of scoresheet (electronic/handwritten)
    * @param {OnProgressCallback} [onProgress] - Optional progress callback
-   * @returns {TesseractOCR} The OCR engine instance
+   * @param {OCREngine} [engine='tesseract'] - OCR engine to use
+   * @returns {TesseractOCR | PaddleOCR} The OCR engine instance
    */
-  create(type, onProgress) {
-    // For now, both types use TesseractOCR with different preprocessing
-    // In the future, 'handwritten' could use TrOCR for better handwriting recognition
-    switch (type) {
-      case 'electronic':
-      case 'handwritten':
+  create(sheetType, onProgress, engine = 'tesseract') {
+    switch (engine) {
+      case 'paddle':
+        return new PaddleOCR(sheetType, onProgress);
+      case 'tesseract':
       default:
-        return new TesseractOCR(type, onProgress);
+        return new TesseractOCR(sheetType, onProgress);
     }
   },
 };
 
 // Re-export types and classes for convenience
 export { TesseractOCR } from './TesseractOCR.js';
+export { PaddleOCR } from './PaddleOCR.js';

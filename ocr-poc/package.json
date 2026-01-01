@@ -17,6 +17,7 @@
     "workbox-window": "^7.3.0"
   },
   "dependencies": {
+    "@paddle-js-models/ocr": "^4.1.1",
     "tesseract.js": "^7.0.0"
   }
 }
