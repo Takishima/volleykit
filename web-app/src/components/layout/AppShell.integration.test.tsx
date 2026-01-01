@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppShell } from "./AppShell";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
+import { useToastStore } from "@/stores/toast";
 import { setLocale } from "@/i18n";
 import { mockApi } from "@/api/mock-api";
 
@@ -36,11 +37,13 @@ describe("AppShell Integration", () => {
       _checkSessionPromise: null,
     });
     useDemoStore.getState().clearDemoData();
+    useToastStore.getState().clearToasts();
   });
 
   afterEach(() => {
     vi.clearAllMocks();
     queryClient.clear();
+    useToastStore.getState().clearToasts();
   });
 
   function renderAppShell() {
@@ -190,6 +193,105 @@ describe("AppShell Integration", () => {
       await waitFor(() => {
         expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
       });
+    });
+
+    it("shows optimistic UI update immediately", async () => {
+      const user = userEvent.setup();
+      renderAppShell();
+
+      // Initially shows SV
+      expect(
+        screen.getByRole("button", { name: /referee.*SV/i }),
+      ).toBeInTheDocument();
+
+      // Open dropdown and select SVRBA
+      await user.click(screen.getByRole("button", { name: /referee.*SV/i }));
+      await user.click(screen.getByRole("option", { name: /SVRBA/i }));
+
+      // Optimistic update: auth store should be updated immediately
+      // (before API call completes)
+      expect(useAuthStore.getState().activeOccupationId).toBe(
+        "demo-referee-svrba",
+      );
+    });
+  });
+
+  describe("error handling", () => {
+    beforeEach(() => {
+      useAuthStore.getState().setDemoAuthenticated();
+      useDemoStore.getState().setActiveAssociation("SV");
+    });
+
+    it("shows error toast when switch fails", async () => {
+      // Mock API to reject
+      vi.mocked(mockApi.switchRoleAndAttribute).mockRejectedValueOnce(
+        new Error("Network error"),
+      );
+
+      const user = userEvent.setup();
+      renderAppShell();
+
+      const dropdownButton = screen.getByRole("button", {
+        name: /referee.*SV/i,
+      });
+      await user.click(dropdownButton);
+
+      const svrbaOption = screen.getByRole("option", { name: /SVRBA/i });
+      await user.click(svrbaOption);
+
+      // Wait for error handling to complete
+      await waitFor(() => {
+        const toasts = useToastStore.getState().toasts;
+        expect(toasts.some((t) => t.type === "error")).toBe(true);
+      });
+    });
+
+    it("reverts optimistic update on error", async () => {
+      // Mock API to reject
+      vi.mocked(mockApi.switchRoleAndAttribute).mockRejectedValueOnce(
+        new Error("Network error"),
+      );
+
+      const user = userEvent.setup();
+      renderAppShell();
+
+      const initialOccupationId = useAuthStore.getState().activeOccupationId;
+      expect(initialOccupationId).toBe("demo-referee-sv");
+
+      // Open dropdown and try to switch
+      await user.click(screen.getByRole("button", { name: /referee.*SV/i }));
+      await user.click(screen.getByRole("option", { name: /SVRBA/i }));
+
+      // Wait for error handling and revert
+      await waitFor(() => {
+        const currentOccupationId = useAuthStore.getState().activeOccupationId;
+        // Should revert back to original
+        expect(currentOccupationId).toBe("demo-referee-sv");
+      });
+    });
+
+    it("does not invalidate queries on error", async () => {
+      // Mock API to reject
+      vi.mocked(mockApi.switchRoleAndAttribute).mockRejectedValueOnce(
+        new Error("Network error"),
+      );
+
+      const user = userEvent.setup();
+      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+      renderAppShell();
+
+      await user.click(screen.getByRole("button", { name: /referee.*SV/i }));
+      await user.click(screen.getByRole("option", { name: /SVRBA/i }));
+
+      // Wait for error handling
+      await waitFor(() => {
+        const toasts = useToastStore.getState().toasts;
+        expect(toasts.some((t) => t.type === "error")).toBe(true);
+      });
+
+      // Queries should not have been invalidated
+      expect(invalidateSpy).not.toHaveBeenCalled();
     });
   });
 });

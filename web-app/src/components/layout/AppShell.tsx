@@ -7,6 +7,7 @@ import { useTourStore } from "@/stores/tour";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getOccupationLabelKey } from "@/utils/occupation-labels";
 import { getApiClient } from "@/api/client";
+import { toast } from "@/stores/toast";
 import {
   Volleyball,
   ClipboardList,
@@ -66,6 +67,10 @@ export function AppShell() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
 
+  // Track the latest switch request to handle race conditions
+  // when user rapidly clicks different associations
+  const switchCounterRef = useRef(0);
+
   const getOccupationLabel = useCallback(
     (occupation: Occupation): string => {
       const labelKey = getOccupationLabelKey(occupation.type);
@@ -102,14 +107,22 @@ export function AppShell() {
     user?.occupations?.[0];
 
   const handleOccupationSelect = async (id: string) => {
-    // Don't switch if already switching or selecting the same occupation
-    if (isSwitching || id === activeOccupationId) {
+    // Don't switch if selecting the same occupation
+    if (id === activeOccupationId) {
       setIsDropdownOpen(false);
       return;
     }
 
+    // Increment counter to track this specific switch request
+    // This handles race conditions when user rapidly clicks different associations
+    const currentSwitch = ++switchCounterRef.current;
+    const previousOccupationId = activeOccupationId;
+
     setIsSwitching(true);
     setIsDropdownOpen(false);
+
+    // Optimistic UI update - immediately show the new selection
+    setActiveOccupation(id);
 
     try {
       // Call API to switch association (works for both demo and production mode)
@@ -118,16 +131,28 @@ export function AppShell() {
       const apiClient = getApiClient(isDemoMode);
       await apiClient.switchRoleAndAttribute(id);
 
-      // Update local state
-      setActiveOccupation(id);
+      // Check if this is still the latest switch request (race condition protection)
+      if (currentSwitch !== switchCounterRef.current) {
+        // A newer switch was initiated, don't invalidate queries
+        return;
+      }
 
       // Invalidate all queries to refetch data for the new association
       await queryClient.invalidateQueries();
     } catch (error) {
-      // Log error but don't block UI - the switch might have partially succeeded
-      console.error("Failed to switch association:", error);
+      // Check if this is still the latest switch request before reverting
+      if (currentSwitch === switchCounterRef.current) {
+        // Revert optimistic update on error
+        setActiveOccupation(previousOccupationId ?? id);
+        // Show error toast to user
+        toast.error(t("common.switchAssociationFailed"));
+        console.error("Failed to switch association:", error);
+      }
     } finally {
-      setIsSwitching(false);
+      // Only clear switching state if this is still the latest request
+      if (currentSwitch === switchCounterRef.current) {
+        setIsSwitching(false);
+      }
     }
   };
 
@@ -151,7 +176,12 @@ export function AppShell() {
                   <div className="relative" ref={dropdownRef}>
                     <button
                       onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                      className="flex items-center gap-1 px-2 py-1 text-sm font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 rounded-lg hover:bg-primary-100 dark:hover:bg-primary-900/50 transition-colors"
+                      disabled={isSwitching}
+                      className={`flex items-center gap-1 px-2 py-1 text-sm font-medium rounded-lg transition-colors ${
+                        isSwitching
+                          ? "text-text-muted dark:text-text-muted-dark bg-surface-subtle dark:bg-surface-subtle-dark cursor-wait"
+                          : "text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50"
+                      }`}
                       aria-expanded={isDropdownOpen}
                       aria-haspopup="listbox"
                     >

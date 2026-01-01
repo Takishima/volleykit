@@ -138,6 +138,7 @@ const it: Translations = {
     locationTbd: "Luogo da definire",
     selectRole: "Seleziona ruolo",
     selectOccupation: "Seleziona funzione",
+    switchAssociationFailed: "Cambio associazione fallito. Riprova.",
     vs: "vs",
     unknown: "Sconosciuto",
     unknownDate: "Data?",
