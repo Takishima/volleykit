@@ -138,7 +138,7 @@ const de: Translations = {
     locationTbd: "Ort unbekannt",
     selectRole: "Rolle wählen",
     selectOccupation: "Funktion wählen",
-    switchAssociationFailed: "Wechsel des Verbands fehlgeschlagen. Bitte erneut versuchen.",
+    switchAssociationFailed: "Verbandswechsel fehlgeschlagen. Bitte erneut versuchen.",
     vs: "vs",
     unknown: "Unbekannt",
     unknownDate: "Datum?",
