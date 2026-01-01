@@ -117,8 +117,8 @@ export function AppShell() {
 
   return (
     <div className="flex flex-col flex-1 bg-surface-page dark:bg-surface-page-dark">
-      {/* Header */}
-      <header className="bg-surface-card dark:bg-surface-card-dark shadow-sm border-b border-border-default dark:border-border-default-dark">
+      {/* Header - fixed to always stay visible */}
+      <header className="bg-surface-card dark:bg-surface-card-dark shadow-sm border-b border-border-default dark:border-border-default-dark fixed top-0 left-0 right-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14">
             <div className="flex items-center gap-2">
@@ -194,6 +194,9 @@ export function AppShell() {
           </div>
         </div>
       </header>
+
+      {/* Spacer to account for fixed header height (h-14 = 3.5rem = 56px) */}
+      <div className="h-14" aria-hidden="true" />
 
       {/* Demo mode banner */}
       {isDemoMode && (
