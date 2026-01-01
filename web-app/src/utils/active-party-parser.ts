@@ -118,13 +118,14 @@ const ACTIVE_PARTY_PATTERN =
  * This is the format used in production VolleyManager pages.
  * Captures the JSON object inside the $convertFromBackendToFrontend() call.
  *
- * Uses greedy matching because the JSON object contains nested braces.
- * The pattern is safe because:
- * - Quotes inside JSON are HTML-encoded as &quot;, so )" only appears at the end
- * - The /s flag allows . to match newlines
+ * Uses non-greedy matching (.+?) to stop at the first })" sequence after the opening brace.
+ * This is correct because:
+ * - Quotes inside JSON are HTML-encoded as &quot;, so }" cannot appear inside JSON string values
+ * - The /s flag allows . to match newlines for multi-line JSON
+ * - Greedy matching would incorrectly extend to later })" sequences elsewhere in the HTML
  */
 const VUE_ACTIVE_PARTY_PATTERN =
-  /:active-party="\$convertFromBackendToFrontend\((\{.+\})\)"/s;
+  /:active-party="\$convertFromBackendToFrontend\((\{.+?\})\)"/s;
 
 /**
  * Decode HTML entities in a string.
