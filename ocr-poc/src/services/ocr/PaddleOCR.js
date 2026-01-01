@@ -117,12 +117,14 @@ export class PaddleOCR {
 
     this.#reportProgress('Recognizing text...', 0.5);
 
-    // Create object URL for the image (more reliable than data URL for large images)
-    const objectUrl = URL.createObjectURL(imageBlob);
+    // Load the blob as an HTMLImageElement (required by @gutenye/ocr-browser)
+    const imageElement = await this.#blobToImageElement(imageBlob);
 
     try {
-      // Run OCR detection
-      const result = await this.#ocr.detect(objectUrl);
+      // Run OCR detection with HTMLImageElement
+      console.log('[PaddleOCR] Starting detection on image:', imageElement.width, 'x', imageElement.height);
+      const result = await this.#ocr.detect(imageElement);
+      console.log('[PaddleOCR] Detection result:', result);
 
       this.#reportProgress('Processing results...', 0.9);
 
@@ -168,10 +170,34 @@ export class PaddleOCR {
         lines,
         words,
       };
-    } finally {
-      // Always revoke the object URL to prevent memory leaks
-      URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      console.error('[PaddleOCR] Detection error:', error);
+      throw error;
     }
+  }
+
+  /**
+   * Convert a Blob to an HTMLImageElement
+   * @param {Blob} blob
+   * @returns {Promise<HTMLImageElement>}
+   */
+  #blobToImageElement(blob) {
+    return new Promise((resolve, reject) => {
+      const objectUrl = URL.createObjectURL(blob);
+      const img = new Image();
+
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(img);
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('Failed to load image'));
+      };
+
+      img.src = objectUrl;
+    });
   }
 
   /**
