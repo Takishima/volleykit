@@ -8,6 +8,8 @@ interface SelectedScorerCardProps {
   scorer?: ValidatedPersonSearchResult | null;
   /** Fallback display name to use when scorer data is not available */
   displayName?: string;
+  /** Fallback birthday to use when scorer data is not available */
+  displayBirthday?: string;
   /** Callback to clear the selection */
   onClear?: () => void;
   /** When true, hides the clear button */
@@ -20,6 +22,7 @@ interface SelectedScorerCardProps {
 export function SelectedScorerCard({
   scorer,
   displayName,
+  displayBirthday,
   onClear,
   readOnly = false,
 }: SelectedScorerCardProps) {
@@ -27,6 +30,8 @@ export function SelectedScorerCard({
 
   // Use scorer displayName if available, otherwise use the displayName prop
   const name = scorer?.displayName ?? displayName ?? "";
+  // Use scorer birthday if available, otherwise use the displayBirthday prop
+  const birthday = scorer?.birthday ?? displayBirthday;
 
   return (
     <div className="mb-4 p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
@@ -35,12 +40,12 @@ export function SelectedScorerCard({
           <div className="font-medium text-text-primary dark:text-text-primary-dark">
             {name}
           </div>
-          {scorer && (
+          {(scorer?.associationId || birthday) && (
             <div className="flex items-center gap-3 text-sm text-text-muted dark:text-text-muted-dark">
-              {scorer.associationId && <span>ID: {scorer.associationId}</span>}
-              {scorer.birthday && (
+              {scorer?.associationId && <span>ID: {scorer.associationId}</span>}
+              {birthday && (
                 <span>
-                  {t("common.dob")}: {formatDOB(scorer.birthday)}
+                  {t("common.dob")}: {formatDOB(birthday)}
                 </span>
               )}
             </div>

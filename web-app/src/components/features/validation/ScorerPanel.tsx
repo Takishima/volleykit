@@ -9,6 +9,8 @@ interface ScorerPanelProps {
   readOnly?: boolean;
   /** Scorer name to display in read-only mode when no scorer data is available */
   readOnlyScorerName?: string;
+  /** Scorer birthday to display in read-only mode when no scorer data is available */
+  readOnlyScorerBirthday?: string;
 }
 
 /**
@@ -21,6 +23,7 @@ export function ScorerPanel({
   initialScorer = null,
   readOnly = false,
   readOnlyScorerName,
+  readOnlyScorerBirthday,
 }: ScorerPanelProps) {
   const [selectedScorer, setSelectedScorer] =
     useState<ValidatedPersonSearchResult | null>(initialScorer);
@@ -44,6 +47,7 @@ export function ScorerPanel({
       onScorerSelect={handleScorerSelect}
       readOnly={readOnly}
       readOnlyScorerName={readOnlyScorerName}
+      readOnlyScorerBirthday={readOnlyScorerBirthday}
     />
   );
 }

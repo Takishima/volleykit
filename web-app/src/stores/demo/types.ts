@@ -30,6 +30,7 @@ export interface ValidatedGameData {
   scorer: {
     __identity: string;
     displayName: string;
+    birthday?: string;
   };
   scoresheetFileId?: string;
   homeRosterClosed: boolean;
@@ -40,6 +41,7 @@ export interface ValidatedGameData {
 export interface PendingScorerData {
   __identity: string;
   displayName: string;
+  birthday?: string;
 }
 
 // Compensation edits for assignments (stored separately since assignments
@@ -156,7 +158,7 @@ export interface DemoState
   markGameValidated: (
     gameId: string,
     data: {
-      scorer: { __identity: string; displayName: string };
+      scorer: { __identity: string; displayName: string; birthday?: string };
       scoresheetFileId?: string;
     },
   ) => void;
@@ -164,7 +166,7 @@ export interface DemoState
   getValidatedGameData: (gameId: string) => ValidatedGameData | null;
   setPendingScorer: (
     gameId: string,
-    scorer: { __identity: string; displayName: string },
+    scorer: { __identity: string; displayName: string; birthday?: string },
   ) => void;
   getPendingScorer: (gameId: string) => PendingScorerData | null;
   clearPendingScorer: (gameId: string) => void;

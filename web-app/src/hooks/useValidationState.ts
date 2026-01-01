@@ -99,20 +99,29 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
   const validatedInfo = useMemo<ValidatedGameInfo | null>(() => {
     const scoresheet = gameDetailsQuery.data?.scoresheet;
     if (!scoresheet?.closedAt) return null;
+    // Cast to include birthday which is available in demo mode
+    const writerPerson = scoresheet.writerPerson as
+      | { displayName?: string; birthday?: string }
+      | undefined;
     return {
       validatedAt: scoresheet.closedAt,
-      scorerName: scoresheet.writerPerson?.displayName ?? "Unknown",
+      scorerName: writerPerson?.displayName ?? "Unknown",
+      scorerBirthday: writerPerson?.birthday,
       hasScoresheet: !!scoresheet.hasFile,
     };
   }, [gameDetailsQuery.data]);
 
   const pendingScorer = useMemo<PendingScorerData | null>(() => {
     if (isValidated) return null;
-    const writerPerson = gameDetailsQuery.data?.scoresheet?.writerPerson;
+    // Cast to include birthday which is available in demo mode
+    const writerPerson = gameDetailsQuery.data?.scoresheet?.writerPerson as
+      | { __identity?: string; displayName?: string; birthday?: string }
+      | undefined;
     if (!writerPerson?.__identity) return null;
     return {
       __identity: writerPerson.__identity,
       displayName: writerPerson.displayName ?? "Unknown",
+      birthday: writerPerson.birthday,
     };
   }, [gameDetailsQuery.data, isValidated]);
 
