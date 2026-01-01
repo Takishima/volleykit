@@ -50,7 +50,7 @@ function getAssignmentAssociationCode(assignment: Assignment): string | undefine
  */
 function filterByAssociation(
   assignments: Assignment[],
-  associationCode: string | undefined,
+  associationCode: string | null | undefined,
 ): Assignment[] {
   if (!associationCode) return assignments;
   return assignments.filter((assignment) => {

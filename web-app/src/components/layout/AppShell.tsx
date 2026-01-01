@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect, useCallback, lazy, Suspense } from "react";
 import { Outlet, NavLink, useLocation } from "react-router-dom";
 import { useShallow } from "zustand/react/shallow";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore, type Occupation } from "@/stores/auth";
-import { useDemoStore, type DemoAssociationCode } from "@/stores/demo";
 import { useTourStore } from "@/stores/tour";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getOccupationLabelKey } from "@/utils/occupation-labels";
+import { api } from "@/api/client";
 import {
   Volleyball,
   ClipboardList,
@@ -40,16 +41,10 @@ const navItems: NavItem[] = [
   { path: "/settings", labelKey: "nav.settings", icon: Settings, testId: "nav-settings" },
 ];
 
-// Valid association codes that can be used for demo mode data generation
-const DEMO_ASSOCIATION_CODES = new Set<DemoAssociationCode>(["SV", "SVRBA", "SVRZ"]);
-
-function isDemoAssociationCode(code: string | undefined): code is DemoAssociationCode {
-  return code !== undefined && DEMO_ASSOCIATION_CODES.has(code as DemoAssociationCode);
-}
-
 export function AppShell() {
   const location = useLocation();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const {
     status,
     user,
@@ -67,9 +62,9 @@ export function AppShell() {
       isDemoMode: state.isDemoMode,
     })),
   );
-  const setActiveAssociation = useDemoStore((state) => state.setActiveAssociation);
   const activeTour = useTourStore((state) => state.activeTour);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isSwitching, setIsSwitching] = useState(false);
 
   const getOccupationLabel = useCallback(
     (occupation: Occupation): string => {
@@ -106,19 +101,32 @@ export function AppShell() {
     user?.occupations?.find((o) => o.id === activeOccupationId) ??
     user?.occupations?.[0];
 
-  const handleOccupationSelect = (id: string) => {
-    setActiveOccupation(id);
+  const handleOccupationSelect = async (id: string) => {
+    // Don't switch if already switching or selecting the same occupation
+    if (isSwitching || id === activeOccupationId) {
+      setIsDropdownOpen(false);
+      return;
+    }
+
+    setIsSwitching(true);
     setIsDropdownOpen(false);
 
-    // In demo mode, regenerate data based on the selected occupation's association
-    if (isDemoMode) {
-      const selectedOccupation = user?.occupations?.find((o) => o.id === id);
-      if (
-        selectedOccupation &&
-        isDemoAssociationCode(selectedOccupation.associationCode)
-      ) {
-        setActiveAssociation(selectedOccupation.associationCode);
-      }
+    try {
+      // Call API to switch association (works for both demo and production mode)
+      // In demo mode, the mock API handles regenerating demo data
+      // In production mode, this switches the server-side active party
+      await api.switchRoleAndAttribute(id);
+
+      // Update local state
+      setActiveOccupation(id);
+
+      // Invalidate all queries to refetch data for the new association
+      await queryClient.invalidateQueries();
+    } catch (error) {
+      // Log error but don't block UI - the switch might have partially succeeded
+      console.error("Failed to switch association:", error);
+    } finally {
+      setIsSwitching(false);
     }
   };
 

@@ -609,6 +609,23 @@ export const api = {
 
     return response.json();
   },
+
+  /**
+   * Switch the active role/association on the server.
+   * This changes which association's data is returned by subsequent API calls.
+   *
+   * @param attributeValueId - The __identity UUID of the AttributeValue (occupation) to switch to
+   * @returns Promise that resolves when the switch is complete
+   */
+  async switchRoleAndAttribute(attributeValueId: string): Promise<void> {
+    await apiRequest<unknown>(
+      "/sportmanager.security/api%5cparty/switchRoleAndAttribute",
+      "PUT",
+      {
+        "attributeValueAsArray[0]": attributeValueId,
+      },
+    );
+  },
 };
 
 export type ApiClient = typeof api;
