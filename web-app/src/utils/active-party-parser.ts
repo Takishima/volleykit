@@ -27,11 +27,13 @@ export interface InflatedAssociationValue {
 
 /**
  * Represents an association that a user is a member of.
+ * All fields are optional because the API may return incomplete items.
+ * Downstream code (parseOccupationFromActiveParty) filters out items missing required fields.
  */
 export interface AttributeValue {
-  __identity: string;
-  attributeIdentifier: string;
-  roleIdentifier: string;
+  __identity?: string;
+  attributeIdentifier?: string;
+  roleIdentifier?: string;
   /**
    * Domain model type - used to distinguish association memberships from boolean flags.
    * For associations: "SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation"
@@ -75,9 +77,12 @@ const InflatedValueSchema = z.object({
 });
 
 const AttributeValueSchema = z.object({
-  __identity: z.string(),
-  attributeIdentifier: z.string(),
-  roleIdentifier: z.string(),
+  // All fields are optional to handle incomplete items in the array.
+  // When one item has missing fields, strict validation would fail the entire array.
+  // Downstream code (parseOccupationFromActiveParty) filters out incomplete items.
+  __identity: z.string().optional(),
+  attributeIdentifier: z.string().optional(),
+  roleIdentifier: z.string().optional(),
   type: z.string().optional(),
   value: z.string().optional(),
   inflatedValue: InflatedValueSchema.optional(),
