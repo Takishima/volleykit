@@ -75,6 +75,7 @@ function createMockAssignment(
     refereeGame: {
       game: {
         __identity: "game-1",
+        number: 12345,
         startingDateTime: "2025-12-15T14:00:00Z",
         encounter: {
           teamHome: { name: "VBC Zürich" },
@@ -98,6 +99,7 @@ describe("EditCompensationModal", () => {
   const mockMutate = vi.fn();
   const mockAssignmentMutate = vi.fn();
   const mockGetCompensationDetails = vi.fn();
+  const mockSearchCompensations = vi.fn();
   const mockGetAssignmentCompensation = vi.fn();
 
   beforeEach(() => {
@@ -162,6 +164,7 @@ describe("EditCompensationModal", () => {
 
     (getApiClient as Mock).mockReturnValue({
       getCompensationDetails: mockGetCompensationDetails,
+      searchCompensations: mockSearchCompensations,
     });
 
     mockGetCompensationDetails.mockResolvedValue({
@@ -170,6 +173,9 @@ describe("EditCompensationModal", () => {
         correctionReason: "",
       },
     });
+
+    // Default: return empty compensations list
+    mockSearchCompensations.mockResolvedValue({ items: [] });
   });
 
   describe("rendering", () => {
@@ -221,9 +227,25 @@ describe("EditCompensationModal", () => {
       });
     });
 
-    it("renders form immediately when only assignment provided (no API fetch)", async () => {
-      // When only assignment is provided (no compensation), there's no compensationId
-      // so the API fetch is skipped and the form renders immediately
+    it("fetches and pre-fills existing compensation data for assignment in production mode", async () => {
+      // Mock searchCompensations to return a compensation with matching game number
+      mockSearchCompensations.mockResolvedValue({
+        items: [
+          {
+            refereeGame: { game: { number: 12345 } },
+            convocationCompensation: { __identity: "found-comp-id" },
+          },
+        ],
+      });
+
+      // Mock getCompensationDetails to return existing values
+      mockGetCompensationDetails.mockResolvedValue({
+        convocationCompensation: {
+          distanceInMetres: 32500,
+          correctionReason: "Detour via highway",
+        },
+      });
+
       render(
         <EditCompensationModal
           assignment={createMockAssignment()}
@@ -233,11 +255,47 @@ describe("EditCompensationModal", () => {
         { wrapper: createWrapper() },
       );
 
-      // Form should render immediately without waiting for API
-      // Query with hidden: true because the backdrop has aria-hidden
-      expect(screen.getByRole("dialog", { hidden: true })).toBeInTheDocument();
-      expect(screen.getByLabelText("Kilometers")).toBeInTheDocument();
-      expect(screen.getByText("Save")).toBeInTheDocument();
+      // Wait for the form to load with pre-filled data
+      await waitFor(() => {
+        const kmInput = screen.getByLabelText("Kilometers");
+        expect(kmInput).toHaveValue("32.5");
+      });
+
+      const reasonInput = screen.getByLabelText("Reason");
+      expect(reasonInput).toHaveValue("Detour via highway");
+
+      // Verify the API was called correctly
+      expect(mockSearchCompensations).toHaveBeenCalledWith({ limit: 100 });
+      expect(mockGetCompensationDetails).toHaveBeenCalledWith("found-comp-id");
+    });
+
+    it("shows empty form when no compensation exists for assignment", async () => {
+      // Mock searchCompensations to return no matching compensation
+      mockSearchCompensations.mockResolvedValue({ items: [] });
+
+      render(
+        <EditCompensationModal
+          assignment={createMockAssignment()}
+          isOpen={true}
+          onClose={mockOnClose}
+        />,
+        { wrapper: createWrapper() },
+      );
+
+      // Wait for loading to complete
+      await waitFor(() => {
+        expect(screen.getByLabelText("Kilometers")).toBeInTheDocument();
+      });
+
+      // Form should be empty since no compensation was found
+      const kmInput = screen.getByLabelText("Kilometers");
+      expect(kmInput).toHaveValue("");
+
+      const reasonInput = screen.getByLabelText("Reason");
+      expect(reasonInput).toHaveValue("");
+
+      // Compensation details should not be fetched since no compensation was found
+      expect(mockGetCompensationDetails).not.toHaveBeenCalled();
     });
 
     it("returns null when neither assignment nor compensation provided", () => {
