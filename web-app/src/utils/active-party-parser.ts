@@ -131,10 +131,22 @@ export const ACTIVE_PARTY_PATTERN =
  * - The /s flag allows . to match newlines for multi-line JSON
  * - Greedy matching would incorrectly extend to later })" sequences elsewhere in the HTML
  *
+ * Uses the global (g) flag to find ALL occurrences, since there may be multiple components
+ * with :active-party attributes (e.g., form permissions vs user party data).
+ *
  * @internal Exported for use in debug panel diagnostics
  */
 export const VUE_ACTIVE_PARTY_PATTERN =
-  /:active-party="\$convertFromBackendToFrontend\((\{.+?\})\)"/s;
+  /:active-party="\$convertFromBackendToFrontend\((\{.+?\})\)"/gs;
+
+/**
+ * Regex pattern to match Vue component attribute :party="$convertFromBackendToFrontend({...})".
+ * This is an alternative attribute name that may be used in some pages.
+ *
+ * @internal Exported for use in debug panel diagnostics
+ */
+export const VUE_PARTY_PATTERN =
+  /:party="\$convertFromBackendToFrontend\((\{.+?\})\)"/gs;
 
 /**
  * Decode HTML entities in a string.
@@ -162,11 +174,169 @@ function decodeHtmlEntities(str: string): string {
 }
 
 /**
+ * Diagnostic result from attempting to extract activeParty from HTML.
+ * Used by the debug panel to show detailed parsing information.
+ */
+export interface ActivePartyDiagnostic {
+  /** Which pattern matched (script, vue, or none) */
+  patternMatched: "script" | "vue" | "none";
+  /** Length of the raw captured match before decoding */
+  rawMatchLength?: number;
+  /** Whether JSON.parse succeeded */
+  jsonParseSuccess?: boolean;
+  /** JSON parse error message if failed */
+  jsonParseError?: string;
+  /** Whether Zod validation succeeded */
+  zodValidationSuccess?: boolean;
+  /** Zod validation error issues if failed */
+  zodValidationErrors?: string[];
+  /** The successfully parsed activeParty, or null */
+  activeParty: ActiveParty | null;
+  /** Top-level keys found in parsed JSON (for debugging structure) */
+  parsedKeys?: string[];
+}
+
+/**
+ * Check if a parsed object looks like valid activeParty data.
+ * Returns true if it has expected fields like eligibleAttributeValues or groupedEligibleAttributeValues.
+ */
+function looksLikeActiveParty(parsed: unknown): parsed is Record<string, unknown> {
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return false;
+  }
+  const obj = parsed as Record<string, unknown>;
+  // Check for expected activeParty fields (not form permission objects)
+  return (
+    "eligibleAttributeValues" in obj ||
+    "groupedEligibleAttributeValues" in obj ||
+    "eligibleRoles" in obj ||
+    "activeRoleIdentifier" in obj ||
+    "activeAttributeValue" in obj
+  );
+}
+
+/**
+ * Try to parse and validate encoded JSON from a regex match.
+ * Updates the diagnostic result and returns the parsed activeParty if successful.
+ */
+function tryParseMatch(
+  encodedJson: string,
+  result: ActivePartyDiagnostic,
+  patternType: "script" | "vue",
+  requiresActivePartyFields: boolean
+): ActiveParty | null {
+  result.patternMatched = patternType;
+  result.rawMatchLength = encodedJson.length;
+
+  try {
+    const decodedJson = decodeHtmlEntities(encodedJson);
+    const parsed: unknown = JSON.parse(decodedJson);
+    result.jsonParseSuccess = true;
+
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      result.parsedKeys = Object.keys(parsed as Record<string, unknown>);
+    }
+
+    // Skip if we require activeParty fields and this doesn't look like activeParty
+    if (requiresActivePartyFields && !looksLikeActiveParty(parsed)) {
+      return null;
+    }
+
+    const zodResult = ActivePartySchema.safeParse(parsed);
+    if (zodResult.success) {
+      result.zodValidationSuccess = true;
+      result.activeParty = zodResult.data;
+      return zodResult.data;
+    }
+
+    result.zodValidationSuccess = false;
+    result.zodValidationErrors = zodResult.error.issues.map(
+      (issue) => `${issue.path.join(".")}: ${issue.message}`
+    );
+    return null;
+  } catch (parseError) {
+    result.jsonParseSuccess = false;
+    result.jsonParseError = parseError instanceof Error ? parseError.message : String(parseError);
+    return null;
+  }
+}
+
+/**
+ * Iterate through all regex matches and try to find valid activeParty data.
+ */
+function tryVuePatternMatches(
+  html: string,
+  pattern: RegExp,
+  result: ActivePartyDiagnostic
+): ActiveParty | null {
+  pattern.lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(html)) !== null) {
+    const activeParty = tryParseMatch(match[1], result, "vue", true);
+    if (activeParty) {
+      return activeParty;
+    }
+    // If we found the right structure but validation failed, stop searching
+    if (result.zodValidationErrors && result.zodValidationErrors.length > 0) {
+      return null;
+    }
+  }
+  return null;
+}
+
+/**
+ * Extract the activeParty JSON data from HTML page content with diagnostics.
+ * This is the diagnostic version that returns detailed parsing information.
+ *
+ * @param html - The HTML page content
+ * @returns Diagnostic information including the parsed ActiveParty or null
+ */
+export function extractActivePartyWithDiagnostics(html: string): ActivePartyDiagnostic {
+  if (!html) {
+    return { patternMatched: "none", activeParty: null };
+  }
+
+  const result: ActivePartyDiagnostic = {
+    patternMatched: "none",
+    activeParty: null,
+  };
+
+  try {
+    // Try the script tag pattern first (legacy format)
+    const scriptMatch = ACTIVE_PARTY_PATTERN.exec(html);
+    if (scriptMatch?.[1]) {
+      tryParseMatch(scriptMatch[1], result, "script", false);
+      if (result.activeParty) {
+        return result;
+      }
+    }
+
+    // Try the Vue :active-party pattern (production format)
+    tryVuePatternMatches(html, VUE_ACTIVE_PARTY_PATTERN, result);
+    if (result.activeParty) {
+      return result;
+    }
+
+    // Also try :party pattern
+    tryVuePatternMatches(html, VUE_PARTY_PATTERN, result);
+  } catch (error) {
+    logger.warn("Failed to extract activeParty from HTML:", error);
+  }
+
+  return result;
+}
+
+/**
  * Extract the activeParty JSON data from HTML page content.
  *
- * Supports two formats:
+ * Supports multiple formats:
  * 1. Script tag: window.activeParty = JSON.parse('{"eligibleAttributeValues":[...],...}')
- * 2. Vue component: <main-layout :active-party="$convertFromBackendToFrontend({...})" ...>
+ * 2. Vue :active-party attribute: <main-layout :active-party="$convertFromBackendToFrontend({...})" ...>
+ * 3. Vue :party attribute: <component :party="$convertFromBackendToFrontend({...})" ...>
+ *
+ * Since there may be multiple :active-party attributes (e.g., form permissions vs user party data),
+ * this function iterates through all matches to find the one with actual activeParty data.
  *
  * @param html - The HTML page content
  * @returns The parsed ActiveParty object, or null if parsing fails
@@ -178,9 +348,9 @@ export function extractActivePartyFromHtml(html: string): ActiveParty | null {
 
   try {
     // Try the script tag pattern first (legacy format)
-    let match = ACTIVE_PARTY_PATTERN.exec(html);
-    if (match?.[1]) {
-      const encodedJson = match[1];
+    const scriptMatch = ACTIVE_PARTY_PATTERN.exec(html);
+    if (scriptMatch?.[1]) {
+      const encodedJson = scriptMatch[1];
       const decodedJson = decodeHtmlEntities(encodedJson);
       const parsed: unknown = JSON.parse(decodedJson);
 
@@ -191,18 +361,51 @@ export function extractActivePartyFromHtml(html: string): ActiveParty | null {
       logger.warn("activeParty validation failed (script format):", result.error.issues);
     }
 
-    // Try the Vue component attribute pattern (production format)
-    match = VUE_ACTIVE_PARTY_PATTERN.exec(html);
-    if (match?.[1]) {
-      const encodedJson = match[1];
-      const decodedJson = decodeHtmlEntities(encodedJson);
-      const parsed: unknown = JSON.parse(decodedJson);
+    // Try the Vue :active-party pattern (production format)
+    // Iterate through all matches to find the one with actual activeParty data
+    let vueMatch: RegExpExecArray | null;
 
-      const result = ActivePartySchema.safeParse(parsed);
-      if (result.success) {
-        return result.data;
+    // Reset lastIndex for global regex
+    VUE_ACTIVE_PARTY_PATTERN.lastIndex = 0;
+
+    while ((vueMatch = VUE_ACTIVE_PARTY_PATTERN.exec(html)) !== null) {
+      try {
+        const encodedJson = vueMatch[1];
+        const decodedJson = decodeHtmlEntities(encodedJson);
+        const parsed: unknown = JSON.parse(decodedJson);
+
+        // Only accept if it looks like activeParty data (not form permissions)
+        if (looksLikeActiveParty(parsed)) {
+          const result = ActivePartySchema.safeParse(parsed);
+          if (result.success) {
+            return result.data;
+          }
+          logger.warn("activeParty validation failed (Vue :active-party format):", result.error.issues);
+        }
+      } catch (error) {
+        logger.warn("Failed to parse :active-party match:", error);
       }
-      logger.warn("activeParty validation failed (Vue format):", result.error.issues);
+    }
+
+    // Try the Vue :party pattern
+    VUE_PARTY_PATTERN.lastIndex = 0;
+
+    while ((vueMatch = VUE_PARTY_PATTERN.exec(html)) !== null) {
+      try {
+        const encodedJson = vueMatch[1];
+        const decodedJson = decodeHtmlEntities(encodedJson);
+        const parsed: unknown = JSON.parse(decodedJson);
+
+        if (looksLikeActiveParty(parsed)) {
+          const result = ActivePartySchema.safeParse(parsed);
+          if (result.success) {
+            return result.data;
+          }
+          logger.warn("activeParty validation failed (Vue :party format):", result.error.issues);
+        }
+      } catch (error) {
+        logger.warn("Failed to parse :party match:", error);
+      }
     }
 
     // activeParty not found in HTML - this is normal for login pages

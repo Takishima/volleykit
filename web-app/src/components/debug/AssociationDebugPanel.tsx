@@ -12,7 +12,8 @@
 import { useAuthStore, type Occupation } from "@/stores/auth";
 import {
   type AttributeValue,
-  extractActivePartyFromHtml,
+  type ActivePartyDiagnostic,
+  extractActivePartyWithDiagnostics,
   ACTIVE_PARTY_PATTERN,
   VUE_ACTIVE_PARTY_PATTERN,
 } from "@/utils/active-party-parser";
@@ -699,7 +700,7 @@ interface FetchResult {
   htmlLength?: number;
   hasScriptPattern?: boolean;
   hasVuePattern?: boolean;
-  activeParty?: unknown;
+  diagnostic?: ActivePartyDiagnostic;
   rawMatch?: string;
   error?: string;
 }
@@ -720,8 +721,8 @@ function LiveDashboardFetch() {
       const hasScriptPattern = ACTIVE_PARTY_PATTERN.test(html);
       const hasVuePattern = VUE_ACTIVE_PARTY_PATTERN.test(html);
 
-      // Try to extract activeParty
-      const activeParty = extractActivePartyFromHtml(html);
+      // Use diagnostic extraction for detailed info
+      const diagnostic = extractActivePartyWithDiagnostics(html);
 
       // Get raw match for debugging
       let rawMatch: string | undefined;
@@ -739,7 +740,7 @@ function LiveDashboardFetch() {
         htmlLength: html.length,
         hasScriptPattern,
         hasVuePattern,
-        activeParty,
+        diagnostic,
         rawMatch,
       });
     } catch (error) {
@@ -800,14 +801,70 @@ function LiveDashboardFetch() {
               {result.hasVuePattern ? "✓ YES" : "✗ NO"}
             </span>
           </div>
-          <div style={{ marginBottom: "4px" }}>
+
+          {/* Detailed diagnostic info */}
+          {result.diagnostic && (
+            <>
+              <div style={{ marginTop: "8px", marginBottom: "4px", borderTop: "1px solid #333", paddingTop: "4px" }}>
+                <strong style={{ color: "#00d4ff" }}>Parsing Diagnostics:</strong>
+              </div>
+              <div style={{ marginBottom: "4px" }}>
+                <strong>Pattern Matched:</strong>{" "}
+                <span style={{ color: result.diagnostic.patternMatched !== "none" ? "#4eff4e" : "#ff6b6b" }}>
+                  {result.diagnostic.patternMatched}
+                </span>
+              </div>
+              {result.diagnostic.rawMatchLength !== undefined && (
+                <div style={{ marginBottom: "4px" }}>
+                  <strong>Raw Match Length:</strong> {result.diagnostic.rawMatchLength.toLocaleString()} chars
+                </div>
+              )}
+              <div style={{ marginBottom: "4px" }}>
+                <strong>JSON.parse:</strong>{" "}
+                <span style={{ color: result.diagnostic.jsonParseSuccess ? "#4eff4e" : "#ff6b6b" }}>
+                  {result.diagnostic.jsonParseSuccess ? "✓ SUCCESS" : result.diagnostic.jsonParseSuccess === false ? "✗ FAILED" : "N/A"}
+                </span>
+              </div>
+              {result.diagnostic.jsonParseError && (
+                <div style={{ marginBottom: "4px", color: "#ff6b6b" }}>
+                  <strong>Parse Error:</strong> {result.diagnostic.jsonParseError}
+                </div>
+              )}
+              {result.diagnostic.parsedKeys && (
+                <div style={{ marginBottom: "4px" }}>
+                  <strong>Top-level Keys:</strong>{" "}
+                  <span style={{ color: "#ffaa00" }}>
+                    [{result.diagnostic.parsedKeys.join(", ")}]
+                  </span>
+                </div>
+              )}
+              <div style={{ marginBottom: "4px" }}>
+                <strong>Zod Validation:</strong>{" "}
+                <span style={{ color: result.diagnostic.zodValidationSuccess ? "#4eff4e" : "#ff6b6b" }}>
+                  {result.diagnostic.zodValidationSuccess ? "✓ SUCCESS" : result.diagnostic.zodValidationSuccess === false ? "✗ FAILED" : "N/A"}
+                </span>
+              </div>
+              {result.diagnostic.zodValidationErrors && result.diagnostic.zodValidationErrors.length > 0 && (
+                <div style={{ marginBottom: "4px", color: "#ff6b6b" }}>
+                  <strong>Validation Errors:</strong>
+                  <ul style={{ margin: "4px 0", paddingLeft: "16px" }}>
+                    {result.diagnostic.zodValidationErrors.map((err, i) => (
+                      <li key={i}>{err}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
+          )}
+
+          <div style={{ marginBottom: "4px", marginTop: "8px" }}>
             <strong>activeParty Parsed:</strong>{" "}
-            <span style={{ color: result.activeParty ? "#4eff4e" : "#ff6b6b" }}>
-              {result.activeParty ? "✓ YES" : "✗ NO"}
+            <span style={{ color: result.diagnostic?.activeParty ? "#4eff4e" : "#ff6b6b" }}>
+              {result.diagnostic?.activeParty ? "✓ YES" : "✗ NO"}
             </span>
           </div>
 
-          {result.activeParty != null && (
+          {result.diagnostic?.activeParty != null && (
             <div style={{ marginTop: "8px" }}>
               <strong>Parsed activeParty:</strong>
               <pre
@@ -824,12 +881,12 @@ function LiveDashboardFetch() {
                   marginTop: "4px",
                 }}
               >
-                {JSON.stringify(result.activeParty, null, 2)}
+                {JSON.stringify(result.diagnostic.activeParty, null, 2)}
               </pre>
             </div>
           )}
 
-          {!result.activeParty && result.rawMatch && (
+          {!result.diagnostic?.activeParty && result.rawMatch && (
             <div style={{ marginTop: "8px" }}>
               <strong>Raw Match (first {RAW_MATCH_PREVIEW_LENGTH} chars):</strong>
               <pre
@@ -851,7 +908,7 @@ function LiveDashboardFetch() {
             </div>
           )}
 
-          {!result.activeParty && !result.rawMatch && (
+          {!result.diagnostic?.activeParty && !result.rawMatch && (
             <div style={{ marginTop: "8px", color: "#ff6b6b" }}>
               ⚠️ Neither pattern matched. The dashboard HTML may not contain activeParty data.
               This can happen if the session is not fully authenticated or the user has no associations.
