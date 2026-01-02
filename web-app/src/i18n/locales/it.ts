@@ -254,7 +254,7 @@ const it: Translations = {
     applied: "Candidato",
     closed: "Chiuso",
     all: "Tutti",
-    myApplications: "Le mie candidature",
+    myApplications: "Aggiunto da me",
     loading: "Caricamento scambi...",
     takeOverTitle: "Assumere la designazione",
     takeOverConfirm: "Sei sicuro di voler assumere questa designazione?",
@@ -274,9 +274,9 @@ const it: Translations = {
     noOpenExchangesTitle: "Nessuno scambio aperto",
     noOpenExchangesDescription:
       "Al momento non ci sono posizioni arbitrali disponibili per lo scambio.",
-    noApplicationsTitle: "Nessuna candidatura",
+    noApplicationsTitle: "Nessuna offerta",
     noApplicationsDescription:
-      "Non hai ancora fatto domanda per nessuno scambio.",
+      "Non hai ancora offerto partite per lo scambio.",
     applySuccess: "Candidatura allo scambio riuscita",
     applyError: "Candidatura fallita. Riprova.",
     withdrawSuccess: "Ritiro dallo scambio riuscito",

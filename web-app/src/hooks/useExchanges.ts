@@ -20,8 +20,12 @@ import { getSeasonDateRange } from "@/utils/date-helpers";
 // Stable empty array for React Query selectors to prevent unnecessary re-renders.
 const EMPTY_EXCHANGES: GameExchange[] = [];
 
+// Demo user identity used for client-side filtering in demo mode
+const DEMO_USER_IDENTITY = "demo-me";
+
 // Exchange status filter type
-export type ExchangeStatus = "open" | "applied" | "closed" | "all";
+// "mine" shows exchanges submitted by the current user (regardless of status)
+export type ExchangeStatus = "open" | "applied" | "closed" | "all" | "mine";
 
 /**
  * Hook to fetch game exchange requests with optional status filtering.
@@ -51,6 +55,7 @@ export function useGameExchanges(status: ExchangeStatus = "all") {
   const toDate = endOfDay(seasonEnd).toISOString();
 
   // Build property filters: always include date range, optionally include status
+  // For "mine", we don't filter by status - we'll filter client-side by submittedByPerson
   const propertyFilters = useMemo(() => {
     const filters: SearchConfiguration["propertyFilters"] = [
       {
@@ -59,7 +64,8 @@ export function useGameExchanges(status: ExchangeStatus = "all") {
       },
     ];
 
-    if (status !== "all") {
+    // "mine" and "all" don't filter by status
+    if (status !== "all" && status !== "mine") {
       filters.push({
         propertyName: "status",
         enumValues: [status],
@@ -85,10 +91,27 @@ export function useGameExchanges(status: ExchangeStatus = "all") {
     [propertyFilters],
   );
 
+  // Create select function that filters by submittedByPerson for "mine" status
+  // In demo mode, we filter client-side; in production, the API may handle this
+  const selectExchanges = useMemo(() => {
+    return (data: { items?: GameExchange[] }) => {
+      const items = data.items ?? EMPTY_EXCHANGES;
+
+      // For "mine" status in demo mode, filter to show only user's submitted exchanges
+      if (status === "mine" && isDemoMode) {
+        return items.filter(
+          (exchange) => exchange.submittedByPerson?.__identity === DEMO_USER_IDENTITY
+        );
+      }
+
+      return items;
+    };
+  }, [status, isDemoMode]);
+
   return useQuery({
     queryKey: queryKeys.exchanges.list(config, associationKey),
     queryFn: () => apiClient.searchExchanges(config),
-    select: (data) => data.items ?? EMPTY_EXCHANGES,
+    select: selectExchanges,
     staleTime: 2 * 60 * 1000,
   });
 }

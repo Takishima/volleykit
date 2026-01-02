@@ -232,6 +232,14 @@ export function ExchangePage() {
       });
 
       // Action array ordering: first item = furthest from card = full swipe default
+
+      // "mine" tab shows user's own submitted exchanges - allow removing them
+      if (statusFilter === "mine") {
+        // Swipe right reveals: card -> [Remove]
+        return { right: [actions.removeFromExchange] };
+      }
+
+      // "open" tab shows exchanges from others based on status
       switch (exchange.status) {
         case "open":
           // Open exchanges: swipe left to take over
@@ -246,12 +254,12 @@ export function ExchangePage() {
           return {};
       }
     },
-    [takeOverModal.open, removeFromExchangeModal.open],
+    [takeOverModal.open, removeFromExchangeModal.open, statusFilter],
   );
 
   const tabs = [
     { id: "open" as const, label: t("exchange.open") },
-    { id: "applied" as const, label: t("exchange.myApplications") },
+    { id: "mine" as const, label: t("exchange.myApplications") },
   ];
 
   const handleTabChange = useCallback((tabId: string) => {
