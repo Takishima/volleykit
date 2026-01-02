@@ -7,9 +7,6 @@
   "engines": {
     "node": ">=20.0.0"
   },
-  "overrides": {
-    "axios": "^1.12.0"
-  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -66,7 +63,6 @@
     "date-fns": "^4.1.0",
     "lucide-react": "^0.562.0",
     "ojp-sdk-next": "^0.21.1",
-    "openapi-typescript-fetch": "^2.2.1",
     "pdf-lib": "^1.17.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
@@ -97,7 +93,6 @@
     "eslint-plugin-sonarjs": "^3.0.5",
     "globals": "^16.5.0",
     "happy-dom": "^20.0.11",
-    "jsdom": "^27.4.0",
     "openapi-typescript": "^7.10.1",
     "rollup-plugin-visualizer": "^6.0.5",
     "size-limit": "^12.0.0",
@@ -105,7 +100,6 @@
     "typescript-eslint": "^8.50.1",
     "vite": "^7.2.4",
     "vite-plugin-pwa": "^1.2.0",
-    "vitest": "^4.0.15",
-    "workbox-window": "^7.4.0"
+    "vitest": "^4.0.15"
   }
 }
