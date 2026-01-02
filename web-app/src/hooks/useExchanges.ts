@@ -44,13 +44,11 @@ export function useGameExchanges(status: ExchangeStatus = "all") {
 
   // Only fetch future exchanges - past games are irrelevant for both
   // "open" (can't take over past games) and "applied" (user only cares about upcoming).
-  const { fromDate, toDate } = useMemo(() => {
-    const { to } = getSeasonDateRange();
-    return {
-      fromDate: startOfDay(new Date()).toISOString(),
-      toDate: endOfDay(to).toISOString(),
-    };
-  }, []);
+  // No useMemo: the calculation is trivial, and we need fresh dates if the app
+  // stays open overnight (the query key change will trigger a refetch).
+  const { to: seasonEnd } = getSeasonDateRange();
+  const fromDate = startOfDay(new Date()).toISOString();
+  const toDate = endOfDay(seasonEnd).toISOString();
 
   // Build property filters: always include date range, optionally include status
   const propertyFilters = useMemo(() => {
