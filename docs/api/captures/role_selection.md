@@ -25,14 +25,43 @@ The menu shows all roles/parties available to the logged-in user:
 
 ### No API Call on Menu Open
 
-Opening the role selection menu does **NOT** trigger any API calls. The available roles are pre-loaded with the initial page/session data.
+Opening the role selection menu does **NOT** trigger any API calls. The available roles are pre-loaded with the initial page/session data (via `activeParty.groupedEligibleAttributeValues`).
 
-### Role Switching Mechanism
+### Role Switching API Call
 
-When clicking a different role, the app navigates to the same page with a different "party" context. This appears to be handled through:
+When clicking a different role, the app makes a `PUT` request to switch the active party:
 
-1. Page reload/navigation
-1. Server-side party/context switch via session
+**Endpoint:**
+```
+PUT /api/sportmanager.security/api\party/switchRoleAndAttribute
+```
+
+**Important:** The URL path requires the `/api/` prefix. This is different from other `/sportmanager.security/` endpoints (like authentication) which do NOT have the `/api/` prefix.
+
+**Request Headers:**
+```
+Content-Type: text/plain;charset=UTF-8
+window-unique-id: <random-uuid>
+```
+
+Note: The `Content-Type` is `text/plain`, NOT `application/x-www-form-urlencoded`, even though the body is URL-encoded.
+
+**Request Body (URL-encoded):**
+```
+attributeValueAsArray[0]=<occupation-uuid>&__csrfToken=<csrf-token>
+```
+
+| Parameter | Description |
+|-----------|-------------|
+| `attributeValueAsArray[0]` | The `__identity` UUID of the AttributeValue (occupation) to switch to |
+| `__csrfToken` | CSRF token from the session |
+
+**Response:**
+- `200 OK` - Successfully switched (empty response or JSON)
+- `500 Internal Server Error` - Switch failed (often due to wrong URL path or Content-Type)
+
+**After switching:**
+The page reloads to apply the new party context. All subsequent API calls will return data for the newly selected association.
 
 ### Navigation Structure per Role
 
@@ -65,4 +94,5 @@ Roles are displayed with:
 - Each regional association (SVRBA, SVRZ) is a separate party
 - The "SV" role represents Swiss Volley national level
 - "Joueur de volleyball" is a player role (not referee)
-- Role switching likely changes the API responses based on the active party context
+- Role switching changes the API responses based on the active party context
+- The occupation UUID comes from `groupedEligibleAttributeValues[].\_\_identity`
