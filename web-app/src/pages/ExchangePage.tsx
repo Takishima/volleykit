@@ -233,13 +233,13 @@ export function ExchangePage() {
 
       // Action array ordering: first item = furthest from card = full swipe default
 
-      // "mine" tab shows user's own submitted exchanges - allow removing them
+      // "mine" tab: user's own submitted exchanges - allow removing them
       if (statusFilter === "mine") {
         // Swipe right reveals: card -> [Remove]
         return { right: [actions.removeFromExchange] };
       }
 
-      // "open" tab shows exchanges from others based on status
+      // "open" tab: actions depend on exchange status
       switch (exchange.status) {
         case "open":
           // Open exchanges: swipe left to take over

@@ -12,16 +12,13 @@ import {
   type GameExchange,
 } from "@/api/client";
 import { useAuthStore } from "@/stores/auth";
-import { useDemoStore } from "@/stores/demo";
+import { useDemoStore, DEMO_USER_PERSON_IDENTITY } from "@/stores/demo";
 import { queryKeys } from "@/api/queryKeys";
 import { DEFAULT_PAGE_SIZE } from "./usePaginatedQuery";
 import { getSeasonDateRange } from "@/utils/date-helpers";
 
 // Stable empty array for React Query selectors to prevent unnecessary re-renders.
 const EMPTY_EXCHANGES: GameExchange[] = [];
-
-// Demo user identity used for client-side filtering in demo mode
-const DEMO_USER_IDENTITY = "demo-me";
 
 // Exchange status filter type
 // "mine" shows exchanges submitted by the current user (regardless of status)
@@ -38,6 +35,7 @@ export type ExchangeStatus = "open" | "applied" | "closed" | "all" | "mine";
 export function useGameExchanges(status: ExchangeStatus = "all") {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
   const activeOccupationId = useAuthStore((state) => state.activeOccupationId);
+  const userId = useAuthStore((state) => state.user?.id);
   const demoAssociationCode = useDemoStore(
     (state) => state.activeAssociationCode,
   );
@@ -91,22 +89,27 @@ export function useGameExchanges(status: ExchangeStatus = "all") {
     [propertyFilters],
   );
 
-  // Create select function that filters by submittedByPerson for "mine" status
-  // In demo mode, we filter client-side; in production, the API may handle this
+  // Create select function that filters by submittedByPerson for "mine" status.
+  // We filter client-side by comparing the user's identity with submittedByPerson.__identity.
+  // In demo mode, we use the known demo user person identity.
+  // In production, we use the user id from the auth store - this needs verification
+  // that it matches the format used in submittedByPerson.__identity. See #466.
   const selectExchanges = useMemo(() => {
     return (data: { items?: GameExchange[] }) => {
       const items = data.items ?? EMPTY_EXCHANGES;
 
-      // For "mine" status in demo mode, filter to show only user's submitted exchanges
-      if (status === "mine" && isDemoMode) {
+      if (status === "mine") {
+        const userIdentity = isDemoMode ? DEMO_USER_PERSON_IDENTITY : userId;
+        if (!userIdentity) return EMPTY_EXCHANGES;
+
         return items.filter(
-          (exchange) => exchange.submittedByPerson?.__identity === DEMO_USER_IDENTITY
+          (exchange) => exchange.submittedByPerson?.__identity === userIdentity
         );
       }
 
       return items;
     };
-  }, [status, isDemoMode]);
+  }, [status, isDemoMode, userId]);
 
   return useQuery({
     queryKey: queryKeys.exchanges.list(config, associationKey),
