@@ -16,6 +16,14 @@
     <link rel="apple-touch-icon" href="./pwa-192x192.svg" />
 
     <title>Scoresheet Scanner</title>
+
+    <!-- Initialize Emscripten Module global before any scripts load -->
+    <!-- Required for OpenCV.js compatibility with Vite bundling -->
+    <script>
+      if (typeof Module === 'undefined') {
+        window.Module = {};
+      }
+    </script>
   </head>
   <body>
     <div class="app-shell">

@@ -12,6 +12,10 @@ const CDN_CACHE_DAYS = 30;
 
 export default defineConfig({
   base: BASE_PATH,
+  // Exclude OpenCV from dependency optimization - it uses Emscripten
+  optimizeDeps: {
+    exclude: ['@paddlejs-mediapipe/opencv'],
+  },
   plugins: [
     VitePWA({
       registerType: 'autoUpdate',
