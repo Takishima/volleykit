@@ -1,9 +1,11 @@
+import { useMemo } from "react";
 import {
   useQuery,
   useMutation,
   useQueryClient,
   type UseMutationResult,
 } from "@tanstack/react-query";
+import { startOfDay, endOfDay, addMonths } from "date-fns";
 import {
   getApiClient,
   type SearchConfiguration,
@@ -14,6 +16,10 @@ import { useDemoStore } from "@/stores/demo";
 import { queryKeys } from "@/api/queryKeys";
 import { DEFAULT_PAGE_SIZE } from "./usePaginatedQuery";
 
+// Exchange date range: from today to 6 months in the future
+// This matches the behavior observed in the real volleymanager website
+const EXCHANGE_DATE_RANGE_MONTHS = 6;
+
 // Stable empty array for React Query selectors to prevent unnecessary re-renders.
 const EMPTY_EXCHANGES: GameExchange[] = [];
 
@@ -22,6 +28,9 @@ export type ExchangeStatus = "open" | "applied" | "closed" | "all";
 
 /**
  * Hook to fetch game exchange requests with optional status filtering.
+ *
+ * The API requires a date filter to return results. We use a 6-month window
+ * from today, matching the behavior of the real volleymanager website.
  *
  * @param status - Filter by exchange status, or 'all' for no filtering
  */
@@ -36,21 +45,50 @@ export function useGameExchanges(status: ExchangeStatus = "all") {
   // Use appropriate key for cache invalidation when switching associations
   const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId;
 
-  const config: SearchConfiguration = {
-    offset: 0,
-    limit: DEFAULT_PAGE_SIZE,
-    propertyFilters:
-      status !== "all"
-        ? [{ propertyName: "status", enumValues: [status] }]
-        : [],
-    propertyOrderings: [
+  // Memoize date range to prevent query key changes on every render.
+  // Date values are stable within the same day due to startOfDay/endOfDay.
+  const { fromDate, toDate } = useMemo(() => {
+    const now = new Date();
+    return {
+      fromDate: startOfDay(now).toISOString(),
+      toDate: endOfDay(addMonths(now, EXCHANGE_DATE_RANGE_MONTHS)).toISOString(),
+    };
+  }, []);
+
+  // Build property filters: always include date range, optionally include status
+  const propertyFilters = useMemo(() => {
+    const filters: SearchConfiguration["propertyFilters"] = [
       {
         propertyName: "refereeGame.game.startingDateTime",
-        descending: false,
-        isSetByUser: true,
+        dateRange: { from: fromDate, to: toDate },
       },
-    ],
-  };
+    ];
+
+    if (status !== "all") {
+      filters.push({
+        propertyName: "status",
+        enumValues: [status],
+      });
+    }
+
+    return filters;
+  }, [fromDate, toDate, status]);
+
+  const config = useMemo<SearchConfiguration>(
+    () => ({
+      offset: 0,
+      limit: DEFAULT_PAGE_SIZE,
+      propertyFilters,
+      propertyOrderings: [
+        {
+          propertyName: "refereeGame.game.startingDateTime",
+          descending: false,
+          isSetByUser: true,
+        },
+      ],
+    }),
+    [propertyFilters],
+  );
 
   return useQuery({
     queryKey: queryKeys.exchanges.list(config, associationKey),
