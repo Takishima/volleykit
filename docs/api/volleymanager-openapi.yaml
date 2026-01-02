@@ -1696,7 +1696,8 @@ components:
           example: 96317
         transportationMode:
           type: string
-          enum: [car, train, other]
+          enum: [car, train, public_transport, other]
+          nullable: true
           example: "car"
         paymentValueDate:
           type: string
