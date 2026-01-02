@@ -27,28 +27,33 @@ export interface MapsUrls {
 /**
  * Build the full address string from postal address components.
  * Handles both combined fields (postalCodeAndCity) and separate fields (postalCode, city).
+ * Always builds from components when available, since API's combinedAddress may only contain street.
  */
 export function buildFullAddress(postalAddress: PostalAddress | null | undefined): string | null {
   if (!postalAddress) return null;
 
-  // Prefer combinedAddress if available
-  if (postalAddress.combinedAddress) {
-    return postalAddress.combinedAddress;
-  }
-
-  // Build postalCodeAndCity from separate fields if not provided
+  // Build postalCodeAndCity from separate fields or use the combined field
   const postalCodeAndCity = postalAddress.postalCodeAndCity
     || (postalAddress.postalCode && postalAddress.city
       ? `${postalAddress.postalCode} ${postalAddress.city}`
       : postalAddress.city || null);
 
-  // If we have street and postal/city, combine them
+  // If we have street and postal/city, combine them for the full address
   if (postalAddress.streetAndHouseNumber && postalCodeAndCity) {
     return `${postalAddress.streetAndHouseNumber}, ${postalCodeAndCity}`;
   }
 
-  // Fall back to just postal code and city
-  return postalCodeAndCity;
+  // If we only have streetAndHouseNumber, fall back to combinedAddress if it has more info
+  if (postalAddress.streetAndHouseNumber) {
+    // Only use combinedAddress if it's different (contains more than just street)
+    if (postalAddress.combinedAddress && postalAddress.combinedAddress !== postalAddress.streetAndHouseNumber) {
+      return postalAddress.combinedAddress;
+    }
+    return null;
+  }
+
+  // Fall back to combinedAddress or just postal code and city
+  return postalAddress.combinedAddress || postalCodeAndCity;
 }
 
 /**

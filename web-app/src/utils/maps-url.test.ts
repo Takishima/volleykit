@@ -17,12 +17,13 @@ describe("maps-url", () => {
       expect(buildFullAddress(undefined)).toBeNull();
     });
 
-    it("returns combinedAddress when available", () => {
+    it("builds address from components when all are available", () => {
       const address: PostalAddress = {
         combinedAddress: "Sportstrasse 1, 8000 Zürich",
         streetAndHouseNumber: "Sportstrasse 1",
         postalCodeAndCity: "8000 Zürich",
       };
+      // Should build from components, result happens to match combinedAddress
       expect(buildFullAddress(address)).toBe("Sportstrasse 1, 8000 Zürich");
     });
 
@@ -67,13 +68,32 @@ describe("maps-url", () => {
       expect(buildFullAddress({})).toBeNull();
     });
 
-    it("prefers combinedAddress over individual components", () => {
+    it("builds from components even when combinedAddress differs", () => {
       const address: PostalAddress = {
-        combinedAddress: "Full Combined Address",
-        streetAndHouseNumber: "Different Street",
-        postalCodeAndCity: "Different City",
+        combinedAddress: "Different Combined Address",
+        streetAndHouseNumber: "Musterstrasse 1",
+        postalCodeAndCity: "8000 Zürich",
       };
-      expect(buildFullAddress(address)).toBe("Full Combined Address");
+      // Components take precedence - builds full address from street + postalCodeAndCity
+      expect(buildFullAddress(address)).toBe("Musterstrasse 1, 8000 Zürich");
+    });
+
+    it("handles API case where combinedAddress only has street", () => {
+      // Real API data: combinedAddress matches streetAndHouseNumber (no postal info)
+      const address: PostalAddress = {
+        combinedAddress: "Steingrubenweg 30",
+        streetAndHouseNumber: "Steingrubenweg 30",
+        postalCode: "4125",
+        city: "Riehen",
+      };
+      expect(buildFullAddress(address)).toBe("Steingrubenweg 30, 4125 Riehen");
+    });
+
+    it("returns combinedAddress when only it is available", () => {
+      const address: PostalAddress = {
+        combinedAddress: "Full Address Here",
+      };
+      expect(buildFullAddress(address)).toBe("Full Address Here");
     });
   });
 
