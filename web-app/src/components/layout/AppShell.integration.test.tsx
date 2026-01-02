@@ -226,4 +226,6 @@ describe("AppShell Integration", () => {
   });
 
 });
-// Note: Error handling tests moved to AppShell.error.test.tsx for proper test isolation
+// Note: Error handling tests moved to AppShell.error.test.tsx for proper test isolation.
+// Mock function state was persisting between success and error test suites, causing the
+// error test's mockRejectedValue to not take effect when run after success tests.

@@ -1,3 +1,11 @@
+/**
+ * Error handling tests for AppShell association switching.
+ *
+ * These tests are isolated in a separate file because mock function state
+ * was persisting between success and error test suites when they shared
+ * the same file. The vi.spyOn() mock setup for success tests interfered
+ * with the mockRejectedValue() configuration needed for error tests.
+ */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
