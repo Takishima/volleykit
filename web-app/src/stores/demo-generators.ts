@@ -75,10 +75,14 @@ function createAddress({
   longitude,
   plusCode,
 }: AddressParams) {
-  const combinedAddress =
-    street && houseNumber
-      ? `${street} ${houseNumber}, ${postalCode} ${city}`
-      : `${postalCode} ${city}`;
+  // Build streetAndHouseNumber if both parts are available
+  const streetAndHouseNumber =
+    street && houseNumber ? `${street} ${houseNumber}` : undefined;
+
+  // combinedAddress in real API often just contains street, but we build full here
+  const combinedAddress = streetAndHouseNumber
+    ? `${streetAndHouseNumber}, ${postalCode} ${city}`
+    : `${postalCode} ${city}`;
 
   return {
     __identity: id,
@@ -86,6 +90,7 @@ function createAddress({
     ...(houseNumber && { houseNumber }),
     postalCode,
     city,
+    ...(streetAndHouseNumber && { streetAndHouseNumber }),
     combinedAddress,
     ...(latitude !== undefined &&
       longitude !== undefined && {
