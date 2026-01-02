@@ -113,6 +113,36 @@ describe("compensationRecordSchema with dateSchema", () => {
     });
     expect(result.success).toBe(true);
   });
+
+  it("accepts compensation with public_transport transportationMode", () => {
+    const result = compensationRecordSchema.safeParse({
+      ...validCompensationBase,
+      convocationCompensation: {
+        transportationMode: "public_transport",
+      },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts compensation with null transportationMode", () => {
+    const result = compensationRecordSchema.safeParse({
+      ...validCompensationBase,
+      convocationCompensation: {
+        transportationMode: null,
+      },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts compensation with null distanceFormatted", () => {
+    const result = compensationRecordSchema.safeParse({
+      ...validCompensationBase,
+      convocationCompensation: {
+        distanceFormatted: null,
+      },
+    });
+    expect(result.success).toBe(true);
+  });
 });
 
 describe("personSearchResultSchema", () => {
