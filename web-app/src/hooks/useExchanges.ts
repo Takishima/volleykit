@@ -15,42 +15,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 import { queryKeys } from "@/api/queryKeys";
 import { DEFAULT_PAGE_SIZE } from "./usePaginatedQuery";
-
-// Volleyball season months (0-indexed): September = 8, May = 4
-const SEASON_START_MONTH = 8; // September
-const SEASON_END_MONTH = 4; // May
-
-/**
- * Calculate the current volleyball season date range.
- * A season runs from beginning of September to end of May of the following year.
- *
- * @returns Object with season start and end dates
- */
-function getSeasonDateRange(): { from: Date; to: Date } {
-  const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
-
-  let seasonStartYear: number;
-  let seasonEndYear: number;
-
-  if (currentMonth >= SEASON_START_MONTH) {
-    // September-December: season is current year to next year
-    seasonStartYear = currentYear;
-    seasonEndYear = currentYear + 1;
-  } else {
-    // January-August: season is previous year to current year
-    seasonStartYear = currentYear - 1;
-    seasonEndYear = currentYear;
-  }
-
-  // Season starts September 1st
-  const seasonStart = new Date(seasonStartYear, SEASON_START_MONTH, 1);
-  // Season ends May 31st
-  const seasonEnd = new Date(seasonEndYear, SEASON_END_MONTH + 1, 0); // Day 0 of June = May 31st
-
-  return { from: seasonStart, to: seasonEnd };
-}
+import { getSeasonDateRange } from "@/utils/date-helpers";
 
 // Stable empty array for React Query selectors to prevent unnecessary re-renders.
 const EMPTY_EXCHANGES: GameExchange[] = [];
