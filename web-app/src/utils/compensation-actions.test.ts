@@ -308,12 +308,31 @@ describe("downloadCompensationPDF", () => {
 });
 
 describe("isCompensationEditable", () => {
-  it("returns true for unpaid compensation with central payout", () => {
+  it("returns true for unpaid compensation with central payout method", () => {
     const compensation = {
       __identity: "test-1",
       convocationCompensation: {
         paymentDone: false,
-        lockPayoutOnSiteCompensation: false,
+        methodOfDisbursementArbitration: "central_payout",
+        lockPayoutCentralPayoutCompensation: false,
+      },
+      refereeGame: {},
+    } as unknown as CompensationRecord;
+
+    expect(isCompensationEditable(compensation)).toBe(true);
+  });
+
+  it("returns true for central payout when on-site lock is true but central lock is false (NLB case)", () => {
+    // This is the key bug fix test: NLB games may have lockPayoutOnSiteCompensation=true
+    // because they don't use on-site payout, but they should still be editable
+    // because lockPayoutCentralPayoutCompensation=false
+    const compensation = {
+      __identity: "test-1",
+      convocationCompensation: {
+        paymentDone: false,
+        methodOfDisbursementArbitration: "central_payout",
+        lockPayoutOnSiteCompensation: true,
+        lockPayoutCentralPayoutCompensation: false,
       },
       refereeGame: {},
     } as unknown as CompensationRecord;
@@ -326,7 +345,8 @@ describe("isCompensationEditable", () => {
       __identity: "test-1",
       convocationCompensation: {
         paymentDone: true,
-        lockPayoutOnSiteCompensation: false,
+        methodOfDisbursementArbitration: "central_payout",
+        lockPayoutCentralPayoutCompensation: false,
       },
       refereeGame: {},
     } as unknown as CompensationRecord;
@@ -334,12 +354,27 @@ describe("isCompensationEditable", () => {
     expect(isCompensationEditable(compensation)).toBe(false);
   });
 
-  it("returns false when on-site payout is locked (regional association)", () => {
+  it("returns false when on-site payout is locked for on-site method (regional association)", () => {
     const compensation = {
       __identity: "test-1",
       convocationCompensation: {
         paymentDone: false,
+        methodOfDisbursementArbitration: "payout_on_site",
         lockPayoutOnSiteCompensation: true,
+      },
+      refereeGame: {},
+    } as unknown as CompensationRecord;
+
+    expect(isCompensationEditable(compensation)).toBe(false);
+  });
+
+  it("returns false when central payout is locked for central method", () => {
+    const compensation = {
+      __identity: "test-1",
+      convocationCompensation: {
+        paymentDone: false,
+        methodOfDisbursementArbitration: "central_payout",
+        lockPayoutCentralPayoutCompensation: true,
       },
       refereeGame: {},
     } as unknown as CompensationRecord;
@@ -356,17 +391,31 @@ describe("isCompensationEditable", () => {
     expect(isCompensationEditable(compensation)).toBe(false);
   });
 
-  it("returns true when lockPayoutOnSiteCompensation is undefined (defaults to editable)", () => {
+  it("returns true when no locks are set and no disbursement method (defaults to editable)", () => {
     const compensation = {
       __identity: "test-1",
       convocationCompensation: {
         paymentDone: false,
-        // lockPayoutOnSiteCompensation not set
+        // No locks set, no disbursement method
       },
       refereeGame: {},
     } as unknown as CompensationRecord;
 
     expect(isCompensationEditable(compensation)).toBe(true);
+  });
+
+  it("returns false when any lock is true without disbursement method (backwards compat)", () => {
+    const compensation = {
+      __identity: "test-1",
+      convocationCompensation: {
+        paymentDone: false,
+        lockPayoutOnSiteCompensation: true,
+        // No disbursement method - checks both locks
+      },
+      refereeGame: {},
+    } as unknown as CompensationRecord;
+
+    expect(isCompensationEditable(compensation)).toBe(false);
   });
 });
 
@@ -380,12 +429,29 @@ describe("isAssignmentCompensationEditable", () => {
     expect(isAssignmentCompensationEditable(assignment)).toBe(true);
   });
 
-  it("returns true for unpaid assignment with central payout (SV association)", () => {
+  it("returns true for unpaid assignment with central payout method (SV association)", () => {
     const assignment = {
       __identity: "test-1",
       convocationCompensation: {
         paymentDone: false,
-        lockPayoutOnSiteCompensation: false,
+        methodOfDisbursementArbitration: "central_payout",
+        lockPayoutCentralPayoutCompensation: false,
+      },
+      refereeGame: {},
+    } as unknown as Assignment;
+
+    expect(isAssignmentCompensationEditable(assignment)).toBe(true);
+  });
+
+  it("returns true for central payout when on-site lock is true but central lock is false (NLB case)", () => {
+    // This is the key bug fix test for assignments
+    const assignment = {
+      __identity: "test-1",
+      convocationCompensation: {
+        paymentDone: false,
+        methodOfDisbursementArbitration: "central_payout",
+        lockPayoutOnSiteCompensation: true,
+        lockPayoutCentralPayoutCompensation: false,
       },
       refereeGame: {},
     } as unknown as Assignment;
@@ -398,7 +464,8 @@ describe("isAssignmentCompensationEditable", () => {
       __identity: "test-1",
       convocationCompensation: {
         paymentDone: true,
-        lockPayoutOnSiteCompensation: false,
+        methodOfDisbursementArbitration: "central_payout",
+        lockPayoutCentralPayoutCompensation: false,
       },
       refereeGame: {},
     } as unknown as Assignment;
@@ -406,11 +473,12 @@ describe("isAssignmentCompensationEditable", () => {
     expect(isAssignmentCompensationEditable(assignment)).toBe(false);
   });
 
-  it("returns false when on-site payout is locked (regional association)", () => {
+  it("returns false when on-site payout is locked for on-site method (regional association)", () => {
     const assignment = {
       __identity: "test-1",
       convocationCompensation: {
         paymentDone: false,
+        methodOfDisbursementArbitration: "payout_on_site",
         lockPayoutOnSiteCompensation: true,
       },
       refereeGame: {},
@@ -419,12 +487,12 @@ describe("isAssignmentCompensationEditable", () => {
     expect(isAssignmentCompensationEditable(assignment)).toBe(false);
   });
 
-  it("returns true when lockPayoutOnSiteCompensation is undefined (defaults to editable)", () => {
+  it("returns true when no locks are set (defaults to editable)", () => {
     const assignment = {
       __identity: "test-1",
       convocationCompensation: {
         paymentDone: false,
-        // lockPayoutOnSiteCompensation not set
+        // No locks set
       },
       refereeGame: {},
     } as unknown as Assignment;

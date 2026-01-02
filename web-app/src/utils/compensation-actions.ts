@@ -4,22 +4,59 @@ import { type SwipeAction, SWIPE_ACTION_ICON_SIZE } from "@/types/swipe";
 import { Wallet, FileText } from "@/components/ui/icons";
 
 /**
- * Extended compensation type that includes lock flags.
+ * Disbursement method for compensation payments.
+ */
+type DisbursementMethod = "payout_on_site" | "central_payout";
+
+/**
+ * Extended compensation type that includes lock flags and disbursement method.
  * The API returns these fields in ConvocationCompensationDetailed,
  * and demo mode generates them for testing regional association behavior.
  */
 interface ConvocationCompensationWithLockFlags {
   paymentDone?: boolean;
   lockPayoutOnSiteCompensation?: boolean;
+  lockPayoutCentralPayoutCompensation?: boolean;
+  methodOfDisbursementArbitration?: DisbursementMethod;
+}
+
+/**
+ * Checks if compensation is locked based on the disbursement method.
+ *
+ * The API uses different lock flags depending on how compensation is paid:
+ * - On-site payout (regional associations): Check lockPayoutOnSiteCompensation
+ * - Central payout (SV national): Check lockPayoutCentralPayoutCompensation
+ */
+function isCompensationLocked(cc: ConvocationCompensationWithLockFlags): boolean {
+  const method = cc.methodOfDisbursementArbitration;
+
+  if (method === "payout_on_site") {
+    // For on-site payout, check the on-site lock
+    return cc.lockPayoutOnSiteCompensation === true;
+  }
+
+  if (method === "central_payout") {
+    // For central payout, check the central payout lock
+    return cc.lockPayoutCentralPayoutCompensation === true;
+  }
+
+  // If disbursement method is unknown, check both locks
+  // This provides backwards compatibility when the field isn't requested
+  return (
+    cc.lockPayoutOnSiteCompensation === true ||
+    cc.lockPayoutCentralPayoutCompensation === true
+  );
 }
 
 /**
  * Checks if a compensation record can be edited.
  *
- * Editability rules:
- * - Non-editable: lockPayoutOnSiteCompensation=true AND paymentDone=false (on-site payout locked)
+ * Editability rules (based on disbursement method):
  * - Non-editable: paymentDone=true (already paid)
- * - Editable: lockPayoutOnSiteCompensation=false AND paymentDone=false
+ * - Non-editable: relevant lock is true based on methodOfDisbursementArbitration
+ *   - payout_on_site: check lockPayoutOnSiteCompensation
+ *   - central_payout: check lockPayoutCentralPayoutCompensation
+ * - Editable: not paid AND relevant lock is false
  */
 export function isCompensationEditable(compensation: CompensationRecord): boolean {
   const cc = compensation.convocationCompensation as
@@ -30,8 +67,8 @@ export function isCompensationEditable(compensation: CompensationRecord): boolea
   // Already paid - not editable
   if (cc.paymentDone) return false;
 
-  // On-site payout locked - not editable (regional associations)
-  if (cc.lockPayoutOnSiteCompensation === true) return false;
+  // Check the appropriate lock based on disbursement method
+  if (isCompensationLocked(cc)) return false;
 
   return true;
 }
@@ -40,13 +77,15 @@ export function isCompensationEditable(compensation: CompensationRecord): boolea
  * Checks if an assignment's compensation can be edited.
  *
  * Editability rules (same as isCompensationEditable):
- * - Non-editable: lockPayoutOnSiteCompensation=true AND paymentDone=false (on-site payout locked)
  * - Non-editable: paymentDone=true (already paid)
- * - Editable: lockPayoutOnSiteCompensation=false AND paymentDone=false
+ * - Non-editable: relevant lock is true based on methodOfDisbursementArbitration
  * - Editable: convocationCompensation not present (defaults to editable for backwards compatibility)
+ * - Editable: not paid AND relevant lock is false
  */
 export function isAssignmentCompensationEditable(assignment: Assignment): boolean {
-  const cc = assignment.convocationCompensation;
+  const cc = assignment.convocationCompensation as
+    | ConvocationCompensationWithLockFlags
+    | undefined;
   // If no compensation data, default to editable (for backwards compatibility
   // and when the API doesn't return compensation properties)
   if (!cc) return true;
@@ -54,8 +93,8 @@ export function isAssignmentCompensationEditable(assignment: Assignment): boolea
   // Already paid - not editable
   if (cc.paymentDone) return false;
 
-  // On-site payout locked - not editable (regional associations)
-  if (cc.lockPayoutOnSiteCompensation === true) return false;
+  // Check the appropriate lock based on disbursement method
+  if (isCompensationLocked(cc)) return false;
 
   return true;
 }

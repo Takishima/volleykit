@@ -47,6 +47,8 @@ export const ASSIGNMENT_PROPERTIES = [
   // Compensation lock flags for editability check
   "convocationCompensation.paymentDone",
   "convocationCompensation.lockPayoutOnSiteCompensation",
+  "convocationCompensation.lockPayoutCentralPayoutCompensation",
+  "convocationCompensation.methodOfDisbursementArbitration",
   // Validation status for swipe button color.
   // Parent object must be requested before nested property to ensure
   // the API populates the nested structure correctly.
@@ -144,6 +146,8 @@ export const COMPENSATION_PROPERTIES = [
   "convocationCompensation.transportationMode",
   "convocationCompensation.paymentDone",
   "convocationCompensation.lockPayoutOnSiteCompensation",
+  "convocationCompensation.lockPayoutCentralPayoutCompensation",
+  "convocationCompensation.methodOfDisbursementArbitration",
   "convocationCompensation.paymentValueDate",
   "convocationCompensation.paymentUpdatedByAssociation.name",
   "indoorAssociationReferee.indoorReferee.person.associationId",
