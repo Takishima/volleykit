@@ -215,7 +215,8 @@ export function AssignmentsPage() {
         }
         className="space-y-3"
       >
-        {isLoading && <LoadingState message={t("assignments.loading")} />}
+        {/* Skip loading state when showing dummy tour data (we already have data to show) */}
+        {isLoading && !showDummyData && <LoadingState message={t("assignments.loading")} />}
 
         {error && (
           <ErrorState
@@ -228,7 +229,7 @@ export function AssignmentsPage() {
           />
         )}
 
-        {!isLoading && !error && data && data.length === 0 && (
+        {(!isLoading || showDummyData) && !error && data && data.length === 0 && (
           <EmptyState
             icon={activeTab === "upcoming" ? "calendar" : "lock"}
             title={
@@ -244,7 +245,7 @@ export function AssignmentsPage() {
           />
         )}
 
-        {!isLoading && !error && groupedData.length > 0 && (
+        {(!isLoading || showDummyData) && !error && groupedData.length > 0 && (
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {groupedData.map((group, groupIndex) => {
               // Track global item index for tour data attribute

@@ -123,7 +123,8 @@ export function CompensationsPage() {
   };
 
   const renderContent = () => {
-    if (isLoading) {
+    // Skip loading state when showing dummy tour data (we already have data to show)
+    if (isLoading && !showDummyData) {
       return <LoadingState message={t("compensations.loading")} />;
     }
 
