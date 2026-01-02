@@ -56,19 +56,25 @@ export const TOUR_DUMMY_EXCHANGE: TourDummyExchange = {
     game: {
       __identity: "tour-dummy-game-exchange",
       gameNumber: "67890",
-      plannedStartDateTime: getFutureDate(),
-      teamHome: {
-        __identity: "tour-dummy-team-home-exchange",
-        name: "VBC Anleitung",
-      },
-      teamAway: {
-        __identity: "tour-dummy-team-away-exchange",
-        name: "SC Hilfe",
+      startingDateTime: getFutureDate(),
+      encounter: {
+        __identity: "tour-dummy-encounter-exchange",
+        teamHome: {
+          __identity: "tour-dummy-team-home-exchange",
+          name: "VBC Anleitung",
+        },
+        teamAway: {
+          __identity: "tour-dummy-team-away-exchange",
+          name: "SC Hilfe",
+        },
       },
       hall: {
         __identity: "tour-dummy-hall-exchange",
         name: "Turnhalle Tutorial",
-        city: "Bern",
+        primaryPostalAddress: {
+          __identity: "tour-dummy-address-exchange",
+          city: "Bern",
+        },
       },
     },
   },
