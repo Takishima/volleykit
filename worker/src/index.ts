@@ -75,6 +75,12 @@ const ALLOWED_PREFIX_PATHS_NO_API = [
   "/sportmanager.volleyball/",
 ];
 
+// Specific paths within NO_API prefixes that DO need the /api/ prefix
+// The party switching endpoint is under /sportmanager.security/ but needs /api/
+const EXCEPTIONS_NEED_API = [
+  "/sportmanager.security/api", // e.g., /sportmanager.security/api\party/switchRoleAndAttribute
+];
+
 // Prefix match paths that ARE prefixed with /api/ (API endpoints)
 const ALLOWED_PREFIX_PATHS_WITH_API = [
   "/indoorvolleyball.refadmin/",
@@ -107,8 +113,15 @@ function isAllowedPath(pathname: string): boolean {
 /**
  * Check if a path requires the /api/ prefix when forwarding to the target host.
  * API endpoints need this prefix, while auth/dashboard endpoints do not.
+ *
+ * Special case: Some paths under /sportmanager.security/ (like party switching)
+ * DO need the /api/ prefix even though most /sportmanager.security/ paths don't.
  */
 function requiresApiPrefix(pathname: string): boolean {
+  // Check for exceptions first - paths that normally wouldn't need /api/ but do
+  if (EXCEPTIONS_NEED_API.some((prefix) => pathname.startsWith(prefix))) {
+    return true;
+  }
   return ALLOWED_PREFIX_PATHS_WITH_API.some((prefix) =>
     pathname.startsWith(prefix),
   );

@@ -2,7 +2,10 @@
  * Debug panel for diagnosing association dropdown issues.
  * Shows raw state values that determine dropdown visibility.
  *
- * Usage: Enable via bookmarklet or by adding ?debug=associations to URL
+ * Usage:
+ * - URL parameter: Add ?debug=associations to URL
+ * - Console: window.dispatchEvent(new Event('vk-debug-show'))
+ * - Toggle: window.dispatchEvent(new Event('vk-debug-toggle'))
  *
  * NOTE: This component uses inline styles intentionally to:
  * 1. Keep debug UI visually distinct from the app
@@ -96,9 +99,20 @@ function useDebugVisibility(refreshPersistedState: () => void) {
         return !v;
       });
     };
-    window.addEventListener("vk-debug-toggle", handleToggle);
 
-    return () => window.removeEventListener("vk-debug-toggle", handleToggle);
+    // Handle both the custom event and a direct show event
+    const handleShow = () => {
+      setIsVisible(true);
+      refreshPersistedState();
+    };
+
+    window.addEventListener("vk-debug-toggle", handleToggle);
+    window.addEventListener("vk-debug-show", handleShow);
+
+    return () => {
+      window.removeEventListener("vk-debug-toggle", handleToggle);
+      window.removeEventListener("vk-debug-show", handleShow);
+    };
   }, [refreshPersistedState]);
 
   return { isVisible, setIsVisible };
