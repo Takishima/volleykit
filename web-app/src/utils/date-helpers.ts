@@ -262,3 +262,50 @@ export function getMaxLastNameWidth(
   }
   return maxLen;
 }
+
+// Volleyball season months (0-indexed): September = 8, May = 4
+const SEASON_START_MONTH = 8; // September
+const SEASON_END_MONTH = 4; // May
+
+/**
+ * Calculate the current volleyball season date range.
+ * A season runs from beginning of September to end of May of the following year.
+ *
+ * Season boundaries:
+ * - September 1st to December 31st: current year → next year (e.g., Sept 2025 - May 2026)
+ * - January 1st to August 31st: previous year → current year (e.g., Sept 2024 - May 2025)
+ *
+ * Note: If the app remains open across a season boundary (Aug 31 → Sept 1),
+ * the user will need to refresh to see the new season. This is acceptable
+ * for a PWA where users typically close/reopen the app regularly.
+ *
+ * @param referenceDate - Date to calculate season for (defaults to current date)
+ * @returns Object with season start and end dates
+ */
+export function getSeasonDateRange(referenceDate: Date = new Date()): {
+  from: Date;
+  to: Date;
+} {
+  const currentMonth = referenceDate.getMonth();
+  const currentYear = referenceDate.getFullYear();
+
+  let seasonStartYear: number;
+  let seasonEndYear: number;
+
+  if (currentMonth >= SEASON_START_MONTH) {
+    // September-December: season is current year to next year
+    seasonStartYear = currentYear;
+    seasonEndYear = currentYear + 1;
+  } else {
+    // January-August: season is previous year to current year
+    seasonStartYear = currentYear - 1;
+    seasonEndYear = currentYear;
+  }
+
+  // Season starts September 1st
+  const seasonStart = new Date(seasonStartYear, SEASON_START_MONTH, 1);
+  // Season ends May 31st (day 0 of June = last day of May)
+  const seasonEnd = new Date(seasonEndYear, SEASON_END_MONTH + 1, 0);
+
+  return { from: seasonStart, to: seasonEnd };
+}

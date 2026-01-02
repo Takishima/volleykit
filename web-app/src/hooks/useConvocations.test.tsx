@@ -308,7 +308,7 @@ describe("useConvocations - API Client Routing", () => {
       );
     });
 
-    it("should call API without filter when status is all", async () => {
+    it("should call API with only date filter when status is all", async () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
         selector({ isDemoMode: false } as ReturnType<
           typeof authStore.useAuthStore.getState
@@ -328,9 +328,18 @@ describe("useConvocations - API Client Routing", () => {
         expect(result.current.isFetching).toBe(false);
       });
 
+      // When status is "all", only the date filter should be present (no status filter)
       expect(mockApi.searchExchanges).toHaveBeenCalledWith(
         expect.objectContaining({
-          propertyFilters: [],
+          propertyFilters: [
+            expect.objectContaining({
+              propertyName: "refereeGame.game.startingDateTime",
+              dateRange: expect.objectContaining({
+                from: expect.any(String),
+                to: expect.any(String),
+              }),
+            }),
+          ],
         }),
       );
     });

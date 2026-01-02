@@ -5,6 +5,7 @@ import {
   groupByWeek,
   formatRosterEntries,
   getMaxLastNameWidth,
+  getSeasonDateRange,
 } from "./date-helpers";
 
 describe("formatDateTime", () => {
@@ -397,5 +398,133 @@ describe("getMaxLastNameWidth", () => {
     ]);
 
     expect(getMaxLastNameWidth(entries)).toBe(4); // "Test" = 4 chars
+  });
+});
+
+describe("getSeasonDateRange", () => {
+  describe("during season (September-December)", () => {
+    it("returns current year to next year for October 15, 2025", () => {
+      const referenceDate = new Date(2025, 9, 15); // October 15, 2025
+      const { from, to } = getSeasonDateRange(referenceDate);
+
+      expect(from.getFullYear()).toBe(2025);
+      expect(from.getMonth()).toBe(8); // September
+      expect(from.getDate()).toBe(1);
+
+      expect(to.getFullYear()).toBe(2026);
+      expect(to.getMonth()).toBe(4); // May
+      expect(to.getDate()).toBe(31);
+    });
+
+    it("returns current year to next year for September 1st (season start)", () => {
+      const referenceDate = new Date(2025, 8, 1); // September 1, 2025
+      const { from, to } = getSeasonDateRange(referenceDate);
+
+      expect(from.getFullYear()).toBe(2025);
+      expect(from.getMonth()).toBe(8); // September
+      expect(from.getDate()).toBe(1);
+
+      expect(to.getFullYear()).toBe(2026);
+      expect(to.getMonth()).toBe(4); // May
+      expect(to.getDate()).toBe(31);
+    });
+
+    it("returns current year to next year for December 31st", () => {
+      const referenceDate = new Date(2025, 11, 31); // December 31, 2025
+      const { from, to } = getSeasonDateRange(referenceDate);
+
+      expect(from.getFullYear()).toBe(2025);
+      expect(from.getMonth()).toBe(8); // September
+      expect(from.getDate()).toBe(1);
+
+      expect(to.getFullYear()).toBe(2026);
+      expect(to.getMonth()).toBe(4); // May
+      expect(to.getDate()).toBe(31);
+    });
+  });
+
+  describe("during season (January-May)", () => {
+    it("returns previous year to current year for January 15, 2025", () => {
+      const referenceDate = new Date(2025, 0, 15); // January 15, 2025
+      const { from, to } = getSeasonDateRange(referenceDate);
+
+      expect(from.getFullYear()).toBe(2024);
+      expect(from.getMonth()).toBe(8); // September
+      expect(from.getDate()).toBe(1);
+
+      expect(to.getFullYear()).toBe(2025);
+      expect(to.getMonth()).toBe(4); // May
+      expect(to.getDate()).toBe(31);
+    });
+
+    it("returns previous year to current year for May 31st (season end)", () => {
+      const referenceDate = new Date(2025, 4, 31); // May 31, 2025
+      const { from, to } = getSeasonDateRange(referenceDate);
+
+      expect(from.getFullYear()).toBe(2024);
+      expect(from.getMonth()).toBe(8); // September
+      expect(from.getDate()).toBe(1);
+
+      expect(to.getFullYear()).toBe(2025);
+      expect(to.getMonth()).toBe(4); // May
+      expect(to.getDate()).toBe(31);
+    });
+  });
+
+  describe("off-season (June-August)", () => {
+    it("returns previous year to current year for June 1st", () => {
+      const referenceDate = new Date(2025, 5, 1); // June 1, 2025
+      const { from, to } = getSeasonDateRange(referenceDate);
+
+      // Still shows the season that just ended (Sept 2024 - May 2025)
+      expect(from.getFullYear()).toBe(2024);
+      expect(from.getMonth()).toBe(8); // September
+      expect(from.getDate()).toBe(1);
+
+      expect(to.getFullYear()).toBe(2025);
+      expect(to.getMonth()).toBe(4); // May
+      expect(to.getDate()).toBe(31);
+    });
+
+    it("returns previous year to current year for August 31st (day before new season)", () => {
+      const referenceDate = new Date(2025, 7, 31); // August 31, 2025
+      const { from, to } = getSeasonDateRange(referenceDate);
+
+      // Still shows the previous season (Sept 2024 - May 2025)
+      expect(from.getFullYear()).toBe(2024);
+      expect(from.getMonth()).toBe(8); // September
+      expect(from.getDate()).toBe(1);
+
+      expect(to.getFullYear()).toBe(2025);
+      expect(to.getMonth()).toBe(4); // May
+      expect(to.getDate()).toBe(31);
+    });
+  });
+
+  describe("edge cases", () => {
+    it("uses current date when no reference date provided", () => {
+      const { from, to } = getSeasonDateRange();
+
+      // Should return valid dates
+      expect(from).toBeInstanceOf(Date);
+      expect(to).toBeInstanceOf(Date);
+      expect(from.getTime()).toBeLessThan(to.getTime());
+
+      // Season should always be Sept to May
+      expect(from.getMonth()).toBe(8); // September
+      expect(from.getDate()).toBe(1);
+      expect(to.getMonth()).toBe(4); // May
+      expect(to.getDate()).toBe(31);
+    });
+
+    it("correctly calculates May 31st for leap years", () => {
+      // 2024 is a leap year, but May always has 31 days
+      const referenceDate = new Date(2024, 2, 15); // March 15, 2024
+      const { to } = getSeasonDateRange(referenceDate);
+
+      expect(to.getFullYear()).toBe(2024);
+      expect(to.getMonth()).toBe(4); // May
+      expect(to.getDate()).toBe(31);
+    });
   });
 });

@@ -1,9 +1,11 @@
+import { useMemo } from "react";
 import {
   useQuery,
   useMutation,
   useQueryClient,
   type UseMutationResult,
 } from "@tanstack/react-query";
+import { startOfDay, endOfDay } from "date-fns";
 import {
   getApiClient,
   type SearchConfiguration,
@@ -13,6 +15,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 import { queryKeys } from "@/api/queryKeys";
 import { DEFAULT_PAGE_SIZE } from "./usePaginatedQuery";
+import { getSeasonDateRange } from "@/utils/date-helpers";
 
 // Stable empty array for React Query selectors to prevent unnecessary re-renders.
 const EMPTY_EXCHANGES: GameExchange[] = [];
@@ -22,6 +25,9 @@ export type ExchangeStatus = "open" | "applied" | "closed" | "all";
 
 /**
  * Hook to fetch game exchange requests with optional status filtering.
+ *
+ * The API requires a date filter to return results. We use the current
+ * volleyball season dates (September to May) to filter exchanges.
  *
  * @param status - Filter by exchange status, or 'all' for no filtering
  */
@@ -36,21 +42,50 @@ export function useGameExchanges(status: ExchangeStatus = "all") {
   // Use appropriate key for cache invalidation when switching associations
   const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId;
 
-  const config: SearchConfiguration = {
-    offset: 0,
-    limit: DEFAULT_PAGE_SIZE,
-    propertyFilters:
-      status !== "all"
-        ? [{ propertyName: "status", enumValues: [status] }]
-        : [],
-    propertyOrderings: [
+  // Memoize season date range. The season only changes once per year,
+  // so this is stable for the entire session.
+  const { fromDate, toDate } = useMemo(() => {
+    const { from, to } = getSeasonDateRange();
+    return {
+      fromDate: startOfDay(from).toISOString(),
+      toDate: endOfDay(to).toISOString(),
+    };
+  }, []);
+
+  // Build property filters: always include date range, optionally include status
+  const propertyFilters = useMemo(() => {
+    const filters: SearchConfiguration["propertyFilters"] = [
       {
         propertyName: "refereeGame.game.startingDateTime",
-        descending: false,
-        isSetByUser: true,
+        dateRange: { from: fromDate, to: toDate },
       },
-    ],
-  };
+    ];
+
+    if (status !== "all") {
+      filters.push({
+        propertyName: "status",
+        enumValues: [status],
+      });
+    }
+
+    return filters;
+  }, [fromDate, toDate, status]);
+
+  const config = useMemo<SearchConfiguration>(
+    () => ({
+      offset: 0,
+      limit: DEFAULT_PAGE_SIZE,
+      propertyFilters,
+      propertyOrderings: [
+        {
+          propertyName: "refereeGame.game.startingDateTime",
+          descending: false,
+          isSetByUser: true,
+        },
+      ],
+    }),
+    [propertyFilters],
+  );
 
   return useQuery({
     queryKey: queryKeys.exchanges.list(config, associationKey),
