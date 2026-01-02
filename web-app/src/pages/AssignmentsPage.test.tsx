@@ -5,8 +5,8 @@ import type { Assignment } from "@/api/client";
 import type { UseQueryResult } from "@tanstack/react-query";
 import * as useConvocations from "@/hooks/useConvocations";
 
-vi.mock("@/hooks/useConvocations");
-vi.mock("@/hooks/useTour", () => ({
+// Mock useTour to disable tour mode during tests (see src/test/mocks.ts for shared pattern)
+const mockUseTour = vi.hoisted(() => ({
   useTour: () => ({
     isActive: false,
     isTourMode: false,
@@ -18,6 +18,9 @@ vi.mock("@/hooks/useTour", () => ({
     shouldShow: false,
   }),
 }));
+
+vi.mock("@/hooks/useConvocations");
+vi.mock("@/hooks/useTour", () => mockUseTour);
 vi.mock("@/hooks/useAssignmentActions", () => ({
   useAssignmentActions: () => ({
     editCompensationModal: {
