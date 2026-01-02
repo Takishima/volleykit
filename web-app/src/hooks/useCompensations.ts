@@ -39,6 +39,10 @@ export type CompensationErrorKey =
 /**
  * Hook to fetch compensation records with optional paid/unpaid filtering.
  *
+ * Note: The volleymanager API does not support filtering by paymentDone=true/false.
+ * It only supports NOT_NULL to check if compensation data exists. Therefore, we
+ * fetch all compensations and apply client-side filtering for paid/unpaid status.
+ *
  * @param paidFilter - Optional filter: true for paid, false for unpaid, undefined for all
  */
 export function useCompensations(paidFilter?: boolean) {
@@ -52,18 +56,13 @@ export function useCompensations(paidFilter?: boolean) {
   // Use appropriate key for cache invalidation when switching associations
   const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId;
 
+  // Note: We don't send paymentDone filter to the API because the real API
+  // doesn't support "true"/"false" values - it only supports "NOT_NULL".
+  // Client-side filtering is applied in the select function instead.
   const config: SearchConfiguration = {
     offset: 0,
     limit: DEFAULT_PAGE_SIZE,
-    propertyFilters:
-      paidFilter !== undefined
-        ? [
-            {
-              propertyName: "convocationCompensation.paymentDone",
-              values: [String(paidFilter)],
-            },
-          ]
-        : [],
+    propertyFilters: [],
     propertyOrderings: [
       {
         propertyName: "refereeGame.game.startingDateTime",
@@ -74,9 +73,19 @@ export function useCompensations(paidFilter?: boolean) {
   };
 
   return useQuery({
+    // All tabs share the same base query - filtering is done client-side via select
     queryKey: queryKeys.compensations.list(config, associationKey),
     queryFn: () => apiClient.searchCompensations(config),
-    select: (data) => data.items ?? EMPTY_COMPENSATIONS,
+    select: (data) => {
+      const items = data.items ?? EMPTY_COMPENSATIONS;
+      // Apply client-side filtering for paid/unpaid status
+      if (paidFilter === undefined) {
+        return items;
+      }
+      return items.filter(
+        (record) => record.convocationCompensation?.paymentDone === paidFilter,
+      );
+    },
     staleTime: 5 * 60 * 1000,
   });
 }

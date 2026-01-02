@@ -215,16 +215,26 @@ describe("useConvocations - API Client Routing", () => {
   });
 
   describe("useCompensations", () => {
-    it("should call API with paid filter when provided", async () => {
+    it("should apply client-side filtering when paid filter is provided", async () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
         selector({ isDemoMode: false } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
 
+      // Return mix of paid and unpaid compensations
       mockApi.searchCompensations.mockResolvedValue({
-        items: [],
-        totalItemsCount: 0,
+        items: [
+          {
+            __identity: "paid-1",
+            convocationCompensation: { __identity: "c1", paymentDone: true },
+          },
+          {
+            __identity: "unpaid-1",
+            convocationCompensation: { __identity: "c2", paymentDone: false },
+          },
+        ],
+        totalItemsCount: 2,
       });
 
       const { result } = renderHook(() => useCompensations(true), {
@@ -235,16 +245,16 @@ describe("useConvocations - API Client Routing", () => {
         expect(result.current.isFetching).toBe(false);
       });
 
+      // API should be called without paymentDone filter (client-side filtering)
       expect(mockApi.searchCompensations).toHaveBeenCalledWith(
         expect.objectContaining({
-          propertyFilters: expect.arrayContaining([
-            expect.objectContaining({
-              propertyName: "convocationCompensation.paymentDone",
-              values: ["true"],
-            }),
-          ]),
+          propertyFilters: [],
         }),
       );
+
+      // Client-side filtering should return only paid compensations
+      expect(result.current.data).toHaveLength(1);
+      expect(result.current.data![0]!.__identity).toBe("paid-1");
     });
 
     it("should call API without filter when no paid filter provided", async () => {
