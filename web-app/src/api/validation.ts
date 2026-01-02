@@ -110,11 +110,11 @@ const hallSchema = z
     __identity: uuidSchema.optional(),
     name: z.string().optional(),
     shortName: z.string().optional().nullable(),
-    postalAddress: z
+    primaryPostalAddress: z
       .object({
-        streetAddress: z.string().optional(),
+        combinedAddress: z.string().optional(),
         postalCode: z.string().optional(),
-        locality: z.string().optional(),
+        city: z.string().optional(),
       })
       .passthrough()
       .optional(),
