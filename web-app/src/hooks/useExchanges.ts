@@ -42,12 +42,12 @@ export function useGameExchanges(status: ExchangeStatus = "all") {
   // Use appropriate key for cache invalidation when switching associations
   const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId;
 
-  // Memoize season date range. The season only changes once per year,
-  // so this is stable for the entire session.
+  // Only fetch future exchanges - past games are irrelevant for both
+  // "open" (can't take over past games) and "applied" (user only cares about upcoming).
   const { fromDate, toDate } = useMemo(() => {
-    const { from, to } = getSeasonDateRange();
+    const { to } = getSeasonDateRange();
     return {
-      fromDate: startOfDay(from).toISOString(),
+      fromDate: startOfDay(new Date()).toISOString(),
       toDate: endOfDay(to).toISOString(),
     };
   }, []);
