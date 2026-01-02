@@ -8,6 +8,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { getOccupationLabelKey } from "@/utils/occupation-labels";
 import { getApiClient } from "@/api/client";
 import { toast } from "@/stores/toast";
+import { createLogger } from "@/utils/logger";
 import {
   Volleyball,
   ClipboardList,
@@ -18,6 +19,8 @@ import {
 } from "@/components/ui/icons";
 import type { LucideIcon } from "lucide-react";
 import { TourModeBanner } from "@/components/tour/TourModeBanner";
+
+const log = createLogger("AppShell");
 
 // Lazy-load debug panel to avoid bundle size impact in production
 const AssociationDebugPanel = lazy(() =>
@@ -146,7 +149,7 @@ export function AppShell() {
         setActiveOccupation(previousOccupationId ?? id);
         // Show error toast to user
         toast.error(t("common.switchAssociationFailed"));
-        console.error("Failed to switch association:", error);
+        log.error("Failed to switch association:", error);
       }
     } finally {
       // Only clear switching state if this is still the latest request
