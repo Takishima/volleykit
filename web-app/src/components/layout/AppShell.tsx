@@ -119,13 +119,9 @@ export function AppShell() {
     // Increment counter to track this specific switch request
     // This handles race conditions when user rapidly clicks different associations
     const currentSwitch = ++switchCounterRef.current;
-    const previousOccupationId = activeOccupationId;
 
     setIsSwitching(true);
     setIsDropdownOpen(false);
-
-    // Optimistic UI update - immediately show the new selection
-    setActiveOccupation(id);
 
     try {
       // Call API to switch association (works for both demo and production mode)
@@ -136,18 +132,26 @@ export function AppShell() {
 
       // Check if this is still the latest switch request (race condition protection)
       if (currentSwitch !== switchCounterRef.current) {
-        // A newer switch was initiated, don't invalidate queries
+        // A newer switch was initiated, don't update state or invalidate queries
         return;
       }
 
-      // Invalidate all queries to refetch data for the new association
-      await queryClient.invalidateQueries();
+      // Update state AFTER the API call succeeds to prevent race conditions.
+      // If we update state before the API call, queries will start refetching
+      // with new keys while the server is still in the old association context,
+      // causing stale data to be cached under the new association key.
+      setActiveOccupation(id);
+
+      // Reset all queries to clear cached data and force fresh fetches.
+      // Using resetQueries() instead of invalidateQueries() ensures:
+      // 1. Old association's data is cleared immediately (shows loading state)
+      // 2. New data is fetched fresh from the server
+      // This prevents showing stale data from the previous association.
+      await queryClient.resetQueries();
     } catch (error) {
-      // Check if this is still the latest switch request before reverting
+      // Check if this is still the latest switch request before showing error
       if (currentSwitch === switchCounterRef.current) {
-        // Revert optimistic update on error
-        setActiveOccupation(previousOccupationId ?? id);
-        // Show error toast to user
+        // Show error toast to user - state was not changed so no revert needed
         toast.error(t("common.switchAssociationFailed"));
         log.error("Failed to switch association:", error);
       }

@@ -145,9 +145,9 @@ describe("AppShell Integration", () => {
       });
     });
 
-    it("invalidates queries after switching", async () => {
+    it("resets queries after switching to clear old data", async () => {
       const user = userEvent.setup();
-      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+      const resetSpy = vi.spyOn(queryClient, "resetQueries");
 
       renderAppShell();
 
@@ -166,9 +166,9 @@ describe("AppShell Integration", () => {
         expect(mockApi.switchRoleAndAttribute).toHaveBeenCalled();
       });
 
-      // Then verify queries were invalidated
+      // Then verify queries were reset (clears cache for immediate loading state)
       await waitFor(() => {
-        expect(invalidateSpy).toHaveBeenCalled();
+        expect(resetSpy).toHaveBeenCalled();
       });
     });
 
@@ -195,7 +195,7 @@ describe("AppShell Integration", () => {
       });
     });
 
-    it("shows optimistic UI update immediately", async () => {
+    it("updates auth store after API call succeeds", async () => {
       const user = userEvent.setup();
       renderAppShell();
 
@@ -208,11 +208,13 @@ describe("AppShell Integration", () => {
       await user.click(screen.getByRole("button", { name: /referee.*SV/i }));
       await user.click(screen.getByRole("option", { name: /SVRBA/i }));
 
-      // Optimistic update: auth store should be updated immediately
-      // (before API call completes)
-      expect(useAuthStore.getState().activeOccupationId).toBe(
-        "demo-referee-svrba",
-      );
+      // State is updated AFTER the API call succeeds (not optimistically)
+      // This prevents race conditions where queries refetch with wrong context
+      await waitFor(() => {
+        expect(useAuthStore.getState().activeOccupationId).toBe(
+          "demo-referee-svrba",
+        );
+      });
     });
   });
 
@@ -246,7 +248,7 @@ describe("AppShell Integration", () => {
       });
     });
 
-    it("reverts optimistic update on error", async () => {
+    it("keeps original state on error (no optimistic update to revert)", async () => {
       // Mock API to reject
       vi.mocked(mockApi.switchRoleAndAttribute).mockRejectedValueOnce(
         new Error("Network error"),
@@ -262,22 +264,25 @@ describe("AppShell Integration", () => {
       await user.click(screen.getByRole("button", { name: /referee.*SV/i }));
       await user.click(screen.getByRole("option", { name: /SVRBA/i }));
 
-      // Wait for error handling and revert
+      // Wait for error handling
       await waitFor(() => {
-        const currentOccupationId = useAuthStore.getState().activeOccupationId;
-        // Should revert back to original
-        expect(currentOccupationId).toBe("demo-referee-sv");
+        const toasts = useToastStore.getState().toasts;
+        expect(toasts.some((t) => t.type === "error")).toBe(true);
       });
+
+      // State should remain unchanged (not updated on failure)
+      const currentOccupationId = useAuthStore.getState().activeOccupationId;
+      expect(currentOccupationId).toBe("demo-referee-sv");
     });
 
-    it("does not invalidate queries on error", async () => {
+    it("does not reset queries on error", async () => {
       // Mock API to reject
       vi.mocked(mockApi.switchRoleAndAttribute).mockRejectedValueOnce(
         new Error("Network error"),
       );
 
       const user = userEvent.setup();
-      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+      const resetSpy = vi.spyOn(queryClient, "resetQueries");
 
       renderAppShell();
 
@@ -290,8 +295,8 @@ describe("AppShell Integration", () => {
         expect(toasts.some((t) => t.type === "error")).toBe(true);
       });
 
-      // Queries should not have been invalidated
-      expect(invalidateSpy).not.toHaveBeenCalled();
+      // Queries should not have been reset (preserves current data on error)
+      expect(resetSpy).not.toHaveBeenCalled();
     });
   });
 });
