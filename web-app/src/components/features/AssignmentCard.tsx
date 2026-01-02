@@ -7,6 +7,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useDateFormat } from "@/hooks/useDateFormat";
 import { getPositionLabel } from "@/utils/position-labels";
 import { buildMapsUrls } from "@/utils/maps-url";
+import { extractCoordinates } from "@/utils/geo-location";
 import { useSettingsStore } from "@/stores/settings";
 import { useActiveAssociationCode } from "@/hooks/useActiveAssociation";
 import { useSbbUrl } from "@/hooks/useSbbUrl";
@@ -105,9 +106,7 @@ function AssignmentCardComponent({
 
   // Extract hall coordinates and ID for travel time queries
   const geoLocation = game?.hall?.primaryPostalAddress?.geographicalLocation;
-  const hallCoords = geoLocation?.latitude !== undefined && geoLocation?.longitude !== undefined
-    ? { latitude: geoLocation.latitude, longitude: geoLocation.longitude }
-    : null;
+  const hallCoords = extractCoordinates(geoLocation);
   const hallId = game?.hall?.__identity;
   const gameStartingDateTime = game?.startingDateTime;
 

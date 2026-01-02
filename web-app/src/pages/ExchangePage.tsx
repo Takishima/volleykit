@@ -8,6 +8,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useSettingsStore } from "@/stores/settings";
 import { createExchangeActions } from "@/utils/exchange-actions";
 import { calculateDistanceKm } from "@/utils/distance";
+import { extractCoordinates } from "@/utils/geo-location";
 import { ExchangeCard } from "@/components/features/ExchangeCard";
 import { SwipeableCard } from "@/components/ui/SwipeableCard";
 import { WeekSeparator } from "@/components/ui/WeekSeparator";
@@ -109,16 +110,15 @@ export function ExchangePage() {
     return data.map((exchange) => {
       const geoLocation =
         exchange.refereeGame?.game?.hall?.primaryPostalAddress?.geographicalLocation;
-      const lat = geoLocation?.latitude;
-      const lon = geoLocation?.longitude;
+      const hallCoords = extractCoordinates(geoLocation);
 
-      if (lat == null || lon == null) {
+      if (!hallCoords) {
         return { exchange, distanceKm: null };
       }
 
       const distanceKm = calculateDistanceKm(
         { latitude: homeLocation.latitude, longitude: homeLocation.longitude },
-        { latitude: lat, longitude: lon },
+        hallCoords,
       );
 
       return { exchange, distanceKm };
