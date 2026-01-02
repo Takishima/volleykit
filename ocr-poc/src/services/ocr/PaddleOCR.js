@@ -6,7 +6,8 @@
  * Supports Chinese, English, and numbers recognition.
  */
 
-import * as ocr from '@paddlejs-models/ocr';
+// Note: @paddlejs-models/ocr is dynamically imported in initialize() to avoid
+// blocking app startup if the library fails to load
 
 /**
  * @typedef {Object} OCRWord
@@ -47,6 +48,9 @@ export class PaddleOCR {
   /** @type {OnProgressCallback | undefined} */
   #onProgress;
 
+  /** @type {typeof import('@paddlejs-models/ocr') | null} */
+  #ocr = null;
+
   /**
    * @param {OnProgressCallback} [onProgress] - Callback for progress updates
    */
@@ -80,8 +84,12 @@ export class PaddleOCR {
     this.#reportProgress('Loading OCR models...', 0);
 
     try {
+      console.log('[PaddleOCR] Loading OCR library...');
+      // Dynamic import to avoid blocking app startup
+      this.#ocr = await import('@paddlejs-models/ocr');
+
       console.log('[PaddleOCR] Initializing OCR engine...');
-      await ocr.init();
+      await this.#ocr.init();
       console.log('[PaddleOCR] OCR engine initialized');
 
       this.#initialized = true;
@@ -99,7 +107,7 @@ export class PaddleOCR {
    * @returns {Promise<OCRResult>}
    */
   async recognize(imageBlob) {
-    if (!this.#initialized) {
+    if (!this.#initialized || !this.#ocr) {
       throw new Error('PaddleOCR not initialized. Call initialize() first.');
     }
 
@@ -110,7 +118,7 @@ export class PaddleOCR {
 
     try {
       console.log('[PaddleOCR] Starting recognition on image:', imageElement.width, 'x', imageElement.height);
-      const result = await ocr.recognize(imageElement);
+      const result = await this.#ocr.recognize(imageElement);
       console.log('[PaddleOCR] Recognition result:', result);
 
       this.#reportProgress('Processing results...', 0.9);
