@@ -1,7 +1,6 @@
 # VolleyKit
 
-[![CI - Web App](https://github.com/Takishima/volleykit/actions/workflows/ci-web.yml/badge.svg)](https://github.com/Takishima/volleykit/actions/workflows/ci-web.yml)
-[![E2E Tests](https://github.com/Takishima/volleykit/actions/workflows/e2e.yml/badge.svg)](https://github.com/Takishima/volleykit/actions/workflows/e2e.yml)
+[![CI](https://github.com/Takishima/volleykit/actions/workflows/ci.yml/badge.svg)](https://github.com/Takishima/volleykit/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A mobile-friendly Progressive Web App (PWA) for Swiss volleyball referees, providing an improved interface to [volleymanager.volleyball.ch](https://volleymanager.volleyball.ch).

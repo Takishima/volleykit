@@ -109,12 +109,10 @@ volleykit/
 │   ├── CODE_PATTERNS.md       # Code examples and patterns
 │   └── DATA_RETENTION.md      # Data handling documentation
 ├── .github/workflows/         # CI/CD pipelines
-│   ├── ci-web.yml             # Lint, test, build, bundle size
+│   ├── ci.yml                 # Consolidated CI (lint, test, build, E2E, Lighthouse)
 │   ├── ci-worker.yml          # Worker validation
-│   ├── e2e.yml                # Cross-browser E2E tests
 │   ├── deploy-web.yml         # Production deployment
 │   ├── deploy-pr-preview.yml  # PR preview builds
-│   ├── lighthouse.yml         # Performance audits
 │   ├── codeql.yml             # Security analysis
 │   └── claude*.yml            # AI code review
 └── devenv.nix                  # Nix development environment
