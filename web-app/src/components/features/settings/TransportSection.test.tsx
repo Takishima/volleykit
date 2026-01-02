@@ -104,6 +104,7 @@ function createMockAuthStore(
     error: null,
     csrfToken: null,
     isDemoMode: false,
+    isAssociationSwitching: false,
     _checkSessionPromise: null,
     eligibleAttributeValues: null,
     groupedEligibleAttributeValues: null,
@@ -114,6 +115,7 @@ function createMockAuthStore(
     setUser: vi.fn(),
     setDemoAuthenticated: vi.fn(),
     setActiveOccupation: vi.fn(),
+    setAssociationSwitching: vi.fn(),
     hasMultipleAssociations: vi.fn().mockReturnValue(false),
     ...overrides,
   };

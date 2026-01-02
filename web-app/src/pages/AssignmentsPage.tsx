@@ -23,6 +23,7 @@ import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTour } from "@/hooks/useTour";
 import { TOUR_DUMMY_ASSIGNMENT } from "@/components/tour/definitions/assignments";
+import { useAuthStore } from "@/stores/auth";
 
 const PdfLanguageModal = lazy(
   () =>
@@ -50,6 +51,9 @@ type TabType = "upcoming" | "validationClosed";
 export function AssignmentsPage() {
   const [activeTab, setActiveTab] = useState<TabType>("upcoming");
   const { t } = useTranslation();
+  const isAssociationSwitching = useAuthStore(
+    (state) => state.isAssociationSwitching,
+  );
 
   // Initialize tour for this page (triggers auto-start on first visit)
   // Use showDummyData to show dummy data immediately, avoiding race condition with empty states
@@ -78,8 +82,10 @@ export function AssignmentsPage() {
   } = useValidationClosedAssignments();
 
   const rawData = activeTab === "upcoming" ? upcomingData : validationClosedData;
+  // Show loading when switching associations or when query is loading
   const isLoading =
-    activeTab === "upcoming" ? upcomingLoading : validationClosedLoading;
+    isAssociationSwitching ||
+    (activeTab === "upcoming" ? upcomingLoading : validationClosedLoading);
   const error =
     activeTab === "upcoming" ? upcomingError : validationClosedError;
   const refetch =

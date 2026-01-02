@@ -50,7 +50,12 @@ export function ExchangePage() {
   // Use showDummyData to show dummy data immediately, avoiding race condition with empty states
   const { showDummyData } = useTour("exchange");
 
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const { isDemoMode, isAssociationSwitching } = useAuthStore(
+    useShallow((state) => ({
+      isDemoMode: state.isDemoMode,
+      isAssociationSwitching: state.isAssociationSwitching,
+    })),
+  );
   const { userRefereeLevel, userRefereeLevelGradationValue } = useDemoStore(
     useShallow((state) => ({
       userRefereeLevel: state.userRefereeLevel,
@@ -77,7 +82,9 @@ export function ExchangePage() {
     })),
   );
 
-  const { data, isLoading, error, refetch } = useGameExchanges(statusFilter);
+  const { data, isLoading: queryLoading, error, refetch } = useGameExchanges(statusFilter);
+  // Show loading when switching associations or when query is loading
+  const isLoading = isAssociationSwitching || queryLoading;
 
   // Get travel time data for exchanges
   const { exchangesWithTravelTime, isAvailable: isTravelTimeAvailable } =

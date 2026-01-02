@@ -32,6 +32,7 @@ describe("AppShell Integration", () => {
       user: null,
       isDemoMode: false,
       activeOccupationId: null,
+      isAssociationSwitching: false,
       error: null,
       csrfToken: null,
       _checkSessionPromise: null,
@@ -145,9 +146,9 @@ describe("AppShell Integration", () => {
       });
     });
 
-    it("invalidates queries after switching", async () => {
+    it("resets queries after switching to clear old data", async () => {
       const user = userEvent.setup();
-      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+      const resetSpy = vi.spyOn(queryClient, "resetQueries");
 
       renderAppShell();
 
@@ -166,9 +167,9 @@ describe("AppShell Integration", () => {
         expect(mockApi.switchRoleAndAttribute).toHaveBeenCalled();
       });
 
-      // Then verify queries were invalidated
+      // Then verify queries were reset (clears cache for immediate loading state)
       await waitFor(() => {
-        expect(invalidateSpy).toHaveBeenCalled();
+        expect(resetSpy).toHaveBeenCalled();
       });
     });
 
@@ -195,7 +196,7 @@ describe("AppShell Integration", () => {
       });
     });
 
-    it("shows optimistic UI update immediately", async () => {
+    it("updates auth store after API call succeeds", async () => {
       const user = userEvent.setup();
       renderAppShell();
 
@@ -208,25 +209,30 @@ describe("AppShell Integration", () => {
       await user.click(screen.getByRole("button", { name: /referee.*SV/i }));
       await user.click(screen.getByRole("option", { name: /SVRBA/i }));
 
-      // Optimistic update: auth store should be updated immediately
-      // (before API call completes)
-      expect(useAuthStore.getState().activeOccupationId).toBe(
-        "demo-referee-svrba",
-      );
+      // State is updated AFTER the API call succeeds (not optimistically)
+      // This prevents race conditions where queries refetch with wrong context
+      await waitFor(() => {
+        expect(useAuthStore.getState().activeOccupationId).toBe(
+          "demo-referee-svrba",
+        );
+      });
     });
   });
 
   describe("error handling", () => {
     beforeEach(() => {
+      // Ensure association switching state is reset before each test
+      useAuthStore.setState({ isAssociationSwitching: false });
       useAuthStore.getState().setDemoAuthenticated();
       useDemoStore.getState().setActiveAssociation("SV");
     });
 
     it("shows error toast when switch fails", async () => {
-      // Mock API to reject
-      vi.mocked(mockApi.switchRoleAndAttribute).mockRejectedValueOnce(
-        new Error("Network error"),
-      );
+      // Mock API to always reject for this test
+      const mockReject = vi
+        .fn()
+        .mockRejectedValue(new Error("Network error"));
+      vi.mocked(mockApi).switchRoleAndAttribute = mockReject;
 
       const user = userEvent.setup();
       renderAppShell();
@@ -239,18 +245,23 @@ describe("AppShell Integration", () => {
       const svrbaOption = screen.getByRole("option", { name: /SVRBA/i });
       await user.click(svrbaOption);
 
-      // Wait for error handling to complete
-      await waitFor(() => {
-        const toasts = useToastStore.getState().toasts;
-        expect(toasts.some((t) => t.type === "error")).toBe(true);
-      });
+      // Wait for error handling to complete and toast to appear
+      // Use longer timeout for CI environments
+      await waitFor(
+        () => {
+          const toasts = useToastStore.getState().toasts;
+          expect(toasts.some((t) => t.type === "error")).toBe(true);
+        },
+        { timeout: 5000 },
+      );
     });
 
-    it("reverts optimistic update on error", async () => {
-      // Mock API to reject
-      vi.mocked(mockApi.switchRoleAndAttribute).mockRejectedValueOnce(
-        new Error("Network error"),
-      );
+    it("keeps original state on error (no optimistic update to revert)", async () => {
+      // Mock API to always reject for this test
+      const mockReject = vi
+        .fn()
+        .mockRejectedValue(new Error("Network error"));
+      vi.mocked(mockApi).switchRoleAndAttribute = mockReject;
 
       const user = userEvent.setup();
       renderAppShell();
@@ -262,36 +273,48 @@ describe("AppShell Integration", () => {
       await user.click(screen.getByRole("button", { name: /referee.*SV/i }));
       await user.click(screen.getByRole("option", { name: /SVRBA/i }));
 
-      // Wait for error handling and revert
-      await waitFor(() => {
-        const currentOccupationId = useAuthStore.getState().activeOccupationId;
-        // Should revert back to original
-        expect(currentOccupationId).toBe("demo-referee-sv");
-      });
-    });
-
-    it("does not invalidate queries on error", async () => {
-      // Mock API to reject
-      vi.mocked(mockApi.switchRoleAndAttribute).mockRejectedValueOnce(
-        new Error("Network error"),
+      // Wait for error handling to complete
+      // Use longer timeout for CI environments
+      await waitFor(
+        () => {
+          const toasts = useToastStore.getState().toasts;
+          expect(toasts.some((t) => t.type === "error")).toBe(true);
+        },
+        { timeout: 5000 },
       );
 
+      // State should remain unchanged (not updated on failure)
+      const currentOccupationId = useAuthStore.getState().activeOccupationId;
+      expect(currentOccupationId).toBe("demo-referee-sv");
+    });
+
+    it("does not reset queries on error", async () => {
+      // Mock API to always reject for this test
+      const mockReject = vi
+        .fn()
+        .mockRejectedValue(new Error("Network error"));
+      vi.mocked(mockApi).switchRoleAndAttribute = mockReject;
+
       const user = userEvent.setup();
-      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+      const resetSpy = vi.spyOn(queryClient, "resetQueries");
 
       renderAppShell();
 
       await user.click(screen.getByRole("button", { name: /referee.*SV/i }));
       await user.click(screen.getByRole("option", { name: /SVRBA/i }));
 
-      // Wait for error handling
-      await waitFor(() => {
-        const toasts = useToastStore.getState().toasts;
-        expect(toasts.some((t) => t.type === "error")).toBe(true);
-      });
+      // Wait for error handling to complete
+      // Use longer timeout for CI environments
+      await waitFor(
+        () => {
+          const toasts = useToastStore.getState().toasts;
+          expect(toasts.some((t) => t.type === "error")).toBe(true);
+        },
+        { timeout: 5000 },
+      );
 
-      // Queries should not have been invalidated
-      expect(invalidateSpy).not.toHaveBeenCalled();
+      // Queries should not have been reset (preserves current data on error)
+      expect(resetSpy).not.toHaveBeenCalled();
     });
   });
 });

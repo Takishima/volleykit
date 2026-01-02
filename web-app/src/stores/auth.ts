@@ -54,6 +54,8 @@ interface AuthState {
   csrfToken: string | null;
   isDemoMode: boolean;
   activeOccupationId: string | null;
+  /** True while switching associations - pages should show loading state */
+  isAssociationSwitching: boolean;
   _checkSessionPromise: Promise<boolean> | null;
   // Active party data from embedded HTML (contains association memberships)
   eligibleAttributeValues: AttributeValue[] | null;
@@ -67,6 +69,7 @@ interface AuthState {
   setUser: (user: UserProfile | null) => void;
   setDemoAuthenticated: () => void;
   setActiveOccupation: (id: string) => void;
+  setAssociationSwitching: (isSwitching: boolean) => void;
   hasMultipleAssociations: () => boolean;
 }
 
@@ -162,6 +165,7 @@ export const useAuthStore = create<AuthState>()(
       csrfToken: null,
       isDemoMode: false,
       activeOccupationId: null,
+      isAssociationSwitching: false,
       _checkSessionPromise: null,
       eligibleAttributeValues: null,
       groupedEligibleAttributeValues: null,
@@ -469,6 +473,10 @@ export const useAuthStore = create<AuthState>()(
 
       setActiveOccupation: (id: string) => {
         set({ activeOccupationId: id });
+      },
+
+      setAssociationSwitching: (isSwitching: boolean) => {
+        set({ isAssociationSwitching: isSwitching });
       },
 
       hasMultipleAssociations: () => {

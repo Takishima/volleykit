@@ -20,6 +20,7 @@ import type { SwipeConfig } from "@/types/swipe";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTour } from "@/hooks/useTour";
 import { TOUR_DUMMY_COMPENSATION } from "@/components/tour/definitions/compensations";
+import { useAuthStore } from "@/stores/auth";
 
 const EditCompensationModal = lazy(
   () =>
@@ -46,6 +47,9 @@ export function CompensationsPage() {
   const [filter, setFilter] = useState<FilterType>("unpaid");
   const { t } = useTranslation();
   const { editCompensationModal, handleGeneratePDF } = useCompensationActions();
+  const isAssociationSwitching = useAuthStore(
+    (state) => state.isAssociationSwitching,
+  );
 
   // Initialize tour for this page (triggers auto-start on first visit)
   // Use showDummyData to show dummy data immediately, avoiding race condition with empty states
@@ -53,7 +57,9 @@ export function CompensationsPage() {
 
   // Single data fetch based on current filter (like ExchangePage pattern)
   const paidFilter = useMemo(() => filterToPaidFilter(filter), [filter]);
-  const { data: rawData, isLoading, error, refetch } = useCompensations(paidFilter);
+  const { data: rawData, isLoading: queryLoading, error, refetch } = useCompensations(paidFilter);
+  // Show loading when switching associations or when query is loading
+  const isLoading = isAssociationSwitching || queryLoading;
 
   // When tour is active (or about to auto-start), show ONLY the dummy compensation
   // to ensure tour works regardless of whether tabs have real data
