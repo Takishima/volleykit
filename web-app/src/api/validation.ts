@@ -115,6 +115,14 @@ const hallSchema = z
         combinedAddress: z.string().optional(),
         postalCode: z.string().optional(),
         city: z.string().optional(),
+        geographicalLocation: z
+          .object({
+            plusCode: z.string().optional(),
+            latitude: z.number().optional(),
+            longitude: z.number().optional(),
+          })
+          .passthrough()
+          .optional(),
       })
       .passthrough()
       .optional(),
@@ -126,8 +134,7 @@ const gameSchema = z
   .object({
     __identity: uuidSchema.optional(),
     gameNumber: z.string().optional(),
-    startDate: dateTimeSchema,
-    endDate: dateTimeSchema,
+    startingDateTime: dateTimeSchema,
     teamHome: teamSchema.optional(),
     teamAway: teamSchema.optional(),
     hall: hallSchema.optional(),

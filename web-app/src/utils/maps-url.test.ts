@@ -41,11 +41,26 @@ describe("maps-url", () => {
       expect(buildFullAddress(address)).toBeNull();
     });
 
-    it("returns null when only postal code is available", () => {
+    it("returns postalCodeAndCity when only that is available", () => {
       const address: PostalAddress = {
         postalCodeAndCity: "3000 Bern",
       };
-      expect(buildFullAddress(address)).toBeNull();
+      expect(buildFullAddress(address)).toBe("3000 Bern");
+    });
+
+    it("builds postalCodeAndCity from separate postalCode and city fields", () => {
+      const address: PostalAddress = {
+        postalCode: "8000",
+        city: "Zürich",
+      };
+      expect(buildFullAddress(address)).toBe("8000 Zürich");
+    });
+
+    it("returns city alone when only city is available", () => {
+      const address: PostalAddress = {
+        city: "Basel",
+      };
+      expect(buildFullAddress(address)).toBe("Basel");
     });
 
     it("returns null for empty object", () => {
