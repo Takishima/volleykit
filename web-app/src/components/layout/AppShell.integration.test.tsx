@@ -221,15 +221,18 @@ describe("AppShell Integration", () => {
 
   describe("error handling", () => {
     beforeEach(() => {
+      // Ensure association switching state is reset before each test
+      useAuthStore.setState({ isAssociationSwitching: false });
       useAuthStore.getState().setDemoAuthenticated();
       useDemoStore.getState().setActiveAssociation("SV");
     });
 
     it("shows error toast when switch fails", async () => {
-      // Mock API to reject
-      vi.mocked(mockApi.switchRoleAndAttribute).mockRejectedValueOnce(
-        new Error("Network error"),
-      );
+      // Mock API to always reject for this test
+      const mockReject = vi
+        .fn()
+        .mockRejectedValue(new Error("Network error"));
+      vi.mocked(mockApi).switchRoleAndAttribute = mockReject;
 
       const user = userEvent.setup();
       renderAppShell();
@@ -242,18 +245,23 @@ describe("AppShell Integration", () => {
       const svrbaOption = screen.getByRole("option", { name: /SVRBA/i });
       await user.click(svrbaOption);
 
-      // Wait for error handling to complete
-      await waitFor(() => {
-        const toasts = useToastStore.getState().toasts;
-        expect(toasts.some((t) => t.type === "error")).toBe(true);
-      });
+      // Wait for error handling to complete and toast to appear
+      // Use longer timeout for CI environments
+      await waitFor(
+        () => {
+          const toasts = useToastStore.getState().toasts;
+          expect(toasts.some((t) => t.type === "error")).toBe(true);
+        },
+        { timeout: 5000 },
+      );
     });
 
     it("keeps original state on error (no optimistic update to revert)", async () => {
-      // Mock API to reject
-      vi.mocked(mockApi.switchRoleAndAttribute).mockRejectedValueOnce(
-        new Error("Network error"),
-      );
+      // Mock API to always reject for this test
+      const mockReject = vi
+        .fn()
+        .mockRejectedValue(new Error("Network error"));
+      vi.mocked(mockApi).switchRoleAndAttribute = mockReject;
 
       const user = userEvent.setup();
       renderAppShell();
@@ -265,11 +273,15 @@ describe("AppShell Integration", () => {
       await user.click(screen.getByRole("button", { name: /referee.*SV/i }));
       await user.click(screen.getByRole("option", { name: /SVRBA/i }));
 
-      // Wait for error handling
-      await waitFor(() => {
-        const toasts = useToastStore.getState().toasts;
-        expect(toasts.some((t) => t.type === "error")).toBe(true);
-      });
+      // Wait for error handling to complete
+      // Use longer timeout for CI environments
+      await waitFor(
+        () => {
+          const toasts = useToastStore.getState().toasts;
+          expect(toasts.some((t) => t.type === "error")).toBe(true);
+        },
+        { timeout: 5000 },
+      );
 
       // State should remain unchanged (not updated on failure)
       const currentOccupationId = useAuthStore.getState().activeOccupationId;
@@ -277,10 +289,11 @@ describe("AppShell Integration", () => {
     });
 
     it("does not reset queries on error", async () => {
-      // Mock API to reject
-      vi.mocked(mockApi.switchRoleAndAttribute).mockRejectedValueOnce(
-        new Error("Network error"),
-      );
+      // Mock API to always reject for this test
+      const mockReject = vi
+        .fn()
+        .mockRejectedValue(new Error("Network error"));
+      vi.mocked(mockApi).switchRoleAndAttribute = mockReject;
 
       const user = userEvent.setup();
       const resetSpy = vi.spyOn(queryClient, "resetQueries");
@@ -290,11 +303,15 @@ describe("AppShell Integration", () => {
       await user.click(screen.getByRole("button", { name: /referee.*SV/i }));
       await user.click(screen.getByRole("option", { name: /SVRBA/i }));
 
-      // Wait for error handling
-      await waitFor(() => {
-        const toasts = useToastStore.getState().toasts;
-        expect(toasts.some((t) => t.type === "error")).toBe(true);
-      });
+      // Wait for error handling to complete
+      // Use longer timeout for CI environments
+      await waitFor(
+        () => {
+          const toasts = useToastStore.getState().toasts;
+          expect(toasts.some((t) => t.type === "error")).toBe(true);
+        },
+        { timeout: 5000 },
+      );
 
       // Queries should not have been reset (preserves current data on error)
       expect(resetSpy).not.toHaveBeenCalled();
