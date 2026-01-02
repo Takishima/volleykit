@@ -232,12 +232,15 @@ const convocationCompensationSchema = z
     publicTransportExpenses: z.number().optional().nullable(),
     travelExpensesPercentageWeighting: z.number().optional(),
     distanceInMetres: z.number().optional(),
-    transportationMode: z.enum(["car", "train", "other"]).optional(),
+    transportationMode: z
+      .enum(["car", "train", "public_transport", "other"])
+      .optional()
+      .nullable(),
     paymentValueDate: dateSchema,
     gameCompensationFormatted: z.string().optional(),
     travelExpensesFormatted: z.string().optional(),
     costFormatted: z.string().optional(),
-    distanceFormatted: z.string().optional(),
+    distanceFormatted: z.string().optional().nullable(),
   })
   .passthrough();
 
