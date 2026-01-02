@@ -19,7 +19,7 @@ export class ExchangesPage extends BasePage {
     this.tablist = page.getByRole("tablist");
     // Use stable IDs for tabs (locale-independent)
     this.openTab = page.locator("#tab-open");
-    this.myApplicationsTab = page.locator("#tab-applied");
+    this.myApplicationsTab = page.locator("#tab-mine");
     this.tabPanel = page.getByRole("tabpanel");
     this.exchangeCards = this.tabPanel.getByRole("button");
     // Use data-tour attribute to distinguish from distance filter checkbox

@@ -56,6 +56,10 @@ export interface AssignmentCompensationEdit {
 export const DEMO_USER_REFEREE_LEVEL = "N2";
 export const DEMO_USER_REFEREE_LEVEL_GRADATION_VALUE = 2;
 
+// Demo user person identity used for filtering "my" exchanges
+// This matches the __identity used in submittedByPerson for demo exchanges
+export const DEMO_USER_PERSON_IDENTITY = "demo-me";
+
 // Demo data is considered stale after 6 hours
 export const DEMO_DATA_STALENESS_MS = 6 * 60 * 60 * 1000;
 

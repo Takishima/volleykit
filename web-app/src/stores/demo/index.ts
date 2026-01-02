@@ -31,7 +31,7 @@ import {
   DEMO_DATA_STALENESS_MS,
 } from "./types";
 
-// Re-export types for consumers
+// Re-export types and constants for consumers
 export type {
   DemoState,
   DemoAssociationCode,
@@ -41,6 +41,8 @@ export type {
   PendingScorerData,
   AssignmentCompensationEdit,
 } from "./types";
+
+export { DEMO_USER_PERSON_IDENTITY } from "./types";
 
 export const useDemoStore = create<DemoState>()(
   persist(

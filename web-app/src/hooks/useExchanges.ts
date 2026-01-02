@@ -12,7 +12,7 @@ import {
   type GameExchange,
 } from "@/api/client";
 import { useAuthStore } from "@/stores/auth";
-import { useDemoStore } from "@/stores/demo";
+import { useDemoStore, DEMO_USER_PERSON_IDENTITY } from "@/stores/demo";
 import { queryKeys } from "@/api/queryKeys";
 import { DEFAULT_PAGE_SIZE } from "./usePaginatedQuery";
 import { getSeasonDateRange } from "@/utils/date-helpers";
@@ -21,7 +21,8 @@ import { getSeasonDateRange } from "@/utils/date-helpers";
 const EMPTY_EXCHANGES: GameExchange[] = [];
 
 // Exchange status filter type
-export type ExchangeStatus = "open" | "applied" | "closed" | "all";
+// "mine" shows exchanges submitted by the current user (regardless of status)
+export type ExchangeStatus = "open" | "applied" | "closed" | "all" | "mine";
 
 /**
  * Hook to fetch game exchange requests with optional status filtering.
@@ -34,6 +35,7 @@ export type ExchangeStatus = "open" | "applied" | "closed" | "all";
 export function useGameExchanges(status: ExchangeStatus = "all") {
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
   const activeOccupationId = useAuthStore((state) => state.activeOccupationId);
+  const userId = useAuthStore((state) => state.user?.id);
   const demoAssociationCode = useDemoStore(
     (state) => state.activeAssociationCode,
   );
@@ -51,6 +53,7 @@ export function useGameExchanges(status: ExchangeStatus = "all") {
   const toDate = endOfDay(seasonEnd).toISOString();
 
   // Build property filters: always include date range, optionally include status
+  // For "mine", we don't filter by status - we'll filter client-side by submittedByPerson
   const propertyFilters = useMemo(() => {
     const filters: SearchConfiguration["propertyFilters"] = [
       {
@@ -59,7 +62,8 @@ export function useGameExchanges(status: ExchangeStatus = "all") {
       },
     ];
 
-    if (status !== "all") {
+    // "mine" and "all" don't filter by status
+    if (status !== "all" && status !== "mine") {
       filters.push({
         propertyName: "status",
         enumValues: [status],
@@ -85,10 +89,32 @@ export function useGameExchanges(status: ExchangeStatus = "all") {
     [propertyFilters],
   );
 
+  // Create select function that filters by submittedByPerson for "mine" status.
+  // We filter client-side by comparing the user's identity with submittedByPerson.__identity.
+  // In demo mode, we use the known demo user person identity.
+  // In production, we use the user id from the auth store - this needs verification
+  // that it matches the format used in submittedByPerson.__identity. See #466.
+  const selectExchanges = useMemo(() => {
+    return (data: { items?: GameExchange[] }) => {
+      const items = data.items ?? EMPTY_EXCHANGES;
+
+      if (status === "mine") {
+        const userIdentity = isDemoMode ? DEMO_USER_PERSON_IDENTITY : userId;
+        if (!userIdentity) return EMPTY_EXCHANGES;
+
+        return items.filter(
+          (exchange) => exchange.submittedByPerson?.__identity === userIdentity
+        );
+      }
+
+      return items;
+    };
+  }, [status, isDemoMode, userId]);
+
   return useQuery({
     queryKey: queryKeys.exchanges.list(config, associationKey),
     queryFn: () => apiClient.searchExchanges(config),
-    select: (data) => data.items ?? EMPTY_EXCHANGES,
+    select: selectExchanges,
     staleTime: 2 * 60 * 1000,
   });
 }

@@ -256,7 +256,7 @@ const de: Translations = {
     applied: "Beworben",
     closed: "Geschlossen",
     all: "Alle",
-    myApplications: "Meine Bewerbungen",
+    myApplications: "Von mir hinzugefügt",
     loading: "Tauschangebote werden geladen...",
     takeOverTitle: "Einsatz übernehmen",
     takeOverConfirm: "Möchten Sie diesen Einsatz wirklich übernehmen?",
@@ -276,9 +276,9 @@ const de: Translations = {
     noOpenExchangesTitle: "Keine offenen Tauschangebote",
     noOpenExchangesDescription:
       "Derzeit sind keine Schiedsrichterpositionen zum Tausch verfügbar.",
-    noApplicationsTitle: "Keine Bewerbungen",
+    noApplicationsTitle: "Keine Angebote",
     noApplicationsDescription:
-      "Sie haben sich noch für keine Tauschangebote beworben.",
+      "Sie haben noch keine Spiele zur Übernahme angeboten.",
     applySuccess: "Erfolgreich für Tausch beworben",
     applyError: "Bewerbung für Tausch fehlgeschlagen. Bitte erneut versuchen.",
     withdrawSuccess: "Erfolgreich vom Tausch zurückgezogen",

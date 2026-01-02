@@ -184,7 +184,7 @@ describe("ExchangePage", () => {
       ).toBeInTheDocument();
     });
 
-    it("should not show level filter on My Applications tab", () => {
+    it("should not show level filter on Added by Me tab", () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
         selector({ isDemoMode: true } as ReturnType<
           typeof authStore.useAuthStore.getState
@@ -198,8 +198,8 @@ describe("ExchangePage", () => {
 
       render(<ExchangePage />);
 
-      // Click on "My Applications" tab
-      fireEvent.click(screen.getByText(/my applications/i));
+      // Click on "Added by Me" tab
+      fireEvent.click(screen.getByText(/added by me/i));
 
       // Level filter should not be visible on this tab
       expect(
@@ -345,18 +345,18 @@ describe("ExchangePage", () => {
       expect(openTab).toHaveAttribute("aria-selected", "true");
     });
 
-    it("should switch to My Applications tab when clicked", () => {
+    it("should switch to Added by Me tab when clicked", () => {
       vi.mocked(useConvocations.useGameExchanges).mockReturnValue(
         createMockQueryResult([]),
       );
 
       render(<ExchangePage />);
 
-      fireEvent.click(screen.getByText(/my applications/i));
+      fireEvent.click(screen.getByText(/added by me/i));
 
-      const myAppsTab = screen.getByRole("tab", { name: /my applications/i });
-      expect(myAppsTab).toHaveClass("border-primary-500");
-      expect(myAppsTab).toHaveAttribute("aria-selected", "true");
+      const myOffersTab = screen.getByRole("tab", { name: /added by me/i });
+      expect(myOffersTab).toHaveClass("border-primary-500");
+      expect(myOffersTab).toHaveAttribute("aria-selected", "true");
     });
   });
 });

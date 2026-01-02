@@ -256,7 +256,7 @@ const fr: Translations = {
     applied: "Postulé",
     closed: "Fermé",
     all: "Tous",
-    myApplications: "Mes candidatures",
+    myApplications: "Ajouté par moi",
     loading: "Chargement des échanges...",
     takeOverTitle: "Reprendre la désignation",
     takeOverConfirm: "Êtes-vous sûr de vouloir reprendre cette désignation?",
@@ -276,9 +276,9 @@ const fr: Translations = {
     noOpenExchangesTitle: "Aucun échange ouvert",
     noOpenExchangesDescription:
       "Il n'y a actuellement aucun poste d'arbitre disponible pour échange.",
-    noApplicationsTitle: "Aucune candidature",
+    noApplicationsTitle: "Aucune offre",
     noApplicationsDescription:
-      "Vous n'avez pas encore postulé pour des échanges.",
+      "Vous n'avez pas encore proposé de matchs à l'échange.",
     applySuccess: "Candidature à l'échange réussie",
     applyError: "Échec de la candidature. Veuillez réessayer.",
     withdrawSuccess: "Retrait de l'échange réussi",
