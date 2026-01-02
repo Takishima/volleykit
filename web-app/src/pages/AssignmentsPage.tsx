@@ -52,7 +52,8 @@ export function AssignmentsPage() {
   const { t } = useTranslation();
 
   // Initialize tour for this page (triggers auto-start on first visit)
-  const { isTourMode } = useTour("assignments");
+  // Use showDummyData to show dummy data immediately, avoiding race condition with empty states
+  const { showDummyData } = useTour("assignments");
 
   const {
     editCompensationModal,
@@ -84,17 +85,17 @@ export function AssignmentsPage() {
   const refetch =
     activeTab === "upcoming" ? refetchUpcoming : refetchValidationClosed;
 
-  // When tour is active, show ONLY the dummy assignment to ensure tour works
-  // regardless of whether tabs have real data
+  // When tour is active (or about to auto-start), show ONLY the dummy assignment
+  // to ensure tour works regardless of whether tabs have real data
   const data = useMemo(() => {
-    if (isTourMode) {
+    if (showDummyData) {
       // Safe cast: TourDummyAssignment provides all fields used by AssignmentCard and
       // eligibility checks (refereePosition, refereeGame, convocationCompensation)
       const tourAssignment = TOUR_DUMMY_ASSIGNMENT as unknown as Assignment;
       return [tourAssignment];
     }
     return rawData;
-  }, [isTourMode, rawData]);
+  }, [showDummyData, rawData]);
 
   // Group assignments by week for visual separation
   const groupedData = useMemo(() => {
@@ -214,7 +215,8 @@ export function AssignmentsPage() {
         }
         className="space-y-3"
       >
-        {isLoading && <LoadingState message={t("assignments.loading")} />}
+        {/* Skip loading state when showing dummy tour data (we already have data to show) */}
+        {isLoading && !showDummyData && <LoadingState message={t("assignments.loading")} />}
 
         {error && (
           <ErrorState
@@ -227,7 +229,7 @@ export function AssignmentsPage() {
           />
         )}
 
-        {!isLoading && !error && data && data.length === 0 && (
+        {(!isLoading || showDummyData) && !error && data && data.length === 0 && (
           <EmptyState
             icon={activeTab === "upcoming" ? "calendar" : "lock"}
             title={
@@ -243,7 +245,7 @@ export function AssignmentsPage() {
           />
         )}
 
-        {!isLoading && !error && groupedData.length > 0 && (
+        {(!isLoading || showDummyData) && !error && groupedData.length > 0 && (
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {groupedData.map((group, groupIndex) => {
               // Track global item index for tour data attribute

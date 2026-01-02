@@ -8,10 +8,25 @@ import * as authStore from "@/stores/auth";
 import * as demoStore from "@/stores/demo";
 import * as settingsStore from "@/stores/settings";
 
+// Mock useTour to disable tour mode during tests (see src/test/mocks.ts for shared pattern)
+const mockUseTour = vi.hoisted(() => ({
+  useTour: () => ({
+    isActive: false,
+    isTourMode: false,
+    showDummyData: false,
+    startTour: vi.fn(),
+    endTour: vi.fn(),
+    currentStep: 0,
+    nextStep: vi.fn(),
+    shouldShow: false,
+  }),
+}));
+
 vi.mock("@/hooks/useConvocations");
 vi.mock("@/stores/auth");
 vi.mock("@/stores/demo");
 vi.mock("@/stores/settings");
+vi.mock("@/hooks/useTour", () => mockUseTour);
 vi.mock("@/hooks/useActiveAssociation", () => ({
   useActiveAssociationCode: () => "TEST",
 }));
