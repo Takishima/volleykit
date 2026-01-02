@@ -1,13 +1,16 @@
 /**
  * PaddleOCR Service
  *
- * Wrapper around @paddlejs-models/ocr for OCR processing.
+ * Wrapper around @arkntools/paddlejs-ocr for OCR processing.
  * Uses WebGL-based Paddle.js for lightweight browser inference.
  * Supports Chinese, English, and numbers recognition.
  */
 
-// Note: @paddlejs-models/ocr is dynamically imported in initialize() to avoid
+// Note: @arkntools/paddlejs-ocr is dynamically imported in initialize() to avoid
 // blocking app startup if the library fails to load
+
+/** Default confidence score (library doesn't provide confidence scores) */
+const DEFAULT_CONFIDENCE = 95;
 
 /**
  * @typedef {Object} OCRWord
@@ -48,7 +51,7 @@ export class PaddleOCR {
   /** @type {OnProgressCallback | undefined} */
   #onProgress;
 
-  /** @type {typeof import('@paddlejs-models/ocr') | null} */
+  /** @type {{ init: Function, recognize: Function } | null} */
   #ocr = null;
 
   /**
@@ -86,10 +89,13 @@ export class PaddleOCR {
     try {
       console.log('[PaddleOCR] Loading OCR library...');
       // Dynamic import to avoid blocking app startup
-      this.#ocr = await import('@paddlejs-models/ocr');
+      const ocrModule = await import('@arkntools/paddlejs-ocr');
+      const defaultConfig = await import('@arkntools/paddlejs-ocr/dist/defaultInitConfig');
 
-      console.log('[PaddleOCR] Initializing OCR engine...');
-      await this.#ocr.init();
+      this.#ocr = ocrModule;
+
+      console.log('[PaddleOCR] Initializing OCR engine with default config...');
+      await this.#ocr.init(defaultConfig.default || defaultConfig);
       console.log('[PaddleOCR] OCR engine initialized');
 
       this.#initialized = true;
@@ -113,24 +119,20 @@ export class PaddleOCR {
 
     this.#reportProgress('Recognizing text...', 0.5);
 
-    // Load the blob as an HTMLImageElement (required by @paddlejs-models/ocr)
-    const imageElement = await this.#blobToImageElement(imageBlob);
-
     try {
-      console.log('[PaddleOCR] Starting recognition on image:', imageElement.width, 'x', imageElement.height);
-      const result = await this.#ocr.recognize(imageElement);
+      console.log('[PaddleOCR] Starting recognition on blob:', imageBlob.size, 'bytes');
+      // @arkntools/paddlejs-ocr accepts Blob directly
+      const result = await this.#ocr.recognize(imageBlob);
       console.log('[PaddleOCR] Recognition result:', result);
 
       this.#reportProgress('Processing results...', 0.9);
 
       // Transform result into our structured format
-      // @paddlejs-models/ocr returns { text: string[][], points: number[][][] }
-      // text is array of text regions, each region is array of lines
+      // @arkntools/paddlejs-ocr returns { text: string[], points: number[][][] }
       const words = [];
       const lines = [];
 
-      // Flatten the text array structure
-      const textLines = Array.isArray(result?.text) ? result.text.flat() : [];
+      const textLines = Array.isArray(result?.text) ? result.text : [];
       const pointsData = result?.points || [];
 
       for (let i = 0; i < textLines.length; i++) {
@@ -149,7 +151,7 @@ export class PaddleOCR {
 
         const ocrWords = lineWords.map((word, idx) => ({
           text: word,
-          confidence: 95, // @paddlejs-models/ocr doesn't provide confidence scores
+          confidence: DEFAULT_CONFIDENCE,
           bbox: {
             x0: bbox.x0 + idx * wordWidth,
             y0: bbox.y0,
@@ -162,7 +164,7 @@ export class PaddleOCR {
 
         lines.push({
           text: lineText,
-          confidence: 95,
+          confidence: DEFAULT_CONFIDENCE,
           words: ocrWords,
         });
       }
@@ -181,30 +183,6 @@ export class PaddleOCR {
       console.error('[PaddleOCR] Recognition error:', error);
       throw error;
     }
-  }
-
-  /**
-   * Convert a Blob to an HTMLImageElement
-   * @param {Blob} blob
-   * @returns {Promise<HTMLImageElement>}
-   */
-  #blobToImageElement(blob) {
-    return new Promise((resolve, reject) => {
-      const objectUrl = URL.createObjectURL(blob);
-      const img = new Image();
-
-      img.onload = () => {
-        URL.revokeObjectURL(objectUrl);
-        resolve(img);
-      };
-
-      img.onerror = () => {
-        URL.revokeObjectURL(objectUrl);
-        reject(new Error('Failed to load image'));
-      };
-
-      img.src = objectUrl;
-    });
   }
 
   /**
@@ -233,7 +211,7 @@ export class PaddleOCR {
    * @returns {Promise<void>}
    */
   async terminate() {
-    // @paddlejs-models/ocr doesn't have an explicit terminate method
+    // @arkntools/paddlejs-ocr doesn't have an explicit terminate method
     // Just reset state
     this.#initialized = false;
   }

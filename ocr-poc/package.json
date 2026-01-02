@@ -17,6 +17,6 @@
     "workbox-window": "^7.3.0"
   },
   "dependencies": {
-    "@paddlejs-models/ocr": "^1.1.0"
+    "@arkntools/paddlejs-ocr": "^2.0.0"
   }
 }
