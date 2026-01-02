@@ -120,6 +120,7 @@ async function rejectNonRefereeUser(
  */
 function deriveUserWithOccupations(
   activeParty: {
+    __identity?: string;
     groupedEligibleAttributeValues?: AttributeValue[] | null;
     eligibleAttributeValues?: AttributeValue[] | null;
   } | null,
@@ -144,10 +145,14 @@ function deriveUserWithOccupations(
 
   const activeOccupationId = currentActiveOccupationId ?? occupations[0]?.id ?? null;
 
+  // Use the person's __identity from activeParty as the user id
+  // This matches the submittedByPerson.__identity format used in exchanges
+  const userId = activeParty?.__identity ?? currentUser?.id ?? "user";
+
   const user = currentUser
-    ? { ...currentUser, occupations }
+    ? { ...currentUser, id: userId, occupations }
     : {
-        id: "user",
+        id: userId,
         firstName: "",
         lastName: "",
         occupations,
