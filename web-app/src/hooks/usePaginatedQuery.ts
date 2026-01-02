@@ -17,9 +17,29 @@ export const DEFAULT_DATE_RANGE_DAYS = 365;
 // to find the one matching the assignment's game.
 export const COMPENSATION_LOOKUP_LIMIT = 200;
 
-// Cache duration for validation-closed assignments (15 minutes).
-// Longer than default because validation status changes infrequently
-// and fetching all pages is expensive.
+// Cache durations (stale times) for different query types.
+// These control how long TanStack Query considers data fresh before refetching.
+
+/** Default stale time for assignments queries (5 minutes) */
+export const ASSIGNMENTS_STALE_TIME_MS = 5 * 60 * 1000;
+
+/** Stale time for compensation queries (5 minutes) */
+export const COMPENSATIONS_STALE_TIME_MS = 5 * 60 * 1000;
+
+/** Stale time for exchange queries (2 minutes) - shorter due to time-sensitive nature */
+export const EXCHANGES_STALE_TIME_MS = 2 * 60 * 1000;
+
+/** Stale time for association settings (30 minutes) - settings rarely change */
+export const SETTINGS_STALE_TIME_MS = 30 * 60 * 1000;
+
+/** Stale time for active season (1 hour) - season changes infrequently */
+export const SEASON_STALE_TIME_MS = 60 * 60 * 1000;
+
+/**
+ * Cache duration for validation-closed assignments (15 minutes).
+ * Longer than default because validation status changes infrequently
+ * and fetching all pages is expensive.
+ */
 export const VALIDATION_CLOSED_STALE_TIME_MS = 15 * 60 * 1000;
 
 // Fallback timestamp for items with missing dates - uses Unix epoch (1970-01-01)
