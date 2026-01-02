@@ -21,6 +21,7 @@ import {
   type Coordinates,
   type TravelTimeResult,
 } from "@/services/transport";
+import { extractCoordinates } from "@/utils/geo-location";
 import type { GameExchange } from "@/api/client";
 
 interface HallInfo {
@@ -46,8 +47,7 @@ function getHallInfo(exchange: GameExchange): HallInfo | null {
   if (!hall?.__identity) return null;
 
   const geoLocation = hall.primaryPostalAddress?.geographicalLocation;
-  const lat = geoLocation?.latitude;
-  const lon = geoLocation?.longitude;
+  const coords = extractCoordinates(geoLocation);
 
   // Extract game start time for optimal connection selection
   const startingDateTime = exchange.refereeGame?.game?.startingDateTime;
@@ -55,7 +55,7 @@ function getHallInfo(exchange: GameExchange): HallInfo | null {
 
   return {
     id: hall.__identity,
-    coords: lat != null && lon != null ? { latitude: lat, longitude: lon } : null,
+    coords,
     gameStartTime,
   };
 }
