@@ -32,6 +32,7 @@ describe("AppShell Integration", () => {
       user: null,
       isDemoMode: false,
       activeOccupationId: null,
+      isAssociationSwitching: false,
       error: null,
       csrfToken: null,
       _checkSessionPromise: null,

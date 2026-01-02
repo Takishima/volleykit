@@ -56,6 +56,8 @@ export function AppShell() {
     activeOccupationId,
     setActiveOccupation,
     isDemoMode,
+    isAssociationSwitching,
+    setAssociationSwitching,
   } = useAuthStore(
     useShallow((state) => ({
       status: state.status,
@@ -64,11 +66,12 @@ export function AppShell() {
       activeOccupationId: state.activeOccupationId,
       setActiveOccupation: state.setActiveOccupation,
       isDemoMode: state.isDemoMode,
+      isAssociationSwitching: state.isAssociationSwitching,
+      setAssociationSwitching: state.setAssociationSwitching,
     })),
   );
   const activeTour = useTourStore((state) => state.activeTour);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isSwitching, setIsSwitching] = useState(false);
 
   // Track the latest switch request to handle race conditions
   // when user rapidly clicks different associations
@@ -120,7 +123,7 @@ export function AppShell() {
     // This handles race conditions when user rapidly clicks different associations
     const currentSwitch = ++switchCounterRef.current;
 
-    setIsSwitching(true);
+    setAssociationSwitching(true);
     setIsDropdownOpen(false);
 
     try {
@@ -158,7 +161,7 @@ export function AppShell() {
     } finally {
       // Only clear switching state if this is still the latest request
       if (currentSwitch === switchCounterRef.current) {
-        setIsSwitching(false);
+        setAssociationSwitching(false);
       }
     }
   };
@@ -183,9 +186,9 @@ export function AppShell() {
                   <div className="relative" ref={dropdownRef}>
                     <button
                       onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                      disabled={isSwitching}
+                      disabled={isAssociationSwitching}
                       className={`flex items-center gap-1 px-2 py-1 text-sm font-medium rounded-lg transition-colors ${
-                        isSwitching
+                        isAssociationSwitching
                           ? "text-text-muted dark:text-text-muted-dark bg-surface-subtle dark:bg-surface-subtle-dark cursor-wait"
                           : "text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50"
                       }`}
