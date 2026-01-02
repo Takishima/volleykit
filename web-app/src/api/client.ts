@@ -614,9 +614,8 @@ export const api = {
    * Switch the active role/association on the server.
    * This changes which association's data is returned by subsequent API calls.
    *
-   * Note: This endpoint requires special handling to match the real volleymanager site:
-   * - Content-Type must be text/plain (not application/x-www-form-urlencoded)
-   * - The window-unique-id header is included for compatibility
+   * Note: This endpoint requires Content-Type: text/plain to match the real
+   * volleymanager site (not application/x-www-form-urlencoded).
    *
    * @param attributeValueId - The __identity UUID of the AttributeValue (occupation) to switch to
    * @returns Promise that resolves when the switch is complete
@@ -637,8 +636,6 @@ export const api = {
           Accept: "application/json",
           // The real site uses text/plain, not application/x-www-form-urlencoded
           "Content-Type": "text/plain;charset=UTF-8",
-          // Include window-unique-id for compatibility with the real site
-          "window-unique-id": crypto.randomUUID(),
         },
         credentials: "include",
         body: body.toString(),
@@ -646,6 +643,7 @@ export const api = {
     );
 
     if (!response.ok) {
+      // 406 indicates session expiry in TYPO3 Neos/Flow (same as apiRequest)
       if (
         response.status === 401 ||
         response.status === 403 ||

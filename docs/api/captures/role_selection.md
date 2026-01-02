@@ -41,10 +41,9 @@ PUT /api/sportmanager.security/api\party/switchRoleAndAttribute
 **Request Headers:**
 ```
 Content-Type: text/plain;charset=UTF-8
-window-unique-id: <random-uuid>
 ```
 
-Note: The `Content-Type` is `text/plain`, NOT `application/x-www-form-urlencoded`, even though the body is URL-encoded.
+Note: The `Content-Type` is `text/plain`, NOT `application/x-www-form-urlencoded`, even though the body is URL-encoded. The real site also sends a `window-unique-id` header, but it appears to be optional.
 
 **Request Body (URL-encoded):**
 ```
