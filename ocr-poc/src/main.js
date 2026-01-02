@@ -26,7 +26,7 @@ import { OCRFactory } from './services/ocr/index.js';
  */
 
 /**
- * @typedef {import('./services/ocr/TesseractOCR.js').OCRResult} OCRResult
+ * @typedef {import('./services/ocr/StubOCR.js').OCRResult} OCRResult
  */
 
 /**
@@ -58,7 +58,7 @@ let sheetTypeSelector = null;
 /** @type {OCRProgress | null} */
 let ocrProgress = null;
 
-/** @type {import('./services/ocr/TesseractOCR.js').TesseractOCR | null} */
+/** @type {import('./services/ocr/StubOCR.js').StubOCR | null} */
 let ocrEngine = null;
 
 /** @type {string | null} Object URL for results state preview image */

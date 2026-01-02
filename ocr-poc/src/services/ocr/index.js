@@ -2,17 +2,18 @@
  * OCR Factory
  *
  * Factory for creating OCR engine instances.
- * Currently supports Tesseract.js, with TrOCR support planned for handwritten text.
+ * Currently uses a stub implementation while external OCR services
+ * (Google Vision, AWS Textract, PaddleOCR) are being integrated.
  */
 
-import { TesseractOCR } from './TesseractOCR.js';
+import { StubOCR } from './StubOCR.js';
 
 /**
  * @typedef {'electronic' | 'handwritten'} OCREngineType
  */
 
 /**
- * @typedef {import('./TesseractOCR.js').OnProgressCallback} OnProgressCallback
+ * @typedef {import('./StubOCR.js').OnProgressCallback} OnProgressCallback
  */
 
 /**
@@ -23,19 +24,19 @@ export const OCRFactory = {
    * Create an OCR engine instance based on the sheet type
    * @param {OCREngineType} type - The type of OCR engine to create
    * @param {OnProgressCallback} [onProgress] - Optional progress callback
-   * @returns {TesseractOCR} The OCR engine instance
+   * @returns {StubOCR} The OCR engine instance
    */
   create(type, onProgress) {
-    // For now, both types use TesseractOCR
-    // In the future, 'handwritten' could use TrOCR for better handwriting recognition
+    // TODO: Integrate external OCR services (Google Vision, AWS Textract, PaddleOCR)
+    // For now, all types use the stub implementation
     switch (type) {
       case 'electronic':
       case 'handwritten':
       default:
-        return new TesseractOCR(onProgress);
+        return new StubOCR(onProgress);
     }
   },
 };
 
 // Re-export types and classes for convenience
-export { TesseractOCR } from './TesseractOCR.js';
+export { StubOCR } from './StubOCR.js';

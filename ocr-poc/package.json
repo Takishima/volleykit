@@ -15,8 +15,5 @@
     "vite": "^6.0.0",
     "vite-plugin-pwa": "^0.21.0",
     "workbox-window": "^7.3.0"
-  },
-  "dependencies": {
-    "tesseract.js": "^7.0.0"
   }
 }
