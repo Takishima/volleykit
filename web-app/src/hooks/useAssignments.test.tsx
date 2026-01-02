@@ -459,7 +459,7 @@ describe("useAssignmentDetails", () => {
         "refereeGame.game.encounter.teamHome",
         "refereeGame.game.encounter.teamAway",
         "refereeGame.game.hall",
-        "refereeGame.game.hall.postalAddress",
+        "refereeGame.game.hall.primaryPostalAddress",
       ]),
     );
   });
