@@ -7,6 +7,7 @@ import type { GameExchange } from "@/api/client";
 import { useDateLocale } from "@/hooks/useDateFormat";
 import { useTranslation } from "@/hooks/useTranslation";
 import { buildMapsUrls } from "@/utils/maps-url";
+import { extractCoordinates } from "@/utils/geo-location";
 import { getPositionLabel } from "@/utils/position-labels";
 import { useSettingsStore } from "@/stores/settings";
 import { useActiveAssociationCode } from "@/hooks/useActiveAssociation";
@@ -99,9 +100,7 @@ function ExchangeCardComponent({
 
   // Extract hall coordinates and ID for travel time queries
   const geoLocation = game?.hall?.primaryPostalAddress?.geographicalLocation;
-  const hallCoords = geoLocation?.latitude !== undefined && geoLocation?.longitude !== undefined
-    ? { latitude: geoLocation.latitude, longitude: geoLocation.longitude }
-    : null;
+  const hallCoords = extractCoordinates(geoLocation);
   const hallId = game?.hall?.__identity;
   const gameStartingDateTime = game?.startingDateTime;
 
