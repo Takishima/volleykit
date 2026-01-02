@@ -1151,9 +1151,9 @@ export interface components {
             distanceInMetres?: number;
             /**
              * @example car
-             * @enum {string}
+             * @enum {string|null}
              */
-            transportationMode?: "car" | "train" | "other";
+            transportationMode?: "car" | "train" | "public_transport" | "other" | null;
             /**
              * Format: date
              * @description Date when payment was made
