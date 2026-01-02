@@ -5,7 +5,7 @@ import {
   useQueryClient,
   type UseMutationResult,
 } from "@tanstack/react-query";
-import { startOfDay, endOfDay, addMonths } from "date-fns";
+import { startOfDay, endOfDay } from "date-fns";
 import {
   getApiClient,
   type SearchConfiguration,
@@ -16,9 +16,41 @@ import { useDemoStore } from "@/stores/demo";
 import { queryKeys } from "@/api/queryKeys";
 import { DEFAULT_PAGE_SIZE } from "./usePaginatedQuery";
 
-// Exchange date range: from today to 6 months in the future
-// This matches the behavior observed in the real volleymanager website
-const EXCHANGE_DATE_RANGE_MONTHS = 6;
+// Volleyball season months (0-indexed): September = 8, May = 4
+const SEASON_START_MONTH = 8; // September
+const SEASON_END_MONTH = 4; // May
+
+/**
+ * Calculate the current volleyball season date range.
+ * A season runs from beginning of September to end of May of the following year.
+ *
+ * @returns Object with season start and end dates
+ */
+function getSeasonDateRange(): { from: Date; to: Date } {
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  let seasonStartYear: number;
+  let seasonEndYear: number;
+
+  if (currentMonth >= SEASON_START_MONTH) {
+    // September-December: season is current year to next year
+    seasonStartYear = currentYear;
+    seasonEndYear = currentYear + 1;
+  } else {
+    // January-August: season is previous year to current year
+    seasonStartYear = currentYear - 1;
+    seasonEndYear = currentYear;
+  }
+
+  // Season starts September 1st
+  const seasonStart = new Date(seasonStartYear, SEASON_START_MONTH, 1);
+  // Season ends May 31st
+  const seasonEnd = new Date(seasonEndYear, SEASON_END_MONTH + 1, 0); // Day 0 of June = May 31st
+
+  return { from: seasonStart, to: seasonEnd };
+}
 
 // Stable empty array for React Query selectors to prevent unnecessary re-renders.
 const EMPTY_EXCHANGES: GameExchange[] = [];
@@ -29,8 +61,8 @@ export type ExchangeStatus = "open" | "applied" | "closed" | "all";
 /**
  * Hook to fetch game exchange requests with optional status filtering.
  *
- * The API requires a date filter to return results. We use a 6-month window
- * from today, matching the behavior of the real volleymanager website.
+ * The API requires a date filter to return results. We use the current
+ * volleyball season dates (September to May) to filter exchanges.
  *
  * @param status - Filter by exchange status, or 'all' for no filtering
  */
@@ -45,13 +77,13 @@ export function useGameExchanges(status: ExchangeStatus = "all") {
   // Use appropriate key for cache invalidation when switching associations
   const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId;
 
-  // Memoize date range to prevent query key changes on every render.
-  // Date values are stable within the same day due to startOfDay/endOfDay.
+  // Memoize season date range. The season only changes once per year,
+  // so this is stable for the entire session.
   const { fromDate, toDate } = useMemo(() => {
-    const now = new Date();
+    const { from, to } = getSeasonDateRange();
     return {
-      fromDate: startOfDay(now).toISOString(),
-      toDate: endOfDay(addMonths(now, EXCHANGE_DATE_RANGE_MONTHS)).toISOString(),
+      fromDate: startOfDay(from).toISOString(),
+      toDate: endOfDay(to).toISOString(),
     };
   }, []);
 
