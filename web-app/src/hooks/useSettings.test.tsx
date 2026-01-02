@@ -7,6 +7,9 @@ import { useAssociationSettings, useActiveSeason } from "./useSettings";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyFunction = (...args: any[]) => any;
 
+/** Delay to allow React Query to process disabled queries before assertions */
+const QUERY_SETTLE_DELAY_MS = 10;
+
 // Mock dependencies
 vi.mock("@/api/client", () => ({
   api: {
@@ -37,6 +40,23 @@ function createWrapper() {
   };
 }
 
+/** Configure auth store mock with specified demo mode and occupation */
+async function setupAuthStore(config: {
+  isDemoMode: boolean;
+  activeOccupationId: string | null;
+}) {
+  const { useAuthStore } = await import("@/stores/auth");
+  vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
+    selector(config),
+  );
+}
+
+/** Get mocked API client */
+async function getApi() {
+  const { api } = await import("@/api/client");
+  return api;
+}
+
 describe("useAssociationSettings", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -47,7 +67,7 @@ describe("useAssociationSettings", () => {
       hoursAfterGameStartForRefereeToEditGameList: 6,
     };
 
-    const { api } = await import("@/api/client");
+    const api = await getApi();
     vi.mocked(api.getAssociationSettings).mockResolvedValue(mockSettings);
 
     const { result } = renderHook(() => useAssociationSettings(), {
@@ -63,37 +83,33 @@ describe("useAssociationSettings", () => {
   });
 
   it("is disabled in demo mode", async () => {
-    const { useAuthStore } = await import("@/stores/auth");
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ isDemoMode: true, activeOccupationId: null }),
-    );
-
-    const { api } = await import("@/api/client");
+    await setupAuthStore({ isDemoMode: true, activeOccupationId: null });
+    const api = await getApi();
 
     const { result } = renderHook(() => useAssociationSettings(), {
       wrapper: createWrapper(),
     });
 
-    // Wait a tick to ensure query would have been called if enabled
-    await new Promise((r) => setTimeout(r, 10));
+    // Wait for query to settle before checking disabled state
+    await new Promise((r) => setTimeout(r, QUERY_SETTLE_DELAY_MS));
 
+    expect(result.current.fetchStatus).toBe("idle");
     expect(result.current.isPending).toBe(true);
     expect(api.getAssociationSettings).not.toHaveBeenCalled();
   });
 
   it("includes activeOccupationId in query key for cache invalidation on association switch", async () => {
-    const { useAuthStore } = await import("@/stores/auth");
-    const { api } = await import("@/api/client");
-
+    const api = await getApi();
     const mockSettings = {
       hoursAfterGameStartForRefereeToEditGameList: 6,
     };
     vi.mocked(api.getAssociationSettings).mockResolvedValue(mockSettings);
 
     // First render with one occupation
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ isDemoMode: false, activeOccupationId: "occupation-1" }),
-    );
+    await setupAuthStore({
+      isDemoMode: false,
+      activeOccupationId: "occupation-1",
+    });
 
     const wrapper1 = createWrapper();
     const { result: result1 } = renderHook(() => useAssociationSettings(), {
@@ -107,9 +123,10 @@ describe("useAssociationSettings", () => {
     expect(api.getAssociationSettings).toHaveBeenCalledTimes(1);
 
     // Second render with different occupation - should trigger new fetch
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ isDemoMode: false, activeOccupationId: "occupation-2" }),
-    );
+    await setupAuthStore({
+      isDemoMode: false,
+      activeOccupationId: "occupation-2",
+    });
 
     const wrapper2 = createWrapper();
     const { result: result2 } = renderHook(() => useAssociationSettings(), {
@@ -125,12 +142,12 @@ describe("useAssociationSettings", () => {
   });
 
   it("handles API errors gracefully", async () => {
-    const { useAuthStore } = await import("@/stores/auth");
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ isDemoMode: false, activeOccupationId: "occupation-123" }),
-    );
+    await setupAuthStore({
+      isDemoMode: false,
+      activeOccupationId: "occupation-123",
+    });
 
-    const { api } = await import("@/api/client");
+    const api = await getApi();
     vi.mocked(api.getAssociationSettings).mockRejectedValue(
       new Error("Network error"),
     );
@@ -154,10 +171,10 @@ describe("useActiveSeason", () => {
   });
 
   it("fetches active season when not in demo mode", async () => {
-    const { useAuthStore } = await import("@/stores/auth");
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ isDemoMode: false, activeOccupationId: "occupation-123" }),
-    );
+    await setupAuthStore({
+      isDemoMode: false,
+      activeOccupationId: "occupation-123",
+    });
 
     const mockSeason = {
       __identity: "season-1",
@@ -165,7 +182,7 @@ describe("useActiveSeason", () => {
       seasonEndDate: "2025-06-30",
     };
 
-    const { api } = await import("@/api/client");
+    const api = await getApi();
     vi.mocked(api.getActiveSeason).mockResolvedValue(mockSeason);
 
     const { result } = renderHook(() => useActiveSeason(), {
@@ -181,28 +198,23 @@ describe("useActiveSeason", () => {
   });
 
   it("is disabled in demo mode", async () => {
-    const { useAuthStore } = await import("@/stores/auth");
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ isDemoMode: true, activeOccupationId: null }),
-    );
-
-    const { api } = await import("@/api/client");
+    await setupAuthStore({ isDemoMode: true, activeOccupationId: null });
+    const api = await getApi();
 
     const { result } = renderHook(() => useActiveSeason(), {
       wrapper: createWrapper(),
     });
 
-    // Wait a tick to ensure query would have been called if enabled
-    await new Promise((r) => setTimeout(r, 10));
+    // Wait for query to settle before checking disabled state
+    await new Promise((r) => setTimeout(r, QUERY_SETTLE_DELAY_MS));
 
+    expect(result.current.fetchStatus).toBe("idle");
     expect(result.current.isPending).toBe(true);
     expect(api.getActiveSeason).not.toHaveBeenCalled();
   });
 
   it("includes activeOccupationId in query key for cache invalidation on association switch", async () => {
-    const { useAuthStore } = await import("@/stores/auth");
-    const { api } = await import("@/api/client");
-
+    const api = await getApi();
     const mockSeason = {
       __identity: "season-1",
       seasonStartDate: "2024-09-01",
@@ -211,9 +223,10 @@ describe("useActiveSeason", () => {
     vi.mocked(api.getActiveSeason).mockResolvedValue(mockSeason);
 
     // First render with one occupation
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ isDemoMode: false, activeOccupationId: "occupation-1" }),
-    );
+    await setupAuthStore({
+      isDemoMode: false,
+      activeOccupationId: "occupation-1",
+    });
 
     const wrapper1 = createWrapper();
     const { result: result1 } = renderHook(() => useActiveSeason(), {
@@ -227,9 +240,10 @@ describe("useActiveSeason", () => {
     expect(api.getActiveSeason).toHaveBeenCalledTimes(1);
 
     // Second render with different occupation - should trigger new fetch
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ isDemoMode: false, activeOccupationId: "occupation-2" }),
-    );
+    await setupAuthStore({
+      isDemoMode: false,
+      activeOccupationId: "occupation-2",
+    });
 
     const wrapper2 = createWrapper();
     const { result: result2 } = renderHook(() => useActiveSeason(), {
@@ -245,12 +259,12 @@ describe("useActiveSeason", () => {
   });
 
   it("handles API errors gracefully", async () => {
-    const { useAuthStore } = await import("@/stores/auth");
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ isDemoMode: false, activeOccupationId: "occupation-123" }),
-    );
+    await setupAuthStore({
+      isDemoMode: false,
+      activeOccupationId: "occupation-123",
+    });
 
-    const { api } = await import("@/api/client");
+    const api = await getApi();
     vi.mocked(api.getActiveSeason).mockRejectedValue(
       new Error("API unavailable"),
     );
