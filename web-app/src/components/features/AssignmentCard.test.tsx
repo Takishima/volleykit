@@ -138,7 +138,8 @@ describe("AssignmentCard", () => {
 
       render(<AssignmentCard assignment={assignment} />);
 
-      expect(screen.getByText("Zürich")).toBeInTheDocument();
+      // City appears in the address link
+      expect(screen.getByRole("link", { name: /Zürich in maps/i })).toBeInTheDocument();
     });
 
     it("maintains consistent spacing when city is not available", () => {

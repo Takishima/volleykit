@@ -6,6 +6,7 @@ export interface PostalAddress {
   combinedAddress?: string;
   streetAndHouseNumber?: string;
   postalCodeAndCity?: string;
+  postalCode?: string;
   city?: string;
   geographicalLocation?: {
     plusCode?: string;
@@ -25,14 +26,29 @@ export interface MapsUrls {
 
 /**
  * Build the full address string from postal address components.
+ * Handles both combined fields (postalCodeAndCity) and separate fields (postalCode, city).
  */
 export function buildFullAddress(postalAddress: PostalAddress | null | undefined): string | null {
   if (!postalAddress) return null;
 
-  return postalAddress.combinedAddress
-    || (postalAddress.streetAndHouseNumber && postalAddress.postalCodeAndCity
-      ? `${postalAddress.streetAndHouseNumber}, ${postalAddress.postalCodeAndCity}`
-      : null);
+  // Prefer combinedAddress if available
+  if (postalAddress.combinedAddress) {
+    return postalAddress.combinedAddress;
+  }
+
+  // Build postalCodeAndCity from separate fields if not provided
+  const postalCodeAndCity = postalAddress.postalCodeAndCity
+    || (postalAddress.postalCode && postalAddress.city
+      ? `${postalAddress.postalCode} ${postalAddress.city}`
+      : postalAddress.city || null);
+
+  // If we have street and postal/city, combine them
+  if (postalAddress.streetAndHouseNumber && postalCodeAndCity) {
+    return `${postalAddress.streetAndHouseNumber}, ${postalCodeAndCity}`;
+  }
+
+  // Fall back to just postal code and city
+  return postalCodeAndCity;
 }
 
 /**
