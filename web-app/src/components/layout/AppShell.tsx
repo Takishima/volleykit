@@ -9,6 +9,7 @@ import { getOccupationLabelKey } from "@/utils/occupation-labels";
 import { getApiClient } from "@/api/client";
 import { toast } from "@/stores/toast";
 import { createLogger } from "@/utils/logger";
+import { prefetchAllTabData } from "@/hooks/usePrefetchTabData";
 import {
   Volleyball,
   ClipboardList,
@@ -151,6 +152,16 @@ export function AppShell() {
       // 2. New data is fetched fresh from the server
       // This prevents showing stale data from the previous association.
       await queryClient.resetQueries();
+
+      // Prefetch data for all tabs in production mode.
+      // This improves UX by loading data for tabs the user hasn't visited yet.
+      // In demo mode, data comes directly from the store, so no prefetch needed.
+      if (!isDemoMode) {
+        // Don't await - let prefetch happen in background while user interacts
+        prefetchAllTabData(queryClient, id).catch(() => {
+          // Errors are already logged in prefetchAllTabData, no action needed
+        });
+      }
     } catch (error) {
       // Check if this is still the latest switch request before showing error
       if (currentSwitch === switchCounterRef.current) {
