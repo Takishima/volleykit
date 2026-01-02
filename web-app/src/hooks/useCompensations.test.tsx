@@ -135,10 +135,21 @@ describe("useCompensations", () => {
     );
   });
 
-  it("filters by paid status when paidFilter is true", async () => {
+  it("applies client-side filtering for paid compensations when paidFilter is true", async () => {
+    const compensations = [
+      createMockCompensation({
+        __identity: "paid-1",
+        convocationCompensation: { __identity: "c1", paymentDone: true, gameCompensation: 50, travelExpenses: 20 },
+      }),
+      createMockCompensation({
+        __identity: "unpaid-1",
+        convocationCompensation: { __identity: "c2", paymentDone: false, gameCompensation: 50, travelExpenses: 20 },
+      }),
+    ];
+
     const mockSearchCompensations = vi.fn().mockResolvedValue({
-      items: [],
-      totalItemsCount: 0,
+      items: compensations,
+      totalItemsCount: 2,
     });
 
     const { getApiClient } = await import("@/api/client");
@@ -147,30 +158,41 @@ describe("useCompensations", () => {
       updateCompensation: vi.fn(),
     } as unknown as ReturnType<typeof getApiClient>);
 
-    renderHook(() => useCompensations(true), {
+    const { result } = renderHook(() => useCompensations(true), {
       wrapper: createWrapper(),
     });
 
     await waitFor(() => {
-      expect(mockSearchCompensations).toHaveBeenCalled();
+      expect(result.current.isSuccess).toBe(true);
     });
 
+    // API should be called without paymentDone filter (client-side filtering)
     expect(mockSearchCompensations).toHaveBeenCalledWith(
       expect.objectContaining({
-        propertyFilters: [
-          {
-            propertyName: "convocationCompensation.paymentDone",
-            values: ["true"],
-          },
-        ],
+        propertyFilters: [],
       }),
     );
+
+    // Should only return paid compensations
+    expect(result.current.data).toHaveLength(1);
+    expect(result.current.data![0]!.__identity).toBe("paid-1");
   });
 
-  it("filters by unpaid status when paidFilter is false", async () => {
+  it("applies client-side filtering for unpaid compensations when paidFilter is false", async () => {
+    const compensations = [
+      createMockCompensation({
+        __identity: "paid-1",
+        convocationCompensation: { __identity: "c1", paymentDone: true, gameCompensation: 50, travelExpenses: 20 },
+      }),
+      createMockCompensation({
+        __identity: "unpaid-1",
+        convocationCompensation: { __identity: "c2", paymentDone: false, gameCompensation: 50, travelExpenses: 20 },
+      }),
+    ];
+
     const mockSearchCompensations = vi.fn().mockResolvedValue({
-      items: [],
-      totalItemsCount: 0,
+      items: compensations,
+      totalItemsCount: 2,
     });
 
     const { getApiClient } = await import("@/api/client");
@@ -179,24 +201,24 @@ describe("useCompensations", () => {
       updateCompensation: vi.fn(),
     } as unknown as ReturnType<typeof getApiClient>);
 
-    renderHook(() => useCompensations(false), {
+    const { result } = renderHook(() => useCompensations(false), {
       wrapper: createWrapper(),
     });
 
     await waitFor(() => {
-      expect(mockSearchCompensations).toHaveBeenCalled();
+      expect(result.current.isSuccess).toBe(true);
     });
 
+    // API should be called without paymentDone filter (client-side filtering)
     expect(mockSearchCompensations).toHaveBeenCalledWith(
       expect.objectContaining({
-        propertyFilters: [
-          {
-            propertyName: "convocationCompensation.paymentDone",
-            values: ["false"],
-          },
-        ],
+        propertyFilters: [],
       }),
     );
+
+    // Should only return unpaid compensations
+    expect(result.current.data).toHaveLength(1);
+    expect(result.current.data![0]!.__identity).toBe("unpaid-1");
   });
 
   it("returns empty array when items is null", async () => {
@@ -257,10 +279,21 @@ describe("useCompensations", () => {
 });
 
 describe("usePaidCompensations", () => {
-  it("is a convenience wrapper for useCompensations with true filter", async () => {
+  it("returns only paid compensations via client-side filtering", async () => {
+    const compensations = [
+      createMockCompensation({
+        __identity: "paid-1",
+        convocationCompensation: { __identity: "c1", paymentDone: true, gameCompensation: 50, travelExpenses: 20 },
+      }),
+      createMockCompensation({
+        __identity: "unpaid-1",
+        convocationCompensation: { __identity: "c2", paymentDone: false, gameCompensation: 50, travelExpenses: 20 },
+      }),
+    ];
+
     const mockSearchCompensations = vi.fn().mockResolvedValue({
-      items: [],
-      totalItemsCount: 0,
+      items: compensations,
+      totalItemsCount: 2,
     });
 
     const { getApiClient } = await import("@/api/client");
@@ -269,32 +302,36 @@ describe("usePaidCompensations", () => {
       updateCompensation: vi.fn(),
     } as unknown as ReturnType<typeof getApiClient>);
 
-    renderHook(() => usePaidCompensations(), {
+    const { result } = renderHook(() => usePaidCompensations(), {
       wrapper: createWrapper(),
     });
 
     await waitFor(() => {
-      expect(mockSearchCompensations).toHaveBeenCalled();
+      expect(result.current.isSuccess).toBe(true);
     });
 
-    expect(mockSearchCompensations).toHaveBeenCalledWith(
-      expect.objectContaining({
-        propertyFilters: [
-          {
-            propertyName: "convocationCompensation.paymentDone",
-            values: ["true"],
-          },
-        ],
-      }),
-    );
+    // Should only return paid compensations
+    expect(result.current.data).toHaveLength(1);
+    expect(result.current.data![0]!.__identity).toBe("paid-1");
   });
 });
 
 describe("useUnpaidCompensations", () => {
-  it("is a convenience wrapper for useCompensations with false filter", async () => {
+  it("returns only unpaid compensations via client-side filtering", async () => {
+    const compensations = [
+      createMockCompensation({
+        __identity: "paid-1",
+        convocationCompensation: { __identity: "c1", paymentDone: true, gameCompensation: 50, travelExpenses: 20 },
+      }),
+      createMockCompensation({
+        __identity: "unpaid-1",
+        convocationCompensation: { __identity: "c2", paymentDone: false, gameCompensation: 50, travelExpenses: 20 },
+      }),
+    ];
+
     const mockSearchCompensations = vi.fn().mockResolvedValue({
-      items: [],
-      totalItemsCount: 0,
+      items: compensations,
+      totalItemsCount: 2,
     });
 
     const { getApiClient } = await import("@/api/client");
@@ -303,24 +340,17 @@ describe("useUnpaidCompensations", () => {
       updateCompensation: vi.fn(),
     } as unknown as ReturnType<typeof getApiClient>);
 
-    renderHook(() => useUnpaidCompensations(), {
+    const { result } = renderHook(() => useUnpaidCompensations(), {
       wrapper: createWrapper(),
     });
 
     await waitFor(() => {
-      expect(mockSearchCompensations).toHaveBeenCalled();
+      expect(result.current.isSuccess).toBe(true);
     });
 
-    expect(mockSearchCompensations).toHaveBeenCalledWith(
-      expect.objectContaining({
-        propertyFilters: [
-          {
-            propertyName: "convocationCompensation.paymentDone",
-            values: ["false"],
-          },
-        ],
-      }),
-    );
+    // Should only return unpaid compensations
+    expect(result.current.data).toHaveLength(1);
+    expect(result.current.data![0]!.__identity).toBe("unpaid-1");
   });
 });
 
