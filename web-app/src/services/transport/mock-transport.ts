@@ -4,6 +4,7 @@
  */
 
 import type { Coordinates, TravelTimeResult, TravelTimeOptions, StationInfo } from "./types";
+import { calculateDistanceKm } from "@/utils/distance";
 
 /** Network delay for realistic demo behavior */
 const MOCK_DELAY_MS = 100;
@@ -37,31 +38,6 @@ function estimateTransfers(distanceKm: number): number {
   if (distanceKm < 30) return 1;
   if (distanceKm < 60) return 2;
   return 3;
-}
-
-/**
- * Calculate straight-line distance between two coordinates using Haversine formula.
- *
- * @param from Origin coordinates
- * @param to Destination coordinates
- * @returns Distance in kilometers
- */
-function calculateDistanceKm(from: Coordinates, to: Coordinates): number {
-  const R = 6371; // Earth's radius in kilometers
-
-  const dLat = ((to.latitude - from.latitude) * Math.PI) / 180;
-  const dLon = ((to.longitude - from.longitude) * Math.PI) / 180;
-
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((from.latitude * Math.PI) / 180) *
-      Math.cos((to.latitude * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-  return R * c;
 }
 
 /**
