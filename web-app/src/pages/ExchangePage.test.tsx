@@ -12,6 +12,18 @@ vi.mock("@/hooks/useConvocations");
 vi.mock("@/stores/auth");
 vi.mock("@/stores/demo");
 vi.mock("@/stores/settings");
+vi.mock("@/hooks/useTour", () => ({
+  useTour: () => ({
+    isActive: false,
+    isTourMode: false,
+    showDummyData: false,
+    startTour: vi.fn(),
+    endTour: vi.fn(),
+    currentStep: 0,
+    nextStep: vi.fn(),
+    shouldShow: false,
+  }),
+}));
 vi.mock("@/hooks/useActiveAssociation", () => ({
   useActiveAssociationCode: () => "TEST",
 }));

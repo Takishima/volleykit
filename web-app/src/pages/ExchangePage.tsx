@@ -47,7 +47,8 @@ export function ExchangePage() {
   const { t } = useTranslation();
 
   // Initialize tour for this page (triggers auto-start on first visit)
-  const { isTourMode } = useTour("exchange");
+  // Use showDummyData to show dummy data immediately, avoiding race condition with empty states
+  const { showDummyData } = useTour("exchange");
 
   const isDemoMode = useAuthStore((state) => state.isDemoMode);
   const { userRefereeLevel, userRefereeLevelGradationValue } = useDemoStore(
@@ -119,9 +120,9 @@ export function ExchangePage() {
 
   // Filter exchanges by user's referee level and distance when filters are enabled
   const filteredData = useMemo(() => {
-    // When tour is active, show ONLY the dummy exchange to ensure tour works
-    // regardless of whether tabs have real data
-    if (isTourMode) {
+    // When tour is active (or about to auto-start), show ONLY the dummy exchange
+    // to ensure tour works regardless of whether tabs have real data
+    if (showDummyData) {
       // Safe cast: TourDummyExchange provides all fields used by ExchangeCard
       const tourExchange = TOUR_DUMMY_EXCHANGE as unknown as GameExchange;
       return [{ exchange: tourExchange, distanceKm: null }];
@@ -185,7 +186,7 @@ export function ExchangePage() {
 
     return result;
   }, [
-    isTourMode,
+    showDummyData,
     exchangesWithDistance,
     levelFilterEnabled,
     statusFilter,

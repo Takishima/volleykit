@@ -48,22 +48,23 @@ export function CompensationsPage() {
   const { editCompensationModal, handleGeneratePDF } = useCompensationActions();
 
   // Initialize tour for this page (triggers auto-start on first visit)
-  const { isTourMode } = useTour("compensations");
+  // Use showDummyData to show dummy data immediately, avoiding race condition with empty states
+  const { showDummyData } = useTour("compensations");
 
   // Single data fetch based on current filter (like ExchangePage pattern)
   const paidFilter = useMemo(() => filterToPaidFilter(filter), [filter]);
   const { data: rawData, isLoading, error, refetch } = useCompensations(paidFilter);
 
-  // When tour is active, show ONLY the dummy compensation to ensure tour works
-  // regardless of whether tabs have real data
+  // When tour is active (or about to auto-start), show ONLY the dummy compensation
+  // to ensure tour works regardless of whether tabs have real data
   const data = useMemo(() => {
-    if (isTourMode) {
+    if (showDummyData) {
       // Safe cast: TourDummyCompensation provides all fields used by CompensationCard
       const tourCompensation = TOUR_DUMMY_COMPENSATION as unknown as CompensationRecord;
       return [tourCompensation];
     }
     return rawData;
-  }, [isTourMode, rawData]);
+  }, [showDummyData, rawData]);
 
   // Group compensations by week for visual separation
   const groupedData = useMemo(() => {

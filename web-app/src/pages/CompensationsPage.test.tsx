@@ -6,6 +6,18 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import * as useConvocations from "@/hooks/useConvocations";
 
 vi.mock("@/hooks/useConvocations");
+vi.mock("@/hooks/useTour", () => ({
+  useTour: () => ({
+    isActive: false,
+    isTourMode: false,
+    showDummyData: false,
+    startTour: vi.fn(),
+    endTour: vi.fn(),
+    currentStep: 0,
+    nextStep: vi.fn(),
+    shouldShow: false,
+  }),
+}));
 vi.mock("@/hooks/useCompensationActions", () => ({
   useCompensationActions: () => ({
     editCompensationModal: {
