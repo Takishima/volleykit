@@ -58,12 +58,15 @@ function ProfileSectionComponent({ user }: ProfileSectionProps) {
       try {
         const params = new URLSearchParams();
         params.set("person[__identity]", user.id);
-        // Parent objects must be requested before nested properties to avoid 500 errors
-        params.set("propertyRenderConfiguration[0]", "profilePicture");
-        params.set("propertyRenderConfiguration[1]", "profilePicture.publicResourceUri");
-        params.set("propertyRenderConfiguration[2]", "svNumber");
-        params.set("propertyRenderConfiguration[3]", "firstName");
-        params.set("propertyRenderConfiguration[4]", "lastName");
+        // Parent objects must be requested before nested properties to avoid 500 errors.
+        // hasProfilePicture must be requested before profilePicture to allow the API
+        // to check existence before accessing the nested object.
+        params.set("propertyRenderConfiguration[0]", "hasProfilePicture");
+        params.set("propertyRenderConfiguration[1]", "profilePicture");
+        params.set("propertyRenderConfiguration[2]", "profilePicture.publicResourceUri");
+        params.set("propertyRenderConfiguration[3]", "svNumber");
+        params.set("propertyRenderConfiguration[4]", "firstName");
+        params.set("propertyRenderConfiguration[5]", "lastName");
 
         const response = await fetch(
           `${API_BASE}/sportmanager.volleyball/api%5cperson/showWithNestedObjects?${params}`,
