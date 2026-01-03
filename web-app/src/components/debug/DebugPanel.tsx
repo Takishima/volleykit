@@ -193,9 +193,6 @@ function copyToClipboard(text: string): Promise<boolean> {
   }
 }
 
-// Keep legacy export name for backwards compatibility with AppShell
-export { DebugPanel as AssociationDebugPanel };
-
 export function DebugPanel() {
   const [persistedState, setPersistedState] = useState<PersistedState | null>(null);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["identity", "status"]));
