@@ -21,78 +21,78 @@ const it: Translations = {
       welcome: {
         title: "Le tue designazioni",
         description:
-          "Qui vedrai le tue prossime designazioni arbitrali. Ogni scheda mostra i dettagli della partita. Questo esempio mostra tutte le azioni disponibili.",
+          "Le tue prossime designazioni arbitrali. Questo esempio mostra tutte le azioni disponibili.",
       },
       swipeValidate: {
-        title: "Scorri verso sinistra",
+        title: "Scorri a sinistra",
         description:
-          "Scorri verso sinistra per rivelare i pulsanti d'azione. Valida appare per il 1° arbitro, Modifica per i compensi modificabili, e Rapporto per le partite NLA/NLB. Le tue partite reali potrebbero mostrare meno pulsanti in base al tuo ruolo e permessi.",
+          "Scorri a sinistra per: Valida (1° arbitro), modifica compenso o Rapporto (NLA/NLB).",
       },
       swipeExchange: {
-        title: "Scorri verso destra",
+        title: "Scorri a destra",
         description:
-          "Scorri verso destra per offrire la designazione alla borsa. Altri arbitri potranno quindi prendere in carico la partita. Disponibile per tutte le partite in programma.",
+          "Scorri a destra per offrire questa designazione alla borsa.",
       },
       tapDetails: {
-        title: "Visualizza dettagli",
+        title: "Tocca per dettagli",
         description:
-          "Tocca una scheda per espanderla e vedere maggiori dettagli sulla designazione.",
+          "Tocca una scheda per più dettagli.",
       },
     },
     compensations: {
       overview: {
         title: "I tuoi compensi",
         description:
-          "Qui puoi vedere tutti i tuoi compensi arbitrali, incluse le tariffe delle partite e le spese di viaggio.",
+          "Le tue tariffe partita e spese di viaggio.",
       },
       swipeEdit: {
-        title: "Scorri per modificare",
+        title: "Scorri a sinistra",
         description:
-          "Scorri verso sinistra per rivelare il pulsante di modifica. Toccalo per regolare la distanza o aggiungere un motivo di correzione.",
+          "Scorri a sinistra per modificare o scaricare PDF.",
       },
       tapDetails: {
-        title: "Visualizza dettagli",
+        title: "Tocca per dettagli",
         description:
-          "Tocca una scheda per espanderla e vedere maggiori dettagli sul compenso.",
+          "Tocca una scheda per il dettaglio completo.",
       },
     },
     exchange: {
       browse: {
-        title: "Scambi disponibili",
+        title: "Borsa",
         description:
-          "Qui puoi vedere le designazioni che altri arbitri vogliono cedere. Assumine una se si adatta ai tuoi impegni!",
+          "Designazioni che altri arbitri vogliono cedere. Assumine una se ti conviene!",
       },
       apply: {
         title: "Scorri per candidarti",
         description:
-          "Scorri verso sinistra per candidarti allo scambio. Assumerai la designazione se approvato.",
+          "Scorri a sinistra per candidarti a questo scambio.",
       },
-      filter: {
-        title: "Filtra per livello",
+      filters: {
+        title: "Impostazioni filtri",
         description:
-          "Usa questo pulsante per mostrare solo le partite che corrispondono al tuo livello arbitrale.",
+          "Tocca l'ingranaggio per personalizzare i filtri di distanza e tempo di viaggio.",
       },
     },
     settings: {
       language: {
-        title: "Cambia lingua",
+        title: "Lingua",
         description:
-          "Seleziona la tua lingua preferita. L'app supporta tedesco, inglese, francese e italiano.",
+          "Scegli la tua lingua preferita.",
       },
       homeLocation: {
-        title: "Imposta posizione",
+        title: "Posizione",
         description:
-          "Imposta la tua posizione per filtrare gli scambi per distanza. Questo ti aiuta a trovare più facilmente le partite vicino a te.",
+          "Imposta la tua posizione per filtrare per distanza e tempo di viaggio.",
       },
       arrivalTime: {
-        title: "Impostazione orario di arrivo",
+        title: "Orario di arrivo",
         description:
-          "Configura quanti minuti prima della partita vuoi arrivare. Questa impostazione viene salvata separatamente per ogni associazione.",
+          "Minuti di anticipo all'arrivo prima della partita.",
       },
       complete: {
         title: "Tour completato!",
         description:
-          "Hai completato il tour guidato. Puoi riavviarlo in qualsiasi momento dalle impostazioni.",
+          "Puoi riavviare i tour in qualsiasi momento dalle impostazioni.",
       },
       tourSection: {
         title: "Tour guidati",

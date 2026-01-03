@@ -124,6 +124,11 @@ export function TourSpotlight({
     if (!target) return;
 
     const element = target as HTMLElement;
+
+    // Scroll element into view if it's not visible
+    // Use smooth scrolling and center the element in the viewport
+    element.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+
     // Store original styles in local variables for cleanup
     const originalPosition = element.style.position;
     const originalZIndex = element.style.zIndex;

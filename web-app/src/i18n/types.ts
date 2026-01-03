@@ -470,7 +470,7 @@ export interface Translations {
         title: string;
         description: string;
       };
-      filter: {
+      filters: {
         title: string;
         description: string;
       };
