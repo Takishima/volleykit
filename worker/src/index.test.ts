@@ -71,6 +71,12 @@ const ALLOWED_PREFIX_PATHS_WITH_API = [
   "/sportmanager.notificationcenter/",
 ];
 
+// Specific paths within WITH_API prefixes that do NOT need the /api/ prefix
+// These are file download endpoints that serve binary content (PDFs, etc.)
+const EXCEPTIONS_NO_API = [
+  "/indoorvolleyball.refadmin/refereestatementofexpenses/downloadrefereestatementofexpenses", // PDF download
+];
+
 function isAllowedPath(pathname: string): boolean {
   // Check exact matches first
   if (ALLOWED_EXACT_PATHS.includes(pathname)) {
@@ -86,8 +92,16 @@ function isAllowedPath(pathname: string): boolean {
 /**
  * Check if a path requires the /api/ prefix when forwarding to the target host.
  * API endpoints need this prefix, while auth/dashboard endpoints do not.
+ *
+ * Special cases:
+ * - Some paths under /indoorvolleyball.refadmin/ (like PDF downloads)
+ *   do NOT need the /api/ prefix even though most /indoorvolleyball.refadmin/ paths do.
  */
 function requiresApiPrefix(pathname: string): boolean {
+  // Check for exceptions that normally would need /api/ but don't (e.g., PDF downloads)
+  if (EXCEPTIONS_NO_API.some((prefix) => pathname.startsWith(prefix))) {
+    return false;
+  }
   return ALLOWED_PREFIX_PATHS_WITH_API.some((prefix) =>
     pathname.startsWith(prefix),
   );
@@ -377,6 +391,24 @@ describe("Path Filtering", () => {
 
     it("returns false for root path", () => {
       expect(requiresApiPrefix("/")).toBe(false);
+    });
+
+    it("returns false for PDF download endpoint (exception)", () => {
+      // PDF download endpoint does NOT use /api/ prefix
+      // even though it's under /indoorvolleyball.refadmin/
+      expect(
+        requiresApiPrefix(
+          "/indoorvolleyball.refadmin/refereestatementofexpenses/downloadrefereestatementofexpenses",
+        ),
+      ).toBe(false);
+    });
+
+    it("returns false for PDF download endpoint with query params", () => {
+      expect(
+        requiresApiPrefix(
+          "/indoorvolleyball.refadmin/refereestatementofexpenses/downloadrefereestatementofexpenses?refereeConvocation=abc-123",
+        ),
+      ).toBe(false);
     });
   });
 });
