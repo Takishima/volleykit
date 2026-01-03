@@ -314,6 +314,7 @@ const it: Translations = {
   settings: {
     title: "Impostazioni",
     profile: "Profilo",
+    svNumber: "N. SV",
     language: "Lingua",
     homeLocation: {
       title: "Posizione casa",

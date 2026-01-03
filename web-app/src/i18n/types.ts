@@ -197,6 +197,7 @@ export interface Translations {
   settings: {
     title: string;
     profile: string;
+    svNumber: string;
     language: string;
     homeLocation: {
       title: string;

@@ -16,7 +16,14 @@ interface PersonProfileResponse {
   profilePicture?: {
     publicResourceUri?: string;
   };
+  svNumber?: number;
+  firstName?: string;
+  lastName?: string;
 }
+
+const DEMO_SV_NUMBER = 12345;
+const DEMO_FIRST_NAME = "Demo";
+const DEMO_LAST_NAME = "User";
 
 function ProfileSectionComponent({ user }: ProfileSectionProps) {
   const { t } = useTranslation();
@@ -24,21 +31,33 @@ function ProfileSectionComponent({ user }: ProfileSectionProps) {
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(
     user.profilePictureUrl ?? null,
   );
+  const [svNumber, setSvNumber] = useState<number | null>(
+    isDemoMode ? DEMO_SV_NUMBER : null,
+  );
+  const [firstName, setFirstName] = useState<string>(
+    isDemoMode ? DEMO_FIRST_NAME : user.firstName,
+  );
+  const [lastName, setLastName] = useState<string>(
+    isDemoMode ? DEMO_LAST_NAME : user.lastName,
+  );
   const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
-    // Skip fetching if already have URL or in demo mode
-    if (profilePictureUrl || isDemoMode || !user.id) {
+    // Skip fetching if in demo mode or no user id
+    if (isDemoMode || !user.id) {
       return;
     }
 
     const controller = new AbortController();
 
-    async function fetchProfilePicture() {
+    async function fetchProfileData() {
       try {
         const params = new URLSearchParams();
         params.set("person[__identity]", user.id);
         params.set("propertyRenderConfiguration[0]", "profilePicture.publicResourceUri");
+        params.set("propertyRenderConfiguration[1]", "svNumber");
+        params.set("propertyRenderConfiguration[2]", "firstName");
+        params.set("propertyRenderConfiguration[3]", "lastName");
 
         const response = await fetch(
           `${API_BASE}/sportmanager.volleyball/api%5Cperson/showWithNestedObjects?${params}`,
@@ -54,16 +73,28 @@ function ProfileSectionComponent({ user }: ProfileSectionProps) {
           if (data.profilePicture?.publicResourceUri) {
             setProfilePictureUrl(data.profilePicture.publicResourceUri);
           }
+          if (data.svNumber) {
+            setSvNumber(data.svNumber);
+          }
+          if (data.firstName) {
+            setFirstName(data.firstName);
+          }
+          if (data.lastName) {
+            setLastName(data.lastName);
+          }
         }
-      } catch {
-        // Ignore errors - profile picture is optional
+      } catch (error) {
+        // Ignore abort errors (expected during cleanup) and other errors (profile data is optional)
+        if (error instanceof Error && error.name !== "AbortError") {
+          // Profile data fetch failed - this is non-critical, so we don't surface the error
+        }
       }
     }
 
-    fetchProfilePicture();
+    fetchProfileData();
 
     return () => controller.abort();
-  }, [user.id, isDemoMode, profilePictureUrl]);
+  }, [user.id, isDemoMode]);
 
   return (
     <Card>
@@ -77,23 +108,30 @@ function ProfileSectionComponent({ user }: ProfileSectionProps) {
           {profilePictureUrl && !imageError ? (
             <img
               src={profilePictureUrl}
-              alt={`${user.firstName} ${user.lastName}`}
+              alt={`${firstName} ${lastName}`}
               className="w-16 h-16 rounded-full object-cover"
               onError={() => setImageError(true)}
             />
           ) : (
             <div
               className="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-2xl"
-              aria-label={`${user.firstName} ${user.lastName}`}
+              aria-label={`${firstName} ${lastName}`}
             >
-              {user.firstName.charAt(0)}
-              {user.lastName.charAt(0)}
+              {firstName.charAt(0) || lastName.charAt(0) || "?"}
+              {lastName.charAt(0) || firstName.charAt(0) || ""}
             </div>
           )}
           <div>
-            <div className="font-medium text-text-primary dark:text-text-primary-dark">
-              {user.firstName} {user.lastName}
-            </div>
+            {(firstName || lastName) && (
+              <div className="font-medium text-text-primary dark:text-text-primary-dark">
+                {firstName} {lastName}
+              </div>
+            )}
+            {svNumber && (
+              <div className="text-sm text-text-muted dark:text-text-muted-dark">
+                {t("settings.svNumber")}: {svNumber}
+              </div>
+            )}
             {user.email && (
               <div className="text-sm text-text-muted dark:text-text-muted-dark">
                 {user.email}
