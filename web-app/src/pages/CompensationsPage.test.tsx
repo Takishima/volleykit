@@ -33,6 +33,13 @@ vi.mock("@/hooks/useCompensationActions", () => ({
   }),
 }));
 
+// Use a date 7 days in the past to ensure it shows in the "Pending (Past)" tab
+function getPastGameDate(): string {
+  const date = new Date();
+  date.setDate(date.getDate() - 7);
+  return date.toISOString();
+}
+
 function createMockCompensation(
   overrides: Partial<CompensationRecord> = {},
 ): CompensationRecord {
@@ -42,7 +49,7 @@ function createMockCompensation(
     refereePosition: "head-one",
     refereeGame: {
       game: {
-        startingDateTime: "2025-12-15T18:00:00Z",
+        startingDateTime: getPastGameDate(),
         encounter: {
           teamHome: { name: "Team A" },
           teamAway: { name: "Team B" },
@@ -88,12 +95,12 @@ describe("CompensationsPage", () => {
   });
 
   describe("Tab Navigation", () => {
-    it("should default to Pending tab", () => {
+    it("should default to Pending (Past) tab", () => {
       render(<CompensationsPage />);
 
-      const pendingTab = screen.getByRole("tab", { name: /pending/i });
-      expect(pendingTab).toHaveClass("border-primary-500");
-      expect(pendingTab).toHaveAttribute("aria-selected", "true");
+      const pendingPastTab = screen.getByRole("tab", { name: /pending \(past\)/i });
+      expect(pendingPastTab).toHaveClass("border-primary-500");
+      expect(pendingPastTab).toHaveAttribute("aria-selected", "true");
     });
 
     it("should switch to All tab when clicked", () => {
@@ -106,14 +113,14 @@ describe("CompensationsPage", () => {
       expect(allTab).toHaveAttribute("aria-selected", "true");
     });
 
-    it("should switch to Paid tab when clicked", () => {
+    it("should switch to Closed tab when clicked", () => {
       render(<CompensationsPage />);
 
-      fireEvent.click(screen.getByRole("tab", { name: /^paid$/i }));
+      fireEvent.click(screen.getByRole("tab", { name: /^closed$/i }));
 
-      const paidTab = screen.getByRole("tab", { name: /^paid$/i });
-      expect(paidTab).toHaveClass("border-primary-500");
-      expect(paidTab).toHaveAttribute("aria-selected", "true");
+      const closedTab = screen.getByRole("tab", { name: /^closed$/i });
+      expect(closedTab).toHaveClass("border-primary-500");
+      expect(closedTab).toHaveAttribute("aria-selected", "true");
     });
 
     it("should have proper ARIA attributes on tablist", () => {
@@ -126,24 +133,24 @@ describe("CompensationsPage", () => {
     it("should support keyboard navigation with arrow keys", () => {
       render(<CompensationsPage />);
 
-      const pendingTab = screen.getByRole("tab", { name: /pending/i });
-      pendingTab.focus();
+      const pendingPastTab = screen.getByRole("tab", { name: /pending \(past\)/i });
+      pendingPastTab.focus();
 
-      // Press right arrow to go to Paid tab
-      fireEvent.keyDown(pendingTab, { key: "ArrowRight" });
+      // Press right arrow to go to Pending (Future) tab
+      fireEvent.keyDown(pendingPastTab, { key: "ArrowRight" });
 
-      const paidTab = screen.getByRole("tab", { name: /^paid$/i });
-      expect(paidTab).toHaveAttribute("aria-selected", "true");
+      const pendingFutureTab = screen.getByRole("tab", { name: /pending \(future\)/i });
+      expect(pendingFutureTab).toHaveAttribute("aria-selected", "true");
 
-      // Press right arrow to go to All tab
-      fireEvent.keyDown(paidTab, { key: "ArrowRight" });
+      // Press right arrow to go to Closed tab
+      fireEvent.keyDown(pendingFutureTab, { key: "ArrowRight" });
 
-      const allTab = screen.getByRole("tab", { name: /^all$/i });
-      expect(allTab).toHaveAttribute("aria-selected", "true");
+      const closedTab = screen.getByRole("tab", { name: /^closed$/i });
+      expect(closedTab).toHaveAttribute("aria-selected", "true");
 
-      // Press left arrow to go back to Paid tab
-      fireEvent.keyDown(allTab, { key: "ArrowLeft" });
-      expect(paidTab).toHaveAttribute("aria-selected", "true");
+      // Press left arrow to go back to Pending (Future) tab
+      fireEvent.keyDown(closedTab, { key: "ArrowLeft" });
+      expect(pendingFutureTab).toHaveAttribute("aria-selected", "true");
     });
   });
 
@@ -178,9 +185,9 @@ describe("CompensationsPage", () => {
 
       render(<CompensationsPage />);
 
-      // Default tab is now Pending, so the empty state is for pending compensations
+      // Default tab is now Pending (Past), so the empty state is for pending past compensations
       expect(
-        screen.getByRole("heading", { name: /no pending compensations/i }),
+        screen.getByRole("heading", { name: /no pending past compensations/i }),
       ).toBeInTheDocument();
     });
 
@@ -197,7 +204,7 @@ describe("CompensationsPage", () => {
   });
 
   describe("Data Fetching", () => {
-    it("should call useCompensations with false for Pending tab (default)", () => {
+    it("should call useCompensations with false for Pending (Past) tab (default)", () => {
       render(<CompensationsPage />);
 
       expect(useConvocations.useCompensations).toHaveBeenCalledWith(false);
@@ -211,12 +218,20 @@ describe("CompensationsPage", () => {
       expect(useConvocations.useCompensations).toHaveBeenCalledWith(undefined);
     });
 
-    it("should call useCompensations with true for Paid tab", () => {
+    it("should call useCompensations with true for Closed tab", () => {
       render(<CompensationsPage />);
 
-      fireEvent.click(screen.getByRole("tab", { name: /^paid$/i }));
+      fireEvent.click(screen.getByRole("tab", { name: /^closed$/i }));
 
       expect(useConvocations.useCompensations).toHaveBeenCalledWith(true);
+    });
+
+    it("should call useCompensations with false for Pending (Future) tab", () => {
+      render(<CompensationsPage />);
+
+      fireEvent.click(screen.getByRole("tab", { name: /pending \(future\)/i }));
+
+      expect(useConvocations.useCompensations).toHaveBeenCalledWith(false);
     });
   });
 });

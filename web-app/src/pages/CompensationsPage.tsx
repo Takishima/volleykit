@@ -4,8 +4,6 @@ import { useCompensations } from "@/hooks/useConvocations";
 import { CompensationCard } from "@/components/features/CompensationCard";
 import { SwipeableCard } from "@/components/ui/SwipeableCard";
 import { WeekSeparator } from "@/components/ui/WeekSeparator";
-import { FilterChip } from "@/components/ui/FilterChip";
-import { Clock } from "@/components/ui/icons";
 import { groupByWeek, getSeasonDateRange } from "@/utils/date-helpers";
 import {
   LoadingState,
@@ -24,7 +22,6 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useTour } from "@/hooks/useTour";
 import { TOUR_DUMMY_COMPENSATION } from "@/components/tour/definitions/compensations";
 import { useAuthStore } from "@/stores/auth";
-import { useCompensationFiltersStore } from "@/stores/compensationFilters";
 
 const EditCompensationModal = lazy(
   () =>
@@ -33,14 +30,15 @@ const EditCompensationModal = lazy(
     })),
 );
 
-type FilterType = "all" | "paid" | "unpaid";
+type FilterType = "pendingPast" | "pendingFuture" | "closed" | "all";
 
-// Convert tab filter to useCompensations parameter
+// Convert tab filter to useCompensations parameter (paid status only)
 function filterToPaidFilter(filter: FilterType): boolean | undefined {
   switch (filter) {
-    case "paid":
+    case "closed":
       return true;
-    case "unpaid":
+    case "pendingPast":
+    case "pendingFuture":
       return false;
     default:
       return undefined;
@@ -48,15 +46,12 @@ function filterToPaidFilter(filter: FilterType): boolean | undefined {
 }
 
 export function CompensationsPage() {
-  const [filter, setFilter] = useState<FilterType>("unpaid");
+  const [filter, setFilter] = useState<FilterType>("pendingPast");
   const { t } = useTranslation();
   const { editCompensationModal, handleGeneratePDF } = useCompensationActions();
   const isAssociationSwitching = useAuthStore(
     (state) => state.isAssociationSwitching,
   );
-
-  // Filter store for persisted filters
-  const { hideFutureItems, toggleHideFutureItems } = useCompensationFiltersStore();
 
   // Initialize tour for this page (triggers auto-start on first visit)
   // Use showDummyData to show dummy data immediately, avoiding race condition with empty states
@@ -71,7 +66,9 @@ export function CompensationsPage() {
   // Calculate season date range for filtering
   const seasonRange = useMemo(() => getSeasonDateRange(), []);
 
-  // Memoize current date to avoid recreating on every render
+  // Memoize current date to avoid recreating on every render.
+  // Note: This value is fixed for the component's lifetime. If a user keeps the page open
+  // past midnight, past/future classification won't update until they refresh or navigate away.
   const now = useMemo(() => new Date(), []);
 
   // When tour is active (or about to auto-start), show ONLY the dummy compensation
@@ -97,14 +94,17 @@ export function CompensationsPage() {
         return false;
       }
 
-      // Filter out future items (user preference)
-      if (hideFutureItems && gameDate > now) {
-        return false;
+      // Filter by past/future based on selected tab
+      if (filter === "pendingPast" && gameDate > now) {
+        return false; // Only show past items for pendingPast tab
+      }
+      if (filter === "pendingFuture" && gameDate <= now) {
+        return false; // Only show future items for pendingFuture tab
       }
 
       return true;
     });
-  }, [showDummyData, rawData, hideFutureItems, seasonRange, now]);
+  }, [showDummyData, rawData, filter, seasonRange, now]);
 
   // Group compensations by week for visual separation
   const groupedData = useMemo(() => {
@@ -113,8 +113,9 @@ export function CompensationsPage() {
   }, [data]);
 
   const tabs = [
-    { id: "unpaid" as const, label: t("compensations.pending") },
-    { id: "paid" as const, label: t("compensations.paid") },
+    { id: "pendingPast" as const, label: t("compensations.pendingPast") },
+    { id: "pendingFuture" as const, label: t("compensations.pendingFuture") },
+    { id: "closed" as const, label: t("compensations.closed") },
     { id: "all" as const, label: t("compensations.all") },
   ];
 
@@ -142,15 +143,20 @@ export function CompensationsPage() {
 
   const getEmptyStateContent = () => {
     switch (filter) {
-      case "paid":
+      case "pendingPast":
         return {
-          title: t("compensations.noPaidTitle"),
-          description: t("compensations.noPaidDescription"),
+          title: t("compensations.noPendingPastTitle"),
+          description: t("compensations.noPendingPastDescription"),
         };
-      case "unpaid":
+      case "pendingFuture":
         return {
-          title: t("compensations.noUnpaidTitle"),
-          description: t("compensations.noUnpaidDescription"),
+          title: t("compensations.noPendingFutureTitle"),
+          description: t("compensations.noPendingFutureDescription"),
+        };
+      case "closed":
+        return {
+          title: t("compensations.noClosedTitle"),
+          description: t("compensations.noClosedDescription"),
         };
       default:
         return {
@@ -232,21 +238,6 @@ export function CompensationsPage() {
         onTabChange={handleTabChange}
         ariaLabel={t("compensations.title")}
       />
-
-      {/* Filter to hide future items */}
-      <div
-        role="group"
-        aria-label={t("compensations.filters")}
-        className="flex flex-wrap gap-2"
-      >
-        <FilterChip
-          active={hideFutureItems}
-          onToggle={toggleHideFutureItems}
-          icon={<Clock className="w-full h-full" />}
-          label={t("compensations.hideFutureItems")}
-          showIconWhenActive
-        />
-      </div>
 
       {/* Content - single TabPanel since all tabs show same component with different data */}
       <TabPanel tabId={filter} activeTab={filter}>
