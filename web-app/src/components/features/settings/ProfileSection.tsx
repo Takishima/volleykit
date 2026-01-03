@@ -69,7 +69,7 @@ function ProfileSectionComponent({ user }: ProfileSectionProps) {
         params.set("propertyRenderConfiguration[5]", "profilePicture.publicResourceUri");
 
         const response = await fetch(
-          `${API_BASE}/sportmanager.volleyball/api%5cperson/showWithNestedObjects?${params}`,
+          `${API_BASE}/sportmanager.volleyball/api%5Cperson/showWithNestedObjects?${params}`,
           {
             credentials: "include",
             signal: controller.signal,

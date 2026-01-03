@@ -76,9 +76,10 @@ const ALLOWED_PREFIX_PATHS_NO_API = [
 ];
 
 // Specific paths within NO_API prefixes that DO need the /api/ prefix
-// The party switching endpoint is under /sportmanager.security/ but needs /api/
+// These are API endpoints under packages that normally serve dashboard/auth pages.
 const EXCEPTIONS_NEED_API = [
   "/sportmanager.security/api", // e.g., /sportmanager.security/api\party/switchRoleAndAttribute
+  "/sportmanager.volleyball/api", // e.g., /sportmanager.volleyball/api\person/showWithNestedObjects
 ];
 
 // Prefix match paths that ARE prefixed with /api/ (API endpoints)
