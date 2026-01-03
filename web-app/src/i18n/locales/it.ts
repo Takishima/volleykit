@@ -244,8 +244,6 @@ const it: Translations = {
       "Record di compenso non trovato. La partita potrebbe essere troppo lontana nel futuro.",
     compensationMissingId:
       "Il record di compenso non ha un identificatore. Riprova più tardi.",
-    filters: "Filtri",
-    currentSeasonOnly: "Stagione corrente",
     hideFutureItems: "Nascondi futuri",
   },
   exchange: {

@@ -130,8 +130,6 @@ export interface Translations {
     assignmentNotFoundInCache: string;
     compensationNotFound: string;
     compensationMissingId: string;
-    filters: string;
-    currentSeasonOnly: string;
     hideFutureItems: string;
   };
   exchange: {

@@ -5,7 +5,7 @@ import { CompensationCard } from "@/components/features/CompensationCard";
 import { SwipeableCard } from "@/components/ui/SwipeableCard";
 import { WeekSeparator } from "@/components/ui/WeekSeparator";
 import { FilterChip } from "@/components/ui/FilterChip";
-import { Calendar, Clock } from "@/components/ui/icons";
+import { Clock } from "@/components/ui/icons";
 import { groupByWeek, getSeasonDateRange } from "@/utils/date-helpers";
 import {
   LoadingState,
@@ -56,12 +56,7 @@ export function CompensationsPage() {
   );
 
   // Filter store for persisted filters
-  const {
-    currentSeasonOnly,
-    hideFutureItems,
-    toggleCurrentSeasonOnly,
-    toggleHideFutureItems,
-  } = useCompensationFiltersStore();
+  const { hideFutureItems, toggleHideFutureItems } = useCompensationFiltersStore();
 
   // Initialize tour for this page (triggers auto-start on first visit)
   // Use showDummyData to show dummy data immediately, avoiding race condition with empty states
@@ -87,7 +82,7 @@ export function CompensationsPage() {
 
     if (!rawData) return rawData;
 
-    // Apply additional filters
+    // Apply filters - always filter to current season since the app is only useful for current season
     const now = new Date();
     return rawData.filter((record) => {
       const dateString = record.refereeGame?.game?.startingDateTime;
@@ -95,23 +90,19 @@ export function CompensationsPage() {
 
       const gameDate = parseISO(dateString);
 
-      // Filter by current season (Sept 1 - May 31)
-      if (currentSeasonOnly) {
-        if (gameDate < seasonRange.from || gameDate > seasonRange.to) {
-          return false;
-        }
+      // Always filter by current season (Sept 1 - May 31)
+      if (gameDate < seasonRange.from || gameDate > seasonRange.to) {
+        return false;
       }
 
-      // Filter out future items
-      if (hideFutureItems) {
-        if (gameDate > now) {
-          return false;
-        }
+      // Filter out future items (user preference)
+      if (hideFutureItems && gameDate > now) {
+        return false;
       }
 
       return true;
     });
-  }, [showDummyData, rawData, currentSeasonOnly, hideFutureItems, seasonRange]);
+  }, [showDummyData, rawData, hideFutureItems, seasonRange]);
 
   // Group compensations by week for visual separation
   const groupedData = useMemo(() => {
@@ -264,15 +255,8 @@ export function CompensationsPage() {
         ariaLabel={t("compensations.title")}
       />
 
-      {/* Additional filters */}
+      {/* Filter to hide future items */}
       <div className="flex flex-wrap gap-2">
-        <FilterChip
-          active={currentSeasonOnly}
-          onToggle={toggleCurrentSeasonOnly}
-          icon={<Calendar className="w-full h-full" />}
-          label={t("compensations.currentSeasonOnly")}
-          showIconWhenActive
-        />
         <FilterChip
           active={hideFutureItems}
           onToggle={toggleHideFutureItems}
