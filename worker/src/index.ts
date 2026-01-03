@@ -82,6 +82,12 @@ const EXCEPTIONS_NEED_API = [
   "/sportmanager.volleyball/api", // e.g., /sportmanager.volleyball/api\person/showWithNestedObjects
 ];
 
+// Specific paths within WITH_API prefixes that do NOT need the /api/ prefix
+// These are file download endpoints that serve binary content (PDFs, etc.)
+const EXCEPTIONS_NO_API = [
+  "/indoorvolleyball.refadmin/refereestatementofexpenses/downloadrefereestatementofexpenses", // PDF download
+];
+
 // Prefix match paths that ARE prefixed with /api/ (API endpoints)
 const ALLOWED_PREFIX_PATHS_WITH_API = [
   "/indoorvolleyball.refadmin/",
@@ -115,11 +121,18 @@ function isAllowedPath(pathname: string): boolean {
  * Check if a path requires the /api/ prefix when forwarding to the target host.
  * API endpoints need this prefix, while auth/dashboard endpoints do not.
  *
- * Special case: Some paths under /sportmanager.security/ (like party switching)
- * DO need the /api/ prefix even though most /sportmanager.security/ paths don't.
+ * Special cases:
+ * - Some paths under /sportmanager.security/ (like party switching)
+ *   DO need the /api/ prefix even though most /sportmanager.security/ paths don't.
+ * - Some paths under /indoorvolleyball.refadmin/ (like PDF downloads)
+ *   do NOT need the /api/ prefix even though most /indoorvolleyball.refadmin/ paths do.
  */
 function requiresApiPrefix(pathname: string): boolean {
-  // Check for exceptions first - paths that normally wouldn't need /api/ but do
+  // Check for exceptions that normally would need /api/ but don't (e.g., PDF downloads)
+  if (EXCEPTIONS_NO_API.some((prefix) => pathname.startsWith(prefix))) {
+    return false;
+  }
+  // Check for exceptions that normally wouldn't need /api/ but do
   if (EXCEPTIONS_NEED_API.some((prefix) => pathname.startsWith(prefix))) {
     return true;
   }
