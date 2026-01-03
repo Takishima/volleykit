@@ -24,9 +24,9 @@ import { TourModeBanner } from "@/components/tour/TourModeBanner";
 const log = createLogger("AppShell");
 
 // Lazy-load debug panel to avoid bundle size impact in production
-const AssociationDebugPanel = lazy(() =>
-  import("@/components/debug/AssociationDebugPanel").then((m) => ({
-    default: m.AssociationDebugPanel,
+const DebugPanel = lazy(() =>
+  import("@/components/debug/DebugPanel").then((m) => ({
+    default: m.DebugPanel,
   })),
 );
 
@@ -333,9 +333,9 @@ export function AppShell() {
         </div>
       </nav>
 
-      {/* Debug panel for association dropdown issues - toggle via ?debug=associations or bookmarklet */}
+      {/* Debug panel - toggle via ?debug or console: window.dispatchEvent(new Event('vk-debug-toggle')) */}
       <Suspense fallback={null}>
-        <AssociationDebugPanel />
+        <DebugPanel />
       </Suspense>
     </div>
   );
