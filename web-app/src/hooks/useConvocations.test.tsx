@@ -318,7 +318,7 @@ describe("useConvocations - API Client Routing", () => {
       );
     });
 
-    it("should call API with only date filter when status is all", async () => {
+    it("should always fetch open exchanges regardless of status parameter", async () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
         selector({ isDemoMode: false } as ReturnType<
           typeof authStore.useAuthStore.getState
@@ -330,6 +330,8 @@ describe("useConvocations - API Client Routing", () => {
         totalItemsCount: 0,
       });
 
+      // Even when status is "all", the API call should include status="open" filter
+      // because we always fetch open exchanges and filter client-side for "mine"
       const { result } = renderHook(() => useGameExchanges("all"), {
         wrapper: createWrapper(),
       });
@@ -338,10 +340,9 @@ describe("useConvocations - API Client Routing", () => {
         expect(result.current.isFetching).toBe(false);
       });
 
-      // When status is "all", only the date filter should be present (no status filter)
       expect(mockApi.searchExchanges).toHaveBeenCalledWith(
         expect.objectContaining({
-          propertyFilters: [
+          propertyFilters: expect.arrayContaining([
             expect.objectContaining({
               propertyName: "refereeGame.game.startingDateTime",
               dateRange: expect.objectContaining({
@@ -349,7 +350,11 @@ describe("useConvocations - API Client Routing", () => {
                 to: expect.any(String),
               }),
             }),
-          ],
+            expect.objectContaining({
+              propertyName: "status",
+              enumValues: ["open"],
+            }),
+          ]),
         }),
       );
     });

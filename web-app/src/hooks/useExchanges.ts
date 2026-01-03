@@ -52,26 +52,21 @@ export function useGameExchanges(status: ExchangeStatus = "all") {
   const fromDate = startOfDay(new Date()).toISOString();
   const toDate = endOfDay(seasonEnd).toISOString();
 
-  // Build property filters: always include date range, optionally include status
-  // For "mine", we don't filter by status - we'll filter client-side by submittedByPerson
-  const propertyFilters = useMemo(() => {
-    const filters: SearchConfiguration["propertyFilters"] = [
+  // Build property filters: always fetch open exchanges, filter client-side for "mine".
+  // This allows both tabs to share the same cached query.
+  const propertyFilters = useMemo<SearchConfiguration["propertyFilters"]>(
+    () => [
       {
         propertyName: "refereeGame.game.startingDateTime",
         dateRange: { from: fromDate, to: toDate },
       },
-    ];
-
-    // "mine" and "all" don't filter by status
-    if (status !== "all" && status !== "mine") {
-      filters.push({
+      {
         propertyName: "status",
-        enumValues: [status],
-      });
-    }
-
-    return filters;
-  }, [fromDate, toDate, status]);
+        enumValues: ["open"],
+      },
+    ],
+    [fromDate, toDate],
+  );
 
   const config = useMemo<SearchConfiguration>(
     () => ({
@@ -89,11 +84,9 @@ export function useGameExchanges(status: ExchangeStatus = "all") {
     [propertyFilters],
   );
 
-  // Create select function that filters by submittedByPerson for "mine" status.
-  // We filter client-side by comparing the user's identity with submittedByPerson.__identity.
-  // In demo mode, we use the known demo user person identity.
-  // In production, we use the user id from the auth store - this needs verification
-  // that it matches the format used in submittedByPerson.__identity. See #466.
+  // Filter by submittedByPerson for "mine" status. Both tabs share the same
+  // cached query (open exchanges), with "mine" filtering to show only the
+  // user's own submissions.
   const selectExchanges = useMemo(() => {
     return (data: { items?: GameExchange[] }) => {
       const items = data.items ?? EMPTY_EXCHANGES;
