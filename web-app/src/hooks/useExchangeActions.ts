@@ -24,40 +24,6 @@ interface UseExchangeActionsResult {
   handleRemoveFromExchange: (exchange: GameExchange) => Promise<void>;
 }
 
-/**
- * Hook for managing exchange marketplace actions.
- *
- * Provides modal state and handlers for taking over or withdrawing from
- * referee assignment exchanges. Includes safe mode guard to prevent
- * accidental modifications and debounced execution to prevent double-clicks.
- *
- * @returns Object containing:
- * - `takeOverModal` - Modal state for the take-over confirmation dialog
- * - `removeFromExchangeModal` - Modal state for the remove/withdraw confirmation dialog
- * - `handleTakeOver` - Handler to apply for (take over) an exchange
- * - `handleRemoveFromExchange` - Handler to withdraw from an exchange
- *
- * @example
- * ```tsx
- * function ExchangeCard({ exchange }: { exchange: GameExchange }) {
- *   const { takeOverModal, handleTakeOver } = useExchangeActions();
- *
- *   return (
- *     <>
- *       <button onClick={() => takeOverModal.open(exchange)}>
- *         Take Over
- *       </button>
- *       {takeOverModal.isOpen && (
- *         <ConfirmDialog
- *           onConfirm={() => handleTakeOver(takeOverModal.exchange!)}
- *           onCancel={takeOverModal.close}
- *         />
- *       )}
- *     </>
- *   );
- * }
- * ```
- */
 export function useExchangeActions(): UseExchangeActionsResult {
   const takeOverModal = useModalState<GameExchange>();
   const removeFromExchangeModal = useModalState<GameExchange>();
