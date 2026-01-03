@@ -109,6 +109,9 @@ export interface Translations {
     paid: string;
     unpaid: string;
     pending: string;
+    pendingPast: string;
+    pendingFuture: string;
+    closed: string;
     total: string;
     gameFee: string;
     travel: string;
@@ -119,10 +122,12 @@ export interface Translations {
     loading: string;
     noCompensationsTitle: string;
     noCompensationsDescription: string;
-    noPaidTitle: string;
-    noPaidDescription: string;
-    noUnpaidTitle: string;
-    noUnpaidDescription: string;
+    noPendingPastTitle: string;
+    noPendingPastDescription: string;
+    noPendingFutureTitle: string;
+    noPendingFutureDescription: string;
+    noClosedTitle: string;
+    noClosedDescription: string;
     errorLoading: string;
     pdfNotAvailableDemo: string;
     pdfDownloadFailed: string;
@@ -130,8 +135,6 @@ export interface Translations {
     assignmentNotFoundInCache: string;
     compensationNotFound: string;
     compensationMissingId: string;
-    filters: string;
-    hideFutureItems: string;
   };
   exchange: {
     title: string;
