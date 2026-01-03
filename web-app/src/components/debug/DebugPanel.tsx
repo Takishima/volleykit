@@ -578,6 +578,20 @@ function ExchangeDebugSection({ userId, isDemoMode }: { userId?: string; isDemoM
         "searchConfiguration[offset]": "0",
         "searchConfiguration[limit]": "10",
       });
+      // Add minimal propertyRenderConfiguration - required by the API
+      // Note: parent objects must be listed before nested properties
+      const properties = [
+        "status",
+        "submittedByPerson",
+        "submittedByPerson.__identity",
+        "submittedByPerson.displayName",
+        "refereeGame",
+        "refereeGame.game",
+        "refereeGame.game.startingDateTime",
+      ];
+      properties.forEach((prop, index) => {
+        bodyParams.append(`propertyRenderConfiguration[${index}]`, prop);
+      });
       if (csrfToken) {
         bodyParams.append("__csrfToken", csrfToken);
       }
