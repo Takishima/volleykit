@@ -66,7 +66,9 @@ export function CompensationsPage() {
   // Calculate season date range for filtering
   const seasonRange = useMemo(() => getSeasonDateRange(), []);
 
-  // Memoize current date to avoid recreating on every render
+  // Memoize current date to avoid recreating on every render.
+  // Note: This value is fixed for the component's lifetime. If a user keeps the page open
+  // past midnight, past/future classification won't update until they refresh or navigate away.
   const now = useMemo(() => new Date(), []);
 
   // When tour is active (or about to auto-start), show ONLY the dummy compensation

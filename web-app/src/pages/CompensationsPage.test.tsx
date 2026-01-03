@@ -33,6 +33,13 @@ vi.mock("@/hooks/useCompensationActions", () => ({
   }),
 }));
 
+// Use a date 7 days in the past to ensure it shows in the "Pending (Past)" tab
+function getPastGameDate(): string {
+  const date = new Date();
+  date.setDate(date.getDate() - 7);
+  return date.toISOString();
+}
+
 function createMockCompensation(
   overrides: Partial<CompensationRecord> = {},
 ): CompensationRecord {
@@ -42,7 +49,7 @@ function createMockCompensation(
     refereePosition: "head-one",
     refereeGame: {
       game: {
-        startingDateTime: "2025-12-15T18:00:00Z",
+        startingDateTime: getPastGameDate(),
         encounter: {
           teamHome: { name: "Team A" },
           teamAway: { name: "Team B" },
