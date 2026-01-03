@@ -144,6 +144,7 @@ const fr: Translations = {
     unknownDate: "Date ?",
     currencyChf: "CHF",
     distanceUnit: "km",
+    carDistance: "en voiture",
     minutesUnit: "'",
     hoursUnit: "h",
     dismissNotification: "Ignorer la notification",

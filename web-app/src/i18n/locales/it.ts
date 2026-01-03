@@ -144,6 +144,7 @@ const it: Translations = {
     unknownDate: "Data?",
     currencyChf: "CHF",
     distanceUnit: "km",
+    carDistance: "in auto",
     minutesUnit: "'",
     hoursUnit: "h",
     dismissNotification: "Ignora notifica",
