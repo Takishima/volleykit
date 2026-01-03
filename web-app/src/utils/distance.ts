@@ -136,12 +136,13 @@ export function calculateDistanceKm(
 /**
  * Multiplier to estimate road distance from straight-line distance.
  *
- * Empirically validated against 10 Swiss volleyball venues using routing.osm.ch:
- * - Swiss Plateau routes (8 venues): 1.19x - 1.41x, average 1.33x
- * - Alpine routes (Luzern, Bellinzona): 1.67x - 1.70x (mountain passes)
+ * Empirically validated against 30 routes from 3 Swiss origins using routing.osm.ch:
+ * - Bern origin: 1.40x average (range 1.19x - 1.70x)
+ * - Zurich origin: 1.25x average (range 1.12x - 1.37x)
+ * - Lausanne origin: 1.41x average (range 1.29x - 1.58x)
  *
- * The 1.33x multiplier provides ~±10% accuracy for Swiss Plateau venues.
- * Alpine crossings will be underestimated but are rare for volleyball.
+ * Overall average: 1.35x | Typical routes (<1.5x): 1.31x (26 of 30 routes)
+ * The 1.33x multiplier provides ~±10% accuracy for most Swiss volleyball venues.
  */
 export const ROAD_DISTANCE_MULTIPLIER = 1.33;
 
