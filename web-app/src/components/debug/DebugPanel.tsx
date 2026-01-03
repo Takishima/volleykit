@@ -1201,8 +1201,8 @@ function PersonDetailsSection({ isDemoMode, userId }: { isDemoMode: boolean; use
             {referee.paymentConnections && referee.paymentConnections.length > 0 && (
               <div style={{ padding: "8px", backgroundColor: "#111122", borderRadius: "4px", border: "1px solid #333" }}>
                 <div style={{ color: "#4ecfff", fontWeight: "bold", marginBottom: "4px" }}>Payment Connections ({referee.paymentConnections.length})</div>
-                {referee.paymentConnections.map((pc, index) => (
-                  <div key={pc.__identity ?? index} style={{ fontSize: "9px", marginBottom: "4px", padding: "4px", backgroundColor: "#0a0a15", borderRadius: "2px" }}>
+                {referee.paymentConnections.map((pc) => (
+                  <div key={pc.__identity} style={{ fontSize: "9px", marginBottom: "4px", padding: "4px", backgroundColor: "#0a0a15", borderRadius: "2px" }}>
                     <div style={{ color: pc.isPrimaryPaymentConnection ? "#4eff4e" : "#888" }}>
                       {pc.isPrimaryPaymentConnection && <span style={{ marginRight: "4px" }}>★</span>}
                       {pc.payee} ({pc.type})

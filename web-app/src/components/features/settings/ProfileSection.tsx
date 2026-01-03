@@ -24,6 +24,7 @@ function ProfileSectionComponent({ user }: ProfileSectionProps) {
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(
     user.profilePictureUrl ?? null,
   );
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     // Skip fetching if already have URL or in demo mode
@@ -73,14 +74,18 @@ function ProfileSectionComponent({ user }: ProfileSectionProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center gap-4">
-          {profilePictureUrl ? (
+          {profilePictureUrl && !imageError ? (
             <img
               src={profilePictureUrl}
               alt={`${user.firstName} ${user.lastName}`}
               className="w-16 h-16 rounded-full object-cover"
+              onError={() => setImageError(true)}
             />
           ) : (
-            <div className="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-2xl">
+            <div
+              className="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-2xl"
+              aria-label={`${user.firstName} ${user.lastName}`}
+            >
               {user.firstName.charAt(0)}
               {user.lastName.charAt(0)}
             </div>
