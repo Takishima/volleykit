@@ -1,9 +1,12 @@
 import { useState, useCallback, useMemo, lazy, Suspense, Fragment } from "react";
+import { parseISO } from "date-fns";
 import { useCompensations, useCompensationTotals } from "@/hooks/useConvocations";
 import { CompensationCard } from "@/components/features/CompensationCard";
 import { SwipeableCard } from "@/components/ui/SwipeableCard";
 import { WeekSeparator } from "@/components/ui/WeekSeparator";
-import { groupByWeek } from "@/utils/date-helpers";
+import { FilterChip } from "@/components/ui/FilterChip";
+import { Clock } from "@/components/ui/icons";
+import { groupByWeek, getSeasonDateRange } from "@/utils/date-helpers";
 import {
   LoadingState,
   ErrorState,
@@ -21,6 +24,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useTour } from "@/hooks/useTour";
 import { TOUR_DUMMY_COMPENSATION } from "@/components/tour/definitions/compensations";
 import { useAuthStore } from "@/stores/auth";
+import { useCompensationFiltersStore } from "@/stores/compensationFilters";
 
 const EditCompensationModal = lazy(
   () =>
@@ -51,6 +55,9 @@ export function CompensationsPage() {
     (state) => state.isAssociationSwitching,
   );
 
+  // Filter store for persisted filters
+  const { hideFutureItems, toggleHideFutureItems } = useCompensationFiltersStore();
+
   // Initialize tour for this page (triggers auto-start on first visit)
   // Use showDummyData to show dummy data immediately, avoiding race condition with empty states
   const { showDummyData } = useTour("compensations");
@@ -61,6 +68,12 @@ export function CompensationsPage() {
   // Show loading when switching associations or when query is loading
   const isLoading = isAssociationSwitching || queryLoading;
 
+  // Calculate season date range for filtering
+  const seasonRange = useMemo(() => getSeasonDateRange(), []);
+
+  // Memoize current date to avoid recreating on every render
+  const now = useMemo(() => new Date(), []);
+
   // When tour is active (or about to auto-start), show ONLY the dummy compensation
   // to ensure tour works regardless of whether tabs have real data
   const data = useMemo(() => {
@@ -69,8 +82,29 @@ export function CompensationsPage() {
       const tourCompensation = TOUR_DUMMY_COMPENSATION as unknown as CompensationRecord;
       return [tourCompensation];
     }
-    return rawData;
-  }, [showDummyData, rawData]);
+
+    if (!rawData) return rawData;
+
+    // Apply filters - always filter to current season since the app is only useful for current season
+    return rawData.filter((record) => {
+      const dateString = record.refereeGame?.game?.startingDateTime;
+      if (!dateString) return true; // Keep items without dates
+
+      const gameDate = parseISO(dateString);
+
+      // Always filter by current season (Sept 1 - May 31)
+      if (gameDate < seasonRange.from || gameDate > seasonRange.to) {
+        return false;
+      }
+
+      // Filter out future items (user preference)
+      if (hideFutureItems && gameDate > now) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [showDummyData, rawData, hideFutureItems, seasonRange, now]);
 
   // Group compensations by week for visual separation
   const groupedData = useMemo(() => {
@@ -222,6 +256,21 @@ export function CompensationsPage() {
         onTabChange={handleTabChange}
         ariaLabel={t("compensations.title")}
       />
+
+      {/* Filter to hide future items */}
+      <div
+        role="group"
+        aria-label={t("compensations.filters")}
+        className="flex flex-wrap gap-2"
+      >
+        <FilterChip
+          active={hideFutureItems}
+          onToggle={toggleHideFutureItems}
+          icon={<Clock className="w-full h-full" />}
+          label={t("compensations.hideFutureItems")}
+          showIconWhenActive
+        />
+      </div>
 
       {/* Content - single TabPanel since all tabs show same component with different data */}
       <TabPanel tabId={filter} activeTab={filter}>
