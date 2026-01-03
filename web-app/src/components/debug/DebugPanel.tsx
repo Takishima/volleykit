@@ -28,11 +28,13 @@ import {
   VUE_ACTIVE_PARTY_PATTERN,
 } from "@/utils/active-party-parser";
 import { useShallow } from "zustand/react/shallow";
-import { useState, useEffect, useCallback, useId } from "react";
+import { useState, useEffect, useCallback, useId, useRef } from "react";
 
 const API_BASE = import.meta.env.VITE_API_PROXY_URL || "";
-
 const STORAGE_KEY = "volleykit-auth";
+const EXPECTED_VERSION = 2; // AUTH_STORE_VERSION from auth.ts
+const MINIMUM_OCCUPATIONS_FOR_DROPDOWN = 2; // Matches MINIMUM_OCCUPATIONS_FOR_SWITCHER in AppShell
+const COPY_FEEDBACK_DURATION_MS = 2000;
 
 /** Fetch status for debug panel API calls */
 type FetchStatus = "idle" | "loading" | "success" | "error";
@@ -40,19 +42,29 @@ type FetchStatus = "idle" | "loading" | "success" | "error";
 /** Custom hook for copy with visual feedback */
 function useCopyWithFeedback() {
   const [copied, setCopied] = useState<string | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleCopy = async (value: string, label: string) => {
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleCopy = useCallback(async (value: string, label: string) => {
     const success = await copyToClipboard(value);
     if (success) {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
       setCopied(label);
-      setTimeout(() => setCopied(null), 2000);
+      timeoutRef.current = setTimeout(() => setCopied(null), COPY_FEEDBACK_DURATION_MS);
     }
-  };
+  }, []);
 
   return { copied, handleCopy };
 }
-const EXPECTED_VERSION = 2; // AUTH_STORE_VERSION from auth.ts
-const MINIMUM_OCCUPATIONS_FOR_DROPDOWN = 2; // Matches MINIMUM_OCCUPATIONS_FOR_SWITCHER in AppShell
 
 /** Type for persisted occupation data in localStorage */
 interface PersistedOccupation {
@@ -847,8 +859,8 @@ function PersonDetailsSection({ isDemoMode }: { isDemoMode: boolean }) {
                   <tr style={{ borderBottom: "1px solid #222" }}>
                     <td style={{ padding: "2px 4px", color: "#888", verticalAlign: "top" }}>Other Emails</td>
                     <td style={{ padding: "2px 4px", color: "#e0e0e0" }}>
-                      {person.emailAddresses.slice(1).map((e, i) => (
-                        <div key={i}>{e.emailAddress}</div>
+                      {person.emailAddresses.slice(1).map((e) => (
+                        <div key={e.emailAddress ?? e.type}>{e.emailAddress}</div>
                       ))}
                     </td>
                   </tr>
@@ -876,8 +888,8 @@ function PersonDetailsSection({ isDemoMode }: { isDemoMode: boolean }) {
           {person.postalAddresses && person.postalAddresses.length > 1 && (
             <div style={{ padding: "8px", backgroundColor: "#111122", borderRadius: "4px", border: "1px solid #333" }}>
               <div style={{ color: "#888", fontWeight: "bold", marginBottom: "4px" }}>Other Addresses ({person.postalAddresses.length - 1})</div>
-              {person.postalAddresses.slice(1).map((addr, i) => (
-                <div key={i} style={{ fontSize: "8px", color: "#666", marginBottom: "4px" }}>
+              {person.postalAddresses.slice(1).map((addr) => (
+                <div key={`${addr.addressLine1}-${addr.zipCode}`} style={{ fontSize: "8px", color: "#666", marginBottom: "4px" }}>
                   {addr.type && <span style={{ color: "#ffaa00" }}>[{addr.type}] </span>}
                   {addr.addressLine1}, {addr.zipCode} {addr.city}
                 </div>
