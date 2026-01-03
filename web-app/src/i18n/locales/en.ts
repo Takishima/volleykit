@@ -67,6 +67,11 @@ const en: Translations = {
         description:
           "Swipe left to apply for this exchange.",
       },
+      filters: {
+        title: "Filter Settings",
+        description:
+          "Tap the gear to customize distance and travel time filters.",
+      },
     },
     settings: {
       language: {

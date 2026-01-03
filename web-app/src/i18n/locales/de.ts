@@ -67,6 +67,11 @@ const de: Translations = {
         description:
           "Nach links wischen, um sich zu bewerben.",
       },
+      filters: {
+        title: "Filtereinstellungen",
+        description:
+          "Tippen Sie auf das Zahnrad, um Entfernungs- und Reisezeitfilter anzupassen.",
+      },
     },
     settings: {
       language: {

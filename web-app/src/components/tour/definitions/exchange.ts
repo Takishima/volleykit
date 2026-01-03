@@ -19,6 +19,14 @@ export const exchangeTour: TourDefinition = {
       placement: "bottom",
       completionEvent: { type: "swipe" },
     },
+    {
+      id: "filters",
+      targetSelector: "[data-tour='exchange-settings']",
+      titleKey: "tour.exchange.filters.title",
+      descriptionKey: "tour.exchange.filters.description",
+      placement: "bottom",
+      completionEvent: { type: "click" },
+    },
   ],
 };
 

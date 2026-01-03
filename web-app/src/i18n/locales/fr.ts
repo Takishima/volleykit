@@ -67,6 +67,11 @@ const fr: Translations = {
         description:
           "Glissez à gauche pour postuler à cet échange.",
       },
+      filters: {
+        title: "Paramètres des filtres",
+        description:
+          "Appuyez sur l'engrenage pour personnaliser les filtres de distance et temps de trajet.",
+      },
     },
     settings: {
       language: {

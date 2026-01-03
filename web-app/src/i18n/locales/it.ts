@@ -67,6 +67,11 @@ const it: Translations = {
         description:
           "Scorri a sinistra per candidarti a questo scambio.",
       },
+      filters: {
+        title: "Impostazioni filtri",
+        description:
+          "Tocca l'ingranaggio per personalizzare i filtri di distanza e tempo di viaggio.",
+      },
     },
     settings: {
       language: {
