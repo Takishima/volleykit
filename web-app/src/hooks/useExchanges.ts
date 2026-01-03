@@ -5,7 +5,7 @@ import {
   useQueryClient,
   type UseMutationResult,
 } from "@tanstack/react-query";
-import { startOfDay, endOfDay } from "date-fns";
+import { startOfDay, endOfDay, format } from "date-fns";
 import {
   getApiClient,
   type SearchConfiguration,
@@ -16,6 +16,9 @@ import { useDemoStore, DEMO_USER_PERSON_IDENTITY } from "@/stores/demo";
 import { queryKeys } from "@/api/queryKeys";
 import { DEFAULT_PAGE_SIZE } from "./usePaginatedQuery";
 import { getSeasonDateRange } from "@/utils/date-helpers";
+
+// Format date as YYYY-MM-DD for stable comparison (no time component)
+const formatDateKey = (date: Date): string => format(date, "yyyy-MM-dd");
 
 // Stable empty array for React Query selectors to prevent unnecessary re-renders.
 const EMPTY_EXCHANGES: GameExchange[] = [];
@@ -44,13 +47,21 @@ export function useGameExchanges(status: ExchangeStatus = "all") {
   // Use appropriate key for cache invalidation when switching associations
   const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId;
 
-  // Only fetch future exchanges - past games are irrelevant for both
-  // "open" (can't take over past games) and "applied" (user only cares about upcoming).
-  // No useMemo: the calculation is trivial, and we need fresh dates if the app
-  // stays open overnight (the query key change will trigger a refetch).
-  const { to: seasonEnd } = getSeasonDateRange();
-  const fromDate = startOfDay(new Date()).toISOString();
-  const toDate = endOfDay(seasonEnd).toISOString();
+  // Compute date keys (YYYY-MM-DD) for stable memoization.
+  // Using just the date portion ensures the key is stable within the same day.
+  const todayKey = formatDateKey(new Date());
+  const seasonEndKey = formatDateKey(getSeasonDateRange().to);
+
+  // Memoize date range to ensure stable query key across tab switches.
+  // Only recalculates when the day changes (for overnight refresh).
+  const dateRange = useMemo(
+    () => ({
+      from: startOfDay(new Date()).toISOString(),
+      to: endOfDay(getSeasonDateRange().to).toISOString(),
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Use date keys for stability, not Date objects
+    [todayKey, seasonEndKey],
+  );
 
   // Build property filters: always fetch open exchanges, filter client-side for "mine".
   // This allows both tabs to share the same cached query.
@@ -58,14 +69,14 @@ export function useGameExchanges(status: ExchangeStatus = "all") {
     () => [
       {
         propertyName: "refereeGame.game.startingDateTime",
-        dateRange: { from: fromDate, to: toDate },
+        dateRange,
       },
       {
         propertyName: "status",
         enumValues: ["open"],
       },
     ],
-    [fromDate, toDate],
+    [dateRange],
   );
 
   const config = useMemo<SearchConfiguration>(
@@ -109,6 +120,9 @@ export function useGameExchanges(status: ExchangeStatus = "all") {
     queryFn: () => apiClient.searchExchanges(config),
     select: selectExchanges,
     staleTime: 2 * 60 * 1000,
+    // Keep previous data while selector recalculates during tab switches.
+    // This prevents loading flash since both tabs share the same cached query.
+    placeholderData: (prev) => prev,
   });
 }
 
