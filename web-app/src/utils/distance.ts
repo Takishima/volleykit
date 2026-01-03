@@ -132,3 +132,42 @@ export function calculateDistanceKm(
 ): number {
   return metresToKilometres(calculateHaversineDistance(from, to));
 }
+
+/**
+ * Multiplier to estimate road distance from straight-line distance.
+ *
+ * Based on research showing that road distances in Switzerland are typically
+ * 1.3-1.4x longer than straight-line distances due to road networks following
+ * terrain, valleys, and avoiding obstacles. We use 1.35 as a reasonable average.
+ *
+ * This is an approximation - actual road distances may vary based on terrain,
+ * road network density, and route optimization.
+ */
+export const ROAD_DISTANCE_MULTIPLIER = 1.35;
+
+/**
+ * Estimates the driving distance between two points based on straight-line distance.
+ *
+ * Uses a multiplier to approximate road distance from the Haversine (straight-line)
+ * distance. This provides a reasonable estimate without requiring an external
+ * routing API.
+ *
+ * @param from - Starting coordinates
+ * @param to - Destination coordinates
+ * @returns Estimated driving distance in kilometres
+ *
+ * @example
+ * ```ts
+ * const zurich = { latitude: 47.3769, longitude: 8.5417 };
+ * const bern = { latitude: 46.9480, longitude: 7.4474 };
+ * const carDistance = calculateCarDistanceKm(zurich, bern);
+ * // Returns approximately 128.8 km (95.4 km * 1.35)
+ * ```
+ */
+export function calculateCarDistanceKm(
+  from: Coordinates,
+  to: Coordinates,
+): number {
+  const straightLineKm = calculateDistanceKm(from, to);
+  return straightLineKm * ROAD_DISTANCE_MULTIPLIER;
+}
