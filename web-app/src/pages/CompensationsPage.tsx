@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, lazy, Suspense, Fragment } from "react";
 import { parseISO } from "date-fns";
-import { useCompensations, useCompensationTotals } from "@/hooks/useConvocations";
+import { useCompensations } from "@/hooks/useConvocations";
 import { CompensationCard } from "@/components/features/CompensationCard";
 import { SwipeableCard } from "@/components/ui/SwipeableCard";
 import { WeekSeparator } from "@/components/ui/WeekSeparator";
@@ -111,8 +111,6 @@ export function CompensationsPage() {
     if (!data || data.length === 0) return [];
     return groupByWeek(data, (c) => c.refereeGame?.game?.startingDateTime);
   }, [data]);
-
-  const totals = useCompensationTotals();
 
   const tabs = [
     { id: "unpaid" as const, label: t("compensations.pending") },
@@ -227,28 +225,6 @@ export function CompensationsPage() {
 
   return (
     <div className="space-y-3">
-      {/* Totals summary */}
-      <div className="flex justify-end">
-        <div className="flex gap-4">
-          <div className="text-center">
-            <div className="text-sm text-text-muted dark:text-text-muted-dark">
-              {t("compensations.pending")}
-            </div>
-            <div className="text-lg font-bold text-warning-500 dark:text-warning-400">
-              CHF {totals.unpaid.toFixed(2)}
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-sm text-text-muted dark:text-text-muted-dark">
-              {t("compensations.received")}
-            </div>
-            <div className="text-lg font-bold text-success-500 dark:text-success-400">
-              CHF {totals.paid.toFixed(2)}
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Filter tabs with keyboard navigation */}
       <Tabs
         tabs={tabs}

@@ -7,7 +7,6 @@ import { LoginPage, CompensationsPage, NavigationPage } from "./pages";
  * These tests verify:
  * - Page loading with real data fetching
  * - Cross-page navigation flows
- * - Data display that requires API integration (CHF totals)
  *
  * Tab navigation, ARIA attributes, card rendering, and accessibility
  * are covered by unit tests in src/pages/CompensationsPage.test.tsx
@@ -33,13 +32,6 @@ test.describe("Compensations Journey", () => {
       await expect(compensationsPage.pendingTab).toBeVisible();
       await expect(compensationsPage.paidTab).toBeVisible();
       await expect(compensationsPage.allTab).toBeVisible();
-    });
-
-    test("loads and displays compensation totals in CHF", async ({ page }) => {
-      // Verify CHF amounts are displayed (requires real data loading)
-      const chfAmounts = page.locator("text=/CHF/");
-      const count = await chfAmounts.count();
-      expect(count).toBeGreaterThanOrEqual(2);
     });
   });
 

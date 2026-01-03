@@ -85,10 +85,6 @@ describe("CompensationsPage", () => {
     vi.mocked(useConvocations.useCompensations).mockReturnValue(
       createMockQueryResult([]),
     );
-    vi.mocked(useConvocations.useCompensationTotals).mockReturnValue({
-      paid: 0,
-      unpaid: 0,
-    });
   });
 
   describe("Tab Navigation", () => {
@@ -197,20 +193,6 @@ describe("CompensationsPage", () => {
       render(<CompensationsPage />);
 
       expect(screen.getByText(/Team A vs Team B/i)).toBeInTheDocument();
-    });
-  });
-
-  describe("Totals Summary", () => {
-    it("should display pending and received totals", () => {
-      vi.mocked(useConvocations.useCompensationTotals).mockReturnValue({
-        paid: 250.5,
-        unpaid: 150.0,
-      });
-
-      render(<CompensationsPage />);
-
-      expect(screen.getByText("CHF 150.00")).toBeInTheDocument();
-      expect(screen.getByText("CHF 250.50")).toBeInTheDocument();
     });
   });
 
