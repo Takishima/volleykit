@@ -21,78 +21,73 @@ const en: Translations = {
       welcome: {
         title: "Your Assignments",
         description:
-          "This is where you'll see your upcoming referee assignments. Each card shows the game details. This example shows all available actions.",
+          "Your upcoming referee assignments. This example shows all available actions.",
       },
       swipeValidate: {
-        title: "Try Swiping Left",
+        title: "Swipe Left",
         description:
-          "Swipe left on a card to reveal action buttons. Validate appears for 1st referees, Edit for editable compensations, and Report for NLA/NLB games. Your actual games may show fewer buttons based on your role and permissions.",
+          "Swipe left for actions: Validate (1st referee), Edit compensation, or Report (NLA/NLB).",
       },
       swipeExchange: {
-        title: "Try Swiping Right",
+        title: "Swipe Right",
         description:
-          "Swipe right on a card to put the assignment up for exchange. Other referees can then take over the game. This is available for all upcoming games.",
+          "Swipe right to offer this assignment for exchange.",
       },
       tapDetails: {
-        title: "View Details",
+        title: "Tap for Details",
         description:
-          "Tap on a card to expand it and see more details about the assignment.",
+          "Tap a card to expand and see more details.",
       },
     },
     compensations: {
       overview: {
         title: "Your Compensations",
         description:
-          "Here you can see all your referee compensations, including game fees and travel expenses.",
+          "Your game fees and travel expenses.",
       },
       swipeEdit: {
-        title: "Try Swiping Left",
+        title: "Swipe Left",
         description:
-          "Swipe left on a card to reveal action buttons: Edit (adjust distance or add correction reason) and PDF (download compensation summary).",
+          "Swipe left to edit distance or download PDF.",
       },
       tapDetails: {
-        title: "View Details",
+        title: "Tap for Details",
         description:
-          "Tap on a card to expand it and see the full breakdown of your compensation.",
+          "Tap a card to see the full breakdown.",
       },
     },
     exchange: {
       browse: {
-        title: "Available Exchanges",
+        title: "Exchange",
         description:
-          "Here you can see assignments that other referees want to give away. Take one if it fits your schedule!",
+          "Assignments other referees want to give away. Take one if it fits your schedule!",
       },
       apply: {
         title: "Swipe to Apply",
         description:
-          "Swipe left on a card to apply for the exchange. You'll take over the assignment if approved.",
-      },
-      filter: {
-        title: "Filter by Level",
-        description:
-          "Use this toggle to show only games that match your referee level.",
+          "Swipe left to apply for this exchange.",
       },
     },
     settings: {
       language: {
-        title: "Change Language",
+        title: "Language",
         description:
-          "Select your preferred language. The app supports German, English, French, and Italian.",
+          "Choose your preferred language.",
       },
       homeLocation: {
-        title: "Set Home Location",
+        title: "Home Location",
         description:
-          "Set your home location to filter exchange offers by distance. This helps you find games near you more easily.",
+          "Set your location to filter exchanges by distance and travel time.",
       },
       arrivalTime: {
-        title: "Arrival Time Setting",
+        title: "Arrival Time",
         description:
-          "Configure how many minutes before the game you want to arrive. This setting is saved separately for each association.",
+          "How many minutes before the game you want to arrive.",
       },
       complete: {
         title: "Tour Complete!",
         description:
-          "You've completed the guided tour. You can restart it anytime from the settings.",
+          "You can restart the tours anytime from settings.",
       },
       tourSection: {
         title: "Guided Tours",

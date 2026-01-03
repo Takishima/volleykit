@@ -21,78 +21,73 @@ const fr: Translations = {
       welcome: {
         title: "Vos désignations",
         description:
-          "Ici vous verrez vos prochaines désignations d'arbitre. Chaque carte affiche les détails du match. Cet exemple montre toutes les actions disponibles.",
+          "Vos prochaines désignations d'arbitre. Cet exemple montre toutes les actions disponibles.",
       },
       swipeValidate: {
-        title: "Glissez vers la gauche",
+        title: "Glissez à gauche",
         description:
-          "Glissez vers la gauche pour révéler les boutons d'action. Valider apparaît pour le 1er arbitre, Modifier pour les indemnités modifiables, et Rapport pour les matchs NLA/NLB. Vos matchs réels peuvent afficher moins de boutons selon votre rôle et vos permissions.",
+          "Glissez à gauche pour : Valider (1er arbitre), modifier l'indemnité ou Rapport (NLA/NLB).",
       },
       swipeExchange: {
-        title: "Glissez vers la droite",
+        title: "Glissez à droite",
         description:
-          "Glissez vers la droite pour proposer la désignation à la bourse. D'autres arbitres pourront alors reprendre le match. Disponible pour tous les matchs à venir.",
+          "Glissez à droite pour proposer cette désignation à la bourse.",
       },
       tapDetails: {
-        title: "Voir les détails",
+        title: "Appuyez pour détails",
         description:
-          "Appuyez sur une carte pour la développer et voir plus de détails sur la désignation.",
+          "Appuyez sur une carte pour plus de détails.",
       },
     },
     compensations: {
       overview: {
         title: "Vos indemnités",
         description:
-          "Ici vous pouvez voir toutes vos indemnités d'arbitre, y compris les frais de match et les frais de déplacement.",
+          "Vos frais de match et de déplacement.",
       },
       swipeEdit: {
-        title: "Glissez pour modifier",
+        title: "Glissez à gauche",
         description:
-          "Glissez vers la gauche pour révéler le bouton de modification. Appuyez dessus pour ajuster la distance ou ajouter un motif de correction.",
+          "Glissez à gauche pour modifier ou télécharger le PDF.",
       },
       tapDetails: {
-        title: "Voir les détails",
+        title: "Appuyez pour détails",
         description:
-          "Appuyez sur une carte pour la développer et voir plus de détails sur l'indemnité.",
+          "Appuyez sur une carte pour le détail complet.",
       },
     },
     exchange: {
       browse: {
-        title: "Échanges disponibles",
+        title: "Bourse",
         description:
-          "Ici vous voyez les désignations que d'autres arbitres souhaitent céder. Reprenez-en une si elle convient à votre emploi du temps !",
+          "Désignations que d'autres arbitres souhaitent céder. Reprenez-en une si elle vous convient !",
       },
       apply: {
         title: "Glissez pour postuler",
         description:
-          "Glissez vers la gauche pour postuler à l'échange. Vous reprendrez la désignation si votre candidature est acceptée.",
-      },
-      filter: {
-        title: "Filtrer par niveau",
-        description:
-          "Utilisez ce bouton pour n'afficher que les matchs correspondant à votre niveau d'arbitre.",
+          "Glissez à gauche pour postuler à cet échange.",
       },
     },
     settings: {
       language: {
-        title: "Changer de langue",
+        title: "Langue",
         description:
-          "Sélectionnez votre langue préférée. L'application prend en charge l'allemand, l'anglais, le français et l'italien.",
+          "Choisissez votre langue préférée.",
       },
       homeLocation: {
-        title: "Définir l'emplacement",
+        title: "Emplacement",
         description:
-          "Définissez votre emplacement pour filtrer les échanges par distance. Cela vous aide à trouver plus facilement des matchs près de chez vous.",
+          "Définissez votre position pour filtrer par distance et temps de trajet.",
       },
       arrivalTime: {
-        title: "Paramètre d'heure d'arrivée",
+        title: "Heure d'arrivée",
         description:
-          "Configurez combien de minutes avant le match vous souhaitez arriver. Ce paramètre est enregistré séparément pour chaque association.",
+          "Minutes avant le match pour arriver.",
       },
       complete: {
         title: "Visite terminée !",
         description:
-          "Vous avez terminé la visite guidée. Vous pouvez la recommencer à tout moment depuis les paramètres.",
+          "Vous pouvez recommencer les visites à tout moment dans les paramètres.",
       },
       tourSection: {
         title: "Visites guidées",

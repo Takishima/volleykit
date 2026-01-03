@@ -21,78 +21,73 @@ const de: Translations = {
       welcome: {
         title: "Ihre Einsätze",
         description:
-          "Hier sehen Sie Ihre bevorstehenden Schiedsrichtereinsätze. Jede Karte zeigt die Spieldetails. Dieses Beispiel zeigt alle verfügbaren Aktionen.",
+          "Ihre bevorstehenden Schiedsrichtereinsätze. Dieses Beispiel zeigt alle verfügbaren Aktionen.",
       },
       swipeValidate: {
         title: "Nach links wischen",
         description:
-          "Wischen Sie nach links, um die Aktionsschaltflächen anzuzeigen. Validieren erscheint für 1. Schiedsrichter, Bearbeiten für bearbeitbare Entschädigungen und Bericht für NLA/NLB-Spiele. Bei Ihren Spielen werden je nach Rolle und Berechtigung möglicherweise weniger Schaltflächen angezeigt.",
+          "Nach links wischen für Aktionen: Validieren (1. SR), Entschädigung bearbeiten oder Bericht (NLA/NLB).",
       },
       swipeExchange: {
         title: "Nach rechts wischen",
         description:
-          "Wischen Sie nach rechts, um den Einsatz zur Börse anzubieten. Andere Schiedsrichter können das Spiel dann übernehmen. Dies ist für alle bevorstehenden Spiele verfügbar.",
+          "Nach rechts wischen, um den Einsatz zur Börse anzubieten.",
       },
       tapDetails: {
-        title: "Details anzeigen",
+        title: "Antippen für Details",
         description:
-          "Tippen Sie auf eine Karte, um sie zu erweitern und weitere Details zum Einsatz zu sehen.",
+          "Tippen Sie auf eine Karte für mehr Details.",
       },
     },
     compensations: {
       overview: {
         title: "Ihre Entschädigungen",
         description:
-          "Hier können Sie alle Ihre Schiedsrichterentschädigungen einsehen, einschliesslich Spielgebühren und Reisekosten.",
+          "Ihre Spielgebühren und Reisekosten.",
       },
       swipeEdit: {
         title: "Nach links wischen",
         description:
-          "Wischen Sie nach links, um die Aktionsschaltflächen anzuzeigen: Bearbeiten (Distanz anpassen oder Korrekturgrund hinzufügen) und PDF (Entschädigungsübersicht herunterladen).",
+          "Nach links wischen zum Bearbeiten oder PDF herunterladen.",
       },
       tapDetails: {
-        title: "Details anzeigen",
+        title: "Antippen für Details",
         description:
-          "Tippen Sie auf eine Karte, um sie zu erweitern und die vollständige Aufschlüsselung Ihrer Entschädigung zu sehen.",
+          "Tippen Sie auf eine Karte für die vollständige Aufschlüsselung.",
       },
     },
     exchange: {
       browse: {
-        title: "Verfügbare Tauschangebote",
+        title: "Tauschbörse",
         description:
-          "Hier sehen Sie Einsätze, die andere Schiedsrichter abgeben möchten. Übernehmen Sie einen, wenn er in Ihren Zeitplan passt!",
+          "Einsätze, die andere Schiedsrichter abgeben möchten. Übernehmen Sie einen, wenn er passt!",
       },
       apply: {
         title: "Wischen zum Bewerben",
         description:
-          "Wischen Sie nach links, um sich für den Tausch zu bewerben. Bei Genehmigung übernehmen Sie den Einsatz.",
-      },
-      filter: {
-        title: "Nach Niveau filtern",
-        description:
-          "Verwenden Sie diesen Schalter, um nur Spiele anzuzeigen, die Ihrem Schiedsrichterniveau entsprechen.",
+          "Nach links wischen, um sich zu bewerben.",
       },
     },
     settings: {
       language: {
-        title: "Sprache ändern",
+        title: "Sprache",
         description:
-          "Wählen Sie Ihre bevorzugte Sprache. Die App unterstützt Deutsch, Englisch, Französisch und Italienisch.",
+          "Wählen Sie Ihre bevorzugte Sprache.",
       },
       homeLocation: {
-        title: "Heimatstandort festlegen",
+        title: "Heimatstandort",
         description:
-          "Legen Sie Ihren Heimatstandort fest, um Tauschangebote nach Entfernung zu filtern. So finden Sie leichter Spiele in Ihrer Nähe.",
+          "Standort festlegen für Filter nach Entfernung und Reisezeit.",
       },
       arrivalTime: {
-        title: "Ankunftszeit-Einstellung",
+        title: "Ankunftszeit",
         description:
-          "Legen Sie fest, wie viele Minuten vor dem Spiel Sie ankommen möchten. Diese Einstellung wird für jeden Verband separat gespeichert.",
+          "Minuten vor Spielbeginn ankommen.",
       },
       complete: {
         title: "Tour abgeschlossen!",
         description:
-          "Sie haben die Einführung abgeschlossen. Sie können sie jederzeit in den Einstellungen neu starten.",
+          "Sie können die Touren jederzeit in den Einstellungen neu starten.",
       },
       tourSection: {
         title: "Einführungstouren",

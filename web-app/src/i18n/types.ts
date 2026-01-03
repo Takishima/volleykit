@@ -470,10 +470,6 @@ export interface Translations {
         title: string;
         description: string;
       };
-      filter: {
-        title: string;
-        description: string;
-      };
     };
     settings: {
       language: {
