@@ -2,7 +2,7 @@ import { memo, useMemo } from "react";
 import { format, parseISO } from "date-fns";
 import { ExpandableCard } from "@/components/ui/ExpandableCard";
 import { TravelTimeBadge } from "@/components/features/TravelTimeBadge";
-import { MapPin, MaleIcon, FemaleIcon, Home, Navigation, TrainFront, Loader2, User } from "@/components/ui/icons";
+import { MapPin, MaleIcon, FemaleIcon, Car, Navigation, TrainFront, Loader2, User } from "@/components/ui/icons";
 import type { GameExchange } from "@/api/client";
 import { useDateLocale } from "@/hooks/useDateFormat";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -36,8 +36,8 @@ interface ExchangeCardProps {
   disableExpansion?: boolean;
   /** Optional data-tour attribute for guided tours */
   dataTour?: string;
-  /** Distance from user's home location in kilometres (if available) */
-  distanceKm?: number | null;
+  /** Estimated car distance from user's home location in kilometres (if available) */
+  carDistanceKm?: number | null;
   /** Travel time in minutes (if available) */
   travelTimeMinutes?: number | null;
   /** Whether travel time is currently loading */
@@ -48,7 +48,7 @@ function ExchangeCardComponent({
   exchange,
   disableExpansion,
   dataTour,
-  distanceKm,
+  carDistanceKm,
   travelTimeMinutes,
   travelTimeLoading,
 }: ExchangeCardProps) {
@@ -164,13 +164,13 @@ function ExchangeCardComponent({
           </div>
 
           {/* Distance and travel time badges */}
-          {(distanceKm != null || travelTimeMinutes !== undefined || travelTimeLoading) && (
+          {(carDistanceKm != null || travelTimeMinutes !== undefined || travelTimeLoading) && (
             <div className="flex flex-col items-end gap-0.5 shrink-0">
-              {/* Distance badge */}
-              {distanceKm != null && (
+              {/* Car distance badge */}
+              {carDistanceKm != null && (
                 <span className="text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 px-2 py-0.5 rounded-full flex items-center gap-1">
-                  <Home className="w-3 h-3" aria-hidden="true" />
-                  {distanceKm.toFixed(0)} {t("common.distanceUnit")}
+                  <Car className="w-3 h-3" aria-hidden="true" />
+                  ~{carDistanceKm.toFixed(0)} {t("common.distanceUnit")}
                 </span>
               )}
               {/* Travel time badge */}

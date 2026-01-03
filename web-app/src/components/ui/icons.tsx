@@ -34,6 +34,7 @@ export { X } from "lucide-react";
 export { Plus } from "lucide-react";
 export { MapPin } from "lucide-react";
 export { Home } from "lucide-react";
+export { Car } from "lucide-react";
 export { TrainFront } from "lucide-react";
 export { Navigation } from "lucide-react";
 export { SlidersHorizontal } from "lucide-react";

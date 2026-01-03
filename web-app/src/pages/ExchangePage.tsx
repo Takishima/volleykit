@@ -7,7 +7,7 @@ import { useDemoStore } from "@/stores/demo";
 import { useAuthStore } from "@/stores/auth";
 import { useSettingsStore } from "@/stores/settings";
 import { createExchangeActions } from "@/utils/exchange-actions";
-import { calculateDistanceKm } from "@/utils/distance";
+import { calculateCarDistanceKm } from "@/utils/distance";
 import { extractCoordinates } from "@/utils/geo-location";
 import { ExchangeCard } from "@/components/features/ExchangeCard";
 import { SwipeableCard } from "@/components/ui/SwipeableCard";
@@ -102,10 +102,10 @@ export function ExchangePage() {
     );
   }, [exchangesWithTravelTime]);
 
-  // Calculate distance for each exchange from user's home location
+  // Calculate car distance for each exchange from user's home location
   const exchangesWithDistance = useMemo(() => {
     if (!data) return null;
-    if (!homeLocation) return data.map((e) => ({ exchange: e, distanceKm: null }));
+    if (!homeLocation) return data.map((e) => ({ exchange: e, carDistanceKm: null }));
 
     return data.map((exchange) => {
       const geoLocation =
@@ -113,15 +113,13 @@ export function ExchangePage() {
       const hallCoords = extractCoordinates(geoLocation);
 
       if (!hallCoords) {
-        return { exchange, distanceKm: null };
+        return { exchange, carDistanceKm: null };
       }
 
-      const distanceKm = calculateDistanceKm(
-        { latitude: homeLocation.latitude, longitude: homeLocation.longitude },
-        hallCoords,
-      );
+      const homeCoords = { latitude: homeLocation.latitude, longitude: homeLocation.longitude };
+      const carDistanceKm = calculateCarDistanceKm(homeCoords, hallCoords);
 
-      return { exchange, distanceKm };
+      return { exchange, carDistanceKm };
     });
   }, [data, homeLocation]);
 
@@ -132,7 +130,7 @@ export function ExchangePage() {
     if (showDummyData) {
       // Safe cast: TourDummyExchange provides all fields used by ExchangeCard
       const tourExchange = TOUR_DUMMY_EXCHANGE as unknown as GameExchange;
-      return [{ exchange: tourExchange, distanceKm: null }];
+      return [{ exchange: tourExchange, carDistanceKm: null }];
     }
 
     if (!exchangesWithDistance) return null;
@@ -164,15 +162,16 @@ export function ExchangePage() {
     }
 
     // Apply distance filter (only on "open" tab when home location is set)
+    // Uses car distance for more accurate filtering
     if (
       distanceFilter.enabled &&
       statusFilter === "open" &&
       homeLocation
     ) {
-      result = result.filter(({ distanceKm }) => {
+      result = result.filter(({ carDistanceKm }) => {
         // If no distance available, include the exchange (conservative)
-        if (distanceKm === null) return true;
-        return distanceKm <= distanceFilter.maxDistanceKm;
+        if (carDistanceKm === null) return true;
+        return carDistanceKm <= distanceFilter.maxDistanceKm;
       });
     }
 
@@ -372,7 +371,7 @@ export function ExchangePage() {
               {groupedData.length > 1 && (
                 <WeekSeparator week={group.week} />
               )}
-              {group.items.map(({ exchange, distanceKm }, itemIndex) => {
+              {group.items.map(({ exchange, carDistanceKm }, itemIndex) => {
                 const travelTimeData = travelTimeMap.get(exchange.__identity);
                 return (
                   <SwipeableCard
@@ -388,7 +387,7 @@ export function ExchangePage() {
                             ? "exchange-card"
                             : undefined
                         }
-                        distanceKm={homeLocation ? distanceKm : null}
+                        carDistanceKm={homeLocation ? carDistanceKm : null}
                         travelTimeMinutes={travelTimeData?.minutes}
                         travelTimeLoading={travelTimeData?.isLoading}
                       />

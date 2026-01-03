@@ -3,12 +3,14 @@ import {
   METRES_PER_KILOMETRE,
   DISTANCE_DISPLAY_PRECISION,
   DECIMAL_INPUT_PATTERN,
+  ROAD_DISTANCE_MULTIPLIER,
   metresToKilometres,
   kilometresToMetres,
   formatDistanceKm,
   parseLocalizedNumber,
   calculateHaversineDistance,
   calculateDistanceKm,
+  calculateCarDistanceKm,
   type Coordinates,
 } from "./distance";
 
@@ -24,6 +26,10 @@ describe("distance utilities", () => {
 
     it("DECIMAL_INPUT_PATTERN accepts period or comma as decimal separator", () => {
       expect(DECIMAL_INPUT_PATTERN).toBe("[0-9]*[.,]?[0-9]*");
+    });
+
+    it("ROAD_DISTANCE_MULTIPLIER is 1.33", () => {
+      expect(ROAD_DISTANCE_MULTIPLIER).toBe(1.33);
     });
   });
 
@@ -177,6 +183,43 @@ describe("distance utilities", () => {
       const distanceMetres = calculateHaversineDistance(zurich, bern);
       const distanceKm = calculateDistanceKm(zurich, bern);
       expect(distanceKm).toBeCloseTo(distanceMetres / 1000, 10);
+    });
+  });
+
+  describe("calculateCarDistanceKm", () => {
+    const zurich: Coordinates = { latitude: 47.3769, longitude: 8.5417 };
+    const bern: Coordinates = { latitude: 46.948, longitude: 7.4474 };
+    const geneva: Coordinates = { latitude: 46.2044, longitude: 6.1432 };
+
+    it("returns estimated driving distance in kilometres", () => {
+      const carDistanceKm = calculateCarDistanceKm(zurich, bern);
+      // Straight-line is ~95.4 km, car distance should be ~126.9 km (95.4 * 1.33)
+      expect(carDistanceKm).toBeGreaterThan(125);
+      expect(carDistanceKm).toBeLessThan(130);
+    });
+
+    it("applies the ROAD_DISTANCE_MULTIPLIER to straight-line distance", () => {
+      const straightLineKm = calculateDistanceKm(zurich, bern);
+      const carDistanceKm = calculateCarDistanceKm(zurich, bern);
+      expect(carDistanceKm).toBeCloseTo(straightLineKm * ROAD_DISTANCE_MULTIPLIER, 10);
+    });
+
+    it("returns 0 for same location", () => {
+      const carDistance = calculateCarDistanceKm(zurich, zurich);
+      expect(carDistance).toBe(0);
+    });
+
+    it("returns same distance regardless of direction", () => {
+      const distanceAB = calculateCarDistanceKm(zurich, bern);
+      const distanceBA = calculateCarDistanceKm(bern, zurich);
+      expect(distanceAB).toBeCloseTo(distanceBA, 10);
+    });
+
+    it("scales appropriately for longer distances", () => {
+      const carDistanceKm = calculateCarDistanceKm(zurich, geneva);
+      // Straight-line is ~224 km, car distance should be ~298 km (224 * 1.33)
+      expect(carDistanceKm).toBeGreaterThan(292);
+      expect(carDistanceKm).toBeLessThan(305);
     });
   });
 });
