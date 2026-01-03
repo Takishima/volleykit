@@ -7,8 +7,9 @@ import { BasePage } from "./base.page";
  */
 export class CompensationsPage extends BasePage {
   readonly tablist: Locator;
-  readonly pendingTab: Locator;
-  readonly paidTab: Locator;
+  readonly pendingPastTab: Locator;
+  readonly pendingFutureTab: Locator;
+  readonly closedTab: Locator;
   readonly allTab: Locator;
   readonly tabPanel: Locator;
   readonly compensationCards: Locator;
@@ -18,8 +19,9 @@ export class CompensationsPage extends BasePage {
     super(page);
     this.tablist = page.getByRole("tablist");
     // Use stable IDs for tabs (locale-independent)
-    this.pendingTab = page.locator("#tab-unpaid");
-    this.paidTab = page.locator("#tab-paid");
+    this.pendingPastTab = page.locator("#tab-pendingPast");
+    this.pendingFutureTab = page.locator("#tab-pendingFuture");
+    this.closedTab = page.locator("#tab-closed");
     this.allTab = page.locator("#tab-all");
     this.tabPanel = page.getByRole("tabpanel");
     this.compensationCards = this.tabPanel.getByRole("button");
@@ -34,15 +36,21 @@ export class CompensationsPage extends BasePage {
     await expect(this.tablist).toBeVisible();
   }
 
-  async switchToPendingTab() {
-    await this.pendingTab.click();
-    await expect(this.pendingTab).toHaveAttribute("aria-selected", "true");
+  async switchToPendingPastTab() {
+    await this.pendingPastTab.click();
+    await expect(this.pendingPastTab).toHaveAttribute("aria-selected", "true");
     await expect(this.tabPanel).toBeVisible();
   }
 
-  async switchToPaidTab() {
-    await this.paidTab.click();
-    await expect(this.paidTab).toHaveAttribute("aria-selected", "true");
+  async switchToPendingFutureTab() {
+    await this.pendingFutureTab.click();
+    await expect(this.pendingFutureTab).toHaveAttribute("aria-selected", "true");
+    await expect(this.tabPanel).toBeVisible();
+  }
+
+  async switchToClosedTab() {
+    await this.closedTab.click();
+    await expect(this.closedTab).toHaveAttribute("aria-selected", "true");
     await expect(this.tabPanel).toBeVisible();
   }
 

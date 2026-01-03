@@ -29,8 +29,9 @@ test.describe("Compensations Journey", () => {
   test.describe("Page Loading", () => {
     test("displays compensations page with tabs after navigation", async () => {
       await compensationsPage.expectToBeLoaded();
-      await expect(compensationsPage.pendingTab).toBeVisible();
-      await expect(compensationsPage.paidTab).toBeVisible();
+      await expect(compensationsPage.pendingPastTab).toBeVisible();
+      await expect(compensationsPage.pendingFutureTab).toBeVisible();
+      await expect(compensationsPage.closedTab).toBeVisible();
       await expect(compensationsPage.allTab).toBeVisible();
     });
   });
