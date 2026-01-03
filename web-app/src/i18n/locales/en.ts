@@ -246,6 +246,9 @@ const en: Translations = {
       "Compensation record not found. The game may be too far in the future.",
     compensationMissingId:
       "Compensation record is missing an identifier. Please try again later.",
+    filters: "Filters",
+    currentSeasonOnly: "Current season",
+    hideFutureItems: "Hide future",
   },
   exchange: {
     title: "Exchange",

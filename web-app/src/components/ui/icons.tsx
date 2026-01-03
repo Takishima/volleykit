@@ -42,6 +42,7 @@ export { SlidersHorizontal } from "lucide-react";
 export { CheckCircle } from "lucide-react";
 export { AlertTriangle } from "lucide-react";
 export { Calendar } from "lucide-react";
+export { Clock } from "lucide-react";
 export { Lock } from "lucide-react";
 export { Inbox } from "lucide-react";
 export { Info } from "lucide-react";

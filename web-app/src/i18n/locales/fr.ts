@@ -246,6 +246,9 @@ const fr: Translations = {
       "Enregistrement d'indemnité introuvable. Le match est peut-être trop éloigné dans le futur.",
     compensationMissingId:
       "L'enregistrement d'indemnité n'a pas d'identifiant. Veuillez réessayer plus tard.",
+    filters: "Filtres",
+    currentSeasonOnly: "Saison actuelle",
+    hideFutureItems: "Masquer futurs",
   },
   exchange: {
     title: "Bourse aux échanges",

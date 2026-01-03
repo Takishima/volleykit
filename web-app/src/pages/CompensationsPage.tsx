@@ -1,9 +1,12 @@
 import { useState, useCallback, useMemo, lazy, Suspense, Fragment } from "react";
+import { parseISO } from "date-fns";
 import { useCompensations, useCompensationTotals } from "@/hooks/useConvocations";
 import { CompensationCard } from "@/components/features/CompensationCard";
 import { SwipeableCard } from "@/components/ui/SwipeableCard";
 import { WeekSeparator } from "@/components/ui/WeekSeparator";
-import { groupByWeek } from "@/utils/date-helpers";
+import { FilterChip } from "@/components/ui/FilterChip";
+import { Calendar, Clock } from "@/components/ui/icons";
+import { groupByWeek, getSeasonDateRange } from "@/utils/date-helpers";
 import {
   LoadingState,
   ErrorState,
@@ -21,6 +24,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useTour } from "@/hooks/useTour";
 import { TOUR_DUMMY_COMPENSATION } from "@/components/tour/definitions/compensations";
 import { useAuthStore } from "@/stores/auth";
+import { useCompensationFiltersStore } from "@/stores/compensationFilters";
 
 const EditCompensationModal = lazy(
   () =>
@@ -51,6 +55,14 @@ export function CompensationsPage() {
     (state) => state.isAssociationSwitching,
   );
 
+  // Filter store for persisted filters
+  const {
+    currentSeasonOnly,
+    hideFutureItems,
+    toggleCurrentSeasonOnly,
+    toggleHideFutureItems,
+  } = useCompensationFiltersStore();
+
   // Initialize tour for this page (triggers auto-start on first visit)
   // Use showDummyData to show dummy data immediately, avoiding race condition with empty states
   const { showDummyData } = useTour("compensations");
@@ -61,6 +73,9 @@ export function CompensationsPage() {
   // Show loading when switching associations or when query is loading
   const isLoading = isAssociationSwitching || queryLoading;
 
+  // Calculate season date range for filtering
+  const seasonRange = useMemo(() => getSeasonDateRange(), []);
+
   // When tour is active (or about to auto-start), show ONLY the dummy compensation
   // to ensure tour works regardless of whether tabs have real data
   const data = useMemo(() => {
@@ -69,8 +84,34 @@ export function CompensationsPage() {
       const tourCompensation = TOUR_DUMMY_COMPENSATION as unknown as CompensationRecord;
       return [tourCompensation];
     }
-    return rawData;
-  }, [showDummyData, rawData]);
+
+    if (!rawData) return rawData;
+
+    // Apply additional filters
+    const now = new Date();
+    return rawData.filter((record) => {
+      const dateString = record.refereeGame?.game?.startingDateTime;
+      if (!dateString) return true; // Keep items without dates
+
+      const gameDate = parseISO(dateString);
+
+      // Filter by current season (Sept 1 - May 31)
+      if (currentSeasonOnly) {
+        if (gameDate < seasonRange.from || gameDate > seasonRange.to) {
+          return false;
+        }
+      }
+
+      // Filter out future items
+      if (hideFutureItems) {
+        if (gameDate > now) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [showDummyData, rawData, currentSeasonOnly, hideFutureItems, seasonRange]);
 
   // Group compensations by week for visual separation
   const groupedData = useMemo(() => {
@@ -222,6 +263,24 @@ export function CompensationsPage() {
         onTabChange={handleTabChange}
         ariaLabel={t("compensations.title")}
       />
+
+      {/* Additional filters */}
+      <div className="flex flex-wrap gap-2">
+        <FilterChip
+          active={currentSeasonOnly}
+          onToggle={toggleCurrentSeasonOnly}
+          icon={<Calendar className="w-full h-full" />}
+          label={t("compensations.currentSeasonOnly")}
+          showIconWhenActive
+        />
+        <FilterChip
+          active={hideFutureItems}
+          onToggle={toggleHideFutureItems}
+          icon={<Clock className="w-full h-full" />}
+          label={t("compensations.hideFutureItems")}
+          showIconWhenActive
+        />
+      </div>
 
       {/* Content - single TabPanel since all tabs show same component with different data */}
       <TabPanel tabId={filter} activeTab={filter}>
