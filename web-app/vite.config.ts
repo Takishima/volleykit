@@ -150,12 +150,15 @@ export default defineConfig(({ mode }) => {
           // Lazy-loaded chunks get "chunk-" prefix to distinguish from main "index-" bundle.
           // This ensures size-limit's "index-*.js" pattern only matches the main bundle.
           chunkFileNames: 'assets/chunk-[name]-[hash].js',
+          // Merge small chunks (under 5KB) to reduce HTTP overhead.
+          // Very small chunks add module wrapper overhead without significant lazy-loading benefit.
+          experimentalMinChunkSize: 5_000,
           // Manual chunks for bundle splitting. Names must match size-limit config in package.json.
           // Current sizes (gzipped) and limits:
-          //   - Main App Bundle (index-*.js):     ~123 kB, limit 125 kB (+2 kB headroom)
-          //   - Vendor Chunks (combined):         ~45 kB,  limit 50 kB  (+5 kB headroom)
-          //   - PDF Library (pdf-lib-*.js):       ~180 kB, limit 185 kB (+5 kB headroom) - lazy-loaded
-          //   - Total JS Bundle:                  ~360 kB, limit 400 kB (+40 kB headroom)
+          //   - Main App Bundle (index-*.js):     ~104 kB, limit 110 kB (+6 kB headroom)
+          //   - Vendor Chunks (combined):         ~46 kB,  limit 50 kB  (+4 kB headroom)
+          //   - PDF Library (pdf-lib-*.js):       ~181 kB, limit 185 kB (+4 kB headroom) - lazy-loaded
+          //   - Total JS Bundle:                  ~440 kB, limit 450 kB (+10 kB headroom)
           manualChunks: {
             'react-vendor': ['react', 'react-dom'],
             'router': ['react-router-dom'],

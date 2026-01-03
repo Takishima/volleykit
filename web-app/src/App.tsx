@@ -17,11 +17,6 @@ import { PageErrorBoundary } from "@/components/ui/PageErrorBoundary";
 import { ReloadPrompt } from "@/components/ui/ReloadPrompt";
 import { ToastContainer } from "@/components/ui/Toast";
 import { PWAProvider } from "@/contexts/PWAContext";
-import { LoginPage } from "@/pages/LoginPage";
-import { AssignmentsPage } from "@/pages/AssignmentsPage";
-import { CompensationsPage } from "@/pages/CompensationsPage";
-import { ExchangePage } from "@/pages/ExchangePage";
-import { SettingsPage } from "@/pages/SettingsPage";
 import {
   classifyQueryError,
   isRetryableError,
@@ -33,6 +28,24 @@ import { usePreloadLocales } from "@/hooks/usePreloadLocales";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useViewportZoom } from "@/hooks/useViewportZoom";
 import { logger } from "@/utils/logger";
+
+// Lazy load pages to reduce initial bundle size
+// Each page becomes a separate chunk that loads on-demand
+const LoginPage = lazy(() =>
+  import("@/pages/LoginPage").then((m) => ({ default: m.LoginPage })),
+);
+const AssignmentsPage = lazy(() =>
+  import("@/pages/AssignmentsPage").then((m) => ({ default: m.AssignmentsPage })),
+);
+const CompensationsPage = lazy(() =>
+  import("@/pages/CompensationsPage").then((m) => ({ default: m.CompensationsPage })),
+);
+const ExchangePage = lazy(() =>
+  import("@/pages/ExchangePage").then((m) => ({ default: m.ExchangePage })),
+);
+const SettingsPage = lazy(() =>
+  import("@/pages/SettingsPage").then((m) => ({ default: m.SettingsPage })),
+);
 
 // Lazy load TourProvider since it's only needed for first-time users
 const TourProvider = lazy(() =>
@@ -254,7 +267,9 @@ export default function App() {
                   path="/login"
                   element={
                     <PublicRoute>
-                      <LoginPage />
+                      <Suspense fallback={<LoadingState />}>
+                        <LoginPage />
+                      </Suspense>
                     </PublicRoute>
                   }
                 />
@@ -271,10 +286,10 @@ export default function App() {
                     </ProtectedRoute>
                   }
                 >
-                  <Route path="/" element={<PageErrorBoundary pageName="AssignmentsPage"><AssignmentsPage /></PageErrorBoundary>} />
-                  <Route path="/compensations" element={<PageErrorBoundary pageName="CompensationsPage"><CompensationsPage /></PageErrorBoundary>} />
-                  <Route path="/exchange" element={<PageErrorBoundary pageName="ExchangePage"><ExchangePage /></PageErrorBoundary>} />
-                  <Route path="/settings" element={<PageErrorBoundary pageName="SettingsPage"><SettingsPage /></PageErrorBoundary>} />
+                  <Route path="/" element={<PageErrorBoundary pageName="AssignmentsPage"><Suspense fallback={<LoadingState />}><AssignmentsPage /></Suspense></PageErrorBoundary>} />
+                  <Route path="/compensations" element={<PageErrorBoundary pageName="CompensationsPage"><Suspense fallback={<LoadingState />}><CompensationsPage /></Suspense></PageErrorBoundary>} />
+                  <Route path="/exchange" element={<PageErrorBoundary pageName="ExchangePage"><Suspense fallback={<LoadingState />}><ExchangePage /></Suspense></PageErrorBoundary>} />
+                  <Route path="/settings" element={<PageErrorBoundary pageName="SettingsPage"><Suspense fallback={<LoadingState />}><SettingsPage /></Suspense></PageErrorBoundary>} />
                 </Route>
 
                 {/* Fallback */}
