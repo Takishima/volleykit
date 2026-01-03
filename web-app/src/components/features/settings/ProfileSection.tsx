@@ -12,13 +12,17 @@ interface ProfileSectionProps {
   user: UserProfile;
 }
 
-interface PersonProfileResponse {
+interface PersonProfile {
   profilePicture?: {
     publicResourceUri?: string;
   };
   svNumber?: number;
   firstName?: string;
   lastName?: string;
+}
+
+interface PersonProfileResponse {
+  person?: PersonProfile;
 }
 
 const DEMO_SV_NUMBER = 12345;
@@ -54,13 +58,15 @@ function ProfileSectionComponent({ user }: ProfileSectionProps) {
       try {
         const params = new URLSearchParams();
         params.set("person[__identity]", user.id);
-        params.set("propertyRenderConfiguration[0]", "profilePicture.publicResourceUri");
-        params.set("propertyRenderConfiguration[1]", "svNumber");
-        params.set("propertyRenderConfiguration[2]", "firstName");
-        params.set("propertyRenderConfiguration[3]", "lastName");
+        // Parent objects must be requested before nested properties to avoid 500 errors
+        params.set("propertyRenderConfiguration[0]", "profilePicture");
+        params.set("propertyRenderConfiguration[1]", "profilePicture.publicResourceUri");
+        params.set("propertyRenderConfiguration[2]", "svNumber");
+        params.set("propertyRenderConfiguration[3]", "firstName");
+        params.set("propertyRenderConfiguration[4]", "lastName");
 
         const response = await fetch(
-          `${API_BASE}/sportmanager.volleyball/api%5Cperson/showWithNestedObjects?${params}`,
+          `${API_BASE}/sportmanager.volleyball/api%5cperson/showWithNestedObjects?${params}`,
           {
             credentials: "include",
             signal: controller.signal,
@@ -70,17 +76,18 @@ function ProfileSectionComponent({ user }: ProfileSectionProps) {
 
         if (response.ok) {
           const data: PersonProfileResponse = await response.json();
-          if (data.profilePicture?.publicResourceUri) {
-            setProfilePictureUrl(data.profilePicture.publicResourceUri);
+          const person = data.person;
+          if (person?.profilePicture?.publicResourceUri) {
+            setProfilePictureUrl(person.profilePicture.publicResourceUri);
           }
-          if (data.svNumber) {
-            setSvNumber(data.svNumber);
+          if (person?.svNumber) {
+            setSvNumber(person.svNumber);
           }
-          if (data.firstName) {
-            setFirstName(data.firstName);
+          if (person?.firstName) {
+            setFirstName(person.firstName);
           }
-          if (data.lastName) {
-            setLastName(data.lastName);
+          if (person?.lastName) {
+            setLastName(person.lastName);
           }
         }
       } catch (error) {
