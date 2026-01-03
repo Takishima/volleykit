@@ -1,11 +1,17 @@
 /**
- * Debug panel for diagnosing association dropdown issues.
- * Shows raw state values that determine dropdown visibility.
+ * Debug panel for diagnosing production issues.
+ * Shows user identity, associations, and API debugging tools.
  *
  * Usage:
- * - URL parameter: Add ?debug=associations to URL
+ * - URL parameter: Add ?debug to URL (or ?debug=1)
  * - Console: window.dispatchEvent(new Event('vk-debug-show'))
  * - Toggle: window.dispatchEvent(new Event('vk-debug-toggle'))
+ *
+ * Features:
+ * - User Identity: Shows user UUID for matching with API responses
+ * - Exchange Debug: Diagnose UUID mismatches in exchange filtering
+ * - Associations: Debug multi-association dropdown issues
+ * - API Tools: Live fetch from dashboard and exchange endpoints
  *
  * NOTE: This component uses inline styles intentionally to:
  * 1. Keep debug UI visually distinct from the app
@@ -27,6 +33,24 @@ import { useState, useEffect, useCallback, useId } from "react";
 const API_BASE = import.meta.env.VITE_API_PROXY_URL || "";
 
 const STORAGE_KEY = "volleykit-auth";
+
+/** Fetch status for debug panel API calls */
+type FetchStatus = "idle" | "loading" | "success" | "error";
+
+/** Custom hook for copy with visual feedback */
+function useCopyWithFeedback() {
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const handleCopy = async (value: string, label: string) => {
+    const success = await copyToClipboard(value);
+    if (success) {
+      setCopied(label);
+      setTimeout(() => setCopied(null), 2000);
+    }
+  };
+
+  return { copied, handleCopy };
+}
 const EXPECTED_VERSION = 2; // AUTH_STORE_VERSION from auth.ts
 const MINIMUM_OCCUPATIONS_FOR_DROPDOWN = 2; // Matches MINIMUM_OCCUPATIONS_FOR_SWITCHER in AppShell
 
@@ -83,8 +107,11 @@ function useDebugVisibility(refreshPersistedState: () => void) {
   useEffect(() => {
     const checkVisibility = () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const hasDebugParam = urlParams.get("debug") === "associations";
-      const hasGlobalFlag = (window as unknown as { __VK_DEBUG_ASSOCIATIONS?: boolean }).__VK_DEBUG_ASSOCIATIONS === true;
+      // Accept ?debug, ?debug=1, ?debug=true, or legacy ?debug=associations
+      const debugValue = urlParams.get("debug");
+      const hasDebugParam = debugValue !== null && debugValue !== "false" && debugValue !== "0";
+      const hasGlobalFlag = (window as unknown as { __VK_DEBUG?: boolean }).__VK_DEBUG === true ||
+        (window as unknown as { __VK_DEBUG_ASSOCIATIONS?: boolean }).__VK_DEBUG_ASSOCIATIONS === true;
       if (hasDebugParam || hasGlobalFlag) {
         setIsVisible(true);
         refreshPersistedState();
@@ -166,9 +193,12 @@ function copyToClipboard(text: string): Promise<boolean> {
   }
 }
 
-export function AssociationDebugPanel() {
+// Keep legacy export name for backwards compatibility with AppShell
+export { DebugPanel as AssociationDebugPanel };
+
+export function DebugPanel() {
   const [persistedState, setPersistedState] = useState<PersistedState | null>(null);
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["status", "comparison"]));
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["identity", "status"]));
 
   const {
     status,
@@ -249,6 +279,41 @@ export function AssociationDebugPanel() {
     >
       <DebugHeader onRefresh={refreshPersistedState} onClose={() => setIsVisible(false)} />
 
+      {/* User Identity - Most important for debugging */}
+      <Section
+        id="identity"
+        title="User Identity"
+        expanded={expandedSections.has("identity")}
+        onToggle={() => toggleSection("identity")}
+      >
+        <UserIdentitySection
+          user={user}
+          activeOccupationId={activeOccupationId}
+          isDemoMode={isDemoMode}
+        />
+      </Section>
+
+      {/* Full Profile Details - fetched from API */}
+      <Section
+        id="profile"
+        title="My Profile (API)"
+        expanded={expandedSections.has("profile")}
+        onToggle={() => toggleSection("profile")}
+      >
+        <PersonDetailsSection isDemoMode={isDemoMode} />
+      </Section>
+
+      {/* Exchange Debug - For diagnosing UUID matching issues */}
+      <Section
+        id="exchanges"
+        title="Exchange Debug"
+        expanded={expandedSections.has("exchanges")}
+        onToggle={() => toggleSection("exchanges")}
+      >
+        <ExchangeDebugSection userId={user?.id} isDemoMode={isDemoMode} />
+      </Section>
+
+      {/* Association Status */}
       <StatusBanner dropdownShouldShow={dropdownShouldShow} occupationsCount={occupationsCount} />
 
       <DiscrepanciesAlert discrepancies={discrepancies} />
@@ -359,10 +424,525 @@ export function AssociationDebugPanel() {
 
 // --- Sub-components ---
 
+interface UserIdentitySectionProps {
+  user: { id: string; firstName: string; lastName: string; occupations: Occupation[] } | null;
+  activeOccupationId: string | null;
+  isDemoMode: boolean;
+}
+
+function UserIdentitySection({ user, activeOccupationId, isDemoMode }: UserIdentitySectionProps) {
+  const { copied, handleCopy } = useCopyWithFeedback();
+  const userId = user?.id;
+  const activeOccupation = user?.occupations?.find(o => o.id === activeOccupationId);
+
+  return (
+    <div style={{ fontSize: "10px" }}>
+      {/* Demo Mode Indicator */}
+      {isDemoMode && (
+        <div style={{ marginBottom: "8px", padding: "4px 8px", backgroundColor: "#3d2a00", borderRadius: "4px", border: "1px solid #6b4500", color: "#ffaa00" }}>
+          Demo Mode Active - UUIDs are simulated
+        </div>
+      )}
+
+      {/* User UUID - Primary identifier */}
+      <div style={{ marginBottom: "8px" }}>
+        <div style={{ color: "#888", marginBottom: "2px" }}>User UUID (user.id):</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <code style={{
+            backgroundColor: "#1a1a2e",
+            padding: "6px 10px",
+            borderRadius: "4px",
+            color: userId ? "#4eff4e" : "#ff6b6b",
+            fontSize: "11px",
+            fontFamily: "ui-monospace, monospace",
+            wordBreak: "break-all",
+            flex: 1,
+          }}>
+            {userId ?? "(not set)"}
+          </code>
+          {userId && (
+            <button
+              onClick={() => handleCopy(userId, "userId")}
+              style={{
+                padding: "4px 8px",
+                fontSize: "9px",
+                backgroundColor: copied === "userId" ? "#0a2e0a" : "#1a1a2e",
+                border: `1px solid ${copied === "userId" ? "#1a5e1a" : "#444"}`,
+                color: copied === "userId" ? "#4eff4e" : "#888",
+                borderRadius: "4px",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {copied === "userId" ? "Copied!" : "Copy"}
+            </button>
+          )}
+        </div>
+        <div style={{ color: "#666", fontSize: "8px", marginTop: "4px" }}>
+          This should match submittedByPerson.__identity in exchanges you created
+        </div>
+      </div>
+
+      {/* Active Occupation */}
+      <div style={{ marginBottom: "8px" }}>
+        <div style={{ color: "#888", marginBottom: "2px" }}>Active Occupation ID:</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <code style={{
+            backgroundColor: "#1a1a2e",
+            padding: "6px 10px",
+            borderRadius: "4px",
+            color: activeOccupationId ? "#00d4ff" : "#ff6b6b",
+            fontSize: "11px",
+            fontFamily: "ui-monospace, monospace",
+            wordBreak: "break-all",
+            flex: 1,
+          }}>
+            {activeOccupationId ?? "(not set)"}
+          </code>
+          {activeOccupationId && (
+            <button
+              onClick={() => handleCopy(activeOccupationId, "occupationId")}
+              style={{
+                padding: "4px 8px",
+                fontSize: "9px",
+                backgroundColor: copied === "occupationId" ? "#0a2e0a" : "#1a1a2e",
+                border: `1px solid ${copied === "occupationId" ? "#1a5e1a" : "#444"}`,
+                color: copied === "occupationId" ? "#4eff4e" : "#888",
+                borderRadius: "4px",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {copied === "occupationId" ? "Copied!" : "Copy"}
+            </button>
+          )}
+        </div>
+        {activeOccupation && (
+          <div style={{ color: "#666", fontSize: "8px", marginTop: "4px" }}>
+            {activeOccupation.type} @ {activeOccupation.associationCode ?? activeOccupation.clubName ?? "unknown"}
+          </div>
+        )}
+      </div>
+
+      {/* User Name */}
+      {user && (user.firstName || user.lastName) && (
+        <div>
+          <div style={{ color: "#888", marginBottom: "2px" }}>User Name:</div>
+          <div style={{ color: "#e0e0e0" }}>
+            {user.firstName} {user.lastName}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface ExchangeFetchResult {
+  status: FetchStatus;
+  totalCount?: number;
+  exchanges?: Array<{
+    __identity: string;
+    status: string;
+    submittedByPerson?: { __identity?: string; displayName?: string };
+    refereeGame?: { game?: { startingDateTime?: string } };
+  }>;
+  error?: string;
+}
+
+function ExchangeDebugSection({ userId, isDemoMode }: { userId?: string; isDemoMode: boolean }) {
+  const [result, setResult] = useState<ExchangeFetchResult>({ status: "idle" });
+
+  const handleFetch = async () => {
+    if (isDemoMode) {
+      setResult({
+        status: "error",
+        error: "Exchange fetch not available in demo mode - use production for real UUID comparison",
+      });
+      return;
+    }
+
+    setResult({ status: "loading" });
+
+    try {
+      // Fetch exchanges from the API
+      const response = await fetch(
+        `${API_BASE}/indoorvolleyball.refadmin/api%5crefereegameexchange/search`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            "configuration[offset]": "0",
+            "configuration[limit]": "10",
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json() as {
+        totalCount?: number;
+        items?: Array<{
+          __identity: string;
+          status: string;
+          submittedByPerson?: { __identity?: string; displayName?: string };
+          refereeGame?: { game?: { startingDateTime?: string } };
+        }>;
+      };
+
+      setResult({
+        status: "success",
+        totalCount: data.totalCount ?? 0,
+        exchanges: data.items ?? [],
+      });
+    } catch (error) {
+      setResult({
+        status: "error",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  };
+
+  // Find exchanges that match/don't match current user
+  const matchingExchanges = result.exchanges?.filter(e => e.submittedByPerson?.__identity === userId) ?? [];
+  const otherExchanges = result.exchanges?.filter(e => e.submittedByPerson?.__identity !== userId) ?? [];
+
+  return (
+    <div style={{ fontSize: "10px" }}>
+      <div style={{ marginBottom: "8px" }}>
+        <button
+          onClick={handleFetch}
+          disabled={result.status === "loading"}
+          aria-busy={result.status === "loading"}
+          style={{
+            padding: "6px 12px",
+            fontSize: "10px",
+            cursor: result.status === "loading" ? "wait" : "pointer",
+            backgroundColor: "#1a3a1a",
+            border: "1px solid #2a5a2a",
+            color: "#4eff4e",
+            borderRadius: "4px",
+          }}
+        >
+          {result.status === "loading" ? "Fetching..." : "Fetch Exchanges (Live API)"}
+        </button>
+      </div>
+
+      {result.status === "error" && (
+        <div style={{ color: "#ff6b6b", padding: "4px", backgroundColor: "#2e0a0a", borderRadius: "4px", marginBottom: "8px" }}>
+          Error: {result.error}
+        </div>
+      )}
+
+      {result.status === "success" && (
+        <>
+          <div style={{ marginBottom: "8px" }}>
+            <strong>Total Exchanges:</strong> <span style={{ color: "#00d4ff" }}>{result.totalCount}</span>
+          </div>
+
+          <div style={{ marginBottom: "8px" }}>
+            <strong style={{ color: "#4eff4e" }}>Matching User ID ({matchingExchanges.length}):</strong>
+            {matchingExchanges.length === 0 ? (
+              <div style={{ color: "#ff6b6b", fontSize: "9px", marginTop: "4px" }}>
+                No exchanges found with submittedByPerson.__identity matching your user.id
+              </div>
+            ) : (
+              <div style={{ marginTop: "4px" }}>
+                {matchingExchanges.slice(0, 3).map((ex) => (
+                  <div key={ex.__identity} style={{ fontSize: "8px", color: "#4eff4e", marginBottom: "2px" }}>
+                    • {ex.__identity.substring(0, 12)}... ({ex.status})
+                  </div>
+                ))}
+                {matchingExchanges.length > 3 && (
+                  <div style={{ fontSize: "8px", color: "#666" }}>...and {matchingExchanges.length - 3} more</div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div style={{ marginBottom: "8px" }}>
+            <strong style={{ color: "#888" }}>Other Exchanges ({otherExchanges.length}):</strong>
+            {otherExchanges.length > 0 && (
+              <div style={{ marginTop: "4px" }}>
+                {otherExchanges.slice(0, 5).map((ex) => (
+                  <div key={ex.__identity} style={{ fontSize: "8px", color: "#888", marginBottom: "2px" }}>
+                    • submitter: <span style={{ color: "#ffaa00" }}>{ex.submittedByPerson?.__identity?.substring(0, 12) ?? "(none)"}...</span>
+                    {" "}({ex.submittedByPerson?.displayName ?? "unknown"})
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* UUID Comparison Helper */}
+          <div style={{ marginTop: "12px", padding: "8px", backgroundColor: "#111122", borderRadius: "4px", border: "1px solid #333" }}>
+            <div style={{ color: "#00d4ff", fontWeight: "bold", marginBottom: "4px" }}>UUID Comparison</div>
+            <div style={{ fontSize: "9px" }}>
+              <div style={{ marginBottom: "4px" }}>
+                <span style={{ color: "#888" }}>Your user.id: </span>
+                <span style={{ color: userId ? "#4eff4e" : "#ff6b6b" }}>{userId ?? "(not set)"}</span>
+              </div>
+              {result.exchanges && result.exchanges.length > 0 && (
+                <>
+                  <div style={{ marginBottom: "4px" }}>
+                    <span style={{ color: "#888" }}>First exchange submitter: </span>
+                    <span style={{ color: result.exchanges[0]?.submittedByPerson?.__identity === userId ? "#4eff4e" : "#ffaa00" }}>
+                      {result.exchanges[0]?.submittedByPerson?.__identity ?? "(not set)"}
+                    </span>
+                  </div>
+                  <div style={{ color: result.exchanges[0]?.submittedByPerson?.__identity === userId ? "#4eff4e" : "#ff6b6b" }}>
+                    {result.exchanges[0]?.submittedByPerson?.__identity === userId ? "✓ UUIDs match" : "✗ UUIDs differ"}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      <div style={{ marginTop: "8px", color: "#666", fontSize: "8px" }}>
+        Tip: If "mine" tab shows no games, your user.id may not match the submittedByPerson.__identity format.
+      </div>
+    </div>
+  );
+}
+
+interface PersonDetailsFetchResult {
+  status: FetchStatus;
+  person?: {
+    __identity?: string;
+    firstName?: string;
+    lastName?: string;
+    displayName?: string;
+    svNumber?: number;
+    birthday?: string;
+    age?: number;
+    gender?: string;
+    correspondenceLanguage?: string;
+    nationality?: { name?: string; shortName?: string };
+    primaryEmailAddress?: { emailAddress?: string };
+    primaryPhoneNumber?: { phoneNumber?: string };
+    primaryPostalAddress?: {
+      addressLine1?: string;
+      addressLine2?: string;
+      zipCode?: string;
+      city?: string;
+      country?: { name?: string };
+    };
+    activeRoleIdentifier?: string;
+    postalAddresses?: Array<{
+      addressLine1?: string;
+      addressLine2?: string;
+      zipCode?: string;
+      city?: string;
+      country?: { name?: string };
+      type?: string;
+    }>;
+    emailAddresses?: Array<{ emailAddress?: string; type?: string }>;
+    phoneNumbers?: Array<{ phoneNumber?: string; type?: string }>;
+  };
+  error?: string;
+}
+
+function PersonDetailsSection({ isDemoMode }: { isDemoMode: boolean }) {
+  const [result, setResult] = useState<PersonDetailsFetchResult>({ status: "idle" });
+  const { copied, handleCopy } = useCopyWithFeedback();
+
+  const handleFetch = async () => {
+    if (isDemoMode) {
+      setResult({
+        status: "error",
+        error: "Person details fetch not available in demo mode",
+      });
+      return;
+    }
+
+    setResult({ status: "loading" });
+
+    try {
+      const response = await fetch(
+        `${API_BASE}/sportmanager.volleyball/api%5cperson/showWithNestedObjects`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json() as { person?: PersonDetailsFetchResult["person"] };
+
+      setResult({
+        status: "success",
+        person: data.person,
+      });
+    } catch (error) {
+      setResult({
+        status: "error",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  };
+
+  const person = result.person;
+
+  return (
+    <div style={{ fontSize: "10px" }}>
+      <div style={{ marginBottom: "8px" }}>
+        <button
+          onClick={handleFetch}
+          disabled={result.status === "loading"}
+          aria-busy={result.status === "loading"}
+          style={{
+            padding: "6px 12px",
+            fontSize: "10px",
+            cursor: result.status === "loading" ? "wait" : "pointer",
+            backgroundColor: "#1a3a1a",
+            border: "1px solid #2a5a2a",
+            color: "#4eff4e",
+            borderRadius: "4px",
+          }}
+        >
+          {result.status === "loading" ? "Fetching..." : "Fetch My Profile (Live API)"}
+        </button>
+      </div>
+
+      {result.status === "error" && (
+        <div style={{ color: "#ff6b6b", padding: "4px", backgroundColor: "#2e0a0a", borderRadius: "4px", marginBottom: "8px" }}>
+          Error: {result.error}
+        </div>
+      )}
+
+      {result.status === "success" && person && (
+        <div>
+          {/* Identity */}
+          <div style={{ marginBottom: "8px", padding: "8px", backgroundColor: "#111122", borderRadius: "4px", border: "1px solid #333" }}>
+            <div style={{ color: "#00d4ff", fontWeight: "bold", marginBottom: "4px" }}>Identity</div>
+            <table style={{ width: "100%", fontSize: "9px", borderCollapse: "collapse" }}>
+              <tbody>
+                <PersonDetailRow label="UUID" value={person.__identity} onCopy={handleCopy} copied={copied} copyKey="uuid" />
+                <PersonDetailRow label="Name" value={person.displayName ?? `${person.firstName ?? ""} ${person.lastName ?? ""}`} />
+                <PersonDetailRow label="SV Number" value={person.svNumber?.toString()} onCopy={handleCopy} copied={copied} copyKey="svNumber" />
+                <PersonDetailRow label="Birthday" value={person.birthday ? new Date(person.birthday).toLocaleDateString() : undefined} />
+                <PersonDetailRow label="Age" value={person.age?.toString()} />
+                <PersonDetailRow label="Gender" value={person.gender === "m" ? "Male" : person.gender === "f" ? "Female" : undefined} />
+                <PersonDetailRow label="Nationality" value={person.nationality?.name} />
+                <PersonDetailRow label="Language" value={person.correspondenceLanguage?.toUpperCase()} />
+                <PersonDetailRow label="Active Role" value={person.activeRoleIdentifier?.split(":").pop()} />
+              </tbody>
+            </table>
+          </div>
+
+          {/* Contact Info */}
+          <div style={{ marginBottom: "8px", padding: "8px", backgroundColor: "#111122", borderRadius: "4px", border: "1px solid #333" }}>
+            <div style={{ color: "#00d4ff", fontWeight: "bold", marginBottom: "4px" }}>Contact</div>
+            <table style={{ width: "100%", fontSize: "9px", borderCollapse: "collapse" }}>
+              <tbody>
+                <PersonDetailRow label="Email" value={person.primaryEmailAddress?.emailAddress} onCopy={handleCopy} copied={copied} copyKey="email" />
+                <PersonDetailRow label="Phone" value={person.primaryPhoneNumber?.phoneNumber} onCopy={handleCopy} copied={copied} copyKey="phone" />
+                {person.emailAddresses && person.emailAddresses.length > 1 && (
+                  <tr style={{ borderBottom: "1px solid #222" }}>
+                    <td style={{ padding: "2px 4px", color: "#888", verticalAlign: "top" }}>Other Emails</td>
+                    <td style={{ padding: "2px 4px", color: "#e0e0e0" }}>
+                      {person.emailAddresses.slice(1).map((e, i) => (
+                        <div key={i}>{e.emailAddress}</div>
+                      ))}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Address */}
+          {person.primaryPostalAddress && (
+            <div style={{ marginBottom: "8px", padding: "8px", backgroundColor: "#111122", borderRadius: "4px", border: "1px solid #333" }}>
+              <div style={{ color: "#00d4ff", fontWeight: "bold", marginBottom: "4px" }}>Primary Address</div>
+              <div style={{ fontSize: "9px", color: "#e0e0e0" }}>
+                {person.primaryPostalAddress.addressLine1 && <div>{person.primaryPostalAddress.addressLine1}</div>}
+                {person.primaryPostalAddress.addressLine2 && <div>{person.primaryPostalAddress.addressLine2}</div>}
+                <div>
+                  {person.primaryPostalAddress.zipCode} {person.primaryPostalAddress.city}
+                </div>
+                {person.primaryPostalAddress.country?.name && <div>{person.primaryPostalAddress.country.name}</div>}
+              </div>
+            </div>
+          )}
+
+          {/* Other Addresses */}
+          {person.postalAddresses && person.postalAddresses.length > 1 && (
+            <div style={{ padding: "8px", backgroundColor: "#111122", borderRadius: "4px", border: "1px solid #333" }}>
+              <div style={{ color: "#888", fontWeight: "bold", marginBottom: "4px" }}>Other Addresses ({person.postalAddresses.length - 1})</div>
+              {person.postalAddresses.slice(1).map((addr, i) => (
+                <div key={i} style={{ fontSize: "8px", color: "#666", marginBottom: "4px" }}>
+                  {addr.type && <span style={{ color: "#ffaa00" }}>[{addr.type}] </span>}
+                  {addr.addressLine1}, {addr.zipCode} {addr.city}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {result.status === "success" && !person && (
+        <div style={{ color: "#ff6b6b" }}>No person data returned from API</div>
+      )}
+    </div>
+  );
+}
+
+function PersonDetailRow({
+  label,
+  value,
+  onCopy,
+  copied,
+  copyKey,
+}: {
+  label: string;
+  value?: string;
+  onCopy?: (value: string, key: string) => void;
+  copied?: string | null;
+  copyKey?: string;
+}) {
+  if (!value) return null;
+
+  return (
+    <tr style={{ borderBottom: "1px solid #222" }}>
+      <td style={{ padding: "2px 4px", color: "#888", width: "30%" }}>{label}</td>
+      <td style={{ padding: "2px 4px", color: "#e0e0e0" }}>
+        <span style={{ wordBreak: "break-all" }}>{value}</span>
+        {onCopy && copyKey && (
+          <button
+            onClick={() => onCopy(value, copyKey)}
+            style={{
+              marginLeft: "8px",
+              padding: "1px 4px",
+              fontSize: "8px",
+              backgroundColor: copied === copyKey ? "#0a2e0a" : "#1a1a2e",
+              border: `1px solid ${copied === copyKey ? "#1a5e1a" : "#333"}`,
+              color: copied === copyKey ? "#4eff4e" : "#666",
+              borderRadius: "2px",
+              cursor: "pointer",
+            }}
+          >
+            {copied === copyKey ? "✓" : "Copy"}
+          </button>
+        )}
+      </td>
+    </tr>
+  );
+}
+
 function DebugHeader({ onRefresh, onClose }: { onRefresh: () => void; onClose: () => void }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px", borderBottom: "1px solid #333", paddingBottom: "4px" }}>
-      <strong style={{ color: "#00d4ff", fontSize: "11px" }}>Association Debug Panel</strong>
+      <strong style={{ color: "#00d4ff", fontSize: "11px" }}>VolleyKit Debug Panel</strong>
       <div style={{ display: "flex", gap: "8px" }}>
         <button
           onClick={onRefresh}
@@ -710,7 +1290,7 @@ function HydrationTimeline({
 const RAW_MATCH_PREVIEW_LENGTH = 500;
 
 interface FetchResult {
-  status: "idle" | "loading" | "success" | "error";
+  status: FetchStatus;
   httpStatus?: number;
   htmlLength?: number;
   hasScriptPattern?: boolean;
