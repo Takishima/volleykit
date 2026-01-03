@@ -9,6 +9,12 @@ const BASE_PATH = process.env.VITE_BASE_PATH || '/ocr-poc/';
 const SECONDS_PER_DAY = 60 * 60 * 24;
 const CACHE_MAX_AGE_DAYS = 7;
 
+// OCR service caching constants
+const API_CACHE_MAX_ENTRIES = 20;
+const MODEL_CACHE_MAX_ENTRIES = 10;
+const NETWORK_TIMEOUT_SECONDS = 10;
+const MODEL_CACHE_MAX_AGE_DAYS = 30;
+
 export default defineConfig({
   base: BASE_PATH,
   plugins: [
@@ -43,10 +49,13 @@ export default defineConfig({
             options: {
               cacheName: 'ocr-google-vision-api',
               expiration: {
-                maxEntries: 20,
-                maxAgeSeconds: SECONDS_PER_DAY, // Cache for 1 day
+                maxEntries: API_CACHE_MAX_ENTRIES,
+                maxAgeSeconds: SECONDS_PER_DAY,
               },
-              networkTimeoutSeconds: 10,
+              networkTimeoutSeconds: NETWORK_TIMEOUT_SECONDS,
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
             },
           },
           {
@@ -56,10 +65,13 @@ export default defineConfig({
             options: {
               cacheName: 'ocr-aws-textract-api',
               expiration: {
-                maxEntries: 20,
+                maxEntries: API_CACHE_MAX_ENTRIES,
                 maxAgeSeconds: SECONDS_PER_DAY,
               },
-              networkTimeoutSeconds: 10,
+              networkTimeoutSeconds: NETWORK_TIMEOUT_SECONDS,
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
             },
           },
           {
@@ -70,8 +82,8 @@ export default defineConfig({
             options: {
               cacheName: 'ocr-model-files',
               expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: SECONDS_PER_DAY * 30, // Cache models for 30 days
+                maxEntries: MODEL_CACHE_MAX_ENTRIES,
+                maxAgeSeconds: SECONDS_PER_DAY * MODEL_CACHE_MAX_AGE_DAYS,
               },
               cacheableResponse: {
                 statuses: [0, 200],
