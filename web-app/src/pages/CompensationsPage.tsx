@@ -71,6 +71,9 @@ export function CompensationsPage() {
   // Calculate season date range for filtering
   const seasonRange = useMemo(() => getSeasonDateRange(), []);
 
+  // Memoize current date to avoid recreating on every render
+  const now = useMemo(() => new Date(), []);
+
   // When tour is active (or about to auto-start), show ONLY the dummy compensation
   // to ensure tour works regardless of whether tabs have real data
   const data = useMemo(() => {
@@ -83,7 +86,6 @@ export function CompensationsPage() {
     if (!rawData) return rawData;
 
     // Apply filters - always filter to current season since the app is only useful for current season
-    const now = new Date();
     return rawData.filter((record) => {
       const dateString = record.refereeGame?.game?.startingDateTime;
       if (!dateString) return true; // Keep items without dates
@@ -102,7 +104,7 @@ export function CompensationsPage() {
 
       return true;
     });
-  }, [showDummyData, rawData, hideFutureItems, seasonRange]);
+  }, [showDummyData, rawData, hideFutureItems, seasonRange, now]);
 
   // Group compensations by week for visual separation
   const groupedData = useMemo(() => {
@@ -256,7 +258,11 @@ export function CompensationsPage() {
       />
 
       {/* Filter to hide future items */}
-      <div className="flex flex-wrap gap-2">
+      <div
+        role="group"
+        aria-label={t("compensations.filters")}
+        className="flex flex-wrap gap-2"
+      >
         <FilterChip
           active={hideFutureItems}
           onToggle={toggleHideFutureItems}

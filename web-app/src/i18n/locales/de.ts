@@ -246,6 +246,7 @@ const de: Translations = {
       "Entschädigungseintrag nicht gefunden. Das Spiel liegt möglicherweise zu weit in der Zukunft.",
     compensationMissingId:
       "Entschädigungseintrag hat keine Kennung. Bitte versuchen Sie es später erneut.",
+    filters: "Filter",
     hideFutureItems: "Zukünftige ausblenden",
   },
   exchange: {
