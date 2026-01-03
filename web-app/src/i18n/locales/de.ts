@@ -317,6 +317,7 @@ const de: Translations = {
   settings: {
     title: "Einstellungen",
     profile: "Profil",
+    svNumber: "SV-Nummer",
     language: "Sprache",
     homeLocation: {
       title: "Heimatstandort",

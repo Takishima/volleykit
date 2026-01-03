@@ -54,9 +54,12 @@ function mockAuthStore(overrides = {}) {
     isDemoMode: false,
     ...overrides,
   };
-  vi.mocked(authStore.useAuthStore).mockReturnValue(
-    state as ReturnType<typeof authStore.useAuthStore>,
-  );
+  vi.mocked(authStore.useAuthStore).mockImplementation((selector?: unknown) => {
+    if (typeof selector === "function") {
+      return selector(state);
+    }
+    return state as ReturnType<typeof authStore.useAuthStore>;
+  });
 }
 
 function mockSettingsStore(overrides = {}) {

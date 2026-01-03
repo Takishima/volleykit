@@ -316,6 +316,7 @@ const fr: Translations = {
   settings: {
     title: "Paramètres",
     profile: "Profil",
+    svNumber: "N° SV",
     language: "Langue",
     homeLocation: {
       title: "Emplacement domicile",
