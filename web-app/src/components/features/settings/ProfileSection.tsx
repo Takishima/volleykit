@@ -12,13 +12,17 @@ interface ProfileSectionProps {
   user: UserProfile;
 }
 
-interface PersonProfileResponse {
+interface PersonProfile {
   profilePicture?: {
     publicResourceUri?: string;
   };
   svNumber?: number;
   firstName?: string;
   lastName?: string;
+}
+
+interface PersonProfileResponse {
+  person?: PersonProfile;
 }
 
 const DEMO_SV_NUMBER = 12345;
@@ -72,17 +76,18 @@ function ProfileSectionComponent({ user }: ProfileSectionProps) {
 
         if (response.ok) {
           const data: PersonProfileResponse = await response.json();
-          if (data.profilePicture?.publicResourceUri) {
-            setProfilePictureUrl(data.profilePicture.publicResourceUri);
+          const person = data.person;
+          if (person?.profilePicture?.publicResourceUri) {
+            setProfilePictureUrl(person.profilePicture.publicResourceUri);
           }
-          if (data.svNumber) {
-            setSvNumber(data.svNumber);
+          if (person?.svNumber) {
+            setSvNumber(person.svNumber);
           }
-          if (data.firstName) {
-            setFirstName(data.firstName);
+          if (person?.firstName) {
+            setFirstName(person.firstName);
           }
-          if (data.lastName) {
-            setLastName(data.lastName);
+          if (person?.lastName) {
+            setLastName(person.lastName);
           }
         }
       } catch (error) {
