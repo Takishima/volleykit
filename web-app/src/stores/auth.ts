@@ -38,6 +38,7 @@ export interface UserProfile {
   lastName: string;
   email?: string;
   occupations: Occupation[];
+  profilePictureUrl?: string;
 }
 
 export interface Occupation {

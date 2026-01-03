@@ -533,8 +533,20 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get referee data by person
-         * @description Retrieves referee-specific data for the specified person
+         * Get referee profile data by person
+         * @description Retrieves comprehensive referee-specific data for the specified person.
+         *     This endpoint returns detailed referee profile information including:
+         *
+         *     - **Referee identification**: refereeInformation, jerseyNumber, validated status
+         *     - **Certifications**: dateOfFirstRefereeCertification, hasLinesmanCertification, isInternationalReferee
+         *     - **Contact info**: mobilePhoneNumbers, fixnetPhoneNumbers, privatePostalAddresses, businessPostalAddresses
+         *     - **Payment info**: paymentConnections array with full IBAN, payee, and postal address details
+         *     - **Transportation**: transportationMode (car, train, public_transport)
+         *     - **Settings**: showPhoneNumberForTwintPaymentOnRefereeStatementOfExpenses
+         *     - **Permissions**: _permissions object indicating CRUD permissions for each field
+         *
+         *     **Note**: The response includes nested payment connection data with full payeePostalAddress
+         *     objects containing country, countrySubdivision, and geographicalLocation details.
          */
         get: operations["getIndoorRefereeByActivePerson"];
         put?: never;
@@ -4884,7 +4896,7 @@ export interface operations {
         parameters: {
             query: {
                 /**
-                 * @description The person identifier
+                 * @description The person identifier (UUID)
                  * @example aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
                  */
                 person: string;
@@ -4895,7 +4907,10 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Successful response */
+            /**
+             * @description Referee profile data retrieved successfully.
+             *     Returns the full IndoorReferee object with all available fields.
+             */
             200: {
                 headers: {
                     [name: string]: unknown;

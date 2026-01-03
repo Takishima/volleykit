@@ -791,6 +791,39 @@ interface PersonDetailsFetchResult {
     }>;
     emailAddresses?: Array<{ emailAddress?: string; type?: string }>;
     phoneNumbers?: Array<{ phoneNumber?: string; type?: string }>;
+    hasProfilePicture?: boolean;
+    profilePicture?: {
+      __identity?: string;
+      publicResourceUri?: string;
+    };
+  };
+  rawResponse?: unknown;
+  error?: string;
+}
+
+interface RefereeProfileFetchResult {
+  status: FetchStatus;
+  referee?: {
+    __identity?: string;
+    refereeInformation?: string;
+    transportationMode?: string;
+    validated?: boolean;
+    isInternationalReferee?: boolean;
+    hasLinesmanCertification?: boolean;
+    mobilePhoneNumbers?: string;
+    fixnetPhoneNumbers?: string;
+    privatePostalAddresses?: string;
+    businessPostalAddresses?: string;
+    dateOfFirstRefereeCertification?: string;
+    hasPlusCode?: boolean;
+    showPhoneNumberForTwintPaymentOnRefereeStatementOfExpenses?: boolean;
+    paymentConnections?: Array<{
+      __identity?: string;
+      iban?: string;
+      payee?: string;
+      isPrimaryPaymentConnection?: boolean;
+      type?: string;
+    }>;
   };
   rawResponse?: unknown;
   error?: string;
@@ -798,6 +831,7 @@ interface PersonDetailsFetchResult {
 
 function PersonDetailsSection({ isDemoMode, userId }: { isDemoMode: boolean; userId?: string }) {
   const [result, setResult] = useState<PersonDetailsFetchResult>({ status: "idle" });
+  const [refereeResult, setRefereeResult] = useState<RefereeProfileFetchResult>({ status: "idle" });
   const { copied, handleCopy } = useCopyWithFeedback();
 
   const handleFetch = async () => {
@@ -851,6 +885,9 @@ function PersonDetailsSection({ isDemoMode, userId }: { isDemoMode: boolean; use
         "postalAddresses",
         "emailAddresses",
         "phoneNumbers",
+        "hasProfilePicture",
+        "profilePicture",
+        "profilePicture.publicResourceUri",
       ];
       properties.forEach((prop, index) => {
         queryParams.append(`propertyRenderConfiguration[${index}]`, prop);
@@ -886,7 +923,58 @@ function PersonDetailsSection({ isDemoMode, userId }: { isDemoMode: boolean; use
     }
   };
 
+  const handleFetchReferee = async () => {
+    if (isDemoMode) {
+      setRefereeResult({
+        status: "error",
+        error: "Referee profile fetch not available in demo mode",
+      });
+      return;
+    }
+
+    if (!userId) {
+      setRefereeResult({
+        status: "error",
+        error: "User ID not available - please ensure you are logged in",
+      });
+      return;
+    }
+
+    setRefereeResult({ status: "loading" });
+
+    try {
+      const response = await fetch(
+        `${API_BASE}/indoorvolleyball.refadmin/api%5Cindoorreferee/getIndoorRefereeByActivePerson?person=${userId}`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            Accept: "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json() as RefereeProfileFetchResult["referee"];
+
+      setRefereeResult({
+        status: "success",
+        referee: data,
+        rawResponse: data,
+      });
+    } catch (error) {
+      setRefereeResult({
+        status: "error",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  };
+
   const person = result.person;
+  const referee = refereeResult.referee;
 
   return (
     <div style={{ fontSize: "10px" }}>
@@ -937,19 +1025,44 @@ function PersonDetailsSection({ isDemoMode, userId }: { isDemoMode: boolean; use
           {/* Identity */}
           <div style={{ marginBottom: "8px", padding: "8px", backgroundColor: "#111122", borderRadius: "4px", border: "1px solid #333" }}>
             <div style={{ color: "#00d4ff", fontWeight: "bold", marginBottom: "4px" }}>Identity</div>
-            <table style={{ width: "100%", fontSize: "9px", borderCollapse: "collapse" }}>
-              <tbody>
-                <PersonDetailRow label="UUID" value={person.__identity} onCopy={handleCopy} copied={copied} copyKey="uuid" />
-                <PersonDetailRow label="Name" value={person.displayName ?? `${person.firstName ?? ""} ${person.lastName ?? ""}`} />
-                <PersonDetailRow label="SV Number" value={person.svNumber?.toString()} onCopy={handleCopy} copied={copied} copyKey="svNumber" />
-                <PersonDetailRow label="Birthday" value={person.birthday ? new Date(person.birthday).toLocaleDateString() : undefined} />
-                <PersonDetailRow label="Age" value={person.age?.toString()} />
-                <PersonDetailRow label="Gender" value={person.gender === "m" ? "Male" : person.gender === "f" ? "Female" : undefined} />
-                <PersonDetailRow label="Nationality" value={person.nationality?.name} />
-                <PersonDetailRow label="Language" value={person.correspondenceLanguage?.toUpperCase()} />
-                <PersonDetailRow label="Active Role" value={person.activeRoleIdentifier?.split(":").pop()} />
-              </tbody>
-            </table>
+            <div style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
+              {/* Profile Picture */}
+              {person.hasProfilePicture && person.profilePicture?.publicResourceUri && (
+                <div style={{ flexShrink: 0 }}>
+                  <img
+                    src={person.profilePicture.publicResourceUri}
+                    alt="Profile"
+                    style={{
+                      width: "64px",
+                      height: "64px",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      border: "2px solid #333",
+                    }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                </div>
+              )}
+              <table style={{ width: "100%", fontSize: "9px", borderCollapse: "collapse" }}>
+                <tbody>
+                  <PersonDetailRow label="UUID" value={person.__identity} onCopy={handleCopy} copied={copied} copyKey="uuid" />
+                  <PersonDetailRow label="Name" value={person.displayName ?? `${person.firstName ?? ""} ${person.lastName ?? ""}`} />
+                  <PersonDetailRow label="SV Number" value={person.svNumber?.toString()} onCopy={handleCopy} copied={copied} copyKey="svNumber" />
+                  <PersonDetailRow label="Birthday" value={person.birthday ? new Date(person.birthday).toLocaleDateString() : undefined} />
+                  <PersonDetailRow label="Age" value={person.age?.toString()} />
+                  <PersonDetailRow label="Gender" value={person.gender === "m" ? "Male" : person.gender === "f" ? "Female" : undefined} />
+                  <PersonDetailRow label="Nationality" value={person.nationality?.name} />
+                  <PersonDetailRow label="Language" value={person.correspondenceLanguage?.toUpperCase()} />
+                  <PersonDetailRow label="Active Role" value={person.activeRoleIdentifier?.split(":").pop()} />
+                  <PersonDetailRow label="Has Picture" value={person.hasProfilePicture ? "Yes" : "No"} />
+                  {person.profilePicture?.publicResourceUri && (
+                    <PersonDetailRow label="Picture URL" value={person.profilePicture.publicResourceUri} onCopy={handleCopy} copied={copied} copyKey="pictureUrl" />
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* Contact Info */}
@@ -1006,6 +1119,106 @@ function PersonDetailsSection({ isDemoMode, userId }: { isDemoMode: boolean; use
       {result.status === "success" && !person && (
         <div style={{ color: "#ff6b6b" }}>No person data returned from API</div>
       )}
+
+      {/* Referee Profile Section */}
+      <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid #333" }}>
+        <div style={{ marginBottom: "8px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          <button
+            onClick={handleFetchReferee}
+            disabled={refereeResult.status === "loading"}
+            aria-busy={refereeResult.status === "loading"}
+            style={{
+              padding: "6px 12px",
+              fontSize: "10px",
+              cursor: refereeResult.status === "loading" ? "wait" : "pointer",
+              backgroundColor: "#1a2a3a",
+              border: "1px solid #2a4a6a",
+              color: "#4ecfff",
+              borderRadius: "4px",
+            }}
+          >
+            {refereeResult.status === "loading" ? "Fetching..." : "Fetch Referee Profile (Live API)"}
+          </button>
+          {refereeResult.status === "success" && refereeResult.rawResponse !== undefined && (
+            <button
+              onClick={() => handleCopy(JSON.stringify(refereeResult.rawResponse, null, 2), "refereeResponse")}
+              aria-label="Copy referee response to clipboard"
+              style={{
+                padding: "6px 12px",
+                fontSize: "10px",
+                cursor: "pointer",
+                backgroundColor: copied === "refereeResponse" ? "#0a2e0a" : "#1a1a2e",
+                border: `1px solid ${copied === "refereeResponse" ? "#1a5e1a" : "#444"}`,
+                color: copied === "refereeResponse" ? "#4eff4e" : "#888",
+                borderRadius: "4px",
+              }}
+            >
+              {copied === "refereeResponse" ? "Copied!" : "Copy Response"}
+            </button>
+          )}
+        </div>
+
+        {refereeResult.status === "error" && (
+          <div style={{ color: "#ff6b6b", padding: "4px", backgroundColor: "#2e0a0a", borderRadius: "4px", marginBottom: "8px" }}>
+            Error: {refereeResult.error}
+          </div>
+        )}
+
+        {refereeResult.status === "success" && referee && (
+          <div>
+            {/* Referee Info */}
+            <div style={{ marginBottom: "8px", padding: "8px", backgroundColor: "#111122", borderRadius: "4px", border: "1px solid #333" }}>
+              <div style={{ color: "#4ecfff", fontWeight: "bold", marginBottom: "4px" }}>Referee Profile</div>
+              <table style={{ width: "100%", fontSize: "9px", borderCollapse: "collapse" }}>
+                <tbody>
+                  <PersonDetailRow label="UUID" value={referee.__identity} onCopy={handleCopy} copied={copied} copyKey="refereeUuid" />
+                  <PersonDetailRow label="Info" value={referee.refereeInformation} />
+                  <PersonDetailRow label="Transport" value={referee.transportationMode} />
+                  <PersonDetailRow label="Validated" value={referee.validated ? "Yes" : "No"} />
+                  <PersonDetailRow label="International" value={referee.isInternationalReferee ? "Yes" : "No"} />
+                  <PersonDetailRow label="Linesman Cert" value={referee.hasLinesmanCertification ? "Yes" : "No"} />
+                  <PersonDetailRow label="Has Plus Code" value={referee.hasPlusCode ? "Yes" : "No"} />
+                  <PersonDetailRow label="TWINT Phone Visible" value={referee.showPhoneNumberForTwintPaymentOnRefereeStatementOfExpenses ? "Yes" : "No"} />
+                  <PersonDetailRow label="First Cert Date" value={referee.dateOfFirstRefereeCertification ? new Date(referee.dateOfFirstRefereeCertification).toLocaleDateString() : undefined} />
+                </tbody>
+              </table>
+            </div>
+
+            {/* Contact Info */}
+            <div style={{ marginBottom: "8px", padding: "8px", backgroundColor: "#111122", borderRadius: "4px", border: "1px solid #333" }}>
+              <div style={{ color: "#4ecfff", fontWeight: "bold", marginBottom: "4px" }}>Contact</div>
+              <table style={{ width: "100%", fontSize: "9px", borderCollapse: "collapse" }}>
+                <tbody>
+                  <PersonDetailRow label="Mobile" value={referee.mobilePhoneNumbers} onCopy={handleCopy} copied={copied} copyKey="refereeMobile" />
+                  <PersonDetailRow label="Landline" value={referee.fixnetPhoneNumbers} />
+                  <PersonDetailRow label="Private Address" value={referee.privatePostalAddresses} />
+                  <PersonDetailRow label="Business Address" value={referee.businessPostalAddresses} />
+                </tbody>
+              </table>
+            </div>
+
+            {/* Payment Connections */}
+            {referee.paymentConnections && referee.paymentConnections.length > 0 && (
+              <div style={{ padding: "8px", backgroundColor: "#111122", borderRadius: "4px", border: "1px solid #333" }}>
+                <div style={{ color: "#4ecfff", fontWeight: "bold", marginBottom: "4px" }}>Payment Connections ({referee.paymentConnections.length})</div>
+                {referee.paymentConnections.map((pc) => (
+                  <div key={pc.__identity} style={{ fontSize: "9px", marginBottom: "4px", padding: "4px", backgroundColor: "#0a0a15", borderRadius: "2px" }}>
+                    <div style={{ color: pc.isPrimaryPaymentConnection ? "#4eff4e" : "#888" }}>
+                      {pc.isPrimaryPaymentConnection && <span style={{ marginRight: "4px" }}>★</span>}
+                      {pc.payee} ({pc.type})
+                    </div>
+                    <div style={{ color: "#666", fontSize: "8px" }}>{pc.iban}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {refereeResult.status === "success" && !referee && (
+          <div style={{ color: "#ff6b6b" }}>No referee data returned from API</div>
+        )}
+      </div>
     </div>
   );
 }
