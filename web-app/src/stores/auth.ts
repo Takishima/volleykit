@@ -359,12 +359,40 @@ export const useAuthStore = create<AuthState>()(
 
               clearTimeout(timeoutId);
 
+              // Detect stale session: if the server redirected us to the login page,
+              // the session is invalid. This commonly happens when session cookies
+              // expire but the app still has persisted auth state.
+              if (response.url) {
+                const pathname = new URL(response.url).pathname.toLowerCase();
+                const isLoginPage = pathname === "/login" || pathname.endsWith("/login");
+                if (isLoginPage) {
+                  logger.info("Session check: redirected to login page, session is stale");
+                  clearSession();
+                  set({ status: "idle", user: null, csrfToken: null });
+                  resolvePromise(false);
+                  return;
+                }
+              }
+
               if (response.ok) {
                 const dashboardHtml = await response.text();
                 const csrfToken = extractCsrfTokenFromPage(dashboardHtml);
+
+                // If we can't find a CSRF token and don't have one stored,
+                // the session is invalid (dashboard pages always have CSRF tokens).
+                // This catches cases where the server might return an error page
+                // or the session is in an inconsistent state.
+                const currentState = get();
+                if (!csrfToken && !currentState.csrfToken) {
+                  logger.info("Session check: no CSRF token found, session is invalid");
+                  clearSession();
+                  set({ status: "idle", user: null, csrfToken: null });
+                  resolvePromise(false);
+                  return;
+                }
+
                 const activeParty = extractActivePartyFromHtml(dashboardHtml);
 
-                const currentState = get();
                 const { user, activeOccupationId } = deriveUserWithOccupations(
                   activeParty,
                   currentState.user,
