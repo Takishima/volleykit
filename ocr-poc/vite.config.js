@@ -34,7 +34,50 @@ export default defineConfig({
               },
             },
           },
-          // TODO: Add caching rules for external OCR service assets when integrated
+          // External OCR service caching rules
+          {
+            // Google Cloud Vision API responses
+            // Uses NetworkFirst since OCR results are dynamic, but cache for offline fallback
+            urlPattern: /^https:\/\/vision\.googleapis\.com\//,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'ocr-google-vision-api',
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: SECONDS_PER_DAY, // Cache for 1 day
+              },
+              networkTimeoutSeconds: 10,
+            },
+          },
+          {
+            // AWS Textract API responses
+            urlPattern: /^https:\/\/textract\.[a-z0-9-]+\.amazonaws\.com\//,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'ocr-aws-textract-api',
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: SECONDS_PER_DAY,
+              },
+              networkTimeoutSeconds: 10,
+            },
+          },
+          {
+            // PaddleOCR or other self-hosted OCR model files (WASM, ONNX, etc.)
+            // These static assets can be cached aggressively
+            urlPattern: /\.(wasm|onnx|bin|pb|pth|pt|weights)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'ocr-model-files',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: SECONDS_PER_DAY * 30, // Cache models for 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
         ],
       },
       manifest: {
