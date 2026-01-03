@@ -36,7 +36,6 @@ export interface Translations {
     unknownDate: string;
     currencyChf: string;
     distanceUnit: string;
-    carDistance: string;
     minutesUnit: string;
     hoursUnit: string;
     dismissNotification: string;
