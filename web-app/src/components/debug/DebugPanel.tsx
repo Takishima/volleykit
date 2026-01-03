@@ -575,8 +575,8 @@ function ExchangeDebugSection({ userId, isDemoMode }: { userId?: string; isDemoM
       // Fetch exchanges from the API
       const csrfToken = getCsrfToken();
       const bodyParams = new URLSearchParams({
-        "configuration[offset]": "0",
-        "configuration[limit]": "10",
+        "searchConfiguration[offset]": "0",
+        "searchConfiguration[limit]": "10",
       });
       if (csrfToken) {
         bodyParams.append("__csrfToken", csrfToken);
@@ -588,6 +588,7 @@ function ExchangeDebugSection({ userId, isDemoMode }: { userId?: string; isDemoM
           method: "POST",
           credentials: "include",
           headers: {
+            Accept: "application/json",
             "Content-Type": "application/x-www-form-urlencoded",
           },
           body: bodyParams,
@@ -846,6 +847,9 @@ function PersonDetailsSection({ isDemoMode, userId }: { isDemoMode: boolean; use
         {
           method: "GET",
           credentials: "include",
+          headers: {
+            Accept: "application/json",
+          },
         }
       );
 
