@@ -9,6 +9,12 @@ const BASE_PATH = process.env.VITE_BASE_PATH || '/ocr-poc/';
 const SECONDS_PER_DAY = 60 * 60 * 24;
 const CACHE_MAX_AGE_DAYS = 7;
 
+// OCR service caching constants
+const API_CACHE_MAX_ENTRIES = 20;
+const MODEL_CACHE_MAX_ENTRIES = 10;
+const NETWORK_TIMEOUT_SECONDS = 10;
+const MODEL_CACHE_MAX_AGE_DAYS = 30;
+
 export default defineConfig({
   base: BASE_PATH,
   plugins: [
@@ -34,7 +40,56 @@ export default defineConfig({
               },
             },
           },
-          // TODO: Add caching rules for external OCR service assets when integrated
+          // External OCR service caching rules
+          {
+            // Google Cloud Vision API responses
+            // Uses NetworkFirst since OCR results are dynamic, but cache for offline fallback
+            urlPattern: /^https:\/\/vision\.googleapis\.com\//,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'ocr-google-vision-api',
+              expiration: {
+                maxEntries: API_CACHE_MAX_ENTRIES,
+                maxAgeSeconds: SECONDS_PER_DAY,
+              },
+              networkTimeoutSeconds: NETWORK_TIMEOUT_SECONDS,
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            // AWS Textract API responses
+            urlPattern: /^https:\/\/textract\.[a-z0-9-]+\.amazonaws\.com\//,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'ocr-aws-textract-api',
+              expiration: {
+                maxEntries: API_CACHE_MAX_ENTRIES,
+                maxAgeSeconds: SECONDS_PER_DAY,
+              },
+              networkTimeoutSeconds: NETWORK_TIMEOUT_SECONDS,
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            // PaddleOCR or other self-hosted OCR model files (WASM, ONNX, etc.)
+            // These static assets can be cached aggressively
+            urlPattern: /\.(wasm|onnx|bin|pb|pth|pt|weights)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'ocr-model-files',
+              expiration: {
+                maxEntries: MODEL_CACHE_MAX_ENTRIES,
+                maxAgeSeconds: SECONDS_PER_DAY * MODEL_CACHE_MAX_AGE_DAYS,
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
         ],
       },
       manifest: {
