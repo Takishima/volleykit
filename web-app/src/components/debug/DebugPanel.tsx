@@ -206,11 +206,6 @@ function copyToClipboard(text: string): Promise<boolean> {
   }
 }
 
-/** Copy JSON data to clipboard as formatted string */
-function copyJsonToClipboard(data: unknown): Promise<boolean> {
-  return copyToClipboard(JSON.stringify(data, null, 2));
-}
-
 export function DebugPanel() {
   const [persistedState, setPersistedState] = useState<PersistedState | null>(null);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["identity", "status"]));
@@ -563,6 +558,7 @@ interface ExchangeFetchResult {
 
 function ExchangeDebugSection({ userId, isDemoMode }: { userId?: string; isDemoMode: boolean }) {
   const [result, setResult] = useState<ExchangeFetchResult>({ status: "idle" });
+  const { copied, handleCopy } = useCopyWithFeedback();
 
   const handleFetch = async () => {
     if (isDemoMode) {
@@ -651,18 +647,19 @@ function ExchangeDebugSection({ userId, isDemoMode }: { userId?: string; isDemoM
         </button>
         {result.status === "success" && result.rawResponse !== undefined && (
           <button
-            onClick={() => { copyJsonToClipboard(result.rawResponse); }}
+            onClick={() => handleCopy(JSON.stringify(result.rawResponse, null, 2), "exchangeResponse")}
+            aria-label="Copy exchange response to clipboard"
             style={{
               padding: "6px 12px",
               fontSize: "10px",
               cursor: "pointer",
-              backgroundColor: "#1a1a2e",
-              border: "1px solid #444",
-              color: "#888",
+              backgroundColor: copied === "exchangeResponse" ? "#0a2e0a" : "#1a1a2e",
+              border: `1px solid ${copied === "exchangeResponse" ? "#1a5e1a" : "#444"}`,
+              color: copied === "exchangeResponse" ? "#4eff4e" : "#888",
               borderRadius: "4px",
             }}
           >
-            Copy Response
+            {copied === "exchangeResponse" ? "Copied!" : "Copy Response"}
           </button>
         )}
       </div>
@@ -894,18 +891,19 @@ function PersonDetailsSection({ isDemoMode, userId }: { isDemoMode: boolean; use
         </button>
         {result.status === "success" && result.rawResponse !== undefined && (
           <button
-            onClick={() => { copyJsonToClipboard(result.rawResponse); }}
+            onClick={() => handleCopy(JSON.stringify(result.rawResponse, null, 2), "profileResponse")}
+            aria-label="Copy profile response to clipboard"
             style={{
               padding: "6px 12px",
               fontSize: "10px",
               cursor: "pointer",
-              backgroundColor: "#1a1a2e",
-              border: "1px solid #444",
-              color: "#888",
+              backgroundColor: copied === "profileResponse" ? "#0a2e0a" : "#1a1a2e",
+              border: `1px solid ${copied === "profileResponse" ? "#1a5e1a" : "#444"}`,
+              color: copied === "profileResponse" ? "#4eff4e" : "#888",
               borderRadius: "4px",
             }}
           >
-            Copy Response
+            {copied === "profileResponse" ? "Copied!" : "Copy Response"}
           </button>
         )}
       </div>
@@ -1386,6 +1384,7 @@ interface FetchResult {
 
 function LiveDashboardFetch() {
   const [result, setResult] = useState<FetchResult>({ status: "idle" });
+  const { copied, handleCopy } = useCopyWithFeedback();
 
   const handleFetch = async () => {
     setResult({ status: "loading" });
@@ -1438,12 +1437,6 @@ function LiveDashboardFetch() {
     }
   };
 
-  const handleCopyActiveParty = async () => {
-    if (result.diagnostic?.activeParty) {
-      await copyToClipboard(JSON.stringify(result.diagnostic.activeParty, null, 2));
-    }
-  };
-
   return (
     <div>
       <div style={{ marginBottom: "8px", display: "flex", gap: "8px" }}>
@@ -1465,18 +1458,19 @@ function LiveDashboardFetch() {
         </button>
         {result.status === "success" && result.diagnostic?.activeParty && (
           <button
-            onClick={handleCopyActiveParty}
+            onClick={() => handleCopy(JSON.stringify(result.diagnostic?.activeParty, null, 2), "activeParty")}
+            aria-label="Copy activeParty data to clipboard"
             style={{
               padding: "6px 12px",
               fontSize: "10px",
               cursor: "pointer",
-              backgroundColor: "#1a1a2e",
-              border: "1px solid #444",
-              color: "#888",
+              backgroundColor: copied === "activeParty" ? "#0a2e0a" : "#1a1a2e",
+              border: `1px solid ${copied === "activeParty" ? "#1a5e1a" : "#444"}`,
+              color: copied === "activeParty" ? "#4eff4e" : "#888",
               borderRadius: "4px",
             }}
           >
-            Copy activeParty
+            {copied === "activeParty" ? "Copied!" : "Copy activeParty"}
           </button>
         )}
       </div>
