@@ -27,6 +27,7 @@ import {
   ACTIVE_PARTY_PATTERN,
   VUE_ACTIVE_PARTY_PATTERN,
 } from "@/utils/active-party-parser";
+import { getCsrfToken } from "@/api/form-serialization";
 import { useShallow } from "zustand/react/shallow";
 import { useState, useEffect, useCallback, useId, useRef } from "react";
 
@@ -254,7 +255,6 @@ export function DebugPanel() {
   }
 
   const occupationsCount = user?.occupations?.length ?? 0;
-  const dropdownShouldShow = occupationsCount >= MINIMUM_OCCUPATIONS_FOR_DROPDOWN;
   const groupedCount = groupedEligibleAttributeValues?.length ?? 0;
 
   // Persisted state analysis
@@ -309,7 +309,7 @@ export function DebugPanel() {
         expanded={expandedSections.has("profile")}
         onToggle={() => toggleSection("profile")}
       >
-        <PersonDetailsSection isDemoMode={isDemoMode} />
+        <PersonDetailsSection isDemoMode={isDemoMode} userId={user?.id} />
       </Section>
 
       {/* Exchange Debug - For diagnosing UUID matching issues */}
@@ -321,9 +321,6 @@ export function DebugPanel() {
       >
         <ExchangeDebugSection userId={user?.id} isDemoMode={isDemoMode} />
       </Section>
-
-      {/* Association Status */}
-      <StatusBanner dropdownShouldShow={dropdownShouldShow} occupationsCount={occupationsCount} />
 
       <DiscrepanciesAlert discrepancies={discrepancies} />
 
@@ -555,11 +552,13 @@ interface ExchangeFetchResult {
     submittedByPerson?: { __identity?: string; displayName?: string };
     refereeGame?: { game?: { startingDateTime?: string } };
   }>;
+  rawResponse?: unknown;
   error?: string;
 }
 
 function ExchangeDebugSection({ userId, isDemoMode }: { userId?: string; isDemoMode: boolean }) {
   const [result, setResult] = useState<ExchangeFetchResult>({ status: "idle" });
+  const { copied, handleCopy } = useCopyWithFeedback();
 
   const handleFetch = async () => {
     if (isDemoMode) {
@@ -574,6 +573,15 @@ function ExchangeDebugSection({ userId, isDemoMode }: { userId?: string; isDemoM
 
     try {
       // Fetch exchanges from the API
+      const csrfToken = getCsrfToken();
+      const bodyParams = new URLSearchParams({
+        "configuration[offset]": "0",
+        "configuration[limit]": "10",
+      });
+      if (csrfToken) {
+        bodyParams.append("__csrfToken", csrfToken);
+      }
+
       const response = await fetch(
         `${API_BASE}/indoorvolleyball.refadmin/api%5crefereegameexchange/search`,
         {
@@ -582,10 +590,7 @@ function ExchangeDebugSection({ userId, isDemoMode }: { userId?: string; isDemoM
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
           },
-          body: new URLSearchParams({
-            "configuration[offset]": "0",
-            "configuration[limit]": "10",
-          }),
+          body: bodyParams,
         }
       );
 
@@ -607,6 +612,7 @@ function ExchangeDebugSection({ userId, isDemoMode }: { userId?: string; isDemoM
         status: "success",
         totalCount: data.totalCount ?? 0,
         exchanges: data.items ?? [],
+        rawResponse: data,
       });
     } catch (error) {
       setResult({
@@ -622,7 +628,7 @@ function ExchangeDebugSection({ userId, isDemoMode }: { userId?: string; isDemoM
 
   return (
     <div style={{ fontSize: "10px" }}>
-      <div style={{ marginBottom: "8px" }}>
+      <div style={{ marginBottom: "8px", display: "flex", gap: "8px" }}>
         <button
           onClick={handleFetch}
           disabled={result.status === "loading"}
@@ -639,6 +645,23 @@ function ExchangeDebugSection({ userId, isDemoMode }: { userId?: string; isDemoM
         >
           {result.status === "loading" ? "Fetching..." : "Fetch Exchanges (Live API)"}
         </button>
+        {result.status === "success" && result.rawResponse !== undefined && (
+          <button
+            onClick={() => handleCopy(JSON.stringify(result.rawResponse, null, 2), "exchangeResponse")}
+            aria-label="Copy exchange response to clipboard"
+            style={{
+              padding: "6px 12px",
+              fontSize: "10px",
+              cursor: "pointer",
+              backgroundColor: copied === "exchangeResponse" ? "#0a2e0a" : "#1a1a2e",
+              border: `1px solid ${copied === "exchangeResponse" ? "#1a5e1a" : "#444"}`,
+              color: copied === "exchangeResponse" ? "#4eff4e" : "#888",
+              borderRadius: "4px",
+            }}
+          >
+            {copied === "exchangeResponse" ? "Copied!" : "Copy Response"}
+          </button>
+        )}
       </div>
 
       {result.status === "error" && (
@@ -754,10 +777,11 @@ interface PersonDetailsFetchResult {
     emailAddresses?: Array<{ emailAddress?: string; type?: string }>;
     phoneNumbers?: Array<{ phoneNumber?: string; type?: string }>;
   };
+  rawResponse?: unknown;
   error?: string;
 }
 
-function PersonDetailsSection({ isDemoMode }: { isDemoMode: boolean }) {
+function PersonDetailsSection({ isDemoMode, userId }: { isDemoMode: boolean; userId?: string }) {
   const [result, setResult] = useState<PersonDetailsFetchResult>({ status: "idle" });
   const { copied, handleCopy } = useCopyWithFeedback();
 
@@ -770,11 +794,55 @@ function PersonDetailsSection({ isDemoMode }: { isDemoMode: boolean }) {
       return;
     }
 
+    if (!userId) {
+      setResult({
+        status: "error",
+        error: "User ID not available - please ensure you are logged in",
+      });
+      return;
+    }
+
     setResult({ status: "loading" });
 
     try {
+      // Build query parameters - the API requires person[__identity]
+      const queryParams = new URLSearchParams();
+      queryParams.set("person[__identity]", userId);
+      // Request additional nested properties for full profile details
+      const properties = [
+        "displayName",
+        "firstName",
+        "lastName",
+        "svNumber",
+        "birthday",
+        "age",
+        "gender",
+        "correspondenceLanguage",
+        "nationality",
+        "nationality.name",
+        "nationality.shortName",
+        "primaryEmailAddress",
+        "primaryEmailAddress.emailAddress",
+        "primaryPhoneNumber",
+        "primaryPhoneNumber.phoneNumber",
+        "primaryPostalAddress",
+        "primaryPostalAddress.addressLine1",
+        "primaryPostalAddress.addressLine2",
+        "primaryPostalAddress.zipCode",
+        "primaryPostalAddress.city",
+        "primaryPostalAddress.country",
+        "primaryPostalAddress.country.name",
+        "activeRoleIdentifier",
+        "postalAddresses",
+        "emailAddresses",
+        "phoneNumbers",
+      ];
+      properties.forEach((prop, index) => {
+        queryParams.append(`propertyRenderConfiguration[${index}]`, prop);
+      });
+
       const response = await fetch(
-        `${API_BASE}/sportmanager.volleyball/api%5cperson/showWithNestedObjects`,
+        `${API_BASE}/sportmanager.volleyball/api%5cperson/showWithNestedObjects?${queryParams.toString()}`,
         {
           method: "GET",
           credentials: "include",
@@ -790,6 +858,7 @@ function PersonDetailsSection({ isDemoMode }: { isDemoMode: boolean }) {
       setResult({
         status: "success",
         person: data.person,
+        rawResponse: data,
       });
     } catch (error) {
       setResult({
@@ -803,7 +872,7 @@ function PersonDetailsSection({ isDemoMode }: { isDemoMode: boolean }) {
 
   return (
     <div style={{ fontSize: "10px" }}>
-      <div style={{ marginBottom: "8px" }}>
+      <div style={{ marginBottom: "8px", display: "flex", gap: "8px" }}>
         <button
           onClick={handleFetch}
           disabled={result.status === "loading"}
@@ -820,6 +889,23 @@ function PersonDetailsSection({ isDemoMode }: { isDemoMode: boolean }) {
         >
           {result.status === "loading" ? "Fetching..." : "Fetch My Profile (Live API)"}
         </button>
+        {result.status === "success" && result.rawResponse !== undefined && (
+          <button
+            onClick={() => handleCopy(JSON.stringify(result.rawResponse, null, 2), "profileResponse")}
+            aria-label="Copy profile response to clipboard"
+            style={{
+              padding: "6px 12px",
+              fontSize: "10px",
+              cursor: "pointer",
+              backgroundColor: copied === "profileResponse" ? "#0a2e0a" : "#1a1a2e",
+              border: `1px solid ${copied === "profileResponse" ? "#1a5e1a" : "#444"}`,
+              color: copied === "profileResponse" ? "#4eff4e" : "#888",
+              borderRadius: "4px",
+            }}
+          >
+            {copied === "profileResponse" ? "Copied!" : "Copy Response"}
+          </button>
+        )}
       </div>
 
       {result.status === "error" && (
@@ -967,19 +1053,6 @@ function DebugHeader({ onRefresh, onClose }: { onRefresh: () => void; onClose: (
         >
           ✕
         </button>
-      </div>
-    </div>
-  );
-}
-
-function StatusBanner({ dropdownShouldShow, occupationsCount }: { dropdownShouldShow: boolean; occupationsCount: number }) {
-  return (
-    <div style={{ marginBottom: "6px", padding: "8px", backgroundColor: dropdownShouldShow ? "#0a2e0a" : "#2e0a0a", borderRadius: "4px", border: `1px solid ${dropdownShouldShow ? "#1a5e1a" : "#5e1a1a"}` }}>
-      <div style={{ fontSize: "12px", fontWeight: "bold", color: dropdownShouldShow ? "#4eff4e" : "#ff4e4e" }}>
-        {dropdownShouldShow ? "✓ DROPDOWN SHOULD SHOW" : "✗ DROPDOWN HIDDEN"}
-      </div>
-      <div style={{ color: "#888", marginTop: "2px" }}>
-        Condition: user.occupations.length ({occupationsCount}) {occupationsCount >= MINIMUM_OCCUPATIONS_FOR_DROPDOWN ? "≥" : "<"} {MINIMUM_OCCUPATIONS_FOR_DROPDOWN}
       </div>
     </div>
   );
@@ -1311,6 +1384,7 @@ interface FetchResult {
 
 function LiveDashboardFetch() {
   const [result, setResult] = useState<FetchResult>({ status: "idle" });
+  const { copied, handleCopy } = useCopyWithFeedback();
 
   const handleFetch = async () => {
     setResult({ status: "loading" });
@@ -1365,7 +1439,7 @@ function LiveDashboardFetch() {
 
   return (
     <div>
-      <div style={{ marginBottom: "8px" }}>
+      <div style={{ marginBottom: "8px", display: "flex", gap: "8px" }}>
         <button
           onClick={handleFetch}
           disabled={result.status === "loading"}
@@ -1382,6 +1456,23 @@ function LiveDashboardFetch() {
         >
           {result.status === "loading" ? "Fetching..." : "Fetch Dashboard Now"}
         </button>
+        {result.status === "success" && result.diagnostic?.activeParty && (
+          <button
+            onClick={() => handleCopy(JSON.stringify(result.diagnostic?.activeParty, null, 2), "activeParty")}
+            aria-label="Copy activeParty data to clipboard"
+            style={{
+              padding: "6px 12px",
+              fontSize: "10px",
+              cursor: "pointer",
+              backgroundColor: copied === "activeParty" ? "#0a2e0a" : "#1a1a2e",
+              border: `1px solid ${copied === "activeParty" ? "#1a5e1a" : "#444"}`,
+              color: copied === "activeParty" ? "#4eff4e" : "#888",
+              borderRadius: "4px",
+            }}
+          >
+            {copied === "activeParty" ? "Copied!" : "Copy activeParty"}
+          </button>
+        )}
       </div>
 
       {result.status === "error" && (
