@@ -17,6 +17,7 @@ interface PersonProfile {
     publicResourceUri?: string;
   };
   svNumber?: number;
+  associationId?: number;
   firstName?: string;
   lastName?: string;
 }
@@ -64,9 +65,10 @@ function ProfileSectionComponent({ user }: ProfileSectionProps) {
         params.set("propertyRenderConfiguration[0]", "firstName");
         params.set("propertyRenderConfiguration[1]", "lastName");
         params.set("propertyRenderConfiguration[2]", "svNumber");
-        params.set("propertyRenderConfiguration[3]", "hasProfilePicture");
-        params.set("propertyRenderConfiguration[4]", "profilePicture");
-        params.set("propertyRenderConfiguration[5]", "profilePicture.publicResourceUri");
+        params.set("propertyRenderConfiguration[3]", "associationId");
+        params.set("propertyRenderConfiguration[4]", "hasProfilePicture");
+        params.set("propertyRenderConfiguration[5]", "profilePicture");
+        params.set("propertyRenderConfiguration[6]", "profilePicture.publicResourceUri");
 
         const response = await fetch(
           `${API_BASE}/sportmanager.volleyball/api%5Cperson/showWithNestedObjects?${params}`,
@@ -83,8 +85,10 @@ function ProfileSectionComponent({ user }: ProfileSectionProps) {
           if (person?.profilePicture?.publicResourceUri) {
             setProfilePictureUrl(person.profilePicture.publicResourceUri);
           }
-          if (person?.svNumber) {
-            setSvNumber(person.svNumber);
+          // Check for svNumber first, fall back to associationId (same value, different property names)
+          const svNum = person?.svNumber ?? person?.associationId;
+          if (svNum != null) {
+            setSvNumber(svNum);
           }
           if (person?.firstName) {
             setFirstName(person.firstName);
