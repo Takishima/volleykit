@@ -63,6 +63,11 @@ export const EXCHANGE_PROPERTIES = [
   "refereeGame.game.startingDateTime",
   "refereeGame.game.playingWeekday",
   "submittedAt",
+  // Parent object must be requested before nested properties
+  "submittedByPerson",
+  "submittedByPerson.__identity",
+  "submittedByPerson.firstName",
+  "submittedByPerson.lastName",
   "submittedByPerson.displayName",
   "submittingType",
   "status",
