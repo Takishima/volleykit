@@ -263,7 +263,7 @@ export function mapCalendarAssignmentToAssignment(
  * @example
  * extractCityFromAddress("Sternenfeldstrasse 50, 4127 Birsfelden") // "Birsfelden"
  */
-function extractCityFromAddress(address: string): string | undefined {
+export function extractCityFromAddress(address: string): string | undefined {
   // Match Swiss postal code pattern (4 digits) followed by city name
   // Use atomic group pattern - match postal code then capture rest of string
   const match = address.match(/\b(\d{4})\s+/);

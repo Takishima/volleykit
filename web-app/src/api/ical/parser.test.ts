@@ -1025,3 +1025,393 @@ END:VCALENDAR`;
     expect(assignment.roleRaw).toBe('LR 2');
   });
 });
+
+describe('extended field parsing', () => {
+  describe('parseGameNumber', () => {
+    it('extracts game number from Match pattern in description', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-382360
+SUMMARY:ARB 1 | Team A - Team B (NLA)
+DESCRIPTION:Match: #382360 | 05.02.2026 20:30 | OTA VOLLEY H1 — VBC Rämi H3
+DTSTART:20260205T203000
+DTEND:20260205T230000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.gameNumber).toBe(382360);
+    });
+
+    it('extracts game number from German Spiel pattern', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-123456
+SUMMARY:ARB 1 | Team A - Team B (League)
+DESCRIPTION:Spiel: #123456 | Details
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.gameNumber).toBe(123456);
+    });
+
+    it('extracts game number from French Partie pattern', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-789012
+SUMMARY:ARB 1 | Team A - Team B (League)
+DESCRIPTION:Partie: #789012
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.gameNumber).toBe(789012);
+    });
+
+    it('extracts game number without hash prefix', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-456789
+SUMMARY:ARB 1 | Team A - Team B (League)
+DESCRIPTION:Match: 456789 | Details
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.gameNumber).toBe(456789);
+    });
+
+    it('returns null when no game number found', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-100000
+SUMMARY:ARB 1 | Team A - Team B (League)
+DESCRIPTION:No game number here
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.gameNumber).toBeNull();
+    });
+  });
+
+  describe('parseLeagueCategory', () => {
+    it('extracts league category from French Ligue pattern', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-100001
+SUMMARY:ARB 1 | Team A - Team B (League)
+DESCRIPTION:Ligue: #6652 | 3L | ♂
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.leagueCategory).toBe('3L');
+    });
+
+    it('extracts league category from German Liga pattern', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-100002
+SUMMARY:ARB 1 | Team A - Team B (League)
+DESCRIPTION:Liga: #1234 | NLA | ♂
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.leagueCategory).toBe('NLA');
+    });
+
+    it('extracts league category from English League pattern', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-100003
+SUMMARY:ARB 1 | Team A - Team B (League)
+DESCRIPTION:League: #5678 | NLB | ♀
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.leagueCategory).toBe('NLB');
+    });
+
+    it('extracts league category from Italian Lega pattern', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-100004
+SUMMARY:ARB 1 | Team A - Team B (League)
+DESCRIPTION:Lega: #9999 | 2L | ♂
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.leagueCategory).toBe('2L');
+    });
+
+    it('returns null when no league category found', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-100005
+SUMMARY:ARB 1 | Team A - Team B (League)
+DESCRIPTION:No league info here
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.leagueCategory).toBeNull();
+    });
+
+    it('handles league line with insufficient parts', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-100006
+SUMMARY:ARB 1 | Team A - Team B (League)
+DESCRIPTION:Ligue: #1234
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.leagueCategory).toBeNull();
+    });
+  });
+
+  describe('parseRefereeNames', () => {
+    it('extracts referee1 name from ARB 1 pattern', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-200001
+SUMMARY:ARB 1 | Team A - Team B (League)
+DESCRIPTION:ARB convoqués:\\nARB 1: Damien Nguyen | ngn.damien@gmail.com | +41786795571
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.referees.referee1).toBe('Damien Nguyen');
+    });
+
+    it('extracts referee2 name from ARB 2 pattern', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-200002
+SUMMARY:ARB 1 | Team A - Team B (League)
+DESCRIPTION:ARB 2: Peter Müller | peterc.mueller@icloud.com | +41791940964
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.referees.referee2).toBe('Peter Müller');
+    });
+
+    it('extracts both referees when present', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-200003
+SUMMARY:ARB 1 | Team A - Team B (League)
+DESCRIPTION:ARB 1: Damien Nguyen | email1\\nARB 2: Peter Müller | email2
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.referees.referee1).toBe('Damien Nguyen');
+      expect(results[0]!.assignment.referees.referee2).toBe('Peter Müller');
+    });
+
+    it('extracts line referees from LR pattern', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-200004
+SUMMARY:LR 1 | Team A - Team B (League)
+DESCRIPTION:LR 1: Line Ref One | email1\\nLR 2: Line Ref Two | email2
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.referees.lineReferee1).toBe('Line Ref One');
+      expect(results[0]!.assignment.referees.lineReferee2).toBe('Line Ref Two');
+    });
+
+    it('extracts referees using SR pattern (German)', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-200005
+SUMMARY:SR 1 | Team A - Team B (League)
+DESCRIPTION:SR 1: Hans Meier | email
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.referees.referee1).toBe('Hans Meier');
+    });
+
+    it('returns empty object when no referees found', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-200006
+SUMMARY:ARB 1 | Team A - Team B (League)
+DESCRIPTION:No referee info here
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.referees).toEqual({});
+    });
+  });
+
+  describe('parseHallInfo', () => {
+    it('extracts hall ID and name from French Salle pattern', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-300001
+SUMMARY:ARB 1 | Team A - Team B (League)
+DESCRIPTION:Salle: #3661 | Turnhalle Sekundarschule Feld (H)
+DTSTART:20250215T140000
+DTEND:20250215T170000
+LOCATION:Turnhalle Sekundarschule Feld (H), Bergstrasse 2, 8800 Thalwil
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.hallId).toBe('3661');
+      expect(results[0]!.assignment.hallName).toBe('Turnhalle Sekundarschule Feld (H)');
+    });
+
+    it('extracts hall ID from German Halle pattern', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-300002
+SUMMARY:ARB 1 | Team A - Team B (League)
+DESCRIPTION:Halle: #1234 | Sporthalle Zürich
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.hallId).toBe('1234');
+    });
+
+    it('extracts hall ID from English Hall pattern', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-300003
+SUMMARY:ARB 1 | Team A - Team B (League)
+DESCRIPTION:Hall: #5678 | Sports Center
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.hallId).toBe('5678');
+    });
+
+    it('extracts hall ID from Italian Sala pattern', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-300004
+SUMMARY:ARB 1 | Team A - Team B (League)
+DESCRIPTION:Sala: #9999 | Palestra Comunale
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.hallId).toBe('9999');
+    });
+
+    it('handles hall info without hash prefix', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-300005
+SUMMARY:ARB 1 | Team A - Team B (League)
+DESCRIPTION:Salle: 1234 | Hall Name
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.hallId).toBe('1234');
+    });
+
+    it('returns null for hall ID when no hall info found', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-300006
+SUMMARY:ARB 1 | Team A - Team B (League)
+DESCRIPTION:No hall info here
+DTSTART:20250215T140000
+DTEND:20250215T170000
+LOCATION:Some Location
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.hallId).toBeNull();
+    });
+  });
+
+  describe('combined realistic scenario', () => {
+    it('parses all extended fields from a complete iCal entry', () => {
+      const ical = `BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+UID:referee-convocation-for-game-382360
+SUMMARY:ARB 1 | OTA VOLLEY H1 - VBC Rämi H3 (3L Herren)
+DESCRIPTION:Engagé en tant que: ARB 1\\nMatch: #382360 | 05.02.2026 20:30 | OTA VOLLEY H1 — VBC Rämi H3\\nLigue: #6652 | 3L | ♂\\nARB convoqués:\\n\\tARB 1: Damien Nguyen | ngn.damien@gmail.com | +41786795571\\n\\tARB 2: Peter Müller | peterc.mueller@icloud.com | +41791940964\\nSalle: #3661 | Turnhalle Sekundarschule Feld (H)\\nAdresse: Bergstrasse 2, 8800 Thalwil\\nhttps://maps.google.com/?q=8FVC7HR7%2BC3&hl=fr
+DTSTART:20260205T203000
+DTEND:20260205T230000
+LOCATION:Turnhalle Sekundarschule Feld (H), Bergstrasse 2, 8800 Thalwil
+GEO:47.2900;8.5600
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results).toHaveLength(1);
+
+      const assignment = results[0]!.assignment;
+      expect(assignment.gameId).toBe('382360');
+      expect(assignment.gameNumber).toBe(382360);
+      expect(assignment.leagueCategory).toBe('3L');
+      expect(assignment.hallId).toBe('3661');
+      expect(assignment.hallName).toBe('Turnhalle Sekundarschule Feld (H)');
+      expect(assignment.referees.referee1).toBe('Damien Nguyen');
+      expect(assignment.referees.referee2).toBe('Peter Müller');
+      expect(assignment.gender).toBe('men');
+    });
+  });
+});
