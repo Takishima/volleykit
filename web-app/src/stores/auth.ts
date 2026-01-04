@@ -557,17 +557,25 @@ export const useAuthStore = create<AuthState>()(
       },
 
       loginWithCalendar: async (code: string): Promise<void> => {
+        // Validate calendar code format (6 alphanumeric characters)
+        const CALENDAR_CODE_LENGTH = 6;
+        const trimmedCode = code.trim();
+        if (trimmedCode.length !== CALENDAR_CODE_LENGTH) {
+          set({ status: "error", error: "auth.invalidCalendarCode" });
+          return;
+        }
+
         // Store the calendar code and set calendar mode.
-        // Actual calendar validation (fetching to verify code) will be added later.
+        // Actual API validation (fetching to verify code works) will be added later.
         // Currently occupations are empty which differs from other auth modes.
         // Full implementation will fetch referee info from the calendar API endpoint.
         set({
           status: "authenticated",
           dataSource: "calendar",
-          calendarCode: code,
+          calendarCode: trimmedCode,
           isDemoMode: false,
           user: {
-            id: `calendar-${code}`,
+            id: `calendar-${trimmedCode}`,
             firstName: "Calendar",
             lastName: "User",
             occupations: [],

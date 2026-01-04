@@ -171,6 +171,7 @@ const de: Translations = {
     privacyNote: "Ihr Passwort wird niemals gespeichert.",
     loadingDemo: "Demo-Modus wird geladen...",
     noRefereeRole: "Diese App ist nur für Schiedsrichter. Ihr Konto hat keine Schiedsrichter-Rolle im VolleyManager.",
+    invalidCalendarCode: "Ungültiger Kalendercode. Bitte geben Sie einen 6-stelligen Code ein.",
   },
   occupations: {
     referee: "Schiedsrichter",
