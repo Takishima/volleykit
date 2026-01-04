@@ -848,8 +848,8 @@ describe("useAuthStore", () => {
   });
 
   describe("loginWithCalendar", () => {
-    it("sets calendar mode with the provided code", () => {
-      useAuthStore.getState().loginWithCalendar("ABC123");
+    it("sets calendar mode with the provided code", async () => {
+      await useAuthStore.getState().loginWithCalendar("ABC123");
 
       const state = useAuthStore.getState();
       expect(state.status).toBe("authenticated");
@@ -857,6 +857,47 @@ describe("useAuthStore", () => {
       expect(state.calendarCode).toBe("ABC123");
       expect(state.isDemoMode).toBe(false);
       expect(state.user?.id).toBe("calendar-ABC123");
+    });
+
+    it("trims whitespace from calendar code", async () => {
+      await useAuthStore.getState().loginWithCalendar("  ABC123  ");
+
+      const state = useAuthStore.getState();
+      expect(state.status).toBe("authenticated");
+      expect(state.calendarCode).toBe("ABC123");
+    });
+
+    it("rejects code that is too short", async () => {
+      await useAuthStore.getState().loginWithCalendar("ABC12");
+
+      const state = useAuthStore.getState();
+      expect(state.status).toBe("error");
+      expect(state.error).toBe("auth.invalidCalendarCode");
+      expect(state.calendarCode).toBeNull();
+    });
+
+    it("rejects code that is too long", async () => {
+      await useAuthStore.getState().loginWithCalendar("ABC1234");
+
+      const state = useAuthStore.getState();
+      expect(state.status).toBe("error");
+      expect(state.error).toBe("auth.invalidCalendarCode");
+    });
+
+    it("rejects code with special characters", async () => {
+      await useAuthStore.getState().loginWithCalendar("ABC12!");
+
+      const state = useAuthStore.getState();
+      expect(state.status).toBe("error");
+      expect(state.error).toBe("auth.invalidCalendarCode");
+    });
+
+    it("accepts lowercase alphanumeric codes", async () => {
+      await useAuthStore.getState().loginWithCalendar("abc123");
+
+      const state = useAuthStore.getState();
+      expect(state.status).toBe("authenticated");
+      expect(state.calendarCode).toBe("abc123");
     });
   });
 

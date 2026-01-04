@@ -101,6 +101,9 @@ const AUTH_URL = `${API_BASE}/sportmanager.security/authentication/authenticate`
 const LOGOUT_URL = `${API_BASE}/logout`;
 const SESSION_CHECK_TIMEOUT_MS = 10_000;
 
+/** Calendar codes are exactly 6 alphanumeric characters */
+const CALENDAR_CODE_PATTERN = /^[a-zA-Z0-9]{6}$/;
+
 /**
  * Error key for users without a referee role.
  * This key is used by LoginPage to display a translated error message.
@@ -558,9 +561,8 @@ export const useAuthStore = create<AuthState>()(
 
       loginWithCalendar: async (code: string): Promise<void> => {
         // Validate calendar code format (6 alphanumeric characters)
-        const CALENDAR_CODE_LENGTH = 6;
         const trimmedCode = code.trim();
-        if (trimmedCode.length !== CALENDAR_CODE_LENGTH) {
+        if (!CALENDAR_CODE_PATTERN.test(trimmedCode)) {
           set({ status: "error", error: "auth.invalidCalendarCode" });
           return;
         }
