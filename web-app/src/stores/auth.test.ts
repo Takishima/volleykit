@@ -125,6 +125,8 @@ describe("useAuthStore", () => {
       user: null,
       error: null,
       csrfToken: null,
+      dataSource: "api",
+      calendarCode: null,
       isDemoMode: false,
       activeOccupationId: null,
       _checkSessionPromise: null,
@@ -696,7 +698,16 @@ describe("useAuthStore", () => {
     });
 
     it("returns true immediately in demo mode", async () => {
-      useAuthStore.setState({ isDemoMode: true });
+      useAuthStore.setState({ dataSource: "demo", isDemoMode: true });
+
+      const result = await useAuthStore.getState().checkSession();
+
+      expect(result).toBe(true);
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it("returns true immediately in calendar mode", async () => {
+      useAuthStore.setState({ dataSource: "calendar", calendarCode: "ABC123" });
 
       const result = await useAuthStore.getState().checkSession();
 
@@ -812,10 +823,106 @@ describe("useAuthStore", () => {
 
       const state = useAuthStore.getState();
       expect(state.status).toBe("authenticated");
+      expect(state.dataSource).toBe("demo");
       expect(state.isDemoMode).toBe(true);
       expect(state.user).toBeTruthy();
       expect(state.user?.firstName).toBe("Demo");
       expect(state.activeOccupationId).toBeTruthy();
+    });
+  });
+
+  describe("isCalendarMode", () => {
+    it("returns false by default", () => {
+      expect(useAuthStore.getState().isCalendarMode()).toBe(false);
+    });
+
+    it("returns true when dataSource is calendar", () => {
+      useAuthStore.setState({ dataSource: "calendar" });
+      expect(useAuthStore.getState().isCalendarMode()).toBe(true);
+    });
+
+    it("returns false in demo mode", () => {
+      useAuthStore.setState({ dataSource: "demo" });
+      expect(useAuthStore.getState().isCalendarMode()).toBe(false);
+    });
+  });
+
+  describe("loginWithCalendar", () => {
+    it("sets calendar mode with the provided code", () => {
+      useAuthStore.getState().loginWithCalendar("ABC123");
+
+      const state = useAuthStore.getState();
+      expect(state.status).toBe("authenticated");
+      expect(state.dataSource).toBe("calendar");
+      expect(state.calendarCode).toBe("ABC123");
+      expect(state.isDemoMode).toBe(false);
+      expect(state.user?.id).toBe("calendar-ABC123");
+    });
+  });
+
+  describe("logoutCalendar", () => {
+    it("clears calendar mode and resets state", async () => {
+      // Set up calendar mode
+      useAuthStore.getState().loginWithCalendar("ABC123");
+
+      // Logout from calendar
+      await useAuthStore.getState().logoutCalendar();
+
+      const state = useAuthStore.getState();
+      expect(state.status).toBe("idle");
+      expect(state.dataSource).toBe("api");
+      expect(state.calendarCode).toBeNull();
+      expect(state.user).toBeNull();
+    });
+  });
+
+  describe("getAuthMode", () => {
+    it("returns 'none' when not authenticated", () => {
+      expect(useAuthStore.getState().getAuthMode()).toBe("none");
+    });
+
+    it("returns 'full' for API authentication", () => {
+      useAuthStore.setState({
+        status: "authenticated",
+        dataSource: "api",
+        user: { id: "1", firstName: "Test", lastName: "User", occupations: [] },
+      });
+
+      expect(useAuthStore.getState().getAuthMode()).toBe("full");
+    });
+
+    it("returns 'demo' for demo mode", () => {
+      useAuthStore.getState().setDemoAuthenticated();
+
+      expect(useAuthStore.getState().getAuthMode()).toBe("demo");
+    });
+
+    it("returns 'calendar' for calendar mode", () => {
+      useAuthStore.getState().loginWithCalendar("ABC123");
+
+      expect(useAuthStore.getState().getAuthMode()).toBe("calendar");
+    });
+  });
+
+  describe("logout clears dataSource and calendarCode", () => {
+    it("resets dataSource to api when logging out from demo mode", async () => {
+      useAuthStore.getState().setDemoAuthenticated();
+      expect(useAuthStore.getState().dataSource).toBe("demo");
+
+      await useAuthStore.getState().logout();
+
+      const state = useAuthStore.getState();
+      expect(state.dataSource).toBe("api");
+      expect(state.isDemoMode).toBe(false);
+    });
+
+    it("clears calendarCode when logging out from calendar mode", async () => {
+      useAuthStore.getState().loginWithCalendar("ABC123");
+      expect(useAuthStore.getState().calendarCode).toBe("ABC123");
+
+      await useAuthStore.getState().logout();
+
+      expect(useAuthStore.getState().calendarCode).toBeNull();
     });
   });
 });
