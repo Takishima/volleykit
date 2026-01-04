@@ -22,6 +22,8 @@ export {
   usePastAssignments,
   useValidationClosedAssignments,
   useAssignmentDetails,
+  useCalendarAssignments,
+  type CalendarAssignment,
 } from "./useAssignments";
 
 // Compensation hooks and types

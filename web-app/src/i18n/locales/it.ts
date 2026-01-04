@@ -185,6 +185,14 @@ const it: Translations = {
     calendarModeInfo: "Accesso in sola lettura alle tue designazioni",
     calendarModeHint: "Trova l'URL del calendario in VolleyManager sotto Profilo → Esporta calendario",
   },
+  calendarError: {
+    title: "Errore calendario",
+    networkMessage: "Impossibile caricare il calendario. Verifica la connessione internet e riprova.",
+    invalidCodeMessage: "Il codice calendario non è valido o è scaduto. Accedi con un nuovo codice.",
+    parseErrorMessage: "Alcuni dati del calendario non sono stati letti. Visualizzazione delle designazioni disponibili.",
+    ok: "OK",
+    loggedOutToast: "Disconnesso a causa di un errore del calendario",
+  },
   occupations: {
     referee: "Arbitro",
     linesmen: "Giudici di linea",
@@ -204,6 +212,12 @@ const it: Translations = {
     noClosedTitle: "Nessuna designazione chiusa",
     noClosedDescription:
       "Nessuna designazione con validazione chiusa in questa stagione.",
+    calendarNoUpcomingTitle: "Nessuna designazione in programma",
+    calendarNoUpcomingDescription:
+      "Tutte le tue designazioni sono passate. Torna quando saranno programmate nuove partite.",
+    calendarEmptyTitle: "Nessuna designazione nel calendario",
+    calendarEmptyDescription:
+      "Il tuo calendario è vuoto. Le designazioni appariranno qui quando sarai programmato per le partite.",
     confirmed: "Confermato",
     pending: "In attesa",
     cancelled: "Annullato",

@@ -185,6 +185,14 @@ const fr: Translations = {
     calendarModeInfo: "Accès en lecture seule à vos désignations",
     calendarModeHint: "Trouvez votre URL de calendrier dans VolleyManager sous Profil → Export du calendrier",
   },
+  calendarError: {
+    title: "Erreur de calendrier",
+    networkMessage: "Impossible de charger votre calendrier. Veuillez vérifier votre connexion internet et réessayer.",
+    invalidCodeMessage: "Le code de calendrier est invalide ou a expiré. Veuillez vous connecter avec un nouveau code.",
+    parseErrorMessage: "Certaines données du calendrier n'ont pas pu être lues. Affichage des désignations disponibles.",
+    ok: "OK",
+    loggedOutToast: "Déconnecté en raison d'une erreur de calendrier",
+  },
   occupations: {
     referee: "Arbitre",
     linesmen: "Juges de ligne",
@@ -204,6 +212,12 @@ const fr: Translations = {
     noClosedTitle: "Aucune désignation clôturée",
     noClosedDescription:
       "Aucune désignation avec validation fermée cette saison.",
+    calendarNoUpcomingTitle: "Aucune désignation à venir",
+    calendarNoUpcomingDescription:
+      "Toutes vos désignations sont passées. Revenez quand de nouveaux matchs seront programmés.",
+    calendarEmptyTitle: "Aucune désignation dans le calendrier",
+    calendarEmptyDescription:
+      "Votre calendrier est vide. Les désignations apparaîtront ici dès que vous serez programmé pour des matchs.",
     confirmed: "Confirmé",
     pending: "En attente",
     cancelled: "Annulé",

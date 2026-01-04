@@ -29,6 +29,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useViewportZoom } from "@/hooks/useViewportZoom";
 import { useCalendarTheme } from "@/hooks/useCalendarTheme";
 import { logger } from "@/utils/logger";
+import { CalendarErrorHandler } from "@/components/features/CalendarErrorHandler";
 
 // Lazy load pages to reduce initial bundle size
 // Each page becomes a separate chunk that loads on-demand
@@ -280,11 +281,13 @@ export default function App() {
                 <Route
                   element={
                     <ProtectedRoute>
-                      <Suspense fallback={null}>
-                        <TourProvider>
-                          <AppShell />
-                        </TourProvider>
-                      </Suspense>
+                      <CalendarErrorHandler>
+                        <Suspense fallback={null}>
+                          <TourProvider>
+                            <AppShell />
+                          </TourProvider>
+                        </Suspense>
+                      </CalendarErrorHandler>
                     </ProtectedRoute>
                   }
                 >

@@ -96,6 +96,24 @@ function createMockQueryResult(
   } as unknown as UseQueryResult<Assignment[], Error>;
 }
 
+// Create a mock for calendar assignments
+function createMockCalendarQueryResult(
+  data: useConvocations.CalendarAssignment[] | undefined = [],
+  isLoading = false,
+  error: Error | null = null,
+) {
+  return {
+    data,
+    isLoading,
+    isFetching: false,
+    isError: !!error,
+    error,
+    isSuccess: !isLoading && !error && !!data,
+    status: isLoading ? "pending" : error ? "error" : "success",
+    refetch: vi.fn(),
+  } as unknown as ReturnType<typeof useConvocations.useCalendarAssignments>;
+}
+
 describe("AssignmentsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -106,6 +124,10 @@ describe("AssignmentsPage", () => {
     );
     vi.mocked(useConvocations.useValidationClosedAssignments).mockReturnValue(
       createMockQueryResult([]),
+    );
+    // Mock calendar assignments (empty by default - calendar mode not active)
+    vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+      createMockCalendarQueryResult([]),
     );
   });
 
