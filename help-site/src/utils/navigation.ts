@@ -1,4 +1,5 @@
-import { navItems, type NavItem } from '../data/navItems';
+import { navItems } from '../data/navItems';
+import { BASE_PATH } from '../constants';
 
 interface PageNavigation {
   prev?: { title: string; href: string };
@@ -62,16 +63,18 @@ export function getBreadcrumbs(
     return itemPath === normalizedPath;
   });
 
+  const homePath = `${BASE_PATH}/`;
+
   // For home page, just return Home
-  if (currentPath === '/volleykit/help/' || currentPath === '/volleykit/help') {
+  if (currentPath === homePath || currentPath === BASE_PATH) {
     return [{ label: 'Home' }];
   }
 
   // For known nav items, return Home > Item
   if (currentNavItem) {
-    return [{ label: 'Home', href: '/volleykit/help/' }, { label: currentNavItem.title }];
+    return [{ label: 'Home', href: homePath }, { label: currentNavItem.title }];
   }
 
   // For unknown pages, use the provided title
-  return [{ label: 'Home', href: '/volleykit/help/' }, { label: pageTitle }];
+  return [{ label: 'Home', href: homePath }, { label: pageTitle }];
 }

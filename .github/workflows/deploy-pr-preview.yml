@@ -5,6 +5,7 @@ on:
     paths:
       - 'web-app/**'
       - 'ocr-poc/**'
+      - 'help-site/**'
       - '.github/workflows/deploy-pr-preview.yml'
 permissions:
   contents: write
@@ -29,6 +30,7 @@ jobs:
           cache-dependency-path: |
             web-app/package-lock.json
             ocr-poc/package-lock.json
+            help-site/package-lock.json
       - name: Install dependencies
         run: npm ci
       - name: Cache generated API types
@@ -67,6 +69,13 @@ jobs:
         working-directory: ocr-poc
         env:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/ocr-poc/
+      # Build Help Site
+      - name: Install Help Site dependencies
+        run: npm ci
+        working-directory: help-site
+      - name: Build Help Site
+        run: npm run build
+        working-directory: help-site
       # Download existing gh-pages content to preserve main site and other PR previews
       - name: Download existing gh-pages content
         run: |
@@ -92,6 +101,9 @@ jobs:
           # Add/update OCR POC preview
           mkdir -p ${{ github.workspace }}/deploy/pr-${{ github.event.pull_request.number }}/ocr-poc
           cp -r ${{ github.workspace }}/ocr-poc/dist/* ${{ github.workspace }}/deploy/pr-${{ github.event.pull_request.number }}/ocr-poc/
+          # Add/update Help Site preview
+          mkdir -p ${{ github.workspace }}/deploy/pr-${{ github.event.pull_request.number }}/help
+          cp -r ${{ github.workspace }}/help-site/dist/* ${{ github.workspace }}/deploy/pr-${{ github.event.pull_request.number }}/help/
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
@@ -105,9 +117,11 @@ jobs:
           script: |
             const previewUrl = `https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/`;
             const ocrPocUrl = `${previewUrl}ocr-poc/`;
+            const helpUrl = `${previewUrl}help/`;
             const body = `## 🚀 PR Preview Deployed!\n\n` +
               `Your preview is ready at: ${previewUrl}\n\n` +
               `**OCR POC:** ${ocrPocUrl}\n\n` +
+              `**Help Site:** ${helpUrl}\n\n` +
               `> This preview will be updated on each push to this PR.\n\n` +
               `**Demo Mode Only:** This preview runs in demo mode with sample data. Real authentication is disabled for security.`;
 

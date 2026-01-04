@@ -1,3 +1,5 @@
+import { BASE_PATH } from '../constants';
+
 export interface NavItem {
   title: string;
   href: string;
@@ -7,47 +9,47 @@ export interface NavItem {
 export const navItems: NavItem[] = [
   {
     title: 'Home',
-    href: '/volleykit/help/',
+    href: `${BASE_PATH}/`,
     icon: 'home',
   },
   {
     title: 'Getting Started',
-    href: '/volleykit/help/getting-started/',
+    href: `${BASE_PATH}/getting-started/`,
     icon: 'rocket',
   },
   {
     title: 'Assignments',
-    href: '/volleykit/help/assignments/',
+    href: `${BASE_PATH}/assignments/`,
     icon: 'calendar-check',
   },
   {
     title: 'Exchanges',
-    href: '/volleykit/help/exchanges/',
+    href: `${BASE_PATH}/exchanges/`,
     icon: 'arrow-left-right',
   },
   {
     title: 'Compensations',
-    href: '/volleykit/help/compensations/',
+    href: `${BASE_PATH}/compensations/`,
     icon: 'wallet',
   },
   {
     title: 'Calendar Mode',
-    href: '/volleykit/help/calendar-mode/',
+    href: `${BASE_PATH}/calendar-mode/`,
     icon: 'calendar',
   },
   {
     title: 'Travel Time',
-    href: '/volleykit/help/travel-time/',
+    href: `${BASE_PATH}/travel-time/`,
     icon: 'train',
   },
   {
     title: 'Offline & PWA',
-    href: '/volleykit/help/offline-pwa/',
+    href: `${BASE_PATH}/offline-pwa/`,
     icon: 'wifi-off',
   },
   {
     title: 'Settings',
-    href: '/volleykit/help/settings/',
+    href: `${BASE_PATH}/settings/`,
     icon: 'settings',
   },
 ];

@@ -4,11 +4,15 @@
  * Full-screen modal on mobile, centered modal on desktop
  * Integrates with Pagefind for search functionality
  */
+import { BASE_PATH, TIMING, MAX_SEARCH_RESULTS } from '../constants';
 ---
 
 <div
   class="fixed inset-0 z-50 hidden"
   data-search-modal
+  data-base-path={BASE_PATH}
+  data-debounce-ms={TIMING.SEARCH_DEBOUNCE_MS}
+  data-max-results={MAX_SEARCH_RESULTS}
   role="dialog"
   aria-modal="true"
   aria-label="Search documentation"
@@ -151,16 +155,64 @@
 </div>
 
 <script>
-  // Load Pagefind dynamically
-  let pagefind: any = null;
+  import type { PagefindAPI, PagefindResultData } from '../types/pagefind';
 
-  async function loadPagefind() {
+  // Pagefind instance (lazy-loaded)
+  let pagefind: PagefindAPI | null = null;
+
+  /**
+   * Sanitize HTML to prevent XSS attacks.
+   * Allows only <mark> tags which Pagefind uses for highlighting search terms.
+   */
+  function sanitizeExcerpt(html: string): string {
+    // Create a temporary element to parse the HTML
+    const temp = document.createElement('div');
+    temp.textContent = html;
+    const escaped = temp.innerHTML;
+
+    // Re-enable only <mark> tags which Pagefind uses for highlighting
+    return escaped
+      .replace(/&lt;mark&gt;/g, '<mark>')
+      .replace(/&lt;\/mark&gt;/g, '</mark>');
+  }
+
+  /**
+   * Create a search result element safely using DOM methods to prevent XSS.
+   */
+  function createResultElement(result: PagefindResultData, index: number): HTMLLIElement {
+    const li = document.createElement('li');
+    li.setAttribute('role', 'option');
+    li.className = 'rounded-lg border border-transparent';
+
+    const link = document.createElement('a');
+    link.href = result.url;
+    link.className = 'block rounded-lg p-3 transition-colors hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark';
+    link.setAttribute('data-search-result', String(index));
+
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'font-medium text-text-primary dark:text-text-primary-dark';
+    // Use textContent for title to prevent XSS - no HTML allowed
+    titleDiv.textContent = result.meta?.title || 'Untitled';
+
+    const excerptDiv = document.createElement('div');
+    excerptDiv.className = 'mt-1 text-sm text-text-secondary line-clamp-2 dark:text-text-secondary-dark';
+    // Sanitize excerpt - only allow <mark> tags for Pagefind highlighting
+    excerptDiv.innerHTML = sanitizeExcerpt(result.excerpt || '');
+
+    link.appendChild(titleDiv);
+    link.appendChild(excerptDiv);
+    li.appendChild(link);
+
+    return li;
+  }
+
+  async function loadPagefind(basePath: string): Promise<PagefindAPI | null> {
     if (pagefind) return pagefind;
 
     try {
-      // @ts-ignore - Pagefind is loaded at runtime
-      pagefind = await import('/volleykit/help/_pagefind/pagefind.js');
-      await pagefind.init();
+      // Dynamic import of Pagefind (generated at build time)
+      pagefind = await import(/* @vite-ignore */ `${basePath}/_pagefind/pagefind.js`);
+      await pagefind!.init();
       return pagefind;
     } catch (e) {
       console.warn('Pagefind not available:', e);
@@ -182,8 +234,13 @@
 
     if (!modal || !input || !resultsContainer) return;
 
+    // Read configuration from data attributes (populated from constants)
+    const basePath = modal.getAttribute('data-base-path') || '/volleykit/help';
+    const debounceMs = parseInt(modal.getAttribute('data-debounce-ms') || '200', 10);
+    const maxResults = parseInt(modal.getAttribute('data-max-results') || '10', 10);
+
     let selectedIndex = -1;
-    let results: any[] = [];
+    let results: PagefindResultData[] = [];
 
     function showState(state: 'initial' | 'loading' | 'empty' | 'results' | 'unavailable') {
       initialState?.classList.toggle('hidden', state !== 'initial');
@@ -197,7 +254,7 @@
       modal.classList.remove('hidden');
       document.body.style.overflow = 'hidden';
       input.focus();
-      loadPagefind().then((pf) => {
+      loadPagefind(basePath).then((pf) => {
         if (!pf) showState('unavailable');
       });
     }
@@ -211,7 +268,7 @@
       results = [];
     }
 
-    function renderResults(searchResults: any[]) {
+    function renderResults(searchResults: PagefindResultData[]) {
       if (!resultsList) return;
 
       results = searchResults;
@@ -223,22 +280,11 @@
       }
 
       showState('results');
-      resultsList.innerHTML = '';
+      // Clear previous results safely using replaceChildren
+      resultsList.replaceChildren();
 
       results.forEach((result, index) => {
-        const li = document.createElement('li');
-        li.setAttribute('role', 'option');
-        li.className = 'rounded-lg border border-transparent';
-        li.innerHTML = `
-          <a
-            href="${result.url}"
-            class="block rounded-lg p-3 transition-colors hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark"
-            data-search-result="${index}"
-          >
-            <div class="font-medium text-text-primary dark:text-text-primary-dark">${result.meta?.title || 'Untitled'}</div>
-            <div class="mt-1 text-sm text-text-secondary line-clamp-2 dark:text-text-secondary-dark">${result.excerpt || ''}</div>
-          </a>
-        `;
+        const li = createResultElement(result, index);
         resultsList.appendChild(li);
       });
     }
@@ -272,7 +318,7 @@
       }
     });
 
-    // Search input handling
+    // Search input handling with debounce
     let debounceTimer: ReturnType<typeof setTimeout>;
 
     input.addEventListener('input', async () => {
@@ -288,7 +334,7 @@
       showState('loading');
 
       debounceTimer = setTimeout(async () => {
-        const pf = await loadPagefind();
+        const pf = await loadPagefind(basePath);
         if (!pf) {
           showState('unavailable');
           return;
@@ -297,14 +343,14 @@
         try {
           const search = await pf.search(query);
           const searchResults = await Promise.all(
-            search.results.slice(0, 10).map((r: any) => r.data())
+            search.results.slice(0, maxResults).map((r) => r.data())
           );
           renderResults(searchResults);
         } catch (e) {
           console.error('Search error:', e);
           showState('empty');
         }
-      }, 200);
+      }, debounceMs);
     });
 
     // Keyboard navigation
