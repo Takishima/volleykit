@@ -10,7 +10,6 @@ export class CompensationsPage extends BasePage {
   readonly pendingPastTab: Locator;
   readonly pendingFutureTab: Locator;
   readonly closedTab: Locator;
-  readonly allTab: Locator;
   readonly tabPanel: Locator;
   readonly compensationCards: Locator;
   private readonly emptyState: Locator;
@@ -22,7 +21,6 @@ export class CompensationsPage extends BasePage {
     this.pendingPastTab = page.locator("#tab-pendingPast");
     this.pendingFutureTab = page.locator("#tab-pendingFuture");
     this.closedTab = page.locator("#tab-closed");
-    this.allTab = page.locator("#tab-all");
     this.tabPanel = page.getByRole("tabpanel");
     this.compensationCards = this.tabPanel.getByRole("button");
     this.emptyState = page.getByTestId("empty-state");
@@ -51,12 +49,6 @@ export class CompensationsPage extends BasePage {
   async switchToClosedTab() {
     await this.closedTab.click();
     await expect(this.closedTab).toHaveAttribute("aria-selected", "true");
-    await expect(this.tabPanel).toBeVisible();
-  }
-
-  async switchToAllTab() {
-    await this.allTab.click();
-    await expect(this.allTab).toHaveAttribute("aria-selected", "true");
     await expect(this.tabPanel).toBeVisible();
   }
 
