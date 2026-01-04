@@ -234,7 +234,7 @@ export function extractAssignment(_event: ICalEvent): ParseResult {
  * @internal
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function parseRole(_roleStr: string): RefereeRole {
+function _parseRole(_roleStr: string): RefereeRole {
   // STUB(#503): Role parsing not yet implemented
   //
   // Implementation:
@@ -260,7 +260,7 @@ export function parseRole(_roleStr: string): RefereeRole {
  * @internal
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function parseGender(_leagueName: string): Gender {
+function _parseGender(_leagueName: string): Gender {
   // STUB(#503): Gender detection not yet implemented
   //
   // Implementation:
@@ -286,7 +286,7 @@ export function parseGender(_leagueName: string): Gender {
  * @internal
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function parseICalDate(_icalDate: string): string {
+function _parseICalDate(_icalDate: string): string {
   // STUB(#503): Date parsing not yet implemented
   //
   // Implementation:
@@ -310,7 +310,8 @@ export function parseICalDate(_icalDate: string): string {
  *
  * @internal
  */
-export function buildMapsUrl(
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function _buildMapsUrl(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _address: string | null,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -340,7 +341,7 @@ export function buildMapsUrl(
  * @internal
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function calculateConfidence(_fields: ParsedFields): ParseConfidence {
+function _calculateConfidence(_fields: ParsedFields): ParseConfidence {
   // STUB(#503): Confidence calculation not yet implemented
   //
   // Implementation:
