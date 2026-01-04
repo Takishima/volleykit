@@ -202,6 +202,8 @@ export default defineConfig(({ mode }) => {
             /\/pr-\d+/,
             // Don't intercept OCR POC routes - it's a separate app
             /\/ocr-poc/,
+            // Don't intercept help site routes - it's a separate Astro app
+            /\/help/,
           ],
           // Runtime caching for API responses
           runtimeCaching: [

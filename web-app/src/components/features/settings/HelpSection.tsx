@@ -1,7 +1,7 @@
 import { BookOpen } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
-import { HELP_SITE_URL } from "@/utils/constants";
+import { getHelpSiteUrl } from "@/utils/constants";
 
 export function HelpSection() {
   const { t } = useTranslation();
@@ -24,7 +24,7 @@ export function HelpSection() {
           {t("settings.help.description")}
         </p>
         <a
-          href={HELP_SITE_URL}
+          href={getHelpSiteUrl()}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1 text-primary-600 dark:text-primary-400 hover:text-primary-500 dark:hover:text-primary-300 underline underline-offset-2 text-sm transition-colors"
