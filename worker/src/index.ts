@@ -275,6 +275,29 @@ function isAllowedOrigin(
  * 3. Path traversal requires ".." sequences, which are still blocked
  * 4. This worker runs on Cloudflare's Linux infrastructure, not Windows
  */
+/**
+ * Validate iCal referee code format.
+ * Codes must be exactly 6 alphanumeric characters.
+ *
+ * @param code The code to validate
+ * @returns true if the code is valid, false otherwise
+ */
+function isValidICalCode(code: string): boolean {
+  return /^[A-Za-z0-9]{6}$/.test(code);
+}
+
+/**
+ * Extract iCal referee code from path.
+ * Matches paths like /iCal/referee/ABC123
+ *
+ * @param pathname The URL pathname
+ * @returns The code if path matches, null otherwise
+ */
+function extractICalCode(pathname: string): string | null {
+  const match = pathname.match(/^\/iCal\/referee\/([^/]+)$/);
+  return match ? match[1] : null;
+}
+
 function isPathSafe(pathname: string): boolean {
   // Decode the pathname to catch encoded traversal attempts
   let decoded: string;
@@ -431,6 +454,99 @@ export default {
         status: 204,
         headers: corsHeaders(origin!),
       });
+    }
+
+    // Handle iCal proxy route: GET /iCal/referee/:code
+    // This is a public endpoint that proxies to volleymanager's iCal feed
+    const iCalCode = extractICalCode(url.pathname);
+    if (iCalCode !== null) {
+      // Only allow GET requests for iCal
+      if (request.method !== "GET") {
+        return new Response("Method Not Allowed", {
+          status: 405,
+          headers: {
+            "Content-Type": "text/plain",
+            Allow: "GET",
+            ...corsHeaders(origin!),
+            ...securityHeaders(),
+          },
+        });
+      }
+
+      // Validate code format (6 alphanumeric characters)
+      if (!isValidICalCode(iCalCode)) {
+        return new Response("Bad Request: Invalid calendar code format", {
+          status: 400,
+          headers: {
+            "Content-Type": "text/plain",
+            ...corsHeaders(origin!),
+            ...securityHeaders(),
+          },
+        });
+      }
+
+      // Proxy to volleymanager iCal endpoint
+      const iCalTargetUrl = `${env.TARGET_HOST}/indoor/iCal/referee/${iCalCode}`;
+
+      try {
+        const iCalResponse = await fetch(iCalTargetUrl, {
+          method: "GET",
+          headers: {
+            "User-Agent": VOLLEYKIT_USER_AGENT,
+            Accept: "text/calendar",
+          },
+        });
+
+        // Pass through 404 if not found
+        if (iCalResponse.status === 404) {
+          return new Response("Not Found: Calendar not found", {
+            status: 404,
+            headers: {
+              "Content-Type": "text/plain",
+              ...corsHeaders(origin!),
+              ...securityHeaders(),
+            },
+          });
+        }
+
+        // Handle other error responses from upstream
+        if (!iCalResponse.ok) {
+          console.error(
+            "iCal upstream error:",
+            iCalResponse.status,
+            iCalResponse.statusText,
+          );
+          return new Response("Bad Gateway: Upstream error", {
+            status: 502,
+            headers: {
+              "Content-Type": "text/plain",
+              ...corsHeaders(origin!),
+              ...securityHeaders(),
+            },
+          });
+        }
+
+        // Return the iCal data with proper headers
+        const iCalBody = await iCalResponse.text();
+        return new Response(iCalBody, {
+          status: 200,
+          headers: {
+            "Content-Type": "text/calendar; charset=utf-8",
+            ...corsHeaders(origin!),
+            ...securityHeaders(),
+          },
+        });
+      } catch (error) {
+        console.error("iCal proxy error:", error);
+        return new Response("Bad Gateway: Unable to reach calendar service", {
+          status: 502,
+          headers: {
+            "Content-Type": "text/plain",
+            ...corsHeaders(origin!),
+            ...securityHeaders(),
+          },
+        });
+      }
     }
 
     // Validate pathname for security (path traversal prevention)
