@@ -113,7 +113,13 @@ export interface Translations {
     active: string;
     archived: string;
     editCompensation: string;
+    editCompensationShort: string;
     validateGame: string;
+    validateGameShort: string;
+    generateReport: string;
+    generateReportShort: string;
+    addToExchange: string;
+    addToExchangeShort: string;
     kilometers: string;
     reason: string;
     reasonPlaceholder: string;

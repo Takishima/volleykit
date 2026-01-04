@@ -3,6 +3,9 @@ import { isValidElement } from "react";
 import { createAssignmentActions } from "./assignment-actions";
 import type { Assignment } from "@/api/client";
 
+// Mock translation function that returns the key for testing
+const mockT = vi.fn((key: string) => key);
+
 const mockAssignment: Assignment = {
   __identity: "test-assignment-1",
   refereePosition: "head-one",
@@ -30,7 +33,7 @@ describe("createAssignmentActions", () => {
       onAddToExchange: vi.fn(),
     };
 
-    const actions = createAssignmentActions(mockAssignment, handlers);
+    const actions = createAssignmentActions(mockAssignment, handlers, mockT);
 
     expect(actions.editCompensation).toBeDefined();
     expect(actions.validateGame).toBeDefined();
@@ -46,7 +49,7 @@ describe("createAssignmentActions", () => {
       onAddToExchange: vi.fn(),
     };
 
-    const actions = createAssignmentActions(mockAssignment, handlers);
+    const actions = createAssignmentActions(mockAssignment, handlers, mockT);
 
     actions.editCompensation.onAction();
     expect(handlers.onEditCompensation).toHaveBeenCalledWith(mockAssignment);
@@ -69,15 +72,15 @@ describe("createAssignmentActions", () => {
       onAddToExchange: vi.fn(),
     };
 
-    const actions = createAssignmentActions(mockAssignment, handlers);
+    const actions = createAssignmentActions(mockAssignment, handlers, mockT);
 
     expect(actions.editCompensation.id).toBe("edit-compensation");
-    expect(actions.editCompensation.label).toBe("Edit Compensation");
+    expect(actions.editCompensation.label).toBe("assignments.editCompensation");
     expect(actions.editCompensation.color).toBe("bg-primary-500");
     expect(isValidElement(actions.editCompensation.icon)).toBe(true);
 
     expect(actions.validateGame.id).toBe("validate-game");
-    expect(actions.validateGame.label).toBe("Validate Game");
+    expect(actions.validateGame.label).toBe("assignments.validateGame");
     expect(actions.validateGame.color).toBe("bg-primary-500");
     expect(isValidElement(actions.validateGame.icon)).toBe(true);
   });
@@ -103,7 +106,7 @@ describe("createAssignmentActions", () => {
       onAddToExchange: vi.fn(),
     };
 
-    const actions = createAssignmentActions(validatedAssignment, handlers);
+    const actions = createAssignmentActions(validatedAssignment, handlers, mockT);
 
     expect(actions.validateGame.color).toBe("bg-slate-500");
   });

@@ -41,12 +41,12 @@ describe('PdfLanguageModal', () => {
     expect(deutschRadio).toBeChecked();
   });
 
-  it('calls onConfirm with selected language when export clicked', () => {
+  it('calls onConfirm with selected language when generate clicked', () => {
     const onConfirm = vi.fn();
     render(<PdfLanguageModal {...defaultProps} onConfirm={onConfirm} />);
 
     fireEvent.click(screen.getByText('Français'));
-    fireEvent.click(screen.getByRole('button', { hidden: true, name: /export/i }));
+    fireEvent.click(screen.getByRole('button', { hidden: true, name: /generate|erstellen/i }));
 
     expect(onConfirm).toHaveBeenCalledWith('fr');
   });
