@@ -19,6 +19,7 @@ import {
 } from "@/utils/active-party-parser";
 import { useDemoStore } from "./demo";
 import { useSettingsStore, DEMO_HOME_LOCATION } from "./settings";
+import { fetchCalendarAssignments } from "@/api/calendar-api";
 
 /**
  * Storage version for the auth store.
@@ -587,21 +588,67 @@ export const useAuthStore = create<AuthState>()(
           return;
         }
 
-        // Calendar code format is valid - set authenticated state
-        // The actual API validation was already done by LoginPage before calling this
-        set({
-          status: "authenticated",
-          dataSource: "calendar",
-          calendarCode: trimmedCode,
-          isDemoMode: false,
-          user: {
-            id: `calendar-${trimmedCode}`,
-            firstName: "Calendar",
-            lastName: "User",
-            occupations: [],
-          },
-          error: null,
-        });
+        set({ status: "loading", error: null });
+
+        try {
+          // Fetch calendar data to extract associations for transport settings
+          // This unifies calendar mode with regular API mode - both have occupations
+          const assignments = await fetchCalendarAssignments(trimmedCode);
+
+          // Extract unique associations from calendar assignments
+          const uniqueAssociations = new Set<string>();
+          for (const assignment of assignments) {
+            if (assignment.association) {
+              uniqueAssociations.add(assignment.association);
+            }
+          }
+
+          // Create synthetic occupations from associations found in calendar
+          // This allows transport settings to work per-association like regular mode
+          const occupations: Occupation[] = Array.from(uniqueAssociations)
+            .sort()
+            .map((assoc) => ({
+              id: `calendar-${assoc}`,
+              type: "referee" as const,
+              associationCode: assoc,
+            }));
+
+          // Set authenticated state with occupations derived from calendar data
+          set({
+            status: "authenticated",
+            dataSource: "calendar",
+            calendarCode: trimmedCode,
+            isDemoMode: false,
+            user: {
+              id: `calendar-${trimmedCode}`,
+              firstName: "Calendar",
+              lastName: "User",
+              occupations,
+            },
+            // Set first occupation as active if any found
+            activeOccupationId: occupations[0]?.id ?? null,
+            error: null,
+          });
+        } catch (error) {
+          // If fetching fails, fall back to no occupations
+          // This allows login to succeed even if calendar is empty or fails
+          logger.warn("Failed to fetch calendar for associations:", error);
+
+          set({
+            status: "authenticated",
+            dataSource: "calendar",
+            calendarCode: trimmedCode,
+            isDemoMode: false,
+            user: {
+              id: `calendar-${trimmedCode}`,
+              firstName: "Calendar",
+              lastName: "User",
+              occupations: [],
+            },
+            activeOccupationId: null,
+            error: null,
+          });
+        }
       },
 
       logoutCalendar: async () => {
