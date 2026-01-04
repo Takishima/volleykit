@@ -103,7 +103,11 @@ export function detectSingleBallHall(
 
 /**
  * Gets the PDF path for single-ball halls documentation based on locale.
+ * Includes the base URL for correct resolution on GitHub Pages.
  */
 export function getSingleBallHallsPdfPath(locale: Locale): string {
-  return SINGLE_BALL_PDF_PATHS[locale];
+  const basePath = import.meta.env.BASE_URL;
+  const pdfPath = SINGLE_BALL_PDF_PATHS[locale];
+  // Remove leading slash from pdfPath since BASE_URL already ends with /
+  return `${basePath}${pdfPath.slice(1)}`;
 }
