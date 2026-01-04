@@ -86,6 +86,11 @@ export interface Translations {
     ok: string;
     loggedOutToast: string;
   };
+  calendar: {
+    allAssociations: string;
+    filterByAssociation: string;
+    selectAssociation: string;
+  };
   occupations: {
     referee: string;
     linesmen: string;

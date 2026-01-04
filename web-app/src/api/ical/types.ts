@@ -134,6 +134,9 @@ export interface CalendarAssignment {
     lineReferee1?: string;
     lineReferee2?: string;
   };
+
+  /** Regional association code extracted from team info (e.g., "SVRZ", "SVRBA", "SVRI") */
+  association: string | null;
 }
 
 /**
