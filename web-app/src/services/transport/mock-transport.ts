@@ -119,10 +119,3 @@ export async function calculateMockTravelTime(
   };
 }
 
-/**
- * Mock transport API object matching the real API interface.
- */
-export const mockTransportApi = {
-  calculateTravelTime: calculateMockTravelTime,
-  isConfigured: (): boolean => true, // Always "configured" in demo mode
-};

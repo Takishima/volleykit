@@ -316,25 +316,8 @@ export const personSearchResponseSchema = z.object({
 });
 
 // Type exports inferred from Zod schemas
-export type ValidatedAssignment = z.infer<typeof assignmentSchema>;
-export type ValidatedCompensationRecord = z.infer<
-  typeof compensationRecordSchema
->;
-export type ValidatedGameExchange = z.infer<typeof gameExchangeSchema>;
 export type ValidatedPersonSearchResult = z.infer<
   typeof personSearchResultSchema
->;
-export type ValidatedAssignmentsResponse = z.infer<
-  typeof assignmentsResponseSchema
->;
-export type ValidatedCompensationsResponse = z.infer<
-  typeof compensationsResponseSchema
->;
-export type ValidatedExchangesResponse = z.infer<
-  typeof exchangesResponseSchema
->;
-export type ValidatedPersonSearchResponse = z.infer<
-  typeof personSearchResponseSchema
 >;
 
 /**

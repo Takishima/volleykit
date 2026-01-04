@@ -201,8 +201,3 @@ export const queryKeys = {
       ] as const,
   },
 } as const;
-
-/**
- * Type helper to extract query key types
- */
-export type QueryKeys = typeof queryKeys;

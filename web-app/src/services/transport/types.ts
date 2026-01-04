@@ -58,18 +58,6 @@ export interface Coordinates {
 }
 
 /**
- * Configuration for the transport service.
- */
-export interface TransportConfig {
-  /** OJP API endpoint URL */
-  apiEndpoint: string;
-  /** API key for authentication */
-  apiKey: string;
-  /** Minimum delay between requests in milliseconds */
-  rateLimitDelayMs: number;
-}
-
-/**
  * Error thrown when transport API requests fail.
  */
 export class TransportApiError extends Error {

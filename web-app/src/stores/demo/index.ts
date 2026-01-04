@@ -36,7 +36,6 @@ export type {
   DemoState,
   DemoAssociationCode,
   MockNominationLists,
-  MockRosterPlayer,
   ValidatedGameData,
   PendingScorerData,
   AssignmentCompensationEdit,

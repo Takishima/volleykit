@@ -37,14 +37,9 @@ if (!import.meta.env.DEV && !API_BASE) {
 export type Schemas = components["schemas"];
 export type Assignment = Schemas["Assignment"];
 export type CompensationRecord = Schemas["CompensationRecord"];
-export type ConvocationCompensation = Schemas["ConvocationCompensation"];
 export type ConvocationCompensationDetailed = Schemas["ConvocationCompensationDetailed"];
 export type GameExchange = Schemas["GameExchange"];
-export type Game = Schemas["Game"];
-export type Team = Schemas["Team"];
-export type Hall = Schemas["Hall"];
 export type RefereeGame = Schemas["RefereeGame"];
-export type PersonSummary = Schemas["PersonSummary"];
 export type AssociationSettings = Schemas["AssociationSettings"];
 export type Season = Schemas["Season"];
 export type AssignmentsResponse = Schemas["AssignmentsResponse"];
@@ -56,7 +51,6 @@ export type PossibleNomination = Schemas["PossibleNomination"];
 export type PossibleNominationsResponse = Schemas["PossibleNominationsResponse"];
 export type NominationListFinalizeResponse = Schemas["NominationListFinalizeResponse"];
 export type Scoresheet = Schemas["Scoresheet"];
-export type ScoresheetValidation = Schemas["ScoresheetValidation"];
 export type FileResource = Schemas["FileResource"];
 export type GameDetails = Schemas["GameDetails"];
 export type PersonSearchResult = Schemas["PersonSearchResult"];
@@ -663,5 +657,3 @@ export type ApiClient = typeof api;
 export function getApiClient(isDemoMode: boolean): ApiClient {
   return isDemoMode ? mockApi : api;
 }
-
-export default api;

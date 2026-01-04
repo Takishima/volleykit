@@ -14,16 +14,6 @@ import type { MockNominationLists } from "../demo-generators";
 // Re-export generator types for consumers
 export type { DemoAssociationCode, MockNominationLists } from "../demo-generators";
 
-// Mock player for roster display
-export interface MockRosterPlayer {
-  id: string;
-  shirtNumber: number;
-  displayName: string;
-  licenseCategory?: string;
-  isCaptain?: boolean;
-  isLibero?: boolean;
-}
-
 // Validated game data stored after finalization
 export interface ValidatedGameData {
   validatedAt: string;
