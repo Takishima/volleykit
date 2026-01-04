@@ -89,7 +89,7 @@ test.describe("Calendar Mode", () => {
   test.describe("Calendar Mode Login Flow", () => {
     test.beforeEach(async ({ page }) => {
       // Mock the calendar API endpoint to return valid iCal data
-      await page.route("**/sportmanager.volleyball/calendar/ical/*", (route) =>
+      await page.route("**/iCal/referee/*", (route) =>
         route.fulfill({
           status: 200,
           contentType: "text/calendar",
@@ -133,7 +133,7 @@ test.describe("Calendar Mode", () => {
   test.describe("Calendar Mode Navigation Restrictions", () => {
     test.beforeEach(async ({ page }) => {
       // Mock the calendar API
-      await page.route("**/sportmanager.volleyball/calendar/ical/*", (route) =>
+      await page.route("**/iCal/referee/*", (route) =>
         route.fulfill({
           status: 200,
           contentType: "text/calendar",
@@ -200,7 +200,7 @@ test.describe("Calendar Mode", () => {
   test.describe("Calendar Mode Logout", () => {
     test.beforeEach(async ({ page }) => {
       // Mock the calendar API
-      await page.route("**/sportmanager.volleyball/calendar/ical/*", (route) =>
+      await page.route("**/iCal/referee/*", (route) =>
         route.fulfill({
           status: 200,
           contentType: "text/calendar",
@@ -249,7 +249,7 @@ test.describe("Calendar Mode", () => {
 
     test("shows error when calendar is not found", async ({ page }) => {
       // Mock 404 response for calendar API
-      await page.route("**/sportmanager.volleyball/calendar/ical/*", (route) =>
+      await page.route("**/iCal/referee/*", (route) =>
         route.fulfill({
           status: 404,
           body: "Not Found",
