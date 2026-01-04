@@ -205,12 +205,16 @@ export function AssignmentsPage() {
         return { left: [], right: [] };
       }
 
-      const actions = createAssignmentActions(assignment, {
-        onEditCompensation: editCompensationModal.open,
-        onValidateGame: validateGameModal.open,
-        onGenerateReport: handleGenerateReport,
-        onAddToExchange: handleAddToExchange,
-      });
+      const actions = createAssignmentActions(
+        assignment,
+        {
+          onEditCompensation: editCompensationModal.open,
+          onValidateGame: validateGameModal.open,
+          onGenerateReport: handleGenerateReport,
+          onAddToExchange: handleAddToExchange,
+        },
+        t,
+      );
 
       const isGameInFuture = assignment.refereeGame?.isGameInFuture === "1";
       const canValidateGame = isValidationEligible(assignment);
@@ -246,6 +250,7 @@ export function AssignmentsPage() {
       validateGameModal,
       handleGenerateReport,
       handleAddToExchange,
+      t,
     ],
   );
 

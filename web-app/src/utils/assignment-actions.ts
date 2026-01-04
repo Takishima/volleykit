@@ -2,6 +2,7 @@ import { createElement } from "react";
 import type { Assignment } from "@/api/client";
 import { type SwipeAction, SWIPE_ACTION_ICON_SIZE } from "@/types/swipe";
 import { Wallet, Check, FileText, ArrowLeftRight } from "@/components/ui/icons";
+import type { TranslationKey } from "@/i18n";
 
 // Pre-created icon elements to avoid recreating on each function call
 const ICON_WALLET = createElement(Wallet, { size: SWIPE_ACTION_ICON_SIZE });
@@ -23,23 +24,26 @@ export interface AssignmentActionHandlers {
   onAddToExchange: (assignment: Assignment) => void;
 }
 
+type TranslationFn = (key: TranslationKey) => string;
+
 export function createAssignmentActions(
   assignment: Assignment,
   handlers: AssignmentActionHandlers,
+  t: TranslationFn,
 ): AssignmentActionConfig {
   return {
     editCompensation: {
       id: "edit-compensation",
-      label: "Edit Compensation",
-      shortLabel: "Edit",
+      label: t("assignments.editCompensation"),
+      shortLabel: t("assignments.editCompensationShort"),
       color: "bg-primary-500",
       icon: ICON_WALLET,
       onAction: () => handlers.onEditCompensation(assignment),
     },
     validateGame: {
       id: "validate-game",
-      label: "Validate Game",
-      shortLabel: "Validate",
+      label: t("assignments.validateGame"),
+      shortLabel: t("assignments.validateGameShort"),
       color: assignment.refereeGame?.game?.scoresheet?.closedAt
         ? "bg-slate-500"
         : "bg-primary-500",
@@ -48,16 +52,16 @@ export function createAssignmentActions(
     },
     generateReport: {
       id: "generate-report",
-      label: "Generate Report",
-      shortLabel: "Report",
+      label: t("assignments.generateReport"),
+      shortLabel: t("assignments.generateReportShort"),
       color: "bg-slate-500",
       icon: ICON_FILE_TEXT,
       onAction: () => handlers.onGenerateReport(assignment),
     },
     addToExchange: {
       id: "add-to-exchange",
-      label: "Add to Exchange",
-      shortLabel: "Exchange",
+      label: t("assignments.addToExchange"),
+      shortLabel: t("assignments.addToExchangeShort"),
       color: "bg-primary-500",
       icon: ICON_ARROW_LEFT_RIGHT,
       onAction: () => handlers.onAddToExchange(assignment),
