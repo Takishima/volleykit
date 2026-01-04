@@ -419,6 +419,136 @@ END:VCALENDAR`;
       expect(events[0]!.uid).toBe('test-123');
     });
   });
+
+  describe('Plus Code extraction', () => {
+    it('extracts Plus Code from URL-encoded Google Maps URL in description', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:test-123
+SUMMARY:Test
+DESCRIPTION:https://maps.google.com/?q=8FV9HH8J%2B49&hl=fr
+DTSTART:20250215T140000
+END:VEVENT
+END:VCALENDAR`;
+
+      const events = parseICalFeed(ical);
+
+      expect(events[0]!.plusCode).toBe('8FV9HH8J+49');
+    });
+
+    it('extracts Plus Code from non-URL-encoded Google Maps URL', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:test-123
+SUMMARY:Test
+DESCRIPTION:https://maps.google.com/?q=8FVC7HR7+C3
+DTSTART:20250215T140000
+END:VEVENT
+END:VCALENDAR`;
+
+      const events = parseICalFeed(ical);
+
+      expect(events[0]!.plusCode).toBe('8FVC7HR7+C3');
+    });
+
+    it('extracts Plus Code with language parameter', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:test-123
+SUMMARY:Test
+DESCRIPTION:Maps: https://maps.google.com/?q=8FVCFH6H%2BV4&hl=de End
+DTSTART:20250215T140000
+END:VEVENT
+END:VCALENDAR`;
+
+      const events = parseICalFeed(ical);
+
+      expect(events[0]!.plusCode).toBe('8FVCFH6H+V4');
+    });
+
+    it('returns null when no Plus Code in URL', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:test-123
+SUMMARY:Test
+DESCRIPTION:https://maps.google.com/?q=47.5,7.6
+DTSTART:20250215T140000
+END:VEVENT
+END:VCALENDAR`;
+
+      const events = parseICalFeed(ical);
+
+      expect(events[0]!.plusCode).toBeNull();
+    });
+
+    it('returns null when no Maps URL in description', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:test-123
+SUMMARY:Test
+DESCRIPTION:No maps link here
+DTSTART:20250215T140000
+END:VEVENT
+END:VCALENDAR`;
+
+      const events = parseICalFeed(ical);
+
+      expect(events[0]!.plusCode).toBeNull();
+    });
+
+    it('handles Plus Code in description with other content', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:test-123
+SUMMARY:Test
+DESCRIPTION:Address: Some Street 123\\nhttps://maps.google.com/?q=8FV9HMQ5%2BF5&hl=fr\\nMore info
+DTSTART:20250215T140000
+END:VEVENT
+END:VCALENDAR`;
+
+      const events = parseICalFeed(ical);
+
+      expect(events[0]!.plusCode).toBe('8FV9HMQ5+F5');
+    });
+
+    it('decodes Plus Code to coordinates when GEO is missing', () => {
+      // Plus Code 8FVC7HR7+C3 decodes to approximately 47.290, 8.560 (Thalwil, Switzerland)
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:test-123
+SUMMARY:Test
+DESCRIPTION:https://maps.google.com/?q=8FVC7HR7%2BC3&hl=fr
+DTSTART:20250215T140000
+END:VEVENT
+END:VCALENDAR`;
+
+      const events = parseICalFeed(ical);
+
+      expect(events[0]!.plusCode).toBe('8FVC7HR7+C3');
+      expect(events[0]!.geo).not.toBeNull();
+      // Plus Codes decode to approximate center of the code area
+      expect(events[0]!.geo?.latitude).toBeCloseTo(47.29, 1);
+      expect(events[0]!.geo?.longitude).toBeCloseTo(8.56, 1);
+    });
+
+    it('does not override GEO when both GEO and Plus Code are present', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:test-123
+SUMMARY:Test
+DESCRIPTION:https://maps.google.com/?q=8FVC7HR7%2BC3&hl=fr
+DTSTART:20250215T140000
+GEO:47.5584;7.6277
+END:VEVENT
+END:VCALENDAR`;
+
+      const events = parseICalFeed(ical);
+
+      // Original GEO should be preserved, not overwritten by Plus Code
+      expect(events[0]!.geo?.latitude).toBe(47.5584);
+      expect(events[0]!.geo?.longitude).toBe(7.6277);
+    });
+  });
 });
 
 describe('extractAssignment', () => {
@@ -433,6 +563,7 @@ describe('extractAssignment', () => {
       location: 'Sternenfeldstrasse 50, 4127 Birsfelden, Suisse',
       appleLocationTitle: 'Sporthalle Sternenfeld',
       geo: { latitude: 47.5584, longitude: 7.6277 },
+      plusCode: null,
       ...overrides,
     };
   }
@@ -757,6 +888,26 @@ describe('extractAssignment', () => {
 
         expect(result.assignment.gender).toBe(expected);
       });
+    });
+  });
+
+  describe('Plus Code extraction', () => {
+    it('includes Plus Code from event in assignment', () => {
+      const event = createEvent({
+        plusCode: '8FV9HH8J+49',
+      });
+      const result = extractAssignment(event);
+
+      expect(result.assignment.plusCode).toBe('8FV9HH8J+49');
+    });
+
+    it('handles null Plus Code', () => {
+      const event = createEvent({
+        plusCode: null,
+      });
+      const result = extractAssignment(event);
+
+      expect(result.assignment.plusCode).toBeNull();
     });
   });
 
@@ -1555,6 +1706,8 @@ END:VCALENDAR`;
       expect(assignment.referees.referee2).toBe('Peter Müller');
       expect(assignment.gender).toBe('men');
       expect(assignment.association).toBe('SVRZ');
+      // Plus Code extracted from Google Maps URL
+      expect(assignment.plusCode).toBe('8FVC7HR7+C3');
     });
   });
 });

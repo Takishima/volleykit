@@ -64,6 +64,7 @@ describe("calendar-client", () => {
       hallName: null,
       hallId: null,
       mapsUrl: null,
+      plusCode: null,
       referees: {},
       association: null,
     });
@@ -145,6 +146,7 @@ describe("calendar-client", () => {
         address: "Hardaustrasse 10, 8005 Zürich",
         coordinates: { latitude: 47.3769, longitude: 8.5417 },
         mapsUrl: null,
+        plusCode: null,
         referees: { referee1: "Max Mustermann", referee2: "Anna Schmidt" },
         association: "SVRZ",
       };
@@ -200,6 +202,7 @@ describe("calendar-client", () => {
         hallName: null,
         hallId: null,
         mapsUrl: null,
+        plusCode: null,
         referees: {},
         association: null,
       };
@@ -232,6 +235,7 @@ describe("calendar-client", () => {
         hallName: null,
         hallId: null,
         mapsUrl: null,
+        plusCode: null,
         referees: {},
         association: null,
       };
@@ -264,6 +268,7 @@ describe("calendar-client", () => {
         hallName: null,
         hallId: null,
         mapsUrl: null,
+        plusCode: null,
         referees: {},
         association: null,
       };
@@ -296,6 +301,7 @@ describe("calendar-client", () => {
         hallName: null,
         hallId: null,
         mapsUrl: null,
+        plusCode: null,
         referees: {},
         association: null,
       };
@@ -326,6 +332,7 @@ describe("calendar-client", () => {
         address: "Test Address",
         coordinates: null,
         mapsUrl: null,
+        plusCode: null,
         referees: {},
         association: null,
       };
@@ -377,6 +384,7 @@ describe("calendar-client", () => {
           hallName: null,
           hallId: null,
           mapsUrl: null,
+          plusCode: null,
           referees: {},
           association: null,
         },
@@ -425,6 +433,7 @@ describe("calendar-client", () => {
           hallName: null,
           hallId: null,
           mapsUrl: null,
+          plusCode: null,
           referees: {},
           association: null,
         },

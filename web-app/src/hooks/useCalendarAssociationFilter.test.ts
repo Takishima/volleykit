@@ -26,6 +26,7 @@ function createMockCalendarAssignment(
     address: 'Hardaustrasse 10, 8005 Zürich',
     coordinates: { latitude: 47.3769, longitude: 8.5417 },
     mapsUrl: 'https://maps.google.com/?q=47.3769,8.5417',
+    plusCode: null,
     referees: {},
     association: null,
     ...overrides,
