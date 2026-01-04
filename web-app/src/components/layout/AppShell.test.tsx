@@ -19,7 +19,8 @@ function createMockAuthStore(
   overrides: Record<string, unknown> = {},
 ) {
   const isDemoMode = overrides.isDemoMode === true;
-  const dataSource = isDemoMode ? "demo" : "api";
+  const isCalendarMode = overrides.isCalendarMode === true;
+  const dataSource = isCalendarMode ? "calendar" : isDemoMode ? "demo" : "api";
   return {
     status: "authenticated" as const,
     user: null,
@@ -27,6 +28,8 @@ function createMockAuthStore(
     csrfToken: null,
     dataSource: dataSource as "api" | "demo" | "calendar",
     isDemoMode,
+    isCalendarMode: () => isCalendarMode,
+    calendarCode: isCalendarMode ? "ABC123" : null,
     activeOccupationId: null,
     _checkSessionPromise: null,
     login: vi.fn(),
@@ -123,7 +126,9 @@ describe("AppShell", () => {
 
       renderAppShell();
 
-      const banner = screen.getByRole("alert");
+      // Find the demo banner by its text content to avoid ambiguity
+      const banner = screen.getByText("Demo Mode - Viewing sample data")
+        .closest('[role="alert"]');
       expect(banner).toBeInTheDocument();
       expect(banner).toHaveAttribute("aria-live", "polite");
     });
@@ -225,6 +230,244 @@ describe("AppShell", () => {
       expect(
         screen.queryByRole("button", { name: /select role/i }),
       ).not.toBeInTheDocument();
+    });
+  });
+
+  describe("calendar mode", () => {
+    const calendarUser: UserProfile = {
+      id: "calendar-ABC123",
+      firstName: "Calendar",
+      lastName: "User",
+      occupations: [], // Calendar users have no occupations
+    };
+
+    describe("calendar mode banner", () => {
+      it("renders calendar mode banner when in calendar mode", () => {
+        vi.mocked(useAuthStore).mockReturnValue(
+          createMockAuthStore({
+            user: calendarUser,
+            isCalendarMode: true,
+            activeOccupationId: null,
+          }),
+        );
+
+        renderAppShell();
+
+        // The banner has role="alert" and contains "Calendar Mode"
+        const banner = screen.getByRole("alert");
+        expect(banner).toHaveTextContent("Calendar Mode");
+      });
+
+      it("does NOT render calendar banner when not in calendar mode", () => {
+        vi.mocked(useAuthStore).mockReturnValue(
+          createMockAuthStore({
+            user: realUser,
+            isCalendarMode: false,
+            activeOccupationId: "ref-1",
+          }),
+        );
+
+        renderAppShell();
+
+        // Should not have an alert role banner (no calendar mode banner)
+        expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+      });
+
+      it("has proper accessibility attributes for calendar banner", () => {
+        vi.mocked(useAuthStore).mockReturnValue(
+          createMockAuthStore({
+            user: calendarUser,
+            isCalendarMode: true,
+            activeOccupationId: null,
+          }),
+        );
+
+        renderAppShell();
+
+        const banner = screen.getByRole("alert");
+        expect(banner).toBeInTheDocument();
+        expect(banner).toHaveAttribute("aria-live", "polite");
+      });
+
+      it.each<{ locale: Locale; expectedPattern: RegExp }>([
+        { locale: "de", expectedPattern: /kalender.?modus/i },
+        { locale: "fr", expectedPattern: /mode calendrier/i },
+        { locale: "it", expectedPattern: /modalità calendario/i },
+      ])(
+        "displays correct translation for $locale locale in calendar mode",
+        ({ locale, expectedPattern }) => {
+          setLocale(locale);
+
+          vi.mocked(useAuthStore).mockReturnValue(
+            createMockAuthStore({
+              user: calendarUser,
+              isCalendarMode: true,
+              activeOccupationId: null,
+            }),
+          );
+
+          renderAppShell();
+
+          // Use the role="alert" banner to avoid matching header indicator
+          const banner = screen.getByRole("alert");
+          expect(banner.textContent).toMatch(expectedPattern);
+        },
+      );
+    });
+
+    describe("navigation filtering", () => {
+      it("hides Compensations nav item in calendar mode", () => {
+        vi.mocked(useAuthStore).mockReturnValue(
+          createMockAuthStore({
+            user: calendarUser,
+            isCalendarMode: true,
+            activeOccupationId: null,
+          }),
+        );
+
+        renderAppShell();
+
+        // Compensations should not be in navigation
+        expect(
+          screen.queryByRole("link", { name: /compensation/i }),
+        ).not.toBeInTheDocument();
+      });
+
+      it("hides Exchange nav item in calendar mode", () => {
+        vi.mocked(useAuthStore).mockReturnValue(
+          createMockAuthStore({
+            user: calendarUser,
+            isCalendarMode: true,
+            activeOccupationId: null,
+          }),
+        );
+
+        renderAppShell();
+
+        // Exchange should not be in navigation
+        expect(
+          screen.queryByRole("link", { name: /exchange/i }),
+        ).not.toBeInTheDocument();
+      });
+
+      it("shows Assignments nav item in calendar mode", () => {
+        vi.mocked(useAuthStore).mockReturnValue(
+          createMockAuthStore({
+            user: calendarUser,
+            isCalendarMode: true,
+            activeOccupationId: null,
+          }),
+        );
+
+        renderAppShell();
+
+        // Assignments should still be visible
+        expect(
+          screen.getByRole("link", { name: /assignment/i }),
+        ).toBeInTheDocument();
+      });
+
+      it("shows Settings nav item in calendar mode", () => {
+        vi.mocked(useAuthStore).mockReturnValue(
+          createMockAuthStore({
+            user: calendarUser,
+            isCalendarMode: true,
+            activeOccupationId: null,
+          }),
+        );
+
+        renderAppShell();
+
+        // Settings should still be visible
+        expect(
+          screen.getByRole("link", { name: /setting/i }),
+        ).toBeInTheDocument();
+      });
+
+      it("shows all nav items when NOT in calendar mode", () => {
+        vi.mocked(useAuthStore).mockReturnValue(
+          createMockAuthStore({
+            user: realUser,
+            isCalendarMode: false,
+            activeOccupationId: "ref-1",
+          }),
+        );
+
+        renderAppShell();
+
+        // All nav items should be visible
+        expect(
+          screen.getByRole("link", { name: /assignment/i }),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("link", { name: /compensation/i }),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("link", { name: /exchange/i }),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("link", { name: /setting/i }),
+        ).toBeInTheDocument();
+      });
+    });
+
+    describe("occupation dropdown in calendar mode", () => {
+      it("does NOT render occupation dropdown in calendar mode", () => {
+        vi.mocked(useAuthStore).mockReturnValue(
+          createMockAuthStore({
+            user: calendarUser,
+            isCalendarMode: true,
+            activeOccupationId: null,
+          }),
+        );
+
+        renderAppShell();
+
+        // Calendar users have no occupations, so no dropdown
+        expect(
+          screen.queryByRole("button", { name: /referee/i }),
+        ).not.toBeInTheDocument();
+        expect(
+          screen.queryByRole("button", { name: /select role/i }),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    describe("demo vs calendar mode distinction", () => {
+      it("shows demo banner in demo mode, not calendar banner", () => {
+        vi.mocked(useAuthStore).mockReturnValue(
+          createMockAuthStore({
+            user: demoUser,
+            isDemoMode: true,
+            isCalendarMode: false,
+            activeOccupationId: "demo-referee-vd",
+          }),
+        );
+
+        renderAppShell();
+
+        // Demo mode banner has role="alert"
+        const banner = screen.getByRole("alert");
+        expect(banner).toHaveTextContent("Demo Mode - Viewing sample data");
+      });
+
+      it("shows calendar banner in calendar mode, not demo banner", () => {
+        vi.mocked(useAuthStore).mockReturnValue(
+          createMockAuthStore({
+            user: calendarUser,
+            isDemoMode: false,
+            isCalendarMode: true,
+            activeOccupationId: null,
+          }),
+        );
+
+        renderAppShell();
+
+        // Calendar mode banner has role="alert"
+        const banner = screen.getByRole("alert");
+        expect(banner).toHaveTextContent("Calendar Mode");
+        expect(banner).not.toHaveTextContent("Demo Mode");
+      });
     });
   });
 });

@@ -19,7 +19,7 @@ export class LoginPage {
   // Common elements
   readonly demoButton: Locator;
   readonly fullLoginTab: Locator;
-  readonly calendarTab: Locator;
+  readonly calendarModeTab: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -32,22 +32,14 @@ export class LoginPage {
     this.calendarLoginButton = page.getByTestId("calendar-login-button");
     // Common elements
     this.demoButton = page.getByTestId("demo-button");
-    this.fullLoginTab = page.getByRole("tab", { name: /full/i });
-    this.calendarTab = page.getByRole("tab", { name: /calendar/i });
+    this.fullLoginTab = page.getByTestId("full-login-tab");
+    this.calendarModeTab = page.getByTestId("calendar-login-tab");
   }
 
   async goto() {
     await this.page.goto("/login");
     // Wait for login form to be ready - calendar mode is the default
     await expect(this.demoButton).toBeVisible();
-  }
-
-  /**
-   * Switch to full login mode (username/password)
-   */
-  async switchToFullLogin() {
-    await this.fullLoginTab.click();
-    await expect(this.loginButton).toBeVisible();
   }
 
   async login(username: string, password: string) {
@@ -70,22 +62,46 @@ export class LoginPage {
     await expect(this.page.getByRole("main")).toBeVisible();
   }
 
-  /**
-   * Check that calendar mode (default) elements are visible
-   */
-  async expectCalendarModeToBeVisible() {
+  async expectToBeVisible() {
     await expect(this.calendarInput).toBeVisible();
-    await expect(this.calendarLoginButton).toBeVisible();
     await expect(this.demoButton).toBeVisible();
   }
 
   /**
-   * Check that full login mode elements are visible
-   * (must switch to full login mode first)
+   * Switch to calendar mode tab on the login page.
    */
-  async expectFullLoginToBeVisible() {
+  async switchToCalendarMode() {
+    await this.calendarModeTab.click();
+    await expect(this.calendarInput).toBeVisible();
+  }
+
+  /**
+   * Switch to full login tab on the login page.
+   */
+  async switchToFullLogin() {
+    await this.fullLoginTab.click();
     await expect(this.usernameInput).toBeVisible();
-    await expect(this.passwordInput).toBeVisible();
-    await expect(this.loginButton).toBeVisible();
+  }
+
+  /**
+   * Enter calendar mode using a calendar code.
+   * Note: Requires the calendar API to be mocked for E2E tests.
+   */
+  async enterCalendarMode(calendarCode: string) {
+    await this.switchToCalendarMode();
+    await this.calendarInput.fill(calendarCode);
+    await this.calendarLoginButton.click();
+
+    // Wait for navigation away from login page and main content to appear
+    await expect(this.page).not.toHaveURL(/login/);
+    await expect(this.page.getByRole("main")).toBeVisible();
+  }
+
+  /**
+   * Expect calendar mode tab to be visible.
+   */
+  async expectCalendarModeTabVisible() {
+    await expect(this.calendarModeTab).toBeVisible();
+    await expect(this.fullLoginTab).toBeVisible();
   }
 }
