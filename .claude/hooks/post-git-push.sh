@@ -70,7 +70,7 @@ if [[ "$command" == *"git push"* ]]; then
         cat <<EOF
 {
   "decision": "block",
-  "reason": "Push successful. PR #${pr_number} exists: ${pr_html_url}\\n\\n**REQUIRED ACTIONS (do all steps):**\\n\\n1. Generate PR content:\\n   - Title: conventional commit style (e.g., feat(scope): description)\\n   - Body: ## Summary, ## Changes, ## Test Plan sections\\n\\n2. Update PR via API using curl with jq for proper JSON escaping:\\n   jq -n --arg title \"<title>\" --arg body \"<body>\" '{title: \\\$title, body: \\\$body}' | \\\\\\n   curl -X PATCH \"https://api.github.com/repos/${owner}/${repo}/pulls/${pr_number}\" \\\\\\n     -H \"Authorization: token \\\$GITHUB_TOKEN\" \\\\\\n     -H \"Accept: application/vnd.github.v3+json\" \\\\\\n     -d @-\\n\\n3. **CONFIRM to user** (REQUIRED - do not skip):\\n   - On success: \\\"✓ Updated PR #${pr_number} title and description\\\"\\n   - On failure: \\\"✗ Failed to update PR: <error>\\\"\\n\\n4. Show the user what was set:\\n   **Title:** <title>\\n   \\\`\\\`\\\`markdown\\n   <description>\\n   \\\`\\\`\\\`\\n\\nNOTE: Use 4-space indentation for code in description, not backticks."
+  "reason": "Push successful. PR #${pr_number} exists: ${pr_html_url}\\n\\n**YOU MUST IMMEDIATELY (no user input needed):**\\n\\n1. Generate PR content based on commits on this branch:\\n   - Title: conventional commit format (feat/fix/refactor/docs/chore)\\n   - Body: ## Summary (bullet points), ## Test Plan (checklist)\\n\\n2. Update PR via API using curl with jq for proper JSON escaping:\\n   jq -n --arg title \"<title>\" --arg body \"<body>\" '{title: \\\$title, body: \\\$body}' | \\\\\\n   curl -X PATCH \"https://api.github.com/repos/${owner}/${repo}/pulls/${pr_number}\" \\\\\\n     -H \"Authorization: token \\\$GITHUB_TOKEN\" \\\\\\n     -H \"Accept: application/vnd.github.v3+json\" \\\\\\n     -d @-\\n\\n3. Report result to user:\\n   - On success: \\\"✓ Updated PR #${pr_number}: ${pr_html_url}\\\"\\n   - On failure: \\\"✗ Failed to update PR: <error>\\\"\\n\\nDO THIS NOW - do not ask the user, do not wait for confirmation."
 }
 EOF
         exit 0
@@ -79,7 +79,7 @@ EOF
         cat <<EOF
 {
   "decision": "block",
-  "reason": "Push successful. PR exists: ${pr_html_url}\\n\\n**REQUIRED ACTIONS:**\\n\\n1. Generate PR content and output for manual copy:\\n\\n**Title:** <conventional commit style>\\n\\n\\\`\\\`\\\`markdown\\n## Summary\\n- <bullet points>\\n\\n## Changes\\n- <specific changes>\\n\\n## Test Plan\\n- [ ] <test items>\\n\\\`\\\`\\\`\\n\\n2. **CONFIRM to user**: \\\"PR description ready for manual copy (no API token available)\\\"\\n\\nNOTE: Use 4-space indentation for code in description, not backticks."
+  "reason": "Push successful. PR exists: ${pr_html_url}\\n\\n**YOU MUST IMMEDIATELY (no user input needed):**\\n\\n1. Generate PR content based on commits on this branch and output for manual copy:\\n\\n**Title:** <conventional commit format>\\n\\n\\\`\\\`\\\`markdown\\n## Summary\\n<bullet points>\\n\\n## Test Plan\\n- [ ] <test items>\\n\\\`\\\`\\\`\\n\\n2. Tell user: \\\"Copy the above to update PR at ${pr_html_url}\\\"\\n\\nDO THIS NOW - do not ask the user, do not wait for confirmation."
 }
 EOF
         exit 0
@@ -94,7 +94,7 @@ EOF
       cat <<EOF
 {
   "decision": "block",
-  "reason": "Push successful. No PR exists yet.\\n\\n**REQUIRED ACTIONS:**\\n\\n1. Generate PR content:\\n   - Title: conventional commit style (e.g., feat(scope): description)\\n   - Body: ## Summary, ## Changes, ## Test Plan sections\\n\\n2. URL-encode title and body, then output a SINGLE clickable link:\\n   [Create PR: <title>](${base_url}&title=<encoded-title>&body=<encoded-body>)\\n\\n3. **CONFIRM to user**: \\\"Click the link above to create the PR\\\"\\n\\nNOTE: Output ONLY the markdown link. Use 4-space indentation for code in description, not backticks."
+  "reason": "Push successful. No PR exists yet.\\n\\n**YOU MUST IMMEDIATELY (no user input needed):**\\n\\n1. Generate PR content based on commits on this branch:\\n   - Title: conventional commit format (feat/fix/refactor/docs/chore)\\n   - Body: ## Summary (bullet points), ## Test Plan (checklist)\\n\\n2. Create the PR link by URL-encoding the title and body, then output ONLY this clickable markdown link:\\n   [Create PR: <your-title>](${base_url}&title=<url-encoded-title>&body=<url-encoded-body>)\\n\\n3. Tell user: \\\"Click the link above to create the PR\\\"\\n\\nDO THIS NOW - do not ask the user, do not wait for confirmation. Generate the content and output the link immediately."
 }
 EOF
       exit 0
@@ -105,7 +105,7 @@ EOF
   cat <<EOF
 {
   "decision": "block",
-  "reason": "Push successful.\\n\\n**REQUIRED ACTIONS:**\\n\\n1. Generate PR content and output for manual copy:\\n\\n**Title:** <conventional commit style>\\n\\n\\\`\\\`\\\`markdown\\n## Summary\\n- <bullet points>\\n\\n## Changes\\n- <specific changes>\\n\\n## Test Plan\\n- [ ] <test items>\\n\\\`\\\`\\\`\\n\\n2. **CONFIRM to user**: \\\"PR description ready for manual copy\\\"\\n\\nNOTE: Use 4-space indentation for code in description, not backticks."
+  "reason": "Push successful.\\n\\n**YOU MUST IMMEDIATELY (no user input needed):**\\n\\n1. Generate PR content based on commits on this branch and output for manual copy:\\n\\n**Title:** <conventional commit format>\\n\\n\\\`\\\`\\\`markdown\\n## Summary\\n<bullet points>\\n\\n## Test Plan\\n- [ ] <test items>\\n\\\`\\\`\\\`\\n\\n2. Tell user: \\\"PR description ready - create PR manually on GitHub\\\"\\n\\nDO THIS NOW - do not ask the user, do not wait for confirmation."
 }
 EOF
   exit 0
