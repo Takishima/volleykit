@@ -510,6 +510,44 @@ END:VCALENDAR`;
 
       expect(events[0]!.plusCode).toBe('8FV9HMQ5+F5');
     });
+
+    it('decodes Plus Code to coordinates when GEO is missing', () => {
+      // Plus Code 8FVC7HR7+C3 decodes to approximately 47.290, 8.560 (Thalwil, Switzerland)
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:test-123
+SUMMARY:Test
+DESCRIPTION:https://maps.google.com/?q=8FVC7HR7%2BC3&hl=fr
+DTSTART:20250215T140000
+END:VEVENT
+END:VCALENDAR`;
+
+      const events = parseICalFeed(ical);
+
+      expect(events[0]!.plusCode).toBe('8FVC7HR7+C3');
+      expect(events[0]!.geo).not.toBeNull();
+      // Plus Codes decode to approximate center of the code area
+      expect(events[0]!.geo?.latitude).toBeCloseTo(47.29, 1);
+      expect(events[0]!.geo?.longitude).toBeCloseTo(8.56, 1);
+    });
+
+    it('does not override GEO when both GEO and Plus Code are present', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:test-123
+SUMMARY:Test
+DESCRIPTION:https://maps.google.com/?q=8FVC7HR7%2BC3&hl=fr
+DTSTART:20250215T140000
+GEO:47.5584;7.6277
+END:VEVENT
+END:VCALENDAR`;
+
+      const events = parseICalFeed(ical);
+
+      // Original GEO should be preserved, not overwritten by Plus Code
+      expect(events[0]!.geo?.latitude).toBe(47.5584);
+      expect(events[0]!.geo?.longitude).toBe(7.6277);
+    });
   });
 });
 

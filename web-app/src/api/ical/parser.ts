@@ -68,6 +68,7 @@ import type {
   RefereeRole,
   Gender,
 } from './types';
+import { decode as decodePlusCode } from 'pluscodes';
 
 /** Pattern to extract game ID from UID */
 const GAME_ID_PATTERN = /referee-convocation-for-game-(\d+)/;
@@ -552,6 +553,14 @@ export function parseICalFeed(icsContent: string): ICalEvent[] {
 
     // Extract Plus Code from Google Maps URL in description
     const plusCode = extractPlusCodeFromDescription(description);
+
+    // If we have a Plus Code but no GEO coordinates, decode the Plus Code
+    if (plusCode && !geo) {
+      const decoded = decodePlusCode(plusCode);
+      if (decoded) {
+        geo = { latitude: decoded.latitude, longitude: decoded.longitude };
+      }
+    }
 
     events.push({
       uid,
