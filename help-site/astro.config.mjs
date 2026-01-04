@@ -1,10 +1,12 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
-import tailwindcss from '@astrojs/tailwind';
+import tailwindcss from '@tailwindcss/vite';
 
 // https://astro.build/config
 export default defineConfig({
   site: 'https://takishima.github.io',
   base: '/volleykit/help',
-  integrations: [tailwindcss()],
+  vite: {
+    plugins: [tailwindcss()],
+  },
 });
