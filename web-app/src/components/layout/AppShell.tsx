@@ -212,6 +212,8 @@ export function AppShell() {
                 {dataSource === "calendar" && (
                   <div
                     className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-primary-100 dark:bg-primary-900/40"
+                    role="status"
+                    aria-label={t("common.calendarModeTooltip")}
                     title={t("common.calendarModeTooltip")}
                   >
                     <Calendar
