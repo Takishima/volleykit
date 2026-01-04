@@ -118,21 +118,26 @@
 
 /* ==============================================
  * CALENDAR MODE THEME VARIANT
- * Slightly darker green (~10-15%) for calendar mode
+ * Slightly darker green (~15%) for calendar mode
  * Applied via .calendar-mode class on :root
+ *
+ * Colors derived by reducing HSL lightness of each
+ * primary shade by ~15% from the base palette:
+ *   Base primary-500: #b2e600 (hsl 73, 100%, 45%)
+ *   Calendar primary-500: #98c400 (hsl 73, 100%, 38%)
  * ============================================== */
 .calendar-mode {
-  --color-primary-50: #f5fad6;
-  --color-primary-100: #ebf5aa;
-  --color-primary-200: #dceb70;
-  --color-primary-300: #c8dc38;
-  --color-primary-400: #b8d020;
-  --color-primary-500: #98c400;  /* Main brand - ~15% darker */
-  --color-primary-600: #759c00;  /* Hover state - ~15% darker */
-  --color-primary-700: #587500;
-  --color-primary-800: #465d06;
-  --color-primary-900: #3b4e09;
-  --color-primary-950: #1e2c00;
+  --color-primary-50: #f5fad6;   /* Base #fdffe4 lightness 95% → 91% */
+  --color-primary-100: #ebf5aa;  /* Base #f9ffc4 lightness 88% → 81% */
+  --color-primary-200: #dceb70;  /* Base #f1ff90 lightness 78% → 68% */
+  --color-primary-300: #c8dc38;  /* Base #e2ff50 lightness 66% → 54% */
+  --color-primary-400: #b8d020;  /* Base #d7ff37 lightness 61% → 47% */
+  --color-primary-500: #98c400;  /* Base #b2e600 lightness 45% → 38% */
+  --color-primary-600: #759c00;  /* Base #8ab800 lightness 36% → 31% */
+  --color-primary-700: #587500;  /* Base #688b00 lightness 27% → 23% */
+  --color-primary-800: #465d06;  /* Base #526d07 lightness 23% → 19% */
+  --color-primary-900: #3b4e09;  /* Base #455c0b lightness 20% → 17% */
+  --color-primary-950: #1e2c00;  /* Base #233400 lightness 10% → 9% */
 }
 
 /* Base styles */

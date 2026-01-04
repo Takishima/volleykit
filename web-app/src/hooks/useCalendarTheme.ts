@@ -11,7 +11,9 @@ const CALENDAR_MODE_CLASS = "calendar-mode";
  * The CSS variables are overridden in index.css when .calendar-mode is present.
  */
 export function useCalendarTheme(): void {
-  const isCalendarMode = useAuthStore((state) => state.isCalendarMode());
+  // Subscribe to dataSource directly for proper Zustand reactivity
+  // (calling methods inside selectors can miss updates)
+  const isCalendarMode = useAuthStore((state) => state.dataSource === "calendar");
 
   useEffect(() => {
     const root = document.documentElement;
