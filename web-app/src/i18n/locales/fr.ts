@@ -171,6 +171,7 @@ const fr: Translations = {
     privacyNote: "Votre mot de passe n'est jamais stocké.",
     loadingDemo: "Chargement du mode démo...",
     noRefereeRole: "Cette application est réservée aux arbitres. Votre compte n'a pas de rôle d'arbitre dans VolleyManager.",
+    invalidCalendarCode: "Code de calendrier invalide. Veuillez entrer un code à 6 caractères.",
   },
   occupations: {
     referee: "Arbitre",

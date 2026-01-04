@@ -87,8 +87,8 @@ interface AuthState {
   hasMultipleAssociations: () => boolean;
   /** Returns true if in calendar mode */
   isCalendarMode: () => boolean;
-  /** Login with a calendar code (placeholder - implementation pending) */
-  loginWithCalendar: (code: string) => void;
+  /** Login with a calendar code (placeholder - validation will be added later) */
+  loginWithCalendar: (code: string) => Promise<void>;
   /** Logout from calendar mode (alias for logout) */
   logoutCalendar: () => Promise<void>;
   /** Get the current authentication mode */
@@ -100,6 +100,9 @@ const LOGIN_PAGE_URL = `${API_BASE}/login`;
 const AUTH_URL = `${API_BASE}/sportmanager.security/authentication/authenticate`;
 const LOGOUT_URL = `${API_BASE}/logout`;
 const SESSION_CHECK_TIMEOUT_MS = 10_000;
+
+/** Calendar codes are exactly 6 alphanumeric characters */
+const CALENDAR_CODE_PATTERN = /^[a-zA-Z0-9]{6}$/;
 
 /**
  * Error key for users without a referee role.
@@ -556,17 +559,25 @@ export const useAuthStore = create<AuthState>()(
         return get().dataSource === "calendar";
       },
 
-      loginWithCalendar: (code: string) => {
-        // Placeholder implementation - full logic will be added when Calendar Mode is implemented.
+      loginWithCalendar: async (code: string): Promise<void> => {
+        // Validate calendar code format (6 alphanumeric characters)
+        const trimmedCode = code.trim();
+        if (!CALENDAR_CODE_PATTERN.test(trimmedCode)) {
+          set({ status: "error", error: "auth.invalidCalendarCode" });
+          return;
+        }
+
+        // Store the calendar code and set calendar mode.
+        // Actual API validation (fetching to verify code works) will be added later.
         // Currently occupations are empty which differs from other auth modes.
         // Full implementation will fetch referee info from the calendar API endpoint.
         set({
           status: "authenticated",
           dataSource: "calendar",
-          calendarCode: code,
+          calendarCode: trimmedCode,
           isDemoMode: false,
           user: {
-            id: `calendar-${code}`,
+            id: `calendar-${trimmedCode}`,
             firstName: "Calendar",
             lastName: "User",
             occupations: [],

@@ -63,6 +63,7 @@ export interface Translations {
     privacyNote: string;
     loadingDemo: string;
     noRefereeRole: string;
+    invalidCalendarCode: string;
   };
   occupations: {
     referee: string;
