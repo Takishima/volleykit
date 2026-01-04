@@ -4,54 +4,55 @@ import Header from '../components/Header.astro';
 import MobileNav from '../components/MobileNav.astro';
 import Footer from '../components/Footer.astro';
 import FeatureCard from '../components/FeatureCard.astro';
+import { BASE_PATH } from '../constants';
 
 const features = [
   {
     title: 'Getting Started',
     description: 'Quick start guide to set up and use VolleyKit for the first time.',
-    href: '/volleykit/help/getting-started/',
+    href: `${BASE_PATH}/getting-started/`,
     icon: 'rocket',
   },
   {
     title: 'Assignments',
     description: 'View and manage your upcoming volleyball referee games.',
-    href: '/volleykit/help/assignments/',
+    href: `${BASE_PATH}/assignments/`,
     icon: 'calendar-check',
   },
   {
     title: 'Exchanges',
     description: 'Request game swaps and offer your assignments to other referees.',
-    href: '/volleykit/help/exchanges/',
+    href: `${BASE_PATH}/exchanges/`,
     icon: 'arrow-left-right',
   },
   {
     title: 'Compensations',
     description: 'Track your referee earnings and compensation history.',
-    href: '/volleykit/help/compensations/',
+    href: `${BASE_PATH}/compensations/`,
     icon: 'wallet',
   },
   {
     title: 'Calendar Mode',
     description: 'Read-only access to view assignments without logging in.',
-    href: '/volleykit/help/calendar-mode/',
+    href: `${BASE_PATH}/calendar-mode/`,
     icon: 'calendar',
   },
   {
     title: 'Travel Time',
     description: 'Calculate travel times using Swiss public transport integration.',
-    href: '/volleykit/help/travel-time/',
+    href: `${BASE_PATH}/travel-time/`,
     icon: 'train',
   },
   {
     title: 'Offline & PWA',
     description: 'Install the app and use it offline on your device.',
-    href: '/volleykit/help/offline-pwa/',
+    href: `${BASE_PATH}/offline-pwa/`,
     icon: 'wifi-off',
   },
   {
     title: 'Settings',
     description: 'Customize your language, theme, and notification preferences.',
-    href: '/volleykit/help/settings/',
+    href: `${BASE_PATH}/settings/`,
     icon: 'settings',
   },
 ];
@@ -73,7 +74,7 @@ const features = [
           <!-- Logo -->
           <div class="mb-6 flex justify-center">
             <img
-              src="/volleykit/help/favicon.svg"
+              src={`${BASE_PATH}/favicon.svg`}
               alt=""
               class="h-16 w-16 md:h-20 md:w-20"
               aria-hidden="true"
@@ -92,7 +93,7 @@ const features = [
 
           <!-- CTA Button -->
           <a
-            href="/volleykit/help/getting-started/"
+            href={`${BASE_PATH}/getting-started/`}
             class="inline-flex items-center gap-2 rounded-lg bg-primary-500 px-6 py-3 text-lg font-medium text-primary-950 transition-colors hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
           >
             Get Started

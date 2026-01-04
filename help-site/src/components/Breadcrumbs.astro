@@ -4,6 +4,7 @@
  * Renders: Home > Parent > Current Page
  * Last item is not a link (current page)
  */
+import { BASE_PATH } from '../constants';
 
 interface BreadcrumbItem {
   label: string;
@@ -20,7 +21,7 @@ const { items } = Astro.props;
 const breadcrumbItems: BreadcrumbItem[] =
   items[0]?.label === 'Home'
     ? items
-    : [{ label: 'Home', href: '/volleykit/help/' }, ...items];
+    : [{ label: 'Home', href: `${BASE_PATH}/` }, ...items];
 ---
 
 <nav aria-label="Breadcrumb" class="mb-6">

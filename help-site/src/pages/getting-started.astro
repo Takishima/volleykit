@@ -3,6 +3,7 @@ import DocLayout from '../layouts/DocLayout.astro';
 import Screenshot from '../components/Screenshot.astro';
 import InfoBox from '../components/InfoBox.astro';
 import StepList from '../components/StepList.astro';
+import { BASE_PATH } from '../constants';
 ---
 
 <DocLayout
@@ -114,8 +115,8 @@ import StepList from '../components/StepList.astro';
   </p>
 
   <ul>
-    <li><a href="/volleykit/help/assignments/">Managing your assignments</a></li>
-    <li><a href="/volleykit/help/exchanges/">Requesting and accepting exchanges</a></li>
-    <li><a href="/volleykit/help/compensations/">Tracking your compensations</a></li>
+    <li><a href={`${BASE_PATH}/assignments/`}>Managing your assignments</a></li>
+    <li><a href={`${BASE_PATH}/exchanges/`}>Requesting and accepting exchanges</a></li>
+    <li><a href={`${BASE_PATH}/compensations/`}>Tracking your compensations</a></li>
   </ul>
 </DocLayout>

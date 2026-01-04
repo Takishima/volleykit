@@ -2,6 +2,7 @@
 import DocLayout from '../layouts/DocLayout.astro';
 import Screenshot from '../components/Screenshot.astro';
 import InfoBox from '../components/InfoBox.astro';
+import { BASE_PATH } from '../constants';
 ---
 
 <DocLayout
@@ -102,7 +103,7 @@ import InfoBox from '../components/InfoBox.astro';
   </InfoBox>
 
   <p>
-    See the <a href="/volleykit/help/travel-time/">Travel Time guide</a> for more
+    See the <a href={`${BASE_PATH}/travel-time/`}>Travel Time guide</a> for more
     details on this feature.
   </p>
 

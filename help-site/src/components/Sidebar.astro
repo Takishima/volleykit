@@ -1,13 +1,14 @@
 ---
 import { navItems } from '../data/navItems';
+import { BASE_PATH } from '../constants';
 
 const currentPath = Astro.url.pathname;
 
 // Helper to check if a nav item is active
 function isActive(href: string): boolean {
   // Exact match for home
-  if (href === '/volleykit/help/') {
-    return currentPath === href || currentPath === '/volleykit/help';
+  if (href === `${BASE_PATH}/`) {
+    return currentPath === href || currentPath === BASE_PATH;
   }
   // Prefix match for other pages
   return currentPath.startsWith(href);

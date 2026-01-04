@@ -5,6 +5,7 @@
  */
 import Search from './Search.astro';
 import LanguageSwitcher from './LanguageSwitcher.astro';
+import { BASE_PATH } from '../constants';
 ---
 
 <header
@@ -37,16 +38,16 @@ import LanguageSwitcher from './LanguageSwitcher.astro';
 
     <!-- Desktop: Logo and title -->
     <a
-      href="/volleykit/help/"
+      href={`${BASE_PATH}/`}
       class="hidden items-center gap-2 text-text-primary hover:text-primary-600 dark:text-text-primary-dark dark:hover:text-primary-400 lg:flex"
     >
-      <img src="/volleykit/help/favicon.svg" alt="" class="h-7 w-7" aria-hidden="true" />
+      <img src={`${BASE_PATH}/favicon.svg`} alt="" class="h-7 w-7" aria-hidden="true" />
       <span class="font-semibold">VolleyKit Help</span>
     </a>
 
     <!-- Mobile: Centered title -->
     <a
-      href="/volleykit/help/"
+      href={`${BASE_PATH}/`}
       class="font-semibold text-text-primary dark:text-text-primary-dark lg:hidden"
     >
       VolleyKit Help

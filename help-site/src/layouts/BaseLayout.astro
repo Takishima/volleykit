@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import SearchModal from '../components/SearchModal.astro';
+import { BASE_PATH } from '../constants';
 
 interface Props {
   title: string;
@@ -11,7 +12,7 @@ interface Props {
 const {
   title,
   description = 'Help documentation for VolleyKit - the improved interface for Swiss volleyball referee management.',
-  image = '/volleykit/help/og-image.png',
+  image = `${BASE_PATH}/og-image.png`,
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
@@ -45,7 +46,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <meta property="twitter:image" content={image} />
 
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/volleykit/help/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href={`${BASE_PATH}/favicon.svg`} />
 
     <!-- Dark mode script - runs before page render to prevent flash -->
     <script is:inline>

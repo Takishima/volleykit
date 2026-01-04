@@ -3,6 +3,7 @@
  * Footer component
  * Site footer with links and copyright
  */
+import { BASE_PATH } from '../constants';
 
 const currentYear = new Date().getFullYear();
 ---
@@ -13,7 +14,7 @@ const currentYear = new Date().getFullYear();
       <!-- Branding -->
       <div class="flex items-center gap-2">
         <img
-          src="/volleykit/help/favicon.svg"
+          src={`${BASE_PATH}/favicon.svg`}
           alt=""
           class="h-6 w-6"
           aria-hidden="true"

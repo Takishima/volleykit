@@ -5,6 +5,7 @@
  */
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { BASE_PATH } from '../constants';
 
 interface Props {
   /** Unique identifier for the screenshot (used as filename) */
@@ -20,7 +21,7 @@ interface Props {
 const { id, alt, caption, instructions } = Astro.props;
 
 // Check if screenshot exists
-const imagePath = `/volleykit/help/images/screenshots/${id}.png`;
+const imagePath = `${BASE_PATH}/images/screenshots/${id}.png`;
 const absolutePath = join(process.cwd(), 'public', 'images', 'screenshots', `${id}.png`);
 const imageExists = existsSync(absolutePath);
 ---
