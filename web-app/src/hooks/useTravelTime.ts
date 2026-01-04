@@ -7,6 +7,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "@/stores/auth";
 import { useSettingsStore } from "@/stores/settings";
 import { useActiveAssociationCode } from "@/hooks/useActiveAssociation";
@@ -49,10 +50,12 @@ export function useTravelTime(
   options: UseTravelTimeOptions = {},
 ) {
   const { date, targetArrivalTime } = options;
-  const { isDemoMode, dataSource } = useAuthStore((state) => ({
-    isDemoMode: state.isDemoMode,
-    dataSource: state.dataSource,
-  }));
+  const { isDemoMode, dataSource } = useAuthStore(
+    useShallow((state) => ({
+      isDemoMode: state.isDemoMode,
+      dataSource: state.dataSource,
+    })),
+  );
   const isCalendarMode = dataSource === "calendar";
   const homeLocation = useSettingsStore((state) => state.homeLocation);
   const transportEnabled = useSettingsStore((state) => state.transportEnabled);
@@ -191,10 +194,12 @@ export function formatTravelTime(minutes: number): string {
  * enabling transport calculations when OJP is configured.
  */
 export function useTravelTimeAvailable(): boolean {
-  const { isDemoMode, dataSource } = useAuthStore((state) => ({
-    isDemoMode: state.isDemoMode,
-    dataSource: state.dataSource,
-  }));
+  const { isDemoMode, dataSource } = useAuthStore(
+    useShallow((state) => ({
+      isDemoMode: state.isDemoMode,
+      dataSource: state.dataSource,
+    })),
+  );
   const isCalendarMode = dataSource === "calendar";
   return isDemoMode || isCalendarMode || isOjpConfigured();
 }
