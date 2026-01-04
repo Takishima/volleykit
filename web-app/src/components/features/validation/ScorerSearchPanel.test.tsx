@@ -49,7 +49,7 @@ vi.mock("@/hooks/useScorerSearch", () => ({
 }));
 
 vi.mock("@/stores/auth", () => ({
-  useAuthStore: vi.fn((selector) => selector({ isDemoMode: false })),
+  useAuthStore: vi.fn((selector) => selector({ dataSource: "api" })),
 }));
 
 function createWrapper() {

@@ -13,17 +13,20 @@ vi.mock("@/stores/auth", () => ({
 
 /**
  * Create a mock auth store return value with sensible defaults.
- * Accepts Partial<ReturnType<typeof useAuthStore>> to allow overriding any property.
+ * Accepts partial overrides to allow customizing any property.
  */
 function createMockAuthStore(
-  overrides: Partial<ReturnType<typeof useAuthStore>> = {},
+  overrides: Record<string, unknown> = {},
 ) {
+  const isDemoMode = overrides.isDemoMode === true;
+  const dataSource = isDemoMode ? "demo" : "api";
   return {
     status: "authenticated" as const,
     user: null,
     error: null,
     csrfToken: null,
-    isDemoMode: false,
+    dataSource: dataSource as "api" | "demo" | "calendar",
+    isDemoMode,
     activeOccupationId: null,
     _checkSessionPromise: null,
     login: vi.fn(),

@@ -3,7 +3,7 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 import { ScoresheetPanel } from "./ScoresheetPanel";
 
 vi.mock("@/stores/auth", () => ({
-  useAuthStore: vi.fn((selector) => selector({ isDemoMode: false })),
+  useAuthStore: vi.fn((selector) => selector({ dataSource: "api" })),
 }));
 
 const SIMULATED_UPLOAD_DURATION_MS = 1500;

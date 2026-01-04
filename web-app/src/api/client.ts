@@ -684,5 +684,9 @@ export function getApiClient(dataSource: DataSource | boolean): ApiClient {
       throw new Error("Calendar API not yet implemented");
     case "api":
       return api;
+    default: {
+      const _exhaustive: never = dataSource;
+      throw new Error(`Unknown data source: ${_exhaustive}`);
+    }
   }
 }

@@ -36,6 +36,7 @@ describe("AppShell Integration", () => {
     useAuthStore.setState({
       status: "idle",
       user: null,
+      dataSource: "api",
       isDemoMode: false,
       activeOccupationId: null,
       isAssociationSwitching: false,
