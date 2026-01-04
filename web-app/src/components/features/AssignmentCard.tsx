@@ -161,6 +161,7 @@ function AssignmentCardComponent({
               {t("common.vs")} {awayTeam}
             </div>
             {/* Position and gender shown in compact view */}
+            {/* Note: Gender icon hidden in calendar mode (gender data unavailable) */}
             <div className="text-xs text-text-subtle dark:text-text-subtle-dark flex items-center gap-1">
               <span>{position}</span>
               {gender === "m" && (
@@ -184,6 +185,7 @@ function AssignmentCardComponent({
               <span className="text-xs text-text-muted dark:text-text-muted-dark truncate w-full text-right">
                 {city || ""}
               </span>
+              {/* Note: League category hidden in calendar mode (league data unavailable) */}
               {game?.group?.phase?.league?.leagueCategory?.name && (
                 <span className="text-xs text-text-subtle dark:text-text-subtle-dark truncate w-full text-right">
                   {game.group.phase.league.leagueCategory.name}
@@ -273,7 +275,7 @@ function AssignmentCardComponent({
             </div>
           )}
 
-          {/* Category/League */}
+          {/* Category/League - hidden in calendar mode (league data unavailable) */}
           {game?.group?.phase?.league?.leagueCategory?.name && (
             <div className="text-xs text-text-subtle dark:text-text-subtle-dark">
               {game.group.phase.league.leagueCategory.name}
@@ -282,7 +284,7 @@ function AssignmentCardComponent({
             </div>
           )}
 
-          {/* Referee names */}
+          {/* Referee names - hidden in calendar mode (referee convocation data unavailable) */}
           {(headReferee1 || headReferee2 || linesmen.length > 0) && (
             <div className="text-xs text-text-subtle dark:text-text-subtle-dark pt-1 space-y-0.5">
               {headReferee1 && (

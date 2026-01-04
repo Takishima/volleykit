@@ -420,83 +420,128 @@ describe("isCompensationEditable", () => {
 });
 
 describe("isAssignmentCompensationEditable", () => {
-  it("returns true when convocationCompensation is undefined (backwards compatibility)", () => {
-    const assignment = {
-      __identity: "test-1",
-      refereeGame: {},
-    } as unknown as Assignment;
-
-    expect(isAssignmentCompensationEditable(assignment)).toBe(true);
+  // Helper to create a refereeGame with league data (not calendar mode)
+  const createRefereeGameWithLeague = () => ({
+    game: {
+      group: {
+        phase: {
+          league: {
+            leagueCategory: { name: "NLA" },
+          },
+        },
+      },
+    },
   });
 
-  it("returns true for unpaid assignment with central payout method (SV association)", () => {
-    const assignment = {
-      __identity: "test-1",
-      convocationCompensation: {
-        paymentDone: false,
-        methodOfDisbursementArbitration: "central_payout",
-        lockPayoutCentralPayoutCompensation: false,
-      },
-      refereeGame: {},
-    } as unknown as Assignment;
+  describe("calendar mode assignments", () => {
+    it("returns false for calendar mode assignments (missing league data)", () => {
+      // Calendar mode assignments don't have league data in the nested structure
+      const assignment = {
+        __identity: "test-1",
+        refereeGame: {
+          game: {
+            // No group/phase/league - this is a calendar mode assignment
+          },
+        },
+      } as unknown as Assignment;
 
-    expect(isAssignmentCompensationEditable(assignment)).toBe(true);
+      expect(isAssignmentCompensationEditable(assignment)).toBe(false);
+    });
+
+    it("returns false for calendar mode even with empty convocationCompensation", () => {
+      const assignment = {
+        __identity: "test-1",
+        convocationCompensation: {},
+        refereeGame: {
+          game: {
+            // No league data
+          },
+        },
+      } as unknown as Assignment;
+
+      expect(isAssignmentCompensationEditable(assignment)).toBe(false);
+    });
   });
 
-  it("returns true for central payout when on-site lock is true but central lock is false (NLB case)", () => {
-    // This is the key bug fix test for assignments
-    const assignment = {
-      __identity: "test-1",
-      convocationCompensation: {
-        paymentDone: false,
-        methodOfDisbursementArbitration: "central_payout",
-        lockPayoutOnSiteCompensation: true,
-        lockPayoutCentralPayoutCompensation: false,
-      },
-      refereeGame: {},
-    } as unknown as Assignment;
+  describe("API-sourced assignments (with league data)", () => {
+    it("returns true when convocationCompensation is undefined (backwards compatibility)", () => {
+      const assignment = {
+        __identity: "test-1",
+        refereeGame: createRefereeGameWithLeague(),
+      } as unknown as Assignment;
 
-    expect(isAssignmentCompensationEditable(assignment)).toBe(true);
-  });
+      expect(isAssignmentCompensationEditable(assignment)).toBe(true);
+    });
 
-  it("returns false for paid assignment", () => {
-    const assignment = {
-      __identity: "test-1",
-      convocationCompensation: {
-        paymentDone: true,
-        methodOfDisbursementArbitration: "central_payout",
-        lockPayoutCentralPayoutCompensation: false,
-      },
-      refereeGame: {},
-    } as unknown as Assignment;
+    it("returns true for unpaid assignment with central payout method (SV association)", () => {
+      const assignment = {
+        __identity: "test-1",
+        convocationCompensation: {
+          paymentDone: false,
+          methodOfDisbursementArbitration: "central_payout",
+          lockPayoutCentralPayoutCompensation: false,
+        },
+        refereeGame: createRefereeGameWithLeague(),
+      } as unknown as Assignment;
 
-    expect(isAssignmentCompensationEditable(assignment)).toBe(false);
-  });
+      expect(isAssignmentCompensationEditable(assignment)).toBe(true);
+    });
 
-  it("returns false when on-site payout is locked for on-site method (regional association)", () => {
-    const assignment = {
-      __identity: "test-1",
-      convocationCompensation: {
-        paymentDone: false,
-        methodOfDisbursementArbitration: "payout_on_site",
-        lockPayoutOnSiteCompensation: true,
-      },
-      refereeGame: {},
-    } as unknown as Assignment;
+    it("returns true for central payout when on-site lock is true but central lock is false (NLB case)", () => {
+      // This is the key bug fix test for assignments
+      const assignment = {
+        __identity: "test-1",
+        convocationCompensation: {
+          paymentDone: false,
+          methodOfDisbursementArbitration: "central_payout",
+          lockPayoutOnSiteCompensation: true,
+          lockPayoutCentralPayoutCompensation: false,
+        },
+        refereeGame: createRefereeGameWithLeague(),
+      } as unknown as Assignment;
 
-    expect(isAssignmentCompensationEditable(assignment)).toBe(false);
-  });
+      expect(isAssignmentCompensationEditable(assignment)).toBe(true);
+    });
 
-  it("returns true when no locks are set (defaults to editable)", () => {
-    const assignment = {
-      __identity: "test-1",
-      convocationCompensation: {
-        paymentDone: false,
-        // No locks set
-      },
-      refereeGame: {},
-    } as unknown as Assignment;
+    it("returns false for paid assignment", () => {
+      const assignment = {
+        __identity: "test-1",
+        convocationCompensation: {
+          paymentDone: true,
+          methodOfDisbursementArbitration: "central_payout",
+          lockPayoutCentralPayoutCompensation: false,
+        },
+        refereeGame: createRefereeGameWithLeague(),
+      } as unknown as Assignment;
 
-    expect(isAssignmentCompensationEditable(assignment)).toBe(true);
+      expect(isAssignmentCompensationEditable(assignment)).toBe(false);
+    });
+
+    it("returns false when on-site payout is locked for on-site method (regional association)", () => {
+      const assignment = {
+        __identity: "test-1",
+        convocationCompensation: {
+          paymentDone: false,
+          methodOfDisbursementArbitration: "payout_on_site",
+          lockPayoutOnSiteCompensation: true,
+        },
+        refereeGame: createRefereeGameWithLeague(),
+      } as unknown as Assignment;
+
+      expect(isAssignmentCompensationEditable(assignment)).toBe(false);
+    });
+
+    it("returns true when no locks are set (defaults to editable)", () => {
+      const assignment = {
+        __identity: "test-1",
+        convocationCompensation: {
+          paymentDone: false,
+          // No locks set
+        },
+        refereeGame: createRefereeGameWithLeague(),
+      } as unknown as Assignment;
+
+      expect(isAssignmentCompensationEditable(assignment)).toBe(true);
+    });
   });
 });

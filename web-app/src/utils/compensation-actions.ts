@@ -2,6 +2,7 @@ import { createElement } from "react";
 import type { Assignment, CompensationRecord } from "@/api/client";
 import { type SwipeAction, SWIPE_ACTION_ICON_SIZE } from "@/types/swipe";
 import { Wallet, FileText } from "@/components/ui/icons";
+import { isFromCalendarMode } from "@/utils/assignment-helpers";
 
 /**
  * Disbursement method for compensation payments.
@@ -77,17 +78,23 @@ export function isCompensationEditable(compensation: CompensationRecord): boolea
  * Checks if an assignment's compensation can be edited.
  *
  * Editability rules (same as isCompensationEditable):
+ * - Non-editable: Calendar mode assignments (missing compensation data entirely)
  * - Non-editable: paymentDone=true (already paid)
  * - Non-editable: relevant lock is true based on methodOfDisbursementArbitration
- * - Editable: convocationCompensation not present (defaults to editable for backwards compatibility)
+ * - Editable: convocationCompensation not present but NOT calendar mode (defaults to editable for backwards compatibility)
  * - Editable: not paid AND relevant lock is false
  */
 export function isAssignmentCompensationEditable(assignment: Assignment): boolean {
+  // Calendar mode assignments are read-only - compensation editing not available
+  if (isFromCalendarMode(assignment)) {
+    return false;
+  }
+
   const cc = assignment.convocationCompensation as
     | ConvocationCompensationWithLockFlags
     | undefined;
-  // If no compensation data, default to editable (for backwards compatibility
-  // and when the API doesn't return compensation properties)
+  // If no compensation data but NOT calendar mode, default to editable
+  // (for backwards compatibility and when the API doesn't return compensation properties)
   if (!cc) return true;
 
   // Already paid - not editable
