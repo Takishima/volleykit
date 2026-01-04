@@ -116,6 +116,25 @@
   --color-border-strong-dark: var(--color-gray-600);
 }
 
+/* ==============================================
+ * CALENDAR MODE THEME VARIANT
+ * Slightly darker green (~10-15%) for calendar mode
+ * Applied via .calendar-mode class on :root
+ * ============================================== */
+.calendar-mode {
+  --color-primary-50: #f5fad6;
+  --color-primary-100: #ebf5aa;
+  --color-primary-200: #dceb70;
+  --color-primary-300: #c8dc38;
+  --color-primary-400: #b8d020;
+  --color-primary-500: #98c400;  /* Main brand - ~15% darker */
+  --color-primary-600: #759c00;  /* Hover state - ~15% darker */
+  --color-primary-700: #587500;
+  --color-primary-800: #465d06;
+  --color-primary-900: #3b4e09;
+  --color-primary-950: #1e2c00;
+}
+
 /* Base styles */
 @layer base {
   html {

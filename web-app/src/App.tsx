@@ -27,6 +27,7 @@ import {
 import { usePreloadLocales } from "@/hooks/usePreloadLocales";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useViewportZoom } from "@/hooks/useViewportZoom";
+import { useCalendarTheme } from "@/hooks/useCalendarTheme";
 import { logger } from "@/utils/logger";
 
 // Lazy load pages to reduce initial bundle size
@@ -254,6 +255,7 @@ function QueryErrorHandler({ children }: { children: React.ReactNode }) {
 export default function App() {
   usePreloadLocales();
   useViewportZoom();
+  useCalendarTheme();
 
   return (
     <ErrorBoundary>
