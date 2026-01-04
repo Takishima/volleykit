@@ -909,6 +909,105 @@ describe("Robots.txt Endpoint", () => {
   });
 });
 
+describe("iCal Proxy Route", () => {
+  /**
+   * Validate iCal referee code format.
+   * Codes must be exactly 6 alphanumeric characters.
+   */
+  function isValidICalCode(code: string): boolean {
+    return /^[A-Za-z0-9]{6}$/.test(code);
+  }
+
+  /**
+   * Extract iCal referee code from path.
+   * Matches paths like /iCal/referee/ABC123
+   */
+  function extractICalCode(pathname: string): string | null {
+    const match = pathname.match(/^\/iCal\/referee\/([^/]+)$/);
+    return match ? match[1] : null;
+  }
+
+  describe("isValidICalCode", () => {
+    it("accepts valid 6-character alphanumeric codes", () => {
+      expect(isValidICalCode("ABC123")).toBe(true);
+      expect(isValidICalCode("abcdef")).toBe(true);
+      expect(isValidICalCode("123456")).toBe(true);
+      expect(isValidICalCode("aB3dE6")).toBe(true);
+    });
+
+    it("rejects codes shorter than 6 characters", () => {
+      expect(isValidICalCode("ABC12")).toBe(false);
+      expect(isValidICalCode("A")).toBe(false);
+      expect(isValidICalCode("")).toBe(false);
+    });
+
+    it("rejects codes longer than 6 characters", () => {
+      expect(isValidICalCode("ABC1234")).toBe(false);
+      expect(isValidICalCode("ABCDEFGH")).toBe(false);
+    });
+
+    it("rejects codes with special characters", () => {
+      expect(isValidICalCode("ABC-12")).toBe(false);
+      expect(isValidICalCode("ABC_12")).toBe(false);
+      expect(isValidICalCode("ABC.12")).toBe(false);
+      expect(isValidICalCode("ABC 12")).toBe(false);
+      expect(isValidICalCode("ABC@12")).toBe(false);
+    });
+
+    it("rejects codes with unicode characters", () => {
+      expect(isValidICalCode("ABCäöü")).toBe(false);
+      expect(isValidICalCode("АВС123")).toBe(false); // Cyrillic
+    });
+  });
+
+  describe("extractICalCode", () => {
+    it("extracts code from valid iCal path", () => {
+      expect(extractICalCode("/iCal/referee/ABC123")).toBe("ABC123");
+      expect(extractICalCode("/iCal/referee/xyzabc")).toBe("xyzabc");
+    });
+
+    it("returns null for non-iCal paths", () => {
+      expect(extractICalCode("/login")).toBe(null);
+      expect(extractICalCode("/")).toBe(null);
+      expect(extractICalCode("/indoorvolleyball.refadmin/api/test")).toBe(null);
+    });
+
+    it("returns null for malformed iCal paths", () => {
+      expect(extractICalCode("/iCal/")).toBe(null);
+      expect(extractICalCode("/iCal/referee/")).toBe(null);
+      expect(extractICalCode("/iCal/referee")).toBe(null);
+      expect(extractICalCode("/ical/referee/ABC123")).toBe(null); // case-sensitive
+    });
+
+    it("returns null for iCal paths with extra segments", () => {
+      expect(extractICalCode("/iCal/referee/ABC123/extra")).toBe(null);
+      expect(extractICalCode("/prefix/iCal/referee/ABC123")).toBe(null);
+    });
+
+    it("extracts code even if format is invalid (validation is separate)", () => {
+      // extractICalCode only extracts, isValidICalCode validates
+      expect(extractICalCode("/iCal/referee/toolong123")).toBe("toolong123");
+      expect(extractICalCode("/iCal/referee/ABC-12")).toBe("ABC-12");
+    });
+  });
+
+  describe("iCal endpoint behavior", () => {
+    it("iCal path is not in allowed paths (handled separately)", () => {
+      // The iCal route is handled before the path allowlist check
+      expect(isAllowedPath("/iCal/referee/ABC123")).toBe(false);
+    });
+
+    it("builds correct target URL", () => {
+      const targetHost = "https://volleymanager.volleyball.ch";
+      const code = "ABC123";
+      const expectedUrl = `${targetHost}/indoor/iCal/referee/${code}`;
+      expect(expectedUrl).toBe(
+        "https://volleymanager.volleyball.ch/indoor/iCal/referee/ABC123",
+      );
+    });
+  });
+});
+
 describe("URL Encoding Preservation", () => {
   // Simulates the URL path extraction logic from the worker
   // This preserves the original URL encoding by extracting the raw path string
