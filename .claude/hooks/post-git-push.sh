@@ -1,6 +1,7 @@
 #!/bin/bash
-# Hook: Generate PR description after git push (Claude Code web only)
-# Supports automatic PR updates via GitHub API when GITHUB_TOKEN is available
+# Hook: Instructs Claude to immediately generate PR links after git push (Claude Code web only)
+# Claude MUST act on these instructions without waiting for user input.
+# Supports automatic PR updates via GitHub API when GITHUB_TOKEN is available.
 
 # Only run in Claude Code web sessions
 if [ "$CLAUDE_CODE_REMOTE" != "true" ]; then
