@@ -48,8 +48,10 @@ test.describe("VolleyKit App", () => {
       await page.setViewportSize({ width: 375, height: 667 });
       await page.goto("/login");
 
-      // Form should still be visible using stable test ID (locale-independent)
-      await expect(page.getByTestId("login-button")).toBeVisible();
+      // Calendar mode is the default - check calendar login button is visible
+      await expect(page.getByTestId("calendar-login-button")).toBeVisible();
+      // Demo button should also be visible
+      await expect(page.getByTestId("demo-button")).toBeVisible();
     });
   });
 });
