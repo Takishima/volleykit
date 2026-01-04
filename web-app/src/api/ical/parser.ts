@@ -57,16 +57,22 @@
  * END:VEVENT
  * END:VCALENDAR
  * ```
+ *
+ * ## Internal Helper Functions (to be implemented)
+ *
+ * The following helper functions will be added during implementation:
+ * - `parseRole(roleStr)` - Map role string to RefereeRole type
+ * - `parseGender(leagueName)` - Detect gender from league name patterns
+ * - `parseICalDate(icalDate)` - Convert iCal date to ISO 8601
+ * - `buildMapsUrl(address, coordinates)` - Construct Google Maps URL
+ * - `calculateConfidence(fields)` - Determine parsing confidence level
  */
 
 import type {
   ICalEvent,
   CalendarAssignment,
   ParseResult,
-  RefereeRole,
-  Gender,
   ParsedFields,
-  ParseConfidence,
 } from './types';
 
 /**
@@ -217,139 +223,6 @@ export function extractAssignment(_event: ICalEvent): ParseResult {
     confidence: 'low',
     warnings: ['Parser not yet implemented'],
   };
-}
-
-/**
- * Maps a raw role string to a standardized RefereeRole type.
- *
- * Role patterns (language-independent abbreviations):
- * - "ARB 1" or "SR 1" -> referee1 (first referee)
- * - "ARB 2" or "SR 2" -> referee2 (second referee)
- * - "LR" -> lineReferee
- * - "SCR" or "SEC" -> scorer
- *
- * @param roleStr - The raw role string from the iCal SUMMARY
- * @returns The standardized RefereeRole
- *
- * @internal
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function _parseRole(_roleStr: string): RefereeRole {
-  // STUB(#503): Role parsing not yet implemented
-  //
-  // Implementation:
-  // 1. Normalize input (trim, uppercase)
-  // 2. Match against known patterns
-  // 3. Return 'unknown' for unrecognized roles
-
-  return 'unknown';
-}
-
-/**
- * Determines the gender category from a league name.
- *
- * Uses pattern matching for common indicators:
- * - German: "Herren", "Damen", "Mixed"
- * - French: "Hommes", "Femmes", "Mixte"
- * - Italian: "Uomini", "Donne", "Misto"
- * - Also checks for "M" or "W" suffixes in league codes
- *
- * @param leagueName - The league name to analyze
- * @returns The detected Gender category
- *
- * @internal
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function _parseGender(_leagueName: string): Gender {
-  // STUB(#503): Gender detection not yet implemented
-  //
-  // Implementation:
-  // 1. Normalize input (lowercase)
-  // 2. Check for language-specific gender keywords
-  // 3. Check for league code patterns (e.g., "NLA M", "2. Liga W")
-  // 4. Return 'unknown' if no pattern matches
-
-  return 'unknown';
-}
-
-/**
- * Parses an iCal date string into an ISO 8601 formatted string.
- *
- * Handles various iCal date formats:
- * - Basic format: "20250215T140000" -> "2025-02-15T14:00:00"
- * - With timezone: "20250215T140000Z" -> "2025-02-15T14:00:00Z"
- * - Date only: "20250215" -> "2025-02-15"
- *
- * @param icalDate - The iCal date string (DTSTART/DTEND value)
- * @returns ISO 8601 formatted date string
- *
- * @internal
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function _parseICalDate(_icalDate: string): string {
-  // STUB(#503): Date parsing not yet implemented
-  //
-  // Implementation:
-  // 1. Handle different formats (date-only, datetime, with timezone)
-  // 2. Parse components: year, month, day, hour, minute, second
-  // 3. Format as ISO 8601
-  // 4. Handle timezone indicator (Z for UTC)
-
-  return '';
-}
-
-/**
- * Constructs a Google Maps URL from an address or coordinates.
- *
- * Prefers coordinates if available for more accurate location.
- * Falls back to address-based search URL.
- *
- * @param address - The venue address (optional)
- * @param coordinates - The geographic coordinates (optional)
- * @returns Google Maps URL or null if neither is available
- *
- * @internal
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function _buildMapsUrl(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _address: string | null,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _coordinates: { latitude: number; longitude: number } | null
-): string | null {
-  // STUB(#503): Maps URL construction not yet implemented
-  //
-  // Implementation:
-  // 1. If coordinates available: use https://www.google.com/maps?q={lat},{lon}
-  // 2. Else if address available: use https://www.google.com/maps/search/{encoded_address}
-  // 3. Return null if neither is available
-
-  return null;
-}
-
-/**
- * Calculates the confidence level based on which fields were successfully parsed.
- *
- * Confidence levels:
- * - high: gameId, role, teams, league all parsed
- * - medium: gameId and teams parsed, some optional fields missing
- * - low: minimal data extracted or critical fields missing
- *
- * @param fields - The ParsedFields indicating which fields were extracted
- * @returns The calculated ParseConfidence level
- *
- * @internal
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function _calculateConfidence(_fields: ParsedFields): ParseConfidence {
-  // STUB(#503): Confidence calculation not yet implemented
-  //
-  // Implementation:
-  // 1. Count critical fields (gameId, role, teams, league)
-  // 2. Count optional fields (venue, address, coordinates)
-  // 3. Determine confidence based on counts
-
-  return 'low';
 }
 
 /**
