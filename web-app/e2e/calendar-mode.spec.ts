@@ -115,10 +115,16 @@ test.describe("Calendar Mode", () => {
       // Wait for the page to be ready
       await expect(page.getByRole("main")).toBeVisible();
 
-      // Should see either assignments content or empty state message
-      // The specific content depends on how the parser handles the iCal data
-      const hasContent = await page.getByRole("tablist").or(page.getByText(/no assignments|assignment/i)).isVisible();
-      expect(hasContent).toBeTruthy();
+      // Should see assignments page content - either the tablist or empty state
+      // Use specific locator to avoid matching nav items
+      const tablist = page.getByRole("tablist", { name: "Assignments" });
+      const emptyState = page.getByText(/no assignments/i);
+
+      // Check if either is visible (calendar mode may have no assignments)
+      const tablistVisible = await tablist.isVisible().catch(() => false);
+      const emptyStateVisible = await emptyState.isVisible().catch(() => false);
+
+      expect(tablistVisible || emptyStateVisible).toBeTruthy();
     });
 
     test("displays calendar mode indicator banner", async ({ page }) => {

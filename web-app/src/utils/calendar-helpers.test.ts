@@ -169,6 +169,53 @@ describe("extractCalendarCode", () => {
       ).toBeNull();
     });
   });
+
+  describe("iOS/Safari edge cases", () => {
+    it("handles zero-width characters from iOS copy-paste", () => {
+      // Zero-width space (U+200B) that iOS sometimes adds
+      expect(extractCalendarCode("\u200BABC123")).toBe("ABC123");
+      expect(extractCalendarCode("ABC123\u200B")).toBe("ABC123");
+      expect(extractCalendarCode("\u200BABC123\u200B")).toBe("ABC123");
+    });
+
+    it("handles non-breaking spaces", () => {
+      // Non-breaking space (U+00A0) that can appear on iOS
+      expect(extractCalendarCode("\u00A0ABC123")).toBe("ABC123");
+      expect(extractCalendarCode("ABC123\u00A0")).toBe("ABC123");
+    });
+
+    it("handles URLs with query strings via fallback", () => {
+      expect(
+        extractCalendarCode(
+          "https://volleymanager.volleyball.ch/indoor/iCal/referee/ABC123?source=share",
+        ),
+      ).toBe("ABC123");
+    });
+
+    it("handles URLs with fragments via fallback", () => {
+      expect(
+        extractCalendarCode(
+          "https://volleymanager.volleyball.ch/indoor/iCal/referee/ABC123#top",
+        ),
+      ).toBe("ABC123");
+    });
+
+    it("handles URLs with query strings and fragments", () => {
+      expect(
+        extractCalendarCode(
+          "https://volleymanager.volleyball.ch/calendar/XYZ789?utm_source=app#section",
+        ),
+      ).toBe("XYZ789");
+    });
+
+    it("handles invisible characters in URLs", () => {
+      expect(
+        extractCalendarCode(
+          "https://volleymanager.volleyball.ch/indoor/iCal/referee/BLYMVF\u200B",
+        ),
+      ).toBe("BLYMVF");
+    });
+  });
 });
 
 describe("validateCalendarCode", () => {
