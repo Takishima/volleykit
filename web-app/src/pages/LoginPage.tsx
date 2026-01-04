@@ -33,7 +33,7 @@ export function LoginPage() {
   const initializeDemoData = useDemoStore((state) => state.initializeDemoData);
   const { t } = useTranslation();
 
-  const [loginMode, setLoginMode] = useState<LoginMode>("full");
+  const [loginMode, setLoginMode] = useState<LoginMode>("calendar");
   const [username, setUsername] = useState("");
   const [calendarInput, setCalendarInput] = useState("");
   const [calendarError, setCalendarError] = useState<string | null>(null);
@@ -272,21 +272,6 @@ export function LoginPage() {
             <button
               type="button"
               role="tab"
-              aria-selected={loginMode === "full"}
-              aria-controls="full-login-panel"
-              id="full-login-tab"
-              onClick={() => setLoginMode("full")}
-              className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
-                loginMode === "full"
-                  ? "bg-surface-card dark:bg-surface-card-dark text-text-primary dark:text-text-primary-dark shadow-sm"
-                  : "text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark"
-              }`}
-            >
-              {t("auth.fullLogin")}
-            </button>
-            <button
-              type="button"
-              role="tab"
               aria-selected={loginMode === "calendar"}
               aria-controls="calendar-login-panel"
               id="calendar-login-tab"
@@ -298,6 +283,21 @@ export function LoginPage() {
               }`}
             >
               {t("auth.calendarMode")}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={loginMode === "full"}
+              aria-controls="full-login-panel"
+              id="full-login-tab"
+              onClick={() => setLoginMode("full")}
+              className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
+                loginMode === "full"
+                  ? "bg-surface-card dark:bg-surface-card-dark text-text-primary dark:text-text-primary-dark shadow-sm"
+                  : "text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark"
+              }`}
+            >
+              {t("auth.fullLogin")}
             </button>
           </div>
 

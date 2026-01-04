@@ -51,6 +51,11 @@ function mockDemoStoreState() {
   });
 }
 
+// Helper to switch to full login mode (calendar mode is now the default)
+function switchToFullLogin() {
+  fireEvent.click(screen.getByRole("tab", { name: /fullLogin/i }));
+}
+
 describe("LoginPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -60,18 +65,30 @@ describe("LoginPage", () => {
   });
 
   describe("Form Rendering", () => {
-    it("renders login form with username and password fields", () => {
+    it("renders calendar mode by default", () => {
       render(<LoginPage />);
+
+      // Calendar mode should be visible by default
+      expect(screen.getByLabelText(/calendarInputLabel/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /enterCalendarMode/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("renders login form with username and password fields when in full login mode", () => {
+      render(<LoginPage />);
+      switchToFullLogin();
 
       expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     });
 
-    it("renders login button", () => {
+    it("renders login button in full login mode", () => {
       render(<LoginPage />);
+      switchToFullLogin();
 
       expect(
-        screen.getByRole("button", { name: /login/i }),
+        screen.getByRole("button", { name: /loginButton/i }),
       ).toBeInTheDocument();
     });
 
@@ -97,6 +114,7 @@ describe("LoginPage", () => {
       mockLogin.mockResolvedValue(true);
 
       render(<LoginPage />);
+      switchToFullLogin();
 
       fireEvent.change(screen.getByLabelText(/username/i), {
         target: { value: "testuser" },
@@ -104,7 +122,7 @@ describe("LoginPage", () => {
       fireEvent.change(screen.getByLabelText(/password/i), {
         target: { value: "testpass" },
       });
-      fireEvent.click(screen.getByRole("button", { name: /login/i }));
+      fireEvent.click(screen.getByRole("button", { name: /loginButton/i }));
 
       await waitFor(() => {
         expect(mockLogin).toHaveBeenCalledWith("testuser", "testpass");
@@ -115,6 +133,7 @@ describe("LoginPage", () => {
       mockLogin.mockResolvedValue(true);
 
       render(<LoginPage />);
+      switchToFullLogin();
 
       fireEvent.change(screen.getByLabelText(/username/i), {
         target: { value: "testuser" },
@@ -122,7 +141,7 @@ describe("LoginPage", () => {
       fireEvent.change(screen.getByLabelText(/password/i), {
         target: { value: "testpass" },
       });
-      fireEvent.click(screen.getByRole("button", { name: /login/i }));
+      fireEvent.click(screen.getByRole("button", { name: /loginButton/i }));
 
       await waitFor(() => {
         expect(mockNavigate).toHaveBeenCalledWith("/");
@@ -133,6 +152,7 @@ describe("LoginPage", () => {
       mockLogin.mockResolvedValue(false);
 
       render(<LoginPage />);
+      switchToFullLogin();
 
       fireEvent.change(screen.getByLabelText(/username/i), {
         target: { value: "testuser" },
@@ -140,7 +160,7 @@ describe("LoginPage", () => {
       fireEvent.change(screen.getByLabelText(/password/i), {
         target: { value: "wrongpass" },
       });
-      fireEvent.click(screen.getByRole("button", { name: /login/i }));
+      fireEvent.click(screen.getByRole("button", { name: /loginButton/i }));
 
       await waitFor(() => {
         expect(mockLogin).toHaveBeenCalled();
@@ -151,26 +171,32 @@ describe("LoginPage", () => {
   });
 
   describe("Loading State", () => {
-    it("disables form fields while loading", () => {
+    it("disables form fields while loading in full login mode", () => {
       mockAuthStoreState({ status: "loading" });
 
       render(<LoginPage />);
+      switchToFullLogin();
 
       expect(screen.getByLabelText(/username/i)).toBeDisabled();
       expect(screen.getByLabelText(/password/i)).toBeDisabled();
     });
 
-    it("disables login button while loading", () => {
+    it("disables calendar input while loading", () => {
       mockAuthStoreState({ status: "loading" });
 
       render(<LoginPage />);
 
-      const buttons = screen.getAllByRole("button");
-      const loginButton = buttons.find(
-        (btn) =>
-          btn.textContent?.toLowerCase().includes("logging") ||
-          btn.textContent?.toLowerCase().includes("login"),
-      );
+      expect(screen.getByLabelText(/calendarInputLabel/i)).toBeDisabled();
+    });
+
+    it("disables login button while loading in full login mode", () => {
+      mockAuthStoreState({ status: "loading" });
+
+      render(<LoginPage />);
+      switchToFullLogin();
+
+      // When loading, button shows "loggingIn" text
+      const loginButton = screen.getByTestId("login-button");
       expect(loginButton).toBeDisabled();
     });
 
@@ -185,10 +211,11 @@ describe("LoginPage", () => {
   });
 
   describe("Error State", () => {
-    it("displays error message when error exists", () => {
+    it("displays error message when error exists in full login mode", () => {
       mockAuthStoreState({ status: "error", error: "Invalid credentials" });
 
       render(<LoginPage />);
+      switchToFullLogin();
 
       expect(screen.getByText("Invalid credentials")).toBeInTheDocument();
     });
@@ -197,6 +224,7 @@ describe("LoginPage", () => {
       mockAuthStoreState({ status: "error", error: "Login failed" });
 
       render(<LoginPage />);
+      switchToFullLogin();
 
       const errorElement = screen.getByText("Login failed");
       expect(errorElement.closest("div")).toHaveClass("bg-danger-50");
@@ -216,20 +244,31 @@ describe("LoginPage", () => {
   });
 
   describe("Accessibility", () => {
-    it("has required attribute on username field", () => {
+    it("has required attribute on calendar input field", () => {
       render(<LoginPage />);
+
+      expect(screen.getByLabelText(/calendarInputLabel/i)).toHaveAttribute(
+        "required",
+      );
+    });
+
+    it("has required attribute on username field in full login mode", () => {
+      render(<LoginPage />);
+      switchToFullLogin();
 
       expect(screen.getByLabelText(/username/i)).toHaveAttribute("required");
     });
 
-    it("has required attribute on password field", () => {
+    it("has required attribute on password field in full login mode", () => {
       render(<LoginPage />);
+      switchToFullLogin();
 
       expect(screen.getByLabelText(/password/i)).toHaveAttribute("required");
     });
 
-    it("has proper autocomplete attributes", () => {
+    it("has proper autocomplete attributes in full login mode", () => {
       render(<LoginPage />);
+      switchToFullLogin();
 
       expect(screen.getByLabelText(/username/i)).toHaveAttribute(
         "autocomplete",
@@ -241,14 +280,22 @@ describe("LoginPage", () => {
       );
     });
 
-    it("has proper input types", () => {
+    it("has proper input types in full login mode", () => {
       render(<LoginPage />);
+      switchToFullLogin();
 
       expect(screen.getByLabelText(/username/i)).toHaveAttribute("type", "text");
       expect(screen.getByLabelText(/password/i)).toHaveAttribute(
         "type",
         "password",
       );
+    });
+
+    it("has proper tab roles for login mode switcher", () => {
+      render(<LoginPage />);
+
+      expect(screen.getByRole("tablist")).toBeInTheDocument();
+      expect(screen.getAllByRole("tab")).toHaveLength(2);
     });
   });
 });
