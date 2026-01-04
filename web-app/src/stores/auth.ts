@@ -87,8 +87,8 @@ interface AuthState {
   hasMultipleAssociations: () => boolean;
   /** Returns true if in calendar mode */
   isCalendarMode: () => boolean;
-  /** Login with a calendar code (placeholder - implementation pending) */
-  loginWithCalendar: (code: string) => void;
+  /** Login with a calendar code (placeholder - validation will be added later) */
+  loginWithCalendar: (code: string) => Promise<void>;
   /** Logout from calendar mode (alias for logout) */
   logoutCalendar: () => Promise<void>;
   /** Get the current authentication mode */
@@ -556,8 +556,9 @@ export const useAuthStore = create<AuthState>()(
         return get().dataSource === "calendar";
       },
 
-      loginWithCalendar: (code: string) => {
-        // Placeholder implementation - full logic will be added when Calendar Mode is implemented.
+      loginWithCalendar: async (code: string): Promise<void> => {
+        // Store the calendar code and set calendar mode.
+        // Actual calendar validation (fetching to verify code) will be added later.
         // Currently occupations are empty which differs from other auth modes.
         // Full implementation will fetch referee info from the calendar API endpoint.
         set({
