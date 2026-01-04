@@ -43,14 +43,6 @@ import InfoBox from '../components/InfoBox.astro';
     instructions="Take a screenshot of the assignments page showing at least 3-4 games. Show the date grouping, team names, times, and venue info. Ensure the layout is clear on mobile."
   />
 
-  <h3>List vs. Card View</h3>
-
-  <p>
-    Toggle between list view (compact) and card view (detailed) using the view
-    switcher in the top right. Card view shows more information at a glance,
-    while list view lets you see more games on screen.
-  </p>
-
   <h2>Assignment Details</h2>
 
   <p>
@@ -62,7 +54,7 @@ import InfoBox from '../components/InfoBox.astro';
     <li>Venue address with map link</li>
     <li>Travel time from your home location</li>
     <li>Other referees assigned to the same game</li>
-    <li>Action buttons (confirm, request exchange, etc.)</li>
+    <li>Available actions via swipe gestures</li>
   </ul>
 
   <Screenshot
@@ -76,12 +68,6 @@ import InfoBox from '../components/InfoBox.astro';
 
   <p>
     Depending on the game status, you may have different actions available:
-  </p>
-
-  <h3>Confirm Assignment</h3>
-  <p>
-    Confirm that you'll be attending the game. This updates your status in
-    the volleymanager system.
   </p>
 
   <h3>Request Exchange</h3>
@@ -104,28 +90,26 @@ import InfoBox from '../components/InfoBox.astro';
 
   <Screenshot
     id="assignment-actions"
-    alt="Assignment action buttons including confirm, exchange, and directions"
+    alt="Assignment card showing swipe actions for exchange and validation"
     caption="Available actions for an assignment"
-    instructions="Take a screenshot showing the action buttons at the bottom of an assignment detail page. Include confirm, request exchange, and directions buttons."
+    instructions="Take a screenshot showing the swipe actions revealed on an assignment card. Show exchange and other available actions."
   />
 
-  <h2>Filtering and Sorting</h2>
+  <h2>Upcoming and Past Games</h2>
 
   <p>
-    Use the filter options to:
+    Use the tabs at the top to switch between:
   </p>
 
   <ul>
-    <li>Show only unconfirmed games</li>
-    <li>Filter by role (1st referee, 2nd referee, line judge)</li>
-    <li>Filter by league</li>
-    <li>Change the date range</li>
+    <li><strong>Upcoming</strong> – Games that haven't happened yet</li>
+    <li><strong>Validation Closed</strong> – Past games where validation is complete</li>
   </ul>
 
   <InfoBox type="tip">
     <p>
-      Enable travel time display in Settings to see how long it takes to reach
-      each venue from your home location.
+      Set your home location in Settings to see travel time estimates on each
+      assignment card.
     </p>
   </InfoBox>
 </DocLayout>

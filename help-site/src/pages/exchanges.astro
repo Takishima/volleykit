@@ -97,15 +97,26 @@ import StepList from '../components/StepList.astro';
   <h3>Filtering Exchanges</h3>
 
   <p>
-    Filter the exchange list to find games that work for you:
+    Filter the exchange list to find games that work for you. Filters become
+    available after you configure the required settings:
   </p>
 
   <ul>
-    <li><strong>Date range</strong> – Show games within specific dates</li>
-    <li><strong>Distance</strong> – Filter by travel distance from your home</li>
-    <li><strong>League</strong> – Filter by competition level</li>
-    <li><strong>Role</strong> – Filter by referee role</li>
+    <li><strong>Distance</strong> – Filter by maximum distance from your home location. Requires setting your home location in Settings.</li>
+    <li><strong>Travel time</strong> – Filter by maximum travel time using public transport. Requires both a home location and enabling the public transport API in Settings.</li>
   </ul>
+
+  <p>
+    Once filters are available, they appear as toggle chips next to the settings
+    gear icon. Tap the gear to configure the maximum values for each filter.
+  </p>
+
+  <InfoBox type="tip">
+    <p>
+      Set your home location in Settings to unlock distance filtering. Enable the
+      public transport API to also filter by travel time.
+    </p>
+  </InfoBox>
 
   <h2>Accepting an Exchange</h2>
 

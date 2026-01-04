@@ -64,67 +64,49 @@ import InfoBox from '../components/InfoBox.astro';
     <li><strong>Paid</strong> – Payment has been made to your account</li>
   </ul>
 
-  <h2>Filtering by Date</h2>
+  <h2>Filtering by Status</h2>
 
   <p>
-    Use the date filter to view compensations for a specific time period:
+    Use the tabs at the top to filter compensations by their status:
   </p>
 
   <ul>
-    <li><strong>This month</strong> – Current month's compensations</li>
-    <li><strong>Last month</strong> – Previous month's compensations</li>
-    <li><strong>This season</strong> – Current volleyball season</li>
-    <li><strong>Custom range</strong> – Select specific start and end dates</li>
+    <li><strong>Pending (Past)</strong> – Past games awaiting payment</li>
+    <li><strong>Pending (Future)</strong> – Upcoming games not yet played</li>
+    <li><strong>Closed</strong> – Completed and paid compensations</li>
   </ul>
 
   <Screenshot
     id="compensations-filters"
-    alt="Date filter options for compensation list"
-    caption="Filtering compensations by date range"
-    instructions="Take a screenshot showing the date filter controls. Include the filter dropdown or date picker interface with the available options visible."
+    alt="Compensation tabs showing pending and closed options"
+    caption="Filtering compensations by status"
+    instructions="Take a screenshot showing the compensation page tabs. Include the pending past, pending future, and closed tabs."
   />
-
-  <h2>Summary Statistics</h2>
-
-  <p>
-    At the top of the compensation list, you'll see summary statistics for the
-    selected date range:
-  </p>
-
-  <ul>
-    <li><strong>Total earned</strong> – Sum of all compensations</li>
-    <li><strong>Games officiated</strong> – Number of games</li>
-    <li><strong>Average per game</strong> – Average compensation amount</li>
-  </ul>
 
   <InfoBox type="tip">
     <p>
-      Use the season filter at the end of each season to get a complete overview
-      of your referee earnings.
+      Compensations are automatically filtered to the current season (September
+      to May) so you can focus on recent games.
     </p>
   </InfoBox>
 
-  <h2>Export Options</h2>
+  <h2>Export to PDF</h2>
 
   <p>
-    You can export your compensation data for your records or tax purposes.
-    The export feature supports:
+    You can export individual compensation records as PDF documents. Swipe left
+    on any compensation card to reveal the PDF export action.
   </p>
 
-  <ul>
-    <li><strong>PDF</strong> – Formatted document suitable for printing</li>
-    <li><strong>CSV</strong> – Spreadsheet-compatible data format</li>
-  </ul>
-
   <p>
-    The export includes all compensations for the currently selected date range,
-    with full game details and payment information.
+    The exported PDF includes the game details and compensation information
+    in a formatted document. This is useful for providing to teams that need
+    to pay the referee directly.
   </p>
 
   <InfoBox type="info">
     <p>
-      Keep your compensation records for at least the current tax year.
-      The export feature makes it easy to maintain accurate records.
+      The PDF export creates an official-looking document with all the game
+      and compensation details that teams may require for their records.
     </p>
   </InfoBox>
 
