@@ -7,7 +7,6 @@ export type {
   TravelTimeResult,
   TravelTimeOptions,
   Coordinates,
-  TransportConfig,
   StationInfo,
 } from "./types";
 
@@ -23,7 +22,7 @@ export {
 
 export type { OjpTrip } from "./ojp-client";
 
-export { calculateMockTravelTime, mockTransportApi } from "./mock-transport";
+export { calculateMockTravelTime } from "./mock-transport";
 
 export type { DayType } from "./cache";
 

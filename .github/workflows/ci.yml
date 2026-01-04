@@ -82,6 +82,47 @@ jobs:
       - name: Lint
         run: npm run lint
 
+  # Dead code detection - needs API types
+  knip:
+    name: Dead Code Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web-app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v4
+        with:
+          path: web-app/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json') }}
+
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Cache generated API types
+        id: api-cache
+        uses: actions/cache@v4
+        with:
+          path: web-app/src/api/schema.ts
+          key: api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'web-app/package-lock.json') }}
+
+      - name: Generate API types
+        if: steps.api-cache.outputs.cache-hit != 'true'
+        run: npm run generate:api
+
+      - name: Check for dead code
+        run: npm run knip
+
   # Unit tests - needs API types
   test:
     name: Test

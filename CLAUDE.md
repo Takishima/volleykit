@@ -349,6 +349,7 @@ npm run generate:api  # Generates src/api/schema.ts from OpenAPI spec
 cd web-app
 npm run generate:api  # REQUIRED before lint/test/build
 npm run lint          # Lint check (0 warnings allowed)
+npm run knip          # Dead code detection
 npm test              # Run all tests
 npm run build         # Production build (includes tsc)
 npm run size          # Check bundle size
