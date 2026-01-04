@@ -2,6 +2,7 @@
 import BaseLayout from './BaseLayout.astro';
 import Header from '../components/Header.astro';
 import Sidebar from '../components/Sidebar.astro';
+import MobileNav from '../components/MobileNav.astro';
 import Footer from '../components/Footer.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
 import NextPrev from '../components/NextPrev.astro';
@@ -28,6 +29,8 @@ const { title, description, breadcrumbs = [], prev, next } = Astro.props;
 ---
 
 <BaseLayout title={title} description={description}>
+  <MobileNav />
+
   <div class="flex min-h-screen flex-col">
     <Header />
 

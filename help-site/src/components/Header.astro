@@ -7,11 +7,11 @@
   data-header
 >
   <div class="container mx-auto flex h-14 items-center justify-between gap-4 px-4">
-    <!-- Mobile: Hamburger menu button -->
+    <!-- Mobile: Hamburger menu button (opens MobileNav drawer) -->
     <button
       type="button"
-      class="flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-subtle hover:text-text-primary dark:text-text-secondary-dark dark:hover:bg-surface-subtle-dark dark:hover:text-text-primary-dark md:hidden"
-      aria-label="Open menu"
+      class="flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-subtle hover:text-text-primary dark:text-text-secondary-dark dark:hover:bg-surface-subtle-dark dark:hover:text-text-primary-dark lg:hidden"
+      aria-label="Open navigation menu"
       data-menu-toggle
     >
       <svg
@@ -32,7 +32,7 @@
     <!-- Desktop: Logo and title -->
     <a
       href="/volleykit/help/"
-      class="hidden items-center gap-2 text-text-primary hover:text-primary-600 dark:text-text-primary-dark dark:hover:text-primary-400 md:flex"
+      class="hidden items-center gap-2 text-text-primary hover:text-primary-600 dark:text-text-primary-dark dark:hover:text-primary-400 lg:flex"
     >
       <img src="/volleykit/help/favicon.svg" alt="" class="h-7 w-7" aria-hidden="true" />
       <span class="font-semibold">VolleyKit Help</span>
@@ -41,13 +41,13 @@
     <!-- Mobile: Centered title -->
     <a
       href="/volleykit/help/"
-      class="font-semibold text-text-primary dark:text-text-primary-dark md:hidden"
+      class="font-semibold text-text-primary dark:text-text-primary-dark lg:hidden"
     >
       VolleyKit Help
     </a>
 
     <!-- Desktop: Search input -->
-    <div class="hidden flex-1 justify-center md:flex">
+    <div class="hidden flex-1 justify-center lg:flex">
       <div class="relative w-full max-w-md">
         <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
           <svg
@@ -78,7 +78,7 @@
       href="https://takishima.github.io/volleykit/"
       target="_blank"
       rel="noopener noreferrer"
-      class="hidden items-center gap-2 rounded-lg bg-primary-500 px-4 py-2 text-sm font-medium text-primary-950 transition-colors hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 md:flex"
+      class="hidden items-center gap-2 rounded-lg bg-primary-500 px-4 py-2 text-sm font-medium text-primary-950 transition-colors hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 lg:flex"
     >
       Open App
       <svg
@@ -100,7 +100,7 @@
     <!-- Mobile: Search icon button -->
     <button
       type="button"
-      class="flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-subtle hover:text-text-primary dark:text-text-secondary-dark dark:hover:bg-surface-subtle-dark dark:hover:text-text-primary-dark md:hidden"
+      class="flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-subtle hover:text-text-primary dark:text-text-secondary-dark dark:hover:bg-surface-subtle-dark dark:hover:text-text-primary-dark lg:hidden"
       aria-label="Search"
       data-search-toggle
     >
@@ -119,63 +119,6 @@
       </svg>
     </button>
   </div>
-
-  <!-- Mobile: Collapsible menu -->
-  <div
-    class="hidden border-t border-border-default bg-surface-card dark:border-border-default-dark dark:bg-surface-card-dark md:hidden"
-    data-mobile-menu
-  >
-    <div class="container mx-auto space-y-4 px-4 py-4">
-      <!-- Mobile search input -->
-      <div class="relative">
-        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-          <svg
-            class="h-4 w-4 text-text-muted dark:text-text-muted-dark"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-          </svg>
-        </div>
-        <input
-          type="search"
-          placeholder="Search documentation..."
-          class="w-full rounded-lg border border-border-strong bg-surface-page py-2 pl-10 pr-4 text-sm text-text-primary placeholder-text-muted focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-border-strong-dark dark:bg-surface-page-dark dark:text-text-primary-dark dark:placeholder-text-muted-dark dark:focus:border-primary-400"
-          data-pagefind-search-mobile
-        />
-      </div>
-
-      <!-- Mobile: Open App link -->
-      <a
-        href="https://takishima.github.io/volleykit/"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="flex items-center justify-center gap-2 rounded-lg bg-primary-500 px-4 py-2 text-sm font-medium text-primary-950 transition-colors hover:bg-primary-600"
-      >
-        Open App
-        <svg
-          class="h-4 w-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-          ></path>
-        </svg>
-      </a>
-    </div>
-  </div>
 </header>
 
 <script>
@@ -185,32 +128,15 @@
 
     const menuToggle = header.querySelector('[data-menu-toggle]');
     const searchToggle = header.querySelector('[data-search-toggle]');
-    const mobileMenu = header.querySelector('[data-mobile-menu]');
 
-    if (!menuToggle || !mobileMenu) return;
-
-    // Toggle mobile menu
-    menuToggle.addEventListener('click', () => {
-      const isOpen = mobileMenu.classList.toggle('hidden');
-      menuToggle.setAttribute('aria-expanded', String(!isOpen));
+    // Hamburger button opens mobile nav drawer
+    menuToggle?.addEventListener('click', () => {
+      document.dispatchEvent(new CustomEvent('open-mobile-nav'));
     });
 
-    // Search toggle opens menu and focuses search input
+    // Search button also opens mobile nav (search is in the drawer)
     searchToggle?.addEventListener('click', () => {
-      mobileMenu.classList.remove('hidden');
-      menuToggle.setAttribute('aria-expanded', 'true');
-      const searchInput = mobileMenu.querySelector('input[type="search"]');
-      if (searchInput instanceof HTMLInputElement) {
-        searchInput.focus();
-      }
-    });
-
-    // Close menu on escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !mobileMenu.classList.contains('hidden')) {
-        mobileMenu.classList.add('hidden');
-        menuToggle.setAttribute('aria-expanded', 'false');
-      }
+      document.dispatchEvent(new CustomEvent('open-mobile-nav', { detail: { focusSearch: true } }));
     });
   }
 
