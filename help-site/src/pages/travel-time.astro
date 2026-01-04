@@ -1,0 +1,170 @@
+---
+import DocLayout from '../layouts/DocLayout.astro';
+import Screenshot from '../components/Screenshot.astro';
+import InfoBox from '../components/InfoBox.astro';
+import StepList from '../components/StepList.astro';
+---
+
+<DocLayout
+  title="Travel Time"
+  description="Learn how VolleyKit calculates travel times to game venues using Swiss public transport data."
+>
+  <h1>Travel Time Feature</h1>
+
+  <p class="lead text-text-secondary dark:text-text-secondary-dark">
+    VolleyKit integrates with Swiss public transport data to show you how long
+    it takes to reach each game venue. Plan your trips better and never be late
+    to a game.
+  </p>
+
+  <h2>How It Works</h2>
+
+  <p>
+    The travel time feature uses the Swiss public transport API (SBB/öV) to
+    calculate journey times from your home location to each game venue. It
+    considers:
+  </p>
+
+  <ul>
+    <li>Real-time train, bus, and tram schedules</li>
+    <li>Walking time to/from stations</li>
+    <li>Transfer times between connections</li>
+    <li>The actual game start time</li>
+  </ul>
+
+  <InfoBox type="info">
+    <p>
+      Travel times are calculated using public transport. If you typically
+      drive, use the times as a rough estimate or for planning alternative
+      transport options.
+    </p>
+  </InfoBox>
+
+  <h2>Setting Your Home Location</h2>
+
+  <p>
+    To get accurate travel times, you need to set your home location in the
+    app settings.
+  </p>
+
+  <StepList
+    steps={[
+      {
+        title: 'Open Settings',
+        description: 'Navigate to the Settings page in VolleyKit.',
+      },
+      {
+        title: 'Find "Home Location"',
+        description: 'Scroll to the travel settings section.',
+      },
+      {
+        title: 'Enter your address',
+        description: 'Type your home address or the station you typically travel from.',
+      },
+      {
+        title: 'Save your settings',
+        description: 'Confirm your location to start seeing travel times.',
+      },
+    ]}
+  />
+
+  <Screenshot
+    id="home-location-setting"
+    alt="Settings page showing home location input field"
+    caption="Setting your home location"
+    instructions="Take a screenshot of the settings page focused on the home location section. Show the address input field with autocomplete suggestions if possible."
+  />
+
+  <InfoBox type="tip">
+    <p>
+      Use your nearest train station as your home location if you typically
+      walk or cycle to the station – this gives more accurate public transport times.
+    </p>
+  </InfoBox>
+
+  <h2>Viewing Travel Times</h2>
+
+  <p>
+    Once your home location is set, travel times appear on your assignment cards
+    and in the assignment detail view.
+  </p>
+
+  <Screenshot
+    id="travel-time-display"
+    alt="Assignment card showing travel time information"
+    caption="Travel time displayed on an assignment"
+    instructions="Take a screenshot of an assignment card or detail view showing the travel time prominently. Include the duration in minutes/hours and any public transport icon."
+  />
+
+  <h3>What's Shown</h3>
+
+  <ul>
+    <li><strong>Duration</strong> – Total travel time from home to venue</li>
+    <li><strong>Departure time</strong> – When you should leave to arrive on time</li>
+    <li><strong>Transport type</strong> – Train, bus, or mixed transport icon</li>
+  </ul>
+
+  <h2>Journey Details</h2>
+
+  <p>
+    Tap on the travel time to see full journey details:
+  </p>
+
+  <ul>
+    <li>Step-by-step directions</li>
+    <li>Connection details (train numbers, platforms)</li>
+    <li>Walking segments</li>
+    <li>Transfer times</li>
+  </ul>
+
+  <p>
+    You can also open the journey directly in the SBB app or website for
+    real-time updates and ticket purchase.
+  </p>
+
+  <Screenshot
+    id="journey-details"
+    alt="Detailed journey information with connections and times"
+    caption="Full journey details for travel planning"
+    instructions="Take a screenshot showing the expanded journey details or a modal with the full route. Include departure/arrival times, train/bus details, and any transfer information."
+  />
+
+  <h2>Arrival Buffer</h2>
+
+  <p>
+    The suggested departure time includes a buffer to ensure you arrive before
+    the game starts:
+  </p>
+
+  <ul>
+    <li><strong>Standard buffer:</strong> 15-30 minutes before game time</li>
+    <li>Time for finding the venue, changing, and warmup</li>
+    <li>Account for potential minor delays</li>
+  </ul>
+
+  <InfoBox type="warning">
+    <p>
+      Always allow extra time for important games or unfamiliar venues.
+      Public transport can experience unexpected delays.
+    </p>
+  </InfoBox>
+
+  <h2>Offline Availability</h2>
+
+  <p>
+    Travel times are cached when you view them online. If you're offline:
+  </p>
+
+  <ul>
+    <li>Previously viewed travel times remain available</li>
+    <li>New calculations require an internet connection</li>
+    <li>The app indicates when data might be outdated</li>
+  </ul>
+
+  <InfoBox type="tip">
+    <p>
+      Check your travel times while online before heading to an area with
+      poor connectivity. The cached data will be available offline.
+    </p>
+  </InfoBox>
+</DocLayout>

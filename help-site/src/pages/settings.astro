@@ -1,0 +1,192 @@
+---
+import DocLayout from '../layouts/DocLayout.astro';
+import Screenshot from '../components/Screenshot.astro';
+import InfoBox from '../components/InfoBox.astro';
+---
+
+<DocLayout
+  title="Settings"
+  description="Customize your VolleyKit experience with language, location, and privacy settings."
+>
+  <h1>App Settings</h1>
+
+  <p class="lead text-text-secondary dark:text-text-secondary-dark">
+    Customize VolleyKit to match your preferences. Configure language, home
+    location, theme, and privacy options.
+  </p>
+
+  <h2>Accessing Settings</h2>
+
+  <p>
+    Open settings by tapping the gear icon in the navigation bar, or by selecting
+    "Settings" from the main menu.
+  </p>
+
+  <Screenshot
+    id="settings-overview"
+    alt="Settings page showing all available options"
+    caption="VolleyKit settings page"
+    instructions="Take a screenshot of the full settings page showing all sections: profile, language, location, appearance, and data settings. Show the organized layout with clear section headers."
+  />
+
+  <h2>Profile Section</h2>
+
+  <p>
+    The profile section shows your account information:
+  </p>
+
+  <ul>
+    <li><strong>Name</strong> – Your registered referee name</li>
+    <li><strong>License number</strong> – Your Swiss Volley referee license</li>
+    <li><strong>Email</strong> – Your registered email address</li>
+    <li><strong>Session status</strong> – Your current login status</li>
+  </ul>
+
+  <InfoBox type="info">
+    <p>
+      Profile information comes from volleymanager and can only be changed
+      on the official website, not in VolleyKit.
+    </p>
+  </InfoBox>
+
+  <h3>Logging Out</h3>
+
+  <p>
+    Tap "Log Out" to sign out of your account. This clears your session and
+    any locally stored data.
+  </p>
+
+  <h2>Language Settings</h2>
+
+  <p>
+    VolleyKit supports multiple languages to match your preference:
+  </p>
+
+  <ul>
+    <li><strong>Deutsch</strong> – German</li>
+    <li><strong>English</strong> – English</li>
+    <li><strong>Français</strong> – French</li>
+    <li><strong>Italiano</strong> – Italian</li>
+  </ul>
+
+  <p>
+    The app will automatically use your browser's language if it's supported,
+    but you can override this in settings.
+  </p>
+
+  <Screenshot
+    id="language-settings"
+    alt="Language selection showing available options"
+    caption="Changing the app language"
+    instructions="Take a screenshot of the language setting section or dropdown. Show the available language options with the current selection highlighted."
+  />
+
+  <h2>Home Location</h2>
+
+  <p>
+    Set your home location to enable travel time calculations. This is used
+    to show how long it takes to reach each game venue.
+  </p>
+
+  <ul>
+    <li>Enter your address or nearest train station</li>
+    <li>Use the autocomplete suggestions for accuracy</li>
+    <li>Travel times will appear on your assignment cards</li>
+  </ul>
+
+  <InfoBox type="tip">
+    <p>
+      If you typically take public transport, use your nearest station as
+      your home location for more accurate journey times.
+    </p>
+  </InfoBox>
+
+  <p>
+    See the <a href="/volleykit/help/travel-time/">Travel Time guide</a> for more
+    details on this feature.
+  </p>
+
+  <h2>Appearance</h2>
+
+  <p>
+    Customize how VolleyKit looks:
+  </p>
+
+  <h3>Theme</h3>
+
+  <ul>
+    <li><strong>Light</strong> – Light background with dark text</li>
+    <li><strong>Dark</strong> – Dark background with light text</li>
+    <li><strong>System</strong> – Match your device's theme setting</li>
+  </ul>
+
+  <Screenshot
+    id="theme-settings"
+    alt="Theme selection with light, dark, and system options"
+    caption="Theme settings"
+    instructions="Take a screenshot showing the theme toggle or dropdown. If possible, show a side-by-side or preview of light vs dark mode."
+  />
+
+  <h2>Data & Privacy</h2>
+
+  <p>
+    Control how your data is handled:
+  </p>
+
+  <h3>Local Storage</h3>
+
+  <p>
+    VolleyKit stores data locally to enable offline access and improve performance:
+  </p>
+
+  <ul>
+    <li><strong>Assignment cache</strong> – Your recent assignments</li>
+    <li><strong>Preferences</strong> – Your settings and preferences</li>
+    <li><strong>Travel data</strong> – Cached journey information</li>
+  </ul>
+
+  <h3>Clear Local Data</h3>
+
+  <p>
+    You can clear all locally stored data from the settings page. This will:
+  </p>
+
+  <ul>
+    <li>Remove cached assignments and travel data</li>
+    <li>Reset all preferences to defaults</li>
+    <li>Require you to log in again</li>
+  </ul>
+
+  <InfoBox type="warning">
+    <p>
+      Clearing local data cannot be undone. You'll need to reload your
+      assignments the next time you open the app.
+    </p>
+  </InfoBox>
+
+  <Screenshot
+    id="data-privacy-settings"
+    alt="Data and privacy settings section with clear data button"
+    caption="Data and privacy options"
+    instructions="Take a screenshot of the data/privacy section showing the clear data button and any explanatory text about what data is stored."
+  />
+
+  <h2>About VolleyKit</h2>
+
+  <p>
+    The About section shows:
+  </p>
+
+  <ul>
+    <li><strong>Version number</strong> – Current app version</li>
+    <li><strong>Last updated</strong> – When the app was last updated</li>
+    <li><strong>Links</strong> – GitHub repository, issue tracker, help site</li>
+  </ul>
+
+  <InfoBox type="info">
+    <p>
+      Check the version number when reporting issues – it helps us identify
+      and fix problems faster.
+    </p>
+  </InfoBox>
+</DocLayout>

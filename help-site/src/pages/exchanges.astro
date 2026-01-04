@@ -1,0 +1,171 @@
+---
+import DocLayout from '../layouts/DocLayout.astro';
+import Screenshot from '../components/Screenshot.astro';
+import InfoBox from '../components/InfoBox.astro';
+import StepList from '../components/StepList.astro';
+---
+
+<DocLayout
+  title="Exchanges"
+  description="Learn how to request game exchanges and pick up available games from other referees in VolleyKit."
+>
+  <h1>Game Exchanges</h1>
+
+  <p class="lead text-text-secondary dark:text-text-secondary-dark">
+    The exchange system allows referees to swap games when they can't attend their
+    scheduled assignments. You can request exchanges for your games or pick up
+    games from other referees.
+  </p>
+
+  <h2>What Are Exchanges?</h2>
+
+  <p>
+    An exchange is a request from a referee who can't attend their scheduled game
+    and is looking for a replacement. The volleymanager system maintains an exchange
+    board where referees can:
+  </p>
+
+  <ul>
+    <li>Post their games for exchange</li>
+    <li>Browse available games from other referees</li>
+    <li>Accept games that fit their schedule</li>
+  </ul>
+
+  <InfoBox type="info">
+    <p>
+      Exchanges are managed through the official volleymanager system. VolleyKit
+      provides a more user-friendly interface to the same exchange board.
+    </p>
+  </InfoBox>
+
+  <h2>Requesting an Exchange</h2>
+
+  <p>
+    When you can't attend one of your scheduled games, you can request an exchange
+    to find a replacement referee.
+  </p>
+
+  <StepList
+    steps={[
+      {
+        title: 'Open the assignment',
+        description: 'Navigate to the game you want to exchange and open the detail view.',
+      },
+      {
+        title: 'Tap "Request Exchange"',
+        description: 'Click the exchange button to open the request form.',
+      },
+      {
+        title: 'Add a reason (optional)',
+        description: 'Provide a brief reason for the exchange request.',
+      },
+      {
+        title: 'Confirm the request',
+        description: 'Submit your request to post it to the exchange board.',
+      },
+    ]}
+  />
+
+  <Screenshot
+    id="exchange-request"
+    alt="Exchange request modal with reason field and submit button"
+    caption="Requesting an exchange for a game"
+    instructions="Take a screenshot of the exchange request modal/dialog. Show the game info at the top, optional reason text field, and submit/cancel buttons."
+  />
+
+  <InfoBox type="warning" title="Request early">
+    <p>
+      The earlier you request an exchange, the more likely you'll find a replacement.
+      Last-minute requests often go unfilled.
+    </p>
+  </InfoBox>
+
+  <h2>Viewing Available Exchanges</h2>
+
+  <p>
+    The Exchanges tab shows all games currently available for exchange. These are
+    games that other referees have posted and are looking for replacements.
+  </p>
+
+  <Screenshot
+    id="exchange-list"
+    alt="List of available exchange games from other referees"
+    caption="Available games on the exchange board"
+    instructions="Take a screenshot of the exchanges page showing several available games. Show game details including date, teams, venue, and the requesting referee's info."
+  />
+
+  <h3>Filtering Exchanges</h3>
+
+  <p>
+    Filter the exchange list to find games that work for you:
+  </p>
+
+  <ul>
+    <li><strong>Date range</strong> – Show games within specific dates</li>
+    <li><strong>Distance</strong> – Filter by travel distance from your home</li>
+    <li><strong>League</strong> – Filter by competition level</li>
+    <li><strong>Role</strong> – Filter by referee role</li>
+  </ul>
+
+  <h2>Accepting an Exchange</h2>
+
+  <p>
+    When you find a game you'd like to take over, you can accept the exchange:
+  </p>
+
+  <StepList
+    steps={[
+      {
+        title: 'Review the game details',
+        description: 'Check the date, time, venue, and travel requirements.',
+      },
+      {
+        title: 'Tap "Accept Exchange"',
+        description: 'Click to indicate you want to take this game.',
+      },
+      {
+        title: 'Confirm your acceptance',
+        description: 'Review the details and confirm your acceptance.',
+      },
+      {
+        title: 'Game added to your schedule',
+        description: 'The game now appears in your assignments.',
+      },
+    ]}
+  />
+
+  <InfoBox type="tip">
+    <p>
+      Make sure you can actually attend the game before accepting. Once accepted,
+      the original referee is released from the assignment.
+    </p>
+  </InfoBox>
+
+  <h2>Managing Your Exchange Requests</h2>
+
+  <p>
+    You can view and manage your active exchange requests from the Exchanges tab.
+    If you no longer need an exchange (e.g., your schedule changed), you can
+    cancel the request before someone accepts it.
+  </p>
+
+  <h3>Canceling a Request</h3>
+
+  <p>
+    To cancel an exchange request you've made:
+  </p>
+
+  <ol>
+    <li>Go to the Exchanges tab</li>
+    <li>Find your pending request in "My Requests"</li>
+    <li>Tap the cancel button</li>
+    <li>Confirm the cancellation</li>
+  </ol>
+
+  <InfoBox type="info">
+    <p>
+      You can only cancel an exchange request if no one has accepted it yet.
+      Once accepted, the exchange is final.
+    </p>
+  </InfoBox>
+</DocLayout>

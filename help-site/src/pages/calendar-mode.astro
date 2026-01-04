@@ -1,0 +1,185 @@
+---
+import DocLayout from '../layouts/DocLayout.astro';
+import Screenshot from '../components/Screenshot.astro';
+import InfoBox from '../components/InfoBox.astro';
+import StepList from '../components/StepList.astro';
+---
+
+<DocLayout
+  title="Calendar Mode"
+  description="Learn about VolleyKit's calendar mode for read-only access to referee assignments without a full login."
+>
+  <h1>Calendar Mode</h1>
+
+  <p class="lead text-text-secondary dark:text-text-secondary-dark">
+    Calendar mode provides read-only access to view referee assignments without
+    requiring a full login. It's perfect for quickly checking your schedule or
+    sharing with family members.
+  </p>
+
+  <h2>What Is Calendar Mode?</h2>
+
+  <p>
+    Calendar mode is a lightweight view-only access method that lets you see
+    your upcoming assignments without entering your password. It uses a unique
+    calendar code that's linked to your referee account.
+  </p>
+
+  <h3>Key Features</h3>
+
+  <ul>
+    <li>View your upcoming game assignments</li>
+    <li>See game details including date, time, teams, and venue</li>
+    <li>No password required – just your calendar code</li>
+    <li>Safe to share with family or add to shared calendars</li>
+  </ul>
+
+  <h2>Who Is Calendar Mode For?</h2>
+
+  <p>
+    Calendar mode is ideal for:
+  </p>
+
+  <ul>
+    <li><strong>Quick schedule checks</strong> – View your games without logging in</li>
+    <li><strong>Family members</strong> – Share your schedule with partners or family</li>
+    <li><strong>Calendar integration</strong> – Add games to external calendar apps</li>
+    <li><strong>Public devices</strong> – Check your schedule on shared computers</li>
+  </ul>
+
+  <InfoBox type="tip">
+    <p>
+      Calendar mode is perfect for letting your family know when you have games
+      without giving them access to your full account.
+    </p>
+  </InfoBox>
+
+  <h2>How to Access Calendar Mode</h2>
+
+  <p>
+    To use calendar mode, you need your unique calendar code from the volleymanager
+    system.
+  </p>
+
+  <StepList
+    steps={[
+      {
+        title: 'Find your calendar code',
+        description: 'Log in to volleymanager.volleyball.ch and find your calendar code in your profile settings.',
+      },
+      {
+        title: 'Open VolleyKit',
+        description: 'Navigate to the VolleyKit app.',
+      },
+      {
+        title: 'Select "Calendar Mode"',
+        description: 'On the login page, tap the "Calendar Mode" option.',
+      },
+      {
+        title: 'Enter your code',
+        description: 'Input your calendar code to access your read-only schedule.',
+      },
+    ]}
+  />
+
+  <Screenshot
+    id="calendar-mode-login"
+    alt="Calendar mode entry screen with code input field"
+    caption="Entering calendar mode with your code"
+    instructions="Take a screenshot of the calendar mode login/entry screen. Show the calendar code input field and any explanatory text about what calendar mode provides."
+  />
+
+  <h2>Viewing Your Schedule</h2>
+
+  <p>
+    Once in calendar mode, you'll see your upcoming assignments in a simplified
+    view. The interface shows the essential information for each game.
+  </p>
+
+  <Screenshot
+    id="calendar-mode-view"
+    alt="Calendar mode showing upcoming assignments in read-only view"
+    caption="Calendar mode assignment view"
+    instructions="Take a screenshot of the calendar mode view showing several upcoming games. Show the read-only indicator and the simplified game cards with date, teams, and venue."
+  />
+
+  <h2>Limitations vs Full Login</h2>
+
+  <p>
+    Calendar mode is read-only, which means some features are not available:
+  </p>
+
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="border-b border-border-default dark:border-border-default-dark">
+        <th class="py-2 text-left">Feature</th>
+        <th class="py-2 text-center">Full Login</th>
+        <th class="py-2 text-center">Calendar Mode</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="border-b border-border-subtle dark:border-border-subtle-dark">
+        <td class="py-2">View assignments</td>
+        <td class="py-2 text-center">✓</td>
+        <td class="py-2 text-center">✓</td>
+      </tr>
+      <tr class="border-b border-border-subtle dark:border-border-subtle-dark">
+        <td class="py-2">View game details</td>
+        <td class="py-2 text-center">✓</td>
+        <td class="py-2 text-center">✓</td>
+      </tr>
+      <tr class="border-b border-border-subtle dark:border-border-subtle-dark">
+        <td class="py-2">Travel time info</td>
+        <td class="py-2 text-center">✓</td>
+        <td class="py-2 text-center">✓</td>
+      </tr>
+      <tr class="border-b border-border-subtle dark:border-border-subtle-dark">
+        <td class="py-2">Confirm assignments</td>
+        <td class="py-2 text-center">✓</td>
+        <td class="py-2 text-center">✗</td>
+      </tr>
+      <tr class="border-b border-border-subtle dark:border-border-subtle-dark">
+        <td class="py-2">Request exchanges</td>
+        <td class="py-2 text-center">✓</td>
+        <td class="py-2 text-center">✗</td>
+      </tr>
+      <tr class="border-b border-border-subtle dark:border-border-subtle-dark">
+        <td class="py-2">View compensations</td>
+        <td class="py-2 text-center">✓</td>
+        <td class="py-2 text-center">✗</td>
+      </tr>
+      <tr>
+        <td class="py-2">Accept exchanges</td>
+        <td class="py-2 text-center">✓</td>
+        <td class="py-2 text-center">✗</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <InfoBox type="info">
+    <p>
+      For any actions like confirming assignments or requesting exchanges,
+      you'll need to log in with your full credentials.
+    </p>
+  </InfoBox>
+
+  <h2>Keeping Your Code Secure</h2>
+
+  <p>
+    While calendar mode is read-only, your calendar code should still be treated
+    with care:
+  </p>
+
+  <ul>
+    <li>Only share with people you trust</li>
+    <li>Don't post your code publicly online</li>
+    <li>If you suspect your code has been compromised, contact Swiss Volley</li>
+  </ul>
+
+  <InfoBox type="warning">
+    <p>
+      Your calendar code reveals your full game schedule. Only share it with
+      people you're comfortable knowing your whereabouts.
+    </p>
+  </InfoBox>
+</DocLayout>

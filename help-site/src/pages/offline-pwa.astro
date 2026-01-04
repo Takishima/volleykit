@@ -1,0 +1,214 @@
+---
+import DocLayout from '../layouts/DocLayout.astro';
+import Screenshot from '../components/Screenshot.astro';
+import InfoBox from '../components/InfoBox.astro';
+import StepList from '../components/StepList.astro';
+---
+
+<DocLayout
+  title="Offline & PWA"
+  description="Learn how to install VolleyKit as a Progressive Web App and use it offline on your device."
+>
+  <h1>Offline & PWA Features</h1>
+
+  <p class="lead text-text-secondary dark:text-text-secondary-dark">
+    VolleyKit is a Progressive Web App (PWA) that you can install on your device
+    and use offline. Access your assignments even without an internet connection.
+  </p>
+
+  <h2>What Is a PWA?</h2>
+
+  <p>
+    A Progressive Web App is a website that works like a native app. When you
+    install VolleyKit:
+  </p>
+
+  <ul>
+    <li>It appears on your home screen like a regular app</li>
+    <li>Opens in its own window without browser UI</li>
+    <li>Works offline for previously viewed content</li>
+    <li>Receives updates automatically</li>
+    <li>Uses minimal storage compared to native apps</li>
+  </ul>
+
+  <InfoBox type="tip">
+    <p>
+      PWAs combine the best of web and native apps – easy installation, automatic
+      updates, and offline capability without app store downloads.
+    </p>
+  </InfoBox>
+
+  <h2>Installing the App</h2>
+
+  <p>
+    You can install VolleyKit on any modern device – phones, tablets, or computers.
+  </p>
+
+  <h3>On iOS (iPhone/iPad)</h3>
+
+  <StepList
+    steps={[
+      {
+        title: 'Open VolleyKit in Safari',
+        description: 'The install feature only works in Safari on iOS.',
+      },
+      {
+        title: 'Tap the Share button',
+        description: 'Find the share icon at the bottom of the screen.',
+      },
+      {
+        title: 'Select "Add to Home Screen"',
+        description: 'Scroll down in the share menu to find this option.',
+      },
+      {
+        title: 'Confirm the installation',
+        description: 'Tap "Add" to install VolleyKit on your home screen.',
+      },
+    ]}
+  />
+
+  <h3>On Android</h3>
+
+  <StepList
+    steps={[
+      {
+        title: 'Open VolleyKit in Chrome',
+        description: 'Other browsers like Firefox also support PWA installation.',
+      },
+      {
+        title: 'Look for the install prompt',
+        description: 'A banner or prompt should appear asking to install the app.',
+      },
+      {
+        title: 'Tap "Install" or "Add to Home Screen"',
+        description: 'Confirm to add the app to your device.',
+      },
+    ]}
+  />
+
+  <Screenshot
+    id="install-prompt"
+    alt="PWA install prompt showing Add to Home Screen option"
+    caption="Installing VolleyKit on your device"
+    instructions="Take a screenshot of the PWA install prompt or banner. Show the VolleyKit icon, name, and install button. If possible, show both iOS and Android versions."
+  />
+
+  <h3>On Desktop (Chrome/Edge)</h3>
+
+  <p>
+    Look for the install icon in the address bar (usually a + or computer icon),
+    or use the browser menu to find "Install VolleyKit".
+  </p>
+
+  <h2>What Works Offline</h2>
+
+  <p>
+    When you're offline, you can still access content you've previously viewed:
+  </p>
+
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="border-b border-border-default dark:border-border-default-dark">
+        <th class="py-2 text-left">Feature</th>
+        <th class="py-2 text-center">Offline</th>
+        <th class="py-2 text-left">Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="border-b border-border-subtle dark:border-border-subtle-dark">
+        <td class="py-2">View assignments</td>
+        <td class="py-2 text-center">✓</td>
+        <td class="py-2">Previously loaded assignments</td>
+      </tr>
+      <tr class="border-b border-border-subtle dark:border-border-subtle-dark">
+        <td class="py-2">View game details</td>
+        <td class="py-2 text-center">✓</td>
+        <td class="py-2">If previously viewed</td>
+      </tr>
+      <tr class="border-b border-border-subtle dark:border-border-subtle-dark">
+        <td class="py-2">Travel times</td>
+        <td class="py-2 text-center">✓</td>
+        <td class="py-2">Cached journey data</td>
+      </tr>
+      <tr class="border-b border-border-subtle dark:border-border-subtle-dark">
+        <td class="py-2">Confirm assignments</td>
+        <td class="py-2 text-center">✗</td>
+        <td class="py-2">Requires connection</td>
+      </tr>
+      <tr class="border-b border-border-subtle dark:border-border-subtle-dark">
+        <td class="py-2">Request exchanges</td>
+        <td class="py-2 text-center">✗</td>
+        <td class="py-2">Requires connection</td>
+      </tr>
+      <tr>
+        <td class="py-2">View compensations</td>
+        <td class="py-2 text-center">✓</td>
+        <td class="py-2">If previously loaded</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <InfoBox type="info">
+    <p>
+      The app automatically syncs when you're back online. Any data changes
+      will be fetched and displayed.
+    </p>
+  </InfoBox>
+
+  <h2>Offline Indicator</h2>
+
+  <p>
+    When you're offline, VolleyKit shows a visual indicator so you know you're
+    viewing cached data. Look for the offline badge in the header or a banner
+    at the top of the screen.
+  </p>
+
+  <Screenshot
+    id="offline-indicator"
+    alt="Offline indicator showing the app is running without internet"
+    caption="Offline mode indicator"
+    instructions="Take a screenshot showing the offline indicator. This could be a banner at the top, an icon in the header, or a toast message indicating offline status."
+  />
+
+  <h2>Updating the App</h2>
+
+  <p>
+    VolleyKit updates automatically in the background. When a new version is
+    available:
+  </p>
+
+  <ol>
+    <li>The app downloads the update in the background</li>
+    <li>A notification appears when the update is ready</li>
+    <li>Tap "Reload" to activate the new version</li>
+  </ol>
+
+  <Screenshot
+    id="update-prompt"
+    alt="App update notification prompting to reload"
+    caption="Update available notification"
+    instructions="Take a screenshot of the update available prompt/toast. Show the reload button and any message about the new version being ready."
+  />
+
+  <InfoBox type="tip">
+    <p>
+      If you dismiss the update notification, the new version will activate
+      the next time you close and reopen the app.
+    </p>
+  </InfoBox>
+
+  <h2>Storage Usage</h2>
+
+  <p>
+    VolleyKit uses minimal storage on your device – typically less than 5MB
+    for the app itself plus cached data. You can clear the cache from your
+    browser settings if needed.
+  </p>
+
+  <InfoBox type="warning">
+    <p>
+      Clearing browser data or "Clear Cache" will remove your offline data.
+      You may need to reload assignments the next time you open the app.
+    </p>
+  </InfoBox>
+</DocLayout>
