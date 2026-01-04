@@ -452,6 +452,7 @@ describe("AssignmentsPage", () => {
         hallId: "3661",
         gender: "men",
         mapsUrl: "https://maps.google.com/?q=47.3769,8.5417",
+        plusCode: null,
         referees: {
           referee1: "Max Mustermann",
           referee2: "Anna Schmidt",

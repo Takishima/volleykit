@@ -52,6 +52,9 @@ export interface ICalEvent {
     latitude: number;
     longitude: number;
   } | null;
+
+  /** Google Plus Code extracted from Google Maps URL in description */
+  plusCode: string | null;
 }
 
 /**
@@ -126,6 +129,9 @@ export interface CalendarAssignment {
 
   /** Google Maps URL for the venue (constructed from address or coordinates) */
   mapsUrl: string | null;
+
+  /** Google Plus Code for the venue (extracted from Google Maps URL in description) */
+  plusCode: string | null;
 
   /** Referee names extracted from description */
   referees: {

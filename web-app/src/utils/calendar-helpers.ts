@@ -230,10 +230,11 @@ export function mapCalendarAssignmentToAssignment(
             ? {
                 streetAndHouseNumber: calendarAssignment.address,
                 city: extractCityFromAddress(calendarAssignment.address),
-                geographicalLocation: calendarAssignment.coordinates
+                geographicalLocation: calendarAssignment.coordinates || calendarAssignment.plusCode
                   ? {
-                      latitude: calendarAssignment.coordinates.latitude,
-                      longitude: calendarAssignment.coordinates.longitude,
+                      latitude: calendarAssignment.coordinates?.latitude,
+                      longitude: calendarAssignment.coordinates?.longitude,
+                      plusCode: calendarAssignment.plusCode ?? undefined,
                     }
                   : undefined,
               }

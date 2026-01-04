@@ -78,6 +78,14 @@ const NUMERIC_ID_PATTERN = /#(\d+)/;
 /** Pattern to extract Google Maps URL from description */
 const MAPS_URL_PATTERN = /https?:\/\/(?:www\.)?(?:maps\.google\.com|google\.com\/maps)[^\s\\]*/i;
 
+/**
+ * Pattern to extract Google Plus Code from a URL query string.
+ * Plus Codes have the format: 4-8 alphanumeric chars + plus sign + 2-4 alphanumeric chars
+ * The plus sign is URL-encoded as %2B in query strings.
+ * Example: ?q=8FV9HH8J%2B49 -> 8FV9HH8J+49
+ */
+const PLUS_CODE_PATTERN = /[?&]q=([A-Z0-9]{4,8}(?:%2B|\+)[A-Z0-9]{2,4})/i;
+
 /** Role mapping from raw strings to RefereeRole type */
 const ROLE_MAPPINGS: Record<string, RefereeRole> = {
   'ARB 1': 'referee1',
@@ -324,6 +332,34 @@ function parseICalDate(icalDate: string): string {
 }
 
 /**
+ * Extracts a Google Plus Code from a Google Maps URL.
+ * The Plus Code is typically in the query parameter 'q=' and may be URL-encoded.
+ *
+ * @example
+ * extractPlusCode('https://maps.google.com/?q=8FV9HH8J%2B49&hl=fr') // '8FV9HH8J+49'
+ * extractPlusCode('https://maps.google.com/?q=8FVC7HR7+C3') // '8FVC7HR7+C3'
+ */
+function extractPlusCode(mapsUrl: string): string | null {
+  const match = PLUS_CODE_PATTERN.exec(mapsUrl);
+  if (match?.[1]) {
+    // Decode URL-encoded plus sign (%2B -> +)
+    return decodeURIComponent(match[1]);
+  }
+  return null;
+}
+
+/**
+ * Extracts a Plus Code from the description text by finding a Google Maps URL.
+ */
+function extractPlusCodeFromDescription(description: string): string | null {
+  const mapsMatch = MAPS_URL_PATTERN.exec(description);
+  if (mapsMatch) {
+    return extractPlusCode(mapsMatch[0]);
+  }
+  return null;
+}
+
+/**
  * Constructs a Google Maps URL from address or coordinates.
  */
 function buildMapsUrl(
@@ -514,6 +550,9 @@ export function parseICalFeed(icsContent: string): ICalEvent[] {
       }
     }
 
+    // Extract Plus Code from Google Maps URL in description
+    const plusCode = extractPlusCodeFromDescription(description);
+
     events.push({
       uid,
       summary,
@@ -523,6 +562,7 @@ export function parseICalFeed(icsContent: string): ICalEvent[] {
       location,
       appleLocationTitle,
       geo,
+      plusCode,
     });
   }
 
@@ -795,6 +835,7 @@ export function extractAssignment(event: ICalEvent): ParseResult {
     hallId: hallInfo.hallId,
     gender,
     mapsUrl,
+    plusCode: event.plusCode,
     referees,
     association,
   };
