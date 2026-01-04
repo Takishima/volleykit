@@ -349,7 +349,6 @@ describe("ProtectedRoute", () => {
     vi.mocked(useAuthStore).mockReturnValue({
       status: "authenticated",
       checkSession: mockCheckSession,
-      isDemoMode: true,
       dataSource: "demo",
       logout: mockLogout,
     } as ReturnType<typeof useAuthStore>);
@@ -371,7 +370,6 @@ describe("ProtectedRoute", () => {
     vi.mocked(useAuthStore).mockReturnValue({
       status: "authenticated",
       checkSession: mockCheckSession,
-      isDemoMode: false,
       dataSource: "calendar",
       logout: mockLogout,
     } as ReturnType<typeof useAuthStore>);
@@ -393,7 +391,6 @@ describe("ProtectedRoute", () => {
     vi.mocked(useAuthStore).mockReturnValue({
       status: "authenticated",
       checkSession: mockCheckSession,
-      isDemoMode: false,
       dataSource: "api",
       logout: mockLogout,
     } as ReturnType<typeof useAuthStore>);

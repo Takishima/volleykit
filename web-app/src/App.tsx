@@ -102,11 +102,10 @@ const queryClient = new QueryClient({
 });
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { status, checkSession, isDemoMode, dataSource } = useAuthStore(
+  const { status, checkSession, dataSource } = useAuthStore(
     useShallow((state) => ({
       status: state.status,
       checkSession: state.checkSession,
-      isDemoMode: state.isDemoMode,
       dataSource: state.dataSource,
     })),
   );
@@ -119,6 +118,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       })),
     );
   const { t } = useTranslation();
+  const isDemoMode = dataSource === "demo";
   // Only verify session for API mode - demo and calendar modes don't need server verification
   const shouldVerifySession = status === "authenticated" && dataSource === "api";
   const [isVerifying, setIsVerifying] = useState(() => shouldVerifySession);

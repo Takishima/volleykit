@@ -102,6 +102,8 @@ const LOGIN_PAGE_URL = `${API_BASE}/login`;
 const AUTH_URL = `${API_BASE}/sportmanager.security/authentication/authenticate`;
 const LOGOUT_URL = `${API_BASE}/logout`;
 const SESSION_CHECK_TIMEOUT_MS = 10_000;
+/** Grace period after login during which session checks are skipped */
+const SESSION_CHECK_GRACE_PERIOD_MS = 5_000;
 
 /** Calendar codes are exactly 6 alphanumeric characters */
 const CALENDAR_CODE_PATTERN = /^[a-zA-Z0-9]{6}$/;
@@ -356,11 +358,11 @@ export const useAuthStore = create<AuthState>()(
           return true;
         }
 
-        // Skip session check if authentication happened very recently (within 5 seconds).
+        // Skip session check if authentication happened very recently.
         // This prevents redundant network requests right after login.
         const lastAuth = get()._lastAuthTimestamp;
-        if (lastAuth && Date.now() - lastAuth < 5000) {
-          logger.info("Session check: skipping, authenticated within last 5 seconds");
+        if (lastAuth && Date.now() - lastAuth < SESSION_CHECK_GRACE_PERIOD_MS) {
+          logger.info("Session check: skipping, authenticated recently");
           return true;
         }
 
