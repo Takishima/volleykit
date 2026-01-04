@@ -456,17 +456,18 @@ export default {
       });
     }
 
-    // Handle iCal proxy route: GET /iCal/referee/:code
+    // Handle iCal proxy route: GET/HEAD /iCal/referee/:code
     // This is a public endpoint that proxies to volleymanager's iCal feed
+    // HEAD is used by the client to validate calendar codes exist without downloading content
     const iCalCode = extractICalCode(url.pathname);
     if (iCalCode !== null) {
-      // Only allow GET requests for iCal
-      if (request.method !== "GET") {
+      // Only allow GET and HEAD requests for iCal
+      if (request.method !== "GET" && request.method !== "HEAD") {
         return new Response("Method Not Allowed", {
           status: 405,
           headers: {
             "Content-Type": "text/plain",
-            Allow: "GET",
+            Allow: "GET, HEAD",
             ...corsHeaders(origin!),
             ...securityHeaders(),
           },
@@ -527,7 +528,9 @@ export default {
         }
 
         // Return the iCal data with proper headers
-        const iCalBody = await iCalResponse.text();
+        // For HEAD requests, return empty body (used for validation)
+        const iCalBody =
+          request.method === "HEAD" ? null : await iCalResponse.text();
         return new Response(iCalBody, {
           status: 200,
           headers: {

@@ -1006,6 +1006,34 @@ describe("iCal Proxy Route", () => {
       );
     });
   });
+
+  describe("iCal HTTP methods", () => {
+    // Simulates the method check logic from the worker
+    function isAllowedICalMethod(method: string): boolean {
+      return method === "GET" || method === "HEAD";
+    }
+
+    it("allows GET requests for iCal endpoint", () => {
+      expect(isAllowedICalMethod("GET")).toBe(true);
+    });
+
+    it("allows HEAD requests for iCal endpoint", () => {
+      // HEAD is used by clients to validate calendar codes exist without downloading content
+      expect(isAllowedICalMethod("HEAD")).toBe(true);
+    });
+
+    it("rejects POST requests for iCal endpoint", () => {
+      expect(isAllowedICalMethod("POST")).toBe(false);
+    });
+
+    it("rejects PUT requests for iCal endpoint", () => {
+      expect(isAllowedICalMethod("PUT")).toBe(false);
+    });
+
+    it("rejects DELETE requests for iCal endpoint", () => {
+      expect(isAllowedICalMethod("DELETE")).toBe(false);
+    });
+  });
 });
 
 describe("URL Encoding Preservation", () => {
