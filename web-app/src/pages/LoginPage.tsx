@@ -275,6 +275,7 @@ export function LoginPage() {
               aria-selected={loginMode === "calendar"}
               aria-controls="calendar-login-panel"
               id="calendar-login-tab"
+              data-testid="calendar-login-tab"
               onClick={() => setLoginMode("calendar")}
               className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
                 loginMode === "calendar"
@@ -290,6 +291,7 @@ export function LoginPage() {
               aria-selected={loginMode === "full"}
               aria-controls="full-login-panel"
               id="full-login-tab"
+              data-testid="full-login-tab"
               onClick={() => setLoginMode("full")}
               className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
                 loginMode === "full"
