@@ -6,6 +6,9 @@ import {
   isValidationClosed,
   isGamePast,
   isGameAlreadyValidated,
+  isFromCalendarMode,
+  isGameReportEligible,
+  isActionAvailable,
 } from "./assignment-helpers";
 import type { Assignment } from "@/api/client";
 
@@ -266,6 +269,237 @@ describe("assignment-helpers", () => {
       const assignment: Partial<Assignment> = {} as Assignment;
 
       expect(isGameAlreadyValidated(assignment as Assignment)).toBe(false);
+    });
+  });
+
+  describe("isFromCalendarMode", () => {
+    it("should return false for API assignments with full league structure", () => {
+      const assignment: Partial<Assignment> = {
+        refereeGame: {
+          game: {
+            group: {
+              phase: {
+                league: {
+                  leagueCategory: { name: "NLA" },
+                },
+              },
+            },
+          },
+        },
+      } as Assignment;
+
+      expect(isFromCalendarMode(assignment as Assignment)).toBe(false);
+    });
+
+    it("should return true when league is undefined", () => {
+      const assignment: Partial<Assignment> = {
+        refereeGame: {
+          game: {
+            group: {
+              phase: {},
+            },
+          },
+        },
+      } as Assignment;
+
+      expect(isFromCalendarMode(assignment as Assignment)).toBe(true);
+    });
+
+    it("should return true when phase is undefined", () => {
+      const assignment: Partial<Assignment> = {
+        refereeGame: {
+          game: {
+            group: {},
+          },
+        },
+      } as Assignment;
+
+      expect(isFromCalendarMode(assignment as Assignment)).toBe(true);
+    });
+
+    it("should return true when group is undefined", () => {
+      const assignment: Partial<Assignment> = {
+        refereeGame: {
+          game: {},
+        },
+      } as Assignment;
+
+      expect(isFromCalendarMode(assignment as Assignment)).toBe(true);
+    });
+
+    it("should return true when game is undefined", () => {
+      const assignment: Partial<Assignment> = {
+        refereeGame: {},
+      } as Assignment;
+
+      expect(isFromCalendarMode(assignment as Assignment)).toBe(true);
+    });
+
+    it("should return true when refereeGame is undefined", () => {
+      const assignment: Partial<Assignment> = {} as Assignment;
+
+      expect(isFromCalendarMode(assignment as Assignment)).toBe(true);
+    });
+  });
+
+  describe("isGameReportEligible", () => {
+    it("should return false for calendar mode assignments", () => {
+      // Calendar assignment without league structure
+      const assignment: Partial<Assignment> = {
+        refereePosition: "head-one",
+        refereeGame: {
+          game: {},
+        },
+      } as Assignment;
+
+      expect(isGameReportEligible(assignment as Assignment)).toBe(false);
+    });
+
+    it("should return true for NLA game with head-one position", () => {
+      const assignment: Partial<Assignment> = {
+        refereePosition: "head-one",
+        refereeGame: {
+          game: {
+            group: {
+              phase: {
+                league: {
+                  leagueCategory: { name: "NLA" },
+                },
+              },
+            },
+          },
+        },
+      } as Assignment;
+
+      expect(isGameReportEligible(assignment as Assignment)).toBe(true);
+    });
+
+    it("should return true for NLB game with head-one position", () => {
+      const assignment: Partial<Assignment> = {
+        refereePosition: "head-one",
+        refereeGame: {
+          game: {
+            group: {
+              phase: {
+                league: {
+                  leagueCategory: { name: "NLB" },
+                },
+              },
+            },
+          },
+        },
+      } as Assignment;
+
+      expect(isGameReportEligible(assignment as Assignment)).toBe(true);
+    });
+
+    it("should return false for NLA game with non-head-one position", () => {
+      const assignment: Partial<Assignment> = {
+        refereePosition: "head-two",
+        refereeGame: {
+          game: {
+            group: {
+              phase: {
+                league: {
+                  leagueCategory: { name: "NLA" },
+                },
+              },
+            },
+          },
+        },
+      } as Assignment;
+
+      expect(isGameReportEligible(assignment as Assignment)).toBe(false);
+    });
+
+    it("should return false for lower league game", () => {
+      const assignment: Partial<Assignment> = {
+        refereePosition: "head-one",
+        refereeGame: {
+          game: {
+            group: {
+              phase: {
+                league: {
+                  leagueCategory: { name: "1L" },
+                },
+              },
+            },
+          },
+        },
+      } as Assignment;
+
+      expect(isGameReportEligible(assignment as Assignment)).toBe(false);
+    });
+  });
+
+  describe("isActionAvailable", () => {
+    describe("calendar mode assignments", () => {
+      const calendarAssignment: Partial<Assignment> = {
+        refereePosition: "head-one",
+        refereeGame: {
+          game: {},
+        },
+      } as Assignment;
+
+      it("should return false for confirm action", () => {
+        expect(isActionAvailable(calendarAssignment as Assignment, "confirm")).toBe(false);
+      });
+
+      it("should return false for report action", () => {
+        expect(isActionAvailable(calendarAssignment as Assignment, "report")).toBe(false);
+      });
+
+      it("should return false for exchange action", () => {
+        expect(isActionAvailable(calendarAssignment as Assignment, "exchange")).toBe(false);
+      });
+    });
+
+    describe("API-sourced assignments", () => {
+      const apiAssignment: Partial<Assignment> = {
+        refereePosition: "head-one",
+        refereeGame: {
+          game: {
+            group: {
+              phase: {
+                league: {
+                  leagueCategory: { name: "NLA" },
+                },
+              },
+            },
+          },
+        },
+      } as Assignment;
+
+      const nonEligibleApiAssignment: Partial<Assignment> = {
+        refereePosition: "head-one",
+        refereeGame: {
+          game: {
+            group: {
+              phase: {
+                league: {
+                  leagueCategory: { name: "1L" },
+                },
+              },
+            },
+          },
+        },
+      } as Assignment;
+
+      it("should return true for confirm action", () => {
+        expect(isActionAvailable(apiAssignment as Assignment, "confirm")).toBe(true);
+      });
+
+      it("should return true for report action when eligible", () => {
+        expect(isActionAvailable(apiAssignment as Assignment, "report")).toBe(true);
+      });
+
+      it("should return false for report action when not eligible", () => {
+        expect(isActionAvailable(nonEligibleApiAssignment as Assignment, "report")).toBe(false);
+      });
+
+      it("should return true for exchange action", () => {
+        expect(isActionAvailable(apiAssignment as Assignment, "exchange")).toBe(true);
+      });
     });
   });
 });
