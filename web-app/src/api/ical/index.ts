@@ -37,10 +37,4 @@ export {
   parseICalFeed,
   extractAssignment,
   parseCalendarFeed,
-  // Internal utilities (exported for testing)
-  parseRole,
-  parseGender,
-  parseICalDate,
-  buildMapsUrl,
-  calculateConfidence,
 } from './parser';

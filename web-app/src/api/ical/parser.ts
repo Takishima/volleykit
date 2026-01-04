@@ -88,7 +88,7 @@ import type {
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function parseICalFeed(_icsContent: string): ICalEvent[] {
-  // STUB: iCal parsing not yet implemented
+  // STUB(#503): iCal parsing not yet implemented
   //
   // Implementation steps:
   // 1. Unfold multi-line fields (RFC 5545: lines starting with SPACE/TAB are continuations)
@@ -166,7 +166,7 @@ export function parseICalFeed(_icsContent: string): ICalEvent[] {
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function extractAssignment(_event: ICalEvent): ParseResult {
-  // STUB: Assignment extraction not yet implemented
+  // STUB(#503): Assignment extraction not yet implemented
   //
   // Implementation steps:
   // 1. Extract gameId from UID using regex pattern
@@ -235,7 +235,7 @@ export function extractAssignment(_event: ICalEvent): ParseResult {
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function parseRole(_roleStr: string): RefereeRole {
-  // STUB: Role parsing not yet implemented
+  // STUB(#503): Role parsing not yet implemented
   //
   // Implementation:
   // 1. Normalize input (trim, uppercase)
@@ -261,7 +261,7 @@ export function parseRole(_roleStr: string): RefereeRole {
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function parseGender(_leagueName: string): Gender {
-  // STUB: Gender detection not yet implemented
+  // STUB(#503): Gender detection not yet implemented
   //
   // Implementation:
   // 1. Normalize input (lowercase)
@@ -287,7 +287,7 @@ export function parseGender(_leagueName: string): Gender {
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function parseICalDate(_icalDate: string): string {
-  // STUB: Date parsing not yet implemented
+  // STUB(#503): Date parsing not yet implemented
   //
   // Implementation:
   // 1. Handle different formats (date-only, datetime, with timezone)
@@ -316,7 +316,7 @@ export function buildMapsUrl(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _coordinates: { latitude: number; longitude: number } | null
 ): string | null {
-  // STUB: Maps URL construction not yet implemented
+  // STUB(#503): Maps URL construction not yet implemented
   //
   // Implementation:
   // 1. If coordinates available: use https://www.google.com/maps?q={lat},{lon}
@@ -341,7 +341,7 @@ export function buildMapsUrl(
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function calculateConfidence(_fields: ParsedFields): ParseConfidence {
-  // STUB: Confidence calculation not yet implemented
+  // STUB(#503): Confidence calculation not yet implemented
   //
   // Implementation:
   // 1. Count critical fields (gameId, role, teams, league)
