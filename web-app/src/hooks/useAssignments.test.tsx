@@ -8,6 +8,7 @@ import {
   usePastAssignments,
   useValidationClosedAssignments,
   useAssignmentDetails,
+  useCalendarAssignments,
   getDateRangeForPeriod,
 } from "./useAssignments";
 import type { Assignment } from "@/api/client";
@@ -490,5 +491,50 @@ describe("useAssignmentDetails", () => {
     });
 
     expect(result.current.isPending).toBe(true);
+  });
+});
+
+describe("useCalendarAssignments", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("is disabled when not in calendar mode", async () => {
+    const { useAuthStore } = await import("@/stores/auth");
+    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
+      selector({
+        dataSource: "api",
+        calendarCode: null,
+      }),
+    );
+
+    const { result } = renderHook(() => useCalendarAssignments(), {
+      wrapper: createWrapper(),
+    });
+
+    // Query should be disabled when not in calendar mode
+    // fetchStatus is 'idle' when query is disabled
+    expect(result.current.fetchStatus).toBe("idle");
+    // Returns empty placeholder data when disabled
+    expect(result.current.data).toEqual([]);
+  });
+
+  it("is disabled when calendar code is missing", async () => {
+    const { useAuthStore } = await import("@/stores/auth");
+    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
+      selector({
+        dataSource: "calendar",
+        calendarCode: null,
+      }),
+    );
+
+    const { result } = renderHook(() => useCalendarAssignments(), {
+      wrapper: createWrapper(),
+    });
+
+    // Query should be disabled when no calendar code
+    expect(result.current.fetchStatus).toBe("idle");
+    // Returns empty placeholder data when disabled
+    expect(result.current.data).toEqual([]);
   });
 });
