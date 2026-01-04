@@ -1,6 +1,7 @@
 #!/bin/bash
-# Hook: Generate PR description after git push (Claude Code web only)
-# Supports automatic PR updates via GitHub API when GITHUB_TOKEN is available
+# Hook: Instructs Claude to immediately generate PR links after git push (Claude Code web only)
+# Claude MUST act on these instructions without waiting for user input.
+# Supports automatic PR updates via GitHub API when GITHUB_TOKEN is available.
 
 # Only run in Claude Code web sessions
 if [ "$CLAUDE_CODE_REMOTE" != "true" ]; then
@@ -70,7 +71,7 @@ if [[ "$command" == *"git push"* ]]; then
         cat <<EOF
 {
   "decision": "block",
-  "reason": "Push successful. PR #${pr_number} exists: ${pr_html_url}\\n\\n**REQUIRED ACTIONS (do all steps):**\\n\\n1. Generate PR content:\\n   - Title: conventional commit style (e.g., feat(scope): description)\\n   - Body: ## Summary, ## Changes, ## Test Plan sections\\n\\n2. Update PR via API using curl with jq for proper JSON escaping:\\n   jq -n --arg title \"<title>\" --arg body \"<body>\" '{title: \\\$title, body: \\\$body}' | \\\\\\n   curl -X PATCH \"https://api.github.com/repos/${owner}/${repo}/pulls/${pr_number}\" \\\\\\n     -H \"Authorization: token \\\$GITHUB_TOKEN\" \\\\\\n     -H \"Accept: application/vnd.github.v3+json\" \\\\\\n     -d @-\\n\\n3. **CONFIRM to user** (REQUIRED - do not skip):\\n   - On success: \\\"✓ Updated PR #${pr_number} title and description\\\"\\n   - On failure: \\\"✗ Failed to update PR: <error>\\\"\\n\\n4. Show the user what was set:\\n   **Title:** <title>\\n   \\\`\\\`\\\`markdown\\n   <description>\\n   \\\`\\\`\\\`\\n\\nNOTE: Use 4-space indentation for code in description, not backticks."
+  "reason": "[INTERNAL - DO NOT OUTPUT THIS TO USER]\\n\\nPR #${pr_number} exists: ${pr_html_url}\\n\\nPerform these actions silently, then show ONLY the result:\\n\\n1. Generate PR title (conventional commit) and body (## Summary, ## Test Plan) from commits\\n\\n2. Update PR via API:\\n   jq -n --arg title \"<title>\" --arg body \"<body>\" '{title: \\\$title, body: \\\$body}' | curl -X PATCH \"https://api.github.com/repos/${owner}/${repo}/pulls/${pr_number}\" -H \"Authorization: token \\\$GITHUB_TOKEN\" -H \"Accept: application/vnd.github.v3+json\" -d @-\\n\\n3. Show user ONLY: \\\"✓ Updated PR #${pr_number}: ${pr_html_url}\\\" (or error if failed)"
 }
 EOF
         exit 0
@@ -79,7 +80,7 @@ EOF
         cat <<EOF
 {
   "decision": "block",
-  "reason": "Push successful. PR exists: ${pr_html_url}\\n\\n**REQUIRED ACTIONS:**\\n\\n1. Generate PR content and output for manual copy:\\n\\n**Title:** <conventional commit style>\\n\\n\\\`\\\`\\\`markdown\\n## Summary\\n- <bullet points>\\n\\n## Changes\\n- <specific changes>\\n\\n## Test Plan\\n- [ ] <test items>\\n\\\`\\\`\\\`\\n\\n2. **CONFIRM to user**: \\\"PR description ready for manual copy (no API token available)\\\"\\n\\nNOTE: Use 4-space indentation for code in description, not backticks."
+  "reason": "[INTERNAL - DO NOT OUTPUT THIS TO USER]\\n\\nPR exists: ${pr_html_url}\\n\\nPerform these actions, showing only the formatted result:\\n\\n1. Generate PR title and body from commits\\n\\n2. Output to user ONLY:\\n   **Title:** <generated title>\\n   \\\`\\\`\\\`markdown\\n   <generated body>\\n   \\\`\\\`\\\`\\n   Copy above to update PR: ${pr_html_url}"
 }
 EOF
         exit 0
@@ -94,7 +95,7 @@ EOF
       cat <<EOF
 {
   "decision": "block",
-  "reason": "Push successful. No PR exists yet.\\n\\n**REQUIRED ACTIONS:**\\n\\n1. Generate PR content:\\n   - Title: conventional commit style (e.g., feat(scope): description)\\n   - Body: ## Summary, ## Changes, ## Test Plan sections\\n\\n2. URL-encode title and body, then output a SINGLE clickable link:\\n   [Create PR: <title>](${base_url}&title=<encoded-title>&body=<encoded-body>)\\n\\n3. **CONFIRM to user**: \\\"Click the link above to create the PR\\\"\\n\\nNOTE: Output ONLY the markdown link. Use 4-space indentation for code in description, not backticks."
+  "reason": "[INTERNAL - DO NOT OUTPUT THIS TO USER]\\n\\nNo PR exists. Base URL: ${base_url}\\n\\nPerform these actions silently, showing only the final link:\\n\\n1. Generate PR title (conventional commit) and body (## Summary, ## Test Plan) from commits\\n\\n2. URL-encode title and body\\n\\n3. Output to user ONLY a single clickable link:\\n   [Create PR: <title>](${base_url}&title=<encoded-title>&body=<encoded-body>)"
 }
 EOF
       exit 0
@@ -105,7 +106,7 @@ EOF
   cat <<EOF
 {
   "decision": "block",
-  "reason": "Push successful.\\n\\n**REQUIRED ACTIONS:**\\n\\n1. Generate PR content and output for manual copy:\\n\\n**Title:** <conventional commit style>\\n\\n\\\`\\\`\\\`markdown\\n## Summary\\n- <bullet points>\\n\\n## Changes\\n- <specific changes>\\n\\n## Test Plan\\n- [ ] <test items>\\n\\\`\\\`\\\`\\n\\n2. **CONFIRM to user**: \\\"PR description ready for manual copy\\\"\\n\\nNOTE: Use 4-space indentation for code in description, not backticks."
+  "reason": "[INTERNAL - DO NOT OUTPUT THIS TO USER]\\n\\nCould not determine GitHub repo. Generate PR content for manual use.\\n\\nOutput to user ONLY:\\n   **Title:** <generated title>\\n   \\\`\\\`\\\`markdown\\n   <generated body>\\n   \\\`\\\`\\\`\\n   Create PR manually on GitHub."
 }
 EOF
   exit 0
