@@ -76,6 +76,8 @@ jobs:
       - name: Build Help Site
         run: npm run build
         working-directory: help-site
+        env:
+          ASTRO_BASE_PATH: /${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/help
       # Download existing gh-pages content to preserve main site and other PR previews
       - name: Download existing gh-pages content
         run: |

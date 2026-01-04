@@ -2,8 +2,12 @@
  * Site-wide constants for the help site
  */
 
-/** Base path for the help site on GitHub Pages */
-export const BASE_PATH = '/volleykit/help';
+/**
+ * Base path for the help site on GitHub Pages
+ * Uses Astro's import.meta.env.BASE_URL which is set from astro.config.mjs
+ * This ensures the path is correct for both production and PR previews
+ */
+export const BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 /** Timing constants */
 export const TIMING = {

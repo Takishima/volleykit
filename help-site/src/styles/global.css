@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Configure dark mode to use .dark class instead of media query */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* VolleyKit Help Site Theme - matching web-app styling */
 @theme {
   /* ==============================================
