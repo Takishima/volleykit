@@ -17,6 +17,7 @@ import {
   ArrowLeftRight,
   Settings,
   ChevronDown,
+  Calendar,
 } from "@/components/ui/icons";
 import type { LucideIcon } from "lucide-react";
 import { TourModeBanner } from "@/components/tour/TourModeBanner";
@@ -207,6 +208,22 @@ export function AppShell() {
 
             {isAuthenticated && (
               <div className="flex items-center gap-3">
+                {/* Calendar Mode Indicator */}
+                {dataSource === "calendar" && (
+                  <div
+                    className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-primary-100 dark:bg-primary-900/40"
+                    title={t("common.calendarModeTooltip")}
+                  >
+                    <Calendar
+                      className="w-4 h-4 text-primary-700 dark:text-primary-300"
+                      aria-hidden="true"
+                    />
+                    <span className="text-xs font-medium text-primary-700 dark:text-primary-300 hidden sm:inline">
+                      {t("common.calendarModeBanner")}
+                    </span>
+                  </div>
+                )}
+
                 {user?.occupations &&
                   user.occupations.length >= MINIMUM_OCCUPATIONS_FOR_SWITCHER && (
                   <div className="relative" ref={dropdownRef}>
