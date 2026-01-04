@@ -12,6 +12,7 @@ import {
   TransportSection,
   DataRetentionSection,
   TourSection,
+  HelpSection,
   DemoSection,
   AccessibilitySection,
   SafeModeSection,
@@ -64,6 +65,8 @@ export function SettingsPage() {
       <DataRetentionSection />
 
       <TourSection isDemoMode={isDemoMode} />
+
+      <HelpSection />
 
       <AccessibilitySection
         preventZoom={preventZoom}

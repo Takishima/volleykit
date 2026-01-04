@@ -76,6 +76,7 @@ export interface Translations {
     enteringCalendarMode: string;
     calendarModeInfo: string;
     calendarModeHint: string;
+    learnHowItWorks: string;
   };
   calendarError: {
     title: string;
@@ -287,6 +288,11 @@ export interface Translations {
       preventZoomDescription: string;
       preventZoomEnabled: string;
       preventZoomDisabled: string;
+    };
+    help: {
+      title: string;
+      description: string;
+      openDocs: string;
     };
     safeMode: string;
     safeModeDescription: string;

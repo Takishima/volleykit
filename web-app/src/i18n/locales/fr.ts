@@ -184,6 +184,7 @@ const fr: Translations = {
     enteringCalendarMode: "Chargement...",
     calendarModeInfo: "Accès en lecture seule à vos désignations",
     calendarModeHint: "Trouvez votre URL de calendrier dans VolleyManager sur la page Mes désignations",
+    learnHowItWorks: "Découvrir comment VolleyKit fonctionne",
   },
   calendarError: {
     title: "Erreur de calendrier",
@@ -421,6 +422,12 @@ const fr: Translations = {
         "Désactive le pincement pour zoomer et le double appui pour zoomer sur les appareils tactiles. Cela peut aider à éviter les zooms accidentels. Remarque: Certains utilisateurs dépendent du zoom pour l'accessibilité, utilisez donc ce paramètre avec discernement.",
       preventZoomEnabled: "La prévention du zoom est activée",
       preventZoomDisabled: "La prévention du zoom est désactivée",
+    },
+    help: {
+      title: "Aide et documentation",
+      description:
+        "Apprenez à utiliser VolleyKit avec des guides et conseils détaillés.",
+      openDocs: "Ouvrir la documentation",
     },
     safeMode: "Mode sécurisé",
     safeModeDescription:

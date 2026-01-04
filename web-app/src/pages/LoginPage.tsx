@@ -12,6 +12,7 @@ import {
   extractCalendarCode,
   validateCalendarCode,
 } from "@/utils/calendar-helpers";
+import { HELP_SITE_URL } from "@/utils/constants";
 
 // Demo-only mode restricts the app to demo mode (used in PR preview deployments)
 const DEMO_MODE_ONLY = import.meta.env.VITE_DEMO_MODE_ONLY === "true";
@@ -501,6 +502,18 @@ export function LoginPage() {
           ) : (
             t("auth.calendarModeInfo")
           )}
+        </p>
+
+        {/* Help link */}
+        <p className="mt-4 text-center">
+          <a
+            href={HELP_SITE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-text-muted dark:text-text-muted-dark hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+          >
+            {t("auth.learnHowItWorks")} &rarr;
+          </a>
         </p>
       </div>
     </div>

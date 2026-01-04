@@ -4,6 +4,7 @@ export { HomeLocationSection } from "./HomeLocationSection";
 export { TransportSection } from "./TransportSection";
 export { DataRetentionSection } from "./DataRetentionSection";
 export { TourSection } from "./TourSection";
+export { HelpSection } from "./HelpSection";
 export { DemoSection } from "./DemoSection";
 export { AccessibilitySection } from "./AccessibilitySection";
 export { SafeModeSection } from "./SafeModeSection";
