@@ -22,6 +22,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useTour } from "@/hooks/useTour";
 import { TOUR_DUMMY_COMPENSATION } from "@/components/tour/definitions/compensations";
 import { useAuthStore } from "@/stores/auth";
+import { useShallow } from "zustand/react/shallow";
 
 const EditCompensationModal = lazy(
   () =>
@@ -60,8 +61,11 @@ export function CompensationsPage() {
   const [filter, setFilter] = useState<FilterType>("pendingPast");
   const { t } = useTranslation();
   const { editCompensationModal, handleGeneratePDF } = useCompensationActions();
-  const isAssociationSwitching = useAuthStore(
-    (state) => state.isAssociationSwitching,
+  const { isAssociationSwitching, isCalendarMode } = useAuthStore(
+    useShallow((state) => ({
+      isAssociationSwitching: state.isAssociationSwitching,
+      isCalendarMode: state.isCalendarMode(),
+    })),
   );
 
   // Initialize tour for this page (triggers auto-start on first visit)
@@ -248,6 +252,19 @@ export function CompensationsPage() {
       </div>
     );
   };
+
+  // In calendar mode, show empty state since compensation data is not available
+  if (isCalendarMode) {
+    return (
+      <div className="space-y-3">
+        <EmptyState
+          icon="wallet"
+          title={t("compensations.unavailableInCalendarModeTitle")}
+          description={t("compensations.unavailableInCalendarModeDescription")}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">

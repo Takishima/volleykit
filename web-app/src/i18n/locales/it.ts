@@ -133,6 +133,7 @@ const it: Translations = {
     position: "Posizione",
     requiredLevel: "Livello richiesto",
     demoModeBanner: "Modalità Demo - Dati di esempio",
+    calendarModeBanner: "Modalità Calendario - Vista di sola lettura",
     optional: "Opzionale",
     tbd: "Da definire",
     locationTbd: "Luogo da definire",
@@ -247,6 +248,9 @@ const it: Translations = {
       "Record di compenso non trovato. La partita potrebbe essere troppo lontana nel futuro.",
     compensationMissingId:
       "Il record di compenso non ha un identificatore. Riprova più tardi.",
+    unavailableInCalendarModeTitle: "Non disponibile in modalità calendario",
+    unavailableInCalendarModeDescription:
+      "I dati dei compensi non sono disponibili in modalità calendario. Usa l'accesso completo per accedere ai dettagli dei compensi.",
   },
   exchange: {
     title: "Borsa scambi",
@@ -289,6 +293,9 @@ const it: Translations = {
     submittedBy: "Da:",
     levelRequired: "Livello {level}+",
     errorLoading: "Impossibile caricare gli scambi",
+    unavailableInCalendarModeTitle: "Non disponibile in modalità calendario",
+    unavailableInCalendarModeDescription:
+      "Le funzionalità di scambio non sono disponibili in modalità calendario. Usa l'accesso completo per sfogliare e candidarti agli scambi.",
     settings: {
       title: "Impostazioni filtri",
       maxDistance: "Distanza massima",

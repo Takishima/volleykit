@@ -133,6 +133,7 @@ const de: Translations = {
     position: "Position",
     requiredLevel: "Erforderliches Niveau",
     demoModeBanner: "Demo-Modus - Beispieldaten werden angezeigt",
+    calendarModeBanner: "Kalender-Modus - Nur-Lesen-Ansicht",
     optional: "Optional",
     tbd: "TBD",
     locationTbd: "Ort unbekannt",
@@ -249,6 +250,9 @@ const de: Translations = {
       "Entschädigungseintrag nicht gefunden. Das Spiel liegt möglicherweise zu weit in der Zukunft.",
     compensationMissingId:
       "Entschädigungseintrag hat keine Kennung. Bitte versuchen Sie es später erneut.",
+    unavailableInCalendarModeTitle: "Im Kalender-Modus nicht verfügbar",
+    unavailableInCalendarModeDescription:
+      "Entschädigungsdaten sind im Kalender-Modus nicht verfügbar. Verwenden Sie die vollständige Anmeldung, um auf Entschädigungsdetails zuzugreifen.",
   },
   exchange: {
     title: "Tauschbörse",
@@ -292,6 +296,9 @@ const de: Translations = {
     submittedBy: "Von:",
     levelRequired: "Niveau {level}+",
     errorLoading: "Fehler beim Laden der Tauschangebote",
+    unavailableInCalendarModeTitle: "Im Kalender-Modus nicht verfügbar",
+    unavailableInCalendarModeDescription:
+      "Tauschbörsen-Funktionen sind im Kalender-Modus nicht verfügbar. Verwenden Sie die vollständige Anmeldung, um Tauschangebote zu durchsuchen und zu bewerben.",
     settings: {
       title: "Filtereinstellungen",
       maxDistance: "Maximale Entfernung",

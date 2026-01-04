@@ -133,6 +133,7 @@ const en: Translations = {
     position: "Position",
     requiredLevel: "Required Level",
     demoModeBanner: "Demo Mode - Viewing sample data",
+    calendarModeBanner: "Calendar Mode - Read-only view",
     optional: "Optional",
     tbd: "TBD",
     locationTbd: "Location TBD",
@@ -249,6 +250,9 @@ const en: Translations = {
       "Compensation record not found. The game may be too far in the future.",
     compensationMissingId:
       "Compensation record is missing an identifier. Please try again later.",
+    unavailableInCalendarModeTitle: "Not available in Calendar Mode",
+    unavailableInCalendarModeDescription:
+      "Compensation data is not available in calendar mode. Use full login to access compensation details.",
   },
   exchange: {
     title: "Exchange",
@@ -290,6 +294,9 @@ const en: Translations = {
     submittedBy: "By:",
     levelRequired: "Level {level}+",
     errorLoading: "Failed to load exchanges",
+    unavailableInCalendarModeTitle: "Not available in Calendar Mode",
+    unavailableInCalendarModeDescription:
+      "Exchange features are not available in calendar mode. Use full login to browse and apply for exchanges.",
     settings: {
       title: "Filter Settings",
       maxDistance: "Maximum distance",

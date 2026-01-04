@@ -24,6 +24,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useTour } from "@/hooks/useTour";
 import { TOUR_DUMMY_ASSIGNMENT } from "@/components/tour/definitions/assignments";
 import { useAuthStore } from "@/stores/auth";
+import { useShallow } from "zustand/react/shallow";
 
 const PdfLanguageModal = lazy(
   () =>
@@ -51,8 +52,11 @@ type TabType = "upcoming" | "validationClosed";
 export function AssignmentsPage() {
   const [activeTab, setActiveTab] = useState<TabType>("upcoming");
   const { t } = useTranslation();
-  const isAssociationSwitching = useAuthStore(
-    (state) => state.isAssociationSwitching,
+  const { isAssociationSwitching, isCalendarMode } = useAuthStore(
+    useShallow((state) => ({
+      isAssociationSwitching: state.isAssociationSwitching,
+      isCalendarMode: state.isCalendarMode(),
+    })),
   );
 
   // Initialize tour for this page (triggers auto-start on first visit)
@@ -111,6 +115,11 @@ export function AssignmentsPage() {
 
   const getSwipeConfig = useCallback(
     (assignment: Assignment) => {
+      // In calendar mode, disable all swipe actions (read-only view)
+      if (isCalendarMode) {
+        return { left: [], right: [] };
+      }
+
       const actions = createAssignmentActions(assignment, {
         onEditCompensation: editCompensationModal.open,
         onValidateGame: validateGameModal.open,
@@ -147,6 +156,7 @@ export function AssignmentsPage() {
       };
     },
     [
+      isCalendarMode,
       editCompensationModal,
       validateGameModal,
       handleGenerateReport,

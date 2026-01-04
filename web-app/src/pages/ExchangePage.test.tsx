@@ -106,11 +106,13 @@ describe("ExchangePage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Default: not in demo mode
+    // Default: not in demo mode, not in calendar mode
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-      selector({ isDemoMode: false } as ReturnType<
-        typeof authStore.useAuthStore.getState
-      >),
+      selector({
+        isDemoMode: false,
+        isAssociationSwitching: false,
+        isCalendarMode: () => false,
+      } as unknown as ReturnType<typeof authStore.useAuthStore.getState>),
     );
 
     vi.mocked(demoStore.useDemoStore).mockReturnValue({
@@ -151,9 +153,11 @@ describe("ExchangePage", () => {
   describe("Level Filter Toggle", () => {
     it("should not show level filter when not in demo mode", () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: false } as ReturnType<
-          typeof authStore.useAuthStore.getState
-        >),
+        selector({
+          isDemoMode: false,
+          isAssociationSwitching: false,
+          isCalendarMode: () => false,
+        } as unknown as ReturnType<typeof authStore.useAuthStore.getState>),
       );
 
       render(<ExchangePage />);
@@ -166,9 +170,11 @@ describe("ExchangePage", () => {
 
     it("should show level filter when in demo mode with user level", () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: true } as ReturnType<
-          typeof authStore.useAuthStore.getState
-        >),
+        selector({
+          isDemoMode: true,
+          isAssociationSwitching: false,
+          isCalendarMode: () => false,
+        } as unknown as ReturnType<typeof authStore.useAuthStore.getState>),
       );
 
       vi.mocked(demoStore.useDemoStore).mockReturnValue({
@@ -186,9 +192,11 @@ describe("ExchangePage", () => {
 
     it("should not show level filter on Added by Me tab", () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: true } as ReturnType<
-          typeof authStore.useAuthStore.getState
-        >),
+        selector({
+          isDemoMode: true,
+          isAssociationSwitching: false,
+          isCalendarMode: () => false,
+        } as unknown as ReturnType<typeof authStore.useAuthStore.getState>),
       );
 
       vi.mocked(demoStore.useDemoStore).mockReturnValue({
@@ -229,9 +237,11 @@ describe("ExchangePage", () => {
 
     beforeEach(() => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: true } as ReturnType<
-          typeof authStore.useAuthStore.getState
-        >),
+        selector({
+          isDemoMode: true,
+          isAssociationSwitching: false,
+          isCalendarMode: () => false,
+        } as unknown as ReturnType<typeof authStore.useAuthStore.getState>),
       );
 
       // User is N2 level (gradation value 2)

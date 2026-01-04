@@ -25,6 +25,7 @@ export interface Translations {
     position: string;
     requiredLevel: string;
     demoModeBanner: string;
+    calendarModeBanner: string;
     optional: string;
     tbd: string;
     locationTbd: string;
@@ -133,6 +134,8 @@ export interface Translations {
     assignmentNotFoundInCache: string;
     compensationNotFound: string;
     compensationMissingId: string;
+    unavailableInCalendarModeTitle: string;
+    unavailableInCalendarModeDescription: string;
   };
   exchange: {
     title: string;
@@ -172,6 +175,8 @@ export interface Translations {
     submittedBy: string;
     levelRequired: string;
     errorLoading: string;
+    unavailableInCalendarModeTitle: string;
+    unavailableInCalendarModeDescription: string;
     settings: {
       title: string;
       maxDistance: string;
