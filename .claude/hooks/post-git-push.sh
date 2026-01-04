@@ -66,11 +66,11 @@ if [[ "$command" == *"git push"* ]]; then
 
     if [ "$pr_exists" = "true" ]; then
       if [ -n "$github_token" ]; then
-        # PR exists and we have a token - update via API and output description
+        # PR exists and we have a token - update via API
         cat <<EOF
 {
   "decision": "block",
-  "reason": "Push successful. PR #${pr_number} exists: ${pr_html_url}\\n\\nYou MUST do the following:\\n\\n1. Generate a PR title (conventional commit style, e.g., feat(scope): description)\\n\\n2. Generate a PR description in markdown with these sections:\\n   - ## Summary (bullet points)\\n   - ## Changes (list of changes)\\n   - ## Test Plan (checklist with [ ] items)\\n\\n3. Update the PR via GitHub API:\\n   curl -X PATCH \"https://api.github.com/repos/${owner}/${repo}/pulls/${pr_number}\" \\\\\\n     -H \"Authorization: token \\\$GITHUB_TOKEN\" \\\\\\n     -H \"Accept: application/vnd.github.v3+json\" \\\\\\n     -d '{\"title\": \"<title>\", \"body\": \"<description>\"}'\\n\\n4. Output the PR description in a code block so the user can see it:\\n   \\n   **Title:** <title>\\n   \\n   \\\`\\\`\\\`markdown\\n   <description>\\n   \\\`\\\`\\\`\\n\\nIMPORTANT:\\n- Escape JSON properly in the curl request (use jq if needed)\\n- Any code snippets INSIDE the description must use 4-space indentation, NOT backticks\\n- Report whether the API update succeeded or failed"
+  "reason": "Push successful. PR #${pr_number} exists: ${pr_html_url}\\n\\n**REQUIRED ACTIONS (do all steps):**\\n\\n1. Generate PR content:\\n   - Title: conventional commit style (e.g., feat(scope): description)\\n   - Body: ## Summary, ## Changes, ## Test Plan sections\\n\\n2. Update PR via API using curl with jq for proper JSON escaping:\\n   jq -n --arg title \"<title>\" --arg body \"<body>\" '{title: \\\$title, body: \\\$body}' | \\\\\\n   curl -X PATCH \"https://api.github.com/repos/${owner}/${repo}/pulls/${pr_number}\" \\\\\\n     -H \"Authorization: token \\\$GITHUB_TOKEN\" \\\\\\n     -H \"Accept: application/vnd.github.v3+json\" \\\\\\n     -d @-\\n\\n3. **CONFIRM to user** (REQUIRED - do not skip):\\n   - On success: \\\"✓ Updated PR #${pr_number} title and description\\\"\\n   - On failure: \\\"✗ Failed to update PR: <error>\\\"\\n\\n4. Show the user what was set:\\n   **Title:** <title>\\n   \\\`\\\`\\\`markdown\\n   <description>\\n   \\\`\\\`\\\`\\n\\nNOTE: Use 4-space indentation for code in description, not backticks."
 }
 EOF
         exit 0
@@ -79,7 +79,7 @@ EOF
         cat <<EOF
 {
   "decision": "block",
-  "reason": "Push successful. PR already exists: ${pr_html_url}\\n\\nYou MUST output the PR title and description for manual copy.\\n\\nOutput EXACTLY this format:\\n\\n**Title:** <conventional commit style title>\\n\\n\\\`\\\`\\\`markdown\\n## Summary\\n\\n- <bullet points summarizing what was done>\\n\\n## Changes\\n\\n- <list of specific changes>\\n\\n## Test Plan\\n\\n- [ ] <checklist items for testing>\\n\\\`\\\`\\\`\\n\\nIMPORTANT:\\n- The code block is REQUIRED so the user can copy the description\\n- Any code snippets INSIDE the description must use 4-space indentation, NOT backticks"
+  "reason": "Push successful. PR exists: ${pr_html_url}\\n\\n**REQUIRED ACTIONS:**\\n\\n1. Generate PR content and output for manual copy:\\n\\n**Title:** <conventional commit style>\\n\\n\\\`\\\`\\\`markdown\\n## Summary\\n- <bullet points>\\n\\n## Changes\\n- <specific changes>\\n\\n## Test Plan\\n- [ ] <test items>\\n\\\`\\\`\\\`\\n\\n2. **CONFIRM to user**: \\\"PR description ready for manual copy (no API token available)\\\"\\n\\nNOTE: Use 4-space indentation for code in description, not backticks."
 }
 EOF
         exit 0
@@ -94,7 +94,7 @@ EOF
       cat <<EOF
 {
   "decision": "block",
-  "reason": "Push successful. No PR exists yet.\\n\\nYou MUST output a clickable markdown link to create the PR.\\n\\nSteps:\\n1. Generate a PR title (conventional commit style, e.g., feat(scope): description)\\n\\n2. Generate a PR description with these sections:\\n   - ## Summary (bullet points)\\n   - ## Changes (list of changes)  \\n   - ## Test Plan (checklist with [ ] items)\\n\\n3. URL-encode the title and description:\\n   - Spaces → %20\\n   - Newlines → %0A\\n   - # → %23\\n   - Other special chars as needed\\n\\n4. Build the URL: ${base_url}&title=<encoded-title>&body=<encoded-description>\\n\\n5. Output a SINGLE markdown link (nothing else):\\n   [Create PR: <title>](<url>)\\n\\nIMPORTANT:\\n- Output ONLY the markdown link - no code blocks, no raw URLs, no extra text\\n- Any code snippets in the description must use 4-space indentation, NOT backticks\\n- The link text format is: Create PR: <title>"
+  "reason": "Push successful. No PR exists yet.\\n\\n**REQUIRED ACTIONS:**\\n\\n1. Generate PR content:\\n   - Title: conventional commit style (e.g., feat(scope): description)\\n   - Body: ## Summary, ## Changes, ## Test Plan sections\\n\\n2. URL-encode title and body, then output a SINGLE clickable link:\\n   [Create PR: <title>](${base_url}&title=<encoded-title>&body=<encoded-body>)\\n\\n3. **CONFIRM to user**: \\\"Click the link above to create the PR\\\"\\n\\nNOTE: Output ONLY the markdown link. Use 4-space indentation for code in description, not backticks."
 }
 EOF
       exit 0
@@ -105,7 +105,7 @@ EOF
   cat <<EOF
 {
   "decision": "block",
-  "reason": "Push successful.\\n\\nYou MUST output the PR title and description for manual copy.\\n\\nOutput EXACTLY this format:\\n\\n**Title:** <conventional commit style title>\\n\\n\\\`\\\`\\\`markdown\\n## Summary\\n\\n- <bullet points summarizing what was done>\\n\\n## Changes\\n\\n- <list of specific changes>\\n\\n## Test Plan\\n\\n- [ ] <checklist items for testing>\\n\\\`\\\`\\\`\\n\\nIMPORTANT:\\n- The code block is REQUIRED so the user can copy the description\\n- Any code snippets INSIDE the description must use 4-space indentation, NOT backticks"
+  "reason": "Push successful.\\n\\n**REQUIRED ACTIONS:**\\n\\n1. Generate PR content and output for manual copy:\\n\\n**Title:** <conventional commit style>\\n\\n\\\`\\\`\\\`markdown\\n## Summary\\n- <bullet points>\\n\\n## Changes\\n- <specific changes>\\n\\n## Test Plan\\n- [ ] <test items>\\n\\\`\\\`\\\`\\n\\n2. **CONFIRM to user**: \\\"PR description ready for manual copy\\\"\\n\\nNOTE: Use 4-space indentation for code in description, not backticks."
 }
 EOF
   exit 0
