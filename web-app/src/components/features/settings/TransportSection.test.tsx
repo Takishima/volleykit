@@ -103,6 +103,8 @@ function createMockAuthStore(
     status: "authenticated" as const,
     error: null,
     csrfToken: null,
+    dataSource: "api" as const,
+    calendarCode: null,
     isDemoMode: false,
     isAssociationSwitching: false,
     _checkSessionPromise: null,
@@ -117,6 +119,10 @@ function createMockAuthStore(
     setActiveOccupation: vi.fn(),
     setAssociationSwitching: vi.fn(),
     hasMultipleAssociations: vi.fn().mockReturnValue(false),
+    isCalendarMode: vi.fn().mockReturnValue(false),
+    loginWithCalendar: vi.fn(),
+    logoutCalendar: vi.fn(),
+    getAuthMode: vi.fn().mockReturnValue("full" as const),
     ...overrides,
   };
 }

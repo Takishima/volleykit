@@ -32,6 +32,14 @@ const AUTH_STORE_VERSION = 2;
 
 export type AuthStatus = "idle" | "loading" | "authenticated" | "error";
 
+/**
+ * Data source for assignments and compensations.
+ * - 'api': Real SwissVolley API (full authentication)
+ * - 'demo': Demo mode with simulated data
+ * - 'calendar': Calendar mode with read-only iCal feed access
+ */
+export type DataSource = "api" | "demo" | "calendar";
+
 export interface UserProfile {
   id: string;
   firstName: string;
@@ -53,7 +61,12 @@ interface AuthState {
   user: UserProfile | null;
   error: string | null;
   csrfToken: string | null;
+  /** @deprecated Use dataSource === 'demo' instead. Kept for backwards compatibility. */
   isDemoMode: boolean;
+  /** The current data source for assignments and compensations */
+  dataSource: DataSource;
+  /** Calendar code for calendar mode (6 characters) */
+  calendarCode: string | null;
   activeOccupationId: string | null;
   /** True while switching associations - pages should show loading state */
   isAssociationSwitching: boolean;
@@ -72,6 +85,14 @@ interface AuthState {
   setActiveOccupation: (id: string) => void;
   setAssociationSwitching: (isSwitching: boolean) => void;
   hasMultipleAssociations: () => boolean;
+  /** Returns true if in calendar mode */
+  isCalendarMode: () => boolean;
+  /** Login with a calendar code (placeholder - implementation pending) */
+  loginWithCalendar: (code: string) => void;
+  /** Logout from calendar mode (alias for logout) */
+  logoutCalendar: () => Promise<void>;
+  /** Get the current authentication mode */
+  getAuthMode: () => "full" | "calendar" | "demo" | "none";
 }
 
 const API_BASE = import.meta.env.VITE_API_PROXY_URL || "";
@@ -169,6 +190,9 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       error: null,
       csrfToken: null,
+      dataSource: "api",
+      calendarCode: null,
+      // isDemoMode kept in sync with dataSource for backwards compatibility
       isDemoMode: false,
       activeOccupationId: null,
       isAssociationSwitching: false,
@@ -278,16 +302,21 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: async () => {
-        try {
-          await fetch(LOGOUT_URL, {
-            credentials: "include",
-            redirect: "manual",
-          });
-        } catch (error) {
-          logger.error("Logout request failed:", error);
+        const currentDataSource = get().dataSource;
+
+        // Only call server logout for API mode
+        if (currentDataSource === "api") {
+          try {
+            await fetch(LOGOUT_URL, {
+              credentials: "include",
+              redirect: "manual",
+            });
+          } catch (error) {
+            logger.error("Logout request failed:", error);
+          }
         }
 
-        if (get().isDemoMode) {
+        if (currentDataSource === "demo") {
           useDemoStore.getState().clearDemoData();
         }
 
@@ -297,6 +326,8 @@ export const useAuthStore = create<AuthState>()(
           user: null,
           error: null,
           csrfToken: null,
+          dataSource: "api",
+          calendarCode: null,
           isDemoMode: false,
           eligibleAttributeValues: null,
           groupedEligibleAttributeValues: null,
@@ -310,7 +341,9 @@ export const useAuthStore = create<AuthState>()(
           throw new DOMException("Aborted", "AbortError");
         }
 
-        if (get().isDemoMode) {
+        const currentDataSource = get().dataSource;
+        // Demo and calendar modes don't need session verification
+        if (currentDataSource === "demo" || currentDataSource === "calendar") {
           return true;
         }
 
@@ -492,7 +525,8 @@ export const useAuthStore = create<AuthState>()(
 
         set({
           status: "authenticated",
-          isDemoMode: true,
+          dataSource: "demo",
+          isDemoMode: true, // Kept in sync for backwards compatibility
           user: {
             id: "demo-user",
             firstName: "Demo",
@@ -517,6 +551,50 @@ export const useAuthStore = create<AuthState>()(
         // Use groupedEligibleAttributeValues which contains all user associations
         return hasMultipleAssociations(get().groupedEligibleAttributeValues);
       },
+
+      isCalendarMode: () => {
+        return get().dataSource === "calendar";
+      },
+
+      loginWithCalendar: (code: string) => {
+        // Placeholder implementation - full logic will be added when Calendar Mode is implemented.
+        // Currently occupations are empty which differs from other auth modes.
+        // Full implementation will fetch referee info from the calendar API endpoint.
+        set({
+          status: "authenticated",
+          dataSource: "calendar",
+          calendarCode: code,
+          isDemoMode: false,
+          user: {
+            id: `calendar-${code}`,
+            firstName: "Calendar",
+            lastName: "User",
+            occupations: [],
+          },
+          error: null,
+        });
+      },
+
+      logoutCalendar: async () => {
+        // Separate method for API clarity and future extensibility
+        // (e.g., calendar-specific cleanup or analytics)
+        await get().logout();
+      },
+
+      getAuthMode: () => {
+        const state = get();
+        if (state.status !== "authenticated") {
+          return "none";
+        }
+        switch (state.dataSource) {
+          case "demo":
+            return "demo";
+          case "calendar":
+            return "calendar";
+          case "api":
+            return "full";
+        }
+      },
     }),
     {
       name: "volleykit-auth",
@@ -529,7 +607,9 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         csrfToken: state.csrfToken,
         _wasAuthenticated: state.status === "authenticated",
-        isDemoMode: state.isDemoMode,
+        dataSource: state.dataSource,
+        calendarCode: state.calendarCode,
+        isDemoMode: state.isDemoMode, // Kept for backwards compatibility
         activeOccupationId: state.activeOccupationId,
         eligibleAttributeValues: state.eligibleAttributeValues,
         groupedEligibleAttributeValues: state.groupedEligibleAttributeValues,
@@ -549,6 +629,8 @@ export const useAuthStore = create<AuthState>()(
               user?: UserProfile | null;
               csrfToken?: string | null;
               _wasAuthenticated?: boolean;
+              dataSource?: DataSource;
+              calendarCode?: string | null;
               isDemoMode?: boolean;
               activeOccupationId?: string | null;
               eligibleAttributeValues?: AttributeValue[] | null;
@@ -561,12 +643,19 @@ export const useAuthStore = create<AuthState>()(
           setCsrfToken(restoredCsrfToken);
         }
 
+        // Derive dataSource from isDemoMode for backwards compatibility with old persisted state
+        const dataSource: DataSource =
+          persistedState?.dataSource ??
+          (persistedState?.isDemoMode ? "demo" : "api");
+
         return {
           ...current,
           user: persistedState?.user ?? null,
           csrfToken: restoredCsrfToken,
           status: persistedState?._wasAuthenticated ? "authenticated" : "idle",
-          isDemoMode: persistedState?.isDemoMode ?? false,
+          dataSource,
+          calendarCode: persistedState?.calendarCode ?? null,
+          isDemoMode: dataSource === "demo",
           activeOccupationId: persistedState?.activeOccupationId ?? null,
           eligibleAttributeValues: persistedState?.eligibleAttributeValues ?? null,
           groupedEligibleAttributeValues: persistedState?.groupedEligibleAttributeValues ?? null,
