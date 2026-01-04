@@ -1,0 +1,73 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Sidebar from '../components/Sidebar.astro';
+import MobileNav from '../components/MobileNav.astro';
+import Footer from '../components/Footer.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import NextPrev from '../components/NextPrev.astro';
+import { getPageNavigation, getBreadcrumbs } from '../utils/navigation';
+
+interface BreadcrumbItem {
+  label: string;
+  href?: string;
+}
+
+interface NavLink {
+  title: string;
+  href: string;
+}
+
+interface Props {
+  title: string;
+  description?: string;
+  breadcrumbs?: BreadcrumbItem[];
+  prev?: NavLink;
+  next?: NavLink;
+  /** Set to false to disable auto-generated prev/next navigation */
+  showNavigation?: boolean;
+}
+
+const {
+  title,
+  description,
+  breadcrumbs: customBreadcrumbs,
+  prev: customPrev,
+  next: customNext,
+  showNavigation = true,
+} = Astro.props;
+
+// Auto-generate breadcrumbs if not provided
+const breadcrumbs = customBreadcrumbs ?? getBreadcrumbs(Astro.url.pathname, title);
+
+// Auto-generate prev/next if not provided and navigation is enabled
+const autoNav = showNavigation ? getPageNavigation(Astro.url.pathname) : {};
+const prev = customPrev ?? autoNav.prev;
+const next = customNext ?? autoNav.next;
+---
+
+<BaseLayout title={title} description={description}>
+  <MobileNav />
+
+  <div class="flex min-h-screen flex-col">
+    <Header />
+
+    <div class="flex flex-1">
+      <Sidebar />
+
+      <main class="flex-1 overflow-x-hidden">
+        <div class="container mx-auto max-w-4xl px-4 py-8">
+          {breadcrumbs.length > 0 && <Breadcrumbs items={breadcrumbs} />}
+
+          <article class="prose prose-gray max-w-none dark:prose-invert" data-pagefind-body>
+            <slot />
+          </article>
+
+          {showNavigation && (prev || next) && <NextPrev prev={prev} next={next} />}
+        </div>
+      </main>
+    </div>
+
+    <Footer />
+  </div>
+</BaseLayout>

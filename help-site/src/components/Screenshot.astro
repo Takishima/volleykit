@@ -1,0 +1,91 @@
+---
+/**
+ * Screenshot component
+ * Shows a screenshot image or placeholder with capture instructions
+ */
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { BASE_PATH } from '../constants';
+
+interface Props {
+  /** Unique identifier for the screenshot (used as filename) */
+  id: string;
+  /** Alt text describing the screenshot */
+  alt: string;
+  /** Optional caption displayed below the image */
+  caption?: string;
+  /** Instructions for capturing the screenshot (for Claude Code) */
+  instructions: string;
+}
+
+const { id, alt, caption, instructions } = Astro.props;
+
+// Check if screenshot exists
+const imagePath = `${BASE_PATH}/images/screenshots/${id}.png`;
+const absolutePath = join(process.cwd(), 'public', 'images', 'screenshots', `${id}.png`);
+const imageExists = existsSync(absolutePath);
+---
+
+<figure class="my-8">
+  {
+    imageExists ? (
+      <img
+        src={imagePath}
+        alt={alt}
+        class="mx-auto max-w-full rounded-lg border border-border-default shadow-md dark:border-border-default-dark"
+        loading="lazy"
+      />
+    ) : (
+      <div class="mx-auto max-w-2xl rounded-lg border-2 border-dashed border-border-strong bg-surface-subtle p-8 text-center dark:border-border-strong-dark dark:bg-surface-subtle-dark">
+        {/* Camera icon */}
+        <svg
+          class="mx-auto mb-4 h-12 w-12 text-text-muted dark:text-text-muted-dark"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.5"
+            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+          />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.5"
+            d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+          />
+        </svg>
+
+        {/* Alt text as label */}
+        <p class="mb-2 font-medium text-text-secondary dark:text-text-secondary-dark">{alt}</p>
+
+        <p class="text-sm text-text-muted dark:text-text-muted-dark">Screenshot placeholder</p>
+
+        {/* Hidden instructions for Claude Code */}
+        <Fragment
+          set:html={`
+            <!--
+            CLAUDE-CODE-SCREENSHOT-INSTRUCTIONS
+            ID: ${id}
+            ALT: ${alt}
+            PATH: public/images/screenshots/${id}.png
+            INSTRUCTIONS: ${instructions}
+            -->
+          `}
+        />
+      </div>
+    )
+  }
+
+  {/* Caption */}
+  {
+    caption && (
+      <figcaption class="mt-3 text-center text-sm text-text-muted dark:text-text-muted-dark">
+        {caption}
+      </figcaption>
+    )
+  }
+</figure>

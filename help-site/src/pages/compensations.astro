@@ -1,0 +1,150 @@
+---
+import DocLayout from '../layouts/DocLayout.astro';
+import Screenshot from '../components/Screenshot.astro';
+import InfoBox from '../components/InfoBox.astro';
+---
+
+<DocLayout
+  title="Compensations"
+  description="Track your volleyball referee earnings and compensation history in VolleyKit. View payments, filter by date, and export your data."
+>
+  <h1>Tracking Your Compensations</h1>
+
+  <p class="lead text-text-secondary dark:text-text-secondary-dark">
+    The Compensations section helps you track your referee earnings and payment
+    history. View past payments, filter by date range, and export your data
+    for record-keeping.
+  </p>
+
+  <h2>What Are Compensations?</h2>
+
+  <p>
+    Compensations are the payments you receive for officiating volleyball games.
+    Each compensation entry typically includes:
+  </p>
+
+  <ul>
+    <li><strong>Game details</strong> – The match you officiated</li>
+    <li><strong>Date</strong> – When the game took place</li>
+    <li><strong>Amount</strong> – The compensation amount in CHF</li>
+    <li><strong>Payment status</strong> – Pending, paid, or processed</li>
+    <li><strong>Role</strong> – Your function in the game</li>
+  </ul>
+
+  <InfoBox type="info">
+    <p>
+      Compensation amounts are set by Swiss Volley and vary based on the league
+      level and your role in the game.
+    </p>
+  </InfoBox>
+
+  <h2>Viewing Your Compensations</h2>
+
+  <p>
+    The compensation list shows all your recorded payments in chronological order.
+    Each entry displays the key information at a glance.
+  </p>
+
+  <Screenshot
+    id="compensations-list"
+    alt="Compensation list showing payment history with amounts and dates"
+    caption="Your compensation history"
+    instructions="Take a screenshot of the compensations page showing several payment entries. Show game info, dates, amounts in CHF, and payment status indicators."
+  />
+
+  <h3>Understanding Payment Status</h3>
+
+  <p>
+    Compensations can have different statuses:
+  </p>
+
+  <ul>
+    <li><strong>Pending</strong> – Game completed, payment not yet processed</li>
+    <li><strong>Processing</strong> – Payment is being processed</li>
+    <li><strong>Paid</strong> – Payment has been made to your account</li>
+  </ul>
+
+  <h2>Filtering by Date</h2>
+
+  <p>
+    Use the date filter to view compensations for a specific time period:
+  </p>
+
+  <ul>
+    <li><strong>This month</strong> – Current month's compensations</li>
+    <li><strong>Last month</strong> – Previous month's compensations</li>
+    <li><strong>This season</strong> – Current volleyball season</li>
+    <li><strong>Custom range</strong> – Select specific start and end dates</li>
+  </ul>
+
+  <Screenshot
+    id="compensations-filters"
+    alt="Date filter options for compensation list"
+    caption="Filtering compensations by date range"
+    instructions="Take a screenshot showing the date filter controls. Include the filter dropdown or date picker interface with the available options visible."
+  />
+
+  <h2>Summary Statistics</h2>
+
+  <p>
+    At the top of the compensation list, you'll see summary statistics for the
+    selected date range:
+  </p>
+
+  <ul>
+    <li><strong>Total earned</strong> – Sum of all compensations</li>
+    <li><strong>Games officiated</strong> – Number of games</li>
+    <li><strong>Average per game</strong> – Average compensation amount</li>
+  </ul>
+
+  <InfoBox type="tip">
+    <p>
+      Use the season filter at the end of each season to get a complete overview
+      of your referee earnings.
+    </p>
+  </InfoBox>
+
+  <h2>Export Options</h2>
+
+  <p>
+    You can export your compensation data for your records or tax purposes.
+    The export feature supports:
+  </p>
+
+  <ul>
+    <li><strong>PDF</strong> – Formatted document suitable for printing</li>
+    <li><strong>CSV</strong> – Spreadsheet-compatible data format</li>
+  </ul>
+
+  <p>
+    The export includes all compensations for the currently selected date range,
+    with full game details and payment information.
+  </p>
+
+  <InfoBox type="info">
+    <p>
+      Keep your compensation records for at least the current tax year.
+      The export feature makes it easy to maintain accurate records.
+    </p>
+  </InfoBox>
+
+  <h2>Payment Schedule</h2>
+
+  <p>
+    Compensation payments are typically processed monthly by Swiss Volley.
+    The exact payment schedule may vary, but generally:
+  </p>
+
+  <ul>
+    <li>Games from the previous month are processed at the start of each month</li>
+    <li>Payments are made via bank transfer to your registered account</li>
+    <li>Processing may take 2-4 weeks after the month ends</li>
+  </ul>
+
+  <InfoBox type="warning">
+    <p>
+      Make sure your bank details are up to date in the volleymanager system
+      to avoid payment delays.
+    </p>
+  </InfoBox>
+</DocLayout>

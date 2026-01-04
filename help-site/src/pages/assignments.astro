@@ -1,0 +1,131 @@
+---
+import DocLayout from '../layouts/DocLayout.astro';
+import Screenshot from '../components/Screenshot.astro';
+import InfoBox from '../components/InfoBox.astro';
+---
+
+<DocLayout
+  title="Assignments"
+  description="Learn how to view and manage your volleyball referee assignments in VolleyKit. See game details, directions, and take actions on your games."
+>
+  <h1>Managing Your Assignments</h1>
+
+  <p class="lead text-text-secondary dark:text-text-secondary-dark">
+    The Assignments section is your central hub for viewing all your upcoming volleyball
+    referee games and managing your schedule.
+  </p>
+
+  <h2>What Are Assignments?</h2>
+
+  <p>
+    Assignments are the games you've been scheduled to referee. Each assignment includes:
+  </p>
+
+  <ul>
+    <li><strong>Date and time</strong> – When the game takes place</li>
+    <li><strong>Teams</strong> – Home and away team names</li>
+    <li><strong>Venue</strong> – Location of the game with address</li>
+    <li><strong>Your role</strong> – 1st referee, 2nd referee, or line judge</li>
+    <li><strong>League</strong> – The competition level (e.g., NLA, NLB, 1. Liga)</li>
+  </ul>
+
+  <h2>Viewing Your Assignments</h2>
+
+  <p>
+    The assignment list shows all your upcoming games in chronological order.
+    Games are grouped by date, making it easy to see what's coming up.
+  </p>
+
+  <Screenshot
+    id="assignments-list"
+    alt="Assignment list showing multiple upcoming games grouped by date"
+    caption="The assignment list view with upcoming games"
+    instructions="Take a screenshot of the assignments page showing at least 3-4 games. Show the date grouping, team names, times, and venue info. Ensure the layout is clear on mobile."
+  />
+
+  <h3>List vs. Card View</h3>
+
+  <p>
+    Toggle between list view (compact) and card view (detailed) using the view
+    switcher in the top right. Card view shows more information at a glance,
+    while list view lets you see more games on screen.
+  </p>
+
+  <h2>Assignment Details</h2>
+
+  <p>
+    Tap on any assignment to see the full details. The detail view includes:
+  </p>
+
+  <ul>
+    <li>Complete game information</li>
+    <li>Venue address with map link</li>
+    <li>Travel time from your home location</li>
+    <li>Other referees assigned to the same game</li>
+    <li>Action buttons (confirm, request exchange, etc.)</li>
+  </ul>
+
+  <Screenshot
+    id="assignment-detail"
+    alt="Assignment detail view showing all game information"
+    caption="Detailed view of a single assignment"
+    instructions="Take a screenshot of an assignment detail page. Show the game header, venue info, travel time, other referees section, and action buttons at the bottom."
+  />
+
+  <h2>Taking Actions</h2>
+
+  <p>
+    Depending on the game status, you may have different actions available:
+  </p>
+
+  <h3>Confirm Assignment</h3>
+  <p>
+    Confirm that you'll be attending the game. This updates your status in
+    the volleymanager system.
+  </p>
+
+  <h3>Request Exchange</h3>
+  <p>
+    If you can't attend a game, you can request an exchange. This posts your
+    assignment to the exchange board for other referees to pick up.
+  </p>
+
+  <InfoBox type="warning">
+    <p>
+      Make sure to request an exchange well in advance. Last-minute requests
+      may not find a replacement in time.
+    </p>
+  </InfoBox>
+
+  <h3>Get Directions</h3>
+  <p>
+    Opens your preferred maps application with directions to the venue.
+  </p>
+
+  <Screenshot
+    id="assignment-actions"
+    alt="Assignment action buttons including confirm, exchange, and directions"
+    caption="Available actions for an assignment"
+    instructions="Take a screenshot showing the action buttons at the bottom of an assignment detail page. Include confirm, request exchange, and directions buttons."
+  />
+
+  <h2>Filtering and Sorting</h2>
+
+  <p>
+    Use the filter options to:
+  </p>
+
+  <ul>
+    <li>Show only unconfirmed games</li>
+    <li>Filter by role (1st referee, 2nd referee, line judge)</li>
+    <li>Filter by league</li>
+    <li>Change the date range</li>
+  </ul>
+
+  <InfoBox type="tip">
+    <p>
+      Enable travel time display in Settings to see how long it takes to reach
+      each venue from your home location.
+    </p>
+  </InfoBox>
+</DocLayout>

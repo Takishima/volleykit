@@ -1,0 +1,191 @@
+---
+/**
+ * LanguageSwitcher component
+ * Dropdown to switch between available languages
+ * Persists selection to localStorage
+ */
+import { languages, defaultLanguage } from '../i18n';
+
+interface Props {
+  /** Compact mode for mobile menu */
+  compact?: boolean;
+}
+
+const { compact = false } = Astro.props;
+---
+
+<div class="relative" data-language-switcher>
+  <button
+    type="button"
+    class:list={[
+      'flex items-center gap-2 rounded-lg border transition-colors',
+      compact
+        ? 'w-full justify-between border-border-default bg-surface-subtle px-3 py-2 text-sm dark:border-border-default-dark dark:bg-surface-subtle-dark'
+        : 'border-border-default bg-surface-page px-3 py-1.5 text-sm hover:bg-surface-subtle dark:border-border-default-dark dark:bg-surface-page-dark dark:hover:bg-surface-subtle-dark',
+    ]}
+    aria-haspopup="listbox"
+    aria-expanded="false"
+    data-language-trigger
+  >
+    <svg
+      class="h-4 w-4 text-text-muted dark:text-text-muted-dark"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
+      />
+    </svg>
+    <span class="text-text-primary dark:text-text-primary-dark" data-current-language>
+      {languages[defaultLanguage]}
+    </span>
+    <svg
+      class="h-4 w-4 text-text-muted transition-transform dark:text-text-muted-dark"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      data-chevron
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+    </svg>
+  </button>
+
+  <ul
+    class="absolute right-0 z-50 mt-1 hidden w-40 rounded-lg border border-border-default bg-surface-card py-1 shadow-lg dark:border-border-default-dark dark:bg-surface-card-dark"
+    role="listbox"
+    data-language-menu
+  >
+    {
+      Object.entries(languages).map(([code, name]) => (
+        <li>
+          <button
+            type="button"
+            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-text-primary transition-colors hover:bg-surface-subtle dark:text-text-primary-dark dark:hover:bg-surface-subtle-dark"
+            role="option"
+            data-language-option={code}
+          >
+            <span class="invisible" data-check aria-hidden="true">
+              ✓
+            </span>
+            <span>{name}</span>
+          </button>
+        </li>
+      ))
+    }
+  </ul>
+</div>
+
+<script>
+  import { getLanguage, setLanguage, languages, type Language } from '../i18n';
+
+  function initLanguageSwitcher() {
+    const switchers = document.querySelectorAll('[data-language-switcher]');
+
+    switchers.forEach((switcher) => {
+      const trigger = switcher.querySelector('[data-language-trigger]');
+      const menu = switcher.querySelector('[data-language-menu]');
+      const currentLabel = switcher.querySelector('[data-current-language]');
+      const chevron = switcher.querySelector('[data-chevron]');
+      const options = switcher.querySelectorAll('[data-language-option]');
+
+      if (!trigger || !menu || !currentLabel) return;
+
+      // Set initial language
+      const currentLang = getLanguage();
+      currentLabel.textContent = languages[currentLang];
+      updateChecks(currentLang);
+
+      function updateChecks(lang: Language) {
+        options.forEach((option) => {
+          const check = option.querySelector('[data-check]');
+          if (check) {
+            check.classList.toggle('invisible', option.getAttribute('data-language-option') !== lang);
+          }
+        });
+      }
+
+      function openMenu() {
+        menu.classList.remove('hidden');
+        trigger.setAttribute('aria-expanded', 'true');
+        chevron?.classList.add('rotate-180');
+      }
+
+      function closeMenu() {
+        menu.classList.add('hidden');
+        trigger.setAttribute('aria-expanded', 'false');
+        chevron?.classList.remove('rotate-180');
+      }
+
+      function toggleMenu() {
+        if (menu.classList.contains('hidden')) {
+          openMenu();
+        } else {
+          closeMenu();
+        }
+      }
+
+      // Toggle menu on trigger click
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleMenu();
+      });
+
+      // Handle option selection
+      options.forEach((option) => {
+        option.addEventListener('click', () => {
+          const lang = option.getAttribute('data-language-option') as Language;
+          setLanguage(lang);
+          currentLabel.textContent = languages[lang];
+          updateChecks(lang);
+          closeMenu();
+          // Reload page to apply translations (since Astro is SSG)
+          // For a more seamless experience, you could use client-side hydration
+          // window.location.reload();
+        });
+      });
+
+      // Close menu on outside click
+      document.addEventListener('click', (e) => {
+        if (!switcher.contains(e.target as Node)) {
+          closeMenu();
+        }
+      });
+
+      // Close menu on escape
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeMenu();
+        }
+      });
+    });
+
+    // Listen for language changes from other components
+    window.addEventListener('language-change', ((e: CustomEvent<{ language: Language }>) => {
+      switchers.forEach((switcher) => {
+        const currentLabel = switcher.querySelector('[data-current-language]');
+        const options = switcher.querySelectorAll('[data-language-option]');
+        if (currentLabel) {
+          currentLabel.textContent = languages[e.detail.language];
+        }
+        options.forEach((option) => {
+          const check = option.querySelector('[data-check]');
+          if (check) {
+            check.classList.toggle(
+              'invisible',
+              option.getAttribute('data-language-option') !== e.detail.language
+            );
+          }
+        });
+      });
+    }) as EventListener);
+  }
+
+  initLanguageSwitcher();
+  document.addEventListener('astro:after-swap', initLanguageSwitcher);
+</script>

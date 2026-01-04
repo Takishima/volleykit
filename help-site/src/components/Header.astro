@@ -1,0 +1,111 @@
+---
+/**
+ * Header component with responsive desktop/mobile layouts
+ * Includes integrated search functionality and language switcher
+ */
+import Search from './Search.astro';
+import LanguageSwitcher from './LanguageSwitcher.astro';
+import { BASE_PATH } from '../constants';
+---
+
+<header
+  class="sticky top-0 z-40 w-full border-b border-border-default bg-surface-card shadow-sm dark:border-border-default-dark dark:bg-surface-card-dark"
+  data-header
+  data-pagefind-ignore
+>
+  <div class="container mx-auto flex h-14 items-center justify-between gap-4 px-4">
+    <!-- Mobile: Hamburger menu button (opens MobileNav drawer) -->
+    <button
+      type="button"
+      class="flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-subtle hover:text-text-primary dark:text-text-secondary-dark dark:hover:bg-surface-subtle-dark dark:hover:text-text-primary-dark lg:hidden"
+      aria-label="Open navigation menu"
+      data-menu-toggle
+    >
+      <svg
+        class="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 6h16M4 12h16M4 18h16"></path>
+      </svg>
+    </button>
+
+    <!-- Desktop: Logo and title -->
+    <a
+      href={`${BASE_PATH}/`}
+      class="hidden items-center gap-2 text-text-primary hover:text-primary-600 dark:text-text-primary-dark dark:hover:text-primary-400 lg:flex"
+    >
+      <img src={`${BASE_PATH}/favicon.svg`} alt="" class="h-7 w-7" aria-hidden="true" />
+      <span class="font-semibold">VolleyKit Help</span>
+    </a>
+
+    <!-- Mobile: Centered title -->
+    <a
+      href={`${BASE_PATH}/`}
+      class="font-semibold text-text-primary dark:text-text-primary-dark lg:hidden"
+    >
+      VolleyKit Help
+    </a>
+
+    <!-- Desktop: Search input -->
+    <div class="hidden flex-1 justify-center lg:flex">
+      <Search variant="desktop" />
+    </div>
+
+    <!-- Desktop: Language switcher and Open App button -->
+    <div class="hidden items-center gap-3 lg:flex">
+      <LanguageSwitcher />
+      <a
+        href="https://takishima.github.io/volleykit/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="flex items-center gap-2 rounded-lg bg-primary-500 px-4 py-2 text-sm font-medium text-primary-950 transition-colors hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+      >
+        Open App
+        <svg
+          class="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+          ></path>
+        </svg>
+      </a>
+    </div>
+
+    <!-- Mobile: Search icon button -->
+    <Search variant="mobile" />
+  </div>
+</header>
+
+<script>
+  function initHeader() {
+    const header = document.querySelector('[data-header]');
+    if (!header) return;
+
+    const menuToggle = header.querySelector('[data-menu-toggle]');
+
+    // Hamburger button opens mobile nav drawer
+    menuToggle?.addEventListener('click', () => {
+      document.dispatchEvent(new CustomEvent('open-mobile-nav'));
+    });
+  }
+
+  // Initialize on page load
+  initHeader();
+
+  // Re-initialize on Astro page transitions
+  document.addEventListener('astro:after-swap', initHeader);
+</script>

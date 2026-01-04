@@ -1,0 +1,122 @@
+---
+import DocLayout from '../layouts/DocLayout.astro';
+import Screenshot from '../components/Screenshot.astro';
+import InfoBox from '../components/InfoBox.astro';
+import StepList from '../components/StepList.astro';
+import { BASE_PATH } from '../constants';
+---
+
+<DocLayout
+  title="Getting Started"
+  description="Quick start guide to set up and use VolleyKit for the first time. Learn how to login, navigate the app, and manage your referee assignments."
+>
+  <h1>Getting Started with VolleyKit</h1>
+
+  <p class="lead text-text-secondary dark:text-text-secondary-dark">
+    VolleyKit is a progressive web application that provides an improved interface for managing
+    your volleyball referee assignments through the Swiss Volleyball Federation's volleymanager system.
+  </p>
+
+  <h2>What is VolleyKit?</h2>
+
+  <p>
+    VolleyKit connects to the official volleymanager.volleyball.ch platform and provides a modern,
+    mobile-friendly interface for referees to:
+  </p>
+
+  <ul>
+    <li>View upcoming game assignments</li>
+    <li>Request and manage game exchanges with other referees</li>
+    <li>Track compensation payments</li>
+    <li>Access assignments offline</li>
+    <li>Calculate travel times using Swiss public transport</li>
+  </ul>
+
+  <InfoBox type="info">
+    <p>
+      VolleyKit is an unofficial app created to improve the referee experience. All data comes
+      from the official volleymanager system.
+    </p>
+  </InfoBox>
+
+  <h2>How to Login</h2>
+
+  <p>
+    To use VolleyKit, you need valid credentials for the volleymanager.volleyball.ch system.
+    These are the same credentials you use to access the official website.
+  </p>
+
+  <StepList
+    steps={[
+      {
+        title: 'Open VolleyKit',
+        description: 'Navigate to the VolleyKit app in your browser or open the installed app.',
+      },
+      {
+        title: 'Enter your credentials',
+        description: 'Use your volleymanager username and password to log in.',
+      },
+      {
+        title: 'Stay logged in',
+        description: 'Enable "Remember me" to stay logged in between sessions.',
+      },
+    ]}
+  />
+
+  <Screenshot
+    id="login-page"
+    alt="VolleyKit login page showing username and password fields"
+    caption="The VolleyKit login page"
+    instructions="Take a screenshot of the login page with empty form fields. Show the VolleyKit branding, username/password inputs, and login button."
+  />
+
+  <InfoBox type="tip" title="Can't remember your password?">
+    <p>
+      VolleyKit uses the same credentials as volleymanager.volleyball.ch. Use the password
+      reset function on the official site if you've forgotten your password.
+    </p>
+  </InfoBox>
+
+  <h2>Quick Tour</h2>
+
+  <p>
+    After logging in, you'll see the main dashboard with your upcoming assignments.
+    Here's a quick overview of the main sections:
+  </p>
+
+  <h3>Assignments</h3>
+  <p>
+    View all your upcoming referee games. Each assignment shows the date, time, teams,
+    venue, and your role (1st referee, 2nd referee, or line judge).
+  </p>
+
+  <h3>Exchanges</h3>
+  <p>
+    Browse available game exchanges from other referees or request an exchange for
+    one of your own assignments.
+  </p>
+
+  <h3>Compensations</h3>
+  <p>
+    Track your referee payments and compensation history. Filter by date range
+    and export your data.
+  </p>
+
+  <h3>Settings</h3>
+  <p>
+    Customize your experience including language, home location for travel calculations,
+    and notification preferences.
+  </p>
+
+  <h2>Next Steps</h2>
+
+  <p>
+    Now that you're familiar with the basics, explore the detailed guides for each feature:
+  </p>
+
+  <ul>
+    <li><a href={`${BASE_PATH}/assignments/`}>Managing your assignments</a></li>
+    <li><a href={`${BASE_PATH}/exchanges/`}>Requesting and accepting exchanges</a></li>
+    <li><a href={`${BASE_PATH}/compensations/`}>Tracking your compensations</a></li>
+  </ul>
+</DocLayout>

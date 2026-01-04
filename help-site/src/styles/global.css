@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+/* Configure dark mode to use .dark class instead of media query */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* VolleyKit Help Site Theme - matching web-app styling */
+@theme {
+  /* ==============================================
+   * PRIMARY BRAND COLOR SYSTEM
+   * Electric lime - energetic and modern
+   * ============================================== */
+
+  /* Primary color shades (electric lime) */
+  --color-primary-50: #fdffe4;
+  --color-primary-100: #f9ffc4;
+  --color-primary-200: #f1ff90;
+  --color-primary-300: #e2ff50;
+  --color-primary-400: #d7ff37;
+  --color-primary-500: #b2e600;  /* Main brand color */
+  --color-primary-600: #8ab800;  /* Hover state */
+  --color-primary-700: #688b00;
+  --color-primary-800: #526d07;
+  --color-primary-900: #455c0b;
+  --color-primary-950: #233400;
+
+  /* ==============================================
+   * SEMANTIC STATUS COLORS
+   * ============================================== */
+
+  /* Success color (teal) */
+  --color-success-50: #f0fdfa;
+  --color-success-100: #ccfbf1;
+  --color-success-200: #99f6e4;
+  --color-success-400: #2dd4bf;
+  --color-success-500: #14b8a6;
+  --color-success-600: #0d9488;
+  --color-success-800: #115e59;
+  --color-success-900: #134e4a;
+
+  /* Warning color (orange) */
+  --color-warning-50: #fff7ed;
+  --color-warning-100: #ffedd5;
+  --color-warning-200: #fed7aa;
+  --color-warning-400: #fb923c;
+  --color-warning-500: #f97316;
+  --color-warning-600: #ea580c;
+  --color-warning-800: #9a3412;
+  --color-warning-900: #7c2d12;
+
+  /* Danger color (red) */
+  --color-danger-50: #fef2f2;
+  --color-danger-100: #fee2e2;
+  --color-danger-200: #fecaca;
+  --color-danger-400: #f87171;
+  --color-danger-500: #ef4444;
+  --color-danger-600: #dc2626;
+  --color-danger-800: #991b1b;
+  --color-danger-900: #7f1d1d;
+
+  /* ==============================================
+   * SEMANTIC SURFACE COLORS (backgrounds)
+   * ============================================== */
+
+  /* Light mode surfaces */
+  --color-surface-page: var(--color-gray-50);
+  --color-surface-card: #ffffff;
+  --color-surface-subtle: var(--color-gray-100);
+  --color-surface-muted: var(--color-gray-200);
+
+  /* Dark mode surfaces */
+  --color-surface-page-dark: var(--color-gray-900);
+  --color-surface-card-dark: var(--color-gray-800);
+  --color-surface-subtle-dark: var(--color-gray-700);
+  --color-surface-muted-dark: var(--color-gray-700);
+
+  /* ==============================================
+   * SEMANTIC TEXT COLORS (foreground)
+   * ============================================== */
+
+  /* Light mode text */
+  --color-text-primary: var(--color-gray-900);
+  --color-text-secondary: var(--color-gray-700);
+  --color-text-muted: var(--color-gray-500);
+  --color-text-subtle: var(--color-gray-400);
+
+  /* Dark mode text */
+  --color-text-primary-dark: var(--color-gray-100);
+  --color-text-secondary-dark: var(--color-gray-300);
+  --color-text-muted-dark: var(--color-gray-400);
+  --color-text-subtle-dark: var(--color-gray-500);
+
+  /* ==============================================
+   * SEMANTIC BORDER COLORS
+   * ============================================== */
+
+  /* Light mode borders */
+  --color-border-subtle: var(--color-gray-100);
+  --color-border-default: var(--color-gray-200);
+  --color-border-strong: var(--color-gray-300);
+
+  /* Dark mode borders */
+  --color-border-subtle-dark: var(--color-gray-700);
+  --color-border-default-dark: var(--color-gray-700);
+  --color-border-strong-dark: var(--color-gray-600);
+}
+
+/* Base styles */
+@layer base {
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply min-h-screen bg-surface-page text-text-primary;
+  }
+
+  /* Dark mode support via 'dark' class on html */
+  html.dark body {
+    @apply bg-surface-page-dark text-text-primary-dark;
+  }
+}

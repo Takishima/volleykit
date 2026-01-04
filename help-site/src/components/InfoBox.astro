@@ -1,0 +1,81 @@
+---
+/**
+ * InfoBox component
+ * Colored box for info, warning, or tip messages
+ */
+
+interface Props {
+  /** Type determines color and icon */
+  type: 'info' | 'warning' | 'tip';
+  /** Optional title for the box */
+  title?: string;
+}
+
+const { type, title } = Astro.props;
+
+// Styles and icons for each type
+const typeConfig = {
+  info: {
+    containerClass:
+      'border-primary-200 bg-primary-50 dark:border-primary-800 dark:bg-primary-950/50',
+    iconClass: 'text-primary-600 dark:text-primary-400',
+    titleClass: 'text-primary-900 dark:text-primary-100',
+    icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>`,
+    defaultTitle: 'Info',
+  },
+  warning: {
+    containerClass:
+      'border-warning-200 bg-warning-50 dark:border-warning-800 dark:bg-warning-950/50',
+    iconClass: 'text-warning-600 dark:text-warning-400',
+    titleClass: 'text-warning-900 dark:text-warning-100',
+    icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>`,
+    defaultTitle: 'Warning',
+  },
+  tip: {
+    containerClass:
+      'border-success-200 bg-success-50 dark:border-success-800 dark:bg-success-950/50',
+    iconClass: 'text-success-600 dark:text-success-400',
+    titleClass: 'text-success-900 dark:text-success-100',
+    icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>`,
+    defaultTitle: 'Tip',
+  },
+};
+
+const config = typeConfig[type];
+const displayTitle = title ?? config.defaultTitle;
+---
+
+<aside
+  class:list={[
+    'my-6 rounded-lg border p-4',
+    config.containerClass,
+  ]}
+  role="note"
+>
+  <div class="flex gap-3">
+    {/* Icon */}
+    <div class:list={['shrink-0', config.iconClass]}>
+      <svg
+        class="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        set:html={config.icon}
+      />
+    </div>
+
+    {/* Content */}
+    <div class="flex-1">
+      {/* Title */}
+      <p class:list={['mb-1 font-semibold', config.titleClass]}>
+        {displayTitle}
+      </p>
+
+      {/* Slot content */}
+      <div class="text-sm text-text-secondary dark:text-text-secondary-dark [&>p]:mb-2 [&>p:last-child]:mb-0">
+        <slot />
+      </div>
+    </div>
+  </div>
+</aside>
