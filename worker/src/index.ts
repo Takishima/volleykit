@@ -487,6 +487,9 @@ export default {
       }
 
       // Proxy to volleymanager iCal endpoint
+      // Note: We always use GET for the upstream request, even for HEAD requests from clients.
+      // This is because the upstream server may not support HEAD, and we need to verify the
+      // calendar exists. For HEAD requests, we simply discard the response body.
       const iCalTargetUrl = `${env.TARGET_HOST}/indoor/iCal/referee/${iCalCode}`;
 
       try {
