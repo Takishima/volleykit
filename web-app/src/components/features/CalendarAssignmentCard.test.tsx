@@ -20,6 +20,7 @@ function createMockCalendarAssignment(
 ): CalendarAssignment {
   return {
     gameId: "game-123",
+    gameNumber: null,
     role: "referee1",
     roleRaw: "1. SR",
     startTime: "2025-12-16T18:00:00Z",
@@ -27,11 +28,14 @@ function createMockCalendarAssignment(
     homeTeam: "VBC Zürich",
     awayTeam: "VBC Basel",
     league: "NLA Men",
+    leagueCategory: null,
     address: "Saalsporthalle, Zürich",
     coordinates: null,
     hallName: null,
+    hallId: null,
     gender: "men",
     mapsUrl: null,
+    referees: {},
     ...overrides,
   };
 }

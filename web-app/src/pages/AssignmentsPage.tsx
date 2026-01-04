@@ -5,9 +5,9 @@ import {
   useCalendarAssignments,
 } from "@/hooks/useConvocations";
 import { AssignmentCard } from "@/components/features/AssignmentCard";
-import { CalendarAssignmentCard } from "@/components/features/CalendarAssignmentCard";
 import { SwipeableCard } from "@/components/ui/SwipeableCard";
 import type { CalendarAssignment } from "@/hooks/useConvocations";
+import { mapCalendarAssignmentToAssignment } from "@/utils/calendar-helpers";
 import { WeekSeparator } from "@/components/ui/WeekSeparator";
 import {
   LoadingState,
@@ -200,11 +200,6 @@ export function AssignmentsPage() {
 
   const getSwipeConfig = useCallback(
     (assignment: Assignment) => {
-      // In calendar mode, disable all swipe actions (read-only view)
-      if (isCalendarMode) {
-        return { left: [], right: [] };
-      }
-
       const actions = createAssignmentActions(
         assignment,
         {
@@ -216,9 +211,19 @@ export function AssignmentsPage() {
         t,
       );
 
+      const canGenerateReport = isGameReportEligible(assignment);
+
+      // In calendar mode, only allow report generation for NLA/NLB games
+      // Other actions require full API access
+      if (isCalendarMode) {
+        return {
+          left: canGenerateReport ? [actions.generateReport] : [],
+          right: [],
+        };
+      }
+
       const isGameInFuture = assignment.refereeGame?.isGameInFuture === "1";
       const canValidateGame = isValidationEligible(assignment);
-      const canGenerateReport = isGameReportEligible(assignment);
       const canEditCompensation = isAssignmentCompensationEditable(assignment);
 
       // Action array ordering: first item = furthest from card = full swipe default
@@ -362,19 +367,29 @@ export function AssignmentsPage() {
                     <WeekSeparator week={group.week} />
                   )}
                   {isCalendarMode
-                    ? // Calendar mode: render simplified cards (no swipe actions)
+                    ? // Calendar mode: same card component, no swipe actions
                       (group.items as CalendarAssignment[]).map(
-                        (assignment, itemIndex) => (
-                          <CalendarAssignmentCard
-                            key={assignment.gameId}
-                            assignment={assignment}
-                            dataTour={
-                              itemsBeforeThisGroup + itemIndex === 0
-                                ? "assignment-card"
-                                : undefined
-                            }
-                          />
-                        ),
+                        (calendarAssignment, itemIndex) => {
+                          const assignment = mapCalendarAssignmentToAssignment(calendarAssignment);
+                          return (
+                            <SwipeableCard
+                              key={calendarAssignment.gameId}
+                              swipeConfig={getSwipeConfig(assignment)}
+                            >
+                              {({ isDrawerOpen }) => (
+                                <AssignmentCard
+                                  assignment={assignment}
+                                  disableExpansion={isDrawerOpen}
+                                  dataTour={
+                                    itemsBeforeThisGroup + itemIndex === 0
+                                      ? "assignment-card"
+                                      : undefined
+                                  }
+                                />
+                              )}
+                            </SwipeableCard>
+                          );
+                        },
                       )
                     : // Regular mode: render full cards with swipe actions
                       (group.items as Assignment[]).map(

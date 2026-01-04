@@ -49,9 +49,11 @@ describe("calendar-client", () => {
       role: CalendarAssignment["role"],
     ): CalendarAssignment => ({
       gameId: "123456",
+      gameNumber: null,
       startTime: "2025-01-15T19:30:00+01:00",
       endTime: "2025-01-15T22:30:00+01:00",
       league: "NLA Men",
+      leagueCategory: null,
       homeTeam: "Home Team",
       awayTeam: "Away Team",
       role,
@@ -60,7 +62,9 @@ describe("calendar-client", () => {
       address: null,
       coordinates: null,
       hallName: null,
+      hallId: null,
       mapsUrl: null,
+      referees: {},
     });
 
     beforeEach(() => {
@@ -125,18 +129,22 @@ describe("calendar-client", () => {
     it("converts calendar assignment to API assignment format", async () => {
       const calendarAssignment: CalendarAssignment = {
         gameId: "123456",
+        gameNumber: 382360,
         startTime: "2025-01-15T19:30:00+01:00",
         endTime: "2025-01-15T22:30:00+01:00",
         league: "NLA Men",
+        leagueCategory: "NLA",
         homeTeam: "VBC Zürich",
         awayTeam: "Volley Luzern",
         role: "referee1",
         roleRaw: "1SR",
         gender: "men",
         hallName: "Sporthalle Hardau",
+        hallId: "3661",
         address: "Hardaustrasse 10, 8005 Zürich",
         coordinates: { latitude: 47.3769, longitude: 8.5417 },
         mapsUrl: null,
+        referees: { referee1: "Max Mustermann", referee2: "Anna Schmidt" },
       };
 
       vi.mocked(calendarApiModule.fetchCalendarAssignments).mockResolvedValue([
@@ -175,9 +183,11 @@ describe("calendar-client", () => {
     it("maps men gender to m", async () => {
       const calendarAssignment: CalendarAssignment = {
         gameId: "123",
+        gameNumber: null,
         startTime: "2025-01-15T19:30:00+01:00",
         endTime: "2025-01-15T22:30:00+01:00",
         league: "NLA",
+        leagueCategory: null,
         homeTeam: "Home",
         awayTeam: "Away",
         role: "referee1",
@@ -186,7 +196,9 @@ describe("calendar-client", () => {
         address: null,
         coordinates: null,
         hallName: null,
+        hallId: null,
         mapsUrl: null,
+        referees: {},
       };
 
       vi.mocked(calendarApiModule.fetchCalendarAssignments).mockResolvedValue([
@@ -202,9 +214,11 @@ describe("calendar-client", () => {
     it("maps women gender to f", async () => {
       const calendarAssignment: CalendarAssignment = {
         gameId: "123",
+        gameNumber: null,
         startTime: "2025-01-15T19:30:00+01:00",
         endTime: "2025-01-15T22:30:00+01:00",
         league: "NLA",
+        leagueCategory: null,
         homeTeam: "Home",
         awayTeam: "Away",
         role: "referee1",
@@ -213,7 +227,9 @@ describe("calendar-client", () => {
         address: null,
         coordinates: null,
         hallName: null,
+        hallId: null,
         mapsUrl: null,
+        referees: {},
       };
 
       vi.mocked(calendarApiModule.fetchCalendarAssignments).mockResolvedValue([
@@ -229,9 +245,11 @@ describe("calendar-client", () => {
     it("maps mixed gender to undefined", async () => {
       const calendarAssignment: CalendarAssignment = {
         gameId: "123",
+        gameNumber: null,
         startTime: "2025-01-15T19:30:00+01:00",
         endTime: "2025-01-15T22:30:00+01:00",
         league: "NLA",
+        leagueCategory: null,
         homeTeam: "Home",
         awayTeam: "Away",
         role: "referee1",
@@ -240,7 +258,9 @@ describe("calendar-client", () => {
         address: null,
         coordinates: null,
         hallName: null,
+        hallId: null,
         mapsUrl: null,
+        referees: {},
       };
 
       vi.mocked(calendarApiModule.fetchCalendarAssignments).mockResolvedValue([
@@ -256,9 +276,11 @@ describe("calendar-client", () => {
     it("handles assignment without hall", async () => {
       const calendarAssignment: CalendarAssignment = {
         gameId: "123",
+        gameNumber: null,
         startTime: "2025-01-15T19:30:00+01:00",
         endTime: "2025-01-15T22:30:00+01:00",
         league: "NLA",
+        leagueCategory: null,
         homeTeam: "Home",
         awayTeam: "Away",
         role: "referee1",
@@ -267,7 +289,9 @@ describe("calendar-client", () => {
         address: null,
         coordinates: null,
         hallName: null,
+        hallId: null,
         mapsUrl: null,
+        referees: {},
       };
 
       vi.mocked(calendarApiModule.fetchCalendarAssignments).mockResolvedValue([
@@ -281,18 +305,22 @@ describe("calendar-client", () => {
     it("handles hall without coordinates", async () => {
       const calendarAssignment: CalendarAssignment = {
         gameId: "123",
+        gameNumber: null,
         startTime: "2025-01-15T19:30:00+01:00",
         endTime: "2025-01-15T22:30:00+01:00",
         league: "NLA",
+        leagueCategory: null,
         homeTeam: "Home",
         awayTeam: "Away",
         role: "referee1",
         roleRaw: "1SR",
         gender: "men",
         hallName: "Test Hall",
+        hallId: null,
         address: "Test Address",
         coordinates: null,
         mapsUrl: null,
+        referees: {},
       };
 
       vi.mocked(calendarApiModule.fetchCalendarAssignments).mockResolvedValue([
@@ -327,9 +355,11 @@ describe("calendar-client", () => {
       vi.mocked(calendarApiModule.fetchCalendarAssignments).mockResolvedValue([
         {
           gameId: "1",
+          gameNumber: null,
           startTime: "2025-01-15T19:30:00+01:00",
           endTime: "2025-01-15T22:30:00+01:00",
           league: "NLA",
+          leagueCategory: null,
           homeTeam: "Home",
           awayTeam: "Away",
           role: "referee1",
@@ -338,7 +368,9 @@ describe("calendar-client", () => {
           address: null,
           coordinates: null,
           hallName: null,
+          hallId: null,
           mapsUrl: null,
+          referees: {},
         },
       ]);
 
@@ -370,9 +402,11 @@ describe("calendar-client", () => {
       vi.mocked(calendarApiModule.fetchCalendarAssignments).mockResolvedValue([
         {
           gameId: "12345",
+          gameNumber: null,
           startTime: "2025-01-15T19:30:00+01:00",
           endTime: "2025-01-15T22:30:00+01:00",
           league: "NLA",
+          leagueCategory: null,
           homeTeam: "Home",
           awayTeam: "Away",
           role: "referee1",
@@ -381,7 +415,9 @@ describe("calendar-client", () => {
           address: null,
           coordinates: null,
           hallName: null,
+          hallId: null,
           mapsUrl: null,
+          referees: {},
         },
       ]);
 

@@ -76,6 +76,9 @@ export interface CalendarAssignment {
   /** Game ID extracted from UID (e.g., "392936" from "referee-convocation-for-game-392936") */
   gameId: string;
 
+  /** Game number extracted from description (e.g., 382360 from "Match: #382360") */
+  gameNumber: number | null;
+
   /** Referee role for this assignment */
   role: RefereeRole;
 
@@ -97,6 +100,9 @@ export interface CalendarAssignment {
   /** League/competition name (e.g., "Mobiliar Volley Cup", "NLA Herren") */
   league: string;
 
+  /** League category (e.g., "3L", "NLA", "2L") extracted from description */
+  leagueCategory: string | null;
+
   /** Full address of the venue */
   address: string | null;
 
@@ -109,11 +115,22 @@ export interface CalendarAssignment {
   /** Name of the sports hall/venue */
   hallName: string | null;
 
-  /** Gender category derived from league name */
+  /** Hall ID extracted from description (e.g., "3661" from "Salle: #3661 | ...") */
+  hallId: string | null;
+
+  /** Gender category derived from ♀/♂ symbols in description */
   gender: Gender;
 
   /** Google Maps URL for the venue (constructed from address or coordinates) */
   mapsUrl: string | null;
+
+  /** Referee names extracted from description */
+  referees: {
+    referee1?: string;
+    referee2?: string;
+    lineReferee1?: string;
+    lineReferee2?: string;
+  };
 }
 
 /**

@@ -12,6 +12,24 @@
  * - Just the 6-character code
  */
 
+import type { Assignment } from "@/api/client";
+import type { CalendarAssignment, RefereeRole, Gender } from "@/api/ical/types";
+
+/**
+ * Maps iCal Gender type to API gender format.
+ * API uses 'm' for men and 'f' for women.
+ */
+function mapGender(gender: Gender): "m" | "f" | undefined {
+  switch (gender) {
+    case "men":
+      return "m";
+    case "women":
+      return "f";
+    default:
+      return undefined;
+  }
+}
+
 /** Calendar codes are exactly 6 alphanumeric characters */
 const CALENDAR_CODE_PATTERN = /^[a-zA-Z0-9]{6}$/;
 
@@ -123,6 +141,155 @@ export function extractCalendarCode(input: string): string | null {
 export interface CalendarValidationResult {
   valid: boolean;
   error?: string;
+}
+
+/**
+ * Helper to create a referee convocation reference with display name.
+ */
+function createRefereeConvocation(displayName: string | undefined) {
+  if (!displayName) return undefined;
+  return {
+    indoorAssociationReferee: {
+      indoorReferee: {
+        person: {
+          displayName,
+        },
+      },
+    },
+  };
+}
+
+/**
+ * Maps a CalendarAssignment (from iCal) to an Assignment-compatible object.
+ *
+ * This allows calendar mode to use the same AssignmentCard component as
+ * normal authenticated mode, ensuring visual consistency.
+ *
+ * Data extracted from iCal:
+ * - Game number (from "Match: #382360" pattern)
+ * - Gender (from ♀/♂ symbols)
+ * - League category (from "Ligue: #6652 | 3L | ♂" pattern)
+ * - Referee names (from "ARB 1: Name | email | phone" pattern)
+ *
+ * Not available in calendar mode:
+ * - Compensation data
+ * - Single-ball hall detection (requires hall ID lookup)
+ */
+export function mapCalendarAssignmentToAssignment(
+  calendarAssignment: CalendarAssignment,
+): Assignment {
+  // Map iCal role to API position key
+  const positionMap: Record<RefereeRole, Assignment["refereePosition"]> = {
+    referee1: "head-one",
+    referee2: "head-two",
+    lineReferee: "linesman-one", // Default to first linesman
+    scorer: "linesman-one", // Scorer treated as linesman position
+    unknown: "head-one", // Fallback
+  };
+
+  return {
+    // Use gameId as identity - it's unique per assignment
+    __identity: calendarAssignment.gameId,
+    refereePosition: positionMap[calendarAssignment.role],
+    refereeConvocationStatus: "active", // All calendar assignments are active
+    refereeGame: {
+      __identity: calendarAssignment.gameId,
+      isGameInFuture:
+        new Date(calendarAssignment.startTime) > new Date() ? "1" : "0",
+      game: {
+        __identity: calendarAssignment.gameId,
+        startingDateTime: calendarAssignment.startTime,
+        number: calendarAssignment.gameNumber != null ? calendarAssignment.gameNumber : undefined,
+        encounter: {
+          teamHome: {
+            name: calendarAssignment.homeTeam,
+          },
+          teamAway: {
+            name: calendarAssignment.awayTeam,
+          },
+        },
+        group: {
+          phase: {
+            // Note: The OpenAPI schema for Game.group.phase.league is simplified
+            // and doesn't include all fields the API actually returns.
+            // We use type assertion because AssignmentCard expects these fields.
+            league: {
+              gender: mapGender(calendarAssignment.gender),
+              leagueCategory: calendarAssignment.leagueCategory
+                ? { name: calendarAssignment.leagueCategory }
+                : undefined,
+            } as { gender?: "m" | "f"; leagueCategory?: { name: string } },
+          },
+        },
+        hall: {
+          // Use hallId from description if available (enables single-ball hall detection)
+          __identity: calendarAssignment.hallId != null ? calendarAssignment.hallId : calendarAssignment.gameId,
+          name: calendarAssignment.hallName ?? undefined,
+          primaryPostalAddress: calendarAssignment.address
+            ? {
+                streetAndHouseNumber: calendarAssignment.address,
+                city: extractCityFromAddress(calendarAssignment.address),
+                geographicalLocation: calendarAssignment.coordinates
+                  ? {
+                      latitude: calendarAssignment.coordinates.latitude,
+                      longitude: calendarAssignment.coordinates.longitude,
+                    }
+                  : undefined,
+              }
+            : undefined,
+        },
+      },
+      // Map referee names from iCal (if available)
+      activeRefereeConvocationFirstHeadReferee: createRefereeConvocation(
+        calendarAssignment.referees?.referee1,
+      ),
+      activeRefereeConvocationSecondHeadReferee: createRefereeConvocation(
+        calendarAssignment.referees?.referee2,
+      ),
+      activeRefereeConvocationFirstLinesman: createRefereeConvocation(
+        calendarAssignment.referees?.lineReferee1,
+      ),
+      activeRefereeConvocationSecondLinesman: createRefereeConvocation(
+        calendarAssignment.referees?.lineReferee2,
+      ),
+    },
+  };
+}
+
+/**
+ * Attempts to extract city from a Swiss address string.
+ * Swiss addresses typically end with "XXXX City" (postal code + city).
+ *
+ * @example
+ * extractCityFromAddress("Sternenfeldstrasse 50, 4127 Birsfelden") // "Birsfelden"
+ */
+function extractCityFromAddress(address: string): string | undefined {
+  // Match Swiss postal code pattern (4 digits) followed by city name
+  // Use atomic group pattern - match postal code then capture rest of string
+  const match = address.match(/\b(\d{4})\s+/);
+  if (match) {
+    // Extract everything after the postal code
+    const postalCodeEnd = address.indexOf(match[0]) + match[0].length;
+    const city = address.slice(postalCodeEnd).trim();
+    if (city.length > 0) {
+      return city;
+    }
+  }
+
+  // Fallback: try to get last part after comma
+  const parts = address.split(",");
+  const lastPart = parts[parts.length - 1];
+  if (parts.length > 1 && lastPart) {
+    const trimmedLastPart = lastPart.trim();
+    // Remove postal code if present - use simple pattern
+    const postalMatch = trimmedLastPart.match(/^\d{4}\s+/);
+    if (postalMatch) {
+      return trimmedLastPart.slice(postalMatch[0].length).trim() || trimmedLastPart;
+    }
+    return trimmedLastPart;
+  }
+
+  return undefined;
 }
 
 /**

@@ -42,13 +42,23 @@ vi.mock("@/hooks/useTranslation", () => ({
         "assignments.calendarEmptyDescription": "Your calendar is empty",
         "assignments.calendarNoUpcomingTitle": "No upcoming calendar events",
         "assignments.calendarNoUpcomingDescription": "No upcoming events in calendar",
+        "assignments.active": "Active",
         "common.today": "Today",
         "common.tomorrow": "Tomorrow",
         "common.vs": "vs",
         "common.unknown": "Unknown",
         "common.retry": "Retry",
+        "common.men": "Men",
+        "common.women": "Women",
+        "positions.head-one": "1st Referee",
+        "positions.head-two": "2nd Referee",
+        "occupations.linesmen": "Linesmen",
       };
       return translations[key] ?? key;
+    },
+    tInterpolate: (key: string) => {
+      // Return the key for testing - params would be substituted in real use
+      return key;
     },
     locale: "en",
   }),
@@ -427,18 +437,25 @@ describe("AssignmentsPage", () => {
       const endTime = getFutureDateString(GAME_END_HOURS_FROM_NOW);
       return {
         gameId: `game-${Math.random()}`,
+        gameNumber: 392936,
         role: "referee1",
-        roleRaw: "1. SR",
+        roleRaw: "ARB 1",
         startTime,
         endTime,
         homeTeam: "VBC Zürich",
         awayTeam: "VBC Basel",
         league: "NLA Men",
-        address: "Saalsporthalle, Zürich",
-        coordinates: null,
-        hallName: null,
+        leagueCategory: "NLA",
+        address: "Saalsporthalle, 8000 Zürich",
+        coordinates: { latitude: 47.3769, longitude: 8.5417 },
+        hallName: "Saalsporthalle",
+        hallId: "3661",
         gender: "men",
-        mapsUrl: null,
+        mapsUrl: "https://maps.google.com/?q=47.3769,8.5417",
+        referees: {
+          referee1: "Max Mustermann",
+          referee2: "Anna Schmidt",
+        },
         ...overrides,
       };
     }
@@ -490,13 +507,15 @@ describe("AssignmentsPage", () => {
 
         render(<AssignmentsPage />);
 
+        // Home team is shown directly
         expect(screen.getByText("Calendar Team A")).toBeInTheDocument();
-        expect(screen.getByText("Calendar Team B")).toBeInTheDocument();
+        // Away team is prefixed with "vs" in AssignmentCard
+        expect(screen.getByText(/vs.*Calendar Team B/)).toBeInTheDocument();
       });
 
-      it("should display role badge from calendar data", () => {
+      it("should display position from calendar data", () => {
         const calendarAssignment = createMockCalendarAssignment({
-          roleRaw: "2. SR",
+          role: "referee2",
         });
         vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
           createMockCalendarQueryResult([calendarAssignment]),
@@ -504,12 +523,14 @@ describe("AssignmentsPage", () => {
 
         render(<AssignmentsPage />);
 
-        expect(screen.getByText("2. SR")).toBeInTheDocument();
+        // AssignmentCard shows translated position - role "referee2" maps to "head-two"
+        // which is translated to "2nd Referee" by our mock
+        expect(screen.getByText("2nd Referee")).toBeInTheDocument();
       });
 
-      it("should display league from calendar data", () => {
+      it("should display league category from calendar data", () => {
         const calendarAssignment = createMockCalendarAssignment({
-          league: "1. Liga Women",
+          leagueCategory: "NLB",
         });
         vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
           createMockCalendarQueryResult([calendarAssignment]),
@@ -517,7 +538,10 @@ describe("AssignmentsPage", () => {
 
         render(<AssignmentsPage />);
 
-        expect(screen.getByText("1. Liga Women")).toBeInTheDocument();
+        // AssignmentCard shows leagueCategory name - may appear in multiple places
+        // (badge and league line), so we use getAllByText
+        const nlbElements = screen.getAllByText(/NLB/);
+        expect(nlbElements.length).toBeGreaterThan(0);
       });
     });
 
@@ -592,18 +616,18 @@ describe("AssignmentsPage", () => {
     });
 
     describe("Read-Only Mode", () => {
-      it("should not show swipe action buttons in calendar mode", () => {
-        const calendarAssignment = createMockCalendarAssignment();
+      it("should not show exchange swipe action in calendar mode", () => {
+        // Use a non-NLA assignment to avoid report action
+        const calendarAssignment = createMockCalendarAssignment({
+          leagueCategory: "3L",
+        });
         vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
           createMockCalendarQueryResult([calendarAssignment]),
         );
 
         render(<AssignmentsPage />);
 
-        // Swipe actions (confirm, exchange, etc.) should not be visible
-        expect(
-          screen.queryByRole("button", { name: /confirm/i }),
-        ).not.toBeInTheDocument();
+        // Exchange action should not be visible in calendar mode
         expect(
           screen.queryByRole("button", { name: /exchange/i }),
         ).not.toBeInTheDocument();
@@ -630,10 +654,12 @@ describe("AssignmentsPage", () => {
 
         render(<AssignmentsPage />);
 
+        // Home teams are shown directly
         expect(screen.getByText("Team Alpha")).toBeInTheDocument();
-        expect(screen.getByText("Team Beta")).toBeInTheDocument();
         expect(screen.getByText("Team Gamma")).toBeInTheDocument();
-        expect(screen.getByText("Team Delta")).toBeInTheDocument();
+        // Away teams are prefixed with "vs" in AssignmentCard
+        expect(screen.getByText(/vs.*Team Beta/)).toBeInTheDocument();
+        expect(screen.getByText(/vs.*Team Delta/)).toBeInTheDocument();
       });
 
       it("should show count badge for calendar assignments", () => {
@@ -672,9 +698,9 @@ describe("AssignmentsPage", () => {
         expect(screen.getByText(/19:30/)).toBeInTheDocument();
       });
 
-      it("should display address from calendar assignment", () => {
+      it("should display city from calendar assignment address", () => {
         const calendarAssignment = createMockCalendarAssignment({
-          address: "Test Arena, Bern",
+          address: "Sporthalle, 3000 Bern",
         });
         vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
           createMockCalendarQueryResult([calendarAssignment]),
@@ -682,7 +708,8 @@ describe("AssignmentsPage", () => {
 
         render(<AssignmentsPage />);
 
-        expect(screen.getByText("Test Arena, Bern")).toBeInTheDocument();
+        // AssignmentCard shows city extracted from address in compact view
+        expect(screen.getAllByText(/Bern/).length).toBeGreaterThan(0);
       });
     });
 

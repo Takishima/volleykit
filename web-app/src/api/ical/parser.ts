@@ -140,6 +140,117 @@ function parseGender(leagueName: string, description: string): Gender {
 }
 
 /**
+ * Extracts league category from description.
+ * Format: "Ligue: #6652 | 3L | ♂" or "Liga: #6652 | 3L | ♂"
+ * The category is the middle part (e.g., "3L", "NLA", "2L")
+ */
+function parseLeagueCategory(description: string): string | null {
+  // Find the league line using string operations to avoid regex backtracking
+  const lines = description.split('\n');
+  for (const line of lines) {
+    const lowerLine = line.toLowerCase();
+    if (
+      lowerLine.includes('ligue:') ||
+      lowerLine.includes('liga:') ||
+      lowerLine.includes('league:') ||
+      lowerLine.includes('lega:')
+    ) {
+      // Split by | and take the second part (index 1 = category)
+      const parts = line.split('|');
+      const categoryPart = parts[1];
+      if (parts.length >= 2 && categoryPart) {
+        const category = categoryPart.trim();
+        if (category.length > 0) {
+          return category;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Extracts referee names from description.
+ * Format: "ARB 1: Name | email | phone" or "ARB 2: Name | email | phone"
+ * Also handles: "LR 1: Name | email | phone", etc.
+ */
+function parseRefereeNames(description: string): {
+  referee1?: string;
+  referee2?: string;
+  lineReferee1?: string;
+  lineReferee2?: string;
+} {
+  const referees: {
+    referee1?: string;
+    referee2?: string;
+    lineReferee1?: string;
+    lineReferee2?: string;
+  } = {};
+
+  // Use [^|\n]+ to match name up to pipe or newline (greedy, no backtracking)
+  // Match ARB 1/SR 1 patterns
+  const ref1Match = description.match(/(?:ARB|SR)\s*1:\s*([^|\n]+)/im);
+  if (ref1Match?.[1]) {
+    referees.referee1 = ref1Match[1].trim();
+  }
+
+  // Match ARB 2/SR 2 patterns
+  const ref2Match = description.match(/(?:ARB|SR)\s*2:\s*([^|\n]+)/im);
+  if (ref2Match?.[1]) {
+    referees.referee2 = ref2Match[1].trim();
+  }
+
+  // Match LR 1 patterns
+  const lr1Match = description.match(/LR\s*1:\s*([^|\n]+)/im);
+  if (lr1Match?.[1]) {
+    referees.lineReferee1 = lr1Match[1].trim();
+  }
+
+  // Match LR 2 patterns
+  const lr2Match = description.match(/LR\s*2:\s*([^|\n]+)/im);
+  if (lr2Match?.[1]) {
+    referees.lineReferee2 = lr2Match[1].trim();
+  }
+
+  return referees;
+}
+
+/**
+ * Extracts game number from description.
+ * Format: "Match: #382360 | ..." or "Spiel: #382360 | ..."
+ */
+function parseGameNumber(description: string): number | null {
+  // Match patterns like "Match: #382360" or "Spiel: #382360"
+  const match = description.match(/(?:Match|Spiel|Partie|Partita):\s*#?(\d+)/i);
+  if (match?.[1]) {
+    return parseInt(match[1], 10);
+  }
+  return null;
+}
+
+/**
+ * Extracts hall ID and name from description.
+ * Format: "Salle: #3661 | Turnhalle Sekundarschule Feld (H)"
+ * or "Halle: #3661 | ..."
+ */
+function parseHallInfo(description: string): {
+  hallId: string | null;
+  hallName: string | null;
+} {
+  // Match patterns like "Salle: #3661 | Hall Name" or "Halle: #3661 | Hall Name"
+  const match = description.match(
+    /(?:Salle|Halle|Hall|Sala):\s*#?(\d+)\s*\|\s*([^\n]+)/i
+  );
+  if (match) {
+    return {
+      hallId: match[1] ?? null,
+      hallName: match[2]?.trim() ?? null,
+    };
+  }
+  return { hallId: null, hallName: null };
+}
+
+/**
  * Converts an iCal date string to ISO 8601 format.
  * Handles formats:
  * - YYYYMMDDTHHMMSS (local time)
@@ -573,6 +684,18 @@ export function extractAssignment(event: ICalEvent): ParseResult {
   // Determine gender from league and description
   const gender = parseGender(summaryData.league, event.description);
 
+  // Extract league category from description
+  const leagueCategory = parseLeagueCategory(event.description);
+
+  // Extract referee names from description
+  const referees = parseRefereeNames(event.description);
+
+  // Extract game number from description
+  const gameNumber = parseGameNumber(event.description);
+
+  // Extract hall ID and name from description (more reliable than LOCATION)
+  const hallInfo = parseHallInfo(event.description);
+
   // Extract or build maps URL
   let mapsUrl: string | null = null;
   const mapsMatch = MAPS_URL_PATTERN.exec(event.description);
@@ -584,6 +707,7 @@ export function extractAssignment(event: ICalEvent): ParseResult {
 
   const assignment: CalendarAssignment = {
     gameId,
+    gameNumber,
     role: summaryData.role,
     roleRaw: summaryData.roleRaw,
     startTime: event.dtstart,
@@ -591,11 +715,15 @@ export function extractAssignment(event: ICalEvent): ParseResult {
     homeTeam: summaryData.homeTeam,
     awayTeam: summaryData.awayTeam,
     league: summaryData.league,
+    leagueCategory,
     address: locationData.address,
     coordinates: event.geo,
-    hallName: locationData.hallName,
+    // Prefer description-based hall name if available
+    hallName: hallInfo.hallName ?? locationData.hallName,
+    hallId: hallInfo.hallId,
     gender,
     mapsUrl,
+    referees,
   };
 
   const confidence = calculateConfidence(parsedFields);
