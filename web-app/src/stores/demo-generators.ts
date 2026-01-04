@@ -272,7 +272,7 @@ const SV_VENUES: VenueConfig[] = [
       city: "Däniken",
       latitude: 47.353312,
       longitude: 7.988187,
-      plusCode: "9X3J+4C",
+      plusCode: "8FVC82PJ+4C",
     },
   },
 ];
@@ -644,8 +644,8 @@ export function generateAssignments(
     // NLB for SV, 3L for regional - women (3L women have only 1st ref)
     { index: 4, status: "cancelled", position: "head-one", confirmationStatus: "confirmed", confirmationDaysAgo: 10, gameDate: addDays(now, 7), venueIndex: 3, leagueIndex: associationCode === "SV" ? 1 : 2, gender: "f", isGameInFuture: true, isOpenInExchange: true },
     // NLA for SV (linesman assignment), 3L for regional
-    { index: 5, status: "archived", position: "linesman-two", confirmationStatus: "confirmed", confirmationDaysAgo: 14, gameDate: subDays(now, 3), venueIndex: 5, leagueIndex: associationCode === "SV" ? 0 : 2, gender: "m", isGameInFuture: false },
-    // NLB in single-ball hall (Ruswil Dorfhalle) - only for SV to showcase single-ball indicator
+    { index: 5, status: "archived", position: "linesman-two", confirmationStatus: "confirmed", confirmationDaysAgo: 14, gameDate: subDays(now, 3), venueIndex: 0, leagueIndex: associationCode === "SV" ? 0 : 2, gender: "m", isGameInFuture: false },
+    // NLB in single-ball hall (Däniken Erlimatt) - only for SV to showcase single-ball indicator
     ...(associationCode === "SV" ? [{ index: 6, status: "active" as const, position: "head-one" as const, confirmationStatus: "confirmed" as const, confirmationDaysAgo: 2, gameDate: addDays(now, 3), venueIndex: 4, leagueIndex: 1, gender: "m" as const, isGameInFuture: true }] : []),
   ];
 
