@@ -104,33 +104,6 @@ export function useUnpaidCompensations() {
   return useCompensations(false);
 }
 
-/**
- * Hook to calculate total paid and unpaid compensation amounts.
- * Derived from the full compensation list.
- */
-export function useCompensationTotals(): { paid: number; unpaid: number } {
-  const { data: all = [] } = useCompensations();
-
-  const totals = all.reduce(
-    (acc: { paid: number; unpaid: number }, record: CompensationRecord) => {
-      const comp = record.convocationCompensation;
-      if (!comp) return acc;
-
-      const total = (comp.gameCompensation || 0) + (comp.travelExpenses || 0);
-
-      if (comp.paymentDone) {
-        acc.paid += total;
-      } else {
-        acc.unpaid += total;
-      }
-      return acc;
-    },
-    { paid: 0, unpaid: 0 },
-  );
-
-  return totals;
-}
-
 // Compensation update types
 export interface CompensationUpdateData {
   distanceInMetres?: number;
