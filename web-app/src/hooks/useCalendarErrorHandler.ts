@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { useAuthStore } from "@/stores/auth";
 import { toast } from "@/stores/toast";
-import { t } from "@/i18n";
+import { useTranslation } from "@/hooks/useTranslation";
 import { classifyError } from "@/utils/error-helpers";
 import { CalendarNotFoundError } from "@/api/calendar-api";
 import type { CalendarErrorType } from "@/components/features/CalendarErrorModal";
@@ -58,6 +58,7 @@ interface UseCalendarErrorHandlerResult {
 export function useCalendarErrorHandler(): UseCalendarErrorHandlerResult {
   const [errorState, setErrorState] = useState<CalendarErrorState | null>(null);
   const logout = useAuthStore((state) => state.logout);
+  const { t } = useTranslation();
 
   const handleError = useCallback((error: Error) => {
     // Classify the error type
@@ -94,7 +95,7 @@ export function useCalendarErrorHandler(): UseCalendarErrorHandlerResult {
       // Logout will clear calendar code and redirect to login
       await logout();
     }
-  }, [errorState, logout]);
+  }, [errorState, logout, t]);
 
   const logParseWarning = useCallback((message: string) => {
     // Parse errors are logged but don't show a modal

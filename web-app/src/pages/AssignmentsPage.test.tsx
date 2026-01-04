@@ -84,14 +84,16 @@ function createMockQueryResult(
   isLoading = false,
   error: Error | null = null,
 ): UseQueryResult<Assignment[], Error> {
+  // Compute status first, then derive other flags from it
+  const status = isLoading ? "pending" : error !== null ? "error" : "success";
   return {
     data,
     isLoading,
     isFetching: false,
-    isError: !!error,
+    isError: status === "error",
     error,
-    isSuccess: !isLoading && !error && !!data,
-    status: isLoading ? "pending" : error ? "error" : "success",
+    isSuccess: status === "success" && data !== undefined,
+    status,
     refetch: vi.fn(),
   } as unknown as UseQueryResult<Assignment[], Error>;
 }
@@ -102,14 +104,16 @@ function createMockCalendarQueryResult(
   isLoading = false,
   error: Error | null = null,
 ) {
+  // Compute status first, then derive other flags from it
+  const status = isLoading ? "pending" : error !== null ? "error" : "success";
   return {
     data,
     isLoading,
     isFetching: false,
-    isError: !!error,
+    isError: status === "error",
     error,
-    isSuccess: !isLoading && !error && !!data,
-    status: isLoading ? "pending" : error ? "error" : "success",
+    isSuccess: status === "success" && data !== undefined,
+    status,
     refetch: vi.fn(),
   } as unknown as ReturnType<typeof useConvocations.useCalendarAssignments>;
 }

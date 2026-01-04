@@ -6,6 +6,12 @@ import { format, isToday, isTomorrow } from "date-fns";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDateLocale } from "@/hooks/useDateFormat";
 
+/**
+ * Maximum width for the address text to prevent layout overflow.
+ * Sized to fit typical Swiss venue addresses while leaving room for time display.
+ */
+const ADDRESS_MAX_WIDTH_CLASS = "max-w-[150px]";
+
 interface CalendarAssignmentCardProps {
   assignment: CalendarAssignment;
   dataTour?: string;
@@ -86,7 +92,7 @@ export const CalendarAssignmentCard = memo(function CalendarAssignmentCard({
           {assignment.address && (
             <div className="flex items-center gap-1">
               <MapPin className="w-4 h-4" aria-hidden="true" />
-              <span className="truncate max-w-[150px]">{assignment.address}</span>
+              <span className={`truncate ${ADDRESS_MAX_WIDTH_CLASS}`}>{assignment.address}</span>
             </div>
           )}
         </div>

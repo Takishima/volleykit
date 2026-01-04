@@ -61,7 +61,14 @@ export function CalendarErrorHandler({ children }: CalendarErrorHandlerProps) {
       if (hasHandledErrorRef.current) return;
       hasHandledErrorRef.current = true;
 
-      handleError(event.query.state.error as Error);
+      // Validate that the error is actually an Error instance
+      const error = event.query.state.error;
+      if (error instanceof Error) {
+        handleError(error);
+      } else {
+        // Wrap non-Error values in an Error for consistent handling
+        handleError(new Error(String(error)));
+      }
     });
 
     return () => {
@@ -93,22 +100,43 @@ export function CalendarErrorHandler({ children }: CalendarErrorHandlerProps) {
 
 /**
  * Check if a query key matches the calendar assignments query key.
+ * Uses recursive deep equality that handles varying key order in objects.
  */
 function isCalendarQueryKey(
   queryKey: readonly unknown[],
   expectedKey: readonly unknown[],
 ): boolean {
-  // Query keys are arrays, compare by structure
-  if (queryKey.length !== expectedKey.length) return false;
+  return deepEqual(queryKey, expectedKey);
+}
 
-  return queryKey.every((part, index) => {
-    const expected = expectedKey[index];
+/**
+ * Deep equality comparison that handles arrays and objects correctly.
+ * Unlike JSON.stringify, this handles objects with different key orderings.
+ */
+function deepEqual(a: unknown, b: unknown): boolean {
+  // Handle primitive types and null
+  if (a === b) return true;
+  if (a === null || b === null) return false;
+  if (typeof a !== typeof b) return false;
 
-    // Handle nested objects (like the query key structure)
-    if (typeof part === "object" && part !== null) {
-      return JSON.stringify(part) === JSON.stringify(expected);
-    }
+  // Handle arrays
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    return a.every((item, index) => deepEqual(item, b[index]));
+  }
 
-    return part === expected;
-  });
+  // Handle objects (but not arrays)
+  if (typeof a === "object" && typeof b === "object") {
+    if (Array.isArray(a) || Array.isArray(b)) return false;
+
+    const aObj = a as Record<string, unknown>;
+    const bObj = b as Record<string, unknown>;
+    const aKeys = Object.keys(aObj);
+    const bKeys = Object.keys(bObj);
+
+    if (aKeys.length !== bKeys.length) return false;
+    return aKeys.every((key) => key in bObj && deepEqual(aObj[key], bObj[key]));
+  }
+
+  return false;
 }
