@@ -6,7 +6,7 @@ import {
 } from './parser';
 import type { ICalEvent } from './types';
 
-// Sample iCal content for testing
+// Sample iCal content for testing (using real API format)
 const SAMPLE_ICAL = `BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//Volleyball.ch//Volleymanager//EN
@@ -16,12 +16,13 @@ SUMMARY:ARB 1 | TV St. Johann 1 - VTV Horw 1 (Mobiliar Volley Cup)
 DESCRIPTION:Funktion: ARB 1\\nSpiel-Nr: 392936\\nDatum: 15.02.2025\\nZeit: 14:00
 DTSTART:20250215T140000
 DTEND:20250215T170000
-LOCATION:Sporthalle Sternenfeld, Sternenfeldstrasse 50, 4127 Birsfelden
+LOCATION:Sternenfeldstrasse 50\\, 4127 Birsfelden\\, Suisse
+X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-ADDRESS=Sternenfeldstrasse 50\\, 4127 Birsfelden\\, Suisse;X-APPLE-RADIUS=72;X-TITLE=Sporthalle Sternenfeld:47.5584;7.6277
 GEO:47.5584;7.6277
 END:VEVENT
 END:VCALENDAR`;
 
-// Sample with multiple events
+// Sample with multiple events (using real API format)
 const MULTI_EVENT_ICAL = `BEGIN:VCALENDAR
 VERSION:2.0
 BEGIN:VEVENT
@@ -29,7 +30,8 @@ UID:referee-convocation-for-game-100001
 SUMMARY:ARB 1 | Team A - Team B (NLA Herren)
 DTSTART:20250220T180000
 DTEND:20250220T210000
-LOCATION:Halle 1, Address 1
+LOCATION:Address 1\\, Suisse
+X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-TITLE=Halle 1:47.1234;8.5678
 GEO:47.1234;8.5678
 END:VEVENT
 BEGIN:VEVENT
@@ -37,7 +39,8 @@ UID:referee-convocation-for-game-100002
 SUMMARY:ARB 2 | Team C - Team D (NLA Damen)
 DTSTART:20250221T190000
 DTEND:20250221T220000
-LOCATION:Halle 2, Address 2
+LOCATION:Address 2\\, Suisse
+X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-TITLE=Halle 2:47.0;8.0
 END:VEVENT
 END:VCALENDAR`;
 
@@ -72,8 +75,14 @@ describe('parseICalFeed', () => {
       const events = parseICalFeed(SAMPLE_ICAL);
 
       expect(events[0]!.location).toBe(
-        'Sporthalle Sternenfeld, Sternenfeldstrasse 50, 4127 Birsfelden'
+        'Sternenfeldstrasse 50, 4127 Birsfelden, Suisse'
       );
+    });
+
+    it('parses X-APPLE-STRUCTURED-LOCATION X-TITLE', () => {
+      const events = parseICalFeed(SAMPLE_ICAL);
+
+      expect(events[0]!.appleLocationTitle).toBe('Sporthalle Sternenfeld');
     });
 
     it('parses GEO coordinates', () => {
@@ -413,7 +422,7 @@ END:VCALENDAR`;
 });
 
 describe('extractAssignment', () => {
-  // Helper to create a minimal valid ICalEvent
+  // Helper to create a minimal valid ICalEvent (using real API format)
   function createEvent(overrides: Partial<ICalEvent> = {}): ICalEvent {
     return {
       uid: 'referee-convocation-for-game-392936',
@@ -421,7 +430,8 @@ describe('extractAssignment', () => {
       description: '',
       dtstart: '2025-02-15T14:00:00',
       dtend: '2025-02-15T17:00:00',
-      location: 'Sporthalle Sternenfeld, Sternenfeldstrasse 50, 4127 Birsfelden',
+      location: 'Sternenfeldstrasse 50, 4127 Birsfelden, Suisse',
+      appleLocationTitle: 'Sporthalle Sternenfeld',
       geo: { latitude: 47.5584, longitude: 7.6277 },
       ...overrides,
     };
@@ -630,13 +640,15 @@ describe('extractAssignment', () => {
   });
 
   describe('location parsing', () => {
-    it('extracts hall name and address from location', () => {
+    it('extracts hall name from appleLocationTitle and address from location', () => {
       const event = createEvent({
-        location: 'Sporthalle Sternenfeld, Sternenfeldstrasse 50, 4127 Birsfelden',
+        location: 'Sternenfeldstrasse 50, 4127 Birsfelden, Suisse',
+        appleLocationTitle: 'Sporthalle Sternenfeld',
       });
       const result = extractAssignment(event);
 
       expect(result.assignment.hallName).toBe('Sporthalle Sternenfeld');
+      // Address has ", Suisse" suffix stripped
       expect(result.assignment.address).toBe(
         'Sternenfeldstrasse 50, 4127 Birsfelden'
       );
@@ -644,19 +656,34 @@ describe('extractAssignment', () => {
       expect(result.parsedFields.address).toBe(true);
     });
 
-    it('handles location without comma', () => {
+    it('uses full location as address without splitting by comma', () => {
       const event = createEvent({
-        location: 'Sporthalle Sternenfeld',
+        location: 'Landskronstrasse 41, 4147 Aesch, Suisse',
+        appleLocationTitle: 'MZH Löhrenacker',
       });
       const result = extractAssignment(event);
 
-      expect(result.assignment.hallName).toBe('Sporthalle Sternenfeld');
-      expect(result.assignment.address).toBe('Sporthalle Sternenfeld');
+      expect(result.assignment.hallName).toBe('MZH Löhrenacker');
+      expect(result.assignment.address).toBe('Landskronstrasse 41, 4147 Aesch');
+    });
+
+    it('handles null appleLocationTitle', () => {
+      const event = createEvent({
+        location: 'Some Address 123, Suisse',
+        appleLocationTitle: null,
+      });
+      const result = extractAssignment(event);
+
+      expect(result.assignment.hallName).toBeNull();
+      expect(result.assignment.address).toBe('Some Address 123');
+      expect(result.parsedFields.venue).toBe(false);
+      expect(result.parsedFields.address).toBe(true);
     });
 
     it('handles null location', () => {
       const event = createEvent({
         location: null,
+        appleLocationTitle: null,
       });
       const result = extractAssignment(event);
 
@@ -664,6 +691,18 @@ describe('extractAssignment', () => {
       expect(result.assignment.address).toBeNull();
       expect(result.parsedFields.venue).toBe(false);
       expect(result.parsedFields.address).toBe(false);
+    });
+
+    it('prefers description-based hall name over appleLocationTitle', () => {
+      const event = createEvent({
+        location: 'Bergstrasse 2, 8800 Thalwil, Suisse',
+        appleLocationTitle: 'Some Apple Title',
+        description: 'Salle: #3661 | Turnhalle Sekundarschule Feld (H)',
+      });
+      const result = extractAssignment(event);
+
+      expect(result.assignment.hallName).toBe('Turnhalle Sekundarschule Feld (H)');
+      expect(result.assignment.hallId).toBe('3661');
     });
   });
 
@@ -764,7 +803,8 @@ describe('extractAssignment', () => {
       const event = createEvent({
         description: 'No maps link here',
         geo: null,
-        location: 'Hall, Some Address 123',
+        location: 'Some Address 123, Suisse',
+        appleLocationTitle: 'Hall',
       });
       const result = extractAssignment(event);
 
@@ -778,6 +818,7 @@ describe('extractAssignment', () => {
         description: '',
         geo: null,
         location: null,
+        appleLocationTitle: null,
       });
       const result = extractAssignment(event);
 
@@ -797,6 +838,7 @@ describe('extractAssignment', () => {
       const event = createEvent({
         geo: null,
         location: null,
+        appleLocationTitle: null,
       });
       const result = extractAssignment(event);
 
@@ -910,7 +952,8 @@ BEGIN:VEVENT
 UID:referee-convocation-for-game-100001
 SUMMARY:ARB 1 | Team A - Team B (League)
 DTSTART:20250215T140000
-LOCATION:Hall, Address
+LOCATION:Address\\, Suisse
+X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-TITLE=Hall:47.5;7.6
 GEO:47.5;7.6
 END:VEVENT
 BEGIN:VEVENT
@@ -940,7 +983,8 @@ SUMMARY:ARB 1 | VBC Zürich - Volley Luzern 1 (NLA Herren)
 DESCRIPTION:Funktion: ARB 1\\nSpiel-Nr: 456789\\nDatum: 20.02.2025\\nZeit: 19:30\\nTeams: VBC Zürich vs Volley Luzern 1\\nLiga: NLA Herren\\nHalle: Saalsporthalle\\nAdresse: Sihlhölzlistrasse 5\\, 8045 Zürich\\nKontakt: Max Muster (+41 79 123 45 67)
 DTSTART:20250220T193000
 DTEND:20250220T220000
-LOCATION:Saalsporthalle, Sihlhölzlistrasse 5, 8045 Zürich
+LOCATION:Sihlhölzlistrasse 5\\, 8045 Zürich\\, Suisse
+X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-TITLE=Saalsporthalle:47.3769;8.5417
 GEO:47.3769;8.5417
 END:VEVENT
 END:VCALENDAR`;
@@ -958,6 +1002,7 @@ END:VCALENDAR`;
     expect(assignment.league).toBe('NLA Herren');
     expect(assignment.gender).toBe('men');
     expect(assignment.hallName).toBe('Saalsporthalle');
+    expect(assignment.address).toBe('Sihlhölzlistrasse 5, 8045 Zürich');
     expect(assignment.startTime).toBe('2025-02-20T19:30:00');
     expect(results[0]!.confidence).toBe('high');
   });
@@ -971,7 +1016,8 @@ SUMMARY:ARB 2 | Genève Volley - Lausanne UC (Ligue Femmes A)
 DESCRIPTION:Fonction: ARB 2\\nMatch: 789012\\nDate: 22.02.2025\\nLigue: Ligue Femmes A
 DTSTART:20250222T150000
 DTEND:20250222T180000
-LOCATION:Centre Sportif du Bois-des-Frères, Route de Valavran 10, 1293 Bellevue
+LOCATION:Route de Valavran 10\\, 1293 Bellevue\\, Suisse
+X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-TITLE=Centre Sportif du Bois-des-Frères:46.2539;6.1589
 GEO:46.2539;6.1589
 END:VEVENT
 END:VCALENDAR`;
@@ -987,6 +1033,8 @@ END:VCALENDAR`;
     expect(assignment.awayTeam).toBe('Lausanne UC');
     expect(assignment.league).toBe('Ligue Femmes A');
     expect(assignment.gender).toBe('women');
+    expect(assignment.hallName).toBe('Centre Sportif du Bois-des-Frères');
+    expect(assignment.address).toBe('Route de Valavran 10, 1293 Bellevue');
   });
 
   it('handles events with gender symbols', () => {
@@ -997,7 +1045,8 @@ SUMMARY:JL 1 | Team Alpha - Team Beta (Cup ♀)
 DESCRIPTION:Match für Frauen ♀
 DTSTART:20250225T140000
 DTEND:20250225T170000
-LOCATION:Sportcenter, Main Street 1
+LOCATION:Main Street 1\\, Suisse
+X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-TITLE=Sportcenter:47.0;8.0
 END:VEVENT
 END:VCALENDAR`;
 
@@ -1006,6 +1055,7 @@ END:VCALENDAR`;
 
     expect(assignment.role).toBe('scorer');
     expect(assignment.gender).toBe('women');
+    expect(assignment.hallName).toBe('Sportcenter');
   });
 
   it('handles line referee role', () => {
@@ -1299,12 +1349,14 @@ SUMMARY:ARB 1 | Team A - Team B (League)
 DESCRIPTION:Salle: #3661 | Turnhalle Sekundarschule Feld (H)
 DTSTART:20250215T140000
 DTEND:20250215T170000
-LOCATION:Turnhalle Sekundarschule Feld (H), Bergstrasse 2, 8800 Thalwil
+LOCATION:Bergstrasse 2\\, 8800 Thalwil\\, Suisse
+X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-TITLE=Some Apple Title:47.0;8.0
 END:VEVENT
 END:VCALENDAR`;
 
       const results = parseCalendarFeed(ical);
       expect(results[0]!.assignment.hallId).toBe('3661');
+      // Description-based hall name takes priority over appleLocationTitle
       expect(results[0]!.assignment.hallName).toBe('Turnhalle Sekundarschule Feld (H)');
     });
 
@@ -1368,7 +1420,7 @@ END:VCALENDAR`;
       expect(results[0]!.assignment.hallId).toBe('1234');
     });
 
-    it('returns null for hall ID when no hall info found', () => {
+    it('returns null for hall ID when no hall info found, uses appleLocationTitle for hall name', () => {
       const ical = `BEGIN:VCALENDAR
 BEGIN:VEVENT
 UID:referee-convocation-for-game-300006
@@ -1376,12 +1428,14 @@ SUMMARY:ARB 1 | Team A - Team B (League)
 DESCRIPTION:No hall info here
 DTSTART:20250215T140000
 DTEND:20250215T170000
-LOCATION:Some Location
+LOCATION:Some Address\\, Suisse
+X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-TITLE=Some Hall:47.0;8.0
 END:VEVENT
 END:VCALENDAR`;
 
       const results = parseCalendarFeed(ical);
       expect(results[0]!.assignment.hallId).toBeNull();
+      expect(results[0]!.assignment.hallName).toBe('Some Hall');
     });
   });
 
@@ -1395,7 +1449,8 @@ SUMMARY:ARB 1 | OTA VOLLEY H1 - VBC Rämi H3 (3L Herren)
 DESCRIPTION:Engagé en tant que: ARB 1\\nMatch: #382360 | 05.02.2026 20:30 | OTA VOLLEY H1 — VBC Rämi H3\\nLigue: #6652 | 3L | ♂\\nARB convoqués:\\n\\tARB 1: Damien Nguyen | ngn.damien@gmail.com | +41786795571\\n\\tARB 2: Peter Müller | peterc.mueller@icloud.com | +41791940964\\nSalle: #3661 | Turnhalle Sekundarschule Feld (H)\\nAdresse: Bergstrasse 2, 8800 Thalwil\\nhttps://maps.google.com/?q=8FVC7HR7%2BC3&hl=fr
 DTSTART:20260205T203000
 DTEND:20260205T230000
-LOCATION:Turnhalle Sekundarschule Feld (H), Bergstrasse 2, 8800 Thalwil
+LOCATION:Bergstrasse 2\\, 8800 Thalwil\\, Suisse
+X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-TITLE=Some Apple Title:47.2900;8.5600
 GEO:47.2900;8.5600
 END:VEVENT
 END:VCALENDAR`;
@@ -1408,7 +1463,9 @@ END:VCALENDAR`;
       expect(assignment.gameNumber).toBe(382360);
       expect(assignment.leagueCategory).toBe('3L');
       expect(assignment.hallId).toBe('3661');
+      // Description-based hall name takes priority over appleLocationTitle
       expect(assignment.hallName).toBe('Turnhalle Sekundarschule Feld (H)');
+      expect(assignment.address).toBe('Bergstrasse 2, 8800 Thalwil');
       expect(assignment.referees.referee1).toBe('Damien Nguyen');
       expect(assignment.referees.referee2).toBe('Peter Müller');
       expect(assignment.gender).toBe('men');
