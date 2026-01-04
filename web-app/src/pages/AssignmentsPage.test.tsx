@@ -4,6 +4,7 @@ import { AssignmentsPage } from "./AssignmentsPage";
 import type { Assignment } from "@/api/client";
 import type { UseQueryResult } from "@tanstack/react-query";
 import * as useConvocations from "@/hooks/useConvocations";
+import * as authStore from "@/stores/auth";
 
 // Mock useTour to disable tour mode during tests (see src/test/mocks.ts for shared pattern)
 const mockUseTour = vi.hoisted(() => ({
@@ -21,6 +22,52 @@ const mockUseTour = vi.hoisted(() => ({
 
 vi.mock("@/hooks/useConvocations");
 vi.mock("@/hooks/useTour", () => mockUseTour);
+vi.mock("@/stores/auth");
+vi.mock("@/hooks/useTranslation", () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      // Return readable strings for key assertions
+      const translations: Record<string, string> = {
+        "assignments.title": "Assignments",
+        "assignments.upcoming": "Upcoming",
+        "assignments.validationClosed": "Validation Closed",
+        "assignments.past": "Past",
+        "assignments.loading": "Loading...",
+        "assignments.failedToLoadData": "Failed to load data",
+        "assignments.noUpcomingTitle": "No upcoming assignments",
+        "assignments.noUpcomingDescription": "You have no upcoming assignments",
+        "assignments.noClosedTitle": "No closed assignments",
+        "assignments.noClosedDescription": "No closed assignments yet",
+        "assignments.calendarEmptyTitle": "No calendar data",
+        "assignments.calendarEmptyDescription": "Your calendar is empty",
+        "assignments.calendarNoUpcomingTitle": "No upcoming calendar events",
+        "assignments.calendarNoUpcomingDescription": "No upcoming events in calendar",
+        "common.today": "Today",
+        "common.tomorrow": "Tomorrow",
+        "common.vs": "vs",
+        "common.unknown": "Unknown",
+        "common.retry": "Retry",
+      };
+      return translations[key] ?? key;
+    },
+    locale: "en",
+  }),
+}));
+
+// Helper to mock auth store
+function mockAuthStoreState(overrides: Record<string, unknown> = {}) {
+  const state = {
+    isAssociationSwitching: false,
+    isCalendarMode: () => false,
+    ...overrides,
+  };
+  vi.mocked(authStore.useAuthStore).mockImplementation((selector?: unknown) => {
+    if (typeof selector === "function") {
+      return selector(state);
+    }
+    return state as ReturnType<typeof authStore.useAuthStore>;
+  });
+}
 vi.mock("@/hooks/useAssignmentActions", () => ({
   useAssignmentActions: () => ({
     editCompensationModal: {
@@ -121,6 +168,9 @@ function createMockCalendarQueryResult(
 describe("AssignmentsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // Default mocks - not in calendar mode
+    mockAuthStoreState();
 
     // Default mocks - empty data
     vi.mocked(useConvocations.useUpcomingAssignments).mockReturnValue(
@@ -355,6 +405,315 @@ describe("AssignmentsPage", () => {
       fireEvent.click(screen.getByRole("button", { name: /retry/i }));
 
       expect(mockRefetch).toHaveBeenCalled();
+    });
+  });
+
+  describe("Calendar Mode", () => {
+    // Named constants for time offsets in hours
+    const DEFAULT_HOURS_FROM_NOW = 24;
+    const GAME_START_HOURS_FROM_NOW = 48;
+    const GAME_END_HOURS_FROM_NOW = 50;
+
+    function getFutureDateString(hoursFromNow = DEFAULT_HOURS_FROM_NOW): string {
+      const date = new Date();
+      date.setHours(date.getHours() + hoursFromNow);
+      return date.toISOString();
+    }
+
+    function createMockCalendarAssignment(
+      overrides: Partial<useConvocations.CalendarAssignment> = {},
+    ): useConvocations.CalendarAssignment {
+      const startTime = getFutureDateString(GAME_START_HOURS_FROM_NOW);
+      const endTime = getFutureDateString(GAME_END_HOURS_FROM_NOW);
+      return {
+        gameId: `game-${Math.random()}`,
+        role: "referee1",
+        roleRaw: "1. SR",
+        startTime,
+        endTime,
+        homeTeam: "VBC Zürich",
+        awayTeam: "VBC Basel",
+        league: "NLA Men",
+        address: "Saalsporthalle, Zürich",
+        coordinates: null,
+        hallName: null,
+        gender: "men",
+        mapsUrl: null,
+        ...overrides,
+      };
+    }
+
+    beforeEach(() => {
+      // Set calendar mode
+      mockAuthStoreState({ isCalendarMode: () => true });
+    });
+
+    describe("Tab Labels", () => {
+      it("should show 'Past' instead of 'Validation Closed' in calendar mode", () => {
+        render(<AssignmentsPage />);
+
+        // Should have "Past" tab, not "Validation Closed"
+        expect(screen.getByRole("tab", { name: /past/i })).toBeInTheDocument();
+        expect(
+          screen.queryByRole("tab", { name: /validation closed/i }),
+        ).not.toBeInTheDocument();
+      });
+
+      it("should still show 'Upcoming' tab in calendar mode", () => {
+        render(<AssignmentsPage />);
+
+        expect(
+          screen.getByRole("tab", { name: /upcoming/i }),
+        ).toBeInTheDocument();
+      });
+    });
+
+    describe("Data Display", () => {
+      it("should show loading state for calendar data", () => {
+        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+          createMockCalendarQueryResult(undefined, true),
+        );
+
+        render(<AssignmentsPage />);
+
+        expect(screen.getByText(/loading/i)).toBeInTheDocument();
+      });
+
+      it("should show calendar assignments when data is available", () => {
+        const calendarAssignment = createMockCalendarAssignment({
+          homeTeam: "Calendar Team A",
+          awayTeam: "Calendar Team B",
+        });
+        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+          createMockCalendarQueryResult([calendarAssignment]),
+        );
+
+        render(<AssignmentsPage />);
+
+        expect(screen.getByText("Calendar Team A")).toBeInTheDocument();
+        expect(screen.getByText("Calendar Team B")).toBeInTheDocument();
+      });
+
+      it("should display role badge from calendar data", () => {
+        const calendarAssignment = createMockCalendarAssignment({
+          roleRaw: "2. SR",
+        });
+        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+          createMockCalendarQueryResult([calendarAssignment]),
+        );
+
+        render(<AssignmentsPage />);
+
+        expect(screen.getByText("2. SR")).toBeInTheDocument();
+      });
+
+      it("should display league from calendar data", () => {
+        const calendarAssignment = createMockCalendarAssignment({
+          league: "1. Liga Women",
+        });
+        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+          createMockCalendarQueryResult([calendarAssignment]),
+        );
+
+        render(<AssignmentsPage />);
+
+        expect(screen.getByText("1. Liga Women")).toBeInTheDocument();
+      });
+    });
+
+    describe("Empty States", () => {
+      it("should show calendar-specific empty state when no calendar data", () => {
+        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+          createMockCalendarQueryResult([]),
+        );
+
+        render(<AssignmentsPage />);
+
+        // Should show calendar-specific empty message
+        expect(
+          screen.getByRole("heading", { name: /no.*calendar|calendar.*empty/i }),
+        ).toBeInTheDocument();
+      });
+
+      it("should show calendar-specific no upcoming message", () => {
+        // Return an empty array but with isSuccess true
+        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+          createMockCalendarQueryResult([]),
+        );
+
+        render(<AssignmentsPage />);
+
+        // Should find empty state heading
+        const heading = screen.getByRole("heading");
+        expect(heading).toBeInTheDocument();
+      });
+    });
+
+    describe("Error Handling", () => {
+      it("should show error state with retry button for calendar data", () => {
+        const mockRefetch = vi.fn();
+        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue({
+          ...createMockCalendarQueryResult(
+            undefined,
+            false,
+            new Error("Calendar fetch failed"),
+          ),
+          refetch: mockRefetch,
+        } as unknown as ReturnType<
+          typeof useConvocations.useCalendarAssignments
+        >);
+
+        render(<AssignmentsPage />);
+
+        expect(screen.getByText(/calendar fetch failed/i)).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /retry/i }),
+        ).toBeInTheDocument();
+      });
+
+      it("should call refetch when retry button is clicked for calendar error", () => {
+        const mockRefetch = vi.fn();
+        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue({
+          ...createMockCalendarQueryResult(
+            undefined,
+            false,
+            new Error("Failed"),
+          ),
+          refetch: mockRefetch,
+        } as unknown as ReturnType<
+          typeof useConvocations.useCalendarAssignments
+        >);
+
+        render(<AssignmentsPage />);
+        fireEvent.click(screen.getByRole("button", { name: /retry/i }));
+
+        expect(mockRefetch).toHaveBeenCalled();
+      });
+    });
+
+    describe("Read-Only Mode", () => {
+      it("should not show swipe action buttons in calendar mode", () => {
+        const calendarAssignment = createMockCalendarAssignment();
+        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+          createMockCalendarQueryResult([calendarAssignment]),
+        );
+
+        render(<AssignmentsPage />);
+
+        // Swipe actions (confirm, exchange, etc.) should not be visible
+        expect(
+          screen.queryByRole("button", { name: /confirm/i }),
+        ).not.toBeInTheDocument();
+        expect(
+          screen.queryByRole("button", { name: /exchange/i }),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    describe("Multiple Assignments", () => {
+      it("should display multiple calendar assignments", () => {
+        const assignments = [
+          createMockCalendarAssignment({
+            gameId: "game-1",
+            homeTeam: "Team Alpha",
+            awayTeam: "Team Beta",
+          }),
+          createMockCalendarAssignment({
+            gameId: "game-2",
+            homeTeam: "Team Gamma",
+            awayTeam: "Team Delta",
+          }),
+        ];
+        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+          createMockCalendarQueryResult(assignments),
+        );
+
+        render(<AssignmentsPage />);
+
+        expect(screen.getByText("Team Alpha")).toBeInTheDocument();
+        expect(screen.getByText("Team Beta")).toBeInTheDocument();
+        expect(screen.getByText("Team Gamma")).toBeInTheDocument();
+        expect(screen.getByText("Team Delta")).toBeInTheDocument();
+      });
+
+      it("should show count badge for calendar assignments", () => {
+        const assignments = [
+          createMockCalendarAssignment({ gameId: "game-1" }),
+          createMockCalendarAssignment({ gameId: "game-2" }),
+          createMockCalendarAssignment({ gameId: "game-3" }),
+        ];
+        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+          createMockCalendarQueryResult(assignments),
+        );
+
+        render(<AssignmentsPage />);
+
+        const upcomingTab = screen.getByRole("tab", { name: /upcoming/i });
+        expect(upcomingTab).toHaveTextContent("3");
+      });
+    });
+
+    describe("Date and Time Display", () => {
+      it("should display time from calendar assignment", () => {
+        // Create a specific future time for testing
+        const futureDate = new Date();
+        futureDate.setDate(futureDate.getDate() + 7); // 1 week from now
+        futureDate.setHours(19, 30, 0, 0);
+        const calendarAssignment = createMockCalendarAssignment({
+          startTime: futureDate.toISOString(),
+        });
+        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+          createMockCalendarQueryResult([calendarAssignment]),
+        );
+
+        render(<AssignmentsPage />);
+
+        // Time should be displayed (format may vary based on locale)
+        expect(screen.getByText(/19:30/)).toBeInTheDocument();
+      });
+
+      it("should display address from calendar assignment", () => {
+        const calendarAssignment = createMockCalendarAssignment({
+          address: "Test Arena, Bern",
+        });
+        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+          createMockCalendarQueryResult([calendarAssignment]),
+        );
+
+        render(<AssignmentsPage />);
+
+        expect(screen.getByText("Test Arena, Bern")).toBeInTheDocument();
+      });
+    });
+
+    describe("API mode vs Calendar mode", () => {
+      it("should use useCalendarAssignments when in calendar mode", () => {
+        mockAuthStoreState({ isCalendarMode: () => true });
+        const calendarAssignment = createMockCalendarAssignment();
+        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+          createMockCalendarQueryResult([calendarAssignment]),
+        );
+
+        render(<AssignmentsPage />);
+
+        // Should use calendar data
+        expect(useConvocations.useCalendarAssignments).toHaveBeenCalled();
+        expect(screen.getByText("VBC Zürich")).toBeInTheDocument();
+      });
+
+      it("should use useUpcomingAssignments when NOT in calendar mode", () => {
+        mockAuthStoreState({ isCalendarMode: () => false });
+        const apiAssignment = createMockAssignment();
+        vi.mocked(useConvocations.useUpcomingAssignments).mockReturnValue(
+          createMockQueryResult([apiAssignment]),
+        );
+
+        render(<AssignmentsPage />);
+
+        // Should use API data
+        expect(useConvocations.useUpcomingAssignments).toHaveBeenCalled();
+        expect(screen.getByText("VBC Zürich")).toBeInTheDocument();
+      });
     });
   });
 });
