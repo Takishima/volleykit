@@ -51,29 +51,16 @@ test.describe("Calendar Mode", () => {
       await loginPage.expectCalendarModeTabVisible();
     });
 
-    test("defaults to full login tab", async () => {
-      // Username input should be visible by default (full login mode)
-      await expect(loginPage.usernameInput).toBeVisible();
-      await expect(loginPage.calendarInput).not.toBeVisible();
-    });
-
-    test("can switch to calendar mode tab", async () => {
-      await loginPage.switchToCalendarMode();
-
-      // Calendar input should now be visible
+    test("defaults to calendar mode tab", async () => {
+      // Calendar input should be visible by default (calendar mode is the default)
       await expect(loginPage.calendarInput).toBeVisible();
-      await expect(loginPage.calendarLoginButton).toBeVisible();
-
-      // Username/password should be hidden
       await expect(loginPage.usernameInput).not.toBeVisible();
-      await expect(loginPage.passwordInput).not.toBeVisible();
     });
 
-    test("can switch back to full login tab", async () => {
-      await loginPage.switchToCalendarMode();
+    test("can switch to full login tab", async () => {
       await loginPage.switchToFullLogin();
 
-      // Username/password should be visible again
+      // Username/password should now be visible
       await expect(loginPage.usernameInput).toBeVisible();
       await expect(loginPage.passwordInput).toBeVisible();
 
@@ -81,10 +68,20 @@ test.describe("Calendar Mode", () => {
       await expect(loginPage.calendarInput).not.toBeVisible();
     });
 
-    test("demo button is visible in calendar mode tab", async () => {
+    test("can switch back to calendar mode tab", async () => {
+      await loginPage.switchToFullLogin();
       await loginPage.switchToCalendarMode();
 
-      // Demo button should still be accessible
+      // Calendar input should be visible again
+      await expect(loginPage.calendarInput).toBeVisible();
+      await expect(loginPage.calendarLoginButton).toBeVisible();
+
+      // Username/password should be hidden
+      await expect(loginPage.usernameInput).not.toBeVisible();
+    });
+
+    test("demo button is visible in calendar mode tab", async () => {
+      // Demo button should be accessible (calendar mode is already the default)
       await expect(loginPage.demoButton).toBeVisible();
     });
   });
@@ -272,12 +269,13 @@ test.describe("Calendar Mode", () => {
   });
 
   test.describe("Calendar Mode Responsive", () => {
-    test("calendar mode tab works on mobile viewport", async ({ page }) => {
+    test("calendar mode displays correctly on mobile viewport", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 });
 
-      await loginPage.switchToCalendarMode();
+      // Calendar mode is the default, verify it displays correctly on mobile
       await expect(loginPage.calendarInput).toBeVisible();
       await expect(loginPage.calendarLoginButton).toBeVisible();
+      await expect(loginPage.demoButton).toBeVisible();
     });
   });
 });
