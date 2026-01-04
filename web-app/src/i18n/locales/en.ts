@@ -184,6 +184,7 @@ const en: Translations = {
     enteringCalendarMode: "Entering...",
     calendarModeInfo: "Read-only access to your assignments",
     calendarModeHint: "Find your calendar URL in VolleyManager on the My Assignments page",
+    learnHowItWorks: "Learn how VolleyKit works",
   },
   calendarError: {
     title: "Calendar Error",
@@ -420,6 +421,12 @@ const en: Translations = {
         "Disable pinch-to-zoom and double-tap zoom on touch devices. This can help prevent accidental zooming. Note: Some users rely on zoom for accessibility, so use this setting thoughtfully.",
       preventZoomEnabled: "Zoom prevention is enabled",
       preventZoomDisabled: "Zoom prevention is disabled",
+    },
+    help: {
+      title: "Help & Documentation",
+      description:
+        "Learn how to use VolleyKit with detailed guides and tips.",
+      openDocs: "Open Documentation",
     },
     safeMode: "Safe Mode",
     safeModeDescription:
