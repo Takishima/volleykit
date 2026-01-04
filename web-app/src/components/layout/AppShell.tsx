@@ -56,7 +56,7 @@ export function AppShell() {
     logout,
     activeOccupationId,
     setActiveOccupation,
-    isDemoMode,
+    dataSource,
     isAssociationSwitching,
     setAssociationSwitching,
   } = useAuthStore(
@@ -66,7 +66,7 @@ export function AppShell() {
       logout: state.logout,
       activeOccupationId: state.activeOccupationId,
       setActiveOccupation: state.setActiveOccupation,
-      isDemoMode: state.isDemoMode,
+      dataSource: state.dataSource,
       isAssociationSwitching: state.isAssociationSwitching,
       setAssociationSwitching: state.setAssociationSwitching,
     })),
@@ -131,7 +131,7 @@ export function AppShell() {
       // Call API to switch association (works for both demo and production mode)
       // In demo mode, the mock API handles regenerating demo data
       // In production mode, this switches the server-side active party
-      const apiClient = getApiClient(isDemoMode);
+      const apiClient = getApiClient(dataSource);
       await apiClient.switchRoleAndAttribute(id);
 
       // Check if this is still the latest switch request (race condition protection)
@@ -156,7 +156,7 @@ export function AppShell() {
       // Prefetch data for all tabs in production mode.
       // This improves UX by loading data for tabs the user hasn't visited yet.
       // In demo mode, data comes directly from the store, so no prefetch needed.
-      if (!isDemoMode) {
+      if (dataSource === "api") {
         // Don't await - let prefetch happen in background while user interacts
         prefetchAllTabData(queryClient, id).catch(() => {
           // Errors are already logged in prefetchAllTabData, no action needed
@@ -266,7 +266,7 @@ export function AppShell() {
       <div className="header-spacer" aria-hidden="true" />
 
       {/* Demo mode banner */}
-      {isDemoMode && (
+      {dataSource === "demo" && (
         <div
           className="bg-amber-100 dark:bg-amber-900/50 border-b border-amber-200 dark:border-amber-800"
           role="alert"
