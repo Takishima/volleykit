@@ -155,10 +155,10 @@ export default defineConfig(({ mode }) => {
           experimentalMinChunkSize: 5_000,
           // Manual chunks for bundle splitting. Names must match size-limit config in package.json.
           // Current sizes (gzipped) and limits:
-          //   - Main App Bundle (index-*.js):     ~104 kB, limit 110 kB (+6 kB headroom)
+          //   - Main App Bundle (index-*.js):     ~110 kB, limit 145 kB (+35 kB headroom)
           //   - Vendor Chunks (combined):         ~46 kB,  limit 50 kB  (+4 kB headroom)
           //   - PDF Library (pdf-lib-*.js):       ~181 kB, limit 185 kB (+4 kB headroom) - lazy-loaded
-          //   - Total JS Bundle:                  ~440 kB, limit 450 kB (+10 kB headroom)
+          //   - Total JS Bundle:                  ~440 kB, limit 460 kB (+20 kB headroom)
           manualChunks: {
             'react-vendor': ['react', 'react-dom'],
             'router': ['react-router-dom'],
