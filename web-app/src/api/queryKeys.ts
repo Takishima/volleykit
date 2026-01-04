@@ -200,4 +200,21 @@ export const queryKeys = {
         dayType,
       ] as const,
   },
+
+  /**
+   * Calendar mode query keys for iCal-based assignment fetching.
+   * Used when in calendar mode instead of authenticated API mode.
+   */
+  calendar: {
+    /** Base key - invalidates ALL calendar queries */
+    all: ["calendar"] as const,
+    /** Parent key for calendar assignment queries */
+    assignments: () => [...queryKeys.calendar.all, "assignments"] as const,
+    /**
+     * Calendar assignments for a specific calendar code.
+     * @param code - The 6-character calendar code
+     */
+    assignmentsByCode: (code: string) =>
+      [...queryKeys.calendar.assignments(), code] as const,
+  },
 } as const;

@@ -2,6 +2,11 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { setCsrfToken, clearSession } from "@/api/client";
 import {
+  validateCalendarCode,
+  InvalidCalendarCodeError,
+  CalendarNotFoundError,
+} from "@/api/calendar-api";
+import {
   filterRefereeOccupations,
   parseOccupationsFromActiveParty,
 } from "@/utils/parseOccupations";
@@ -560,30 +565,56 @@ export const useAuthStore = create<AuthState>()(
       },
 
       loginWithCalendar: async (code: string): Promise<void> => {
-        // Validate calendar code format (6 alphanumeric characters)
         const trimmedCode = code.trim();
+
+        // Validate calendar code format (6 alphanumeric characters)
         if (!CALENDAR_CODE_PATTERN.test(trimmedCode)) {
           set({ status: "error", error: "auth.invalidCalendarCode" });
           return;
         }
 
-        // Store the calendar code and set calendar mode.
-        // Actual API validation (fetching to verify code works) will be added later.
-        // Currently occupations are empty which differs from other auth modes.
-        // Full implementation will fetch referee info from the calendar API endpoint.
-        set({
-          status: "authenticated",
-          dataSource: "calendar",
-          calendarCode: trimmedCode,
-          isDemoMode: false,
-          user: {
-            id: `calendar-${trimmedCode}`,
-            firstName: "Calendar",
-            lastName: "User",
-            occupations: [],
-          },
-          error: null,
-        });
+        set({ status: "loading", error: null });
+
+        try {
+          // Validate that the calendar code exists by fetching the iCal feed
+          const isValid = await validateCalendarCode(trimmedCode);
+
+          if (!isValid) {
+            set({ status: "error", error: "auth.calendarNotFound" });
+            return;
+          }
+
+          // Calendar code is valid - set authenticated state
+          set({
+            status: "authenticated",
+            dataSource: "calendar",
+            calendarCode: trimmedCode,
+            isDemoMode: false,
+            user: {
+              id: `calendar-${trimmedCode}`,
+              firstName: "Calendar",
+              lastName: "User",
+              occupations: [],
+            },
+            error: null,
+          });
+        } catch (error) {
+          // Handle specific error types
+          if (error instanceof InvalidCalendarCodeError) {
+            set({ status: "error", error: "auth.invalidCalendarCode" });
+            return;
+          }
+
+          if (error instanceof CalendarNotFoundError) {
+            set({ status: "error", error: "auth.calendarNotFound" });
+            return;
+          }
+
+          // Network or other errors
+          const message = error instanceof Error ? error.message : "Calendar login failed";
+          logger.error("Calendar login failed:", error);
+          set({ status: "error", error: message });
+        }
       },
 
       logoutCalendar: async () => {

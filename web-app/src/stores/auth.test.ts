@@ -8,6 +8,24 @@ vi.mock("@/api/client", () => ({
   clearSession: vi.fn(),
 }));
 
+// Mock the calendar API validation
+const mockValidateCalendarCode = vi.fn();
+vi.mock("@/api/calendar-api", () => ({
+  validateCalendarCode: (...args: unknown[]) => mockValidateCalendarCode(...args),
+  InvalidCalendarCodeError: class InvalidCalendarCodeError extends Error {
+    constructor(code: string) {
+      super(`Invalid calendar code: ${code}`);
+      this.name = "InvalidCalendarCodeError";
+    }
+  },
+  CalendarNotFoundError: class CalendarNotFoundError extends Error {
+    constructor(code: string) {
+      super(`Calendar not found: ${code}`);
+      this.name = "CalendarNotFoundError";
+    }
+  },
+}));
+
 // Mock fetch
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
@@ -849,6 +867,8 @@ describe("useAuthStore", () => {
 
   describe("loginWithCalendar", () => {
     it("sets calendar mode with the provided code", async () => {
+      mockValidateCalendarCode.mockResolvedValueOnce(true);
+
       await useAuthStore.getState().loginWithCalendar("ABC123");
 
       const state = useAuthStore.getState();
@@ -860,6 +880,8 @@ describe("useAuthStore", () => {
     });
 
     it("trims whitespace from calendar code", async () => {
+      mockValidateCalendarCode.mockResolvedValueOnce(true);
+
       await useAuthStore.getState().loginWithCalendar("  ABC123  ");
 
       const state = useAuthStore.getState();
@@ -874,6 +896,8 @@ describe("useAuthStore", () => {
       expect(state.status).toBe("error");
       expect(state.error).toBe("auth.invalidCalendarCode");
       expect(state.calendarCode).toBeNull();
+      // Validation should not be called for invalid format
+      expect(mockValidateCalendarCode).not.toHaveBeenCalled();
     });
 
     it("rejects code that is too long", async () => {
@@ -882,6 +906,7 @@ describe("useAuthStore", () => {
       const state = useAuthStore.getState();
       expect(state.status).toBe("error");
       expect(state.error).toBe("auth.invalidCalendarCode");
+      expect(mockValidateCalendarCode).not.toHaveBeenCalled();
     });
 
     it("rejects code with special characters", async () => {
@@ -890,21 +915,53 @@ describe("useAuthStore", () => {
       const state = useAuthStore.getState();
       expect(state.status).toBe("error");
       expect(state.error).toBe("auth.invalidCalendarCode");
+      expect(mockValidateCalendarCode).not.toHaveBeenCalled();
     });
 
     it("accepts lowercase alphanumeric codes", async () => {
+      mockValidateCalendarCode.mockResolvedValueOnce(true);
+
       await useAuthStore.getState().loginWithCalendar("abc123");
 
       const state = useAuthStore.getState();
       expect(state.status).toBe("authenticated");
       expect(state.calendarCode).toBe("abc123");
     });
+
+    it("shows error when calendar code is not found", async () => {
+      mockValidateCalendarCode.mockResolvedValueOnce(false);
+
+      await useAuthStore.getState().loginWithCalendar("NOTFND");
+
+      const state = useAuthStore.getState();
+      expect(state.status).toBe("error");
+      expect(state.error).toBe("auth.calendarNotFound");
+      expect(state.calendarCode).toBeNull();
+    });
+
+    it("shows loading state while validating", async () => {
+      let resolveValidation: (value: boolean) => void = () => {};
+      mockValidateCalendarCode.mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveValidation = resolve;
+        }),
+      );
+
+      const promise = useAuthStore.getState().loginWithCalendar("ABC123");
+      expect(useAuthStore.getState().status).toBe("loading");
+
+      resolveValidation(true);
+      await promise;
+
+      expect(useAuthStore.getState().status).toBe("authenticated");
+    });
   });
 
   describe("logoutCalendar", () => {
     it("clears calendar mode and resets state", async () => {
       // Set up calendar mode
-      useAuthStore.getState().loginWithCalendar("ABC123");
+      mockValidateCalendarCode.mockResolvedValueOnce(true);
+      await useAuthStore.getState().loginWithCalendar("ABC123");
 
       // Logout from calendar
       await useAuthStore.getState().logoutCalendar();
@@ -938,8 +995,9 @@ describe("useAuthStore", () => {
       expect(useAuthStore.getState().getAuthMode()).toBe("demo");
     });
 
-    it("returns 'calendar' for calendar mode", () => {
-      useAuthStore.getState().loginWithCalendar("ABC123");
+    it("returns 'calendar' for calendar mode", async () => {
+      mockValidateCalendarCode.mockResolvedValueOnce(true);
+      await useAuthStore.getState().loginWithCalendar("ABC123");
 
       expect(useAuthStore.getState().getAuthMode()).toBe("calendar");
     });
@@ -958,7 +1016,8 @@ describe("useAuthStore", () => {
     });
 
     it("clears calendarCode when logging out from calendar mode", async () => {
-      useAuthStore.getState().loginWithCalendar("ABC123");
+      mockValidateCalendarCode.mockResolvedValueOnce(true);
+      await useAuthStore.getState().loginWithCalendar("ABC123");
       expect(useAuthStore.getState().calendarCode).toBe("ABC123");
 
       await useAuthStore.getState().logout();
