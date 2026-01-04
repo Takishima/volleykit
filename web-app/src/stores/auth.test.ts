@@ -940,7 +940,7 @@ describe("useAuthStore", () => {
     });
 
     it("shows loading state while validating", async () => {
-      let resolveValidation: (value: boolean) => void = () => {};
+      let resolveValidation!: (value: boolean) => void;
       mockValidateCalendarCode.mockReturnValueOnce(
         new Promise((resolve) => {
           resolveValidation = resolve;

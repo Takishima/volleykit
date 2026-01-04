@@ -409,8 +409,12 @@ describe("AssignmentsPage", () => {
   });
 
   describe("Calendar Mode", () => {
-    // Helper to create a future date string for mock assignments
-    function getFutureDateString(hoursFromNow = 24): string {
+    // Named constants for time offsets in hours
+    const DEFAULT_HOURS_FROM_NOW = 24;
+    const GAME_START_HOURS_FROM_NOW = 48;
+    const GAME_END_HOURS_FROM_NOW = 50;
+
+    function getFutureDateString(hoursFromNow = DEFAULT_HOURS_FROM_NOW): string {
       const date = new Date();
       date.setHours(date.getHours() + hoursFromNow);
       return date.toISOString();
@@ -419,9 +423,8 @@ describe("AssignmentsPage", () => {
     function createMockCalendarAssignment(
       overrides: Partial<useConvocations.CalendarAssignment> = {},
     ): useConvocations.CalendarAssignment {
-      // Use a dynamically computed future date to ensure assignments are "upcoming"
-      const startTime = getFutureDateString(48); // 48 hours from now
-      const endTime = getFutureDateString(50); // 50 hours from now
+      const startTime = getFutureDateString(GAME_START_HOURS_FROM_NOW);
+      const endTime = getFutureDateString(GAME_END_HOURS_FROM_NOW);
       return {
         gameId: `game-${Math.random()}`,
         role: "referee1",

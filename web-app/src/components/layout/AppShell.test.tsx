@@ -11,10 +11,7 @@ vi.mock("@/stores/auth", () => ({
   useAuthStore: vi.fn(),
 }));
 
-/**
- * Create a mock auth store return value with sensible defaults.
- * Accepts partial overrides to allow customizing any property.
- */
+// Creates mock auth store with sensible defaults; accepts partial overrides
 function createMockAuthStore(
   overrides: Record<string, unknown> = {},
 ) {

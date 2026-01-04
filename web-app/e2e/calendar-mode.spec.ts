@@ -1,31 +1,20 @@
 import { test, expect } from "@playwright/test";
 import { LoginPage, NavigationPage } from "./pages";
 
-/**
- * Calendar Mode E2E tests - focused on browser-specific behavior.
- *
- * These tests verify:
- * - Calendar mode login tab rendering and switching
- * - Calendar mode login flow with mocked API
- * - Navigation restrictions in calendar mode (hidden nav items)
- * - Calendar mode banner display
- *
- * Component rendering details and accessibility attributes are covered
- * by unit tests in src/pages/LoginPage.test.tsx and
- * src/components/layout/AppShell.test.tsx
- */
+// Calendar Mode E2E tests: login flow, navigation restrictions, and banner display.
+// Component details and accessibility are covered in unit tests.
 
-/**
- * Generate mock iCal content with a future date.
- * Uses dynamic dates to prevent test brittleness.
- */
+// Uses dynamic dates to prevent test brittleness
+const DAYS_IN_FUTURE = 7;
+const GAME_START_HOUR = 18;
+const GAME_END_HOUR = 20;
+
 function generateMockIcalContent(): string {
-  // Create a date 7 days in the future to ensure the assignment appears in upcoming tab
   const futureDate = new Date();
-  futureDate.setDate(futureDate.getDate() + 7);
-  futureDate.setHours(18, 0, 0, 0);
+  futureDate.setDate(futureDate.getDate() + DAYS_IN_FUTURE);
+  futureDate.setHours(GAME_START_HOUR, 0, 0, 0);
   const endDate = new Date(futureDate);
-  endDate.setHours(20, 0, 0, 0);
+  endDate.setHours(GAME_END_HOUR, 0, 0, 0);
 
   // Format as iCal timestamp (YYYYMMDDTHHMMSSZ)
   const formatIcalDate = (date: Date) => {

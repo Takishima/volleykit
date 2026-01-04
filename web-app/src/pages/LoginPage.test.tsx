@@ -331,23 +331,24 @@ describe("LoginPage", () => {
         ).toBeInTheDocument();
       });
 
-      it("defaults to full login tab", () => {
+      it("defaults to calendar mode tab", () => {
         render(<LoginPage />);
 
-        const fullTab = screen.getByRole("tab", { name: "auth.fullLogin" });
-        expect(fullTab).toHaveAttribute("aria-selected", "true");
-      });
-
-      it("switches to calendar mode tab when clicked", () => {
-        render(<LoginPage />);
-
-        const calendarTab = screen.getByRole("tab", {
-          name: "auth.calendarMode",
-        });
-        fireEvent.click(calendarTab);
-
+        const calendarTab = screen.getByRole("tab", { name: "auth.calendarMode" });
         expect(calendarTab).toHaveAttribute("aria-selected", "true");
         expect(screen.getByTestId("calendar-input")).toBeInTheDocument();
+      });
+
+      it("switches to full login tab when clicked", () => {
+        render(<LoginPage />);
+
+        const fullTab = screen.getByRole("tab", {
+          name: "auth.fullLogin",
+        });
+        fireEvent.click(fullTab);
+
+        expect(fullTab).toHaveAttribute("aria-selected", "true");
+        expect(screen.getByTestId("username-input")).toBeInTheDocument();
       });
 
       it("shows calendar input field in calendar mode", () => {
@@ -489,8 +490,8 @@ describe("LoginPage", () => {
         vi.mocked(calendarHelpers.extractCalendarCode).mockReturnValue(
           "ABC123",
         );
-        // Create a promise that doesn't resolve immediately
-        let resolveValidation: (value: { valid: boolean }) => void = () => {};
+        // Use definite assignment assertion - resolve is assigned in Promise constructor
+        let resolveValidation!: (value: { valid: boolean }) => void;
         vi.mocked(calendarHelpers.validateCalendarCode).mockReturnValue(
           new Promise((resolve) => {
             resolveValidation = resolve;
@@ -517,7 +518,7 @@ describe("LoginPage", () => {
         vi.mocked(calendarHelpers.extractCalendarCode).mockReturnValue(
           "ABC123",
         );
-        let resolveValidation: (value: { valid: boolean }) => void = () => {};
+        let resolveValidation!: (value: { valid: boolean }) => void;
         vi.mocked(calendarHelpers.validateCalendarCode).mockReturnValue(
           new Promise((resolve) => {
             resolveValidation = resolve;
