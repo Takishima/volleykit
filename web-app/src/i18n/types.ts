@@ -26,6 +26,7 @@ export interface Translations {
     requiredLevel: string;
     demoModeBanner: string;
     calendarModeBanner: string;
+    calendarModeTooltip: string;
     optional: string;
     tbd: string;
     locationTbd: string;
