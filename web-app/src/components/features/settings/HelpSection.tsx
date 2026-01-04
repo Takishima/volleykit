@@ -1,8 +1,7 @@
 import { BookOpen } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
-
-const HELP_SITE_URL = "https://takishima.github.io/volleykit/help";
+import { HELP_SITE_URL } from "@/utils/constants";
 
 export function HelpSection() {
   const { t } = useTranslation();
