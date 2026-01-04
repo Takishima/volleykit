@@ -225,13 +225,26 @@ function unfoldLines(content: string): string {
 /**
  * Unescapes iCal text values.
  * Handles: \n -> newline, \, -> comma, \\ -> backslash, \; -> semicolon
+ *
+ * Uses a placeholder approach to prevent double-unescaping vulnerabilities.
+ * For example, "\\n" (escaped backslash + n) should become "\n" (backslash + n),
+ * not a newline character.
  */
 function unescapeText(text: string): string {
-  return text
-    .replace(/\\n/g, '\n')
-    .replace(/\\,/g, ',')
-    .replace(/\\\\/g, '\\')
-    .replace(/\\;/g, ';');
+  // Use null character as placeholder for escaped backslashes
+  const BACKSLASH_PLACEHOLDER = '\x00';
+
+  return (
+    text
+      // First, replace escaped backslashes with placeholder to prevent double-unescaping
+      .replace(/\\\\/g, BACKSLASH_PLACEHOLDER)
+      // Then unescape other sequences
+      .replace(/\\n/g, '\n')
+      .replace(/\\,/g, ',')
+      .replace(/\\;/g, ';')
+      // Finally, convert placeholder back to single backslash
+      .replaceAll(BACKSLASH_PLACEHOLDER, '\\')
+  );
 }
 
 /**

@@ -172,6 +172,25 @@ END:VCALENDAR`;
       expect(events[0]!.summary).toBe('Test\\Path');
     });
 
+    it('handles escaped backslash followed by n without double-unescaping', () => {
+      // \\\\n in the template literal = \\n in the actual string = escaped backslash + n
+      // This should become \n (backslash + n), NOT a newline character
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:test-123
+SUMMARY:Test
+DESCRIPTION:Path\\\\nName
+DTSTART:20250215T140000
+END:VEVENT
+END:VCALENDAR`;
+
+      const events = parseICalFeed(ical);
+
+      // Should be backslash + 'n' + 'N' + 'a' + 'm' + 'e' (6 chars), not newline + 'Name' (5 chars)
+      expect(events[0]!.description).toBe('Path\\nName');
+      expect(events[0]!.description.length).toBe(10);
+    });
+
     it('unescapes semicolon characters', () => {
       const ical = `BEGIN:VCALENDAR
 BEGIN:VEVENT
