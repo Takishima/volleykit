@@ -32,7 +32,6 @@ export {
   useCompensations,
   usePaidCompensations,
   useUnpaidCompensations,
-  useCompensationTotals,
   useUpdateCompensation,
   useUpdateAssignmentCompensation,
 } from "./useCompensations";
