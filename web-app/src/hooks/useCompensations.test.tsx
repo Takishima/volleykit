@@ -29,7 +29,7 @@ vi.mock("@/api/client", () => ({
 
 vi.mock("@/stores/auth", () => ({
   useAuthStore: vi.fn((selector: AnyFunction) =>
-    selector({ isDemoMode: false }),
+    selector({ dataSource: "api" }),
   ),
 }));
 
@@ -427,7 +427,7 @@ describe("useUpdateAssignmentCompensation", () => {
     const { useDemoStore } = await import("@/stores/demo");
 
     vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ isDemoMode: true }),
+      selector({ dataSource: "demo" }),
     );
 
     vi.mocked(useDemoStore).mockImplementation((selector: AnyFunction) =>
@@ -459,7 +459,7 @@ describe("useUpdateAssignmentCompensation", () => {
     const { useDemoStore } = await import("@/stores/demo");
 
     vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ isDemoMode: true }),
+      selector({ dataSource: "demo" }),
     );
 
     vi.mocked(useDemoStore).mockImplementation((selector: AnyFunction) =>

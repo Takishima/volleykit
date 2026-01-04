@@ -112,13 +112,14 @@ export function useAssignments(
   period: DatePeriod = "upcoming",
   customRange?: { from: Date; to: Date },
 ): UseQueryResult<Assignment[], Error> {
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const dataSource = useAuthStore((state) => state.dataSource);
+  const isDemoMode = dataSource === "demo";
   const activeOccupationId = useAuthStore((state) => state.activeOccupationId);
   const demoAssignments = useDemoStore((state) => state.assignments);
   const demoAssociationCode = useDemoStore(
     (state) => state.activeAssociationCode,
   );
-  const apiClient = getApiClient(isDemoMode);
+  const apiClient = getApiClient(dataSource);
 
   // Use appropriate key for cache invalidation when switching associations
   const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId;
@@ -366,8 +367,8 @@ export function useValidationClosedAssignments(): UseQueryResult<
  * @param assignmentId - The assignment ID to fetch, or null to disable the query
  */
 export function useAssignmentDetails(assignmentId: string | null) {
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
-  const apiClient = getApiClient(isDemoMode);
+  const dataSource = useAuthStore((state) => state.dataSource);
+  const apiClient = getApiClient(dataSource);
 
   return useQuery({
     queryKey: queryKeys.assignments.detail(assignmentId || ""),

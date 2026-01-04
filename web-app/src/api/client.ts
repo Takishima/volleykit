@@ -654,6 +654,39 @@ export const api = {
 
 export type ApiClient = typeof api;
 
-export function getApiClient(isDemoMode: boolean): ApiClient {
-  return isDemoMode ? mockApi : api;
+// Re-export DataSource from auth store for consumers that import from client
+export type { DataSource } from "@/stores/auth";
+
+// Import for internal use
+import type { DataSource } from "@/stores/auth";
+
+/**
+ * Returns the appropriate API client based on the data source.
+ *
+ * @param dataSource - The data source to use. Accepts either:
+ *   - DataSource string: 'api', 'demo', or 'calendar'
+ *   - boolean (deprecated): true = demo mode, false = api mode
+ *
+ * @returns The API client for the specified data source
+ * @throws Error if calendar mode is requested (not yet implemented)
+ */
+export function getApiClient(dataSource: DataSource | boolean): ApiClient {
+  // Handle legacy boolean parameter for backwards compatibility
+  if (typeof dataSource === "boolean") {
+    return dataSource ? mockApi : api;
+  }
+
+  switch (dataSource) {
+    case "demo":
+      return mockApi;
+    case "calendar":
+      // Calendar mode API will be implemented in a future PR
+      throw new Error("Calendar API not yet implemented");
+    case "api":
+      return api;
+    default: {
+      const _exhaustive: never = dataSource;
+      throw new Error(`Unknown data source: ${_exhaustive}`);
+    }
+  }
 }

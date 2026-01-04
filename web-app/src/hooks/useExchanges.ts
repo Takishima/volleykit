@@ -36,13 +36,14 @@ export type ExchangeStatus = "open" | "applied" | "closed" | "all" | "mine";
  * @param status - Filter by exchange status, or 'all' for no filtering
  */
 export function useGameExchanges(status: ExchangeStatus = "all") {
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const dataSource = useAuthStore((state) => state.dataSource);
+  const isDemoMode = dataSource === "demo";
   const activeOccupationId = useAuthStore((state) => state.activeOccupationId);
   const userId = useAuthStore((state) => state.user?.id);
   const demoAssociationCode = useDemoStore(
     (state) => state.activeAssociationCode,
   );
-  const apiClient = getApiClient(isDemoMode);
+  const apiClient = getApiClient(dataSource);
 
   // Use appropriate key for cache invalidation when switching associations
   const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId;
@@ -131,8 +132,8 @@ export function useGameExchanges(status: ExchangeStatus = "all") {
  */
 export function useApplyForExchange(): UseMutationResult<void, Error, string> {
   const queryClient = useQueryClient();
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
-  const apiClient = getApiClient(isDemoMode);
+  const dataSource = useAuthStore((state) => state.dataSource);
+  const apiClient = getApiClient(dataSource);
 
   return useMutation({
     mutationFn: (exchangeId: string) => apiClient.applyForExchange(exchangeId),
@@ -151,8 +152,8 @@ export function useWithdrawFromExchange(): UseMutationResult<
   string
 > {
   const queryClient = useQueryClient();
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
-  const apiClient = getApiClient(isDemoMode);
+  const dataSource = useAuthStore((state) => state.dataSource);
+  const apiClient = getApiClient(dataSource);
 
   return useMutation({
     mutationFn: (exchangeId: string) =>

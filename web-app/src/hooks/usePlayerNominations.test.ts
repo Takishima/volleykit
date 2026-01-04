@@ -78,7 +78,7 @@ describe("usePossiblePlayerNominations", () => {
     vi.clearAllMocks();
 
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-      selector({ isDemoMode: false } as ReturnType<
+      selector({ dataSource: "api" } as ReturnType<
         typeof authStore.useAuthStore.getState
       >),
     );
@@ -223,7 +223,7 @@ describe("usePossiblePlayerNominations", () => {
 
   it("uses demo API client when in demo mode", async () => {
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-      selector({ isDemoMode: true } as ReturnType<
+      selector({ dataSource: "demo" } as ReturnType<
         typeof authStore.useAuthStore.getState
       >),
     );
@@ -244,12 +244,12 @@ describe("usePossiblePlayerNominations", () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    expect(apiClient.getApiClient).toHaveBeenCalledWith(true);
+    expect(apiClient.getApiClient).toHaveBeenCalledWith("demo");
   });
 
   it("uses production API client when not in demo mode", async () => {
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-      selector({ isDemoMode: false } as ReturnType<
+      selector({ dataSource: "api" } as ReturnType<
         typeof authStore.useAuthStore.getState
       >),
     );
@@ -270,6 +270,6 @@ describe("usePossiblePlayerNominations", () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    expect(apiClient.getApiClient).toHaveBeenCalledWith(false);
+    expect(apiClient.getApiClient).toHaveBeenCalledWith("api");
   });
 });

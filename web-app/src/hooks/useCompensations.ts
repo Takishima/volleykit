@@ -46,12 +46,13 @@ export type CompensationErrorKey =
  * @param paidFilter - Optional filter: true for paid, false for unpaid, undefined for all
  */
 export function useCompensations(paidFilter?: boolean) {
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const dataSource = useAuthStore((state) => state.dataSource);
+  const isDemoMode = dataSource === "demo";
   const activeOccupationId = useAuthStore((state) => state.activeOccupationId);
   const demoAssociationCode = useDemoStore(
     (state) => state.activeAssociationCode,
   );
-  const apiClient = getApiClient(isDemoMode);
+  const apiClient = getApiClient(dataSource);
 
   // Use appropriate key for cache invalidation when switching associations
   const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId;
@@ -120,8 +121,8 @@ export function useUpdateCompensation(): UseMutationResult<
   { compensationId: string; data: CompensationUpdateData }
 > {
   const queryClient = useQueryClient();
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
-  const apiClient = getApiClient(isDemoMode);
+  const dataSource = useAuthStore((state) => state.dataSource);
+  const apiClient = getApiClient(dataSource);
 
   return useMutation({
     mutationFn: async ({
@@ -134,7 +135,7 @@ export function useUpdateCompensation(): UseMutationResult<
       log.debug("Updating compensation:", {
         compensationId,
         data,
-        isDemoMode,
+        dataSource,
       });
       await apiClient.updateCompensation(compensationId, data);
     },
@@ -267,7 +268,8 @@ export function useUpdateAssignmentCompensation(): UseMutationResult<
   { assignmentId: string; data: CompensationUpdateData }
 > {
   const queryClient = useQueryClient();
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const dataSource = useAuthStore((state) => state.dataSource);
+  const isDemoMode = dataSource === "demo";
   const updateAssignmentCompensation = useDemoStore(
     (state) => state.updateAssignmentCompensation,
   );

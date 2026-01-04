@@ -63,7 +63,7 @@ vi.mock("@/hooks/usePlayerNominations", () => ({
 
 vi.mock("@/stores/auth", () => ({
   useAuthStore: vi.fn((selector) =>
-    selector({ isDemoMode: false }),
+    selector({ dataSource: "api" }),
   ),
 }));
 

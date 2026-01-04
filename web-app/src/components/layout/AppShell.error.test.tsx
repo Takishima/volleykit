@@ -66,6 +66,7 @@ describe("AppShell Error Handling", () => {
     useAuthStore.setState({
       status: "idle",
       user: null,
+      dataSource: "api",
       isDemoMode: false,
       activeOccupationId: null,
       isAssociationSwitching: false,
