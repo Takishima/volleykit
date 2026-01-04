@@ -2,10 +2,6 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { setCsrfToken, clearSession } from "@/api/client";
 import {
-  validateCalendarCode,
-  InvalidCalendarCodeError,
-} from "@/api/calendar-api";
-import {
   filterRefereeOccupations,
   parseOccupationsFromActiveParty,
 } from "@/utils/parseOccupations";
@@ -75,6 +71,8 @@ interface AuthState {
   /** True while switching associations - pages should show loading state */
   isAssociationSwitching: boolean;
   _checkSessionPromise: Promise<boolean> | null;
+  /** Timestamp of the last successful authentication (login or session check) */
+  _lastAuthTimestamp: number | null;
   // Active party data from embedded HTML (contains association memberships)
   eligibleAttributeValues: AttributeValue[] | null;
   /** All associations the user belongs to, grouped by role - use this for multi-association detection */
@@ -204,6 +202,7 @@ export const useAuthStore = create<AuthState>()(
       activeOccupationId: null,
       isAssociationSwitching: false,
       _checkSessionPromise: null,
+      _lastAuthTimestamp: null,
       eligibleAttributeValues: null,
       groupedEligibleAttributeValues: null,
       eligibleRoles: null,
@@ -259,6 +258,7 @@ export const useAuthStore = create<AuthState>()(
               eligibleRoles: activeParty?.eligibleRoles ?? null,
               user,
               activeOccupationId,
+              _lastAuthTimestamp: Date.now(),
             });
             return true;
           }
@@ -295,6 +295,7 @@ export const useAuthStore = create<AuthState>()(
               eligibleRoles: activeParty?.eligibleRoles ?? null,
               user,
               activeOccupationId,
+              _lastAuthTimestamp: Date.now(),
             });
             return true;
           }
@@ -339,6 +340,7 @@ export const useAuthStore = create<AuthState>()(
           eligibleAttributeValues: null,
           groupedEligibleAttributeValues: null,
           eligibleRoles: null,
+          _lastAuthTimestamp: null,
         });
       },
 
@@ -351,6 +353,14 @@ export const useAuthStore = create<AuthState>()(
         const currentDataSource = get().dataSource;
         // Demo and calendar modes don't need session verification
         if (currentDataSource === "demo" || currentDataSource === "calendar") {
+          return true;
+        }
+
+        // Skip session check if authentication happened very recently (within 5 seconds).
+        // This prevents redundant network requests right after login.
+        const lastAuth = get()._lastAuthTimestamp;
+        if (lastAuth && Date.now() - lastAuth < 5000) {
+          logger.info("Session check: skipping, authenticated within last 5 seconds");
           return true;
         }
 
@@ -409,7 +419,7 @@ export const useAuthStore = create<AuthState>()(
                 if (isLoginPage) {
                   logger.info("Session check: redirected to login page, session is stale");
                   clearSession();
-                  set({ status: "idle", user: null, csrfToken: null });
+                  set({ status: "idle", user: null, csrfToken: null, _lastAuthTimestamp: null });
                   resolvePromise(false);
                   return;
                 }
@@ -427,7 +437,7 @@ export const useAuthStore = create<AuthState>()(
                 if (!csrfToken && !currentState.csrfToken) {
                   logger.info("Session check: no CSRF token found, session is invalid");
                   clearSession();
-                  set({ status: "idle", user: null, csrfToken: null });
+                  set({ status: "idle", user: null, csrfToken: null, _lastAuthTimestamp: null });
                   resolvePromise(false);
                   return;
                 }
@@ -460,6 +470,7 @@ export const useAuthStore = create<AuthState>()(
                     activeParty?.eligibleRoles ?? currentState.eligibleRoles,
                   user,
                   activeOccupationId,
+                  _lastAuthTimestamp: Date.now(),
                 });
                 resolvePromise(true);
                 return;
@@ -567,48 +578,28 @@ export const useAuthStore = create<AuthState>()(
         const trimmedCode = code.trim();
 
         // Validate calendar code format (6 alphanumeric characters)
+        // Note: The calendar code should already be validated by LoginPage before
+        // calling this function. This is just a safeguard for direct API calls.
         if (!CALENDAR_CODE_PATTERN.test(trimmedCode)) {
           set({ status: "error", error: "auth.invalidCalendarCode" });
           return;
         }
 
-        set({ status: "loading", error: null });
-
-        try {
-          // Validate that the calendar code exists by fetching the iCal feed
-          const isValid = await validateCalendarCode(trimmedCode);
-
-          if (!isValid) {
-            set({ status: "error", error: "auth.calendarNotFound" });
-            return;
-          }
-
-          // Calendar code is valid - set authenticated state
-          set({
-            status: "authenticated",
-            dataSource: "calendar",
-            calendarCode: trimmedCode,
-            isDemoMode: false,
-            user: {
-              id: `calendar-${trimmedCode}`,
-              firstName: "Calendar",
-              lastName: "User",
-              occupations: [],
-            },
-            error: null,
-          });
-        } catch (error) {
-          // Handle specific error types
-          if (error instanceof InvalidCalendarCodeError) {
-            set({ status: "error", error: "auth.invalidCalendarCode" });
-            return;
-          }
-
-          // Network or other errors
-          const message = error instanceof Error ? error.message : "Calendar login failed";
-          logger.error("Calendar login failed:", error);
-          set({ status: "error", error: message });
-        }
+        // Calendar code format is valid - set authenticated state
+        // The actual API validation was already done by LoginPage before calling this
+        set({
+          status: "authenticated",
+          dataSource: "calendar",
+          calendarCode: trimmedCode,
+          isDemoMode: false,
+          user: {
+            id: `calendar-${trimmedCode}`,
+            firstName: "Calendar",
+            lastName: "User",
+            occupations: [],
+          },
+          error: null,
+        });
       },
 
       logoutCalendar: async () => {
