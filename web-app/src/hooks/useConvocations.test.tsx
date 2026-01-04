@@ -65,10 +65,10 @@ describe("useConvocations - API Client Routing", () => {
   });
 
   describe("useAssignments", () => {
-    it("should call getApiClient with isDemoMode value in non-demo mode", async () => {
+    it("should call getApiClient with dataSource value in non-demo mode", async () => {
       // In non-demo mode, the API should be called
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: false } as ReturnType<
+        selector({ dataSource: "api" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -91,7 +91,7 @@ describe("useConvocations - API Client Routing", () => {
         expect(result.current.isFetching).toBe(false);
       });
 
-      expect(getApiClient).toHaveBeenCalledWith(false);
+      expect(getApiClient).toHaveBeenCalledWith("api");
       expect(mockApi.searchAssignments).toHaveBeenCalled();
     });
 
@@ -99,7 +99,7 @@ describe("useConvocations - API Client Routing", () => {
       const futureDate = addDays(new Date(), 1).toISOString();
 
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: true } as ReturnType<
+        selector({ dataSource: "demo" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -136,7 +136,7 @@ describe("useConvocations - API Client Routing", () => {
 
     it("should call API with correct search configuration", async () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: false } as ReturnType<
+        selector({ dataSource: "api" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -154,7 +154,7 @@ describe("useConvocations - API Client Routing", () => {
         expect(result.current.isFetching).toBe(false);
       });
 
-      expect(getApiClient).toHaveBeenCalledWith(false);
+      expect(getApiClient).toHaveBeenCalledWith("api");
       expect(mockApi.searchAssignments).toHaveBeenCalledWith(
         expect.objectContaining({
           offset: 0,
@@ -173,7 +173,7 @@ describe("useConvocations - API Client Routing", () => {
   describe("useAssignmentDetails", () => {
     it("should call API when assignmentId is provided", async () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: false } as ReturnType<
+        selector({ dataSource: "api" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -201,7 +201,7 @@ describe("useConvocations - API Client Routing", () => {
 
     it("should not call API when assignmentId is null", async () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: false } as ReturnType<
+        selector({ dataSource: "api" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -217,7 +217,7 @@ describe("useConvocations - API Client Routing", () => {
   describe("useCompensations", () => {
     it("should apply client-side filtering when paid filter is provided", async () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: false } as ReturnType<
+        selector({ dataSource: "api" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -259,7 +259,7 @@ describe("useConvocations - API Client Routing", () => {
 
     it("should call API without filter when no paid filter provided", async () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: false } as ReturnType<
+        selector({ dataSource: "api" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -288,7 +288,7 @@ describe("useConvocations - API Client Routing", () => {
   describe("useGameExchanges", () => {
     it("should call API with status filter when not all", async () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: false } as ReturnType<
+        selector({ dataSource: "api" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -320,7 +320,7 @@ describe("useConvocations - API Client Routing", () => {
 
     it("should always fetch open exchanges regardless of status parameter", async () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: false } as ReturnType<
+        selector({ dataSource: "api" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -363,7 +363,7 @@ describe("useConvocations - API Client Routing", () => {
   describe("useApplyForExchange", () => {
     it("should call API with exchange ID", async () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: false } as ReturnType<
+        selector({ dataSource: "api" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -383,7 +383,7 @@ describe("useConvocations - API Client Routing", () => {
   describe("useWithdrawFromExchange", () => {
     it("should call API with exchange ID", async () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: false } as ReturnType<
+        selector({ dataSource: "api" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -420,7 +420,7 @@ describe("useConvocations - Data Handling", () => {
       const futureDate = addDays(now, 5).toISOString();
 
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: false } as ReturnType<
+        selector({ dataSource: "api" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -457,7 +457,7 @@ describe("useConvocations - Data Handling", () => {
       const futureDate = addDays(now, 5).toISOString();
 
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: true } as ReturnType<
+        selector({ dataSource: "demo" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -489,7 +489,7 @@ describe("useConvocations - Data Handling", () => {
 
     it("should use past date range for past period", async () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: false } as ReturnType<
+        selector({ dataSource: "api" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -524,7 +524,7 @@ describe("useConvocations - Data Handling", () => {
   describe("useAssignmentDetails", () => {
     it("should return assignment details from API response", async () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: true } as ReturnType<
+        selector({ dataSource: "demo" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -554,7 +554,7 @@ describe("useConvocations - Data Handling", () => {
 
     it("should return error when assignment not found", async () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: true } as ReturnType<
+        selector({ dataSource: "demo" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -584,7 +584,7 @@ describe("useConvocations - Data Handling", () => {
   describe("useCompensations", () => {
     it("should return filtered compensations from API response", async () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: true } as ReturnType<
+        selector({ dataSource: "demo" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -621,7 +621,7 @@ describe("useConvocations - Data Handling", () => {
   describe("useGameExchanges", () => {
     it("should return filtered exchanges from API response", async () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: true } as ReturnType<
+        selector({ dataSource: "demo" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -670,7 +670,7 @@ describe("useConvocations - Unified API Architecture", () => {
   it("should use different code paths for demo and non-demo modes", async () => {
     // In demo mode, data comes from the store (no API call)
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-      selector({ isDemoMode: true } as ReturnType<
+      selector({ dataSource: "demo" } as ReturnType<
         typeof authStore.useAuthStore.getState
       >),
     );
@@ -695,7 +695,7 @@ describe("useConvocations - Unified API Architecture", () => {
 
     // In non-demo mode, data comes from the API
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-      selector({ isDemoMode: false } as ReturnType<
+      selector({ dataSource: "api" } as ReturnType<
         typeof authStore.useAuthStore.getState
       >),
     );
@@ -715,13 +715,13 @@ describe("useConvocations - Unified API Architecture", () => {
       expect(realResult.current.isFetching).toBe(false);
     });
 
-    expect(getApiClient).toHaveBeenCalledWith(false);
+    expect(getApiClient).toHaveBeenCalledWith("api");
     expect(mockApi.searchAssignments).toHaveBeenCalled();
   });
 
   it("should invalidate queries after successful mutations", async () => {
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-      selector({ isDemoMode: false } as ReturnType<
+      selector({ dataSource: "api" } as ReturnType<
         typeof authStore.useAuthStore.getState
       >),
     );
@@ -755,7 +755,7 @@ describe("useConvocations - Compensation Totals", () => {
 
   it("should fetch compensations successfully", async () => {
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-      selector({ isDemoMode: false } as ReturnType<
+      selector({ dataSource: "api" } as ReturnType<
         typeof authStore.useAuthStore.getState
       >),
     );
@@ -814,7 +814,7 @@ describe("useConvocations - Demo Association Switching", () => {
 
     // Test with SV association
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-      selector({ isDemoMode: true } as ReturnType<
+      selector({ dataSource: "demo" } as ReturnType<
         typeof authStore.useAuthStore.getState
       >),
     );
@@ -886,7 +886,7 @@ describe("useConvocations - Demo Association Switching", () => {
     // Verify that in non-demo mode, the association code is null
     // and doesn't affect the query key
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-      selector({ isDemoMode: false } as ReturnType<
+      selector({ dataSource: "api" } as ReturnType<
         typeof authStore.useAuthStore.getState
       >),
     );
@@ -920,12 +920,12 @@ describe("useConvocations - Demo Association Switching", () => {
     });
 
     // Verify that getApiClient was called with false (non-demo mode)
-    expect(getApiClient).toHaveBeenCalledWith(false);
+    expect(getApiClient).toHaveBeenCalledWith("api");
   });
 
   it("should include association code in query keys for compensations and exchanges", async () => {
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-      selector({ isDemoMode: true } as ReturnType<
+      selector({ dataSource: "demo" } as ReturnType<
         typeof authStore.useAuthStore.getState
       >),
     );
@@ -974,7 +974,7 @@ describe("useConvocations - Demo Association Switching", () => {
     });
 
     // Both should have been called with the demo API client
-    expect(getApiClient).toHaveBeenCalledWith(true);
+    expect(getApiClient).toHaveBeenCalledWith("demo");
     expect(mockApi.searchCompensations).toHaveBeenCalled();
     expect(mockApi.searchExchanges).toHaveBeenCalled();
   });

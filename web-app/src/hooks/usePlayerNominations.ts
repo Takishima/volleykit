@@ -26,8 +26,8 @@ export function usePossiblePlayerNominations({
   PossibleNomination[],
   Error
 > {
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
-  const apiClient = getApiClient(isDemoMode);
+  const dataSource = useAuthStore((state) => state.dataSource);
+  const apiClient = getApiClient(dataSource);
 
   return useQuery({
     queryKey: queryKeys.nominations.possible(nominationListId),

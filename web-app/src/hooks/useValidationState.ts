@@ -61,8 +61,8 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
   const isSavingRef = useRef(false);
   const isFinalizingRef = useRef(false);
 
-  const isDemoMode = useAuthStore((s) => s.isDemoMode);
-  const apiClient = getApiClient(isDemoMode);
+  const dataSource = useAuthStore((s) => s.dataSource);
+  const apiClient = getApiClient(dataSource);
   const queryClient = useQueryClient();
 
   // Fetch game details (scoresheet and nomination list IDs)

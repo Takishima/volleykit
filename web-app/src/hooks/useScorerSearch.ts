@@ -88,8 +88,8 @@ export function useScorerSearch(
   filters: PersonSearchFilter,
   options: UseScorerSearchOptions = {},
 ): UseScorerSearchResult {
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
-  const apiClient = getApiClient(isDemoMode);
+  const dataSource = useAuthStore((state) => state.dataSource);
+  const apiClient = getApiClient(dataSource);
 
   const hasFilters = Boolean(
     filters.firstName || filters.lastName || filters.yearOfBirth,

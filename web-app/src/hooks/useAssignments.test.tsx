@@ -29,7 +29,7 @@ vi.mock("@/api/client", () => ({
 
 vi.mock("@/stores/auth", () => ({
   useAuthStore: vi.fn((selector: AnyFunction) =>
-    selector({ isDemoMode: false }),
+    selector({ dataSource: "api" }),
   ),
 }));
 
@@ -277,7 +277,7 @@ describe("useAssignments", () => {
     const { useDemoStore } = await import("@/stores/demo");
 
     vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ isDemoMode: true }),
+      selector({ dataSource: "demo" }),
     );
 
     const futureDate = new Date();
@@ -320,7 +320,7 @@ describe("useUpcomingAssignments", () => {
     // Reset to non-demo mode for API tests
     const { useAuthStore } = await import("@/stores/auth");
     vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ isDemoMode: false }),
+      selector({ dataSource: "api" }),
     );
   });
 
@@ -362,7 +362,7 @@ describe("usePastAssignments", () => {
     // Reset to non-demo mode for API tests
     const { useAuthStore } = await import("@/stores/auth");
     vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ isDemoMode: false }),
+      selector({ dataSource: "api" }),
     );
   });
 

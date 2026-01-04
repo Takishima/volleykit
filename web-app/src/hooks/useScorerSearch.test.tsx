@@ -13,7 +13,7 @@ vi.mock("@/api/client", () => ({
 }));
 
 vi.mock("@/stores/auth", () => ({
-  useAuthStore: vi.fn((selector) => selector({ isDemoMode: false })),
+  useAuthStore: vi.fn((selector) => selector({ dataSource: "api" })),
 }));
 
 function createWrapper() {
@@ -328,15 +328,15 @@ describe("useScorerSearch - integration with mock API", () => {
 
     // Mock to use real implementations with demo mode enabled
     const { getApiClient } = await import("@/api/client");
-    vi.mocked(getApiClient).mockImplementation((isDemoMode: boolean) =>
-      realGetApiClient(isDemoMode),
+    vi.mocked(getApiClient).mockImplementation((dataSource) =>
+      realGetApiClient(dataSource),
     );
 
     const { useAuthStore } = await import("@/stores/auth");
     vi.mocked(useAuthStore).mockImplementation((selector: unknown) => {
       if (typeof selector === "function") {
-        return (selector as (state: { isDemoMode: boolean }) => boolean)({
-          isDemoMode: true,
+        return (selector as (state: { dataSource: string }) => string)({
+          dataSource: "demo",
         });
       }
       return realUseAuthStore(selector as never);
