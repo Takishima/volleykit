@@ -43,10 +43,15 @@ function filterToPaidFilter(filter: FilterType): boolean | undefined {
   }
 }
 
-// Determine sort direction based on filter type.
-// Past items: descending (newest first, scroll down = further into past)
-// Future items: ascending (soonest first, scroll down = further into future)
-// This creates a mental model where "now" is always at the top.
+/**
+ * Determines sort direction based on filter type.
+ *
+ * This creates a consistent UX where "now" is always at the top of the list:
+ * - Past/closed tabs: descending (newest first, scroll down = further into past)
+ * - Future tab: ascending (soonest first, scroll down = further into future)
+ *
+ * This matches the pattern used in useAssignments for upcoming/past periods.
+ */
 function shouldSortDescending(filter: FilterType): boolean {
   return filter !== "pendingFuture";
 }
