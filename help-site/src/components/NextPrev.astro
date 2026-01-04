@@ -1,0 +1,48 @@
+---
+// NextPrev navigation component - placeholder
+
+interface NavLink {
+  label: string;
+  href: string;
+}
+
+interface Props {
+  prev?: NavLink;
+  next?: NavLink;
+}
+
+const { prev, next } = Astro.props;
+---
+
+<nav class="mt-12 flex items-center justify-between border-t border-border-default pt-6 dark:border-border-default-dark">
+  <div>
+    {
+      prev && (
+        <a
+          href={prev.href}
+          class="group flex items-center gap-2 text-text-secondary hover:text-primary-600 dark:text-text-secondary-dark dark:hover:text-primary-400"
+        >
+          <span class="text-text-muted group-hover:text-primary-600 dark:text-text-muted-dark dark:group-hover:text-primary-400">
+            &larr;
+          </span>
+          <span>{prev.label}</span>
+        </a>
+      )
+    }
+  </div>
+  <div>
+    {
+      next && (
+        <a
+          href={next.href}
+          class="group flex items-center gap-2 text-text-secondary hover:text-primary-600 dark:text-text-secondary-dark dark:hover:text-primary-400"
+        >
+          <span>{next.label}</span>
+          <span class="text-text-muted group-hover:text-primary-600 dark:text-text-muted-dark dark:group-hover:text-primary-400">
+            &rarr;
+          </span>
+        </a>
+      )
+    }
+  </div>
+</nav>

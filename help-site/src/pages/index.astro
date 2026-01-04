@@ -1,10 +1,16 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import DocLayout from '../layouts/DocLayout.astro';
+
+const breadcrumbs = [{ label: 'Home' }];
 ---
 
-<Layout title="VolleyKit Help">
-  <main class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-4">VolleyKit Help</h1>
-    <p class="text-text-secondary">Welcome to the VolleyKit help site.</p>
-  </main>
-</Layout>
+<DocLayout
+  title="Welcome"
+  description="Help documentation for VolleyKit - the improved interface for Swiss volleyball referee management."
+  breadcrumbs={breadcrumbs}
+>
+  <h1>VolleyKit Help</h1>
+  <p class="lead text-text-secondary dark:text-text-secondary-dark">
+    Welcome to the VolleyKit help site. Find guides and documentation for using the VolleyKit app.
+  </p>
+</DocLayout>

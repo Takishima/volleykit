@@ -1,0 +1,52 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Sidebar from '../components/Sidebar.astro';
+import Footer from '../components/Footer.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import NextPrev from '../components/NextPrev.astro';
+
+interface BreadcrumbItem {
+  label: string;
+  href?: string;
+}
+
+interface NavLink {
+  label: string;
+  href: string;
+}
+
+interface Props {
+  title: string;
+  description?: string;
+  breadcrumbs?: BreadcrumbItem[];
+  prev?: NavLink;
+  next?: NavLink;
+}
+
+const { title, description, breadcrumbs = [], prev, next } = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+  <div class="flex min-h-screen flex-col">
+    <Header />
+
+    <div class="flex flex-1">
+      <Sidebar />
+
+      <main class="flex-1 overflow-x-hidden">
+        <div class="container mx-auto max-w-4xl px-4 py-8">
+          {breadcrumbs.length > 0 && <Breadcrumbs items={breadcrumbs} />}
+
+          <article class="prose prose-gray max-w-none dark:prose-invert">
+            <slot />
+          </article>
+
+          {(prev || next) && <NextPrev prev={prev} next={next} />}
+        </div>
+      </main>
+    </div>
+
+    <Footer />
+  </div>
+</BaseLayout>
