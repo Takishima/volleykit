@@ -13,6 +13,9 @@ import { fetchCalendarAssignments, type CalendarAssignment } from "@/api/calenda
 // Stable empty array to prevent unnecessary re-renders
 const EMPTY_ASSIGNMENTS: CalendarAssignment[] = [];
 
+/** Cache duration for calendar assignments (5 minutes). Calendar data updates infrequently. */
+const CALENDAR_STALE_TIME_MS = 5 * 60 * 1000;
+
 /**
  * Fetches assignments from the calendar iCal feed.
  *
@@ -55,8 +58,7 @@ export function useCalendarAssignments(): UseQueryResult<CalendarAssignment[], E
     },
     // Only fetch when in calendar mode with a valid code
     enabled: isCalendarMode && !!calendarCode,
-    // Cache for 5 minutes - calendar data updates infrequently
-    staleTime: 5 * 60 * 1000,
+    staleTime: CALENDAR_STALE_TIME_MS,
     // Use empty array as placeholder to avoid undefined data
     placeholderData: EMPTY_ASSIGNMENTS,
   });

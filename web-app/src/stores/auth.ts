@@ -4,7 +4,6 @@ import { setCsrfToken, clearSession } from "@/api/client";
 import {
   validateCalendarCode,
   InvalidCalendarCodeError,
-  CalendarNotFoundError,
 } from "@/api/calendar-api";
 import {
   filterRefereeOccupations,
@@ -602,11 +601,6 @@ export const useAuthStore = create<AuthState>()(
           // Handle specific error types
           if (error instanceof InvalidCalendarCodeError) {
             set({ status: "error", error: "auth.invalidCalendarCode" });
-            return;
-          }
-
-          if (error instanceof CalendarNotFoundError) {
-            set({ status: "error", error: "auth.calendarNotFound" });
             return;
           }
 
