@@ -41,8 +41,11 @@ export interface ICalEvent {
   /** End date/time from DTEND property (ISO 8601 format after parsing) */
   dtend: string;
 
-  /** Location string from LOCATION property */
+  /** Location string from LOCATION property (contains full address in real API) */
   location: string | null;
+
+  /** Hall/venue name extracted from X-APPLE-STRUCTURED-LOCATION X-TITLE parameter */
+  appleLocationTitle: string | null;
 
   /** Geographic coordinates from GEO property */
   geo: {

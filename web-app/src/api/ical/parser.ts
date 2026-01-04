@@ -390,6 +390,28 @@ function extractProperty(
 }
 
 /**
+ * Extracts X-TITLE from X-APPLE-STRUCTURED-LOCATION property.
+ * Format: X-APPLE-STRUCTURED-LOCATION;...;X-TITLE=Hall Name:lat;lon
+ */
+function extractAppleLocationTitle(eventBlock: string): string | null {
+  const lines = eventBlock.split(/\r?\n/);
+
+  for (const line of lines) {
+    const upperLine = line.toUpperCase();
+    if (upperLine.startsWith('X-APPLE-STRUCTURED-LOCATION')) {
+      // Extract X-TITLE parameter value
+      // Format: X-TITLE=Hall Name (may contain escaped characters)
+      const titleMatch = line.match(/X-TITLE=([^:;]+)/i);
+      if (titleMatch?.[1]) {
+        return unescapeText(titleMatch[1].trim());
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
  * Parses raw iCal (.ics) content into an array of ICalEvent objects.
  *
  * This function handles:
@@ -437,6 +459,7 @@ export function parseICalFeed(icsContent: string): ICalEvent[] {
     const description = extractProperty(eventContent, 'DESCRIPTION') ?? '';
     const location = extractProperty(eventContent, 'LOCATION');
     const geoStr = extractProperty(eventContent, 'GEO');
+    const appleLocationTitle = extractAppleLocationTitle(eventContent);
 
     // Parse GEO coordinates
     let geo: ICalEvent['geo'] = null;
@@ -460,6 +483,7 @@ export function parseICalFeed(icsContent: string): ICalEvent[] {
       dtstart: parseICalDate(dtstart),
       dtend: dtend ? parseICalDate(dtend) : parseICalDate(dtstart),
       location,
+      appleLocationTitle,
       geo,
     });
   }
@@ -540,36 +564,40 @@ function parseSummary(summary: string): {
 }
 
 /**
- * Parses the LOCATION field to extract hall name and address.
- * Expected format: "Hall Name, Address Parts"
+ * Parses the LOCATION field as a full address.
+ *
+ * In the real volleymanager API:
+ * - LOCATION contains the full street address (e.g., "Landskronstrasse 41, 4147 Aesch, Suisse")
+ * - Hall name comes from X-APPLE-STRUCTURED-LOCATION X-TITLE parameter (handled separately)
+ *
+ * This function optionally strips the country suffix (", Suisse") for cleaner display.
  */
-function parseLocation(location: string | null): {
+function parseLocation(
+  location: string | null,
+  appleLocationTitle: string | null
+): {
   hallName: string | null;
   address: string | null;
   parsed: { venue: boolean; address: boolean };
 } {
   const result = {
-    hallName: null as string | null,
+    hallName: appleLocationTitle,
     address: null as string | null,
-    parsed: { venue: false, address: false },
+    parsed: { venue: appleLocationTitle !== null && appleLocationTitle.length > 0, address: false },
   };
 
   if (!location) return result;
 
-  // First part before comma is typically the hall name
-  const commaIndex = location.indexOf(',');
-  if (commaIndex !== -1) {
-    result.hallName = location.slice(0, commaIndex).trim();
-    result.address = location.slice(commaIndex + 1).trim();
-    result.parsed.venue = result.hallName.length > 0;
-    result.parsed.address = result.address.length > 0;
-  } else {
-    // If no comma, the whole thing could be either hall name or address
-    result.hallName = location.trim();
-    result.address = location.trim();
-    result.parsed.venue = location.trim().length > 0;
-    result.parsed.address = location.trim().length > 0;
+  // Use the full location as the address
+  // Optionally strip ", Suisse" suffix for cleaner display (common in Swiss volleyball)
+  let address = location.trim();
+  const suisseSuffix = /, Suisse$/i;
+  if (suisseSuffix.test(address)) {
+    address = address.replace(suisseSuffix, '');
   }
+
+  result.address = address;
+  result.parsed.address = address.length > 0;
 
   return result;
 }
@@ -673,8 +701,15 @@ export function extractAssignment(event: ICalEvent): ParseResult {
     warnings.push('Could not extract league from summary');
   }
 
-  // Parse LOCATION for hall name and address
-  const locationData = parseLocation(event.location);
+  // Extract hall ID and name from description
+  const hallInfo = parseHallInfo(event.description);
+
+  // Parse LOCATION for address, using appleLocationTitle for hall name
+  // Priority for hall name: description-based > appleLocationTitle > null
+  const locationData = parseLocation(
+    event.location,
+    hallInfo.hallName ?? event.appleLocationTitle
+  );
   parsedFields.venue = locationData.parsed.venue;
   parsedFields.address = locationData.parsed.address;
 
@@ -692,9 +727,6 @@ export function extractAssignment(event: ICalEvent): ParseResult {
 
   // Extract game number from description
   const gameNumber = parseGameNumber(event.description);
-
-  // Extract hall ID and name from description (more reliable than LOCATION)
-  const hallInfo = parseHallInfo(event.description);
 
   // Extract or build maps URL
   let mapsUrl: string | null = null;
@@ -718,8 +750,7 @@ export function extractAssignment(event: ICalEvent): ParseResult {
     leagueCategory,
     address: locationData.address,
     coordinates: event.geo,
-    // Prefer description-based hall name if available
-    hallName: hallInfo.hallName ?? locationData.hallName,
+    hallName: locationData.hallName,
     hallId: hallInfo.hallId,
     gender,
     mapsUrl,
