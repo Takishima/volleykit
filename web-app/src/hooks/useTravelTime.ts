@@ -49,7 +49,11 @@ export function useTravelTime(
   options: UseTravelTimeOptions = {},
 ) {
   const { date, targetArrivalTime } = options;
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const { isDemoMode, dataSource } = useAuthStore((state) => ({
+    isDemoMode: state.isDemoMode,
+    dataSource: state.dataSource,
+  }));
+  const isCalendarMode = dataSource === "calendar";
   const homeLocation = useSettingsStore((state) => state.homeLocation);
   const transportEnabled = useSettingsStore((state) => state.transportEnabled);
   const transportEnabledByAssociation = useSettingsStore(
@@ -75,12 +79,13 @@ export function useTravelTime(
   const dayType: DayType = getDayType(date);
 
   // Determine if we should fetch travel time
+  // Demo mode uses mock transport, calendar/API mode uses real OJP when configured
   const shouldFetch = Boolean(
     isTransportEnabled &&
       homeLocation &&
       hallCoords &&
       hallId &&
-      (isDemoMode || isOjpConfigured()),
+      (isDemoMode || isCalendarMode || isOjpConfigured()),
   );
 
   const queryKey = queryKeys.travelTime.hall(
@@ -180,9 +185,16 @@ export function formatTravelTime(minutes: number): string {
 
 /**
  * Check if travel time feature is available.
- * Returns true if either demo mode is active or OJP API is configured.
+ * Returns true if demo mode, calendar mode is active, or OJP API is configured.
+ *
+ * Calendar mode is included because it provides coordinates from iCal GEO data,
+ * enabling transport calculations when OJP is configured.
  */
 export function useTravelTimeAvailable(): boolean {
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
-  return isDemoMode || isOjpConfigured();
+  const { isDemoMode, dataSource } = useAuthStore((state) => ({
+    isDemoMode: state.isDemoMode,
+    dataSource: state.dataSource,
+  }));
+  const isCalendarMode = dataSource === "calendar";
+  return isDemoMode || isCalendarMode || isOjpConfigured();
 }
