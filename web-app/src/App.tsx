@@ -102,11 +102,11 @@ const queryClient = new QueryClient({
 });
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { status, checkSession, isDemoMode } = useAuthStore(
+  const { status, checkSession, dataSource } = useAuthStore(
     useShallow((state) => ({
       status: state.status,
       checkSession: state.checkSession,
-      isDemoMode: state.isDemoMode,
+      dataSource: state.dataSource,
     })),
   );
   const { assignments, activeAssociationCode, initializeDemoData } =
@@ -118,7 +118,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       })),
     );
   const { t } = useTranslation();
-  const shouldVerifySession = status === "authenticated" && !isDemoMode;
+  const isDemoMode = dataSource === "demo";
+  // Only verify session for API mode - demo and calendar modes don't need server verification
+  const shouldVerifySession = status === "authenticated" && dataSource === "api";
   const [isVerifying, setIsVerifying] = useState(() => shouldVerifySession);
   const [verifyError, setVerifyError] = useState<string | null>(null);
 
@@ -134,7 +136,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   // Verify persisted session is still valid on mount
   useEffect(() => {
-    if (!isVerifying || isDemoMode) return;
+    if (!isVerifying || dataSource !== "api") return;
 
     const controller = new AbortController();
 
@@ -160,7 +162,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return () => {
       controller.abort();
     };
-  }, [isVerifying, checkSession, isDemoMode]);
+  }, [isVerifying, checkSession, dataSource]);
 
   // Show loading state while verifying session
   if (status === "loading" || isVerifying) {
@@ -210,12 +212,13 @@ const BASE_PATH = getBasename();
 function QueryErrorHandler({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const logout = useAuthStore((state) => state.logout);
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const dataSource = useAuthStore((state) => state.dataSource);
   const isRedirectingRef = useRef(false);
 
   useEffect(() => {
     const handleQueryError = (error: unknown) => {
-      if (isDemoMode || isRedirectingRef.current) return;
+      // Only handle auth errors for API mode - demo and calendar modes don't use server auth
+      if (dataSource !== "api" || isRedirectingRef.current) return;
 
       if (isAuthError(error)) {
         isRedirectingRef.current = true;
@@ -248,7 +251,7 @@ function QueryErrorHandler({ children }: { children: React.ReactNode }) {
       unsubscribeQueries();
       unsubscribeMutations();
     };
-  }, [navigate, logout, isDemoMode]);
+  }, [navigate, logout, dataSource]);
 
   return <>{children}</>;
 }

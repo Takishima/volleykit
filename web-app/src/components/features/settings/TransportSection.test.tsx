@@ -108,6 +108,7 @@ function createMockAuthStore(
     isDemoMode: false,
     isAssociationSwitching: false,
     _checkSessionPromise: null,
+    _lastAuthTimestamp: null,
     eligibleAttributeValues: null,
     groupedEligibleAttributeValues: null,
     eligibleRoles: null,

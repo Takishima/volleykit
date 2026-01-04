@@ -349,7 +349,7 @@ describe("ProtectedRoute", () => {
     vi.mocked(useAuthStore).mockReturnValue({
       status: "authenticated",
       checkSession: mockCheckSession,
-      isDemoMode: true,
+      dataSource: "demo",
       logout: mockLogout,
     } as ReturnType<typeof useAuthStore>);
 
@@ -366,11 +366,32 @@ describe("ProtectedRoute", () => {
     });
   });
 
-  it("calls checkSession when not in demo mode", async () => {
+  it("does not call checkSession in calendar mode", async () => {
     vi.mocked(useAuthStore).mockReturnValue({
       status: "authenticated",
       checkSession: mockCheckSession,
-      isDemoMode: false,
+      dataSource: "calendar",
+      logout: mockLogout,
+    } as ReturnType<typeof useAuthStore>);
+
+    vi.mocked(useDemoStore).mockReturnValue({
+      assignments: [],
+      initializeDemoData: mockInitializeDemoData,
+    } as unknown as ReturnType<typeof useDemoStore>);
+
+    render(<App />);
+
+    // Wait for any potential async operations to complete
+    await waitFor(() => {
+      expect(mockCheckSession).not.toHaveBeenCalled();
+    });
+  });
+
+  it("calls checkSession in API mode", async () => {
+    vi.mocked(useAuthStore).mockReturnValue({
+      status: "authenticated",
+      checkSession: mockCheckSession,
+      dataSource: "api",
       logout: mockLogout,
     } as ReturnType<typeof useAuthStore>);
 
