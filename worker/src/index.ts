@@ -261,21 +261,6 @@ function isAllowedOrigin(
 }
 
 /**
- * Validate pathname to prevent path traversal attacks.
- * Returns true if the path is safe, false if it contains suspicious patterns.
- *
- * Note: Backslashes (\) are ALLOWED because the TYPO3 Neos/Flow backend uses
- * them as namespace separators in controller paths. For example:
- * - /indoorvolleyball.refadmin/api\refereeconvocation/search
- * - /indoorvolleyball.refadmin/api\refereeassociationsettings/get
- *
- * The backslash is not a path traversal risk here because:
- * 1. It's used as a literal character in the URL path, not as a directory separator
- * 2. The backend interprets it as a PHP namespace separator
- * 3. Path traversal requires ".." sequences, which are still blocked
- * 4. This worker runs on Cloudflare's Linux infrastructure, not Windows
- */
-/**
  * Validate iCal referee code format.
  * Codes must be exactly 6 alphanumeric characters.
  *
@@ -298,6 +283,21 @@ function extractICalCode(pathname: string): string | null {
   return match ? match[1] : null;
 }
 
+/**
+ * Validate pathname to prevent path traversal attacks.
+ * Returns true if the path is safe, false if it contains suspicious patterns.
+ *
+ * Note: Backslashes (\) are ALLOWED because the TYPO3 Neos/Flow backend uses
+ * them as namespace separators in controller paths. For example:
+ * - /indoorvolleyball.refadmin/api\refereeconvocation/search
+ * - /indoorvolleyball.refadmin/api\refereeassociationsettings/get
+ *
+ * The backslash is not a path traversal risk here because:
+ * 1. It's used as a literal character in the URL path, not as a directory separator
+ * 2. The backend interprets it as a PHP namespace separator
+ * 3. Path traversal requires ".." sequences, which are still blocked
+ * 4. This worker runs on Cloudflare's Linux infrastructure, not Windows
+ */
 function isPathSafe(pathname: string): boolean {
   // Decode the pathname to catch encoded traversal attempts
   let decoded: string;
@@ -532,6 +532,7 @@ export default {
           status: 200,
           headers: {
             "Content-Type": "text/calendar; charset=utf-8",
+            "Cache-Control": "public, max-age=300", // 5 minutes
             ...corsHeaders(origin!),
             ...securityHeaders(),
           },
