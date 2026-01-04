@@ -23,6 +23,45 @@ For code reviews and detailed examples, see:
 - **[Code Patterns](docs/CODE_PATTERNS.md)** - Detailed code examples and anti-patterns
 - **[Testing Strategy](docs/TESTING_STRATEGY.md)** - When to use unit, integration, and E2E tests
 
+## AI Development Workflow
+
+### Implement, Commit, Validate Before Push
+
+**CRITICAL**: Implement features fully, commit meaningfully along the way, then run all validation phases before pushing.
+
+**Workflow**:
+1. **Implement features/fixes** - Complete the work as required
+2. **Commit along the way** - Make meaningful commits as you progress (logical units of work)
+3. **Run full validation before push** - Before pushing, run all validation phases
+4. **Fix any issues** - If validation fails, fix issues and amend/add commits as needed
+5. **Push** - Only after all validations pass
+
+**Before pushing source code changes, run all phases in order**:
+
+```bash
+cd web-app
+npm run generate:api  # If API types are affected
+npm run lint          # Lint check (0 warnings allowed)
+npm run knip          # Dead code detection
+npm test              # Run all tests
+npm run build         # Production build (includes tsc)
+```
+
+**When full validation is required** (run all commands above before push):
+- Adding, modifying, or deleting `.ts`, `.tsx`, `.js`, `.jsx` files
+- Modifying imports, exports, or dependencies
+- Changing type definitions or interfaces
+- Updating configuration files (`vite.config.ts`, `tsconfig.json`, etc.)
+- Refactoring code structure
+
+**When validation can be skipped**:
+- Comment-only changes that don't affect code logic
+- Fixing typos in comments or strings
+- Changes to `.md` documentation files only
+- Translation-only changes (`.json` locale files) - run `npm run lint` only
+
+**Order matters**: Run commands in sequence—later steps depend on earlier ones passing. If lint fails, fix issues before running tests. If tests fail, fix before building. Do not push until all phases pass.
+
 ## Tech Stack
 
 - **Framework**: React 19 with TypeScript 5.9
@@ -341,9 +380,9 @@ npm run generate:api  # Generates src/api/schema.ts from OpenAPI spec
 
 ## Commands Reference
 
-### CI Validation (Run Before Creating PRs)
+### CI Validation (Run Before Push and PRs)
 
-**CRITICAL**: Always run full CI validation before creating a pull request.
+**CRITICAL**: Run validation before pushing source code changes (see [AI Development Workflow](#ai-development-workflow) for when to skip). Always run full validation before creating a pull request.
 
 ```bash
 cd web-app
@@ -352,7 +391,7 @@ npm run lint          # Lint check (0 warnings allowed)
 npm run knip          # Dead code detection
 npm test              # Run all tests
 npm run build         # Production build (includes tsc)
-npm run size          # Check bundle size
+npm run size          # Check bundle size (before PRs)
 ```
 
 ### Development
@@ -436,7 +475,7 @@ ESLint plugin `jsx-a11y` enforces many accessibility rules.
 1. Unit tests cover business logic and interactions
 1. E2E tests added for critical user flows (if applicable)
 1. Translations added for all 4 languages (de, en, fr, it)
-1. **Full CI validation passes locally** (see "CI Validation" section above)
+1. **All validation phases pass before push** (lint, knip, test, build - see [AI Development Workflow](#ai-development-workflow))
 1. Bundle size limits not exceeded
 1. Works across modern browsers (Chrome, Firefox, Safari)
 1. Accessible (keyboard navigation, screen reader compatible)
