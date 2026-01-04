@@ -170,10 +170,11 @@ function createRefereeConvocation(displayName: string | undefined) {
  * - Gender (from ♀/♂ symbols)
  * - League category (from "Ligue: #6652 | 3L | ♂" pattern)
  * - Referee names (from "ARB 1: Name | email | phone" pattern)
+ * - Hall name (from X-APPLE-STRUCTURED-LOCATION or description)
+ * - City (extracted from address for single-ball hall detection)
  *
  * Not available in calendar mode:
  * - Compensation data
- * - Single-ball hall detection (requires hall ID lookup)
  */
 export function mapCalendarAssignmentToAssignment(
   calendarAssignment: CalendarAssignment,
