@@ -6,6 +6,7 @@ on:
       - 'web-app/**'
       - 'worker/**'
       - 'ocr-poc/**'
+      - 'help-site/**'
       - '.github/workflows/deploy-web.yml'
   workflow_dispatch:
 permissions:
@@ -83,6 +84,14 @@ jobs:
       - name: Add .nojekyll for GitHub Pages
         run: touch dist/.nojekyll
 
+      # Build Help Site subdirectory app
+      - name: Install Help Site dependencies
+        run: npm ci
+        working-directory: help-site
+      - name: Build Help Site
+        run: npm run build
+        working-directory: help-site
+
       # Build OCR PoC subdirectory app
       - name: Install OCR PoC dependencies
         run: npm ci
@@ -112,6 +121,9 @@ jobs:
           mkdir -p ${{ github.workspace }}/deploy
           # Copy new main site build
           cp -r dist/* ${{ github.workspace }}/deploy/
+          # Copy Help Site build to subdirectory
+          mkdir -p ${{ github.workspace }}/deploy/help
+          cp -r ${{ github.workspace }}/help-site/dist/* ${{ github.workspace }}/deploy/help/
           # Copy OCR PoC build to subdirectory
           mkdir -p ${{ github.workspace }}/deploy/ocr-poc
           cp -r ${{ github.workspace }}/ocr-poc/dist/* ${{ github.workspace }}/deploy/ocr-poc/

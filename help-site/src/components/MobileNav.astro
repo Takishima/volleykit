@@ -1,5 +1,6 @@
 ---
 import { navItems } from '../data/navItems';
+import LanguageSwitcher from './LanguageSwitcher.astro';
 
 const currentPath = Astro.url.pathname;
 
@@ -100,8 +101,9 @@ const icons: Record<string, string> = {
       </ul>
     </nav>
 
-    <!-- Footer with app link -->
-    <div class="border-t border-border-default p-4 dark:border-border-default-dark">
+    <!-- Footer with language switcher and app link -->
+    <div class="space-y-3 border-t border-border-default p-4 dark:border-border-default-dark">
+      <LanguageSwitcher compact />
       <a
         href="https://takishima.github.io/volleykit/"
         target="_blank"
