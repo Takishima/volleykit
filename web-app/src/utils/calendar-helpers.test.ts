@@ -138,22 +138,20 @@ describe("extractCalendarCode", () => {
 });
 
 describe("validateCalendarCode", () => {
-  const originalFetch = global.fetch;
+  const mockFetch = vi.fn();
 
   beforeEach(() => {
+    vi.stubGlobal("fetch", mockFetch);
     vi.stubEnv("VITE_API_PROXY_URL", "https://api.example.com");
   });
 
   afterEach(() => {
-    global.fetch = originalFetch;
+    mockFetch.mockReset();
     vi.unstubAllEnvs();
   });
 
   describe("format validation", () => {
     it("returns invalid for codes with wrong format before API call", async () => {
-      const mockFetch = vi.fn();
-      global.fetch = mockFetch;
-
       const result = await validateCalendarCode("INVALID");
 
       expect(result).toEqual({
@@ -166,7 +164,7 @@ describe("validateCalendarCode", () => {
 
   describe("API validation", () => {
     it("returns valid when API responds with 200", async () => {
-      global.fetch = vi.fn().mockResolvedValue({
+      mockFetch.mockResolvedValue({
         ok: true,
         status: 200,
       });
@@ -174,14 +172,14 @@ describe("validateCalendarCode", () => {
       const result = await validateCalendarCode("ABC123");
 
       expect(result).toEqual({ valid: true });
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(mockFetch).toHaveBeenCalledWith(
         "https://api.example.com/sportmanager.volleyball/calendar/ical/ABC123",
         { method: "HEAD", signal: undefined },
       );
     });
 
     it("returns calendarNotFound when API responds with 404", async () => {
-      global.fetch = vi.fn().mockResolvedValue({
+      mockFetch.mockResolvedValue({
         ok: false,
         status: 404,
       });
@@ -195,7 +193,7 @@ describe("validateCalendarCode", () => {
     });
 
     it("returns calendarValidationFailed for other error status codes", async () => {
-      global.fetch = vi.fn().mockResolvedValue({
+      mockFetch.mockResolvedValue({
         ok: false,
         status: 500,
       });
@@ -209,7 +207,7 @@ describe("validateCalendarCode", () => {
     });
 
     it("returns calendarValidationFailed on network error", async () => {
-      global.fetch = vi.fn().mockRejectedValue(new Error("Network error"));
+      mockFetch.mockRejectedValue(new Error("Network error"));
 
       const result = await validateCalendarCode("ABC123");
 
@@ -223,14 +221,14 @@ describe("validateCalendarCode", () => {
   describe("abort signal handling", () => {
     it("passes signal to fetch", async () => {
       const controller = new AbortController();
-      global.fetch = vi.fn().mockResolvedValue({
+      mockFetch.mockResolvedValue({
         ok: true,
         status: 200,
       });
 
       await validateCalendarCode("ABC123", controller.signal);
 
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(mockFetch).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({ signal: controller.signal }),
       );
@@ -241,7 +239,7 @@ describe("validateCalendarCode", () => {
       const abortError = Object.assign(new Error("Aborted"), {
         name: "AbortError",
       });
-      global.fetch = vi.fn().mockRejectedValue(abortError);
+      mockFetch.mockRejectedValue(abortError);
 
       await expect(validateCalendarCode("ABC123")).rejects.toThrow("Aborted");
     });
