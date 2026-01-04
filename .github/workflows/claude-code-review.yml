@@ -2,19 +2,19 @@ name: Claude Code Review
 on:
   pull_request:
     types: [opened, synchronize]
-    # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to review'
+        required: true
+        type: number
+      retry_attempt:
+        description: 'Retry attempt number (used by auto-retry)'
+        required: false
+        default: '1'
+        type: string
 jobs:
   claude-review:
-    # Optional: Filter by PR author
-    # if: |
-    #   github.event.pull_request.user.login == 'external-contributor' ||
-    #   github.event.pull_request.user.login == 'new-developer' ||
-    #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -25,7 +25,48 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
-          fetch-depth: 1
+          fetch-depth: 0 # Need full history to check changed files
+
+      - name: Check if CLAUDE.md was modified
+        id: check-claude-md
+        run: |
+          # For workflow_dispatch, we need to fetch the PR info
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            PR_NUMBER="${{ inputs.pr_number }}"
+            # Fetch the PR branch
+            gh pr checkout "$PR_NUMBER" --detach 2>/dev/null || true
+            BASE_REF=$(gh pr view "$PR_NUMBER" --json baseRefName -q '.baseRefName')
+          else
+            BASE_REF="${{ github.base_ref }}"
+          fi
+
+          # Get the list of changed files in this PR
+          CHANGED_FILES=$(git diff --name-only "origin/$BASE_REF"...HEAD 2>/dev/null || echo "")
+
+          # Check for guidelines files
+          if echo "$CHANGED_FILES" | grep -qE "^(CLAUDE\.md|docs/SECURITY_CHECKLIST\.md|docs/CODE_PATTERNS\.md)$"; then
+            echo "Guidelines files modified - retries disabled"
+            echo "guidelines_changed=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Check for workflow files (GitHub security restriction prevents retrying)
+          if echo "$CHANGED_FILES" | grep -qE "^\.github/workflows/.*\.ya?ml$"; then
+            echo "Workflow files modified - retries disabled (GitHub security restriction)"
+            echo "guidelines_changed=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "No special files modified - retries enabled"
+          echo "guidelines_changed=false" >> $GITHUB_OUTPUT
+
+          # Output retry info
+          RETRY_ATTEMPT="${{ inputs.retry_attempt || '1' }}"
+          echo "retry_attempt=$RETRY_ATTEMPT" >> $GITHUB_OUTPUT
+          echo "Current retry attempt: $RETRY_ATTEMPT"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
       - name: Run Claude Code Review
         id: claude-review
         uses: anthropics/claude-code-action@v1
@@ -33,7 +74,7 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
             REPO: ${{ github.repository }}
-            PR NUMBER: ${{ github.event.pull_request.number }}
+            PR NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
             EVENT TYPE: ${{ github.event.action }}
 
             CRITICAL: You MUST read these files FIRST and strictly enforce all guidelines during this review:
@@ -44,7 +85,7 @@ jobs:
             ## CONSISTENCY REQUIREMENTS
 
             BEFORE reviewing, check for previous review comments on this PR:
-            1. Run `gh pr view ${{ github.event.pull_request.number }} --comments` to see all previous comments
+            1. Run `gh pr view ${{ github.event.pull_request.number || inputs.pr_number }} --comments` to see all previous comments
             2. Identify any previous Claude Code Review comments (they follow the format below)
             3. Track which issues were previously raised
 
@@ -102,3 +143,7 @@ jobs:
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
           claude_args: '--model opus --allowed-tools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"'
+
+    outputs:
+      guidelines_changed: ${{ steps.check-claude-md.outputs.guidelines_changed }}
+      retry_attempt: ${{ steps.check-claude-md.outputs.retry_attempt }}
