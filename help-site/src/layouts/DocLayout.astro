@@ -6,6 +6,7 @@ import MobileNav from '../components/MobileNav.astro';
 import Footer from '../components/Footer.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
 import NextPrev from '../components/NextPrev.astro';
+import { getPageNavigation, getBreadcrumbs } from '../utils/navigation';
 
 interface BreadcrumbItem {
   label: string;
@@ -13,7 +14,7 @@ interface BreadcrumbItem {
 }
 
 interface NavLink {
-  label: string;
+  title: string;
   href: string;
 }
 
@@ -23,9 +24,26 @@ interface Props {
   breadcrumbs?: BreadcrumbItem[];
   prev?: NavLink;
   next?: NavLink;
+  /** Set to false to disable auto-generated prev/next navigation */
+  showNavigation?: boolean;
 }
 
-const { title, description, breadcrumbs = [], prev, next } = Astro.props;
+const {
+  title,
+  description,
+  breadcrumbs: customBreadcrumbs,
+  prev: customPrev,
+  next: customNext,
+  showNavigation = true,
+} = Astro.props;
+
+// Auto-generate breadcrumbs if not provided
+const breadcrumbs = customBreadcrumbs ?? getBreadcrumbs(Astro.url.pathname, title);
+
+// Auto-generate prev/next if not provided and navigation is enabled
+const autoNav = showNavigation ? getPageNavigation(Astro.url.pathname) : {};
+const prev = customPrev ?? autoNav.prev;
+const next = customNext ?? autoNav.next;
 ---
 
 <BaseLayout title={title} description={description}>
@@ -45,7 +63,7 @@ const { title, description, breadcrumbs = [], prev, next } = Astro.props;
             <slot />
           </article>
 
-          {(prev || next) && <NextPrev prev={prev} next={next} />}
+          {showNavigation && (prev || next) && <NextPrev prev={prev} next={next} />}
         </div>
       </main>
     </div>

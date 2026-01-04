@@ -1,8 +1,11 @@
 ---
-// NextPrev navigation component - placeholder
+/**
+ * Previous/Next navigation component
+ * Renders navigation cards at the bottom of content
+ */
 
 interface NavLink {
-  label: string;
+  title: string;
   href: string;
 }
 
@@ -12,34 +15,77 @@ interface Props {
 }
 
 const { prev, next } = Astro.props;
+
+// Don't render if no prev or next
+if (!prev && !next) {
+  return null;
+}
 ---
 
-<nav class="mt-12 flex items-center justify-between border-t border-border-default pt-6 dark:border-border-default-dark">
-  <div>
+<nav
+  class="mt-12 grid gap-4 border-t border-border-default pt-8 dark:border-border-default-dark sm:grid-cols-2"
+  aria-label="Page navigation"
+>
+  <!-- Previous link -->
+  <div class={next && !prev ? 'sm:col-start-2' : ''}>
     {
       prev && (
         <a
           href={prev.href}
-          class="group flex items-center gap-2 text-text-secondary hover:text-primary-600 dark:text-text-secondary-dark dark:hover:text-primary-400"
+          class="group flex h-full flex-col rounded-lg border border-border-default bg-surface-card p-4 transition-all hover:border-primary-500 hover:shadow-md dark:border-border-default-dark dark:bg-surface-card-dark dark:hover:border-primary-400"
         >
-          <span class="text-text-muted group-hover:text-primary-600 dark:text-text-muted-dark dark:group-hover:text-primary-400">
-            &larr;
+          <span class="mb-1 flex items-center gap-1 text-sm text-text-muted dark:text-text-muted-dark">
+            <svg
+              class="h-4 w-4 transition-transform group-hover:-translate-x-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+            Previous
           </span>
-          <span>{prev.label}</span>
+          <span class="font-medium text-text-primary group-hover:text-primary-600 dark:text-text-primary-dark dark:group-hover:text-primary-400">
+            {prev.title}
+          </span>
         </a>
       )
     }
   </div>
+
+  <!-- Next link -->
   <div>
     {
       next && (
         <a
           href={next.href}
-          class="group flex items-center gap-2 text-text-secondary hover:text-primary-600 dark:text-text-secondary-dark dark:hover:text-primary-400"
+          class="group flex h-full flex-col items-end rounded-lg border border-border-default bg-surface-card p-4 text-right transition-all hover:border-primary-500 hover:shadow-md dark:border-border-default-dark dark:bg-surface-card-dark dark:hover:border-primary-400"
         >
-          <span>{next.label}</span>
-          <span class="text-text-muted group-hover:text-primary-600 dark:text-text-muted-dark dark:group-hover:text-primary-400">
-            &rarr;
+          <span class="mb-1 flex items-center gap-1 text-sm text-text-muted dark:text-text-muted-dark">
+            Next
+            <svg
+              class="h-4 w-4 transition-transform group-hover:translate-x-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </span>
+          <span class="font-medium text-text-primary group-hover:text-primary-600 dark:text-text-primary-dark dark:group-hover:text-primary-400">
+            {next.title}
           </span>
         </a>
       )

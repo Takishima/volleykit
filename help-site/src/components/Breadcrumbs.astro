@@ -1,5 +1,9 @@
 ---
-// Breadcrumbs component - placeholder
+/**
+ * Breadcrumbs navigation component
+ * Renders: Home > Parent > Current Page
+ * Last item is not a link (current page)
+ */
 
 interface BreadcrumbItem {
   label: string;
@@ -11,28 +15,83 @@ interface Props {
 }
 
 const { items } = Astro.props;
+
+// Always prepend Home if not already there
+const breadcrumbItems: BreadcrumbItem[] =
+  items[0]?.label === 'Home'
+    ? items
+    : [{ label: 'Home', href: '/volleykit/help/' }, ...items];
 ---
 
-<nav aria-label="Breadcrumb" class="mb-4">
-  <ol class="flex items-center gap-2 text-sm text-text-muted dark:text-text-muted-dark">
+<nav aria-label="Breadcrumb" class="mb-6">
+  <ol class="flex flex-wrap items-center gap-1 text-sm">
     {
-      items.map((item, index) => (
-        <>
-          {index > 0 && <span class="text-text-subtle dark:text-text-subtle-dark">/</span>}
-          <li>
-            {item.href ? (
+      breadcrumbItems.map((item, index) => {
+        const isLast = index === breadcrumbItems.length - 1;
+        const isFirst = index === 0;
+
+        return (
+          <li class="flex items-center gap-1">
+            {/* Chevron separator (not before first item) */}
+            {!isFirst && (
+              <svg
+                class="h-4 w-4 shrink-0 text-text-subtle dark:text-text-subtle-dark"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            )}
+
+            {/* Breadcrumb item */}
+            {isLast ? (
+              <span
+                class="font-medium text-text-primary dark:text-text-primary-dark"
+                aria-current="page"
+              >
+                {/* Truncate long labels on mobile */}
+                <span class="line-clamp-1">{item.label}</span>
+              </span>
+            ) : (
               <a
                 href={item.href}
-                class="hover:text-primary-600 dark:hover:text-primary-400"
+                class="text-text-muted transition-colors hover:text-primary-600 dark:text-text-muted-dark dark:hover:text-primary-400"
               >
-                {item.label}
+                {/* Home icon for first item on mobile */}
+                {isFirst ? (
+                  <>
+                    <span class="sr-only">Home</span>
+                    <svg
+                      class="h-4 w-4 sm:hidden"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                      />
+                    </svg>
+                    <span class="hidden sm:inline">{item.label}</span>
+                  </>
+                ) : (
+                  <span class="line-clamp-1">{item.label}</span>
+                )}
               </a>
-            ) : (
-              <span class="text-text-primary dark:text-text-primary-dark">{item.label}</span>
             )}
           </li>
-        </>
-      ))
+        );
+      })
     }
   </ol>
 </nav>
