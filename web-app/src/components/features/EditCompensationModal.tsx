@@ -68,7 +68,7 @@ function EditCompensationModalComponent({
 }: EditCompensationModalProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const dataSource = useAuthStore((state) => state.dataSource);
   const getAssignmentCompensation = useDemoStore(
     (state) => state.getAssignmentCompensation,
   );
@@ -93,7 +93,7 @@ function EditCompensationModalComponent({
     if (!isOpen) return;
 
     // For assignment edits in demo mode, load from stored assignment compensations
-    if (isAssignmentEdit && isDemoMode && assignment) {
+    if (isAssignmentEdit && dataSource === "demo" && assignment) {
       const storedData = getAssignmentCompensation(assignment.__identity);
       if (storedData) {
         if (storedData.distanceInMetres !== undefined && storedData.distanceInMetres > 0) {
@@ -110,8 +110,8 @@ function EditCompensationModalComponent({
       return;
     }
 
-    // For assignment edits in production mode, find compensation by game number
-    if (isAssignmentEdit && !isDemoMode && assignment) {
+    // For assignment edits in production/calendar mode, find compensation by game number
+    if (isAssignmentEdit && dataSource !== "demo" && assignment) {
       const gameNumber = assignment.refereeGame?.game?.number;
       if (!gameNumber) {
         logger.debug(
@@ -125,7 +125,7 @@ function EditCompensationModalComponent({
       const fetchDetailsForAssignment = async () => {
         setIsLoading(true);
         setFetchError(null);
-        const apiClient = getApiClient(isDemoMode);
+        const apiClient = getApiClient(dataSource);
 
         try {
           // Try to find compensation in cache first
@@ -211,7 +211,7 @@ function EditCompensationModalComponent({
     const fetchDetails = async () => {
       setIsLoading(true);
       setFetchError(null);
-      const apiClient = getApiClient(isDemoMode);
+      const apiClient = getApiClient(dataSource);
 
       try {
         const details = await apiClient.getCompensationDetails(compensationId);
@@ -261,7 +261,7 @@ function EditCompensationModalComponent({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, compensationId, isDemoMode, isAssignmentEdit, assignment, getAssignmentCompensation, queryClient, t]);
+  }, [isOpen, compensationId, dataSource, isAssignmentEdit, assignment, getAssignmentCompensation, queryClient, t]);
 
   // Reset form when modal closes
   useEffect(() => {
