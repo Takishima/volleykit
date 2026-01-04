@@ -127,6 +127,9 @@ export interface Translations {
     openAddressInMaps: string;
     invalidKilometers: string;
     failedToLoadData: string;
+    singleBallHall: string;
+    singleBallHallConditional: string;
+    singleBallHallTooltip: string;
   };
   compensations: {
     title: string;

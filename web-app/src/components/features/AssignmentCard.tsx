@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { ExpandableCard } from "@/components/ui/ExpandableCard";
 import { Badge } from "@/components/ui/Badge";
-import { MapPin, MaleIcon, FemaleIcon, TrainFront, Loader2, Navigation } from "@/components/ui/icons";
+import { MapPin, MaleIcon, FemaleIcon, TrainFront, Loader2, Navigation, CircleAlert } from "@/components/ui/icons";
 import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDateFormat } from "@/hooks/useDateFormat";
@@ -11,6 +11,7 @@ import { extractCoordinates } from "@/utils/geo-location";
 import { useSettingsStore } from "@/stores/settings";
 import { useActiveAssociationCode } from "@/hooks/useActiveAssociation";
 import { useSbbUrl } from "@/hooks/useSbbUrl";
+import { detectSingleBallHall, getSingleBallHallsPdfPath } from "@/utils/single-ball-halls";
 
 /** Helper to extract referee display name from deep nested structure */
 function getRefereeDisplayName(
@@ -122,6 +123,10 @@ function AssignmentCardComponent({
   // Show SBB button if transport is enabled and we have the required data
   const showSbbButton = isTransportEnabled && city && gameStartingDateTime;
 
+  // Detect if this is a single-ball hall (NLA/NLB only)
+  const singleBallMatch = detectSingleBallHall(assignment);
+  const singleBallPdfPath = getSingleBallHallsPdfPath(locale);
+
   const statusConfig: Record<
     string,
     { label: string; variant: "success" | "danger" | "neutral" }
@@ -179,11 +184,20 @@ function AssignmentCardComponent({
             </div>
           </div>
 
-          {/* City, game number & expand indicator */}
+          {/* City, single-ball indicator, game number & expand indicator */}
           <div className="flex items-center gap-2">
             <div className="flex flex-col items-end w-24">
-              <span className="text-xs text-text-muted dark:text-text-muted-dark truncate w-full text-right">
+              <span className="text-xs text-text-muted dark:text-text-muted-dark truncate w-full text-right flex items-center justify-end gap-1">
                 {city || ""}
+                {singleBallMatch && (
+                  <span
+                    className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-[10px] font-bold flex-shrink-0"
+                    title={t("assignments.singleBallHallTooltip")}
+                    aria-label={t("assignments.singleBallHallTooltip")}
+                  >
+                    1
+                  </span>
+                )}
               </span>
               {/* Note: League category hidden in calendar mode (league data unavailable) */}
               {game?.group?.phase?.league?.leagueCategory?.name && (
@@ -257,6 +271,24 @@ function AssignmentCardComponent({
               )}
             </div>
           </div>
+
+          {/* Single-ball hall notice */}
+          {singleBallMatch && (
+            <a
+              href={singleBallPdfPath}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 px-2 py-1.5 rounded-md hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <CircleAlert className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+              <span>
+                {singleBallMatch.isConditional
+                  ? t("assignments.singleBallHallConditional")
+                  : t("assignments.singleBallHall")}
+              </span>
+            </a>
+          )}
 
           {/* Status */}
           <div className="flex items-center gap-2 text-sm pt-1">

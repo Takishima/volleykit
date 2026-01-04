@@ -239,6 +239,10 @@ const fr: Translations = {
     openAddressInMaps: "Ouvrir {address} dans les cartes",
     invalidKilometers: "Veuillez entrer un nombre positif valide",
     failedToLoadData: "Échec du chargement des données",
+    singleBallHall: "Rencontre avec 1 ballon (sans ramasseurs)",
+    singleBallHallConditional:
+      "Rencontre avec 1 ballon possible (seulement si exceptionnellement une seule salle partielle disponible)",
+    singleBallHallTooltip: "Salle 1 ballon",
   },
   compensations: {
     title: "Indemnités",

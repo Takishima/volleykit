@@ -240,6 +240,10 @@ const en: Translations = {
     openAddressInMaps: "Open {address} in maps",
     invalidKilometers: "Please enter a valid positive number",
     failedToLoadData: "Failed to load data",
+    singleBallHall: "Single ball game (no ball kids)",
+    singleBallHallConditional:
+      "Single ball game possible (only when exceptionally one sub-hall available)",
+    singleBallHallTooltip: "Single ball hall",
   },
   compensations: {
     title: "Compensations",

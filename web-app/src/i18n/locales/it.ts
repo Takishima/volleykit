@@ -239,6 +239,10 @@ const it: Translations = {
     openAddressInMaps: "Apri {address} nelle mappe",
     invalidKilometers: "Inserisci un numero positivo valido",
     failedToLoadData: "Impossibile caricare i dati",
+    singleBallHall: "Partita con 1 pallone (senza raccattapalle)",
+    singleBallHallConditional:
+      "Partita con 1 pallone possibile (solo se eccezionalmente disponibile una sola sala parziale)",
+    singleBallHallTooltip: "Sala 1 pallone",
   },
   compensations: {
     title: "Compensi",
