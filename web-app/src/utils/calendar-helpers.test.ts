@@ -106,6 +106,40 @@ describe("extractCalendarCode", () => {
     });
   });
 
+  describe("URL extraction - indoor/iCal/referee/", () => {
+    it("extracts code from indoor iCal referee path", () => {
+      expect(
+        extractCalendarCode(
+          "https://volleymanager.volleyball.ch/indoor/iCal/referee/ABC123",
+        ),
+      ).toBe("ABC123");
+    });
+
+    it("extracts code from indoor iCal referee path with trailing slash", () => {
+      expect(
+        extractCalendarCode(
+          "https://volleymanager.volleyball.ch/indoor/iCal/referee/ABC123/",
+        ),
+      ).toBe("ABC123");
+    });
+
+    it("extracts code from webcal indoor iCal referee path", () => {
+      expect(
+        extractCalendarCode(
+          "webcal://volleymanager.volleyball.ch/indoor/iCal/referee/ABC123",
+        ),
+      ).toBe("ABC123");
+    });
+
+    it("extracts code regardless of case in path", () => {
+      expect(
+        extractCalendarCode(
+          "https://volleymanager.volleyball.ch/indoor/iCal/referee/BLYMVF",
+        ),
+      ).toBe("BLYMVF");
+    });
+  });
+
   describe("invalid URLs", () => {
     it("returns null for URLs from other domains", () => {
       expect(
@@ -173,7 +207,7 @@ describe("validateCalendarCode", () => {
 
       expect(result).toEqual({ valid: true });
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.example.com/sportmanager.volleyball/calendar/ical/ABC123",
+        "https://api.example.com/iCal/referee/ABC123",
         { method: "HEAD", signal: undefined },
       );
     });
