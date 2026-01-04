@@ -240,6 +240,10 @@ const de: Translations = {
     openAddressInMaps: "{address} in Karten öffnen",
     invalidKilometers: "Bitte geben Sie eine gültige positive Zahl ein",
     failedToLoadData: "Daten konnten nicht geladen werden",
+    singleBallHall: "Spiel mit 1 Ball (ohne Ballholer)",
+    singleBallHallConditional:
+      "Spiel mit 1 Ball möglich (nur wenn ausnahmsweise nur eine Teilhalle zur Verfügung steht)",
+    singleBallHallTooltip: "1-Ball-Halle",
   },
   compensations: {
     title: "Entschädigungen",
