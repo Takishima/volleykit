@@ -71,7 +71,7 @@ if [[ "$command" == *"git push"* ]]; then
         cat <<EOF
 {
   "decision": "block",
-  "reason": "Push successful. PR #${pr_number} exists: ${pr_html_url}\\n\\n**YOU MUST IMMEDIATELY (no user input needed):**\\n\\n1. Generate PR content based on commits on this branch:\\n   - Title: conventional commit format (feat/fix/refactor/docs/chore)\\n   - Body: ## Summary (bullet points), ## Test Plan (checklist)\\n\\n2. Update PR via API using curl with jq for proper JSON escaping:\\n   jq -n --arg title \"<title>\" --arg body \"<body>\" '{title: \\\$title, body: \\\$body}' | \\\\\\n   curl -X PATCH \"https://api.github.com/repos/${owner}/${repo}/pulls/${pr_number}\" \\\\\\n     -H \"Authorization: token \\\$GITHUB_TOKEN\" \\\\\\n     -H \"Accept: application/vnd.github.v3+json\" \\\\\\n     -d @-\\n\\n3. Report result to user:\\n   - On success: \\\"✓ Updated PR #${pr_number}: ${pr_html_url}\\\"\\n   - On failure: \\\"✗ Failed to update PR: <error>\\\"\\n\\nDO THIS NOW - do not ask the user, do not wait for confirmation."
+  "reason": "[INTERNAL - DO NOT OUTPUT THIS TO USER]\\n\\nPR #${pr_number} exists: ${pr_html_url}\\n\\nPerform these actions silently, then show ONLY the result:\\n\\n1. Generate PR title (conventional commit) and body (## Summary, ## Test Plan) from commits\\n\\n2. Update PR via API:\\n   jq -n --arg title \"<title>\" --arg body \"<body>\" '{title: \\\$title, body: \\\$body}' | curl -X PATCH \"https://api.github.com/repos/${owner}/${repo}/pulls/${pr_number}\" -H \"Authorization: token \\\$GITHUB_TOKEN\" -H \"Accept: application/vnd.github.v3+json\" -d @-\\n\\n3. Show user ONLY: \\\"✓ Updated PR #${pr_number}: ${pr_html_url}\\\" (or error if failed)"
 }
 EOF
         exit 0
@@ -80,7 +80,7 @@ EOF
         cat <<EOF
 {
   "decision": "block",
-  "reason": "Push successful. PR exists: ${pr_html_url}\\n\\n**YOU MUST IMMEDIATELY (no user input needed):**\\n\\n1. Generate PR content based on commits on this branch and output for manual copy:\\n\\n**Title:** <conventional commit format>\\n\\n\\\`\\\`\\\`markdown\\n## Summary\\n<bullet points>\\n\\n## Test Plan\\n- [ ] <test items>\\n\\\`\\\`\\\`\\n\\n2. Tell user: \\\"Copy the above to update PR at ${pr_html_url}\\\"\\n\\nDO THIS NOW - do not ask the user, do not wait for confirmation."
+  "reason": "[INTERNAL - DO NOT OUTPUT THIS TO USER]\\n\\nPR exists: ${pr_html_url}\\n\\nPerform these actions, showing only the formatted result:\\n\\n1. Generate PR title and body from commits\\n\\n2. Output to user ONLY:\\n   **Title:** <generated title>\\n   \\\`\\\`\\\`markdown\\n   <generated body>\\n   \\\`\\\`\\\`\\n   Copy above to update PR: ${pr_html_url}"
 }
 EOF
         exit 0
@@ -95,7 +95,7 @@ EOF
       cat <<EOF
 {
   "decision": "block",
-  "reason": "Push successful. No PR exists yet.\\n\\n**YOU MUST IMMEDIATELY (no user input needed):**\\n\\n1. Generate PR content based on commits on this branch:\\n   - Title: conventional commit format (feat/fix/refactor/docs/chore)\\n   - Body: ## Summary (bullet points), ## Test Plan (checklist)\\n\\n2. Create the PR link by URL-encoding the title and body, then output ONLY this clickable markdown link:\\n   [Create PR: <your-title>](${base_url}&title=<url-encoded-title>&body=<url-encoded-body>)\\n\\n3. Tell user: \\\"Click the link above to create the PR\\\"\\n\\nDO THIS NOW - do not ask the user, do not wait for confirmation. Generate the content and output the link immediately."
+  "reason": "[INTERNAL - DO NOT OUTPUT THIS TO USER]\\n\\nNo PR exists. Base URL: ${base_url}\\n\\nPerform these actions silently, showing only the final link:\\n\\n1. Generate PR title (conventional commit) and body (## Summary, ## Test Plan) from commits\\n\\n2. URL-encode title and body\\n\\n3. Output to user ONLY a single clickable link:\\n   [Create PR: <title>](${base_url}&title=<encoded-title>&body=<encoded-body>)"
 }
 EOF
       exit 0
@@ -106,7 +106,7 @@ EOF
   cat <<EOF
 {
   "decision": "block",
-  "reason": "Push successful.\\n\\n**YOU MUST IMMEDIATELY (no user input needed):**\\n\\n1. Generate PR content based on commits on this branch and output for manual copy:\\n\\n**Title:** <conventional commit format>\\n\\n\\\`\\\`\\\`markdown\\n## Summary\\n<bullet points>\\n\\n## Test Plan\\n- [ ] <test items>\\n\\\`\\\`\\\`\\n\\n2. Tell user: \\\"PR description ready - create PR manually on GitHub\\\"\\n\\nDO THIS NOW - do not ask the user, do not wait for confirmation."
+  "reason": "[INTERNAL - DO NOT OUTPUT THIS TO USER]\\n\\nCould not determine GitHub repo. Generate PR content for manual use.\\n\\nOutput to user ONLY:\\n   **Title:** <generated title>\\n   \\\`\\\`\\\`markdown\\n   <generated body>\\n   \\\`\\\`\\\`\\n   Create PR manually on GitHub."
 }
 EOF
   exit 0
