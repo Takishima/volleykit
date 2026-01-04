@@ -217,27 +217,47 @@ describe("detectSingleBallHall", () => {
 });
 
 describe("getSingleBallHallsPdfPath", () => {
-  it("returns German PDF path for German locale", () => {
-    expect(getSingleBallHallsPdfPath("de")).toBe(
-      "/documents/single-ball-halls-de.pdf"
-    );
+  // Note: In Vitest, import.meta.env.BASE_URL defaults to "/"
+  // The function prepends BASE_URL to ensure correct paths on GitHub Pages
+
+  it("prepends BASE_URL to German PDF path", () => {
+    const path = getSingleBallHallsPdfPath("de");
+    // With default BASE_URL="/", result is "/documents/..."
+    expect(path).toBe("/documents/single-ball-halls-de.pdf");
+    // Verify it starts with BASE_URL (which is "/" in tests)
+    expect(path.startsWith(import.meta.env.BASE_URL)).toBe(true);
   });
 
-  it("returns French PDF path for French locale", () => {
-    expect(getSingleBallHallsPdfPath("fr")).toBe(
-      "/documents/single-ball-halls-fr.pdf"
-    );
+  it("prepends BASE_URL to French PDF path", () => {
+    const path = getSingleBallHallsPdfPath("fr");
+    expect(path).toBe("/documents/single-ball-halls-fr.pdf");
+    expect(path.startsWith(import.meta.env.BASE_URL)).toBe(true);
   });
 
-  it("returns German PDF path for English locale (fallback)", () => {
-    expect(getSingleBallHallsPdfPath("en")).toBe(
-      "/documents/single-ball-halls-de.pdf"
-    );
+  it("uses German PDF for English locale (fallback)", () => {
+    const path = getSingleBallHallsPdfPath("en");
+    expect(path).toBe("/documents/single-ball-halls-de.pdf");
+    expect(path).toContain("single-ball-halls-de.pdf");
   });
 
-  it("returns German PDF path for Italian locale (fallback)", () => {
-    expect(getSingleBallHallsPdfPath("it")).toBe(
-      "/documents/single-ball-halls-de.pdf"
-    );
+  it("uses German PDF for Italian locale (fallback)", () => {
+    const path = getSingleBallHallsPdfPath("it");
+    expect(path).toBe("/documents/single-ball-halls-de.pdf");
+    expect(path).toContain("single-ball-halls-de.pdf");
+  });
+
+  it("constructs path correctly with BASE_URL", () => {
+    // This test documents the expected behavior:
+    // With BASE_URL="/volleykit/", the path should be "/volleykit/documents/..."
+    // In tests, BASE_URL is "/", so we verify the construction logic
+    const baseUrl = import.meta.env.BASE_URL;
+    const path = getSingleBallHallsPdfPath("fr");
+
+    // Path should start with BASE_URL
+    expect(path.startsWith(baseUrl)).toBe(true);
+    // Path should not have double slashes (except in protocol)
+    expect(path).not.toMatch(/(?<!:)\/\//);
+    // Path should end with the correct PDF filename
+    expect(path.endsWith("single-ball-halls-fr.pdf")).toBe(true);
   });
 });
