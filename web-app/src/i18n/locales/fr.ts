@@ -133,6 +133,7 @@ const fr: Translations = {
     position: "Position",
     requiredLevel: "Niveau requis",
     demoModeBanner: "Mode Démo - Données d'exemple",
+    calendarModeBanner: "Mode Calendrier - Vue en lecture seule",
     optional: "Optionnel",
     tbd: "À déterminer",
     locationTbd: "Lieu à déterminer",
@@ -249,6 +250,9 @@ const fr: Translations = {
       "Enregistrement d'indemnité introuvable. Le match est peut-être trop éloigné dans le futur.",
     compensationMissingId:
       "L'enregistrement d'indemnité n'a pas d'identifiant. Veuillez réessayer plus tard.",
+    unavailableInCalendarModeTitle: "Non disponible en mode calendrier",
+    unavailableInCalendarModeDescription:
+      "Les données d'indemnités ne sont pas disponibles en mode calendrier. Utilisez la connexion complète pour accéder aux détails des indemnités.",
   },
   exchange: {
     title: "Bourse aux échanges",
@@ -291,6 +295,9 @@ const fr: Translations = {
     submittedBy: "Par :",
     levelRequired: "Niveau {level}+",
     errorLoading: "Échec du chargement des échanges",
+    unavailableInCalendarModeTitle: "Non disponible en mode calendrier",
+    unavailableInCalendarModeDescription:
+      "Les fonctionnalités d'échange ne sont pas disponibles en mode calendrier. Utilisez la connexion complète pour parcourir et postuler aux échanges.",
     settings: {
       title: "Paramètres des filtres",
       maxDistance: "Distance maximale",

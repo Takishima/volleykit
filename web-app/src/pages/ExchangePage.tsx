@@ -51,10 +51,11 @@ export function ExchangePage() {
   // Use showDummyData to show dummy data immediately, avoiding race condition with empty states
   const { showDummyData } = useTour("exchange");
 
-  const { isDemoMode, isAssociationSwitching } = useAuthStore(
+  const { isDemoMode, isAssociationSwitching, isCalendarMode } = useAuthStore(
     useShallow((state) => ({
       isDemoMode: state.isDemoMode,
       isAssociationSwitching: state.isAssociationSwitching,
+      isCalendarMode: state.isCalendarMode(),
     })),
   );
   const { userRefereeLevel, userRefereeLevelGradationValue } = useDemoStore(
@@ -401,6 +402,19 @@ export function ExchangePage() {
       </div>
     );
   };
+
+  // In calendar mode, show empty state since exchange features are not available
+  if (isCalendarMode) {
+    return (
+      <div className="space-y-3">
+        <EmptyState
+          icon="exchange"
+          title={t("exchange.unavailableInCalendarModeTitle")}
+          description={t("exchange.unavailableInCalendarModeDescription")}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">

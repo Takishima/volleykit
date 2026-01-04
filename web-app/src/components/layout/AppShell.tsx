@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, lazy, Suspense } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo, lazy, Suspense } from "react";
 import { Outlet, NavLink, useLocation } from "react-router-dom";
 import { useShallow } from "zustand/react/shallow";
 import { useQueryClient } from "@tanstack/react-query";
@@ -39,12 +39,15 @@ interface NavItem {
   testId: string;
 }
 
-const navItems: NavItem[] = [
+const allNavItems: NavItem[] = [
   { path: "/", labelKey: "nav.assignments", icon: ClipboardList, testId: "nav-assignments" },
   { path: "/compensations", labelKey: "nav.compensations", icon: Wallet, testId: "nav-compensations" },
   { path: "/exchange", labelKey: "nav.exchange", icon: ArrowLeftRight, testId: "nav-exchange" },
   { path: "/settings", labelKey: "nav.settings", icon: Settings, testId: "nav-settings" },
 ];
+
+// Paths that are hidden in calendar mode (read-only view)
+const CALENDAR_MODE_HIDDEN_PATHS = ["/compensations", "/exchange"];
 
 export function AppShell() {
   const location = useLocation();
@@ -59,6 +62,7 @@ export function AppShell() {
     dataSource,
     isAssociationSwitching,
     setAssociationSwitching,
+    isCalendarMode,
   } = useAuthStore(
     useShallow((state) => ({
       status: state.status,
@@ -69,6 +73,7 @@ export function AppShell() {
       dataSource: state.dataSource,
       isAssociationSwitching: state.isAssociationSwitching,
       setAssociationSwitching: state.setAssociationSwitching,
+      isCalendarMode: state.isCalendarMode(),
     })),
   );
   const activeTour = useTourStore((state) => state.activeTour);
@@ -94,6 +99,16 @@ export function AppShell() {
   );
   const dropdownRef = useRef<HTMLDivElement>(null);
   const isAuthenticated = status === "authenticated";
+
+  // Filter nav items based on calendar mode
+  const navItems = useMemo(() => {
+    if (isCalendarMode) {
+      return allNavItems.filter(
+        (item) => !CALENDAR_MODE_HIDDEN_PATHS.includes(item.path),
+      );
+    }
+    return allNavItems;
+  }, [isCalendarMode]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -275,6 +290,21 @@ export function AppShell() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
             <p className="text-sm text-amber-800 dark:text-amber-200 text-center font-medium">
               {t("common.demoModeBanner")}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Calendar mode banner */}
+      {isCalendarMode && (
+        <div
+          className="bg-sky-100 dark:bg-sky-900/50 border-b border-sky-200 dark:border-sky-800"
+          role="alert"
+          aria-live="polite"
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+            <p className="text-sm text-sky-800 dark:text-sky-200 text-center font-medium">
+              {t("common.calendarModeBanner")}
             </p>
           </div>
         </div>
