@@ -65,6 +65,7 @@ describe("calendar-client", () => {
       hallId: null,
       mapsUrl: null,
       referees: {},
+      association: null,
     });
 
     beforeEach(() => {
@@ -145,6 +146,7 @@ describe("calendar-client", () => {
         coordinates: { latitude: 47.3769, longitude: 8.5417 },
         mapsUrl: null,
         referees: { referee1: "Max Mustermann", referee2: "Anna Schmidt" },
+        association: "SVRZ",
       };
 
       vi.mocked(calendarApiModule.fetchCalendarAssignments).mockResolvedValue([
@@ -199,6 +201,7 @@ describe("calendar-client", () => {
         hallId: null,
         mapsUrl: null,
         referees: {},
+        association: null,
       };
 
       vi.mocked(calendarApiModule.fetchCalendarAssignments).mockResolvedValue([
@@ -230,6 +233,7 @@ describe("calendar-client", () => {
         hallId: null,
         mapsUrl: null,
         referees: {},
+        association: null,
       };
 
       vi.mocked(calendarApiModule.fetchCalendarAssignments).mockResolvedValue([
@@ -261,6 +265,7 @@ describe("calendar-client", () => {
         hallId: null,
         mapsUrl: null,
         referees: {},
+        association: null,
       };
 
       vi.mocked(calendarApiModule.fetchCalendarAssignments).mockResolvedValue([
@@ -292,6 +297,7 @@ describe("calendar-client", () => {
         hallId: null,
         mapsUrl: null,
         referees: {},
+        association: null,
       };
 
       vi.mocked(calendarApiModule.fetchCalendarAssignments).mockResolvedValue([
@@ -321,6 +327,7 @@ describe("calendar-client", () => {
         coordinates: null,
         mapsUrl: null,
         referees: {},
+        association: null,
       };
 
       vi.mocked(calendarApiModule.fetchCalendarAssignments).mockResolvedValue([
@@ -371,6 +378,7 @@ describe("calendar-client", () => {
           hallId: null,
           mapsUrl: null,
           referees: {},
+          association: null,
         },
       ]);
 
@@ -418,6 +426,7 @@ describe("calendar-client", () => {
           hallId: null,
           mapsUrl: null,
           referees: {},
+          association: null,
         },
       ]);
 

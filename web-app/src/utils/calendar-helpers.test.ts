@@ -358,6 +358,7 @@ describe("mapCalendarAssignmentToAssignment", () => {
         referee1: "Max Mustermann",
         referee2: "Anna Schmidt",
       },
+      association: null,
       ...overrides,
     };
   }

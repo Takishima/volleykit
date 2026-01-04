@@ -1439,6 +1439,91 @@ END:VCALENDAR`;
     });
   });
 
+  describe('parseAssociation', () => {
+    it('extracts association from French Equipe recevante pattern', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-392936
+SUMMARY:ARB 1 | Team A - Team B (League)
+DESCRIPTION:Equipe recevante: #10008 | TV St. Johann (3L, ♀, SVRBA)
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.association).toBe('SVRBA');
+    });
+
+    it('extracts association from French Equipe visiteuse pattern', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-394291
+SUMMARY:ARB 1 | Team A - Team B (League)
+DESCRIPTION:Equipe visiteuse: #10641 | VBC Therwil (U20, ♀, SVRZ)
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.association).toBe('SVRZ');
+    });
+
+    it('extracts association with different codes', () => {
+      const testCases = [
+        { code: 'SVRI', description: 'Equipe recevante: #123 | Team (NLA, ♂, SVRI)' },
+        { code: 'SVRNO', description: 'Equipe visiteuse: #456 | Team (NLB, ♀, SVRNO)' },
+        { code: 'SV', description: 'Equipe recevante: #789 | Team (Cup, ♂, SV)' },
+      ];
+
+      for (const { code, description } of testCases) {
+        const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-100001
+SUMMARY:ARB 1 | Team A - Team B (League)
+DESCRIPTION:${description}
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+        const results = parseCalendarFeed(ical);
+        expect(results[0]!.assignment.association).toBe(code);
+      }
+    });
+
+    it('falls back to known association codes in description', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-100002
+SUMMARY:ARB 1 | Team A - Team B (League)
+DESCRIPTION:Some text mentioning SVRBA in the content
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.association).toBe('SVRBA');
+    });
+
+    it('returns null when no association found', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-100003
+SUMMARY:ARB 1 | Team A - Team B (League)
+DESCRIPTION:No association info here
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.association).toBeNull();
+    });
+  });
+
   describe('combined realistic scenario', () => {
     it('parses all extended fields from a complete iCal entry', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1446,7 +1531,7 @@ VERSION:2.0
 BEGIN:VEVENT
 UID:referee-convocation-for-game-382360
 SUMMARY:ARB 1 | OTA VOLLEY H1 - VBC Rämi H3 (3L Herren)
-DESCRIPTION:Engagé en tant que: ARB 1\\nMatch: #382360 | 05.02.2026 20:30 | OTA VOLLEY H1 — VBC Rämi H3\\nLigue: #6652 | 3L | ♂\\nARB convoqués:\\n\\tARB 1: Damien Nguyen | ngn.damien@gmail.com | +41786795571\\n\\tARB 2: Peter Müller | peterc.mueller@icloud.com | +41791940964\\nSalle: #3661 | Turnhalle Sekundarschule Feld (H)\\nAdresse: Bergstrasse 2, 8800 Thalwil\\nhttps://maps.google.com/?q=8FVC7HR7%2BC3&hl=fr
+DESCRIPTION:Engagé en tant que: ARB 1\\nMatch: #382360 | 05.02.2026 20:30 | OTA VOLLEY H1 — VBC Rämi H3\\nLigue: #6652 | 3L | ♂\\nARB convoqués:\\n\\tARB 1: Damien Nguyen | ngn.damien@gmail.com | +41786795571\\n\\tARB 2: Peter Müller | peterc.mueller@icloud.com | +41791940964\\nSalle: #3661 | Turnhalle Sekundarschule Feld (H)\\nAdresse: Bergstrasse 2, 8800 Thalwil\\nEquipe recevante: #12345 | OTA VOLLEY (3L, ♂, SVRZ)\\nhttps://maps.google.com/?q=8FVC7HR7%2BC3&hl=fr
 DTSTART:20260205T203000
 DTEND:20260205T230000
 LOCATION:Bergstrasse 2\\, 8800 Thalwil\\, Suisse
@@ -1469,6 +1554,7 @@ END:VCALENDAR`;
       expect(assignment.referees.referee1).toBe('Damien Nguyen');
       expect(assignment.referees.referee2).toBe('Peter Müller');
       expect(assignment.gender).toBe('men');
+      expect(assignment.association).toBe('SVRZ');
     });
   });
 });

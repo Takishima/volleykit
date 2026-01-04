@@ -194,6 +194,11 @@ const fr: Translations = {
     ok: "OK",
     loggedOutToast: "Déconnecté en raison d'une erreur de calendrier",
   },
+  calendar: {
+    allAssociations: "Toutes les associations",
+    filterByAssociation: "Filtrer par association",
+    selectAssociation: "Sélectionner une association",
+  },
   occupations: {
     referee: "Arbitre",
     linesmen: "Juges de ligne",

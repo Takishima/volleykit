@@ -229,6 +229,44 @@ function parseGameNumber(description: string): number | null {
 }
 
 /**
+ * Extracts regional association code from team info in description.
+ * Format: "Equipe recevante: #10008 | TV St. Johann (3L, ♀, SVRBA)"
+ * or "Equipe visiteuse: #10641 | VBC Therwil (U20, ♀, SVRBA)"
+ *
+ * The association code is the last item in parentheses after team name.
+ * Known codes: SVRBA, SVRZ, SVRI, SVRNO, SV
+ */
+function parseAssociation(description: string): string | null {
+  // Match team info patterns in multiple languages
+  // Pattern: Team info with parentheses containing (Category, Gender, AssociationCode)
+  // Example: "Equipe recevante: #10008 | TV St. Johann (3L, ♀, SVRBA)"
+  const teamPatterns = [
+    /Equipe (?:recevante|visiteuse):[^(]+\([^,]+,\s*[♀♂],\s*([A-Z]{2,6})\)/i,
+    /(?:Heim|Gast)(?:mannschaft)?:[^(]+\([^,]+,\s*[♀♂],\s*([A-Z]{2,6})\)/i,
+    /(?:Home|Away) Team:[^(]+\([^,]+,\s*[♀♂],\s*([A-Z]{2,6})\)/i,
+    /Squadra (?:di casa|ospite):[^(]+\([^,]+,\s*[♀♂],\s*([A-Z]{2,6})\)/i,
+  ];
+
+  for (const pattern of teamPatterns) {
+    const match = pattern.exec(description);
+    if (match?.[1]) {
+      return match[1].toUpperCase();
+    }
+  }
+
+  // Fallback: look for known association codes in parentheses
+  // This catches formats we haven't explicitly matched
+  const knownAssociations = ['SVRBA', 'SVRZ', 'SVRI', 'SVRNO', 'SVRNW', 'SVRBE', 'SV'];
+  for (const assoc of knownAssociations) {
+    if (description.includes(assoc)) {
+      return assoc;
+    }
+  }
+
+  return null;
+}
+
+/**
  * Extracts hall ID and name from description.
  * Format: "Salle: #3661 | Turnhalle Sekundarschule Feld (H)"
  * or "Halle: #3661 | ..."
@@ -728,6 +766,9 @@ export function extractAssignment(event: ICalEvent): ParseResult {
   // Extract game number from description
   const gameNumber = parseGameNumber(event.description);
 
+  // Extract association from team info in description
+  const association = parseAssociation(event.description);
+
   // Extract or build maps URL
   let mapsUrl: string | null = null;
   const mapsMatch = MAPS_URL_PATTERN.exec(event.description);
@@ -755,6 +796,7 @@ export function extractAssignment(event: ICalEvent): ParseResult {
     gender,
     mapsUrl,
     referees,
+    association,
   };
 
   const confidence = calculateConfidence(parsedFields);

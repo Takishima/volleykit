@@ -28,6 +28,8 @@ import { useTour } from "@/hooks/useTour";
 import { TOUR_DUMMY_ASSIGNMENT } from "@/components/tour/definitions/assignments";
 import { useAuthStore } from "@/stores/auth";
 import { useShallow } from "zustand/react/shallow";
+import { useCalendarAssociationFilter } from "@/hooks/useCalendarAssociationFilter";
+import { CalendarAssociationDropdown } from "@/components/features/CalendarAssociationDropdown";
 
 const PdfLanguageModal = lazy(
   () =>
@@ -132,18 +134,29 @@ export function AssignmentsPage() {
     refetch: refetchCalendar,
   } = useCalendarAssignments();
 
-  // Compute calendar-specific data (filter by upcoming/past based on current date)
+  // Association filter for calendar mode (extracts unique associations from data)
+  const {
+    associations: calendarAssociations,
+    selectedAssociation,
+    setSelectedAssociation,
+    filterByAssociation,
+    hasMultipleAssociations,
+  } = useCalendarAssociationFilter(calendarData ?? []);
+
+  // Compute calendar-specific data (filter by upcoming/past and association)
   const calendarUpcoming = useMemo(() => {
     if (!isCalendarMode || !calendarData) return [];
     const now = new Date();
-    return calendarData.filter((a) => new Date(a.startTime) >= now);
-  }, [isCalendarMode, calendarData]);
+    const upcoming = calendarData.filter((a) => new Date(a.startTime) >= now);
+    return filterByAssociation(upcoming);
+  }, [isCalendarMode, calendarData, filterByAssociation]);
 
   const calendarPast = useMemo(() => {
     if (!isCalendarMode || !calendarData) return [];
     const now = new Date();
-    return calendarData.filter((a) => new Date(a.startTime) < now);
-  }, [isCalendarMode, calendarData]);
+    const past = calendarData.filter((a) => new Date(a.startTime) < now);
+    return filterByAssociation(past);
+  }, [isCalendarMode, calendarData, filterByAssociation]);
 
   // Select the appropriate data source based on mode and tab
   const rawData = useMemo(() => {
@@ -261,6 +274,17 @@ export function AssignmentsPage() {
 
   return (
     <div className="space-y-3">
+      {/* Calendar mode association filter */}
+      {isCalendarMode && hasMultipleAssociations && (
+        <div className="flex justify-end">
+          <CalendarAssociationDropdown
+            associations={calendarAssociations}
+            selected={selectedAssociation}
+            onChange={setSelectedAssociation}
+          />
+        </div>
+      )}
+
       {/* Tabs - WAI-ARIA tab pattern */}
       <div
         role="tablist"

@@ -194,6 +194,11 @@ const en: Translations = {
     ok: "OK",
     loggedOutToast: "Logged out due to calendar error",
   },
+  calendar: {
+    allAssociations: "All associations",
+    filterByAssociation: "Filter by association",
+    selectAssociation: "Select association",
+  },
   occupations: {
     referee: "Referee",
     linesmen: "Line Judges",
