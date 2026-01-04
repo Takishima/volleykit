@@ -185,6 +185,14 @@ const en: Translations = {
     calendarModeInfo: "Read-only access to your assignments",
     calendarModeHint: "Find your calendar URL in VolleyManager under Profile → Calendar Export",
   },
+  calendarError: {
+    title: "Calendar Error",
+    networkMessage: "Unable to load your calendar. Please check your internet connection and try again.",
+    invalidCodeMessage: "The calendar code is invalid or has expired. Please log in with a new code.",
+    parseErrorMessage: "Some calendar data could not be read. Displaying available assignments.",
+    ok: "OK",
+    loggedOutToast: "Logged out due to calendar error",
+  },
   occupations: {
     referee: "Referee",
     linesmen: "Line Judges",
@@ -205,6 +213,12 @@ const en: Translations = {
     noClosedTitle: "No closed assignments",
     noClosedDescription:
       "No assignments with closed validation in this season.",
+    calendarNoUpcomingTitle: "No upcoming assignments",
+    calendarNoUpcomingDescription:
+      "All your assignments are in the past. Check back when new games are scheduled.",
+    calendarEmptyTitle: "No assignments in calendar",
+    calendarEmptyDescription:
+      "Your calendar is empty. Assignments will appear here once you are scheduled for games.",
     confirmed: "Confirmed",
     pending: "Pending",
     cancelled: "Cancelled",

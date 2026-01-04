@@ -77,6 +77,14 @@ export interface Translations {
     calendarModeInfo: string;
     calendarModeHint: string;
   };
+  calendarError: {
+    title: string;
+    networkMessage: string;
+    invalidCodeMessage: string;
+    parseErrorMessage: string;
+    ok: string;
+    loggedOutToast: string;
+  };
   occupations: {
     referee: string;
     linesmen: string;
@@ -95,6 +103,10 @@ export interface Translations {
     noUpcomingDescription: string;
     noClosedTitle: string;
     noClosedDescription: string;
+    calendarNoUpcomingTitle: string;
+    calendarNoUpcomingDescription: string;
+    calendarEmptyTitle: string;
+    calendarEmptyDescription: string;
     confirmed: string;
     pending: string;
     cancelled: string;

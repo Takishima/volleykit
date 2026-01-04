@@ -185,6 +185,14 @@ const de: Translations = {
     calendarModeInfo: "Nur-Lese-Zugriff auf Ihre Spieleinsätze",
     calendarModeHint: "Finden Sie Ihre Kalender-URL im VolleyManager unter Profil → Kalender-Export",
   },
+  calendarError: {
+    title: "Kalenderfehler",
+    networkMessage: "Ihr Kalender konnte nicht geladen werden. Bitte überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.",
+    invalidCodeMessage: "Der Kalendercode ist ungültig oder abgelaufen. Bitte melden Sie sich mit einem neuen Code an.",
+    parseErrorMessage: "Einige Kalenderdaten konnten nicht gelesen werden. Verfügbare Einsätze werden angezeigt.",
+    ok: "OK",
+    loggedOutToast: "Aufgrund eines Kalenderfehlers abgemeldet",
+  },
   occupations: {
     referee: "Schiedsrichter",
     linesmen: "Linienrichter",
@@ -205,6 +213,12 @@ const de: Translations = {
     noClosedTitle: "Keine abgeschlossenen Einsätze",
     noClosedDescription:
       "Keine Einsätze mit abgeschlossener Validierung in dieser Saison.",
+    calendarNoUpcomingTitle: "Keine bevorstehenden Einsätze",
+    calendarNoUpcomingDescription:
+      "Alle Ihre Einsätze liegen in der Vergangenheit. Schauen Sie wieder vorbei, wenn neue Spiele geplant sind.",
+    calendarEmptyTitle: "Keine Einsätze im Kalender",
+    calendarEmptyDescription:
+      "Ihr Kalender ist leer. Einsätze werden hier angezeigt, sobald Sie für Spiele eingeteilt sind.",
     confirmed: "Bestätigt",
     pending: "Ausstehend",
     cancelled: "Abgesagt",

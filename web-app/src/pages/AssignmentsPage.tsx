@@ -2,9 +2,12 @@ import { useState, useCallback, useMemo, lazy, Suspense, Fragment } from "react"
 import {
   useUpcomingAssignments,
   useValidationClosedAssignments,
+  useCalendarAssignments,
 } from "@/hooks/useConvocations";
 import { AssignmentCard } from "@/components/features/AssignmentCard";
+import { CalendarAssignmentCard } from "@/components/features/CalendarAssignmentCard";
 import { SwipeableCard } from "@/components/ui/SwipeableCard";
+import type { CalendarAssignment } from "@/hooks/useConvocations";
 import { WeekSeparator } from "@/components/ui/WeekSeparator";
 import {
   LoadingState,
@@ -49,6 +52,41 @@ const ValidateGameModal = lazy(
 
 type TabType = "upcoming" | "validationClosed";
 
+type TranslationFn = ReturnType<typeof useTranslation>["t"];
+
+/**
+ * Get empty state content for assignments page.
+ * Extracted to reduce cognitive complexity of main component.
+ */
+function getEmptyStateContent(
+  isCalendarMode: boolean,
+  activeTab: TabType,
+  hasCalendarData: boolean,
+  t: TranslationFn,
+): { title: string; description: string } {
+  if (isCalendarMode && activeTab === "upcoming") {
+    return hasCalendarData
+      ? {
+          title: t("assignments.calendarNoUpcomingTitle"),
+          description: t("assignments.calendarNoUpcomingDescription"),
+        }
+      : {
+          title: t("assignments.calendarEmptyTitle"),
+          description: t("assignments.calendarEmptyDescription"),
+        };
+  }
+  if (activeTab === "upcoming") {
+    return {
+      title: t("assignments.noUpcomingTitle"),
+      description: t("assignments.noUpcomingDescription"),
+    };
+  }
+  return {
+    title: t("assignments.noClosedTitle"),
+    description: t("assignments.noClosedDescription"),
+  };
+}
+
 export function AssignmentsPage() {
   const [activeTab, setActiveTab] = useState<TabType>("upcoming");
   const { t } = useTranslation();
@@ -71,6 +109,7 @@ export function AssignmentsPage() {
     handleAddToExchange,
   } = useAssignmentActions();
 
+  // Fetch regular assignments (only enabled when not in calendar mode)
   const {
     data: upcomingData,
     isLoading: upcomingLoading,
@@ -85,15 +124,55 @@ export function AssignmentsPage() {
     refetch: refetchValidationClosed,
   } = useValidationClosedAssignments();
 
-  const rawData = activeTab === "upcoming" ? upcomingData : validationClosedData;
+  // Fetch calendar assignments (only enabled in calendar mode)
+  const {
+    data: calendarData,
+    isLoading: calendarLoading,
+    error: calendarError,
+    refetch: refetchCalendar,
+  } = useCalendarAssignments();
+
+  // Compute calendar-specific data (filter by upcoming/past based on current date)
+  const calendarUpcoming = useMemo(() => {
+    if (!isCalendarMode || !calendarData) return [];
+    const now = new Date();
+    return calendarData.filter((a) => new Date(a.startTime) >= now);
+  }, [isCalendarMode, calendarData]);
+
+  const calendarPast = useMemo(() => {
+    if (!isCalendarMode || !calendarData) return [];
+    const now = new Date();
+    return calendarData.filter((a) => new Date(a.startTime) < now);
+  }, [isCalendarMode, calendarData]);
+
+  // Select the appropriate data source based on mode and tab
+  const rawData = useMemo(() => {
+    if (isCalendarMode) {
+      // Calendar mode: return calendar data filtered by tab
+      // Note: Calendar assignments are displayed as limited info since they don't have full Assignment structure
+      return activeTab === "upcoming" ? calendarUpcoming : calendarPast;
+    }
+    return activeTab === "upcoming" ? upcomingData : validationClosedData;
+  }, [isCalendarMode, activeTab, calendarUpcoming, calendarPast, upcomingData, validationClosedData]);
+
   // Show loading when switching associations or when query is loading
-  const isLoading =
-    isAssociationSwitching ||
-    (activeTab === "upcoming" ? upcomingLoading : validationClosedLoading);
-  const error =
-    activeTab === "upcoming" ? upcomingError : validationClosedError;
-  const refetch =
-    activeTab === "upcoming" ? refetchUpcoming : refetchValidationClosed;
+  const isLoading = useMemo(() => {
+    if (isAssociationSwitching) return true;
+    if (isCalendarMode) return calendarLoading;
+    return activeTab === "upcoming" ? upcomingLoading : validationClosedLoading;
+  }, [isAssociationSwitching, isCalendarMode, calendarLoading, activeTab, upcomingLoading, validationClosedLoading]);
+
+  const error = useMemo(() => {
+    if (isCalendarMode) return calendarError;
+    return activeTab === "upcoming" ? upcomingError : validationClosedError;
+  }, [isCalendarMode, calendarError, activeTab, upcomingError, validationClosedError]);
+
+  const refetch = useCallback(() => {
+    if (isCalendarMode) {
+      return refetchCalendar();
+    }
+    return activeTab === "upcoming" ? refetchUpcoming() : refetchValidationClosed();
+  }, [isCalendarMode, activeTab, refetchCalendar, refetchUpcoming, refetchValidationClosed]);
 
   // When tour is active (or about to auto-start), show ONLY the dummy assignment
   // to ensure tour works regardless of whether tabs have real data
@@ -108,10 +187,16 @@ export function AssignmentsPage() {
   }, [showDummyData, rawData]);
 
   // Group assignments by week for visual separation
+  // Handle both regular Assignment and CalendarAssignment types
   const groupedData = useMemo(() => {
     if (!data || data.length === 0) return [];
-    return groupByWeek(data, (a) => a.refereeGame?.game?.startingDateTime);
-  }, [data]);
+    // For calendar mode, CalendarAssignment has startTime, regular Assignment has refereeGame?.game?.startingDateTime
+    const getDate = isCalendarMode
+      ? (a: { startTime?: string }) => a.startTime
+      : (a: { refereeGame?: { game?: { startingDateTime?: string } } }) =>
+          a.refereeGame?.game?.startingDateTime;
+    return groupByWeek(data, getDate as (item: unknown) => string | undefined);
+  }, [data, isCalendarMode]);
 
   const getSwipeConfig = useCallback(
     (assignment: Assignment) => {
@@ -188,9 +273,9 @@ export function AssignmentsPage() {
           `}
         >
           {t("assignments.upcoming")}
-          {upcomingData && upcomingData.length > 0 && (
+          {((isCalendarMode ? calendarUpcoming : upcomingData) ?? []).length > 0 && (
             <span className="ml-2 px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200 text-xs">
-              {upcomingData.length}
+              {(isCalendarMode ? calendarUpcoming : upcomingData)?.length}
             </span>
           )}
         </button>
@@ -209,10 +294,10 @@ export function AssignmentsPage() {
             }
           `}
         >
-          {t("assignments.validationClosed")}
-          {validationClosedData && validationClosedData.length > 0 && (
+          {isCalendarMode ? t("assignments.past") : t("assignments.validationClosed")}
+          {((isCalendarMode ? calendarPast : validationClosedData) ?? []).length > 0 && (
             <span className="ml-2 px-2 py-0.5 rounded-full bg-surface-subtle dark:bg-surface-card-dark text-text-secondary dark:text-text-muted-dark text-xs">
-              {validationClosedData.length}
+              {(isCalendarMode ? calendarPast : validationClosedData)?.length}
             </span>
           )}
         </button>
@@ -248,16 +333,12 @@ export function AssignmentsPage() {
         {(!isLoading || showDummyData) && !error && data && data.length === 0 && (
           <EmptyState
             icon={activeTab === "upcoming" ? "calendar" : "lock"}
-            title={
-              activeTab === "upcoming"
-                ? t("assignments.noUpcomingTitle")
-                : t("assignments.noClosedTitle")
-            }
-            description={
-              activeTab === "upcoming"
-                ? t("assignments.noUpcomingDescription")
-                : t("assignments.noClosedDescription")
-            }
+            {...getEmptyStateContent(
+              isCalendarMode,
+              activeTab,
+              (calendarData?.length ?? 0) > 0,
+              t,
+            )}
           />
         )}
 
@@ -275,24 +356,42 @@ export function AssignmentsPage() {
                   {groupedData.length > 1 && (
                     <WeekSeparator week={group.week} />
                   )}
-                  {group.items.map((assignment, itemIndex) => (
-                    <SwipeableCard
-                      key={assignment.__identity}
-                      swipeConfig={getSwipeConfig(assignment)}
-                    >
-                      {({ isDrawerOpen }) => (
-                        <AssignmentCard
-                          assignment={assignment}
-                          disableExpansion={isDrawerOpen}
-                          dataTour={
-                            itemsBeforeThisGroup + itemIndex === 0
-                              ? "assignment-card"
-                              : undefined
-                          }
-                        />
+                  {isCalendarMode
+                    ? // Calendar mode: render simplified cards (no swipe actions)
+                      (group.items as CalendarAssignment[]).map(
+                        (assignment, itemIndex) => (
+                          <CalendarAssignmentCard
+                            key={assignment.gameId}
+                            assignment={assignment}
+                            dataTour={
+                              itemsBeforeThisGroup + itemIndex === 0
+                                ? "assignment-card"
+                                : undefined
+                            }
+                          />
+                        ),
+                      )
+                    : // Regular mode: render full cards with swipe actions
+                      (group.items as Assignment[]).map(
+                        (assignment, itemIndex) => (
+                          <SwipeableCard
+                            key={assignment.__identity}
+                            swipeConfig={getSwipeConfig(assignment)}
+                          >
+                            {({ isDrawerOpen }) => (
+                              <AssignmentCard
+                                assignment={assignment}
+                                disableExpansion={isDrawerOpen}
+                                dataTour={
+                                  itemsBeforeThisGroup + itemIndex === 0
+                                    ? "assignment-card"
+                                    : undefined
+                                }
+                              />
+                            )}
+                          </SwipeableCard>
+                        ),
                       )}
-                    </SwipeableCard>
-                  ))}
                 </Fragment>
               );
             })}
