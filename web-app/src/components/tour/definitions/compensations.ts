@@ -42,19 +42,23 @@ export const TOUR_DUMMY_COMPENSATION: TourDummyCompensation = {
   __identity: "tour-dummy-compensation-record",
   amount: 85,
   status: "pending",
+  refereePosition: "head-one",
   refereeGame: {
     __identity: "tour-dummy-referee-game-comp",
     game: {
       __identity: "tour-dummy-game-comp",
-      gameNumber: "54321",
-      plannedStartDateTime: getPastDate(),
-      teamHome: {
-        __identity: "tour-dummy-team-home-comp",
-        name: "TV Demo",
-      },
-      teamAway: {
-        __identity: "tour-dummy-team-away-comp",
-        name: "BC Tutorial",
+      number: "54321",
+      startingDateTime: getPastDate(),
+      encounter: {
+        __identity: "tour-dummy-encounter-comp",
+        teamHome: {
+          __identity: "tour-dummy-team-home-comp",
+          name: "TV Demo",
+        },
+        teamAway: {
+          __identity: "tour-dummy-team-away-comp",
+          name: "BC Tutorial",
+        },
       },
     },
   },
@@ -62,7 +66,8 @@ export const TOUR_DUMMY_COMPENSATION: TourDummyCompensation = {
     __identity: "tour-dummy-conv-comp",
     distanceInMetres: 30000,
     distanceFormatted: "30 km",
-    gameFee: 55,
-    travelCompensation: 30,
+    gameCompensation: 55,
+    travelExpenses: 30,
+    paymentDone: false,
   },
 };
