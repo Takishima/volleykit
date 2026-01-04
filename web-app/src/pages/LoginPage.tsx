@@ -1,10 +1,4 @@
-import {
-  useState,
-  useRef,
-  useEffect,
-  useCallback,
-  type FormEvent,
-} from "react";
+import { useState, useRef, useEffect, useCallback, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useShallow } from "zustand/react/shallow";
 import { useAuthStore, NO_REFEREE_ROLE_ERROR_KEY } from "@/stores/auth";
@@ -52,6 +46,8 @@ export function LoginPage() {
   // Ref to prevent race condition with double submission
   // State updates are async, so we need a synchronous guard
   const isSubmittingRef = useRef(false);
+  // AbortController ref for cancelling calendar validation on unmount
+  const calendarValidationAbortRef = useRef<AbortController | null>(null);
 
   const isLoading = status === "loading" || isValidatingCalendar;
 
@@ -73,14 +69,20 @@ export function LoginPage() {
     }
   }, [initializeDemoData, setDemoAuthenticated, navigate]);
 
-  // Clear calendar error when input changes
+  // Cleanup: abort any pending calendar validation on unmount
   useEffect(() => {
+    return () => {
+      calendarValidationAbortRef.current?.abort();
+    };
+  }, []);
+
+  function handleCalendarInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setCalendarInput(e.target.value);
+    // Clear error when user starts typing
     if (calendarError) {
       setCalendarError(null);
     }
-    // Only clear on input change, not on error change
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [calendarInput]);
+  }
 
   async function handleSubmit(e: FormEvent) {
     // Prevent native form submission - critical for iOS autofill compatibility
@@ -138,13 +140,23 @@ export function LoginPage() {
       return;
     }
 
+    // Abort any previous validation request
+    calendarValidationAbortRef.current?.abort();
+    const abortController = new AbortController();
+    calendarValidationAbortRef.current = abortController;
+
     isSubmittingRef.current = true;
     setIsValidatingCalendar(true);
     setCalendarError(null);
 
     try {
       // Validate the calendar code by checking the API
-      const result = await validateCalendarCode(code);
+      const result = await validateCalendarCode(code, abortController.signal);
+
+      // Don't update state if the request was aborted (component unmounted)
+      if (abortController.signal.aborted) {
+        return;
+      }
 
       if (!result.valid) {
         setCalendarError(result.error ?? "auth.calendarValidationFailed");
@@ -154,9 +166,18 @@ export function LoginPage() {
       // Login with the validated calendar code
       await loginWithCalendar(code);
       navigate("/");
+    } catch (error) {
+      // Ignore AbortError - component was unmounted or new request started
+      if (error instanceof Error && error.name === "AbortError") {
+        return;
+      }
+      setCalendarError("auth.calendarValidationFailed");
     } finally {
       isSubmittingRef.current = false;
-      setIsValidatingCalendar(false);
+      // Only update state if this controller wasn't aborted
+      if (!abortController.signal.aborted) {
+        setIsValidatingCalendar(false);
+      }
     }
   }
 
@@ -391,8 +412,8 @@ export function LoginPage() {
                 className="space-y-6"
               >
                 {/* Info box */}
-                <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                <div className="p-3 rounded-lg bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800">
+                  <p className="text-sm text-primary-700 dark:text-primary-300">
                     {t("auth.calendarModeInfo")}
                   </p>
                 </div>
@@ -409,7 +430,7 @@ export function LoginPage() {
                     data-testid="calendar-input"
                     type="text"
                     value={calendarInput}
-                    onChange={(e) => setCalendarInput(e.target.value)}
+                    onChange={handleCalendarInputChange}
                     placeholder={t("auth.calendarInputPlaceholder")}
                     required
                     disabled={isLoading}
