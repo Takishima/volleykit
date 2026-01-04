@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, lazy, Suspense, Fragment } from "react";
-import { parseISO } from "date-fns";
+import { parseISO, compareAsc, compareDesc } from "date-fns";
 import { useCompensations } from "@/hooks/useConvocations";
 import { CompensationCard } from "@/components/features/CompensationCard";
 import { SwipeableCard } from "@/components/ui/SwipeableCard";
@@ -30,7 +30,7 @@ const EditCompensationModal = lazy(
     })),
 );
 
-type FilterType = "pendingPast" | "pendingFuture" | "closed" | "all";
+type FilterType = "pendingPast" | "pendingFuture" | "closed";
 
 // Convert tab filter to useCompensations parameter (paid status only)
 function filterToPaidFilter(filter: FilterType): boolean | undefined {
@@ -40,9 +40,20 @@ function filterToPaidFilter(filter: FilterType): boolean | undefined {
     case "pendingPast":
     case "pendingFuture":
       return false;
-    default:
-      return undefined;
   }
+}
+
+/**
+ * Determines sort direction based on filter type.
+ *
+ * This creates a consistent UX where "now" is always at the top of the list:
+ * - Past/closed tabs: descending (newest first, scroll down = further into past)
+ * - Future tab: ascending (soonest first, scroll down = further into future)
+ *
+ * This matches the pattern used in useAssignments for upcoming/past periods.
+ */
+function shouldSortDescending(filter: FilterType): boolean {
+  return filter !== "pendingFuture";
 }
 
 export function CompensationsPage() {
@@ -83,7 +94,7 @@ export function CompensationsPage() {
     if (!rawData) return rawData;
 
     // Apply filters - always filter to current season since the app is only useful for current season
-    return rawData.filter((record) => {
+    const filtered = rawData.filter((record) => {
       const dateString = record.refereeGame?.game?.startingDateTime;
       if (!dateString) return true; // Keep items without dates
 
@@ -104,6 +115,21 @@ export function CompensationsPage() {
 
       return true;
     });
+
+    // Sort based on tab type:
+    // - Past/closed tabs: descending (newest first, "now" at top)
+    // - Future tab: ascending (soonest first, "now" at top)
+    const descending = shouldSortDescending(filter);
+    const compareFn = descending ? compareDesc : compareAsc;
+
+    return [...filtered].sort((a, b) => {
+      const dateA = a.refereeGame?.game?.startingDateTime;
+      const dateB = b.refereeGame?.game?.startingDateTime;
+      if (!dateA && !dateB) return 0;
+      if (!dateA) return 1; // Items without dates go to end
+      if (!dateB) return -1;
+      return compareFn(parseISO(dateA), parseISO(dateB));
+    });
   }, [showDummyData, rawData, filter, seasonRange, now]);
 
   // Group compensations by week for visual separation
@@ -116,7 +142,6 @@ export function CompensationsPage() {
     { id: "pendingPast" as const, label: t("compensations.pendingPast") },
     { id: "pendingFuture" as const, label: t("compensations.pendingFuture") },
     { id: "closed" as const, label: t("compensations.closed") },
-    { id: "all" as const, label: t("compensations.all") },
   ];
 
   const handleTabChange = useCallback((tabId: string) => {
@@ -157,11 +182,6 @@ export function CompensationsPage() {
         return {
           title: t("compensations.noClosedTitle"),
           description: t("compensations.noClosedDescription"),
-        };
-      default:
-        return {
-          title: t("compensations.noCompensationsTitle"),
-          description: t("compensations.noCompensationsDescription"),
         };
     }
   };

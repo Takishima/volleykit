@@ -32,7 +32,6 @@ test.describe("Compensations Journey", () => {
       await expect(compensationsPage.pendingPastTab).toBeVisible();
       await expect(compensationsPage.pendingFutureTab).toBeVisible();
       await expect(compensationsPage.closedTab).toBeVisible();
-      await expect(compensationsPage.allTab).toBeVisible();
     });
   });
 

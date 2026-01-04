@@ -103,16 +103,6 @@ describe("CompensationsPage", () => {
       expect(pendingPastTab).toHaveAttribute("aria-selected", "true");
     });
 
-    it("should switch to All tab when clicked", () => {
-      render(<CompensationsPage />);
-
-      fireEvent.click(screen.getByRole("tab", { name: /^all$/i }));
-
-      const allTab = screen.getByRole("tab", { name: /^all$/i });
-      expect(allTab).toHaveClass("border-primary-500");
-      expect(allTab).toHaveAttribute("aria-selected", "true");
-    });
-
     it("should switch to Closed tab when clicked", () => {
       render(<CompensationsPage />);
 
@@ -148,9 +138,13 @@ describe("CompensationsPage", () => {
       const closedTab = screen.getByRole("tab", { name: /^closed$/i });
       expect(closedTab).toHaveAttribute("aria-selected", "true");
 
-      // Press left arrow to go back to Pending (Future) tab
-      fireEvent.keyDown(closedTab, { key: "ArrowLeft" });
-      expect(pendingFutureTab).toHaveAttribute("aria-selected", "true");
+      // Press right arrow wraps around to first tab (Pending Past)
+      fireEvent.keyDown(closedTab, { key: "ArrowRight" });
+      expect(pendingPastTab).toHaveAttribute("aria-selected", "true");
+
+      // Press left arrow to go back to Closed tab
+      fireEvent.keyDown(pendingPastTab, { key: "ArrowLeft" });
+      expect(closedTab).toHaveAttribute("aria-selected", "true");
     });
   });
 
@@ -208,14 +202,6 @@ describe("CompensationsPage", () => {
       render(<CompensationsPage />);
 
       expect(useConvocations.useCompensations).toHaveBeenCalledWith(false);
-    });
-
-    it("should call useCompensations with undefined for All tab", () => {
-      render(<CompensationsPage />);
-
-      fireEvent.click(screen.getByRole("tab", { name: /^all$/i }));
-
-      expect(useConvocations.useCompensations).toHaveBeenCalledWith(undefined);
     });
 
     it("should call useCompensations with true for Closed tab", () => {

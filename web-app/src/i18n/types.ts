@@ -117,11 +117,8 @@ export interface Translations {
     travel: string;
     distance: string;
     status: string;
-    all: string;
     received: string;
     loading: string;
-    noCompensationsTitle: string;
-    noCompensationsDescription: string;
     noPendingPastTitle: string;
     noPendingPastDescription: string;
     noPendingFutureTitle: string;
