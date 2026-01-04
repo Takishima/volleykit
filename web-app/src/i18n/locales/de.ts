@@ -183,7 +183,7 @@ const de: Translations = {
     enterCalendarMode: "Kalender-Modus starten",
     enteringCalendarMode: "Wird gestartet...",
     calendarModeInfo: "Nur-Lese-Zugriff auf Ihre Spieleinsätze",
-    calendarModeHint: "Finden Sie Ihre Kalender-URL im VolleyManager unter Profil → Kalender-Export",
+    calendarModeHint: "Finden Sie Ihre Kalender-URL im VolleyManager auf der Seite Meine Einsätze",
   },
   calendarError: {
     title: "Kalenderfehler",

@@ -183,7 +183,7 @@ const it: Translations = {
     enterCalendarMode: "Entra in modalità calendario",
     enteringCalendarMode: "Caricamento...",
     calendarModeInfo: "Accesso in sola lettura alle tue designazioni",
-    calendarModeHint: "Trova l'URL del calendario in VolleyManager sotto Profilo → Esporta calendario",
+    calendarModeHint: "Trova l'URL del calendario in VolleyManager sulla pagina Le mie designazioni",
   },
   calendarError: {
     title: "Errore calendario",

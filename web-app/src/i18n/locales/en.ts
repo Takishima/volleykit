@@ -183,7 +183,7 @@ const en: Translations = {
     enterCalendarMode: "Enter Calendar Mode",
     enteringCalendarMode: "Entering...",
     calendarModeInfo: "Read-only access to your assignments",
-    calendarModeHint: "Find your calendar URL in VolleyManager under Profile → Calendar Export",
+    calendarModeHint: "Find your calendar URL in VolleyManager on the My Assignments page",
   },
   calendarError: {
     title: "Calendar Error",

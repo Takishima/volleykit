@@ -183,7 +183,7 @@ const fr: Translations = {
     enterCalendarMode: "Entrer en mode calendrier",
     enteringCalendarMode: "Chargement...",
     calendarModeInfo: "Accès en lecture seule à vos désignations",
-    calendarModeHint: "Trouvez votre URL de calendrier dans VolleyManager sous Profil → Export du calendrier",
+    calendarModeHint: "Trouvez votre URL de calendrier dans VolleyManager sur la page Mes désignations",
   },
   calendarError: {
     title: "Erreur de calendrier",
