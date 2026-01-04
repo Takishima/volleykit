@@ -66,6 +66,16 @@ export interface Translations {
     loadingDemo: string;
     noRefereeRole: string;
     invalidCalendarCode: string;
+    calendarNotFound: string;
+    calendarValidationFailed: string;
+    fullLogin: string;
+    calendarMode: string;
+    calendarInputLabel: string;
+    calendarInputPlaceholder: string;
+    enterCalendarMode: string;
+    enteringCalendarMode: string;
+    calendarModeInfo: string;
+    calendarModeHint: string;
   };
   occupations: {
     referee: string;
