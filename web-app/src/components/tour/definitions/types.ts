@@ -95,19 +95,23 @@ export interface TourDummyCompensation {
   __identity: string;
   amount: number;
   status: string;
+  refereePosition?: string;
   refereeGame: {
     __identity: string;
     game: {
       __identity: string;
-      gameNumber: string;
-      plannedStartDateTime: string;
-      teamHome: {
+      number?: string;
+      startingDateTime: string;
+      encounter: {
         __identity: string;
-        name: string;
-      };
-      teamAway: {
-        __identity: string;
-        name: string;
+        teamHome: {
+          __identity: string;
+          name: string;
+        };
+        teamAway: {
+          __identity: string;
+          name: string;
+        };
       };
     };
   };
@@ -115,8 +119,9 @@ export interface TourDummyCompensation {
     __identity: string;
     distanceInMetres: number;
     distanceFormatted: string;
-    gameFee?: number;
-    travelCompensation?: number;
+    gameCompensation?: number;
+    travelExpenses?: number;
+    paymentDone?: boolean;
   };
 }
 
