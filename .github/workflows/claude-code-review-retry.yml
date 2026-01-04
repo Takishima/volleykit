@@ -1,0 +1,149 @@
+name: Auto-Retry Claude Code Review
+on:
+  workflow_run:
+    workflows: ['Claude Code Review']
+    types: [completed]
+
+jobs:
+  retry-on-failure:
+    # Only run if the workflow failed and was triggered by a PR (not workflow_dispatch)
+    if: |
+      github.event.workflow_run.conclusion == 'failure' &&
+      github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Get PR information
+        id: pr-info
+        run: |
+          # Get PR number from the workflow run
+          PR_NUMBER=$(gh run view ${{ github.event.workflow_run.id }} --json jobs -q '.jobs[0].steps[0].name' 2>/dev/null || echo "")
+
+          # Alternative: search for the PR associated with this head SHA
+          HEAD_SHA="${{ github.event.workflow_run.head_sha }}"
+          PR_DATA=$(gh pr list --state open --json number,headRefOid -q ".[] | select(.headRefOid == \"$HEAD_SHA\")")
+
+          if [ -z "$PR_DATA" ]; then
+            echo "Could not find PR for SHA $HEAD_SHA"
+            echo "skip=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          PR_NUMBER=$(echo "$PR_DATA" | jq -r '.number')
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "Found PR #$PR_NUMBER"
+
+          # Get base ref for checking changed files
+          BASE_REF=$(gh pr view "$PR_NUMBER" --json baseRefName -q '.baseRefName')
+          echo "base_ref=$BASE_REF" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Check if retry should be skipped
+        id: check-guidelines
+        if: steps.pr-info.outputs.skip != 'true'
+        run: |
+          PR_NUMBER="${{ steps.pr-info.outputs.pr_number }}"
+
+          # Get changed files in the PR
+          CHANGED_FILES=$(gh pr diff "$PR_NUMBER" --name-only)
+
+          # Skip retry if guidelines files were modified (expected failures during review)
+          if echo "$CHANGED_FILES" | grep -qE "^(CLAUDE\.md|docs/SECURITY_CHECKLIST\.md|docs/CODE_PATTERNS\.md)$"; then
+            echo "Guidelines files were modified - skipping retry"
+            echo "skip_retry=true" >> $GITHUB_OUTPUT
+            echo "skip_reason=guidelines_modified" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Skip retry if workflow files were modified (GitHub security restriction)
+          # When workflow files change, GitHub requires them to match the default branch
+          if echo "$CHANGED_FILES" | grep -qE "^\.github/workflows/.*\.ya?ml$"; then
+            echo "Workflow files were modified - skipping retry (GitHub security restriction)"
+            echo "skip_retry=true" >> $GITHUB_OUTPUT
+            echo "skip_reason=workflow_modified" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "No special files modified - retry is allowed"
+          echo "skip_retry=false" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Check retry count
+        id: check-retry
+        if: |
+          steps.pr-info.outputs.skip != 'true' &&
+          steps.check-guidelines.outputs.skip_retry != 'true'
+        run: |
+          PR_NUMBER="${{ steps.pr-info.outputs.pr_number }}"
+          MAX_RETRIES=3
+
+          # Count recent failed runs for this PR (within last hour)
+          # This prevents infinite retry loops
+          FAILED_RUNS=$(gh run list \
+            --workflow "Claude Code Review" \
+            --status failure \
+            --limit 10 \
+            --json createdAt,headSha \
+            -q "[.[] | select(.headSha == \"${{ github.event.workflow_run.head_sha }}\")] | length")
+
+          echo "Failed runs for this commit: $FAILED_RUNS"
+
+          if [ "$FAILED_RUNS" -ge "$MAX_RETRIES" ]; then
+            echo "Max retries ($MAX_RETRIES) reached - not retrying"
+            echo "should_retry=false" >> $GITHUB_OUTPUT
+          else
+            echo "Retry $((FAILED_RUNS + 1)) of $MAX_RETRIES"
+            echo "should_retry=true" >> $GITHUB_OUTPUT
+            echo "retry_attempt=$((FAILED_RUNS + 1))" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Trigger retry
+        if: |
+          steps.pr-info.outputs.skip != 'true' &&
+          steps.check-guidelines.outputs.skip_retry != 'true' &&
+          steps.check-retry.outputs.should_retry == 'true'
+        run: |
+          PR_NUMBER="${{ steps.pr-info.outputs.pr_number }}"
+          RETRY_ATTEMPT="${{ steps.check-retry.outputs.retry_attempt }}"
+
+          echo "Triggering retry $RETRY_ATTEMPT for PR #$PR_NUMBER..."
+
+          # Wait before retrying to avoid rate limits
+          sleep 30
+
+          gh workflow run "Claude Code Review" \
+            --ref "${{ github.event.workflow_run.head_branch }}" \
+            -f pr_number="$PR_NUMBER" \
+            -f retry_attempt="$RETRY_ATTEMPT"
+
+          echo "Retry triggered successfully"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Log skip reason
+        if: |
+          steps.pr-info.outputs.skip == 'true' ||
+          steps.check-guidelines.outputs.skip_retry == 'true' ||
+          steps.check-retry.outputs.should_retry == 'false'
+        run: |
+          if [ "${{ steps.pr-info.outputs.skip }}" = "true" ]; then
+            echo "Skipped: Could not find associated PR"
+          elif [ "${{ steps.check-guidelines.outputs.skip_reason }}" = "guidelines_modified" ]; then
+            echo "Skipped: Guidelines files (CLAUDE.md, SECURITY_CHECKLIST.md, CODE_PATTERNS.md) were modified"
+          elif [ "${{ steps.check-guidelines.outputs.skip_reason }}" = "workflow_modified" ]; then
+            echo "Skipped: Workflow files (.github/workflows/*.yml) were modified - GitHub security restriction prevents retrying"
+          elif [ "${{ steps.check-retry.outputs.should_retry }}" = "false" ]; then
+            echo "Skipped: Maximum retry attempts reached"
+          fi
