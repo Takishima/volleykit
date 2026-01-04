@@ -27,7 +27,7 @@ export function HelpSection() {
           href={getHelpSiteUrl()}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-primary-600 dark:text-primary-400 hover:text-primary-500 dark:hover:text-primary-300 underline underline-offset-2 text-sm transition-colors"
+          className="inline-flex items-center gap-1 text-primary-600 dark:text-primary-400 hover:underline text-sm"
         >
           {t("settings.help.openDocs")} &rarr;
         </a>

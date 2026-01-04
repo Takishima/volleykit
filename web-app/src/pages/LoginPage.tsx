@@ -510,7 +510,7 @@ export function LoginPage() {
             href={getHelpSiteUrl()}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-primary-400 hover:text-primary-300 dark:text-primary-400 dark:hover:text-primary-300 transition-colors underline underline-offset-2"
+            className="text-xs text-text-muted dark:text-text-muted-dark hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
           >
             {t("auth.learnHowItWorks")} &rarr;
           </a>
