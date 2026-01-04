@@ -1,9 +1,10 @@
 /**
  * Calendar URL/code extraction and validation utilities.
  *
- * Calendar URLs from VolleyManager follow this pattern:
- * https://volleymanager.volleyball.ch/calendar/{6-char-code}
- * webcal://volleymanager.volleyball.ch/calendar/{6-char-code}
+ * Calendar URLs from VolleyManager follow these patterns:
+ * - https://volleymanager.volleyball.ch/calendar/{6-char-code}
+ * - https://volleymanager.volleyball.ch/indoor/iCal/referee/{6-char-code}
+ * - webcal://volleymanager.volleyball.ch/calendar/{6-char-code}
  *
  * Users can provide:
  * - Full HTTPS URL
@@ -24,6 +25,10 @@ const CALENDAR_URL_PATTERNS = [
   /^https?:\/\/(?:www\.)?volleymanager\.volleyball\.ch\/sportmanager\.volleyball\/calendar\/ical\/([a-z0-9]{6})\/?$/i,
   // webcal://volleymanager.volleyball.ch/sportmanager.volleyball/calendar/ical/XXXXXX
   /^webcal:\/\/(?:www\.)?volleymanager\.volleyball\.ch\/sportmanager\.volleyball\/calendar\/ical\/([a-z0-9]{6})\/?$/i,
+  // https://volleymanager.volleyball.ch/indoor/iCal/referee/XXXXXX
+  /^https?:\/\/(?:www\.)?volleymanager\.volleyball\.ch\/indoor\/iCal\/referee\/([a-z0-9]{6})\/?$/i,
+  // webcal://volleymanager.volleyball.ch/indoor/iCal/referee/XXXXXX
+  /^webcal:\/\/(?:www\.)?volleymanager\.volleyball\.ch\/indoor\/iCal\/referee\/([a-z0-9]{6})\/?$/i,
 ];
 
 /**
@@ -87,7 +92,7 @@ export async function validateCalendarCode(
   }
 
   const API_BASE = import.meta.env.VITE_API_PROXY_URL || "";
-  const calendarUrl = `${API_BASE}/sportmanager.volleyball/calendar/ical/${code}`;
+  const calendarUrl = `${API_BASE}/iCal/referee/${code}`;
 
   try {
     const response = await fetch(calendarUrl, {
