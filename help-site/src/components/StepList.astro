@@ -1,0 +1,59 @@
+---
+/**
+ * StepList component
+ * Numbered steps with visual connector for how-to guides
+ */
+
+interface Step {
+  title: string;
+  description?: string;
+}
+
+interface Props {
+  steps: Step[];
+}
+
+const { steps } = Astro.props;
+---
+
+<ol class="relative my-8 space-y-8 border-l-2 border-border-default pl-8 dark:border-border-default-dark">
+  {
+    steps.map((step, index) => (
+      <li class="relative">
+        {/* Step number circle */}
+        <div class="absolute -left-[calc(2rem+1px)] flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary-500 bg-surface-card text-sm font-bold text-primary-600 dark:border-primary-400 dark:bg-surface-card-dark dark:text-primary-400">
+          {index + 1}
+        </div>
+
+        {/* Step content */}
+        <div class="pt-0.5">
+          <h4 class="mb-1 font-semibold text-text-primary dark:text-text-primary-dark">
+            {step.title}
+          </h4>
+          {step.description && (
+            <p class="text-sm text-text-secondary dark:text-text-secondary-dark">
+              {step.description}
+            </p>
+          )}
+        </div>
+      </li>
+    ))
+  }
+</ol>
+
+<style>
+  /* Ensure the connector line covers the full height */
+  ol > li:last-child::before {
+    content: '';
+    position: absolute;
+    left: calc(-2rem - 1px);
+    top: 1rem;
+    bottom: 0;
+    width: 2px;
+    background: var(--color-surface-card);
+  }
+
+  :global(.dark) ol > li:last-child::before {
+    background: var(--color-surface-card-dark);
+  }
+</style>
