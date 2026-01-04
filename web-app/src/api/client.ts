@@ -654,11 +654,11 @@ export const api = {
 
 export type ApiClient = typeof api;
 
-/**
- * Data source type for API client selection.
- * Matches the DataSource type from the auth store.
- */
-export type DataSource = "api" | "demo" | "calendar";
+// Re-export DataSource from auth store for consumers that import from client
+export type { DataSource } from "@/stores/auth";
+
+// Import for internal use
+import type { DataSource } from "@/stores/auth";
 
 /**
  * Returns the appropriate API client based on the data source.
@@ -682,7 +682,7 @@ export function getApiClient(dataSource: DataSource | boolean): ApiClient {
     case "calendar":
       // Calendar mode API will be implemented in a future PR
       throw new Error("Calendar API not yet implemented");
-    default:
+    case "api":
       return api;
   }
 }
