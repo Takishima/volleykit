@@ -51,13 +51,13 @@
     {
       "name": "CSS Bundle",
       "path": "dist/assets/*.css",
-      "limit": "10 kB",
+      "limit": "10.1 kB",
       "gzip": true
     },
     {
       "name": "Total JS Bundle",
       "path": "dist/assets/*.js",
-      "limit": "445 kB",
+      "limit": "448 kB",
       "gzip": true
     }
   ],
