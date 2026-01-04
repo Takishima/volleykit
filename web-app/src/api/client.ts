@@ -6,6 +6,7 @@ import {
   validateResponse,
 } from "./validation";
 import { mockApi } from "./mock-api";
+import { calendarApi } from "./calendar-client";
 import {
   buildFormData,
   setCsrfToken as setToken,
@@ -668,7 +669,6 @@ import type { DataSource } from "@/stores/auth";
  *   - boolean (deprecated): true = demo mode, false = api mode
  *
  * @returns The API client for the specified data source
- * @throws Error if calendar mode is requested (not yet implemented)
  */
 export function getApiClient(dataSource: DataSource | boolean): ApiClient {
   // Handle legacy boolean parameter for backwards compatibility
@@ -680,8 +680,7 @@ export function getApiClient(dataSource: DataSource | boolean): ApiClient {
     case "demo":
       return mockApi;
     case "calendar":
-      // Calendar mode API will be implemented in a future PR
-      throw new Error("Calendar API not yet implemented");
+      return calendarApi;
     case "api":
       return api;
     default: {

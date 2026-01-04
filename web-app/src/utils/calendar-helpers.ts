@@ -32,6 +32,22 @@ const CALENDAR_URL_PATTERNS = [
 ];
 
 /**
+ * Sanitizes input by removing invisible characters and normalizing whitespace.
+ * iOS Safari can sometimes add invisible Unicode characters when copy-pasting.
+ */
+function sanitizeInput(input: string): string {
+  return (
+    input
+      // Remove zero-width characters (common in iOS copy-paste)
+      .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, "")
+      // Remove other invisible formatting characters
+      .replace(/[\u2060\u180E]/g, "")
+      // Normalize whitespace
+      .trim()
+  );
+}
+
+/**
  * Extracts a 6-character calendar code from various input formats.
  *
  * Accepts:
@@ -39,27 +55,63 @@ const CALENDAR_URL_PATTERNS = [
  * - webcal:// URL (e.g., webcal://volleymanager.volleyball.ch/calendar/XXXXXX)
  * - Just the 6-character code (e.g., XXXXXX)
  *
+ * Handles iOS/Safari quirks:
+ * - Removes invisible Unicode characters from copy-paste
+ * - Handles URL-encoded characters
+ * - Extracts code from URLs with query strings or fragments
+ *
  * @param input - User input (URL or code)
  * @returns The extracted 6-character code, or null if invalid format
  */
 export function extractCalendarCode(input: string): string | null {
-  const trimmed = input.trim();
+  const sanitized = sanitizeInput(input);
 
-  if (!trimmed) {
+  if (!sanitized) {
     return null;
   }
 
   // Check if it's already a valid 6-character code
-  if (CALENDAR_CODE_PATTERN.test(trimmed)) {
-    return trimmed;
+  if (CALENDAR_CODE_PATTERN.test(sanitized)) {
+    return sanitized;
   }
 
-  // Try to extract from URL patterns
+  // Try to extract from URL patterns (handles most cases)
   for (const pattern of CALENDAR_URL_PATTERNS) {
-    const match = trimmed.match(pattern);
+    const match = sanitized.match(pattern);
     if (match?.[1]) {
       return match[1];
     }
+  }
+
+  // Fallback: Try to parse as URL and extract from path
+  // This handles URLs with query strings, fragments, or unusual formatting
+  try {
+    // Handle webcal:// by converting to https:// for URL parsing
+    const urlString = sanitized.replace(/^webcal:\/\//i, "https://");
+    const url = new URL(urlString);
+
+    // Check if it's a volleymanager URL
+    if (!url.hostname.includes("volleymanager.volleyball.ch")) {
+      return null;
+    }
+
+    // Try to extract the last path segment as the code
+    const pathSegments = url.pathname.split("/").filter(Boolean);
+    const lastSegment = pathSegments[pathSegments.length - 1];
+
+    if (lastSegment && CALENDAR_CODE_PATTERN.test(lastSegment)) {
+      // Verify the path looks like a calendar URL
+      const pathLower = url.pathname.toLowerCase();
+      if (
+        pathLower.includes("/calendar/") ||
+        pathLower.includes("/ical/") ||
+        pathLower.includes("/referee/")
+      ) {
+        return lastSegment;
+      }
+    }
+  } catch {
+    // URL parsing failed, input is not a valid URL
   }
 
   return null;
