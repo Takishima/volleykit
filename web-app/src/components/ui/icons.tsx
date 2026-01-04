@@ -53,6 +53,7 @@ export { Volleyball } from "lucide-react";
 
 // Indicator icons
 export { CircleAlert } from "lucide-react";
+export { ExternalLink } from "lucide-react";
 
 // Gender icons - custom SVGs since Lucide doesn't have Mars/Venus symbols
 import type { SVGProps } from "react";
