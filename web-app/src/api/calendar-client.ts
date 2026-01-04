@@ -19,6 +19,20 @@
  * - Role switching (switchRoleAndAttribute)
  */
 
+// Calendar mode settings constants
+/** Default hours after game start when referees can edit game list */
+export const DEFAULT_REFEREE_EDIT_HOURS = 6;
+
+// Volleyball season date constants (0-indexed months)
+/** September - month when volleyball season starts */
+const SEASON_START_MONTH = 8;
+/** June - month when volleyball season ends */
+const SEASON_END_MONTH = 5;
+/** Day of month when season starts (September 1st) */
+const SEASON_START_DAY = 1;
+/** Day of month when season ends (June 30th) */
+const SEASON_END_DAY = 30;
+
 import type {
   SearchConfiguration,
   Assignment,
@@ -230,7 +244,7 @@ export const calendarApi = {
   async getAssociationSettings(): Promise<AssociationSettings> {
     // Return sensible defaults for calendar mode
     return {
-      hoursAfterGameStartForRefereeToEditGameList: 6,
+      hoursAfterGameStartForRefereeToEditGameList: DEFAULT_REFEREE_EDIT_HOURS,
     } as AssociationSettings;
   },
 
@@ -242,10 +256,19 @@ export const calendarApi = {
     const currentMonth = now.getMonth();
 
     // If we're before September, we're in the previous season
-    const seasonStartYear = currentMonth < 8 ? currentYear - 1 : currentYear;
+    const seasonStartYear =
+      currentMonth < SEASON_START_MONTH ? currentYear - 1 : currentYear;
 
-    const seasonStart = new Date(seasonStartYear, 8, 1); // September 1st
-    const seasonEnd = new Date(seasonStartYear + 1, 5, 30); // June 30th next year
+    const seasonStart = new Date(
+      seasonStartYear,
+      SEASON_START_MONTH,
+      SEASON_START_DAY,
+    );
+    const seasonEnd = new Date(
+      seasonStartYear + 1,
+      SEASON_END_MONTH,
+      SEASON_END_DAY,
+    );
 
     return {
       seasonStartDate: seasonStart.toISOString(),
