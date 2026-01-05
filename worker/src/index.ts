@@ -593,8 +593,13 @@ export default {
         });
       }
 
-      // Determine OCR provider (default to Mistral for backward compatibility)
-      const provider: OcrProvider = env.OCR_PROVIDER || "mistral";
+      // Determine OCR provider from request or env (default: "mistral")
+      // Request can override via ?provider=aws or ?provider=mistral query param
+      const requestedProvider = url.searchParams.get("provider");
+      const provider: OcrProvider =
+        requestedProvider === "aws" || requestedProvider === "mistral"
+          ? requestedProvider
+          : env.OCR_PROVIDER || "mistral";
 
       // Validate provider credentials are configured
       if (provider === "mistral" && !env.MISTRAL_API_KEY) {
