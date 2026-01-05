@@ -5,7 +5,6 @@ import { useAuthStore, NO_REFEREE_ROLE_ERROR_KEY } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/Button";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { Volleyball } from "@/components/ui/icons";
 import {
@@ -60,15 +59,8 @@ export function LoginPage() {
     navigate("/");
   }, [initializeDemoData, setDemoAuthenticated, navigate]);
 
-  // Auto-start demo mode in demo-only deployments (PR previews)
-  // This runs once on mount - the functions are stable store actions
-  useEffect(() => {
-    if (DEMO_MODE_ONLY) {
-      initializeDemoData("SV");
-      setDemoAuthenticated();
-      navigate("/");
-    }
-  }, [initializeDemoData, setDemoAuthenticated, navigate]);
+  // In demo-only mode (PR previews), calendar mode is allowed but full login is not
+  // No auto-redirect - let users choose between calendar mode and demo mode
 
   // Cleanup: abort any pending calendar validation on unmount
   useEffect(() => {
@@ -217,28 +209,9 @@ export function LoginPage() {
     return errorKey;
   }
 
-  // In demo-only mode, show a loading state while auto-redirecting
-  if (DEMO_MODE_ONLY) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-surface-page dark:bg-surface-page-dark px-4">
-        <div className="text-center" role="status">
-          <Volleyball
-            className="w-16 h-16 text-primary-600 dark:text-primary-400 mx-auto"
-            aria-hidden="true"
-          />
-          <h1 className="mt-4 text-3xl font-bold text-text-primary dark:text-text-primary-dark">
-            VolleyKit
-          </h1>
-          <p className="mt-4 text-text-muted dark:text-text-muted-dark">
-            {t("auth.loadingDemo")}
-          </p>
-          <div className="mt-4">
-            <LoadingSpinner size="md" />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // In demo-only mode (PR previews), we show the login form but only with
+  // Calendar mode and Demo options - Full Login is hidden for security
+  // (full login would require real credentials)
 
   const displayError = loginMode === "calendar" ? calendarError : error;
 
@@ -264,48 +237,50 @@ export function LoginPage() {
 
         {/* Login form */}
         <div className="card p-6">
-          {/* Login mode tabs */}
-          <div
-            className="flex mb-6 bg-surface-subtle dark:bg-surface-subtle-dark rounded-lg p-1"
-            role="tablist"
-            aria-label="Login mode"
-          >
-            <button
-              type="button"
-              role="tab"
-              aria-selected={loginMode === "calendar"}
-              aria-controls="calendar-login-panel"
-              id="calendar-login-tab"
-              data-testid="calendar-login-tab"
-              onClick={() => setLoginMode("calendar")}
-              className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
-                loginMode === "calendar"
-                  ? "bg-surface-card dark:bg-surface-card-dark text-text-primary dark:text-text-primary-dark shadow-sm"
-                  : "text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark"
-              }`}
+          {/* Login mode tabs - hidden in demo-only mode since only calendar is allowed */}
+          {!DEMO_MODE_ONLY && (
+            <div
+              className="flex mb-6 bg-surface-subtle dark:bg-surface-subtle-dark rounded-lg p-1"
+              role="tablist"
+              aria-label="Login mode"
             >
-              {t("auth.calendarMode")}
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={loginMode === "full"}
-              aria-controls="full-login-panel"
-              id="full-login-tab"
-              data-testid="full-login-tab"
-              onClick={() => setLoginMode("full")}
-              className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
-                loginMode === "full"
-                  ? "bg-surface-card dark:bg-surface-card-dark text-text-primary dark:text-text-primary-dark shadow-sm"
-                  : "text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark"
-              }`}
-            >
-              {t("auth.fullLogin")}
-            </button>
-          </div>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={loginMode === "calendar"}
+                aria-controls="calendar-login-panel"
+                id="calendar-login-tab"
+                data-testid="calendar-login-tab"
+                onClick={() => setLoginMode("calendar")}
+                className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
+                  loginMode === "calendar"
+                    ? "bg-surface-card dark:bg-surface-card-dark text-text-primary dark:text-text-primary-dark shadow-sm"
+                    : "text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark"
+                }`}
+              >
+                {t("auth.calendarMode")}
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={loginMode === "full"}
+                aria-controls="full-login-panel"
+                id="full-login-tab"
+                data-testid="full-login-tab"
+                onClick={() => setLoginMode("full")}
+                className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
+                  loginMode === "full"
+                    ? "bg-surface-card dark:bg-surface-card-dark text-text-primary dark:text-text-primary-dark shadow-sm"
+                    : "text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark"
+                }`}
+              >
+                {t("auth.fullLogin")}
+              </button>
+            </div>
+          )}
 
-          {/* Full Login Panel */}
-          {loginMode === "full" && (
+          {/* Full Login Panel - hidden in demo-only mode */}
+          {loginMode === "full" && !DEMO_MODE_ONLY && (
             <div
               id="full-login-panel"
               role="tabpanel"
