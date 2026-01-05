@@ -186,6 +186,63 @@ function isSectionHeader(line) {
 }
 
 /**
+ * Find the start of the player list section in OCR text
+ * Looks for the "N." + "Name of the player" header row
+ * @param {string[]} lines - Array of OCR lines
+ * @returns {{ startIndex: number, teamNamesIndex: number }} - Index where player list starts, and team names line
+ */
+function findPlayerListStart(lines) {
+  // Look for the header row with "N." and "Name of the player"
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const upperLine = line.toUpperCase();
+
+    // Check for the player list header row
+    if (upperLine.includes('NAME OF THE PLAYER') || (upperLine.includes('N.') && upperLine.includes('NAME'))) {
+      // The team names should be on the line before the header
+      // Look backwards for a line that looks like team names (contains team identifiers)
+      let teamNamesIndex = -1;
+      for (let j = i - 1; j >= 0 && j >= i - 3; j--) {
+        const prevLine = lines[j];
+        // Team names line typically contains two names separated by tab
+        // or has "A " / "B " prefixes for team identification
+        const parts = prevLine.split('\t').filter((p) => p.trim().length > 0);
+        if (parts.length >= 2) {
+          // Check if this looks like team names (not numeric score data)
+          const hasNonNumericContent = parts.some((p) => /[a-zA-Z]{3,}/.test(p));
+          if (hasNonNumericContent) {
+            teamNamesIndex = j;
+            break;
+          }
+        }
+      }
+      return { startIndex: i + 1, teamNamesIndex };
+    }
+  }
+
+  // Fallback: look for lines that match player data pattern (number + name + license)
+  for (let i = 0; i < lines.length; i++) {
+    const parts = lines[i].split('\t');
+    if (parts.length >= 3) {
+      const firstPart = parts[0].trim();
+      // Check if first part is a jersey number (1-99)
+      if (/^\d{1,2}$/.test(firstPart)) {
+        const num = parseInt(firstPart, 10);
+        if (num >= 1 && num <= 99) {
+          // Check if second part looks like a name (uppercase letters)
+          const secondPart = parts[1].trim();
+          if (/^[A-Z\s]+$/.test(secondPart) && secondPart.length > 3) {
+            return { startIndex: i, teamNamesIndex: i - 1 };
+          }
+        }
+      }
+    }
+  }
+
+  return { startIndex: 0, teamNamesIndex: -1 };
+}
+
+/**
  * Parse the OCR text output into structured player lists
  * @param {string} ocrText - Raw OCR text from Mistral
  * @returns {ParsedGameSheet}
@@ -206,17 +263,44 @@ export function parseGameSheet(ocrText) {
   }
 
   // Split into lines and filter empty ones
-  const lines = ocrText
+  const allLines = ocrText
     .split('\n')
     .map((l) => l.trim())
     .filter((l) => l.length > 0);
+
+  // Find where the player list section starts (skip score data, set data, etc.)
+  const { startIndex, teamNamesIndex } = findPlayerListStart(allLines);
+
+  if (startIndex > 0) {
+    warnings.push(`Skipped ${startIndex} lines of non-player data (score/set information)`);
+  }
+
+  // Extract team names from the identified line (before header row)
+  if (teamNamesIndex >= 0 && teamNamesIndex < allLines.length) {
+    const teamNamesLine = allLines[teamNamesIndex];
+    const nameParts = teamNamesLine.split('\t').map((p) => p.trim()).filter((p) => p.length > 0);
+
+    if (nameParts.length >= 2) {
+      // Remove any "A " or "B " prefixes from team names
+      teamA.name = nameParts[0].replace(/^[AB]\s+/, '').trim();
+      teamB.name = nameParts[1].replace(/^[AB]\s+/, '').trim();
+    } else if (nameParts.length === 1) {
+      teamA.name = nameParts[0].replace(/^[AB]\s+/, '').trim();
+    }
+  }
+
+  // Process only from the player list start
+  const lines = allLines.slice(startIndex);
 
   if (lines.length === 0) {
     warnings.push('OCR text contains no lines');
     return { teamA, teamB, warnings };
   }
 
-  let currentSection = 'header'; // 'header' | 'players' | 'libero' | 'officials' | 'done'
+  // If we already found team names via findPlayerListStart, start in players section
+  // Otherwise, we need to parse from header
+  const teamNamesAlreadyFound = teamA.name.length > 0 || teamB.name.length > 0;
+  let currentSection = teamNamesAlreadyFound ? 'players' : 'header';
   let headerRowsParsed = 0;
 
   for (const line of lines) {
@@ -247,15 +331,15 @@ export function parseGameSheet(ocrText) {
 
     // Parse based on current section
     if (currentSection === 'header') {
-      // First non-header row should be team names
+      // First non-header row should be team names (only if not already found)
       if (headerRowsParsed === 0 && !isSectionHeader(line)) {
         // Team names row - could be 2 parts (tab-separated) or in various formats
         if (parts.length >= 2) {
-          teamA.name = parts[0];
-          teamB.name = parts[1];
+          teamA.name = parts[0].replace(/^[AB]\s+/, '').trim();
+          teamB.name = parts[1].replace(/^[AB]\s+/, '').trim();
         } else if (parts.length === 1) {
           // Single value - might be combined or just one team
-          teamA.name = parts[0];
+          teamA.name = parts[0].replace(/^[AB]\s+/, '').trim();
         }
         headerRowsParsed++;
         continue;
