@@ -10,26 +10,33 @@
  * Row 3+: Number<tab>LASTNAME FIRSTNAME<tab>License<tab>Number<tab>LASTNAME FIRSTNAME<tab>License
  * ...
  * LIBERO section: L1<tab>Number LASTNAME FIRSTNAME<tab>License<tab>L1<tab>Number LASTNAME FIRSTNAME<tab>License
- * OFFICIAL MEMBERS section marks end of player data
+ * OFFICIAL MEMBERS section: C<tab>Name<tab>C<tab>Name (coaches), AC<tab>Name<tab>AC<tab>Name (assistants)
  */
 
 /**
  * @typedef {Object} ParsedPlayer
- * @property {number | null} shirtNumber - Player's shirt number
+ * @property {number | null} shirtNumber - Player's shirt number (from OCR, not used for matching)
  * @property {string} lastName - Player's last name (normalized)
  * @property {string} firstName - Player's first name (normalized)
  * @property {string} displayName - Full display name
  * @property {string} rawName - Original name from OCR
  * @property {string} licenseStatus - License status (NOT/LFP)
- * @property {boolean} isLibero - Whether player is a libero
- * @property {'L1' | 'L2' | null} liberoPosition - Libero position if applicable
+ */
+
+/**
+ * @typedef {Object} ParsedOfficial
+ * @property {string} role - Role: 'C' (coach), 'AC' (assistant coach), 'AC2', 'AC3'
+ * @property {string} lastName - Last name (normalized)
+ * @property {string} firstName - First name (normalized)
+ * @property {string} displayName - Full display name
+ * @property {string} rawName - Original name from OCR
  */
 
 /**
  * @typedef {Object} ParsedTeam
  * @property {string} name - Team name
- * @property {ParsedPlayer[]} players - Regular players
- * @property {ParsedPlayer[]} liberos - Libero players
+ * @property {ParsedPlayer[]} players - All players (including liberos)
+ * @property {ParsedOfficial[]} officials - Coaches and assistant coaches
  */
 
 /**
@@ -84,6 +91,36 @@ function parsePlayerName(rawName) {
 }
 
 /**
+ * Parse an official name - format is "Firstname Lastname" (not reversed like players)
+ * @param {string} rawName - Raw name from OCR
+ * @returns {{ lastName: string, firstName: string, displayName: string }}
+ */
+function parseOfficialName(rawName) {
+  if (!rawName || typeof rawName !== 'string') {
+    return { lastName: '', firstName: '', displayName: '' };
+  }
+
+  const trimmed = rawName.trim();
+  const parts = trimmed.split(/\s+/).filter((p) => p.length > 0);
+
+  if (parts.length === 0) {
+    return { lastName: '', firstName: '', displayName: '' };
+  }
+
+  if (parts.length === 1) {
+    const name = normalizeName(parts[0]);
+    return { lastName: name, firstName: '', displayName: name };
+  }
+
+  // For officials, format is "Firstname Lastname" - last part is last name
+  const lastName = normalizeName(parts[parts.length - 1]);
+  const firstName = parts.slice(0, -1).map(normalizeName).join(' ');
+  const displayName = `${firstName} ${lastName}`;
+
+  return { lastName, firstName, displayName };
+}
+
+/**
  * Parse a libero entry which has format "Number LASTNAME FIRSTNAME"
  * @param {string} entry - Libero entry like "1 ZOLLER MILENA TIMEA"
  * @returns {{ number: number | null, name: string }}
@@ -107,20 +144,33 @@ function parseLiberoEntry(entry) {
 }
 
 /**
- * Check if a line marks the end of player data
+ * Check if a line starts the officials section
  * @param {string} line - Line to check
  * @returns {boolean}
  */
-function isEndMarker(line) {
-  const markers = [
-    'OFFICIAL MEMBERS',
-    'SIGNATURES',
-    'COACH',
-    'ASSISTANT',
-    'Team Captain',
-  ];
+function isOfficialsHeader(line) {
   const upper = line.toUpperCase();
-  return markers.some((marker) => upper.includes(marker.toUpperCase()));
+  return upper.includes('OFFICIAL MEMBERS') || upper.includes('ADMITTED ON THE BENCH');
+}
+
+/**
+ * Check if a line marks the end of all data (signatures section)
+ * @param {string} line - Line to check
+ * @returns {boolean}
+ */
+function isSignaturesSection(line) {
+  const upper = line.toUpperCase();
+  return upper.includes('SIGNATURES') || upper.includes('TEAM CAPTAIN');
+}
+
+/**
+ * Check if a role string is a valid official role
+ * @param {string} role - Role to check
+ * @returns {boolean}
+ */
+function isOfficialRole(role) {
+  const normalized = role.toUpperCase().trim();
+  return ['C', 'AC', 'AC2', 'AC3', 'AC4'].includes(normalized);
 }
 
 /**
@@ -143,10 +193,10 @@ export function parseGameSheet(ocrText) {
   const warnings = [];
 
   /** @type {ParsedTeam} */
-  const teamA = { name: '', players: [], liberos: [] };
+  const teamA = { name: '', players: [], officials: [] };
 
   /** @type {ParsedTeam} */
-  const teamB = { name: '', players: [], liberos: [] };
+  const teamB = { name: '', players: [], officials: [] };
 
   if (!ocrText || typeof ocrText !== 'string') {
     warnings.push('No OCR text provided');
@@ -164,17 +214,23 @@ export function parseGameSheet(ocrText) {
     return { teamA, teamB, warnings };
   }
 
-  let currentSection = 'header'; // 'header' | 'players' | 'libero' | 'done'
+  let currentSection = 'header'; // 'header' | 'players' | 'libero' | 'officials' | 'done'
   let headerRowsParsed = 0;
 
   for (const line of lines) {
-    // Check for end markers
-    if (isEndMarker(line)) {
+    // Check for signatures section (end of all data)
+    if (isSignaturesSection(line)) {
       currentSection = 'done';
       continue;
     }
 
     if (currentSection === 'done') {
+      continue;
+    }
+
+    // Check for officials section
+    if (isOfficialsHeader(line)) {
+      currentSection = 'officials';
       continue;
     }
 
@@ -233,8 +289,6 @@ export function parseGameSheet(ocrText) {
             displayName: parsed.displayName,
             rawName: nameA,
             licenseStatus: licenseA || '',
-            isLibero: false,
-            liberoPosition: null,
           });
         }
 
@@ -253,8 +307,6 @@ export function parseGameSheet(ocrText) {
               displayName: parsed.displayName,
               rawName: nameB,
               licenseStatus: licenseB || '',
-              isLibero: false,
-              liberoPosition: null,
             });
           }
         }
@@ -265,45 +317,73 @@ export function parseGameSheet(ocrText) {
       // Libero format: L1<tab>Number Name<tab>License<tab>L1<tab>Number Name<tab>License
       // Or: L1<tab>Number Name<tab>License (only one team)
       if (parts.length >= 3) {
-        const posA = parts[0]; // L1 or L2
         const entryA = parseLiberoEntry(parts[1]);
         const licenseA = parts[2];
 
         if (entryA.name) {
           const parsed = parsePlayerName(entryA.name);
-          teamA.liberos.push({
+          teamA.players.push({
             shirtNumber: entryA.number,
             lastName: parsed.lastName,
             firstName: parsed.firstName,
             displayName: parsed.displayName,
             rawName: entryA.name,
             licenseStatus: licenseA || '',
-            isLibero: true,
-            liberoPosition: /** @type {'L1' | 'L2' | null} */ (
-              posA.toUpperCase().startsWith('L') ? posA.toUpperCase() : null
-            ),
           });
         }
 
         // Team B libero (if present)
         if (parts.length >= 6) {
-          const posB = parts[3];
           const entryB = parseLiberoEntry(parts[4]);
           const licenseB = parts[5];
 
           if (entryB.name) {
             const parsed = parsePlayerName(entryB.name);
-            teamB.liberos.push({
+            teamB.players.push({
               shirtNumber: entryB.number,
               lastName: parsed.lastName,
               firstName: parsed.firstName,
               displayName: parsed.displayName,
               rawName: entryB.name,
               licenseStatus: licenseB || '',
-              isLibero: true,
-              liberoPosition: /** @type {'L1' | 'L2' | null} */ (
-                posB.toUpperCase().startsWith('L') ? posB.toUpperCase() : null
-              ),
+            });
+          }
+        }
+      }
+    }
+
+    if (currentSection === 'officials') {
+      // Officials format: Role<tab>Name<tab>Role<tab>Name
+      // Or: Role<tab>Name (only one team)
+      // Roles: C (coach), AC (assistant coach), AC2, AC3
+      if (parts.length >= 2) {
+        const roleA = parts[0];
+        const nameA = parts[1];
+
+        if (isOfficialRole(roleA) && nameA) {
+          const parsed = parseOfficialName(nameA);
+          teamA.officials.push({
+            role: roleA.toUpperCase(),
+            lastName: parsed.lastName,
+            firstName: parsed.firstName,
+            displayName: parsed.displayName,
+            rawName: nameA,
+          });
+        }
+
+        // Team B official (if present)
+        if (parts.length >= 4) {
+          const roleB = parts[2];
+          const nameB = parts[3];
+
+          if (isOfficialRole(roleB) && nameB) {
+            const parsed = parseOfficialName(nameB);
+            teamB.officials.push({
+              role: roleB.toUpperCase(),
+              lastName: parsed.lastName,
+              firstName: parsed.firstName,
+              displayName: parsed.displayName,
+              rawName: nameB,
             });
           }
         }
@@ -312,21 +392,35 @@ export function parseGameSheet(ocrText) {
   }
 
   // Add warnings if teams have no players
-  if (teamA.players.length === 0 && teamA.liberos.length === 0) {
+  if (teamA.players.length === 0) {
     warnings.push('No players found for Team A');
   }
-  if (teamB.players.length === 0 && teamB.liberos.length === 0) {
+  if (teamB.players.length === 0) {
     warnings.push('No players found for Team B');
+  }
+
+  // Warn if officials section wasn't found or parsed
+  if (teamA.officials.length === 0 && teamB.officials.length === 0) {
+    warnings.push('No officials (coaches) found - the OFFICIAL MEMBERS section may not have been recognized');
   }
 
   return { teamA, teamB, warnings };
 }
 
 /**
- * Get all players (regular + liberos) for a team
+ * Get all players for a team
  * @param {ParsedTeam} team
  * @returns {ParsedPlayer[]}
  */
 export function getAllPlayers(team) {
-  return [...team.players, ...team.liberos];
+  return team.players;
+}
+
+/**
+ * Get all officials for a team
+ * @param {ParsedTeam} team
+ * @returns {ParsedOfficial[]}
+ */
+export function getAllOfficials(team) {
+  return team.officials;
 }
