@@ -130,7 +130,35 @@ export default {
     }
 
     // Health check endpoint - no authentication needed, no rate limiting
+    // Requires CORS headers for browser-based health checks (e.g., OCR availability check)
     if (url.pathname === "/health") {
+      const origin = request.headers.get("Origin");
+      let allowedOrigins: string[];
+      try {
+        allowedOrigins = parseAllowedOrigins(env.ALLOWED_ORIGINS);
+      } catch {
+        return new Response("Server configuration error", {
+          status: 500,
+          headers: { "Content-Type": "text/plain" },
+        });
+      }
+
+      // Check origin for health endpoint (required for CORS)
+      if (!isAllowedOrigin(origin, allowedOrigins)) {
+        return new Response("Forbidden: Origin not allowed", {
+          status: 403,
+          headers: { "Content-Type": "text/plain" },
+        });
+      }
+
+      // Handle CORS preflight for health check
+      if (request.method === "OPTIONS") {
+        return new Response(null, {
+          status: 204,
+          headers: corsHeaders(origin!),
+        });
+      }
+
       return new Response(
         JSON.stringify({
           status: "ok",
@@ -140,6 +168,7 @@ export default {
           status: 200,
           headers: {
             "Content-Type": "application/json",
+            ...corsHeaders(origin!),
             ...securityHeaders(),
           },
         },
