@@ -204,6 +204,8 @@ export default defineConfig(({ mode }) => {
             /\/ocr-poc/,
             // Don't intercept help site routes - it's a separate Astro app
             /\/help/,
+            // Don't intercept PDF files - let browser handle natively
+            /\.pdf$/,
           ],
           // Runtime caching for API responses
           runtimeCaching: [
