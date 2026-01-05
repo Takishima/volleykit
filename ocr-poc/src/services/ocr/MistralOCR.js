@@ -7,6 +7,19 @@
  * @see https://docs.mistral.ai/capabilities/document_ai/basic_ocr
  */
 
+// Configuration constants
+const DEFAULT_OCR_ENDPOINT = 'https://volleykit-proxy.takishima.workers.dev/ocr';
+
+// Mistral OCR doesn't provide per-word confidence scores, so we use a high default
+// since the model is generally very accurate
+const DEFAULT_CONFIDENCE_SCORE = 95;
+
+// Approximate bounding box dimensions for word positioning
+// Mistral doesn't provide coordinates, so these are estimates for UI compatibility
+const ESTIMATED_WORD_SPACING_PX = 50;
+const ESTIMATED_CHAR_WIDTH_PX = 8;
+const ESTIMATED_LINE_HEIGHT_PX = 20;
+
 /**
  * @typedef {Object} OCRWord
  * @property {string} text - The recognized word
@@ -52,9 +65,6 @@
  * @property {string} model - Model used for OCR
  * @property {Object} usage_info - Usage information
  */
-
-// Default OCR proxy endpoint (Cloudflare Worker)
-const DEFAULT_OCR_ENDPOINT = 'https://volleykit-proxy.takishima.workers.dev/ocr';
 
 export class MistralOCR {
   /** @type {OnProgressCallback | undefined} */
@@ -143,18 +153,18 @@ export class MistralOCR {
       /** @type {OCRWord[]} */
       const words = wordTexts.map((text, idx) => ({
         text,
-        confidence: 95, // Mistral doesn't provide per-word confidence, use high default
+        confidence: DEFAULT_CONFIDENCE_SCORE,
         bbox: {
-          x0: idx * 50, // Approximate bounding boxes (Mistral doesn't provide coordinates)
+          x0: idx * ESTIMATED_WORD_SPACING_PX,
           y0: 0,
-          x1: idx * 50 + text.length * 8,
-          y1: 20,
+          x1: idx * ESTIMATED_WORD_SPACING_PX + text.length * ESTIMATED_CHAR_WIDTH_PX,
+          y1: ESTIMATED_LINE_HEIGHT_PX,
         },
       }));
 
       return {
         text: lineText,
-        confidence: 95, // High confidence for Mistral OCR
+        confidence: DEFAULT_CONFIDENCE_SCORE,
         words,
       };
     });

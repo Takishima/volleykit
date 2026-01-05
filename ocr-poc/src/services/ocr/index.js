@@ -9,6 +9,9 @@
 import { MistralOCR } from './MistralOCR.js';
 import { StubOCR } from './StubOCR.js';
 
+// Timeout for health check when determining OCR proxy availability
+const HEALTH_CHECK_TIMEOUT_MS = 3000;
+
 /**
  * @typedef {'electronic' | 'handwritten'} OCREngineType
  */
@@ -32,7 +35,7 @@ async function isOCRProxyAvailable(endpoint) {
   try {
     const response = await fetch(endpoint.replace('/ocr', '/health'), {
       method: 'GET',
-      signal: AbortSignal.timeout(3000), // 3 second timeout
+      signal: AbortSignal.timeout(HEALTH_CHECK_TIMEOUT_MS),
     });
     return response.ok;
   } catch {
