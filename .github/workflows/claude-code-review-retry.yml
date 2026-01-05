@@ -84,27 +84,20 @@ jobs:
           steps.pr-info.outputs.skip != 'true' &&
           steps.check-guidelines.outputs.skip_retry != 'true'
         run: |
-          PR_NUMBER="${{ steps.pr-info.outputs.pr_number }}"
           MAX_RETRIES=3
 
-          # Count recent failed runs for this PR (within last hour)
-          # This prevents infinite retry loops
-          FAILED_RUNS=$(gh run list \
-            --workflow "Claude Code Review" \
-            --status failure \
-            --limit 10 \
-            --json createdAt,headSha \
-            -q "[.[] | select(.headSha == \"${{ github.event.workflow_run.head_sha }}\")] | length")
+          # Get current attempt number from the failed run
+          CURRENT_ATTEMPT=$(gh run view ${{ github.event.workflow_run.id }} --json attempt -q '.attempt')
 
-          echo "Failed runs for this commit: $FAILED_RUNS"
+          echo "Current attempt: $CURRENT_ATTEMPT of max $MAX_RETRIES"
 
-          if [ "$FAILED_RUNS" -ge "$MAX_RETRIES" ]; then
+          if [ "$CURRENT_ATTEMPT" -ge "$MAX_RETRIES" ]; then
             echo "Max retries ($MAX_RETRIES) reached - not retrying"
             echo "should_retry=false" >> $GITHUB_OUTPUT
           else
-            echo "Retry $((FAILED_RUNS + 1)) of $MAX_RETRIES"
+            echo "Will trigger retry (attempt $((CURRENT_ATTEMPT + 1)) of $MAX_RETRIES)"
             echo "should_retry=true" >> $GITHUB_OUTPUT
-            echo "retry_attempt=$((FAILED_RUNS + 1))" >> $GITHUB_OUTPUT
+            echo "retry_attempt=$((CURRENT_ATTEMPT + 1))" >> $GITHUB_OUTPUT
           fi
         env:
           GH_TOKEN: ${{ github.token }}
@@ -115,18 +108,16 @@ jobs:
           steps.check-guidelines.outputs.skip_retry != 'true' &&
           steps.check-retry.outputs.should_retry == 'true'
         run: |
-          PR_NUMBER="${{ steps.pr-info.outputs.pr_number }}"
           RETRY_ATTEMPT="${{ steps.check-retry.outputs.retry_attempt }}"
+          RUN_ID="${{ github.event.workflow_run.id }}"
 
-          echo "Triggering retry $RETRY_ATTEMPT for PR #$PR_NUMBER..."
+          echo "Triggering retry attempt $RETRY_ATTEMPT for run $RUN_ID..."
 
           # Wait before retrying to avoid rate limits
           sleep 30
 
-          gh workflow run "Claude Code Review" \
-            --ref "${{ github.event.workflow_run.head_branch }}" \
-            -f pr_number="$PR_NUMBER" \
-            -f retry_attempt="$RETRY_ATTEMPT"
+          # Re-run the failed workflow run (maintains PR association and updates PR status)
+          gh run rerun "$RUN_ID" --failed
 
           echo "Retry triggered successfully"
         env:
