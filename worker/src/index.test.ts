@@ -6,181 +6,31 @@
  * - Path filtering
  * - Cookie rewriting
  * - Error handling
+ * - Cache control headers
+ * - Session issue detection
  */
 import { describe, it, expect, vi } from "vitest";
-
-// Extract testable functions from the module
-// We test the logic by re-implementing the helper functions here
-// since the worker exports a default object without named exports
-
-// Test implementations of the helper functions
-function parseAllowedOrigins(allowedOrigins: string): string[] {
-  return allowedOrigins
-    .split(",")
-    .map((o) => o.trim())
-    .filter((o) => o.length > 0);
-}
-
-function validateAllowedOrigins(origins: string[]): void {
-  for (const origin of origins) {
-    try {
-      const url = new URL(origin);
-      if (url.protocol !== "https:" && url.protocol !== "http:") {
-        throw new Error(`Origin must use http or https protocol: ${origin}`);
-      }
-      if (url.pathname !== "/" || url.search || url.hash) {
-        throw new Error(
-          `Origin should not include path, query, or fragment: ${origin}`,
-        );
-      }
-    } catch (e) {
-      if (e instanceof Error && e.message.includes("Origin")) {
-        throw e;
-      }
-      throw new Error(`Invalid origin format: ${origin}`);
-    }
-  }
-}
-
-function isAllowedOrigin(
-  origin: string | null,
-  allowedOrigins: string[],
-): boolean {
-  if (!origin) return false;
-  const normalizedOrigin = origin.replace(/\/$/, "").toLowerCase();
-  return allowedOrigins.some(
-    (allowed) => allowed.replace(/\/$/, "").toLowerCase() === normalizedOrigin,
-  );
-}
-
-// Exact match paths (no subpaths allowed) - NOT prefixed with /api/
-const ALLOWED_EXACT_PATHS = ["/", "/login", "/logout"];
-
-// Prefix match paths that are NOT prefixed with /api/ (auth and dashboard)
-const ALLOWED_PREFIX_PATHS_NO_API = [
-  "/sportmanager.security/",
-  "/sportmanager.volleyball/",
-];
-
-// Prefix match paths that ARE prefixed with /api/ (API endpoints)
-const ALLOWED_PREFIX_PATHS_WITH_API = [
-  "/indoorvolleyball.refadmin/",
-  "/sportmanager.indoorvolleyball/",
-  "/sportmanager.core/",
-  "/sportmanager.resourcemanagement/",
-  "/sportmanager.notificationcenter/",
-];
-
-// Specific paths within WITH_API prefixes that do NOT need the /api/ prefix
-// These are file download endpoints that serve binary content (PDFs, etc.)
-const EXCEPTIONS_NO_API = [
-  "/indoorvolleyball.refadmin/refereestatementofexpenses/downloadrefereestatementofexpenses", // PDF download
-];
-
-function isAllowedPath(pathname: string): boolean {
-  // Check exact matches first
-  if (ALLOWED_EXACT_PATHS.includes(pathname)) {
-    return true;
-  }
-  // Check prefix matches (both with and without /api/ prefix)
-  return (
-    ALLOWED_PREFIX_PATHS_NO_API.some((prefix) => pathname.startsWith(prefix)) ||
-    ALLOWED_PREFIX_PATHS_WITH_API.some((prefix) => pathname.startsWith(prefix))
-  );
-}
-
-/**
- * Check if a path requires the /api/ prefix when forwarding to the target host.
- * API endpoints need this prefix, while auth/dashboard endpoints do not.
- *
- * Special cases:
- * - Some paths under /indoorvolleyball.refadmin/ (like PDF downloads)
- *   do NOT need the /api/ prefix even though most /indoorvolleyball.refadmin/ paths do.
- */
-function requiresApiPrefix(pathname: string): boolean {
-  // Check for exceptions that normally would need /api/ but don't (e.g., PDF downloads)
-  if (EXCEPTIONS_NO_API.some((prefix) => pathname.startsWith(prefix))) {
-    return false;
-  }
-  return ALLOWED_PREFIX_PATHS_WITH_API.some((prefix) =>
-    pathname.startsWith(prefix),
-  );
-}
-
-function rewriteCookie(cookie: string): string {
-  return (
-    cookie
-      .replace(/Domain=[^;]+;?\s*/gi, "")
-      .replace(/;\s*Secure\s*(;|$)/gi, "$1")
-      .replace(/SameSite=[^;]+;?\s*/gi, "")
-      .replace(/;\s*Partitioned\s*(;|$)/gi, "$1") +
-    "; SameSite=None; Secure; Partitioned"
-  );
-}
-
-// The correct authentication endpoint
-const AUTH_ENDPOINT = "/sportmanager.security/authentication/authenticate";
-
-// Form field name that indicates authentication credentials are present
-const AUTH_USERNAME_FIELD =
-  "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][username]";
-
-/**
- * Check if request body contains authentication credentials.
- */
-function hasAuthCredentials(body: string): boolean {
-  // Check for Neos Flow format (from React fetch)
-  const encodedField = encodeURIComponent(AUTH_USERNAME_FIELD);
-  if (body.includes(AUTH_USERNAME_FIELD) || body.includes(encodedField)) {
-    return true;
-  }
-
-  // Check for simple HTML form format (from iOS native form submission)
-  const params = new URLSearchParams(body);
-  return params.has("username") && params.has("password");
-}
-
-/**
- * Transform simple form fields to Neos Flow authentication format.
- */
-function transformAuthFormData(body: string): string {
-  // Check if already in Neos Flow format
-  const encodedField = encodeURIComponent(AUTH_USERNAME_FIELD);
-  if (body.includes(AUTH_USERNAME_FIELD) || body.includes(encodedField)) {
-    return body; // Already in correct format
-  }
-
-  // Parse simple form fields
-  const params = new URLSearchParams(body);
-  const username = params.get("username");
-  const password = params.get("password");
-
-  if (!username || !password) {
-    return body; // Not a valid login form, return unchanged
-  }
-
-  // Build Neos Flow format form data
-  const neosParams = new URLSearchParams();
-
-  // Add authentication credentials in Neos Flow format
-  neosParams.set(
-    "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][username]",
-    username,
-  );
-  neosParams.set(
-    "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][password]",
-    password,
-  );
-
-  // Copy any other fields that might be present
-  for (const [key, value] of params.entries()) {
-    if (key !== "username" && key !== "password") {
-      neosParams.set(key, value);
-    }
-  }
-
-  return neosParams.toString();
-}
+import {
+  AUTH_ENDPOINT,
+  KILL_SWITCH_RETRY_AFTER_SECONDS,
+  VOLLEYKIT_USER_AGENT,
+  checkKillSwitch,
+  detectSessionIssue,
+  extractICalCode,
+  extractRawPathAndSearch,
+  hasAuthCredentials,
+  isAllowedOrigin,
+  isAllowedPath,
+  isDynamicContent,
+  isPathSafe,
+  isValidICalCode,
+  noCacheHeaders,
+  parseAllowedOrigins,
+  requiresApiPrefix,
+  rewriteCookie,
+  transformAuthFormData,
+  validateAllowedOrigins,
+} from "./utils";
 
 describe("Origin Validation", () => {
   describe("parseAllowedOrigins", () => {
@@ -629,26 +479,6 @@ describe("CORS Headers", () => {
 });
 
 describe("Path Safety (Traversal Prevention)", () => {
-  // Re-implementation of isPathSafe for testing
-  // Note: Backslashes are ALLOWED because TYPO3 Neos/Flow uses them as
-  // namespace separators in API controller paths (e.g., api\refereeconvocation)
-  function isPathSafe(pathname: string): boolean {
-    let decoded: string;
-    try {
-      decoded = decodeURIComponent(pathname);
-    } catch {
-      return false;
-    }
-    if (
-      decoded.includes("..") ||
-      decoded.includes("//") ||
-      decoded.includes("\0")
-    ) {
-      return false;
-    }
-    return true;
-  }
-
   it("accepts normal paths", () => {
     expect(isPathSafe("/neos/login")).toBe(true);
     expect(isPathSafe("/indoorvolleyball.refadmin/api/test")).toBe(true);
@@ -738,10 +568,6 @@ describe("Rate Limiting", () => {
 });
 
 describe("User-Agent Header", () => {
-  // The worker sets a custom User-Agent to identify VolleyKit traffic
-  const VOLLEYKIT_USER_AGENT =
-    "VolleyKit/1.0 (PWA; https://github.com/Takishima/volleykit)";
-
   it("sets custom User-Agent for upstream requests", () => {
     // Verify the expected User-Agent string format
     expect(VOLLEYKIT_USER_AGENT).toBe(
@@ -818,11 +644,6 @@ describe("User-Agent Header", () => {
 });
 
 describe("Kill Switch", () => {
-  // Simulates the kill switch check logic from the worker
-  function checkKillSwitch(env: { KILL_SWITCH?: string }): boolean {
-    return env.KILL_SWITCH === "true";
-  }
-
   it("returns true when KILL_SWITCH is 'true'", () => {
     expect(checkKillSwitch({ KILL_SWITCH: "true" })).toBe(true);
   });
@@ -848,9 +669,6 @@ describe("Kill Switch", () => {
     // Only exact string "true" should enable kill switch
     expect(checkKillSwitch({ KILL_SWITCH: "1" })).toBe(false);
   });
-
-  // Test the response format
-  const KILL_SWITCH_RETRY_AFTER_SECONDS = 86400;
 
   it("returns 503 status with proper headers", () => {
     const expectedStatus = 503;
@@ -910,23 +728,6 @@ describe("Robots.txt Endpoint", () => {
 });
 
 describe("iCal Proxy Route", () => {
-  /**
-   * Validate iCal referee code format.
-   * Codes must be exactly 6 alphanumeric characters.
-   */
-  function isValidICalCode(code: string): boolean {
-    return /^[A-Za-z0-9]{6}$/.test(code);
-  }
-
-  /**
-   * Extract iCal referee code from path.
-   * Matches paths like /iCal/referee/ABC123
-   */
-  function extractICalCode(pathname: string): string | null {
-    const match = pathname.match(/^\/iCal\/referee\/([^/]+)$/);
-    return match ? match[1] : null;
-  }
-
   describe("isValidICalCode", () => {
     it("accepts valid 6-character alphanumeric codes", () => {
       expect(isValidICalCode("ABC123")).toBe(true);
@@ -1037,16 +838,6 @@ describe("iCal Proxy Route", () => {
 });
 
 describe("URL Encoding Preservation", () => {
-  // Simulates the URL path extraction logic from the worker
-  // This preserves the original URL encoding by extracting the raw path string
-  function extractRawPathAndSearch(requestUrlStr: string): string {
-    const pathStart = requestUrlStr.indexOf(
-      "/",
-      requestUrlStr.indexOf("://") + 3,
-    );
-    return pathStart >= 0 ? requestUrlStr.substring(pathStart) : "/";
-  }
-
   it("preserves URL-encoded backslashes (%5c) in paths", () => {
     // TYPO3 Neos/Flow requires exact %5c encoding for namespace separators
     const requestUrl =
@@ -1130,15 +921,6 @@ describe("URL Encoding Preservation", () => {
 });
 
 describe("Cache Control Headers", () => {
-  // Re-implementation of noCacheHeaders for testing
-  function noCacheHeaders(): Record<string, string> {
-    return {
-      "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
-      Pragma: "no-cache",
-      Expires: "0",
-    };
-  }
-
   it("returns strict no-cache headers", () => {
     const headers = noCacheHeaders();
     expect(headers["Cache-Control"]).toBe(
@@ -1167,17 +949,6 @@ describe("Cache Control Headers", () => {
 });
 
 describe("Dynamic Content Detection", () => {
-  // Re-implementation of isDynamicContent for testing
-  function isDynamicContent(contentType: string | null): boolean {
-    if (!contentType) return true;
-    const normalizedType = contentType.toLowerCase();
-    return (
-      normalizedType.includes("text/html") ||
-      normalizedType.includes("application/json") ||
-      normalizedType.includes("application/x-www-form-urlencoded")
-    );
-  }
-
   describe("isDynamicContent", () => {
     it("returns true for null content type (unknown = dynamic)", () => {
       expect(isDynamicContent(null)).toBe(true);
@@ -1214,46 +985,6 @@ describe("Dynamic Content Detection", () => {
 });
 
 describe("Session Issue Detection", () => {
-  // Re-implementation of detectSessionIssue for testing
-  function detectSessionIssue(
-    response: { status: number; headers: { get: (name: string) => string | null } },
-    responseBody?: string,
-  ): boolean {
-    // Check for redirect to login page
-    if (response.status >= 300 && response.status < 400) {
-      const location = response.headers.get("Location");
-      if (location) {
-        const normalizedLocation = location.toLowerCase();
-        if (
-          normalizedLocation.includes("/login") ||
-          normalizedLocation.endsWith("/") ||
-          normalizedLocation.includes("authentication")
-        ) {
-          return true;
-        }
-      }
-    }
-
-    // Check for auth error responses
-    if (response.status === 401 || response.status === 403) {
-      return true;
-    }
-
-    // Check HTML content for login form indicators
-    if (responseBody) {
-      const lowerBody = responseBody.toLowerCase();
-      if (
-        lowerBody.includes('name="username"') &&
-        lowerBody.includes('name="password"') &&
-        lowerBody.includes("login")
-      ) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
   // Helper to create mock response
   function mockResponse(
     status: number,

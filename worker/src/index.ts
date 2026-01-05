@@ -13,14 +13,24 @@
  */
 
 import type { HeadersWithCookies } from "./types";
-
-// Custom User-Agent to identify VolleyKit traffic to the upstream server
-// This helps Swiss Volley distinguish our app from bots or abuse
-const VOLLEYKIT_USER_AGENT =
-  "VolleyKit/1.0 (PWA; https://github.com/Takishima/volleykit)";
-
-// Retry-After duration when service is unavailable (kill switch enabled)
-const KILL_SWITCH_RETRY_AFTER_SECONDS = 86400; // 24 hours
+import {
+  AUTH_ENDPOINT,
+  KILL_SWITCH_RETRY_AFTER_SECONDS,
+  VOLLEYKIT_USER_AGENT,
+  detectSessionIssue,
+  extractICalCode,
+  hasAuthCredentials,
+  isAllowedOrigin,
+  isAllowedPath,
+  isDynamicContent,
+  isPathSafe,
+  isValidICalCode,
+  noCacheHeaders,
+  parseAllowedOrigins,
+  requiresApiPrefix,
+  transformAuthFormData,
+  validateAllowedOrigins,
+} from "./utils";
 
 /**
  * Cloudflare Rate Limiter binding interface.
@@ -44,7 +54,6 @@ function validateEnv(env: Env): void {
   if (!env.TARGET_HOST || env.TARGET_HOST.trim() === "") {
     throw new Error("TARGET_HOST environment variable is required");
   }
-  // Validate TARGET_HOST is a valid URL
   try {
     new URL(env.TARGET_HOST);
   } catch {
@@ -52,381 +61,18 @@ function validateEnv(env: Env): void {
   }
 }
 
-// Paths that should be proxied (matches volleymanager.volleyball.ch API structure)
-// Authentication endpoints (Neos Flow) - these are NOT prefixed with /api/:
-// - /: Homepage (backend redirects /login here, contains login form)
-// - /login: Login redirect target (redirects to / which has the actual form)
-// - /sportmanager.security/authentication/authenticate: Submit credentials (POST)
-// - /logout: Logout endpoint (GET)
-// - /sportmanager.volleyball/: Dashboard and other authenticated pages
-// API endpoints - these ARE prefixed with /api/:
-// - /indoorvolleyball.refadmin/: Referee admin API (assignments, compensations)
-// - /sportmanager.indoorvolleyball/: Game exchange marketplace API
-// - /sportmanager.core/: Core API (search, countries)
-// - /sportmanager.resourcemanagement/: Resource upload API
-// - /sportmanager.notificationcenter/: Notifications API
-
-// Exact match paths (no subpaths allowed) - NOT prefixed with /api/
-const ALLOWED_EXACT_PATHS = ["/", "/login", "/logout"];
-
-// Prefix match paths that are NOT prefixed with /api/ (auth and dashboard)
-const ALLOWED_PREFIX_PATHS_NO_API = [
-  "/sportmanager.security/",
-  "/sportmanager.volleyball/",
-];
-
-// Specific paths within NO_API prefixes that DO need the /api/ prefix
-// These are API endpoints under packages that normally serve dashboard/auth pages.
-const EXCEPTIONS_NEED_API = [
-  "/sportmanager.security/api", // e.g., /sportmanager.security/api\party/switchRoleAndAttribute
-  "/sportmanager.volleyball/api", // e.g., /sportmanager.volleyball/api\person/showWithNestedObjects
-];
-
-// Specific paths within WITH_API prefixes that do NOT need the /api/ prefix
-// These are file download endpoints that serve binary content (PDFs, etc.)
-const EXCEPTIONS_NO_API = [
-  "/indoorvolleyball.refadmin/refereestatementofexpenses/downloadrefereestatementofexpenses", // PDF download
-];
-
-// Prefix match paths that ARE prefixed with /api/ (API endpoints)
-const ALLOWED_PREFIX_PATHS_WITH_API = [
-  "/indoorvolleyball.refadmin/",
-  "/sportmanager.indoorvolleyball/",
-  "/sportmanager.core/",
-  "/sportmanager.resourcemanagement/",
-  "/sportmanager.notificationcenter/",
-];
-
-// The correct authentication endpoint
-const AUTH_ENDPOINT = "/sportmanager.security/authentication/authenticate";
-
-// Form field name that indicates authentication credentials are present
-// This is the Neos Flow authentication token username field
-const AUTH_USERNAME_FIELD =
-  "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][username]";
-
-function isAllowedPath(pathname: string): boolean {
-  // Check exact matches first
-  if (ALLOWED_EXACT_PATHS.includes(pathname)) {
-    return true;
-  }
-  // Check prefix matches (both with and without /api/ prefix)
-  return (
-    ALLOWED_PREFIX_PATHS_NO_API.some((prefix) => pathname.startsWith(prefix)) ||
-    ALLOWED_PREFIX_PATHS_WITH_API.some((prefix) => pathname.startsWith(prefix))
-  );
-}
-
-/**
- * Check if a path requires the /api/ prefix when forwarding to the target host.
- * API endpoints need this prefix, while auth/dashboard endpoints do not.
- *
- * Special cases:
- * - Some paths under /sportmanager.security/ (like party switching)
- *   DO need the /api/ prefix even though most /sportmanager.security/ paths don't.
- * - Some paths under /indoorvolleyball.refadmin/ (like PDF downloads)
- *   do NOT need the /api/ prefix even though most /indoorvolleyball.refadmin/ paths do.
- */
-function requiresApiPrefix(pathname: string): boolean {
-  // Check for exceptions that normally would need /api/ but don't (e.g., PDF downloads)
-  if (EXCEPTIONS_NO_API.some((prefix) => pathname.startsWith(prefix))) {
-    return false;
-  }
-  // Check for exceptions that normally wouldn't need /api/ but do
-  if (EXCEPTIONS_NEED_API.some((prefix) => pathname.startsWith(prefix))) {
-    return true;
-  }
-  return ALLOWED_PREFIX_PATHS_WITH_API.some((prefix) =>
-    pathname.startsWith(prefix),
-  );
-}
-
-/**
- * Check if request body contains authentication credentials.
- * This detects when iOS Safari's password autofill triggers a native form
- * submission to /login instead of the correct /sportmanager.security/authentication/authenticate endpoint.
- *
- * Checks for both:
- * 1. Neos Flow format: __authentication[Neos][Flow]...[username]=value
- * 2. Simple HTML form format: username=value (from native form submission)
- *
- * @param body The request body as text
- * @returns true if the body contains authentication credentials
- */
-function hasAuthCredentials(body: string): boolean {
-  // Check for Neos Flow format (from React fetch)
-  const encodedField = encodeURIComponent(AUTH_USERNAME_FIELD);
-  if (body.includes(AUTH_USERNAME_FIELD) || body.includes(encodedField)) {
-    return true;
-  }
-
-  // Check for simple HTML form format (from iOS native form submission)
-  // Look for username=...&password=... pattern
-  const params = new URLSearchParams(body);
-  return params.has("username") && params.has("password");
-}
-
-/**
- * Transform simple form fields to Neos Flow authentication format.
- * This converts native HTML form submission (username/password) to the
- * format expected by the VolleyManager authentication endpoint.
- *
- * @param body The original form body
- * @returns Transformed body with Neos Flow field names, or original if already in correct format
- */
-function transformAuthFormData(body: string): string {
-  // Check if already in Neos Flow format
-  const encodedField = encodeURIComponent(AUTH_USERNAME_FIELD);
-  if (body.includes(AUTH_USERNAME_FIELD) || body.includes(encodedField)) {
-    return body; // Already in correct format
-  }
-
-  // Parse simple form fields
-  const params = new URLSearchParams(body);
-  const username = params.get("username");
-  const password = params.get("password");
-
-  if (!username || !password) {
-    return body; // Not a valid login form, return unchanged
-  }
-
-  // Build Neos Flow format form data
-  // Note: The __trustedProperties and __referrer fields are required by Neos Flow
-  // but we can't generate them here as they contain HMAC signatures.
-  // This transformation will allow the auth to proceed, but it may fail server-side
-  // if the CSRF protection rejects it. The real fix is in the PWA to prevent
-  // native form submission, but this provides a fallback.
-  const neosParams = new URLSearchParams();
-
-  // Add authentication credentials in Neos Flow format
-  neosParams.set(
-    "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][username]",
-    username,
-  );
-  neosParams.set(
-    "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][password]",
-    password,
-  );
-
-  // Copy any other fields that might be present (e.g., __trustedProperties if included)
-  for (const [key, value] of params.entries()) {
-    if (key !== "username" && key !== "password") {
-      neosParams.set(key, value);
-    }
-  }
-
-  return neosParams.toString();
-}
-
-function parseAllowedOrigins(allowedOrigins: string): string[] {
-  return allowedOrigins
-    .split(",")
-    .map((o) => o.trim())
-    .filter((o) => o.length > 0);
-}
-
-function validateAllowedOrigins(origins: string[]): void {
-  for (const origin of origins) {
-    try {
-      const url = new URL(origin);
-      if (url.protocol !== "https:" && url.protocol !== "http:") {
-        throw new Error(`Origin must use http or https protocol: ${origin}`);
-      }
-      // Origin should not have path, query, or fragment
-      if (url.pathname !== "/" || url.search || url.hash) {
-        throw new Error(
-          `Origin should not include path, query, or fragment: ${origin}`,
-        );
-      }
-    } catch (e) {
-      if (e instanceof Error && e.message.includes("Origin")) {
-        throw e;
-      }
-      throw new Error(`Invalid origin format: ${origin}`);
-    }
-  }
-}
-
-function isAllowedOrigin(
-  origin: string | null,
-  allowedOrigins: string[],
-): boolean {
-  if (!origin) return false;
-  // Normalize: remove trailing slash and lowercase for case-insensitive comparison
-  // Origins are case-insensitive per RFC 6454
-  const normalizedOrigin = origin.replace(/\/$/, "").toLowerCase();
-  return allowedOrigins.some(
-    (allowed) => allowed.replace(/\/$/, "").toLowerCase() === normalizedOrigin,
-  );
-}
-
-/**
- * Validate iCal referee code format.
- * Codes must be exactly 6 alphanumeric characters.
- *
- * @param code The code to validate
- * @returns true if the code is valid, false otherwise
- */
-function isValidICalCode(code: string): boolean {
-  return /^[A-Za-z0-9]{6}$/.test(code);
-}
-
-/**
- * Extract iCal referee code from path.
- * Matches paths like /iCal/referee/ABC123
- *
- * @param pathname The URL pathname
- * @returns The code if path matches, null otherwise
- */
-function extractICalCode(pathname: string): string | null {
-  const match = pathname.match(/^\/iCal\/referee\/([^/]+)$/);
-  return match ? match[1] : null;
-}
-
-/**
- * Validate pathname to prevent path traversal attacks.
- * Returns true if the path is safe, false if it contains suspicious patterns.
- *
- * Note: Backslashes (\) are ALLOWED because the TYPO3 Neos/Flow backend uses
- * them as namespace separators in controller paths. For example:
- * - /indoorvolleyball.refadmin/api\refereeconvocation/search
- * - /indoorvolleyball.refadmin/api\refereeassociationsettings/get
- *
- * The backslash is not a path traversal risk here because:
- * 1. It's used as a literal character in the URL path, not as a directory separator
- * 2. The backend interprets it as a PHP namespace separator
- * 3. Path traversal requires ".." sequences, which are still blocked
- * 4. This worker runs on Cloudflare's Linux infrastructure, not Windows
- */
-function isPathSafe(pathname: string): boolean {
-  // Decode the pathname to catch encoded traversal attempts
-  let decoded: string;
-  try {
-    decoded = decodeURIComponent(pathname);
-  } catch {
-    // Invalid encoding - reject
-    return false;
-  }
-
-  // Check for path traversal patterns
-  // Note: Backslash is intentionally NOT blocked - see function documentation
-  if (
-    decoded.includes("..") ||
-    decoded.includes("//") ||
-    decoded.includes("\0")
-  ) {
-    return false;
-  }
-
-  return true;
-}
-
 /**
  * Security headers to protect against common web vulnerabilities.
- * These are added to all proxy responses.
  */
 function securityHeaders(): HeadersInit {
   return {
-    // Content Security Policy - restrict resource loading
-    // default-src 'self': Only allow resources from same origin
-    // script-src 'self': Only allow scripts from same origin
-    // style-src 'self' 'unsafe-inline': Allow inline styles (needed for some frameworks)
-    // img-src 'self' data:: Allow images from same origin and data URIs
-    // connect-src 'self': Only allow fetch/XHR to same origin
     "Content-Security-Policy":
       "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'",
-    // Prevent clickjacking - only allow framing from same origin
     "X-Frame-Options": "SAMEORIGIN",
-    // Prevent MIME type sniffing
     "X-Content-Type-Options": "nosniff",
-    // Enable XSS protection in older browsers
     "X-XSS-Protection": "1; mode=block",
-    // Referrer policy - don't leak referrer to other origins
     "Referrer-Policy": "strict-origin-when-cross-origin",
   };
-}
-
-/**
- * Cache control headers to prevent stale data from being served.
- * Dynamic content (API responses, HTML pages) should never be cached.
- *
- * The upstream server (volleymanager.volleyball.ch) may return cache-friendly
- * headers, but since this is a real-time application with authentication,
- * caching can cause stale data issues (outdated assignments, sessions, etc.).
- */
-function noCacheHeaders(): HeadersInit {
-  return {
-    // Prevent all caching - critical for real-time data
-    "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
-    // Legacy HTTP/1.0 cache prevention
-    Pragma: "no-cache",
-    // Ensure content is always considered expired
-    Expires: "0",
-  };
-}
-
-/**
- * Check if a response contains dynamic content that should not be cached.
- * This includes HTML pages (login, dashboard) and API JSON responses.
- *
- * @param contentType The Content-Type header value from the response
- * @returns true if the content should have no-cache headers applied
- */
-function isDynamicContent(contentType: string | null): boolean {
-  if (!contentType) return true; // Default to dynamic if unknown
-
-  const normalizedType = contentType.toLowerCase();
-  return (
-    normalizedType.includes("text/html") ||
-    normalizedType.includes("application/json") ||
-    normalizedType.includes("application/x-www-form-urlencoded")
-  );
-}
-
-/**
- * Check if the response appears to be from an expired or invalid session.
- * The upstream server may return a login redirect or error page when
- * the session has expired, which we should detect and not cache.
- *
- * @param response The upstream response
- * @param responseBody The response body text (for HTML inspection)
- * @returns true if the response indicates session issues
- */
-function detectSessionIssue(response: Response, responseBody?: string): boolean {
-  // Check for redirect to login page (302/303 to /login or root)
-  if (response.status >= 300 && response.status < 400) {
-    const location = response.headers.get("Location");
-    if (location) {
-      const normalizedLocation = location.toLowerCase();
-      if (
-        normalizedLocation.includes("/login") ||
-        normalizedLocation.endsWith("/") ||
-        normalizedLocation.includes("authentication")
-      ) {
-        return true;
-      }
-    }
-  }
-
-  // Check for session-related error responses
-  if (response.status === 401 || response.status === 403) {
-    return true;
-  }
-
-  // Check HTML content for login form indicators (suggests session expired)
-  if (responseBody) {
-    const lowerBody = responseBody.toLowerCase();
-    // Look for login form markers that indicate we've been redirected to login
-    if (
-      lowerBody.includes('name="username"') &&
-      lowerBody.includes('name="password"') &&
-      lowerBody.includes("login")
-    ) {
-      return true;
-    }
-  }
-
-  return false;
 }
 
 function corsHeaders(origin: string): HeadersInit {
