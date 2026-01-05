@@ -53,11 +53,18 @@ const ESTIMATED_LINE_HEIGHT_PX = 20;
  */
 
 /**
+ * @typedef {Object} MistralTable
+ * @property {string} id - Table identifier (e.g., "tbl-0.html")
+ * @property {string} content - HTML table content
+ * @property {"html" | "markdown"} format - Table format
+ */
+
+/**
  * @typedef {Object} MistralOCRPage
  * @property {number} index - Page index
  * @property {string} markdown - Extracted text in markdown format
  * @property {string[]} [images] - Base64 encoded images (if requested)
- * @property {string[]} [tables] - HTML table content (when table_format="html")
+ * @property {(string | MistralTable)[]} [tables] - HTML table content (when table_format="html")
  * @property {Object} dimensions - Page dimensions
  */
 
@@ -168,9 +175,30 @@ export class MistralOCR {
   }
 
   /**
+   * Extract HTML content from a table entry
+   * Mistral returns tables as objects with {id, content, format}
+   * @param {string | MistralTable} table - Table entry from Mistral response
+   * @returns {string} HTML content
+   */
+  #getTableHtml(table) {
+    // Handle string format (legacy/fallback)
+    if (typeof table === 'string') {
+      return table;
+    }
+
+    // Handle Mistral's object format: {id, content, format}
+    if (typeof table === 'object' && table !== null && typeof table.content === 'string') {
+      return table.content;
+    }
+
+    console.warn('Unexpected table format:', table);
+    return '';
+  }
+
+  /**
    * Replace table placeholders in markdown with actual table content
    * @param {string} markdown - Markdown text with placeholders like [tbl-0.html](tbl-0.html)
-   * @param {string[]} tables - Array of HTML table strings
+   * @param {(string | MistralTable)[]} tables - Array of HTML table entries
    * @returns {string} Markdown with table content inlined
    */
   #inlineTables(markdown, tables) {
@@ -184,7 +212,8 @@ export class MistralOCR {
     // Placeholders are in format: [tbl-N.html](tbl-N.html)
     for (let i = 0; i < tables.length; i++) {
       const placeholder = `[tbl-${i}.html](tbl-${i}.html)`;
-      const tableLines = this.#parseHtmlTable(tables[i]);
+      const tableHtml = this.#getTableHtml(tables[i]);
+      const tableLines = this.#parseHtmlTable(tableHtml);
       const tableText = tableLines.join('\n');
 
       result = result.replace(placeholder, tableText);
