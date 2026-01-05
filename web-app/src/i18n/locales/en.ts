@@ -389,6 +389,7 @@ const en: Translations = {
       description:
         "Calculate travel times using Swiss public transport to filter exchange offers by commute time.",
       enableCalculations: "Enable travel time calculations",
+      disabledHint: "Requires home location and transport API",
       requiresHomeLocation: "Set your home location first",
       apiNotConfigured: "Transport API is not configured",
       maxTravelTime: "Maximum travel time",

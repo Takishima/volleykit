@@ -263,6 +263,7 @@ export interface Translations {
       title: string;
       description: string;
       enableCalculations: string;
+      disabledHint: string;
       requiresHomeLocation: string;
       apiNotConfigured: string;
       maxTravelTime: string;

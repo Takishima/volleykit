@@ -390,6 +390,7 @@ const fr: Translations = {
       description:
         "Calculez les temps de trajet avec les transports publics suisses pour filtrer les échanges par temps de déplacement.",
       enableCalculations: "Activer le calcul des temps de trajet",
+      disabledHint: "Nécessite emplacement domicile et API de transport",
       requiresHomeLocation: "Définissez d'abord votre emplacement domicile",
       apiNotConfigured: "L'API de transport n'est pas configurée",
       maxTravelTime: "Temps de trajet maximum",
