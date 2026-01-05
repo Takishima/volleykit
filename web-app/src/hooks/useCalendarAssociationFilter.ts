@@ -3,13 +3,20 @@
  *
  * Extracts unique associations from calendar data and provides
  * filtering functionality similar to the association switcher in API mode.
+ *
+ * Uses a shared Zustand store so the filter selection persists across
+ * components (e.g., AppShell dropdown and AssignmentsPage).
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useEffect } from 'react';
 import type { CalendarAssignment } from '@/api/calendar-api';
+import {
+  useCalendarFilterStore,
+  ALL_ASSOCIATIONS,
+} from '@/stores/calendar-filter';
 
-/** Special value meaning "show all associations" */
-export const ALL_ASSOCIATIONS = '__all__';
+// Re-export for backward compatibility
+export { ALL_ASSOCIATIONS } from '@/stores/calendar-filter';
 
 export interface UseCalendarAssociationFilterResult {
   /** List of unique associations found in calendar data */
@@ -68,8 +75,11 @@ export interface UseCalendarAssociationFilterResult {
 export function useCalendarAssociationFilter(
   calendarData: CalendarAssignment[]
 ): UseCalendarAssociationFilterResult {
-  const [selectedAssociation, setSelectedAssociation] =
-    useState<string>(ALL_ASSOCIATIONS);
+  const {
+    selectedAssociation,
+    setSelectedAssociation,
+    setAssociations,
+  } = useCalendarFilterStore();
 
   // Extract unique associations from calendar data
   const associations = useMemo(() => {
@@ -84,6 +94,19 @@ export function useCalendarAssociationFilter(
     // Sort alphabetically for consistent ordering
     return Array.from(uniqueAssociations).sort();
   }, [calendarData]);
+
+  // Sync extracted associations to store (only when they actually change)
+  const storeAssociations = useCalendarFilterStore((state) => state.associations);
+  useEffect(() => {
+    // Only update if the associations have actually changed
+    const hasChanged =
+      associations.length !== storeAssociations.length ||
+      associations.some((a, i) => a !== storeAssociations[i]);
+
+    if (hasChanged) {
+      setAssociations(associations);
+    }
+  }, [associations, storeAssociations, setAssociations]);
 
   const hasMultipleAssociations = associations.length >= 2;
 
