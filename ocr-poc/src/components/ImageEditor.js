@@ -100,8 +100,7 @@ export class ImageEditor {
     this.#render();
     this.#loadImage();
 
-    // Bind event handlers
-    this.#handleResize = this.#handleResize.bind(this);
+    // Add resize listener (arrow function is already bound to `this`)
     window.addEventListener('resize', this.#handleResize);
   }
 
@@ -280,11 +279,12 @@ export class ImageEditor {
     this.#panY = Math.max(-maxPanY, Math.min(maxPanY, this.#panY));
   }
 
-  #handleResize() {
+  /** @type {() => void} */
+  #handleResize = () => {
     this.#calculateSizes();
     this.#centerImage();
     this.#updateTransform();
-  }
+  };
 
   /** @param {TouchEvent} e */
   #handleTouchStart(e) {
