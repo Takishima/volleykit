@@ -40,14 +40,14 @@ Configure in `wrangler.toml` or Cloudflare Dashboard:
 This worker implements rate limiting using Cloudflare's Rate Limiter binding:
 
 - **Limit**: 100 requests per minute per IP
-- **Configuration**: Set in `wrangler.toml` via `[[rate_limits]]` binding
+- **Configuration**: Set in `wrangler.toml` via `[[ratelimits]]` binding
 - **Response**: Returns HTTP 429 with `Retry-After: 60` header when exceeded
 
 The rate limiter is configured in `wrangler.toml`:
 
 ```toml
-[[rate_limits]]
-binding = "RATE_LIMITER"
+[[ratelimits]]
+name = "RATE_LIMITER"
 namespace_id = "1001"
 simple = { limit = 100, period = 60 }
 ```
