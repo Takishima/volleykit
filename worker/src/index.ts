@@ -543,6 +543,9 @@ export default {
               },
             },
             include_image_base64: false,
+            // Enable HTML table formatting for structured table extraction
+            // Scoresheets contain player lists and scores that benefit from table structure
+            table_format: "html",
           }),
         });
 
