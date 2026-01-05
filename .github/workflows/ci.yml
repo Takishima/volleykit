@@ -29,7 +29,7 @@ jobs:
 
       - name: Cache node_modules
         id: cache-node-modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: web-app/node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json') }}
@@ -59,7 +59,7 @@ jobs:
 
       - name: Cache node_modules
         id: cache-node-modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: web-app/node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json') }}
@@ -70,7 +70,7 @@ jobs:
 
       - name: Cache generated API types
         id: api-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: web-app/src/api/schema.ts
           key: api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'web-app/package-lock.json') }}
@@ -100,7 +100,7 @@ jobs:
 
       - name: Cache node_modules
         id: cache-node-modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: web-app/node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json') }}
@@ -111,7 +111,7 @@ jobs:
 
       - name: Cache generated API types
         id: api-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: web-app/src/api/schema.ts
           key: api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'web-app/package-lock.json') }}
@@ -141,7 +141,7 @@ jobs:
 
       - name: Cache node_modules
         id: cache-node-modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: web-app/node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json') }}
@@ -152,7 +152,7 @@ jobs:
 
       - name: Cache generated API types
         id: api-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: web-app/src/api/schema.ts
           key: api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'web-app/package-lock.json') }}
@@ -182,7 +182,7 @@ jobs:
 
       - name: Cache node_modules
         id: cache-node-modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: web-app/node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json') }}
@@ -193,7 +193,7 @@ jobs:
 
       - name: Cache generated API types
         id: api-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: web-app/src/api/schema.ts
           key: api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'web-app/package-lock.json') }}
@@ -231,7 +231,7 @@ jobs:
 
       - name: Cache node_modules
         id: cache-node-modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: web-app/node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json') }}
@@ -273,7 +273,7 @@ jobs:
 
       - name: Cache node_modules
         id: cache-node-modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: web-app/node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json') }}
@@ -294,7 +294,7 @@ jobs:
 
       - name: Cache Playwright browsers
         id: playwright-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ matrix.browser }}-${{ steps.playwright-version.outputs.version }}
@@ -337,7 +337,7 @@ jobs:
 
       - name: Cache node_modules
         id: cache-node-modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: web-app/node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json') }}
