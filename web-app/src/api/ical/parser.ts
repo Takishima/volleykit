@@ -268,37 +268,53 @@ function parseGameNumber(description: string): number | null {
  *
  * Handles multiple language formats:
  * - French: "Equipe recevante: #10008 | TV St. Johann (3L, ♀, SVRBA)"
- *           "Equipe visiteuse: #10641 | VBC Therwil (U20, ♀, SVRBA)"
  * - German: "Heimteam: #20 | Volley Amriswil (NLA, ♂, SV)"
- *           "Gastteam: #4 | Lausanne UC (NLA, ♂, SV)"
  *
- * The association code is the last item in parentheses after team name.
- * Known codes: SVRBA, SVRZ, SVRI, SVRNO, SV
+ * The association code is the last item in parentheses: (Category, Gender, AssociationCode)
  */
 function parseAssociation(description: string): string | null {
-  // Match team info patterns in multiple languages
-  // Pattern: Team info with parentheses containing (Category, Gender, AssociationCode)
-  // The gender symbol has a space before it in real data: "(NLA,  ♂, SV)"
-  const teamPatterns = [
-    // French patterns
-    /Equipe (?:recevante|visiteuse):[^(]+\([^,]+,\s*[♀♂],\s*([A-Z]{2,6})\)/i,
-    // German patterns - "Heimteam:" and "Gastteam:" (note: space before gender symbol)
-    /(?:Heim|Gast)team:[^(]+\([^,]+,\s*[♀♂],\s*([A-Z]{2,6})\)/i,
-    // English patterns
-    /(?:Home|Away) Team:[^(]+\([^,]+,\s*[♀♂],\s*([A-Z]{2,6})\)/i,
-    // Italian patterns
-    /Squadra (?:di casa|ospite):[^(]+\([^,]+,\s*[♀♂],\s*([A-Z]{2,6})\)/i,
+  // Team line labels in different languages
+  const teamLabels = [
+    'equipe recevante:',
+    'equipe visiteuse:',
+    'heimteam:',
+    'gastteam:',
+    'home team:',
+    'away team:',
+    'squadra di casa:',
+    'squadra ospite:',
   ];
 
-  for (const pattern of teamPatterns) {
-    const match = pattern.exec(description);
-    if (match?.[1]) {
-      return match[1].toUpperCase();
+  // Find a team line by checking each line
+  const lines = description.split('\n');
+  for (const line of lines) {
+    const lowerLine = line.toLowerCase();
+    if (teamLabels.some((label) => lowerLine.includes(label))) {
+      // Split by | to get the team info part: "TV St. Johann (3L, ♀, SVRBA)"
+      const parts = line.split('|');
+      const teamPart = parts[1];
+      if (teamPart) {
+        // Find opening and closing parentheses using indexOf (no regex backtracking)
+        const openParen = teamPart.lastIndexOf('(');
+        const closeParen = teamPart.lastIndexOf(')');
+        if (openParen !== -1 && closeParen > openParen) {
+          const parenContent = teamPart.slice(openParen + 1, closeParen);
+          // Split by comma to get: ["3L", " ♀", " SVRBA"]
+          const values = parenContent.split(',');
+          const lastValue = values[values.length - 1];
+          if (lastValue) {
+            const assoc = lastValue.trim().toUpperCase();
+            // Validate it looks like an association code (2-6 uppercase letters)
+            if (/^[A-Z]{2,6}$/.test(assoc)) {
+              return assoc;
+            }
+          }
+        }
+      }
     }
   }
 
-  // Fallback: look for known association codes in parentheses
-  // This catches formats we haven't explicitly matched
+  // Fallback: look for known association codes anywhere in description
   const knownAssociations = ['SVRBA', 'SVRZ', 'SVRI', 'SVRNO', 'SVRNW', 'SVRBE', 'SV'];
   for (const assoc of knownAssociations) {
     if (description.includes(assoc)) {
@@ -312,21 +328,33 @@ function parseAssociation(description: string): string | null {
 /**
  * Extracts hall ID and name from description.
  * Format: "Salle: #3661 | Turnhalle Sekundarschule Feld (H)"
- * or "Halle: #3661 | ..."
+ * or "Halle: #10 | Tellenfeld B (A)"
  */
 function parseHallInfo(description: string): {
   hallId: string | null;
   hallName: string | null;
 } {
-  // Match patterns like "Salle: #3661 | Hall Name" or "Halle: #3661 | Hall Name"
-  const match = description.match(
-    /(?:Salle|Halle|Hall|Sala):\s*#?(\d+)\s*\|\s*([^\n]+)/i
-  );
-  if (match) {
-    return {
-      hallId: match[1] ?? null,
-      hallName: match[2]?.trim() ?? null,
-    };
+  // Hall labels in different languages
+  const hallLabels = ['salle:', 'halle:', 'hall:', 'sala:'];
+
+  const lines = description.split('\n');
+  for (const line of lines) {
+    const lowerLine = line.toLowerCase();
+    if (hallLabels.some((label) => lowerLine.includes(label))) {
+      // Split by | to get: ["Salle: #3661", "Turnhalle Sekundarschule Feld (H)"]
+      const parts = line.split('|');
+      if (parts.length >= 2) {
+        // Extract ID from first part (e.g., "#3661" or "#10")
+        const idPart = parts[0];
+        const idMatch = idPart ? /#?(\d+)/.exec(idPart) : null;
+        const hallId = idMatch?.[1] ?? null;
+
+        // Hall name is the second part
+        const hallName = parts[1]?.trim() ?? null;
+
+        return { hallId, hallName };
+      }
+    }
   }
   return { hallId: null, hallName: null };
 }
