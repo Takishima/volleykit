@@ -144,10 +144,19 @@ export default {
       }
 
       // Check origin for health endpoint (required for CORS)
+      // Include CORS headers even in error responses so browsers can read the error
       if (!isAllowedOrigin(origin, allowedOrigins)) {
+        const errorHeaders: HeadersInit = {
+          "Content-Type": "text/plain",
+          ...securityHeaders(),
+        };
+        // If origin was provided, include CORS headers so browser can read the error
+        if (origin) {
+          Object.assign(errorHeaders, corsHeaders(origin));
+        }
         return new Response("Forbidden: Origin not allowed", {
           status: 403,
-          headers: { "Content-Type": "text/plain" },
+          headers: errorHeaders,
         });
       }
 
@@ -190,10 +199,19 @@ export default {
       }
 
       // Check origin for OCR endpoint
+      // Include CORS headers even in error responses so browsers can read the error
       if (!isAllowedOrigin(origin, allowedOrigins)) {
+        const errorHeaders: HeadersInit = {
+          "Content-Type": "text/plain",
+          ...securityHeaders(),
+        };
+        // If origin was provided, include CORS headers so browser can read the error
+        if (origin) {
+          Object.assign(errorHeaders, corsHeaders(origin));
+        }
         return new Response("Forbidden: Origin not allowed", {
           status: 403,
-          headers: { "Content-Type": "text/plain" },
+          headers: errorHeaders,
         });
       }
 
@@ -454,10 +472,19 @@ export default {
     const origin = request.headers.get("Origin");
 
     // Check if origin is allowed
+    // Include CORS headers even in error responses so browsers can read the error
     if (!isAllowedOrigin(origin, allowedOrigins)) {
+      const errorHeaders: HeadersInit = {
+        "Content-Type": "text/plain",
+        ...securityHeaders(),
+      };
+      // If origin was provided, include CORS headers so browser can read the error
+      if (origin) {
+        Object.assign(errorHeaders, corsHeaders(origin));
+      }
       return new Response("Forbidden: Origin not allowed", {
         status: 403,
-        headers: { "Content-Type": "text/plain" },
+        headers: errorHeaders,
       });
     }
 
