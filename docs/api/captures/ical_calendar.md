@@ -66,13 +66,13 @@ DESCRIPTION:Engagé en tant que: ARB 1\n\nMatch: #392936 | 11.09.2025 20:15
   | TV St. Johann — VTV Horw 1\nLigue: #6758 | Mobilière Volley Cup |
  ♀\n\nSalle: #1477 | TH St. Johann (E)\nAdresse: Spitalstrasse 50\, 4056
  Basel\nhttps://maps.google.com/?q=8FV9HH8J%2B49&hl=fr\n\nEquipe recevante:
-  #10008 | TV St. Johann (3L\,  ♀\, SVRBA)\n	Responsable d'équipe: Sara
- Gürtler | sara_guertler@bluewin.ch | +41796218933\n	Responsable d'équipe
- : Marianne Lorentz | mariannelorentz@yahoo.de | +41798172050\n\nEquipe vis
- iteuse: #3813 | VTV Horw 1 (3L\,  ♀\, SVRI)\n	Responsable d'équipe: Mar
- tina Frei | martina.frei@hotmail.com | +41795808953\n\nConvocateur: \n	Hug
- o Spahni | hugo.spahni@bluewin.ch | +41786130823\n\nARB convoqués:\n	ARB
- 1: Damien Nguyen | ngn.damien@gmail.com | +41786795571\n
+  #10008 | TV St. Johann (3L\,  ♀\, SVRBA)\n	Responsable d'équipe: Anna
+ Müller | anna.mueller@example.com | +41791234567\n	Responsable d'équipe
+ : Marie Dubois | marie.dubois@example.org | +41792345678\n\nEquipe vis
+ iteuse: #3813 | VTV Horw 1 (3L\,  ♀\, SVRI)\n	Responsable d'équipe: Luc
+ ia Weber | lucia.weber@example.net | +41793456789\n\nConvocateur: \n	Max
+  Meier | max.meier@example.com | +41794567890\n\nARB convoqués:\n	ARB
+ 1: Pierre Martin | pierre.martin@example.org | +41795678901\n
 LOCATION:Spitalstrasse 50\, 4056 Basel\, Suisse
 DTSTART;TZID=UTC:20250911T181500
 DTEND;TZID=UTC:20250911T201500
@@ -97,15 +97,15 @@ DESCRIPTION:Einsatz als: 1. SR\n\nSpiel: #377762 | 11.10.2025 17:00 | Volle
  y Amriswil — Lausanne UC\nLiga: #6607 | NLA | ♂\n\nHalle: #10 | Tellen
  feld B (A)\nAdresse: Untere Grenzstrasse 10\, 8580 Amriswil\nhttps://maps.
  google.com/?q=8FVFG7XQ%2BCP&hl=de\n\nHeimteam: #20 | Volley Amriswil (NLA\
- ,  ♂\, SV)\n	Teamverantwortlicher: Alvaro Jurado Moreno | alvaro.juradom
- 3@gmail.com | \n	Teamverantwortlicher: Gesa Osterwald | gesa.osterwald@vol
- leyamriswil.ch | +41766890060\n\nGastteam: #4 | Lausanne UC (NLA\,  ♂\,
- SV)\n	Teamverantwortlicher: Philippe Ducommun | philippe@lucvolleyball.ch
- | +41796372064\n\nAufbieter: \n	Philippe Weinberger | philippe.weinberger@
- axa.ch | +41792136008\n\nAufgebotene SR:\n	1. SR: Laura Rüegg | laura.ru
- eegg@me.com | +41796558486\n	2. SR: Alfio Sanapo | alfiosan70@gmail.com |
- +41796194374\n	1. LR: Martin Auricht | administration@volleyaadorf.ch | +4
- 1764808808\n	2. LR: Sepp Signer | signer-inauen@bluewin.ch | +41764138087\
+ ,  ♂\, SV)\n	Teamverantwortlicher: Hans Schmidt | hans.schmidt@example
+ .com | \n	Teamverantwortlicher: Lisa Brunner | lisa.brunner@example
+ .ch | +41796789012\n\nGastteam: #4 | Lausanne UC (NLA\,  ♂\,
+ SV)\n	Teamverantwortlicher: Jean Dupont | jean.dupont@example.ch
+ | +41797890123\n\nAufbieter: \n	Thomas Keller | thomas.keller@
+ example.ch | +41798901234\n\nAufgebotene SR:\n	1. SR: Sandra Huber | sandra.hu
+ ber@example.com | +41799012345\n	2. SR: Marco Rossi | marco.rossi@example.org |
+ +41790123456\n	1. LR: Peter Zimmermann | peter.zimmermann@example.ch | +4
+ 1791234560\n	2. LR: Klaus Fischer | klaus.fischer@example.net | +41792345670\
  n
 LOCATION:Untere Grenzstrasse 10\, 8580 Amriswil\, Schweiz
 DTSTART;TZID=UTC:20251011T150000
@@ -142,8 +142,8 @@ The description contains structured data in `Label: Value` format, separated by 
 | `Match: #{id}` / `Spiel: #{id}` | `Match: #392936` | Game number: `392936` |
 | `Ligue: #{id} \| {category} \| {gender}` | `Ligue: #6758 \| Mobilière Volley Cup \| ♀` | League category, gender symbol |
 | `Salle: #{id} \| {name}` / `Halle: #{id} \| {name}` | `Salle: #1477 \| TH St. Johann (E)` | Hall ID: `1477`, Hall name |
-| `ARB 1: {name} \| {email} \| {phone}` | `ARB 1: Damien Nguyen \| ngn.damien@gmail.com \| +41786795571` | Referee name |
-| `1. SR: {name} \| {email} \| {phone}` | `1. SR: Laura Rüegg \| laura.rueegg@me.com \| +41796558486` | Referee name (German) |
+| `ARB 1: {name} \| {email} \| {phone}` | `ARB 1: Pierre Martin \| pierre.martin@example.org \| +41795678901` | Referee name |
+| `1. SR: {name} \| {email} \| {phone}` | `1. SR: Sandra Huber \| sandra.huber@example.com \| +41799012345` | Referee name (German) |
 | `Equipe recevante: #{id} \| {team} ({cat}, {gender}, {assoc})` | `Equipe recevante: #10008 \| TV St. Johann (3L, ♀, SVRBA)` | Association code: `SVRBA` |
 | `Heimteam: #{id} \| {team} ({cat}, {gender}, {assoc})` | `Heimteam: #20 \| Volley Amriswil (NLA, ♂, SV)` | Association code: `SV` |
 
