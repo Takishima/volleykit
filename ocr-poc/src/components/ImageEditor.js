@@ -13,7 +13,7 @@
 import { TABLE_ASPECT_RATIO } from './CameraGuide.js';
 
 /** Minimum zoom level */
-const MIN_ZOOM = 0.5;
+const MIN_ZOOM = 0.1;
 
 /** Maximum zoom level */
 const MAX_ZOOM = 4;
