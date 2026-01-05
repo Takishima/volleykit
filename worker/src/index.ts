@@ -22,6 +22,16 @@ const VOLLEYKIT_USER_AGENT =
 // Retry-After duration when service is unavailable (kill switch enabled)
 const KILL_SWITCH_RETRY_AFTER_SECONDS = 86400; // 24 hours
 
+// OCR configuration constants
+const OCR_MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50MB - Mistral API limit
+const OCR_ALLOWED_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/pdf",
+] as const;
+const OCR_RATE_LIMIT_RETRY_SECONDS = 60;
+
 /**
  * Cloudflare Rate Limiter binding interface.
  * @see https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
@@ -437,6 +447,27 @@ export default {
         });
       }
 
+      // Rate limiting for OCR endpoint
+      if (env.RATE_LIMITER) {
+        const clientIP = request.headers.get("CF-Connecting-IP") || "unknown";
+        const { success } = await env.RATE_LIMITER.limit({ key: clientIP });
+
+        if (!success) {
+          return new Response(
+            JSON.stringify({ error: "Too many requests" }),
+            {
+              status: 429,
+              headers: {
+                "Content-Type": "application/json",
+                "Retry-After": String(OCR_RATE_LIMIT_RETRY_SECONDS),
+                ...corsHeaders(origin!),
+                ...securityHeaders(),
+              },
+            },
+          );
+        }
+      }
+
       // Only allow POST for OCR
       if (request.method !== "POST") {
         return new Response("Method Not Allowed", {
@@ -485,11 +516,14 @@ export default {
         }
 
         // Validate file type
-        const allowedTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
-        if (!allowedTypes.includes(imageFile.type)) {
+        if (
+          !OCR_ALLOWED_MIME_TYPES.includes(
+            imageFile.type as (typeof OCR_ALLOWED_MIME_TYPES)[number],
+          )
+        ) {
           return new Response(
             JSON.stringify({
-              error: `Unsupported file type: ${imageFile.type}. Allowed: ${allowedTypes.join(", ")}`,
+              error: `Unsupported file type: ${imageFile.type}. Allowed: ${OCR_ALLOWED_MIME_TYPES.join(", ")}`,
             }),
             {
               status: 400,
@@ -502,9 +536,8 @@ export default {
           );
         }
 
-        // Validate file size (max 50MB as per Mistral limits)
-        const MAX_FILE_SIZE = 50 * 1024 * 1024;
-        if (imageFile.size > MAX_FILE_SIZE) {
+        // Validate file size
+        if (imageFile.size > OCR_MAX_FILE_SIZE_BYTES) {
           return new Response(
             JSON.stringify({
               error: `File too large: ${(imageFile.size / 1024 / 1024).toFixed(1)}MB. Maximum: 50MB`,
@@ -521,10 +554,16 @@ export default {
         }
 
         // Convert image to base64 for Mistral API
+        // Use chunked approach to avoid stack overflow with large files
         const imageBuffer = await imageFile.arrayBuffer();
-        const base64Image = btoa(
-          String.fromCharCode(...new Uint8Array(imageBuffer)),
-        );
+        const bytes = new Uint8Array(imageBuffer);
+        const CHUNK_SIZE = 8192;
+        let base64Image = "";
+        for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+          const chunk = bytes.subarray(i, i + CHUNK_SIZE);
+          base64Image += String.fromCharCode(...chunk);
+        }
+        base64Image = btoa(base64Image);
         const dataUrl = `data:${imageFile.type};base64,${base64Image}`;
 
         // Call Mistral OCR API
@@ -575,7 +614,7 @@ export default {
                 status: 429,
                 headers: {
                   "Content-Type": "application/json",
-                  "Retry-After": "60",
+                  "Retry-After": String(OCR_RATE_LIMIT_RETRY_SECONDS),
                   ...corsHeaders(origin!),
                   ...securityHeaders(),
                 },
