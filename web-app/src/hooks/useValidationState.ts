@@ -205,8 +205,8 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
         return;
       }
 
-      await saveRosterModifications(apiClient, gameId, gameDetails.nominationListOfTeamHome, state.homeRoster.playerModifications);
-      await saveRosterModifications(apiClient, gameId, gameDetails.nominationListOfTeamAway, state.awayRoster.playerModifications);
+      await saveRosterModifications(apiClient, gameId, gameDetails.nominationListOfTeamHome, state.homeRoster.playerModifications, state.homeRoster.coachModifications);
+      await saveRosterModifications(apiClient, gameId, gameDetails.nominationListOfTeamAway, state.awayRoster.playerModifications, state.awayRoster.coachModifications);
       await saveScorerSelection(apiClient, gameId, gameDetails.scoresheet, state.scorer.selected?.__identity);
       logger.debug("[VS] save done");
     } catch (error) {
@@ -241,8 +241,8 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
         logger.debug("[VS] PDF uploaded:", fileResourceId);
       }
 
-      await finalizeRoster(apiClient, gameId, gameDetails.nominationListOfTeamHome, state.homeRoster.playerModifications);
-      await finalizeRoster(apiClient, gameId, gameDetails.nominationListOfTeamAway, state.awayRoster.playerModifications);
+      await finalizeRoster(apiClient, gameId, gameDetails.nominationListOfTeamHome, state.homeRoster.playerModifications, state.homeRoster.coachModifications);
+      await finalizeRoster(apiClient, gameId, gameDetails.nominationListOfTeamAway, state.awayRoster.playerModifications, state.awayRoster.coachModifications);
       await finalizeScoresheetWithFile(apiClient, gameId, gameDetails.scoresheet, state.scorer.selected?.__identity, fileResourceId);
 
       await queryClient.invalidateQueries({ queryKey: queryKeys.validation.gameDetail(gameId!) });

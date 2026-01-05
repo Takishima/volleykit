@@ -55,6 +55,8 @@ interface CollapsibleHeaderProps {
   countLabel: string;
   expanded: boolean;
   onToggle: () => void;
+  /** ID of the section this header controls, for aria-controls */
+  sectionId: string;
 }
 
 function CollapsibleHeader({
@@ -63,6 +65,7 @@ function CollapsibleHeader({
   countLabel,
   expanded,
   onToggle,
+  sectionId,
 }: CollapsibleHeaderProps) {
   const Icon = expanded ? ChevronUp : ChevronDown;
 
@@ -72,6 +75,7 @@ function CollapsibleHeader({
       onClick={onToggle}
       className="w-full flex items-center justify-between py-3 px-1 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-lg"
       aria-expanded={expanded}
+      aria-controls={sectionId}
     >
       <div className="flex items-center gap-2">
         <Icon
@@ -370,9 +374,10 @@ export function RosterVerificationPanel({
           countLabel={t("validation.roster.coachCount")}
           expanded={expandedSection === "coaches"}
           onToggle={() => setExpandedSection("coaches")}
+          sectionId={`coaches-section-${team}`}
         />
         {expandedSection === "coaches" && (
-          <div className="mt-2">
+          <div id={`coaches-section-${team}`} className="mt-2">
             <CoachesSection
               headCoach={headCoach}
               firstAssistant={firstAssistant}
@@ -395,9 +400,10 @@ export function RosterVerificationPanel({
           countLabel={t("validation.roster.playerCount")}
           expanded={expandedSection === "players"}
           onToggle={() => setExpandedSection("players")}
+          sectionId={`players-section-${team}`}
         />
         {expandedSection === "players" && (
-          <div className="mt-2">
+          <div id={`players-section-${team}`} className="mt-2">
             {allPlayers.length === 0 ? (
               <div className="py-8 text-center">
                 <p className="text-sm text-gray-500 dark:text-gray-400">
