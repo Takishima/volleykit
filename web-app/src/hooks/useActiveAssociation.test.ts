@@ -1,7 +1,12 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useActiveAssociationCode } from "./useActiveAssociation";
-import { useAuthStore, type Occupation, type UserProfile } from "@/stores/auth";
+import {
+  useAuthStore,
+  CALENDAR_ASSOCIATION,
+  type Occupation,
+  type UserProfile,
+} from "@/stores/auth";
 
 function createOccupation(overrides: Partial<Occupation> = {}): Occupation {
   return {
@@ -32,6 +37,8 @@ describe("useActiveAssociationCode", () => {
         error: null,
         csrfToken: null,
         isDemoMode: false,
+        dataSource: "api",
+        calendarCode: null,
         activeOccupationId: null,
         isAssociationSwitching: false,
         _checkSessionPromise: null,
@@ -169,5 +176,84 @@ describe("useActiveAssociationCode", () => {
     });
 
     expect(result.current).toBe("VBCZ");
+  });
+
+  describe("calendar mode", () => {
+    it("returns CALENDAR_ASSOCIATION when dataSource is calendar", () => {
+      const occupations: Occupation[] = [
+        createOccupation({ id: "occ-1", associationCode: "SVRZ" }),
+      ];
+
+      act(() => {
+        useAuthStore.setState({
+          user: createUser({ occupations }),
+          dataSource: "calendar",
+          calendarCode: "ABC123",
+        });
+      });
+
+      const { result } = renderHook(() => useActiveAssociationCode());
+      expect(result.current).toBe(CALENDAR_ASSOCIATION);
+    });
+
+    it("returns CALENDAR_ASSOCIATION regardless of user occupations in calendar mode", () => {
+      // Even with multiple occupations, calendar mode should use dummy association
+      const occupations: Occupation[] = [
+        createOccupation({ id: "occ-1", associationCode: "SV" }),
+        createOccupation({ id: "occ-2", associationCode: "SVRBA" }),
+      ];
+
+      act(() => {
+        useAuthStore.setState({
+          user: createUser({ occupations }),
+          dataSource: "calendar",
+          calendarCode: "XYZ789",
+          activeOccupationId: "occ-2",
+        });
+      });
+
+      const { result } = renderHook(() => useActiveAssociationCode());
+      expect(result.current).toBe(CALENDAR_ASSOCIATION);
+    });
+
+    it("returns CALENDAR_ASSOCIATION even with no user in calendar mode", () => {
+      act(() => {
+        useAuthStore.setState({
+          user: null,
+          dataSource: "calendar",
+          calendarCode: "ABC123",
+        });
+      });
+
+      const { result } = renderHook(() => useActiveAssociationCode());
+      expect(result.current).toBe(CALENDAR_ASSOCIATION);
+    });
+
+    it("returns real association when switching from calendar to api mode", () => {
+      const occupations: Occupation[] = [
+        createOccupation({ id: "occ-1", associationCode: "SVRZ" }),
+      ];
+
+      act(() => {
+        useAuthStore.setState({
+          user: createUser({ occupations }),
+          dataSource: "calendar",
+          calendarCode: "ABC123",
+        });
+      });
+
+      const { result } = renderHook(() => useActiveAssociationCode());
+      expect(result.current).toBe(CALENDAR_ASSOCIATION);
+
+      // Switch to API mode
+      act(() => {
+        useAuthStore.setState({
+          dataSource: "api",
+          calendarCode: null,
+        });
+      });
+
+      expect(result.current).toBe("SVRZ");
+    });
   });
 });

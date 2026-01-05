@@ -15,6 +15,7 @@ vi.mock("@/stores/settings", () => ({
 
 vi.mock("@/stores/auth", () => ({
   useAuthStore: vi.fn(),
+  CALENDAR_ASSOCIATION: "CAL",
 }));
 
 vi.mock("@/hooks/useTravelTime", () => ({
