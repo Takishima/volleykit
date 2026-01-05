@@ -136,7 +136,7 @@ const de: Translations = {
     calendarModeBanner: "Kalendermodus",
     calendarModeTooltip: "Kalendermodus - Nur Lesen",
     optional: "Optional",
-    tbd: "TBD",
+    tbd: "Noch offen",
     locationTbd: "Ort unbekannt",
     selectRole: "Rolle wählen",
     selectOccupation: "Funktion wählen",
