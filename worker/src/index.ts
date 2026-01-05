@@ -346,6 +346,89 @@ function securityHeaders(): HeadersInit {
   };
 }
 
+/**
+ * Cache control headers to prevent stale data from being served.
+ * Dynamic content (API responses, HTML pages) should never be cached.
+ *
+ * The upstream server (volleymanager.volleyball.ch) may return cache-friendly
+ * headers, but since this is a real-time application with authentication,
+ * caching can cause stale data issues (outdated assignments, sessions, etc.).
+ */
+function noCacheHeaders(): HeadersInit {
+  return {
+    // Prevent all caching - critical for real-time data
+    "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+    // Legacy HTTP/1.0 cache prevention
+    Pragma: "no-cache",
+    // Ensure content is always considered expired
+    Expires: "0",
+  };
+}
+
+/**
+ * Check if a response contains dynamic content that should not be cached.
+ * This includes HTML pages (login, dashboard) and API JSON responses.
+ *
+ * @param contentType The Content-Type header value from the response
+ * @returns true if the content should have no-cache headers applied
+ */
+function isDynamicContent(contentType: string | null): boolean {
+  if (!contentType) return true; // Default to dynamic if unknown
+
+  const normalizedType = contentType.toLowerCase();
+  return (
+    normalizedType.includes("text/html") ||
+    normalizedType.includes("application/json") ||
+    normalizedType.includes("application/x-www-form-urlencoded")
+  );
+}
+
+/**
+ * Check if the response appears to be from an expired or invalid session.
+ * The upstream server may return a login redirect or error page when
+ * the session has expired, which we should detect and not cache.
+ *
+ * @param response The upstream response
+ * @param responseBody The response body text (for HTML inspection)
+ * @returns true if the response indicates session issues
+ */
+function detectSessionIssue(response: Response, responseBody?: string): boolean {
+  // Check for redirect to login page (302/303 to /login or root)
+  if (response.status >= 300 && response.status < 400) {
+    const location = response.headers.get("Location");
+    if (location) {
+      const normalizedLocation = location.toLowerCase();
+      if (
+        normalizedLocation.includes("/login") ||
+        normalizedLocation.endsWith("/") ||
+        normalizedLocation.includes("authentication")
+      ) {
+        return true;
+      }
+    }
+  }
+
+  // Check for session-related error responses
+  if (response.status === 401 || response.status === 403) {
+    return true;
+  }
+
+  // Check HTML content for login form indicators (suggests session expired)
+  if (responseBody) {
+    const lowerBody = responseBody.toLowerCase();
+    // Look for login form markers that indicate we've been redirected to login
+    if (
+      lowerBody.includes('name="username"') &&
+      lowerBody.includes('name="password"') &&
+      lowerBody.includes("login")
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function corsHeaders(origin: string): HeadersInit {
   return {
     "Access-Control-Allow-Origin": origin,
@@ -677,6 +760,9 @@ export default {
 
     proxyRequest.headers.set("User-Agent", VOLLEYKIT_USER_AGENT);
 
+    // Record request start time for latency tracking
+    const requestStartTime = Date.now();
+
     try {
       const response = await fetch(proxyRequest);
 
@@ -689,6 +775,34 @@ export default {
           responseHeaders.set(key, value);
         },
       );
+
+      // Apply cache control based on content type
+      // Dynamic content (HTML, JSON) should never be cached to prevent stale data
+      const contentType = response.headers.get("Content-Type");
+      if (isDynamicContent(contentType)) {
+        // Remove any upstream cache headers that could cause stale data
+        responseHeaders.delete("ETag");
+        responseHeaders.delete("Last-Modified");
+
+        // Apply strict no-cache headers
+        Object.entries(noCacheHeaders()).forEach(([key, value]) => {
+          responseHeaders.set(key, value);
+        });
+      }
+
+      // Add proxy timing header for debugging stale data issues
+      // Format: timestamp when proxy processed request, latency in ms
+      const latencyMs = Date.now() - requestStartTime;
+      responseHeaders.set(
+        "X-Proxy-Timestamp",
+        `${new Date().toISOString()}; latency=${latencyMs}ms`,
+      );
+
+      // Detect potential session issues for logging/debugging
+      // This helps identify when cached responses might be from expired sessions
+      if (detectSessionIssue(response)) {
+        responseHeaders.set("X-Proxy-Session-Warning", "potential-session-issue");
+      }
 
       // Handle Set-Cookie headers for cross-origin
       // Must set SameSite=None; Secure for cross-origin cookies to work

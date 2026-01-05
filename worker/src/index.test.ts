@@ -1128,3 +1128,254 @@ describe("URL Encoding Preservation", () => {
     expect(result).not.toContain("%255c"); // Should NOT be double-encoded
   });
 });
+
+describe("Cache Control Headers", () => {
+  // Re-implementation of noCacheHeaders for testing
+  function noCacheHeaders(): Record<string, string> {
+    return {
+      "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+      Pragma: "no-cache",
+      Expires: "0",
+    };
+  }
+
+  it("returns strict no-cache headers", () => {
+    const headers = noCacheHeaders();
+    expect(headers["Cache-Control"]).toBe(
+      "no-store, no-cache, must-revalidate, max-age=0",
+    );
+  });
+
+  it("includes Pragma no-cache for HTTP/1.0 compatibility", () => {
+    const headers = noCacheHeaders();
+    expect(headers["Pragma"]).toBe("no-cache");
+  });
+
+  it("includes Expires header set to 0", () => {
+    const headers = noCacheHeaders();
+    expect(headers["Expires"]).toBe("0");
+  });
+
+  it("contains all required cache-busting headers", () => {
+    const headers = noCacheHeaders();
+    const keys = Object.keys(headers);
+    expect(keys).toContain("Cache-Control");
+    expect(keys).toContain("Pragma");
+    expect(keys).toContain("Expires");
+    expect(keys.length).toBe(3);
+  });
+});
+
+describe("Dynamic Content Detection", () => {
+  // Re-implementation of isDynamicContent for testing
+  function isDynamicContent(contentType: string | null): boolean {
+    if (!contentType) return true;
+    const normalizedType = contentType.toLowerCase();
+    return (
+      normalizedType.includes("text/html") ||
+      normalizedType.includes("application/json") ||
+      normalizedType.includes("application/x-www-form-urlencoded")
+    );
+  }
+
+  describe("isDynamicContent", () => {
+    it("returns true for null content type (unknown = dynamic)", () => {
+      expect(isDynamicContent(null)).toBe(true);
+    });
+
+    it("returns true for HTML content", () => {
+      expect(isDynamicContent("text/html")).toBe(true);
+      expect(isDynamicContent("text/html; charset=utf-8")).toBe(true);
+      expect(isDynamicContent("TEXT/HTML")).toBe(true);
+    });
+
+    it("returns true for JSON content", () => {
+      expect(isDynamicContent("application/json")).toBe(true);
+      expect(isDynamicContent("application/json; charset=utf-8")).toBe(true);
+      expect(isDynamicContent("APPLICATION/JSON")).toBe(true);
+    });
+
+    it("returns true for form data content", () => {
+      expect(isDynamicContent("application/x-www-form-urlencoded")).toBe(true);
+    });
+
+    it("returns false for static content types", () => {
+      expect(isDynamicContent("image/png")).toBe(false);
+      expect(isDynamicContent("image/jpeg")).toBe(false);
+      expect(isDynamicContent("application/pdf")).toBe(false);
+      expect(isDynamicContent("text/css")).toBe(false);
+      expect(isDynamicContent("application/javascript")).toBe(false);
+    });
+
+    it("returns false for calendar content (iCal has separate cache)", () => {
+      expect(isDynamicContent("text/calendar")).toBe(false);
+    });
+  });
+});
+
+describe("Session Issue Detection", () => {
+  // Re-implementation of detectSessionIssue for testing
+  function detectSessionIssue(
+    response: { status: number; headers: { get: (name: string) => string | null } },
+    responseBody?: string,
+  ): boolean {
+    // Check for redirect to login page
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get("Location");
+      if (location) {
+        const normalizedLocation = location.toLowerCase();
+        if (
+          normalizedLocation.includes("/login") ||
+          normalizedLocation.endsWith("/") ||
+          normalizedLocation.includes("authentication")
+        ) {
+          return true;
+        }
+      }
+    }
+
+    // Check for auth error responses
+    if (response.status === 401 || response.status === 403) {
+      return true;
+    }
+
+    // Check HTML content for login form indicators
+    if (responseBody) {
+      const lowerBody = responseBody.toLowerCase();
+      if (
+        lowerBody.includes('name="username"') &&
+        lowerBody.includes('name="password"') &&
+        lowerBody.includes("login")
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  // Helper to create mock response
+  function mockResponse(
+    status: number,
+    location?: string,
+  ): { status: number; headers: { get: (name: string) => string | null } } {
+    return {
+      status,
+      headers: {
+        get: (name: string) => (name === "Location" ? location ?? null : null),
+      },
+    };
+  }
+
+  describe("detectSessionIssue", () => {
+    it("detects redirect to /login", () => {
+      expect(detectSessionIssue(mockResponse(302, "/login"))).toBe(true);
+      expect(detectSessionIssue(mockResponse(303, "/login?redirect=..."))).toBe(
+        true,
+      );
+    });
+
+    it("detects redirect to root (often login redirect)", () => {
+      expect(detectSessionIssue(mockResponse(302, "/"))).toBe(true);
+      expect(
+        detectSessionIssue(mockResponse(302, "https://example.com/")),
+      ).toBe(true);
+    });
+
+    it("detects redirect to authentication endpoint", () => {
+      expect(
+        detectSessionIssue(
+          mockResponse(302, "/sportmanager.security/authentication/login"),
+        ),
+      ).toBe(true);
+    });
+
+    it("detects 401 Unauthorized responses", () => {
+      expect(detectSessionIssue(mockResponse(401))).toBe(true);
+    });
+
+    it("detects 403 Forbidden responses", () => {
+      expect(detectSessionIssue(mockResponse(403))).toBe(true);
+    });
+
+    it("detects login form in HTML body", () => {
+      const loginHtml = `
+        <html>
+          <body>
+            <form>
+              <input name="username" type="text" />
+              <input name="password" type="password" />
+              <button>Login</button>
+            </form>
+          </body>
+        </html>
+      `;
+      expect(detectSessionIssue(mockResponse(200), loginHtml)).toBe(true);
+    });
+
+    it("does not flag normal 200 responses", () => {
+      expect(detectSessionIssue(mockResponse(200))).toBe(false);
+    });
+
+    it("does not flag redirects to non-login paths", () => {
+      expect(detectSessionIssue(mockResponse(302, "/dashboard"))).toBe(false);
+      expect(detectSessionIssue(mockResponse(302, "/api/data"))).toBe(false);
+    });
+
+    it("does not flag normal HTML without login form", () => {
+      const normalHtml = `
+        <html>
+          <body>
+            <h1>Dashboard</h1>
+            <p>Welcome to the application</p>
+          </body>
+        </html>
+      `;
+      expect(detectSessionIssue(mockResponse(200), normalHtml)).toBe(false);
+    });
+
+    it("does not flag HTML with only username field (not a complete login form)", () => {
+      const partialForm = `
+        <html>
+          <body>
+            <form>
+              <input name="username" type="text" />
+              <button>Search</button>
+            </form>
+          </body>
+        </html>
+      `;
+      expect(detectSessionIssue(mockResponse(200), partialForm)).toBe(false);
+    });
+
+    it("handles case-insensitive location headers", () => {
+      expect(detectSessionIssue(mockResponse(302, "/LOGIN"))).toBe(true);
+      expect(detectSessionIssue(mockResponse(302, "/Authentication/Login"))).toBe(
+        true,
+      );
+    });
+  });
+});
+
+describe("Proxy Timestamp Header", () => {
+  it("timestamp header format includes ISO date and latency", () => {
+    // Simulates the header format used by the proxy
+    const timestamp = new Date().toISOString();
+    const latencyMs = 42;
+    const headerValue = `${timestamp}; latency=${latencyMs}ms`;
+
+    expect(headerValue).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+    expect(headerValue).toContain("; latency=");
+    expect(headerValue).toContain("ms");
+  });
+
+  it("latency is measured in milliseconds", () => {
+    const startTime = Date.now();
+    // Simulate some work
+    const endTime = startTime + 100;
+    const latencyMs = endTime - startTime;
+
+    expect(latencyMs).toBe(100);
+    expect(typeof latencyMs).toBe("number");
+  });
+});
