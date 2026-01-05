@@ -25,7 +25,7 @@ describe("useSafeModeGuard", () => {
 
     // Default: not in demo mode, safe mode disabled
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-      selector({ isDemoMode: false } as ReturnType<
+      selector({ dataSource: "api" } as ReturnType<
         typeof authStore.useAuthStore.getState
       >),
     );
@@ -59,7 +59,7 @@ describe("useSafeModeGuard", () => {
 
     it("should return false when in demo mode, even with safe mode enabled", () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: true } as ReturnType<
+        selector({ dataSource: "demo" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -144,7 +144,7 @@ describe("useSafeModeGuard", () => {
   describe("state exposure", () => {
     it("should expose isDemoMode state", () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: true } as ReturnType<
+        selector({ dataSource: "demo" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -184,7 +184,7 @@ describe("useSafeModeGuard", () => {
       const firstGuard = result.current.guard;
 
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: true } as ReturnType<
+        selector({ dataSource: "demo" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );

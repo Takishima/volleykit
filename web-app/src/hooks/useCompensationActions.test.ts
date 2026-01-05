@@ -59,7 +59,7 @@ describe("useCompensationActions", () => {
 
     // Default: not in demo mode
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-      selector({ isDemoMode: false } as ReturnType<
+      selector({ dataSource: "api" } as ReturnType<
         typeof authStore.useAuthStore.getState
       >),
     );
@@ -229,7 +229,7 @@ describe("useCompensationActions", () => {
   describe("demo mode guards", () => {
     beforeEach(() => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: true } as ReturnType<
+        selector({ dataSource: "demo" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -272,7 +272,7 @@ describe("useCompensationActions", () => {
     beforeEach(() => {
       // Not in demo mode, safe mode enabled
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: false } as ReturnType<
+        selector({ dataSource: "api" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );

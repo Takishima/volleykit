@@ -51,13 +51,14 @@ export function ExchangePage() {
   // Use showDummyData to show dummy data immediately, avoiding race condition with empty states
   const { showDummyData } = useTour("exchange");
 
-  const { isDemoMode, isAssociationSwitching, isCalendarMode } = useAuthStore(
+  const { dataSource, isAssociationSwitching, isCalendarMode } = useAuthStore(
     useShallow((state) => ({
-      isDemoMode: state.isDemoMode,
+      dataSource: state.dataSource,
       isAssociationSwitching: state.isAssociationSwitching,
       isCalendarMode: state.isCalendarMode(),
     })),
   );
+  const isDemoMode = dataSource === "demo";
   const { userRefereeLevel, userRefereeLevelGradationValue } = useDemoStore(
     useShallow((state) => ({
       userRefereeLevel: state.userRefereeLevel,

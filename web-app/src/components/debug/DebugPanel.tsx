@@ -198,7 +198,7 @@ export function DebugPanel() {
     user,
     activeOccupationId,
     csrfToken,
-    isDemoMode,
+    dataSource,
     eligibleAttributeValues,
     groupedEligibleAttributeValues,
   } = useAuthStore(
@@ -207,11 +207,12 @@ export function DebugPanel() {
       user: state.user,
       activeOccupationId: state.activeOccupationId,
       csrfToken: state.csrfToken,
-      isDemoMode: state.isDemoMode,
+      dataSource: state.dataSource,
       eligibleAttributeValues: state.eligibleAttributeValues,
       groupedEligibleAttributeValues: state.groupedEligibleAttributeValues,
     })),
   );
+  const isDemoMode = dataSource === "demo";
 
   const refreshPersistedState = useCallback(() => {
     setPersistedState(getPersistedState());
@@ -462,13 +463,8 @@ function UserIdentitySection({ user, activeOccupationId, isDemoMode }: UserIdent
 function TransportDebugSection() {
   const homeLocation = useSettingsStore((state) => state.homeLocation);
   const associationCode = useActiveAssociationCode();
-  const { isDemoMode, dataSource } = useAuthStore(
-    useShallow((state) => ({
-      isDemoMode: state.isDemoMode,
-      dataSource: state.dataSource,
-    })),
-  );
-
+  const dataSource = useAuthStore((state) => state.dataSource);
+  const isDemoMode = dataSource === "demo";
   const isCalendarMode = dataSource === "calendar";
   const ojpConfigured = isOjpConfigured();
   const apiKeyPresent = Boolean(import.meta.env.VITE_OJP_API_KEY);

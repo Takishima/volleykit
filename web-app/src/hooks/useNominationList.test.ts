@@ -60,7 +60,7 @@ describe("useNominationList", () => {
   describe("demo mode", () => {
     beforeEach(() => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: true } as ReturnType<
+        selector({ dataSource: "demo" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -211,7 +211,7 @@ describe("useNominationList", () => {
   describe("prefetched data", () => {
     beforeEach(() => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: false } as ReturnType<
+        selector({ dataSource: "api" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -272,7 +272,7 @@ describe("useNominationList", () => {
   describe("no data available", () => {
     beforeEach(() => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: false } as ReturnType<
+        selector({ dataSource: "api" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );

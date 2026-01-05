@@ -22,13 +22,14 @@ import {
 } from "@/components/features/settings";
 
 export function SettingsPage() {
-  const { user, logout, isDemoMode } = useAuthStore(
+  const { user, logout, dataSource } = useAuthStore(
     useShallow((state) => ({
       user: state.user,
       logout: state.logout,
-      isDemoMode: state.isDemoMode,
+      dataSource: state.dataSource,
     })),
   );
+  const isDemoMode = dataSource === "demo";
   const { activeAssociationCode, refreshData } = useDemoStore(
     useShallow((state) => ({
       activeAssociationCode: state.activeAssociationCode,

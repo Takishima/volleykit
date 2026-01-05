@@ -73,7 +73,7 @@ describe("useAssignmentActions", () => {
 
     // Default: not in demo mode, safe mode disabled
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-      selector({ isDemoMode: false } as ReturnType<
+      selector({ dataSource: "api" } as ReturnType<
         typeof authStore.useAuthStore.getState
       >),
     );
@@ -358,7 +358,7 @@ describe("useAssignmentActions", () => {
   describe("demo mode guards", () => {
     beforeEach(() => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: true } as ReturnType<
+        selector({ dataSource: "demo" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -392,7 +392,7 @@ describe("useAssignmentActions", () => {
   describe("safe mode guards", () => {
     beforeEach(() => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: false } as ReturnType<
+        selector({ dataSource: "api" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -452,7 +452,7 @@ describe("useAssignmentActions", () => {
 
     it("should not block operations in demo mode even with safe mode enabled", () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: true } as ReturnType<
+        selector({ dataSource: "demo" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );

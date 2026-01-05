@@ -128,7 +128,6 @@ describe("useAuthStore", () => {
       csrfToken: null,
       dataSource: "api",
       calendarCode: null,
-      isDemoMode: false,
       activeOccupationId: null,
       _checkSessionPromise: null,
       _lastAuthTimestamp: null,
@@ -700,7 +699,7 @@ describe("useAuthStore", () => {
     });
 
     it("returns true immediately in demo mode", async () => {
-      useAuthStore.setState({ dataSource: "demo", isDemoMode: true });
+      useAuthStore.setState({ dataSource: "demo" });
 
       const result = await useAuthStore.getState().checkSession();
 
@@ -826,7 +825,6 @@ describe("useAuthStore", () => {
       const state = useAuthStore.getState();
       expect(state.status).toBe("authenticated");
       expect(state.dataSource).toBe("demo");
-      expect(state.isDemoMode).toBe(true);
       expect(state.user).toBeTruthy();
       expect(state.user?.firstName).toBe("Demo");
       expect(state.activeOccupationId).toBeTruthy();
@@ -860,7 +858,6 @@ describe("useAuthStore", () => {
       expect(state.status).toBe("authenticated");
       expect(state.dataSource).toBe("calendar");
       expect(state.calendarCode).toBe("ABC123");
-      expect(state.isDemoMode).toBe(false);
       expect(state.user?.id).toBe("calendar-ABC123");
     });
 
@@ -869,6 +866,7 @@ describe("useAuthStore", () => {
 
       const state = useAuthStore.getState();
       expect(state.status).toBe("authenticated");
+      expect(state.dataSource).toBe("calendar");
       expect(state.calendarCode).toBe("ABC123");
     });
 
@@ -966,7 +964,6 @@ describe("useAuthStore", () => {
 
       const state = useAuthStore.getState();
       expect(state.dataSource).toBe("api");
-      expect(state.isDemoMode).toBe(false);
     });
 
     it("clears calendarCode when logging out from calendar mode", async () => {

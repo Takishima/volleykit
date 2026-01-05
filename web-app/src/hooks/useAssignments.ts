@@ -231,7 +231,8 @@ export function useValidationClosedAssignments(): UseQueryResult<
   Assignment[],
   Error
 > {
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const dataSource = useAuthStore((state) => state.dataSource);
+  const isDemoMode = dataSource === "demo";
   const activeOccupationId = useAuthStore((state) => state.activeOccupationId);
   const demoAssignments = useDemoStore((state) => state.assignments);
   const demoAssociationCode = useDemoStore(

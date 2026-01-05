@@ -20,7 +20,7 @@ vi.mock("@/api/client", () => ({
 
 vi.mock("@/stores/auth", () => ({
   useAuthStore: vi.fn((selector: AnyFunction) =>
-    selector({ isDemoMode: false, activeOccupationId: "occupation-123" }),
+    selector({ dataSource: "api", activeOccupationId: "occupation-123" }),
   ),
 }));
 
@@ -40,9 +40,9 @@ function createWrapper() {
   };
 }
 
-/** Configure auth store mock with specified demo mode and occupation */
+/** Configure auth store mock with specified data source and occupation */
 async function setupAuthStore(config: {
-  isDemoMode: boolean;
+  dataSource: "api" | "demo" | "calendar";
   activeOccupationId: string | null;
 }) {
   const { useAuthStore } = await import("@/stores/auth");
@@ -83,7 +83,7 @@ describe("useAssociationSettings", () => {
   });
 
   it("is disabled in demo mode", async () => {
-    await setupAuthStore({ isDemoMode: true, activeOccupationId: null });
+    await setupAuthStore({ dataSource: "demo", activeOccupationId: null });
     const api = await getApi();
 
     const { result } = renderHook(() => useAssociationSettings(), {
@@ -107,7 +107,7 @@ describe("useAssociationSettings", () => {
 
     // First render with one occupation
     await setupAuthStore({
-      isDemoMode: false,
+      dataSource: "api",
       activeOccupationId: "occupation-1",
     });
 
@@ -124,7 +124,7 @@ describe("useAssociationSettings", () => {
 
     // Second render with different occupation - should trigger new fetch
     await setupAuthStore({
-      isDemoMode: false,
+      dataSource: "api",
       activeOccupationId: "occupation-2",
     });
 
@@ -143,7 +143,7 @@ describe("useAssociationSettings", () => {
 
   it("handles API errors gracefully", async () => {
     await setupAuthStore({
-      isDemoMode: false,
+      dataSource: "api",
       activeOccupationId: "occupation-123",
     });
 
@@ -172,7 +172,7 @@ describe("useActiveSeason", () => {
 
   it("fetches active season when not in demo mode", async () => {
     await setupAuthStore({
-      isDemoMode: false,
+      dataSource: "api",
       activeOccupationId: "occupation-123",
     });
 
@@ -198,7 +198,7 @@ describe("useActiveSeason", () => {
   });
 
   it("is disabled in demo mode", async () => {
-    await setupAuthStore({ isDemoMode: true, activeOccupationId: null });
+    await setupAuthStore({ dataSource: "demo", activeOccupationId: null });
     const api = await getApi();
 
     const { result } = renderHook(() => useActiveSeason(), {
@@ -224,7 +224,7 @@ describe("useActiveSeason", () => {
 
     // First render with one occupation
     await setupAuthStore({
-      isDemoMode: false,
+      dataSource: "api",
       activeOccupationId: "occupation-1",
     });
 
@@ -241,7 +241,7 @@ describe("useActiveSeason", () => {
 
     // Second render with different occupation - should trigger new fetch
     await setupAuthStore({
-      isDemoMode: false,
+      dataSource: "api",
       activeOccupationId: "occupation-2",
     });
 
@@ -260,7 +260,7 @@ describe("useActiveSeason", () => {
 
   it("handles API errors gracefully", async () => {
     await setupAuthStore({
-      isDemoMode: false,
+      dataSource: "api",
       activeOccupationId: "occupation-123",
     });
 

@@ -49,7 +49,8 @@ export function ScoresheetPanel({
   scoresheetNotRequired = false,
 }: ScoresheetPanelProps) {
   const { t } = useTranslation();
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const dataSource = useAuthStore((state) => state.dataSource);
+  const isDemoMode = dataSource === "demo";
   const onScoresheetChangeRef = useRef(onScoresheetChange);
 
   // Keep ref in sync with prop

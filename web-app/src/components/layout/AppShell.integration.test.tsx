@@ -37,7 +37,6 @@ describe("AppShell Integration", () => {
       status: "idle",
       user: null,
       dataSource: "api",
-      isDemoMode: false,
       activeOccupationId: null,
       isAssociationSwitching: false,
       error: null,

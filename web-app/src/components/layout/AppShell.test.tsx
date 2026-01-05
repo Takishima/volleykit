@@ -12,21 +12,21 @@ vi.mock("@/stores/auth", () => ({
 }));
 
 // Creates mock auth store with sensible defaults; accepts partial overrides
+// Note: isCalendarMode is returned as a boolean (the result of calling state.isCalendarMode())
+// because the component's selector does: isCalendarMode: state.isCalendarMode()
 function createMockAuthStore(
   overrides: Record<string, unknown> = {},
 ) {
-  const isDemoMode = overrides.isDemoMode === true;
-  const isCalendarMode = overrides.isCalendarMode === true;
-  const dataSource = isCalendarMode ? "calendar" : isDemoMode ? "demo" : "api";
+  const dataSource = (overrides.dataSource as "api" | "demo" | "calendar") || "api";
+  const isCalendarModeValue = dataSource === "calendar";
   return {
     status: "authenticated" as const,
     user: null,
     error: null,
     csrfToken: null,
-    dataSource: dataSource as "api" | "demo" | "calendar",
-    isDemoMode,
-    isCalendarMode: () => isCalendarMode,
-    calendarCode: isCalendarMode ? "ABC123" : null,
+    dataSource,
+    isCalendarMode: isCalendarModeValue, // Boolean, not function - selector calls state.isCalendarMode()
+    calendarCode: isCalendarModeValue ? "ABC123" : null,
     activeOccupationId: null,
     _checkSessionPromise: null,
     login: vi.fn(),
@@ -80,11 +80,11 @@ describe("AppShell", () => {
   }
 
   describe("demo mode banner", () => {
-    it("renders demo banner when isDemoMode is true", () => {
+    it("renders demo banner when dataSource is demo", () => {
       vi.mocked(useAuthStore).mockReturnValue(
         createMockAuthStore({
           user: demoUser,
-          isDemoMode: true,
+          dataSource: "demo",
           activeOccupationId: "demo-referee-vd",
         }),
       );
@@ -96,11 +96,11 @@ describe("AppShell", () => {
       ).toBeInTheDocument();
     });
 
-    it("does NOT render demo banner when isDemoMode is false", () => {
+    it("does NOT render demo banner when dataSource is api", () => {
       vi.mocked(useAuthStore).mockReturnValue(
         createMockAuthStore({
           user: realUser,
-          isDemoMode: false,
+          dataSource: "api",
           activeOccupationId: "ref-1",
         }),
       );
@@ -116,7 +116,7 @@ describe("AppShell", () => {
       vi.mocked(useAuthStore).mockReturnValue(
         createMockAuthStore({
           user: demoUser,
-          isDemoMode: true,
+          dataSource: "demo",
           activeOccupationId: "demo-referee-vd",
         }),
       );
@@ -142,7 +142,7 @@ describe("AppShell", () => {
         vi.mocked(useAuthStore).mockReturnValue(
           createMockAuthStore({
             user: demoUser,
-            isDemoMode: true,
+            dataSource: "demo",
             activeOccupationId: "demo-referee-vd",
           }),
         );
@@ -243,47 +243,52 @@ describe("AppShell", () => {
         vi.mocked(useAuthStore).mockReturnValue(
           createMockAuthStore({
             user: calendarUser,
-            isCalendarMode: true,
+            dataSource: "calendar",
             activeOccupationId: null,
           }),
         );
 
         renderAppShell();
 
-        // The banner has role="alert" and contains "Calendar Mode"
-        const banner = screen.getByRole("alert");
-        expect(banner).toHaveTextContent("Calendar Mode");
+        // Find the calendar banner by its sky-colored background (banner, not header indicator)
+        const banners = screen.getAllByRole("alert");
+        const calendarBanner = banners.find(b => b.className.includes("sky"));
+        expect(calendarBanner).toBeInTheDocument();
       });
 
       it("does NOT render calendar banner when not in calendar mode", () => {
         vi.mocked(useAuthStore).mockReturnValue(
           createMockAuthStore({
             user: realUser,
-            isCalendarMode: false,
+            dataSource: "api",
             activeOccupationId: "ref-1",
           }),
         );
 
         renderAppShell();
 
-        // Should not have an alert role banner (no calendar mode banner)
-        expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+        // Should not have calendar mode banner (sky-colored alert)
+        const banners = screen.queryAllByRole("alert");
+        const calendarBanner = banners.find(b => b.className.includes("sky"));
+        expect(calendarBanner).toBeUndefined();
       });
 
       it("has proper accessibility attributes for calendar banner", () => {
         vi.mocked(useAuthStore).mockReturnValue(
           createMockAuthStore({
             user: calendarUser,
-            isCalendarMode: true,
+            dataSource: "calendar",
             activeOccupationId: null,
           }),
         );
 
         renderAppShell();
 
-        const banner = screen.getByRole("alert");
-        expect(banner).toBeInTheDocument();
-        expect(banner).toHaveAttribute("aria-live", "polite");
+        // Find the calendar banner by its sky-colored background
+        const banners = screen.getAllByRole("alert");
+        const calendarBanner = banners.find(b => b.className.includes("sky"));
+        expect(calendarBanner).toBeInTheDocument();
+        expect(calendarBanner).toHaveAttribute("aria-live", "polite");
       });
 
       it.each<{ locale: Locale; expectedPattern: RegExp }>([
@@ -298,16 +303,17 @@ describe("AppShell", () => {
           vi.mocked(useAuthStore).mockReturnValue(
             createMockAuthStore({
               user: calendarUser,
-              isCalendarMode: true,
+              dataSource: "calendar",
               activeOccupationId: null,
             }),
           );
 
           renderAppShell();
 
-          // Use the role="alert" banner to avoid matching header indicator
-          const banner = screen.getByRole("alert");
-          expect(banner.textContent).toMatch(expectedPattern);
+          // Find the calendar banner by its sky-colored background class
+          const banners = screen.getAllByRole("alert");
+          const calendarBanner = banners.find(b => b.className.includes("sky"));
+          expect(calendarBanner?.textContent).toMatch(expectedPattern);
         },
       );
     });
@@ -317,7 +323,7 @@ describe("AppShell", () => {
         vi.mocked(useAuthStore).mockReturnValue(
           createMockAuthStore({
             user: calendarUser,
-            isCalendarMode: true,
+            dataSource: "calendar",
             activeOccupationId: null,
           }),
         );
@@ -334,7 +340,7 @@ describe("AppShell", () => {
         vi.mocked(useAuthStore).mockReturnValue(
           createMockAuthStore({
             user: calendarUser,
-            isCalendarMode: true,
+            dataSource: "calendar",
             activeOccupationId: null,
           }),
         );
@@ -351,7 +357,7 @@ describe("AppShell", () => {
         vi.mocked(useAuthStore).mockReturnValue(
           createMockAuthStore({
             user: calendarUser,
-            isCalendarMode: true,
+            dataSource: "calendar",
             activeOccupationId: null,
           }),
         );
@@ -368,7 +374,7 @@ describe("AppShell", () => {
         vi.mocked(useAuthStore).mockReturnValue(
           createMockAuthStore({
             user: calendarUser,
-            isCalendarMode: true,
+            dataSource: "calendar",
             activeOccupationId: null,
           }),
         );
@@ -385,7 +391,7 @@ describe("AppShell", () => {
         vi.mocked(useAuthStore).mockReturnValue(
           createMockAuthStore({
             user: realUser,
-            isCalendarMode: false,
+            dataSource: "api",
             activeOccupationId: "ref-1",
           }),
         );
@@ -413,7 +419,7 @@ describe("AppShell", () => {
         vi.mocked(useAuthStore).mockReturnValue(
           createMockAuthStore({
             user: calendarUser,
-            isCalendarMode: true,
+            dataSource: "calendar",
             activeOccupationId: null,
           }),
         );
@@ -435,35 +441,40 @@ describe("AppShell", () => {
         vi.mocked(useAuthStore).mockReturnValue(
           createMockAuthStore({
             user: demoUser,
-            isDemoMode: true,
-            isCalendarMode: false,
+            dataSource: "demo",
             activeOccupationId: "demo-referee-vd",
           }),
         );
 
         renderAppShell();
 
-        // Demo mode banner has role="alert"
-        const banner = screen.getByRole("alert");
-        expect(banner).toHaveTextContent("Demo Mode - Viewing sample data");
+        // Find demo banner (amber-colored) by its background
+        const alerts = screen.getAllByRole("alert");
+        const demoBanner = alerts.find(a => a.className.includes("amber"));
+        expect(demoBanner).toBeInTheDocument();
+        // Calendar banner (sky-colored) should not be present
+        const calendarBanner = alerts.find(a => a.className.includes("sky"));
+        expect(calendarBanner).toBeUndefined();
       });
 
       it("shows calendar banner in calendar mode, not demo banner", () => {
         vi.mocked(useAuthStore).mockReturnValue(
           createMockAuthStore({
             user: calendarUser,
-            isDemoMode: false,
-            isCalendarMode: true,
+            dataSource: "calendar",
             activeOccupationId: null,
           }),
         );
 
         renderAppShell();
 
-        // Calendar mode banner has role="alert"
-        const banner = screen.getByRole("alert");
-        expect(banner).toHaveTextContent("Calendar Mode");
-        expect(banner).not.toHaveTextContent("Demo Mode");
+        // Find the calendar banner by its sky-colored background
+        const banners = screen.getAllByRole("alert");
+        const calendarBanner = banners.find(b => b.className.includes("sky"));
+        expect(calendarBanner).toBeInTheDocument();
+        // Demo banner (amber-colored) should not be present
+        const demoBanner = banners.find(b => b.className.includes("amber"));
+        expect(demoBanner).toBeUndefined();
       });
     });
   });

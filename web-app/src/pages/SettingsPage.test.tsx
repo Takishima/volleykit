@@ -51,7 +51,7 @@ function mockAuthStore(overrides = {}) {
   const state = {
     user: mockUser,
     logout: mockLogout,
-    isDemoMode: false,
+    dataSource: "api" as const,
     ...overrides,
   };
   vi.mocked(authStore.useAuthStore).mockImplementation((selector?: unknown) => {
@@ -126,7 +126,7 @@ describe("SettingsPage", () => {
 
   describe("Safe Mode Section", () => {
     it("hides safe mode section in demo mode", () => {
-      mockAuthStore({ isDemoMode: true });
+      mockAuthStore({ dataSource: "demo" });
       render(<SettingsPage />, { wrapper: createWrapper() });
       expect(screen.queryByText("settings.safeMode")).not.toBeInTheDocument();
     });

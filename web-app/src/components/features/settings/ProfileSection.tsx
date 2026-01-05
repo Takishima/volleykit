@@ -32,7 +32,8 @@ const DEMO_LAST_NAME = "User";
 
 function ProfileSectionComponent({ user }: ProfileSectionProps) {
   const { t } = useTranslation();
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const dataSource = useAuthStore((state) => state.dataSource);
+  const isDemoMode = dataSource === "demo";
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(
     user.profilePictureUrl ?? null,
   );

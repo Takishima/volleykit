@@ -41,7 +41,8 @@ interface UseSafeModeGuardResult {
  * }, [guard]);
  */
 export function useSafeModeGuard(): UseSafeModeGuardResult {
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const dataSource = useAuthStore((state) => state.dataSource);
+  const isDemoMode = dataSource === "demo";
   const isSafeModeEnabled = useSettingsStore(
     (state) => state.isSafeModeEnabled,
   );
