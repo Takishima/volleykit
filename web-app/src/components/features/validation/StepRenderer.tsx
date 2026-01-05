@@ -90,7 +90,8 @@ export function StepRenderer({
           onModificationsChange={handlers.setHomeRosterModifications}
           onAddPlayerSheetOpenChange={handlers.onAddPlayerSheetOpenChange}
           readOnly={validation.isValidated}
-          initialModifications={validation.state.homeRoster.modifications}
+          initialModifications={validation.state.homeRoster.playerModifications}
+          initialCoachModifications={validation.state.homeRoster.coachModifications}
           prefetchedNominationList={validation.homeNominationList}
         />
       )}
@@ -101,7 +102,8 @@ export function StepRenderer({
           onModificationsChange={handlers.setAwayRosterModifications}
           onAddPlayerSheetOpenChange={handlers.onAddPlayerSheetOpenChange}
           readOnly={validation.isValidated}
-          initialModifications={validation.state.awayRoster.modifications}
+          initialModifications={validation.state.awayRoster.playerModifications}
+          initialCoachModifications={validation.state.awayRoster.coachModifications}
           prefetchedNominationList={validation.awayNominationList}
         />
       )}

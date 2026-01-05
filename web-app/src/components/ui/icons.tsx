@@ -28,6 +28,7 @@ export { Loader2 } from "lucide-react";
 export { Trash2 } from "lucide-react";
 export { Undo2 } from "lucide-react";
 export { ChevronDown } from "lucide-react";
+export { ChevronUp } from "lucide-react";
 export { ChevronRight } from "lucide-react";
 export { Circle } from "lucide-react";
 export { X } from "lucide-react";
