@@ -615,6 +615,7 @@ describe('extractAssignment', () => {
 
   describe('role extraction', () => {
     const roleTestCases = [
+      // French patterns
       { input: 'ARB 1', expected: 'referee1', raw: 'ARB 1' },
       { input: 'ARB 2', expected: 'referee2', raw: 'ARB 2' },
       { input: 'ARB1', expected: 'referee1', raw: 'ARB1' },
@@ -627,6 +628,13 @@ describe('extractAssignment', () => {
       { input: 'LR', expected: 'lineReferee', raw: 'LR' },
       { input: 'LR 1', expected: 'lineReferee', raw: 'LR 1' },
       { input: 'LR 2', expected: 'lineReferee', raw: 'LR 2' },
+      // German patterns (number first with period)
+      { input: '1. SR', expected: 'referee1', raw: '1. SR' },
+      { input: '2. SR', expected: 'referee2', raw: '2. SR' },
+      { input: '1.SR', expected: 'referee1', raw: '1.SR' },
+      { input: '2.SR', expected: 'referee2', raw: '2.SR' },
+      { input: '1. LR', expected: 'lineReferee', raw: '1. LR' },
+      { input: '2. LR', expected: 'lineReferee', raw: '2. LR' },
     ];
 
     roleTestCases.forEach(({ input, expected, raw }) => {
@@ -1124,19 +1132,27 @@ END:VCALENDAR`;
 });
 
 describe('integration scenarios', () => {
-  it('handles a realistic German iCal feed', () => {
+  it('handles a realistic German iCal feed with number-first role format', () => {
+    // Real German iCal format captured from volleymanager.volleyball.ch
     const germanIcal = `BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//Volleyball.ch//Volleymanager//DE
+PRODID:VolleyManager V2
+NAME:SR-Aufgebote #174531 | Laura Rüegg
+X-WR-CALNAME:SR-Aufgebote #174531 | Laura Rüegg
 BEGIN:VEVENT
-UID:referee-convocation-for-game-456789
-SUMMARY:ARB 1 | VBC Zürich - Volley Luzern 1 (NLA Herren)
-DESCRIPTION:Funktion: ARB 1\\nSpiel-Nr: 456789\\nDatum: 20.02.2025\\nZeit: 19:30\\nTeams: VBC Zürich vs Volley Luzern 1\\nLiga: NLA Herren\\nHalle: Saalsporthalle\\nAdresse: Sihlhölzlistrasse 5\\, 8045 Zürich\\nKontakt: Max Muster (+41 79 123 45 67)
-DTSTART:20250220T193000
-DTEND:20250220T220000
-LOCATION:Sihlhölzlistrasse 5\\, 8045 Zürich\\, Suisse
-X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-TITLE=Saalsporthalle:47.3769;8.5417
-GEO:47.3769;8.5417
+UID:referee-convocation-for-game-377762
+SUMMARY:1. SR | Volley Amriswil - Lausanne UC (NLA)
+DESCRIPTION:Einsatz als: 1. SR\\n\\nSpiel: #377762 | 11.10.2025 17:00 | Volley Amriswil — Lausanne UC\\nLiga: #6607 | NLA | ♂\\n\\nHalle: #10 | Tellenfeld B (A)\\nAdresse: Untere Grenzstrasse 10\\, 8580 Amriswil\\nhttps://maps.google.com/?q=8FVFG7XQ%2BCP&hl=de\\n\\nHeimteam: #20 | Volley Amriswil (NLA\\,  ♂\\, SV)\\n\\tTeamverantwortlicher: Gesa Osterwald | gesa.osterwald@volleyamriswil.ch | +41766890060\\n\\nGastteam: #4 | Lausanne UC (NLA\\,  ♂\\, SV)\\n\\tTeamverantwortlicher: Philippe Ducommun | philippe@lucvolleyball.ch | +41796372064\\n\\nAufbieter: \\n\\tPhilippe Weinberger | philippe.weinberger@axa.ch | +41792136008\\n\\nAufgebotene SR:\\n\\t1. SR: Laura Rüegg | laura.rueegg@me.com | +41796558486\\n\\t2. SR: Alfio Sanapo | alfiosan70@gmail.com | +41796194374\\n\\t1. LR: Martin Auricht | administration@volleyaadorf.ch | +41764808808\\n\\t2. LR: Sepp Signer | signer-inauen@bluewin.ch | +41764138087\\n
+LOCATION:Untere Grenzstrasse 10\\, 8580 Amriswil\\, Schweiz
+DTSTART;TZID=UTC:20251011T150000
+DTEND;TZID=UTC:20251011T170000
+DTSTAMP;TZID=UTC:20260105T120042
+GEO:47.5486134;9.2893436
+X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-ADDRESS=Untere Grenzstrasse 10\\, 8580 Amriswil\\, Schweiz;X-APPLE-RADIUS=72;X-TITLE=Tellenfeld B:47.5486134;9.2893436
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT60M
+END:VALARM
 END:VEVENT
 END:VCALENDAR`;
 
@@ -1145,16 +1161,34 @@ END:VCALENDAR`;
     expect(results).toHaveLength(1);
     const assignment = results[0]!.assignment;
 
-    expect(assignment.gameId).toBe('456789');
+    // Role extraction - German format "1. SR"
+    expect(assignment.gameId).toBe('377762');
     expect(assignment.role).toBe('referee1');
-    expect(assignment.roleRaw).toBe('ARB 1');
-    expect(assignment.homeTeam).toBe('VBC Zürich');
-    expect(assignment.awayTeam).toBe('Volley Luzern 1');
-    expect(assignment.league).toBe('NLA Herren');
+    expect(assignment.roleRaw).toBe('1. SR');
+    expect(assignment.homeTeam).toBe('Volley Amriswil');
+    expect(assignment.awayTeam).toBe('Lausanne UC');
+    expect(assignment.league).toBe('NLA');
     expect(assignment.gender).toBe('men');
-    expect(assignment.hallName).toBe('Saalsporthalle');
-    expect(assignment.address).toBe('Sihlhölzlistrasse 5, 8045 Zürich');
-    expect(assignment.startTime).toBe('2025-02-20T19:30:00');
+    expect(assignment.leagueCategory).toBe('NLA');
+    expect(assignment.gameNumber).toBe(377762);
+
+    // Hall info from description
+    expect(assignment.hallId).toBe('10');
+    expect(assignment.hallName).toBe('Tellenfeld B (A)');
+    expect(assignment.address).toBe('Untere Grenzstrasse 10, 8580 Amriswil');
+
+    // Referee names - German format "1. SR:", "2. SR:"
+    expect(assignment.referees.referee1).toBe('Laura Rüegg');
+    expect(assignment.referees.referee2).toBe('Alfio Sanapo');
+    expect(assignment.referees.lineReferee1).toBe('Martin Auricht');
+    expect(assignment.referees.lineReferee2).toBe('Sepp Signer');
+
+    // Association from Heimteam
+    expect(assignment.association).toBe('SV');
+
+    // Plus Code extraction
+    expect(assignment.plusCode).toBe('8FVFG7XQ+CP');
+
     expect(results[0]!.confidence).toBe('high');
   });
 
@@ -1460,7 +1494,7 @@ END:VCALENDAR`;
       expect(results[0]!.assignment.referees.lineReferee2).toBe('Line Ref Two');
     });
 
-    it('extracts referees using SR pattern (German)', () => {
+    it('extracts referees using SR pattern (German alternative)', () => {
       const ical = `BEGIN:VCALENDAR
 BEGIN:VEVENT
 UID:referee-convocation-for-game-200005
@@ -1473,6 +1507,38 @@ END:VCALENDAR`;
 
       const results = parseCalendarFeed(ical);
       expect(results[0]!.assignment.referees.referee1).toBe('Hans Meier');
+    });
+
+    it('extracts referees using German number-first pattern (1. SR, 2. SR)', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-200007
+SUMMARY:1. SR | Team A - Team B (League)
+DESCRIPTION:Aufgebotene SR:\\n\\t1. SR: Laura Rüegg | laura.rueegg@me.com | +41796558486\\n\\t2. SR: Alfio Sanapo | alfiosan70@gmail.com | +41796194374
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.referees.referee1).toBe('Laura Rüegg');
+      expect(results[0]!.assignment.referees.referee2).toBe('Alfio Sanapo');
+    });
+
+    it('extracts line referees using German number-first pattern (1. LR, 2. LR)', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-200008
+SUMMARY:1. LR | Team A - Team B (League)
+DESCRIPTION:Aufgebotene SR:\\n\\t1. LR: Martin Auricht | email1\\n\\t2. LR: Sepp Signer | email2
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.referees.lineReferee1).toBe('Martin Auricht');
+      expect(results[0]!.assignment.referees.lineReferee2).toBe('Sepp Signer');
     });
 
     it('returns empty object when no referees found', () => {
@@ -1642,6 +1708,36 @@ END:VCALENDAR`;
         const results = parseCalendarFeed(ical);
         expect(results[0]!.assignment.association).toBe(code);
       }
+    });
+
+    it('extracts association from German Heimteam pattern', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-100010
+SUMMARY:1. SR | Team A - Team B (League)
+DESCRIPTION:Heimteam: #20 | Volley Amriswil (NLA, ♂, SV)
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.association).toBe('SV');
+    });
+
+    it('extracts association from German Gastteam pattern', () => {
+      const ical = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:referee-convocation-for-game-100011
+SUMMARY:2. SR | Team A - Team B (League)
+DESCRIPTION:Gastteam: #4 | Lausanne UC (NLA, ♂, SVRNO)
+DTSTART:20250215T140000
+DTEND:20250215T170000
+END:VEVENT
+END:VCALENDAR`;
+
+      const results = parseCalendarFeed(ical);
+      expect(results[0]!.assignment.association).toBe('SVRNO');
     });
 
     it('falls back to known association codes in description', () => {
