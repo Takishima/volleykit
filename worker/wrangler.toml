@@ -51,6 +51,18 @@ ALLOWED_ORIGINS = "https://takishima.github.io"
 TARGET_HOST = "https://volleymanager.volleyball.ch"
 
 # =============================================================================
+# SECRETS (Configure via Cloudflare Dashboard or wrangler secret)
+# =============================================================================
+# MISTRAL_API_KEY: API key for Mistral OCR service
+#   - Required for the /ocr endpoint to function
+#   - Get a key from: https://console.mistral.ai/
+#   - Set via: npx wrangler secret put MISTRAL_API_KEY
+#   - Or configure in Cloudflare Dashboard > Workers > volleykit-proxy > Settings > Variables
+#
+# Note: Secrets are not stored in this file for security reasons.
+# =============================================================================
+
+# =============================================================================
 # RATE LIMITING BINDING (In-Worker Rate Limiting)
 # =============================================================================
 # Uses Cloudflare's Rate Limiting binding for programmatic rate limiting.
