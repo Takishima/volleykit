@@ -54,9 +54,9 @@ const ESTIMATED_LINE_HEIGHT_PX = 20;
 
 /**
  * @typedef {Object} MistralTable
- * @property {string} [id] - Table identifier (e.g., "tbl-0.html")
- * @property {string} [content] - HTML table content
- * @property {string} [html] - Alternative property for HTML content
+ * @property {string} id - Table identifier (e.g., "tbl-0.html")
+ * @property {string} content - HTML table content
+ * @property {"html" | "markdown"} format - Table format
  */
 
 /**
@@ -176,37 +176,22 @@ export class MistralOCR {
 
   /**
    * Extract HTML content from a table entry
-   * Handles both string format and object format (e.g., {id, content} or {html})
+   * Mistral returns tables as objects with {id, content, format}
    * @param {string | MistralTable} table - Table entry from Mistral response
    * @returns {string} HTML content
    */
   #getTableHtml(table) {
+    // Handle string format (legacy/fallback)
     if (typeof table === 'string') {
       return table;
     }
 
-    // Handle object format - try common property names
-    if (typeof table === 'object' && table !== null) {
-      // Log the structure for debugging
-      console.log('Table object structure:', JSON.stringify(table, null, 2));
-
-      if (typeof table.content === 'string') {
-        return table.content;
-      }
-      if (typeof table.html === 'string') {
-        return table.html;
-      }
-      // Last resort: try to find any string property that looks like HTML
-      for (const key of Object.keys(table)) {
-        const value = table[key];
-        if (typeof value === 'string' && value.includes('<')) {
-          console.log(`Using table property "${key}" for HTML content`);
-          return value;
-        }
-      }
+    // Handle Mistral's object format: {id, content, format}
+    if (typeof table === 'object' && table !== null && typeof table.content === 'string') {
+      return table.content;
     }
 
-    console.warn('Could not extract HTML from table:', table);
+    console.warn('Unexpected table format:', table);
     return '';
   }
 
