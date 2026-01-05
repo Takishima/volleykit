@@ -24,6 +24,12 @@ const ZOOM_STEP = 0.1;
 /** JPEG quality for cropped output */
 const JPEG_QUALITY = 0.92;
 
+/** Padding from viewport edge in pixels */
+const FRAME_PADDING_PX = 24;
+
+/** Frame size as ratio of available space */
+const FRAME_SIZE_RATIO = 0.85;
+
 /**
  * @typedef {Object} ImageEditorOptions
  * @property {HTMLElement} container - Container element to render into
@@ -201,17 +207,16 @@ export class ImageEditor {
     this.#containerSize = { width: rect.width, height: rect.height };
 
     // Calculate frame size based on container and aspect ratio
-    const padding = 24;
-    const availableWidth = this.#containerSize.width - padding * 2;
-    const availableHeight = this.#containerSize.height - padding * 2;
+    const availableWidth = this.#containerSize.width - FRAME_PADDING_PX * 2;
+    const availableHeight = this.#containerSize.height - FRAME_PADDING_PX * 2;
 
     if (availableWidth / availableHeight > TABLE_ASPECT_RATIO) {
       // Container is wider - constrain by height
-      this.#frameSize.height = availableHeight * 0.85;
+      this.#frameSize.height = availableHeight * FRAME_SIZE_RATIO;
       this.#frameSize.width = this.#frameSize.height * TABLE_ASPECT_RATIO;
     } else {
       // Container is taller - constrain by width
-      this.#frameSize.width = availableWidth * 0.85;
+      this.#frameSize.width = availableWidth * FRAME_SIZE_RATIO;
       this.#frameSize.height = this.#frameSize.width / TABLE_ASPECT_RATIO;
     }
 
@@ -257,7 +262,8 @@ export class ImageEditor {
     // Constrain pan to keep frame filled
     this.#constrainPan();
 
-    this.#imageElement.style.transform = `translate(${this.#panX}px, ${this.#panY}px) scale(${this.#zoom})`;
+    // Include -50% offset to maintain centering (CSS top/left: 50%) plus user pan adjustments
+    this.#imageElement.style.transform = `translate(calc(-50% + ${this.#panX}px), calc(-50% + ${this.#panY}px)) scale(${this.#zoom})`;
   }
 
   #constrainPan() {

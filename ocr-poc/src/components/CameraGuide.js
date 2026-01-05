@@ -18,6 +18,15 @@
  */
 export const TABLE_ASPECT_RATIO = 4 / 5;
 
+/** Padding from container edge in pixels */
+const FRAME_PADDING_PX = 24;
+
+/** Frame size as ratio of available height when container is wider */
+const FRAME_HEIGHT_RATIO = 0.7;
+
+/** Frame size as ratio of available width when container is taller */
+const FRAME_WIDTH_RATIO = 0.85;
+
 /**
  * @typedef {Object} CameraGuideOptions
  * @property {HTMLElement} container - Container element to render into
@@ -82,20 +91,19 @@ export class CameraGuide {
     const containerHeight = containerRect.height;
 
     // Calculate frame dimensions to fit within container with padding
-    const padding = 24; // pixels from edge
-    const availableWidth = containerWidth - padding * 2;
-    const availableHeight = containerHeight - padding * 2;
+    const availableWidth = containerWidth - FRAME_PADDING_PX * 2;
+    const availableHeight = containerHeight - FRAME_PADDING_PX * 2;
 
     let frameWidth, frameHeight;
 
     // Determine dimensions based on available space while maintaining aspect ratio
     if (availableWidth / availableHeight > TABLE_ASPECT_RATIO) {
       // Container is wider than needed - constrain by height
-      frameHeight = availableHeight * 0.7; // 70% of available height
+      frameHeight = availableHeight * FRAME_HEIGHT_RATIO;
       frameWidth = frameHeight * TABLE_ASPECT_RATIO;
     } else {
       // Container is taller than needed - constrain by width
-      frameWidth = availableWidth * 0.85; // 85% of available width
+      frameWidth = availableWidth * FRAME_WIDTH_RATIO;
       frameHeight = frameWidth / TABLE_ASPECT_RATIO;
     }
 

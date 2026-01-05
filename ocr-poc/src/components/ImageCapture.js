@@ -49,9 +49,6 @@ export class ImageCapture {
   /** @type {ImageEditor | null} */
   #imageEditor = null;
 
-  /** @type {boolean} */
-  #isEditorActive = false;
-
   /** 1920x1080 provides good OCR quality while being widely supported */
   static VIDEO_CONSTRAINTS = {
     facingMode: 'environment',
@@ -329,7 +326,6 @@ export class ImageCapture {
 
     buttonsContainer?.setAttribute('hidden', '');
     editorContainer.removeAttribute('hidden');
-    this.#isEditorActive = true;
   }
 
   /** @param {Blob} croppedBlob */
@@ -349,7 +345,6 @@ export class ImageCapture {
 
     editorContainer?.setAttribute('hidden', '');
     buttonsContainer?.removeAttribute('hidden');
-    this.#isEditorActive = false;
   }
 
   destroy() {
