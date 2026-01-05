@@ -217,37 +217,48 @@ function TransportSectionComponent() {
         )}
 
         {/* Enable toggle */}
-        <div className="flex items-center justify-between py-2">
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
-                {t("settings.transport.enableCalculations")}
-              </span>
-              {associationCode && <AssociationBadge code={associationCode} />}
+        <div className="py-2">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
+                  {t("settings.transport.enableCalculations")}
+                </span>
+                {associationCode && <AssociationBadge code={associationCode} />}
+              </div>
             </div>
-          </div>
 
-          <button
-            type="button"
-            onClick={handleToggleTransport}
-            disabled={!canEnable}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-              !canEnable
-                ? "bg-surface-muted dark:bg-surface-subtle-dark cursor-not-allowed opacity-50"
-                : isTransportEnabled
-                  ? "bg-primary-600"
-                  : "bg-surface-muted dark:bg-surface-subtle-dark"
-            }`}
-            role="switch"
-            aria-checked={isTransportEnabled}
-            aria-label={t("settings.transport.enableCalculations")}
-          >
-            <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                isTransportEnabled ? "translate-x-6" : "translate-x-1"
+            <button
+              type="button"
+              onClick={handleToggleTransport}
+              disabled={!canEnable}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
+                !canEnable
+                  ? "bg-surface-muted dark:bg-surface-subtle-dark cursor-not-allowed opacity-50"
+                  : isTransportEnabled
+                    ? "bg-primary-600"
+                    : "bg-surface-muted dark:bg-surface-subtle-dark"
               }`}
-            />
-          </button>
+              role="switch"
+              aria-checked={isTransportEnabled}
+              aria-label={t("settings.transport.enableCalculations")}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  isTransportEnabled ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+          {!canEnable && (
+            <p className="text-xs text-text-muted dark:text-text-muted-dark mt-1">
+              {!hasHomeLocation
+                ? t("settings.transport.requiresHomeLocation")
+                : !isAvailable
+                  ? t("settings.transport.apiNotConfigured")
+                  : t("settings.transport.disabledHint")}
+            </p>
+          )}
         </div>
 
         {/* Arrival time setting - only show when transport is enabled */}

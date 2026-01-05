@@ -391,6 +391,7 @@ const de: Translations = {
       description:
         "Berechnen Sie Reisezeiten mit dem Schweizer öffentlichen Verkehr, um Tauschangebote nach Anfahrtszeit zu filtern.",
       enableCalculations: "Reisezeitberechnung aktivieren",
+      disabledHint: "Erfordert Heimatstandort und Transport-API",
       requiresHomeLocation: "Legen Sie zuerst Ihren Heimatstandort fest",
       apiNotConfigured: "Transport-API ist nicht konfiguriert",
       maxTravelTime: "Maximale Reisezeit",

@@ -388,6 +388,7 @@ const it: Translations = {
       description:
         "Calcola i tempi di viaggio con i trasporti pubblici svizzeri per filtrare gli scambi per tempo di percorrenza.",
       enableCalculations: "Abilita calcolo tempo di viaggio",
+      disabledHint: "Richiede posizione casa e API trasporti",
       requiresHomeLocation: "Imposta prima la tua posizione casa",
       apiNotConfigured: "API trasporti non configurata",
       maxTravelTime: "Tempo di viaggio massimo",
