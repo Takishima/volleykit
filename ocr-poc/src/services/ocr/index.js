@@ -47,7 +47,7 @@ async function isOCRProxyAvailable(endpoint) {
 const OCR_ENDPOINT =
   typeof import.meta !== 'undefined' && import.meta.env?.VITE_OCR_ENDPOINT
     ? import.meta.env.VITE_OCR_ENDPOINT
-    : 'https://volleykit-proxy.ngn-damien.workers.dev/ocr';
+    : 'https://volleykit-proxy.takishima.workers.dev/ocr';
 
 /**
  * Factory for creating OCR engine instances

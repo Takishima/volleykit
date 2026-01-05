@@ -8,7 +8,7 @@
  */
 
 // Configuration constants
-const DEFAULT_OCR_ENDPOINT = 'https://volleykit-proxy.ngn-damien.workers.dev/ocr';
+const DEFAULT_OCR_ENDPOINT = 'https://volleykit-proxy.takishima.workers.dev/ocr';
 
 // Mistral OCR doesn't provide per-word confidence scores, so we use a high default
 // since the model is generally very accurate
