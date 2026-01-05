@@ -112,7 +112,6 @@ export class ImageEditor {
           <img
             class="image-editor__image"
             id="editor-image"
-            src="${this.#imageUrl}"
             alt="Image to crop"
             draggable="false"
           />
@@ -179,6 +178,9 @@ export class ImageEditor {
     if (!this.#imageElement) {
       return;
     }
+
+    // Set src programmatically to avoid innerHTML interpolation (CodeQL security)
+    this.#imageElement.src = this.#imageUrl;
 
     // Wait for image to load
     if (!this.#imageElement.complete) {
