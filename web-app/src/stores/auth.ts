@@ -110,6 +110,13 @@ const SESSION_CHECK_GRACE_PERIOD_MS = 5_000;
 const CALENDAR_CODE_PATTERN = /^[a-zA-Z0-9]{6}$/;
 
 /**
+ * Dummy association code for calendar mode transport settings.
+ * Using a dedicated code ensures calendar mode settings don't interfere
+ * with real API association settings if the user logs in later.
+ */
+export const CALENDAR_ASSOCIATION = "CAL";
+
+/**
  * Error key for users without a referee role.
  * This key is used by LoginPage to display a translated error message.
  * The actual translations are in i18n/locales under auth.noRefereeRole.

@@ -10,6 +10,7 @@ import {
 import { useTranslation } from "@/hooks/useTranslation";
 import { useActiveAssociationCode } from "@/hooks/useActiveAssociation";
 import { useTravelTimeAvailable } from "@/hooks/useTravelTime";
+import { CALENDAR_ASSOCIATION } from "@/stores/auth";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { queryKeys } from "@/api/queryKeys";
 import {
@@ -224,7 +225,9 @@ function TransportSectionComponent() {
                 <span className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
                   {t("settings.transport.enableCalculations")}
                 </span>
-                {associationCode && <AssociationBadge code={associationCode} />}
+                {associationCode && associationCode !== CALENDAR_ASSOCIATION && (
+                  <AssociationBadge code={associationCode} />
+                )}
               </div>
             </div>
 
@@ -270,7 +273,9 @@ function TransportSectionComponent() {
                   <span className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
                     {t("settings.transport.arrivalTime")}
                   </span>
-                  {associationCode && <AssociationBadge code={associationCode} />}
+                  {associationCode && associationCode !== CALENDAR_ASSOCIATION && (
+                    <AssociationBadge code={associationCode} />
+                  )}
                 </div>
                 <div className="text-xs text-text-muted dark:text-text-muted-dark mt-0.5">
                   {t("settings.transport.arrivalTimeDescription")}
