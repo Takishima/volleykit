@@ -90,7 +90,7 @@ interface AuthState {
   hasMultipleAssociations: () => boolean;
   /** Returns true if in calendar mode */
   isCalendarMode: () => boolean;
-  /** Login with a calendar code (placeholder - validation will be added later) */
+  /** Login with a calendar code. Validates the code format and fetches calendar data. */
   loginWithCalendar: (code: string) => Promise<void>;
   /** Logout from calendar mode (alias for logout) */
   logoutCalendar: () => Promise<void>;
