@@ -428,22 +428,26 @@ describe("RosterVerificationPanel", () => {
 
       // Simulate remounting by changing key (would force complete remount)
       // or we can check that onModificationsChange was called with the correct values
-      expect(onModificationsChange).toHaveBeenCalledWith({
-        added: [addedPlayer],
-        removed: ["player-1"],
-      });
+      expect(onModificationsChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          players: {
+            added: [addedPlayer],
+            removed: ["player-1"],
+          },
+        }),
+      );
     });
 
     it("simulates wizard navigation: state persists after unmount/remount", () => {
       const onModificationsChange = vi.fn();
-      let capturedModifications: { added: RosterPlayer[]; removed: string[] } = {
+      let capturedPlayerModifications: { added: RosterPlayer[]; removed: string[] } = {
         added: [],
         removed: [],
       };
 
       // Track modifications as they're reported
       onModificationsChange.mockImplementation((mods) => {
-        capturedModifications = mods;
+        capturedPlayerModifications = mods.players;
       });
 
       vi.mocked(useNominationListModule.useNominationList).mockReturnValue({
@@ -469,12 +473,14 @@ describe("RosterVerificationPanel", () => {
 
       expect(screen.getByText("3 players")).toBeInTheDocument();
 
-      // Step 2: User removes a player
+      // Step 2: User removes a player - need to expand players section first
+      const playersHeader = screen.getByRole("button", { name: /players/i });
+      fireEvent.click(playersHeader);
       const removeButtons = screen.getAllByRole("button", { name: /remove/i });
       fireEvent.click(removeButtons[0]!);
 
       expect(screen.getByText("2 players")).toBeInTheDocument();
-      expect(capturedModifications.removed).toContain("player-1");
+      expect(capturedPlayerModifications.removed).toContain("player-1");
 
       // Step 3: Simulate navigation to next wizard step (component unmounts)
       unmount();
@@ -486,13 +492,16 @@ describe("RosterVerificationPanel", () => {
           teamName="Test Team"
           gameId="game-1"
           onModificationsChange={onModificationsChange}
-          initialModifications={capturedModifications}
+          initialModifications={capturedPlayerModifications}
         />,
         { wrapper: createWrapper() },
       );
 
       // Step 5: Verify state was restored correctly
       expect(screen.getByText("2 players")).toBeInTheDocument();
+      // Expand players section to see the undo button
+      const playersHeaderRemount = screen.getByRole("button", { name: /players/i });
+      fireEvent.click(playersHeaderRemount);
       // The removed player should still be marked for removal (has undo button)
       expect(screen.getByRole("button", { name: /undo/i })).toBeInTheDocument();
     });

@@ -1,29 +1,96 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
-import type { PossibleNomination, NominationList } from "@/api/client";
+import type { PossibleNomination, NominationList, Schemas } from "@/api/client";
+import type { ValidatedPersonSearchResult } from "@/api/validation";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   useNominationList,
   type RosterPlayer,
   type RosterModifications,
+  type CoachRole,
+  type CoachInfo,
+  type CoachModifications,
 } from "@/hooks/useNominationList";
 import { PlayerListItem } from "./PlayerListItem";
 import { AddPlayerSheet } from "./AddPlayerSheet";
-import { UserPlus, AlertCircle, RefreshCw } from "@/components/ui/icons";
+import { CoachesSection } from "./CoachesSection";
+import { AddCoachSheet } from "./AddCoachSheet";
+import {
+  UserPlus,
+  AlertCircle,
+  RefreshCw,
+  ChevronDown,
+  ChevronUp,
+} from "@/components/ui/icons";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { formatRosterEntries, getMaxLastNameWidth } from "@/utils/date-helpers";
+
+type PersonSummary = Schemas["PersonSummary"];
+
+type ExpandedSection = "coaches" | "players";
+
+export interface RosterPanelModifications {
+  players: RosterModifications;
+  coaches: CoachModifications;
+}
 
 interface RosterVerificationPanelProps {
   team: "home" | "away";
   teamName: string;
   gameId: string;
-  onModificationsChange?: (modifications: RosterModifications) => void;
+  onModificationsChange?: (modifications: RosterPanelModifications) => void;
   onAddPlayerSheetOpenChange?: (isOpen: boolean) => void;
   /** When true, shows roster in view-only mode without edit controls */
   readOnly?: boolean;
-  /** Initial modifications to restore state when remounting */
+  /** Initial player modifications to restore state when remounting */
   initialModifications?: RosterModifications;
+  /** Initial coach modifications to restore state when remounting */
+  initialCoachModifications?: CoachModifications;
   /** Pre-fetched nomination list data to avoid duplicate API calls */
   prefetchedNominationList?: NominationList | null;
+}
+
+interface CollapsibleHeaderProps {
+  title: string;
+  count: number;
+  countLabel: string;
+  expanded: boolean;
+  onToggle: () => void;
+  /** ID of the section this header controls, for aria-controls */
+  sectionId: string;
+}
+
+function CollapsibleHeader({
+  title,
+  count,
+  countLabel,
+  expanded,
+  onToggle,
+  sectionId,
+}: CollapsibleHeaderProps) {
+  const Icon = expanded ? ChevronUp : ChevronDown;
+
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="w-full flex items-center justify-between py-3 px-1 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-lg"
+      aria-expanded={expanded}
+      aria-controls={sectionId}
+    >
+      <div className="flex items-center gap-2">
+        <Icon
+          className="w-5 h-5 text-text-muted dark:text-text-muted-dark"
+          aria-hidden="true"
+        />
+        <span className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
+          {title}
+        </span>
+      </div>
+      <span className="text-xs text-text-muted dark:text-text-muted-dark">
+        {countLabel.replace("{count}", String(count))}
+      </span>
+    </button>
+  );
 }
 
 export function RosterVerificationPanel({
@@ -34,6 +101,7 @@ export function RosterVerificationPanel({
   onAddPlayerSheetOpenChange,
   readOnly = false,
   initialModifications,
+  initialCoachModifications,
   prefetchedNominationList,
 }: RosterVerificationPanelProps) {
   const { t } = useTranslation();
@@ -44,38 +112,57 @@ export function RosterVerificationPanel({
       prefetchedData: prefetchedNominationList,
     });
 
-  // Track locally added players - initialize from props to restore state when remounting
+  // Accordion state - players expanded by default as per user request
+  const [expandedSection, setExpandedSection] =
+    useState<ExpandedSection>("players");
+
+  // Player modifications state
   const [addedPlayers, setAddedPlayers] = useState<RosterPlayer[]>(
     () => initialModifications?.added ?? [],
   );
-
-  // Track AddPlayerSheet open state
-  const [isAddPlayerSheetOpen, setIsAddPlayerSheetOpen] = useState(false);
-
-  // Track IDs of players marked for removal - initialize from props
   const [removedPlayerIds, setRemovedPlayerIds] = useState<Set<string>>(
     () => new Set(initialModifications?.removed ?? []),
   );
 
-  // Use ref to avoid stale closure when callback isn't memoized by parent
+  // Coach modifications state
+  const [coachAdditions, setCoachAdditions] = useState<Map<CoachRole, CoachInfo>>(
+    () => initialCoachModifications?.added ?? new Map(),
+  );
+  const [coachRemovals, setCoachRemovals] = useState<Set<CoachRole>>(
+    () => initialCoachModifications?.removed ?? new Set(),
+  );
+
+  // Sheet states
+  const [isAddPlayerSheetOpen, setIsAddPlayerSheetOpen] = useState(false);
+  const [isAddCoachSheetOpen, setIsAddCoachSheetOpen] = useState(false);
+  const [addingCoachRole, setAddingCoachRole] = useState<CoachRole>("head");
+
+  // Ref for stable callback
   const onModificationsChangeRef = useRef(onModificationsChange);
   useEffect(() => {
     onModificationsChangeRef.current = onModificationsChange;
   }, [onModificationsChange]);
 
-  // Notify parent when modifications change
+  // Notify parent when any modifications change
   useEffect(() => {
     onModificationsChangeRef.current?.({
-      added: addedPlayers,
-      removed: [...removedPlayerIds],
+      players: {
+        added: addedPlayers,
+        removed: [...removedPlayerIds],
+      },
+      coaches: {
+        added: coachAdditions,
+        removed: coachRemovals,
+      },
     });
-  }, [addedPlayers, removedPlayerIds]);
+  }, [addedPlayers, removedPlayerIds, coachAdditions, coachRemovals]);
 
   // Notify parent when AddPlayerSheet open state changes
   useEffect(() => {
     onAddPlayerSheetOpenChange?.(isAddPlayerSheetOpen);
   }, [isAddPlayerSheetOpen, onAddPlayerSheetOpenChange]);
 
+  // Player handlers
   const handleRemovePlayer = useCallback((playerId: string) => {
     setRemovedPlayerIds((prev) => {
       const newSet = new Set(prev);
@@ -84,7 +171,7 @@ export function RosterVerificationPanel({
     });
   }, []);
 
-  const handleUndoRemoval = useCallback((playerId: string) => {
+  const handleUndoPlayerRemoval = useCallback((playerId: string) => {
     setRemovedPlayerIds((prev) => {
       const newSet = new Set(prev);
       newSet.delete(playerId);
@@ -110,13 +197,68 @@ export function RosterVerificationPanel({
     };
 
     setAddedPlayers((prev) => [...prev, newPlayer]);
-    // Sheet stays open to allow adding multiple players
   }, []);
 
   const handleRemoveAddedPlayer = useCallback((playerId: string) => {
     setAddedPlayers((prev) => prev.filter((p) => p.id !== playerId));
   }, []);
 
+  // Coach handlers
+  const handleAddCoach = useCallback((role: CoachRole) => {
+    setAddingCoachRole(role);
+    setIsAddCoachSheetOpen(true);
+  }, []);
+
+  const handleRemoveCoach = useCallback((role: CoachRole) => {
+    // If there's a pending addition for this role, just remove it
+    if (coachAdditions.has(role)) {
+      setCoachAdditions((prev) => {
+        const newMap = new Map(prev);
+        newMap.delete(role);
+        return newMap;
+      });
+      return;
+    }
+
+    // Toggle removal state for existing coaches
+    setCoachRemovals((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(role)) {
+        newSet.delete(role);
+      } else {
+        newSet.add(role);
+      }
+      return newSet;
+    });
+  }, [coachAdditions]);
+
+  const handleSelectCoach = useCallback(
+    (coach: ValidatedPersonSearchResult, role: CoachRole) => {
+      const coachInfo: CoachInfo = {
+        id: coach.__identity,
+        displayName: coach.displayName ?? "",
+        firstName: coach.firstName,
+        lastName: coach.lastName,
+        birthday: coach.birthday,
+      };
+
+      setCoachAdditions((prev) => {
+        const newMap = new Map(prev);
+        newMap.set(role, coachInfo);
+        return newMap;
+      });
+
+      // Clear any pending removal for this role
+      setCoachRemovals((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(role);
+        return newSet;
+      });
+    },
+    [],
+  );
+
+  // Compute player data
   const allPlayers = [...players, ...addedPlayers].sort((a, b) => {
     if (a.isNewlyAdded && !b.isNewlyAdded) return 1;
     if (!a.isNewlyAdded && b.isNewlyAdded) return -1;
@@ -125,22 +267,55 @@ export function RosterVerificationPanel({
     return lastNameA.localeCompare(lastNameB);
   });
 
-  // Compute formatted display data for all players (handles duplicate detection)
   const formattedEntries = useMemo(
     () => formatRosterEntries(allPlayers),
     [allPlayers],
   );
 
-  // Calculate max last name width for column alignment
   const maxLastNameWidth = useMemo(
     () => getMaxLastNameWidth(formattedEntries),
     [formattedEntries],
   );
 
-  // Calculate visible player count (excluding removed)
   const visiblePlayerCount = allPlayers.filter(
     (p) => !removedPlayerIds.has(p.id),
   ).length;
+
+  // Compute coach data
+  const headCoach = nominationList?.coachPerson;
+  const firstAssistant = nominationList?.firstAssistantCoachPerson;
+  const secondAssistant = nominationList?.secondAssistantCoachPerson;
+
+  // Convert CoachInfo to PersonSummary for display
+  const coachAdditionsAsPersonSummary = useMemo(() => {
+    const map = new Map<CoachRole, PersonSummary>();
+    coachAdditions.forEach((info, role) => {
+      map.set(role, {
+        __identity: info.id,
+        displayName: info.displayName,
+        firstName: info.firstName,
+        lastName: info.lastName,
+        birthday: info.birthday,
+      });
+    });
+    return map;
+  }, [coachAdditions]);
+
+  // Count coaches (including pending additions, excluding pending removals)
+  const coachCount = useMemo(() => {
+    let count = 0;
+    const roles: CoachRole[] = ["head", "firstAssistant", "secondAssistant"];
+    const existingCoaches = { head: headCoach, firstAssistant, secondAssistant };
+
+    for (const role of roles) {
+      const hasPendingAddition = coachAdditions.has(role);
+      const hasExistingCoach = existingCoaches[role] && !coachRemovals.has(role);
+      if (hasPendingAddition || hasExistingCoach) {
+        count++;
+      }
+    }
+    return count;
+  }, [headCoach, firstAssistant, secondAssistant, coachAdditions, coachRemovals]);
 
   // Loading state
   if (isLoading) {
@@ -161,8 +336,14 @@ export function RosterVerificationPanel({
   // Error state
   if (isError) {
     return (
-      <div className="py-8 flex flex-col items-center justify-center" role="alert">
-        <AlertCircle className="w-10 h-10 text-danger-500 mb-3" aria-hidden="true" />
+      <div
+        className="py-8 flex flex-col items-center justify-center"
+        role="alert"
+      >
+        <AlertCircle
+          className="w-10 h-10 text-danger-500 mb-3"
+          aria-hidden="true"
+        />
         <p className="text-sm text-danger-600 dark:text-danger-400 mb-4">
           {t("validation.roster.errorLoading")}
         </p>
@@ -180,63 +361,104 @@ export function RosterVerificationPanel({
 
   return (
     <div className="py-4">
-      {/* Header with team name and player count */}
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-          {teamName}
-        </h3>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
-          {t("validation.roster.playerCount").replace(
-            "{count}",
-            String(visiblePlayerCount),
-          )}
-        </span>
+      {/* Team name header */}
+      <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+        {teamName}
+      </h3>
+
+      {/* Coaches Section */}
+      <div className="mb-2">
+        <CollapsibleHeader
+          title={t("validation.roster.coaches")}
+          count={coachCount}
+          countLabel={t("validation.roster.coachCount")}
+          expanded={expandedSection === "coaches"}
+          onToggle={() => setExpandedSection("coaches")}
+          sectionId={`coaches-section-${team}`}
+        />
+        {expandedSection === "coaches" && (
+          <div id={`coaches-section-${team}`} className="mt-2">
+            <CoachesSection
+              headCoach={headCoach}
+              firstAssistant={firstAssistant}
+              secondAssistant={secondAssistant}
+              readOnly={readOnly}
+              onAddCoach={handleAddCoach}
+              onRemoveCoach={handleRemoveCoach}
+              pendingAdditions={coachAdditionsAsPersonSummary}
+              pendingRemovals={coachRemovals}
+            />
+          </div>
+        )}
       </div>
 
-      {/* Player list */}
-      {allPlayers.length === 0 ? (
-        <div className="py-8 text-center">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {t("validation.roster.emptyRoster")}
-          </p>
-        </div>
-      ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          {allPlayers.map((player) => {
-            const entry = formattedEntries.get(player.id);
-            return (
-              <PlayerListItem
-                key={player.id}
-                player={player}
-                displayData={{
-                  lastName: entry?.lastName || player.lastName || player.displayName,
-                  firstInitial: entry?.firstInitial || "",
-                  dob: entry?.dob || "",
-                }}
-                maxLastNameWidth={maxLastNameWidth}
-                isMarkedForRemoval={removedPlayerIds.has(player.id)}
-                onRemove={readOnly ? undefined : () => handleRemovePlayer(player.id)}
-                onUndoRemoval={readOnly ? undefined : () => handleUndoRemoval(player.id)}
-                readOnly={readOnly}
-              />
-            );
-          })}
-        </div>
-      )}
+      {/* Players Section */}
+      <div>
+        <CollapsibleHeader
+          title={t("validation.roster.players")}
+          count={visiblePlayerCount}
+          countLabel={t("validation.roster.playerCount")}
+          expanded={expandedSection === "players"}
+          onToggle={() => setExpandedSection("players")}
+          sectionId={`players-section-${team}`}
+        />
+        {expandedSection === "players" && (
+          <div id={`players-section-${team}`} className="mt-2">
+            {allPlayers.length === 0 ? (
+              <div className="py-8 text-center">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {t("validation.roster.emptyRoster")}
+                </p>
+              </div>
+            ) : (
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                {allPlayers.map((player) => {
+                  const entry = formattedEntries.get(player.id);
+                  return (
+                    <PlayerListItem
+                      key={player.id}
+                      player={player}
+                      displayData={{
+                        lastName:
+                          entry?.lastName || player.lastName || player.displayName,
+                        firstInitial: entry?.firstInitial || "",
+                        dob: entry?.dob || "",
+                      }}
+                      maxLastNameWidth={maxLastNameWidth}
+                      isMarkedForRemoval={removedPlayerIds.has(player.id)}
+                      onRemove={
+                        readOnly
+                          ? undefined
+                          : () => handleRemovePlayer(player.id)
+                      }
+                      onUndoRemoval={
+                        readOnly
+                          ? undefined
+                          : () => handleUndoPlayerRemoval(player.id)
+                      }
+                      readOnly={readOnly}
+                    />
+                  );
+                })}
+              </div>
+            )}
 
-      {/* Add Player button - hidden in read-only mode */}
-      {!readOnly && (
-        <div className="mt-4">
-          <button
-            type="button"
-            onClick={() => setIsAddPlayerSheetOpen(true)}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 rounded-lg border border-primary-200 dark:border-primary-800 transition-colors"
-          >
-            <UserPlus className="w-4 h-4" aria-hidden="true" />
-            {t("validation.roster.addPlayer")}
-          </button>
-        </div>
-      )}
+            {/* Add Player button - hidden in read-only mode */}
+            {!readOnly && (
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsAddPlayerSheetOpen(true)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 rounded-lg border border-primary-200 dark:border-primary-800 transition-colors"
+                >
+                  <UserPlus className="w-4 h-4" aria-hidden="true" />
+                  {t("validation.roster.addPlayer")}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* AddPlayerSheet - only available in edit mode */}
       {!readOnly && (
@@ -247,6 +469,16 @@ export function RosterVerificationPanel({
           excludePlayerIds={players.map((p) => p.id)}
           onAddPlayer={handleAddPlayer}
           onRemovePlayer={handleRemoveAddedPlayer}
+        />
+      )}
+
+      {/* AddCoachSheet - only available in edit mode */}
+      {!readOnly && (
+        <AddCoachSheet
+          isOpen={isAddCoachSheetOpen}
+          onClose={() => setIsAddCoachSheetOpen(false)}
+          role={addingCoachRole}
+          onSelectCoach={handleSelectCoach}
         />
       )}
     </div>

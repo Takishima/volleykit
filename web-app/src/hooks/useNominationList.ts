@@ -18,6 +18,23 @@ export interface RosterModifications {
   removed: string[];
 }
 
+export type CoachRole = "head" | "firstAssistant" | "secondAssistant";
+
+export interface CoachInfo {
+  id: string;
+  displayName: string;
+  firstName?: string;
+  lastName?: string;
+  birthday?: string | null;
+}
+
+export interface CoachModifications {
+  /** Map of coach roles to the person being added */
+  added: Map<CoachRole, CoachInfo>;
+  /** Set of coach roles being removed */
+  removed: Set<CoachRole>;
+}
+
 interface UseNominationListOptions {
   gameId: string;
   team: "home" | "away";

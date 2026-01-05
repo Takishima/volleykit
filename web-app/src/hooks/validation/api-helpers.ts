@@ -4,7 +4,7 @@
 
 import { getApiClient } from "@/api/client";
 import { logger } from "@/utils/logger";
-import type { RosterModifications } from "@/hooks/useNominationList";
+import type { RosterModifications, CoachModifications, CoachRole } from "@/hooks/useNominationList";
 
 /** Type for nomination list with required fields for API calls. */
 export interface NominationListForApi {
@@ -12,6 +12,9 @@ export interface NominationListForApi {
   team?: { __identity?: string };
   indoorPlayerNominations?: { __identity?: string }[];
   nominationListValidation?: { __identity?: string };
+  coachPerson?: { __identity?: string };
+  firstAssistantCoachPerson?: { __identity?: string };
+  secondAssistantCoachPerson?: { __identity?: string };
 }
 
 /** Type for scoresheet with required fields for API calls. */
@@ -47,14 +50,68 @@ export function getPlayerNominationIds(
   return [...remainingIds, ...addedIds];
 }
 
-/** Saves roster modifications for a single team. */
+/**
+ * Check if there are any coach modifications (additions or removals).
+ */
+export function hasCoachModifications(modifications: CoachModifications): boolean {
+  return modifications.added.size > 0 || modifications.removed.size > 0;
+}
+
+/**
+ * Build coach IDs object from coach modifications.
+ * Merges existing coaches with additions and handles removals.
+ */
+export function buildCoachIds(
+  nomList: NominationListForApi,
+  coachModifications: CoachModifications,
+): { head?: string; firstAssistant?: string; secondAssistant?: string } | undefined {
+  if (!hasCoachModifications(coachModifications)) {
+    return undefined;
+  }
+
+  const coachIds: { head?: string; firstAssistant?: string; secondAssistant?: string } = {};
+  const roleToProperty: Record<CoachRole, keyof Pick<NominationListForApi, "coachPerson" | "firstAssistantCoachPerson" | "secondAssistantCoachPerson">> = {
+    head: "coachPerson",
+    firstAssistant: "firstAssistantCoachPerson",
+    secondAssistant: "secondAssistantCoachPerson",
+  };
+
+  for (const role of ["head", "firstAssistant", "secondAssistant"] as CoachRole[]) {
+    // Check if there's a pending addition for this role
+    const addedCoach = coachModifications.added.get(role);
+    if (addedCoach) {
+      coachIds[role] = addedCoach.id;
+      continue;
+    }
+
+    // Check if this role is being removed
+    if (coachModifications.removed.has(role)) {
+      coachIds[role] = ""; // Empty string signals removal
+      continue;
+    }
+
+    // Preserve existing coach if no modification
+    const existingId = nomList[roleToProperty[role]]?.__identity;
+    if (existingId) {
+      coachIds[role] = existingId;
+    }
+  }
+
+  return coachIds;
+}
+
+/** Saves roster modifications (players and coaches) for a single team. */
 export async function saveRosterModifications(
   apiClient: ReturnType<typeof getApiClient>,
   gameId: string,
   nomList: NominationListForApi | undefined,
-  modifications: RosterModifications,
+  playerModifications: RosterModifications,
+  coachModifications?: CoachModifications,
 ): Promise<void> {
-  if (!hasRosterModifications(modifications)) {
+  const hasPlayerMods = hasRosterModifications(playerModifications);
+  const hasCoachMods = coachModifications ? hasCoachModifications(coachModifications) : false;
+
+  if (!hasPlayerMods && !hasCoachMods) {
     logger.debug("[VS] skip roster save: no modifications");
     return;
   }
@@ -63,12 +120,15 @@ export async function saveRosterModifications(
     return;
   }
 
-  const playerIds = getPlayerNominationIds(nomList, modifications);
+  const playerIds = getPlayerNominationIds(nomList, playerModifications);
+  const coachIds = coachModifications ? buildCoachIds(nomList, coachModifications) : undefined;
+
   await apiClient.updateNominationList(
     nomList.__identity,
     gameId,
     nomList.team.__identity,
     playerIds,
+    coachIds,
   );
 }
 
@@ -92,25 +152,29 @@ export async function saveScorerSelection(
   );
 }
 
-/** Finalizes a single team's roster. */
+/** Finalizes a single team's roster (players and coaches). */
 export async function finalizeRoster(
   apiClient: ReturnType<typeof getApiClient>,
   gameId: string,
   nomList: NominationListForApi | undefined,
-  modifications: RosterModifications,
+  playerModifications: RosterModifications,
+  coachModifications?: CoachModifications,
 ): Promise<void> {
   if (!nomList?.__identity || !nomList.team?.__identity) {
     logger.debug("[VS] skip roster finalize: missing nomination list or team ID");
     return;
   }
 
-  const playerIds = getPlayerNominationIds(nomList, modifications);
+  const playerIds = getPlayerNominationIds(nomList, playerModifications);
+  const coachIds = coachModifications ? buildCoachIds(nomList, coachModifications) : undefined;
+
   await apiClient.finalizeNominationList(
     nomList.__identity,
     gameId,
     nomList.team.__identity,
     playerIds,
     nomList.nominationListValidation?.__identity,
+    coachIds,
   );
 }
 
