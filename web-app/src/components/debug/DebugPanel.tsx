@@ -677,12 +677,16 @@ function TransportDebugSection() {
                 <td style={{ padding: "4px", color: "#888" }}>Longitude</td>
                 <td style={{ padding: "4px", color: "#e0e0e0" }}>{homeLocation.longitude.toFixed(6)}</td>
               </tr>
-              {homeLocation.address && (
+              {homeLocation.label && (
                 <tr style={{ borderBottom: "1px solid #222" }}>
-                  <td style={{ padding: "4px", color: "#888" }}>Address</td>
-                  <td style={{ padding: "4px", color: "#e0e0e0" }}>{homeLocation.address}</td>
+                  <td style={{ padding: "4px", color: "#888" }}>Label</td>
+                  <td style={{ padding: "4px", color: "#e0e0e0" }}>{homeLocation.label}</td>
                 </tr>
               )}
+              <tr style={{ borderBottom: "1px solid #222" }}>
+                <td style={{ padding: "4px", color: "#888" }}>Source</td>
+                <td style={{ padding: "4px", color: "#e0e0e0" }}>{homeLocation.source}</td>
+              </tr>
             </tbody>
           </table>
         </div>
