@@ -35,6 +35,7 @@ interface Env {
   TARGET_HOST: string;
   RATE_LIMITER: RateLimiter;
   KILL_SWITCH?: string; // Set to "true" to disable the proxy
+  MISTRAL_API_KEY?: string; // API key for Mistral OCR
 }
 
 function validateEnv(env: Env): void {
@@ -404,6 +405,218 @@ export default {
           },
         },
       );
+    }
+
+    // OCR endpoint - proxy to Mistral OCR API
+    // Accepts POST with image data and returns OCR results
+    if (url.pathname === "/ocr") {
+      const origin = request.headers.get("Origin");
+      let allowedOrigins: string[];
+      try {
+        allowedOrigins = parseAllowedOrigins(env.ALLOWED_ORIGINS);
+      } catch {
+        return new Response("Server configuration error", {
+          status: 500,
+          headers: { "Content-Type": "text/plain" },
+        });
+      }
+
+      // Check origin for OCR endpoint
+      if (!isAllowedOrigin(origin, allowedOrigins)) {
+        return new Response("Forbidden: Origin not allowed", {
+          status: 403,
+          headers: { "Content-Type": "text/plain" },
+        });
+      }
+
+      // Handle CORS preflight for OCR
+      if (request.method === "OPTIONS") {
+        return new Response(null, {
+          status: 204,
+          headers: corsHeaders(origin!),
+        });
+      }
+
+      // Only allow POST for OCR
+      if (request.method !== "POST") {
+        return new Response("Method Not Allowed", {
+          status: 405,
+          headers: {
+            "Content-Type": "text/plain",
+            Allow: "POST",
+            ...corsHeaders(origin!),
+            ...securityHeaders(),
+          },
+        });
+      }
+
+      // Check if Mistral API key is configured
+      if (!env.MISTRAL_API_KEY) {
+        return new Response(
+          JSON.stringify({ error: "OCR service not configured" }),
+          {
+            status: 503,
+            headers: {
+              "Content-Type": "application/json",
+              ...corsHeaders(origin!),
+              ...securityHeaders(),
+            },
+          },
+        );
+      }
+
+      try {
+        // Parse the incoming request - expects multipart form data with 'image' field
+        const formData = await request.formData();
+        const imageFile = formData.get("image") as File | null;
+
+        if (!imageFile) {
+          return new Response(
+            JSON.stringify({ error: "Missing 'image' field in form data" }),
+            {
+              status: 400,
+              headers: {
+                "Content-Type": "application/json",
+                ...corsHeaders(origin!),
+                ...securityHeaders(),
+              },
+            },
+          );
+        }
+
+        // Validate file type
+        const allowedTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+        if (!allowedTypes.includes(imageFile.type)) {
+          return new Response(
+            JSON.stringify({
+              error: `Unsupported file type: ${imageFile.type}. Allowed: ${allowedTypes.join(", ")}`,
+            }),
+            {
+              status: 400,
+              headers: {
+                "Content-Type": "application/json",
+                ...corsHeaders(origin!),
+                ...securityHeaders(),
+              },
+            },
+          );
+        }
+
+        // Validate file size (max 50MB as per Mistral limits)
+        const MAX_FILE_SIZE = 50 * 1024 * 1024;
+        if (imageFile.size > MAX_FILE_SIZE) {
+          return new Response(
+            JSON.stringify({
+              error: `File too large: ${(imageFile.size / 1024 / 1024).toFixed(1)}MB. Maximum: 50MB`,
+            }),
+            {
+              status: 400,
+              headers: {
+                "Content-Type": "application/json",
+                ...corsHeaders(origin!),
+                ...securityHeaders(),
+              },
+            },
+          );
+        }
+
+        // Convert image to base64 for Mistral API
+        const imageBuffer = await imageFile.arrayBuffer();
+        const base64Image = btoa(
+          String.fromCharCode(...new Uint8Array(imageBuffer)),
+        );
+        const dataUrl = `data:${imageFile.type};base64,${base64Image}`;
+
+        // Call Mistral OCR API
+        const mistralResponse = await fetch("https://api.mistral.ai/v1/ocr", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${env.MISTRAL_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "mistral-ocr-latest",
+            document: {
+              type: "image_url",
+              image_url: {
+                url: dataUrl,
+              },
+            },
+            include_image_base64: false,
+          }),
+        });
+
+        if (!mistralResponse.ok) {
+          const errorText = await mistralResponse.text();
+          console.error("Mistral OCR error:", mistralResponse.status, errorText);
+
+          // Return appropriate error based on status
+          if (mistralResponse.status === 401) {
+            return new Response(
+              JSON.stringify({ error: "OCR service authentication failed" }),
+              {
+                status: 503,
+                headers: {
+                  "Content-Type": "application/json",
+                  ...corsHeaders(origin!),
+                  ...securityHeaders(),
+                },
+              },
+            );
+          }
+
+          if (mistralResponse.status === 429) {
+            return new Response(
+              JSON.stringify({ error: "OCR service rate limit exceeded" }),
+              {
+                status: 429,
+                headers: {
+                  "Content-Type": "application/json",
+                  "Retry-After": "60",
+                  ...corsHeaders(origin!),
+                  ...securityHeaders(),
+                },
+              },
+            );
+          }
+
+          return new Response(
+            JSON.stringify({ error: "OCR processing failed" }),
+            {
+              status: 502,
+              headers: {
+                "Content-Type": "application/json",
+                ...corsHeaders(origin!),
+                ...securityHeaders(),
+              },
+            },
+          );
+        }
+
+        // Return the Mistral OCR response
+        const ocrResult = await mistralResponse.json();
+        return new Response(JSON.stringify(ocrResult), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders(origin!),
+            ...securityHeaders(),
+          },
+        });
+      } catch (error) {
+        console.error("OCR proxy error:", error);
+        return new Response(
+          JSON.stringify({ error: "Internal server error during OCR processing" }),
+          {
+            status: 500,
+            headers: {
+              "Content-Type": "application/json",
+              ...corsHeaders(origin!),
+              ...securityHeaders(),
+            },
+          },
+        );
+      }
     }
 
     // Rate limiting check (100 requests per minute per IP)
