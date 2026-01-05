@@ -72,6 +72,8 @@ jobs:
         working-directory: ocr-poc
         env:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/ocr-poc/
+          # OCR proxy endpoint - configure via repository variable for custom worker deployments
+          VITE_OCR_ENDPOINT: ${{ vars.VITE_OCR_ENDPOINT }}
       # Build Help Site
       - name: Install Help Site dependencies
         run: npm ci

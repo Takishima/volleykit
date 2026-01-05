@@ -104,6 +104,8 @@ jobs:
         working-directory: ocr-poc
         env:
           VITE_BASE_PATH: ${{ vars.VITE_BASE_PATH || format('/{0}/', github.event.repository.name) }}ocr-poc/
+          # OCR proxy endpoint - configure via repository variable for custom worker deployments
+          VITE_OCR_ENDPOINT: ${{ vars.VITE_OCR_ENDPOINT }}
       # Download existing gh-pages content to preserve PR previews
       - name: Download existing gh-pages content
         run: |
