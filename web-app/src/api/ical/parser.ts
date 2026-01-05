@@ -89,24 +89,38 @@ const PLUS_CODE_PATTERN = /[?&]q=([A-Z0-9]{4,8}(?:%2B|\+)[A-Z0-9]{2,4})/i;
 
 /** Role mapping from raw strings to RefereeRole type */
 const ROLE_MAPPINGS: Record<string, RefereeRole> = {
+  // French patterns: ARB 1, ARB 2, JL 1, JL 2
   'ARB 1': 'referee1',
   'ARB 2': 'referee2',
   'ARB1': 'referee1',
   'ARB2': 'referee2',
+  // German patterns: 1. SR, 2. SR (with period)
+  '1. SR': 'referee1',
+  '2. SR': 'referee2',
+  '1.SR': 'referee1',
+  '2.SR': 'referee2',
+  // Alternative patterns: SR 1, SR 2 (without period)
   'SR 1': 'referee1',
   'SR 2': 'referee2',
   'SR1': 'referee1',
   'SR2': 'referee2',
+  // French/generic scorer: JL
   JL: 'scorer',
   'JL 1': 'scorer',
   'JL 2': 'scorer',
   JL1: 'scorer',
   JL2: 'scorer',
+  // Line referees: LR or with number prefix (German)
   LR: 'lineReferee',
   'LR 1': 'lineReferee',
   'LR 2': 'lineReferee',
   LR1: 'lineReferee',
   LR2: 'lineReferee',
+  // German line referee patterns: 1. LR, 2. LR
+  '1. LR': 'lineReferee',
+  '2. LR': 'lineReferee',
+  '1.LR': 'lineReferee',
+  '2.LR': 'lineReferee',
 };
 
 /**
@@ -180,8 +194,12 @@ function parseLeagueCategory(description: string): string | null {
 
 /**
  * Extracts referee names from description.
- * Format: "ARB 1: Name | email | phone" or "ARB 2: Name | email | phone"
- * Also handles: "LR 1: Name | email | phone", etc.
+ *
+ * Handles multiple language formats:
+ * - French: "ARB 1: Name | email | phone", "ARB 2: Name | email | phone"
+ * - German: "1. SR: Name | email | phone", "2. SR: Name | email | phone"
+ * - Line refs French: "JL 1: Name | email | phone"
+ * - Line refs German: "1. LR: Name | email | phone", "2. LR: Name | email | phone"
  */
 function parseRefereeNames(description: string): {
   referee1?: string;
@@ -197,26 +215,34 @@ function parseRefereeNames(description: string): {
   } = {};
 
   // Use [^|\n]+ to match name up to pipe or newline (greedy, no backtracking)
-  // Match ARB 1/SR 1 patterns
-  const ref1Match = description.match(/(?:ARB|SR)\s*1:\s*([^|\n]+)/im);
+  // Match referee 1 patterns:
+  // - French: "ARB 1:" or "SR 1:"
+  // - German: "1. SR:" (number first with period)
+  const ref1Match = description.match(/(?:(?:ARB|SR)\s*1|1\.\s*SR):\s*([^|\n]+)/im);
   if (ref1Match?.[1]) {
     referees.referee1 = ref1Match[1].trim();
   }
 
-  // Match ARB 2/SR 2 patterns
-  const ref2Match = description.match(/(?:ARB|SR)\s*2:\s*([^|\n]+)/im);
+  // Match referee 2 patterns:
+  // - French: "ARB 2:" or "SR 2:"
+  // - German: "2. SR:" (number first with period)
+  const ref2Match = description.match(/(?:(?:ARB|SR)\s*2|2\.\s*SR):\s*([^|\n]+)/im);
   if (ref2Match?.[1]) {
     referees.referee2 = ref2Match[1].trim();
   }
 
-  // Match LR 1 patterns
-  const lr1Match = description.match(/LR\s*1:\s*([^|\n]+)/im);
+  // Match line referee 1 patterns:
+  // - French: "LR 1:" or "JL 1:"
+  // - German: "1. LR:"
+  const lr1Match = description.match(/(?:(?:LR|JL)\s*1|1\.\s*LR):\s*([^|\n]+)/im);
   if (lr1Match?.[1]) {
     referees.lineReferee1 = lr1Match[1].trim();
   }
 
-  // Match LR 2 patterns
-  const lr2Match = description.match(/LR\s*2:\s*([^|\n]+)/im);
+  // Match line referee 2 patterns:
+  // - French: "LR 2:" or "JL 2:"
+  // - German: "2. LR:"
+  const lr2Match = description.match(/(?:(?:LR|JL)\s*2|2\.\s*LR):\s*([^|\n]+)/im);
   if (lr2Match?.[1]) {
     referees.lineReferee2 = lr2Match[1].trim();
   }
@@ -239,8 +265,12 @@ function parseGameNumber(description: string): number | null {
 
 /**
  * Extracts regional association code from team info in description.
- * Format: "Equipe recevante: #10008 | TV St. Johann (3L, ♀, SVRBA)"
- * or "Equipe visiteuse: #10641 | VBC Therwil (U20, ♀, SVRBA)"
+ *
+ * Handles multiple language formats:
+ * - French: "Equipe recevante: #10008 | TV St. Johann (3L, ♀, SVRBA)"
+ *           "Equipe visiteuse: #10641 | VBC Therwil (U20, ♀, SVRBA)"
+ * - German: "Heimteam: #20 | Volley Amriswil (NLA, ♂, SV)"
+ *           "Gastteam: #4 | Lausanne UC (NLA, ♂, SV)"
  *
  * The association code is the last item in parentheses after team name.
  * Known codes: SVRBA, SVRZ, SVRI, SVRNO, SV
@@ -248,11 +278,15 @@ function parseGameNumber(description: string): number | null {
 function parseAssociation(description: string): string | null {
   // Match team info patterns in multiple languages
   // Pattern: Team info with parentheses containing (Category, Gender, AssociationCode)
-  // Example: "Equipe recevante: #10008 | TV St. Johann (3L, ♀, SVRBA)"
+  // The gender symbol has a space before it in real data: "(NLA,  ♂, SV)"
   const teamPatterns = [
+    // French patterns
     /Equipe (?:recevante|visiteuse):[^(]+\([^,]+,\s*[♀♂],\s*([A-Z]{2,6})\)/i,
-    /(?:Heim|Gast)(?:mannschaft)?:[^(]+\([^,]+,\s*[♀♂],\s*([A-Z]{2,6})\)/i,
+    // German patterns - "Heimteam:" and "Gastteam:" (note: space before gender symbol)
+    /(?:Heim|Gast)team:[^(]+\([^,]+,\s*[♀♂],\s*([A-Z]{2,6})\)/i,
+    // English patterns
     /(?:Home|Away) Team:[^(]+\([^,]+,\s*[♀♂],\s*([A-Z]{2,6})\)/i,
+    // Italian patterns
     /Squadra (?:di casa|ospite):[^(]+\([^,]+,\s*[♀♂],\s*([A-Z]{2,6})\)/i,
   ];
 
@@ -676,11 +710,12 @@ function parseLocation(
   if (!location) return result;
 
   // Use the full location as the address
-  // Optionally strip ", Suisse" suffix for cleaner display (common in Swiss volleyball)
+  // Strip country suffix for cleaner display (common in Swiss volleyball)
+  // Handles both French "Suisse" and German "Schweiz"
   let address = location.trim();
-  const suisseSuffix = /, Suisse$/i;
-  if (suisseSuffix.test(address)) {
-    address = address.replace(suisseSuffix, '');
+  const countrySuffix = /, (?:Suisse|Schweiz)$/i;
+  if (countrySuffix.test(address)) {
+    address = address.replace(countrySuffix, '');
   }
 
   result.address = address;
