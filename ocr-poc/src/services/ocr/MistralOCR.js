@@ -56,6 +56,8 @@ const ESTIMATED_LINE_HEIGHT_PX = 20;
  * @typedef {Object} MistralOCRPage
  * @property {number} index - Page index
  * @property {string} markdown - Extracted text in markdown format
+ * @property {string[]} [images] - Base64 encoded images (if requested)
+ * @property {string[]} [tables] - HTML table content (when table_format="html")
  * @property {Object} dimensions - Page dimensions
  */
 
@@ -130,14 +132,76 @@ export class MistralOCR {
   }
 
   /**
+   * Extract text content from HTML table
+   * Parses table cells and returns rows as text lines
+   * @param {string} html - HTML table string
+   * @returns {string[]} Array of text lines from the table
+   */
+  #parseHtmlTable(html) {
+    // Use DOMParser to safely parse HTML
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const table = doc.querySelector('table');
+
+    if (!table) {
+      return [html]; // Return raw content if no table found
+    }
+
+    /** @type {string[]} */
+    const lines = [];
+
+    // Process each row
+    const rows = table.querySelectorAll('tr');
+    for (const row of rows) {
+      const cells = row.querySelectorAll('th, td');
+      const cellTexts = Array.from(cells)
+        .map((cell) => cell.textContent?.trim() || '')
+        .filter((text) => text.length > 0);
+
+      if (cellTexts.length > 0) {
+        // Join cells with tab separator for structured output
+        lines.push(cellTexts.join('\t'));
+      }
+    }
+
+    return lines;
+  }
+
+  /**
+   * Replace table placeholders in markdown with actual table content
+   * @param {string} markdown - Markdown text with placeholders like [tbl-0.html](tbl-0.html)
+   * @param {string[]} tables - Array of HTML table strings
+   * @returns {string} Markdown with table content inlined
+   */
+  #inlineTables(markdown, tables) {
+    if (!tables || tables.length === 0) {
+      return markdown;
+    }
+
+    let result = markdown;
+
+    // Replace each table placeholder with parsed table content
+    // Placeholders are in format: [tbl-N.html](tbl-N.html)
+    for (let i = 0; i < tables.length; i++) {
+      const placeholder = `[tbl-${i}.html](tbl-${i}.html)`;
+      const tableLines = this.#parseHtmlTable(tables[i]);
+      const tableText = tableLines.join('\n');
+
+      result = result.replace(placeholder, tableText);
+    }
+
+    return result;
+  }
+
+  /**
    * Convert Mistral OCR response to our internal format
    * @param {MistralOCRResponse} mistralResponse - Response from Mistral API
    * @returns {OCRResult}
    */
   #convertResponse(mistralResponse) {
-    // Combine all pages' markdown into full text
+    // Combine all pages' markdown into full text, replacing table placeholders
     const fullText = mistralResponse.pages
-      .map((page) => page.markdown)
+      .map((page) => this.#inlineTables(page.markdown, page.tables || []))
       .join('\n\n--- Page Break ---\n\n')
       .trim();
 
