@@ -8,11 +8,6 @@ on:
         description: 'PR number to review'
         required: true
         type: number
-      retry_attempt:
-        description: 'Retry attempt number (used by auto-retry)'
-        required: false
-        default: '1'
-        type: string
 jobs:
   claude-review:
     runs-on: ubuntu-latest
@@ -59,11 +54,6 @@ jobs:
 
           echo "No special files modified - retries enabled"
           echo "guidelines_changed=false" >> $GITHUB_OUTPUT
-
-          # Output retry info
-          RETRY_ATTEMPT="${{ inputs.retry_attempt || '1' }}"
-          echo "retry_attempt=$RETRY_ATTEMPT" >> $GITHUB_OUTPUT
-          echo "Current retry attempt: $RETRY_ATTEMPT"
         env:
           GH_TOKEN: ${{ github.token }}
 
@@ -146,4 +136,3 @@ jobs:
 
     outputs:
       guidelines_changed: ${{ steps.check-claude-md.outputs.guidelines_changed }}
-      retry_attempt: ${{ steps.check-claude-md.outputs.retry_attempt }}
