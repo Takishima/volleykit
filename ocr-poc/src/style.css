@@ -336,11 +336,25 @@ body {
   overflow: hidden;
 }
 
+.image-capture__video-wrapper {
+  position: relative;
+  width: 100%;
+}
+
 .image-capture__video {
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
   background-color: var(--color-gray-800);
+  display: block;
+}
+
+#camera-guide-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 .image-capture__camera-controls {
@@ -964,4 +978,217 @@ body {
   color: white;
   min-width: 24px;
   text-align: center;
+}
+
+/* ==============================================
+ * CAMERA GUIDE OVERLAY
+ * ============================================== */
+
+.camera-guide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.camera-guide__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.camera-guide__frame {
+  position: relative;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  border-radius: var(--radius-md);
+  box-shadow:
+    0 0 0 9999px rgba(0, 0, 0, 0.4),
+    inset 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.camera-guide__corner {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-color: #fff;
+  border-style: solid;
+  border-width: 0;
+}
+
+.camera-guide__corner--tl {
+  top: -2px;
+  left: -2px;
+  border-top-width: 4px;
+  border-left-width: 4px;
+  border-top-left-radius: var(--radius-md);
+}
+
+.camera-guide__corner--tr {
+  top: -2px;
+  right: -2px;
+  border-top-width: 4px;
+  border-right-width: 4px;
+  border-top-right-radius: var(--radius-md);
+}
+
+.camera-guide__corner--bl {
+  bottom: -2px;
+  left: -2px;
+  border-bottom-width: 4px;
+  border-left-width: 4px;
+  border-bottom-left-radius: var(--radius-md);
+}
+
+.camera-guide__corner--br {
+  bottom: -2px;
+  right: -2px;
+  border-bottom-width: 4px;
+  border-right-width: 4px;
+  border-bottom-right-radius: var(--radius-md);
+}
+
+.camera-guide__label {
+  position: absolute;
+  bottom: -36px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.camera-guide__label span {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: var(--font-size-sm);
+  border-radius: var(--radius-sm);
+}
+
+/* ==============================================
+ * IMAGE EDITOR COMPONENT
+ * ============================================== */
+
+.image-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.image-editor__viewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background-color: var(--color-gray-900);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.image-editor__viewport:active {
+  cursor: grabbing;
+}
+
+.image-editor__image {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: center center;
+  /* Initial centering - JS will override with pan/zoom transforms that include this offset */
+  max-width: none;
+  pointer-events: none;
+}
+
+.image-editor__frame-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.image-editor__frame {
+  position: relative;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: var(--radius-md);
+  box-shadow:
+    0 0 0 9999px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+}
+
+.image-editor__corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: #fff;
+  border-style: solid;
+  border-width: 0;
+}
+
+.image-editor__corner--tl {
+  top: -2px;
+  left: -2px;
+  border-top-width: 4px;
+  border-left-width: 4px;
+  border-top-left-radius: var(--radius-md);
+}
+
+.image-editor__corner--tr {
+  top: -2px;
+  right: -2px;
+  border-top-width: 4px;
+  border-right-width: 4px;
+  border-top-right-radius: var(--radius-md);
+}
+
+.image-editor__corner--bl {
+  bottom: -2px;
+  left: -2px;
+  border-bottom-width: 4px;
+  border-left-width: 4px;
+  border-bottom-left-radius: var(--radius-md);
+}
+
+.image-editor__corner--br {
+  bottom: -2px;
+  right: -2px;
+  border-bottom-width: 4px;
+  border-right-width: 4px;
+  border-bottom-right-radius: var(--radius-md);
+}
+
+.image-editor__hint {
+  text-align: center;
+}
+
+.image-editor__hint span {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: var(--color-surface-subtle);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  border-radius: var(--radius-sm);
+}
+
+.image-editor__controls {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.image-editor__btn {
+  flex: 1;
+  min-height: 48px;
 }
