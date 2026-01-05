@@ -1,162 +1,162 @@
 import type { TranslationKeys } from './types';
 
-// TODO: Translate all strings to German
 export const de: TranslationKeys = {
   nav: {
-    home: 'Home', // TODO: Startseite
-    gettingStarted: 'Getting Started', // TODO: Erste Schritte
-    assignments: 'Assignments', // TODO: Einsätze
-    exchanges: 'Exchanges', // TODO: Tauschbörse
-    compensations: 'Compensations', // TODO: Vergütungen
-    calendarMode: 'Calendar Mode', // TODO: Kalendermodus
-    travelTime: 'Travel Time', // TODO: Reisezeit
-    offlinePwa: 'Offline & PWA', // TODO: Offline & PWA
-    settings: 'Settings', // TODO: Einstellungen
+    home: 'Startseite',
+    gettingStarted: 'Erste Schritte',
+    assignments: 'Einsätze',
+    exchanges: 'Tauschbörse',
+    compensations: 'Vergütungen',
+    calendarMode: 'Kalendermodus',
+    travelTime: 'Reisezeit',
+    offlinePwa: 'Offline & PWA',
+    settings: 'Einstellungen',
   },
 
   common: {
-    openApp: 'Open App', // TODO: App öffnen
-    learnMore: 'Learn more', // TODO: Mehr erfahren
-    readMore: 'Read more', // TODO: Weiterlesen
-    back: 'Back', // TODO: Zurück
-    next: 'Next', // TODO: Weiter
-    previous: 'Previous', // TODO: Zurück
-    close: 'Close', // TODO: Schliessen
-    menu: 'Menu', // TODO: Menü
-    search: 'Search', // TODO: Suchen
+    openApp: 'App öffnen',
+    learnMore: 'Mehr erfahren',
+    readMore: 'Weiterlesen',
+    back: 'Zurück',
+    next: 'Weiter',
+    previous: 'Zurück',
+    close: 'Schliessen',
+    menu: 'Menü',
+    search: 'Suchen',
   },
 
   home: {
-    title: 'VolleyKit Help', // TODO: VolleyKit Hilfe
-    subtitle: 'Your guide to the VolleyKit app', // TODO: Ihr Leitfaden zur VolleyKit App
+    title: 'VolleyKit Hilfe',
+    subtitle: 'Ihr Leitfaden zur VolleyKit App',
     description:
-      'Learn how to use VolleyKit to manage your volleyball referee assignments, exchanges, and compensations.', // TODO
-    ctaOpenApp: 'Open App', // TODO: App öffnen
-    ctaGetStarted: 'Get Started', // TODO: Jetzt starten
-    featuresTitle: 'Features', // TODO: Funktionen
+      'Erfahren Sie, wie Sie VolleyKit nutzen können, um Ihre Volleyball-Schiedsrichtereinsätze, Tauschbörse und Vergütungen zu verwalten.',
+    ctaOpenApp: 'App öffnen',
+    ctaGetStarted: 'Jetzt starten',
+    featuresTitle: 'Funktionen',
     features: {
       assignments: {
-        title: 'Assignments', // TODO: Einsätze
+        title: 'Einsätze',
         description:
-          'View and manage your upcoming referee assignments with all the details you need.', // TODO
+          'Sehen und verwalten Sie Ihre anstehenden Schiedsrichtereinsätze mit allen benötigten Details.',
       },
       exchanges: {
-        title: 'Exchanges', // TODO: Tauschbörse
+        title: 'Tauschbörse',
         description:
-          'Request and accept assignment exchanges with other referees easily.', // TODO
+          'Fordern Sie einfach Einsatztausche mit anderen Schiedsrichtern an und akzeptieren Sie diese.',
       },
       compensations: {
-        title: 'Compensations', // TODO: Vergütungen
+        title: 'Vergütungen',
         description:
-          'Track your referee compensation payments and history in one place.', // TODO
+          'Verfolgen Sie Ihre Schiedsrichtervergütungen und deren Verlauf an einem Ort.',
       },
       calendarMode: {
-        title: 'Calendar Mode', // TODO: Kalendermodus
+        title: 'Kalendermodus',
         description:
-          'Quick read-only access to your schedule without full login.', // TODO
+          'Schneller Nur-Lese-Zugriff auf Ihren Zeitplan ohne vollständige Anmeldung.',
       },
       travelTime: {
-        title: 'Travel Time', // TODO: Reisezeit
+        title: 'Reisezeit',
         description:
-          'See how long it takes to reach each venue using Swiss public transport.', // TODO
+          'Sehen Sie, wie lange Sie mit dem öffentlichen Verkehr in der Schweiz zu jedem Spielort benötigen.',
       },
       offlinePwa: {
-        title: 'Offline & PWA', // TODO: Offline & PWA
+        title: 'Offline & PWA',
         description:
-          'Access your assignments even without internet. Install as an app.', // TODO
+          'Greifen Sie auch ohne Internet auf Ihre Einsätze zu. Als App installierbar.',
       },
     },
   },
 
   pages: {
     gettingStarted: {
-      title: 'Getting Started', // TODO: Erste Schritte
+      title: 'Erste Schritte',
       description:
-        'Learn how to set up and start using VolleyKit for your referee assignments.', // TODO
+        'Erfahren Sie, wie Sie VolleyKit einrichten und für Ihre Schiedsrichtereinsätze nutzen können.',
     },
     assignments: {
-      title: 'Assignments', // TODO: Einsätze
+      title: 'Einsätze',
       description:
-        'Learn how to view and manage your volleyball referee assignments in VolleyKit.', // TODO
+        'Erfahren Sie, wie Sie Ihre Volleyball-Schiedsrichtereinsätze in VolleyKit anzeigen und verwalten können.',
     },
     exchanges: {
-      title: 'Exchanges', // TODO: Tauschbörse
+      title: 'Tauschbörse',
       description:
-        'Learn how to request and manage assignment exchanges with other referees.', // TODO
+        'Erfahren Sie, wie Sie Einsatztausche mit anderen Schiedsrichtern anfordern und verwalten können.',
     },
     compensations: {
-      title: 'Compensations', // TODO: Vergütungen
+      title: 'Vergütungen',
       description:
-        'Learn how to track and understand your referee compensation payments.', // TODO
+        'Erfahren Sie, wie Sie Ihre Schiedsrichtervergütungen verfolgen und verstehen können.',
     },
     calendarMode: {
-      title: 'Calendar Mode', // TODO: Kalendermodus
+      title: 'Kalendermodus',
       description:
-        'Learn about calendar mode for read-only access to referee assignments.', // TODO
+        'Erfahren Sie mehr über den Kalendermodus für den Nur-Lese-Zugriff auf Schiedsrichtereinsätze.',
     },
     travelTime: {
-      title: 'Travel Time', // TODO: Reisezeit
+      title: 'Reisezeit',
       description:
-        'Learn how VolleyKit calculates travel times to game venues using Swiss public transport.', // TODO
+        'Erfahren Sie, wie VolleyKit Reisezeiten zu Spielorten mit dem öffentlichen Verkehr in der Schweiz berechnet.',
     },
     offlinePwa: {
-      title: 'Offline & PWA', // TODO: Offline & PWA
+      title: 'Offline & PWA',
       description:
-        'Learn how to use VolleyKit offline and install it as a progressive web app.', // TODO
+        'Erfahren Sie, wie Sie VolleyKit offline nutzen und als Progressive Web App installieren können.',
     },
     settings: {
-      title: 'Settings', // TODO: Einstellungen
+      title: 'Einstellungen',
       description:
-        'Learn how to customize VolleyKit settings and preferences.', // TODO
+        'Erfahren Sie, wie Sie VolleyKit-Einstellungen und -Präferenzen anpassen können.',
     },
   },
 
   search: {
-    placeholder: 'Search documentation...', // TODO: Dokumentation durchsuchen...
-    placeholderShort: 'Search...', // TODO: Suchen...
-    noResults: 'No results found', // TODO: Keine Ergebnisse gefunden
-    tryDifferent: 'Try different keywords', // TODO: Versuchen Sie andere Suchbegriffe
-    initialHint: 'Type to start searching', // TODO: Tippen Sie, um zu suchen
-    initialSubhint: 'Search across all documentation pages', // TODO: Durchsuchen Sie alle Dokumentationsseiten
-    searching: 'Searching...', // TODO: Suche läuft...
-    unavailable: 'Search not available', // TODO: Suche nicht verfügbar
-    unavailableHint: 'Run a production build to enable search', // TODO: Führen Sie einen Produktions-Build aus, um die Suche zu aktivieren
-    resultsCount: '{count} results', // TODO: {count} Ergebnisse
-    navigateHint: 'to navigate', // TODO: zum Navigieren
-    selectHint: 'to select', // TODO: zum Auswählen
-    poweredBy: 'Powered by Pagefind', // TODO: Unterstützt von Pagefind
+    placeholder: 'Dokumentation durchsuchen...',
+    placeholderShort: 'Suchen...',
+    noResults: 'Keine Ergebnisse gefunden',
+    tryDifferent: 'Versuchen Sie andere Suchbegriffe',
+    initialHint: 'Tippen Sie, um zu suchen',
+    initialSubhint: 'Durchsuchen Sie alle Dokumentationsseiten',
+    searching: 'Suche läuft...',
+    unavailable: 'Suche nicht verfügbar',
+    unavailableHint:
+      'Führen Sie einen Produktions-Build aus, um die Suche zu aktivieren',
+    resultsCount: '{count} Ergebnisse',
+    navigateHint: 'zum Navigieren',
+    selectHint: 'zum Auswählen',
+    poweredBy: 'Unterstützt von Pagefind',
     shortcut: '⌘K',
   },
 
   footer: {
-    builtWith: 'Built with Astro', // TODO: Erstellt mit Astro
-    forReferees: 'For Swiss volleyball referees', // TODO: Für Schweizer Volleyball-Schiedsrichter
+    builtWith: 'Erstellt mit Astro',
+    forReferees: 'Für Schweizer Volleyball-Schiedsrichter',
     copyright: '© {year} VolleyKit',
-    mainApp: 'Main App', // TODO: Haupt-App
-    documentation: 'Documentation', // TODO: Dokumentation
+    mainApp: 'Haupt-App',
+    documentation: 'Dokumentation',
     github: 'GitHub',
   },
 
   a11y: {
-    openMenu: 'Open navigation menu', // TODO: Navigationsmenü öffnen
-    closeMenu: 'Close menu', // TODO: Menü schliessen
-    openSearch: 'Search documentation', // TODO: Dokumentation durchsuchen
-    closeSearch: 'Close search', // TODO: Suche schliessen
-    skipToContent: 'Skip to content', // TODO: Zum Inhalt springen
-    breadcrumb: 'Breadcrumb', // TODO: Brotkrümel-Navigation
-    mainNavigation: 'Main navigation', // TODO: Hauptnavigation
-    mobileNavigation: 'Mobile navigation', // TODO: Mobile Navigation
-    externalLink: 'Opens in new tab', // TODO: Öffnet in neuem Tab
+    openMenu: 'Navigationsmenü öffnen',
+    closeMenu: 'Menü schliessen',
+    openSearch: 'Dokumentation durchsuchen',
+    closeSearch: 'Suche schliessen',
+    skipToContent: 'Zum Inhalt springen',
+    breadcrumb: 'Brotkrümel-Navigation',
+    mainNavigation: 'Hauptnavigation',
+    mobileNavigation: 'Mobile Navigation',
+    externalLink: 'Öffnet in neuem Tab',
   },
 
   screenshot: {
-    placeholder: 'Screenshot placeholder', // TODO: Screenshot-Platzhalter
-    captureInstructions: 'Capture instructions', // TODO: Aufnahmeanweisungen
+    placeholder: 'Screenshot-Platzhalter',
+    captureInstructions: 'Aufnahmeanweisungen',
   },
 
   infoBox: {
-    info: 'Info', // TODO: Info
-    tip: 'Tip', // TODO: Tipp
-    warning: 'Warning', // TODO: Warnung
+    info: 'Info',
+    tip: 'Tipp',
+    warning: 'Warnung',
   },
 };
