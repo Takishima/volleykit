@@ -2,12 +2,15 @@
  * ImageCapture Component
  *
  * Provides two methods for capturing images:
- * 1. Camera capture - Opens rear camera with live preview
- * 2. File upload - Accepts image files from device
+ * 1. Camera capture - Opens rear camera with live preview and alignment guide
+ * 2. File upload - Accepts image files from device with zoom/pan editor
  *
  * Designed for mobile-first with large touch targets and
  * graceful degradation when camera is unavailable.
  */
+
+import { CameraGuide } from './CameraGuide.js';
+import { ImageEditor } from './ImageEditor.js';
 
 /**
  * @typedef {Object} ImageCaptureOptions
@@ -39,6 +42,15 @@ export class ImageCapture {
 
   /** @type {boolean} */
   #cameraPermissionDenied = false;
+
+  /** @type {CameraGuide | null} */
+  #cameraGuide = null;
+
+  /** @type {ImageEditor | null} */
+  #imageEditor = null;
+
+  /** @type {boolean} */
+  #isEditorActive = false;
 
   /** 1920x1080 provides good OCR quality while being widely supported */
   static VIDEO_CONSTRAINTS = {
@@ -96,13 +108,16 @@ export class ImageCapture {
         />
 
         <div id="camera-container" class="image-capture__camera" hidden>
-          <video
-            id="camera-preview"
-            class="image-capture__video"
-            autoplay
-            playsinline
-            muted
-          ></video>
+          <div class="image-capture__video-wrapper">
+            <video
+              id="camera-preview"
+              class="image-capture__video"
+              autoplay
+              playsinline
+              muted
+            ></video>
+            <div id="camera-guide-container"></div>
+          </div>
           <div class="image-capture__camera-controls">
             <button
               type="button"
@@ -134,6 +149,8 @@ export class ImageCapture {
           </svg>
           <p>Camera access was denied. Please use the upload button to select an image instead.</p>
         </div>
+
+        <div id="editor-container" class="image-capture__editor" hidden></div>
       </div>
     `;
 
@@ -168,11 +185,17 @@ export class ImageCapture {
 
       const cameraContainer = this.#container.querySelector('#camera-container');
       const buttonsContainer = this.#container.querySelector('.image-capture__buttons');
+      const guideContainer = this.#container.querySelector('#camera-guide-container');
       this.#videoElement = this.#container.querySelector('#camera-preview');
 
       if (this.#videoElement && this.#stream) {
         this.#videoElement.srcObject = this.#stream;
         await this.#videoElement.play();
+      }
+
+      // Initialize camera guide overlay
+      if (guideContainer) {
+        this.#cameraGuide = new CameraGuide({ container: guideContainer });
       }
 
       buttonsContainer?.setAttribute('hidden', '');
@@ -218,6 +241,12 @@ export class ImageCapture {
 
     if (this.#videoElement) {
       this.#videoElement.srcObject = null;
+    }
+
+    // Clean up camera guide
+    if (this.#cameraGuide) {
+      this.#cameraGuide.destroy();
+      this.#cameraGuide = null;
     }
 
     const cameraContainer = this.#container.querySelector('#camera-container');
@@ -275,14 +304,61 @@ export class ImageCapture {
       return;
     }
 
-    this.#onCapture(file);
-
     // Reset input so the same file can be selected again
     input.value = '';
+
+    // Show the image editor for cropping
+    this.#openEditor(file);
+  }
+
+  /** @param {Blob} imageBlob */
+  #openEditor(imageBlob) {
+    const editorContainer = this.#container.querySelector('#editor-container');
+    const buttonsContainer = this.#container.querySelector('.image-capture__buttons');
+
+    if (!editorContainer) {
+      return;
+    }
+
+    this.#imageEditor = new ImageEditor({
+      container: editorContainer,
+      imageBlob,
+      onConfirm: (croppedBlob) => this.#handleEditorConfirm(croppedBlob),
+      onCancel: () => this.#closeEditor(),
+    });
+
+    buttonsContainer?.setAttribute('hidden', '');
+    editorContainer.removeAttribute('hidden');
+    this.#isEditorActive = true;
+  }
+
+  /** @param {Blob} croppedBlob */
+  #handleEditorConfirm(croppedBlob) {
+    this.#closeEditor();
+    this.#onCapture(croppedBlob);
+  }
+
+  #closeEditor() {
+    if (this.#imageEditor) {
+      this.#imageEditor.destroy();
+      this.#imageEditor = null;
+    }
+
+    const editorContainer = this.#container.querySelector('#editor-container');
+    const buttonsContainer = this.#container.querySelector('.image-capture__buttons');
+
+    editorContainer?.setAttribute('hidden', '');
+    buttonsContainer?.removeAttribute('hidden');
+    this.#isEditorActive = false;
   }
 
   destroy() {
     this.#closeCamera();
+    this.#closeEditor();
+    if (this.#cameraGuide) {
+      this.#cameraGuide.destroy();
+      this.#cameraGuide = null;
+    }
     this.#container.innerHTML = '';
   }
 }
