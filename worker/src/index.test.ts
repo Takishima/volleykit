@@ -6,181 +6,31 @@
  * - Path filtering
  * - Cookie rewriting
  * - Error handling
+ * - Cache control headers
+ * - Session issue detection
  */
 import { describe, it, expect, vi } from "vitest";
-
-// Extract testable functions from the module
-// We test the logic by re-implementing the helper functions here
-// since the worker exports a default object without named exports
-
-// Test implementations of the helper functions
-function parseAllowedOrigins(allowedOrigins: string): string[] {
-  return allowedOrigins
-    .split(",")
-    .map((o) => o.trim())
-    .filter((o) => o.length > 0);
-}
-
-function validateAllowedOrigins(origins: string[]): void {
-  for (const origin of origins) {
-    try {
-      const url = new URL(origin);
-      if (url.protocol !== "https:" && url.protocol !== "http:") {
-        throw new Error(`Origin must use http or https protocol: ${origin}`);
-      }
-      if (url.pathname !== "/" || url.search || url.hash) {
-        throw new Error(
-          `Origin should not include path, query, or fragment: ${origin}`,
-        );
-      }
-    } catch (e) {
-      if (e instanceof Error && e.message.includes("Origin")) {
-        throw e;
-      }
-      throw new Error(`Invalid origin format: ${origin}`);
-    }
-  }
-}
-
-function isAllowedOrigin(
-  origin: string | null,
-  allowedOrigins: string[],
-): boolean {
-  if (!origin) return false;
-  const normalizedOrigin = origin.replace(/\/$/, "").toLowerCase();
-  return allowedOrigins.some(
-    (allowed) => allowed.replace(/\/$/, "").toLowerCase() === normalizedOrigin,
-  );
-}
-
-// Exact match paths (no subpaths allowed) - NOT prefixed with /api/
-const ALLOWED_EXACT_PATHS = ["/", "/login", "/logout"];
-
-// Prefix match paths that are NOT prefixed with /api/ (auth and dashboard)
-const ALLOWED_PREFIX_PATHS_NO_API = [
-  "/sportmanager.security/",
-  "/sportmanager.volleyball/",
-];
-
-// Prefix match paths that ARE prefixed with /api/ (API endpoints)
-const ALLOWED_PREFIX_PATHS_WITH_API = [
-  "/indoorvolleyball.refadmin/",
-  "/sportmanager.indoorvolleyball/",
-  "/sportmanager.core/",
-  "/sportmanager.resourcemanagement/",
-  "/sportmanager.notificationcenter/",
-];
-
-// Specific paths within WITH_API prefixes that do NOT need the /api/ prefix
-// These are file download endpoints that serve binary content (PDFs, etc.)
-const EXCEPTIONS_NO_API = [
-  "/indoorvolleyball.refadmin/refereestatementofexpenses/downloadrefereestatementofexpenses", // PDF download
-];
-
-function isAllowedPath(pathname: string): boolean {
-  // Check exact matches first
-  if (ALLOWED_EXACT_PATHS.includes(pathname)) {
-    return true;
-  }
-  // Check prefix matches (both with and without /api/ prefix)
-  return (
-    ALLOWED_PREFIX_PATHS_NO_API.some((prefix) => pathname.startsWith(prefix)) ||
-    ALLOWED_PREFIX_PATHS_WITH_API.some((prefix) => pathname.startsWith(prefix))
-  );
-}
-
-/**
- * Check if a path requires the /api/ prefix when forwarding to the target host.
- * API endpoints need this prefix, while auth/dashboard endpoints do not.
- *
- * Special cases:
- * - Some paths under /indoorvolleyball.refadmin/ (like PDF downloads)
- *   do NOT need the /api/ prefix even though most /indoorvolleyball.refadmin/ paths do.
- */
-function requiresApiPrefix(pathname: string): boolean {
-  // Check for exceptions that normally would need /api/ but don't (e.g., PDF downloads)
-  if (EXCEPTIONS_NO_API.some((prefix) => pathname.startsWith(prefix))) {
-    return false;
-  }
-  return ALLOWED_PREFIX_PATHS_WITH_API.some((prefix) =>
-    pathname.startsWith(prefix),
-  );
-}
-
-function rewriteCookie(cookie: string): string {
-  return (
-    cookie
-      .replace(/Domain=[^;]+;?\s*/gi, "")
-      .replace(/;\s*Secure\s*(;|$)/gi, "$1")
-      .replace(/SameSite=[^;]+;?\s*/gi, "")
-      .replace(/;\s*Partitioned\s*(;|$)/gi, "$1") +
-    "; SameSite=None; Secure; Partitioned"
-  );
-}
-
-// The correct authentication endpoint
-const AUTH_ENDPOINT = "/sportmanager.security/authentication/authenticate";
-
-// Form field name that indicates authentication credentials are present
-const AUTH_USERNAME_FIELD =
-  "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][username]";
-
-/**
- * Check if request body contains authentication credentials.
- */
-function hasAuthCredentials(body: string): boolean {
-  // Check for Neos Flow format (from React fetch)
-  const encodedField = encodeURIComponent(AUTH_USERNAME_FIELD);
-  if (body.includes(AUTH_USERNAME_FIELD) || body.includes(encodedField)) {
-    return true;
-  }
-
-  // Check for simple HTML form format (from iOS native form submission)
-  const params = new URLSearchParams(body);
-  return params.has("username") && params.has("password");
-}
-
-/**
- * Transform simple form fields to Neos Flow authentication format.
- */
-function transformAuthFormData(body: string): string {
-  // Check if already in Neos Flow format
-  const encodedField = encodeURIComponent(AUTH_USERNAME_FIELD);
-  if (body.includes(AUTH_USERNAME_FIELD) || body.includes(encodedField)) {
-    return body; // Already in correct format
-  }
-
-  // Parse simple form fields
-  const params = new URLSearchParams(body);
-  const username = params.get("username");
-  const password = params.get("password");
-
-  if (!username || !password) {
-    return body; // Not a valid login form, return unchanged
-  }
-
-  // Build Neos Flow format form data
-  const neosParams = new URLSearchParams();
-
-  // Add authentication credentials in Neos Flow format
-  neosParams.set(
-    "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][username]",
-    username,
-  );
-  neosParams.set(
-    "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][password]",
-    password,
-  );
-
-  // Copy any other fields that might be present
-  for (const [key, value] of params.entries()) {
-    if (key !== "username" && key !== "password") {
-      neosParams.set(key, value);
-    }
-  }
-
-  return neosParams.toString();
-}
+import {
+  AUTH_ENDPOINT,
+  KILL_SWITCH_RETRY_AFTER_SECONDS,
+  VOLLEYKIT_USER_AGENT,
+  checkKillSwitch,
+  detectSessionIssue,
+  extractICalCode,
+  extractRawPathAndSearch,
+  hasAuthCredentials,
+  isAllowedOrigin,
+  isAllowedPath,
+  isDynamicContent,
+  isPathSafe,
+  isValidICalCode,
+  noCacheHeaders,
+  parseAllowedOrigins,
+  requiresApiPrefix,
+  rewriteCookie,
+  transformAuthFormData,
+  validateAllowedOrigins,
+} from "./utils";
 
 describe("Origin Validation", () => {
   describe("parseAllowedOrigins", () => {
@@ -629,26 +479,6 @@ describe("CORS Headers", () => {
 });
 
 describe("Path Safety (Traversal Prevention)", () => {
-  // Re-implementation of isPathSafe for testing
-  // Note: Backslashes are ALLOWED because TYPO3 Neos/Flow uses them as
-  // namespace separators in API controller paths (e.g., api\refereeconvocation)
-  function isPathSafe(pathname: string): boolean {
-    let decoded: string;
-    try {
-      decoded = decodeURIComponent(pathname);
-    } catch {
-      return false;
-    }
-    if (
-      decoded.includes("..") ||
-      decoded.includes("//") ||
-      decoded.includes("\0")
-    ) {
-      return false;
-    }
-    return true;
-  }
-
   it("accepts normal paths", () => {
     expect(isPathSafe("/neos/login")).toBe(true);
     expect(isPathSafe("/indoorvolleyball.refadmin/api/test")).toBe(true);
@@ -738,10 +568,6 @@ describe("Rate Limiting", () => {
 });
 
 describe("User-Agent Header", () => {
-  // The worker sets a custom User-Agent to identify VolleyKit traffic
-  const VOLLEYKIT_USER_AGENT =
-    "VolleyKit/1.0 (PWA; https://github.com/Takishima/volleykit)";
-
   it("sets custom User-Agent for upstream requests", () => {
     // Verify the expected User-Agent string format
     expect(VOLLEYKIT_USER_AGENT).toBe(
@@ -818,11 +644,6 @@ describe("User-Agent Header", () => {
 });
 
 describe("Kill Switch", () => {
-  // Simulates the kill switch check logic from the worker
-  function checkKillSwitch(env: { KILL_SWITCH?: string }): boolean {
-    return env.KILL_SWITCH === "true";
-  }
-
   it("returns true when KILL_SWITCH is 'true'", () => {
     expect(checkKillSwitch({ KILL_SWITCH: "true" })).toBe(true);
   });
@@ -848,9 +669,6 @@ describe("Kill Switch", () => {
     // Only exact string "true" should enable kill switch
     expect(checkKillSwitch({ KILL_SWITCH: "1" })).toBe(false);
   });
-
-  // Test the response format
-  const KILL_SWITCH_RETRY_AFTER_SECONDS = 86400;
 
   it("returns 503 status with proper headers", () => {
     const expectedStatus = 503;
@@ -910,23 +728,6 @@ describe("Robots.txt Endpoint", () => {
 });
 
 describe("iCal Proxy Route", () => {
-  /**
-   * Validate iCal referee code format.
-   * Codes must be exactly 6 alphanumeric characters.
-   */
-  function isValidICalCode(code: string): boolean {
-    return /^[A-Za-z0-9]{6}$/.test(code);
-  }
-
-  /**
-   * Extract iCal referee code from path.
-   * Matches paths like /iCal/referee/ABC123
-   */
-  function extractICalCode(pathname: string): string | null {
-    const match = pathname.match(/^\/iCal\/referee\/([^/]+)$/);
-    return match ? match[1] : null;
-  }
-
   describe("isValidICalCode", () => {
     it("accepts valid 6-character alphanumeric codes", () => {
       expect(isValidICalCode("ABC123")).toBe(true);
@@ -1037,16 +838,6 @@ describe("iCal Proxy Route", () => {
 });
 
 describe("URL Encoding Preservation", () => {
-  // Simulates the URL path extraction logic from the worker
-  // This preserves the original URL encoding by extracting the raw path string
-  function extractRawPathAndSearch(requestUrlStr: string): string {
-    const pathStart = requestUrlStr.indexOf(
-      "/",
-      requestUrlStr.indexOf("://") + 3,
-    );
-    return pathStart >= 0 ? requestUrlStr.substring(pathStart) : "/";
-  }
-
   it("preserves URL-encoded backslashes (%5c) in paths", () => {
     // TYPO3 Neos/Flow requires exact %5c encoding for namespace separators
     const requestUrl =
@@ -1126,5 +917,405 @@ describe("URL Encoding Preservation", () => {
     const result = extractRawPathAndSearch(requestUrl);
     expect(result).toBe("/api%5ctest");
     expect(result).not.toContain("%255c"); // Should NOT be double-encoded
+  });
+});
+
+describe("Cache Control Headers", () => {
+  it("returns strict no-cache headers", () => {
+    const headers = noCacheHeaders();
+    expect(headers["Cache-Control"]).toBe(
+      "no-store, no-cache, must-revalidate, max-age=0",
+    );
+  });
+
+  it("includes Pragma no-cache for HTTP/1.0 compatibility", () => {
+    const headers = noCacheHeaders();
+    expect(headers["Pragma"]).toBe("no-cache");
+  });
+
+  it("includes Expires header set to 0", () => {
+    const headers = noCacheHeaders();
+    expect(headers["Expires"]).toBe("0");
+  });
+
+  it("contains all required cache-busting headers", () => {
+    const headers = noCacheHeaders();
+    const keys = Object.keys(headers);
+    expect(keys).toContain("Cache-Control");
+    expect(keys).toContain("Pragma");
+    expect(keys).toContain("Expires");
+    expect(keys.length).toBe(3);
+  });
+});
+
+describe("Dynamic Content Detection", () => {
+  describe("isDynamicContent", () => {
+    it("returns true for null content type (unknown = dynamic)", () => {
+      expect(isDynamicContent(null)).toBe(true);
+    });
+
+    it("returns true for HTML content", () => {
+      expect(isDynamicContent("text/html")).toBe(true);
+      expect(isDynamicContent("text/html; charset=utf-8")).toBe(true);
+      expect(isDynamicContent("TEXT/HTML")).toBe(true);
+    });
+
+    it("returns true for JSON content", () => {
+      expect(isDynamicContent("application/json")).toBe(true);
+      expect(isDynamicContent("application/json; charset=utf-8")).toBe(true);
+      expect(isDynamicContent("APPLICATION/JSON")).toBe(true);
+    });
+
+    it("returns true for form data content", () => {
+      expect(isDynamicContent("application/x-www-form-urlencoded")).toBe(true);
+    });
+
+    it("returns false for static content types", () => {
+      expect(isDynamicContent("image/png")).toBe(false);
+      expect(isDynamicContent("image/jpeg")).toBe(false);
+      expect(isDynamicContent("application/pdf")).toBe(false);
+      expect(isDynamicContent("text/css")).toBe(false);
+      expect(isDynamicContent("application/javascript")).toBe(false);
+    });
+
+    it("returns false for calendar content (iCal has separate cache)", () => {
+      expect(isDynamicContent("text/calendar")).toBe(false);
+    });
+  });
+});
+
+describe("Session Issue Detection", () => {
+  // Helper to create mock response
+  function mockResponse(
+    status: number,
+    location?: string,
+  ): { status: number; headers: { get: (name: string) => string | null } } {
+    return {
+      status,
+      headers: {
+        get: (name: string) => (name === "Location" ? location ?? null : null),
+      },
+    };
+  }
+
+  describe("detectSessionIssue", () => {
+    it("detects redirect to /login", () => {
+      expect(detectSessionIssue(mockResponse(302, "/login"))).toBe(true);
+      expect(detectSessionIssue(mockResponse(303, "/login?redirect=..."))).toBe(
+        true,
+      );
+    });
+
+    it("detects redirect to root (often login redirect)", () => {
+      expect(detectSessionIssue(mockResponse(302, "/"))).toBe(true);
+      expect(
+        detectSessionIssue(mockResponse(302, "https://example.com/")),
+      ).toBe(true);
+    });
+
+    it("detects redirect to authentication endpoint", () => {
+      expect(
+        detectSessionIssue(
+          mockResponse(302, "/sportmanager.security/authentication/login"),
+        ),
+      ).toBe(true);
+    });
+
+    it("detects 401 Unauthorized responses", () => {
+      expect(detectSessionIssue(mockResponse(401))).toBe(true);
+    });
+
+    it("detects 403 Forbidden responses", () => {
+      expect(detectSessionIssue(mockResponse(403))).toBe(true);
+    });
+
+    it("detects login form in HTML body", () => {
+      const loginHtml = `
+        <html>
+          <body>
+            <form>
+              <input name="username" type="text" />
+              <input name="password" type="password" />
+              <button>Login</button>
+            </form>
+          </body>
+        </html>
+      `;
+      expect(detectSessionIssue(mockResponse(200), loginHtml)).toBe(true);
+    });
+
+    it("does not flag normal 200 responses", () => {
+      expect(detectSessionIssue(mockResponse(200))).toBe(false);
+    });
+
+    it("does not flag redirects to non-login paths", () => {
+      expect(detectSessionIssue(mockResponse(302, "/dashboard"))).toBe(false);
+      expect(detectSessionIssue(mockResponse(302, "/api/data"))).toBe(false);
+    });
+
+    it("does not flag normal HTML without login form", () => {
+      const normalHtml = `
+        <html>
+          <body>
+            <h1>Dashboard</h1>
+            <p>Welcome to the application</p>
+          </body>
+        </html>
+      `;
+      expect(detectSessionIssue(mockResponse(200), normalHtml)).toBe(false);
+    });
+
+    it("does not flag HTML with only username field (not a complete login form)", () => {
+      const partialForm = `
+        <html>
+          <body>
+            <form>
+              <input name="username" type="text" />
+              <button>Search</button>
+            </form>
+          </body>
+        </html>
+      `;
+      expect(detectSessionIssue(mockResponse(200), partialForm)).toBe(false);
+    });
+
+    it("handles case-insensitive location headers", () => {
+      expect(detectSessionIssue(mockResponse(302, "/LOGIN"))).toBe(true);
+      expect(detectSessionIssue(mockResponse(302, "/Authentication/Login"))).toBe(
+        true,
+      );
+    });
+  });
+});
+
+describe("Proxy Timestamp Header", () => {
+  it("timestamp header format includes ISO date and latency", () => {
+    // Simulates the header format used by the proxy
+    const timestamp = new Date().toISOString();
+    const latencyMs = 42;
+    const headerValue = `${timestamp}; latency=${latencyMs}ms`;
+
+    expect(headerValue).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+    expect(headerValue).toContain("; latency=");
+    expect(headerValue).toContain("ms");
+  });
+
+  it("latency is measured in milliseconds", () => {
+    const startTime = Date.now();
+    // Simulate some work
+    const endTime = startTime + 100;
+    const latencyMs = endTime - startTime;
+
+    expect(latencyMs).toBe(100);
+    expect(typeof latencyMs).toBe("number");
+  });
+});
+
+describe("Integration: Proxy Response Headers", () => {
+  // Helper to create mock environment for integration tests
+  function createMockEnv() {
+    return {
+      ALLOWED_ORIGINS: "https://example.com",
+      TARGET_HOST: "https://volleymanager.volleyball.ch",
+      RATE_LIMITER: {
+        limit: vi.fn().mockResolvedValue({ success: true }),
+      },
+    };
+  }
+
+  it("applies no-cache headers to JSON API responses", async () => {
+    // Import the worker dynamically to allow mocking fetch
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    // Mock fetch to return a JSON response
+    const mockJsonResponse = new Response(JSON.stringify({ data: "test" }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        ETag: '"abc123"', // Should be removed
+        "Last-Modified": "Wed, 01 Jan 2025 00:00:00 GMT", // Should be removed
+        "Cache-Control": "max-age=3600", // Should be overwritten
+      },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockJsonResponse));
+
+    const request = new Request(
+      "https://proxy.example.com/indoorvolleyball.refadmin/api/test",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    const response = await worker.fetch(request, mockEnv);
+
+    // Verify no-cache headers are applied
+    expect(response.headers.get("Cache-Control")).toBe(
+      "no-store, no-cache, must-revalidate, max-age=0",
+    );
+    expect(response.headers.get("Pragma")).toBe("no-cache");
+    expect(response.headers.get("Expires")).toBe("0");
+
+    // Verify upstream cache headers are removed
+    expect(response.headers.get("ETag")).toBeNull();
+    expect(response.headers.get("Last-Modified")).toBeNull();
+
+    // Verify proxy timestamp header is present
+    expect(response.headers.get("X-Proxy-Timestamp")).toMatch(
+      /^\d{4}-\d{2}-\d{2}T.*; latency=\d+ms$/,
+    );
+
+    vi.unstubAllGlobals();
+  });
+
+  it("applies no-cache headers to HTML responses", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const mockHtmlResponse = new Response("<html><body>Test</body></html>", {
+      status: 200,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+      },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockHtmlResponse));
+
+    const request = new Request("https://proxy.example.com/login", {
+      headers: {
+        Origin: "https://example.com",
+      },
+    });
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.headers.get("Cache-Control")).toBe(
+      "no-store, no-cache, must-revalidate, max-age=0",
+    );
+    expect(response.headers.get("Pragma")).toBe("no-cache");
+
+    vi.unstubAllGlobals();
+  });
+
+  it("adds session warning header for 401 responses", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const mockUnauthorizedResponse = new Response("Unauthorized", {
+      status: 401,
+      headers: {
+        "Content-Type": "text/plain",
+      },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockUnauthorizedResponse));
+
+    const request = new Request(
+      "https://proxy.example.com/indoorvolleyball.refadmin/api/test",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.headers.get("X-Proxy-Session-Warning")).toBe(
+      "potential-session-issue",
+    );
+
+    vi.unstubAllGlobals();
+  });
+
+  it("adds session warning header for redirect to login", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const mockRedirectResponse = new Response(null, {
+      status: 302,
+      headers: {
+        Location: "https://volleymanager.volleyball.ch/login",
+        "Content-Type": "text/html",
+      },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockRedirectResponse));
+
+    const request = new Request(
+      "https://proxy.example.com/sportmanager.volleyball/main/dashboard",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.headers.get("X-Proxy-Session-Warning")).toBe(
+      "potential-session-issue",
+    );
+
+    vi.unstubAllGlobals();
+  });
+
+  it("does not add session warning for normal 200 responses", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const mockOkResponse = new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockOkResponse));
+
+    const request = new Request(
+      "https://proxy.example.com/indoorvolleyball.refadmin/api/test",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.headers.get("X-Proxy-Session-Warning")).toBeNull();
+
+    vi.unstubAllGlobals();
+  });
+
+  it("preserves iCal cache control (not dynamic content)", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const mockICalResponse = new Response(
+      "BEGIN:VCALENDAR\nVERSION:2.0\nEND:VCALENDAR",
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "text/calendar; charset=utf-8",
+        },
+      },
+    );
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockICalResponse));
+
+    const request = new Request(
+      "https://proxy.example.com/iCal/referee/ABC123",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    const response = await worker.fetch(request, mockEnv);
+
+    // iCal endpoint has its own cache policy (5 minutes)
+    expect(response.headers.get("Cache-Control")).toBe("public, max-age=300");
+
+    vi.unstubAllGlobals();
   });
 });
