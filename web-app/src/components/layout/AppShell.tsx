@@ -33,6 +33,7 @@ const DebugPanel = lazy(() =>
 );
 
 const MINIMUM_OCCUPATIONS_FOR_SWITCHER = 2;
+const MINIMUM_ASSOCIATIONS_FOR_FILTER = 2;
 
 interface NavItem {
   path: string;
@@ -116,12 +117,14 @@ export function AppShell() {
   );
 
   // Determine if we should show the dropdown based on mode
-  const showCalendarDropdown = isCalendarMode && calendarAssociations.length >= 2;
+  const showCalendarDropdown =
+    isCalendarMode && calendarAssociations.length >= MINIMUM_ASSOCIATIONS_FOR_FILTER;
   const showOccupationDropdown =
     !isCalendarMode &&
     user?.occupations &&
     user.occupations.length >= MINIMUM_OCCUPATIONS_FOR_SWITCHER;
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const calendarDropdownRef = useRef<HTMLDivElement>(null);
+  const occupationDropdownRef = useRef<HTMLDivElement>(null);
   const isAuthenticated = status === "authenticated";
 
   // Filter nav items based on calendar mode
@@ -137,10 +140,13 @@ export function AppShell() {
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      const target = event.target as Node;
+      const isOutsideCalendar =
+        !calendarDropdownRef.current?.contains(target);
+      const isOutsideOccupation =
+        !occupationDropdownRef.current?.contains(target);
+
+      if (isOutsideCalendar && isOutsideOccupation) {
         setIsDropdownOpen(false);
       }
     }
@@ -256,7 +262,7 @@ export function AppShell() {
 
                 {/* Calendar mode: Association filter dropdown */}
                 {showCalendarDropdown && (
-                  <div className="relative" ref={dropdownRef}>
+                  <div className="relative" ref={calendarDropdownRef}>
                     <button
                       onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                       className="flex items-center gap-1 px-2 py-1 text-sm font-medium rounded-lg transition-colors text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50"
@@ -315,7 +321,7 @@ export function AppShell() {
 
                 {/* Normal mode: Occupation switcher dropdown */}
                 {showOccupationDropdown && (
-                  <div className="relative" ref={dropdownRef}>
+                  <div className="relative" ref={occupationDropdownRef}>
                     <button
                       onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                       disabled={isAssociationSwitching}
