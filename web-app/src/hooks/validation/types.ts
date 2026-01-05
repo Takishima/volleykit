@@ -3,7 +3,8 @@
  */
 
 import type { ValidatedPersonSearchResult } from "@/api/validation";
-import type { RosterModifications } from "@/hooks/useNominationList";
+import type { RosterModifications, CoachModifications } from "@/hooks/useNominationList";
+import type { RosterPanelModifications } from "@/components/features/validation/RosterVerificationPanel";
 import type { NominationList } from "@/api/client";
 
 /**
@@ -12,8 +13,10 @@ import type { NominationList } from "@/api/client";
 export interface RosterPanelState {
   /** Whether the roster has been reviewed (user viewed and acknowledged) */
   reviewed: boolean;
-  /** Roster changes made by the user */
-  modifications: RosterModifications;
+  /** Player changes made by the user */
+  playerModifications: RosterModifications;
+  /** Coach changes made by the user */
+  coachModifications: CoachModifications;
 }
 
 /**
@@ -94,9 +97,9 @@ export interface UseValidationStateResult {
   /** Whether scoresheet upload is not required for this game's group */
   scoresheetNotRequired: boolean;
   /** Update home roster modifications (auto-marks roster as reviewed) */
-  setHomeRosterModifications: (modifications: RosterModifications) => void;
+  setHomeRosterModifications: (modifications: RosterPanelModifications) => void;
   /** Update away roster modifications (auto-marks roster as reviewed) */
-  setAwayRosterModifications: (modifications: RosterModifications) => void;
+  setAwayRosterModifications: (modifications: RosterPanelModifications) => void;
   /** Set the selected scorer */
   setScorer: (scorer: ValidatedPersonSearchResult | null) => void;
   /** Set the scoresheet file and upload status */
@@ -128,11 +131,13 @@ export function createInitialState(): ValidationState {
   return {
     homeRoster: {
       reviewed: false,
-      modifications: { added: [], removed: [] },
+      playerModifications: { added: [], removed: [] },
+      coachModifications: { added: new Map(), removed: new Set() },
     },
     awayRoster: {
       reviewed: false,
-      modifications: { added: [], removed: [] },
+      playerModifications: { added: [], removed: [] },
+      coachModifications: { added: new Map(), removed: new Set() },
     },
     scorer: { selected: null },
     scoresheet: { file: null, uploaded: false },

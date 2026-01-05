@@ -410,6 +410,18 @@ export interface Translations {
       loadingRoster: string;
       errorLoading: string;
       playerCount: string;
+      coaches: string;
+      coachCount: string;
+      players: string;
+      headCoach: string;
+      firstAssistant: string;
+      secondAssistant: string;
+      notAssigned: string;
+      addCoach: string;
+      removeCoach: string;
+      searchCoaches: string;
+      noCoachesFound: string;
+      loadCoachesError: string;
     };
     scorerSearch: {
       searchPlaceholder: string;

@@ -83,8 +83,16 @@ describe("ValidateGameModal", () => {
     });
     vi.mocked(useValidationStateModule.useValidationState).mockReturnValue({
       state: {
-        homeRoster: { reviewed: false, modifications: { added: [], removed: [] } },
-        awayRoster: { reviewed: false, modifications: { added: [], removed: [] } },
+        homeRoster: {
+          reviewed: false,
+          playerModifications: { added: [], removed: [] },
+          coachModifications: { added: new Map(), removed: new Set() },
+        },
+        awayRoster: {
+          reviewed: false,
+          playerModifications: { added: [], removed: [] },
+          coachModifications: { added: new Map(), removed: new Set() },
+        },
         scorer: { selected: null },
         scoresheet: { file: null, uploaded: false },
       },

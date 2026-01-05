@@ -102,7 +102,7 @@ describe("useValidationState", () => {
       });
 
       expect(result.current.state.homeRoster.reviewed).toBe(false);
-      expect(result.current.state.homeRoster.modifications).toEqual({
+      expect(result.current.state.homeRoster.playerModifications).toEqual({
         added: [],
         removed: [],
       });
@@ -153,12 +153,12 @@ describe("useValidationState", () => {
       const newPlayer: RosterPlayer = { id: "new-player", displayName: "New Player" };
       act(() => {
         result.current.setHomeRosterModifications({
-          added: [newPlayer],
-          removed: [],
+          players: { added: [newPlayer], removed: [] },
+          coaches: { added: new Map(), removed: new Set() },
         });
       });
 
-      expect(result.current.state.homeRoster.modifications.added).toHaveLength(
+      expect(result.current.state.homeRoster.playerModifications.added).toHaveLength(
         1,
       );
       expect(result.current.state.homeRoster.reviewed).toBe(true);
@@ -172,13 +172,13 @@ describe("useValidationState", () => {
 
       act(() => {
         result.current.setAwayRosterModifications({
-          added: [],
-          removed: ["player-to-remove"],
+          players: { added: [], removed: ["player-to-remove"] },
+          coaches: { added: new Map(), removed: new Set() },
         });
       });
 
       expect(
-        result.current.state.awayRoster.modifications.removed,
+        result.current.state.awayRoster.playerModifications.removed,
       ).toHaveLength(1);
       expect(result.current.state.awayRoster.reviewed).toBe(true);
       expect(result.current.completionStatus.awayRoster).toBe(true);
@@ -191,8 +191,8 @@ describe("useValidationState", () => {
 
       act(() => {
         result.current.setHomeRosterModifications({
-          added: [{ id: "player", displayName: "Player" }],
-          removed: [],
+          players: { added: [{ id: "player", displayName: "Player" }], removed: [] },
+          coaches: { added: new Map(), removed: new Set() },
         });
       });
 
@@ -303,8 +303,14 @@ describe("useValidationState", () => {
 
       // Set all required fields
       act(() => {
-        result.current.setHomeRosterModifications({ added: [], removed: [] });
-        result.current.setAwayRosterModifications({ added: [], removed: [] });
+        result.current.setHomeRosterModifications({
+          players: { added: [], removed: [] },
+          coaches: { added: new Map(), removed: new Set() },
+        });
+        result.current.setAwayRosterModifications({
+          players: { added: [], removed: [] },
+          coaches: { added: new Map(), removed: new Set() },
+        });
         result.current.setScorer(mockScorer);
       });
 
@@ -317,8 +323,14 @@ describe("useValidationState", () => {
       });
 
       act(() => {
-        result.current.setHomeRosterModifications({ added: [], removed: [] });
-        result.current.setAwayRosterModifications({ added: [], removed: [] });
+        result.current.setHomeRosterModifications({
+          players: { added: [], removed: [] },
+          coaches: { added: new Map(), removed: new Set() },
+        });
+        result.current.setAwayRosterModifications({
+          players: { added: [], removed: [] },
+          coaches: { added: new Map(), removed: new Set() },
+        });
       });
 
       expect(result.current.isAllRequiredComplete).toBe(false);
@@ -342,8 +354,8 @@ describe("useValidationState", () => {
       // Make some changes
       act(() => {
         result.current.setHomeRosterModifications({
-          added: [{ id: "p1", displayName: "Player 1" }],
-          removed: [],
+          players: { added: [{ id: "p1", displayName: "Player 1" }], removed: [] },
+          coaches: { added: new Map(), removed: new Set() },
         });
         result.current.setScorer(mockScorer);
         result.current.setScoresheet(
@@ -358,7 +370,7 @@ describe("useValidationState", () => {
       });
 
       expect(result.current.state.homeRoster.reviewed).toBe(false);
-      expect(result.current.state.homeRoster.modifications).toEqual({
+      expect(result.current.state.homeRoster.playerModifications).toEqual({
         added: [],
         removed: [],
       });
@@ -418,8 +430,8 @@ describe("useValidationState", () => {
       // Make modifications
       act(() => {
         result.current.setHomeRosterModifications({
-          added: [{ id: "new-player", displayName: "New Player" }],
-          removed: ["player-1"],
+          players: { added: [{ id: "new-player", displayName: "New Player" }], removed: ["player-1"] },
+          coaches: { added: new Map(), removed: new Set() },
         });
       });
 
@@ -471,8 +483,8 @@ describe("useValidationState", () => {
 
       act(() => {
         result.current.setHomeRosterModifications({
-          added: [{ id: "player", displayName: "Player" }],
-          removed: [],
+          players: { added: [{ id: "player", displayName: "Player" }], removed: [] },
+          coaches: { added: new Map(), removed: new Set() },
         });
       });
 
@@ -505,8 +517,8 @@ describe("useValidationState", () => {
 
       act(() => {
         result.current.setHomeRosterModifications({
-          added: [{ id: "player", displayName: "Player" }],
-          removed: [],
+          players: { added: [{ id: "player", displayName: "Player" }], removed: [] },
+          coaches: { added: new Map(), removed: new Set() },
         });
       });
 
@@ -558,8 +570,14 @@ describe("useValidationState", () => {
       });
 
       act(() => {
-        result.current.setHomeRosterModifications({ added: [], removed: [] });
-        result.current.setAwayRosterModifications({ added: [], removed: [] });
+        result.current.setHomeRosterModifications({
+          players: { added: [], removed: [] },
+          coaches: { added: new Map(), removed: new Set() },
+        });
+        result.current.setAwayRosterModifications({
+          players: { added: [], removed: [] },
+          coaches: { added: new Map(), removed: new Set() },
+        });
         result.current.setScorer(mockScorer);
         result.current.setScoresheet(file, false);
       });
@@ -581,8 +599,14 @@ describe("useValidationState", () => {
       });
 
       act(() => {
-        result.current.setHomeRosterModifications({ added: [], removed: [] });
-        result.current.setAwayRosterModifications({ added: [], removed: [] });
+        result.current.setHomeRosterModifications({
+          players: { added: [], removed: [] },
+          coaches: { added: new Map(), removed: new Set() },
+        });
+        result.current.setAwayRosterModifications({
+          players: { added: [], removed: [] },
+          coaches: { added: new Map(), removed: new Set() },
+        });
         result.current.setScorer(mockScorer);
       });
 
@@ -607,7 +631,10 @@ describe("useValidationState", () => {
       });
 
       act(() => {
-        result.current.setHomeRosterModifications({ added: [], removed: [] });
+        result.current.setHomeRosterModifications({
+          players: { added: [], removed: [] },
+          coaches: { added: new Map(), removed: new Set() },
+        });
         result.current.setScorer(mockScorer);
       });
 
@@ -639,7 +666,10 @@ describe("useValidationState", () => {
       });
 
       act(() => {
-        result.current.setHomeRosterModifications({ added: [], removed: [] });
+        result.current.setHomeRosterModifications({
+          players: { added: [], removed: [] },
+          coaches: { added: new Map(), removed: new Set() },
+        });
         result.current.setScorer(mockScorer);
       });
 
@@ -671,7 +701,10 @@ describe("useValidationState", () => {
       });
 
       act(() => {
-        result.current.setHomeRosterModifications({ added: [], removed: [] });
+        result.current.setHomeRosterModifications({
+          players: { added: [], removed: [] },
+          coaches: { added: new Map(), removed: new Set() },
+        });
         result.current.setScorer(mockScorer);
       });
 

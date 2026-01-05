@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { logger } from "@/utils/logger";
 import type { ValidatedPersonSearchResult } from "@/api/validation";
-import type { RosterModifications } from "@/hooks/useNominationList";
+import type { RosterPanelModifications } from "@/components/features/validation/RosterVerificationPanel";
 import { getApiClient } from "@/api/client";
 import { useAuthStore } from "@/stores/auth";
 import type { PendingScorerData } from "@/stores/demo";
@@ -142,24 +142,38 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
 
   const isDirty = useMemo(() => {
     return (
-      hasRosterModifications(state.homeRoster.modifications) ||
-      hasRosterModifications(state.awayRoster.modifications) ||
+      hasRosterModifications(state.homeRoster.playerModifications) ||
+      hasRosterModifications(state.awayRoster.playerModifications) ||
+      state.homeRoster.coachModifications.added.size > 0 ||
+      state.homeRoster.coachModifications.removed.size > 0 ||
+      state.awayRoster.coachModifications.added.size > 0 ||
+      state.awayRoster.coachModifications.removed.size > 0 ||
       state.scorer.selected !== null ||
       state.scoresheet.file !== null
     );
   }, [state]);
 
-  const setHomeRosterModifications = useCallback((modifications: RosterModifications) => {
+  const setHomeRosterModifications = useCallback((modifications: RosterPanelModifications) => {
     setState((prev) => ({
       ...prev,
-      homeRoster: { ...prev.homeRoster, modifications, reviewed: true },
+      homeRoster: {
+        ...prev.homeRoster,
+        playerModifications: modifications.players,
+        coachModifications: modifications.coaches,
+        reviewed: true,
+      },
     }));
   }, []);
 
-  const setAwayRosterModifications = useCallback((modifications: RosterModifications) => {
+  const setAwayRosterModifications = useCallback((modifications: RosterPanelModifications) => {
     setState((prev) => ({
       ...prev,
-      awayRoster: { ...prev.awayRoster, modifications, reviewed: true },
+      awayRoster: {
+        ...prev.awayRoster,
+        playerModifications: modifications.players,
+        coachModifications: modifications.coaches,
+        reviewed: true,
+      },
     }));
   }, []);
 
@@ -191,8 +205,8 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
         return;
       }
 
-      await saveRosterModifications(apiClient, gameId, gameDetails.nominationListOfTeamHome, state.homeRoster.modifications);
-      await saveRosterModifications(apiClient, gameId, gameDetails.nominationListOfTeamAway, state.awayRoster.modifications);
+      await saveRosterModifications(apiClient, gameId, gameDetails.nominationListOfTeamHome, state.homeRoster.playerModifications, state.homeRoster.coachModifications);
+      await saveRosterModifications(apiClient, gameId, gameDetails.nominationListOfTeamAway, state.awayRoster.playerModifications, state.awayRoster.coachModifications);
       await saveScorerSelection(apiClient, gameId, gameDetails.scoresheet, state.scorer.selected?.__identity);
       logger.debug("[VS] save done");
     } catch (error) {
@@ -227,8 +241,8 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
         logger.debug("[VS] PDF uploaded:", fileResourceId);
       }
 
-      await finalizeRoster(apiClient, gameId, gameDetails.nominationListOfTeamHome, state.homeRoster.modifications);
-      await finalizeRoster(apiClient, gameId, gameDetails.nominationListOfTeamAway, state.awayRoster.modifications);
+      await finalizeRoster(apiClient, gameId, gameDetails.nominationListOfTeamHome, state.homeRoster.playerModifications, state.homeRoster.coachModifications);
+      await finalizeRoster(apiClient, gameId, gameDetails.nominationListOfTeamAway, state.awayRoster.playerModifications, state.awayRoster.coachModifications);
       await finalizeScoresheetWithFile(apiClient, gameId, gameDetails.scoresheet, state.scorer.selected?.__identity, fileResourceId);
 
       await queryClient.invalidateQueries({ queryKey: queryKeys.validation.gameDetail(gameId!) });

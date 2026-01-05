@@ -466,6 +466,7 @@ export const api = {
     gameId: string,
     teamId: string,
     playerNominationIds: string[],
+    coachIds?: { head?: string; firstAssistant?: string; secondAssistant?: string },
   ): Promise<NominationList> {
     const body: Record<string, unknown> = {
       "nominationList[__identity]": nominationListId,
@@ -478,6 +479,22 @@ export const api = {
     playerNominationIds.forEach((id, index) => {
       body[`nominationList[indoorPlayerNominations][${index}][__identity]`] = id;
     });
+
+    // Add coach assignments
+    if (coachIds?.head) {
+      body["nominationList[coachPerson][__identity]"] = coachIds.head;
+    }
+    if (coachIds?.firstAssistant) {
+      body["nominationList[firstAssistantCoachPerson][__identity]"] = coachIds.firstAssistant;
+    }
+    // secondAssistantCoachPerson: use [__identity] with UUID, or plain field when clearing
+    if (coachIds?.secondAssistant !== undefined) {
+      if (coachIds.secondAssistant) {
+        body["nominationList[secondAssistantCoachPerson][__identity]"] = coachIds.secondAssistant;
+      } else {
+        body["nominationList[secondAssistantCoachPerson]"] = "";
+      }
+    }
 
     return apiRequest<NominationList>(
       "/sportmanager.indoorvolleyball/api%5cnominationlist",
@@ -492,6 +509,7 @@ export const api = {
     teamId: string,
     playerNominationIds: string[],
     validationId?: string,
+    coachIds?: { head?: string; firstAssistant?: string; secondAssistant?: string },
   ): Promise<NominationListFinalizeResponse> {
     const body: Record<string, unknown> = {
       "nominationList[__identity]": nominationListId,
@@ -507,6 +525,22 @@ export const api = {
 
     if (validationId) {
       body["nominationList[nominationListValidation][__identity]"] = validationId;
+    }
+
+    // Add coach assignments
+    if (coachIds?.head) {
+      body["nominationList[coachPerson][__identity]"] = coachIds.head;
+    }
+    if (coachIds?.firstAssistant) {
+      body["nominationList[firstAssistantCoachPerson][__identity]"] = coachIds.firstAssistant;
+    }
+    // secondAssistantCoachPerson: use [__identity] with UUID, or plain field when clearing
+    if (coachIds?.secondAssistant !== undefined) {
+      if (coachIds.secondAssistant) {
+        body["nominationList[secondAssistantCoachPerson][__identity]"] = coachIds.secondAssistant;
+      } else {
+        body["nominationList[secondAssistantCoachPerson]"] = "";
+      }
     }
 
     return apiRequest<NominationListFinalizeResponse>(

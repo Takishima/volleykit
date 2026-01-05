@@ -1071,12 +1071,35 @@ function createPlayerNomination(
   };
 }
 
+interface CoachConfig {
+  firstName: string;
+  lastName: string;
+}
+
 interface NominationListConfig {
   gameId: string;
   teamId: string;
   teamDisplayName: string;
   side: "home" | "away";
   players: PlayerNominationConfig[];
+  headCoach?: CoachConfig;
+  firstAssistant?: CoachConfig;
+  secondAssistant?: CoachConfig;
+}
+
+function createCoachPerson(
+  coach: CoachConfig,
+  gameIndex: number,
+  teamIndex: number,
+  role: "head" | "first" | "second",
+) {
+  const displayName = `${coach.firstName} ${coach.lastName}`;
+  return {
+    __identity: `demo-coach-${role}-${gameIndex}-${teamIndex}`,
+    firstName: coach.firstName,
+    lastName: coach.lastName,
+    displayName,
+  };
 }
 
 function createNominationList(
@@ -1093,6 +1116,15 @@ function createNominationList(
     indoorPlayerNominations: config.players.map((player) =>
       createPlayerNomination(player, gameIndex, teamIndex),
     ),
+    ...(config.headCoach && {
+      coachPerson: createCoachPerson(config.headCoach, gameIndex, teamIndex, "head"),
+    }),
+    ...(config.firstAssistant && {
+      firstAssistantCoachPerson: createCoachPerson(config.firstAssistant, gameIndex, teamIndex, "first"),
+    }),
+    ...(config.secondAssistant && {
+      secondAssistantCoachPerson: createCoachPerson(config.secondAssistant, gameIndex, teamIndex, "second"),
+    }),
   };
 }
 
@@ -1116,6 +1148,9 @@ const NOMINATION_LIST_CONFIGS: NominationListGameConfig[] = [
         { index: 5, shirtNumber: 9, firstName: "Tim", lastName: "Fischer", licenseCategory: "SEN" },
         { index: 6, shirtNumber: 14, firstName: "Jan", lastName: "Brunner", licenseCategory: "SEN" },
       ],
+      headCoach: { firstName: "Martin", lastName: "Schwegler" },
+      firstAssistant: { firstName: "Andreas", lastName: "Kohler" },
+      // No second assistant - to test empty state
     },
     away: {
       teamId: "team-demo-2",
@@ -1127,6 +1162,8 @@ const NOMINATION_LIST_CONFIGS: NominationListGameConfig[] = [
         { index: 4, shirtNumber: 6, firstName: "Yannick", lastName: "Hofer", licenseCategory: "SEN" },
         { index: 5, shirtNumber: 10, firstName: "Nico", lastName: "Baumann", licenseCategory: "SEN" },
       ],
+      headCoach: { firstName: "Patrick", lastName: "Heuscher" },
+      // No assistants - to test adding coaches
     },
   },
 ];
@@ -1144,8 +1181,9 @@ export function generateMockNominationLists(): MockNominationLists {
   const result: MockNominationLists = {};
 
   for (const config of NOMINATION_LIST_CONFIGS) {
-    // Use same seed pattern as createRefereeGame to ensure game IDs match
-    const gameUuid = generateDemoUuid(`demo-game-${config.gameIndex}`);
+    // Must match the game ID pattern from createRefereeGame: `${idPrefix}-g-${gameId}`
+    // For assignments, idPrefix is "demo" and gameId is the index string
+    const gameUuid = generateDemoUuid(`demo-g-${config.gameIndex}`);
 
     result[gameUuid] = {
       home: createNominationList(
