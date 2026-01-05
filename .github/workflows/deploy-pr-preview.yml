@@ -50,7 +50,10 @@ jobs:
         run: npm run build
         env:
           # PR previews run in demo-only mode (no real authentication)
+          # but calendar mode is allowed (uses public iCal endpoints)
           VITE_DEMO_MODE_ONLY: 'true'
+          # Set the proxy URL for calendar API requests
+          VITE_API_PROXY_URL: ${{ vars.VITE_API_PROXY_URL }}
           # Set base path for PR preview - uses pr-{number} subdirectory
           VITE_BASE_PATH: /${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/
           # OJP API key for Swiss public transport travel times
@@ -125,7 +128,7 @@ jobs:
               `**OCR POC:** ${ocrPocUrl}\n\n` +
               `**Help Site:** ${helpUrl}\n\n` +
               `> This preview will be updated on each push to this PR.\n\n` +
-              `**Demo Mode Only:** This preview runs in demo mode with sample data. Real authentication is disabled for security.`;
+              `**Preview Mode:** Calendar mode login (read-only) and demo mode are available. Full login is disabled for security.`;
 
             // Check if comment already exists
             const { data: comments } = await github.rest.issues.listComments({

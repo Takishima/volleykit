@@ -279,8 +279,8 @@ export function LoginPage() {
             </div>
           )}
 
-          {/* Full Login Panel - hidden in demo-only mode */}
-          {loginMode === "full" && !DEMO_MODE_ONLY && (
+          {/* Full Login Panel - only shown when tab is selected (tabs hidden in demo-only mode) */}
+          {loginMode === "full" && (
             <div
               id="full-login-panel"
               role="tabpanel"
