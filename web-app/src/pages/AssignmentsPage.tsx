@@ -29,7 +29,6 @@ import { TOUR_DUMMY_ASSIGNMENT } from "@/components/tour/definitions/assignments
 import { useAuthStore } from "@/stores/auth";
 import { useShallow } from "zustand/react/shallow";
 import { useCalendarAssociationFilter } from "@/hooks/useCalendarAssociationFilter";
-import { CalendarAssociationDropdown } from "@/components/features/CalendarAssociationDropdown";
 
 const PdfLanguageModal = lazy(
   () =>
@@ -135,13 +134,8 @@ export function AssignmentsPage() {
   } = useCalendarAssignments();
 
   // Association filter for calendar mode (extracts unique associations from data)
-  const {
-    associations: calendarAssociations,
-    selectedAssociation,
-    setSelectedAssociation,
-    filterByAssociation,
-    hasMultipleAssociations,
-  } = useCalendarAssociationFilter(calendarData ?? []);
+  // The filter selection is managed in the AppShell header dropdown
+  const { filterByAssociation } = useCalendarAssociationFilter(calendarData ?? []);
 
   // Compute calendar-specific data (filter by upcoming/past and association)
   const calendarUpcoming = useMemo(() => {
@@ -274,17 +268,6 @@ export function AssignmentsPage() {
 
   return (
     <div className="space-y-3">
-      {/* Calendar mode association filter */}
-      {isCalendarMode && hasMultipleAssociations && (
-        <div className="flex justify-end">
-          <CalendarAssociationDropdown
-            associations={calendarAssociations}
-            selected={selectedAssociation}
-            onChange={setSelectedAssociation}
-          />
-        </div>
-      )}
-
       {/* Tabs - WAI-ARIA tab pattern */}
       <div
         role="tablist"

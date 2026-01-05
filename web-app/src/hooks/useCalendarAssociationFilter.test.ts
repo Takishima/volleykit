@@ -1,9 +1,10 @@
 import { renderHook, act } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   useCalendarAssociationFilter,
   ALL_ASSOCIATIONS,
 } from './useCalendarAssociationFilter';
+import { useCalendarFilterStore } from '@/stores/calendar-filter';
 import type { CalendarAssignment } from '@/api/calendar-api';
 
 function createMockCalendarAssignment(
@@ -34,6 +35,14 @@ function createMockCalendarAssignment(
 }
 
 describe('useCalendarAssociationFilter', () => {
+  // Reset the Zustand store before each test to ensure isolation
+  beforeEach(() => {
+    useCalendarFilterStore.setState({
+      selectedAssociation: ALL_ASSOCIATIONS,
+      associations: [],
+    });
+  });
+
   describe('associations extraction', () => {
     it('returns empty array when no calendar data', () => {
       const { result } = renderHook(() => useCalendarAssociationFilter([]));

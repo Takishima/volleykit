@@ -4,6 +4,7 @@ import { useShallow } from "zustand/react/shallow";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore, type Occupation } from "@/stores/auth";
 import { useTourStore } from "@/stores/tour";
+import { useCalendarFilterStore, ALL_ASSOCIATIONS } from "@/stores/calendar-filter";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getOccupationLabelKey } from "@/utils/occupation-labels";
 import { getApiClient } from "@/api/client";
@@ -32,6 +33,7 @@ const DebugPanel = lazy(() =>
 );
 
 const MINIMUM_OCCUPATIONS_FOR_SWITCHER = 2;
+const MINIMUM_ASSOCIATIONS_FOR_FILTER = 2;
 
 interface NavItem {
   path: string;
@@ -78,6 +80,11 @@ export function AppShell() {
     })),
   );
   const activeTour = useTourStore((state) => state.activeTour);
+  const {
+    selectedAssociation,
+    associations: calendarAssociations,
+    setSelectedAssociation,
+  } = useCalendarFilterStore();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Track the latest switch request to handle race conditions
@@ -98,7 +105,26 @@ export function AppShell() {
     },
     [t],
   );
-  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const getCalendarAssociationLabel = useCallback(
+    (association: string): string => {
+      if (association === ALL_ASSOCIATIONS) {
+        return t("calendar.allAssociations");
+      }
+      return association;
+    },
+    [t],
+  );
+
+  // Determine if we should show the dropdown based on mode
+  const showCalendarDropdown =
+    isCalendarMode && calendarAssociations.length >= MINIMUM_ASSOCIATIONS_FOR_FILTER;
+  const showOccupationDropdown =
+    !isCalendarMode &&
+    user?.occupations &&
+    user.occupations.length >= MINIMUM_OCCUPATIONS_FOR_SWITCHER;
+  const calendarDropdownRef = useRef<HTMLDivElement>(null);
+  const occupationDropdownRef = useRef<HTMLDivElement>(null);
   const isAuthenticated = status === "authenticated";
 
   // Filter nav items based on calendar mode
@@ -114,10 +140,13 @@ export function AppShell() {
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      const target = event.target as Node;
+      const isOutsideCalendar =
+        !calendarDropdownRef.current?.contains(target);
+      const isOutsideOccupation =
+        !occupationDropdownRef.current?.contains(target);
+
+      if (isOutsideCalendar && isOutsideOccupation) {
         setIsDropdownOpen(false);
       }
     }
@@ -128,6 +157,11 @@ export function AppShell() {
   const activeOccupation =
     user?.occupations?.find((o) => o.id === activeOccupationId) ??
     user?.occupations?.[0];
+
+  const handleCalendarAssociationSelect = (association: string) => {
+    setSelectedAssociation(association);
+    setIsDropdownOpen(false);
+  };
 
   const handleOccupationSelect = async (id: string) => {
     // Don't switch if selecting the same occupation
@@ -226,9 +260,68 @@ export function AppShell() {
                   </div>
                 )}
 
-                {user?.occupations &&
-                  user.occupations.length >= MINIMUM_OCCUPATIONS_FOR_SWITCHER && (
-                  <div className="relative" ref={dropdownRef}>
+                {/* Calendar mode: Association filter dropdown */}
+                {showCalendarDropdown && (
+                  <div className="relative" ref={calendarDropdownRef}>
+                    <button
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      className="flex items-center gap-1 px-2 py-1 text-sm font-medium rounded-lg transition-colors text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50"
+                      aria-expanded={isDropdownOpen}
+                      aria-haspopup="listbox"
+                      aria-label={t("calendar.filterByAssociation")}
+                    >
+                      <span className="max-w-[100px] truncate">
+                        {getCalendarAssociationLabel(selectedAssociation)}
+                      </span>
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
+                        aria-hidden="true"
+                      />
+                    </button>
+
+                    {isDropdownOpen && (
+                      <div
+                        className="absolute right-0 mt-1 w-48 bg-surface-card dark:bg-surface-card-dark rounded-lg shadow-lg border border-border-default dark:border-border-default-dark py-1 z-50"
+                        role="listbox"
+                        aria-label={t("calendar.selectAssociation")}
+                      >
+                        {/* All associations option */}
+                        <button
+                          onClick={() => handleCalendarAssociationSelect(ALL_ASSOCIATIONS)}
+                          className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+                            selectedAssociation === ALL_ASSOCIATIONS
+                              ? "bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400"
+                              : "text-text-secondary dark:text-text-secondary-dark hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark"
+                          }`}
+                          role="option"
+                          aria-selected={selectedAssociation === ALL_ASSOCIATIONS}
+                        >
+                          {t("calendar.allAssociations")}
+                        </button>
+                        {/* Individual association options */}
+                        {calendarAssociations.map((association) => (
+                          <button
+                            key={association}
+                            onClick={() => handleCalendarAssociationSelect(association)}
+                            className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+                              selectedAssociation === association
+                                ? "bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400"
+                                : "text-text-secondary dark:text-text-secondary-dark hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark"
+                            }`}
+                            role="option"
+                            aria-selected={selectedAssociation === association}
+                          >
+                            {association}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Normal mode: Occupation switcher dropdown */}
+                {showOccupationDropdown && (
+                  <div className="relative" ref={occupationDropdownRef}>
                     <button
                       onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                       disabled={isAssociationSwitching}

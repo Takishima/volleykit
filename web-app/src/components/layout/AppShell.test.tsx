@@ -193,6 +193,7 @@ describe("AppShell", () => {
         createMockAuthStore({
           user: multiOccupationUser,
           activeOccupationId: "ref-1",
+          isCalendarMode: false,
         }),
       );
 
