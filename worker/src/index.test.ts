@@ -1110,3 +1110,212 @@ describe("Proxy Timestamp Header", () => {
     expect(typeof latencyMs).toBe("number");
   });
 });
+
+describe("Integration: Proxy Response Headers", () => {
+  // Helper to create mock environment for integration tests
+  function createMockEnv() {
+    return {
+      ALLOWED_ORIGINS: "https://example.com",
+      TARGET_HOST: "https://volleymanager.volleyball.ch",
+      RATE_LIMITER: {
+        limit: vi.fn().mockResolvedValue({ success: true }),
+      },
+    };
+  }
+
+  it("applies no-cache headers to JSON API responses", async () => {
+    // Import the worker dynamically to allow mocking fetch
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    // Mock fetch to return a JSON response
+    const mockJsonResponse = new Response(JSON.stringify({ data: "test" }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        ETag: '"abc123"', // Should be removed
+        "Last-Modified": "Wed, 01 Jan 2025 00:00:00 GMT", // Should be removed
+        "Cache-Control": "max-age=3600", // Should be overwritten
+      },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockJsonResponse));
+
+    const request = new Request(
+      "https://proxy.example.com/indoorvolleyball.refadmin/api/test",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    const response = await worker.fetch(request, mockEnv);
+
+    // Verify no-cache headers are applied
+    expect(response.headers.get("Cache-Control")).toBe(
+      "no-store, no-cache, must-revalidate, max-age=0",
+    );
+    expect(response.headers.get("Pragma")).toBe("no-cache");
+    expect(response.headers.get("Expires")).toBe("0");
+
+    // Verify upstream cache headers are removed
+    expect(response.headers.get("ETag")).toBeNull();
+    expect(response.headers.get("Last-Modified")).toBeNull();
+
+    // Verify proxy timestamp header is present
+    expect(response.headers.get("X-Proxy-Timestamp")).toMatch(
+      /^\d{4}-\d{2}-\d{2}T.*; latency=\d+ms$/,
+    );
+
+    vi.unstubAllGlobals();
+  });
+
+  it("applies no-cache headers to HTML responses", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const mockHtmlResponse = new Response("<html><body>Test</body></html>", {
+      status: 200,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+      },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockHtmlResponse));
+
+    const request = new Request("https://proxy.example.com/login", {
+      headers: {
+        Origin: "https://example.com",
+      },
+    });
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.headers.get("Cache-Control")).toBe(
+      "no-store, no-cache, must-revalidate, max-age=0",
+    );
+    expect(response.headers.get("Pragma")).toBe("no-cache");
+
+    vi.unstubAllGlobals();
+  });
+
+  it("adds session warning header for 401 responses", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const mockUnauthorizedResponse = new Response("Unauthorized", {
+      status: 401,
+      headers: {
+        "Content-Type": "text/plain",
+      },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockUnauthorizedResponse));
+
+    const request = new Request(
+      "https://proxy.example.com/indoorvolleyball.refadmin/api/test",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.headers.get("X-Proxy-Session-Warning")).toBe(
+      "potential-session-issue",
+    );
+
+    vi.unstubAllGlobals();
+  });
+
+  it("adds session warning header for redirect to login", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const mockRedirectResponse = new Response(null, {
+      status: 302,
+      headers: {
+        Location: "https://volleymanager.volleyball.ch/login",
+        "Content-Type": "text/html",
+      },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockRedirectResponse));
+
+    const request = new Request(
+      "https://proxy.example.com/sportmanager.volleyball/main/dashboard",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.headers.get("X-Proxy-Session-Warning")).toBe(
+      "potential-session-issue",
+    );
+
+    vi.unstubAllGlobals();
+  });
+
+  it("does not add session warning for normal 200 responses", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const mockOkResponse = new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockOkResponse));
+
+    const request = new Request(
+      "https://proxy.example.com/indoorvolleyball.refadmin/api/test",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.headers.get("X-Proxy-Session-Warning")).toBeNull();
+
+    vi.unstubAllGlobals();
+  });
+
+  it("preserves iCal cache control (not dynamic content)", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const mockICalResponse = new Response(
+      "BEGIN:VCALENDAR\nVERSION:2.0\nEND:VCALENDAR",
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "text/calendar; charset=utf-8",
+        },
+      },
+    );
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockICalResponse));
+
+    const request = new Request(
+      "https://proxy.example.com/iCal/referee/ABC123",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    const response = await worker.fetch(request, mockEnv);
+
+    // iCal endpoint has its own cache policy (5 minutes)
+    expect(response.headers.get("Cache-Control")).toBe("public, max-age=300");
+
+    vi.unstubAllGlobals();
+  });
+});
