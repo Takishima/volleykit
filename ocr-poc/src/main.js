@@ -16,13 +16,14 @@ import { ImageCapture } from './components/ImageCapture.js';
 import { SheetTypeSelector } from './components/SheetTypeSelector.js';
 import { OCRProgress } from './components/OCRProgress.js';
 import { OCRFactory } from './services/ocr/index.js';
+import { PlayerComparison } from './components/PlayerComparison.js';
 
 /* ==============================================
  * APPLICATION STATE
  * ============================================== */
 
 /**
- * @typedef {'capture' | 'select-type' | 'processing' | 'results'} AppState
+ * @typedef {'capture' | 'select-type' | 'processing' | 'results' | 'comparison'} AppState
  */
 
 /**
@@ -66,6 +67,9 @@ let resultsPreviewUrl = null;
 
 /** @type {boolean} Guard flag to prevent concurrent OCR operations */
 let isOCRRunning = false;
+
+/** @type {PlayerComparison | null} */
+let playerComparison = null;
 
 /* ==============================================
  * STATE MACHINE
@@ -122,6 +126,12 @@ function cleanupState(state) {
         resultsPreviewUrl = null;
       }
       break;
+    case 'comparison':
+      if (playerComparison) {
+        playerComparison.destroy();
+        playerComparison = null;
+      }
+      break;
   }
 }
 
@@ -148,6 +158,9 @@ function renderState(state) {
       break;
     case 'results':
       renderResultsState(contentContainer);
+      break;
+    case 'comparison':
+      renderComparisonState(contentContainer);
       break;
   }
 }
@@ -338,7 +351,10 @@ function renderResultsState(container) {
     </details>
 
     <div class="flex flex-col gap-md">
-      <button class="btn btn-primary btn-block" id="btn-new-scan">
+      <button class="btn btn-primary btn-block" id="btn-compare-players">
+        Compare with Reference List
+      </button>
+      <button class="btn btn-secondary btn-block" id="btn-new-scan">
         Scan Another Sheet
       </button>
     </div>
@@ -352,8 +368,31 @@ function renderResultsState(container) {
   }
 
   // Bind buttons
+  const compareBtn = document.getElementById('btn-compare-players');
+  compareBtn?.addEventListener('click', handleComparePressed);
+
   const newScanBtn = document.getElementById('btn-new-scan');
   newScanBtn?.addEventListener('click', handleStartOver);
+}
+
+/**
+ * Render the player comparison state
+ * @param {HTMLElement} container
+ */
+function renderComparisonState(container) {
+  container.innerHTML = `
+    <h2 class="text-center mb-md">Player List Comparison</h2>
+    <div id="player-comparison-container"></div>
+  `;
+
+  const comparisonContainer = document.getElementById('player-comparison-container');
+  if (comparisonContainer && appContext.ocrResult) {
+    playerComparison = new PlayerComparison({
+      container: comparisonContainer,
+      ocrText: appContext.ocrResult.fullText,
+      onBack: handleBackToResults,
+    });
+  }
 }
 
 /**
@@ -407,6 +446,20 @@ function handleBackToCapture() {
  */
 function handleStartOver() {
   transition('capture', { capturedImage: null, sheetType: null, ocrResult: null });
+}
+
+/**
+ * Handle compare players button press
+ */
+function handleComparePressed() {
+  transition('comparison');
+}
+
+/**
+ * Handle going back to results from comparison
+ */
+function handleBackToResults() {
+  transition('results');
 }
 
 /**
