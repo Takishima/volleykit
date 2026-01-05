@@ -1111,6 +1111,161 @@ describe("Proxy Timestamp Header", () => {
   });
 });
 
+describe("Integration: Origin Validation Error Responses", () => {
+  // Helper to create mock environment for integration tests
+  function createMockEnv() {
+    return {
+      ALLOWED_ORIGINS: "https://example.com",
+      TARGET_HOST: "https://volleymanager.volleyball.ch",
+      RATE_LIMITER: {
+        limit: vi.fn().mockResolvedValue({ success: true }),
+      },
+      MISTRAL_API_KEY: "test-api-key",
+    };
+  }
+
+  describe("/health endpoint origin validation", () => {
+    it("returns 403 with CORS headers when origin is provided but not allowed", async () => {
+      const { default: worker } = await import("./index");
+      const mockEnv = createMockEnv();
+
+      const request = new Request("https://proxy.example.com/health", {
+        headers: {
+          Origin: "https://malicious.com",
+        },
+      });
+
+      const response = await worker.fetch(request, mockEnv);
+
+      expect(response.status).toBe(403);
+      expect(await response.text()).toBe("Forbidden: Origin not allowed");
+      // CORS headers should be present so browser can read the error
+      expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+        "https://malicious.com",
+      );
+      expect(response.headers.get("Access-Control-Allow-Credentials")).toBe(
+        "true",
+      );
+    });
+
+    it("returns 403 without CORS headers when origin is missing", async () => {
+      const { default: worker } = await import("./index");
+      const mockEnv = createMockEnv();
+
+      const request = new Request("https://proxy.example.com/health");
+      // No Origin header
+
+      const response = await worker.fetch(request, mockEnv);
+
+      expect(response.status).toBe(403);
+      expect(await response.text()).toBe("Forbidden: Origin not allowed");
+      // No CORS headers when origin is null
+      expect(response.headers.get("Access-Control-Allow-Origin")).toBeNull();
+    });
+
+    it("returns 200 with CORS headers when origin is allowed", async () => {
+      const { default: worker } = await import("./index");
+      const mockEnv = createMockEnv();
+
+      const request = new Request("https://proxy.example.com/health", {
+        headers: {
+          Origin: "https://example.com",
+        },
+      });
+
+      const response = await worker.fetch(request, mockEnv);
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+        "https://example.com",
+      );
+    });
+  });
+
+  describe("/ocr endpoint origin validation", () => {
+    it("returns 403 with CORS headers when origin is provided but not allowed", async () => {
+      const { default: worker } = await import("./index");
+      const mockEnv = createMockEnv();
+
+      const request = new Request("https://proxy.example.com/ocr", {
+        method: "POST",
+        headers: {
+          Origin: "https://malicious.com",
+        },
+      });
+
+      const response = await worker.fetch(request, mockEnv);
+
+      expect(response.status).toBe(403);
+      expect(await response.text()).toBe("Forbidden: Origin not allowed");
+      // CORS headers should be present so browser can read the error
+      expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+        "https://malicious.com",
+      );
+      expect(response.headers.get("Access-Control-Allow-Credentials")).toBe(
+        "true",
+      );
+    });
+
+    it("returns 403 without CORS headers when origin is missing", async () => {
+      const { default: worker } = await import("./index");
+      const mockEnv = createMockEnv();
+
+      const request = new Request("https://proxy.example.com/ocr", {
+        method: "POST",
+      });
+      // No Origin header
+
+      const response = await worker.fetch(request, mockEnv);
+
+      expect(response.status).toBe(403);
+      expect(await response.text()).toBe("Forbidden: Origin not allowed");
+      // No CORS headers when origin is null
+      expect(response.headers.get("Access-Control-Allow-Origin")).toBeNull();
+    });
+  });
+
+  describe("general proxy origin validation", () => {
+    it("returns 403 with CORS headers when origin is provided but not allowed", async () => {
+      const { default: worker } = await import("./index");
+      const mockEnv = createMockEnv();
+
+      const request = new Request("https://proxy.example.com/login", {
+        headers: {
+          Origin: "https://malicious.com",
+        },
+      });
+
+      const response = await worker.fetch(request, mockEnv);
+
+      expect(response.status).toBe(403);
+      expect(await response.text()).toBe("Forbidden: Origin not allowed");
+      // CORS headers should be present so browser can read the error
+      expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+        "https://malicious.com",
+      );
+      expect(response.headers.get("Access-Control-Allow-Credentials")).toBe(
+        "true",
+      );
+    });
+
+    it("returns 403 without CORS headers when origin is missing", async () => {
+      const { default: worker } = await import("./index");
+      const mockEnv = createMockEnv();
+
+      const request = new Request("https://proxy.example.com/login");
+      // No Origin header
+
+      const response = await worker.fetch(request, mockEnv);
+
+      expect(response.status).toBe(403);
+      expect(await response.text()).toBe("Forbidden: Origin not allowed");
+      // No CORS headers when origin is null
+      expect(response.headers.get("Access-Control-Allow-Origin")).toBeNull();
+    });
+  });
+});
+
 describe("Integration: Proxy Response Headers", () => {
   // Helper to create mock environment for integration tests
   function createMockEnv() {
