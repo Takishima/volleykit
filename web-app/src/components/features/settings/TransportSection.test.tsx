@@ -106,7 +106,6 @@ function createMockAuthStore(
     csrfToken: null,
     dataSource: "api" as const,
     calendarCode: null,
-    isDemoMode: false,
     isAssociationSwitching: false,
     _checkSessionPromise: null,
     _lastAuthTimestamp: null,

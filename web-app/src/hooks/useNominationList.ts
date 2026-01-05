@@ -101,7 +101,8 @@ export function useNominationList({
   team,
   prefetchedData,
 }: UseNominationListOptions): UseNominationListResult {
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const dataSource = useAuthStore((state) => state.dataSource);
+  const isDemoMode = dataSource === "demo";
   const nominationLists = useDemoStore((state) => state.nominationLists);
   // Check for both null and undefined - API may return null for some validated games
   const hasPrefetchedData = prefetchedData != null;

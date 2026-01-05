@@ -26,7 +26,7 @@ vi.mock("@/services/transport", () => ({
 
 vi.mock("@/stores/auth", () => ({
   useAuthStore: vi.fn((selector: AnyFunction) =>
-    selector({ isDemoMode: false }),
+    selector({ dataSource: "api" }),
   ),
 }));
 
@@ -200,7 +200,7 @@ describe("useTravelTimeFilter", () => {
       const { calculateMockTravelTime } = await import("@/services/transport");
 
       vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-        selector({ isDemoMode: true }),
+        selector({ dataSource: "demo" }),
       );
 
       const mockResult: TravelTimeResult = {
@@ -269,7 +269,7 @@ describe("useTravelTimeFilter", () => {
       const { calculateMockTravelTime } = await import("@/services/transport");
 
       vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-        selector({ isDemoMode: true }),
+        selector({ dataSource: "demo" }),
       );
 
       vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
@@ -544,7 +544,7 @@ describe("useTravelTimeFilter", () => {
 
       vi.mocked(useActiveAssociationCode).mockReturnValue("SPECIAL");
       vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-        selector({ isDemoMode: true }),
+        selector({ dataSource: "demo" }),
       );
 
       vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>

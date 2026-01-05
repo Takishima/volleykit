@@ -4,7 +4,9 @@ import { useSbbUrl } from "./useSbbUrl";
 
 // Mock stores - simple mocks that return fixed values
 vi.mock("@/stores/auth", () => ({
-  useAuthStore: vi.fn(() => true), // isDemoMode = true
+  useAuthStore: vi.fn((selector: (state: { dataSource: string }) => unknown) =>
+    selector({ dataSource: "demo" })
+  ),
 }));
 
 vi.mock("@/stores/settings", () => ({

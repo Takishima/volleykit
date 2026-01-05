@@ -36,7 +36,6 @@ describe("useActiveAssociationCode", () => {
         user: null,
         error: null,
         csrfToken: null,
-        isDemoMode: false,
         dataSource: "api",
         calendarCode: null,
         activeOccupationId: null,

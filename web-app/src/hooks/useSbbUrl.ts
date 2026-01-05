@@ -59,7 +59,8 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
   const [originStation, setOriginStation] = useState<StationInfo | undefined>();
   const [destinationStation, setDestinationStation] = useState<StationInfo | undefined>();
 
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const dataSource = useAuthStore((state) => state.dataSource);
+  const isDemoMode = dataSource === "demo";
   const homeLocation = useSettingsStore((state) => state.homeLocation);
   const associationCode = useActiveAssociationCode();
   const arrivalBuffer = useSettingsStore((state) =>

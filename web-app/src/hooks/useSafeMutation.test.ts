@@ -39,7 +39,7 @@ describe("useSafeMutation", () => {
 
     // Default: not in demo mode, safe mode disabled
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-      selector({ isDemoMode: false } as ReturnType<
+      selector({ dataSource: "api" } as ReturnType<
         typeof authStore.useAuthStore.getState
       >),
     );
@@ -235,7 +235,7 @@ describe("useSafeMutation", () => {
 
     it("should allow execution in demo mode even with safe mode enabled", async () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: true } as ReturnType<
+        selector({ dataSource: "demo" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -262,7 +262,7 @@ describe("useSafeMutation", () => {
   describe("skipSuccessToastInDemoMode", () => {
     it("should skip success toast in demo mode when configured", async () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: true } as ReturnType<
+        selector({ dataSource: "demo" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -287,7 +287,7 @@ describe("useSafeMutation", () => {
 
     it("should show success toast in demo mode when not configured to skip", async () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: true } as ReturnType<
+        selector({ dataSource: "demo" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );

@@ -66,7 +66,7 @@ describe("useExchangeActions", () => {
 
     // Default: not in demo mode, safe mode disabled
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-      selector({ isDemoMode: false } as ReturnType<
+      selector({ dataSource: "api" } as ReturnType<
         typeof authStore.useAuthStore.getState
       >),
     );
@@ -351,7 +351,7 @@ describe("useExchangeActions", () => {
     beforeEach(() => {
       vi.useRealTimers();
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: true } as ReturnType<
+        selector({ dataSource: "demo" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -418,7 +418,7 @@ describe("useExchangeActions", () => {
     beforeEach(() => {
       vi.useRealTimers();
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: false } as ReturnType<
+        selector({ dataSource: "api" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );
@@ -453,7 +453,7 @@ describe("useExchangeActions", () => {
 
     it("should not block operations in demo mode even with safe mode enabled", async () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ isDemoMode: true } as ReturnType<
+        selector({ dataSource: "demo" } as ReturnType<
           typeof authStore.useAuthStore.getState
         >),
       );

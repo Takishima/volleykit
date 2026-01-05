@@ -115,7 +115,7 @@ describe("EditCompensationModal", () => {
     });
 
     (useAuthStore as unknown as Mock).mockImplementation((selector) =>
-      selector({ dataSource: "api", isDemoMode: false }),
+      selector({ dataSource: "api" }),
     );
 
     // Mock useDemoStore to return getAssignmentCompensation
@@ -605,7 +605,7 @@ describe("EditCompensationModal", () => {
   describe("demo mode", () => {
     beforeEach(() => {
       (useAuthStore as unknown as Mock).mockImplementation((selector) =>
-        selector({ dataSource: "demo", isDemoMode: true }),
+        selector({ dataSource: "demo" }),
       );
 
       // In demo mode, also mock getAssignmentCompensation with demo values

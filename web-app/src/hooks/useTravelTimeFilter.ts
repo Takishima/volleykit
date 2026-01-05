@@ -67,7 +67,8 @@ function getHallInfo(exchange: GameExchange): HallInfo | null {
  * @returns Object with travel time data for each exchange and filter helper
  */
 export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | null) {
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const dataSource = useAuthStore((state) => state.dataSource);
+  const isDemoMode = dataSource === "demo";
   const homeLocation = useSettingsStore((state) => state.homeLocation);
   const transportEnabled = useSettingsStore((state) => state.transportEnabled);
   const transportEnabledByAssociation = useSettingsStore(

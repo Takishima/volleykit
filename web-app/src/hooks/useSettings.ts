@@ -14,7 +14,8 @@ export function useAssociationSettings(): UseQueryResult<
   AssociationSettings,
   Error
 > {
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const dataSource = useAuthStore((state) => state.dataSource);
+  const isDemoMode = dataSource === "demo";
   const activeOccupationId = useAuthStore((state) => state.activeOccupationId);
 
   return useQuery({
@@ -33,7 +34,8 @@ export function useAssociationSettings(): UseQueryResult<
  * Includes activeOccupationId in the query key to refetch when switching associations.
  */
 export function useActiveSeason(): UseQueryResult<Season, Error> {
-  const isDemoMode = useAuthStore((state) => state.isDemoMode);
+  const dataSource = useAuthStore((state) => state.dataSource);
+  const isDemoMode = dataSource === "demo";
   const activeOccupationId = useAuthStore((state) => state.activeOccupationId);
 
   return useQuery({

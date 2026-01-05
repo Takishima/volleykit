@@ -109,7 +109,7 @@ describe("ExchangePage", () => {
     // Default: not in demo mode, not in calendar mode
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
       selector({
-        isDemoMode: false,
+        dataSource: "api",
         isAssociationSwitching: false,
         isCalendarMode: () => false,
       } as unknown as ReturnType<typeof authStore.useAuthStore.getState>),
@@ -154,7 +154,7 @@ describe("ExchangePage", () => {
     it("should not show level filter when not in demo mode", () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
         selector({
-          isDemoMode: false,
+          dataSource: "api",
           isAssociationSwitching: false,
           isCalendarMode: () => false,
         } as unknown as ReturnType<typeof authStore.useAuthStore.getState>),
@@ -171,7 +171,7 @@ describe("ExchangePage", () => {
     it("should show level filter when in demo mode with user level", () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
         selector({
-          isDemoMode: true,
+          dataSource: "demo",
           isAssociationSwitching: false,
           isCalendarMode: () => false,
         } as unknown as ReturnType<typeof authStore.useAuthStore.getState>),
@@ -193,7 +193,7 @@ describe("ExchangePage", () => {
     it("should not show level filter on Added by Me tab", () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
         selector({
-          isDemoMode: true,
+          dataSource: "demo",
           isAssociationSwitching: false,
           isCalendarMode: () => false,
         } as unknown as ReturnType<typeof authStore.useAuthStore.getState>),
@@ -238,7 +238,7 @@ describe("ExchangePage", () => {
     beforeEach(() => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
         selector({
-          isDemoMode: true,
+          dataSource: "demo",
           isAssociationSwitching: false,
           isCalendarMode: () => false,
         } as unknown as ReturnType<typeof authStore.useAuthStore.getState>),

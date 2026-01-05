@@ -251,7 +251,7 @@ describe("QueryErrorHandler", () => {
   it("redirects to login on 406 query error", async () => {
     vi.mocked(useAuthStore).mockReturnValue({
       logout: mockLogout,
-      isDemoMode: false,
+      dataSource: "api",
     } as ReturnType<typeof useAuthStore>);
 
     // Create a query that will fail with 406
@@ -281,7 +281,7 @@ describe("QueryErrorHandler", () => {
   it("redirects to login on 403 query error", async () => {
     vi.mocked(useAuthStore).mockReturnValue({
       logout: mockLogout,
-      isDemoMode: false,
+      dataSource: "api",
     } as ReturnType<typeof useAuthStore>);
 
     await waitFor(() => {
@@ -292,18 +292,18 @@ describe("QueryErrorHandler", () => {
   it("does not redirect in demo mode", async () => {
     vi.mocked(useAuthStore).mockReturnValue({
       logout: mockLogout,
-      isDemoMode: true,
+      dataSource: "demo",
     } as ReturnType<typeof useAuthStore>);
 
     // Even with auth error, should not redirect in demo mode
     expect(isAuthError(new Error("401 Unauthorized"))).toBe(true);
-    // In actual implementation, isDemoMode check prevents redirect
+    // In actual implementation, dataSource check prevents redirect
   });
 
   it("redirects on mutation auth errors", async () => {
     vi.mocked(useAuthStore).mockReturnValue({
       logout: mockLogout,
-      isDemoMode: false,
+      dataSource: "api",
     } as ReturnType<typeof useAuthStore>);
 
     // Verify mutation errors are also auth errors
@@ -316,7 +316,7 @@ describe("QueryErrorHandler", () => {
 
     vi.mocked(useAuthStore).mockReturnValue({
       logout: mockLogout,
-      isDemoMode: false,
+      dataSource: "api",
     } as ReturnType<typeof useAuthStore>);
 
     // Error classification should still work

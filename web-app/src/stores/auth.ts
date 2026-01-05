@@ -62,8 +62,6 @@ interface AuthState {
   user: UserProfile | null;
   error: string | null;
   csrfToken: string | null;
-  /** @deprecated Use dataSource === 'demo' instead. Kept for backwards compatibility. */
-  isDemoMode: boolean;
   /** The current data source for assignments and compensations */
   dataSource: DataSource;
   /** Calendar code for calendar mode (6 characters) */
@@ -207,8 +205,6 @@ export const useAuthStore = create<AuthState>()(
       csrfToken: null,
       dataSource: "api",
       calendarCode: null,
-      // isDemoMode kept in sync with dataSource for backwards compatibility
-      isDemoMode: false,
       activeOccupationId: null,
       isAssociationSwitching: false,
       _checkSessionPromise: null,
@@ -346,7 +342,6 @@ export const useAuthStore = create<AuthState>()(
           csrfToken: null,
           dataSource: "api",
           calendarCode: null,
-          isDemoMode: false,
           eligibleAttributeValues: null,
           groupedEligibleAttributeValues: null,
           eligibleRoles: null,
@@ -554,7 +549,6 @@ export const useAuthStore = create<AuthState>()(
         set({
           status: "authenticated",
           dataSource: "demo",
-          isDemoMode: true, // Kept in sync for backwards compatibility
           user: {
             id: "demo-user",
             firstName: "Demo",
@@ -625,7 +619,6 @@ export const useAuthStore = create<AuthState>()(
             status: "authenticated",
             dataSource: "calendar",
             calendarCode: trimmedCode,
-            isDemoMode: false,
             user: {
               id: `calendar-${trimmedCode}`,
               firstName: "Calendar",
@@ -645,7 +638,6 @@ export const useAuthStore = create<AuthState>()(
             status: "authenticated",
             dataSource: "calendar",
             calendarCode: trimmedCode,
-            isDemoMode: false,
             user: {
               id: `calendar-${trimmedCode}`,
               firstName: "Calendar",
@@ -692,7 +684,6 @@ export const useAuthStore = create<AuthState>()(
         _wasAuthenticated: state.status === "authenticated",
         dataSource: state.dataSource,
         calendarCode: state.calendarCode,
-        isDemoMode: state.isDemoMode, // Kept for backwards compatibility
         activeOccupationId: state.activeOccupationId,
         eligibleAttributeValues: state.eligibleAttributeValues,
         groupedEligibleAttributeValues: state.groupedEligibleAttributeValues,
@@ -738,7 +729,6 @@ export const useAuthStore = create<AuthState>()(
           status: persistedState?._wasAuthenticated ? "authenticated" : "idle",
           dataSource,
           calendarCode: persistedState?.calendarCode ?? null,
-          isDemoMode: dataSource === "demo",
           activeOccupationId: persistedState?.activeOccupationId ?? null,
           eligibleAttributeValues: persistedState?.eligibleAttributeValues ?? null,
           groupedEligibleAttributeValues: persistedState?.groupedEligibleAttributeValues ?? null,
