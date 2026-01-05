@@ -48,7 +48,6 @@ export class CameraGuide {
     this.#updateGuideSize();
 
     // Update guide size on window resize
-    this.#handleResize = this.#handleResize.bind(this);
     window.addEventListener('resize', this.#handleResize);
   }
 
@@ -72,9 +71,10 @@ export class CameraGuide {
     this.#container.appendChild(this.#guideElement);
   }
 
-  #handleResize() {
+  /** @type {() => void} */
+  #handleResize = () => {
     this.#updateGuideSize();
-  }
+  };
 
   /**
    * Update the guide frame size to maintain the correct aspect ratio
