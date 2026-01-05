@@ -46,7 +46,9 @@ import { getMockReferenceData } from '../services/MockReferenceData.js';
  * @returns {string}
  */
 function normalizeForComparison(str) {
-  if (!str) return '';
+  if (!str) {
+    return '';
+  }
   return str
     .toLowerCase()
     .normalize('NFD')
@@ -67,8 +69,12 @@ function calculateNameSimilarity(name1, name2) {
   const n1 = normalizeForComparison(name1);
   const n2 = normalizeForComparison(name2);
 
-  if (!n1 || !n2) return 0;
-  if (n1 === n2) return 100;
+  if (!n1 || !n2) {
+    return 0;
+  }
+  if (n1 === n2) {
+    return 100;
+  }
 
   // Check if one contains the other
   if (n1.includes(n2) || n2.includes(n1)) {
@@ -92,7 +98,9 @@ function calculateNameSimilarity(name1, name2) {
   }
 
   const totalWords = Math.max(words1.length, words2.length);
-  if (totalWords === 0) return 0;
+  if (totalWords === 0) {
+    return 0;
+  }
 
   return Math.round((matchingWords / totalWords) * 85);
 }
@@ -109,7 +117,9 @@ function findBestPlayerMatch(ocrPlayer, refPlayers, usedRefIds) {
   let bestConfidence = 0;
 
   for (const refPlayer of refPlayers) {
-    if (usedRefIds.has(refPlayer.id)) continue;
+    if (usedRefIds.has(refPlayer.id)) {
+      continue;
+    }
 
     // Match by name only - no shirt numbers available in reference
     const lastNameSim = calculateNameSimilarity(ocrPlayer.lastName, refPlayer.lastName);
@@ -145,7 +155,9 @@ function findBestOfficialMatch(ocrOfficial, refOfficials, usedRefIds) {
   let bestConfidence = 0;
 
   for (const refOfficial of refOfficials) {
-    if (usedRefIds.has(refOfficial.id)) continue;
+    if (usedRefIds.has(refOfficial.id)) {
+      continue;
+    }
 
     // Match by name
     const lastNameSim = calculateNameSimilarity(ocrOfficial.lastName, refOfficial.lastName);
@@ -360,22 +372,23 @@ function renderComparisonRow(result, isOfficial = false) {
   const icon = statusIcons[result.status];
   const rowClass = statusClasses[result.status];
 
-  // Get display name
-  const displayName =
+  // Get display name (escaped for XSS protection)
+  const rawDisplayName =
     result.status === 'ref-only'
       ? result.refEntry?.displayName || ''
       : result.ocrEntry?.displayName || '';
+  const displayName = escapeHtml(rawDisplayName);
 
-  // Get role badge for officials
+  // Get role badge for officials (escaped for defense-in-depth)
   const roleBadge =
     isOfficial && result.role
-      ? `<span class="comparison-role-badge">${result.role}</span>`
+      ? `<span class="comparison-role-badge">${escapeHtml(result.role)}</span>`
       : '';
 
-  // Get shirt number for players (display only)
+  // Get shirt number for players (display only, escaped for defense-in-depth)
   const numberDisplay =
     !isOfficial && result.shirtNumber !== null
-      ? `<span class="comparison-number">${result.shirtNumber}</span>`
+      ? `<span class="comparison-number">${escapeHtml(String(result.shirtNumber))}</span>`
       : '';
 
   if (result.status === 'match') {
@@ -455,14 +468,18 @@ function renderTeamPanel(comparison, label) {
 
   const hasOfficials = comparison.officialResults.length > 0;
 
+  // Escape team names for XSS protection
+  const escapedOcrTeamName = escapeHtml(comparison.ocrTeamName || 'Unknown Team');
+  const escapedRefTeamName = escapeHtml(comparison.refTeamName);
+
   return `
     <div class="comparison-panel">
       <div class="comparison-header">
-        <h3 class="comparison-title">${label}</h3>
+        <h3 class="comparison-title">${escapeHtml(label)}</h3>
         <div class="comparison-teams">
-          <span class="comparison-team-name" title="From OCR">${comparison.ocrTeamName || 'Unknown Team'}</span>
+          <span class="comparison-team-name" title="From OCR">${escapedOcrTeamName}</span>
           <span class="comparison-arrow">→</span>
-          <span class="comparison-team-name" title="Reference">${comparison.refTeamName}</span>
+          <span class="comparison-team-name" title="Reference">${escapedRefTeamName}</span>
         </div>
       </div>
 

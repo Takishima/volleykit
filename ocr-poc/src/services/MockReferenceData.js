@@ -167,7 +167,9 @@ export function getMockReferenceData() {
  * @returns {ReferenceTeam | null}
  */
 export function findTeamByName(teamName) {
-  if (!teamName) return null;
+  if (!teamName) {
+    return null;
+  }
 
   const normalized = teamName.toLowerCase().trim();
   const teamA = getMockTeamA();

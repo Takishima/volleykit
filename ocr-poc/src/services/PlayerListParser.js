@@ -52,7 +52,9 @@
  * @returns {string} - Name in title case
  */
 function normalizeName(name) {
-  if (!name) return '';
+  if (!name) {
+    return '';
+  }
   return name
     .toLowerCase()
     .split(/[\s-]+/)
