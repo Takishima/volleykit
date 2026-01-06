@@ -41,6 +41,12 @@
  * @property {ReferenceOfficial[]} officials - Coaches and assistant coaches
  */
 
+/**
+ * Minimum characters to match when doing fuzzy team name lookups.
+ * Used as a fallback when specific keywords don't match.
+ */
+const MINIMUM_MATCH_PREFIX_LENGTH = 5;
+
 // Helper to create a reference player (no shirt number - API doesn't provide it)
 function createPlayer(id, firstName, lastName, birthday, licenseCategory = 'SEN') {
   return {
@@ -268,10 +274,10 @@ export function findTeamByName(teamName) {
   }
 
   // Fallback: check if team name is similar
-  if (teamA.name.toLowerCase().includes(normalized.slice(0, 5))) {
+  if (teamA.name.toLowerCase().includes(normalized.slice(0, MINIMUM_MATCH_PREFIX_LENGTH))) {
     return teamA;
   }
-  if (teamB.name.toLowerCase().includes(normalized.slice(0, 5))) {
+  if (teamB.name.toLowerCase().includes(normalized.slice(0, MINIMUM_MATCH_PREFIX_LENGTH))) {
     return teamB;
   }
 
@@ -302,10 +308,10 @@ export function findManuscriptTeamByName(teamName) {
   }
 
   // Fallback: check if team name is similar
-  if (teamA.name.toLowerCase().includes(normalized.slice(0, 5))) {
+  if (teamA.name.toLowerCase().includes(normalized.slice(0, MINIMUM_MATCH_PREFIX_LENGTH))) {
     return teamA;
   }
-  if (teamB.name.toLowerCase().includes(normalized.slice(0, 5))) {
+  if (teamB.name.toLowerCase().includes(normalized.slice(0, MINIMUM_MATCH_PREFIX_LENGTH))) {
     return teamB;
   }
 
