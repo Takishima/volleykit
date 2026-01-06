@@ -1,4 +1,4 @@
-import { memo, useMemo, type ReactNode } from "react";
+import { memo, useMemo } from "react";
 import { ExpandableCard } from "@/components/ui/ExpandableCard";
 import type { Assignment } from "@/api/client";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -38,36 +38,26 @@ interface AssignmentCardProps {
   disableExpansion?: boolean;
   /** Optional data-tour attribute for guided tours */
   dataTour?: string;
-  /**
-   * Optional children for custom composition.
-   * If not provided, uses default Header and Details.
-   */
-  children?: ReactNode;
 }
 
 /**
  * A compound component for displaying assignment information.
  *
- * @example Default usage (backward compatible)
+ * Sub-components are available as static properties for external composition:
+ * - AssignmentCard.DateTime - Date and time display
+ * - AssignmentCard.Teams - Teams, position, and gender
+ * - AssignmentCard.CityInfo - City and league category
+ * - AssignmentCard.Header - Composed compact view
+ * - AssignmentCard.Location - Hall with navigation buttons
+ * - AssignmentCard.SingleBallNotice - Single-ball hall warning
+ * - AssignmentCard.Status - Status badge
+ * - AssignmentCard.GameInfo - Game number and category
+ * - AssignmentCard.Referees - Referee names
+ * - AssignmentCard.Details - Composed details section
+ *
+ * @example
  * ```tsx
  * <AssignmentCard assignment={assignment} />
- * ```
- *
- * @example Custom composition with compound components
- * ```tsx
- * <AssignmentCard assignment={assignment}>
- *   <AssignmentCard.Header />
- *   <AssignmentCard.Details />
- * </AssignmentCard>
- * ```
- *
- * @example Fine-grained composition
- * ```tsx
- * <AssignmentCard assignment={assignment}>
- *   <AssignmentCard.DateTime />
- *   <AssignmentCard.Teams />
- *   <AssignmentCard.Location />
- * </AssignmentCard>
  * ```
  */
 function AssignmentCardComponent({
