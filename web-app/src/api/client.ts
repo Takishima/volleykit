@@ -698,18 +698,10 @@ import type { DataSource } from "@/stores/auth";
 /**
  * Returns the appropriate API client based on the data source.
  *
- * @param dataSource - The data source to use. Accepts either:
- *   - DataSource string: 'api', 'demo', or 'calendar'
- *   - boolean (deprecated): true = demo mode, false = api mode
- *
+ * @param dataSource - The data source to use: 'api', 'demo', or 'calendar'
  * @returns The API client for the specified data source
  */
-export function getApiClient(dataSource: DataSource | boolean): ApiClient {
-  // Handle legacy boolean parameter for backwards compatibility
-  if (typeof dataSource === "boolean") {
-    return dataSource ? mockApi : api;
-  }
-
+export function getApiClient(dataSource: DataSource): ApiClient {
   switch (dataSource) {
     case "demo":
       return mockApi;

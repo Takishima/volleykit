@@ -171,7 +171,15 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       zodLocalesStubPlugin(),
-      react(),
+      react({
+        babel: {
+          plugins: [
+            // React Compiler - automatically optimizes components and hooks
+            // without requiring manual useMemo/useCallback. See: https://react.dev/learn/react-compiler
+            ['babel-plugin-react-compiler', {}],
+          ],
+        },
+      }),
       tailwindcss(),
       // Disable PWA for PR previews to avoid service worker scope conflicts
       // The main site's SW scope (/volleykit/) would intercept PR preview requests
