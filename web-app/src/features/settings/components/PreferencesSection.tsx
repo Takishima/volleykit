@@ -1,16 +1,17 @@
 import { useCallback, memo } from "react";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import { Card, CardContent, CardHeader } from "@/shared/components/Card";
+import { LanguageSwitcher } from "@/shared/components/LanguageSwitcher";
 
-interface AccessibilitySectionProps {
+interface PreferencesSectionProps {
   preventZoom: boolean;
   onSetPreventZoom: (enabled: boolean) => void;
 }
 
-function AccessibilitySectionComponent({
+function PreferencesSectionComponent({
   preventZoom,
   onSetPreventZoom,
-}: AccessibilitySectionProps) {
+}: PreferencesSectionProps) {
   const { t } = useTranslation();
 
   const handleTogglePreventZoom = useCallback(() => {
@@ -21,16 +22,30 @@ function AccessibilitySectionComponent({
     <Card>
       <CardHeader>
         <h2 className="font-semibold text-text-primary dark:text-text-primary-dark">
-          {t("settings.accessibility.title")}
+          {t("settings.preferences.title")}
         </h2>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="text-sm text-text-muted dark:text-text-muted-dark">
-          {t("settings.accessibility.description")}
-        </p>
+      <CardContent className="space-y-6">
+        {/* Language selection */}
+        <div data-tour="language-switcher">
+          <div className="text-sm font-medium text-text-primary dark:text-text-primary-dark mb-2">
+            {t("settings.language")}
+          </div>
+          <LanguageSwitcher variant="grid" />
+        </div>
 
-        {/* Prevent Zoom Toggle */}
+        {/* Separator */}
+        <div className="border-t border-border-subtle dark:border-border-subtle-dark" />
+
+        {/* Accessibility: Prevent Zoom Toggle */}
         <div className="space-y-2">
+          <div className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
+            {t("settings.accessibility.title")}
+          </div>
+          <p className="text-sm text-text-muted dark:text-text-muted-dark">
+            {t("settings.accessibility.description")}
+          </p>
+
           <div className="flex items-center justify-between py-2">
             <div className="flex-1">
               <div className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
@@ -72,4 +87,4 @@ function AccessibilitySectionComponent({
   );
 }
 
-export const AccessibilitySection = memo(AccessibilitySectionComponent);
+export const PreferencesSection = memo(PreferencesSectionComponent);

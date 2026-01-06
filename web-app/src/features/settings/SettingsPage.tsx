@@ -7,19 +7,13 @@ import { useTour } from "@/shared/hooks/useTour";
 import { Button } from "@/shared/components/Button";
 import {
   ProfileSection,
-  LanguageSection,
-  HomeLocationSection,
-  TransportSection,
+  PreferencesSection,
+  LocationTravelSection,
+  DataProtectionSection,
+  HelpToursSection,
   DataRetentionSection,
-  TourSection,
-  HelpSection,
   DemoSection,
-  AccessibilitySection,
-  SafeModeSection,
-  SafeValidationSection,
-  UpdateSection,
-  ExperimentalSection,
-  AboutSection,
+  AppInfoSection,
 } from "./components";
 
 export function SettingsPage() {
@@ -67,22 +61,16 @@ export function SettingsPage() {
 
       {user && <ProfileSection user={user} />}
 
-      <LanguageSection />
-
-      <HomeLocationSection />
-
-      <TransportSection />
-
-      <DataRetentionSection />
-
-      <TourSection isDemoMode={isDemoMode} />
-
-      <HelpSection />
-
-      <AccessibilitySection
+      <PreferencesSection
         preventZoom={preventZoom}
         onSetPreventZoom={setPreventZoom}
       />
+
+      <LocationTravelSection />
+
+      <DataRetentionSection />
+
+      <HelpToursSection isDemoMode={isDemoMode} />
 
       {isDemoMode && (
         <DemoSection
@@ -92,23 +80,15 @@ export function SettingsPage() {
       )}
 
       {!isDemoMode && (
-        <>
-          <SafeModeSection
-            isSafeModeEnabled={isSafeModeEnabled}
-            onSetSafeMode={setSafeMode}
-          />
-          <SafeValidationSection
-            isSafeValidationEnabled={isSafeValidationEnabled}
-            onSetSafeValidation={setSafeValidation}
-          />
-        </>
+        <DataProtectionSection
+          isSafeModeEnabled={isSafeModeEnabled}
+          onSetSafeMode={setSafeMode}
+          isSafeValidationEnabled={isSafeValidationEnabled}
+          onSetSafeValidation={setSafeValidation}
+        />
       )}
 
-      {__PWA_ENABLED__ && <UpdateSection />}
-
-      <ExperimentalSection />
-
-      <AboutSection />
+      <AppInfoSection showUpdates={__PWA_ENABLED__} />
 
       {/* Logout */}
       <div className="pt-4 border-t border-border-default dark:border-border-default-dark">
