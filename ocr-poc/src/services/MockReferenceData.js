@@ -75,7 +75,7 @@ function createOfficial(id, firstName, lastName, role) {
  * Based on sample OCR output.
  * - Matches most players
  * - Missing: KADRIU VENERË, KOSTADINOVA VIOLETA (to show "on sheet but not in reference")
- * - Extra: MARTINEZ ELENA (to show "in reference but not on sheet")
+ * - Extra: ZIMMERMANN ALEXANDRA (clearly different name, to show "in reference but not on sheet")
  * @returns {ReferenceTeam}
  */
 export function getMockTeamA() {
@@ -97,8 +97,8 @@ export function getMockTeamA() {
       // Liberos (also just players in reference, no position indicated)
       createPlayer('p-a-11', 'Milena Timea', 'Zoller', '2001-01-11', 'JUN'),
       createPlayer('p-a-12', 'Debora', 'Reinhard', '1997-03-05', 'SEN'),
-      // EXTRA player not on sheet (to show "in reference but not on sheet")
-      createPlayer('p-a-extra', 'Elena', 'Martinez', '1998-06-20', 'SEN'),
+      // EXTRA player not on sheet - clearly different name (to show "in reference but not on sheet")
+      createPlayer('p-a-extra', 'Alexandra', 'Zimmermann-Hofstetter', '1998-06-20', 'SEN'),
       // Note: KADRIU VENERË and KOSTADINOVA VIOLETA are NOT included
       // to demonstrate "on sheet but not in reference"
     ],
@@ -120,7 +120,7 @@ export function getMockTeamA() {
  * Based on sample OCR output.
  * - Matches most players
  * - Missing: SCRUCCA NINA (to show "on sheet but not in reference")
- * - Extra: DUBOIS CLAIRE (to show "in reference but not on sheet")
+ * - Extra: BACHMANN-KELLER FRANZISKA (clearly different name, to show "in reference but not on sheet")
  * @returns {ReferenceTeam}
  */
 export function getMockTeamB() {
@@ -141,8 +141,8 @@ export function getMockTeamB() {
       // Liberos
       createPlayer('p-b-10', 'Asia', 'Marzocchella', '2001-08-29', 'JUN'),
       createPlayer('p-b-11', 'Nora', 'Sojcic', '2000-01-11', 'SEN'),
-      // EXTRA player not on sheet
-      createPlayer('p-b-extra', 'Claire', 'Dubois', '1997-03-05', 'SEN'),
+      // EXTRA player not on sheet - clearly different name (to show "in reference but not on sheet")
+      createPlayer('p-b-extra', 'Franziska', 'Bachmann-Keller', '1997-03-05', 'SEN'),
       // Note: SCRUCCA NINA is NOT included to demonstrate "on sheet but not in reference"
     ],
     officials: [
@@ -175,8 +175,8 @@ export function getMockReferenceData() {
  * Mock reference data for Manuscript Team A (TV St. Johann)
  * Based on manuscript scoresheet OCR sample.
  * - Matches most players from the handwritten roster
- * - Missing: One player to show "on sheet but not in reference"
- * - Extra: One player to show "in reference but not on sheet"
+ * - Missing: Suter Andrea to show "on sheet but not in reference"
+ * - Extra: WEHRLI-GERBER KATHARINA (clearly different name, to show "in reference but not on sheet")
  * @returns {ReferenceTeam}
  */
 export function getMockManuscriptTeamA() {
@@ -196,8 +196,8 @@ export function getMockManuscriptTeamA() {
       // Missing Suter to demonstrate "on sheet but not in reference"
       // createPlayer('ms-a-9', 'Andrea', 'Suter', '1982-10-07', 'SEN'),
       createPlayer('ms-a-10', 'Aline Hélène', 'Vonwiller', '1991-03-16', 'SEN'),
-      // EXTRA player not on sheet (to show "in reference but not on sheet")
-      createPlayer('ms-a-extra', 'Sophie', 'Müller', '1995-05-15', 'SEN'),
+      // EXTRA player not on sheet - clearly different name (to show "in reference but not on sheet")
+      createPlayer('ms-a-extra', 'Katharina', 'Wehrli-Gerber', '1995-05-15', 'SEN'),
     ],
     officials: [
       // Coach - Marianne Lorentz (also a player)
@@ -210,8 +210,8 @@ export function getMockManuscriptTeamA() {
  * Mock reference data for Manuscript Team B (VTV Horw 1)
  * Based on manuscript scoresheet OCR sample.
  * - Matches most players from the handwritten roster
- * - Missing: One player to show "on sheet but not in reference"
- * - Extra: One player to show "in reference but not on sheet"
+ * - Missing: Morgenthaler Miryam Nicole to show "on sheet but not in reference"
+ * - Extra: TSCHUDI-LANG ELISABETH (clearly different name, to show "in reference but not on sheet")
  * @returns {ReferenceTeam}
  */
 export function getMockManuscriptTeamB() {
@@ -230,8 +230,8 @@ export function getMockManuscriptTeamB() {
       // createPlayer('ms-b-7', 'Miryam Nicole', 'Morgenthaler', '1993-01-15', 'SEN'),
       createPlayer('ms-b-8', 'Monika Kamila', 'Brzozowska', '2001-08-28', 'JUN'),
       createPlayer('ms-b-9', 'Marina Julia', 'Erne', '1992-10-17', 'SEN'),
-      // EXTRA player not on sheet (to show "in reference but not on sheet")
-      createPlayer('ms-b-extra', 'Lena', 'Fischer', '1994-08-22', 'SEN'),
+      // EXTRA player not on sheet - clearly different name (to show "in reference but not on sheet")
+      createPlayer('ms-b-extra', 'Elisabeth', 'Tschudi-Lang', '1994-08-22', 'SEN'),
     ],
     officials: [
       // Coach - A. Zbinden (first name unknown from sheet)
