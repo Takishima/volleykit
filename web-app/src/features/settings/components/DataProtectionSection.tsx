@@ -1,6 +1,7 @@
 import { useState, useCallback, lazy, Suspense, memo } from "react";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import { Card, CardContent, CardHeader } from "@/shared/components/Card";
+import { ToggleSwitch } from "@/shared/components/ToggleSwitch";
 
 const SafeModeWarningModal = lazy(
   () =>
@@ -109,24 +110,12 @@ function DataProtectionSectionComponent({
                 )}
               </div>
 
-              <button
-                type="button"
-                onClick={handleToggleSafeMode}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-                  isSafeModeEnabled
-                    ? "bg-success-600"
-                    : "bg-surface-muted dark:bg-surface-subtle-dark"
-                }`}
-                role="switch"
-                aria-checked={isSafeModeEnabled}
-                aria-label={t("settings.safeMode")}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    isSafeModeEnabled ? "translate-x-6" : "translate-x-1"
-                  }`}
-                />
-              </button>
+              <ToggleSwitch
+                checked={isSafeModeEnabled}
+                onChange={handleToggleSafeMode}
+                label={t("settings.safeMode")}
+                variant="success"
+              />
             </div>
           </div>
 
@@ -151,24 +140,12 @@ function DataProtectionSectionComponent({
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={handleToggleSafeValidation}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-                  isSafeValidationEnabled
-                    ? "bg-success-600"
-                    : "bg-surface-muted dark:bg-surface-subtle-dark"
-                }`}
-                role="switch"
-                aria-checked={isSafeValidationEnabled}
-                aria-label={t("settings.safeValidation")}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    isSafeValidationEnabled ? "translate-x-6" : "translate-x-1"
-                  }`}
-                />
-              </button>
+              <ToggleSwitch
+                checked={isSafeValidationEnabled}
+                onChange={handleToggleSafeValidation}
+                label={t("settings.safeValidation")}
+                variant="success"
+              />
             </div>
           </div>
         </CardContent>

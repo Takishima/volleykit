@@ -1,31 +1,14 @@
-import { useState, useEffect, useCallback, memo, useRef, useMemo } from "react";
-import { useShallow } from "zustand/react/shallow";
-import { useQueryClient } from "@tanstack/react-query";
-import {
-  useSettingsStore,
-  getDefaultArrivalBuffer,
-  MIN_ARRIVAL_BUFFER_MINUTES,
-  MAX_ARRIVAL_BUFFER_MINUTES,
-  type UserLocation,
-} from "@/shared/stores/settings";
+import { memo } from "react";
 import { useTranslation } from "@/shared/hooks/useTranslation";
-import { useGeolocation } from "@/shared/hooks/useGeolocation";
-import { useCombinedGeocode } from "@/shared/hooks/useCombinedGeocode";
-import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
-import { useActiveAssociationCode } from "@/features/auth/hooks/useActiveAssociation";
-import { useTravelTimeAvailable } from "@/shared/hooks/useTravelTime";
 import { CALENDAR_ASSOCIATION } from "@/shared/stores/auth";
 import { Card, CardContent, CardHeader } from "@/shared/components/Card";
 import { Button } from "@/shared/components/Button";
-import { queryKeys } from "@/api/queryKeys";
+import { ToggleSwitch } from "@/shared/components/ToggleSwitch";
 import {
-  clearTravelTimeCache,
-  getTravelTimeCacheStats,
-} from "@/shared/services/transport";
-
-const GEOCODE_DEBOUNCE_MS = 500;
-const MIN_SEARCH_LENGTH = 3;
-const ARRIVAL_BUFFER_DEBOUNCE_MS = 300;
+  useHomeLocationSettings,
+  getGeolocationErrorMessage,
+} from "../hooks/useHomeLocationSettings";
+import { useTransportSettings } from "../hooks/useTransportSettings";
 
 /** Badge showing the current association code */
 function AssociationBadge({ code }: { code: string }) {
@@ -38,203 +21,9 @@ function AssociationBadge({ code }: { code: string }) {
 
 function LocationTravelSectionComponent() {
   const { t, tInterpolate } = useTranslation();
-  const queryClient = useQueryClient();
-  const isTransportAvailable = useTravelTimeAvailable();
 
-  const {
-    homeLocation,
-    setHomeLocation,
-    transportEnabled,
-    transportEnabledByAssociation,
-    setTransportEnabledForAssociation,
-    arrivalBufferByAssociation,
-    setArrivalBufferForAssociation,
-  } = useSettingsStore(
-    useShallow((state) => ({
-      homeLocation: state.homeLocation,
-      setHomeLocation: state.setHomeLocation,
-      transportEnabled: state.transportEnabled,
-      transportEnabledByAssociation: state.transportEnabledByAssociation,
-      setTransportEnabledForAssociation: state.setTransportEnabledForAssociation,
-      arrivalBufferByAssociation: state.travelTimeFilter.arrivalBufferByAssociation,
-      setArrivalBufferForAssociation: state.setArrivalBufferForAssociation,
-    })),
-  );
-
-  // Home location state
-  const [addressQuery, setAddressQuery] = useState("");
-  const debouncedQuery = useDebouncedValue(addressQuery, GEOCODE_DEBOUNCE_MS);
-
-  const {
-    results: geocodeResults,
-    isLoading: geocodeLoading,
-    error: geocodeError,
-    search: geocodeSearch,
-    clear: geocodeClear,
-  } = useCombinedGeocode();
-
-  // Transport state
-  const [showClearConfirm, setShowClearConfirm] = useState(false);
-  const [cacheVersion, setCacheVersion] = useState(0);
-  const associationCode = useActiveAssociationCode();
-
-  // Keep refs in sync with latest values for use in geolocation callback
-  const setAddressQueryRef = useRef(setAddressQuery);
-  const geocodeClearRef = useRef(geocodeClear);
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- Refs should sync on every render
-  useEffect(() => {
-    setAddressQueryRef.current = setAddressQuery;
-    geocodeClearRef.current = geocodeClear;
-  });
-
-  // Handle geolocation success via callback
-  const handleGeolocationSuccess = useCallback(
-    (position: { latitude: number; longitude: number }) => {
-      const location: UserLocation = {
-        latitude: position.latitude,
-        longitude: position.longitude,
-        label: t("settings.homeLocation.currentLocation"),
-        source: "geolocation",
-      };
-      setHomeLocation(location);
-      setAddressQueryRef.current("");
-      geocodeClearRef.current();
-    },
-    [setHomeLocation, t],
-  );
-
-  const {
-    isLoading: geoLoading,
-    error: geoError,
-    isSupported: geoSupported,
-    requestLocation,
-  } = useGeolocation({
-    onSuccess: handleGeolocationSuccess,
-  });
-
-  // Get current transport enabled state for this association
-  const isTransportEnabled = useMemo(() => {
-    const enabledMap = transportEnabledByAssociation ?? {};
-    if (associationCode && enabledMap[associationCode] !== undefined) {
-      return enabledMap[associationCode];
-    }
-    return transportEnabled;
-  }, [associationCode, transportEnabledByAssociation, transportEnabled]);
-
-  // Get current arrival buffer for this association from store
-  const storeArrivalBuffer = useMemo(() => {
-    if (associationCode && arrivalBufferByAssociation?.[associationCode] !== undefined) {
-      return arrivalBufferByAssociation[associationCode];
-    }
-    return getDefaultArrivalBuffer(associationCode);
-  }, [associationCode, arrivalBufferByAssociation]);
-
-  // Local state for immediate input feedback
-  const [localArrivalBuffer, setLocalArrivalBuffer] = useState(storeArrivalBuffer);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Sync local state when store value changes externally
-  useEffect(() => {
-    setLocalArrivalBuffer((prev) => (prev !== storeArrivalBuffer ? storeArrivalBuffer : prev));
-  }, [storeArrivalBuffer]);
-
-  // Cleanup debounce timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-    };
-  }, []);
-
-  // Calculate cache entry count
-  const cacheEntryCount = useMemo(
-    () => (isTransportEnabled ? getTravelTimeCacheStats().entryCount : 0),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isTransportEnabled, cacheVersion],
-  );
-
-  // Trigger geocoding when debounced query changes
-  useEffect(() => {
-    if (debouncedQuery.length >= MIN_SEARCH_LENGTH) {
-      geocodeSearch(debouncedQuery);
-    } else {
-      geocodeClear();
-    }
-  }, [debouncedQuery, geocodeSearch, geocodeClear]);
-
-  const handleSelectGeocodedLocation = useCallback(
-    (result: { latitude: number; longitude: number; displayName: string }) => {
-      const location: UserLocation = {
-        latitude: result.latitude,
-        longitude: result.longitude,
-        label: result.displayName,
-        source: "geocoded",
-      };
-      setHomeLocation(location);
-      setAddressQuery("");
-      geocodeClear();
-    },
-    [setHomeLocation, geocodeClear],
-  );
-
-  const handleClearLocation = useCallback(() => {
-    setHomeLocation(null);
-    setAddressQuery("");
-  }, [setHomeLocation]);
-
-  const handleAddressChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setAddressQuery(e.target.value);
-    },
-    [],
-  );
-
-  const handleToggleTransport = useCallback(() => {
-    if (!associationCode) return;
-    setTransportEnabledForAssociation(associationCode, !isTransportEnabled);
-  }, [associationCode, isTransportEnabled, setTransportEnabledForAssociation]);
-
-  const handleClearCache = useCallback(() => {
-    clearTravelTimeCache();
-    queryClient.invalidateQueries({ queryKey: queryKeys.travelTime.all });
-    setCacheVersion((v) => v + 1);
-    setShowClearConfirm(false);
-  }, [queryClient]);
-
-  const handleArrivalBufferChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (!associationCode) return;
-      const value = parseInt(e.target.value, 10);
-      if (!isNaN(value) && value >= MIN_ARRIVAL_BUFFER_MINUTES) {
-        setLocalArrivalBuffer(value);
-        if (debounceRef.current) {
-          clearTimeout(debounceRef.current);
-        }
-        debounceRef.current = setTimeout(() => {
-          setArrivalBufferForAssociation(associationCode, value);
-        }, ARRIVAL_BUFFER_DEBOUNCE_MS);
-      }
-    },
-    [associationCode, setArrivalBufferForAssociation],
-  );
-
-  const getGeolocationErrorMessage = (error: string): string => {
-    switch (error) {
-      case "permission_denied":
-        return t("settings.homeLocation.errorPermissionDenied");
-      case "position_unavailable":
-        return t("settings.homeLocation.errorPositionUnavailable");
-      case "timeout":
-        return t("settings.homeLocation.errorTimeout");
-      default:
-        return t("settings.homeLocation.errorUnknown");
-    }
-  };
-
-  const hasHomeLocation = Boolean(homeLocation);
-  const hasAssociation = Boolean(associationCode);
-  const canEnableTransport = hasHomeLocation && isTransportAvailable && hasAssociation;
+  const homeLocation = useHomeLocationSettings({ t });
+  const transport = useTransportSettings();
 
   return (
     <Card>
@@ -276,7 +65,7 @@ function LocationTravelSectionComponent() {
           </p>
 
           {/* Current location display */}
-          {homeLocation && (
+          {homeLocation.homeLocation && (
             <div className="flex items-center justify-between p-3 bg-surface-subtle dark:bg-surface-subtle-dark rounded-lg">
               <div className="flex items-center gap-2 min-w-0">
                 <svg
@@ -300,12 +89,12 @@ function LocationTravelSectionComponent() {
                   />
                 </svg>
                 <span className="text-sm text-text-primary dark:text-text-primary-dark truncate">
-                  {homeLocation.label}
+                  {homeLocation.homeLocation.label}
                 </span>
               </div>
               <button
                 type="button"
-                onClick={handleClearLocation}
+                onClick={homeLocation.handleClearLocation}
                 className="ml-2 p-1 text-text-muted hover:text-text-primary dark:text-text-muted-dark dark:hover:text-text-primary-dark rounded transition-colors"
                 aria-label={t("settings.homeLocation.clear")}
               >
@@ -328,14 +117,14 @@ function LocationTravelSectionComponent() {
           )}
 
           {/* Use current location button */}
-          {geoSupported && (
+          {homeLocation.geoSupported && (
             <Button
               variant="secondary"
-              onClick={requestLocation}
-              loading={geoLoading}
+              onClick={homeLocation.requestLocation}
+              loading={homeLocation.geoLoading}
               fullWidth
               iconLeft={
-                !geoLoading && (
+                !homeLocation.geoLoading && (
                   <svg
                     className="w-4 h-4"
                     fill="none"
@@ -353,16 +142,16 @@ function LocationTravelSectionComponent() {
                 )
               }
             >
-              {geoLoading
+              {homeLocation.geoLoading
                 ? t("settings.homeLocation.locating")
                 : t("settings.homeLocation.useCurrentLocation")}
             </Button>
           )}
 
           {/* Geolocation error */}
-          {geoError && (
+          {homeLocation.geoError && (
             <p className="text-sm text-error-600 dark:text-error-400">
-              {getGeolocationErrorMessage(geoError)}
+              {getGeolocationErrorMessage(homeLocation.geoError, t)}
             </p>
           )}
 
@@ -378,12 +167,12 @@ function LocationTravelSectionComponent() {
               <input
                 id="address-search"
                 type="text"
-                value={addressQuery}
-                onChange={handleAddressChange}
+                value={homeLocation.addressQuery}
+                onChange={homeLocation.handleAddressChange}
                 placeholder={t("settings.homeLocation.searchPlaceholder")}
                 className="w-full px-4 py-2 text-sm border border-border-default dark:border-border-default-dark rounded-lg bg-surface-card dark:bg-surface-card-dark text-text-primary dark:text-text-primary-dark placeholder:text-text-muted dark:placeholder:text-text-muted-dark focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
-              {geocodeLoading && (
+              {homeLocation.geocodeLoading && (
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
                   <span className="w-4 h-4 block border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
                 </div>
@@ -391,20 +180,20 @@ function LocationTravelSectionComponent() {
             </div>
 
             {/* Geocoding error */}
-            {geocodeError && (
+            {homeLocation.geocodeError && (
               <p className="text-sm text-error-600 dark:text-error-400">
                 {t("settings.homeLocation.searchError")}
               </p>
             )}
 
             {/* Geocoding results */}
-            {geocodeResults.length > 0 && (
+            {homeLocation.geocodeResults.length > 0 && (
               <ul className="border border-border-default dark:border-border-default-dark rounded-lg overflow-hidden divide-y divide-border-subtle dark:divide-border-subtle-dark">
-                {geocodeResults.map((result) => (
+                {homeLocation.geocodeResults.map((result) => (
                   <li key={result.id}>
                     <button
                       type="button"
-                      onClick={() => handleSelectGeocodedLocation(result)}
+                      onClick={() => homeLocation.handleSelectGeocodedLocation(result)}
                       className="w-full px-4 py-3 text-left text-sm text-text-primary dark:text-text-primary-dark hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark transition-colors"
                     >
                       {result.displayName}
@@ -415,10 +204,10 @@ function LocationTravelSectionComponent() {
             )}
 
             {/* No results message */}
-            {debouncedQuery.length >= MIN_SEARCH_LENGTH &&
-              !geocodeLoading &&
-              geocodeResults.length === 0 &&
-              !geocodeError && (
+            {homeLocation.debouncedQuery.length >= homeLocation.minSearchLength &&
+              !homeLocation.geocodeLoading &&
+              homeLocation.geocodeResults.length === 0 &&
+              !homeLocation.geocodeError && (
                 <p className="text-sm text-text-muted dark:text-text-muted-dark">
                   {t("settings.homeLocation.noResults")}
                 </p>
@@ -455,7 +244,7 @@ function LocationTravelSectionComponent() {
           </p>
 
           {/* Status messages */}
-          {!hasHomeLocation && (
+          {!transport.hasHomeLocation && (
             <div className="flex items-center gap-2 p-3 bg-surface-subtle dark:bg-surface-subtle-dark rounded-lg">
               <svg
                 className="w-5 h-5 flex-shrink-0 text-text-muted dark:text-text-muted-dark"
@@ -477,7 +266,7 @@ function LocationTravelSectionComponent() {
             </div>
           )}
 
-          {hasHomeLocation && !isTransportAvailable && (
+          {transport.hasHomeLocation && !transport.isTransportAvailable && (
             <div className="flex items-center gap-2 p-3 bg-warning-50 dark:bg-warning-900/20 rounded-lg">
               <svg
                 className="w-5 h-5 flex-shrink-0 text-warning-600 dark:text-warning-400"
@@ -507,39 +296,24 @@ function LocationTravelSectionComponent() {
                   <span className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
                     {t("settings.transport.enableCalculations")}
                   </span>
-                  {associationCode && associationCode !== CALENDAR_ASSOCIATION && (
-                    <AssociationBadge code={associationCode} />
+                  {transport.associationCode && transport.associationCode !== CALENDAR_ASSOCIATION && (
+                    <AssociationBadge code={transport.associationCode} />
                   )}
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={handleToggleTransport}
-                disabled={!canEnableTransport}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-                  !canEnableTransport
-                    ? "bg-surface-muted dark:bg-surface-subtle-dark cursor-not-allowed opacity-50"
-                    : isTransportEnabled
-                      ? "bg-primary-600"
-                      : "bg-surface-muted dark:bg-surface-subtle-dark"
-                }`}
-                role="switch"
-                aria-checked={isTransportEnabled}
-                aria-label={t("settings.transport.enableCalculations")}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    isTransportEnabled ? "translate-x-6" : "translate-x-1"
-                  }`}
-                />
-              </button>
+              <ToggleSwitch
+                checked={transport.isTransportEnabled}
+                onChange={transport.handleToggleTransport}
+                disabled={!transport.canEnableTransport}
+                label={t("settings.transport.enableCalculations")}
+              />
             </div>
-            {!canEnableTransport && (
+            {!transport.canEnableTransport && (
               <p className="text-xs text-text-muted dark:text-text-muted-dark mt-1">
-                {!hasHomeLocation
+                {!transport.hasHomeLocation
                   ? t("settings.transport.requiresHomeLocation")
-                  : !isTransportAvailable
+                  : !transport.isTransportAvailable
                     ? t("settings.transport.apiNotConfigured")
                     : t("settings.transport.disabledHint")}
               </p>
@@ -547,7 +321,7 @@ function LocationTravelSectionComponent() {
           </div>
 
           {/* Arrival time setting - only show when transport is enabled */}
-          {isTransportEnabled && (
+          {transport.isTransportEnabled && (
             <div className="pt-2 border-t border-border-subtle dark:border-border-subtle-dark" data-tour="arrival-time">
               <div className="flex items-center justify-between py-2">
                 <div className="flex-1 pr-3">
@@ -555,8 +329,8 @@ function LocationTravelSectionComponent() {
                     <span className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
                       {t("settings.transport.arrivalTime")}
                     </span>
-                    {associationCode && associationCode !== CALENDAR_ASSOCIATION && (
-                      <AssociationBadge code={associationCode} />
+                    {transport.associationCode && transport.associationCode !== CALENDAR_ASSOCIATION && (
+                      <AssociationBadge code={transport.associationCode} />
                     )}
                   </div>
                   <div className="text-xs text-text-muted dark:text-text-muted-dark mt-0.5">
@@ -566,10 +340,10 @@ function LocationTravelSectionComponent() {
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
-                    min={MIN_ARRIVAL_BUFFER_MINUTES}
-                    max={MAX_ARRIVAL_BUFFER_MINUTES}
-                    value={localArrivalBuffer}
-                    onChange={handleArrivalBufferChange}
+                    min={transport.minArrivalBuffer}
+                    max={transport.maxArrivalBuffer}
+                    value={transport.localArrivalBuffer}
+                    onChange={transport.handleArrivalBufferChange}
                     className="w-16 px-2 py-1 text-sm text-right border border-border-default dark:border-border-default-dark rounded-md bg-surface-card dark:bg-surface-card-dark text-text-primary dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary-500"
                     aria-label={t("settings.transport.arrivalTime")}
                   />
@@ -582,7 +356,7 @@ function LocationTravelSectionComponent() {
           )}
 
           {/* Cache management - only show when transport is enabled */}
-          {isTransportEnabled && (
+          {transport.isTransportEnabled && (
             <div className="pt-2 border-t border-border-subtle dark:border-border-subtle-dark">
               <p className="text-xs text-text-muted dark:text-text-muted-dark mb-2">
                 {t("settings.transport.cacheInfo")}
@@ -591,15 +365,15 @@ function LocationTravelSectionComponent() {
               <div className="flex items-center justify-between">
                 <span className="text-sm text-text-secondary dark:text-text-secondary-dark">
                   {tInterpolate("settings.transport.cacheEntries", {
-                    count: cacheEntryCount,
+                    count: transport.cacheEntryCount,
                   })}
                 </span>
 
-                {!showClearConfirm ? (
+                {!transport.showClearConfirm ? (
                   <button
                     type="button"
-                    onClick={() => setShowClearConfirm(true)}
-                    disabled={cacheEntryCount === 0}
+                    onClick={() => transport.setShowClearConfirm(true)}
+                    disabled={transport.cacheEntryCount === 0}
                     className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {t("settings.transport.refreshCache")}
@@ -608,14 +382,14 @@ function LocationTravelSectionComponent() {
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => setShowClearConfirm(false)}
+                      onClick={() => transport.setShowClearConfirm(false)}
                       className="text-sm text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark"
                     >
                       {t("common.cancel")}
                     </button>
                     <button
                       type="button"
-                      onClick={handleClearCache}
+                      onClick={transport.handleClearCache}
                       className="text-sm text-error-600 dark:text-error-400 hover:text-error-700 dark:hover:text-error-300"
                     >
                       {t("common.confirm")}
