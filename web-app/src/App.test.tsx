@@ -5,14 +5,31 @@ import { MemoryRouter } from "react-router-dom";
 import { useAuthStore } from "@/stores/auth";
 import { useDemoStore } from "@/stores/demo";
 
-// Mock the auth store
+// Create hoisted mocks to avoid initialization order issues
+const { mockAuthStore, mockSettingsStore } = vi.hoisted(() => {
+  const mockAuthStore = Object.assign(vi.fn(), {
+    getState: vi.fn(() => ({ dataSource: "api" })),
+    subscribe: vi.fn(() => () => {}), // Returns unsubscribe function
+  });
+
+  const mockSettingsStore = Object.assign(vi.fn(), {
+    getState: vi.fn(() => ({ _setCurrentMode: vi.fn() })),
+  });
+
+  return { mockAuthStore, mockSettingsStore };
+});
+
 vi.mock("@/stores/auth", () => ({
-  useAuthStore: vi.fn(),
+  useAuthStore: mockAuthStore,
 }));
 
 // Mock the demo store
 vi.mock("@/stores/demo", () => ({
   useDemoStore: vi.fn(),
+}));
+
+vi.mock("@/stores/settings", () => ({
+  useSettingsStore: mockSettingsStore,
 }));
 
 // Mock navigate function
@@ -328,14 +345,19 @@ describe("ProtectedRoute", () => {
   const mockCheckSession = vi.fn();
   const mockLogout = vi.fn();
   const mockInitializeDemoData = vi.fn();
+  const mockSetCurrentMode = vi.fn();
 
   beforeEach(() => {
     mockCheckSession.mockClear();
     mockLogout.mockClear();
     mockInitializeDemoData.mockClear();
     mockNavigate.mockClear();
+    mockSetCurrentMode.mockClear();
     mockCheckSession.mockResolvedValue(undefined);
     mockLogout.mockResolvedValue(undefined);
+
+    // Reset settings store mock
+    mockSettingsStore.getState.mockReturnValue({ _setCurrentMode: mockSetCurrentMode });
 
     vi.spyOn(console, "warn").mockImplementation(() => {});
     vi.spyOn(console, "error").mockImplementation(() => {});
@@ -346,6 +368,8 @@ describe("ProtectedRoute", () => {
   });
 
   it("does not call checkSession in demo mode", async () => {
+    // Update both the hook return value and getState for this test
+    mockAuthStore.getState.mockReturnValue({ dataSource: "demo" });
     vi.mocked(useAuthStore).mockReturnValue({
       status: "authenticated",
       checkSession: mockCheckSession,
@@ -367,6 +391,8 @@ describe("ProtectedRoute", () => {
   });
 
   it("does not call checkSession in calendar mode", async () => {
+    // Update both the hook return value and getState for this test
+    mockAuthStore.getState.mockReturnValue({ dataSource: "calendar" });
     vi.mocked(useAuthStore).mockReturnValue({
       status: "authenticated",
       checkSession: mockCheckSession,
@@ -388,6 +414,8 @@ describe("ProtectedRoute", () => {
   });
 
   it("calls checkSession in API mode", async () => {
+    // Update both the hook return value and getState for this test
+    mockAuthStore.getState.mockReturnValue({ dataSource: "api" });
     vi.mocked(useAuthStore).mockReturnValue({
       status: "authenticated",
       checkSession: mockCheckSession,

@@ -543,9 +543,7 @@ export const useAuthStore = create<AuthState>()(
 
         const demoOccupations = filterRefereeOccupations(rawDemoOccupations);
 
-        // Set demo home location for distance filtering showcase
-        useSettingsStore.getState().setHomeLocation(DEMO_HOME_LOCATION);
-
+        // Set auth state to demo mode first
         set({
           status: "authenticated",
           dataSource: "demo",
@@ -559,6 +557,13 @@ export const useAuthStore = create<AuthState>()(
           activeOccupationId: demoOccupations[0]!.id,
           error: null,
         });
+
+        // Set demo home location for distance filtering showcase
+        // Must be called after dataSource is set to "demo" so the settings
+        // store's mode is synced and the location is stored in demo settings
+        const settingsStore = useSettingsStore.getState();
+        settingsStore._setCurrentMode("demo");
+        settingsStore.setHomeLocation(DEMO_HOME_LOCATION);
       },
 
       setActiveOccupation: (id: string) => {

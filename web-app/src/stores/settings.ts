@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { subscribeWithSelector } from "zustand/middleware";
+import type { DataSource } from "./auth";
 
 /**
  * Source of the user's home location.
@@ -69,50 +71,6 @@ export function getDefaultArrivalBuffer(associationCode: string | undefined): nu
   return DEFAULT_ARRIVAL_BUFFER_REGIONAL_MINUTES;
 }
 
-interface SettingsState {
-  // Safe mode
-  isSafeModeEnabled: boolean;
-  setSafeMode: (enabled: boolean) => void;
-
-  // Accessibility settings
-  preventZoom: boolean;
-  setPreventZoom: (enabled: boolean) => void;
-
-  // Home location for distance filtering
-  homeLocation: UserLocation | null;
-  setHomeLocation: (location: UserLocation | null) => void;
-
-  // Distance filter settings
-  distanceFilter: DistanceFilter;
-  setDistanceFilterEnabled: (enabled: boolean) => void;
-  setMaxDistanceKm: (km: number) => void;
-
-  // Transport feature toggle (legacy global setting)
-  transportEnabled: boolean;
-  setTransportEnabled: (enabled: boolean) => void;
-
-  // Per-association transport enabled settings
-  transportEnabledByAssociation: Record<string, boolean>;
-  setTransportEnabledForAssociation: (associationCode: string, enabled: boolean) => void;
-  isTransportEnabledForAssociation: (associationCode: string | undefined) => boolean;
-
-  // Travel time filter settings
-  travelTimeFilter: TravelTimeFilter;
-  setTravelTimeFilterEnabled: (enabled: boolean) => void;
-  setMaxTravelTimeMinutes: (minutes: number) => void;
-  setArrivalBufferMinutes: (minutes: number) => void;
-  setArrivalBufferForAssociation: (associationCode: string, minutes: number) => void;
-  getArrivalBufferForAssociation: (associationCode: string | undefined) => number;
-  invalidateTravelTimeCache: () => void;
-
-  // Level filter (demo mode only)
-  levelFilterEnabled: boolean;
-  setLevelFilterEnabled: (enabled: boolean) => void;
-
-  // Reset all settings to defaults (keeps safe mode)
-  resetLocationSettings: () => void;
-}
-
 /** Default max distance in kilometers */
 const DEFAULT_MAX_DISTANCE_KM = 50;
 
@@ -121,6 +79,86 @@ const DEFAULT_MAX_TRAVEL_TIME_MINUTES = 120;
 
 /** Default arrival buffer (minutes before game start) */
 const DEFAULT_ARRIVAL_BUFFER_MINUTES = 30;
+
+/**
+ * Mode-specific settings that are stored separately for each data source.
+ * This prevents demo mode settings from affecting real API mode and vice versa.
+ */
+export interface ModeSettings {
+  homeLocation: UserLocation | null;
+  distanceFilter: DistanceFilter;
+  transportEnabled: boolean;
+  transportEnabledByAssociation: Record<string, boolean>;
+  travelTimeFilter: TravelTimeFilter;
+  levelFilterEnabled: boolean;
+}
+
+/** Default mode-specific settings */
+const DEFAULT_MODE_SETTINGS: ModeSettings = {
+  homeLocation: null,
+  distanceFilter: {
+    enabled: false,
+    maxDistanceKm: DEFAULT_MAX_DISTANCE_KM,
+  },
+  transportEnabled: false,
+  transportEnabledByAssociation: {},
+  travelTimeFilter: {
+    enabled: false,
+    maxTravelTimeMinutes: DEFAULT_MAX_TRAVEL_TIME_MINUTES,
+    arrivalBufferMinutes: DEFAULT_ARRIVAL_BUFFER_MINUTES,
+    arrivalBufferByAssociation: {},
+    cacheInvalidatedAt: null,
+  },
+  levelFilterEnabled: false,
+};
+
+interface SettingsState {
+  // === Global settings (shared across all modes) ===
+
+  // Safe mode
+  isSafeModeEnabled: boolean;
+  setSafeMode: (enabled: boolean) => void;
+
+  // Accessibility settings
+  preventZoom: boolean;
+  setPreventZoom: (enabled: boolean) => void;
+
+  // === Mode-specific settings ===
+
+  /** Current data source mode - synced from auth store */
+  currentMode: DataSource;
+  /** Internal: update current mode (called by auth store subscription) */
+  _setCurrentMode: (mode: DataSource) => void;
+
+  /** Settings stored per mode (api, demo, calendar) */
+  settingsByMode: Record<DataSource, ModeSettings>;
+
+  // Getters for current mode's settings (read from settingsByMode[currentMode])
+  homeLocation: UserLocation | null;
+  distanceFilter: DistanceFilter;
+  transportEnabled: boolean;
+  transportEnabledByAssociation: Record<string, boolean>;
+  travelTimeFilter: TravelTimeFilter;
+  levelFilterEnabled: boolean;
+
+  // Setters that update current mode's settings
+  setHomeLocation: (location: UserLocation | null) => void;
+  setDistanceFilterEnabled: (enabled: boolean) => void;
+  setMaxDistanceKm: (km: number) => void;
+  setTransportEnabled: (enabled: boolean) => void;
+  setTransportEnabledForAssociation: (associationCode: string, enabled: boolean) => void;
+  isTransportEnabledForAssociation: (associationCode: string | undefined) => boolean;
+  setTravelTimeFilterEnabled: (enabled: boolean) => void;
+  setMaxTravelTimeMinutes: (minutes: number) => void;
+  setArrivalBufferMinutes: (minutes: number) => void;
+  setArrivalBufferForAssociation: (associationCode: string, minutes: number) => void;
+  getArrivalBufferForAssociation: (associationCode: string | undefined) => number;
+  invalidateTravelTimeCache: () => void;
+  setLevelFilterEnabled: (enabled: boolean) => void;
+
+  // Reset current mode's settings to defaults (keeps safe mode and other modes)
+  resetLocationSettings: () => void;
+}
 
 /**
  * Demo mode default location: Bern (central Switzerland).
@@ -133,202 +171,319 @@ export const DEMO_HOME_LOCATION: UserLocation = {
   source: "geocoded",
 };
 
-export const useSettingsStore = create<SettingsState>()(
-  persist(
-    (set, get) => ({
-      isSafeModeEnabled: true,
-      preventZoom: false,
-      homeLocation: null,
-      distanceFilter: {
-        enabled: false,
-        maxDistanceKm: DEFAULT_MAX_DISTANCE_KM,
-      },
-      transportEnabled: false,
-      transportEnabledByAssociation: {},
-      travelTimeFilter: {
-        enabled: false,
-        maxTravelTimeMinutes: DEFAULT_MAX_TRAVEL_TIME_MINUTES,
-        arrivalBufferMinutes: DEFAULT_ARRIVAL_BUFFER_MINUTES,
-        arrivalBufferByAssociation: {},
-        cacheInvalidatedAt: null,
-      },
-      levelFilterEnabled: false,
+/**
+ * Helper to get current mode settings and also update top-level properties.
+ * Updates both settingsByMode and the top-level backward-compatible properties.
+ */
+function updateModeAndTopLevel(
+  state: SettingsState,
+  updater: (current: ModeSettings) => Partial<ModeSettings>,
+): Partial<SettingsState> {
+  const currentSettings = state.settingsByMode[state.currentMode];
+  const updates = updater(currentSettings);
+  const newModeSettings = { ...currentSettings, ...updates };
 
-      setSafeMode: (enabled: boolean) => {
-        set({ isSafeModeEnabled: enabled });
-      },
-
-      setPreventZoom: (enabled: boolean) => {
-        set({ preventZoom: enabled });
-      },
-
-      setHomeLocation: (location: UserLocation | null) => {
-        // When home location changes, invalidate travel time cache
-        set((state) => ({
-          homeLocation: location,
-          travelTimeFilter: {
-            ...state.travelTimeFilter,
-            cacheInvalidatedAt: Date.now(),
-          },
-        }));
-      },
-
-      setDistanceFilterEnabled: (enabled: boolean) => {
-        set((state) => ({
-          distanceFilter: { ...state.distanceFilter, enabled },
-        }));
-      },
-
-      setMaxDistanceKm: (km: number) => {
-        set((state) => ({
-          distanceFilter: { ...state.distanceFilter, maxDistanceKm: km },
-        }));
-      },
-
-      setTransportEnabled: (enabled: boolean) => {
-        set({ transportEnabled: enabled });
-      },
-
-      setTransportEnabledForAssociation: (associationCode: string, enabled: boolean) => {
-        set((state) => ({
-          transportEnabledByAssociation: {
-            ...state.transportEnabledByAssociation,
-            [associationCode]: enabled,
-          },
-        }));
-      },
-
-      isTransportEnabledForAssociation: (associationCode: string | undefined) => {
-        const state = get();
-        // Handle migration: if per-association setting exists, use it
-        // Otherwise fall back to global transportEnabled for backwards compatibility
-        const enabledMap = state.transportEnabledByAssociation ?? {};
-        if (associationCode && enabledMap[associationCode] !== undefined) {
-          return enabledMap[associationCode];
-        }
-        // Fall back to global setting for migration
-        return state.transportEnabled;
-      },
-
-      setTravelTimeFilterEnabled: (enabled: boolean) => {
-        set((state) => ({
-          travelTimeFilter: { ...state.travelTimeFilter, enabled },
-        }));
-      },
-
-      setMaxTravelTimeMinutes: (minutes: number) => {
-        set((state) => ({
-          travelTimeFilter: { ...state.travelTimeFilter, maxTravelTimeMinutes: minutes },
-        }));
-      },
-
-      setArrivalBufferMinutes: (minutes: number) => {
-        set((state) => ({
-          travelTimeFilter: { ...state.travelTimeFilter, arrivalBufferMinutes: minutes },
-        }));
-      },
-
-      setArrivalBufferForAssociation: (associationCode: string, minutes: number) => {
-        set((state) => ({
-          travelTimeFilter: {
-            ...state.travelTimeFilter,
-            arrivalBufferByAssociation: {
-              ...state.travelTimeFilter.arrivalBufferByAssociation,
-              [associationCode]: minutes,
-            },
-          },
-        }));
-      },
-
-      getArrivalBufferForAssociation: (associationCode: string | undefined) => {
-        const state = get();
-        // Handle migration from old storage (arrivalBufferByAssociation might not exist)
-        const bufferMap = state.travelTimeFilter.arrivalBufferByAssociation ?? {};
-        if (associationCode && bufferMap[associationCode] !== undefined) {
-          return bufferMap[associationCode];
-        }
-        return getDefaultArrivalBuffer(associationCode);
-      },
-
-      invalidateTravelTimeCache: () => {
-        set((state) => ({
-          travelTimeFilter: {
-            ...state.travelTimeFilter,
-            cacheInvalidatedAt: Date.now(),
-          },
-        }));
-      },
-
-      setLevelFilterEnabled: (enabled: boolean) => {
-        set({ levelFilterEnabled: enabled });
-      },
-
-      resetLocationSettings: () => {
-        // Reset all location-related settings to defaults
-        // Keeps safe mode and language preferences unchanged
-        set({
-          homeLocation: null,
-          distanceFilter: {
-            enabled: false,
-            maxDistanceKm: DEFAULT_MAX_DISTANCE_KM,
-          },
-          transportEnabled: false,
-          transportEnabledByAssociation: {},
-          travelTimeFilter: {
-            enabled: false,
-            maxTravelTimeMinutes: DEFAULT_MAX_TRAVEL_TIME_MINUTES,
-            arrivalBufferMinutes: DEFAULT_ARRIVAL_BUFFER_MINUTES,
-            arrivalBufferByAssociation: {},
-            cacheInvalidatedAt: null,
-          },
-          levelFilterEnabled: false,
-        });
-      },
-    }),
-    {
-      name: "volleykit-settings",
-      version: 1,
-      partialize: (state) => ({
-        isSafeModeEnabled: state.isSafeModeEnabled,
-        preventZoom: state.preventZoom,
-        homeLocation: state.homeLocation,
-        distanceFilter: state.distanceFilter,
-        transportEnabled: state.transportEnabled,
-        transportEnabledByAssociation: state.transportEnabledByAssociation,
-        travelTimeFilter: state.travelTimeFilter,
-        levelFilterEnabled: state.levelFilterEnabled,
-      }),
-      merge: (persisted, current) => {
-        // Defensively merge persisted data with current defaults.
-        // This prevents data loss when the schema changes or data is corrupted.
-        const persistedState = persisted as Partial<SettingsState> | undefined;
-
-        return {
-          ...current,
-          // Preserve safe mode setting
-          isSafeModeEnabled: persistedState?.isSafeModeEnabled ?? current.isSafeModeEnabled,
-          // Preserve accessibility settings
-          preventZoom: persistedState?.preventZoom ?? current.preventZoom,
-          // Preserve home location - critical user data
-          homeLocation: persistedState?.homeLocation ?? current.homeLocation,
-          // Merge distance filter with defaults for any missing fields
-          distanceFilter: {
-            ...current.distanceFilter,
-            ...(persistedState?.distanceFilter ?? {}),
-          },
-          // Preserve transport settings
-          transportEnabled: persistedState?.transportEnabled ?? current.transportEnabled,
-          transportEnabledByAssociation:
-            persistedState?.transportEnabledByAssociation ?? current.transportEnabledByAssociation,
-          // Merge travel time filter with defaults for any missing fields
-          travelTimeFilter: {
-            ...current.travelTimeFilter,
-            ...(persistedState?.travelTimeFilter ?? {}),
-          },
-          // Preserve level filter
-          levelFilterEnabled: persistedState?.levelFilterEnabled ?? current.levelFilterEnabled,
-        };
-      },
+  return {
+    settingsByMode: {
+      ...state.settingsByMode,
+      [state.currentMode]: newModeSettings,
     },
+    // Also update top-level properties for backward compatibility
+    ...updates,
+  };
+}
+
+/**
+ * Sync top-level properties from the given mode's settings.
+ * Called when switching modes to update the backward-compatible properties.
+ */
+function syncFromMode(settingsByMode: Record<DataSource, ModeSettings>, mode: DataSource): Partial<SettingsState> {
+  const modeSettings = settingsByMode[mode];
+  return {
+    homeLocation: modeSettings.homeLocation,
+    distanceFilter: modeSettings.distanceFilter,
+    transportEnabled: modeSettings.transportEnabled,
+    transportEnabledByAssociation: modeSettings.transportEnabledByAssociation,
+    travelTimeFilter: modeSettings.travelTimeFilter,
+    levelFilterEnabled: modeSettings.levelFilterEnabled,
+  };
+}
+
+export const useSettingsStore = create<SettingsState>()(
+  subscribeWithSelector(
+    persist(
+      (set, get) => ({
+        // Global settings
+        isSafeModeEnabled: true,
+        preventZoom: false,
+
+        // Mode tracking
+        currentMode: "api" as DataSource,
+        settingsByMode: {
+          api: { ...DEFAULT_MODE_SETTINGS },
+          demo: { ...DEFAULT_MODE_SETTINGS },
+          calendar: { ...DEFAULT_MODE_SETTINGS },
+        },
+
+        // Top-level properties (backward compatible) - synced from current mode
+        homeLocation: DEFAULT_MODE_SETTINGS.homeLocation,
+        distanceFilter: DEFAULT_MODE_SETTINGS.distanceFilter,
+        transportEnabled: DEFAULT_MODE_SETTINGS.transportEnabled,
+        transportEnabledByAssociation: DEFAULT_MODE_SETTINGS.transportEnabledByAssociation,
+        travelTimeFilter: DEFAULT_MODE_SETTINGS.travelTimeFilter,
+        levelFilterEnabled: DEFAULT_MODE_SETTINGS.levelFilterEnabled,
+
+        _setCurrentMode: (mode: DataSource) => {
+          const state = get();
+          // Switch mode and sync top-level properties from new mode
+          set({
+            currentMode: mode,
+            ...syncFromMode(state.settingsByMode, mode),
+          });
+        },
+
+        setSafeMode: (enabled: boolean) => {
+          set({ isSafeModeEnabled: enabled });
+        },
+
+        setPreventZoom: (enabled: boolean) => {
+          set({ preventZoom: enabled });
+        },
+
+        setHomeLocation: (location: UserLocation | null) => {
+          // When home location changes, invalidate travel time cache
+          set((state) =>
+            updateModeAndTopLevel(state, (current) => ({
+              homeLocation: location,
+              travelTimeFilter: {
+                ...current.travelTimeFilter,
+                cacheInvalidatedAt: Date.now(),
+              },
+            })),
+          );
+        },
+
+        setDistanceFilterEnabled: (enabled: boolean) => {
+          set((state) =>
+            updateModeAndTopLevel(state, (current) => ({
+              distanceFilter: { ...current.distanceFilter, enabled },
+            })),
+          );
+        },
+
+        setMaxDistanceKm: (km: number) => {
+          set((state) =>
+            updateModeAndTopLevel(state, (current) => ({
+              distanceFilter: { ...current.distanceFilter, maxDistanceKm: km },
+            })),
+          );
+        },
+
+        setTransportEnabled: (enabled: boolean) => {
+          set((state) => updateModeAndTopLevel(state, () => ({ transportEnabled: enabled })));
+        },
+
+        setTransportEnabledForAssociation: (associationCode: string, enabled: boolean) => {
+          set((state) =>
+            updateModeAndTopLevel(state, (current) => ({
+              transportEnabledByAssociation: {
+                ...current.transportEnabledByAssociation,
+                [associationCode]: enabled,
+              },
+            })),
+          );
+        },
+
+        isTransportEnabledForAssociation: (associationCode: string | undefined) => {
+          const state = get();
+          // Handle migration: if per-association setting exists, use it
+          // Otherwise fall back to global transportEnabled for backwards compatibility
+          const enabledMap = state.transportEnabledByAssociation ?? {};
+          if (associationCode && enabledMap[associationCode] !== undefined) {
+            return enabledMap[associationCode];
+          }
+          // Fall back to global setting for migration
+          return state.transportEnabled;
+        },
+
+        setTravelTimeFilterEnabled: (enabled: boolean) => {
+          set((state) =>
+            updateModeAndTopLevel(state, (current) => ({
+              travelTimeFilter: { ...current.travelTimeFilter, enabled },
+            })),
+          );
+        },
+
+        setMaxTravelTimeMinutes: (minutes: number) => {
+          set((state) =>
+            updateModeAndTopLevel(state, (current) => ({
+              travelTimeFilter: { ...current.travelTimeFilter, maxTravelTimeMinutes: minutes },
+            })),
+          );
+        },
+
+        setArrivalBufferMinutes: (minutes: number) => {
+          set((state) =>
+            updateModeAndTopLevel(state, (current) => ({
+              travelTimeFilter: { ...current.travelTimeFilter, arrivalBufferMinutes: minutes },
+            })),
+          );
+        },
+
+        setArrivalBufferForAssociation: (associationCode: string, minutes: number) => {
+          set((state) =>
+            updateModeAndTopLevel(state, (current) => ({
+              travelTimeFilter: {
+                ...current.travelTimeFilter,
+                arrivalBufferByAssociation: {
+                  ...current.travelTimeFilter.arrivalBufferByAssociation,
+                  [associationCode]: minutes,
+                },
+              },
+            })),
+          );
+        },
+
+        getArrivalBufferForAssociation: (associationCode: string | undefined) => {
+          const state = get();
+          // Handle migration from old storage (arrivalBufferByAssociation might not exist)
+          const bufferMap = state.travelTimeFilter.arrivalBufferByAssociation ?? {};
+          if (associationCode && bufferMap[associationCode] !== undefined) {
+            return bufferMap[associationCode];
+          }
+          return getDefaultArrivalBuffer(associationCode);
+        },
+
+        invalidateTravelTimeCache: () => {
+          set((state) =>
+            updateModeAndTopLevel(state, (current) => ({
+              travelTimeFilter: {
+                ...current.travelTimeFilter,
+                cacheInvalidatedAt: Date.now(),
+              },
+            })),
+          );
+        },
+
+        setLevelFilterEnabled: (enabled: boolean) => {
+          set((state) => updateModeAndTopLevel(state, () => ({ levelFilterEnabled: enabled })));
+        },
+
+        resetLocationSettings: () => {
+          // Reset current mode's location-related settings to defaults
+          // Keeps safe mode and other modes' settings unchanged
+          set((state) =>
+            updateModeAndTopLevel(state, () => ({ ...DEFAULT_MODE_SETTINGS })),
+          );
+        },
+      }),
+      {
+        name: "volleykit-settings",
+        version: 2,
+        partialize: (state) => ({
+          // Global settings
+          isSafeModeEnabled: state.isSafeModeEnabled,
+          preventZoom: state.preventZoom,
+          // Mode-specific settings stored per mode
+          settingsByMode: state.settingsByMode,
+          // Don't persist currentMode - it's synced from auth store on load
+        }),
+        migrate: (persisted, version) => {
+          // Migration from version 1 (flat settings) to version 2 (settings by mode)
+          if (version === 1) {
+            const v1State = persisted as {
+              isSafeModeEnabled?: boolean;
+              preventZoom?: boolean;
+              homeLocation?: UserLocation | null;
+              distanceFilter?: DistanceFilter;
+              transportEnabled?: boolean;
+              transportEnabledByAssociation?: Record<string, boolean>;
+              travelTimeFilter?: TravelTimeFilter;
+              levelFilterEnabled?: boolean;
+            };
+
+            // Migrate old flat settings to the API mode (most common real usage)
+            // Demo mode gets fresh defaults since demo data is regenerated anyway
+            const migratedApiSettings: ModeSettings = {
+              homeLocation: v1State.homeLocation ?? null,
+              distanceFilter: v1State.distanceFilter ?? DEFAULT_MODE_SETTINGS.distanceFilter,
+              transportEnabled: v1State.transportEnabled ?? false,
+              transportEnabledByAssociation: v1State.transportEnabledByAssociation ?? {},
+              travelTimeFilter: v1State.travelTimeFilter ?? DEFAULT_MODE_SETTINGS.travelTimeFilter,
+              levelFilterEnabled: v1State.levelFilterEnabled ?? false,
+            };
+
+            return {
+              isSafeModeEnabled: v1State.isSafeModeEnabled ?? true,
+              preventZoom: v1State.preventZoom ?? false,
+              settingsByMode: {
+                api: migratedApiSettings,
+                demo: { ...DEFAULT_MODE_SETTINGS },
+                calendar: { ...DEFAULT_MODE_SETTINGS },
+              },
+            };
+          }
+          return persisted;
+        },
+        merge: (persisted, current) => {
+          // Defensively merge persisted data with current defaults.
+          // This prevents data loss when the schema changes or data is corrupted.
+          const persistedState = persisted as
+            | {
+                isSafeModeEnabled?: boolean;
+                preventZoom?: boolean;
+                settingsByMode?: Record<DataSource, Partial<ModeSettings>>;
+              }
+            | undefined;
+
+          // Deep merge settingsByMode with defaults
+          const mergedSettingsByMode: Record<DataSource, ModeSettings> = {
+            api: { ...DEFAULT_MODE_SETTINGS },
+            demo: { ...DEFAULT_MODE_SETTINGS },
+            calendar: { ...DEFAULT_MODE_SETTINGS },
+          };
+
+          if (persistedState?.settingsByMode) {
+            for (const mode of ["api", "demo", "calendar"] as DataSource[]) {
+              const persistedModeSettings = persistedState.settingsByMode[mode];
+              if (persistedModeSettings) {
+                mergedSettingsByMode[mode] = {
+                  homeLocation:
+                    persistedModeSettings.homeLocation ?? DEFAULT_MODE_SETTINGS.homeLocation,
+                  distanceFilter: {
+                    ...DEFAULT_MODE_SETTINGS.distanceFilter,
+                    ...(persistedModeSettings.distanceFilter ?? {}),
+                  },
+                  transportEnabled:
+                    persistedModeSettings.transportEnabled ?? DEFAULT_MODE_SETTINGS.transportEnabled,
+                  transportEnabledByAssociation:
+                    persistedModeSettings.transportEnabledByAssociation ??
+                    DEFAULT_MODE_SETTINGS.transportEnabledByAssociation,
+                  travelTimeFilter: {
+                    ...DEFAULT_MODE_SETTINGS.travelTimeFilter,
+                    ...(persistedModeSettings.travelTimeFilter ?? {}),
+                  },
+                  levelFilterEnabled:
+                    persistedModeSettings.levelFilterEnabled ??
+                    DEFAULT_MODE_SETTINGS.levelFilterEnabled,
+                };
+              }
+            }
+          }
+
+          return {
+            ...current,
+            // Preserve global settings
+            isSafeModeEnabled: persistedState?.isSafeModeEnabled ?? current.isSafeModeEnabled,
+            preventZoom: persistedState?.preventZoom ?? current.preventZoom,
+            // Preserve mode-specific settings
+            settingsByMode: mergedSettingsByMode,
+          };
+        },
+      },
+    ),
   ),
 );
+
+// Note: Settings sync with auth store is initialized in App.tsx
+// to avoid circular dependencies between stores.

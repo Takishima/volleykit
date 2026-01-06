@@ -28,6 +28,7 @@ import { usePreloadLocales } from "@/hooks/usePreloadLocales";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useViewportZoom } from "@/hooks/useViewportZoom";
 import { useCalendarTheme } from "@/hooks/useCalendarTheme";
+import { useSettingsStore } from "@/stores/settings";
 import { logger } from "@/utils/logger";
 import { CalendarErrorHandler } from "@/components/features/CalendarErrorHandler";
 
@@ -260,6 +261,27 @@ export default function App() {
   usePreloadLocales();
   useViewportZoom();
   useCalendarTheme();
+
+  // Sync settings store's currentMode with auth store's dataSource
+  // This ensures mode-specific settings are loaded for the correct mode
+  useEffect(() => {
+    // Set initial mode from auth store
+    const initialDataSource = useAuthStore.getState().dataSource;
+    useSettingsStore.getState()._setCurrentMode(initialDataSource);
+
+    // Track previous dataSource to detect changes
+    let previousDataSource = initialDataSource;
+
+    // Subscribe to auth store changes
+    const unsubscribe = useAuthStore.subscribe((state) => {
+      if (state.dataSource !== previousDataSource) {
+        previousDataSource = state.dataSource;
+        useSettingsStore.getState()._setCurrentMode(state.dataSource);
+      }
+    });
+
+    return unsubscribe;
+  }, []);
 
   return (
     <ErrorBoundary>
