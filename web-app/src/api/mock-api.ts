@@ -118,13 +118,13 @@ function matchesFilter<T>(item: T, filter: PropertyFilter): boolean {
   }
 
   // Enum values filter (for status fields)
-  if (filter.enumValues && filter.enumValues.length > 0) {
+  if (filter.enumValues?.length) {
     return filter.enumValues.includes(String(value));
   }
 
   // Values filter (for boolean/string fields)
   // Converts value to string for comparison (handles booleans, strings, numbers)
-  if (filter.values && filter.values.length > 0) {
+  if (filter.values?.length) {
     return filter.values.includes(String(value));
   }
 
@@ -136,7 +136,7 @@ function matchesFilter<T>(item: T, filter: PropertyFilter): boolean {
  * Apply all filters from SearchConfiguration to a list of items.
  */
 function applyFilters<T>(items: T[], filters?: PropertyFilter[]): T[] {
-  if (!filters || filters.length === 0) {
+  if (!filters?.length) {
     return items;
   }
 
@@ -191,7 +191,7 @@ function compareValues(
  * when previous orderings are equal).
  */
 function applySorting<T>(items: T[], orderings?: PropertyOrdering[]): T[] {
-  if (!orderings || orderings.length === 0) {
+  if (!orderings?.length) {
     return items;
   }
 
