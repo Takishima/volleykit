@@ -106,7 +106,7 @@ export class ImageEditor {
 
   #render() {
     this.#container.innerHTML = `
-      <div class="image-editor">
+      <div class="image-editor" role="dialog" aria-modal="true" aria-label="Image editor">
         <div class="image-editor__viewport" id="editor-viewport">
           <img
             class="image-editor__image"
