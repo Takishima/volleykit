@@ -6,7 +6,7 @@ import {
   validateResponse,
 } from "./validation";
 import { mockApi } from "./mock-api";
-import { calendarApi } from "./calendar-client";
+import { calendarApi } from "@/features/assignments/api/calendar-client";
 import {
   buildFormData,
   setCsrfToken as setToken,
@@ -690,10 +690,10 @@ export const api = {
 export type ApiClient = typeof api;
 
 // Re-export DataSource from auth store for consumers that import from client
-export type { DataSource } from "@/stores/auth";
+export type { DataSource } from "@/shared/stores/auth";
 
 // Import for internal use
-import type { DataSource } from "@/stores/auth";
+import type { DataSource } from "@/shared/stores/auth";
 
 /**
  * Returns the appropriate API client based on the data source.

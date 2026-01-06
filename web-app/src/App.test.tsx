@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
-import { useAuthStore } from "@/stores/auth";
-import { useDemoStore } from "@/stores/demo";
+import { useAuthStore } from "@/shared/stores/auth";
+import { useDemoStore } from "@/shared/stores/demo";
 
 // Create hoisted mocks to avoid initialization order issues
 const { mockAuthStore, mockSettingsStore } = vi.hoisted(() => {
@@ -19,16 +19,16 @@ const { mockAuthStore, mockSettingsStore } = vi.hoisted(() => {
   return { mockAuthStore, mockSettingsStore };
 });
 
-vi.mock("@/stores/auth", () => ({
+vi.mock("@/shared/stores/auth", () => ({
   useAuthStore: mockAuthStore,
 }));
 
 // Mock the demo store
-vi.mock("@/stores/demo", () => ({
+vi.mock("@/shared/stores/demo", () => ({
   useDemoStore: vi.fn(),
 }));
 
-vi.mock("@/stores/settings", () => ({
+vi.mock("@/shared/stores/settings", () => ({
   useSettingsStore: mockSettingsStore,
 }));
 
@@ -49,7 +49,7 @@ import {
   classifyQueryError,
   isRetryableError,
   calculateRetryDelay,
-} from "@/utils/query-error-utils";
+} from "@/shared/utils/query-error-utils";
 
 describe("classifyQueryError", () => {
   it("classifies network errors", () => {

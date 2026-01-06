@@ -8,14 +8,14 @@ import {
 } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useShallow } from "zustand/react/shallow";
-import { useAuthStore } from "@/stores/auth";
-import { useDemoStore } from "@/stores/demo";
-import { AppShell } from "@/components/layout/AppShell";
-import { LoadingState } from "@/components/ui/LoadingSpinner";
-import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { PageErrorBoundary } from "@/components/ui/PageErrorBoundary";
-import { ReloadPrompt } from "@/components/ui/ReloadPrompt";
-import { ToastContainer } from "@/components/ui/Toast";
+import { useAuthStore } from "@/shared/stores/auth";
+import { useDemoStore } from "@/shared/stores/demo";
+import { AppShell } from "@/shared/components/layout/AppShell";
+import { LoadingState } from "@/shared/components/LoadingSpinner";
+import { ErrorBoundary } from "@/shared/components/ErrorBoundary";
+import { PageErrorBoundary } from "@/shared/components/PageErrorBoundary";
+import { ReloadPrompt } from "@/shared/components/ReloadPrompt";
+import { ToastContainer } from "@/shared/components/Toast";
 import { PWAProvider } from "@/contexts/PWAContext";
 import {
   classifyQueryError,
@@ -23,36 +23,36 @@ import {
   calculateRetryDelay,
   isAuthError,
   RETRY_CONFIG,
-} from "@/utils/query-error-utils";
-import { usePreloadLocales } from "@/hooks/usePreloadLocales";
-import { useTranslation } from "@/hooks/useTranslation";
-import { useViewportZoom } from "@/hooks/useViewportZoom";
-import { useCalendarTheme } from "@/hooks/useCalendarTheme";
-import { useSettingsStore } from "@/stores/settings";
-import { logger } from "@/utils/logger";
-import { CalendarErrorHandler } from "@/components/features/CalendarErrorHandler";
+} from "@/shared/utils/query-error-utils";
+import { usePreloadLocales } from "@/shared/hooks/usePreloadLocales";
+import { useTranslation } from "@/shared/hooks/useTranslation";
+import { useViewportZoom } from "@/shared/hooks/useViewportZoom";
+import { useCalendarTheme } from "@/features/assignments/hooks/useCalendarTheme";
+import { useSettingsStore } from "@/shared/stores/settings";
+import { logger } from "@/shared/utils/logger";
+import { CalendarErrorHandler } from "@/features/assignments/components/CalendarErrorHandler";
 
 // Lazy load pages to reduce initial bundle size
 // Each page becomes a separate chunk that loads on-demand
 const LoginPage = lazy(() =>
-  import("@/pages/LoginPage").then((m) => ({ default: m.LoginPage })),
+  import("@/features/auth/LoginPage").then((m) => ({ default: m.LoginPage })),
 );
 const AssignmentsPage = lazy(() =>
-  import("@/pages/AssignmentsPage").then((m) => ({ default: m.AssignmentsPage })),
+  import("@/features/assignments/AssignmentsPage").then((m) => ({ default: m.AssignmentsPage })),
 );
 const CompensationsPage = lazy(() =>
-  import("@/pages/CompensationsPage").then((m) => ({ default: m.CompensationsPage })),
+  import("@/features/compensations/CompensationsPage").then((m) => ({ default: m.CompensationsPage })),
 );
 const ExchangePage = lazy(() =>
-  import("@/pages/ExchangePage").then((m) => ({ default: m.ExchangePage })),
+  import("@/features/exchanges/ExchangePage").then((m) => ({ default: m.ExchangePage })),
 );
 const SettingsPage = lazy(() =>
-  import("@/pages/SettingsPage").then((m) => ({ default: m.SettingsPage })),
+  import("@/features/settings/SettingsPage").then((m) => ({ default: m.SettingsPage })),
 );
 
 // Lazy load TourProvider since it's only needed for first-time users
 const TourProvider = lazy(() =>
-  import("@/components/tour").then((m) => ({ default: m.TourProvider })),
+  import("@/shared/components/tour").then((m) => ({ default: m.TourProvider })),
 );
 
 /**

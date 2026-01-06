@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { mockApi } from "./mock-api";
-import { useDemoStore } from "@/stores/demo";
-import { parseSearchInput } from "@/hooks/useScorerSearch";
+import { useDemoStore } from "@/shared/stores/demo";
+import { parseSearchInput } from "@/features/validation/hooks/useScorerSearch";
 
 describe("mockApi.searchPersons", () => {
   beforeEach(() => {

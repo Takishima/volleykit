@@ -81,6 +81,8 @@ npm run build         # Production build (includes tsc)
 
 ## Project Structure
 
+The project uses a **feature-based folder structure** for clear domain boundaries and better code organization.
+
 ```
 volleykit/
 ├── web-app/                    # React PWA
@@ -89,50 +91,69 @@ volleykit/
 │   │   └── pages/             # Page Object Models
 │   ├── public/                # Static PWA assets (icons, manifest)
 │   ├── src/
-│   │   ├── api/               # API client, generated types, mock API
+│   │   ├── api/               # Core API client and types
 │   │   │   ├── client.ts      # API fetch wrapper with error handling
 │   │   │   ├── mock-api.ts    # Demo mode API simulation
 │   │   │   ├── queryKeys.ts   # TanStack Query key definitions
 │   │   │   ├── schema.ts      # Generated OpenAPI types (do not edit)
 │   │   │   └── validation.ts  # Zod schemas for API responses
-│   │   ├── components/
-│   │   │   ├── features/      # Feature-specific components
-│   │   │   │   ├── validation/# Game validation wizard components
-│   │   │   │   └── settings/  # Settings page sections
-│   │   │   ├── layout/        # App shell, navigation
-│   │   │   └── ui/            # Reusable UI components (Button, Modal, Card, etc.)
+│   │   ├── features/          # Feature modules (domain-driven)
+│   │   │   ├── assignments/   # Assignment management feature
+│   │   │   │   ├── components/    # AssignmentCard, CalendarErrorModal, etc.
+│   │   │   │   ├── hooks/         # useAssignments, useAssignmentActions
+│   │   │   │   ├── api/           # Calendar API client, iCal parser
+│   │   │   │   ├── utils/         # assignment-actions, assignment-helpers
+│   │   │   │   └── AssignmentsPage.tsx
+│   │   │   ├── compensations/ # Compensation management feature
+│   │   │   │   ├── components/    # CompensationCard, EditCompensationModal
+│   │   │   │   ├── hooks/         # useCompensations, useCompensationActions
+│   │   │   │   ├── utils/         # compensation-actions
+│   │   │   │   └── CompensationsPage.tsx
+│   │   │   ├── exchanges/     # Exchange/swap feature
+│   │   │   │   ├── components/    # ExchangeCard, ExchangeSettingsSheet
+│   │   │   │   ├── hooks/         # useExchanges, useExchangeActions
+│   │   │   │   ├── utils/         # exchange-actions
+│   │   │   │   └── ExchangePage.tsx
+│   │   │   ├── validation/    # Game validation wizard
+│   │   │   │   ├── components/    # ValidateGameModal, panels, wizard UI
+│   │   │   │   ├── hooks/         # useValidateGameWizard, useValidationState
+│   │   │   │   ├── api/           # Validation API helpers
+│   │   │   │   └── utils/         # roster-validation
+│   │   │   ├── settings/      # User settings feature
+│   │   │   │   ├── components/    # ProfileSection, LanguageSection, etc.
+│   │   │   │   ├── hooks/         # useSettings
+│   │   │   │   └── SettingsPage.tsx
+│   │   │   └── auth/          # Authentication feature
+│   │   │       ├── hooks/         # useActiveAssociation
+│   │   │       ├── utils/         # auth-parsers, parseOccupations
+│   │   │       └── LoginPage.tsx
+│   │   ├── shared/            # Shared/common code
+│   │   │   ├── components/    # Reusable UI components
+│   │   │   │   ├── layout/        # AppShell, navigation
+│   │   │   │   ├── tour/          # Onboarding tour system
+│   │   │   │   └── ...            # Button, Modal, Card, etc.
+│   │   │   ├── hooks/         # Common hooks
+│   │   │   │   ├── useTranslation.ts
+│   │   │   │   ├── useSwipeGesture.ts
+│   │   │   │   └── ...
+│   │   │   ├── utils/         # Common utilities
+│   │   │   │   ├── date-helpers.ts
+│   │   │   │   ├── error-helpers.ts
+│   │   │   │   └── ...
+│   │   │   ├── stores/        # Zustand stores
+│   │   │   │   ├── auth.ts        # Authentication state
+│   │   │   │   ├── demo/          # Demo mode state
+│   │   │   │   ├── settings.ts    # User preferences
+│   │   │   │   └── ...
+│   │   │   └── services/      # External service integrations
+│   │   │       └── transport/     # Swiss public transport (OJP)
 │   │   ├── contexts/          # React context providers (PWA)
-│   │   ├── hooks/             # Custom React hooks
-│   │   │   ├── useAssignments.ts      # Assignment data fetching
-│   │   │   ├── useCompensations.ts    # Compensation data fetching
-│   │   │   ├── useExchanges.ts        # Exchange data fetching
-│   │   │   ├── useTranslation.ts      # i18n hook
-│   │   │   ├── useSwipeGesture.ts     # Touch gesture handling
-│   │   │   ├── useSafeMutation.ts     # Mutation with confirmation
-│   │   │   └── ...
 │   │   ├── i18n/              # Internationalization
 │   │   │   ├── types.ts       # Translation key types (edit this first)
 │   │   │   ├── index.ts       # Translation functions
 │   │   │   └── locales/       # Translation files (de, en, fr, it)
-│   │   ├── pages/             # Route components
-│   │   │   ├── AssignmentsPage.tsx
-│   │   │   ├── CompensationsPage.tsx
-│   │   │   ├── ExchangePage.tsx
-│   │   │   ├── LoginPage.tsx
-│   │   │   └── SettingsPage.tsx
-│   │   ├── stores/            # Zustand stores
-│   │   │   ├── auth.ts        # Authentication state
-│   │   │   ├── demo/          # Demo mode state (assignments, compensations, etc.)
-│   │   │   ├── language.ts    # Language preference
-│   │   │   ├── toast.ts       # Toast notifications
-│   │   │   └── tour.ts        # Onboarding tour state
 │   │   ├── test/              # Test setup and utilities
-│   │   ├── types/             # TypeScript types
-│   │   └── utils/             # Utility functions
-│   │       ├── assignment-actions.ts  # Assignment business logic
-│   │       ├── date-helpers.ts        # Date formatting
-│   │       ├── error-helpers.ts       # Error handling utilities
-│   │       └── ...
+│   │   └── types/             # TypeScript type declarations
 │   ├── playwright.config.ts   # E2E test configuration
 │   ├── vite.config.ts         # Vite + PWA configuration
 │   └── package.json
@@ -156,6 +177,16 @@ volleykit/
 │   └── claude*.yml            # AI code review
 └── devenv.nix                  # Nix development environment
 ```
+
+### Feature Module Structure
+
+Each feature module follows a consistent structure:
+- **components/**: UI components specific to this feature
+- **hooks/**: Custom hooks for data fetching and state
+- **api/**: API clients and helpers (if needed)
+- **utils/**: Business logic and helper functions
+
+Import from features using: `@/features/assignments`, `@/features/compensations`, etc.
 
 ## Development Environment
 
@@ -231,8 +262,8 @@ This project uses React 19. Avoid outdated patterns:
 
 ### State Management
 
-- **Zustand** for global client state (auth, preferences) - see `src/stores/`
-- **TanStack Query** for server state (API data) - see `src/hooks/`
+- **Zustand** for global client state (auth, preferences) - see `src/shared/stores/`
+- **TanStack Query** for server state (API data) - see feature hooks in `src/features/*/hooks/`
 
 ### Query Keys Pattern
 

@@ -11,7 +11,7 @@
 
 import type { Translations } from "./types";
 import en from "./locales/en";
-import { logger } from "@/utils/logger";
+import { logger } from "@/shared/utils/logger";
 
 export type { Translations };
 export type Locale = "de" | "fr" | "it" | "en";

@@ -10,7 +10,7 @@
  */
 import { describe, it, expect, beforeEach } from "vitest";
 import type { ZodError } from "zod";
-import { useDemoStore } from "@/stores/demo";
+import { useDemoStore } from "@/shared/stores/demo";
 import {
   assignmentSchema,
   compensationRecordSchema,
