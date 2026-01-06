@@ -510,9 +510,12 @@ function renderComparisonState(container) {
 
   const comparisonContainer = document.getElementById('player-comparison-container');
   if (comparisonContainer && appContext.ocrResult) {
+    // Pass isManuscript flag so the component knows to show confirmation modal
+    // for manuscript scoresheets (which may have lower OCR accuracy)
     playerComparison = new PlayerComparison({
       container: comparisonContainer,
       ocrText: appContext.ocrResult.fullText,
+      isManuscript: appContext.sheetType === 'manuscript',
       onBack: handleBackToResults,
     });
   }

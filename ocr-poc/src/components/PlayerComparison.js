@@ -11,6 +11,7 @@
 
 import { parseGameSheet, getAllPlayers, getAllOfficials } from '../services/PlayerListParser.js';
 import { getMockReferenceData } from '../services/MockReferenceData.js';
+import { TeamConfirmationModal } from './TeamConfirmationModal.js';
 
 /**
  * @typedef {import('../services/PlayerListParser.js').ParsedPlayer} ParsedPlayer
@@ -315,6 +316,12 @@ function compareTeams(ocrTeam, refTeam) {
 }
 
 /**
+ * Minimum score difference needed to consider the mapping "confident"
+ * If the difference between the two options is less than this, we ask the user
+ */
+const CONFIDENCE_THRESHOLD = 2;
+
+/**
  * Try to match OCR teams to reference teams
  * Since we don't know which column is which team, we try both combinations
  * and pick the one with more matches
@@ -322,7 +329,7 @@ function compareTeams(ocrTeam, refTeam) {
  * @param {ParsedTeam} ocrTeamB
  * @param {ReferenceTeam} refTeamA
  * @param {ReferenceTeam} refTeamB
- * @returns {{ team1: TeamComparison, team2: TeamComparison, swapped: boolean }}
+ * @returns {{ team1: TeamComparison, team2: TeamComparison, swapped: boolean, isConfident: boolean, confidenceScore: number, option1Score: number, option2Score: number }}
  */
 function findBestTeamMapping(ocrTeamA, ocrTeamB, refTeamA, refTeamB) {
   // Try mapping: ocrA -> refA, ocrB -> refB
@@ -343,11 +350,46 @@ function findBestTeamMapping(ocrTeamA, ocrTeamB, refTeamA, refTeamB) {
     option2Team1.counts.officials.match +
     option2Team2.counts.officials.match;
 
-  if (option2Score > option1Score) {
-    return { team1: option2Team1, team2: option2Team2, swapped: true };
+  // Calculate confidence based on the difference between scores
+  const scoreDiff = Math.abs(option1Score - option2Score);
+  const maxScore = Math.max(option1Score, option2Score);
+  const totalPossible = ocrTeamA.players.length + ocrTeamB.players.length +
+    ocrTeamA.officials.length + ocrTeamB.officials.length;
+
+  // Confidence score: 0-100
+  // - Higher when there's a clear winner (big score difference)
+  // - Higher when the winning option has many matches
+  let confidenceScore = 0;
+  if (totalPossible > 0) {
+    const matchRatio = maxScore / totalPossible;
+    const diffRatio = scoreDiff / Math.max(1, maxScore);
+    confidenceScore = Math.round((matchRatio * 50) + (diffRatio * 50));
   }
 
-  return { team1: option1Team1, team2: option1Team2, swapped: false };
+  // Determine if we're confident in the mapping
+  const isConfident = scoreDiff >= CONFIDENCE_THRESHOLD && confidenceScore >= 50;
+
+  if (option2Score > option1Score) {
+    return {
+      team1: option2Team1,
+      team2: option2Team2,
+      swapped: true,
+      isConfident,
+      confidenceScore,
+      option1Score,
+      option2Score,
+    };
+  }
+
+  return {
+    team1: option1Team1,
+    team2: option1Team2,
+    swapped: false,
+    isConfident,
+    confidenceScore,
+    option1Score,
+    option2Score,
+  };
 }
 
 /**
@@ -516,44 +558,157 @@ export class PlayerComparison {
    * @param {Object} options
    * @param {HTMLElement} options.container - Container element
    * @param {string} options.ocrText - Raw OCR text
+   * @param {boolean} [options.isManuscript=false] - Whether this is a manuscript scoresheet
    * @param {Function} [options.onBack] - Callback when back button is clicked
    */
-  constructor({ container, ocrText, onBack }) {
+  constructor({ container, ocrText, isManuscript = false, onBack }) {
     this.container = container;
     this.ocrText = ocrText;
+    this.isManuscript = isManuscript;
     this.onBack = onBack;
 
-    this.render();
+    /** @type {TeamConfirmationModal | null} */
+    this.confirmationModal = null;
+
+    /** @type {import('../services/PlayerListParser.js').ParsedGameSheet | null} */
+    this.parsed = null;
+
+    /** @type {{ teamA: ReferenceTeam, teamB: ReferenceTeam } | null} */
+    this.referenceData = null;
+
+    /** @type {boolean} */
+    this.userSwapped = false;
+
+    this.initialize();
   }
 
-  render() {
+  /**
+   * Initialize the component - parse data and determine if confirmation is needed
+   */
+  initialize() {
     // Parse OCR text
-    const parsed = parseGameSheet(this.ocrText);
+    this.parsed = parseGameSheet(this.ocrText);
 
     // Get mock reference data
-    const { teamA: refTeamA, teamB: refTeamB } = getMockReferenceData();
+    this.referenceData = getMockReferenceData();
 
-    // Find best team mapping
-    const { team1, team2, swapped } = findBestTeamMapping(
-      parsed.teamA,
-      parsed.teamB,
-      refTeamA,
-      refTeamB,
+    // Find best team mapping and check confidence
+    const mapping = findBestTeamMapping(
+      this.parsed.teamA,
+      this.parsed.teamB,
+      this.referenceData.teamA,
+      this.referenceData.teamB,
     );
+
+    console.log('Team mapping analysis:', {
+      isConfident: mapping.isConfident,
+      confidenceScore: mapping.confidenceScore,
+      option1Score: mapping.option1Score,
+      option2Score: mapping.option2Score,
+      autoSwapped: mapping.swapped,
+      isManuscript: this.isManuscript,
+    });
+
+    // Show confirmation modal if:
+    // 1. Confidence is low (scores are close)
+    // 2. OR this is a manuscript scoresheet (lower OCR reliability)
+    const needsConfirmation = !mapping.isConfident || this.isManuscript;
+
+    if (needsConfirmation) {
+      this.showConfirmationModal(mapping);
+    } else {
+      // Confident in mapping - render directly
+      this.userSwapped = mapping.swapped;
+      this.renderComparison();
+    }
+  }
+
+  /**
+   * Show the team confirmation modal
+   * @param {{ swapped: boolean, confidenceScore: number }} mapping
+   */
+  showConfirmationModal(mapping) {
+    // Create a container for the modal
+    const modalContainer = document.createElement('div');
+    modalContainer.id = 'team-confirmation-modal';
+    this.container.appendChild(modalContainer);
+
+    // Show loading message while modal is displayed
+    this.container.insertAdjacentHTML(
+      'afterbegin',
+      `<div class="comparison-loading">
+        <p class="text-muted text-center">Please confirm team positions...</p>
+      </div>`,
+    );
+
+    // Determine which teams to show based on auto-mapping
+    const leftTeam = mapping.swapped ? this.parsed.teamB : this.parsed.teamA;
+    const rightTeam = mapping.swapped ? this.parsed.teamA : this.parsed.teamB;
+
+    this.confirmationModal = new TeamConfirmationModal({
+      container: modalContainer,
+      leftTeam: {
+        name: leftTeam.name,
+        playerCount: leftTeam.players.length,
+      },
+      rightTeam: {
+        name: rightTeam.name,
+        playerCount: rightTeam.players.length,
+      },
+      confidenceScore: mapping.confidenceScore,
+      onConfirm: (userSwappedFromModal) => {
+        // User's swap is relative to the auto-mapping
+        // If auto-mapping swapped AND user swapped, they cancel out
+        this.userSwapped = mapping.swapped !== userSwappedFromModal;
+        this.confirmationModal?.destroy();
+        this.confirmationModal = null;
+        modalContainer.remove();
+        this.container.querySelector('.comparison-loading')?.remove();
+        this.renderComparison();
+      },
+      onCancel: () => {
+        // User cancelled - use auto-mapping
+        this.userSwapped = mapping.swapped;
+        this.confirmationModal?.destroy();
+        this.confirmationModal = null;
+        modalContainer.remove();
+        this.container.querySelector('.comparison-loading')?.remove();
+        this.renderComparison();
+      },
+    });
+  }
+
+  /**
+   * Render the comparison results
+   */
+  renderComparison() {
+    if (!this.parsed || !this.referenceData) {
+      return;
+    }
+
+    // Determine final team mapping based on user choice
+    let team1, team2;
+    if (this.userSwapped) {
+      team1 = compareTeams(this.parsed.teamA, this.referenceData.teamB);
+      team2 = compareTeams(this.parsed.teamB, this.referenceData.teamA);
+    } else {
+      team1 = compareTeams(this.parsed.teamA, this.referenceData.teamA);
+      team2 = compareTeams(this.parsed.teamB, this.referenceData.teamB);
+    }
 
     // Render warnings if any
     const warningsHtml =
-      parsed.warnings.length > 0
+      this.parsed.warnings.length > 0
         ? `
       <div class="comparison-warnings">
-        ${parsed.warnings.map((w) => `<p class="comparison-warning">⚠ ${escapeHtml(w)}</p>`).join('')}
+        ${this.parsed.warnings.map((w) => `<p class="comparison-warning">⚠ ${escapeHtml(w)}</p>`).join('')}
       </div>
     `
         : '';
 
     // Render mapping info if swapped
-    const mappingInfo = swapped
-      ? `<p class="comparison-mapping-info">Teams were automatically matched based on player names</p>`
+    const mappingInfo = this.userSwapped
+      ? `<p class="comparison-mapping-info">Teams were matched based on your confirmation</p>`
       : '';
 
     this.container.innerHTML = `
@@ -608,6 +763,7 @@ export class PlayerComparison {
   }
 
   destroy() {
+    this.confirmationModal?.destroy();
     this.container.innerHTML = '';
   }
 }
