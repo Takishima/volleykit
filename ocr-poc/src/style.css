@@ -305,6 +305,18 @@ body {
   padding-right: max(var(--spacing-xl), env(safe-area-inset-right));
 }
 
+.image-capture__header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.image-capture__hint {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
 .image-capture__buttons {
   display: flex;
   flex-direction: column;

@@ -2,15 +2,16 @@
  * ImageEditor Component
  *
  * Provides zoom and pan functionality for uploaded images before OCR processing.
- * Allows users to frame the player/officials table correctly using:
+ * Allows users to frame the scoresheet correctly using:
  * - Pinch-to-zoom and drag-to-pan (touch devices)
  * - Scroll-to-zoom and drag-to-pan (desktop)
  *
- * Shows a crop frame overlay matching the 4:5 aspect ratio of the
- * scoresheet player list table.
+ * Supports different aspect ratios based on scoresheet type:
+ * - Electronic (4:5 portrait): For player list table
+ * - Manuscript (7:5 landscape): For full physical scoresheet
  */
 
-import { TABLE_ASPECT_RATIO } from './CameraGuide.js';
+import { TABLE_ASPECT_RATIO, MANUSCRIPT_ASPECT_RATIO } from './CameraGuide.js';
 
 /** Minimum zoom level */
 const MIN_ZOOM = 0.1;
@@ -31,9 +32,14 @@ const FRAME_PADDING_PX = 24;
 const FRAME_SIZE_RATIO = 0.85;
 
 /**
+ * @typedef {'electronic' | 'manuscript'} SheetType
+ */
+
+/**
  * @typedef {Object} ImageEditorOptions
  * @property {HTMLElement} container - Container element to render into
  * @property {Blob} imageBlob - The image to edit
+ * @property {SheetType} [sheetType='electronic'] - Type of scoresheet (affects aspect ratio)
  * @property {(croppedBlob: Blob) => void} onConfirm - Callback when crop is confirmed
  * @property {() => void} onCancel - Callback when editing is cancelled
  */
@@ -44,6 +50,9 @@ export class ImageEditor {
 
   /** @type {Blob} */
   #imageBlob;
+
+  /** @type {number} */
+  #aspectRatio;
 
   /** @type {(croppedBlob: Blob) => void} */
   #onConfirm;
@@ -90,9 +99,10 @@ export class ImageEditor {
   /**
    * @param {ImageEditorOptions} options
    */
-  constructor({ container, imageBlob, onConfirm, onCancel }) {
+  constructor({ container, imageBlob, sheetType = 'electronic', onConfirm, onCancel }) {
     this.#container = container;
     this.#imageBlob = imageBlob;
+    this.#aspectRatio = sheetType === 'manuscript' ? MANUSCRIPT_ASPECT_RATIO : TABLE_ASPECT_RATIO;
     this.#onConfirm = onConfirm;
     this.#onCancel = onCancel;
 
@@ -211,14 +221,14 @@ export class ImageEditor {
     const availableWidth = this.#containerSize.width - FRAME_PADDING_PX * 2;
     const availableHeight = this.#containerSize.height - FRAME_PADDING_PX * 2;
 
-    if (availableWidth / availableHeight > TABLE_ASPECT_RATIO) {
+    if (availableWidth / availableHeight > this.#aspectRatio) {
       // Container is wider - constrain by height
       this.#frameSize.height = availableHeight * FRAME_SIZE_RATIO;
-      this.#frameSize.width = this.#frameSize.height * TABLE_ASPECT_RATIO;
+      this.#frameSize.width = this.#frameSize.height * this.#aspectRatio;
     } else {
       // Container is taller - constrain by width
       this.#frameSize.width = availableWidth * FRAME_SIZE_RATIO;
-      this.#frameSize.height = this.#frameSize.width / TABLE_ASPECT_RATIO;
+      this.#frameSize.height = this.#frameSize.width / this.#aspectRatio;
     }
 
     // Update frame element size

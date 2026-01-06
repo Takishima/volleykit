@@ -3,9 +3,9 @@
  *
  * A proof-of-concept app for extracting player names from volleyball scoresheets.
  * This scaffold sets up the basic structure for:
- * - Photo capture of scoresheets
- * - Sheet type selection (electronic vs handwritten)
- * - OCR processing to extract text
+ * - Sheet type selection (electronic vs manuscript)
+ * - Photo capture of scoresheets with type-specific guides
+ * - OCR processing to extract text (electronic only)
  * - Comparison against reference player lists
  *
  * Note: Service worker registration is handled automatically by vite-plugin-pwa
@@ -23,7 +23,7 @@ import { PlayerComparison } from './components/PlayerComparison.js';
  * ============================================== */
 
 /**
- * @typedef {'capture' | 'select-type' | 'processing' | 'results' | 'comparison'} AppState
+ * @typedef {'select-type' | 'capture' | 'processing' | 'results' | 'comparison' | 'manuscript-complete'} AppState
  */
 
 /**
@@ -34,13 +34,13 @@ import { PlayerComparison } from './components/PlayerComparison.js';
  * @typedef {Object} AppContext
  * @property {AppState} state - Current application state
  * @property {Blob | null} capturedImage - The captured image blob
- * @property {'electronic' | 'handwritten' | null} sheetType - Selected sheet type
+ * @property {'electronic' | 'manuscript' | null} sheetType - Selected sheet type
  * @property {OCRResult | null} ocrResult - OCR processing result
  */
 
 /** @type {AppContext} */
 const appContext = {
-  state: 'capture',
+  state: 'select-type',
   capturedImage: null,
   sheetType: null,
   ocrResult: null,
@@ -101,16 +101,16 @@ function transition(newState, contextUpdates = {}) {
  */
 function cleanupState(state) {
   switch (state) {
-    case 'capture':
-      if (imageCapture) {
-        imageCapture.destroy();
-        imageCapture = null;
-      }
-      break;
     case 'select-type':
       if (sheetTypeSelector) {
         sheetTypeSelector.destroy();
         sheetTypeSelector = null;
+      }
+      break;
+    case 'capture':
+      if (imageCapture) {
+        imageCapture.destroy();
+        imageCapture = null;
       }
       break;
     case 'processing':
@@ -132,6 +132,12 @@ function cleanupState(state) {
         playerComparison = null;
       }
       break;
+    case 'manuscript-complete':
+      if (resultsPreviewUrl) {
+        URL.revokeObjectURL(resultsPreviewUrl);
+        resultsPreviewUrl = null;
+      }
+      break;
   }
 }
 
@@ -147,11 +153,11 @@ function renderState(state) {
   }
 
   switch (state) {
-    case 'capture':
-      renderCaptureState(contentContainer);
-      break;
     case 'select-type':
       renderSelectTypeState(contentContainer);
+      break;
+    case 'capture':
+      renderCaptureState(contentContainer);
       break;
     case 'processing':
       renderProcessingState(contentContainer);
@@ -161,6 +167,9 @@ function renderState(state) {
       break;
     case 'comparison':
       renderComparisonState(contentContainer);
+      break;
+    case 'manuscript-complete':
+      renderManuscriptCompleteState(contentContainer);
       break;
   }
 }
@@ -179,16 +188,18 @@ function renderCaptureState(container) {
   `;
 
   const captureContainer = document.getElementById('image-capture-container');
-  if (captureContainer) {
+  if (captureContainer && appContext.sheetType) {
     imageCapture = new ImageCapture({
       container: captureContainer,
+      sheetType: appContext.sheetType,
       onCapture: handleImageCapture,
+      onBack: handleBackToTypeSelection,
     });
   }
 }
 
 /**
- * Render the sheet type selection state
+ * Render the sheet type selection state (first step)
  * @param {HTMLElement} container
  */
 function renderSelectTypeState(container) {
@@ -196,7 +207,7 @@ function renderSelectTypeState(container) {
     <div class="main-content">
       <div class="container">
         <div class="card">
-          <h2 class="text-center mb-md">Select Sheet Type</h2>
+          <h2 class="text-center mb-md">What type of scoresheet?</h2>
           <div id="sheet-type-container"></div>
         </div>
       </div>
@@ -204,18 +215,16 @@ function renderSelectTypeState(container) {
   `;
 
   const typeContainer = document.getElementById('sheet-type-container');
-  if (typeContainer && appContext.capturedImage) {
+  if (typeContainer) {
     sheetTypeSelector = new SheetTypeSelector({
       container: typeContainer,
-      imageBlob: appContext.capturedImage,
       onSelect: handleSheetTypeSelect,
-      onBack: handleBackToCapture,
     });
   }
 }
 
 /**
- * Render the processing state with OCR progress
+ * Render the processing state with OCR progress (electronic sheets only)
  * @param {HTMLElement} container
  */
 function renderProcessingState(container) {
@@ -225,7 +234,7 @@ function renderProcessingState(container) {
         <div class="card">
           <h2 class="text-center mb-md">Processing Scoresheet</h2>
           <p class="text-muted text-center mb-lg">
-            Extracting text using ${appContext.sheetType === 'electronic' ? 'print' : 'handwriting'} recognition...
+            Extracting text using print recognition...
           </p>
           <div id="ocr-progress-container"></div>
         </div>
@@ -416,6 +425,50 @@ function renderComparisonState(container) {
 }
 
 /**
+ * Render the manuscript capture complete state (no OCR)
+ * @param {HTMLElement} container
+ */
+function renderManuscriptCompleteState(container) {
+  container.innerHTML = `
+    <div class="main-content">
+      <div class="container">
+        <div class="card">
+          <h2 class="text-center mb-md">Image Captured</h2>
+          <p class="text-muted text-center mb-lg">
+            Manuscript scoresheet captured successfully. OCR for manuscript scoresheets is not yet available.
+          </p>
+
+          <div class="sheet-type-selector__preview mb-lg">
+            <img
+              id="manuscript-preview"
+              class="sheet-type-selector__thumbnail"
+              alt="Captured manuscript scoresheet"
+            />
+          </div>
+
+          <div class="flex flex-col gap-md">
+            <button class="btn btn-primary btn-block" id="btn-new-scan">
+              Scan Another Sheet
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Show the captured image
+  const preview = document.getElementById('manuscript-preview');
+  if (preview && appContext.capturedImage) {
+    resultsPreviewUrl = URL.createObjectURL(appContext.capturedImage);
+    preview.src = resultsPreviewUrl;
+  }
+
+  // Bind button
+  const newScanBtn = document.getElementById('btn-new-scan');
+  newScanBtn?.addEventListener('click', handleStartOver);
+}
+
+/**
  * Escape HTML to prevent XSS
  * @param {string} text
  * @returns {string}
@@ -439,33 +492,36 @@ function handleImageCapture(blob) {
   console.log('  Type:', blob.type);
   console.log('  Size:', (blob.size / 1024).toFixed(2), 'KB');
 
-  transition('select-type', { capturedImage: blob });
+  // Route based on sheet type
+  if (appContext.sheetType === 'manuscript') {
+    transition('manuscript-complete', { capturedImage: blob });
+  } else {
+    transition('processing', { capturedImage: blob });
+  }
 }
 
 /**
- * Handle sheet type selection
- * @param {{ type: 'electronic' | 'handwritten', imageBlob: Blob }} selection
+ * Handle sheet type selection (now first step, routes to capture)
+ * @param {'electronic' | 'manuscript'} type
  */
-function handleSheetTypeSelect(selection) {
-  console.log('Sheet type selected:', selection.type);
-  console.log('  Image size:', (selection.imageBlob.size / 1024).toFixed(2), 'KB');
+function handleSheetTypeSelect(type) {
+  console.log('Sheet type selected:', type);
 
-  transition('processing', { sheetType: selection.type });
+  transition('capture', { sheetType: type });
 }
 
 /**
- * Handle going back to capture from type selection
+ * Handle going back to type selection from capture
  */
-function handleBackToCapture() {
-  // SheetTypeSelector component handles its own URL cleanup via destroy()
-  transition('capture', { capturedImage: null, sheetType: null });
+function handleBackToTypeSelection() {
+  transition('select-type', { sheetType: null, capturedImage: null });
 }
 
 /**
  * Handle starting over from any state
  */
 function handleStartOver() {
-  transition('capture', { capturedImage: null, sheetType: null, ocrResult: null });
+  transition('select-type', { capturedImage: null, sheetType: null, ocrResult: null });
 }
 
 /**

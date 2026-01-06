@@ -1,22 +1,25 @@
 /**
  * CameraGuide Component
  *
- * Provides a visual overlay guide for framing the players and officials
- * table when capturing images. Displays corner markers and alignment
- * guides to help users position the scoresheet correctly.
+ * Provides a visual overlay guide for framing scoresheets when capturing images.
+ * Displays corner markers and alignment guides to help users position correctly.
  *
- * The guide uses a 4:5 portrait aspect ratio which matches the typical
- * player list table format on Swiss volleyball scoresheets (player lists
- * for both teams, libero section, and official members combined).
+ * Supports two aspect ratios based on scoresheet type:
+ * - Electronic (4:5 portrait): For player list table capture from screenshots
+ * - Manuscript (7:5 landscape): For full physical scoresheet capture
  */
 
 /**
- * Aspect ratio for the player/officials table (width:height)
+ * Aspect ratio for electronic scoresheet player list (width:height)
  * 4:5 portrait format matches Swiss volleyball scoresheet tables
- * Based on actual scoresheet dimensions showing player lists,
- * liberos, and official members sections combined.
  */
 export const TABLE_ASPECT_RATIO = 4 / 5;
+
+/**
+ * Aspect ratio for manuscript scoresheet (width:height)
+ * 7:5 landscape format matches A4 paper scoresheets
+ */
+export const MANUSCRIPT_ASPECT_RATIO = 7 / 5;
 
 /** Padding from container edge in pixels */
 const FRAME_PADDING_PX = 24;
@@ -28,13 +31,24 @@ const FRAME_HEIGHT_RATIO = 0.7;
 const FRAME_WIDTH_RATIO = 0.85;
 
 /**
+ * @typedef {'electronic' | 'manuscript'} SheetType
+ */
+
+/**
  * @typedef {Object} CameraGuideOptions
  * @property {HTMLElement} container - Container element to render into
+ * @property {SheetType} [sheetType='electronic'] - Type of scoresheet (affects aspect ratio)
  */
 
 export class CameraGuide {
   /** @type {HTMLElement} */
   #container;
+
+  /** @type {number} */
+  #aspectRatio;
+
+  /** @type {string} */
+  #labelText;
 
   /** @type {HTMLElement | null} */
   #guideElement = null;
@@ -42,13 +56,23 @@ export class CameraGuide {
   /**
    * @param {CameraGuideOptions} options
    */
-  constructor({ container }) {
+  constructor({ container, sheetType = 'electronic' }) {
     this.#container = container;
+    this.#aspectRatio = sheetType === 'manuscript' ? MANUSCRIPT_ASPECT_RATIO : TABLE_ASPECT_RATIO;
+    this.#labelText = sheetType === 'manuscript' ? 'Align full scoresheet here' : 'Align player list here';
     this.#render();
     this.#updateGuideSize();
 
     // Update guide size on window resize
     window.addEventListener('resize', this.#handleResize);
+  }
+
+  /**
+   * Get the current aspect ratio
+   * @returns {number}
+   */
+  getAspectRatio() {
+    return this.#aspectRatio;
   }
 
   #render() {
@@ -62,7 +86,7 @@ export class CameraGuide {
           <div class="camera-guide__corner camera-guide__corner--bl"></div>
           <div class="camera-guide__corner camera-guide__corner--br"></div>
           <div class="camera-guide__label">
-            <span>Align player list here</span>
+            <span>${this.#labelText}</span>
           </div>
         </div>
       </div>
@@ -97,14 +121,14 @@ export class CameraGuide {
     let frameWidth, frameHeight;
 
     // Determine dimensions based on available space while maintaining aspect ratio
-    if (availableWidth / availableHeight > TABLE_ASPECT_RATIO) {
+    if (availableWidth / availableHeight > this.#aspectRatio) {
       // Container is wider than needed - constrain by height
       frameHeight = availableHeight * FRAME_HEIGHT_RATIO;
-      frameWidth = frameHeight * TABLE_ASPECT_RATIO;
+      frameWidth = frameHeight * this.#aspectRatio;
     } else {
       // Container is taller than needed - constrain by width
       frameWidth = availableWidth * FRAME_WIDTH_RATIO;
-      frameHeight = frameWidth / TABLE_ASPECT_RATIO;
+      frameHeight = frameWidth / this.#aspectRatio;
     }
 
     frame.style.width = `${frameWidth}px`;
