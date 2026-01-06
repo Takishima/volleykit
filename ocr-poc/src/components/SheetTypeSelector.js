@@ -8,9 +8,7 @@
  * This selection determines the capture guide aspect ratio and whether OCR is available.
  */
 
-/**
- * @typedef {'electronic' | 'manuscript'} SheetType
- */
+/** @typedef {import('../types.js').SheetType} SheetType */
 
 /**
  * @typedef {Object} SheetTypeSelectorOptions

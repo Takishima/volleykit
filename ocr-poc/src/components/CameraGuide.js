@@ -9,6 +9,8 @@
  * - Manuscript (7:5 landscape): For full physical scoresheet capture
  */
 
+/** @typedef {import('../types.js').SheetType} SheetType */
+
 /**
  * Aspect ratio for electronic scoresheet player list (width:height)
  * 4:5 portrait format matches Swiss volleyball scoresheet tables
@@ -29,10 +31,6 @@ const FRAME_HEIGHT_RATIO = 0.7;
 
 /** Frame size as ratio of available width when container is taller */
 const FRAME_WIDTH_RATIO = 0.85;
-
-/**
- * @typedef {'electronic' | 'manuscript'} SheetType
- */
 
 /**
  * @typedef {Object} CameraGuideOptions
@@ -86,11 +84,17 @@ export class CameraGuide {
           <div class="camera-guide__corner camera-guide__corner--bl"></div>
           <div class="camera-guide__corner camera-guide__corner--br"></div>
           <div class="camera-guide__label">
-            <span>${this.#labelText}</span>
+            <span></span>
           </div>
         </div>
       </div>
     `;
+
+    // Set label text safely via textContent to prevent XSS
+    const labelSpan = this.#guideElement.querySelector('.camera-guide__label span');
+    if (labelSpan) {
+      labelSpan.textContent = this.#labelText;
+    }
 
     this.#container.appendChild(this.#guideElement);
   }

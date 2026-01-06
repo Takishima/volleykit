@@ -16,9 +16,7 @@
 import { CameraGuide } from './CameraGuide.js';
 import { ImageEditor } from './ImageEditor.js';
 
-/**
- * @typedef {'electronic' | 'manuscript'} SheetType
- */
+/** @typedef {import('../types.js').SheetType} SheetType */
 
 /**
  * @typedef {Object} ImageCaptureOptions
@@ -99,7 +97,7 @@ export class ImageCapture {
           >
             ← Back
           </button>
-          <span class="image-capture__hint">${captureHint}</span>
+          <span class="image-capture__hint"></span>
         </div>
 
         <div class="image-capture__buttons">
@@ -184,6 +182,12 @@ export class ImageCapture {
         <div id="editor-container" class="image-capture__editor" hidden></div>
       </div>
     `;
+
+    // Set hint text safely via textContent to prevent XSS
+    const hintSpan = this.#container.querySelector('.image-capture__hint');
+    if (hintSpan) {
+      hintSpan.textContent = captureHint;
+    }
 
     this.#bindEvents();
   }

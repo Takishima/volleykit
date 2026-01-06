@@ -13,6 +13,8 @@
 
 import { TABLE_ASPECT_RATIO, MANUSCRIPT_ASPECT_RATIO } from './CameraGuide.js';
 
+/** @typedef {import('../types.js').SheetType} SheetType */
+
 /** Minimum zoom level */
 const MIN_ZOOM = 0.1;
 
@@ -30,10 +32,6 @@ const FRAME_PADDING_PX = 24;
 
 /** Frame size as ratio of available space */
 const FRAME_SIZE_RATIO = 0.85;
-
-/**
- * @typedef {'electronic' | 'manuscript'} SheetType
- */
 
 /**
  * @typedef {Object} ImageEditorOptions
