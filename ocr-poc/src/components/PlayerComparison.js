@@ -321,6 +321,15 @@ function compareTeams(ocrTeam, refTeam) {
  */
 const CONFIDENCE_THRESHOLD = 2;
 
+/** Weight for match ratio in confidence calculation (0-100 scale contribution) */
+const MATCH_RATIO_WEIGHT = 50;
+
+/** Weight for score difference ratio in confidence calculation (0-100 scale contribution) */
+const DIFF_RATIO_WEIGHT = 50;
+
+/** Minimum confidence score required to skip user confirmation */
+const MINIMUM_CONFIDENCE_SCORE = 50;
+
 /**
  * Try to match OCR teams to reference teams
  * Since we don't know which column is which team, we try both combinations
@@ -363,11 +372,11 @@ function findBestTeamMapping(ocrTeamA, ocrTeamB, refTeamA, refTeamB) {
   if (totalPossible > 0) {
     const matchRatio = maxScore / totalPossible;
     const diffRatio = scoreDiff / Math.max(1, maxScore);
-    confidenceScore = Math.round((matchRatio * 50) + (diffRatio * 50));
+    confidenceScore = Math.round((matchRatio * MATCH_RATIO_WEIGHT) + (diffRatio * DIFF_RATIO_WEIGHT));
   }
 
   // Determine if we're confident in the mapping
-  const isConfident = scoreDiff >= CONFIDENCE_THRESHOLD && confidenceScore >= 50;
+  const isConfident = scoreDiff >= CONFIDENCE_THRESHOLD && confidenceScore >= MINIMUM_CONFIDENCE_SCORE;
 
   if (option2Score > option1Score) {
     return {
@@ -599,15 +608,6 @@ export class PlayerComparison {
       this.referenceData.teamA,
       this.referenceData.teamB,
     );
-
-    console.log('Team mapping analysis:', {
-      isConfident: mapping.isConfident,
-      confidenceScore: mapping.confidenceScore,
-      option1Score: mapping.option1Score,
-      option2Score: mapping.option2Score,
-      autoSwapped: mapping.swapped,
-      isManuscript: this.isManuscript,
-    });
 
     // Show confirmation modal if:
     // 1. Confidence is low (scores are close)

@@ -24,6 +24,9 @@
  * @property {() => void} [onCancel] - Called when user cancels
  */
 
+/** Duration of the swap button rotation animation in milliseconds */
+const SWAP_ANIMATION_DURATION_MS = 300;
+
 /**
  * Escape HTML to prevent XSS
  * @param {string} text
@@ -235,7 +238,7 @@ export class TeamConfirmationModal {
     swapBtn?.classList.add('team-confirm__swap-btn--animating');
     setTimeout(() => {
       swapBtn?.classList.remove('team-confirm__swap-btn--animating');
-    }, 300);
+    }, SWAP_ANIMATION_DURATION_MS);
   }
 
   /**
