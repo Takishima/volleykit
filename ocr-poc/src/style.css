@@ -1053,7 +1053,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  /* Create horizontal lines to simulate table rows */
+  /* 14 rows matches Swiss volleyball scoresheet player list layout */
   background: repeating-linear-gradient(
     to bottom,
     transparent,

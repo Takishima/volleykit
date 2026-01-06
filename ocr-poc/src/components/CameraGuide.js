@@ -2,7 +2,7 @@
  * CameraGuide Component
  *
  * Provides a visual overlay guide for framing scoresheets when capturing images.
- * Displays corner markers and alignment guides to help users position correctly.
+ * Displays a table outline with row lines to help users align scoresheets correctly.
  *
  * Supports two aspect ratios based on scoresheet type:
  * - Electronic (4:5 portrait): For player list table capture from screenshots
