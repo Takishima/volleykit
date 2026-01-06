@@ -265,15 +265,26 @@ describe("useHomeLocationSettings", () => {
   });
 
   it("provides geocode results", async () => {
-    const results = [
+    const inputResults = [
       { latitude: 47.38, longitude: 8.54, displayName: "Zurich" },
       { latitude: 46.95, longitude: 7.45, displayName: "Bern" },
     ];
-    await setupMocks({ geocodeResults: results });
+    await setupMocks({ geocodeResults: inputResults });
 
     const { result } = renderHook(() => useHomeLocationSettings({ t: mockT }));
 
-    expect(result.current.geocodeResults).toEqual(results);
+    // Results include id and source added by the mock
+    expect(result.current.geocodeResults).toHaveLength(2);
+    expect(result.current.geocodeResults[0]).toMatchObject({
+      latitude: 47.38,
+      longitude: 8.54,
+      displayName: "Zurich",
+    });
+    expect(result.current.geocodeResults[1]).toMatchObject({
+      latitude: 46.95,
+      longitude: 7.45,
+      displayName: "Bern",
+    });
   });
 
   it("provides geocode loading state", async () => {
