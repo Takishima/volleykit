@@ -10,7 +10,7 @@
  */
 import { describe, it, expect, beforeEach } from "vitest";
 import type { ZodError } from "zod";
-import { useDemoStore } from "@/shared/stores/demo";
+import { useDemoStore, DEMO_USER_PERSON_IDENTITY } from "@/shared/stores/demo";
 import {
   assignmentSchema,
   compensationRecordSchema,
@@ -365,7 +365,7 @@ describe("Exchange mutation endpoints", () => {
     const { exchanges, assignments } = useDemoStore.getState();
     // Find an open exchange that's not submitted by the demo user
     const openExchange = exchanges.find(
-      (e) => e.status === "open" && e.submittedByPerson?.__identity !== "demo-me",
+      (e) => e.status === "open" && e.submittedByPerson?.__identity !== DEMO_USER_PERSON_IDENTITY,
     );
     expect(openExchange).toBeDefined();
 
