@@ -2,7 +2,7 @@
  * CameraGuide Component
  *
  * Provides a visual overlay guide for framing scoresheets when capturing images.
- * Displays corner markers and alignment guides to help users position correctly.
+ * Displays a table outline with row lines to help users align scoresheets correctly.
  *
  * Supports two aspect ratios based on scoresheet type:
  * - Electronic (4:5 portrait): For player list table capture from screenshots
@@ -79,10 +79,7 @@ export class CameraGuide {
     this.#guideElement.innerHTML = `
       <div class="camera-guide__overlay">
         <div class="camera-guide__frame">
-          <div class="camera-guide__corner camera-guide__corner--tl"></div>
-          <div class="camera-guide__corner camera-guide__corner--tr"></div>
-          <div class="camera-guide__corner camera-guide__corner--bl"></div>
-          <div class="camera-guide__corner camera-guide__corner--br"></div>
+          <div class="camera-guide__table-lines"></div>
           <div class="camera-guide__label">
             <span></span>
           </div>
