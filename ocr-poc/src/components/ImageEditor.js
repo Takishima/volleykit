@@ -28,8 +28,14 @@ const ZOOM_STEP = 0.1;
 /** JPEG quality for cropped output */
 const JPEG_QUALITY = 0.92;
 
-/** Padding from viewport edge in pixels */
+/** Padding from viewport edge in pixels (used for frame positioning) */
 const FRAME_PADDING_PX = 24;
+
+/**
+ * Padding from viewport edge when fitting full image (larger than FRAME_PADDING_PX
+ * to ensure the full image is comfortably visible when zoomed out)
+ */
+const VIEWPORT_PADDING_PX = 40;
 
 /** Frame size as ratio of available space */
 const FRAME_SIZE_RATIO = 0.85;
@@ -260,9 +266,8 @@ export class ImageEditor {
 
     // Calculate initial zoom to fit the entire image within the viewport
     // This allows users to see the full image and zoom in to select the area they want
-    const viewportPadding = 40; // Padding from viewport edges
-    const availableWidth = this.#containerSize.width - viewportPadding * 2;
-    const availableHeight = this.#containerSize.height - viewportPadding * 2;
+    const availableWidth = this.#containerSize.width - VIEWPORT_PADDING_PX * 2;
+    const availableHeight = this.#containerSize.height - VIEWPORT_PADDING_PX * 2;
 
     const scaleToFitWidth = availableWidth / this.#imageNaturalSize.width;
     const scaleToFitHeight = availableHeight / this.#imageNaturalSize.height;
