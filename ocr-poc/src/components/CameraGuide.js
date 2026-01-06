@@ -23,6 +23,12 @@ export const TABLE_ASPECT_RATIO = 4 / 5;
  */
 export const MANUSCRIPT_ASPECT_RATIO = 7 / 5;
 
+/**
+ * Aspect ratio for roster-only capture (width:height)
+ * 23:20 landscape format matches both teams' roster section of manuscript scoresheets
+ */
+export const ROSTER_ASPECT_RATIO = 23 / 20;
+
 /** Padding from container edge in pixels */
 const FRAME_PADDING_PX = 24;
 
@@ -32,10 +38,13 @@ const FRAME_HEIGHT_RATIO = 0.7;
 /** Frame size as ratio of available width when container is taller */
 const FRAME_WIDTH_RATIO = 0.85;
 
+/** @typedef {'full' | 'roster-only'} ManuscriptCaptureMode */
+
 /**
  * @typedef {Object} CameraGuideOptions
  * @property {HTMLElement} container - Container element to render into
  * @property {SheetType} [sheetType='electronic'] - Type of scoresheet (affects aspect ratio)
+ * @property {ManuscriptCaptureMode} [captureMode] - Capture mode for manuscript sheets
  */
 
 export class CameraGuide {
@@ -54,15 +63,42 @@ export class CameraGuide {
   /**
    * @param {CameraGuideOptions} options
    */
-  constructor({ container, sheetType = 'electronic' }) {
+  constructor({ container, sheetType = 'electronic', captureMode }) {
     this.#container = container;
-    this.#aspectRatio = sheetType === 'manuscript' ? MANUSCRIPT_ASPECT_RATIO : TABLE_ASPECT_RATIO;
-    this.#labelText = sheetType === 'manuscript' ? 'Align full scoresheet here' : 'Align player list here';
+    this.#aspectRatio = this.#determineAspectRatio(sheetType, captureMode);
+    this.#labelText = this.#determineLabelText(sheetType, captureMode);
     this.#render();
     this.#updateGuideSize();
 
     // Update guide size on window resize
     window.addEventListener('resize', this.#handleResize);
+  }
+
+  /**
+   * Determine the aspect ratio based on sheet type and capture mode
+   * @param {SheetType} sheetType
+   * @param {ManuscriptCaptureMode} [captureMode]
+   * @returns {number}
+   */
+  #determineAspectRatio(sheetType, captureMode) {
+    if (sheetType === 'manuscript') {
+      // Roster-only mode uses a wider landscape ratio for the roster area
+      return captureMode === 'roster-only' ? ROSTER_ASPECT_RATIO : MANUSCRIPT_ASPECT_RATIO;
+    }
+    return TABLE_ASPECT_RATIO;
+  }
+
+  /**
+   * Determine the label text based on sheet type and capture mode
+   * @param {SheetType} sheetType
+   * @param {ManuscriptCaptureMode} [captureMode]
+   * @returns {string}
+   */
+  #determineLabelText(sheetType, captureMode) {
+    if (sheetType === 'manuscript') {
+      return captureMode === 'roster-only' ? 'Align roster area here' : 'Align full scoresheet here';
+    }
+    return 'Align player list here';
   }
 
   /**

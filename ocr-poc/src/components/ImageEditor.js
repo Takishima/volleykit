@@ -11,9 +11,10 @@
  * - Manuscript (7:5 landscape): For full physical scoresheet
  */
 
-import { TABLE_ASPECT_RATIO, MANUSCRIPT_ASPECT_RATIO } from './CameraGuide.js';
+import { TABLE_ASPECT_RATIO, MANUSCRIPT_ASPECT_RATIO, ROSTER_ASPECT_RATIO } from './CameraGuide.js';
 
 /** @typedef {import('../types.js').SheetType} SheetType */
+/** @typedef {'full' | 'roster-only'} ManuscriptCaptureMode */
 
 /** Minimum zoom level */
 const MIN_ZOOM = 0.1;
@@ -38,6 +39,7 @@ const FRAME_SIZE_RATIO = 0.85;
  * @property {HTMLElement} container - Container element to render into
  * @property {Blob} imageBlob - The image to edit
  * @property {SheetType} [sheetType='electronic'] - Type of scoresheet (affects aspect ratio)
+ * @property {ManuscriptCaptureMode} [captureMode] - Capture mode for manuscript sheets
  * @property {(croppedBlob: Blob) => void} onConfirm - Callback when crop is confirmed
  * @property {() => void} onCancel - Callback when editing is cancelled
  */
@@ -97,10 +99,10 @@ export class ImageEditor {
   /**
    * @param {ImageEditorOptions} options
    */
-  constructor({ container, imageBlob, sheetType = 'electronic', onConfirm, onCancel }) {
+  constructor({ container, imageBlob, sheetType = 'electronic', captureMode, onConfirm, onCancel }) {
     this.#container = container;
     this.#imageBlob = imageBlob;
-    this.#aspectRatio = sheetType === 'manuscript' ? MANUSCRIPT_ASPECT_RATIO : TABLE_ASPECT_RATIO;
+    this.#aspectRatio = this.#determineAspectRatio(sheetType, captureMode);
     this.#onConfirm = onConfirm;
     this.#onCancel = onCancel;
 
@@ -110,6 +112,20 @@ export class ImageEditor {
 
     // Add resize listener (arrow function is already bound to `this`)
     window.addEventListener('resize', this.#handleResize);
+  }
+
+  /**
+   * Determine the aspect ratio based on sheet type and capture mode
+   * @param {SheetType} sheetType
+   * @param {ManuscriptCaptureMode} [captureMode]
+   * @returns {number}
+   */
+  #determineAspectRatio(sheetType, captureMode) {
+    if (sheetType === 'manuscript') {
+      // Roster-only mode uses a wider landscape ratio for the roster area
+      return captureMode === 'roster-only' ? ROSTER_ASPECT_RATIO : MANUSCRIPT_ASPECT_RATIO;
+    }
+    return TABLE_ASPECT_RATIO;
   }
 
   #render() {

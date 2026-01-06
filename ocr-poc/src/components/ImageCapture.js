@@ -17,11 +17,13 @@ import { CameraGuide } from './CameraGuide.js';
 import { ImageEditor } from './ImageEditor.js';
 
 /** @typedef {import('../types.js').SheetType} SheetType */
+/** @typedef {'full' | 'roster-only'} ManuscriptCaptureMode */
 
 /**
  * @typedef {Object} ImageCaptureOptions
  * @property {HTMLElement} container - Container element to render into
  * @property {SheetType} sheetType - Type of scoresheet (affects aspect ratio)
+ * @property {ManuscriptCaptureMode} [captureMode] - Capture mode for manuscript sheets
  * @property {(blob: Blob) => void} onCapture - Callback when image is captured
  * @property {() => void} [onBack] - Callback to go back to type selection
  */
@@ -38,6 +40,9 @@ export class ImageCapture {
 
   /** @type {SheetType} */
   #sheetType;
+
+  /** @type {ManuscriptCaptureMode | undefined} */
+  #captureMode;
 
   /** @type {(blob: Blob) => void} */
   #onCapture;
@@ -73,18 +78,30 @@ export class ImageCapture {
   /**
    * @param {ImageCaptureOptions} options
    */
-  constructor({ container, sheetType, onCapture, onBack }) {
+  constructor({ container, sheetType, captureMode, onCapture, onBack }) {
     this.#container = container;
     this.#sheetType = sheetType;
+    this.#captureMode = captureMode;
     this.#onCapture = onCapture;
     this.#onBack = onBack;
     this.#render();
   }
 
+  /**
+   * Get the capture hint text based on sheet type and capture mode
+   * @returns {string}
+   */
+  #getCaptureHint() {
+    if (this.#sheetType === 'manuscript') {
+      return this.#captureMode === 'roster-only'
+        ? 'Capture the roster area in landscape'
+        : 'Capture the full scoresheet in landscape';
+    }
+    return 'Capture the player list table';
+  }
+
   #render() {
-    const captureHint = this.#sheetType === 'manuscript'
-      ? 'Capture the full scoresheet in landscape'
-      : 'Capture the player list table';
+    const captureHint = this.#getCaptureHint();
 
     this.#container.innerHTML = `
       <div class="image-capture">
@@ -237,11 +254,12 @@ export class ImageCapture {
         await this.#videoElement.play();
       }
 
-      // Initialize camera guide overlay with sheet type
+      // Initialize camera guide overlay with sheet type and capture mode
       if (guideContainer) {
         this.#cameraGuide = new CameraGuide({
           container: guideContainer,
           sheetType: this.#sheetType,
+          captureMode: this.#captureMode,
         });
       }
 
@@ -375,6 +393,7 @@ export class ImageCapture {
       container: editorContainer,
       imageBlob,
       sheetType: this.#sheetType,
+      captureMode: this.#captureMode,
       onConfirm: (croppedBlob) => this.#handleEditorConfirm(croppedBlob),
       onCancel: () => this.#closeEditor(),
     });
