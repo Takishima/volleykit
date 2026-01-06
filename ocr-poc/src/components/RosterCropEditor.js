@@ -123,6 +123,9 @@ export class RosterCropEditor {
   /** @type {number | null} Resize debounce timer */
   #resizeTimer = null;
 
+  /** @type {Element | null} Element that had focus before modal opened */
+  #previouslyFocusedElement = null;
+
   /**
    * @param {RosterCropEditorOptions} options
    */
@@ -133,9 +136,13 @@ export class RosterCropEditor {
     this.#onConfirm = onConfirm;
     this.#onCancel = onCancel;
 
+    // Store previously focused element to restore on close
+    this.#previouslyFocusedElement = document.activeElement;
+
     this.#imageUrl = URL.createObjectURL(imageBlob);
     this.#render();
     this.#loadImage();
+    this.#setupFocusTrap();
 
     window.addEventListener('resize', this.#handleResize);
   }
@@ -609,6 +616,80 @@ export class RosterCropEditor {
     }
   }
 
+  /**
+   * Get all focusable elements within the modal
+   * @returns {HTMLElement[]}
+   */
+  #getFocusableElements() {
+    const modal = this.#container.querySelector('.roster-crop-editor');
+    if (!modal) {
+      return [];
+    }
+
+    const focusableSelectors = [
+      'button:not([disabled])',
+      '[tabindex]:not([tabindex="-1"])',
+      'input:not([disabled])',
+      'select:not([disabled])',
+      'textarea:not([disabled])',
+      'a[href]',
+    ].join(', ');
+
+    return Array.from(modal.querySelectorAll(focusableSelectors));
+  }
+
+  /**
+   * Set up focus trapping within the modal
+   */
+  #setupFocusTrap() {
+    const modal = this.#container.querySelector('.roster-crop-editor');
+    if (!modal) {
+      return;
+    }
+
+    // Focus the first preset button when modal opens
+    const firstFocusable = this.#getFocusableElements()[0];
+    if (firstFocusable) {
+      // Use setTimeout to ensure the element is rendered
+      setTimeout(() => firstFocusable.focus(), 0);
+    }
+
+    // Add keydown listener for focus trapping
+    modal.addEventListener('keydown', this.#handleFocusTrap);
+  }
+
+  /**
+   * Handle Tab key to trap focus within the modal
+   * @type {(e: KeyboardEvent) => void}
+   */
+  #handleFocusTrap = (e) => {
+    if (e.key !== 'Tab') {
+      return;
+    }
+
+    const focusableElements = this.#getFocusableElements();
+    if (focusableElements.length === 0) {
+      return;
+    }
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    if (e.shiftKey) {
+      // Shift+Tab: if on first element, wrap to last
+      if (document.activeElement === firstElement) {
+        e.preventDefault();
+        lastElement.focus();
+      }
+    } else {
+      // Tab: if on last element, wrap to first
+      if (document.activeElement === lastElement) {
+        e.preventDefault();
+        firstElement.focus();
+      }
+    }
+  };
+
   async #cropAndConfirm() {
     if (!this.#imageElement) {
       this.#showError('Image not loaded. Please try again.');
@@ -669,6 +750,17 @@ export class RosterCropEditor {
     if (this.#resizeTimer !== null) {
       clearTimeout(this.#resizeTimer);
       this.#resizeTimer = null;
+    }
+
+    // Remove focus trap listener
+    const modal = this.#container.querySelector('.roster-crop-editor');
+    if (modal) {
+      modal.removeEventListener('keydown', this.#handleFocusTrap);
+    }
+
+    // Restore focus to previously focused element
+    if (this.#previouslyFocusedElement instanceof HTMLElement) {
+      this.#previouslyFocusedElement.focus();
     }
 
     window.removeEventListener('resize', this.#handleResize);
