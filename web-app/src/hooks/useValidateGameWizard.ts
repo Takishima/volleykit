@@ -4,6 +4,10 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { logger } from "@/utils/logger";
 import { useWizardNavigation } from "@/hooks/useWizardNavigation";
 import { useValidationState } from "@/hooks/useValidationState";
+import {
+  validateBothRosters,
+  type RosterValidationStatus,
+} from "@/utils/roster-validation";
 
 /** Duration to show success toast before auto-dismissing */
 const SUCCESS_TOAST_DURATION_MS = 3000;
@@ -14,6 +18,8 @@ export interface ValidationStep {
   id: ValidationStepId;
   label: string;
   isOptional?: boolean;
+  /** Whether the step has validation errors (e.g., insufficient players/coaches) */
+  isInvalid?: boolean;
 }
 
 interface UseValidateGameWizardOptions {
@@ -55,9 +61,13 @@ export interface UseValidateGameWizardResult {
 
   // UI state
   showUnsavedDialog: boolean;
+  showRosterWarningDialog: boolean;
   saveError: string | null;
   successToast: string | null;
   isAddPlayerSheetOpen: boolean;
+
+  // Roster validation
+  rosterValidation: RosterValidationStatus;
 
   // Computed values
   canMarkCurrentStepDone: boolean;
@@ -74,6 +84,8 @@ export interface UseValidateGameWizardResult {
   handleValidateAndNext: () => void;
   goBack: () => void;
   handleAddPlayerSheetOpenChange: (open: boolean) => void;
+  handleRosterWarningGoBack: () => void;
+  handleRosterWarningProceed: () => Promise<void>;
 }
 
 /**
@@ -94,6 +106,7 @@ export function useValidateGameWizard({
 
   // UI state
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [showRosterWarningDialog, setShowRosterWarningDialog] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [successToast, setSuccessToast] = useState<string | null>(null);
   const [isAddPlayerSheetOpen, setIsAddPlayerSheetOpen] = useState(false);
@@ -123,14 +136,41 @@ export function useValidateGameWizard({
     awayNominationList,
   } = useValidationState(gameId);
 
+  // Compute roster validation status
+  const rosterValidation = useMemo<RosterValidationStatus>(() => {
+    return validateBothRosters(
+      homeNominationList,
+      validationState.homeRoster.playerModifications,
+      validationState.homeRoster.coachModifications,
+      awayNominationList,
+      validationState.awayRoster.playerModifications,
+      validationState.awayRoster.coachModifications,
+    );
+  }, [
+    homeNominationList,
+    awayNominationList,
+    validationState.homeRoster.playerModifications,
+    validationState.homeRoster.coachModifications,
+    validationState.awayRoster.playerModifications,
+    validationState.awayRoster.coachModifications,
+  ]);
+
   const wizardSteps = useMemo<ValidationStep[]>(
     () => [
-      { id: "home-roster", label: t("validation.homeRoster") },
-      { id: "away-roster", label: t("validation.awayRoster") },
+      {
+        id: "home-roster",
+        label: t("validation.homeRoster"),
+        isInvalid: !rosterValidation.home.isValid,
+      },
+      {
+        id: "away-roster",
+        label: t("validation.awayRoster"),
+        isInvalid: !rosterValidation.away.isValid,
+      },
       { id: "scorer", label: t("validation.scorer") },
       { id: "scoresheet", label: t("validation.scoresheet"), isOptional: true },
     ],
-    [t],
+    [t, rosterValidation.home.isValid, rosterValidation.away.isValid],
   );
 
   const {
@@ -174,6 +214,7 @@ export function useValidateGameWizard({
     if (isOpen) {
       setSaveError(null);
       setSuccessToast(null);
+      setShowRosterWarningDialog(false);
       reset();
       resetToStart();
     }
@@ -216,6 +257,12 @@ export function useValidateGameWizard({
     if (!lastStep?.isOptional && !canMarkCurrentStepDone) return;
     if (!allPreviousRequiredStepsDone) return;
 
+    // Check roster validation - show warning if invalid
+    if (!rosterValidation.allValid) {
+      setShowRosterWarningDialog(true);
+      return;
+    }
+
     if (!lastStep?.isOptional) {
       setStepDone(currentStepIndex, true);
     }
@@ -241,6 +288,7 @@ export function useValidateGameWizard({
     wizardSteps,
     canMarkCurrentStepDone,
     allPreviousRequiredStepsDone,
+    rosterValidation.allValid,
     currentStepIndex,
     setStepDone,
     finalizeValidation,
@@ -280,6 +328,45 @@ export function useValidateGameWizard({
     setIsAddPlayerSheetOpen(open);
   }, []);
 
+  // Roster warning dialog handlers
+  const handleRosterWarningGoBack = useCallback(() => {
+    setShowRosterWarningDialog(false);
+    // Navigate to the first invalid roster step
+    if (!rosterValidation.home.isValid) {
+      goToStep(0); // Home roster
+    } else if (!rosterValidation.away.isValid) {
+      goToStep(1); // Away roster
+    }
+  }, [rosterValidation.home.isValid, rosterValidation.away.isValid, goToStep]);
+
+  const handleRosterWarningProceed = useCallback(async () => {
+    // User chose to proceed despite invalid rosters (game will be forfeited)
+    setShowRosterWarningDialog(false);
+
+    const lastStep = wizardSteps[wizardSteps.length - 1];
+    if (!lastStep?.isOptional) {
+      setStepDone(currentStepIndex, true);
+    }
+
+    isFinalizingRef.current = true;
+    setSaveError(null);
+
+    try {
+      await finalizeValidation();
+      setSuccessToast(t("validation.state.saveSuccess"));
+      toastTimeoutRef.current = setTimeout(() => {
+        setSuccessToast(null);
+      }, SUCCESS_TOAST_DURATION_MS);
+      onClose();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : t("validation.state.saveError");
+      setSaveError(message);
+    } finally {
+      isFinalizingRef.current = false;
+    }
+  }, [wizardSteps, currentStepIndex, setStepDone, finalizeValidation, t, onClose]);
+
   return {
     // Wizard navigation
     currentStepIndex,
@@ -313,9 +400,13 @@ export function useValidateGameWizard({
 
     // UI state
     showUnsavedDialog,
+    showRosterWarningDialog,
     saveError,
     successToast,
     isAddPlayerSheetOpen,
+
+    // Roster validation
+    rosterValidation,
 
     // Computed values
     canMarkCurrentStepDone,
@@ -332,5 +423,7 @@ export function useValidateGameWizard({
     handleValidateAndNext,
     goBack,
     handleAddPlayerSheetOpenChange,
+    handleRosterWarningGoBack,
+    handleRosterWarningProceed,
   };
 }

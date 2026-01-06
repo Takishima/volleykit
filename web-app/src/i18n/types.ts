@@ -46,6 +46,7 @@ export interface Translations {
     wizardProgress: string;
     stepIndicatorCurrent: string;
     stepIndicatorDone: string;
+    stepIndicatorInvalid: string;
     dob: string;
   };
   auth: {
@@ -463,6 +464,15 @@ export interface Translations {
       saveSuccess: string;
       saveError: string;
       markAllStepsTooltip: string;
+    };
+    rosterWarning: {
+      title: string;
+      description: string;
+      missingHeadCoach: string;
+      insufficientPlayers: string;
+      forfeitNote: string;
+      goBack: string;
+      proceedAnyway: string;
     };
     wizard: {
       previous: string;

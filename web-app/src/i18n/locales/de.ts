@@ -154,6 +154,7 @@ const de: Translations = {
     wizardProgress: "Assistentenfortschritt",
     stepIndicatorCurrent: "(aktuell)",
     stepIndicatorDone: "(erledigt)",
+    stepIndicatorInvalid: "(unvollständig)",
     dob: "Geb.",
   },
   auth: {
@@ -625,6 +626,17 @@ const de: Translations = {
       saveError: "Validierung konnte nicht gespeichert werden",
       markAllStepsTooltip:
         "Markieren Sie alle erforderlichen Schritte als geprüft, um abzuschliessen",
+    },
+    rosterWarning: {
+      title: "Unvollständige Aufstellung",
+      description:
+        "Eine oder mehrere Mannschaftsaufstellungen erfüllen nicht die Mindestanforderungen für ein gültiges Spiel.",
+      missingHeadCoach: "Fehlender Cheftrainer",
+      insufficientPlayers: "Nur {count} von {required} erforderlichen Spielern",
+      forfeitNote:
+        "Das Fortfahren mit einer unvollständigen Aufstellung kann zu einem verlorenen Spiel führen.",
+      goBack: "Zurück",
+      proceedAnyway: "Trotzdem fortfahren",
     },
     wizard: {
       previous: "Zurück",

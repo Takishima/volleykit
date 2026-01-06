@@ -9,6 +9,7 @@ import { WizardStepContainer } from "@/components/ui/WizardStepContainer";
 import { WizardStepIndicator } from "@/components/ui/WizardStepIndicator";
 import {
   UnsavedChangesDialog,
+  RosterValidationWarningDialog,
   ValidationSuccessToast,
   StepRenderer,
   ValidatedModeButtons,
@@ -85,7 +86,7 @@ function ValidateGameModalComponent({
         onClose={wizard.attemptClose}
         titleId={modalTitleId}
         size="lg"
-        isLoading={wizard.showUnsavedDialog}
+        isLoading={wizard.showUnsavedDialog || wizard.showRosterWarningDialog}
       >
         <ModalHeader
           title={t("assignments.validateGame")}
@@ -204,6 +205,16 @@ function ValidateGameModalComponent({
         onDiscard={wizard.handleDiscardAndClose}
         onCancel={wizard.handleCancelClose}
         isSaving={wizard.isSaving}
+      />
+
+      <RosterValidationWarningDialog
+        isOpen={wizard.showRosterWarningDialog}
+        rosterValidation={wizard.rosterValidation}
+        homeTeamName={homeTeam}
+        awayTeamName={awayTeam}
+        onGoBack={wizard.handleRosterWarningGoBack}
+        onProceedAnyway={wizard.handleRosterWarningProceed}
+        isProceedingAnyway={wizard.isFinalizing}
       />
     </>
   );
