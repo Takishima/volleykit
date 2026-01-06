@@ -371,6 +371,18 @@ const fr: Translations = {
     profile: "Profil",
     svNumber: "N° SV",
     language: "Langue",
+    preferences: {
+      title: "Préférences",
+    },
+    locationTravel: {
+      title: "Localisation & Déplacement",
+    },
+    dataProtection: {
+      title: "Protection des données",
+    },
+    helpTours: {
+      title: "Aide & Visites guidées",
+    },
     homeLocation: {
       title: "Emplacement domicile",
       description:

@@ -217,6 +217,8 @@ export function t(key: TranslationKey): string {
   return typeof result === "string" ? result : key;
 }
 
+export type TranslationFunction = typeof t;
+
 /**
  * Get translation with interpolation support.
  * Replaces {placeholder} patterns in the translated string with provided values.

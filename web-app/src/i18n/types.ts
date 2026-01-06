@@ -246,6 +246,18 @@ export interface Translations {
     profile: string;
     svNumber: string;
     language: string;
+    preferences: {
+      title: string;
+    };
+    locationTravel: {
+      title: string;
+    };
+    dataProtection: {
+      title: string;
+    };
+    helpTours: {
+      title: string;
+    };
     homeLocation: {
       title: string;
       description: string;
