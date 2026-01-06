@@ -261,23 +261,8 @@ export function useValidateGameWizard({
     }
   }, [onClose, isValidated]);
 
-  const handleFinish = useCallback(async () => {
-    if (isFinalizingRef.current) return;
-
-    const lastStep = wizardSteps[wizardSteps.length - 1];
-    if (!lastStep?.isOptional && !canMarkCurrentStepDone) return;
-    if (!allPreviousRequiredStepsDone) return;
-
-    // Check roster validation - show warning if invalid
-    if (!rosterValidation.allValid) {
-      setShowRosterWarningDialog(true);
-      return;
-    }
-
-    if (!lastStep?.isOptional) {
-      setStepDone(currentStepIndex, true);
-    }
-
+  // Shared finalization logic used by both handleFinish and handleRosterWarningProceed
+  const performFinalization = useCallback(async () => {
     isFinalizingRef.current = true;
     setSaveError(null);
 
@@ -302,6 +287,26 @@ export function useValidateGameWizard({
     } finally {
       isFinalizingRef.current = false;
     }
+  }, [useSafeValidation, saveProgress, finalizeValidation, t, onClose]);
+
+  const handleFinish = useCallback(async () => {
+    if (isFinalizingRef.current) return;
+
+    const lastStep = wizardSteps[wizardSteps.length - 1];
+    if (!lastStep?.isOptional && !canMarkCurrentStepDone) return;
+    if (!allPreviousRequiredStepsDone) return;
+
+    // Check roster validation - show warning if invalid
+    if (!rosterValidation.allValid) {
+      setShowRosterWarningDialog(true);
+      return;
+    }
+
+    if (!lastStep?.isOptional) {
+      setStepDone(currentStepIndex, true);
+    }
+
+    await performFinalization();
   }, [
     wizardSteps,
     canMarkCurrentStepDone,
@@ -309,11 +314,7 @@ export function useValidateGameWizard({
     rosterValidation.allValid,
     currentStepIndex,
     setStepDone,
-    useSafeValidation,
-    saveProgress,
-    finalizeValidation,
-    t,
-    onClose,
+    performFinalization,
   ]);
 
   const handleSaveAndClose = useCallback(async () => {
@@ -368,31 +369,8 @@ export function useValidateGameWizard({
       setStepDone(currentStepIndex, true);
     }
 
-    isFinalizingRef.current = true;
-    setSaveError(null);
-
-    try {
-      if (useSafeValidation) {
-        // Safe validation mode: save only, don't finalize
-        await saveProgress();
-        setShowSafeValidationComplete(true);
-      } else {
-        // Normal mode: finalize the validation
-        await finalizeValidation();
-        setSuccessToast(t("validation.state.saveSuccess"));
-        toastTimeoutRef.current = setTimeout(() => {
-          setSuccessToast(null);
-        }, SUCCESS_TOAST_DURATION_MS);
-        onClose();
-      }
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : t("validation.state.saveError");
-      setSaveError(message);
-    } finally {
-      isFinalizingRef.current = false;
-    }
-  }, [wizardSteps, currentStepIndex, setStepDone, useSafeValidation, saveProgress, finalizeValidation, t, onClose]);
+    await performFinalization();
+  }, [wizardSteps, currentStepIndex, setStepDone, performFinalization]);
 
   const handleSafeValidationCompleteClose = useCallback(() => {
     setShowSafeValidationComplete(false);
