@@ -55,6 +55,10 @@ function createMockSettingsStore(
     isSafeModeEnabled: false,
     setSafeMode: vi.fn(),
 
+    // Safe validation mode
+    isSafeValidationEnabled: true,
+    setSafeValidation: vi.fn(),
+
     // Accessibility
     preventZoom: false,
     setPreventZoom: vi.fn(),

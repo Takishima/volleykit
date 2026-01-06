@@ -4,6 +4,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { logger } from "@/utils/logger";
 import { useWizardNavigation } from "@/hooks/useWizardNavigation";
 import { useValidationState } from "@/hooks/useValidationState";
+import { useAuthStore } from "@/stores/auth";
+import { useSettingsStore } from "@/stores/settings";
 import {
   validateBothRosters,
   type RosterValidationStatus,
@@ -62,6 +64,7 @@ export interface UseValidateGameWizardResult {
   // UI state
   showUnsavedDialog: boolean;
   showRosterWarningDialog: boolean;
+  showSafeValidationComplete: boolean;
   saveError: string | null;
   successToast: string | null;
   isAddPlayerSheetOpen: boolean;
@@ -86,6 +89,7 @@ export interface UseValidateGameWizardResult {
   handleAddPlayerSheetOpenChange: (open: boolean) => void;
   handleRosterWarningGoBack: () => void;
   handleRosterWarningProceed: () => Promise<void>;
+  handleSafeValidationCompleteClose: () => void;
 }
 
 /**
@@ -107,9 +111,15 @@ export function useValidateGameWizard({
   // UI state
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [showRosterWarningDialog, setShowRosterWarningDialog] = useState(false);
+  const [showSafeValidationComplete, setShowSafeValidationComplete] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [successToast, setSuccessToast] = useState<string | null>(null);
   const [isAddPlayerSheetOpen, setIsAddPlayerSheetOpen] = useState(false);
+
+  // Check if safe validation mode is enabled (only applies when not in demo mode)
+  const dataSource = useAuthStore((s) => s.dataSource);
+  const isSafeValidationEnabled = useSettingsStore((s) => s.isSafeValidationEnabled);
+  const useSafeValidation = dataSource !== "demo" && isSafeValidationEnabled;
 
   const gameId = assignment.refereeGame?.game?.__identity;
 
@@ -215,6 +225,7 @@ export function useValidateGameWizard({
       setSaveError(null);
       setSuccessToast(null);
       setShowRosterWarningDialog(false);
+      setShowSafeValidationComplete(false);
       reset();
       resetToStart();
     }
@@ -271,12 +282,19 @@ export function useValidateGameWizard({
     setSaveError(null);
 
     try {
-      await finalizeValidation();
-      setSuccessToast(t("validation.state.saveSuccess"));
-      toastTimeoutRef.current = setTimeout(() => {
-        setSuccessToast(null);
-      }, SUCCESS_TOAST_DURATION_MS);
-      onClose();
+      if (useSafeValidation) {
+        // Safe validation mode: save only, don't finalize
+        await saveProgress();
+        setShowSafeValidationComplete(true);
+      } else {
+        // Normal mode: finalize the validation
+        await finalizeValidation();
+        setSuccessToast(t("validation.state.saveSuccess"));
+        toastTimeoutRef.current = setTimeout(() => {
+          setSuccessToast(null);
+        }, SUCCESS_TOAST_DURATION_MS);
+        onClose();
+      }
     } catch (error) {
       const message =
         error instanceof Error ? error.message : t("validation.state.saveError");
@@ -291,6 +309,8 @@ export function useValidateGameWizard({
     rosterValidation.allValid,
     currentStepIndex,
     setStepDone,
+    useSafeValidation,
+    saveProgress,
     finalizeValidation,
     t,
     onClose,
@@ -352,12 +372,19 @@ export function useValidateGameWizard({
     setSaveError(null);
 
     try {
-      await finalizeValidation();
-      setSuccessToast(t("validation.state.saveSuccess"));
-      toastTimeoutRef.current = setTimeout(() => {
-        setSuccessToast(null);
-      }, SUCCESS_TOAST_DURATION_MS);
-      onClose();
+      if (useSafeValidation) {
+        // Safe validation mode: save only, don't finalize
+        await saveProgress();
+        setShowSafeValidationComplete(true);
+      } else {
+        // Normal mode: finalize the validation
+        await finalizeValidation();
+        setSuccessToast(t("validation.state.saveSuccess"));
+        toastTimeoutRef.current = setTimeout(() => {
+          setSuccessToast(null);
+        }, SUCCESS_TOAST_DURATION_MS);
+        onClose();
+      }
     } catch (error) {
       const message =
         error instanceof Error ? error.message : t("validation.state.saveError");
@@ -365,7 +392,12 @@ export function useValidateGameWizard({
     } finally {
       isFinalizingRef.current = false;
     }
-  }, [wizardSteps, currentStepIndex, setStepDone, finalizeValidation, t, onClose]);
+  }, [wizardSteps, currentStepIndex, setStepDone, useSafeValidation, saveProgress, finalizeValidation, t, onClose]);
+
+  const handleSafeValidationCompleteClose = useCallback(() => {
+    setShowSafeValidationComplete(false);
+    onClose();
+  }, [onClose]);
 
   return {
     // Wizard navigation
@@ -401,6 +433,7 @@ export function useValidateGameWizard({
     // UI state
     showUnsavedDialog,
     showRosterWarningDialog,
+    showSafeValidationComplete,
     saveError,
     successToast,
     isAddPlayerSheetOpen,
@@ -425,5 +458,6 @@ export function useValidateGameWizard({
     handleAddPlayerSheetOpenChange,
     handleRosterWarningGoBack,
     handleRosterWarningProceed,
+    handleSafeValidationCompleteClose,
   };
 }

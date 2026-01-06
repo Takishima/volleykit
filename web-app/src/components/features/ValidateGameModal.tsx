@@ -10,6 +10,7 @@ import { WizardStepIndicator } from "@/components/ui/WizardStepIndicator";
 import {
   UnsavedChangesDialog,
   RosterValidationWarningDialog,
+  SafeValidationCompleteModal,
   ValidationSuccessToast,
   StepRenderer,
   ValidatedModeButtons,
@@ -215,6 +216,11 @@ function ValidateGameModalComponent({
         onGoBack={wizard.handleRosterWarningGoBack}
         onProceedAnyway={wizard.handleRosterWarningProceed}
         isProceedingAnyway={wizard.isFinalizing}
+      />
+
+      <SafeValidationCompleteModal
+        isOpen={wizard.showSafeValidationComplete}
+        onClose={wizard.handleSafeValidationCompleteClose}
       />
     </>
   );

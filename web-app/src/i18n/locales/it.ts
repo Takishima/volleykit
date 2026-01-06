@@ -452,6 +452,15 @@ const it: Translations = {
     safeModeDangerous: "Le operazioni pericolose sono abilitate",
     safeModeBlocked:
       "Questa operazione è bloccata in modalità sicura. Disattiva la modalità sicura nelle Impostazioni per procedere.",
+    safeValidation: "Convalida sicura",
+    safeValidationDescription:
+      "Quando attivata, la convalida salva le modifiche ma non finalizza la partita. Sarai invitato a completare la convalida su VolleyManager.",
+    safeValidationEnabled: "Convalida sicura attivata",
+    safeValidationDisabled: "Convalida sicura disattivata - le partite verranno finalizzate direttamente",
+    safeValidationCompleteTitle: "Convalida salvata",
+    safeValidationCompleteMessage:
+      "Le tue modifiche sono state salvate. Vai su VolleyManager per completare la convalida e finalizzare la partita.",
+    safeValidationCompleteButton: "Apri VolleyManager",
     privacy: "Privacy",
     privacyNoCollection:
       "VolleyKit non raccoglie né memorizza alcun dato personale.",
