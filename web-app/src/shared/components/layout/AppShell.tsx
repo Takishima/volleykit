@@ -93,15 +93,16 @@ export function AppShell() {
 
   const getOccupationLabel = useCallback(
     (occupation: Occupation): string => {
-      const labelKey = getOccupationLabelKey(occupation.type);
-      const baseLabel = t(labelKey);
+      // Prioritize showing the association/club identifier for easier differentiation
+      // Only fall back to occupation type if no identifier is available
       if (occupation.clubName) {
-        return `${baseLabel} (${occupation.clubName})`;
+        return occupation.clubName;
       }
       if (occupation.associationCode) {
-        return `${baseLabel} (${occupation.associationCode})`;
+        return occupation.associationCode;
       }
-      return baseLabel;
+      const labelKey = getOccupationLabelKey(occupation.type);
+      return t(labelKey);
     },
     [t],
   );
