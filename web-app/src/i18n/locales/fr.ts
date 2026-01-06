@@ -154,6 +154,7 @@ const fr: Translations = {
     wizardProgress: "Progression de l'assistant",
     stepIndicatorCurrent: "(actuel)",
     stepIndicatorDone: "(terminé)",
+    stepIndicatorInvalid: "(incomplet)",
     dob: "DDN",
   },
   auth: {
@@ -624,6 +625,17 @@ const fr: Translations = {
       saveError: "Échec de l'enregistrement de la validation",
       markAllStepsTooltip:
         "Marquez toutes les étapes requises comme vérifiées pour terminer",
+    },
+    rosterWarning: {
+      title: "Liste incomplète",
+      description:
+        "Une ou plusieurs listes d'équipe ne répondent pas aux exigences minimales pour un match valide.",
+      missingHeadCoach: "Entraîneur principal manquant",
+      insufficientPlayers: "Seulement {count} joueurs sur {required} requis",
+      forfeitNote:
+        "Continuer avec une liste incomplète peut entraîner la perte du match par forfait.",
+      goBack: "Retour",
+      proceedAnyway: "Continuer quand même",
     },
     wizard: {
       previous: "Précédent",

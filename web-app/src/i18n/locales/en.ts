@@ -154,6 +154,7 @@ const en: Translations = {
     wizardProgress: "Wizard progress",
     stepIndicatorCurrent: "(current)",
     stepIndicatorDone: "(done)",
+    stepIndicatorInvalid: "(incomplete)",
     dob: "DOB",
   },
   auth: {
@@ -619,6 +620,17 @@ const en: Translations = {
       saveSuccess: "Validation saved successfully",
       saveError: "Failed to save validation",
       markAllStepsTooltip: "Mark all required steps as reviewed to finish",
+    },
+    rosterWarning: {
+      title: "Incomplete Roster",
+      description:
+        "One or more team rosters do not meet the minimum requirements for a valid game.",
+      missingHeadCoach: "Missing head coach",
+      insufficientPlayers: "Only {count} of {required} required players",
+      forfeitNote:
+        "Proceeding with an incomplete roster may result in a forfeited game.",
+      goBack: "Go Back",
+      proceedAnyway: "Proceed Anyway",
     },
     wizard: {
       previous: "Previous",

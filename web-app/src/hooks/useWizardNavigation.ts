@@ -4,6 +4,8 @@ export interface WizardStep {
   id: string;
   label: string;
   isOptional?: boolean;
+  /** Whether the step has validation errors that should be highlighted */
+  isInvalid?: boolean;
 }
 
 export interface UseWizardNavigationOptions<T extends WizardStep> {

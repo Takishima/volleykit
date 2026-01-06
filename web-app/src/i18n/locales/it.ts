@@ -154,6 +154,7 @@ const it: Translations = {
     wizardProgress: "Progresso procedura guidata",
     stepIndicatorCurrent: "(corrente)",
     stepIndicatorDone: "(completato)",
+    stepIndicatorInvalid: "(incompleto)",
     dob: "DDN",
   },
   auth: {
@@ -619,6 +620,17 @@ const it: Translations = {
       saveError: "Impossibile salvare la validazione",
       markAllStepsTooltip:
         "Segna tutti i passaggi richiesti come verificati per terminare",
+    },
+    rosterWarning: {
+      title: "Rosa incompleta",
+      description:
+        "Una o più rose delle squadre non soddisfano i requisiti minimi per una partita valida.",
+      missingHeadCoach: "Allenatore principale mancante",
+      insufficientPlayers: "Solo {count} giocatori su {required} richiesti",
+      forfeitNote:
+        "Procedere con una rosa incompleta può comportare la sconfitta a tavolino.",
+      goBack: "Torna indietro",
+      proceedAnyway: "Procedi comunque",
     },
     wizard: {
       previous: "Precedente",
