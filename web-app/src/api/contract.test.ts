@@ -361,20 +361,31 @@ describe("Exchange mutation endpoints", () => {
     useDemoStore.getState().initializeDemoData();
   });
 
-  it("applyForExchange changes status to applied", async () => {
-    const { exchanges } = useDemoStore.getState();
-    const openExchange = exchanges.find((e) => e.status === "open");
+  it("applyForExchange removes exchange and creates assignment", async () => {
+    const { exchanges, assignments } = useDemoStore.getState();
+    // Find an open exchange that's not submitted by the demo user
+    const openExchange = exchanges.find(
+      (e) => e.status === "open" && e.submittedByPerson?.__identity !== "demo-me",
+    );
     expect(openExchange).toBeDefined();
+
+    const initialAssignmentCount = assignments.length;
+    const initialExchangeCount = exchanges.length;
 
     await mockApi.applyForExchange(openExchange!.__identity);
 
-    const { exchanges: updated } = useDemoStore.getState();
-    const applied = updated.find(
+    const { exchanges: updated, assignments: updatedAssignments } =
+      useDemoStore.getState();
+
+    // Exchange should be removed from the list
+    const exchangeStillExists = updated.find(
       (e) => e.__identity === openExchange!.__identity,
     );
-    expect(applied?.status).toBe("applied");
-    expect(applied?.appliedBy).toBeDefined();
-    expect(applied?.appliedAt).toBeDefined();
+    expect(exchangeStillExists).toBeUndefined();
+    expect(updated.length).toBe(initialExchangeCount - 1);
+
+    // A new assignment should be created
+    expect(updatedAssignments.length).toBe(initialAssignmentCount + 1);
   });
 
   it("withdrawFromExchange changes status back to open", async () => {

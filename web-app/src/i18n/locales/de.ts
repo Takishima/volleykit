@@ -335,6 +335,8 @@ const de: Translations = {
       "Rückzug vom Tausch fehlgeschlagen. Bitte erneut versuchen.",
     addedToExchangeSuccess: "Einsatz zur Tauschbörse hinzugefügt",
     addedToExchangeError: "Einsatz konnte nicht zur Tauschbörse hinzugefügt werden",
+    cannotExchangeValidatedGame:
+      "Bereits validierte Spiele können nicht zur Tauschbörse hinzugefügt werden",
     submittedBy: "Von:",
     levelRequired: "Niveau {level}+",
     errorLoading: "Fehler beim Laden der Tauschangebote",
