@@ -17,13 +17,18 @@ import { SheetTypeSelector } from './components/SheetTypeSelector.js';
 import { OCRProgress } from './components/OCRProgress.js';
 import { OCRFactory } from './services/ocr/index.js';
 import { PlayerComparison } from './components/PlayerComparison.js';
+import { RosterCropEditor } from './components/RosterCropEditor.js';
 
 /* ==============================================
  * APPLICATION STATE
  * ============================================== */
 
 /**
- * @typedef {'select-type' | 'capture' | 'processing' | 'results' | 'comparison' | 'manuscript-complete'} AppState
+ * @typedef {'select-type' | 'manuscript-options' | 'capture' | 'roster-crop' | 'processing' | 'results' | 'comparison' | 'manuscript-complete'} AppState
+ */
+
+/**
+ * @typedef {'full' | 'roster-only'} ManuscriptCaptureMode
  */
 
 /**
@@ -35,6 +40,7 @@ import { PlayerComparison } from './components/PlayerComparison.js';
  * @property {AppState} state - Current application state
  * @property {Blob | null} capturedImage - The captured image blob
  * @property {'electronic' | 'manuscript' | null} sheetType - Selected sheet type
+ * @property {ManuscriptCaptureMode | null} captureMode - How to capture manuscript (full or roster-only)
  * @property {OCRResult | null} ocrResult - OCR processing result
  */
 
@@ -43,6 +49,7 @@ const appContext = {
   state: 'select-type',
   capturedImage: null,
   sheetType: null,
+  captureMode: null,
   ocrResult: null,
 };
 
@@ -70,6 +77,9 @@ let isOCRRunning = false;
 
 /** @type {PlayerComparison | null} */
 let playerComparison = null;
+
+/** @type {RosterCropEditor | null} */
+let rosterCropEditor = null;
 
 /* ==============================================
  * STATE MACHINE
@@ -132,6 +142,12 @@ function cleanupState(state) {
         playerComparison = null;
       }
       break;
+    case 'roster-crop':
+      if (rosterCropEditor) {
+        rosterCropEditor.destroy();
+        rosterCropEditor = null;
+      }
+      break;
     case 'manuscript-complete':
       if (resultsPreviewUrl) {
         URL.revokeObjectURL(resultsPreviewUrl);
@@ -156,6 +172,9 @@ function renderState(state) {
     case 'select-type':
       renderSelectTypeState(contentContainer);
       break;
+    case 'manuscript-options':
+      renderManuscriptOptionsState(contentContainer);
+      break;
     case 'capture':
       renderCaptureState(contentContainer);
       break;
@@ -167,6 +186,9 @@ function renderState(state) {
       break;
     case 'comparison':
       renderComparisonState(contentContainer);
+      break;
+    case 'roster-crop':
+      renderRosterCropState(contentContainer);
       break;
     case 'manuscript-complete':
       renderManuscriptCompleteState(contentContainer);
@@ -189,11 +211,16 @@ function renderCaptureState(container) {
 
   const captureContainer = document.getElementById('image-capture-container');
   if (captureContainer && appContext.sheetType) {
+    // Manuscript sheets go back to options, electronic sheets go back to type selection
+    const backHandler = appContext.sheetType === 'manuscript'
+      ? handleBackToManuscriptOptions
+      : handleBackToTypeSelection;
+
     imageCapture = new ImageCapture({
       container: captureContainer,
       sheetType: appContext.sheetType,
       onCapture: handleImageCapture,
-      onBack: handleBackToTypeSelection,
+      onBack: backHandler,
     });
   }
 }
@@ -221,6 +248,72 @@ function renderSelectTypeState(container) {
       onSelect: handleSheetTypeSelect,
     });
   }
+}
+
+/**
+ * Render the manuscript capture options state
+ * User chooses between capturing full scoresheet or roster area only
+ * @param {HTMLElement} container
+ */
+function renderManuscriptOptionsState(container) {
+  container.innerHTML = `
+    <div class="main-content">
+      <div class="container">
+        <div class="card">
+          <h2 class="text-center mb-md">How would you like to capture?</h2>
+          <p class="text-muted text-center mb-lg">
+            Choose how to capture the handwritten roster
+          </p>
+
+          <div class="sheet-type-selector__options">
+            <button
+              type="button"
+              class="sheet-type-selector__option"
+              id="btn-capture-roster"
+              aria-label="Capture roster area only"
+            >
+              <span class="sheet-type-selector__option-icon">📋</span>
+              <span class="sheet-type-selector__option-label">Roster Only</span>
+              <span class="sheet-type-selector__option-desc">
+                Take a photo of just the player list area
+              </span>
+            </button>
+
+            <button
+              type="button"
+              class="sheet-type-selector__option"
+              id="btn-capture-full"
+              aria-label="Capture full scoresheet"
+            >
+              <span class="sheet-type-selector__option-icon">📄</span>
+              <span class="sheet-type-selector__option-label">Full Scoresheet</span>
+              <span class="sheet-type-selector__option-desc">
+                Take a photo of the entire sheet, then crop to roster
+              </span>
+            </button>
+          </div>
+
+          <button
+            type="button"
+            class="btn btn-secondary btn-block mt-lg"
+            id="btn-back-to-type"
+            aria-label="Go back to type selection"
+          >
+            ← Back
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Bind buttons
+  const rosterOnlyBtn = document.getElementById('btn-capture-roster');
+  const fullSheetBtn = document.getElementById('btn-capture-full');
+  const backBtn = document.getElementById('btn-back-to-type');
+
+  rosterOnlyBtn?.addEventListener('click', () => handleManuscriptModeSelect('roster-only'));
+  fullSheetBtn?.addEventListener('click', () => handleManuscriptModeSelect('full'));
+  backBtn?.addEventListener('click', handleBackToTypeSelection);
 }
 
 /**
@@ -425,7 +518,28 @@ function renderComparisonState(container) {
 }
 
 /**
- * Render the manuscript capture complete state (no OCR)
+ * Render the roster crop state for manuscript scoresheets
+ * @param {HTMLElement} container
+ */
+function renderRosterCropState(container) {
+  container.innerHTML = `
+    <div id="roster-crop-container"></div>
+  `;
+
+  const cropContainer = document.getElementById('roster-crop-container');
+  if (cropContainer && appContext.capturedImage) {
+    rosterCropEditor = new RosterCropEditor({
+      container: cropContainer,
+      imageBlob: appContext.capturedImage,
+      initialPreset: 'both',
+      onConfirm: handleRosterCropConfirm,
+      onCancel: handleRosterCropCancel,
+    });
+  }
+}
+
+/**
+ * Render the manuscript capture complete state (no OCR - fallback)
  * @param {HTMLElement} container
  */
 function renderManuscriptCompleteState(container) {
@@ -492,36 +606,65 @@ function handleImageCapture(blob) {
   console.log('  Type:', blob.type);
   console.log('  Size:', (blob.size / 1024).toFixed(2), 'KB');
 
-  // Route based on sheet type
+  // Route based on sheet type and capture mode
   if (appContext.sheetType === 'manuscript') {
-    transition('manuscript-complete', { capturedImage: blob });
+    if (appContext.captureMode === 'roster-only') {
+      // Roster-only mode: go directly to OCR processing
+      transition('processing', { capturedImage: blob });
+    } else {
+      // Full sheet mode: go to roster crop step first
+      transition('roster-crop', { capturedImage: blob });
+    }
   } else {
+    // Electronic sheets go directly to OCR processing
     transition('processing', { capturedImage: blob });
   }
 }
 
 /**
- * Handle sheet type selection (now first step, routes to capture)
+ * Handle sheet type selection (first step)
  * @param {'electronic' | 'manuscript'} type
  */
 function handleSheetTypeSelect(type) {
   console.log('Sheet type selected:', type);
 
-  transition('capture', { sheetType: type });
+  if (type === 'manuscript') {
+    // Manuscript sheets go to options screen first (roster-only vs full sheet)
+    transition('manuscript-options', { sheetType: type });
+  } else {
+    // Electronic sheets go directly to capture
+    transition('capture', { sheetType: type });
+  }
+}
+
+/**
+ * Handle manuscript capture mode selection
+ * @param {ManuscriptCaptureMode} mode - 'full' or 'roster-only'
+ */
+function handleManuscriptModeSelect(mode) {
+  console.log('Manuscript capture mode selected:', mode);
+  transition('capture', { captureMode: mode });
 }
 
 /**
  * Handle going back to type selection from capture
  */
 function handleBackToTypeSelection() {
-  transition('select-type', { sheetType: null, capturedImage: null });
+  transition('select-type', { sheetType: null, capturedImage: null, captureMode: null });
+}
+
+/**
+ * Handle going back to manuscript options from capture
+ */
+function handleBackToManuscriptOptions() {
+  transition('manuscript-options', { capturedImage: null, captureMode: null });
 }
 
 /**
  * Handle starting over from any state
  */
 function handleStartOver() {
-  transition('select-type', { capturedImage: null, sheetType: null, ocrResult: null });
+  transition('select-type', { capturedImage: null, sheetType: null, captureMode: null, ocrResult: null });
 }
 
 /**
@@ -548,6 +691,26 @@ async function handleCancelOCR() {
   }
   isOCRRunning = false;
   transition('capture', { capturedImage: null, sheetType: null, ocrResult: null });
+}
+
+/**
+ * Handle roster crop confirmation - proceed to OCR processing
+ * @param {Blob} croppedBlob - The cropped roster image
+ * @param {string} preset - Which preset was used (both, teamA, teamB)
+ */
+function handleRosterCropConfirm(croppedBlob, preset) {
+  console.log('Roster cropped:', preset);
+  console.log('  Size:', (croppedBlob.size / 1024).toFixed(2), 'KB');
+
+  // Use the cropped image for OCR processing
+  transition('processing', { capturedImage: croppedBlob });
+}
+
+/**
+ * Handle roster crop cancellation - go back to capture
+ */
+function handleRosterCropCancel() {
+  transition('capture', { capturedImage: null });
 }
 
 /* ==============================================
