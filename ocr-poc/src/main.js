@@ -175,10 +175,6 @@ function renderState(state) {
  */
 function renderCaptureState(container) {
   container.innerHTML = `
-    <h2 class="text-center mb-md">Capture Scoresheet</h2>
-    <p class="text-muted text-center mb-lg">
-      Take a photo or select an image from your library to extract player information.
-    </p>
     <div id="image-capture-container"></div>
   `;
 
@@ -197,8 +193,14 @@ function renderCaptureState(container) {
  */
 function renderSelectTypeState(container) {
   container.innerHTML = `
-    <h2 class="text-center mb-md">Select Sheet Type</h2>
-    <div id="sheet-type-container"></div>
+    <div class="main-content">
+      <div class="container">
+        <div class="card">
+          <h2 class="text-center mb-md">Select Sheet Type</h2>
+          <div id="sheet-type-container"></div>
+        </div>
+      </div>
+    </div>
   `;
 
   const typeContainer = document.getElementById('sheet-type-container');
@@ -218,11 +220,17 @@ function renderSelectTypeState(container) {
  */
 function renderProcessingState(container) {
   container.innerHTML = `
-    <h2 class="text-center mb-md">Processing Scoresheet</h2>
-    <p class="text-muted text-center mb-lg">
-      Extracting text using ${appContext.sheetType === 'electronic' ? 'print' : 'handwriting'} recognition...
-    </p>
-    <div id="ocr-progress-container"></div>
+    <div class="main-content">
+      <div class="container">
+        <div class="card">
+          <h2 class="text-center mb-md">Processing Scoresheet</h2>
+          <p class="text-muted text-center mb-lg">
+            Extracting text using ${appContext.sheetType === 'electronic' ? 'print' : 'handwriting'} recognition...
+          </p>
+          <div id="ocr-progress-container"></div>
+        </div>
+      </div>
+    </div>
   `;
 
   const progressContainer = document.getElementById('ocr-progress-container');
@@ -320,43 +328,49 @@ function renderResultsState(container) {
       : 0;
 
   container.innerHTML = `
-    <h2 class="text-center mb-md">OCR Complete</h2>
+    <div class="main-content">
+      <div class="container">
+        <div class="card">
+          <h2 class="text-center mb-md">OCR Complete</h2>
 
-    <div class="ocr-results__stats mb-lg">
-      <div class="ocr-results__stat">
-        <span class="ocr-results__stat-value">${lineCount}</span>
-        <span class="ocr-results__stat-label">Lines</span>
+          <div class="ocr-results__stats mb-lg">
+            <div class="ocr-results__stat">
+              <span class="ocr-results__stat-value">${lineCount}</span>
+              <span class="ocr-results__stat-label">Lines</span>
+            </div>
+            <div class="ocr-results__stat">
+              <span class="ocr-results__stat-value">${wordCount}</span>
+              <span class="ocr-results__stat-label">Words</span>
+            </div>
+            <div class="ocr-results__stat">
+              <span class="ocr-results__stat-value">${avgConfidence}%</span>
+              <span class="ocr-results__stat-label">Confidence</span>
+            </div>
+          </div>
+
+          <div class="sheet-type-selector__preview mb-md">
+            <img
+              id="result-preview"
+              class="sheet-type-selector__thumbnail"
+              alt="Processed scoresheet"
+            />
+          </div>
+
+          <details class="ocr-results__details mb-lg">
+            <summary class="ocr-results__summary">View Extracted Text</summary>
+            <pre class="ocr-results__text">${escapeHtml(result?.fullText || 'No text extracted')}</pre>
+          </details>
+
+          <div class="flex flex-col gap-md">
+            <button class="btn btn-primary btn-block" id="btn-compare-players">
+              Compare with Reference List
+            </button>
+            <button class="btn btn-secondary btn-block" id="btn-new-scan">
+              Scan Another Sheet
+            </button>
+          </div>
+        </div>
       </div>
-      <div class="ocr-results__stat">
-        <span class="ocr-results__stat-value">${wordCount}</span>
-        <span class="ocr-results__stat-label">Words</span>
-      </div>
-      <div class="ocr-results__stat">
-        <span class="ocr-results__stat-value">${avgConfidence}%</span>
-        <span class="ocr-results__stat-label">Confidence</span>
-      </div>
-    </div>
-
-    <div class="sheet-type-selector__preview mb-md">
-      <img
-        id="result-preview"
-        class="sheet-type-selector__thumbnail"
-        alt="Processed scoresheet"
-      />
-    </div>
-
-    <details class="ocr-results__details mb-lg">
-      <summary class="ocr-results__summary">View Extracted Text</summary>
-      <pre class="ocr-results__text">${escapeHtml(result?.fullText || 'No text extracted')}</pre>
-    </details>
-
-    <div class="flex flex-col gap-md">
-      <button class="btn btn-primary btn-block" id="btn-compare-players">
-        Compare with Reference List
-      </button>
-      <button class="btn btn-secondary btn-block" id="btn-new-scan">
-        Scan Another Sheet
-      </button>
     </div>
   `;
 
@@ -381,8 +395,14 @@ function renderResultsState(container) {
  */
 function renderComparisonState(container) {
   container.innerHTML = `
-    <h2 class="text-center mb-md">Player List Comparison</h2>
-    <div id="player-comparison-container"></div>
+    <div class="main-content">
+      <div class="container">
+        <div class="card">
+          <h2 class="text-center mb-md">Player List Comparison</h2>
+          <div id="player-comparison-container"></div>
+        </div>
+      </div>
+    </div>
   `;
 
   const comparisonContainer = document.getElementById('player-comparison-container');
@@ -491,11 +511,7 @@ function init() {
 
   // Render app shell
   app.innerHTML = `
-    <div class="container">
-      <div class="card">
-        <div id="content-container"></div>
-      </div>
-    </div>
+    <div id="content-container"></div>
   `;
 
   // Render initial state
