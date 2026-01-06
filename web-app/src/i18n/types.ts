@@ -217,6 +217,7 @@ export interface Translations {
     errorLoading: string;
     unavailableInCalendarModeTitle: string;
     unavailableInCalendarModeDescription: string;
+    hideOwn: string;
     settings: {
       title: string;
       maxDistance: string;

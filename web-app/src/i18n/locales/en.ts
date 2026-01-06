@@ -340,6 +340,7 @@ const en: Translations = {
     unavailableInCalendarModeTitle: "Not available in Calendar Mode",
     unavailableInCalendarModeDescription:
       "Exchange features are not available in calendar mode. Use full login to browse and apply for exchanges.",
+    hideOwn: "Hide own",
     settings: {
       title: "Filter Settings",
       maxDistance: "Maximum distance",
