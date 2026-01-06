@@ -104,7 +104,7 @@ export class ImageCapture {
           aria-hidden="true"
         />
 
-        <div id="camera-container" class="image-capture__camera" hidden>
+        <div id="camera-container" class="image-capture__camera" role="dialog" aria-modal="true" aria-label="Camera capture" hidden>
           <div class="image-capture__video-wrapper">
             <video
               id="camera-preview"

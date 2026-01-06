@@ -13,7 +13,7 @@
 import { TABLE_ASPECT_RATIO } from './CameraGuide.js';
 
 /** Minimum zoom level */
-const MIN_ZOOM = 0.5;
+const MIN_ZOOM = 0.1;
 
 /** Maximum zoom level */
 const MAX_ZOOM = 4;
@@ -106,7 +106,7 @@ export class ImageEditor {
 
   #render() {
     this.#container.innerHTML = `
-      <div class="image-editor">
+      <div class="image-editor" role="dialog" aria-modal="true" aria-label="Image editor">
         <div class="image-editor__viewport" id="editor-viewport">
           <img
             class="image-editor__image"
