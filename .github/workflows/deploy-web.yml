@@ -38,12 +38,10 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-  build-and-deploy:
+
+  # Build jobs run in parallel
+  build-web-app:
     runs-on: ubuntu-latest
-    # Run build if worker succeeded, was skipped (Cloudflare not configured), or never ran
-    # Don't run if worker deployment failed or was cancelled
-    needs: [deploy-worker]
-    if: ${{ !failure() && !cancelled() }}
     defaults:
       run:
         working-directory: web-app
@@ -74,74 +72,127 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          # Set the proxy URL for production build
           VITE_API_PROXY_URL: ${{ vars.VITE_API_PROXY_URL }}
-          # Set base path for GitHub Pages deployment
-          # Configure via repository variable, defaults to repo name pattern
           VITE_BASE_PATH: ${{ vars.VITE_BASE_PATH || format('/{0}/', github.event.repository.name) }}
-          # OJP API key for Swiss public transport travel times
           VITE_OJP_API_KEY: ${{ secrets.VITE_OJP_API_KEY }}
       - name: Add .nojekyll for GitHub Pages
         run: touch dist/.nojekyll
+      - name: Upload web-app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-app-dist
+          path: web-app/dist
+          retention-days: 1
 
-      # Build Help Site subdirectory app
-      - name: Install Help Site dependencies
-        run: npm ci
+  build-help-site:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
         working-directory: help-site
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: help-site/package-lock.json
+      - name: Install dependencies
+        run: npm ci
       - name: Build Help Site
         run: npm run build
-        working-directory: help-site
+        env:
+          ASTRO_BASE_PATH: ${{ vars.VITE_BASE_PATH || format('/{0}/', github.event.repository.name) }}help
+      - name: Upload help-site artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: help-site-dist
+          path: help-site/dist
+          retention-days: 1
 
-      # Build OCR PoC subdirectory app
-      - name: Install OCR PoC dependencies
-        run: npm ci
+  build-ocr-poc:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
         working-directory: ocr-poc
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ocr-poc/package-lock.json
+      - name: Install dependencies
+        run: npm ci
       - name: Lint OCR PoC
         run: npm run lint
-        working-directory: ocr-poc
       - name: Build OCR PoC
         run: npm run build
-        working-directory: ocr-poc
         env:
           VITE_BASE_PATH: ${{ vars.VITE_BASE_PATH || format('/{0}/', github.event.repository.name) }}ocr-poc/
-          # OCR proxy endpoint - configure via repository variable for custom worker deployments
           VITE_OCR_ENDPOINT: ${{ vars.VITE_OCR_ENDPOINT }}
-      # Download existing gh-pages content to preserve PR previews
+      - name: Upload ocr-poc artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ocr-poc-dist
+          path: ocr-poc/dist
+          retention-days: 1
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [deploy-worker, build-web-app, build-help-site, build-ocr-poc]
+    # Run if all builds succeeded; worker can be skipped (Cloudflare not configured)
+    if: ${{ !failure() && !cancelled() }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Download web-app artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: web-app-dist
+          path: deploy
+      - name: Download help-site artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: help-site-dist
+          path: deploy/help
+      - name: Download ocr-poc artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ocr-poc-dist
+          path: deploy/ocr-poc
+      - name: Delete artifacts
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: |
+            web-app-dist
+            help-site-dist
+            ocr-poc-dist
       - name: Download existing gh-pages content
         run: |
           if git ls-remote --exit-code --heads origin gh-pages; then
             echo "Cloning existing gh-pages branch..."
             git clone --depth 1 --branch gh-pages \
               https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git \
-              ${{ github.workspace }}/gh-pages-current
+              gh-pages-current
           else
             echo "gh-pages branch does not exist yet, starting fresh"
           fi
-        working-directory: ${{ github.workspace }}
-      - name: Prepare deployment preserving PR previews
+      - name: Preserve PR preview subdirectories
         run: |
-          mkdir -p ${{ github.workspace }}/deploy
-          # Copy new main site build
-          cp -r dist/* ${{ github.workspace }}/deploy/
-          # Copy Help Site build to subdirectory
-          mkdir -p ${{ github.workspace }}/deploy/help
-          cp -r ${{ github.workspace }}/help-site/dist/* ${{ github.workspace }}/deploy/help/
-          # Copy OCR PoC build to subdirectory
-          mkdir -p ${{ github.workspace }}/deploy/ocr-poc
-          cp -r ${{ github.workspace }}/ocr-poc/dist/* ${{ github.workspace }}/deploy/ocr-poc/
-          # Preserve existing PR preview subdirectories (if any)
-          if [ -d "${{ github.workspace }}/gh-pages-current" ]; then
+          if [ -d "gh-pages-current" ]; then
             shopt -s nullglob
-            for pr_dir in ${{ github.workspace }}/gh-pages-current/pr-*/; do
-              [ -d "$pr_dir" ] && cp -r "$pr_dir" ${{ github.workspace }}/deploy/
+            for pr_dir in gh-pages-current/pr-*/; do
+              [ -d "$pr_dir" ] && cp -r "$pr_dir" deploy/
             done
           fi
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ${{ github.workspace }}/deploy
-          # Keep existing files not in this deployment (PR previews)
+          publish_dir: deploy
           keep_files: false
-          # Enable for debugging
           enable_jekyll: false
