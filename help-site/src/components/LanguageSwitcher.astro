@@ -145,8 +145,7 @@ const { compact = false } = Astro.props;
           updateChecks(lang);
           closeMenu();
           // Reload page to apply translations (since Astro is SSG)
-          // For a more seamless experience, you could use client-side hydration
-          // window.location.reload();
+          window.location.reload();
         });
       });
 

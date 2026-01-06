@@ -19,6 +19,7 @@ import { BASE_PATH } from '../constants';
       type="button"
       class="flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-subtle hover:text-text-primary dark:text-text-secondary-dark dark:hover:bg-surface-subtle-dark dark:hover:text-text-primary-dark lg:hidden"
       aria-label="Open navigation menu"
+      data-i18n-aria-label="a11y.openMenu"
       data-menu-toggle
     >
       <svg
@@ -42,13 +43,14 @@ import { BASE_PATH } from '../constants';
       class="hidden items-center gap-2 text-text-primary hover:text-primary-600 dark:text-text-primary-dark dark:hover:text-primary-400 lg:flex"
     >
       <img src={`${BASE_PATH}/favicon.svg`} alt="" class="h-7 w-7" aria-hidden="true" />
-      <span class="font-semibold">VolleyKit Help</span>
+      <span class="font-semibold" data-i18n="home.title">VolleyKit Help</span>
     </a>
 
     <!-- Mobile: Centered title -->
     <a
       href={`${BASE_PATH}/`}
       class="font-semibold text-text-primary dark:text-text-primary-dark lg:hidden"
+      data-i18n="home.title"
     >
       VolleyKit Help
     </a>
@@ -67,7 +69,7 @@ import { BASE_PATH } from '../constants';
         rel="noopener noreferrer"
         class="flex items-center gap-2 rounded-lg bg-primary-500 px-4 py-2 text-sm font-medium text-primary-950 transition-colors hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
       >
-        Open App
+        <span data-i18n="common.openApp">Open App</span>
         <svg
           class="h-4 w-4"
           fill="none"

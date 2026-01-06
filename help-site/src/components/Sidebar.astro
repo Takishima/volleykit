@@ -29,7 +29,7 @@ const icons: Record<string, string> = {
 ---
 
 <aside class="hidden w-64 shrink-0 border-r border-border-default bg-surface-card dark:border-border-default-dark dark:bg-surface-card-dark lg:block" data-pagefind-ignore>
-  <nav class="sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto p-4" aria-label="Main navigation">
+  <nav class="sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto p-4" aria-label="Main navigation" data-i18n-aria-label="a11y.mainNavigation">
     <ul class="space-y-1">
       {
         navItems.map((item) => {
@@ -54,7 +54,7 @@ const icons: Record<string, string> = {
                   aria-hidden="true"
                   set:html={icons[item.icon]}
                 />
-                <span>{item.title}</span>
+                <span data-i18n={item.i18nKey}>{item.title}</span>
               </a>
             </li>
           );
