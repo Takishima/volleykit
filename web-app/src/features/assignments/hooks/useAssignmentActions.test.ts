@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { createElement, type ReactNode } from "react";
 import { renderHook, act } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAssignmentActions } from "./useAssignmentActions";
 import type { Assignment } from "@/api/client";
 import * as authStore from "@/shared/stores/auth";
@@ -8,6 +10,22 @@ import * as languageStore from "@/shared/stores/language";
 import * as settingsStore from "@/shared/stores/settings";
 import { toast } from "@/shared/stores/toast";
 import { MODAL_CLEANUP_DELAY } from "../utils/assignment-helpers";
+
+function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+}
+
+function createWrapper() {
+  const queryClient = createTestQueryClient();
+  return function Wrapper({ children }: { children: ReactNode }) {
+    return createElement(QueryClientProvider, { client: queryClient }, children);
+  };
+}
 
 vi.mock("@/shared/stores/auth");
 vi.mock("@/shared/stores/demo");
@@ -102,7 +120,7 @@ describe("useAssignmentActions", () => {
   });
 
   it("should initialize with closed modals", () => {
-    const { result } = renderHook(() => useAssignmentActions());
+    const { result } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() });
 
     expect(result.current.editCompensationModal.isOpen).toBe(false);
     expect(result.current.editCompensationModal.assignment).toBeNull();
@@ -115,7 +133,7 @@ describe("useAssignmentActions", () => {
   });
 
   it("should open and close edit compensation modal", () => {
-    const { result } = renderHook(() => useAssignmentActions());
+    const { result } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() });
 
     act(() => {
       result.current.editCompensationModal.open(mockAssignment);
@@ -146,7 +164,7 @@ describe("useAssignmentActions", () => {
   });
 
   it("should open and close validate game modal", () => {
-    const { result } = renderHook(() => useAssignmentActions());
+    const { result } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() });
 
     act(() => {
       result.current.validateGameModal.open(mockAssignment);
@@ -173,7 +191,7 @@ describe("useAssignmentActions", () => {
   });
 
   it("should cleanup timeout on unmount", () => {
-    const { result, unmount } = renderHook(() => useAssignmentActions());
+    const { result, unmount } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() });
 
     act(() => {
       result.current.editCompensationModal.open(mockAssignment);
@@ -193,7 +211,7 @@ describe("useAssignmentActions", () => {
   });
 
   it("should clear previous timeout when closing multiple times", () => {
-    const { result } = renderHook(() => useAssignmentActions());
+    const { result } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() });
 
     act(() => {
       result.current.editCompensationModal.open(mockAssignment);
@@ -225,7 +243,7 @@ describe("useAssignmentActions", () => {
   });
 
   it("should open PDF report modal for NLA/NLB games", () => {
-    const { result } = renderHook(() => useAssignmentActions());
+    const { result } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() });
 
     act(() => {
       result.current.handleGenerateReport(mockAssignment);
@@ -236,7 +254,7 @@ describe("useAssignmentActions", () => {
   });
 
   it("should block generate report for non-NLA/NLB games", () => {
-    const { result } = renderHook(() => useAssignmentActions());
+    const { result } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() });
 
     const nonEligibleAssignment = createMockAssignment("1L");
 
@@ -249,7 +267,7 @@ describe("useAssignmentActions", () => {
   });
 
   it("should open PDF report modal for NLB games", () => {
-    const { result } = renderHook(() => useAssignmentActions());
+    const { result } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() });
 
     const nlbAssignment = createMockAssignment("NLB");
 
@@ -262,7 +280,7 @@ describe("useAssignmentActions", () => {
   });
 
   it("should block generate report when league data is undefined", () => {
-    const { result } = renderHook(() => useAssignmentActions());
+    const { result } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() });
 
     const assignmentWithoutLeague: Assignment = {
       __identity: "test-assignment-1",
@@ -291,7 +309,7 @@ describe("useAssignmentActions", () => {
   });
 
   it("should block generate report for second referee (head-two)", () => {
-    const { result } = renderHook(() => useAssignmentActions());
+    const { result } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() });
 
     const secondRefereeAssignment: Assignment = {
       ...createMockAssignment("NLA"),
@@ -307,7 +325,7 @@ describe("useAssignmentActions", () => {
   });
 
   it("should block generate report for linesman positions", () => {
-    const { result } = renderHook(() => useAssignmentActions());
+    const { result } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() });
 
     const linesmanAssignment: Assignment = {
       ...createMockAssignment("NLA"),
@@ -323,7 +341,7 @@ describe("useAssignmentActions", () => {
   });
 
   it("should open and close PDF report modal", () => {
-    const { result } = renderHook(() => useAssignmentActions());
+    const { result } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() });
 
     act(() => {
       result.current.pdfReportModal.open(mockAssignment);
@@ -346,7 +364,7 @@ describe("useAssignmentActions", () => {
   });
 
   it("should handle add to exchange action", () => {
-    const { result } = renderHook(() => useAssignmentActions());
+    const { result } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() });
 
     act(() => {
       result.current.handleAddToExchange(mockAssignment);
@@ -365,7 +383,7 @@ describe("useAssignmentActions", () => {
     });
 
     it("should use demo store for add to exchange in demo mode", () => {
-      const { result } = renderHook(() => useAssignmentActions());
+      const { result } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() });
 
       act(() => {
         result.current.handleAddToExchange(mockAssignment);
@@ -378,7 +396,7 @@ describe("useAssignmentActions", () => {
     });
 
     it("should open PDF report modal in demo mode", () => {
-      const { result } = renderHook(() => useAssignmentActions());
+      const { result } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() });
 
       act(() => {
         result.current.handleGenerateReport(mockAssignment);
@@ -404,7 +422,7 @@ describe("useAssignmentActions", () => {
     });
 
     it("should block add to exchange when safe mode is enabled", () => {
-      const { result } = renderHook(() => useAssignmentActions());
+      const { result } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() });
 
       act(() => {
         result.current.handleAddToExchange(mockAssignment);
@@ -415,7 +433,7 @@ describe("useAssignmentActions", () => {
     });
 
     it("should block validate game when safe mode is enabled for unvalidated games", () => {
-      const { result } = renderHook(() => useAssignmentActions());
+      const { result } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() });
 
       act(() => {
         result.current.validateGameModal.open(mockAssignment);
@@ -439,7 +457,7 @@ describe("useAssignmentActions", () => {
         },
       } as Assignment;
 
-      const { result } = renderHook(() => useAssignmentActions());
+      const { result } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() });
 
       act(() => {
         result.current.validateGameModal.open(validatedAssignment);
@@ -457,7 +475,7 @@ describe("useAssignmentActions", () => {
         >),
       );
 
-      const { result } = renderHook(() => useAssignmentActions());
+      const { result } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() });
 
       act(() => {
         result.current.handleAddToExchange(mockAssignment);

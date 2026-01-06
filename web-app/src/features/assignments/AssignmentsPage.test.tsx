@@ -78,7 +78,7 @@ function mockAuthStoreState(overrides: Record<string, unknown> = {}) {
     return state as ReturnType<typeof authStore.useAuthStore>;
   });
 }
-vi.mock("@/shared/hooks/useAssignmentActions", () => ({
+vi.mock("./hooks/useAssignmentActions", () => ({
   useAssignmentActions: () => ({
     editCompensationModal: {
       isOpen: false,

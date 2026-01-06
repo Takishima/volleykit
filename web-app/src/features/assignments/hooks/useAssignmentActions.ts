@@ -1,5 +1,7 @@
 import { useState, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import type { Assignment } from "@/api/client";
+import { queryKeys } from "@/api/queryKeys";
 import { createLogger } from "@/shared/utils/logger";
 import {
   getTeamNames,
@@ -49,6 +51,7 @@ interface UseAssignmentActionsResult {
 
 export function useAssignmentActions(): UseAssignmentActionsResult {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const { guard, isDemoMode } = useSafeModeGuard();
   const locale = useLanguageStore((state) => state.locale);
   const addAssignmentToExchange = useDemoStore(
@@ -171,6 +174,10 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
 
       if (isDemoMode) {
         addAssignmentToExchange(assignment.__identity);
+        // Invalidate exchanges query so the new exchange appears immediately
+        queryClient.invalidateQueries({ queryKey: queryKeys.exchanges.lists() });
+        // Also invalidate assignments since isOpenEntryInRefereeGameExchange changes
+        queryClient.invalidateQueries({ queryKey: queryKeys.assignments.lists() });
         log.debug(
           "Demo mode: added assignment to exchange:",
           assignment.__identity,
@@ -186,7 +193,7 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
 
       toast.success(t("exchange.addedToExchangeSuccess"));
     },
-    [guard, isDemoMode, addAssignmentToExchange, t],
+    [guard, isDemoMode, addAssignmentToExchange, queryClient, t],
   );
 
   return {
