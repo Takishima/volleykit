@@ -12,6 +12,15 @@
 /** JPEG quality for cropped output */
 const JPEG_QUALITY = 0.92;
 
+/** Debounce delay for resize handler in milliseconds */
+const RESIZE_DEBOUNCE_MS = 100;
+
+/** Keyboard step size for moving crop area in pixels */
+const KEYBOARD_MOVE_STEP_PX = 10;
+
+/** Keyboard step size for resizing crop area in pixels */
+const KEYBOARD_RESIZE_STEP_PX = 10;
+
 /**
  * Preset crop regions as percentages of the full scoresheet image.
  * Based on Swiss volleyball manuscript scoresheet layout.
@@ -108,6 +117,12 @@ export class RosterCropEditor {
   /** Minimum crop size in pixels */
   static MIN_CROP_SIZE = 50;
 
+  /** @type {boolean} Flag to track if component has been destroyed */
+  #isDestroyed = false;
+
+  /** @type {number | null} Resize debounce timer */
+  #resizeTimer = null;
+
   /**
    * @param {RosterCropEditorOptions} options
    */
@@ -171,7 +186,13 @@ export class RosterCropEditor {
             draggable="false"
           />
           <div class="roster-crop-editor__overlay">
-            <div class="roster-crop-editor__crop-area" id="crop-area">
+            <div
+              class="roster-crop-editor__crop-area"
+              id="crop-area"
+              tabindex="0"
+              role="application"
+              aria-label="Crop area. Use arrow keys to move, Shift+arrow keys to resize."
+            >
               <div class="roster-crop-editor__handle roster-crop-editor__handle--tl" data-handle="resize-tl"></div>
               <div class="roster-crop-editor__handle roster-crop-editor__handle--tr" data-handle="resize-tr"></div>
               <div class="roster-crop-editor__handle roster-crop-editor__handle--bl" data-handle="resize-bl"></div>
@@ -225,6 +246,9 @@ export class RosterCropEditor {
     cropArea?.addEventListener('mousedown', (e) => this.#handleMouseDown(e, 'move'));
     cropArea?.addEventListener('touchstart', (e) => this.#handleTouchStart(e, 'move'), { passive: false });
 
+    // Keyboard controls for accessibility
+    cropArea?.addEventListener('keydown', (e) => this.#handleKeyDown(e));
+
     // Handle resize handles
     const handles = this.#container.querySelectorAll('.roster-crop-editor__handle');
     handles.forEach((handle) => {
@@ -261,9 +285,34 @@ export class RosterCropEditor {
     this.#imageElement.src = this.#imageUrl || '';
 
     if (!this.#imageElement.complete) {
-      await new Promise((resolve) => {
-        this.#imageElement?.addEventListener('load', resolve, { once: true });
+      await new Promise((resolve, reject) => {
+        if (this.#isDestroyed) {
+          reject(new Error('Component destroyed before image loaded'));
+          return;
+        }
+
+        const handleLoad = () => {
+          if (!this.#isDestroyed) {
+            resolve(undefined);
+          }
+        };
+
+        const handleError = () => {
+          reject(new Error('Failed to load image'));
+        };
+
+        this.#imageElement?.addEventListener('load', handleLoad, { once: true });
+        this.#imageElement?.addEventListener('error', handleError, { once: true });
+      }).catch((error) => {
+        // Component was destroyed or image failed to load - just log and return
+        console.warn('Image load aborted:', error.message);
+        return;
       });
+    }
+
+    // Check again in case component was destroyed during await
+    if (this.#isDestroyed || !this.#imageElement) {
+      return;
     }
 
     this.#imageNaturalSize = {
@@ -474,12 +523,95 @@ export class RosterCropEditor {
 
   /** @type {() => void} */
   #handleResize = () => {
-    this.#calculateSizes();
-    this.#applyPreset(this.#currentPreset);
+    // Debounce resize to avoid excessive recalculations during orientation changes
+    if (this.#resizeTimer !== null) {
+      clearTimeout(this.#resizeTimer);
+    }
+    this.#resizeTimer = window.setTimeout(() => {
+      this.#resizeTimer = null;
+      if (!this.#isDestroyed) {
+        this.#calculateSizes();
+        this.#applyPreset(this.#currentPreset);
+      }
+    }, RESIZE_DEBOUNCE_MS);
   };
+
+  /**
+   * Handle keyboard navigation for accessibility
+   * Arrow keys move the crop area, Shift+Arrow keys resize it
+   * @param {KeyboardEvent} e
+   */
+  #handleKeyDown(e) {
+    const scale = this.#getDisplayScale();
+    const maxX = this.#imageNaturalSize.width * scale;
+    const maxY = this.#imageNaturalSize.height * scale;
+    const minSize = RosterCropEditor.MIN_CROP_SIZE;
+
+    let handled = false;
+
+    if (e.shiftKey) {
+      // Shift + Arrow: Resize from bottom-right corner
+      switch (e.key) {
+        case 'ArrowLeft':
+          this.#cropRegion.width = Math.max(minSize, this.#cropRegion.width - KEYBOARD_RESIZE_STEP_PX);
+          handled = true;
+          break;
+        case 'ArrowRight':
+          this.#cropRegion.width = Math.min(maxX - this.#cropRegion.x, this.#cropRegion.width + KEYBOARD_RESIZE_STEP_PX);
+          handled = true;
+          break;
+        case 'ArrowUp':
+          this.#cropRegion.height = Math.max(minSize, this.#cropRegion.height - KEYBOARD_RESIZE_STEP_PX);
+          handled = true;
+          break;
+        case 'ArrowDown':
+          this.#cropRegion.height = Math.min(maxY - this.#cropRegion.y, this.#cropRegion.height + KEYBOARD_RESIZE_STEP_PX);
+          handled = true;
+          break;
+      }
+    } else {
+      // Arrow keys: Move the crop area
+      switch (e.key) {
+        case 'ArrowLeft':
+          this.#cropRegion.x = Math.max(0, this.#cropRegion.x - KEYBOARD_MOVE_STEP_PX);
+          handled = true;
+          break;
+        case 'ArrowRight':
+          this.#cropRegion.x = Math.min(maxX - this.#cropRegion.width, this.#cropRegion.x + KEYBOARD_MOVE_STEP_PX);
+          handled = true;
+          break;
+        case 'ArrowUp':
+          this.#cropRegion.y = Math.max(0, this.#cropRegion.y - KEYBOARD_MOVE_STEP_PX);
+          handled = true;
+          break;
+        case 'ArrowDown':
+          this.#cropRegion.y = Math.min(maxY - this.#cropRegion.height, this.#cropRegion.y + KEYBOARD_MOVE_STEP_PX);
+          handled = true;
+          break;
+      }
+    }
+
+    if (handled) {
+      e.preventDefault();
+      this.#updateCropAreaDisplay();
+    }
+  }
+
+  /**
+   * Show an error message to the user
+   * @param {string} message
+   */
+  #showError(message) {
+    const hint = this.#container.querySelector('.roster-crop-editor__hint');
+    if (hint) {
+      hint.textContent = message;
+      hint.style.color = 'var(--color-danger-500)';
+    }
+  }
 
   async #cropAndConfirm() {
     if (!this.#imageElement) {
+      this.#showError('Image not loaded. Please try again.');
       return;
     }
 
@@ -499,6 +631,7 @@ export class RosterCropEditor {
     const ctx = canvas.getContext('2d');
     if (!ctx) {
       console.error('Could not get canvas context');
+      this.#showError('Failed to create crop canvas. Please try again.');
       return;
     }
 
@@ -519,6 +652,9 @@ export class RosterCropEditor {
       (blob) => {
         if (blob) {
           this.#onConfirm(blob, this.#currentPreset);
+        } else {
+          console.error('Failed to create image blob from canvas');
+          this.#showError('Failed to crop image. Please try again.');
         }
       },
       'image/jpeg',
@@ -527,6 +663,14 @@ export class RosterCropEditor {
   }
 
   destroy() {
+    this.#isDestroyed = true;
+
+    // Clear any pending resize timer
+    if (this.#resizeTimer !== null) {
+      clearTimeout(this.#resizeTimer);
+      this.#resizeTimer = null;
+    }
+
     window.removeEventListener('resize', this.#handleResize);
     document.removeEventListener('mousemove', this.#handleMouseMove);
     document.removeEventListener('mouseup', this.#handleMouseUp);
