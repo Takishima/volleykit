@@ -27,6 +27,12 @@ if [ -n "${GITHUB_TOKEN:-}" ]; then
   echo ""
   echo "=== GitHub API Access ==="
   echo "A GitHub token (GITHUB_TOKEN) is available in this environment."
-  echo "You can use the GitHub API via curl or the WebFetch tool."
+  echo "IMPORTANT: ALWAYS use the GitHub REST API via curl instead of the gh CLI."
+  echo "The gh CLI is NOT available. Use curl with the GITHUB_TOKEN for all GitHub operations."
+  echo ""
+  echo "Example:"
+  echo "  curl -s -H \"Authorization: Bearer \$GITHUB_TOKEN\" \\"
+  echo "       -H \"Accept: application/vnd.github+json\" \\"
+  echo "       https://api.github.com/repos/OWNER/REPO/issues"
   echo "========================="
 fi
