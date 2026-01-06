@@ -1423,3 +1423,211 @@ body {
     min-width: 80px;
   }
 }
+
+/* ==============================================
+ * TEAM CONFIRMATION MODAL COMPONENT
+ * ============================================== */
+
+.team-confirm__backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: var(--spacing-md);
+  /* iOS safe area support */
+  padding-top: max(var(--spacing-md), env(safe-area-inset-top));
+  padding-bottom: max(var(--spacing-md), env(safe-area-inset-bottom));
+  padding-left: max(var(--spacing-md), env(safe-area-inset-left));
+  padding-right: max(var(--spacing-md), env(safe-area-inset-right));
+}
+
+.team-confirm__dialog {
+  background-color: var(--color-surface-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  padding: var(--spacing-lg);
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.team-confirm__title {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-align: center;
+}
+
+.team-confirm__description {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.team-confirm__warning {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  margin: 0 0 var(--spacing-md) 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  color: #92400e;
+}
+
+.team-confirm__warning-icon {
+  font-size: var(--font-size-base);
+}
+
+.team-confirm__teams {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.team-confirm__team-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-md);
+  background-color: var(--color-surface-subtle);
+  border: 2px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  min-width: 0;
+}
+
+.team-confirm__team-card--left {
+  border-color: var(--color-primary-300);
+  background-color: var(--color-primary-50);
+}
+
+.team-confirm__team-card--right {
+  border-color: var(--color-success-500);
+  background-color: #dcfce7;
+}
+
+.team-confirm__team-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.team-confirm__team-name {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.team-confirm__team-count {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.team-confirm__swap-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background-color: var(--color-gray-200);
+  border: 2px solid var(--color-border-strong);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.team-confirm__swap-btn:hover {
+  background-color: var(--color-gray-300);
+  border-color: var(--color-gray-400);
+}
+
+.team-confirm__swap-btn:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+.team-confirm__swap-btn:active {
+  transform: scale(0.95);
+}
+
+.team-confirm__swap-btn--animating {
+  animation: swap-rotate 0.3s ease;
+}
+
+@keyframes swap-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(180deg);
+  }
+}
+
+.team-confirm__swap-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--color-text-secondary);
+}
+
+.team-confirm__actions {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: flex-end;
+}
+
+.team-confirm__actions .btn {
+  min-width: 100px;
+}
+
+/* Small screen adjustments for team cards */
+@media (max-width: 400px) {
+  .team-confirm__teams {
+    flex-direction: column;
+  }
+
+  .team-confirm__team-card {
+    width: 100%;
+  }
+
+  .team-confirm__swap-btn {
+    transform: rotate(90deg);
+  }
+
+  .team-confirm__swap-btn--animating {
+    animation: swap-rotate-vertical 0.3s ease;
+  }
+
+  @keyframes swap-rotate-vertical {
+    0% {
+      transform: rotate(90deg);
+    }
+    100% {
+      transform: rotate(270deg);
+    }
+  }
+}
