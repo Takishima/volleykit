@@ -89,6 +89,12 @@ export interface DemoCompensationsState {
  */
 export interface DemoExchangesState {
   exchanges: GameExchange[];
+  /**
+   * Tracks assignments that were moved to exchanges.
+   * Key: exchange ID, Value: original assignment.
+   * Used to restore assignments when exchanges are taken over or withdrawn.
+   */
+  exchangedAssignments: Record<string, Assignment>;
 }
 
 /**
@@ -132,6 +138,7 @@ export interface DemoState
   applyForExchange: (exchangeId: string) => void;
   withdrawFromExchange: (exchangeId: string) => void;
   addAssignmentToExchange: (assignmentId: string) => void;
+  removeOwnExchange: (exchangeId: string) => void;
 
   // Compensation operations
   updateCompensation: (

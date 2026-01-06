@@ -334,6 +334,8 @@ const fr: Translations = {
     withdrawError: "Échec du retrait de l'échange. Veuillez réessayer.",
     addedToExchangeSuccess: "Désignation ajoutée à la bourse aux échanges",
     addedToExchangeError: "Impossible d'ajouter la désignation à la bourse",
+    cannotExchangeValidatedGame:
+      "Les matchs validés ne peuvent pas être ajoutés à la bourse",
     submittedBy: "Par :",
     levelRequired: "Niveau {level}+",
     errorLoading: "Échec du chargement des échanges",

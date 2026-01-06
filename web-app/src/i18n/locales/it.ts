@@ -332,6 +332,8 @@ const it: Translations = {
     withdrawError: "Ritiro dallo scambio fallito. Riprova.",
     addedToExchangeSuccess: "Designazione aggiunta alla borsa scambi",
     addedToExchangeError: "Impossibile aggiungere la designazione alla borsa",
+    cannotExchangeValidatedGame:
+      "Le partite validate non possono essere aggiunte alla borsa",
     submittedBy: "Da:",
     levelRequired: "Livello {level}+",
     errorLoading: "Impossibile caricare gli scambi",

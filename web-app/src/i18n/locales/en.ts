@@ -333,6 +333,7 @@ const en: Translations = {
     withdrawError: "Failed to remove from exchange. Please try again.",
     addedToExchangeSuccess: "Assignment added to exchange list",
     addedToExchangeError: "Failed to add assignment to exchange",
+    cannotExchangeValidatedGame: "Validated games cannot be added to the exchange",
     submittedBy: "By:",
     levelRequired: "Level {level}+",
     errorLoading: "Failed to load exchanges",

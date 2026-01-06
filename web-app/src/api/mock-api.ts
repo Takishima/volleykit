@@ -30,7 +30,7 @@ import type {
   PersonSearchResponse,
   PersonSearchResult,
 } from "./client";
-import { useDemoStore } from "@/shared/stores/demo";
+import { useDemoStore, DEMO_USER_PERSON_IDENTITY } from "@/shared/stores/demo";
 import {
   assignmentsResponseSchema,
   compensationsResponseSchema,
@@ -400,7 +400,19 @@ export const mockApi = {
     await delay(MOCK_MUTATION_DELAY_MS);
 
     const store = useDemoStore.getState();
-    store.withdrawFromExchange(exchangeId);
+
+    // Check if this is the user's own exchange (they submitted it)
+    const exchange = store.exchanges.find((e) => e.__identity === exchangeId);
+    const isOwnExchange =
+      exchange?.submittedByPerson?.__identity === DEMO_USER_PERSON_IDENTITY;
+
+    if (isOwnExchange) {
+      // Remove own exchange - restores original assignment
+      store.removeOwnExchange(exchangeId);
+    } else {
+      // Withdraw application from someone else's exchange
+      store.withdrawFromExchange(exchangeId);
+    }
   },
 
   async getAssociationSettings(): Promise<AssociationSettings> {

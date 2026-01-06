@@ -153,6 +153,13 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
     (assignment: Assignment) => {
       const { homeTeam, awayTeam } = getTeamNames(assignment);
 
+      // Prevent adding validated games to exchange
+      if (isGameAlreadyValidated(assignment)) {
+        log.debug("Cannot add validated game to exchange:", assignment.__identity);
+        toast.error(t("exchange.cannotExchangeValidatedGame"));
+        return;
+      }
+
       if (
         guard({
           context: "useAssignmentActions",

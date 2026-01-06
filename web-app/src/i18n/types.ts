@@ -211,6 +211,7 @@ export interface Translations {
     withdrawError: string;
     addedToExchangeSuccess: string;
     addedToExchangeError: string;
+    cannotExchangeValidatedGame: string;
     submittedBy: string;
     levelRequired: string;
     errorLoading: string;
