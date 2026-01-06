@@ -10,6 +10,7 @@ import type {
   PersonSearchResult,
 } from "@/api/client";
 import type { MockNominationLists } from "../demo-generators";
+import { generateDemoUuid } from "@/shared/utils/demo-uuid";
 
 // Re-export generator types for consumers
 export type { DemoAssociationCode, MockNominationLists } from "../demo-generators";
@@ -48,7 +49,8 @@ export const DEMO_USER_REFEREE_LEVEL_GRADATION_VALUE = 2;
 
 // Demo user person identity used for filtering "my" exchanges
 // This matches the __identity used in submittedByPerson for demo exchanges
-export const DEMO_USER_PERSON_IDENTITY = "demo-me";
+// Uses generateDemoUuid to ensure a valid UUID format for API validation
+export const DEMO_USER_PERSON_IDENTITY = generateDemoUuid("demo-user-person");
 
 // Demo data is considered stale after 6 hours
 export const DEMO_DATA_STALENESS_MS = 6 * 60 * 60 * 1000;

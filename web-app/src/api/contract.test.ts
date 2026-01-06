@@ -404,6 +404,70 @@ describe("Exchange mutation endpoints", () => {
   });
 });
 
+describe("Add assignment to exchange mutation", () => {
+  beforeEach(() => {
+    useDemoStore.getState().initializeDemoData();
+  });
+
+  it("addAssignmentToExchange creates exchange that passes schema validation", async () => {
+    const { assignments } = useDemoStore.getState();
+    const assignment = assignments[0];
+    expect(assignment).toBeDefined();
+
+    // Add the assignment to exchange
+    useDemoStore.getState().addAssignmentToExchange(assignment!.__identity);
+
+    // Find the newly created exchange
+    const { exchanges } = useDemoStore.getState();
+    const newExchange = exchanges.find(
+      (e) => e.submittedByPerson?.__identity === DEMO_USER_PERSON_IDENTITY,
+    );
+    expect(newExchange).toBeDefined();
+
+    // Validate the new exchange passes schema validation
+    // This specifically tests that submittedByPerson.__identity is a valid UUID
+    const result = gameExchangeSchema.safeParse(newExchange);
+    if (!result.success) {
+      throw new Error(
+        `New exchange failed validation:\n${formatZodErrors(result.error)}\n\nData: ${JSON.stringify(newExchange, null, 2)}`,
+      );
+    }
+    expect(result.success).toBe(true);
+  });
+
+  it("searchExchanges validates after addAssignmentToExchange", async () => {
+    const { assignments } = useDemoStore.getState();
+    const assignment = assignments[0];
+    expect(assignment).toBeDefined();
+
+    // Add assignment to exchange
+    useDemoStore.getState().addAssignmentToExchange(assignment!.__identity);
+
+    // Fetch exchanges through mock API (which runs validation)
+    // This will throw if validation fails
+    const response = await mockApi.searchExchanges();
+
+    const result = exchangesResponseSchema.safeParse(response);
+    if (!result.success) {
+      throw responseValidationError("Exchanges response after add", result.error);
+    }
+    expect(result.success).toBe(true);
+
+    // Verify the new exchange is included
+    const newExchange = response.items.find(
+      (e) => e.submittedByPerson?.__identity === DEMO_USER_PERSON_IDENTITY,
+    );
+    expect(newExchange).toBeDefined();
+  });
+
+  it("DEMO_USER_PERSON_IDENTITY is a valid UUID", () => {
+    // This test ensures the constant itself is valid
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    expect(DEMO_USER_PERSON_IDENTITY).toMatch(uuidRegex);
+  });
+});
+
 describe("Settings endpoints", () => {
   beforeEach(() => {
     useDemoStore.getState().initializeDemoData();
