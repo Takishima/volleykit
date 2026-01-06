@@ -26,7 +26,7 @@
  * - Prefer specific error messages over generic validation errors
  */
 import { z } from "zod";
-import { logger } from "@/utils/logger";
+import { logger } from "@/shared/utils/logger";
 
 // Common field schemas
 const uuidSchema = z.string().uuid();

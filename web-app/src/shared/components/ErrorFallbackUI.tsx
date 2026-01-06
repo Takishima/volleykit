@@ -1,0 +1,76 @@
+import { useTranslation } from "@/shared/hooks/useTranslation";
+
+type ErrorType = "network" | "application";
+
+interface ErrorFallbackUIProps {
+  error: Error | null;
+  errorType: ErrorType;
+  onReset: () => void;
+}
+
+export function ErrorFallbackUI({
+  error,
+  errorType,
+  onReset,
+}: ErrorFallbackUIProps) {
+  const { t } = useTranslation();
+  const isNetworkError = errorType === "network";
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-surface-page dark:bg-surface-page-dark p-4">
+      <div className="max-w-md w-full bg-surface-card dark:bg-surface-card-dark rounded-xl shadow-lg p-6 text-center">
+        {/* SVG icons render consistently across all platforms */}
+        <div
+          className="w-16 h-16 mx-auto mb-4 text-text-subtle dark:text-text-subtle-dark"
+          aria-hidden="true"
+        >
+          {isNetworkError ? (
+            // Network/signal icon
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z" />
+            </svg>
+          ) : (
+            // Warning triangle icon
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+            </svg>
+          )}
+        </div>
+        <h1 className="text-xl font-semibold text-text-primary dark:text-text-primary-dark mb-2">
+          {isNetworkError
+            ? t("errorBoundary.connectionProblem")
+            : t("errorBoundary.somethingWentWrong")}
+        </h1>
+        <p className="text-text-secondary dark:text-text-muted-dark mb-4">
+          {isNetworkError
+            ? t("errorBoundary.networkErrorDescription")
+            : t("errorBoundary.applicationErrorDescription")}
+        </p>
+        {error && (
+          <details className="text-left mb-4">
+            <summary className="text-sm text-text-muted dark:text-text-muted-dark cursor-pointer">
+              {t("errorBoundary.errorDetails")}
+            </summary>
+            <pre className="mt-2 p-2 bg-surface-subtle dark:bg-surface-subtle-dark rounded text-xs overflow-auto">
+              {error.message}
+            </pre>
+          </details>
+        )}
+        <div className="flex gap-3 justify-center">
+          <button
+            onClick={onReset}
+            className="px-4 py-2 bg-surface-muted dark:bg-surface-subtle-dark text-text-primary dark:text-text-primary-dark rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+          >
+            {t("errorBoundary.tryAgain")}
+          </button>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-primary-500 text-primary-950 rounded-lg hover:bg-primary-600 transition-colors"
+          >
+            {t("errorBoundary.refreshPage")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

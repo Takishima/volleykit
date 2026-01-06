@@ -30,7 +30,7 @@ import type {
   PersonSearchResponse,
   PersonSearchResult,
 } from "./client";
-import { useDemoStore } from "@/stores/demo";
+import { useDemoStore } from "@/shared/stores/demo";
 import {
   assignmentsResponseSchema,
   compensationsResponseSchema,
@@ -743,7 +743,7 @@ export const mockApi = {
     await delay(MOCK_MUTATION_DELAY_MS);
 
     // Import stores dynamically to avoid circular dependencies
-    const { useAuthStore } = await import("@/stores/auth");
+    const { useAuthStore } = await import("@/shared/stores/auth");
 
     // Find the occupation by ID to get its association code
     const user = useAuthStore.getState().user;

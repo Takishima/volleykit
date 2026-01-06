@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { PWAContext, type PWAContextType } from "./pwa-context-value";
-import { logger } from "../utils/logger";
+import { logger } from "@/shared/utils/logger";
 
 /**
  * Interval for automatic update checks (1 hour).

@@ -6,7 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 import { visualizer } from 'rollup-plugin-visualizer'
 import path from 'path'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
-import { normalizeBasePath } from './src/utils/basePath'
+import { normalizeBasePath } from './src/shared/utils/basePath'
 import packageJson from './package.json' with { type: 'json' }
 
 // Plugin to exclude Zod v4 locale files from the bundle.
@@ -281,9 +281,11 @@ export default defineConfig(({ mode }) => {
         // Pure unit tests don't need DOM - run in faster node environment
         ['src/api/**/*.test.ts', 'node'],
         ['src/i18n/**/*.test.ts', 'node'],
-        ['src/stores/**/*.test.ts', 'node'],
-        ['src/utils/**/*.test.ts', 'node'],
-        ['src/services/**/*.test.ts', 'node'],
+        ['src/shared/stores/**/*.test.ts', 'node'],
+        ['src/shared/utils/**/*.test.ts', 'node'],
+        ['src/shared/services/**/*.test.ts', 'node'],
+        ['src/features/**/utils/**/*.test.ts', 'node'],
+        ['src/features/**/api/**/*.test.ts', 'node'],
         ['src/test/**/*.test.ts', 'node'],
       ],
       setupFiles: './src/test/setup.ts',

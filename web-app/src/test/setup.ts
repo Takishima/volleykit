@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom";
 import { beforeAll } from "vitest";
 import { preloadTranslations } from "@/i18n";
-import { preloadDateLocales } from "@/hooks/useDateFormat";
+import { preloadDateLocales } from "@/shared/hooks/useDateFormat";
 
 // Preload all translations and date locales before each test file runs.
 // This ensures synchronous availability of localized strings during tests.
