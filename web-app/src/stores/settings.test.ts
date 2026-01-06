@@ -30,6 +30,7 @@ function resetStore(mode: DataSource = "api") {
   useSettingsStore.setState({
     // Global settings
     isSafeModeEnabled: true,
+    isSafeValidationEnabled: true,
     preventZoom: false,
     // Mode tracking
     currentMode: mode,
@@ -90,6 +91,45 @@ describe("useSettingsStore", () => {
     if (persistedData) {
       const parsed = JSON.parse(persistedData);
       expect(parsed.state.isSafeModeEnabled).toBe(false);
+    }
+  });
+
+  it("should have safe validation enabled by default", () => {
+    const { isSafeValidationEnabled } = useSettingsStore.getState();
+    expect(isSafeValidationEnabled).toBe(true);
+  });
+
+  it("should allow disabling safe validation", () => {
+    const { setSafeValidation } = useSettingsStore.getState();
+
+    setSafeValidation(false);
+
+    const { isSafeValidationEnabled } = useSettingsStore.getState();
+    expect(isSafeValidationEnabled).toBe(false);
+  });
+
+  it("should allow enabling safe validation", () => {
+    const { setSafeValidation } = useSettingsStore.getState();
+
+    setSafeValidation(false);
+    setSafeValidation(true);
+
+    const { isSafeValidationEnabled } = useSettingsStore.getState();
+    expect(isSafeValidationEnabled).toBe(true);
+  });
+
+  it("should persist safe validation setting", () => {
+    const { setSafeValidation } = useSettingsStore.getState();
+
+    setSafeValidation(false);
+
+    const storageKey = "volleykit-settings";
+    const persistedData = localStorage.getItem(storageKey);
+    expect(persistedData).toBeTruthy();
+
+    if (persistedData) {
+      const parsed = JSON.parse(persistedData);
+      expect(parsed.state.isSafeValidationEnabled).toBe(false);
     }
   });
 

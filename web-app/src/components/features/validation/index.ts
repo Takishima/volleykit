@@ -11,6 +11,7 @@ export { PlayerListItem } from "./PlayerListItem";
 export { CoachesSection } from "./CoachesSection";
 export { UnsavedChangesDialog } from "./UnsavedChangesDialog";
 export { RosterValidationWarningDialog } from "./RosterValidationWarningDialog";
+export { SafeValidationCompleteModal } from "./SafeValidationCompleteModal";
 export { ValidationSuccessToast } from "./ValidationSuccessToast";
 export { StepRenderer } from "./StepRenderer";
 export { ValidatedModeButtons, EditModeButtons } from "./WizardButtons";

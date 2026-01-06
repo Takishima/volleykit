@@ -313,6 +313,13 @@ export interface Translations {
     safeModeConfirmButton: string;
     safeModeDangerous: string;
     safeModeBlocked: string;
+    safeValidation: string;
+    safeValidationDescription: string;
+    safeValidationEnabled: string;
+    safeValidationDisabled: string;
+    safeValidationCompleteTitle: string;
+    safeValidationCompleteMessage: string;
+    safeValidationCompleteButton: string;
     privacy: string;
     privacyNoCollection: string;
     privacyDirectComm: string;

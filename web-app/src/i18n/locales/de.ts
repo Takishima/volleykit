@@ -455,6 +455,15 @@ const de: Translations = {
     safeModeDangerous: "Gefährliche Operationen sind aktiviert",
     safeModeBlocked:
       "Diese Operation ist im Sicherheitsmodus gesperrt. Deaktivieren Sie den Sicherheitsmodus in den Einstellungen, um fortzufahren.",
+    safeValidation: "Sichere Validierung",
+    safeValidationDescription:
+      "Wenn aktiviert, speichert die Validierung Ihre Änderungen, aber schliesst das Spiel nicht ab. Sie werden aufgefordert, die Validierung im VolleyManager abzuschliessen.",
+    safeValidationEnabled: "Sichere Validierung ist aktiviert",
+    safeValidationDisabled: "Sichere Validierung ist deaktiviert - Spiele werden direkt abgeschlossen",
+    safeValidationCompleteTitle: "Validierung gespeichert",
+    safeValidationCompleteMessage:
+      "Ihre Änderungen wurden gespeichert. Bitte gehen Sie zum VolleyManager, um die Validierung abzuschliessen und das Spiel zu finalisieren.",
+    safeValidationCompleteButton: "VolleyManager öffnen",
     privacy: "Datenschutz",
     privacyNoCollection:
       "VolleyKit sammelt oder speichert keine persönlichen Daten.",

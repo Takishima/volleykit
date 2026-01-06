@@ -8,6 +8,7 @@ export { HelpSection } from "./HelpSection";
 export { DemoSection } from "./DemoSection";
 export { AccessibilitySection } from "./AccessibilitySection";
 export { SafeModeSection } from "./SafeModeSection";
+export { SafeValidationSection } from "./SafeValidationSection";
 export { UpdateSection } from "./UpdateSection";
 export { AboutSection } from "./AboutSection";
 export { ExperimentalSection } from "./ExperimentalSection";

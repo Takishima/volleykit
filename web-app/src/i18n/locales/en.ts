@@ -453,6 +453,15 @@ const en: Translations = {
     safeModeDangerous: "Dangerous operations are enabled",
     safeModeBlocked:
       "This operation is blocked in safe mode. Disable safe mode in Settings to proceed.",
+    safeValidation: "Safe Validation Mode",
+    safeValidationDescription:
+      "When enabled, validation saves your changes but does not finalize the game. You will be directed to complete the validation on VolleyManager.",
+    safeValidationEnabled: "Safe validation is enabled",
+    safeValidationDisabled: "Safe validation is disabled - games will be finalized directly",
+    safeValidationCompleteTitle: "Validation Saved",
+    safeValidationCompleteMessage:
+      "Your changes have been saved. Please go to VolleyManager to complete the validation and finalize the game.",
+    safeValidationCompleteButton: "Open VolleyManager",
     privacy: "Privacy",
     privacyNoCollection:
       "VolleyKit does not collect or store any personal data.",
