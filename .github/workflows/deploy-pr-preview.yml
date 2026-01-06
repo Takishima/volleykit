@@ -14,7 +14,8 @@ concurrency:
   group: 'pages'
   cancel-in-progress: false
 jobs:
-  build-and-deploy:
+  # Build jobs run in parallel
+  build-web-app:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -27,10 +28,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: |
-            web-app/package-lock.json
-            ocr-poc/package-lock.json
-            help-site/package-lock.json
+          cache-dependency-path: web-app/package-lock.json
       - name: Install dependencies
         run: npm ci
       - name: Cache generated API types
@@ -49,73 +47,128 @@ jobs:
       - name: Build for PR Preview
         run: npm run build
         env:
-          # PR previews run in demo-only mode (no real authentication)
-          # but calendar mode is allowed (uses public iCal endpoints)
           VITE_DEMO_MODE_ONLY: 'true'
-          # Set the proxy URL for calendar API requests
           VITE_API_PROXY_URL: ${{ vars.VITE_API_PROXY_URL }}
-          # Set base path for PR preview - uses pr-{number} subdirectory
           VITE_BASE_PATH: /${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/
-          # OJP API key for Swiss public transport travel times
           VITE_OJP_API_KEY: ${{ secrets.VITE_OJP_API_KEY }}
       - name: Add .nojekyll for GitHub Pages
         run: touch dist/.nojekyll
-      # Build OCR POC
-      - name: Install OCR POC dependencies
-        run: npm ci
-        working-directory: ocr-poc
-      - name: Lint OCR POC
-        run: npm run lint
-        working-directory: ocr-poc
-      - name: Build OCR POC
-        run: npm run build
-        working-directory: ocr-poc
-        env:
-          VITE_BASE_PATH: /${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/ocr-poc/
-          # OCR proxy endpoint - configure via repository variable for custom worker deployments
-          VITE_OCR_ENDPOINT: ${{ vars.VITE_OCR_ENDPOINT }}
-      # Build Help Site
-      - name: Install Help Site dependencies
-        run: npm ci
+      - name: Upload web-app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-app-dist
+          path: web-app/dist
+          retention-days: 1
+
+  build-help-site:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
         working-directory: help-site
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: help-site/package-lock.json
+      - name: Install dependencies
+        run: npm ci
       - name: Build Help Site
         run: npm run build
-        working-directory: help-site
         env:
           ASTRO_BASE_PATH: /${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/help
-      # Download existing gh-pages content to preserve main site and other PR previews
+      - name: Upload help-site artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: help-site-dist
+          path: help-site/dist
+          retention-days: 1
+
+  build-ocr-poc:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ocr-poc
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ocr-poc/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint OCR POC
+        run: npm run lint
+      - name: Build OCR POC
+        run: npm run build
+        env:
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/ocr-poc/
+          VITE_OCR_ENDPOINT: ${{ vars.VITE_OCR_ENDPOINT }}
+      - name: Upload ocr-poc artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ocr-poc-dist
+          path: ocr-poc/dist
+          retention-days: 1
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build-web-app, build-help-site, build-ocr-poc]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Download web-app artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: web-app-dist
+          path: web-app-dist
+      - name: Download help-site artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: help-site-dist
+          path: help-site-dist
+      - name: Download ocr-poc artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ocr-poc-dist
+          path: ocr-poc-dist
       - name: Download existing gh-pages content
         run: |
           if git ls-remote --exit-code --heads origin gh-pages; then
             echo "Cloning existing gh-pages branch..."
             git clone --depth 1 --branch gh-pages \
               https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git \
-              ${{ github.workspace }}/gh-pages-current
+              gh-pages-current
           else
             echo "gh-pages branch does not exist yet, starting fresh"
           fi
-        working-directory: ${{ github.workspace }}
       - name: Prepare deployment with PR preview
         run: |
-          mkdir -p ${{ github.workspace }}/deploy
+          mkdir -p deploy
           # Copy existing content (if any) preserving main site
-          if [ -d "${{ github.workspace }}/gh-pages-current" ]; then
-            rsync -a --exclude='.git' ${{ github.workspace }}/gh-pages-current/ ${{ github.workspace }}/deploy/
+          if [ -d "gh-pages-current" ]; then
+            rsync -a --exclude='.git' gh-pages-current/ deploy/
           fi
           # Add/update this PR's preview (web-app)
-          mkdir -p ${{ github.workspace }}/deploy/pr-${{ github.event.pull_request.number }}
-          cp -r dist/* ${{ github.workspace }}/deploy/pr-${{ github.event.pull_request.number }}/
+          mkdir -p deploy/pr-${{ github.event.pull_request.number }}
+          cp -r web-app-dist/* deploy/pr-${{ github.event.pull_request.number }}/
           # Add/update OCR POC preview
-          mkdir -p ${{ github.workspace }}/deploy/pr-${{ github.event.pull_request.number }}/ocr-poc
-          cp -r ${{ github.workspace }}/ocr-poc/dist/* ${{ github.workspace }}/deploy/pr-${{ github.event.pull_request.number }}/ocr-poc/
+          mkdir -p deploy/pr-${{ github.event.pull_request.number }}/ocr-poc
+          cp -r ocr-poc-dist/* deploy/pr-${{ github.event.pull_request.number }}/ocr-poc/
           # Add/update Help Site preview
-          mkdir -p ${{ github.workspace }}/deploy/pr-${{ github.event.pull_request.number }}/help
-          cp -r ${{ github.workspace }}/help-site/dist/* ${{ github.workspace }}/deploy/pr-${{ github.event.pull_request.number }}/help/
+          mkdir -p deploy/pr-${{ github.event.pull_request.number }}/help
+          cp -r help-site-dist/* deploy/pr-${{ github.event.pull_request.number }}/help/
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ${{ github.workspace }}/deploy
+          publish_dir: deploy
           keep_files: false
           enable_jekyll: false
       - name: Comment PR with preview link
@@ -125,7 +178,7 @@ jobs:
             const previewUrl = `https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/`;
             const ocrPocUrl = `${previewUrl}ocr-poc/`;
             const helpUrl = `${previewUrl}help/`;
-            const body = `## 🚀 PR Preview Deployed!\n\n` +
+            const body = `## PR Preview Deployed!\n\n` +
               `Your preview is ready at: ${previewUrl}\n\n` +
               `**OCR POC:** ${ocrPocUrl}\n\n` +
               `**Help Site:** ${helpUrl}\n\n` +
