@@ -35,6 +35,7 @@ const icons: Record<string, string> = {
   role="dialog"
   aria-modal="true"
   aria-label="Navigation menu"
+  data-i18n-aria-label="a11y.mobileNavigation"
 >
   <!-- Backdrop overlay -->
   <div
@@ -52,12 +53,13 @@ const icons: Record<string, string> = {
     <div class="flex h-14 items-center justify-between border-b border-border-default px-4 dark:border-border-default-dark">
       <a href={`${BASE_PATH}/`} class="flex items-center gap-2">
         <img src={`${BASE_PATH}/favicon.svg`} alt="" class="h-7 w-7" aria-hidden="true" />
-        <span class="font-semibold text-text-primary dark:text-text-primary-dark">VolleyKit Help</span>
+        <span class="font-semibold text-text-primary dark:text-text-primary-dark" data-i18n="home.title">VolleyKit Help</span>
       </a>
       <button
         type="button"
         class="flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-subtle hover:text-text-primary dark:text-text-secondary-dark dark:hover:bg-surface-subtle-dark dark:hover:text-text-primary-dark"
         aria-label="Close menu"
+        data-i18n-aria-label="a11y.closeMenu"
         data-mobile-nav-close
       >
         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -67,7 +69,7 @@ const icons: Record<string, string> = {
     </div>
 
     <!-- Navigation links -->
-    <nav class="flex-1 overflow-y-auto p-4" aria-label="Mobile navigation">
+    <nav class="flex-1 overflow-y-auto p-4" aria-label="Mobile navigation" data-i18n-aria-label="a11y.mobileNavigation">
       <ul class="space-y-1">
         {
           navItems.map((item) => {
@@ -93,7 +95,7 @@ const icons: Record<string, string> = {
                     aria-hidden="true"
                     set:html={icons[item.icon]}
                   />
-                  <span>{item.title}</span>
+                  <span data-i18n={item.i18nKey}>{item.title}</span>
                 </a>
               </li>
             );
@@ -111,7 +113,7 @@ const icons: Record<string, string> = {
         rel="noopener noreferrer"
         class="flex items-center justify-center gap-2 rounded-lg bg-primary-500 px-4 py-2.5 text-sm font-medium text-primary-950 transition-colors hover:bg-primary-600"
       >
-        Open App
+        <span data-i18n="common.openApp">Open App</span>
         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path
             stroke-linecap="round"
