@@ -92,9 +92,9 @@ describe("AppShell Error Handling", () => {
 
     renderAppShell();
 
-    await user.click(screen.getByRole("button", { name: /referee.*SV/i }));
+    await user.click(screen.getByRole("button", { name: "SV" }));
     const svrbaOption = await screen.findByRole("option", {
-      name: /SVRBA/i,
+      name: "SVRBA",
     });
     await user.click(svrbaOption);
 

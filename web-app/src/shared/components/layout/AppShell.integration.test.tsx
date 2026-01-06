@@ -76,9 +76,9 @@ describe("AppShell Integration", () => {
       const user = userEvent.setup();
       renderAppShell();
 
-      // Find and click the dropdown button (shows current association)
+      // Find and click the dropdown button (shows current association code)
       const dropdownButton = screen.getByRole("button", {
-        name: /referee.*SV/i,
+        name: "SV",
       });
       expect(dropdownButton).toBeInTheDocument();
 
@@ -102,9 +102,9 @@ describe("AppShell Integration", () => {
       const user = userEvent.setup();
       renderAppShell();
 
-      // Initial state should show SV
+      // Initial state should show SV association code
       const dropdownButton = screen.getByRole("button", {
-        name: /referee.*SV/i,
+        name: "SV",
       });
       await user.click(dropdownButton);
 
@@ -132,7 +132,7 @@ describe("AppShell Integration", () => {
 
       // Open dropdown and switch
       const dropdownButton = screen.getByRole("button", {
-        name: /referee.*SV/i,
+        name: "SV",
       });
       await user.click(dropdownButton);
 
@@ -155,12 +155,12 @@ describe("AppShell Integration", () => {
       renderAppShell();
 
       const dropdownButton = screen.getByRole("button", {
-        name: /referee.*SV/i,
+        name: "SV",
       });
       await user.click(dropdownButton);
 
       const svrbaOption = await screen.findByRole("option", {
-        name: /SVRBA/i,
+        name: "SVRBA",
       });
       await user.click(svrbaOption);
 
@@ -180,7 +180,7 @@ describe("AppShell Integration", () => {
       renderAppShell();
 
       const dropdownButton = screen.getByRole("button", {
-        name: /referee.*SV/i,
+        name: "SV",
       });
       await user.click(dropdownButton);
 
@@ -189,7 +189,7 @@ describe("AppShell Integration", () => {
       expect(listbox).toBeVisible();
 
       // Select an option
-      const svrbaOption = screen.getByRole("option", { name: /SVRBA/i });
+      const svrbaOption = screen.getByRole("option", { name: "SVRBA" });
       await user.click(svrbaOption);
 
       // Dropdown should close
@@ -202,14 +202,14 @@ describe("AppShell Integration", () => {
       const user = userEvent.setup();
       renderAppShell();
 
-      // Initially shows SV
+      // Initially shows SV association code
       expect(
-        screen.getByRole("button", { name: /referee.*SV/i }),
+        screen.getByRole("button", { name: "SV" }),
       ).toBeInTheDocument();
 
       // Open dropdown and select SVRBA
-      await user.click(screen.getByRole("button", { name: /referee.*SV/i }));
-      await user.click(screen.getByRole("option", { name: /SVRBA/i }));
+      await user.click(screen.getByRole("button", { name: "SV" }));
+      await user.click(screen.getByRole("option", { name: "SVRBA" }));
 
       // State is updated AFTER the API call succeeds (not optimistically)
       // This prevents race conditions where queries refetch with wrong context
