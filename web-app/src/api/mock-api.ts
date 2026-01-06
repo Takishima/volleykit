@@ -30,7 +30,7 @@ import type {
   PersonSearchResponse,
   PersonSearchResult,
 } from "./client";
-import { useDemoStore } from "@/shared/stores/demo";
+import { useDemoStore, DEMO_USER_PERSON_IDENTITY } from "@/shared/stores/demo";
 import {
   assignmentsResponseSchema,
   compensationsResponseSchema,
@@ -404,7 +404,7 @@ export const mockApi = {
     // Check if this is the user's own exchange (they submitted it)
     const exchange = store.exchanges.find((e) => e.__identity === exchangeId);
     const isOwnExchange =
-      exchange?.submittedByPerson?.__identity === "demo-me";
+      exchange?.submittedByPerson?.__identity === DEMO_USER_PERSON_IDENTITY;
 
     if (isOwnExchange) {
       // Remove own exchange - restores original assignment
