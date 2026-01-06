@@ -8,6 +8,11 @@ import { MIN_PLAYERS_REQUIRED } from "@/utils/roster-validation";
 /** Z-index for warning dialog (above main modal) */
 const Z_INDEX_WARNING_DIALOG = 60;
 
+interface RosterIssue {
+  key: string;
+  message: string;
+}
+
 interface RosterValidationWarningDialogProps {
   isOpen: boolean;
   rosterValidation: RosterValidationStatus;
@@ -43,42 +48,74 @@ export function RosterValidationWarningDialog({
     }
   }, [isOpen]);
 
+  // Handle Escape key to close dialog
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !isProceedingAnyway) {
+        onGoBack();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, isProceedingAnyway, onGoBack]);
+
   if (!isOpen) return null;
 
   const { home, away } = rosterValidation;
 
-  // Build list of issues for each team
-  const homeIssues: string[] = [];
-  const awayIssues: string[] = [];
+  // Build list of issues for each team with stable keys
+  const homeIssues: RosterIssue[] = [];
+  const awayIssues: RosterIssue[] = [];
 
   if (!home.hasHeadCoach) {
-    homeIssues.push(t("validation.rosterWarning.missingHeadCoach"));
+    homeIssues.push({
+      key: "home-coach",
+      message: t("validation.rosterWarning.missingHeadCoach"),
+    });
   }
   if (!home.hasMinPlayers) {
-    homeIssues.push(
-      tInterpolate("validation.rosterWarning.insufficientPlayers", {
+    homeIssues.push({
+      key: "home-players",
+      message: tInterpolate("validation.rosterWarning.insufficientPlayers", {
         count: home.playerCount,
         required: MIN_PLAYERS_REQUIRED,
       }),
-    );
+    });
   }
 
   if (!away.hasHeadCoach) {
-    awayIssues.push(t("validation.rosterWarning.missingHeadCoach"));
+    awayIssues.push({
+      key: "away-coach",
+      message: t("validation.rosterWarning.missingHeadCoach"),
+    });
   }
   if (!away.hasMinPlayers) {
-    awayIssues.push(
-      tInterpolate("validation.rosterWarning.insufficientPlayers", {
+    awayIssues.push({
+      key: "away-players",
+      message: tInterpolate("validation.rosterWarning.insufficientPlayers", {
         count: away.playerCount,
         required: MIN_PLAYERS_REQUIRED,
       }),
-    );
+    });
   }
 
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    // Only close if clicking the backdrop itself, not the dialog content
+    if (e.target === e.currentTarget && !isProceedingAnyway) {
+      onGoBack();
+    }
+  };
+
+  // Backdrop pattern: aria-hidden="true" hides the backdrop from screen readers since it's
+  // purely decorative. Click-to-close is a convenience feature; keyboard users close via Escape.
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
       style={{ zIndex: Z_INDEX_WARNING_DIALOG }}
+      onClick={handleBackdropClick}
       aria-hidden="true"
     >
       <div
@@ -120,8 +157,8 @@ export function RosterValidationWarningDialog({
                 {homeTeamName}
               </p>
               <ul className="list-disc list-inside text-sm text-warning-700 dark:text-warning-400 space-y-0.5">
-                {homeIssues.map((issue, idx) => (
-                  <li key={idx}>{issue}</li>
+                {homeIssues.map((issue) => (
+                  <li key={issue.key}>{issue.message}</li>
                 ))}
               </ul>
             </div>
@@ -133,8 +170,8 @@ export function RosterValidationWarningDialog({
                 {awayTeamName}
               </p>
               <ul className="list-disc list-inside text-sm text-warning-700 dark:text-warning-400 space-y-0.5">
-                {awayIssues.map((issue, idx) => (
-                  <li key={idx}>{issue}</li>
+                {awayIssues.map((issue) => (
+                  <li key={issue.key}>{issue.message}</li>
                 ))}
               </ul>
             </div>
