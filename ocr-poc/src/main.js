@@ -219,6 +219,7 @@ function renderCaptureState(container) {
     imageCapture = new ImageCapture({
       container: captureContainer,
       sheetType: appContext.sheetType,
+      captureMode: appContext.captureMode,
       onCapture: handleImageCapture,
       onBack: backHandler,
     });
