@@ -55,9 +55,9 @@
       "gzip": true
     },
     {
-      "name": "Total JS Bundle",
+      "name": "Total JS Bundle (includes React Compiler runtime ~36kB)",
       "path": "dist/assets/*.js",
-      "limit": "460 kB",
+      "limit": "500 kB",
       "gzip": true
     }
   ],
@@ -89,6 +89,7 @@
     "@vite-pwa/assets-generator": "^1.0.2",
     "@vitejs/plugin-react": "^5.1.1",
     "@vitest/coverage-v8": "^4.0.15",
+    "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9.39.2",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-no-unsanitized": "^4.1.4",

@@ -154,11 +154,12 @@ export default defineConfig(({ mode }) => {
           // Very small chunks add module wrapper overhead without significant lazy-loading benefit.
           experimentalMinChunkSize: 5_000,
           // Manual chunks for bundle splitting. Names must match size-limit config in package.json.
-          // Current sizes (gzipped) and limits:
-          //   - Main App Bundle (index-*.js):     ~110 kB, limit 145 kB (+35 kB headroom)
-          //   - Vendor Chunks (combined):         ~46 kB,  limit 50 kB  (+4 kB headroom)
+          // Current sizes (gzipped) and limits (with React Compiler enabled):
+          //   - Main App Bundle (index-*.js):     ~120 kB, limit 145 kB (+25 kB headroom)
+          //   - Vendor Chunks (combined):         ~47 kB,  limit 50 kB  (+3 kB headroom)
           //   - PDF Library (pdf-lib-*.js):       ~181 kB, limit 185 kB (+4 kB headroom) - lazy-loaded
-          //   - Total JS Bundle:                  ~440 kB, limit 460 kB (+20 kB headroom)
+          //   - Total JS Bundle:                  ~496 kB, limit 500 kB (+4 kB headroom)
+          // Note: React Compiler adds ~36kB for automatic memoization runtime
           manualChunks: {
             'react-vendor': ['react', 'react-dom'],
             'router': ['react-router-dom'],
@@ -171,7 +172,15 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       zodLocalesStubPlugin(),
-      react(),
+      react({
+        babel: {
+          plugins: [
+            // React Compiler - automatically optimizes components and hooks
+            // without requiring manual useMemo/useCallback. See: https://react.dev/learn/react-compiler
+            ['babel-plugin-react-compiler', {}],
+          ],
+        },
+      }),
       tailwindcss(),
       // Disable PWA for PR previews to avoid service worker scope conflicts
       // The main site's SW scope (/volleykit/) would intercept PR preview requests
