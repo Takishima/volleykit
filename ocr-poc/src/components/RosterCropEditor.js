@@ -99,6 +99,12 @@ export class RosterCropEditor {
   /** @type {{ width: number, height: number }} */
   #containerSize = { width: 0, height: 0 };
 
+  /** @type {{ x: number, y: number }} */
+  #imageOffset = { x: 0, y: 0 };
+
+  /** @type {{ width: number, height: number }} */
+  #displayedImageSize = { width: 0, height: 0 };
+
   /** @type {{ x: number, y: number, width: number, height: number }} */
   #cropRegion = { x: 0, y: 0, width: 0, height: 0 };
 
@@ -339,6 +345,26 @@ export class RosterCropEditor {
 
     const rect = viewport.getBoundingClientRect();
     this.#containerSize = { width: rect.width, height: rect.height };
+
+    // Calculate actual displayed image size and offset with object-fit: contain
+    if (this.#imageNaturalSize.width > 0 && this.#imageNaturalSize.height > 0) {
+      const containerAspect = this.#containerSize.width / this.#containerSize.height;
+      const imageAspect = this.#imageNaturalSize.width / this.#imageNaturalSize.height;
+
+      if (imageAspect > containerAspect) {
+        // Image is wider than container - fit by width
+        this.#displayedImageSize.width = this.#containerSize.width;
+        this.#displayedImageSize.height = this.#containerSize.width / imageAspect;
+        this.#imageOffset.x = 0;
+        this.#imageOffset.y = (this.#containerSize.height - this.#displayedImageSize.height) / 2;
+      } else {
+        // Image is taller than container - fit by height
+        this.#displayedImageSize.height = this.#containerSize.height;
+        this.#displayedImageSize.width = this.#containerSize.height * imageAspect;
+        this.#imageOffset.x = (this.#containerSize.width - this.#displayedImageSize.width) / 2;
+        this.#imageOffset.y = 0;
+      }
+    }
   }
 
   /**
@@ -346,10 +372,10 @@ export class RosterCropEditor {
    * @returns {number}
    */
   #getDisplayScale() {
-    if (!this.#imageElement) {
+    if (this.#imageNaturalSize.width === 0) {
       return 1;
     }
-    return this.#imageElement.clientWidth / this.#imageNaturalSize.width;
+    return this.#displayedImageSize.width / this.#imageNaturalSize.width;
   }
 
   /**
@@ -358,14 +384,14 @@ export class RosterCropEditor {
    */
   #applyPreset(preset) {
     const presetConfig = ROSTER_PRESETS[preset];
-    const scale = this.#getDisplayScale();
 
-    // Convert percentage-based preset to pixel coordinates
+    // Convert percentage-based preset to pixel coordinates relative to displayed image
+    // Then add the image offset to get viewport coordinates
     this.#cropRegion = {
-      x: presetConfig.x * this.#imageNaturalSize.width * scale,
-      y: presetConfig.y * this.#imageNaturalSize.height * scale,
-      width: presetConfig.width * this.#imageNaturalSize.width * scale,
-      height: presetConfig.height * this.#imageNaturalSize.height * scale,
+      x: this.#imageOffset.x + presetConfig.x * this.#displayedImageSize.width,
+      y: this.#imageOffset.y + presetConfig.y * this.#displayedImageSize.height,
+      width: presetConfig.width * this.#displayedImageSize.width,
+      height: presetConfig.height * this.#displayedImageSize.height,
     };
 
     this.#updateCropAreaDisplay();
@@ -457,24 +483,27 @@ export class RosterCropEditor {
   #updateDrag(x, y) {
     const deltaX = x - this.#dragStart.x;
     const deltaY = y - this.#dragStart.y;
-    const scale = this.#getDisplayScale();
-    const maxX = this.#imageNaturalSize.width * scale;
-    const maxY = this.#imageNaturalSize.height * scale;
+
+    // Calculate image bounds in viewport coordinates
+    const minX = this.#imageOffset.x;
+    const minY = this.#imageOffset.y;
+    const maxX = this.#imageOffset.x + this.#displayedImageSize.width;
+    const maxY = this.#imageOffset.y + this.#displayedImageSize.height;
 
     if (this.#dragMode === 'move') {
       // Move the entire crop area
       let newX = this.#cropStartRegion.x + deltaX;
       let newY = this.#cropStartRegion.y + deltaY;
 
-      // Constrain to image bounds
-      newX = Math.max(0, Math.min(maxX - this.#cropRegion.width, newX));
-      newY = Math.max(0, Math.min(maxY - this.#cropRegion.height, newY));
+      // Constrain to image bounds (accounting for offset)
+      newX = Math.max(minX, Math.min(maxX - this.#cropRegion.width, newX));
+      newY = Math.max(minY, Math.min(maxY - this.#cropRegion.height, newY));
 
       this.#cropRegion.x = newX;
       this.#cropRegion.y = newY;
     } else if (this.#dragMode) {
       // Resize from a corner
-      this.#resizeFromCorner(deltaX, deltaY, maxX, maxY);
+      this.#resizeFromCorner(deltaX, deltaY, minX, minY, maxX, maxY);
     }
 
     this.#updateCropAreaDisplay();
@@ -483,27 +512,29 @@ export class RosterCropEditor {
   /**
    * @param {number} deltaX
    * @param {number} deltaY
+   * @param {number} minX
+   * @param {number} minY
    * @param {number} maxX
    * @param {number} maxY
    */
-  #resizeFromCorner(deltaX, deltaY, maxX, maxY) {
+  #resizeFromCorner(deltaX, deltaY, minX, minY, maxX, maxY) {
     const minSize = RosterCropEditor.MIN_CROP_SIZE;
     let { x, y, width, height } = this.#cropStartRegion;
 
     switch (this.#dragMode) {
       case 'resize-tl':
-        x = Math.max(0, Math.min(x + width - minSize, x + deltaX));
-        y = Math.max(0, Math.min(y + height - minSize, y + deltaY));
+        x = Math.max(minX, Math.min(x + width - minSize, x + deltaX));
+        y = Math.max(minY, Math.min(y + height - minSize, y + deltaY));
         width = this.#cropStartRegion.x + this.#cropStartRegion.width - x;
         height = this.#cropStartRegion.y + this.#cropStartRegion.height - y;
         break;
       case 'resize-tr':
-        y = Math.max(0, Math.min(y + height - minSize, y + deltaY));
+        y = Math.max(minY, Math.min(y + height - minSize, y + deltaY));
         width = Math.max(minSize, Math.min(maxX - x, this.#cropStartRegion.width + deltaX));
         height = this.#cropStartRegion.y + this.#cropStartRegion.height - y;
         break;
       case 'resize-bl':
-        x = Math.max(0, Math.min(x + width - minSize, x + deltaX));
+        x = Math.max(minX, Math.min(x + width - minSize, x + deltaX));
         width = this.#cropStartRegion.x + this.#cropStartRegion.width - x;
         height = Math.max(minSize, Math.min(maxY - y, this.#cropStartRegion.height + deltaY));
         break;
@@ -549,9 +580,11 @@ export class RosterCropEditor {
    * @param {KeyboardEvent} e
    */
   #handleKeyDown(e) {
-    const scale = this.#getDisplayScale();
-    const maxX = this.#imageNaturalSize.width * scale;
-    const maxY = this.#imageNaturalSize.height * scale;
+    // Calculate image bounds in viewport coordinates
+    const minX = this.#imageOffset.x;
+    const minY = this.#imageOffset.y;
+    const maxX = this.#imageOffset.x + this.#displayedImageSize.width;
+    const maxY = this.#imageOffset.y + this.#displayedImageSize.height;
     const minSize = RosterCropEditor.MIN_CROP_SIZE;
 
     let handled = false;
@@ -580,7 +613,7 @@ export class RosterCropEditor {
       // Arrow keys: Move the crop area
       switch (e.key) {
         case 'ArrowLeft':
-          this.#cropRegion.x = Math.max(0, this.#cropRegion.x - KEYBOARD_MOVE_STEP_PX);
+          this.#cropRegion.x = Math.max(minX, this.#cropRegion.x - KEYBOARD_MOVE_STEP_PX);
           handled = true;
           break;
         case 'ArrowRight':
@@ -588,7 +621,7 @@ export class RosterCropEditor {
           handled = true;
           break;
         case 'ArrowUp':
-          this.#cropRegion.y = Math.max(0, this.#cropRegion.y - KEYBOARD_MOVE_STEP_PX);
+          this.#cropRegion.y = Math.max(minY, this.#cropRegion.y - KEYBOARD_MOVE_STEP_PX);
           handled = true;
           break;
         case 'ArrowDown':
@@ -698,9 +731,10 @@ export class RosterCropEditor {
 
     const scale = this.#getDisplayScale();
 
-    // Convert display coordinates to natural image coordinates
-    const cropX = this.#cropRegion.x / scale;
-    const cropY = this.#cropRegion.y / scale;
+    // Convert viewport coordinates to natural image coordinates
+    // First subtract the image offset to get coordinates relative to the displayed image
+    const cropX = (this.#cropRegion.x - this.#imageOffset.x) / scale;
+    const cropY = (this.#cropRegion.y - this.#imageOffset.y) / scale;
     const cropWidth = this.#cropRegion.width / scale;
     const cropHeight = this.#cropRegion.height / scale;
 
