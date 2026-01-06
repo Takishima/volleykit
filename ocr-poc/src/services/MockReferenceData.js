@@ -41,6 +41,12 @@
  * @property {ReferenceOfficial[]} officials - Coaches and assistant coaches
  */
 
+/**
+ * Minimum characters to match when doing fuzzy team name lookups.
+ * Used as a fallback when specific keywords don't match.
+ */
+const MINIMUM_MATCH_PREFIX_LENGTH = 5;
+
 // Helper to create a reference player (no shirt number - API doesn't provide it)
 function createPlayer(id, firstName, lastName, birthday, licenseCategory = 'SEN') {
   return {
@@ -151,7 +157,7 @@ export function getMockTeamB() {
 }
 
 /**
- * Get both mock teams
+ * Get both mock teams (electronic scoresheet)
  * @returns {{ teamA: ReferenceTeam, teamB: ReferenceTeam }}
  */
 export function getMockReferenceData() {
@@ -161,8 +167,92 @@ export function getMockReferenceData() {
   };
 }
 
+// =============================================================================
+// MANUSCRIPT SCORESHEET MOCK DATA
+// =============================================================================
+
 /**
- * Get mock team by name (fuzzy match)
+ * Mock reference data for Manuscript Team A (TV St. Johann)
+ * Based on manuscript scoresheet OCR sample.
+ * - Matches most players from the handwritten roster
+ * - Missing: One player to show "on sheet but not in reference"
+ * - Extra: One player to show "in reference but not on sheet"
+ * @returns {ReferenceTeam}
+ */
+export function getMockManuscriptTeamA() {
+  return {
+    id: 'team-a-tv-st-johann',
+    name: 'TV St. Johann',
+    players: [
+      // Players that MATCH the OCR (from official roster)
+      createPlayer('ms-a-1', 'Sotiria', 'Angeli', '1997-02-20', 'SEN'),
+      createPlayer('ms-a-2', 'Lea', 'Cottier', '1990-09-21', 'SEN'),
+      createPlayer('ms-a-3', 'Oceane', 'Follonier', '1997-11-19', 'SEN'),
+      createPlayer('ms-a-4', 'Sara', 'Gürtler', '1981-01-13', 'SEN'),
+      createPlayer('ms-a-5', 'Martina Stephanie', 'Kaptanoglu - Griner', '1976-12-27', 'SEN'),
+      createPlayer('ms-a-6', 'Marianne', 'Lorentz', '1980-04-06', 'SEN'),
+      createPlayer('ms-a-7', 'Jeanine', 'Monnier', '1981-07-21', 'SEN'),
+      createPlayer('ms-a-8', 'Laura', 'Montero', '1997-06-19', 'SEN'),
+      // Missing Suter to demonstrate "on sheet but not in reference"
+      // createPlayer('ms-a-9', 'Andrea', 'Suter', '1982-10-07', 'SEN'),
+      createPlayer('ms-a-10', 'Aline Hélène', 'Vonwiller', '1991-03-16', 'SEN'),
+      // EXTRA player not on sheet (to show "in reference but not on sheet")
+      createPlayer('ms-a-extra', 'Sophie', 'Müller', '1995-05-15', 'SEN'),
+    ],
+    officials: [
+      // Coach - Marianne Lorentz (also a player)
+      createOfficial('ms-o-a-1', 'Marianne', 'Lorentz', 'C'),
+    ],
+  };
+}
+
+/**
+ * Mock reference data for Manuscript Team B (VTV Horw 1)
+ * Based on manuscript scoresheet OCR sample.
+ * - Matches most players from the handwritten roster
+ * - Missing: One player to show "on sheet but not in reference"
+ * - Extra: One player to show "in reference but not on sheet"
+ * @returns {ReferenceTeam}
+ */
+export function getMockManuscriptTeamB() {
+  return {
+    id: 'team-b-vtv-horw',
+    name: 'VTV Horw 1',
+    players: [
+      // Players that MATCH the OCR (from official roster)
+      createPlayer('ms-b-1', 'Nicole', 'Hentschel', '1990-05-03', 'SEN'),
+      createPlayer('ms-b-2', 'Julia', 'Brunner', '1992-06-28', 'SEN'),
+      createPlayer('ms-b-3', 'Silvia', 'Candido', '1992-06-10', 'SEN'),
+      createPlayer('ms-b-4', 'Fabienne Viviane', 'Stalder', '1989-03-12', 'SEN'),
+      createPlayer('ms-b-5', 'Sabrina', 'Wirz', '1990-06-01', 'SEN'),
+      createPlayer('ms-b-6', 'Corinne', 'Michel', '1998-11-19', 'SEN'),
+      // Missing Morgenthaler to demonstrate "on sheet but not in reference"
+      // createPlayer('ms-b-7', 'Miryam Nicole', 'Morgenthaler', '1993-01-15', 'SEN'),
+      createPlayer('ms-b-8', 'Monika Kamila', 'Brzozowska', '2001-08-28', 'JUN'),
+      createPlayer('ms-b-9', 'Marina Julia', 'Erne', '1992-10-17', 'SEN'),
+      // EXTRA player not on sheet (to show "in reference but not on sheet")
+      createPlayer('ms-b-extra', 'Lena', 'Fischer', '1994-08-22', 'SEN'),
+    ],
+    officials: [
+      // Coach - A. Zbinden (first name unknown from sheet)
+      createOfficial('ms-o-b-1', 'A.', 'Zbinden', 'C'),
+    ],
+  };
+}
+
+/**
+ * Get both mock teams for manuscript scoresheet
+ * @returns {{ teamA: ReferenceTeam, teamB: ReferenceTeam }}
+ */
+export function getMockManuscriptReferenceData() {
+  return {
+    teamA: getMockManuscriptTeamA(),
+    teamB: getMockManuscriptTeamB(),
+  };
+}
+
+/**
+ * Get mock team by name (fuzzy match) - electronic scoresheet
  * @param {string} teamName - Team name to search for
  * @returns {ReferenceTeam | null}
  */
@@ -184,10 +274,44 @@ export function findTeamByName(teamName) {
   }
 
   // Fallback: check if team name is similar
-  if (teamA.name.toLowerCase().includes(normalized.slice(0, 5))) {
+  if (teamA.name.toLowerCase().includes(normalized.slice(0, MINIMUM_MATCH_PREFIX_LENGTH))) {
     return teamA;
   }
-  if (teamB.name.toLowerCase().includes(normalized.slice(0, 5))) {
+  if (teamB.name.toLowerCase().includes(normalized.slice(0, MINIMUM_MATCH_PREFIX_LENGTH))) {
+    return teamB;
+  }
+
+  return null;
+}
+
+/**
+ * Get mock team by name (fuzzy match) - manuscript scoresheet
+ * @param {string} teamName - Team name to search for
+ * @returns {ReferenceTeam | null}
+ */
+export function findManuscriptTeamByName(teamName) {
+  if (!teamName) {
+    return null;
+  }
+
+  const normalized = teamName.toLowerCase().trim();
+  const teamA = getMockManuscriptTeamA();
+  const teamB = getMockManuscriptTeamB();
+
+  // Check if name contains key parts for TV St. Johann
+  if (normalized.includes('johann') || normalized.includes('st. johann') || normalized.includes('tv st')) {
+    return teamA;
+  }
+  // Check if name contains key parts for VTV Horw
+  if (normalized.includes('horw') || normalized.includes('vtv')) {
+    return teamB;
+  }
+
+  // Fallback: check if team name is similar
+  if (teamA.name.toLowerCase().includes(normalized.slice(0, MINIMUM_MATCH_PREFIX_LENGTH))) {
+    return teamA;
+  }
+  if (teamB.name.toLowerCase().includes(normalized.slice(0, MINIMUM_MATCH_PREFIX_LENGTH))) {
     return teamB;
   }
 
