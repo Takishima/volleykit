@@ -164,6 +164,13 @@ jobs:
         with:
           name: ocr-poc-dist
           path: deploy/ocr-poc
+      - name: Delete artifacts
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: |
+            web-app-dist
+            help-site-dist
+            ocr-poc-dist
       - name: Download existing gh-pages content
         run: |
           if git ls-remote --exit-code --heads origin gh-pages; then
