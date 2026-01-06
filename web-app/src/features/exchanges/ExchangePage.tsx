@@ -3,7 +3,7 @@ import { useShallow } from "zustand/react/shallow";
 import { useGameExchanges, type ExchangeStatus } from "@/features/validation/hooks/useConvocations";
 import { useExchangeActions } from "./hooks/useExchangeActions";
 import { useTravelTimeFilter } from "@/shared/hooks/useTravelTimeFilter";
-import { useDemoStore } from "@/shared/stores/demo";
+import { useDemoStore, DEMO_USER_PERSON_IDENTITY } from "@/shared/stores/demo";
 import { useAuthStore } from "@/shared/stores/auth";
 import { useSettingsStore } from "@/shared/stores/settings";
 import { createExchangeActions } from "./utils/exchange-actions";
@@ -16,6 +16,7 @@ import { groupByWeek } from "@/shared/utils/date-helpers";
 import { LevelFilterToggle } from "@/shared/components/LevelFilterToggle";
 import { DistanceFilterToggle } from "@/shared/components/DistanceFilterToggle";
 import { TravelTimeFilterToggle } from "@/shared/components/TravelTimeFilterToggle";
+import { FilterChip } from "@/shared/components/FilterChip";
 import { ExchangeSettingsSheet } from "@/features/exchanges/components/ExchangeSettingsSheet";
 import {
   LoadingState,
@@ -45,20 +46,34 @@ const RemoveFromExchangeModal = lazy(
 
 export function ExchangePage() {
   const [statusFilter, setStatusFilter] = useState<ExchangeStatus>("open");
+  const [hideOwnExchanges, setHideOwnExchanges] = useState(true);
   const { t } = useTranslation();
 
   // Initialize tour for this page (triggers auto-start on first visit)
   // Use showDummyData to show dummy data immediately, avoiding race condition with empty states
   const { showDummyData } = useTour("exchange");
 
-  const { dataSource, isAssociationSwitching, isCalendarMode } = useAuthStore(
+  const { dataSource, isAssociationSwitching, isCalendarMode, userId } = useAuthStore(
     useShallow((state) => ({
       dataSource: state.dataSource,
       isAssociationSwitching: state.isAssociationSwitching,
       isCalendarMode: state.isCalendarMode(),
+      userId: state.user?.id,
     })),
   );
   const isDemoMode = dataSource === "demo";
+
+  // Get current user's identity for checking exchange ownership
+  const currentUserIdentity = isDemoMode ? DEMO_USER_PERSON_IDENTITY : userId;
+
+  // Helper to check if an exchange was submitted by the current user
+  const isOwnExchange = useCallback(
+    (exchange: GameExchange) => {
+      if (!currentUserIdentity) return false;
+      return exchange.submittedByPerson?.__identity === currentUserIdentity;
+    },
+    [currentUserIdentity],
+  );
   const { userRefereeLevel, userRefereeLevelGradationValue } = useDemoStore(
     useShallow((state) => ({
       userRefereeLevel: state.userRefereeLevel,
@@ -192,6 +207,13 @@ export function ExchangePage() {
       });
     }
 
+    // Hide user's own exchanges in "open" tab when filter is enabled
+    if (hideOwnExchanges && statusFilter === "open" && currentUserIdentity) {
+      result = result.filter(
+        ({ exchange }) => exchange.submittedByPerson?.__identity !== currentUserIdentity,
+      );
+    }
+
     return result;
   }, [
     showDummyData,
@@ -207,6 +229,8 @@ export function ExchangePage() {
     travelTimeFilter.maxTravelTimeMinutes,
     isTravelTimeAvailable,
     travelTimeMap,
+    hideOwnExchanges,
+    currentUserIdentity,
   ]);
 
   // Group exchanges by week for visual separation
@@ -240,7 +264,14 @@ export function ExchangePage() {
         return { right: [actions.removeFromExchange] };
       }
 
-      // "open" tab: actions depend on exchange status
+      // "open" tab: check if it's user's own exchange first
+      if (isOwnExchange(exchange)) {
+        // User's own exchange in open tab - show remove action
+        // Swipe right reveals: card -> [Remove]
+        return { right: [actions.removeFromExchange] };
+      }
+
+      // "open" tab: actions for other users' exchanges depend on status
       switch (exchange.status) {
         case "open":
           // Open exchanges: swipe left to take over
@@ -255,7 +286,7 @@ export function ExchangePage() {
           return {};
       }
     },
-    [takeOverModal.open, removeFromExchangeModal.open, statusFilter],
+    [takeOverModal.open, removeFromExchangeModal.open, statusFilter, isOwnExchange],
   );
 
   const tabs = [
@@ -289,10 +320,16 @@ export function ExchangePage() {
     isLevelFilterAvailable || isDistanceFilterAvailable || isTravelTimeFilterAvailable;
 
   // Horizontal scrollable filter chips with settings gear - only show on "Open" tab when any filter is available
+  // Always show filter bar on "open" tab (at minimum we have "hide own" filter)
   const filterContent =
-    statusFilter === "open" && hasAnyFilter ? (
+    statusFilter === "open" ? (
       <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-        <ExchangeSettingsSheet dataTour="exchange-settings" />
+        {hasAnyFilter && <ExchangeSettingsSheet dataTour="exchange-settings" />}
+        <FilterChip
+          active={hideOwnExchanges}
+          onToggle={() => setHideOwnExchanges((prev) => !prev)}
+          label={t("exchange.hideOwn")}
+        />
         {isTravelTimeFilterAvailable && (
           <TravelTimeFilterToggle
             checked={travelTimeFilter.enabled}
@@ -339,7 +376,7 @@ export function ExchangePage() {
 
     if (groupedData.length === 0) {
       const hasActiveFilters =
-        levelFilterEnabled || distanceFilter.enabled || travelTimeFilter.enabled;
+        hideOwnExchanges || levelFilterEnabled || distanceFilter.enabled || travelTimeFilter.enabled;
       return (
         <EmptyState
           icon="exchange"

@@ -343,6 +343,7 @@ const de: Translations = {
     unavailableInCalendarModeTitle: "Im Kalender-Modus nicht verfügbar",
     unavailableInCalendarModeDescription:
       "Tauschbörsen-Funktionen sind im Kalender-Modus nicht verfügbar. Verwenden Sie die vollständige Anmeldung, um Tauschangebote zu durchsuchen und zu bewerben.",
+    hideOwn: "Eigene ausblenden",
     settings: {
       title: "Filtereinstellungen",
       maxDistance: "Maximale Entfernung",
