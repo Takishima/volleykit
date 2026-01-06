@@ -5,6 +5,10 @@
  * 1. Camera capture - Opens rear camera with live preview and alignment guide
  * 2. File upload - Accepts image files from device with zoom/pan editor
  *
+ * Supports different aspect ratios based on scoresheet type:
+ * - Electronic: 4:5 portrait for player list table
+ * - Manuscript: 7:5 landscape for full scoresheet
+ *
  * Designed for mobile-first with large touch targets and
  * graceful degradation when camera is unavailable.
  */
@@ -12,10 +16,14 @@
 import { CameraGuide } from './CameraGuide.js';
 import { ImageEditor } from './ImageEditor.js';
 
+/** @typedef {import('../types.js').SheetType} SheetType */
+
 /**
  * @typedef {Object} ImageCaptureOptions
  * @property {HTMLElement} container - Container element to render into
+ * @property {SheetType} sheetType - Type of scoresheet (affects aspect ratio)
  * @property {(blob: Blob) => void} onCapture - Callback when image is captured
+ * @property {() => void} [onBack] - Callback to go back to type selection
  */
 
 /** How long to display the permission denied message */
@@ -28,8 +36,14 @@ export class ImageCapture {
   /** @type {HTMLElement} */
   #container;
 
+  /** @type {SheetType} */
+  #sheetType;
+
   /** @type {(blob: Blob) => void} */
   #onCapture;
+
+  /** @type {(() => void) | undefined} */
+  #onBack;
 
   /** @type {MediaStream | null} */
   #stream = null;
@@ -59,15 +73,33 @@ export class ImageCapture {
   /**
    * @param {ImageCaptureOptions} options
    */
-  constructor({ container, onCapture }) {
+  constructor({ container, sheetType, onCapture, onBack }) {
     this.#container = container;
+    this.#sheetType = sheetType;
     this.#onCapture = onCapture;
+    this.#onBack = onBack;
     this.#render();
   }
 
   #render() {
+    const captureHint = this.#sheetType === 'manuscript'
+      ? 'Capture the full scoresheet in landscape'
+      : 'Capture the player list table';
+
     this.#container.innerHTML = `
       <div class="image-capture">
+        <div class="image-capture__header">
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            id="btn-back"
+            aria-label="Go back to type selection"
+          >
+            ← Back
+          </button>
+          <span class="image-capture__hint"></span>
+        </div>
+
         <div class="image-capture__buttons">
           <button
             type="button"
@@ -151,21 +183,35 @@ export class ImageCapture {
       </div>
     `;
 
+    // Set hint text safely via textContent to prevent XSS
+    const hintSpan = this.#container.querySelector('.image-capture__hint');
+    if (hintSpan) {
+      hintSpan.textContent = captureHint;
+    }
+
     this.#bindEvents();
   }
 
   #bindEvents() {
+    const backBtn = this.#container.querySelector('#btn-back');
     const cameraBtn = this.#container.querySelector('#btn-camera');
     const uploadBtn = this.#container.querySelector('#btn-upload');
     const fileInput = this.#container.querySelector('#file-input');
     const cancelBtn = this.#container.querySelector('#btn-cancel-camera');
     const takePhotoBtn = this.#container.querySelector('#btn-take-photo');
 
+    backBtn?.addEventListener('click', () => this.#handleBack());
     cameraBtn?.addEventListener('click', () => this.#openCamera());
     uploadBtn?.addEventListener('click', () => fileInput?.click());
     fileInput?.addEventListener('change', (e) => this.#handleFileSelect(e));
     cancelBtn?.addEventListener('click', () => this.#closeCamera());
     takePhotoBtn?.addEventListener('click', () => this.#capturePhoto());
+  }
+
+  #handleBack() {
+    if (this.#onBack) {
+      this.#onBack();
+    }
   }
 
   async #openCamera() {
@@ -182,6 +228,7 @@ export class ImageCapture {
 
       const cameraContainer = this.#container.querySelector('#camera-container');
       const buttonsContainer = this.#container.querySelector('.image-capture__buttons');
+      const headerContainer = this.#container.querySelector('.image-capture__header');
       const guideContainer = this.#container.querySelector('#camera-guide-container');
       this.#videoElement = this.#container.querySelector('#camera-preview');
 
@@ -190,12 +237,16 @@ export class ImageCapture {
         await this.#videoElement.play();
       }
 
-      // Initialize camera guide overlay
+      // Initialize camera guide overlay with sheet type
       if (guideContainer) {
-        this.#cameraGuide = new CameraGuide({ container: guideContainer });
+        this.#cameraGuide = new CameraGuide({
+          container: guideContainer,
+          sheetType: this.#sheetType,
+        });
       }
 
       buttonsContainer?.setAttribute('hidden', '');
+      headerContainer?.setAttribute('hidden', '');
       cameraContainer?.removeAttribute('hidden');
       this.#isCameraActive = true;
     } catch (error) {
@@ -248,9 +299,11 @@ export class ImageCapture {
 
     const cameraContainer = this.#container.querySelector('#camera-container');
     const buttonsContainer = this.#container.querySelector('.image-capture__buttons');
+    const headerContainer = this.#container.querySelector('.image-capture__header');
 
     cameraContainer?.setAttribute('hidden', '');
     buttonsContainer?.removeAttribute('hidden');
+    headerContainer?.removeAttribute('hidden');
     this.#isCameraActive = false;
   }
 
@@ -312,6 +365,7 @@ export class ImageCapture {
   #openEditor(imageBlob) {
     const editorContainer = this.#container.querySelector('#editor-container');
     const buttonsContainer = this.#container.querySelector('.image-capture__buttons');
+    const headerContainer = this.#container.querySelector('.image-capture__header');
 
     if (!editorContainer) {
       return;
@@ -320,11 +374,13 @@ export class ImageCapture {
     this.#imageEditor = new ImageEditor({
       container: editorContainer,
       imageBlob,
+      sheetType: this.#sheetType,
       onConfirm: (croppedBlob) => this.#handleEditorConfirm(croppedBlob),
       onCancel: () => this.#closeEditor(),
     });
 
     buttonsContainer?.setAttribute('hidden', '');
+    headerContainer?.setAttribute('hidden', '');
     editorContainer.removeAttribute('hidden');
   }
 
@@ -342,9 +398,11 @@ export class ImageCapture {
 
     const editorContainer = this.#container.querySelector('#editor-container');
     const buttonsContainer = this.#container.querySelector('.image-capture__buttons');
+    const headerContainer = this.#container.querySelector('.image-capture__header');
 
     editorContainer?.setAttribute('hidden', '');
     buttonsContainer?.removeAttribute('hidden');
+    headerContainer?.removeAttribute('hidden');
   }
 
   destroy() {

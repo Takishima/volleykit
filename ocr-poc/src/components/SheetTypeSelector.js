@@ -1,74 +1,40 @@
 /**
  * SheetTypeSelector Component
  *
- * Allows the user to specify the type of scoresheet they captured:
- * - Electronic/Printed: Screenshots or printed forms
- * - Handwritten: Physical forms filled by hand
+ * First step in the workflow - allows the user to specify the type of scoresheet:
+ * - Electronic: Screenshots or printed forms with typed text
+ * - Manuscript: Physical paper forms filled by hand (large landscape format)
  *
- * This distinction helps optimize OCR processing for different text styles.
+ * This selection determines the capture guide aspect ratio and whether OCR is available.
  */
 
-/**
- * @typedef {'electronic' | 'handwritten'} SheetType
- */
-
-/**
- * @typedef {Object} SheetSelection
- * @property {SheetType} type - The selected sheet type
- * @property {Blob} imageBlob - The captured image
- */
+/** @typedef {import('../types.js').SheetType} SheetType */
 
 /**
  * @typedef {Object} SheetTypeSelectorOptions
  * @property {HTMLElement} container - Container element to render into
- * @property {Blob} imageBlob - The captured image to display
- * @property {(selection: SheetSelection) => void} onSelect - Callback when type is selected
- * @property {() => void} [onBack] - Optional callback to go back to capture
+ * @property {(type: SheetType) => void} onSelect - Callback when type is selected
  */
 
 export class SheetTypeSelector {
   /** @type {HTMLElement} */
   #container;
 
-  /** @type {Blob} */
-  #imageBlob;
-
-  /** @type {(selection: SheetSelection) => void} */
+  /** @type {(type: SheetType) => void} */
   #onSelect;
-
-  /** @type {(() => void) | undefined} */
-  #onBack;
-
-  /** @type {string | null} */
-  #previewUrl = null;
 
   /**
    * @param {SheetTypeSelectorOptions} options
    */
-  constructor({ container, imageBlob, onSelect, onBack }) {
+  constructor({ container, onSelect }) {
     this.#container = container;
-    this.#imageBlob = imageBlob;
     this.#onSelect = onSelect;
-    this.#onBack = onBack;
     this.#render();
   }
 
   #render() {
-    // Create object URL for thumbnail preview
-    this.#previewUrl = URL.createObjectURL(this.#imageBlob);
-
     this.#container.innerHTML = `
       <div class="sheet-type-selector">
-        <div class="sheet-type-selector__preview">
-          <img
-            src="${this.#previewUrl}"
-            alt="Captured scoresheet"
-            class="sheet-type-selector__thumbnail"
-          />
-        </div>
-
-        <h3 class="sheet-type-selector__title">What type of scoresheet is this?</h3>
-
         <div class="sheet-type-selector__options">
           <button
             type="button"
@@ -76,8 +42,8 @@ export class SheetTypeSelector {
             id="btn-electronic"
             aria-describedby="desc-electronic"
           >
-            <span class="sheet-type-selector__option-icon" aria-hidden="true">🖥️</span>
-            <span class="sheet-type-selector__option-label">Electronic / Printed</span>
+            <span class="sheet-type-selector__option-icon" aria-hidden="true">📱</span>
+            <span class="sheet-type-selector__option-label">Electronic</span>
             <span class="sheet-type-selector__option-desc" id="desc-electronic">
               Screenshots or printed forms with typed text
             </span>
@@ -86,24 +52,16 @@ export class SheetTypeSelector {
           <button
             type="button"
             class="sheet-type-selector__option"
-            id="btn-handwritten"
-            aria-describedby="desc-handwritten"
+            id="btn-manuscript"
+            aria-describedby="desc-manuscript"
           >
-            <span class="sheet-type-selector__option-icon" aria-hidden="true">✍️</span>
-            <span class="sheet-type-selector__option-label">Handwritten</span>
-            <span class="sheet-type-selector__option-desc" id="desc-handwritten">
-              Physical forms filled in by hand
+            <span class="sheet-type-selector__option-icon" aria-hidden="true">📝</span>
+            <span class="sheet-type-selector__option-label">Manuscript</span>
+            <span class="sheet-type-selector__option-desc" id="desc-manuscript">
+              Physical paper forms filled in by hand
             </span>
           </button>
         </div>
-
-        <button
-          type="button"
-          class="btn btn-secondary btn-block sheet-type-selector__back"
-          id="btn-back"
-        >
-          ← Capture Different Image
-        </button>
       </div>
     `;
 
@@ -112,35 +70,20 @@ export class SheetTypeSelector {
 
   #bindEvents() {
     const electronicBtn = this.#container.querySelector('#btn-electronic');
-    const handwrittenBtn = this.#container.querySelector('#btn-handwritten');
-    const backBtn = this.#container.querySelector('#btn-back');
+    const manuscriptBtn = this.#container.querySelector('#btn-manuscript');
 
     electronicBtn?.addEventListener('click', () => this.#handleSelect('electronic'));
-    handwrittenBtn?.addEventListener('click', () => this.#handleSelect('handwritten'));
-    backBtn?.addEventListener('click', () => this.#handleBack());
+    manuscriptBtn?.addEventListener('click', () => this.#handleSelect('manuscript'));
   }
 
   /**
    * @param {SheetType} type
    */
   #handleSelect(type) {
-    this.#onSelect({
-      type,
-      imageBlob: this.#imageBlob,
-    });
-  }
-
-  #handleBack() {
-    if (this.#onBack) {
-      this.#onBack();
-    }
+    this.#onSelect(type);
   }
 
   destroy() {
-    if (this.#previewUrl) {
-      URL.revokeObjectURL(this.#previewUrl);
-      this.#previewUrl = null;
-    }
     this.#container.innerHTML = '';
   }
 }
