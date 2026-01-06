@@ -79,10 +79,7 @@ export class CameraGuide {
     this.#guideElement.innerHTML = `
       <div class="camera-guide__overlay">
         <div class="camera-guide__frame">
-          <div class="camera-guide__corner camera-guide__corner--tl"></div>
-          <div class="camera-guide__corner camera-guide__corner--tr"></div>
-          <div class="camera-guide__corner camera-guide__corner--bl"></div>
-          <div class="camera-guide__corner camera-guide__corner--br"></div>
+          <div class="camera-guide__table-lines"></div>
           <div class="camera-guide__label">
             <span></span>
           </div>
