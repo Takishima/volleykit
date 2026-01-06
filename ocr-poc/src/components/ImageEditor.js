@@ -258,21 +258,17 @@ export class ImageEditor {
       return;
     }
 
-    // Calculate initial zoom to fit image so it covers the frame
-    const imageAspect = this.#imageNaturalSize.width / this.#imageNaturalSize.height;
-    const frameAspect = this.#frameSize.width / this.#frameSize.height;
+    // Calculate initial zoom to fit the entire image within the viewport
+    // This allows users to see the full image and zoom in to select the area they want
+    const viewportPadding = 40; // Padding from viewport edges
+    const availableWidth = this.#containerSize.width - viewportPadding * 2;
+    const availableHeight = this.#containerSize.height - viewportPadding * 2;
 
-    let fitScale;
-    if (imageAspect > frameAspect) {
-      // Image is wider than frame - fit by height
-      fitScale = this.#frameSize.height / this.#imageNaturalSize.height;
-    } else {
-      // Image is taller than frame - fit by width
-      fitScale = this.#frameSize.width / this.#imageNaturalSize.width;
-    }
+    const scaleToFitWidth = availableWidth / this.#imageNaturalSize.width;
+    const scaleToFitHeight = availableHeight / this.#imageNaturalSize.height;
 
-    // Set initial zoom to fit
-    this.#zoom = Math.max(fitScale, MIN_ZOOM);
+    // Set initial zoom to fit the entire image in the viewport
+    this.#zoom = Math.max(MIN_ZOOM, Math.min(scaleToFitWidth, scaleToFitHeight));
 
     // Center the image
     this.#panX = 0;
@@ -295,12 +291,25 @@ export class ImageEditor {
     const scaledWidth = this.#imageNaturalSize.width * this.#zoom;
     const scaledHeight = this.#imageNaturalSize.height * this.#zoom;
 
-    // Calculate how far the image can move while still covering the frame
-    const maxPanX = Math.max(0, (scaledWidth - this.#frameSize.width) / 2);
-    const maxPanY = Math.max(0, (scaledHeight - this.#frameSize.height) / 2);
+    // When image is larger than the viewport, constrain to keep frame filled
+    // When image is smaller than the viewport, keep the image centered (allow limited panning)
+    if (scaledWidth >= this.#containerSize.width) {
+      // Image is wider than viewport - constrain to keep visible
+      const maxPanX = (scaledWidth - this.#frameSize.width) / 2;
+      this.#panX = Math.max(-maxPanX, Math.min(maxPanX, this.#panX));
+    } else {
+      // Image is narrower than viewport - keep centered
+      this.#panX = 0;
+    }
 
-    this.#panX = Math.max(-maxPanX, Math.min(maxPanX, this.#panX));
-    this.#panY = Math.max(-maxPanY, Math.min(maxPanY, this.#panY));
+    if (scaledHeight >= this.#containerSize.height) {
+      // Image is taller than viewport - constrain to keep visible
+      const maxPanY = (scaledHeight - this.#frameSize.height) / 2;
+      this.#panY = Math.max(-maxPanY, Math.min(maxPanY, this.#panY));
+    } else {
+      // Image is shorter than viewport - keep centered
+      this.#panY = 0;
+    }
   }
 
   /** @type {() => void} */
