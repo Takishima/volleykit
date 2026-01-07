@@ -31,7 +31,8 @@ function getNestedValue(obj: unknown, path: string): string | undefined {
 }
 
 /**
- * Get the current language from localStorage or browser settings
+ * Get the current language from URL parameter, localStorage, or browser settings
+ * Priority: URL param > localStorage > browser language > default
  * Falls back to default language if not found
  */
 export function getLanguage(): Language {
@@ -39,7 +40,16 @@ export function getLanguage(): Language {
     return defaultLanguage;
   }
 
-  // Check localStorage first
+  // Check URL parameter first (allows main app to pass language)
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlLang = urlParams.get('lang');
+  if (urlLang && isValidLanguage(urlLang)) {
+    // Persist the URL language to localStorage for subsequent page loads
+    localStorage.setItem('help-site-language', urlLang);
+    return urlLang;
+  }
+
+  // Check localStorage second
   const stored = localStorage.getItem('help-site-language');
   if (stored && isValidLanguage(stored)) {
     return stored;

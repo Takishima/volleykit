@@ -1,7 +1,13 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { getHelpSiteUrl } from "./constants";
+import { useLanguageStore } from "@/shared/stores/language";
 
 describe("getHelpSiteUrl", () => {
+  beforeEach(() => {
+    // Reset the language store to default locale before each test
+    useLanguageStore.setState({ locale: "en" });
+  });
+
   afterEach(() => {
     vi.unstubAllGlobals();
   });
@@ -15,7 +21,7 @@ describe("getHelpSiteUrl", () => {
 
     const url = getHelpSiteUrl();
 
-    expect(url).toBe("https://takishima.github.io/volleykit/help/");
+    expect(url).toBe("https://takishima.github.io/volleykit/help/?lang=en");
   });
 
   it("returns help URL with correct base path for PR preview", () => {
@@ -27,7 +33,7 @@ describe("getHelpSiteUrl", () => {
 
     const url = getHelpSiteUrl();
 
-    expect(url).toBe("https://takishima.github.io/volleykit/pr-123/help/");
+    expect(url).toBe("https://takishima.github.io/volleykit/pr-123/help/?lang=en");
   });
 
   it("returns help URL for local development", () => {
@@ -41,7 +47,7 @@ describe("getHelpSiteUrl", () => {
 
     const url = getHelpSiteUrl();
 
-    expect(url).toBe("http://localhost:5173/help/");
+    expect(url).toBe("http://localhost:5173/help/?lang=en");
   });
 
   it("handles missing window (SSR) gracefully", () => {
@@ -51,6 +57,33 @@ describe("getHelpSiteUrl", () => {
 
     const url = getHelpSiteUrl();
 
-    expect(url).toBe("/volleykit/help/");
+    expect(url).toBe("/volleykit/help/?lang=en");
+  });
+
+  it("includes the current language in the URL", () => {
+    vi.stubGlobal("window", {
+      location: { origin: "https://takishima.github.io" },
+    });
+    vi.stubEnv("BASE_URL", "/volleykit/");
+
+    // Set German as the current language
+    useLanguageStore.setState({ locale: "de" });
+
+    const url = getHelpSiteUrl();
+
+    expect(url).toBe("https://takishima.github.io/volleykit/help/?lang=de");
+  });
+
+  it("includes French language when selected", () => {
+    vi.stubGlobal("window", {
+      location: { origin: "https://takishima.github.io" },
+    });
+    vi.stubEnv("BASE_URL", "/volleykit/");
+
+    useLanguageStore.setState({ locale: "fr" });
+
+    const url = getHelpSiteUrl();
+
+    expect(url).toBe("https://takishima.github.io/volleykit/help/?lang=fr");
   });
 });
