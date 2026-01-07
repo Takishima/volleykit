@@ -47,11 +47,13 @@ const mockUser = {
 const mockLogout = vi.fn();
 const mockSetSafeMode = vi.fn();
 
-function mockAuthStore(overrides = {}) {
+function mockAuthStore(overrides: Record<string, unknown> = {}) {
+  const dataSource = (overrides.dataSource ?? "api") as "api" | "demo" | "calendar";
   const state = {
     user: mockUser,
     logout: mockLogout,
-    dataSource: "api" as const,
+    dataSource,
+    isCalendarMode: () => dataSource === "calendar",
     ...overrides,
   };
   vi.mocked(authStore.useAuthStore).mockImplementation((selector?: unknown) => {
@@ -131,7 +133,13 @@ describe("SettingsPage", () => {
       expect(screen.queryByText("settings.safeMode")).not.toBeInTheDocument();
     });
 
-    it("shows safe mode section when not in demo mode", () => {
+    it("hides safe mode section in calendar mode", () => {
+      mockAuthStore({ dataSource: "calendar" });
+      render(<SettingsPage />, { wrapper: createWrapper() });
+      expect(screen.queryByText("settings.safeMode")).not.toBeInTheDocument();
+    });
+
+    it("shows safe mode section when not in demo or calendar mode", () => {
       render(<SettingsPage />, { wrapper: createWrapper() });
       expect(screen.getByText("settings.safeMode")).toBeInTheDocument();
     });

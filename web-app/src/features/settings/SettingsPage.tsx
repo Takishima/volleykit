@@ -18,11 +18,12 @@ import {
 } from "./components";
 
 export function SettingsPage() {
-  const { user, logout, dataSource } = useAuthStore(
+  const { user, logout, dataSource, isCalendarMode } = useAuthStore(
     useShallow((state) => ({
       user: state.user,
       logout: state.logout,
       dataSource: state.dataSource,
+      isCalendarMode: state.isCalendarMode(),
     })),
   );
   const isDemoMode = dataSource === "demo";
@@ -82,7 +83,7 @@ export function SettingsPage() {
         />
       )}
 
-      {!isDemoMode && (
+      {!isDemoMode && !isCalendarMode && (
         <DataProtectionSection
           isSafeModeEnabled={isSafeModeEnabled}
           onSetSafeMode={setSafeMode}
