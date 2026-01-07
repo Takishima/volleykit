@@ -67,14 +67,24 @@ import InfoBox from '../components/InfoBox.astro';
   <h2>Taking Actions</h2>
 
   <p>
-    Depending on the game status, you may have different actions available:
+    VolleyKit uses swipe gestures to quickly access actions on your assignment cards.
+    Depending on the game status, you may have different actions available.
   </p>
 
-  <h3>Request Exchange</h3>
+  <h3>Swipe Right – Add to Exchange</h3>
+
   <p>
-    If you can't attend a game, you can request an exchange. This posts your
-    assignment to the exchange board for other referees to pick up.
+    Swipe an assignment card to the <strong>right</strong> to reveal the exchange action.
+    If you can't attend a game, you can add it to the exchange board for other
+    referees to pick up.
   </p>
+
+  <DeviceScreenshot
+    id="swipe-right-exchange"
+    alt="Assignment card swiped right showing exchange action"
+    caption="Swipe right to add an assignment to the exchange board"
+    instructions="Take a screenshot showing an assignment card swiped to the right, revealing the green Exchange button on the left side of the card."
+  />
 
   <InfoBox type="warning">
     <p>
@@ -83,17 +93,36 @@ import InfoBox from '../components/InfoBox.astro';
     </p>
   </InfoBox>
 
-  <h3>Get Directions</h3>
+  <h3>Swipe Left – Validate &amp; Edit</h3>
+
   <p>
-    Opens your preferred maps application with directions to the venue.
+    Swipe an assignment card to the <strong>left</strong> to reveal additional actions:
   </p>
+
+  <ul>
+    <li><strong>Validate</strong> – Submit game results and validate the match (available for first referees after the game)</li>
+    <li><strong>Edit</strong> – Edit your compensation details for this assignment</li>
+  </ul>
 
   <DeviceScreenshot
     id="assignment-actions"
-    alt="Assignment card showing swipe actions for exchange and validation"
-    caption="Available actions for an assignment"
-    instructions="Take a screenshot showing the swipe actions revealed on an assignment card. Show exchange and other available actions."
+    alt="Assignment card swiped left showing validate and edit actions"
+    caption="Swipe left to reveal validate and edit actions"
+    instructions="Take a screenshot showing an assignment card swiped to the left, revealing the Validate and Edit buttons on the right side of the card."
   />
+
+  <InfoBox type="tip">
+    <p>
+      You can also perform a full swipe to immediately trigger the primary action
+      without tapping the button.
+    </p>
+  </InfoBox>
+
+  <h3>Get Directions</h3>
+  <p>
+    Tap on an assignment card to expand it, then use the directions button to open
+    your preferred maps application with directions to the venue.
+  </p>
 
   <h2>Upcoming and Past Games</h2>
 
