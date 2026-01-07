@@ -74,10 +74,10 @@ export function getDefaultArrivalBuffer(associationCode: string | undefined): nu
 }
 
 /** Default max distance in kilometers */
-const DEFAULT_MAX_DISTANCE_KM = 50;
+export const DEFAULT_MAX_DISTANCE_KM = 50;
 
 /** Default max travel time in minutes (2 hours) */
-const DEFAULT_MAX_TRAVEL_TIME_MINUTES = 120;
+export const DEFAULT_MAX_TRAVEL_TIME_MINUTES = 120;
 
 /** Default arrival buffer (minutes before game start) */
 const DEFAULT_ARRIVAL_BUFFER_MINUTES = 30;
@@ -527,7 +527,10 @@ export const useSettingsStore = create<SettingsState>()(
                   if (!modeSettings.distanceFilterByAssociation) {
                     modeSettings.distanceFilterByAssociation = {};
                   }
-                  if (modeSettings.travelTimeFilter && !modeSettings.travelTimeFilter.maxTravelTimeByAssociation) {
+                  // Ensure travelTimeFilter exists before adding new fields
+                  if (!modeSettings.travelTimeFilter) {
+                    modeSettings.travelTimeFilter = { ...DEFAULT_MODE_SETTINGS.travelTimeFilter };
+                  } else if (!modeSettings.travelTimeFilter.maxTravelTimeByAssociation) {
                     modeSettings.travelTimeFilter.maxTravelTimeByAssociation = {};
                   }
                 }

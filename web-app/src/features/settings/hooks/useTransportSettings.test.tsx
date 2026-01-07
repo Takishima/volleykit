@@ -13,6 +13,8 @@ vi.mock("@/shared/stores/settings", () => ({
   getDefaultArrivalBuffer: vi.fn(() => 30),
   MIN_ARRIVAL_BUFFER_MINUTES: 15,
   MAX_ARRIVAL_BUFFER_MINUTES: 120,
+  DEFAULT_MAX_DISTANCE_KM: 50,
+  DEFAULT_MAX_TRAVEL_TIME_MINUTES: 120,
 }));
 
 vi.mock("@/features/auth/hooks/useActiveAssociation", () => ({

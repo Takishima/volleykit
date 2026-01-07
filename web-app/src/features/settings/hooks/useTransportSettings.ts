@@ -6,6 +6,8 @@ import {
   getDefaultArrivalBuffer,
   MIN_ARRIVAL_BUFFER_MINUTES,
   MAX_ARRIVAL_BUFFER_MINUTES,
+  DEFAULT_MAX_DISTANCE_KM,
+  DEFAULT_MAX_TRAVEL_TIME_MINUTES,
   type DistanceFilter,
 } from "@/shared/stores/settings";
 import { useActiveAssociationCode } from "@/features/auth/hooks/useActiveAssociation";
@@ -18,17 +20,11 @@ import {
 
 const DEBOUNCE_MS = 300;
 
-/** Default max distance in kilometers */
-const DEFAULT_MAX_DISTANCE_KM = 50;
-
 /** Minimum max distance in kilometers */
 const MIN_MAX_DISTANCE_KM = 10;
 
 /** Maximum max distance in kilometers */
 const MAX_MAX_DISTANCE_KM = 200;
-
-/** Default max travel time in minutes (2 hours) */
-const DEFAULT_MAX_TRAVEL_TIME_MINUTES = 120;
 
 /** Minimum max travel time in minutes */
 const MIN_MAX_TRAVEL_TIME_MINUTES = 30;
