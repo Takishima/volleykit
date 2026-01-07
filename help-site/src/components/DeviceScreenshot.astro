@@ -197,9 +197,40 @@ const defaultDevice = firstExisting?.device ?? devices[0];
   function initDeviceSwitcher() {
     const tabs = document.querySelectorAll<HTMLButtonElement>('.device-tab');
 
-    /** Detect the user's device type based on viewport width */
+    /**
+     * Detect the user's device type using multiple signals for accuracy.
+     * Combines pointer precision, hover capability, touch support, and viewport width.
+     * @see https://developer.mozilla.org/en-US/docs/Web/CSS/@media/pointer
+     * @see https://web.dev/learn/design/interaction
+     */
     function detectDeviceType(): 'phone' | 'tablet' | 'desktop' {
       const width = window.innerWidth;
+
+      // Check pointer precision (coarse = touch, fine = mouse/trackpad)
+      const hasCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+      const hasFinePointer = window.matchMedia('(pointer: fine)').matches;
+
+      // Check hover capability (none = touch device, hover = mouse/trackpad)
+      const canHover = window.matchMedia('(hover: hover)').matches;
+
+      // Check touch support
+      const hasTouch = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
+
+      // Desktop: has fine pointer OR can hover (typical mouse/trackpad)
+      // Even if device has touch, primary input is mouse-like
+      if (hasFinePointer || (canHover && !hasCoarsePointer)) {
+        return 'desktop';
+      }
+
+      // Touch device (coarse pointer, no hover, or has touch)
+      if (hasCoarsePointer || !canHover || hasTouch) {
+        // Distinguish phone vs tablet by viewport width
+        // Tablets typically have viewport >= 768px
+        if (width >= 768) return 'tablet';
+        return 'phone';
+      }
+
+      // Fallback to viewport-based detection
       if (width < 768) return 'phone';
       if (width < 1024) return 'tablet';
       return 'desktop';
