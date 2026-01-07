@@ -375,7 +375,7 @@ export function AssignmentsPage() {
                   {groupedData.length > 1 && (
                     <WeekSeparator week={group.week} />
                   )}
-                  {isCalendarMode
+                  {isCalendarMode && !showDummyData
                     ? // Calendar mode: same card component, no swipe actions
                       (group.items as CalendarAssignment[]).map(
                         (calendarAssignment, itemIndex) => {
@@ -400,7 +400,7 @@ export function AssignmentsPage() {
                           );
                         },
                       )
-                    : // Regular mode: render full cards with swipe actions
+                    : // Regular mode (or tour dummy): render full cards with swipe actions
                       (group.items as Assignment[]).map(
                         (assignment, itemIndex) => (
                           <SwipeableCard
