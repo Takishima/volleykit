@@ -33,8 +33,8 @@ test.beforeAll(() => {
   }
 });
 
-// Helper to dismiss all tours by setting localStorage
-async function dismissAllTours(page: Page) {
+// Helper to dismiss all tours and PWA notifications by setting localStorage
+async function setupCleanEnvironment(page: Page) {
   await page.addInitScript(() => {
     // Pre-dismiss all tours to avoid them interfering with screenshots
     const tourState = {
@@ -45,14 +45,118 @@ async function dismissAllTours(page: Page) {
       version: 0,
     };
     localStorage.setItem('volleykit-tour', JSON.stringify(tourState));
+
+    // Disable PWA prompts by mocking the service worker registration
+    // This prevents "App ready for offline use" notifications
+    if ('serviceWorker' in navigator) {
+      // Override the ready promise to prevent PWA notifications
+      Object.defineProperty(navigator.serviceWorker, 'ready', {
+        get: () => new Promise(() => {}), // Never resolves
+      });
+    }
   });
+}
+
+// Helper to dismiss any visible PWA notification
+async function dismissPWANotification(page: Page) {
+  // Look for the PWA notification and dismiss it if visible
+  const closeButton = page.locator('[role="alert"] button').last();
+  if (await closeButton.isVisible({ timeout: 500 }).catch(() => false)) {
+    await closeButton.click();
+    await page.waitForTimeout(300);
+  }
 }
 
 // Helper to take a screenshot with a specific name
 async function takeScreenshot(page: Page, name: string) {
+  // Dismiss any PWA notifications before taking screenshot
+  await dismissPWANotification(page);
+
   const filePath = path.join(SCREENSHOT_DIR, `${name}.png`);
   await page.screenshot({ path: filePath, fullPage: false });
   console.log(`✅ Captured: ${name}.png`);
+}
+
+// Helper to add a spotlight effect highlighting a specific element
+// Creates a dark overlay with a "hole" around the spotlighted element
+async function addSpotlight(page: Page, selector: string, padding = 8) {
+  await page.evaluate(
+    ({ selector, padding }) => {
+      const element = document.querySelector(selector);
+      if (!element) return;
+
+      const rect = element.getBoundingClientRect();
+
+      // Create spotlight overlay
+      const overlay = document.createElement('div');
+      overlay.id = 'screenshot-spotlight-overlay';
+      overlay.style.cssText = `
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        pointer-events: none;
+        background: rgba(0, 0, 0, 0.6);
+        /* Create a hole using clip-path */
+        clip-path: polygon(
+          0% 0%,
+          0% 100%,
+          ${rect.left - padding}px 100%,
+          ${rect.left - padding}px ${rect.top - padding}px,
+          ${rect.right + padding}px ${rect.top - padding}px,
+          ${rect.right + padding}px ${rect.bottom + padding}px,
+          ${rect.left - padding}px ${rect.bottom + padding}px,
+          ${rect.left - padding}px 100%,
+          100% 100%,
+          100% 0%
+        );
+      `;
+      document.body.appendChild(overlay);
+
+      // Add a subtle border around the spotlighted area
+      const border = document.createElement('div');
+      border.id = 'screenshot-spotlight-border';
+      border.style.cssText = `
+        position: fixed;
+        left: ${rect.left - padding}px;
+        top: ${rect.top - padding}px;
+        width: ${rect.width + padding * 2}px;
+        height: ${rect.height + padding * 2}px;
+        z-index: 100000;
+        pointer-events: none;
+        border: 2px solid rgba(255, 255, 255, 0.8);
+        border-radius: 12px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+      `;
+      document.body.appendChild(border);
+    },
+    { selector, padding }
+  );
+}
+
+// Helper to remove the spotlight overlay
+async function removeSpotlight(page: Page) {
+  await page.evaluate(() => {
+    document.getElementById('screenshot-spotlight-overlay')?.remove();
+    document.getElementById('screenshot-spotlight-border')?.remove();
+  });
+}
+
+// Helper to take a screenshot with a spotlight effect on a specific element
+async function takeSpotlightScreenshot(
+  page: Page,
+  name: string,
+  selector: string,
+  padding = 8
+) {
+  await dismissPWANotification(page);
+  await addSpotlight(page, selector, padding);
+  await page.waitForTimeout(100); // Let the overlay render
+
+  const filePath = path.join(SCREENSHOT_DIR, `${name}.png`);
+  await page.screenshot({ path: filePath, fullPage: false });
+  console.log(`✅ Captured: ${name}.png (with spotlight on ${selector})`);
+
+  await removeSpotlight(page);
 }
 
 // Helper to take device-specific screenshots
@@ -73,12 +177,49 @@ async function takeDeviceScreenshots(
   }
 }
 
-// Helper to enter demo mode with tours dismissed
+// Helper to enter demo mode with clean environment
 async function enterDemoModeWithoutTours(page: Page) {
-  await dismissAllTours(page);
+  await setupCleanEnvironment(page);
   const loginPage = new LoginPage(page);
   await loginPage.goto();
   await loginPage.enterDemoMode();
+
+  // Wait for any initial notifications to appear and dismiss them
+  await page.waitForTimeout(500);
+  await dismissPWANotification(page);
+}
+
+// Helper to perform a swipe gesture using mouse events
+async function performSwipe(
+  page: Page,
+  element: { x: number; y: number; width: number; height: number },
+  direction: 'left' | 'right',
+  distance: number
+) {
+  const startX = element.x + element.width / 2;
+  const startY = element.y + element.height / 2;
+  const endX = direction === 'right' ? startX + distance : startX - distance;
+
+  // Start with mouse position at the element
+  await page.mouse.move(startX, startY);
+  await page.waitForTimeout(50);
+
+  // Mouse down to start drag
+  await page.mouse.down();
+  await page.waitForTimeout(50);
+
+  // Move in small steps to simulate a real swipe - slower for reliability
+  const steps = 30;
+  for (let i = 1; i <= steps; i++) {
+    const x = startX + ((endX - startX) * i) / steps;
+    await page.mouse.move(x, startY);
+    await page.waitForTimeout(15);
+  }
+
+  // Hold at end position briefly before releasing
+  await page.waitForTimeout(100);
+  await page.mouse.up();
+  await page.waitForTimeout(400);
 }
 
 test.describe('Help Site Screenshots', () => {
@@ -125,8 +266,9 @@ test.describe('Help Site Screenshots', () => {
     const assignmentsPage = new AssignmentsPage(page);
     await assignmentsPage.waitForAssignmentsLoaded();
 
-    // Wait for any animations to complete
-    await page.waitForTimeout(500);
+    // Wait for any animations to complete and dismiss notifications
+    await page.waitForTimeout(1000);
+    await dismissPWANotification(page);
 
     await takeScreenshot(page, 'assignments-list');
   });
@@ -136,15 +278,15 @@ test.describe('Help Site Screenshots', () => {
     const assignmentsPage = new AssignmentsPage(page);
     await assignmentsPage.waitForAssignmentsLoaded();
 
-    // Click on the first assignment card to open detail view
+    // Click on the first assignment card to expand it
     const firstCard = assignmentsPage.assignmentCards.first();
     await firstCard.click();
 
-    // Wait for the detail sheet to appear (look for sheet content specifically)
+    // Wait for expansion animation
     await page.waitForTimeout(500);
 
-    // Take screenshot regardless of state - the sheet should be open
-    await takeScreenshot(page, 'assignment-detail');
+    // Use spotlight to highlight the expanded card
+    await takeSpotlightScreenshot(page, 'assignment-detail', '[data-tour="assignment-card"]', 4);
   });
 
   test('assignment-actions - capture swipe actions', async ({ page }) => {
@@ -152,19 +294,19 @@ test.describe('Help Site Screenshots', () => {
     const assignmentsPage = new AssignmentsPage(page);
     await assignmentsPage.waitForAssignmentsLoaded();
 
-    // Get the first assignment card and simulate swipe to reveal actions
+    // Get the first assignment card
     const firstCard = assignmentsPage.assignmentCards.first();
     const cardBox = await firstCard.boundingBox();
 
     if (cardBox) {
-      // Swipe right to reveal left actions (exchange)
-      await page.mouse.move(cardBox.x + cardBox.width / 2, cardBox.y + cardBox.height / 2);
-      await page.mouse.down();
-      await page.mouse.move(cardBox.x + cardBox.width / 2 + 100, cardBox.y + cardBox.height / 2, {
-        steps: 10,
-      });
-      await page.mouse.up();
-      await page.waitForTimeout(300);
+      // Calculate swipe distance - needs to be past the drawer threshold (30% of width)
+      // Swipe RIGHT to reveal the exchange action (which appears on the left side behind the card)
+      const swipeDistance = cardBox.width * 0.4; // 40% of card width
+
+      await performSwipe(page, cardBox, 'right', swipeDistance);
+
+      // Wait for the drawer animation to complete
+      await page.waitForTimeout(500);
     }
 
     await takeScreenshot(page, 'assignment-actions');
@@ -190,19 +332,15 @@ test.describe('Help Site Screenshots', () => {
     const assignmentsPage = new AssignmentsPage(page);
     await assignmentsPage.waitForAssignmentsLoaded();
 
-    // Swipe to reveal exchange action
+    // Get the first assignment card
     const firstCard = assignmentsPage.assignmentCards.first();
     const cardBox = await firstCard.boundingBox();
 
     if (cardBox) {
       // Swipe right to reveal exchange action
-      await page.mouse.move(cardBox.x + cardBox.width / 2, cardBox.y + cardBox.height / 2);
-      await page.mouse.down();
-      await page.mouse.move(cardBox.x + cardBox.width / 2 + 120, cardBox.y + cardBox.height / 2, {
-        steps: 10,
-      });
-      await page.mouse.up();
-      await page.waitForTimeout(300);
+      const swipeDistance = cardBox.width * 0.4;
+      await performSwipe(page, cardBox, 'right', swipeDistance);
+      await page.waitForTimeout(500);
     }
 
     await takeScreenshot(page, 'exchange-request');
