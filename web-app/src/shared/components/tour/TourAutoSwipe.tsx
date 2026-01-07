@@ -60,33 +60,26 @@ export function TourAutoSwipe({
       swipeableContent.style.transform = `translateX(${targetTranslate}px)`;
     });
 
-    // Set up cleanup function
+    // Set up cleanup function (resets styles if component unmounts during animation)
     cleanupRef.current = () => {
       swipeableContent.style.transition = originalTransition;
       swipeableContent.style.transform = originalTransform;
       swipeableContent.style.pointerEvents = originalPointerEvents;
     };
 
-    // After animation completes, return to original position and dispatch event
-    const returnTimer = setTimeout(() => {
-      // Quick return animation
-      swipeableContent.style.transition = "transform 300ms cubic-bezier(0.25, 0.1, 0.25, 1)";
-      swipeableContent.style.transform = originalTransform || "translateX(0px)";
+    // After animation completes, leave drawer open and dispatch completion event
+    const completeTimer = setTimeout(() => {
+      // Restore transition and pointer events, but keep the drawer open
+      swipeableContent.style.transition = originalTransition;
+      swipeableContent.style.pointerEvents = originalPointerEvents;
+      cleanupRef.current = null;
 
-      // Wait for return animation, then complete
-      setTimeout(() => {
-        // Restore original styles
-        swipeableContent.style.transition = originalTransition;
-        swipeableContent.style.pointerEvents = originalPointerEvents;
-        cleanupRef.current = null;
-
-        // Dispatch completion event on the container
-        container.dispatchEvent(new CustomEvent("tour-swipe-complete"));
-        onComplete();
-      }, 350);
+      // Dispatch completion event on the container
+      container.dispatchEvent(new CustomEvent("tour-swipe-complete"));
+      onComplete();
     }, duration);
 
-    return () => clearTimeout(returnTimer);
+    return () => clearTimeout(completeTimer);
   }, [targetSelector, direction, duration, onComplete]);
 
   useEffect(() => {
