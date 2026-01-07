@@ -5,38 +5,28 @@
  */
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { BASE_PATH } from '../constants';
+import { BASE_PATH, DEVICE_TYPES, DEVICE_SUFFIXES, type DeviceType } from '../constants';
 
-/** Device types supported by the screenshot component */
-export type DeviceType = 'desktop' | 'phone' | 'tablet';
-
-/** Device configuration for display and file paths */
-interface DeviceConfig {
+/** Device configuration for display (labels and icons) */
+interface DeviceDisplayConfig {
   label: string;
   icon: string;
-  suffix: string;
 }
 
-const DEVICE_CONFIGS: Record<DeviceType, DeviceConfig> = {
+const DEVICE_DISPLAY: Record<DeviceType, DeviceDisplayConfig> = {
   desktop: {
     label: 'Desktop',
     icon: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
-    suffix: '-desktop',
   },
   phone: {
     label: 'Phone',
     icon: 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z',
-    suffix: '-phone',
   },
   tablet: {
     label: 'Tablet',
     icon: 'M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z',
-    suffix: '-tablet',
   },
 };
-
-/** Order of devices in the switcher */
-const DEVICE_ORDER: DeviceType[] = ['desktop', 'phone', 'tablet'];
 
 interface Props {
   /** Unique identifier for the screenshot (used as filename base) */
@@ -51,30 +41,30 @@ interface Props {
   devices?: DeviceType[];
 }
 
-const { id, alt, caption, instructions, devices = DEVICE_ORDER } = Astro.props;
+const { id, alt, caption, instructions, devices = [...DEVICE_TYPES] } = Astro.props;
 
 // Generate a unique ID for this component instance (for tab accessibility)
 const componentId = `device-screenshot-${id}`;
 
 // Check which device screenshots exist
-const deviceStatus = devices.map((device) => {
-  const config = DEVICE_CONFIGS[device];
-  const filename = `${id}${config.suffix}.png`;
+const deviceStatus = devices.map((device, index) => {
+  const display = DEVICE_DISPLAY[device];
+  const suffix = DEVICE_SUFFIXES[device];
+  const filename = `${id}${suffix}.png`;
   const imagePath = `${BASE_PATH}/images/screenshots/${filename}`;
   const absolutePath = join(process.cwd(), 'public', 'images', 'screenshots', filename);
   const exists = existsSync(absolutePath);
 
   return {
     device,
-    config,
+    display,
+    suffix,
     filename,
     imagePath,
     exists,
+    index,
   };
 });
-
-// Check if any screenshots exist
-const anyExists = deviceStatus.some((s) => s.exists);
 
 // Find first existing screenshot for default tab
 const firstExisting = deviceStatus.find((s) => s.exists);
@@ -89,15 +79,17 @@ const defaultDevice = firstExisting?.device ?? devices[0];
     aria-label="Device type selector"
   >
     {
-      deviceStatus.map(({ device, config }) => (
+      deviceStatus.map(({ device, display, index }) => (
         <button
           type="button"
           role="tab"
           id={`${componentId}-tab-${device}`}
           aria-selected={device === defaultDevice ? 'true' : 'false'}
           aria-controls={`${componentId}-panel-${device}`}
+          tabindex={device === defaultDevice ? 0 : -1}
           data-device={device}
           data-component-id={componentId}
+          data-index={index}
           class:list={[
             'device-tab flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
             device === defaultDevice
@@ -112,9 +104,9 @@ const defaultDevice = firstExisting?.device ?? devices[0];
             viewBox="0 0 24 24"
             aria-hidden="true"
           >
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={config.icon} />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={display.icon} />
           </svg>
-          <span>{config.label}</span>
+          <span>{display.label}</span>
         </button>
       ))
     }
@@ -122,7 +114,7 @@ const defaultDevice = firstExisting?.device ?? devices[0];
 
   {/* Device Panels */}
   {
-    deviceStatus.map(({ device, config, filename, imagePath, exists }) => (
+    deviceStatus.map(({ device, display, filename, imagePath, exists }) => (
       <div
         id={`${componentId}-panel-${device}`}
         role="tabpanel"
@@ -134,7 +126,7 @@ const defaultDevice = firstExisting?.device ?? devices[0];
         {exists ? (
           <img
             src={imagePath}
-            alt={`${alt} (${config.label})`}
+            alt={`${alt} (${display.label})`}
             class="mx-auto max-w-full rounded-lg border border-border-default shadow-md dark:border-border-default-dark"
             loading="lazy"
           />
@@ -152,29 +144,34 @@ const defaultDevice = firstExisting?.device ?? devices[0];
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="1.5"
-                d={config.icon}
+                d={display.icon}
               />
             </svg>
 
             {/* Alt text as label */}
             <p class="mb-2 font-medium text-text-secondary dark:text-text-secondary-dark">
-              {alt} ({config.label})
+              {alt} ({display.label})
             </p>
 
             <p class="text-sm text-text-muted dark:text-text-muted-dark">
-              Screenshot placeholder - {config.label.toLowerCase()} view
+              Screenshot placeholder - {display.label.toLowerCase()} view
             </p>
 
-            {/* Hidden instructions for Claude Code */}
+            {/*
+              Hidden instructions for Claude Code.
+              SECURITY NOTE: set:html is safe here because all interpolated values (id, device,
+              alt, display.label, filename, instructions) are build-time component props from
+              the developer, not runtime user input. The output is also inside an HTML comment.
+            */}
             <Fragment
               set:html={`
                 <!--
                 CLAUDE-CODE-SCREENSHOT-INSTRUCTIONS
                 ID: ${id}
                 DEVICE: ${device}
-                ALT: ${alt} (${config.label})
+                ALT: ${alt} (${display.label})
                 PATH: public/images/screenshots/${filename}
-                INSTRUCTIONS: ${instructions} Capture this as a ${config.label.toLowerCase()} view${device === 'phone' ? ' (mobile viewport, ~375px width)' : device === 'tablet' ? ' (tablet viewport, ~768px width)' : ' (desktop viewport, ~1280px width)'}.
+                INSTRUCTIONS: ${instructions} Capture this as a ${display.label.toLowerCase()} view${device === 'phone' ? ' (mobile viewport, ~375px width)' : device === 'tablet' ? ' (tablet viewport, ~768px width)' : ' (desktop viewport, ~1280px width)'}.
                 -->
               `}
             />
@@ -195,65 +192,113 @@ const defaultDevice = firstExisting?.device ?? devices[0];
 </figure>
 
 <script>
-  // Handle device tab switching
+  // Handle device tab switching with keyboard navigation (WCAG 2.1 compliant)
   function initDeviceSwitcher() {
     const tabs = document.querySelectorAll<HTMLButtonElement>('.device-tab');
 
+    /** Select a tab and update the UI */
+    function selectTab(tab: HTMLButtonElement) {
+      const device = tab.dataset.device;
+      const componentId = tab.dataset.componentId;
+
+      if (!device || !componentId) return;
+
+      // Get all tabs in this component
+      const siblingTabs = document.querySelectorAll<HTMLButtonElement>(
+        `.device-tab[data-component-id="${componentId}"]`
+      );
+
+      // Update all tabs
+      siblingTabs.forEach((siblingTab) => {
+        const isSelected = siblingTab.dataset.device === device;
+        siblingTab.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+        // Roving tabindex: only selected tab is in tab order
+        siblingTab.setAttribute('tabindex', isSelected ? '0' : '-1');
+
+        // Update visual styles
+        if (isSelected) {
+          siblingTab.classList.remove(
+            'text-text-muted',
+            'dark:text-text-muted-dark',
+            'hover:text-text-secondary',
+            'dark:hover:text-text-secondary-dark'
+          );
+          siblingTab.classList.add(
+            'bg-surface-default',
+            'dark:bg-surface-default-dark',
+            'text-text-primary',
+            'dark:text-text-primary-dark',
+            'shadow-sm'
+          );
+        } else {
+          siblingTab.classList.add(
+            'text-text-muted',
+            'dark:text-text-muted-dark',
+            'hover:text-text-secondary',
+            'dark:hover:text-text-secondary-dark'
+          );
+          siblingTab.classList.remove(
+            'bg-surface-default',
+            'dark:bg-surface-default-dark',
+            'text-text-primary',
+            'dark:text-text-primary-dark',
+            'shadow-sm'
+          );
+        }
+      });
+
+      // Update all panels in this component
+      const panels = document.querySelectorAll<HTMLDivElement>(
+        `.device-panel[data-component-id="${componentId}"]`
+      );
+      panels.forEach((panel) => {
+        const isVisible = panel.dataset.device === device;
+        panel.classList.toggle('hidden', !isVisible);
+      });
+    }
+
     tabs.forEach((tab) => {
-      tab.addEventListener('click', () => {
-        const device = tab.dataset.device;
+      // Click handler
+      tab.addEventListener('click', () => selectTab(tab));
+
+      // Keyboard navigation (arrow keys for WCAG compliance)
+      tab.addEventListener('keydown', (e) => {
         const componentId = tab.dataset.componentId;
+        if (!componentId) return;
 
-        if (!device || !componentId) return;
-
-        // Update all tabs in this component
-        const siblingTabs = document.querySelectorAll<HTMLButtonElement>(
-          `.device-tab[data-component-id="${componentId}"]`
+        const siblingTabs = Array.from(
+          document.querySelectorAll<HTMLButtonElement>(
+            `.device-tab[data-component-id="${componentId}"]`
+          )
         );
-        siblingTabs.forEach((siblingTab) => {
-          const isSelected = siblingTab.dataset.device === device;
-          siblingTab.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+        const currentIndex = siblingTabs.indexOf(tab);
 
-          // Update visual styles
-          if (isSelected) {
-            siblingTab.classList.remove(
-              'text-text-muted',
-              'dark:text-text-muted-dark',
-              'hover:text-text-secondary',
-              'dark:hover:text-text-secondary-dark'
-            );
-            siblingTab.classList.add(
-              'bg-surface-default',
-              'dark:bg-surface-default-dark',
-              'text-text-primary',
-              'dark:text-text-primary-dark',
-              'shadow-sm'
-            );
-          } else {
-            siblingTab.classList.add(
-              'text-text-muted',
-              'dark:text-text-muted-dark',
-              'hover:text-text-secondary',
-              'dark:hover:text-text-secondary-dark'
-            );
-            siblingTab.classList.remove(
-              'bg-surface-default',
-              'dark:bg-surface-default-dark',
-              'text-text-primary',
-              'dark:text-text-primary-dark',
-              'shadow-sm'
-            );
-          }
-        });
+        let nextTab: HTMLButtonElement | undefined;
 
-        // Update all panels in this component
-        const panels = document.querySelectorAll<HTMLDivElement>(
-          `.device-panel[data-component-id="${componentId}"]`
-        );
-        panels.forEach((panel) => {
-          const isVisible = panel.dataset.device === device;
-          panel.classList.toggle('hidden', !isVisible);
-        });
+        switch (e.key) {
+          case 'ArrowLeft':
+            // Move to previous tab (wrap to end)
+            nextTab = siblingTabs[(currentIndex - 1 + siblingTabs.length) % siblingTabs.length];
+            break;
+          case 'ArrowRight':
+            // Move to next tab (wrap to start)
+            nextTab = siblingTabs[(currentIndex + 1) % siblingTabs.length];
+            break;
+          case 'Home':
+            // Move to first tab
+            nextTab = siblingTabs[0];
+            break;
+          case 'End':
+            // Move to last tab
+            nextTab = siblingTabs[siblingTabs.length - 1];
+            break;
+        }
+
+        if (nextTab) {
+          e.preventDefault();
+          selectTab(nextTab);
+          nextTab.focus();
+        }
       });
     });
   }
