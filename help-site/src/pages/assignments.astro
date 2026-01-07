@@ -2,143 +2,127 @@
 import DocLayout from '../layouts/DocLayout.astro';
 import DeviceScreenshot from '../components/DeviceScreenshot.astro';
 import InfoBox from '../components/InfoBox.astro';
+import { t } from '../i18n';
 ---
 
 <DocLayout
-  title="Assignments"
-  description="Learn how to view and manage your volleyball referee assignments in VolleyKit. See game details, directions, and take actions on your games."
+  title={t('pages.assignments.title')}
+  description={t('pages.assignments.description')}
 >
-  <h1>Managing Your Assignments</h1>
+  <h1 data-i18n="assignments.heading">{t('assignments.heading')}</h1>
 
-  <p class="lead text-text-secondary dark:text-text-secondary-dark">
-    The Assignments section is your central hub for viewing all your upcoming volleyball
-    referee games and managing your schedule.
+  <p class="lead text-text-secondary dark:text-text-secondary-dark" data-i18n="assignments.lead">
+    {t('assignments.lead')}
   </p>
 
-  <h2>What Are Assignments?</h2>
+  <h2 data-i18n="assignments.whatAre.title">{t('assignments.whatAre.title')}</h2>
 
-  <p>
-    Assignments are the games you've been scheduled to referee. Each assignment includes:
-  </p>
+  <p data-i18n="assignments.whatAre.description">{t('assignments.whatAre.description')}</p>
 
   <ul>
-    <li><strong>Date and time</strong> – When the game takes place</li>
-    <li><strong>Teams</strong> – Home and away team names</li>
-    <li><strong>Venue</strong> – Location of the game with address</li>
-    <li><strong>Your role</strong> – 1st referee, 2nd referee, or line judge</li>
-    <li><strong>League</strong> – The competition level (e.g., NLA, NLB, 1. Liga)</li>
+    <li data-i18n="assignments.whatAre.details.dateTime">{t('assignments.whatAre.details.dateTime')}</li>
+    <li data-i18n="assignments.whatAre.details.teams">{t('assignments.whatAre.details.teams')}</li>
+    <li data-i18n="assignments.whatAre.details.venue">{t('assignments.whatAre.details.venue')}</li>
+    <li data-i18n="assignments.whatAre.details.role">{t('assignments.whatAre.details.role')}</li>
+    <li data-i18n="assignments.whatAre.details.league">{t('assignments.whatAre.details.league')}</li>
   </ul>
 
-  <h2>Viewing Your Assignments</h2>
+  <h2 data-i18n="assignments.viewing.title">{t('assignments.viewing.title')}</h2>
 
-  <p>
-    The assignment list shows all your upcoming games in chronological order.
-    Games are grouped by date, making it easy to see what's coming up.
-  </p>
+  <p data-i18n="assignments.viewing.description">{t('assignments.viewing.description')}</p>
 
   <DeviceScreenshot
     id="assignments-list"
-    alt="Assignment list showing multiple upcoming games grouped by date"
-    caption="The assignment list view with upcoming games"
+    alt={t('assignments.viewing.screenshotAlt')}
+    caption={t('assignments.viewing.screenshotCaption')}
+    altKey="assignments.viewing.screenshotAlt"
+    captionKey="assignments.viewing.screenshotCaption"
     instructions="Take a screenshot of the assignments page showing at least 3-4 games. Show the date grouping, team names, times, and venue info."
   />
 
-  <h2>Assignment Details</h2>
+  <h2 data-i18n="assignments.details.title">{t('assignments.details.title')}</h2>
 
-  <p>
-    Tap on any assignment to see the full details. The detail view includes:
-  </p>
+  <p data-i18n="assignments.details.description">{t('assignments.details.description')}</p>
 
   <ul>
-    <li>Complete game information</li>
-    <li>Venue address with map link</li>
-    <li>Travel time from your home location</li>
-    <li>Other referees assigned to the same game</li>
-    <li>Available actions via swipe gestures</li>
+    <li data-i18n="assignments.details.items.gameInfo">{t('assignments.details.items.gameInfo')}</li>
+    <li data-i18n="assignments.details.items.venueAddress">{t('assignments.details.items.venueAddress')}</li>
+    <li data-i18n="assignments.details.items.travelTime">{t('assignments.details.items.travelTime')}</li>
+    <li data-i18n="assignments.details.items.otherReferees">{t('assignments.details.items.otherReferees')}</li>
+    <li data-i18n="assignments.details.items.swipeActions">{t('assignments.details.items.swipeActions')}</li>
   </ul>
 
   <DeviceScreenshot
     id="assignment-detail"
-    alt="Assignment detail view showing all game information"
-    caption="Detailed view of a single assignment"
+    alt={t('assignments.details.screenshotAlt')}
+    caption={t('assignments.details.screenshotCaption')}
+    altKey="assignments.details.screenshotAlt"
+    captionKey="assignments.details.screenshotCaption"
     instructions="Take a screenshot of an assignment detail page. Show the game header, venue info, travel time, other referees section, and action buttons at the bottom."
   />
 
-  <h2>Taking Actions</h2>
+  <h2 data-i18n="assignments.actions.title">{t('assignments.actions.title')}</h2>
 
-  <p>
-    VolleyKit uses swipe gestures to quickly access actions on your assignment cards.
-    Depending on the game status, you may have different actions available.
-  </p>
+  <p data-i18n="assignments.actions.description">{t('assignments.actions.description')}</p>
 
-  <h3>Swipe Right – Add to Exchange</h3>
+  <h3 data-i18n="assignments.actions.swipeRight.title">{t('assignments.actions.swipeRight.title')}</h3>
 
-  <p>
-    Swipe an assignment card to the <strong>right</strong> to reveal the exchange action.
-    If you can't attend a game, you can add it to the exchange board for other
-    referees to pick up.
-  </p>
+  <p data-i18n="assignments.actions.swipeRight.description">{t('assignments.actions.swipeRight.description')}</p>
 
   <DeviceScreenshot
     id="swipe-right-exchange"
-    alt="Assignment card swiped right showing exchange action"
-    caption="Swipe right to add an assignment to the exchange board"
+    alt={t('assignments.actions.swipeRight.screenshotAlt')}
+    caption={t('assignments.actions.swipeRight.screenshotCaption')}
+    altKey="assignments.actions.swipeRight.screenshotAlt"
+    captionKey="assignments.actions.swipeRight.screenshotCaption"
     instructions="Take a screenshot showing an assignment card swiped to the right, revealing the green Exchange button on the left side of the card."
   />
 
   <InfoBox type="warning">
-    <p>
-      Make sure to request an exchange well in advance. Last-minute requests
-      may not find a replacement in time.
+    <p data-i18n="assignments.actions.swipeRight.warning">
+      {t('assignments.actions.swipeRight.warning')}
     </p>
   </InfoBox>
 
-  <h3>Swipe Left – Validate &amp; Edit</h3>
+  <h3 data-i18n="assignments.actions.swipeLeft.title">{t('assignments.actions.swipeLeft.title')}</h3>
 
-  <p>
-    Swipe an assignment card to the <strong>left</strong> to reveal additional actions:
-  </p>
+  <p data-i18n="assignments.actions.swipeLeft.description">{t('assignments.actions.swipeLeft.description')}</p>
 
   <ul>
-    <li><strong>Validate</strong> – Submit game results and validate the match (available for first referees after the game)</li>
-    <li><strong>Edit</strong> – Edit your compensation details for this assignment</li>
+    <li data-i18n="assignments.actions.swipeLeft.validate">{t('assignments.actions.swipeLeft.validate')}</li>
+    <li data-i18n="assignments.actions.swipeLeft.edit">{t('assignments.actions.swipeLeft.edit')}</li>
   </ul>
 
   <DeviceScreenshot
     id="assignment-actions"
-    alt="Assignment card swiped left showing validate and edit actions"
-    caption="Swipe left to reveal validate and edit actions"
+    alt={t('assignments.actions.swipeLeft.screenshotAlt')}
+    caption={t('assignments.actions.swipeLeft.screenshotCaption')}
+    altKey="assignments.actions.swipeLeft.screenshotAlt"
+    captionKey="assignments.actions.swipeLeft.screenshotCaption"
     instructions="Take a screenshot showing an assignment card swiped to the left, revealing the Validate and Edit buttons on the right side of the card."
   />
 
   <InfoBox type="tip">
-    <p>
-      You can also perform a full swipe to immediately trigger the primary action
-      without tapping the button.
+    <p data-i18n="assignments.actions.swipeLeft.tip">
+      {t('assignments.actions.swipeLeft.tip')}
     </p>
   </InfoBox>
 
-  <h3>Get Directions</h3>
-  <p>
-    Tap on an assignment card to expand it, then use the directions button to open
-    your preferred maps application with directions to the venue.
-  </p>
+  <h3 data-i18n="assignments.actions.directions.title">{t('assignments.actions.directions.title')}</h3>
+  <p data-i18n="assignments.actions.directions.description">{t('assignments.actions.directions.description')}</p>
 
-  <h2>Upcoming and Past Games</h2>
+  <h2 data-i18n="assignments.upcomingPast.title">{t('assignments.upcomingPast.title')}</h2>
 
-  <p>
-    Use the tabs at the top to switch between:
-  </p>
+  <p data-i18n="assignments.upcomingPast.description">{t('assignments.upcomingPast.description')}</p>
 
   <ul>
-    <li><strong>Upcoming</strong> – Games that haven't happened yet</li>
-    <li><strong>Validation Closed</strong> – Past games where validation is complete</li>
+    <li data-i18n="assignments.upcomingPast.upcoming">{t('assignments.upcomingPast.upcoming')}</li>
+    <li data-i18n="assignments.upcomingPast.validationClosed">{t('assignments.upcomingPast.validationClosed')}</li>
   </ul>
 
   <InfoBox type="tip">
-    <p>
-      Set your home location in Settings to see travel time estimates on each
-      assignment card.
+    <p data-i18n="assignments.upcomingPast.tip">
+      {t('assignments.upcomingPast.tip')}
     </p>
   </InfoBox>
 </DocLayout>

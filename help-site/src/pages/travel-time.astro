@@ -3,168 +3,156 @@ import DocLayout from '../layouts/DocLayout.astro';
 import Screenshot from '../components/Screenshot.astro';
 import InfoBox from '../components/InfoBox.astro';
 import StepList from '../components/StepList.astro';
+import { t } from '../i18n';
 ---
 
 <DocLayout
-  title="Travel Time"
-  description="Learn how VolleyKit calculates travel times to game venues using Swiss public transport data."
+  title={t('pages.travelTime.title')}
+  description={t('pages.travelTime.description')}
 >
-  <h1>Travel Time Feature</h1>
+  <h1 data-i18n="travelTime.heading">{t('travelTime.heading')}</h1>
 
-  <p class="lead text-text-secondary dark:text-text-secondary-dark">
-    VolleyKit integrates with Swiss public transport data to show you how long
-    it takes to reach each game venue. Plan your trips better and never be late
-    to a game.
+  <p class="lead text-text-secondary dark:text-text-secondary-dark" data-i18n="travelTime.lead">
+    {t('travelTime.lead')}
   </p>
 
-  <h2>How It Works</h2>
+  <h2 data-i18n="travelTime.howItWorks.title">{t('travelTime.howItWorks.title')}</h2>
 
-  <p>
-    The travel time feature uses the Swiss public transport API (SBB/öV) to
-    calculate journey times from your home location to each game venue. It
-    considers:
-  </p>
+  <p data-i18n="travelTime.howItWorks.description">{t('travelTime.howItWorks.description')}</p>
 
   <ul>
-    <li>Real-time train, bus, and tram schedules</li>
-    <li>Walking time to/from stations</li>
-    <li>Transfer times between connections</li>
-    <li>The actual game start time</li>
+    <li data-i18n="travelTime.howItWorks.considerations.schedules">{t('travelTime.howItWorks.considerations.schedules')}</li>
+    <li data-i18n="travelTime.howItWorks.considerations.walkingTime">{t('travelTime.howItWorks.considerations.walkingTime')}</li>
+    <li data-i18n="travelTime.howItWorks.considerations.transferTimes">{t('travelTime.howItWorks.considerations.transferTimes')}</li>
+    <li data-i18n="travelTime.howItWorks.considerations.gameStartTime">{t('travelTime.howItWorks.considerations.gameStartTime')}</li>
   </ul>
 
   <InfoBox type="info">
-    <p>
-      Travel times are calculated using public transport. If you typically
-      drive, use the times as a rough estimate or for planning alternative
-      transport options.
+    <p data-i18n="travelTime.howItWorks.infoBox">
+      {t('travelTime.howItWorks.infoBox')}
     </p>
   </InfoBox>
 
-  <h2>Setting Your Home Location</h2>
+  <h2 data-i18n="travelTime.settingHome.title">{t('travelTime.settingHome.title')}</h2>
 
-  <p>
-    To get accurate travel times, you need to set your home location in the
-    app settings.
-  </p>
+  <p data-i18n="travelTime.settingHome.description">{t('travelTime.settingHome.description')}</p>
 
   <StepList
     steps={[
       {
-        title: 'Open Settings',
-        description: 'Navigate to the Settings page in VolleyKit.',
+        title: t('travelTime.settingHome.steps.openSettings.title'),
+        description: t('travelTime.settingHome.steps.openSettings.description'),
+        titleKey: 'travelTime.settingHome.steps.openSettings.title',
+        descriptionKey: 'travelTime.settingHome.steps.openSettings.description',
       },
       {
-        title: 'Find "Home Location"',
-        description: 'Scroll to the travel settings section.',
+        title: t('travelTime.settingHome.steps.findHomeLocation.title'),
+        description: t('travelTime.settingHome.steps.findHomeLocation.description'),
+        titleKey: 'travelTime.settingHome.steps.findHomeLocation.title',
+        descriptionKey: 'travelTime.settingHome.steps.findHomeLocation.description',
       },
       {
-        title: 'Enter your address',
-        description: 'Type your home address or the station you typically travel from.',
+        title: t('travelTime.settingHome.steps.enterAddress.title'),
+        description: t('travelTime.settingHome.steps.enterAddress.description'),
+        titleKey: 'travelTime.settingHome.steps.enterAddress.title',
+        descriptionKey: 'travelTime.settingHome.steps.enterAddress.description',
       },
       {
-        title: 'Save your settings',
-        description: 'Confirm your location to start seeing travel times.',
+        title: t('travelTime.settingHome.steps.saveSettings.title'),
+        description: t('travelTime.settingHome.steps.saveSettings.description'),
+        titleKey: 'travelTime.settingHome.steps.saveSettings.title',
+        descriptionKey: 'travelTime.settingHome.steps.saveSettings.description',
       },
     ]}
   />
 
   <Screenshot
     id="home-location-setting"
-    alt="Settings page showing home location input field"
-    caption="Setting your home location"
+    alt={t('travelTime.settingHome.screenshotAlt')}
+    caption={t('travelTime.settingHome.screenshotCaption')}
+    altKey="travelTime.settingHome.screenshotAlt"
+    captionKey="travelTime.settingHome.screenshotCaption"
     instructions="Take a screenshot of the settings page focused on the home location section. Show the address input field with autocomplete suggestions if possible."
   />
 
   <InfoBox type="tip">
-    <p>
-      Use your nearest train station as your home location if you typically
-      walk or cycle to the station – this gives more accurate public transport times.
+    <p data-i18n="travelTime.settingHome.tip">
+      {t('travelTime.settingHome.tip')}
     </p>
   </InfoBox>
 
-  <h2>Viewing Travel Times</h2>
+  <h2 data-i18n="travelTime.viewingTimes.title">{t('travelTime.viewingTimes.title')}</h2>
 
-  <p>
-    Once your home location is set, travel times appear on your assignment cards
-    and in the assignment detail view.
-  </p>
+  <p data-i18n="travelTime.viewingTimes.description">{t('travelTime.viewingTimes.description')}</p>
 
   <Screenshot
     id="travel-time-display"
-    alt="Assignment card showing travel time information"
-    caption="Travel time displayed on an assignment"
+    alt={t('travelTime.viewingTimes.screenshotAlt')}
+    caption={t('travelTime.viewingTimes.screenshotCaption')}
+    altKey="travelTime.viewingTimes.screenshotAlt"
+    captionKey="travelTime.viewingTimes.screenshotCaption"
     instructions="Take a screenshot of an assignment card or detail view showing the travel time prominently. Include the duration in minutes/hours and any public transport icon."
   />
 
-  <h3>What's Shown</h3>
+  <h3 data-i18n="travelTime.viewingTimes.whatsShown.title">{t('travelTime.viewingTimes.whatsShown.title')}</h3>
 
   <ul>
-    <li><strong>Duration</strong> – Total travel time from home to venue</li>
-    <li><strong>Departure time</strong> – When you should leave to arrive on time</li>
-    <li><strong>Transport type</strong> – Train, bus, or mixed transport icon</li>
+    <li data-i18n="travelTime.viewingTimes.whatsShown.duration">{t('travelTime.viewingTimes.whatsShown.duration')}</li>
+    <li data-i18n="travelTime.viewingTimes.whatsShown.departureTime">{t('travelTime.viewingTimes.whatsShown.departureTime')}</li>
+    <li data-i18n="travelTime.viewingTimes.whatsShown.transportType">{t('travelTime.viewingTimes.whatsShown.transportType')}</li>
   </ul>
 
-  <h2>Journey Details</h2>
+  <h2 data-i18n="travelTime.journeyDetails.title">{t('travelTime.journeyDetails.title')}</h2>
 
-  <p>
-    Tap on the travel time to see full journey details:
-  </p>
+  <p data-i18n="travelTime.journeyDetails.description">{t('travelTime.journeyDetails.description')}</p>
 
   <ul>
-    <li>Step-by-step directions</li>
-    <li>Connection details (train numbers, platforms)</li>
-    <li>Walking segments</li>
-    <li>Transfer times</li>
+    <li data-i18n="travelTime.journeyDetails.features.stepByStep">{t('travelTime.journeyDetails.features.stepByStep')}</li>
+    <li data-i18n="travelTime.journeyDetails.features.connectionDetails">{t('travelTime.journeyDetails.features.connectionDetails')}</li>
+    <li data-i18n="travelTime.journeyDetails.features.walkingSegments">{t('travelTime.journeyDetails.features.walkingSegments')}</li>
+    <li data-i18n="travelTime.journeyDetails.features.transferTimes">{t('travelTime.journeyDetails.features.transferTimes')}</li>
   </ul>
 
-  <p>
-    You can also open the journey directly in the SBB app or website for
-    real-time updates and ticket purchase.
-  </p>
+  <p data-i18n="travelTime.journeyDetails.sbbLink">{t('travelTime.journeyDetails.sbbLink')}</p>
 
   <Screenshot
     id="journey-details"
-    alt="Detailed journey information with connections and times"
-    caption="Full journey details for travel planning"
+    alt={t('travelTime.journeyDetails.screenshotAlt')}
+    caption={t('travelTime.journeyDetails.screenshotCaption')}
+    altKey="travelTime.journeyDetails.screenshotAlt"
+    captionKey="travelTime.journeyDetails.screenshotCaption"
     instructions="Take a screenshot showing the expanded journey details or a modal with the full route. Include departure/arrival times, train/bus details, and any transfer information."
   />
 
-  <h2>Arrival Buffer</h2>
+  <h2 data-i18n="travelTime.arrivalBuffer.title">{t('travelTime.arrivalBuffer.title')}</h2>
 
-  <p>
-    The suggested departure time includes a buffer to ensure you arrive before
-    the game starts:
-  </p>
+  <p data-i18n="travelTime.arrivalBuffer.description">{t('travelTime.arrivalBuffer.description')}</p>
 
   <ul>
-    <li><strong>Standard buffer:</strong> 15-30 minutes before game time</li>
-    <li>Time for finding the venue, changing, and warmup</li>
-    <li>Account for potential minor delays</li>
+    <li data-i18n="travelTime.arrivalBuffer.details.standardBuffer">{t('travelTime.arrivalBuffer.details.standardBuffer')}</li>
+    <li data-i18n="travelTime.arrivalBuffer.details.timeFor">{t('travelTime.arrivalBuffer.details.timeFor')}</li>
+    <li data-i18n="travelTime.arrivalBuffer.details.accountForDelays">{t('travelTime.arrivalBuffer.details.accountForDelays')}</li>
   </ul>
 
   <InfoBox type="warning">
-    <p>
-      Always allow extra time for important games or unfamiliar venues.
-      Public transport can experience unexpected delays.
+    <p data-i18n="travelTime.arrivalBuffer.warning">
+      {t('travelTime.arrivalBuffer.warning')}
     </p>
   </InfoBox>
 
-  <h2>Offline Availability</h2>
+  <h2 data-i18n="travelTime.offlineAvailability.title">{t('travelTime.offlineAvailability.title')}</h2>
 
-  <p>
-    Travel times are cached when you view them online. If you're offline:
-  </p>
+  <p data-i18n="travelTime.offlineAvailability.description">{t('travelTime.offlineAvailability.description')}</p>
 
   <ul>
-    <li>Previously viewed travel times remain available</li>
-    <li>New calculations require an internet connection</li>
-    <li>The app indicates when data might be outdated</li>
+    <li data-i18n="travelTime.offlineAvailability.details.cachedAvailable">{t('travelTime.offlineAvailability.details.cachedAvailable')}</li>
+    <li data-i18n="travelTime.offlineAvailability.details.requiresConnection">{t('travelTime.offlineAvailability.details.requiresConnection')}</li>
+    <li data-i18n="travelTime.offlineAvailability.details.outdatedIndicator">{t('travelTime.offlineAvailability.details.outdatedIndicator')}</li>
   </ul>
 
   <InfoBox type="tip">
-    <p>
-      Check your travel times while online before heading to an area with
-      poor connectivity. The cached data will be available offline.
+    <p data-i18n="travelTime.offlineAvailability.tip">
+      {t('travelTime.offlineAvailability.tip')}
     </p>
   </InfoBox>
 </DocLayout>

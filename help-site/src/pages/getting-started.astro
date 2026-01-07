@@ -5,156 +5,140 @@ import DeviceScreenshot from '../components/DeviceScreenshot.astro';
 import InfoBox from '../components/InfoBox.astro';
 import StepList from '../components/StepList.astro';
 import { BASE_PATH } from '../constants';
+import { t } from '../i18n';
 ---
 
 <DocLayout
-  title="Getting Started"
-  description="Quick start guide to set up and use VolleyKit for the first time. Learn how to login, navigate the app, and manage your referee assignments."
+  title={t('pages.gettingStarted.title')}
+  description={t('pages.gettingStarted.description')}
 >
-  <h1>Getting Started with VolleyKit</h1>
+  <h1 data-i18n="gettingStarted.heading">{t('gettingStarted.heading')}</h1>
 
-  <p class="lead text-text-secondary dark:text-text-secondary-dark">
-    VolleyKit is a progressive web application that provides an improved interface for managing
-    your volleyball referee assignments through the Swiss Volleyball Federation's volleymanager system.
+  <p class="lead text-text-secondary dark:text-text-secondary-dark" data-i18n="gettingStarted.lead">
+    {t('gettingStarted.lead')}
   </p>
 
-  <h2>What is VolleyKit?</h2>
+  <h2 data-i18n="gettingStarted.whatIs.title">{t('gettingStarted.whatIs.title')}</h2>
 
-  <p>
-    VolleyKit connects to the official volleymanager.volleyball.ch platform and provides a modern,
-    mobile-friendly interface for referees to:
-  </p>
+  <p data-i18n="gettingStarted.whatIs.description">{t('gettingStarted.whatIs.description')}</p>
 
   <ul>
-    <li>View upcoming game assignments</li>
-    <li>Request and manage game exchanges with other referees</li>
-    <li>Track compensation payments</li>
-    <li>Access assignments offline</li>
-    <li>Calculate travel times using Swiss public transport</li>
+    <li data-i18n="gettingStarted.whatIs.features.viewAssignments">{t('gettingStarted.whatIs.features.viewAssignments')}</li>
+    <li data-i18n="gettingStarted.whatIs.features.manageExchanges">{t('gettingStarted.whatIs.features.manageExchanges')}</li>
+    <li data-i18n="gettingStarted.whatIs.features.trackCompensations">{t('gettingStarted.whatIs.features.trackCompensations')}</li>
+    <li data-i18n="gettingStarted.whatIs.features.offlineAccess">{t('gettingStarted.whatIs.features.offlineAccess')}</li>
+    <li data-i18n="gettingStarted.whatIs.features.travelTime">{t('gettingStarted.whatIs.features.travelTime')}</li>
   </ul>
 
   <InfoBox type="info">
-    <p>
-      VolleyKit is an unofficial app created to improve the referee experience. All data comes
-      from the official volleymanager system.
+    <p data-i18n="gettingStarted.whatIs.infoBox">
+      {t('gettingStarted.whatIs.infoBox')}
     </p>
   </InfoBox>
 
-  <h2>How to Login</h2>
+  <h2 data-i18n="gettingStarted.howToLogin.title">{t('gettingStarted.howToLogin.title')}</h2>
 
-  <p>
-    VolleyKit offers two ways to access your assignments:
-  </p>
+  <p data-i18n="gettingStarted.howToLogin.description">{t('gettingStarted.howToLogin.description')}</p>
 
-  <h3>Option 1: Calendar Mode (Recommended)</h3>
+  <h3 data-i18n="gettingStarted.howToLogin.calendarMode.title">{t('gettingStarted.howToLogin.calendarMode.title')}</h3>
 
-  <p>
-    For quick access to view your schedule without entering your password, you can use
-    Calendar Mode with your unique calendar URL or code from volleymanager.
-  </p>
+  <p data-i18n="gettingStarted.howToLogin.calendarMode.description">{t('gettingStarted.howToLogin.calendarMode.description')}</p>
 
   <StepList
     steps={[
       {
-        title: 'Find your calendar URL',
-        description: 'In volleymanager, go to "My Assignments" and copy your calendar subscription URL.',
+        title: t('gettingStarted.howToLogin.calendarMode.steps.findUrl.title'),
+        description: t('gettingStarted.howToLogin.calendarMode.steps.findUrl.description'),
+        titleKey: 'gettingStarted.howToLogin.calendarMode.steps.findUrl.title',
+        descriptionKey: 'gettingStarted.howToLogin.calendarMode.steps.findUrl.description',
       },
       {
-        title: 'Select Calendar Mode',
-        description: 'On the VolleyKit login page, tap the "Calendar Mode" tab.',
+        title: t('gettingStarted.howToLogin.calendarMode.steps.selectMode.title'),
+        description: t('gettingStarted.howToLogin.calendarMode.steps.selectMode.description'),
+        titleKey: 'gettingStarted.howToLogin.calendarMode.steps.selectMode.title',
+        descriptionKey: 'gettingStarted.howToLogin.calendarMode.steps.selectMode.description',
       },
       {
-        title: 'Paste your URL or code',
-        description: 'Enter your calendar URL or just the code portion to access your schedule.',
+        title: t('gettingStarted.howToLogin.calendarMode.steps.pasteUrl.title'),
+        description: t('gettingStarted.howToLogin.calendarMode.steps.pasteUrl.description'),
+        titleKey: 'gettingStarted.howToLogin.calendarMode.steps.pasteUrl.title',
+        descriptionKey: 'gettingStarted.howToLogin.calendarMode.steps.pasteUrl.description',
       },
     ]}
   />
 
   <InfoBox type="info">
-    <p>
-      Calendar Mode provides read-only access – you can view assignments but cannot
-      confirm games, request exchanges, or access compensations. See the
-      <a href={`${BASE_PATH}/calendar-mode/`}>Calendar Mode guide</a> for more details.
+    <p data-i18n="gettingStarted.howToLogin.calendarMode.infoBox">
+      {t('gettingStarted.howToLogin.calendarMode.infoBox')}
+      <a href={`${BASE_PATH}/calendar-mode/`} data-i18n-skip="true">{t('nav.calendarMode')}</a>
     </p>
   </InfoBox>
 
-  <h3>Option 2: Full Login</h3>
+  <h3 data-i18n="gettingStarted.howToLogin.fullLogin.title">{t('gettingStarted.howToLogin.fullLogin.title')}</h3>
 
-  <p>
-    Use your volleymanager.volleyball.ch credentials for full access to all features.
-  </p>
+  <p data-i18n="gettingStarted.howToLogin.fullLogin.description">{t('gettingStarted.howToLogin.fullLogin.description')}</p>
 
   <StepList
     steps={[
       {
-        title: 'Open VolleyKit',
-        description: 'Navigate to the VolleyKit app in your browser or open the installed app.',
+        title: t('gettingStarted.howToLogin.fullLogin.steps.openApp.title'),
+        description: t('gettingStarted.howToLogin.fullLogin.steps.openApp.description'),
+        titleKey: 'gettingStarted.howToLogin.fullLogin.steps.openApp.title',
+        descriptionKey: 'gettingStarted.howToLogin.fullLogin.steps.openApp.description',
       },
       {
-        title: 'Enter your credentials',
-        description: 'Use your volleymanager username and password to log in.',
+        title: t('gettingStarted.howToLogin.fullLogin.steps.enterCredentials.title'),
+        description: t('gettingStarted.howToLogin.fullLogin.steps.enterCredentials.description'),
+        titleKey: 'gettingStarted.howToLogin.fullLogin.steps.enterCredentials.title',
+        descriptionKey: 'gettingStarted.howToLogin.fullLogin.steps.enterCredentials.description',
       },
       {
-        title: 'Stay logged in',
-        description: 'Enable "Remember me" to stay logged in between sessions.',
+        title: t('gettingStarted.howToLogin.fullLogin.steps.stayLoggedIn.title'),
+        description: t('gettingStarted.howToLogin.fullLogin.steps.stayLoggedIn.description'),
+        titleKey: 'gettingStarted.howToLogin.fullLogin.steps.stayLoggedIn.title',
+        descriptionKey: 'gettingStarted.howToLogin.fullLogin.steps.stayLoggedIn.description',
       },
     ]}
   />
 
   <DeviceScreenshot
     id="login-page"
-    alt="VolleyKit login page showing username and password fields"
-    caption="The VolleyKit login page"
+    alt={t('gettingStarted.howToLogin.fullLogin.screenshotAlt')}
+    caption={t('gettingStarted.howToLogin.fullLogin.screenshotCaption')}
+    altKey="gettingStarted.howToLogin.fullLogin.screenshotAlt"
+    captionKey="gettingStarted.howToLogin.fullLogin.screenshotCaption"
     instructions="Take a screenshot of the login page with empty form fields. Show the VolleyKit branding, username/password inputs, and login button."
   />
 
-  <InfoBox type="tip" title="Can't remember your password?">
-    <p>
-      VolleyKit uses the same credentials as volleymanager.volleyball.ch. Use the password
-      reset function on the official site if you've forgotten your password.
+  <InfoBox type="tip" title={t('gettingStarted.howToLogin.fullLogin.tipTitle')} titleKey="gettingStarted.howToLogin.fullLogin.tipTitle">
+    <p data-i18n="gettingStarted.howToLogin.fullLogin.tipContent">
+      {t('gettingStarted.howToLogin.fullLogin.tipContent')}
     </p>
   </InfoBox>
 
-  <h2>Quick Tour</h2>
+  <h2 data-i18n="gettingStarted.quickTour.title">{t('gettingStarted.quickTour.title')}</h2>
 
-  <p>
-    After logging in, you'll see the main dashboard with your upcoming assignments.
-    Here's a quick overview of the main sections:
-  </p>
+  <p data-i18n="gettingStarted.quickTour.description">{t('gettingStarted.quickTour.description')}</p>
 
-  <h3>Assignments</h3>
-  <p>
-    View all your upcoming referee games. Each assignment shows the date, time, teams,
-    venue, and your role (1st referee, 2nd referee, or line judge).
-  </p>
+  <h3 data-i18n="gettingStarted.quickTour.assignments.title">{t('gettingStarted.quickTour.assignments.title')}</h3>
+  <p data-i18n="gettingStarted.quickTour.assignments.description">{t('gettingStarted.quickTour.assignments.description')}</p>
 
-  <h3>Exchanges</h3>
-  <p>
-    Browse available game exchanges from other referees or request an exchange for
-    one of your own assignments.
-  </p>
+  <h3 data-i18n="gettingStarted.quickTour.exchanges.title">{t('gettingStarted.quickTour.exchanges.title')}</h3>
+  <p data-i18n="gettingStarted.quickTour.exchanges.description">{t('gettingStarted.quickTour.exchanges.description')}</p>
 
-  <h3>Compensations</h3>
-  <p>
-    Track your referee payments and compensation history. Filter by date range
-    and export your data.
-  </p>
+  <h3 data-i18n="gettingStarted.quickTour.compensations.title">{t('gettingStarted.quickTour.compensations.title')}</h3>
+  <p data-i18n="gettingStarted.quickTour.compensations.description">{t('gettingStarted.quickTour.compensations.description')}</p>
 
-  <h3>Settings</h3>
-  <p>
-    Customize your experience including language, home location for travel calculations,
-    and notification preferences.
-  </p>
+  <h3 data-i18n="gettingStarted.quickTour.settings.title">{t('gettingStarted.quickTour.settings.title')}</h3>
+  <p data-i18n="gettingStarted.quickTour.settings.description">{t('gettingStarted.quickTour.settings.description')}</p>
 
-  <h2>Next Steps</h2>
+  <h2 data-i18n="gettingStarted.nextSteps.title">{t('gettingStarted.nextSteps.title')}</h2>
 
-  <p>
-    Now that you're familiar with the basics, explore the detailed guides for each feature:
-  </p>
+  <p data-i18n="gettingStarted.nextSteps.description">{t('gettingStarted.nextSteps.description')}</p>
 
   <ul>
-    <li><a href={`${BASE_PATH}/assignments/`}>Managing your assignments</a></li>
-    <li><a href={`${BASE_PATH}/exchanges/`}>Requesting and accepting exchanges</a></li>
-    <li><a href={`${BASE_PATH}/compensations/`}>Tracking your compensations</a></li>
+    <li><a href={`${BASE_PATH}/assignments/`} data-i18n="gettingStarted.nextSteps.links.assignments">{t('gettingStarted.nextSteps.links.assignments')}</a></li>
+    <li><a href={`${BASE_PATH}/exchanges/`} data-i18n="gettingStarted.nextSteps.links.exchanges">{t('gettingStarted.nextSteps.links.exchanges')}</a></li>
+    <li><a href={`${BASE_PATH}/compensations/`} data-i18n="gettingStarted.nextSteps.links.compensations">{t('gettingStarted.nextSteps.links.compensations')}</a></li>
   </ul>
 </DocLayout>

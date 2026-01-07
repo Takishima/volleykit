@@ -3,131 +3,110 @@ import DocLayout from '../layouts/DocLayout.astro';
 import Screenshot from '../components/Screenshot.astro';
 import DeviceScreenshot from '../components/DeviceScreenshot.astro';
 import InfoBox from '../components/InfoBox.astro';
+import { t } from '../i18n';
 ---
 
 <DocLayout
-  title="Compensations"
-  description="Track your volleyball referee earnings and compensation history in VolleyKit. View payments, filter by date, and export your data."
+  title={t('pages.compensations.title')}
+  description={t('pages.compensations.description')}
 >
-  <h1>Tracking Your Compensations</h1>
+  <h1 data-i18n="compensations.heading">{t('compensations.heading')}</h1>
 
-  <p class="lead text-text-secondary dark:text-text-secondary-dark">
-    The Compensations section helps you track your referee earnings and payment
-    history. View past payments, filter by date range, and export your data
-    for record-keeping.
+  <p class="lead text-text-secondary dark:text-text-secondary-dark" data-i18n="compensations.lead">
+    {t('compensations.lead')}
   </p>
 
-  <h2>What Are Compensations?</h2>
+  <h2 data-i18n="compensations.whatAre.title">{t('compensations.whatAre.title')}</h2>
 
-  <p>
-    Compensations are the payments you receive for officiating volleyball games.
-    Each compensation entry typically includes:
-  </p>
+  <p data-i18n="compensations.whatAre.description">{t('compensations.whatAre.description')}</p>
 
   <ul>
-    <li><strong>Game details</strong> – The match you officiated</li>
-    <li><strong>Date</strong> – When the game took place</li>
-    <li><strong>Amount</strong> – The compensation amount in CHF</li>
-    <li><strong>Payment status</strong> – Pending, paid, or processed</li>
-    <li><strong>Role</strong> – Your function in the game</li>
+    <li data-i18n="compensations.whatAre.details.gameDetails">{t('compensations.whatAre.details.gameDetails')}</li>
+    <li data-i18n="compensations.whatAre.details.date">{t('compensations.whatAre.details.date')}</li>
+    <li data-i18n="compensations.whatAre.details.amount">{t('compensations.whatAre.details.amount')}</li>
+    <li data-i18n="compensations.whatAre.details.paymentStatus">{t('compensations.whatAre.details.paymentStatus')}</li>
+    <li data-i18n="compensations.whatAre.details.role">{t('compensations.whatAre.details.role')}</li>
   </ul>
 
   <InfoBox type="info">
-    <p>
-      Compensation amounts are set by Swiss Volley and vary based on the league
-      level and your role in the game.
+    <p data-i18n="compensations.whatAre.infoBox">
+      {t('compensations.whatAre.infoBox')}
     </p>
   </InfoBox>
 
-  <h2>Viewing Your Compensations</h2>
+  <h2 data-i18n="compensations.viewing.title">{t('compensations.viewing.title')}</h2>
 
-  <p>
-    The compensation list shows all your recorded payments in chronological order.
-    Each entry displays the key information at a glance.
-  </p>
+  <p data-i18n="compensations.viewing.description">{t('compensations.viewing.description')}</p>
 
   <DeviceScreenshot
     id="compensations-list"
-    alt="Compensation list showing payment history with amounts and dates"
-    caption="Your compensation history"
+    alt={t('compensations.viewing.screenshotAlt')}
+    caption={t('compensations.viewing.screenshotCaption')}
+    altKey="compensations.viewing.screenshotAlt"
+    captionKey="compensations.viewing.screenshotCaption"
     instructions="Take a screenshot of the compensations page showing several payment entries. Show game info, dates, amounts in CHF, and payment status indicators."
   />
 
-  <h3>Understanding Payment Status</h3>
+  <h3 data-i18n="compensations.viewing.paymentStatus.title">{t('compensations.viewing.paymentStatus.title')}</h3>
 
-  <p>
-    Compensations can have different statuses:
-  </p>
+  <p data-i18n="compensations.viewing.description">{t('compensations.viewing.description')}</p>
 
   <ul>
-    <li><strong>Pending</strong> – Game completed, payment not yet processed</li>
-    <li><strong>Processing</strong> – Payment is being processed</li>
-    <li><strong>Paid</strong> – Payment has been made to your account</li>
+    <li data-i18n="compensations.viewing.paymentStatus.pending">{t('compensations.viewing.paymentStatus.pending')}</li>
+    <li data-i18n="compensations.viewing.paymentStatus.processing">{t('compensations.viewing.paymentStatus.processing')}</li>
+    <li data-i18n="compensations.viewing.paymentStatus.paid">{t('compensations.viewing.paymentStatus.paid')}</li>
   </ul>
 
-  <h2>Filtering by Status</h2>
+  <h2 data-i18n="compensations.filtering.title">{t('compensations.filtering.title')}</h2>
 
-  <p>
-    Use the tabs at the top to filter compensations by their status:
-  </p>
+  <p data-i18n="compensations.filtering.description">{t('compensations.filtering.description')}</p>
 
   <ul>
-    <li><strong>Pending (Past)</strong> – Past games awaiting payment</li>
-    <li><strong>Pending (Future)</strong> – Upcoming games not yet played</li>
-    <li><strong>Closed</strong> – Completed and paid compensations</li>
+    <li data-i18n="compensations.filtering.tabs.pendingPast">{t('compensations.filtering.tabs.pendingPast')}</li>
+    <li data-i18n="compensations.filtering.tabs.pendingFuture">{t('compensations.filtering.tabs.pendingFuture')}</li>
+    <li data-i18n="compensations.filtering.tabs.closed">{t('compensations.filtering.tabs.closed')}</li>
   </ul>
 
   <Screenshot
     id="compensations-filters"
-    alt="Compensation tabs showing pending and closed options"
-    caption="Filtering compensations by status"
+    alt={t('compensations.filtering.screenshotAlt')}
+    caption={t('compensations.filtering.screenshotCaption')}
+    altKey="compensations.filtering.screenshotAlt"
+    captionKey="compensations.filtering.screenshotCaption"
     instructions="Take a screenshot showing the compensation page tabs. Include the pending past, pending future, and closed tabs."
   />
 
   <InfoBox type="tip">
-    <p>
-      Compensations are automatically filtered to the current season (September
-      to May) so you can focus on recent games.
+    <p data-i18n="compensations.filtering.tip">
+      {t('compensations.filtering.tip')}
     </p>
   </InfoBox>
 
-  <h2>Export to PDF</h2>
+  <h2 data-i18n="compensations.exportPdf.title">{t('compensations.exportPdf.title')}</h2>
 
-  <p>
-    You can export individual compensation records as PDF documents. Swipe left
-    on any compensation card to reveal the PDF export action.
-  </p>
+  <p data-i18n="compensations.exportPdf.description">{t('compensations.exportPdf.description')}</p>
 
-  <p>
-    The exported PDF includes the game details and compensation information
-    in a formatted document. This is useful for providing to teams that need
-    to pay the referee directly.
-  </p>
+  <p data-i18n="compensations.exportPdf.usage">{t('compensations.exportPdf.usage')}</p>
 
   <InfoBox type="info">
-    <p>
-      The PDF export creates an official-looking document with all the game
-      and compensation details that teams may require for their records.
+    <p data-i18n="compensations.exportPdf.infoBox">
+      {t('compensations.exportPdf.infoBox')}
     </p>
   </InfoBox>
 
-  <h2>Payment Schedule</h2>
+  <h2 data-i18n="compensations.paymentSchedule.title">{t('compensations.paymentSchedule.title')}</h2>
 
-  <p>
-    Compensation payments are typically processed monthly by Swiss Volley.
-    The exact payment schedule may vary, but generally:
-  </p>
+  <p data-i18n="compensations.paymentSchedule.description">{t('compensations.paymentSchedule.description')}</p>
 
   <ul>
-    <li>Games from the previous month are processed at the start of each month</li>
-    <li>Payments are made via bank transfer to your registered account</li>
-    <li>Processing may take 2-4 weeks after the month ends</li>
+    <li data-i18n="compensations.paymentSchedule.details.processing">{t('compensations.paymentSchedule.details.processing')}</li>
+    <li data-i18n="compensations.paymentSchedule.details.bankTransfer">{t('compensations.paymentSchedule.details.bankTransfer')}</li>
+    <li data-i18n="compensations.paymentSchedule.details.timing">{t('compensations.paymentSchedule.details.timing')}</li>
   </ul>
 
   <InfoBox type="warning">
-    <p>
-      Make sure your bank details are up to date in the volleymanager system
-      to avoid payment delays.
+    <p data-i18n="compensations.paymentSchedule.warning">
+      {t('compensations.paymentSchedule.warning')}
     </p>
   </InfoBox>
 </DocLayout>
