@@ -26,6 +26,29 @@ const VIEWPORTS = {
   phone: { width: 375, height: 667 },
 } as const;
 
+// ============================================
+// Animation and timing constants
+// ============================================
+const SWIPE_ANIMATION_STEPS = 30;
+const SWIPE_STEP_DELAY_MS = 15;
+const SWIPE_MOUSE_SETTLE_DELAY_MS = 50;
+const SWIPE_HOLD_DELAY_MS = 100;
+const SWIPE_COMPLETE_DELAY_MS = 400;
+const OVERLAY_RENDER_DELAY_MS = 100;
+const PWA_DISMISS_DELAY_MS = 300;
+
+// ============================================
+// Spotlight styling constants
+// ============================================
+const SPOTLIGHT_OVERLAY_Z_INDEX = 99999;
+const SPOTLIGHT_BORDER_Z_INDEX = 100000;
+const SPOTLIGHT_OVERLAY_OPACITY = 0.6;
+const SPOTLIGHT_BORDER_OPACITY = 0.8;
+const SPOTLIGHT_SHADOW_OPACITY = 0.3;
+const SPOTLIGHT_BORDER_RADIUS_PX = 12;
+const SPOTLIGHT_BORDER_WIDTH_PX = 2;
+const SPOTLIGHT_SHADOW_BLUR_PX = 20;
+
 // Ensure screenshot directory exists
 test.beforeAll(() => {
   if (!fs.existsSync(SCREENSHOT_DIR)) {
@@ -63,7 +86,7 @@ async function dismissPWANotification(page: Page) {
   const closeButton = page.locator('[role="alert"] button').last();
   if (await closeButton.isVisible({ timeout: 500 }).catch(() => false)) {
     await closeButton.click();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(PWA_DISMISS_DELAY_MS);
   }
 }
 
@@ -80,39 +103,48 @@ async function takeScreenshot(page: Page, name: string) {
 // Helper to add a spotlight effect highlighting a specific element
 // Creates a dark overlay with a "hole" around the spotlighted element
 async function addSpotlight(page: Page, selector: string, padding = 8) {
+  // Pass constants to evaluate context since they're not accessible inside
+  const styles = {
+    overlayZIndex: SPOTLIGHT_OVERLAY_Z_INDEX,
+    borderZIndex: SPOTLIGHT_BORDER_Z_INDEX,
+    overlayOpacity: SPOTLIGHT_OVERLAY_OPACITY,
+    borderOpacity: SPOTLIGHT_BORDER_OPACITY,
+    shadowOpacity: SPOTLIGHT_SHADOW_OPACITY,
+    borderRadius: SPOTLIGHT_BORDER_RADIUS_PX,
+    borderWidth: SPOTLIGHT_BORDER_WIDTH_PX,
+    shadowBlur: SPOTLIGHT_SHADOW_BLUR_PX,
+  };
+
   await page.evaluate(
-    ({ selector, padding }) => {
+    ({ selector, padding, styles }) => {
       const element = document.querySelector(selector);
       if (!element) return;
 
       const rect = element.getBoundingClientRect();
 
-      // Create spotlight overlay
+      // Create spotlight overlay with clip-path hole
       const overlay = document.createElement('div');
       overlay.id = 'screenshot-spotlight-overlay';
       overlay.style.cssText = `
         position: fixed;
         inset: 0;
-        z-index: 99999;
+        z-index: ${styles.overlayZIndex};
         pointer-events: none;
-        background: rgba(0, 0, 0, 0.6);
-        /* Create a hole using clip-path */
+        background: rgba(0, 0, 0, ${styles.overlayOpacity});
         clip-path: polygon(
-          0% 0%,
-          0% 100%,
+          0% 0%, 0% 100%,
           ${rect.left - padding}px 100%,
           ${rect.left - padding}px ${rect.top - padding}px,
           ${rect.right + padding}px ${rect.top - padding}px,
           ${rect.right + padding}px ${rect.bottom + padding}px,
           ${rect.left - padding}px ${rect.bottom + padding}px,
           ${rect.left - padding}px 100%,
-          100% 100%,
-          100% 0%
+          100% 100%, 100% 0%
         );
       `;
       document.body.appendChild(overlay);
 
-      // Add a subtle border around the spotlighted area
+      // Add border around the spotlighted area
       const border = document.createElement('div');
       border.id = 'screenshot-spotlight-border';
       border.style.cssText = `
@@ -121,15 +153,15 @@ async function addSpotlight(page: Page, selector: string, padding = 8) {
         top: ${rect.top - padding}px;
         width: ${rect.width + padding * 2}px;
         height: ${rect.height + padding * 2}px;
-        z-index: 100000;
+        z-index: ${styles.borderZIndex};
         pointer-events: none;
-        border: 2px solid rgba(255, 255, 255, 0.8);
-        border-radius: 12px;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        border: ${styles.borderWidth}px solid rgba(255, 255, 255, ${styles.borderOpacity});
+        border-radius: ${styles.borderRadius}px;
+        box-shadow: 0 0 ${styles.shadowBlur}px rgba(0, 0, 0, ${styles.shadowOpacity});
       `;
       document.body.appendChild(border);
     },
-    { selector, padding }
+    { selector, padding, styles }
   );
 }
 
@@ -150,7 +182,7 @@ async function takeSpotlightScreenshot(
 ) {
   await dismissPWANotification(page);
   await addSpotlight(page, selector, padding);
-  await page.waitForTimeout(100); // Let the overlay render
+  await page.waitForTimeout(OVERLAY_RENDER_DELAY_MS);
 
   const filePath = path.join(SCREENSHOT_DIR, `${name}.png`);
   await page.screenshot({ path: filePath, fullPage: false });
@@ -202,24 +234,23 @@ async function performSwipe(
 
   // Start with mouse position at the element
   await page.mouse.move(startX, startY);
-  await page.waitForTimeout(50);
+  await page.waitForTimeout(SWIPE_MOUSE_SETTLE_DELAY_MS);
 
   // Mouse down to start drag
   await page.mouse.down();
-  await page.waitForTimeout(50);
+  await page.waitForTimeout(SWIPE_MOUSE_SETTLE_DELAY_MS);
 
-  // Move in small steps to simulate a real swipe - slower for reliability
-  const steps = 30;
-  for (let i = 1; i <= steps; i++) {
-    const x = startX + ((endX - startX) * i) / steps;
+  // Move in small steps to simulate a real swipe
+  for (let i = 1; i <= SWIPE_ANIMATION_STEPS; i++) {
+    const x = startX + ((endX - startX) * i) / SWIPE_ANIMATION_STEPS;
     await page.mouse.move(x, startY);
-    await page.waitForTimeout(15);
+    await page.waitForTimeout(SWIPE_STEP_DELAY_MS);
   }
 
   // Hold at end position briefly before releasing
-  await page.waitForTimeout(100);
+  await page.waitForTimeout(SWIPE_HOLD_DELAY_MS);
   await page.mouse.up();
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(SWIPE_COMPLETE_DELAY_MS);
 }
 
 test.describe('Help Site Screenshots', () => {
