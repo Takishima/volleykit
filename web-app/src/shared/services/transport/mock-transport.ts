@@ -5,6 +5,7 @@
 
 import type { Coordinates, TravelTimeResult, TravelTimeOptions, StationInfo } from "./types";
 import { calculateDistanceKm } from "@/shared/utils/distance";
+import { MINUTES_PER_HOUR } from "@/shared/utils/constants";
 
 /** Network delay for realistic demo behavior */
 const MOCK_DELAY_MS = 100;
@@ -22,7 +23,7 @@ const MOCK_DELAY_MS = 100;
 function estimateTravelTimeFromDistance(distanceKm: number): number {
   const baseTimeMinutes = 15; // Getting to station, waiting
   const averageSpeedKmh = 40; // Average speed including stops
-  const travelMinutes = (distanceKm / averageSpeedKmh) * 60;
+  const travelMinutes = (distanceKm / averageSpeedKmh) * MINUTES_PER_HOUR;
 
   return Math.round(baseTimeMinutes + travelMinutes);
 }

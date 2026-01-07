@@ -7,6 +7,7 @@
 
 import type { Coordinates, TravelTimeResult, TravelTimeOptions, StationInfo } from "./types";
 import { TransportApiError } from "./types";
+import { MINUTES_PER_HOUR, SECONDS_PER_MINUTE } from "@/shared/utils/constants";
 
 /** Lazily loaded OJP SDK module */
 let ojpSdk: typeof import("ojp-sdk-next") | null = null;
@@ -418,5 +419,5 @@ function parseDurationToMinutes(duration: string): number {
   const minutes = extractDurationComponent(duration, "M");
   const seconds = extractDurationComponent(duration, "S");
 
-  return hours * 60 + minutes + Math.ceil(seconds / 60);
+  return hours * MINUTES_PER_HOUR + minutes + Math.ceil(seconds / SECONDS_PER_MINUTE);
 }

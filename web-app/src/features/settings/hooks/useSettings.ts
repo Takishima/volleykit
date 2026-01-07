@@ -2,6 +2,7 @@ import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { api, type AssociationSettings, type Season } from "@/api/client";
 import { useAuthStore } from "@/shared/stores/auth";
 import { queryKeys } from "@/api/queryKeys";
+import { MS_PER_MINUTE, MS_PER_HOUR } from "@/shared/utils/constants";
 
 /**
  * Hook to fetch association settings.
@@ -21,7 +22,7 @@ export function useAssociationSettings(): UseQueryResult<
   return useQuery({
     queryKey: queryKeys.settings.association(activeOccupationId),
     queryFn: () => api.getAssociationSettings(),
-    staleTime: 30 * 60 * 1000, // 30 minutes - settings rarely change
+    staleTime: 30 * MS_PER_MINUTE, // 30 minutes - settings rarely change
     enabled: !isDemoMode,
   });
 }
@@ -41,7 +42,7 @@ export function useActiveSeason(): UseQueryResult<Season, Error> {
   return useQuery({
     queryKey: queryKeys.seasons.active(activeOccupationId),
     queryFn: () => api.getActiveSeason(),
-    staleTime: 60 * 60 * 1000, // 1 hour - season rarely changes
+    staleTime: MS_PER_HOUR, // 1 hour - season rarely changes
     enabled: !isDemoMode,
   });
 }

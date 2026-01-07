@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { PWAContext, type PWAContextType } from "./pwa-context-value";
 import { logger } from "@/shared/utils/logger";
+import { MS_PER_HOUR } from "@/shared/utils/constants";
 
 /**
  * Interval for automatic update checks (1 hour).
  * Balances freshness with avoiding excessive network requests.
  * The service worker will also check for updates on page load.
  */
-const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000; // 1 hour in milliseconds
+const UPDATE_CHECK_INTERVAL_MS = MS_PER_HOUR;
 
 interface PWAProviderInternalProps {
   children: ReactNode;

@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { logger } from "@/shared/utils/logger";
+import { MS_PER_MINUTE } from "@/shared/utils/constants";
 import type { ValidatedPersonSearchResult } from "@/api/validation";
 import type { RosterPanelModifications } from "@/features/validation/components/RosterVerificationPanel";
 import { getApiClient } from "@/api/client";
@@ -36,8 +37,7 @@ export type {
 // Re-export for consumers of this hook
 export type { PendingScorerData as PendingScorerInfo } from "@/shared/stores/demo";
 
-const MINUTES_TO_MS = 60 * 1000;
-const GAME_DETAILS_STALE_TIME_MS = 5 * MINUTES_TO_MS;
+const GAME_DETAILS_STALE_TIME_MS = 5 * MS_PER_MINUTE;
 
 /**
  * Hook to manage validation state across all panels in the ValidateGameModal.

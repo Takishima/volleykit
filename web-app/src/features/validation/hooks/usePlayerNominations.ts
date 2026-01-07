@@ -6,6 +6,7 @@ import {
 } from "@/api/client";
 import { useAuthStore } from "@/shared/stores/auth";
 import { queryKeys } from "@/api/queryKeys";
+import { MS_PER_MINUTE } from "@/shared/utils/constants";
 
 interface UsePossiblePlayerNominationsOptions {
   nominationListId: string;
@@ -37,6 +38,6 @@ export function usePossiblePlayerNominations({
       return response.items ?? [];
     },
     enabled: enabled && !!nominationListId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * MS_PER_MINUTE,
   });
 }

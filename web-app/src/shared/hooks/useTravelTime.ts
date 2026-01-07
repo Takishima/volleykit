@@ -7,6 +7,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
+import { MINUTES_PER_HOUR } from "@/shared/utils/constants";
 import { useAuthStore } from "@/shared/stores/auth";
 import { useSettingsStore } from "@/shared/stores/settings";
 import { useActiveAssociationCode } from "@/features/auth/hooks/useActiveAssociation";
@@ -167,12 +168,12 @@ export function useTravelTime(
  * @returns Formatted string like "45'" or "1h15'"
  */
 export function formatTravelTime(minutes: number): string {
-  if (minutes < 60) {
+  if (minutes < MINUTES_PER_HOUR) {
     return `${minutes}'`;
   }
 
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
+  const hours = Math.floor(minutes / MINUTES_PER_HOUR);
+  const remainingMinutes = minutes % MINUTES_PER_HOUR;
 
   if (remainingMinutes === 0) {
     return `${hours}h`;

@@ -7,6 +7,7 @@ import {
 } from "@/api/validation";
 import { useAuthStore } from "@/shared/stores/auth";
 import { queryKeys } from "@/api/queryKeys";
+import { MS_PER_MINUTE } from "@/shared/utils/constants";
 
 /**
  * Cache duration for search results.
@@ -15,7 +16,7 @@ import { queryKeys } from "@/api/queryKeys";
  * - Users often search for the same person multiple times in a session
  * - Reduces load on the Elasticsearch backend
  */
-const STALE_TIME_MS = 5 * 60 * 1000;
+const STALE_TIME_MS = 5 * MS_PER_MINUTE;
 
 /**
  * Parses a search input string into search filters.

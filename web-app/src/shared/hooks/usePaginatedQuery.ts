@@ -1,6 +1,7 @@
 import type { UseQueryResult } from "@tanstack/react-query";
 import { api, type SearchConfiguration, type Assignment } from "@/api/client";
 import { createLogger } from "@/shared/utils/logger";
+import { MS_PER_MINUTE, MS_PER_HOUR } from "@/shared/utils/constants";
 
 const log = createLogger("usePaginatedQuery");
 
@@ -21,26 +22,26 @@ export const COMPENSATION_LOOKUP_LIMIT = 200;
 // These control how long TanStack Query considers data fresh before refetching.
 
 /** Default stale time for assignments queries (5 minutes) */
-export const ASSIGNMENTS_STALE_TIME_MS = 5 * 60 * 1000;
+export const ASSIGNMENTS_STALE_TIME_MS = 5 * MS_PER_MINUTE;
 
 /** Stale time for compensation queries (5 minutes) */
-export const COMPENSATIONS_STALE_TIME_MS = 5 * 60 * 1000;
+export const COMPENSATIONS_STALE_TIME_MS = 5 * MS_PER_MINUTE;
 
 /** Stale time for exchange queries (2 minutes) - shorter due to time-sensitive nature */
-export const EXCHANGES_STALE_TIME_MS = 2 * 60 * 1000;
+export const EXCHANGES_STALE_TIME_MS = 2 * MS_PER_MINUTE;
 
 /** Stale time for association settings (30 minutes) - settings rarely change */
-export const SETTINGS_STALE_TIME_MS = 30 * 60 * 1000;
+export const SETTINGS_STALE_TIME_MS = 30 * MS_PER_MINUTE;
 
 /** Stale time for active season (1 hour) - season changes infrequently */
-export const SEASON_STALE_TIME_MS = 60 * 60 * 1000;
+export const SEASON_STALE_TIME_MS = MS_PER_HOUR;
 
 /**
  * Cache duration for validation-closed assignments (15 minutes).
  * Longer than default because validation status changes infrequently
  * and fetching all pages is expensive.
  */
-export const VALIDATION_CLOSED_STALE_TIME_MS = 15 * 60 * 1000;
+export const VALIDATION_CLOSED_STALE_TIME_MS = 15 * MS_PER_MINUTE;
 
 // Fallback timestamp for items with missing dates - uses Unix epoch (1970-01-01)
 // Items with missing dates will sort as oldest when ascending, newest when descending

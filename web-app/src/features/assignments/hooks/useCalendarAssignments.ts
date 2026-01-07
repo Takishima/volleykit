@@ -9,12 +9,13 @@ import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { useAuthStore } from "@/shared/stores/auth";
 import { queryKeys } from "@/api/queryKeys";
 import { fetchCalendarAssignments, type CalendarAssignment } from "@/features/assignments/api/calendar-api";
+import { MS_PER_MINUTE } from "@/shared/utils/constants";
 
 // Stable empty array to prevent unnecessary re-renders
 const EMPTY_ASSIGNMENTS: CalendarAssignment[] = [];
 
 /** Cache duration for calendar assignments (5 minutes). Calendar data updates infrequently. */
-const CALENDAR_STALE_TIME_MS = 5 * 60 * 1000;
+const CALENDAR_STALE_TIME_MS = 5 * MS_PER_MINUTE;
 
 /**
  * Fetches assignments from the calendar iCal feed.

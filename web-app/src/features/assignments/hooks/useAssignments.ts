@@ -30,6 +30,7 @@ import {
   createDemoQueryResult,
   getGameTimestamp,
 } from "@/shared/hooks/usePaginatedQuery";
+import { MS_PER_MINUTE } from "@/shared/utils/constants";
 
 // Re-export calendar assignments hook for calendar mode
 export { useCalendarAssignments } from "./useCalendarAssignments";
@@ -185,7 +186,7 @@ export function useAssignments(
     queryKey: queryKeys.assignments.list(config, associationKey),
     queryFn: () => apiClient.searchAssignments(config),
     select: (data) => data.items ?? EMPTY_ASSIGNMENTS,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * MS_PER_MINUTE,
     // Disable query in demo mode - we read directly from the store
     enabled: !isDemoMode,
   });
@@ -385,6 +386,6 @@ export function useAssignmentDetails(assignmentId: string | null) {
         "refereeGame.game.hall.primaryPostalAddress",
       ]),
     enabled: !!assignmentId,
-    staleTime: 10 * 60 * 1000,
+    staleTime: 10 * MS_PER_MINUTE,
   });
 }
