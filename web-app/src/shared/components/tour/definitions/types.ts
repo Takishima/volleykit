@@ -25,6 +25,17 @@ export interface TourStep {
     // Delay in ms for "auto" type
     delay?: number;
   };
+
+  // Auto-swipe demo configuration for swipe steps
+  // When enabled, disables user input and performs a slow swipe animation
+  autoSwipe?: {
+    // Direction to swipe ("left" reveals right actions, "right" reveals left actions)
+    direction: "left" | "right";
+    // Duration of the animation in ms (default: 1500)
+    duration?: number;
+    // Delay before starting the animation in ms (default: 500)
+    delay?: number;
+  };
 }
 
 export interface TourDefinition {

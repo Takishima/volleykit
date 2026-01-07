@@ -20,6 +20,8 @@ interface TourSpotlightProps {
   freezePosition?: boolean;
   /** When true, disables backdrop blur so drawer buttons are clearly visible */
   disableBlur?: boolean;
+  /** When true, blocks all interaction with the target element (during auto-swipe demo) */
+  blockInteraction?: boolean;
 }
 
 const SPOTLIGHT_PADDING = 8;
@@ -85,6 +87,7 @@ export function TourSpotlight({
   children,
   freezePosition = false,
   disableBlur = false,
+  blockInteraction = false,
 }: TourSpotlightProps) {
   // Start with null - position will be set after mount when element is ready
   const [targetRect, setTargetRect] = useState<TargetRect | null>(null);
@@ -296,6 +299,20 @@ export function TourSpotlight({
         style={{ clipPath }}
         aria-hidden="true"
       />
+
+      {/* Interaction blocker - covers target area during auto-swipe demo */}
+      {blockInteraction && (
+        <div
+          className="fixed z-[46] pointer-events-auto"
+          style={{
+            top: targetRect.top,
+            left: targetRect.left,
+            width: targetRect.width,
+            height: targetRect.height,
+          }}
+          aria-hidden="true"
+        />
+      )}
 
       {/* Tooltip - needs pointer-events-auto to be interactive */}
       <div

@@ -18,6 +18,7 @@ export const assignmentsTour: TourDefinition = {
       descriptionKey: "tour.assignments.swipeValidate.description",
       placement: "bottom",
       completionEvent: { type: "swipe" },
+      autoSwipe: { direction: "left" },
     },
     {
       id: "swipe-exchange",
@@ -26,6 +27,7 @@ export const assignmentsTour: TourDefinition = {
       descriptionKey: "tour.assignments.swipeExchange.description",
       placement: "bottom",
       completionEvent: { type: "swipe" },
+      autoSwipe: { direction: "right" },
     },
     {
       id: "tap-details",

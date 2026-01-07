@@ -18,6 +18,7 @@ export const exchangeTour: TourDefinition = {
       descriptionKey: "tour.exchange.apply.description",
       placement: "bottom",
       completionEvent: { type: "swipe" },
+      autoSwipe: { direction: "left" },
     },
     {
       id: "filters",

@@ -18,6 +18,7 @@ export const compensationsTour: TourDefinition = {
       descriptionKey: "tour.compensations.swipeEdit.description",
       placement: "bottom",
       completionEvent: { type: "swipe" },
+      autoSwipe: { direction: "left" },
     },
     {
       id: "tap-details",
