@@ -1,6 +1,5 @@
 import { memo } from "react";
 import { useTranslation } from "@/shared/hooks/useTranslation";
-import { CALENDAR_ASSOCIATION } from "@/shared/stores/auth";
 import { Card, CardContent, CardHeader } from "@/shared/components/Card";
 import { ToggleSwitch } from "@/shared/components/ToggleSwitch";
 import { TrainFront, MapPin, Clock, Info } from "@/shared/components/icons";
@@ -20,7 +19,7 @@ function TravelSettingsSectionComponent() {
   const transport = useTransportSettings();
 
   // Don't show if no association selected
-  if (!transport.associationCode || transport.associationCode === CALENDAR_ASSOCIATION) {
+  if (!transport.associationCode) {
     return null;
   }
 

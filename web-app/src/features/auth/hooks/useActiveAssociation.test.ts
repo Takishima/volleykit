@@ -196,7 +196,7 @@ describe("useActiveAssociationCode", () => {
     });
 
     it("returns CALENDAR_ASSOCIATION regardless of user occupations in calendar mode", () => {
-      // Even with multiple occupations, calendar mode should use dummy association
+      // Even with multiple occupations, calendar mode should use global association
       const occupations: Occupation[] = [
         createOccupation({ id: "occ-1", associationCode: "SV" }),
         createOccupation({ id: "occ-2", associationCode: "SVRBA" }),
