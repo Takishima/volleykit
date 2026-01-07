@@ -1,6 +1,6 @@
 ---
 import DocLayout from '../layouts/DocLayout.astro';
-import Screenshot from '../components/Screenshot.astro';
+import DeviceScreenshot from '../components/DeviceScreenshot.astro';
 import InfoBox from '../components/InfoBox.astro';
 import { BASE_PATH } from '../constants';
 ---
@@ -23,7 +23,7 @@ import { BASE_PATH } from '../constants';
     "Settings" from the main menu.
   </p>
 
-  <Screenshot
+  <DeviceScreenshot
     id="settings-overview"
     alt="Settings page showing all available options"
     caption="VolleyKit settings page"
@@ -75,7 +75,7 @@ import { BASE_PATH } from '../constants';
     but you can override this in settings.
   </p>
 
-  <Screenshot
+  <DeviceScreenshot
     id="language-settings"
     alt="Language selection showing available options"
     caption="Changing the app language"
@@ -94,6 +94,13 @@ import { BASE_PATH } from '../constants';
     <li>Use the autocomplete suggestions for accuracy</li>
     <li>Travel times will appear on your assignment cards</li>
   </ul>
+
+  <DeviceScreenshot
+    id="home-location-setting"
+    alt="Home location input with address search"
+    caption="Setting your home location"
+    instructions="Take a screenshot of the home location input showing the address search field and any autocomplete suggestions."
+  />
 
   <InfoBox type="tip">
     <p>
@@ -144,7 +151,7 @@ import { BASE_PATH } from '../constants';
     </p>
   </InfoBox>
 
-  <Screenshot
+  <DeviceScreenshot
     id="data-privacy-settings"
     alt="Data and privacy settings section with clear data button"
     caption="Data and privacy options"
