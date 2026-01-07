@@ -33,14 +33,14 @@ const { steps } = Astro.props;
         <div class="pt-0.5">
           <h4
             class="mb-1 font-semibold text-text-primary dark:text-text-primary-dark"
-            data-i18n={step.titleKey}
+            {...(step.titleKey ? { 'data-i18n': step.titleKey } : {})}
           >
             {step.title}
           </h4>
           {step.description && (
             <p
               class="text-sm text-text-secondary dark:text-text-secondary-dark"
-              data-i18n={step.descriptionKey}
+              {...(step.descriptionKey ? { 'data-i18n': step.descriptionKey } : {})}
             >
               {step.description}
             </p>
