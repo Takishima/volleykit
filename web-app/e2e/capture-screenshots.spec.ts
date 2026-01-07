@@ -300,10 +300,10 @@ test.describe('Help Site Screenshots', () => {
 
     if (cardBox) {
       // Calculate swipe distance - needs to be past the drawer threshold (30% of width)
-      // Swipe RIGHT to reveal the exchange action (which appears on the left side behind the card)
+      // Swipe LEFT to reveal validate/edit/report actions (which appear on the right side behind the card)
       const swipeDistance = cardBox.width * 0.4; // 40% of card width
 
-      await performSwipe(page, cardBox, 'right', swipeDistance);
+      await performSwipe(page, cardBox, 'left', swipeDistance);
 
       // Wait for the drawer animation to complete
       await page.waitForTimeout(500);
@@ -343,7 +343,14 @@ test.describe('Help Site Screenshots', () => {
       await page.waitForTimeout(500);
     }
 
-    await takeScreenshot(page, 'exchange-request');
+    // Spotlight the first swipeable card container to highlight the action
+    const swipeableContainer = page.locator('[role="group"][aria-label*="Swipeable"]').first();
+    const containerSelector = await swipeableContainer.evaluate((el) => {
+      el.id = 'screenshot-target-exchange';
+      return '#screenshot-target-exchange';
+    });
+
+    await takeSpotlightScreenshot(page, 'exchange-request', containerSelector, 4);
   });
 
   // ============================================
@@ -361,7 +368,8 @@ test.describe('Help Site Screenshots', () => {
     await takeScreenshot(page, 'compensations-list');
   });
 
-  test('compensations-filters - capture compensation tabs', async ({ page }) => {
+  test.skip('compensations-filters - capture compensation tabs', async ({ page }) => {
+    // Skipped: Filters are not available in demo mode
     await enterDemoModeWithoutTours(page);
     const navigation = new NavigationPage(page);
     const compensationsPage = new CompensationsPage(page);
@@ -420,7 +428,16 @@ test.describe('Help Site Screenshots', () => {
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     await page.waitForTimeout(500);
 
-    await takeScreenshot(page, 'data-privacy-settings');
+    // Spotlight the DataRetentionSection card (visible in demo mode)
+    // Find the card containing privacy text
+    const privacyCard = page.locator('.space-y-6 > div').filter({ hasText: /privacy|Datenschutz|confidentialité|privacy/i }).first();
+    const cardSelector = await privacyCard.evaluate((el) => {
+      // Add a temporary ID for the spotlight
+      el.id = 'screenshot-target-privacy';
+      return '#screenshot-target-privacy';
+    });
+
+    await takeSpotlightScreenshot(page, 'data-privacy-settings', cardSelector, 4);
   });
 
   test('home-location-setting - capture home location input', async ({ page }) => {
@@ -431,57 +448,144 @@ test.describe('Help Site Screenshots', () => {
 
     await page.waitForLoadState('networkidle');
 
-    // Try to find the home location section
-    const locationSection = page
-      .getByText(/Home Location|Heimatort|Lieu de départ|Posizione di partenza/i)
-      .first();
-    if (await locationSection.isVisible()) {
-      await locationSection.scrollIntoViewIfNeeded();
-    }
+    // Scroll to the home location section
+    const locationSection = page.locator('[data-tour="home-location"]');
+    await locationSection.scrollIntoViewIfNeeded();
 
     await page.waitForTimeout(500);
-    await takeScreenshot(page, 'home-location-setting');
+
+    // Spotlight the home location card (using the parent Card element)
+    const homeLocationCard = page.locator('[data-tour="home-location"]').locator('xpath=ancestor::*[contains(@class, "rounded")]').first();
+    const cardSelector = await homeLocationCard.evaluate((el) => {
+      el.id = 'screenshot-target-home-location';
+      return '#screenshot-target-home-location';
+    });
+
+    await takeSpotlightScreenshot(page, 'home-location-setting', cardSelector, 4);
   });
 
   // ============================================
-  // Travel Time Screenshots
+  // Travel Time Screenshots (require production site with OJP API)
   // ============================================
-  test('travel-time-display - capture travel time on assignment', async ({ page }) => {
-    await enterDemoModeWithoutTours(page);
+  // These tests require the production site where the OJP API is configured.
+  // To run them manually:
+  // 1. Ensure you can access https://takishima.github.io/volleykit/
+  // 2. Run with: PRODUCTION_URL=https://takishima.github.io/volleykit/ npx playwright test -g "travel-time"
+  const PRODUCTION_URL = process.env.PRODUCTION_URL || '';
+
+  test.skip('travel-time-display - capture travel time on assignment', async ({ page }) => {
+    // Skipped: Requires production site with OJP API configured.
+    // Run manually with PRODUCTION_URL env var set.
+    if (!PRODUCTION_URL) {
+      console.log('⚠️ travel-time-display: Set PRODUCTION_URL env var to run this test');
+      return;
+    }
+
+    await setupCleanEnvironment(page);
+    await page.goto(`${PRODUCTION_URL}login`);
+    await page.waitForLoadState('networkidle');
+
+    // Enter demo mode on production
+    const demoButton = page.getByTestId('demo-mode-button');
+    await expect(demoButton).toBeVisible({ timeout: 10000 });
+    await demoButton.click();
+
+    // Wait for assignments to load
+    await page.waitForURL(/\/assignments/, { timeout: 15000 });
     const assignmentsPage = new AssignmentsPage(page);
+    await assignmentsPage.waitForAssignmentsLoaded();
+
+    // First, set a home location in settings so travel time can be calculated
+    const navigation = new NavigationPage(page);
+    await navigation.goToSettings();
+    await page.waitForLoadState('networkidle');
+
+    // Enter a home location (Bern, Switzerland)
+    const addressInput = page.locator('#address-search');
+    await addressInput.fill('Bern');
+    await page.waitForTimeout(1500); // Wait for geocoding
+
+    // Select first result if available
+    const firstResult = page.locator('ul li button').first();
+    if (await firstResult.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await firstResult.click();
+      await page.waitForTimeout(500);
+    }
+
+    // Navigate back to assignments
+    await page.getByRole('link', { name: /assignments|Einsätze|Désignations|Convocazioni/i }).click();
+    await page.waitForURL(/\/assignments/);
     await assignmentsPage.waitForAssignmentsLoaded();
 
     // Click on an assignment to see the travel time
     const firstCard = assignmentsPage.assignmentCards.first();
     await firstCard.click();
 
-    // Wait for detail view
-    await page.waitForTimeout(500);
+    // Wait for travel time to load (may take a moment)
+    await page.waitForTimeout(2000);
+    await dismissPWANotification(page);
 
     await takeScreenshot(page, 'travel-time-display');
   });
 
-  test('journey-details - capture journey details', async ({ page }) => {
-    await enterDemoModeWithoutTours(page);
+  test.skip('journey-details - capture journey details', async ({ page }) => {
+    // Skipped: Requires production site with OJP API configured.
+    // Run manually with PRODUCTION_URL env var set.
+    if (!PRODUCTION_URL) {
+      console.log('⚠️ journey-details: Set PRODUCTION_URL env var to run this test');
+      return;
+    }
+
+    await setupCleanEnvironment(page);
+    await page.goto(`${PRODUCTION_URL}login`);
+    await page.waitForLoadState('networkidle');
+
+    // Enter demo mode on production
+    const demoButton = page.getByTestId('demo-mode-button');
+    await expect(demoButton).toBeVisible({ timeout: 10000 });
+    await demoButton.click();
+
+    // Wait for assignments to load
+    await page.waitForURL(/\/assignments/, { timeout: 15000 });
     const assignmentsPage = new AssignmentsPage(page);
+    await assignmentsPage.waitForAssignmentsLoaded();
+
+    // First, set a home location in settings
+    const navigation = new NavigationPage(page);
+    await navigation.goToSettings();
+    await page.waitForLoadState('networkidle');
+
+    // Enter a home location (Bern, Switzerland)
+    const addressInput = page.locator('#address-search');
+    await addressInput.fill('Bern');
+    await page.waitForTimeout(1500);
+
+    const firstResult = page.locator('ul li button').first();
+    if (await firstResult.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await firstResult.click();
+      await page.waitForTimeout(500);
+    }
+
+    // Navigate back to assignments
+    await page.getByRole('link', { name: /assignments|Einsätze|Désignations|Convocazioni/i }).click();
+    await page.waitForURL(/\/assignments/);
     await assignmentsPage.waitForAssignmentsLoaded();
 
     // Click on an assignment to see the travel time
     const firstCard = assignmentsPage.assignmentCards.first();
     await firstCard.click();
 
-    // Wait for detail view
-    await page.waitForTimeout(500);
+    // Wait for travel time to load
+    await page.waitForTimeout(2000);
 
     // Try to find and click on travel time to expand journey details
-    const travelTimeElement = page
-      .getByText(/min|h|Travel|Reise|Trajet|Viaggio/i)
-      .first();
-    if (await travelTimeElement.isVisible()) {
-      await travelTimeElement.click();
-      await page.waitForTimeout(500);
+    const travelTimeButton = page.locator('[aria-label*="travel"], [aria-label*="Reise"], [aria-label*="trajet"]').first();
+    if (await travelTimeButton.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await travelTimeButton.click();
+      await page.waitForTimeout(1000);
     }
 
+    await dismissPWANotification(page);
     await takeScreenshot(page, 'journey-details');
   });
 
