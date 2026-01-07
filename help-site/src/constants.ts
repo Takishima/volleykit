@@ -19,3 +19,16 @@ export const TIMING = {
 
 /** Maximum number of search results to display */
 export const MAX_SEARCH_RESULTS = 10;
+
+/** Device types for screenshots */
+export const DEVICE_TYPES = ['desktop', 'phone', 'tablet'] as const;
+
+/** Device type union */
+export type DeviceType = (typeof DEVICE_TYPES)[number];
+
+/** Screenshot file suffix for each device type */
+export const DEVICE_SUFFIXES: Record<DeviceType, string> = {
+  desktop: '-desktop',
+  phone: '-phone',
+  tablet: '-tablet',
+} as const;

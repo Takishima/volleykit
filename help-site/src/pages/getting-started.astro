@@ -1,6 +1,7 @@
 ---
 import DocLayout from '../layouts/DocLayout.astro';
 import Screenshot from '../components/Screenshot.astro';
+import DeviceScreenshot from '../components/DeviceScreenshot.astro';
 import InfoBox from '../components/InfoBox.astro';
 import StepList from '../components/StepList.astro';
 import { BASE_PATH } from '../constants';
@@ -100,7 +101,7 @@ import { BASE_PATH } from '../constants';
     ]}
   />
 
-  <Screenshot
+  <DeviceScreenshot
     id="login-page"
     alt="VolleyKit login page showing username and password fields"
     caption="The VolleyKit login page"
