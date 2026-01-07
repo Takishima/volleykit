@@ -9,8 +9,8 @@ import { useAuthStore, CALENDAR_ASSOCIATION } from "@/shared/stores/auth";
  * Returns the association code of the currently active occupation.
  * Falls back to the first occupation if no active occupation is set.
  *
- * In calendar mode, returns a dummy association code (CALENDAR_ASSOCIATION)
- * to keep transport settings separate from real API login settings.
+ * In calendar mode, returns CALENDAR_ASSOCIATION for global transport settings
+ * that apply across all assignments regardless of their association.
  *
  * @returns The association code (e.g., "SV", "SVRBA", "CAL") or undefined if not available
  */
@@ -24,8 +24,7 @@ export function useActiveAssociationCode(): string | undefined {
     })),
   );
 
-  // In calendar mode, use a dummy association so settings don't interfere
-  // with real API association settings if the user logs in later
+  // In calendar mode, use a global association for transport settings
   if (dataSource === "calendar") {
     return CALENDAR_ASSOCIATION;
   }
