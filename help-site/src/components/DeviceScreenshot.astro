@@ -79,7 +79,7 @@ const defaultDevice = firstExisting?.device ?? devices[0];
     aria-label="Device type selector"
   >
     {
-      deviceStatus.map(({ device, display, index }) => (
+      deviceStatus.map(({ device, display, index, exists }) => (
         <button
           type="button"
           role="tab"
@@ -90,6 +90,7 @@ const defaultDevice = firstExisting?.device ?? devices[0];
           data-device={device}
           data-component-id={componentId}
           data-index={index}
+          data-exists={exists ? 'true' : 'false'}
           class:list={[
             'device-tab flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
             device === defaultDevice
@@ -196,6 +197,48 @@ const defaultDevice = firstExisting?.device ?? devices[0];
   function initDeviceSwitcher() {
     const tabs = document.querySelectorAll<HTMLButtonElement>('.device-tab');
 
+    /**
+     * Detect the user's device type using multiple signals for accuracy.
+     * Combines pointer precision, hover capability, touch support, and viewport width.
+     * @see https://developer.mozilla.org/en-US/docs/Web/CSS/@media/pointer
+     * @see https://web.dev/learn/design/interaction
+     */
+    function detectDeviceType(): 'phone' | 'tablet' | 'desktop' {
+      // Breakpoint constants for device type detection
+      const TABLET_MIN_WIDTH_PX = 768;
+      const DESKTOP_MIN_WIDTH_PX = 1024;
+
+      const width = window.innerWidth;
+
+      // Check pointer precision (coarse = touch, fine = mouse/trackpad)
+      const hasCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+      const hasFinePointer = window.matchMedia('(pointer: fine)').matches;
+
+      // Check hover capability (none = touch device, hover = mouse/trackpad)
+      const canHover = window.matchMedia('(hover: hover)').matches;
+
+      // Check touch support
+      const hasTouch = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
+
+      // Desktop: has fine pointer OR can hover (typical mouse/trackpad)
+      // Even if device has touch, primary input is mouse-like
+      if (hasFinePointer || (canHover && !hasCoarsePointer)) {
+        return 'desktop';
+      }
+
+      // Touch device (coarse pointer, no hover, or has touch)
+      if (hasCoarsePointer || !canHover || hasTouch) {
+        // Distinguish phone vs tablet by viewport width
+        if (width >= TABLET_MIN_WIDTH_PX) return 'tablet';
+        return 'phone';
+      }
+
+      // Fallback to viewport-based detection
+      if (width < TABLET_MIN_WIDTH_PX) return 'phone';
+      if (width < DESKTOP_MIN_WIDTH_PX) return 'tablet';
+      return 'desktop';
+    }
+
     /** Select a tab and update the UI */
     function selectTab(tab: HTMLButtonElement) {
       const device = tab.dataset.device;
@@ -300,6 +343,25 @@ const defaultDevice = firstExisting?.device ?? devices[0];
           nextTab.focus();
         }
       });
+    });
+
+    // Auto-select the tab matching the user's device type (if screenshot exists)
+    const detectedDevice = detectDeviceType();
+    const componentIds = new Set<string>();
+    tabs.forEach((tab) => {
+      if (tab.dataset.componentId) {
+        componentIds.add(tab.dataset.componentId);
+      }
+    });
+
+    componentIds.forEach((componentId) => {
+      const deviceTab = document.querySelector<HTMLButtonElement>(
+        `.device-tab[data-component-id="${componentId}"][data-device="${detectedDevice}"]`
+      );
+      // Only auto-select if the screenshot exists for this device
+      if (deviceTab && deviceTab.dataset.exists === 'true') {
+        selectTab(deviceTab);
+      }
     });
   }
 
