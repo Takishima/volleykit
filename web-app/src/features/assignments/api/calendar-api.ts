@@ -15,6 +15,7 @@
  */
 
 import { parseCalendarFeed, type CalendarAssignment, type ParseResult } from './ical';
+import { HttpStatus } from '@/shared/utils/constants';
 
 // Re-export types for consumers
 export type { CalendarAssignment, ParseResult } from './ical';
@@ -92,7 +93,7 @@ export async function fetchCalendarAssignments(
     // No credentials needed - public endpoint
   });
 
-  if (response.status === 404) {
+  if (response.status === HttpStatus.NOT_FOUND) {
     throw new CalendarNotFoundError(code);
   }
 
@@ -166,7 +167,7 @@ export async function validateCalendarCode(
     });
 
     // 404 means the calendar code doesn't exist
-    if (response.status === 404) {
+    if (response.status === HttpStatus.NOT_FOUND) {
       return false;
     }
 

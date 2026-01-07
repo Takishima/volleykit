@@ -43,6 +43,7 @@ import {
   ALLOWED_FILE_TYPES,
   DEFAULT_SEARCH_RESULTS_LIMIT,
 } from "./constants";
+import { BYTES_PER_KB } from "@/shared/utils/constants";
 
 // Network delay constants for realistic demo behavior
 const MOCK_NETWORK_DELAY_MS = 50;
@@ -725,7 +726,7 @@ export const mockApi = {
 
     // Validate file size
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+      const sizeMB = (file.size / (BYTES_PER_KB * BYTES_PER_KB)).toFixed(1);
       throw new Error(`File too large: ${sizeMB} MB. Maximum size is 10 MB.`);
     }
 

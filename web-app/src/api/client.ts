@@ -24,6 +24,7 @@ import {
   ALLOWED_FILE_TYPES,
   DEFAULT_SEARCH_RESULTS_LIMIT,
 } from "./constants";
+import { HttpStatus, BYTES_PER_KB } from "@/shared/utils/constants";
 
 // Base URL configuration - uses proxy URL if set, otherwise empty string for relative URLs
 const API_BASE = import.meta.env.VITE_API_PROXY_URL || "";
@@ -122,9 +123,9 @@ async function apiRequest<T>(
 
   if (!response.ok) {
     if (
-      response.status === 401 ||
-      response.status === 403 ||
-      response.status === 406
+      response.status === HttpStatus.UNAUTHORIZED ||
+      response.status === HttpStatus.FORBIDDEN ||
+      response.status === HttpStatus.NOT_ACCEPTABLE
     ) {
       clearSession();
       throw new Error("Session expired. Please log in again.");
@@ -608,7 +609,7 @@ export const api = {
     }
 
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+      const sizeMB = (file.size / (BYTES_PER_KB * BYTES_PER_KB)).toFixed(1);
       throw new Error(`File too large: ${sizeMB} MB. Maximum size is 10 MB.`);
     }
 
@@ -628,7 +629,7 @@ export const api = {
     });
 
     if (!response.ok) {
-      if (response.status === 401 || response.status === 403) {
+      if (response.status === HttpStatus.UNAUTHORIZED || response.status === HttpStatus.FORBIDDEN) {
         clearSession();
         throw new Error("Session expired. Please log in again.");
       }
@@ -674,9 +675,9 @@ export const api = {
     if (!response.ok) {
       // 406 indicates session expiry in TYPO3 Neos/Flow (same as apiRequest)
       if (
-        response.status === 401 ||
-        response.status === 403 ||
-        response.status === 406
+        response.status === HttpStatus.UNAUTHORIZED ||
+        response.status === HttpStatus.FORBIDDEN ||
+        response.status === HttpStatus.NOT_ACCEPTABLE
       ) {
         clearSession();
         throw new Error("Session expired. Please log in again.");

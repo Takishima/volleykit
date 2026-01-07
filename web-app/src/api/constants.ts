@@ -4,11 +4,13 @@
  * and demo modes.
  */
 
+import { BYTES_PER_KB } from "@/shared/utils/constants";
+
 /**
  * Maximum allowed file size for uploads (10 MB).
  * Used for scoresheet uploads and other file upload validations.
  */
-export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+export const MAX_FILE_SIZE_BYTES = 10 * BYTES_PER_KB * BYTES_PER_KB;
 
 /**
  * Allowed MIME types for file uploads.

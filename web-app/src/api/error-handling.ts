@@ -5,6 +5,9 @@
 
 import { z } from "zod";
 
+/** Maximum length for error message excerpts from HTML responses */
+const MAX_ERROR_EXCERPT_LENGTH = 200;
+
 /**
  * Strips HTML tags from text using character-by-character parsing.
  * This approach avoids regex backtracking issues while safely handling nested tags.
@@ -75,7 +78,7 @@ export async function parseErrorResponse(response: Response): Promise<string> {
     // Try to get text content for non-JSON responses
     if (contentType.includes("text/")) {
       const text = await response.text();
-      const cleanText = stripHtmlTags(text).trim().slice(0, 200);
+      const cleanText = stripHtmlTags(text).trim().slice(0, MAX_ERROR_EXCERPT_LENGTH);
       if (cleanText) {
         return cleanText;
       }

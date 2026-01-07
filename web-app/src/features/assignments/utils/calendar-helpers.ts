@@ -14,6 +14,7 @@
 
 import type { Assignment } from "@/api/client";
 import type { CalendarAssignment, RefereeRole, Gender } from "@/features/assignments/api/ical/types";
+import { HttpStatus } from "@/shared/utils/constants";
 
 /**
  * Maps iCal Gender type to API gender format.
@@ -325,7 +326,7 @@ export async function validateCalendarCode(
       return { valid: true };
     }
 
-    if (response.status === 404) {
+    if (response.status === HttpStatus.NOT_FOUND) {
       return { valid: false, error: "auth.calendarNotFound" };
     }
 
