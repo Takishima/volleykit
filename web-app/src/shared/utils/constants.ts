@@ -26,9 +26,6 @@ export const HttpStatus = {
   SERVICE_UNAVAILABLE: 503,
 } as const;
 
-/** Type representing any HTTP status code value */
-export type HttpStatusCode = (typeof HttpStatus)[keyof typeof HttpStatus];
-
 // ============================================================================
 // Time Conversion Factors
 // ============================================================================
@@ -60,6 +57,29 @@ export const BYTES_PER_KB = 1024;
 
 /** Bytes in one megabyte (binary: 1024^2) */
 export const BYTES_PER_MB = BYTES_PER_KB * BYTES_PER_KB;
+
+// ============================================================================
+// UI Animation Timing
+// ============================================================================
+
+/** Standard modal/sheet close animation duration (300ms) */
+export const MODAL_ANIMATION_MS = 300;
+
+/** Toast notification display duration (500ms minimum visibility) */
+export const TOAST_MIN_DURATION_MS = 500;
+
+// ============================================================================
+// Distance Thresholds (kilometers)
+// ============================================================================
+
+/** Short distance threshold - typically no transfers needed */
+export const SHORT_DISTANCE_KM = 10;
+
+/** Medium distance threshold - typically 1 transfer */
+export const MEDIUM_DISTANCE_KM = 30;
+
+/** Long distance threshold - typically 2 transfers */
+export const LONG_DISTANCE_KM = 60;
 
 // ============================================================================
 // Application URLs

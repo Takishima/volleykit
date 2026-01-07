@@ -5,7 +5,12 @@
 
 import type { Coordinates, TravelTimeResult, TravelTimeOptions, StationInfo } from "./types";
 import { calculateDistanceKm } from "@/shared/utils/distance";
-import { MINUTES_PER_HOUR } from "@/shared/utils/constants";
+import {
+  MINUTES_PER_HOUR,
+  SHORT_DISTANCE_KM,
+  MEDIUM_DISTANCE_KM,
+  LONG_DISTANCE_KM,
+} from "@/shared/utils/constants";
 
 /** Network delay for realistic demo behavior */
 const MOCK_DELAY_MS = 100;
@@ -35,9 +40,9 @@ function estimateTravelTimeFromDistance(distanceKm: number): number {
  * @returns Estimated number of transfers
  */
 function estimateTransfers(distanceKm: number): number {
-  if (distanceKm < 10) return 0;
-  if (distanceKm < 30) return 1;
-  if (distanceKm < 60) return 2;
+  if (distanceKm < SHORT_DISTANCE_KM) return 0;
+  if (distanceKm < MEDIUM_DISTANCE_KM) return 1;
+  if (distanceKm < LONG_DISTANCE_KM) return 2;
   return 3;
 }
 

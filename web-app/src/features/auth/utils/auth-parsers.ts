@@ -29,6 +29,9 @@ const TFA_PAGE_INDICATORS = [
   "TOTP",
 ] as const;
 
+/** Maximum characters to include in diagnostic HTML preview logs */
+const DIAGNOSTIC_PREVIEW_LENGTH = 500;
+
 /**
  * Login form fields extracted from the login page HTML.
  * The Neos Flow framework requires these fields for CSRF protection.
@@ -248,7 +251,7 @@ export async function submitLoginCredentials(
     redirected: response.redirected,
     url: response.url ?? "(no url)",
     htmlLength: html.length,
-    htmlPreview: html.slice(0, 500),
+    htmlPreview: html.slice(0, DIAGNOSTIC_PREVIEW_LENGTH),
   });
   return { success: false, error: "Login failed - please try again" };
 }

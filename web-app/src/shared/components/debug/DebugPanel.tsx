@@ -12,6 +12,7 @@
  * 2. Avoid polluting Tailwind CSS with debug-only classes
  * 3. Ensure styles work regardless of app theme/CSS state
  */
+/* eslint-disable @typescript-eslint/no-magic-numbers -- Debug panel uses inline styles with pixel values and truncation limits */
 import { useAuthStore, type Occupation } from "@/shared/stores/auth";
 import { useSettingsStore } from "@/shared/stores/settings";
 import { useActiveAssociationCode } from "@/features/auth/hooks/useActiveAssociation";

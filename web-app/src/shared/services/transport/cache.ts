@@ -10,9 +10,13 @@
  */
 
 import type { Coordinates } from "./types";
+import { MS_PER_HOUR, HOURS_PER_DAY } from "@/shared/utils/constants";
 
 /** Day types for Swiss public transport schedules */
 export type DayType = "weekday" | "saturday" | "sunday";
+
+/** Cache TTL in days */
+const CACHE_TTL_DAYS = 14;
 
 /**
  * Cache TTL: 14 days in milliseconds.
@@ -21,7 +25,7 @@ export type DayType = "weekday" | "saturday" | "sunday";
  * signed integer limit for setTimeout (~24.8 days max). Values above
  * ~2.147 billion ms cause silent clamping to 1ms.
  */
-export const TRAVEL_TIME_CACHE_TTL = 14 * 24 * 60 * 60 * 1000;
+export const TRAVEL_TIME_CACHE_TTL = CACHE_TTL_DAYS * HOURS_PER_DAY * MS_PER_HOUR;
 
 /** Cache stale time: 14 days (TanStack Query config) */
 export const TRAVEL_TIME_STALE_TIME = TRAVEL_TIME_CACHE_TTL;
