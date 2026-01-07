@@ -3,177 +3,157 @@ import DocLayout from '../layouts/DocLayout.astro';
 import DeviceScreenshot from '../components/DeviceScreenshot.astro';
 import InfoBox from '../components/InfoBox.astro';
 import { BASE_PATH } from '../constants';
+import { t } from '../i18n';
 ---
 
 <DocLayout
-  title="Settings"
-  description="Customize your VolleyKit experience with language, location, and privacy settings."
+  title={t('pages.settings.title')}
+  description={t('pages.settings.description')}
 >
-  <h1>App Settings</h1>
+  <h1 data-i18n="settings.heading">{t('settings.heading')}</h1>
 
-  <p class="lead text-text-secondary dark:text-text-secondary-dark">
-    Customize VolleyKit to match your preferences. Configure language, home
-    location, and privacy options.
+  <p class="lead text-text-secondary dark:text-text-secondary-dark" data-i18n="settings.lead">
+    {t('settings.lead')}
   </p>
 
-  <h2>Accessing Settings</h2>
+  <h2 data-i18n="settings.accessing.title">{t('settings.accessing.title')}</h2>
 
-  <p>
-    Open settings by tapping the gear icon in the navigation bar, or by selecting
-    "Settings" from the main menu.
-  </p>
+  <p data-i18n="settings.accessing.description">{t('settings.accessing.description')}</p>
 
   <DeviceScreenshot
     id="settings-overview"
-    alt="Settings page showing all available options"
-    caption="VolleyKit settings page"
+    alt={t('settings.accessing.screenshotAlt')}
+    caption={t('settings.accessing.screenshotCaption')}
+    altKey="settings.accessing.screenshotAlt"
+    captionKey="settings.accessing.screenshotCaption"
     instructions="Take a screenshot of the full settings page showing all sections: profile, language, location, and data settings. Show the organized layout with clear section headers."
   />
 
-  <h2>Profile Section</h2>
+  <h2 data-i18n="settings.profile.title">{t('settings.profile.title')}</h2>
 
-  <p>
-    The profile section shows your account information:
-  </p>
+  <p data-i18n="settings.profile.description">{t('settings.profile.description')}</p>
 
   <ul>
-    <li><strong>Name</strong> – Your registered referee name</li>
-    <li><strong>License number</strong> – Your Swiss Volley referee license</li>
-    <li><strong>Email</strong> – Your registered email address</li>
-    <li><strong>Session status</strong> – Your current login status</li>
+    <li data-i18n="settings.profile.fields.name">{t('settings.profile.fields.name')}</li>
+    <li data-i18n="settings.profile.fields.licenseNumber">{t('settings.profile.fields.licenseNumber')}</li>
+    <li data-i18n="settings.profile.fields.email">{t('settings.profile.fields.email')}</li>
+    <li data-i18n="settings.profile.fields.sessionStatus">{t('settings.profile.fields.sessionStatus')}</li>
   </ul>
 
   <InfoBox type="info">
-    <p>
-      Profile information comes from volleymanager and can only be changed
-      on the official website, not in VolleyKit.
+    <p data-i18n="settings.profile.infoBox">
+      {t('settings.profile.infoBox')}
     </p>
   </InfoBox>
 
-  <h3>Logging Out</h3>
+  <h3 data-i18n="settings.profile.loggingOut.title">{t('settings.profile.loggingOut.title')}</h3>
 
-  <p>
-    Tap "Log Out" to sign out of your account. This clears your session and
-    any locally stored data.
-  </p>
+  <p data-i18n="settings.profile.loggingOut.description">{t('settings.profile.loggingOut.description')}</p>
 
-  <h2>Language Settings</h2>
+  <h2 data-i18n="settings.language.title">{t('settings.language.title')}</h2>
 
-  <p>
-    VolleyKit supports multiple languages to match your preference:
-  </p>
+  <p data-i18n="settings.language.description">{t('settings.language.description')}</p>
 
   <ul>
-    <li><strong>Deutsch</strong> – German</li>
-    <li><strong>English</strong> – English</li>
-    <li><strong>Français</strong> – French</li>
-    <li><strong>Italiano</strong> – Italian</li>
+    <li data-i18n="settings.language.options.deutsch">{t('settings.language.options.deutsch')}</li>
+    <li data-i18n="settings.language.options.english">{t('settings.language.options.english')}</li>
+    <li data-i18n="settings.language.options.francais">{t('settings.language.options.francais')}</li>
+    <li data-i18n="settings.language.options.italiano">{t('settings.language.options.italiano')}</li>
   </ul>
 
-  <p>
-    The app will automatically use your browser's language if it's supported,
-    but you can override this in settings.
-  </p>
+  <p data-i18n="settings.language.autoDetect">{t('settings.language.autoDetect')}</p>
 
   <DeviceScreenshot
     id="language-settings"
-    alt="Language selection showing available options"
-    caption="Changing the app language"
+    alt={t('settings.language.screenshotAlt')}
+    caption={t('settings.language.screenshotCaption')}
+    altKey="settings.language.screenshotAlt"
+    captionKey="settings.language.screenshotCaption"
     instructions="Take a screenshot of the language setting section or dropdown. Show the available language options with the current selection highlighted."
   />
 
-  <h2>Home Location</h2>
+  <h2 data-i18n="settings.homeLocation.title">{t('settings.homeLocation.title')}</h2>
 
-  <p>
-    Set your home location to enable travel time calculations. This is used
-    to show how long it takes to reach each game venue.
-  </p>
+  <p data-i18n="settings.homeLocation.description">{t('settings.homeLocation.description')}</p>
 
   <ul>
-    <li>Enter your address or nearest train station</li>
-    <li>Use the autocomplete suggestions for accuracy</li>
-    <li>Travel times will appear on your assignment cards</li>
+    <li data-i18n="settings.homeLocation.instructions.enterAddress">{t('settings.homeLocation.instructions.enterAddress')}</li>
+    <li data-i18n="settings.homeLocation.instructions.useAutocomplete">{t('settings.homeLocation.instructions.useAutocomplete')}</li>
+    <li data-i18n="settings.homeLocation.instructions.travelTimesAppear">{t('settings.homeLocation.instructions.travelTimesAppear')}</li>
   </ul>
 
   <DeviceScreenshot
     id="home-location-setting"
-    alt="Home location input with address search"
-    caption="Setting your home location"
+    alt={t('settings.homeLocation.screenshotAlt')}
+    caption={t('settings.homeLocation.screenshotCaption')}
+    altKey="settings.homeLocation.screenshotAlt"
+    captionKey="settings.homeLocation.screenshotCaption"
     instructions="Take a screenshot of the home location input showing the address search field and any autocomplete suggestions."
   />
 
   <InfoBox type="tip">
-    <p>
-      If you typically take public transport, use your nearest station as
-      your home location for more accurate journey times.
+    <p data-i18n="settings.homeLocation.tip">
+      {t('settings.homeLocation.tip')}
     </p>
   </InfoBox>
 
-  <p>
-    See the <a href={`${BASE_PATH}/travel-time/`}>Travel Time guide</a> for more
-    details on this feature.
+  <p data-i18n="settings.homeLocation.seeGuide">
+    {t('settings.homeLocation.seeGuide')}
+    <a href={`${BASE_PATH}/travel-time/`} data-i18n-skip="true">{t('nav.travelTime')}</a>
   </p>
 
-  <h2>Data & Privacy</h2>
+  <h2 data-i18n="settings.dataPrivacy.title">{t('settings.dataPrivacy.title')}</h2>
 
-  <p>
-    Control how your data is handled:
-  </p>
+  <p data-i18n="settings.dataPrivacy.description">{t('settings.dataPrivacy.description')}</p>
 
-  <h3>Local Storage</h3>
+  <h3 data-i18n="settings.dataPrivacy.localStorage.title">{t('settings.dataPrivacy.localStorage.title')}</h3>
 
-  <p>
-    VolleyKit stores data locally to enable offline access and improve performance:
-  </p>
+  <p data-i18n="settings.dataPrivacy.localStorage.description">{t('settings.dataPrivacy.localStorage.description')}</p>
 
   <ul>
-    <li><strong>Assignment cache</strong> – Your recent assignments</li>
-    <li><strong>Preferences</strong> – Your settings and preferences</li>
-    <li><strong>Travel data</strong> – Cached journey information</li>
+    <li data-i18n="settings.dataPrivacy.localStorage.items.assignmentCache">{t('settings.dataPrivacy.localStorage.items.assignmentCache')}</li>
+    <li data-i18n="settings.dataPrivacy.localStorage.items.preferences">{t('settings.dataPrivacy.localStorage.items.preferences')}</li>
+    <li data-i18n="settings.dataPrivacy.localStorage.items.travelData">{t('settings.dataPrivacy.localStorage.items.travelData')}</li>
   </ul>
 
-  <h3>Clear Local Data</h3>
+  <h3 data-i18n="settings.dataPrivacy.clearData.title">{t('settings.dataPrivacy.clearData.title')}</h3>
 
-  <p>
-    You can clear all locally stored data from the settings page. This will:
-  </p>
+  <p data-i18n="settings.dataPrivacy.clearData.description">{t('settings.dataPrivacy.clearData.description')}</p>
 
   <ul>
-    <li>Remove cached assignments and travel data</li>
-    <li>Reset all preferences to defaults</li>
-    <li>Require you to log in again</li>
+    <li data-i18n="settings.dataPrivacy.clearData.effects.removeCached">{t('settings.dataPrivacy.clearData.effects.removeCached')}</li>
+    <li data-i18n="settings.dataPrivacy.clearData.effects.resetPreferences">{t('settings.dataPrivacy.clearData.effects.resetPreferences')}</li>
+    <li data-i18n="settings.dataPrivacy.clearData.effects.requireLogin">{t('settings.dataPrivacy.clearData.effects.requireLogin')}</li>
   </ul>
 
   <InfoBox type="warning">
-    <p>
-      Clearing local data cannot be undone. You'll need to reload your
-      assignments the next time you open the app.
+    <p data-i18n="settings.dataPrivacy.clearData.warning">
+      {t('settings.dataPrivacy.clearData.warning')}
     </p>
   </InfoBox>
 
   <DeviceScreenshot
     id="data-privacy-settings"
-    alt="Data and privacy settings section with clear data button"
-    caption="Data and privacy options"
+    alt={t('settings.dataPrivacy.screenshotAlt')}
+    caption={t('settings.dataPrivacy.screenshotCaption')}
+    altKey="settings.dataPrivacy.screenshotAlt"
+    captionKey="settings.dataPrivacy.screenshotCaption"
     instructions="Take a screenshot of the data/privacy section showing the clear data button and any explanatory text about what data is stored."
   />
 
-  <h2>About VolleyKit</h2>
+  <h2 data-i18n="settings.about.title">{t('settings.about.title')}</h2>
 
-  <p>
-    The About section shows:
-  </p>
+  <p data-i18n="settings.about.description">{t('settings.about.description')}</p>
 
   <ul>
-    <li><strong>Version number</strong> – Current app version</li>
-    <li><strong>Last updated</strong> – When the app was last updated</li>
-    <li><strong>Links</strong> – GitHub repository, issue tracker, help site</li>
+    <li data-i18n="settings.about.items.versionNumber">{t('settings.about.items.versionNumber')}</li>
+    <li data-i18n="settings.about.items.lastUpdated">{t('settings.about.items.lastUpdated')}</li>
+    <li data-i18n="settings.about.items.links">{t('settings.about.items.links')}</li>
   </ul>
 
   <InfoBox type="info">
-    <p>
-      Check the version number when reporting issues – it helps us identify
-      and fix problems faster.
+    <p data-i18n="settings.about.infoBox">
+      {t('settings.about.infoBox')}
     </p>
   </InfoBox>
 </DocLayout>

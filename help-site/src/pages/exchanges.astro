@@ -3,172 +3,158 @@ import DocLayout from '../layouts/DocLayout.astro';
 import DeviceScreenshot from '../components/DeviceScreenshot.astro';
 import InfoBox from '../components/InfoBox.astro';
 import StepList from '../components/StepList.astro';
+import { t } from '../i18n';
 ---
 
 <DocLayout
-  title="Exchanges"
-  description="Learn how to request game exchanges and pick up available games from other referees in VolleyKit."
+  title={t('pages.exchanges.title')}
+  description={t('pages.exchanges.description')}
 >
-  <h1>Game Exchanges</h1>
+  <h1 data-i18n="exchanges.heading">{t('exchanges.heading')}</h1>
 
-  <p class="lead text-text-secondary dark:text-text-secondary-dark">
-    The exchange system allows referees to swap games when they can't attend their
-    scheduled assignments. You can request exchanges for your games or pick up
-    games from other referees.
+  <p class="lead text-text-secondary dark:text-text-secondary-dark" data-i18n="exchanges.lead">
+    {t('exchanges.lead')}
   </p>
 
-  <h2>What Are Exchanges?</h2>
+  <h2 data-i18n="exchanges.whatAre.title">{t('exchanges.whatAre.title')}</h2>
 
-  <p>
-    An exchange is a request from a referee who can't attend their scheduled game
-    and is looking for a replacement. The volleymanager system maintains an exchange
-    board where referees can:
-  </p>
+  <p data-i18n="exchanges.whatAre.description">{t('exchanges.whatAre.description')}</p>
 
   <ul>
-    <li>Post their games for exchange</li>
-    <li>Browse available games from other referees</li>
-    <li>Accept games that fit their schedule</li>
+    <li data-i18n="exchanges.whatAre.features.postGames">{t('exchanges.whatAre.features.postGames')}</li>
+    <li data-i18n="exchanges.whatAre.features.browseGames">{t('exchanges.whatAre.features.browseGames')}</li>
+    <li data-i18n="exchanges.whatAre.features.acceptGames">{t('exchanges.whatAre.features.acceptGames')}</li>
   </ul>
 
   <InfoBox type="info">
-    <p>
-      Exchanges are managed through the official volleymanager system. VolleyKit
-      provides a more user-friendly interface to the same exchange board.
+    <p data-i18n="exchanges.whatAre.infoBox">
+      {t('exchanges.whatAre.infoBox')}
     </p>
   </InfoBox>
 
-  <h2>Requesting an Exchange</h2>
+  <h2 data-i18n="exchanges.requesting.title">{t('exchanges.requesting.title')}</h2>
 
-  <p>
-    When you can't attend one of your scheduled games, you can request an exchange
-    to find a replacement referee.
-  </p>
+  <p data-i18n="exchanges.requesting.description">{t('exchanges.requesting.description')}</p>
 
   <StepList
     steps={[
       {
-        title: 'Find the assignment',
-        description: 'Go to your Assignments tab and locate the game you want to exchange.',
+        title: t('exchanges.requesting.steps.findAssignment.title'),
+        description: t('exchanges.requesting.steps.findAssignment.description'),
+        titleKey: 'exchanges.requesting.steps.findAssignment.title',
+        descriptionKey: 'exchanges.requesting.steps.findAssignment.description',
       },
       {
-        title: 'Swipe right on the card',
-        description: 'Swipe the assignment card to the right to reveal the exchange action, then tap it. The game will be posted to the exchange board.',
+        title: t('exchanges.requesting.steps.swipeRight.title'),
+        description: t('exchanges.requesting.steps.swipeRight.description'),
+        titleKey: 'exchanges.requesting.steps.swipeRight.title',
+        descriptionKey: 'exchanges.requesting.steps.swipeRight.description',
       },
     ]}
   />
 
   <DeviceScreenshot
     id="exchange-request"
-    alt="Assignment card with exchange swipe action revealed"
-    caption="Requesting an exchange for a game"
+    alt={t('exchanges.requesting.screenshotAlt')}
+    caption={t('exchanges.requesting.screenshotCaption')}
+    altKey="exchanges.requesting.screenshotAlt"
+    captionKey="exchanges.requesting.screenshotCaption"
     instructions="Take a screenshot showing an assignment card with the exchange swipe action revealed on the right side."
   />
 
-  <InfoBox type="warning" title="Request early">
-    <p>
-      The earlier you request an exchange, the more likely you'll find a replacement.
-      Last-minute requests often go unfilled.
+  <InfoBox type="warning" title={t('exchanges.requesting.warningTitle')} titleKey="exchanges.requesting.warningTitle">
+    <p data-i18n="exchanges.requesting.warningContent">
+      {t('exchanges.requesting.warningContent')}
     </p>
   </InfoBox>
 
-  <h2>Viewing Available Exchanges</h2>
+  <h2 data-i18n="exchanges.viewing.title">{t('exchanges.viewing.title')}</h2>
 
-  <p>
-    The Exchanges tab shows all games currently available for exchange. These are
-    games that other referees have posted and are looking for replacements.
-  </p>
+  <p data-i18n="exchanges.viewing.description">{t('exchanges.viewing.description')}</p>
 
   <DeviceScreenshot
     id="exchange-list"
-    alt="List of available exchange games from other referees"
-    caption="Available games on the exchange board"
+    alt={t('exchanges.viewing.screenshotAlt')}
+    caption={t('exchanges.viewing.screenshotCaption')}
+    altKey="exchanges.viewing.screenshotAlt"
+    captionKey="exchanges.viewing.screenshotCaption"
     instructions="Take a screenshot of the exchanges page showing several available games. Show game details including date, teams, venue, and the requesting referee's info."
   />
 
-  <h3>Filtering Exchanges</h3>
+  <h3 data-i18n="exchanges.viewing.filtering.title">{t('exchanges.viewing.filtering.title')}</h3>
 
-  <p>
-    Filter the exchange list to find games that work for you. Filters become
-    available after you configure the required settings:
-  </p>
+  <p data-i18n="exchanges.viewing.filtering.description">{t('exchanges.viewing.filtering.description')}</p>
 
   <ul>
-    <li><strong>Distance</strong> – Filter by maximum distance from your home location. Requires setting your home location in Settings.</li>
-    <li><strong>Travel time</strong> – Filter by maximum travel time using public transport. Requires both a home location and enabling the public transport API in Settings.</li>
+    <li data-i18n="exchanges.viewing.filtering.distance">{t('exchanges.viewing.filtering.distance')}</li>
+    <li data-i18n="exchanges.viewing.filtering.travelTime">{t('exchanges.viewing.filtering.travelTime')}</li>
   </ul>
 
-  <p>
-    Once filters are available, they appear as toggle chips next to the settings
-    gear icon. Tap the gear to configure the maximum values for each filter.
-  </p>
+  <p data-i18n="exchanges.viewing.filtering.usage">{t('exchanges.viewing.filtering.usage')}</p>
 
   <InfoBox type="tip">
-    <p>
-      Set your home location in Settings to unlock distance filtering. Enable the
-      public transport API to also filter by travel time.
+    <p data-i18n="exchanges.viewing.filtering.tip">
+      {t('exchanges.viewing.filtering.tip')}
     </p>
   </InfoBox>
 
-  <h2>Accepting an Exchange</h2>
+  <h2 data-i18n="exchanges.accepting.title">{t('exchanges.accepting.title')}</h2>
 
-  <p>
-    When you find a game you'd like to take over, you can accept the exchange:
-  </p>
+  <p data-i18n="exchanges.accepting.description">{t('exchanges.accepting.description')}</p>
 
   <StepList
     steps={[
       {
-        title: 'Review the game details',
-        description: 'Check the date, time, venue, and travel requirements.',
+        title: t('exchanges.accepting.steps.review.title'),
+        description: t('exchanges.accepting.steps.review.description'),
+        titleKey: 'exchanges.accepting.steps.review.title',
+        descriptionKey: 'exchanges.accepting.steps.review.description',
       },
       {
-        title: 'Swipe left on the card',
-        description: 'Swipe the exchange card to the left to reveal the take over action, then tap it.',
+        title: t('exchanges.accepting.steps.swipeLeft.title'),
+        description: t('exchanges.accepting.steps.swipeLeft.description'),
+        titleKey: 'exchanges.accepting.steps.swipeLeft.title',
+        descriptionKey: 'exchanges.accepting.steps.swipeLeft.description',
       },
       {
-        title: 'Confirm your acceptance',
-        description: 'Review the details and confirm your acceptance.',
+        title: t('exchanges.accepting.steps.confirm.title'),
+        description: t('exchanges.accepting.steps.confirm.description'),
+        titleKey: 'exchanges.accepting.steps.confirm.title',
+        descriptionKey: 'exchanges.accepting.steps.confirm.description',
       },
       {
-        title: 'Game added to your schedule',
-        description: 'The game now appears in your assignments.',
+        title: t('exchanges.accepting.steps.gameAdded.title'),
+        description: t('exchanges.accepting.steps.gameAdded.description'),
+        titleKey: 'exchanges.accepting.steps.gameAdded.title',
+        descriptionKey: 'exchanges.accepting.steps.gameAdded.description',
       },
     ]}
   />
 
   <InfoBox type="tip">
-    <p>
-      Make sure you can actually attend the game before accepting. Once accepted,
-      the original referee is released from the assignment.
+    <p data-i18n="exchanges.accepting.tip">
+      {t('exchanges.accepting.tip')}
     </p>
   </InfoBox>
 
-  <h2>Managing Your Exchange Requests</h2>
+  <h2 data-i18n="exchanges.managing.title">{t('exchanges.managing.title')}</h2>
 
-  <p>
-    You can view and manage your active exchange requests from the Exchanges tab.
-    If you no longer need an exchange (e.g., your schedule changed), you can
-    cancel the request before someone accepts it.
-  </p>
+  <p data-i18n="exchanges.managing.description">{t('exchanges.managing.description')}</p>
 
-  <h3>Canceling a Request</h3>
+  <h3 data-i18n="exchanges.managing.canceling.title">{t('exchanges.managing.canceling.title')}</h3>
 
-  <p>
-    To cancel an exchange request you've made:
-  </p>
+  <p data-i18n="exchanges.managing.canceling.description">{t('exchanges.managing.canceling.description')}</p>
 
   <ol>
-    <li>Go to the Exchanges tab</li>
-    <li>Select the "Added by Me" tab to see your pending requests</li>
-    <li>Swipe right on the request card to reveal the remove action, then tap it</li>
-    <li>Confirm the cancellation</li>
+    <li data-i18n="exchanges.managing.canceling.steps.goToExchanges">{t('exchanges.managing.canceling.steps.goToExchanges')}</li>
+    <li data-i18n="exchanges.managing.canceling.steps.selectAddedByMe">{t('exchanges.managing.canceling.steps.selectAddedByMe')}</li>
+    <li data-i18n="exchanges.managing.canceling.steps.swipeRight">{t('exchanges.managing.canceling.steps.swipeRight')}</li>
+    <li data-i18n="exchanges.managing.canceling.steps.confirmCancellation">{t('exchanges.managing.canceling.steps.confirmCancellation')}</li>
   </ol>
 
   <InfoBox type="info">
-    <p>
-      You can only cancel an exchange request if no one has accepted it yet.
-      Once accepted, the exchange is final.
+    <p data-i18n="exchanges.managing.canceling.infoBox">
+      {t('exchanges.managing.canceling.infoBox')}
     </p>
   </InfoBox>
 </DocLayout>
