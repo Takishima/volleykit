@@ -198,12 +198,14 @@ export function AssignmentsPage() {
   const groupedData = useMemo(() => {
     if (!data || data.length === 0) return [];
     // For calendar mode, CalendarAssignment has startTime, regular Assignment has refereeGame?.game?.startingDateTime
-    const getDate = isCalendarMode
-      ? (a: { startTime?: string }) => a.startTime
-      : (a: { refereeGame?: { game?: { startingDateTime?: string } } }) =>
-          a.refereeGame?.game?.startingDateTime;
+    // When showDummyData is true, always use regular Assignment extractor since tour dummy is an Assignment
+    const getDate =
+      isCalendarMode && !showDummyData
+        ? (a: { startTime?: string }) => a.startTime
+        : (a: { refereeGame?: { game?: { startingDateTime?: string } } }) =>
+            a.refereeGame?.game?.startingDateTime;
     return groupByWeek(data, getDate as (item: unknown) => string | undefined);
-  }, [data, isCalendarMode]);
+  }, [data, isCalendarMode, showDummyData]);
 
   const getSwipeConfig = useCallback(
     (assignment: Assignment) => {
