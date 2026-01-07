@@ -110,6 +110,9 @@ const fr: Translations = {
       swipeSuccess: "Excellent glissement ! Vous avez compris le principe.",
       tapSuccess: "Parfait ! Appuyez pour découvrir plus de détails.",
     },
+    accessibility: {
+      swipeDemoInProgress: "Démonstration du geste de glissement",
+    },
   },
   common: {
     loading: "Chargement...",

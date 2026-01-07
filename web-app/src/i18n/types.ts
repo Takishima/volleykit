@@ -604,5 +604,8 @@ export interface Translations {
       swipeSuccess: string;
       tapSuccess: string;
     };
+    accessibility: {
+      swipeDemoInProgress: string;
+    };
   };
 }

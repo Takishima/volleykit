@@ -1,4 +1,6 @@
 import { useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 interface TourAutoSwipeProps {
   targetSelector: string;
@@ -21,6 +23,7 @@ export function TourAutoSwipe({
   delay = DEFAULT_DELAY_MS,
   onComplete,
 }: TourAutoSwipeProps) {
+  const { t } = useTranslation();
   const animationRef = useRef<number | null>(null);
   const hasAnimatedRef = useRef(false);
   const cleanupRef = useRef<(() => void) | null>(null);
@@ -100,6 +103,16 @@ export function TourAutoSwipe({
     };
   }, [delay, runAnimation]);
 
-  // This component doesn't render anything visible
-  return null;
+  // Render a visually hidden aria-live region to announce the demo to screen readers
+  return createPortal(
+    <div
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      className="sr-only"
+    >
+      {t("tour.accessibility.swipeDemoInProgress")}
+    </div>,
+    document.body,
+  );
 }
