@@ -23,14 +23,19 @@ import { useAssociationSettings, useActiveSeason } from "@/features/settings/hoo
 import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_DATE_RANGE_DAYS,
+  THIS_WEEK_DAYS,
+  NEXT_MONTH_DAYS,
   VALIDATION_CLOSED_STALE_TIME_MS,
+  ASSIGNMENTS_STALE_TIME_MS,
   fetchAllAssignmentPages,
   parseDateOrFallback,
   sortByGameDate,
   createDemoQueryResult,
   getGameTimestamp,
 } from "@/shared/hooks/usePaginatedQuery";
-import { MS_PER_MINUTE } from "@/shared/utils/constants";
+
+/** Stale time for assignment details - longer since details rarely change */
+const ASSIGNMENT_DETAILS_STALE_TIME_MS = ASSIGNMENTS_STALE_TIME_MS * 2;
 
 // Re-export calendar assignments hook for calendar mode
 export { useCalendarAssignments } from "./useCalendarAssignments";
@@ -69,12 +74,12 @@ export function getDateRangeForPeriod(
     case "thisWeek":
       return {
         from: startOfDay(now).toISOString(),
-        to: endOfDay(addDays(now, 7)).toISOString(),
+        to: endOfDay(addDays(now, THIS_WEEK_DAYS)).toISOString(),
       };
     case "nextMonth":
       return {
         from: startOfDay(now).toISOString(),
-        to: endOfDay(addDays(now, 30)).toISOString(),
+        to: endOfDay(addDays(now, NEXT_MONTH_DAYS)).toISOString(),
       };
     case "custom":
       if (customRange) {
@@ -186,7 +191,7 @@ export function useAssignments(
     queryKey: queryKeys.assignments.list(config, associationKey),
     queryFn: () => apiClient.searchAssignments(config),
     select: (data) => data.items ?? EMPTY_ASSIGNMENTS,
-    staleTime: 5 * MS_PER_MINUTE,
+    staleTime: ASSIGNMENTS_STALE_TIME_MS,
     // Disable query in demo mode - we read directly from the store
     enabled: !isDemoMode,
   });
@@ -386,6 +391,6 @@ export function useAssignmentDetails(assignmentId: string | null) {
         "refereeGame.game.hall.primaryPostalAddress",
       ]),
     enabled: !!assignmentId,
-    staleTime: 10 * MS_PER_MINUTE,
+    staleTime: ASSIGNMENT_DETAILS_STALE_TIME_MS,
   });
 }

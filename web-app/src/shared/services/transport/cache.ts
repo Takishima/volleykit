@@ -18,6 +18,13 @@ export type DayType = "weekday" | "saturday" | "sunday";
 /** Cache TTL in days */
 const CACHE_TTL_DAYS = 14;
 
+// Day of week values (JavaScript Date.getDay() returns 0=Sunday, 6=Saturday)
+const SUNDAY = 0;
+const SATURDAY = 6;
+
+// Coordinate precision multiplier (~100m precision with 3 decimal places)
+const COORD_PRECISION_MULTIPLIER = 1000;
+
 /**
  * Cache TTL: 14 days in milliseconds.
  *
@@ -48,8 +55,8 @@ export const TRAVEL_TIME_STORAGE_KEY = "volleykit-travel-time-cache";
  */
 export function getDayType(date: Date = new Date()): DayType {
   const day = date.getDay();
-  if (day === 0) return "sunday";
-  if (day === 6) return "saturday";
+  if (day === SUNDAY) return "sunday";
+  if (day === SATURDAY) return "saturday";
   return "weekday";
 }
 
@@ -62,8 +69,8 @@ export function getDayType(date: Date = new Date()): DayType {
  */
 export function hashLocation(coords: Coordinates): string {
   // Round to 3 decimal places (~100m precision)
-  const lat = Math.round(coords.latitude * 1000) / 1000;
-  const lon = Math.round(coords.longitude * 1000) / 1000;
+  const lat = Math.round(coords.latitude * COORD_PRECISION_MULTIPLIER) / COORD_PRECISION_MULTIPLIER;
+  const lon = Math.round(coords.longitude * COORD_PRECISION_MULTIPLIER) / COORD_PRECISION_MULTIPLIER;
   return `${lat},${lon}`;
 }
 

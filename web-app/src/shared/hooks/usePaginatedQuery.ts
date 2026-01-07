@@ -13,6 +13,10 @@ export const DEFAULT_PAGE_SIZE = 100;
 export const MAX_FETCH_ALL_PAGES = 10; // Maximum pages to fetch (1000 items)
 export const DEFAULT_DATE_RANGE_DAYS = 365;
 
+// Date range period constants for assignment filtering
+export const THIS_WEEK_DAYS = 7;
+export const NEXT_MONTH_DAYS = 30;
+
 // Limit for fetching compensations when looking up by game number.
 // Higher than DEFAULT_PAGE_SIZE because we need to search through all compensations
 // to find the one matching the assignment's game.

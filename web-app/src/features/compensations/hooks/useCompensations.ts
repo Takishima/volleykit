@@ -15,8 +15,7 @@ import { useAuthStore } from "@/shared/stores/auth";
 import { useDemoStore } from "@/shared/stores/demo";
 import { createLogger } from "@/shared/utils/logger";
 import { queryKeys } from "@/api/queryKeys";
-import { DEFAULT_PAGE_SIZE, COMPENSATION_LOOKUP_LIMIT } from "@/shared/hooks/usePaginatedQuery";
-import { MS_PER_MINUTE } from "@/shared/utils/constants";
+import { DEFAULT_PAGE_SIZE, COMPENSATION_LOOKUP_LIMIT, COMPENSATIONS_STALE_TIME_MS } from "@/shared/hooks/usePaginatedQuery";
 
 const log = createLogger("useCompensations");
 
@@ -88,7 +87,7 @@ export function useCompensations(paidFilter?: boolean) {
         (record) => record.convocationCompensation?.paymentDone === paidFilter,
       );
     },
-    staleTime: 5 * MS_PER_MINUTE,
+    staleTime: COMPENSATIONS_STALE_TIME_MS,
   });
 }
 

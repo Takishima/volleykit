@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { logger } from "@/shared/utils/logger";
-import { MS_PER_MINUTE } from "@/shared/utils/constants";
+import { ASSIGNMENTS_STALE_TIME_MS } from "@/shared/hooks/usePaginatedQuery";
 import type { ValidatedPersonSearchResult } from "@/api/validation";
 import type { RosterPanelModifications } from "@/features/validation/components/RosterVerificationPanel";
 import { getApiClient } from "@/api/client";
@@ -37,8 +37,6 @@ export type {
 // Re-export for consumers of this hook
 export type { PendingScorerData as PendingScorerInfo } from "@/shared/stores/demo";
 
-const GAME_DETAILS_STALE_TIME_MS = 5 * MS_PER_MINUTE;
-
 /**
  * Hook to manage validation state across all panels in the ValidateGameModal.
  *
@@ -73,7 +71,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
       return apiClient.getGameWithScoresheet(gameId);
     },
     enabled: !!gameId,
-    staleTime: GAME_DETAILS_STALE_TIME_MS,
+    staleTime: ASSIGNMENTS_STALE_TIME_MS,
   });
 
   const completionStatus = useMemo<PanelCompletionStatus>(

@@ -1,5 +1,10 @@
 import type { TourDefinition, TourDummyCompensation } from "@/shared/components/tour/definitions/types";
 
+// Tour dummy data configuration
+const TOUR_DAYS_PAST = 7;
+const TOUR_GAME_HOUR = 19;
+const TOUR_GAME_MINUTE = 30;
+
 export const compensationsTour: TourDefinition = {
   id: "compensations",
   steps: [
@@ -34,8 +39,8 @@ export const compensationsTour: TourDefinition = {
 // Generate a past date for the dummy compensation
 function getPastDate(): string {
   const date = new Date();
-  date.setDate(date.getDate() - 7);
-  date.setHours(19, 30, 0, 0);
+  date.setDate(date.getDate() - TOUR_DAYS_PAST);
+  date.setHours(TOUR_GAME_HOUR, TOUR_GAME_MINUTE, 0, 0);
   return date.toISOString();
 }
 

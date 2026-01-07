@@ -1,5 +1,9 @@
 import type { TourDefinition, TourDummyAssignment } from "@/shared/components/tour/definitions/types";
 
+// Tour dummy data configuration
+const TOUR_DAYS_AHEAD = 3;
+const TOUR_GAME_HOUR = 14;
+
 export const assignmentsTour: TourDefinition = {
   id: "assignments",
   steps: [
@@ -43,8 +47,8 @@ export const assignmentsTour: TourDefinition = {
 // Generate a date in the near future for the dummy assignment
 function getUpcomingDate(): string {
   const date = new Date();
-  date.setDate(date.getDate() + 3);
-  date.setHours(14, 0, 0, 0);
+  date.setDate(date.getDate() + TOUR_DAYS_AHEAD);
+  date.setHours(TOUR_GAME_HOUR, 0, 0, 0);
   return date.toISOString();
 }
 
