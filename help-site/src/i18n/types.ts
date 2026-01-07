@@ -28,6 +28,7 @@ export interface TranslationKeys {
     close: string;
     menu: string;
     search: string;
+    viewOnGithub: string;
   };
 
   // Landing page
@@ -38,7 +39,12 @@ export interface TranslationKeys {
     ctaOpenApp: string;
     ctaGetStarted: string;
     featuresTitle: string;
+    readyToStart: string;
     features: {
+      gettingStarted: {
+        title: string;
+        description: string;
+      };
       assignments: {
         title: string;
         description: string;
@@ -60,6 +66,10 @@ export interface TranslationKeys {
         description: string;
       };
       offlinePwa: {
+        title: string;
+        description: string;
+      };
+      settings: {
         title: string;
         description: string;
       };

@@ -2,6 +2,7 @@
 /**
  * FeatureCard component
  * Card with icon, title, description for feature grids
+ * Supports i18n via data-i18n attributes
  */
 
 interface Props {
@@ -9,9 +10,11 @@ interface Props {
   description: string;
   href: string;
   icon: string;
+  titleKey?: string;
+  descriptionKey?: string;
 }
 
-const { title, description, href, icon } = Astro.props;
+const { title, description, href, icon, titleKey, descriptionKey } = Astro.props;
 
 // Icon SVGs mapped by name
 const icons: Record<string, string> = {
@@ -50,18 +53,24 @@ const iconSvg = icons[icon] || icons['help-circle'];
   </div>
 
   <!-- Title -->
-  <h3 class="mb-2 font-semibold text-text-primary group-hover:text-primary-600 dark:text-text-primary-dark dark:group-hover:text-primary-400">
+  <h3
+    class="mb-2 font-semibold text-text-primary group-hover:text-primary-600 dark:text-text-primary-dark dark:group-hover:text-primary-400"
+    data-i18n={titleKey}
+  >
     {title}
   </h3>
 
   <!-- Description -->
-  <p class="text-sm text-text-secondary dark:text-text-secondary-dark">
+  <p
+    class="text-sm text-text-secondary dark:text-text-secondary-dark"
+    data-i18n={descriptionKey}
+  >
     {description}
   </p>
 
   <!-- Arrow indicator -->
   <div class="mt-4 flex items-center text-sm font-medium text-primary-600 dark:text-primary-400">
-    <span>Learn more</span>
+    <span data-i18n="common.learnMore">Learn more</span>
     <svg
       class="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1"
       fill="none"

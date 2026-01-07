@@ -5,53 +5,70 @@ import MobileNav from '../components/MobileNav.astro';
 import Footer from '../components/Footer.astro';
 import FeatureCard from '../components/FeatureCard.astro';
 import { BASE_PATH } from '../constants';
+import { t } from '../i18n';
 
 const features = [
   {
-    title: 'Getting Started',
-    description: 'Quick start guide to set up and use VolleyKit for the first time.',
+    title: t('home.features.gettingStarted.title'),
+    description: t('home.features.gettingStarted.description'),
+    titleKey: 'home.features.gettingStarted.title',
+    descriptionKey: 'home.features.gettingStarted.description',
     href: `${BASE_PATH}/getting-started/`,
     icon: 'rocket',
   },
   {
-    title: 'Assignments',
-    description: 'View and manage your upcoming volleyball referee games.',
+    title: t('home.features.assignments.title'),
+    description: t('home.features.assignments.description'),
+    titleKey: 'home.features.assignments.title',
+    descriptionKey: 'home.features.assignments.description',
     href: `${BASE_PATH}/assignments/`,
     icon: 'calendar-check',
   },
   {
-    title: 'Exchanges',
-    description: 'Request game swaps and offer your assignments to other referees.',
+    title: t('home.features.exchanges.title'),
+    description: t('home.features.exchanges.description'),
+    titleKey: 'home.features.exchanges.title',
+    descriptionKey: 'home.features.exchanges.description',
     href: `${BASE_PATH}/exchanges/`,
     icon: 'arrow-left-right',
   },
   {
-    title: 'Compensations',
-    description: 'Track your referee earnings and compensation history.',
+    title: t('home.features.compensations.title'),
+    description: t('home.features.compensations.description'),
+    titleKey: 'home.features.compensations.title',
+    descriptionKey: 'home.features.compensations.description',
     href: `${BASE_PATH}/compensations/`,
     icon: 'wallet',
   },
   {
-    title: 'Calendar Mode',
-    description: 'Read-only access to view assignments without logging in.',
+    title: t('home.features.calendarMode.title'),
+    description: t('home.features.calendarMode.description'),
+    titleKey: 'home.features.calendarMode.title',
+    descriptionKey: 'home.features.calendarMode.description',
     href: `${BASE_PATH}/calendar-mode/`,
     icon: 'calendar',
   },
   {
-    title: 'Travel Time',
-    description: 'Calculate travel times using Swiss public transport integration.',
+    title: t('home.features.travelTime.title'),
+    description: t('home.features.travelTime.description'),
+    titleKey: 'home.features.travelTime.title',
+    descriptionKey: 'home.features.travelTime.description',
     href: `${BASE_PATH}/travel-time/`,
     icon: 'train',
   },
   {
-    title: 'Offline & PWA',
-    description: 'Install the app and use it offline on your device.',
+    title: t('home.features.offlinePwa.title'),
+    description: t('home.features.offlinePwa.description'),
+    titleKey: 'home.features.offlinePwa.title',
+    descriptionKey: 'home.features.offlinePwa.description',
     href: `${BASE_PATH}/offline-pwa/`,
     icon: 'wifi-off',
   },
   {
-    title: 'Settings',
-    description: 'Customize your language, theme, and notification preferences.',
+    title: t('home.features.settings.title'),
+    description: t('home.features.settings.description'),
+    titleKey: 'home.features.settings.title',
+    descriptionKey: 'home.features.settings.description',
     href: `${BASE_PATH}/settings/`,
     icon: 'settings',
   },
@@ -82,13 +99,19 @@ const features = [
           </div>
 
           <!-- Heading -->
-          <h1 class="mb-4 text-4xl font-bold text-text-primary dark:text-text-primary-dark md:text-5xl">
-            VolleyKit Documentation
+          <h1
+            class="mb-4 text-4xl font-bold text-text-primary dark:text-text-primary-dark md:text-5xl"
+            data-i18n="home.title"
+          >
+            {t('home.title')}
           </h1>
 
           <!-- Subtitle -->
-          <p class="mx-auto mb-8 max-w-2xl text-lg text-text-secondary dark:text-text-secondary-dark md:text-xl">
-            Learn how to use VolleyKit to manage your volleyball referee assignments
+          <p
+            class="mx-auto mb-8 max-w-2xl text-lg text-text-secondary dark:text-text-secondary-dark md:text-xl"
+            data-i18n="home.description"
+          >
+            {t('home.description')}
           </p>
 
           <!-- CTA Button -->
@@ -96,7 +119,7 @@ const features = [
             href={`${BASE_PATH}/getting-started/`}
             class="inline-flex items-center gap-2 rounded-lg bg-primary-500 px-6 py-3 text-lg font-medium text-primary-950 transition-colors hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
           >
-            Get Started
+            <span data-i18n="home.ctaGetStarted">{t('home.ctaGetStarted')}</span>
             <svg
               class="h-5 w-5"
               fill="none"
@@ -116,8 +139,11 @@ const features = [
 
       <!-- Feature Grid -->
       <section class="container mx-auto px-4 py-16">
-        <h2 class="mb-8 text-center text-2xl font-bold text-text-primary dark:text-text-primary-dark md:text-3xl">
-          Explore the Documentation
+        <h2
+          class="mb-8 text-center text-2xl font-bold text-text-primary dark:text-text-primary-dark md:text-3xl"
+          data-i18n="home.featuresTitle"
+        >
+          {t('home.featuresTitle')}
         </h2>
 
         <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -127,6 +153,8 @@ const features = [
               description={feature.description}
               href={feature.href}
               icon={feature.icon}
+              titleKey={feature.titleKey}
+              descriptionKey={feature.descriptionKey}
             />
           ))}
         </div>
@@ -135,8 +163,11 @@ const features = [
       <!-- Quick Links Section -->
       <section class="border-t border-border-default bg-surface-subtle py-12 dark:border-border-default-dark dark:bg-surface-subtle-dark">
         <div class="container mx-auto px-4 text-center">
-          <h2 class="mb-6 text-xl font-bold text-text-primary dark:text-text-primary-dark">
-            Ready to get started?
+          <h2
+            class="mb-6 text-xl font-bold text-text-primary dark:text-text-primary-dark"
+            data-i18n="home.readyToStart"
+          >
+            {t('home.readyToStart')}
           </h2>
           <div class="flex flex-wrap justify-center gap-4">
             <a
@@ -145,7 +176,7 @@ const features = [
               rel="noopener noreferrer"
               class="inline-flex items-center gap-2 rounded-lg bg-primary-500 px-5 py-2.5 font-medium text-primary-950 transition-colors hover:bg-primary-600"
             >
-              Open VolleyKit App
+              <span data-i18n="common.openApp">{t('common.openApp')}</span>
               <svg
                 class="h-4 w-4"
                 fill="none"
@@ -173,7 +204,7 @@ const features = [
                   d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
                   clip-rule="evenodd"></path>
               </svg>
-              View on GitHub
+              <span data-i18n="common.viewOnGithub">{t('common.viewOnGithub')}</span>
             </a>
           </div>
         </div>

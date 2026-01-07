@@ -23,6 +23,7 @@ export const en: TranslationKeys = {
     close: 'Close',
     menu: 'Menu',
     search: 'Search',
+    viewOnGithub: 'View on GitHub',
   },
 
   home: {
@@ -32,37 +33,48 @@ export const en: TranslationKeys = {
       'Learn how to use VolleyKit to manage your volleyball referee assignments, exchanges, and compensations.',
     ctaOpenApp: 'Open App',
     ctaGetStarted: 'Get Started',
-    featuresTitle: 'Features',
+    featuresTitle: 'Explore the Documentation',
+    readyToStart: 'Ready to get started?',
     features: {
+      gettingStarted: {
+        title: 'Getting Started',
+        description:
+          'Quick start guide to set up and use VolleyKit for the first time.',
+      },
       assignments: {
         title: 'Assignments',
         description:
-          'View and manage your upcoming referee assignments with all the details you need.',
+          'View and manage your upcoming volleyball referee games.',
       },
       exchanges: {
         title: 'Exchanges',
         description:
-          'Request and accept assignment exchanges with other referees easily.',
+          'Request game swaps and offer your assignments to other referees.',
       },
       compensations: {
         title: 'Compensations',
         description:
-          'Track your referee compensation payments and history in one place.',
+          'Track your referee earnings and compensation history.',
       },
       calendarMode: {
         title: 'Calendar Mode',
         description:
-          'Quick read-only access to your schedule without full login.',
+          'Read-only access to view assignments without logging in.',
       },
       travelTime: {
         title: 'Travel Time',
         description:
-          'See how long it takes to reach each venue using Swiss public transport.',
+          'Calculate travel times using Swiss public transport integration.',
       },
       offlinePwa: {
         title: 'Offline & PWA',
         description:
-          'Access your assignments even without internet. Install as an app.',
+          'Install the app and use it offline on your device.',
+      },
+      settings: {
+        title: 'Settings',
+        description:
+          'Customize your language, theme, and notification preferences.',
       },
     },
   },

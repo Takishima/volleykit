@@ -23,6 +23,7 @@ export const de: TranslationKeys = {
     close: 'Schliessen',
     menu: 'Menü',
     search: 'Suchen',
+    viewOnGithub: 'Auf GitHub ansehen',
   },
 
   home: {
@@ -32,37 +33,48 @@ export const de: TranslationKeys = {
       'Erfahren Sie, wie Sie VolleyKit nutzen können, um Ihre Volleyball-Schiedsrichtereinsätze, Tauschbörse und Vergütungen zu verwalten.',
     ctaOpenApp: 'App öffnen',
     ctaGetStarted: 'Jetzt starten',
-    featuresTitle: 'Funktionen',
+    featuresTitle: 'Dokumentation erkunden',
+    readyToStart: 'Bereit loszulegen?',
     features: {
+      gettingStarted: {
+        title: 'Erste Schritte',
+        description:
+          'Schnellstartanleitung zur Einrichtung und Nutzung von VolleyKit.',
+      },
       assignments: {
         title: 'Einsätze',
         description:
-          'Sehen und verwalten Sie Ihre anstehenden Schiedsrichtereinsätze mit allen benötigten Details.',
+          'Sehen und verwalten Sie Ihre anstehenden Volleyball-Schiedsrichterspiele.',
       },
       exchanges: {
         title: 'Tauschbörse',
         description:
-          'Fordern Sie einfach Einsatztausche mit anderen Schiedsrichtern an und akzeptieren Sie diese.',
+          'Fordern Sie Spieltausche an und bieten Sie Ihre Einsätze anderen Schiedsrichtern an.',
       },
       compensations: {
         title: 'Vergütungen',
         description:
-          'Verfolgen Sie Ihre Schiedsrichtervergütungen und deren Verlauf an einem Ort.',
+          'Verfolgen Sie Ihre Schiedsrichtervergütungen und deren Verlauf.',
       },
       calendarMode: {
         title: 'Kalendermodus',
         description:
-          'Schneller Nur-Lese-Zugriff auf Ihren Zeitplan ohne vollständige Anmeldung.',
+          'Nur-Lese-Zugriff auf Einsätze ohne Anmeldung.',
       },
       travelTime: {
         title: 'Reisezeit',
         description:
-          'Sehen Sie, wie lange Sie mit dem öffentlichen Verkehr in der Schweiz zu jedem Spielort benötigen.',
+          'Reisezeiten mit Schweizer ÖV-Integration berechnen.',
       },
       offlinePwa: {
         title: 'Offline & PWA',
         description:
-          'Greifen Sie auch ohne Internet auf Ihre Einsätze zu. Als App installierbar.',
+          'App installieren und offline auf Ihrem Gerät nutzen.',
+      },
+      settings: {
+        title: 'Einstellungen',
+        description:
+          'Sprache, Design und Benachrichtigungen anpassen.',
       },
     },
   },
