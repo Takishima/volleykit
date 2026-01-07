@@ -450,8 +450,12 @@ describe("ScoresheetPanel", () => {
 
     it("announces upload completion via aria-live region", async () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
-      await uploadTestFile(getFileInput());
+      selectFile(getFileInput());
 
+      // Run all timers to complete the simulated upload
+      await vi.runAllTimersAsync();
+
+      // The status element should now be present with complete state
       const statusElement = screen.getByRole("status");
       expect(statusElement).toHaveAttribute("aria-live", "polite");
       expect(statusElement).toHaveTextContent("Upload complete");
