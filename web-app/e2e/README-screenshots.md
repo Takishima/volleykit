@@ -27,7 +27,7 @@ The script captures these screenshots in `help-site/public/images/screenshots/`:
 | `calendar-mode-login.png` | Calendar mode entry on login page |
 | `assignments-list.png` | Main assignments list |
 | `assignment-detail.png` | Expanded assignment card with spotlight |
-| `assignment-actions.png` | Swipe left actions (validate/edit/report) |
+| `assignment-actions.png` | Swipe left actions (validate/edit/report) on 1st ref card with spotlight |
 | `exchange-list.png` | Exchange board |
 | `exchange-request.png` | Swipe right to exchange with spotlight |
 | `compensations-list.png` | Compensation list |
@@ -35,7 +35,6 @@ The script captures these screenshots in `help-site/public/images/screenshots/`:
 | `language-settings.png` | Language selection in settings |
 | `home-location-setting.png` | Home location input with spotlight |
 | `data-privacy-settings.png` | Data retention section with spotlight |
-| `calendar-mode-view.png` | Assignments in calendar mode |
 
 ## Travel Time Screenshots (Manual)
 

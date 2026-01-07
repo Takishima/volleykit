@@ -294,9 +294,18 @@ test.describe('Help Site Screenshots', () => {
     const assignmentsPage = new AssignmentsPage(page);
     await assignmentsPage.waitForAssignmentsLoaded();
 
-    // Get the first assignment card
-    const firstCard = assignmentsPage.assignmentCards.first();
-    const cardBox = await firstCard.boundingBox();
+    // Find an assignment card where user is 1st referee (head-one position)
+    // The position label shows "1. SR" in German, "1st Referee" in English, etc.
+    const firstRefCard = page.locator('[role="group"][aria-label*="Swipeable"]')
+      .filter({ hasText: /1\. SR|1st Ref|1er arbitre|1° arbitro/i })
+      .first();
+
+    // Fallback to first card if no 1st ref card found
+    const targetCard = await firstRefCard.isVisible().catch(() => false)
+      ? firstRefCard
+      : assignmentsPage.assignmentCards.first();
+
+    const cardBox = await targetCard.boundingBox();
 
     if (cardBox) {
       // Calculate swipe distance - needs to be past the drawer threshold (30% of width)
@@ -309,7 +318,22 @@ test.describe('Help Site Screenshots', () => {
       await page.waitForTimeout(500);
     }
 
-    await takeScreenshot(page, 'assignment-actions');
+    // Spotlight the swipeable card container to highlight the revealed actions
+    const swipeableContainer = page.locator('[role="group"][aria-label*="Swipeable"]')
+      .filter({ hasText: /1\. SR|1st Ref|1er arbitre|1° arbitro/i })
+      .first();
+
+    // Use the first visible swipeable container if 1st ref not found
+    const spotlightTarget = await swipeableContainer.isVisible().catch(() => false)
+      ? swipeableContainer
+      : page.locator('[role="group"][aria-label*="Swipeable"]').first();
+
+    const containerSelector = await spotlightTarget.evaluate((el) => {
+      el.id = 'screenshot-target-actions';
+      return '#screenshot-target-actions';
+    });
+
+    await takeSpotlightScreenshot(page, 'assignment-actions', containerSelector, 4);
   });
 
   // ============================================
@@ -405,15 +429,12 @@ test.describe('Help Site Screenshots', () => {
 
     await page.waitForLoadState('networkidle');
 
-    // Try to find and click the language dropdown or section
-    const languageSection = page.getByText(/Language|Sprache|Langue|Lingua/i).first();
-    if (await languageSection.isVisible()) {
-      // Scroll to language section
-      await languageSection.scrollIntoViewIfNeeded();
-    }
-
+    // Scroll to and spotlight the language switcher section
+    const languageSwitcher = page.locator('[data-tour="language-switcher"]');
+    await languageSwitcher.scrollIntoViewIfNeeded();
     await page.waitForTimeout(500);
-    await takeScreenshot(page, 'language-settings');
+
+    await takeSpotlightScreenshot(page, 'language-settings', '[data-tour="language-switcher"]', 8);
   });
 
   test('data-privacy-settings - capture data privacy section', async ({ page }) => {
@@ -428,11 +449,21 @@ test.describe('Help Site Screenshots', () => {
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     await page.waitForTimeout(500);
 
-    // Spotlight the DataRetentionSection card (visible in demo mode)
-    // Find the card containing privacy text
-    const privacyCard = page.locator('.space-y-6 > div').filter({ hasText: /privacy|Datenschutz|confidentialité|privacy/i }).first();
-    const cardSelector = await privacyCard.evaluate((el) => {
-      // Add a temporary ID for the spotlight
+    // Find the Data Retention card by looking for the card containing "Data" and "Privacy" text
+    // The section header contains translations like "Daten & Datenschutz", "Data & Privacy", etc.
+    const dataRetentionCard = page.locator('section, div')
+      .filter({ has: page.getByText(/Daten|Data|Données|Dati/i) })
+      .filter({ has: page.getByText(/Datenschutz|Privacy|Confidentialité|Riservatezza/i) })
+      .first();
+
+    // If not found, try finding by the card structure with shield icon text
+    let targetCard = dataRetentionCard;
+    if (!await dataRetentionCard.isVisible({ timeout: 1000 }).catch(() => false)) {
+      // Fallback: find any card near the bottom
+      targetCard = page.locator('.max-w-2xl > div').last();
+    }
+
+    const cardSelector = await targetCard.evaluate((el) => {
       el.id = 'screenshot-target-privacy';
       return '#screenshot-target-privacy';
     });
@@ -587,20 +618,6 @@ test.describe('Help Site Screenshots', () => {
 
     await dismissPWANotification(page);
     await takeScreenshot(page, 'journey-details');
-  });
-
-  // ============================================
-  // Calendar Mode View Screenshot
-  // ============================================
-  test('calendar-mode-view - capture calendar mode assignments view', async ({ page }) => {
-    // This would require a valid calendar code or mocking
-    // For now, we'll use demo mode as a placeholder
-    await enterDemoModeWithoutTours(page);
-    const assignmentsPage = new AssignmentsPage(page);
-    await assignmentsPage.waitForAssignmentsLoaded();
-
-    await page.waitForTimeout(500);
-    await takeScreenshot(page, 'calendar-mode-view');
   });
 
   // ============================================
