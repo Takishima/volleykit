@@ -35,9 +35,23 @@ export function TourAutoSwipe({
     if (!container) return;
 
     // Find the swipeable content div (has z-10 and bg-white classes)
-    const swipeableContent = container.querySelector(
-      ".z-10.bg-white, .z-10.bg-gray-800",
-    ) as HTMLElement | null;
+    // Note: bg-white is always present in the class list; dark:bg-gray-800 is a separate Tailwind class
+    // Try multiple strategies:
+    // 1. Look for it as a descendant of the target
+    // 2. Check if target itself is the swipeable content
+    // 3. Look upward - target might be inside the swipeable content (e.g., data-tour on inner Card)
+    const swipeableSelector = ".z-10.bg-white";
+    let swipeableContent = container.querySelector(swipeableSelector) as HTMLElement | null;
+
+    if (!swipeableContent) {
+      // Check if target matches the selector
+      if (container.matches(swipeableSelector)) {
+        swipeableContent = container as HTMLElement;
+      } else {
+        // Look upward - target might be inside the swipeable content
+        swipeableContent = container.closest(swipeableSelector) as HTMLElement | null;
+      }
+    }
     if (!swipeableContent) return;
 
     hasAnimatedRef.current = true;
