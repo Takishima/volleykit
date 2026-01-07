@@ -24,5 +24,7 @@ export function getHelpSiteUrl(): string {
   // Get current language from store (works outside React components)
   const currentLang = useLanguageStore.getState().locale;
 
-  return `${baseUrl}?lang=${currentLang}`;
+  // Use URLSearchParams for safe query parameter construction
+  const params = new URLSearchParams({ lang: currentLang });
+  return `${baseUrl}?${params.toString()}`;
 }
