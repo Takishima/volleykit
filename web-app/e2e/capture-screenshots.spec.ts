@@ -29,13 +29,20 @@ const VIEWPORTS = {
 // ============================================
 // Animation and timing constants
 // ============================================
+// Swipe gesture timing
 const SWIPE_ANIMATION_STEPS = 30;
 const SWIPE_STEP_DELAY_MS = 15;
 const SWIPE_MOUSE_SETTLE_DELAY_MS = 50;
 const SWIPE_HOLD_DELAY_MS = 100;
 const SWIPE_COMPLETE_DELAY_MS = 400;
+
+// UI timing delays
 const OVERLAY_RENDER_DELAY_MS = 100;
 const PWA_DISMISS_DELAY_MS = 300;
+const ANIMATION_SETTLE_DELAY_MS = 500;
+const PAGE_LOAD_DELAY_MS = 1000;
+const GEOCODING_DELAY_MS = 1500;
+const TRAVEL_TIME_LOAD_DELAY_MS = 2000;
 
 // ============================================
 // Spotlight styling constants
@@ -255,7 +262,7 @@ async function enterDemoModeWithoutTours(page: Page) {
   await loginPage.enterDemoMode();
 
   // Wait for any initial notifications to appear and dismiss them
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
   await dismissPWANotification(page);
 }
 
@@ -310,7 +317,7 @@ test.describe('Help Site Screenshots', () => {
       await expect(page.getByTestId('username-input')).toBeVisible();
 
       // Small delay to ensure UI is fully rendered
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(PWA_DISMISS_DELAY_MS);
     });
 
     await context.close();
@@ -322,7 +329,7 @@ test.describe('Help Site Screenshots', () => {
 
     // Calendar mode is the default tab
     await expect(page.getByTestId('calendar-input')).toBeVisible();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(PWA_DISMISS_DELAY_MS);
 
     await takeScreenshot(page, 'calendar-mode-login');
   });
@@ -336,7 +343,7 @@ test.describe('Help Site Screenshots', () => {
     await assignmentsPage.waitForAssignmentsLoaded();
 
     // Wait for any animations to complete and dismiss notifications
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(PAGE_LOAD_DELAY_MS);
     await dismissPWANotification(page);
 
     await takeScreenshot(page, 'assignments-list');
@@ -352,7 +359,7 @@ test.describe('Help Site Screenshots', () => {
     await firstCard.click();
 
     // Wait for expansion animation
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
 
     // Use spotlight to highlight the expanded card
     await takeSpotlightScreenshot(page, 'assignment-detail', '[data-tour="assignment-card"]', 4);
@@ -383,7 +390,7 @@ test.describe('Help Site Screenshots', () => {
       await performSwipe(page, cardBox, 'left', swipeDistance);
 
       // Wait for the drawer animation to complete
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
     }
 
     // Spotlight the same card we swiped
@@ -406,7 +413,7 @@ test.describe('Help Site Screenshots', () => {
     await navigation.goToExchange();
     await exchangesPage.waitForExchangesLoaded();
 
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
     await takeScreenshot(page, 'exchange-list');
   });
 
@@ -423,7 +430,7 @@ test.describe('Help Site Screenshots', () => {
       // Swipe right to reveal exchange action
       const swipeDistance = cardBox.width * 0.4;
       await performSwipe(page, cardBox, 'right', swipeDistance);
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
     }
 
     // Spotlight the first swipeable card container to highlight the action
@@ -447,7 +454,7 @@ test.describe('Help Site Screenshots', () => {
     await navigation.goToCompensations();
     await compensationsPage.waitForCompensationsLoaded();
 
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
     await takeScreenshot(page, 'compensations-list');
   });
 
@@ -461,7 +468,7 @@ test.describe('Help Site Screenshots', () => {
     await compensationsPage.waitForCompensationsLoaded();
 
     // Focus on the tabs area at the top
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
     await takeScreenshot(page, 'compensations-filters');
   });
 
@@ -475,7 +482,7 @@ test.describe('Help Site Screenshots', () => {
     await navigation.goToSettings();
 
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
 
     await takeScreenshot(page, 'settings-overview');
   });
@@ -491,7 +498,7 @@ test.describe('Help Site Screenshots', () => {
     // Scroll to and spotlight the language switcher section
     const languageSwitcher = page.locator('[data-tour="language-switcher"]');
     await languageSwitcher.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
 
     await takeSpotlightScreenshot(page, 'language-settings', '[data-tour="language-switcher"]', 8);
   });
@@ -506,7 +513,7 @@ test.describe('Help Site Screenshots', () => {
 
     // Scroll to bottom of settings page to show data/privacy section
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
 
     // Find the Data Retention card by looking for the card containing "Data" and "Privacy" text
     // The section header contains translations like "Daten & Datenschutz", "Data & Privacy", etc.
@@ -542,7 +549,7 @@ test.describe('Help Site Screenshots', () => {
     const locationSection = page.locator('[data-tour="home-location"]');
     await locationSection.scrollIntoViewIfNeeded();
 
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
 
     // Spotlight the home location card (using the parent Card element)
     const homeLocationCard = page.locator('[data-tour="home-location"]').locator('xpath=ancestor::*[contains(@class, "rounded")]').first();
@@ -593,13 +600,13 @@ test.describe('Help Site Screenshots', () => {
     // Enter a home location (Bern, Switzerland)
     const addressInput = page.locator('#address-search');
     await addressInput.fill('Bern');
-    await page.waitForTimeout(1500); // Wait for geocoding
+    await page.waitForTimeout(GEOCODING_DELAY_MS); // Wait for geocoding
 
     // Select first result if available
     const firstResult = page.locator('ul li button').first();
     if (await firstResult.isVisible({ timeout: 3000 }).catch(() => false)) {
       await firstResult.click();
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
     }
 
     // Navigate back to assignments
@@ -612,7 +619,7 @@ test.describe('Help Site Screenshots', () => {
     await firstCard.click();
 
     // Wait for travel time to load (may take a moment)
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(TRAVEL_TIME_LOAD_DELAY_MS);
     await dismissPWANotification(page);
 
     await takeScreenshot(page, 'travel-time-display');
@@ -648,12 +655,12 @@ test.describe('Help Site Screenshots', () => {
     // Enter a home location (Bern, Switzerland)
     const addressInput = page.locator('#address-search');
     await addressInput.fill('Bern');
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(GEOCODING_DELAY_MS);
 
     const firstResult = page.locator('ul li button').first();
     if (await firstResult.isVisible({ timeout: 3000 }).catch(() => false)) {
       await firstResult.click();
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
     }
 
     // Navigate back to assignments
@@ -666,13 +673,13 @@ test.describe('Help Site Screenshots', () => {
     await firstCard.click();
 
     // Wait for travel time to load
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(TRAVEL_TIME_LOAD_DELAY_MS);
 
     // Try to find and click on travel time to expand journey details
     const travelTimeButton = page.locator('[aria-label*="travel"], [aria-label*="Reise"], [aria-label*="trajet"]').first();
     if (await travelTimeButton.isVisible({ timeout: 3000 }).catch(() => false)) {
       await travelTimeButton.click();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(PAGE_LOAD_DELAY_MS);
     }
 
     await dismissPWANotification(page);
@@ -709,12 +716,12 @@ test.describe('Help Site Screenshots', () => {
       const loginPage = new LoginPage(page);
       await loginPage.goto();
       await loginPage.enterDemoMode();
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
       await dismissPWANotification(page);
 
       const assignmentsPage = new AssignmentsPage(page);
       await assignmentsPage.waitForAssignmentsLoaded();
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
       await dismissPWANotification(page);
     });
 
@@ -729,7 +736,7 @@ test.describe('Help Site Screenshots', () => {
       const loginPage = new LoginPage(page);
       await loginPage.goto();
       await loginPage.enterDemoMode();
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
 
       const assignmentsPage = new AssignmentsPage(page);
       await assignmentsPage.waitForAssignmentsLoaded();
@@ -737,7 +744,7 @@ test.describe('Help Site Screenshots', () => {
       // Click on the first assignment card to expand it
       const firstCard = assignmentsPage.assignmentCards.first();
       await firstCard.click();
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
 
       return { selector: '[data-tour="assignment-card"]', padding: 4 };
     });
@@ -753,7 +760,7 @@ test.describe('Help Site Screenshots', () => {
       const loginPage = new LoginPage(page);
       await loginPage.goto();
       await loginPage.enterDemoMode();
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
 
       const assignmentsPage = new AssignmentsPage(page);
       await assignmentsPage.waitForAssignmentsLoaded();
@@ -768,7 +775,7 @@ test.describe('Help Site Screenshots', () => {
       if (cardBox) {
         const swipeDistance = cardBox.width * 0.4;
         await performSwipe(page, cardBox, 'left', swipeDistance);
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
       }
 
       // Add ID for spotlight
@@ -787,14 +794,14 @@ test.describe('Help Site Screenshots', () => {
       const loginPage = new LoginPage(page);
       await loginPage.goto();
       await loginPage.enterDemoMode();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(PAGE_LOAD_DELAY_MS);
       await dismissPWANotification(page);
 
       // Navigate directly via URL to avoid click interception
       await page.goto('/exchange');
       const exchangesPage = new ExchangesPage(page);
       await exchangesPage.waitForExchangesLoaded();
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
       await dismissPWANotification(page);
     });
 
@@ -809,7 +816,7 @@ test.describe('Help Site Screenshots', () => {
       const loginPage = new LoginPage(page);
       await loginPage.goto();
       await loginPage.enterDemoMode();
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
 
       const assignmentsPage = new AssignmentsPage(page);
       await assignmentsPage.waitForAssignmentsLoaded();
@@ -819,7 +826,7 @@ test.describe('Help Site Screenshots', () => {
       if (cardBox) {
         const swipeDistance = cardBox.width * 0.4;
         await performSwipe(page, cardBox, 'right', swipeDistance);
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
       }
 
       const container = page.locator('[role="group"][aria-label*="Swipeable"]').first();
@@ -838,14 +845,14 @@ test.describe('Help Site Screenshots', () => {
       const loginPage = new LoginPage(page);
       await loginPage.goto();
       await loginPage.enterDemoMode();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(PAGE_LOAD_DELAY_MS);
       await dismissPWANotification(page);
 
       // Navigate directly via URL to avoid click interception
       await page.goto('/compensations');
       const compensationsPage = new CompensationsPage(page);
       await compensationsPage.waitForCompensationsLoaded();
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
       await dismissPWANotification(page);
     });
 
@@ -860,13 +867,13 @@ test.describe('Help Site Screenshots', () => {
       const loginPage = new LoginPage(page);
       await loginPage.goto();
       await loginPage.enterDemoMode();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(PAGE_LOAD_DELAY_MS);
       await dismissPWANotification(page);
 
       // Navigate to settings directly via URL to avoid click interception
       await page.goto('/settings');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
       await dismissPWANotification(page);
     });
 
@@ -881,7 +888,7 @@ test.describe('Help Site Screenshots', () => {
       const loginPage = new LoginPage(page);
       await loginPage.goto();
       await loginPage.enterDemoMode();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(PAGE_LOAD_DELAY_MS);
       await dismissPWANotification(page);
 
       // Navigate to settings directly via URL
@@ -891,7 +898,7 @@ test.describe('Help Site Screenshots', () => {
 
       const languageSwitcher = page.locator('[data-tour="language-switcher"]');
       await languageSwitcher.scrollIntoViewIfNeeded();
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
 
       return { selector: '[data-tour="language-switcher"]', padding: 8 };
     });
@@ -907,7 +914,7 @@ test.describe('Help Site Screenshots', () => {
       const loginPage = new LoginPage(page);
       await loginPage.goto();
       await loginPage.enterDemoMode();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(PAGE_LOAD_DELAY_MS);
       await dismissPWANotification(page);
 
       // Navigate to settings directly via URL
@@ -917,7 +924,7 @@ test.describe('Help Site Screenshots', () => {
 
       const locationSection = page.locator('[data-tour="home-location"]');
       await locationSection.scrollIntoViewIfNeeded();
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
 
       const homeLocationCard = page.locator('[data-tour="home-location"]')
         .locator('xpath=ancestor::*[contains(@class, "rounded")]').first();
@@ -937,7 +944,7 @@ test.describe('Help Site Screenshots', () => {
       const loginPage = new LoginPage(page);
       await loginPage.goto();
       await loginPage.enterDemoMode();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(PAGE_LOAD_DELAY_MS);
       await dismissPWANotification(page);
 
       // Navigate to settings directly via URL
@@ -946,7 +953,7 @@ test.describe('Help Site Screenshots', () => {
       await dismissPWANotification(page);
 
       await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS);
 
       const dataRetentionCard = page.locator('section, div')
         .filter({ has: page.getByText(/Daten|Data|Données|Dati/i) })
