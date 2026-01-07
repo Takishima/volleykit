@@ -29,7 +29,6 @@ const TOOLTIP_OFFSET = 16;
 const ARROW_SIZE = 12;
 const VIEWPORT_MARGIN = 16;
 const MUTATION_OBSERVER_DEBOUNCE_MS = 100;
-const INITIAL_POSITION_DELAY_MS = 100;
 // Z-index layers for tour overlay (must be between backdrop z-40 and tooltip z-50)
 const TARGET_ELEVATION_Z_INDEX = "45";
 const INTERACTION_BLOCKER_Z_INDEX = "z-[46]";
@@ -131,10 +130,6 @@ export function TourSpotlight({
 
     const element = target as HTMLElement;
 
-    // Scroll element into view if it's not visible
-    // Use smooth scrolling and center the element in the viewport
-    element.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
-
     // Store original styles in local variables for cleanup
     const originalPosition = element.style.position;
     const originalZIndex = element.style.zIndex;
@@ -177,12 +172,23 @@ export function TourSpotlight({
     setTooltipPosition(position);
   }, [targetRect, placement]);
 
-  // Subscribe to scroll/resize events and trigger initial update
+  // Scroll target into view - this is a separate effect that only depends on targetSelector
+  // to avoid re-scrolling when other dependencies change
   useEffect(() => {
-    // Initial position update after mount (allows layout to settle)
-    // Use force=true to bypass freezePosition check for initial positioning
-    const initialTimer = setTimeout(() => updatePositions(true), INITIAL_POSITION_DELAY_MS);
+    const target = document.querySelector(targetSelector);
+    if (!target) return;
 
+    // First calculate initial position so spotlight appears immediately
+    updatePositions(true);
+
+    // Then scroll element into view with smooth animation
+    // The scroll event listener will update positions during the animation
+    target.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only scroll when target changes, not when updatePositions changes
+  }, [targetSelector]);
+
+  // Subscribe to scroll/resize events for position updates during the tour
+  useEffect(() => {
     const handleUpdate = () => updatePositions();
 
     // Listen on window for resize
@@ -203,7 +209,6 @@ export function TourSpotlight({
     observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
-      clearTimeout(initialTimer);
       window.removeEventListener("resize", handleUpdate);
       document.removeEventListener("scroll", handleUpdate, { capture: true });
       if (mutationTimeout) clearTimeout(mutationTimeout);
