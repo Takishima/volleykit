@@ -79,7 +79,7 @@ const defaultDevice = firstExisting?.device ?? devices[0];
     aria-label="Device type selector"
   >
     {
-      deviceStatus.map(({ device, display, index }) => (
+      deviceStatus.map(({ device, display, index, exists }) => (
         <button
           type="button"
           role="tab"
@@ -90,6 +90,7 @@ const defaultDevice = firstExisting?.device ?? devices[0];
           data-device={device}
           data-component-id={componentId}
           data-index={index}
+          data-exists={exists ? 'true' : 'false'}
           class:list={[
             'device-tab flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
             device === defaultDevice
@@ -196,6 +197,14 @@ const defaultDevice = firstExisting?.device ?? devices[0];
   function initDeviceSwitcher() {
     const tabs = document.querySelectorAll<HTMLButtonElement>('.device-tab');
 
+    /** Detect the user's device type based on viewport width */
+    function detectDeviceType(): 'phone' | 'tablet' | 'desktop' {
+      const width = window.innerWidth;
+      if (width < 768) return 'phone';
+      if (width < 1024) return 'tablet';
+      return 'desktop';
+    }
+
     /** Select a tab and update the UI */
     function selectTab(tab: HTMLButtonElement) {
       const device = tab.dataset.device;
@@ -300,6 +309,25 @@ const defaultDevice = firstExisting?.device ?? devices[0];
           nextTab.focus();
         }
       });
+    });
+
+    // Auto-select the tab matching the user's device type (if screenshot exists)
+    const detectedDevice = detectDeviceType();
+    const componentIds = new Set<string>();
+    tabs.forEach((tab) => {
+      if (tab.dataset.componentId) {
+        componentIds.add(tab.dataset.componentId);
+      }
+    });
+
+    componentIds.forEach((componentId) => {
+      const deviceTab = document.querySelector<HTMLButtonElement>(
+        `.device-tab[data-component-id="${componentId}"][data-device="${detectedDevice}"]`
+      );
+      // Only auto-select if the screenshot exists for this device
+      if (deviceTab && deviceTab.dataset.exists === 'true') {
+        selectTab(deviceTab);
+      }
     });
   }
 
