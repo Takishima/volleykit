@@ -13,6 +13,8 @@ vi.mock("@/shared/stores/settings", () => ({
   getDefaultArrivalBuffer: vi.fn(() => 30),
   MIN_ARRIVAL_BUFFER_MINUTES: 15,
   MAX_ARRIVAL_BUFFER_MINUTES: 120,
+  DEFAULT_MAX_DISTANCE_KM: 50,
+  DEFAULT_MAX_TRAVEL_TIME_MINUTES: 120,
 }));
 
 vi.mock("@/features/auth/hooks/useActiveAssociation", () => ({
@@ -66,6 +68,8 @@ async function getTransportService() {
 describe("useTransportSettings", () => {
   const mockSetTransportEnabledForAssociation = vi.fn();
   const mockSetArrivalBufferForAssociation = vi.fn();
+  const mockSetDistanceFilterForAssociation = vi.fn();
+  const mockSetMaxTravelTimeForAssociation = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -82,6 +86,9 @@ describe("useTransportSettings", () => {
     transportEnabled?: boolean;
     transportEnabledByAssociation?: Record<string, boolean>;
     arrivalBufferByAssociation?: Record<string, number>;
+    distanceFilter?: { enabled: boolean; maxDistanceKm: number };
+    distanceFilterByAssociation?: Record<string, { enabled: boolean; maxDistanceKm: number }>;
+    maxTravelTimeByAssociation?: Record<string, number>;
     associationCode?: string | null;
     isTransportAvailable?: boolean;
     cacheEntryCount?: number;
@@ -97,9 +104,15 @@ describe("useTransportSettings", () => {
         transportEnabled: options.transportEnabled ?? false,
         transportEnabledByAssociation: options.transportEnabledByAssociation ?? {},
         setTransportEnabledForAssociation: mockSetTransportEnabledForAssociation,
+        distanceFilter: options.distanceFilter ?? { enabled: false, maxDistanceKm: 50 },
+        distanceFilterByAssociation: options.distanceFilterByAssociation ?? {},
+        setDistanceFilterForAssociation: mockSetDistanceFilterForAssociation,
         travelTimeFilter: {
+          maxTravelTimeMinutes: 120,
+          maxTravelTimeByAssociation: options.maxTravelTimeByAssociation ?? {},
           arrivalBufferByAssociation: options.arrivalBufferByAssociation ?? {},
         },
+        setMaxTravelTimeForAssociation: mockSetMaxTravelTimeForAssociation,
         setArrivalBufferForAssociation: mockSetArrivalBufferForAssociation,
       }),
     );

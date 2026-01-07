@@ -38,8 +38,10 @@ export interface DistanceFilter {
 export interface TravelTimeFilter {
   /** Whether travel time filtering is active */
   enabled: boolean;
-  /** Maximum travel time in minutes */
+  /** Maximum travel time in minutes - legacy global setting */
   maxTravelTimeMinutes: number;
+  /** Per-association max travel time minutes (association code -> minutes) */
+  maxTravelTimeByAssociation: Record<string, number>;
   /** Minutes before game start to arrive (buffer time) - legacy global setting */
   arrivalBufferMinutes: number;
   /** Per-association arrival buffer minutes (association code -> minutes) */
@@ -72,10 +74,10 @@ export function getDefaultArrivalBuffer(associationCode: string | undefined): nu
 }
 
 /** Default max distance in kilometers */
-const DEFAULT_MAX_DISTANCE_KM = 50;
+export const DEFAULT_MAX_DISTANCE_KM = 50;
 
 /** Default max travel time in minutes (2 hours) */
-const DEFAULT_MAX_TRAVEL_TIME_MINUTES = 120;
+export const DEFAULT_MAX_TRAVEL_TIME_MINUTES = 120;
 
 /** Default arrival buffer (minutes before game start) */
 const DEFAULT_ARRIVAL_BUFFER_MINUTES = 30;
@@ -87,6 +89,8 @@ const DEFAULT_ARRIVAL_BUFFER_MINUTES = 30;
 export interface ModeSettings {
   homeLocation: UserLocation | null;
   distanceFilter: DistanceFilter;
+  /** Per-association distance filter settings (association code -> settings) */
+  distanceFilterByAssociation: Record<string, DistanceFilter>;
   transportEnabled: boolean;
   transportEnabledByAssociation: Record<string, boolean>;
   travelTimeFilter: TravelTimeFilter;
@@ -100,11 +104,13 @@ const DEFAULT_MODE_SETTINGS: ModeSettings = {
     enabled: false,
     maxDistanceKm: DEFAULT_MAX_DISTANCE_KM,
   },
+  distanceFilterByAssociation: {},
   transportEnabled: false,
   transportEnabledByAssociation: {},
   travelTimeFilter: {
     enabled: false,
     maxTravelTimeMinutes: DEFAULT_MAX_TRAVEL_TIME_MINUTES,
+    maxTravelTimeByAssociation: {},
     arrivalBufferMinutes: DEFAULT_ARRIVAL_BUFFER_MINUTES,
     arrivalBufferByAssociation: {},
     cacheInvalidatedAt: null,
@@ -140,6 +146,7 @@ interface SettingsState {
   // Getters for current mode's settings (read from settingsByMode[currentMode])
   homeLocation: UserLocation | null;
   distanceFilter: DistanceFilter;
+  distanceFilterByAssociation: Record<string, DistanceFilter>;
   transportEnabled: boolean;
   transportEnabledByAssociation: Record<string, boolean>;
   travelTimeFilter: TravelTimeFilter;
@@ -149,11 +156,20 @@ interface SettingsState {
   setHomeLocation: (location: UserLocation | null) => void;
   setDistanceFilterEnabled: (enabled: boolean) => void;
   setMaxDistanceKm: (km: number) => void;
+  // Per-association distance filter setters/getters
+  setDistanceFilterForAssociation: (
+    associationCode: string,
+    filter: Partial<DistanceFilter>,
+  ) => void;
+  getDistanceFilterForAssociation: (associationCode: string | undefined) => DistanceFilter;
   setTransportEnabled: (enabled: boolean) => void;
   setTransportEnabledForAssociation: (associationCode: string, enabled: boolean) => void;
   isTransportEnabledForAssociation: (associationCode: string | undefined) => boolean;
   setTravelTimeFilterEnabled: (enabled: boolean) => void;
   setMaxTravelTimeMinutes: (minutes: number) => void;
+  // Per-association max travel time setters/getters
+  setMaxTravelTimeForAssociation: (associationCode: string, minutes: number) => void;
+  getMaxTravelTimeForAssociation: (associationCode: string | undefined) => number;
   setArrivalBufferMinutes: (minutes: number) => void;
   setArrivalBufferForAssociation: (associationCode: string, minutes: number) => void;
   getArrivalBufferForAssociation: (associationCode: string | undefined) => number;
@@ -206,6 +222,7 @@ function syncFromMode(settingsByMode: Record<DataSource, ModeSettings>, mode: Da
   return {
     homeLocation: modeSettings.homeLocation,
     distanceFilter: modeSettings.distanceFilter,
+    distanceFilterByAssociation: modeSettings.distanceFilterByAssociation,
     transportEnabled: modeSettings.transportEnabled,
     transportEnabledByAssociation: modeSettings.transportEnabledByAssociation,
     travelTimeFilter: modeSettings.travelTimeFilter,
@@ -233,6 +250,7 @@ export const useSettingsStore = create<SettingsState>()(
         // Top-level properties (backward compatible) - synced from current mode
         homeLocation: DEFAULT_MODE_SETTINGS.homeLocation,
         distanceFilter: DEFAULT_MODE_SETTINGS.distanceFilter,
+        distanceFilterByAssociation: DEFAULT_MODE_SETTINGS.distanceFilterByAssociation,
         transportEnabled: DEFAULT_MODE_SETTINGS.transportEnabled,
         transportEnabledByAssociation: DEFAULT_MODE_SETTINGS.transportEnabledByAssociation,
         travelTimeFilter: DEFAULT_MODE_SETTINGS.travelTimeFilter,
@@ -288,6 +306,35 @@ export const useSettingsStore = create<SettingsState>()(
           );
         },
 
+        setDistanceFilterForAssociation: (
+          associationCode: string,
+          filter: Partial<DistanceFilter>,
+        ) => {
+          set((state) =>
+            updateModeAndTopLevel(state, (current) => {
+              const existingFilter = current.distanceFilterByAssociation[associationCode] ?? {
+                ...current.distanceFilter,
+              };
+              return {
+                distanceFilterByAssociation: {
+                  ...current.distanceFilterByAssociation,
+                  [associationCode]: { ...existingFilter, ...filter },
+                },
+              };
+            }),
+          );
+        },
+
+        getDistanceFilterForAssociation: (associationCode: string | undefined) => {
+          const state = get();
+          const filterMap = state.distanceFilterByAssociation ?? {};
+          if (associationCode && filterMap[associationCode] !== undefined) {
+            return filterMap[associationCode];
+          }
+          // Fall back to global distanceFilter
+          return state.distanceFilter;
+        },
+
         setTransportEnabled: (enabled: boolean) => {
           set((state) => updateModeAndTopLevel(state, () => ({ transportEnabled: enabled })));
         },
@@ -329,6 +376,30 @@ export const useSettingsStore = create<SettingsState>()(
               travelTimeFilter: { ...current.travelTimeFilter, maxTravelTimeMinutes: minutes },
             })),
           );
+        },
+
+        setMaxTravelTimeForAssociation: (associationCode: string, minutes: number) => {
+          set((state) =>
+            updateModeAndTopLevel(state, (current) => ({
+              travelTimeFilter: {
+                ...current.travelTimeFilter,
+                maxTravelTimeByAssociation: {
+                  ...current.travelTimeFilter.maxTravelTimeByAssociation,
+                  [associationCode]: minutes,
+                },
+              },
+            })),
+          );
+        },
+
+        getMaxTravelTimeForAssociation: (associationCode: string | undefined) => {
+          const state = get();
+          const timeMap = state.travelTimeFilter.maxTravelTimeByAssociation ?? {};
+          if (associationCode && timeMap[associationCode] !== undefined) {
+            return timeMap[associationCode];
+          }
+          // Fall back to global maxTravelTimeMinutes
+          return state.travelTimeFilter.maxTravelTimeMinutes;
         },
 
         setArrivalBufferMinutes: (minutes: number) => {
@@ -388,7 +459,7 @@ export const useSettingsStore = create<SettingsState>()(
       }),
       {
         name: "volleykit-settings",
-        version: 2,
+        version: 3,
         partialize: (state) => ({
           // Global settings
           isSafeModeEnabled: state.isSafeModeEnabled,
@@ -399,9 +470,12 @@ export const useSettingsStore = create<SettingsState>()(
           // Don't persist currentMode - it's synced from auth store on load
         }),
         migrate: (persisted, version) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          let state = persisted as any;
+
           // Migration from version 1 (flat settings) to version 2 (settings by mode)
           if (version === 1) {
-            const v1State = persisted as {
+            const v1State = state as {
               isSafeModeEnabled?: boolean;
               preventZoom?: boolean;
               homeLocation?: UserLocation | null;
@@ -417,13 +491,18 @@ export const useSettingsStore = create<SettingsState>()(
             const migratedApiSettings: ModeSettings = {
               homeLocation: v1State.homeLocation ?? null,
               distanceFilter: v1State.distanceFilter ?? DEFAULT_MODE_SETTINGS.distanceFilter,
+              distanceFilterByAssociation: {},
               transportEnabled: v1State.transportEnabled ?? false,
               transportEnabledByAssociation: v1State.transportEnabledByAssociation ?? {},
-              travelTimeFilter: v1State.travelTimeFilter ?? DEFAULT_MODE_SETTINGS.travelTimeFilter,
+              travelTimeFilter: {
+                ...DEFAULT_MODE_SETTINGS.travelTimeFilter,
+                ...(v1State.travelTimeFilter ?? {}),
+                maxTravelTimeByAssociation: {},
+              },
               levelFilterEnabled: v1State.levelFilterEnabled ?? false,
             };
 
-            return {
+            state = {
               isSafeModeEnabled: v1State.isSafeModeEnabled ?? true,
               preventZoom: v1State.preventZoom ?? false,
               settingsByMode: {
@@ -433,7 +512,33 @@ export const useSettingsStore = create<SettingsState>()(
               },
             };
           }
-          return persisted;
+
+          // Migration from version 2 to version 3 (add per-association distance and travel time)
+          if (version === 2 || version === 1) {
+            const v2State = state as {
+              settingsByMode?: Record<DataSource, Partial<ModeSettings>>;
+            };
+
+            if (v2State.settingsByMode) {
+              for (const mode of ["api", "demo", "calendar"] as DataSource[]) {
+                const modeSettings = v2State.settingsByMode[mode];
+                if (modeSettings) {
+                  // Add new per-association fields if missing
+                  if (!modeSettings.distanceFilterByAssociation) {
+                    modeSettings.distanceFilterByAssociation = {};
+                  }
+                  // Ensure travelTimeFilter exists before adding new fields
+                  if (!modeSettings.travelTimeFilter) {
+                    modeSettings.travelTimeFilter = { ...DEFAULT_MODE_SETTINGS.travelTimeFilter };
+                  } else if (!modeSettings.travelTimeFilter.maxTravelTimeByAssociation) {
+                    modeSettings.travelTimeFilter.maxTravelTimeByAssociation = {};
+                  }
+                }
+              }
+            }
+          }
+
+          return state;
         },
         merge: (persisted, current) => {
           // Defensively merge persisted data with current defaults.
@@ -465,6 +570,9 @@ export const useSettingsStore = create<SettingsState>()(
                     ...DEFAULT_MODE_SETTINGS.distanceFilter,
                     ...(persistedModeSettings.distanceFilter ?? {}),
                   },
+                  distanceFilterByAssociation:
+                    persistedModeSettings.distanceFilterByAssociation ??
+                    DEFAULT_MODE_SETTINGS.distanceFilterByAssociation,
                   transportEnabled:
                     persistedModeSettings.transportEnabled ?? DEFAULT_MODE_SETTINGS.transportEnabled,
                   transportEnabledByAssociation:
@@ -473,6 +581,10 @@ export const useSettingsStore = create<SettingsState>()(
                   travelTimeFilter: {
                     ...DEFAULT_MODE_SETTINGS.travelTimeFilter,
                     ...(persistedModeSettings.travelTimeFilter ?? {}),
+                    // Ensure new fields exist
+                    maxTravelTimeByAssociation:
+                      persistedModeSettings.travelTimeFilter?.maxTravelTimeByAssociation ??
+                      DEFAULT_MODE_SETTINGS.travelTimeFilter.maxTravelTimeByAssociation,
                   },
                   levelFilterEnabled:
                     persistedModeSettings.levelFilterEnabled ??

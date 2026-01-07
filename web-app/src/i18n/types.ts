@@ -277,11 +277,15 @@ export interface Translations {
     transport: {
       title: string;
       description: string;
+      perAssociationNote: string;
       enableCalculations: string;
       disabledHint: string;
       requiresHomeLocation: string;
       apiNotConfigured: string;
+      maxDistance: string;
+      maxDistanceDescription: string;
       maxTravelTime: string;
+      maxTravelTimeDescription: string;
       arrivalTime: string;
       arrivalTimeDescription: string;
       cacheInfo: string;

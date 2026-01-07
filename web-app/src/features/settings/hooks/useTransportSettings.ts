@@ -6,6 +6,9 @@ import {
   getDefaultArrivalBuffer,
   MIN_ARRIVAL_BUFFER_MINUTES,
   MAX_ARRIVAL_BUFFER_MINUTES,
+  DEFAULT_MAX_DISTANCE_KM,
+  DEFAULT_MAX_TRAVEL_TIME_MINUTES,
+  type DistanceFilter,
 } from "@/shared/stores/settings";
 import { useActiveAssociationCode } from "@/features/auth/hooks/useActiveAssociation";
 import { useTravelTimeAvailable } from "@/shared/hooks/useTravelTime";
@@ -15,7 +18,19 @@ import {
   getTravelTimeCacheStats,
 } from "@/shared/services/transport";
 
-const ARRIVAL_BUFFER_DEBOUNCE_MS = 300;
+const DEBOUNCE_MS = 300;
+
+/** Minimum max distance in kilometers */
+const MIN_MAX_DISTANCE_KM = 10;
+
+/** Maximum max distance in kilometers */
+const MAX_MAX_DISTANCE_KM = 200;
+
+/** Minimum max travel time in minutes */
+const MIN_MAX_TRAVEL_TIME_MINUTES = 30;
+
+/** Maximum max travel time in minutes (4 hours) */
+const MAX_MAX_TRAVEL_TIME_MINUTES = 240;
 
 export function useTransportSettings() {
   const queryClient = useQueryClient();
@@ -27,6 +42,11 @@ export function useTransportSettings() {
     transportEnabled,
     transportEnabledByAssociation,
     setTransportEnabledForAssociation,
+    distanceFilter,
+    distanceFilterByAssociation,
+    setDistanceFilterForAssociation,
+    travelTimeFilter,
+    setMaxTravelTimeForAssociation,
     arrivalBufferByAssociation,
     setArrivalBufferForAssociation,
   } = useSettingsStore(
@@ -35,6 +55,11 @@ export function useTransportSettings() {
       transportEnabled: state.transportEnabled,
       transportEnabledByAssociation: state.transportEnabledByAssociation,
       setTransportEnabledForAssociation: state.setTransportEnabledForAssociation,
+      distanceFilter: state.distanceFilter,
+      distanceFilterByAssociation: state.distanceFilterByAssociation,
+      setDistanceFilterForAssociation: state.setDistanceFilterForAssociation,
+      travelTimeFilter: state.travelTimeFilter,
+      setMaxTravelTimeForAssociation: state.setMaxTravelTimeForAssociation,
       arrivalBufferByAssociation: state.travelTimeFilter.arrivalBufferByAssociation,
       setArrivalBufferForAssociation: state.setArrivalBufferForAssociation,
     })),
@@ -52,6 +77,25 @@ export function useTransportSettings() {
     return transportEnabled;
   }, [associationCode, transportEnabledByAssociation, transportEnabled]);
 
+  // Get current distance filter for this association
+  const currentDistanceFilter: DistanceFilter = useMemo(() => {
+    const filterMap = distanceFilterByAssociation ?? {};
+    if (associationCode && filterMap[associationCode] !== undefined) {
+      return filterMap[associationCode];
+    }
+    // Use distanceFilter or default if not set
+    return distanceFilter ?? { enabled: false, maxDistanceKm: DEFAULT_MAX_DISTANCE_KM };
+  }, [associationCode, distanceFilterByAssociation, distanceFilter]);
+
+  // Get current max travel time for this association
+  const currentMaxTravelTime = useMemo(() => {
+    const timeMap = travelTimeFilter?.maxTravelTimeByAssociation ?? {};
+    if (associationCode && timeMap[associationCode] !== undefined) {
+      return timeMap[associationCode];
+    }
+    return travelTimeFilter?.maxTravelTimeMinutes ?? DEFAULT_MAX_TRAVEL_TIME_MINUTES;
+  }, [associationCode, travelTimeFilter]);
+
   // Get current arrival buffer for this association from store
   const storeArrivalBuffer = useMemo(() => {
     if (associationCode && arrivalBufferByAssociation?.[associationCode] !== undefined) {
@@ -62,19 +106,36 @@ export function useTransportSettings() {
 
   // Local state for immediate input feedback
   const [localArrivalBuffer, setLocalArrivalBuffer] = useState(storeArrivalBuffer);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [localMaxDistance, setLocalMaxDistance] = useState(currentDistanceFilter.maxDistanceKm);
+  const [localMaxTravelTime, setLocalMaxTravelTime] = useState(currentMaxTravelTime);
+
+  const arrivalDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const distanceDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const travelTimeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Sync local state when store value changes externally
   useEffect(() => {
     setLocalArrivalBuffer((prev) => (prev !== storeArrivalBuffer ? storeArrivalBuffer : prev));
   }, [storeArrivalBuffer]);
 
-  // Cleanup debounce timeout on unmount
+  useEffect(() => {
+    setLocalMaxDistance((prev) =>
+      prev !== currentDistanceFilter.maxDistanceKm ? currentDistanceFilter.maxDistanceKm : prev,
+    );
+  }, [currentDistanceFilter.maxDistanceKm]);
+
+  useEffect(() => {
+    setLocalMaxTravelTime((prev) =>
+      prev !== currentMaxTravelTime ? currentMaxTravelTime : prev,
+    );
+  }, [currentMaxTravelTime]);
+
+  // Cleanup debounce timeouts on unmount
   useEffect(() => {
     return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
+      if (arrivalDebounceRef.current) clearTimeout(arrivalDebounceRef.current);
+      if (distanceDebounceRef.current) clearTimeout(distanceDebounceRef.current);
+      if (travelTimeDebounceRef.current) clearTimeout(travelTimeDebounceRef.current);
     };
   }, []);
 
@@ -103,15 +164,49 @@ export function useTransportSettings() {
       const value = parseInt(e.target.value, 10);
       if (!isNaN(value) && value >= MIN_ARRIVAL_BUFFER_MINUTES) {
         setLocalArrivalBuffer(value);
-        if (debounceRef.current) {
-          clearTimeout(debounceRef.current);
+        if (arrivalDebounceRef.current) {
+          clearTimeout(arrivalDebounceRef.current);
         }
-        debounceRef.current = setTimeout(() => {
+        arrivalDebounceRef.current = setTimeout(() => {
           setArrivalBufferForAssociation(associationCode, value);
-        }, ARRIVAL_BUFFER_DEBOUNCE_MS);
+        }, DEBOUNCE_MS);
       }
     },
     [associationCode, setArrivalBufferForAssociation],
+  );
+
+  const handleMaxDistanceChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!associationCode) return;
+      const value = parseInt(e.target.value, 10);
+      if (!isNaN(value) && value >= MIN_MAX_DISTANCE_KM) {
+        setLocalMaxDistance(value);
+        if (distanceDebounceRef.current) {
+          clearTimeout(distanceDebounceRef.current);
+        }
+        distanceDebounceRef.current = setTimeout(() => {
+          setDistanceFilterForAssociation(associationCode, { maxDistanceKm: value });
+        }, DEBOUNCE_MS);
+      }
+    },
+    [associationCode, setDistanceFilterForAssociation],
+  );
+
+  const handleMaxTravelTimeChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!associationCode) return;
+      const value = parseInt(e.target.value, 10);
+      if (!isNaN(value) && value >= MIN_MAX_TRAVEL_TIME_MINUTES) {
+        setLocalMaxTravelTime(value);
+        if (travelTimeDebounceRef.current) {
+          clearTimeout(travelTimeDebounceRef.current);
+        }
+        travelTimeDebounceRef.current = setTimeout(() => {
+          setMaxTravelTimeForAssociation(associationCode, value);
+        }, DEBOUNCE_MS);
+      }
+    },
+    [associationCode, setMaxTravelTimeForAssociation],
   );
 
   const hasHomeLocation = Boolean(homeLocation);
@@ -124,6 +219,8 @@ export function useTransportSettings() {
     isTransportAvailable,
     isTransportEnabled,
     localArrivalBuffer,
+    localMaxDistance,
+    localMaxTravelTime,
     cacheEntryCount,
     showClearConfirm,
     hasHomeLocation,
@@ -132,11 +229,19 @@ export function useTransportSettings() {
     // Constants
     minArrivalBuffer: MIN_ARRIVAL_BUFFER_MINUTES,
     maxArrivalBuffer: MAX_ARRIVAL_BUFFER_MINUTES,
+    minMaxDistance: MIN_MAX_DISTANCE_KM,
+    maxMaxDistance: MAX_MAX_DISTANCE_KM,
+    defaultMaxDistance: DEFAULT_MAX_DISTANCE_KM,
+    minMaxTravelTime: MIN_MAX_TRAVEL_TIME_MINUTES,
+    maxMaxTravelTime: MAX_MAX_TRAVEL_TIME_MINUTES,
+    defaultMaxTravelTime: DEFAULT_MAX_TRAVEL_TIME_MINUTES,
 
     // Actions
     handleToggleTransport,
     handleClearCache,
     handleArrivalBufferChange,
+    handleMaxDistanceChange,
+    handleMaxTravelTimeChange,
     setShowClearConfirm,
   };
 }

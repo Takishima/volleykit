@@ -62,10 +62,15 @@ describe("ExchangeSettingsSheet", () => {
   const defaultSettingsState = {
     homeLocation: { lat: 47.3769, lng: 8.5417, name: "Zurich" },
     distanceFilter: { maxDistanceKm: 50, enabled: true },
-    setMaxDistanceKm: vi.fn(),
+    distanceFilterByAssociation: {},
+    setDistanceFilterForAssociation: vi.fn(),
     isTransportEnabledForAssociation: () => true,
-    travelTimeFilter: { maxTravelTimeMinutes: 60, enabled: true },
-    setMaxTravelTimeMinutes: vi.fn(),
+    travelTimeFilter: {
+      maxTravelTimeMinutes: 60,
+      maxTravelTimeByAssociation: {},
+      enabled: true,
+    },
+    setMaxTravelTimeForAssociation: vi.fn(),
   };
 
   beforeEach(() => {
@@ -190,11 +195,11 @@ describe("ExchangeSettingsSheet", () => {
     expect(screen.getAllByText("50 km").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("calls setMaxDistanceKm when distance slider changes", async () => {
-    const setMaxDistanceKm = vi.fn();
+  it("calls setDistanceFilterForAssociation when distance slider changes", async () => {
+    const setDistanceFilterForAssociation = vi.fn();
     mockSettingsState.mockReturnValue({
       ...defaultSettingsState,
-      setMaxDistanceKm,
+      setDistanceFilterForAssociation,
     });
     const user = userEvent.setup();
 
@@ -207,14 +212,16 @@ describe("ExchangeSettingsSheet", () => {
     const slider = screen.getByLabelText("Maximum Distance");
     fireEvent.change(slider, { target: { value: "75" } });
 
-    expect(setMaxDistanceKm).toHaveBeenCalledWith(75);
+    expect(setDistanceFilterForAssociation).toHaveBeenCalledWith("TEST", {
+      maxDistanceKm: 75,
+    });
   });
 
-  it("calls setMaxTravelTimeMinutes when travel time slider changes", async () => {
-    const setMaxTravelTimeMinutes = vi.fn();
+  it("calls setMaxTravelTimeForAssociation when travel time slider changes", async () => {
+    const setMaxTravelTimeForAssociation = vi.fn();
     mockSettingsState.mockReturnValue({
       ...defaultSettingsState,
-      setMaxTravelTimeMinutes,
+      setMaxTravelTimeForAssociation,
     });
     const user = userEvent.setup();
 
@@ -227,7 +234,7 @@ describe("ExchangeSettingsSheet", () => {
     const slider = screen.getByLabelText("Maximum Travel Time");
     fireEvent.change(slider, { target: { value: "90" } });
 
-    expect(setMaxTravelTimeMinutes).toHaveBeenCalledWith(90);
+    expect(setMaxTravelTimeForAssociation).toHaveBeenCalledWith("TEST", 90);
   });
 
   it("displays distance presets", async () => {

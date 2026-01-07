@@ -400,16 +400,21 @@ const it: Translations = {
       errorUnknown: "Errore sconosciuto durante l'ottenimento della posizione.",
     },
     transport: {
-      title: "Trasporto pubblico",
+      title: "Impostazioni viaggio",
       description:
-        "Calcola i tempi di viaggio con i trasporti pubblici svizzeri per filtrare gli scambi per tempo di percorrenza.",
+        "Configura i limiti di distanza e tempo di viaggio per filtrare gli scambi.",
+      perAssociationNote:
+        "Queste impostazioni vengono salvate separatamente per ogni associazione. Cambia associazione per configurare limiti diversi.",
       enableCalculations: "Abilita calcolo tempo di viaggio",
       disabledHint: "Richiede posizione casa e API trasporti",
       requiresHomeLocation: "Imposta prima la tua posizione casa",
       apiNotConfigured: "API trasporti non configurata",
+      maxDistance: "Distanza massima",
+      maxDistanceDescription: "Nascondi scambi oltre questa distanza",
       maxTravelTime: "Tempo di viaggio massimo",
+      maxTravelTimeDescription: "Nascondi scambi con tempi di viaggio più lunghi",
       arrivalTime: "Arrivo prima della partita",
-      arrivalTimeDescription: "Minuti di anticipo all'arrivo (per associazione)",
+      arrivalTimeDescription: "Minuti di anticipo all'arrivo",
       cacheInfo:
         "I tempi di viaggio sono memorizzati in cache per tipo di giorno (feriale/sabato/domenica) per 14 giorni.",
       cacheEntries: "{count} percorsi in cache",

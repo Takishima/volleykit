@@ -403,16 +403,21 @@ const de: Translations = {
       errorUnknown: "Unbekannter Fehler beim Ermitteln des Standorts.",
     },
     transport: {
-      title: "Öffentlicher Verkehr",
+      title: "Reiseeinstellungen",
       description:
-        "Berechnen Sie Reisezeiten mit dem Schweizer öffentlichen Verkehr, um Tauschangebote nach Anfahrtszeit zu filtern.",
+        "Konfigurieren Sie Distanz- und Reisezeitlimits zum Filtern von Tauschangeboten.",
+      perAssociationNote:
+        "Diese Einstellungen werden für jeden Verband separat gespeichert. Wechseln Sie den Verband, um verschiedene Limits zu konfigurieren.",
       enableCalculations: "Reisezeitberechnung aktivieren",
       disabledHint: "Erfordert Heimatstandort und Transport-API",
       requiresHomeLocation: "Legen Sie zuerst Ihren Heimatstandort fest",
       apiNotConfigured: "Transport-API ist nicht konfiguriert",
+      maxDistance: "Maximale Distanz",
+      maxDistanceDescription: "Tauschangebote über dieser Distanz ausblenden",
       maxTravelTime: "Maximale Reisezeit",
+      maxTravelTimeDescription: "Tauschangebote mit längerer Reisezeit ausblenden",
       arrivalTime: "Ankunft vor Spielbeginn",
-      arrivalTimeDescription: "Minuten vor Spielbeginn ankommen (pro Verband)",
+      arrivalTimeDescription: "Minuten vor Spielbeginn ankommen",
       cacheInfo:
         "Reisezeiten werden nach Tagestyp (Werktag/Samstag/Sonntag) für 14 Tage zwischengespeichert.",
       cacheEntries: "{count} gespeicherte Routen",

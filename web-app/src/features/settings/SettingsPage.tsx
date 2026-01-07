@@ -8,7 +8,8 @@ import { Button } from "@/shared/components/Button";
 import {
   ProfileSection,
   PreferencesSection,
-  LocationTravelSection,
+  HomeLocationSection,
+  TravelSettingsSection,
   DataProtectionSection,
   HelpToursSection,
   DataRetentionSection,
@@ -66,7 +67,9 @@ export function SettingsPage() {
         onSetPreventZoom={setPreventZoom}
       />
 
-      <LocationTravelSection />
+      <HomeLocationSection />
+
+      <TravelSettingsSection />
 
       <DataRetentionSection />
 
