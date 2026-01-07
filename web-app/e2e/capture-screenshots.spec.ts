@@ -198,13 +198,51 @@ async function takeDeviceScreenshots(
   setupFn: (page: Page) => Promise<void>
 ) {
   for (const [device, viewport] of Object.entries(VIEWPORTS)) {
+    // Clear all storage between device screenshots to avoid state leaking
+    await context.clearCookies();
+
     const page = await context.newPage();
     await page.setViewportSize(viewport);
+
+    // Navigate to app and clear storage before running setup
+    await page.goto('/');
+    await page.evaluate(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+    });
 
     await setupFn(page);
 
     const filename = `${name}-${device}`;
     await takeScreenshot(page, filename);
+    await page.close();
+  }
+}
+
+// Helper to take device-specific screenshots with spotlight
+async function takeDeviceSpotlightScreenshots(
+  context: BrowserContext,
+  name: string,
+  setupFn: (page: Page) => Promise<{ selector: string; padding?: number }>
+) {
+  for (const [device, viewport] of Object.entries(VIEWPORTS)) {
+    // Clear all storage between device screenshots to avoid state leaking
+    await context.clearCookies();
+
+    const page = await context.newPage();
+    await page.setViewportSize(viewport);
+
+    // Navigate to app and clear storage before running setup
+    await page.goto('/');
+    await page.evaluate(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+    });
+
+    const { selector, padding = 8 } = await setupFn(page);
+
+    const filename = `${name}-${device}`;
+    await takeSpotlightScreenshot(page, filename, selector, padding);
     await page.close();
   }
 }
@@ -658,5 +696,272 @@ test.describe('Help Site Screenshots', () => {
   test.skip('update-prompt - app update notification', async () => {
     // Update prompt requires service worker update
     console.log('⚠️ update-prompt: Requires manual capture of update notification');
+  });
+
+  // ============================================
+  // Device-Specific Screenshots (tablet & phone)
+  // ============================================
+  test('assignments-list-devices - capture for tablet and phone', async ({ browser }) => {
+    const context = await browser.newContext();
+
+    await takeDeviceScreenshots(context, 'assignments-list', async (page) => {
+      await setupCleanEnvironment(page);
+      const loginPage = new LoginPage(page);
+      await loginPage.goto();
+      await loginPage.enterDemoMode();
+      await page.waitForTimeout(500);
+      await dismissPWANotification(page);
+
+      const assignmentsPage = new AssignmentsPage(page);
+      await assignmentsPage.waitForAssignmentsLoaded();
+      await page.waitForTimeout(500);
+      await dismissPWANotification(page);
+    });
+
+    await context.close();
+  });
+
+  test('assignment-detail-devices - capture for tablet and phone', async ({ browser }) => {
+    const context = await browser.newContext();
+
+    await takeDeviceSpotlightScreenshots(context, 'assignment-detail', async (page) => {
+      await setupCleanEnvironment(page);
+      const loginPage = new LoginPage(page);
+      await loginPage.goto();
+      await loginPage.enterDemoMode();
+      await page.waitForTimeout(500);
+
+      const assignmentsPage = new AssignmentsPage(page);
+      await assignmentsPage.waitForAssignmentsLoaded();
+
+      // Click on the first assignment card to expand it
+      const firstCard = assignmentsPage.assignmentCards.first();
+      await firstCard.click();
+      await page.waitForTimeout(500);
+
+      return { selector: '[data-tour="assignment-card"]', padding: 4 };
+    });
+
+    await context.close();
+  });
+
+  test('assignment-actions-devices - capture for tablet and phone', async ({ browser }) => {
+    const context = await browser.newContext();
+
+    await takeDeviceSpotlightScreenshots(context, 'assignment-actions', async (page) => {
+      await setupCleanEnvironment(page);
+      const loginPage = new LoginPage(page);
+      await loginPage.goto();
+      await loginPage.enterDemoMode();
+      await page.waitForTimeout(500);
+
+      const assignmentsPage = new AssignmentsPage(page);
+      await assignmentsPage.waitForAssignmentsLoaded();
+
+      // Find the SECOND 1st referee card
+      const firstRefCards = page.locator('[role="group"][aria-label*="Swipeable"]')
+        .filter({ hasText: /1\. SR|1st Ref|1er arbitre|1° arbitro/i });
+      const cardCount = await firstRefCards.count();
+      const targetCard = cardCount > 1 ? firstRefCards.nth(1) : firstRefCards.first();
+
+      const cardBox = await targetCard.boundingBox();
+      if (cardBox) {
+        const swipeDistance = cardBox.width * 0.4;
+        await performSwipe(page, cardBox, 'left', swipeDistance);
+        await page.waitForTimeout(500);
+      }
+
+      // Add ID for spotlight
+      await targetCard.evaluate((el) => { el.id = 'screenshot-target-actions'; });
+      return { selector: '#screenshot-target-actions', padding: 4 };
+    });
+
+    await context.close();
+  });
+
+  test('exchange-list-devices - capture for tablet and phone', async ({ browser }) => {
+    const context = await browser.newContext();
+
+    await takeDeviceScreenshots(context, 'exchange-list', async (page) => {
+      await setupCleanEnvironment(page);
+      const loginPage = new LoginPage(page);
+      await loginPage.goto();
+      await loginPage.enterDemoMode();
+      await page.waitForTimeout(1000);
+      await dismissPWANotification(page);
+
+      // Navigate directly via URL to avoid click interception
+      await page.goto('/exchange');
+      const exchangesPage = new ExchangesPage(page);
+      await exchangesPage.waitForExchangesLoaded();
+      await page.waitForTimeout(500);
+      await dismissPWANotification(page);
+    });
+
+    await context.close();
+  });
+
+  test('exchange-request-devices - capture for tablet and phone', async ({ browser }) => {
+    const context = await browser.newContext();
+
+    await takeDeviceSpotlightScreenshots(context, 'exchange-request', async (page) => {
+      await setupCleanEnvironment(page);
+      const loginPage = new LoginPage(page);
+      await loginPage.goto();
+      await loginPage.enterDemoMode();
+      await page.waitForTimeout(500);
+
+      const assignmentsPage = new AssignmentsPage(page);
+      await assignmentsPage.waitForAssignmentsLoaded();
+
+      const firstCard = assignmentsPage.assignmentCards.first();
+      const cardBox = await firstCard.boundingBox();
+      if (cardBox) {
+        const swipeDistance = cardBox.width * 0.4;
+        await performSwipe(page, cardBox, 'right', swipeDistance);
+        await page.waitForTimeout(500);
+      }
+
+      const container = page.locator('[role="group"][aria-label*="Swipeable"]').first();
+      await container.evaluate((el) => { el.id = 'screenshot-target-exchange'; });
+      return { selector: '#screenshot-target-exchange', padding: 4 };
+    });
+
+    await context.close();
+  });
+
+  test('compensations-list-devices - capture for tablet and phone', async ({ browser }) => {
+    const context = await browser.newContext();
+
+    await takeDeviceScreenshots(context, 'compensations-list', async (page) => {
+      await setupCleanEnvironment(page);
+      const loginPage = new LoginPage(page);
+      await loginPage.goto();
+      await loginPage.enterDemoMode();
+      await page.waitForTimeout(1000);
+      await dismissPWANotification(page);
+
+      // Navigate directly via URL to avoid click interception
+      await page.goto('/compensations');
+      const compensationsPage = new CompensationsPage(page);
+      await compensationsPage.waitForCompensationsLoaded();
+      await page.waitForTimeout(500);
+      await dismissPWANotification(page);
+    });
+
+    await context.close();
+  });
+
+  test('settings-overview-devices - capture for tablet and phone', async ({ browser }) => {
+    const context = await browser.newContext();
+
+    await takeDeviceScreenshots(context, 'settings-overview', async (page) => {
+      await setupCleanEnvironment(page);
+      const loginPage = new LoginPage(page);
+      await loginPage.goto();
+      await loginPage.enterDemoMode();
+      await page.waitForTimeout(1000);
+      await dismissPWANotification(page);
+
+      // Navigate to settings directly via URL to avoid click interception
+      await page.goto('/settings');
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(500);
+      await dismissPWANotification(page);
+    });
+
+    await context.close();
+  });
+
+  test('language-settings-devices - capture for tablet and phone', async ({ browser }) => {
+    const context = await browser.newContext();
+
+    await takeDeviceSpotlightScreenshots(context, 'language-settings', async (page) => {
+      await setupCleanEnvironment(page);
+      const loginPage = new LoginPage(page);
+      await loginPage.goto();
+      await loginPage.enterDemoMode();
+      await page.waitForTimeout(1000);
+      await dismissPWANotification(page);
+
+      // Navigate to settings directly via URL
+      await page.goto('/settings');
+      await page.waitForLoadState('networkidle');
+      await dismissPWANotification(page);
+
+      const languageSwitcher = page.locator('[data-tour="language-switcher"]');
+      await languageSwitcher.scrollIntoViewIfNeeded();
+      await page.waitForTimeout(500);
+
+      return { selector: '[data-tour="language-switcher"]', padding: 8 };
+    });
+
+    await context.close();
+  });
+
+  test('home-location-setting-devices - capture for tablet and phone', async ({ browser }) => {
+    const context = await browser.newContext();
+
+    await takeDeviceSpotlightScreenshots(context, 'home-location-setting', async (page) => {
+      await setupCleanEnvironment(page);
+      const loginPage = new LoginPage(page);
+      await loginPage.goto();
+      await loginPage.enterDemoMode();
+      await page.waitForTimeout(1000);
+      await dismissPWANotification(page);
+
+      // Navigate to settings directly via URL
+      await page.goto('/settings');
+      await page.waitForLoadState('networkidle');
+      await dismissPWANotification(page);
+
+      const locationSection = page.locator('[data-tour="home-location"]');
+      await locationSection.scrollIntoViewIfNeeded();
+      await page.waitForTimeout(500);
+
+      const homeLocationCard = page.locator('[data-tour="home-location"]')
+        .locator('xpath=ancestor::*[contains(@class, "rounded")]').first();
+      await homeLocationCard.evaluate((el) => { el.id = 'screenshot-target-home-location'; });
+
+      return { selector: '#screenshot-target-home-location', padding: 4 };
+    });
+
+    await context.close();
+  });
+
+  test('data-privacy-settings-devices - capture for tablet and phone', async ({ browser }) => {
+    const context = await browser.newContext();
+
+    await takeDeviceSpotlightScreenshots(context, 'data-privacy-settings', async (page) => {
+      await setupCleanEnvironment(page);
+      const loginPage = new LoginPage(page);
+      await loginPage.goto();
+      await loginPage.enterDemoMode();
+      await page.waitForTimeout(1000);
+      await dismissPWANotification(page);
+
+      // Navigate to settings directly via URL
+      await page.goto('/settings');
+      await page.waitForLoadState('networkidle');
+      await dismissPWANotification(page);
+
+      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+      await page.waitForTimeout(500);
+
+      const dataRetentionCard = page.locator('section, div')
+        .filter({ has: page.getByText(/Daten|Data|Données|Dati/i) })
+        .filter({ has: page.getByText(/Datenschutz|Privacy|Confidentialité|Riservatezza/i) })
+        .first();
+
+      let targetCard = dataRetentionCard;
+      if (!await dataRetentionCard.isVisible({ timeout: 1000 }).catch(() => false)) {
+        targetCard = page.locator('.max-w-2xl > div').last();
+      }
+
+      await targetCard.evaluate((el) => { el.id = 'screenshot-target-privacy'; });
+      return { selector: '#screenshot-target-privacy', padding: 4 };
+    });
+
+    await context.close();
   });
 });
