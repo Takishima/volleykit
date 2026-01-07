@@ -1,11 +1,19 @@
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback, useRef, useState } from "react";
+import type { TourId } from "@/shared/stores/tour";
 import { useTourStore } from "@/shared/stores/tour";
 import { getTourDefinition, getTourStepCount } from "./definitions";
 import { TourSpotlight } from "./TourSpotlight";
 import { TourTooltip } from "./TourTooltip";
+import { TourAutoSwipe } from "./TourAutoSwipe";
 
 interface TourProviderProps {
   children: React.ReactNode;
+}
+
+// Track which step the auto-swipe was completed for
+interface AutoSwipeCompletedFor {
+  tour: TourId;
+  step: number;
 }
 
 export function TourProvider({ children }: TourProviderProps) {
@@ -19,6 +27,7 @@ export function TourProvider({ children }: TourProviderProps) {
   } = useTourStore();
 
   const autoAdvanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [autoSwipeCompletedFor, setAutoSwipeCompletedFor] = useState<AutoSwipeCompletedFor | null>(null);
 
   // Get current tour definition and step
   const tourDefinition = activeTour ? getTourDefinition(activeTour) : null;
@@ -29,6 +38,12 @@ export function TourProvider({ children }: TourProviderProps) {
 
   // Freeze spotlight position during swipe steps to keep drawer visible
   const isSwipeStep = currentStepData?.completionEvent?.type === "swipe";
+  const hasAutoSwipe = Boolean(currentStepData?.autoSwipe);
+  // Auto-swipe is completed only if it was completed for the current tour and step
+  const isAutoSwipeCompleted =
+    autoSwipeCompletedFor?.tour === activeTour &&
+    autoSwipeCompletedFor?.step === currentStep;
+  const isAutoSwipeActive = isSwipeStep && hasAutoSwipe && !isAutoSwipeCompleted;
 
   // Handle step completion
   const handleStepComplete = useCallback(() => {
@@ -38,6 +53,13 @@ export function TourProvider({ children }: TourProviderProps) {
       nextStep();
     }
   }, [isLastStep, completeTour, nextStep]);
+
+  // Handle auto-swipe animation completion
+  const handleAutoSwipeComplete = useCallback(() => {
+    if (activeTour !== null) {
+      setAutoSwipeCompletedFor({ tour: activeTour, step: currentStep });
+    }
+  }, [activeTour, currentStep]);
 
   // Handle manual next button click
   const handleNext = useCallback(() => {
@@ -131,6 +153,7 @@ export function TourProvider({ children }: TourProviderProps) {
         onDismiss={handleDismiss}
         freezePosition={isSwipeStep}
         disableBlur={isSwipeStep}
+        blockInteraction={isAutoSwipeActive}
       >
         <TourTooltip
           titleKey={currentStepData.titleKey}
@@ -144,6 +167,15 @@ export function TourProvider({ children }: TourProviderProps) {
           isFirstStep={isFirstStep}
         />
       </TourSpotlight>
+      {isAutoSwipeActive && currentStepData.autoSwipe && (
+        <TourAutoSwipe
+          targetSelector={currentStepData.targetSelector}
+          direction={currentStepData.autoSwipe.direction}
+          duration={currentStepData.autoSwipe.duration}
+          delay={currentStepData.autoSwipe.delay}
+          onComplete={handleAutoSwipeComplete}
+        />
+      )}
     </>
   );
 }

@@ -20,6 +20,8 @@ interface TourSpotlightProps {
   freezePosition?: boolean;
   /** When true, disables backdrop blur so drawer buttons are clearly visible */
   disableBlur?: boolean;
+  /** When true, blocks all interaction with the target element (during auto-swipe demo) */
+  blockInteraction?: boolean;
 }
 
 const SPOTLIGHT_PADDING = 8;
@@ -28,6 +30,9 @@ const ARROW_SIZE = 12;
 const VIEWPORT_MARGIN = 16;
 const MUTATION_OBSERVER_DEBOUNCE_MS = 100;
 const INITIAL_POSITION_DELAY_MS = 100;
+// Z-index layers for tour overlay (must be between backdrop z-40 and tooltip z-50)
+const TARGET_ELEVATION_Z_INDEX = "45";
+const INTERACTION_BLOCKER_Z_INDEX = "z-[46]";
 
 function calculateTargetRect(target: Element): TargetRect {
   const rect = target.getBoundingClientRect();
@@ -85,6 +90,7 @@ export function TourSpotlight({
   children,
   freezePosition = false,
   disableBlur = false,
+  blockInteraction = false,
 }: TourSpotlightProps) {
   // Start with null - position will be set after mount when element is ready
   const [targetRect, setTargetRect] = useState<TargetRect | null>(null);
@@ -135,7 +141,7 @@ export function TourSpotlight({
 
     // Elevate the element
     element.style.position = "relative";
-    element.style.zIndex = "45";
+    element.style.zIndex = TARGET_ELEVATION_Z_INDEX;
 
     // Also elevate SwipeableCard container if target is inside one
     // This ensures the swipe drawer actions are also above the overlay
@@ -147,7 +153,7 @@ export function TourSpotlight({
       originalContainerPosition = swipeableContainer.style.position;
       originalContainerZIndex = swipeableContainer.style.zIndex;
       swipeableContainer.style.position = "relative";
-      swipeableContainer.style.zIndex = "45";
+      swipeableContainer.style.zIndex = TARGET_ELEVATION_Z_INDEX;
     }
 
     return () => {
@@ -296,6 +302,20 @@ export function TourSpotlight({
         style={{ clipPath }}
         aria-hidden="true"
       />
+
+      {/* Interaction blocker - covers target area during auto-swipe demo */}
+      {blockInteraction && (
+        <div
+          className={`fixed ${INTERACTION_BLOCKER_Z_INDEX} pointer-events-auto`}
+          style={{
+            top: targetRect.top,
+            left: targetRect.left,
+            width: targetRect.width,
+            height: targetRect.height,
+          }}
+          aria-hidden="true"
+        />
+      )}
 
       {/* Tooltip - needs pointer-events-auto to be interactive */}
       <div

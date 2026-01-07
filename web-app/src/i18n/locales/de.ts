@@ -110,6 +110,9 @@ const de: Translations = {
       swipeSuccess: "Tolle Wischbewegung! Sie haben den Dreh raus.",
       tapSuccess: "Perfekt! Tippen Sie, um mehr Details zu entdecken.",
     },
+    accessibility: {
+      swipeDemoInProgress: "Wischgeste wird demonstriert",
+    },
   },
   common: {
     loading: "Laden...",

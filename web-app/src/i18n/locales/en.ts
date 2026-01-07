@@ -110,6 +110,9 @@ const en: Translations = {
       swipeSuccess: "Great swipe! You've got the hang of it.",
       tapSuccess: "Perfect! Tap to explore more details.",
     },
+    accessibility: {
+      swipeDemoInProgress: "Demonstrating swipe gesture",
+    },
   },
   common: {
     loading: "Loading...",

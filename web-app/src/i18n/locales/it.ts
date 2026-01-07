@@ -110,6 +110,9 @@ const it: Translations = {
       swipeSuccess: "Ottimo scorrimento! Hai capito come funziona.",
       tapSuccess: "Perfetto! Tocca per esplorare più dettagli.",
     },
+    accessibility: {
+      swipeDemoInProgress: "Dimostrazione del gesto di scorrimento",
+    },
   },
   common: {
     loading: "Caricamento...",
