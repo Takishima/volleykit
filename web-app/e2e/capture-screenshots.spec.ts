@@ -294,16 +294,15 @@ test.describe('Help Site Screenshots', () => {
     const assignmentsPage = new AssignmentsPage(page);
     await assignmentsPage.waitForAssignmentsLoaded();
 
-    // Find an assignment card where user is 1st referee (head-one position)
+    // Find the SECOND assignment card where user is 1st referee (head-one position)
+    // This is the middle column, top row card
     // The position label shows "1. SR" in German, "1st Referee" in English, etc.
-    const firstRefCard = page.locator('[role="group"][aria-label*="Swipeable"]')
-      .filter({ hasText: /1\. SR|1st Ref|1er arbitre|1° arbitro/i })
-      .first();
+    const firstRefCards = page.locator('[role="group"][aria-label*="Swipeable"]')
+      .filter({ hasText: /1\. SR|1st Ref|1er arbitre|1° arbitro/i });
 
-    // Fallback to first card if no 1st ref card found
-    const targetCard = await firstRefCard.isVisible().catch(() => false)
-      ? firstRefCard
-      : assignmentsPage.assignmentCards.first();
+    // Use the second 1st-ref card (index 1), fallback to first if only one exists
+    const cardCount = await firstRefCards.count();
+    const targetCard = cardCount > 1 ? firstRefCards.nth(1) : firstRefCards.first();
 
     const cardBox = await targetCard.boundingBox();
 
@@ -318,17 +317,8 @@ test.describe('Help Site Screenshots', () => {
       await page.waitForTimeout(500);
     }
 
-    // Spotlight the swipeable card container to highlight the revealed actions
-    const swipeableContainer = page.locator('[role="group"][aria-label*="Swipeable"]')
-      .filter({ hasText: /1\. SR|1st Ref|1er arbitre|1° arbitro/i })
-      .first();
-
-    // Use the first visible swipeable container if 1st ref not found
-    const spotlightTarget = await swipeableContainer.isVisible().catch(() => false)
-      ? swipeableContainer
-      : page.locator('[role="group"][aria-label*="Swipeable"]').first();
-
-    const containerSelector = await spotlightTarget.evaluate((el) => {
+    // Spotlight the same card we swiped
+    const containerSelector = await targetCard.evaluate((el) => {
       el.id = 'screenshot-target-actions';
       return '#screenshot-target-actions';
     });
