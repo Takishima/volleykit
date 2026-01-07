@@ -402,16 +402,21 @@ const fr: Translations = {
       errorUnknown: "Erreur inconnue lors de l'obtention de la position.",
     },
     transport: {
-      title: "Transports publics",
+      title: "Paramètres de voyage",
       description:
-        "Calculez les temps de trajet avec les transports publics suisses pour filtrer les échanges par temps de déplacement.",
+        "Configurez les limites de distance et de temps de trajet pour filtrer les échanges.",
+      perAssociationNote:
+        "Ces paramètres sont enregistrés séparément pour chaque association. Changez d'association pour configurer différentes limites.",
       enableCalculations: "Activer le calcul des temps de trajet",
       disabledHint: "Nécessite emplacement domicile et API de transport",
       requiresHomeLocation: "Définissez d'abord votre emplacement domicile",
       apiNotConfigured: "L'API de transport n'est pas configurée",
+      maxDistance: "Distance maximale",
+      maxDistanceDescription: "Masquer les échanges au-delà de cette distance",
       maxTravelTime: "Temps de trajet maximum",
+      maxTravelTimeDescription: "Masquer les échanges avec des temps de trajet plus longs",
       arrivalTime: "Arrivée avant le match",
-      arrivalTimeDescription: "Minutes d'arrivée avant le début du match (par association)",
+      arrivalTimeDescription: "Minutes d'arrivée avant le début du match",
       cacheInfo:
         "Les temps de trajet sont mis en cache par type de jour (semaine/samedi/dimanche) pendant 14 jours.",
       cacheEntries: "{count} trajets en cache",

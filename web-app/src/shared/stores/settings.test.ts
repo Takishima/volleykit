@@ -13,11 +13,13 @@ import type { DataSource } from "./auth";
 const DEFAULT_MODE_SETTINGS: ModeSettings = {
   homeLocation: null,
   distanceFilter: { enabled: false, maxDistanceKm: 50 },
+  distanceFilterByAssociation: {},
   transportEnabled: false,
   transportEnabledByAssociation: {},
   travelTimeFilter: {
     enabled: false,
     maxTravelTimeMinutes: 120,
+    maxTravelTimeByAssociation: {},
     arrivalBufferMinutes: 30,
     arrivalBufferByAssociation: {},
     cacheInvalidatedAt: null,
@@ -42,6 +44,7 @@ function resetStore(mode: DataSource = "api") {
     // Top-level properties (synced from current mode)
     homeLocation: DEFAULT_MODE_SETTINGS.homeLocation,
     distanceFilter: { ...DEFAULT_MODE_SETTINGS.distanceFilter },
+    distanceFilterByAssociation: { ...DEFAULT_MODE_SETTINGS.distanceFilterByAssociation },
     transportEnabled: DEFAULT_MODE_SETTINGS.transportEnabled,
     transportEnabledByAssociation: { ...DEFAULT_MODE_SETTINGS.transportEnabledByAssociation },
     travelTimeFilter: { ...DEFAULT_MODE_SETTINGS.travelTimeFilter },

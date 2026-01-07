@@ -1,4 +1,4 @@
-import { useState, useCallback, memo } from "react";
+import { useState, useCallback, memo, useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useSettingsStore } from "@/shared/stores/settings";
 import { useActiveAssociationCode } from "@/features/auth/hooks/useActiveAssociation";
@@ -27,16 +27,18 @@ function ExchangeSettingsSheetComponent({ dataTour }: ExchangeSettingsSheetProps
   const {
     homeLocation,
     distanceFilter,
-    setMaxDistanceKm,
+    distanceFilterByAssociation,
+    setDistanceFilterForAssociation,
     travelTimeFilter,
-    setMaxTravelTimeMinutes,
+    setMaxTravelTimeForAssociation,
   } = useSettingsStore(
     useShallow((state) => ({
       homeLocation: state.homeLocation,
       distanceFilter: state.distanceFilter,
-      setMaxDistanceKm: state.setMaxDistanceKm,
+      distanceFilterByAssociation: state.distanceFilterByAssociation,
+      setDistanceFilterForAssociation: state.setDistanceFilterForAssociation,
       travelTimeFilter: state.travelTimeFilter,
-      setMaxTravelTimeMinutes: state.setMaxTravelTimeMinutes,
+      setMaxTravelTimeForAssociation: state.setMaxTravelTimeForAssociation,
     })),
   );
 
@@ -45,18 +47,40 @@ function ExchangeSettingsSheetComponent({ dataTour }: ExchangeSettingsSheetProps
     (state) => state.isTransportEnabledForAssociation,
   );
 
+  // Get per-association distance filter
+  const currentDistanceFilter = useMemo(() => {
+    const filterMap = distanceFilterByAssociation ?? {};
+    if (associationCode && filterMap[associationCode] !== undefined) {
+      return filterMap[associationCode];
+    }
+    return distanceFilter;
+  }, [associationCode, distanceFilterByAssociation, distanceFilter]);
+
+  // Get per-association max travel time
+  const currentMaxTravelTime = useMemo(() => {
+    const timeMap = travelTimeFilter.maxTravelTimeByAssociation ?? {};
+    if (associationCode && timeMap[associationCode] !== undefined) {
+      return timeMap[associationCode];
+    }
+    return travelTimeFilter.maxTravelTimeMinutes;
+  }, [associationCode, travelTimeFilter]);
+
   const handleDistanceChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      setMaxDistanceKm(Number(e.target.value));
+      if (!associationCode) return;
+      setDistanceFilterForAssociation(associationCode, {
+        maxDistanceKm: Number(e.target.value),
+      });
     },
-    [setMaxDistanceKm],
+    [associationCode, setDistanceFilterForAssociation],
   );
 
   const handleTravelTimeChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      setMaxTravelTimeMinutes(Number(e.target.value));
+      if (!associationCode) return;
+      setMaxTravelTimeForAssociation(associationCode, Number(e.target.value));
     },
-    [setMaxTravelTimeMinutes],
+    [associationCode, setMaxTravelTimeForAssociation],
   );
 
   // Determine which settings are available
@@ -135,7 +159,7 @@ function ExchangeSettingsSheetComponent({ dataTour }: ExchangeSettingsSheetProps
                   {t("exchange.settings.maxDistance")}
                 </label>
                 <span className="ml-auto text-sm font-semibold text-primary-600 dark:text-primary-400">
-                  {formatDistance(distanceFilter.maxDistanceKm)}
+                  {formatDistance(currentDistanceFilter.maxDistanceKm)}
                 </span>
               </div>
 
@@ -145,7 +169,7 @@ function ExchangeSettingsSheetComponent({ dataTour }: ExchangeSettingsSheetProps
                 min={DISTANCE_PRESETS[0]}
                 max={DISTANCE_PRESETS[DISTANCE_PRESETS.length - 1]}
                 step={5}
-                value={distanceFilter.maxDistanceKm}
+                value={currentDistanceFilter.maxDistanceKm}
                 onChange={handleDistanceChange}
                 className="w-full h-2 bg-surface-muted dark:bg-surface-subtle-dark rounded-lg appearance-none cursor-pointer accent-primary-600"
               />
@@ -171,7 +195,7 @@ function ExchangeSettingsSheetComponent({ dataTour }: ExchangeSettingsSheetProps
                   {t("exchange.settings.maxTravelTime")}
                 </label>
                 <span className="ml-auto text-sm font-semibold text-primary-600 dark:text-primary-400">
-                  {formatTravelTime(travelTimeFilter.maxTravelTimeMinutes, timeUnits)}
+                  {formatTravelTime(currentMaxTravelTime, timeUnits)}
                 </span>
               </div>
 
@@ -181,7 +205,7 @@ function ExchangeSettingsSheetComponent({ dataTour }: ExchangeSettingsSheetProps
                 min={TRAVEL_TIME_PRESETS[0]}
                 max={TRAVEL_TIME_PRESETS[TRAVEL_TIME_PRESETS.length - 1]}
                 step={15}
-                value={travelTimeFilter.maxTravelTimeMinutes}
+                value={currentMaxTravelTime}
                 onChange={handleTravelTimeChange}
                 className="w-full h-2 bg-surface-muted dark:bg-surface-subtle-dark rounded-lg appearance-none cursor-pointer accent-primary-600"
               />

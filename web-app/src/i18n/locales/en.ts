@@ -400,16 +400,21 @@ const en: Translations = {
       errorUnknown: "Unknown error while getting location.",
     },
     transport: {
-      title: "Public Transport",
+      title: "Travel Settings",
       description:
-        "Calculate travel times using Swiss public transport to filter exchange offers by commute time.",
+        "Configure distance and travel time limits for filtering exchange offers.",
+      perAssociationNote:
+        "These settings are saved separately for each association. Switch associations to configure different limits.",
       enableCalculations: "Enable travel time calculations",
       disabledHint: "Requires home location and transport API",
       requiresHomeLocation: "Set your home location first",
       apiNotConfigured: "Transport API is not configured",
+      maxDistance: "Maximum distance",
+      maxDistanceDescription: "Hide exchanges further than this distance",
       maxTravelTime: "Maximum travel time",
+      maxTravelTimeDescription: "Hide exchanges with longer travel times",
       arrivalTime: "Arrive before game",
-      arrivalTimeDescription: "Minutes to arrive before game start (per association)",
+      arrivalTimeDescription: "Minutes to arrive before game start",
       cacheInfo:
         "Travel times are cached by day type (weekday/Saturday/Sunday) for 14 days.",
       cacheEntries: "{count} cached routes",
