@@ -23,6 +23,7 @@ export const it: TranslationKeys = {
     close: 'Chiudi',
     menu: 'Menu',
     search: 'Cerca',
+    viewOnGithub: 'Vedi su GitHub',
   },
 
   home: {
@@ -32,37 +33,48 @@ export const it: TranslationKeys = {
       'Scopri come utilizzare VolleyKit per gestire le tue designazioni arbitrali, gli scambi e i compensi.',
     ctaOpenApp: 'Apri App',
     ctaGetStarted: 'Inizia',
-    featuresTitle: 'Funzionalità',
+    featuresTitle: 'Esplora la documentazione',
+    readyToStart: 'Pronto per iniziare?',
     features: {
+      gettingStarted: {
+        title: 'Primi passi',
+        description:
+          'Guida rapida per configurare e utilizzare VolleyKit per la prima volta.',
+      },
       assignments: {
         title: 'Designazioni',
         description:
-          'Visualizza e gestisci le tue prossime designazioni arbitrali con tutti i dettagli necessari.',
+          'Visualizza e gestisci le tue prossime partite arbitrali di pallavolo.',
       },
       exchanges: {
         title: 'Scambi',
         description:
-          'Richiedi e accetta scambi di designazioni con altri arbitri in modo semplice.',
+          'Richiedi scambi di partite e offri le tue designazioni ad altri arbitri.',
       },
       compensations: {
         title: 'Compensi',
         description:
-          'Tieni traccia dei tuoi compensi arbitrali e dello storico in un unico posto.',
+          'Monitora i tuoi guadagni arbitrali e lo storico dei compensi.',
       },
       calendarMode: {
         title: 'Modalità calendario',
         description:
-          'Accesso rapido in sola lettura al tuo programma senza login completo.',
+          'Accesso in sola lettura alle designazioni senza effettuare il login.',
       },
       travelTime: {
         title: 'Tempo di viaggio',
         description:
-          'Scopri quanto tempo ci vuole per raggiungere ogni sede con i trasporti pubblici svizzeri.',
+          'Calcola i tempi di viaggio con i trasporti pubblici svizzeri.',
       },
       offlinePwa: {
         title: 'Offline & PWA',
         description:
-          'Accedi alle tue designazioni anche senza internet. Installabile come app.',
+          'Installa l\'app e usala offline sul tuo dispositivo.',
+      },
+      settings: {
+        title: 'Impostazioni',
+        description:
+          'Personalizza lingua, tema e preferenze di notifica.',
       },
     },
   },

@@ -23,6 +23,7 @@ export const fr: TranslationKeys = {
     close: 'Fermer',
     menu: 'Menu',
     search: 'Rechercher',
+    viewOnGithub: 'Voir sur GitHub',
   },
 
   home: {
@@ -32,37 +33,48 @@ export const fr: TranslationKeys = {
       "Apprenez à utiliser VolleyKit pour gérer vos désignations d'arbitrage, échanges et indemnités.",
     ctaOpenApp: "Ouvrir l'app",
     ctaGetStarted: 'Commencer',
-    featuresTitle: 'Fonctionnalités',
+    featuresTitle: 'Explorer la documentation',
+    readyToStart: 'Prêt à commencer ?',
     features: {
+      gettingStarted: {
+        title: 'Premiers pas',
+        description:
+          'Guide de démarrage rapide pour configurer et utiliser VolleyKit.',
+      },
       assignments: {
         title: 'Désignations',
         description:
-          "Consultez et gérez vos prochaines désignations d'arbitrage avec tous les détails nécessaires.",
+          "Consultez et gérez vos prochains matchs d'arbitrage de volleyball.",
       },
       exchanges: {
         title: 'Échanges',
         description:
-          "Demandez et acceptez facilement des échanges de désignations avec d'autres arbitres.",
+          "Demandez des échanges et proposez vos désignations à d'autres arbitres.",
       },
       compensations: {
         title: 'Indemnités',
         description:
-          "Suivez vos paiements et l'historique de vos indemnités d'arbitrage en un seul endroit.",
+          "Suivez vos gains d'arbitrage et l'historique de vos indemnités.",
       },
       calendarMode: {
         title: 'Mode calendrier',
         description:
-          'Accès rapide en lecture seule à votre emploi du temps sans connexion complète.',
+          'Accès en lecture seule aux désignations sans connexion.',
       },
       travelTime: {
         title: 'Temps de trajet',
         description:
-          "Voyez combien de temps il faut pour rejoindre chaque salle en utilisant les transports publics suisses.",
+          'Calculez les temps de trajet avec les transports publics suisses.',
       },
       offlinePwa: {
         title: 'Hors ligne & PWA',
         description:
-          "Accédez à vos désignations même sans internet. Installez l'application.",
+          "Installez l'app et utilisez-la hors ligne sur votre appareil.",
+      },
+      settings: {
+        title: 'Paramètres',
+        description:
+          'Personnalisez la langue, le thème et les préférences de notification.',
       },
     },
   },
