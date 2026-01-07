@@ -69,6 +69,21 @@ export default tseslint.config(
       // XSS prevention - flag unsafe DOM manipulation
       'no-unsanitized/method': 'error',
       'no-unsanitized/property': 'error',
+      // Magic numbers - enforce named constants for clarity
+      // Use HttpStatus enum and time/size constants from @/shared/utils/constants
+      '@typescript-eslint/no-magic-numbers': [
+        'warn',
+        {
+          ignore: [-1, 0, 1, 2, 100], // Only basic math operations and percentages
+          ignoreArrayIndexes: true,
+          ignoreDefaultValues: true,
+          ignoreEnums: true,
+          ignoreNumericLiteralTypes: true,
+          ignoreReadonlyClassProperties: true,
+          ignoreTypeIndexes: true,
+          enforceConst: true,
+        },
+      ],
       // SonarJS rules - code quality and complexity
       // Disable rules with high false positive rates in this codebase:
       // - no-hardcoded-passwords: Flags translation labels like "Password:" in locale files
@@ -99,6 +114,8 @@ export default tseslint.config(
   {
     files: ['**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}', 'e2e/**/*.{ts,tsx}'],
     rules: {
+      // Magic numbers are common in test data and assertions
+      '@typescript-eslint/no-magic-numbers': 'off',
       // Testing frameworks use nested describe/it blocks which trigger this rule
       'sonarjs/no-nested-functions': 'off',
       // Math.random() is safe in tests for generating test data
