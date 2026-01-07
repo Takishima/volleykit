@@ -10,6 +10,7 @@ import {
   Info,
 } from "@/shared/components/icons";
 import { MAX_FILE_SIZE_BYTES, ALLOWED_FILE_TYPES } from "@/api/constants";
+import { BYTES_PER_KB, BYTES_PER_MB } from "@/shared/utils/constants";
 
 interface ScoresheetPanelProps {
   /** Callback when scoresheet state changes */
@@ -37,9 +38,9 @@ interface SelectedFile {
 }
 
 function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  if (bytes < BYTES_PER_KB) return `${bytes} B`;
+  if (bytes < BYTES_PER_MB) return `${(bytes / BYTES_PER_KB).toFixed(1)} KB`;
+  return `${(bytes / BYTES_PER_MB).toFixed(1)} MB`;
 }
 
 export function ScoresheetPanel({

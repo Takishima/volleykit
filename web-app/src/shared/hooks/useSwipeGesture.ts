@@ -6,6 +6,12 @@ import { useState, useRef, useCallback, useLayoutEffect } from "react";
  */
 const DIRECTION_THRESHOLD_PX = 10;
 
+/**
+ * Default swipe threshold as ratio of container width (30%).
+ * User must drag 30% of container width to trigger action.
+ */
+const DEFAULT_SWIPE_THRESHOLD_RATIO = 0.3;
+
 /** Direction determined by initial gesture movement */
 export type SwipeDirection = "horizontal" | "vertical" | null;
 
@@ -136,7 +142,7 @@ export function useSwipeGesture(
     };
   }, []);
 
-  const threshold = thresholdOption ?? (containerWidth ? containerWidth * 0.3 : 100);
+  const threshold = thresholdOption ?? (containerWidth ? containerWidth * DEFAULT_SWIPE_THRESHOLD_RATIO : 100);
 
   const resetPosition = useCallback(() => {
     setTranslateX(0);

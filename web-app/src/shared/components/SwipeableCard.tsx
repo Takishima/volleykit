@@ -30,6 +30,8 @@ const SCALE_RANGE = 0.2; // Scale grows from 0.8 to 1.0
 // Click blocking delay after drag ends (prevents unwanted expansion)
 // 150ms provides margin for click event to fire after mouseup
 const CLICK_BLOCK_DELAY_MS = 150;
+// Maximum opacity for action hint overlay
+const MAX_HINT_OPACITY = 0.3;
 
 /** Calculate drawer width based on number of actions */
 function calculateDrawerWidth(actionsCount: number, containerWidth: number): number {
@@ -412,7 +414,7 @@ export function SwipeableCard({
                   opacity: Math.min(
                     (swipeAmount - thresholds.drawerOpen) /
                       (thresholds.full - thresholds.drawerOpen),
-                    0.3,
+                    MAX_HINT_OPACITY,
                   ),
                 }}
               >

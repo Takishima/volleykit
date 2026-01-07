@@ -68,11 +68,14 @@ export function parseLocalizedNumber(value: string): number {
   return parseFloat(normalized);
 }
 
+/** Degrees in a half circle (for radians conversion) */
+const DEGREES_PER_HALF_CIRCLE = 180;
+
 /**
  * Converts degrees to radians.
  */
 function degreesToRadians(degrees: number): number {
-  return degrees * (Math.PI / 180);
+  return degrees * (Math.PI / DEGREES_PER_HALF_CIRCLE);
 }
 
 /**

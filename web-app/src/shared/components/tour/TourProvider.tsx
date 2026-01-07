@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useRef, useState } from "react";
 import type { TourId } from "@/shared/stores/tour";
 import { useTourStore } from "@/shared/stores/tour";
+import { MODAL_ANIMATION_MS, TOAST_MIN_DURATION_MS } from "@/shared/utils/constants";
 import { getTourDefinition, getTourStepCount } from "./definitions";
 import { TourSpotlight } from "./TourSpotlight";
 import { TourTooltip } from "./TourTooltip";
@@ -111,7 +112,7 @@ export function TourProvider({ children }: TourProviderProps) {
           // Small delay to let the click action complete visually
           setTimeout(() => {
             handleStepComplete();
-          }, 300);
+          }, MODAL_ANIMATION_MS);
         }
       };
 
@@ -125,7 +126,7 @@ export function TourProvider({ children }: TourProviderProps) {
       const handleSwipe = () => {
         setTimeout(() => {
           handleStepComplete();
-        }, 500);
+        }, TOAST_MIN_DURATION_MS);
       };
 
       // Use a custom event that SwipeableCard can dispatch

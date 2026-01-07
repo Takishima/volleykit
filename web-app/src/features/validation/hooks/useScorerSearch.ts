@@ -7,15 +7,7 @@ import {
 } from "@/api/validation";
 import { useAuthStore } from "@/shared/stores/auth";
 import { queryKeys } from "@/api/queryKeys";
-
-/**
- * Cache duration for search results.
- * 5 minutes balances data freshness with reducing unnecessary requests:
- * - Person data changes infrequently (names, IDs are stable)
- * - Users often search for the same person multiple times in a session
- * - Reduces load on the Elasticsearch backend
- */
-const STALE_TIME_MS = 5 * 60 * 1000;
+import { ASSIGNMENTS_STALE_TIME_MS } from "@/shared/hooks/usePaginatedQuery";
 
 /**
  * Parses a search input string into search filters.
@@ -107,7 +99,7 @@ export function useScorerSearch(
       return validated.items ?? [];
     },
     enabled: options.enabled !== false && hasFilters,
-    staleTime: STALE_TIME_MS,
+    staleTime: ASSIGNMENTS_STALE_TIME_MS,
   });
 
   return {

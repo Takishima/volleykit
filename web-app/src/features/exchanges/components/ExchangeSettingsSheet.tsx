@@ -9,9 +9,11 @@ import { Settings, X, MapPin, TrainFront } from "@/shared/components/icons";
 import { formatTravelTime, MINUTES_PER_HOUR } from "@/shared/utils/format-travel-time";
 
 /** Distance presets for the slider (in kilometers) */
+// eslint-disable-next-line @typescript-eslint/no-magic-numbers -- intentional UI presets
 const DISTANCE_PRESETS = [10, 25, 50, 75, 100];
 
 /** Travel time presets for the slider (in minutes) */
+// eslint-disable-next-line @typescript-eslint/no-magic-numbers -- intentional UI presets
 const TRAVEL_TIME_PRESETS = [30, 45, 60, 90, 120];
 
 interface ExchangeSettingsSheetProps {

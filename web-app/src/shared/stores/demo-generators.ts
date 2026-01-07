@@ -2,6 +2,7 @@
  * Demo data generators for creating sample assignments, compensations, exchanges, etc.
  * These generators create deterministic mock data for demo mode.
  */
+/* eslint-disable @typescript-eslint/no-magic-numbers -- Demo data uses hardcoded IDs and indices */
 
 import { addDays, addHours, subDays } from "date-fns";
 import type {

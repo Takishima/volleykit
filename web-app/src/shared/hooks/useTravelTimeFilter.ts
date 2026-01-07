@@ -4,6 +4,7 @@
 
 import { useMemo, useCallback } from "react";
 import { useQueries } from "@tanstack/react-query";
+import { MS_PER_SECOND, MS_PER_MINUTE } from "@/shared/utils/constants";
 import { useAuthStore } from "@/shared/stores/auth";
 import { useSettingsStore, getDefaultArrivalBuffer } from "@/shared/stores/settings";
 import { useActiveAssociationCode } from "@/features/auth/hooks/useActiveAssociation";
@@ -23,6 +24,9 @@ import {
 } from "@/shared/services/transport";
 import { extractCoordinates } from "@/shared/utils/geo-location";
 import type { GameExchange } from "@/api/client";
+
+/** Maximum retry delay in seconds for failed travel time queries */
+const MAX_RETRY_DELAY_SECONDS = 30;
 
 interface HallInfo {
   id: string;
@@ -165,7 +169,7 @@ export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | nul
         };
 
         // Calculate target arrival time (game start minus buffer from settings)
-        const arrivalBufferMs = arrivalBufferMinutes * 60 * 1000;
+        const arrivalBufferMs = arrivalBufferMinutes * MS_PER_MINUTE;
         const targetArrivalTime = hallInfo.gameStartTime
           ? new Date(hallInfo.gameStartTime.getTime() - arrivalBufferMs)
           : undefined;
@@ -189,7 +193,7 @@ export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | nul
       gcTime: TRAVEL_TIME_GC_TIME,
       refetchOnWindowFocus: false,
       retry: 3,
-      retryDelay: (attempt: number) => Math.min(1000 * 2 ** attempt, 30000),
+      retryDelay: (attempt: number) => Math.min(MS_PER_SECOND * 2 ** attempt, MAX_RETRY_DELAY_SECONDS * MS_PER_SECOND),
     })),
   });
 

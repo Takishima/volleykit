@@ -1,5 +1,9 @@
 import type { TourDefinition, TourDummyExchange } from "@/shared/components/tour/definitions/types";
 
+// Tour dummy data configuration
+const TOUR_DAYS_AHEAD = 10;
+const TOUR_GAME_HOUR = 16;
+
 export const exchangeTour: TourDefinition = {
   id: "exchange",
   steps: [
@@ -34,8 +38,8 @@ export const exchangeTour: TourDefinition = {
 // Generate a future date for the exchange
 function getFutureDate(): string {
   const date = new Date();
-  date.setDate(date.getDate() + 10);
-  date.setHours(16, 0, 0, 0);
+  date.setDate(date.getDate() + TOUR_DAYS_AHEAD);
+  date.setHours(TOUR_GAME_HOUR, 0, 0, 0);
   return date.toISOString();
 }
 

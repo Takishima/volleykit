@@ -17,6 +17,12 @@ const DISMISS_THRESHOLD_RATIO = 0.25;
  */
 const MAX_SWIPE_MULTIPLIER = 1.5;
 
+/**
+ * Fallback container height in pixels when container ref is not available.
+ * Used for threshold calculation when container dimensions can't be determined.
+ */
+const FALLBACK_CONTAINER_HEIGHT_PX = 300;
+
 /** Direction determined by initial gesture movement */
 type SwipeDirection = "horizontal" | "vertical" | null;
 
@@ -221,7 +227,7 @@ export function useVerticalSwipeDismiss(
         preventDefault();
 
         // Get container height for threshold calculation
-        const containerHeight = containerRef.current?.offsetHeight ?? 300;
+        const containerHeight = containerRef.current?.offsetHeight ?? FALLBACK_CONTAINER_HEIGHT_PX;
         const threshold = containerHeight * DISMISS_THRESHOLD_RATIO;
         const maxSwipe = threshold * MAX_SWIPE_MULTIPLIER;
 
@@ -249,7 +255,7 @@ export function useVerticalSwipeDismiss(
     }
 
     const finalTranslateY = currentTranslateRef.current;
-    const containerHeight = containerRef.current?.offsetHeight ?? 300;
+    const containerHeight = containerRef.current?.offsetHeight ?? FALLBACK_CONTAINER_HEIGHT_PX;
     const threshold = containerHeight * DISMISS_THRESHOLD_RATIO;
 
     // Check if swipe exceeded threshold (in either direction)

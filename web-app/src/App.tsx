@@ -24,6 +24,7 @@ import {
   isAuthError,
   RETRY_CONFIG,
 } from "@/shared/utils/query-error-utils";
+import { ASSIGNMENTS_STALE_TIME_MS, SETTINGS_STALE_TIME_MS } from "@/shared/hooks/usePaginatedQuery";
 import { usePreloadLocales } from "@/shared/hooks/usePreloadLocales";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import { useViewportZoom } from "@/shared/hooks/useViewportZoom";
@@ -89,9 +90,9 @@ const queryClient = new QueryClient({
       retryDelay: calculateRetryDelay,
       refetchOnWindowFocus: false,
       // Cache data for 5 minutes before considering it stale
-      staleTime: 5 * 60 * 1000,
+      staleTime: ASSIGNMENTS_STALE_TIME_MS,
       // Keep unused data in cache for 30 minutes
-      gcTime: 30 * 60 * 1000,
+      gcTime: SETTINGS_STALE_TIME_MS,
     },
     mutations: {
       // Log mutation errors globally with context

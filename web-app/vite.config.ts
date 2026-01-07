@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-magic-numbers -- Config file with build/cache values */
 /// <reference types="vitest" />
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -158,7 +159,7 @@ export default defineConfig(({ mode }) => {
           //   - Main App Bundle (index-*.js):     ~110 kB, limit 145 kB (+35 kB headroom)
           //   - Vendor Chunks (combined):         ~46 kB,  limit 50 kB  (+4 kB headroom)
           //   - PDF Library (pdf-lib-*.js):       ~181 kB, limit 185 kB (+4 kB headroom) - lazy-loaded
-          //   - Total JS Bundle:                  ~440 kB, limit 460 kB (+20 kB headroom)
+          //   - Total JS Bundle:                  ~460 kB, limit 465 kB (+5 kB headroom)
           manualChunks: {
             'react-vendor': ['react', 'react-dom'],
             'router': ['react-router-dom'],

@@ -373,10 +373,13 @@ function parseICalDate(icalDate: string): string {
     : icalDate;
 
   // Handle date-only format (YYYYMMDD)
+  // eslint-disable-next-line @typescript-eslint/no-magic-numbers -- iCal date format positions
   if (dateStr.length === 8) {
+    /* eslint-disable @typescript-eslint/no-magic-numbers -- iCal date format: YYYY (0-4), MM (4-6), DD (6-8) */
     const year = dateStr.slice(0, 4);
     const month = dateStr.slice(4, 6);
     const day = dateStr.slice(6, 8);
+    /* eslint-enable @typescript-eslint/no-magic-numbers */
     return `${year}-${month}-${day}`;
   }
 
@@ -455,6 +458,7 @@ function calculateConfidence(fields: ParsedFields): ParseConfidence {
   ];
   const optionalParsedCount = optionalFields.filter(Boolean).length;
 
+  // eslint-disable-next-line @typescript-eslint/no-magic-numbers -- confidence threshold
   if (optionalParsedCount >= 3) return 'high';
   return 'medium';
 }
@@ -678,6 +682,7 @@ function parseSummary(summary: string): {
   result.role = parseRole(result.roleRaw);
   result.parsed.role = result.role !== 'unknown';
 
+  // eslint-disable-next-line @typescript-eslint/no-magic-numbers -- " | " separator length
   const matchInfo = summary.slice(pipeIndex + 3).trim();
 
   // Extract league from parentheses at the end using string operations
@@ -705,6 +710,7 @@ function parseSummary(summary: string): {
   const teamSeparator = teamsStr.indexOf(' - ');
   if (teamSeparator !== -1) {
     result.homeTeam = teamsStr.slice(0, teamSeparator).trim();
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers -- " - " separator length
     result.awayTeam = teamsStr.slice(teamSeparator + 3).trim();
     result.parsed.teams = result.homeTeam.length > 0 && result.awayTeam.length > 0;
   }

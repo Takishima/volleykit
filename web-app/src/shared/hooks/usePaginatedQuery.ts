@@ -1,6 +1,7 @@
 import type { UseQueryResult } from "@tanstack/react-query";
 import { api, type SearchConfiguration, type Assignment } from "@/api/client";
 import { createLogger } from "@/shared/utils/logger";
+import { MS_PER_MINUTE, MS_PER_HOUR } from "@/shared/utils/constants";
 
 const log = createLogger("usePaginatedQuery");
 
@@ -12,6 +13,10 @@ export const DEFAULT_PAGE_SIZE = 100;
 export const MAX_FETCH_ALL_PAGES = 10; // Maximum pages to fetch (1000 items)
 export const DEFAULT_DATE_RANGE_DAYS = 365;
 
+// Date range period constants for assignment filtering
+export const THIS_WEEK_DAYS = 7;
+export const NEXT_MONTH_DAYS = 30;
+
 // Limit for fetching compensations when looking up by game number.
 // Higher than DEFAULT_PAGE_SIZE because we need to search through all compensations
 // to find the one matching the assignment's game.
@@ -19,28 +24,29 @@ export const COMPENSATION_LOOKUP_LIMIT = 200;
 
 // Cache durations (stale times) for different query types.
 // These control how long TanStack Query considers data fresh before refetching.
+const STALE_TIME = { DEFAULT: 5, EXCHANGES: 2, SETTINGS: 30, VALIDATION_CLOSED: 15 } as const;
 
 /** Default stale time for assignments queries (5 minutes) */
-export const ASSIGNMENTS_STALE_TIME_MS = 5 * 60 * 1000;
+export const ASSIGNMENTS_STALE_TIME_MS = STALE_TIME.DEFAULT * MS_PER_MINUTE;
 
 /** Stale time for compensation queries (5 minutes) */
-export const COMPENSATIONS_STALE_TIME_MS = 5 * 60 * 1000;
+export const COMPENSATIONS_STALE_TIME_MS = STALE_TIME.DEFAULT * MS_PER_MINUTE;
 
 /** Stale time for exchange queries (2 minutes) - shorter due to time-sensitive nature */
-export const EXCHANGES_STALE_TIME_MS = 2 * 60 * 1000;
+export const EXCHANGES_STALE_TIME_MS = STALE_TIME.EXCHANGES * MS_PER_MINUTE;
 
 /** Stale time for association settings (30 minutes) - settings rarely change */
-export const SETTINGS_STALE_TIME_MS = 30 * 60 * 1000;
+export const SETTINGS_STALE_TIME_MS = STALE_TIME.SETTINGS * MS_PER_MINUTE;
 
 /** Stale time for active season (1 hour) - season changes infrequently */
-export const SEASON_STALE_TIME_MS = 60 * 60 * 1000;
+export const SEASON_STALE_TIME_MS = MS_PER_HOUR;
 
 /**
  * Cache duration for validation-closed assignments (15 minutes).
  * Longer than default because validation status changes infrequently
  * and fetching all pages is expensive.
  */
-export const VALIDATION_CLOSED_STALE_TIME_MS = 15 * 60 * 1000;
+export const VALIDATION_CLOSED_STALE_TIME_MS = STALE_TIME.VALIDATION_CLOSED * MS_PER_MINUTE;
 
 // Fallback timestamp for items with missing dates - uses Unix epoch (1970-01-01)
 // Items with missing dates will sort as oldest when ascending, newest when descending

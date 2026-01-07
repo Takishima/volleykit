@@ -16,6 +16,7 @@ import { useDemoStore, DEMO_USER_PERSON_IDENTITY } from "@/shared/stores/demo";
 import { queryKeys } from "@/api/queryKeys";
 import { DEFAULT_PAGE_SIZE } from "@/shared/hooks/usePaginatedQuery";
 import { getSeasonDateRange } from "@/shared/utils/date-helpers";
+import { MS_PER_MINUTE } from "@/shared/utils/constants";
 
 // Format date as YYYY-MM-DD for stable comparison (no time component)
 const formatDateKey = (date: Date): string => format(date, "yyyy-MM-dd");
@@ -120,7 +121,7 @@ export function useGameExchanges(status: ExchangeStatus = "all") {
     queryKey: queryKeys.exchanges.list(config, associationKey),
     queryFn: () => apiClient.searchExchanges(config),
     select: selectExchanges,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 2 * MS_PER_MINUTE,
     // Keep previous data while selector recalculates during tab switches.
     // This prevents loading flash since both tabs share the same cached query.
     placeholderData: (prev) => prev,

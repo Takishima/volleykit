@@ -43,6 +43,7 @@ import {
   ALLOWED_FILE_TYPES,
   DEFAULT_SEARCH_RESULTS_LIMIT,
 } from "./constants";
+import { BYTES_PER_KB } from "@/shared/utils/constants";
 
 // Network delay constants for realistic demo behavior
 const MOCK_NETWORK_DELAY_MS = 50;
@@ -429,7 +430,9 @@ export const mockApi = {
 
     // Return mock season spanning current year
     const now = new Date();
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers -- Month indices: 8=September, 5=June (0-indexed)
     const seasonStart = new Date(now.getFullYear(), 8, 1); // September 1st
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers -- Month/day: June 30th next year
     const seasonEnd = new Date(now.getFullYear() + 1, 5, 30); // June 30th next year
 
     return {
@@ -725,7 +728,7 @@ export const mockApi = {
 
     // Validate file size
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+      const sizeMB = (file.size / (BYTES_PER_KB * BYTES_PER_KB)).toFixed(1);
       throw new Error(`File too large: ${sizeMB} MB. Maximum size is 10 MB.`);
     }
 

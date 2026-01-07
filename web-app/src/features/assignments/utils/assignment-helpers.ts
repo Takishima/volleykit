@@ -1,4 +1,5 @@
 import type { Assignment, CompensationRecord } from "@/api/client";
+import { MS_PER_HOUR } from "@/shared/utils/constants";
 
 /**
  * Modal animation delay in milliseconds.
@@ -127,8 +128,6 @@ export function isValidationEligible(assignment: Assignment): boolean {
  */
 export const DEFAULT_VALIDATION_DEADLINE_HOURS = 6;
 
-/** Milliseconds per hour constant for time calculations. */
-const MS_PER_HOUR = 60 * 60 * 1000;
 
 /**
  * Parses a game start time string into a Date object.
