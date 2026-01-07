@@ -204,6 +204,10 @@ const defaultDevice = firstExisting?.device ?? devices[0];
      * @see https://web.dev/learn/design/interaction
      */
     function detectDeviceType(): 'phone' | 'tablet' | 'desktop' {
+      // Breakpoint constants for device type detection
+      const TABLET_MIN_WIDTH_PX = 768;
+      const DESKTOP_MIN_WIDTH_PX = 1024;
+
       const width = window.innerWidth;
 
       // Check pointer precision (coarse = touch, fine = mouse/trackpad)
@@ -225,14 +229,13 @@ const defaultDevice = firstExisting?.device ?? devices[0];
       // Touch device (coarse pointer, no hover, or has touch)
       if (hasCoarsePointer || !canHover || hasTouch) {
         // Distinguish phone vs tablet by viewport width
-        // Tablets typically have viewport >= 768px
-        if (width >= 768) return 'tablet';
+        if (width >= TABLET_MIN_WIDTH_PX) return 'tablet';
         return 'phone';
       }
 
       // Fallback to viewport-based detection
-      if (width < 768) return 'phone';
-      if (width < 1024) return 'tablet';
+      if (width < TABLET_MIN_WIDTH_PX) return 'phone';
+      if (width < DESKTOP_MIN_WIDTH_PX) return 'tablet';
       return 'desktop';
     }
 
