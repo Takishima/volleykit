@@ -224,6 +224,67 @@ describe("TourAutoSwipe", () => {
   });
 
   describe("edge cases", () => {
+    it("finds swipeable content when target is inside it (real-world structure)", async () => {
+      // This test simulates the real DOM structure where:
+      // SwipeableCard contains .z-10.bg-white which contains Card[data-tour="..."]
+
+      // Remove and keep reference to original container for cleanup
+      container.remove();
+
+      // Create realistic structure: SwipeableCard > swipeable-div > Card[data-tour]
+      const swipeableCardWrapper = document.createElement("div");
+      swipeableCardWrapper.className = "relative overflow-hidden rounded-xl";
+      swipeableCardWrapper.style.width = "300px";
+
+      const swipeableDiv = document.createElement("div");
+      swipeableDiv.className = "z-10 bg-white rounded-xl";
+      swipeableDiv.style.transform = "translateX(0px)";
+
+      const innerCard = document.createElement("div");
+      innerCard.setAttribute("data-tour", "assignment-card");
+      innerCard.textContent = "Card content";
+
+      swipeableDiv.appendChild(innerCard);
+      swipeableCardWrapper.appendChild(swipeableDiv);
+      document.body.appendChild(swipeableCardWrapper);
+
+      // Mock getBoundingClientRect on the element found by targetSelector (innerCard)
+      innerCard.getBoundingClientRect = vi.fn(() => ({
+        width: 300,
+        height: 100,
+        top: 0,
+        left: 0,
+        right: 300,
+        bottom: 100,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      }));
+
+      const onComplete = vi.fn();
+
+      render(
+        <TourAutoSwipe
+          targetSelector="[data-tour='assignment-card']"
+          direction="left"
+          onComplete={onComplete}
+          delay={100}
+          duration={500}
+        />
+      );
+
+      await act(async () => {
+        vi.advanceTimersByTime(120);
+      });
+
+      // The swipeableDiv (parent of target) should be animated, not the innerCard
+      expect(swipeableDiv.style.transform).toContain("translateX(-");
+
+      // Clean up test-specific structure and restore original for afterEach
+      swipeableCardWrapper.remove();
+      document.body.appendChild(container);
+    });
+
     it("does not animate when target element is not found", async () => {
       const onComplete = vi.fn();
 
