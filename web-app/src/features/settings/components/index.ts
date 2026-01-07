@@ -2,7 +2,6 @@ export { ProfileSection } from "./ProfileSection";
 export { PreferencesSection } from "./PreferencesSection";
 export { HomeLocationSection } from "./HomeLocationSection";
 export { TravelSettingsSection } from "./TravelSettingsSection";
-export { LocationTravelSection } from "./LocationTravelSection";
 export { DataProtectionSection } from "./DataProtectionSection";
 export { HelpToursSection } from "./HelpToursSection";
 export { DataRetentionSection } from "./DataRetentionSection";
