@@ -430,7 +430,9 @@ export const mockApi = {
 
     // Return mock season spanning current year
     const now = new Date();
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers -- Month indices: 8=September, 5=June (0-indexed)
     const seasonStart = new Date(now.getFullYear(), 8, 1); // September 1st
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers -- Month/day: June 30th next year
     const seasonEnd = new Date(now.getFullYear() + 1, 5, 30); // June 30th next year
 
     return {

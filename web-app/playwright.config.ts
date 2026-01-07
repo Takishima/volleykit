@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-magic-numbers -- Config file with timeout/retry values */
 import { defineConfig, devices } from '@playwright/test';
 
 /**

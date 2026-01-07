@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-magic-numbers -- UUID format requires specific string indices */
 /**
  * Deterministic UUID generation for demo data.
  * Uses hashing to create reproducible UUIDs from seed strings,

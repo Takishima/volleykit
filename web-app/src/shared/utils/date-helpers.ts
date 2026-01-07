@@ -44,6 +44,7 @@ export function formatDOB(birthday: string | null | undefined): string {
   if (isNaN(date.getTime())) return "";
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");
+  // eslint-disable-next-line @typescript-eslint/no-magic-numbers -- Get last 2 digits of year for YY format
   const year = String(date.getFullYear()).slice(-2);
   return `${day}.${month}.${year}`;
 }

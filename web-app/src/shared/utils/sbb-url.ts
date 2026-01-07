@@ -1,5 +1,6 @@
 import type { Locale } from "@/i18n";
 import type { StationInfo } from "@/shared/services/transport/types";
+import { MS_PER_MINUTE } from "@/shared/utils/constants";
 
 /**
  * Parameters for generating a public transport timetable URL.
@@ -21,6 +22,11 @@ export interface SbbUrlParams {
   originAddress?: string;
 }
 
+// Swiss UIC station ID format constants
+const SWISS_UIC_PREFIX = "85";
+const SWISS_UIC_TOTAL_LENGTH = 7;
+const SWISS_UIC_ID_LENGTH = 5; // Length after prefix
+
 /**
  * Normalize a Swiss station ID to the full UIC format.
  * SBB requires the "85" country prefix for Swiss stations.
@@ -36,13 +42,13 @@ export interface SbbUrlParams {
  */
 function normalizeSwissStationId(id: string): string {
   // If the ID already starts with "85" and is 7 digits, it's already normalized
-  if (id.startsWith("85") && id.length === 7) {
+  if (id.startsWith(SWISS_UIC_PREFIX) && id.length === SWISS_UIC_TOTAL_LENGTH) {
     return id;
   }
 
   // If it's a shorter numeric ID without "85" prefix, pad to 5 digits and add prefix
-  if (/^\d+$/.test(id) && !id.startsWith("85")) {
-    return `85${id.padStart(5, "0")}`;
+  if (/^\d+$/.test(id) && !id.startsWith(SWISS_UIC_PREFIX)) {
+    return `${SWISS_UIC_PREFIX}${id.padStart(SWISS_UIC_ID_LENGTH, "0")}`;
   }
 
   // Return as-is if it doesn't match expected patterns
@@ -140,7 +146,7 @@ export function calculateArrivalTime(
     typeof gameStartTime === "string"
       ? new Date(gameStartTime)
       : gameStartTime;
-  return new Date(startTime.getTime() - arrivalBufferMinutes * 60 * 1000);
+  return new Date(startTime.getTime() - arrivalBufferMinutes * MS_PER_MINUTE);
 }
 
 /**

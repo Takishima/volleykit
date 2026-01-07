@@ -53,6 +53,7 @@ export const DEMO_USER_REFEREE_LEVEL_GRADATION_VALUE = 2;
 export const DEMO_USER_PERSON_IDENTITY = generateDemoUuid("demo-user-person");
 
 // Demo data is considered stale after 6 hours
+// eslint-disable-next-line @typescript-eslint/no-magic-numbers -- Time calculation: 6 hours * 60 min * 60 sec * 1000 ms
 export const DEMO_DATA_STALENESS_MS = 6 * 60 * 60 * 1000;
 
 /**

@@ -57,6 +57,7 @@ const GEOADMIN_API_URL =
 const NOMINATIM_API_URL = "https://nominatim.openstreetmap.org/search";
 const DEFAULT_LIMIT = 5;
 const MIN_QUERY_LENGTH = 3;
+const MAX_API_RESULTS = 50; // Maximum results supported by geo.admin.ch API
 
 /**
  * Hook for geocoding addresses with Swiss priority and Nominatim fallback.
@@ -192,7 +193,7 @@ async function searchSwiss(
     searchText: query,
     type: "locations",
     origins: "address,zipcode",
-    limit: String(Math.min(limit, 50)),
+    limit: String(Math.min(limit, MAX_API_RESULTS)),
   });
 
   const response = await fetch(`${GEOADMIN_API_URL}?${params}`, { signal });

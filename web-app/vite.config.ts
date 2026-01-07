@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-magic-numbers -- Config file with build/cache values */
 /// <reference types="vitest" />
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
