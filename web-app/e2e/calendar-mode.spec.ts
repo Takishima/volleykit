@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import { LoginPage, NavigationPage } from "./pages";
 
 // Calendar Mode E2E tests: login flow, navigation restrictions, and banner display.
