@@ -439,6 +439,24 @@ interface ParserState {
   teamAColumnEnded: boolean;
 }
 
+/**
+ * Check if single-column rows should be assigned to Team B (overflow mode).
+ *
+ * In electronic scoresheets, both teams' rosters are displayed side-by-side in two columns.
+ * When one team has fewer players than the other, the shorter team's column ends first,
+ * and the remaining rows appear as single-column data (3 parts instead of 6).
+ *
+ * Team A's column (left side) always ends first when there's overflow because:
+ * 1. The scoresheet format places Team A in the left column
+ * 2. When Team A runs out of players, their cells become empty
+ * 3. The OCR then only captures Team B's data (right column), resulting in 3-part rows
+ *
+ * Therefore, after seeing two-column rows, any single-column rows belong to Team B.
+ */
+function isOverflowToTeamB(state: ParserState): boolean {
+  return state.teamAColumnEnded || state.seenTwoColumnPlayers;
+}
+
 function processHeaderLine(
   parts: string[],
   line: string,
@@ -483,12 +501,10 @@ function processPlayersLine(parts: string[], state: ParserState): void {
     // (Team A's column ended first, remaining players are Team B)
     const player = parsePlayerFromParts(parts, 0);
     if (player) {
-      if (state.seenTwoColumnPlayers) {
-        // Team A ended, overflow goes to Team B
+      if (isOverflowToTeamB(state)) {
         state.teamAColumnEnded = true;
         state.teamB.players.push(player);
       } else {
-        // Haven't seen two-column yet, assume Team A
         state.teamA.players.push(player);
       }
     }
@@ -523,8 +539,7 @@ function processLiberoLine(parts: string[], state: ParserState): void {
     // Format: [L1/L2 <num>] [NAME] [LICENSE]
     const libero = parseLiberoFromParts(parts, 0, 1, 2);
     if (libero) {
-      // Single-column liberos go to Team B if we've seen the transition
-      if (state.teamAColumnEnded || state.seenTwoColumnPlayers) {
+      if (isOverflowToTeamB(state)) {
         state.teamB.players.push(libero);
       } else {
         state.teamA.players.push(libero);
@@ -549,8 +564,7 @@ function processOfficialsLine(parts: string[], state: ParserState): void {
     // Single-column officials row
     const official = parseOfficialFromParts(parts, 0, 1);
     if (official) {
-      // Single-column officials go to Team B if we've seen the transition
-      if (state.teamAColumnEnded || state.seenTwoColumnPlayers) {
+      if (isOverflowToTeamB(state)) {
         state.teamB.officials.push(official);
       } else {
         state.teamA.officials.push(official);
