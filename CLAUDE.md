@@ -32,9 +32,9 @@ For code reviews and detailed examples, see:
 2. **Commit along the way** - Make meaningful commits as you progress (logical units of work)
 3. **Push** - The pre-push hook automatically validates before allowing the push
 
-### Automatic Pre-Push Validation
+### Automatic Pre-Push Validation (Claude Code Web Only)
 
-A git pre-push hook (`scripts/pre-push-validate.sh`) automatically runs validation before any push. This is configured via devenv and runs:
+A git pre-push hook (`scripts/pre-push-validate.sh`) automatically runs validation before any push **in Claude Code web environment only** (`CLAUDE_CODE_REMOTE=true`). Human developers are not affected and rely on CI. This is configured via devenv and runs:
 
 1. **Detect changes** - Skip validation for docs-only changes
 2. **Generate API types** - If `volleymanager-openapi.yaml` changed

@@ -1,8 +1,17 @@
 #!/usr/bin/env bash
 # Pre-push validation hook for VolleyKit
 # Runs lint, knip, and test in PARALLEL, then build sequentially
+#
+# IMPORTANT: This hook only runs in Claude Code web environment
+# to avoid slowing down human developers. Human devs rely on CI.
 
 set -e
+
+# Only run in Claude Code Remote environment (web sessions)
+# Human developers can skip this and rely on CI
+if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
+    exit 0
+fi
 
 # Colors for output
 RED='\033[0;31m'
