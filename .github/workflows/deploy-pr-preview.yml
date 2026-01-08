@@ -7,12 +7,14 @@ on:
       - 'ocr-poc/**'
       - 'help-site/**'
       - '.github/workflows/deploy-pr-preview.yml'
+      - '.github/actions/**'
 permissions:
   contents: write
   pull-requests: write
 concurrency:
   group: 'pages'
   cancel-in-progress: false
+
 jobs:
   # Build jobs run in parallel
   build-web-app:
@@ -24,26 +26,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
         with:
-          node-version: '20'
-
-      # Cache node_modules per branch with fallback to main
-      - name: Cache node_modules
-        id: cache-node-modules
-        uses: actions/cache@v5
-        with:
-          path: web-app/node_modules
-          key: node-modules-${{ runner.os }}-${{ github.head_ref }}-${{ hashFiles('web-app/package-lock.json') }}
-          restore-keys: |
-            node-modules-${{ runner.os }}-${{ github.head_ref }}-
-            node-modules-${{ runner.os }}-main-
-            node-modules-${{ runner.os }}-
-
-      - name: Install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
-        run: npm ci
+          working-directory: web-app
 
       # Cache generated API types (shared across branches)
       - name: Cache generated API types
@@ -120,26 +106,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
         with:
-          node-version: '20'
-
-      # Cache node_modules per branch with fallback to main
-      - name: Cache node_modules
-        id: cache-node-modules
-        uses: actions/cache@v5
-        with:
-          path: help-site/node_modules
-          key: help-site-node-modules-${{ runner.os }}-${{ github.head_ref }}-${{ hashFiles('help-site/package-lock.json') }}
-          restore-keys: |
-            help-site-node-modules-${{ runner.os }}-${{ github.head_ref }}-
-            help-site-node-modules-${{ runner.os }}-main-
-            help-site-node-modules-${{ runner.os }}-
-
-      - name: Install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
-        run: npm ci
+          working-directory: help-site
 
       # Cache Astro build artifacts per branch
       - name: Cache Astro build
@@ -172,26 +142,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
         with:
-          node-version: '20'
-
-      # Cache node_modules per branch with fallback to main
-      - name: Cache node_modules
-        id: cache-node-modules
-        uses: actions/cache@v5
-        with:
-          path: ocr-poc/node_modules
-          key: ocr-poc-node-modules-${{ runner.os }}-${{ github.head_ref }}-${{ hashFiles('ocr-poc/package-lock.json') }}
-          restore-keys: |
-            ocr-poc-node-modules-${{ runner.os }}-${{ github.head_ref }}-
-            ocr-poc-node-modules-${{ runner.os }}-main-
-            ocr-poc-node-modules-${{ runner.os }}-
-
-      - name: Install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
-        run: npm ci
+          working-directory: ocr-poc
 
       # Cache ESLint results per branch
       - name: Cache ESLint
@@ -235,21 +189,25 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
       - name: Download web-app artifact
         uses: actions/download-artifact@v4
         with:
           name: web-app-dist
           path: web-app-dist
+
       - name: Download help-site artifact
         uses: actions/download-artifact@v4
         with:
           name: help-site-dist
           path: help-site-dist
+
       - name: Download ocr-poc artifact
         uses: actions/download-artifact@v4
         with:
           name: ocr-poc-dist
           path: ocr-poc-dist
+
       - name: Delete artifacts
         uses: geekyeggo/delete-artifact@v5
         with:
@@ -257,6 +215,7 @@ jobs:
             web-app-dist
             help-site-dist
             ocr-poc-dist
+
       - name: Download existing gh-pages content
         run: |
           if git ls-remote --exit-code --heads origin gh-pages; then
@@ -267,6 +226,7 @@ jobs:
           else
             echo "gh-pages branch does not exist yet, starting fresh"
           fi
+
       - name: Prepare deployment with PR preview
         run: |
           mkdir -p deploy
@@ -283,6 +243,7 @@ jobs:
           # Add/update Help Site preview
           mkdir -p deploy/pr-${{ github.event.pull_request.number }}/help
           cp -r help-site-dist/* deploy/pr-${{ github.event.pull_request.number }}/help/
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
@@ -290,6 +251,7 @@ jobs:
           publish_dir: deploy
           keep_files: false
           enable_jekyll: false
+
       - name: Comment PR with preview link
         uses: actions/github-script@v8
         with:
