@@ -12,8 +12,35 @@ on:
       - '.github/workflows/ci.yml'
       - '.github/actions/**'
 
+# =============================================================================
+# CI Pipeline Architecture
+# =============================================================================
+#
+# Job Dependency Graph:
+#
+#   setup ─────┬──────────────────────────────────────┐
+#   (API types)│                                      │
+#              ├──> lint ──────┐                      │
+#              ├──> knip       │                      │
+#              ├──> test       │                      │
+#              └──> build ─────┼──> bundle-size       │
+#                              ├──> e2e (chromium)    │
+#                              ├──> e2e (firefox)     │
+#                              └──> lighthouse        │
+#                                                     │
+#   audit (independent) ──────────────────────────────┘
+#
+# Key Design Decisions:
+# - setup job generates API types ONCE, shared via artifact to avoid 4x generation
+# - audit runs independently (doesn't need API types)
+# - build artifact is shared by bundle-size, e2e, and lighthouse
+# - Per-branch caching with main fallback for faster PR builds
+#
+# =============================================================================
+
 jobs:
   # Setup job - generates API types once, shared by all downstream jobs
+  # This is the CRITICAL PATH for lint, knip, test, and build jobs
   setup:
     name: Setup
     runs-on: ubuntu-latest
