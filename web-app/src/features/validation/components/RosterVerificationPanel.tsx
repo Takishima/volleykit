@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo, lazy, Suspense } from "react";
 import type { PossibleNomination, NominationList, Schemas } from "@/api/client";
 import type { ValidatedPersonSearchResult } from "@/api/validation";
 import { useTranslation } from "@/shared/hooks/useTranslation";
@@ -20,9 +20,14 @@ import {
   RefreshCw,
   ChevronDown,
   ChevronUp,
+  Camera,
 } from "@/shared/components/icons";
 import { LoadingSpinner } from "@/shared/components/LoadingSpinner";
+import { useSettingsStore } from "@/shared/stores/settings";
 import { formatRosterEntries, getMaxLastNameWidth } from "@/shared/utils/date-helpers";
+
+// Lazy load OCR panel to reduce initial bundle size
+const OCRPanel = lazy(() => import("./OCRPanel").then(m => ({ default: m.OCRPanel })));
 
 type PersonSummary = Schemas["PersonSummary"];
 
@@ -111,6 +116,7 @@ export function RosterVerificationPanel({
       team,
       prefetchedData: prefetchedNominationList,
     });
+  const { isOCREnabled } = useSettingsStore();
 
   // Accordion state - players expanded by default as per user request
   const [expandedSection, setExpandedSection] =
@@ -136,6 +142,9 @@ export function RosterVerificationPanel({
   const [isAddPlayerSheetOpen, setIsAddPlayerSheetOpen] = useState(false);
   const [isAddCoachSheetOpen, setIsAddCoachSheetOpen] = useState(false);
   const [addingCoachRole, setAddingCoachRole] = useState<CoachRole>("head");
+
+  // OCR panel state
+  const [isOCRPanelOpen, setIsOCRPanelOpen] = useState(false);
 
   // Ref for stable callback
   const onModificationsChangeRef = useRef(onModificationsChange);
@@ -254,6 +263,20 @@ export function RosterVerificationPanel({
         newSet.delete(role);
         return newSet;
       });
+    },
+    [],
+  );
+
+  // OCR handlers
+  const handleOCRApplyResults = useCallback(
+    (matchedPlayerIds: string[]) => {
+      // Clear any removed flags for matched players
+      setRemovedPlayerIds((prev) => {
+        const newSet = new Set(prev);
+        matchedPlayerIds.forEach((id) => newSet.delete(id));
+        return newSet;
+      });
+      setIsOCRPanelOpen(false);
     },
     [],
   );
@@ -443,17 +466,30 @@ export function RosterVerificationPanel({
               </div>
             )}
 
-            {/* Add Player button - hidden in read-only mode */}
+            {/* Action buttons - hidden in read-only mode */}
             {!readOnly && (
-              <div className="mt-4">
+              <div className="mt-4 flex gap-2">
                 <button
                   type="button"
                   onClick={() => setIsAddPlayerSheetOpen(true)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 rounded-lg border border-primary-200 dark:border-primary-800 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 rounded-lg border border-primary-200 dark:border-primary-800 transition-colors"
                 >
                   <UserPlus className="w-4 h-4" aria-hidden="true" />
                   {t("validation.roster.addPlayer")}
                 </button>
+                {isOCREnabled && (
+                  <button
+                    type="button"
+                    onClick={() => setIsOCRPanelOpen(true)}
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/30 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 transition-colors"
+                    title={t("validation.ocr.scanScoresheet")}
+                  >
+                    <Camera className="w-4 h-4" aria-hidden="true" />
+                    <span className="sr-only">
+                      {t("validation.ocr.scanScoresheet")}
+                    </span>
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -480,6 +516,20 @@ export function RosterVerificationPanel({
           role={addingCoachRole}
           onSelectCoach={handleSelectCoach}
         />
+      )}
+
+      {/* OCR Panel - only available in edit mode and when OCR is enabled */}
+      {!readOnly && isOCREnabled && (
+        <Suspense fallback={null}>
+          <OCRPanel
+            isOpen={isOCRPanelOpen}
+            onClose={() => setIsOCRPanelOpen(false)}
+            team={team}
+            teamName={teamName}
+            rosterPlayers={allPlayers}
+            onApplyResults={handleOCRApplyResults}
+          />
+        </Suspense>
       )}
     </div>
   );

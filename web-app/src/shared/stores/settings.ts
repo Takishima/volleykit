@@ -129,6 +129,10 @@ interface SettingsState {
   isSafeValidationEnabled: boolean;
   setSafeValidation: (enabled: boolean) => void;
 
+  // OCR feature toggle (experimental)
+  isOCREnabled: boolean;
+  setOCREnabled: (enabled: boolean) => void;
+
   // Accessibility settings
   preventZoom: boolean;
   setPreventZoom: (enabled: boolean) => void;
@@ -237,6 +241,7 @@ export const useSettingsStore = create<SettingsState>()(
         // Global settings
         isSafeModeEnabled: true,
         isSafeValidationEnabled: true,
+        isOCREnabled: false,
         preventZoom: false,
 
         // Mode tracking
@@ -271,6 +276,10 @@ export const useSettingsStore = create<SettingsState>()(
 
         setSafeValidation: (enabled: boolean) => {
           set({ isSafeValidationEnabled: enabled });
+        },
+
+        setOCREnabled: (enabled: boolean) => {
+          set({ isOCREnabled: enabled });
         },
 
         setPreventZoom: (enabled: boolean) => {
@@ -459,11 +468,12 @@ export const useSettingsStore = create<SettingsState>()(
       }),
       {
         name: "volleykit-settings",
-        version: 3,
+        version: 4,
         partialize: (state) => ({
           // Global settings
           isSafeModeEnabled: state.isSafeModeEnabled,
           isSafeValidationEnabled: state.isSafeValidationEnabled,
+          isOCREnabled: state.isOCREnabled,
           preventZoom: state.preventZoom,
           // Mode-specific settings stored per mode
           settingsByMode: state.settingsByMode,
@@ -547,6 +557,7 @@ export const useSettingsStore = create<SettingsState>()(
             | {
                 isSafeModeEnabled?: boolean;
                 isSafeValidationEnabled?: boolean;
+                isOCREnabled?: boolean;
                 preventZoom?: boolean;
                 settingsByMode?: Record<DataSource, Partial<ModeSettings>>;
               }
@@ -600,6 +611,7 @@ export const useSettingsStore = create<SettingsState>()(
             isSafeModeEnabled: persistedState?.isSafeModeEnabled ?? current.isSafeModeEnabled,
             isSafeValidationEnabled:
               persistedState?.isSafeValidationEnabled ?? current.isSafeValidationEnabled,
+            isOCREnabled: persistedState?.isOCREnabled ?? current.isOCREnabled,
             preventZoom: persistedState?.preventZoom ?? current.preventZoom,
             // Preserve mode-specific settings
             settingsByMode: mergedSettingsByMode,
