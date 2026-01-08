@@ -29,20 +29,22 @@ import type {
 // Constants
 // =============================================================================
 
-/** Minimum parts required for team A player data */
-const MIN_PARTS_TEAM_A = 3;
-/** Minimum parts required for team B player data */
-const MIN_PARTS_TEAM_B = 6;
-/** Minimum parts for team A official */
-const MIN_PARTS_OFFICIAL_A = 2;
-/** Minimum parts for team B official */
-const MIN_PARTS_OFFICIAL_B = 4;
+/** Minimum parts required for single-column player data */
+const MIN_PARTS_SINGLE_COLUMN = 3;
+/** Minimum parts required for two-column (both teams) player data */
+const MIN_PARTS_TWO_COLUMN = 6;
+/** Minimum parts for single-column official */
+const MIN_PARTS_OFFICIAL_SINGLE = 2;
+/** Minimum parts for two-column official */
+const MIN_PARTS_OFFICIAL_TWO_COL = 4;
 
-/** Index positions for libero entries in tab-separated format */
-const LIBERO_A_ENTRY_IDX = 1;
-const LIBERO_A_LICENSE_IDX = 2;
-const LIBERO_B_ENTRY_IDX = 4;
-const LIBERO_B_LICENSE_IDX = 5;
+/** Index positions for libero entries in two-column tab-separated format */
+const LIBERO_TWO_COL_A_MARKER_IDX = 0;
+const LIBERO_TWO_COL_A_NAME_IDX = 1;
+const LIBERO_TWO_COL_A_LICENSE_IDX = 2;
+const LIBERO_TWO_COL_B_MARKER_IDX = 3;
+const LIBERO_TWO_COL_B_NAME_IDX = 4;
+const LIBERO_TWO_COL_B_LICENSE_IDX = 5;
 
 /** Index positions for official entries */
 const OFFICIAL_B_ROLE_IDX = 2;
@@ -139,7 +141,30 @@ export function parseOfficialName(rawName: string): {
 }
 
 /**
+ * Extract shirt number from libero marker field
+ * Handles formats like "L 12", "L1 6", "L2 17"
+ * The marker (L, L1, L2) indicates libero position, the number is the shirt number
+ */
+function parseLiberoMarker(marker: string): number | null {
+  if (!marker || typeof marker !== 'string') {
+    return null;
+  }
+
+  const trimmed = marker.trim();
+  // Match libero marker (L, L1, L2, etc.) followed by optional space and number
+  // e.g., "L 12" -> 12, "L1 6" -> 6, "L2 17" -> 17
+  const match = /^L\d?\s+(\d{1,2})$/.exec(trimmed);
+
+  if (match) {
+    return parseInt(match[1]!, 10);
+  }
+
+  return null;
+}
+
+/**
  * Parse a libero entry which has format "Number LASTNAME FIRSTNAME"
+ * Used for old-style format where number is in the name field
  * Uses a non-greedy match to avoid backtracking issues
  */
 function parseLiberoEntry(entry: string): { number: number | null; name: string } {
@@ -220,7 +245,7 @@ function findTeamNamesIndex(lines: string[], headerIndex: number): number {
 
 function isPlayerDataLine(line: string): boolean {
   const parts = line.split('\t');
-  if (parts.length < MIN_PARTS_TEAM_A) return false;
+  if (parts.length < MIN_PARTS_SINGLE_COLUMN) return false;
 
   const firstPart = parts[0]!.trim();
   if (!/^\d{1,2}$/.test(firstPart)) return false;
@@ -329,26 +354,51 @@ function parsePlayerFromParts(
   };
 }
 
+/**
+ * Parse libero from parts where marker contains the number
+ * Format: [L1 <num>] [NAME] [LICENSE]
+ * Falls back to old format where number is in the name field if marker parsing fails
+ */
 function parseLiberoFromParts(
   parts: string[],
-  entryIdx: number,
+  markerIdx: number,
+  nameIdx: number,
   licenseIdx: number,
 ): ParsedPlayer | null {
-  const entryStr = parts[entryIdx];
-  if (!entryStr) return null;
-  const entry = parseLiberoEntry(entryStr);
-  const license = parts[licenseIdx];
+  const markerStr = parts[markerIdx];
+  const nameStr = parts[nameIdx];
 
-  if (!entry.name) return null;
+  if (!markerStr || !nameStr) return null;
 
-  const parsed = parsePlayerName(entry.name);
+  // Extract shirt number from marker (e.g., "L1 7" -> 7)
+  const shirtNumber = parseLiberoMarker(markerStr);
+
+  // If marker doesn't contain number, try old format (number in name field)
+  if (shirtNumber === null) {
+    const entry = parseLiberoEntry(nameStr);
+    if (entry.name) {
+      const parsed = parsePlayerName(entry.name);
+      return {
+        shirtNumber: entry.number,
+        lastName: parsed.lastName,
+        firstName: parsed.firstName,
+        displayName: parsed.displayName,
+        rawName: entry.name,
+        licenseStatus: parts[licenseIdx] || '',
+      };
+    }
+    return null;
+  }
+
+  // New format: number in marker, name is just the name
+  const parsed = parsePlayerName(nameStr);
   return {
-    shirtNumber: entry.number,
+    shirtNumber,
     lastName: parsed.lastName,
     firstName: parsed.firstName,
     displayName: parsed.displayName,
-    rawName: entry.name,
-    licenseStatus: license || '',
+    rawName: nameStr,
+    licenseStatus: parts[licenseIdx] || '',
   };
 }
 
@@ -383,6 +433,10 @@ interface ParserState {
   headerRowsParsed: number;
   teamA: ParsedTeam;
   teamB: ParsedTeam;
+  /** Whether we've seen two-column player rows (6+ parts) */
+  seenTwoColumnPlayers: boolean;
+  /** Whether Team A's column has ended (single-column rows go to Team B) */
+  teamAColumnEnded: boolean;
 }
 
 function processHeaderLine(
@@ -410,38 +464,98 @@ function processHeaderLine(
 }
 
 function processPlayersLine(parts: string[], state: ParserState): void {
-  if (parts.length < MIN_PARTS_TEAM_A) return;
+  if (parts.length < MIN_PARTS_SINGLE_COLUMN) return;
 
-  const playerA = parsePlayerFromParts(parts, 0);
-  if (playerA) state.teamA.players.push(playerA);
+  const isTwoColumnRow = parts.length >= MIN_PARTS_TWO_COLUMN;
 
-  if (parts.length >= MIN_PARTS_TEAM_B) {
-    const playerB = parsePlayerFromParts(parts, MIN_PARTS_TEAM_A);
+  if (isTwoColumnRow) {
+    // Two-column row: both teams have data
+    state.seenTwoColumnPlayers = true;
+
+    const playerA = parsePlayerFromParts(parts, 0);
+    if (playerA) state.teamA.players.push(playerA);
+
+    const playerB = parsePlayerFromParts(parts, MIN_PARTS_SINGLE_COLUMN);
     if (playerB) state.teamB.players.push(playerB);
+  } else {
+    // Single-column row: only one team has data
+    // If we've already seen two-column rows, this is overflow for Team B
+    // (Team A's column ended first, remaining players are Team B)
+    const player = parsePlayerFromParts(parts, 0);
+    if (player) {
+      if (state.seenTwoColumnPlayers) {
+        // Team A ended, overflow goes to Team B
+        state.teamAColumnEnded = true;
+        state.teamB.players.push(player);
+      } else {
+        // Haven't seen two-column yet, assume Team A
+        state.teamA.players.push(player);
+      }
+    }
   }
 }
 
 function processLiberoLine(parts: string[], state: ParserState): void {
-  if (parts.length < MIN_PARTS_TEAM_A) return;
+  if (parts.length < MIN_PARTS_SINGLE_COLUMN) return;
 
-  const liberoA = parseLiberoFromParts(parts, LIBERO_A_ENTRY_IDX, LIBERO_A_LICENSE_IDX);
-  if (liberoA) state.teamA.players.push(liberoA);
+  const isTwoColumnRow = parts.length >= MIN_PARTS_TWO_COLUMN;
 
-  if (parts.length >= MIN_PARTS_TEAM_B) {
-    const liberoB = parseLiberoFromParts(parts, LIBERO_B_ENTRY_IDX, LIBERO_B_LICENSE_IDX);
+  if (isTwoColumnRow) {
+    // Two-column libero row: both teams have libero data
+    // Format: [L1 <num>] [NAME] [LICENSE] [L1 <num>] [NAME] [LICENSE]
+    const liberoA = parseLiberoFromParts(
+      parts,
+      LIBERO_TWO_COL_A_MARKER_IDX,
+      LIBERO_TWO_COL_A_NAME_IDX,
+      LIBERO_TWO_COL_A_LICENSE_IDX,
+    );
+    if (liberoA) state.teamA.players.push(liberoA);
+
+    const liberoB = parseLiberoFromParts(
+      parts,
+      LIBERO_TWO_COL_B_MARKER_IDX,
+      LIBERO_TWO_COL_B_NAME_IDX,
+      LIBERO_TWO_COL_B_LICENSE_IDX,
+    );
     if (liberoB) state.teamB.players.push(liberoB);
+  } else {
+    // Single-column libero row
+    // Format: [L1/L2 <num>] [NAME] [LICENSE]
+    const libero = parseLiberoFromParts(parts, 0, 1, 2);
+    if (libero) {
+      // Single-column liberos go to Team B if we've seen the transition
+      if (state.teamAColumnEnded || state.seenTwoColumnPlayers) {
+        state.teamB.players.push(libero);
+      } else {
+        state.teamA.players.push(libero);
+      }
+    }
   }
 }
 
 function processOfficialsLine(parts: string[], state: ParserState): void {
-  if (parts.length < MIN_PARTS_OFFICIAL_A) return;
+  if (parts.length < MIN_PARTS_OFFICIAL_SINGLE) return;
 
-  const officialA = parseOfficialFromParts(parts, 0, 1);
-  if (officialA) state.teamA.officials.push(officialA);
+  const isTwoColumnRow = parts.length >= MIN_PARTS_OFFICIAL_TWO_COL;
 
-  if (parts.length >= MIN_PARTS_OFFICIAL_B) {
+  if (isTwoColumnRow) {
+    // Two-column officials row: both teams have official data
+    const officialA = parseOfficialFromParts(parts, 0, 1);
+    if (officialA) state.teamA.officials.push(officialA);
+
     const officialB = parseOfficialFromParts(parts, OFFICIAL_B_ROLE_IDX, OFFICIAL_B_NAME_IDX);
     if (officialB) state.teamB.officials.push(officialB);
+  } else {
+    // Single-column officials row
+    const official = parseOfficialFromParts(parts, 0, 1);
+    if (official) {
+      // Single-column officials go to Team B if we've seen the transition
+      if (state.teamAColumnEnded || state.seenTwoColumnPlayers) {
+        state.teamB.officials.push(official);
+      } else {
+        state.teamA.officials.push(official);
+      }
+    }
   }
 }
 
@@ -496,6 +610,8 @@ export function parseGameSheet(ocrText: string): ParsedGameSheet {
     headerRowsParsed: 0,
     teamA: { name: '', players: [], officials: [] },
     teamB: { name: '', players: [], officials: [] },
+    seenTwoColumnPlayers: false,
+    teamAColumnEnded: false,
   };
 
   if (!ocrText || typeof ocrText !== 'string') {
