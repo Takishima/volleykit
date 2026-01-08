@@ -90,6 +90,10 @@ export function ImageCropEditor({
   const dragStartRef = useRef<Position>({ x: 0, y: 0 });
   const positionStartRef = useRef<Position>({ x: 0, y: 0 });
 
+  // Pinch zoom state
+  const pinchStartDistanceRef = useRef<number>(0);
+  const pinchStartZoomRef = useRef<number>(1);
+
   // Frame dimensions
   const [frameSize, setFrameSize] = useState({ width: 0, height: 0 });
 
@@ -204,6 +208,45 @@ export function ImageCropEditor({
     setZoom((z) => Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, z * delta)));
   }, []);
 
+  // Calculate distance between two touch points (called only when length >= 2)
+  const getTouchDistance = useCallback((touches: React.TouchList): number => {
+    const touch0 = touches[0];
+    const touch1 = touches[1];
+    if (!touch0 || !touch1) return 0;
+    const dx = touch0.clientX - touch1.clientX;
+    const dy = touch0.clientY - touch1.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }, []);
+
+  // Pinch zoom handlers
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        pinchStartDistanceRef.current = getTouchDistance(e.touches);
+        pinchStartZoomRef.current = zoom;
+      }
+    },
+    [zoom, getTouchDistance],
+  );
+
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      if (e.touches.length === 2 && pinchStartDistanceRef.current > 0) {
+        e.preventDefault();
+        const currentDistance = getTouchDistance(e.touches);
+        const scale = currentDistance / pinchStartDistanceRef.current;
+        const newZoom = pinchStartZoomRef.current * scale;
+        setZoom(Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom)));
+      }
+    },
+    [getTouchDistance],
+  );
+
+  const handleTouchEnd = useCallback(() => {
+    pinchStartDistanceRef.current = 0;
+  }, []);
+
   // Crop and export
   const handleConfirm = useCallback(() => {
     if (!imageRef.current || !viewportRef.current) return;
@@ -275,6 +318,9 @@ export function ImageCropEditor({
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
         onWheel={handleWheel}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         {/* Image */}
         <img

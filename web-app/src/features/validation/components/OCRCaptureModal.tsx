@@ -291,11 +291,6 @@ export function OCRCaptureModal({
             {t("validation.ocr.scanScoresheetDescription")}
           </p>
 
-          {/* Scoresheet guide preview */}
-          <div className="relative aspect-[4/3] bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
-            <ScoresheetGuide scoresheetType={scoresheetType} />
-          </div>
-
           {/* Error message */}
           {error && (
             <div
