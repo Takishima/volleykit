@@ -12,6 +12,9 @@ dist/
 *.log
 npm-debug.log*
 
+# ESLint cache
+.eslintcache
+
 # Editor
 .vscode/
 .idea/
