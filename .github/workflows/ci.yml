@@ -305,15 +305,15 @@ jobs:
           path: web-app/dist
 
       - name: Run E2E tests
-        run: npx playwright test --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/3 --retries=2
+        run: npx playwright test --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/3 --retries=2 --reporter=blob
 
-      - name: Upload test results
+      - name: Upload blob report
         uses: actions/upload-artifact@v5
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report-${{ matrix.browser }}-shard-${{ matrix.shard }}
-          path: web-app/playwright-report/
-          retention-days: 7
+          name: blob-report-${{ matrix.browser }}-shard-${{ matrix.shard }}
+          path: web-app/blob-report/
+          retention-days: 1
 
   # Merge E2E shard reports into single HTML report for easier debugging
   e2e-report:
@@ -333,15 +333,15 @@ jobs:
         with:
           working-directory: web-app
 
-      - name: Download all shard reports
+      - name: Download all blob reports
         uses: actions/download-artifact@v5
         with:
-          pattern: playwright-report-*
-          path: web-app/all-reports
-          merge-multiple: false
+          pattern: blob-report-*
+          path: web-app/all-blob-reports
+          merge-multiple: true
 
       - name: Merge reports
-        run: npx playwright merge-reports --reporter=html ./all-reports/*
+        run: npx playwright merge-reports --reporter=html ./all-blob-reports
 
       - name: Upload merged report
         uses: actions/upload-artifact@v5
