@@ -513,6 +513,40 @@ export interface Translations {
       alreadyValidated: string;
       validatedBy: string;
     };
+    ocr: {
+      scanScoresheet: string;
+      scanScoresheetDescription: string;
+      takePhoto: string;
+      selectImage: string;
+      processing: string;
+      processingDescription: string;
+      scanComplete: string;
+      scanFailed: string;
+      noPlayersFound: string;
+      retryCapture: string;
+      useResults: string;
+      cancel: string;
+      comparison: {
+        title: string;
+        matched: string;
+        ocrOnly: string;
+        rosterOnly: string;
+        confidence: string;
+        matchedCount: string;
+        ocrOnlyCount: string;
+        rosterOnlyCount: string;
+        noMatches: string;
+        applyMatches: string;
+        selectAll: string;
+        deselectAll: string;
+      };
+      errors: {
+        cameraNotAvailable: string;
+        processingFailed: string;
+        noTextFound: string;
+        imageTooLarge: string;
+      };
+    };
   };
   tour: {
     banner: {

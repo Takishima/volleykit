@@ -340,8 +340,9 @@ describe("ValidateGameModal", () => {
       );
 
       // Navigate to step 4 using step indicator (since Validate on step 3 is disabled without scorer)
+      // Use exact match to avoid matching "Scan Scoresheet" button
       const scoresheetStep = screen.getByRole("button", {
-        name: /Scoresheet/i,
+        name: "Scoresheet",
         hidden: true,
       });
       fireEvent.click(scoresheetStep);
@@ -472,8 +473,9 @@ describe("ValidateGameModal", () => {
       );
 
       // Navigate to step 4 using step indicator
+      // Use exact match to avoid matching "Scan Scoresheet" button
       const scoresheetStep = screen.getByRole("button", {
-        name: /Scoresheet/i,
+        name: "Scoresheet",
         hidden: true,
       });
       fireEvent.click(scoresheetStep);
@@ -516,8 +518,9 @@ describe("ValidateGameModal", () => {
       );
 
       // Navigate to last step using step indicator
+      // Use exact match to avoid matching "Scan Scoresheet" button
       const scoresheetStep = screen.getByRole("button", {
-        name: /Scoresheet/i,
+        name: "Scoresheet",
         hidden: true,
       });
       fireEvent.click(scoresheetStep);
@@ -543,8 +546,9 @@ describe("ValidateGameModal", () => {
 
       // Navigate to last step using step indicator (not Validate button)
       // This allows us to reach the last step without validating previous steps
+      // Use exact match to avoid matching "Scan Scoresheet" button
       const scoresheetStep = screen.getByRole("button", {
-        name: /Scoresheet/i,
+        name: "Scoresheet",
         hidden: true,
       });
       fireEvent.click(scoresheetStep);

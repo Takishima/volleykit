@@ -27,6 +27,8 @@ export { RefreshCw } from "lucide-react";
 export { Loader2 } from "lucide-react";
 export { Trash2 } from "lucide-react";
 export { Undo2 } from "lucide-react";
+export { Image } from "lucide-react";
+export { XCircle } from "lucide-react";
 export { ChevronDown } from "lucide-react";
 export { ChevronUp } from "lucide-react";
 export { ChevronRight } from "lucide-react";
