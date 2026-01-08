@@ -114,7 +114,11 @@ export function useOCRScoresheet(): UseOCRScoresheetReturn {
    */
   const cancel = useCallback(async () => {
     if (engineRef.current) {
-      await engineRef.current.terminate();
+      try {
+        await engineRef.current.terminate();
+      } catch {
+        // Ignore errors during cancellation - engine may already be terminated
+      }
       engineRef.current = null;
     }
     setIsProcessing(false);

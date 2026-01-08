@@ -118,7 +118,13 @@ export class MistralOCR implements OCREngine {
     // Verify the OCR endpoint is reachable via health check
     try {
       const healthUrl = this.#endpoint.replace('/ocr', '/health');
-      const response = await fetch(healthUrl, { method: 'GET' });
+      // Create abort controller for health check (can be cancelled via terminate())
+      this.#abortController = new AbortController();
+      const response = await fetch(healthUrl, {
+        method: 'GET',
+        signal: this.#abortController.signal,
+      });
+      this.#abortController = null;
 
       if (!response.ok) {
         throw new Error('OCR service health check failed');
@@ -127,6 +133,11 @@ export class MistralOCR implements OCREngine {
       this.#reportProgress('Mistral OCR ready', PROGRESS_INIT_READY);
       this.#initialized = true;
     } catch (error) {
+      this.#abortController = null;
+      // Handle cancellation
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('OCR cancelled');
+      }
       // Health check failed but we'll try OCR anyway
       console.warn(
         'OCR service health check failed, will attempt OCR anyway:',
