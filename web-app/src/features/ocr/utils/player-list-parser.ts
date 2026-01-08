@@ -23,26 +23,30 @@ import type {
   ParsedTeam,
   ParsedGameSheet,
   OfficialRole,
+  OCRResult,
+  OCRLine,
 } from '../types';
 
 // =============================================================================
 // Constants
 // =============================================================================
 
-/** Minimum parts required for team A player data */
-const MIN_PARTS_TEAM_A = 3;
-/** Minimum parts required for team B player data */
-const MIN_PARTS_TEAM_B = 6;
-/** Minimum parts for team A official */
-const MIN_PARTS_OFFICIAL_A = 2;
-/** Minimum parts for team B official */
-const MIN_PARTS_OFFICIAL_B = 4;
+/** Minimum parts required for single-column player data */
+const MIN_PARTS_SINGLE_COLUMN = 3;
+/** Minimum parts required for two-column (both teams) player data */
+const MIN_PARTS_TWO_COLUMN = 6;
+/** Minimum parts for single-column official */
+const MIN_PARTS_OFFICIAL_SINGLE = 2;
+/** Minimum parts for two-column official */
+const MIN_PARTS_OFFICIAL_TWO_COL = 4;
 
-/** Index positions for libero entries in tab-separated format */
-const LIBERO_A_ENTRY_IDX = 1;
-const LIBERO_A_LICENSE_IDX = 2;
-const LIBERO_B_ENTRY_IDX = 4;
-const LIBERO_B_LICENSE_IDX = 5;
+/** Index positions for libero entries in two-column tab-separated format */
+const LIBERO_TWO_COL_A_MARKER_IDX = 0;
+const LIBERO_TWO_COL_A_NAME_IDX = 1;
+const LIBERO_TWO_COL_A_LICENSE_IDX = 2;
+const LIBERO_TWO_COL_B_MARKER_IDX = 3;
+const LIBERO_TWO_COL_B_NAME_IDX = 4;
+const LIBERO_TWO_COL_B_LICENSE_IDX = 5;
 
 /** Index positions for official entries */
 const OFFICIAL_B_ROLE_IDX = 2;
@@ -55,6 +59,11 @@ const TEAM_NAME_LOOKBACK = 3;
 const MIN_ALPHA_LENGTH = 3;
 /** Maximum valid shirt number */
 const MAX_SHIRT_NUMBER = 99;
+
+/** Minimum words in a line to consider for column boundary detection */
+const MIN_WORDS_FOR_COLUMN_DETECTION = 4;
+/** Minimum gap in pixels between columns to consider as column separator */
+const MIN_COLUMN_GAP_PX = 50;
 
 // =============================================================================
 // Name Parsing Utilities
@@ -139,7 +148,30 @@ export function parseOfficialName(rawName: string): {
 }
 
 /**
+ * Extract shirt number from libero marker field
+ * Handles formats like "L 12", "L1 6", "L2 17"
+ * The marker (L, L1, L2) indicates libero position, the number is the shirt number
+ */
+function parseLiberoMarker(marker: string): number | null {
+  if (!marker || typeof marker !== 'string') {
+    return null;
+  }
+
+  const trimmed = marker.trim();
+  // Match libero marker (L, L1, L2, etc.) followed by optional space and number
+  // e.g., "L 12" -> 12, "L1 6" -> 6, "L2 17" -> 17
+  const match = /^L\d?\s+(\d{1,2})$/.exec(trimmed);
+
+  if (match) {
+    return parseInt(match[1]!, 10);
+  }
+
+  return null;
+}
+
+/**
  * Parse a libero entry which has format "Number LASTNAME FIRSTNAME"
+ * Used for old-style format where number is in the name field
  * Uses a non-greedy match to avoid backtracking issues
  */
 function parseLiberoEntry(entry: string): { number: number | null; name: string } {
@@ -220,7 +252,7 @@ function findTeamNamesIndex(lines: string[], headerIndex: number): number {
 
 function isPlayerDataLine(line: string): boolean {
   const parts = line.split('\t');
-  if (parts.length < MIN_PARTS_TEAM_A) return false;
+  if (parts.length < MIN_PARTS_SINGLE_COLUMN) return false;
 
   const firstPart = parts[0]!.trim();
   if (!/^\d{1,2}$/.test(firstPart)) return false;
@@ -329,26 +361,51 @@ function parsePlayerFromParts(
   };
 }
 
+/**
+ * Parse libero from parts where marker contains the number
+ * Format: [L1 <num>] [NAME] [LICENSE]
+ * Falls back to old format where number is in the name field if marker parsing fails
+ */
 function parseLiberoFromParts(
   parts: string[],
-  entryIdx: number,
+  markerIdx: number,
+  nameIdx: number,
   licenseIdx: number,
 ): ParsedPlayer | null {
-  const entryStr = parts[entryIdx];
-  if (!entryStr) return null;
-  const entry = parseLiberoEntry(entryStr);
-  const license = parts[licenseIdx];
+  const markerStr = parts[markerIdx];
+  const nameStr = parts[nameIdx];
 
-  if (!entry.name) return null;
+  if (!markerStr || !nameStr) return null;
 
-  const parsed = parsePlayerName(entry.name);
+  // Extract shirt number from marker (e.g., "L1 7" -> 7)
+  const shirtNumber = parseLiberoMarker(markerStr);
+
+  // If marker doesn't contain number, try old format (number in name field)
+  if (shirtNumber === null) {
+    const entry = parseLiberoEntry(nameStr);
+    if (entry.name) {
+      const parsed = parsePlayerName(entry.name);
+      return {
+        shirtNumber: entry.number,
+        lastName: parsed.lastName,
+        firstName: parsed.firstName,
+        displayName: parsed.displayName,
+        rawName: entry.name,
+        licenseStatus: parts[licenseIdx] || '',
+      };
+    }
+    return null;
+  }
+
+  // New format: number in marker, name is just the name
+  const parsed = parsePlayerName(nameStr);
   return {
-    shirtNumber: entry.number,
+    shirtNumber,
     lastName: parsed.lastName,
     firstName: parsed.firstName,
     displayName: parsed.displayName,
-    rawName: entry.name,
-    licenseStatus: license || '',
+    rawName: nameStr,
+    licenseStatus: parts[licenseIdx] || '',
   };
 }
 
@@ -383,6 +440,28 @@ interface ParserState {
   headerRowsParsed: number;
   teamA: ParsedTeam;
   teamB: ParsedTeam;
+  /** Whether we've seen two-column player rows (6+ parts) */
+  seenTwoColumnPlayers: boolean;
+  /** Whether Team A's column has ended (single-column rows go to Team B) */
+  teamAColumnEnded: boolean;
+}
+
+/**
+ * Check if single-column rows should be assigned to Team B (overflow mode).
+ *
+ * In electronic scoresheets, both teams' rosters are displayed side-by-side in two columns.
+ * When one team has fewer players than the other, the shorter team's column ends first,
+ * and the remaining rows appear as single-column data (3 parts instead of 6).
+ *
+ * Team A's column (left side) always ends first when there's overflow because:
+ * 1. The scoresheet format places Team A in the left column
+ * 2. When Team A runs out of players, their cells become empty
+ * 3. The OCR then only captures Team B's data (right column), resulting in 3-part rows
+ *
+ * Therefore, after seeing two-column rows, any single-column rows belong to Team B.
+ */
+function isOverflowToTeamB(state: ParserState): boolean {
+  return state.teamAColumnEnded || state.seenTwoColumnPlayers;
 }
 
 function processHeaderLine(
@@ -410,38 +489,94 @@ function processHeaderLine(
 }
 
 function processPlayersLine(parts: string[], state: ParserState): void {
-  if (parts.length < MIN_PARTS_TEAM_A) return;
+  if (parts.length < MIN_PARTS_SINGLE_COLUMN) return;
 
-  const playerA = parsePlayerFromParts(parts, 0);
-  if (playerA) state.teamA.players.push(playerA);
+  const isTwoColumnRow = parts.length >= MIN_PARTS_TWO_COLUMN;
 
-  if (parts.length >= MIN_PARTS_TEAM_B) {
-    const playerB = parsePlayerFromParts(parts, MIN_PARTS_TEAM_A);
+  if (isTwoColumnRow) {
+    // Two-column row: both teams have data
+    state.seenTwoColumnPlayers = true;
+
+    const playerA = parsePlayerFromParts(parts, 0);
+    if (playerA) state.teamA.players.push(playerA);
+
+    const playerB = parsePlayerFromParts(parts, MIN_PARTS_SINGLE_COLUMN);
     if (playerB) state.teamB.players.push(playerB);
+  } else {
+    // Single-column row: only one team has data
+    // If we've already seen two-column rows, this is overflow for Team B
+    // (Team A's column ended first, remaining players are Team B)
+    const player = parsePlayerFromParts(parts, 0);
+    if (player) {
+      if (isOverflowToTeamB(state)) {
+        state.teamAColumnEnded = true;
+        state.teamB.players.push(player);
+      } else {
+        state.teamA.players.push(player);
+      }
+    }
   }
 }
 
 function processLiberoLine(parts: string[], state: ParserState): void {
-  if (parts.length < MIN_PARTS_TEAM_A) return;
+  if (parts.length < MIN_PARTS_SINGLE_COLUMN) return;
 
-  const liberoA = parseLiberoFromParts(parts, LIBERO_A_ENTRY_IDX, LIBERO_A_LICENSE_IDX);
-  if (liberoA) state.teamA.players.push(liberoA);
+  const isTwoColumnRow = parts.length >= MIN_PARTS_TWO_COLUMN;
 
-  if (parts.length >= MIN_PARTS_TEAM_B) {
-    const liberoB = parseLiberoFromParts(parts, LIBERO_B_ENTRY_IDX, LIBERO_B_LICENSE_IDX);
+  if (isTwoColumnRow) {
+    // Two-column libero row: both teams have libero data
+    // Format: [L1 <num>] [NAME] [LICENSE] [L1 <num>] [NAME] [LICENSE]
+    const liberoA = parseLiberoFromParts(
+      parts,
+      LIBERO_TWO_COL_A_MARKER_IDX,
+      LIBERO_TWO_COL_A_NAME_IDX,
+      LIBERO_TWO_COL_A_LICENSE_IDX,
+    );
+    if (liberoA) state.teamA.players.push(liberoA);
+
+    const liberoB = parseLiberoFromParts(
+      parts,
+      LIBERO_TWO_COL_B_MARKER_IDX,
+      LIBERO_TWO_COL_B_NAME_IDX,
+      LIBERO_TWO_COL_B_LICENSE_IDX,
+    );
     if (liberoB) state.teamB.players.push(liberoB);
+  } else {
+    // Single-column libero row
+    // Format: [L1/L2 <num>] [NAME] [LICENSE]
+    const libero = parseLiberoFromParts(parts, 0, 1, 2);
+    if (libero) {
+      if (isOverflowToTeamB(state)) {
+        state.teamB.players.push(libero);
+      } else {
+        state.teamA.players.push(libero);
+      }
+    }
   }
 }
 
 function processOfficialsLine(parts: string[], state: ParserState): void {
-  if (parts.length < MIN_PARTS_OFFICIAL_A) return;
+  if (parts.length < MIN_PARTS_OFFICIAL_SINGLE) return;
 
-  const officialA = parseOfficialFromParts(parts, 0, 1);
-  if (officialA) state.teamA.officials.push(officialA);
+  const isTwoColumnRow = parts.length >= MIN_PARTS_OFFICIAL_TWO_COL;
 
-  if (parts.length >= MIN_PARTS_OFFICIAL_B) {
+  if (isTwoColumnRow) {
+    // Two-column officials row: both teams have official data
+    const officialA = parseOfficialFromParts(parts, 0, 1);
+    if (officialA) state.teamA.officials.push(officialA);
+
     const officialB = parseOfficialFromParts(parts, OFFICIAL_B_ROLE_IDX, OFFICIAL_B_NAME_IDX);
     if (officialB) state.teamB.officials.push(officialB);
+  } else {
+    // Single-column officials row
+    const official = parseOfficialFromParts(parts, 0, 1);
+    if (official) {
+      if (isOverflowToTeamB(state)) {
+        state.teamB.officials.push(official);
+      } else {
+        state.teamA.officials.push(official);
+      }
+    }
   }
 }
 
@@ -496,6 +631,8 @@ export function parseGameSheet(ocrText: string): ParsedGameSheet {
     headerRowsParsed: 0,
     teamA: { name: '', players: [], officials: [] },
     teamB: { name: '', players: [], officials: [] },
+    seenTwoColumnPlayers: false,
+    teamAColumnEnded: false,
   };
 
   if (!ocrText || typeof ocrText !== 'string') {
@@ -631,3 +768,415 @@ export function parseGameSheetWithType(
  * @returns Parsed game sheet with both teams
  */
 export const parseElectronicSheet = parseGameSheet;
+
+// =============================================================================
+// OCR-Aware Parser (with bounding box column detection)
+// =============================================================================
+
+/**
+ * Column boundary threshold calculated from OCR bounding boxes
+ */
+interface ColumnBoundary {
+  /** X coordinate threshold - content to the left is Team A, right is Team B */
+  midpoint: number;
+  /** Whether we have enough data to determine column boundaries */
+  isValid: boolean;
+}
+
+/**
+ * Analyze OCR lines to determine column boundaries based on word positions.
+ *
+ * Strategy:
+ * 1. Look for lines that appear to have two-column data (based on tab separation)
+ * 2. For each such line, find words in the left half and right half
+ * 3. Calculate a midpoint that separates the columns
+ */
+function calculateColumnBoundary(lines: OCRLine[]): ColumnBoundary {
+  const leftColumnMaxX: number[] = [];
+  const rightColumnMinX: number[] = [];
+
+  for (const line of lines) {
+    // Skip lines with no words or very few words
+    if (!line.words || line.words.length < MIN_WORDS_FOR_COLUMN_DETECTION) continue;
+
+    // Check if this looks like a two-column player line (tab-separated)
+    const text = line.text;
+    const parts = text.split('\t').filter((p) => p.trim().length > 0);
+    if (parts.length < MIN_PARTS_TWO_COLUMN) continue;
+
+    // Sort words by x position
+    const sortedWords = [...line.words].sort((a, b) => a.bbox.x0 - b.bbox.x0);
+
+    // Find the largest gap between consecutive words - this is likely the column separator
+    let maxGap = 0;
+    let gapIndex = -1;
+
+    for (let i = 0; i < sortedWords.length - 1; i++) {
+      const gap = sortedWords[i + 1]!.bbox.x0 - sortedWords[i]!.bbox.x1;
+      if (gap > maxGap) {
+        maxGap = gap;
+        gapIndex = i;
+      }
+    }
+
+    // If we found a significant gap, use it to determine column boundaries
+    if (gapIndex >= 0 && maxGap > MIN_COLUMN_GAP_PX) {
+      const leftEnd = sortedWords[gapIndex]!.bbox.x1;
+      const rightStart = sortedWords[gapIndex + 1]!.bbox.x0;
+
+      leftColumnMaxX.push(leftEnd);
+      rightColumnMinX.push(rightStart);
+    }
+  }
+
+  // If we don't have enough data, return invalid boundary
+  if (leftColumnMaxX.length < 2 || rightColumnMinX.length < 2) {
+    return { midpoint: 0, isValid: false };
+  }
+
+  // Calculate average column boundaries
+  const avgLeftEnd =
+    leftColumnMaxX.reduce((a, b) => a + b, 0) / leftColumnMaxX.length;
+  const avgRightStart =
+    rightColumnMinX.reduce((a, b) => a + b, 0) / rightColumnMinX.length;
+
+  // Midpoint is the average of the left column end and right column start
+  const midpoint = (avgLeftEnd + avgRightStart) / 2;
+
+  return { midpoint, isValid: true };
+}
+
+/**
+ * Determine which team a single-column line belongs to based on word positions.
+ *
+ * @param line - The OCR line to analyze
+ * @param boundary - The calculated column boundary
+ * @returns 'A' for Team A (left column), 'B' for Team B (right column)
+ */
+function determineTeamFromPosition(
+  line: OCRLine,
+  boundary: ColumnBoundary,
+): 'A' | 'B' {
+  if (!boundary.isValid || !line.words || line.words.length === 0) {
+    // Fallback: if no valid boundary, use the heuristic (Team B for single-column overflow)
+    return 'B';
+  }
+
+  // Calculate the average x position of words in this line
+  const avgX =
+    line.words.reduce((sum, word) => sum + word.bbox.x0, 0) / line.words.length;
+
+  // If the average position is to the left of midpoint, it's Team A
+  return avgX < boundary.midpoint ? 'A' : 'B';
+}
+
+/**
+ * Extended parser state with column boundary information
+ */
+interface ParserStateWithOCR extends ParserState {
+  /** Column boundary calculated from bounding boxes */
+  columnBoundary: ColumnBoundary;
+  /** Current OCR line being processed (for position detection) */
+  currentLine?: OCRLine;
+}
+
+/**
+ * Process player line with OCR-aware column detection
+ */
+function processPlayersLineWithOCR(
+  parts: string[],
+  state: ParserStateWithOCR,
+): void {
+  if (parts.length < MIN_PARTS_SINGLE_COLUMN) return;
+
+  const isTwoColumnRow = parts.length >= MIN_PARTS_TWO_COLUMN;
+
+  if (isTwoColumnRow) {
+    // Two-column row: both teams have data
+    state.seenTwoColumnPlayers = true;
+
+    const playerA = parsePlayerFromParts(parts, 0);
+    if (playerA) state.teamA.players.push(playerA);
+
+    const playerB = parsePlayerFromParts(parts, MIN_PARTS_SINGLE_COLUMN);
+    if (playerB) state.teamB.players.push(playerB);
+  } else {
+    // Single-column row: use bounding box to determine which team
+    const player = parsePlayerFromParts(parts, 0);
+    if (player && state.currentLine) {
+      const team = determineTeamFromPosition(
+        state.currentLine,
+        state.columnBoundary,
+      );
+      if (team === 'A') {
+        state.teamA.players.push(player);
+      } else {
+        state.teamAColumnEnded = true;
+        state.teamB.players.push(player);
+      }
+    } else if (player) {
+      // Fallback without OCR data
+      if (state.seenTwoColumnPlayers) {
+        state.teamAColumnEnded = true;
+        state.teamB.players.push(player);
+      } else {
+        state.teamA.players.push(player);
+      }
+    }
+  }
+}
+
+/**
+ * Process libero line with OCR-aware column detection
+ */
+function processLiberoLineWithOCR(
+  parts: string[],
+  state: ParserStateWithOCR,
+): void {
+  if (parts.length < MIN_PARTS_SINGLE_COLUMN) return;
+
+  const isTwoColumnRow = parts.length >= MIN_PARTS_TWO_COLUMN;
+
+  if (isTwoColumnRow) {
+    const liberoA = parseLiberoFromParts(
+      parts,
+      LIBERO_TWO_COL_A_MARKER_IDX,
+      LIBERO_TWO_COL_A_NAME_IDX,
+      LIBERO_TWO_COL_A_LICENSE_IDX,
+    );
+    if (liberoA) state.teamA.players.push(liberoA);
+
+    const liberoB = parseLiberoFromParts(
+      parts,
+      LIBERO_TWO_COL_B_MARKER_IDX,
+      LIBERO_TWO_COL_B_NAME_IDX,
+      LIBERO_TWO_COL_B_LICENSE_IDX,
+    );
+    if (liberoB) state.teamB.players.push(liberoB);
+  } else {
+    const libero = parseLiberoFromParts(parts, 0, 1, 2);
+    if (libero && state.currentLine) {
+      const team = determineTeamFromPosition(
+        state.currentLine,
+        state.columnBoundary,
+      );
+      if (team === 'A') {
+        state.teamA.players.push(libero);
+      } else {
+        state.teamB.players.push(libero);
+      }
+    } else if (libero) {
+      // Fallback without OCR data
+      if (state.teamAColumnEnded || state.seenTwoColumnPlayers) {
+        state.teamB.players.push(libero);
+      } else {
+        state.teamA.players.push(libero);
+      }
+    }
+  }
+}
+
+/**
+ * Process officials line with OCR-aware column detection
+ */
+function processOfficialsLineWithOCR(
+  parts: string[],
+  state: ParserStateWithOCR,
+): void {
+  if (parts.length < MIN_PARTS_OFFICIAL_SINGLE) return;
+
+  const isTwoColumnRow = parts.length >= MIN_PARTS_OFFICIAL_TWO_COL;
+
+  if (isTwoColumnRow) {
+    const officialA = parseOfficialFromParts(parts, 0, 1);
+    if (officialA) state.teamA.officials.push(officialA);
+
+    const officialB = parseOfficialFromParts(
+      parts,
+      OFFICIAL_B_ROLE_IDX,
+      OFFICIAL_B_NAME_IDX,
+    );
+    if (officialB) state.teamB.officials.push(officialB);
+  } else {
+    const official = parseOfficialFromParts(parts, 0, 1);
+    if (official && state.currentLine) {
+      const team = determineTeamFromPosition(
+        state.currentLine,
+        state.columnBoundary,
+      );
+      if (team === 'A') {
+        state.teamA.officials.push(official);
+      } else {
+        state.teamB.officials.push(official);
+      }
+    } else if (official) {
+      // Fallback without OCR data
+      if (state.teamAColumnEnded || state.seenTwoColumnPlayers) {
+        state.teamB.officials.push(official);
+      } else {
+        state.teamA.officials.push(official);
+      }
+    }
+  }
+}
+
+/**
+ * Process a line with OCR-aware column detection
+ */
+function processLineWithOCR(
+  line: string,
+  state: ParserStateWithOCR,
+  ocrLine?: OCRLine,
+): void {
+  state.currentLine = ocrLine;
+
+  // Check for section transitions
+  if (isSignaturesSection(line)) {
+    state.section = 'done';
+    return;
+  }
+  if (state.section === 'done') return;
+
+  if (isOfficialsHeader(line)) {
+    state.section = 'officials';
+    return;
+  }
+
+  const parts = line.split('\t').map((p) => p.trim());
+
+  if (isLiberoSection(line, parts)) {
+    state.section = 'libero';
+    return;
+  }
+
+  // Process based on current section
+  switch (state.section) {
+    case 'header':
+      state.section = processHeaderLine(parts, line, state);
+      break;
+    case 'players':
+      processPlayersLineWithOCR(parts, state);
+      break;
+    case 'libero':
+      processLiberoLineWithOCR(parts, state);
+      break;
+    case 'officials':
+      processOfficialsLineWithOCR(parts, state);
+      break;
+  }
+}
+
+/**
+ * Parse a game sheet using full OCR result with bounding box data.
+ *
+ * This parser uses the word bounding boxes to accurately determine
+ * which column single-row entries belong to, instead of using heuristics.
+ *
+ * @param ocrResult - Full OCR result with lines and word bounding boxes
+ * @returns Parsed game sheet with both teams
+ *
+ * @example
+ * ```typescript
+ * const ocrResult = await ocrEngine.recognize(imageBlob);
+ * const parsed = parseGameSheetWithOCR(ocrResult);
+ * ```
+ */
+export function parseGameSheetWithOCR(ocrResult: OCRResult): ParsedGameSheet {
+  const warnings: string[] = [];
+
+  // If no lines available, fall back to text-only parsing
+  if (!ocrResult.lines || ocrResult.lines.length === 0) {
+    const fallbackResult = parseGameSheet(ocrResult.fullText);
+    return {
+      ...fallbackResult,
+      warnings: [
+        'No OCR line data available, using text-only parsing',
+        ...fallbackResult.warnings,
+      ],
+    };
+  }
+
+  // Calculate column boundaries from bounding boxes
+  const columnBoundary = calculateColumnBoundary(ocrResult.lines);
+
+  if (!columnBoundary.isValid) {
+    warnings.push(
+      'Could not determine column boundaries from bounding boxes, using heuristic fallback',
+    );
+  }
+
+  const state: ParserStateWithOCR = {
+    section: 'header',
+    headerRowsParsed: 0,
+    teamA: { name: '', players: [], officials: [] },
+    teamB: { name: '', players: [], officials: [] },
+    seenTwoColumnPlayers: false,
+    teamAColumnEnded: false,
+    columnBoundary,
+  };
+
+  // Build a map from line text to OCR line data
+  const lineToOCRLine = new Map<string, OCRLine>();
+  for (const ocrLine of ocrResult.lines) {
+    const normalizedText = ocrLine.text.trim();
+    if (normalizedText) {
+      lineToOCRLine.set(normalizedText, ocrLine);
+    }
+  }
+
+  // Split full text into lines
+  const allLines = ocrResult.fullText
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0);
+
+  // Find where the player list section starts
+  const { startIndex, teamNamesIndex } = findPlayerListStart(allLines);
+
+  if (startIndex > 0) {
+    warnings.push(
+      `Skipped ${startIndex} lines of non-player data (score/set information)`,
+    );
+  }
+
+  // Extract team names from the identified line
+  const { teamAName, teamBName } = extractTeamNames(allLines, teamNamesIndex);
+  state.teamA.name = teamAName;
+  state.teamB.name = teamBName;
+
+  // Update initial section based on whether team names were found
+  const teamNamesFound = teamAName.length > 0 || teamBName.length > 0;
+  state.section = teamNamesFound ? 'players' : 'header';
+
+  // Process lines from the player list start
+  const lines = allLines.slice(startIndex);
+
+  if (lines.length === 0) {
+    warnings.push('OCR text contains no lines');
+    return { teamA: state.teamA, teamB: state.teamB, warnings };
+  }
+
+  for (const line of lines) {
+    // Try to find corresponding OCR line with bounding box data
+    const ocrLine = lineToOCRLine.get(line);
+    processLineWithOCR(line, state, ocrLine);
+  }
+
+  // Add warnings
+  if (state.teamA.players.length === 0) {
+    warnings.push('No players found for Team A');
+  }
+  if (state.teamB.players.length === 0) {
+    warnings.push('No players found for Team B');
+  }
+  if (
+    state.teamA.officials.length === 0 &&
+    state.teamB.officials.length === 0
+  ) {
+    warnings.push(
+      'No officials (coaches) found - the OFFICIAL MEMBERS section may not have been recognized',
+    );
+  }
+
+  return { teamA: state.teamA, teamB: state.teamB, warnings };
+}
