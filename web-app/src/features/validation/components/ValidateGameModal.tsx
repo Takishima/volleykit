@@ -93,6 +93,7 @@ function ValidateGameModalComponent({
           title={t("assignments.validateGame")}
           titleId={modalTitleId}
           subtitle={subtitle}
+          onClose={wizard.attemptClose}
         />
 
         {wizard.isValidated && wizard.validatedInfo && (
