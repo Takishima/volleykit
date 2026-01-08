@@ -521,6 +521,11 @@ const it: Translations = {
       ocrPoc: "Scanner foglio partita",
       ocrPocDescription: "Strumento OCR per la scansione dei fogli partita di pallavolo",
       openOcrPoc: "Apri scanner",
+      ocrValidation: "Scanner OCR nella validazione",
+      ocrValidationDescription:
+        "Abilita la scansione OCR dei fogli partita durante la validazione delle partite",
+      ocrValidationEnabled: "Scanner OCR abilitato",
+      ocrValidationDisabled: "Scanner OCR disabilitato",
     },
   },
   pwa: {

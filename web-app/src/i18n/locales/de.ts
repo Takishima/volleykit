@@ -524,6 +524,10 @@ const de: Translations = {
       ocrPoc: "Spielberichts-Scanner",
       ocrPocDescription: "OCR-Tool zum Scannen von Volleyball-Spielberichten",
       openOcrPoc: "Scanner öffnen",
+      ocrValidation: "OCR Kader-Validierung",
+      ocrValidationDescription: "Spielberichte scannen, um Spielerlisten bei der Spielvalidierung automatisch auszufüllen",
+      ocrValidationEnabled: "OCR-Validierung ist aktiviert",
+      ocrValidationDisabled: "OCR-Validierung ist deaktiviert",
     },
   },
   pwa: {

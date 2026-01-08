@@ -24,6 +24,7 @@ import {
 } from "@/shared/components/icons";
 import { OCRPanel } from "./OCRPanel";
 import { LoadingSpinner } from "@/shared/components/LoadingSpinner";
+import { useSettingsStore } from "@/shared/stores/settings";
 import { formatRosterEntries, getMaxLastNameWidth } from "@/shared/utils/date-helpers";
 
 type PersonSummary = Schemas["PersonSummary"];
@@ -113,6 +114,7 @@ export function RosterVerificationPanel({
       team,
       prefetchedData: prefetchedNominationList,
     });
+  const { isOCREnabled } = useSettingsStore();
 
   // Accordion state - players expanded by default as per user request
   const [expandedSection, setExpandedSection] =
@@ -473,17 +475,19 @@ export function RosterVerificationPanel({
                   <UserPlus className="w-4 h-4" aria-hidden="true" />
                   {t("validation.roster.addPlayer")}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setIsOCRPanelOpen(true)}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/30 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 transition-colors"
-                  title={t("validation.ocr.scanScoresheet")}
-                >
-                  <Camera className="w-4 h-4" aria-hidden="true" />
-                  <span className="sr-only">
-                    {t("validation.ocr.scanScoresheet")}
-                  </span>
-                </button>
+                {isOCREnabled && (
+                  <button
+                    type="button"
+                    onClick={() => setIsOCRPanelOpen(true)}
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/30 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 transition-colors"
+                    title={t("validation.ocr.scanScoresheet")}
+                  >
+                    <Camera className="w-4 h-4" aria-hidden="true" />
+                    <span className="sr-only">
+                      {t("validation.ocr.scanScoresheet")}
+                    </span>
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -512,8 +516,8 @@ export function RosterVerificationPanel({
         />
       )}
 
-      {/* OCR Panel - only available in edit mode */}
-      {!readOnly && (
+      {/* OCR Panel - only available in edit mode and when OCR is enabled */}
+      {!readOnly && isOCREnabled && (
         <OCRPanel
           isOpen={isOCRPanelOpen}
           onClose={() => setIsOCRPanelOpen(false)}

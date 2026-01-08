@@ -523,6 +523,11 @@ const fr: Translations = {
       ocrPoc: "Scanner de feuille de match",
       ocrPocDescription: "Outil OCR pour scanner les feuilles de match de volleyball",
       openOcrPoc: "Ouvrir le scanner",
+      ocrValidation: "Scanner OCR dans la validation",
+      ocrValidationDescription:
+        "Activer la numérisation OCR des feuilles de match lors de la validation des matchs",
+      ocrValidationEnabled: "Scanner OCR activé",
+      ocrValidationDisabled: "Scanner OCR désactivé",
     },
   },
   pwa: {

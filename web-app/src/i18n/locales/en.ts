@@ -521,6 +521,10 @@ const en: Translations = {
       ocrPoc: "Scoresheet Scanner",
       ocrPocDescription: "OCR tool for scanning volleyball scoresheets",
       openOcrPoc: "Open Scanner",
+      ocrValidation: "OCR Roster Validation",
+      ocrValidationDescription: "Scan scoresheets to auto-fill player rosters during game validation",
+      ocrValidationEnabled: "OCR validation is enabled",
+      ocrValidationDisabled: "OCR validation is disabled",
     },
   },
   pwa: {

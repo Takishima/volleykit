@@ -370,6 +370,10 @@ export interface Translations {
       ocrPoc: string;
       ocrPocDescription: string;
       openOcrPoc: string;
+      ocrValidation: string;
+      ocrValidationDescription: string;
+      ocrValidationEnabled: string;
+      ocrValidationDisabled: string;
     };
   };
   pwa: {

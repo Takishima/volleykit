@@ -3,6 +3,8 @@ import { useTranslation } from "@/shared/hooks/useTranslation";
 import { usePWA } from "@/contexts/PWAContext";
 import { Card, CardContent, CardHeader } from "@/shared/components/Card";
 import { Button } from "@/shared/components/Button";
+import { ToggleSwitch } from "@/shared/components/ToggleSwitch";
+import { useSettingsStore } from "@/shared/stores/settings";
 
 // Build OCR POC URL relative to the app's base path
 const OCR_POC_URL = `${import.meta.env.BASE_URL}ocr-poc/`;
@@ -21,6 +23,11 @@ function AppInfoSectionComponent({ showUpdates }: AppInfoSectionProps) {
     checkForUpdate,
     updateApp,
   } = usePWA();
+  const { isOCREnabled, setOCREnabled } = useSettingsStore();
+
+  const handleToggleOCR = useCallback(() => {
+    setOCREnabled(!isOCREnabled);
+  }, [isOCREnabled, setOCREnabled]);
 
   const formatLastChecked = useCallback(
     (date: Date) => {
@@ -148,6 +155,28 @@ function AppInfoSectionComponent({ showUpdates }: AppInfoSectionProps) {
             >
               {t("settings.experimental.openOcrPoc")}
             </Button>
+          </div>
+
+          {/* OCR Validation Toggle */}
+          <div className="flex items-center justify-between py-2">
+            <div className="flex-1">
+              <div className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
+                {t("settings.experimental.ocrValidation")}
+              </div>
+              <div className="text-xs text-text-muted dark:text-text-muted-dark mt-1">
+                {t("settings.experimental.ocrValidationDescription")}
+              </div>
+            </div>
+            <ToggleSwitch
+              checked={isOCREnabled}
+              onChange={handleToggleOCR}
+              label={t("settings.experimental.ocrValidation")}
+            />
+          </div>
+          <div className="text-xs text-text-muted dark:text-text-muted-dark">
+            {isOCREnabled
+              ? t("settings.experimental.ocrValidationEnabled")
+              : t("settings.experimental.ocrValidationDisabled")}
           </div>
         </div>
 
