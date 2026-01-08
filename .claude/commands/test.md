@@ -3,7 +3,7 @@
 Run tests only.
 
 ```bash
-cd /home/user/volleykit/web-app && npm test
+cd web-app && npm test
 ```
 
 Output: `✓ Test (N passed)` or `✗ Test: [failed test names]`
