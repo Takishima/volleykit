@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import type { TooltipPlacement } from "./definitions/types";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 interface TargetRect {
   top: number;
@@ -99,6 +100,7 @@ export function TourSpotlight({
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
   const [isPositioned, setIsPositioned] = useState(false);
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
 
   // Find target element and calculate positions
   const updatePositions = useCallback(
@@ -302,7 +304,7 @@ export function TourSpotlight({
       className="tour-spotlight pointer-events-none"
       role="dialog"
       aria-modal="true"
-      aria-label="Guided tour"
+      aria-label={t("tour.accessibility.spotlightLabel")}
     >
       {/* Full-screen interaction blocker - blocks all page interaction during tour */}
       {blockAllInteraction && (
