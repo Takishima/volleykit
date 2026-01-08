@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import { Camera, Image, X, AlertCircle } from "@/shared/components/icons";
 
@@ -32,6 +32,9 @@ export function OCRCaptureModal({
       const file = event.target.files?.[0];
       if (!file) return;
 
+      // Reset file input to allow re-selecting the same file
+      event.target.value = "";
+
       setError(null);
 
       // Validate file type
@@ -61,6 +64,20 @@ export function OCRCaptureModal({
     setError(null);
     cameraInputRef.current?.click();
   }, []);
+
+  // Handle Escape key to close modal
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 

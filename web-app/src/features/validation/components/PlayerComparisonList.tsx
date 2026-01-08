@@ -237,9 +237,9 @@ export function PlayerComparisonList({
       {/* OCR-only players (not selectable) */}
       {ocrOnly.length > 0 && (
         <div className="space-y-2">
-          {ocrOnly.map((result, index) => (
+          {ocrOnly.map((result) => (
             <ComparisonItem
-              key={result.ocrPlayer?.rawName ?? index}
+              key={`ocr-only-${result.ocrPlayer?.rawName ?? result.ocrPlayer?.displayName}`}
               result={result}
               isSelected={false}
               onToggle={() => {}}

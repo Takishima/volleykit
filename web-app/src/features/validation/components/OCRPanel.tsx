@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import { useOCRScoresheet, compareRosters } from "@/features/ocr";
 import type {
@@ -58,6 +58,23 @@ export function OCRPanel({
   const [processedResult, setProcessedResult] =
     useState<ParsedGameSheet | null>(null);
 
+  // Guard against rapid double-clicks triggering duplicate processing
+  const isProcessingRef = useRef(false);
+
+  // Handle Escape key to close panel (when capture modal is not open)
+  useEffect(() => {
+    if (!isOpen || showCaptureModal) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, showCaptureModal, onClose]);
+
   // Determine which team's data to use from OCR results
   const getOCRTeam = useCallback(
     (parsed: ParsedGameSheet): ParsedTeam | null => {
@@ -109,6 +126,10 @@ export function OCRPanel({
   // Handle image selection from capture modal
   const handleImageSelected = useCallback(
     async (blob: Blob) => {
+      // Guard against duplicate processing from rapid clicks
+      if (isProcessingRef.current) return;
+      isProcessingRef.current = true;
+
       setShowCaptureModal(false);
       setStep("processing");
 
@@ -140,6 +161,8 @@ export function OCRPanel({
         }
       } catch {
         setStep("error");
+      } finally {
+        isProcessingRef.current = false;
       }
     },
     [processImage, getOCRTeam, rosterPlayers, initializeSelection],
