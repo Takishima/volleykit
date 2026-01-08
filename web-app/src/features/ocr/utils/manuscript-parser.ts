@@ -227,19 +227,20 @@ export function parseOfficialName(rawName: string): {
  * Pattern for detecting a player line in manuscript format
  * Matches: number followed by name, with various separators
  */
-const PLAYER_LINE_PATTERN = /^(\d{1,2})[\s.:_-]+([A-Za-zÀ-ÿ\s]+)/;
+const PLAYER_LINE_PATTERN = /^(\d{1,2})[\s.:_-]+([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s]*)/;
 
 /**
  * Pattern for detecting a player line with OCR errors
  * More lenient - allows OCR-misread digits
  */
-const PLAYER_LINE_LENIENT = /^([0-9OoIlZzSsGgBb]{1,2})[\s.:_-]+([A-Za-zÀ-ÿ\s]+)/;
+const PLAYER_LINE_LENIENT = /^([0-9OoIlZzSsGgBb]{1,2})[\s.:_-]+([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s]*)/;
 
 /**
  * Pattern for detecting an official line
  * Matches: C/AC/AC2/AC3/AC4 followed by name
+ * Note: Uses case-insensitive flag, so name capture uses lowercase ranges only
  */
-const OFFICIAL_LINE_PATTERN = /^(C|AC\d?)[\s.:_-]+([A-Za-zÀ-ÿ\s]+)/i;
+const OFFICIAL_LINE_PATTERN = /^(C|AC\d?)[\s.:_-]+([a-zà-ÿ][a-zà-ÿ\s]*)/i;
 
 /**
  * Check if a line contains team section marker
@@ -269,10 +270,17 @@ function isLiberoMarker(line: string): boolean {
 
 /**
  * Check if a line indicates the officials section
+ * Note: We only match section headers, not individual official lines
  */
 function isOfficialsMarker(line: string): boolean {
   const upper = line.toUpperCase();
-  return upper.includes('OFFICIAL') || upper.includes('COACH') || upper.includes('TRAINER');
+  // Must contain 'OFFICIAL' or specific section headers
+  // Avoid matching lines like "C Hans Trainer" which contain 'TRAINER'
+  return (
+    upper.includes('OFFICIAL') ||
+    upper.startsWith('COACH') ||
+    /^TRAINER\b/.test(upper)
+  );
 }
 
 /**
