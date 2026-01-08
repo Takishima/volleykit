@@ -488,6 +488,9 @@ function renderResultsState(container) {
               <button class="btn btn-outline btn-block" id="btn-export-json">
                 Export Full Sample (JSON)
               </button>
+              <button class="btn btn-outline btn-block" id="btn-copy-json">
+                Copy JSON to Clipboard
+              </button>
               <button class="btn btn-outline btn-block" id="btn-export-text">
                 Export Raw Text
               </button>
@@ -524,6 +527,21 @@ function renderResultsState(container) {
     if (result && appContext.sheetType) {
       const sample = collectSample(result, appContext.sheetType);
       exportSampleAsJSON(sample);
+    }
+  });
+
+  const copyJsonBtn = document.getElementById('btn-copy-json');
+  copyJsonBtn?.addEventListener('click', async () => {
+    if (result && appContext.sheetType) {
+      const sample = collectSample(result, appContext.sheetType);
+      const json = JSON.stringify(sample, null, 2);
+      const success = await copyToClipboard(json);
+      if (success) {
+        copyJsonBtn.textContent = '✓ Copied!';
+        setTimeout(() => {
+          copyJsonBtn.textContent = 'Copy JSON to Clipboard';
+        }, 2000);
+      }
     }
   });
 
