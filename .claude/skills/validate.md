@@ -1,102 +1,64 @@
-# Validate Skill
+---
+name: validate
+description: Run pre-push validation (lint, knip, test, build) with parallel subagents
+autoInvoke: before-push
+---
 
-Run pre-push validation optimized for mobile (iPhone) development. Uses parallel sub-agents for speed.
+# Validation Skill
 
-## Trigger Phrases
+Run pre-push validation using parallel subagents for maximum speed on Claude Code web.
 
-Invoke this skill when user says any of:
-- "validate", "validation", "run validation"
-- "check before push", "pre-push check"
-- "run checks", "run all checks"
-- "lint test build", "full check"
+## When to Use (Automatic Triggers)
 
-## Instructions
+**AUTOMATICALLY invoke this skill when**:
+- User says "push", "git push", or is about to push code
+- User says "validate", "check", "run checks", "pre-push"
+- User asks to "commit and push" changes
+- After completing code changes that modify `.ts`, `.tsx`, `.js`, `.jsx` files
+- User says "ready to push" or "before I push"
 
-When this skill is invoked, perform validation with these steps:
+## Execution Strategy
 
-### 1. Quick Change Detection
+**CRITICAL**: Use parallel subagents for speed. Launch lint, knip, and test simultaneously.
 
-First, detect what changed to determine required validations. Check both staged and unstaged changes:
+### Phase 1: Quick Check (5 seconds)
 
+Determine what changed:
 ```bash
-# From project root, detect all uncommitted changes
-git diff --name-only          # Unstaged changes
-git diff --name-only --cached # Staged changes
-git status --porcelain        # All modified/untracked files
+git diff --name-only HEAD 2>/dev/null
+git diff --name-only --cached 2>/dev/null
 ```
 
-Categorize changes:
-- **Source files**: `*.ts`, `*.tsx`, `*.js`, `*.jsx` → needs full validation
-- **OpenAPI spec**: `docs/api/volleymanager-openapi.yaml` → needs generate:api first
-- **Test files only**: `*.test.ts`, `*.test.tsx` → needs test only
-- **Locale files**: `*.json` in `i18n/locales/` → needs lint only
-- **Docs only**: `*.md` files → skip all validation
+**Skip all if**: Only `.md` documentation files changed
+**Lint only if**: Only `.json` locale files changed
 
-### 2. Generate API Types (If Needed)
+### Phase 2: API Generation (if needed)
 
-**Run FIRST if OpenAPI spec changed**:
-
+If `volleymanager-openapi.yaml` changed:
 ```bash
 cd web-app && npm run generate:api
 ```
 
-This must complete before lint/test/build since they depend on generated types.
+### Phase 3: Parallel Validation (MUST USE SUBAGENTS)
 
-### 3. Parallel Validation (Sub-Agents)
+**Launch ALL THREE subagents in a SINGLE message** using the Task tool:
 
-**CRITICAL**: Launch these sub-agents IN PARALLEL using a SINGLE message with multiple Task tool calls.
-
-**Validation order per CLAUDE.md**: generate:api → lint → knip → test → build
-
-Lint, knip, and test can run in parallel since they're independent. Build must wait for all to pass.
-
-#### Agent 1: Lint Check
 ```
-subagent_type: "general-purpose"
-prompt: |
-  Run ESLint in the web-app directory:
-  cd web-app && npm run lint
-
-  Return ONLY this format:
-  LINT: PASS or LINT: FAIL
-  [If fail, include first 5 error lines]
+Task 1: { subagent_type: "Bash", prompt: "cd web-app && npm run lint", description: "Run lint check" }
+Task 2: { subagent_type: "Bash", prompt: "cd web-app && npm run knip", description: "Run knip check" }
+Task 3: { subagent_type: "Bash", prompt: "cd web-app && npm test", description: "Run test suite" }
 ```
 
-#### Agent 2: Dead Code Check
-```
-subagent_type: "general-purpose"
-prompt: |
-  Run Knip dead code detection in the web-app directory:
-  cd web-app && npm run knip
+### Phase 4: Build (Sequential)
 
-  Return ONLY this format:
-  KNIP: PASS or KNIP: FAIL
-  [If fail, include summary of unused exports]
-```
-
-#### Agent 3: Test Suite
-```
-subagent_type: "general-purpose"
-prompt: |
-  Run Vitest tests in the web-app directory:
-  cd web-app && npm test
-
-  Return ONLY this format:
-  TEST: PASS (X passed) or TEST: FAIL (X passed, Y failed)
-  [If fail, list failed test names only]
-```
-
-### 4. Sequential Build (Only if Parallel Checks Pass)
-
-If ALL parallel checks pass, run build:
-
+**Only after ALL parallel checks pass**:
 ```bash
 cd web-app && npm run build
 ```
 
-### 5. Mobile-Friendly Summary
+### Phase 5: Summary
 
-Output a concise summary using this exact format:
+Output mobile-friendly results:
 
 ```
 ## Validation Results
@@ -107,44 +69,32 @@ Ready to push!
 ```
 
 Or on failure:
-
 ```
 ## Validation Results
 
-✓ Lint  ✗ Knip  ✓ Test  ⊘ Build
+✓ Lint  ✗ Test  ⊘ Build
 
 Issues:
-- Knip: 2 unused exports in helpers.ts
+- Test: 2 failed in auth.test.ts
 ```
 
-### Status Icons (Mobile-Optimized)
+## Icons
 - `✓` Pass
 - `✗` Fail
 - `⊘` Skipped
 - `◐` Running
 
-### Smart Skip Rules
+## Error Handling
 
-Skip validations when safe:
-- **No source changes**: Skip all (docs/config only)
-- **Test files only**: Skip lint, knip, build - run test only
-- **Locale JSON only**: Run lint only
-- **OpenAPI changes**: Run generate:api before other checks
+If a subagent times out or fails unexpectedly:
+- Note the failure in the summary with `✗` status
+- Include a brief error description
+- Suggest manual execution: `cd web-app && npm run <command>`
+- Do NOT proceed to build if any check fails
 
-### Error Handling
+## Quick Variants
 
-If a sub-agent times out or fails unexpectedly:
-1. Note the failed check
-2. Continue with other results
-3. Suggest running the failed check manually
-
-### Example Invocations
-
-User says: "validate" or "check" or "run validation"
-→ Run full validation flow above
-
-User says: "quick validate" or "lint only"
-→ Run only lint check, skip others
-
-User says: "test only"
-→ Run only test suite
+- `/lint` - Lint only
+- `/test` - Tests only
+- `/build` - Build only
+- `/knip` - Dead code check only

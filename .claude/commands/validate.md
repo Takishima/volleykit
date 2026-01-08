@@ -1,43 +1,47 @@
 # Pre-Push Validation
 
-Run validation before pushing. Optimized for mobile with parallel execution.
+Run validation before pushing. Uses parallel subagents for speed on Claude Code web.
 
 ## Instructions
 
-1. **Detect changes** (check uncommitted files):
+### Step 1: Detect Changes
+
 ```bash
-git diff --name-only && git diff --name-only --cached
+git diff --name-only HEAD 2>/dev/null
+git diff --name-only --cached 2>/dev/null
 ```
 
-2. **Generate API types** (if OpenAPI spec changed):
+- **Skip all**: Only `.md` files changed
+- **Lint only**: Only `.json` locale files changed
+
+### Step 2: Generate API Types (if needed)
+
+If `volleymanager-openapi.yaml` changed:
 ```bash
 cd web-app && npm run generate:api
 ```
 
-3. **Run parallel validations** using Task tool sub-agents:
+### Step 3: Parallel Validation (CRITICAL)
 
-Launch ALL THREE agents IN PARALLEL (single message, multiple Task calls):
+**Launch ALL THREE subagents in a SINGLE message** using the Task tool:
 
-**Agent 1 - Lint**:
-- subagent_type: "general-purpose"
-- prompt: "cd web-app && npm run lint. Reply: LINT: PASS or LINT: FAIL with first 3 errors"
+```
+Task 1: { subagent_type: "Bash", prompt: "cd web-app && npm run lint", description: "Run lint check" }
+Task 2: { subagent_type: "Bash", prompt: "cd web-app && npm run knip", description: "Run knip check" }
+Task 3: { subagent_type: "Bash", prompt: "cd web-app && npm test", description: "Run test suite" }
+```
 
-**Agent 2 - Knip**:
-- subagent_type: "general-purpose"
-- prompt: "cd web-app && npm run knip. Reply: KNIP: PASS or KNIP: FAIL with summary"
+### Step 4: Build (only if all pass)
 
-**Agent 3 - Test**:
-- subagent_type: "general-purpose"
-- prompt: "cd web-app && npm test. Reply: TEST: PASS (N passed) or TEST: FAIL with failed names"
-
-4. **Build** (only if all parallel checks pass):
 ```bash
 cd web-app && npm run build
 ```
 
-5. **Output concise summary**:
+### Step 5: Summary
 
 ```
+## Validation Results
+
 ✓ Lint  ✓ Knip  ✓ Test  ✓ Build
 
 Ready to push!
@@ -45,8 +49,10 @@ Ready to push!
 
 Or on failure:
 ```
-✓ Lint  ✗ Knip  ✓ Test  ⊘ Build
+## Validation Results
+
+✓ Lint  ✗ Test  ⊘ Build
 
 Issues:
-- Knip: unused export in helpers.ts
+- Test: [failed test names]
 ```
