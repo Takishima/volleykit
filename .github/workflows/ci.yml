@@ -27,12 +27,17 @@ jobs:
         with:
           node-version: '20'
 
+      # Cache node_modules per branch with fallback to main
       - name: Cache node_modules
         id: cache-node-modules
         uses: actions/cache@v5
         with:
           path: web-app/node_modules
-          key: node-modules-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json') }}
+          key: node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('web-app/package-lock.json') }}
+          restore-keys: |
+            node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
+            node-modules-${{ runner.os }}-main-
+            node-modules-${{ runner.os }}-
 
       - name: Install dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
@@ -57,12 +62,17 @@ jobs:
         with:
           node-version: '20'
 
+      # Cache node_modules per branch with fallback to main
       - name: Cache node_modules
         id: cache-node-modules
         uses: actions/cache@v5
         with:
           path: web-app/node_modules
-          key: node-modules-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json') }}
+          key: node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('web-app/package-lock.json') }}
+          restore-keys: |
+            node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
+            node-modules-${{ runner.os }}-main-
+            node-modules-${{ runner.os }}-
 
       - name: Install dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
@@ -79,8 +89,18 @@ jobs:
         if: steps.api-cache.outputs.cache-hit != 'true'
         run: npm run generate:api
 
+      # Cache ESLint results per branch
+      - name: Cache ESLint
+        uses: actions/cache@v5
+        with:
+          path: web-app/.eslintcache
+          key: eslint-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('web-app/src/**/*.ts', 'web-app/src/**/*.tsx') }}
+          restore-keys: |
+            eslint-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
+            eslint-${{ runner.os }}-
+
       - name: Lint
-        run: npm run lint
+        run: npm run lint -- --cache --cache-location .eslintcache
 
   # Dead code detection - needs API types
   knip:
@@ -98,12 +118,17 @@ jobs:
         with:
           node-version: '20'
 
+      # Cache node_modules per branch with fallback to main
       - name: Cache node_modules
         id: cache-node-modules
         uses: actions/cache@v5
         with:
           path: web-app/node_modules
-          key: node-modules-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json') }}
+          key: node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('web-app/package-lock.json') }}
+          restore-keys: |
+            node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
+            node-modules-${{ runner.os }}-main-
+            node-modules-${{ runner.os }}-
 
       - name: Install dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
@@ -139,12 +164,17 @@ jobs:
         with:
           node-version: '20'
 
+      # Cache node_modules per branch with fallback to main
       - name: Cache node_modules
         id: cache-node-modules
         uses: actions/cache@v5
         with:
           path: web-app/node_modules
-          key: node-modules-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json') }}
+          key: node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('web-app/package-lock.json') }}
+          restore-keys: |
+            node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
+            node-modules-${{ runner.os }}-main-
+            node-modules-${{ runner.os }}-
 
       - name: Install dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
@@ -160,6 +190,16 @@ jobs:
       - name: Generate API types
         if: steps.api-cache.outputs.cache-hit != 'true'
         run: npm run generate:api
+
+      # Cache Vitest results per branch
+      - name: Cache Vitest
+        uses: actions/cache@v5
+        with:
+          path: web-app/node_modules/.vitest
+          key: vitest-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('web-app/src/**/*.ts', 'web-app/src/**/*.tsx', 'web-app/src/**/*.test.ts', 'web-app/src/**/*.test.tsx') }}
+          restore-keys: |
+            vitest-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
+            vitest-${{ runner.os }}-
 
       - name: Run tests
         run: npm test
@@ -180,12 +220,17 @@ jobs:
         with:
           node-version: '20'
 
+      # Cache node_modules per branch with fallback to main
       - name: Cache node_modules
         id: cache-node-modules
         uses: actions/cache@v5
         with:
           path: web-app/node_modules
-          key: node-modules-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json') }}
+          key: node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('web-app/package-lock.json') }}
+          restore-keys: |
+            node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
+            node-modules-${{ runner.os }}-main-
+            node-modules-${{ runner.os }}-
 
       - name: Install dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
@@ -201,6 +246,16 @@ jobs:
       - name: Generate API types
         if: steps.api-cache.outputs.cache-hit != 'true'
         run: npm run generate:api
+
+      # Cache Vite build artifacts per branch
+      - name: Cache Vite build
+        uses: actions/cache@v5
+        with:
+          path: web-app/node_modules/.vite
+          key: vite-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('web-app/src/**/*.ts', 'web-app/src/**/*.tsx', 'web-app/vite.config.ts') }}
+          restore-keys: |
+            vite-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
+            vite-${{ runner.os }}-
 
       - name: Build
         run: npm run build
@@ -229,12 +284,17 @@ jobs:
         with:
           node-version: '20'
 
+      # Cache node_modules per branch with fallback to main
       - name: Cache node_modules
         id: cache-node-modules
         uses: actions/cache@v5
         with:
           path: web-app/node_modules
-          key: node-modules-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json') }}
+          key: node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('web-app/package-lock.json') }}
+          restore-keys: |
+            node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
+            node-modules-${{ runner.os }}-main-
+            node-modules-${{ runner.os }}-
 
       - name: Install dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
@@ -271,12 +331,17 @@ jobs:
         with:
           node-version: '20'
 
+      # Cache node_modules per branch with fallback to main
       - name: Cache node_modules
         id: cache-node-modules
         uses: actions/cache@v5
         with:
           path: web-app/node_modules
-          key: node-modules-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json') }}
+          key: node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('web-app/package-lock.json') }}
+          restore-keys: |
+            node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
+            node-modules-${{ runner.os }}-main-
+            node-modules-${{ runner.os }}-
 
       - name: Install dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
@@ -292,12 +357,15 @@ jobs:
         id: playwright-version
         run: echo "version=$(npm ls @playwright/test --json | jq -r '.dependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
 
+      # Cache Playwright browsers with fallback to older versions
       - name: Cache Playwright browsers
         id: playwright-cache
         uses: actions/cache@v5
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ matrix.browser }}-${{ steps.playwright-version.outputs.version }}
+          key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ steps.playwright-version.outputs.version }}
+          restore-keys: |
+            playwright-${{ runner.os }}-${{ matrix.browser }}-
 
       - name: Install Playwright browser
         if: steps.playwright-cache.outputs.cache-hit != 'true'
@@ -335,12 +403,17 @@ jobs:
         with:
           node-version: '20'
 
+      # Cache node_modules per branch with fallback to main
       - name: Cache node_modules
         id: cache-node-modules
         uses: actions/cache@v5
         with:
           path: web-app/node_modules
-          key: node-modules-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json') }}
+          key: node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('web-app/package-lock.json') }}
+          restore-keys: |
+            node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
+            node-modules-${{ runner.os }}-main-
+            node-modules-${{ runner.os }}-
 
       - name: Install dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
