@@ -640,6 +640,11 @@ export default {
       const lockoutStatus = checkLockoutStatus(lockoutState);
 
       if (lockoutStatus.isLocked) {
+        console.log("[Auth Lockout] Blocked locked-out IP:", {
+          ip: clientIP,
+          remainingSeconds: lockoutStatus.remainingSeconds,
+          failedAttempts: lockoutStatus.failedAttempts,
+        });
         return new Response(
           JSON.stringify({
             error: "Too many failed login attempts",
@@ -774,12 +779,31 @@ export default {
           // If we can't read the body, continue without it
         }
 
-        if (isSuccessfulLoginResponse(response)) {
+        const isSuccess = isSuccessfulLoginResponse(response);
+        const isFailed = isFailedLoginResponse(response, responseBodyForCheck);
+
+        console.log("[Auth Lockout]", {
+          ip: clientIP,
+          status: response.status,
+          location: response.headers.get("Location"),
+          isSuccess,
+          isFailed,
+        });
+
+        if (isSuccess) {
           // Clear lockout on successful login
           await clearAuthLockout(env.AUTH_LOCKOUT, clientIP);
-        } else if (isFailedLoginResponse(response, responseBodyForCheck)) {
+          console.log("[Auth Lockout] Cleared lockout for IP:", clientIP);
+        } else if (isFailed) {
           // Record failed attempt
-          await recordFailedAttempt(env.AUTH_LOCKOUT, clientIP);
+          const result = await recordFailedAttempt(env.AUTH_LOCKOUT, clientIP);
+          console.log("[Auth Lockout] Recorded failed attempt:", {
+            ip: clientIP,
+            failedAttempts: result.failedAttempts,
+            attemptsRemaining: result.attemptsRemaining,
+            isLocked: result.isLocked,
+            remainingSeconds: result.remainingSeconds,
+          });
         }
       }
 
