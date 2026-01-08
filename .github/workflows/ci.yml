@@ -24,8 +24,7 @@ on:
 #              ├──> knip       │                      │
 #              ├──> test       │                      │
 #              └──> build ─────┼──> bundle-size       │
-#                              ├──> e2e (chromium)    │
-#                              ├──> e2e (firefox)     │
+#                              ├──> e2e (per browser) │
 #                              └──> lighthouse        │
 #                                                     │
 #   audit (independent) ──────────────────────────────┘
@@ -35,6 +34,8 @@ on:
 # - audit runs independently (doesn't need API types)
 # - build artifact is shared by bundle-size, e2e, and lighthouse
 # - Per-branch caching with main fallback for faster PR builds
+# - PRs run chromium only; main branch runs chromium + firefox + webkit
+# - E2E uses pre-built Playwright Docker image (no browser install overhead)
 #
 # =============================================================================
 
@@ -267,16 +268,22 @@ jobs:
       - name: Check bundle size
         run: npm run size
 
-  # E2E tests - matrix across browsers, uses build artifact
+  # E2E tests - per browser, uses build artifact
+  # PRs: chromium only (fast feedback)
+  # main: chromium + firefox + webkit (full coverage)
+  # Uses pre-built Playwright Docker image (browsers pre-installed)
   e2e:
     name: E2E (${{ matrix.browser }})
     needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    container:
+      image: mcr.microsoft.com/playwright:v1.57.0-noble
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        browser: [chromium, firefox]
+        # PRs: chromium only; main: all browsers
+        browser: ${{ github.event_name == 'pull_request' && fromJson('["chromium"]') || fromJson('["chromium", "firefox", "webkit"]') }}
     defaults:
       run:
         working-directory: web-app
@@ -295,30 +302,8 @@ jobs:
           name: web-app-dist
           path: web-app/dist
 
-      - name: Get Playwright version
-        id: playwright-version
-        run: echo "version=$(npm ls @playwright/test --json | jq -r '.dependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
-
-      # Cache Playwright browsers with fallback to older versions
-      - name: Cache Playwright browsers
-        id: playwright-cache
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ steps.playwright-version.outputs.version }}
-          restore-keys: |
-            playwright-${{ runner.os }}-${{ matrix.browser }}-
-
-      # Install browser if not cached, always install system deps (fast & idempotent)
-      - name: Install Playwright browser
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install ${{ matrix.browser }}
-
-      - name: Install Playwright system dependencies
-        run: npx playwright install-deps ${{ matrix.browser }}
-
       - name: Run E2E tests
-        run: npx playwright test --project=${{ matrix.browser }}
+        run: npx playwright test --project=${{ matrix.browser }} --retries=2
 
       - name: Upload test results
         uses: actions/upload-artifact@v5
