@@ -329,16 +329,3 @@ jobs:
         with:
           uploadArtifacts: true
           configPath: ./web-app/lighthouserc.json
-
-  # Cleanup artifacts after all jobs complete
-  cleanup:
-    name: Cleanup
-    needs: [audit, lint, knip, test, bundle-size, e2e, lighthouse]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Delete API types artifact
-        uses: geekyeggo/delete-artifact@v5
-        with:
-          name: api-types
-          failOnError: false
