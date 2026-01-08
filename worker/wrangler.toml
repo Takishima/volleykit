@@ -96,8 +96,8 @@ simple = { limit = 100, period = 60 }
 # =============================================================================
 [[kv_namespaces]]
 binding = "AUTH_LOCKOUT"
-id = "AUTH_LOCKOUT_PLACEHOLDER"
-preview_id = "AUTH_LOCKOUT_PREVIEW_PLACEHOLDER"
+id = "53a59c378b3a46f58dbde0b4128e4840"
+preview_id = "3bd4bb21113740ba950ed53f3dbdd1d8"
 
 # Observability (for debugging in Cloudflare dashboard)
 [observability]
