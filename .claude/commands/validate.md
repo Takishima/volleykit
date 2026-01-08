@@ -18,7 +18,7 @@ git diff --name-only --cached 2>/dev/null
 
 If `volleymanager-openapi.yaml` changed:
 ```bash
-cd /home/user/volleykit/web-app && npm run generate:api
+cd web-app && npm run generate:api
 ```
 
 ### Step 3: Parallel Validation (CRITICAL)
@@ -26,15 +26,15 @@ cd /home/user/volleykit/web-app && npm run generate:api
 **Launch ALL THREE subagents in a SINGLE message** using the Task tool:
 
 ```
-Task 1: { subagent_type: "Bash", prompt: "cd /home/user/volleykit/web-app && npm run lint", description: "Run lint check" }
-Task 2: { subagent_type: "Bash", prompt: "cd /home/user/volleykit/web-app && npm run knip", description: "Run knip check" }
-Task 3: { subagent_type: "Bash", prompt: "cd /home/user/volleykit/web-app && npm test", description: "Run test suite" }
+Task 1: { subagent_type: "Bash", prompt: "cd web-app && npm run lint", description: "Run lint check" }
+Task 2: { subagent_type: "Bash", prompt: "cd web-app && npm run knip", description: "Run knip check" }
+Task 3: { subagent_type: "Bash", prompt: "cd web-app && npm test", description: "Run test suite" }
 ```
 
 ### Step 4: Build (only if all pass)
 
 ```bash
-cd /home/user/volleykit/web-app && npm run build
+cd web-app && npm run build
 ```
 
 ### Step 5: Summary

@@ -36,7 +36,7 @@ git diff --name-only --cached 2>/dev/null
 
 If `volleymanager-openapi.yaml` changed:
 ```bash
-cd /home/user/volleykit/web-app && npm run generate:api
+cd web-app && npm run generate:api
 ```
 
 ### Phase 3: Parallel Validation (MUST USE SUBAGENTS)
@@ -44,16 +44,16 @@ cd /home/user/volleykit/web-app && npm run generate:api
 **Launch ALL THREE subagents in a SINGLE message** using the Task tool:
 
 ```
-Task 1: { subagent_type: "Bash", prompt: "cd /home/user/volleykit/web-app && npm run lint", description: "Run lint check" }
-Task 2: { subagent_type: "Bash", prompt: "cd /home/user/volleykit/web-app && npm run knip", description: "Run knip check" }
-Task 3: { subagent_type: "Bash", prompt: "cd /home/user/volleykit/web-app && npm test", description: "Run test suite" }
+Task 1: { subagent_type: "Bash", prompt: "cd web-app && npm run lint", description: "Run lint check" }
+Task 2: { subagent_type: "Bash", prompt: "cd web-app && npm run knip", description: "Run knip check" }
+Task 3: { subagent_type: "Bash", prompt: "cd web-app && npm test", description: "Run test suite" }
 ```
 
 ### Phase 4: Build (Sequential)
 
 **Only after ALL parallel checks pass**:
 ```bash
-cd /home/user/volleykit/web-app && npm run build
+cd web-app && npm run build
 ```
 
 ### Phase 5: Summary
@@ -83,6 +83,14 @@ Issues:
 - `✗` Fail
 - `⊘` Skipped
 - `◐` Running
+
+## Error Handling
+
+If a subagent times out or fails unexpectedly:
+- Note the failure in the summary with `✗` status
+- Include a brief error description
+- Suggest manual execution: `cd web-app && npm run <command>`
+- Do NOT proceed to build if any check fails
 
 ## Quick Variants
 

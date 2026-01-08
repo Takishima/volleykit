@@ -31,7 +31,7 @@ git diff --name-only --cached 2>/dev/null || echo "no-staged"
 If `docs/api/volleymanager-openapi.yaml` changed:
 
 ```bash
-cd /home/user/volleykit/web-app && npm run generate:api
+cd web-app && npm run generate:api
 ```
 
 ### Step 3: Parallel Validation
@@ -43,19 +43,19 @@ Each subagent should use `subagent_type: "Bash"` for direct command execution:
 **Subagent 1 - Lint**:
 ```
 subagent_type: Bash
-prompt: cd /home/user/volleykit/web-app && npm run lint
+prompt: cd web-app && npm run lint
 ```
 
 **Subagent 2 - Knip**:
 ```
 subagent_type: Bash
-prompt: cd /home/user/volleykit/web-app && npm run knip
+prompt: cd web-app && npm run knip
 ```
 
 **Subagent 3 - Test**:
 ```
 subagent_type: Bash
-prompt: cd /home/user/volleykit/web-app && npm test
+prompt: cd web-app && npm test
 ```
 
 ### Step 4: Build (Sequential)
@@ -63,7 +63,7 @@ prompt: cd /home/user/volleykit/web-app && npm test
 **Only if ALL parallel checks passed**, run the build:
 
 ```bash
-cd /home/user/volleykit/web-app && npm run build
+cd web-app && npm run build
 ```
 
 ### Step 5: Summary
@@ -88,6 +88,14 @@ Ready to push!
 Issues:
 - Knip: [brief error summary]
 ```
+
+## Error Handling
+
+If a subagent times out or fails unexpectedly:
+- Note the failure in the summary with `✗` status
+- Include a brief error description
+- Suggest manual execution: `cd web-app && npm run <command>`
+- Do NOT proceed to build if any check fails
 
 ## Status Icons
 
