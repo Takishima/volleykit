@@ -701,7 +701,10 @@ const de: Translations = {
       noPlayersFound: "Keine Spieler im Bild gefunden",
       retryCapture: "Erneut versuchen",
       useResults: "Ergebnisse anwenden",
+      continueToValidation: "Weiter",
       cancel: "Abbrechen",
+      players: "Spieler",
+      coaches: "Trainer",
       comparison: {
         title: "Spielervergleich",
         matched: "Übereinstimmend",

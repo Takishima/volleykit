@@ -694,7 +694,10 @@ const en: Translations = {
       noPlayersFound: "No players found in the image",
       retryCapture: "Try Again",
       useResults: "Apply Results",
+      continueToValidation: "Continue",
       cancel: "Cancel",
+      players: "Players",
+      coaches: "Coaches",
       comparison: {
         title: "Player Comparison",
         matched: "Matched",

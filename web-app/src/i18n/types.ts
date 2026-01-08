@@ -529,7 +529,10 @@ export interface Translations {
       noPlayersFound: string;
       retryCapture: string;
       useResults: string;
+      continueToValidation: string;
       cancel: string;
+      players: string;
+      coaches: string;
       comparison: {
         title: string;
         matched: string;

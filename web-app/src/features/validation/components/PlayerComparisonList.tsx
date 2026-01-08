@@ -7,8 +7,10 @@ interface PlayerComparisonListProps {
   results: PlayerComparisonResult[];
   selectedPlayerIds: Set<string>;
   onTogglePlayer: (playerId: string) => void;
-  onSelectAll: () => void;
-  onDeselectAll: () => void;
+  onSelectAll?: () => void;
+  onDeselectAll?: () => void;
+  /** If true, hide selection UI and show read-only comparison */
+  readOnly?: boolean;
 }
 
 interface StatusConfig {
@@ -143,6 +145,7 @@ export function PlayerComparisonList({
   onTogglePlayer,
   onSelectAll,
   onDeselectAll,
+  readOnly = false,
 }: PlayerComparisonListProps) {
   const { t, tInterpolate } = useTranslation();
 
@@ -157,6 +160,9 @@ export function PlayerComparisonList({
   const selectableCount = matched.length;
   const selectedCount = selectedPlayerIds.size;
   const allSelected = selectableCount > 0 && selectedCount === selectableCount;
+
+  // In read-only mode, don't show selection controls
+  const showSelectionControls = !readOnly && selectableCount > 0 && onSelectAll && onDeselectAll;
 
   if (results.length === 0) {
     return (
@@ -196,7 +202,7 @@ export function PlayerComparisonList({
       </div>
 
       {/* Select all / deselect all buttons */}
-      {selectableCount > 0 && (
+      {showSelectionControls && (
         <div className="flex gap-2">
           <button
             type="button"
@@ -213,7 +219,7 @@ export function PlayerComparisonList({
         </div>
       )}
 
-      {/* Matched players (selectable) */}
+      {/* Matched players (selectable in non-read-only mode) */}
       {matched.length > 0 && (
         <div className="space-y-2">
           {matched.map((result) => (
@@ -228,7 +234,7 @@ export function PlayerComparisonList({
               onToggle={() =>
                 result.rosterPlayerId && onTogglePlayer(result.rosterPlayerId)
               }
-              isSelectable={!!result.rosterPlayerId}
+              isSelectable={!readOnly && !!result.rosterPlayerId}
             />
           ))}
         </div>

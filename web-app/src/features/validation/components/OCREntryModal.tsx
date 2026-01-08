@@ -1,7 +1,11 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import { useOCRScoresheet, compareRosters } from "@/features/ocr";
-import type { ParsedGameSheet, PlayerComparisonResult } from "@/features/ocr";
+import type {
+  ParsedGameSheet,
+  PlayerComparisonResult,
+  ParsedOfficial,
+} from "@/features/ocr";
 import type { RosterPlayer } from "@/features/validation/hooks/useNominationList";
 import { OCRCaptureModal } from "./OCRCaptureModal";
 import { PlayerComparisonList } from "./PlayerComparisonList";
@@ -13,9 +17,28 @@ import {
   RefreshCw,
   SkipForward,
   X,
+  ChevronDown,
+  ChevronUp,
 } from "@/shared/components/icons";
 
 type OCREntryStep = "intro" | "capture" | "processing" | "results" | "error";
+
+/** Coach info for comparison */
+export interface CoachForComparison {
+  id: string;
+  displayName: string;
+  firstName?: string;
+  lastName?: string;
+  role: "head" | "firstAssistant" | "secondAssistant";
+}
+
+/** Comparison result for a single team */
+interface TeamComparison {
+  teamName: string;
+  ocrTeamName: string;
+  playerResults: PlayerComparisonResult[];
+  coachResults: PlayerComparisonResult[];
+}
 
 interface OCREntryModalProps {
   isOpen: boolean;
@@ -27,21 +50,47 @@ interface OCREntryModalProps {
   homeRosterPlayers: RosterPlayer[];
   /** Away roster players for comparison */
   awayRosterPlayers: RosterPlayer[];
-  /** Which team is currently being scanned */
-  currentTeam: "home" | "away";
-  /** Callback when user confirms OCR results for a team */
-  onApplyResults: (team: "home" | "away", matchedPlayerIds: string[]) => void;
+  /** Home roster coaches for comparison */
+  homeRosterCoaches: CoachForComparison[];
+  /** Away roster coaches for comparison */
+  awayRosterCoaches: CoachForComparison[];
   /** Callback when user skips OCR */
   onSkip: () => void;
-  /** Callback when user completes OCR for both teams or decides to proceed */
+  /** Callback when user completes OCR */
   onComplete: () => void;
   /** Callback to close */
   onClose: () => void;
 }
 
 /**
+ * Convert ParsedOfficial to a format compatible with compareRosters
+ */
+function officialsToPlayers(officials: ParsedOfficial[]) {
+  return officials.map((official) => ({
+    shirtNumber: null,
+    lastName: official.lastName,
+    firstName: official.firstName,
+    displayName: official.displayName,
+    rawName: official.rawName,
+    licenseStatus: "",
+  }));
+}
+
+/**
+ * Convert CoachForComparison to RosterPlayerForComparison format
+ */
+function coachesToRosterFormat(coaches: CoachForComparison[]) {
+  return coaches.map((coach) => ({
+    id: coach.id,
+    displayName: coach.displayName,
+    firstName: coach.firstName,
+    lastName: coach.lastName,
+  }));
+}
+
+/**
  * Full-screen OCR entry modal that appears before the validation wizard.
- * Allows scanning both home and away team rosters.
+ * Shows comparison results for both teams (players and coaches).
  */
 export function OCREntryModal({
   isOpen,
@@ -49,8 +98,8 @@ export function OCREntryModal({
   awayTeamName,
   homeRosterPlayers,
   awayRosterPlayers,
-  currentTeam,
-  onApplyResults,
+  homeRosterCoaches,
+  awayRosterCoaches,
   onSkip,
   onComplete,
   onClose,
@@ -61,20 +110,22 @@ export function OCREntryModal({
 
   const [step, setStep] = useState<OCREntryStep>("intro");
   const [showCaptureModal, setShowCaptureModal] = useState(false);
-  const [selectedPlayerIds, setSelectedPlayerIds] = useState<Set<string>>(
-    new Set(),
+
+  // Comparison results for both teams
+  const [homeComparison, setHomeComparison] = useState<TeamComparison | null>(
+    null,
   );
-  const [comparisonResults, setComparisonResults] = useState<
-    PlayerComparisonResult[]
-  >([]);
+  const [awayComparison, setAwayComparison] = useState<TeamComparison | null>(
+    null,
+  );
+
+  // Expanded sections state
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set(["home-players", "away-players"]),
+  );
 
   // Guard against rapid double-clicks
   const isProcessingRef = useRef(false);
-
-  // Get current team data
-  const teamName = currentTeam === "home" ? homeTeamName : awayTeamName;
-  const rosterPlayers =
-    currentTeam === "home" ? homeRosterPlayers : awayRosterPlayers;
 
   // Handle Escape key
   useEffect(() => {
@@ -94,38 +145,53 @@ export function OCREntryModal({
   useEffect(() => {
     if (isOpen) {
       setStep("intro");
-      setSelectedPlayerIds(new Set());
-      setComparisonResults([]);
+      setHomeComparison(null);
+      setAwayComparison(null);
+      setExpandedSections(new Set(["home-players", "away-players"]));
       reset();
     }
   }, [isOpen, reset]);
 
-  // Initialize selection with all matched players
-  const initializeSelection = useCallback(
-    (results: PlayerComparisonResult[]) => {
-      const matchedIds = results
-        .filter((r) => r.status === "match" && r.rosterPlayerId)
-        .map((r) => r.rosterPlayerId as string);
-      setSelectedPlayerIds(new Set(matchedIds));
-    },
-    [],
-  );
-
-  // Determine which team's data from OCR results
-  const getOCRTeam = useCallback(
+  // Match OCR team to home/away based on team names
+  const matchOCRTeams = useCallback(
     (parsed: ParsedGameSheet) => {
-      const homeMatch =
-        parsed.teamA.name.toLowerCase().includes(teamName.toLowerCase()) ||
-        teamName.toLowerCase().includes(parsed.teamA.name.toLowerCase());
-      const awayMatch =
-        parsed.teamB.name.toLowerCase().includes(teamName.toLowerCase()) ||
-        teamName.toLowerCase().includes(parsed.teamB.name.toLowerCase());
+      const teamANameLower = parsed.teamA.name.toLowerCase();
+      const teamBNameLower = parsed.teamB.name.toLowerCase();
+      const homeNameLower = homeTeamName.toLowerCase();
+      const awayNameLower = awayTeamName.toLowerCase();
 
-      if (homeMatch && !awayMatch) return parsed.teamA;
-      if (awayMatch && !homeMatch) return parsed.teamB;
-      return currentTeam === "home" ? parsed.teamA : parsed.teamB;
+      // Check if teamA matches home or away
+      const teamAMatchesHome =
+        teamANameLower.includes(homeNameLower) ||
+        homeNameLower.includes(teamANameLower);
+      const teamAMatchesAway =
+        teamANameLower.includes(awayNameLower) ||
+        awayNameLower.includes(teamANameLower);
+      const teamBMatchesHome =
+        teamBNameLower.includes(homeNameLower) ||
+        homeNameLower.includes(teamBNameLower);
+      const teamBMatchesAway =
+        teamBNameLower.includes(awayNameLower) ||
+        awayNameLower.includes(teamBNameLower);
+
+      // Determine which OCR team is home and which is away
+      if (teamAMatchesHome && !teamAMatchesAway) {
+        return { homeOCR: parsed.teamA, awayOCR: parsed.teamB };
+      }
+      if (teamAMatchesAway && !teamAMatchesHome) {
+        return { homeOCR: parsed.teamB, awayOCR: parsed.teamA };
+      }
+      if (teamBMatchesHome && !teamBMatchesAway) {
+        return { homeOCR: parsed.teamB, awayOCR: parsed.teamA };
+      }
+      if (teamBMatchesAway && !teamBMatchesHome) {
+        return { homeOCR: parsed.teamA, awayOCR: parsed.teamB };
+      }
+
+      // Default: teamA = home, teamB = away (column order on scoresheet)
+      return { homeOCR: parsed.teamA, awayOCR: parsed.teamB };
     },
-    [currentTeam, teamName],
+    [homeTeamName, awayTeamName],
   );
 
   // Handle image selection
@@ -140,21 +206,65 @@ export function OCREntryModal({
       try {
         const parsed = await processImage(blob);
         if (parsed) {
-          const ocrTeam = getOCRTeam(parsed);
-          if (!ocrTeam || ocrTeam.players.length === 0) {
+          const { homeOCR, awayOCR } = matchOCRTeams(parsed);
+
+          // Check if we have any players
+          if (
+            homeOCR.players.length === 0 &&
+            awayOCR.players.length === 0
+          ) {
             setStep("error");
             return;
           }
 
-          const rosterForComparison = rosterPlayers.map((p) => ({
-            id: p.id,
-            displayName: p.displayName,
-            firstName: p.firstName,
-            lastName: p.lastName,
-          }));
-          const results = compareRosters(ocrTeam.players, rosterForComparison);
-          setComparisonResults(results);
-          initializeSelection(results);
+          // Compare home team players
+          const homePlayerResults = compareRosters(
+            homeOCR.players,
+            homeRosterPlayers.map((p) => ({
+              id: p.id,
+              displayName: p.displayName,
+              firstName: p.firstName,
+              lastName: p.lastName,
+            })),
+          );
+
+          // Compare home team coaches
+          const homeCoachResults = compareRosters(
+            officialsToPlayers(homeOCR.officials),
+            coachesToRosterFormat(homeRosterCoaches),
+          );
+
+          // Compare away team players
+          const awayPlayerResults = compareRosters(
+            awayOCR.players,
+            awayRosterPlayers.map((p) => ({
+              id: p.id,
+              displayName: p.displayName,
+              firstName: p.firstName,
+              lastName: p.lastName,
+            })),
+          );
+
+          // Compare away team coaches
+          const awayCoachResults = compareRosters(
+            officialsToPlayers(awayOCR.officials),
+            coachesToRosterFormat(awayRosterCoaches),
+          );
+
+          setHomeComparison({
+            teamName: homeTeamName,
+            ocrTeamName: homeOCR.name,
+            playerResults: homePlayerResults,
+            coachResults: homeCoachResults,
+          });
+
+          setAwayComparison({
+            teamName: awayTeamName,
+            ocrTeamName: awayOCR.name,
+            playerResults: awayPlayerResults,
+            coachResults: awayCoachResults,
+          });
+
           setStep("results");
         } else {
           setStep("error");
@@ -165,45 +275,23 @@ export function OCREntryModal({
         isProcessingRef.current = false;
       }
     },
-    [processImage, getOCRTeam, rosterPlayers, initializeSelection],
+    [
+      processImage,
+      matchOCRTeams,
+      homeTeamName,
+      awayTeamName,
+      homeRosterPlayers,
+      awayRosterPlayers,
+      homeRosterCoaches,
+      awayRosterCoaches,
+    ],
   );
-
-  // Handle player toggle
-  const handleTogglePlayer = useCallback((playerId: string) => {
-    setSelectedPlayerIds((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(playerId)) {
-        newSet.delete(playerId);
-      } else {
-        newSet.add(playerId);
-      }
-      return newSet;
-    });
-  }, []);
-
-  // Handle select/deselect all
-  const handleSelectAll = useCallback(() => {
-    const matchedIds = comparisonResults
-      .filter((r) => r.status === "match" && r.rosterPlayerId)
-      .map((r) => r.rosterPlayerId as string);
-    setSelectedPlayerIds(new Set(matchedIds));
-  }, [comparisonResults]);
-
-  const handleDeselectAll = useCallback(() => {
-    setSelectedPlayerIds(new Set());
-  }, []);
-
-  // Handle apply and continue
-  const handleApplyAndContinue = useCallback(() => {
-    onApplyResults(currentTeam, Array.from(selectedPlayerIds));
-    onComplete();
-  }, [onApplyResults, currentTeam, selectedPlayerIds, onComplete]);
 
   // Handle retry
   const handleRetry = useCallback(() => {
     reset();
-    setSelectedPlayerIds(new Set());
-    setComparisonResults([]);
+    setHomeComparison(null);
+    setAwayComparison(null);
     setStep("capture");
     setShowCaptureModal(true);
   }, [reset]);
@@ -214,7 +302,37 @@ export function OCREntryModal({
     setShowCaptureModal(true);
   }, []);
 
+  // Toggle section expansion
+  const toggleSection = useCallback((sectionId: string) => {
+    setExpandedSections((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(sectionId)) {
+        newSet.delete(sectionId);
+      } else {
+        newSet.add(sectionId);
+      }
+      return newSet;
+    });
+  }, []);
+
   if (!isOpen) return null;
+
+  // Count discrepancies for summary
+  const countDiscrepancies = (results: PlayerComparisonResult[]) => {
+    const ocrOnly = results.filter((r) => r.status === "ocr-only").length;
+    const rosterOnly = results.filter((r) => r.status === "roster-only").length;
+    return ocrOnly + rosterOnly;
+  };
+
+  const totalDiscrepancies =
+    (homeComparison
+      ? countDiscrepancies(homeComparison.playerResults) +
+        countDiscrepancies(homeComparison.coachResults)
+      : 0) +
+    (awayComparison
+      ? countDiscrepancies(awayComparison.playerResults) +
+        countDiscrepancies(awayComparison.coachResults)
+      : 0);
 
   return (
     <div
@@ -232,7 +350,6 @@ export function OCREntryModal({
           >
             {t("validation.ocr.scanScoresheet")}
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{teamName}</p>
         </div>
         <button
           type="button"
@@ -306,7 +423,7 @@ export function OCREntryModal({
 
         {/* Results step */}
         {step === "results" && (
-          <div className="max-w-lg mx-auto">
+          <div className="max-w-2xl mx-auto">
             <div className="flex items-center gap-2 text-success-600 dark:text-success-400 mb-4">
               <CheckCircle className="w-6 h-6" aria-hidden="true" />
               <span className="text-lg font-medium">
@@ -314,17 +431,123 @@ export function OCREntryModal({
               </span>
             </div>
 
-            <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-4">
-              {t("validation.ocr.comparison.title")}
-            </h3>
+            {totalDiscrepancies > 0 && (
+              <div className="mb-4 p-3 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg">
+                <p className="text-sm text-warning-700 dark:text-warning-400">
+                  {totalDiscrepancies} discrepancies found
+                </p>
+              </div>
+            )}
 
-            <PlayerComparisonList
-              results={comparisonResults}
-              selectedPlayerIds={selectedPlayerIds}
-              onTogglePlayer={handleTogglePlayer}
-              onSelectAll={handleSelectAll}
-              onDeselectAll={handleDeselectAll}
-            />
+            {/* Home Team Section */}
+            {homeComparison && (
+              <div className="mb-6">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">
+                  {homeComparison.teamName}
+                  {homeComparison.ocrTeamName &&
+                    homeComparison.ocrTeamName !== homeComparison.teamName && (
+                      <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
+                        (OCR: {homeComparison.ocrTeamName})
+                      </span>
+                    )}
+                </h3>
+
+                {/* Home Players */}
+                <CollapsibleSection
+                  title={t("validation.ocr.players")}
+                  count={homeComparison.playerResults.length}
+                  discrepancies={countDiscrepancies(
+                    homeComparison.playerResults,
+                  )}
+                  expanded={expandedSections.has("home-players")}
+                  onToggle={() => toggleSection("home-players")}
+                  sectionId="home-players"
+                >
+                  <PlayerComparisonList
+                    results={homeComparison.playerResults}
+                    selectedPlayerIds={new Set()}
+                    onTogglePlayer={() => {}}
+                    readOnly
+                  />
+                </CollapsibleSection>
+
+                {/* Home Coaches */}
+                {homeComparison.coachResults.length > 0 && (
+                  <CollapsibleSection
+                    title={t("validation.ocr.coaches")}
+                    count={homeComparison.coachResults.length}
+                    discrepancies={countDiscrepancies(
+                      homeComparison.coachResults,
+                    )}
+                    expanded={expandedSections.has("home-coaches")}
+                    onToggle={() => toggleSection("home-coaches")}
+                    sectionId="home-coaches"
+                  >
+                    <PlayerComparisonList
+                      results={homeComparison.coachResults}
+                      selectedPlayerIds={new Set()}
+                      onTogglePlayer={() => {}}
+                      readOnly
+                    />
+                  </CollapsibleSection>
+                )}
+              </div>
+            )}
+
+            {/* Away Team Section */}
+            {awayComparison && (
+              <div className="mb-6">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">
+                  {awayComparison.teamName}
+                  {awayComparison.ocrTeamName &&
+                    awayComparison.ocrTeamName !== awayComparison.teamName && (
+                      <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
+                        (OCR: {awayComparison.ocrTeamName})
+                      </span>
+                    )}
+                </h3>
+
+                {/* Away Players */}
+                <CollapsibleSection
+                  title={t("validation.ocr.players")}
+                  count={awayComparison.playerResults.length}
+                  discrepancies={countDiscrepancies(
+                    awayComparison.playerResults,
+                  )}
+                  expanded={expandedSections.has("away-players")}
+                  onToggle={() => toggleSection("away-players")}
+                  sectionId="away-players"
+                >
+                  <PlayerComparisonList
+                    results={awayComparison.playerResults}
+                    selectedPlayerIds={new Set()}
+                    onTogglePlayer={() => {}}
+                    readOnly
+                  />
+                </CollapsibleSection>
+
+                {/* Away Coaches */}
+                {awayComparison.coachResults.length > 0 && (
+                  <CollapsibleSection
+                    title={t("validation.ocr.coaches")}
+                    count={awayComparison.coachResults.length}
+                    discrepancies={countDiscrepancies(
+                      awayComparison.coachResults,
+                    )}
+                    expanded={expandedSections.has("away-coaches")}
+                    onToggle={() => toggleSection("away-coaches")}
+                    sectionId="away-coaches"
+                  >
+                    <PlayerComparisonList
+                      results={awayComparison.coachResults}
+                      selectedPlayerIds={new Set()}
+                      onTogglePlayer={() => {}}
+                      readOnly
+                    />
+                  </CollapsibleSection>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -368,10 +591,10 @@ export function OCREntryModal({
           </button>
           <button
             type="button"
-            onClick={handleApplyAndContinue}
+            onClick={onComplete}
             className="flex-1 px-4 py-3 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
           >
-            {t("validation.ocr.useResults")}
+            {t("validation.ocr.continueToValidation")}
           </button>
         </div>
       )}
@@ -387,6 +610,64 @@ export function OCREntryModal({
         }}
         onImageSelected={handleImageSelected}
       />
+    </div>
+  );
+}
+
+// Collapsible section component
+interface CollapsibleSectionProps {
+  title: string;
+  count: number;
+  discrepancies: number;
+  expanded: boolean;
+  onToggle: () => void;
+  sectionId: string;
+  children: React.ReactNode;
+}
+
+function CollapsibleSection({
+  title,
+  count,
+  discrepancies,
+  expanded,
+  onToggle,
+  sectionId,
+  children,
+}: CollapsibleSectionProps) {
+  const Icon = expanded ? ChevronUp : ChevronDown;
+
+  return (
+    <div className="mb-3">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        aria-expanded={expanded}
+        aria-controls={sectionId}
+      >
+        <div className="flex items-center gap-2">
+          <Icon
+            className="w-4 h-4 text-gray-500 dark:text-gray-400"
+            aria-hidden="true"
+          />
+          <span className="text-sm font-medium text-gray-900 dark:text-white">
+            {title}
+          </span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            ({count})
+          </span>
+        </div>
+        {discrepancies > 0 && (
+          <span className="text-xs px-2 py-0.5 rounded-full bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-400">
+            {discrepancies} discrepancies
+          </span>
+        )}
+      </button>
+      {expanded && (
+        <div id={sectionId} className="mt-2 pl-6">
+          {children}
+        </div>
+      )}
     </div>
   );
 }

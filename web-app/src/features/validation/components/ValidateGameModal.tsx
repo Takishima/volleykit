@@ -1,10 +1,11 @@
 import { memo, useState, useCallback, useMemo } from "react";
-import type { Assignment, IndoorPlayerNomination } from "@/api/client";
+import type { Assignment, IndoorPlayerNomination, NominationList } from "@/api/client";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import { getTeamNames } from "@/features/assignments/utils/assignment-helpers";
 import { useValidateGameWizard } from "@/features/validation/hooks/useValidateGameWizard";
 import { useSettingsStore } from "@/shared/stores/settings";
 import type { RosterPlayer } from "@/features/validation/hooks/useNominationList";
+import type { CoachForComparison } from "./OCREntryModal";
 import { Modal } from "@/shared/components/Modal";
 import { ModalHeader } from "@/shared/components/ModalHeader";
 import { WizardStepContainer } from "@/shared/components/WizardStepContainer";
@@ -53,6 +54,53 @@ function transformNominationsToRosterPlayers(
   return players.sort((a, b) => a.displayName.localeCompare(b.displayName));
 }
 
+/** Transform nomination list coaches to CoachForComparison format for OCR comparison */
+function transformNominationListToCoaches(
+  nominationList: NominationList | null,
+): CoachForComparison[] {
+  if (!nominationList) return [];
+
+  const coaches: CoachForComparison[] = [];
+
+  // Head coach
+  const headCoach = nominationList.coachPerson;
+  if (headCoach?.__identity && headCoach.displayName) {
+    coaches.push({
+      id: headCoach.__identity,
+      displayName: headCoach.displayName,
+      firstName: headCoach.firstName,
+      lastName: headCoach.lastName,
+      role: "head",
+    });
+  }
+
+  // First assistant coach
+  const firstAssistant = nominationList.firstAssistantCoachPerson;
+  if (firstAssistant?.__identity && firstAssistant.displayName) {
+    coaches.push({
+      id: firstAssistant.__identity,
+      displayName: firstAssistant.displayName,
+      firstName: firstAssistant.firstName,
+      lastName: firstAssistant.lastName,
+      role: "firstAssistant",
+    });
+  }
+
+  // Second assistant coach
+  const secondAssistant = nominationList.secondAssistantCoachPerson;
+  if (secondAssistant?.__identity && secondAssistant.displayName) {
+    coaches.push({
+      id: secondAssistant.__identity,
+      displayName: secondAssistant.displayName,
+      firstName: secondAssistant.firstName,
+      lastName: secondAssistant.lastName,
+      role: "secondAssistant",
+    });
+  }
+
+  return coaches;
+}
+
 function ValidateGameModalComponent({
   assignment,
   isOpen,
@@ -94,14 +142,15 @@ function ValidateGameModalComponent({
     [wizard.awayNominationList],
   );
 
-  // OCR entry modal handlers
-  const handleOCRApplyResults = useCallback(
-    (team: "home" | "away", matchedPlayerIds: string[]) => {
-      // For now, just log the results - the OCR provides feedback on discrepancies
-      // Future enhancement: could pre-fill the roster modifications
-      console.log(`[OCR] Applied ${matchedPlayerIds.length} matched players for ${team} team`);
-    },
-    [],
+  // Transform nomination lists to coaches for OCR comparison
+  const homeRosterCoaches = useMemo(
+    () => transformNominationListToCoaches(wizard.homeNominationList),
+    [wizard.homeNominationList],
+  );
+
+  const awayRosterCoaches = useMemo(
+    () => transformNominationListToCoaches(wizard.awayNominationList),
+    [wizard.awayNominationList],
   );
 
   const handleOCRSkip = useCallback(() => {
@@ -309,8 +358,8 @@ function ValidateGameModalComponent({
         awayTeamName={awayTeam}
         homeRosterPlayers={homeRosterPlayers}
         awayRosterPlayers={awayRosterPlayers}
-        currentTeam="home"
-        onApplyResults={handleOCRApplyResults}
+        homeRosterCoaches={homeRosterCoaches}
+        awayRosterCoaches={awayRosterCoaches}
         onSkip={handleOCRSkip}
         onComplete={handleOCRComplete}
         onClose={handleOCRClose}
