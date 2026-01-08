@@ -18,3 +18,4 @@ export { ValidatedModeButtons, EditModeButtons } from "./WizardButtons";
 export { OCRCaptureModal } from "./OCRCaptureModal";
 export { OCRPanel } from "./OCRPanel";
 export { PlayerComparisonList } from "./PlayerComparisonList";
+export { OCREntryModal } from "./OCREntryModal";

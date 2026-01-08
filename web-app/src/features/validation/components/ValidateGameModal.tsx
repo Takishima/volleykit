@@ -1,8 +1,10 @@
-import { memo } from "react";
-import type { Assignment } from "@/api/client";
+import { memo, useState, useCallback, useMemo } from "react";
+import type { Assignment, IndoorPlayerNomination } from "@/api/client";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import { getTeamNames } from "@/features/assignments/utils/assignment-helpers";
 import { useValidateGameWizard } from "@/features/validation/hooks/useValidateGameWizard";
+import { useSettingsStore } from "@/shared/stores/settings";
+import type { RosterPlayer } from "@/features/validation/hooks/useNominationList";
 import { Modal } from "@/shared/components/Modal";
 import { ModalHeader } from "@/shared/components/ModalHeader";
 import { WizardStepContainer } from "@/shared/components/WizardStepContainer";
@@ -15,6 +17,7 @@ import {
   StepRenderer,
   ValidatedModeButtons,
   EditModeButtons,
+  OCREntryModal,
 } from ".";
 
 interface ValidateGameModalProps {
@@ -23,12 +26,48 @@ interface ValidateGameModalProps {
   onClose: () => void;
 }
 
+/** Transform nomination list players to RosterPlayer format for OCR comparison */
+function transformNominationsToRosterPlayers(
+  nominations: IndoorPlayerNomination[] | undefined,
+): RosterPlayer[] {
+  if (!nominations) return [];
+
+  const players: RosterPlayer[] = [];
+
+  for (const nomination of nominations) {
+    const id = nomination.__identity;
+    const person = nomination.indoorPlayer?.person;
+    const displayName = person?.displayName ??
+      [person?.firstName, person?.lastName].filter(Boolean).join(" ");
+
+    if (!id || !displayName) continue;
+
+    players.push({
+      id,
+      displayName,
+      firstName: person?.firstName,
+      lastName: person?.lastName,
+    });
+  }
+
+  return players.sort((a, b) => a.displayName.localeCompare(b.displayName));
+}
+
 function ValidateGameModalComponent({
   assignment,
   isOpen,
   onClose,
 }: ValidateGameModalProps) {
   const { t, tInterpolate } = useTranslation();
+  const isOCREnabled = useSettingsStore((s) => s.isOCREnabled);
+
+  // OCR entry modal state - track whether user dismissed OCR entry for this assignment
+  // Use assignment ID as key to reset when switching assignments
+  const [ocrDismissedForAssignment, setOCRDismissedForAssignment] = useState<string | null>(null);
+  const assignmentId = assignment.__identity;
+
+  // OCR is dismissed if user explicitly dismissed it for this assignment
+  const ocrDismissed = ocrDismissedForAssignment === assignmentId;
 
   const wizard = useValidateGameWizard({
     assignment,
@@ -39,6 +78,46 @@ function ValidateGameModalComponent({
   const { homeTeam, awayTeam } = getTeamNames(assignment);
   const modalTitleId = "validate-game-title";
   const subtitle = `${homeTeam} ${t("common.vs")} ${awayTeam}`;
+
+  // Transform nomination lists to RosterPlayer format for OCR comparison
+  const homeRosterPlayers = useMemo(
+    () => transformNominationsToRosterPlayers(
+      wizard.homeNominationList?.indoorPlayerNominations,
+    ),
+    [wizard.homeNominationList],
+  );
+
+  const awayRosterPlayers = useMemo(
+    () => transformNominationsToRosterPlayers(
+      wizard.awayNominationList?.indoorPlayerNominations,
+    ),
+    [wizard.awayNominationList],
+  );
+
+  // OCR entry modal handlers
+  const handleOCRApplyResults = useCallback(
+    (team: "home" | "away", matchedPlayerIds: string[]) => {
+      // For now, just log the results - the OCR provides feedback on discrepancies
+      // Future enhancement: could pre-fill the roster modifications
+      console.log(`[OCR] Applied ${matchedPlayerIds.length} matched players for ${team} team`);
+    },
+    [],
+  );
+
+  const handleOCRSkip = useCallback(() => {
+    setOCRDismissedForAssignment(assignmentId);
+  }, [assignmentId]);
+
+  const handleOCRComplete = useCallback(() => {
+    setOCRDismissedForAssignment(assignmentId);
+  }, [assignmentId]);
+
+  const handleOCRClose = useCallback(() => {
+    setOCRDismissedForAssignment(assignmentId);
+  }, [assignmentId]);
+
+  // Determine if OCR entry should be shown
+  const shouldShowOCREntry = isOpen && isOCREnabled && !ocrDismissed && !wizard.isValidated && !wizard.isLoadingGameDetails;
 
   const navigation = {
     isFirstStep: wizard.isFirstStep,
@@ -221,6 +300,20 @@ function ValidateGameModalComponent({
       <SafeValidationCompleteModal
         isOpen={wizard.showSafeValidationComplete}
         onClose={wizard.handleSafeValidationCompleteClose}
+      />
+
+      {/* OCR Entry Modal - shown before validation wizard when OCR is enabled */}
+      <OCREntryModal
+        isOpen={shouldShowOCREntry}
+        homeTeamName={homeTeam}
+        awayTeamName={awayTeam}
+        homeRosterPlayers={homeRosterPlayers}
+        awayRosterPlayers={awayRosterPlayers}
+        currentTeam="home"
+        onApplyResults={handleOCRApplyResults}
+        onSkip={handleOCRSkip}
+        onComplete={handleOCRComplete}
+        onClose={handleOCRClose}
       />
     </>
   );

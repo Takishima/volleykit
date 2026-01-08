@@ -19,6 +19,7 @@ export { Settings } from "lucide-react";
 export { Upload } from "lucide-react";
 export { Camera } from "lucide-react";
 export { Check } from "lucide-react";
+export { SkipForward } from "lucide-react";
 export { FileText } from "lucide-react";
 export { AlertCircle } from "lucide-react";
 export { User } from "lucide-react";
