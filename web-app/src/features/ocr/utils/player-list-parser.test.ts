@@ -1,12 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import {
   parseGameSheet,
+  parseGameSheetWithOCR,
   parsePlayerName,
   parseOfficialName,
   normalizeName,
   getAllPlayers,
   getAllOfficials,
 } from './player-list-parser';
+import type { OCRResult, OCRLine, OCRWord } from '../types';
 
 describe('normalizeName', () => {
   it('converts uppercase to title case', () => {
@@ -275,5 +277,265 @@ C\tFölmli Marco\tC\tJoller Philipp`;
 
     // Verify overflow liberos are in Team B
     expect(result.teamB.players.some((p) => p.rawName === 'METZLER NILS MATTIA')).toBe(true);
+  });
+});
+
+// =============================================================================
+// Helper functions for creating OCR test data with bounding boxes
+// =============================================================================
+
+function createWord(text: string, x0: number, x1?: number): OCRWord {
+  return {
+    text,
+    confidence: 95,
+    bbox: { x0, y0: 0, x1: x1 ?? x0 + text.length * 10, y1: 20 },
+  };
+}
+
+function createLine(text: string, words: OCRWord[]): OCRLine {
+  return {
+    text,
+    confidence: 95,
+    words,
+  };
+}
+
+function createOCRResult(fullText: string, lines: OCRLine[]): OCRResult {
+  const allWords: OCRWord[] = [];
+  for (const line of lines) {
+    allWords.push(...line.words);
+  }
+  return { fullText, lines, words: allWords };
+}
+
+describe('parseGameSheetWithOCR', () => {
+  it('falls back to text-only parsing when no OCR lines provided', () => {
+    const ocrResult: OCRResult = {
+      fullText: `Team A\tTeam B
+N.\tName of the player\tLicense\tN.\tName of the player\tLicense
+1\tPLAYER ONE\tOK\t1\tPLAYER TWO\tOK`,
+      lines: [],
+      words: [],
+    };
+
+    const result = parseGameSheetWithOCR(ocrResult);
+
+    expect(result.warnings.some((w) => w.includes('text-only parsing'))).toBe(true);
+    expect(result.teamA.players).toHaveLength(1);
+    expect(result.teamB.players).toHaveLength(1);
+  });
+
+  it('uses bounding boxes to assign single-column overflow to correct team', () => {
+    // Simulate OCR output where Team A has fewer players
+    // Two-column rows have words at x=0-200 (Team A) and x=400-600 (Team B)
+    // Single-column overflow rows have words at x=400-600 (Team B)
+    const lines: OCRLine[] = [
+      // Header
+      createLine('Team A\tTeam B', [
+        createWord('Team A', 0, 100),
+        createWord('Team B', 400, 500),
+      ]),
+      // Column headers
+      createLine('N.\tName of the player\tLicense\tN.\tName of the player\tLicense', [
+        createWord('N.', 0, 20),
+        createWord('Name of the player', 30, 150),
+        createWord('License', 160, 200),
+        createWord('N.', 400, 420),
+        createWord('Name of the player', 430, 550),
+        createWord('License', 560, 600),
+      ]),
+      // Two-column player row
+      createLine('1\tPLAYER A1\tLFP\t1\tPLAYER B1\tLFP', [
+        createWord('1', 0, 10),
+        createWord('PLAYER A1', 30, 120),
+        createWord('LFP', 160, 200),
+        createWord('1', 400, 410),
+        createWord('PLAYER B1', 430, 520),
+        createWord('LFP', 560, 600),
+      ]),
+      // Two-column player row
+      createLine('2\tPLAYER A2\tLFP\t2\tPLAYER B2\tLFP', [
+        createWord('2', 0, 10),
+        createWord('PLAYER A2', 30, 120),
+        createWord('LFP', 160, 200),
+        createWord('2', 400, 410),
+        createWord('PLAYER B2', 430, 520),
+        createWord('LFP', 560, 600),
+      ]),
+      // Single-column overflow - positioned in right column (Team B)
+      createLine('3\tPLAYER B3\tLFP', [
+        createWord('3', 400, 410),
+        createWord('PLAYER B3', 430, 520),
+        createWord('LFP', 560, 600),
+      ]),
+      // Another single-column overflow - positioned in right column (Team B)
+      createLine('4\tPLAYER B4\tLFP', [
+        createWord('4', 400, 410),
+        createWord('PLAYER B4', 430, 520),
+        createWord('LFP', 560, 600),
+      ]),
+    ];
+
+    const fullText = lines.map((l) => l.text).join('\n');
+    const ocrResult = createOCRResult(fullText, lines);
+
+    const result = parseGameSheetWithOCR(ocrResult);
+
+    // Team A should have exactly 2 players
+    expect(result.teamA.players).toHaveLength(2);
+    expect(result.teamA.players.map((p) => p.rawName)).toEqual(['PLAYER A1', 'PLAYER A2']);
+
+    // Team B should have 4 players (2 from two-column + 2 from overflow)
+    expect(result.teamB.players).toHaveLength(4);
+    expect(result.teamB.players.map((p) => p.rawName)).toEqual([
+      'PLAYER B1',
+      'PLAYER B2',
+      'PLAYER B3',
+      'PLAYER B4',
+    ]);
+  });
+
+  it('assigns single-column overflow to Team A when positioned in left column', () => {
+    // In this scenario, Team B has fewer players and Team A has overflow
+    const lines: OCRLine[] = [
+      createLine('Team A\tTeam B', [
+        createWord('Team A', 0, 100),
+        createWord('Team B', 400, 500),
+      ]),
+      createLine('N.\tName of the player\tLicense\tN.\tName of the player\tLicense', [
+        createWord('N.', 0, 20),
+        createWord('Name of the player', 30, 150),
+        createWord('License', 160, 200),
+        createWord('N.', 400, 420),
+        createWord('Name of the player', 430, 550),
+        createWord('License', 560, 600),
+      ]),
+      // Two-column row
+      createLine('1\tPLAYER A1\tLFP\t1\tPLAYER B1\tLFP', [
+        createWord('1', 0, 10),
+        createWord('PLAYER A1', 30, 120),
+        createWord('LFP', 160, 200),
+        createWord('1', 400, 410),
+        createWord('PLAYER B1', 430, 520),
+        createWord('LFP', 560, 600),
+      ]),
+      // Single-column overflow - positioned in LEFT column (Team A)
+      createLine('2\tPLAYER A2\tLFP', [
+        createWord('2', 0, 10),
+        createWord('PLAYER A2', 30, 120),
+        createWord('LFP', 160, 200),
+      ]),
+      // Another single-column in left column (Team A)
+      createLine('3\tPLAYER A3\tLFP', [
+        createWord('3', 0, 10),
+        createWord('PLAYER A3', 30, 120),
+        createWord('LFP', 160, 200),
+      ]),
+    ];
+
+    const fullText = lines.map((l) => l.text).join('\n');
+    const ocrResult = createOCRResult(fullText, lines);
+
+    const result = parseGameSheetWithOCR(ocrResult);
+
+    // Team A should have 3 players (1 from two-column + 2 from single-column)
+    expect(result.teamA.players).toHaveLength(3);
+    expect(result.teamA.players.map((p) => p.rawName)).toEqual([
+      'PLAYER A1',
+      'PLAYER A2',
+      'PLAYER A3',
+    ]);
+
+    // Team B should have 1 player
+    expect(result.teamB.players).toHaveLength(1);
+    expect(result.teamB.players[0]!.rawName).toBe('PLAYER B1');
+  });
+
+  it('handles libero overflow with bounding box column detection', () => {
+    const lines: OCRLine[] = [
+      createLine('Team A\tTeam B', [
+        createWord('Team A', 0, 100),
+        createWord('Team B', 400, 500),
+      ]),
+      createLine('N.\tName of the player\tLicense\tN.\tName of the player\tLicense', [
+        createWord('N.', 0, 20),
+        createWord('Name of the player', 30, 150),
+        createWord('License', 160, 200),
+        createWord('N.', 400, 420),
+        createWord('Name of the player', 430, 550),
+        createWord('License', 560, 600),
+      ]),
+      // Player rows
+      createLine('1\tPLAYER A1\tLFP\t1\tPLAYER B1\tLFP', [
+        createWord('1', 0, 10),
+        createWord('PLAYER A1', 30, 120),
+        createWord('LFP', 160, 200),
+        createWord('1', 400, 410),
+        createWord('PLAYER B1', 430, 520),
+        createWord('LFP', 560, 600),
+      ]),
+      // Libero section header
+      createLine('LIBERO', [createWord('LIBERO', 200, 280)]),
+      // Two-column libero row
+      createLine('L1 10\tLIBERO A1\tLFP\tL1 20\tLIBERO B1\tLFP', [
+        createWord('L1 10', 0, 40),
+        createWord('LIBERO A1', 50, 140),
+        createWord('LFP', 160, 200),
+        createWord('L1 20', 400, 440),
+        createWord('LIBERO B1', 450, 540),
+        createWord('LFP', 560, 600),
+      ]),
+      // Single-column libero overflow - positioned in right column (Team B)
+      createLine('L2 21\tLIBERO B2\tLFP', [
+        createWord('L2 21', 400, 440),
+        createWord('LIBERO B2', 450, 540),
+        createWord('LFP', 560, 600),
+      ]),
+    ];
+
+    const fullText = lines.map((l) => l.text).join('\n');
+    const ocrResult = createOCRResult(fullText, lines);
+
+    const result = parseGameSheetWithOCR(ocrResult);
+
+    // Team A: 1 player + 1 libero = 2
+    expect(result.teamA.players).toHaveLength(2);
+    expect(result.teamA.players[1]!.rawName).toBe('LIBERO A1');
+    expect(result.teamA.players[1]!.shirtNumber).toBe(10);
+
+    // Team B: 1 player + 2 liberos = 3
+    expect(result.teamB.players).toHaveLength(3);
+    expect(result.teamB.players[1]!.rawName).toBe('LIBERO B1');
+    expect(result.teamB.players[1]!.shirtNumber).toBe(20);
+    expect(result.teamB.players[2]!.rawName).toBe('LIBERO B2');
+    expect(result.teamB.players[2]!.shirtNumber).toBe(21);
+  });
+
+  it('adds warning when column boundaries cannot be determined', () => {
+    // Only single-column data - cannot determine column boundaries
+    const lines: OCRLine[] = [
+      createLine('Team A\tTeam B', [
+        createWord('Team A', 0, 100),
+        createWord('Team B', 200, 300),
+      ]),
+      createLine('N.\tName of the player\tLicense', [
+        createWord('N.', 0, 20),
+        createWord('Name of the player', 30, 150),
+        createWord('License', 160, 200),
+      ]),
+      createLine('1\tPLAYER ONE\tLFP', [
+        createWord('1', 0, 10),
+        createWord('PLAYER ONE', 30, 120),
+        createWord('LFP', 160, 200),
+      ]),
+    ];
+
+    const fullText = lines.map((l) => l.text).join('\n');
+    const ocrResult = createOCRResult(fullText, lines);
+
+    const result = parseGameSheetWithOCR(ocrResult);
+
+    // Should have a warning about column boundary detection
+    expect(result.warnings.some((w) => w.includes('column boundaries'))).toBe(true);
   });
 });

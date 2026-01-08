@@ -15,7 +15,7 @@ import type {
   OCREngine,
 } from '../types';
 import { OCRFactory } from '../services/ocr-factory';
-import { parseGameSheet } from '../utils/player-list-parser';
+import { parseGameSheetWithOCR } from '../utils/player-list-parser';
 
 // =============================================================================
 // Hook Implementation
@@ -80,8 +80,8 @@ export function useOCRScoresheet(): UseOCRScoresheetReturn {
         // Perform OCR
         const ocrResult = await engine.recognize(imageBlob);
 
-        // Parse the OCR text into structured data
-        const parsed = parseGameSheet(ocrResult.fullText);
+        // Parse the OCR result into structured data (uses bounding boxes for column detection)
+        const parsed = parseGameSheetWithOCR(ocrResult);
 
         // Clean up
         await engine.terminate();
