@@ -2,17 +2,21 @@
  * Player List Parser
  *
  * Parses OCR text output into structured player lists for both teams.
- * Handles the tab-separated format from Mistral OCR.
+ * Supports both electronic (tab-separated) and manuscript (handwritten) scoresheets.
  *
- * Expected OCR format:
+ * Expected electronic OCR format:
  * Row 1: TeamA Name<tab>TeamB Name
  * Row 2: N.<tab>Name of the player<tab>N.<tab>Name of the player (headers)
  * Row 3+: Number<tab>LASTNAME FIRSTNAME<tab>License<tab>Number<tab>LASTNAME FIRSTNAME<tab>License
  * ...
  * LIBERO section: L1<tab>Number LASTNAME FIRSTNAME<tab>License<tab>L1<tab>Number LASTNAME FIRSTNAME<tab>License
  * OFFICIAL MEMBERS section: C<tab>Name<tab>C<tab>Name (coaches), AC<tab>Name<tab>AC<tab>Name (assistants)
+ *
+ * For manuscript scoresheets, use parseGameSheet with type: 'manuscript' option.
  */
 
+import type { ScoresheetType } from './scoresheet-detector';
+import { parseManuscriptSheet } from './manuscript-parser';
 import type {
   ParsedPlayer,
   ParsedOfficial,
@@ -564,3 +568,66 @@ export function getAllPlayers(team: ParsedTeam): ParsedPlayer[] {
 export function getAllOfficials(team: ParsedTeam): ParsedOfficial[] {
   return team.officials;
 }
+
+// =============================================================================
+// Parser Factory
+// =============================================================================
+
+/**
+ * Options for parseGameSheet
+ */
+export interface ParseGameSheetOptions {
+  /**
+   * Type of scoresheet to parse
+   * - 'electronic': Tab-separated format from printed/electronic scoresheets
+   * - 'manuscript': Handwritten format with variable spacing
+   * @default 'electronic'
+   */
+  type?: ScoresheetType;
+}
+
+/**
+ * Parse a game sheet using the appropriate parser based on scoresheet type
+ *
+ * This is the main entry point for parsing OCR text. The type parameter
+ * determines which parsing strategy to use:
+ * - 'electronic' (default): Uses tab-separated column parsing
+ * - 'manuscript': Uses pattern matching for handwritten text
+ *
+ * @param ocrText - Raw OCR text from scanning the scoresheet
+ * @param options - Parser options including scoresheet type
+ * @returns Parsed game sheet with both teams
+ *
+ * @example
+ * ```typescript
+ * // Parse electronic scoresheet (default)
+ * const result = parseGameSheet(ocrText);
+ *
+ * // Parse manuscript scoresheet
+ * const result = parseGameSheet(ocrText, { type: 'manuscript' });
+ * ```
+ */
+export function parseGameSheetWithType(
+  ocrText: string,
+  options?: ParseGameSheetOptions,
+): ParsedGameSheet {
+  const type = options?.type ?? 'electronic';
+
+  if (type === 'manuscript') {
+    return parseManuscriptSheet(ocrText);
+  }
+
+  // Default to electronic parser (the existing parseGameSheet implementation)
+  return parseElectronicSheet(ocrText);
+}
+
+/**
+ * Parse electronic (tab-separated) scoresheet OCR text
+ *
+ * This is the original parseGameSheet function renamed for clarity.
+ * For new code, prefer using parseGameSheetWithType with explicit type.
+ *
+ * @param ocrText - Raw OCR text from electronic scoresheet
+ * @returns Parsed game sheet with both teams
+ */
+export const parseElectronicSheet = parseGameSheet;

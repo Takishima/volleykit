@@ -74,12 +74,21 @@ export { StubOCR } from './services/stub-ocr';
 // Player list parsing
 export {
   parseGameSheet,
+  parseGameSheetWithType,
+  parseElectronicSheet,
   parsePlayerName,
   parseOfficialName,
   normalizeName,
   getAllPlayers,
   getAllOfficials,
 } from './utils/player-list-parser';
+export type { ParseGameSheetOptions } from './utils/player-list-parser';
+
+// Manuscript parsing
+export { parseManuscriptSheet } from './utils/manuscript-parser';
+
+// Scoresheet type
+export type { ScoresheetType } from './utils/scoresheet-detector';
 
 // Roster comparison
 export {
