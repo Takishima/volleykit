@@ -163,5 +163,16 @@
       # Exclude tsconfig files as they use JSONC (JSON with comments)
       excludes = [ "tsconfig.*\\.json$" ];
     };
+
+    # Pre-push validation (lint, knip, test, build)
+    pre-push-validate = {
+      enable = true;
+      name = "pre-push-validate";
+      entry = "${config.devenv.root}/scripts/pre-push-validate.sh";
+      language = "script";
+      stages = [ "pre-push" ];
+      pass_filenames = false;
+      always_run = true;
+    };
   };
 }
