@@ -213,7 +213,10 @@ export interface OCRScoresheetState {
  */
 export interface OCRScoresheetActions {
   /** Process an image and extract player data */
-  processImage: (imageBlob: Blob) => Promise<ParsedGameSheet | null>;
+  processImage: (
+    imageBlob: Blob,
+    scoresheetType?: 'electronic' | 'manuscript',
+  ) => Promise<ParsedGameSheet | null>;
   /** Reset state to initial values */
   reset: () => void;
   /** Cancel ongoing processing */

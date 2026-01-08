@@ -1,40 +1,159 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import { Camera, Image, X, AlertCircle } from "@/shared/components/icons";
+import type { ScoresheetType } from "@/features/ocr/utils/scoresheet-detector";
+import { ScoresheetGuide } from "./ScoresheetGuide";
+import { ImageCropEditor } from "./ImageCropEditor";
 
 const MAX_FILE_SIZE_MB = 10;
 const BYTES_PER_KB = 1024;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * BYTES_PER_KB * BYTES_PER_KB;
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
+/** Video constraints for camera preview */
+const VIDEO_CONSTRAINTS: MediaTrackConstraints = {
+  facingMode: "environment",
+  width: { ideal: 1920 },
+  height: { ideal: 1080 },
+};
+
+/** JPEG quality for captured photos */
+const JPEG_QUALITY = 0.92;
+
+type CaptureStep = "select" | "camera" | "crop";
+
 interface OCRCaptureModalProps {
   isOpen: boolean;
+  /** Type of scoresheet being captured (affects guide aspect ratio) */
+  scoresheetType: ScoresheetType;
   onClose: () => void;
   onImageSelected: (blob: Blob) => void;
 }
 
 /**
  * Modal for capturing or selecting an image for OCR processing.
- * Supports camera capture and file selection.
+ * Supports live camera preview with guides and file selection with cropping.
  */
 export function OCRCaptureModal({
   isOpen,
+  scoresheetType,
   onClose,
   onImageSelected,
 }: OCRCaptureModalProps) {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
-  const [error, setError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
+  const [step, setStep] = useState<CaptureStep>("select");
+  const [error, setError] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<Blob | null>(null);
+  const [cameraError, setCameraError] = useState(false);
+
+  // Clean up camera stream
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, [stopCamera]);
+
+  // Connect stream to video element when camera step is active
+  useEffect(() => {
+    if (step === "camera" && streamRef.current && videoRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch(console.error);
+    }
+  }, [step]);
+
+  // Handle Escape key to close modal or go back
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        if (step === "camera") {
+          stopCamera();
+          setStep("select");
+        } else if (step === "crop") {
+          setSelectedImage(null);
+          setStep("select");
+        } else {
+          onClose();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, step, onClose, stopCamera]);
+
+  // Start camera preview
+  const startCamera = useCallback(async () => {
+    setError(null);
+    setCameraError(false);
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: VIDEO_CONSTRAINTS,
+        audio: false,
+      });
+
+      streamRef.current = stream;
+      // Step change triggers useEffect to connect stream to video element
+      setStep("camera");
+    } catch (err) {
+      console.error("Camera access error:", err);
+      setCameraError(true);
+      setError(t("validation.ocr.errors.cameraNotAvailable"));
+    }
+  }, [t]);
+
+  // Capture photo from camera
+  const capturePhoto = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          stopCamera();
+          setSelectedImage(blob);
+          setStep("crop");
+        }
+      },
+      "image/jpeg",
+      JPEG_QUALITY,
+    );
+  }, [stopCamera]);
+
+  // Handle file selection
   const handleFileChange = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
+    (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
       if (!file) return;
 
       // Reset file input to allow re-selecting the same file
       event.target.value = "";
-
       setError(null);
 
       // Validate file type
@@ -49,10 +168,10 @@ export function OCRCaptureModal({
         return;
       }
 
-      onImageSelected(file);
-      onClose();
+      setSelectedImage(file);
+      setStep("crop");
     },
-    [onImageSelected, onClose, t],
+    [t],
   );
 
   const handleSelectImage = useCallback(() => {
@@ -60,27 +179,86 @@ export function OCRCaptureModal({
     fileInputRef.current?.click();
   }, []);
 
-  const handleTakePhoto = useCallback(() => {
-    setError(null);
-    cameraInputRef.current?.click();
+  // Handle crop confirmation
+  const handleCropConfirm = useCallback(
+    (croppedBlob: Blob) => {
+      onImageSelected(croppedBlob);
+      onClose();
+    },
+    [onImageSelected, onClose],
+  );
+
+  // Handle crop cancel
+  const handleCropCancel = useCallback(() => {
+    setSelectedImage(null);
+    setStep("select");
   }, []);
 
-  // Handle Escape key to close modal
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+  // Handle camera cancel
+  const handleCameraCancel = useCallback(() => {
+    stopCamera();
+    setStep("select");
+  }, [stopCamera]);
 
   if (!isOpen) return null;
 
+  // Show crop editor
+  if (step === "crop" && selectedImage) {
+    return (
+      <ImageCropEditor
+        imageBlob={selectedImage}
+        scoresheetType={scoresheetType}
+        onConfirm={handleCropConfirm}
+        onCancel={handleCropCancel}
+      />
+    );
+  }
+
+  // Show camera preview
+  if (step === "camera") {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col bg-gray-900">
+        {/* Video preview with guide overlay */}
+        <div className="relative flex-1 min-h-0 overflow-hidden">
+          <video
+            ref={videoRef}
+            className="w-full h-full object-cover bg-gray-800"
+            autoPlay
+            playsInline
+            muted
+          />
+          {/* Guide overlay */}
+          <ScoresheetGuide scoresheetType={scoresheetType} />
+        </div>
+
+        {/* Camera controls */}
+        <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 bg-gray-900 safe-area-bottom">
+          <button
+            type="button"
+            onClick={handleCameraCancel}
+            className="px-4 py-2 text-white bg-gray-700 hover:bg-gray-600 rounded-lg font-medium transition-colors"
+          >
+            {t("validation.ocr.cancel")}
+          </button>
+
+          {/* Capture button */}
+          <button
+            type="button"
+            onClick={capturePhoto}
+            className="w-16 h-16 rounded-full bg-white hover:bg-gray-100 flex items-center justify-center transition-colors"
+            aria-label={t("validation.ocr.takePhoto")}
+          >
+            <div className="w-12 h-12 rounded-full bg-danger-500" />
+          </button>
+
+          {/* Spacer for centering */}
+          <div className="w-20" />
+        </div>
+      </div>
+    );
+  }
+
+  // Show selection UI
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
@@ -131,10 +309,10 @@ export function OCRCaptureModal({
 
           {/* Action buttons */}
           <div className="space-y-3">
-            {/* Take Photo button */}
+            {/* Take Photo button - use live camera if available */}
             <button
               type="button"
-              onClick={handleTakePhoto}
+              onClick={cameraError ? handleSelectImage : startCamera}
               className="w-full flex items-center justify-center gap-3 px-4 py-3 text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors font-medium"
             >
               <Camera className="w-5 h-5" aria-hidden="true" />
@@ -161,20 +339,11 @@ export function OCRCaptureModal({
             </button>
           </div>
 
-          {/* Hidden file inputs */}
+          {/* Hidden file input */}
           <input
             ref={fileInputRef}
             type="file"
             accept={ACCEPTED_IMAGE_TYPES.join(",")}
-            onChange={handleFileChange}
-            className="hidden"
-            aria-hidden="true"
-          />
-          <input
-            ref={cameraInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
             onChange={handleFileChange}
             className="hidden"
             aria-hidden="true"

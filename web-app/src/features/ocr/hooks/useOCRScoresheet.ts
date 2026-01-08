@@ -14,6 +14,7 @@ import type {
   UseOCRScoresheetReturn,
   OCREngine,
 } from '../types';
+import type { ScoresheetType } from '../utils/scoresheet-detector';
 import { OCRFactory } from '../services/ocr-factory';
 import { parseGameSheetWithOCR } from '../utils/player-list-parser';
 
@@ -58,9 +59,14 @@ export function useOCRScoresheet(): UseOCRScoresheetReturn {
 
   /**
    * Process an image and extract player data
+   * @param imageBlob - The image to process
+   * @param scoresheetType - Type of scoresheet (electronic or manuscript)
    */
   const processImage = useCallback(
-    async (imageBlob: Blob): Promise<ParsedGameSheet | null> => {
+    async (
+      imageBlob: Blob,
+      scoresheetType: ScoresheetType = 'electronic',
+    ): Promise<ParsedGameSheet | null> => {
       // Reset state
       setIsProcessing(true);
       setProgress(null);
@@ -81,7 +87,7 @@ export function useOCRScoresheet(): UseOCRScoresheetReturn {
         const ocrResult = await engine.recognize(imageBlob);
 
         // Parse the OCR result into structured data (uses bounding boxes for column detection)
-        const parsed = parseGameSheetWithOCR(ocrResult);
+        const parsed = parseGameSheetWithOCR(ocrResult, { type: scoresheetType });
 
         // Clean up
         await engine.terminate();

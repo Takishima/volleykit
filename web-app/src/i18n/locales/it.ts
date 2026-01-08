@@ -701,6 +701,18 @@ const it: Translations = {
       cancel: "Annulla",
       players: "Giocatori",
       coaches: "Allenatori",
+      scoresheetType: {
+        title: "Tipo di referto",
+        electronic: "Elettronico",
+        electronicDescription: "Referto stampato/digitale",
+        manuscript: "Manoscritto",
+        manuscriptDescription: "Referto scritto a mano",
+      },
+      photoGuide: {
+        alignScoresheet: "Allinea il referto nel riquadro",
+        electronicHint: "Posiziona la lista giocatori orizzontalmente",
+        manuscriptHint: "Cattura l'intera pagina del referto",
+      },
       comparison: {
         title: "Confronto giocatori",
         matched: "Corrispondente",

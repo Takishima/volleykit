@@ -706,6 +706,18 @@ const fr: Translations = {
       cancel: "Annuler",
       players: "Joueurs",
       coaches: "Entraîneurs",
+      scoresheetType: {
+        title: "Type de feuille de match",
+        electronic: "Électronique",
+        electronicDescription: "Feuille de match imprimée/numérique",
+        manuscript: "Manuscrite",
+        manuscriptDescription: "Feuille de match écrite à la main",
+      },
+      photoGuide: {
+        alignScoresheet: "Alignez la feuille de match dans le cadre",
+        electronicHint: "Positionnez la liste des joueurs horizontalement",
+        manuscriptHint: "Capturez la page complète de la feuille de match",
+      },
       comparison: {
         title: "Comparaison des joueurs",
         matched: "Correspondant",
