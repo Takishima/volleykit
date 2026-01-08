@@ -27,6 +27,9 @@ yarn-error.log*
 # Test coverage
 coverage/
 
+# ESLint cache
+.eslintcache
+
 # Playwright
 test-results/
 playwright-report/
