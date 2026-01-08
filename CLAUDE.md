@@ -32,11 +32,27 @@ For code reviews and detailed examples, see:
 **Workflow**:
 1. **Implement features/fixes** - Complete the work as required
 2. **Commit along the way** - Make meaningful commits as you progress (logical units of work)
-3. **Run full validation before push** - Before pushing, run all validation phases
+3. **Run full validation before push** - Before pushing, **use the `/validate` skill** to run all validation phases
 4. **Fix any issues** - If validation fails, fix issues and amend/add commits as needed
 5. **Push** - Only after all validations pass
 
-**Before pushing source code changes, run all phases in order**:
+### Automatic Validation with Parallel Subagents
+
+**IMPORTANT FOR CLAUDE CODE WEB**: Before pushing code changes, **automatically invoke the `/validate` skill** which runs validation steps in parallel using subagents for maximum speed.
+
+The `/validate` skill will:
+1. Detect what changed (skip validation for docs-only changes)
+2. Generate API types if OpenAPI spec changed
+3. **Launch lint, knip, and test in parallel** using Task tool subagents
+4. Run build sequentially after parallel checks pass
+5. Output a concise mobile-friendly summary
+
+**Trigger `/validate` automatically when**:
+- User says "push", "git push", or is about to push
+- After completing source code changes (`.ts`, `.tsx`, `.js`, `.jsx`)
+- User says "validate", "check", "run checks", "pre-push"
+
+**Manual validation** (if not using the skill):
 
 ```bash
 cd web-app
