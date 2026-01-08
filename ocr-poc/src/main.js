@@ -27,6 +27,13 @@ import {
 } from './services/DataCollector.js';
 
 /* ==============================================
+ * CONSTANTS
+ * ============================================== */
+
+/** Duration in ms to show copy success feedback before resetting button text */
+const COPY_FEEDBACK_DURATION_MS = 2000;
+
+/* ==============================================
  * APPLICATION STATE
  * ============================================== */
 
@@ -87,6 +94,26 @@ let playerComparison = null;
 
 /** @type {RosterCropEditor | null} */
 let rosterCropEditor = null;
+
+/* ==============================================
+ * HELPERS
+ * ============================================== */
+
+/**
+ * Copy text to clipboard and show feedback on a button
+ * @param {HTMLButtonElement} button - The button to update with feedback
+ * @param {string} text - The text to copy
+ * @param {string} originalLabel - The button's original text to restore
+ */
+async function copyWithFeedback(button, text, originalLabel) {
+  const success = await copyToClipboard(text);
+  if (success) {
+    button.textContent = '✓ Copied!';
+    setTimeout(() => {
+      button.textContent = originalLabel;
+    }, COPY_FEEDBACK_DURATION_MS);
+  }
+}
 
 /* ==============================================
  * STATE MACHINE
@@ -485,19 +512,19 @@ function renderResultsState(container) {
           <details class="ocr-results__details">
             <summary class="ocr-results__summary">📊 Data Export (for parser improvement)</summary>
             <div class="flex flex-col gap-sm mt-md">
-              <button class="btn btn-outline btn-block" id="btn-export-json">
+              <button class="btn btn-outline btn-block" id="btn-export-json" aria-label="Download OCR sample data as JSON file">
                 Export Full Sample (JSON)
               </button>
-              <button class="btn btn-outline btn-block" id="btn-copy-json">
+              <button class="btn btn-outline btn-block" id="btn-copy-json" aria-label="Copy OCR sample JSON data to clipboard">
                 Copy JSON to Clipboard
               </button>
-              <button class="btn btn-outline btn-block" id="btn-export-text">
+              <button class="btn btn-outline btn-block" id="btn-export-text" aria-label="Download raw OCR text as text file">
                 Export Raw Text
               </button>
-              <button class="btn btn-outline btn-block" id="btn-copy-text">
+              <button class="btn btn-outline btn-block" id="btn-copy-text" aria-label="Copy raw OCR text to clipboard">
                 Copy Text to Clipboard
               </button>
-              <button class="btn btn-outline btn-block" id="btn-log-summary">
+              <button class="btn btn-outline btn-block" id="btn-log-summary" aria-label="Log OCR sample summary to browser console">
                 Log Summary to Console
               </button>
             </div>
@@ -532,16 +559,10 @@ function renderResultsState(container) {
 
   const copyJsonBtn = document.getElementById('btn-copy-json');
   copyJsonBtn?.addEventListener('click', async () => {
-    if (result && appContext.sheetType) {
+    if (result && appContext.sheetType && copyJsonBtn) {
       const sample = collectSample(result, appContext.sheetType);
       const json = JSON.stringify(sample, null, 2);
-      const success = await copyToClipboard(json);
-      if (success) {
-        copyJsonBtn.textContent = '✓ Copied!';
-        setTimeout(() => {
-          copyJsonBtn.textContent = 'Copy JSON to Clipboard';
-        }, 2000);
-      }
+      await copyWithFeedback(copyJsonBtn, json, 'Copy JSON to Clipboard');
     }
   });
 
@@ -554,14 +575,8 @@ function renderResultsState(container) {
 
   const copyTextBtn = document.getElementById('btn-copy-text');
   copyTextBtn?.addEventListener('click', async () => {
-    if (result) {
-      const success = await copyToClipboard(result.fullText);
-      if (success) {
-        copyTextBtn.textContent = '✓ Copied!';
-        setTimeout(() => {
-          copyTextBtn.textContent = 'Copy Text to Clipboard';
-        }, 2000);
-      }
+    if (result && copyTextBtn) {
+      await copyWithFeedback(copyTextBtn, result.fullText, 'Copy Text to Clipboard');
     }
   });
 

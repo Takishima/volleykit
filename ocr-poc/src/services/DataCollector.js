@@ -24,11 +24,23 @@ import { parseGameSheet } from './PlayerListParser.js';
  */
 
 /**
+ * Start index for slicing base36 random string (skip "0." prefix from toString(36))
+ */
+const RANDOM_SUFFIX_START = 2;
+
+/**
+ * End index for slicing base36 random string (produces 6-char suffix)
+ */
+const RANDOM_SUFFIX_END = 8;
+
+/**
  * Generate a unique ID for a sample
+ * Format: sample-{timestamp}-{6-char-random}
  * @returns {string}
  */
 function generateId() {
-  return `sample-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const randomSuffix = Math.random().toString(36).slice(RANDOM_SUFFIX_START, RANDOM_SUFFIX_END);
+  return `sample-${Date.now()}-${randomSuffix}`;
 }
 
 /**
