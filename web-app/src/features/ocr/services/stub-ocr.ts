@@ -123,6 +123,7 @@ export class StubOCR implements OCREngine {
     this.#initialized = true;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async recognize(_imageBlob: Blob): Promise<OCRResult> {
     if (!this.#initialized) {
       throw new Error('StubOCR not initialized. Call initialize() first.');
