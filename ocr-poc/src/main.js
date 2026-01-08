@@ -18,6 +18,13 @@ import { OCRProgress } from './components/OCRProgress.js';
 import { OCRFactory } from './services/ocr/index.js';
 import { PlayerComparison } from './components/PlayerComparison.js';
 import { RosterCropEditor } from './components/RosterCropEditor.js';
+import {
+  collectSample,
+  exportSampleAsJSON,
+  exportRawText,
+  logSampleSummary,
+  copyToClipboard,
+} from './services/DataCollector.js';
 
 /* ==============================================
  * APPLICATION STATE
@@ -472,6 +479,26 @@ function renderResultsState(container) {
               Scan Another Sheet
             </button>
           </div>
+
+          <hr class="mt-lg mb-lg" style="border: none; border-top: 1px solid var(--color-border);" />
+
+          <details class="ocr-results__details">
+            <summary class="ocr-results__summary">📊 Data Export (for parser improvement)</summary>
+            <div class="flex flex-col gap-sm mt-md">
+              <button class="btn btn-outline btn-block" id="btn-export-json">
+                Export Full Sample (JSON)
+              </button>
+              <button class="btn btn-outline btn-block" id="btn-export-text">
+                Export Raw Text
+              </button>
+              <button class="btn btn-outline btn-block" id="btn-copy-text">
+                Copy Text to Clipboard
+              </button>
+              <button class="btn btn-outline btn-block" id="btn-log-summary">
+                Log Summary to Console
+              </button>
+            </div>
+          </details>
         </div>
       </div>
     </div>
@@ -490,6 +517,43 @@ function renderResultsState(container) {
 
   const newScanBtn = document.getElementById('btn-new-scan');
   newScanBtn?.addEventListener('click', handleStartOver);
+
+  // Bind data export buttons
+  const exportJsonBtn = document.getElementById('btn-export-json');
+  exportJsonBtn?.addEventListener('click', () => {
+    if (result && appContext.sheetType) {
+      const sample = collectSample(result, appContext.sheetType);
+      exportSampleAsJSON(sample);
+    }
+  });
+
+  const exportTextBtn = document.getElementById('btn-export-text');
+  exportTextBtn?.addEventListener('click', () => {
+    if (result && appContext.sheetType) {
+      exportRawText(result, appContext.sheetType);
+    }
+  });
+
+  const copyTextBtn = document.getElementById('btn-copy-text');
+  copyTextBtn?.addEventListener('click', async () => {
+    if (result) {
+      const success = await copyToClipboard(result.fullText);
+      if (success) {
+        copyTextBtn.textContent = '✓ Copied!';
+        setTimeout(() => {
+          copyTextBtn.textContent = 'Copy Text to Clipboard';
+        }, 2000);
+      }
+    }
+  });
+
+  const logSummaryBtn = document.getElementById('btn-log-summary');
+  logSummaryBtn?.addEventListener('click', () => {
+    if (result && appContext.sheetType) {
+      const sample = collectSample(result, appContext.sheetType);
+      logSampleSummary(sample);
+    }
+  });
 }
 
 /**
