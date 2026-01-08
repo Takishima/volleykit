@@ -148,13 +148,21 @@ export function TourProvider({ children }: TourProviderProps) {
   return (
     <>
       {children}
+      {/* blockAllInteraction is always enabled during the tour to prevent users from
+          accidentally navigating away, clicking buttons, or interacting with the page
+          in ways that could break the tour flow. Users can still interact with the
+          tour tooltip (next/previous/skip) and exit the tour at any time.
+
+          blockInteraction covers the target element during swipe steps so users can
+          see the drawer buttons but cannot click them - this demonstrates the feature
+          without triggering actual actions. */}
       <TourSpotlight
         targetSelector={currentStepData.targetSelector}
         placement={currentStepData.placement}
         onDismiss={handleDismiss}
         freezePosition={isSwipeStep}
         disableBlur={isSwipeStep}
-        blockInteraction={isAutoSwipeActive}
+        blockInteraction={isSwipeStep}
         blockAllInteraction
       >
         <TourTooltip

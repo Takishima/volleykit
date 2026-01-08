@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "@/shared/hooks/useTranslation";
+import { ACTION_BUTTON_WIDTH, ACTION_BUTTON_GAP, DRAWER_PADDING } from "@/types/swipe";
 
 interface TourAutoSwipeProps {
   targetSelector: string;
@@ -13,10 +14,6 @@ interface TourAutoSwipeProps {
 // Default timing values
 const DEFAULT_DURATION_MS = 1500;
 const DEFAULT_DELAY_MS = 800;
-// Action button layout constants (must match SwipeableCard.tsx)
-const ACTION_BUTTON_WIDTH = 72;
-const ACTION_BUTTON_GAP = 8;
-const DRAWER_PADDING = 16;
 // Default number of actions to assume if we can't detect them
 const DEFAULT_ACTION_COUNT = 3;
 

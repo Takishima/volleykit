@@ -42,3 +42,19 @@ export const MINIMUM_SWIPE_RATIO = 0.03;
  * Used consistently across all swipe action configurations.
  */
 export const SWIPE_ACTION_ICON_SIZE = 20;
+
+/**
+ * Layout constants for swipe action drawer buttons.
+ * Used by SwipeableCard and TourAutoSwipe for consistent drawer sizing.
+ */
+export const ACTION_BUTTON_WIDTH = 72;
+export const ACTION_BUTTON_GAP = 8;
+export const DRAWER_PADDING = 16;
+
+/**
+ * Custom event interface for tour auto-swipe coordination.
+ * Dispatched by TourAutoSwipe, listened to by SwipeableCard.
+ */
+export interface TourSwipeStartEvent extends CustomEvent {
+  detail: { translateX: number };
+}
