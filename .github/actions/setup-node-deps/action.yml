@@ -1,0 +1,59 @@
+name: Setup Node.js with Dependencies
+description: Sets up Node.js, caches node_modules per branch, and installs dependencies
+
+inputs:
+  working-directory:
+    description: The working directory for npm commands
+    required: true
+  node-version:
+    description: Node.js version to use
+    required: false
+    default: '20'
+  cache-key-prefix:
+    description: Optional prefix for cache key (defaults to working directory basename)
+    required: false
+    default: ''
+
+outputs:
+  cache-hit:
+    description: Whether node_modules cache was hit
+    value: ${{ steps.cache-node-modules.outputs.cache-hit }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    # Determine cache key prefix (use provided prefix or derive from working directory)
+    - name: Determine cache key prefix
+      id: cache-prefix
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.cache-key-prefix }}" ]; then
+          echo "prefix=${{ inputs.cache-key-prefix }}" >> $GITHUB_OUTPUT
+        else
+          # Extract basename from working directory for cache isolation
+          basename=$(basename "${{ inputs.working-directory }}")
+          echo "prefix=${basename}" >> $GITHUB_OUTPUT
+        fi
+
+    # Cache node_modules per branch with fallback to main
+    - name: Cache node_modules
+      id: cache-node-modules
+      uses: actions/cache@v5
+      with:
+        path: ${{ inputs.working-directory }}/node_modules
+        key: ${{ steps.cache-prefix.outputs.prefix }}-node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles(format('{0}/package-lock.json', inputs.working-directory)) }}
+        restore-keys: |
+          ${{ steps.cache-prefix.outputs.prefix }}-node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
+          ${{ steps.cache-prefix.outputs.prefix }}-node-modules-${{ runner.os }}-main-
+          ${{ steps.cache-prefix.outputs.prefix }}-node-modules-${{ runner.os }}-
+
+    - name: Install dependencies
+      if: steps.cache-node-modules.outputs.cache-hit != 'true'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: npm ci

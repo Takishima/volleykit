@@ -8,6 +8,7 @@ on:
       - 'ocr-poc/**'
       - 'help-site/**'
       - '.github/workflows/deploy-web.yml'
+      - '.github/actions/**'
   workflow_dispatch:
 permissions:
   contents: write
@@ -25,14 +26,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: worker/package-lock.json
-      - name: Install dependencies
-        run: npm ci
+          working-directory: worker
+
       - name: Deploy to Cloudflare Workers
         run: npx wrangler deploy
         env:
@@ -48,35 +47,69 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: web-app/package-lock.json
-      - name: Install dependencies
-        run: npm ci
+          working-directory: web-app
+
       - name: Cache generated API types
         id: api-cache
         uses: actions/cache@v5
         with:
           path: web-app/src/api/schema.ts
           key: api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'web-app/package-lock.json') }}
+
       - name: Generate API types
         if: steps.api-cache.outputs.cache-hit != 'true'
         run: npm run generate:api
+
+      # Cache ESLint results
+      - name: Cache ESLint
+        uses: actions/cache@v5
+        with:
+          path: web-app/.eslintcache
+          key: eslint-${{ runner.os }}-main-${{ hashFiles('web-app/src/**/*.ts', 'web-app/src/**/*.tsx') }}
+          restore-keys: |
+            eslint-${{ runner.os }}-main-
+            eslint-${{ runner.os }}-
+
       - name: Lint
-        run: npm run lint
+        run: npm run lint -- --cache --cache-location .eslintcache
+
+      # Cache Vitest results
+      - name: Cache Vitest
+        uses: actions/cache@v5
+        with:
+          path: web-app/node_modules/.vitest
+          key: vitest-${{ runner.os }}-main-${{ hashFiles('web-app/src/**/*.ts', 'web-app/src/**/*.tsx', 'web-app/src/**/*.test.ts', 'web-app/src/**/*.test.tsx') }}
+          restore-keys: |
+            vitest-${{ runner.os }}-main-
+            vitest-${{ runner.os }}-
+
       - name: Test
         run: npm test
+
+      # Cache Vite build artifacts
+      - name: Cache Vite build
+        uses: actions/cache@v5
+        with:
+          path: web-app/node_modules/.vite
+          key: vite-${{ runner.os }}-main-${{ hashFiles('web-app/src/**/*.ts', 'web-app/src/**/*.tsx', 'web-app/vite.config.ts') }}
+          restore-keys: |
+            vite-${{ runner.os }}-main-
+            vite-${{ runner.os }}-
+
       - name: Build
         run: npm run build
         env:
           VITE_API_PROXY_URL: ${{ vars.VITE_API_PROXY_URL }}
           VITE_BASE_PATH: ${{ vars.VITE_BASE_PATH || format('/{0}/', github.event.repository.name) }}
           VITE_OJP_API_KEY: ${{ secrets.VITE_OJP_API_KEY }}
+
       - name: Add .nojekyll for GitHub Pages
         run: touch dist/.nojekyll
+
       - name: Upload web-app artifact
         uses: actions/upload-artifact@v4
         with:
@@ -92,18 +125,27 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: help-site/package-lock.json
-      - name: Install dependencies
-        run: npm ci
+          working-directory: help-site
+
+      # Cache Astro build artifacts
+      - name: Cache Astro build
+        uses: actions/cache@v5
+        with:
+          path: help-site/node_modules/.astro
+          key: astro-${{ runner.os }}-main-${{ hashFiles('help-site/src/**/*', 'help-site/astro.config.mjs') }}
+          restore-keys: |
+            astro-${{ runner.os }}-main-
+            astro-${{ runner.os }}-
+
       - name: Build Help Site
         run: npm run build
         env:
           ASTRO_BASE_PATH: ${{ vars.VITE_BASE_PATH || format('/{0}/', github.event.repository.name) }}help
+
       - name: Upload help-site artifact
         uses: actions/upload-artifact@v4
         with:
@@ -119,21 +161,41 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: ocr-poc/package-lock.json
-      - name: Install dependencies
-        run: npm ci
+          working-directory: ocr-poc
+
+      # Cache ESLint results
+      - name: Cache ESLint
+        uses: actions/cache@v5
+        with:
+          path: ocr-poc/.eslintcache
+          key: ocr-poc-eslint-${{ runner.os }}-main-${{ hashFiles('ocr-poc/src/**/*.ts', 'ocr-poc/src/**/*.tsx') }}
+          restore-keys: |
+            ocr-poc-eslint-${{ runner.os }}-main-
+            ocr-poc-eslint-${{ runner.os }}-
+
       - name: Lint OCR PoC
-        run: npm run lint
+        run: npm run lint -- --cache --cache-location .eslintcache
+
+      # Cache Vite build artifacts
+      - name: Cache Vite build
+        uses: actions/cache@v5
+        with:
+          path: ocr-poc/node_modules/.vite
+          key: ocr-poc-vite-${{ runner.os }}-main-${{ hashFiles('ocr-poc/src/**/*.ts', 'ocr-poc/src/**/*.tsx', 'ocr-poc/vite.config.ts') }}
+          restore-keys: |
+            ocr-poc-vite-${{ runner.os }}-main-
+            ocr-poc-vite-${{ runner.os }}-
+
       - name: Build OCR PoC
         run: npm run build
         env:
           VITE_BASE_PATH: ${{ vars.VITE_BASE_PATH || format('/{0}/', github.event.repository.name) }}ocr-poc/
           VITE_OCR_ENDPOINT: ${{ vars.VITE_OCR_ENDPOINT }}
+
       - name: Upload ocr-poc artifact
         uses: actions/upload-artifact@v4
         with:
@@ -149,21 +211,25 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
       - name: Download web-app artifact
         uses: actions/download-artifact@v4
         with:
           name: web-app-dist
           path: deploy
+
       - name: Download help-site artifact
         uses: actions/download-artifact@v4
         with:
           name: help-site-dist
           path: deploy/help
+
       - name: Download ocr-poc artifact
         uses: actions/download-artifact@v4
         with:
           name: ocr-poc-dist
           path: deploy/ocr-poc
+
       - name: Delete artifacts
         uses: geekyeggo/delete-artifact@v5
         with:
@@ -171,6 +237,7 @@ jobs:
             web-app-dist
             help-site-dist
             ocr-poc-dist
+
       - name: Download existing gh-pages content
         run: |
           if git ls-remote --exit-code --heads origin gh-pages; then
@@ -181,6 +248,7 @@ jobs:
           else
             echo "gh-pages branch does not exist yet, starting fresh"
           fi
+
       - name: Preserve PR preview subdirectories
         run: |
           if [ -d "gh-pages-current" ]; then
@@ -189,6 +257,7 @@ jobs:
               [ -d "$pr_dir" ] && cp -r "$pr_dir" deploy/
             done
           fi
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:

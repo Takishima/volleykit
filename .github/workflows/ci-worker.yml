@@ -5,10 +5,13 @@ on:
     paths:
       - 'worker/**'
       - '.github/workflows/ci-worker.yml'
+      - '.github/actions/**'
   pull_request:
     paths:
       - 'worker/**'
       - '.github/workflows/ci-worker.yml'
+      - '.github/actions/**'
+
 jobs:
   lint:
     name: Lint
@@ -18,17 +21,26 @@ jobs:
         working-directory: worker
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: worker/package-lock.json
-      - name: Install dependencies
-        run: npm ci
+          working-directory: worker
+
+      # Cache ESLint results per branch
+      - name: Cache ESLint
+        uses: actions/cache@v5
+        with:
+          path: worker/.eslintcache
+          key: worker-eslint-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('worker/src/**/*.ts') }}
+          restore-keys: |
+            worker-eslint-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
+            worker-eslint-${{ runner.os }}-
+
       - name: Lint
-        run: npm run lint
+        run: npm run lint -- --cache --cache-location .eslintcache
+
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -37,14 +49,12 @@ jobs:
         working-directory: worker
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: worker/package-lock.json
-      - name: Install dependencies
-        run: npm ci
+          working-directory: worker
+
       - name: Run tests
         run: npm test

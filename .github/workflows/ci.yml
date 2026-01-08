@@ -5,13 +5,83 @@ on:
     paths:
       - 'web-app/**'
       - '.github/workflows/ci.yml'
+      - '.github/actions/**'
   pull_request:
     paths:
       - 'web-app/**'
       - '.github/workflows/ci.yml'
+      - '.github/actions/**'
+
+# =============================================================================
+# CI Pipeline Architecture
+# =============================================================================
+#
+# Job Dependency Graph:
+#
+#   setup ─────┬──────────────────────────────────────┐
+#   (API types)│                                      │
+#              ├──> lint ──────┐                      │
+#              ├──> knip       │                      │
+#              ├──> test       │                      │
+#              └──> build ─────┼──> bundle-size       │
+#                              ├──> e2e (chromium)    │
+#                              ├──> e2e (firefox)     │
+#                              └──> lighthouse        │
+#                                                     │
+#   audit (independent) ──────────────────────────────┘
+#
+# Key Design Decisions:
+# - setup job generates API types ONCE, shared via artifact to avoid 4x generation
+# - audit runs independently (doesn't need API types)
+# - build artifact is shared by bundle-size, e2e, and lighthouse
+# - Per-branch caching with main fallback for faster PR builds
+#
+# =============================================================================
 
 jobs:
-  # Security audit - runs independently
+  # Setup job - generates API types once, shared by all downstream jobs
+  # This is the CRITICAL PATH for lint, knip, test, and build jobs
+  setup:
+    name: Setup
+    runs-on: ubuntu-latest
+    outputs:
+      api-cache-key: ${{ steps.api-cache-key.outputs.key }}
+    defaults:
+      run:
+        working-directory: web-app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
+        with:
+          working-directory: web-app
+
+      - name: Generate API cache key
+        id: api-cache-key
+        run: echo "key=api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'web-app/package-lock.json') }}" >> $GITHUB_OUTPUT
+
+      - name: Cache generated API types
+        id: api-cache
+        uses: actions/cache@v5
+        with:
+          path: web-app/src/api/schema.ts
+          key: ${{ steps.api-cache-key.outputs.key }}
+
+      - name: Generate API types
+        if: steps.api-cache.outputs.cache-hit != 'true'
+        run: npm run generate:api
+
+      # Upload API types as artifact for downstream jobs
+      - name: Upload API types
+        uses: actions/upload-artifact@v5
+        with:
+          name: api-types
+          path: web-app/src/api/schema.ts
+          retention-days: 1
+
+  # Security audit - runs independently (doesn't need API types)
   audit:
     name: Security Audit
     runs-on: ubuntu-latest
@@ -22,33 +92,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
         with:
-          node-version: '20'
-
-      # Cache node_modules per branch with fallback to main
-      - name: Cache node_modules
-        id: cache-node-modules
-        uses: actions/cache@v5
-        with:
-          path: web-app/node_modules
-          key: node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('web-app/package-lock.json') }}
-          restore-keys: |
-            node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
-            node-modules-${{ runner.os }}-main-
-            node-modules-${{ runner.os }}-
-
-      - name: Install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
-        run: npm ci
+          working-directory: web-app
 
       - name: Audit dependencies
         run: npm audit --audit-level=high --omit=dev
 
-  # Lint check - needs API types
+  # Lint check - needs API types from setup
   lint:
     name: Lint
+    needs: setup
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -57,37 +112,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
         with:
-          node-version: '20'
+          working-directory: web-app
 
-      # Cache node_modules per branch with fallback to main
-      - name: Cache node_modules
-        id: cache-node-modules
-        uses: actions/cache@v5
+      - name: Download API types
+        uses: actions/download-artifact@v5
         with:
-          path: web-app/node_modules
-          key: node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('web-app/package-lock.json') }}
-          restore-keys: |
-            node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
-            node-modules-${{ runner.os }}-main-
-            node-modules-${{ runner.os }}-
-
-      - name: Install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
-        run: npm ci
-
-      - name: Cache generated API types
-        id: api-cache
-        uses: actions/cache@v5
-        with:
-          path: web-app/src/api/schema.ts
-          key: api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'web-app/package-lock.json') }}
-
-      - name: Generate API types
-        if: steps.api-cache.outputs.cache-hit != 'true'
-        run: npm run generate:api
+          name: api-types
+          path: web-app/src/api
 
       # Cache ESLint results per branch
       - name: Cache ESLint
@@ -102,9 +136,10 @@ jobs:
       - name: Lint
         run: npm run lint -- --cache --cache-location .eslintcache
 
-  # Dead code detection - needs API types
+  # Dead code detection - needs API types from setup
   knip:
     name: Dead Code Check
+    needs: setup
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -113,44 +148,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
         with:
-          node-version: '20'
+          working-directory: web-app
 
-      # Cache node_modules per branch with fallback to main
-      - name: Cache node_modules
-        id: cache-node-modules
-        uses: actions/cache@v5
+      - name: Download API types
+        uses: actions/download-artifact@v5
         with:
-          path: web-app/node_modules
-          key: node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('web-app/package-lock.json') }}
-          restore-keys: |
-            node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
-            node-modules-${{ runner.os }}-main-
-            node-modules-${{ runner.os }}-
-
-      - name: Install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
-        run: npm ci
-
-      - name: Cache generated API types
-        id: api-cache
-        uses: actions/cache@v5
-        with:
-          path: web-app/src/api/schema.ts
-          key: api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'web-app/package-lock.json') }}
-
-      - name: Generate API types
-        if: steps.api-cache.outputs.cache-hit != 'true'
-        run: npm run generate:api
+          name: api-types
+          path: web-app/src/api
 
       - name: Check for dead code
         run: npm run knip
 
-  # Unit tests - needs API types
+  # Unit tests - needs API types from setup
   test:
     name: Test
+    needs: setup
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -159,37 +174,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
         with:
-          node-version: '20'
+          working-directory: web-app
 
-      # Cache node_modules per branch with fallback to main
-      - name: Cache node_modules
-        id: cache-node-modules
-        uses: actions/cache@v5
+      - name: Download API types
+        uses: actions/download-artifact@v5
         with:
-          path: web-app/node_modules
-          key: node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('web-app/package-lock.json') }}
-          restore-keys: |
-            node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
-            node-modules-${{ runner.os }}-main-
-            node-modules-${{ runner.os }}-
-
-      - name: Install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
-        run: npm ci
-
-      - name: Cache generated API types
-        id: api-cache
-        uses: actions/cache@v5
-        with:
-          path: web-app/src/api/schema.ts
-          key: api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'web-app/package-lock.json') }}
-
-      - name: Generate API types
-        if: steps.api-cache.outputs.cache-hit != 'true'
-        run: npm run generate:api
+          name: api-types
+          path: web-app/src/api
 
       # Cache Vitest results per branch
       - name: Cache Vitest
@@ -207,6 +201,7 @@ jobs:
   # Build once - artifact shared by bundle-size, e2e, and lighthouse
   build:
     name: Build
+    needs: setup
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -215,37 +210,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
         with:
-          node-version: '20'
+          working-directory: web-app
 
-      # Cache node_modules per branch with fallback to main
-      - name: Cache node_modules
-        id: cache-node-modules
-        uses: actions/cache@v5
+      - name: Download API types
+        uses: actions/download-artifact@v5
         with:
-          path: web-app/node_modules
-          key: node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('web-app/package-lock.json') }}
-          restore-keys: |
-            node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
-            node-modules-${{ runner.os }}-main-
-            node-modules-${{ runner.os }}-
-
-      - name: Install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
-        run: npm ci
-
-      - name: Cache generated API types
-        id: api-cache
-        uses: actions/cache@v5
-        with:
-          path: web-app/src/api/schema.ts
-          key: api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'web-app/package-lock.json') }}
-
-      - name: Generate API types
-        if: steps.api-cache.outputs.cache-hit != 'true'
-        run: npm run generate:api
+          name: api-types
+          path: web-app/src/api
 
       # Cache Vite build artifacts per branch
       - name: Cache Vite build
@@ -267,7 +241,7 @@ jobs:
           path: web-app/dist
           retention-days: 1
 
-  # Bundle size check - uses build artifact
+  # Bundle size check - lightweight job, only needs build artifact
   bundle-size:
     name: Bundle Size
     needs: build
@@ -279,29 +253,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
         with:
-          node-version: '20'
-
-      # Cache node_modules per branch with fallback to main
-      - name: Cache node_modules
-        id: cache-node-modules
-        uses: actions/cache@v5
-        with:
-          path: web-app/node_modules
-          key: node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('web-app/package-lock.json') }}
-          restore-keys: |
-            node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
-            node-modules-${{ runner.os }}-main-
-            node-modules-${{ runner.os }}-
-
-      - name: Install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
-        run: npm ci
+          working-directory: web-app
 
       - name: Download build artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v5
         with:
           name: web-app-dist
           path: web-app/dist
@@ -326,29 +284,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
         with:
-          node-version: '20'
-
-      # Cache node_modules per branch with fallback to main
-      - name: Cache node_modules
-        id: cache-node-modules
-        uses: actions/cache@v5
-        with:
-          path: web-app/node_modules
-          key: node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('web-app/package-lock.json') }}
-          restore-keys: |
-            node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
-            node-modules-${{ runner.os }}-main-
-            node-modules-${{ runner.os }}-
-
-      - name: Install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
-        run: npm ci
+          working-directory: web-app
 
       - name: Download build artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v5
         with:
           name: web-app-dist
           path: web-app/dist
@@ -367,12 +309,12 @@ jobs:
           restore-keys: |
             playwright-${{ runner.os }}-${{ matrix.browser }}-
 
+      # Install browser if not cached, always install system deps (fast & idempotent)
       - name: Install Playwright browser
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps ${{ matrix.browser }}
+        run: npx playwright install ${{ matrix.browser }}
 
-      - name: Install Playwright browser dependencies (for cached browsers)
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
+      - name: Install Playwright system dependencies
         run: npx playwright install-deps ${{ matrix.browser }}
 
       - name: Run E2E tests
@@ -398,29 +340,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
         with:
-          node-version: '20'
-
-      # Cache node_modules per branch with fallback to main
-      - name: Cache node_modules
-        id: cache-node-modules
-        uses: actions/cache@v5
-        with:
-          path: web-app/node_modules
-          key: node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('web-app/package-lock.json') }}
-          restore-keys: |
-            node-modules-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
-            node-modules-${{ runner.os }}-main-
-            node-modules-${{ runner.os }}-
-
-      - name: Install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
-        run: npm ci
+          working-directory: web-app
 
       - name: Download build artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v5
         with:
           name: web-app-dist
           path: web-app/dist
