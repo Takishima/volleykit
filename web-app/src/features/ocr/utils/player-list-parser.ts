@@ -1067,21 +1067,39 @@ function processLineWithOCR(
 }
 
 /**
+ * Options for parseGameSheetWithOCR
+ */
+export interface ParseGameSheetWithOCROptions {
+  /** Type of scoresheet (affects parsing strategy). Defaults to 'electronic'. */
+  type?: ScoresheetType;
+}
+
+/**
  * Parse a game sheet using full OCR result with bounding box data.
  *
  * This parser uses the word bounding boxes to accurately determine
  * which column single-row entries belong to, instead of using heuristics.
  *
  * @param ocrResult - Full OCR result with lines and word bounding boxes
+ * @param options - Parser options (type selection)
  * @returns Parsed game sheet with both teams
  *
  * @example
  * ```typescript
  * const ocrResult = await ocrEngine.recognize(imageBlob);
- * const parsed = parseGameSheetWithOCR(ocrResult);
+ * const parsed = parseGameSheetWithOCR(ocrResult, { type: 'electronic' });
  * ```
  */
-export function parseGameSheetWithOCR(ocrResult: OCRResult): ParsedGameSheet {
+export function parseGameSheetWithOCR(
+  ocrResult: OCRResult,
+  options?: ParseGameSheetWithOCROptions,
+): ParsedGameSheet {
+  const type = options?.type ?? 'electronic';
+
+  // For manuscript scoresheets, use the dedicated manuscript parser
+  if (type === 'manuscript') {
+    return parseManuscriptSheet(ocrResult.fullText);
+  }
   const warnings: string[] = [];
 
   // If no lines available, fall back to text-only parsing

@@ -698,6 +698,18 @@ const en: Translations = {
       cancel: "Cancel",
       players: "Players",
       coaches: "Coaches",
+      scoresheetType: {
+        title: "Scoresheet Type",
+        electronic: "Electronic",
+        electronicDescription: "Printed/digital scoresheet",
+        manuscript: "Manuscript",
+        manuscriptDescription: "Handwritten scoresheet",
+      },
+      photoGuide: {
+        alignScoresheet: "Align the scoresheet within the frame",
+        electronicHint: "Position the player list section horizontally",
+        manuscriptHint: "Capture the full scoresheet page",
+      },
       comparison: {
         title: "Player Comparison",
         matched: "Matched",

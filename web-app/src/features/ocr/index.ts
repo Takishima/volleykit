@@ -75,6 +75,7 @@ export { StubOCR } from './services/stub-ocr';
 export {
   parseGameSheet,
   parseGameSheetWithType,
+  parseGameSheetWithOCR,
   parseElectronicSheet,
   parsePlayerName,
   parseOfficialName,
@@ -82,7 +83,10 @@ export {
   getAllPlayers,
   getAllOfficials,
 } from './utils/player-list-parser';
-export type { ParseGameSheetOptions } from './utils/player-list-parser';
+export type {
+  ParseGameSheetOptions,
+  ParseGameSheetWithOCROptions,
+} from './utils/player-list-parser';
 
 // Manuscript parsing
 export { parseManuscriptSheet } from './utils/manuscript-parser';

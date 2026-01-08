@@ -705,6 +705,18 @@ const de: Translations = {
       cancel: "Abbrechen",
       players: "Spieler",
       coaches: "Trainer",
+      scoresheetType: {
+        title: "Spielberichtstyp",
+        electronic: "Elektronisch",
+        electronicDescription: "Gedruckter/digitaler Spielbericht",
+        manuscript: "Handschriftlich",
+        manuscriptDescription: "Handgeschriebener Spielbericht",
+      },
+      photoGuide: {
+        alignScoresheet: "Spielbericht im Rahmen ausrichten",
+        electronicHint: "Spielerliste horizontal positionieren",
+        manuscriptHint: "Gesamte Spielberichtsseite erfassen",
+      },
       comparison: {
         title: "Spielervergleich",
         matched: "Übereinstimmend",

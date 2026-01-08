@@ -533,6 +533,18 @@ export interface Translations {
       cancel: string;
       players: string;
       coaches: string;
+      scoresheetType: {
+        title: string;
+        electronic: string;
+        electronicDescription: string;
+        manuscript: string;
+        manuscriptDescription: string;
+      };
+      photoGuide: {
+        alignScoresheet: string;
+        electronicHint: string;
+        manuscriptHint: string;
+      };
       comparison: {
         title: string;
         matched: string;

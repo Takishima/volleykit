@@ -1,6 +1,8 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import { Camera, Image, X, AlertCircle } from "@/shared/components/icons";
+import type { ScoresheetType } from "@/features/ocr/utils/scoresheet-detector";
+import { ScoresheetGuide } from "./ScoresheetGuide";
 
 const MAX_FILE_SIZE_MB = 10;
 const BYTES_PER_KB = 1024;
@@ -9,6 +11,8 @@ const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 interface OCRCaptureModalProps {
   isOpen: boolean;
+  /** Type of scoresheet being captured (affects guide aspect ratio) */
+  scoresheetType: ScoresheetType;
   onClose: () => void;
   onImageSelected: (blob: Blob) => void;
 }
@@ -19,6 +23,7 @@ interface OCRCaptureModalProps {
  */
 export function OCRCaptureModal({
   isOpen,
+  scoresheetType,
   onClose,
   onImageSelected,
 }: OCRCaptureModalProps) {
@@ -112,6 +117,11 @@ export function OCRCaptureModal({
           <p className="text-sm text-gray-600 dark:text-gray-300">
             {t("validation.ocr.scanScoresheetDescription")}
           </p>
+
+          {/* Scoresheet guide preview */}
+          <div className="relative aspect-[4/3] bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
+            <ScoresheetGuide scoresheetType={scoresheetType} />
+          </div>
 
           {/* Error message */}
           {error && (

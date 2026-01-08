@@ -6,6 +6,7 @@ import type {
   ParsedTeam,
   PlayerComparisonResult,
 } from "@/features/ocr";
+import type { ScoresheetType } from "@/features/ocr/utils/scoresheet-detector";
 import type { RosterPlayer } from "@/features/validation/hooks/useNominationList";
 import { OCRCaptureModal } from "./OCRCaptureModal";
 import { PlayerComparisonList } from "./PlayerComparisonList";
@@ -32,6 +33,8 @@ interface OCRPanelProps {
   onClose: () => void;
   /** Whether the panel is open */
   isOpen: boolean;
+  /** Type of scoresheet (affects guide aspect ratio). Defaults to electronic. */
+  scoresheetType?: ScoresheetType;
 }
 
 /**
@@ -45,6 +48,7 @@ export function OCRPanel({
   onApplyResults,
   onClose,
   isOpen,
+  scoresheetType = "electronic",
 }: OCRPanelProps) {
   const { t } = useTranslation();
   const { processImage, isProcessing, progress, error, reset } =
@@ -375,6 +379,7 @@ export function OCRPanel({
       {/* Capture modal */}
       <OCRCaptureModal
         isOpen={showCaptureModal}
+        scoresheetType={scoresheetType}
         onClose={() => setShowCaptureModal(false)}
         onImageSelected={handleImageSelected}
       />
