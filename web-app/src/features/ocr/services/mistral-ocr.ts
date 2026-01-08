@@ -19,7 +19,7 @@ import type {
 // Configuration
 // =============================================================================
 
-/** Default OCR proxy endpoint */
+/** Default OCR proxy endpoint - used if endpoint not provided */
 const DEFAULT_OCR_ENDPOINT = 'https://volleykit-proxy.takishima.workers.dev/ocr';
 
 /**
@@ -92,10 +92,8 @@ export class MistralOCR implements OCREngine {
 
   constructor(onProgress?: OnProgressCallback, endpoint?: string) {
     this.#onProgress = onProgress;
-    this.#endpoint =
-      endpoint ??
-      (import.meta.env.VITE_OCR_ENDPOINT as string | undefined) ??
-      DEFAULT_OCR_ENDPOINT;
+    // Endpoint resolution is centralized in OCRFactory - use default if not provided
+    this.#endpoint = endpoint ?? DEFAULT_OCR_ENDPOINT;
   }
 
   /**
