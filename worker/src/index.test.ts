@@ -37,6 +37,7 @@ import {
   isFailedLoginResponse,
   isPathSafe,
   isSuccessfulLoginResponse,
+  isValidAuthLockoutState,
   isValidICalCode,
   noCacheHeaders,
   parseAllowedOrigins,
@@ -1561,6 +1562,79 @@ describe("Auth Lockout", () => {
 
       const state = await getAuthLockoutState(kv, "192.168.1.1");
       expect(state).toBeNull();
+    });
+
+    it("returns null for corrupted data (valid JSON, wrong shape)", async () => {
+      const kv = createMockKV();
+      // Valid JSON but missing required fields
+      kv.store.set("auth:lockout:192.168.1.1", JSON.stringify({ foo: "bar" }));
+
+      const state = await getAuthLockoutState(kv, "192.168.1.1");
+      expect(state).toBeNull();
+    });
+
+    it("returns null for data with wrong types", async () => {
+      const kv = createMockKV();
+      // Has all fields but wrong types
+      kv.store.set(
+        "auth:lockout:192.168.1.1",
+        JSON.stringify({
+          failedAttempts: "not a number",
+          firstAttemptAt: Date.now(),
+          lockedUntil: null,
+          lockoutCount: 0,
+        }),
+      );
+
+      const state = await getAuthLockoutState(kv, "192.168.1.1");
+      expect(state).toBeNull();
+    });
+  });
+
+  describe("isValidAuthLockoutState", () => {
+    it("returns true for valid state", () => {
+      const state = {
+        failedAttempts: 3,
+        firstAttemptAt: Date.now(),
+        lockedUntil: null,
+        lockoutCount: 0,
+      };
+      expect(isValidAuthLockoutState(state)).toBe(true);
+    });
+
+    it("returns true for valid state with lockedUntil set", () => {
+      const state = {
+        failedAttempts: 5,
+        firstAttemptAt: Date.now(),
+        lockedUntil: Date.now() + 30000,
+        lockoutCount: 1,
+      };
+      expect(isValidAuthLockoutState(state)).toBe(true);
+    });
+
+    it("returns false for null", () => {
+      expect(isValidAuthLockoutState(null)).toBe(false);
+    });
+
+    it("returns false for non-object", () => {
+      expect(isValidAuthLockoutState("string")).toBe(false);
+      expect(isValidAuthLockoutState(123)).toBe(false);
+    });
+
+    it("returns false for missing fields", () => {
+      expect(isValidAuthLockoutState({})).toBe(false);
+      expect(isValidAuthLockoutState({ failedAttempts: 1 })).toBe(false);
+    });
+
+    it("returns false for wrong field types", () => {
+      expect(
+        isValidAuthLockoutState({
+          failedAttempts: "not a number",
+          firstAttemptAt: Date.now(),
+          lockedUntil: null,
+          lockoutCount: 0,
+        }),
+      ).toBe(false);
     });
   });
 

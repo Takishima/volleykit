@@ -81,7 +81,6 @@ export interface Translations {
     accountLocked: string;
     lockoutRemainingTime: string;
     lockoutSeconds: string;
-    tooManyAttempts: string;
   };
   calendarError: {
     title: string;

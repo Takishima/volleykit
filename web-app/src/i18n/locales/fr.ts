@@ -192,7 +192,6 @@ const fr: Translations = {
     accountLocked: "Compte temporairement verrouillé",
     lockoutRemainingTime: "Réessayez dans",
     lockoutSeconds: "secondes",
-    tooManyAttempts: "Trop de tentatives de connexion échouées. Veuillez patienter avant de réessayer.",
   },
   calendarError: {
     title: "Erreur de calendrier",

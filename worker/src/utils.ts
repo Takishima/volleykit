@@ -444,6 +444,25 @@ export function getAuthLockoutKey(ip: string): string {
 }
 
 /**
+ * Validate that an object has the expected AuthLockoutState shape.
+ * Returns true if valid, false if corrupted or malformed.
+ */
+export function isValidAuthLockoutState(obj: unknown): obj is AuthLockoutState {
+  if (typeof obj !== "object" || obj === null) {
+    return false;
+  }
+
+  const state = obj as Record<string, unknown>;
+
+  return (
+    typeof state.failedAttempts === "number" &&
+    typeof state.firstAttemptAt === "number" &&
+    (state.lockedUntil === null || typeof state.lockedUntil === "number") &&
+    typeof state.lockoutCount === "number"
+  );
+}
+
+/**
  * Get the current lockout state for an IP address.
  */
 export async function getAuthLockoutState(
@@ -455,7 +474,12 @@ export async function getAuthLockoutState(
   if (!data) return null;
 
   try {
-    return JSON.parse(data) as AuthLockoutState;
+    const parsed: unknown = JSON.parse(data);
+    if (!isValidAuthLockoutState(parsed)) {
+      // Corrupted data - treat as no state (will be overwritten on next attempt)
+      return null;
+    }
+    return parsed;
   } catch {
     return null;
   }

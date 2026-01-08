@@ -782,14 +782,6 @@ export default {
         const isSuccess = isSuccessfulLoginResponse(response);
         const isFailed = isFailedLoginResponse(response, responseBodyForCheck);
 
-        console.log("[Auth Lockout]", {
-          ip: clientIP,
-          status: response.status,
-          location: response.headers.get("Location"),
-          isSuccess,
-          isFailed,
-        });
-
         if (isSuccess) {
           // Clear lockout on successful login
           await clearAuthLockout(env.AUTH_LOCKOUT, clientIP);

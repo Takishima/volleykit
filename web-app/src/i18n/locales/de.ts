@@ -192,7 +192,6 @@ const de: Translations = {
     accountLocked: "Konto vorübergehend gesperrt",
     lockoutRemainingTime: "Versuchen Sie es in",
     lockoutSeconds: "Sekunden erneut",
-    tooManyAttempts: "Zu viele fehlgeschlagene Anmeldeversuche. Bitte warten Sie, bevor Sie es erneut versuchen.",
   },
   calendarError: {
     title: "Kalenderfehler",

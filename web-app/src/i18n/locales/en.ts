@@ -192,7 +192,6 @@ const en: Translations = {
     accountLocked: "Account temporarily locked",
     lockoutRemainingTime: "Try again in",
     lockoutSeconds: "seconds",
-    tooManyAttempts: "Too many failed login attempts. Please wait before trying again.",
   },
   calendarError: {
     title: "Calendar Error",

@@ -192,7 +192,6 @@ const it: Translations = {
     accountLocked: "Account temporaneamente bloccato",
     lockoutRemainingTime: "Riprova tra",
     lockoutSeconds: "secondi",
-    tooManyAttempts: "Troppi tentativi di accesso falliti. Attendere prima di riprovare.",
   },
   calendarError: {
     title: "Errore calendario",
