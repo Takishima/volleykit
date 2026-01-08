@@ -1100,6 +1100,7 @@ export function parseGameSheetWithOCR(
   if (type === 'manuscript') {
     return parseManuscriptSheet(ocrResult.fullText);
   }
+
   const warnings: string[] = [];
 
   // If no lines available, fall back to text-only parsing

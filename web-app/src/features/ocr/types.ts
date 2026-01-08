@@ -208,9 +208,6 @@ export interface OCRScoresheetState {
   error: Error | null;
 }
 
-/** Scoresheet type for OCR processing */
-export type ScoresheetTypeForOCR = 'electronic' | 'manuscript';
-
 /**
  * Actions returned by useOCRScoresheet hook
  */
@@ -218,7 +215,7 @@ export interface OCRScoresheetActions {
   /** Process an image and extract player data */
   processImage: (
     imageBlob: Blob,
-    scoresheetType?: ScoresheetTypeForOCR,
+    scoresheetType?: 'electronic' | 'manuscript',
   ) => Promise<ParsedGameSheet | null>;
   /** Reset state to initial values */
   reset: () => void;
