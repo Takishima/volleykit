@@ -49,6 +49,50 @@ export function ValidatedModeButtons({
   );
 }
 
+interface SafeModeButtonsProps {
+  navigation: WizardNavigationState;
+  onBack: () => void;
+  onNext: () => void;
+  onClose: () => void;
+}
+
+/**
+ * Navigation buttons shown when safe mode is enabled.
+ * Read-only mode with Previous/Next/Dismiss buttons.
+ * Dismiss closes without making any API calls.
+ */
+export function SafeModeButtons({
+  navigation,
+  onBack,
+  onNext,
+  onClose,
+}: SafeModeButtonsProps) {
+  const { t } = useTranslation();
+
+  return (
+    <>
+      <div>
+        {!navigation.isFirstStep && (
+          <Button variant="secondary" onClick={onBack}>
+            {t("validation.wizard.previous")}
+          </Button>
+        )}
+      </div>
+      <div>
+        {navigation.isLastStep ? (
+          <Button variant="primary" onClick={onClose}>
+            {t("validation.wizard.dismiss")}
+          </Button>
+        ) : (
+          <Button variant="primary" onClick={onNext}>
+            {t("validation.wizard.next")}
+          </Button>
+        )}
+      </div>
+    </>
+  );
+}
+
 interface EditModeState {
   isFinalizing: boolean;
   isLoadingGameDetails: boolean;

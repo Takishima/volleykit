@@ -65,21 +65,13 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
 
   const openValidateGame = useCallback(
     (assignment: Assignment) => {
-      // Allow viewing already validated games in safe mode (read-only)
-      const isAlreadyValidated = isGameAlreadyValidated(assignment);
-      if (
-        !isAlreadyValidated &&
-        guard({
-          context: "useAssignmentActions",
-          action: "game validation",
-        })
-      ) {
-        return;
-      }
-
+      // Safe mode no longer blocks opening the validation modal.
+      // Instead, when in safe mode, the modal shows a "Dismiss" button
+      // that closes without making any API calls, allowing users to
+      // preview the validation workflow without modifying data.
       validateGameModal.open(assignment);
     },
-    [guard, validateGameModal],
+    [validateGameModal],
   );
 
   const openPdfReport = useCallback(

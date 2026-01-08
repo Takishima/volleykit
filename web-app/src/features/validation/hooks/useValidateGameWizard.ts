@@ -42,6 +42,10 @@ export interface UseValidateGameWizardResult {
   goToStep: (index: number) => void;
   wizardSteps: ValidationStep[];
 
+  // Safe mode state
+  /** True when safe mode is enabled and not in demo mode - modal is read-only */
+  isInSafeMode: boolean;
+
   // Validation state
   validationState: ReturnType<typeof useValidationState>["state"];
   isDirty: boolean;
@@ -116,9 +120,11 @@ export function useValidateGameWizard({
   const [successToast, setSuccessToast] = useState<string | null>(null);
   const [isAddPlayerSheetOpen, setIsAddPlayerSheetOpen] = useState(false);
 
-  // Check if safe validation mode is enabled (only applies when not in demo mode)
+  // Check if safe mode or safe validation mode is enabled (only applies when not in demo mode)
   const dataSource = useAuthStore((s) => s.dataSource);
+  const isSafeModeEnabled = useSettingsStore((s) => s.isSafeModeEnabled);
   const isSafeValidationEnabled = useSettingsStore((s) => s.isSafeValidationEnabled);
+  const isInSafeMode = dataSource !== "demo" && isSafeModeEnabled;
   const useSafeValidation = dataSource !== "demo" && isSafeValidationEnabled;
 
   const gameId = assignment.refereeGame?.game?.__identity;
@@ -388,6 +394,9 @@ export function useValidateGameWizard({
     stepsMarkedDone,
     goToStep,
     wizardSteps,
+
+    // Safe mode state
+    isInSafeMode,
 
     // Validation state
     validationState,

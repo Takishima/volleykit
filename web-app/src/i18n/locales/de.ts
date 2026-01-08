@@ -683,6 +683,7 @@ const de: Translations = {
       next: "Weiter",
       validate: "Validieren",
       finish: "Abschliessen",
+      dismiss: "Schliessen",
       stepOf: "Schritt {current} von {total}",
       saving: "Speichern...",
       markAsReviewed: "Als geprüft markieren",

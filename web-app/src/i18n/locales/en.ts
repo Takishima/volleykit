@@ -676,6 +676,7 @@ const en: Translations = {
       next: "Next",
       validate: "Validate",
       finish: "Finish",
+      dismiss: "Dismiss",
       stepOf: "Step {current} of {total}",
       saving: "Saving...",
       markAsReviewed: "Mark as reviewed",

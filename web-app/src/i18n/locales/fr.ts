@@ -683,6 +683,7 @@ const fr: Translations = {
       next: "Suivant",
       validate: "Valider",
       finish: "Terminer",
+      dismiss: "Fermer",
       stepOf: "Étape {current} sur {total}",
       saving: "Enregistrement...",
       markAsReviewed: "Marquer comme vérifié",

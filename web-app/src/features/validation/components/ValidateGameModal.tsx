@@ -17,6 +17,7 @@ import {
   ValidationSuccessToast,
   StepRenderer,
   ValidatedModeButtons,
+  SafeModeButtons,
   EditModeButtons,
   OCREntryModal,
 } from ".";
@@ -310,6 +311,13 @@ function ValidateGameModalComponent({
         <div className="flex justify-between gap-3 pt-4 border-t border-border-default dark:border-border-default-dark mt-4">
           {wizard.isValidated ? (
             <ValidatedModeButtons
+              navigation={navigation}
+              onBack={wizard.goBack}
+              onNext={wizard.goNext}
+              onClose={onClose}
+            />
+          ) : wizard.isInSafeMode ? (
+            <SafeModeButtons
               navigation={navigation}
               onBack={wizard.goBack}
               onNext={wizard.goNext}
