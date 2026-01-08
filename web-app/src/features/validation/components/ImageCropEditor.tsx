@@ -32,7 +32,7 @@ const FRAME_HEIGHT_RATIO = 0.7;
 const FRAME_WIDTH_RATIO = 0.85;
 
 /** Minimum zoom level */
-const MIN_ZOOM = 0.5;
+const MIN_ZOOM = 0.1;
 
 /** Maximum zoom level */
 const MAX_ZOOM = 3;

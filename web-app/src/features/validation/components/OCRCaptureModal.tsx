@@ -68,6 +68,14 @@ export function OCRCaptureModal({
     };
   }, [stopCamera]);
 
+  // Connect stream to video element when camera step is active
+  useEffect(() => {
+    if (step === "camera" && streamRef.current && videoRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch(console.error);
+    }
+  }, [step]);
+
   // Handle Escape key to close modal or go back
   useEffect(() => {
     if (!isOpen) return;
@@ -102,12 +110,7 @@ export function OCRCaptureModal({
       });
 
       streamRef.current = stream;
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-
+      // Step change triggers useEffect to connect stream to video element
       setStep("camera");
     } catch (err) {
       console.error("Camera access error:", err);
