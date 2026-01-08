@@ -93,6 +93,7 @@ function ValidateGameModalComponent({
           title={t("assignments.validateGame")}
           titleId={modalTitleId}
           subtitle={subtitle}
+          onClose={wizard.attemptClose}
         />
 
         {wizard.isValidated && wizard.validatedInfo && (
@@ -132,7 +133,6 @@ function ValidateGameModalComponent({
           totalSteps={wizard.totalSteps}
           onSwipeNext={wizard.goNext}
           onSwipePrevious={wizard.goBack}
-          onDismiss={wizard.attemptClose}
           swipeEnabled={wizard.isSwipeEnabled}
         >
           <div className="max-h-80 overflow-y-auto">

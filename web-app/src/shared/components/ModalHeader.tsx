@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { X } from "@/shared/components/icons";
+import { useTranslation } from "@/shared/hooks/useTranslation";
 
 type TitleSize = "base" | "lg" | "xl";
 
@@ -13,6 +15,8 @@ interface ModalHeaderProps {
   subtitle?: ReactNode;
   /** Title text size variant */
   titleSize?: TitleSize;
+  /** Optional close handler - when provided, shows a close button */
+  onClose?: () => void;
 }
 
 const titleSizeClasses: Record<TitleSize, string> = {
@@ -57,22 +61,42 @@ export function ModalHeader({
   icon,
   subtitle,
   titleSize = "xl",
+  onClose,
 }: ModalHeaderProps) {
+  const { t } = useTranslation();
+
   return (
-    <div className="mb-4">
-      <div className={icon ? "flex items-center gap-3" : undefined}>
-        {icon}
-        <h2
-          id={titleId}
-          className={`${titleSizeClasses[titleSize]} font-semibold text-text-primary dark:text-text-primary-dark`}
-        >
-          {title}
-        </h2>
-      </div>
-      {subtitle && (
-        <div className="mt-1 text-sm text-text-muted dark:text-text-muted-dark">
-          {subtitle}
+    <div className="mb-4 flex items-start justify-between gap-2">
+      <div className="flex-1 min-w-0">
+        <div className={icon ? "flex items-center gap-3" : undefined}>
+          {icon}
+          <h2
+            id={titleId}
+            className={`${titleSizeClasses[titleSize]} font-semibold text-text-primary dark:text-text-primary-dark`}
+          >
+            {title}
+          </h2>
         </div>
+        {subtitle && (
+          <div className="mt-1 text-sm text-text-muted dark:text-text-muted-dark">
+            {subtitle}
+          </div>
+        )}
+      </div>
+      {onClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={t("common.close")}
+          className="
+            flex-shrink-0 p-2 -mt-1 -mr-2 rounded-lg
+            text-text-muted hover:text-text-secondary dark:text-text-muted-dark dark:hover:text-text-secondary-dark
+            hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark
+            transition-colors
+          "
+        >
+          <X className="w-5 h-5" aria-hidden="true" />
+        </button>
       )}
     </div>
   );
