@@ -8,9 +8,11 @@ import { ScoresheetPanel } from "./ScoresheetPanel";
 import type { Assignment } from "@/api/client";
 import * as useNominationListModule from "@/features/validation/hooks/useNominationList";
 
-// Test file size constants
+// Test constants
 const TWO_KILOBYTES = 2 * 1024;
 const TWO_MEGABYTES = 2 * 1024 * 1024;
+// Time to advance past SIMULATED_UPLOAD_DURATION_MS (1500ms) to complete upload
+const TIMER_ADVANCE_MS = 2000;
 
 vi.mock("@/features/validation/hooks/useNominationList");
 
@@ -204,6 +206,8 @@ describe("ScoresheetPanel", () => {
     return input;
   }
 
+  // Helper to select file and wait for upload to complete.
+  // Uses act() to ensure React processes all state updates from timer callbacks.
   function uploadTestFile(
     fileInput: HTMLInputElement,
     fileName = "test.jpg",
@@ -212,9 +216,8 @@ describe("ScoresheetPanel", () => {
   ): File {
     const file = new File([content], fileName, { type: fileType });
     fireEvent.change(fileInput, { target: { files: [file] } });
-    // Use act() to ensure React processes all state updates from timer callbacks
     act(() => {
-      vi.advanceTimersByTime(2000); // > SIMULATED_UPLOAD_DURATION_MS (1500ms)
+      vi.advanceTimersByTime(TIMER_ADVANCE_MS);
     });
     return file;
   }
@@ -289,12 +292,12 @@ describe("ScoresheetPanel", () => {
     expect(mockCreateObjectURL).toHaveBeenCalledWith(validFile);
 
     act(() => {
-      vi.advanceTimersByTime(2000); // > SIMULATED_UPLOAD_DURATION_MS (1500ms)
+      vi.advanceTimersByTime(TIMER_ADVANCE_MS);
     });
     expect(screen.getByText("Upload complete")).toBeInTheDocument();
   });
 
-  it("shows replace and remove buttons after file selection", async () => {
+  it("shows replace and remove buttons after file selection", () => {
     render(<ScoresheetPanel />, { wrapper: createWrapper() });
     uploadTestFile(getFileInput());
 
@@ -302,7 +305,7 @@ describe("ScoresheetPanel", () => {
     expect(screen.getByRole("button", { name: "Remove" })).toBeInTheDocument();
   });
 
-  it("resets state when remove button clicked", async () => {
+  it("resets state when remove button clicked", () => {
     render(<ScoresheetPanel />, { wrapper: createWrapper() });
     uploadTestFile(getFileInput());
     expect(screen.getByText("Upload complete")).toBeInTheDocument();
@@ -342,7 +345,7 @@ describe("ScoresheetPanel", () => {
   });
 
   describe("State Transitions", () => {
-    it("verifies correct state during Replace flow", async () => {
+    it("verifies correct state during Replace flow", () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
       const fileInput = getFileInput();
       uploadTestFile(fileInput, "first.jpg");
@@ -374,12 +377,12 @@ describe("ScoresheetPanel", () => {
       expect(screen.getByText("file1.jpg")).toBeInTheDocument();
 
       act(() => {
-        vi.advanceTimersByTime(2000); // > SIMULATED_UPLOAD_DURATION_MS (1500ms)
+        vi.advanceTimersByTime(TIMER_ADVANCE_MS);
       });
       expect(screen.getByText("file1.jpg")).toBeInTheDocument();
     });
 
-    it("verifies state reset after clicking Remove", async () => {
+    it("verifies state reset after clicking Remove", () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
       uploadTestFile(getFileInput());
 
@@ -400,7 +403,7 @@ describe("ScoresheetPanel", () => {
   });
 
   describe("Cleanup Behavior", () => {
-    it("calls URL.revokeObjectURL when replacing files", async () => {
+    it("calls URL.revokeObjectURL when replacing files", () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
       uploadTestFile(getFileInput(), "first.jpg");
       mockRevokeObjectURL.mockClear();
@@ -451,10 +454,8 @@ describe("ScoresheetPanel", () => {
       expect(progressBar).toHaveAttribute("aria-valuenow");
       expect(progressBar).toHaveAttribute("aria-label", "Uploading...");
 
-      // Use act() to ensure React processes all state updates from timer callbacks
-      // This matches the pattern used in ScoresheetPanel.test.tsx for reliable timer handling
       act(() => {
-        vi.advanceTimersByTime(2000); // > SIMULATED_UPLOAD_DURATION_MS (1500ms)
+        vi.advanceTimersByTime(TIMER_ADVANCE_MS);
       });
       expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
     });
@@ -463,9 +464,8 @@ describe("ScoresheetPanel", () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
       selectFile(getFileInput());
 
-      // Use act() to ensure React processes all state updates from timer callbacks
       act(() => {
-        vi.advanceTimersByTime(2000); // > SIMULATED_UPLOAD_DURATION_MS (1500ms)
+        vi.advanceTimersByTime(TIMER_ADVANCE_MS);
       });
 
       // The status element should now be present with complete state
@@ -542,7 +542,7 @@ describe("ScoresheetPanel", () => {
       expect(mockCreateObjectURL).not.toHaveBeenCalled();
     });
 
-    it("displays file name with truncation class for long names", async () => {
+    it("displays file name with truncation class for long names", () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
       const longFileName =
         "this_is_a_very_long_file_name_that_should_be_truncated_in_the_ui.jpg";
@@ -561,7 +561,7 @@ describe("ScoresheetPanel", () => {
       expect(screen.getByRole("button", { name: "Remove" })).toBeDisabled();
     });
 
-    it("enables Replace and Remove buttons after upload complete", async () => {
+    it("enables Replace and Remove buttons after upload complete", () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
       uploadTestFile(getFileInput());
 
@@ -582,7 +582,7 @@ describe("ScoresheetPanel", () => {
       expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     });
 
-    it("displays correct file size formatting for KB", async () => {
+    it("displays correct file size formatting for KB", () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
       const kbContent = new Array(TWO_KILOBYTES).fill("a").join("");
       uploadTestFile(
@@ -595,14 +595,14 @@ describe("ScoresheetPanel", () => {
       expect(screen.getByText("2.0 KB")).toBeInTheDocument();
     });
 
-    it("displays correct file size formatting for bytes", async () => {
+    it("displays correct file size formatting for bytes", () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
       uploadTestFile(getFileInput(), "tiny.jpg", "image/jpeg", "abc");
 
       expect(screen.getByText("3 B")).toBeInTheDocument();
     });
 
-    it("displays correct file size formatting for MB", async () => {
+    it("displays correct file size formatting for MB", () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
       const mbContent = new Array(TWO_MEGABYTES).fill("a").join("");
       uploadTestFile(
