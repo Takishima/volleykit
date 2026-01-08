@@ -78,6 +78,9 @@ export interface Translations {
     calendarModeInfo: string;
     calendarModeHint: string;
     learnHowItWorks: string;
+    accountLocked: string;
+    lockoutRemainingTime: string;
+    lockoutSeconds: string;
   };
   calendarError: {
     title: string;

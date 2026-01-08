@@ -190,6 +190,9 @@ const en: Translations = {
     calendarModeInfo: "Read-only access to your assignments",
     calendarModeHint: "Find your calendar URL in VolleyManager on the My Assignments page",
     learnHowItWorks: "Learn how VolleyKit works",
+    accountLocked: "Account temporarily locked",
+    lockoutRemainingTime: "Try again in",
+    lockoutSeconds: "seconds",
   },
   calendarError: {
     title: "Calendar Error",

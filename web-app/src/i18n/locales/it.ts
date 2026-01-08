@@ -190,6 +190,9 @@ const it: Translations = {
     calendarModeInfo: "Accesso in sola lettura alle tue designazioni",
     calendarModeHint: "Trova l'URL del calendario in VolleyManager sulla pagina Le mie designazioni",
     learnHowItWorks: "Scopri come funziona VolleyKit",
+    accountLocked: "Account temporaneamente bloccato",
+    lockoutRemainingTime: "Riprova tra",
+    lockoutSeconds: "secondi",
   },
   calendarError: {
     title: "Errore calendario",

@@ -16,20 +16,30 @@ import { getHelpSiteUrl } from "@/shared/utils/constants";
 // Demo-only mode restricts the app to demo mode (used in PR preview deployments)
 const DEMO_MODE_ONLY = import.meta.env.VITE_DEMO_MODE_ONLY === "true";
 
+/** Interval for lockout countdown timer (1 second in milliseconds) */
+const LOCKOUT_COUNTDOWN_INTERVAL_MS = 1000;
+
 type LoginMode = "full" | "calendar";
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { login, loginWithCalendar, status, error, setDemoAuthenticated } =
-    useAuthStore(
-      useShallow((state) => ({
-        login: state.login,
-        loginWithCalendar: state.loginWithCalendar,
-        status: state.status,
-        error: state.error,
-        setDemoAuthenticated: state.setDemoAuthenticated,
-      })),
-    );
+  const {
+    login,
+    loginWithCalendar,
+    status,
+    error,
+    lockedUntil,
+    setDemoAuthenticated,
+  } = useAuthStore(
+    useShallow((state) => ({
+      login: state.login,
+      loginWithCalendar: state.loginWithCalendar,
+      status: state.status,
+      error: state.error,
+      lockedUntil: state.lockedUntil,
+      setDemoAuthenticated: state.setDemoAuthenticated,
+    })),
+  );
   const initializeDemoData = useDemoStore((state) => state.initializeDemoData);
   const { t } = useTranslation();
 
@@ -38,6 +48,7 @@ export function LoginPage() {
   const [calendarInput, setCalendarInput] = useState("");
   const [calendarError, setCalendarError] = useState<string | null>(null);
   const [isValidatingCalendar, setIsValidatingCalendar] = useState(false);
+  const [lockoutCountdown, setLockoutCountdown] = useState<number | null>(null);
   // Use ref for password to minimize memory exposure (avoids re-renders with password in state)
   const passwordRef = useRef<HTMLInputElement>(null);
   // Form ref for manual validation trigger (needed since button is type="button")
@@ -68,6 +79,31 @@ export function LoginPage() {
       calendarValidationAbortRef.current?.abort();
     };
   }, []);
+
+  // Countdown timer for lockout - ticks every second until lockout expires
+  useEffect(() => {
+    if (!lockedUntil || lockedUntil <= 0) {
+      setLockoutCountdown(null);
+      return;
+    }
+
+    setLockoutCountdown(lockedUntil);
+
+    const interval = setInterval(() => {
+      setLockoutCountdown((prev) => {
+        if (!prev || prev <= 1) {
+          clearInterval(interval);
+          return null;
+        }
+        return prev - 1;
+      });
+    }, LOCKOUT_COUNTDOWN_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+  }, [lockedUntil]);
+
+  // Determine if login should be disabled due to lockout
+  const isLockedOut = lockoutCountdown !== null && lockoutCountdown > 0;
 
   function handleCalendarInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     setCalendarInput(e.target.value);
@@ -205,6 +241,10 @@ export function LoginPage() {
     }
     if (errorKey === "auth.calendarValidationFailed") {
       return t("auth.calendarValidationFailed");
+    }
+    // Handle lockout error with countdown
+    if (isLockedOut && lockoutCountdown) {
+      return `${t("auth.accountLocked")} - ${t("auth.lockoutRemainingTime")} ${lockoutCountdown} ${t("auth.lockoutSeconds")}`;
     }
     return errorKey;
   }
@@ -346,6 +386,7 @@ export function LoginPage() {
                   variant="primary"
                   fullWidth
                   loading={isLoading}
+                  disabled={isLockedOut}
                   onClick={performLogin}
                   data-testid="login-button"
                 >
