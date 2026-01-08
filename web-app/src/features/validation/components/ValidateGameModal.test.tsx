@@ -26,6 +26,18 @@ vi.mock("@/shared/stores/auth", () => ({
   useAuthStore: vi.fn((selector) => selector({ dataSource: "api" })),
 }));
 
+vi.mock("@/shared/stores/settings", () => ({
+  useSettingsStore: vi.fn((selector) => {
+    const state = {
+      isSafeModeEnabled: false,
+      isSafeValidationEnabled: false,
+      isOCREnabled: false,
+    };
+    // Handle both selector function and direct access patterns
+    return typeof selector === "function" ? selector(state) : state;
+  }),
+}));
+
 function createMockAssignment(overrides: Partial<Assignment> = {}): Assignment {
   return {
     __identity: "assignment-1",

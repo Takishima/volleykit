@@ -678,6 +678,7 @@ const it: Translations = {
       next: "Avanti",
       validate: "Valida",
       finish: "Termina",
+      dismiss: "Chiudi",
       stepOf: "Passo {current} di {total}",
       saving: "Salvataggio...",
       markAsReviewed: "Segna come verificato",

@@ -432,15 +432,18 @@ describe("useAssignmentActions", () => {
       expect(toast.warning).toHaveBeenCalledWith("settings.safeModeBlocked");
     });
 
-    it("should block validate game when safe mode is enabled for unvalidated games", () => {
+    it("should allow opening validate game modal when safe mode is enabled for unvalidated games", () => {
+      // Safe mode now allows opening the modal - the modal shows SafeModeButtons
+      // with a "Dismiss" button instead of blocking entirely
       const { result } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() });
 
       act(() => {
         result.current.validateGameModal.open(mockAssignment);
       });
 
-      expect(result.current.validateGameModal.isOpen).toBe(false);
-      expect(toast.warning).toHaveBeenCalledWith("settings.safeModeBlocked");
+      expect(result.current.validateGameModal.isOpen).toBe(true);
+      expect(result.current.validateGameModal.assignment).toBe(mockAssignment);
+      expect(toast.warning).not.toHaveBeenCalled();
     });
 
     it("should allow validate game when safe mode is enabled for already validated games", () => {

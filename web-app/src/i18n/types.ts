@@ -511,6 +511,7 @@ export interface Translations {
       next: string;
       validate: string;
       finish: string;
+      dismiss: string;
       stepOf: string;
       saving: string;
       markAsReviewed: string;

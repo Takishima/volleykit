@@ -6,23 +6,25 @@ interface WizardNavigationState {
   isLastStep: boolean;
 }
 
-interface ValidatedModeButtonsProps {
+interface ReadOnlyModeButtonsProps {
   navigation: WizardNavigationState;
   onBack: () => void;
   onNext: () => void;
   onClose: () => void;
+  closeLabel: string;
 }
 
 /**
- * Navigation buttons shown when viewing an already-validated game.
- * Read-only mode with Previous/Next/Close buttons.
+ * Shared navigation buttons for read-only modes (validated/safe mode).
+ * Shows Previous/Next buttons with a customizable close button on last step.
  */
-export function ValidatedModeButtons({
+function ReadOnlyModeButtons({
   navigation,
   onBack,
   onNext,
   onClose,
-}: ValidatedModeButtonsProps) {
+  closeLabel,
+}: ReadOnlyModeButtonsProps) {
   const { t } = useTranslation();
 
   return (
@@ -37,7 +39,7 @@ export function ValidatedModeButtons({
       <div>
         {navigation.isLastStep ? (
           <Button variant="primary" onClick={onClose}>
-            {t("common.close")}
+            {closeLabel}
           </Button>
         ) : (
           <Button variant="primary" onClick={onNext}>
@@ -47,6 +49,39 @@ export function ValidatedModeButtons({
       </div>
     </>
   );
+}
+
+interface ValidatedModeButtonsProps {
+  navigation: WizardNavigationState;
+  onBack: () => void;
+  onNext: () => void;
+  onClose: () => void;
+}
+
+/**
+ * Navigation buttons shown when viewing an already-validated game.
+ * Read-only mode with Previous/Next/Close buttons.
+ */
+export function ValidatedModeButtons(props: ValidatedModeButtonsProps) {
+  const { t } = useTranslation();
+  return <ReadOnlyModeButtons {...props} closeLabel={t("common.close")} />;
+}
+
+interface SafeModeButtonsProps {
+  navigation: WizardNavigationState;
+  onBack: () => void;
+  onNext: () => void;
+  onClose: () => void;
+}
+
+/**
+ * Navigation buttons shown when safe mode is enabled.
+ * Read-only mode with Previous/Next/Dismiss buttons.
+ * Dismiss closes without making any API calls.
+ */
+export function SafeModeButtons(props: SafeModeButtonsProps) {
+  const { t } = useTranslation();
+  return <ReadOnlyModeButtons {...props} closeLabel={t("validation.wizard.dismiss")} />;
 }
 
 interface EditModeState {
