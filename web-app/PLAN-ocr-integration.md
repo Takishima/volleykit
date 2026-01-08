@@ -18,19 +18,18 @@ OCR will enhance the **Scoresheet step** by:
 ## File Structure
 
 ```
-web-app/src/features/validation/
-├── api/
-│   └── ocr/                          # NEW: OCR services
-│       ├── index.ts                  # Public exports
-│       ├── types.ts                  # OCR types
-│       ├── ocr-factory.ts            # Factory for creating OCR instances
-│       ├── mistral-ocr.ts            # Mistral OCR implementation
-│       ├── stub-ocr.ts               # Stub for dev/testing
-│       └── player-list-parser.ts     # Parse OCR text → structured data
-├── hooks/
-│   └── useOCRScoresheet.ts           # NEW: Hook for OCR in components
-└── utils/
-    └── roster-comparison.ts          # NEW: Compare OCR results vs roster
+web-app/src/features/ocr/            # NEW: Standalone OCR feature (reusable)
+├── index.ts                         # Public exports
+├── types.ts                         # OCR types
+├── services/
+│   ├── mistral-ocr.ts               # Mistral OCR implementation
+│   ├── stub-ocr.ts                  # Stub for dev/testing
+│   └── ocr-factory.ts               # Factory for creating OCR instances
+├── utils/
+│   ├── player-list-parser.ts        # Parse OCR text → structured data
+│   └── roster-comparison.ts         # Compare OCR results vs roster
+└── hooks/
+    └── useOCRScoresheet.ts          # Hook for OCR in components
 ```
 
 ## Phase 1 Tasks
@@ -234,13 +233,8 @@ No new dependencies needed - uses native `fetch` and `FormData`.
 | 7. useOCRScoresheet hook | Medium |
 | 8. Tests | Medium |
 
-## Questions for Review
+## Decisions Made
 
-1. Should we put OCR services under `features/validation/api/ocr/` or create a new `features/ocr/` feature module?
-   - Recommendation: Start under validation since that's the primary use case
-
-2. Should the hook use TanStack Query for caching OCR results?
-   - Recommendation: No, OCR results are ephemeral (per-session, per-image)
-
-3. Should we add a "confidence threshold" setting?
-   - Recommendation: Hardcode 50% for now, make configurable later
+1. **Location**: Create standalone `features/ocr/` module for reusability across features
+2. **Caching**: Skip TanStack Query - use simple local state (results are ephemeral)
+3. **Confidence threshold**: Hardcode 50% for now, make configurable later
