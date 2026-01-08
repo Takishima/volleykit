@@ -704,6 +704,8 @@ const de: Translations = {
       useResults: "Ergebnisse anwenden",
       continueToValidation: "Weiter",
       cancel: "Abbrechen",
+      rotateLeft: "Nach links drehen",
+      rotateRight: "Nach rechts drehen",
       players: "Spieler",
       coaches: "Trainer",
       scoresheetType: {

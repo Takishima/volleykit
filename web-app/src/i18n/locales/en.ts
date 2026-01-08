@@ -697,6 +697,8 @@ const en: Translations = {
       useResults: "Apply Results",
       continueToValidation: "Continue",
       cancel: "Cancel",
+      rotateLeft: "Rotate left",
+      rotateRight: "Rotate right",
       players: "Players",
       coaches: "Coaches",
       scoresheetType: {

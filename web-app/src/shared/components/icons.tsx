@@ -43,6 +43,8 @@ export { Car } from "lucide-react";
 export { TrainFront } from "lucide-react";
 export { Navigation } from "lucide-react";
 export { SlidersHorizontal } from "lucide-react";
+export { RotateCcw } from "lucide-react";
+export { RotateCw } from "lucide-react";
 
 // Status icons
 export { CheckCircle } from "lucide-react";
