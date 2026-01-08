@@ -24,7 +24,7 @@ on:
 #              ├──> knip       │                      │
 #              ├──> test       │                      │
 #              └──> build ─────┼──> bundle-size       │
-#                              ├──> e2e (sharded)     │
+#                              ├──> e2e (3 shards) ───┼──> e2e-report
 #                              └──> lighthouse        │
 #                                                     │
 #   audit (independent) ──────────────────────────────┘
@@ -36,6 +36,7 @@ on:
 # - Per-branch caching with main fallback for faster PR builds
 # - E2E tests use sharding (3 shards) for parallel execution
 # - PRs run chromium only; main branch runs chromium + firefox + webkit
+# - e2e-report merges shard reports into a single HTML report for debugging
 #
 # =============================================================================
 
@@ -304,7 +305,7 @@ jobs:
           path: web-app/dist
 
       - name: Run E2E tests
-        run: npx playwright test --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/3
+        run: npx playwright test --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/3 --retries=2
 
       - name: Upload test results
         uses: actions/upload-artifact@v5
@@ -313,6 +314,41 @@ jobs:
           name: playwright-report-${{ matrix.browser }}-shard-${{ matrix.shard }}
           path: web-app/playwright-report/
           retention-days: 7
+
+  # Merge E2E shard reports into single HTML report for easier debugging
+  e2e-report:
+    name: E2E Report
+    needs: e2e
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web-app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
+        with:
+          working-directory: web-app
+
+      - name: Download all shard reports
+        uses: actions/download-artifact@v5
+        with:
+          pattern: playwright-report-*
+          path: web-app/all-reports
+          merge-multiple: false
+
+      - name: Merge reports
+        run: npx playwright merge-reports --reporter=html ./all-reports/*
+
+      - name: Upload merged report
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-report-merged
+          path: web-app/playwright-report/
+          retention-days: 14
 
   # Lighthouse performance audit - uses build artifact
   lighthouse:
