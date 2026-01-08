@@ -204,15 +204,18 @@ describe("ScoresheetPanel", () => {
     return input;
   }
 
-  async function uploadTestFile(
+  function uploadTestFile(
     fileInput: HTMLInputElement,
     fileName = "test.jpg",
     fileType = "image/jpeg",
     content = "image content",
-  ): Promise<File> {
+  ): File {
     const file = new File([content], fileName, { type: fileType });
     fireEvent.change(fileInput, { target: { files: [file] } });
-    await vi.runAllTimersAsync();
+    // Use act() to ensure React processes all state updates from timer callbacks
+    act(() => {
+      vi.advanceTimersByTime(2000); // > SIMULATED_UPLOAD_DURATION_MS (1500ms)
+    });
     return file;
   }
 
@@ -278,20 +281,22 @@ describe("ScoresheetPanel", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows upload progress when valid file selected", async () => {
+  it("shows upload progress when valid file selected", () => {
     render(<ScoresheetPanel />, { wrapper: createWrapper() });
     const validFile = selectFile(getFileInput());
 
     expect(screen.getByText("Uploading...")).toBeInTheDocument();
     expect(mockCreateObjectURL).toHaveBeenCalledWith(validFile);
 
-    await vi.runAllTimersAsync();
+    act(() => {
+      vi.advanceTimersByTime(2000); // > SIMULATED_UPLOAD_DURATION_MS (1500ms)
+    });
     expect(screen.getByText("Upload complete")).toBeInTheDocument();
   });
 
   it("shows replace and remove buttons after file selection", async () => {
     render(<ScoresheetPanel />, { wrapper: createWrapper() });
-    await uploadTestFile(getFileInput());
+    uploadTestFile(getFileInput());
 
     expect(screen.getByRole("button", { name: "Replace" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Remove" })).toBeInTheDocument();
@@ -299,7 +304,7 @@ describe("ScoresheetPanel", () => {
 
   it("resets state when remove button clicked", async () => {
     render(<ScoresheetPanel />, { wrapper: createWrapper() });
-    await uploadTestFile(getFileInput());
+    uploadTestFile(getFileInput());
     expect(screen.getByText("Upload complete")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Remove" }));
@@ -340,7 +345,7 @@ describe("ScoresheetPanel", () => {
     it("verifies correct state during Replace flow", async () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
       const fileInput = getFileInput();
-      await uploadTestFile(fileInput, "first.jpg");
+      uploadTestFile(fileInput, "first.jpg");
 
       expect(screen.getByText("Upload complete")).toBeInTheDocument();
       expect(screen.getByText("first.jpg")).toBeInTheDocument();
@@ -351,11 +356,11 @@ describe("ScoresheetPanel", () => {
       expect(mockRevokeObjectURL).toHaveBeenCalled();
       expect(clickSpy).toHaveBeenCalled();
 
-      await uploadTestFile(fileInput, "second.jpg");
+      uploadTestFile(fileInput, "second.jpg");
       expect(screen.getByText("second.jpg")).toBeInTheDocument();
     });
 
-    it("prevents concurrent uploads during rapid file selections", async () => {
+    it("prevents concurrent uploads during rapid file selections", () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
       const fileInput = getFileInput();
 
@@ -368,13 +373,15 @@ describe("ScoresheetPanel", () => {
       expect(mockCreateObjectURL).toHaveBeenCalledTimes(createObjectURLCalls);
       expect(screen.getByText("file1.jpg")).toBeInTheDocument();
 
-      await vi.runAllTimersAsync();
+      act(() => {
+        vi.advanceTimersByTime(2000); // > SIMULATED_UPLOAD_DURATION_MS (1500ms)
+      });
       expect(screen.getByText("file1.jpg")).toBeInTheDocument();
     });
 
     it("verifies state reset after clicking Remove", async () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
-      await uploadTestFile(getFileInput());
+      uploadTestFile(getFileInput());
 
       fireEvent.click(screen.getByRole("button", { name: "Remove" }));
 
@@ -395,7 +402,7 @@ describe("ScoresheetPanel", () => {
   describe("Cleanup Behavior", () => {
     it("calls URL.revokeObjectURL when replacing files", async () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
-      await uploadTestFile(getFileInput(), "first.jpg");
+      uploadTestFile(getFileInput(), "first.jpg");
       mockRevokeObjectURL.mockClear();
 
       fireEvent.click(screen.getByRole("button", { name: "Replace" }));
@@ -452,12 +459,14 @@ describe("ScoresheetPanel", () => {
       expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
     });
 
-    it("announces upload completion via aria-live region", async () => {
+    it("announces upload completion via aria-live region", () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
       selectFile(getFileInput());
 
-      // Run all timers to complete the simulated upload
-      await vi.runAllTimersAsync();
+      // Use act() to ensure React processes all state updates from timer callbacks
+      act(() => {
+        vi.advanceTimersByTime(2000); // > SIMULATED_UPLOAD_DURATION_MS (1500ms)
+      });
 
       // The status element should now be present with complete state
       const statusElement = screen.getByRole("status");
@@ -537,7 +546,7 @@ describe("ScoresheetPanel", () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
       const longFileName =
         "this_is_a_very_long_file_name_that_should_be_truncated_in_the_ui.jpg";
-      await uploadTestFile(getFileInput(), longFileName);
+      uploadTestFile(getFileInput(), longFileName);
 
       const fileNameElement = screen.getByText(longFileName);
       expect(fileNameElement).toBeInTheDocument();
@@ -554,7 +563,7 @@ describe("ScoresheetPanel", () => {
 
     it("enables Replace and Remove buttons after upload complete", async () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
-      await uploadTestFile(getFileInput());
+      uploadTestFile(getFileInput());
 
       expect(
         screen.getByRole("button", { name: "Replace" }),
@@ -576,7 +585,7 @@ describe("ScoresheetPanel", () => {
     it("displays correct file size formatting for KB", async () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
       const kbContent = new Array(TWO_KILOBYTES).fill("a").join("");
-      await uploadTestFile(
+      uploadTestFile(
         getFileInput(),
         "small.jpg",
         "image/jpeg",
@@ -588,7 +597,7 @@ describe("ScoresheetPanel", () => {
 
     it("displays correct file size formatting for bytes", async () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
-      await uploadTestFile(getFileInput(), "tiny.jpg", "image/jpeg", "abc");
+      uploadTestFile(getFileInput(), "tiny.jpg", "image/jpeg", "abc");
 
       expect(screen.getByText("3 B")).toBeInTheDocument();
     });
@@ -596,7 +605,7 @@ describe("ScoresheetPanel", () => {
     it("displays correct file size formatting for MB", async () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
       const mbContent = new Array(TWO_MEGABYTES).fill("a").join("");
-      await uploadTestFile(
+      uploadTestFile(
         getFileInput(),
         "large.jpg",
         "image/jpeg",
