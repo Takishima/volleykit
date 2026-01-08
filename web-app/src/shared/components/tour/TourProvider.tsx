@@ -38,13 +38,14 @@ export function TourProvider({ children }: TourProviderProps) {
   const isFirstStep = currentStep === 0;
 
   // Freeze spotlight position during swipe steps to keep drawer visible
-  const isSwipeStep = currentStepData?.completionEvent?.type === "swipe";
+  // A step is a "swipe step" if it has autoSwipe config (regardless of completionEvent)
   const hasAutoSwipe = Boolean(currentStepData?.autoSwipe);
+  const isSwipeStep = hasAutoSwipe;
   // Auto-swipe is completed only if it was completed for the current tour and step
   const isAutoSwipeCompleted =
     autoSwipeCompletedFor?.tour === activeTour &&
     autoSwipeCompletedFor?.step === currentStep;
-  const isAutoSwipeActive = isSwipeStep && hasAutoSwipe && !isAutoSwipeCompleted;
+  const isAutoSwipeActive = hasAutoSwipe && !isAutoSwipeCompleted;
 
   // Handle step completion
   const handleStepComplete = useCallback(() => {
