@@ -25,34 +25,35 @@ For code reviews and detailed examples, see:
 
 ## AI Development Workflow
 
-### Implement, Commit, Validate Before Push
-
-**CRITICAL**: Implement features fully, commit meaningfully along the way, then run all validation phases before pushing.
+### Implement, Commit, Push
 
 **Workflow**:
 1. **Implement features/fixes** - Complete the work as required
 2. **Commit along the way** - Make meaningful commits as you progress (logical units of work)
-3. **Run full validation before push** - Before pushing, **use the `/validate` skill** to run all validation phases
-4. **Fix any issues** - If validation fails, fix issues and amend/add commits as needed
-5. **Push** - Only after all validations pass
+3. **Push** - The pre-push hook automatically validates before allowing the push
 
-### Automatic Validation with Parallel Subagents
+### Automatic Pre-Push Validation (Claude Code Web Only)
 
-**IMPORTANT FOR CLAUDE CODE WEB**: Before pushing code changes, **automatically invoke the `/validate` skill** which runs validation steps in parallel using subagents for maximum speed.
+A git pre-push hook (`scripts/pre-push-validate.sh`) automatically runs validation before any push **in Claude Code web environment only** (`CLAUDE_CODE_REMOTE=true`). Human developers are not affected and rely on CI. This is configured via devenv and runs:
 
-The `/validate` skill will:
-1. Detect what changed (skip validation for docs-only changes)
-2. Generate API types if OpenAPI spec changed
-3. **Launch lint, knip, and test in parallel** using Task tool subagents
-4. Run build sequentially after parallel checks pass
-5. Output a concise mobile-friendly summary
+1. **Detect changes** - Skip validation for docs-only changes
+2. **Generate API types** - If `volleymanager-openapi.yaml` changed
+3. **Run lint, knip, test in PARALLEL** - Maximum speed by running concurrently
+4. **Run build** - Production build (only if parallel steps pass)
 
-**Trigger `/validate` automatically when**:
-- User says "push", "git push", or is about to push
-- After completing source code changes (`.ts`, `.tsx`, `.js`, `.jsx`)
-- User says "validate", "check", "run checks", "pre-push"
+The push is **blocked** if any validation step fails. Fix issues and push again.
 
-**Manual validation** (if not using the skill):
+**When validation runs automatically**:
+- Adding, modifying, or deleting `.ts`, `.tsx`, `.js`, `.jsx` files
+- Modifying imports, exports, or dependencies
+- Changing type definitions or interfaces
+- Updating configuration files (`vite.config.ts`, `tsconfig.json`, etc.)
+
+**When validation is skipped** (by the hook):
+- Changes to `.md` documentation files only
+- No source files changed
+
+**Manual validation** (for debugging or running individually):
 
 ```bash
 cd web-app
@@ -62,21 +63,6 @@ npm run knip          # Dead code detection
 npm test              # Run all tests
 npm run build         # Production build (includes tsc)
 ```
-
-**When full validation is required** (run all commands above before push):
-- Adding, modifying, or deleting `.ts`, `.tsx`, `.js`, `.jsx` files
-- Modifying imports, exports, or dependencies
-- Changing type definitions or interfaces
-- Updating configuration files (`vite.config.ts`, `tsconfig.json`, etc.)
-- Refactoring code structure
-
-**When validation can be skipped**:
-- Comment-only changes that don't affect code logic
-- Fixing typos in comments or strings
-- Changes to `.md` documentation files only
-- Translation-only changes (`.json` locale files) - run `npm run lint` only
-
-**Order matters**: Run commands in sequence—later steps depend on earlier ones passing. If lint fails, fix issues before running tests. If tests fail, fix before building. Do not push until all phases pass.
 
 ## Tech Stack
 
@@ -224,14 +210,17 @@ worker-dev     # Start Cloudflare Worker locally
 worker-deploy  # Deploy worker to Cloudflare
 ```
 
-### Pre-commit Hooks (via devenv)
+### Git Hooks (via devenv)
 
-Automatic checks on commit:
+**Pre-commit** (automatic on commit):
 - **treefmt**: Code formatting (Prettier, nixfmt, yamlfmt)
 - **ripsecrets**: Secret detection
 - **convco**: Conventional commit messages
 - **check-merge-conflicts**: Conflict markers
 - **check-yaml/json**: File validation
+
+**Pre-push** (automatic on push):
+- **pre-push-validate**: Runs lint, knip, tests, and build (see `scripts/pre-push-validate.sh`)
 
 ### Without Nix
 
