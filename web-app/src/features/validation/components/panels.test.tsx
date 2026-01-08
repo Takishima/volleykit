@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HomeRosterPanel } from "./HomeRosterPanel";
 import { AwayRosterPanel } from "./AwayRosterPanel";
@@ -434,7 +434,7 @@ describe("ScoresheetPanel", () => {
   });
 
   describe("Accessibility", () => {
-    it("has proper ARIA attributes on progress bar during upload", async () => {
+    it("has proper ARIA attributes on progress bar during upload", () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() });
       selectFile(getFileInput());
 
@@ -444,7 +444,11 @@ describe("ScoresheetPanel", () => {
       expect(progressBar).toHaveAttribute("aria-valuenow");
       expect(progressBar).toHaveAttribute("aria-label", "Uploading...");
 
-      await vi.runAllTimersAsync();
+      // Use act() to ensure React processes all state updates from timer callbacks
+      // This matches the pattern used in ScoresheetPanel.test.tsx for reliable timer handling
+      act(() => {
+        vi.advanceTimersByTime(2000); // > SIMULATED_UPLOAD_DURATION_MS (1500ms)
+      });
       expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
     });
 
