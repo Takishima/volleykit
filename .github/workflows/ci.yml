@@ -24,7 +24,7 @@ on:
 #              ├──> knip       │                      │
 #              ├──> test       │                      │
 #              └──> build ─────┼──> bundle-size       │
-#                              ├──> e2e (3 shards) ───┼──> e2e-report
+#                              ├──> e2e (per browser) │
 #                              └──> lighthouse        │
 #                                                     │
 #   audit (independent) ──────────────────────────────┘
@@ -34,9 +34,8 @@ on:
 # - audit runs independently (doesn't need API types)
 # - build artifact is shared by bundle-size, e2e, and lighthouse
 # - Per-branch caching with main fallback for faster PR builds
-# - E2E tests use sharding (3 shards) for parallel execution
 # - PRs run chromium only; main branch runs chromium + firefox + webkit
-# - e2e-report merges shard reports into a single HTML report for debugging
+# - E2E uses pre-built Playwright Docker image (no browser install overhead)
 #
 # =============================================================================
 
@@ -269,12 +268,12 @@ jobs:
       - name: Check bundle size
         run: npm run size
 
-  # E2E tests - sharded across browsers, uses build artifact
+  # E2E tests - per browser, uses build artifact
   # PRs: chromium only (fast feedback)
   # main: chromium + firefox + webkit (full coverage)
   # Uses pre-built Playwright Docker image (browsers pre-installed)
   e2e:
-    name: E2E (${{ matrix.browser }} ${{ matrix.shard }}/3)
+    name: E2E (${{ matrix.browser }})
     needs: build
     runs-on: ubuntu-latest
     container:
@@ -285,7 +284,6 @@ jobs:
       matrix:
         # PRs: chromium only; main: all browsers
         browser: ${{ github.event_name == 'pull_request' && fromJson('["chromium"]') || fromJson('["chromium", "firefox", "webkit"]') }}
-        shard: [1, 2, 3]
     defaults:
       run:
         working-directory: web-app
@@ -305,50 +303,15 @@ jobs:
           path: web-app/dist
 
       - name: Run E2E tests
-        run: npx playwright test --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/3 --retries=2 --reporter=blob
+        run: npx playwright test --project=${{ matrix.browser }} --retries=2
 
-      - name: Upload blob report
+      - name: Upload test results
         uses: actions/upload-artifact@v5
         if: ${{ !cancelled() }}
         with:
-          name: blob-report-${{ matrix.browser }}-shard-${{ matrix.shard }}
-          path: web-app/blob-report/
-          retention-days: 1
-
-  # Merge E2E shard reports into single HTML report for easier debugging
-  e2e-report:
-    name: E2E Report
-    needs: e2e
-    if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: web-app
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Node.js with dependencies
-        uses: ./.github/actions/setup-node-deps
-        with:
-          working-directory: web-app
-
-      - name: Download all blob reports
-        uses: actions/download-artifact@v5
-        with:
-          pattern: blob-report-*
-          path: web-app/all-blob-reports
-          merge-multiple: true
-
-      - name: Merge reports
-        run: npx playwright merge-reports --reporter=html ./all-blob-reports
-
-      - name: Upload merged report
-        uses: actions/upload-artifact@v5
-        with:
-          name: playwright-report-merged
+          name: playwright-report-${{ matrix.browser }}
           path: web-app/playwright-report/
-          retention-days: 14
+          retention-days: 7
 
   # Lighthouse performance audit - uses build artifact
   lighthouse:
