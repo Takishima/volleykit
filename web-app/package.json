@@ -50,6 +50,12 @@
       "gzip": true
     },
     {
+      "name": "OCR Feature (lazy-loaded)",
+      "path": "dist/assets/chunk-OCRPanel-*.js",
+      "limit": "10 kB",
+      "gzip": true
+    },
+    {
       "name": "CSS Bundle",
       "path": "dist/assets/*.css",
       "limit": "12 kB",
@@ -58,7 +64,7 @@
     {
       "name": "Total JS Bundle",
       "path": "dist/assets/*.js",
-      "limit": "465 kB",
+      "limit": "475 kB",
       "gzip": true
     }
   ],

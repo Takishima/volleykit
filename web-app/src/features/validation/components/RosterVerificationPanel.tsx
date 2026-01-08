@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo, lazy, Suspense } from "react";
 import type { PossibleNomination, NominationList, Schemas } from "@/api/client";
 import type { ValidatedPersonSearchResult } from "@/api/validation";
 import { useTranslation } from "@/shared/hooks/useTranslation";
@@ -22,10 +22,12 @@ import {
   ChevronUp,
   Camera,
 } from "@/shared/components/icons";
-import { OCRPanel } from "./OCRPanel";
 import { LoadingSpinner } from "@/shared/components/LoadingSpinner";
 import { useSettingsStore } from "@/shared/stores/settings";
 import { formatRosterEntries, getMaxLastNameWidth } from "@/shared/utils/date-helpers";
+
+// Lazy load OCR panel to reduce initial bundle size
+const OCRPanel = lazy(() => import("./OCRPanel").then(m => ({ default: m.OCRPanel })));
 
 type PersonSummary = Schemas["PersonSummary"];
 
@@ -518,14 +520,16 @@ export function RosterVerificationPanel({
 
       {/* OCR Panel - only available in edit mode and when OCR is enabled */}
       {!readOnly && isOCREnabled && (
-        <OCRPanel
-          isOpen={isOCRPanelOpen}
-          onClose={() => setIsOCRPanelOpen(false)}
-          team={team}
-          teamName={teamName}
-          rosterPlayers={allPlayers}
-          onApplyResults={handleOCRApplyResults}
-        />
+        <Suspense fallback={null}>
+          <OCRPanel
+            isOpen={isOCRPanelOpen}
+            onClose={() => setIsOCRPanelOpen(false)}
+            team={team}
+            teamName={teamName}
+            rosterPlayers={allPlayers}
+            onApplyResults={handleOCRApplyResults}
+          />
+        </Suspense>
       )}
     </div>
   );
