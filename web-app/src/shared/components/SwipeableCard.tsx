@@ -273,6 +273,23 @@ export function SwipeableCard({
     return () => document.removeEventListener("keydown", handleEscape);
   }, [showActions, resetPosition]);
 
+  // Listen for tour auto-swipe events to update state and render action buttons
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !hasAnyAction) return;
+
+    const handleTourSwipe = (e: Event) => {
+      const { translateX: targetTranslate } = (e as CustomEvent).detail;
+      // Update React state so action buttons render
+      setTranslateX(targetTranslate);
+      currentTranslateRef.current = targetTranslate;
+      setIsDrawerOpen(true);
+    };
+
+    container.addEventListener("tour-swipe-start", handleTourSwipe);
+    return () => container.removeEventListener("tour-swipe-start", handleTourSwipe);
+  }, [containerRef, hasAnyAction, setTranslateX]);
+
   // Capture phase click handler prevents card expansion when drawer is open
   const handleClickCapture = useCallback(
     (e: React.MouseEvent) => {

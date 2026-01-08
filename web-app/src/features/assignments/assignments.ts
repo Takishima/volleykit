@@ -53,6 +53,8 @@ function getUpcomingDate(): string {
 }
 
 // Configured to pass all eligibility checks so all action buttons are visible during the tour
+// - refereePosition: "head-one" = 1st referee (enables validate game action)
+// - leagueCategory: "NLA" = top league (enables hall report generation)
 export const TOUR_DUMMY_ASSIGNMENT: TourDummyAssignment = {
   __identity: "tour-dummy-assignment",
   refereePosition: "head-one",

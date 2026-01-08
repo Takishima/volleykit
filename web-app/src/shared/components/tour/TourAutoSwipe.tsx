@@ -13,8 +13,12 @@ interface TourAutoSwipeProps {
 // Default timing values
 const DEFAULT_DURATION_MS = 1500;
 const DEFAULT_DELAY_MS = 800;
-// Swipe distance as percentage of container width
-const SWIPE_DISTANCE_RATIO = 0.35;
+// Action button layout constants (must match SwipeableCard.tsx)
+const ACTION_BUTTON_WIDTH = 72;
+const ACTION_BUTTON_GAP = 8;
+const DRAWER_PADDING = 16;
+// Default number of actions to assume if we can't detect them
+const DEFAULT_ACTION_COUNT = 3;
 
 export function TourAutoSwipe({
   targetSelector,
@@ -56,10 +60,22 @@ export function TourAutoSwipe({
 
     hasAnimatedRef.current = true;
 
-    // Calculate swipe distance
-    const containerWidth = container.getBoundingClientRect().width;
-    const swipeDistance = containerWidth * SWIPE_DISTANCE_RATIO;
-    const targetTranslate = direction === "left" ? -swipeDistance : swipeDistance;
+    // Calculate drawer width based on number of actions
+    // Using default count since we can't detect the actual swipe config
+    const actionCount = DEFAULT_ACTION_COUNT;
+    const drawerWidth = actionCount * ACTION_BUTTON_WIDTH +
+      (actionCount - 1) * ACTION_BUTTON_GAP +
+      DRAWER_PADDING;
+    const targetTranslate = direction === "left" ? -drawerWidth : drawerWidth;
+
+    // Dispatch event to notify SwipeableCard to update its state
+    // This allows the action buttons to render properly
+    container.dispatchEvent(
+      new CustomEvent("tour-swipe-start", {
+        bubbles: true,
+        detail: { translateX: targetTranslate },
+      }),
+    );
 
     // Store original styles for cleanup
     const originalTransition = swipeableContent.style.transition;

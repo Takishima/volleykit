@@ -155,6 +155,7 @@ export function TourProvider({ children }: TourProviderProps) {
         freezePosition={isSwipeStep}
         disableBlur={isSwipeStep}
         blockInteraction={isAutoSwipeActive}
+        blockAllInteraction
       >
         <TourTooltip
           titleKey={currentStepData.titleKey}
