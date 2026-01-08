@@ -13,7 +13,6 @@ export const assignmentsTour: TourDefinition = {
       titleKey: "tour.assignments.welcome.title",
       descriptionKey: "tour.assignments.welcome.description",
       placement: "bottom",
-      completionEvent: { type: "auto", delay: 3000 },
     },
     {
       id: "swipe-validate",
@@ -21,7 +20,6 @@ export const assignmentsTour: TourDefinition = {
       titleKey: "tour.assignments.swipeValidate.title",
       descriptionKey: "tour.assignments.swipeValidate.description",
       placement: "bottom",
-      completionEvent: { type: "swipe" },
       autoSwipe: { direction: "left" },
     },
     {
@@ -30,7 +28,6 @@ export const assignmentsTour: TourDefinition = {
       titleKey: "tour.assignments.swipeExchange.title",
       descriptionKey: "tour.assignments.swipeExchange.description",
       placement: "bottom",
-      completionEvent: { type: "swipe" },
       autoSwipe: { direction: "right" },
     },
     {
@@ -39,7 +36,6 @@ export const assignmentsTour: TourDefinition = {
       titleKey: "tour.assignments.tapDetails.title",
       descriptionKey: "tour.assignments.tapDetails.description",
       placement: "bottom",
-      completionEvent: { type: "click" },
     },
   ],
 };
