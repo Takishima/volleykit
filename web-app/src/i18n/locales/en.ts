@@ -112,6 +112,7 @@ const en: Translations = {
     },
     accessibility: {
       swipeDemoInProgress: "Demonstrating swipe gesture",
+      spotlightLabel: "Guided tour",
     },
   },
   common: {

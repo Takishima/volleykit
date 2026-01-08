@@ -606,6 +606,7 @@ export interface Translations {
     };
     accessibility: {
       swipeDemoInProgress: string;
+      spotlightLabel: string;
     };
   };
 }

@@ -112,6 +112,7 @@ const it: Translations = {
     },
     accessibility: {
       swipeDemoInProgress: "Dimostrazione del gesto di scorrimento",
+      spotlightLabel: "Visita guidata",
     },
   },
   common: {

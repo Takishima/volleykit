@@ -112,6 +112,7 @@ const de: Translations = {
     },
     accessibility: {
       swipeDemoInProgress: "Wischgeste wird demonstriert",
+      spotlightLabel: "Geführte Tour",
     },
   },
   common: {
