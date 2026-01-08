@@ -189,6 +189,10 @@ const fr: Translations = {
     calendarModeInfo: "Accès en lecture seule à vos désignations",
     calendarModeHint: "Trouvez votre URL de calendrier dans VolleyManager sur la page Mes désignations",
     learnHowItWorks: "Découvrir comment VolleyKit fonctionne",
+    accountLocked: "Compte temporairement verrouillé",
+    lockoutRemainingTime: "Réessayez dans",
+    lockoutSeconds: "secondes",
+    tooManyAttempts: "Trop de tentatives de connexion échouées. Veuillez patienter avant de réessayer.",
   },
   calendarError: {
     title: "Erreur de calendrier",

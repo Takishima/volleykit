@@ -30,6 +30,15 @@ import {
   requiresApiPrefix,
   transformAuthFormData,
   validateAllowedOrigins,
+  // Auth lockout imports
+  type AuthLockoutKV,
+  checkLockoutStatus,
+  clearAuthLockout,
+  getAuthLockoutState,
+  isAuthRequest,
+  isFailedLoginResponse,
+  isSuccessfulLoginResponse,
+  recordFailedAttempt,
 } from "./utils";
 
 // OCR configuration constants
@@ -56,6 +65,7 @@ interface Env {
   RATE_LIMITER: RateLimiter;
   KILL_SWITCH?: string; // Set to "true" to disable the proxy
   MISTRAL_API_KEY?: string; // API key for Mistral OCR
+  AUTH_LOCKOUT?: AuthLockoutKV; // KV namespace for auth lockout state
 }
 
 function validateEnv(env: Env): void {
@@ -620,6 +630,35 @@ export default {
       });
     }
 
+    // Auth lockout check - block auth requests from locked-out IPs
+    // This is tamper-proof as the state is stored server-side in KV
+    const clientIP = request.headers.get("CF-Connecting-IP") || "unknown";
+    const isAuthReq = isAuthRequest(url.pathname, request.method);
+
+    if (isAuthReq && env.AUTH_LOCKOUT) {
+      const lockoutState = await getAuthLockoutState(env.AUTH_LOCKOUT, clientIP);
+      const lockoutStatus = checkLockoutStatus(lockoutState);
+
+      if (lockoutStatus.isLocked) {
+        return new Response(
+          JSON.stringify({
+            error: "Too many failed login attempts",
+            lockedUntil: lockoutStatus.remainingSeconds,
+            message: `Account locked. Try again in ${lockoutStatus.remainingSeconds} seconds.`,
+          }),
+          {
+            status: 423, // 423 Locked
+            headers: {
+              "Content-Type": "application/json",
+              "Retry-After": String(lockoutStatus.remainingSeconds),
+              ...corsHeaders(origin!),
+              ...securityHeaders(),
+            },
+          },
+        );
+      }
+    }
+
     // Build target URL
     // Extract the raw path + search from request URL to preserve URL encoding
     // This is critical for backslash (%5c) encoding required by TYPO3 Neos/Flow
@@ -722,6 +761,27 @@ export default {
 
     try {
       const response = await fetch(proxyRequest);
+
+      // Track auth attempts for lockout
+      // Must clone response to read body without consuming it
+      let responseBodyForCheck: string | undefined;
+      if (isAuthReq && env.AUTH_LOCKOUT) {
+        // Clone response to read body for auth result detection
+        const clonedResponse = response.clone();
+        try {
+          responseBodyForCheck = await clonedResponse.text();
+        } catch {
+          // If we can't read the body, continue without it
+        }
+
+        if (isSuccessfulLoginResponse(response)) {
+          // Clear lockout on successful login
+          await clearAuthLockout(env.AUTH_LOCKOUT, clientIP);
+        } else if (isFailedLoginResponse(response, responseBodyForCheck)) {
+          // Record failed attempt
+          await recordFailedAttempt(env.AUTH_LOCKOUT, clientIP);
+        }
+      }
 
       // Create response with CORS headers
       const responseHeaders = new Headers(response.headers);

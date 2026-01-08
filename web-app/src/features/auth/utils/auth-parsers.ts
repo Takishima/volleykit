@@ -32,6 +32,9 @@ const TFA_PAGE_INDICATORS = [
 /** Maximum characters to include in diagnostic HTML preview logs */
 const DIAGNOSTIC_PREVIEW_LENGTH = 500;
 
+/** HTTP status code for account lockout (from proxy brute-force protection) */
+const HTTP_STATUS_LOCKED = 423;
+
 /**
  * Login form fields extracted from the login page HTML.
  * The Neos Flow framework requires these fields for CSRF protection.
@@ -134,7 +137,7 @@ export function extractCsrfTokenFromPage(html: string): string | null {
  */
 export type LoginResult =
   | { success: true; csrfToken: string; dashboardHtml: string }
-  | { success: false; error: string };
+  | { success: false; error: string; lockedUntil?: number };
 
 /**
  * Submit login credentials to the authentication endpoint.
@@ -186,6 +189,26 @@ export async function submitLoginCredentials(
     },
     body: formData,
   });
+
+  // Handle lockout response from proxy (auth brute-force protection)
+  if (response.status === HTTP_STATUS_LOCKED) {
+    try {
+      const lockoutData = (await response.json()) as {
+        lockedUntil?: number;
+        message?: string;
+      };
+      return {
+        success: false,
+        error: lockoutData.message ?? "Account temporarily locked",
+        lockedUntil: lockoutData.lockedUntil,
+      };
+    } catch {
+      return {
+        success: false,
+        error: "Account temporarily locked due to too many failed attempts",
+      };
+    }
+  }
 
   if (!response.ok) {
     return { success: false, error: "Authentication request failed" };

@@ -61,6 +61,8 @@ interface AuthState {
   status: AuthStatus;
   user: UserProfile | null;
   error: string | null;
+  /** Seconds until lockout expires (for 423 Locked response from proxy) */
+  lockedUntil: number | null;
   csrfToken: string | null;
   /** The current data source for assignments and compensations */
   dataSource: DataSource;
@@ -202,6 +204,7 @@ export const useAuthStore = create<AuthState>()(
       status: "idle",
       user: null,
       error: null,
+      lockedUntil: null,
       csrfToken: null,
       dataSource: "api",
       calendarCode: null,
@@ -214,7 +217,7 @@ export const useAuthStore = create<AuthState>()(
       eligibleRoles: null,
 
       login: async (username: string, password: string): Promise<boolean> => {
-        set({ status: "loading", error: null });
+        set({ status: "loading", error: null, lockedUntil: null });
 
         try {
           const loginPageResponse = await fetch(LOGIN_PAGE_URL, {
@@ -306,11 +309,15 @@ export const useAuthStore = create<AuthState>()(
             return true;
           }
 
-          set({ status: "error", error: result.error });
+          set({
+            status: "error",
+            error: result.error,
+            lockedUntil: result.lockedUntil ?? null,
+          });
           return false;
         } catch (error) {
           const message = error instanceof Error ? error.message : "Login failed";
-          set({ status: "error", error: message });
+          set({ status: "error", error: message, lockedUntil: null });
           return false;
         }
       },

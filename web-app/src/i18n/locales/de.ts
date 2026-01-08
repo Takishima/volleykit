@@ -189,6 +189,10 @@ const de: Translations = {
     calendarModeInfo: "Nur-Lese-Zugriff auf Ihre Spieleinsätze",
     calendarModeHint: "Finden Sie Ihre Kalender-URL im VolleyManager auf der Seite Meine Einsätze",
     learnHowItWorks: "So funktioniert VolleyKit",
+    accountLocked: "Konto vorübergehend gesperrt",
+    lockoutRemainingTime: "Versuchen Sie es in",
+    lockoutSeconds: "Sekunden erneut",
+    tooManyAttempts: "Zu viele fehlgeschlagene Anmeldeversuche. Bitte warten Sie, bevor Sie es erneut versuchen.",
   },
   calendarError: {
     title: "Kalenderfehler",
