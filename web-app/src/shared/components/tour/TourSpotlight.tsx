@@ -22,6 +22,8 @@ interface TourSpotlightProps {
   disableBlur?: boolean;
   /** When true, blocks all interaction with the target element (during auto-swipe demo) */
   blockInteraction?: boolean;
+  /** When true, blocks interaction with the entire page except for the tour tooltip */
+  blockAllInteraction?: boolean;
 }
 
 const SPOTLIGHT_PADDING = 8;
@@ -90,6 +92,7 @@ export function TourSpotlight({
   freezePosition = false,
   disableBlur = false,
   blockInteraction = false,
+  blockAllInteraction = false,
 }: TourSpotlightProps) {
   // Start with null - position will be set after mount when element is ready
   const [targetRect, setTargetRect] = useState<TargetRect | null>(null);
@@ -301,6 +304,14 @@ export function TourSpotlight({
       aria-modal="true"
       aria-label="Guided tour"
     >
+      {/* Full-screen interaction blocker - blocks all page interaction during tour */}
+      {blockAllInteraction && (
+        <div
+          className="fixed inset-0 z-40 pointer-events-auto"
+          aria-hidden="true"
+        />
+      )}
+
       {/* Backdrop overlay with blur and cutout - pointer-events-none to let clicks through */}
       <div
         className={`fixed inset-0 z-40 bg-black/70 transition-opacity ${disableBlur ? "" : "backdrop-blur-sm"}`}

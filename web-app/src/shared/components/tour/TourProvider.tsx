@@ -38,13 +38,14 @@ export function TourProvider({ children }: TourProviderProps) {
   const isFirstStep = currentStep === 0;
 
   // Freeze spotlight position during swipe steps to keep drawer visible
-  const isSwipeStep = currentStepData?.completionEvent?.type === "swipe";
+  // A step is a "swipe step" if it has autoSwipe config (regardless of completionEvent)
   const hasAutoSwipe = Boolean(currentStepData?.autoSwipe);
+  const isSwipeStep = hasAutoSwipe;
   // Auto-swipe is completed only if it was completed for the current tour and step
   const isAutoSwipeCompleted =
     autoSwipeCompletedFor?.tour === activeTour &&
     autoSwipeCompletedFor?.step === currentStep;
-  const isAutoSwipeActive = isSwipeStep && hasAutoSwipe && !isAutoSwipeCompleted;
+  const isAutoSwipeActive = hasAutoSwipe && !isAutoSwipeCompleted;
 
   // Handle step completion
   const handleStepComplete = useCallback(() => {
@@ -148,13 +149,22 @@ export function TourProvider({ children }: TourProviderProps) {
   return (
     <>
       {children}
+      {/* blockAllInteraction is always enabled during the tour to prevent users from
+          accidentally navigating away, clicking buttons, or interacting with the page
+          in ways that could break the tour flow. Users can still interact with the
+          tour tooltip (next/previous/skip) and exit the tour at any time.
+
+          blockInteraction covers the target element during swipe steps so users can
+          see the drawer buttons but cannot click them - this demonstrates the feature
+          without triggering actual actions. */}
       <TourSpotlight
         targetSelector={currentStepData.targetSelector}
         placement={currentStepData.placement}
         onDismiss={handleDismiss}
         freezePosition={isSwipeStep}
         disableBlur={isSwipeStep}
-        blockInteraction={isAutoSwipeActive}
+        blockInteraction={isSwipeStep}
+        blockAllInteraction
       >
         <TourTooltip
           titleKey={currentStepData.titleKey}

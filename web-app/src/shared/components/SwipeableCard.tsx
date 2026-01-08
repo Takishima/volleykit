@@ -9,17 +9,18 @@ import {
 import {
   type SwipeConfig,
   type SwipeAction,
+  type TourSwipeStartEvent,
   DRAWER_OPEN_RATIO,
   FULL_SWIPE_RATIO,
   MINIMUM_SWIPE_RATIO,
+  ACTION_BUTTON_WIDTH,
+  ACTION_BUTTON_GAP,
+  DRAWER_PADDING,
 } from "../../types/swipe";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import { useSwipeGesture } from "@/shared/hooks/useSwipeGesture";
 
-// Layout constants for action buttons
-const ACTION_BUTTON_WIDTH = 72;
-const ACTION_BUTTON_GAP = 8;
-const DRAWER_PADDING = 16;
+// Layout constants for action buttons (others imported from types/swipe.ts)
 const MAX_DRAWER_WIDTH_RATIO = 0.8;
 const SWIPE_OVERSHOOT_MULTIPLIER = 1.2;
 const OPACITY_FADE_MULTIPLIER = 1.5;
@@ -272,6 +273,25 @@ export function SwipeableCard({
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
   }, [showActions, resetPosition]);
+
+  // Listen for tour auto-swipe events to update state and render action buttons.
+  // TourAutoSwipe dispatches 'tour-swipe-start' during guided tour demonstrations
+  // so SwipeableCard can update its React state and render the action buttons.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !hasAnyAction) return;
+
+    const handleTourSwipe = (e: Event) => {
+      const { translateX: targetTranslate } = (e as TourSwipeStartEvent).detail;
+      // Update React state so action buttons render
+      setTranslateX(targetTranslate);
+      currentTranslateRef.current = targetTranslate;
+      setIsDrawerOpen(true);
+    };
+
+    container.addEventListener("tour-swipe-start", handleTourSwipe);
+    return () => container.removeEventListener("tour-swipe-start", handleTourSwipe);
+  }, [containerRef, hasAnyAction, setTranslateX]);
 
   // Capture phase click handler prevents card expansion when drawer is open
   const handleClickCapture = useCallback(
