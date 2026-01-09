@@ -191,6 +191,7 @@ function ValidateGameModalComponent({
 
   const validationInfo = {
     isValidated: wizard.isValidated,
+    isInSafeMode: wizard.isInSafeMode,
     validatedInfo: wizard.validatedInfo,
     pendingScorer: wizard.pendingScorer,
     scoresheetNotRequired: wizard.scoresheetNotRequired,
