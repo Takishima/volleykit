@@ -10,6 +10,7 @@
 import { useState, useCallback, useRef } from 'react';
 import type {
   OCRProgress,
+  OCRResult,
   ParsedGameSheet,
   UseOCRScoresheetReturn,
   OCREngine,
@@ -52,6 +53,7 @@ export function useOCRScoresheet(): UseOCRScoresheetReturn {
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState<OCRProgress | null>(null);
   const [result, setResult] = useState<ParsedGameSheet | null>(null);
+  const [ocrResult, setOcrResult] = useState<OCRResult | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
   // Keep reference to current OCR engine for cancellation
@@ -71,6 +73,7 @@ export function useOCRScoresheet(): UseOCRScoresheetReturn {
       setIsProcessing(true);
       setProgress(null);
       setResult(null);
+      setOcrResult(null);
       setError(null);
 
       try {
@@ -84,10 +87,10 @@ export function useOCRScoresheet(): UseOCRScoresheetReturn {
         await engine.initialize();
 
         // Perform OCR
-        const ocrResult = await engine.recognize(imageBlob);
+        const rawOcrResult = await engine.recognize(imageBlob);
 
         // Parse the OCR result into structured data (uses bounding boxes for column detection)
-        const parsed = parseGameSheetWithOCR(ocrResult, { type: scoresheetType });
+        const parsed = parseGameSheetWithOCR(rawOcrResult, { type: scoresheetType });
 
         // Clean up
         await engine.terminate();
@@ -95,6 +98,7 @@ export function useOCRScoresheet(): UseOCRScoresheetReturn {
 
         // Update state
         setResult(parsed);
+        setOcrResult(rawOcrResult);
         setIsProcessing(false);
 
         return parsed;
@@ -138,6 +142,7 @@ export function useOCRScoresheet(): UseOCRScoresheetReturn {
     setIsProcessing(false);
     setProgress(null);
     setResult(null);
+    setOcrResult(null);
     setError(null);
   }, []);
 
@@ -146,6 +151,7 @@ export function useOCRScoresheet(): UseOCRScoresheetReturn {
     isProcessing,
     progress,
     result,
+    ocrResult,
     error,
     // Actions
     processImage,

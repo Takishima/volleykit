@@ -204,6 +204,8 @@ export interface OCRScoresheetState {
   progress: OCRProgress | null;
   /** Parsed result (null if not yet processed) */
   result: ParsedGameSheet | null;
+  /** Raw OCR result with bounding boxes (null if not yet processed) */
+  ocrResult: OCRResult | null;
   /** Error if processing failed */
   error: Error | null;
 }

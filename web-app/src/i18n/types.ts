@@ -578,6 +578,14 @@ export interface Translations {
         licenseStatus: string;
         role: string;
         noData: string;
+        imageOverlay: string;
+        hideOverlay: string;
+        showOverlay: string;
+        matchedWords: string;
+        otherWords: string;
+        capturedImage: string;
+        wordsDetected: string;
+        wordsMatched: string;
       };
     };
   };
