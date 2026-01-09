@@ -11,8 +11,10 @@
  * - Swiss-specific formats (tabular layout, multilingual headers)
  */
 
-// Import from the main app's OCR feature
+// Import from the main app's OCR feature barrel file
+// Using the barrel export ensures we're using the public API
 import {
+  // Parsing utilities
   parseGameSheet as parseElectronicSheet,
   parseGameSheetWithType,
   parseGameSheetWithOCR,
@@ -21,15 +23,13 @@ import {
   normalizeName,
   getAllPlayers,
   getAllOfficials,
-} from '@volleykit/ocr/utils/player-list-parser';
-
-import {
+  // Roster comparison utilities
   compareRosters,
   compareTeamRosters,
   calculateMatchScore,
   calculateNameSimilarity,
   normalizeForComparison,
-} from '@volleykit/ocr/utils/roster-comparison';
+} from '@volleykit/ocr';
 
 /**
  * Parse a game sheet from OCR text.
