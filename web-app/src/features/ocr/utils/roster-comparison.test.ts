@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   normalizeForComparison,
   calculateNameSimilarity,
+  calculateWordOrderIndependentSimilarity,
   compareRosters,
   compareTeamRosters,
   calculateMatchScore,
@@ -58,6 +59,74 @@ describe('calculateNameSimilarity', () => {
   it('returns 0 for empty strings', () => {
     expect(calculateNameSimilarity('', 'Anna')).toBe(0);
     expect(calculateNameSimilarity('Anna', '')).toBe(0);
+  });
+});
+
+describe('calculateWordOrderIndependentSimilarity', () => {
+  it('returns high score for exact match', () => {
+    const score = calculateWordOrderIndependentSimilarity('Emma van Berg', 'Emma van Berg');
+    expect(score).toBeGreaterThanOrEqual(90);
+  });
+
+  it('matches names with different word order', () => {
+    // OCR: "Van Berg Emma" vs Roster: "Emma van Berg"
+    const score = calculateWordOrderIndependentSimilarity(
+      'Van Berg Emma',
+      'Emma van Berg',
+    );
+    expect(score).toBeGreaterThanOrEqual(90);
+  });
+
+  it('matches names with extra middle names', () => {
+    // OCR only has first name, roster has full name
+    // "Emma" vs "Emma Sophie van Berg"
+    const score = calculateWordOrderIndependentSimilarity('Emma', 'Emma Sophie van Berg');
+    // 1 word matches out of 4 = 25% → 25% * 95 = ~24
+    expect(score).toBeGreaterThan(20);
+  });
+
+  it('matches compound surnames with particles', () => {
+    // Both have the same words, different order
+    const score = calculateWordOrderIndependentSimilarity(
+      'Berg Emma Van',
+      'Emma Sophie van Berg',
+    );
+    // 3 words match (emma, van, berg) out of 4 = 75% → ~71
+    expect(score).toBeGreaterThanOrEqual(70);
+  });
+
+  it('handles nickname/partial matches (Alex vs Alexander)', () => {
+    const score = calculateWordOrderIndependentSimilarity('Schmidt Alex', 'Alexander Schmidt');
+    // "schmidt" matches exactly, "alex" partially matches "alexander" (prefix)
+    expect(score).toBeGreaterThanOrEqual(70);
+  });
+
+  it('handles officials with reversed name format', () => {
+    // OCR: "Santos Maria Lucia" (Lastname Firstname format)
+    // Roster: "Maria Lucia Santos" (also reversed or different format)
+    const score = calculateWordOrderIndependentSimilarity(
+      'Santos Maria Lucia',
+      'Maria Lucia Santos',
+    );
+    expect(score).toBeGreaterThanOrEqual(90);
+  });
+
+  it('handles accented characters', () => {
+    const score = calculateWordOrderIndependentSimilarity(
+      'BÖHLER CÉLINE',
+      'Céline Böhler',
+    );
+    expect(score).toBeGreaterThanOrEqual(90);
+  });
+
+  it('returns 0 for completely different names', () => {
+    const score = calculateWordOrderIndependentSimilarity('John Smith', 'Maria Garcia');
+    expect(score).toBe(0);
+  });
+
+  it('returns 0 for empty strings', () => {
+    expect(calculateWordOrderIndependentSimilarity('', 'Anna')).toBe(0);
+    expect(calculateWordOrderIndependentSimilarity('Anna', '')).toBe(0);
   });
 });
 
@@ -174,6 +243,82 @@ describe('compareRosters', () => {
 
     const matches = results.filter((r) => r.status === 'match');
     expect(matches).toHaveLength(1);
+  });
+
+  // OCR matching scenarios with word-order variations
+  describe('word-order-independent matching', () => {
+    it('matches compound surnames with particles (van Berg)', () => {
+      // OCR parses "VAN BERG EMMA" as lastName="Van", firstName="Berg Emma"
+      // Roster has firstName="Emma Sophie", lastName="van Berg"
+      const ocrPlayers = [createOCRPlayer('Berg Emma', 'Van')];
+      const rosterPlayers = [createRosterPlayer('1', 'Emma Sophie', 'van Berg')];
+
+      const results = compareRosters(ocrPlayers, rosterPlayers);
+
+      expect(results[0]!.status).toBe('match');
+      expect(results[0]!.confidence).toBeGreaterThanOrEqual(70);
+    });
+
+    it('matches officials with reversed name format (Lastname Firstname)', () => {
+      // OCR: "Schmidt Alex" parsed as lastName="Alex", firstName="Schmidt" (wrong)
+      // Roster: firstName="Alexander", lastName="Schmidt"
+      // Word-order-independent should still match "Schmidt" + partial "Alex/Alexander"
+      const ocrPlayers = [createOCRPlayer('Schmidt', 'Alex')];
+      const rosterPlayers = [createRosterPlayer('1', 'Alexander', 'Schmidt')];
+
+      const results = compareRosters(ocrPlayers, rosterPlayers);
+
+      expect(results[0]!.status).toBe('match');
+      expect(results[0]!.confidence).toBeGreaterThanOrEqual(50);
+    });
+
+    it('matches three-part names with reordering', () => {
+      // OCR: "Santos Maria Lucia" parsed incorrectly
+      // Roster: "Maria Lucia Santos"
+      const ocrPlayers = [createOCRPlayer('Maria Lucia', 'Santos')];
+      const rosterPlayers = [createRosterPlayer('1', 'Maria Lucia', 'Santos')];
+
+      const results = compareRosters(ocrPlayers, rosterPlayers);
+
+      expect(results[0]!.status).toBe('match');
+      expect(results[0]!.confidence).toBeGreaterThanOrEqual(90);
+    });
+
+    it('does not match when OCR has only one partial name word', () => {
+      // OCR only captures "EMMA" but roster has "Emma Sophie van Berg"
+      // 1 word out of 4 = 25% - below threshold, should NOT match to avoid false positives
+      const ocrPlayers = [createOCRPlayer('', 'Emma')];
+      const rosterPlayers = [createRosterPlayer('1', 'Emma Sophie', 'van Berg')];
+
+      const results = compareRosters(ocrPlayers, rosterPlayers);
+
+      // Should NOT match - too little information to be confident
+      expect(results[0]!.status).toBe('ocr-only');
+    });
+
+    it('matches when OCR has partial name with last name', () => {
+      // OCR captures "Emma van Berg" but roster has "Emma Sophie van Berg"
+      // 3 words out of 4 match = 75% - above threshold
+      const ocrPlayers = [createOCRPlayer('Emma', 'van Berg')];
+      const rosterPlayers = [createRosterPlayer('1', 'Emma Sophie', 'van Berg')];
+
+      const results = compareRosters(ocrPlayers, rosterPlayers);
+
+      expect(results[0]!.status).toBe('match');
+      expect(results[0]!.confidence).toBeGreaterThanOrEqual(70);
+    });
+
+    it('matches accented names from OCR', () => {
+      // OCR: "BÖHLER CÉLINE" → firstName="Céline", lastName="Böhler"
+      // Roster: firstName="Céline", lastName="Böhler"
+      const ocrPlayers = [createOCRPlayer('Céline', 'Böhler')];
+      const rosterPlayers = [createRosterPlayer('1', 'Céline', 'Böhler')];
+
+      const results = compareRosters(ocrPlayers, rosterPlayers);
+
+      expect(results[0]!.status).toBe('match');
+      expect(results[0]!.confidence).toBe(100);
+    });
   });
 });
 
