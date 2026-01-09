@@ -160,3 +160,21 @@ export const COMPENSATION_PROPERTIES = [
   "refereeGame.game.isVolleyCupGameWithoutNationalAssociationLeagueCategoryTeams",
   "refereeGame.game.displayName",
 ];
+
+/**
+ * Property configuration for referee backup (Pikett) endpoint.
+ * Used to fetch on-call referee schedules for NLA/NLB games.
+ */
+export const REFEREE_BACKUP_PROPERTIES = [
+  "date",
+  "weekday",
+  "calendarWeek",
+  "joinedNlaReferees",
+  "joinedNlbReferees",
+  // NLA referee details
+  "nlaReferees.*.indoorReferee.person.primaryEmailAddress",
+  "nlaReferees.*.indoorReferee.person.primaryPhoneNumber",
+  // NLB referee details
+  "nlbReferees.*.indoorReferee.person.primaryEmailAddress",
+  "nlbReferees.*.indoorReferee.person.primaryPhoneNumber",
+];
