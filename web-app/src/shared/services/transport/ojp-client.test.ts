@@ -3,7 +3,14 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { selectBestTrip, extractDestinationStation, extractOriginStation, type OjpTrip } from "./ojp-client";
+import {
+  selectBestTrip,
+  extractDestinationStation,
+  extractOriginStation,
+  extractFinalWalkingMinutes,
+  calculateActualArrivalTime,
+  type OjpTrip,
+} from "./ojp-client";
 
 describe("selectBestTrip", () => {
   // Helper to create trip objects
@@ -606,5 +613,262 @@ describe("extractOriginStation", () => {
 
     const result = extractOriginStation(trip);
     expect(result).toEqual({ id: "8502206", name: "Schönenwerd SO, Bahnhof" });
+  });
+});
+
+describe("extractFinalWalkingMinutes", () => {
+  const baseTrip: OjpTrip = {
+    duration: "PT1H",
+    startTime: "2025-01-15T12:00:00Z",
+    endTime: "2025-01-15T13:00:00Z",
+    transfers: 0,
+    leg: [],
+  };
+
+  it("returns 0 when no legs exist", () => {
+    const result = extractFinalWalkingMinutes(baseTrip);
+    expect(result).toBe(0);
+  });
+
+  it("returns 0 when no timed legs exist", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      leg: [
+        { continuousLeg: { duration: "PT10M" } },
+      ],
+    };
+    const result = extractFinalWalkingMinutes(trip);
+    expect(result).toBe(0);
+  });
+
+  it("returns 0 when trip ends with a timed leg", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      leg: [
+        {
+          timedLeg: {
+            legBoard: { stopPointRef: "ch:1:sloid:8503000", stopPointName: { text: "Zürich HB" } },
+            legAlight: { stopPointRef: "ch:1:sloid:8507000", stopPointName: { text: "Bern" } },
+          },
+        },
+      ],
+    };
+    const result = extractFinalWalkingMinutes(trip);
+    expect(result).toBe(0);
+  });
+
+  it("extracts walking time from final continuousLeg", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      leg: [
+        {
+          timedLeg: {
+            legBoard: { stopPointRef: "ch:1:sloid:8503000", stopPointName: { text: "Zürich HB" } },
+            legAlight: { stopPointRef: "ch:1:sloid:8507000", stopPointName: { text: "Bern" } },
+          },
+        },
+        { continuousLeg: { duration: "PT5M" } },
+      ],
+    };
+    const result = extractFinalWalkingMinutes(trip);
+    expect(result).toBe(5);
+  });
+
+  it("extracts walking time with hours and minutes", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      leg: [
+        {
+          timedLeg: {
+            legBoard: { stopPointRef: "ch:1:sloid:8503000", stopPointName: { text: "Zürich HB" } },
+            legAlight: { stopPointRef: "ch:1:sloid:8507000", stopPointName: { text: "Bern" } },
+          },
+        },
+        { continuousLeg: { duration: "PT1H15M" } },
+      ],
+    };
+    const result = extractFinalWalkingMinutes(trip);
+    expect(result).toBe(75);
+  });
+
+  it("sums multiple continuous legs after last timed leg", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      leg: [
+        {
+          timedLeg: {
+            legBoard: { stopPointRef: "ch:1:sloid:8503000", stopPointName: { text: "Zürich HB" } },
+            legAlight: { stopPointRef: "ch:1:sloid:8507000", stopPointName: { text: "Bern" } },
+          },
+        },
+        { continuousLeg: { duration: "PT3M" } },
+        { continuousLeg: { duration: "PT7M" } },
+      ],
+    };
+    const result = extractFinalWalkingMinutes(trip);
+    expect(result).toBe(10);
+  });
+
+  it("ignores continuous legs before the last timed leg", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      leg: [
+        { continuousLeg: { duration: "PT10M" } }, // Initial walk to station
+        {
+          timedLeg: {
+            legBoard: { stopPointRef: "ch:1:sloid:8503000", stopPointName: { text: "Zürich HB" } },
+            legAlight: { stopPointRef: "ch:1:sloid:8500218", stopPointName: { text: "Olten" } },
+          },
+        },
+        { continuousLeg: { duration: "PT2M" } }, // Transfer walk
+        {
+          timedLeg: {
+            legBoard: { stopPointRef: "ch:1:sloid:8500218", stopPointName: { text: "Olten" } },
+            legAlight: { stopPointRef: "ch:1:sloid:8507000", stopPointName: { text: "Bern" } },
+          },
+        },
+        { continuousLeg: { duration: "PT8M" } }, // Final walk to destination
+      ],
+    };
+    const result = extractFinalWalkingMinutes(trip);
+    // Should only count the 8 minutes after the last timed leg
+    expect(result).toBe(8);
+  });
+
+  it("handles legs without continuousLeg property", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      leg: [
+        {
+          timedLeg: {
+            legBoard: { stopPointRef: "ch:1:sloid:8503000", stopPointName: { text: "Zürich HB" } },
+            legAlight: { stopPointRef: "ch:1:sloid:8507000", stopPointName: { text: "Bern" } },
+          },
+        },
+        {}, // Empty leg (transfer leg without continuousLeg)
+        { continuousLeg: { duration: "PT5M" } },
+      ],
+    };
+    const result = extractFinalWalkingMinutes(trip);
+    expect(result).toBe(5);
+  });
+});
+
+describe("calculateActualArrivalTime", () => {
+  const baseTrip: OjpTrip = {
+    duration: "PT1H",
+    startTime: "2025-01-15T12:00:00Z",
+    endTime: "2025-01-15T13:00:00Z",
+    transfers: 0,
+    leg: [],
+  };
+
+  it("returns endTime when no walking after last timed leg", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      leg: [
+        {
+          timedLeg: {
+            legBoard: { stopPointRef: "ch:1:sloid:8503000", stopPointName: { text: "Zürich HB" } },
+            legAlight: { stopPointRef: "ch:1:sloid:8507000", stopPointName: { text: "Bern" } },
+          },
+        },
+      ],
+    };
+    const result = calculateActualArrivalTime(trip);
+    expect(result).toBe("2025-01-15T13:00:00Z");
+  });
+
+  it("adds walking time to endTime", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      endTime: "2025-01-15T13:00:00.000Z",
+      leg: [
+        {
+          timedLeg: {
+            legBoard: { stopPointRef: "ch:1:sloid:8503000", stopPointName: { text: "Zürich HB" } },
+            legAlight: { stopPointRef: "ch:1:sloid:8507000", stopPointName: { text: "Bern" } },
+          },
+        },
+        { continuousLeg: { duration: "PT10M" } },
+      ],
+    };
+    const result = calculateActualArrivalTime(trip);
+    // 13:00 + 10 minutes = 13:10
+    expect(new Date(result).toISOString()).toBe("2025-01-15T13:10:00.000Z");
+  });
+
+  it("handles crossing hour boundary", () => {
+    const trip: OjpTrip = {
+      ...baseTrip,
+      endTime: "2025-01-15T13:55:00.000Z",
+      leg: [
+        {
+          timedLeg: {
+            legBoard: { stopPointRef: "ch:1:sloid:8503000", stopPointName: { text: "Zürich HB" } },
+            legAlight: { stopPointRef: "ch:1:sloid:8507000", stopPointName: { text: "Bern" } },
+          },
+        },
+        { continuousLeg: { duration: "PT15M" } },
+      ],
+    };
+    const result = calculateActualArrivalTime(trip);
+    // 13:55 + 15 minutes = 14:10
+    expect(new Date(result).toISOString()).toBe("2025-01-15T14:10:00.000Z");
+  });
+});
+
+describe("selectBestTrip with walking time", () => {
+  // Helper to create trip objects with walking legs
+  const createTripWithWalking = (
+    endTime: string,
+    transfers: number,
+    finalWalkingMinutes: number,
+    duration = "PT1H",
+    startTime = "2025-01-15T12:00:00Z",
+  ): OjpTrip => ({
+    duration,
+    startTime,
+    endTime,
+    transfers,
+    leg: [
+      {
+        timedLeg: {
+          legBoard: { stopPointRef: "ch:1:sloid:8503000", stopPointName: { text: "Zürich HB" } },
+          legAlight: { stopPointRef: "ch:1:sloid:8507000", stopPointName: { text: "Bern" } },
+        },
+      },
+      ...(finalWalkingMinutes > 0 ? [{ continuousLeg: { duration: `PT${finalWalkingMinutes}M` } }] : []),
+    ],
+  });
+
+  it("excludes trips that arrive late due to walking time", () => {
+    const targetArrivalTime = new Date("2025-01-15T14:00:00Z");
+    const trips: OjpTrip[] = [
+      // Arrives at station 13:55, + 10 min walk = 14:05 (late)
+      createTripWithWalking("2025-01-15T13:55:00Z", 0, 10),
+      // Arrives at station 13:45, + 10 min walk = 13:55 (on time)
+      createTripWithWalking("2025-01-15T13:45:00Z", 1, 10),
+    ];
+
+    const result = selectBestTrip(trips, targetArrivalTime);
+
+    // Should select the second trip because first is late after walking
+    expect(result.endTime).toBe("2025-01-15T13:45:00Z");
+  });
+
+  it("considers walking time when comparing arrival proximity", () => {
+    const targetArrivalTime = new Date("2025-01-15T14:00:00Z");
+    const trips: OjpTrip[] = [
+      // Arrives at station 13:50, no walking = 13:50 actual
+      createTripWithWalking("2025-01-15T13:50:00Z", 1, 0),
+      // Arrives at station 13:45, + 10 min walk = 13:55 actual (closer to target)
+      createTripWithWalking("2025-01-15T13:45:00Z", 1, 10),
+    ];
+
+    const result = selectBestTrip(trips, targetArrivalTime);
+
+    // With same transfers, should prefer the one arriving closer to target (13:55 vs 13:50)
+    expect(result.endTime).toBe("2025-01-15T13:45:00Z");
   });
 });

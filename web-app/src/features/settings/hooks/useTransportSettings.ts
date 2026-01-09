@@ -9,6 +9,7 @@ import {
   DEFAULT_MAX_DISTANCE_KM,
   DEFAULT_MAX_TRAVEL_TIME_MINUTES,
   type DistanceFilter,
+  type SbbDestinationType,
 } from "@/shared/stores/settings";
 import { useActiveAssociationCode } from "@/features/auth/hooks/useActiveAssociation";
 import { useTravelTimeAvailable } from "@/shared/hooks/useTravelTime";
@@ -49,6 +50,8 @@ export function useTransportSettings() {
     setMaxTravelTimeForAssociation,
     arrivalBufferByAssociation,
     setArrivalBufferForAssociation,
+    sbbDestinationType,
+    setSbbDestinationType,
   } = useSettingsStore(
     useShallow((state) => ({
       homeLocation: state.homeLocation,
@@ -62,6 +65,8 @@ export function useTransportSettings() {
       setMaxTravelTimeForAssociation: state.setMaxTravelTimeForAssociation,
       arrivalBufferByAssociation: state.travelTimeFilter.arrivalBufferByAssociation,
       setArrivalBufferForAssociation: state.setArrivalBufferForAssociation,
+      sbbDestinationType: state.travelTimeFilter.sbbDestinationType ?? "address",
+      setSbbDestinationType: state.setSbbDestinationType,
     })),
   );
 
@@ -209,6 +214,13 @@ export function useTransportSettings() {
     [associationCode, setMaxTravelTimeForAssociation],
   );
 
+  const handleSbbDestinationTypeChange = useCallback(
+    (type: SbbDestinationType) => {
+      setSbbDestinationType(type);
+    },
+    [setSbbDestinationType],
+  );
+
   const hasHomeLocation = Boolean(homeLocation);
   const hasAssociation = Boolean(associationCode);
   const canEnableTransport = hasHomeLocation && isTransportAvailable && hasAssociation;
@@ -225,6 +237,7 @@ export function useTransportSettings() {
     showClearConfirm,
     hasHomeLocation,
     canEnableTransport,
+    sbbDestinationType: sbbDestinationType as SbbDestinationType,
 
     // Constants
     minArrivalBuffer: MIN_ARRIVAL_BUFFER_MINUTES,
@@ -242,6 +255,7 @@ export function useTransportSettings() {
     handleArrivalBufferChange,
     handleMaxDistanceChange,
     handleMaxTravelTimeChange,
+    handleSbbDestinationTypeChange,
     setShowClearConfirm,
   };
 }

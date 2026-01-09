@@ -140,6 +140,7 @@ function AssignmentCardComponent({
     hallCoords,
     hallId,
     city,
+    hallAddress: fullAddress,
     gameStartTime: gameStartingDateTime,
     language: locale,
   });

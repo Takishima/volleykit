@@ -101,6 +101,44 @@ describe("sbb-url", () => {
         expect(url).toContain("nach=Bern");
         expect(url).not.toContain("stops=");
       });
+
+      it("uses destinationAddress when provided without station IDs", () => {
+        const params = {
+          ...baseParams,
+          destinationAddress: "Sporthalle Bern, Sportstrasse 1, 3000 Bern",
+        };
+        const url = generateSbbUrl(params);
+        // Should use the full address instead of just the city
+        expect(url).toContain("nach=Sporthalle+Bern%2C+Sportstrasse+1%2C+3000+Bern");
+        expect(url).not.toContain("stops=");
+      });
+
+      it("uses destinationAddress over destinationStation name when both provided", () => {
+        const params = {
+          ...baseParams,
+          destinationStation: { id: "8507000", name: "Bern" },
+          destinationAddress: "Sporthalle Bern, Sportstrasse 1, 3000 Bern",
+        };
+        const url = generateSbbUrl(params);
+        // Should use the full hall address, not just the station name
+        expect(url).toContain("nach=Sporthalle+Bern%2C+Sportstrasse+1%2C+3000+Bern");
+        // Should use von/nach format because destinationAddress overrides station ID routing
+        expect(url).not.toContain("stops=");
+      });
+
+      it("uses von/nach when destinationAddress overrides station IDs", () => {
+        const params = {
+          ...baseParams,
+          originStation: { id: "8503000", name: "Zürich HB" },
+          destinationStation: { id: "8507000", name: "Bern" },
+          destinationAddress: "Sporthalle Bern, Sportstrasse 1, 3000 Bern",
+        };
+        const url = generateSbbUrl(params);
+        // When destinationAddress is provided, should use von/nach for full route to final destination
+        expect(url).toContain("von=Z%C3%BCrich+HB");
+        expect(url).toContain("nach=Sporthalle+Bern%2C+Sportstrasse+1%2C+3000+Bern");
+        expect(url).not.toContain("stops=");
+      });
     });
 
     describe("stops JSON format (with station IDs)", () => {

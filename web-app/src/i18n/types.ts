@@ -291,6 +291,10 @@ export interface Translations {
       maxTravelTimeDescription: string;
       arrivalTime: string;
       arrivalTimeDescription: string;
+      sbbDestination: string;
+      sbbDestinationDescription: string;
+      sbbDestinationAddress: string;
+      sbbDestinationStation: string;
       cacheInfo: string;
       cacheEntries: string;
       refreshCache: string;

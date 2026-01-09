@@ -424,6 +424,10 @@ const fr: Translations = {
       maxTravelTimeDescription: "Masquer les échanges avec des temps de trajet plus longs",
       arrivalTime: "Arrivée avant le match",
       arrivalTimeDescription: "Minutes d'arrivée avant le début du match",
+      sbbDestination: "Destination CFF",
+      sbbDestinationDescription: "Choisissez où le lien CFF doit mener",
+      sbbDestinationAddress: "Salle de sport (y.c. marche)",
+      sbbDestinationStation: "Dernier arrêt de transport public",
       cacheInfo:
         "Les temps de trajet sont mis en cache par type de jour (semaine/samedi/dimanche) pendant 14 jours.",
       cacheEntries: "{count} trajets en cache",

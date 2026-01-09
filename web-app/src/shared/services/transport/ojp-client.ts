@@ -124,13 +124,18 @@ export async function calculateTravelTime(
     const originStation = extractOriginStation(trip);
     const destinationStation = extractDestinationStation(trip);
 
+    // Calculate actual arrival time including walking from final stop to destination
+    const arrivalTime = calculateActualArrivalTime(trip);
+    const finalWalkingMinutes = extractFinalWalkingMinutes(trip);
+
     return {
       durationMinutes,
       departureTime: trip.startTime,
-      arrivalTime: trip.endTime,
+      arrivalTime,
       transfers: trip.transfers,
       originStation,
       destinationStation,
+      finalWalkingMinutes,
       tripData: options.includeTrips ? trip : undefined,
     };
   } catch (error) {
@@ -166,12 +171,22 @@ interface OjpTimedLeg {
 }
 
 /**
+ * Continuous leg from OJP SDK representing walking/cycling segments.
+ * These appear at the start or end of a trip for walking to/from stations.
+ */
+interface OjpContinuousLeg {
+  /** ISO 8601 duration string (e.g., "PT5M" for 5 minutes walking) */
+  duration: string;
+}
+
+/**
  * Leg structure from OJP SDK. A trip consists of multiple legs.
  * Each leg can be a timedLeg (public transport), transferLeg (walking between stations),
  * or continuousLeg (walking to/from stations).
  */
 interface OjpLeg {
   timedLeg?: OjpTimedLeg;
+  continuousLeg?: OjpContinuousLeg;
 }
 
 /**
@@ -318,6 +333,60 @@ function findLastTimedLeg(trip: OjpTrip): OjpTimedLeg | undefined {
 }
 
 /**
+ * Extract the total walking duration after the last public transport segment.
+ * This accounts for walking from the final stop to the destination.
+ *
+ * @param trip The trip containing multiple legs
+ * @returns Total walking duration in minutes after the last timed leg
+ */
+export function extractFinalWalkingMinutes(trip: OjpTrip): number {
+  // Find the index of the last timed leg
+  let lastTimedLegIndex = -1;
+  for (let i = trip.leg.length - 1; i >= 0; i--) {
+    if (trip.leg[i]?.timedLeg) {
+      lastTimedLegIndex = i;
+      break;
+    }
+  }
+
+  // If no timed legs, there's no "final" walking (might be all walking trip)
+  if (lastTimedLegIndex === -1) {
+    return 0;
+  }
+
+  // Sum up walking duration from all legs after the last timed leg
+  let totalWalkingMinutes = 0;
+  for (let i = lastTimedLegIndex + 1; i < trip.leg.length; i++) {
+    const leg = trip.leg[i];
+    if (leg?.continuousLeg?.duration) {
+      totalWalkingMinutes += parseDurationToMinutes(leg.continuousLeg.duration);
+    }
+  }
+
+  return totalWalkingMinutes;
+}
+
+/**
+ * Calculate the actual arrival time at the destination, including final walking.
+ *
+ * @param trip The trip data
+ * @returns ISO 8601 timestamp of actual arrival at destination
+ */
+export function calculateActualArrivalTime(trip: OjpTrip): string {
+  const finalWalkingMinutes = extractFinalWalkingMinutes(trip);
+
+  if (finalWalkingMinutes === 0) {
+    return trip.endTime;
+  }
+
+  // Add walking time to the trip end time
+  const endTime = new Date(trip.endTime);
+  endTime.setMinutes(endTime.getMinutes() + finalWalkingMinutes);
+
+  return endTime.toISOString();
+}
+
+/**
  * Extract origin station info from an OJP trip.
  * Gets the boarding station from the first timed leg.
  */
@@ -339,7 +408,7 @@ export function extractDestinationStation(trip: OjpTrip): StationInfo | undefine
  * Select the best trip based on target arrival time.
  *
  * Selection criteria (in priority order):
- * 1. Must arrive on time (before or at target arrival time)
+ * 1. Must arrive on time (before or at target arrival time) - includes walking time to destination
  * 2. Prefer fewer transfers (less stressful journey)
  * 3. Prefer arrival closest to target time (minimize waiting)
  *
@@ -357,10 +426,10 @@ export function selectBestTrip(trips: OjpTrip[], targetArrivalTime?: Date): OjpT
 
   const targetTime = targetArrivalTime.getTime();
 
-  // Find trips that arrive on time (before or at target)
+  // Find trips that arrive on time (before or at target) - using actual arrival including walking
   const onTimeTrips = trips.filter((trip) => {
-    const arrivalTime = new Date(trip.endTime).getTime();
-    return arrivalTime <= targetTime;
+    const actualArrivalTime = new Date(calculateActualArrivalTime(trip)).getTime();
+    return actualArrivalTime <= targetTime;
   });
 
   // If no trips arrive on time, return the first trip (earliest arrival)
@@ -377,9 +446,9 @@ export function selectBestTrip(trips: OjpTrip[], targetArrivalTime?: Date): OjpT
     if (trip.transfers > best.transfers) {
       return best;
     }
-    // Same transfers: prefer later arrival (closer to target time)
-    const bestArrival = new Date(best.endTime).getTime();
-    const tripArrival = new Date(trip.endTime).getTime();
+    // Same transfers: prefer later arrival (closer to target time) - using actual arrival
+    const bestArrival = new Date(calculateActualArrivalTime(best)).getTime();
+    const tripArrival = new Date(calculateActualArrivalTime(trip)).getTime();
     return tripArrival > bestArrival ? trip : best;
   });
 }

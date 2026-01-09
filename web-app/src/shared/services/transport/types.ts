@@ -21,7 +21,7 @@ export interface TravelTimeResult {
   durationMinutes: number;
   /** ISO 8601 departure time */
   departureTime: string;
-  /** ISO 8601 arrival time */
+  /** ISO 8601 arrival time (includes walking to final destination) */
   arrivalTime: string;
   /** Number of transfers required */
   transfers: number;
@@ -29,6 +29,8 @@ export interface TravelTimeResult {
   originStation?: StationInfo;
   /** Destination station info for SBB deep linking */
   destinationStation?: StationInfo;
+  /** Walking time from last public transport stop to destination (minutes) */
+  finalWalkingMinutes?: number;
   /** Raw trip data for future itinerary display */
   tripData?: unknown;
 }
