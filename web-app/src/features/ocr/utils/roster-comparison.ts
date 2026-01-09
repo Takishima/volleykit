@@ -100,14 +100,82 @@ export interface RosterPlayerForComparison {
   lastName?: string;
 }
 
+/**
+ * Pre-computed Fuse instances and word arrays for a roster player.
+ * Used to avoid repeated Fuse instantiation during comparison loops.
+ */
+interface RosterPlayerCache {
+  fullNameWords: string[];
+  fullNameFuse: Fuse<string> | null;
+  lastNameWords: string[];
+  lastNameFuse: Fuse<string> | null;
+  firstNameWords: string[];
+  firstNameFuse: Fuse<string> | null;
+}
+
+// =============================================================================
+// Fuse Cache
+// =============================================================================
+
+/**
+ * Build a cache of pre-computed Fuse instances for roster players.
+ * This avoids O(n*m) Fuse instantiation during roster comparison.
+ */
+function buildRosterPlayerCache(
+  rosterPlayers: RosterPlayerForComparison[],
+): Map<string, RosterPlayerCache> {
+  const cache = new Map<string, RosterPlayerCache>();
+
+  for (const player of rosterPlayers) {
+    const fullName = [player.firstName ?? '', player.lastName ?? '']
+      .filter((p) => p && p.trim())
+      .join(' ');
+
+    // For word-order-independent matching (uses extractNameWords logic)
+    const fullNameNormalized = normalizeForComparisonInternal(fullName);
+    const fullNameWords = fullNameNormalized
+      ? fullNameNormalized.split(' ').filter((w) => w.length >= 2 || NOBILITY_PARTICLES.has(w))
+      : [];
+    const fullNameFuse =
+      fullNameWords.length > 0 ? new Fuse(fullNameWords, FUSE_WORD_OPTIONS) : null;
+
+    // For structured matching (lastName)
+    const lastNameNormalized = normalizeForComparisonInternal(player.lastName ?? '');
+    const lastNameWords = lastNameNormalized
+      ? lastNameNormalized.split(' ').filter((w) => w.length > 1)
+      : [];
+    const lastNameFuse =
+      lastNameWords.length > 0 ? new Fuse(lastNameWords, FUSE_WORD_OPTIONS) : null;
+
+    // For structured matching (firstName)
+    const firstNameNormalized = normalizeForComparisonInternal(player.firstName ?? '');
+    const firstNameWords = firstNameNormalized
+      ? firstNameNormalized.split(' ').filter((w) => w.length > 1)
+      : [];
+    const firstNameFuse =
+      firstNameWords.length > 0 ? new Fuse(firstNameWords, FUSE_WORD_OPTIONS) : null;
+
+    cache.set(player.id, {
+      fullNameWords,
+      fullNameFuse,
+      lastNameWords,
+      lastNameFuse,
+      firstNameWords,
+      firstNameFuse,
+    });
+  }
+
+  return cache;
+}
+
 // =============================================================================
 // Name Similarity
 // =============================================================================
 
 /**
- * Normalize a string for comparison (lowercase, remove accents, trim)
+ * Internal normalize function (used by cache building before export is defined)
  */
-export function normalizeForComparison(str: string): string {
+function normalizeForComparisonInternal(str: string): string {
   if (!str) {
     return '';
   }
@@ -118,6 +186,13 @@ export function normalizeForComparison(str: string): string {
     .replace(/[^a-z0-9\s]/g, '') // Remove special chars
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+/**
+ * Normalize a string for comparison (lowercase, remove accents, trim)
+ */
+export function normalizeForComparison(str: string): string {
+  return normalizeForComparisonInternal(str);
 }
 
 /**
@@ -255,6 +330,104 @@ export function calculateNameSimilarity(name1: string, name2: string): number {
 }
 
 /**
+ * Optimized word-order-independent similarity using pre-built Fuse instance.
+ * Used internally by compareRosters for O(m) instead of O(n*m) Fuse instantiation.
+ */
+function calculateWordOrderIndependentSimilarityWithCache(
+  name1: string,
+  cachedWords2: string[],
+  cachedFuse: Fuse<string> | null,
+): number {
+  const words1 = extractNameWords(name1);
+
+  if (words1.length === 0 || cachedWords2.length === 0 || !cachedFuse) {
+    return 0;
+  }
+
+  let matchScore = 0;
+  const usedIndices = new Set<number>();
+
+  for (const w1 of words1) {
+    const results = cachedFuse.search(w1);
+
+    for (const result of results) {
+      const idx = result.refIndex;
+      if (usedIndices.has(idx)) continue;
+
+      const similarity = 1 - (result.score ?? 1);
+      if (similarity > 0) {
+        matchScore += similarity;
+        usedIndices.add(idx);
+        break;
+      }
+    }
+  }
+
+  const totalUniqueWords = Math.max(words1.length, cachedWords2.length);
+  return Math.round((matchScore / totalUniqueWords) * WORD_ORDER_INDEPENDENT_SCORE);
+}
+
+/**
+ * Optimized name similarity using pre-built Fuse instance.
+ * Used internally by compareRosters for O(m) instead of O(n*m) Fuse instantiation.
+ */
+function calculateNameSimilarityWithCache(
+  name1: string,
+  name2Normalized: string,
+  cachedWords2: string[],
+  cachedFuse: Fuse<string> | null,
+): number {
+  const n1 = normalizeForComparison(name1);
+
+  if (!n1 || !name2Normalized) {
+    return 0;
+  }
+  if (n1 === name2Normalized) {
+    return MAX_CONFIDENCE;
+  }
+
+  // Check if one contains the other (fast path, no Fuse needed)
+  if (n1.includes(name2Normalized) || name2Normalized.includes(n1)) {
+    const shorter = n1.length < name2Normalized.length ? n1 : name2Normalized;
+    const longer = n1.length >= name2Normalized.length ? n1 : name2Normalized;
+    return Math.round((shorter.length / longer.length) * CONTAINED_MATCH_SCORE);
+  }
+
+  // Check word-by-word overlap using cached Fuse
+  const words1 = n1.split(' ').filter((w) => w.length > 1);
+
+  if (cachedWords2.length === 0 || !cachedFuse) {
+    return 0;
+  }
+
+  let matchingScore = 0;
+  const usedIndices = new Set<number>();
+
+  for (const w1 of words1) {
+    const results = cachedFuse.search(w1);
+
+    for (const result of results) {
+      const idx = result.refIndex;
+      if (usedIndices.has(idx)) continue;
+
+      const similarity = 1 - (result.score ?? 1);
+      if (similarity > MIN_WORD_MATCH_SIMILARITY) {
+        matchingScore += similarity;
+        usedIndices.add(idx);
+        break;
+      }
+    }
+  }
+
+  const totalWords = Math.max(words1.length, cachedWords2.length);
+  if (totalWords === 0) {
+    return 0;
+  }
+
+  return Math.round((matchingScore / totalWords) * WORD_OVERLAP_MATCH_SCORE);
+}
+
+/**
  * Build a combined full name from firstName and lastName parts.
  */
 function buildFullName(firstName: string, lastName: string): string {
@@ -287,6 +460,7 @@ function findBestPlayerMatch(
   ocrPlayer: ParsedPlayer,
   rosterPlayers: RosterPlayerForComparison[],
   usedRosterIds: Set<string>,
+  cache?: Map<string, RosterPlayerCache>,
 ): MatchResult {
   let bestMatch: RosterPlayerForComparison | null = null;
   let bestConfidence = 0;
@@ -299,28 +473,57 @@ function findBestPlayerMatch(
       continue;
     }
 
-    // Strategy 1: Structured comparison (lastName vs lastName, firstName vs firstName)
-    const lastNameSim = calculateNameSimilarity(
-      ocrPlayer.lastName,
-      rosterPlayer.lastName ?? '',
-    );
-    const firstNameSim = calculateNameSimilarity(
-      ocrPlayer.firstName,
-      rosterPlayer.firstName ?? '',
-    );
-    const structuredConfidence =
-      lastNameSim * LAST_NAME_WEIGHT + firstNameSim * FIRST_NAME_WEIGHT;
+    let structuredConfidence: number;
+    let wordOrderConfidence: number;
 
-    // Strategy 2: Word-order-independent full name comparison
-    // This catches cases where name parts are in different order or parsed differently
-    const rosterFullName = buildFullName(
-      rosterPlayer.firstName ?? '',
-      rosterPlayer.lastName ?? '',
-    );
-    const wordOrderConfidence = calculateWordOrderIndependentSimilarity(
-      ocrFullName,
-      rosterFullName,
-    );
+    // Use cached Fuse instances if available
+    const playerCache = cache?.get(rosterPlayer.id);
+
+    if (playerCache) {
+      // Optimized path: use pre-built Fuse instances
+      const lastNameNormalized = normalizeForComparisonInternal(rosterPlayer.lastName ?? '');
+      const firstNameNormalized = normalizeForComparisonInternal(rosterPlayer.firstName ?? '');
+
+      const lastNameSim = calculateNameSimilarityWithCache(
+        ocrPlayer.lastName,
+        lastNameNormalized,
+        playerCache.lastNameWords,
+        playerCache.lastNameFuse,
+      );
+      const firstNameSim = calculateNameSimilarityWithCache(
+        ocrPlayer.firstName,
+        firstNameNormalized,
+        playerCache.firstNameWords,
+        playerCache.firstNameFuse,
+      );
+      structuredConfidence = lastNameSim * LAST_NAME_WEIGHT + firstNameSim * FIRST_NAME_WEIGHT;
+
+      wordOrderConfidence = calculateWordOrderIndependentSimilarityWithCache(
+        ocrFullName,
+        playerCache.fullNameWords,
+        playerCache.fullNameFuse,
+      );
+    } else {
+      // Fallback: create Fuse instances on-the-fly (original behavior)
+      const lastNameSim = calculateNameSimilarity(
+        ocrPlayer.lastName,
+        rosterPlayer.lastName ?? '',
+      );
+      const firstNameSim = calculateNameSimilarity(
+        ocrPlayer.firstName,
+        rosterPlayer.firstName ?? '',
+      );
+      structuredConfidence = lastNameSim * LAST_NAME_WEIGHT + firstNameSim * FIRST_NAME_WEIGHT;
+
+      const rosterFullName = buildFullName(
+        rosterPlayer.firstName ?? '',
+        rosterPlayer.lastName ?? '',
+      );
+      wordOrderConfidence = calculateWordOrderIndependentSimilarity(
+        ocrFullName,
+        rosterFullName,
+      );
+    }
 
     // Use the higher of the two strategies
     const confidence = Math.max(structuredConfidence, wordOrderConfidence);
@@ -347,7 +550,10 @@ function findBestPlayerMatch(
 // =============================================================================
 
 /**
- * Compare OCR players against a roster
+ * Compare OCR players against a roster.
+ *
+ * Performance: Pre-builds Fuse instances for roster players to reduce
+ * Fuse instantiation from O(n*m) to O(m), where n = OCR players, m = roster players.
  */
 export function compareRosters(
   ocrPlayers: ParsedPlayer[],
@@ -356,12 +562,16 @@ export function compareRosters(
   const results: PlayerComparisonResult[] = [];
   const usedRosterIds = new Set<string>();
 
+  // Pre-build Fuse instances for all roster players (O(m) instead of O(n*m))
+  const cache = buildRosterPlayerCache(rosterPlayers);
+
   // Compare each OCR player against the roster
   for (const ocrPlayer of ocrPlayers) {
     const { player: matchedRoster, confidence } = findBestPlayerMatch(
       ocrPlayer,
       rosterPlayers,
       usedRosterIds,
+      cache,
     );
 
     if (matchedRoster) {
