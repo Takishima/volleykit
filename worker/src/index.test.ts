@@ -1179,9 +1179,74 @@ describe("Integration: Origin Validation Error Responses", () => {
       expect(response.headers.get("Access-Control-Allow-Origin")).toBeNull();
     });
 
-    it("returns 200 with CORS headers when origin is allowed", async () => {
+    it("returns 200 with Mistral status when API key is configured and API is healthy", async () => {
       const { default: worker } = await import("./index");
       const mockEnv = createMockEnv();
+
+      // Mock fetch for Mistral API /v1/models endpoint
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ data: [] }), { status: 200 }),
+      );
+
+      try {
+        const request = new Request("https://proxy.example.com/health", {
+          headers: {
+            Origin: "https://example.com",
+          },
+        });
+
+        const response = await worker.fetch(request, mockEnv);
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+          "https://example.com",
+        );
+        expect(body.status).toBe("ok");
+        expect(body.services.proxy).toBe("ok");
+        expect(body.services.mistral_ocr).toBe("ok");
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+
+    it("returns 503 degraded status when Mistral API returns error", async () => {
+      const { default: worker } = await import("./index");
+      const mockEnv = createMockEnv();
+
+      // Mock fetch for Mistral API returning 401
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn().mockResolvedValue(
+        new Response("Unauthorized", { status: 401 }),
+      );
+
+      try {
+        const request = new Request("https://proxy.example.com/health", {
+          headers: {
+            Origin: "https://example.com",
+          },
+        });
+
+        const response = await worker.fetch(request, mockEnv);
+        const body = await response.json();
+
+        expect(response.status).toBe(503);
+        expect(body.status).toBe("degraded");
+        expect(body.services.proxy).toBe("ok");
+        expect(body.services.mistral_ocr).toBe("error");
+        expect(body.services.mistral_ocr_error).toBe("Invalid API key");
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+
+    it("returns 503 degraded status when Mistral API key is not configured", async () => {
+      const { default: worker } = await import("./index");
+      const mockEnv = {
+        ...createMockEnv(),
+        MISTRAL_API_KEY: undefined,
+      };
 
       const request = new Request("https://proxy.example.com/health", {
         headers: {
@@ -1190,11 +1255,72 @@ describe("Integration: Origin Validation Error Responses", () => {
       });
 
       const response = await worker.fetch(request, mockEnv);
+      const body = await response.json();
 
-      expect(response.status).toBe(200);
-      expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
-        "https://example.com",
-      );
+      expect(response.status).toBe(503);
+      expect(body.status).toBe("degraded");
+      expect(body.services.proxy).toBe("ok");
+      expect(body.services.mistral_ocr).toBe("not_configured");
+    });
+
+    it("returns 503 degraded status when Mistral API connection fails", async () => {
+      const { default: worker } = await import("./index");
+      const mockEnv = createMockEnv();
+
+      // Mock fetch to throw network error
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn().mockRejectedValue(new Error("Network error"));
+
+      try {
+        const request = new Request("https://proxy.example.com/health", {
+          headers: {
+            Origin: "https://example.com",
+          },
+        });
+
+        const response = await worker.fetch(request, mockEnv);
+        const body = await response.json();
+
+        expect(response.status).toBe(503);
+        expect(body.status).toBe("degraded");
+        expect(body.services.proxy).toBe("ok");
+        expect(body.services.mistral_ocr).toBe("error");
+        expect(body.services.mistral_ocr_error).toBe("Network error");
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+
+    it("returns 503 degraded status when Mistral API times out", async () => {
+      const { default: worker } = await import("./index");
+      const mockEnv = createMockEnv();
+
+      // Mock fetch to simulate timeout via AbortError
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn().mockImplementation(() => {
+        const error = new Error("The operation was aborted");
+        error.name = "AbortError";
+        return Promise.reject(error);
+      });
+
+      try {
+        const request = new Request("https://proxy.example.com/health", {
+          headers: {
+            Origin: "https://example.com",
+          },
+        });
+
+        const response = await worker.fetch(request, mockEnv);
+        const body = await response.json();
+
+        expect(response.status).toBe(503);
+        expect(body.status).toBe("degraded");
+        expect(body.services.proxy).toBe("ok");
+        expect(body.services.mistral_ocr).toBe("error");
+        expect(body.services.mistral_ocr_error).toBe("Health check timed out");
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
     });
   });
 
