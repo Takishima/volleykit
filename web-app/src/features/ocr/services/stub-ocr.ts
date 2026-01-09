@@ -85,6 +85,8 @@ function generateMockResult(text: string): OCRResult {
     fullText: text,
     lines,
     words: lines.flatMap((line) => line.words),
+    // Stub OCR uses estimated bounding boxes (same as MistralOCR).
+    // Real pixel coordinates are not available from mock data.
     hasPreciseBoundingBoxes: false,
   };
 }
