@@ -757,6 +757,17 @@ const it: Translations = {
       },
     },
   },
+  easterEggs: {
+    ac3: {
+      title: "Terzo assistente allenatore!",
+      message: "Un terzo assistente allenatore? Qualcuno andrà all'inferno degli arbitri per questa burocrazia!",
+    },
+    multipleDoctors: {
+      title: "Congresso medico!",
+      message: "Più medici in panchina? O questa squadra si aspetta una partita dura, o è un congresso medico!",
+    },
+    dismiss: "Capito!",
+  },
 };
 
 export default it;

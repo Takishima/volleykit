@@ -1,6 +1,11 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useTranslation } from "@/shared/hooks/useTranslation";
-import { useOCRScoresheet, compareRosters } from "@/features/ocr";
+import {
+  useOCRScoresheet,
+  compareRosters,
+  useEasterEggDetection,
+  EasterEggModal,
+} from "@/features/ocr";
 import type {
   ParsedGameSheet,
   PlayerComparisonResult,
@@ -117,6 +122,8 @@ export function OCREntryModal({
     reset,
     ocrResult: hookOcrResult,
   } = useOCRScoresheet();
+  const { easterEgg, checkForEasterEggs, dismissEasterEgg } =
+    useEasterEggDetection();
 
   const [step, setStep] = useState<OCREntryStep>("intro");
   const [showCaptureModal, setShowCaptureModal] = useState(false);
@@ -323,6 +330,9 @@ export function OCREntryModal({
             coachResults: awayCoachResults,
           });
 
+          // Check for Easter egg conditions
+          checkForEasterEggs(parsed);
+
           setStep("results");
         } else {
           setStep("error");
@@ -343,6 +353,7 @@ export function OCREntryModal({
       awayRosterPlayers,
       homeRosterCoaches,
       awayRosterCoaches,
+      checkForEasterEggs,
     ],
   );
 
@@ -726,6 +737,15 @@ export function OCREntryModal({
         }}
         onImageSelected={handleImageSelected}
       />
+
+      {/* Easter egg modal */}
+      {easterEgg.type && (
+        <EasterEggModal
+          isOpen={easterEgg.isOpen}
+          type={easterEgg.type}
+          onClose={dismissEasterEgg}
+        />
+      )}
     </div>
   );
 }

@@ -58,6 +58,14 @@ export type {
 // =============================================================================
 
 export { useOCRScoresheet } from './hooks/useOCRScoresheet';
+export { useEasterEggDetection } from './hooks/useEasterEggDetection';
+
+// =============================================================================
+// Components
+// =============================================================================
+
+export { EasterEggModal } from './components/EasterEggModal';
+export type { EasterEggType } from './components/EasterEggModal';
 
 // =============================================================================
 // Services

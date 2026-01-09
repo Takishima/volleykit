@@ -755,6 +755,17 @@ const en: Translations = {
       },
     },
   },
+  easterEggs: {
+    ac3: {
+      title: "Third Assistant Coach!",
+      message: "A third assistant coach? Someone's going to referee hell for this paperwork!",
+    },
+    multipleDoctors: {
+      title: "Medical Conference!",
+      message: "Multiple doctors on the bench? Either this team expects a tough match, or it's a medical conference!",
+    },
+    dismiss: "Got it!",
+  },
 };
 
 export default en;

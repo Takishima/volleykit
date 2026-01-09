@@ -762,6 +762,17 @@ const fr: Translations = {
       },
     },
   },
+  easterEggs: {
+    ac3: {
+      title: "Troisième entraîneur adjoint !",
+      message: "Un troisième entraîneur adjoint ? Quelqu'un va en enfer des arbitres pour cette paperasse !",
+    },
+    multipleDoctors: {
+      title: "Conférence médicale !",
+      message: "Plusieurs médecins sur le banc ? Soit cette équipe s'attend à un match difficile, soit c'est une conférence médicale !",
+    },
+    dismiss: "Compris !",
+  },
 };
 
 export default fr;

@@ -369,7 +369,7 @@ function isLiberoSection(line: string, parts: string[]): boolean {
 }
 
 /** Valid official roles */
-const VALID_ROLES = new Set(['C', 'AC', 'AC2', 'AC3', 'AC4']);
+const VALID_ROLES = new Set(['C', 'AC', 'AC2', 'AC3', 'AC4', 'M']);
 
 function isOfficialRole(role: string): role is OfficialRole {
   return VALID_ROLES.has(role.toUpperCase().trim());
