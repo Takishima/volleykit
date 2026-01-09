@@ -112,7 +112,6 @@ export function OCREntryModal({
   const { t } = useTranslation();
   const {
     processImage,
-    isProcessing,
     progress,
     error,
     reset,
@@ -502,7 +501,7 @@ export function OCREntryModal({
         )}
 
         {/* Processing step */}
-        {step === "processing" && isProcessing && (
+        {step === "processing" && (
           <div
             className="flex flex-col items-center justify-center min-h-[50vh]"
             role="status"
