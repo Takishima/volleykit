@@ -32,8 +32,34 @@ const CONTAINED_MATCH_SCORE = 90;
 /** Maximum similarity score for word overlap matches (0-100) */
 const WORD_OVERLAP_MATCH_SCORE = 85;
 
+/** Maximum similarity score for word-order-independent full name matches (0-100) */
+const WORD_ORDER_INDEPENDENT_SCORE = 95;
+
 /** Max confidence score */
 const MAX_CONFIDENCE = 100;
+
+/**
+ * Common nobility particles that should be considered part of surnames.
+ * These are case-insensitive and used for word matching.
+ */
+const NOBILITY_PARTICLES = new Set([
+  'de',
+  'del',
+  'della',
+  'di',
+  'du',
+  'von',
+  'van',
+  'den',
+  'der',
+  'la',
+  'le',
+  'las',
+  'los',
+  'dos',
+  'da',
+  'das',
+]);
 
 // =============================================================================
 // Types
@@ -68,6 +94,93 @@ export function normalizeForComparison(str: string): string {
     .replace(/[^a-z0-9\s]/g, '') // Remove special chars
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+/**
+ * Extract meaningful words from a name, filtering out very short words
+ * but keeping nobility particles
+ */
+function extractNameWords(name: string): string[] {
+  const normalized = normalizeForComparison(name);
+  if (!normalized) return [];
+
+  return normalized.split(' ').filter((w) => {
+    // Keep words with 2+ chars OR nobility particles
+    return w.length >= 2 || NOBILITY_PARTICLES.has(w);
+  });
+}
+
+/**
+ * Calculate word-order-independent similarity between two full names.
+ * This compares all words in both names regardless of their order.
+ *
+ * Example: "De Courten Renée" vs "Renée Sophie de Courten"
+ * Words1: [de, courten, renee]
+ * Words2: [renee, sophie, de, courten]
+ * Matching: 3 words match out of 4 unique = 75%
+ */
+export function calculateWordOrderIndependentSimilarity(
+  name1: string,
+  name2: string,
+): number {
+  const words1 = extractNameWords(name1);
+  const words2 = extractNameWords(name2);
+
+  if (words1.length === 0 || words2.length === 0) {
+    return 0;
+  }
+
+  // Count matching words (allowing partial matches for longer words)
+  let matchScore = 0;
+  const usedWords2 = new Set<number>();
+
+  for (const w1 of words1) {
+    let bestMatchScore = 0;
+    let bestMatchIdx = -1;
+
+    for (let i = 0; i < words2.length; i++) {
+      if (usedWords2.has(i)) continue;
+
+      const w2 = words2[i]!;
+
+      // Exact match
+      if (w1 === w2) {
+        if (1 > bestMatchScore) {
+          bestMatchScore = 1;
+          bestMatchIdx = i;
+        }
+      }
+      // One contains the other (for partial matches like "Timo" vs "Timothy")
+      else if (w1.length >= 3 && w2.length >= 3) {
+        if (w1.includes(w2) || w2.includes(w1)) {
+          const shorter = w1.length < w2.length ? w1 : w2;
+          const longer = w1.length >= w2.length ? w1 : w2;
+          const partialScore = shorter.length / longer.length;
+          if (partialScore > bestMatchScore) {
+            bestMatchScore = partialScore;
+            bestMatchIdx = i;
+          }
+        }
+        // Check if words start the same (nickname matching: Tim/Timo/Timothy)
+        else if (w1.startsWith(w2.substring(0, 3)) || w2.startsWith(w1.substring(0, 3))) {
+          const partialScore = 0.6; // Give 60% credit for prefix matches
+          if (partialScore > bestMatchScore) {
+            bestMatchScore = partialScore;
+            bestMatchIdx = i;
+          }
+        }
+      }
+    }
+
+    if (bestMatchIdx >= 0) {
+      matchScore += bestMatchScore;
+      usedWords2.add(bestMatchIdx);
+    }
+  }
+
+  // Calculate similarity based on matched words vs total unique words
+  const totalUniqueWords = Math.max(words1.length, words2.length);
+  return Math.round((matchScore / totalUniqueWords) * WORD_ORDER_INDEPENDENT_SCORE);
 }
 
 /**
@@ -113,6 +226,13 @@ export function calculateNameSimilarity(name1: string, name2: string): number {
   return Math.round((matchingWords / totalWords) * WORD_OVERLAP_MATCH_SCORE);
 }
 
+/**
+ * Build a combined full name from firstName and lastName parts.
+ */
+function buildFullName(firstName: string, lastName: string): string {
+  return [firstName, lastName].filter((p) => p && p.trim()).join(' ');
+}
+
 // =============================================================================
 // Player Matching
 // =============================================================================
@@ -123,7 +243,17 @@ interface MatchResult {
 }
 
 /**
- * Find the best matching roster player for an OCR player
+ * Find the best matching roster player for an OCR player.
+ *
+ * Uses a hybrid approach:
+ * 1. Structured comparison (lastName vs lastName, firstName vs firstName)
+ * 2. Word-order-independent full name comparison
+ *
+ * This handles cases where:
+ * - Names are parsed with different orderings (De Courten Renée vs Renée de Courten)
+ * - Compound surnames are split differently (De vs De Courten)
+ * - OCR only captures partial names (RENÉE vs Renée Sophie)
+ * - Officials are in reversed format (Lastname Firstname vs Firstname Lastname)
  */
 function findBestPlayerMatch(
   ocrPlayer: ParsedPlayer,
@@ -133,12 +263,15 @@ function findBestPlayerMatch(
   let bestMatch: RosterPlayerForComparison | null = null;
   let bestConfidence = 0;
 
+  // Build OCR full name for word-order-independent matching
+  const ocrFullName = buildFullName(ocrPlayer.firstName, ocrPlayer.lastName);
+
   for (const rosterPlayer of rosterPlayers) {
     if (usedRosterIds.has(rosterPlayer.id)) {
       continue;
     }
 
-    // Match by name
+    // Strategy 1: Structured comparison (lastName vs lastName, firstName vs firstName)
     const lastNameSim = calculateNameSimilarity(
       ocrPlayer.lastName,
       rosterPlayer.lastName ?? '',
@@ -147,9 +280,22 @@ function findBestPlayerMatch(
       ocrPlayer.firstName,
       rosterPlayer.firstName ?? '',
     );
+    const structuredConfidence =
+      lastNameSim * LAST_NAME_WEIGHT + firstNameSim * FIRST_NAME_WEIGHT;
 
-    // Weight last name more heavily
-    const confidence = lastNameSim * LAST_NAME_WEIGHT + firstNameSim * FIRST_NAME_WEIGHT;
+    // Strategy 2: Word-order-independent full name comparison
+    // This catches cases where name parts are in different order or parsed differently
+    const rosterFullName = buildFullName(
+      rosterPlayer.firstName ?? '',
+      rosterPlayer.lastName ?? '',
+    );
+    const wordOrderConfidence = calculateWordOrderIndependentSimilarity(
+      ocrFullName,
+      rosterFullName,
+    );
+
+    // Use the higher of the two strategies
+    const confidence = Math.max(structuredConfidence, wordOrderConfidence);
 
     if (confidence > bestConfidence) {
       bestConfidence = confidence;
