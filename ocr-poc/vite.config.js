@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import path from 'path';
 
 // Base path for GitHub Pages subdirectory deployment
 // In production, this app is served from /volleykit/ocr-poc/
@@ -17,6 +18,12 @@ const MODEL_CACHE_MAX_AGE_DAYS = 30;
 
 export default defineConfig({
   base: BASE_PATH,
+  resolve: {
+    alias: {
+      // Allow importing TypeScript modules from the main web-app
+      '@volleykit/ocr': path.resolve(__dirname, '../web-app/src/features/ocr'),
+    },
+  },
   plugins: [
     VitePWA({
       registerType: 'autoUpdate',
