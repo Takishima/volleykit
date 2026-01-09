@@ -446,6 +446,18 @@ describe('Concatenated Data Splitting', () => {
       const numbers = splitConcatenatedNumbers('135789');
       expect(numbers).toEqual([1, 3, 5, 7, 8, 9]);
     });
+
+    it('handles consecutive two-digit-looking numbers', () => {
+      // Edge case: 1011121314 could be interpreted multiple ways
+      // With single-digit preference, should split as: 1, 0(skip), 1, 1, 1, 2, 1, 3, 1, 4
+      // But zeros are skipped, so we get: 1, 1, 1, 1, 2, 1, 3, 1, 4
+      const numbers = splitConcatenatedNumbers('1011121314');
+      // Since we prefer single digits, each digit 1-9 is taken individually
+      expect(numbers.length).toBeGreaterThan(5);
+      expect(numbers[0]).toBe(1); // First digit
+      // Zeros are skipped as invalid jersey numbers
+      expect(numbers).not.toContain(0);
+    });
   });
 });
 

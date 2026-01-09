@@ -464,7 +464,7 @@ const MIN_VALID_TEAM_NAME_LENGTH = 3;
 function cleanSwissMarkers(text: string): string {
   return text
     .replace(/aader\/ou\/o\s*B?\s*/gi, ' ')
-    .replace(/punkte[^]*?punti\s*/i, ' ')
+    .replace(/punkte[\s\S]*?punti\s*/i, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -767,7 +767,7 @@ function extractConcatenatedData(parts: string[]): {
   const secondHalfNames: string[] = [];
   const firstHalfDates: string[] = [];
   const secondHalfDates: string[] = [];
-  const midpoint = parts.length / 2;
+  const midpoint = Math.ceil(parts.length / 2);
 
   for (let partIndex = 0; partIndex < parts.length; partIndex++) {
     const part = parts[partIndex]!;
