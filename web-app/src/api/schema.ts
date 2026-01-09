@@ -912,6 +912,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/indoorvolleyball.refadmin/api\\refereeconvocationrefereebackup/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search referee backups (Pikett)
+         * @description Search for referee backup assignments (Pikett - on-call referees) for NLA and NLB games.
+         *     Returns a list of dates with assigned backup referees for each league category.
+         *
+         *     **Use Case:**
+         *     This endpoint is used by referee administrators to view and manage the on-call
+         *     referee schedule. Backup referees (Pikett) are available to step in if a
+         *     scheduled referee cannot attend a game.
+         *
+         *     **Response Structure:**
+         *     Each item represents a date with:
+         *     - `nlaReferees`: Backup referees for NLA (National League A) games
+         *     - `nlbReferees`: Backup referees for NLB (National League B) games
+         *     - `joinedNlaReferees`/`joinedNlbReferees`: Pre-formatted display strings with contact info
+         *
+         *     **Custom Filters:**
+         *     - `myReferees`: Filter to only show referees managed by the current association
+         */
+        post: operations["searchRefereeBackups"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1010,6 +1045,45 @@ export interface components {
         ExchangesSearchRequest: {
             searchConfiguration?: components["schemas"]["SearchConfiguration"];
             propertyRenderConfiguration?: string[];
+            __csrfToken?: string;
+        };
+        /**
+         * @description Search request for referee backups (Pikett).
+         *     Typically filtered by date range and the `myReferees` custom filter.
+         */
+        RefereeBackupSearchRequest: {
+            searchConfiguration?: components["schemas"]["SearchConfiguration"] & {
+                /** @description Custom filters for the search */
+                customFilters?: {
+                    /**
+                     * @description Filter name
+                     * @example myReferees
+                     * @enum {string}
+                     */
+                    name?: "myReferees";
+                }[];
+            };
+            /**
+             * @description Properties to include in the response. Common properties:
+             *     - date
+             *     - weekday
+             *     - calendarWeek
+             *     - joinedNlaReferees
+             *     - joinedNlbReferees
+             *     - nlaReferees.*.indoorReferee.person.primaryEmailAddress
+             *     - nlbReferees.*.indoorReferee.person.primaryEmailAddress
+             *     - nlaReferees.*.indoorReferee.person.primaryPhoneNumber
+             *     - nlbReferees.*.indoorReferee.person.primaryPhoneNumber
+             * @example [
+             *       "date",
+             *       "weekday",
+             *       "calendarWeek",
+             *       "joinedNlaReferees",
+             *       "joinedNlbReferees"
+             *     ]
+             */
+            propertyRenderConfiguration?: string[];
+            /** @description CSRF token for request validation */
             __csrfToken?: string;
         };
         SearchConfiguration: {
@@ -1208,6 +1282,218 @@ export interface components {
             items: components["schemas"]["GameExchange"][];
             /** @example 7 */
             totalItemsCount: number;
+        };
+        /** @description Response containing referee backup (Pikett) entries */
+        RefereeBackupSearchResponse: {
+            items: components["schemas"]["RefereeBackupEntry"][];
+            /**
+             * @description Total number of backup entries matching the search criteria
+             * @example 15
+             */
+            totalItemsCount: number;
+            /** @description Template for creating new entities (usually null) */
+            entityTemplate?: Record<string, never> | null;
+        };
+        /** @description A single date entry with assigned backup referees */
+        RefereeBackupEntry: {
+            /**
+             * Format: uuid
+             * @description Unique identifier for this backup entry
+             * @example 11111111-aaaa-bbbb-cccc-222222222222
+             */
+            __identity: string;
+            /**
+             * Format: date-time
+             * @description The date for which backup referees are assigned (ISO 8601)
+             * @example 2025-01-10T23:00:00.000000+00:00
+             */
+            date: string;
+            /**
+             * @description Short weekday name (locale-dependent)
+             * @example So
+             */
+            weekday: string;
+            /**
+             * @description Calendar week number
+             * @example 2
+             */
+            calendarWeek: number;
+            /**
+             * @description Formatted string of NLA backup referees with contact info.
+             *     Format: "#associationId | Name (email, phone)"
+             *     Multiple referees separated by newlines.
+             * @example #12345 | Max Mustermann (max@example.com, +41791234567)
+             */
+            joinedNlaReferees?: string;
+            /**
+             * @description Formatted string of NLB backup referees with contact info.
+             *     Format: "#associationId | Name (email, phone)"
+             *     Multiple referees separated by newlines.
+             * @example #67890 | Anna Schmidt (anna@example.com, +41797654321)
+             *     #11111 | Peter Müller (peter@example.com, +41791111111)
+             */
+            joinedNlbReferees?: string;
+            /** @description Detailed list of NLA backup referees */
+            nlaReferees?: components["schemas"]["BackupRefereeAssignment"][];
+            /** @description Detailed list of NLB backup referees */
+            nlbReferees?: components["schemas"]["BackupRefereeAssignment"][];
+        };
+        /** @description An assignment of a referee as backup for a specific league */
+        BackupRefereeAssignment: {
+            /**
+             * Format: uuid
+             * @description Unique identifier for this assignment
+             * @example 33333333-dddd-eeee-ffff-444444444444
+             */
+            __identity: string;
+            indoorReferee: components["schemas"]["BackupIndoorReferee"];
+            /**
+             * @description Whether the referee is dispensed from duty
+             * @default false
+             */
+            isDispensed: boolean;
+            /** @description Whether the referee has future convocations scheduled */
+            hasFutureRefereeConvocations?: boolean;
+            /**
+             * @description Whether the referee has resigned
+             * @default false
+             */
+            hasResigned: boolean;
+            /**
+             * @description Whether there are unconfirmed future convocations
+             * @default false
+             */
+            unconfirmedFutureRefereeConvocations: boolean;
+            /**
+             * @description Origin identifier (if imported from external system)
+             * @example 1234
+             */
+            originId?: number | null;
+            /**
+             * @description Username of creator
+             * @example System
+             */
+            createdBy?: string;
+            /** @description UUID of creator */
+            createdByPersistenceIdentifier?: string;
+            /** @description Username of last updater */
+            updatedBy?: string;
+            /** @description UUID of last updater */
+            updatedByPersistenceIdentifier?: string;
+        };
+        /** @description Indoor referee details for backup assignment */
+        BackupIndoorReferee: {
+            /**
+             * Format: uuid
+             * @description Referee identifier
+             * @example 55555555-aaaa-bbbb-cccc-666666666666
+             */
+            persistenceObjectIdentifier?: string;
+            /**
+             * Format: uuid
+             * @example 55555555-aaaa-bbbb-cccc-666666666666
+             */
+            __identity?: string;
+            person?: components["schemas"]["BackupRefereePerson"];
+            /**
+             * @description Formatted referee info string
+             * @example Mustermann Max (12345, 1990-01-15, )
+             */
+            refereeInformation?: string;
+            /**
+             * @description Preferred transportation mode
+             * @example car
+             * @enum {string}
+             */
+            transportationMode?: "car" | "public_transport" | "bicycle" | "on_foot";
+            /** @description Whether referee data is validated */
+            validated?: boolean;
+            /**
+             * @description Mobile phone number(s)
+             * @example +41791234567
+             */
+            mobilePhoneNumbers?: string;
+            /**
+             * @description Private postal address
+             * @example Musterstrasse 1, 8000 Zürich
+             */
+            privatePostalAddresses?: string;
+            /** @description Whether location has a Plus Code */
+            hasPlusCode?: boolean;
+            /** @description Whether there are notes about this referee */
+            hasNotes?: boolean;
+            /** @description Whether this is an international referee */
+            isInternationalReferee?: boolean;
+            /** @description Whether referee has linesman certification */
+            hasLinesmanCertification?: boolean;
+        };
+        /** @description Person details for a backup referee */
+        BackupRefereePerson: {
+            /**
+             * Format: uuid
+             * @example 77777777-aaaa-bbbb-cccc-888888888888
+             */
+            persistenceObjectIdentifier?: string;
+            /**
+             * Format: uuid
+             * @example 77777777-aaaa-bbbb-cccc-888888888888
+             */
+            __identity?: string;
+            /**
+             * @description Swiss Volley association ID
+             * @example 12345
+             */
+            associationId?: number;
+            /** @example Max */
+            firstName?: string;
+            /** @example Mustermann */
+            lastName?: string;
+            /**
+             * @description Full display name
+             * @example Max Mustermann
+             */
+            displayName?: string;
+            /**
+             * @description Full name
+             * @example Max Mustermann
+             */
+            fullName?: string;
+            /**
+             * @example m
+             * @enum {string}
+             */
+            gender?: "m" | "f";
+            /**
+             * @description Preferred language for correspondence
+             * @example de
+             * @enum {string}
+             */
+            correspondenceLanguage?: "de" | "fr" | "it" | "en";
+            /**
+             * @example de
+             * @enum {string}
+             */
+            language?: "de" | "fr" | "it" | "en";
+            /**
+             * @description Age in years
+             * @example 35
+             */
+            age?: number;
+            /** @example 1990 */
+            yearOfBirth?: number;
+            /**
+             * Format: date
+             * @description Birthday in YYYY-MM-DD format
+             * @example 1990-01-15
+             */
+            formattedAndTimezoneIndependentBirthday?: string;
+            /** @description Whether person has a VolleyManager account */
+            hasAccount?: boolean;
+            /** @description Whether account is active */
+            accountActive?: boolean;
+            hasProfilePicture?: boolean;
+            primaryEmailAddress?: components["schemas"]["EmailAddress"];
+            primaryPhoneNumber?: components["schemas"]["PhoneNumber"];
         };
         GameExchange: {
             /**
@@ -5386,6 +5672,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RefereeAbsenceSearchResult"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    searchRefereeBackups: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": components["schemas"]["RefereeBackupSearchRequest"];
+            };
+        };
+        responses: {
+            /** @description Referee backup search results */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RefereeBackupSearchResponse"];
                 };
             };
             401: components["responses"]["Unauthorized"];
