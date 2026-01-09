@@ -22,10 +22,10 @@ const TABLE_ASPECT_RATIO = ELECTRONIC_WIDTH / ELECTRONIC_HEIGHT;
 
 /**
  * Aspect ratio dimensions for manuscript scoresheet roster section
- * 23:20 landscape format matches the roster area of Swiss volleyball scoresheets
+ * 20:23 portrait format matches the roster area of Swiss volleyball scoresheets
  */
-const MANUSCRIPT_WIDTH = 23;
-const MANUSCRIPT_HEIGHT = 20;
+const MANUSCRIPT_WIDTH = 20;
+const MANUSCRIPT_HEIGHT = 23;
 const MANUSCRIPT_ASPECT_RATIO = MANUSCRIPT_WIDTH / MANUSCRIPT_HEIGHT;
 
 interface ScoresheetGuideProps {
