@@ -6,7 +6,7 @@
  *
  * Supports two aspect ratios based on scoresheet type:
  * - Electronic (4:5 portrait): For player list table capture from screenshots
- * - Manuscript (7:5 landscape): For full physical scoresheet capture
+ * - Manuscript (4:5 portrait): For roster section capture from physical scoresheets
  */
 
 import type { ScoresheetType } from "@/features/ocr/utils/scoresheet-detector";
@@ -21,10 +21,10 @@ const ELECTRONIC_HEIGHT = 5;
 const TABLE_ASPECT_RATIO = ELECTRONIC_WIDTH / ELECTRONIC_HEIGHT;
 
 /**
- * Aspect ratio dimensions for manuscript scoresheet
- * 7:5 landscape format matches A4 paper scoresheets
+ * Aspect ratio dimensions for manuscript scoresheet roster section
+ * 4:5 portrait format matches the roster area of Swiss volleyball scoresheets
  */
-const MANUSCRIPT_WIDTH = 7;
+const MANUSCRIPT_WIDTH = 4;
 const MANUSCRIPT_HEIGHT = 5;
 const MANUSCRIPT_ASPECT_RATIO = MANUSCRIPT_WIDTH / MANUSCRIPT_HEIGHT;
 
@@ -44,8 +44,9 @@ export function ScoresheetGuide({ scoresheetType }: ScoresheetGuideProps) {
   const aspectRatio = isElectronic ? TABLE_ASPECT_RATIO : MANUSCRIPT_ASPECT_RATIO;
 
   // Calculate frame dimensions based on aspect ratio
-  // For electronic (portrait): width is smaller than height (e.g., 80% width, 100% height)
-  // For manuscript (landscape): width is larger than height (e.g., 100% width, 71% height)
+  // Both electronic and manuscript use portrait orientation (4:5)
+  // Electronic uses smaller frame width (70%) for tighter focus on player list
+  // Manuscript uses larger frame width (90%) for broader roster capture
   const frameStyle = isElectronic
     ? {
         width: "70%",
