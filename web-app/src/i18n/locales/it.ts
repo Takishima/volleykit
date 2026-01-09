@@ -753,6 +753,7 @@ const it: Translations = {
         capturedImage: "Immagine del referto catturata",
         wordsDetected: "parole rilevate",
         wordsMatched: "corrispondenti",
+        rawText: "Testo OCR grezzo",
       },
     },
   },

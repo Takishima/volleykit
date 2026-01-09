@@ -52,6 +52,8 @@ export interface OCRResult {
   lines: OCRLine[];
   /** All words with confidence scores */
   words: OCRWord[];
+  /** Whether bounding boxes are precise pixel coordinates (false = estimated) */
+  hasPreciseBoundingBoxes: boolean;
 }
 
 /**

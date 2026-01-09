@@ -758,6 +758,7 @@ const fr: Translations = {
         capturedImage: "Image de la feuille de match capturée",
         wordsDetected: "mots détectés",
         wordsMatched: "correspondants",
+        rawText: "Texte OCR brut",
       },
     },
   },

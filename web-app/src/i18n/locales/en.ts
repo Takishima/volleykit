@@ -751,6 +751,7 @@ const en: Translations = {
         capturedImage: "Captured scoresheet image",
         wordsDetected: "words detected",
         wordsMatched: "matched",
+        rawText: "Raw OCR text",
       },
     },
   },

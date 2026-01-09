@@ -266,6 +266,10 @@ export class MistralOCR implements OCREngine {
       fullText,
       lines,
       words,
+      // Mistral OCR returns text only, not pixel-level bounding boxes.
+      // The bbox values above are estimated from word/line positions in text,
+      // so they don't align with actual image coordinates.
+      hasPreciseBoundingBoxes: false,
     };
   }
 

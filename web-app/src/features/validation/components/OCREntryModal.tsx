@@ -1027,32 +1027,36 @@ function OCRImageOverlay({
             {t("validation.ocr.rawData.imageOverlay")}
           </span>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowOverlay(!showOverlay)}
-          className="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-        >
-          {showOverlay
-            ? t("validation.ocr.rawData.hideOverlay")
-            : t("validation.ocr.rawData.showOverlay")}
-        </button>
+        {ocrResult.hasPreciseBoundingBoxes && (
+          <button
+            type="button"
+            onClick={() => setShowOverlay(!showOverlay)}
+            className="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+          >
+            {showOverlay
+              ? t("validation.ocr.rawData.hideOverlay")
+              : t("validation.ocr.rawData.showOverlay")}
+          </button>
+        )}
       </div>
 
-      {/* Legend */}
-      <div className="flex items-center gap-4 mb-2 text-xs">
-        <div className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded border-2 border-success-500 bg-success-500/20" />
-          <span className="text-gray-600 dark:text-gray-400">
-            {t("validation.ocr.rawData.matchedWords")}
-          </span>
+      {/* Legend - only show when we have precise bounding boxes */}
+      {ocrResult.hasPreciseBoundingBoxes && (
+        <div className="flex items-center gap-4 mb-2 text-xs">
+          <div className="flex items-center gap-1">
+            <span className="w-3 h-3 rounded border-2 border-success-500 bg-success-500/20" />
+            <span className="text-gray-600 dark:text-gray-400">
+              {t("validation.ocr.rawData.matchedWords")}
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="w-3 h-3 rounded border-2 border-gray-400 bg-gray-400/20" />
+            <span className="text-gray-600 dark:text-gray-400">
+              {t("validation.ocr.rawData.otherWords")}
+            </span>
+          </div>
         </div>
-        <div className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded border-2 border-gray-400 bg-gray-400/20" />
-          <span className="text-gray-600 dark:text-gray-400">
-            {t("validation.ocr.rawData.otherWords")}
-          </span>
-        </div>
-      </div>
+      )}
 
       {/* Image container */}
       <div
@@ -1066,8 +1070,8 @@ function OCRImageOverlay({
           className="w-full h-auto"
         />
 
-        {/* Bounding box overlay */}
-        {showOverlay && imageSize && (
+        {/* Bounding box overlay - only show when we have precise bounding boxes */}
+        {ocrResult.hasPreciseBoundingBoxes && showOverlay && imageSize && (
           <svg
             className="absolute top-0 left-0 pointer-events-none"
             style={{
@@ -1105,6 +1109,20 @@ function OCRImageOverlay({
         {ocrResult.words.filter((w) => isMatchedWord(w.text)).length}{" "}
         {t("validation.ocr.rawData.wordsMatched")}
       </div>
+
+      {/* Raw OCR text - shown when bounding boxes are not precise */}
+      {!ocrResult.hasPreciseBoundingBoxes && ocrResult.fullText && (
+        <div className="mt-3">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+              {t("validation.ocr.rawData.rawText")}
+            </span>
+          </div>
+          <pre className="text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700 overflow-auto max-h-64 whitespace-pre-wrap break-words">
+            {ocrResult.fullText}
+          </pre>
+        </div>
+      )}
     </div>
   );
 }
