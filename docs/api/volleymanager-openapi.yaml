@@ -61,6 +61,8 @@ tags:
     description: In-app notification management
   - name: Absences
     description: Referee absence management
+  - name: RefereeBackup
+    description: Referee backup (Pikett) management - on-call referees for NLA/NLB games
 paths:
   # ==================== Authentication Endpoints ====================
   /login:
@@ -1367,6 +1369,46 @@ paths:
                 $ref: '#/components/schemas/RefereeAbsenceSearchResult'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  # ==================== Referee Backup (Pikett) Endpoints ====================
+  # Note: The backslash in paths is intentional - VolleyManager uses this
+  # unusual URL pattern (Neos Flow framework namespace separator)
+  /indoorvolleyball.refadmin/api\refereeconvocationrefereebackup/search:
+    post:
+      tags: [RefereeBackup]
+      summary: Search referee backups (Pikett)
+      description: |
+        Search for referee backup assignments (Pikett - on-call referees) for NLA and NLB games.
+        Returns a list of dates with assigned backup referees for each league category.
+
+        **Use Case:**
+        This endpoint is used by referee administrators to view and manage the on-call
+        referee schedule. Backup referees (Pikett) are available to step in if a
+        scheduled referee cannot attend a game.
+
+        **Response Structure:**
+        Each item represents a date with:
+        - `nlaReferees`: Backup referees for NLA (National League A) games
+        - `nlbReferees`: Backup referees for NLB (National League B) games
+        - `joinedNlaReferees`/`joinedNlbReferees`: Pre-formatted display strings with contact info
+
+        **Custom Filters:**
+        - `myReferees`: Filter to only show referees managed by the current association
+      operationId: searchRefereeBackups
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RefereeBackupSearchRequest'
+      responses:
+        '200':
+          description: Referee backup search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefereeBackupSearchResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 components:
   securitySchemes:
     cookieAuth:
@@ -1509,6 +1551,52 @@ components:
             type: string
         __csrfToken:
           type: string
+    RefereeBackupSearchRequest:
+      type: object
+      description: |
+        Search request for referee backups (Pikett).
+        Typically filtered by date range and the `myReferees` custom filter.
+      properties:
+        searchConfiguration:
+          allOf:
+            - $ref: '#/components/schemas/SearchConfiguration'
+            - type: object
+              properties:
+                customFilters:
+                  type: array
+                  description: Custom filters for the search
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        description: Filter name
+                        enum: [myReferees]
+                        example: "myReferees"
+        propertyRenderConfiguration:
+          type: array
+          description: |
+            Properties to include in the response. Common properties:
+            - date
+            - weekday
+            - calendarWeek
+            - joinedNlaReferees
+            - joinedNlbReferees
+            - nlaReferees.*.indoorReferee.person.primaryEmailAddress
+            - nlbReferees.*.indoorReferee.person.primaryEmailAddress
+            - nlaReferees.*.indoorReferee.person.primaryPhoneNumber
+            - nlbReferees.*.indoorReferee.person.primaryPhoneNumber
+          items:
+            type: string
+          example:
+            - "date"
+            - "weekday"
+            - "calendarWeek"
+            - "joinedNlaReferees"
+            - "joinedNlbReferees"
+        __csrfToken:
+          type: string
+          description: CSRF token for request validation
     SearchConfiguration:
       type: object
       properties:
@@ -1777,6 +1865,233 @@ components:
           type: integer
           minimum: 0
           example: 7
+    # ==================== Referee Backup Response Schemas ====================
+    RefereeBackupSearchResponse:
+      type: object
+      description: Response containing referee backup (Pikett) entries
+      required: [items, totalItemsCount]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RefereeBackupEntry'
+        totalItemsCount:
+          type: integer
+          minimum: 0
+          description: Total number of backup entries matching the search criteria
+          example: 15
+        entityTemplate:
+          type: object
+          nullable: true
+          description: Template for creating new entities (usually null)
+    RefereeBackupEntry:
+      type: object
+      description: A single date entry with assigned backup referees
+      required: [__identity, date, weekday, calendarWeek]
+      properties:
+        __identity:
+          type: string
+          format: uuid
+          description: Unique identifier for this backup entry
+          example: "11111111-aaaa-bbbb-cccc-222222222222"
+        date:
+          type: string
+          format: date-time
+          description: The date for which backup referees are assigned (ISO 8601)
+          example: "2025-01-10T23:00:00.000000+00:00"
+        weekday:
+          type: string
+          description: Short weekday name (locale-dependent)
+          example: "So"
+        calendarWeek:
+          type: integer
+          description: Calendar week number
+          minimum: 1
+          maximum: 53
+          example: 2
+        joinedNlaReferees:
+          type: string
+          description: |
+            Formatted string of NLA backup referees with contact info.
+            Format: "#associationId | Name (email, phone)"
+            Multiple referees separated by newlines.
+          example: "#12345 | Max Mustermann (max@example.com, +41791234567)"
+        joinedNlbReferees:
+          type: string
+          description: |
+            Formatted string of NLB backup referees with contact info.
+            Format: "#associationId | Name (email, phone)"
+            Multiple referees separated by newlines.
+          example: "#67890 | Anna Schmidt (anna@example.com, +41797654321)\n#11111 | Peter Müller (peter@example.com, +41791111111)"
+        nlaReferees:
+          type: array
+          description: Detailed list of NLA backup referees
+          items:
+            $ref: '#/components/schemas/BackupRefereeAssignment'
+        nlbReferees:
+          type: array
+          description: Detailed list of NLB backup referees
+          items:
+            $ref: '#/components/schemas/BackupRefereeAssignment'
+    BackupRefereeAssignment:
+      type: object
+      description: An assignment of a referee as backup for a specific league
+      required: [__identity, indoorReferee]
+      properties:
+        __identity:
+          type: string
+          format: uuid
+          description: Unique identifier for this assignment
+          example: "33333333-dddd-eeee-ffff-444444444444"
+        indoorReferee:
+          $ref: '#/components/schemas/BackupIndoorReferee'
+        isDispensed:
+          type: boolean
+          description: Whether the referee is dispensed from duty
+          default: false
+        hasFutureRefereeConvocations:
+          type: boolean
+          description: Whether the referee has future convocations scheduled
+        hasResigned:
+          type: boolean
+          description: Whether the referee has resigned
+          default: false
+        unconfirmedFutureRefereeConvocations:
+          type: boolean
+          description: Whether there are unconfirmed future convocations
+          default: false
+        originId:
+          type: integer
+          nullable: true
+          description: Origin identifier (if imported from external system)
+          example: 1234
+        createdBy:
+          type: string
+          description: Username of creator
+          example: "System"
+        createdByPersistenceIdentifier:
+          type: string
+          description: UUID of creator
+        updatedBy:
+          type: string
+          description: Username of last updater
+        updatedByPersistenceIdentifier:
+          type: string
+          description: UUID of last updater
+    BackupIndoorReferee:
+      type: object
+      description: Indoor referee details for backup assignment
+      properties:
+        persistenceObjectIdentifier:
+          type: string
+          format: uuid
+          description: Referee identifier
+          example: "55555555-aaaa-bbbb-cccc-666666666666"
+        __identity:
+          type: string
+          format: uuid
+          example: "55555555-aaaa-bbbb-cccc-666666666666"
+        person:
+          $ref: '#/components/schemas/BackupRefereePerson'
+        refereeInformation:
+          type: string
+          description: Formatted referee info string
+          example: "Mustermann Max (12345, 1990-01-15, )"
+        transportationMode:
+          type: string
+          enum: [car, public_transport, bicycle, on_foot]
+          description: Preferred transportation mode
+          example: "car"
+        validated:
+          type: boolean
+          description: Whether referee data is validated
+        mobilePhoneNumbers:
+          type: string
+          description: Mobile phone number(s)
+          example: "+41791234567"
+        privatePostalAddresses:
+          type: string
+          description: Private postal address
+          example: "Musterstrasse 1, 8000 Zürich"
+        hasPlusCode:
+          type: boolean
+          description: Whether location has a Plus Code
+        hasNotes:
+          type: boolean
+          description: Whether there are notes about this referee
+        isInternationalReferee:
+          type: boolean
+          description: Whether this is an international referee
+        hasLinesmanCertification:
+          type: boolean
+          description: Whether referee has linesman certification
+    BackupRefereePerson:
+      type: object
+      description: Person details for a backup referee
+      properties:
+        persistenceObjectIdentifier:
+          type: string
+          format: uuid
+          example: "77777777-aaaa-bbbb-cccc-888888888888"
+        __identity:
+          type: string
+          format: uuid
+          example: "77777777-aaaa-bbbb-cccc-888888888888"
+        associationId:
+          type: integer
+          description: Swiss Volley association ID
+          example: 12345
+        firstName:
+          type: string
+          example: "Max"
+        lastName:
+          type: string
+          example: "Mustermann"
+        displayName:
+          type: string
+          description: Full display name
+          example: "Max Mustermann"
+        fullName:
+          type: string
+          description: Full name
+          example: "Max Mustermann"
+        gender:
+          type: string
+          enum: [m, f]
+          example: "m"
+        correspondenceLanguage:
+          type: string
+          enum: [de, fr, it, en]
+          description: Preferred language for correspondence
+          example: "de"
+        language:
+          type: string
+          enum: [de, fr, it, en]
+          example: "de"
+        age:
+          type: integer
+          description: Age in years
+          example: 35
+        yearOfBirth:
+          type: integer
+          example: 1990
+        formattedAndTimezoneIndependentBirthday:
+          type: string
+          format: date
+          description: Birthday in YYYY-MM-DD format
+          example: "1990-01-15"
+        hasAccount:
+          type: boolean
+          description: Whether person has a VolleyManager account
+        accountActive:
+          type: boolean
+          description: Whether account is active
+        hasProfilePicture:
+          type: boolean
+        primaryEmailAddress:
+          $ref: '#/components/schemas/EmailAddress'
+        primaryPhoneNumber:
+          $ref: '#/components/schemas/PhoneNumber'
     GameExchange:
       type: object
       required: [__identity, refereeGame, status, submittedAt, submittedByPerson, submittingType, refereePosition]
