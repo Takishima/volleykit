@@ -125,12 +125,12 @@ jobs:
           path: web-app/src/api
 
       # Cache ESLint results (ESLint handles per-file invalidation internally)
-      # Key based on ESLint config and plugins - source changes handled by ESLint's cache format
+      # Key based on ESLint config, TypeScript config, and plugins
       - name: Cache ESLint
         uses: actions/cache@v5
         with:
           path: web-app/.eslintcache
-          key: eslint-${{ runner.os }}-${{ hashFiles('web-app/eslint.config.js', 'web-app/package-lock.json') }}
+          key: eslint-${{ runner.os }}-${{ hashFiles('web-app/eslint.config.js', 'web-app/tsconfig.json', 'web-app/package-lock.json') }}
           restore-keys: |
             eslint-${{ runner.os }}-
 
