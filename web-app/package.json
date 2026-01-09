@@ -52,6 +52,12 @@
     {
       "name": "OCR Feature (lazy-loaded)",
       "path": "dist/assets/chunk-OCRPanel-*.js",
+      "limit": "12 kB",
+      "gzip": true
+    },
+    {
+      "name": "Image Cropper (lazy-loaded)",
+      "path": "dist/assets/chunk-cropper-*.js",
       "limit": "10 kB",
       "gzip": true
     },
@@ -64,7 +70,7 @@
     {
       "name": "Total JS Bundle",
       "path": "dist/assets/*.js",
-      "limit": "500 kB",
+      "limit": "510 kB",
       "gzip": true
     }
   ],
@@ -78,6 +84,7 @@
     "pluscodes": "^3.0.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
+    "react-easy-crop": "^5.5.6",
     "react-router-dom": "^7.10.1",
     "tailwindcss": "^4.1.17",
     "zod": "^4.3.5",

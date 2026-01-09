@@ -159,14 +159,16 @@ export default defineConfig(({ mode }) => {
           //   - Main App Bundle (index-*.js):     ~117 kB, limit 145 kB (+28 kB headroom)
           //   - Vendor Chunks (combined):         ~47 kB,  limit 50 kB  (+3 kB headroom)
           //   - PDF Library (pdf-lib-*.js):       ~181 kB, limit 185 kB (+4 kB headroom) - lazy-loaded
-          //   - OCR Feature (OCRPanel-*.js):      ~8 kB,   limit 10 kB  (+2 kB headroom) - lazy-loaded
-          //   - Total JS Bundle:                  ~470 kB, limit 475 kB (+5 kB headroom)
+          //   - Image Cropper (cropper-*.js):     ~6 kB,   limit 10 kB  (+4 kB headroom) - lazy-loaded
+          //   - OCR Feature (OCRPanel-*.js):      ~8 kB,   limit 12 kB  (+4 kB headroom) - lazy-loaded
+          //   - Total JS Bundle:                  ~480 kB, limit 510 kB (+30 kB headroom)
           manualChunks: {
             'react-vendor': ['react', 'react-dom'],
             'router': ['react-router-dom'],
             'state': ['zustand', '@tanstack/react-query'],
             'validation': ['zod'],
             'pdf-lib': ['pdf-lib'],
+            'cropper': ['react-easy-crop'],
           },
         },
       },

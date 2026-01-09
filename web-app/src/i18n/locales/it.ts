@@ -699,6 +699,8 @@ const it: Translations = {
       useResults: "Applica risultati",
       continueToValidation: "Continua",
       cancel: "Annulla",
+      rotateLeft: "Ruota a sinistra",
+      rotateRight: "Ruota a destra",
       players: "Giocatori",
       coaches: "Allenatori",
       scoresheetType: {

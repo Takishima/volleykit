@@ -532,6 +532,8 @@ export interface Translations {
       useResults: string;
       continueToValidation: string;
       cancel: string;
+      rotateLeft: string;
+      rotateRight: string;
       players: string;
       coaches: string;
       scoresheetType: {
