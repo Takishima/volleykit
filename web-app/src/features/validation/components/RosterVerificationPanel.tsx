@@ -270,6 +270,12 @@ export function RosterVerificationPanel({
   // OCR handlers
   const handleOCRApplyResults = useCallback(
     (matchedPlayerIds: string[]) => {
+      // In read-only mode, just close the panel without applying changes
+      // (OCR is available for debugging/re-verification purposes only)
+      if (readOnly) {
+        setIsOCRPanelOpen(false);
+        return;
+      }
       // Clear any removed flags for matched players
       setRemovedPlayerIds((prev) => {
         const newSet = new Set(prev);
@@ -278,7 +284,7 @@ export function RosterVerificationPanel({
       });
       setIsOCRPanelOpen(false);
     },
-    [],
+    [readOnly],
   );
 
   // Compute player data
@@ -466,22 +472,25 @@ export function RosterVerificationPanel({
               </div>
             )}
 
-            {/* Action buttons - hidden in read-only mode */}
-            {!readOnly && (
+            {/* Action buttons */}
+            {(!readOnly || isOCREnabled) && (
               <div className="mt-4 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsAddPlayerSheetOpen(true)}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 rounded-lg border border-primary-200 dark:border-primary-800 transition-colors"
-                >
-                  <UserPlus className="w-4 h-4" aria-hidden="true" />
-                  {t("validation.roster.addPlayer")}
-                </button>
+                {!readOnly && (
+                  <button
+                    type="button"
+                    onClick={() => setIsAddPlayerSheetOpen(true)}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 rounded-lg border border-primary-200 dark:border-primary-800 transition-colors"
+                  >
+                    <UserPlus className="w-4 h-4" aria-hidden="true" />
+                    {t("validation.roster.addPlayer")}
+                  </button>
+                )}
+                {/* OCR button available in read-only mode for debugging/re-verification */}
                 {isOCREnabled && (
                   <button
                     type="button"
                     onClick={() => setIsOCRPanelOpen(true)}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/30 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 transition-colors"
+                    className={`flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/30 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 transition-colors ${readOnly ? "flex-1" : ""}`}
                     title={t("validation.ocr.scanScoresheet")}
                   >
                     <Camera className="w-4 h-4" aria-hidden="true" />
@@ -518,8 +527,8 @@ export function RosterVerificationPanel({
         />
       )}
 
-      {/* OCR Panel - only available in edit mode and when OCR is enabled */}
-      {!readOnly && isOCREnabled && (
+      {/* OCR Panel - available in read-only mode for debugging/re-verification */}
+      {isOCREnabled && (
         <Suspense fallback={null}>
           <OCRPanel
             isOpen={isOCRPanelOpen}
