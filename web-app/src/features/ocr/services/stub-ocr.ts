@@ -85,6 +85,7 @@ function generateMockResult(text: string): OCRResult {
     fullText: text,
     lines,
     words: lines.flatMap((line) => line.words),
+    hasPreciseBoundingBoxes: false,
   };
 }
 

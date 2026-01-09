@@ -305,7 +305,7 @@ function createOCRResult(fullText: string, lines: OCRLine[]): OCRResult {
   for (const line of lines) {
     allWords.push(...line.words);
   }
-  return { fullText, lines, words: allWords };
+  return { fullText, lines, words: allWords, hasPreciseBoundingBoxes: false };
 }
 
 describe('parseGameSheetWithOCR', () => {
@@ -316,6 +316,7 @@ N.\tName of the player\tLicense\tN.\tName of the player\tLicense
 1\tPLAYER ONE\tOK\t1\tPLAYER TWO\tOK`,
       lines: [],
       words: [],
+      hasPreciseBoundingBoxes: false,
     };
 
     const result = parseGameSheetWithOCR(ocrResult);

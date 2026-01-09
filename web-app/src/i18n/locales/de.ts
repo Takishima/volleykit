@@ -758,6 +758,7 @@ const de: Translations = {
         capturedImage: "Aufgenommenes Spielberichtsbild",
         wordsDetected: "Wörter erkannt",
         wordsMatched: "übereinstimmend",
+        rawText: "OCR-Rohtext",
       },
     },
   },

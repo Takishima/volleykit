@@ -42,6 +42,7 @@ N.\tName of the player\tLicense\tN.\tName of the player\tLicense
 1\tMÜLLER ANNA\tOK\t1\tSCHMIDT LISA\tOK`,
       lines: [],
       words: [],
+      hasPreciseBoundingBoxes: false,
     };
     mockEngine.recognize.mockResolvedValue(mockOCRResult);
 
@@ -85,6 +86,7 @@ N.\tName of the player\tLicense\tN.\tName of the player\tLicense
       fullText: 'Team A\tTeam B',
       lines: [],
       words: [],
+      hasPreciseBoundingBoxes: false,
     };
     mockEngine.recognize.mockResolvedValue(mockOCRResult);
 
@@ -130,7 +132,7 @@ N.\tName of the player\tLicense\tN.\tName of the player\tLicense
 
     // Resolve and wait
     await act(async () => {
-      resolveRecognize!({ fullText: '', lines: [], words: [] });
+      resolveRecognize!({ fullText: '', lines: [], words: [], hasPreciseBoundingBoxes: false });
       await processPromise;
     });
 
@@ -148,7 +150,7 @@ N.\tName of the player\tLicense\tN.\tName of the player\tLicense
     mockEngine.recognize.mockImplementation(async () => {
       // Simulate progress updates
       capturedProgressCallback?.({ status: 'Processing...', progress: 50 });
-      return { fullText: '', lines: [], words: [] };
+      return { fullText: '', lines: [], words: [], hasPreciseBoundingBoxes: false };
     });
 
     const { result } = renderHook(() => useOCRScoresheet());

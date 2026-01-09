@@ -586,6 +586,7 @@ export interface Translations {
         capturedImage: string;
         wordsDetected: string;
         wordsMatched: string;
+        rawText: string;
       };
     };
   };

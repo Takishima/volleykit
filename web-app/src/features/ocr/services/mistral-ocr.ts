@@ -266,6 +266,7 @@ export class MistralOCR implements OCREngine {
       fullText,
       lines,
       words,
+      hasPreciseBoundingBoxes: false,
     };
   }
 
