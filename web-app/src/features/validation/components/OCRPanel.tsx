@@ -268,7 +268,7 @@ export function OCRPanel({
           )}
 
           {/* Processing step */}
-          {step === "processing" && isProcessing && (
+          {step === "processing" && (
             <div
               className="py-8 flex flex-col items-center justify-center"
               role="status"
