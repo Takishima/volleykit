@@ -55,10 +55,16 @@ const PARTICLE_HEIGHT_RATIO = 4;
  *
  * Creates a canvas overlay and animates confetti particles falling from the top.
  * The animation cleans up automatically when complete.
+ * Respects prefers-reduced-motion for accessibility.
  *
  * @param duration - Animation duration in milliseconds (default: 3000)
  */
 export function launchConfetti(duration = 3000): void {
+  // Respect user's motion preferences for accessibility
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    return;
+  }
+
   // Create canvas element
   const canvas = document.createElement('canvas');
   canvas.style.position = 'fixed';
@@ -80,7 +86,9 @@ export function launchConfetti(duration = 3000): void {
 
   const ctx = canvas.getContext('2d');
   if (!ctx) {
-    document.body.removeChild(canvas);
+    if (canvas.parentNode) {
+      canvas.parentNode.removeChild(canvas);
+    }
     return;
   }
 
@@ -116,7 +124,9 @@ export function launchConfetti(duration = 3000): void {
       // Cleanup
       cancelAnimationFrame(animationId);
       window.removeEventListener('resize', resize);
-      document.body.removeChild(canvas);
+      if (canvas.parentNode) {
+        canvas.parentNode.removeChild(canvas);
+      }
       return;
     }
 
