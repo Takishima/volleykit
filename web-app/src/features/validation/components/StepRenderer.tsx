@@ -114,7 +114,7 @@ export function StepRenderer({
         <ScorerPanel
           key={validation.pendingScorer?.__identity ?? "no-pending-scorer"}
           onScorerChange={handlers.setScorer}
-          readOnly={validation.isValidated}
+          readOnly={validation.isValidated || validation.isInSafeMode}
           readOnlyScorerName={validation.validatedInfo?.scorerName}
           readOnlyScorerBirthday={validation.validatedInfo?.scorerBirthday}
           initialScorer={
