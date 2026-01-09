@@ -182,12 +182,16 @@ export function OCRCaptureModal({
   }, []);
 
   // Handle crop confirmation
+  // Note: We only call onImageSelected, not onClose. The parent component
+  // (OCREntryModal/OCRPanel) is responsible for closing this modal by setting
+  // showCaptureModal to false in their handleImageSelected callback.
+  // Calling onClose here would race with the parent's state updates and could
+  // reset the step to "intro" before the processing step is shown.
   const handleCropConfirm = useCallback(
     (croppedBlob: Blob) => {
       onImageSelected(croppedBlob);
-      onClose();
     },
-    [onImageSelected, onClose],
+    [onImageSelected],
   );
 
   // Handle crop cancel
