@@ -299,6 +299,9 @@ jobs:
     defaults:
       run:
         working-directory: web-app
+    # Firefox requires HOME to be owned by current user in containers
+    env:
+      HOME: /root
     steps:
       - name: Checkout
         uses: actions/checkout@v6
