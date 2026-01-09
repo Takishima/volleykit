@@ -132,7 +132,7 @@ export function StepRenderer({
       {currentStepId === "scoresheet" && (
         <ScoresheetPanel
           onScoresheetChange={handlers.setScoresheet}
-          readOnly={validation.isValidated}
+          readOnly={validation.isValidated || validation.isInSafeMode}
           hasScoresheet={validation.validatedInfo?.hasScoresheet}
           scoresheetNotRequired={validation.scoresheetNotRequired}
         />
