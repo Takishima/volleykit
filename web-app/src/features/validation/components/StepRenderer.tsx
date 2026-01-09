@@ -17,6 +17,8 @@ interface LoadingState {
 
 interface ValidationInfo {
   isValidated: boolean;
+  /** True when safe mode is enabled - roster editing is disabled */
+  isInSafeMode: boolean;
   validatedInfo: UseValidationStateResult["validatedInfo"];
   pendingScorer: UseValidationStateResult["pendingScorer"];
   scoresheetNotRequired: boolean;
@@ -89,7 +91,7 @@ export function StepRenderer({
           assignment={assignment}
           onModificationsChange={handlers.setHomeRosterModifications}
           onAddPlayerSheetOpenChange={handlers.onAddPlayerSheetOpenChange}
-          readOnly={validation.isValidated}
+          readOnly={validation.isValidated || validation.isInSafeMode}
           initialModifications={validation.state.homeRoster.playerModifications}
           initialCoachModifications={validation.state.homeRoster.coachModifications}
           prefetchedNominationList={validation.homeNominationList}
@@ -101,7 +103,7 @@ export function StepRenderer({
           assignment={assignment}
           onModificationsChange={handlers.setAwayRosterModifications}
           onAddPlayerSheetOpenChange={handlers.onAddPlayerSheetOpenChange}
-          readOnly={validation.isValidated}
+          readOnly={validation.isValidated || validation.isInSafeMode}
           initialModifications={validation.state.awayRoster.playerModifications}
           initialCoachModifications={validation.state.awayRoster.coachModifications}
           prefetchedNominationList={validation.awayNominationList}
