@@ -23,6 +23,10 @@ const mockUseTour = vi.hoisted(() => ({
 vi.mock("@/features/validation/hooks/useConvocations");
 vi.mock("@/shared/hooks/useTour", () => mockUseTour);
 vi.mock("@/shared/stores/auth");
+vi.mock("@/features/referee-backup", () => ({
+  useMyOnCallAssignments: () => ({ data: [], isLoading: false, error: null }),
+  OnCallCard: () => null,
+}));
 vi.mock("@/shared/hooks/useTranslation", () => ({
   useTranslation: () => ({
     t: (key: string) => {

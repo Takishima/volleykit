@@ -214,6 +214,11 @@ const de: Translations = {
     clubAdmin: "Vereinsadministrator",
     associationAdmin: "Verband",
   },
+  onCall: {
+    title: "Pikett",
+    duty: "Pikettdienst",
+    section: "Pikettdienste",
+  },
   assignments: {
     title: "Einsätze",
     upcoming: "Bevorstehend",

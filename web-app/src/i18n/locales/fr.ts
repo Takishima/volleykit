@@ -214,6 +214,11 @@ const fr: Translations = {
     clubAdmin: "Admin club",
     associationAdmin: "Association",
   },
+  onCall: {
+    title: "Piquet",
+    duty: "Service de piquet",
+    section: "Services de piquet",
+  },
   assignments: {
     title: "Désignations",
     upcoming: "À venir",

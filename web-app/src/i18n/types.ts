@@ -102,6 +102,11 @@ export interface Translations {
     clubAdmin: string;
     associationAdmin: string;
   };
+  onCall: {
+    title: string;
+    duty: string;
+    section: string;
+  };
   assignments: {
     title: string;
     upcoming: string;

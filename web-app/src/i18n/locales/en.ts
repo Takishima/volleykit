@@ -214,6 +214,11 @@ const en: Translations = {
     clubAdmin: "Club Admin",
     associationAdmin: "Association",
   },
+  onCall: {
+    title: "On-Call",
+    duty: "On-call duty",
+    section: "On-Call Duties",
+  },
   assignments: {
     title: "Assignments",
     upcoming: "Upcoming",

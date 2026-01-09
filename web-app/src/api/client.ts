@@ -61,6 +61,7 @@ export type PersonSearchResult = Schemas["PersonSearchResult"];
 export type PersonSearchResponse = Schemas["PersonSearchResponse"];
 export type RefereeBackupEntry = Schemas["RefereeBackupEntry"];
 export type RefereeBackupSearchResponse = Schemas["RefereeBackupSearchResponse"];
+export type BackupRefereeAssignment = Schemas["BackupRefereeAssignment"];
 
 export interface PersonSearchFilter {
   firstName?: string;

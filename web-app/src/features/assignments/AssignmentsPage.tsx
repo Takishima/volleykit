@@ -29,6 +29,7 @@ import { TOUR_DUMMY_ASSIGNMENT } from "@/features/assignments/assignments";
 import { useAuthStore } from "@/shared/stores/auth";
 import { useShallow } from "zustand/react/shallow";
 import { useCalendarAssociationFilter } from "./hooks/useCalendarAssociationFilter";
+import { useMyOnCallAssignments, OnCallCard } from "@/features/referee-backup";
 
 const PdfLanguageModal = lazy(
   () =>
@@ -136,6 +137,9 @@ export function AssignmentsPage() {
   // Association filter for calendar mode (extracts unique associations from data)
   // The filter selection is managed in the AppShell header dropdown
   const { filterByAssociation } = useCalendarAssociationFilter(calendarData ?? []);
+
+  // Fetch on-call (Pikett) assignments - only in full API mode
+  const { data: onCallAssignments } = useMyOnCallAssignments();
 
   // Compute calendar-specific data (filter by upcoming/past and association)
   const calendarUpcoming = useMemo(() => {
@@ -349,7 +353,7 @@ export function AssignmentsPage() {
           />
         )}
 
-        {(!isLoading || showDummyData) && !error && data && data.length === 0 && (
+        {(!isLoading || showDummyData) && !error && data && data.length === 0 && onCallAssignments.length === 0 && (
           <EmptyState
             icon={activeTab === "upcoming" ? "calendar" : "lock"}
             {...getEmptyStateContent(
@@ -359,6 +363,20 @@ export function AssignmentsPage() {
               t,
             )}
           />
+        )}
+
+        {/* On-call assignments section - only in upcoming tab, API or demo mode (not calendar) */}
+        {activeTab === "upcoming" && !isCalendarMode && !showDummyData && onCallAssignments.length > 0 && (
+          <div className="space-y-2 mb-4">
+            <h3 className="text-xs font-medium text-amber-700 dark:text-amber-400 uppercase tracking-wide px-1">
+              {t("onCall.section")}
+            </h3>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {onCallAssignments.map((assignment) => (
+                <OnCallCard key={assignment.id} assignment={assignment} />
+              ))}
+            </div>
+          </div>
         )}
 
         {(!isLoading || showDummyData) && !error && groupedData.length > 0 && (

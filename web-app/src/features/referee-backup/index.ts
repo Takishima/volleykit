@@ -4,12 +4,15 @@
  * This feature provides API client integration for managing on-call
  * referee schedules for NLA and NLB games.
  *
- * Currently implements:
- * - useRefereeBackups hook for fetching backup schedules
- *
- * Future additions may include:
- * - UI components for displaying backup schedules
- * - Admin actions for managing backups
+ * Implements:
+ * - useRefereeBackups: Hook for fetching all backup schedules (admin view)
+ * - useMyOnCallAssignments: Hook for fetching current user's on-call duties
+ * - OnCallCard: UI component for displaying on-call assignments
  */
 
 export { useRefereeBackups } from "./hooks/useRefereeBackups";
+export {
+  useMyOnCallAssignments,
+  type OnCallAssignment,
+} from "./hooks/useMyOnCallAssignments";
+export { OnCallCard } from "./components/OnCallCard";
