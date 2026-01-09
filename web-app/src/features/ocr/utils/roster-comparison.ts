@@ -44,12 +44,6 @@ const WORD_ORDER_INDEPENDENT_SCORE = 95;
 /** Minimum Fuse.js score (0-1, lower is better) to consider a word match */
 const MAX_FUSE_WORD_SCORE = 0.4;
 
-/** Minimum Fuse.js score (0-1, lower is better) for direct string comparison */
-const MAX_FUSE_DIRECT_SCORE = 0.2;
-
-/** Minimum normalized similarity (0-1) for direct match to be accepted */
-const MIN_DIRECT_MATCH_SIMILARITY = 0.8;
-
 /** Minimum normalized similarity (0-1) for word-level match to count */
 const MIN_WORD_MATCH_SIMILARITY = 0.6;
 
@@ -216,21 +210,7 @@ export function calculateNameSimilarity(name1: string, name2: string): number {
     return MAX_CONFIDENCE;
   }
 
-  // Use Fuse.js for direct string comparison
-  const directFuse = new Fuse([n2], {
-    threshold: MAX_FUSE_DIRECT_SCORE,
-    ignoreLocation: true,
-    includeScore: true,
-  });
-  const directResults = directFuse.search(n1);
-  if (directResults.length > 0 && directResults[0]!.score !== undefined) {
-    const similarity = 1 - directResults[0]!.score;
-    if (similarity >= MIN_DIRECT_MATCH_SIMILARITY) {
-      return Math.round(similarity * MAX_CONFIDENCE);
-    }
-  }
-
-  // Check if one contains the other
+  // Check if one contains the other (fast path, no Fuse needed)
   if (n1.includes(n2) || n2.includes(n1)) {
     const shorter = n1.length < n2.length ? n1 : n2;
     const longer = n1.length >= n2.length ? n1 : n2;
@@ -247,13 +227,21 @@ export function calculateNameSimilarity(name1: string, name2: string): number {
 
   const wordFuse = new Fuse(words2, FUSE_WORD_OPTIONS);
   let matchingScore = 0;
+  const usedIndices = new Set<number>();
 
   for (const w1 of words1) {
     const results = wordFuse.search(w1);
-    if (results.length > 0 && results[0]!.score !== undefined) {
-      const similarity = 1 - results[0]!.score;
+
+    // Find best unused match to avoid double-counting
+    for (const result of results) {
+      const idx = result.refIndex;
+      if (usedIndices.has(idx)) continue;
+
+      const similarity = 1 - (result.score ?? 1);
       if (similarity > MIN_WORD_MATCH_SIMILARITY) {
         matchingScore += similarity;
+        usedIndices.add(idx);
+        break;
       }
     }
   }
