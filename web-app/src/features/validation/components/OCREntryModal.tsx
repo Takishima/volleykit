@@ -838,9 +838,9 @@ function RawOcrDataPanel({
             />
           )}
           {/* Team A */}
-          <RawTeamData team={data.teamA} label="Team A" />
+          <RawTeamData team={data.teamA} label={t("validation.ocr.rawData.teamA")} />
           {/* Team B */}
-          <RawTeamData team={data.teamB} label="Team B" />
+          <RawTeamData team={data.teamB} label={t("validation.ocr.rawData.teamB")} />
         </div>
       )}
     </div>
@@ -877,21 +877,21 @@ function RawTeamData({ team, label }: RawTeamDataProps) {
             <table className="min-w-full text-xs">
               <thead>
                 <tr className="text-gray-500 dark:text-gray-400">
-                  <th className="text-left pr-2 font-medium">
+                  <th scope="col" className="text-left pr-2 font-medium">
                     {t("validation.ocr.rawData.shirtNumber")}
                   </th>
-                  <th className="text-left pr-2 font-medium">
+                  <th scope="col" className="text-left pr-2 font-medium">
                     {t("validation.ocr.rawData.name")}
                   </th>
-                  <th className="text-left font-medium">
+                  <th scope="col" className="text-left font-medium">
                     {t("validation.ocr.rawData.licenseStatus")}
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {team.players.map((player, idx) => (
+                {team.players.map((player) => (
                   <tr
-                    key={idx}
+                    key={`${player.shirtNumber}-${player.rawName || player.displayName}`}
                     className="text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-700"
                   >
                     <td className="pr-2 py-0.5">
@@ -919,18 +919,18 @@ function RawTeamData({ team, label }: RawTeamDataProps) {
             <table className="min-w-full text-xs">
               <thead>
                 <tr className="text-gray-500 dark:text-gray-400">
-                  <th className="text-left pr-2 font-medium">
+                  <th scope="col" className="text-left pr-2 font-medium">
                     {t("validation.ocr.rawData.role")}
                   </th>
-                  <th className="text-left font-medium">
+                  <th scope="col" className="text-left font-medium">
                     {t("validation.ocr.rawData.name")}
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {team.officials.map((official, idx) => (
+                {team.officials.map((official) => (
                   <tr
-                    key={idx}
+                    key={`${official.role}-${official.rawName || official.displayName}`}
                     className="text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-700"
                   >
                     <td className="pr-2 py-0.5">{official.role}</td>
@@ -1077,10 +1077,10 @@ function OCRImageOverlay({
             viewBox={`0 0 ${imageSize.width} ${imageSize.height}`}
             preserveAspectRatio="none"
           >
-            {ocrResult.words.map((word, idx) => {
+            {ocrResult.words.map((word) => {
               const isMatched = isMatchedWord(word.text);
               return (
-                <g key={idx}>
+                <g key={`${word.bbox.x0}-${word.bbox.y0}-${word.bbox.x1}-${word.bbox.y1}`}>
                   <rect
                     x={word.bbox.x0}
                     y={word.bbox.y0}

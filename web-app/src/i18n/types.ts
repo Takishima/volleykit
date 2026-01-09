@@ -570,14 +570,14 @@ export interface Translations {
       };
       rawData: {
         title: string;
-        teamName: string;
+        teamA: string;
+        teamB: string;
         players: string;
         officials: string;
         shirtNumber: string;
         name: string;
         licenseStatus: string;
         role: string;
-        noData: string;
         imageOverlay: string;
         hideOverlay: string;
         showOverlay: string;
