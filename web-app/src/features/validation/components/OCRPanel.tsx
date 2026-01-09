@@ -51,8 +51,7 @@ export function OCRPanel({
   scoresheetType = "electronic",
 }: OCRPanelProps) {
   const { t } = useTranslation();
-  const { processImage, isProcessing, progress, error, reset } =
-    useOCRScoresheet();
+  const { processImage, progress, error, reset } = useOCRScoresheet();
 
   const [step, setStep] = useState<OCRPanelStep>("capture");
   const [showCaptureModal, setShowCaptureModal] = useState(false);
