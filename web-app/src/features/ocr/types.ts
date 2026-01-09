@@ -106,6 +106,8 @@ export interface ParsedPlayer {
   rawName: string;
   /** License status (e.g., "NOT", "LFP") */
   licenseStatus: string;
+  /** Birth date in DD.MM.YY format (from Swiss manuscript scoresheets) */
+  birthDate?: string;
 }
 
 /**
