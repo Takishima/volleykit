@@ -164,6 +164,8 @@ jobs:
         run: npm run knip
 
   # Unit tests - needs API types from setup
+  # PRs: only run tests affected by changed files (--changed)
+  # main: run all tests for full coverage validation
   test:
     name: Test
     needs: setup
@@ -174,6 +176,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          # Full history needed for --changed to compare against base branch
+          fetch-depth: 0
 
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
@@ -197,7 +202,14 @@ jobs:
             vitest-${{ runner.os }}-
 
       - name: Run tests
-        run: npm test
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # PRs: only run tests affected by changes since base branch
+            npm test -- --changed origin/${{ github.base_ref }}
+          else
+            # main branch: run all tests
+            npm test
+          fi
 
   # Build once - artifact shared by bundle-size, e2e, and lighthouse
   build:
