@@ -78,7 +78,9 @@ export function useOCRScoresheet(): UseOCRScoresheetReturn {
 
       try {
         // Create OCR engine with progress callback
-        const engine = await OCRFactory.createWithFallback((p) => {
+        // Use create() directly to skip health check - the PoC works this way
+        // and createWithFallback's health check may fail in some environments
+        const engine = OCRFactory.create((p) => {
           setProgress(p);
         });
         engineRef.current = engine;

@@ -6,7 +6,7 @@ import { OCRFactory } from '../services/ocr-factory';
 // Mock the OCRFactory
 vi.mock('../services/ocr-factory', () => ({
   OCRFactory: {
-    createWithFallback: vi.fn(),
+    create: vi.fn(),
   },
 }));
 
@@ -19,7 +19,7 @@ describe('useOCRScoresheet', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(OCRFactory.createWithFallback).mockResolvedValue(mockEngine);
+    vi.mocked(OCRFactory.create).mockReturnValue(mockEngine);
   });
 
   afterEach(() => {
@@ -53,7 +53,7 @@ N.\tName of the player\tLicense\tN.\tName of the player\tLicense
       processResult = await result.current.processImage(imageBlob);
     });
 
-    expect(OCRFactory.createWithFallback).toHaveBeenCalled();
+    expect(OCRFactory.create).toHaveBeenCalled();
     expect(mockEngine.initialize).toHaveBeenCalled();
     expect(mockEngine.recognize).toHaveBeenCalledWith(imageBlob);
     expect(mockEngine.terminate).toHaveBeenCalled();
@@ -140,12 +140,10 @@ N.\tName of the player\tLicense\tN.\tName of the player\tLicense
   it('calls progress callback', async () => {
     let capturedProgressCallback: ((p: { status: string; progress: number }) => void) | undefined;
 
-    vi.mocked(OCRFactory.createWithFallback).mockImplementation(
-      async (onProgress) => {
-        capturedProgressCallback = onProgress;
-        return mockEngine;
-      },
-    );
+    vi.mocked(OCRFactory.create).mockImplementation((onProgress) => {
+      capturedProgressCallback = onProgress;
+      return mockEngine;
+    });
 
     mockEngine.recognize.mockImplementation(async () => {
       // Simulate progress updates

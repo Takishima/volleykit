@@ -86,6 +86,7 @@ jobs:
           VITE_API_PROXY_URL: ${{ vars.VITE_API_PROXY_URL }}
           VITE_BASE_PATH: /${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/
           VITE_OJP_API_KEY: ${{ secrets.VITE_OJP_API_KEY }}
+          VITE_OCR_ENDPOINT: ${{ vars.VITE_OCR_ENDPOINT }}
 
       - name: Add .nojekyll for GitHub Pages
         run: touch dist/.nojekyll
