@@ -3,6 +3,7 @@ import {
   assignmentsResponseSchema,
   compensationsResponseSchema,
   exchangesResponseSchema,
+  refereeBackupResponseSchema,
   validateResponse,
 } from "./validation";
 import { mockApi } from "./mock-api";
@@ -18,6 +19,7 @@ import {
   ASSIGNMENT_PROPERTIES,
   EXCHANGE_PROPERTIES,
   COMPENSATION_PROPERTIES,
+  REFEREE_BACKUP_PROPERTIES,
 } from "./property-configs";
 import {
   MAX_FILE_SIZE_BYTES,
@@ -57,6 +59,8 @@ export type FileResource = Schemas["FileResource"];
 export type GameDetails = Schemas["GameDetails"];
 export type PersonSearchResult = Schemas["PersonSearchResult"];
 export type PersonSearchResponse = Schemas["PersonSearchResponse"];
+export type RefereeBackupEntry = Schemas["RefereeBackupEntry"];
+export type RefereeBackupSearchResponse = Schemas["RefereeBackupSearchResponse"];
 
 export interface PersonSearchFilter {
   firstName?: string;
@@ -685,6 +689,32 @@ export const api = {
       const errorMessage = await parseErrorResponse(response);
       throw new Error(`PUT switchRoleAndAttribute: ${errorMessage}`);
     }
+  },
+
+  // Referee Backup (Pikett)
+  /**
+   * Search referee backup (Pikett) assignments.
+   * Returns on-call referees for NLA and NLB games within the specified date range.
+   *
+   * @param config - Search configuration with date filters
+   * @returns Promise with referee backup entries
+   */
+  async searchRefereeBackups(
+    config: SearchConfiguration = {},
+  ): Promise<RefereeBackupSearchResponse> {
+    const data = await apiRequest<unknown>(
+      "/indoorvolleyball.refadmin/api%5crefereeconvocationrefereebackup/search",
+      "POST",
+      {
+        searchConfiguration: {
+          ...config,
+          customFilters: [{ name: "myReferees" }],
+        },
+        propertyRenderConfiguration: REFEREE_BACKUP_PROPERTIES,
+      },
+    );
+    validateResponse(data, refereeBackupResponseSchema, "searchRefereeBackups");
+    return data as RefereeBackupSearchResponse;
   },
 };
 

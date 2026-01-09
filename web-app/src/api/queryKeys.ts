@@ -217,4 +217,22 @@ export const queryKeys = {
     assignmentsByCode: (code: string) =>
       [...queryKeys.calendar.assignments(), code] as const,
   },
+
+  /**
+   * Referee backup (Pikett) query keys for on-call referee management.
+   * Used by referee administrators to view on-call schedules for NLA/NLB games.
+   */
+  refereeBackup: {
+    /** Base key - invalidates ALL referee backup queries */
+    all: ["refereeBackup"] as const,
+    /** Parent key for all list queries */
+    lists: () => [...queryKeys.refereeBackup.all, "list"] as const,
+    /**
+     * Specific list query with search configuration.
+     * @param config - Search configuration filters and sorting
+     * @param associationKey - In demo mode: demoAssociationCode. In production: activeOccupationId.
+     */
+    list: (config?: SearchConfiguration, associationKey?: string | null) =>
+      [...queryKeys.refereeBackup.lists(), config, associationKey] as const,
+  },
 } as const;

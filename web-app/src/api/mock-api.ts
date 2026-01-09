@@ -29,6 +29,7 @@ import type {
   PersonSearchFilter,
   PersonSearchResponse,
   PersonSearchResult,
+  RefereeBackupSearchResponse,
 } from "./client";
 import { useDemoStore, DEMO_USER_PERSON_IDENTITY } from "@/shared/stores/demo";
 import {
@@ -773,6 +774,23 @@ export const mockApi = {
         store.setActiveAssociation(occupation.associationCode as DemoCode);
       }
     }
+  },
+
+  /**
+   * Search referee backup (Pikett) assignments.
+   * In demo mode, returns an empty list since this feature is admin-only.
+   */
+  async searchRefereeBackups(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required for API interface compatibility
+    _config: SearchConfiguration = {},
+  ): Promise<RefereeBackupSearchResponse> {
+    await delay(MOCK_NETWORK_DELAY_MS);
+
+    // Demo mode doesn't include referee backup data (admin-only feature)
+    return {
+      items: [],
+      totalItemsCount: 0,
+    };
   },
 };
 

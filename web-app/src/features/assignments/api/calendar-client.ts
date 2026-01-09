@@ -49,6 +49,7 @@ import type {
   GameDetails,
   PossibleNominationsResponse,
   PersonSearchResponse,
+  RefereeBackupSearchResponse,
 } from "@/api/client";
 import {
   fetchCalendarAssignments,
@@ -315,5 +316,9 @@ export const calendarApi = {
 
   async switchRoleAndAttribute(): Promise<void> {
     throw new CalendarModeNotSupportedError("Role switching");
+  },
+
+  async searchRefereeBackups(): Promise<RefereeBackupSearchResponse> {
+    throw new CalendarModeNotSupportedError("Referee backups");
   },
 };
