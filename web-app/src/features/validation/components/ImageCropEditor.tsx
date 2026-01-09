@@ -12,9 +12,9 @@ import { useTranslation } from "@/shared/hooks/useTranslation";
 import { X, Check, RotateCcw, RotateCw, AlertCircle } from "@/shared/components/icons";
 import type { ScoresheetType } from "@/features/ocr/utils/scoresheet-detector";
 
-/** Aspect ratio for electronic scoresheet (4:5 portrait) */
-const ELECTRONIC_WIDTH = 4;
-const ELECTRONIC_HEIGHT = 5;
+/** Aspect ratio for electronic scoresheet (5:7 portrait) */
+const ELECTRONIC_WIDTH = 5;
+const ELECTRONIC_HEIGHT = 7;
 const ELECTRONIC_ASPECT_RATIO = ELECTRONIC_WIDTH / ELECTRONIC_HEIGHT;
 
 /** Aspect ratio for manuscript scoresheet (7:5 landscape) */
