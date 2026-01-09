@@ -33,7 +33,7 @@ on:
 # - setup job generates API types ONCE, shared via artifact to avoid 4x generation
 # - audit runs independently (doesn't need API types)
 # - build artifact is shared by bundle-size, e2e, and lighthouse
-# - Per-branch caching with main fallback for faster PR builds
+# - Tool caches (ESLint, Vitest, Vite) keyed by config, not source files for better reuse
 # - PRs run chromium only; main branch runs chromium + firefox + webkit
 # - E2E uses pre-built Playwright Docker image (no browser install overhead)
 #
@@ -124,14 +124,14 @@ jobs:
           name: api-types
           path: web-app/src/api
 
-      # Cache ESLint results per branch
+      # Cache ESLint results (ESLint handles per-file invalidation internally)
+      # Key based on ESLint config, TypeScript config, and plugins
       - name: Cache ESLint
         uses: actions/cache@v5
         with:
           path: web-app/.eslintcache
-          key: eslint-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('web-app/src/**/*.ts', 'web-app/src/**/*.tsx') }}
+          key: eslint-${{ runner.os }}-${{ hashFiles('web-app/eslint.config.js', 'web-app/tsconfig.json', 'web-app/package-lock.json') }}
           restore-keys: |
-            eslint-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
             eslint-${{ runner.os }}-
 
       - name: Lint
@@ -164,6 +164,8 @@ jobs:
         run: npm run knip
 
   # Unit tests - needs API types from setup
+  # PRs: only run tests affected by changed files (--changed)
+  # main: run all tests for full coverage validation
   test:
     name: Test
     needs: setup
@@ -174,6 +176,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          # Full history needed for --changed to compare against base branch
+          fetch-depth: 0
 
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
@@ -186,18 +191,25 @@ jobs:
           name: api-types
           path: web-app/src/api
 
-      # Cache Vitest results per branch
-      - name: Cache Vitest
+      # Cache Vite/Vitest transform cache (Vitest stores cache in .vite/vitest)
+      # Key based on tooling config - source file changes don't invalidate transforms
+      - name: Cache Vite
         uses: actions/cache@v5
         with:
-          path: web-app/node_modules/.vitest
-          key: vitest-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('web-app/src/**/*.ts', 'web-app/src/**/*.tsx', 'web-app/src/**/*.test.ts', 'web-app/src/**/*.test.tsx') }}
+          path: web-app/node_modules/.vite
+          key: vite-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json', 'web-app/vite.config.ts', 'web-app/tsconfig.json') }}
           restore-keys: |
-            vitest-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
-            vitest-${{ runner.os }}-
+            vite-${{ runner.os }}-
 
       - name: Run tests
-        run: npm test
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # PRs: only run tests affected by changes since base branch
+            npm test -- --changed origin/${{ github.base_ref }}
+          else
+            # main branch: run all tests
+            npm test
+          fi
 
   # Build once - artifact shared by bundle-size, e2e, and lighthouse
   build:
@@ -222,14 +234,14 @@ jobs:
           name: api-types
           path: web-app/src/api
 
-      # Cache Vite build artifacts per branch
-      - name: Cache Vite build
+      # Cache Vite pre-bundled dependencies (shared key with test job)
+      # Key based on dependencies and config - source changes don't affect dep pre-bundling
+      - name: Cache Vite
         uses: actions/cache@v5
         with:
           path: web-app/node_modules/.vite
-          key: vite-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('web-app/src/**/*.ts', 'web-app/src/**/*.tsx', 'web-app/vite.config.ts') }}
+          key: vite-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json', 'web-app/vite.config.ts', 'web-app/tsconfig.json') }}
           restore-keys: |
-            vite-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
             vite-${{ runner.os }}-
 
       - name: Build
