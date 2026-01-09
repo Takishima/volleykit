@@ -228,6 +228,9 @@ export function parseOfficialName(rawName: string): {
 // Swiss Tabular Format Detection
 // =============================================================================
 
+/** Minimum number of tab-separated lines required to detect Swiss tabular format */
+const MIN_TAB_LINES_FOR_SWISS_FORMAT = 3;
+
 /**
  * Multilingual header labels found in Swiss manuscript scoresheets
  * These indicate a tabular format where OCR reads horizontally
@@ -247,11 +250,13 @@ const SWISS_HEADER_PATTERNS = [
 /**
  * Patterns for noise lines that should be filtered out
  */
+/** Minimum length for noise line pattern match */
+const NOISE_LINE_MIN_LENGTH = 10;
+
 const NOISE_PATTERNS = [
   /^[\d\s.]+$/, // Lines with only numbers, spaces, dots (e.g., "4 8 4 8 . 4 8...")
-  /^[\"T\":\s]+$/i, // Quote marks and colons
+  /^["T:\s]+$/i, // Quote marks, T, and colons
   /^\d+$/, // Single numbers
-  /^[\d\s]{10,}$/, // Long sequences of digits and spaces
 ];
 
 /**
@@ -260,6 +265,12 @@ const NOISE_PATTERNS = [
 function isNoiseLine(line: string): boolean {
   const trimmed = line.trim();
   if (trimmed.length < 2) return true;
+
+  // Check for long sequences of digits and spaces
+  if (trimmed.length >= NOISE_LINE_MIN_LENGTH && /^[\d\s]+$/.test(trimmed)) {
+    return true;
+  }
+
   return NOISE_PATTERNS.some((pattern) => pattern.test(trimmed));
 }
 
@@ -276,7 +287,7 @@ export function isSwissTabularFormat(ocrText: string): boolean {
 
   // Check for tab-separated content with multiple columns
   const tabSeparatedLines = lines.filter((line) => line.includes('\t'));
-  const hasTabularStructure = tabSeparatedLines.length >= 3;
+  const hasTabularStructure = tabSeparatedLines.length >= MIN_TAB_LINES_FOR_SWISS_FORMAT;
 
   // Check for concatenated names pattern (e.g., "S. AngeliL. Collier")
   const hasConcatenatedNames = /[A-Z]\.\s*[A-Za-zÀ-ÿ]+[A-Z]\.\s*[A-Za-zÀ-ÿ]+/.test(ocrText);
@@ -361,6 +372,15 @@ export function splitConcatenatedDates(text: string): string[] {
   return dates;
 }
 
+/** Maximum single digit jersey number */
+const MAX_SINGLE_DIGIT = 9;
+
+/** Minimum two-digit jersey number */
+const MIN_TWO_DIGIT = 10;
+
+/** Maximum two-digit jersey number */
+const MAX_TWO_DIGIT = 99;
+
 /**
  * Split concatenated jersey numbers like "51396102581915"
  * This is tricky as we don't know boundaries. Use heuristics:
@@ -404,14 +424,14 @@ export function splitConcatenatedNumbers(text: string, expectedCount?: number): 
 
       // Prefer single digit for most cases (volleyball numbers 1-20 are common)
       // Only take two digits if the single digit would be 0 or if two-digit is clearly intended
-      if (oneDigit >= 1 && oneDigit <= 9) {
+      if (oneDigit >= 1 && oneDigit <= MAX_SINGLE_DIGIT) {
         numbers.push(oneDigit);
         i += 1;
         continue;
       }
 
       // For numbers starting with 0, skip the leading zero
-      if (twoDigit >= 10 && twoDigit <= 99) {
+      if (twoDigit >= MIN_TWO_DIGIT && twoDigit <= MAX_TWO_DIGIT) {
         numbers.push(twoDigit);
         i += 2;
         continue;
@@ -432,6 +452,95 @@ export function splitConcatenatedNumbers(text: string, expectedCount?: number): 
 // Swiss Tabular Format Team Name Extraction
 // =============================================================================
 
+/** Club prefixes used in Swiss volleyball team names */
+const CLUB_PREFIXES = ['VTV', 'TV', 'VBC', 'BC', 'VC', 'SC', 'FC', 'STV', 'TSV', 'USC', 'US'];
+
+/** Minimum length for a valid team name */
+const MIN_VALID_TEAM_NAME_LENGTH = 3;
+
+/**
+ * Clean Swiss form markers from a text string
+ */
+function cleanSwissMarkers(text: string): string {
+  return text
+    .replace(/aader\/ou\/o\s*B?\s*/gi, ' ')
+    .replace(/punkte[^]*?punti\s*/i, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Remove trailing numbers from team name (like "1" in "VTV Horw 1")
+ */
+function removeTrailingNumbers(name: string): string {
+  const trimmed = name.trim();
+  // Split into words and remove trailing numeric parts
+  const words = trimmed.split(/\s+/);
+  while (words.length > 1 && /^\d+$/.test(words[words.length - 1]!)) {
+    words.pop();
+  }
+  return words.join(' ');
+}
+
+/**
+ * Extract team name starting from a club prefix position
+ */
+function extractTeamNameFromPosition(text: string, startIndex: number, prefix: string): string {
+  // Get the text after the prefix
+  const afterPrefix = text.substring(startIndex + prefix.length).trim();
+
+  // Find where the team name ends (at next club prefix or end of string)
+  let endIndex = afterPrefix.length;
+  for (const otherPrefix of CLUB_PREFIXES) {
+    const idx = afterPrefix.toUpperCase().indexOf(` ${otherPrefix} `);
+    if (idx >= 0 && idx < endIndex) {
+      endIndex = idx;
+    }
+  }
+
+  const teamName = afterPrefix.substring(0, endIndex).trim();
+  return removeTrailingNumbers(`${prefix} ${teamName}`);
+}
+
+/**
+ * Check if a prefix appears at a word boundary in the text
+ */
+function isWordBoundary(text: string, prefixIdx: number, prefixLength: number): boolean {
+  const beforeOk = prefixIdx === 0 || /\s/.test(text[prefixIdx - 1]!);
+  const afterIdx = prefixIdx + prefixLength;
+  const afterOk = afterIdx >= text.length || /\s/.test(text[afterIdx]!);
+  return beforeOk && afterOk;
+}
+
+/**
+ * Find team name in a single part by looking for club prefixes
+ */
+function findTeamNameInPart(part: string): string | null {
+  const cleanedPart = cleanSwissMarkers(part);
+  const upperPart = cleanedPart.toUpperCase();
+
+  for (const prefix of CLUB_PREFIXES) {
+    const prefixIdx = upperPart.indexOf(prefix);
+    if (prefixIdx < 0) continue;
+
+    if (!isWordBoundary(cleanedPart, prefixIdx, prefix.length)) continue;
+
+    const teamName = extractTeamNameFromPosition(cleanedPart, prefixIdx, prefix);
+    if (teamName.length > MIN_VALID_TEAM_NAME_LENGTH) {
+      return teamName;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Check if a line is header-only (all parts match header patterns)
+ */
+function isHeaderOnlyLine(parts: string[]): boolean {
+  return parts.every((p) => SWISS_HEADER_PATTERNS.some((pat) => pat.test(p)));
+}
+
 /**
  * Extract team names from Swiss scoresheet header
  * Header format: "PunktePointsPunti\tAader/ou/oB TV St. Johann\tVTV Horw 1 Aader/ou/oB"
@@ -440,67 +549,23 @@ export function extractSwissTeamNames(ocrText: string): { teamA: string; teamB: 
   const lines = ocrText.split('\n');
 
   for (const line of lines) {
-    // Look for line containing team names (has tab separators and team-like content)
     if (!line.includes('\t')) continue;
 
     const parts = line.split('\t').map((p) => p.trim());
+    if (isHeaderOnlyLine(parts)) continue;
 
-    // Skip header-only lines (all parts match header patterns)
-    if (parts.every((p) => SWISS_HEADER_PATTERNS.some((pat) => pat.test(p)))) {
-      continue;
-    }
-
-    // Clean up the full line by removing Swiss form markers
-    const fullLine = parts.join(' ');
-    const cleanedLine = fullLine
-      .replace(/aader\/ou\/o\s*B?\s*/gi, ' ')
-      .replace(/punkte.*punti\s*/i, ' ')
-      .replace(/\d+\s*/g, ' ') // Remove standalone numbers (like "1" in "VTV Horw 1")
-      .replace(/\s+/g, ' ')
-      .trim();
-
-    // Try to find team names by looking for volleyball club patterns
-    // Pattern: club prefix (TV, VTV, VBC, etc.) followed by team name
-    // Use a simpler pattern that captures until the next club prefix or end
-    const clubPattern = /\b(VTV|TV|VBC|BC|VC|SC|FC|STV|TSV|USC|US)\s+([A-Za-zÀ-ÿ.\s]+?)(?=\s+(?:VTV|TV|VBC|BC|VC|SC|FC|STV|TSV|USC|US)\b|\s*$)/gi;
-
-    const matches = [...cleanedLine.matchAll(clubPattern)];
-
-    if (matches.length >= 2) {
-      return {
-        teamA: `${matches[0]![1]} ${matches[0]![2]}`.trim(),
-        teamB: `${matches[1]![1]} ${matches[1]![2]}`.trim(),
-      };
-    } else if (matches.length === 1) {
-      return {
-        teamA: `${matches[0]![1]} ${matches[0]![2]}`.trim(),
-        teamB: '',
-      };
-    }
-
-    // Alternative approach: look for club prefixes directly in parts
     const foundTeams: string[] = [];
     for (const part of parts) {
-      // Clean the part
-      const cleanedPart = part
-        .replace(/aader\/ou\/o\s*B?\s*/gi, ' ')
-        .replace(/punkte.*punti\s*/i, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-
-      // Look for club prefix anywhere in the part
-      const clubMatch = cleanedPart.match(/\b(VTV|TV|VBC|BC|VC|SC|FC|STV|TSV|USC|US)\s+([A-Za-zÀ-ÿ.\s\d]+)/i);
-      if (clubMatch) {
-        const teamName = `${clubMatch[1]} ${clubMatch[2]}`.replace(/\s+\d+\s*$/, '').trim();
-        if (teamName.length > 3 && !foundTeams.includes(teamName)) {
-          foundTeams.push(teamName);
-        }
+      const teamName = findTeamNameInPart(part);
+      if (teamName && !foundTeams.includes(teamName)) {
+        foundTeams.push(teamName);
       }
     }
 
     if (foundTeams.length >= 2) {
       return { teamA: foundTeams[0]!, teamB: foundTeams[1]! };
-    } else if (foundTeams.length === 1) {
+    }
+    if (foundTeams.length === 1) {
       return { teamA: foundTeams[0]!, teamB: '' };
     }
   }
@@ -512,6 +577,74 @@ export function extractSwissTeamNames(ocrText: string): { teamA: string; teamB: 
 // Swiss Tabular Format Parsing
 // =============================================================================
 
+/** Maximum players per team in a volleyball roster */
+const MAX_PLAYERS_PER_TEAM = 14;
+
+/** Maximum row number in scoresheet (used to detect row numbers vs jersey numbers) */
+const MAX_ROW_NUMBER = 14;
+
+/** Minimum parts needed to parse a libero line */
+const MIN_LIBERO_LINE_PARTS = 3;
+
+/** Date pattern for DD.MM.YY or DD.MM.YYYY format */
+const DATE_PATTERN = /^\d{1,2}\.\d{1,2}\.\d{2,4}$/;
+
+/** Name pattern - starts with a letter */
+const NAME_START_PATTERN = /^[A-Za-zÀ-ÿ]/;
+
+/** Jersey number pattern (1-2 digits) */
+const JERSEY_NUMBER_PATTERN = /^\d{1,2}$/;
+
+/**
+ * Parse a single player's data from libero line parts
+ * Returns the player and the new current index
+ */
+function parseLiberoPlayerData(
+  parts: string[],
+  startIndex: number,
+): { player: ParsedPlayer | null; nextIndex: number } {
+  let currentIndex = startIndex;
+  let date = '';
+  let jerseyNumber: number | null = null;
+  let name = '';
+
+  // Check if current is a date
+  if (currentIndex < parts.length && DATE_PATTERN.test(parts[currentIndex]!)) {
+    date = parts[currentIndex]!;
+    currentIndex++;
+  }
+
+  // Next should be jersey number
+  if (currentIndex < parts.length && JERSEY_NUMBER_PATTERN.test(parts[currentIndex]!)) {
+    jerseyNumber = parseInt(parts[currentIndex]!, 10);
+    if (jerseyNumber > MAX_SHIRT_NUMBER) jerseyNumber = null;
+    currentIndex++;
+  }
+
+  // Next should be name
+  if (currentIndex < parts.length && NAME_START_PATTERN.test(parts[currentIndex]!)) {
+    name = parts[currentIndex]!;
+    currentIndex++;
+  }
+
+  if (!name) {
+    return { player: null, nextIndex: currentIndex };
+  }
+
+  const parsed = parsePlayerName(name);
+  const player: ParsedPlayer = {
+    shirtNumber: jerseyNumber,
+    lastName: parsed.lastName,
+    firstName: parsed.firstName,
+    displayName: parsed.displayName,
+    rawName: name,
+    licenseStatus: '',
+    birthDate: date || undefined,
+  };
+
+  return { player, nextIndex: currentIndex };
+}
+
 /**
  * Parse a tab-separated libero line from Swiss format
  * Format: "2\t20.2.97\t5\tS. Angeli\t10.6.92\t7\tS. Candido"
@@ -520,101 +653,25 @@ export function extractSwissTeamNames(ocrText: string): { teamA: string; teamB: 
 function parseSwissLiberoLine(line: string): { teamA: ParsedPlayer | null; teamB: ParsedPlayer | null } {
   const parts = line.split('\t').map((p) => p.trim()).filter((p) => p.length > 0);
 
-  // Need at least some parts to parse
-  if (parts.length < 3) {
+  if (parts.length < MIN_LIBERO_LINE_PARTS) {
     return { teamA: null, teamB: null };
   }
 
-  let teamAPlayer: ParsedPlayer | null = null;
-  let teamBPlayer: ParsedPlayer | null = null;
-
-  // Find patterns: number, possible date, number, name
-  // Team A data comes first, then Team B
   let currentIndex = 0;
 
   // Skip row number if present (first part being just a small number)
-  if (/^\d{1,2}$/.test(parts[0]!) && parseInt(parts[0]!, 10) <= 14) {
+  if (JERSEY_NUMBER_PATTERN.test(parts[0]!) && parseInt(parts[0]!, 10) <= MAX_ROW_NUMBER) {
     currentIndex = 1;
   }
 
   // Parse Team A libero
-  // Look for: [date], number, name
-  if (currentIndex < parts.length) {
-    let dateA = '';
-    let numberA: number | null = null;
-    let nameA = '';
+  const teamAResult = parseLiberoPlayerData(parts, currentIndex);
+  currentIndex = teamAResult.nextIndex;
 
-    // Check if current is a date
-    if (/^\d{1,2}\.\d{1,2}\.\d{2,4}$/.test(parts[currentIndex]!)) {
-      dateA = parts[currentIndex]!;
-      currentIndex++;
-    }
+  // Parse Team B libero
+  const teamBResult = parseLiberoPlayerData(parts, currentIndex);
 
-    // Next should be jersey number
-    if (currentIndex < parts.length && /^\d{1,2}$/.test(parts[currentIndex]!)) {
-      numberA = parseInt(parts[currentIndex]!, 10);
-      if (numberA > 99) numberA = null;
-      currentIndex++;
-    }
-
-    // Next should be name
-    if (currentIndex < parts.length && /^[A-Za-zÀ-ÿ]/.test(parts[currentIndex]!)) {
-      nameA = parts[currentIndex]!;
-      currentIndex++;
-    }
-
-    if (nameA) {
-      const parsed = parsePlayerName(nameA);
-      teamAPlayer = {
-        shirtNumber: numberA,
-        lastName: parsed.lastName,
-        firstName: parsed.firstName,
-        displayName: parsed.displayName,
-        rawName: nameA,
-        licenseStatus: '',
-      };
-    }
-  }
-
-  // Parse Team B libero (similar pattern)
-  if (currentIndex < parts.length) {
-    let dateB = '';
-    let numberB: number | null = null;
-    let nameB = '';
-
-    // Check if current is a date
-    if (/^\d{1,2}\.\d{1,2}\.\d{2,4}$/.test(parts[currentIndex]!)) {
-      dateB = parts[currentIndex]!;
-      currentIndex++;
-    }
-
-    // Next should be jersey number
-    if (currentIndex < parts.length && /^\d{1,2}$/.test(parts[currentIndex]!)) {
-      numberB = parseInt(parts[currentIndex]!, 10);
-      if (numberB > 99) numberB = null;
-      currentIndex++;
-    }
-
-    // Next should be name
-    if (currentIndex < parts.length && /^[A-Za-zÀ-ÿ]/.test(parts[currentIndex]!)) {
-      nameB = parts[currentIndex]!;
-      currentIndex++;
-    }
-
-    if (nameB) {
-      const parsed = parsePlayerName(nameB);
-      teamBPlayer = {
-        shirtNumber: numberB,
-        lastName: parsed.lastName,
-        firstName: parsed.firstName,
-        displayName: parsed.displayName,
-        rawName: nameB,
-        licenseStatus: '',
-      };
-    }
-  }
-
-  return { teamA: teamAPlayer, teamB: teamBPlayer };
+  return { teamA: teamAResult.player, teamB: teamBResult.player };
 }
 
 /**
@@ -672,134 +729,199 @@ function parseSwissOfficialsLine(line: string): { teamA: ParsedOfficial | null; 
   return { teamA: teamAOfficial, teamB: teamBOfficial };
 }
 
+/** Concatenated names pattern (e.g., "S. AngeliL. Collier") */
+const CONCATENATED_NAMES_PATTERN = /[A-Z]\.\s*[A-Za-zÀ-ÿ]+[A-Z]\.\s*[A-Za-zÀ-ÿ]+/;
+
+/** Concatenated dates pattern (multiple dates concatenated) */
+const CONCATENATED_DATES_PATTERN = /\d{1,2}\.\d{1,2}\.\d{2,4}.*\d{1,2}\.\d{1,2}\.\d{2,4}/;
+
+/** Official line pattern (starts with C/AC followed by tab) */
+const OFFICIAL_LINE_START_PATTERN = /^[CA]C?\d?\t/i;
+
 /**
- * Parse Swiss tabular manuscript format
- * This format has both teams side-by-side with OCR reading horizontally
+ * Create a player from name and optional birth date
  */
-function parseSwissTabularSheet(ocrText: string): ParsedGameSheet {
+function createPlayerFromName(name: string, birthDate?: string): ParsedPlayer {
+  const parsed = parsePlayerName(name);
+  return {
+    shirtNumber: null,
+    lastName: parsed.lastName,
+    firstName: parsed.firstName,
+    displayName: parsed.displayName,
+    rawName: name,
+    licenseStatus: '',
+    birthDate,
+  };
+}
+
+/**
+ * Extract concatenated names and dates from tab-separated parts
+ */
+function extractConcatenatedData(parts: string[]): {
+  firstHalfNames: string[];
+  secondHalfNames: string[];
+  firstHalfDates: string[];
+  secondHalfDates: string[];
+} {
+  const firstHalfNames: string[] = [];
+  const secondHalfNames: string[] = [];
+  const firstHalfDates: string[] = [];
+  const secondHalfDates: string[] = [];
+  const midpoint = parts.length / 2;
+
+  for (let partIndex = 0; partIndex < parts.length; partIndex++) {
+    const part = parts[partIndex]!;
+    const isFirstHalf = partIndex < midpoint;
+
+    if (CONCATENATED_NAMES_PATTERN.test(part)) {
+      const names = splitConcatenatedNames(part);
+      if (isFirstHalf) {
+        firstHalfNames.push(...names);
+      } else {
+        secondHalfNames.push(...names);
+      }
+    }
+
+    if (CONCATENATED_DATES_PATTERN.test(part)) {
+      const dates = splitConcatenatedDates(part);
+      if (isFirstHalf) {
+        firstHalfDates.push(...dates);
+      } else {
+        secondHalfDates.push(...dates);
+      }
+    }
+  }
+
+  return { firstHalfNames, secondHalfNames, firstHalfDates, secondHalfDates };
+}
+
+/**
+ * Add players to team from extracted names and dates
+ */
+function addPlayersFromExtractedData(
+  team: ParsedTeam,
+  names: string[],
+  dates: string[],
+): void {
+  for (let i = 0; i < names.length; i++) {
+    if (team.players.length >= MAX_PLAYERS_PER_TEAM) break;
+    const player = createPlayerFromName(names[i]!, dates[i]);
+    team.players.push(player);
+  }
+}
+
+/**
+ * Process a tab-separated line for officials or liberos
+ */
+function processStructuredLine(
+  line: string,
+  inOfficialsSection: boolean,
+  inLiberoSection: boolean,
+  teamA: ParsedTeam,
+  teamB: ParsedTeam,
+): boolean {
+  if (inOfficialsSection || OFFICIAL_LINE_START_PATTERN.test(line)) {
+    const officials = parseSwissOfficialsLine(line);
+    if (officials.teamA) teamA.officials.push(officials.teamA);
+    if (officials.teamB) teamB.officials.push(officials.teamB);
+    return true;
+  }
+
+  if (inLiberoSection) {
+    const liberos = parseSwissLiberoLine(line);
+    if (liberos.teamA) teamA.players.push(liberos.teamA);
+    if (liberos.teamB) teamB.players.push(liberos.teamB);
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Check if a line should be skipped (noise or header-only)
+ */
+function shouldSkipLine(line: string): boolean {
+  if (isNoiseLine(line)) return true;
+  if (SWISS_HEADER_PATTERNS.some((pattern) => pattern.test(line)) && !line.includes('\t')) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Update section state based on line markers
+ * Returns: 'libero' | 'officials' | 'end' | null
+ */
+function detectSectionMarker(line: string): 'libero' | 'officials' | 'end' | null {
+  if (isLiberoMarker(line)) return 'libero';
+  if (isOfficialsMarker(line)) return 'officials';
+  if (isEndMarker(line)) return 'end';
+  return null;
+}
+
+/**
+ * Generate warnings for parsed teams
+ */
+function generateTeamWarnings(teamA: ParsedTeam, teamB: ParsedTeam): string[] {
   const warnings: string[] = [];
-  const lines = ocrText.split('\n').map((l) => l.trim());
-
-  // Extract team names
-  const teamNames = extractSwissTeamNames(ocrText);
-
-  const teamA: ParsedTeam = {
-    name: teamNames.teamA,
-    players: [],
-    officials: [],
-  };
-
-  const teamB: ParsedTeam = {
-    name: teamNames.teamB,
-    players: [],
-    officials: [],
-  };
-
-  // Track which section we're in
-  let inLiberoSection = false;
-  let inOfficialsSection = false;
-  let foundConcatenatedData = false;
-
-  for (const line of lines) {
-    // Skip noise lines
-    if (isNoiseLine(line)) continue;
-
-    // Skip pure header lines
-    if (SWISS_HEADER_PATTERNS.some((pattern) => pattern.test(line)) && !line.includes('\t')) {
-      continue;
-    }
-
-    // Check for section markers
-    if (isLiberoMarker(line)) {
-      inLiberoSection = true;
-      inOfficialsSection = false;
-      continue;
-    }
-
-    if (isOfficialsMarker(line)) {
-      inOfficialsSection = true;
-      inLiberoSection = false;
-      continue;
-    }
-
-    if (isEndMarker(line)) {
-      break;
-    }
-
-    // Handle tab-separated lines (better structured)
-    if (line.includes('\t')) {
-      if (inOfficialsSection || /^[CA]C?\d?\t/i.test(line)) {
-        const officials = parseSwissOfficialsLine(line);
-        if (officials.teamA) teamA.officials.push(officials.teamA);
-        if (officials.teamB) teamB.officials.push(officials.teamB);
-        continue;
-      }
-
-      if (inLiberoSection) {
-        const liberos = parseSwissLiberoLine(line);
-        if (liberos.teamA) teamA.players.push(liberos.teamA);
-        if (liberos.teamB) teamB.players.push(liberos.teamB);
-        continue;
-      }
-
-      // Check for concatenated names in tab-separated data
-      const parts = line.split('\t');
-      for (const part of parts) {
-        // Look for concatenated names pattern
-        if (/[A-Z]\.\s*[A-Za-zÀ-ÿ]+[A-Z]\.\s*[A-Za-zÀ-ÿ]+/.test(part)) {
-          foundConcatenatedData = true;
-          const names = splitConcatenatedNames(part);
-
-          // Determine which team based on position in line
-          const partIndex = parts.indexOf(part);
-          const isFirstHalf = partIndex < parts.length / 2;
-
-          for (const name of names) {
-            const parsed = parsePlayerName(name);
-            const player: ParsedPlayer = {
-              shirtNumber: null, // Can't reliably extract from concatenated data
-              lastName: parsed.lastName,
-              firstName: parsed.firstName,
-              displayName: parsed.displayName,
-              rawName: name,
-              licenseStatus: '',
-            };
-
-            if (isFirstHalf && teamA.players.length < 14) {
-              teamA.players.push(player);
-            } else if (!isFirstHalf && teamB.players.length < 14) {
-              teamB.players.push(player);
-            } else if (teamA.players.length < 14) {
-              teamA.players.push(player);
-            } else {
-              teamB.players.push(player);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // If we found concatenated data, add a warning about jersey numbers
-  if (foundConcatenatedData) {
-    warnings.push(
-      'Player jersey numbers could not be reliably extracted from concatenated OCR data',
-    );
-  }
-
   if (teamA.players.length === 0) {
     warnings.push('No players found for Team A');
   }
   if (teamB.players.length === 0) {
     warnings.push('No players found for Team B');
   }
-
   if (teamA.officials.length === 0 && teamB.officials.length === 0) {
     warnings.push(
       'No officials (coaches) found - the OFFICIAL MEMBERS section may not have been recognized',
     );
   }
+  return warnings;
+}
 
+/**
+ * Parse Swiss tabular manuscript format
+ * This format has both teams side-by-side with OCR reading horizontally
+ */
+function parseSwissTabularSheet(ocrText: string): ParsedGameSheet {
+  const lines = ocrText.split('\n').map((l) => l.trim());
+  const teamNames = extractSwissTeamNames(ocrText);
+
+  const teamA: ParsedTeam = { name: teamNames.teamA, players: [], officials: [] };
+  const teamB: ParsedTeam = { name: teamNames.teamB, players: [], officials: [] };
+
+  let inLiberoSection = false;
+  let inOfficialsSection = false;
+
+  for (const line of lines) {
+    if (shouldSkipLine(line)) continue;
+
+    const sectionMarker = detectSectionMarker(line);
+    if (sectionMarker === 'end') break;
+    if (sectionMarker === 'libero') {
+      inLiberoSection = true;
+      inOfficialsSection = false;
+      continue;
+    }
+    if (sectionMarker === 'officials') {
+      inOfficialsSection = true;
+      inLiberoSection = false;
+      continue;
+    }
+
+    if (!line.includes('\t')) continue;
+
+    if (processStructuredLine(line, inOfficialsSection, inLiberoSection, teamA, teamB)) {
+      continue;
+    }
+
+    // Process concatenated player data
+    const parts = line.split('\t');
+    const data = extractConcatenatedData(parts);
+    addPlayersFromExtractedData(teamA, data.firstHalfNames, data.firstHalfDates);
+    addPlayersFromExtractedData(teamB, data.secondHalfNames, data.secondHalfDates);
+  }
+
+  const warnings = generateTeamWarnings(teamA, teamB);
   return { teamA, teamB, warnings };
 }
 

@@ -552,15 +552,43 @@ LIBEROS («L»)
     expect(result.teamA.name).not.toContain('4 8 4 8');
   });
 
-  it('adds warning when jersey numbers cannot be extracted from concatenated data', () => {
-    const ocrText = `PunktePointsPunti\tTV Test
-NameNomNome
-data\tS. AngeliL. Collier`;
+  it('extracts birth dates and pairs them with player names', () => {
+    const ocrText = `PunktePointsPunti\tTV St. Johann\tVTV Horw
+NameNomNome\tNameNomNome
+data\t20.2.9721.1.9713.1.97\t513\tS. AngeliL. CollierO. Follouier\t5.5.9028.6.92\t517\tN. HeutschelJ. Brunner`;
 
     const result = parseManuscriptSheet(ocrText);
 
-    // Should have warning about jersey numbers
-    expect(result.warnings.some((w) => w.includes('jersey numbers'))).toBe(true);
+    // Team A should have players with paired DOBs
+    expect(result.teamA.players.length).toBeGreaterThanOrEqual(3);
+
+    // First player should have first DOB
+    const firstPlayer = result.teamA.players[0];
+    expect(firstPlayer?.birthDate).toBe('20.2.97');
+
+    // Second player should have second DOB
+    const secondPlayer = result.teamA.players[1];
+    expect(secondPlayer?.birthDate).toBe('21.1.97');
+
+    // Third player should have third DOB
+    const thirdPlayer = result.teamA.players[2];
+    expect(thirdPlayer?.birthDate).toBe('13.1.97');
+  });
+
+  it('extracts birth dates from libero lines', () => {
+    const ocrText = `PunktePointsPunti\tTV Test\tVTV Test
+NameNomNome
+LIBEROS («L»)\tLIBEROS («L»)
+2\t20.2.97\t5\tS. Angeli\t10.6.92\t7\tS. Candido`;
+
+    const result = parseManuscriptSheet(ocrText);
+
+    // Should parse liberos with DOBs
+    const teamALibero = result.teamA.players.find((p) => p.rawName.includes('Angeli'));
+    expect(teamALibero?.birthDate).toBe('20.2.97');
+
+    const teamBLibero = result.teamB.players.find((p) => p.rawName.includes('Candido'));
+    expect(teamBLibero?.birthDate).toBe('10.6.92');
   });
 });
 
