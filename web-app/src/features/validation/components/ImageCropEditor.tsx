@@ -13,9 +13,9 @@ import { X, Check, RotateCcw, RotateCw, AlertCircle } from "@/shared/components/
 import type { ScoresheetType } from "@/features/ocr/utils/scoresheet-detector";
 import { getCroppedImage } from "../utils/image-crop";
 
-/** Aspect ratio for electronic scoresheet (5:7 portrait) */
-const ELECTRONIC_WIDTH = 5;
-const ELECTRONIC_HEIGHT = 7;
+/** Aspect ratio for electronic scoresheet (3:4 portrait) */
+const ELECTRONIC_WIDTH = 3;
+const ELECTRONIC_HEIGHT = 4;
 const ELECTRONIC_ASPECT_RATIO = ELECTRONIC_WIDTH / ELECTRONIC_HEIGHT;
 
 /** Aspect ratio for manuscript scoresheet (7:5 landscape) */
