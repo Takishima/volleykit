@@ -124,6 +124,9 @@ export function OCREntryModal({
     null,
   );
 
+  // Raw OCR data for debugging/transparency
+  const [rawOcrData, setRawOcrData] = useState<ParsedGameSheet | null>(null);
+
   // Expanded sections state
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(["home-players", "away-players"]),
@@ -153,6 +156,7 @@ export function OCREntryModal({
       setScoresheetType("electronic");
       setHomeComparison(null);
       setAwayComparison(null);
+      setRawOcrData(null);
       setExpandedSections(new Set(["home-players", "away-players"]));
       reset();
     }
@@ -212,6 +216,9 @@ export function OCREntryModal({
       try {
         const parsed = await processImage(blob, scoresheetType);
         if (parsed) {
+          // Store raw OCR data for debugging/transparency
+          setRawOcrData(parsed);
+
           const { homeOCR, awayOCR } = matchOCRTeams(parsed);
 
           // Check if we have any players
@@ -594,6 +601,15 @@ export function OCREntryModal({
                 )}
               </div>
             )}
+
+            {/* Raw OCR Data Panel */}
+            {rawOcrData && (
+              <RawOcrDataPanel
+                data={rawOcrData}
+                expanded={expandedSections.has("raw-ocr-data")}
+                onToggle={() => toggleSection("raw-ocr-data")}
+              />
+            )}
           </div>
         )}
 
@@ -713,6 +729,149 @@ function CollapsibleSection({
       {expanded && (
         <div id={sectionId} className="mt-2 pl-6">
           {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Raw OCR data panel for debugging/transparency
+interface RawOcrDataPanelProps {
+  data: ParsedGameSheet;
+  expanded: boolean;
+  onToggle: () => void;
+}
+
+function RawOcrDataPanel({ data, expanded, onToggle }: RawOcrDataPanelProps) {
+  const { t } = useTranslation();
+  const Icon = expanded ? ChevronUp : ChevronDown;
+
+  return (
+    <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex items-center justify-between py-2 px-3 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+        aria-expanded={expanded}
+        aria-controls="raw-ocr-data"
+      >
+        <div className="flex items-center gap-2">
+          <Icon
+            className="w-4 h-4 text-gray-500 dark:text-gray-400"
+            aria-hidden="true"
+          />
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {t("validation.ocr.rawData.title")}
+          </span>
+        </div>
+      </button>
+      {expanded && (
+        <div id="raw-ocr-data" className="mt-3 space-y-4">
+          {/* Team A */}
+          <RawTeamData team={data.teamA} label="Team A" />
+          {/* Team B */}
+          <RawTeamData team={data.teamB} label="Team B" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Raw team data display
+interface RawTeamDataProps {
+  team: ParsedGameSheet["teamA"];
+  label: string;
+}
+
+function RawTeamData({ team, label }: RawTeamDataProps) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
+      <div className="mb-2">
+        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+          {label}
+        </span>
+        <p className="text-sm font-medium text-gray-900 dark:text-white">
+          {team.name || "-"}
+        </p>
+      </div>
+
+      {/* Players */}
+      {team.players.length > 0 && (
+        <div className="mb-3">
+          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+            {t("validation.ocr.rawData.players")} ({team.players.length})
+          </span>
+          <div className="mt-1 overflow-x-auto">
+            <table className="min-w-full text-xs">
+              <thead>
+                <tr className="text-gray-500 dark:text-gray-400">
+                  <th className="text-left pr-2 font-medium">
+                    {t("validation.ocr.rawData.shirtNumber")}
+                  </th>
+                  <th className="text-left pr-2 font-medium">
+                    {t("validation.ocr.rawData.name")}
+                  </th>
+                  <th className="text-left font-medium">
+                    {t("validation.ocr.rawData.licenseStatus")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {team.players.map((player, idx) => (
+                  <tr
+                    key={idx}
+                    className="text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-700"
+                  >
+                    <td className="pr-2 py-0.5">
+                      {player.shirtNumber ?? "-"}
+                    </td>
+                    <td className="pr-2 py-0.5 font-mono">
+                      {player.rawName || player.displayName}
+                    </td>
+                    <td className="py-0.5">{player.licenseStatus || "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Officials */}
+      {team.officials.length > 0 && (
+        <div>
+          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+            {t("validation.ocr.rawData.officials")} ({team.officials.length})
+          </span>
+          <div className="mt-1 overflow-x-auto">
+            <table className="min-w-full text-xs">
+              <thead>
+                <tr className="text-gray-500 dark:text-gray-400">
+                  <th className="text-left pr-2 font-medium">
+                    {t("validation.ocr.rawData.role")}
+                  </th>
+                  <th className="text-left font-medium">
+                    {t("validation.ocr.rawData.name")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {team.officials.map((official, idx) => (
+                  <tr
+                    key={idx}
+                    className="text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-700"
+                  >
+                    <td className="pr-2 py-0.5">{official.role}</td>
+                    <td className="py-0.5 font-mono">
+                      {official.rawName || official.displayName}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

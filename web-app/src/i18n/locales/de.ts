@@ -740,6 +740,17 @@ const de: Translations = {
         noTextFound: "Kein Text im Bild erkannt. Bitte stellen Sie sicher, dass der Spielbericht gut sichtbar ist.",
         imageTooLarge: "Bild ist zu gross. Bitte verwenden Sie ein kleineres Bild (max. 10 MB).",
       },
+      rawData: {
+        title: "OCR-Rohdaten",
+        teamName: "Teamname",
+        players: "Spieler",
+        officials: "Funktionäre",
+        shirtNumber: "#",
+        name: "Name",
+        licenseStatus: "Lizenz",
+        role: "Rolle",
+        noData: "Keine OCR-Daten verfügbar",
+      },
     },
   },
 };

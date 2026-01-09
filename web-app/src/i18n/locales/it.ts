@@ -735,6 +735,17 @@ const it: Translations = {
         noTextFound: "Nessun testo rilevato nell'immagine. Assicurati che il referto sia ben visibile.",
         imageTooLarge: "L'immagine è troppo grande. Usa un'immagine più piccola (max 10 MB).",
       },
+      rawData: {
+        title: "Dati OCR grezzi",
+        teamName: "Nome squadra",
+        players: "Giocatori",
+        officials: "Ufficiali",
+        shirtNumber: "#",
+        name: "Nome",
+        licenseStatus: "Licenza",
+        role: "Ruolo",
+        noData: "Nessun dato OCR disponibile",
+      },
     },
   },
 };

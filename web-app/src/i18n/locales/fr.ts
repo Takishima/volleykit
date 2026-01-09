@@ -740,6 +740,17 @@ const fr: Translations = {
         noTextFound: "Aucun texte détecté dans l'image. Assurez-vous que la feuille de match est bien visible.",
         imageTooLarge: "L'image est trop volumineuse. Veuillez utiliser une image plus petite (max 10 Mo).",
       },
+      rawData: {
+        title: "Données OCR brutes",
+        teamName: "Nom de l'équipe",
+        players: "Joueurs",
+        officials: "Officiels",
+        shirtNumber: "#",
+        name: "Nom",
+        licenseStatus: "Licence",
+        role: "Rôle",
+        noData: "Aucune donnée OCR disponible",
+      },
     },
   },
 };

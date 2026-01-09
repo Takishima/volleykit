@@ -733,6 +733,17 @@ const en: Translations = {
         noTextFound: "Could not read any text from the image. Please ensure the scoresheet is clearly visible.",
         imageTooLarge: "Image is too large. Please use a smaller image (max 10 MB).",
       },
+      rawData: {
+        title: "Raw OCR Data",
+        teamName: "Team Name",
+        players: "Players",
+        officials: "Officials",
+        shirtNumber: "#",
+        name: "Name",
+        licenseStatus: "License",
+        role: "Role",
+        noData: "No OCR data available",
+      },
     },
   },
 };
