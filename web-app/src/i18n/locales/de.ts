@@ -762,6 +762,17 @@ const de: Translations = {
       },
     },
   },
+  easterEggs: {
+    ac3: {
+      title: "Dritter Assistenztrainer!",
+      message: "Ein dritter Assistenztrainer? Dafür kommt jemand in die Schiedsrichter-Hölle!",
+    },
+    multipleDoctors: {
+      title: "Medizinische Fachkonferenz!",
+      message: "Mehrere Ärzte auf der Bank? Entweder erwartet dieses Team ein hartes Spiel, oder es ist eine medizinische Fachkonferenz!",
+    },
+    dismiss: "Verstanden!",
+  },
 };
 
 export default de;

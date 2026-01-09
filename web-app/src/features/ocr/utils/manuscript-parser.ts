@@ -41,7 +41,7 @@ const MIN_TEAM_NAME_LENGTH = 3;
 const MIN_LETTER_RATIO = 0.6;
 
 /** Valid official roles */
-const VALID_ROLES = new Set(['C', 'AC', 'AC2', 'AC3', 'AC4']);
+const VALID_ROLES = new Set(['C', 'AC', 'AC2', 'AC3', 'AC4', 'M']);
 
 // =============================================================================
 // OCR Error Correction Maps

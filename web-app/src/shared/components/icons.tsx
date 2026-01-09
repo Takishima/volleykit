@@ -62,6 +62,10 @@ export { Volleyball } from "lucide-react";
 export { CircleAlert } from "lucide-react";
 export { ExternalLink } from "lucide-react";
 
+// Celebration/medical icons
+export { PartyPopper } from "lucide-react";
+export { Stethoscope } from "lucide-react";
+
 // Gender icons - custom SVGs since Lucide doesn't have Mars/Venus symbols
 import type { SVGProps } from "react";
 

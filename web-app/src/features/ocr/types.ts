@@ -89,8 +89,11 @@ export interface OCREngine {
 
 /**
  * Official role on a volleyball team
+ * - C: Head Coach
+ * - AC, AC2, AC3, AC4: Assistant Coaches
+ * - M: Medical Staff (Doctor)
  */
-export type OfficialRole = 'C' | 'AC' | 'AC2' | 'AC3' | 'AC4';
+export type OfficialRole = 'C' | 'AC' | 'AC2' | 'AC3' | 'AC4' | 'M';
 
 /**
  * A player parsed from OCR text

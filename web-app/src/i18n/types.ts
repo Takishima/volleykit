@@ -688,4 +688,15 @@ export interface Translations {
       spotlightLabel: string;
     };
   };
+  easterEggs: {
+    ac3: {
+      title: string;
+      message: string;
+    };
+    multipleDoctors: {
+      title: string;
+      message: string;
+    };
+    dismiss: string;
+  };
 }
