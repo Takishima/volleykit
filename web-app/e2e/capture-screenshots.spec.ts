@@ -7,6 +7,7 @@
  * Screenshots are saved to ../help-site/public/images/screenshots/
  */
 import { test, expect, type Page, type BrowserContext } from '@playwright/test';
+import { disableTours } from './fixtures';
 import { LoginPage, AssignmentsPage, NavigationPage, ExchangesPage, CompensationsPage } from './pages';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -65,19 +66,12 @@ test.beforeAll(() => {
 
 // Helper to dismiss all tours and PWA notifications by setting localStorage
 async function setupCleanEnvironment(page: Page) {
-  await page.addInitScript(() => {
-    // Pre-dismiss all tours to avoid them interfering with screenshots
-    const tourState = {
-      state: {
-        completedTours: ['assignments', 'compensations', 'exchange', 'settings'],
-        dismissedTours: [],
-      },
-      version: 0,
-    };
-    localStorage.setItem('volleykit-tour', JSON.stringify(tourState));
+  // Use shared helper to disable tours
+  await disableTours(page);
 
-    // Disable PWA prompts by mocking the service worker registration
-    // This prevents "App ready for offline use" notifications
+  // Disable PWA prompts by mocking the service worker registration
+  // This prevents "App ready for offline use" notifications
+  await page.addInitScript(() => {
     if ('serviceWorker' in navigator) {
       // Override the ready promise to prevent PWA notifications
       Object.defineProperty(navigator.serviceWorker, 'ready', {
