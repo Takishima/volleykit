@@ -5,11 +5,11 @@
  * Uses react-easy-crop for reliable touch gestures and coordinate calculations.
  */
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import Cropper from "react-easy-crop";
 import type { Area, Point } from "react-easy-crop";
 import { useTranslation } from "@/shared/hooks/useTranslation";
-import { X, Check, RotateCcw, RotateCw } from "@/shared/components/icons";
+import { X, Check, RotateCcw, RotateCw, AlertCircle } from "@/shared/components/icons";
 import type { ScoresheetType } from "@/features/ocr/utils/scoresheet-detector";
 
 /** Aspect ratio for electronic scoresheet (4:5 portrait) */
@@ -168,12 +168,18 @@ export function ImageCropEditor({
   // Create object URL for the image
   const imageUrl = useMemo(() => URL.createObjectURL(imageBlob), [imageBlob]);
 
+  // Cleanup object URL on unmount or when imageBlob changes
+  useEffect(() => {
+    return () => URL.revokeObjectURL(imageUrl);
+  }, [imageUrl]);
+
   // Crop state
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const aspectRatio =
     scoresheetType === "electronic"
@@ -199,6 +205,7 @@ export function ImageCropEditor({
     if (!croppedAreaPixels) return;
 
     setIsProcessing(true);
+    setError(null);
     try {
       const croppedBlob = await getCroppedImage(
         imageUrl,
@@ -206,12 +213,12 @@ export function ImageCropEditor({
         rotation,
       );
       onConfirm(croppedBlob);
-    } catch (error) {
-      console.error("Failed to crop image:", error);
-      // Still allow user to try again
+    } catch (err) {
+      console.error("Failed to crop image:", err);
+      setError(t("validation.ocr.errors.processingFailed"));
       setIsProcessing(false);
     }
-  }, [croppedAreaPixels, imageUrl, rotation, onConfirm]);
+  }, [croppedAreaPixels, imageUrl, rotation, onConfirm, t]);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-gray-900">
@@ -237,8 +244,19 @@ export function ImageCropEditor({
         />
       </div>
 
-      {/* Hint and rotation controls */}
+      {/* Hint, error, and rotation controls */}
       <div className="flex-shrink-0 py-2 px-4">
+        {/* Error message */}
+        {error && (
+          <div
+            className="flex items-center gap-2 mb-2 px-3 py-2 text-sm text-red-200 bg-red-900/50 rounded"
+            role="alert"
+          >
+            <AlertCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+            {error}
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
           {/* Rotate left */}
           <button
