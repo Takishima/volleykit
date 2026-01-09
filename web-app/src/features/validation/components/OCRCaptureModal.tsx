@@ -8,7 +8,9 @@ import { ImageCropEditor } from "./ImageCropEditor";
 const MAX_FILE_SIZE_MB = 10;
 const BYTES_PER_KB = 1024;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * BYTES_PER_KB * BYTES_PER_KB;
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ACCEPTED_IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
+/** File extensions for accept attribute - prevents camera app from appearing in file picker */
+const ACCEPTED_IMAGE_EXTENSIONS = ".jpg,.jpeg,.png,.webp";
 
 /** Video constraints for camera preview */
 const VIDEO_CONSTRAINTS: MediaTrackConstraints = {
@@ -157,7 +159,7 @@ export function OCRCaptureModal({
       setError(null);
 
       // Validate file type
-      if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      if (!ACCEPTED_IMAGE_MIME_TYPES.includes(file.type)) {
         setError(t("validation.scoresheetUpload.invalidFileType"));
         return;
       }
@@ -339,11 +341,11 @@ export function OCRCaptureModal({
             </button>
           </div>
 
-          {/* Hidden file input */}
+          {/* Hidden file input - uses extensions to prevent camera option */}
           <input
             ref={fileInputRef}
             type="file"
-            accept={ACCEPTED_IMAGE_TYPES.join(",")}
+            accept={ACCEPTED_IMAGE_EXTENSIONS}
             onChange={handleFileChange}
             className="hidden"
             aria-hidden="true"
