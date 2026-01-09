@@ -1290,6 +1290,38 @@ describe("Integration: Origin Validation Error Responses", () => {
         globalThis.fetch = originalFetch;
       }
     });
+
+    it("returns 503 degraded status when Mistral API times out", async () => {
+      const { default: worker } = await import("./index");
+      const mockEnv = createMockEnv();
+
+      // Mock fetch to simulate timeout via AbortError
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn().mockImplementation(() => {
+        const error = new Error("The operation was aborted");
+        error.name = "AbortError";
+        return Promise.reject(error);
+      });
+
+      try {
+        const request = new Request("https://proxy.example.com/health", {
+          headers: {
+            Origin: "https://example.com",
+          },
+        });
+
+        const response = await worker.fetch(request, mockEnv);
+        const body = await response.json();
+
+        expect(response.status).toBe(503);
+        expect(body.status).toBe("degraded");
+        expect(body.services.proxy).toBe("ok");
+        expect(body.services.mistral_ocr).toBe("error");
+        expect(body.services.mistral_ocr_error).toBe("Health check timed out");
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
   });
 
   describe("/ocr endpoint origin validation", () => {

@@ -181,10 +181,18 @@ export default {
 
       // Check Mistral API connectivity if API key is configured
       // Uses /v1/models endpoint as a lightweight health check (no token consumption)
+      // Timeout after 5 seconds to prevent health check from hanging
+      const HEALTH_CHECK_TIMEOUT_MS = 5000;
       let mistralStatus: "ok" | "not_configured" | "error" = "not_configured";
       let mistralError: string | undefined;
 
       if (env.MISTRAL_API_KEY) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(
+          () => controller.abort(),
+          HEALTH_CHECK_TIMEOUT_MS,
+        );
+
         try {
           const mistralResponse = await fetch(
             "https://api.mistral.ai/v1/models",
@@ -193,6 +201,7 @@ export default {
               headers: {
                 Authorization: `Bearer ${env.MISTRAL_API_KEY}`,
               },
+              signal: controller.signal,
             },
           );
 
@@ -207,8 +216,14 @@ export default {
           }
         } catch (error) {
           mistralStatus = "error";
-          mistralError =
-            error instanceof Error ? error.message : "Connection failed";
+          if (error instanceof Error && error.name === "AbortError") {
+            mistralError = "Health check timed out";
+          } else {
+            mistralError =
+              error instanceof Error ? error.message : "Connection failed";
+          }
+        } finally {
+          clearTimeout(timeoutId);
         }
       }
 
