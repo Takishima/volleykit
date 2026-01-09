@@ -167,7 +167,8 @@ function ValidateGameModalComponent({
   }, [assignmentId]);
 
   // Determine if OCR entry should be shown
-  const shouldShowOCREntry = isOpen && isOCREnabled && !ocrDismissed && !wizard.isValidated && !wizard.isLoadingGameDetails;
+  // Note: OCR is available for validated games too (for debugging/re-verification purposes)
+  const shouldShowOCREntry = isOpen && isOCREnabled && !ocrDismissed && !wizard.isLoadingGameDetails;
 
   const navigation = {
     isFirstStep: wizard.isFirstStep,
