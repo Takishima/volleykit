@@ -191,15 +191,15 @@ jobs:
           name: api-types
           path: web-app/src/api
 
-      # Cache Vitest transform cache (transpiled modules, not test results)
+      # Cache Vite/Vitest transform cache (Vitest stores cache in .vite/vitest)
       # Key based on tooling config - source file changes don't invalidate transforms
-      - name: Cache Vitest
+      - name: Cache Vite
         uses: actions/cache@v5
         with:
-          path: web-app/node_modules/.vitest
-          key: vitest-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json', 'web-app/vite.config.ts', 'web-app/tsconfig.json') }}
+          path: web-app/node_modules/.vite
+          key: vite-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json', 'web-app/vite.config.ts', 'web-app/tsconfig.json') }}
           restore-keys: |
-            vitest-${{ runner.os }}-
+            vite-${{ runner.os }}-
 
       - name: Run tests
         run: |
@@ -234,13 +234,13 @@ jobs:
           name: api-types
           path: web-app/src/api
 
-      # Cache Vite pre-bundled dependencies (not build output)
+      # Cache Vite pre-bundled dependencies (shared key with test job)
       # Key based on dependencies and config - source changes don't affect dep pre-bundling
-      - name: Cache Vite build
+      - name: Cache Vite
         uses: actions/cache@v5
         with:
           path: web-app/node_modules/.vite
-          key: vite-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json', 'web-app/vite.config.ts') }}
+          key: vite-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json', 'web-app/vite.config.ts', 'web-app/tsconfig.json') }}
           restore-keys: |
             vite-${{ runner.os }}-
 
