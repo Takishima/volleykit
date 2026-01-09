@@ -29,6 +29,12 @@ const ID_PAD_LENGTH = 5;
 // Decimal places for coordinate display (0.1 degree precision)
 const COORD_DISPLAY_PRECISION = 10;
 
+// Walking time estimation constants
+const WALKING_TIME_BASE_MINUTES = 5;
+const WALKING_TIME_VARIATION = 6;
+const WALKING_COORD_MULTIPLIER_LAT = 100;
+const WALKING_COORD_MULTIPLIER_LON = 10;
+
 /**
  * Estimate travel time based on straight-line distance.
  * Uses a formula that approximates Swiss public transport:
@@ -128,6 +134,14 @@ export async function calculateMockTravelTime(
     name: options.destinationLabel ?? generateMockStationName(to),
   };
 
+  // Mock walking time from last stop to destination (5-10 minutes typically)
+  // Use a deterministic value based on coordinates for consistency
+  const coordHash =
+    Math.abs(
+      Math.round(to.latitude * WALKING_COORD_MULTIPLIER_LAT + to.longitude * WALKING_COORD_MULTIPLIER_LON),
+    ) % WALKING_TIME_VARIATION;
+  const finalWalkingMinutes = WALKING_TIME_BASE_MINUTES + coordHash;
+
   return {
     durationMinutes,
     departureTime: departureTime.toISOString(),
@@ -135,6 +149,7 @@ export async function calculateMockTravelTime(
     transfers,
     originStation,
     destinationStation,
+    finalWalkingMinutes,
     tripData: undefined,
   };
 }

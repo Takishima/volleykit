@@ -422,6 +422,10 @@ const it: Translations = {
       maxTravelTimeDescription: "Nascondi scambi con tempi di viaggio più lunghi",
       arrivalTime: "Arrivo prima della partita",
       arrivalTimeDescription: "Minuti di anticipo all'arrivo",
+      sbbDestination: "Destinazione FFS",
+      sbbDestinationDescription: "Scegli dove deve portare il link FFS",
+      sbbDestinationAddress: "Palestra (incl. cammino)",
+      sbbDestinationStation: "Ultima fermata trasporto pubblico",
       cacheInfo:
         "I tempi di viaggio sono memorizzati in cache per tipo di giorno (feriale/sabato/domenica) per 14 giorni.",
       cacheEntries: "{count} percorsi in cache",

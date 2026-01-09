@@ -425,6 +425,10 @@ const de: Translations = {
       maxTravelTimeDescription: "Tauschangebote mit längerer Reisezeit ausblenden",
       arrivalTime: "Ankunft vor Spielbeginn",
       arrivalTimeDescription: "Minuten vor Spielbeginn ankommen",
+      sbbDestination: "SBB-Ziel",
+      sbbDestinationDescription: "Wählen Sie, wohin der SBB-Link führen soll",
+      sbbDestinationAddress: "Sporthalle (inkl. Fussweg)",
+      sbbDestinationStation: "Letzte ÖV-Haltestelle",
       cacheInfo:
         "Reisezeiten werden nach Tagestyp (Werktag/Samstag/Sonntag) für 14 Tage zwischengespeichert.",
       cacheEntries: "{count} gespeicherte Routen",

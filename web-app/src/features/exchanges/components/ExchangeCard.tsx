@@ -109,6 +109,7 @@ function ExchangeCardComponent({
     hallCoords,
     hallId,
     city,
+    hallAddress: fullAddress,
     gameStartTime: gameStartingDateTime,
     language: locale,
   });

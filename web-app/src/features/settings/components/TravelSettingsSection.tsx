@@ -2,7 +2,7 @@ import { memo } from "react";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import { Card, CardContent, CardHeader } from "@/shared/components/Card";
 import { ToggleSwitch } from "@/shared/components/ToggleSwitch";
-import { TrainFront, MapPin, Clock, Info } from "@/shared/components/icons";
+import { TrainFront, MapPin, Clock, Info, Navigation } from "@/shared/components/icons";
 import { useTransportSettings } from "../hooks/useTransportSettings";
 
 /** Badge showing the current association code */
@@ -191,6 +191,49 @@ function TravelSettingsSectionComponent() {
                       <span className="text-sm text-text-muted dark:text-text-muted-dark">
                         {t("common.minutesUnit")}
                       </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* SBB destination type setting */}
+                <div className="pt-2 border-t border-border-subtle dark:border-border-subtle-dark">
+                  <div className="py-2">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Navigation className="w-4 h-4 text-text-muted dark:text-text-muted-dark" />
+                      <span className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
+                        {t("settings.transport.sbbDestination")}
+                      </span>
+                    </div>
+                    <div className="text-xs text-text-muted dark:text-text-muted-dark mb-3 ml-6">
+                      {t("settings.transport.sbbDestinationDescription")}
+                    </div>
+                    <div className="flex flex-col gap-2 ml-6">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="sbbDestinationType"
+                          value="address"
+                          checked={transport.sbbDestinationType === "address"}
+                          onChange={() => transport.handleSbbDestinationTypeChange("address")}
+                          className="w-4 h-4 text-primary-600 border-border-default dark:border-border-default-dark focus:ring-primary-500"
+                        />
+                        <span className="text-sm text-text-primary dark:text-text-primary-dark">
+                          {t("settings.transport.sbbDestinationAddress")}
+                        </span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="sbbDestinationType"
+                          value="station"
+                          checked={transport.sbbDestinationType === "station"}
+                          onChange={() => transport.handleSbbDestinationTypeChange("station")}
+                          className="w-4 h-4 text-primary-600 border-border-default dark:border-border-default-dark focus:ring-primary-500"
+                        />
+                        <span className="text-sm text-text-primary dark:text-text-primary-dark">
+                          {t("settings.transport.sbbDestinationStation")}
+                        </span>
+                      </label>
                     </div>
                   </div>
                 </div>

@@ -19,6 +19,9 @@ vi.mock("@/shared/stores/settings", () => ({
         source: "geocoded",
       },
       getArrivalBufferForAssociation: () => 30,
+      travelTimeFilter: {
+        sbbDestinationType: "address",
+      },
     })
   ),
 }));
@@ -61,6 +64,7 @@ describe("useSbbUrl", () => {
     hallCoords: { latitude: 47.38, longitude: 8.54 },
     hallId: "hall-123",
     city: "Zurich",
+    hallAddress: "Sporthalle Zurich, Sportstrasse 1, 8000 Zürich",
     gameStartTime: "2024-03-15T14:00:00",
     language: "de" as const,
   };
@@ -229,6 +233,48 @@ describe("useSbbUrl", () => {
         language: "de",
         originStation: tripResult.originStation,
         destinationStation: tripResult.destinationStation,
+      })
+    );
+  });
+
+  it("passes hall address as destination address", async () => {
+    const tripResult = {
+      travelTimeMinutes: 30,
+      originStation: { id: "origin-id", name: "Origin Station" },
+      destinationStation: { id: "dest-id", name: "Dest Station" },
+    };
+    mockCalculateMockTravelTime.mockResolvedValue(tripResult);
+
+    const { result } = renderHook(() => useSbbUrl(defaultOptions));
+
+    await act(async () => {
+      await result.current.openSbbConnection();
+    });
+
+    expect(mockGenerateSbbUrl).toHaveBeenCalledWith(
+      expect.objectContaining({
+        destinationAddress: "Sporthalle Zurich, Sportstrasse 1, 8000 Zürich",
+      })
+    );
+  });
+
+  it("handles null hall address", async () => {
+    const tripResult = {
+      travelTimeMinutes: 30,
+      originStation: { id: "origin-id", name: "Origin Station" },
+      destinationStation: { id: "dest-id", name: "Dest Station" },
+    };
+    mockCalculateMockTravelTime.mockResolvedValue(tripResult);
+
+    const { result } = renderHook(() => useSbbUrl({ ...defaultOptions, hallAddress: null }));
+
+    await act(async () => {
+      await result.current.openSbbConnection();
+    });
+
+    expect(mockGenerateSbbUrl).toHaveBeenCalledWith(
+      expect.objectContaining({
+        destinationAddress: undefined,
       })
     );
   });

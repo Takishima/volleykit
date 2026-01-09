@@ -6,7 +6,7 @@ import { MS_PER_MINUTE } from "@/shared/utils/constants";
  * Parameters for generating a public transport timetable URL.
  */
 export interface SbbUrlParams {
-  /** Destination location (city, station, or address) */
+  /** Destination location (city name as fallback) */
   destination: string;
   /** Date of travel (used to format the date parameter) */
   date: Date;
@@ -20,6 +20,8 @@ export interface SbbUrlParams {
   destinationStation?: StationInfo;
   /** Fallback origin address when station lookup fails (e.g., "Zürich, Bahnhofstrasse 1") */
   originAddress?: string;
+  /** Final destination address (e.g., sports hall address) - used when no station ID or to show full route */
+  destinationAddress?: string;
 }
 
 // Swiss UIC station ID format constants
@@ -95,14 +97,25 @@ function formatTime(date: Date): string {
  * ```
  */
 export function generateSbbUrl(params: SbbUrlParams): string {
-  const { destination, date, arrivalTime, language = "de", originStation, destinationStation, originAddress } = params;
+  const {
+    destination,
+    date,
+    arrivalTime,
+    language = "de",
+    originStation,
+    destinationStation,
+    originAddress,
+    destinationAddress,
+  } = params;
 
   const formattedDate = formatDateSbb(date);
   const formattedTime = formatTime(arrivalTime);
 
   // Determine origin and destination names
+  // For origin: prefer station name, fall back to geocoded address
   const origin = originStation?.name ?? originAddress;
-  const dest = destinationStation?.name ?? destination;
+  // For destination: prefer full address (sports hall), fall back to station name, then city
+  const dest = destinationAddress ?? destinationStation?.name ?? destination;
 
   // Generate SBB website URL
   // Common time/date parameters (quoted per SBB spec)
@@ -110,8 +123,9 @@ export function generateSbbUrl(params: SbbUrlParams): string {
   const quotedTime = `%22${formattedTime}%22`;
   const baseParams = `date=${quotedDate}&time=${quotedTime}&moment=%22ARRIVAL%22`;
 
-  // When both stations have IDs, use the stops JSON format for precise routing
-  if (originStation && destinationStation) {
+  // When both stations have IDs and no destination address override, use precise routing
+  // If destinationAddress is provided, we want to route to the actual address, not just the station
+  if (originStation && destinationStation && !destinationAddress) {
     const stops = [
       { value: normalizeSwissStationId(originStation.id), type: "ID", label: originStation.name },
       { value: normalizeSwissStationId(destinationStation.id), type: "ID", label: destinationStation.name },
@@ -120,8 +134,8 @@ export function generateSbbUrl(params: SbbUrlParams): string {
     return `https://www.sbb.ch/${language}?stops=${stopsJson}&${baseParams}`;
   }
 
-  // For addresses without station IDs, use the simpler von/nach format
-  // SBB will geocode these addresses automatically
+  // For addresses, use the simpler von/nach format
+  // SBB will geocode these addresses automatically and show the full route including walking
   const urlParams = new URLSearchParams();
   if (origin) {
     urlParams.set("von", origin);

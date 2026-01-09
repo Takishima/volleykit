@@ -32,6 +32,13 @@ export interface DistanceFilter {
 }
 
 /**
+ * SBB destination type for the SBB button.
+ * - 'address': Route to the full sports hall address (includes walking)
+ * - 'station': Route to the last public transport stop only
+ */
+export type SbbDestinationType = "address" | "station";
+
+/**
  * Travel time filter configuration for exchanges.
  * Uses Swiss public transport travel times.
  */
@@ -48,6 +55,8 @@ export interface TravelTimeFilter {
   arrivalBufferByAssociation: Record<string, number>;
   /** Timestamp when cache was last invalidated (home location change) */
   cacheInvalidatedAt: number | null;
+  /** SBB button destination type - 'address' for sports hall, 'station' for last stop */
+  sbbDestinationType: SbbDestinationType;
 }
 
 /** Default arrival buffer for SV (Swiss Volley national) - 60 minutes */
@@ -114,6 +123,7 @@ const DEFAULT_MODE_SETTINGS: ModeSettings = {
     arrivalBufferMinutes: DEFAULT_ARRIVAL_BUFFER_MINUTES,
     arrivalBufferByAssociation: {},
     cacheInvalidatedAt: null,
+    sbbDestinationType: "address",
   },
   levelFilterEnabled: false,
 };
@@ -178,6 +188,7 @@ interface SettingsState {
   setArrivalBufferForAssociation: (associationCode: string, minutes: number) => void;
   getArrivalBufferForAssociation: (associationCode: string | undefined) => number;
   invalidateTravelTimeCache: () => void;
+  setSbbDestinationType: (type: SbbDestinationType) => void;
   setLevelFilterEnabled: (enabled: boolean) => void;
 
   // Reset current mode's settings to defaults (keeps safe mode and other modes)
@@ -454,6 +465,14 @@ export const useSettingsStore = create<SettingsState>()(
           );
         },
 
+        setSbbDestinationType: (type: SbbDestinationType) => {
+          set((state) =>
+            updateModeAndTopLevel(state, (current) => ({
+              travelTimeFilter: { ...current.travelTimeFilter, sbbDestinationType: type },
+            })),
+          );
+        },
+
         setLevelFilterEnabled: (enabled: boolean) => {
           set((state) => updateModeAndTopLevel(state, () => ({ levelFilterEnabled: enabled })));
         },
@@ -596,6 +615,9 @@ export const useSettingsStore = create<SettingsState>()(
                     maxTravelTimeByAssociation:
                       persistedModeSettings.travelTimeFilter?.maxTravelTimeByAssociation ??
                       DEFAULT_MODE_SETTINGS.travelTimeFilter.maxTravelTimeByAssociation,
+                    sbbDestinationType:
+                      persistedModeSettings.travelTimeFilter?.sbbDestinationType ??
+                      DEFAULT_MODE_SETTINGS.travelTimeFilter.sbbDestinationType,
                   },
                   levelFilterEnabled:
                     persistedModeSettings.levelFilterEnabled ??

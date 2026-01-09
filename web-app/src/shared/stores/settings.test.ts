@@ -23,6 +23,7 @@ const DEFAULT_MODE_SETTINGS: ModeSettings = {
     arrivalBufferMinutes: 30,
     arrivalBufferByAssociation: {},
     cacheInvalidatedAt: null,
+    sbbDestinationType: "address",
   },
   levelFilterEnabled: false,
 };

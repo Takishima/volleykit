@@ -422,6 +422,10 @@ const en: Translations = {
       maxTravelTimeDescription: "Hide exchanges with longer travel times",
       arrivalTime: "Arrive before game",
       arrivalTimeDescription: "Minutes to arrive before game start",
+      sbbDestination: "SBB destination",
+      sbbDestinationDescription: "Choose where the SBB link should route to",
+      sbbDestinationAddress: "Sports hall (incl. walking)",
+      sbbDestinationStation: "Last public transport stop",
       cacheInfo:
         "Travel times are cached by day type (weekday/Saturday/Sunday) for 14 days.",
       cacheEntries: "{count} cached routes",
