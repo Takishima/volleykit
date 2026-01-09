@@ -22,6 +22,9 @@ export default defineConfig({
     alias: {
       // Allow importing TypeScript modules from the main web-app
       '@volleykit/ocr': path.resolve(__dirname, '../web-app/src/features/ocr'),
+      // Ensure fuse.js resolves from ocr-poc's node_modules
+      // (needed because web-app imports are resolved relative to web-app)
+      'fuse.js': path.resolve(__dirname, 'node_modules/fuse.js'),
     },
   },
   plugins: [
