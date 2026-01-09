@@ -9,12 +9,13 @@
  * - Manuscript scoresheets (handwritten with OCR error correction)
  * - Bounding box-aware parsing for better column detection
  * - Swiss-specific formats (tabular layout, multilingual headers)
+ *
+ * NOTE: We import from specific utility files rather than the barrel file
+ * because the barrel file exports React hooks which would require React.
  */
 
-// Import from the main app's OCR feature barrel file
-// Using the barrel export ensures we're using the public API
+// Import parsing utilities directly (no React dependency)
 import {
-  // Parsing utilities
   parseGameSheet as parseElectronicSheet,
   parseGameSheetWithType,
   parseGameSheetWithOCR,
@@ -23,13 +24,16 @@ import {
   normalizeName,
   getAllPlayers,
   getAllOfficials,
-  // Roster comparison utilities
+} from '@volleykit/ocr/utils/player-list-parser';
+
+// Import roster comparison utilities directly (no React dependency)
+import {
   compareRosters,
   compareTeamRosters,
   calculateMatchScore,
   calculateNameSimilarity,
   normalizeForComparison,
-} from '@volleykit/ocr';
+} from '@volleykit/ocr/utils/roster-comparison';
 
 /**
  * Parse a game sheet from OCR text.

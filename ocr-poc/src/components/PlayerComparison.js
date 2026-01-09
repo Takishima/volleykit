@@ -22,10 +22,11 @@ import { getMockReferenceData } from '../services/MockReferenceData.js';
 import { TeamConfirmationModal } from './TeamConfirmationModal.js';
 
 /**
- * Types are imported from the main app's OCR feature barrel file.
- * @typedef {import('@volleykit/ocr').ParsedPlayer} ParsedPlayer
- * @typedef {import('@volleykit/ocr').ParsedOfficial} ParsedOfficial
- * @typedef {import('@volleykit/ocr').ParsedTeam} ParsedTeam
+ * Types are imported from the main app's OCR feature types file directly.
+ * We avoid the barrel file since it exports React hooks which require React.
+ * @typedef {import('@volleykit/ocr/types').ParsedPlayer} ParsedPlayer
+ * @typedef {import('@volleykit/ocr/types').ParsedOfficial} ParsedOfficial
+ * @typedef {import('@volleykit/ocr/types').ParsedTeam} ParsedTeam
  * @typedef {import('../services/MockReferenceData.js').ReferencePlayer} ReferencePlayer
  * @typedef {import('../services/MockReferenceData.js').ReferenceOfficial} ReferenceOfficial
  * @typedef {import('../services/MockReferenceData.js').ReferenceTeam} ReferenceTeam
