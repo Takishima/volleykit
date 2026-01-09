@@ -4,8 +4,14 @@
  * Compares OCR-extracted players against a reference roster.
  * Matching is done by name similarity since OCR shirt numbers
  * are not reliably available in reference data.
+ *
+ * Uses Fuse.js for fuzzy string matching with support for:
+ * - Accented characters (German: ü, ö, ä; French: é, è, ê, etc.)
+ * - Word-order-independent matching
+ * - Partial name matches (nicknames like Timo/Timothy)
  */
 
+import Fuse, { type IFuseOptions } from 'fuse.js';
 import type {
   ParsedPlayer,
   PlayerComparisonResult,
@@ -34,6 +40,30 @@ const WORD_OVERLAP_MATCH_SCORE = 85;
 
 /** Maximum similarity score for word-order-independent full name matches (0-100) */
 const WORD_ORDER_INDEPENDENT_SCORE = 95;
+
+/** Minimum Fuse.js score (0-1, lower is better) to consider a word match */
+const MAX_FUSE_WORD_SCORE = 0.4;
+
+/** Minimum Fuse.js score (0-1, lower is better) for direct string comparison */
+const MAX_FUSE_DIRECT_SCORE = 0.2;
+
+/** Minimum normalized similarity (0-1) for direct match to be accepted */
+const MIN_DIRECT_MATCH_SIMILARITY = 0.8;
+
+/** Minimum normalized similarity (0-1) for word-level match to count */
+const MIN_WORD_MATCH_SIMILARITY = 0.6;
+
+/**
+ * Fuse.js options for word-level matching.
+ * - threshold: 0.4 allows for typos and OCR errors
+ * - ignoreLocation: true for matching anywhere in the string
+ * - includeScore: true to get similarity scores
+ */
+const FUSE_WORD_OPTIONS: IFuseOptions<string> = {
+  threshold: MAX_FUSE_WORD_SCORE,
+  ignoreLocation: true,
+  includeScore: true,
+};
 
 /** Max confidence score */
 const MAX_CONFIDENCE = 100;
@@ -112,12 +142,17 @@ function extractNameWords(name: string): string[] {
 
 /**
  * Calculate word-order-independent similarity between two full names.
- * This compares all words in both names regardless of their order.
+ * This compares all words in both names regardless of their order using Fuse.js.
  *
  * Example: "De Courten Renée" vs "Renée Sophie de Courten"
  * Words1: [de, courten, renee]
  * Words2: [renee, sophie, de, courten]
  * Matching: 3 words match out of 4 unique = 75%
+ *
+ * Uses Fuse.js for word comparison which handles:
+ * - Accented characters (Müller ↔ Mueller)
+ * - Typos and OCR errors
+ * - Partial matches with configurable threshold
  */
 export function calculateWordOrderIndependentSimilarity(
   name1: string,
@@ -130,51 +165,30 @@ export function calculateWordOrderIndependentSimilarity(
     return 0;
   }
 
-  // Count matching words (allowing partial matches for longer words)
+  // Create Fuse instance for searching words2
+  const fuse = new Fuse(words2, FUSE_WORD_OPTIONS);
+
+  // Count matching words using Fuse.js for comparison
   let matchScore = 0;
-  const usedWords2 = new Set<number>();
+  const usedIndices = new Set<number>();
 
   for (const w1 of words1) {
-    let bestMatchScore = 0;
-    let bestMatchIdx = -1;
+    const results = fuse.search(w1);
 
-    for (let i = 0; i < words2.length; i++) {
-      if (usedWords2.has(i)) continue;
+    // Find best unused match
+    for (const result of results) {
+      const idx = result.refIndex;
+      if (usedIndices.has(idx)) continue;
 
-      const w2 = words2[i]!;
+      // Fuse.js score: 0 = perfect match, 1 = no match
+      // Convert to 0-1 where 1 is perfect
+      const similarity = 1 - (result.score ?? 1);
 
-      // Exact match
-      if (w1 === w2) {
-        if (1 > bestMatchScore) {
-          bestMatchScore = 1;
-          bestMatchIdx = i;
-        }
+      if (similarity > 0) {
+        matchScore += similarity;
+        usedIndices.add(idx);
+        break;
       }
-      // One contains the other (for partial matches like "Timo" vs "Timothy")
-      else if (w1.length >= 3 && w2.length >= 3) {
-        if (w1.includes(w2) || w2.includes(w1)) {
-          const shorter = w1.length < w2.length ? w1 : w2;
-          const longer = w1.length >= w2.length ? w1 : w2;
-          const partialScore = shorter.length / longer.length;
-          if (partialScore > bestMatchScore) {
-            bestMatchScore = partialScore;
-            bestMatchIdx = i;
-          }
-        }
-        // Check if words start the same (nickname matching: Tim/Timo/Timothy)
-        else if (w1.startsWith(w2.substring(0, 3)) || w2.startsWith(w1.substring(0, 3))) {
-          const partialScore = 0.6; // Give 60% credit for prefix matches
-          if (partialScore > bestMatchScore) {
-            bestMatchScore = partialScore;
-            bestMatchIdx = i;
-          }
-        }
-      }
-    }
-
-    if (bestMatchIdx >= 0) {
-      matchScore += bestMatchScore;
-      usedWords2.add(bestMatchIdx);
     }
   }
 
@@ -184,7 +198,12 @@ export function calculateWordOrderIndependentSimilarity(
 }
 
 /**
- * Calculate similarity between two names (0-100)
+ * Calculate similarity between two names (0-100) using Fuse.js.
+ *
+ * This handles:
+ * - Case differences
+ * - Accented characters (Müller ↔ Muller)
+ * - Minor typos and OCR errors
  */
 export function calculateNameSimilarity(name1: string, name2: string): number {
   const n1 = normalizeForComparison(name1);
@@ -197,6 +216,20 @@ export function calculateNameSimilarity(name1: string, name2: string): number {
     return MAX_CONFIDENCE;
   }
 
+  // Use Fuse.js for direct string comparison
+  const directFuse = new Fuse([n2], {
+    threshold: MAX_FUSE_DIRECT_SCORE,
+    ignoreLocation: true,
+    includeScore: true,
+  });
+  const directResults = directFuse.search(n1);
+  if (directResults.length > 0 && directResults[0]!.score !== undefined) {
+    const similarity = 1 - directResults[0]!.score;
+    if (similarity >= MIN_DIRECT_MATCH_SIMILARITY) {
+      return Math.round(similarity * MAX_CONFIDENCE);
+    }
+  }
+
   // Check if one contains the other
   if (n1.includes(n2) || n2.includes(n1)) {
     const shorter = n1.length < n2.length ? n1 : n2;
@@ -204,16 +237,23 @@ export function calculateNameSimilarity(name1: string, name2: string): number {
     return Math.round((shorter.length / longer.length) * CONTAINED_MATCH_SCORE);
   }
 
-  // Check word-by-word overlap
+  // Check word-by-word overlap using Fuse.js
   const words1 = n1.split(' ').filter((w) => w.length > 1);
   const words2 = n2.split(' ').filter((w) => w.length > 1);
 
-  let matchingWords = 0;
+  if (words2.length === 0) {
+    return 0;
+  }
+
+  const wordFuse = new Fuse(words2, FUSE_WORD_OPTIONS);
+  let matchingScore = 0;
+
   for (const w1 of words1) {
-    for (const w2 of words2) {
-      if (w1 === w2 || w1.includes(w2) || w2.includes(w1)) {
-        matchingWords++;
-        break;
+    const results = wordFuse.search(w1);
+    if (results.length > 0 && results[0]!.score !== undefined) {
+      const similarity = 1 - results[0]!.score;
+      if (similarity > MIN_WORD_MATCH_SIMILARITY) {
+        matchingScore += similarity;
       }
     }
   }
@@ -223,7 +263,7 @@ export function calculateNameSimilarity(name1: string, name2: string): number {
     return 0;
   }
 
-  return Math.round((matchingWords / totalWords) * WORD_OVERLAP_MATCH_SCORE);
+  return Math.round((matchingScore / totalWords) * WORD_OVERLAP_MATCH_SCORE);
 }
 
 /**
