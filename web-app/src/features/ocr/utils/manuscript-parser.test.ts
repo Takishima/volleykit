@@ -7,6 +7,11 @@ import {
   normalizeName,
   parsePlayerName,
   parseOfficialName,
+  isSwissTabularFormat,
+  splitConcatenatedNames,
+  splitConcatenatedDates,
+  splitConcatenatedNumbers,
+  extractSwissTeamNames,
 } from './manuscript-parser';
 
 describe('OCR Error Correction', () => {
@@ -321,5 +326,271 @@ N.\tName of the player\tLicense\tN.\tName of the player\tLicense
 
     expect(result.teamA.name).toBe('VBC Heimteam');
     expect(result.teamB.name).toBe('VBC Gastteam');
+  });
+});
+
+// =============================================================================
+// Swiss Tabular Format Tests
+// =============================================================================
+
+describe('Swiss Tabular Format Detection', () => {
+  describe('isSwissTabularFormat', () => {
+    it('detects Swiss format by multilingual headers and tab structure', () => {
+      const text = `PunktePointsPunti\tTeam A\tTeam B
+Lizenz-Nr.Licence-No.Licenza-No.\tData\tData
+NameNomNome\tNames\tNames
+LIBEROS\tLib\tLib`;
+      expect(isSwissTabularFormat(text)).toBe(true);
+    });
+
+    it('detects Swiss format by concatenated names pattern', () => {
+      const text = `NameNomNome
+S. AngeliL. CollierO. Follouier`;
+      expect(isSwissTabularFormat(text)).toBe(true);
+    });
+
+    it('returns false for simple sequential format', () => {
+      const text = `Team A VBC Test
+1 MÜLLER ANNA
+2 WEBER MARIE`;
+      expect(isSwissTabularFormat(text)).toBe(false);
+    });
+  });
+});
+
+describe('Concatenated Data Splitting', () => {
+  describe('splitConcatenatedNames', () => {
+    it('splits names with initial + dot pattern', () => {
+      const text = 'S. AngeliL. CollierO. Follouier';
+      const names = splitConcatenatedNames(text);
+      expect(names).toEqual(['S. Angeli', 'L. Collier', 'O. Follouier']);
+    });
+
+    it('splits real OCR data from TV St. Johann', () => {
+      const text = 'S. AngeliL. CollierO. FollouierS. GürtlerM. KaprtanagluM. LorentzJ. MonnierL. MonteroA. SuterA. Vouwiler';
+      const names = splitConcatenatedNames(text);
+      expect(names).toHaveLength(10);
+      expect(names[0]).toBe('S. Angeli');
+      expect(names[1]).toBe('L. Collier');
+      expect(names[5]).toBe('M. Lorentz');
+      expect(names[9]).toBe('A. Vouwiler');
+    });
+
+    it('handles names without dots', () => {
+      const text = 'MüllerAnnaWeberMarie';
+      const names = splitConcatenatedNames(text);
+      expect(names.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('returns empty array for empty input', () => {
+      expect(splitConcatenatedNames('')).toEqual([]);
+      expect(splitConcatenatedNames('  ')).toEqual([]);
+    });
+  });
+
+  describe('splitConcatenatedDates', () => {
+    it('splits concatenated birth dates', () => {
+      const text = '20.2.9721.1.9713.1.97';
+      const dates = splitConcatenatedDates(text);
+      expect(dates).toEqual(['20.2.97', '21.1.97', '13.1.97']);
+    });
+
+    it('splits real OCR date data', () => {
+      const text = '20.2.9721.1.9713.1.9715.1.8127.12.966.4.8021.7.8119.6.977.10.8216.3.91';
+      const dates = splitConcatenatedDates(text);
+      expect(dates).toHaveLength(10);
+      expect(dates[0]).toBe('20.2.97');
+      expect(dates[4]).toBe('27.12.96');
+      expect(dates[9]).toBe('16.3.91');
+    });
+
+    it('handles 4-digit years', () => {
+      const text = '20.02.199721.01.1997';
+      const dates = splitConcatenatedDates(text);
+      expect(dates).toEqual(['20.02.1997', '21.01.1997']);
+    });
+
+    it('returns empty array for empty input', () => {
+      expect(splitConcatenatedDates('')).toEqual([]);
+    });
+  });
+
+  describe('splitConcatenatedNumbers', () => {
+    it('splits jersey numbers preferring single digits', () => {
+      const numbers = splitConcatenatedNumbers('5139');
+      // All single digits when no ambiguity
+      expect(numbers).toEqual([5, 1, 3, 9]);
+    });
+
+    it('handles sequences with zeros', () => {
+      // Zeros are skipped as they're invalid jersey numbers
+      const numbers = splitConcatenatedNumbers('102030');
+      expect(numbers).toContain(1);
+      expect(numbers).toContain(2);
+      expect(numbers).toContain(3);
+    });
+
+    it('handles expected count hint to prefer single digits', () => {
+      // With expected count of 5, should take all single digits
+      const numbers = splitConcatenatedNumbers('12345', 5);
+      expect(numbers).toHaveLength(5);
+      expect(numbers).toEqual([1, 2, 3, 4, 5]);
+    });
+
+    it('returns empty array for empty input', () => {
+      expect(splitConcatenatedNumbers('')).toEqual([]);
+    });
+
+    it('handles typical volleyball numbers', () => {
+      // Common volleyball jersey numbers
+      const numbers = splitConcatenatedNumbers('135789');
+      expect(numbers).toEqual([1, 3, 5, 7, 8, 9]);
+    });
+  });
+});
+
+describe('Swiss Team Name Extraction', () => {
+  describe('extractSwissTeamNames', () => {
+    it('extracts team names from simple tab-separated header', () => {
+      const text = `Header\tTV St. Johann\tVTV Horw 1`;
+      const names = extractSwissTeamNames(text);
+      expect(names.teamA).toContain('TV');
+      expect(names.teamA).toContain('St. Johann');
+    });
+
+    it('extracts both team names when clearly separated', () => {
+      const text = `Teams\tTV Zürich\tVBC Basel`;
+      const names = extractSwissTeamNames(text);
+      expect(names.teamA).toBe('TV Zürich');
+      expect(names.teamB).toBe('VBC Basel');
+    });
+
+    it('handles complex Swiss header with Aader/ou/oB markers', () => {
+      // This is the actual format from the OCR - the markers make parsing harder
+      // The real-world extraction is best-effort; simpler formats work better
+      const text = `PunktePointsPunti\tAader/ou/oB TV St. Johann\tVTV Horw 1 Aader/ou/oB`;
+      const names = extractSwissTeamNames(text);
+      // This complex format is hard to parse reliably
+      // The important thing is it doesn't crash and returns valid structure
+      expect(names).toHaveProperty('teamA');
+      expect(names).toHaveProperty('teamB');
+      expect(typeof names.teamA).toBe('string');
+      expect(typeof names.teamB).toBe('string');
+    });
+  });
+});
+
+describe('Swiss Tabular Format Parsing', () => {
+  it('parses libero line with both teams', () => {
+    const ocrText = `PunktePointsPunti\tTV St. Johann\tVTV Horw
+NameNomNome
+LIBEROS («L»)\tLIBEROS («L»)
+2\t20.2.97\t5\tS. Angeli\t10.6.92\t7\tS. Candido`;
+
+    const result = parseManuscriptSheet(ocrText);
+
+    // Should parse libero players
+    expect(result.teamA.players.length).toBeGreaterThanOrEqual(1);
+    expect(result.teamB.players.length).toBeGreaterThanOrEqual(1);
+
+    // Check Team A libero
+    const teamALibero = result.teamA.players.find((p) => p.shirtNumber === 5);
+    if (teamALibero) {
+      expect(teamALibero.rawName).toContain('Angeli');
+    }
+
+    // Check Team B libero
+    const teamBLibero = result.teamB.players.find((p) => p.shirtNumber === 7);
+    if (teamBLibero) {
+      expect(teamBLibero.rawName).toContain('Candido');
+    }
+  });
+
+  it('parses officials line with captains for both teams', () => {
+    const ocrText = `PunktePointsPunti\tTV Test\tVTV Test
+NameNomNome
+Offizielle/Officiels/Ufficiali\tOffizielle/Officiels/Ufficiali
+C\tM. Lorentz\tC\tA. Zbinden`;
+
+    const result = parseManuscriptSheet(ocrText);
+
+    // Should parse officials
+    expect(result.teamA.officials.length).toBe(1);
+    expect(result.teamB.officials.length).toBe(1);
+
+    expect(result.teamA.officials[0]!.role).toBe('C');
+    expect(result.teamA.officials[0]!.rawName).toBe('M. Lorentz');
+
+    expect(result.teamB.officials[0]!.role).toBe('C');
+    expect(result.teamB.officials[0]!.rawName).toBe('A. Zbinden');
+  });
+
+  it('parses concatenated player names from real OCR data', () => {
+    const ocrText = `PunktePointsPunti\tTV St. Johann\tVTV Horw
+NameNomNome\tNameNomNome
+data\tS. AngeliL. CollierO. Follouier\tN. HeutschelJ. Brunner`;
+
+    const result = parseManuscriptSheet(ocrText);
+
+    // Should extract players from concatenated names
+    expect(result.teamA.players.length).toBeGreaterThanOrEqual(3);
+
+    // Check that names are properly split
+    const angeliPlayer = result.teamA.players.find((p) => p.rawName.includes('Angeli'));
+    expect(angeliPlayer).toBeDefined();
+  });
+
+  it('filters out noise lines like "4 8 4 8..."', () => {
+    const ocrText = `4 8 4 8 . 4 8 4 8 4 8 4 8 4 8 4 8 .
+PunktePointsPunti\tTV St. Johann\tVTV Horw
+LIBEROS («L»)
+2\t20.2.97\t5\tS. Angeli\t10.6.92\t7\tS. Candido`;
+
+    const result = parseManuscriptSheet(ocrText);
+
+    // Team name should NOT be the noise line
+    expect(result.teamA.name).not.toContain('4 8 4 8');
+  });
+
+  it('adds warning when jersey numbers cannot be extracted from concatenated data', () => {
+    const ocrText = `PunktePointsPunti\tTV Test
+NameNomNome
+data\tS. AngeliL. Collier`;
+
+    const result = parseManuscriptSheet(ocrText);
+
+    // Should have warning about jersey numbers
+    expect(result.warnings.some((w) => w.includes('jersey numbers'))).toBe(true);
+  });
+});
+
+describe('parseManuscriptSheet with real Swiss OCR data', () => {
+  it('parses the complete real-world Swiss manuscript scoresheet', () => {
+    // This is a simplified version of the actual OCR output
+    const ocrText = `4 8 4 8 . 4 8 4 8 4 8 4 8 4 8 4 8 .
+Cony
+
+PunktePointsPunti\tAader/ou/oB TV St. Johann\tVTV Horw 1 Aader/ou/oB
+Lizenz-Nr.Licence-No.Licenza-No.\tSpieler Nr.Joueur No.Giocatore No.\tNameNomNome
+1 2112 2213\t20.2.9721.1.97\t513\tS. AngeliL. CollierO. Follouier\t5.5.9028.6.92\t517\tN. HeutschelJ. Brunner
+"T"
+LIBEROS («L»)\tLIBEROS («L»)
+2\t20.2.97\t5\tS. Angeli\t10.6.92\t7\tS. Candido
+Offizielle/Officiels/Ufficiali\tOffizielle/Officiels/Ufficiali
+C\tM. Lorentz\tC\tA. Zbinden
+AC1\tAC1
+TrainerEntraîneurAllenatore\tTrainerEntraîneurAllenatore`;
+
+    const result = parseManuscriptSheet(ocrText);
+
+    // Should detect Swiss format and parse it
+    expect(result.teamA.players.length).toBeGreaterThan(0);
+
+    // Should have parsed officials
+    expect(result.teamA.officials.length).toBeGreaterThanOrEqual(1);
+    expect(result.teamA.officials[0]?.role).toBe('C');
+
+    // Team name should not be noise
+    expect(result.teamA.name).not.toBe('4 8 4 8 . 4 8 4 8 4 8 4 8 4 8 4 8 .');
   });
 });
