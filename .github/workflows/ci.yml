@@ -33,7 +33,7 @@ on:
 # - setup job generates API types ONCE, shared via artifact to avoid 4x generation
 # - audit runs independently (doesn't need API types)
 # - build artifact is shared by bundle-size, e2e, and lighthouse
-# - Per-branch caching with main fallback for faster PR builds
+# - Tool caches (ESLint, Vitest, Vite) keyed by config, not source files for better reuse
 # - PRs run chromium only; main branch runs chromium + firefox + webkit
 # - E2E uses pre-built Playwright Docker image (no browser install overhead)
 #
@@ -124,14 +124,14 @@ jobs:
           name: api-types
           path: web-app/src/api
 
-      # Cache ESLint results per branch
+      # Cache ESLint results (ESLint handles per-file invalidation internally)
+      # Key based on ESLint config and plugins - source changes handled by ESLint's cache format
       - name: Cache ESLint
         uses: actions/cache@v5
         with:
           path: web-app/.eslintcache
-          key: eslint-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('web-app/src/**/*.ts', 'web-app/src/**/*.tsx') }}
+          key: eslint-${{ runner.os }}-${{ hashFiles('web-app/eslint.config.js', 'web-app/package-lock.json') }}
           restore-keys: |
-            eslint-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
             eslint-${{ runner.os }}-
 
       - name: Lint
@@ -186,14 +186,14 @@ jobs:
           name: api-types
           path: web-app/src/api
 
-      # Cache Vitest results per branch
+      # Cache Vitest transform cache (transpiled modules, not test results)
+      # Key based on tooling config - source file changes don't invalidate transforms
       - name: Cache Vitest
         uses: actions/cache@v5
         with:
           path: web-app/node_modules/.vitest
-          key: vitest-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('web-app/src/**/*.ts', 'web-app/src/**/*.tsx', 'web-app/src/**/*.test.ts', 'web-app/src/**/*.test.tsx') }}
+          key: vitest-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json', 'web-app/vite.config.ts', 'web-app/tsconfig.json') }}
           restore-keys: |
-            vitest-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
             vitest-${{ runner.os }}-
 
       - name: Run tests
@@ -222,14 +222,14 @@ jobs:
           name: api-types
           path: web-app/src/api
 
-      # Cache Vite build artifacts per branch
+      # Cache Vite pre-bundled dependencies (not build output)
+      # Key based on dependencies and config - source changes don't affect dep pre-bundling
       - name: Cache Vite build
         uses: actions/cache@v5
         with:
           path: web-app/node_modules/.vite
-          key: vite-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('web-app/src/**/*.ts', 'web-app/src/**/*.tsx', 'web-app/vite.config.ts') }}
+          key: vite-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json', 'web-app/vite.config.ts') }}
           restore-keys: |
-            vite-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
             vite-${{ runner.os }}-
 
       - name: Build
