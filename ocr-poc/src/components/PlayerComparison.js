@@ -7,16 +7,24 @@
  *
  * IMPORTANT: Matching is done by NAME ONLY since VolleyManager API
  * does not provide shirt numbers or player positions.
+ *
+ * This component uses the main web-app's parsing and comparison utilities
+ * for consistent behavior between the POC and production app.
  */
 
-import { parseGameSheet, getAllPlayers, getAllOfficials } from '../services/PlayerListParser.js';
+import {
+  parseGameSheet,
+  getAllPlayers,
+  getAllOfficials,
+  calculateNameSimilarity,
+} from '../services/PlayerListParser.js';
 import { getMockReferenceData } from '../services/MockReferenceData.js';
 import { TeamConfirmationModal } from './TeamConfirmationModal.js';
 
 /**
- * @typedef {import('../services/PlayerListParser.js').ParsedPlayer} ParsedPlayer
- * @typedef {import('../services/PlayerListParser.js').ParsedOfficial} ParsedOfficial
- * @typedef {import('../services/PlayerListParser.js').ParsedTeam} ParsedTeam
+ * @typedef {import('@volleykit/ocr/types').ParsedPlayer} ParsedPlayer
+ * @typedef {import('@volleykit/ocr/types').ParsedOfficial} ParsedOfficial
+ * @typedef {import('@volleykit/ocr/types').ParsedTeam} ParsedTeam
  * @typedef {import('../services/MockReferenceData.js').ReferencePlayer} ReferencePlayer
  * @typedef {import('../services/MockReferenceData.js').ReferenceOfficial} ReferenceOfficial
  * @typedef {import('../services/MockReferenceData.js').ReferenceTeam} ReferenceTeam
@@ -40,71 +48,6 @@ import { TeamConfirmationModal } from './TeamConfirmationModal.js';
  * @property {ComparisonResult[]} officialResults - Official comparison results
  * @property {{ players: { match: number, ocrOnly: number, refOnly: number }, officials: { match: number, ocrOnly: number, refOnly: number } }} counts
  */
-
-/**
- * Normalize a string for comparison (lowercase, remove accents, trim)
- * @param {string} str
- * @returns {string}
- */
-function normalizeForComparison(str) {
-  if (!str) {
-    return '';
-  }
-  return str
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // Remove accents
-    .replace(/[^a-z0-9\s]/g, '') // Remove special chars
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-/**
- * Calculate similarity between two names (0-100)
- * Uses a combination of exact match, starts-with, and contains checks
- * @param {string} name1
- * @param {string} name2
- * @returns {number}
- */
-function calculateNameSimilarity(name1, name2) {
-  const n1 = normalizeForComparison(name1);
-  const n2 = normalizeForComparison(name2);
-
-  if (!n1 || !n2) {
-    return 0;
-  }
-  if (n1 === n2) {
-    return 100;
-  }
-
-  // Check if one contains the other
-  if (n1.includes(n2) || n2.includes(n1)) {
-    const shorter = n1.length < n2.length ? n1 : n2;
-    const longer = n1.length >= n2.length ? n1 : n2;
-    return Math.round((shorter.length / longer.length) * 90);
-  }
-
-  // Check word-by-word overlap
-  const words1 = n1.split(' ').filter((w) => w.length > 1);
-  const words2 = n2.split(' ').filter((w) => w.length > 1);
-
-  let matchingWords = 0;
-  for (const w1 of words1) {
-    for (const w2 of words2) {
-      if (w1 === w2 || w1.includes(w2) || w2.includes(w1)) {
-        matchingWords++;
-        break;
-      }
-    }
-  }
-
-  const totalWords = Math.max(words1.length, words2.length);
-  if (totalWords === 0) {
-    return 0;
-  }
-
-  return Math.round((matchingWords / totalWords) * 85);
-}
 
 /**
  * Find the best matching reference player for an OCR player (name-based only)
@@ -595,8 +538,10 @@ export class PlayerComparison {
    * Initialize the component - parse data and determine if confirmation is needed
    */
   initialize() {
-    // Parse OCR text
-    this.parsed = parseGameSheet(this.ocrText);
+    // Parse OCR text using appropriate parser based on scoresheet type
+    // Manuscript sheets use specialized parser with OCR error correction
+    const parserType = this.isManuscript ? 'manuscript' : 'electronic';
+    this.parsed = parseGameSheet(this.ocrText, { type: parserType });
 
     // Get mock reference data
     this.referenceData = getMockReferenceData();
