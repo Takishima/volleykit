@@ -18,9 +18,9 @@ const ELECTRONIC_WIDTH = 17;
 const ELECTRONIC_HEIGHT = 20;
 const ELECTRONIC_ASPECT_RATIO = ELECTRONIC_WIDTH / ELECTRONIC_HEIGHT;
 
-/** Aspect ratio for manuscript scoresheet (7:5 landscape) */
-const MANUSCRIPT_WIDTH = 7;
-const MANUSCRIPT_HEIGHT = 5;
+/** Aspect ratio for manuscript scoresheet roster section (23:20 landscape) */
+const MANUSCRIPT_WIDTH = 23;
+const MANUSCRIPT_HEIGHT = 20;
 const MANUSCRIPT_ASPECT_RATIO = MANUSCRIPT_WIDTH / MANUSCRIPT_HEIGHT;
 
 /** Minimum zoom level */
