@@ -568,6 +568,25 @@ export interface Translations {
         noTextFound: string;
         imageTooLarge: string;
       };
+      rawData: {
+        title: string;
+        teamA: string;
+        teamB: string;
+        players: string;
+        officials: string;
+        shirtNumber: string;
+        name: string;
+        licenseStatus: string;
+        role: string;
+        imageOverlay: string;
+        hideOverlay: string;
+        showOverlay: string;
+        matchedWords: string;
+        otherWords: string;
+        capturedImage: string;
+        wordsDetected: string;
+        wordsMatched: string;
+      };
     };
   };
   tour: {
