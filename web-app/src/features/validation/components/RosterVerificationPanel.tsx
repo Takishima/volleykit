@@ -270,6 +270,12 @@ export function RosterVerificationPanel({
   // OCR handlers
   const handleOCRApplyResults = useCallback(
     (matchedPlayerIds: string[]) => {
+      // In read-only mode, just close the panel without applying changes
+      // (OCR is available for debugging/re-verification purposes only)
+      if (readOnly) {
+        setIsOCRPanelOpen(false);
+        return;
+      }
       // Clear any removed flags for matched players
       setRemovedPlayerIds((prev) => {
         const newSet = new Set(prev);
@@ -278,7 +284,7 @@ export function RosterVerificationPanel({
       });
       setIsOCRPanelOpen(false);
     },
-    [],
+    [readOnly],
   );
 
   // Compute player data
