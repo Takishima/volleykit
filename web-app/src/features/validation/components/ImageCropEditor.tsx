@@ -11,6 +11,7 @@ import type { Area, Point } from "react-easy-crop";
 import { useTranslation } from "@/shared/hooks/useTranslation";
 import { X, Check, RotateCcw, RotateCw, AlertCircle } from "@/shared/components/icons";
 import type { ScoresheetType } from "@/features/ocr/utils/scoresheet-detector";
+import { getCroppedImage } from "../utils/image-crop";
 
 /** Aspect ratio for electronic scoresheet (5:7 portrait) */
 const ELECTRONIC_WIDTH = 5;
@@ -31,12 +32,6 @@ const MAX_ZOOM = 3;
 /** Rotation step in degrees */
 const ROTATION_STEP = 90;
 
-/** JPEG quality for output */
-const JPEG_QUALITY = 0.92;
-
-/** Degrees in half a circle (for radians conversion) */
-const DEGREES_PER_HALF_CIRCLE = 180;
-
 interface ImageCropEditorProps {
   /** Image blob to crop */
   imageBlob: Blob;
@@ -46,111 +41,6 @@ interface ImageCropEditorProps {
   onConfirm: (croppedBlob: Blob) => void;
   /** Called when user cancels */
   onCancel: () => void;
-}
-
-/**
- * Creates a cropped image from the source image and crop area.
- * Handles rotation by drawing onto a rotated canvas.
- */
-async function getCroppedImage(
-  imageSrc: string,
-  pixelCrop: Area,
-  rotation: number,
-): Promise<Blob> {
-  const image = await createImage(imageSrc);
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-
-  if (!ctx) {
-    throw new Error("Could not get canvas context");
-  }
-
-  // Calculate bounding box of the rotated image
-  const rotRad = (rotation * Math.PI) / DEGREES_PER_HALF_CIRCLE;
-  const { width: bBoxWidth, height: bBoxHeight } = getRotatedBoundingBox(
-    image.width,
-    image.height,
-    rotation,
-  );
-
-  // Set canvas size to the bounding box
-  canvas.width = bBoxWidth;
-  canvas.height = bBoxHeight;
-
-  // Translate to center, rotate, then translate back
-  ctx.translate(bBoxWidth / 2, bBoxHeight / 2);
-  ctx.rotate(rotRad);
-  ctx.translate(-image.width / 2, -image.height / 2);
-
-  // Draw the rotated image
-  ctx.drawImage(image, 0, 0);
-
-  // Extract the cropped area
-  const croppedCanvas = document.createElement("canvas");
-  const croppedCtx = croppedCanvas.getContext("2d");
-
-  if (!croppedCtx) {
-    throw new Error("Could not get cropped canvas context");
-  }
-
-  croppedCanvas.width = pixelCrop.width;
-  croppedCanvas.height = pixelCrop.height;
-
-  croppedCtx.drawImage(
-    canvas,
-    pixelCrop.x,
-    pixelCrop.y,
-    pixelCrop.width,
-    pixelCrop.height,
-    0,
-    0,
-    pixelCrop.width,
-    pixelCrop.height,
-  );
-
-  return new Promise((resolve, reject) => {
-    croppedCanvas.toBlob(
-      (blob) => {
-        if (blob) {
-          resolve(blob);
-        } else {
-          reject(new Error("Failed to create blob from canvas"));
-        }
-      },
-      "image/jpeg",
-      JPEG_QUALITY,
-    );
-  });
-}
-
-/**
- * Creates an Image element from a source URL.
- */
-function createImage(url: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.addEventListener("load", () => resolve(image));
-    image.addEventListener("error", (error) => reject(error));
-    image.src = url;
-  });
-}
-
-/**
- * Calculates the bounding box dimensions of a rotated rectangle.
- */
-function getRotatedBoundingBox(
-  width: number,
-  height: number,
-  rotation: number,
-): { width: number; height: number } {
-  const rotRad = (rotation * Math.PI) / DEGREES_PER_HALF_CIRCLE;
-  const sinRot = Math.abs(Math.sin(rotRad));
-  const cosRot = Math.abs(Math.cos(rotRad));
-
-  return {
-    width: width * cosRot + height * sinRot,
-    height: width * sinRot + height * cosRot,
-  };
 }
 
 /**
