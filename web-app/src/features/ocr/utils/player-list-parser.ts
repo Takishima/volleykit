@@ -66,6 +66,163 @@ const MIN_WORDS_FOR_COLUMN_DETECTION = 4;
 const MIN_COLUMN_GAP_PX = 50;
 
 // =============================================================================
+// Space-Separated Column Splitting (for OCR without tabs)
+// =============================================================================
+
+/**
+ * Result of splitting a space-separated line into two team columns
+ */
+interface TwoColumnSplit {
+  /** Team A data as tab-separated parts: [number, name, license] */
+  teamAParts: string[];
+  /** Team B data as tab-separated parts: [number, name, license] */
+  teamBParts: string[];
+}
+
+/** Valid license status values that indicate end of a player entry */
+const LICENSE_STATUS_VALUES = new Set(['NOT', 'LFP', 'OK', 'NE', 'PEN']);
+
+/** Minimum words needed for a valid two-column player line:
+ * numA + name (1+ words) + licenseA + numB + name (1+ words) = 5 minimum */
+const MIN_WORDS_TWO_COLUMN_PLAYER = 5;
+
+/**
+ * Try to split a space-separated line into two team columns using license status as markers.
+ *
+ * Pattern: `<num> <NAME> <license> <num> <NAME> <license>`
+ * Example: `5   TORTAROLO MARIA NOT 2   BALMER SOPHIE LFP`
+ *
+ * Strategy:
+ * 1. Find the first jersey number (1-99) at the start → Team A shirt number
+ * 2. Find a license status word (NOT/LFP/OK) → End of Team A name
+ * 3. Find the next jersey number → Team B starts
+ * 4. Split at that boundary
+ *
+ * @returns TwoColumnSplit if successful, null if line doesn't match two-column pattern
+ */
+function trySpaceSeparatedTwoColumnSplit(line: string): TwoColumnSplit | null {
+  if (!line || line.includes('\t')) {
+    return null; // Only for space-separated lines
+  }
+
+  const trimmed = line.trim();
+  const words = trimmed.split(/\s+/);
+
+  // Need at least: numA, nameA (1+ words), licenseA, numB, nameB (1+ words)
+  if (words.length < MIN_WORDS_TWO_COLUMN_PLAYER) {
+    return null;
+  }
+
+  // First word must be Team A's shirt number
+  const numA = words[0]!;
+  if (!/^\d{1,2}$/.test(numA)) {
+    return null;
+  }
+  const shirtNumA = parseInt(numA, 10);
+  if (shirtNumA < 1 || shirtNumA > MAX_SHIRT_NUMBER) {
+    return null;
+  }
+
+  // Find first license status word (marks end of Team A name)
+  let licenseAIndex = -1;
+  for (let i = 2; i < words.length - 2; i++) {
+    if (LICENSE_STATUS_VALUES.has(words[i]!.toUpperCase())) {
+      licenseAIndex = i;
+      break;
+    }
+  }
+
+  if (licenseAIndex === -1) {
+    return null;
+  }
+
+  const licenseA = words[licenseAIndex]!;
+  const nameAWords = words.slice(1, licenseAIndex);
+  if (nameAWords.length === 0) {
+    return null;
+  }
+
+  // Word after license must be Team B's shirt number
+  const numB = words[licenseAIndex + 1];
+  if (!numB || !/^\d{1,2}$/.test(numB)) {
+    return null;
+  }
+  const shirtNumB = parseInt(numB, 10);
+  if (shirtNumB < 1 || shirtNumB > MAX_SHIRT_NUMBER) {
+    return null;
+  }
+
+  // Rest is Team B name and optional license
+  const remainingWords = words.slice(licenseAIndex + 2);
+  if (remainingWords.length === 0) {
+    return null;
+  }
+
+  // Check if last word is a license status
+  const lastWord = remainingWords[remainingWords.length - 1]!;
+  let licenseB = '';
+  let nameBWords = remainingWords;
+
+  if (LICENSE_STATUS_VALUES.has(lastWord.toUpperCase())) {
+    licenseB = lastWord;
+    nameBWords = remainingWords.slice(0, -1);
+  }
+
+  if (nameBWords.length === 0) {
+    return null;
+  }
+
+  return {
+    teamAParts: [numA, nameAWords.join(' '), licenseA],
+    teamBParts: [numB, nameBWords.join(' '), licenseB],
+  };
+}
+
+/**
+ * Try to split a space-separated team names line into two team names.
+ *
+ * Pattern: `<TeamA Name>    <TeamB Name>` (multiple spaces as separator)
+ * Example: `B BTV Aarau 1    VBC NUC II A`
+ *
+ * Strategy: Look for a large gap (3+ spaces) as column separator
+ *
+ * @returns Array of [teamAName, teamBName] if successful, null otherwise
+ */
+function trySpaceSeparatedTeamNamesSplit(line: string): [string, string] | null {
+  if (!line || line.includes('\t')) {
+    return null;
+  }
+
+  const trimmed = line.trim();
+
+  // Find the first occurrence of 3+ consecutive spaces as column separator
+  // Use indexOf instead of regex with .+ to avoid backtracking
+  const gapIndex = trimmed.search(/\s{3,}/);
+  if (gapIndex === -1) {
+    return null;
+  }
+
+  // Find where the gap ends (first non-space after the gap)
+  const afterGap = trimmed.slice(gapIndex).search(/\S/);
+  if (afterGap === -1) {
+    return null;
+  }
+
+  const teamA = trimmed.slice(0, gapIndex);
+  const teamB = trimmed.slice(gapIndex + afterGap);
+
+  // Clean up team names (remove leading A/B markers sometimes present)
+  const cleanA = teamA.replace(/^[AB]\s+/, '').trim();
+  const cleanB = teamB.replace(/^[AB]\s+/, '').trim();
+
+  if (cleanA.length >= MIN_ALPHA_LENGTH && cleanB.length >= MIN_ALPHA_LENGTH) {
+    return [cleanA, cleanB];
+  }
+
+  return null;
+}
+
+// =============================================================================
 // Name Parsing Utilities
 // =============================================================================
 
@@ -242,8 +399,16 @@ function findTeamNamesIndex(lines: string[], headerIndex: number): number {
   for (let j = headerIndex - 1; j >= minIndex; j--) {
     const line = lines[j];
     if (!line) continue;
+
+    // First try tab-separated
     const parts = line.split('\t').filter((p) => p.trim().length > 0);
     if (parts.length >= 2 && hasNonNumericContent(parts)) {
+      return j;
+    }
+
+    // Fallback: try space-separated team names
+    const spaceSplit = trySpaceSeparatedTeamNamesSplit(line);
+    if (spaceSplit) {
       return j;
     }
   }
@@ -315,6 +480,7 @@ function extractTeamNames(
     return { teamAName: '', teamBName: '' };
   }
 
+  // First try tab-separated
   const nameParts = teamNamesLine
     .split('\t')
     .map((p) => p.trim())
@@ -324,6 +490,15 @@ function extractTeamNames(
     return {
       teamAName: cleanTeamName(nameParts[0]!),
       teamBName: cleanTeamName(nameParts[1]!),
+    };
+  }
+
+  // Fallback: try space-separated team names
+  const spaceSplit = trySpaceSeparatedTeamNamesSplit(teamNamesLine);
+  if (spaceSplit) {
+    return {
+      teamAName: spaceSplit[0],
+      teamBName: spaceSplit[1],
     };
   }
 
@@ -474,7 +649,14 @@ function processHeaderLine(
       state.teamA.name = cleanTeamName(parts[0]!);
       state.teamB.name = cleanTeamName(parts[1]!);
     } else if (parts.length === 1) {
-      state.teamA.name = cleanTeamName(parts[0]!);
+      // Fallback: try space-separated team names
+      const spaceSplit = trySpaceSeparatedTeamNamesSplit(line);
+      if (spaceSplit) {
+        state.teamA.name = spaceSplit[0];
+        state.teamB.name = spaceSplit[1];
+      } else {
+        state.teamA.name = cleanTeamName(parts[0]!);
+      }
     }
     state.headerRowsParsed++;
     return 'header';
@@ -488,8 +670,22 @@ function processHeaderLine(
   return state.headerRowsParsed > MAX_HEADER_ROWS ? 'players' : 'header';
 }
 
-function processPlayersLine(parts: string[], state: ParserState): void {
-  if (parts.length < MIN_PARTS_SINGLE_COLUMN) return;
+function processPlayersLine(parts: string[], line: string, state: ParserState): void {
+  if (parts.length < MIN_PARTS_SINGLE_COLUMN) {
+    // Tab-split didn't produce enough parts - try space-separated fallback
+    const spaceSplit = trySpaceSeparatedTwoColumnSplit(line);
+    if (spaceSplit) {
+      // Successfully split space-separated line into two columns
+      state.seenTwoColumnPlayers = true;
+
+      const playerA = parsePlayerFromParts(spaceSplit.teamAParts, 0);
+      if (playerA) state.teamA.players.push(playerA);
+
+      const playerB = parsePlayerFromParts(spaceSplit.teamBParts, 0);
+      if (playerB) state.teamB.players.push(playerB);
+    }
+    return;
+  }
 
   const isTwoColumnRow = parts.length >= MIN_PARTS_TWO_COLUMN;
 
@@ -606,7 +802,7 @@ function processLine(line: string, state: ParserState): void {
       state.section = processHeaderLine(parts, line, state);
       break;
     case 'players':
-      processPlayersLine(parts, state);
+      processPlayersLine(parts, line, state);
       break;
     case 'libero':
       processLiberoLine(parts, state);
@@ -781,6 +977,56 @@ interface ColumnBoundary {
   midpoint: number;
   /** Whether we have enough data to determine column boundaries */
   isValid: boolean;
+}
+
+/**
+ * Reconstruct an OCR line with proper tab separation using bounding boxes.
+ *
+ * When OCR produces space-separated text without tabs, this function uses
+ * word bounding boxes to determine the column boundary and inserts a tab
+ * character between the two columns.
+ *
+ * @param ocrLine - OCR line with word bounding boxes
+ * @param boundary - Calculated column boundary
+ * @returns Line text with tab inserted between columns (or original if single-column)
+ */
+function reconstructLineWithTabs(
+  ocrLine: OCRLine,
+  boundary: ColumnBoundary,
+): string {
+  // If line already has tabs, use it as-is (already properly formatted)
+  if (ocrLine.text.includes('\t')) {
+    return ocrLine.text;
+  }
+
+  if (!boundary.isValid || !ocrLine.words || ocrLine.words.length === 0) {
+    return ocrLine.text;
+  }
+
+  // Sort words by x position
+  const sortedWords = [...ocrLine.words].sort((a, b) => a.bbox.x0 - b.bbox.x0);
+
+  // Split into left and right column words
+  const leftWords: string[] = [];
+  const rightWords: string[] = [];
+
+  for (const word of sortedWords) {
+    // Use word center for more accurate column assignment
+    const wordCenterX = (word.bbox.x0 + word.bbox.x1) / 2;
+    if (wordCenterX < boundary.midpoint) {
+      leftWords.push(word.text);
+    } else {
+      rightWords.push(word.text);
+    }
+  }
+
+  // If all words are on one side, return original
+  if (leftWords.length === 0 || rightWords.length === 0) {
+    return ocrLine.text;
+  }
+
+  // Reconstruct with tab separator between columns
+  return `${leftWords.join(' ')}\t${rightWords.join(' ')}`;
 }
 
 /**
@@ -1134,20 +1380,34 @@ export function parseGameSheetWithOCR(
     columnBoundary,
   };
 
-  // Build a map from line text to OCR line data
+  // Reconstruct lines with tab separators using bounding boxes
+  // This handles OCR output that uses spaces instead of tabs between columns
+  const reconstructedLines: string[] = [];
   const lineToOCRLine = new Map<string, OCRLine>();
+
   for (const ocrLine of ocrResult.lines) {
     const normalizedText = ocrLine.text.trim();
-    if (normalizedText) {
-      lineToOCRLine.set(normalizedText, ocrLine);
+    if (!normalizedText) continue;
+
+    // Reconstruct line with tabs if bounding boxes indicate two columns
+    const reconstructed = reconstructLineWithTabs(ocrLine, columnBoundary);
+    reconstructedLines.push(reconstructed);
+
+    // Map both original and reconstructed text to the OCR line for lookup
+    lineToOCRLine.set(normalizedText, ocrLine);
+    if (reconstructed !== normalizedText) {
+      lineToOCRLine.set(reconstructed, ocrLine);
     }
   }
 
-  // Split full text into lines
-  const allLines = ocrResult.fullText
-    .split('\n')
-    .map((l) => l.trim())
-    .filter((l) => l.length > 0);
+  // Use reconstructed lines (with tabs) if available, otherwise fall back to fullText
+  const allLines =
+    reconstructedLines.length > 0
+      ? reconstructedLines
+      : ocrResult.fullText
+          .split('\n')
+          .map((l) => l.trim())
+          .filter((l) => l.length > 0);
 
   // Find where the player list section starts
   const { startIndex, teamNamesIndex } = findPlayerListStart(allLines);

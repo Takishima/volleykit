@@ -172,6 +172,131 @@ AC\tAssistant\tAC\tOther Assistant`;
   });
 });
 
+describe('space-separated two-column parsing (no tabs)', () => {
+  it('parses space-separated player lines using jersey numbers as markers', () => {
+    // This mimics OCR output where tabs are not present
+    const ocrText = `B BTV Aarau 1    VBC NUC II A
+N.  Name of the player  N.  Name of the player
+5   TORTAROLO MARIA NOT 2   BALMER SOPHIE LFP
+6   LOOSLI ANNA STEFANIE LFP 3   MODJO YVANA LFP
+7   STÄUBLE ALINA SARAH LFP 5   FRÉCHELIN AURÉLIE LFP`;
+
+    const result = parseGameSheet(ocrText);
+
+    // Team names should be extracted from space-separated header
+    expect(result.teamA.name).toBe('BTV Aarau 1');
+    expect(result.teamB.name).toBe('VBC NUC II A');
+
+    // Both teams should have players
+    expect(result.teamA.players.length).toBeGreaterThanOrEqual(3);
+    expect(result.teamB.players.length).toBeGreaterThanOrEqual(3);
+
+    // Verify specific players were parsed correctly
+    const teamAPlayer1 = result.teamA.players.find((p) => p.shirtNumber === 5);
+    expect(teamAPlayer1).toBeDefined();
+    expect(teamAPlayer1!.lastName).toBe('Tortarolo');
+    expect(teamAPlayer1!.firstName).toBe('Maria');
+    expect(teamAPlayer1!.licenseStatus).toBe('NOT');
+
+    const teamBPlayer1 = result.teamB.players.find((p) => p.shirtNumber === 2);
+    expect(teamBPlayer1).toBeDefined();
+    expect(teamBPlayer1!.lastName).toBe('Balmer');
+    expect(teamBPlayer1!.firstName).toBe('Sophie');
+    expect(teamBPlayer1!.licenseStatus).toBe('LFP');
+  });
+
+  it('handles players with three-part names', () => {
+    const ocrText = `Team A    Team B
+N.  Name of the player  N.  Name of the player
+6   LOOSLI ANNA STEFANIE LFP 3   MODJO YVANA LFP`;
+
+    const result = parseGameSheet(ocrText);
+
+    const teamAPlayer = result.teamA.players.find((p) => p.shirtNumber === 6);
+    expect(teamAPlayer).toBeDefined();
+    expect(teamAPlayer!.lastName).toBe('Loosli');
+    expect(teamAPlayer!.firstName).toBe('Anna Stefanie');
+  });
+
+  it('handles accented characters in names', () => {
+    const ocrText = `Team A    Team B
+N.  Name of the player  N.  Name of the player
+7   STÄUBLE ALINA SARAH LFP 5   FRÉCHELIN AURÉLIE LFP`;
+
+    const result = parseGameSheet(ocrText);
+
+    const teamAPlayer = result.teamA.players.find((p) => p.shirtNumber === 7);
+    expect(teamAPlayer).toBeDefined();
+    expect(teamAPlayer!.lastName).toBe('Stäuble');
+
+    const teamBPlayer = result.teamB.players.find((p) => p.shirtNumber === 5);
+    expect(teamBPlayer).toBeDefined();
+    expect(teamBPlayer!.lastName).toBe('Fréchelin');
+    expect(teamBPlayer!.firstName).toBe('Aurélie');
+  });
+
+  it('extracts team names from space-separated header line', () => {
+    const ocrText = `B BTV Aarau 1    VBC NUC II A
+N.  Name  N.  Name
+1   PLAYER ONE LFP 1   PLAYER TWO LFP`;
+
+    const result = parseGameSheet(ocrText);
+
+    expect(result.teamA.name).toBe('BTV Aarau 1');
+    expect(result.teamB.name).toBe('VBC NUC II A');
+  });
+
+  it('falls back to tab parsing when tabs are present', () => {
+    // With tabs, should use the standard parser
+    const ocrText = `Team A\tTeam B
+N.\tName of the player\tLicense\tN.\tName of the player\tLicense
+1\tPLAYER ONE\tLFP\t2\tPLAYER TWO\tLFP`;
+
+    const result = parseGameSheet(ocrText);
+
+    expect(result.teamA.players).toHaveLength(1);
+    expect(result.teamB.players).toHaveLength(1);
+    expect(result.teamA.players[0]!.rawName).toBe('PLAYER ONE');
+    expect(result.teamB.players[0]!.rawName).toBe('PLAYER TWO');
+  });
+
+  it('handles Team A name longer than Team B name', () => {
+    const ocrText = `Team A    Team B
+N.  Name of the player  N.  Name of the player
+6   LOOSLI ANNA STEFANIE MARIE LFP 3   SMITH JO LFP`;
+
+    const result = parseGameSheet(ocrText);
+
+    const teamAPlayer = result.teamA.players.find((p) => p.shirtNumber === 6);
+    expect(teamAPlayer).toBeDefined();
+    expect(teamAPlayer!.lastName).toBe('Loosli');
+    expect(teamAPlayer!.firstName).toBe('Anna Stefanie Marie');
+
+    const teamBPlayer = result.teamB.players.find((p) => p.shirtNumber === 3);
+    expect(teamBPlayer).toBeDefined();
+    expect(teamBPlayer!.lastName).toBe('Smith');
+    expect(teamBPlayer!.firstName).toBe('Jo');
+  });
+
+  it('handles Team B name longer than Team A name', () => {
+    const ocrText = `Team A    Team B
+N.  Name of the player  N.  Name of the player
+1   DOE JO LFP 12   MÜLLER ANNA MARIE ELISABETH LFP`;
+
+    const result = parseGameSheet(ocrText);
+
+    const teamAPlayer = result.teamA.players.find((p) => p.shirtNumber === 1);
+    expect(teamAPlayer).toBeDefined();
+    expect(teamAPlayer!.lastName).toBe('Doe');
+    expect(teamAPlayer!.firstName).toBe('Jo');
+
+    const teamBPlayer = result.teamB.players.find((p) => p.shirtNumber === 12);
+    expect(teamBPlayer).toBeDefined();
+    expect(teamBPlayer!.lastName).toBe('Müller');
+    expect(teamBPlayer!.firstName).toBe('Anna Marie Elisabeth');
+  });
+});
+
 describe('single-column overflow handling', () => {
   it('assigns single-column player rows to Team B after two-column rows', () => {
     // Team A has 2 players, Team B has 4 players
