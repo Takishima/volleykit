@@ -8,7 +8,7 @@
  * with push notifications to update badges when the app is closed.
  */
 
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { isToday } from "date-fns";
 import { badgeService } from "@/shared/services/badge";
 import type { Assignment } from "@/api/client";
@@ -114,24 +114,15 @@ export function useDailyGameBadge(
     void updateBadge();
   }, [todaysGameCount, enabled, isSupported]);
 
-  // Clear badge on unmount (optional behavior)
-  useEffect(() => {
-    return () => {
-      // Don't clear on unmount - badge should persist when navigating
-      // Uncomment if you want to clear when the component unmounts:
-      // void badgeService.clearBadge();
-    };
-  }, []);
-
-  const updateBadge = async () => {
+  const updateBadge = useCallback(async () => {
     await badgeService.setBadge(todaysGameCount);
     lastSetCountRef.current = todaysGameCount;
-  };
+  }, [todaysGameCount]);
 
-  const clearBadge = async () => {
+  const clearBadge = useCallback(async () => {
     await badgeService.clearBadge();
     lastSetCountRef.current = 0;
-  };
+  }, []);
 
   return {
     todaysGameCount,
