@@ -4,6 +4,10 @@ import { Camera, Image, X, AlertCircle } from "@/shared/components/icons";
 import type { ScoresheetType } from "@/features/ocr/utils/scoresheet-detector";
 import { ScoresheetGuide } from "./ScoresheetGuide";
 import { ImageCropEditor } from "./ImageCropEditor";
+import {
+  calculateGuideCropArea,
+  cropCanvasToArea,
+} from "../utils/image-crop";
 
 const MAX_FILE_SIZE_MB = 10;
 const BYTES_PER_KB = 1024;
@@ -121,32 +125,54 @@ export function OCRCaptureModal({
     }
   }, [t]);
 
-  // Capture photo from camera
-  const capturePhoto = useCallback(() => {
+  // Capture photo from camera and auto-crop to guide area
+  const capturePhoto = useCallback(async () => {
     const video = videoRef.current;
     if (!video) return;
 
-    const canvas = document.createElement("canvas");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    // Capture full video frame to canvas
+    const fullCanvas = document.createElement("canvas");
+    fullCanvas.width = video.videoWidth;
+    fullCanvas.height = video.videoHeight;
 
-    const ctx = canvas.getContext("2d");
+    const ctx = fullCanvas.getContext("2d");
     if (!ctx) return;
 
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(video, 0, 0, fullCanvas.width, fullCanvas.height);
 
-    canvas.toBlob(
-      (blob) => {
-        if (blob) {
-          stopCamera();
-          setSelectedImage(blob);
-          setStep("crop");
-        }
-      },
-      "image/jpeg",
-      JPEG_QUALITY,
+    // Calculate the guide crop area based on video and container dimensions
+    // video.clientWidth/Height = displayed size (container size after object-cover)
+    // video.videoWidth/Height = native video resolution
+    const cropArea = calculateGuideCropArea(
+      video.videoWidth,
+      video.videoHeight,
+      video.clientWidth,
+      video.clientHeight,
+      scoresheetType,
     );
-  }, [stopCamera]);
+
+    try {
+      // Crop the canvas to the guide area
+      const croppedBlob = await cropCanvasToArea(fullCanvas, cropArea, JPEG_QUALITY);
+      stopCamera();
+      setSelectedImage(croppedBlob);
+      setStep("crop");
+    } catch (err) {
+      console.error("Failed to crop captured image:", err);
+      // Fallback: use full image if cropping fails
+      fullCanvas.toBlob(
+        (blob) => {
+          if (blob) {
+            stopCamera();
+            setSelectedImage(blob);
+            setStep("crop");
+          }
+        },
+        "image/jpeg",
+        JPEG_QUALITY,
+      );
+    }
+  }, [stopCamera, scoresheetType]);
 
   // Handle file selection
   const handleFileChange = useCallback(
