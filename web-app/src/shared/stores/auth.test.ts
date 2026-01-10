@@ -790,6 +790,57 @@ describe("useAuthStore", () => {
       consoleSpy.mockRestore();
       vi.useRealTimers();
     });
+
+    it("detects stale session in PWA mode when redirected but URL not updated", async () => {
+      // Set up authenticated state first
+      useAuthStore.setState({
+        status: "authenticated",
+        user: { id: "user-1", firstName: "Test", lastName: "User", occupations: [] },
+        csrfToken: "existing-token",
+      });
+
+      // PWA mode scenario: redirected to login page, but response.url not updated
+      // response.redirected is true, but URL still shows dashboard
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        redirected: true, // Key: redirect happened
+        url: "https://volleymanager.volleyball.ch/sportmanager.volleyball/main/dashboard", // URL not updated
+        text: () =>
+          Promise.resolve(`
+          <!DOCTYPE html>
+          <html>
+          <body>
+            <form action="/login" method="post">
+              <input id="username" type="text">
+              <input id="password" type="password">
+            </form>
+          </body>
+          </html>
+        `),
+      });
+
+      const result = await useAuthStore.getState().checkSession();
+
+      expect(result).toBe(false);
+      expect(useAuthStore.getState().status).toBe("idle");
+      expect(useAuthStore.getState().user).toBeNull();
+    });
+
+    it("succeeds in PWA mode when redirected but URL not updated and content is dashboard", async () => {
+      // PWA mode scenario: redirected but URL not updated, content is valid dashboard
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        redirected: true, // Key: redirect happened (after following login redirect)
+        url: "https://volleymanager.volleyball.ch/sportmanager.volleyball/main/dashboard", // URL shows dashboard
+        text: () => Promise.resolve(createDashboardHtml("pwa-csrf-token")),
+      });
+
+      const result = await useAuthStore.getState().checkSession();
+
+      expect(result).toBe(true);
+      expect(useAuthStore.getState().status).toBe("authenticated");
+      expect(useAuthStore.getState().csrfToken).toBe("pwa-csrf-token");
+    });
   });
 
   describe("setUser", () => {
