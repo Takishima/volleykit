@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { addDays, getISOWeek } from "date-fns";
+import { addDays, getISOWeek, setHours } from "date-fns";
 import { useRefereeBackups } from "./useRefereeBackups";
 import { useAuthStore } from "@/shared/stores/auth";
 import { generateDemoUuid } from "@/shared/utils/demo-uuid";
@@ -8,6 +8,19 @@ import type { RefereeBackupEntry, BackupRefereeAssignment } from "@/api/client";
 
 /** Default number of weeks ahead to fetch on-call assignments */
 const DEFAULT_WEEKS_AHEAD = 2;
+
+/** On-call assignments display at noon for consistent sorting with game assignments */
+const ON_CALL_DISPLAY_HOUR = 12;
+
+/**
+ * Normalizes the on-call date to display at 12:00 (noon).
+ * API returns dates at midnight, but we show them at noon for better
+ * visual alignment with game assignments in the timeline.
+ */
+function normalizeOnCallDate(dateString: string): string {
+  const date = new Date(dateString);
+  return setHours(date, ON_CALL_DISPLAY_HOUR).toISOString();
+}
 
 /**
  * Represents an on-call (Pikett) assignment for the current user.
@@ -43,47 +56,6 @@ export function isUserAssignment(
 }
 
 /**
- * Collects all unique referee identities from backup entries for debugging.
- */
-function collectRefereeIds(entries: RefereeBackupEntry[]): Set<string> {
-  const allRefereeIds = new Set<string>();
-  for (const entry of entries) {
-    for (const ref of entry.nlaReferees ?? []) {
-      const person = ref.indoorReferee?.person;
-      const id = person?.__identity ?? person?.persistenceObjectIdentifier;
-      if (id) allRefereeIds.add(id);
-    }
-    for (const ref of entry.nlbReferees ?? []) {
-      const person = ref.indoorReferee?.person;
-      const id = person?.__identity ?? person?.persistenceObjectIdentifier;
-      if (id) allRefereeIds.add(id);
-    }
-  }
-  return allRefereeIds;
-}
-
-/**
- * Logs debug info for on-call assignment filtering.
- * Helps diagnose issues where user's on-call assignments don't appear.
- * Uses console.log directly to ensure visibility in production builds.
- */
-function logFilterContext(
-  entries: RefereeBackupEntry[],
-  userId: string,
-  resultCount: number,
-): void {
-  if (entries.length === 0) return;
-
-  const allRefereeIds = collectRefereeIds(entries);
-  // Use console.log directly for production visibility (logger is dev-only)
-  console.log(
-    `[VolleyKit] On-call filter: userId=${userId}, entries=${entries.length}, uniqueReferees=${allRefereeIds.size}`,
-    { refereeIds: Array.from(allRefereeIds) },
-  );
-  console.log(`[VolleyKit] On-call filter result: found ${resultCount} assignments for user`);
-}
-
-/**
  * Extracts on-call assignments for the current user from backup entries.
  */
 export function extractUserOnCallAssignments(
@@ -93,12 +65,15 @@ export function extractUserOnCallAssignments(
   const assignments: OnCallAssignment[] = [];
 
   for (const entry of entries) {
+    // Normalize date to 12:00 for consistent display
+    const normalizedDate = normalizeOnCallDate(entry.date);
+
     // Check NLA referees
     for (const assignment of entry.nlaReferees ?? []) {
       if (isUserAssignment(assignment, userId)) {
         assignments.push({
           id: `${entry.__identity}-NLA`,
-          date: entry.date,
+          date: normalizedDate,
           weekday: entry.weekday,
           calendarWeek: entry.calendarWeek,
           league: "NLA",
@@ -113,7 +88,7 @@ export function extractUserOnCallAssignments(
       if (isUserAssignment(assignment, userId)) {
         assignments.push({
           id: `${entry.__identity}-NLB`,
-          date: entry.date,
+          date: normalizedDate,
           weekday: entry.weekday,
           calendarWeek: entry.calendarWeek,
           league: "NLB",
@@ -123,9 +98,6 @@ export function extractUserOnCallAssignments(
       }
     }
   }
-
-  // Debug: Log filtering context and results
-  logFilterContext(entries, userId, assignments.length);
 
   // Sort by date (ascending)
   return assignments.sort(
@@ -151,7 +123,7 @@ function generateDemoOnCallAssignments(): OnCallAssignment[] {
   // Find the next Saturday (on-call duties typically on weekends)
   const daysUntilSaturday =
     (SATURDAY - now.getDay() + DAYS_IN_WEEK) % DAYS_IN_WEEK || DAYS_IN_WEEK;
-  const nextSaturday = addDays(now, daysUntilSaturday);
+  const nextSaturday = setHours(addDays(now, daysUntilSaturday), ON_CALL_DISPLAY_HOUR);
 
   // Create a demo backup entry for NLA duty this weekend
   const nlaEntry: RefereeBackupEntry = {
@@ -238,9 +210,6 @@ export function useMyOnCallAssignments(
 
   const { data: backupEntries, ...queryResult } = useRefereeBackups(weeksAhead);
 
-  // Debug: Log raw data from API
-  console.log(`[VolleyKit] useMyOnCallAssignments: dataSource=${dataSource}, userId=${userId}, backupEntries=${backupEntries?.length ?? "undefined"}`);
-
   // Filter and transform backup entries to user's on-call assignments
   const data = useMemo(() => {
     // Demo mode: generate sample on-call assignments
@@ -250,7 +219,6 @@ export function useMyOnCallAssignments(
 
     // Calendar mode: no on-call data available
     if (dataSource === "calendar" || !userId || !backupEntries) {
-      console.log(`[VolleyKit] On-call skipped: calendar=${dataSource === "calendar"}, noUserId=${!userId}, noBackupEntries=${!backupEntries}`);
       return [];
     }
 

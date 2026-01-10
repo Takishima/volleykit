@@ -90,7 +90,7 @@ export function useRefereeBackups(weeksAhead: number = DEFAULT_WEEKS_AHEAD) {
     };
   }, []);
 
-  const query = useQuery({
+  return useQuery({
     queryKey: queryKeys.refereeBackup.list(config, associationKey),
     queryFn: () => apiClient.searchRefereeBackups(config),
     select: selectBackups,
@@ -98,9 +98,4 @@ export function useRefereeBackups(weeksAhead: number = DEFAULT_WEEKS_AHEAD) {
     // Keep previous data while refetching
     placeholderData: (prev) => prev,
   });
-
-  // Debug: Log query state
-  console.log(`[VolleyKit] useRefereeBackups: status=${query.status}, error=${query.error?.message ?? "none"}, dataLength=${query.data?.length ?? "undefined"}`);
-
-  return query;
 }
