@@ -490,12 +490,16 @@ Releases are fully automated via the **Release workflow** (`.github/workflows/re
 **What the workflow does**:
 1. Validates the codebase (lint, test, build)
 2. Auto-detects version bump type from changelog (or uses manual selection)
-3. Moves `[Unreleased]` entries in CHANGELOG.md to new version section
-4. Updates version in `web-app/package.json` and `package-lock.json`
-5. Creates commit: `chore(release): prepare vX.Y.Z release`
-6. Creates git tag: `vX.Y.Z`
-7. Creates GitHub Release with changelog excerpt
-8. Deployment triggers automatically via `deploy-web.yml`
+3. Updates CHANGELOG.md using [keep-a-changelog-action](https://github.com/release-flow/keep-a-changelog-action):
+   - Moves `[Unreleased]` entries to new version section
+   - Updates comparison links
+   - Outputs the new version number
+4. Updates `web-app/package.json` and `package-lock.json` with the **same version**
+5. Verifies all three files have matching versions (fails if mismatch)
+6. Creates commit: `chore(release): prepare vX.Y.Z release`
+7. Creates git tag: `vX.Y.Z`
+8. Creates GitHub Release with changelog excerpt
+9. Deployment triggers automatically via `deploy-web.yml`
 
 **Manual release** (if needed):
 1. Move `[Unreleased]` entries to a new version section with date
