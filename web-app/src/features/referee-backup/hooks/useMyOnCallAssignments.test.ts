@@ -111,7 +111,7 @@ describe("extractUserOnCallAssignments", () => {
     expect(result[0]).toMatchObject({
       id: "entry-1-NLA",
       league: "NLA",
-      date: "2026-01-15T12:00:00.000Z", // Normalized to noon
+      date: "2026-01-15T16:00:00.000Z", // Normalized to 16:00 (weekday)
     });
   });
 
@@ -226,9 +226,9 @@ describe("extractUserOnCallAssignments", () => {
     const result = extractUserOnCallAssignments(entries, userId);
 
     expect(result).toHaveLength(2);
-    // Both dates normalized to noon
-    expect(result[0]?.date).toBe("2026-01-15T12:00:00.000Z");
-    expect(result[1]?.date).toBe("2026-01-22T12:00:00.000Z");
+    // Both dates normalized to 16:00 (weekdays)
+    expect(result[0]?.date).toBe("2026-01-15T16:00:00.000Z");
+    expect(result[1]?.date).toBe("2026-01-22T16:00:00.000Z");
   });
 
   it("returns empty array for empty entries", () => {
