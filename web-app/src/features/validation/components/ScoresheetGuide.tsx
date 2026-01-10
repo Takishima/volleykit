@@ -11,27 +11,19 @@
 
 import type { ScoresheetType } from "@/features/ocr/utils/scoresheet-detector";
 import { useTranslation } from "@/shared/hooks/useTranslation";
-
-/**
- * Aspect ratio dimensions for electronic scoresheet player list
- * 4:5 portrait format matches Swiss volleyball scoresheet tables
- */
-const ELECTRONIC_WIDTH = 4;
-const ELECTRONIC_HEIGHT = 5;
-const TABLE_ASPECT_RATIO = ELECTRONIC_WIDTH / ELECTRONIC_HEIGHT;
-
-/**
- * Aspect ratio dimensions for manuscript scoresheet roster section
- * 4:5 portrait format matches the roster area of Swiss volleyball scoresheets
- */
-const MANUSCRIPT_WIDTH = 4;
-const MANUSCRIPT_HEIGHT = 5;
-const MANUSCRIPT_ASPECT_RATIO = MANUSCRIPT_WIDTH / MANUSCRIPT_HEIGHT;
+import {
+  ELECTRONIC_GUIDE_WIDTH_PERCENT,
+  MANUSCRIPT_GUIDE_WIDTH_PERCENT,
+  GUIDE_ASPECT_RATIO,
+} from "../constants/scoresheet-guide";
 
 interface ScoresheetGuideProps {
   /** Type of scoresheet being captured */
   scoresheetType: ScoresheetType;
 }
+
+/** Multiplier to convert decimal percentage to CSS percentage */
+const PERCENT_MULTIPLIER = 100;
 
 /**
  * Visual overlay guide for scoresheet image capture.
@@ -41,21 +33,18 @@ export function ScoresheetGuide({ scoresheetType }: ScoresheetGuideProps) {
   const { t } = useTranslation();
 
   const isElectronic = scoresheetType === "electronic";
-  const aspectRatio = isElectronic ? TABLE_ASPECT_RATIO : MANUSCRIPT_ASPECT_RATIO;
+  const widthPercent = isElectronic
+    ? ELECTRONIC_GUIDE_WIDTH_PERCENT
+    : MANUSCRIPT_GUIDE_WIDTH_PERCENT;
 
-  // Calculate frame dimensions based on aspect ratio
+  // Calculate frame dimensions using shared constants
   // Both electronic and manuscript use portrait orientation (4:5)
   // Electronic uses smaller frame width (70%) for tighter focus on player list
   // Manuscript uses larger frame width (90%) for broader roster capture
-  const frameStyle = isElectronic
-    ? {
-        width: "70%",
-        aspectRatio: `${aspectRatio}`,
-      }
-    : {
-        width: "90%",
-        aspectRatio: `${aspectRatio}`,
-      };
+  const frameStyle = {
+    width: `${widthPercent * PERCENT_MULTIPLIER}%`,
+    aspectRatio: `${GUIDE_ASPECT_RATIO}`,
+  };
 
   const hintText = isElectronic
     ? t("validation.ocr.photoGuide.electronicHint")
