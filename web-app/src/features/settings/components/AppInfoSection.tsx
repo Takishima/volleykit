@@ -65,7 +65,12 @@ function AppInfoSectionComponent({ showUpdates }: AppInfoSectionProps) {
             <span className="text-text-muted dark:text-text-muted-dark">
               {t("settings.version")}
             </span>
-            <span className="text-text-primary dark:text-text-primary-dark">{__APP_VERSION__}</span>
+            <span className="text-text-primary dark:text-text-primary-dark">
+              {__APP_VERSION__}{" "}
+              <span className="text-text-muted dark:text-text-muted-dark font-mono text-xs">
+                ({__GIT_HASH__})
+              </span>
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-text-muted dark:text-text-muted-dark">
