@@ -4,22 +4,18 @@
  */
 
 import type { ScoresheetType } from "@/features/ocr/utils/scoresheet-detector";
+import {
+  ELECTRONIC_GUIDE_WIDTH_PERCENT,
+  MANUSCRIPT_GUIDE_WIDTH_PERCENT,
+  GUIDE_ASPECT_RATIO,
+} from "../constants/scoresheet-guide";
 
 /** Degrees in half a circle (for radians conversion) */
 const DEGREES_PER_HALF_CIRCLE = 180;
 
-/** Guide width percentage for electronic scoresheets (70%) */
-const ELECTRONIC_GUIDE_WIDTH_PERCENT = 0.7;
-
-/** Guide width percentage for manuscript scoresheets (90%) */
-const MANUSCRIPT_GUIDE_WIDTH_PERCENT = 0.9;
-
-/** Guide aspect ratio (4:5 portrait) */
-const GUIDE_ASPECT_RATIO = 0.8;
-
 /**
  * Guide overlay dimensions for different scoresheet types.
- * These must match the values in ScoresheetGuide.tsx
+ * Uses shared constants from scoresheet-guide.ts
  */
 const GUIDE_CONFIG = {
   /** Electronic scoresheet: tighter focus on player list */

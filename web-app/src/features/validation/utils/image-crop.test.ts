@@ -4,11 +4,11 @@ import {
   getRotatedBoundingBox,
   calculateGuideCropArea,
 } from "./image-crop";
-
-// Test constants matching the implementation values
-const ELECTRONIC_WIDTH_PERCENT = 0.7;
-const MANUSCRIPT_WIDTH_PERCENT = 0.9;
-const GUIDE_ASPECT_RATIO = 0.8; // 4:5 portrait
+import {
+  ELECTRONIC_GUIDE_WIDTH_PERCENT,
+  MANUSCRIPT_GUIDE_WIDTH_PERCENT,
+  GUIDE_ASPECT_RATIO,
+} from "../constants/scoresheet-guide";
 
 describe("image-crop utilities", () => {
   describe("degreesToRadians", () => {
@@ -131,7 +131,7 @@ describe("image-crop utilities", () => {
         );
 
         // Guide is centered in visible area
-        const expectedWidth = Math.round(videoWidth * ELECTRONIC_WIDTH_PERCENT);
+        const expectedWidth = Math.round(videoWidth * ELECTRONIC_GUIDE_WIDTH_PERCENT);
         const expectedHeight = Math.round(expectedWidth / GUIDE_ASPECT_RATIO);
         const expectedX = Math.round((videoWidth - expectedWidth) / 2);
 
@@ -160,7 +160,7 @@ describe("image-crop utilities", () => {
         const containerAspect = containerWidth / containerHeight;
         const visibleWidth = videoHeight * containerAspect;
         const offsetX = (videoWidth - visibleWidth) / 2;
-        const guideWidth = visibleWidth * ELECTRONIC_WIDTH_PERCENT;
+        const guideWidth = visibleWidth * ELECTRONIC_GUIDE_WIDTH_PERCENT;
         const guideHeight = guideWidth / GUIDE_ASPECT_RATIO;
         const guideXInVisible = (visibleWidth - guideWidth) / 2;
         const guideYInVisible = (videoHeight - guideHeight) / 2;
@@ -191,7 +191,7 @@ describe("image-crop utilities", () => {
         const containerAspect = containerWidth / containerHeight;
         const visibleHeight = videoWidth / containerAspect;
         const offsetY = (videoHeight - visibleHeight) / 2;
-        const guideWidth = videoWidth * ELECTRONIC_WIDTH_PERCENT;
+        const guideWidth = videoWidth * ELECTRONIC_GUIDE_WIDTH_PERCENT;
         const guideHeight = guideWidth / GUIDE_ASPECT_RATIO;
         const guideXInVisible = (videoWidth - guideWidth) / 2;
         const guideYInVisible = (visibleHeight - guideHeight) / 2;
@@ -217,7 +217,7 @@ describe("image-crop utilities", () => {
           "manuscript",
         );
 
-        const expectedWidth = Math.round(videoWidth * MANUSCRIPT_WIDTH_PERCENT);
+        const expectedWidth = Math.round(videoWidth * MANUSCRIPT_GUIDE_WIDTH_PERCENT);
         const expectedHeight = Math.round(expectedWidth / GUIDE_ASPECT_RATIO);
         const expectedX = Math.round((videoWidth - expectedWidth) / 2);
 
@@ -260,7 +260,7 @@ describe("image-crop utilities", () => {
         );
 
         // No object-cover cropping needed (same aspect ratio)
-        const expectedWidth = Math.round(size * ELECTRONIC_WIDTH_PERCENT);
+        const expectedWidth = Math.round(size * ELECTRONIC_GUIDE_WIDTH_PERCENT);
         const expectedHeight = Math.round(expectedWidth / GUIDE_ASPECT_RATIO);
 
         expect(result.width).toBe(expectedWidth);
