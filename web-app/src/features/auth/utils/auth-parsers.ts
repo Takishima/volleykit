@@ -184,6 +184,9 @@ export async function submitLoginCredentials(
   const response = await fetch(authUrl, {
     method: "POST",
     credentials: "include",
+    // Explicit redirect: "follow" for consistent behavior across browsers and PWA modes.
+    // Some service workers may handle implicit defaults differently in standalone PWA mode.
+    redirect: "follow",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
@@ -218,24 +221,35 @@ export async function submitLoginCredentials(
   const html = await response.text();
 
   // Check if we were redirected to the dashboard (successful login)
-  // The API returns 303 redirect on success, fetch follows it automatically
-  // Note: Some proxies may not preserve the redirected flag, so we check
-  // if the final URL contains the dashboard pattern regardless of redirect flag
+  // The API returns 303 redirect on success, fetch follows it automatically.
+  //
+  // PWA standalone mode fix: In some PWA/service worker configurations,
+  // response.url may not be updated after following redirects, but response.redirected
+  // will still be true. We check both conditions for robust success detection.
   const isOnDashboard = response.url?.includes(DASHBOARD_URL_PATTERN) ?? false;
+  const wasRedirected = response.redirected;
 
-  if (isOnDashboard) {
-    // Successfully redirected to dashboard - extract CSRF token
+  // Success detection: Either URL indicates dashboard, OR we were redirected
+  // and can extract a CSRF token (indicating we reached the dashboard).
+  // This handles PWA standalone mode where response.url may not be updated.
+  if (isOnDashboard || wasRedirected) {
     const csrfToken = extractCsrfTokenFromPage(html);
     if (csrfToken) {
       return { success: true, csrfToken, dashboardHtml: html };
     }
-    // Redirected to dashboard but couldn't find CSRF token
-    // This is a parsing issue, not invalid credentials
-    logger.warn("Login succeeded but CSRF token not found in dashboard HTML");
-    return {
-      success: false,
-      error: "Login succeeded but session could not be established",
-    };
+
+    // If we were redirected but can't find CSRF token, continue with error checks below.
+    // The redirect might have been to an error page or TFA page.
+    if (isOnDashboard) {
+      // Specifically redirected to dashboard URL but couldn't find CSRF token
+      // This is a parsing issue, not invalid credentials
+      logger.warn("Login succeeded but CSRF token not found in dashboard HTML");
+      return {
+        success: false,
+        error: "Login succeeded but session could not be established",
+      };
+    }
+    // wasRedirected but no CSRF token - fall through to check for errors/TFA
   }
 
   // Not redirected - check if we're on the login page with an error
@@ -262,7 +276,9 @@ export async function submitLoginCredentials(
     };
   }
 
-  // Fallback: Check if CSRF token exists (might be on dashboard without redirect flag)
+  // Fallback: Check if CSRF token exists (might be on dashboard via edge case path)
+  // Note: This is rarely reached now that we check wasRedirected above,
+  // but kept for safety in case of unusual response scenarios.
   const csrfToken = extractCsrfTokenFromPage(html);
   if (csrfToken) {
     return { success: true, csrfToken, dashboardHtml: html };
@@ -271,7 +287,8 @@ export async function submitLoginCredentials(
   // Unknown state - couldn't determine success or failure
   // Log diagnostic info to help debug login issues
   logger.warn("Could not determine login result from response", {
-    redirected: response.redirected,
+    redirected: wasRedirected,
+    isOnDashboard,
     url: response.url ?? "(no url)",
     htmlLength: html.length,
     htmlPreview: html.slice(0, DIAGNOSTIC_PREVIEW_LENGTH),
