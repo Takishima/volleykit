@@ -282,6 +282,7 @@ describe("submitLoginCredentials", () => {
       expect(mockFetch).toHaveBeenCalledWith(authUrl, {
         method: "POST",
         credentials: "include",
+        redirect: "follow",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
@@ -323,6 +324,41 @@ describe("submitLoginCredentials", () => {
         csrfToken: "fallback-token",
         dashboardHtml: htmlWithCsrf,
       });
+    });
+
+    it("succeeds in PWA mode when redirected flag is true but URL is not updated", async () => {
+      // PWA standalone mode fix: Service workers may not update response.url after redirects
+      // but response.redirected will still be true. Login should succeed if CSRF token is found.
+      const dashboardHtml = createDashboardHtml("pwa-csrf-token");
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        redirected: true, // PWA mode: redirect happened
+        url: "https://example.com/authenticate", // URL not updated (PWA quirk)
+        text: () => Promise.resolve(dashboardHtml),
+      });
+
+      const result = await submitLoginCredentials(authUrl, username, password, formFields);
+
+      expect(result).toEqual({
+        success: true,
+        csrfToken: "pwa-csrf-token",
+        dashboardHtml,
+      });
+    });
+
+    it("falls through to error checks when redirected but no CSRF token", async () => {
+      // If redirected to an error page (no CSRF token), should detect the error
+      const errorHtml = `<html><body><v-snackbar color="error">Error!</v-snackbar></body></html>`;
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        redirected: true,
+        url: "https://example.com/authenticate",
+        text: () => Promise.resolve(errorHtml),
+      });
+
+      const result = await submitLoginCredentials(authUrl, username, password, formFields);
+
+      expect(result).toEqual({ success: false, error: "Invalid username or password" });
     });
   });
 

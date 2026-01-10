@@ -470,8 +470,8 @@ describe("useAuthStore", () => {
       );
       expect(options.method).toBe("POST");
       expect(options.credentials).toBe("include");
-      // Should NOT use redirect: "manual" (allows browser to process cookies)
-      expect(options.redirect).toBeUndefined();
+      // Explicit redirect: "follow" for consistent behavior in PWA standalone mode
+      expect(options.redirect).toBe("follow");
 
       const body = new URLSearchParams(options.body as string);
       expect(body.get("__trustedProperties")).toBe("trusted-props-value");
