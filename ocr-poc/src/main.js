@@ -16,29 +16,19 @@ import { ImageCapture } from './components/ImageCapture.js';
 import { SheetTypeSelector } from './components/SheetTypeSelector.js';
 import { OCRProgress } from './components/OCRProgress.js';
 import { OCRFactory } from './services/ocr/index.js';
-import { PlayerComparison } from './components/PlayerComparison.js';
+import { ParsedRosterDisplay } from './components/ParsedRosterDisplay.js';
 import { RosterCropEditor } from './components/RosterCropEditor.js';
-import {
-  collectSample,
-  exportSampleAsJSON,
-  exportRawText,
-  logSampleSummary,
-  copyToClipboard,
-} from './services/DataCollector.js';
 
 /* ==============================================
  * CONSTANTS
  * ============================================== */
-
-/** Duration in ms to show copy success feedback before resetting button text */
-const COPY_FEEDBACK_DURATION_MS = 2000;
 
 /* ==============================================
  * APPLICATION STATE
  * ============================================== */
 
 /**
- * @typedef {'select-type' | 'manuscript-options' | 'capture' | 'roster-crop' | 'processing' | 'results' | 'comparison' | 'manuscript-complete'} AppState
+ * @typedef {'select-type' | 'manuscript-options' | 'capture' | 'roster-crop' | 'processing' | 'results' | 'roster-display' | 'manuscript-complete'} AppState
  */
 
 /**
@@ -89,31 +79,11 @@ let resultsPreviewUrl = null;
 /** @type {boolean} Guard flag to prevent concurrent OCR operations */
 let isOCRRunning = false;
 
-/** @type {PlayerComparison | null} */
-let playerComparison = null;
+/** @type {ParsedRosterDisplay | null} */
+let parsedRosterDisplay = null;
 
 /** @type {RosterCropEditor | null} */
 let rosterCropEditor = null;
-
-/* ==============================================
- * HELPERS
- * ============================================== */
-
-/**
- * Copy text to clipboard and show feedback on a button
- * @param {HTMLButtonElement} button - The button to update with feedback
- * @param {string} text - The text to copy
- * @param {string} originalLabel - The button's original text to restore
- */
-async function copyWithFeedback(button, text, originalLabel) {
-  const success = await copyToClipboard(text);
-  if (success) {
-    button.textContent = '✓ Copied!';
-    setTimeout(() => {
-      button.textContent = originalLabel;
-    }, COPY_FEEDBACK_DURATION_MS);
-  }
-}
 
 /* ==============================================
  * STATE MACHINE
@@ -170,10 +140,10 @@ function cleanupState(state) {
         resultsPreviewUrl = null;
       }
       break;
-    case 'comparison':
-      if (playerComparison) {
-        playerComparison.destroy();
-        playerComparison = null;
+    case 'roster-display':
+      if (parsedRosterDisplay) {
+        parsedRosterDisplay.destroy();
+        parsedRosterDisplay = null;
       }
       break;
     case 'roster-crop':
@@ -218,8 +188,8 @@ function renderState(state) {
     case 'results':
       renderResultsState(contentContainer);
       break;
-    case 'comparison':
-      renderComparisonState(contentContainer);
+    case 'roster-display':
+      renderRosterDisplayState(contentContainer);
       break;
     case 'roster-crop':
       renderRosterCropState(contentContainer);
@@ -499,36 +469,13 @@ function renderResultsState(container) {
           </details>
 
           <div class="flex flex-col gap-md">
-            <button class="btn btn-primary btn-block" id="btn-compare-players">
-              Compare with Reference List
+            <button class="btn btn-primary btn-block" id="btn-view-roster">
+              View Parsed Roster
             </button>
             <button class="btn btn-secondary btn-block" id="btn-new-scan">
               Scan Another Sheet
             </button>
           </div>
-
-          <hr class="mt-lg mb-lg" style="border: none; border-top: 1px solid var(--color-border);" />
-
-          <details class="ocr-results__details">
-            <summary class="ocr-results__summary">📊 Data Export (for parser improvement)</summary>
-            <div class="flex flex-col gap-sm mt-md">
-              <button class="btn btn-outline btn-block" id="btn-export-json" aria-label="Download OCR sample data as JSON file">
-                Export Full Sample (JSON)
-              </button>
-              <button class="btn btn-outline btn-block" id="btn-copy-json" aria-label="Copy OCR sample JSON data to clipboard">
-                Copy JSON to Clipboard
-              </button>
-              <button class="btn btn-outline btn-block" id="btn-export-text" aria-label="Download raw OCR text as text file">
-                Export Raw Text
-              </button>
-              <button class="btn btn-outline btn-block" id="btn-copy-text" aria-label="Copy raw OCR text to clipboard">
-                Copy Text to Clipboard
-              </button>
-              <button class="btn btn-outline btn-block" id="btn-log-summary" aria-label="Log OCR sample summary to browser console">
-                Log Summary to Console
-              </button>
-            </div>
-          </details>
         </div>
       </div>
     </div>
@@ -542,76 +489,36 @@ function renderResultsState(container) {
   }
 
   // Bind buttons
-  const compareBtn = document.getElementById('btn-compare-players');
-  compareBtn?.addEventListener('click', handleComparePressed);
+  const viewRosterBtn = document.getElementById('btn-view-roster');
+  viewRosterBtn?.addEventListener('click', handleViewRosterPressed);
 
   const newScanBtn = document.getElementById('btn-new-scan');
   newScanBtn?.addEventListener('click', handleStartOver);
-
-  // Bind data export buttons
-  const exportJsonBtn = document.getElementById('btn-export-json');
-  exportJsonBtn?.addEventListener('click', () => {
-    if (result && appContext.sheetType) {
-      const sample = collectSample(result, appContext.sheetType);
-      exportSampleAsJSON(sample);
-    }
-  });
-
-  const copyJsonBtn = document.getElementById('btn-copy-json');
-  copyJsonBtn?.addEventListener('click', async () => {
-    if (result && appContext.sheetType && copyJsonBtn) {
-      const sample = collectSample(result, appContext.sheetType);
-      const json = JSON.stringify(sample, null, 2);
-      await copyWithFeedback(copyJsonBtn, json, 'Copy JSON to Clipboard');
-    }
-  });
-
-  const exportTextBtn = document.getElementById('btn-export-text');
-  exportTextBtn?.addEventListener('click', () => {
-    if (result && appContext.sheetType) {
-      exportRawText(result, appContext.sheetType);
-    }
-  });
-
-  const copyTextBtn = document.getElementById('btn-copy-text');
-  copyTextBtn?.addEventListener('click', async () => {
-    if (result && copyTextBtn) {
-      await copyWithFeedback(copyTextBtn, result.fullText, 'Copy Text to Clipboard');
-    }
-  });
-
-  const logSummaryBtn = document.getElementById('btn-log-summary');
-  logSummaryBtn?.addEventListener('click', () => {
-    if (result && appContext.sheetType) {
-      const sample = collectSample(result, appContext.sheetType);
-      logSampleSummary(sample);
-    }
-  });
 }
 
 /**
- * Render the player comparison state
+ * Render the parsed roster display state
  * @param {HTMLElement} container
  */
-function renderComparisonState(container) {
+function renderRosterDisplayState(container) {
   container.innerHTML = `
     <div class="main-content">
       <div class="container">
         <div class="card">
-          <h2 class="text-center mb-md">Player List Comparison</h2>
-          <div id="player-comparison-container"></div>
+          <h2 class="text-center mb-md">Parsed Roster</h2>
+          <div id="roster-display-container"></div>
         </div>
       </div>
     </div>
   `;
 
-  const comparisonContainer = document.getElementById('player-comparison-container');
-  if (comparisonContainer && appContext.ocrResult) {
-    // Pass isManuscript flag so the component knows to show confirmation modal
-    // for manuscript scoresheets (which may have lower OCR accuracy)
-    playerComparison = new PlayerComparison({
-      container: comparisonContainer,
+  const rosterContainer = document.getElementById('roster-display-container');
+  if (rosterContainer && appContext.ocrResult) {
+    parsedRosterDisplay = new ParsedRosterDisplay({
+      container: rosterContainer,
       ocrText: appContext.ocrResult.fullText,
+      ocrResult: appContext.ocrResult,
+      sheetType: appContext.sheetType || 'electronic',
       isManuscript: appContext.sheetType === 'manuscript',
       onBack: handleBackToResults,
     });
@@ -769,14 +676,14 @@ function handleStartOver() {
 }
 
 /**
- * Handle compare players button press
+ * Handle view roster button press
  */
-function handleComparePressed() {
-  transition('comparison');
+function handleViewRosterPressed() {
+  transition('roster-display');
 }
 
 /**
- * Handle going back to results from comparison
+ * Handle going back to results from roster display
  */
 function handleBackToResults() {
   transition('results');
