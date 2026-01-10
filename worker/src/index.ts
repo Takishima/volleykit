@@ -931,17 +931,20 @@ export default {
             proxyRedirect.pathname = redirectUrl.pathname;
             proxyRedirect.search = redirectUrl.search;
 
-            // iOS Safari PWA fix: Convert ALL auth redirects to 200 + JSON response
+            // iOS Safari PWA fix: Convert POST auth redirects to 200 + JSON response
             // When using redirect: "manual", browsers return "opaqueredirect" which hides
             // all headers including Set-Cookie from JavaScript. iOS Safari PWA doesn't
             // properly store cookies from redirect responses. By returning 200 with JSON,
             // the browser processes Set-Cookie normally and the client handles navigation.
             //
-            // We convert ALL auth redirects (not just successful ones) because:
+            // We convert ALL auth POST redirects (not just successful ones) because:
             // 1. opaqueredirect hides all response details, making debugging impossible
             // 2. The client can determine success/failure by fetching the redirect URL
             // 3. This is more robust than trying to detect success server-side
-            if (isAuthReq) {
+            //
+            // NOTE: Only convert POST requests - GET to /login should return the HTML
+            // login page, even when the server redirects (e.g., user already logged in).
+            if (isAuthReq && request.method === "POST") {
               const isSuccess = isSuccessfulLoginResponse(response);
               console.log("[iOS PWA Auth] Converting redirect to JSON:", {
                 originalStatus: response.status,
