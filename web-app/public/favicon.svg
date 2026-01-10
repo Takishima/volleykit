@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Background with rounded corners -->
-  <rect width="512" height="512" rx="64" fill="#b2e600"/>
+  <!-- Background fills entire icon - OS applies its own mask -->
+  <rect width="512" height="512" fill="#b2e600"/>
   <!-- Volleyball icon based on Lucide design, centered and scaled -->
   <g transform="translate(106, 106) scale(12.5)" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="12" cy="12" r="10"/>
