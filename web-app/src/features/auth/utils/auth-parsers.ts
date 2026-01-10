@@ -3,7 +3,7 @@
  * Extracts form fields and tokens from Neos Flow login pages.
  */
 
-import { logger } from "@/shared/utils/logger";
+import { authLogger as logger } from "@/shared/utils/auth-log-buffer";
 
 /**
  * URL path pattern that indicates successful login redirect to dashboard.
@@ -34,6 +34,13 @@ const DIAGNOSTIC_PREVIEW_LENGTH = 500;
 
 /** HTTP status code for account lockout (from proxy brute-force protection) */
 const HTTP_STATUS_LOCKED = 423;
+
+/** HTTP status codes for redirect detection (3xx range) */
+const HTTP_REDIRECT_MIN = 300;
+const HTTP_REDIRECT_MAX = 400;
+
+/** Delay in ms to allow browser to process Set-Cookie headers from redirect response */
+const COOKIE_PROCESSING_DELAY_MS = 100;
 
 /**
  * Login form fields extracted from the login page HTML.
@@ -160,6 +167,119 @@ export type LoginResult =
   | { success: false; error: string; lockedUntil?: number };
 
 /**
+ * Fetches the dashboard and extracts the CSRF token.
+ * Used after detecting a successful login redirect.
+ *
+ * @returns LoginResult - success with CSRF token, or specific error
+ */
+async function fetchDashboardAfterLogin(dashboardUrl: string): Promise<LoginResult> {
+  await new Promise((resolve) => setTimeout(resolve, COOKIE_PROCESSING_DELAY_MS));
+
+  const dashboardResponse = await fetch(dashboardUrl, {
+    method: "GET",
+    credentials: "include",
+    redirect: "follow",
+    cache: "no-store",
+  });
+
+  if (!dashboardResponse.ok) {
+    logger.warn("iOS PWA: Dashboard fetch failed after successful login redirect", {
+      status: dashboardResponse.status,
+    });
+    return {
+      success: false,
+      error: "Login succeeded but could not load dashboard",
+    };
+  }
+
+  const dashboardHtml = await dashboardResponse.text();
+  const csrfToken = extractCsrfTokenFromPage(dashboardHtml);
+
+  if (csrfToken) {
+    return { success: true, csrfToken, dashboardHtml };
+  }
+
+  // Got dashboard but no CSRF token - check if it's actually the login page
+  // (would happen if cookies weren't sent with the dashboard request)
+  if (isDashboardHtmlContent(dashboardHtml)) {
+    logger.warn("Dashboard fetched but CSRF token not found");
+    return {
+      success: false,
+      error: "Login succeeded but session could not be established",
+    };
+  }
+
+  // The "dashboard" response was actually the login page - cookie issue
+  logger.warn("iOS PWA: Dashboard request returned login page - cookie not sent");
+  return {
+    success: false,
+    error: "Login succeeded but session cookie failed. Please try again or use Safari browser.",
+  };
+}
+
+/**
+ * Analyzes HTML content to determine login result using fallback strategies.
+ * Used when redirect-based detection fails or is unavailable.
+ */
+function analyzeLoginResponseHtml(
+  html: string,
+  responseUrl: string,
+  wasRedirected: boolean,
+): LoginResult {
+  const isOnDashboard = responseUrl.includes(DASHBOARD_URL_PATTERN);
+  const isDashboardContent = html.length > 0 && isDashboardHtmlContent(html);
+
+  // Success detection using multiple strategies
+  if (isOnDashboard || wasRedirected || isDashboardContent) {
+    const csrfToken = extractCsrfTokenFromPage(html);
+    if (csrfToken) {
+      if (!isOnDashboard && !wasRedirected && isDashboardContent) {
+        logger.info("iOS PWA mode: Login success detected via content analysis");
+      }
+      return { success: true, csrfToken, dashboardHtml: html };
+    }
+
+    // Dashboard URL but no CSRF token - parsing issue
+    if (isOnDashboard) {
+      logger.warn("Login succeeded but CSRF token not found in dashboard HTML");
+      return {
+        success: false,
+        error: "Login succeeded but session could not be established",
+      };
+    }
+    // wasRedirected or isDashboardContent but no CSRF token - fall through to error checks
+  }
+
+  // Check for authentication errors (Vuetify snackbar)
+  const hasAuthError = AUTH_ERROR_INDICATORS.some((indicator) => html.includes(indicator));
+  if (hasAuthError) {
+    return { success: false, error: "Invalid username or password" };
+  }
+
+  // Check for Two-Factor Authentication page
+  const hasTfaPage = TFA_PAGE_INDICATORS.some((indicator) => html.includes(indicator));
+  if (hasTfaPage) {
+    logger.info("TFA page detected - user has two-factor authentication enabled");
+    return {
+      success: false,
+      error:
+        "Two-factor authentication is not supported. Please disable it in your VolleyManager account settings to use this app.",
+    };
+  }
+
+  // Unknown state - log diagnostic info
+  logger.warn("Could not determine login result from response", {
+    redirected: wasRedirected,
+    isOnDashboard,
+    isDashboardContent,
+    url: responseUrl,
+    htmlLength: html.length,
+    htmlPreview: html.slice(0, DIAGNOSTIC_PREVIEW_LENGTH),
+  });
+  return { success: false, error: "Login failed - please try again" };
+}
+
+/**
  * Submit login credentials to the authentication endpoint.
  * This is the core login logic used after we have valid form fields.
  *
@@ -201,12 +321,23 @@ export async function submitLoginCredentials(
     password,
   );
 
+  // iOS PWA standalone mode fix: Use redirect: "manual" instead of "follow".
+  // In iOS Safari PWA standalone mode, fetch with redirect: "follow" has issues:
+  // - response.url may not update after redirects
+  // - response.redirected may be unreliable
+  // - Cookies from redirect responses may not be properly stored/sent
+  //
+  // By handling redirects manually, we can:
+  // 1. Detect successful login from the 303 status + Location header
+  // 2. Manually fetch the dashboard in a separate request
+  // 3. Give the browser time to process Set-Cookie headers
   const response = await fetch(authUrl, {
     method: "POST",
     credentials: "include",
-    // Explicit redirect: "follow" for consistent behavior across browsers and PWA modes.
-    // Some service workers may handle implicit defaults differently in standalone PWA mode.
-    redirect: "follow",
+    redirect: "manual",
+    // cache: "no-store" is critical for iOS Safari PWA - prevents using stale cached cookies
+    // See: https://developer.apple.com/forums/thread/89050
+    cache: "no-store",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
@@ -233,85 +364,55 @@ export async function submitLoginCredentials(
     }
   }
 
+  // Log response details for debugging iOS PWA issues
+  logger.info("Auth response received", {
+    status: response.status,
+    type: response.type,
+    url: response.url,
+    hasLocationHeader: response.headers.has("Location"),
+  });
+
+  // Check for redirect response (303 See Other = successful login)
+  // With redirect: "manual", we get the raw redirect response instead of following it
+  const isRedirectResponse =
+    response.status >= HTTP_REDIRECT_MIN &&
+    response.status < HTTP_REDIRECT_MAX &&
+    response.type !== "opaqueredirect";
+  const locationHeader = response.headers.get("Location");
+  const isRedirectToDashboard =
+    isRedirectResponse &&
+    locationHeader !== null &&
+    locationHeader.includes(DASHBOARD_URL_PATTERN);
+
+  // Handle opaqueredirect - this can happen in some CORS configurations on iOS
+  // We can't see the Location header, but type "opaqueredirect" indicates a redirect
+  if (response.type === "opaqueredirect") {
+    logger.info("iOS PWA: Got opaqueredirect response, assuming successful login...");
+    const dashboardUrl = authUrl.replace(
+      "/sportmanager.security/authentication/authenticate",
+      "/sportmanager.volleyball/main/dashboard"
+    );
+    const result = await fetchDashboardAfterLogin(dashboardUrl);
+    if (result.success) {
+      logger.info("iOS PWA: Successfully fetched dashboard after opaqueredirect");
+    }
+    return result;
+  }
+
+  // If we got a redirect to the dashboard, login was successful
+  // Now manually fetch the dashboard to get the CSRF token and user data
+  if (isRedirectToDashboard) {
+    logger.info("iOS PWA mode: Login successful (detected from 303 redirect), fetching dashboard...");
+    return await fetchDashboardAfterLogin(locationHeader);
+  }
+
+  // Not a redirect response - could be error page or direct response
+  // (opaqueredirect case is handled above and returns early)
   if (!response.ok) {
     return { success: false, error: "Authentication request failed" };
   }
 
-  // Parse response HTML
+  // Parse response HTML for content-based detection (fallback for non-redirect responses)
   const html = await response.text();
-
-  // Check if we were redirected to the dashboard (successful login)
-  // The API returns 303 redirect on success, fetch follows it automatically.
-  //
-  // iOS PWA standalone mode fix: In iOS Safari PWA standalone mode,
-  // response.url may not update after following redirects, AND response.redirected
-  // may also be unreliable. We use multiple detection strategies:
-  // 1. URL-based: Check if response.url contains dashboard pattern
-  // 2. Redirect flag: Check response.redirected
-  // 3. Content-based: Check if HTML content indicates dashboard (most reliable for iOS PWA)
-  const isOnDashboard = response.url?.includes(DASHBOARD_URL_PATTERN) ?? false;
-  const wasRedirected = response.redirected;
-  const isDashboardContent = isDashboardHtmlContent(html);
-
-  // Success detection using multiple strategies
-  // Content-based detection is most reliable for iOS PWA standalone mode
-  if (isOnDashboard || wasRedirected || isDashboardContent) {
-    const csrfToken = extractCsrfTokenFromPage(html);
-    if (csrfToken) {
-      // Log which detection method succeeded for debugging
-      if (!isOnDashboard && !wasRedirected && isDashboardContent) {
-        logger.info("iOS PWA mode: Login success detected via content analysis");
-      }
-      return { success: true, csrfToken, dashboardHtml: html };
-    }
-
-    // If we detected dashboard but can't find CSRF token, continue with error checks.
-    // The redirect might have been to an error page or TFA page.
-    if (isOnDashboard) {
-      // Specifically redirected to dashboard URL but couldn't find CSRF token
-      // This is a parsing issue, not invalid credentials
-      logger.warn("Login succeeded but CSRF token not found in dashboard HTML");
-      return {
-        success: false,
-        error: "Login succeeded but session could not be established",
-      };
-    }
-    // wasRedirected or isDashboardContent but no CSRF token - fall through to check for errors/TFA
-  }
-
-  // Check for authentication errors first
-  // The Vuetify snackbar with color="error" indicates authentication failure
-  const hasAuthError = AUTH_ERROR_INDICATORS.some((indicator) =>
-    html.includes(indicator),
-  );
-
-  if (hasAuthError) {
-    return { success: false, error: "Invalid username or password" };
-  }
-
-  // Check if we're on a Two-Factor Authentication page
-  // TFA users see an OTP input form after valid credentials
-  const hasTfaPage = TFA_PAGE_INDICATORS.some((indicator) =>
-    html.includes(indicator),
-  );
-
-  if (hasTfaPage) {
-    logger.info("TFA page detected - user has two-factor authentication enabled");
-    return {
-      success: false,
-      error: "Two-factor authentication is not supported. Please disable it in your VolleyManager account settings to use this app.",
-    };
-  }
-
-  // Unknown state - couldn't determine success or failure
-  // Log diagnostic info to help debug login issues
-  logger.warn("Could not determine login result from response", {
-    redirected: wasRedirected,
-    isOnDashboard,
-    isDashboardContent,
-    url: response.url ?? "(no url)",
-    htmlLength: html.length,
-    htmlPreview: html.slice(0, DIAGNOSTIC_PREVIEW_LENGTH),
-  });
-  return { success: false, error: "Login failed - please try again" };
+  return analyzeLoginResponseHtml(html, response.url ?? "", response.redirected);
 }

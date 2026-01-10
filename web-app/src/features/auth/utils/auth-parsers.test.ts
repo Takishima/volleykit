@@ -11,13 +11,41 @@ import {
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
 
+// Helper to create a mock Response with proper headers
+function createMockResponse(options: {
+  ok?: boolean;
+  status?: number;
+  type?: ResponseType;
+  url?: string;
+  redirected?: boolean;
+  headers?: Record<string, string>;
+  body?: string;
+}): Partial<Response> {
+  const headers = new Map(Object.entries(options.headers ?? {}));
+  return {
+    ok: options.ok ?? true,
+    status: options.status ?? 200,
+    type: options.type ?? "basic",
+    url: options.url ?? "",
+    redirected: options.redirected ?? false,
+    headers: {
+      get: (name: string) => headers.get(name) ?? null,
+      has: (name: string) => headers.has(name),
+    } as Headers,
+    text: () => Promise.resolve(options.body ?? ""),
+    json: () => Promise.resolve(JSON.parse(options.body ?? "{}")),
+  };
+}
+
 // Clear mocks before each test to prevent test pollution
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.useFakeTimers();
 });
 
 afterEach(() => {
   vi.resetAllMocks();
+  vi.useRealTimers();
 });
 
 // Helper to create login page HTML with all form fields
@@ -241,7 +269,8 @@ describe("extractCsrfTokenFromPage", () => {
 });
 
 describe("submitLoginCredentials", () => {
-  const authUrl = "https://example.com/authenticate";
+  const authUrl = "https://example.com/sportmanager.security/authentication/authenticate";
+  const dashboardUrl = "https://example.com/sportmanager.volleyball/main/dashboard";
   const username = "testuser";
   const password = "testpass";
   const formFields: LoginFormFields = {
@@ -253,37 +282,69 @@ describe("submitLoginCredentials", () => {
     referrerArguments: "YTowOnt9",
   };
 
-  describe("successful login", () => {
-    it("returns success with CSRF token and dashboard HTML when redirected to dashboard", async () => {
+  describe("successful login with redirect: manual", () => {
+    it("returns success when receiving 303 redirect to dashboard", async () => {
       const dashboardHtml = createDashboardHtml("success-csrf-token");
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        url: "https://example.com/sportmanager.volleyball/main/dashboard",
-        text: () => Promise.resolve(dashboardHtml),
-      });
 
-      const result = await submitLoginCredentials(authUrl, username, password, formFields);
+      // First call: auth POST returns 303 redirect
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: false,
+          status: 303,
+          headers: { Location: dashboardUrl },
+        })
+      );
+
+      // Second call: manual dashboard fetch returns dashboard with CSRF token
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          status: 200,
+          body: dashboardHtml,
+        })
+      );
+
+      const resultPromise = submitLoginCredentials(authUrl, username, password, formFields);
+
+      // Advance timers for the 100ms delay
+      await vi.advanceTimersByTimeAsync(100);
+
+      const result = await resultPromise;
 
       expect(result).toEqual({
         success: true,
         csrfToken: "success-csrf-token",
         dashboardHtml,
       });
+      expect(mockFetch).toHaveBeenCalledTimes(2);
     });
 
-    it("sends correct form data", async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        url: "https://example.com/sportmanager.volleyball/main/dashboard",
-        text: () => Promise.resolve(createDashboardHtml("token")),
-      });
+    it("sends correct form data with redirect: manual", async () => {
+      const dashboardHtml = createDashboardHtml("token");
 
-      await submitLoginCredentials(authUrl, username, password, formFields);
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: false,
+          status: 303,
+          headers: { Location: dashboardUrl },
+        })
+      );
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: dashboardHtml,
+        })
+      );
 
-      expect(mockFetch).toHaveBeenCalledWith(authUrl, {
+      const resultPromise = submitLoginCredentials(authUrl, username, password, formFields);
+      await vi.advanceTimersByTimeAsync(100);
+      await resultPromise;
+
+      expect(mockFetch).toHaveBeenNthCalledWith(1, authUrl, {
         method: "POST",
         credentials: "include",
-        redirect: "follow",
+        redirect: "manual",
+        cache: "no-store",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
@@ -309,34 +370,68 @@ describe("submitLoginCredentials", () => {
       ).toBe(password);
     });
 
-    it("succeeds when CSRF token found even without dashboard URL", async () => {
-      // Fallback case: CSRF token found but URL doesn't match dashboard pattern
-      const htmlWithCsrf = createDashboardHtml("fallback-token");
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        url: "https://example.com/some-other-page",
-        text: () => Promise.resolve(htmlWithCsrf),
+    it("handles opaqueredirect by fetching dashboard directly", async () => {
+      const dashboardHtml = createDashboardHtml("opaque-csrf-token");
+
+      // First call: auth POST returns opaqueredirect
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: false,
+          status: 0,
+          type: "opaqueredirect",
+        })
+      );
+
+      // Second call: dashboard fetch succeeds
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: dashboardHtml,
+        })
+      );
+
+      const resultPromise = submitLoginCredentials(authUrl, username, password, formFields);
+      await vi.advanceTimersByTimeAsync(100);
+      const result = await resultPromise;
+
+      expect(result).toEqual({
+        success: true,
+        csrfToken: "opaque-csrf-token",
+        dashboardHtml,
       });
+    });
+
+    it("succeeds with fallback when receiving 200 OK with dashboard content", async () => {
+      // Fallback case: Some configurations might return 200 with dashboard directly
+      const dashboardHtml = createDashboardHtml("fallback-token");
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          status: 200,
+          body: dashboardHtml,
+        })
+      );
 
       const result = await submitLoginCredentials(authUrl, username, password, formFields);
 
       expect(result).toEqual({
         success: true,
         csrfToken: "fallback-token",
-        dashboardHtml: htmlWithCsrf,
+        dashboardHtml,
       });
     });
 
-    it("succeeds in PWA mode when redirected flag is true but URL is not updated", async () => {
-      // PWA standalone mode fix: Service workers may not update response.url after redirects
-      // but response.redirected will still be true. Login should succeed if CSRF token is found.
+    it("succeeds when redirected flag is true (legacy fallback)", async () => {
+      // Legacy fallback: response.redirected might be true in some environments
       const dashboardHtml = createDashboardHtml("pwa-csrf-token");
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        redirected: true, // PWA mode: redirect happened
-        url: "https://example.com/authenticate", // URL not updated (PWA quirk)
-        text: () => Promise.resolve(dashboardHtml),
-      });
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          status: 200,
+          redirected: true,
+          body: dashboardHtml,
+        })
+      );
 
       const result = await submitLoginCredentials(authUrl, username, password, formFields);
 
@@ -346,29 +441,17 @@ describe("submitLoginCredentials", () => {
         dashboardHtml,
       });
     });
-
-    it("falls through to error checks when redirected but no CSRF token", async () => {
-      // If redirected to an error page (no CSRF token), should detect the error
-      const errorHtml = `<html><body><v-snackbar color="error">Error!</v-snackbar></body></html>`;
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        redirected: true,
-        url: "https://example.com/authenticate",
-        text: () => Promise.resolve(errorHtml),
-      });
-
-      const result = await submitLoginCredentials(authUrl, username, password, formFields);
-
-      expect(result).toEqual({ success: false, error: "Invalid username or password" });
-    });
   });
 
   describe("failed login", () => {
-    it("returns error when response is not ok", async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-      });
+    it("returns error when response is not ok and not a redirect", async () => {
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: false,
+          status: 500,
+          type: "basic",
+        })
+      );
 
       const result = await submitLoginCredentials(authUrl, username, password, formFields);
 
@@ -381,11 +464,14 @@ describe("submitLoginCredentials", () => {
           <v-snackbar color="error">Error!</v-snackbar>
         </body></html>
       `;
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        url: "https://example.com/login",
-        text: () => Promise.resolve(errorHtml),
-      });
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          status: 200,
+          url: "https://example.com/login",
+          body: errorHtml,
+        })
+      );
 
       const result = await submitLoginCredentials(authUrl, username, password, formFields);
 
@@ -398,11 +484,13 @@ describe("submitLoginCredentials", () => {
           <v-snackbar color='error'>Error!</v-snackbar>
         </body></html>
       `;
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        url: "https://example.com/login",
-        text: () => Promise.resolve(errorHtml),
-      });
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          status: 200,
+          body: errorHtml,
+        })
+      );
 
       const result = await submitLoginCredentials(authUrl, username, password, formFields);
 
@@ -410,11 +498,13 @@ describe("submitLoginCredentials", () => {
     });
 
     it("returns TFA error when secondFactorToken field is present", async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        url: "https://example.com/login",
-        text: () => Promise.resolve(createTfaPageHtml()),
-      });
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          status: 200,
+          body: createTfaPageHtml(),
+        })
+      );
 
       const result = await submitLoginCredentials(authUrl, username, password, formFields);
 
@@ -427,11 +517,13 @@ describe("submitLoginCredentials", () => {
 
     it("returns TFA error when TOTP indicator is present", async () => {
       const tfaHtml = `<html><body>Please enter your TOTP code</body></html>`;
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        url: "https://example.com/login",
-        text: () => Promise.resolve(tfaHtml),
-      });
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          status: 200,
+          body: tfaHtml,
+        })
+      );
 
       const result = await submitLoginCredentials(authUrl, username, password, formFields);
 
@@ -442,33 +534,131 @@ describe("submitLoginCredentials", () => {
       });
     });
 
-    it("returns error when redirected to dashboard but no CSRF token found", async () => {
-      const dashboardWithoutToken = createDashboardHtml(null);
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        url: "https://example.com/sportmanager.volleyball/main/dashboard",
-        text: () => Promise.resolve(dashboardWithoutToken),
-      });
+    it("returns error when dashboard fetch fails after redirect", async () => {
+      // First call: 303 redirect to dashboard
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: false,
+          status: 303,
+          headers: { Location: dashboardUrl },
+        })
+      );
 
-      const result = await submitLoginCredentials(authUrl, username, password, formFields);
+      // Second call: dashboard fetch fails
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: false,
+          status: 500,
+        })
+      );
+
+      const resultPromise = submitLoginCredentials(authUrl, username, password, formFields);
+      await vi.advanceTimersByTimeAsync(100);
+      const result = await resultPromise;
 
       expect(result).toEqual({
         success: false,
-        error: "Login succeeded but session could not be established",
+        error: "Login succeeded but could not load dashboard",
+      });
+    });
+
+    it("returns cookie error when dashboard returns login page after redirect", async () => {
+      const loginPageHtml = `<html><body><form action="/login"><input id="username"/><input id="password"/></form></body></html>`;
+
+      // First call: 303 redirect to dashboard
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: false,
+          status: 303,
+          headers: { Location: dashboardUrl },
+        })
+      );
+
+      // Second call: dashboard returns login page (cookie not sent)
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: loginPageHtml,
+        })
+      );
+
+      const resultPromise = submitLoginCredentials(authUrl, username, password, formFields);
+      await vi.advanceTimersByTimeAsync(100);
+      const result = await resultPromise;
+
+      expect(result).toEqual({
+        success: false,
+        error: "Login succeeded but session cookie failed. Please try again or use Safari browser.",
       });
     });
 
     it("returns generic error when unable to determine login result", async () => {
       const unknownHtml = `<html><body>Unknown page</body></html>`;
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        url: "https://example.com/unknown",
-        text: () => Promise.resolve(unknownHtml),
-      });
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          status: 200,
+          url: "https://example.com/unknown",
+          body: unknownHtml,
+        })
+      );
 
       const result = await submitLoginCredentials(authUrl, username, password, formFields);
 
       expect(result).toEqual({ success: false, error: "Login failed - please try again" });
+    });
+
+    it("falls through to error checks when redirect detected but no CSRF token", async () => {
+      const errorHtml = `<html><body><v-snackbar color="error">Error!</v-snackbar></body></html>`;
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          status: 200,
+          redirected: true,
+          body: errorHtml,
+        })
+      );
+
+      const result = await submitLoginCredentials(authUrl, username, password, formFields);
+
+      expect(result).toEqual({ success: false, error: "Invalid username or password" });
+    });
+  });
+
+  describe("lockout handling", () => {
+    it("returns lockout error with lockedUntil timestamp", async () => {
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: false,
+          status: 423,
+          body: JSON.stringify({ lockedUntil: 60, message: "Account locked for 60 seconds" }),
+        })
+      );
+
+      const result = await submitLoginCredentials(authUrl, username, password, formFields);
+
+      expect(result).toEqual({
+        success: false,
+        error: "Account locked for 60 seconds",
+        lockedUntil: 60,
+      });
+    });
+
+    it("returns default lockout error if response parsing fails", async () => {
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: false,
+          status: 423,
+          body: "invalid json",
+        })
+      );
+
+      const result = await submitLoginCredentials(authUrl, username, password, formFields);
+
+      expect(result).toEqual({
+        success: false,
+        error: "Account temporarily locked due to too many failed attempts",
+      });
     });
   });
 });

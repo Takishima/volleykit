@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, type FormEvent } from "react";
+import { useState, useRef, useEffect, useCallback, lazy, Suspense, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useShallow } from "zustand/react/shallow";
 import { useAuthStore, NO_REFEREE_ROLE_ERROR_KEY } from "@/shared/stores/auth";
@@ -12,6 +12,13 @@ import {
   validateCalendarCode,
 } from "@/features/assignments/utils/calendar-helpers";
 import { getHelpSiteUrl } from "@/shared/utils/constants";
+
+// Lazy-load debug panel to avoid bundle size impact
+const LoginDebugPanel = lazy(() =>
+  import("@/shared/components/debug/LoginDebugPanel").then((m) => ({
+    default: m.LoginDebugPanel,
+  })),
+);
 
 // Demo-only mode restricts the app to demo mode (used in PR preview deployments)
 const DEMO_MODE_ONLY = import.meta.env.VITE_DEMO_MODE_ONLY === "true";
@@ -532,6 +539,11 @@ export function LoginPage() {
           </a>
         </p>
       </div>
+
+      {/* Debug panel - toggle via ?debug URL parameter */}
+      <Suspense fallback={null}>
+        <LoginDebugPanel />
+      </Suspense>
     </div>
   );
 }
