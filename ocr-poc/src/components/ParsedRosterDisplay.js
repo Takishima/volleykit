@@ -102,15 +102,20 @@ function renderOfficialRow(official) {
 }
 
 /**
+ * @typedef {Object} TeamPanelOptions
+ * @property {ParsedTeam} team - The parsed team data
+ * @property {string} label - Display label for the panel
+ * @property {boolean} playersExpanded - Whether players section is expanded
+ * @property {boolean} officialsExpanded - Whether officials section is expanded
+ * @property {string} panelId - Unique ID for the panel
+ */
+
+/**
  * Render a team panel
- * @param {ParsedTeam} team
- * @param {string} label
- * @param {boolean} playersExpanded
- * @param {boolean} officialsExpanded
- * @param {string} panelId
+ * @param {TeamPanelOptions} options
  * @returns {string}
  */
-function renderTeamPanel(team, label, playersExpanded, officialsExpanded, panelId) {
+function renderTeamPanel({ team, label, playersExpanded, officialsExpanded, panelId }) {
   const players = getAllPlayers(team);
   const officials = getAllOfficials(team);
 
@@ -266,8 +271,6 @@ export class ParsedRosterDisplay {
     const parserType = this.isManuscript ? 'manuscript' : 'electronic';
     this.parsed = parseGameSheet(this.ocrText, { type: parserType });
 
-    console.log('Parsed game sheet:', this.parsed);
-
     this.render();
     this.bindEvents();
   }
@@ -326,20 +329,20 @@ export class ParsedRosterDisplay {
         ${warningsHtml}
 
         <div class="roster-display__panels">
-          ${renderTeamPanel(
-            this.parsed.teamA,
-            'Team A (Left Column)',
-            this.expandedState.playersA,
-            this.expandedState.officialsA,
-            'team-a'
-          )}
-          ${renderTeamPanel(
-            this.parsed.teamB,
-            'Team B (Right Column)',
-            this.expandedState.playersB,
-            this.expandedState.officialsB,
-            'team-b'
-          )}
+          ${renderTeamPanel({
+            team: this.parsed.teamA,
+            label: 'Team A (Left Column)',
+            playersExpanded: this.expandedState.playersA,
+            officialsExpanded: this.expandedState.officialsA,
+            panelId: 'team-a',
+          })}
+          ${renderTeamPanel({
+            team: this.parsed.teamB,
+            label: 'Team B (Right Column)',
+            playersExpanded: this.expandedState.playersB,
+            officialsExpanded: this.expandedState.officialsB,
+            panelId: 'team-b',
+          })}
         </div>
 
         <!-- Debug Data Export Panel -->
