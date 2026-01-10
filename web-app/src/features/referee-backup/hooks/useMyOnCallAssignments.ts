@@ -4,6 +4,7 @@ import { useRefereeBackups } from "./useRefereeBackups";
 import { useAuthStore } from "@/shared/stores/auth";
 import { generateDemoUuid } from "@/shared/utils/demo-uuid";
 import { DEMO_USER_PERSON_IDENTITY } from "@/shared/stores/demo";
+import { logger } from "@/shared/utils/logger";
 import type { RefereeBackupEntry, BackupRefereeAssignment } from "@/api/client";
 
 /** Default number of weeks ahead to fetch on-call assignments */
@@ -43,6 +44,45 @@ export function isUserAssignment(
 }
 
 /**
+ * Collects all unique referee identities from backup entries for debugging.
+ */
+function collectRefereeIds(entries: RefereeBackupEntry[]): Set<string> {
+  const allRefereeIds = new Set<string>();
+  for (const entry of entries) {
+    for (const ref of entry.nlaReferees ?? []) {
+      const person = ref.indoorReferee?.person;
+      const id = person?.__identity ?? person?.persistenceObjectIdentifier;
+      if (id) allRefereeIds.add(id);
+    }
+    for (const ref of entry.nlbReferees ?? []) {
+      const person = ref.indoorReferee?.person;
+      const id = person?.__identity ?? person?.persistenceObjectIdentifier;
+      if (id) allRefereeIds.add(id);
+    }
+  }
+  return allRefereeIds;
+}
+
+/**
+ * Logs debug info for on-call assignment filtering.
+ * Helps diagnose issues where user's on-call assignments don't appear.
+ */
+function logFilterContext(
+  entries: RefereeBackupEntry[],
+  userId: string,
+  resultCount: number,
+): void {
+  if (entries.length === 0) return;
+
+  const allRefereeIds = collectRefereeIds(entries);
+  logger.info(
+    `On-call filter: userId=${userId}, entries=${entries.length}, uniqueReferees=${allRefereeIds.size}`,
+    { refereeIds: Array.from(allRefereeIds) },
+  );
+  logger.info(`On-call filter result: found ${resultCount} assignments for user`);
+}
+
+/**
  * Extracts on-call assignments for the current user from backup entries.
  */
 export function extractUserOnCallAssignments(
@@ -53,8 +93,7 @@ export function extractUserOnCallAssignments(
 
   for (const entry of entries) {
     // Check NLA referees
-    const nlaAssignments = entry.nlaReferees ?? [];
-    for (const assignment of nlaAssignments) {
+    for (const assignment of entry.nlaReferees ?? []) {
       if (isUserAssignment(assignment, userId)) {
         assignments.push({
           id: `${entry.__identity}-NLA`,
@@ -69,8 +108,7 @@ export function extractUserOnCallAssignments(
     }
 
     // Check NLB referees
-    const nlbAssignments = entry.nlbReferees ?? [];
-    for (const assignment of nlbAssignments) {
+    for (const assignment of entry.nlbReferees ?? []) {
       if (isUserAssignment(assignment, userId)) {
         assignments.push({
           id: `${entry.__identity}-NLB`,
@@ -84,6 +122,9 @@ export function extractUserOnCallAssignments(
       }
     }
   }
+
+  // Debug: Log filtering context and results
+  logFilterContext(entries, userId, assignments.length);
 
   // Sort by date (ascending)
   return assignments.sort(
