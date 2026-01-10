@@ -125,14 +125,37 @@ jobs:
           keep-unreleased-section: true
           fail-on-empty-release-notes: true
 
-      - name: Update package.json version
+      - name: Update package.json and package-lock.json
         working-directory: web-app
+        env:
+          NEW_VERSION: ${{ steps.changelog.outputs.version }}
         run: |
-          npm version "${{ steps.changelog.outputs.version }}" --no-git-tag-version --allow-same-version
+          echo "Updating package.json to version $NEW_VERSION"
+          npm version "$NEW_VERSION" --no-git-tag-version --allow-same-version
+          npm install --package-lock-only
 
-      - name: Update package-lock.json
-        working-directory: web-app
-        run: npm install --package-lock-only
+      - name: Verify versions match
+        env:
+          CHANGELOG_VERSION: ${{ steps.changelog.outputs.version }}
+        run: |
+          PACKAGE_VERSION=$(node -p "require('./web-app/package.json').version")
+          LOCK_VERSION=$(node -p "require('./web-app/package-lock.json').version")
+
+          echo "Changelog version: $CHANGELOG_VERSION"
+          echo "package.json version: $PACKAGE_VERSION"
+          echo "package-lock.json version: $LOCK_VERSION"
+
+          if [ "$CHANGELOG_VERSION" != "$PACKAGE_VERSION" ]; then
+            echo "::error::Version mismatch: changelog=$CHANGELOG_VERSION, package.json=$PACKAGE_VERSION"
+            exit 1
+          fi
+
+          if [ "$CHANGELOG_VERSION" != "$LOCK_VERSION" ]; then
+            echo "::error::Version mismatch: changelog=$CHANGELOG_VERSION, package-lock.json=$LOCK_VERSION"
+            exit 1
+          fi
+
+          echo "All versions match: $CHANGELOG_VERSION"
 
       - name: Show changes (dry run)
         if: ${{ inputs.dry_run }}
