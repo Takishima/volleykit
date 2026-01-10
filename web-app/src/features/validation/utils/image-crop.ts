@@ -3,8 +3,36 @@
  * Handles rotation, cropping, and canvas operations.
  */
 
+import type { ScoresheetType } from "@/features/ocr/utils/scoresheet-detector";
+
 /** Degrees in half a circle (for radians conversion) */
 const DEGREES_PER_HALF_CIRCLE = 180;
+
+/** Guide width percentage for electronic scoresheets (70%) */
+const ELECTRONIC_GUIDE_WIDTH_PERCENT = 0.7;
+
+/** Guide width percentage for manuscript scoresheets (90%) */
+const MANUSCRIPT_GUIDE_WIDTH_PERCENT = 0.9;
+
+/** Guide aspect ratio (4:5 portrait) */
+const GUIDE_ASPECT_RATIO = 0.8;
+
+/**
+ * Guide overlay dimensions for different scoresheet types.
+ * These must match the values in ScoresheetGuide.tsx
+ */
+const GUIDE_CONFIG = {
+  /** Electronic scoresheet: tighter focus on player list */
+  electronic: {
+    widthPercent: ELECTRONIC_GUIDE_WIDTH_PERCENT,
+    aspectRatio: GUIDE_ASPECT_RATIO,
+  },
+  /** Manuscript scoresheet: broader roster capture */
+  manuscript: {
+    widthPercent: MANUSCRIPT_GUIDE_WIDTH_PERCENT,
+    aspectRatio: GUIDE_ASPECT_RATIO,
+  },
+} as const;
 
 /** Default JPEG quality for output */
 const DEFAULT_JPEG_QUALITY = 0.92;
@@ -17,6 +45,120 @@ export interface CropArea {
   y: number;
   width: number;
   height: number;
+}
+
+/**
+ * Calculates the crop area corresponding to the guide overlay.
+ *
+ * When capturing video with CSS `object-cover`, the video is scaled to cover
+ * the container while maintaining aspect ratio. This function calculates
+ * which portion of the native video corresponds to the guide overlay area.
+ *
+ * @param videoWidth - Native video width in pixels
+ * @param videoHeight - Native video height in pixels
+ * @param containerWidth - Displayed container width in pixels
+ * @param containerHeight - Displayed container height in pixels
+ * @param scoresheetType - Type of scoresheet (affects guide dimensions)
+ * @returns Crop area in native video coordinates
+ */
+export function calculateGuideCropArea(
+  videoWidth: number,
+  videoHeight: number,
+  containerWidth: number,
+  containerHeight: number,
+  scoresheetType: ScoresheetType,
+): CropArea {
+  const config = GUIDE_CONFIG[scoresheetType];
+
+  // Calculate object-cover scaling
+  // object-cover scales to cover the entire container while maintaining aspect ratio
+  const videoAspect = videoWidth / videoHeight;
+  const containerAspect = containerWidth / containerHeight;
+
+  let visibleWidth: number;
+  let visibleHeight: number;
+  let offsetX: number;
+  let offsetY: number;
+
+  if (videoAspect > containerAspect) {
+    // Video is wider than container - height fits fully, width is cropped
+    visibleHeight = videoHeight;
+    visibleWidth = videoHeight * containerAspect;
+    offsetX = (videoWidth - visibleWidth) / 2;
+    offsetY = 0;
+  } else {
+    // Video is taller than container - width fits fully, height is cropped
+    visibleWidth = videoWidth;
+    visibleHeight = videoWidth / containerAspect;
+    offsetX = 0;
+    offsetY = (videoHeight - visibleHeight) / 2;
+  }
+
+  // Calculate guide rectangle in visible area coordinates
+  // Guide is centered horizontally and vertically in the visible area
+  const guideWidthInVisible = visibleWidth * config.widthPercent;
+  const guideHeightInVisible = guideWidthInVisible / config.aspectRatio;
+
+  // Guide is centered in the visible area
+  const guideXInVisible = (visibleWidth - guideWidthInVisible) / 2;
+  const guideYInVisible = (visibleHeight - guideHeightInVisible) / 2;
+
+  // Convert to native video coordinates by adding the offset
+  return {
+    x: Math.round(offsetX + guideXInVisible),
+    y: Math.round(offsetY + guideYInVisible),
+    width: Math.round(guideWidthInVisible),
+    height: Math.round(guideHeightInVisible),
+  };
+}
+
+/**
+ * Crops a canvas to the specified area.
+ *
+ * @param sourceCanvas - Source canvas to crop from
+ * @param cropArea - Area to crop in source canvas coordinates
+ * @param quality - JPEG quality (0-1), defaults to 0.92
+ * @returns Promise resolving to the cropped image as a Blob
+ */
+export function cropCanvasToArea(
+  sourceCanvas: HTMLCanvasElement,
+  cropArea: CropArea,
+  quality: number = DEFAULT_JPEG_QUALITY,
+): Promise<Blob> {
+  const croppedCanvas = document.createElement("canvas");
+  croppedCanvas.width = cropArea.width;
+  croppedCanvas.height = cropArea.height;
+
+  const ctx = croppedCanvas.getContext("2d");
+  if (!ctx) {
+    return Promise.reject(new Error("Could not get canvas context"));
+  }
+
+  ctx.drawImage(
+    sourceCanvas,
+    cropArea.x,
+    cropArea.y,
+    cropArea.width,
+    cropArea.height,
+    0,
+    0,
+    cropArea.width,
+    cropArea.height,
+  );
+
+  return new Promise((resolve, reject) => {
+    croppedCanvas.toBlob(
+      (blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject(new Error("Failed to create blob from canvas"));
+        }
+      },
+      "image/jpeg",
+      quality,
+    );
+  });
 }
 
 /**
