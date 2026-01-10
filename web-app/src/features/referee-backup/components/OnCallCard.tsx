@@ -9,26 +9,17 @@ interface OnCallCardProps {
   assignment: OnCallAssignment;
 }
 
-/**
- * Card component for displaying on-call (Pikett) assignments.
- *
- * Features:
- * - Distinct amber/orange styling to differentiate from regular assignments
- * - Shows date, weekday, and league (NLA/NLB)
- * - Phone icon to indicate on-call status
- * - No swipe actions (on-call assignments don't have validation/exchange)
- *
- * @example
- * ```tsx
- * <OnCallCard assignment={onCallAssignment} />
- * ```
- */
 function OnCallCardComponent({ assignment }: OnCallCardProps) {
   const { t } = useTranslation();
   const { dateLabel, isToday } = useDateFormat(assignment.date);
 
+  const ariaLabel = `${t("onCall.duty")} ${assignment.league} - ${dateLabel}`;
+
   return (
-    <Card className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/50">
+    <Card
+      className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/50"
+      aria-label={ariaLabel}
+    >
       <CardContent className="p-3">
         <div className="flex items-center gap-3">
           {/* Icon */}

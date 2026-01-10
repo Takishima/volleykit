@@ -6,35 +6,26 @@ import { generateDemoUuid } from "@/shared/utils/demo-uuid";
 import { DEMO_USER_PERSON_IDENTITY } from "@/shared/stores/demo";
 import type { RefereeBackupEntry, BackupRefereeAssignment } from "@/api/client";
 
+/** Default number of weeks ahead to fetch on-call assignments */
+const DEFAULT_WEEKS_AHEAD = 2;
+
 /**
  * Represents an on-call (Pikett) assignment for the current user.
- * Simplified from the full backup entry to only include relevant data.
  */
 export interface OnCallAssignment {
-  /** Unique identifier (combines date and league) */
   id: string;
-  /** The date of the on-call duty (ISO 8601) */
   date: string;
-  /** Short weekday name (e.g., "So" for Sunday) */
   weekday: string;
-  /** Calendar week number */
   calendarWeek: number;
-  /** League: NLA or NLB */
   league: "NLA" | "NLB";
-  /** The original backup entry for reference */
   backupEntry: RefereeBackupEntry;
-  /** The user's specific assignment within the entry */
   assignment: BackupRefereeAssignment;
 }
 
 /**
  * Checks if a backup referee assignment belongs to the given user.
- *
- * @param assignment - The backup referee assignment to check
- * @param userId - The current user's ID (person __identity)
- * @returns true if the assignment belongs to the user
  */
-function isUserAssignment(
+export function isUserAssignment(
   assignment: BackupRefereeAssignment,
   userId: string,
 ): boolean {
@@ -46,12 +37,8 @@ function isUserAssignment(
 
 /**
  * Extracts on-call assignments for the current user from backup entries.
- *
- * @param entries - Referee backup entries
- * @param userId - Current user's ID
- * @returns Array of on-call assignments for the user
  */
-function extractUserOnCallAssignments(
+export function extractUserOnCallAssignments(
   entries: RefereeBackupEntry[],
   userId: string,
 ): OnCallAssignment[] {
@@ -191,25 +178,11 @@ function generateDemoOnCallAssignments(): OnCallAssignment[] {
 
 /**
  * Hook to fetch on-call (Pikett) assignments for the current user.
- *
- * This hook fetches all referee backup entries and filters them to only
- * include dates where the current user is assigned as a backup referee.
- *
- * @param weeksAhead - Number of weeks ahead to fetch (default: 2)
- * @returns Query result with the user's on-call assignments
- *
- * @example
- * ```tsx
- * const { data: onCallAssignments, isLoading } = useMyOnCallAssignments();
- *
- * if (onCallAssignments?.length) {
- *   return onCallAssignments.map(a => (
- *     <OnCallCard key={a.id} assignment={a} />
- *   ));
- * }
- * ```
+ * Filters backup entries to only include dates where the user is assigned.
  */
-export function useMyOnCallAssignments(weeksAhead: number = 2) {
+export function useMyOnCallAssignments(
+  weeksAhead: number = DEFAULT_WEEKS_AHEAD,
+) {
   const userId = useAuthStore((state) => state.user?.id);
   const dataSource = useAuthStore((state) => state.dataSource);
   const isDemoMode = dataSource === "demo";

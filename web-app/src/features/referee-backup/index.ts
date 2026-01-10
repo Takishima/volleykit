@@ -13,6 +13,8 @@
 export { useRefereeBackups } from "./hooks/useRefereeBackups";
 export {
   useMyOnCallAssignments,
+  isUserAssignment,
+  extractUserOnCallAssignments,
   type OnCallAssignment,
 } from "./hooks/useMyOnCallAssignments";
 export { OnCallCard } from "./components/OnCallCard";
