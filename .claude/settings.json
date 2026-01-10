@@ -57,6 +57,10 @@
           {
             "type": "command",
             "command": ".claude/hooks/address-pr-reviews.sh"
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/address-pr-reviews-on-create.sh"
           }
         ]
       }

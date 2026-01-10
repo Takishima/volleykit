@@ -84,6 +84,11 @@ After a successful `git push`, these hooks run automatically in Claude Code web 
      - 5-minute cooldown between checks
      - Only processes unresolved issues from the latest review
 
+3. **address-pr-reviews-on-create.sh** - Addresses reviews when PR is created
+   - Triggers when a new PR is created via GitHub API (curl POST to /pulls)
+   - Same 2-minute wait and review-addressing behavior as above
+   - Shares state file with push hook to prevent duplicate processing
+
 The hooks are configured in `.claude/settings.json` and state is tracked in `.claude/.state/` (gitignored).
 
 ## Tech Stack
