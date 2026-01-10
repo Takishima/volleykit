@@ -41,8 +41,9 @@ result
 # HAR files (contain session tokens)
 *.har
 
-# Claude Code (track settings.json, ignore local settings)
+# Claude Code (track settings.json, ignore local settings and state)
 .claude/settings.local.json
+.claude/.state/
 
 # Cloudflare
 .wrangler/
