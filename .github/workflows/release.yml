@@ -59,8 +59,7 @@ jobs:
     needs: validate
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.bump.outputs.version }}
-      release_notes: ${{ steps.changelog.outputs.release_notes }}
+      version: ${{ steps.changelog.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -78,15 +77,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Get current version
-        id: current
-        run: |
-          CURRENT_VERSION=$(node -p "require('./web-app/package.json').version")
-          echo "version=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
-          echo "Current version: $CURRENT_VERSION"
-
-      - name: Extract unreleased changes
-        id: unreleased
+      - name: Detect version type from changelog
+        id: detect
+        if: ${{ inputs.version_type == 'auto' }}
         run: |
           # Extract content between [Unreleased] and the next version header
           UNRELEASED=$(sed -n '/^## \[Unreleased\]/,/^## \[/p' CHANGELOG.md | sed '1d;$d')
@@ -95,10 +88,6 @@ jobs:
             echo "::error::No unreleased changes found in CHANGELOG.md"
             exit 1
           fi
-
-          # Save to file for later use
-          echo "$UNRELEASED" > /tmp/unreleased.md
-          echo "Found unreleased changes"
 
           # Detect version bump type from changelog content
           # Priority: BREAKING > Added > everything else
@@ -120,97 +109,37 @@ jobs:
       - name: Determine version type
         id: version_type
         run: |
-          INPUT_TYPE="${{ inputs.version_type }}"
-          DETECTED_TYPE="${{ steps.unreleased.outputs.type }}"
-
-          if [ "$INPUT_TYPE" = "auto" ]; then
-            echo "type=$DETECTED_TYPE" >> "$GITHUB_OUTPUT"
-            echo "Using auto-detected version type: $DETECTED_TYPE"
+          if [ "${{ inputs.version_type }}" = "auto" ]; then
+            echo "type=${{ steps.detect.outputs.type }}" >> "$GITHUB_OUTPUT"
           else
-            echo "type=$INPUT_TYPE" >> "$GITHUB_OUTPUT"
-            echo "Using manually specified version type: $INPUT_TYPE"
+            echo "type=${{ inputs.version_type }}" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Calculate new version
-        id: bump
-        run: |
-          CURRENT="${{ steps.current.outputs.version }}"
-          TYPE="${{ steps.version_type.outputs.type }}"
-
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
-
-          case "$TYPE" in
-            major)
-              NEW_VERSION="$((MAJOR + 1)).0.0"
-              ;;
-            minor)
-              NEW_VERSION="$MAJOR.$((MINOR + 1)).0"
-              ;;
-            patch)
-              NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
-              ;;
-          esac
-
-          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
-          echo "type=$TYPE" >> "$GITHUB_OUTPUT"
-          echo "Version bump: $CURRENT -> $NEW_VERSION ($TYPE)"
-
-      - name: Update CHANGELOG.md
+      - name: Update changelog
         id: changelog
-        run: |
-          VERSION="${{ steps.bump.outputs.version }}"
-          CURRENT="${{ steps.current.outputs.version }}"
-          DATE=$(date +%Y-%m-%d)
-          REPO="${{ github.repository }}"
-
-          # Save release notes for GitHub release
-          cp /tmp/unreleased.md /tmp/release_notes.md
-          echo "notes_file=/tmp/release_notes.md" >> "$GITHUB_OUTPUT"
-
-          # Update the changelog using awk:
-          # 1. After [Unreleased] header, insert new version section
-          # 2. Update the comparison links at the bottom
-          awk -v version="$VERSION" -v date="$DATE" -v repo="$REPO" -v current="$CURRENT" '
-            /^## \[Unreleased\]/ {
-              print $0
-              print ""
-              print "## [" version "] - " date
-              in_unreleased = 1
-              next
-            }
-            /^## \[/ && in_unreleased {
-              in_unreleased = 0
-            }
-            /^\[Unreleased\]:/ {
-              print "[Unreleased]: https://github.com/" repo "/compare/v" version "...HEAD"
-              print "[" version "]: https://github.com/" repo "/compare/v" current "...v" version
-              next
-            }
-            { print }
-          ' CHANGELOG.md > /tmp/changelog_updated.md
-
-          mv /tmp/changelog_updated.md CHANGELOG.md
-          echo "Updated CHANGELOG.md for version $VERSION"
+        uses: release-flow/keep-a-changelog-action@v3
+        with:
+          command: bump
+          version: ${{ steps.version_type.outputs.type }}
+          tag-prefix: v
+          keep-unreleased-section: true
+          fail-on-empty-release-notes: true
 
       - name: Update package.json version
         working-directory: web-app
         run: |
-          VERSION="${{ steps.bump.outputs.version }}"
-          npm version "$VERSION" --no-git-tag-version --allow-same-version
-          echo "Updated package.json to version $VERSION"
+          npm version "${{ steps.changelog.outputs.version }}" --no-git-tag-version --allow-same-version
 
       - name: Update package-lock.json
         working-directory: web-app
-        run: |
-          npm install --package-lock-only
-          echo "Updated package-lock.json"
+        run: npm install --package-lock-only
 
       - name: Show changes (dry run)
         if: ${{ inputs.dry_run }}
         run: |
           echo "=== Version bump ==="
-          echo "Type: ${{ steps.bump.outputs.type }}"
-          echo "New version: ${{ steps.bump.outputs.version }}"
+          echo "Type: ${{ steps.version_type.outputs.type }}"
+          echo "New version: ${{ steps.changelog.outputs.version }}"
           echo ""
           echo "=== CHANGELOG.md changes ==="
           git diff CHANGELOG.md
@@ -219,51 +148,48 @@ jobs:
           git diff web-app/package.json
           echo ""
           echo "=== Release notes ==="
-          cat /tmp/release_notes.md
+          cat << 'RELEASE_NOTES'
+          ${{ steps.changelog.outputs.release-notes }}
+          RELEASE_NOTES
           echo ""
-          echo "=== Would create tag: v${{ steps.bump.outputs.version }} ==="
+          echo "=== Would create tag: v${{ steps.changelog.outputs.version }} ==="
 
       - name: Commit changes
         if: ${{ !inputs.dry_run }}
         run: |
-          VERSION="${{ steps.bump.outputs.version }}"
           git add CHANGELOG.md web-app/package.json web-app/package-lock.json
           git commit -m "$(cat <<'EOF'
-          chore(release): prepare v${{ steps.bump.outputs.version }} release
+          chore(release): prepare v${{ steps.changelog.outputs.version }} release
           EOF
           )"
 
       - name: Create tag
         if: ${{ !inputs.dry_run }}
-        run: |
-          VERSION="${{ steps.bump.outputs.version }}"
-          git tag -a "v$VERSION" -m "Release v$VERSION"
+        run: git tag -a "v${{ steps.changelog.outputs.version }}" -m "Release v${{ steps.changelog.outputs.version }}"
 
       - name: Push changes
         if: ${{ !inputs.dry_run }}
         run: |
           git push origin main
-          git push origin "v${{ steps.bump.outputs.version }}"
+          git push origin "v${{ steps.changelog.outputs.version }}"
 
       - name: Create GitHub Release
         if: ${{ !inputs.dry_run }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION="${{ steps.bump.outputs.version }}"
-          NOTES_FILE="${{ steps.changelog.outputs.notes_file }}"
+          cat << 'RELEASE_NOTES' > /tmp/release_notes.md
+          ${{ steps.changelog.outputs.release-notes }}
+          RELEASE_NOTES
 
-          # Create release with notes from changelog
-          gh release create "v$VERSION" \
-            --title "v$VERSION" \
-            --notes-file "$NOTES_FILE"
-
-          echo "Created GitHub release v$VERSION"
+          gh release create "v${{ steps.changelog.outputs.version }}" \
+            --title "v${{ steps.changelog.outputs.version }}" \
+            --notes-file /tmp/release_notes.md
 
       - name: Summary
         run: |
-          VERSION="${{ steps.bump.outputs.version }}"
-          TYPE="${{ steps.bump.outputs.type }}"
+          VERSION="${{ steps.changelog.outputs.version }}"
+          TYPE="${{ steps.version_type.outputs.type }}"
 
           if [ "${{ inputs.dry_run }}" = "true" ]; then
             echo "## Dry Run Complete" >> "$GITHUB_STEP_SUMMARY"
@@ -276,7 +202,7 @@ jobs:
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo "### Release Notes Preview" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
-            cat /tmp/release_notes.md >> "$GITHUB_STEP_SUMMARY"
+            echo '${{ steps.changelog.outputs.release-notes }}' >> "$GITHUB_STEP_SUMMARY"
           else
             echo "## Release Complete" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
