@@ -436,6 +436,7 @@ This project uses [Semantic Versioning](https://semver.org/) and maintains a [Ch
 2. Use the appropriate subsection: Added, Changed, Deprecated, Removed, Fixed, Security
 3. Include the PR/issue number: `- Description of change (#123)`
 4. Write user-facing descriptions (what users will notice, not implementation details)
+5. **For breaking changes**: Prefix the entry with `BREAKING:` (see below)
 
 **Entry format**:
 ```markdown
@@ -444,7 +445,20 @@ This project uses [Semantic Versioning](https://semver.org/) and maintains a [Ch
 
 ### Fixed
 - Assignment dates now display correctly in all timezones (#126)
+
+### Changed
+- BREAKING: Authentication now requires email instead of username (#130)
 ```
+
+**Breaking change markers** (triggers MAJOR version bump):
+- `BREAKING:` - Prefix for breaking changes
+- `BREAKING CHANGE:` - Alternative prefix
+- `[BREAKING]` - Inline marker
+
+The release workflow auto-detects the version bump type:
+- **MAJOR**: Any entry contains `BREAKING:`, `BREAKING CHANGE:`, or `[BREAKING]`
+- **MINOR**: `### Added` section has entries (new features)
+- **PATCH**: Only `### Fixed`, `### Changed`, etc. without breaking markers
 
 ### PWA Version Display
 
@@ -456,25 +470,32 @@ The PWA automatically checks for updates and prompts users when a new version is
 
 ### Releasing a New Version
 
-Releases are automated via the **Release workflow** (`.github/workflows/release.yml`).
+Releases are fully automated via the **Release workflow** (`.github/workflows/release.yml`).
 
 **To create a release**:
 1. Go to **Actions** > **Release** workflow in GitHub
 2. Click **Run workflow**
-3. Select version bump type:
+3. Leave version type as `auto` (recommended) or manually select:
+   - `auto` - **Automatically detects** from changelog content (default)
    - `patch` - Bug fixes (1.0.0 -> 1.0.1)
    - `minor` - New features (1.0.0 -> 1.1.0)
    - `major` - Breaking changes (1.0.0 -> 2.0.0)
 4. Optionally enable **Dry run** to preview changes without committing
 
+**Auto-detection rules** (from changelog content):
+- **MAJOR**: Entry contains `BREAKING:`, `BREAKING CHANGE:`, or `[BREAKING]`
+- **MINOR**: `### Added` section has entries
+- **PATCH**: Only fixes, changes, or other non-breaking updates
+
 **What the workflow does**:
 1. Validates the codebase (lint, test, build)
-2. Moves `[Unreleased]` entries in CHANGELOG.md to new version section
-3. Updates version in `web-app/package.json` and `package-lock.json`
-4. Creates commit: `chore(release): prepare vX.Y.Z release`
-5. Creates git tag: `vX.Y.Z`
-6. Creates GitHub Release with changelog excerpt
-7. Deployment triggers automatically via `deploy-web.yml`
+2. Auto-detects version bump type from changelog (or uses manual selection)
+3. Moves `[Unreleased]` entries in CHANGELOG.md to new version section
+4. Updates version in `web-app/package.json` and `package-lock.json`
+5. Creates commit: `chore(release): prepare vX.Y.Z release`
+6. Creates git tag: `vX.Y.Z`
+7. Creates GitHub Release with changelog excerpt
+8. Deployment triggers automatically via `deploy-web.yml`
 
 **Manual release** (if needed):
 1. Move `[Unreleased]` entries to a new version section with date
