@@ -1,6 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="64" fill="#ff6b00"/>
-  <circle cx="256" cy="200" r="96" fill="white"/>
-  <path d="M256 320 L160 480 L352 480 Z" fill="white"/>
-  <text x="256" y="450" font-family="system-ui, sans-serif" font-size="64" font-weight="bold" fill="#ff6b00" text-anchor="middle">VK</text>
+  <!-- Background with rounded corners -->
+  <rect width="512" height="512" rx="64" fill="#b2e600"/>
+  <!-- Volleyball icon based on Lucide design, centered and scaled -->
+  <g transform="translate(106, 106) scale(12.5)" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/>
+    <path d="M11.1 7.1a16.55 16.55 0 0 1 10.9 4"/>
+    <path d="M12 12a12.6 12.6 0 0 1-8.7 5"/>
+    <path d="M16.8 13.6a16.55 16.55 0 0 1-9 7.5"/>
+    <path d="M20.7 17a12.8 12.8 0 0 0-8.7-5 13.3 13.3 0 0 1 0-10"/>
+    <path d="M6.3 3.8a16.55 16.55 0 0 0 1.9 11.5"/>
+  </g>
 </svg>
