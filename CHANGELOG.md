@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-01-10
+
+### Changed
+
+- On-call card now displays date and time (12:00) in the same format as regular assignment cards (#676)
+
 ## [1.0.1] - 2026-01-10
 
 ### Fixed

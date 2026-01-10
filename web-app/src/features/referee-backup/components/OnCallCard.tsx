@@ -1,5 +1,4 @@
 import { memo } from "react";
-import { Phone } from "lucide-react";
 import { Card, CardContent } from "@/shared/components/Card";
 import { useDateFormat } from "@/shared/hooks/useDateFormat";
 import { useTranslation } from "@/shared/hooks/useTranslation";
@@ -22,14 +21,6 @@ function OnCallCardComponent({ assignment }: OnCallCardProps) {
     >
       <CardContent className="p-3">
         <div className="flex items-center gap-3">
-          {/* Icon */}
-          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
-            <Phone
-              className="w-5 h-5 text-amber-600 dark:text-amber-400"
-              aria-hidden="true"
-            />
-          </div>
-
           {/* Date and time */}
           <div className="flex flex-col items-start">
             <span
