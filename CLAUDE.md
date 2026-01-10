@@ -455,6 +455,13 @@ This project uses [Semantic Versioning](https://semver.org/) and maintains a [Ch
 - `BREAKING CHANGE:` - Alternative prefix
 - `[BREAKING]` - Inline marker
 
+**What counts as a breaking change** (use `BREAKING:` prefix):
+- Removing or renaming public APIs, components, or props
+- Changing authentication or authorization flows
+- Removing features users depend on
+- Changing data formats that affect stored data
+- Requiring user action after update (re-login, clear cache, etc.)
+
 The release workflow auto-detects the version bump type:
 - **MAJOR**: Any entry contains `BREAKING:`, `BREAKING CHANGE:`, or `[BREAKING]`
 - **MINOR**: `### Added` section has entries (new features)
@@ -604,7 +611,7 @@ ESLint plugin `jsx-a11y` enforces many accessibility rules.
 1. Unit tests cover business logic and interactions
 1. E2E tests added for critical user flows (if applicable)
 1. Translations added for all 4 languages (de, en, fr, it)
-1. **Changelog updated** for new features and bug fixes (see [Semantic Versioning & Changelog](#semantic-versioning--changelog))
+1. **Changelog updated** with `BREAKING:` prefix for breaking changes (see [Semantic Versioning & Changelog](#semantic-versioning--changelog))
 1. **All validation phases pass before push** (lint, knip, test, build - see [AI Development Workflow](#ai-development-workflow))
 1. Bundle size limits not exceeded
 1. Works across modern browsers (Chrome, Firefox, Safari)
