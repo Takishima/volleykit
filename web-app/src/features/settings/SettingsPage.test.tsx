@@ -148,7 +148,7 @@ describe("SettingsPage", () => {
   describe("About Section", () => {
     it("displays version info", () => {
       render(<SettingsPage />, { wrapper: createWrapper() });
-      expect(screen.getByText("1.0.0")).toBeInTheDocument();
+      expect(screen.getByText("1.0.1")).toBeInTheDocument();
     });
   });
 

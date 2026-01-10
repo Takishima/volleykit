@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-01-10
+
+### Fixed
+
+- On-call assignments not appearing in production due to Zod validation rejecting null `originId` values (#675)
+- On-call assignment dates normalized to 12:00 noon for consistent display with game assignments (#675)
+
 ## [1.0.0] - 2025-01-10
 
 ### Added
@@ -56,5 +63,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Session-based authentication with CSRF protection
 - Content Security Policy headers
 
-[Unreleased]: https://github.com/Takishima/volleykit/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/Takishima/volleykit/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/Takishima/volleykit/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/Takishima/volleykit/releases/tag/v1.0.0

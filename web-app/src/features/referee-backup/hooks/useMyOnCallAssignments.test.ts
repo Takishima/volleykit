@@ -98,7 +98,7 @@ describe("extractUserOnCallAssignments", () => {
     const entries: RefereeBackupEntry[] = [
       {
         __identity: "entry-1",
-        date: "2026-01-15T00:00:00.000Z",
+        date: "2026-01-15T00:00:00.000Z", // API returns midnight
         weekday: "Mi",
         calendarWeek: 3,
         nlaReferees: [createAssignment("nla-1", userId)],
@@ -111,7 +111,7 @@ describe("extractUserOnCallAssignments", () => {
     expect(result[0]).toMatchObject({
       id: "entry-1-NLA",
       league: "NLA",
-      date: "2026-01-15T00:00:00.000Z",
+      date: "2026-01-15T12:00:00.000Z", // Normalized to noon
     });
   });
 
@@ -119,7 +119,7 @@ describe("extractUserOnCallAssignments", () => {
     const entries: RefereeBackupEntry[] = [
       {
         __identity: "entry-1",
-        date: "2026-01-15T00:00:00.000Z",
+        date: "2026-01-15T00:00:00.000Z", // API returns midnight
         weekday: "Mi",
         calendarWeek: 3,
         nlbReferees: [createAssignment("nlb-1", userId)],
@@ -139,7 +139,7 @@ describe("extractUserOnCallAssignments", () => {
     const entries: RefereeBackupEntry[] = [
       {
         __identity: "entry-1",
-        date: "2026-01-15T00:00:00.000Z",
+        date: "2026-01-15T00:00:00.000Z", // API returns midnight
         weekday: "Mi",
         calendarWeek: 3,
         nlaReferees: [createAssignment("nla-1", userId)],
@@ -157,7 +157,7 @@ describe("extractUserOnCallAssignments", () => {
     const entries: RefereeBackupEntry[] = [
       {
         __identity: "entry-1",
-        date: "2026-01-15T00:00:00.000Z",
+        date: "2026-01-15T00:00:00.000Z", // API returns midnight
         weekday: "Mi",
         calendarWeek: 3,
         nlaReferees: [
@@ -177,7 +177,7 @@ describe("extractUserOnCallAssignments", () => {
     const entries: RefereeBackupEntry[] = [
       {
         __identity: "entry-1",
-        date: "2026-01-15T00:00:00.000Z",
+        date: "2026-01-15T00:00:00.000Z", // API returns midnight
         weekday: "Mi",
         calendarWeek: 3,
         nlaReferees: [],
@@ -194,7 +194,7 @@ describe("extractUserOnCallAssignments", () => {
     const entries: RefereeBackupEntry[] = [
       {
         __identity: "entry-1",
-        date: "2026-01-15T00:00:00.000Z",
+        date: "2026-01-15T00:00:00.000Z", // API returns midnight
         weekday: "Mi",
         calendarWeek: 3,
       },
@@ -216,7 +216,7 @@ describe("extractUserOnCallAssignments", () => {
       },
       {
         __identity: "entry-1",
-        date: "2026-01-15T00:00:00.000Z",
+        date: "2026-01-15T00:00:00.000Z", // API returns midnight
         weekday: "Mi",
         calendarWeek: 3,
         nlaReferees: [createAssignment("nla-1", userId)],
@@ -226,8 +226,9 @@ describe("extractUserOnCallAssignments", () => {
     const result = extractUserOnCallAssignments(entries, userId);
 
     expect(result).toHaveLength(2);
-    expect(result[0]?.date).toBe("2026-01-15T00:00:00.000Z");
-    expect(result[1]?.date).toBe("2026-01-22T00:00:00.000Z");
+    // Both dates normalized to noon
+    expect(result[0]?.date).toBe("2026-01-15T12:00:00.000Z");
+    expect(result[1]?.date).toBe("2026-01-22T12:00:00.000Z");
   });
 
   it("returns empty array for empty entries", () => {

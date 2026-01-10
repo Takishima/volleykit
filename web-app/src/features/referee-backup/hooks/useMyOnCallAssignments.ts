@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { addDays, getISOWeek } from "date-fns";
+import { addDays, getISOWeek, setHours } from "date-fns";
 import { useRefereeBackups } from "./useRefereeBackups";
 import { useAuthStore } from "@/shared/stores/auth";
 import { generateDemoUuid } from "@/shared/utils/demo-uuid";
@@ -8,6 +8,19 @@ import type { RefereeBackupEntry, BackupRefereeAssignment } from "@/api/client";
 
 /** Default number of weeks ahead to fetch on-call assignments */
 const DEFAULT_WEEKS_AHEAD = 2;
+
+/** On-call assignments display at noon for consistent sorting with game assignments */
+const ON_CALL_DISPLAY_HOUR = 12;
+
+/**
+ * Normalizes the on-call date to display at 12:00 (noon).
+ * API returns dates at midnight, but we show them at noon for better
+ * visual alignment with game assignments in the timeline.
+ */
+function normalizeOnCallDate(dateString: string): string {
+  const date = new Date(dateString);
+  return setHours(date, ON_CALL_DISPLAY_HOUR).toISOString();
+}
 
 /**
  * Represents an on-call (Pikett) assignment for the current user.
@@ -52,13 +65,15 @@ export function extractUserOnCallAssignments(
   const assignments: OnCallAssignment[] = [];
 
   for (const entry of entries) {
+    // Normalize date to 12:00 for consistent display
+    const normalizedDate = normalizeOnCallDate(entry.date);
+
     // Check NLA referees
-    const nlaAssignments = entry.nlaReferees ?? [];
-    for (const assignment of nlaAssignments) {
+    for (const assignment of entry.nlaReferees ?? []) {
       if (isUserAssignment(assignment, userId)) {
         assignments.push({
           id: `${entry.__identity}-NLA`,
-          date: entry.date,
+          date: normalizedDate,
           weekday: entry.weekday,
           calendarWeek: entry.calendarWeek,
           league: "NLA",
@@ -69,12 +84,11 @@ export function extractUserOnCallAssignments(
     }
 
     // Check NLB referees
-    const nlbAssignments = entry.nlbReferees ?? [];
-    for (const assignment of nlbAssignments) {
+    for (const assignment of entry.nlbReferees ?? []) {
       if (isUserAssignment(assignment, userId)) {
         assignments.push({
           id: `${entry.__identity}-NLB`,
-          date: entry.date,
+          date: normalizedDate,
           weekday: entry.weekday,
           calendarWeek: entry.calendarWeek,
           league: "NLB",
@@ -109,7 +123,7 @@ function generateDemoOnCallAssignments(): OnCallAssignment[] {
   // Find the next Saturday (on-call duties typically on weekends)
   const daysUntilSaturday =
     (SATURDAY - now.getDay() + DAYS_IN_WEEK) % DAYS_IN_WEEK || DAYS_IN_WEEK;
-  const nextSaturday = addDays(now, daysUntilSaturday);
+  const nextSaturday = setHours(addDays(now, daysUntilSaturday), ON_CALL_DISPLAY_HOUR);
 
   // Create a demo backup entry for NLA duty this weekend
   const nlaEntry: RefereeBackupEntry = {

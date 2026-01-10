@@ -374,9 +374,9 @@ const backupRefereeAssignmentSchema = z
     hasFutureRefereeConvocations: z.boolean().optional(),
     hasResigned: z.boolean().optional(),
     unconfirmedFutureRefereeConvocations: z.boolean().optional(),
-    originId: z.number().optional(),
-    createdBy: z.string().optional(),
-    updatedBy: z.string().optional(),
+    originId: z.number().optional().nullable(),
+    createdBy: z.string().optional().nullable(),
+    updatedBy: z.string().optional().nullable(),
   })
   .passthrough();
 
