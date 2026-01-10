@@ -263,22 +263,32 @@ export default function App() {
   useViewportZoom();
   useCalendarTheme();
 
-  // Sync settings store's currentMode with auth store's dataSource
-  // This ensures mode-specific settings are loaded for the correct mode
+  // Sync settings store with auth store and handle logout cache clearing.
+  // Uses a single subscription for better performance.
   useEffect(() => {
     // Set initial mode from auth store
     const initialDataSource = useAuthStore.getState().dataSource;
     useSettingsStore.getState()._setCurrentMode(initialDataSource);
 
-    // Track previous dataSource to detect changes
+    // Track state to detect changes
     let previousDataSource = initialDataSource;
+    let wasAuthenticated = useAuthStore.getState().user !== null;
 
-    // Subscribe to auth store changes
     const unsubscribe = useAuthStore.subscribe((state) => {
+      // Sync dataSource changes to settings store
       if (state.dataSource !== previousDataSource) {
         previousDataSource = state.dataSource;
         useSettingsStore.getState()._setCurrentMode(state.dataSource);
       }
+
+      // Clear query cache on logout to prevent stale data from previous sessions.
+      // This ensures users don't see assignments from a previously logged-in association.
+      const isAuthenticated = state.user !== null;
+      if (wasAuthenticated && !isAuthenticated) {
+        queryClient.resetQueries();
+        logger.info("Query cache cleared on logout");
+      }
+      wasAuthenticated = isAuthenticated;
     });
 
     return unsubscribe;
