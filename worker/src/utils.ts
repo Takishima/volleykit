@@ -679,10 +679,13 @@ export function isSuccessfulLoginResponse(
 
       // Failed login redirects back to login page or root
       // Check for patterns that indicate authentication failure
+      // Be specific: only reject exact failed login patterns, not any path with "authentication"
       if (
         normalizedLocation.endsWith("/login") ||
         normalizedLocation.includes("/login?") ||
-        normalizedLocation.includes("/authentication") ||
+        // Only reject if redirecting back to the authenticate action (retry)
+        normalizedLocation.endsWith("/authenticate") ||
+        normalizedLocation.includes("/authenticate?") ||
         // Root path redirect often indicates session creation failed
         normalizedLocation.match(/^https?:\/\/[^/]+\/?$/)
       ) {

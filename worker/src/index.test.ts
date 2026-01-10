@@ -2106,12 +2106,21 @@ describe("Auth Lockout", () => {
       ).toBe(false);
     });
 
-    it("returns false for redirect to authentication endpoint", () => {
+    it("returns false for redirect to authenticate action", () => {
       expect(
         isSuccessfulLoginResponse(
-          mockResponse(302, { Location: "/sportmanager.security/authentication" }),
+          mockResponse(302, { Location: "/sportmanager.security/authentication/authenticate" }),
         ),
       ).toBe(false);
+    });
+
+    it("returns true for redirect through authentication path", () => {
+      // Successful login may redirect through auth-related paths (not ending in /authenticate)
+      expect(
+        isSuccessfulLoginResponse(
+          mockResponse(302, { Location: "/sportmanager.security/authentication/success" }),
+        ),
+      ).toBe(true);
     });
 
     it("returns false for 200 without session cookie", () => {
