@@ -284,6 +284,28 @@ export default function App() {
     return unsubscribe;
   }, []);
 
+  // Clear query cache on logout to prevent stale data from previous sessions.
+  // This ensures users don't see assignments from a previously logged-in association.
+  useEffect(() => {
+    // Track whether user was previously authenticated
+    let wasAuthenticated = useAuthStore.getState().user !== null;
+
+    const unsubscribe = useAuthStore.subscribe((state) => {
+      const isAuthenticated = state.user !== null;
+
+      // User just logged out (was authenticated, now is not)
+      if (wasAuthenticated && !isAuthenticated) {
+        // Reset all queries to clear cached data from previous session
+        queryClient.resetQueries();
+        logger.info("Query cache cleared on logout");
+      }
+
+      wasAuthenticated = isAuthenticated;
+    });
+
+    return unsubscribe;
+  }, []);
+
   return (
     <ErrorBoundary>
       <PWAProvider>

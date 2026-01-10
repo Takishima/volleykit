@@ -386,6 +386,7 @@ export const useAuthStore = create<AuthState>()(
           groupedEligibleAttributeValues: null,
           eligibleRoles: null,
           _lastAuthTimestamp: null,
+          activeOccupationId: null,
         });
       },
 
