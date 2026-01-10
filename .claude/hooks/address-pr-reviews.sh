@@ -3,10 +3,8 @@
 #
 # ANTI-INFINITE-LOOP SAFEGUARDS:
 # 1. Skips if last commit message contains "fix(review):" or "[skip-review-check]"
-# 2. Tracks processed review comment IDs in state file
-# 3. Limits to max 3 review-addressing cycles per session
-# 4. Enforces 5-minute cooldown between checks
-# 5. Only processes unresolved/pending review comments
+# 2. Limits to max 3 review-addressing cycles per session
+# 3. Enforces 5-minute cooldown between checks
 
 # Only run in Claude Code web sessions
 if [ "$CLAUDE_CODE_REMOTE" != "true" ]; then
@@ -94,7 +92,7 @@ mkdir -p "$STATE_DIR"
 
 # Initialize state file if it doesn't exist
 if [ ! -f "$STATE_FILE" ]; then
-  echo '{"last_check": 0, "cycle_count": 0, "processed_comment_ids": [], "session_id": ""}' > "$STATE_FILE"
+  echo '{"last_check": 0, "cycle_count": 0, "session_id": ""}' > "$STATE_FILE"
 fi
 
 # Get current session ID (use a combination of date and PR number)

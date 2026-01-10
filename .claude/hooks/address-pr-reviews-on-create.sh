@@ -91,7 +91,7 @@ mkdir -p "$STATE_DIR"
 
 # Initialize state file if it doesn't exist
 if [ ! -f "$STATE_FILE" ]; then
-  echo '{"last_check": 0, "cycle_count": 0, "processed_comment_ids": [], "session_id": ""}' > "$STATE_FILE"
+  echo '{"last_check": 0, "cycle_count": 0, "session_id": ""}' > "$STATE_FILE"
 fi
 
 # Get current session ID (use a combination of date and PR number)
