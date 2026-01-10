@@ -376,7 +376,7 @@ export async function submitLoginCredentials(
   });
 
   // Handle JSON response from proxy (iOS Safari PWA fix)
-  // The proxy converts successful auth redirects to 200 + JSON so iOS Safari PWA
+  // The proxy converts ALL auth redirects to 200 + JSON so iOS Safari PWA
   // properly processes the Set-Cookie header (opaqueredirect hides all headers)
   const contentType = response.headers.get("Content-Type");
   if (response.status === HTTP_STATUS_OK && contentType?.includes("application/json")) {
@@ -385,17 +385,26 @@ export async function submitLoginCredentials(
         success?: boolean;
         redirectUrl?: string;
       };
-      if (jsonResponse.success && jsonResponse.redirectUrl) {
-        logger.info("iOS PWA: Got JSON auth response, fetching dashboard...", {
+      if (jsonResponse.redirectUrl) {
+        logger.info("iOS PWA: Got JSON auth response", {
+          success: jsonResponse.success,
           redirectUrl: jsonResponse.redirectUrl,
         });
-        // Extract dashboard URL from the redirect URL
-        const dashboardUrl = jsonResponse.redirectUrl;
-        const result = await fetchDashboardAfterLogin(dashboardUrl);
-        if (result.success) {
-          logger.info("iOS PWA: Successfully fetched dashboard after JSON auth response");
+
+        // For successful login, fetch the dashboard to get CSRF token
+        if (jsonResponse.success) {
+          const dashboardUrl = jsonResponse.redirectUrl;
+          const result = await fetchDashboardAfterLogin(dashboardUrl);
+          if (result.success) {
+            logger.info("iOS PWA: Successfully fetched dashboard after JSON auth response");
+          }
+          return result;
         }
-        return result;
+
+        // For failed login (redirect back to login page), return error
+        // The proxy detected this was a redirect to login/auth page
+        logger.info("iOS PWA: Auth redirect indicates failed login");
+        return { success: false, error: "Invalid username or password" };
       }
     } catch {
       // Not valid JSON, continue with other response handling
