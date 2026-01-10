@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Login not working on iPhone when installed as PWA due to iOS Safari standalone mode limitations with response.url and response.redirected
 - OCR camera capture now auto-crops images to match the guide overlay, improving OCR accuracy by focusing on the scoresheet area
+- User now sees correct assignments after logging into a different association (#682)
 
 ## [1.0.2] - 2026-01-10
 
