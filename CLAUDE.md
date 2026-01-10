@@ -19,6 +19,7 @@ A progressive web application (PWA) that provides an improved interface for voll
 
 For code reviews and detailed examples, see:
 
+- **[Changelog](CHANGELOG.md)** - Version history and release notes
 - **[Security Checklist](docs/SECURITY_CHECKLIST.md)** - Security review checklist (XSS, injection, auth)
 - **[Code Patterns](docs/CODE_PATTERNS.md)** - Detailed code examples and anti-patterns
 - **[Testing Strategy](docs/TESTING_STRATEGY.md)** - When to use unit, integration, and E2E tests
@@ -412,6 +413,55 @@ npm run generate:api  # Generates src/api/schema.ts from OpenAPI spec
 
 **Branch Naming**: `feature/description`, `bugfix/description`, `refactor/description`
 
+## Semantic Versioning & Changelog
+
+This project uses [Semantic Versioning](https://semver.org/) and maintains a [Changelog](CHANGELOG.md) following [Keep a Changelog](https://keepachangelog.com/) format.
+
+### Version Format: MAJOR.MINOR.PATCH
+
+- **MAJOR**: Breaking changes requiring user action (e.g., authentication flow changes, feature removal)
+- **MINOR**: New backwards-compatible features (e.g., new pages, settings, enhancements)
+- **PATCH**: Bug fixes and minor improvements (e.g., fixes, performance, translations)
+
+### Changelog Maintenance (Claude Instructions)
+
+**When to update the changelog**:
+- After implementing a new feature (`feat:` commits)
+- After fixing a bug (`fix:` commits)
+- After making breaking changes
+- After security-related changes
+
+**How to update**:
+1. Add entries to the `[Unreleased]` section in `CHANGELOG.md`
+2. Use the appropriate subsection: Added, Changed, Deprecated, Removed, Fixed, Security
+3. Include the PR/issue number: `- Description of change (#123)`
+4. Write user-facing descriptions (what users will notice, not implementation details)
+
+**Entry format**:
+```markdown
+### Added
+- Calendar export to Google Calendar and Apple Calendar (#123)
+
+### Fixed
+- Assignment dates now display correctly in all timezones (#126)
+```
+
+### PWA Version Display
+
+The app version is displayed in Settings > About. It shows:
+- **Version**: From `package.json` (e.g., "1.0.0")
+- **Git Hash**: Short commit hash for build identification
+
+The PWA automatically checks for updates and prompts users when a new version is deployed.
+
+### Releasing a New Version
+
+When ready to release (typically done by maintainers):
+1. Move `[Unreleased]` entries to a new version section with date
+2. Update version in `web-app/package.json`
+3. Update comparison links at the bottom of `CHANGELOG.md`
+4. Create a git tag: `git tag -a v1.1.0 -m "Release 1.1.0"`
+
 ## Commands Reference
 
 ### CI Validation (Run Before Push and PRs)
@@ -509,6 +559,7 @@ ESLint plugin `jsx-a11y` enforces many accessibility rules.
 1. Unit tests cover business logic and interactions
 1. E2E tests added for critical user flows (if applicable)
 1. Translations added for all 4 languages (de, en, fr, it)
+1. **Changelog updated** for new features and bug fixes (see [Semantic Versioning & Changelog](#semantic-versioning--changelog))
 1. **All validation phases pass before push** (lint, knip, test, build - see [AI Development Workflow](#ai-development-workflow))
 1. Bundle size limits not exceeded
 1. Works across modern browsers (Chrome, Firefox, Safari)
