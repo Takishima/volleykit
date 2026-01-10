@@ -3,7 +3,7 @@
  * Extracts form fields and tokens from Neos Flow login pages.
  */
 
-import { logger } from "@/shared/utils/logger";
+import { authLogger as logger } from "@/shared/utils/auth-log-buffer";
 
 /**
  * URL path pattern that indicates successful login redirect to dashboard.
