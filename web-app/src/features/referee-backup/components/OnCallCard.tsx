@@ -11,7 +11,7 @@ interface OnCallCardProps {
 
 function OnCallCardComponent({ assignment }: OnCallCardProps) {
   const { t } = useTranslation();
-  const { dateLabel, isToday } = useDateFormat(assignment.date);
+  const { dateLabel, timeLabel, isToday } = useDateFormat(assignment.date);
 
   const ariaLabel = `${t("onCall.duty")} ${assignment.league} - ${dateLabel}`;
 
@@ -30,25 +30,25 @@ function OnCallCardComponent({ assignment }: OnCallCardProps) {
             />
           </div>
 
-          {/* Date and label */}
+          {/* Date and time */}
+          <div className="flex flex-col items-start">
+            <span
+              className={`text-xs font-medium ${
+                isToday
+                  ? "text-amber-700 dark:text-amber-300"
+                  : "text-amber-600 dark:text-amber-400"
+              }`}
+            >
+              {dateLabel}
+            </span>
+            <span className="text-lg font-bold text-amber-900 dark:text-amber-100">
+              {timeLabel}
+            </span>
+          </div>
+
+          {/* Label */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span
-                className={`text-sm font-medium ${
-                  isToday
-                    ? "text-amber-700 dark:text-amber-300"
-                    : "text-amber-900 dark:text-amber-100"
-                }`}
-              >
-                {dateLabel}
-              </span>
-              {isToday && (
-                <span className="px-1.5 py-0.5 text-xs font-medium bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200 rounded">
-                  {t("common.today")}
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-amber-700 dark:text-amber-400">
+            <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
               {t("onCall.duty")}
             </p>
           </div>
