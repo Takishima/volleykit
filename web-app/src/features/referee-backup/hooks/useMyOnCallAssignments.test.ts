@@ -16,17 +16,19 @@ const createTestAssignment = (
 describe("isUserAssignment", () => {
   const userId = "user-123";
 
-  it("returns true when persistenceObjectIdentifier matches", () => {
+  it("returns true when person.__identity matches", () => {
     const assignment = createTestAssignment({
       __identity: "assignment-1",
       indoorReferee: {
-        persistenceObjectIdentifier: userId,
+        person: {
+          __identity: userId,
+        },
       },
     });
     expect(isUserAssignment(assignment, userId)).toBe(true);
   });
 
-  it("returns true when person.persistenceObjectIdentifier matches", () => {
+  it("returns true when person.persistenceObjectIdentifier matches (fallback)", () => {
     const assignment = createTestAssignment({
       __identity: "assignment-1",
       indoorReferee: {
@@ -38,11 +40,13 @@ describe("isUserAssignment", () => {
     expect(isUserAssignment(assignment, userId)).toBe(true);
   });
 
-  it("returns false when neither ID matches", () => {
+  it("returns false when person ID does not match", () => {
     const assignment = createTestAssignment({
       __identity: "assignment-1",
       indoorReferee: {
-        persistenceObjectIdentifier: "other-user",
+        person: {
+          __identity: "other-user",
+        },
       },
     });
     expect(isUserAssignment(assignment, userId)).toBe(false);
@@ -55,12 +59,20 @@ describe("isUserAssignment", () => {
     expect(isUserAssignment(assignment, userId)).toBe(false);
   });
 
-  it("prefers persistenceObjectIdentifier over person.persistenceObjectIdentifier", () => {
+  it("returns false when person is missing", () => {
+    const assignment = createTestAssignment({
+      __identity: "assignment-1",
+      indoorReferee: {},
+    });
+    expect(isUserAssignment(assignment, userId)).toBe(false);
+  });
+
+  it("prefers __identity over persistenceObjectIdentifier on person", () => {
     const assignment = createTestAssignment({
       __identity: "assignment-1",
       indoorReferee: {
-        persistenceObjectIdentifier: userId,
         person: {
+          __identity: userId,
           persistenceObjectIdentifier: "other-user",
         },
       },
@@ -72,11 +84,13 @@ describe("isUserAssignment", () => {
 describe("extractUserOnCallAssignments", () => {
   const userId = "user-123";
 
-  const createAssignment = (id: string, refId: string) =>
+  const createAssignment = (id: string, personId: string) =>
     createTestAssignment({
       __identity: id,
       indoorReferee: {
-        persistenceObjectIdentifier: refId,
+        person: {
+          __identity: personId,
+        },
       },
     });
 

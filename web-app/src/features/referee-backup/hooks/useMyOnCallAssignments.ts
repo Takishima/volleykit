@@ -24,14 +24,21 @@ export interface OnCallAssignment {
 
 /**
  * Checks if a backup referee assignment belongs to the given user.
+ *
+ * The API returns person identity in two possible fields:
+ * - `person.__identity` - always returned by the API (the person's UUID)
+ * - `person.persistenceObjectIdentifier` - may not be included in responses
+ *
+ * The user ID from auth store is the person's `__identity`, so we need to
+ * check both fields to ensure matching works correctly.
  */
 export function isUserAssignment(
   assignment: BackupRefereeAssignment,
   userId: string,
 ): boolean {
+  const person = assignment.indoorReferee?.person;
   const refereeId =
-    assignment.indoorReferee?.persistenceObjectIdentifier ??
-    assignment.indoorReferee?.person?.persistenceObjectIdentifier;
+    person?.__identity ?? person?.persistenceObjectIdentifier;
   return refereeId === userId;
 }
 
@@ -114,8 +121,8 @@ function generateDemoOnCallAssignments(): OnCallAssignment[] {
       {
         __identity: generateDemoUuid("demo-backup-assignment-nla"),
         indoorReferee: {
-          persistenceObjectIdentifier: DEMO_USER_PERSON_IDENTITY,
           person: {
+            __identity: DEMO_USER_PERSON_IDENTITY,
             firstName: "Demo",
             lastName: "User",
             displayName: "Demo User",
@@ -149,8 +156,8 @@ function generateDemoOnCallAssignments(): OnCallAssignment[] {
       {
         __identity: generateDemoUuid("demo-backup-assignment-nlb"),
         indoorReferee: {
-          persistenceObjectIdentifier: DEMO_USER_PERSON_IDENTITY,
           person: {
+            __identity: DEMO_USER_PERSON_IDENTITY,
             firstName: "Demo",
             lastName: "User",
             displayName: "Demo User",

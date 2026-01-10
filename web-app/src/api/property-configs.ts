@@ -172,14 +172,16 @@ export const REFEREE_BACKUP_PROPERTIES = [
   "joinedNlaReferees",
   "joinedNlbReferees",
   // NLA referee identity (required for filtering user's assignments)
-  "nlaReferees.*.indoorReferee.persistenceObjectIdentifier",
-  "nlaReferees.*.indoorReferee.person.persistenceObjectIdentifier",
+  // Request person object first to ensure nested __identity is populated
+  "nlaReferees.*.indoorReferee.person",
+  "nlaReferees.*.indoorReferee.person.__identity",
   // NLA referee details
   "nlaReferees.*.indoorReferee.person.primaryEmailAddress",
   "nlaReferees.*.indoorReferee.person.primaryPhoneNumber",
   // NLB referee identity (required for filtering user's assignments)
-  "nlbReferees.*.indoorReferee.persistenceObjectIdentifier",
-  "nlbReferees.*.indoorReferee.person.persistenceObjectIdentifier",
+  // Request person object first to ensure nested __identity is populated
+  "nlbReferees.*.indoorReferee.person",
+  "nlbReferees.*.indoorReferee.person.__identity",
   // NLB referee details
   "nlbReferees.*.indoorReferee.person.primaryEmailAddress",
   "nlbReferees.*.indoorReferee.person.primaryPhoneNumber",
