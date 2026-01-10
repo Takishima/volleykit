@@ -38,9 +38,14 @@ const LOG_LEVEL_COLORS: Record<AuthLogEntry["level"], string> = {
 
 /** Check if debug mode is enabled via URL parameter */
 function isDebugModeEnabled(): boolean {
-  const urlParams = new URLSearchParams(window.location.search);
-  const debugValue = urlParams.get("debug");
-  return debugValue !== null && debugValue !== "false" && debugValue !== "0";
+  // TEMPORARY: Always show for iOS PWA login debugging
+  // Remove this line once debugging is complete
+  return true;
+
+  // Original logic - uncomment when debugging is done:
+  // const urlParams = new URLSearchParams(window.location.search);
+  // const debugValue = urlParams.get("debug");
+  // return debugValue !== null && debugValue !== "false" && debugValue !== "0";
 }
 
 export function LoginDebugPanel() {
@@ -84,7 +89,7 @@ export function LoginDebugPanel() {
         }}
       >
         <strong style={{ color: "#00d4ff", fontSize: "11px" }}>
-          Auth Debug ({logs.length} logs)
+          Auth Debug ({logs.length} logs) | v{__APP_VERSION__} ({__GIT_HASH__})
         </strong>
         <div style={{ display: "flex", gap: "8px" }}>
           <button

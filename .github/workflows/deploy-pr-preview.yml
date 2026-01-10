@@ -82,7 +82,7 @@ jobs:
       - name: Build for PR Preview
         run: npm run build
         env:
-          VITE_DEMO_MODE_ONLY: 'true'
+          # Real login enabled for iOS PWA debugging
           VITE_API_PROXY_URL: ${{ vars.VITE_API_PROXY_URL }}
           VITE_BASE_PATH: /${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/
           VITE_OJP_API_KEY: ${{ secrets.VITE_OJP_API_KEY }}
