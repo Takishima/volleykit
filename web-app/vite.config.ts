@@ -108,6 +108,13 @@ function versionFilePlugin(version: string, gitHash: string, basePath: string): 
           if (!res.ok) return;
           var data = await res.json();
           if (BUNDLED_GIT_HASH !== data.gitHash) {
+            // Prevent infinite reload loop: track attempted updates in sessionStorage
+            var reloadKey = 'pwa-update-attempted-' + data.gitHash;
+            if (sessionStorage.getItem(reloadKey)) {
+              console.warn('[PWA] Already attempted update to ' + data.gitHash + ', skipping to prevent loop');
+              return;
+            }
+            sessionStorage.setItem(reloadKey, '1');
             console.log('[PWA] Version mismatch: ' + BUNDLED_GIT_HASH + ' → ' + data.gitHash + ', forcing update...');
             var reg = await navigator.serviceWorker?.getRegistration();
             if (reg?.waiting) {
@@ -118,7 +125,11 @@ function versionFilePlugin(version: string, gitHash: string, basePath: string): 
             location.reload();
           }
         } catch (e) {
-          // Network error - continue with cached version
+          // Network errors are expected when offline - ignore silently
+          // Log other errors for debugging
+          if (!(e instanceof TypeError)) {
+            console.warn('[PWA] Version check failed:', e);
+          }
         }
       })();
     </script>`;
