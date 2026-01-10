@@ -211,6 +211,10 @@ function isResponseUrlLoginPage(url: string | undefined): boolean {
 /**
  * Checks if HTML content represents a login page.
  * Used as fallback for PWA standalone mode where response.url may not update.
+ *
+ * Note: This heuristic is intentionally permissive to catch various login page
+ * implementations. It checks for common login form indicators rather than
+ * exact matches.
  */
 function isLoginPageHtmlContent(html: string): boolean {
   return (
@@ -423,6 +427,14 @@ export const useAuthStore = create<AuthState>()(
         set({ _checkSessionPromise: promise });
 
         (async () => {
+          // Helper to handle invalid session - clears state and resolves false
+          const handleInvalidSession = (logMessage: string): void => {
+            logger.info(logMessage);
+            clearSession();
+            set({ status: "idle", user: null, csrfToken: null, _lastAuthTimestamp: null });
+            resolvePromise(false);
+          };
+
           try {
             const timeoutController = new AbortController();
             const timeoutId = setTimeout(
@@ -447,10 +459,7 @@ export const useAuthStore = create<AuthState>()(
               // the session is invalid. This commonly happens when session cookies
               // expire but the app still has persisted auth state.
               if (isResponseUrlLoginPage(response.url)) {
-                logger.info("Session check: redirected to login page, session is stale");
-                clearSession();
-                set({ status: "idle", user: null, csrfToken: null, _lastAuthTimestamp: null });
-                resolvePromise(false);
+                handleInvalidSession("Session check: redirected to login page, session is stale");
                 return;
               }
 
@@ -461,10 +470,7 @@ export const useAuthStore = create<AuthState>()(
               // response.url may not be updated after following redirects, but
               // response.redirected will still be true. Check response content as fallback.
               if (response.redirected && isLoginPageHtmlContent(html)) {
-                logger.info("Session check: PWA mode detected login page via content, session is stale");
-                clearSession();
-                set({ status: "idle", user: null, csrfToken: null, _lastAuthTimestamp: null });
-                resolvePromise(false);
+                handleInvalidSession("Session check: PWA mode detected login page via content, session is stale");
                 return;
               }
 
@@ -475,10 +481,7 @@ export const useAuthStore = create<AuthState>()(
                 // If we can't find a CSRF token and don't have one stored,
                 // the session is invalid (dashboard pages always have CSRF tokens).
                 if (!csrfToken && !currentState.csrfToken) {
-                  logger.info("Session check: no CSRF token found, session is invalid");
-                  clearSession();
-                  set({ status: "idle", user: null, csrfToken: null, _lastAuthTimestamp: null });
-                  resolvePromise(false);
+                  handleInvalidSession("Session check: no CSRF token found, session is invalid");
                   return;
                 }
 
