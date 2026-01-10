@@ -22,7 +22,7 @@ function OnCallCardComponent({ assignment }: OnCallCardProps) {
       <CardContent className="p-3">
         <div className="flex items-center gap-3">
           {/* Date and time */}
-          <div className="flex flex-col items-start">
+          <div className="flex flex-col items-end w-14 shrink-0">
             <span
               className={`text-xs font-medium ${
                 isToday
