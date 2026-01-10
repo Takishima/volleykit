@@ -4,7 +4,6 @@ import { useRefereeBackups } from "./useRefereeBackups";
 import { useAuthStore } from "@/shared/stores/auth";
 import { generateDemoUuid } from "@/shared/utils/demo-uuid";
 import { DEMO_USER_PERSON_IDENTITY } from "@/shared/stores/demo";
-import { logger } from "@/shared/utils/logger";
 import type { RefereeBackupEntry, BackupRefereeAssignment } from "@/api/client";
 
 /** Default number of weeks ahead to fetch on-call assignments */
@@ -66,6 +65,7 @@ function collectRefereeIds(entries: RefereeBackupEntry[]): Set<string> {
 /**
  * Logs debug info for on-call assignment filtering.
  * Helps diagnose issues where user's on-call assignments don't appear.
+ * Uses console.log directly to ensure visibility in production builds.
  */
 function logFilterContext(
   entries: RefereeBackupEntry[],
@@ -75,11 +75,12 @@ function logFilterContext(
   if (entries.length === 0) return;
 
   const allRefereeIds = collectRefereeIds(entries);
-  logger.info(
-    `On-call filter: userId=${userId}, entries=${entries.length}, uniqueReferees=${allRefereeIds.size}`,
+  // Use console.log directly for production visibility (logger is dev-only)
+  console.log(
+    `[VolleyKit] On-call filter: userId=${userId}, entries=${entries.length}, uniqueReferees=${allRefereeIds.size}`,
     { refereeIds: Array.from(allRefereeIds) },
   );
-  logger.info(`On-call filter result: found ${resultCount} assignments for user`);
+  console.log(`[VolleyKit] On-call filter result: found ${resultCount} assignments for user`);
 }
 
 /**
@@ -237,6 +238,9 @@ export function useMyOnCallAssignments(
 
   const { data: backupEntries, ...queryResult } = useRefereeBackups(weeksAhead);
 
+  // Debug: Log raw data from API
+  console.log(`[VolleyKit] useMyOnCallAssignments: dataSource=${dataSource}, userId=${userId}, backupEntries=${backupEntries?.length ?? "undefined"}`);
+
   // Filter and transform backup entries to user's on-call assignments
   const data = useMemo(() => {
     // Demo mode: generate sample on-call assignments
@@ -246,6 +250,7 @@ export function useMyOnCallAssignments(
 
     // Calendar mode: no on-call data available
     if (dataSource === "calendar" || !userId || !backupEntries) {
+      console.log(`[VolleyKit] On-call skipped: calendar=${dataSource === "calendar"}, noUserId=${!userId}, noBackupEntries=${!backupEntries}`);
       return [];
     }
 
