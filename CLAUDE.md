@@ -65,6 +65,27 @@ npm test              # Run all tests
 npm run build         # Production build (includes tsc)
 ```
 
+### Claude Code Post-Push Hooks (Claude Code Web Only)
+
+After a successful `git push`, these hooks run automatically in Claude Code web sessions:
+
+1. **post-git-push.sh** - Generates PR links or updates existing PRs
+   - If no PR exists: Outputs a clickable link to create one
+   - If PR exists: Updates title/body via GitHub API (when `GITHUB_TOKEN` available)
+
+2. **address-pr-reviews.sh** - Automatically addresses PR review comments
+   - Waits 2 minutes after push for review workflow to complete
+   - Fetches Claude Code Review comments from `claude[bot]`
+   - Parses "Issues Found" section and addresses each issue
+   - Creates a single `fix(review):` commit with all fixes
+   - **Anti-infinite-loop safeguards**:
+     - Skips if last commit has `fix(review):` prefix (won't re-trigger)
+     - Max 3 review cycles per session per PR
+     - 5-minute cooldown between checks
+     - Only processes unresolved issues from the latest review
+
+The hooks are configured in `.claude/settings.json` and state is tracked in `.claude/.state/` (gitignored).
+
 ## Tech Stack
 
 - **Framework**: React 19 with TypeScript 5.9

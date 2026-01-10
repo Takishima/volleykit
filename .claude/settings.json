@@ -53,6 +53,10 @@
           {
             "type": "command",
             "command": ".claude/hooks/post-git-push.sh"
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/address-pr-reviews.sh"
           }
         ]
       }
