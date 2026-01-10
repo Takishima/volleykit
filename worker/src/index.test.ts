@@ -2172,8 +2172,13 @@ describe("Integration: Auth Lockout in Worker", () => {
 
     const response = await worker.fetch(request, mockEnv);
 
-    // Should proxy the response, not block
-    expect(response.status).toBe(302);
+    // iOS Safari PWA fix: Successful auth returns 200 + JSON instead of 302
+    // This allows iOS Safari PWA to properly process Set-Cookie headers
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toBe("application/json");
+    const body = await response.json();
+    expect(body).toHaveProperty("success", true);
+    expect(body).toHaveProperty("redirectUrl");
 
     vi.unstubAllGlobals();
   });

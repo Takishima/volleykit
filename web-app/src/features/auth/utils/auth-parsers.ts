@@ -35,6 +35,9 @@ const DIAGNOSTIC_PREVIEW_LENGTH = 500;
 /** HTTP status code for account lockout (from proxy brute-force protection) */
 const HTTP_STATUS_LOCKED = 423;
 
+/** HTTP status code for successful response */
+const HTTP_STATUS_OK = 200;
+
 /** HTTP status codes for redirect detection (3xx range) */
 const HTTP_REDIRECT_MIN = 300;
 const HTTP_REDIRECT_MAX = 400;
@@ -371,6 +374,33 @@ export async function submitLoginCredentials(
     url: response.url,
     hasLocationHeader: response.headers.has("Location"),
   });
+
+  // Handle JSON response from proxy (iOS Safari PWA fix)
+  // The proxy converts successful auth redirects to 200 + JSON so iOS Safari PWA
+  // properly processes the Set-Cookie header (opaqueredirect hides all headers)
+  const contentType = response.headers.get("Content-Type");
+  if (response.status === HTTP_STATUS_OK && contentType?.includes("application/json")) {
+    try {
+      const jsonResponse = (await response.json()) as {
+        success?: boolean;
+        redirectUrl?: string;
+      };
+      if (jsonResponse.success && jsonResponse.redirectUrl) {
+        logger.info("iOS PWA: Got JSON auth response, fetching dashboard...", {
+          redirectUrl: jsonResponse.redirectUrl,
+        });
+        // Extract dashboard URL from the redirect URL
+        const dashboardUrl = jsonResponse.redirectUrl;
+        const result = await fetchDashboardAfterLogin(dashboardUrl);
+        if (result.success) {
+          logger.info("iOS PWA: Successfully fetched dashboard after JSON auth response");
+        }
+        return result;
+      }
+    } catch {
+      // Not valid JSON, continue with other response handling
+    }
+  }
 
   // Check for redirect response (303 See Other = successful login)
   // With redirect: "manual", we get the raw redirect response instead of following it
