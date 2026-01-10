@@ -10,6 +10,7 @@ import {
   extractLoginFormFields,
   extractCsrfTokenFromPage,
   submitLoginCredentials,
+  isDashboardHtmlContent,
 } from "@/features/auth/utils/auth-parsers";
 import {
   extractActivePartyFromHtml,
@@ -217,10 +218,17 @@ function isResponseUrlLoginPage(url: string | undefined): boolean {
  * exact matches.
  */
 function isLoginPageHtmlContent(html: string): boolean {
-  return (
+  // A page is a login page if it has login form elements AND is not a dashboard
+  // (dashboard pages may have login-related strings in navigation but aren't login pages)
+  const hasLoginFormIndicators =
     html.includes('action="/login"') ||
-    (html.includes('id="username"') && html.includes('id="password"'))
-  );
+    (html.includes('id="username"') && html.includes('id="password"'));
+
+  // Don't misidentify dashboard as login page in iOS PWA mode
+  // Dashboard pages have CSRF tokens and authenticated content
+  const hasDashboardIndicators = isDashboardHtmlContent(html);
+
+  return hasLoginFormIndicators && !hasDashboardIndicators;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -466,11 +474,12 @@ export const useAuthStore = create<AuthState>()(
               // Read response body once - needed for PWA fallback and dashboard processing
               const html = response.ok ? await response.text() : "";
 
-              // PWA standalone mode fix: In some PWA/service worker configurations,
-              // response.url may not be updated after following redirects, but
-              // response.redirected will still be true. Check response content as fallback.
-              if (response.redirected && isLoginPageHtmlContent(html)) {
-                handleInvalidSession("Session check: PWA mode detected login page via content, session is stale");
+              // iOS PWA standalone mode fix: In iOS Safari PWA standalone mode,
+              // both response.url and response.redirected may be unreliable.
+              // Use content-based detection as the most reliable fallback.
+              // Check if the response is actually a login page regardless of redirect status.
+              if (isLoginPageHtmlContent(html)) {
+                handleInvalidSession("Session check: detected login page via content analysis, session is stale");
                 return;
               }
 

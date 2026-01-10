@@ -3,6 +3,7 @@ import {
   extractLoginFormFields,
   extractCsrfTokenFromPage,
   submitLoginCredentials,
+  isDashboardHtmlContent,
   type LoginFormFields,
 } from "./auth-parsers";
 
@@ -468,6 +469,59 @@ describe("submitLoginCredentials", () => {
       const result = await submitLoginCredentials(authUrl, username, password, formFields);
 
       expect(result).toEqual({ success: false, error: "Login failed - please try again" });
+    });
+  });
+});
+
+describe("isDashboardHtmlContent", () => {
+  describe("dashboard detection", () => {
+    it("returns true for dashboard page with CSRF token", () => {
+      const html = '<html data-csrf-token="abc123"><body>Dashboard content</body></html>';
+      expect(isDashboardHtmlContent(html)).toBe(true);
+    });
+
+    it("returns true for dashboard with double-quoted CSRF token", () => {
+      const html = `<html data-csrf-token="token-value"><body>Dashboard</body></html>`;
+      expect(isDashboardHtmlContent(html)).toBe(true);
+    });
+
+    it("returns true for dashboard with single-quoted CSRF token", () => {
+      const html = `<html data-csrf-token='token-value'><body>Dashboard</body></html>`;
+      expect(isDashboardHtmlContent(html)).toBe(true);
+    });
+  });
+
+  describe("login page detection", () => {
+    it("returns false for login page with form action", () => {
+      const html = `<html><body><form action="/login"><input id="username"/><input id="password"/></form></body></html>`;
+      expect(isDashboardHtmlContent(html)).toBe(false);
+    });
+
+    it("returns false for login page with username/password inputs", () => {
+      const html = `<html><body><form><input id="username"/><input id="password"/></form></body></html>`;
+      expect(isDashboardHtmlContent(html)).toBe(false);
+    });
+
+    it("returns false for login page even with CSRF token", () => {
+      // Edge case: login page might have CSRF token but still has login form
+      const html = `<html data-csrf-token="abc"><body><form action="/login"><input id="username"/><input id="password"/></form></body></html>`;
+      expect(isDashboardHtmlContent(html)).toBe(false);
+    });
+  });
+
+  describe("other pages", () => {
+    it("returns false for page without CSRF token", () => {
+      const html = "<html><body>No token here</body></html>";
+      expect(isDashboardHtmlContent(html)).toBe(false);
+    });
+
+    it("returns false for empty HTML", () => {
+      expect(isDashboardHtmlContent("")).toBe(false);
+    });
+
+    it("returns false for error page without CSRF token", () => {
+      const html = `<html><body><v-snackbar color="error">Error!</v-snackbar></body></html>`;
+      expect(isDashboardHtmlContent(html)).toBe(false);
     });
   });
 });
