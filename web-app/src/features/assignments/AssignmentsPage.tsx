@@ -29,6 +29,27 @@ import { TOUR_DUMMY_ASSIGNMENT } from "@/features/assignments/assignments";
 import { useAuthStore } from "@/shared/stores/auth";
 import { useShallow } from "zustand/react/shallow";
 import { useCalendarAssociationFilter } from "./hooks/useCalendarAssociationFilter";
+import {
+  useMyOnCallAssignments,
+  OnCallCard,
+  type OnCallAssignment,
+} from "@/features/referee-backup";
+
+/**
+ * Discriminated union for items that can be displayed in the assignments list.
+ * Allows mixing regular assignments with on-call assignments inline.
+ */
+type DisplayItem =
+  | { type: "assignment"; item: Assignment }
+  | { type: "onCall"; item: OnCallAssignment };
+
+/** Extract date from a display item for sorting/grouping */
+function getDisplayItemDate(item: DisplayItem): string | undefined {
+  if (item.type === "onCall") {
+    return item.item.date;
+  }
+  return item.item.refereeGame?.game?.startingDateTime;
+}
 
 const PdfLanguageModal = lazy(
   () =>
@@ -137,6 +158,9 @@ export function AssignmentsPage() {
   // The filter selection is managed in the AppShell header dropdown
   const { filterByAssociation } = useCalendarAssociationFilter(calendarData ?? []);
 
+  // Fetch on-call (Pikett) assignments - only in full API mode
+  const { data: onCallAssignments } = useMyOnCallAssignments();
+
   // Compute calendar-specific data (filter by upcoming/past and association)
   const calendarUpcoming = useMemo(() => {
     if (!isCalendarMode || !calendarData) return [];
@@ -193,9 +217,46 @@ export function AssignmentsPage() {
     return rawData;
   }, [showDummyData, rawData]);
 
+  // Merge on-call assignments with regular assignments for upcoming tab (API/demo mode only)
+  // Creates a unified list of DisplayItems sorted by date
+  const mergedDisplayItems = useMemo((): DisplayItem[] => {
+    // Only merge for upcoming tab in non-calendar mode
+    if (activeTab !== "upcoming" || isCalendarMode || showDummyData) {
+      return [];
+    }
+
+    const items: DisplayItem[] = [];
+
+    // Add regular assignments
+    if (data) {
+      for (const assignment of data as Assignment[]) {
+        items.push({ type: "assignment", item: assignment });
+      }
+    }
+
+    // Add on-call assignments
+    for (const onCall of onCallAssignments) {
+      items.push({ type: "onCall", item: onCall });
+    }
+
+    // Sort by date ascending
+    return items.sort((a, b) => {
+      const dateA = getDisplayItemDate(a);
+      const dateB = getDisplayItemDate(b);
+      if (!dateA || !dateB) return 0;
+      return new Date(dateA).getTime() - new Date(dateB).getTime();
+    });
+  }, [activeTab, isCalendarMode, showDummyData, data, onCallAssignments]);
+
   // Group assignments by week for visual separation
-  // Handle both regular Assignment and CalendarAssignment types
+  // Handle regular Assignment, CalendarAssignment, and merged DisplayItem types
   const groupedData = useMemo(() => {
+    // Use merged display items for upcoming tab in non-calendar mode
+    if (activeTab === "upcoming" && !isCalendarMode && !showDummyData) {
+      if (mergedDisplayItems.length === 0) return [];
+      return groupByWeek(mergedDisplayItems, getDisplayItemDate);
+    }
+
     if (!data || data.length === 0) return [];
     // For calendar mode, CalendarAssignment has startTime, regular Assignment has refereeGame?.game?.startingDateTime
     // When showDummyData is true, always use regular Assignment extractor since tour dummy is an Assignment
@@ -205,7 +266,7 @@ export function AssignmentsPage() {
         : (a: { refereeGame?: { game?: { startingDateTime?: string } } }) =>
             a.refereeGame?.game?.startingDateTime;
     return groupByWeek(data, getDate as (item: unknown) => string | undefined);
-  }, [data, isCalendarMode, showDummyData]);
+  }, [activeTab, isCalendarMode, showDummyData, mergedDisplayItems, data]);
 
   const getSwipeConfig = useCallback(
     (assignment: Assignment) => {
@@ -292,11 +353,16 @@ export function AssignmentsPage() {
           `}
         >
           {t("assignments.upcoming")}
-          {((isCalendarMode ? calendarUpcoming : upcomingData) ?? []).length > 0 && (
-            <span className="ml-2 px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200 text-xs">
-              {(isCalendarMode ? calendarUpcoming : upcomingData)?.length}
-            </span>
-          )}
+          {(() => {
+            const regularCount = (isCalendarMode ? calendarUpcoming : upcomingData)?.length ?? 0;
+            const onCallCount = isCalendarMode ? 0 : onCallAssignments.length;
+            const totalCount = regularCount + onCallCount;
+            return totalCount > 0 ? (
+              <span className="ml-2 px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200 text-xs">
+                {totalCount}
+              </span>
+            ) : null;
+          })()}
         </button>
         <button
           role="tab"
@@ -349,7 +415,7 @@ export function AssignmentsPage() {
           />
         )}
 
-        {(!isLoading || showDummyData) && !error && data && data.length === 0 && (
+        {(!isLoading || showDummyData) && !error && groupedData.length === 0 && (
           <EmptyState
             icon={activeTab === "upcoming" ? "calendar" : "lock"}
             {...getEmptyStateContent(
@@ -376,7 +442,7 @@ export function AssignmentsPage() {
                     <WeekSeparator week={group.week} />
                   )}
                   {isCalendarMode && !showDummyData
-                    ? // Calendar mode: same card component, no swipe actions
+                    ? // Calendar mode: same card component, limited swipe actions
                       (group.items as CalendarAssignment[]).map(
                         (calendarAssignment, itemIndex) => {
                           const assignment = mapCalendarAssignmentToAssignment(calendarAssignment);
@@ -400,27 +466,60 @@ export function AssignmentsPage() {
                           );
                         },
                       )
-                    : // Regular mode (or tour dummy): render full cards with swipe actions
-                      (group.items as Assignment[]).map(
-                        (assignment, itemIndex) => (
-                          <SwipeableCard
-                            key={assignment.__identity}
-                            swipeConfig={getSwipeConfig(assignment)}
-                          >
-                            {({ isDrawerOpen }) => (
-                              <AssignmentCard
-                                assignment={assignment}
-                                disableExpansion={isDrawerOpen}
-                                dataTour={
-                                  itemsBeforeThisGroup + itemIndex === 0
-                                    ? "assignment-card"
-                                    : undefined
-                                }
-                              />
-                            )}
-                          </SwipeableCard>
-                        ),
-                      )}
+                    : activeTab === "upcoming" && !showDummyData
+                      ? // Upcoming tab (API/demo mode): render mixed DisplayItems
+                        (group.items as DisplayItem[]).map(
+                          (displayItem, itemIndex) => {
+                            if (displayItem.type === "onCall") {
+                              return (
+                                <OnCallCard
+                                  key={displayItem.item.id}
+                                  assignment={displayItem.item}
+                                />
+                              );
+                            }
+                            const assignment = displayItem.item;
+                            return (
+                              <SwipeableCard
+                                key={assignment.__identity}
+                                swipeConfig={getSwipeConfig(assignment)}
+                              >
+                                {({ isDrawerOpen }) => (
+                                  <AssignmentCard
+                                    assignment={assignment}
+                                    disableExpansion={isDrawerOpen}
+                                    dataTour={
+                                      itemsBeforeThisGroup + itemIndex === 0
+                                        ? "assignment-card"
+                                        : undefined
+                                    }
+                                  />
+                                )}
+                              </SwipeableCard>
+                            );
+                          },
+                        )
+                      : // Validation closed tab or tour dummy: render regular assignments
+                        (group.items as Assignment[]).map(
+                          (assignment, itemIndex) => (
+                            <SwipeableCard
+                              key={assignment.__identity}
+                              swipeConfig={getSwipeConfig(assignment)}
+                            >
+                              {({ isDrawerOpen }) => (
+                                <AssignmentCard
+                                  assignment={assignment}
+                                  disableExpansion={isDrawerOpen}
+                                  dataTour={
+                                    itemsBeforeThisGroup + itemIndex === 0
+                                      ? "assignment-card"
+                                      : undefined
+                                  }
+                                />
+                              )}
+                            </SwipeableCard>
+                          ),
+                        )}
                 </Fragment>
               );
             })}

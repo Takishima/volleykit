@@ -214,6 +214,11 @@ const it: Translations = {
     clubAdmin: "Admin club",
     associationAdmin: "Associazione",
   },
+  onCall: {
+    title: "Picchetto",
+    duty: "Servizio di picchetto",
+    section: "Servizi di picchetto",
+  },
   assignments: {
     title: "Designazioni",
     upcoming: "In programma",
