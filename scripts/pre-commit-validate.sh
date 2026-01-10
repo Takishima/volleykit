@@ -42,6 +42,12 @@ echo "  Web App: $WEB_APP_DIR"
 # Get list of staged files (for pre-commit hook)
 STAGED_FILES=$(git diff --name-only --cached 2>/dev/null || echo "")
 
+# Early exit if no files are staged
+if [ -z "$STAGED_FILES" ]; then
+    echo -e "${GREEN}No files staged, skipping validation${NC}"
+    exit 0
+fi
+
 # Check if only markdown files are staged
 if echo "$STAGED_FILES" | grep -v '^\s*$' | grep -qvE '\.md$'; then
     HAS_NON_MD=true
@@ -86,7 +92,7 @@ fi
 
 # Create temp directory for parallel job outputs
 TEMP_DIR=$(mktemp -d)
-trap "rm -rf $TEMP_DIR" EXIT
+trap "rm -rf \"$TEMP_DIR\"" EXIT
 
 # Function to run a validation step and capture result
 run_validation() {
