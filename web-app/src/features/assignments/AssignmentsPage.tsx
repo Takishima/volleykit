@@ -34,6 +34,7 @@ import {
   OnCallCard,
   type OnCallAssignment,
 } from "@/features/referee-backup";
+import { useDailyGameBadge } from "./hooks/useDailyGameBadge";
 
 /**
  * Discriminated union for items that can be displayed in the assignments list.
@@ -160,6 +161,9 @@ export function AssignmentsPage() {
 
   // Fetch on-call (Pikett) assignments - only in full API mode
   const { data: onCallAssignments } = useMyOnCallAssignments();
+
+  // Update PWA badge with today's game count (only for regular assignments, not calendar mode)
+  useDailyGameBadge(isCalendarMode ? [] : (upcomingData ?? []));
 
   // Compute calendar-specific data (filter by upcoming/past and association)
   const calendarUpcoming = useMemo(() => {
