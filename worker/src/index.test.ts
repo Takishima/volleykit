@@ -2213,6 +2213,43 @@ describe("Integration: Auth Lockout in Worker", () => {
     vi.unstubAllGlobals();
   });
 
+  it("returns JSON for failed auth redirect (iOS Safari PWA fix)", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    // Mock failed login response (redirect to login page)
+    const mockFailedResponse = new Response(null, {
+      status: 302,
+      headers: {
+        Location: "https://volleymanager.volleyball.ch/login",
+      },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockFailedResponse));
+
+    const request = new Request("https://proxy.example.com/login", {
+      method: "POST",
+      headers: {
+        Origin: "https://example.com",
+        "CF-Connecting-IP": "192.168.1.1",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: "username=test&password=wrong",
+    });
+
+    const response = await worker.fetch(request, mockEnv);
+
+    // iOS Safari PWA fix: Failed auth also returns 200 + JSON instead of 302
+    // This allows iOS Safari PWA to properly process Set-Cookie headers
+    // and the client can determine success/failure from the JSON
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toBe("application/json");
+    const body = await response.json();
+    expect(body).toHaveProperty("success", false);
+    expect(body).toHaveProperty("redirectUrl");
+
+    vi.unstubAllGlobals();
+  });
+
   it("clears lockout on successful login", async () => {
     const { default: worker } = await import("./index");
     const mockEnv = createMockEnv();
