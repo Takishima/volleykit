@@ -6,6 +6,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { visualizer } from 'rollup-plugin-visualizer'
 import path from 'path'
+import { execSync } from 'child_process'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { normalizeBasePath } from './src/shared/utils/basePath'
 import packageJson from './package.json' with { type: 'json' }
@@ -58,6 +59,76 @@ function spaFallbackPlugin(basePath: string): Plugin {
   };
 }
 
+/**
+ * Gets the current git commit hash (short form).
+ * Used for PWA version detection - each deployment has a unique hash.
+ * Falls back to 'dev' if git is not available (shouldn't happen in CI).
+ */
+function getGitHash(): string {
+  try {
+    // eslint-disable-next-line sonarjs/no-os-command-from-path -- Build-time only, git is always available in CI
+    return execSync('git rev-parse --short HEAD').toString().trim();
+  } catch {
+    console.warn('\x1b[33m⚠ Warning: Could not get git hash, using "dev"\x1b[0m');
+    return 'dev';
+  }
+}
+
+/**
+ * Plugin to generate version.json for PWA update detection.
+ * This file is fetched (cache-busted) on app load to compare against
+ * the bundled version. If they differ, the app forces an update.
+ */
+function versionFilePlugin(version: string, gitHash: string, basePath: string): Plugin {
+  return {
+    name: 'version-file',
+    apply: 'build',
+    closeBundle() {
+      const versionData = {
+        version,
+        gitHash,
+        buildTime: new Date().toISOString(),
+      };
+
+      const versionPath = path.resolve(__dirname, 'dist', 'version.json');
+      writeFileSync(versionPath, JSON.stringify(versionData, null, 2));
+
+      console.log(`\x1b[32m✓ Generated version.json: v${version} (${gitHash})\x1b[0m`);
+    },
+    // Inject version check script into index.html
+    transformIndexHtml(html) {
+      const versionCheckScript = `
+    <script>
+      // PWA Force Update: Check if cached version matches deployed version
+      (async function() {
+        var BUNDLED_GIT_HASH = '${gitHash}';
+        var BASE_PATH = '${basePath}';
+        try {
+          var res = await fetch(BASE_PATH + 'version.json?t=' + Date.now());
+          if (!res.ok) return;
+          var data = await res.json();
+          if (BUNDLED_GIT_HASH !== data.gitHash) {
+            console.log('[PWA] Version mismatch: ' + BUNDLED_GIT_HASH + ' → ' + data.gitHash + ', forcing update...');
+            var reg = await navigator.serviceWorker?.getRegistration();
+            if (reg?.waiting) {
+              reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            }
+            var cacheNames = await caches?.keys() || [];
+            await Promise.all(cacheNames.map(function(name) { return caches.delete(name); }));
+            location.reload();
+          }
+        } catch (e) {
+          // Network error - continue with cached version
+        }
+      })();
+    </script>`;
+
+      // Insert after the existing redirect script in <head>
+      return html.replace('</head>', versionCheckScript + '\n  </head>');
+    },
+  };
+}
+
 // Target API server for development proxy
 const VOLLEYMANAGER_API = 'https://volleymanager.volleyball.ch';
 
@@ -98,6 +169,9 @@ function createDevProxy(paths: string[]): Record<string, object> {
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
+  // Get git hash for version tracking (used in PWA update detection)
+  const gitHash = getGitHash();
+
   // Warn if proxy URL is not configured for production (runtime check in client.ts handles the actual failure)
   if (mode === 'production' && !process.env.VITE_API_PROXY_URL) {
     console.warn(
@@ -144,6 +218,8 @@ export default defineConfig(({ mode }) => {
       '__PWA_ENABLED__': JSON.stringify(!isPrPreview),
       // Expose app version from package.json
       '__APP_VERSION__': JSON.stringify(packageJson.version),
+      // Expose git hash for version display and PWA update detection
+      '__GIT_HASH__': JSON.stringify(gitHash),
     },
     build: {
       rollupOptions: {
@@ -188,8 +264,8 @@ export default defineConfig(({ mode }) => {
         workbox: {
           // Precache all static assets (app shell)
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
-          // Don't precache API responses or large files
-          globIgnores: ['**/node_modules/**/*'],
+          // Don't precache API responses, large files, or version.json (must be fetched fresh)
+          globIgnores: ['**/node_modules/**/*', 'version.json'],
           // Use NetworkFirst for navigation requests to ensure fresh content
           // but fall back to cache during deployment/network issues
           // navigateFallback defaults to 'index.html' with correct base path handling
@@ -267,6 +343,8 @@ export default defineConfig(({ mode }) => {
         },
       }),
       spaFallbackPlugin(basePath),
+      // Generate version.json for PWA update detection (skip for PR previews)
+      !isPrPreview && versionFilePlugin(packageJson.version, gitHash, basePath),
       // Bundle analyzer - generates stats.html after build
       visualizer({
         filename: 'stats.html',

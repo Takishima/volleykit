@@ -3,6 +3,8 @@
 declare const __PWA_ENABLED__: boolean;
 // __APP_VERSION__ is the version from package.json
 declare const __APP_VERSION__: string;
+// __GIT_HASH__ is the short git commit hash at build time (for PWA update detection)
+declare const __GIT_HASH__: string;
 
 // Type declarations for vite-plugin-pwa's vanilla register module
 declare module "virtual:pwa-register" {
