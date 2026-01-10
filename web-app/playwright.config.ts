@@ -23,7 +23,11 @@ export default defineConfig({
   // 4 workers balances parallelism with resource usage across 5 browser projects
   workers: process.env.CI ? 4 : undefined,
   // Reporter to use
-  reporter: process.env.CI ? 'github' : 'html',
+  // CI: github (inline annotations) + html (artifact upload)
+  // Local: html only
+  reporter: process.env.CI
+    ? [['github'], ['html', { open: 'never' }]]
+    : 'html',
   // Shared settings for all the projects below
   use: {
     // Base URL for navigation actions like `await page.goto('/')`
