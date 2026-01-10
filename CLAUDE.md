@@ -29,19 +29,19 @@ For code reviews and detailed examples, see:
 
 **Workflow**:
 1. **Implement features/fixes** - Complete the work as required
-2. **Commit along the way** - Make meaningful commits as you progress (logical units of work)
-3. **Push** - The pre-push hook automatically validates before allowing the push
+2. **Commit** - The pre-commit hook automatically validates before allowing the commit
+3. **Push** - Push your changes to the remote
 
-### Automatic Pre-Push Validation (Claude Code Web Only)
+### Automatic Pre-Commit Validation (Claude Code Web Only)
 
-A git pre-push hook (`scripts/pre-push-validate.sh`) automatically runs validation before any push **in Claude Code web environment only** (`CLAUDE_CODE_REMOTE=true`). Human developers are not affected and rely on CI. This is configured via devenv and runs:
+A git pre-commit hook (`scripts/pre-commit-validate.sh`) automatically runs validation before any commit **in Claude Code web environment only** (`CLAUDE_CODE_REMOTE=true`). Human developers are not affected and rely on CI. This is configured via devenv and runs:
 
-1. **Detect changes** - Skip validation for docs-only changes
-2. **Generate API types** - If `volleymanager-openapi.yaml` changed
+1. **Detect staged changes** - Skip validation for docs-only changes
+2. **Generate API types** - If `volleymanager-openapi.yaml` is staged
 3. **Run lint, knip, test in PARALLEL** - Maximum speed by running concurrently
 4. **Run build** - Production build (only if parallel steps pass)
 
-The push is **blocked** if any validation step fails. Fix issues and push again.
+The commit is **blocked** if any validation step fails. Fix issues and commit again.
 
 **When validation runs automatically**:
 - Adding, modifying, or deleting `.ts`, `.tsx`, `.js`, `.jsx` files
@@ -218,9 +218,7 @@ worker-deploy  # Deploy worker to Cloudflare
 - **convco**: Conventional commit messages
 - **check-merge-conflicts**: Conflict markers
 - **check-yaml/json**: File validation
-
-**Pre-push** (automatic on push):
-- **pre-push-validate**: Runs lint, knip, tests, and build (see `scripts/pre-push-validate.sh`)
+- **pre-commit-validate**: Runs lint, knip, tests, and build (see `scripts/pre-commit-validate.sh`) - Claude Code web only
 
 ### Without Nix
 
