@@ -49,6 +49,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Knip (dead code detection)
+        run: npm run knip
+
       - name: Test
         run: npm test
 
