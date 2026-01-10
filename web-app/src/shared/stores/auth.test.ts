@@ -13,6 +13,32 @@ vi.mock("@/api/client", () => ({
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
 
+// Helper to create mock Response with proper headers (for redirect: manual)
+function createMockResponse(options: {
+  ok?: boolean;
+  status?: number;
+  type?: ResponseType;
+  url?: string;
+  redirected?: boolean;
+  headers?: Record<string, string>;
+  body?: string;
+}): Partial<Response> {
+  const headers = new Map(Object.entries(options.headers ?? {}));
+  return {
+    ok: options.ok ?? true,
+    status: options.status ?? 200,
+    type: options.type ?? "basic",
+    url: options.url ?? "",
+    redirected: options.redirected ?? false,
+    headers: {
+      get: (name: string) => headers.get(name) ?? null,
+      has: (name: string) => headers.has(name),
+    } as Headers,
+    text: () => Promise.resolve(options.body ?? ""),
+    json: () => Promise.resolve(JSON.parse(options.body ?? "{}")),
+  };
+}
+
 // Helper to create valid login page HTML with form fields
 function createLoginPageHtml(
   trustedProperties = "a:0:{}abc123def456",
@@ -133,10 +159,12 @@ describe("useAuthStore", () => {
       _lastAuthTimestamp: null,
     });
     vi.clearAllMocks();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
     vi.resetAllMocks();
+    vi.useRealTimers();
   });
 
   describe("initial state", () => {
@@ -239,53 +267,64 @@ describe("useAuthStore", () => {
     });
 
     it("successful login follows redirect and extracts CSRF token", async () => {
+      const dashboardUrl = "/sportmanager.volleyball/main/dashboard";
+
       // First fetch: login page with form fields
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve(createLoginPageHtml()),
-      });
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: createLoginPageHtml(),
+        })
+      );
 
-      // Second fetch: login POST follows redirect to dashboard
-      // (browser handles redirect automatically, returns final page)
-      // Must include referee role to pass the no-referee-role check
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        redirected: true,
-        url: "https://volleymanager.volleyball.ch/sportmanager.volleyball/main/dashboard",
-        text: () =>
-          Promise.resolve(
-            createDashboardHtmlWithReferee("my-csrf-token-12345678901234567890"),
-          ),
-      });
+      // Second fetch: login POST returns 303 redirect (redirect: manual)
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: false,
+          status: 303,
+          headers: { Location: dashboardUrl },
+        })
+      );
 
-      const result = await useAuthStore.getState().login("user", "pass");
+      // Third fetch: manual dashboard fetch with referee role
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: createDashboardHtmlWithReferee("my-csrf-token-12345678901234567890"),
+        })
+      );
+
+      const resultPromise = useAuthStore.getState().login("user", "pass");
+      await vi.advanceTimersByTimeAsync(100); // Wait for cookie processing delay
+      const result = await resultPromise;
 
       expect(result).toBe(true);
       expect(useAuthStore.getState().status).toBe("authenticated");
       expect(setCsrfToken).toHaveBeenCalledWith(
         "my-csrf-token-12345678901234567890",
       );
-      // Should only make 2 calls (login page + auth POST that follows redirect)
-      expect(mockFetch).toHaveBeenCalledTimes(2);
+      // Should make 3 calls: login page + auth POST + manual dashboard fetch
+      expect(mockFetch).toHaveBeenCalledTimes(3);
     });
 
     it("failed login returns login page with error snackbar", async () => {
       // First fetch: login page with form fields
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve(createLoginPageHtml()),
-      });
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: createLoginPageHtml(),
+        })
+      );
 
       // Second fetch: login POST returns login page with error (no redirect, invalid credentials)
       // The response is still 200 OK but contains error snackbar
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        redirected: false,
-        text: () =>
-          Promise.resolve(
-            createLoginPageHtml("a:0:{}abc123def456", { withError: true }),
-          ),
-      });
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          status: 200,
+          body: createLoginPageHtml("a:0:{}abc123def456", { withError: true }),
+        })
+      );
 
       const result = await useAuthStore.getState().login("user", "wrongpass");
 
@@ -298,25 +337,23 @@ describe("useAuthStore", () => {
     it("succeeds via fallback when redirected flag is missing but CSRF token present", async () => {
       // Regression test: When proxy doesn't preserve redirect info,
       // but the response contains a valid CSRF token (dashboard HTML),
-      // login should still succeed. The old code would fail with
-      // "Invalid username or password" in this case.
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve(createLoginPageHtml()),
-      });
+      // login should still succeed.
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: createLoginPageHtml(),
+        })
+      );
 
-      // Second fetch: login POST returns dashboard with CSRF token
-      // BUT redirected flag is false (e.g., due to proxy behavior)
-      // Must include referee role to pass the no-referee-role check
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        redirected: false, // Proxy didn't preserve redirect info
-        url: "", // No URL info either
-        text: () =>
-          Promise.resolve(
-            createDashboardHtmlWithReferee("fallback-csrf-token-12345678901234"),
-          ),
-      });
+      // Second fetch: login POST returns dashboard with CSRF token directly (200 OK)
+      // This is the fallback path via content-based detection
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          status: 200,
+          body: createDashboardHtmlWithReferee("fallback-csrf-token-12345678901234"),
+        })
+      );
 
       const result = await useAuthStore.getState().login("user", "pass");
 
@@ -373,45 +410,63 @@ describe("useAuthStore", () => {
     });
 
     it("handles stale session by proceeding with normal login", async () => {
+      const dashboardUrl = "/sportmanager.volleyball/main/dashboard";
+
       // With stale session cookie, /login returns login page (session invalid)
       // First fetch: login page (browser followed redirect but session was invalid)
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        redirected: true, // May have redirected but ended up at login
-        text: () => Promise.resolve(createLoginPageHtml()),
-      });
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          redirected: true,
+          body: createLoginPageHtml(),
+        })
+      );
 
-      // Second fetch: login POST follows redirect to dashboard (success)
-      // Must include referee role to pass the no-referee-role check
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        redirected: true,
-        url: "https://volleymanager.volleyball.ch/sportmanager.volleyball/main/dashboard",
-        text: () =>
-          Promise.resolve(createDashboardHtmlWithReferee("fresh-csrf-token-abcdef")),
-      });
+      // Second fetch: login POST returns 303 redirect (redirect: manual)
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: false,
+          status: 303,
+          headers: { Location: dashboardUrl },
+        })
+      );
 
-      const result = await useAuthStore.getState().login("user", "pass");
+      // Third fetch: manual dashboard fetch
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: createDashboardHtmlWithReferee("fresh-csrf-token-abcdef"),
+        })
+      );
+
+      const resultPromise = useAuthStore.getState().login("user", "pass");
+      await vi.advanceTimersByTimeAsync(100);
+      const result = await resultPromise;
 
       expect(result).toBe(true);
       expect(useAuthStore.getState().status).toBe("authenticated");
       expect(setCsrfToken).toHaveBeenCalledWith("fresh-csrf-token-abcdef");
-      // 2 calls: login page fetch + auth POST
-      expect(mockFetch).toHaveBeenCalledTimes(2);
+      // 3 calls: login page fetch + auth POST + dashboard
+      expect(mockFetch).toHaveBeenCalledTimes(3);
     });
 
     it("fails when auth request returns non-ok response", async () => {
       // First fetch: login page
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve(createLoginPageHtml()),
-      });
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: createLoginPageHtml(),
+        })
+      );
 
       // Second fetch: auth POST fails with server error
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-      });
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: false,
+          status: 500,
+          type: "basic",
+        })
+      );
 
       const result = await useAuthStore.getState().login("user", "pass");
 
@@ -424,17 +479,21 @@ describe("useAuthStore", () => {
 
     it("detects TFA page and returns helpful error message", async () => {
       // First fetch: login page with form fields
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve(createLoginPageHtml()),
-      });
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: createLoginPageHtml(),
+        })
+      );
 
       // Second fetch: login POST returns TFA page (valid credentials but TFA enabled)
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        redirected: false,
-        text: () => Promise.resolve(createLoginPageHtml("a:0:{}", { withTfa: true })),
-      });
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          status: 200,
+          body: createLoginPageHtml("a:0:{}", { withTfa: true }),
+        })
+      );
 
       const result = await useAuthStore.getState().login("user", "pass");
 
@@ -446,20 +505,21 @@ describe("useAuthStore", () => {
 
     it("sends correct form data to authentication endpoint", async () => {
       // First fetch: login page
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve(createLoginPageHtml("trusted-props-value")),
-      });
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: createLoginPageHtml("trusted-props-value"),
+        })
+      );
 
       // Second fetch: login POST (returns login page with error to simulate failure)
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        redirected: false,
-        text: () =>
-          Promise.resolve(
-            createLoginPageHtml("trusted-props-value", { withError: true }),
-          ),
-      });
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          status: 200,
+          body: createLoginPageHtml("trusted-props-value", { withError: true }),
+        })
+      );
 
       await useAuthStore.getState().login("testuser", "testpass");
 
@@ -470,8 +530,10 @@ describe("useAuthStore", () => {
       );
       expect(options.method).toBe("POST");
       expect(options.credentials).toBe("include");
-      // Explicit redirect: "follow" for consistent behavior in PWA standalone mode
-      expect(options.redirect).toBe("follow");
+      // redirect: "manual" for iOS PWA cookie handling
+      expect(options.redirect).toBe("manual");
+      // cache: "no-store" for iOS Safari cookie workaround
+      expect(options.cache).toBe("no-store");
 
       const body = new URLSearchParams(options.body as string);
       expect(body.get("__trustedProperties")).toBe("trusted-props-value");
@@ -489,36 +551,51 @@ describe("useAuthStore", () => {
     });
 
     it("rejects login when user has no referee role", async () => {
+      const dashboardUrl = "/sportmanager.volleyball/main/dashboard";
+
       // First fetch: login page with form fields
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve(createLoginPageHtml()),
-      });
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: createLoginPageHtml(),
+        })
+      );
 
-      // Second fetch: login POST follows redirect to dashboard with player-only roles
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        redirected: true,
-        url: "https://volleymanager.volleyball.ch/sportmanager.volleyball/main/dashboard",
-        text: () => Promise.resolve(createDashboardHtmlWithPlayerOnly("valid-csrf-token")),
-      });
+      // Second fetch: login POST returns 303 redirect (redirect: manual)
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: false,
+          status: 303,
+          headers: { Location: dashboardUrl },
+        })
+      );
 
-      // Third fetch: logout to invalidate session
+      // Third fetch: manual dashboard fetch returns player-only roles
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: createDashboardHtmlWithPlayerOnly("valid-csrf-token"),
+        })
+      );
+
+      // Fourth fetch: logout to invalidate session
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 303,
         type: "opaqueredirect",
       });
 
-      const result = await useAuthStore.getState().login("player-user", "pass");
+      const resultPromise = useAuthStore.getState().login("player-user", "pass");
+      await vi.advanceTimersByTimeAsync(100); // Wait for cookie processing delay
+      const result = await resultPromise;
 
       expect(result).toBe(false);
       const { status, error } = useAuthStore.getState();
       expect(status).toBe("error");
       expect(error).toBe(NO_REFEREE_ROLE_ERROR_KEY);
       expect(clearSession).toHaveBeenCalled();
-      // Should have made 3 calls: login page + auth POST + logout
-      expect(mockFetch).toHaveBeenCalledTimes(3);
+      // Should have made 4 calls: login page + auth POST + dashboard + logout
+      expect(mockFetch).toHaveBeenCalledTimes(4);
     });
 
     it("rejects already-authenticated user without referee role", async () => {
@@ -553,28 +630,43 @@ describe("useAuthStore", () => {
     });
 
     it("accepts login when user has referee role", async () => {
+      const dashboardUrl = "/sportmanager.volleyball/main/dashboard";
+
       // First fetch: login page with form fields
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve(createLoginPageHtml()),
-      });
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: createLoginPageHtml(),
+        })
+      );
 
-      // Second fetch: login POST follows redirect to dashboard with referee role
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        redirected: true,
-        url: "https://volleymanager.volleyball.ch/sportmanager.volleyball/main/dashboard",
-        text: () => Promise.resolve(createDashboardHtmlWithReferee("valid-csrf-token")),
-      });
+      // Second fetch: login POST returns 303 redirect (redirect: manual)
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: false,
+          status: 303,
+          headers: { Location: dashboardUrl },
+        })
+      );
 
-      const result = await useAuthStore.getState().login("referee-user", "pass");
+      // Third fetch: manual dashboard fetch returns referee role
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: createDashboardHtmlWithReferee("valid-csrf-token"),
+        })
+      );
+
+      const resultPromise = useAuthStore.getState().login("referee-user", "pass");
+      await vi.advanceTimersByTimeAsync(100); // Wait for cookie processing delay
+      const result = await resultPromise;
 
       expect(result).toBe(true);
       expect(useAuthStore.getState().status).toBe("authenticated");
       expect(useAuthStore.getState().user?.occupations).toHaveLength(1);
       expect(useAuthStore.getState().user?.occupations?.[0]?.type).toBe("referee");
-      // Should only make 2 calls (no logout needed)
-      expect(mockFetch).toHaveBeenCalledTimes(2);
+      // Should make 3 calls: login page + auth POST + dashboard
+      expect(mockFetch).toHaveBeenCalledTimes(3);
     });
   });
 
@@ -717,27 +809,32 @@ describe("useAuthStore", () => {
     });
 
     it("deduplicates concurrent session checks", async () => {
-      // Slow response to ensure both calls happen before resolution
+      // Mock a slow response to ensure both calls happen before resolution
       mockFetch.mockImplementation(
         () =>
-          new Promise((resolve) =>
+          new Promise((resolve) => {
+            // Use setTimeout with fake timers
             setTimeout(
               () =>
-                resolve({
-                  ok: true,
-                  text: () =>
-                    Promise.resolve(createDashboardHtml("concurrent-csrf")),
-                }),
+                resolve(
+                  createMockResponse({
+                    ok: true,
+                    body: createDashboardHtml("concurrent-csrf"),
+                  })
+                ),
               50,
-            ),
-          ),
+            );
+          }),
       );
 
       // Start two concurrent session checks
-      const [result1, result2] = await Promise.all([
-        useAuthStore.getState().checkSession(),
-        useAuthStore.getState().checkSession(),
-      ]);
+      const promise1 = useAuthStore.getState().checkSession();
+      const promise2 = useAuthStore.getState().checkSession();
+
+      // Advance timers to let the fetch complete
+      await vi.advanceTimersByTimeAsync(100);
+
+      const [result1, result2] = await Promise.all([promise1, promise2]);
 
       expect(result1).toBe(true);
       expect(result2).toBe(true);
@@ -746,8 +843,7 @@ describe("useAuthStore", () => {
     });
 
     it("returns false and sets idle status on timeout", async () => {
-      // Use fake timers to avoid waiting for real 10-second timeout
-      vi.useFakeTimers();
+      // Fake timers are already set up in beforeEach
 
       const consoleSpy = vi
         .spyOn(console, "error")
@@ -788,7 +884,6 @@ describe("useAuthStore", () => {
       );
 
       consoleSpy.mockRestore();
-      vi.useRealTimers();
     });
 
     it("detects stale session in PWA mode when redirected but URL not updated", async () => {

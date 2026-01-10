@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Login not working on iPhone when installed as PWA due to iOS Safari standalone mode limitations with response.url and response.redirected
+- Login not working on iPhone when installed as PWA - now uses manual redirect handling with `cache: no-store` to work around iOS Safari cookie and redirect handling issues in standalone mode
 - OCR camera capture now auto-crops images to match the guide overlay, improving OCR accuracy by focusing on the scoresheet area
 - User now sees correct assignments after logging into a different association (#682)
 

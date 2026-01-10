@@ -253,8 +253,11 @@ export const useAuthStore = create<AuthState>()(
         set({ status: "loading", error: null, lockedUntil: null });
 
         try {
+          // cache: "no-store" is critical for iOS Safari PWA - prevents using stale cached cookies
+          // See: https://developer.apple.com/forums/thread/89050
           const loginPageResponse = await fetch(LOGIN_PAGE_URL, {
             credentials: "include",
+            cache: "no-store",
           });
 
           if (!loginPageResponse.ok) {
@@ -269,7 +272,7 @@ export const useAuthStore = create<AuthState>()(
             // We need to fetch the dashboard explicitly to get the user's associations
             const dashboardResponse = await fetch(
               `${API_BASE}/sportmanager.volleyball/main/dashboard`,
-              { credentials: "include" },
+              { credentials: "include", cache: "no-store" },
             );
 
             let activeParty = null;
@@ -459,7 +462,7 @@ export const useAuthStore = create<AuthState>()(
             try {
               const response = await fetch(
                 `${API_BASE}/sportmanager.volleyball/main/dashboard`,
-                { credentials: "include", redirect: "follow", signal: fetchSignal },
+                { credentials: "include", redirect: "follow", signal: fetchSignal, cache: "no-store" },
               );
 
               clearTimeout(timeoutId);
