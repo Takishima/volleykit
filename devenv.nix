@@ -164,13 +164,14 @@
       excludes = [ "tsconfig.*\\.json$" ];
     };
 
-    # Pre-push validation (lint, knip, test, build)
-    pre-push-validate = {
+    # Pre-commit validation (lint, knip, test, build)
+    # Only runs in Claude Code web environment (CLAUDE_CODE_REMOTE=true)
+    pre-commit-validate = {
       enable = true;
-      name = "pre-push-validate";
-      entry = "${config.devenv.root}/scripts/pre-push-validate.sh";
+      name = "pre-commit-validate";
+      entry = "${config.devenv.root}/scripts/pre-commit-validate.sh";
       language = "script";
-      stages = [ "pre-push" ];
+      stages = [ "pre-commit" ];
       pass_filenames = false;
       always_run = true;
     };
