@@ -132,6 +132,26 @@ export function extractCsrfTokenFromPage(html: string): string | null {
 }
 
 /**
+ * Checks if HTML content represents the dashboard page.
+ * Used as fallback for iOS PWA standalone mode where response.url
+ * may not update after redirects.
+ *
+ * This checks for dashboard-specific content to reliably detect
+ * successful login even when response.url and response.redirected
+ * are not properly set (known iOS Safari PWA limitation).
+ */
+export function isDashboardHtmlContent(html: string): boolean {
+  // Dashboard pages have CSRF token AND don't have login form
+  const hasCsrfToken = html.includes("data-csrf-token");
+  const hasLoginForm =
+    html.includes('action="/login"') ||
+    (html.includes('id="username"') && html.includes('id="password"'));
+
+  // Must have CSRF token (authenticated page) and NOT be a login page
+  return hasCsrfToken && !hasLoginForm;
+}
+
+/**
  * Result of submitting login credentials.
  * On success, includes the dashboard HTML for extracting additional data like activeParty.
  */
@@ -223,22 +243,29 @@ export async function submitLoginCredentials(
   // Check if we were redirected to the dashboard (successful login)
   // The API returns 303 redirect on success, fetch follows it automatically.
   //
-  // PWA standalone mode fix: In some PWA/service worker configurations,
-  // response.url may not be updated after following redirects, but response.redirected
-  // will still be true. We check both conditions for robust success detection.
+  // iOS PWA standalone mode fix: In iOS Safari PWA standalone mode,
+  // response.url may not update after following redirects, AND response.redirected
+  // may also be unreliable. We use multiple detection strategies:
+  // 1. URL-based: Check if response.url contains dashboard pattern
+  // 2. Redirect flag: Check response.redirected
+  // 3. Content-based: Check if HTML content indicates dashboard (most reliable for iOS PWA)
   const isOnDashboard = response.url?.includes(DASHBOARD_URL_PATTERN) ?? false;
   const wasRedirected = response.redirected;
+  const isDashboardContent = isDashboardHtmlContent(html);
 
-  // Success detection: Either URL indicates dashboard, OR we were redirected
-  // and can extract a CSRF token (indicating we reached the dashboard).
-  // This handles PWA standalone mode where response.url may not be updated.
-  if (isOnDashboard || wasRedirected) {
+  // Success detection using multiple strategies
+  // Content-based detection is most reliable for iOS PWA standalone mode
+  if (isOnDashboard || wasRedirected || isDashboardContent) {
     const csrfToken = extractCsrfTokenFromPage(html);
     if (csrfToken) {
+      // Log which detection method succeeded for debugging
+      if (!isOnDashboard && !wasRedirected && isDashboardContent) {
+        logger.info("iOS PWA mode: Login success detected via content analysis");
+      }
       return { success: true, csrfToken, dashboardHtml: html };
     }
 
-    // If we were redirected but can't find CSRF token, continue with error checks below.
+    // If we detected dashboard but can't find CSRF token, continue with error checks.
     // The redirect might have been to an error page or TFA page.
     if (isOnDashboard) {
       // Specifically redirected to dashboard URL but couldn't find CSRF token
@@ -249,10 +276,10 @@ export async function submitLoginCredentials(
         error: "Login succeeded but session could not be established",
       };
     }
-    // wasRedirected but no CSRF token - fall through to check for errors/TFA
+    // wasRedirected or isDashboardContent but no CSRF token - fall through to check for errors/TFA
   }
 
-  // Not redirected - check if we're on the login page with an error
+  // Check for authentication errors first
   // The Vuetify snackbar with color="error" indicates authentication failure
   const hasAuthError = AUTH_ERROR_INDICATORS.some((indicator) =>
     html.includes(indicator),
@@ -276,19 +303,12 @@ export async function submitLoginCredentials(
     };
   }
 
-  // Fallback: Check if CSRF token exists (might be on dashboard via edge case path)
-  // Note: This is rarely reached now that we check wasRedirected above,
-  // but kept for safety in case of unusual response scenarios.
-  const csrfToken = extractCsrfTokenFromPage(html);
-  if (csrfToken) {
-    return { success: true, csrfToken, dashboardHtml: html };
-  }
-
   // Unknown state - couldn't determine success or failure
   // Log diagnostic info to help debug login issues
   logger.warn("Could not determine login result from response", {
     redirected: wasRedirected,
     isOnDashboard,
+    isDashboardContent,
     url: response.url ?? "(no url)",
     htmlLength: html.length,
     htmlPreview: html.slice(0, DIAGNOSTIC_PREVIEW_LENGTH),
