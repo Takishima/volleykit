@@ -77,7 +77,7 @@ export function extractUserOnCallAssignments(
   const assignments: OnCallAssignment[] = [];
 
   for (const entry of entries) {
-    // Normalize date to 12:00 for consistent display
+    // Normalize date to appropriate display hour (16:00 weekdays, 12:00 weekends)
     const normalizedDate = normalizeOnCallDate(entry.date);
 
     // Check NLA referees

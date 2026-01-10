@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- On-call card now displays date and time (12:00) in the same format as regular assignment cards (#676)
+- On-call card now displays date and time (16:00 weekdays, 12:00 weekends) in the same format as regular assignment cards (#676)
 
 ## [1.0.1] - 2026-01-10
 
