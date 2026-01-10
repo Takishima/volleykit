@@ -930,6 +930,27 @@ export default {
             const proxyRedirect = new URL(request.url);
             proxyRedirect.pathname = redirectUrl.pathname;
             proxyRedirect.search = redirectUrl.search;
+
+            // iOS Safari PWA fix: Convert successful auth redirects to 200 response
+            // When using redirect: "manual", browsers return "opaqueredirect" which hides
+            // all headers including Set-Cookie from JavaScript. iOS Safari PWA doesn't
+            // properly store cookies from redirect responses. By returning 200 with JSON,
+            // the browser processes Set-Cookie normally and the client handles navigation.
+            if (isAuthReq && isSuccessfulLoginResponse(response)) {
+              responseHeaders.set("Content-Type", "application/json");
+              responseHeaders.delete("Location"); // Remove redirect header
+              return new Response(
+                JSON.stringify({
+                  success: true,
+                  redirectUrl: proxyRedirect.toString(),
+                }),
+                {
+                  status: 200,
+                  headers: responseHeaders,
+                },
+              );
+            }
+
             responseHeaders.set("Location", proxyRedirect.toString());
           }
         }
