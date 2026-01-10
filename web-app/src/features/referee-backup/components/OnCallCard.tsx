@@ -19,7 +19,7 @@ function OnCallCardComponent({ assignment }: OnCallCardProps) {
       className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/50"
       aria-label={ariaLabel}
     >
-      <CardContent className="p-3">
+      <CardContent className="px-2 py-2">
         <div className="flex items-center gap-3">
           {/* Date and time */}
           <div className="flex flex-col items-end w-14 shrink-0">
