@@ -198,6 +198,27 @@ function deriveUserWithOccupations(
   return { user, activeOccupationId };
 }
 
+/**
+ * Checks if the response URL indicates the login page.
+ * Used to detect stale sessions that redirect to login.
+ */
+function isResponseUrlLoginPage(url: string | undefined): boolean {
+  if (!url) return false;
+  const pathname = new URL(url).pathname.toLowerCase();
+  return pathname === "/login" || pathname.endsWith("/login");
+}
+
+/**
+ * Checks if HTML content represents a login page.
+ * Used as fallback for PWA standalone mode where response.url may not update.
+ */
+function isLoginPageHtmlContent(html: string): boolean {
+  return (
+    html.includes('action="/login"') ||
+    (html.includes('id="username"') && html.includes('id="password"'))
+  );
+}
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
@@ -417,7 +438,7 @@ export const useAuthStore = create<AuthState>()(
             try {
               const response = await fetch(
                 `${API_BASE}/sportmanager.volleyball/main/dashboard`,
-                { credentials: "include", signal: fetchSignal },
+                { credentials: "include", redirect: "follow", signal: fetchSignal },
               );
 
               clearTimeout(timeoutId);
@@ -425,27 +446,34 @@ export const useAuthStore = create<AuthState>()(
               // Detect stale session: if the server redirected us to the login page,
               // the session is invalid. This commonly happens when session cookies
               // expire but the app still has persisted auth state.
-              if (response.url) {
-                const pathname = new URL(response.url).pathname.toLowerCase();
-                const isLoginPage = pathname === "/login" || pathname.endsWith("/login");
-                if (isLoginPage) {
-                  logger.info("Session check: redirected to login page, session is stale");
-                  clearSession();
-                  set({ status: "idle", user: null, csrfToken: null, _lastAuthTimestamp: null });
-                  resolvePromise(false);
-                  return;
-                }
+              if (isResponseUrlLoginPage(response.url)) {
+                logger.info("Session check: redirected to login page, session is stale");
+                clearSession();
+                set({ status: "idle", user: null, csrfToken: null, _lastAuthTimestamp: null });
+                resolvePromise(false);
+                return;
+              }
+
+              // Read response body once - needed for PWA fallback and dashboard processing
+              const html = response.ok ? await response.text() : "";
+
+              // PWA standalone mode fix: In some PWA/service worker configurations,
+              // response.url may not be updated after following redirects, but
+              // response.redirected will still be true. Check response content as fallback.
+              if (response.redirected && isLoginPageHtmlContent(html)) {
+                logger.info("Session check: PWA mode detected login page via content, session is stale");
+                clearSession();
+                set({ status: "idle", user: null, csrfToken: null, _lastAuthTimestamp: null });
+                resolvePromise(false);
+                return;
               }
 
               if (response.ok) {
-                const dashboardHtml = await response.text();
-                const csrfToken = extractCsrfTokenFromPage(dashboardHtml);
+                const csrfToken = extractCsrfTokenFromPage(html);
+                const currentState = get();
 
                 // If we can't find a CSRF token and don't have one stored,
                 // the session is invalid (dashboard pages always have CSRF tokens).
-                // This catches cases where the server might return an error page
-                // or the session is in an inconsistent state.
-                const currentState = get();
                 if (!csrfToken && !currentState.csrfToken) {
                   logger.info("Session check: no CSRF token found, session is invalid");
                   clearSession();
@@ -454,8 +482,7 @@ export const useAuthStore = create<AuthState>()(
                   return;
                 }
 
-                const activeParty = extractActivePartyFromHtml(dashboardHtml);
-
+                const activeParty = extractActivePartyFromHtml(html);
                 const { user, activeOccupationId } = deriveUserWithOccupations(
                   activeParty,
                   currentState.user,
