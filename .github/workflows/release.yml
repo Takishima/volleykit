@@ -196,7 +196,7 @@ jobs:
       - name: Push changes
         if: ${{ !inputs.dry_run }}
         run: |
-          git push origin main
+          git push origin ${{ github.event.repository.default_branch }}
           git push origin "v${{ steps.changelog.outputs.version }}"
 
       - name: Create GitHub Release
