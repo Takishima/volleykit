@@ -7,38 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- Automatic version check with force updates for PWA (#671)
-- On-call (Pikett) assignments display in upcoming tab (#661)
-- Referee backup (Pikett) API client foundation (#660)
-- Daily game badge on PWA app icon (#663)
-- New volleyball-themed PWA icons (#664)
-- OCR improvements: medical staff role, enhanced validation, Fuse.js name matching (#654, #657)
-- Birth date extraction in OCR (#646)
-- Expandable raw OCR data panel (#645)
-- Mistral API health check endpoint (#650)
-
-### Changed
-
-- Validation moved from pre-push to pre-commit hook (#662)
-- PWA icons updated with volleyball design (#664)
-
-### Fixed
-
-- GitHub token handling in hooks requires bash -c wrapper (#673)
-- On-call assignments match by person identity (#672)
-- Stale session detection in PWA standalone mode (#668)
-- Login redirect detection for PWA standalone mode (#665)
-- PWA icon green background extends to edges (#666)
-- Transport arrival calculation includes walking time (#658)
-- OCR loading state shows immediately (#656)
-- OCR handles space-separated two-column output (#655)
-- Validation wizard is fully read-only in safe mode (#652)
-- OCR bounding boxes hidden when not precise (#651)
-- Camera app no longer appears in image file picker (#644)
-
-## [1.0.0] - 2025-01-01
+## [1.0.0] - 2025-01-10
 
 ### Added
 
@@ -53,6 +22,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PDF export for compensations
 - Dark mode support
 - Onboarding tour for new users
+- Automatic version check with force updates for PWA (#671)
+- On-call (Pikett) assignments display in upcoming tab (#661)
+- Referee backup (Pikett) API client foundation (#660)
+- Daily game badge on PWA app icon (#663)
+- New volleyball-themed PWA icons (#664)
+- OCR improvements: medical staff role, enhanced validation, Fuse.js name matching (#654, #657)
+- Birth date extraction in OCR (#646)
+- Expandable raw OCR data panel (#645)
+- Mistral API health check endpoint (#650)
+
+### Changed
+
+- Validation moved from pre-push to pre-commit hook (#662)
+
+### Fixed
+
+- GitHub token handling in hooks requires bash -c wrapper (#673)
+- On-call assignments match by person identity (#672)
+- Stale session detection in PWA standalone mode (#668)
+- Login redirect detection for PWA standalone mode (#665)
+- PWA icon green background extends to edges (#666)
+- Transport arrival calculation includes walking time (#658)
+- OCR loading state shows immediately (#656)
+- OCR handles space-separated two-column output (#655)
+- Validation wizard is fully read-only in safe mode (#652)
+- OCR bounding boxes hidden when not precise (#651)
+- Camera app no longer appears in image file picker (#644)
 
 ### Security
 
