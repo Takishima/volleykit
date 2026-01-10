@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Automated release workflow with semantic version auto-detection from changelog
+
 ### Fixed
 
 - Login not working on iPhone when installed as PWA due to iOS Safari standalone mode limitations with response.url and response.redirected
