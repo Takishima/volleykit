@@ -109,6 +109,23 @@ run_validation() {
     fi
 }
 
+# Function to print result immediately when a job completes
+print_result_immediate() {
+    local name=$1
+    local result=$2
+    local output_file="$TEMP_DIR/${name}.out"
+
+    if [ "$result" -eq 0 ]; then
+        echo -e "${GREEN}✓ ${name} passed${NC}"
+    else
+        echo -e "${RED}✗ ${name} failed${NC}"
+        echo ""
+        # Show output for failed checks immediately
+        cat "$output_file"
+        echo ""
+    fi
+}
+
 echo ""
 echo -e "${BLUE}Running lint, knip, and test in parallel...${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -123,40 +140,48 @@ KNIP_PID=$!
 run_validation "test" "npm test" &
 TEST_PID=$!
 
-# Wait for all parallel jobs to complete
-echo "  Lint (PID $LINT_PID)"
-echo "  Knip (PID $KNIP_PID)"
-echo "  Test (PID $TEST_PID)"
+# Track job completion
+LINT_DONE=0
+KNIP_DONE=0
+TEST_DONE=0
+LINT_RESULT=""
+KNIP_RESULT=""
+TEST_RESULT=""
+
+echo "  Running: Lint, Knip, Test"
 echo ""
 
-wait $LINT_PID $KNIP_PID $TEST_PID
-
-# Read results
-LINT_RESULT=$(cat "$TEMP_DIR/lint.result")
-KNIP_RESULT=$(cat "$TEMP_DIR/knip.result")
-TEST_RESULT=$(cat "$TEMP_DIR/test.result")
-
-# Print results for each
-print_result() {
-    local name=$1
-    local result=$2
-    local output_file="$TEMP_DIR/${name}.out"
-
-    echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    if [ "$result" -eq 0 ]; then
-        echo -e "${GREEN}${name} passed${NC}"
-    else
-        echo -e "${RED}${name} failed${NC}"
-        echo ""
-        # Show output for failed checks
-        cat "$output_file"
+# Monitor jobs and print results immediately as they complete
+while [ $LINT_DONE -eq 0 ] || [ $KNIP_DONE -eq 0 ] || [ $TEST_DONE -eq 0 ]; do
+    # Check lint
+    if [ $LINT_DONE -eq 0 ] && ! kill -0 $LINT_PID 2>/dev/null; then
+        wait $LINT_PID 2>/dev/null || true
+        LINT_DONE=1
+        LINT_RESULT=$(cat "$TEMP_DIR/lint.result" 2>/dev/null || echo "1")
+        print_result_immediate "Lint" "$LINT_RESULT"
     fi
-}
 
-print_result "Lint" "$LINT_RESULT"
-print_result "Knip" "$KNIP_RESULT"
-print_result "Test" "$TEST_RESULT"
+    # Check knip
+    if [ $KNIP_DONE -eq 0 ] && ! kill -0 $KNIP_PID 2>/dev/null; then
+        wait $KNIP_PID 2>/dev/null || true
+        KNIP_DONE=1
+        KNIP_RESULT=$(cat "$TEMP_DIR/knip.result" 2>/dev/null || echo "1")
+        print_result_immediate "Knip" "$KNIP_RESULT"
+    fi
+
+    # Check test
+    if [ $TEST_DONE -eq 0 ] && ! kill -0 $TEST_PID 2>/dev/null; then
+        wait $TEST_PID 2>/dev/null || true
+        TEST_DONE=1
+        TEST_RESULT=$(cat "$TEMP_DIR/test.result" 2>/dev/null || echo "1")
+        print_result_immediate "Test" "$TEST_RESULT"
+    fi
+
+    # Small delay to avoid busy loop (only if jobs still running)
+    if [ $LINT_DONE -eq 0 ] || [ $KNIP_DONE -eq 0 ] || [ $TEST_DONE -eq 0 ]; then
+        sleep 0.2
+    fi
+done
 
 # Run build (only if previous steps passed)
 BUILD_RESULT=0
