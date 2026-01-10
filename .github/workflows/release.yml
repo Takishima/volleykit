@@ -1,0 +1,241 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version bump type (leave as "auto" to detect from changelog)'
+        required: true
+        type: choice
+        default: auto
+        options:
+          - auto
+          - patch
+          - minor
+          - major
+      dry_run:
+        description: 'Dry run (preview changes without committing)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+# Prevent concurrent releases
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  # Validate before release
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web-app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
+        with:
+          working-directory: web-app
+
+      - name: Generate API types
+        run: npm run generate:api
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Knip (dead code detection)
+        run: npm run knip
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+  release:
+    needs: validate
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.changelog.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Detect version type from changelog
+        id: detect
+        if: ${{ inputs.version_type == 'auto' }}
+        run: |
+          # Extract content between [Unreleased] and the next version header
+          UNRELEASED=$(sed -n '/^## \[Unreleased\]/,/^## \[/p' CHANGELOG.md | sed '1d;$d')
+
+          if [ -z "$(echo "$UNRELEASED" | sed '/^$/d')" ]; then
+            echo "::error::No unreleased changes found in CHANGELOG.md"
+            exit 1
+          fi
+
+          # Detect version bump type from changelog content
+          # Priority: BREAKING > Added > everything else
+
+          # Check for breaking changes (BREAKING: or [BREAKING] markers)
+          if echo "$UNRELEASED" | grep -qiE '(BREAKING:|BREAKING CHANGE:|\[BREAKING\])'; then
+            echo "type=major" >> "$GITHUB_OUTPUT"
+            echo "Detected: MAJOR (breaking changes found)"
+          # Check for new features (### Added section with content)
+          elif echo "$UNRELEASED" | sed -n '/^### Added/,/^### /p' | grep -qE '^- '; then
+            echo "type=minor" >> "$GITHUB_OUTPUT"
+            echo "Detected: MINOR (new features in Added section)"
+          # Default to patch (bug fixes, changes, etc.)
+          else
+            echo "type=patch" >> "$GITHUB_OUTPUT"
+            echo "Detected: PATCH (bug fixes or minor changes)"
+          fi
+
+      - name: Determine version type
+        id: version_type
+        run: |
+          if [ "${{ inputs.version_type }}" = "auto" ]; then
+            echo "type=${{ steps.detect.outputs.type }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "type=${{ inputs.version_type }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update changelog
+        id: changelog
+        uses: release-flow/keep-a-changelog-action@v3
+        with:
+          command: bump
+          version: ${{ steps.version_type.outputs.type }}
+          tag-prefix: v
+          keep-unreleased-section: true
+          fail-on-empty-release-notes: true
+
+      - name: Update package.json and package-lock.json
+        working-directory: web-app
+        env:
+          NEW_VERSION: ${{ steps.changelog.outputs.version }}
+        run: |
+          echo "Updating package.json to version $NEW_VERSION"
+          npm version "$NEW_VERSION" --no-git-tag-version --allow-same-version
+          npm install --package-lock-only
+
+      - name: Verify versions match
+        env:
+          CHANGELOG_VERSION: ${{ steps.changelog.outputs.version }}
+        run: |
+          PACKAGE_VERSION=$(node -p "require('./web-app/package.json').version")
+          LOCK_VERSION=$(node -p "require('./web-app/package-lock.json').version")
+
+          echo "Changelog version: $CHANGELOG_VERSION"
+          echo "package.json version: $PACKAGE_VERSION"
+          echo "package-lock.json version: $LOCK_VERSION"
+
+          if [ "$CHANGELOG_VERSION" != "$PACKAGE_VERSION" ]; then
+            echo "::error::Version mismatch: changelog=$CHANGELOG_VERSION, package.json=$PACKAGE_VERSION"
+            exit 1
+          fi
+
+          if [ "$CHANGELOG_VERSION" != "$LOCK_VERSION" ]; then
+            echo "::error::Version mismatch: changelog=$CHANGELOG_VERSION, package-lock.json=$LOCK_VERSION"
+            exit 1
+          fi
+
+          echo "All versions match: $CHANGELOG_VERSION"
+
+      - name: Show changes (dry run)
+        if: ${{ inputs.dry_run }}
+        run: |
+          echo "=== Version bump ==="
+          echo "Type: ${{ steps.version_type.outputs.type }}"
+          echo "New version: ${{ steps.changelog.outputs.version }}"
+          echo ""
+          echo "=== CHANGELOG.md changes ==="
+          git diff CHANGELOG.md
+          echo ""
+          echo "=== package.json changes ==="
+          git diff web-app/package.json
+          echo ""
+          echo "=== Release notes ==="
+          cat << 'RELEASE_NOTES'
+          ${{ steps.changelog.outputs.release-notes }}
+          RELEASE_NOTES
+          echo ""
+          echo "=== Would create tag: v${{ steps.changelog.outputs.version }} ==="
+
+      - name: Commit changes
+        if: ${{ !inputs.dry_run }}
+        run: |
+          git add CHANGELOG.md web-app/package.json web-app/package-lock.json
+          git commit -m "$(cat <<'EOF'
+          chore(release): prepare v${{ steps.changelog.outputs.version }} release
+          EOF
+          )"
+
+      - name: Create tag
+        if: ${{ !inputs.dry_run }}
+        run: git tag -a "v${{ steps.changelog.outputs.version }}" -m "Release v${{ steps.changelog.outputs.version }}"
+
+      - name: Push changes
+        if: ${{ !inputs.dry_run }}
+        run: |
+          git push origin ${{ github.event.repository.default_branch }}
+          git push origin "v${{ steps.changelog.outputs.version }}"
+
+      - name: Create GitHub Release
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cat << 'RELEASE_NOTES' > /tmp/release_notes.md
+          ${{ steps.changelog.outputs.release-notes }}
+          RELEASE_NOTES
+
+          gh release create "v${{ steps.changelog.outputs.version }}" \
+            --title "v${{ steps.changelog.outputs.version }}" \
+            --notes-file /tmp/release_notes.md
+
+      - name: Summary
+        run: |
+          VERSION="${{ steps.changelog.outputs.version }}"
+          TYPE="${{ steps.version_type.outputs.type }}"
+
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            echo "## Dry Run Complete" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "| Property | Value |" >> "$GITHUB_STEP_SUMMARY"
+            echo "|----------|-------|" >> "$GITHUB_STEP_SUMMARY"
+            echo "| Version type | $TYPE |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| New version | v$VERSION |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| Auto-detected | ${{ inputs.version_type == 'auto' && 'Yes' || 'No' }} |" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "### Release Notes Preview" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo '${{ steps.changelog.outputs.release-notes }}' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "## Release Complete" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "| Property | Value |" >> "$GITHUB_STEP_SUMMARY"
+            echo "|----------|-------|" >> "$GITHUB_STEP_SUMMARY"
+            echo "| Version type | $TYPE |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| New version | v$VERSION |" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "[View Release](https://github.com/${{ github.repository }}/releases/tag/v$VERSION)" >> "$GITHUB_STEP_SUMMARY"
+          fi

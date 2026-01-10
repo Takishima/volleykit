@@ -436,6 +436,7 @@ This project uses [Semantic Versioning](https://semver.org/) and maintains a [Ch
 2. Use the appropriate subsection: Added, Changed, Deprecated, Removed, Fixed, Security
 3. Include the PR/issue number: `- Description of change (#123)`
 4. Write user-facing descriptions (what users will notice, not implementation details)
+5. **For breaking changes**: Prefix the entry with `BREAKING:` (see below)
 
 **Entry format**:
 ```markdown
@@ -444,7 +445,27 @@ This project uses [Semantic Versioning](https://semver.org/) and maintains a [Ch
 
 ### Fixed
 - Assignment dates now display correctly in all timezones (#126)
+
+### Changed
+- BREAKING: Authentication now requires email instead of username (#130)
 ```
+
+**Breaking change markers** (triggers MAJOR version bump):
+- `BREAKING:` - Prefix for breaking changes
+- `BREAKING CHANGE:` - Alternative prefix
+- `[BREAKING]` - Inline marker
+
+**What counts as a breaking change** (use `BREAKING:` prefix):
+- Removing or renaming public APIs, components, or props
+- Changing authentication or authorization flows
+- Removing features users depend on
+- Changing data formats that affect stored data
+- Requiring user action after update (re-login, clear cache, etc.)
+
+The release workflow auto-detects the version bump type:
+- **MAJOR**: Any entry contains `BREAKING:`, `BREAKING CHANGE:`, or `[BREAKING]`
+- **MINOR**: `### Added` section has entries (new features)
+- **PATCH**: Only `### Fixed`, `### Changed`, etc. without breaking markers
 
 ### PWA Version Display
 
@@ -456,7 +477,38 @@ The PWA automatically checks for updates and prompts users when a new version is
 
 ### Releasing a New Version
 
-When ready to release (typically done by maintainers):
+Releases are fully automated via the **Release workflow** (`.github/workflows/release.yml`).
+
+**To create a release**:
+1. Go to **Actions** > **Release** workflow in GitHub
+2. Click **Run workflow**
+3. Leave version type as `auto` (recommended) or manually select:
+   - `auto` - **Automatically detects** from changelog content (default)
+   - `patch` - Bug fixes (1.0.0 -> 1.0.1)
+   - `minor` - New features (1.0.0 -> 1.1.0)
+   - `major` - Breaking changes (1.0.0 -> 2.0.0)
+4. Optionally enable **Dry run** to preview changes without committing
+
+**Auto-detection rules** (from changelog content):
+- **MAJOR**: Entry contains `BREAKING:`, `BREAKING CHANGE:`, or `[BREAKING]`
+- **MINOR**: `### Added` section has entries
+- **PATCH**: Only fixes, changes, or other non-breaking updates
+
+**What the workflow does**:
+1. Validates the codebase (lint, test, build)
+2. Auto-detects version bump type from changelog (or uses manual selection)
+3. Updates CHANGELOG.md using [keep-a-changelog-action](https://github.com/release-flow/keep-a-changelog-action):
+   - Moves `[Unreleased]` entries to new version section
+   - Updates comparison links
+   - Outputs the new version number
+4. Updates `web-app/package.json` and `package-lock.json` with the **same version**
+5. Verifies all three files have matching versions (fails if mismatch)
+6. Creates commit: `chore(release): prepare vX.Y.Z release`
+7. Creates git tag: `vX.Y.Z`
+8. Creates GitHub Release with changelog excerpt
+9. Deployment triggers automatically via `deploy-web.yml`
+
+**Manual release** (if needed):
 1. Move `[Unreleased]` entries to a new version section with date
 2. Update version in `web-app/package.json`
 3. Update comparison links at the bottom of `CHANGELOG.md`
@@ -559,7 +611,7 @@ ESLint plugin `jsx-a11y` enforces many accessibility rules.
 1. Unit tests cover business logic and interactions
 1. E2E tests added for critical user flows (if applicable)
 1. Translations added for all 4 languages (de, en, fr, it)
-1. **Changelog updated** for new features and bug fixes (see [Semantic Versioning & Changelog](#semantic-versioning--changelog))
+1. **Changelog updated** with `BREAKING:` prefix for breaking changes (see [Semantic Versioning & Changelog](#semantic-versioning--changelog))
 1. **All validation phases pass before push** (lint, knip, test, build - see [AI Development Workflow](#ai-development-workflow))
 1. Bundle size limits not exceeded
 1. Works across modern browsers (Chrome, Firefox, Safari)
