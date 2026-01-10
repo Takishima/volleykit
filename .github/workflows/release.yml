@@ -1,0 +1,248 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      dry_run:
+        description: 'Dry run (no commits or releases)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+# Prevent concurrent releases
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  # Validate before release
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web-app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
+        with:
+          working-directory: web-app
+
+      - name: Generate API types
+        run: npm run generate:api
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+  release:
+    needs: validate
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+      release_notes: ${{ steps.changelog.outputs.release_notes }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Get current version
+        id: current
+        run: |
+          CURRENT_VERSION=$(node -p "require('./web-app/package.json').version")
+          echo "version=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Current version: $CURRENT_VERSION"
+
+      - name: Calculate new version
+        id: bump
+        run: |
+          CURRENT="${{ steps.current.outputs.version }}"
+          TYPE="${{ inputs.version_type }}"
+
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+
+          case "$TYPE" in
+            major)
+              NEW_VERSION="$((MAJOR + 1)).0.0"
+              ;;
+            minor)
+              NEW_VERSION="$MAJOR.$((MINOR + 1)).0"
+              ;;
+            patch)
+              NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+              ;;
+          esac
+
+          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "New version: $NEW_VERSION"
+
+      - name: Check for unreleased changes
+        id: check_changes
+        run: |
+          # Extract content between [Unreleased] and the next version header
+          UNRELEASED=$(sed -n '/^## \[Unreleased\]/,/^## \[/p' CHANGELOG.md | sed '1d;$d' | sed '/^$/d')
+
+          if [ -z "$UNRELEASED" ]; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::No unreleased changes found in CHANGELOG.md"
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "Found unreleased changes"
+          fi
+
+      - name: Update CHANGELOG.md
+        id: changelog
+        run: |
+          VERSION="${{ steps.bump.outputs.version }}"
+          CURRENT="${{ steps.current.outputs.version }}"
+          DATE=$(date +%Y-%m-%d)
+          REPO="${{ github.repository }}"
+
+          # Create temporary file for new changelog
+          TEMP_FILE=$(mktemp)
+
+          # Extract unreleased content for release notes
+          RELEASE_NOTES=$(sed -n '/^## \[Unreleased\]/,/^## \[/p' CHANGELOG.md | sed '1d;$d')
+
+          # Save release notes to file for GitHub release (handle multiline)
+          NOTES_FILE=$(mktemp)
+          echo "$RELEASE_NOTES" > "$NOTES_FILE"
+          echo "notes_file=$NOTES_FILE" >> "$GITHUB_OUTPUT"
+
+          # Update the changelog:
+          # 1. Keep header and [Unreleased] section header
+          # 2. Add new version section after [Unreleased]
+          # 3. Keep rest of file
+
+          awk -v version="$VERSION" -v date="$DATE" -v repo="$REPO" -v current="$CURRENT" '
+            /^## \[Unreleased\]/ {
+              print $0
+              print ""
+              print "## [" version "] - " date
+              in_unreleased = 1
+              next
+            }
+            /^## \[/ && in_unreleased {
+              in_unreleased = 0
+            }
+            /^\[Unreleased\]:/ {
+              print "[Unreleased]: https://github.com/" repo "/compare/v" version "...HEAD"
+              print "[" version "]: https://github.com/" repo "/compare/v" current "...v" version
+              next
+            }
+            { print }
+          ' CHANGELOG.md > "$TEMP_FILE"
+
+          mv "$TEMP_FILE" CHANGELOG.md
+
+          echo "Updated CHANGELOG.md for version $VERSION"
+
+      - name: Update package.json version
+        working-directory: web-app
+        run: |
+          VERSION="${{ steps.bump.outputs.version }}"
+          npm version "$VERSION" --no-git-tag-version --allow-same-version
+          echo "Updated package.json to version $VERSION"
+
+      - name: Update package-lock.json
+        working-directory: web-app
+        run: |
+          npm install --package-lock-only
+          echo "Updated package-lock.json"
+
+      - name: Show changes (dry run)
+        if: ${{ inputs.dry_run }}
+        run: |
+          echo "=== CHANGELOG.md changes ==="
+          git diff CHANGELOG.md
+          echo ""
+          echo "=== package.json changes ==="
+          git diff web-app/package.json
+          echo ""
+          echo "=== Would create tag: v${{ steps.bump.outputs.version }} ==="
+
+      - name: Commit changes
+        if: ${{ !inputs.dry_run }}
+        run: |
+          VERSION="${{ steps.bump.outputs.version }}"
+          git add CHANGELOG.md web-app/package.json web-app/package-lock.json
+          git commit -m "$(cat <<'EOF'
+          chore(release): prepare v${{ steps.bump.outputs.version }} release
+          EOF
+          )"
+
+      - name: Create tag
+        if: ${{ !inputs.dry_run }}
+        run: |
+          VERSION="${{ steps.bump.outputs.version }}"
+          git tag -a "v$VERSION" -m "Release v$VERSION"
+
+      - name: Push changes
+        if: ${{ !inputs.dry_run }}
+        run: |
+          git push origin main
+          git push origin "v${{ steps.bump.outputs.version }}"
+
+      - name: Create GitHub Release
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.bump.outputs.version }}"
+          NOTES_FILE="${{ steps.changelog.outputs.notes_file }}"
+
+          # Create release with notes from changelog
+          if [ -s "$NOTES_FILE" ]; then
+            gh release create "v$VERSION" \
+              --title "v$VERSION" \
+              --notes-file "$NOTES_FILE"
+          else
+            gh release create "v$VERSION" \
+              --title "v$VERSION" \
+              --notes "Release v$VERSION"
+          fi
+
+          echo "Created GitHub release v$VERSION"
+
+      - name: Summary
+        run: |
+          VERSION="${{ steps.bump.outputs.version }}"
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            echo "## Dry Run Complete" >> "$GITHUB_STEP_SUMMARY"
+            echo "Would have released version **v$VERSION**" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "## Release Complete" >> "$GITHUB_STEP_SUMMARY"
+            echo "Released version **v$VERSION**" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "[View Release](https://github.com/${{ github.repository }}/releases/tag/v$VERSION)" >> "$GITHUB_STEP_SUMMARY"
+          fi

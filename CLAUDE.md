@@ -456,7 +456,27 @@ The PWA automatically checks for updates and prompts users when a new version is
 
 ### Releasing a New Version
 
-When ready to release (typically done by maintainers):
+Releases are automated via the **Release workflow** (`.github/workflows/release.yml`).
+
+**To create a release**:
+1. Go to **Actions** > **Release** workflow in GitHub
+2. Click **Run workflow**
+3. Select version bump type:
+   - `patch` - Bug fixes (1.0.0 -> 1.0.1)
+   - `minor` - New features (1.0.0 -> 1.1.0)
+   - `major` - Breaking changes (1.0.0 -> 2.0.0)
+4. Optionally enable **Dry run** to preview changes without committing
+
+**What the workflow does**:
+1. Validates the codebase (lint, test, build)
+2. Moves `[Unreleased]` entries in CHANGELOG.md to new version section
+3. Updates version in `web-app/package.json` and `package-lock.json`
+4. Creates commit: `chore(release): prepare vX.Y.Z release`
+5. Creates git tag: `vX.Y.Z`
+6. Creates GitHub Release with changelog excerpt
+7. Deployment triggers automatically via `deploy-web.yml`
+
+**Manual release** (if needed):
 1. Move `[Unreleased]` entries to a new version section with date
 2. Update version in `web-app/package.json`
 3. Update comparison links at the bottom of `CHANGELOG.md`
