@@ -171,9 +171,15 @@ export const REFEREE_BACKUP_PROPERTIES = [
   "calendarWeek",
   "joinedNlaReferees",
   "joinedNlbReferees",
+  // NLA referee identity (required for filtering user's assignments)
+  "nlaReferees.*.indoorReferee.persistenceObjectIdentifier",
+  "nlaReferees.*.indoorReferee.person.persistenceObjectIdentifier",
   // NLA referee details
   "nlaReferees.*.indoorReferee.person.primaryEmailAddress",
   "nlaReferees.*.indoorReferee.person.primaryPhoneNumber",
+  // NLB referee identity (required for filtering user's assignments)
+  "nlbReferees.*.indoorReferee.persistenceObjectIdentifier",
+  "nlbReferees.*.indoorReferee.person.persistenceObjectIdentifier",
   // NLB referee details
   "nlbReferees.*.indoorReferee.person.primaryEmailAddress",
   "nlbReferees.*.indoorReferee.person.primaryPhoneNumber",
