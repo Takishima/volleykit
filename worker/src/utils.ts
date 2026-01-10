@@ -662,7 +662,11 @@ export function isFailedLoginResponse(
 
 /**
  * Check if a response indicates a successful login.
- * Successful logins redirect to the dashboard with a CSRF token.
+ * Successful logins redirect to the dashboard (any path except login/auth pages).
+ *
+ * Logic: A 3xx redirect from auth that does NOT go back to login/auth pages
+ * is considered successful. This is more robust than looking for specific
+ * dashboard paths since the upstream server may redirect to various paths.
  */
 export function isSuccessfulLoginResponse(
   response: { status: number; headers: { get: (name: string) => string | null } },
@@ -672,13 +676,22 @@ export function isSuccessfulLoginResponse(
     const location = response.headers.get("Location");
     if (location) {
       const normalizedLocation = location.toLowerCase();
-      // Redirect to dashboard or main page with CSRF token indicates success
+
+      // Failed login redirects back to login page or root
+      // Check for patterns that indicate authentication failure
       if (
-        normalizedLocation.includes("sportmanager.volleyball") ||
-        normalizedLocation.includes("__csrftoken")
+        normalizedLocation.endsWith("/login") ||
+        normalizedLocation.includes("/login?") ||
+        normalizedLocation.includes("/authentication") ||
+        // Root path redirect often indicates session creation failed
+        normalizedLocation.match(/^https?:\/\/[^/]+\/?$/)
       ) {
-        return true;
+        return false;
       }
+
+      // Any other redirect from auth endpoint is considered success
+      // This includes redirects to /indoor/, /sportmanager.volleyball/, etc.
+      return true;
     }
   }
 

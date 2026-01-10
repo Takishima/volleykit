@@ -2078,9 +2078,39 @@ describe("Auth Lockout", () => {
       ).toBe(true);
     });
 
+    it("detects redirect to /indoor/ path", () => {
+      expect(
+        isSuccessfulLoginResponse(
+          mockResponse(302, { Location: "https://volleymanager.volleyball.ch/indoor/start" }),
+        ),
+      ).toBe(true);
+    });
+
     it("returns false for redirect to login", () => {
       expect(
         isSuccessfulLoginResponse(mockResponse(302, { Location: "/login" })),
+      ).toBe(false);
+    });
+
+    it("returns false for redirect to login with query params", () => {
+      expect(
+        isSuccessfulLoginResponse(mockResponse(302, { Location: "/login?error=invalid" })),
+      ).toBe(false);
+    });
+
+    it("returns false for redirect to root path", () => {
+      expect(
+        isSuccessfulLoginResponse(
+          mockResponse(302, { Location: "https://volleymanager.volleyball.ch/" }),
+        ),
+      ).toBe(false);
+    });
+
+    it("returns false for redirect to authentication endpoint", () => {
+      expect(
+        isSuccessfulLoginResponse(
+          mockResponse(302, { Location: "/sportmanager.security/authentication" }),
+        ),
       ).toBe(false);
     });
 
