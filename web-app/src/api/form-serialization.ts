@@ -74,6 +74,9 @@ export function setSessionToken(token: string | null): void {
       })
       .catch(() => {
         // Fallback to plaintext on encryption failure
+        console.warn(
+          "[session-token] Encryption failed, falling back to plaintext storage",
+        );
         try {
           localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, token);
         } catch {
@@ -82,6 +85,9 @@ export function setSessionToken(token: string | null): void {
       });
   } else {
     // Fallback to plaintext storage
+    console.warn(
+      "[session-token] Web Crypto not available, using plaintext storage",
+    );
     try {
       localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, token);
     } catch {
