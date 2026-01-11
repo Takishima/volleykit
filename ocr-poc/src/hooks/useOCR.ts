@@ -107,7 +107,7 @@ export function useOCR(options: UseOCROptions = {}): UseOCRReturn {
  * Calculate overall confidence from OCR result lines.
  */
 function calculateOverallConfidence(result: OCRResult): number {
-  if (result.lines.length === 0) return 0
+  if (result.lines.length === 0) {return 0}
 
   const totalConfidence = result.lines.reduce((sum, line) => sum + line.confidence, 0)
   return totalConfidence / result.lines.length

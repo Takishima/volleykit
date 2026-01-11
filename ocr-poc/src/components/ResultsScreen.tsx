@@ -24,7 +24,7 @@ export function ResultsScreen() {
   // Create preview URL for the processed image
   const imageUrl = useMemo(() => {
     const image = croppedImage ?? capturedImage
-    if (!image) return null
+    if (!image) {return null}
     return URL.createObjectURL(image)
   }, [croppedImage, capturedImage])
 
@@ -38,7 +38,7 @@ export function ResultsScreen() {
   }, [imageUrl])
 
   const handleCopy = async () => {
-    if (!ocrResult?.fullText) return
+    if (!ocrResult?.fullText) {return}
 
     try {
       await navigator.clipboard.writeText(ocrResult.fullText)

@@ -28,7 +28,7 @@ export function CropScreen({ isRosterCrop = false }: CropScreenProps) {
 
   // Convert PoC sheet type to web-app's ScoresheetType
   const scoresheetType: ScoresheetType = useMemo(() => {
-    if (isRosterCrop) return 'manuscript'
+    if (isRosterCrop) {return 'manuscript'}
     return sheetType === 'electronic' ? 'electronic' : 'manuscript'
   }, [sheetType, isRosterCrop])
 

@@ -45,7 +45,7 @@ export function ProcessingScreen() {
 
   // Start OCR when component mounts
   useEffect(() => {
-    if (hasStartedRef.current) return
+    if (hasStartedRef.current) {return}
     hasStartedRef.current = true
 
     if (!imageToProcess) {
