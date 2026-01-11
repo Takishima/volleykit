@@ -20,8 +20,10 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
+      "@/shared/*": ["./src/shared/*"],
+      "@/features/*": ["../web-app/src/features/*"],
       "@volleykit/ocr/*": ["../web-app/src/features/ocr/*"],
-      "@volleykit/shared/*": ["../web-app/src/features/validation/*"]
+      "@volleykit/validation/*": ["../web-app/src/features/validation/*"]
     },
 
     /* Linting */

@@ -22,14 +22,21 @@ const MODEL_CACHE_MAX_AGE_DAYS = 30
 export default defineConfig({
   base: BASE_PATH,
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-      // Allow importing TypeScript modules from the main web-app
-      '@volleykit/ocr': path.resolve(__dirname, '../web-app/src/features/ocr'),
-      '@volleykit/shared': path.resolve(__dirname, '../web-app/src/features/validation'),
+    // Use array format for aliases - order matters for matching!
+    alias: [
+      // Most specific aliases first
+      // Web-app shared components resolve to PoC stubs (translation, icons)
+      { find: '@/shared', replacement: path.resolve(__dirname, './src/shared') },
+      // Web-app features resolve to actual web-app code
+      { find: '@/features', replacement: path.resolve(__dirname, '../web-app/src/features') },
+      // PoC's own source files (must come after more specific paths)
+      { find: '@', replacement: path.resolve(__dirname, './src') },
+      // Legacy aliases for explicit imports
+      { find: '@volleykit/ocr', replacement: path.resolve(__dirname, '../web-app/src/features/ocr') },
+      { find: '@volleykit/validation', replacement: path.resolve(__dirname, '../web-app/src/features/validation') },
       // Ensure fuse.js resolves from ocr-poc's node_modules
-      'fuse.js': path.resolve(__dirname, 'node_modules/fuse.js'),
-    },
+      { find: 'fuse.js', replacement: path.resolve(__dirname, 'node_modules/fuse.js') },
+    ],
   },
   plugins: [
     react(),
