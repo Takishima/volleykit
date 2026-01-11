@@ -35,6 +35,9 @@ function createWrapper() {
 // Disable PWA for tests by default
 vi.stubGlobal('__PWA_ENABLED__', false)
 
+// Stub app version to avoid test failures on version bumps
+vi.stubGlobal('__APP_VERSION__', '1.0.0-test')
+
 const mockUser = {
   id: 'user-1',
   firstName: 'John',
@@ -147,7 +150,7 @@ describe('SettingsPage', () => {
   describe('About Section', () => {
     it('displays version info', () => {
       render(<SettingsPage />, { wrapper: createWrapper() })
-      expect(screen.getByText('1.0.2')).toBeInTheDocument()
+      expect(screen.getByText('1.0.0-test')).toBeInTheDocument()
     })
   })
 
