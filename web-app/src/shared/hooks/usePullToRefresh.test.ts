@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import { usePullToRefresh } from './usePullToRefresh'
 
@@ -8,8 +8,13 @@ describe('usePullToRefresh', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.useFakeTimers()
     // Reset scroll position
     Object.defineProperty(window, 'scrollY', { value: 0, writable: true })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   describe('initial state', () => {
@@ -209,11 +214,14 @@ describe('usePullToRefresh', () => {
       // Verify pull distance is set and exceeds threshold
       expect(result.current.pullDistance).toBeGreaterThan(result.current.threshold)
 
-      // Release - need to await the async handler
+      // Release - need to await the async handler and advance timers for min duration
       await act(async () => {
         // The handler returns a Promise, so we await it
         const handler = result.current.containerProps.onTouchEnd as () => Promise<void>
-        await handler()
+        const promise = handler()
+        // Advance past the minimum refresh duration (500ms)
+        await vi.advanceTimersByTimeAsync(500)
+        await promise
       })
 
       expect(mockOnRefresh).toHaveBeenCalledTimes(1)
@@ -271,10 +279,12 @@ describe('usePullToRefresh', () => {
         } as unknown as React.TouchEvent)
       })
 
-      // Complete the refresh
+      // Complete the refresh with timer advance for min duration
       await act(async () => {
         const handler = result.current.containerProps.onTouchEnd as () => Promise<void>
-        await handler()
+        const promise = handler()
+        await vi.advanceTimersByTimeAsync(500)
+        await promise
       })
 
       // After refresh completes, isRefreshing should be false
@@ -302,7 +312,9 @@ describe('usePullToRefresh', () => {
 
       await act(async () => {
         const handler = result.current.containerProps.onTouchEnd as () => Promise<void>
-        await handler()
+        const promise = handler()
+        await vi.advanceTimersByTimeAsync(500)
+        await promise
       })
 
       expect(result.current.pullDistance).toBe(0)

@@ -8,7 +8,6 @@ import { Loader2 } from './icons'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import { usePwaStandalone } from '../hooks/usePwaStandalone'
 
-
 interface PullToRefreshProps {
   /** Callback to execute when refresh is triggered */
   onRefresh: () => Promise<void>

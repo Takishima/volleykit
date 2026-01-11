@@ -91,6 +91,8 @@ export async function fetchCalendarAssignments(
   const response = await fetch(url, {
     method: 'GET',
     signal,
+    // Ensure fresh data on each request (important for pull-to-refresh)
+    cache: 'no-store',
     // No credentials needed - public endpoint
   })
 

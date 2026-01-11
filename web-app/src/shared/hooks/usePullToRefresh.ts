@@ -12,6 +12,9 @@ const RESISTANCE_FACTOR = 0.4
 /** Threshold with resistance applied - this is what pullDistance is compared against */
 const PULL_THRESHOLD = RAW_PULL_THRESHOLD * RESISTANCE_FACTOR
 
+/** Minimum time to show the refresh animation (ms) */
+const MIN_REFRESH_DURATION_MS = 500
+
 export interface UsePullToRefreshOptions {
   /** Callback to execute when refresh is triggered */
   onRefresh: () => Promise<void>
@@ -134,7 +137,11 @@ export function usePullToRefresh({
       setPullDistance(PULL_THRESHOLD)
 
       try {
-        await onRefresh()
+        // Ensure minimum animation duration so user sees the spinner
+        const minDurationPromise = new Promise((resolve) =>
+          setTimeout(resolve, MIN_REFRESH_DURATION_MS)
+        )
+        await Promise.all([onRefresh(), minDurationPromise])
       } finally {
         setIsRefreshing(false)
         setPullDistance(0)
