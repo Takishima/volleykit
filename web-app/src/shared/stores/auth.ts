@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { setCsrfToken, clearSession, captureSessionToken, getSessionHeaders, apiClient } from "@/api/client";
+import { setCsrfToken, clearSession, captureSessionToken, getSessionHeaders, getSessionToken, apiClient } from "@/api/client";
 import {
   filterRefereeOccupations,
   parseOccupationsFromActiveParty,
@@ -208,6 +208,52 @@ function deriveUserWithOccupations(
 }
 
 /**
+ * Fetches the login page with iOS Safari PWA session token handling.
+ * If a new session token is captured during the first fetch, re-fetches
+ * to ensure the form's __trustedProperties is generated for an established session.
+ *
+ * @returns The final login page response after any necessary re-fetches
+ * @throws Error if fetching the login page fails
+ */
+async function fetchLoginPageWithSessionHandling(): Promise<Response> {
+  const hadTokenBeforeRequest = !!getSessionToken();
+
+  // cache: "no-store" is critical for iOS Safari PWA - prevents using stale cached cookies
+  // See: https://developer.apple.com/forums/thread/89050
+  let response = await fetch(LOGIN_PAGE_URL, {
+    credentials: "include",
+    cache: "no-store",
+    headers: getSessionHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to load login page");
+  }
+
+  captureSessionToken(response);
+
+  // iOS Safari PWA fix: If we didn't have a session token before this request
+  // but now we do, re-fetch the login page to ensure the form's __trustedProperties
+  // is generated for the established session. Without this, the first login after
+  // logout/fresh install fails because the session isn't fully recognized.
+  if (!hadTokenBeforeRequest && getSessionToken()) {
+    response = await fetch(LOGIN_PAGE_URL, {
+      credentials: "include",
+      cache: "no-store",
+      headers: getSessionHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to load login page");
+    }
+
+    captureSessionToken(response);
+  }
+
+  return response;
+}
+
+/**
  * Checks if the response URL indicates the login page.
  * Used to detect stale sessions that redirect to login.
  */
@@ -261,21 +307,7 @@ export const useAuthStore = create<AuthState>()(
         set({ status: "loading", error: null, lockedUntil: null });
 
         try {
-          // cache: "no-store" is critical for iOS Safari PWA - prevents using stale cached cookies
-          // See: https://developer.apple.com/forums/thread/89050
-          const loginPageResponse = await fetch(LOGIN_PAGE_URL, {
-            credentials: "include",
-            cache: "no-store",
-            headers: getSessionHeaders(),
-          });
-
-          if (!loginPageResponse.ok) {
-            throw new Error("Failed to load login page");
-          }
-
-          // Capture session token from response headers (iOS Safari PWA)
-          captureSessionToken(loginPageResponse);
-
+          const loginPageResponse = await fetchLoginPageWithSessionHandling();
           const html = await loginPageResponse.text();
           const existingCsrfToken = extractCsrfTokenFromPage(html);
 

@@ -46,8 +46,17 @@ const SESSION_TOKEN_STORAGE_KEY = "volleykit-session-token";
 let sessionTokenCache: string | null | undefined = undefined;
 
 /**
+ * Tracks pending encryption key clear operations.
+ * Used to prevent race conditions between logout (clearing) and login (encrypting).
+ */
+let pendingKeyClear: Promise<void> | null = null;
+
+/**
  * Set the session token (encrypts and stores asynchronously).
  * The in-memory cache is updated immediately for sync access.
+ *
+ * If an encryption key clear is in progress (from logout), we wait for it
+ * to complete before encrypting the new token to prevent race conditions.
  */
 export function setSessionToken(token: string | null): void {
   sessionTokenCache = token;
@@ -64,25 +73,30 @@ export function setSessionToken(token: string | null): void {
 
   // Encrypt and store asynchronously
   if (isSecureStorageAvailable()) {
-    encryptToken(token)
-      .then((encrypted) => {
-        try {
-          localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, encrypted);
-        } catch {
-          // localStorage may not be available
-        }
-      })
-      .catch(() => {
-        // Fallback to plaintext on encryption failure
-        console.warn(
-          "[session-token] Encryption failed, falling back to plaintext storage",
-        );
-        try {
-          localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, token);
-        } catch {
-          // localStorage may not be available
-        }
-      });
+    // Wait for any pending key clear to complete before encrypting
+    const encryptAndStore = async () => {
+      if (pendingKeyClear) {
+        await pendingKeyClear;
+      }
+      const encrypted = await encryptToken(token);
+      try {
+        localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, encrypted);
+      } catch {
+        // localStorage may not be available
+      }
+    };
+
+    encryptAndStore().catch(() => {
+      // Fallback to plaintext on encryption failure
+      console.warn(
+        "[session-token] Encryption failed, falling back to plaintext storage",
+      );
+      try {
+        localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, token);
+      } catch {
+        // localStorage may not be available
+      }
+    });
   } else {
     // Fallback to plaintext storage
     console.warn(
@@ -146,6 +160,8 @@ export async function initSessionToken(): Promise<void> {
 
 /**
  * Clear the session token and encryption key.
+ * The encryption key clear is tracked to prevent race conditions with
+ * subsequent setSessionToken calls (login after logout).
  */
 export function clearSessionToken(): void {
   sessionTokenCache = null;
@@ -154,10 +170,15 @@ export function clearSessionToken(): void {
   } catch {
     // localStorage may not be available
   }
-  // Clear encryption key asynchronously (don't wait)
-  clearEncryptionKey().catch(() => {
-    // Ignore errors during cleanup
-  });
+  // Clear encryption key asynchronously and track the operation
+  // This prevents race conditions when encrypting a new token immediately after logout
+  pendingKeyClear = clearEncryptionKey()
+    .catch(() => {
+      // Ignore errors during cleanup
+    })
+    .finally(() => {
+      pendingKeyClear = null;
+    });
 }
 
 export interface BuildFormDataOptions {
