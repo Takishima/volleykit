@@ -375,7 +375,7 @@ export function LoginPage() {
                   variant="primary"
                   fullWidth
                   loading={isLoading}
-                  disabled={isLockedOut}
+                  disabled={isLockedOut || needRefresh}
                   onClick={performLogin}
                   data-testid="login-button"
                 >
@@ -459,6 +459,7 @@ export function LoginPage() {
                   variant="primary"
                   fullWidth
                   loading={isLoading}
+                  disabled={needRefresh}
                   onClick={performCalendarLogin}
                   data-testid="calendar-login-button"
                 >

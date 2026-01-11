@@ -649,8 +649,21 @@ describe('PWAContext', () => {
   })
 
   describe('updateApp', () => {
-    it('logs warning when SW is not ready', async () => {
+    it('uses fallback reload when SW is not ready', async () => {
       const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const reloadSpy = vi.fn()
+      // Mock window.location.reload
+      Object.defineProperty(window, 'location', {
+        value: { reload: reloadSpy },
+        writable: true,
+      })
+      // Mock caches API
+      const mockCaches = {
+        keys: vi.fn().mockResolvedValue(['cache1', 'cache2']),
+        delete: vi.fn().mockResolvedValue(true),
+      }
+      vi.stubGlobal('caches', mockCaches)
+
       // Don't set up a proper registration - updateSWRef will be null
       const mockRegisterSW = vi.fn().mockReturnValue(null)
       const { registerSW } = await import('virtual:pwa-register')
@@ -670,11 +683,64 @@ describe('PWAContext', () => {
         screen.getByTestId('updateApp').click()
       })
 
+      // Should log warning about fallback
       expect(consoleWarnSpy).toHaveBeenCalledWith(
         '[VolleyKit][App]',
-        'updateApp called but service worker is not ready'
+        'Service worker not ready, using fallback reload mechanism'
       )
+      // Should clear all caches
+      expect(mockCaches.keys).toHaveBeenCalled()
+      expect(mockCaches.delete).toHaveBeenCalledWith('cache1')
+      expect(mockCaches.delete).toHaveBeenCalledWith('cache2')
+      // Should reload the page
+      expect(reloadSpy).toHaveBeenCalled()
+
       consoleWarnSpy.mockRestore()
+      vi.unstubAllGlobals()
+    })
+
+    it('falls back to reload even when cache clearing fails', async () => {
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const reloadSpy = vi.fn()
+      Object.defineProperty(window, 'location', {
+        value: { reload: reloadSpy },
+        writable: true,
+      })
+      // Mock caches API that throws
+      const mockCaches = {
+        keys: vi.fn().mockRejectedValue(new Error('Cache API error')),
+      }
+      vi.stubGlobal('caches', mockCaches)
+
+      const mockRegisterSW = vi.fn().mockReturnValue(null)
+      const { registerSW } = await import('virtual:pwa-register')
+      vi.mocked(registerSW).mockImplementation(mockRegisterSW)
+
+      render(
+        <PWAProvider>
+          <TestConsumer />
+        </PWAProvider>
+      )
+
+      await waitFor(() => {
+        expect(mockRegisterSW).toHaveBeenCalled()
+      })
+
+      await act(async () => {
+        screen.getByTestId('updateApp').click()
+      })
+
+      // Should still reload even if cache clearing fails
+      expect(reloadSpy).toHaveBeenCalled()
+      // Should log the cache clearing failure
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        '[VolleyKit][App]',
+        'Failed to clear caches during fallback update:',
+        expect.any(Error)
+      )
+
+      consoleWarnSpy.mockRestore()
+      vi.unstubAllGlobals()
     })
 
     it('calls updateSW with true to reload page', async () => {

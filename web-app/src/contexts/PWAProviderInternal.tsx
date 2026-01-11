@@ -148,9 +148,25 @@ export default function PWAProviderInternal({ children }: PWAProviderInternalPro
 
   const updateApp = async () => {
     if (updateSWRef.current) {
+      // Use vite-plugin-pwa's built-in update mechanism
+      // This posts SKIP_WAITING to waiting SW and reloads
       await updateSWRef.current(true)
     } else {
-      logger.warn('updateApp called but service worker is not ready')
+      // Fallback: Service worker not ready (race condition or registration pending)
+      // This can happen on the login page when PWA is first opened, especially on iOS
+      // where the app resumes from background before SW registration completes.
+      // Manual update: clear caches and force reload to get fresh content.
+      logger.warn('Service worker not ready, using fallback reload mechanism')
+      try {
+        // Clear all caches to ensure fresh content is fetched
+        const cacheNames = (await caches?.keys()) || []
+        await Promise.all(cacheNames.map((name) => caches.delete(name)))
+      } catch (error) {
+        // Ignore cache clearing errors - proceed with reload anyway
+        logger.warn('Failed to clear caches during fallback update:', error)
+      }
+      // Force reload to fetch fresh content from network
+      window.location.reload()
     }
   }
 

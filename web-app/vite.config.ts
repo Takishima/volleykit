@@ -103,37 +103,53 @@ function versionFilePlugin(version: string, gitHash: string, basePath: string): 
       const versionCheckScript = `
     <script>
       // PWA Force Update: Check if cached version matches deployed version
-      (async function() {
+      (function() {
         var BUNDLED_GIT_HASH = '${gitHash}';
         var BASE_PATH = '${basePath}';
-        try {
-          var res = await fetch(BASE_PATH + 'version.json?t=' + Date.now());
-          if (!res.ok) return;
-          var data = await res.json();
-          if (BUNDLED_GIT_HASH !== data.gitHash) {
-            // Prevent infinite reload loop: track attempted updates in sessionStorage
-            var reloadKey = 'pwa-update-attempted-' + data.gitHash;
-            if (sessionStorage.getItem(reloadKey)) {
-              console.warn('[PWA] Already attempted update to ' + data.gitHash + ', skipping to prevent loop');
-              return;
+
+        async function checkVersion() {
+          try {
+            var res = await fetch(BASE_PATH + 'version.json?t=' + Date.now());
+            if (!res.ok) return;
+            var data = await res.json();
+            if (BUNDLED_GIT_HASH !== data.gitHash) {
+              // Prevent infinite reload loop: track attempted updates in sessionStorage
+              var reloadKey = 'pwa-update-attempted-' + data.gitHash;
+              if (sessionStorage.getItem(reloadKey)) {
+                console.warn('[PWA] Already attempted update to ' + data.gitHash + ', skipping to prevent loop');
+                return;
+              }
+              sessionStorage.setItem(reloadKey, '1');
+              console.log('[PWA] Version mismatch: ' + BUNDLED_GIT_HASH + ' → ' + data.gitHash + ', forcing update...');
+              var reg = await navigator.serviceWorker?.getRegistration();
+              if (reg?.waiting) {
+                reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+              }
+              var cacheNames = await caches?.keys() || [];
+              await Promise.all(cacheNames.map(function(name) { return caches.delete(name); }));
+              location.reload();
             }
-            sessionStorage.setItem(reloadKey, '1');
-            console.log('[PWA] Version mismatch: ' + BUNDLED_GIT_HASH + ' → ' + data.gitHash + ', forcing update...');
-            var reg = await navigator.serviceWorker?.getRegistration();
-            if (reg?.waiting) {
-              reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+          } catch (e) {
+            // Network errors are expected when offline - ignore silently
+            // Log other errors for debugging
+            if (!(e instanceof TypeError)) {
+              console.warn('[PWA] Version check failed:', e);
             }
-            var cacheNames = await caches?.keys() || [];
-            await Promise.all(cacheNames.map(function(name) { return caches.delete(name); }));
-            location.reload();
-          }
-        } catch (e) {
-          // Network errors are expected when offline - ignore silently
-          // Log other errors for debugging
-          if (!(e instanceof TypeError)) {
-            console.warn('[PWA] Version check failed:', e);
           }
         }
+
+        // Run version check on page load
+        checkVersion();
+
+        // Also check on visibility change (iOS PWA resume from background)
+        // iOS Safari PWAs resume from suspended state without a full page reload,
+        // so the initial version check doesn't run. This ensures stale cached apps
+        // are detected and updated when the user returns to the app.
+        document.addEventListener('visibilitychange', function() {
+          if (document.visibilityState === 'visible') {
+            checkVersion();
+          }
+        });
       })();
     </script>`;
 
