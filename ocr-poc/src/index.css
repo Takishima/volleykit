@@ -1,5 +1,11 @@
 @import 'tailwindcss';
 
+/* Tailwind 4 theme customization */
+@theme {
+  --color-primary-500: #1e40af;
+  --color-primary-600: #1e3a8a;
+}
+
 /* CSS variables for consistent theming */
 :root {
   --color-primary: #1e40af;
