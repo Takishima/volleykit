@@ -25,6 +25,7 @@ import { COMPENSATION_LOOKUP_LIMIT } from '@/shared/hooks/usePaginatedQuery'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useAuthStore } from '@/shared/stores/auth'
 import { useDemoStore } from '@/shared/stores/demo'
+import { toast } from '@/shared/stores/toast'
 import {
   DECIMAL_INPUT_PATTERN,
   formatDistanceKm,
@@ -81,6 +82,10 @@ function EditCompensationModalComponent({
 
   // Determine if we're editing an assignment or a compensation record
   const isAssignmentEdit = !!assignment && !compensation
+
+  // Track saving state to disable buttons during save
+  const isSaving =
+    updateCompensationMutation.isPending || updateAssignmentCompensationMutation.isPending
 
   // Get the compensation ID from the compensation record
   // Assignments don't have convocationCompensation, only CompensationRecord does
@@ -301,6 +306,15 @@ function EditCompensationModalComponent({
                   assignmentId: assignment.__identity,
                   ...updateData,
                 })
+                toast.success(t('compensations.saveSuccess'))
+                onClose()
+              },
+              onError: (error) => {
+                logger.error('[EditCompensationModal] Failed to update assignment compensation:', {
+                  assignmentId: assignment.__identity,
+                  error,
+                })
+                toast.error(t('compensations.saveError'))
               },
             }
           )
@@ -314,13 +328,23 @@ function EditCompensationModalComponent({
                   compensationId,
                   ...updateData,
                 })
+                toast.success(t('compensations.saveSuccess'))
+                onClose()
+              },
+              onError: (error) => {
+                logger.error('[EditCompensationModal] Failed to update compensation:', {
+                  compensationId,
+                  error,
+                })
+                toast.error(t('compensations.saveError'))
               },
             }
           )
         }
+      } else {
+        // No changes to save, just close
+        onClose()
       }
-
-      onClose()
     },
     [
       assignment,
@@ -426,10 +450,16 @@ function EditCompensationModalComponent({
             </div>
 
             <ModalFooter>
-              <Button variant="secondary" className="flex-1" onClick={onClose}>
+              <Button variant="secondary" className="flex-1" onClick={onClose} disabled={isSaving}>
                 {t('common.close')}
               </Button>
-              <Button variant="primary" className="flex-1" type="submit">
+              <Button
+                variant="primary"
+                className="flex-1"
+                type="submit"
+                disabled={isSaving}
+                loading={isSaving}
+              >
                 {t('common.save')}
               </Button>
             </ModalFooter>

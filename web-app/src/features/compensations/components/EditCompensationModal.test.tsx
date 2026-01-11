@@ -93,8 +93,13 @@ async function waitForFormToLoad() {
 
 describe('EditCompensationModal', () => {
   const mockOnClose = vi.fn()
-  const mockMutate = vi.fn()
-  const mockAssignmentMutate = vi.fn()
+  // Mock mutate to call onSuccess callback immediately (simulates successful mutation)
+  const mockMutate = vi.fn((_, options) => {
+    options?.onSuccess?.()
+  })
+  const mockAssignmentMutate = vi.fn((_, options) => {
+    options?.onSuccess?.()
+  })
   const mockGetCompensationDetails = vi.fn()
   const mockSearchCompensations = vi.fn()
   const mockGetAssignmentCompensation = vi.fn()

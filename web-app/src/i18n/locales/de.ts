@@ -298,6 +298,8 @@ const de: Translations = {
       'Entschädigungseintrag nicht gefunden. Das Spiel liegt möglicherweise zu weit in der Zukunft.',
     compensationMissingId:
       'Entschädigungseintrag hat keine Kennung. Bitte versuchen Sie es später erneut.',
+    saveError: 'Entschädigung konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.',
+    saveSuccess: 'Entschädigung erfolgreich gespeichert.',
     unavailableInCalendarModeTitle: 'Im Kalender-Modus nicht verfügbar',
     unavailableInCalendarModeDescription:
       'Entschädigungsdaten sind im Kalender-Modus nicht verfügbar. Verwenden Sie die vollständige Anmeldung, um auf Entschädigungsdetails zuzugreifen.',
