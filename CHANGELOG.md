@@ -12,9 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/pr-review` command for Claude Code - creates PR and automatically addresses Claude Code Review comments after 2-minute wait
 - Automated release workflow with semantic version auto-detection from changelog
 - PWA standalone mode detection - Settings now displays "PWA" instead of "Web" when running as installed app (#687)
+- Login debug panel now auto-shows for installed PWAs with copy button for sharing logs (#700)
+- Enhanced auth logging throughout login and session check flows for easier debugging (#700)
 
 ### Changed
 
+- PR previews now enable real login for iOS PWA debugging (VITE_DEMO_MODE_ONLY removed) (#700)
 - OCR POC now displays parsed roster data instead of comparing against dummy data, for debugging OCR recognition issues
 - Claude Code `/review` command now includes changelog status check
 - CLAUDE.md workflow now explicitly lists changelog update as step 2 before commit

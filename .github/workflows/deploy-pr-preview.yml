@@ -82,7 +82,7 @@ jobs:
       - name: Build for PR Preview
         run: npm run build
         env:
-          VITE_DEMO_MODE_ONLY: 'true'
+          # Real login enabled for iOS PWA debugging (VITE_DEMO_MODE_ONLY not set)
           VITE_API_PROXY_URL: ${{ vars.VITE_API_PROXY_URL }}
           VITE_BASE_PATH: /${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/
           VITE_OJP_API_KEY: ${{ secrets.VITE_OJP_API_KEY }}
@@ -265,7 +265,7 @@ jobs:
               `**OCR POC:** ${ocrPocUrl}\n\n` +
               `**Help Site:** ${helpUrl}\n\n` +
               `> This preview will be updated on each push to this PR.\n\n` +
-              `**Preview Mode:** Calendar mode login (read-only) and demo mode are available. Full login is disabled for security.`;
+              `**Login:** All login modes available (full, calendar, demo). Debug panel auto-shows for installed PWAs.`;
 
             // Check if comment already exists
             const { data: comments } = await github.rest.issues.listComments({

@@ -6,6 +6,7 @@ import {
   parseOccupationsFromActiveParty,
 } from "@/features/auth/utils/parseOccupations";
 import { logger } from "@/shared/utils/logger";
+import { authLogger } from "@/shared/utils/auth-log-buffer";
 import {
   extractLoginFormFields,
   extractCsrfTokenFromPage,
@@ -258,18 +259,36 @@ export const useAuthStore = create<AuthState>()(
       eligibleRoles: null,
 
       login: async (username: string, password: string): Promise<boolean> => {
+        // Log with masked username for privacy (show first chars only)
+        // eslint-disable-next-line @typescript-eslint/no-magic-numbers -- privacy mask
+        authLogger.info("Login started", { username: `${username.substring(0, 3)}***` });
         set({ status: "loading", error: null, lockedUntil: null });
 
         try {
+          // Log environment info for debugging
+          authLogger.debug("Login environment", {
+            apiBase: API_BASE,
+            isPWA: window.matchMedia("(display-mode: standalone)").matches,
+            userAgent: navigator.userAgent.substring(0, 100),
+          });
+
           // cache: "no-store" is critical for iOS Safari PWA - prevents using stale cached cookies
           // See: https://developer.apple.com/forums/thread/89050
+          authLogger.debug("Fetching login page...");
           const loginPageResponse = await fetch(LOGIN_PAGE_URL, {
             credentials: "include",
             cache: "no-store",
             headers: getSessionHeaders(),
           });
 
+          authLogger.debug("Login page response", {
+            status: loginPageResponse.status,
+            ok: loginPageResponse.ok,
+            type: loginPageResponse.type,
+          });
+
           if (!loginPageResponse.ok) {
+            authLogger.error("Login page fetch failed", { status: loginPageResponse.status });
             throw new Error("Failed to load login page");
           }
 
@@ -277,15 +296,22 @@ export const useAuthStore = create<AuthState>()(
           captureSessionToken(loginPageResponse);
 
           const html = await loginPageResponse.text();
+          authLogger.debug("Login page HTML received", { length: html.length });
           const existingCsrfToken = extractCsrfTokenFromPage(html);
 
           if (existingCsrfToken) {
             // Already logged in - the login page redirect doesn't contain activeParty data
             // We need to fetch the dashboard explicitly to get the user's associations
+            authLogger.info("Existing session detected, fetching dashboard...");
             const dashboardResponse = await fetch(
               `${API_BASE}/sportmanager.volleyball/main/dashboard`,
               { credentials: "include", cache: "no-store", headers: getSessionHeaders() },
             );
+
+            authLogger.debug("Dashboard response (existing session)", {
+              status: dashboardResponse.status,
+              ok: dashboardResponse.ok,
+            });
 
             // Capture session token from response headers (iOS Safari PWA)
             captureSessionToken(dashboardResponse);
@@ -294,6 +320,10 @@ export const useAuthStore = create<AuthState>()(
             if (dashboardResponse.ok) {
               const dashboardHtml = await dashboardResponse.text();
               activeParty = extractActivePartyFromHtml(dashboardHtml);
+              authLogger.debug("Active party extracted", {
+                hasActiveParty: !!activeParty,
+                attributeCount: activeParty?.eligibleAttributeValues?.length ?? 0,
+              });
             }
 
             setCsrfToken(existingCsrfToken);
@@ -307,8 +337,14 @@ export const useAuthStore = create<AuthState>()(
 
             // Reject users without referee role - this app is for referees only
             if (user.occupations.length === 0) {
+              authLogger.warn("Login rejected: no referee role found");
               return rejectNonRefereeUser(set);
             }
+
+            authLogger.info("Login success (existing session)", {
+              occupationCount: user.occupations.length,
+              activeOccupationId,
+            });
 
             set({
               status: "authenticated",
@@ -323,16 +359,25 @@ export const useAuthStore = create<AuthState>()(
             return true;
           }
 
+          authLogger.debug("No existing session, extracting form fields...");
           const formFields = extractLoginFormFields(html);
           if (!formFields) {
+            authLogger.error("Failed to extract form fields from login page");
             throw new Error("Could not extract form fields from login page");
           }
 
+          authLogger.info("Submitting credentials...");
           const result = await submitLoginCredentials(AUTH_URL, username, password, formFields);
 
           if (result.success) {
+            authLogger.info("Credentials accepted, parsing dashboard...");
             // Parse activeParty from dashboard HTML after successful login
             const activeParty = extractActivePartyFromHtml(result.dashboardHtml);
+            authLogger.debug("Active party from dashboard", {
+              hasActiveParty: !!activeParty,
+              attributeCount: activeParty?.eligibleAttributeValues?.length ?? 0,
+              groupedCount: activeParty?.groupedEligibleAttributeValues?.length ?? 0,
+            });
             setCsrfToken(result.csrfToken);
 
             const currentState = get();
@@ -344,8 +389,15 @@ export const useAuthStore = create<AuthState>()(
 
             // Reject users without referee role - this app is for referees only
             if (user.occupations.length === 0) {
+              authLogger.warn("Login rejected: no referee role found after credentials accepted");
               return rejectNonRefereeUser(set);
             }
+
+            authLogger.info("Login success", {
+              occupationCount: user.occupations.length,
+              activeOccupationId,
+              associations: user.occupations.map((o) => o.associationCode).filter(Boolean),
+            });
 
             set({
               status: "authenticated",
@@ -360,6 +412,7 @@ export const useAuthStore = create<AuthState>()(
             return true;
           }
 
+          authLogger.error("Login failed", { error: result.error, lockedUntil: result.lockedUntil });
           set({
             status: "error",
             error: result.error,
@@ -368,6 +421,7 @@ export const useAuthStore = create<AuthState>()(
           return false;
         } catch (error) {
           const message = error instanceof Error ? error.message : "Login failed";
+          authLogger.error("Login exception", { message, error: String(error) });
           set({ status: "error", error: message, lockedUntil: null });
           return false;
         }
@@ -417,6 +471,7 @@ export const useAuthStore = create<AuthState>()(
         const currentDataSource = get().dataSource;
         // Demo and calendar modes don't need session verification
         if (currentDataSource === "demo" || currentDataSource === "calendar") {
+          authLogger.debug("Session check: skipping (mode)", { dataSource: currentDataSource });
           return true;
         }
 
@@ -424,9 +479,11 @@ export const useAuthStore = create<AuthState>()(
         // This prevents redundant network requests right after login.
         const lastAuth = get()._lastAuthTimestamp;
         if (lastAuth && Date.now() - lastAuth < SESSION_CHECK_GRACE_PERIOD_MS) {
-          logger.info("Session check: skipping, authenticated recently");
+          authLogger.debug("Session check: skipping, authenticated recently");
           return true;
         }
+
+        authLogger.debug("Session check: starting...");
 
         const existingPromise = get()._checkSessionPromise;
         if (existingPromise) {
@@ -456,7 +513,7 @@ export const useAuthStore = create<AuthState>()(
         (async () => {
           // Helper to handle invalid session - clears state and resolves false
           const handleInvalidSession = (logMessage: string): void => {
-            logger.info(logMessage);
+            authLogger.warn(logMessage);
             clearSession();
             set({ status: "idle", user: null, csrfToken: null, _lastAuthTimestamp: null });
             resolvePromise(false);
@@ -481,6 +538,13 @@ export const useAuthStore = create<AuthState>()(
               );
 
               clearTimeout(timeoutId);
+
+              authLogger.debug("Session check: dashboard response", {
+                status: response.status,
+                ok: response.ok,
+                type: response.type,
+                url: response.url?.substring(0, 100),
+              });
 
               // Capture session token from response headers (iOS Safari PWA)
               captureSessionToken(response);
@@ -527,6 +591,11 @@ export const useAuthStore = create<AuthState>()(
                   setCsrfToken(csrfToken);
                 }
 
+                authLogger.info("Session check: valid session confirmed", {
+                  hasCsrf: !!csrfToken,
+                  occupationCount: user.occupations.length,
+                });
+
                 set({
                   status: "authenticated",
                   csrfToken: csrfToken ?? currentState.csrfToken,
@@ -549,6 +618,7 @@ export const useAuthStore = create<AuthState>()(
                 return;
               }
 
+              authLogger.warn("Session check: response not ok", { status: response.status });
               set({ status: "idle", user: null });
               resolvePromise(false);
             } catch (error) {
@@ -559,11 +629,12 @@ export const useAuthStore = create<AuthState>()(
                 if (signal?.aborted) {
                   // External abort - don't log, don't update state
                   // Let the caller handle it via the wrapped promise
+                  authLogger.debug("Session check: aborted by caller");
                   resolvePromise(false);
                   return;
                 }
                 // Timeout abort
-                logger.error("Session check timed out");
+                authLogger.error("Session check timed out");
                 set({ status: "idle", user: null });
                 resolvePromise(false);
                 return;
@@ -572,7 +643,7 @@ export const useAuthStore = create<AuthState>()(
               throw error;
             }
           } catch (error) {
-            logger.error("Session check failed:", error);
+            authLogger.error("Session check failed", { error: String(error) });
             set({ status: "idle", user: null });
             resolvePromise(false);
           } finally {

@@ -899,10 +899,11 @@ describe("useAuthStore", () => {
       const result = await useAuthStore.getState().checkSession();
 
       expect(result).toBe(false);
+      // authLogger logs with [Auth] prefix and passes error as object
       expect(consoleSpy).toHaveBeenCalledWith(
-        "[VolleyKit][App]",
-        "Session check failed:",
-        expect.any(Error),
+        "[Auth]",
+        "Session check failed",
+        expect.objectContaining({ error: expect.any(String) }),
       );
       consoleSpy.mockRestore();
     });
@@ -995,9 +996,11 @@ describe("useAuthStore", () => {
       expect(result).toBe(false);
       expect(useAuthStore.getState().status).toBe("idle");
       expect(useAuthStore.getState().user).toBeNull();
+      // authLogger logs with [Auth] prefix and empty string for no data
       expect(consoleSpy).toHaveBeenCalledWith(
-        "[VolleyKit][App]",
+        "[Auth]",
         "Session check timed out",
+        "",
       );
 
       consoleSpy.mockRestore();

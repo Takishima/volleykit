@@ -36,8 +36,49 @@ const LOG_LEVEL_COLORS: Record<AuthLogEntry["level"], string> = {
   error: "#ff6b6b",
 };
 
-/** Check if debug mode is enabled via URL parameter */
+/** Format logs as text for copying */
+function formatLogsForExport(logs: AuthLogEntry[]): string {
+  const header = [
+    `VolleyKit Auth Debug Logs`,
+    `Version: ${__APP_VERSION__} (${__GIT_HASH__})`,
+    `Exported: ${new Date().toISOString()}`,
+    `Platform: ${navigator.userAgent}`,
+    `PWA Mode: ${isPWAMode() ? "Yes" : "No"}`,
+    `URL: ${window.location.href}`,
+    "---",
+  ].join("\n");
+
+  const logLines = logs.map((entry) => {
+    const time = formatTime(entry.timestamp);
+    const level = `[${entry.level.toUpperCase()}]`;
+    const dataStr =
+      entry.data !== undefined
+        ? `\n  ${typeof entry.data === "object" ? JSON.stringify(entry.data, null, 2).replace(/\n/g, "\n  ") : String(entry.data)}`
+        : "";
+    return `${time} ${level} ${entry.message}${dataStr}`;
+  });
+
+  return `${header}\n${logLines.join("\n")}`;
+}
+
+/** Check if running as installed PWA (standalone mode) */
+function isPWAMode(): boolean {
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    // iOS Safari PWA detection
+    ("standalone" in window.navigator &&
+      (window.navigator as Navigator & { standalone?: boolean }).standalone ===
+        true)
+  );
+}
+
+/** Check if debug mode is enabled via URL parameter or PWA mode */
 function isDebugModeEnabled(): boolean {
+  // Always show debug panel for PWAs to help debug iOS Safari login issues
+  if (isPWAMode()) {
+    return true;
+  }
+  // Otherwise, check URL parameter
   const urlParams = new URLSearchParams(window.location.search);
   const debugValue = urlParams.get("debug");
   return debugValue !== null && debugValue !== "false" && debugValue !== "0";
@@ -46,7 +87,22 @@ function isDebugModeEnabled(): boolean {
 export function LoginDebugPanel() {
   // Initialize visibility from URL parameter (synchronously, before first render)
   const [isVisible, setIsVisible] = useState(isDebugModeEnabled);
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">(
+    "idle",
+  );
   const logs = useAuthLogs();
+
+  async function handleCopyLogs(): Promise<void> {
+    try {
+      const text = formatLogsForExport(logs);
+      await navigator.clipboard.writeText(text);
+      setCopyStatus("copied");
+      setTimeout(() => setCopyStatus("idle"), 2000);
+    } catch {
+      setCopyStatus("error");
+      setTimeout(() => setCopyStatus("idle"), 2000);
+    }
+  }
 
   if (!isVisible) {
     return null;
@@ -84,9 +140,25 @@ export function LoginDebugPanel() {
         }}
       >
         <strong style={{ color: "#00d4ff", fontSize: "11px" }}>
-          Auth Debug ({logs.length} logs)
+          Auth Debug ({logs.length} logs) | v{__APP_VERSION__} ({__GIT_HASH__})
         </strong>
         <div style={{ display: "flex", gap: "8px" }}>
+          <button
+            onClick={handleCopyLogs}
+            disabled={logs.length === 0}
+            style={{
+              background: copyStatus === "copied" ? "#1a3d1a" : "#1a1a2e",
+              border: `1px solid ${copyStatus === "copied" ? "#4a4" : copyStatus === "error" ? "#a44" : "#444"}`,
+              color: copyStatus === "copied" ? "#4f4" : copyStatus === "error" ? "#f44" : "#888",
+              padding: "2px 6px",
+              borderRadius: "4px",
+              fontSize: "9px",
+              cursor: logs.length === 0 ? "not-allowed" : "pointer",
+              opacity: logs.length === 0 ? 0.5 : 1,
+            }}
+          >
+            {copyStatus === "copied" ? "Copied!" : copyStatus === "error" ? "Failed" : "Copy"}
+          </button>
           <button
             onClick={clearAuthLogs}
             style={{
