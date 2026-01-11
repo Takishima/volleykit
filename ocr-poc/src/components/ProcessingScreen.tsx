@@ -2,12 +2,14 @@
  * ProcessingScreen Component
  *
  * Shows OCR processing progress with a spinner and status messages.
+ * Integrates with the OCR service to process the captured/cropped image.
  */
 
-import { useEffect, useCallback } from 'react'
+import { useEffect, useRef } from 'react'
 
 import { Loader2, AlertCircle } from 'lucide-react'
 
+import { useOCR } from '@/hooks/useOCR'
 import { useAppStore } from '@/stores/appStore'
 
 export function ProcessingScreen() {
@@ -25,53 +27,39 @@ export function ProcessingScreen() {
   // Use cropped image if available, otherwise use captured image
   const imageToProcess = croppedImage ?? capturedImage
 
-  const runOCR = useCallback(async () => {
+  // Track if we've started processing to prevent double execution
+  const hasStartedRef = useRef(false)
+
+  const { processImage, cancel } = useOCR({
+    onProgress: (ocrProgress) => {
+      setProgress(ocrProgress.progress, ocrProgress.status)
+    },
+    onComplete: (result) => {
+      setOcrResult(result)
+      goToResults()
+    },
+    onError: (err) => {
+      setError(err.message)
+    },
+  })
+
+  // Start OCR when component mounts
+  useEffect(() => {
+    if (hasStartedRef.current) return
+    hasStartedRef.current = true
+
     if (!imageToProcess) {
       setError('No image to process')
       return
     }
 
-    try {
-      setProgress(10, 'Preparing image...')
+    processImage(imageToProcess)
 
-      // Simulate OCR processing for now
-      // TODO: Integrate with actual OCR service
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      setProgress(30, 'Sending to OCR service...')
-
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      setProgress(60, 'Processing text...')
-
-      await new Promise((resolve) => setTimeout(resolve, 800))
-      setProgress(90, 'Parsing results...')
-
-      await new Promise((resolve) => setTimeout(resolve, 400))
-      setProgress(100, 'Complete!')
-
-      // Mock OCR result
-      setOcrResult({
-        fullText: 'Sample OCR result text\nPlayer 1: John Doe\nPlayer 2: Jane Smith',
-        lines: [
-          { text: 'Sample OCR result text', confidence: 0.95, words: [] },
-          { text: 'Player 1: John Doe', confidence: 0.92, words: [] },
-          { text: 'Player 2: Jane Smith', confidence: 0.89, words: [] },
-        ],
-        words: [],
-        confidence: 0.92,
-        processingTime: 2700,
-      })
-
-      goToResults()
-    } catch (err) {
-      console.error('OCR processing failed:', err)
-      setError(err instanceof Error ? err.message : 'OCR processing failed')
+    // Cleanup: cancel OCR if component unmounts
+    return () => {
+      cancel()
     }
-  }, [imageToProcess, setProgress, setOcrResult, setError, goToResults])
-
-  // Start OCR when component mounts
-  useEffect(() => {
-    runOCR()
-  }, [runOCR])
+  }, [imageToProcess, processImage, cancel, setError])
 
   if (error) {
     return (

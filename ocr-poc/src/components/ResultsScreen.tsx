@@ -55,7 +55,7 @@ export function ResultsScreen() {
           <div>
             <h2 className="font-semibold text-green-900">OCR Complete</h2>
             <p className="text-sm text-green-700">
-              Confidence: {Math.round(ocrResult.confidence * 100)}% •{' '}
+              Confidence: {Math.round(ocrResult.confidence ?? 0)}% •{' '}
               {ocrResult.processingTime ? `${(ocrResult.processingTime / 1000).toFixed(1)}s` : ''}
             </p>
           </div>
@@ -125,7 +125,7 @@ export function ResultsScreen() {
                   </span>
                   <span className="text-sm text-slate-700 flex-1">{line.text}</span>
                   <span className="text-xs text-slate-400 flex-shrink-0">
-                    {Math.round(line.confidence * 100)}%
+                    {Math.round(line.confidence)}%
                   </span>
                 </div>
               ))}
