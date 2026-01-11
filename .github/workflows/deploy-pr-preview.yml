@@ -148,6 +148,11 @@ jobs:
         with:
           working-directory: ocr-poc
 
+      # Install web-app deps for shared component imports
+      - name: Install web-app dependencies
+        run: npm ci
+        working-directory: web-app
+
       # Cache ESLint results per branch
       - name: Cache ESLint
         uses: actions/cache@v5
