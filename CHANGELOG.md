@@ -31,6 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - OCR camera capture now auto-crops images to match the guide overlay, improving OCR accuracy by focusing on the scoresheet area
 - User now sees correct assignments after logging into a different association (#682)
 
+### Removed
+
+- Automatic PR review hooks (`address-pr-reviews.sh`, `address-pr-reviews-on-create.sh`) - replaced by manual `/pr-review` command
+
 ## [1.0.2] - 2026-01-10
 
 ### Changed
