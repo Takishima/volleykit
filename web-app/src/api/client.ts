@@ -258,28 +258,23 @@ export const api = {
     compensationId: string,
     data: { distanceInMetres?: number; correctionReason?: string }
   ): Promise<void> {
-    const requestBody: Record<string, unknown> = {
+    // The __identity must be nested inside convocationCompensation, not at root level
+    const convocationCompensation: Record<string, unknown> = {
       __identity: compensationId,
     }
 
     if (data.distanceInMetres !== undefined) {
-      requestBody['convocationCompensation'] = {
-        ...(requestBody['convocationCompensation'] as object),
-        distanceInMetres: data.distanceInMetres,
-      }
+      convocationCompensation.distanceInMetres = data.distanceInMetres
     }
 
     if (data.correctionReason !== undefined) {
-      requestBody['convocationCompensation'] = {
-        ...(requestBody['convocationCompensation'] as object),
-        correctionReason: data.correctionReason,
-      }
+      convocationCompensation.correctionReason = data.correctionReason
     }
 
     return apiRequest(
       '/indoorvolleyball.refadmin/api%5cconvocationcompensation',
       'PUT',
-      requestBody
+      { convocationCompensation }
     )
   },
 

@@ -623,6 +623,9 @@ paths:
       description: |
         Updates the compensation settings for a convocation.
         Used by the "Editer les frais et l'indemnité" dialog save action.
+
+        IMPORTANT: The `__identity` field must be nested inside `convocationCompensation`,
+        not at the root level. Example: `convocationCompensation[__identity]=uuid`
       operationId: updateConvocationCompensation
       requestBody:
         required: true
@@ -630,13 +633,21 @@ paths:
           application/x-www-form-urlencoded:
             schema:
               type: object
-              required: [__identity, __csrfToken]
+              required: [convocationCompensation[__identity], __csrfToken]
               properties:
-                __identity:
+                convocationCompensation[__identity]:
                   type: string
                   format: uuid
-                  description: The compensation record identifier
+                  description: The compensation record identifier (nested inside convocationCompensation)
                   example: "cccccccc-cccc-cccc-cccc-cccccccccccc"
+                convocationCompensation[distanceInMetres]:
+                  type: integer
+                  description: Distance in metres for travel expense calculation
+                  example: 56000
+                convocationCompensation[correctionReason]:
+                  type: string
+                  description: Reason for any correction to the compensation
+                  example: "Ich wohne in Oberengstringen"
                 convocationCompensation[payTravelExpenses]:
                   type: string
                   enum: ["0", "1"]
