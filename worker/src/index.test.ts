@@ -2098,12 +2098,24 @@ describe("Auth Lockout", () => {
       ).toBe(false);
     });
 
-    it("returns false for redirect to root path", () => {
+    it("returns false for redirect to root path without session cookie", () => {
       expect(
         isSuccessfulLoginResponse(
           mockResponse(302, { Location: "https://volleymanager.volleyball.ch/" }),
         ),
       ).toBe(false);
+    });
+
+    it("detects redirect to root with session cookie", () => {
+      // If session cookie is set, login succeeded even if redirecting to root
+      expect(
+        isSuccessfulLoginResponse(
+          mockResponse(302, {
+            Location: "https://volleymanager.volleyball.ch/",
+            "Set-Cookie": "Neos_Session=abc123; Path=/",
+          }),
+        ),
+      ).toBe(true);
     });
 
     it("returns false for redirect to authentication endpoint", () => {

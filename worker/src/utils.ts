@@ -671,9 +671,21 @@ export function isFailedLoginResponse(
 export function isSuccessfulLoginResponse(
   response: { status: number; headers: { get: (name: string) => string | null } },
 ): boolean {
+  // Check for session cookies - if present, login succeeded regardless of redirect target
+  // This is the most reliable indicator as the server sets session cookies on successful auth
+  const setCookie = response.headers.get("Set-Cookie");
+  const hasSessionCookie = setCookie && setCookie.toLowerCase().includes("neos_session");
+
   // Successful login results in a redirect to dashboard
   if (response.status >= 300 && response.status < 400) {
     const location = response.headers.get("Location");
+
+    // If session cookie is set, login succeeded even if redirecting to root
+    // The server may redirect to / or /indoor/ after successful authentication
+    if (hasSessionCookie) {
+      return true;
+    }
+
     if (location) {
       const normalizedLocation = location.toLowerCase();
 
@@ -683,7 +695,7 @@ export function isSuccessfulLoginResponse(
         normalizedLocation.endsWith("/login") ||
         normalizedLocation.includes("/login?") ||
         normalizedLocation.includes("/authentication") ||
-        // Root path redirect often indicates session creation failed
+        // Root path redirect without session cookie indicates session creation failed
         normalizedLocation.match(/^https?:\/\/[^/]+\/?$/)
       ) {
         return false;
@@ -695,12 +707,9 @@ export function isSuccessfulLoginResponse(
     }
   }
 
-  // 200 OK with session cookies could also indicate success
-  if (response.status === 200) {
-    const setCookie = response.headers.get("Set-Cookie");
-    if (setCookie && setCookie.toLowerCase().includes("neos_session")) {
-      return true;
-    }
+  // 200 OK with session cookies also indicates success
+  if (response.status === 200 && hasSessionCookie) {
+    return true;
   }
 
   return false;

@@ -24,19 +24,52 @@ export function clearCsrfToken() {
  * Session token for iOS Safari PWA mode.
  * The Cloudflare Worker extracts session cookies from Set-Cookie headers
  * and sends them as X-Session-Token header to bypass iOS Safari ITP.
+ *
+ * IMPORTANT: This token is persisted to localStorage to survive PWA restarts.
+ * iOS Safari PWA mode loses cookies when the app is closed, so we need to
+ * store the session token client-side and send it with each request.
  */
-let sessionToken: string | null = null;
+const SESSION_TOKEN_STORAGE_KEY = "volleykit-session-token";
+
+/**
+ * In-memory cache for the session token (for performance).
+ * Initialized lazily from localStorage on first access.
+ */
+let sessionTokenCache: string | null | undefined = undefined;
 
 export function setSessionToken(token: string | null) {
-  sessionToken = token;
+  sessionTokenCache = token;
+  try {
+    if (token) {
+      localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, token);
+    } else {
+      localStorage.removeItem(SESSION_TOKEN_STORAGE_KEY);
+    }
+  } catch {
+    // localStorage may not be available (e.g., private browsing)
+  }
 }
 
 export function getSessionToken(): string | null {
-  return sessionToken;
+  // Lazy initialization from localStorage
+  if (sessionTokenCache === undefined) {
+    try {
+      sessionTokenCache = localStorage.getItem(SESSION_TOKEN_STORAGE_KEY);
+    } catch {
+      // localStorage may not be available
+      sessionTokenCache = null;
+    }
+  }
+  return sessionTokenCache;
 }
 
 export function clearSessionToken() {
-  sessionToken = null;
+  sessionTokenCache = null;
+  try {
+    localStorage.removeItem(SESSION_TOKEN_STORAGE_KEY);
+  } catch {
+    // localStorage may not be available
+  }
 }
 
 export interface BuildFormDataOptions {
