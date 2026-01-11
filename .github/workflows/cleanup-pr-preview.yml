@@ -3,6 +3,7 @@ on:
   # Daily cleanup of all closed PR previews (catches any missed cleanups)
   schedule:
     - cron: '0 3 * * *' # 3 AM UTC daily
+    - cron: '0 4 1 * *' # 4 AM UTC on 1st of month - history squash
   # Allow manual cleanup (all closed PRs or specific PR)
   workflow_dispatch:
     inputs:
@@ -10,6 +11,11 @@ on:
         description: 'PR number to clean up (leave empty to clean all closed PRs)'
         required: false
         type: string
+      squash_history:
+        description: 'Squash gh-pages history to single commit (reduces repo size)'
+        required: false
+        type: boolean
+        default: false
 permissions:
   contents: write
 # Concurrency group serializes all GitHub Pages deployments
@@ -160,4 +166,93 @@ jobs:
             done
           else
             echo "No PR previews needed cleanup." >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Squash gh-pages history to reduce repository size
+  # Runs monthly (1st of month) or on manual trigger with squash_history=true
+  squash-history:
+    runs-on: ubuntu-latest
+    # Run on monthly schedule (second cron) or manual trigger with squash_history
+    if: github.event.schedule == '0 4 1 * *' || inputs.squash_history == true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Check gh-pages exists and get commit count
+        id: check
+        run: |
+          if ! git ls-remote --exit-code --heads origin gh-pages; then
+            echo "gh-pages branch does not exist, nothing to squash"
+            echo "should_squash=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Get commit count to determine if squash is worthwhile
+          git fetch origin gh-pages --depth=1000
+          commit_count=$(git rev-list --count origin/gh-pages 2>/dev/null || echo "0")
+          echo "Current gh-pages commit count: $commit_count"
+          echo "commit_count=$commit_count" >> $GITHUB_OUTPUT
+
+          # Only squash if there are more than 10 commits (avoid unnecessary churn)
+          if [ "$commit_count" -gt 10 ]; then
+            echo "should_squash=true" >> $GITHUB_OUTPUT
+          else
+            echo "Only $commit_count commits, skipping squash (threshold: 10)"
+            echo "should_squash=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download gh-pages content
+        if: steps.check.outputs.should_squash == 'true'
+        run: |
+          git clone --depth 1 --branch gh-pages \
+            https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git \
+            gh-pages-content
+
+      - name: Create squashed commit
+        if: steps.check.outputs.should_squash == 'true'
+        run: |
+          cd gh-pages-content
+
+          # Remove git history but keep all files
+          rm -rf .git
+
+          # Initialize fresh repo
+          git init
+          git checkout -b gh-pages
+
+          # Configure git for the commit
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Add all files and create single commit
+          git add -A
+          git commit -m "chore: squash gh-pages history (was ${{ steps.check.outputs.commit_count }} commits)
+
+          Automated monthly cleanup to reduce repository size.
+          All content preserved, only git history removed."
+
+          echo "✓ Created squashed commit with all content preserved"
+
+      - name: Force push squashed history
+        if: steps.check.outputs.should_squash == 'true'
+        run: |
+          cd gh-pages-content
+          git remote add origin https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
+          git push --force origin gh-pages
+          echo "✓ Force pushed squashed gh-pages branch"
+
+      - name: Summary
+        run: |
+          echo "## History Squash Summary" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.check.outputs.should_squash }}" == "true" ]; then
+            echo "✅ Successfully squashed gh-pages history" >> $GITHUB_STEP_SUMMARY
+            echo "- Previous commits: ${{ steps.check.outputs.commit_count }}" >> $GITHUB_STEP_SUMMARY
+            echo "- New commits: 1" >> $GITHUB_STEP_SUMMARY
+            echo "- All content preserved" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "ℹ️ Squash skipped" >> $GITHUB_STEP_SUMMARY
+            if [ "${{ steps.check.outputs.commit_count }}" != "" ]; then
+              echo "- Current commits: ${{ steps.check.outputs.commit_count }}" >> $GITHUB_STEP_SUMMARY
+              echo "- Threshold: 10 commits" >> $GITHUB_STEP_SUMMARY
+            fi
           fi
