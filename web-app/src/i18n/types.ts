@@ -43,6 +43,9 @@ export interface Translations {
     dismissNotification: string
     notifications: string
     cardActions: string
+    pullToRefresh: string
+    releaseToRefresh: string
+    refreshing: string
     wizardProgress: string
     stepIndicatorCurrent: string
     stepIndicatorDone: string

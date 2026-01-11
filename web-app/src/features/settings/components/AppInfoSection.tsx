@@ -1,9 +1,10 @@
-import { useCallback, memo, useMemo } from 'react'
+import { useCallback, memo } from 'react'
 
 import { usePWA } from '@/contexts/PWAContext'
 import { Button } from '@/shared/components/Button'
 import { Card, CardContent, CardHeader } from '@/shared/components/Card'
 import { ToggleSwitch } from '@/shared/components/ToggleSwitch'
+import { usePwaStandalone } from '@/shared/hooks/usePwaStandalone'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useSettingsStore } from '@/shared/stores/settings'
 
@@ -14,37 +15,13 @@ interface AppInfoSectionProps {
   showUpdates: boolean
 }
 
-/** Detect if running as installed PWA (standalone mode) */
-function isPwaStandalone(): boolean {
-  // iOS Safari specific: navigator.standalone property
-  // Must check this FIRST as it's the only reliable method for iOS Safari PWA
-  // Using 'in' operator to check property existence before accessing
-  if ('standalone' in window.navigator) {
-    const nav = window.navigator as Navigator & { standalone: boolean }
-    if (nav.standalone === true) {
-      return true
-    }
-  }
-
-  // Standard way: CSS display-mode media query (works for Chrome/Android PWAs)
-  if (window.matchMedia('(display-mode: standalone)').matches) {
-    return true
-  }
-
-  // Fallback: Check if running in minimal-ui mode (some PWAs use this)
-  if (window.matchMedia('(display-mode: minimal-ui)').matches) {
-    return true
-  }
-
-  return false
-}
-
 function AppInfoSectionComponent({ showUpdates }: AppInfoSectionProps) {
   const { t, locale } = useTranslation()
   const { needRefresh, isChecking, lastChecked, checkError, checkForUpdate, updateApp } = usePWA()
   const { isOCREnabled, setOCREnabled } = useSettingsStore()
+  const isStandalone = usePwaStandalone()
 
-  const platform = useMemo(() => (isPwaStandalone() ? 'PWA' : 'Web'), [])
+  const platform = isStandalone ? 'PWA' : 'Web'
 
   const handleToggleOCR = useCallback(() => {
     setOCREnabled(!isOCREnabled)
