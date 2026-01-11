@@ -243,7 +243,9 @@ jobs:
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo "### Release Notes Preview" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo '${{ steps.changelog.outputs.release-notes }}' >> "$GITHUB_STEP_SUMMARY"
+            cat << 'RELEASE_NOTES' >> "$GITHUB_STEP_SUMMARY"
+          ${{ steps.changelog.outputs.release-notes }}
+          RELEASE_NOTES
           else
             echo "## Release Complete" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
