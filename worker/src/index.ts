@@ -100,12 +100,56 @@ function corsHeaders(origin: string): HeadersInit {
   return {
     "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-    // Note: Cookie header is NOT included - browsers handle cookies automatically
-    // when credentials: 'include' is set. Including Cookie would be a security risk.
-    "Access-Control-Allow-Headers": "Content-Type, Accept",
+    // X-Session-Token is used for iOS Safari PWA cookie relay - see SESSION_TOKEN_HEADER
+    // This header bypasses iOS Safari's ITP which blocks third-party cookies in PWA mode
+    "Access-Control-Allow-Headers": "Content-Type, Accept, X-Session-Token",
+    // Expose X-Session-Token so JavaScript can read the session cookie relay
+    "Access-Control-Expose-Headers": "X-Session-Token",
     "Access-Control-Allow-Credentials": "true",
     "Access-Control-Max-Age": "86400",
   };
+}
+
+/**
+ * Custom header for iOS Safari PWA session cookie relay.
+ * iOS Safari's Intelligent Tracking Prevention (ITP) blocks third-party cookies
+ * in PWA standalone mode. This header allows the client to:
+ * 1. Receive session cookies as a readable header (not blocked by ITP)
+ * 2. Store the session token in JavaScript
+ * 3. Send it back to the proxy, which converts it to a Cookie header
+ */
+const SESSION_TOKEN_HEADER = "X-Session-Token";
+
+/**
+ * Extract session cookie values from Set-Cookie headers.
+ * Returns a base64-encoded string of cookie name=value pairs.
+ */
+function extractSessionCookies(cookies: string[]): string | null {
+  if (cookies.length === 0) return null;
+
+  // Extract just the cookie name=value part (before attributes like Path, Secure, etc.)
+  const cookieValues = cookies
+    .map((cookie) => {
+      const [nameValue] = cookie.split(";");
+      return nameValue?.trim();
+    })
+    .filter(Boolean);
+
+  if (cookieValues.length === 0) return null;
+
+  // Join all cookies and base64 encode for safe transport
+  return btoa(cookieValues.join("; "));
+}
+
+/**
+ * Decode session token back to cookie string.
+ */
+function decodeSessionToken(token: string): string | null {
+  try {
+    return atob(token);
+  } catch {
+    return null;
+  }
 }
 
 export default {
@@ -808,6 +852,9 @@ export default {
         const refererUrl = new URL(originalReferer);
         refererUrl.protocol = targetHostUrl.protocol;
         refererUrl.host = targetHost;
+        // Strip query parameters from Referer - the upstream server may reject
+        // requests with unknown query params like ?debug
+        refererUrl.search = "";
         proxyRequest.headers.set("Referer", refererUrl.toString());
       } catch {
         // If Referer is malformed, set a safe default
@@ -816,6 +863,21 @@ export default {
     }
 
     proxyRequest.headers.set("User-Agent", VOLLEYKIT_USER_AGENT);
+
+    // iOS Safari PWA cookie relay: convert X-Session-Token header to Cookie
+    // This bypasses iOS Safari's ITP which blocks third-party cookies in PWA mode
+    const sessionToken = request.headers.get(SESSION_TOKEN_HEADER);
+    if (sessionToken) {
+      const cookieValue = decodeSessionToken(sessionToken);
+      if (cookieValue) {
+        // Merge with any existing cookies (from browsers that do support cookies)
+        const existingCookies = proxyRequest.headers.get("Cookie");
+        const mergedCookies = existingCookies
+          ? `${existingCookies}; ${cookieValue}`
+          : cookieValue;
+        proxyRequest.headers.set("Cookie", mergedCookies);
+      }
+    }
 
     // Record request start time for latency tracking
     const requestStartTime = Date.now();
@@ -916,6 +978,13 @@ export default {
             "Set-Cookie",
             `${modifiedCookie}; SameSite=None; Secure; Partitioned`,
           );
+        }
+
+        // iOS Safari PWA cookie relay: also send cookies as X-Session-Token header
+        // This allows JavaScript to receive cookies even when ITP blocks Set-Cookie
+        const extractedSessionToken = extractSessionCookies(cookies);
+        if (extractedSessionToken) {
+          responseHeaders.set(SESSION_TOKEN_HEADER, extractedSessionToken);
         }
       }
 

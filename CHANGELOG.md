@@ -18,9 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- iOS Safari PWA login - worker now converts POST auth redirects to JSON responses, fixing `opaqueredirect` issue that prevented login detection (#690)
-- iOS Safari PWA login - broadened successful login detection to match any dashboard redirect (e.g., `/indoor/`), not just specific paths (#687)
-- Login not working on iPhone when installed as PWA - now uses manual redirect handling with `cache: no-store` to work around iOS Safari cookie and redirect handling issues in standalone mode
+- iOS Safari PWA login now works reliably with multiple worker-side fixes (#687, #690):
+  - Session cookies relayed via `X-Session-Token` header to bypass ITP third-party cookie blocking
+  - Query parameters stripped from Referer header to prevent upstream server rejections
+  - POST auth redirects converted to JSON responses, fixing `opaqueredirect` issue
+  - Broadened successful login detection to match any dashboard redirect path
 - OCR camera capture now auto-crops images to match the guide overlay, improving OCR accuracy by focusing on the scoresheet area
 - User now sees correct assignments after logging into a different association (#682)
 
