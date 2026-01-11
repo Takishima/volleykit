@@ -4,7 +4,7 @@ import { ArrowDown } from 'lucide-react'
 
 import { useTranslation } from '@/shared/hooks/useTranslation'
 
-import { Loader2 } from './icons'
+import { LoadingState } from './LoadingSpinner'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import { usePwaStandalone } from '../hooks/usePwaStandalone'
 
@@ -43,6 +43,19 @@ export function PullToRefresh({ onRefresh, children }: PullToRefreshProps) {
 
   const isPastThreshold = pullDistance >= threshold
 
+  // When refreshing, show full-page loading state overlay
+  if (isRefreshing) {
+    return (
+      <div
+        {...containerProps}
+        className="relative"
+        style={{ overscrollBehavior: 'none' }}
+      >
+        <LoadingState message={t('common.refreshing')} />
+      </div>
+    )
+  }
+
   return (
     <div
       {...containerProps}
@@ -63,21 +76,13 @@ export function PullToRefresh({ onRefresh, children }: PullToRefreshProps) {
         aria-hidden="true"
       >
         <div className="flex flex-col items-center gap-1 pb-2">
-          {isRefreshing ? (
-            <Loader2 className="w-5 h-5 animate-spin text-primary-500 dark:text-primary-400" />
-          ) : (
-            <ArrowDown
-              className={`w-5 h-5 text-text-muted dark:text-text-muted-dark transition-transform duration-200 ${
-                isPastThreshold ? 'rotate-180' : ''
-              }`}
-            />
-          )}
+          <ArrowDown
+            className={`w-5 h-5 text-text-muted dark:text-text-muted-dark transition-transform duration-200 ${
+              isPastThreshold ? 'rotate-180' : ''
+            }`}
+          />
           <span className="text-xs text-text-muted dark:text-text-muted-dark">
-            {isRefreshing
-              ? t('common.refreshing')
-              : isPastThreshold
-                ? t('common.releaseToRefresh')
-                : t('common.pullToRefresh')}
+            {isPastThreshold ? t('common.releaseToRefresh') : t('common.pullToRefresh')}
           </span>
         </div>
       </div>
