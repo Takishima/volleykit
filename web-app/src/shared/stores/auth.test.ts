@@ -17,9 +17,7 @@ vi.mock('@/api/client', () => ({
   setCsrfToken: vi.fn(),
   clearSession: vi.fn(),
   captureSessionToken: vi.fn(),
-  getSessionHeaders: vi.fn(() =>
-    mockSessionToken ? { 'X-Session-Token': mockSessionToken } : {}
-  ),
+  getSessionHeaders: vi.fn(() => (mockSessionToken ? { 'X-Session-Token': mockSessionToken } : {})),
   getSessionToken: vi.fn(() => mockSessionToken),
   apiClient: {
     switchRoleAndAttribute: mockSwitchRoleAndAttribute,
@@ -29,7 +27,6 @@ vi.mock('@/api/client', () => ({
 // Mock fetch
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
-
 
 // Helper to create mock Response with proper headers (for redirect: manual)
 function createMockResponse(options: {

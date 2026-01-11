@@ -297,18 +297,15 @@ async function ensureSessionEstablished(): Promise<void> {
   // redirect responses to JSON, which allows us to capture the session token
   // from the headers (redirect responses with redirect: 'manual' would otherwise
   // be opaque with inaccessible headers in iOS Safari PWA).
-  const response = await fetch(
-    `${API_BASE}/sportmanager.volleyball/main/dashboard`,
-    {
-      credentials: 'include',
-      cache: 'no-store',
-      redirect: 'manual',
-      headers: {
-        ...getSessionHeaders(),
-        [CAPTURE_SESSION_TOKEN_HEADER]: 'true',
-      },
-    }
-  )
+  const response = await fetch(`${API_BASE}/sportmanager.volleyball/main/dashboard`, {
+    credentials: 'include',
+    cache: 'no-store',
+    redirect: 'manual',
+    headers: {
+      ...getSessionHeaders(),
+      [CAPTURE_SESSION_TOKEN_HEADER]: 'true',
+    },
+  })
 
   // Capture session token from response headers.
   // The proxy converts redirects with session tokens to JSON when we send
