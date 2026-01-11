@@ -1,52 +1,53 @@
-import { useState, useCallback, useRef, useEffect, memo } from "react";
-import { useTranslation } from "@/shared/hooks/useTranslation";
-import { Card, CardContent, CardHeader } from "@/shared/components/Card";
-import { Button } from "@/shared/components/Button";
+import { useState, useCallback, useRef, useEffect, memo } from 'react'
 
-const DEMO_RESET_MESSAGE_DURATION_MS = 3000;
+import { Button } from '@/shared/components/Button'
+import { Card, CardContent, CardHeader } from '@/shared/components/Card'
+import { useTranslation } from '@/shared/hooks/useTranslation'
+
+const DEMO_RESET_MESSAGE_DURATION_MS = 3000
 
 interface DemoSectionProps {
-  activeAssociationCode: string | null;
-  onRefreshData: () => void;
+  activeAssociationCode: string | null
+  onRefreshData: () => void
 }
 
 function DemoSectionComponent({ activeAssociationCode, onRefreshData }: DemoSectionProps) {
-  const { t } = useTranslation();
-  const [demoDataReset, setDemoDataReset] = useState(false);
-  const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { t } = useTranslation()
+  const [demoDataReset, setDemoDataReset] = useState(false)
+  const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Cleanup timeout on unmount to prevent memory leaks
   useEffect(() => {
     return () => {
       if (resetTimeoutRef.current) {
-        clearTimeout(resetTimeoutRef.current);
+        clearTimeout(resetTimeoutRef.current)
       }
-    };
-  }, []);
+    }
+  }, [])
 
   const handleResetDemoData = useCallback(() => {
-    onRefreshData();
-    setDemoDataReset(true);
+    onRefreshData()
+    setDemoDataReset(true)
     // Clear any existing timeout before setting a new one
     if (resetTimeoutRef.current) {
-      clearTimeout(resetTimeoutRef.current);
+      clearTimeout(resetTimeoutRef.current)
     }
     resetTimeoutRef.current = setTimeout(
       () => setDemoDataReset(false),
-      DEMO_RESET_MESSAGE_DURATION_MS,
-    );
-  }, [onRefreshData]);
+      DEMO_RESET_MESSAGE_DURATION_MS
+    )
+  }, [onRefreshData])
 
   return (
     <Card>
       <CardHeader>
         <h2 className="font-semibold text-text-primary dark:text-text-primary-dark">
-          {t("settings.demoData")}
+          {t('settings.demoData')}
         </h2>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-text-muted dark:text-text-muted-dark">
-          {t("settings.demoDataDescription")}
+          {t('settings.demoDataDescription')}
         </p>
 
         <div className="flex items-center justify-between py-2">
@@ -57,7 +58,7 @@ function DemoSectionComponent({ activeAssociationCode, onRefreshData }: DemoSect
                 role="status"
                 aria-live="polite"
               >
-                {t("settings.demoDataReset")}
+                {t('settings.demoDataReset')}
               </div>
             )}
             {activeAssociationCode && !demoDataReset && (
@@ -70,14 +71,14 @@ function DemoSectionComponent({ activeAssociationCode, onRefreshData }: DemoSect
           <Button
             variant="secondary"
             onClick={handleResetDemoData}
-            aria-label={t("settings.resetDemoData")}
+            aria-label={t('settings.resetDemoData')}
           >
-            {t("settings.resetDemoData")}
+            {t('settings.resetDemoData')}
           </Button>
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
 
-export const DemoSection = memo(DemoSectionComponent);
+export const DemoSection = memo(DemoSectionComponent)

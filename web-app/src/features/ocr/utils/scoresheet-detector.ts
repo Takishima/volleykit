@@ -8,4 +8,4 @@
  * - `electronic`: Printed/electronic scoresheets with consistent tab-separated columns
  */
 
-export type ScoresheetType = 'manuscript' | 'electronic';
+export type ScoresheetType = 'manuscript' | 'electronic'

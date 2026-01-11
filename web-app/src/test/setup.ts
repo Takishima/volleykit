@@ -1,24 +1,25 @@
-import "@testing-library/jest-dom";
-import { beforeAll } from "vitest";
-import { preloadTranslations } from "@/i18n";
-import { preloadDateLocales } from "@/shared/hooks/useDateFormat";
+import '@testing-library/jest-dom'
+import { beforeAll } from 'vitest'
+
+import { preloadTranslations } from '@/i18n'
+import { preloadDateLocales } from '@/shared/hooks/useDateFormat'
 
 // Preload all translations and date locales before each test file runs.
 // This ensures synchronous availability of localized strings during tests.
 beforeAll(async () => {
-  await Promise.all([preloadTranslations(), preloadDateLocales()]);
-});
+  await Promise.all([preloadTranslations(), preloadDateLocales()])
+})
 
 globalThis.ResizeObserver = class ResizeObserver {
-  private callback: ResizeObserverCallback;
+  private callback: ResizeObserverCallback
 
   constructor(callback: ResizeObserverCallback) {
-    this.callback = callback;
+    this.callback = callback
   }
 
   observe(target: Element) {
-    const width = (target as HTMLElement).offsetWidth || 0;
-    const height = (target as HTMLElement).offsetHeight || 0;
+    const width = (target as HTMLElement).offsetWidth || 0
+    const height = (target as HTMLElement).offsetHeight || 0
 
     const contentRect = {
       width,
@@ -39,9 +40,9 @@ globalThis.ResizeObserver = class ResizeObserver {
           right: this.right,
           x: this.x,
           y: this.y,
-        };
+        }
       },
-    };
+    }
 
     const entry = {
       target,
@@ -49,13 +50,13 @@ globalThis.ResizeObserver = class ResizeObserver {
       borderBoxSize: [],
       contentBoxSize: [],
       devicePixelContentBoxSize: [],
-    } as unknown as ResizeObserverEntry;
+    } as unknown as ResizeObserverEntry
 
     setTimeout(() => {
-      this.callback([entry], this);
-    }, 0);
+      this.callback([entry], this)
+    }, 0)
   }
 
   unobserve() {}
   disconnect() {}
-};
+}

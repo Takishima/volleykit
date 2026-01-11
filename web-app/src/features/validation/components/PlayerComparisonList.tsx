@@ -1,82 +1,75 @@
-import { useMemo } from "react";
-import { useTranslation } from "@/shared/hooks/useTranslation";
-import { Check, AlertTriangle, XCircle, User } from "@/shared/components/icons";
-import type { PlayerComparisonResult, ComparisonStatus } from "@/features/ocr";
+import { useMemo } from 'react'
+
+import type { PlayerComparisonResult, ComparisonStatus } from '@/features/ocr'
+import { Check, AlertTriangle, XCircle, User } from '@/shared/components/icons'
+import { useTranslation } from '@/shared/hooks/useTranslation'
 
 interface PlayerComparisonListProps {
-  results: PlayerComparisonResult[];
-  selectedPlayerIds: Set<string>;
-  onTogglePlayer: (playerId: string) => void;
-  onSelectAll?: () => void;
-  onDeselectAll?: () => void;
+  results: PlayerComparisonResult[]
+  selectedPlayerIds: Set<string>
+  onTogglePlayer: (playerId: string) => void
+  onSelectAll?: () => void
+  onDeselectAll?: () => void
   /** If true, hide selection UI and show read-only comparison */
-  readOnly?: boolean;
+  readOnly?: boolean
 }
 
 interface StatusConfig {
-  icon: typeof Check;
-  iconColor: string;
-  bgColor: string;
-  borderColor: string;
-  label: string;
+  icon: typeof Check
+  iconColor: string
+  bgColor: string
+  borderColor: string
+  label: string
 }
 
 function getStatusConfig(
   status: ComparisonStatus,
-  t: ReturnType<typeof useTranslation>["t"],
+  t: ReturnType<typeof useTranslation>['t']
 ): StatusConfig {
   switch (status) {
-    case "match":
+    case 'match':
       return {
         icon: Check,
-        iconColor: "text-success-500",
-        bgColor: "bg-success-50 dark:bg-success-900/20",
-        borderColor: "border-success-200 dark:border-success-800",
-        label: t("validation.ocr.comparison.matched"),
-      };
-    case "ocr-only":
+        iconColor: 'text-success-500',
+        bgColor: 'bg-success-50 dark:bg-success-900/20',
+        borderColor: 'border-success-200 dark:border-success-800',
+        label: t('validation.ocr.comparison.matched'),
+      }
+    case 'ocr-only':
       return {
         icon: AlertTriangle,
-        iconColor: "text-warning-500",
-        bgColor: "bg-warning-50 dark:bg-warning-900/20",
-        borderColor: "border-warning-200 dark:border-warning-800",
-        label: t("validation.ocr.comparison.ocrOnly"),
-      };
-    case "roster-only":
+        iconColor: 'text-warning-500',
+        bgColor: 'bg-warning-50 dark:bg-warning-900/20',
+        borderColor: 'border-warning-200 dark:border-warning-800',
+        label: t('validation.ocr.comparison.ocrOnly'),
+      }
+    case 'roster-only':
       return {
         icon: XCircle,
-        iconColor: "text-danger-500",
-        bgColor: "bg-danger-50 dark:bg-danger-900/20",
-        borderColor: "border-danger-200 dark:border-danger-800",
-        label: t("validation.ocr.comparison.rosterOnly"),
-      };
+        iconColor: 'text-danger-500',
+        bgColor: 'bg-danger-50 dark:bg-danger-900/20',
+        borderColor: 'border-danger-200 dark:border-danger-800',
+        label: t('validation.ocr.comparison.rosterOnly'),
+      }
   }
 }
 
 interface ComparisonItemProps {
-  result: PlayerComparisonResult;
-  isSelected: boolean;
-  onToggle: () => void;
-  isSelectable: boolean;
+  result: PlayerComparisonResult
+  isSelected: boolean
+  onToggle: () => void
+  isSelectable: boolean
 }
 
-function ComparisonItem({
-  result,
-  isSelected,
-  onToggle,
-  isSelectable,
-}: ComparisonItemProps) {
-  const { t, tInterpolate } = useTranslation();
-  const config = getStatusConfig(result.status, t);
-  const Icon = config.icon;
+function ComparisonItem({ result, isSelected, onToggle, isSelectable }: ComparisonItemProps) {
+  const { t, tInterpolate } = useTranslation()
+  const config = getStatusConfig(result.status, t)
+  const Icon = config.icon
 
   const displayName =
-    result.status === "roster-only"
-      ? result.rosterPlayerName
-      : result.ocrPlayer?.displayName;
+    result.status === 'roster-only' ? result.rosterPlayerName : result.ocrPlayer?.displayName
 
-  const secondaryName =
-    result.status === "match" ? result.rosterPlayerName : null;
+  const secondaryName = result.status === 'match' ? result.rosterPlayerName : null
 
   return (
     <div
@@ -101,13 +94,8 @@ function ComparisonItem({
       {/* Player info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <User
-            className="w-4 h-4 text-gray-400 flex-shrink-0"
-            aria-hidden="true"
-          />
-          <span className="font-medium text-gray-900 dark:text-white truncate">
-            {displayName}
-          </span>
+          <User className="w-4 h-4 text-gray-400 flex-shrink-0" aria-hidden="true" />
+          <span className="font-medium text-gray-900 dark:text-white truncate">{displayName}</span>
         </div>
         {secondaryName && (
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
@@ -125,14 +113,14 @@ function ComparisonItem({
         </span>
         {result.confidence > 0 && (
           <span className="text-xs text-gray-500 dark:text-gray-400">
-            {tInterpolate("validation.ocr.comparison.confidence", {
+            {tInterpolate('validation.ocr.comparison.confidence', {
               score: String(result.confidence),
             })}
           </span>
         )}
       </div>
     </div>
-  );
+  )
 }
 
 /**
@@ -147,31 +135,31 @@ export function PlayerComparisonList({
   onDeselectAll,
   readOnly = false,
 }: PlayerComparisonListProps) {
-  const { t, tInterpolate } = useTranslation();
+  const { t, tInterpolate } = useTranslation()
 
   const { matched, ocrOnly, rosterOnly } = useMemo(() => {
     return {
-      matched: results.filter((r) => r.status === "match"),
-      ocrOnly: results.filter((r) => r.status === "ocr-only"),
-      rosterOnly: results.filter((r) => r.status === "roster-only"),
-    };
-  }, [results]);
+      matched: results.filter((r) => r.status === 'match'),
+      ocrOnly: results.filter((r) => r.status === 'ocr-only'),
+      rosterOnly: results.filter((r) => r.status === 'roster-only'),
+    }
+  }, [results])
 
-  const selectableCount = matched.length;
-  const selectedCount = selectedPlayerIds.size;
-  const allSelected = selectableCount > 0 && selectedCount === selectableCount;
+  const selectableCount = matched.length
+  const selectedCount = selectedPlayerIds.size
+  const allSelected = selectableCount > 0 && selectedCount === selectableCount
 
   // In read-only mode, don't show selection controls
-  const showSelectionControls = !readOnly && selectableCount > 0 && onSelectAll && onDeselectAll;
+  const showSelectionControls = !readOnly && selectableCount > 0 && onSelectAll && onDeselectAll
 
   if (results.length === 0) {
     return (
       <div className="py-8 text-center">
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          {t("validation.ocr.comparison.noMatches")}
+          {t('validation.ocr.comparison.noMatches')}
         </p>
       </div>
-    );
+    )
   }
 
   return (
@@ -180,21 +168,21 @@ export function PlayerComparisonList({
       <div className="flex flex-wrap gap-3 text-xs">
         {matched.length > 0 && (
           <span className="px-2 py-1 bg-success-50 dark:bg-success-900/20 text-success-700 dark:text-success-400 rounded-full">
-            {tInterpolate("validation.ocr.comparison.matchedCount", {
+            {tInterpolate('validation.ocr.comparison.matchedCount', {
               count: String(matched.length),
             })}
           </span>
         )}
         {ocrOnly.length > 0 && (
           <span className="px-2 py-1 bg-warning-50 dark:bg-warning-900/20 text-warning-700 dark:text-warning-400 rounded-full">
-            {tInterpolate("validation.ocr.comparison.ocrOnlyCount", {
+            {tInterpolate('validation.ocr.comparison.ocrOnlyCount', {
               count: String(ocrOnly.length),
             })}
           </span>
         )}
         {rosterOnly.length > 0 && (
           <span className="px-2 py-1 bg-danger-50 dark:bg-danger-900/20 text-danger-700 dark:text-danger-400 rounded-full">
-            {tInterpolate("validation.ocr.comparison.rosterOnlyCount", {
+            {tInterpolate('validation.ocr.comparison.rosterOnlyCount', {
               count: String(rosterOnly.length),
             })}
           </span>
@@ -210,8 +198,8 @@ export function PlayerComparisonList({
             className="text-xs text-primary-600 dark:text-primary-400 hover:underline"
           >
             {allSelected
-              ? t("validation.ocr.comparison.deselectAll")
-              : t("validation.ocr.comparison.selectAll")}
+              ? t('validation.ocr.comparison.deselectAll')
+              : t('validation.ocr.comparison.selectAll')}
           </button>
           <span className="text-xs text-gray-400">
             ({selectedCount}/{selectableCount})
@@ -227,13 +215,9 @@ export function PlayerComparisonList({
               key={result.rosterPlayerId ?? result.ocrPlayer?.rawName}
               result={result}
               isSelected={
-                result.rosterPlayerId
-                  ? selectedPlayerIds.has(result.rosterPlayerId)
-                  : false
+                result.rosterPlayerId ? selectedPlayerIds.has(result.rosterPlayerId) : false
               }
-              onToggle={() =>
-                result.rosterPlayerId && onTogglePlayer(result.rosterPlayerId)
-              }
+              onToggle={() => result.rosterPlayerId && onTogglePlayer(result.rosterPlayerId)}
               isSelectable={!readOnly && !!result.rosterPlayerId}
             />
           ))}
@@ -270,5 +254,5 @@ export function PlayerComparisonList({
         </div>
       )}
     </div>
-  );
+  )
 }

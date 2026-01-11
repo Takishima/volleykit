@@ -1,179 +1,179 @@
-import type { TourId } from "@/shared/stores/tour";
+import type { TourId } from '@/shared/stores/tour'
 
-export type TooltipPlacement = "top" | "bottom" | "left" | "right";
+export type TooltipPlacement = 'top' | 'bottom' | 'left' | 'right'
 
 export interface TourStep {
   // Unique identifier for this step
-  id: string;
+  id: string
 
   // CSS selector to highlight the target element
-  targetSelector: string;
+  targetSelector: string
 
   // Translation keys for title and description
-  titleKey: string;
-  descriptionKey: string;
+  titleKey: string
+  descriptionKey: string
 
   // Where to position the tooltip relative to target
-  placement: TooltipPlacement;
+  placement: TooltipPlacement
 
   // How to detect completion of this step
   completionEvent?: {
     // Type of event to listen for
-    type: "click" | "swipe" | "auto";
+    type: 'click' | 'swipe' | 'auto'
     // Optional selector for click events (if different from target)
-    selector?: string;
+    selector?: string
     // Delay in ms for "auto" type
-    delay?: number;
-  };
+    delay?: number
+  }
 
   // Auto-swipe demo configuration for swipe steps
   // When enabled, disables user input and performs a slow swipe animation
   autoSwipe?: {
     // Direction to swipe ("left" reveals right actions, "right" reveals left actions)
-    direction: "left" | "right";
+    direction: 'left' | 'right'
     // Duration of the animation in ms (default: 1500)
-    duration?: number;
+    duration?: number
     // Delay before starting the animation in ms (default: 500)
-    delay?: number;
-  };
+    delay?: number
+  }
 }
 
 export interface TourDefinition {
   // The tour identifier
-  id: TourId;
+  id: TourId
 
   // Array of steps in order
-  steps: TourStep[];
+  steps: TourStep[]
 }
 
 // Dummy data types for tour mode
 export interface TourDummyAssignment {
-  __identity: string;
-  refereePosition: string;
+  __identity: string
+  refereePosition: string
   refereeGame: {
-    __identity: string;
+    __identity: string
     game: {
-      __identity: string;
-      gameNumber: string;
-      startingDateTime: string;
+      __identity: string
+      gameNumber: string
+      startingDateTime: string
       encounter: {
-        __identity: string;
+        __identity: string
         teamHome: {
-          __identity: string;
-          name: string;
-        };
+          __identity: string
+          name: string
+        }
         teamAway: {
-          __identity: string;
-          name: string;
-        };
-      };
+          __identity: string
+          name: string
+        }
+      }
       hall: {
-        __identity: string;
-        name: string;
+        __identity: string
+        name: string
         primaryPostalAddress: {
-          __identity: string;
-          city: string;
-        };
-      };
+          __identity: string
+          city: string
+        }
+      }
       // League category structure for game report eligibility
       group?: {
-        __identity: string;
+        __identity: string
         phase?: {
-          __identity: string;
+          __identity: string
           league?: {
-            __identity: string;
+            __identity: string
             leagueCategory?: {
-              __identity: string;
-              name: string;
-            };
-          };
-        };
-      };
-    };
-    isGameInFuture: string;
-  };
+              __identity: string
+              name: string
+            }
+          }
+        }
+      }
+    }
+    isGameInFuture: string
+  }
   convocationCompensation?: {
-    __identity: string;
-    distanceInMetres: number;
-    distanceFormatted: string;
+    __identity: string
+    distanceInMetres: number
+    distanceFormatted: string
     // Compensation editability flags
-    paymentDone?: boolean;
-    lockPayoutOnSiteCompensation?: boolean;
-  };
+    paymentDone?: boolean
+    lockPayoutOnSiteCompensation?: boolean
+  }
 }
 
 export interface TourDummyCompensation {
-  __identity: string;
-  amount: number;
-  status: string;
-  refereePosition?: string;
+  __identity: string
+  amount: number
+  status: string
+  refereePosition?: string
   refereeGame: {
-    __identity: string;
+    __identity: string
     game: {
-      __identity: string;
-      number?: string;
-      startingDateTime: string;
+      __identity: string
+      number?: string
+      startingDateTime: string
       encounter: {
-        __identity: string;
+        __identity: string
         teamHome: {
-          __identity: string;
-          name: string;
-        };
+          __identity: string
+          name: string
+        }
         teamAway: {
-          __identity: string;
-          name: string;
-        };
-      };
-    };
-  };
+          __identity: string
+          name: string
+        }
+      }
+    }
+  }
   convocationCompensation?: {
-    __identity: string;
-    distanceInMetres: number;
-    distanceFormatted: string;
-    gameCompensation?: number;
-    travelExpenses?: number;
-    paymentDone?: boolean;
-  };
+    __identity: string
+    distanceInMetres: number
+    distanceFormatted: string
+    gameCompensation?: number
+    travelExpenses?: number
+    paymentDone?: boolean
+  }
 }
 
 export interface TourDummyExchange {
-  __identity: string;
-  status: "open" | "applied";
-  submittedAt: string;
-  submittingType: string;
-  refereePosition: string;
-  requiredRefereeLevel: string;
+  __identity: string
+  status: 'open' | 'applied'
+  submittedAt: string
+  submittingType: string
+  refereePosition: string
+  requiredRefereeLevel: string
   submittedByPerson: {
-    __identity: string;
-    firstName: string;
-    lastName: string;
-    displayName: string;
-  };
+    __identity: string
+    firstName: string
+    lastName: string
+    displayName: string
+  }
   refereeGame: {
-    __identity: string;
+    __identity: string
     game: {
-      __identity: string;
-      gameNumber: string;
-      startingDateTime: string;
+      __identity: string
+      gameNumber: string
+      startingDateTime: string
       encounter: {
-        __identity: string;
+        __identity: string
         teamHome: {
-          __identity: string;
-          name: string;
-        };
+          __identity: string
+          name: string
+        }
         teamAway: {
-          __identity: string;
-          name: string;
-        };
-      };
+          __identity: string
+          name: string
+        }
+      }
       hall: {
-        __identity: string;
-        name: string;
+        __identity: string
+        name: string
         primaryPostalAddress: {
-          __identity: string;
-          city: string;
-        };
-      };
-    };
-  };
+          __identity: string
+          city: string
+        }
+      }
+    }
+  }
 }

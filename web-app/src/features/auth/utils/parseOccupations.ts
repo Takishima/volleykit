@@ -8,14 +8,15 @@
  * The activeParty mode includes inflatedValue with association short names (e.g., "SVRZ")
  * which are used to set the associationCode on occupations.
  */
-import type { Occupation } from "@/shared/stores/auth";
-import type { components } from "@/api/schema";
+import type { components } from '@/api/schema'
+import type { Occupation } from '@/shared/stores/auth'
+
 import {
   isInflatedObject,
   type AttributeValue as ActivePartyAttributeValue,
-} from "./active-party-parser";
+} from './active-party-parser'
 
-type AttributeValue = components["schemas"]["AttributeValue"];
+type AttributeValue = components['schemas']['AttributeValue']
 
 /**
  * Role identifier patterns from the VolleyManager API.
@@ -26,7 +27,7 @@ const ROLE_PATTERNS = {
   player: /:Player$/,
   clubAdmin: /:ClubAdmin$/,
   associationAdmin: /:AssociationAdmin$/,
-} as const;
+} as const
 
 /**
  * Parses an AttributeValue from the API into an Occupation.
@@ -35,37 +36,34 @@ const ROLE_PATTERNS = {
  * @param attr - The AttributeValue from eligibleAttributeValues
  * @param refereeOnly - If true, only return referee occupations (default: true)
  */
-export function parseOccupation(
-  attr: AttributeValue,
-  refereeOnly = true,
-): Occupation | null {
-  const roleIdentifier = attr.roleIdentifier;
+export function parseOccupation(attr: AttributeValue, refereeOnly = true): Occupation | null {
+  const roleIdentifier = attr.roleIdentifier
   if (!roleIdentifier || !attr.__identity) {
-    return null;
+    return null
   }
 
-  let type: Occupation["type"] | null = null;
+  let type: Occupation['type'] | null = null
 
   if (ROLE_PATTERNS.referee.test(roleIdentifier)) {
-    type = "referee";
+    type = 'referee'
   } else if (!refereeOnly) {
     if (ROLE_PATTERNS.player.test(roleIdentifier)) {
-      type = "player";
+      type = 'player'
     } else if (ROLE_PATTERNS.clubAdmin.test(roleIdentifier)) {
-      type = "clubAdmin";
+      type = 'clubAdmin'
     } else if (ROLE_PATTERNS.associationAdmin.test(roleIdentifier)) {
-      type = "associationAdmin";
+      type = 'associationAdmin'
     }
   }
 
   if (!type) {
-    return null;
+    return null
   }
 
   return {
     id: attr.__identity,
     type,
-  };
+  }
 }
 
 /**
@@ -80,15 +78,15 @@ export function parseOccupation(
  */
 export function parseOccupations(
   attributeValues: AttributeValue[] | undefined,
-  refereeOnly = true,
+  refereeOnly = true
 ): Occupation[] {
   if (!attributeValues || attributeValues.length === 0) {
-    return [];
+    return []
   }
 
   return attributeValues
     .map((attr) => parseOccupation(attr, refereeOnly))
-    .filter((occ): occ is Occupation => occ !== null);
+    .filter((occ): occ is Occupation => occ !== null)
 }
 
 /**
@@ -111,14 +109,14 @@ export function parseOccupations(
  * // Returns: [{ id: "1", type: "referee", associationCode: "SV" }]
  */
 export function filterRefereeOccupations(occupations: Occupation[]): Occupation[] {
-  return occupations.filter((occ) => occ.type === "referee");
+  return occupations.filter((occ) => occ.type === 'referee')
 }
 
 /**
  * Words to exclude when deriving association code from name.
  * These are common prepositions/articles that shouldn't be part of the abbreviation.
  */
-const EXCLUDED_WORDS = new Set(["de", "du", "des", "la", "le", "les", "et", "und", "of", "the"]);
+const EXCLUDED_WORDS = new Set(['de', 'du', 'des', 'la', 'le', 'les', 'et', 'und', 'of', 'the'])
 
 /**
  * Derives an association code from the full name by extracting first letters.
@@ -134,16 +132,16 @@ const EXCLUDED_WORDS = new Set(["de", "du", "des", "la", "le", "les", "et", "und
  */
 export function deriveAssociationCodeFromName(name: string | undefined): string | undefined {
   if (!name) {
-    return undefined;
+    return undefined
   }
 
-  const words = name.split(/\s+/);
+  const words = name.split(/\s+/)
   const initials = words
     .filter((word) => !EXCLUDED_WORDS.has(word.toLowerCase()))
     .map((word) => word.charAt(0).toUpperCase())
-    .join("");
+    .join('')
 
-  return initials || undefined;
+  return initials || undefined
 }
 
 /**
@@ -158,30 +156,27 @@ export function deriveAssociationCodeFromName(name: string | undefined): string 
  * @param attr - The AttributeValue from activeParty.groupedEligibleAttributeValues
  * @returns Occupation with associationCode, or null if not a referee role
  */
-export function parseOccupationFromActiveParty(
-  attr: ActivePartyAttributeValue,
-): Occupation | null {
-  const roleIdentifier = attr.roleIdentifier;
+export function parseOccupationFromActiveParty(attr: ActivePartyAttributeValue): Occupation | null {
+  const roleIdentifier = attr.roleIdentifier
   if (!roleIdentifier || !attr.__identity) {
-    return null;
+    return null
   }
 
   // Only parse referee roles
   if (!ROLE_PATTERNS.referee.test(roleIdentifier)) {
-    return null;
+    return null
   }
 
   // Extract association code: prefer shortName, fall back to derived from name
   // inflatedValue can be an object or primitive (boolean/null/string/number)
-  const inflated = isInflatedObject(attr.inflatedValue) ? attr.inflatedValue : undefined;
-  const associationCode =
-    inflated?.shortName ?? deriveAssociationCodeFromName(inflated?.name);
+  const inflated = isInflatedObject(attr.inflatedValue) ? attr.inflatedValue : undefined
+  const associationCode = inflated?.shortName ?? deriveAssociationCodeFromName(inflated?.name)
 
   return {
     id: attr.__identity,
-    type: "referee",
+    type: 'referee',
     associationCode,
-  };
+  }
 }
 
 /**
@@ -199,26 +194,26 @@ export function parseOccupationFromActiveParty(
  * @returns Array of unique referee Occupations with association codes
  */
 export function parseOccupationsFromActiveParty(
-  attributeValues: ActivePartyAttributeValue[] | null | undefined,
+  attributeValues: ActivePartyAttributeValue[] | null | undefined
 ): Occupation[] {
   if (!attributeValues || attributeValues.length === 0) {
-    return [];
+    return []
   }
 
   const occupations = attributeValues
     .map((attr) => parseOccupationFromActiveParty(attr))
-    .filter((occ): occ is Occupation => occ !== null);
+    .filter((occ): occ is Occupation => occ !== null)
 
   // Deduplicate by association code (same association = same dropdown entry)
   // Keep the first occurrence of each unique association
-  const seen = new Set<string>();
+  const seen = new Set<string>()
   return occupations.filter((occ) => {
     // Use association code for deduplication, fall back to id if no code
-    const key = occ.associationCode ?? occ.id;
+    const key = occ.associationCode ?? occ.id
     if (seen.has(key)) {
-      return false;
+      return false
     }
-    seen.add(key);
-    return true;
-  });
+    seen.add(key)
+    return true
+  })
 }

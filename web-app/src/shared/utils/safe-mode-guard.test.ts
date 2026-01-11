@@ -1,186 +1,186 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { checkSafeMode } from "./safe-mode-guard";
-import { toast } from "@/shared/stores/toast";
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-const mockLogDebug = vi.fn();
+import { toast } from '@/shared/stores/toast'
 
-vi.mock("@/shared/utils/logger", () => ({
+import { checkSafeMode } from './safe-mode-guard'
+
+const mockLogDebug = vi.fn()
+
+vi.mock('@/shared/utils/logger', () => ({
   createLogger: () => ({
     debug: (...args: unknown[]) => mockLogDebug(...args),
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
   }),
-}));
+}))
 
-vi.mock("@/shared/stores/toast", () => ({
+vi.mock('@/shared/stores/toast', () => ({
   toast: {
     success: vi.fn(),
     error: vi.fn(),
     info: vi.fn(),
     warning: vi.fn(),
   },
-}));
+}))
 
-vi.mock("@/i18n", () => ({
+vi.mock('@/i18n', () => ({
   t: (key: string) => key,
-}));
+}))
 
-describe("checkSafeMode", () => {
+describe('checkSafeMode', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-  });
+    vi.clearAllMocks()
+  })
 
   afterEach(() => {
-    vi.restoreAllMocks();
-  });
+    vi.restoreAllMocks()
+  })
 
-  describe("demo mode bypass", () => {
-    it("should return false when in demo mode, even if safe mode is enabled", () => {
+  describe('demo mode bypass', () => {
+    it('should return false when in demo mode, even if safe mode is enabled', () => {
       const result = checkSafeMode({
         isDemoMode: true,
         isSafeModeEnabled: true,
-        context: "test",
-        action: "operation",
-      });
+        context: 'test',
+        action: 'operation',
+      })
 
-      expect(result).toBe(false);
-      expect(mockLogDebug).not.toHaveBeenCalled();
-      expect(toast.warning).not.toHaveBeenCalled();
-    });
+      expect(result).toBe(false)
+      expect(mockLogDebug).not.toHaveBeenCalled()
+      expect(toast.warning).not.toHaveBeenCalled()
+    })
 
-    it("should return false when in demo mode and safe mode is disabled", () => {
+    it('should return false when in demo mode and safe mode is disabled', () => {
       const result = checkSafeMode({
         isDemoMode: true,
         isSafeModeEnabled: false,
-        context: "test",
-        action: "operation",
-      });
+        context: 'test',
+        action: 'operation',
+      })
 
-      expect(result).toBe(false);
-      expect(mockLogDebug).not.toHaveBeenCalled();
-      expect(toast.warning).not.toHaveBeenCalled();
-    });
-  });
+      expect(result).toBe(false)
+      expect(mockLogDebug).not.toHaveBeenCalled()
+      expect(toast.warning).not.toHaveBeenCalled()
+    })
+  })
 
-  describe("safe mode disabled", () => {
-    it("should return false when safe mode is disabled (not in demo mode)", () => {
+  describe('safe mode disabled', () => {
+    it('should return false when safe mode is disabled (not in demo mode)', () => {
       const result = checkSafeMode({
         isDemoMode: false,
         isSafeModeEnabled: false,
-        context: "test",
-        action: "operation",
-      });
+        context: 'test',
+        action: 'operation',
+      })
 
-      expect(result).toBe(false);
-      expect(mockLogDebug).not.toHaveBeenCalled();
-      expect(toast.warning).not.toHaveBeenCalled();
-    });
-  });
+      expect(result).toBe(false)
+      expect(mockLogDebug).not.toHaveBeenCalled()
+      expect(toast.warning).not.toHaveBeenCalled()
+    })
+  })
 
-  describe("active blocking", () => {
-    it("should return true and show warning when safe mode is active and not in demo mode", () => {
+  describe('active blocking', () => {
+    it('should return true and show warning when safe mode is active and not in demo mode', () => {
       const result = checkSafeMode({
         isDemoMode: false,
         isSafeModeEnabled: true,
-        context: "useAssignmentActions",
-        action: "game validation",
-      });
+        context: 'useAssignmentActions',
+        action: 'game validation',
+      })
 
-      expect(result).toBe(true);
+      expect(result).toBe(true)
       expect(mockLogDebug).toHaveBeenCalledWith(
-        "[useAssignmentActions] game validation blocked by safe mode",
-      );
-      expect(toast.warning).toHaveBeenCalledWith("settings.safeModeBlocked");
-    });
+        '[useAssignmentActions] game validation blocked by safe mode'
+      )
+      expect(toast.warning).toHaveBeenCalledWith('settings.safeModeBlocked')
+    })
 
-    it("should use provided context and action in log message", () => {
+    it('should use provided context and action in log message', () => {
       checkSafeMode({
         isDemoMode: false,
         isSafeModeEnabled: true,
-        context: "useExchangeActions",
-        action: "take over",
-      });
+        context: 'useExchangeActions',
+        action: 'take over',
+      })
 
       expect(mockLogDebug).toHaveBeenCalledWith(
-        "[useExchangeActions] take over blocked by safe mode",
-      );
-    });
-  });
+        '[useExchangeActions] take over blocked by safe mode'
+      )
+    })
+  })
 
-  describe("logging behavior", () => {
-    it("should log with correct format when blocking operation", () => {
+  describe('logging behavior', () => {
+    it('should log with correct format when blocking operation', () => {
       checkSafeMode({
         isDemoMode: false,
         isSafeModeEnabled: true,
-        context: "custom",
-        action: "my action",
-      });
+        context: 'custom',
+        action: 'my action',
+      })
 
-      expect(mockLogDebug).toHaveBeenCalledTimes(1);
-      expect(mockLogDebug).toHaveBeenCalledWith(
-        "[custom] my action blocked by safe mode",
-      );
-    });
+      expect(mockLogDebug).toHaveBeenCalledTimes(1)
+      expect(mockLogDebug).toHaveBeenCalledWith('[custom] my action blocked by safe mode')
+    })
 
-    it("should not log when operation is allowed", () => {
+    it('should not log when operation is allowed', () => {
       checkSafeMode({
         isDemoMode: false,
         isSafeModeEnabled: false,
-        context: "test",
-        action: "allowed operation",
-      });
+        context: 'test',
+        action: 'allowed operation',
+      })
 
-      expect(mockLogDebug).not.toHaveBeenCalled();
-    });
-  });
+      expect(mockLogDebug).not.toHaveBeenCalled()
+    })
+  })
 
-  describe("toast behavior", () => {
-    it("should show warning toast with translation key when blocking", () => {
+  describe('toast behavior', () => {
+    it('should show warning toast with translation key when blocking', () => {
       checkSafeMode({
         isDemoMode: false,
         isSafeModeEnabled: true,
-        context: "test",
-        action: "blocked",
-      });
+        context: 'test',
+        action: 'blocked',
+      })
 
-      expect(toast.warning).toHaveBeenCalledTimes(1);
-      expect(toast.warning).toHaveBeenCalledWith("settings.safeModeBlocked");
-    });
+      expect(toast.warning).toHaveBeenCalledTimes(1)
+      expect(toast.warning).toHaveBeenCalledWith('settings.safeModeBlocked')
+    })
 
-    it("should not show toast when operation is allowed", () => {
+    it('should not show toast when operation is allowed', () => {
       checkSafeMode({
         isDemoMode: true,
         isSafeModeEnabled: true,
-        context: "test",
-        action: "allowed",
-      });
+        context: 'test',
+        action: 'allowed',
+      })
 
-      expect(toast.warning).not.toHaveBeenCalled();
-    });
-  });
+      expect(toast.warning).not.toHaveBeenCalled()
+    })
+  })
 
-  describe("return value semantics", () => {
-    it("should return true to indicate operation should be blocked", () => {
+  describe('return value semantics', () => {
+    it('should return true to indicate operation should be blocked', () => {
       const result = checkSafeMode({
         isDemoMode: false,
         isSafeModeEnabled: true,
-        context: "test",
-        action: "blocked",
-      });
+        context: 'test',
+        action: 'blocked',
+      })
 
-      expect(result).toBe(true);
-    });
+      expect(result).toBe(true)
+    })
 
-    it("should return false to indicate operation can proceed", () => {
+    it('should return false to indicate operation can proceed', () => {
       const result = checkSafeMode({
         isDemoMode: false,
         isSafeModeEnabled: false,
-        context: "test",
-        action: "allowed",
-      });
+        context: 'test',
+        action: 'allowed',
+      })
 
-      expect(result).toBe(false);
-    });
-  });
-});
+      expect(result).toBe(false)
+    })
+  })
+})

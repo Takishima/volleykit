@@ -12,24 +12,25 @@
  * - validation: Game validation state and pending scorers
  */
 
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+
 import {
   generateDummyData,
   generateMockNominationLists,
   type DemoAssociationCode,
-} from "../demo-generators";
-import { createAssignmentsSlice } from "./assignments";
-import { createCompensationsSlice } from "./compensations";
-import { createExchangesSlice } from "./exchanges";
-import { createNominationsSlice } from "./nominations";
-import { createValidationSlice } from "./validation";
+} from '../demo-generators'
+import { createAssignmentsSlice } from './assignments'
+import { createCompensationsSlice } from './compensations'
+import { createExchangesSlice } from './exchanges'
+import { createNominationsSlice } from './nominations'
 import {
   type DemoState,
   DEMO_USER_REFEREE_LEVEL,
   DEMO_USER_REFEREE_LEVEL_GRADATION_VALUE,
   DEMO_DATA_STALENESS_MS,
-} from "./types";
+} from './types'
+import { createValidationSlice } from './validation'
 
 // Re-export types and constants for consumers
 export type {
@@ -39,9 +40,9 @@ export type {
   ValidatedGameData,
   PendingScorerData,
   AssignmentCompensationEdit,
-} from "./types";
+} from './types'
 
-export { DEMO_USER_PERSON_IDENTITY } from "./types";
+export { DEMO_USER_PERSON_IDENTITY } from './types'
 
 export const useDemoStore = create<DemoState>()(
   persist(
@@ -60,17 +61,16 @@ export const useDemoStore = create<DemoState>()(
       generatedAt: null,
 
       // Data lifecycle actions
-      initializeDemoData: (associationCode: DemoAssociationCode = "SV") => {
-        const currentState = get();
-        const hasExistingData = currentState.assignments.length > 0;
-        const isSameAssociation =
-          currentState.activeAssociationCode === associationCode;
+      initializeDemoData: (associationCode: DemoAssociationCode = 'SV') => {
+        const currentState = get()
+        const hasExistingData = currentState.assignments.length > 0
+        const isSameAssociation = currentState.activeAssociationCode === associationCode
 
         if (hasExistingData && isSameAssociation) {
-          return;
+          return
         }
 
-        const data = generateDummyData(associationCode);
+        const data = generateDummyData(associationCode)
         set({
           assignments: data.assignments,
           compensations: data.compensations,
@@ -83,7 +83,7 @@ export const useDemoStore = create<DemoState>()(
           userRefereeLevel: DEMO_USER_REFEREE_LEVEL,
           userRefereeLevelGradationValue: DEMO_USER_REFEREE_LEVEL_GRADATION_VALUE,
           generatedAt: Date.now(),
-        });
+        })
       },
 
       clearDemoData: () =>
@@ -106,8 +106,8 @@ export const useDemoStore = create<DemoState>()(
 
       refreshData: () =>
         set(() => {
-          const currentAssociation = get().activeAssociationCode ?? "SV";
-          const newData = generateDummyData(currentAssociation);
+          const currentAssociation = get().activeAssociationCode ?? 'SV'
+          const newData = generateDummyData(currentAssociation)
           return {
             assignments: newData.assignments,
             compensations: newData.compensations,
@@ -120,11 +120,11 @@ export const useDemoStore = create<DemoState>()(
             pendingScorers: {},
             assignmentCompensations: {},
             generatedAt: Date.now(),
-          };
+          }
         }),
 
       setActiveAssociation: (associationCode: DemoAssociationCode) => {
-        const data = generateDummyData(associationCode);
+        const data = generateDummyData(associationCode)
         set({
           assignments: data.assignments,
           compensations: data.compensations,
@@ -135,11 +135,11 @@ export const useDemoStore = create<DemoState>()(
           scorers: data.scorers,
           activeAssociationCode: associationCode,
           generatedAt: Date.now(),
-        });
+        })
       },
     }),
     {
-      name: "volleykit-demo",
+      name: 'volleykit-demo',
       partialize: (state) => ({
         assignments: state.assignments,
         compensations: state.compensations,
@@ -157,11 +157,10 @@ export const useDemoStore = create<DemoState>()(
         generatedAt: state.generatedAt,
       }),
       merge: (persisted, current) => {
-        const persistedState = persisted as Partial<DemoState> | undefined;
+        const persistedState = persisted as Partial<DemoState> | undefined
 
-        const generatedAt = persistedState?.generatedAt;
-        const isStale =
-          !generatedAt || Date.now() - generatedAt > DEMO_DATA_STALENESS_MS;
+        const generatedAt = persistedState?.generatedAt
+        const isStale = !generatedAt || Date.now() - generatedAt > DEMO_DATA_STALENESS_MS
 
         if (isStale) {
           return {
@@ -169,14 +168,14 @@ export const useDemoStore = create<DemoState>()(
             validatedGames: persistedState?.validatedGames ?? {},
             pendingScorers: persistedState?.pendingScorers ?? {},
             assignmentCompensations: persistedState?.assignmentCompensations ?? {},
-          };
+          }
         }
 
         return {
           ...current,
           ...persistedState,
-        };
+        }
       },
-    },
-  ),
-);
+    }
+  )
+)

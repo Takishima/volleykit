@@ -1,16 +1,18 @@
-import { useState, useEffect } from "react";
-import type { ValidatedPersonSearchResult } from "@/api/validation";
-import { ScorerSearchPanel } from "./ScorerSearchPanel";
+import { useState, useEffect } from 'react'
+
+import type { ValidatedPersonSearchResult } from '@/api/validation'
+
+import { ScorerSearchPanel } from './ScorerSearchPanel'
 
 interface ScorerPanelProps {
-  onScorerChange?: (scorer: ValidatedPersonSearchResult | null) => void;
-  initialScorer?: ValidatedPersonSearchResult | null;
+  onScorerChange?: (scorer: ValidatedPersonSearchResult | null) => void
+  initialScorer?: ValidatedPersonSearchResult | null
   /** When true, shows scorer in view-only mode without edit controls */
-  readOnly?: boolean;
+  readOnly?: boolean
   /** Scorer name to display in read-only mode when no scorer data is available */
-  readOnlyScorerName?: string;
+  readOnlyScorerName?: string
   /** Scorer birthday to display in read-only mode when no scorer data is available */
-  readOnlyScorerBirthday?: string;
+  readOnlyScorerBirthday?: string
 }
 
 /**
@@ -25,21 +27,22 @@ export function ScorerPanel({
   readOnlyScorerName,
   readOnlyScorerBirthday,
 }: ScorerPanelProps) {
-  const [selectedScorer, setSelectedScorer] =
-    useState<ValidatedPersonSearchResult | null>(initialScorer);
+  const [selectedScorer, setSelectedScorer] = useState<ValidatedPersonSearchResult | null>(
+    initialScorer
+  )
 
   // Notify parent of initial scorer on mount (so completionStatus is updated)
   // Note: Component uses key={pendingScorer?.__identity} to force remount when scorer changes
   useEffect(() => {
     if (initialScorer) {
-      onScorerChange?.(initialScorer);
+      onScorerChange?.(initialScorer)
     }
-  }, [initialScorer, onScorerChange]);
+  }, [initialScorer, onScorerChange])
 
   const handleScorerSelect = (scorer: ValidatedPersonSearchResult | null) => {
-    setSelectedScorer(scorer);
-    onScorerChange?.(scorer);
-  };
+    setSelectedScorer(scorer)
+    onScorerChange?.(scorer)
+  }
 
   return (
     <ScorerSearchPanel
@@ -49,5 +52,5 @@ export function ScorerPanel({
       readOnlyScorerName={readOnlyScorerName}
       readOnlyScorerBirthday={readOnlyScorerBirthday}
     />
-  );
+  )
 }

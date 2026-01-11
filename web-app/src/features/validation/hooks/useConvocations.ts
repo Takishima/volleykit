@@ -11,7 +11,7 @@
  */
 
 // Re-export query keys for backwards compatibility
-export { queryKeys } from "@/api/queryKeys";
+export { queryKeys } from '@/api/queryKeys'
 
 // Assignment hooks and types
 export {
@@ -24,7 +24,7 @@ export {
   useAssignmentDetails,
   useCalendarAssignments,
   type CalendarAssignment,
-} from "@/features/assignments/hooks/useAssignments";
+} from '@/features/assignments/hooks/useAssignments'
 
 // Compensation hooks and types
 export {
@@ -36,7 +36,7 @@ export {
   useUnpaidCompensations,
   useUpdateCompensation,
   useUpdateAssignmentCompensation,
-} from "@/features/compensations/hooks/useCompensations";
+} from '@/features/compensations/hooks/useCompensations'
 
 // Exchange hooks and types
 export {
@@ -44,7 +44,7 @@ export {
   useGameExchanges,
   useApplyForExchange,
   useWithdrawFromExchange,
-} from "@/features/exchanges/hooks/useExchanges";
+} from '@/features/exchanges/hooks/useExchanges'
 
 // Settings hooks
-export { useAssociationSettings, useActiveSeason } from "@/features/settings/hooks/useSettings";
+export { useAssociationSettings, useActiveSeason } from '@/features/settings/hooks/useSettings'

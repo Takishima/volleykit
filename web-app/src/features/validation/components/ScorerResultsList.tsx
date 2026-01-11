@@ -1,22 +1,22 @@
-import type { ValidatedPersonSearchResult } from "@/api/validation";
-import { useTranslation } from "@/shared/hooks/useTranslation";
-import { LoadingSpinner } from "@/shared/components/LoadingSpinner";
-import { formatDOB } from "@/shared/utils/date-helpers";
-import { ChevronRight } from "@/shared/components/icons";
+import type { ValidatedPersonSearchResult } from '@/api/validation'
+import { ChevronRight } from '@/shared/components/icons'
+import { LoadingSpinner } from '@/shared/components/LoadingSpinner'
+import { useTranslation } from '@/shared/hooks/useTranslation'
+import { formatDOB } from '@/shared/utils/date-helpers'
 
 interface ScorerResultsListProps {
-  results: ValidatedPersonSearchResult[] | undefined;
-  isLoading: boolean;
-  isError: boolean;
-  onSelect: (scorer: ValidatedPersonSearchResult) => void;
-  highlightedIndex?: number;
-  onHighlight?: (index: number) => void;
-  listboxId?: string;
+  results: ValidatedPersonSearchResult[] | undefined
+  isLoading: boolean
+  isError: boolean
+  onSelect: (scorer: ValidatedPersonSearchResult) => void
+  highlightedIndex?: number
+  onHighlight?: (index: number) => void
+  listboxId?: string
 }
 
 /** Generates a unique ID for a scorer option element. */
 function getScorerOptionId(identity: string): string {
-  return `scorer-option-${identity}`;
+  return `scorer-option-${identity}`
 }
 
 /**
@@ -32,46 +32,43 @@ export function ScorerResultsList({
   onHighlight,
   listboxId,
 }: ScorerResultsListProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
-  const hasResults = results && results.length > 0;
+  const hasResults = results && results.length > 0
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
         <LoadingSpinner size="md" />
       </div>
-    );
+    )
   }
 
   if (isError) {
     return (
-      <div
-        role="alert"
-        className="text-center py-8 text-danger-500 dark:text-danger-400"
-      >
-        {t("validation.scorerSearch.searchError")}
+      <div role="alert" className="text-center py-8 text-danger-500 dark:text-danger-400">
+        {t('validation.scorerSearch.searchError')}
       </div>
-    );
+    )
   }
 
   if (!hasResults) {
     return (
       <div className="text-center py-8 text-text-muted dark:text-text-muted-dark">
-        {t("validation.scorerSearch.noScorersFound")}
+        {t('validation.scorerSearch.noScorersFound')}
       </div>
-    );
+    )
   }
 
   return (
     <ul
       id={listboxId}
       role="listbox"
-      aria-label={t("validation.scorerSearch.searchResults")}
+      aria-label={t('validation.scorerSearch.searchResults')}
       className="space-y-1"
     >
       {results.map((scorer, index) => {
-        const isHighlighted = index === highlightedIndex;
+        const isHighlighted = index === highlightedIndex
         return (
           <li
             key={scorer.__identity}
@@ -88,8 +85,8 @@ export function ScorerResultsList({
                 transition-colors
                 ${
                   isHighlighted
-                    ? "bg-primary-50 dark:bg-primary-900/30"
-                    : "hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark"
+                    ? 'bg-primary-50 dark:bg-primary-900/30'
+                    : 'hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark'
                 }
               `}
             >
@@ -98,12 +95,10 @@ export function ScorerResultsList({
                   {scorer.displayName}
                 </div>
                 <div className="flex items-center gap-3 text-sm text-text-muted dark:text-text-muted-dark">
-                  {scorer.associationId && (
-                    <span>ID: {scorer.associationId}</span>
-                  )}
+                  {scorer.associationId && <span>ID: {scorer.associationId}</span>}
                   {scorer.birthday && (
                     <span>
-                      {t("common.dob")}: {formatDOB(scorer.birthday)}
+                      {t('common.dob')}: {formatDOB(scorer.birthday)}
                     </span>
                   )}
                 </div>
@@ -114,8 +109,8 @@ export function ScorerResultsList({
               />
             </button>
           </li>
-        );
+        )
       })}
     </ul>
-  );
+  )
 }

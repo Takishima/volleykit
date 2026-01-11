@@ -1,101 +1,94 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
-import { LevelFilterToggle } from "./LevelFilterToggle";
+import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi } from 'vitest'
 
-describe("LevelFilterToggle", () => {
-  it("should render with unchecked state", () => {
-    const onChange = vi.fn();
+import { LevelFilterToggle } from './LevelFilterToggle'
 
-    render(<LevelFilterToggle checked={false} onChange={onChange} />);
+describe('LevelFilterToggle', () => {
+  it('should render with unchecked state', () => {
+    const onChange = vi.fn()
 
-    const toggle = screen.getByRole("switch");
-    expect(toggle).toHaveAttribute("aria-checked", "false");
-    expect(toggle).toHaveAttribute("aria-label", "My level");
-  });
+    render(<LevelFilterToggle checked={false} onChange={onChange} />)
 
-  it("should render with checked state", () => {
-    const onChange = vi.fn();
+    const toggle = screen.getByRole('switch')
+    expect(toggle).toHaveAttribute('aria-checked', 'false')
+    expect(toggle).toHaveAttribute('aria-label', 'My level')
+  })
 
-    render(<LevelFilterToggle checked={true} onChange={onChange} />);
+  it('should render with checked state', () => {
+    const onChange = vi.fn()
 
-    const toggle = screen.getByRole("switch");
-    expect(toggle).toHaveAttribute("aria-checked", "true");
-  });
+    render(<LevelFilterToggle checked={true} onChange={onChange} />)
 
-  it("should call onChange with true when clicking unchecked toggle", () => {
-    const onChange = vi.fn();
+    const toggle = screen.getByRole('switch')
+    expect(toggle).toHaveAttribute('aria-checked', 'true')
+  })
 
-    render(<LevelFilterToggle checked={false} onChange={onChange} />);
+  it('should call onChange with true when clicking unchecked toggle', () => {
+    const onChange = vi.fn()
 
-    const toggle = screen.getByRole("switch");
-    fireEvent.click(toggle);
+    render(<LevelFilterToggle checked={false} onChange={onChange} />)
 
-    expect(onChange).toHaveBeenCalledOnce();
-    expect(onChange).toHaveBeenCalledWith(true);
-  });
+    const toggle = screen.getByRole('switch')
+    fireEvent.click(toggle)
 
-  it("should call onChange with false when clicking checked toggle", () => {
-    const onChange = vi.fn();
+    expect(onChange).toHaveBeenCalledOnce()
+    expect(onChange).toHaveBeenCalledWith(true)
+  })
 
-    render(<LevelFilterToggle checked={true} onChange={onChange} />);
+  it('should call onChange with false when clicking checked toggle', () => {
+    const onChange = vi.fn()
 
-    const toggle = screen.getByRole("switch");
-    fireEvent.click(toggle);
+    render(<LevelFilterToggle checked={true} onChange={onChange} />)
 
-    expect(onChange).toHaveBeenCalledOnce();
-    expect(onChange).toHaveBeenCalledWith(false);
-  });
+    const toggle = screen.getByRole('switch')
+    fireEvent.click(toggle)
 
-  it("should display user level when provided and checked", () => {
-    const onChange = vi.fn();
+    expect(onChange).toHaveBeenCalledOnce()
+    expect(onChange).toHaveBeenCalledWith(false)
+  })
 
-    render(
-      <LevelFilterToggle checked={true} onChange={onChange} userLevel="N2" />,
-    );
+  it('should display user level when provided and checked', () => {
+    const onChange = vi.fn()
 
-    expect(screen.getByText("N2+")).toBeInTheDocument();
-  });
+    render(<LevelFilterToggle checked={true} onChange={onChange} userLevel="N2" />)
 
-  it("should not display user level when unchecked", () => {
-    const onChange = vi.fn();
+    expect(screen.getByText('N2+')).toBeInTheDocument()
+  })
 
-    render(
-      <LevelFilterToggle checked={false} onChange={onChange} userLevel="N2" />,
-    );
+  it('should not display user level when unchecked', () => {
+    const onChange = vi.fn()
+
+    render(<LevelFilterToggle checked={false} onChange={onChange} userLevel="N2" />)
 
     // When unchecked, shows label instead of the level value
-    expect(screen.queryByText("N2+")).not.toBeInTheDocument();
-    expect(screen.getByText("My level")).toBeInTheDocument();
-  });
+    expect(screen.queryByText('N2+')).not.toBeInTheDocument()
+    expect(screen.getByText('My level')).toBeInTheDocument()
+  })
 
-  it("should not display user level when not provided", () => {
-    const onChange = vi.fn();
+  it('should not display user level when not provided', () => {
+    const onChange = vi.fn()
 
-    render(<LevelFilterToggle checked={true} onChange={onChange} />);
+    render(<LevelFilterToggle checked={true} onChange={onChange} />)
 
     // Shows label when no userLevel is provided
-    expect(screen.getByText("My level")).toBeInTheDocument();
-  });
+    expect(screen.getByText('My level')).toBeInTheDocument()
+  })
 
-  it("should have correct visual styling when checked", () => {
-    const onChange = vi.fn();
+  it('should have correct visual styling when checked', () => {
+    const onChange = vi.fn()
 
-    const { container } = render(
-      <LevelFilterToggle checked={true} onChange={onChange} />,
-    );
+    const { container } = render(<LevelFilterToggle checked={true} onChange={onChange} />)
 
-    const toggle = container.querySelector(".bg-primary-100");
-    expect(toggle).toBeInTheDocument();
-  });
+    const toggle = container.querySelector('.bg-primary-100')
+    expect(toggle).toBeInTheDocument()
+  })
 
-  it("should have correct visual styling when unchecked", () => {
-    const onChange = vi.fn();
+  it('should have correct visual styling when unchecked', () => {
+    const onChange = vi.fn()
 
-    const { container } = render(
-      <LevelFilterToggle checked={false} onChange={onChange} />,
-    );
+    const { container } = render(<LevelFilterToggle checked={false} onChange={onChange} />)
 
-    const toggle = container.querySelector(".bg-gray-100");
-    expect(toggle).toBeInTheDocument();
-  });
-});
+    const toggle = container.querySelector('.bg-gray-100')
+    expect(toggle).toBeInTheDocument()
+  })
+})

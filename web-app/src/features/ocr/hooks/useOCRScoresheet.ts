@@ -7,17 +7,19 @@
  * Works with both manuscript (handwritten) and electronic (printed) scoresheets.
  */
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react'
+
+import { OCRFactory } from '../services/ocr-factory'
+import { parseGameSheetWithOCR } from '../utils/player-list-parser'
+
 import type {
   OCRProgress,
   OCRResult,
   ParsedGameSheet,
   UseOCRScoresheetReturn,
   OCREngine,
-} from '../types';
-import type { ScoresheetType } from '../utils/scoresheet-detector';
-import { OCRFactory } from '../services/ocr-factory';
-import { parseGameSheetWithOCR } from '../utils/player-list-parser';
+} from '../types'
+import type { ScoresheetType } from '../utils/scoresheet-detector'
 
 // =============================================================================
 // Hook Implementation
@@ -50,14 +52,14 @@ import { parseGameSheetWithOCR } from '../utils/player-list-parser';
  * ```
  */
 export function useOCRScoresheet(): UseOCRScoresheetReturn {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [progress, setProgress] = useState<OCRProgress | null>(null);
-  const [result, setResult] = useState<ParsedGameSheet | null>(null);
-  const [ocrResult, setOcrResult] = useState<OCRResult | null>(null);
-  const [error, setError] = useState<Error | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [progress, setProgress] = useState<OCRProgress | null>(null)
+  const [result, setResult] = useState<ParsedGameSheet | null>(null)
+  const [ocrResult, setOcrResult] = useState<OCRResult | null>(null)
+  const [error, setError] = useState<Error | null>(null)
 
   // Keep reference to current OCR engine for cancellation
-  const engineRef = useRef<OCREngine | null>(null);
+  const engineRef = useRef<OCREngine | null>(null)
 
   /**
    * Process an image and extract player data
@@ -67,59 +69,59 @@ export function useOCRScoresheet(): UseOCRScoresheetReturn {
   const processImage = useCallback(
     async (
       imageBlob: Blob,
-      scoresheetType: ScoresheetType = 'electronic',
+      scoresheetType: ScoresheetType = 'electronic'
     ): Promise<ParsedGameSheet | null> => {
       // Reset state
-      setIsProcessing(true);
-      setProgress(null);
-      setResult(null);
-      setOcrResult(null);
-      setError(null);
+      setIsProcessing(true)
+      setProgress(null)
+      setResult(null)
+      setOcrResult(null)
+      setError(null)
 
       try {
         // Create OCR engine with progress callback
         // Use create() directly to skip health check - the PoC works this way
         // and createWithFallback's health check may fail in some environments
         const engine = OCRFactory.create((p) => {
-          setProgress(p);
-        });
-        engineRef.current = engine;
+          setProgress(p)
+        })
+        engineRef.current = engine
 
         // Initialize OCR
-        await engine.initialize();
+        await engine.initialize()
 
         // Perform OCR
-        const rawOcrResult = await engine.recognize(imageBlob);
+        const rawOcrResult = await engine.recognize(imageBlob)
 
         // Parse the OCR result into structured data (uses bounding boxes for column detection)
-        const parsed = parseGameSheetWithOCR(rawOcrResult, { type: scoresheetType });
+        const parsed = parseGameSheetWithOCR(rawOcrResult, { type: scoresheetType })
 
         // Clean up
-        await engine.terminate();
-        engineRef.current = null;
+        await engine.terminate()
+        engineRef.current = null
 
         // Update state
-        setResult(parsed);
-        setOcrResult(rawOcrResult);
-        setIsProcessing(false);
+        setResult(parsed)
+        setOcrResult(rawOcrResult)
+        setIsProcessing(false)
 
-        return parsed;
+        return parsed
       } catch (err) {
-        const errorObj = err instanceof Error ? err : new Error(String(err));
+        const errorObj = err instanceof Error ? err : new Error(String(err))
 
         // Don't set error state if cancelled
         if (errorObj.message !== 'OCR cancelled') {
-          setError(errorObj);
+          setError(errorObj)
         }
 
-        setIsProcessing(false);
-        engineRef.current = null;
+        setIsProcessing(false)
+        engineRef.current = null
 
-        return null;
+        return null
       }
     },
-    [],
-  );
+    []
+  )
 
   /**
    * Cancel ongoing processing
@@ -127,26 +129,26 @@ export function useOCRScoresheet(): UseOCRScoresheetReturn {
   const cancel = useCallback(async () => {
     if (engineRef.current) {
       try {
-        await engineRef.current.terminate();
+        await engineRef.current.terminate()
       } catch {
         // Ignore errors during cancellation - engine may already be terminated
       }
-      engineRef.current = null;
+      engineRef.current = null
     }
-    setIsProcessing(false);
-    setProgress(null);
-  }, []);
+    setIsProcessing(false)
+    setProgress(null)
+  }, [])
 
   /**
    * Reset state to initial values
    */
   const reset = useCallback(() => {
-    setIsProcessing(false);
-    setProgress(null);
-    setResult(null);
-    setOcrResult(null);
-    setError(null);
-  }, []);
+    setIsProcessing(false)
+    setProgress(null)
+    setResult(null)
+    setOcrResult(null)
+    setError(null)
+  }, [])
 
   return {
     // State
@@ -159,5 +161,5 @@ export function useOCRScoresheet(): UseOCRScoresheetReturn {
     processImage,
     cancel,
     reset,
-  };
+  }
 }

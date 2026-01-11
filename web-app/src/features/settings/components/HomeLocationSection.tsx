@@ -1,16 +1,18 @@
-import { memo } from "react";
-import { useTranslation } from "@/shared/hooks/useTranslation";
-import { Card, CardContent, CardHeader } from "@/shared/components/Card";
-import { Button } from "@/shared/components/Button";
-import { MapPin, X, Clock } from "@/shared/components/icons";
+import { memo } from 'react'
+
+import { Button } from '@/shared/components/Button'
+import { Card, CardContent, CardHeader } from '@/shared/components/Card'
+import { MapPin, X, Clock } from '@/shared/components/icons'
+import { useTranslation } from '@/shared/hooks/useTranslation'
+
 import {
   useHomeLocationSettings,
   getGeolocationErrorMessage,
-} from "../hooks/useHomeLocationSettings";
+} from '../hooks/useHomeLocationSettings'
 
 function HomeLocationSectionComponent() {
-  const { t } = useTranslation();
-  const homeLocation = useHomeLocationSettings({ t });
+  const { t } = useTranslation()
+  const homeLocation = useHomeLocationSettings({ t })
 
   return (
     <Card>
@@ -18,13 +20,13 @@ function HomeLocationSectionComponent() {
         <div className="flex items-center gap-2">
           <MapPin className="w-5 h-5 text-text-muted dark:text-text-muted-dark" />
           <h2 className="font-semibold text-text-primary dark:text-text-primary-dark">
-            {t("settings.homeLocation.title")}
+            {t('settings.homeLocation.title')}
           </h2>
         </div>
       </CardHeader>
       <CardContent className="space-y-4" data-tour="home-location">
         <p className="text-sm text-text-muted dark:text-text-muted-dark">
-          {t("settings.homeLocation.description")}
+          {t('settings.homeLocation.description')}
         </p>
 
         {/* Current location display */}
@@ -40,7 +42,7 @@ function HomeLocationSectionComponent() {
               type="button"
               onClick={homeLocation.handleClearLocation}
               className="ml-2 p-1 text-text-muted hover:text-text-primary dark:text-text-muted-dark dark:hover:text-text-primary-dark rounded transition-colors"
-              aria-label={t("settings.homeLocation.clear")}
+              aria-label={t('settings.homeLocation.clear')}
             >
               <X className="w-5 h-5" />
             </button>
@@ -57,8 +59,8 @@ function HomeLocationSectionComponent() {
             iconLeft={!homeLocation.geoLoading && <Clock className="w-4 h-4" />}
           >
             {homeLocation.geoLoading
-              ? t("settings.homeLocation.locating")
-              : t("settings.homeLocation.useCurrentLocation")}
+              ? t('settings.homeLocation.locating')
+              : t('settings.homeLocation.useCurrentLocation')}
           </Button>
         )}
 
@@ -75,7 +77,7 @@ function HomeLocationSectionComponent() {
             htmlFor="address-search"
             className="block text-sm font-medium text-text-primary dark:text-text-primary-dark"
           >
-            {t("settings.homeLocation.searchLabel")}
+            {t('settings.homeLocation.searchLabel')}
           </label>
           <div className="relative">
             <input
@@ -83,7 +85,7 @@ function HomeLocationSectionComponent() {
               type="text"
               value={homeLocation.addressQuery}
               onChange={homeLocation.handleAddressChange}
-              placeholder={t("settings.homeLocation.searchPlaceholder")}
+              placeholder={t('settings.homeLocation.searchPlaceholder')}
               className="w-full px-4 py-2 text-sm border border-border-default dark:border-border-default-dark rounded-lg bg-surface-card dark:bg-surface-card-dark text-text-primary dark:text-text-primary-dark placeholder:text-text-muted dark:placeholder:text-text-muted-dark focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
             {homeLocation.geocodeLoading && (
@@ -96,7 +98,7 @@ function HomeLocationSectionComponent() {
           {/* Geocoding error */}
           {homeLocation.geocodeError && (
             <p className="text-sm text-error-600 dark:text-error-400">
-              {t("settings.homeLocation.searchError")}
+              {t('settings.homeLocation.searchError')}
             </p>
           )}
 
@@ -123,13 +125,13 @@ function HomeLocationSectionComponent() {
             homeLocation.geocodeResults.length === 0 &&
             !homeLocation.geocodeError && (
               <p className="text-sm text-text-muted dark:text-text-muted-dark">
-                {t("settings.homeLocation.noResults")}
+                {t('settings.homeLocation.noResults')}
               </p>
             )}
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
 
-export const HomeLocationSection = memo(HomeLocationSectionComponent);
+export const HomeLocationSection = memo(HomeLocationSectionComponent)

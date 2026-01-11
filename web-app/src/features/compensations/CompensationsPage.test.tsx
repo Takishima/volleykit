@@ -1,9 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
-import { CompensationsPage } from "./CompensationsPage";
-import type { CompensationRecord } from "@/api/client";
-import type { UseQueryResult } from "@tanstack/react-query";
-import * as useConvocations from "@/features/validation/hooks/useConvocations";
+import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+import type { CompensationRecord } from '@/api/client'
+import * as useConvocations from '@/features/validation/hooks/useConvocations'
+
+import { CompensationsPage } from './CompensationsPage'
+
+import type { UseQueryResult } from '@tanstack/react-query'
 
 // Mock useTour to disable tour mode during tests (see src/test/mocks.ts for shared pattern)
 const mockUseTour = vi.hoisted(() => ({
@@ -17,11 +20,11 @@ const mockUseTour = vi.hoisted(() => ({
     nextStep: vi.fn(),
     shouldShow: false,
   }),
-}));
+}))
 
-vi.mock("@/features/validation/hooks/useConvocations");
-vi.mock("@/shared/hooks/useTour", () => mockUseTour);
-vi.mock("@/shared/hooks/useCompensationActions", () => ({
+vi.mock('@/features/validation/hooks/useConvocations')
+vi.mock('@/shared/hooks/useTour', () => mockUseTour)
+vi.mock('@/shared/hooks/useCompensationActions', () => ({
   useCompensationActions: () => ({
     editCompensationModal: {
       isOpen: false,
@@ -31,46 +34,44 @@ vi.mock("@/shared/hooks/useCompensationActions", () => ({
     },
     handleGeneratePDF: vi.fn(),
   }),
-}));
+}))
 
 // Use a date 7 days in the past to ensure it shows in the "Pending (Past)" tab
 function getPastGameDate(): string {
-  const date = new Date();
-  date.setDate(date.getDate() - 7);
-  return date.toISOString();
+  const date = new Date()
+  date.setDate(date.getDate() - 7)
+  return date.toISOString()
 }
 
-function createMockCompensation(
-  overrides: Partial<CompensationRecord> = {},
-): CompensationRecord {
+function createMockCompensation(overrides: Partial<CompensationRecord> = {}): CompensationRecord {
   return {
     __identity: `compensation-${Math.random()}`,
-    refereeConvocationStatus: "active",
-    refereePosition: "head-one",
+    refereeConvocationStatus: 'active',
+    refereePosition: 'head-one',
     refereeGame: {
       game: {
         startingDateTime: getPastGameDate(),
         encounter: {
-          teamHome: { name: "Team A" },
-          teamAway: { name: "Team B" },
+          teamHome: { name: 'Team A' },
+          teamAway: { name: 'Team B' },
         },
-        hall: { name: "Main Arena" },
+        hall: { name: 'Main Arena' },
       },
     },
     convocationCompensation: {
       paymentDone: false,
       gameCompensation: 100,
       travelExpenses: 50,
-      costFormatted: "CHF 150.00",
+      costFormatted: 'CHF 150.00',
     },
     ...overrides,
-  } as CompensationRecord;
+  } as CompensationRecord
 }
 
 function createMockQueryResult(
   data: CompensationRecord[] | undefined,
   isLoading = false,
-  error: Error | null = null,
+  error: Error | null = null
 ): UseQueryResult<CompensationRecord[], Error> {
   return {
     data,
@@ -79,145 +80,139 @@ function createMockQueryResult(
     isError: !!error,
     error,
     isSuccess: !isLoading && !error && !!data,
-    status: isLoading ? "pending" : error ? "error" : "success",
+    status: isLoading ? 'pending' : error ? 'error' : 'success',
     refetch: vi.fn(),
-  } as unknown as UseQueryResult<CompensationRecord[], Error>;
+  } as unknown as UseQueryResult<CompensationRecord[], Error>
 }
 
-describe("CompensationsPage", () => {
+describe('CompensationsPage', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.clearAllMocks()
 
     // Default mocks - single useCompensations hook with dynamic filter
-    vi.mocked(useConvocations.useCompensations).mockReturnValue(
-      createMockQueryResult([]),
-    );
-  });
+    vi.mocked(useConvocations.useCompensations).mockReturnValue(createMockQueryResult([]))
+  })
 
-  describe("Tab Navigation", () => {
-    it("should default to Pending (Past) tab", () => {
-      render(<CompensationsPage />);
+  describe('Tab Navigation', () => {
+    it('should default to Pending (Past) tab', () => {
+      render(<CompensationsPage />)
 
-      const pendingPastTab = screen.getByRole("tab", { name: /pending \(past\)/i });
-      expect(pendingPastTab).toHaveClass("border-primary-500");
-      expect(pendingPastTab).toHaveAttribute("aria-selected", "true");
-    });
+      const pendingPastTab = screen.getByRole('tab', { name: /pending \(past\)/i })
+      expect(pendingPastTab).toHaveClass('border-primary-500')
+      expect(pendingPastTab).toHaveAttribute('aria-selected', 'true')
+    })
 
-    it("should switch to Closed tab when clicked", () => {
-      render(<CompensationsPage />);
+    it('should switch to Closed tab when clicked', () => {
+      render(<CompensationsPage />)
 
-      fireEvent.click(screen.getByRole("tab", { name: /^closed$/i }));
+      fireEvent.click(screen.getByRole('tab', { name: /^closed$/i }))
 
-      const closedTab = screen.getByRole("tab", { name: /^closed$/i });
-      expect(closedTab).toHaveClass("border-primary-500");
-      expect(closedTab).toHaveAttribute("aria-selected", "true");
-    });
+      const closedTab = screen.getByRole('tab', { name: /^closed$/i })
+      expect(closedTab).toHaveClass('border-primary-500')
+      expect(closedTab).toHaveAttribute('aria-selected', 'true')
+    })
 
-    it("should have proper ARIA attributes on tablist", () => {
-      render(<CompensationsPage />);
+    it('should have proper ARIA attributes on tablist', () => {
+      render(<CompensationsPage />)
 
-      const tablist = screen.getByRole("tablist");
-      expect(tablist).toHaveAttribute("aria-label");
-    });
+      const tablist = screen.getByRole('tablist')
+      expect(tablist).toHaveAttribute('aria-label')
+    })
 
-    it("should support keyboard navigation with arrow keys", () => {
-      render(<CompensationsPage />);
+    it('should support keyboard navigation with arrow keys', () => {
+      render(<CompensationsPage />)
 
-      const pendingPastTab = screen.getByRole("tab", { name: /pending \(past\)/i });
-      pendingPastTab.focus();
+      const pendingPastTab = screen.getByRole('tab', { name: /pending \(past\)/i })
+      pendingPastTab.focus()
 
       // Press right arrow to go to Pending (Future) tab
-      fireEvent.keyDown(pendingPastTab, { key: "ArrowRight" });
+      fireEvent.keyDown(pendingPastTab, { key: 'ArrowRight' })
 
-      const pendingFutureTab = screen.getByRole("tab", { name: /pending \(future\)/i });
-      expect(pendingFutureTab).toHaveAttribute("aria-selected", "true");
+      const pendingFutureTab = screen.getByRole('tab', { name: /pending \(future\)/i })
+      expect(pendingFutureTab).toHaveAttribute('aria-selected', 'true')
 
       // Press right arrow to go to Closed tab
-      fireEvent.keyDown(pendingFutureTab, { key: "ArrowRight" });
+      fireEvent.keyDown(pendingFutureTab, { key: 'ArrowRight' })
 
-      const closedTab = screen.getByRole("tab", { name: /^closed$/i });
-      expect(closedTab).toHaveAttribute("aria-selected", "true");
+      const closedTab = screen.getByRole('tab', { name: /^closed$/i })
+      expect(closedTab).toHaveAttribute('aria-selected', 'true')
 
       // Press right arrow wraps around to first tab (Pending Past)
-      fireEvent.keyDown(closedTab, { key: "ArrowRight" });
-      expect(pendingPastTab).toHaveAttribute("aria-selected", "true");
+      fireEvent.keyDown(closedTab, { key: 'ArrowRight' })
+      expect(pendingPastTab).toHaveAttribute('aria-selected', 'true')
 
       // Press left arrow to go back to Closed tab
-      fireEvent.keyDown(pendingPastTab, { key: "ArrowLeft" });
-      expect(closedTab).toHaveAttribute("aria-selected", "true");
-    });
-  });
+      fireEvent.keyDown(pendingPastTab, { key: 'ArrowLeft' })
+      expect(closedTab).toHaveAttribute('aria-selected', 'true')
+    })
+  })
 
-  describe("Content Display", () => {
-    it("should show loading state", () => {
+  describe('Content Display', () => {
+    it('should show loading state', () => {
       vi.mocked(useConvocations.useCompensations).mockReturnValue(
-        createMockQueryResult(undefined, true),
-      );
+        createMockQueryResult(undefined, true)
+      )
 
-      render(<CompensationsPage />);
+      render(<CompensationsPage />)
 
-      expect(screen.getByText(/loading/i)).toBeInTheDocument();
-    });
+      expect(screen.getByText(/loading/i)).toBeInTheDocument()
+    })
 
-    it("should show error state with retry button", () => {
+    it('should show error state with retry button', () => {
       vi.mocked(useConvocations.useCompensations).mockReturnValue(
-        createMockQueryResult(undefined, false, new Error("Failed to load")),
-      );
+        createMockQueryResult(undefined, false, new Error('Failed to load'))
+      )
 
-      render(<CompensationsPage />);
+      render(<CompensationsPage />)
 
-      expect(screen.getByText(/failed to load/i)).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: /retry/i }),
-      ).toBeInTheDocument();
-    });
+      expect(screen.getByText(/failed to load/i)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument()
+    })
 
-    it("should show empty state when no compensations", () => {
-      vi.mocked(useConvocations.useCompensations).mockReturnValue(
-        createMockQueryResult([]),
-      );
+    it('should show empty state when no compensations', () => {
+      vi.mocked(useConvocations.useCompensations).mockReturnValue(createMockQueryResult([]))
 
-      render(<CompensationsPage />);
+      render(<CompensationsPage />)
 
       // Default tab is now Pending (Past), so the empty state is for pending past compensations
       expect(
-        screen.getByRole("heading", { name: /no pending past compensations/i }),
-      ).toBeInTheDocument();
-    });
+        screen.getByRole('heading', { name: /no pending past compensations/i })
+      ).toBeInTheDocument()
+    })
 
-    it("should show compensations when data is available", () => {
-      const compensation = createMockCompensation();
+    it('should show compensations when data is available', () => {
+      const compensation = createMockCompensation()
       vi.mocked(useConvocations.useCompensations).mockReturnValue(
-        createMockQueryResult([compensation]),
-      );
+        createMockQueryResult([compensation])
+      )
 
-      render(<CompensationsPage />);
+      render(<CompensationsPage />)
 
-      expect(screen.getByText(/Team A vs Team B/i)).toBeInTheDocument();
-    });
-  });
+      expect(screen.getByText(/Team A vs Team B/i)).toBeInTheDocument()
+    })
+  })
 
-  describe("Data Fetching", () => {
-    it("should call useCompensations with false for Pending (Past) tab (default)", () => {
-      render(<CompensationsPage />);
+  describe('Data Fetching', () => {
+    it('should call useCompensations with false for Pending (Past) tab (default)', () => {
+      render(<CompensationsPage />)
 
-      expect(useConvocations.useCompensations).toHaveBeenCalledWith(false);
-    });
+      expect(useConvocations.useCompensations).toHaveBeenCalledWith(false)
+    })
 
-    it("should call useCompensations with true for Closed tab", () => {
-      render(<CompensationsPage />);
+    it('should call useCompensations with true for Closed tab', () => {
+      render(<CompensationsPage />)
 
-      fireEvent.click(screen.getByRole("tab", { name: /^closed$/i }));
+      fireEvent.click(screen.getByRole('tab', { name: /^closed$/i }))
 
-      expect(useConvocations.useCompensations).toHaveBeenCalledWith(true);
-    });
+      expect(useConvocations.useCompensations).toHaveBeenCalledWith(true)
+    })
 
-    it("should call useCompensations with false for Pending (Future) tab", () => {
-      render(<CompensationsPage />);
+    it('should call useCompensations with false for Pending (Future) tab', () => {
+      render(<CompensationsPage />)
 
-      fireEvent.click(screen.getByRole("tab", { name: /pending \(future\)/i }));
+      fireEvent.click(screen.getByRole('tab', { name: /pending \(future\)/i }))
 
-      expect(useConvocations.useCompensations).toHaveBeenCalledWith(false);
-    });
-  });
-});
+      expect(useConvocations.useCompensations).toHaveBeenCalledWith(false)
+    })
+  })
+})

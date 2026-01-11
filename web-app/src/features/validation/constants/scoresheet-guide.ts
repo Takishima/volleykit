@@ -10,19 +10,19 @@
  */
 
 /** Guide width as percentage of container width for electronic scoresheets (70%) */
-export const ELECTRONIC_GUIDE_WIDTH_PERCENT = 0.7;
+export const ELECTRONIC_GUIDE_WIDTH_PERCENT = 0.7
 
 /** Guide width as percentage of container width for manuscript scoresheets (90%) */
-export const MANUSCRIPT_GUIDE_WIDTH_PERCENT = 0.9;
+export const MANUSCRIPT_GUIDE_WIDTH_PERCENT = 0.9
 
 /** Aspect ratio width component (4:5 portrait) */
-const ASPECT_WIDTH = 4;
+const ASPECT_WIDTH = 4
 
 /** Aspect ratio height component (4:5 portrait) */
-const ASPECT_HEIGHT = 5;
+const ASPECT_HEIGHT = 5
 
 /**
  * Guide aspect ratio (width / height).
  * 4:5 portrait format = 0.8
  */
-export const GUIDE_ASPECT_RATIO = ASPECT_WIDTH / ASPECT_HEIGHT;
+export const GUIDE_ASPECT_RATIO = ASPECT_WIDTH / ASPECT_HEIGHT

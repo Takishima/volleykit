@@ -3,14 +3,9 @@
  * Provides travel time calculations using Swiss public transport via OJP 2.0.
  */
 
-export type {
-  TravelTimeResult,
-  TravelTimeOptions,
-  Coordinates,
-  StationInfo,
-} from "./types";
+export type { TravelTimeResult, TravelTimeOptions, Coordinates, StationInfo } from './types'
 
-export { TransportApiError } from "./types";
+export { TransportApiError } from './types'
 
 export {
   calculateTravelTime,
@@ -18,13 +13,13 @@ export {
   selectBestTrip,
   extractOriginStation,
   extractDestinationStation,
-} from "./ojp-client";
+} from './ojp-client'
 
-export type { OjpTrip } from "./ojp-client";
+export type { OjpTrip } from './ojp-client'
 
-export { calculateMockTravelTime } from "./mock-transport";
+export { calculateMockTravelTime } from './mock-transport'
 
-export type { DayType } from "./cache";
+export type { DayType } from './cache'
 
 export {
   TRAVEL_TIME_CACHE_TTL,
@@ -34,7 +29,7 @@ export {
   getHallCacheKey,
   hashLocation,
   getDayType,
-} from "./cache";
+} from './cache'
 
 export {
   getCachedTravelTime,
@@ -43,4 +38,4 @@ export {
   clearTravelTimeCache,
   getTravelTimeCacheStats,
   buildCacheKey,
-} from "./persistence";
+} from './persistence'

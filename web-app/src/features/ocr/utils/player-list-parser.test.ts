@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vitest'
+
 import {
   parseGameSheet,
   parseGameSheetWithOCR,
@@ -7,69 +8,70 @@ import {
   normalizeName,
   getAllPlayers,
   getAllOfficials,
-} from './player-list-parser';
-import type { OCRResult, OCRLine, OCRWord } from '../types';
+} from './player-list-parser'
+
+import type { OCRResult, OCRLine, OCRWord } from '../types'
 
 describe('normalizeName', () => {
   it('converts uppercase to title case', () => {
-    expect(normalizeName('MÜLLER')).toBe('Müller');
-    expect(normalizeName('ANNA MARIA')).toBe('Anna Maria');
-  });
+    expect(normalizeName('MÜLLER')).toBe('Müller')
+    expect(normalizeName('ANNA MARIA')).toBe('Anna Maria')
+  })
 
   it('handles empty strings', () => {
-    expect(normalizeName('')).toBe('');
-  });
+    expect(normalizeName('')).toBe('')
+  })
 
   it('handles hyphenated names', () => {
-    expect(normalizeName('JEAN-PIERRE')).toBe('Jean Pierre');
-  });
-});
+    expect(normalizeName('JEAN-PIERRE')).toBe('Jean Pierre')
+  })
+})
 
 describe('parsePlayerName', () => {
   it('parses LASTNAME FIRSTNAME format', () => {
-    const result = parsePlayerName('MÜLLER ANNA');
-    expect(result.lastName).toBe('Müller');
-    expect(result.firstName).toBe('Anna');
-    expect(result.displayName).toBe('Anna Müller');
-  });
+    const result = parsePlayerName('MÜLLER ANNA')
+    expect(result.lastName).toBe('Müller')
+    expect(result.firstName).toBe('Anna')
+    expect(result.displayName).toBe('Anna Müller')
+  })
 
   it('handles single name', () => {
-    const result = parsePlayerName('MÜLLER');
-    expect(result.lastName).toBe('Müller');
-    expect(result.firstName).toBe('');
-    expect(result.displayName).toBe('Müller');
-  });
+    const result = parsePlayerName('MÜLLER')
+    expect(result.lastName).toBe('Müller')
+    expect(result.firstName).toBe('')
+    expect(result.displayName).toBe('Müller')
+  })
 
   it('handles multiple first names', () => {
-    const result = parsePlayerName('MÜLLER ANNA MARIA');
-    expect(result.lastName).toBe('Müller');
-    expect(result.firstName).toBe('Anna Maria');
-    expect(result.displayName).toBe('Anna Maria Müller');
-  });
+    const result = parsePlayerName('MÜLLER ANNA MARIA')
+    expect(result.lastName).toBe('Müller')
+    expect(result.firstName).toBe('Anna Maria')
+    expect(result.displayName).toBe('Anna Maria Müller')
+  })
 
   it('handles empty input', () => {
-    const result = parsePlayerName('');
-    expect(result.lastName).toBe('');
-    expect(result.firstName).toBe('');
-    expect(result.displayName).toBe('');
-  });
-});
+    const result = parsePlayerName('')
+    expect(result.lastName).toBe('')
+    expect(result.firstName).toBe('')
+    expect(result.displayName).toBe('')
+  })
+})
 
 describe('parseOfficialName', () => {
   it('parses Firstname Lastname format', () => {
-    const result = parseOfficialName('Hans Trainer');
-    expect(result.firstName).toBe('Hans');
-    expect(result.lastName).toBe('Trainer');
-    expect(result.displayName).toBe('Hans Trainer');
-  });
+    const result = parseOfficialName('Hans Trainer')
+    expect(result.firstName).toBe('Hans')
+    expect(result.lastName).toBe('Trainer')
+    expect(result.displayName).toBe('Hans Trainer')
+  })
 
   it('handles single name', () => {
-    const result = parseOfficialName('Trainer');
-    expect(result.lastName).toBe('Trainer');
-    expect(result.firstName).toBe('');
-    expect(result.displayName).toBe('Trainer');
-  });
-});
+    const result = parseOfficialName('Trainer')
+    expect(result.lastName).toBe('Trainer')
+    expect(result.firstName).toBe('')
+    expect(result.displayName).toBe('Trainer')
+  })
+})
 
 describe('parseGameSheet', () => {
   it('parses a complete scoresheet', () => {
@@ -80,55 +82,55 @@ N.\tName of the player\tLicense\tN.\tName of the player\tLicense
 LIBERO
 L1\t2 BRUNNER LEA\tOK\tL1\t5 KOCH CLARA\tOK
 OFFICIAL MEMBERS ADMITTED ON THE BENCH
-C\tHans Trainer\tC\tPeter Coach`;
+C\tHans Trainer\tC\tPeter Coach`
 
-    const result = parseGameSheet(ocrText);
+    const result = parseGameSheet(ocrText)
 
     // Team names
-    expect(result.teamA.name).toBe('VBC Heimteam');
-    expect(result.teamB.name).toBe('VBC Gastteam');
+    expect(result.teamA.name).toBe('VBC Heimteam')
+    expect(result.teamB.name).toBe('VBC Gastteam')
 
     // Team A players
-    expect(result.teamA.players).toHaveLength(3); // 2 + 1 libero
-    expect(result.teamA.players[0]!.lastName).toBe('Müller');
-    expect(result.teamA.players[0]!.firstName).toBe('Anna');
-    expect(result.teamA.players[0]!.shirtNumber).toBe(1);
+    expect(result.teamA.players).toHaveLength(3) // 2 + 1 libero
+    expect(result.teamA.players[0]!.lastName).toBe('Müller')
+    expect(result.teamA.players[0]!.firstName).toBe('Anna')
+    expect(result.teamA.players[0]!.shirtNumber).toBe(1)
 
     // Team B players
-    expect(result.teamB.players).toHaveLength(3);
-    expect(result.teamB.players[0]!.lastName).toBe('Schmidt');
-    expect(result.teamB.players[0]!.firstName).toBe('Lisa');
+    expect(result.teamB.players).toHaveLength(3)
+    expect(result.teamB.players[0]!.lastName).toBe('Schmidt')
+    expect(result.teamB.players[0]!.firstName).toBe('Lisa')
 
     // Liberos are included
-    expect(result.teamA.players[2]!.lastName).toBe('Brunner');
-    expect(result.teamA.players[2]!.shirtNumber).toBe(2);
+    expect(result.teamA.players[2]!.lastName).toBe('Brunner')
+    expect(result.teamA.players[2]!.shirtNumber).toBe(2)
 
     // Officials
-    expect(result.teamA.officials).toHaveLength(1);
-    expect(result.teamA.officials[0]!.role).toBe('C');
-    expect(result.teamA.officials[0]!.displayName).toBe('Hans Trainer');
+    expect(result.teamA.officials).toHaveLength(1)
+    expect(result.teamA.officials[0]!.role).toBe('C')
+    expect(result.teamA.officials[0]!.displayName).toBe('Hans Trainer')
 
-    expect(result.teamB.officials).toHaveLength(1);
-    expect(result.teamB.officials[0]!.role).toBe('C');
-  });
+    expect(result.teamB.officials).toHaveLength(1)
+    expect(result.teamB.officials[0]!.role).toBe('C')
+  })
 
   it('handles empty input', () => {
-    const result = parseGameSheet('');
-    expect(result.warnings).toContain('No OCR text provided');
-    expect(result.teamA.players).toHaveLength(0);
-    expect(result.teamB.players).toHaveLength(0);
-  });
+    const result = parseGameSheet('')
+    expect(result.warnings).toContain('No OCR text provided')
+    expect(result.teamA.players).toHaveLength(0)
+    expect(result.teamB.players).toHaveLength(0)
+  })
 
   it('handles missing team B', () => {
     // Tab-separated format with Team B name but no Team B players
     const ocrText = `VBC Heimteam\tVBC Gastteam
 N.\tName of the player\tLicense\tN.\tName of the player\tLicense
-1\tMÜLLER ANNA\tOK`;
+1\tMÜLLER ANNA\tOK`
 
-    const result = parseGameSheet(ocrText);
-    expect(result.teamA.players.length).toBeGreaterThan(0);
-    expect(result.warnings.some((w) => w.includes('Team B'))).toBe(true);
-  });
+    const result = parseGameSheet(ocrText)
+    expect(result.teamA.players.length).toBeGreaterThan(0)
+    expect(result.warnings.some((w) => w.includes('Team B'))).toBe(true)
+  })
 
   it('parses assistant coaches', () => {
     const ocrText = `Team A\tTeam B
@@ -136,26 +138,26 @@ N.\tName of the player\tLicense\tN.\tName of the player\tLicense
 1\tPLAYER ONE\tOK\t1\tPLAYER TWO\tOK
 OFFICIAL MEMBERS
 C\tHead Coach\tC\tOther Coach
-AC\tAssistant One\tAC\tAssistant Two`;
+AC\tAssistant One\tAC\tAssistant Two`
 
-    const result = parseGameSheet(ocrText);
-    expect(result.teamA.officials).toHaveLength(2);
-    expect(result.teamA.officials[1]!.role).toBe('AC');
-  });
-});
+    const result = parseGameSheet(ocrText)
+    expect(result.teamA.officials).toHaveLength(2)
+    expect(result.teamA.officials[1]!.role).toBe('AC')
+  })
+})
 
 describe('getAllPlayers', () => {
   it('returns all players from a team', () => {
     const ocrText = `Team A\tTeam B
 N.\tName of the player\tLicense\tN.\tName of the player\tLicense
 1\tPLAYER ONE\tOK\t1\tPLAYER TWO\tOK
-2\tPLAYER THREE\tOK\t2\tPLAYER FOUR\tOK`;
+2\tPLAYER THREE\tOK\t2\tPLAYER FOUR\tOK`
 
-    const result = parseGameSheet(ocrText);
-    const players = getAllPlayers(result.teamA);
-    expect(players).toHaveLength(2);
-  });
-});
+    const result = parseGameSheet(ocrText)
+    const players = getAllPlayers(result.teamA)
+    expect(players).toHaveLength(2)
+  })
+})
 
 describe('getAllOfficials', () => {
   it('returns all officials from a team', () => {
@@ -164,13 +166,13 @@ N.\tName of the player\tLicense\tN.\tName of the player\tLicense
 1\tPLAYER ONE\tOK\t1\tPLAYER TWO\tOK
 OFFICIAL MEMBERS
 C\tHead Coach\tC\tOther Coach
-AC\tAssistant\tAC\tOther Assistant`;
+AC\tAssistant\tAC\tOther Assistant`
 
-    const result = parseGameSheet(ocrText);
-    const officials = getAllOfficials(result.teamA);
-    expect(officials).toHaveLength(2);
-  });
-});
+    const result = parseGameSheet(ocrText)
+    const officials = getAllOfficials(result.teamA)
+    expect(officials).toHaveLength(2)
+  })
+})
 
 describe('space-separated two-column parsing (no tabs)', () => {
   it('parses space-separated player lines using jersey numbers as markers', () => {
@@ -179,123 +181,123 @@ describe('space-separated two-column parsing (no tabs)', () => {
 N.  Name of the player  N.  Name of the player
 5   TORTAROLO MARIA NOT 2   BALMER SOPHIE LFP
 6   LOOSLI ANNA STEFANIE LFP 3   MODJO YVANA LFP
-7   STÄUBLE ALINA SARAH LFP 5   FRÉCHELIN AURÉLIE LFP`;
+7   STÄUBLE ALINA SARAH LFP 5   FRÉCHELIN AURÉLIE LFP`
 
-    const result = parseGameSheet(ocrText);
+    const result = parseGameSheet(ocrText)
 
     // Team names should be extracted from space-separated header
-    expect(result.teamA.name).toBe('BTV Aarau 1');
-    expect(result.teamB.name).toBe('VBC NUC II A');
+    expect(result.teamA.name).toBe('BTV Aarau 1')
+    expect(result.teamB.name).toBe('VBC NUC II A')
 
     // Both teams should have players
-    expect(result.teamA.players.length).toBeGreaterThanOrEqual(3);
-    expect(result.teamB.players.length).toBeGreaterThanOrEqual(3);
+    expect(result.teamA.players.length).toBeGreaterThanOrEqual(3)
+    expect(result.teamB.players.length).toBeGreaterThanOrEqual(3)
 
     // Verify specific players were parsed correctly
-    const teamAPlayer1 = result.teamA.players.find((p) => p.shirtNumber === 5);
-    expect(teamAPlayer1).toBeDefined();
-    expect(teamAPlayer1!.lastName).toBe('Tortarolo');
-    expect(teamAPlayer1!.firstName).toBe('Maria');
-    expect(teamAPlayer1!.licenseStatus).toBe('NOT');
+    const teamAPlayer1 = result.teamA.players.find((p) => p.shirtNumber === 5)
+    expect(teamAPlayer1).toBeDefined()
+    expect(teamAPlayer1!.lastName).toBe('Tortarolo')
+    expect(teamAPlayer1!.firstName).toBe('Maria')
+    expect(teamAPlayer1!.licenseStatus).toBe('NOT')
 
-    const teamBPlayer1 = result.teamB.players.find((p) => p.shirtNumber === 2);
-    expect(teamBPlayer1).toBeDefined();
-    expect(teamBPlayer1!.lastName).toBe('Balmer');
-    expect(teamBPlayer1!.firstName).toBe('Sophie');
-    expect(teamBPlayer1!.licenseStatus).toBe('LFP');
-  });
+    const teamBPlayer1 = result.teamB.players.find((p) => p.shirtNumber === 2)
+    expect(teamBPlayer1).toBeDefined()
+    expect(teamBPlayer1!.lastName).toBe('Balmer')
+    expect(teamBPlayer1!.firstName).toBe('Sophie')
+    expect(teamBPlayer1!.licenseStatus).toBe('LFP')
+  })
 
   it('handles players with three-part names', () => {
     const ocrText = `Team A    Team B
 N.  Name of the player  N.  Name of the player
-6   LOOSLI ANNA STEFANIE LFP 3   MODJO YVANA LFP`;
+6   LOOSLI ANNA STEFANIE LFP 3   MODJO YVANA LFP`
 
-    const result = parseGameSheet(ocrText);
+    const result = parseGameSheet(ocrText)
 
-    const teamAPlayer = result.teamA.players.find((p) => p.shirtNumber === 6);
-    expect(teamAPlayer).toBeDefined();
-    expect(teamAPlayer!.lastName).toBe('Loosli');
-    expect(teamAPlayer!.firstName).toBe('Anna Stefanie');
-  });
+    const teamAPlayer = result.teamA.players.find((p) => p.shirtNumber === 6)
+    expect(teamAPlayer).toBeDefined()
+    expect(teamAPlayer!.lastName).toBe('Loosli')
+    expect(teamAPlayer!.firstName).toBe('Anna Stefanie')
+  })
 
   it('handles accented characters in names', () => {
     const ocrText = `Team A    Team B
 N.  Name of the player  N.  Name of the player
-7   STÄUBLE ALINA SARAH LFP 5   FRÉCHELIN AURÉLIE LFP`;
+7   STÄUBLE ALINA SARAH LFP 5   FRÉCHELIN AURÉLIE LFP`
 
-    const result = parseGameSheet(ocrText);
+    const result = parseGameSheet(ocrText)
 
-    const teamAPlayer = result.teamA.players.find((p) => p.shirtNumber === 7);
-    expect(teamAPlayer).toBeDefined();
-    expect(teamAPlayer!.lastName).toBe('Stäuble');
+    const teamAPlayer = result.teamA.players.find((p) => p.shirtNumber === 7)
+    expect(teamAPlayer).toBeDefined()
+    expect(teamAPlayer!.lastName).toBe('Stäuble')
 
-    const teamBPlayer = result.teamB.players.find((p) => p.shirtNumber === 5);
-    expect(teamBPlayer).toBeDefined();
-    expect(teamBPlayer!.lastName).toBe('Fréchelin');
-    expect(teamBPlayer!.firstName).toBe('Aurélie');
-  });
+    const teamBPlayer = result.teamB.players.find((p) => p.shirtNumber === 5)
+    expect(teamBPlayer).toBeDefined()
+    expect(teamBPlayer!.lastName).toBe('Fréchelin')
+    expect(teamBPlayer!.firstName).toBe('Aurélie')
+  })
 
   it('extracts team names from space-separated header line', () => {
     const ocrText = `B BTV Aarau 1    VBC NUC II A
 N.  Name  N.  Name
-1   PLAYER ONE LFP 1   PLAYER TWO LFP`;
+1   PLAYER ONE LFP 1   PLAYER TWO LFP`
 
-    const result = parseGameSheet(ocrText);
+    const result = parseGameSheet(ocrText)
 
-    expect(result.teamA.name).toBe('BTV Aarau 1');
-    expect(result.teamB.name).toBe('VBC NUC II A');
-  });
+    expect(result.teamA.name).toBe('BTV Aarau 1')
+    expect(result.teamB.name).toBe('VBC NUC II A')
+  })
 
   it('falls back to tab parsing when tabs are present', () => {
     // With tabs, should use the standard parser
     const ocrText = `Team A\tTeam B
 N.\tName of the player\tLicense\tN.\tName of the player\tLicense
-1\tPLAYER ONE\tLFP\t2\tPLAYER TWO\tLFP`;
+1\tPLAYER ONE\tLFP\t2\tPLAYER TWO\tLFP`
 
-    const result = parseGameSheet(ocrText);
+    const result = parseGameSheet(ocrText)
 
-    expect(result.teamA.players).toHaveLength(1);
-    expect(result.teamB.players).toHaveLength(1);
-    expect(result.teamA.players[0]!.rawName).toBe('PLAYER ONE');
-    expect(result.teamB.players[0]!.rawName).toBe('PLAYER TWO');
-  });
+    expect(result.teamA.players).toHaveLength(1)
+    expect(result.teamB.players).toHaveLength(1)
+    expect(result.teamA.players[0]!.rawName).toBe('PLAYER ONE')
+    expect(result.teamB.players[0]!.rawName).toBe('PLAYER TWO')
+  })
 
   it('handles Team A name longer than Team B name', () => {
     const ocrText = `Team A    Team B
 N.  Name of the player  N.  Name of the player
-6   LOOSLI ANNA STEFANIE MARIE LFP 3   SMITH JO LFP`;
+6   LOOSLI ANNA STEFANIE MARIE LFP 3   SMITH JO LFP`
 
-    const result = parseGameSheet(ocrText);
+    const result = parseGameSheet(ocrText)
 
-    const teamAPlayer = result.teamA.players.find((p) => p.shirtNumber === 6);
-    expect(teamAPlayer).toBeDefined();
-    expect(teamAPlayer!.lastName).toBe('Loosli');
-    expect(teamAPlayer!.firstName).toBe('Anna Stefanie Marie');
+    const teamAPlayer = result.teamA.players.find((p) => p.shirtNumber === 6)
+    expect(teamAPlayer).toBeDefined()
+    expect(teamAPlayer!.lastName).toBe('Loosli')
+    expect(teamAPlayer!.firstName).toBe('Anna Stefanie Marie')
 
-    const teamBPlayer = result.teamB.players.find((p) => p.shirtNumber === 3);
-    expect(teamBPlayer).toBeDefined();
-    expect(teamBPlayer!.lastName).toBe('Smith');
-    expect(teamBPlayer!.firstName).toBe('Jo');
-  });
+    const teamBPlayer = result.teamB.players.find((p) => p.shirtNumber === 3)
+    expect(teamBPlayer).toBeDefined()
+    expect(teamBPlayer!.lastName).toBe('Smith')
+    expect(teamBPlayer!.firstName).toBe('Jo')
+  })
 
   it('handles Team B name longer than Team A name', () => {
     const ocrText = `Team A    Team B
 N.  Name of the player  N.  Name of the player
-1   DOE JO LFP 12   MÜLLER ANNA MARIE ELISABETH LFP`;
+1   DOE JO LFP 12   MÜLLER ANNA MARIE ELISABETH LFP`
 
-    const result = parseGameSheet(ocrText);
+    const result = parseGameSheet(ocrText)
 
-    const teamAPlayer = result.teamA.players.find((p) => p.shirtNumber === 1);
-    expect(teamAPlayer).toBeDefined();
-    expect(teamAPlayer!.lastName).toBe('Doe');
-    expect(teamAPlayer!.firstName).toBe('Jo');
+    const teamAPlayer = result.teamA.players.find((p) => p.shirtNumber === 1)
+    expect(teamAPlayer).toBeDefined()
+    expect(teamAPlayer!.lastName).toBe('Doe')
+    expect(teamAPlayer!.firstName).toBe('Jo')
 
-    const teamBPlayer = result.teamB.players.find((p) => p.shirtNumber === 12);
-    expect(teamBPlayer).toBeDefined();
-    expect(teamBPlayer!.lastName).toBe('Müller');
-    expect(teamBPlayer!.firstName).toBe('Anna Marie Elisabeth');
-  });
-});
+    const teamBPlayer = result.teamB.players.find((p) => p.shirtNumber === 12)
+    expect(teamBPlayer).toBeDefined()
+    expect(teamBPlayer!.lastName).toBe('Müller')
+    expect(teamBPlayer!.firstName).toBe('Anna Marie Elisabeth')
+  })
+})
 
 describe('single-column overflow handling', () => {
   it('assigns single-column player rows to Team B after two-column rows', () => {
@@ -306,23 +308,23 @@ N.\tName of the player\tLicense\tN.\tName of the player\tLicense
 1\tPLAYER A1\tLFP\t1\tPLAYER B1\tLFP
 2\tPLAYER A2\tLFP\t2\tPLAYER B2\tLFP
 3\tPLAYER B3\tLFP
-4\tPLAYER B4\tLFP`;
+4\tPLAYER B4\tLFP`
 
-    const result = parseGameSheet(ocrText);
+    const result = parseGameSheet(ocrText)
 
     // Team A should have exactly 2 players
-    expect(result.teamA.players).toHaveLength(2);
-    expect(result.teamA.players.map((p) => p.rawName)).toEqual(['PLAYER A1', 'PLAYER A2']);
+    expect(result.teamA.players).toHaveLength(2)
+    expect(result.teamA.players.map((p) => p.rawName)).toEqual(['PLAYER A1', 'PLAYER A2'])
 
     // Team B should have 4 players (2 from two-column + 2 from single-column overflow)
-    expect(result.teamB.players).toHaveLength(4);
+    expect(result.teamB.players).toHaveLength(4)
     expect(result.teamB.players.map((p) => p.rawName)).toEqual([
       'PLAYER B1',
       'PLAYER B2',
       'PLAYER B3',
       'PLAYER B4',
-    ]);
-  });
+    ])
+  })
 
   it('assigns single-column libero rows to Team B after two-column rows', () => {
     const ocrText = `Team A\tTeam B
@@ -330,41 +332,41 @@ N.\tName of the player\tLicense\tN.\tName of the player\tLicense
 1\tPLAYER A1\tLFP\t1\tPLAYER B1\tLFP
 LIBERO
 L1 10\tLIBERO A1\tLFP\tL1 20\tLIBERO B1\tLFP
-L2 21\tLIBERO B2\tLFP`;
+L2 21\tLIBERO B2\tLFP`
 
-    const result = parseGameSheet(ocrText);
+    const result = parseGameSheet(ocrText)
 
     // Team A should have 1 player + 1 libero = 2 total
-    expect(result.teamA.players).toHaveLength(2);
-    expect(result.teamA.players[1]!.rawName).toBe('LIBERO A1');
-    expect(result.teamA.players[1]!.shirtNumber).toBe(10);
+    expect(result.teamA.players).toHaveLength(2)
+    expect(result.teamA.players[1]!.rawName).toBe('LIBERO A1')
+    expect(result.teamA.players[1]!.shirtNumber).toBe(10)
 
     // Team B should have 1 player + 2 liberos = 3 total
-    expect(result.teamB.players).toHaveLength(3);
-    expect(result.teamB.players[1]!.rawName).toBe('LIBERO B1');
-    expect(result.teamB.players[1]!.shirtNumber).toBe(20);
-    expect(result.teamB.players[2]!.rawName).toBe('LIBERO B2');
-    expect(result.teamB.players[2]!.shirtNumber).toBe(21);
-  });
+    expect(result.teamB.players).toHaveLength(3)
+    expect(result.teamB.players[1]!.rawName).toBe('LIBERO B1')
+    expect(result.teamB.players[1]!.shirtNumber).toBe(20)
+    expect(result.teamB.players[2]!.rawName).toBe('LIBERO B2')
+    expect(result.teamB.players[2]!.shirtNumber).toBe(21)
+  })
 
   it('handles libero marker with number format (L1 7)', () => {
     const ocrText = `Team A\tTeam B
 N.\tName of the player\tLicense\tN.\tName of the player\tLicense
 5\tPLAYER ONE\tLFP\t3\tPLAYER TWO\tLFP
 LIBERO
-L1 1\tZOLLER MILENA\tLFP\tL1 7\tMARZOCCHELLA ASIA\tLFP`;
+L1 1\tZOLLER MILENA\tLFP\tL1 7\tMARZOCCHELLA ASIA\tLFP`
 
-    const result = parseGameSheet(ocrText);
+    const result = parseGameSheet(ocrText)
 
     // Verify libero shirt numbers are correctly extracted from marker
-    const teamALibero = result.teamA.players.find((p) => p.rawName === 'ZOLLER MILENA');
-    expect(teamALibero).toBeDefined();
-    expect(teamALibero!.shirtNumber).toBe(1);
+    const teamALibero = result.teamA.players.find((p) => p.rawName === 'ZOLLER MILENA')
+    expect(teamALibero).toBeDefined()
+    expect(teamALibero!.shirtNumber).toBe(1)
 
-    const teamBLibero = result.teamB.players.find((p) => p.rawName === 'MARZOCCHELLA ASIA');
-    expect(teamBLibero).toBeDefined();
-    expect(teamBLibero!.shirtNumber).toBe(7);
-  });
+    const teamBLibero = result.teamB.players.find((p) => p.rawName === 'MARZOCCHELLA ASIA')
+    expect(teamBLibero).toBeDefined()
+    expect(teamBLibero!.shirtNumber).toBe(7)
+  })
 
   it('handles real-world electronic scoresheet format', () => {
     // Based on actual OCR output from electronic scoresheet
@@ -385,25 +387,25 @@ LIBERO
 L 12\tGERBER JOAN\tLFP\tL1 6\tOTTO-KOVACS VILMOS\tLFP
 L2 17\tMETZLER NILS MATTIA\tLFP
 OFFICIAL MEMBERS ADMITTED ON THE BENCH
-C\tFölmli Marco\tC\tJoller Philipp`;
+C\tFölmli Marco\tC\tJoller Philipp`
 
-    const result = parseGameSheet(ocrText);
+    const result = parseGameSheet(ocrText)
 
     // Team A should have 8 players + 1 libero
-    expect(result.teamA.players).toHaveLength(9);
+    expect(result.teamA.players).toHaveLength(9)
 
     // Team B should have 11 players (8 from two-column + 3 from overflow) + 2 liberos
-    expect(result.teamB.players).toHaveLength(13);
+    expect(result.teamB.players).toHaveLength(13)
 
     // Verify overflow players are in Team B
-    expect(result.teamB.players.some((p) => p.rawName === 'WYMANN LUKAS')).toBe(true);
-    expect(result.teamB.players.some((p) => p.rawName === 'KYBURZ FABIAN')).toBe(true);
-    expect(result.teamB.players.some((p) => p.rawName === 'SCHMID DARIO RAFFAEL')).toBe(true);
+    expect(result.teamB.players.some((p) => p.rawName === 'WYMANN LUKAS')).toBe(true)
+    expect(result.teamB.players.some((p) => p.rawName === 'KYBURZ FABIAN')).toBe(true)
+    expect(result.teamB.players.some((p) => p.rawName === 'SCHMID DARIO RAFFAEL')).toBe(true)
 
     // Verify overflow liberos are in Team B
-    expect(result.teamB.players.some((p) => p.rawName === 'METZLER NILS MATTIA')).toBe(true);
-  });
-});
+    expect(result.teamB.players.some((p) => p.rawName === 'METZLER NILS MATTIA')).toBe(true)
+  })
+})
 
 // =============================================================================
 // Helper functions for creating OCR test data with bounding boxes
@@ -414,7 +416,7 @@ function createWord(text: string, x0: number, x1?: number): OCRWord {
     text,
     confidence: 95,
     bbox: { x0, y0: 0, x1: x1 ?? x0 + text.length * 10, y1: 20 },
-  };
+  }
 }
 
 function createLine(text: string, words: OCRWord[]): OCRLine {
@@ -422,15 +424,15 @@ function createLine(text: string, words: OCRWord[]): OCRLine {
     text,
     confidence: 95,
     words,
-  };
+  }
 }
 
 function createOCRResult(fullText: string, lines: OCRLine[]): OCRResult {
-  const allWords: OCRWord[] = [];
+  const allWords: OCRWord[] = []
   for (const line of lines) {
-    allWords.push(...line.words);
+    allWords.push(...line.words)
   }
-  return { fullText, lines, words: allWords, hasPreciseBoundingBoxes: false };
+  return { fullText, lines, words: allWords, hasPreciseBoundingBoxes: false }
 }
 
 describe('parseGameSheetWithOCR', () => {
@@ -442,14 +444,14 @@ N.\tName of the player\tLicense\tN.\tName of the player\tLicense
       lines: [],
       words: [],
       hasPreciseBoundingBoxes: false,
-    };
+    }
 
-    const result = parseGameSheetWithOCR(ocrResult);
+    const result = parseGameSheetWithOCR(ocrResult)
 
-    expect(result.warnings.some((w) => w.includes('text-only parsing'))).toBe(true);
-    expect(result.teamA.players).toHaveLength(1);
-    expect(result.teamB.players).toHaveLength(1);
-  });
+    expect(result.warnings.some((w) => w.includes('text-only parsing'))).toBe(true)
+    expect(result.teamA.players).toHaveLength(1)
+    expect(result.teamB.players).toHaveLength(1)
+  })
 
   it('uses bounding boxes to assign single-column overflow to correct team', () => {
     // Simulate OCR output where Team A has fewer players
@@ -457,10 +459,7 @@ N.\tName of the player\tLicense\tN.\tName of the player\tLicense
     // Single-column overflow rows have words at x=400-600 (Team B)
     const lines: OCRLine[] = [
       // Header
-      createLine('Team A\tTeam B', [
-        createWord('Team A', 0, 100),
-        createWord('Team B', 400, 500),
-      ]),
+      createLine('Team A\tTeam B', [createWord('Team A', 0, 100), createWord('Team B', 400, 500)]),
       // Column headers
       createLine('N.\tName of the player\tLicense\tN.\tName of the player\tLicense', [
         createWord('N.', 0, 20),
@@ -500,34 +499,31 @@ N.\tName of the player\tLicense\tN.\tName of the player\tLicense
         createWord('PLAYER B4', 430, 520),
         createWord('LFP', 560, 600),
       ]),
-    ];
+    ]
 
-    const fullText = lines.map((l) => l.text).join('\n');
-    const ocrResult = createOCRResult(fullText, lines);
+    const fullText = lines.map((l) => l.text).join('\n')
+    const ocrResult = createOCRResult(fullText, lines)
 
-    const result = parseGameSheetWithOCR(ocrResult);
+    const result = parseGameSheetWithOCR(ocrResult)
 
     // Team A should have exactly 2 players
-    expect(result.teamA.players).toHaveLength(2);
-    expect(result.teamA.players.map((p) => p.rawName)).toEqual(['PLAYER A1', 'PLAYER A2']);
+    expect(result.teamA.players).toHaveLength(2)
+    expect(result.teamA.players.map((p) => p.rawName)).toEqual(['PLAYER A1', 'PLAYER A2'])
 
     // Team B should have 4 players (2 from two-column + 2 from overflow)
-    expect(result.teamB.players).toHaveLength(4);
+    expect(result.teamB.players).toHaveLength(4)
     expect(result.teamB.players.map((p) => p.rawName)).toEqual([
       'PLAYER B1',
       'PLAYER B2',
       'PLAYER B3',
       'PLAYER B4',
-    ]);
-  });
+    ])
+  })
 
   it('assigns single-column overflow to Team A when positioned in left column', () => {
     // In this scenario, Team B has fewer players and Team A has overflow
     const lines: OCRLine[] = [
-      createLine('Team A\tTeam B', [
-        createWord('Team A', 0, 100),
-        createWord('Team B', 400, 500),
-      ]),
+      createLine('Team A\tTeam B', [createWord('Team A', 0, 100), createWord('Team B', 400, 500)]),
       createLine('N.\tName of the player\tLicense\tN.\tName of the player\tLicense', [
         createWord('N.', 0, 20),
         createWord('Name of the player', 30, 150),
@@ -557,32 +553,29 @@ N.\tName of the player\tLicense\tN.\tName of the player\tLicense
         createWord('PLAYER A3', 30, 120),
         createWord('LFP', 160, 200),
       ]),
-    ];
+    ]
 
-    const fullText = lines.map((l) => l.text).join('\n');
-    const ocrResult = createOCRResult(fullText, lines);
+    const fullText = lines.map((l) => l.text).join('\n')
+    const ocrResult = createOCRResult(fullText, lines)
 
-    const result = parseGameSheetWithOCR(ocrResult);
+    const result = parseGameSheetWithOCR(ocrResult)
 
     // Team A should have 3 players (1 from two-column + 2 from single-column)
-    expect(result.teamA.players).toHaveLength(3);
+    expect(result.teamA.players).toHaveLength(3)
     expect(result.teamA.players.map((p) => p.rawName)).toEqual([
       'PLAYER A1',
       'PLAYER A2',
       'PLAYER A3',
-    ]);
+    ])
 
     // Team B should have 1 player
-    expect(result.teamB.players).toHaveLength(1);
-    expect(result.teamB.players[0]!.rawName).toBe('PLAYER B1');
-  });
+    expect(result.teamB.players).toHaveLength(1)
+    expect(result.teamB.players[0]!.rawName).toBe('PLAYER B1')
+  })
 
   it('handles libero overflow with bounding box column detection', () => {
     const lines: OCRLine[] = [
-      createLine('Team A\tTeam B', [
-        createWord('Team A', 0, 100),
-        createWord('Team B', 400, 500),
-      ]),
+      createLine('Team A\tTeam B', [createWord('Team A', 0, 100), createWord('Team B', 400, 500)]),
       createLine('N.\tName of the player\tLicense\tN.\tName of the player\tLicense', [
         createWord('N.', 0, 20),
         createWord('Name of the player', 30, 150),
@@ -617,33 +610,30 @@ N.\tName of the player\tLicense\tN.\tName of the player\tLicense
         createWord('LIBERO B2', 450, 540),
         createWord('LFP', 560, 600),
       ]),
-    ];
+    ]
 
-    const fullText = lines.map((l) => l.text).join('\n');
-    const ocrResult = createOCRResult(fullText, lines);
+    const fullText = lines.map((l) => l.text).join('\n')
+    const ocrResult = createOCRResult(fullText, lines)
 
-    const result = parseGameSheetWithOCR(ocrResult);
+    const result = parseGameSheetWithOCR(ocrResult)
 
     // Team A: 1 player + 1 libero = 2
-    expect(result.teamA.players).toHaveLength(2);
-    expect(result.teamA.players[1]!.rawName).toBe('LIBERO A1');
-    expect(result.teamA.players[1]!.shirtNumber).toBe(10);
+    expect(result.teamA.players).toHaveLength(2)
+    expect(result.teamA.players[1]!.rawName).toBe('LIBERO A1')
+    expect(result.teamA.players[1]!.shirtNumber).toBe(10)
 
     // Team B: 1 player + 2 liberos = 3
-    expect(result.teamB.players).toHaveLength(3);
-    expect(result.teamB.players[1]!.rawName).toBe('LIBERO B1');
-    expect(result.teamB.players[1]!.shirtNumber).toBe(20);
-    expect(result.teamB.players[2]!.rawName).toBe('LIBERO B2');
-    expect(result.teamB.players[2]!.shirtNumber).toBe(21);
-  });
+    expect(result.teamB.players).toHaveLength(3)
+    expect(result.teamB.players[1]!.rawName).toBe('LIBERO B1')
+    expect(result.teamB.players[1]!.shirtNumber).toBe(20)
+    expect(result.teamB.players[2]!.rawName).toBe('LIBERO B2')
+    expect(result.teamB.players[2]!.shirtNumber).toBe(21)
+  })
 
   it('adds warning when column boundaries cannot be determined', () => {
     // Only single-column data - cannot determine column boundaries
     const lines: OCRLine[] = [
-      createLine('Team A\tTeam B', [
-        createWord('Team A', 0, 100),
-        createWord('Team B', 200, 300),
-      ]),
+      createLine('Team A\tTeam B', [createWord('Team A', 0, 100), createWord('Team B', 200, 300)]),
       createLine('N.\tName of the player\tLicense', [
         createWord('N.', 0, 20),
         createWord('Name of the player', 30, 150),
@@ -654,14 +644,14 @@ N.\tName of the player\tLicense\tN.\tName of the player\tLicense
         createWord('PLAYER ONE', 30, 120),
         createWord('LFP', 160, 200),
       ]),
-    ];
+    ]
 
-    const fullText = lines.map((l) => l.text).join('\n');
-    const ocrResult = createOCRResult(fullText, lines);
+    const fullText = lines.map((l) => l.text).join('\n')
+    const ocrResult = createOCRResult(fullText, lines)
 
-    const result = parseGameSheetWithOCR(ocrResult);
+    const result = parseGameSheetWithOCR(ocrResult)
 
     // Should have a warning about column boundary detection
-    expect(result.warnings.some((w) => w.includes('column boundaries'))).toBe(true);
-  });
-});
+    expect(result.warnings.some((w) => w.includes('column boundaries'))).toBe(true)
+  })
+})

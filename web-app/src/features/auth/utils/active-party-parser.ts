@@ -6,23 +6,24 @@
  * eligibleRoles which are needed to determine if a user has multiple associations.
  */
 
-import { z } from "zod";
-import { logger } from "@/shared/utils/logger";
+import { z } from 'zod'
+
+import { logger } from '@/shared/utils/logger'
 
 /**
  * Represents an inflated association value with full details.
  */
 export interface InflatedAssociationValue {
-  __identity?: string; // Some inflatedValue objects don't have __identity
-  name?: string;
-  shortName?: string;
+  __identity?: string // Some inflatedValue objects don't have __identity
+  name?: string
+  shortName?: string
   /** Association identifier code (e.g., "912000" for SVRZ) */
-  identifier?: string;
+  identifier?: string
   /**
    * Origin ID to distinguish regional vs national associations.
    * 0 = national (Swiss Volley), >0 = regional (e.g., 12 for SVRZ)
    */
-  originId?: number;
+  originId?: number
 }
 
 /**
@@ -31,32 +32,32 @@ export interface InflatedAssociationValue {
  * Downstream code (parseOccupationFromActiveParty) filters out items missing required fields.
  */
 export interface AttributeValue {
-  __identity?: string;
-  attributeIdentifier?: string;
-  roleIdentifier?: string;
+  __identity?: string
+  attributeIdentifier?: string
+  roleIdentifier?: string
   /**
    * Domain model type - used to distinguish association memberships from boolean flags.
    * For associations: "SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation"
    * For player roles: "boolean"
    */
-  type?: string;
+  type?: string
   /** UUID reference to the association entity */
-  value?: string;
+  value?: string
   /**
    * Inflated value containing association details.
    * Can be an object with association info, or a primitive value (boolean, null, string, number)
    * for certain attribute types like boolean player flags.
    */
-  inflatedValue?: InflatedAssociationValue | boolean | null | string | number;
+  inflatedValue?: InflatedAssociationValue | boolean | null | string | number
 }
 
 /**
  * Definition of a role in the VolleyManager system.
  */
 export interface RoleDefinition {
-  identifier: string;
-  name?: string;
-  packageKey?: string;
+  identifier: string
+  name?: string
+  packageKey?: string
 }
 
 /**
@@ -64,12 +65,12 @@ export interface RoleDefinition {
  * Contains user context including association memberships and roles.
  */
 export interface ActiveParty {
-  __identity?: string;
-  eligibleAttributeValues?: AttributeValue[];
-  eligibleRoles?: Record<string, RoleDefinition>;
-  activeAttributeValue?: AttributeValue;
-  activeRoleIdentifier?: string;
-  groupedEligibleAttributeValues?: AttributeValue[];
+  __identity?: string
+  eligibleAttributeValues?: AttributeValue[]
+  eligibleRoles?: Record<string, RoleDefinition>
+  activeAttributeValue?: AttributeValue
+  activeRoleIdentifier?: string
+  groupedEligibleAttributeValues?: AttributeValue[]
 }
 
 // Zod schemas for runtime validation of parsed JSON
@@ -83,7 +84,7 @@ const InflatedValueObjectSchema = z
     identifier: z.string().optional(),
     originId: z.number().optional(),
   })
-  .passthrough(); // Allow additional unknown properties from the API
+  .passthrough() // Allow additional unknown properties from the API
 
 // inflatedValue can be an object, boolean, null, string, or number depending on the attribute type
 const InflatedValueSchema = z.union([
@@ -92,7 +93,7 @@ const InflatedValueSchema = z.union([
   z.null(),
   z.string(),
   z.number(),
-]);
+])
 
 const AttributeValueSchema = z.object({
   // All fields are optional to handle incomplete items in the array.
@@ -104,13 +105,13 @@ const AttributeValueSchema = z.object({
   type: z.string().optional(),
   value: z.string().optional(),
   inflatedValue: InflatedValueSchema.optional(),
-});
+})
 
 const RoleDefinitionSchema = z.object({
   identifier: z.string(),
   name: z.string().optional(),
   packageKey: z.string().optional(),
-});
+})
 
 const ActivePartySchema = z
   .object({
@@ -121,7 +122,7 @@ const ActivePartySchema = z
     activeRoleIdentifier: z.string().optional(),
     groupedEligibleAttributeValues: z.array(AttributeValueSchema).optional(),
   })
-  .passthrough(); // Allow additional unknown properties from the API
+  .passthrough() // Allow additional unknown properties from the API
 
 /**
  * Regex pattern to match window.activeParty = JSON.parse('...') in HTML.
@@ -136,7 +137,7 @@ const ActivePartySchema = z
  * @internal Exported for use in debug panel diagnostics
  */
 export const ACTIVE_PARTY_PATTERN =
-  /window\.activeParty\s*=\s*JSON\.parse\s*\(\s*'((?:[^'\\]|\\.)*)'\s*\)/;
+  /window\.activeParty\s*=\s*JSON\.parse\s*\(\s*'((?:[^'\\]|\\.)*)'\s*\)/
 
 /**
  * Regex pattern to match Vue component attribute :active-party="$convertFromBackendToFrontend({...})".
@@ -155,7 +156,7 @@ export const ACTIVE_PARTY_PATTERN =
  * @internal Exported for use in debug panel diagnostics
  */
 export const VUE_ACTIVE_PARTY_PATTERN =
-  /:active-party="\$convertFromBackendToFrontend\((\{.+?\})\)"/gs;
+  /:active-party="\$convertFromBackendToFrontend\((\{.+?\})\)"/gs
 
 /**
  * Regex pattern to match Vue component attribute :party="$convertFromBackendToFrontend({...})".
@@ -163,8 +164,7 @@ export const VUE_ACTIVE_PARTY_PATTERN =
  *
  * @internal Exported for use in debug panel diagnostics
  */
-export const VUE_PARTY_PATTERN =
-  /:party="\$convertFromBackendToFrontend\((\{.+?\})\)"/gs;
+export const VUE_PARTY_PATTERN = /:party="\$convertFromBackendToFrontend\((\{.+?\})\)"/gs
 
 /**
  * Decode HTML entities in a string.
@@ -172,23 +172,23 @@ export const VUE_PARTY_PATTERN =
  */
 function decodeHtmlEntities(str: string): string {
   const entities: Record<string, string> = {
-    "&quot;": '"',
-    "&amp;": "&",
-    "&lt;": "<",
-    "&gt;": ">",
-    "&apos;": "'",
-    "&#39;": "'",
-    "&#x27;": "'",
-    "&#34;": '"',
-    "&#x22;": '"',
-  };
-
-  let decoded = str;
-  for (const [entity, char] of Object.entries(entities)) {
-    decoded = decoded.replaceAll(entity, char);
+    '&quot;': '"',
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&apos;': "'",
+    '&#39;': "'",
+    '&#x27;': "'",
+    '&#34;': '"',
+    '&#x22;': '"',
   }
 
-  return decoded;
+  let decoded = str
+  for (const [entity, char] of Object.entries(entities)) {
+    decoded = decoded.replaceAll(entity, char)
+  }
+
+  return decoded
 }
 
 /**
@@ -196,18 +196,18 @@ function decodeHtmlEntities(str: string): string {
  * Returns true if it has expected fields like eligibleAttributeValues or groupedEligibleAttributeValues.
  */
 function looksLikeActiveParty(parsed: unknown): parsed is Record<string, unknown> {
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-    return false;
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return false
   }
-  const obj = parsed as Record<string, unknown>;
+  const obj = parsed as Record<string, unknown>
   // Check for expected activeParty fields (not form permission objects)
   return (
-    "eligibleAttributeValues" in obj ||
-    "groupedEligibleAttributeValues" in obj ||
-    "eligibleRoles" in obj ||
-    "activeRoleIdentifier" in obj ||
-    "activeAttributeValue" in obj
-  );
+    'eligibleAttributeValues' in obj ||
+    'groupedEligibleAttributeValues' in obj ||
+    'eligibleRoles' in obj ||
+    'activeRoleIdentifier' in obj ||
+    'activeAttributeValue' in obj
+  )
 }
 
 /**
@@ -226,97 +226,100 @@ function looksLikeActiveParty(parsed: unknown): parsed is Record<string, unknown
  */
 export function extractActivePartyFromHtml(html: string): ActiveParty | null {
   if (!html) {
-    return null;
+    return null
   }
 
   try {
     // Try the script tag pattern first (legacy format)
-    const scriptMatch = ACTIVE_PARTY_PATTERN.exec(html);
+    const scriptMatch = ACTIVE_PARTY_PATTERN.exec(html)
     if (scriptMatch?.[1]) {
-      const encodedJson = scriptMatch[1];
-      const decodedJson = decodeHtmlEntities(encodedJson);
-      const parsed: unknown = JSON.parse(decodedJson);
+      const encodedJson = scriptMatch[1]
+      const decodedJson = decodeHtmlEntities(encodedJson)
+      const parsed: unknown = JSON.parse(decodedJson)
 
-      const result = ActivePartySchema.safeParse(parsed);
+      const result = ActivePartySchema.safeParse(parsed)
       if (result.success) {
-        return result.data;
+        return result.data
       }
-      logger.warn("activeParty validation failed (script format):", result.error.issues);
+      logger.warn('activeParty validation failed (script format):', result.error.issues)
     }
 
     // Try the Vue :active-party pattern (production format)
     // Iterate through all matches to find the one with actual activeParty data
-    let vueMatch: RegExpExecArray | null;
+    let vueMatch: RegExpExecArray | null
 
     // Reset lastIndex for global regex
-    VUE_ACTIVE_PARTY_PATTERN.lastIndex = 0;
+    VUE_ACTIVE_PARTY_PATTERN.lastIndex = 0
 
     while ((vueMatch = VUE_ACTIVE_PARTY_PATTERN.exec(html)) !== null) {
-      const encodedJson = vueMatch[1];
-      if (!encodedJson) continue;
+      const encodedJson = vueMatch[1]
+      if (!encodedJson) continue
 
       try {
-        const decodedJson = decodeHtmlEntities(encodedJson);
-        const parsed: unknown = JSON.parse(decodedJson);
+        const decodedJson = decodeHtmlEntities(encodedJson)
+        const parsed: unknown = JSON.parse(decodedJson)
 
         // Only accept if it looks like activeParty data (not form permissions)
         if (looksLikeActiveParty(parsed)) {
-          const result = ActivePartySchema.safeParse(parsed);
+          const result = ActivePartySchema.safeParse(parsed)
           if (result.success) {
-            return result.data;
+            return result.data
           }
-          logger.warn("activeParty validation failed (Vue :active-party format):", result.error.issues);
+          logger.warn(
+            'activeParty validation failed (Vue :active-party format):',
+            result.error.issues
+          )
         }
       } catch (error) {
-        logger.warn("Failed to parse :active-party match:", error);
+        logger.warn('Failed to parse :active-party match:', error)
       }
     }
 
     // Try the Vue :party pattern
-    VUE_PARTY_PATTERN.lastIndex = 0;
+    VUE_PARTY_PATTERN.lastIndex = 0
 
     while ((vueMatch = VUE_PARTY_PATTERN.exec(html)) !== null) {
-      const encodedJson = vueMatch[1];
-      if (!encodedJson) continue;
+      const encodedJson = vueMatch[1]
+      if (!encodedJson) continue
 
       try {
-        const decodedJson = decodeHtmlEntities(encodedJson);
-        const parsed: unknown = JSON.parse(decodedJson);
+        const decodedJson = decodeHtmlEntities(encodedJson)
+        const parsed: unknown = JSON.parse(decodedJson)
 
         if (looksLikeActiveParty(parsed)) {
-          const result = ActivePartySchema.safeParse(parsed);
+          const result = ActivePartySchema.safeParse(parsed)
           if (result.success) {
-            return result.data;
+            return result.data
           }
-          logger.warn("activeParty validation failed (Vue :party format):", result.error.issues);
+          logger.warn('activeParty validation failed (Vue :party format):', result.error.issues)
         }
       } catch (error) {
-        logger.warn("Failed to parse :party match:", error);
+        logger.warn('Failed to parse :party match:', error)
       }
     }
 
     // activeParty not found in HTML - this is normal for login pages
-    return null;
+    return null
   } catch (error) {
-    logger.warn("Failed to parse activeParty from HTML:", error);
-    return null;
+    logger.warn('Failed to parse activeParty from HTML:', error)
+    return null
   }
 }
 
 /** Role identifier for referee role in the VolleyManager system */
-const REFEREE_ROLE_IDENTIFIER = "Indoorvolleyball.RefAdmin:Referee";
+const REFEREE_ROLE_IDENTIFIER = 'Indoorvolleyball.RefAdmin:Referee'
 
 /** Type suffix for association memberships (vs boolean player roles) */
-const ASSOCIATION_TYPE_SUFFIX = "AbstractAssociation";
+const ASSOCIATION_TYPE_SUFFIX = 'AbstractAssociation'
 
 /**
  * Type guard to check if inflatedValue is an object (InflatedAssociationValue).
  * Returns false for primitive values (boolean, null, string, number).
  */
 export function isInflatedObject(
-  value: InflatedAssociationValue | boolean | null | string | number | undefined,
+  value: InflatedAssociationValue | boolean | null | string | number | undefined
 ): value is InflatedAssociationValue {
-  return value !== null && typeof value === "object";
+  return value !== null && typeof value === 'object'
 }
 
 /**
@@ -327,17 +330,16 @@ export function isInflatedObject(
  * @returns Filtered array containing only referee association memberships
  */
 export function filterRefereeAssociations(
-  attributeValues: AttributeValue[] | null | undefined,
+  attributeValues: AttributeValue[] | null | undefined
 ): AttributeValue[] {
   if (!attributeValues) {
-    return [];
+    return []
   }
 
   return attributeValues.filter(
     (av) =>
-      av.roleIdentifier === REFEREE_ROLE_IDENTIFIER &&
-      av.type?.includes(ASSOCIATION_TYPE_SUFFIX),
-  );
+      av.roleIdentifier === REFEREE_ROLE_IDENTIFIER && av.type?.includes(ASSOCIATION_TYPE_SUFFIX)
+  )
 }
 
 /**
@@ -348,16 +350,16 @@ export function filterRefereeAssociations(
  * @returns true if the user has multiple eligible referee associations
  */
 export function hasMultipleAssociations(
-  attributeValues: AttributeValue[] | null | undefined,
+  attributeValues: AttributeValue[] | null | undefined
 ): boolean {
-  const refereeAssociations = filterRefereeAssociations(attributeValues);
+  const refereeAssociations = filterRefereeAssociations(attributeValues)
 
   // Count unique associations by their identity
   const uniqueAssociations = new Set(
     refereeAssociations
       .map((av) => (isInflatedObject(av.inflatedValue) ? av.inflatedValue.__identity : undefined))
-      .filter(Boolean),
-  );
+      .filter(Boolean)
+  )
 
-  return uniqueAssociations.size > 1;
+  return uniqueAssociations.size > 1
 }

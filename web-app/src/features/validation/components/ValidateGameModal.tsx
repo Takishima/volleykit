@@ -1,15 +1,16 @@
-import { memo, useState, useCallback, useMemo } from "react";
-import type { Assignment, IndoorPlayerNomination, NominationList } from "@/api/client";
-import { useTranslation } from "@/shared/hooks/useTranslation";
-import { getTeamNames } from "@/features/assignments/utils/assignment-helpers";
-import { useValidateGameWizard } from "@/features/validation/hooks/useValidateGameWizard";
-import { useSettingsStore } from "@/shared/stores/settings";
-import type { RosterPlayer } from "@/features/validation/hooks/useNominationList";
-import type { CoachForComparison } from "./OCREntryModal";
-import { Modal } from "@/shared/components/Modal";
-import { ModalHeader } from "@/shared/components/ModalHeader";
-import { WizardStepContainer } from "@/shared/components/WizardStepContainer";
-import { WizardStepIndicator } from "@/shared/components/WizardStepIndicator";
+import { memo, useState, useCallback, useMemo } from 'react'
+
+import type { Assignment, IndoorPlayerNomination, NominationList } from '@/api/client'
+import { getTeamNames } from '@/features/assignments/utils/assignment-helpers'
+import type { RosterPlayer } from '@/features/validation/hooks/useNominationList'
+import { useValidateGameWizard } from '@/features/validation/hooks/useValidateGameWizard'
+import { Modal } from '@/shared/components/Modal'
+import { ModalHeader } from '@/shared/components/ModalHeader'
+import { WizardStepContainer } from '@/shared/components/WizardStepContainer'
+import { WizardStepIndicator } from '@/shared/components/WizardStepIndicator'
+import { useTranslation } from '@/shared/hooks/useTranslation'
+import { useSettingsStore } from '@/shared/stores/settings'
+
 import {
   UnsavedChangesDialog,
   RosterValidationWarningDialog,
@@ -20,160 +21,154 @@ import {
   SafeModeButtons,
   EditModeButtons,
   OCREntryModal,
-} from ".";
+} from '.'
+
+import type { CoachForComparison } from './OCREntryModal'
 
 interface ValidateGameModalProps {
-  assignment: Assignment;
-  isOpen: boolean;
-  onClose: () => void;
+  assignment: Assignment
+  isOpen: boolean
+  onClose: () => void
 }
 
 /** Transform nomination list players to RosterPlayer format for OCR comparison */
 function transformNominationsToRosterPlayers(
-  nominations: IndoorPlayerNomination[] | undefined,
+  nominations: IndoorPlayerNomination[] | undefined
 ): RosterPlayer[] {
-  if (!nominations) return [];
+  if (!nominations) return []
 
-  const players: RosterPlayer[] = [];
+  const players: RosterPlayer[] = []
 
   for (const nomination of nominations) {
-    const id = nomination.__identity;
-    const person = nomination.indoorPlayer?.person;
-    const displayName = person?.displayName ??
-      [person?.firstName, person?.lastName].filter(Boolean).join(" ");
+    const id = nomination.__identity
+    const person = nomination.indoorPlayer?.person
+    const displayName =
+      person?.displayName ?? [person?.firstName, person?.lastName].filter(Boolean).join(' ')
 
-    if (!id || !displayName) continue;
+    if (!id || !displayName) continue
 
     players.push({
       id,
       displayName,
       firstName: person?.firstName,
       lastName: person?.lastName,
-    });
+    })
   }
 
-  return players.sort((a, b) => a.displayName.localeCompare(b.displayName));
+  return players.sort((a, b) => a.displayName.localeCompare(b.displayName))
 }
 
 /** Transform nomination list coaches to CoachForComparison format for OCR comparison */
 function transformNominationListToCoaches(
-  nominationList: NominationList | null,
+  nominationList: NominationList | null
 ): CoachForComparison[] {
-  if (!nominationList) return [];
+  if (!nominationList) return []
 
-  const coaches: CoachForComparison[] = [];
+  const coaches: CoachForComparison[] = []
 
   // Head coach
-  const headCoach = nominationList.coachPerson;
+  const headCoach = nominationList.coachPerson
   if (headCoach?.__identity && headCoach.displayName) {
     coaches.push({
       id: headCoach.__identity,
       displayName: headCoach.displayName,
       firstName: headCoach.firstName,
       lastName: headCoach.lastName,
-      role: "head",
-    });
+      role: 'head',
+    })
   }
 
   // First assistant coach
-  const firstAssistant = nominationList.firstAssistantCoachPerson;
+  const firstAssistant = nominationList.firstAssistantCoachPerson
   if (firstAssistant?.__identity && firstAssistant.displayName) {
     coaches.push({
       id: firstAssistant.__identity,
       displayName: firstAssistant.displayName,
       firstName: firstAssistant.firstName,
       lastName: firstAssistant.lastName,
-      role: "firstAssistant",
-    });
+      role: 'firstAssistant',
+    })
   }
 
   // Second assistant coach
-  const secondAssistant = nominationList.secondAssistantCoachPerson;
+  const secondAssistant = nominationList.secondAssistantCoachPerson
   if (secondAssistant?.__identity && secondAssistant.displayName) {
     coaches.push({
       id: secondAssistant.__identity,
       displayName: secondAssistant.displayName,
       firstName: secondAssistant.firstName,
       lastName: secondAssistant.lastName,
-      role: "secondAssistant",
-    });
+      role: 'secondAssistant',
+    })
   }
 
-  return coaches;
+  return coaches
 }
 
-function ValidateGameModalComponent({
-  assignment,
-  isOpen,
-  onClose,
-}: ValidateGameModalProps) {
-  const { t, tInterpolate } = useTranslation();
-  const isOCREnabled = useSettingsStore((s) => s.isOCREnabled);
+function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGameModalProps) {
+  const { t, tInterpolate } = useTranslation()
+  const isOCREnabled = useSettingsStore((s) => s.isOCREnabled)
 
   // OCR entry modal state - track whether user dismissed OCR entry for this assignment
   // Use assignment ID as key to reset when switching assignments
-  const [ocrDismissedForAssignment, setOCRDismissedForAssignment] = useState<string | null>(null);
-  const assignmentId = assignment.__identity;
+  const [ocrDismissedForAssignment, setOCRDismissedForAssignment] = useState<string | null>(null)
+  const assignmentId = assignment.__identity
 
   // OCR is dismissed if user explicitly dismissed it for this assignment
-  const ocrDismissed = ocrDismissedForAssignment === assignmentId;
+  const ocrDismissed = ocrDismissedForAssignment === assignmentId
 
   const wizard = useValidateGameWizard({
     assignment,
     isOpen,
     onClose,
-  });
+  })
 
-  const { homeTeam, awayTeam } = getTeamNames(assignment);
-  const modalTitleId = "validate-game-title";
-  const subtitle = `${homeTeam} ${t("common.vs")} ${awayTeam}`;
+  const { homeTeam, awayTeam } = getTeamNames(assignment)
+  const modalTitleId = 'validate-game-title'
+  const subtitle = `${homeTeam} ${t('common.vs')} ${awayTeam}`
 
   // Transform nomination lists to RosterPlayer format for OCR comparison
   const homeRosterPlayers = useMemo(
-    () => transformNominationsToRosterPlayers(
-      wizard.homeNominationList?.indoorPlayerNominations,
-    ),
-    [wizard.homeNominationList],
-  );
+    () => transformNominationsToRosterPlayers(wizard.homeNominationList?.indoorPlayerNominations),
+    [wizard.homeNominationList]
+  )
 
   const awayRosterPlayers = useMemo(
-    () => transformNominationsToRosterPlayers(
-      wizard.awayNominationList?.indoorPlayerNominations,
-    ),
-    [wizard.awayNominationList],
-  );
+    () => transformNominationsToRosterPlayers(wizard.awayNominationList?.indoorPlayerNominations),
+    [wizard.awayNominationList]
+  )
 
   // Transform nomination lists to coaches for OCR comparison
   const homeRosterCoaches = useMemo(
     () => transformNominationListToCoaches(wizard.homeNominationList),
-    [wizard.homeNominationList],
-  );
+    [wizard.homeNominationList]
+  )
 
   const awayRosterCoaches = useMemo(
     () => transformNominationListToCoaches(wizard.awayNominationList),
-    [wizard.awayNominationList],
-  );
+    [wizard.awayNominationList]
+  )
 
   const handleOCRSkip = useCallback(() => {
-    setOCRDismissedForAssignment(assignmentId);
-  }, [assignmentId]);
+    setOCRDismissedForAssignment(assignmentId)
+  }, [assignmentId])
 
   const handleOCRComplete = useCallback(() => {
-    setOCRDismissedForAssignment(assignmentId);
-  }, [assignmentId]);
+    setOCRDismissedForAssignment(assignmentId)
+  }, [assignmentId])
 
   const handleOCRClose = useCallback(() => {
-    setOCRDismissedForAssignment(assignmentId);
-  }, [assignmentId]);
+    setOCRDismissedForAssignment(assignmentId)
+  }, [assignmentId])
 
   // Determine if OCR entry should be shown
   // Note: OCR is available for validated games too (for debugging/re-verification purposes)
-  const shouldShowOCREntry = isOpen && isOCREnabled && !ocrDismissed && !wizard.isLoadingGameDetails;
+  const shouldShowOCREntry = isOpen && isOCREnabled && !ocrDismissed && !wizard.isLoadingGameDetails
 
   const navigation = {
     isFirstStep: wizard.isFirstStep,
     isLastStep: wizard.isLastStep,
-  };
+  }
 
   const editModeState = {
     isFinalizing: wizard.isFinalizing,
@@ -182,12 +177,12 @@ function ValidateGameModalComponent({
     canMarkCurrentStepDone: wizard.canMarkCurrentStepDone,
     allPreviousRequiredStepsDone: wizard.allPreviousRequiredStepsDone,
     currentStepIsOptional: wizard.currentStep.isOptional ?? false,
-  };
+  }
 
   const loadingState = {
     isLoading: wizard.isLoadingGameDetails,
     error: wizard.gameDetailsError,
-  };
+  }
 
   const validationInfo = {
     isValidated: wizard.isValidated,
@@ -198,7 +193,7 @@ function ValidateGameModalComponent({
     state: wizard.validationState,
     homeNominationList: wizard.homeNominationList,
     awayNominationList: wizard.awayNominationList,
-  };
+  }
 
   const stepHandlers = {
     setHomeRosterModifications: wizard.setHomeRosterModifications,
@@ -207,7 +202,7 @@ function ValidateGameModalComponent({
     setScoresheet: wizard.setScoresheet,
     onAddPlayerSheetOpenChange: wizard.handleAddPlayerSheetOpenChange,
     onClose,
-  };
+  }
 
   return (
     <>
@@ -221,7 +216,7 @@ function ValidateGameModalComponent({
         isLoading={wizard.showUnsavedDialog || wizard.showRosterWarningDialog}
       >
         <ModalHeader
-          title={t("assignments.validateGame")}
+          title={t('assignments.validateGame')}
           titleId={modalTitleId}
           subtitle={subtitle}
           onClose={wizard.attemptClose}
@@ -233,10 +228,10 @@ function ValidateGameModalComponent({
             className="mb-4 p-3 bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 rounded-lg"
           >
             <p className="text-sm font-medium text-success-700 dark:text-success-400">
-              {t("validation.wizard.alreadyValidated")}
+              {t('validation.wizard.alreadyValidated')}
             </p>
             <p className="text-xs text-success-600 dark:text-success-500 mt-1">
-              {tInterpolate("validation.wizard.validatedBy", {
+              {tInterpolate('validation.wizard.validatedBy', {
                 scorer: wizard.validatedInfo.scorerName,
               })}
             </p>
@@ -252,7 +247,7 @@ function ValidateGameModalComponent({
             onStepClick={wizard.goToStep}
           />
           <p className="text-center text-xs text-text-muted dark:text-text-muted-dark mt-2">
-            {tInterpolate("validation.wizard.stepOf", {
+            {tInterpolate('validation.wizard.stepOf', {
               current: wizard.currentStepIndex + 1,
               total: wizard.totalSteps,
             })}
@@ -282,23 +277,21 @@ function ValidateGameModalComponent({
             role="alert"
             className="mt-4 p-3 bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800 rounded-lg"
           >
-            <p className="text-sm text-danger-700 dark:text-danger-400">
-              {wizard.saveError}
-            </p>
+            <p className="text-sm text-danger-700 dark:text-danger-400">{wizard.saveError}</p>
             <div className="mt-2 flex gap-3">
               <button
                 type="button"
                 onClick={() => wizard.handleFinish()}
                 className="text-sm font-medium text-danger-600 dark:text-danger-400 hover:text-danger-700 dark:hover:text-danger-300"
               >
-                {t("common.retry")}
+                {t('common.retry')}
               </button>
               <button
                 type="button"
                 onClick={wizard.handleDiscardAndClose}
                 className="text-sm font-medium text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark"
               >
-                {t("validation.state.discardAndClose")}
+                {t('validation.state.discardAndClose')}
               </button>
             </div>
           </div>
@@ -306,7 +299,7 @@ function ValidateGameModalComponent({
 
         {wizard.isSaving && (
           <div className="mt-4 text-center text-sm text-text-muted dark:text-text-muted-dark">
-            {t("validation.wizard.saving")}
+            {t('validation.wizard.saving')}
           </div>
         )}
 
@@ -375,7 +368,7 @@ function ValidateGameModalComponent({
         onClose={handleOCRClose}
       />
     </>
-  );
+  )
 }
 
-export const ValidateGameModal = memo(ValidateGameModalComponent);
+export const ValidateGameModal = memo(ValidateGameModalComponent)

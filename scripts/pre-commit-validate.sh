@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Pre-commit validation hook for VolleyKit
-# Runs lint, knip, and test in PARALLEL, then build sequentially
+# Runs format, lint, knip, and test in PARALLEL, then build sequentially
 #
 # IMPORTANT: This hook only runs in Claude Code web environment
 # to avoid slowing down human developers. Human devs rely on CI.
@@ -127,10 +127,13 @@ print_result_immediate() {
 }
 
 echo ""
-echo -e "${BLUE}Running lint, knip, and test in parallel...${NC}"
+echo -e "${BLUE}Running format, lint, knip, and test in parallel...${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
-# Run lint, knip, and test in parallel
+# Run format, lint, knip, and test in parallel
+run_validation "format" "npm run format:check" &
+FORMAT_PID=$!
+
 run_validation "lint" "npm run lint" &
 LINT_PID=$!
 
@@ -141,18 +144,28 @@ run_validation "test" "npm test" &
 TEST_PID=$!
 
 # Track job completion
+FORMAT_DONE=0
 LINT_DONE=0
 KNIP_DONE=0
 TEST_DONE=0
+FORMAT_RESULT=""
 LINT_RESULT=""
 KNIP_RESULT=""
 TEST_RESULT=""
 
-echo "  Running: Lint, Knip, Test"
+echo "  Running: Format, Lint, Knip, Test"
 echo ""
 
 # Monitor jobs and print results immediately as they complete
-while [ $LINT_DONE -eq 0 ] || [ $KNIP_DONE -eq 0 ] || [ $TEST_DONE -eq 0 ]; do
+while [ $FORMAT_DONE -eq 0 ] || [ $LINT_DONE -eq 0 ] || [ $KNIP_DONE -eq 0 ] || [ $TEST_DONE -eq 0 ]; do
+    # Check format
+    if [ $FORMAT_DONE -eq 0 ] && ! kill -0 $FORMAT_PID 2>/dev/null; then
+        wait $FORMAT_PID 2>/dev/null || true
+        FORMAT_DONE=1
+        FORMAT_RESULT=$(cat "$TEMP_DIR/format.result" 2>/dev/null || echo "1")
+        print_result_immediate "Format" "$FORMAT_RESULT"
+    fi
+
     # Check lint
     if [ $LINT_DONE -eq 0 ] && ! kill -0 $LINT_PID 2>/dev/null; then
         wait $LINT_PID 2>/dev/null || true
@@ -178,7 +191,7 @@ while [ $LINT_DONE -eq 0 ] || [ $KNIP_DONE -eq 0 ] || [ $TEST_DONE -eq 0 ]; do
     fi
 
     # Small delay to avoid busy loop (only if jobs still running)
-    if [ $LINT_DONE -eq 0 ] || [ $KNIP_DONE -eq 0 ] || [ $TEST_DONE -eq 0 ]; then
+    if [ $FORMAT_DONE -eq 0 ] || [ $LINT_DONE -eq 0 ] || [ $KNIP_DONE -eq 0 ] || [ $TEST_DONE -eq 0 ]; then
         sleep 0.2
     fi
 done
@@ -187,7 +200,7 @@ done
 BUILD_RESULT=0
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-if [ "$LINT_RESULT" -eq 0 ] && [ "$KNIP_RESULT" -eq 0 ] && [ "$TEST_RESULT" -eq 0 ]; then
+if [ "$FORMAT_RESULT" -eq 0 ] && [ "$LINT_RESULT" -eq 0 ] && [ "$KNIP_RESULT" -eq 0 ] && [ "$TEST_RESULT" -eq 0 ]; then
     echo "Running build..."
     if npm run build; then
         echo -e "${GREEN}Build passed${NC}"
@@ -218,13 +231,14 @@ print_status() {
     fi
 }
 
+print_status "Format" "$FORMAT_RESULT"
 print_status "Lint" "$LINT_RESULT"
 print_status "Knip" "$KNIP_RESULT"
 print_status "Test" "$TEST_RESULT"
 print_status "Build" "$BUILD_RESULT"
 
 # Exit with error if any check failed
-if [ "$LINT_RESULT" -ne 0 ] || [ "$KNIP_RESULT" -ne 0 ] || [ "$TEST_RESULT" -ne 0 ] || [ "$BUILD_RESULT" -eq 1 ]; then
+if [ "$FORMAT_RESULT" -ne 0 ] || [ "$LINT_RESULT" -ne 0 ] || [ "$KNIP_RESULT" -ne 0 ] || [ "$TEST_RESULT" -ne 0 ] || [ "$BUILD_RESULT" -eq 1 ]; then
     echo ""
     echo -e "${RED}Commit blocked: Fix the issues above before committing${NC}"
     exit 1

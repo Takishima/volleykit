@@ -1,47 +1,43 @@
-import type { Assignment, NominationList } from "@/api/client";
-import type { ValidationStepId } from "@/features/validation/hooks/useValidateGameWizard";
-import type { UseValidationStateResult } from "@/features/validation/hooks/useValidationState";
-import { useTranslation } from "@/shared/hooks/useTranslation";
-import { ModalErrorBoundary } from "@/shared/components/ModalErrorBoundary";
-import {
-  HomeRosterPanel,
-  AwayRosterPanel,
-  ScorerPanel,
-  ScoresheetPanel,
-} from ".";
+import type { Assignment, NominationList } from '@/api/client'
+import type { ValidationStepId } from '@/features/validation/hooks/useValidateGameWizard'
+import type { UseValidationStateResult } from '@/features/validation/hooks/useValidationState'
+import { ModalErrorBoundary } from '@/shared/components/ModalErrorBoundary'
+import { useTranslation } from '@/shared/hooks/useTranslation'
+
+import { HomeRosterPanel, AwayRosterPanel, ScorerPanel, ScoresheetPanel } from '.'
 
 interface LoadingState {
-  isLoading: boolean;
-  error: Error | null;
+  isLoading: boolean
+  error: Error | null
 }
 
 interface ValidationInfo {
-  isValidated: boolean;
+  isValidated: boolean
   /** True when safe mode is enabled - roster editing is disabled */
-  isInSafeMode: boolean;
-  validatedInfo: UseValidationStateResult["validatedInfo"];
-  pendingScorer: UseValidationStateResult["pendingScorer"];
-  scoresheetNotRequired: boolean;
-  state: UseValidationStateResult["state"];
-  homeNominationList: NominationList | null;
-  awayNominationList: NominationList | null;
+  isInSafeMode: boolean
+  validatedInfo: UseValidationStateResult['validatedInfo']
+  pendingScorer: UseValidationStateResult['pendingScorer']
+  scoresheetNotRequired: boolean
+  state: UseValidationStateResult['state']
+  homeNominationList: NominationList | null
+  awayNominationList: NominationList | null
 }
 
 interface StepHandlers {
-  setHomeRosterModifications: UseValidationStateResult["setHomeRosterModifications"];
-  setAwayRosterModifications: UseValidationStateResult["setAwayRosterModifications"];
-  setScorer: UseValidationStateResult["setScorer"];
-  setScoresheet: UseValidationStateResult["setScoresheet"];
-  onAddPlayerSheetOpenChange: (open: boolean) => void;
-  onClose: () => void;
+  setHomeRosterModifications: UseValidationStateResult['setHomeRosterModifications']
+  setAwayRosterModifications: UseValidationStateResult['setAwayRosterModifications']
+  setScorer: UseValidationStateResult['setScorer']
+  setScoresheet: UseValidationStateResult['setScoresheet']
+  onAddPlayerSheetOpenChange: (open: boolean) => void
+  onClose: () => void
 }
 
 interface StepRendererProps {
-  currentStepId: ValidationStepId;
-  assignment: Assignment;
-  loading: LoadingState;
-  validation: ValidationInfo;
-  handlers: StepHandlers;
+  currentStepId: ValidationStepId
+  assignment: Assignment
+  loading: LoadingState
+  validation: ValidationInfo
+  handlers: StepHandlers
 }
 
 /**
@@ -59,16 +55,16 @@ export function StepRenderer({
   validation,
   handlers,
 }: StepRendererProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
   if (loading.isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
         <div className="text-sm text-text-muted dark:text-text-muted-dark">
-          {t("common.loading")}
+          {t('common.loading')}
         </div>
       </div>
-    );
+    )
   }
 
   if (loading.error) {
@@ -77,16 +73,14 @@ export function StepRenderer({
         role="alert"
         className="p-3 bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800 rounded-lg"
       >
-        <p className="text-sm text-danger-700 dark:text-danger-400">
-          {loading.error.message}
-        </p>
+        <p className="text-sm text-danger-700 dark:text-danger-400">{loading.error.message}</p>
       </div>
-    );
+    )
   }
 
   return (
     <ModalErrorBoundary modalName="ValidateGameModal" onClose={handlers.onClose}>
-      {currentStepId === "home-roster" && (
+      {currentStepId === 'home-roster' && (
         <HomeRosterPanel
           assignment={assignment}
           onModificationsChange={handlers.setHomeRosterModifications}
@@ -98,7 +92,7 @@ export function StepRenderer({
         />
       )}
 
-      {currentStepId === "away-roster" && (
+      {currentStepId === 'away-roster' && (
         <AwayRosterPanel
           assignment={assignment}
           onModificationsChange={handlers.setAwayRosterModifications}
@@ -110,9 +104,9 @@ export function StepRenderer({
         />
       )}
 
-      {currentStepId === "scorer" && (
+      {currentStepId === 'scorer' && (
         <ScorerPanel
-          key={validation.pendingScorer?.__identity ?? "no-pending-scorer"}
+          key={validation.pendingScorer?.__identity ?? 'no-pending-scorer'}
           onScorerChange={handlers.setScorer}
           readOnly={validation.isValidated || validation.isInSafeMode}
           readOnlyScorerName={validation.validatedInfo?.scorerName}
@@ -122,14 +116,14 @@ export function StepRenderer({
               ? {
                   __identity: validation.pendingScorer.__identity,
                   displayName: validation.pendingScorer.displayName,
-                  birthday: validation.pendingScorer.birthday ?? "",
+                  birthday: validation.pendingScorer.birthday ?? '',
                 }
               : null
           }
         />
       )}
 
-      {currentStepId === "scoresheet" && (
+      {currentStepId === 'scoresheet' && (
         <ScoresheetPanel
           onScoresheetChange={handlers.setScoresheet}
           readOnly={validation.isValidated || validation.isInSafeMode}
@@ -138,5 +132,5 @@ export function StepRenderer({
         />
       )}
     </ModalErrorBoundary>
-  );
+  )
 }

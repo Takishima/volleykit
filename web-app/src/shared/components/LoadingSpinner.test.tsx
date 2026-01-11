@@ -1,129 +1,104 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
-import {
-  LoadingSpinner,
-  LoadingState,
-  ErrorState,
-  EmptyState,
-} from "./LoadingSpinner";
+import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi } from 'vitest'
 
-describe("LoadingSpinner", () => {
-  it("renders with status role", () => {
-    render(<LoadingSpinner />);
-    expect(screen.getByRole("status")).toBeInTheDocument();
-  });
+import { LoadingSpinner, LoadingState, ErrorState, EmptyState } from './LoadingSpinner'
 
-  it("has accessible label", () => {
-    render(<LoadingSpinner />);
-    expect(screen.getByLabelText("Loading...")).toBeInTheDocument();
-  });
+describe('LoadingSpinner', () => {
+  it('renders with status role', () => {
+    render(<LoadingSpinner />)
+    expect(screen.getByRole('status')).toBeInTheDocument()
+  })
 
-  it("applies size classes", () => {
-    const { rerender } = render(<LoadingSpinner size="sm" />);
-    expect(screen.getByRole("status")).toHaveClass("w-4", "h-4");
+  it('has accessible label', () => {
+    render(<LoadingSpinner />)
+    expect(screen.getByLabelText('Loading...')).toBeInTheDocument()
+  })
 
-    rerender(<LoadingSpinner size="lg" />);
-    expect(screen.getByRole("status")).toHaveClass("w-12", "h-12");
-  });
-});
+  it('applies size classes', () => {
+    const { rerender } = render(<LoadingSpinner size="sm" />)
+    expect(screen.getByRole('status')).toHaveClass('w-4', 'h-4')
 
-describe("LoadingState", () => {
-  it("renders default message", () => {
-    render(<LoadingState />);
-    expect(screen.getByText("Loading...")).toBeInTheDocument();
-  });
+    rerender(<LoadingSpinner size="lg" />)
+    expect(screen.getByRole('status')).toHaveClass('w-12', 'h-12')
+  })
+})
 
-  it("renders custom message", () => {
-    render(<LoadingState message="Fetching data..." />);
-    expect(screen.getByText("Fetching data...")).toBeInTheDocument();
-  });
+describe('LoadingState', () => {
+  it('renders default message', () => {
+    render(<LoadingState />)
+    expect(screen.getByText('Loading...')).toBeInTheDocument()
+  })
 
-  it("includes spinner with status role", () => {
-    render(<LoadingState />);
+  it('renders custom message', () => {
+    render(<LoadingState message="Fetching data..." />)
+    expect(screen.getByText('Fetching data...')).toBeInTheDocument()
+  })
+
+  it('includes spinner with status role', () => {
+    render(<LoadingState />)
     // LoadingSpinner inside LoadingState has role="status"
     // The outer container uses aria-live="polite" without role to avoid redundancy
-    expect(screen.getByRole("status")).toBeInTheDocument();
-  });
-});
+    expect(screen.getByRole('status')).toBeInTheDocument()
+  })
+})
 
-describe("ErrorState", () => {
-  it("renders error message", () => {
-    render(<ErrorState message="Something went wrong" />);
-    expect(screen.getByText("Something went wrong")).toBeInTheDocument();
-  });
+describe('ErrorState', () => {
+  it('renders error message', () => {
+    render(<ErrorState message="Something went wrong" />)
+    expect(screen.getByText('Something went wrong')).toBeInTheDocument()
+  })
 
-  it("shows retry button when onRetry is provided", () => {
-    const handleRetry = vi.fn();
-    render(<ErrorState message="Error" onRetry={handleRetry} />);
-    expect(
-      screen.getByRole("button", { name: "Retry" }),
-    ).toBeInTheDocument();
-  });
+  it('shows retry button when onRetry is provided', () => {
+    const handleRetry = vi.fn()
+    render(<ErrorState message="Error" onRetry={handleRetry} />)
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
+  })
 
-  it("calls onRetry when button is clicked", () => {
-    const handleRetry = vi.fn();
-    render(<ErrorState message="Error" onRetry={handleRetry} />);
-    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
-    expect(handleRetry).toHaveBeenCalledTimes(1);
-  });
+  it('calls onRetry when button is clicked', () => {
+    const handleRetry = vi.fn()
+    render(<ErrorState message="Error" onRetry={handleRetry} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
+    expect(handleRetry).toHaveBeenCalledTimes(1)
+  })
 
-  it("hides retry button when onRetry is not provided", () => {
-    render(<ErrorState message="Error" />);
-    expect(screen.queryByRole("button")).not.toBeInTheDocument();
-  });
-});
+  it('hides retry button when onRetry is not provided', () => {
+    render(<ErrorState message="Error" />)
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
+  })
+})
 
-describe("EmptyState", () => {
-  it("renders title", () => {
-    render(<EmptyState title="No items" />);
-    expect(screen.getByText("No items")).toBeInTheDocument();
-  });
+describe('EmptyState', () => {
+  it('renders title', () => {
+    render(<EmptyState title="No items" />)
+    expect(screen.getByText('No items')).toBeInTheDocument()
+  })
 
-  it("renders description when provided", () => {
-    render(
-      <EmptyState
-        title="No items"
-        description="Add some items to get started"
-      />,
-    );
-    expect(
-      screen.getByText("Add some items to get started"),
-    ).toBeInTheDocument();
-  });
+  it('renders description when provided', () => {
+    render(<EmptyState title="No items" description="Add some items to get started" />)
+    expect(screen.getByText('Add some items to get started')).toBeInTheDocument()
+  })
 
-  it("renders icon from string name", () => {
-    const { container } = render(<EmptyState title="No items" icon="calendar" />);
+  it('renders icon from string name', () => {
+    const { container } = render(<EmptyState title="No items" icon="calendar" />)
     // Calendar icon renders as SVG
-    expect(container.querySelector("svg")).toBeInTheDocument();
-  });
+    expect(container.querySelector('svg')).toBeInTheDocument()
+  })
 
-  it("renders custom ReactNode icon", () => {
-    render(<EmptyState title="No items" icon={<span data-testid="custom-icon">Custom</span>} />);
-    expect(screen.getByTestId("custom-icon")).toBeInTheDocument();
-  });
+  it('renders custom ReactNode icon', () => {
+    render(<EmptyState title="No items" icon={<span data-testid="custom-icon">Custom</span>} />)
+    expect(screen.getByTestId('custom-icon')).toBeInTheDocument()
+  })
 
-  it("renders action button when provided", () => {
-    const handleAction = vi.fn();
-    render(
-      <EmptyState
-        title="No items"
-        action={{ label: "Add Item", onClick: handleAction }}
-      />,
-    );
-    expect(
-      screen.getByRole("button", { name: "Add Item" }),
-    ).toBeInTheDocument();
-  });
+  it('renders action button when provided', () => {
+    const handleAction = vi.fn()
+    render(<EmptyState title="No items" action={{ label: 'Add Item', onClick: handleAction }} />)
+    expect(screen.getByRole('button', { name: 'Add Item' })).toBeInTheDocument()
+  })
 
-  it("calls action onClick when button is clicked", () => {
-    const handleAction = vi.fn();
-    render(
-      <EmptyState
-        title="No items"
-        action={{ label: "Add Item", onClick: handleAction }}
-      />,
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Add Item" }));
-    expect(handleAction).toHaveBeenCalledTimes(1);
-  });
-});
+  it('calls action onClick when button is clicked', () => {
+    const handleAction = vi.fn()
+    render(<EmptyState title="No items" action={{ label: 'Add Item', onClick: handleAction }} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Add Item' }))
+    expect(handleAction).toHaveBeenCalledTimes(1)
+  })
+})

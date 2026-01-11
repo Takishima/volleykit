@@ -1,46 +1,40 @@
-import { useEffect, useRef, useState } from "react";
-import type { ReactNode } from "react";
-import { PWAContext, type PWAContextType } from "./pwa-context-value";
-import { logger } from "@/shared/utils/logger";
-import { MS_PER_HOUR } from "@/shared/utils/constants";
+import { useEffect, useRef, useState } from 'react'
+import type { ReactNode } from 'react'
+
+import { MS_PER_HOUR } from '@/shared/utils/constants'
+import { logger } from '@/shared/utils/logger'
+
+import { PWAContext, type PWAContextType } from './pwa-context-value'
 
 /**
  * Interval for automatic update checks (1 hour).
  * Balances freshness with avoiding excessive network requests.
  * The service worker will also check for updates on page load.
  */
-const UPDATE_CHECK_INTERVAL_MS = MS_PER_HOUR;
+const UPDATE_CHECK_INTERVAL_MS = MS_PER_HOUR
 
 interface PWAProviderInternalProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 /**
  * Internal PWA Provider that manages service worker registration and updates.
  * This component should only be rendered when PWA is enabled.
  */
-export default function PWAProviderInternal({
-  children,
-}: PWAProviderInternalProps) {
-  const [offlineReady, setOfflineReady] = useState(false);
-  const [needRefresh, setNeedRefresh] = useState(false);
-  const [isChecking, setIsChecking] = useState(false);
-  const [lastChecked, setLastChecked] = useState<Date | null>(null);
-  const [checkError, setCheckError] = useState<Error | null>(null);
-  const [registrationError, setRegistrationError] = useState<Error | null>(
-    null,
-  );
+export default function PWAProviderInternal({ children }: PWAProviderInternalProps) {
+  const [offlineReady, setOfflineReady] = useState(false)
+  const [needRefresh, setNeedRefresh] = useState(false)
+  const [isChecking, setIsChecking] = useState(false)
+  const [lastChecked, setLastChecked] = useState<Date | null>(null)
+  const [checkError, setCheckError] = useState<Error | null>(null)
+  const [registrationError, setRegistrationError] = useState<Error | null>(null)
 
   // Refs must be declared before useEffect to avoid race conditions
-  const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(
-    undefined,
-  );
-  const updateSWRef = useRef<((reloadPage?: boolean) => Promise<void>) | null>(
-    null,
-  );
+  const registrationRef = useRef<ServiceWorkerRegistration | null>(null)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
+  const updateSWRef = useRef<((reloadPage?: boolean) => Promise<void>) | null>(null)
   // Ref-based guard to prevent duplicate concurrent update checks
-  const isCheckingRef = useRef(false);
+  const isCheckingRef = useRef(false)
 
   // Check for updates when the app becomes visible again (e.g., reopening PWA on iOS).
   // iOS Safari PWAs resume from a suspended state rather than reloading, so the
@@ -48,19 +42,19 @@ export default function PWAProviderInternal({
   // see update prompts when returning to the app after a new version is deployed.
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible" && registrationRef.current) {
+      if (document.visibilityState === 'visible' && registrationRef.current) {
         // Silently ignore errors - update check failures on visibility change are not critical
         // (e.g., user returns to the app while offline)
-        registrationRef.current.update().catch(() => {});
+        registrationRef.current.update().catch(() => {})
       }
-    };
+    }
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, []);
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [])
 
   useEffect(() => {
     // Cancellation flag pattern for async operations in React 18+.
@@ -69,108 +63,101 @@ export default function PWAProviderInternal({
     // 1. Prevent unnecessary state updates after unmount
     // 2. Avoid setting up intervals on unmounted components
     // 3. Make the cleanup intent explicit for maintainability
-    let cancelled = false;
+    let cancelled = false
 
     async function registerSW() {
       try {
-        const { registerSW } = await import("virtual:pwa-register");
+        const { registerSW } = await import('virtual:pwa-register')
 
         const updateSW = registerSW({
           immediate: true,
           onRegisteredSW(_swUrl, registration) {
-            if (cancelled || !registration) return;
+            if (cancelled || !registration) return
 
-            registrationRef.current = registration;
+            registrationRef.current = registration
 
             // Check for updates periodically
             intervalRef.current = setInterval(() => {
-              registration.update();
-            }, UPDATE_CHECK_INTERVAL_MS);
+              registration.update()
+            }, UPDATE_CHECK_INTERVAL_MS)
           },
           onOfflineReady() {
             if (!cancelled) {
-              setOfflineReady(true);
+              setOfflineReady(true)
             }
           },
           onNeedRefresh() {
             if (!cancelled) {
-              setNeedRefresh(true);
+              setNeedRefresh(true)
             }
           },
           onRegisterError(error) {
-            logger.error("Service worker registration error:", error);
+            logger.error('Service worker registration error:', error)
             if (!cancelled) {
               const regError =
-                error instanceof Error
-                  ? error
-                  : new Error("Service worker registration failed");
-              setRegistrationError(regError);
+                error instanceof Error ? error : new Error('Service worker registration failed')
+              setRegistrationError(regError)
             }
           },
-        });
+        })
 
         // Store updateSW function for later use
         if (!cancelled) {
-          updateSWRef.current = updateSW;
+          updateSWRef.current = updateSW
         }
       } catch (error) {
-        logger.error("Failed to register service worker:", error);
+        logger.error('Failed to register service worker:', error)
         if (!cancelled) {
           const regError =
-            error instanceof Error
-              ? error
-              : new Error("Failed to register service worker");
-          setRegistrationError(regError);
+            error instanceof Error ? error : new Error('Failed to register service worker')
+          setRegistrationError(regError)
         }
       }
     }
 
-    registerSW();
+    registerSW()
 
     return () => {
-      cancelled = true;
+      cancelled = true
       if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = undefined;
+        clearInterval(intervalRef.current)
+        intervalRef.current = undefined
       }
-    };
-  }, []);
+    }
+  }, [])
 
   const checkForUpdate = async () => {
     // Use ref-based guard to prevent race conditions with concurrent calls
-    if (!registrationRef.current || isCheckingRef.current) return;
+    if (!registrationRef.current || isCheckingRef.current) return
 
-    isCheckingRef.current = true;
-    setIsChecking(true);
-    setCheckError(null);
+    isCheckingRef.current = true
+    setIsChecking(true)
+    setCheckError(null)
     try {
-      await registrationRef.current.update();
-      setLastChecked(new Date());
+      await registrationRef.current.update()
+      setLastChecked(new Date())
     } catch (error) {
-      const updateError =
-        error instanceof Error
-          ? error
-          : new Error("Failed to check for updates");
-      logger.error("Failed to check for updates:", error);
-      setCheckError(updateError);
+      const updateError = error instanceof Error ? error : new Error('Failed to check for updates')
+      logger.error('Failed to check for updates:', error)
+      setCheckError(updateError)
     } finally {
-      isCheckingRef.current = false;
-      setIsChecking(false);
+      isCheckingRef.current = false
+      setIsChecking(false)
     }
-  };
+  }
 
   const updateApp = async () => {
     if (updateSWRef.current) {
-      await updateSWRef.current(true);
+      await updateSWRef.current(true)
     } else {
-      logger.warn("updateApp called but service worker is not ready");
+      logger.warn('updateApp called but service worker is not ready')
     }
-  };
+  }
 
   const dismissPrompt = () => {
-    setOfflineReady(false);
-    setNeedRefresh(false);
-  };
+    setOfflineReady(false)
+    setNeedRefresh(false)
+  }
 
   const value: PWAContextType = {
     offlineReady,
@@ -182,7 +169,7 @@ export default function PWAProviderInternal({
     checkForUpdate,
     updateApp,
     dismissPrompt,
-  };
+  }
 
-  return <PWAContext.Provider value={value}>{children}</PWAContext.Provider>;
+  return <PWAContext.Provider value={value}>{children}</PWAContext.Provider>
 }

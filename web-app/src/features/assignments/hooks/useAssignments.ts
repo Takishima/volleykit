@@ -1,25 +1,11 @@
-import { useMemo } from "react";
-import { useQuery, type UseQueryResult } from "@tanstack/react-query";
-import {
-  getApiClient,
-  type SearchConfiguration,
-  type Assignment,
-} from "@/api/client";
-import {
-  addDays,
-  startOfDay,
-  endOfDay,
-  subDays,
-  isWithinInterval,
-} from "date-fns";
-import {
-  isValidationClosed,
-  DEFAULT_VALIDATION_DEADLINE_HOURS,
-} from "../utils/assignment-helpers";
-import { useAuthStore } from "@/shared/stores/auth";
-import { useDemoStore } from "@/shared/stores/demo";
-import { queryKeys } from "@/api/queryKeys";
-import { useAssociationSettings, useActiveSeason } from "@/features/settings/hooks/useSettings";
+import { useMemo } from 'react'
+
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
+import { addDays, startOfDay, endOfDay, subDays, isWithinInterval } from 'date-fns'
+
+import { getApiClient, type SearchConfiguration, type Assignment } from '@/api/client'
+import { queryKeys } from '@/api/queryKeys'
+import { useAssociationSettings, useActiveSeason } from '@/features/settings/hooks/useSettings'
 import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_DATE_RANGE_DAYS,
@@ -32,63 +18,62 @@ import {
   sortByGameDate,
   createDemoQueryResult,
   getGameTimestamp,
-} from "@/shared/hooks/usePaginatedQuery";
+} from '@/shared/hooks/usePaginatedQuery'
+import { useAuthStore } from '@/shared/stores/auth'
+import { useDemoStore } from '@/shared/stores/demo'
+
+import { isValidationClosed, DEFAULT_VALIDATION_DEADLINE_HOURS } from '../utils/assignment-helpers'
 
 /** Stale time for assignment details - longer since details rarely change */
-const ASSIGNMENT_DETAILS_STALE_TIME_MS = ASSIGNMENTS_STALE_TIME_MS * 2;
+const ASSIGNMENT_DETAILS_STALE_TIME_MS = ASSIGNMENTS_STALE_TIME_MS * 2
 
 // Re-export calendar assignments hook for calendar mode
-export { useCalendarAssignments } from "./useCalendarAssignments";
-export type { CalendarAssignment } from "./useCalendarAssignments";
+export { useCalendarAssignments } from './useCalendarAssignments'
+export type { CalendarAssignment } from './useCalendarAssignments'
 
 // Stable empty array for React Query selectors to prevent unnecessary re-renders.
 // Using `|| []` creates a new array reference on each render, while this constant
 // provides referential stability when data.items is nullish.
-const EMPTY_ASSIGNMENTS: Assignment[] = [];
+const EMPTY_ASSIGNMENTS: Assignment[] = []
 
 // Date period presets
-export type DatePeriod =
-  | "upcoming"
-  | "past"
-  | "thisWeek"
-  | "nextMonth"
-  | "custom";
+export type DatePeriod = 'upcoming' | 'past' | 'thisWeek' | 'nextMonth' | 'custom'
 
 export function getDateRangeForPeriod(
   period: DatePeriod,
-  customRange?: { from: Date; to: Date },
+  customRange?: { from: Date; to: Date }
 ): { from: string; to: string } {
-  const now = new Date();
+  const now = new Date()
 
   switch (period) {
-    case "upcoming":
+    case 'upcoming':
       return {
         from: startOfDay(now).toISOString(),
         to: endOfDay(addDays(now, DEFAULT_DATE_RANGE_DAYS)).toISOString(),
-      };
-    case "past":
+      }
+    case 'past':
       return {
         from: startOfDay(subDays(now, DEFAULT_DATE_RANGE_DAYS)).toISOString(),
         to: endOfDay(subDays(now, 1)).toISOString(),
-      };
-    case "thisWeek":
+      }
+    case 'thisWeek':
       return {
         from: startOfDay(now).toISOString(),
         to: endOfDay(addDays(now, THIS_WEEK_DAYS)).toISOString(),
-      };
-    case "nextMonth":
+      }
+    case 'nextMonth':
       return {
         from: startOfDay(now).toISOString(),
         to: endOfDay(addDays(now, NEXT_MONTH_DAYS)).toISOString(),
-      };
-    case "custom":
+      }
+    case 'custom':
       if (customRange) {
         return {
           from: startOfDay(customRange.from).toISOString(),
           to: endOfDay(customRange.to).toISOString(),
-        };
+        }
       }
-      return getDateRangeForPeriod("upcoming");
+      return getDateRangeForPeriod('upcoming')
   }
 }
 
@@ -96,16 +81,10 @@ export function getDateRangeForPeriod(
  * Helper to filter assignments by validation closed status.
  * Shared between demo mode and production code to avoid duplication.
  */
-function filterByValidationClosed(
-  items: Assignment[],
-  deadlineHours: number,
-): Assignment[] {
+function filterByValidationClosed(items: Assignment[], deadlineHours: number): Assignment[] {
   return items.filter((assignment) =>
-    isValidationClosed(
-      assignment.refereeGame?.game?.startingDateTime,
-      deadlineHours,
-    ),
-  );
+    isValidationClosed(assignment.refereeGame?.game?.startingDateTime, deadlineHours)
+  )
 }
 
 /**
@@ -119,21 +98,19 @@ function filterByValidationClosed(
  * @param customRange - Custom date range when period is 'custom'
  */
 export function useAssignments(
-  period: DatePeriod = "upcoming",
-  customRange?: { from: Date; to: Date },
+  period: DatePeriod = 'upcoming',
+  customRange?: { from: Date; to: Date }
 ): UseQueryResult<Assignment[], Error> {
-  const dataSource = useAuthStore((state) => state.dataSource);
-  const isDemoMode = dataSource === "demo";
-  const activeOccupationId = useAuthStore((state) => state.activeOccupationId);
-  const demoAssignments = useDemoStore((state) => state.assignments);
-  const demoAssociationCode = useDemoStore(
-    (state) => state.activeAssociationCode,
-  );
-  const apiClient = getApiClient(dataSource);
+  const dataSource = useAuthStore((state) => state.dataSource)
+  const isDemoMode = dataSource === 'demo'
+  const activeOccupationId = useAuthStore((state) => state.activeOccupationId)
+  const demoAssignments = useDemoStore((state) => state.assignments)
+  const demoAssociationCode = useDemoStore((state) => state.activeAssociationCode)
+  const apiClient = getApiClient(dataSource)
 
   // Use appropriate key for cache invalidation when switching associations
-  const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId;
-  const dateRange = getDateRangeForPeriod(period, customRange);
+  const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId
+  const dateRange = getDateRangeForPeriod(period, customRange)
 
   // Memoize date range values to prevent query key changes on every render.
   // getDateRangeForPeriod returns new objects each time, but the ISO strings
@@ -142,8 +119,8 @@ export function useAssignments(
     return {
       fromDate: dateRange.from,
       toDate: dateRange.to,
-    };
-  }, [dateRange.from, dateRange.to]);
+    }
+  }, [dateRange.from, dateRange.to])
 
   const config = useMemo<SearchConfiguration>(
     () => ({
@@ -151,41 +128,41 @@ export function useAssignments(
       limit: DEFAULT_PAGE_SIZE,
       propertyFilters: [
         {
-          propertyName: "refereeGame.game.startingDateTime",
+          propertyName: 'refereeGame.game.startingDateTime',
           dateRange: { from: fromDate, to: toDate },
         },
       ],
       propertyOrderings: [
         {
-          propertyName: "refereeGame.game.startingDateTime",
-          descending: period === "past",
+          propertyName: 'refereeGame.game.startingDateTime',
+          descending: period === 'past',
           isSetByUser: true,
         },
       ],
     }),
-    [fromDate, toDate, period],
-  );
+    [fromDate, toDate, period]
+  )
 
   // Filter demo assignments client-side to match API behavior.
   // This bypasses React Query's cache to ensure immediate updates
   // when switching associations.
   const demoFilteredData = useMemo(() => {
-    if (!isDemoMode) return [];
+    if (!isDemoMode) return []
 
-    const assignments = Array.isArray(demoAssignments) ? demoAssignments : [];
-    const from = new Date(fromDate);
-    const to = new Date(toDate);
+    const assignments = Array.isArray(demoAssignments) ? demoAssignments : []
+    const from = new Date(fromDate)
+    const to = new Date(toDate)
 
     const filtered = assignments.filter((assignment) => {
-      const timestamp = getGameTimestamp(assignment);
+      const timestamp = getGameTimestamp(assignment)
       // Skip items with missing dates (timestamp would be 0 from epoch fallback)
-      if (timestamp === 0) return false;
-      const gameDate = new Date(timestamp);
-      return gameDate >= from && gameDate <= to;
-    });
+      if (timestamp === 0) return false
+      const gameDate = new Date(timestamp)
+      return gameDate >= from && gameDate <= to
+    })
 
-    return sortByGameDate(filtered, period === "past");
-  }, [isDemoMode, demoAssignments, fromDate, toDate, period]);
+    return sortByGameDate(filtered, period === 'past')
+  }, [isDemoMode, demoAssignments, fromDate, toDate, period])
 
   const query = useQuery({
     queryKey: queryKeys.assignments.list(config, associationKey),
@@ -194,28 +171,28 @@ export function useAssignments(
     staleTime: ASSIGNMENTS_STALE_TIME_MS,
     // Disable query in demo mode - we read directly from the store
     enabled: !isDemoMode,
-  });
+  })
 
   // In demo mode, return store data directly to bypass React Query cache
   if (isDemoMode) {
-    return createDemoQueryResult(query, demoFilteredData);
+    return createDemoQueryResult(query, demoFilteredData)
   }
 
-  return query;
+  return query
 }
 
 /**
  * Convenience hook for upcoming assignments.
  */
 export function useUpcomingAssignments() {
-  return useAssignments("upcoming");
+  return useAssignments('upcoming')
 }
 
 /**
  * Convenience hook for past assignments.
  */
 export function usePastAssignments() {
-  return useAssignments("past");
+  return useAssignments('past')
 }
 
 /**
@@ -233,20 +210,15 @@ export function usePastAssignments() {
  * - Uses shared filtering logic between production and demo modes
  * - Supports cancellation via AbortController
  */
-export function useValidationClosedAssignments(): UseQueryResult<
-  Assignment[],
-  Error
-> {
-  const dataSource = useAuthStore((state) => state.dataSource);
-  const isDemoMode = dataSource === "demo";
-  const activeOccupationId = useAuthStore((state) => state.activeOccupationId);
-  const demoAssignments = useDemoStore((state) => state.assignments);
-  const demoAssociationCode = useDemoStore(
-    (state) => state.activeAssociationCode,
-  );
+export function useValidationClosedAssignments(): UseQueryResult<Assignment[], Error> {
+  const dataSource = useAuthStore((state) => state.dataSource)
+  const isDemoMode = dataSource === 'demo'
+  const activeOccupationId = useAuthStore((state) => state.activeOccupationId)
+  const demoAssignments = useDemoStore((state) => state.assignments)
+  const demoAssociationCode = useDemoStore((state) => state.activeAssociationCode)
 
   // Use appropriate key for cache invalidation when switching associations
-  const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId;
+  const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId
 
   // Fetch settings and season for filtering
   // Note: In demo mode, these queries are disabled (enabled: !isDemoMode),
@@ -257,52 +229,47 @@ export function useValidationClosedAssignments(): UseQueryResult<
     data: settings,
     isSuccess: settingsSuccess,
     isError: settingsError,
-  } = useAssociationSettings();
-  const {
-    data: season,
-    isSuccess: seasonSuccess,
-    isError: seasonError,
-  } = useActiveSeason();
+  } = useAssociationSettings()
+  const { data: season, isSuccess: seasonSuccess, isError: seasonError } = useActiveSeason()
 
   // Memoize date calculations to prevent query key changes on every render.
   // Only recalculate when season data actually changes.
   const { fromDate, toDate } = useMemo(() => {
-    const now = new Date();
+    const now = new Date()
     const seasonStart = parseDateOrFallback(
       season?.seasonStartDate,
-      subDays(now, DEFAULT_DATE_RANGE_DAYS),
-    );
-    const seasonEnd = parseDateOrFallback(season?.seasonEndDate, now);
+      subDays(now, DEFAULT_DATE_RANGE_DAYS)
+    )
+    const seasonEnd = parseDateOrFallback(season?.seasonEndDate, now)
 
     return {
       fromDate: startOfDay(seasonStart).toISOString(),
       toDate: endOfDay(now < seasonEnd ? now : seasonEnd).toISOString(),
-    };
-  }, [season?.seasonStartDate, season?.seasonEndDate]);
+    }
+  }, [season?.seasonStartDate, season?.seasonEndDate])
 
   const deadlineHours =
-    settings?.hoursAfterGameStartForRefereeToEditGameList ??
-    DEFAULT_VALIDATION_DEADLINE_HOURS;
+    settings?.hoursAfterGameStartForRefereeToEditGameList ?? DEFAULT_VALIDATION_DEADLINE_HOURS
 
   // Memoize config to prevent unnecessary object recreation
   const config = useMemo<SearchConfiguration>(
     () => ({
       propertyFilters: [
         {
-          propertyName: "refereeGame.game.startingDateTime",
+          propertyName: 'refereeGame.game.startingDateTime',
           dateRange: { from: fromDate, to: toDate },
         },
       ],
       propertyOrderings: [
         {
-          propertyName: "refereeGame.game.startingDateTime",
+          propertyName: 'refereeGame.game.startingDateTime',
           descending: true, // Most recent first
           isSetByUser: true,
         },
       ],
     }),
-    [fromDate, toDate],
-  );
+    [fromDate, toDate]
+  )
 
   // Wait for settings and season to load before making the main query.
   // Use isSuccess for reliable state detection (avoids race conditions where
@@ -310,66 +277,60 @@ export function useValidationClosedAssignments(): UseQueryResult<
   // If either query fails, proceed with defaults rather than blocking indefinitely.
   // Extra checks: verify we have actual data when queries succeed to prevent
   // race conditions where isSuccess is true but derived values use stale data.
-  const settingsResolved = settingsSuccess || settingsError;
-  const seasonResolved = seasonSuccess || seasonError;
-  const hasSettingsData = settingsSuccess ? settings !== undefined : true;
-  const hasSeasonDates = seasonSuccess
-    ? season?.seasonStartDate !== undefined
-    : true;
+  const settingsResolved = settingsSuccess || settingsError
+  const seasonResolved = seasonSuccess || seasonError
+  const hasSettingsData = settingsSuccess ? settings !== undefined : true
+  const hasSeasonDates = seasonSuccess ? season?.seasonStartDate !== undefined : true
   const isReady =
-    !isDemoMode &&
-    settingsResolved &&
-    seasonResolved &&
-    hasSettingsData &&
-    hasSeasonDates;
+    !isDemoMode && settingsResolved && seasonResolved && hasSettingsData && hasSeasonDates
 
   const query = useQuery({
     queryKey: queryKeys.assignments.validationClosed(
       fromDate,
       toDate,
       deadlineHours,
-      associationKey,
+      associationKey
     ),
     queryFn: async ({ signal }) => {
       // Fetch all pages because API doesn't support server-side filtering
       // by validation status - we must filter client-side after fetching.
-      const allItems = await fetchAllAssignmentPages(config, signal);
+      const allItems = await fetchAllAssignmentPages(config, signal)
       // Filter by validation closed status
-      return filterByValidationClosed(allItems, deadlineHours);
+      return filterByValidationClosed(allItems, deadlineHours)
     },
     // Longer cache time because validation status changes infrequently
     // and fetching all pages is expensive (multiple API calls).
     staleTime: VALIDATION_CLOSED_STALE_TIME_MS,
     enabled: isReady,
-  });
+  })
 
   // Memoize demo data filtering to prevent recalculation on every render.
   // Only recompute when demo assignments, date range, or deadline changes.
   const demoFilteredData = useMemo(() => {
-    if (!isDemoMode) return [];
+    if (!isDemoMode) return []
 
     // Defensive fallback: store initializes assignments as [], but during SSR/hydration
     // or in test environments, the store state may not be fully initialized yet.
-    const assignments = Array.isArray(demoAssignments) ? demoAssignments : [];
+    const assignments = Array.isArray(demoAssignments) ? demoAssignments : []
     const inDateRange = assignments.filter((assignment) => {
-      const gameDate = assignment.refereeGame?.game?.startingDateTime;
-      if (!gameDate) return false;
+      const gameDate = assignment.refereeGame?.game?.startingDateTime
+      if (!gameDate) return false
 
-      const date = new Date(gameDate);
+      const date = new Date(gameDate)
       return isWithinInterval(date, {
         start: new Date(fromDate),
         end: new Date(toDate),
-      });
-    });
-    const filtered = filterByValidationClosed(inDateRange, deadlineHours);
-    return sortByGameDate(filtered, true);
-  }, [isDemoMode, demoAssignments, fromDate, toDate, deadlineHours]);
+      })
+    })
+    const filtered = filterByValidationClosed(inDateRange, deadlineHours)
+    return sortByGameDate(filtered, true)
+  }, [isDemoMode, demoAssignments, fromDate, toDate, deadlineHours])
 
   if (isDemoMode) {
-    return createDemoQueryResult(query, demoFilteredData);
+    return createDemoQueryResult(query, demoFilteredData)
   }
 
-  return query;
+  return query
 }
 
 /**
@@ -378,19 +339,19 @@ export function useValidationClosedAssignments(): UseQueryResult<
  * @param assignmentId - The assignment ID to fetch, or null to disable the query
  */
 export function useAssignmentDetails(assignmentId: string | null) {
-  const dataSource = useAuthStore((state) => state.dataSource);
-  const apiClient = getApiClient(dataSource);
+  const dataSource = useAuthStore((state) => state.dataSource)
+  const apiClient = getApiClient(dataSource)
 
   return useQuery({
-    queryKey: queryKeys.assignments.detail(assignmentId || ""),
+    queryKey: queryKeys.assignments.detail(assignmentId || ''),
     queryFn: () =>
       apiClient.getAssignmentDetails(assignmentId!, [
-        "refereeGame.game.encounter.teamHome",
-        "refereeGame.game.encounter.teamAway",
-        "refereeGame.game.hall",
-        "refereeGame.game.hall.primaryPostalAddress",
+        'refereeGame.game.encounter.teamHome',
+        'refereeGame.game.encounter.teamAway',
+        'refereeGame.game.hall',
+        'refereeGame.game.hall.primaryPostalAddress',
       ]),
     enabled: !!assignmentId,
     staleTime: ASSIGNMENT_DETAILS_STALE_TIME_MS,
-  });
+  })
 }

@@ -4,29 +4,25 @@
  * and demo modes.
  */
 
-import { BYTES_PER_MB } from "@/shared/utils/constants";
+import { BYTES_PER_MB } from '@/shared/utils/constants'
 
 /** Maximum file size in megabytes */
-const MAX_FILE_SIZE_MB = 10;
+const MAX_FILE_SIZE_MB = 10
 
 /**
  * Maximum allowed file size for uploads (10 MB).
  * Used for scoresheet uploads and other file upload validations.
  */
-export const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * BYTES_PER_MB;
+export const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * BYTES_PER_MB
 
 /**
  * Allowed MIME types for file uploads.
  * Accepts PDF documents and JPEG/PNG images.
  */
-export const ALLOWED_FILE_TYPES: readonly string[] = [
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-];
+export const ALLOWED_FILE_TYPES: readonly string[] = ['application/pdf', 'image/jpeg', 'image/png']
 
 /**
  * Default limit for search results pagination.
  * Used for person search and similar paginated endpoints.
  */
-export const DEFAULT_SEARCH_RESULTS_LIMIT = 50;
+export const DEFAULT_SEARCH_RESULTS_LIMIT = 50

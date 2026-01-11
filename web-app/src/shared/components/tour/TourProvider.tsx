@@ -1,149 +1,146 @@
-import { useEffect, useCallback, useRef, useState } from "react";
-import type { TourId } from "@/shared/stores/tour";
-import { useTourStore } from "@/shared/stores/tour";
-import { MODAL_ANIMATION_MS, TOAST_MIN_DURATION_MS } from "@/shared/utils/constants";
-import { getTourDefinition, getTourStepCount } from "./definitions";
-import { TourSpotlight } from "./TourSpotlight";
-import { TourTooltip } from "./TourTooltip";
-import { TourAutoSwipe } from "./TourAutoSwipe";
+import { useEffect, useCallback, useRef, useState } from 'react'
+
+import type { TourId } from '@/shared/stores/tour'
+import { useTourStore } from '@/shared/stores/tour'
+import { MODAL_ANIMATION_MS, TOAST_MIN_DURATION_MS } from '@/shared/utils/constants'
+
+import { getTourDefinition, getTourStepCount } from './definitions'
+import { TourAutoSwipe } from './TourAutoSwipe'
+import { TourSpotlight } from './TourSpotlight'
+import { TourTooltip } from './TourTooltip'
 
 interface TourProviderProps {
-  children: React.ReactNode;
+  children: React.ReactNode
 }
 
 // Track which step the auto-swipe was completed for
 interface AutoSwipeCompletedFor {
-  tour: TourId;
-  step: number;
+  tour: TourId
+  step: number
 }
 
 export function TourProvider({ children }: TourProviderProps) {
-  const {
-    activeTour,
-    currentStep,
-    nextStep,
-    previousStep,
-    completeTour,
-    dismissTour,
-  } = useTourStore();
+  const { activeTour, currentStep, nextStep, previousStep, completeTour, dismissTour } =
+    useTourStore()
 
-  const autoAdvanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [autoSwipeCompletedFor, setAutoSwipeCompletedFor] = useState<AutoSwipeCompletedFor | null>(null);
+  const autoAdvanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [autoSwipeCompletedFor, setAutoSwipeCompletedFor] = useState<AutoSwipeCompletedFor | null>(
+    null
+  )
 
   // Get current tour definition and step
-  const tourDefinition = activeTour ? getTourDefinition(activeTour) : null;
-  const currentStepData = tourDefinition?.steps[currentStep];
-  const totalSteps = activeTour ? getTourStepCount(activeTour) : 0;
-  const isLastStep = currentStep === totalSteps - 1;
-  const isFirstStep = currentStep === 0;
+  const tourDefinition = activeTour ? getTourDefinition(activeTour) : null
+  const currentStepData = tourDefinition?.steps[currentStep]
+  const totalSteps = activeTour ? getTourStepCount(activeTour) : 0
+  const isLastStep = currentStep === totalSteps - 1
+  const isFirstStep = currentStep === 0
 
   // Freeze spotlight position during swipe steps to keep drawer visible
   // A step is a "swipe step" if it has autoSwipe config (regardless of completionEvent)
-  const hasAutoSwipe = Boolean(currentStepData?.autoSwipe);
-  const isSwipeStep = hasAutoSwipe;
+  const hasAutoSwipe = Boolean(currentStepData?.autoSwipe)
+  const isSwipeStep = hasAutoSwipe
   // Auto-swipe is completed only if it was completed for the current tour and step
   const isAutoSwipeCompleted =
-    autoSwipeCompletedFor?.tour === activeTour &&
-    autoSwipeCompletedFor?.step === currentStep;
-  const isAutoSwipeActive = hasAutoSwipe && !isAutoSwipeCompleted;
+    autoSwipeCompletedFor?.tour === activeTour && autoSwipeCompletedFor?.step === currentStep
+  const isAutoSwipeActive = hasAutoSwipe && !isAutoSwipeCompleted
 
   // Handle step completion
   const handleStepComplete = useCallback(() => {
     if (isLastStep) {
-      completeTour();
+      completeTour()
     } else {
-      nextStep();
+      nextStep()
     }
-  }, [isLastStep, completeTour, nextStep]);
+  }, [isLastStep, completeTour, nextStep])
 
   // Handle auto-swipe animation completion
   const handleAutoSwipeComplete = useCallback(() => {
     if (activeTour !== null) {
-      setAutoSwipeCompletedFor({ tour: activeTour, step: currentStep });
+      setAutoSwipeCompletedFor({ tour: activeTour, step: currentStep })
     }
-  }, [activeTour, currentStep]);
+  }, [activeTour, currentStep])
 
   // Handle manual next button click
   const handleNext = useCallback(() => {
-    handleStepComplete();
-  }, [handleStepComplete]);
+    handleStepComplete()
+  }, [handleStepComplete])
 
   // Handle previous button click
   const handlePrevious = useCallback(() => {
-    previousStep();
-  }, [previousStep]);
+    previousStep()
+  }, [previousStep])
 
   // Handle skip/dismiss
   const handleDismiss = useCallback(() => {
-    dismissTour();
-  }, [dismissTour]);
+    dismissTour()
+  }, [dismissTour])
 
   // Set up auto-advance timer for "auto" completion events
   useEffect(() => {
-    if (!currentStepData?.completionEvent) return;
+    if (!currentStepData?.completionEvent) return
 
-    const { type, delay } = currentStepData.completionEvent;
+    const { type, delay } = currentStepData.completionEvent
 
-    if (type === "auto" && delay) {
+    if (type === 'auto' && delay) {
       autoAdvanceTimerRef.current = setTimeout(() => {
-        handleStepComplete();
-      }, delay);
+        handleStepComplete()
+      }, delay)
     }
 
     return () => {
       if (autoAdvanceTimerRef.current) {
-        clearTimeout(autoAdvanceTimerRef.current);
-        autoAdvanceTimerRef.current = null;
+        clearTimeout(autoAdvanceTimerRef.current)
+        autoAdvanceTimerRef.current = null
       }
-    };
-  }, [currentStepData, handleStepComplete]);
+    }
+  }, [currentStepData, handleStepComplete])
 
   // Set up event listeners for click and swipe completion events
   useEffect(() => {
-    if (!currentStepData?.completionEvent) return;
+    if (!currentStepData?.completionEvent) return
 
-    const { type, selector } = currentStepData.completionEvent;
-    const targetSelector = selector || currentStepData.targetSelector;
+    const { type, selector } = currentStepData.completionEvent
+    const targetSelector = selector || currentStepData.targetSelector
 
-    if (type === "click") {
+    if (type === 'click') {
       const handleClick = (e: MouseEvent) => {
-        const target = e.target as Element;
-        const clickedElement = target.closest(targetSelector);
+        const target = e.target as Element
+        const clickedElement = target.closest(targetSelector)
         if (clickedElement) {
           // Small delay to let the click action complete visually
           setTimeout(() => {
-            handleStepComplete();
-          }, MODAL_ANIMATION_MS);
+            handleStepComplete()
+          }, MODAL_ANIMATION_MS)
         }
-      };
+      }
 
-      document.addEventListener("click", handleClick, { capture: true });
-      return () => document.removeEventListener("click", handleClick, { capture: true });
+      document.addEventListener('click', handleClick, { capture: true })
+      return () => document.removeEventListener('click', handleClick, { capture: true })
     }
 
-    if (type === "swipe") {
+    if (type === 'swipe') {
       // Listen for swipe completion by detecting touch/pointer events
       // We'll detect when the swipeable card action is triggered
       const handleSwipe = () => {
         setTimeout(() => {
-          handleStepComplete();
-        }, TOAST_MIN_DURATION_MS);
-      };
+          handleStepComplete()
+        }, TOAST_MIN_DURATION_MS)
+      }
 
       // Use a custom event that SwipeableCard can dispatch
-      const targetElement = document.querySelector(targetSelector);
+      const targetElement = document.querySelector(targetSelector)
       if (targetElement) {
-        targetElement.addEventListener("tour-swipe-complete", handleSwipe);
-        return () => targetElement.removeEventListener("tour-swipe-complete", handleSwipe);
+        targetElement.addEventListener('tour-swipe-complete', handleSwipe)
+        return () => targetElement.removeEventListener('tour-swipe-complete', handleSwipe)
       }
     }
 
-    return undefined;
-  }, [currentStepData, handleStepComplete]);
+    return undefined
+  }, [currentStepData, handleStepComplete])
 
   // Don't render spotlight if no active tour or step
   if (!activeTour || !currentStepData) {
-    return <>{children}</>;
+    return <>{children}</>
   }
 
   return (
@@ -188,5 +185,5 @@ export function TourProvider({ children }: TourProviderProps) {
         />
       )}
     </>
-  );
+  )
 }

@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/rules-of-hooks -- Playwright fixtures use 'use' callback, not React hooks */
-import { test as base, expect, type Page } from "@playwright/test";
+import { test as base, expect, type Page } from '@playwright/test'
 
 /**
  * Pre-complete all tours to prevent them from auto-starting.
@@ -17,13 +17,13 @@ export async function disableTours(page: Page): Promise<void> {
     // Zustand persist format for the tour store
     const tourState = {
       state: {
-        completedTours: ["assignments", "compensations", "exchange", "settings"],
+        completedTours: ['assignments', 'compensations', 'exchange', 'settings'],
         dismissedTours: [],
       },
       version: 0,
-    };
-    localStorage.setItem("volleykit-tour", JSON.stringify(tourState));
-  });
+    }
+    localStorage.setItem('volleykit-tour', JSON.stringify(tourState))
+  })
 }
 
 /**
@@ -38,10 +38,10 @@ export const test = base.extend({
    * This runs before each test and sets up the browser state.
    */
   page: async ({ page }, use) => {
-    await disableTours(page);
-    await use(page);
+    await disableTours(page)
+    await use(page)
   },
-});
+})
 
 // Re-export expect for convenience
-export { expect };
+export { expect }

@@ -8,21 +8,25 @@
  * Without these minimums, the game would be forfeited.
  */
 
-import type { NominationList } from "@/api/client";
-import type { RosterModifications, CoachModifications, CoachRole } from "@/features/validation/hooks/useNominationList";
+import type { NominationList } from '@/api/client'
+import type {
+  RosterModifications,
+  CoachModifications,
+  CoachRole,
+} from '@/features/validation/hooks/useNominationList'
 
 /** Minimum number of players required for a valid roster */
-export const MIN_PLAYERS_REQUIRED = 6;
+export const MIN_PLAYERS_REQUIRED = 6
 
 export interface RosterValidationResult {
   /** Whether the roster meets all minimum requirements */
-  isValid: boolean;
+  isValid: boolean
   /** Effective number of players (base + added - removed) */
-  playerCount: number;
+  playerCount: number
   /** Whether the team has a head coach */
-  hasHeadCoach: boolean;
+  hasHeadCoach: boolean
   /** Whether player count is sufficient */
-  hasMinPlayers: boolean;
+  hasMinPlayers: boolean
 }
 
 /**
@@ -36,7 +40,7 @@ export interface RosterValidationResult {
 export function validateRoster(
   nominationList: NominationList | null,
   playerModifications: RosterModifications,
-  coachModifications: CoachModifications,
+  coachModifications: CoachModifications
 ): RosterValidationResult {
   // If nomination list is not yet loaded, assume valid (don't show errors during loading)
   if (!nominationList) {
@@ -45,39 +49,39 @@ export function validateRoster(
       playerCount: 0,
       hasHeadCoach: true,
       hasMinPlayers: true,
-    };
+    }
   }
 
   // Calculate effective player count
-  const basePlayerCount = nominationList.indoorPlayerNominations?.length ?? 0;
-  const addedCount = playerModifications.added.length;
-  const removedCount = playerModifications.removed.length;
-  const playerCount = basePlayerCount + addedCount - removedCount;
+  const basePlayerCount = nominationList.indoorPlayerNominations?.length ?? 0
+  const addedCount = playerModifications.added.length
+  const removedCount = playerModifications.removed.length
+  const playerCount = basePlayerCount + addedCount - removedCount
 
   // Check for head coach
   // A team has a head coach if:
   // 1. Base nomination list has one AND it's not removed, OR
   // 2. A head coach addition is pending
-  const hasBaseHeadCoach = !!nominationList.coachPerson;
-  const headCoachRemoved = coachModifications.removed.has("head" as CoachRole);
-  const headCoachAdded = coachModifications.added.has("head" as CoachRole);
+  const hasBaseHeadCoach = !!nominationList.coachPerson
+  const headCoachRemoved = coachModifications.removed.has('head' as CoachRole)
+  const headCoachAdded = coachModifications.added.has('head' as CoachRole)
 
-  const hasHeadCoach = headCoachAdded || (hasBaseHeadCoach && !headCoachRemoved);
-  const hasMinPlayers = playerCount >= MIN_PLAYERS_REQUIRED;
+  const hasHeadCoach = headCoachAdded || (hasBaseHeadCoach && !headCoachRemoved)
+  const hasMinPlayers = playerCount >= MIN_PLAYERS_REQUIRED
 
   return {
     isValid: hasHeadCoach && hasMinPlayers,
     playerCount,
     hasHeadCoach,
     hasMinPlayers,
-  };
+  }
 }
 
 export interface RosterValidationStatus {
-  home: RosterValidationResult;
-  away: RosterValidationResult;
+  home: RosterValidationResult
+  away: RosterValidationResult
   /** Whether both rosters are valid */
-  allValid: boolean;
+  allValid: boolean
 }
 
 /**
@@ -89,14 +93,14 @@ export function validateBothRosters(
   homeCoachModifications: CoachModifications,
   awayNominationList: NominationList | null,
   awayPlayerModifications: RosterModifications,
-  awayCoachModifications: CoachModifications,
+  awayCoachModifications: CoachModifications
 ): RosterValidationStatus {
-  const home = validateRoster(homeNominationList, homePlayerModifications, homeCoachModifications);
-  const away = validateRoster(awayNominationList, awayPlayerModifications, awayCoachModifications);
+  const home = validateRoster(homeNominationList, homePlayerModifications, homeCoachModifications)
+  const away = validateRoster(awayNominationList, awayPlayerModifications, awayCoachModifications)
 
   return {
     home,
     away,
     allValid: home.isValid && away.isValid,
-  };
+  }
 }

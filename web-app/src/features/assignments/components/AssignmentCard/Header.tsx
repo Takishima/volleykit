@@ -1,6 +1,6 @@
-import { DateTime } from "./DateTime";
-import { Teams } from "./Teams";
-import { CityInfo } from "./CityInfo";
+import { CityInfo } from './CityInfo'
+import { DateTime } from './DateTime'
+import { Teams } from './Teams'
 
 /**
  * Composed header for the compact view.
@@ -13,5 +13,5 @@ export function Header() {
       <Teams />
       <CityInfo />
     </>
-  );
+  )
 }

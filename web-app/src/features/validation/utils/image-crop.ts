@@ -3,15 +3,16 @@
  * Handles rotation, cropping, and canvas operations.
  */
 
-import type { ScoresheetType } from "@/features/ocr/utils/scoresheet-detector";
+import type { ScoresheetType } from '@/features/ocr/utils/scoresheet-detector'
+
 import {
   ELECTRONIC_GUIDE_WIDTH_PERCENT,
   MANUSCRIPT_GUIDE_WIDTH_PERCENT,
   GUIDE_ASPECT_RATIO,
-} from "../constants/scoresheet-guide";
+} from '../constants/scoresheet-guide'
 
 /** Degrees in half a circle (for radians conversion) */
-const DEGREES_PER_HALF_CIRCLE = 180;
+const DEGREES_PER_HALF_CIRCLE = 180
 
 /**
  * Guide overlay dimensions for different scoresheet types.
@@ -28,19 +29,19 @@ const GUIDE_CONFIG = {
     widthPercent: MANUSCRIPT_GUIDE_WIDTH_PERCENT,
     aspectRatio: GUIDE_ASPECT_RATIO,
   },
-} as const;
+} as const
 
 /** Default JPEG quality for output */
-const DEFAULT_JPEG_QUALITY = 0.92;
+const DEFAULT_JPEG_QUALITY = 0.92
 
 /**
  * Represents a crop area with position and dimensions.
  */
 export interface CropArea {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+  x: number
+  y: number
+  width: number
+  height: number
 }
 
 /**
@@ -62,42 +63,42 @@ export function calculateGuideCropArea(
   videoHeight: number,
   containerWidth: number,
   containerHeight: number,
-  scoresheetType: ScoresheetType,
+  scoresheetType: ScoresheetType
 ): CropArea {
-  const config = GUIDE_CONFIG[scoresheetType];
+  const config = GUIDE_CONFIG[scoresheetType]
 
   // Calculate object-cover scaling
   // object-cover scales to cover the entire container while maintaining aspect ratio
-  const videoAspect = videoWidth / videoHeight;
-  const containerAspect = containerWidth / containerHeight;
+  const videoAspect = videoWidth / videoHeight
+  const containerAspect = containerWidth / containerHeight
 
-  let visibleWidth: number;
-  let visibleHeight: number;
-  let offsetX: number;
-  let offsetY: number;
+  let visibleWidth: number
+  let visibleHeight: number
+  let offsetX: number
+  let offsetY: number
 
   if (videoAspect > containerAspect) {
     // Video is wider than container - height fits fully, width is cropped
-    visibleHeight = videoHeight;
-    visibleWidth = videoHeight * containerAspect;
-    offsetX = (videoWidth - visibleWidth) / 2;
-    offsetY = 0;
+    visibleHeight = videoHeight
+    visibleWidth = videoHeight * containerAspect
+    offsetX = (videoWidth - visibleWidth) / 2
+    offsetY = 0
   } else {
     // Video is taller than container - width fits fully, height is cropped
-    visibleWidth = videoWidth;
-    visibleHeight = videoWidth / containerAspect;
-    offsetX = 0;
-    offsetY = (videoHeight - visibleHeight) / 2;
+    visibleWidth = videoWidth
+    visibleHeight = videoWidth / containerAspect
+    offsetX = 0
+    offsetY = (videoHeight - visibleHeight) / 2
   }
 
   // Calculate guide rectangle in visible area coordinates
   // Guide is centered horizontally and vertically in the visible area
-  const guideWidthInVisible = visibleWidth * config.widthPercent;
-  const guideHeightInVisible = guideWidthInVisible / config.aspectRatio;
+  const guideWidthInVisible = visibleWidth * config.widthPercent
+  const guideHeightInVisible = guideWidthInVisible / config.aspectRatio
 
   // Guide is centered in the visible area
-  const guideXInVisible = (visibleWidth - guideWidthInVisible) / 2;
-  const guideYInVisible = (visibleHeight - guideHeightInVisible) / 2;
+  const guideXInVisible = (visibleWidth - guideWidthInVisible) / 2
+  const guideYInVisible = (visibleHeight - guideHeightInVisible) / 2
 
   // Convert to native video coordinates by adding the offset
   return {
@@ -105,7 +106,7 @@ export function calculateGuideCropArea(
     y: Math.round(offsetY + guideYInVisible),
     width: Math.round(guideWidthInVisible),
     height: Math.round(guideHeightInVisible),
-  };
+  }
 }
 
 /**
@@ -119,15 +120,15 @@ export function calculateGuideCropArea(
 export function cropCanvasToArea(
   sourceCanvas: HTMLCanvasElement,
   cropArea: CropArea,
-  quality: number = DEFAULT_JPEG_QUALITY,
+  quality: number = DEFAULT_JPEG_QUALITY
 ): Promise<Blob> {
-  const croppedCanvas = document.createElement("canvas");
-  croppedCanvas.width = cropArea.width;
-  croppedCanvas.height = cropArea.height;
+  const croppedCanvas = document.createElement('canvas')
+  croppedCanvas.width = cropArea.width
+  croppedCanvas.height = cropArea.height
 
-  const ctx = croppedCanvas.getContext("2d");
+  const ctx = croppedCanvas.getContext('2d')
   if (!ctx) {
-    return Promise.reject(new Error("Could not get canvas context"));
+    return Promise.reject(new Error('Could not get canvas context'))
   }
 
   ctx.drawImage(
@@ -139,29 +140,29 @@ export function cropCanvasToArea(
     0,
     0,
     cropArea.width,
-    cropArea.height,
-  );
+    cropArea.height
+  )
 
   return new Promise((resolve, reject) => {
     croppedCanvas.toBlob(
       (blob) => {
         if (blob) {
-          resolve(blob);
+          resolve(blob)
         } else {
-          reject(new Error("Failed to create blob from canvas"));
+          reject(new Error('Failed to create blob from canvas'))
         }
       },
-      "image/jpeg",
-      quality,
-    );
-  });
+      'image/jpeg',
+      quality
+    )
+  })
 }
 
 /**
  * Converts degrees to radians.
  */
 export function degreesToRadians(degrees: number): number {
-  return (degrees * Math.PI) / DEGREES_PER_HALF_CIRCLE;
+  return (degrees * Math.PI) / DEGREES_PER_HALF_CIRCLE
 }
 
 /**
@@ -176,16 +177,16 @@ export function degreesToRadians(degrees: number): number {
 export function getRotatedBoundingBox(
   width: number,
   height: number,
-  rotation: number,
+  rotation: number
 ): { width: number; height: number } {
-  const rotRad = degreesToRadians(rotation);
-  const sinRot = Math.abs(Math.sin(rotRad));
-  const cosRot = Math.abs(Math.cos(rotRad));
+  const rotRad = degreesToRadians(rotation)
+  const sinRot = Math.abs(Math.sin(rotRad))
+  const cosRot = Math.abs(Math.cos(rotRad))
 
   return {
     width: width * cosRot + height * sinRot,
     height: width * sinRot + height * cosRot,
-  };
+  }
 }
 
 /**
@@ -197,11 +198,11 @@ export function getRotatedBoundingBox(
  */
 export function createImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.addEventListener("load", () => resolve(image));
-    image.addEventListener("error", (error) => reject(error));
-    image.src = url;
-  });
+    const image = new Image()
+    image.addEventListener('load', () => resolve(image))
+    image.addEventListener('error', (error) => reject(error))
+    image.src = url
+  })
 }
 
 /**
@@ -219,46 +220,46 @@ export async function getCroppedImage(
   imageSrc: string,
   pixelCrop: CropArea,
   rotation: number,
-  quality: number = DEFAULT_JPEG_QUALITY,
+  quality: number = DEFAULT_JPEG_QUALITY
 ): Promise<Blob> {
-  const image = await createImage(imageSrc);
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
+  const image = await createImage(imageSrc)
+  const canvas = document.createElement('canvas')
+  const ctx = canvas.getContext('2d')
 
   if (!ctx) {
-    throw new Error("Could not get canvas context");
+    throw new Error('Could not get canvas context')
   }
 
   // Calculate bounding box of the rotated image
-  const rotRad = degreesToRadians(rotation);
+  const rotRad = degreesToRadians(rotation)
   const { width: bBoxWidth, height: bBoxHeight } = getRotatedBoundingBox(
     image.width,
     image.height,
-    rotation,
-  );
+    rotation
+  )
 
   // Set canvas size to the bounding box
-  canvas.width = bBoxWidth;
-  canvas.height = bBoxHeight;
+  canvas.width = bBoxWidth
+  canvas.height = bBoxHeight
 
   // Translate to center, rotate, then translate back
-  ctx.translate(bBoxWidth / 2, bBoxHeight / 2);
-  ctx.rotate(rotRad);
-  ctx.translate(-image.width / 2, -image.height / 2);
+  ctx.translate(bBoxWidth / 2, bBoxHeight / 2)
+  ctx.rotate(rotRad)
+  ctx.translate(-image.width / 2, -image.height / 2)
 
   // Draw the rotated image
-  ctx.drawImage(image, 0, 0);
+  ctx.drawImage(image, 0, 0)
 
   // Extract the cropped area
-  const croppedCanvas = document.createElement("canvas");
-  const croppedCtx = croppedCanvas.getContext("2d");
+  const croppedCanvas = document.createElement('canvas')
+  const croppedCtx = croppedCanvas.getContext('2d')
 
   if (!croppedCtx) {
-    throw new Error("Could not get cropped canvas context");
+    throw new Error('Could not get cropped canvas context')
   }
 
-  croppedCanvas.width = pixelCrop.width;
-  croppedCanvas.height = pixelCrop.height;
+  croppedCanvas.width = pixelCrop.width
+  croppedCanvas.height = pixelCrop.height
 
   croppedCtx.drawImage(
     canvas,
@@ -269,20 +270,20 @@ export async function getCroppedImage(
     0,
     0,
     pixelCrop.width,
-    pixelCrop.height,
-  );
+    pixelCrop.height
+  )
 
   return new Promise((resolve, reject) => {
     croppedCanvas.toBlob(
       (blob) => {
         if (blob) {
-          resolve(blob);
+          resolve(blob)
         } else {
-          reject(new Error("Failed to create blob from canvas"));
+          reject(new Error('Failed to create blob from canvas'))
         }
       },
-      "image/jpeg",
-      quality,
-    );
-  });
+      'image/jpeg',
+      quality
+    )
+  })
 }

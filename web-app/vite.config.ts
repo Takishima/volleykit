@@ -1,15 +1,18 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers -- Config file with build/cache values */
 /// <reference types="vitest" />
-import { defineConfig, type Plugin } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
-import { VitePWA } from 'vite-plugin-pwa'
-import { visualizer } from 'rollup-plugin-visualizer'
-import path from 'path'
 import { execSync } from 'child_process'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
-import { normalizeBasePath } from './src/shared/utils/basePath'
+import path from 'path'
+
+import tailwindcss from '@tailwindcss/vite'
+import react from '@vitejs/plugin-react'
+import { visualizer } from 'rollup-plugin-visualizer'
+import { defineConfig, type Plugin } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa'
+
+
 import packageJson from './package.json' with { type: 'json' }
+import { normalizeBasePath } from './src/shared/utils/basePath'
 
 // Plugin to exclude Zod v4 locale files from the bundle.
 // Zod v4 includes ~50 locale files for i18n error messages that we don't use.

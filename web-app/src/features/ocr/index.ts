@@ -51,29 +51,29 @@ export type {
   OCRScoresheetState,
   OCRScoresheetActions,
   UseOCRScoresheetReturn,
-} from './types';
+} from './types'
 
 // =============================================================================
 // Hooks
 // =============================================================================
 
-export { useOCRScoresheet } from './hooks/useOCRScoresheet';
-export { useEasterEggDetection } from './hooks/useEasterEggDetection';
+export { useOCRScoresheet } from './hooks/useOCRScoresheet'
+export { useEasterEggDetection } from './hooks/useEasterEggDetection'
 
 // =============================================================================
 // Components
 // =============================================================================
 
-export { EasterEggModal } from './components/EasterEggModal';
-export type { EasterEggType } from './components/EasterEggModal';
+export { EasterEggModal } from './components/EasterEggModal'
+export type { EasterEggType } from './components/EasterEggModal'
 
 // =============================================================================
 // Services
 // =============================================================================
 
-export { OCRFactory } from './services/ocr-factory';
-export { MistralOCR } from './services/mistral-ocr';
-export { StubOCR } from './services/stub-ocr';
+export { OCRFactory } from './services/ocr-factory'
+export { MistralOCR } from './services/mistral-ocr'
+export { StubOCR } from './services/stub-ocr'
 
 // =============================================================================
 // Utilities
@@ -90,17 +90,17 @@ export {
   normalizeName,
   getAllPlayers,
   getAllOfficials,
-} from './utils/player-list-parser';
+} from './utils/player-list-parser'
 export type {
   ParseGameSheetOptions,
   ParseGameSheetWithOCROptions,
-} from './utils/player-list-parser';
+} from './utils/player-list-parser'
 
 // Manuscript parsing
-export { parseManuscriptSheet } from './utils/manuscript-parser';
+export { parseManuscriptSheet } from './utils/manuscript-parser'
 
 // Scoresheet type
-export type { ScoresheetType } from './utils/scoresheet-detector';
+export type { ScoresheetType } from './utils/scoresheet-detector'
 
 // Roster comparison
 export {
@@ -109,6 +109,6 @@ export {
   calculateNameSimilarity,
   normalizeForComparison,
   calculateMatchScore,
-} from './utils/roster-comparison';
+} from './utils/roster-comparison'
 
-export type { RosterPlayerForComparison } from './utils/roster-comparison';
+export type { RosterPlayerForComparison } from './utils/roster-comparison'

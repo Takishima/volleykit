@@ -1,19 +1,19 @@
-import type { ValidatedPersonSearchResult } from "@/api/validation";
-import { useTranslation } from "@/shared/hooks/useTranslation";
-import { formatDOB } from "@/shared/utils/date-helpers";
-import { X } from "@/shared/components/icons";
+import type { ValidatedPersonSearchResult } from '@/api/validation'
+import { X } from '@/shared/components/icons'
+import { useTranslation } from '@/shared/hooks/useTranslation'
+import { formatDOB } from '@/shared/utils/date-helpers'
 
 interface SelectedScorerCardProps {
   /** Scorer data from search (may be null in read-only mode) */
-  scorer?: ValidatedPersonSearchResult | null;
+  scorer?: ValidatedPersonSearchResult | null
   /** Fallback display name to use when scorer data is not available */
-  displayName?: string;
+  displayName?: string
   /** Fallback birthday to use when scorer data is not available */
-  displayBirthday?: string;
+  displayBirthday?: string
   /** Callback to clear the selection */
-  onClear?: () => void;
+  onClear?: () => void
   /** When true, hides the clear button */
-  readOnly?: boolean;
+  readOnly?: boolean
 }
 
 /**
@@ -26,26 +26,24 @@ export function SelectedScorerCard({
   onClear,
   readOnly = false,
 }: SelectedScorerCardProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
   // Use scorer displayName if available, otherwise use the displayName prop
-  const name = scorer?.displayName ?? displayName ?? "";
+  const name = scorer?.displayName ?? displayName ?? ''
   // Use scorer birthday if available, otherwise use the displayBirthday prop
-  const birthday = scorer?.birthday ?? displayBirthday;
+  const birthday = scorer?.birthday ?? displayBirthday
 
   return (
     <div className="mb-4 p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
       <div className="flex items-center justify-between">
         <div>
-          <div className="font-medium text-text-primary dark:text-text-primary-dark">
-            {name}
-          </div>
+          <div className="font-medium text-text-primary dark:text-text-primary-dark">{name}</div>
           {(scorer?.associationId || birthday) && (
             <div className="flex items-center gap-3 text-sm text-text-muted dark:text-text-muted-dark">
               {scorer?.associationId && <span>ID: {scorer.associationId}</span>}
               {birthday && (
                 <span>
-                  {t("common.dob")}: {formatDOB(birthday)}
+                  {t('common.dob')}: {formatDOB(birthday)}
                 </span>
               )}
             </div>
@@ -54,7 +52,7 @@ export function SelectedScorerCard({
         {!readOnly && onClear && (
           <button
             onClick={onClear}
-            aria-label={t("common.close")}
+            aria-label={t('common.close')}
             className="
               p-2 rounded-lg
               text-text-muted hover:text-text-secondary dark:text-text-muted-dark dark:hover:text-text-secondary-dark
@@ -67,5 +65,5 @@ export function SelectedScorerCard({
         )}
       </div>
     </div>
-  );
+  )
 }

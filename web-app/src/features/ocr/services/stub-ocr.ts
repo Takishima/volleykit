@@ -6,33 +6,33 @@
  * to allow the UI flow to be tested.
  */
 
-import type { OCREngine, OCRResult, OCRLine, OnProgressCallback } from '../types';
+import type { OCREngine, OCRResult, OCRLine, OnProgressCallback } from '../types'
 
 // =============================================================================
 // Configuration
 // =============================================================================
 
 /** Simulated processing delay in milliseconds */
-const SIMULATED_DELAY_MS = 1500;
+const SIMULATED_DELAY_MS = 1500
 /** Short delay for UI feedback */
-const SHORT_DELAY_MS = 200;
+const SHORT_DELAY_MS = 200
 /** Brief delay for state transitions */
-const BRIEF_DELAY_MS = 300;
+const BRIEF_DELAY_MS = 300
 
 /** Default confidence score for mock OCR results */
-const MOCK_CONFIDENCE_SCORE = 95;
+const MOCK_CONFIDENCE_SCORE = 95
 /** Approximate word spacing for estimated bounding boxes */
-const ESTIMATED_WORD_SPACING_PX = 50;
+const ESTIMATED_WORD_SPACING_PX = 50
 /** Approximate character width for estimated bounding boxes */
-const ESTIMATED_CHAR_WIDTH_PX = 8;
+const ESTIMATED_CHAR_WIDTH_PX = 8
 /** Approximate line height for estimated bounding boxes */
-const ESTIMATED_LINE_HEIGHT_PX = 20;
+const ESTIMATED_LINE_HEIGHT_PX = 20
 
 /** Progress percentage values */
-const PROGRESS_INIT_READY = 50;
-const PROGRESS_PROCESSING = 60;
-const PROGRESS_EXTRACTING = 90;
-const PROGRESS_COMPLETE = 100;
+const PROGRESS_INIT_READY = 50
+const PROGRESS_PROCESSING = 60
+const PROGRESS_EXTRACTING = 90
+const PROGRESS_COMPLETE = 100
 
 // =============================================================================
 // Mock Data
@@ -54,16 +54,16 @@ LIBERO
 L1	2 BRUNNER LEA	OK	L1	5 KOCH CLARA	OK
 OFFICIAL MEMBERS ADMITTED ON THE BENCH
 C	Hans Trainer	C	Peter Coach
-AC	Maria Assistentin	AC	Sandra Helper`;
+AC	Maria Assistentin	AC	Sandra Helper`
 
 /**
  * Generate mock OCR result from text
  */
 function generateMockResult(text: string): OCRResult {
-  const rawLines = text.split('\n');
+  const rawLines = text.split('\n')
 
   const lines: OCRLine[] = rawLines.map((lineText, lineIdx) => {
-    const wordTexts = lineText.split(/\s+/).filter((w) => w.length > 0);
+    const wordTexts = lineText.split(/\s+/).filter((w) => w.length > 0)
 
     return {
       text: lineText,
@@ -78,8 +78,8 @@ function generateMockResult(text: string): OCRResult {
           y1: (lineIdx + 1) * ESTIMATED_LINE_HEIGHT_PX,
         },
       })),
-    };
-  });
+    }
+  })
 
   return {
     fullText: text,
@@ -88,10 +88,10 @@ function generateMockResult(text: string): OCRResult {
     // Stub OCR uses estimated bounding boxes (same as MistralOCR).
     // Real pixel coordinates are not available from mock data.
     hasPreciseBoundingBoxes: false,
-  };
+  }
 }
 
-const MOCK_RESULT = generateMockResult(MOCK_SCORESHEET_TEXT);
+const MOCK_RESULT = generateMockResult(MOCK_SCORESHEET_TEXT)
 
 // =============================================================================
 // StubOCR Class
@@ -101,52 +101,52 @@ const MOCK_RESULT = generateMockResult(MOCK_SCORESHEET_TEXT);
  * Stub OCR engine for development and testing
  */
 export class StubOCR implements OCREngine {
-  #onProgress: OnProgressCallback | undefined;
-  #initialized = false;
+  #onProgress: OnProgressCallback | undefined
+  #initialized = false
 
   constructor(onProgress?: OnProgressCallback) {
-    this.#onProgress = onProgress;
+    this.#onProgress = onProgress
   }
 
   #reportProgress(status: string, progress: number): void {
-    this.#onProgress?.({ status, progress });
+    this.#onProgress?.({ status, progress })
   }
 
   async initialize(): Promise<void> {
     if (this.#initialized) {
-      return;
+      return
     }
 
-    this.#reportProgress('Initializing stub OCR...', 0);
+    this.#reportProgress('Initializing stub OCR...', 0)
 
     // Simulate initialization delay
-    await new Promise((resolve) => setTimeout(resolve, SHORT_DELAY_MS));
+    await new Promise((resolve) => setTimeout(resolve, SHORT_DELAY_MS))
 
-    this.#reportProgress('Stub OCR ready', PROGRESS_INIT_READY);
-    this.#initialized = true;
+    this.#reportProgress('Stub OCR ready', PROGRESS_INIT_READY)
+    this.#initialized = true
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async recognize(_imageBlob: Blob): Promise<OCRResult> {
     if (!this.#initialized) {
-      throw new Error('StubOCR not initialized. Call initialize() first.');
+      throw new Error('StubOCR not initialized. Call initialize() first.')
     }
 
-    this.#reportProgress('Processing image...', PROGRESS_PROCESSING);
+    this.#reportProgress('Processing image...', PROGRESS_PROCESSING)
 
     // Simulate processing delay
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_DELAY_MS));
+    await new Promise((resolve) => setTimeout(resolve, SIMULATED_DELAY_MS))
 
-    this.#reportProgress('Extracting text...', PROGRESS_EXTRACTING);
+    this.#reportProgress('Extracting text...', PROGRESS_EXTRACTING)
 
-    await new Promise((resolve) => setTimeout(resolve, BRIEF_DELAY_MS));
+    await new Promise((resolve) => setTimeout(resolve, BRIEF_DELAY_MS))
 
-    this.#reportProgress('Complete', PROGRESS_COMPLETE);
+    this.#reportProgress('Complete', PROGRESS_COMPLETE)
 
-    return MOCK_RESULT;
+    return MOCK_RESULT
   }
 
   async terminate(): Promise<void> {
-    this.#initialized = false;
+    this.#initialized = false
   }
 }

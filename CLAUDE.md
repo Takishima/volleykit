@@ -40,7 +40,7 @@ A git pre-commit hook (`scripts/pre-commit-validate.sh`) automatically runs vali
 
 1. **Detect staged changes** - Skip validation for docs-only changes
 2. **Generate API types** - If `volleymanager-openapi.yaml` is staged
-3. **Run lint, knip, test in PARALLEL** - Maximum speed by running concurrently
+3. **Run format, lint, knip, test in PARALLEL** - Maximum speed by running concurrently
 4. **Run build** - Production build (only if parallel steps pass)
 
 The commit is **blocked** if any validation step fails. Fix issues and commit again.
@@ -60,7 +60,10 @@ The commit is **blocked** if any validation step fails. Fix issues and commit ag
 ```bash
 cd web-app
 npm run generate:api  # If API types are affected
+npm run format:check  # Check formatting (Prettier)
+npm run format        # Auto-fix formatting issues
 npm run lint          # Lint check (0 warnings allowed)
+npm run lint:fix      # Auto-fix lint issues where possible
 npm run knip          # Dead code detection
 npm test              # Run all tests
 npm run build         # Production build (includes tsc)
@@ -399,10 +402,20 @@ npm run generate:api  # Generates src/api/schema.ts from OpenAPI spec
 
 ## Security
 
-### ESLint Security Plugins
+### ESLint Plugins
 
+**Security**:
 - `eslint-plugin-security`: Detects common security issues
 - `eslint-plugin-no-unsanitized`: Prevents XSS via DOM manipulation
+
+**Code Quality**:
+- `eslint-plugin-sonarjs`: Code complexity and quality rules
+- `eslint-plugin-import-x`: Import ordering and validation
+- `eslint-plugin-jsx-a11y`: Accessibility checks
+
+**React**:
+- `eslint-plugin-react-hooks`: Hook rules enforcement
+- `eslint-plugin-react-refresh`: Fast Refresh compatibility
 
 ### Best Practices
 
@@ -540,11 +553,21 @@ Releases are fully automated via the **Release workflow** (`.github/workflows/re
 ```bash
 cd web-app
 npm run generate:api  # REQUIRED before lint/test/build
+npm run format:check  # Check formatting (Prettier)
 npm run lint          # Lint check (0 warnings allowed)
 npm run knip          # Dead code detection
 npm test              # Run all tests
 npm run build         # Production build (includes tsc)
 npm run size          # Check bundle size (before PRs)
+```
+
+### Formatting
+
+```bash
+cd web-app
+npm run format        # Auto-fix all formatting issues
+npm run format:check  # Check for formatting issues (CI)
+npm run lint:fix      # Auto-fix lint issues + import ordering
 ```
 
 ### Development

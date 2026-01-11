@@ -1,4 +1,4 @@
-import { type Page, type Locator, expect } from "@playwright/test";
+import { type Page, type Locator, expect } from '@playwright/test'
 
 /**
  * Base Page Object Model with shared utilities.
@@ -10,10 +10,10 @@ import { type Page, type Locator, expect } from "@playwright/test";
  * hardcoded timeouts, which accommodates slower browsers like Firefox.
  */
 export class BasePage {
-  readonly page: Page;
+  readonly page: Page
 
   constructor(page: Page) {
-    this.page = page;
+    this.page = page
   }
 
   /**
@@ -21,19 +21,16 @@ export class BasePage {
    * This is more reliable than networkidle for demo mode where there's no real network.
    * Uses Playwright's configured expect.timeout for browser compatibility.
    */
-  protected async waitForContentReady(
-    contentLocator: Locator,
-    emptyStateLocator?: Locator,
-  ) {
+  protected async waitForContentReady(contentLocator: Locator, emptyStateLocator?: Locator) {
     // Wait for loading indicator to disappear (if present)
-    const loadingIndicator = this.page.getByTestId("loading-state");
-    await loadingIndicator.waitFor({ state: "hidden" });
+    const loadingIndicator = this.page.getByTestId('loading-state')
+    await loadingIndicator.waitFor({ state: 'hidden' })
 
     // Wait for content or empty state to be visible
     if (emptyStateLocator) {
-      await expect(contentLocator.first().or(emptyStateLocator)).toBeVisible();
+      await expect(contentLocator.first().or(emptyStateLocator)).toBeVisible()
     } else {
-      await expect(contentLocator.first()).toBeVisible();
+      await expect(contentLocator.first()).toBeVisible()
     }
   }
 }

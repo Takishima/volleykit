@@ -6,20 +6,22 @@
  * calendar data (e.g., SVRZ, SVRBA, SVRI).
  */
 
-import { useState, useRef, useEffect } from 'react';
-import { ChevronDown } from '@/shared/components/icons';
-import { useTranslation } from '@/shared/hooks/useTranslation';
-import { ALL_ASSOCIATIONS } from '../hooks/useCalendarAssociationFilter';
+import { useState, useRef, useEffect } from 'react'
+
+import { ChevronDown } from '@/shared/components/icons'
+import { useTranslation } from '@/shared/hooks/useTranslation'
+
+import { ALL_ASSOCIATIONS } from '../hooks/useCalendarAssociationFilter'
 
 interface CalendarAssociationDropdownProps {
   /** List of available associations to filter by */
-  associations: string[];
+  associations: string[]
 
   /** Currently selected association (or ALL_ASSOCIATIONS for all) */
-  selected: string;
+  selected: string
 
   /** Callback when selection changes */
-  onChange: (association: string) => void;
+  onChange: (association: string) => void
 }
 
 /**
@@ -41,40 +43,37 @@ export function CalendarAssociationDropdown({
   selected,
   onChange,
 }: CalendarAssociationDropdownProps) {
-  const { t } = useTranslation();
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation()
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   // Don't render if only one or no associations
   if (associations.length < 2) {
-    return null;
+    return null
   }
 
   const getDisplayLabel = (value: string): string => {
     if (value === ALL_ASSOCIATIONS) {
-      return t('calendar.allAssociations');
+      return t('calendar.allAssociations')
     }
-    return value;
-  };
+    return value
+  }
 
   const handleSelect = (value: string) => {
-    onChange(value);
-    setIsOpen(false);
-  };
+    onChange(value)
+    setIsOpen(false)
+  }
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -140,5 +139,5 @@ export function CalendarAssociationDropdown({
         </div>
       )}
     </div>
-  );
+  )
 }

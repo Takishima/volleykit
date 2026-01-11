@@ -6,75 +6,73 @@
  * the same file. The vi.spyOn() mock setup for success tests interfered
  * with the mockRejectedValue() configuration needed for error tests.
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AppShell } from "./AppShell";
-import { useAuthStore } from "@/shared/stores/auth";
-import { useDemoStore } from "@/shared/stores/demo";
-import { useToastStore } from "@/shared/stores/toast";
-import { setLocale } from "@/i18n";
-import { mockApi } from "@/api/mock-api";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+
+import { mockApi } from '@/api/mock-api'
+import { setLocale } from '@/i18n'
+import { useAuthStore } from '@/shared/stores/auth'
+import { useDemoStore } from '@/shared/stores/demo'
+import { useToastStore } from '@/shared/stores/toast'
+
+import { AppShell } from './AppShell'
 
 // Save the original function before any mocking
-const originalSwitchRoleAndAttribute = mockApi.switchRoleAndAttribute.bind(
-  mockApi,
-);
+const originalSwitchRoleAndAttribute = mockApi.switchRoleAndAttribute.bind(mockApi)
 
-describe("AppShell Error Handling", () => {
-  let queryClient: QueryClient;
+describe('AppShell Error Handling', () => {
+  let queryClient: QueryClient
 
   beforeEach(() => {
-    setLocale("en");
+    setLocale('en')
     queryClient = new QueryClient({
       defaultOptions: {
         queries: {
           retry: false,
         },
       },
-    });
+    })
 
     // Set up demo mode with SV association
-    useAuthStore.getState().setDemoAuthenticated();
-    useDemoStore.getState().setActiveAssociation("SV");
+    useAuthStore.getState().setDemoAuthenticated()
+    useDemoStore.getState().setActiveAssociation('SV')
 
     // Explicitly ensure the activeOccupationId is reset to SV
     useAuthStore.setState({
-      activeOccupationId: "demo-referee-sv",
+      activeOccupationId: 'demo-referee-sv',
       isAssociationSwitching: false,
-    });
+    })
 
     // Clear any existing toasts
-    useToastStore.getState().clearToasts();
+    useToastStore.getState().clearToasts()
 
     // Mock the API to reject
-    mockApi.switchRoleAndAttribute = vi
-      .fn()
-      .mockRejectedValue(new Error("Network error"));
-  });
+    mockApi.switchRoleAndAttribute = vi.fn().mockRejectedValue(new Error('Network error'))
+  })
 
   afterEach(() => {
     // Restore original function
-    mockApi.switchRoleAndAttribute = originalSwitchRoleAndAttribute;
-    vi.restoreAllMocks();
-    queryClient.clear();
-    useToastStore.getState().clearToasts();
+    mockApi.switchRoleAndAttribute = originalSwitchRoleAndAttribute
+    vi.restoreAllMocks()
+    queryClient.clear()
+    useToastStore.getState().clearToasts()
 
     // Reset stores
     useAuthStore.setState({
-      status: "idle",
+      status: 'idle',
       user: null,
-      dataSource: "api",
+      dataSource: 'api',
       activeOccupationId: null,
       isAssociationSwitching: false,
       error: null,
       csrfToken: null,
       _checkSessionPromise: null,
-    });
-    useDemoStore.getState().clearDemoData();
-  });
+    })
+    useDemoStore.getState().clearDemoData()
+  })
 
   function renderAppShell() {
     return render(
@@ -82,37 +80,35 @@ describe("AppShell Error Handling", () => {
         <MemoryRouter>
           <AppShell />
         </MemoryRouter>
-      </QueryClientProvider>,
-    );
+      </QueryClientProvider>
+    )
   }
 
-  it("does not reset queries on error and shows toast", async () => {
-    const user = userEvent.setup();
-    const resetSpy = vi.spyOn(queryClient, "resetQueries");
+  it('does not reset queries on error and shows toast', async () => {
+    const user = userEvent.setup()
+    const resetSpy = vi.spyOn(queryClient, 'resetQueries')
 
-    renderAppShell();
+    renderAppShell()
 
-    await user.click(screen.getByRole("button", { name: "SV" }));
-    const svrbaOption = await screen.findByRole("option", {
-      name: "SVRBA",
-    });
-    await user.click(svrbaOption);
+    await user.click(screen.getByRole('button', { name: 'SV' }))
+    const svrbaOption = await screen.findByRole('option', {
+      name: 'SVRBA',
+    })
+    await user.click(svrbaOption)
 
     // Wait for the error toast to appear (indicates error was handled)
     await waitFor(() => {
-      const toasts = useToastStore.getState().toasts;
-      expect(toasts.some((t) => t.type === "error")).toBe(true);
-    });
+      const toasts = useToastStore.getState().toasts
+      expect(toasts.some((t) => t.type === 'error')).toBe(true)
+    })
 
     // Queries should not have been reset (preserves current data on error)
-    expect(resetSpy).not.toHaveBeenCalled();
+    expect(resetSpy).not.toHaveBeenCalled()
 
     // Verify switching state is cleared after error
-    expect(useAuthStore.getState().isAssociationSwitching).toBe(false);
+    expect(useAuthStore.getState().isAssociationSwitching).toBe(false)
 
     // Verify the mock was called
-    expect(mockApi.switchRoleAndAttribute).toHaveBeenCalledWith(
-      "demo-referee-svrba",
-    );
-  });
-});
+    expect(mockApi.switchRoleAndAttribute).toHaveBeenCalledWith('demo-referee-svrba')
+  })
+})

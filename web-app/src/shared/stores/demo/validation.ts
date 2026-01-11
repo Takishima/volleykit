@@ -3,47 +3,40 @@
  * Handles game validation state and pending scorer selections.
  */
 
-import type { StateCreator } from "zustand";
-import type {
-  DemoState,
-  DemoValidationState,
-  ValidatedGameData,
-  PendingScorerData,
-} from "./types";
+import type { DemoState, DemoValidationState, ValidatedGameData, PendingScorerData } from './types'
+import type { StateCreator } from 'zustand'
 
 export interface ValidationSlice extends DemoValidationState {
   markGameValidated: (
     gameId: string,
     data: {
-      scorer: { __identity: string; displayName: string; birthday?: string };
-      scoresheetFileId?: string;
-    },
-  ) => void;
-  isGameValidated: (gameId: string) => boolean;
-  getValidatedGameData: (gameId: string) => ValidatedGameData | null;
+      scorer: { __identity: string; displayName: string; birthday?: string }
+      scoresheetFileId?: string
+    }
+  ) => void
+  isGameValidated: (gameId: string) => boolean
+  getValidatedGameData: (gameId: string) => ValidatedGameData | null
   setPendingScorer: (
     gameId: string,
-    scorer: { __identity: string; displayName: string; birthday?: string },
-  ) => void;
-  getPendingScorer: (gameId: string) => PendingScorerData | null;
-  clearPendingScorer: (gameId: string) => void;
+    scorer: { __identity: string; displayName: string; birthday?: string }
+  ) => void
+  getPendingScorer: (gameId: string) => PendingScorerData | null
+  clearPendingScorer: (gameId: string) => void
 }
 
-export const createValidationSlice: StateCreator<
-  DemoState,
-  [],
-  [],
-  ValidationSlice
-> = (set, get) => ({
+export const createValidationSlice: StateCreator<DemoState, [], [], ValidationSlice> = (
+  set,
+  get
+) => ({
   validatedGames: {},
   pendingScorers: {},
 
   markGameValidated: (
     gameId: string,
     data: {
-      scorer: { __identity: string; displayName: string; birthday?: string };
-      scoresheetFileId?: string;
-    },
+      scorer: { __identity: string; displayName: string; birthday?: string }
+      scoresheetFileId?: string
+    }
   ) =>
     set((state) => ({
       validatedGames: {
@@ -59,16 +52,16 @@ export const createValidationSlice: StateCreator<
     })),
 
   isGameValidated: (gameId: string) => {
-    return !!get().validatedGames[gameId];
+    return !!get().validatedGames[gameId]
   },
 
   getValidatedGameData: (gameId: string) => {
-    return get().validatedGames[gameId] ?? null;
+    return get().validatedGames[gameId] ?? null
   },
 
   setPendingScorer: (
     gameId: string,
-    scorer: { __identity: string; displayName: string; birthday?: string },
+    scorer: { __identity: string; displayName: string; birthday?: string }
   ) =>
     set((state) => ({
       pendingScorers: {
@@ -78,13 +71,13 @@ export const createValidationSlice: StateCreator<
     })),
 
   getPendingScorer: (gameId: string) => {
-    return get().pendingScorers[gameId] ?? null;
+    return get().pendingScorers[gameId] ?? null
   },
 
   clearPendingScorer: (gameId: string) =>
     set((state) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Destructuring to remove key
-      const { [gameId]: _removed, ...rest } = state.pendingScorers;
-      return { pendingScorers: rest };
+      const { [gameId]: _removed, ...rest } = state.pendingScorers
+      return { pendingScorers: rest }
     }),
-});
+})

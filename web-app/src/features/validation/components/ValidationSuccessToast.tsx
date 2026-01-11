@@ -1,8 +1,8 @@
 /** Z-index for toast notification (above all dialogs) */
-const Z_INDEX_TOAST = 70;
+const Z_INDEX_TOAST = 70
 
 interface ValidationSuccessToastProps {
-  message: string;
+  message: string
 }
 
 /**
@@ -31,5 +31,5 @@ export function ValidationSuccessToast({ message }: ValidationSuccessToastProps)
       </svg>
       <span className="text-sm font-medium">{message}</span>
     </div>
-  );
+  )
 }

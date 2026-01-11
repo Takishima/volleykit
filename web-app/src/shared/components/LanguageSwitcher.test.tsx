@@ -1,176 +1,160 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
-import { LanguageSwitcher } from "./LanguageSwitcher";
-import { useLanguageStore } from "@/shared/stores/language";
+import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, beforeEach } from 'vitest'
 
-describe("LanguageSwitcher", () => {
+import { useLanguageStore } from '@/shared/stores/language'
+
+import { LanguageSwitcher } from './LanguageSwitcher'
+
+describe('LanguageSwitcher', () => {
   beforeEach(() => {
     // Reset to default locale before each test
-    useLanguageStore.getState().changeLocale("de");
-  });
+    useLanguageStore.getState().changeLocale('de')
+  })
 
-  describe("compact variant", () => {
-    it("renders all language buttons", () => {
-      render(<LanguageSwitcher />);
-      expect(
-        screen.getByRole("button", { name: "Deutsch" }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: "Français" }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: "Italiano" }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: "English" }),
-      ).toBeInTheDocument();
-    });
+  describe('compact variant', () => {
+    it('renders all language buttons', () => {
+      render(<LanguageSwitcher />)
+      expect(screen.getByRole('button', { name: 'Deutsch' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Français' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Italiano' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'English' })).toBeInTheDocument()
+    })
 
-    it("marks current language as pressed", () => {
-      render(<LanguageSwitcher />);
-      const germanButton = screen.getByRole("button", { name: "Deutsch" });
-      expect(germanButton).toHaveAttribute("aria-pressed", "true");
-    });
+    it('marks current language as pressed', () => {
+      render(<LanguageSwitcher />)
+      const germanButton = screen.getByRole('button', { name: 'Deutsch' })
+      expect(germanButton).toHaveAttribute('aria-pressed', 'true')
+    })
 
-    it("updates locale when language button is clicked", () => {
-      render(<LanguageSwitcher />);
-      const frenchButton = screen.getByRole("button", { name: "Français" });
+    it('updates locale when language button is clicked', () => {
+      render(<LanguageSwitcher />)
+      const frenchButton = screen.getByRole('button', { name: 'Français' })
 
-      fireEvent.click(frenchButton);
+      fireEvent.click(frenchButton)
 
-      expect(useLanguageStore.getState().locale).toBe("fr");
-      expect(frenchButton).toHaveAttribute("aria-pressed", "true");
-    });
+      expect(useLanguageStore.getState().locale).toBe('fr')
+      expect(frenchButton).toHaveAttribute('aria-pressed', 'true')
+    })
 
-    it("applies active styles to current language", () => {
-      render(<LanguageSwitcher />);
-      const germanButton = screen.getByRole("button", { name: "Deutsch" });
-      expect(germanButton).toHaveClass("bg-primary-500", "text-primary-950");
-    });
+    it('applies active styles to current language', () => {
+      render(<LanguageSwitcher />)
+      const germanButton = screen.getByRole('button', { name: 'Deutsch' })
+      expect(germanButton).toHaveClass('bg-primary-500', 'text-primary-950')
+    })
 
-    it("applies custom className", () => {
-      const { container } = render(
-        <LanguageSwitcher className="custom-class" />,
-      );
-      const wrapper = container.firstChild as HTMLElement;
-      expect(wrapper).toHaveClass("custom-class");
-    });
-  });
+    it('applies custom className', () => {
+      const { container } = render(<LanguageSwitcher className="custom-class" />)
+      const wrapper = container.firstChild as HTMLElement
+      expect(wrapper).toHaveClass('custom-class')
+    })
+  })
 
-  describe("grid variant", () => {
-    it("renders all language buttons in grid layout", () => {
-      render(<LanguageSwitcher variant="grid" />);
-      expect(
-        screen.getByRole("button", { name: "Deutsch" }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: "Français" }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: "Italiano" }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: "English" }),
-      ).toBeInTheDocument();
-    });
+  describe('grid variant', () => {
+    it('renders all language buttons in grid layout', () => {
+      render(<LanguageSwitcher variant="grid" />)
+      expect(screen.getByRole('button', { name: 'Deutsch' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Français' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Italiano' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'English' })).toBeInTheDocument()
+    })
 
-    it("uses grid layout classes", () => {
-      const { container } = render(<LanguageSwitcher variant="grid" />);
-      const wrapper = container.firstChild as HTMLElement;
-      expect(wrapper).toHaveClass("grid", "grid-cols-2", "sm:grid-cols-4");
-    });
+    it('uses grid layout classes', () => {
+      const { container } = render(<LanguageSwitcher variant="grid" />)
+      const wrapper = container.firstChild as HTMLElement
+      expect(wrapper).toHaveClass('grid', 'grid-cols-2', 'sm:grid-cols-4')
+    })
 
-    it("marks current language as pressed in grid variant", () => {
-      render(<LanguageSwitcher variant="grid" />);
-      const germanButton = screen.getByRole("button", { name: "Deutsch" });
-      expect(germanButton).toHaveAttribute("aria-pressed", "true");
-    });
+    it('marks current language as pressed in grid variant', () => {
+      render(<LanguageSwitcher variant="grid" />)
+      const germanButton = screen.getByRole('button', { name: 'Deutsch' })
+      expect(germanButton).toHaveAttribute('aria-pressed', 'true')
+    })
 
-    it("updates locale when language button is clicked in grid variant", () => {
-      render(<LanguageSwitcher variant="grid" />);
-      const italianButton = screen.getByRole("button", { name: "Italiano" });
+    it('updates locale when language button is clicked in grid variant', () => {
+      render(<LanguageSwitcher variant="grid" />)
+      const italianButton = screen.getByRole('button', { name: 'Italiano' })
 
-      fireEvent.click(italianButton);
+      fireEvent.click(italianButton)
 
-      expect(useLanguageStore.getState().locale).toBe("it");
-      expect(italianButton).toHaveAttribute("aria-pressed", "true");
-    });
+      expect(useLanguageStore.getState().locale).toBe('it')
+      expect(italianButton).toHaveAttribute('aria-pressed', 'true')
+    })
 
-    it("applies active styles to current language in grid variant", () => {
-      render(<LanguageSwitcher variant="grid" />);
-      const germanButton = screen.getByRole("button", { name: "Deutsch" });
-      expect(germanButton).toHaveClass("border-primary-500", "bg-primary-50");
-    });
-  });
+    it('applies active styles to current language in grid variant', () => {
+      render(<LanguageSwitcher variant="grid" />)
+      const germanButton = screen.getByRole('button', { name: 'Deutsch' })
+      expect(germanButton).toHaveClass('border-primary-500', 'bg-primary-50')
+    })
+  })
 
-  describe("language switching", () => {
-    it("switches between all languages correctly", () => {
-      render(<LanguageSwitcher />);
+  describe('language switching', () => {
+    it('switches between all languages correctly', () => {
+      render(<LanguageSwitcher />)
 
       // Start with German
-      expect(useLanguageStore.getState().locale).toBe("de");
+      expect(useLanguageStore.getState().locale).toBe('de')
 
       // Switch to French
-      fireEvent.click(screen.getByRole("button", { name: "Français" }));
-      expect(useLanguageStore.getState().locale).toBe("fr");
+      fireEvent.click(screen.getByRole('button', { name: 'Français' }))
+      expect(useLanguageStore.getState().locale).toBe('fr')
 
       // Switch to Italian
-      fireEvent.click(screen.getByRole("button", { name: "Italiano" }));
-      expect(useLanguageStore.getState().locale).toBe("it");
+      fireEvent.click(screen.getByRole('button', { name: 'Italiano' }))
+      expect(useLanguageStore.getState().locale).toBe('it')
 
       // Switch to English
-      fireEvent.click(screen.getByRole("button", { name: "English" }));
-      expect(useLanguageStore.getState().locale).toBe("en");
+      fireEvent.click(screen.getByRole('button', { name: 'English' }))
+      expect(useLanguageStore.getState().locale).toBe('en')
 
       // Switch back to German
-      fireEvent.click(screen.getByRole("button", { name: "Deutsch" }));
-      expect(useLanguageStore.getState().locale).toBe("de");
-    });
-  });
+      fireEvent.click(screen.getByRole('button', { name: 'Deutsch' }))
+      expect(useLanguageStore.getState().locale).toBe('de')
+    })
+  })
 
-  describe("accessibility", () => {
-    it("has proper aria-label for each button", () => {
-      render(<LanguageSwitcher />);
+  describe('accessibility', () => {
+    it('has proper aria-label for each button', () => {
+      render(<LanguageSwitcher />)
 
-      expect(screen.getByRole("button", { name: "Deutsch" })).toHaveAttribute(
-        "aria-label",
-        "Deutsch",
-      );
-      expect(screen.getByRole("button", { name: "Français" })).toHaveAttribute(
-        "aria-label",
-        "Français",
-      );
-      expect(screen.getByRole("button", { name: "Italiano" })).toHaveAttribute(
-        "aria-label",
-        "Italiano",
-      );
-      expect(screen.getByRole("button", { name: "English" })).toHaveAttribute(
-        "aria-label",
-        "English",
-      );
-    });
+      expect(screen.getByRole('button', { name: 'Deutsch' })).toHaveAttribute(
+        'aria-label',
+        'Deutsch'
+      )
+      expect(screen.getByRole('button', { name: 'Français' })).toHaveAttribute(
+        'aria-label',
+        'Français'
+      )
+      expect(screen.getByRole('button', { name: 'Italiano' })).toHaveAttribute(
+        'aria-label',
+        'Italiano'
+      )
+      expect(screen.getByRole('button', { name: 'English' })).toHaveAttribute(
+        'aria-label',
+        'English'
+      )
+    })
 
-    it("indicates pressed state with aria-pressed", () => {
-      render(<LanguageSwitcher />);
+    it('indicates pressed state with aria-pressed', () => {
+      render(<LanguageSwitcher />)
 
-      const germanButton = screen.getByRole("button", { name: "Deutsch" });
-      const frenchButton = screen.getByRole("button", { name: "Français" });
+      const germanButton = screen.getByRole('button', { name: 'Deutsch' })
+      const frenchButton = screen.getByRole('button', { name: 'Français' })
 
-      expect(germanButton).toHaveAttribute("aria-pressed", "true");
-      expect(frenchButton).toHaveAttribute("aria-pressed", "false");
+      expect(germanButton).toHaveAttribute('aria-pressed', 'true')
+      expect(frenchButton).toHaveAttribute('aria-pressed', 'false')
 
-      fireEvent.click(frenchButton);
+      fireEvent.click(frenchButton)
 
-      expect(germanButton).toHaveAttribute("aria-pressed", "false");
-      expect(frenchButton).toHaveAttribute("aria-pressed", "true");
-    });
+      expect(germanButton).toHaveAttribute('aria-pressed', 'false')
+      expect(frenchButton).toHaveAttribute('aria-pressed', 'true')
+    })
 
-    it("is keyboard accessible", () => {
-      render(<LanguageSwitcher />);
-      const frenchButton = screen.getByRole("button", { name: "Français" });
+    it('is keyboard accessible', () => {
+      render(<LanguageSwitcher />)
+      const frenchButton = screen.getByRole('button', { name: 'Français' })
 
-      frenchButton.focus();
-      expect(frenchButton).toHaveFocus();
-    });
-  });
-});
+      frenchButton.focus()
+      expect(frenchButton).toHaveFocus()
+    })
+  })
+})

@@ -6,21 +6,22 @@
  * with StubOCR available as fallback for local development.
  */
 
-import type { OCREngine, OnProgressCallback } from '../types';
-import { MistralOCR } from './mistral-ocr';
-import { StubOCR } from './stub-ocr';
+import { MistralOCR } from './mistral-ocr'
+import { StubOCR } from './stub-ocr'
+
+import type { OCREngine, OnProgressCallback } from '../types'
 
 // =============================================================================
 // Configuration
 // =============================================================================
 
 /** Timeout for health check when determining OCR proxy availability */
-const HEALTH_CHECK_TIMEOUT_MS = 3000;
+const HEALTH_CHECK_TIMEOUT_MS = 3000
 
 /** OCR proxy endpoint - uses environment variable or default */
 const OCR_ENDPOINT =
   (import.meta.env.VITE_OCR_ENDPOINT as string | undefined) ??
-  'https://volleykit-proxy.takishima.workers.dev/ocr';
+  'https://volleykit-proxy.takishima.workers.dev/ocr'
 
 // =============================================================================
 // Health Check
@@ -31,14 +32,14 @@ const OCR_ENDPOINT =
  */
 async function isOCRProxyAvailable(): Promise<boolean> {
   try {
-    const healthUrl = OCR_ENDPOINT.replace('/ocr', '/health');
+    const healthUrl = OCR_ENDPOINT.replace('/ocr', '/health')
     const response = await fetch(healthUrl, {
       method: 'GET',
       signal: AbortSignal.timeout(HEALTH_CHECK_TIMEOUT_MS),
-    });
-    return response.ok;
+    })
+    return response.ok
   } catch {
-    return false;
+    return false
   }
 }
 
@@ -58,7 +59,7 @@ export const OCRFactory = {
    * @returns OCR engine instance
    */
   create(onProgress?: OnProgressCallback): OCREngine {
-    return new MistralOCR(onProgress, OCR_ENDPOINT);
+    return new MistralOCR(onProgress, OCR_ENDPOINT)
   },
 
   /**
@@ -69,14 +70,14 @@ export const OCRFactory = {
    * @returns OCR engine instance
    */
   async createWithFallback(onProgress?: OnProgressCallback): Promise<OCREngine> {
-    const isAvailable = await isOCRProxyAvailable();
+    const isAvailable = await isOCRProxyAvailable()
 
     if (isAvailable) {
-      return new MistralOCR(onProgress, OCR_ENDPOINT);
+      return new MistralOCR(onProgress, OCR_ENDPOINT)
     }
 
-    console.warn('OCR proxy not available, falling back to stub implementation');
-    return new StubOCR(onProgress);
+    console.warn('OCR proxy not available, falling back to stub implementation')
+    return new StubOCR(onProgress)
   },
 
   /**
@@ -86,6 +87,6 @@ export const OCRFactory = {
    * @returns Stub OCR engine instance
    */
   createStub(onProgress?: OnProgressCallback): OCREngine {
-    return new StubOCR(onProgress);
+    return new StubOCR(onProgress)
   },
-};
+}

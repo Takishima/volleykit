@@ -1,164 +1,113 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
-import { SafeModeWarningModal } from "./SafeModeWarningModal";
+import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi } from 'vitest'
 
-describe("SafeModeWarningModal", () => {
-  it("should not render when closed", () => {
-    const onClose = vi.fn();
-    const onConfirm = vi.fn();
+import { SafeModeWarningModal } from './SafeModeWarningModal'
 
-    render(
-      <SafeModeWarningModal
-        isOpen={false}
-        onClose={onClose}
-        onConfirm={onConfirm}
-      />,
-    );
+describe('SafeModeWarningModal', () => {
+  it('should not render when closed', () => {
+    const onClose = vi.fn()
+    const onConfirm = vi.fn()
+
+    render(<SafeModeWarningModal isOpen={false} onClose={onClose} onConfirm={onConfirm} />)
 
     expect(
-      screen.queryByRole("dialog", { name: /disable safe mode/i, hidden: true }),
-    ).not.toBeInTheDocument();
-  });
+      screen.queryByRole('dialog', { name: /disable safe mode/i, hidden: true })
+    ).not.toBeInTheDocument()
+  })
 
-  it("should render when open", () => {
-    const onClose = vi.fn();
-    const onConfirm = vi.fn();
+  it('should render when open', () => {
+    const onClose = vi.fn()
+    const onConfirm = vi.fn()
 
-    render(
-      <SafeModeWarningModal
-        isOpen={true}
-        onClose={onClose}
-        onConfirm={onConfirm}
-      />,
-    );
+    render(<SafeModeWarningModal isOpen={true} onClose={onClose} onConfirm={onConfirm} />)
 
     expect(
-      screen.getByRole("dialog", { name: /disable safe mode/i, hidden: true }),
-    ).toBeInTheDocument();
-  });
+      screen.getByRole('dialog', { name: /disable safe mode/i, hidden: true })
+    ).toBeInTheDocument()
+  })
 
-  it("should call onClose when cancel button is clicked", () => {
-    const onClose = vi.fn();
-    const onConfirm = vi.fn();
+  it('should call onClose when cancel button is clicked', () => {
+    const onClose = vi.fn()
+    const onConfirm = vi.fn()
 
-    render(
-      <SafeModeWarningModal
-        isOpen={true}
-        onClose={onClose}
-        onConfirm={onConfirm}
-      />,
-    );
+    render(<SafeModeWarningModal isOpen={true} onClose={onClose} onConfirm={onConfirm} />)
 
-    fireEvent.click(screen.getByRole("button", { name: /cancel/i, hidden: true }));
+    fireEvent.click(screen.getByRole('button', { name: /cancel/i, hidden: true }))
 
-    expect(onClose).toHaveBeenCalledOnce();
-    expect(onConfirm).not.toHaveBeenCalled();
-  });
+    expect(onClose).toHaveBeenCalledOnce()
+    expect(onConfirm).not.toHaveBeenCalled()
+  })
 
-  it("should call onConfirm and onClose when confirm button is clicked", () => {
-    const onClose = vi.fn();
-    const onConfirm = vi.fn();
+  it('should call onConfirm and onClose when confirm button is clicked', () => {
+    const onClose = vi.fn()
+    const onConfirm = vi.fn()
 
-    render(
-      <SafeModeWarningModal
-        isOpen={true}
-        onClose={onClose}
-        onConfirm={onConfirm}
-      />,
-    );
+    render(<SafeModeWarningModal isOpen={true} onClose={onClose} onConfirm={onConfirm} />)
 
-    fireEvent.click(
-      screen.getByRole("button", { name: /i understand, disable/i, hidden: true }),
-    );
+    fireEvent.click(screen.getByRole('button', { name: /i understand, disable/i, hidden: true }))
 
-    expect(onConfirm).toHaveBeenCalledOnce();
-    expect(onClose).toHaveBeenCalledOnce();
-  });
+    expect(onConfirm).toHaveBeenCalledOnce()
+    expect(onClose).toHaveBeenCalledOnce()
+  })
 
-  it("should call onClose when Escape key is pressed", () => {
-    const onClose = vi.fn();
-    const onConfirm = vi.fn();
+  it('should call onClose when Escape key is pressed', () => {
+    const onClose = vi.fn()
+    const onConfirm = vi.fn()
 
-    render(
-      <SafeModeWarningModal
-        isOpen={true}
-        onClose={onClose}
-        onConfirm={onConfirm}
-      />,
-    );
+    render(<SafeModeWarningModal isOpen={true} onClose={onClose} onConfirm={onConfirm} />)
 
-    fireEvent.keyDown(document, { key: "Escape" });
+    fireEvent.keyDown(document, { key: 'Escape' })
 
-    expect(onClose).toHaveBeenCalledOnce();
-    expect(onConfirm).not.toHaveBeenCalled();
-  });
+    expect(onClose).toHaveBeenCalledOnce()
+    expect(onConfirm).not.toHaveBeenCalled()
+  })
 
-  it("should call onClose when backdrop is clicked", () => {
-    const onClose = vi.fn();
-    const onConfirm = vi.fn();
+  it('should call onClose when backdrop is clicked', () => {
+    const onClose = vi.fn()
+    const onConfirm = vi.fn()
 
     const { container } = render(
-      <SafeModeWarningModal
-        isOpen={true}
-        onClose={onClose}
-        onConfirm={onConfirm}
-      />,
-    );
+      <SafeModeWarningModal isOpen={true} onClose={onClose} onConfirm={onConfirm} />
+    )
 
-    const backdrop = container.querySelector(
-      ".fixed.inset-0.bg-black",
-    ) as HTMLElement;
+    const backdrop = container.querySelector('.fixed.inset-0.bg-black') as HTMLElement
     if (backdrop) {
-      fireEvent.click(backdrop);
-      expect(onClose).toHaveBeenCalledOnce();
+      fireEvent.click(backdrop)
+      expect(onClose).toHaveBeenCalledOnce()
     }
-  });
+  })
 
-  it("should clean up event listener when modal closes", () => {
-    const onClose = vi.fn();
-    const onConfirm = vi.fn();
+  it('should clean up event listener when modal closes', () => {
+    const onClose = vi.fn()
+    const onConfirm = vi.fn()
 
     const { rerender } = render(
-      <SafeModeWarningModal
-        isOpen={true}
-        onClose={onClose}
-        onConfirm={onConfirm}
-      />,
-    );
+      <SafeModeWarningModal isOpen={true} onClose={onClose} onConfirm={onConfirm} />
+    )
 
     // Close the modal
-    rerender(
-      <SafeModeWarningModal
-        isOpen={false}
-        onClose={onClose}
-        onConfirm={onConfirm}
-      />,
-    );
+    rerender(<SafeModeWarningModal isOpen={false} onClose={onClose} onConfirm={onConfirm} />)
 
     // Escape key should not trigger onClose after modal is closed
-    fireEvent.keyDown(document, { key: "Escape" });
+    fireEvent.keyDown(document, { key: 'Escape' })
 
-    expect(onClose).not.toHaveBeenCalled();
-  });
+    expect(onClose).not.toHaveBeenCalled()
+  })
 
-  it("should clean up event listener when unmounted", () => {
-    const onClose = vi.fn();
-    const onConfirm = vi.fn();
+  it('should clean up event listener when unmounted', () => {
+    const onClose = vi.fn()
+    const onConfirm = vi.fn()
 
     const { unmount } = render(
-      <SafeModeWarningModal
-        isOpen={true}
-        onClose={onClose}
-        onConfirm={onConfirm}
-      />,
-    );
+      <SafeModeWarningModal isOpen={true} onClose={onClose} onConfirm={onConfirm} />
+    )
 
     // Unmount the component
-    unmount();
+    unmount()
 
     // Escape key should not trigger onClose after unmount
-    fireEvent.keyDown(document, { key: "Escape" });
+    fireEvent.keyDown(document, { key: 'Escape' })
 
-    expect(onClose).not.toHaveBeenCalled();
-  });
-});
+    expect(onClose).not.toHaveBeenCalled()
+  })
+})

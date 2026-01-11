@@ -1,9 +1,9 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef } from 'react'
 
 interface UseTabNavigationOptions<T extends string> {
-  tabs: readonly T[];
-  activeTab: T;
-  onTabChange: (tabId: T) => void;
+  tabs: readonly T[]
+  activeTab: T
+  onTabChange: (tabId: T) => void
 }
 
 /**
@@ -15,62 +15,61 @@ export function useTabNavigation<T extends string>({
   activeTab,
   onTabChange,
 }: UseTabNavigationOptions<T>) {
-  const tabRefs = useRef<Map<T, HTMLButtonElement>>(new Map());
+  const tabRefs = useRef<Map<T, HTMLButtonElement>>(new Map())
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLButtonElement>, currentIndex: number) => {
-      let nextIndex: number | null = null;
+      let nextIndex: number | null = null
 
-      if (e.key === "ArrowRight") {
-        e.preventDefault();
-        nextIndex = (currentIndex + 1) % tabs.length;
-      } else if (e.key === "ArrowLeft") {
-        e.preventDefault();
-        nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
-      } else if (e.key === "Home") {
-        e.preventDefault();
-        nextIndex = 0;
-      } else if (e.key === "End") {
-        e.preventDefault();
-        nextIndex = tabs.length - 1;
+      if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        nextIndex = (currentIndex + 1) % tabs.length
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        nextIndex = (currentIndex - 1 + tabs.length) % tabs.length
+      } else if (e.key === 'Home') {
+        e.preventDefault()
+        nextIndex = 0
+      } else if (e.key === 'End') {
+        e.preventDefault()
+        nextIndex = tabs.length - 1
       }
 
       if (nextIndex !== null) {
-        const nextTab = tabs[nextIndex];
+        const nextTab = tabs[nextIndex]
         if (nextTab) {
-          onTabChange(nextTab);
-          tabRefs.current.get(nextTab)?.focus();
+          onTabChange(nextTab)
+          tabRefs.current.get(nextTab)?.focus()
         }
       }
     },
-    [tabs, onTabChange],
-  );
+    [tabs, onTabChange]
+  )
 
   const setTabRef = useCallback(
     (tabId: T) => (el: HTMLButtonElement | null) => {
       if (el) {
-        tabRefs.current.set(tabId, el);
+        tabRefs.current.set(tabId, el)
       } else {
-        tabRefs.current.delete(tabId);
+        tabRefs.current.delete(tabId)
       }
     },
-    [],
-  );
+    []
+  )
 
   const getTabProps = useCallback(
     (tabId: T, index: number) => ({
       ref: setTabRef(tabId),
-      role: "tab" as const,
+      role: 'tab' as const,
       // ID format used by E2E tests for locale-independent tab selection
       id: `tab-${tabId}`,
-      "aria-selected": activeTab === tabId,
-      "aria-controls": `tabpanel-${tabId}`,
+      'aria-selected': activeTab === tabId,
+      'aria-controls': `tabpanel-${tabId}`,
       tabIndex: activeTab === tabId ? 0 : -1,
-      onKeyDown: (e: React.KeyboardEvent<HTMLButtonElement>) =>
-        handleKeyDown(e, index),
+      onKeyDown: (e: React.KeyboardEvent<HTMLButtonElement>) => handleKeyDown(e, index),
     }),
-    [activeTab, handleKeyDown, setTabRef],
-  );
+    [activeTab, handleKeyDown, setTabRef]
+  )
 
-  return { getTabProps };
+  return { getTabProps }
 }

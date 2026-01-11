@@ -1,11 +1,11 @@
-import { useTranslation } from "@/shared/hooks/useTranslation";
-import { useTourStore } from "@/shared/stores/tour";
+import { useTranslation } from '@/shared/hooks/useTranslation'
+import { useTourStore } from '@/shared/stores/tour'
 
 export function TourModeBanner() {
-  const { activeTour, dismissTour } = useTourStore();
-  const { t } = useTranslation();
+  const { activeTour, dismissTour } = useTourStore()
+  const { t } = useTranslation()
 
-  if (!activeTour) return null;
+  if (!activeTour) return null
 
   return (
     <div
@@ -46,13 +46,11 @@ export function TourModeBanner() {
 
             <div className="flex items-center gap-2 text-sm min-w-0">
               <span className="font-medium text-primary-700 dark:text-primary-300">
-                {t("tour.banner.title")}
+                {t('tour.banner.title')}
               </span>
-              <span className="hidden sm:inline text-primary-600 dark:text-primary-400">
-                •
-              </span>
+              <span className="hidden sm:inline text-primary-600 dark:text-primary-400">•</span>
               <span className="hidden sm:inline text-primary-600 dark:text-primary-400 truncate">
-                {t("tour.banner.subtitle")}
+                {t('tour.banner.subtitle')}
               </span>
             </div>
           </div>
@@ -62,10 +60,10 @@ export function TourModeBanner() {
             onClick={dismissTour}
             className="flex-shrink-0 px-3 py-1 text-sm font-medium text-primary-700 dark:text-primary-300 hover:text-primary-900 dark:hover:text-primary-100 hover:bg-primary-200 dark:hover:bg-primary-800 rounded-md transition-colors"
           >
-            {t("tour.banner.exit")}
+            {t('tour.banner.exit')}
           </button>
         </div>
       </div>
     </div>
-  );
+  )
 }

@@ -6,6 +6,7 @@ import jsxA11y from 'eslint-plugin-jsx-a11y'
 import security from 'eslint-plugin-security'
 import noUnsanitized from 'eslint-plugin-no-unsanitized'
 import sonarjs from 'eslint-plugin-sonarjs'
+import importX from 'eslint-plugin-import-x'
 import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
@@ -49,12 +50,55 @@ export default tseslint.config(
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,
       'jsx-a11y': jsxA11y,
-      'security': security,
+      security,
       'no-unsanitized': noUnsanitized,
+      'import-x': importX,
+    },
+    settings: {
+      'import-x/resolver': {
+        typescript: {
+          alwaysTryTypes: true,
+        },
+      },
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
       ...jsxA11y.configs.recommended.rules,
+      // Import ordering - consistent import structure across codebase
+      'import-x/order': [
+        'warn',
+        {
+          groups: [
+            'builtin', // Node.js built-ins
+            'external', // npm packages
+            'internal', // @/ aliased imports
+            ['parent', 'sibling', 'index'], // Relative imports
+            'type', // Type imports
+          ],
+          'newlines-between': 'always',
+          alphabetize: {
+            order: 'asc',
+            caseInsensitive: true,
+          },
+          pathGroups: [
+            {
+              pattern: 'react',
+              group: 'external',
+              position: 'before',
+            },
+            {
+              pattern: '@/**',
+              group: 'internal',
+              position: 'before',
+            },
+          ],
+          pathGroupsExcludedImportTypes: ['react'],
+        },
+      ],
+      // Prevent duplicate imports from the same module
+      'import-x/no-duplicates': 'error',
+      // Ensure imports resolve to actual files
+      'import-x/no-unresolved': 'off', // TypeScript handles this better
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       // Security rules - prevent common vulnerabilities
       ...security.configs.recommended.rules,
@@ -126,6 +170,8 @@ export default tseslint.config(
       'sonarjs/no-nested-conditional': 'off',
       // Some tests verify "no throw" behavior without explicit assertions
       'sonarjs/assertions-in-tests': 'off',
+      // Import ordering is relaxed for tests - mocks need to be set up before imports
+      'import-x/order': 'off',
     },
   },
 )

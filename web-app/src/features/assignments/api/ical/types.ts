@@ -27,41 +27,41 @@
  */
 export interface ICalEvent {
   /** Unique identifier from the UID property (e.g., "referee-convocation-for-game-392936") */
-  uid: string;
+  uid: string
 
   /** Event summary/title from SUMMARY property */
-  summary: string;
+  summary: string
 
   /** Full description text from DESCRIPTION property (may contain escaped newlines) */
-  description: string;
+  description: string
 
   /** Start date/time from DTSTART property (ISO 8601 format after parsing) */
-  dtstart: string;
+  dtstart: string
 
   /** End date/time from DTEND property (ISO 8601 format after parsing) */
-  dtend: string;
+  dtend: string
 
   /** Location string from LOCATION property (contains full address in real API) */
-  location: string | null;
+  location: string | null
 
   /** Hall/venue name extracted from X-APPLE-STRUCTURED-LOCATION X-TITLE parameter */
-  appleLocationTitle: string | null;
+  appleLocationTitle: string | null
 
   /** Geographic coordinates from GEO property */
   geo: {
-    latitude: number;
-    longitude: number;
-  } | null;
+    latitude: number
+    longitude: number
+  } | null
 
   /** Google Plus Code extracted from Google Maps URL in description */
-  plusCode: string | null;
+  plusCode: string | null
 }
 
 /**
  * Gender category for a volleyball match.
  * Derived from league name patterns in the iCal data.
  */
-export type Gender = 'men' | 'women' | 'mixed' | 'unknown';
+export type Gender = 'men' | 'women' | 'mixed' | 'unknown'
 
 /**
  * Referee role extracted from the assignment.
@@ -72,7 +72,7 @@ export type RefereeRole =
   | 'referee2' // Second referee (ARB 2)
   | 'lineReferee' // Line referee (LR)
   | 'scorer' // Scorer/Secretary
-  | 'unknown';
+  | 'unknown'
 
 /**
  * Parsed assignment data matching the app's requirements.
@@ -80,69 +80,69 @@ export type RefereeRole =
  */
 export interface CalendarAssignment {
   /** Game ID extracted from UID (e.g., "392936" from "referee-convocation-for-game-392936") */
-  gameId: string;
+  gameId: string
 
   /** Game number extracted from description (e.g., 382360 from "Match: #382360") */
-  gameNumber: number | null;
+  gameNumber: number | null
 
   /** Referee role for this assignment */
-  role: RefereeRole;
+  role: RefereeRole
 
   /** Raw role string as it appears in the iCal (e.g., "ARB 1") for display purposes */
-  roleRaw: string;
+  roleRaw: string
 
   /** Game start time as ISO 8601 string */
-  startTime: string;
+  startTime: string
 
   /** Game end time as ISO 8601 string */
-  endTime: string;
+  endTime: string
 
   /** Home team name */
-  homeTeam: string;
+  homeTeam: string
 
   /** Away team name */
-  awayTeam: string;
+  awayTeam: string
 
   /** League/competition name (e.g., "Mobiliar Volley Cup", "NLA Herren") */
-  league: string;
+  league: string
 
   /** League category (e.g., "3L", "NLA", "2L") extracted from description */
-  leagueCategory: string | null;
+  leagueCategory: string | null
 
   /** Full address of the venue */
-  address: string | null;
+  address: string | null
 
   /** Geographic coordinates of the venue */
   coordinates: {
-    latitude: number;
-    longitude: number;
-  } | null;
+    latitude: number
+    longitude: number
+  } | null
 
   /** Name of the sports hall/venue */
-  hallName: string | null;
+  hallName: string | null
 
   /** Hall ID extracted from description (e.g., "3661" from "Salle: #3661 | ...") */
-  hallId: string | null;
+  hallId: string | null
 
   /** Gender category derived from ♀/♂ symbols in description */
-  gender: Gender;
+  gender: Gender
 
   /** Google Maps URL for the venue (constructed from address or coordinates) */
-  mapsUrl: string | null;
+  mapsUrl: string | null
 
   /** Google Plus Code for the venue (extracted from Google Maps URL in description) */
-  plusCode: string | null;
+  plusCode: string | null
 
   /** Referee names extracted from description */
   referees: {
-    referee1?: string;
-    referee2?: string;
-    lineReferee1?: string;
-    lineReferee2?: string;
-  };
+    referee1?: string
+    referee2?: string
+    lineReferee1?: string
+    lineReferee2?: string
+  }
 
   /** Regional association code extracted from team info (e.g., "SVRZ", "SVRBA", "SVRI") */
-  association: string | null;
+  association: string | null
 }
 
 /**
@@ -151,25 +151,25 @@ export interface CalendarAssignment {
  */
 export interface ParsedFields {
   /** Whether gameId was extracted successfully */
-  gameId: boolean;
+  gameId: boolean
 
   /** Whether role was extracted successfully */
-  role: boolean;
+  role: boolean
 
   /** Whether teams were extracted successfully */
-  teams: boolean;
+  teams: boolean
 
   /** Whether league was extracted successfully */
-  league: boolean;
+  league: boolean
 
   /** Whether hall/venue info was extracted successfully */
-  venue: boolean;
+  venue: boolean
 
   /** Whether address was extracted successfully */
-  address: boolean;
+  address: boolean
 
   /** Whether coordinates were available */
-  coordinates: boolean;
+  coordinates: boolean
 }
 
 /**
@@ -178,7 +178,7 @@ export interface ParsedFields {
  * - 'medium': Core fields parsed, some optional fields missing
  * - 'low': Minimal data extracted, may be unreliable
  */
-export type ParseConfidence = 'high' | 'medium' | 'low';
+export type ParseConfidence = 'high' | 'medium' | 'low'
 
 /**
  * Result of parsing an iCal event into a CalendarAssignment.
@@ -186,14 +186,14 @@ export type ParseConfidence = 'high' | 'medium' | 'low';
  */
 export interface ParseResult {
   /** The parsed assignment data */
-  assignment: CalendarAssignment;
+  assignment: CalendarAssignment
 
   /** Which fields were successfully parsed */
-  parsedFields: ParsedFields;
+  parsedFields: ParsedFields
 
   /** Overall confidence level of the parsing */
-  confidence: ParseConfidence;
+  confidence: ParseConfidence
 
   /** Any warnings or issues encountered during parsing */
-  warnings: string[];
+  warnings: string[]
 }

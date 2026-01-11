@@ -1,26 +1,27 @@
-import { useRef, useEffect } from "react";
-import { useTranslation } from "@/shared/hooks/useTranslation";
-import { Button } from "@/shared/components/Button";
-import { AlertTriangle } from "@/shared/components/icons";
-import type { RosterValidationStatus } from "@/features/validation/utils/roster-validation";
-import { MIN_PLAYERS_REQUIRED } from "@/features/validation/utils/roster-validation";
+import { useRef, useEffect } from 'react'
+
+import type { RosterValidationStatus } from '@/features/validation/utils/roster-validation'
+import { MIN_PLAYERS_REQUIRED } from '@/features/validation/utils/roster-validation'
+import { Button } from '@/shared/components/Button'
+import { AlertTriangle } from '@/shared/components/icons'
+import { useTranslation } from '@/shared/hooks/useTranslation'
 
 /** Z-index for warning dialog (above main modal) */
-const Z_INDEX_WARNING_DIALOG = 60;
+const Z_INDEX_WARNING_DIALOG = 60
 
 interface RosterIssue {
-  key: string;
-  message: string;
+  key: string
+  message: string
 }
 
 interface RosterValidationWarningDialogProps {
-  isOpen: boolean;
-  rosterValidation: RosterValidationStatus;
-  homeTeamName: string;
-  awayTeamName: string;
-  onGoBack: () => void;
-  onProceedAnyway: () => void;
-  isProceedingAnyway: boolean;
+  isOpen: boolean
+  rosterValidation: RosterValidationStatus
+  homeTeamName: string
+  awayTeamName: string
+  onGoBack: () => void
+  onProceedAnyway: () => void
+  isProceedingAnyway: boolean
 }
 
 /**
@@ -37,77 +38,77 @@ export function RosterValidationWarningDialog({
   onProceedAnyway,
   isProceedingAnyway,
 }: RosterValidationWarningDialogProps) {
-  const { t, tInterpolate } = useTranslation();
-  const dialogRef = useRef<HTMLDivElement>(null);
+  const { t, tInterpolate } = useTranslation()
+  const dialogRef = useRef<HTMLDivElement>(null)
 
   // Focus first button when dialog opens for accessibility
   useEffect(() => {
     if (isOpen && dialogRef.current) {
-      const firstButton = dialogRef.current.querySelector("button");
-      firstButton?.focus();
+      const firstButton = dialogRef.current.querySelector('button')
+      firstButton?.focus()
     }
-  }, [isOpen]);
+  }, [isOpen])
 
   // Handle Escape key to close dialog
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) return
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !isProceedingAnyway) {
-        onGoBack();
+      if (e.key === 'Escape' && !isProceedingAnyway) {
+        onGoBack()
       }
-    };
+    }
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, isProceedingAnyway, onGoBack]);
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, isProceedingAnyway, onGoBack])
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
-  const { home, away } = rosterValidation;
+  const { home, away } = rosterValidation
 
   // Build list of issues for each team with stable keys
-  const homeIssues: RosterIssue[] = [];
-  const awayIssues: RosterIssue[] = [];
+  const homeIssues: RosterIssue[] = []
+  const awayIssues: RosterIssue[] = []
 
   if (!home.hasHeadCoach) {
     homeIssues.push({
-      key: "home-coach",
-      message: t("validation.rosterWarning.missingHeadCoach"),
-    });
+      key: 'home-coach',
+      message: t('validation.rosterWarning.missingHeadCoach'),
+    })
   }
   if (!home.hasMinPlayers) {
     homeIssues.push({
-      key: "home-players",
-      message: tInterpolate("validation.rosterWarning.insufficientPlayers", {
+      key: 'home-players',
+      message: tInterpolate('validation.rosterWarning.insufficientPlayers', {
         count: home.playerCount,
         required: MIN_PLAYERS_REQUIRED,
       }),
-    });
+    })
   }
 
   if (!away.hasHeadCoach) {
     awayIssues.push({
-      key: "away-coach",
-      message: t("validation.rosterWarning.missingHeadCoach"),
-    });
+      key: 'away-coach',
+      message: t('validation.rosterWarning.missingHeadCoach'),
+    })
   }
   if (!away.hasMinPlayers) {
     awayIssues.push({
-      key: "away-players",
-      message: tInterpolate("validation.rosterWarning.insufficientPlayers", {
+      key: 'away-players',
+      message: tInterpolate('validation.rosterWarning.insufficientPlayers', {
         count: away.playerCount,
         required: MIN_PLAYERS_REQUIRED,
       }),
-    });
+    })
   }
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     // Only close if clicking the backdrop itself, not the dialog content
     if (e.target === e.currentTarget && !isProceedingAnyway) {
-      onGoBack();
+      onGoBack()
     }
-  };
+  }
 
   // Backdrop pattern: aria-hidden="true" hides the backdrop from screen readers since it's
   // purely decorative. Click-to-close is a convenience feature; keyboard users close via Escape.
@@ -138,13 +139,13 @@ export function RosterValidationWarningDialog({
               id="roster-warning-title"
               className="text-lg font-semibold text-text-primary dark:text-text-primary-dark"
             >
-              {t("validation.rosterWarning.title")}
+              {t('validation.rosterWarning.title')}
             </h3>
             <p
               id="roster-warning-description"
               className="text-sm text-text-muted dark:text-text-muted-dark mt-1"
             >
-              {t("validation.rosterWarning.description")}
+              {t('validation.rosterWarning.description')}
             </p>
           </div>
         </div>
@@ -179,28 +180,18 @@ export function RosterValidationWarningDialog({
         </div>
 
         <p className="text-xs text-text-muted dark:text-text-muted-dark mb-4">
-          {t("validation.rosterWarning.forfeitNote")}
+          {t('validation.rosterWarning.forfeitNote')}
         </p>
 
         <div className="flex justify-end gap-3">
-          <Button
-            variant="secondary"
-            onClick={onGoBack}
-            disabled={isProceedingAnyway}
-          >
-            {t("validation.rosterWarning.goBack")}
+          <Button variant="secondary" onClick={onGoBack} disabled={isProceedingAnyway}>
+            {t('validation.rosterWarning.goBack')}
           </Button>
-          <Button
-            variant="danger"
-            onClick={onProceedAnyway}
-            disabled={isProceedingAnyway}
-          >
-            {isProceedingAnyway
-              ? t("common.loading")
-              : t("validation.rosterWarning.proceedAnyway")}
+          <Button variant="danger" onClick={onProceedAnyway} disabled={isProceedingAnyway}>
+            {isProceedingAnyway ? t('common.loading') : t('validation.rosterWarning.proceedAnyway')}
           </Button>
         </div>
       </div>
     </div>
-  );
+  )
 }

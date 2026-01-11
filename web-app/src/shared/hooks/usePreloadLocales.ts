@@ -1,11 +1,12 @@
-import { useEffect } from "react";
-import { preloadTranslations } from "@/i18n";
-import { preloadDateLocales } from "@/shared/hooks/useDateFormat";
-import { createLogger } from "@/shared/utils/logger";
+import { useEffect } from 'react'
 
-const log = createLogger("usePreloadLocales");
+import { preloadTranslations } from '@/i18n'
+import { preloadDateLocales } from '@/shared/hooks/useDateFormat'
+import { createLogger } from '@/shared/utils/logger'
 
-const PRELOAD_IDLE_TIMEOUT_MS = 1000;
+const log = createLogger('usePreloadLocales')
+
+const PRELOAD_IDLE_TIMEOUT_MS = 1000
 
 /**
  * Preloads all translation and date locales when the browser is idle.
@@ -15,21 +16,19 @@ const PRELOAD_IDLE_TIMEOUT_MS = 1000;
 export function usePreloadLocales(): void {
   useEffect(() => {
     const handlePreload = () => {
-      Promise.all([preloadTranslations(), preloadDateLocales()]).catch(
-        (error) => {
-          log.error("Failed to preload locales:", error);
-        },
-      );
-    };
-
-    if ("requestIdleCallback" in window) {
-      const idleCallbackId = requestIdleCallback(handlePreload, {
-        timeout: PRELOAD_IDLE_TIMEOUT_MS,
-      });
-      return () => cancelIdleCallback(idleCallbackId);
+      Promise.all([preloadTranslations(), preloadDateLocales()]).catch((error) => {
+        log.error('Failed to preload locales:', error)
+      })
     }
 
-    const timeoutId = setTimeout(handlePreload, PRELOAD_IDLE_TIMEOUT_MS);
-    return () => clearTimeout(timeoutId);
-  }, []);
+    if ('requestIdleCallback' in window) {
+      const idleCallbackId = requestIdleCallback(handlePreload, {
+        timeout: PRELOAD_IDLE_TIMEOUT_MS,
+      })
+      return () => cancelIdleCallback(idleCallbackId)
+    }
+
+    const timeoutId = setTimeout(handlePreload, PRELOAD_IDLE_TIMEOUT_MS)
+    return () => clearTimeout(timeoutId)
+  }, [])
 }

@@ -1,26 +1,24 @@
-import type { Assignment, NominationList } from "@/api/client";
-import { getTeamNames } from "@/features/assignments/utils/assignment-helpers";
-import {
-  RosterVerificationPanel,
-  type RosterPanelModifications,
-} from "./RosterVerificationPanel";
+import type { Assignment, NominationList } from '@/api/client'
+import { getTeamNames } from '@/features/assignments/utils/assignment-helpers'
 import type {
   RosterModifications,
   CoachModifications,
-} from "@/features/validation/hooks/useNominationList";
+} from '@/features/validation/hooks/useNominationList'
+
+import { RosterVerificationPanel, type RosterPanelModifications } from './RosterVerificationPanel'
 
 interface HomeRosterPanelProps {
-  assignment: Assignment;
-  onModificationsChange?: (modifications: RosterPanelModifications) => void;
-  onAddPlayerSheetOpenChange?: (isOpen: boolean) => void;
+  assignment: Assignment
+  onModificationsChange?: (modifications: RosterPanelModifications) => void
+  onAddPlayerSheetOpenChange?: (isOpen: boolean) => void
   /** When true, shows roster in view-only mode */
-  readOnly?: boolean;
+  readOnly?: boolean
   /** Initial player modifications to restore state when remounting */
-  initialModifications?: RosterModifications;
+  initialModifications?: RosterModifications
   /** Initial coach modifications to restore state when remounting */
-  initialCoachModifications?: CoachModifications;
+  initialCoachModifications?: CoachModifications
   /** Pre-fetched nomination list data to avoid duplicate API calls */
-  prefetchedNominationList?: NominationList | null;
+  prefetchedNominationList?: NominationList | null
 }
 
 export function HomeRosterPanel({
@@ -32,8 +30,8 @@ export function HomeRosterPanel({
   initialCoachModifications,
   prefetchedNominationList,
 }: HomeRosterPanelProps) {
-  const { homeTeam } = getTeamNames(assignment);
-  const gameId = assignment.refereeGame?.game?.__identity ?? "";
+  const { homeTeam } = getTeamNames(assignment)
+  const gameId = assignment.refereeGame?.game?.__identity ?? ''
 
   return (
     <RosterVerificationPanel
@@ -47,5 +45,5 @@ export function HomeRosterPanel({
       initialCoachModifications={initialCoachModifications}
       prefetchedNominationList={prefetchedNominationList}
     />
-  );
+  )
 }

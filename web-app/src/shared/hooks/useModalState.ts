@@ -1,20 +1,21 @@
-import { useState, useCallback, useRef, useEffect } from "react";
-import { MODAL_CLEANUP_DELAY } from "@/features/assignments/utils/assignment-helpers";
+import { useState, useCallback, useRef, useEffect } from 'react'
+
+import { MODAL_CLEANUP_DELAY } from '@/features/assignments/utils/assignment-helpers'
 
 export interface ModalState<T> {
   /** Whether the modal is currently open */
-  isOpen: boolean;
+  isOpen: boolean
   /** The data associated with the modal (null when no data is set) */
-  data: T | null;
+  data: T | null
   /** Opens the modal with the provided data */
-  open: (data: T) => void;
+  open: (data: T) => void
   /** Closes the modal and schedules delayed data cleanup */
-  close: () => void;
+  close: () => void
 }
 
 interface UseModalStateOptions {
   /** Custom cleanup delay in milliseconds (default: MODAL_CLEANUP_DELAY) */
-  cleanupDelay?: number;
+  cleanupDelay?: number
 }
 
 /**
@@ -44,50 +45,48 @@ interface UseModalStateOptions {
  * }
  * ```
  */
-export function useModalState<T>(
-  options: UseModalStateOptions = {},
-): ModalState<T> {
-  const { cleanupDelay = MODAL_CLEANUP_DELAY } = options;
+export function useModalState<T>(options: UseModalStateOptions = {}): ModalState<T> {
+  const { cleanupDelay = MODAL_CLEANUP_DELAY } = options
 
-  const [isOpen, setIsOpen] = useState(false);
-  const [data, setData] = useState<T | null>(null);
-  const cleanupTimeoutRef = useRef<number | null>(null);
+  const [isOpen, setIsOpen] = useState(false)
+  const [data, setData] = useState<T | null>(null)
+  const cleanupTimeoutRef = useRef<number | null>(null)
 
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (cleanupTimeoutRef.current) {
-        clearTimeout(cleanupTimeoutRef.current);
+        clearTimeout(cleanupTimeoutRef.current)
       }
-    };
-  }, []);
+    }
+  }, [])
 
   const open = useCallback((newData: T) => {
     // Cancel any pending cleanup from a previous close
     if (cleanupTimeoutRef.current) {
-      clearTimeout(cleanupTimeoutRef.current);
-      cleanupTimeoutRef.current = null;
+      clearTimeout(cleanupTimeoutRef.current)
+      cleanupTimeoutRef.current = null
     }
-    setData(newData);
-    setIsOpen(true);
-  }, []);
+    setData(newData)
+    setIsOpen(true)
+  }, [])
 
   const close = useCallback(() => {
-    setIsOpen(false);
+    setIsOpen(false)
     // Clear any existing timeout before setting a new one
     if (cleanupTimeoutRef.current) {
-      clearTimeout(cleanupTimeoutRef.current);
+      clearTimeout(cleanupTimeoutRef.current)
     }
     // Delay data cleanup to allow for close animations
     cleanupTimeoutRef.current = setTimeout(() => {
-      setData(null);
-    }, cleanupDelay);
-  }, [cleanupDelay]);
+      setData(null)
+    }, cleanupDelay)
+  }, [cleanupDelay])
 
   return {
     isOpen,
     data,
     open,
     close,
-  };
+  }
 }

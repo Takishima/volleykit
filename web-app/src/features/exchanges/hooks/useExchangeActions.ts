@@ -1,82 +1,83 @@
-import { useCallback } from "react";
-import type { GameExchange } from "@/api/client";
+import { useCallback } from 'react'
+
+import type { GameExchange } from '@/api/client'
 import {
   useApplyForExchange,
   useWithdrawFromExchange,
-} from "@/features/validation/hooks/useConvocations";
-import { useModalState } from "@/shared/hooks/useModalState";
-import { useSafeMutation } from "@/shared/hooks/useSafeMutation";
+} from '@/features/validation/hooks/useConvocations'
+import { useModalState } from '@/shared/hooks/useModalState'
+import { useSafeMutation } from '@/shared/hooks/useSafeMutation'
 
 interface UseExchangeActionsResult {
   takeOverModal: {
-    isOpen: boolean;
-    exchange: GameExchange | null;
-    open: (exchange: GameExchange) => void;
-    close: () => void;
-  };
+    isOpen: boolean
+    exchange: GameExchange | null
+    open: (exchange: GameExchange) => void
+    close: () => void
+  }
   removeFromExchangeModal: {
-    isOpen: boolean;
-    exchange: GameExchange | null;
-    open: (exchange: GameExchange) => void;
-    close: () => void;
-  };
-  handleTakeOver: (exchange: GameExchange) => Promise<void>;
-  handleRemoveFromExchange: (exchange: GameExchange) => Promise<void>;
+    isOpen: boolean
+    exchange: GameExchange | null
+    open: (exchange: GameExchange) => void
+    close: () => void
+  }
+  handleTakeOver: (exchange: GameExchange) => Promise<void>
+  handleRemoveFromExchange: (exchange: GameExchange) => Promise<void>
 }
 
 export function useExchangeActions(): UseExchangeActionsResult {
-  const takeOverModal = useModalState<GameExchange>();
-  const removeFromExchangeModal = useModalState<GameExchange>();
+  const takeOverModal = useModalState<GameExchange>()
+  const removeFromExchangeModal = useModalState<GameExchange>()
 
-  const applyMutation = useApplyForExchange();
-  const withdrawMutation = useWithdrawFromExchange();
+  const applyMutation = useApplyForExchange()
+  const withdrawMutation = useWithdrawFromExchange()
 
   const takeOverMutation = useSafeMutation(
     async (exchange: GameExchange, log) => {
-      await applyMutation.mutateAsync(exchange.__identity);
-      log.debug("Successfully applied for exchange:", exchange.__identity);
+      await applyMutation.mutateAsync(exchange.__identity)
+      log.debug('Successfully applied for exchange:', exchange.__identity)
     },
     {
-      logContext: "useExchangeActions",
-      successMessage: "exchange.applySuccess",
-      errorMessage: "exchange.applyError",
-      safeGuard: { context: "useExchangeActions", action: "taking exchange" },
+      logContext: 'useExchangeActions',
+      successMessage: 'exchange.applySuccess',
+      errorMessage: 'exchange.applyError',
+      safeGuard: { context: 'useExchangeActions', action: 'taking exchange' },
       skipSuccessToastInDemoMode: true,
       onSuccess: () => takeOverModal.close(),
-    },
-  );
+    }
+  )
 
   const withdrawSafeMutation = useSafeMutation(
     async (exchange: GameExchange, log) => {
-      await withdrawMutation.mutateAsync(exchange.__identity);
-      log.debug("Successfully withdrawn from exchange:", exchange.__identity);
+      await withdrawMutation.mutateAsync(exchange.__identity)
+      log.debug('Successfully withdrawn from exchange:', exchange.__identity)
     },
     {
-      logContext: "useExchangeActions",
-      successMessage: "exchange.withdrawSuccess",
-      errorMessage: "exchange.withdrawError",
+      logContext: 'useExchangeActions',
+      successMessage: 'exchange.withdrawSuccess',
+      errorMessage: 'exchange.withdrawError',
       safeGuard: {
-        context: "useExchangeActions",
-        action: "withdrawing from exchange",
+        context: 'useExchangeActions',
+        action: 'withdrawing from exchange',
       },
       skipSuccessToastInDemoMode: true,
       onSuccess: () => removeFromExchangeModal.close(),
-    },
-  );
+    }
+  )
 
   const handleTakeOver = useCallback(
     async (exchange: GameExchange) => {
-      await takeOverMutation.execute(exchange);
+      await takeOverMutation.execute(exchange)
     },
-    [takeOverMutation],
-  );
+    [takeOverMutation]
+  )
 
   const handleRemoveFromExchange = useCallback(
     async (exchange: GameExchange) => {
-      await withdrawSafeMutation.execute(exchange);
+      await withdrawSafeMutation.execute(exchange)
     },
-    [withdrawSafeMutation],
-  );
+    [withdrawSafeMutation]
+  )
 
   return {
     takeOverModal: {
@@ -93,5 +94,5 @@ export function useExchangeActions(): UseExchangeActionsResult {
     },
     handleTakeOver,
     handleRemoveFromExchange,
-  };
+  }
 }

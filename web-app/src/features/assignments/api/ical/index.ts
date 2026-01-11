@@ -30,11 +30,7 @@ export type {
   ParsedFields,
   ParseConfidence,
   ParseResult,
-} from './types';
+} from './types'
 
 // Parser functions
-export {
-  parseICalFeed,
-  extractAssignment,
-  parseCalendarFeed,
-} from './parser';
+export { parseICalFeed, extractAssignment, parseCalendarFeed } from './parser'

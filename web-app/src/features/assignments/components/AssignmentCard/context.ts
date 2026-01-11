@@ -1,6 +1,7 @@
-import { createContext, useContext } from "react";
-import type { Assignment } from "@/api/client";
-import type { ReactNode } from "react";
+import { createContext, useContext } from 'react'
+import type { ReactNode } from 'react'
+
+import type { Assignment } from '@/api/client'
 
 /** Helper to extract referee display name from deep nested structure */
 export function getRefereeDisplayName(
@@ -8,79 +9,75 @@ export function getRefereeDisplayName(
     | {
         indoorAssociationReferee?: {
           indoorReferee?: {
-            person?: { displayName?: string };
-          };
-        };
+            person?: { displayName?: string }
+          }
+        }
       }
     | null
     | undefined
 ): string | undefined {
-  return convocation?.indoorAssociationReferee?.indoorReferee?.person
-    ?.displayName;
+  return convocation?.indoorAssociationReferee?.indoorReferee?.person?.displayName
 }
 
 export interface AssignmentCardContextValue {
   /** The assignment data */
-  assignment: Assignment;
+  assignment: Assignment
   /** The game from the assignment */
-  game: Assignment["refereeGame"]["game"] | undefined;
+  game: Assignment['refereeGame']['game'] | undefined
   /** Formatted date label */
-  dateLabel: string;
+  dateLabel: string
   /** Formatted time label */
-  timeLabel: string;
+  timeLabel: string
   /** Whether the game is today */
-  isToday: boolean;
+  isToday: boolean
   /** Whether the game is in the past */
-  isPast: boolean;
+  isPast: boolean
   /** Home team name */
-  homeTeam: string;
+  homeTeam: string
   /** Away team name */
-  awayTeam: string;
+  awayTeam: string
   /** Hall name */
-  hallName: string;
+  hallName: string
   /** City name */
-  city: string | undefined;
+  city: string | undefined
   /** Full address for display */
-  fullAddress: string | null;
+  fullAddress: string | null
   /** Google Maps URL */
-  googleMapsUrl: string | null;
+  googleMapsUrl: string | null
   /** Native maps app URL */
-  addressMapsUrl: string | null;
+  addressMapsUrl: string | null
   /** Assignment status */
-  status: string;
+  status: string
   /** Position label */
-  position: string;
+  position: string
   /** Gender indicator ('m' | 'f' | undefined) */
-  gender: string | undefined;
+  gender: string | undefined
   /** First head referee name */
-  headReferee1: string | undefined;
+  headReferee1: string | undefined
   /** Second head referee name */
-  headReferee2: string | undefined;
+  headReferee2: string | undefined
   /** Linesmen names array */
-  linesmen: string[];
+  linesmen: string[]
   /** Whether to show SBB button */
-  showSbbButton: boolean;
+  showSbbButton: boolean
   /** Whether SBB connection is loading */
-  isSbbLoading: boolean;
+  isSbbLoading: boolean
   /** Function to open SBB connection */
-  openSbbConnection: () => Promise<void>;
+  openSbbConnection: () => Promise<void>
   /** Single-ball hall match info */
-  singleBallMatch: { isConditional: boolean } | null;
+  singleBallMatch: { isConditional: boolean } | null
   /** Path to single-ball halls PDF */
-  singleBallPdfPath: string;
+  singleBallPdfPath: string
   /** Pre-rendered expand arrow element */
-  expandArrow: ReactNode | null;
+  expandArrow: ReactNode | null
 }
 
-export const AssignmentCardContext =
-  createContext<AssignmentCardContextValue | null>(null);
+export const AssignmentCardContext = createContext<AssignmentCardContextValue | null>(null)
 
 export function useAssignmentCardContext(): AssignmentCardContextValue {
-  const context = useContext(AssignmentCardContext);
+  const context = useContext(AssignmentCardContext)
   if (!context) {
-    throw new Error(
-      "useAssignmentCardContext must be used within an AssignmentCard"
-    );
+    throw new Error('useAssignmentCardContext must be used within an AssignmentCard')
   }
-  return context;
+  return context
 }

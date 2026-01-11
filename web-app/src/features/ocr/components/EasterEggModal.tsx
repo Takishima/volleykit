@@ -1,23 +1,24 @@
-import { useEffect } from 'react';
-import { Modal } from '@/shared/components/Modal';
-import { ModalHeader } from '@/shared/components/ModalHeader';
-import { ModalFooter } from '@/shared/components/ModalFooter';
-import { useTranslation } from '@/shared/hooks/useTranslation';
-import { launchConfetti } from '@/shared/utils/confetti';
-import { PartyPopper, Stethoscope } from '@/shared/components/icons';
+import { useEffect } from 'react'
+
+import { PartyPopper, Stethoscope } from '@/shared/components/icons'
+import { Modal } from '@/shared/components/Modal'
+import { ModalFooter } from '@/shared/components/ModalFooter'
+import { ModalHeader } from '@/shared/components/ModalHeader'
+import { useTranslation } from '@/shared/hooks/useTranslation'
+import { launchConfetti } from '@/shared/utils/confetti'
 
 /** Duration of confetti animation in milliseconds */
-const CONFETTI_DURATION_MS = 3000;
+const CONFETTI_DURATION_MS = 3000
 
-export type EasterEggType = 'ac3' | 'multipleDoctors';
+export type EasterEggType = 'ac3' | 'multipleDoctors'
 
 interface EasterEggModalProps {
   /** Whether the modal is open */
-  isOpen: boolean;
+  isOpen: boolean
   /** The type of Easter egg to display */
-  type: EasterEggType;
+  type: EasterEggType
   /** Callback when the modal is closed */
-  onClose: () => void;
+  onClose: () => void
 }
 
 /**
@@ -28,16 +29,16 @@ interface EasterEggModalProps {
  * - multipleDoctors: When a team has 2+ medical staff (M role)
  */
 export function EasterEggModal({ isOpen, type, onClose }: EasterEggModalProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
   // Launch confetti when modal opens
   useEffect(() => {
     if (isOpen) {
-      launchConfetti(CONFETTI_DURATION_MS);
+      launchConfetti(CONFETTI_DURATION_MS)
     }
-  }, [isOpen]);
+  }, [isOpen])
 
-  const titleId = `easter-egg-${type}-title`;
+  const titleId = `easter-egg-${type}-title`
 
   const getIcon = () => {
     switch (type) {
@@ -49,32 +50,19 @@ export function EasterEggModal({ isOpen, type, onClose }: EasterEggModalProps) {
               aria-hidden="true"
             />
           </div>
-        );
+        )
       case 'multipleDoctors':
         return (
           <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-            <Stethoscope
-              className="w-6 h-6 text-red-600 dark:text-red-400"
-              aria-hidden="true"
-            />
+            <Stethoscope className="w-6 h-6 text-red-600 dark:text-red-400" aria-hidden="true" />
           </div>
-        );
+        )
     }
-  };
+  }
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      titleId={titleId}
-      size="sm"
-      zIndex={70}
-    >
-      <ModalHeader
-        title={t(`easterEggs.${type}.title`)}
-        titleId={titleId}
-        icon={getIcon()}
-      />
+    <Modal isOpen={isOpen} onClose={onClose} titleId={titleId} size="sm" zIndex={70}>
+      <ModalHeader title={t(`easterEggs.${type}.title`)} titleId={titleId} icon={getIcon()} />
 
       <p className="text-text-secondary dark:text-text-secondary-dark mb-6">
         {t(`easterEggs.${type}.message`)}
@@ -90,5 +78,5 @@ export function EasterEggModal({ isOpen, type, onClose }: EasterEggModalProps) {
         </button>
       </ModalFooter>
     </Modal>
-  );
+  )
 }

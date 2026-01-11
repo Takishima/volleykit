@@ -1,4 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+
+import type { Assignment } from '@/api/client'
+
 import {
   getTeamNames,
   MODAL_CLEANUP_DELAY,
@@ -9,219 +12,218 @@ import {
   isFromCalendarMode,
   isGameReportEligible,
   isActionAvailable,
-} from "./assignment-helpers";
-import type { Assignment } from "@/api/client";
+} from './assignment-helpers'
 
 // Test constants
-const EXTENDED_VALIDATION_DEADLINE_HOURS = 24;
+const EXTENDED_VALIDATION_DEADLINE_HOURS = 24
 
-describe("assignment-helpers", () => {
-  describe("MODAL_CLEANUP_DELAY", () => {
-    it("should be defined as 300ms", () => {
-      expect(MODAL_CLEANUP_DELAY).toBe(300);
-    });
-  });
+describe('assignment-helpers', () => {
+  describe('MODAL_CLEANUP_DELAY', () => {
+    it('should be defined as 300ms', () => {
+      expect(MODAL_CLEANUP_DELAY).toBe(300)
+    })
+  })
 
-  describe("getTeamNames", () => {
-    it("should extract team names from assignment", () => {
+  describe('getTeamNames', () => {
+    it('should extract team names from assignment', () => {
       const assignment: Partial<Assignment> = {
         refereeGame: {
           game: {
             encounter: {
-              teamHome: { name: "Team A" },
-              teamAway: { name: "Team B" },
+              teamHome: { name: 'Team A' },
+              teamAway: { name: 'Team B' },
             },
           },
         },
-      } as Assignment;
+      } as Assignment
 
-      const result = getTeamNames(assignment as Assignment);
-      expect(result).toEqual({ homeTeam: "Team A", awayTeam: "Team B" });
-    });
+      const result = getTeamNames(assignment as Assignment)
+      expect(result).toEqual({ homeTeam: 'Team A', awayTeam: 'Team B' })
+    })
 
-    it("should return TBD for missing team names", () => {
+    it('should return TBD for missing team names', () => {
       const assignment: Partial<Assignment> = {
         refereeGame: {
           game: {
             encounter: {},
           },
         },
-      } as Assignment;
+      } as Assignment
 
-      const result = getTeamNames(assignment as Assignment);
-      expect(result).toEqual({ homeTeam: "TBD", awayTeam: "TBD" });
-    });
+      const result = getTeamNames(assignment as Assignment)
+      expect(result).toEqual({ homeTeam: 'TBD', awayTeam: 'TBD' })
+    })
 
-    it("should return TBD for missing game data", () => {
+    it('should return TBD for missing game data', () => {
       const assignment: Partial<Assignment> = {
         refereeGame: {},
-      } as Assignment;
+      } as Assignment
 
-      const result = getTeamNames(assignment as Assignment);
-      expect(result).toEqual({ homeTeam: "TBD", awayTeam: "TBD" });
-    });
+      const result = getTeamNames(assignment as Assignment)
+      expect(result).toEqual({ homeTeam: 'TBD', awayTeam: 'TBD' })
+    })
 
-    it("should return TBD for missing refereeGame", () => {
-      const assignment: Partial<Assignment> = {} as Assignment;
+    it('should return TBD for missing refereeGame', () => {
+      const assignment: Partial<Assignment> = {} as Assignment
 
-      const result = getTeamNames(assignment as Assignment);
-      expect(result).toEqual({ homeTeam: "TBD", awayTeam: "TBD" });
-    });
-  });
+      const result = getTeamNames(assignment as Assignment)
+      expect(result).toEqual({ homeTeam: 'TBD', awayTeam: 'TBD' })
+    })
+  })
 
-  describe("DEFAULT_VALIDATION_DEADLINE_HOURS", () => {
-    it("should be defined as 6 hours", () => {
-      expect(DEFAULT_VALIDATION_DEADLINE_HOURS).toBe(6);
-    });
-  });
+  describe('DEFAULT_VALIDATION_DEADLINE_HOURS', () => {
+    it('should be defined as 6 hours', () => {
+      expect(DEFAULT_VALIDATION_DEADLINE_HOURS).toBe(6)
+    })
+  })
 
-  describe("isValidationClosed", () => {
-    const FIXED_NOW = new Date("2025-01-15T12:00:00Z");
+  describe('isValidationClosed', () => {
+    const FIXED_NOW = new Date('2025-01-15T12:00:00Z')
 
     beforeEach(() => {
-      vi.useFakeTimers();
-      vi.setSystemTime(FIXED_NOW);
-    });
+      vi.useFakeTimers()
+      vi.setSystemTime(FIXED_NOW)
+    })
 
     afterEach(() => {
-      vi.useRealTimers();
-    });
+      vi.useRealTimers()
+    })
 
-    it("should return true when validation deadline has passed", () => {
+    it('should return true when validation deadline has passed', () => {
       // Game started 10 hours ago, deadline is DEFAULT_VALIDATION_DEADLINE_HOURS
-      const gameStart = new Date("2025-01-15T02:00:00Z").toISOString();
-      expect(isValidationClosed(gameStart, DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(true);
-    });
+      const gameStart = new Date('2025-01-15T02:00:00Z').toISOString()
+      expect(isValidationClosed(gameStart, DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(true)
+    })
 
-    it("should return false when within validation window", () => {
+    it('should return false when within validation window', () => {
       // Game started 3 hours ago, deadline is DEFAULT_VALIDATION_DEADLINE_HOURS
-      const gameStart = new Date("2025-01-15T09:00:00Z").toISOString();
-      expect(isValidationClosed(gameStart, DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(false);
-    });
+      const gameStart = new Date('2025-01-15T09:00:00Z').toISOString()
+      expect(isValidationClosed(gameStart, DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(false)
+    })
 
-    it("should return false for future games", () => {
+    it('should return false for future games', () => {
       // Game starts in 2 hours
-      const gameStart = new Date("2025-01-15T14:00:00Z").toISOString();
-      expect(isValidationClosed(gameStart, DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(false);
-    });
+      const gameStart = new Date('2025-01-15T14:00:00Z').toISOString()
+      expect(isValidationClosed(gameStart, DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(false)
+    })
 
-    it("should return false exactly at the deadline boundary", () => {
+    it('should return false exactly at the deadline boundary', () => {
       // Game started exactly DEFAULT_VALIDATION_DEADLINE_HOURS ago - validation just closed
-      const gameStart = new Date("2025-01-15T06:00:00Z").toISOString();
+      const gameStart = new Date('2025-01-15T06:00:00Z').toISOString()
       // At exactly the deadline, now > deadline is false (deadline = 12:00, now = 12:00)
-      expect(isValidationClosed(gameStart, DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(false);
-    });
+      expect(isValidationClosed(gameStart, DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(false)
+    })
 
-    it("should return true just after the deadline", () => {
+    it('should return true just after the deadline', () => {
       // Game started DEFAULT_VALIDATION_DEADLINE_HOURS and 1 second ago
-      const gameStart = new Date("2025-01-15T05:59:59Z").toISOString();
-      expect(isValidationClosed(gameStart, DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(true);
-    });
+      const gameStart = new Date('2025-01-15T05:59:59Z').toISOString()
+      expect(isValidationClosed(gameStart, DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(true)
+    })
 
-    it("should use default deadline when not specified", () => {
+    it('should use default deadline when not specified', () => {
       // Game started 10 hours ago, default deadline is DEFAULT_VALIDATION_DEADLINE_HOURS
-      const gameStart = new Date("2025-01-15T02:00:00Z").toISOString();
-      expect(isValidationClosed(gameStart)).toBe(true);
-    });
+      const gameStart = new Date('2025-01-15T02:00:00Z').toISOString()
+      expect(isValidationClosed(gameStart)).toBe(true)
+    })
 
-    it("should return false for undefined gameStartTime", () => {
-      expect(isValidationClosed(undefined, DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(false);
-    });
+    it('should return false for undefined gameStartTime', () => {
+      expect(isValidationClosed(undefined, DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(false)
+    })
 
-    it("should return false for null gameStartTime", () => {
-      expect(isValidationClosed(null, DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(false);
-    });
+    it('should return false for null gameStartTime', () => {
+      expect(isValidationClosed(null, DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(false)
+    })
 
-    it("should return false for invalid date string", () => {
-      expect(isValidationClosed("not-a-date", DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(false);
-    });
+    it('should return false for invalid date string', () => {
+      expect(isValidationClosed('not-a-date', DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(false)
+    })
 
-    it("should return false for empty string", () => {
-      expect(isValidationClosed("", DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(false);
-    });
+    it('should return false for empty string', () => {
+      expect(isValidationClosed('', DEFAULT_VALIDATION_DEADLINE_HOURS)).toBe(false)
+    })
 
-    it("should handle custom deadline hours", () => {
+    it('should handle custom deadline hours', () => {
       // Game started 25 hours ago, deadline is EXTENDED_VALIDATION_DEADLINE_HOURS
-      const gameStart = new Date("2025-01-14T11:00:00Z").toISOString();
-      expect(isValidationClosed(gameStart, EXTENDED_VALIDATION_DEADLINE_HOURS)).toBe(true);
+      const gameStart = new Date('2025-01-14T11:00:00Z').toISOString()
+      expect(isValidationClosed(gameStart, EXTENDED_VALIDATION_DEADLINE_HOURS)).toBe(true)
 
       // Game started 23 hours ago, deadline is EXTENDED_VALIDATION_DEADLINE_HOURS
-      const recentGame = new Date("2025-01-14T13:00:00Z").toISOString();
-      expect(isValidationClosed(recentGame, EXTENDED_VALIDATION_DEADLINE_HOURS)).toBe(false);
-    });
-  });
+      const recentGame = new Date('2025-01-14T13:00:00Z').toISOString()
+      expect(isValidationClosed(recentGame, EXTENDED_VALIDATION_DEADLINE_HOURS)).toBe(false)
+    })
+  })
 
-  describe("isGamePast", () => {
-    const FIXED_NOW = new Date("2025-01-15T12:00:00Z");
+  describe('isGamePast', () => {
+    const FIXED_NOW = new Date('2025-01-15T12:00:00Z')
 
     beforeEach(() => {
-      vi.useFakeTimers();
-      vi.setSystemTime(FIXED_NOW);
-    });
+      vi.useFakeTimers()
+      vi.setSystemTime(FIXED_NOW)
+    })
 
     afterEach(() => {
-      vi.useRealTimers();
-    });
+      vi.useRealTimers()
+    })
 
-    it("should return true for games that have started", () => {
-      const gameStart = new Date("2025-01-15T10:00:00Z").toISOString();
-      expect(isGamePast(gameStart)).toBe(true);
-    });
+    it('should return true for games that have started', () => {
+      const gameStart = new Date('2025-01-15T10:00:00Z').toISOString()
+      expect(isGamePast(gameStart)).toBe(true)
+    })
 
-    it("should return false for future games", () => {
-      const gameStart = new Date("2025-01-15T14:00:00Z").toISOString();
-      expect(isGamePast(gameStart)).toBe(false);
-    });
+    it('should return false for future games', () => {
+      const gameStart = new Date('2025-01-15T14:00:00Z').toISOString()
+      expect(isGamePast(gameStart)).toBe(false)
+    })
 
-    it("should return false for games starting exactly now", () => {
-      const gameStart = new Date("2025-01-15T12:00:00Z").toISOString();
+    it('should return false for games starting exactly now', () => {
+      const gameStart = new Date('2025-01-15T12:00:00Z').toISOString()
       // now > gameStart is false when they are equal
-      expect(isGamePast(gameStart)).toBe(false);
-    });
+      expect(isGamePast(gameStart)).toBe(false)
+    })
 
-    it("should return true for games that started just 1 second ago", () => {
-      const gameStart = new Date("2025-01-15T11:59:59Z").toISOString();
-      expect(isGamePast(gameStart)).toBe(true);
-    });
+    it('should return true for games that started just 1 second ago', () => {
+      const gameStart = new Date('2025-01-15T11:59:59Z').toISOString()
+      expect(isGamePast(gameStart)).toBe(true)
+    })
 
-    it("should return false for undefined gameStartTime", () => {
-      expect(isGamePast(undefined)).toBe(false);
-    });
+    it('should return false for undefined gameStartTime', () => {
+      expect(isGamePast(undefined)).toBe(false)
+    })
 
-    it("should return false for null gameStartTime", () => {
-      expect(isGamePast(null)).toBe(false);
-    });
+    it('should return false for null gameStartTime', () => {
+      expect(isGamePast(null)).toBe(false)
+    })
 
-    it("should return false for invalid date string", () => {
-      expect(isGamePast("invalid-date")).toBe(false);
-    });
+    it('should return false for invalid date string', () => {
+      expect(isGamePast('invalid-date')).toBe(false)
+    })
 
-    it("should return false for empty string", () => {
-      expect(isGamePast("")).toBe(false);
-    });
+    it('should return false for empty string', () => {
+      expect(isGamePast('')).toBe(false)
+    })
 
-    it("should return true for games from yesterday", () => {
-      const gameStart = new Date("2025-01-14T18:00:00Z").toISOString();
-      expect(isGamePast(gameStart)).toBe(true);
-    });
-  });
+    it('should return true for games from yesterday', () => {
+      const gameStart = new Date('2025-01-14T18:00:00Z').toISOString()
+      expect(isGamePast(gameStart)).toBe(true)
+    })
+  })
 
-  describe("isGameAlreadyValidated", () => {
-    it("should return true when scoresheet has closedAt set", () => {
+  describe('isGameAlreadyValidated', () => {
+    it('should return true when scoresheet has closedAt set', () => {
       const assignment: Partial<Assignment> = {
         refereeGame: {
           game: {
             scoresheet: {
-              closedAt: "2025-01-15T20:00:00Z",
+              closedAt: '2025-01-15T20:00:00Z',
             },
           },
         },
-      } as Assignment;
+      } as Assignment
 
-      expect(isGameAlreadyValidated(assignment as Assignment)).toBe(true);
-    });
+      expect(isGameAlreadyValidated(assignment as Assignment)).toBe(true)
+    })
 
-    it("should return false when scoresheet closedAt is null", () => {
+    it('should return false when scoresheet closedAt is null', () => {
       const assignment: Partial<Assignment> = {
         refereeGame: {
           game: {
@@ -230,68 +232,68 @@ describe("assignment-helpers", () => {
             },
           },
         },
-      } as Assignment;
+      } as Assignment
 
-      expect(isGameAlreadyValidated(assignment as Assignment)).toBe(false);
-    });
+      expect(isGameAlreadyValidated(assignment as Assignment)).toBe(false)
+    })
 
-    it("should return false when scoresheet closedAt is undefined", () => {
+    it('should return false when scoresheet closedAt is undefined', () => {
       const assignment: Partial<Assignment> = {
         refereeGame: {
           game: {
             scoresheet: {},
           },
         },
-      } as Assignment;
+      } as Assignment
 
-      expect(isGameAlreadyValidated(assignment as Assignment)).toBe(false);
-    });
+      expect(isGameAlreadyValidated(assignment as Assignment)).toBe(false)
+    })
 
-    it("should return false when scoresheet is missing", () => {
+    it('should return false when scoresheet is missing', () => {
       const assignment: Partial<Assignment> = {
         refereeGame: {
           game: {},
         },
-      } as Assignment;
+      } as Assignment
 
-      expect(isGameAlreadyValidated(assignment as Assignment)).toBe(false);
-    });
+      expect(isGameAlreadyValidated(assignment as Assignment)).toBe(false)
+    })
 
-    it("should return false when game is missing", () => {
+    it('should return false when game is missing', () => {
       const assignment: Partial<Assignment> = {
         refereeGame: {},
-      } as Assignment;
+      } as Assignment
 
-      expect(isGameAlreadyValidated(assignment as Assignment)).toBe(false);
-    });
+      expect(isGameAlreadyValidated(assignment as Assignment)).toBe(false)
+    })
 
-    it("should return false when refereeGame is missing", () => {
-      const assignment: Partial<Assignment> = {} as Assignment;
+    it('should return false when refereeGame is missing', () => {
+      const assignment: Partial<Assignment> = {} as Assignment
 
-      expect(isGameAlreadyValidated(assignment as Assignment)).toBe(false);
-    });
-  });
+      expect(isGameAlreadyValidated(assignment as Assignment)).toBe(false)
+    })
+  })
 
-  describe("isFromCalendarMode", () => {
-    it("should return false for API assignments with full league structure", () => {
+  describe('isFromCalendarMode', () => {
+    it('should return false for API assignments with full league structure', () => {
       const assignment: Partial<Assignment> = {
         refereeGame: {
           game: {
             group: {
               phase: {
                 league: {
-                  leagueCategory: { name: "NLA" },
+                  leagueCategory: { name: 'NLA' },
                 },
               },
             },
           },
         },
-      } as Assignment;
+      } as Assignment
 
-      expect(isFromCalendarMode(assignment as Assignment)).toBe(false);
-    });
+      expect(isFromCalendarMode(assignment as Assignment)).toBe(false)
+    })
 
-    it("should return true when league is undefined", () => {
+    it('should return true when league is undefined', () => {
       const assignment: Partial<Assignment> = {
         refereeGame: {
           game: {
@@ -300,206 +302,206 @@ describe("assignment-helpers", () => {
             },
           },
         },
-      } as Assignment;
+      } as Assignment
 
-      expect(isFromCalendarMode(assignment as Assignment)).toBe(true);
-    });
+      expect(isFromCalendarMode(assignment as Assignment)).toBe(true)
+    })
 
-    it("should return true when phase is undefined", () => {
+    it('should return true when phase is undefined', () => {
       const assignment: Partial<Assignment> = {
         refereeGame: {
           game: {
             group: {},
           },
         },
-      } as Assignment;
+      } as Assignment
 
-      expect(isFromCalendarMode(assignment as Assignment)).toBe(true);
-    });
+      expect(isFromCalendarMode(assignment as Assignment)).toBe(true)
+    })
 
-    it("should return true when group is undefined", () => {
+    it('should return true when group is undefined', () => {
       const assignment: Partial<Assignment> = {
         refereeGame: {
           game: {},
         },
-      } as Assignment;
+      } as Assignment
 
-      expect(isFromCalendarMode(assignment as Assignment)).toBe(true);
-    });
+      expect(isFromCalendarMode(assignment as Assignment)).toBe(true)
+    })
 
-    it("should return true when game is undefined", () => {
+    it('should return true when game is undefined', () => {
       const assignment: Partial<Assignment> = {
         refereeGame: {},
-      } as Assignment;
+      } as Assignment
 
-      expect(isFromCalendarMode(assignment as Assignment)).toBe(true);
-    });
+      expect(isFromCalendarMode(assignment as Assignment)).toBe(true)
+    })
 
-    it("should return true when refereeGame is undefined", () => {
-      const assignment: Partial<Assignment> = {} as Assignment;
+    it('should return true when refereeGame is undefined', () => {
+      const assignment: Partial<Assignment> = {} as Assignment
 
-      expect(isFromCalendarMode(assignment as Assignment)).toBe(true);
-    });
-  });
+      expect(isFromCalendarMode(assignment as Assignment)).toBe(true)
+    })
+  })
 
-  describe("isGameReportEligible", () => {
-    it("should return false for calendar mode assignments", () => {
+  describe('isGameReportEligible', () => {
+    it('should return false for calendar mode assignments', () => {
       // Calendar assignment without league structure
       const assignment: Partial<Assignment> = {
-        refereePosition: "head-one",
+        refereePosition: 'head-one',
         refereeGame: {
           game: {},
         },
-      } as Assignment;
+      } as Assignment
 
-      expect(isGameReportEligible(assignment as Assignment)).toBe(false);
-    });
+      expect(isGameReportEligible(assignment as Assignment)).toBe(false)
+    })
 
-    it("should return true for NLA game with head-one position", () => {
+    it('should return true for NLA game with head-one position', () => {
       const assignment: Partial<Assignment> = {
-        refereePosition: "head-one",
+        refereePosition: 'head-one',
         refereeGame: {
           game: {
             group: {
               phase: {
                 league: {
-                  leagueCategory: { name: "NLA" },
+                  leagueCategory: { name: 'NLA' },
                 },
               },
             },
           },
         },
-      } as Assignment;
+      } as Assignment
 
-      expect(isGameReportEligible(assignment as Assignment)).toBe(true);
-    });
+      expect(isGameReportEligible(assignment as Assignment)).toBe(true)
+    })
 
-    it("should return true for NLB game with head-one position", () => {
+    it('should return true for NLB game with head-one position', () => {
       const assignment: Partial<Assignment> = {
-        refereePosition: "head-one",
+        refereePosition: 'head-one',
         refereeGame: {
           game: {
             group: {
               phase: {
                 league: {
-                  leagueCategory: { name: "NLB" },
+                  leagueCategory: { name: 'NLB' },
                 },
               },
             },
           },
         },
-      } as Assignment;
+      } as Assignment
 
-      expect(isGameReportEligible(assignment as Assignment)).toBe(true);
-    });
+      expect(isGameReportEligible(assignment as Assignment)).toBe(true)
+    })
 
-    it("should return false for NLA game with non-head-one position", () => {
+    it('should return false for NLA game with non-head-one position', () => {
       const assignment: Partial<Assignment> = {
-        refereePosition: "head-two",
+        refereePosition: 'head-two',
         refereeGame: {
           game: {
             group: {
               phase: {
                 league: {
-                  leagueCategory: { name: "NLA" },
+                  leagueCategory: { name: 'NLA' },
                 },
               },
             },
           },
         },
-      } as Assignment;
+      } as Assignment
 
-      expect(isGameReportEligible(assignment as Assignment)).toBe(false);
-    });
+      expect(isGameReportEligible(assignment as Assignment)).toBe(false)
+    })
 
-    it("should return false for lower league game", () => {
+    it('should return false for lower league game', () => {
       const assignment: Partial<Assignment> = {
-        refereePosition: "head-one",
+        refereePosition: 'head-one',
         refereeGame: {
           game: {
             group: {
               phase: {
                 league: {
-                  leagueCategory: { name: "1L" },
+                  leagueCategory: { name: '1L' },
                 },
               },
             },
           },
         },
-      } as Assignment;
+      } as Assignment
 
-      expect(isGameReportEligible(assignment as Assignment)).toBe(false);
-    });
-  });
+      expect(isGameReportEligible(assignment as Assignment)).toBe(false)
+    })
+  })
 
-  describe("isActionAvailable", () => {
-    describe("calendar mode assignments", () => {
+  describe('isActionAvailable', () => {
+    describe('calendar mode assignments', () => {
       const calendarAssignment: Partial<Assignment> = {
-        refereePosition: "head-one",
+        refereePosition: 'head-one',
         refereeGame: {
           game: {},
         },
-      } as Assignment;
+      } as Assignment
 
-      it("should return false for confirm action", () => {
-        expect(isActionAvailable(calendarAssignment as Assignment, "confirm")).toBe(false);
-      });
+      it('should return false for confirm action', () => {
+        expect(isActionAvailable(calendarAssignment as Assignment, 'confirm')).toBe(false)
+      })
 
-      it("should return false for report action", () => {
-        expect(isActionAvailable(calendarAssignment as Assignment, "report")).toBe(false);
-      });
+      it('should return false for report action', () => {
+        expect(isActionAvailable(calendarAssignment as Assignment, 'report')).toBe(false)
+      })
 
-      it("should return false for exchange action", () => {
-        expect(isActionAvailable(calendarAssignment as Assignment, "exchange")).toBe(false);
-      });
-    });
+      it('should return false for exchange action', () => {
+        expect(isActionAvailable(calendarAssignment as Assignment, 'exchange')).toBe(false)
+      })
+    })
 
-    describe("API-sourced assignments", () => {
+    describe('API-sourced assignments', () => {
       const apiAssignment: Partial<Assignment> = {
-        refereePosition: "head-one",
+        refereePosition: 'head-one',
         refereeGame: {
           game: {
             group: {
               phase: {
                 league: {
-                  leagueCategory: { name: "NLA" },
+                  leagueCategory: { name: 'NLA' },
                 },
               },
             },
           },
         },
-      } as Assignment;
+      } as Assignment
 
       const nonEligibleApiAssignment: Partial<Assignment> = {
-        refereePosition: "head-one",
+        refereePosition: 'head-one',
         refereeGame: {
           game: {
             group: {
               phase: {
                 league: {
-                  leagueCategory: { name: "1L" },
+                  leagueCategory: { name: '1L' },
                 },
               },
             },
           },
         },
-      } as Assignment;
+      } as Assignment
 
-      it("should return true for confirm action", () => {
-        expect(isActionAvailable(apiAssignment as Assignment, "confirm")).toBe(true);
-      });
+      it('should return true for confirm action', () => {
+        expect(isActionAvailable(apiAssignment as Assignment, 'confirm')).toBe(true)
+      })
 
-      it("should return true for report action when eligible", () => {
-        expect(isActionAvailable(apiAssignment as Assignment, "report")).toBe(true);
-      });
+      it('should return true for report action when eligible', () => {
+        expect(isActionAvailable(apiAssignment as Assignment, 'report')).toBe(true)
+      })
 
-      it("should return false for report action when not eligible", () => {
-        expect(isActionAvailable(nonEligibleApiAssignment as Assignment, "report")).toBe(false);
-      });
+      it('should return false for report action when not eligible', () => {
+        expect(isActionAvailable(nonEligibleApiAssignment as Assignment, 'report')).toBe(false)
+      })
 
-      it("should return true for exchange action", () => {
-        expect(isActionAvailable(apiAssignment as Assignment, "exchange")).toBe(true);
-      });
-    });
-  });
-});
+      it('should return true for exchange action', () => {
+        expect(isActionAvailable(apiAssignment as Assignment, 'exchange')).toBe(true)
+      })
+    })
+  })
+})

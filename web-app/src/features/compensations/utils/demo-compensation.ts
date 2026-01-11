@@ -3,7 +3,7 @@
  * Provides rate calculations and expense formatting for demo mode.
  */
 
-import { formatDistanceKm, metresToKilometres } from "@/shared/utils/distance";
+import { formatDistanceKm, metresToKilometres } from '@/shared/utils/distance'
 
 // Compensation rates per association type (CHF)
 // SV (national) has higher rates than regional associations
@@ -20,9 +20,9 @@ export const COMPENSATION_RATES = {
     LINESMAN: 40,
     SECOND_LINESMAN: 30,
   },
-} as const;
+} as const
 
-export const TRAVEL_EXPENSE_RATE_PER_KM = 0.7;
+export const TRAVEL_EXPENSE_RATE_PER_KM = 0.7
 
 // Sample distances in metres for demo compensation records
 export const SAMPLE_DISTANCES = {
@@ -31,55 +31,49 @@ export const SAMPLE_DISTANCES = {
   MEDIUM_LONG: 48000,
   LONG: 62000,
   VERY_LONG: 89000,
-} as const;
+} as const
 
-export type RefereePosition = "head-one" | "head-two" | "linesman-one" | "linesman-two";
+export type RefereePosition = 'head-one' | 'head-two' | 'linesman-one' | 'linesman-two'
 
 export function calculateTravelExpenses(distanceInMetres: number): number {
-  const distanceInKm = metresToKilometres(distanceInMetres);
-  return Math.round(distanceInKm * TRAVEL_EXPENSE_RATE_PER_KM * 100) / 100;
+  const distanceInKm = metresToKilometres(distanceInMetres)
+  return Math.round(distanceInKm * TRAVEL_EXPENSE_RATE_PER_KM * 100) / 100
 }
 
 export function formatCurrency(amount: number): string {
-  return amount.toFixed(2);
+  return amount.toFixed(2)
 }
 
-export function calculateTotalCost(
-  gameCompensation: number,
-  travelExpenses: number,
-): string {
-  return formatCurrency(gameCompensation + travelExpenses);
+export function calculateTotalCost(gameCompensation: number, travelExpenses: number): string {
+  return formatCurrency(gameCompensation + travelExpenses)
 }
 
-export function getCompensationForPosition(
-  position: RefereePosition,
-  isSV: boolean,
-): number {
-  const rates = isSV ? COMPENSATION_RATES.SV : COMPENSATION_RATES.REGIONAL;
+export function getCompensationForPosition(position: RefereePosition, isSV: boolean): number {
+  const rates = isSV ? COMPENSATION_RATES.SV : COMPENSATION_RATES.REGIONAL
   switch (position) {
-    case "head-one":
-      return rates.HEAD_REFEREE;
-    case "head-two":
-      return rates.SECOND_HEAD_REFEREE;
-    case "linesman-one":
-      return rates.LINESMAN;
-    case "linesman-two":
-      return rates.SECOND_LINESMAN;
+    case 'head-one':
+      return rates.HEAD_REFEREE
+    case 'head-two':
+      return rates.SECOND_HEAD_REFEREE
+    case 'linesman-one':
+      return rates.LINESMAN
+    case 'linesman-two':
+      return rates.SECOND_LINESMAN
   }
 }
 
 export interface CompensationParams {
-  position: RefereePosition;
-  distanceInMetres: number;
-  isSV: boolean;
-  paymentDone: boolean;
-  paymentValueDate?: string;
-  transportationMode?: "car" | "train";
-  correctionReason?: string | null;
+  position: RefereePosition
+  distanceInMetres: number
+  isSV: boolean
+  paymentDone: boolean
+  paymentValueDate?: string
+  transportationMode?: 'car' | 'train'
+  correctionReason?: string | null
   /** When true, compensation is locked for on-site payout (non-editable) */
-  lockPayoutOnSiteCompensation?: boolean;
+  lockPayoutOnSiteCompensation?: boolean
   /** Disbursement method: payout_on_site or central_payout */
-  methodOfDisbursement?: "payout_on_site" | "central_payout";
+  methodOfDisbursement?: 'payout_on_site' | 'central_payout'
 }
 
 export function createCompensationData({
@@ -88,13 +82,13 @@ export function createCompensationData({
   isSV,
   paymentDone,
   paymentValueDate,
-  transportationMode = "car",
+  transportationMode = 'car',
   correctionReason = null,
   lockPayoutOnSiteCompensation = false,
-  methodOfDisbursement = "central_payout",
+  methodOfDisbursement = 'central_payout',
 }: CompensationParams) {
-  const gameCompensation = getCompensationForPosition(position, isSV);
-  const travelExpenses = calculateTravelExpenses(distanceInMetres);
+  const gameCompensation = getCompensationForPosition(position, isSV)
+  const travelExpenses = calculateTravelExpenses(distanceInMetres)
 
   return {
     gameCompensation,
@@ -112,13 +106,13 @@ export function createCompensationData({
     hasFlexibleTravelExpenses: isSV,
     hasFlexibleOvernightStayExpenses: false,
     hasFlexibleCateringExpenses: false,
-    overnightStayExpensesFormatted: "0.00",
-    cateringExpensesFormatted: "0.00",
+    overnightStayExpensesFormatted: '0.00',
+    cateringExpensesFormatted: '0.00',
     // Lock flags for editability
     lockPayoutOnSiteCompensation,
     lockPayoutCentralPayoutCompensation: paymentDone,
     // Disbursement methods
     methodOfDisbursementArbitration: methodOfDisbursement,
     methodOfDisbursementTravelCompensation: methodOfDisbursement,
-  };
+  }
 }

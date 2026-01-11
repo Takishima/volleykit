@@ -1,50 +1,40 @@
-import { useTabNavigation } from "@/shared/hooks/useTabNavigation";
-import { Check, Circle } from "@/shared/components/icons";
+import { Check, Circle } from '@/shared/components/icons'
+import { useTabNavigation } from '@/shared/hooks/useTabNavigation'
 
 /** Tab completion status for visual indicators */
-export type TabStatus = "complete" | "incomplete" | "optional";
+export type TabStatus = 'complete' | 'incomplete' | 'optional'
 
 export interface Tab {
-  id: string;
-  label: string;
-  badge?: string;
+  id: string
+  label: string
+  badge?: string
   /** Completion status for visual indicator */
-  status?: TabStatus;
+  status?: TabStatus
 }
 
 interface TabsProps {
-  tabs: Tab[];
-  activeTab: string;
-  onTabChange: (tabId: string) => void;
-  ariaLabel: string;
+  tabs: Tab[]
+  activeTab: string
+  onTabChange: (tabId: string) => void
+  ariaLabel: string
   /** Optional content to render at the end of the tab bar (e.g., filters, toggles) */
-  endContent?: React.ReactNode;
+  endContent?: React.ReactNode
 }
 
-export function Tabs({
-  tabs,
-  activeTab,
-  onTabChange,
-  ariaLabel,
-  endContent,
-}: TabsProps) {
+export function Tabs({ tabs, activeTab, onTabChange, ariaLabel, endContent }: TabsProps) {
   const { getTabProps } = useTabNavigation({
     tabs: tabs.map((tab) => tab.id),
     activeTab,
     onTabChange,
-  });
+  })
 
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border-default dark:border-border-default-dark pb-2">
-      <div
-        className="overflow-x-auto scrollbar-hide"
-        role="tablist"
-        aria-label={ariaLabel}
-      >
+      <div className="overflow-x-auto scrollbar-hide" role="tablist" aria-label={ariaLabel}>
         <div className="flex gap-1 min-w-max">
           {tabs.map((tab, index) => {
-            const isActive = activeTab === tab.id;
-            const tabProps = getTabProps(tab.id, index);
+            const isActive = activeTab === tab.id
+            const tabProps = getTabProps(tab.id, index)
             return (
               <button
                 key={tab.id}
@@ -56,16 +46,22 @@ export function Tabs({
                   dark:focus-visible:ring-offset-surface-card-dark
                   ${
                     isActive
-                      ? "border-primary-500 text-primary-600 dark:text-primary-400"
-                      : "border-transparent text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark hover:border-border-strong dark:hover:border-border-strong-dark"
+                      ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                      : 'border-transparent text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark hover:border-border-strong dark:hover:border-border-strong-dark'
                   }
                 `}
               >
-                {tab.status === "complete" && (
-                  <Check className="w-4 h-4 mr-1.5 text-success-500 dark:text-success-400" aria-hidden="true" />
+                {tab.status === 'complete' && (
+                  <Check
+                    className="w-4 h-4 mr-1.5 text-success-500 dark:text-success-400"
+                    aria-hidden="true"
+                  />
                 )}
-                {tab.status === "incomplete" && (
-                  <Circle className="w-3 h-3 mr-1.5 text-warning-500 dark:text-warning-400 fill-current" aria-hidden="true" />
+                {tab.status === 'incomplete' && (
+                  <Circle
+                    className="w-3 h-3 mr-1.5 text-warning-500 dark:text-warning-400 fill-current"
+                    aria-hidden="true"
+                  />
                 )}
                 {tab.label}
                 {tab.badge && (
@@ -74,23 +70,23 @@ export function Tabs({
                   </span>
                 )}
               </button>
-            );
+            )
           })}
         </div>
       </div>
       {endContent}
     </div>
-  );
+  )
 }
 
 interface TabPanelProps {
-  tabId: string;
-  activeTab: string;
-  children: React.ReactNode;
+  tabId: string
+  activeTab: string
+  children: React.ReactNode
 }
 
 export function TabPanel({ tabId, activeTab, children }: TabPanelProps) {
-  const isActive = activeTab === tabId;
+  const isActive = activeTab === tabId
 
   return (
     <div
@@ -101,5 +97,5 @@ export function TabPanel({ tabId, activeTab, children }: TabPanelProps) {
     >
       {isActive && children}
     </div>
-  );
+  )
 }

@@ -1,8 +1,10 @@
-import type { QueryClient } from "@tanstack/react-query";
-import { startOfDay, endOfDay, addDays } from "date-fns";
-import { api, type SearchConfiguration } from "@/api/client";
-import { queryKeys } from "@/api/queryKeys";
-import { getSeasonDateRange } from "@/shared/utils/date-helpers";
+import { startOfDay, endOfDay, addDays } from 'date-fns'
+
+import { api, type SearchConfiguration } from '@/api/client'
+import { queryKeys } from '@/api/queryKeys'
+import { getSeasonDateRange } from '@/shared/utils/date-helpers'
+import { createLogger } from '@/shared/utils/logger'
+
 import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_DATE_RANGE_DAYS,
@@ -11,10 +13,11 @@ import {
   EXCHANGES_STALE_TIME_MS,
   SETTINGS_STALE_TIME_MS,
   SEASON_STALE_TIME_MS,
-} from "./usePaginatedQuery";
-import { createLogger } from "@/shared/utils/logger";
+} from './usePaginatedQuery'
 
-const log = createLogger("prefetchTabData");
+import type { QueryClient } from '@tanstack/react-query'
+
+const log = createLogger('prefetchTabData')
 
 /**
  * Prefetches data for all main tabs after an association switch.
@@ -33,9 +36,9 @@ const log = createLogger("prefetchTabData");
  */
 export async function prefetchAllTabData(
   queryClient: QueryClient,
-  newOccupationId: string,
+  newOccupationId: string
 ): Promise<void> {
-  const now = new Date();
+  const now = new Date()
 
   // Build configs matching what the hooks use
   const upcomingAssignmentsConfig: SearchConfiguration = {
@@ -43,7 +46,7 @@ export async function prefetchAllTabData(
     limit: DEFAULT_PAGE_SIZE,
     propertyFilters: [
       {
-        propertyName: "refereeGame.game.startingDateTime",
+        propertyName: 'refereeGame.game.startingDateTime',
         dateRange: {
           from: startOfDay(now).toISOString(),
           to: endOfDay(addDays(now, DEFAULT_DATE_RANGE_DAYS)).toISOString(),
@@ -52,12 +55,12 @@ export async function prefetchAllTabData(
     ],
     propertyOrderings: [
       {
-        propertyName: "refereeGame.game.startingDateTime",
+        propertyName: 'refereeGame.game.startingDateTime',
         descending: false,
         isSetByUser: true,
       },
     ],
-  };
+  }
 
   const compensationsConfig: SearchConfiguration = {
     offset: 0,
@@ -65,20 +68,20 @@ export async function prefetchAllTabData(
     propertyFilters: [],
     propertyOrderings: [
       {
-        propertyName: "refereeGame.game.startingDateTime",
+        propertyName: 'refereeGame.game.startingDateTime',
         descending: true,
         isSetByUser: true,
       },
     ],
-  };
+  }
 
-  const { to: seasonEnd } = getSeasonDateRange();
+  const { to: seasonEnd } = getSeasonDateRange()
   const exchangesConfig: SearchConfiguration = {
     offset: 0,
     limit: DEFAULT_PAGE_SIZE,
     propertyFilters: [
       {
-        propertyName: "refereeGame.game.startingDateTime",
+        propertyName: 'refereeGame.game.startingDateTime',
         dateRange: {
           from: startOfDay(now).toISOString(),
           to: endOfDay(seasonEnd).toISOString(),
@@ -87,40 +90,34 @@ export async function prefetchAllTabData(
     ],
     propertyOrderings: [
       {
-        propertyName: "refereeGame.game.startingDateTime",
+        propertyName: 'refereeGame.game.startingDateTime',
         descending: false,
         isSetByUser: true,
       },
     ],
-  };
+  }
 
-  log.debug("Prefetching all tab data for occupation:", newOccupationId);
+  log.debug('Prefetching all tab data for occupation:', newOccupationId)
 
   // Prefetch all in parallel - failures are logged but don't block other prefetches
   const prefetchPromises = [
     // Assignments tab - upcoming assignments
     queryClient
       .prefetchQuery({
-        queryKey: queryKeys.assignments.list(
-          upcomingAssignmentsConfig,
-          newOccupationId,
-        ),
+        queryKey: queryKeys.assignments.list(upcomingAssignmentsConfig, newOccupationId),
         queryFn: () => api.searchAssignments(upcomingAssignmentsConfig),
         staleTime: ASSIGNMENTS_STALE_TIME_MS,
       })
-      .catch((err) => log.warn("Failed to prefetch assignments:", err)),
+      .catch((err) => log.warn('Failed to prefetch assignments:', err)),
 
     // Compensations tab
     queryClient
       .prefetchQuery({
-        queryKey: queryKeys.compensations.list(
-          compensationsConfig,
-          newOccupationId,
-        ),
+        queryKey: queryKeys.compensations.list(compensationsConfig, newOccupationId),
         queryFn: () => api.searchCompensations(compensationsConfig),
         staleTime: COMPENSATIONS_STALE_TIME_MS,
       })
-      .catch((err) => log.warn("Failed to prefetch compensations:", err)),
+      .catch((err) => log.warn('Failed to prefetch compensations:', err)),
 
     // Exchange tab
     queryClient
@@ -129,7 +126,7 @@ export async function prefetchAllTabData(
         queryFn: () => api.searchExchanges(exchangesConfig),
         staleTime: EXCHANGES_STALE_TIME_MS,
       })
-      .catch((err) => log.warn("Failed to prefetch exchanges:", err)),
+      .catch((err) => log.warn('Failed to prefetch exchanges:', err)),
 
     // Settings - needed for validation-closed assignments
     queryClient
@@ -138,7 +135,7 @@ export async function prefetchAllTabData(
         queryFn: () => api.getAssociationSettings(),
         staleTime: SETTINGS_STALE_TIME_MS,
       })
-      .catch((err) => log.warn("Failed to prefetch settings:", err)),
+      .catch((err) => log.warn('Failed to prefetch settings:', err)),
 
     // Active season - needed for validation-closed assignments
     queryClient
@@ -147,9 +144,9 @@ export async function prefetchAllTabData(
         queryFn: () => api.getActiveSeason(),
         staleTime: SEASON_STALE_TIME_MS,
       })
-      .catch((err) => log.warn("Failed to prefetch season:", err)),
-  ];
+      .catch((err) => log.warn('Failed to prefetch season:', err)),
+  ]
 
-  await Promise.all(prefetchPromises);
-  log.debug("Tab data prefetch complete");
+  await Promise.all(prefetchPromises)
+  log.debug('Tab data prefetch complete')
 }

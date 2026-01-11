@@ -1,15 +1,15 @@
-import { useTranslation } from "@/shared/hooks/useTranslation";
+import { useTranslation } from '@/shared/hooks/useTranslation'
 
 interface TourTooltipProps {
-  titleKey: string;
-  descriptionKey: string;
-  currentStep: number;
-  totalSteps: number;
-  onSkip: () => void;
-  onNext?: () => void;
-  onPrevious?: () => void;
-  isLastStep: boolean;
-  isFirstStep: boolean;
+  titleKey: string
+  descriptionKey: string
+  currentStep: number
+  totalSteps: number
+  onSkip: () => void
+  onNext?: () => void
+  onPrevious?: () => void
+  isLastStep: boolean
+  isFirstStep: boolean
 }
 
 export function TourTooltip({
@@ -23,7 +23,7 @@ export function TourTooltip({
   isLastStep,
   isFirstStep,
 }: TourTooltipProps) {
-  const { t, tInterpolate } = useTranslation();
+  const { t, tInterpolate } = useTranslation()
 
   return (
     <div className="p-4">
@@ -36,7 +36,7 @@ export function TourTooltip({
           type="button"
           onClick={onSkip}
           className="flex-shrink-0 p-1 -mr-1 -mt-1 rounded-md text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark transition-colors"
-          aria-label={t("tour.actions.skip")}
+          aria-label={t('tour.actions.skip')}
         >
           <svg
             className="w-5 h-5"
@@ -69,14 +69,14 @@ export function TourTooltip({
               key={`step-${index}`}
               className={`w-2 h-2 rounded-full transition-colors ${
                 index === currentStep
-                  ? "bg-primary-500"
+                  ? 'bg-primary-500'
                   : index < currentStep
-                    ? "bg-primary-300 dark:bg-primary-700"
-                    : "bg-surface-muted dark:bg-surface-subtle-dark"
+                    ? 'bg-primary-300 dark:bg-primary-700'
+                    : 'bg-surface-muted dark:bg-surface-subtle-dark'
               }`}
               aria-label={
                 index === currentStep
-                  ? tInterpolate("tour.stepCurrent", { step: index + 1, total: totalSteps })
+                  ? tInterpolate('tour.stepCurrent', { step: index + 1, total: totalSteps })
                   : undefined
               }
             />
@@ -94,7 +94,7 @@ export function TourTooltip({
               onClick={onPrevious}
               className="px-3 py-1.5 text-sm font-medium text-text-secondary dark:text-text-secondary-dark hover:text-text-primary dark:hover:text-text-primary-dark transition-colors"
             >
-              {t("tour.actions.previous")}
+              {t('tour.actions.previous')}
             </button>
           )}
 
@@ -104,11 +104,11 @@ export function TourTooltip({
               onClick={onNext}
               className="px-4 py-1.5 text-sm font-medium bg-primary-500 text-primary-950 rounded-lg hover:bg-primary-600 transition-colors"
             >
-              {isLastStep ? t("tour.actions.finish") : t("tour.actions.next")}
+              {isLastStep ? t('tour.actions.finish') : t('tour.actions.next')}
             </button>
           )}
         </div>
       </div>
     </div>
-  );
+  )
 }

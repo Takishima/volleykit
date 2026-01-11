@@ -1,6 +1,12 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { useShallow } from "zustand/react/shallow";
-import { useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+
+import { useQueryClient } from '@tanstack/react-query'
+import { useShallow } from 'zustand/react/shallow'
+
+import { queryKeys } from '@/api/queryKeys'
+import { useActiveAssociationCode } from '@/features/auth/hooks/useActiveAssociation'
+import { useTravelTimeAvailable } from '@/shared/hooks/useTravelTime'
+import { clearTravelTimeCache, getTravelTimeCacheStats } from '@/shared/services/transport'
 import {
   useSettingsStore,
   getDefaultArrivalBuffer,
@@ -10,33 +16,26 @@ import {
   DEFAULT_MAX_TRAVEL_TIME_MINUTES,
   type DistanceFilter,
   type SbbDestinationType,
-} from "@/shared/stores/settings";
-import { useActiveAssociationCode } from "@/features/auth/hooks/useActiveAssociation";
-import { useTravelTimeAvailable } from "@/shared/hooks/useTravelTime";
-import { queryKeys } from "@/api/queryKeys";
-import {
-  clearTravelTimeCache,
-  getTravelTimeCacheStats,
-} from "@/shared/services/transport";
+} from '@/shared/stores/settings'
 
-const DEBOUNCE_MS = 300;
+const DEBOUNCE_MS = 300
 
 /** Minimum max distance in kilometers */
-const MIN_MAX_DISTANCE_KM = 10;
+const MIN_MAX_DISTANCE_KM = 10
 
 /** Maximum max distance in kilometers */
-const MAX_MAX_DISTANCE_KM = 200;
+const MAX_MAX_DISTANCE_KM = 200
 
 /** Minimum max travel time in minutes */
-const MIN_MAX_TRAVEL_TIME_MINUTES = 30;
+const MIN_MAX_TRAVEL_TIME_MINUTES = 30
 
 /** Maximum max travel time in minutes (4 hours) */
-const MAX_MAX_TRAVEL_TIME_MINUTES = 240;
+const MAX_MAX_TRAVEL_TIME_MINUTES = 240
 
 export function useTransportSettings() {
-  const queryClient = useQueryClient();
-  const isTransportAvailable = useTravelTimeAvailable();
-  const associationCode = useActiveAssociationCode();
+  const queryClient = useQueryClient()
+  const isTransportAvailable = useTravelTimeAvailable()
+  const associationCode = useActiveAssociationCode()
 
   const {
     homeLocation,
@@ -65,165 +64,163 @@ export function useTransportSettings() {
       setMaxTravelTimeForAssociation: state.setMaxTravelTimeForAssociation,
       arrivalBufferByAssociation: state.travelTimeFilter.arrivalBufferByAssociation,
       setArrivalBufferForAssociation: state.setArrivalBufferForAssociation,
-      sbbDestinationType: state.travelTimeFilter.sbbDestinationType ?? "address",
+      sbbDestinationType: state.travelTimeFilter.sbbDestinationType ?? 'address',
       setSbbDestinationType: state.setSbbDestinationType,
-    })),
-  );
+    }))
+  )
 
-  const [showClearConfirm, setShowClearConfirm] = useState(false);
-  const [cacheVersion, setCacheVersion] = useState(0);
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const [cacheVersion, setCacheVersion] = useState(0)
 
   // Get current transport enabled state for this association
   const isTransportEnabled = useMemo(() => {
-    const enabledMap = transportEnabledByAssociation ?? {};
+    const enabledMap = transportEnabledByAssociation ?? {}
     if (associationCode && enabledMap[associationCode] !== undefined) {
-      return enabledMap[associationCode];
+      return enabledMap[associationCode]
     }
-    return transportEnabled;
-  }, [associationCode, transportEnabledByAssociation, transportEnabled]);
+    return transportEnabled
+  }, [associationCode, transportEnabledByAssociation, transportEnabled])
 
   // Get current distance filter for this association
   const currentDistanceFilter: DistanceFilter = useMemo(() => {
-    const filterMap = distanceFilterByAssociation ?? {};
+    const filterMap = distanceFilterByAssociation ?? {}
     if (associationCode && filterMap[associationCode] !== undefined) {
-      return filterMap[associationCode];
+      return filterMap[associationCode]
     }
     // Use distanceFilter or default if not set
-    return distanceFilter ?? { enabled: false, maxDistanceKm: DEFAULT_MAX_DISTANCE_KM };
-  }, [associationCode, distanceFilterByAssociation, distanceFilter]);
+    return distanceFilter ?? { enabled: false, maxDistanceKm: DEFAULT_MAX_DISTANCE_KM }
+  }, [associationCode, distanceFilterByAssociation, distanceFilter])
 
   // Get current max travel time for this association
   const currentMaxTravelTime = useMemo(() => {
-    const timeMap = travelTimeFilter?.maxTravelTimeByAssociation ?? {};
+    const timeMap = travelTimeFilter?.maxTravelTimeByAssociation ?? {}
     if (associationCode && timeMap[associationCode] !== undefined) {
-      return timeMap[associationCode];
+      return timeMap[associationCode]
     }
-    return travelTimeFilter?.maxTravelTimeMinutes ?? DEFAULT_MAX_TRAVEL_TIME_MINUTES;
-  }, [associationCode, travelTimeFilter]);
+    return travelTimeFilter?.maxTravelTimeMinutes ?? DEFAULT_MAX_TRAVEL_TIME_MINUTES
+  }, [associationCode, travelTimeFilter])
 
   // Get current arrival buffer for this association from store
   const storeArrivalBuffer = useMemo(() => {
     if (associationCode && arrivalBufferByAssociation?.[associationCode] !== undefined) {
-      return arrivalBufferByAssociation[associationCode];
+      return arrivalBufferByAssociation[associationCode]
     }
-    return getDefaultArrivalBuffer(associationCode);
-  }, [associationCode, arrivalBufferByAssociation]);
+    return getDefaultArrivalBuffer(associationCode)
+  }, [associationCode, arrivalBufferByAssociation])
 
   // Local state for immediate input feedback
-  const [localArrivalBuffer, setLocalArrivalBuffer] = useState(storeArrivalBuffer);
-  const [localMaxDistance, setLocalMaxDistance] = useState(currentDistanceFilter.maxDistanceKm);
-  const [localMaxTravelTime, setLocalMaxTravelTime] = useState(currentMaxTravelTime);
+  const [localArrivalBuffer, setLocalArrivalBuffer] = useState(storeArrivalBuffer)
+  const [localMaxDistance, setLocalMaxDistance] = useState(currentDistanceFilter.maxDistanceKm)
+  const [localMaxTravelTime, setLocalMaxTravelTime] = useState(currentMaxTravelTime)
 
-  const arrivalDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const distanceDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const travelTimeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const arrivalDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const distanceDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const travelTimeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Sync local state when store value changes externally
   useEffect(() => {
-    setLocalArrivalBuffer((prev) => (prev !== storeArrivalBuffer ? storeArrivalBuffer : prev));
-  }, [storeArrivalBuffer]);
+    setLocalArrivalBuffer((prev) => (prev !== storeArrivalBuffer ? storeArrivalBuffer : prev))
+  }, [storeArrivalBuffer])
 
   useEffect(() => {
     setLocalMaxDistance((prev) =>
-      prev !== currentDistanceFilter.maxDistanceKm ? currentDistanceFilter.maxDistanceKm : prev,
-    );
-  }, [currentDistanceFilter.maxDistanceKm]);
+      prev !== currentDistanceFilter.maxDistanceKm ? currentDistanceFilter.maxDistanceKm : prev
+    )
+  }, [currentDistanceFilter.maxDistanceKm])
 
   useEffect(() => {
-    setLocalMaxTravelTime((prev) =>
-      prev !== currentMaxTravelTime ? currentMaxTravelTime : prev,
-    );
-  }, [currentMaxTravelTime]);
+    setLocalMaxTravelTime((prev) => (prev !== currentMaxTravelTime ? currentMaxTravelTime : prev))
+  }, [currentMaxTravelTime])
 
   // Cleanup debounce timeouts on unmount
   useEffect(() => {
     return () => {
-      if (arrivalDebounceRef.current) clearTimeout(arrivalDebounceRef.current);
-      if (distanceDebounceRef.current) clearTimeout(distanceDebounceRef.current);
-      if (travelTimeDebounceRef.current) clearTimeout(travelTimeDebounceRef.current);
-    };
-  }, []);
+      if (arrivalDebounceRef.current) clearTimeout(arrivalDebounceRef.current)
+      if (distanceDebounceRef.current) clearTimeout(distanceDebounceRef.current)
+      if (travelTimeDebounceRef.current) clearTimeout(travelTimeDebounceRef.current)
+    }
+  }, [])
 
   // Calculate cache entry count
   const cacheEntryCount = useMemo(
     () => (isTransportEnabled ? getTravelTimeCacheStats().entryCount : 0),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isTransportEnabled, cacheVersion],
-  );
+    [isTransportEnabled, cacheVersion]
+  )
 
   const handleToggleTransport = useCallback(() => {
-    if (!associationCode) return;
-    setTransportEnabledForAssociation(associationCode, !isTransportEnabled);
-  }, [associationCode, isTransportEnabled, setTransportEnabledForAssociation]);
+    if (!associationCode) return
+    setTransportEnabledForAssociation(associationCode, !isTransportEnabled)
+  }, [associationCode, isTransportEnabled, setTransportEnabledForAssociation])
 
   const handleClearCache = useCallback(() => {
-    clearTravelTimeCache();
-    queryClient.invalidateQueries({ queryKey: queryKeys.travelTime.all });
-    setCacheVersion((v) => v + 1);
-    setShowClearConfirm(false);
-  }, [queryClient]);
+    clearTravelTimeCache()
+    queryClient.invalidateQueries({ queryKey: queryKeys.travelTime.all })
+    setCacheVersion((v) => v + 1)
+    setShowClearConfirm(false)
+  }, [queryClient])
 
   const handleArrivalBufferChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (!associationCode) return;
-      const value = parseInt(e.target.value, 10);
+      if (!associationCode) return
+      const value = parseInt(e.target.value, 10)
       if (!isNaN(value) && value >= MIN_ARRIVAL_BUFFER_MINUTES) {
-        setLocalArrivalBuffer(value);
+        setLocalArrivalBuffer(value)
         if (arrivalDebounceRef.current) {
-          clearTimeout(arrivalDebounceRef.current);
+          clearTimeout(arrivalDebounceRef.current)
         }
         arrivalDebounceRef.current = setTimeout(() => {
-          setArrivalBufferForAssociation(associationCode, value);
-        }, DEBOUNCE_MS);
+          setArrivalBufferForAssociation(associationCode, value)
+        }, DEBOUNCE_MS)
       }
     },
-    [associationCode, setArrivalBufferForAssociation],
-  );
+    [associationCode, setArrivalBufferForAssociation]
+  )
 
   const handleMaxDistanceChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (!associationCode) return;
-      const value = parseInt(e.target.value, 10);
+      if (!associationCode) return
+      const value = parseInt(e.target.value, 10)
       if (!isNaN(value) && value >= MIN_MAX_DISTANCE_KM) {
-        setLocalMaxDistance(value);
+        setLocalMaxDistance(value)
         if (distanceDebounceRef.current) {
-          clearTimeout(distanceDebounceRef.current);
+          clearTimeout(distanceDebounceRef.current)
         }
         distanceDebounceRef.current = setTimeout(() => {
-          setDistanceFilterForAssociation(associationCode, { maxDistanceKm: value });
-        }, DEBOUNCE_MS);
+          setDistanceFilterForAssociation(associationCode, { maxDistanceKm: value })
+        }, DEBOUNCE_MS)
       }
     },
-    [associationCode, setDistanceFilterForAssociation],
-  );
+    [associationCode, setDistanceFilterForAssociation]
+  )
 
   const handleMaxTravelTimeChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (!associationCode) return;
-      const value = parseInt(e.target.value, 10);
+      if (!associationCode) return
+      const value = parseInt(e.target.value, 10)
       if (!isNaN(value) && value >= MIN_MAX_TRAVEL_TIME_MINUTES) {
-        setLocalMaxTravelTime(value);
+        setLocalMaxTravelTime(value)
         if (travelTimeDebounceRef.current) {
-          clearTimeout(travelTimeDebounceRef.current);
+          clearTimeout(travelTimeDebounceRef.current)
         }
         travelTimeDebounceRef.current = setTimeout(() => {
-          setMaxTravelTimeForAssociation(associationCode, value);
-        }, DEBOUNCE_MS);
+          setMaxTravelTimeForAssociation(associationCode, value)
+        }, DEBOUNCE_MS)
       }
     },
-    [associationCode, setMaxTravelTimeForAssociation],
-  );
+    [associationCode, setMaxTravelTimeForAssociation]
+  )
 
   const handleSbbDestinationTypeChange = useCallback(
     (type: SbbDestinationType) => {
-      setSbbDestinationType(type);
+      setSbbDestinationType(type)
     },
-    [setSbbDestinationType],
-  );
+    [setSbbDestinationType]
+  )
 
-  const hasHomeLocation = Boolean(homeLocation);
-  const hasAssociation = Boolean(associationCode);
-  const canEnableTransport = hasHomeLocation && isTransportAvailable && hasAssociation;
+  const hasHomeLocation = Boolean(homeLocation)
+  const hasAssociation = Boolean(associationCode)
+  const canEnableTransport = hasHomeLocation && isTransportAvailable && hasAssociation
 
   return {
     // State
@@ -257,5 +254,5 @@ export function useTransportSettings() {
     handleMaxTravelTimeChange,
     handleSbbDestinationTypeChange,
     setShowClearConfirm,
-  };
+  }
 }

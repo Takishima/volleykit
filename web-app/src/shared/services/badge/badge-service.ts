@@ -13,18 +13,16 @@
  * to update badges from push notification handlers.
  */
 
-import type { BadgeResult, BadgeService, BadgeUpdateOptions } from "./types";
+import type { BadgeResult, BadgeService, BadgeUpdateOptions } from './types'
 
 // Track the last badge value to avoid unnecessary API calls
-let lastBadgeCount: number | null = null;
+let lastBadgeCount: number | null = null
 
 /**
  * Check if the Badging API is available
  */
 function isSupported(): boolean {
-  return (
-    typeof navigator !== "undefined" && "setAppBadge" in navigator
-  );
+  return typeof navigator !== 'undefined' && 'setAppBadge' in navigator
 }
 
 /**
@@ -34,38 +32,35 @@ function isSupported(): boolean {
  * @param options - Optional settings for the update
  * @returns Result indicating success or failure
  */
-async function setBadge(
-  count: number,
-  options: BadgeUpdateOptions = {},
-): Promise<BadgeResult> {
-  const { skipIfUnchanged = false } = options;
+async function setBadge(count: number, options: BadgeUpdateOptions = {}): Promise<BadgeResult> {
+  const { skipIfUnchanged = false } = options
 
   // Skip if unchanged and option is set
   if (skipIfUnchanged && lastBadgeCount === count) {
-    return { success: true };
+    return { success: true }
   }
 
   if (!isSupported()) {
     return {
       success: false,
-      error: "Badging API not supported in this browser",
-    };
+      error: 'Badging API not supported in this browser',
+    }
   }
 
   try {
     if (count === 0) {
-      await navigator.clearAppBadge();
+      await navigator.clearAppBadge()
     } else {
-      await navigator.setAppBadge(count);
+      await navigator.setAppBadge(count)
     }
-    lastBadgeCount = count;
-    return { success: true };
+    lastBadgeCount = count
+    return { success: true }
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
+    const message = error instanceof Error ? error.message : 'Unknown error'
     return {
       success: false,
       error: `Failed to set badge: ${message}`,
-    };
+    }
   }
 }
 
@@ -75,7 +70,7 @@ async function setBadge(
  * @returns Result indicating success or failure
  */
 async function clearBadge(): Promise<BadgeResult> {
-  return setBadge(0);
+  return setBadge(0)
 }
 
 /**
@@ -94,7 +89,7 @@ export const badgeService: BadgeService = {
   isSupported,
   setBadge: (count: number) => setBadge(count),
   clearBadge,
-};
+}
 
 /**
  * Extended badge operations for advanced use cases
@@ -114,6 +109,6 @@ export const badgeOperations = {
    * Reset the cached badge count (useful for testing)
    */
   resetCache: (): void => {
-    lastBadgeCount = null;
+    lastBadgeCount = null
   },
-};
+}

@@ -1,16 +1,17 @@
-import { lazy, Suspense, useContext } from "react";
-import type { ReactNode } from "react";
-import { PWAContext, type PWAContextType } from "./pwa-context-value";
+import { lazy, Suspense, useContext } from 'react'
+import type { ReactNode } from 'react'
 
-export type { PWAContextType } from "./pwa-context-value";
+import { PWAContext, type PWAContextType } from './pwa-context-value'
+
+export type { PWAContextType } from './pwa-context-value'
 
 interface PWAProviderProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 // Passthrough component for when PWA is disabled
 function PWAProviderPassthrough({ children }: PWAProviderProps) {
-  return <>{children}</>;
+  return <>{children}</>
 }
 
 /**
@@ -20,9 +21,9 @@ function PWAProviderPassthrough({ children }: PWAProviderProps) {
  */
 const LazyPWAProvider = lazy(() =>
   __PWA_ENABLED__
-    ? import("./PWAProviderInternal")
-    : Promise.resolve({ default: PWAProviderPassthrough }),
-);
+    ? import('./PWAProviderInternal')
+    : Promise.resolve({ default: PWAProviderPassthrough })
+)
 
 /**
  * PWA Provider wrapper that handles conditional loading.
@@ -33,7 +34,7 @@ export function PWAProvider({ children }: PWAProviderProps) {
     <Suspense fallback={children}>
       <LazyPWAProvider>{children}</LazyPWAProvider>
     </Suspense>
-  );
+  )
 }
 
 /**
@@ -42,7 +43,7 @@ export function PWAProvider({ children }: PWAProviderProps) {
  */
 // eslint-disable-next-line react-refresh/only-export-components
 export function usePWA(): PWAContextType {
-  const context = useContext(PWAContext);
+  const context = useContext(PWAContext)
 
   // Return safe defaults if context is not available (PWA disabled)
   if (!context) {
@@ -56,8 +57,8 @@ export function usePWA(): PWAContextType {
       checkForUpdate: async () => {},
       updateApp: async () => {},
       dismissPrompt: () => {},
-    };
+    }
   }
 
-  return context;
+  return context
 }

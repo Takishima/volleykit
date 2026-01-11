@@ -2,32 +2,32 @@
  * Position keys used in the volleymanager API for referee assignments.
  */
 export type PositionKey =
-  | "head-one"
-  | "head-two"
-  | "linesman-one"
-  | "linesman-two"
-  | "linesman-three"
-  | "linesman-four"
-  | "standby-head"
-  | "standby-linesman";
+  | 'head-one'
+  | 'head-two'
+  | 'linesman-one'
+  | 'linesman-two'
+  | 'linesman-three'
+  | 'linesman-four'
+  | 'standby-head'
+  | 'standby-linesman'
 
 /** Translation keys for positions */
-type PositionTranslationKey = `positions.${PositionKey}`;
+type PositionTranslationKey = `positions.${PositionKey}`
 
 /** Map from position key to its translation key */
 const POSITION_TRANSLATION_KEYS: Record<PositionKey, PositionTranslationKey> = {
-  "head-one": "positions.head-one",
-  "head-two": "positions.head-two",
-  "linesman-one": "positions.linesman-one",
-  "linesman-two": "positions.linesman-two",
-  "linesman-three": "positions.linesman-three",
-  "linesman-four": "positions.linesman-four",
-  "standby-head": "positions.standby-head",
-  "standby-linesman": "positions.standby-linesman",
-};
+  'head-one': 'positions.head-one',
+  'head-two': 'positions.head-two',
+  'linesman-one': 'positions.linesman-one',
+  'linesman-two': 'positions.linesman-two',
+  'linesman-three': 'positions.linesman-three',
+  'linesman-four': 'positions.linesman-four',
+  'standby-head': 'positions.standby-head',
+  'standby-linesman': 'positions.standby-linesman',
+}
 
 function isPositionKey(key: string): key is PositionKey {
-  return key in POSITION_TRANSLATION_KEYS;
+  return key in POSITION_TRANSLATION_KEYS
 }
 
 /**
@@ -41,15 +41,15 @@ function isPositionKey(key: string): key is PositionKey {
 export function getPositionLabel(
   positionKey: string | undefined,
   t: (key: PositionTranslationKey) => string,
-  fallback?: string,
+  fallback?: string
 ): string {
   if (!positionKey) {
-    return fallback ?? "";
+    return fallback ?? ''
   }
 
   if (isPositionKey(positionKey)) {
-    return t(POSITION_TRANSLATION_KEYS[positionKey]);
+    return t(POSITION_TRANSLATION_KEYS[positionKey])
   }
 
-  return positionKey;
+  return positionKey
 }
