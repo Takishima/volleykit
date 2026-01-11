@@ -70,6 +70,12 @@ function mockSettingsStore(overrides = {}) {
   const state = {
     isSafeModeEnabled: true,
     setSafeMode: mockSetSafeMode,
+    notificationSettings: {
+      enabled: false,
+      reminderTimes: ['1h'] as const,
+    },
+    setNotificationsEnabled: vi.fn(),
+    setNotificationReminderTimes: vi.fn(),
     ...overrides,
   }
   vi.mocked(settingsStore.useSettingsStore).mockReturnValue(

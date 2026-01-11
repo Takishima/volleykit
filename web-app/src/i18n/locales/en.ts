@@ -369,6 +369,10 @@ const en: Translations = {
     exchange: 'Exchange',
     settings: 'Settings',
   },
+  notifications: {
+    gameReminder: 'Game Reminder',
+    gameReminderBody: 'Your game {game} starts {time} at {gameTime}',
+  },
   settings: {
     title: 'Settings',
     profile: 'Profile',
@@ -376,6 +380,26 @@ const en: Translations = {
     language: 'Language',
     preferences: {
       title: 'Preferences',
+    },
+    notifications: {
+      title: 'Notifications',
+      description: 'Get reminders before your games start.',
+      notSupported: 'Notifications are not supported in this browser.',
+      permissionDenied:
+        'Notification permission was denied. Please enable notifications in your browser settings.',
+      enableNotifications: 'Enable Notifications',
+      requesting: 'Requesting...',
+      gameReminders: 'Game Reminders',
+      gameRemindersDescription: 'Receive notifications before your scheduled games.',
+      reminderTimes: 'Remind me',
+      reminderTimesHint: 'Select when you want to be reminded before each game.',
+      foregroundNote:
+        'Note: Notifications are only sent while the app is open. For offline reminders, add games to your calendar.',
+      reminderTime: {
+        '1h': '1 hour before',
+        '2h': '2 hours before',
+        '1d': '1 day before',
+      },
     },
     locationTravel: {
       title: 'Location & Travel',

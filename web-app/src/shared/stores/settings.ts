@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { persist, subscribeWithSelector } from 'zustand/middleware'
 
+import type { ReminderTime } from '@/shared/services/notifications'
+
 import type { DataSource } from './auth'
 
 /**
@@ -92,6 +94,22 @@ export const DEFAULT_MAX_TRAVEL_TIME_MINUTES = 120
 const DEFAULT_ARRIVAL_BUFFER_MINUTES = 30
 
 /**
+ * Notification settings for game reminders.
+ */
+export interface NotificationSettings {
+  /** Whether notifications are enabled */
+  enabled: boolean
+  /** Selected reminder times before games */
+  reminderTimes: ReminderTime[]
+}
+
+/** Default notification settings */
+export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
+  enabled: false,
+  reminderTimes: ['1h'],
+}
+
+/**
  * Mode-specific settings that are stored separately for each data source.
  * This prevents demo mode settings from affecting real API mode and vice versa.
  */
@@ -104,6 +122,8 @@ export interface ModeSettings {
   transportEnabledByAssociation: Record<string, boolean>
   travelTimeFilter: TravelTimeFilter
   levelFilterEnabled: boolean
+  /** Notification settings for game reminders */
+  notificationSettings: NotificationSettings
 }
 
 /** Default mode-specific settings */
@@ -126,6 +146,7 @@ const DEFAULT_MODE_SETTINGS: ModeSettings = {
     sbbDestinationType: 'address',
   },
   levelFilterEnabled: false,
+  notificationSettings: { ...DEFAULT_NOTIFICATION_SETTINGS },
 }
 
 interface SettingsState {
@@ -165,6 +186,7 @@ interface SettingsState {
   transportEnabledByAssociation: Record<string, boolean>
   travelTimeFilter: TravelTimeFilter
   levelFilterEnabled: boolean
+  notificationSettings: NotificationSettings
 
   // Setters that update current mode's settings
   setHomeLocation: (location: UserLocation | null) => void
@@ -190,6 +212,9 @@ interface SettingsState {
   invalidateTravelTimeCache: () => void
   setSbbDestinationType: (type: SbbDestinationType) => void
   setLevelFilterEnabled: (enabled: boolean) => void
+  // Notification settings
+  setNotificationsEnabled: (enabled: boolean) => void
+  setNotificationReminderTimes: (times: ReminderTime[]) => void
 
   // Reset current mode's settings to defaults (keeps safe mode and other modes)
   resetLocationSettings: () => void
@@ -245,6 +270,98 @@ function syncFromMode(
     transportEnabledByAssociation: modeSettings.transportEnabledByAssociation,
     travelTimeFilter: modeSettings.travelTimeFilter,
     levelFilterEnabled: modeSettings.levelFilterEnabled,
+    notificationSettings: modeSettings.notificationSettings,
+  }
+}
+
+// ============================================================================
+// Migration Helpers
+// ============================================================================
+
+/** List of all data source modes for migrations */
+const ALL_MODES: DataSource[] = ['api', 'demo', 'calendar']
+
+/** Version that introduced notification settings */
+const NOTIFICATION_SETTINGS_VERSION = 5
+
+/** V1 state shape (flat settings) */
+interface V1State {
+  isSafeModeEnabled?: boolean
+  preventZoom?: boolean
+  homeLocation?: UserLocation | null
+  distanceFilter?: DistanceFilter
+  transportEnabled?: boolean
+  transportEnabledByAssociation?: Record<string, boolean>
+  travelTimeFilter?: TravelTimeFilter
+  levelFilterEnabled?: boolean
+}
+
+/** State shape with settingsByMode (v2+) */
+interface StateWithModes {
+  settingsByMode?: Record<DataSource, Partial<ModeSettings>>
+}
+
+/**
+ * Migrate from v1 (flat settings) to v2 (settings by mode).
+ */
+function migrateV1ToV2(v1State: V1State): Record<string, unknown> {
+  const migratedApiSettings: ModeSettings = {
+    homeLocation: v1State.homeLocation ?? null,
+    distanceFilter: v1State.distanceFilter ?? DEFAULT_MODE_SETTINGS.distanceFilter,
+    distanceFilterByAssociation: {},
+    transportEnabled: v1State.transportEnabled ?? false,
+    transportEnabledByAssociation: v1State.transportEnabledByAssociation ?? {},
+    travelTimeFilter: {
+      ...DEFAULT_MODE_SETTINGS.travelTimeFilter,
+      ...(v1State.travelTimeFilter ?? {}),
+      maxTravelTimeByAssociation: {},
+    },
+    levelFilterEnabled: v1State.levelFilterEnabled ?? false,
+    notificationSettings: { ...DEFAULT_NOTIFICATION_SETTINGS },
+  }
+
+  return {
+    isSafeModeEnabled: v1State.isSafeModeEnabled ?? true,
+    preventZoom: v1State.preventZoom ?? false,
+    settingsByMode: {
+      api: migratedApiSettings,
+      demo: { ...DEFAULT_MODE_SETTINGS },
+      calendar: { ...DEFAULT_MODE_SETTINGS },
+    },
+  }
+}
+
+/**
+ * Add per-association fields for v2→v3 migration.
+ */
+function addPerAssociationFields(state: StateWithModes): void {
+  if (!state.settingsByMode) return
+
+  for (const mode of ALL_MODES) {
+    const settings = state.settingsByMode[mode]
+    if (!settings) continue
+
+    settings.distanceFilterByAssociation ??= {}
+
+    if (!settings.travelTimeFilter) {
+      settings.travelTimeFilter = { ...DEFAULT_MODE_SETTINGS.travelTimeFilter }
+    } else {
+      settings.travelTimeFilter.maxTravelTimeByAssociation ??= {}
+    }
+  }
+}
+
+/**
+ * Add notification settings for v4→v5 migration.
+ */
+function addNotificationSettings(state: StateWithModes): void {
+  if (!state.settingsByMode) return
+
+  for (const mode of ALL_MODES) {
+    const settings = state.settingsByMode[mode]
+    if (settings && !settings.notificationSettings) {
+      settings.notificationSettings = { ...DEFAULT_NOTIFICATION_SETTINGS }
+    }
   }
 }
 
@@ -274,6 +391,7 @@ export const useSettingsStore = create<SettingsState>()(
         transportEnabledByAssociation: DEFAULT_MODE_SETTINGS.transportEnabledByAssociation,
         travelTimeFilter: DEFAULT_MODE_SETTINGS.travelTimeFilter,
         levelFilterEnabled: DEFAULT_MODE_SETTINGS.levelFilterEnabled,
+        notificationSettings: DEFAULT_MODE_SETTINGS.notificationSettings,
 
         _setCurrentMode: (mode: DataSource) => {
           const state = get()
@@ -480,6 +598,22 @@ export const useSettingsStore = create<SettingsState>()(
           set((state) => updateModeAndTopLevel(state, () => ({ levelFilterEnabled: enabled })))
         },
 
+        setNotificationsEnabled: (enabled: boolean) => {
+          set((state) =>
+            updateModeAndTopLevel(state, (current) => ({
+              notificationSettings: { ...current.notificationSettings, enabled },
+            }))
+          )
+        },
+
+        setNotificationReminderTimes: (times: ReminderTime[]) => {
+          set((state) =>
+            updateModeAndTopLevel(state, (current) => ({
+              notificationSettings: { ...current.notificationSettings, reminderTimes: times },
+            }))
+          )
+        },
+
         resetLocationSettings: () => {
           // Reset current mode's location-related settings to defaults
           // Keeps safe mode and other modes' settings unchanged
@@ -488,7 +622,7 @@ export const useSettingsStore = create<SettingsState>()(
       }),
       {
         name: 'volleykit-settings',
-        version: 4,
+        version: 5,
         partialize: (state) => ({
           // Global settings
           isSafeModeEnabled: state.isSafeModeEnabled,
@@ -503,69 +637,19 @@ export const useSettingsStore = create<SettingsState>()(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           let state = persisted as any
 
-          // Migration from version 1 (flat settings) to version 2 (settings by mode)
+          // v1 → v2: Migrate flat settings to per-mode settings
           if (version === 1) {
-            const v1State = state as {
-              isSafeModeEnabled?: boolean
-              preventZoom?: boolean
-              homeLocation?: UserLocation | null
-              distanceFilter?: DistanceFilter
-              transportEnabled?: boolean
-              transportEnabledByAssociation?: Record<string, boolean>
-              travelTimeFilter?: TravelTimeFilter
-              levelFilterEnabled?: boolean
-            }
-
-            // Migrate old flat settings to the API mode (most common real usage)
-            // Demo mode gets fresh defaults since demo data is regenerated anyway
-            const migratedApiSettings: ModeSettings = {
-              homeLocation: v1State.homeLocation ?? null,
-              distanceFilter: v1State.distanceFilter ?? DEFAULT_MODE_SETTINGS.distanceFilter,
-              distanceFilterByAssociation: {},
-              transportEnabled: v1State.transportEnabled ?? false,
-              transportEnabledByAssociation: v1State.transportEnabledByAssociation ?? {},
-              travelTimeFilter: {
-                ...DEFAULT_MODE_SETTINGS.travelTimeFilter,
-                ...(v1State.travelTimeFilter ?? {}),
-                maxTravelTimeByAssociation: {},
-              },
-              levelFilterEnabled: v1State.levelFilterEnabled ?? false,
-            }
-
-            state = {
-              isSafeModeEnabled: v1State.isSafeModeEnabled ?? true,
-              preventZoom: v1State.preventZoom ?? false,
-              settingsByMode: {
-                api: migratedApiSettings,
-                demo: { ...DEFAULT_MODE_SETTINGS },
-                calendar: { ...DEFAULT_MODE_SETTINGS },
-              },
-            }
+            state = migrateV1ToV2(state as V1State)
           }
 
-          // Migration from version 2 to version 3 (add per-association distance and travel time)
-          if (version === 2 || version === 1) {
-            const v2State = state as {
-              settingsByMode?: Record<DataSource, Partial<ModeSettings>>
-            }
+          // v2 → v3: Add per-association distance and travel time fields
+          if (version <= 2) {
+            addPerAssociationFields(state as StateWithModes)
+          }
 
-            if (v2State.settingsByMode) {
-              for (const mode of ['api', 'demo', 'calendar'] as DataSource[]) {
-                const modeSettings = v2State.settingsByMode[mode]
-                if (modeSettings) {
-                  // Add new per-association fields if missing
-                  if (!modeSettings.distanceFilterByAssociation) {
-                    modeSettings.distanceFilterByAssociation = {}
-                  }
-                  // Ensure travelTimeFilter exists before adding new fields
-                  if (!modeSettings.travelTimeFilter) {
-                    modeSettings.travelTimeFilter = { ...DEFAULT_MODE_SETTINGS.travelTimeFilter }
-                  } else if (!modeSettings.travelTimeFilter.maxTravelTimeByAssociation) {
-                    modeSettings.travelTimeFilter.maxTravelTimeByAssociation = {}
-                  }
-                }
-              }
-            }
+          // v4 → v5: Add notification settings
+          if (version < NOTIFICATION_SETTINGS_VERSION) {
+            addNotificationSettings(state as StateWithModes)
           }
 
           return state
@@ -624,6 +708,10 @@ export const useSettingsStore = create<SettingsState>()(
                   levelFilterEnabled:
                     persistedModeSettings.levelFilterEnabled ??
                     DEFAULT_MODE_SETTINGS.levelFilterEnabled,
+                  notificationSettings: {
+                    ...DEFAULT_NOTIFICATION_SETTINGS,
+                    ...(persistedModeSettings.notificationSettings ?? {}),
+                  },
                 }
               }
             }
