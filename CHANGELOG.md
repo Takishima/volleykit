@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - iOS Safari PWA update detection - app now checks for updates when reopened after being suspended, ensuring users see the update prompt after quitting and reopening the PWA
 - iOS Safari PWA session persistence - session token now encrypted with Web Crypto API (AES-GCM) before storage in localStorage; encryption key stored as non-extractable CryptoKey in IndexedDB
 - iOS Safari PWA first login failure - login now proactively establishes a session before fetching the login page form, ensuring the form's CSRF token matches the session state when credentials are submitted (#703)
+- iOS Safari PWA login with installed app - session token capture now works via new `X-Capture-Session-Token` header that converts redirect responses to JSON, fixing opaque redirect issue where session tokens were inaccessible (#706)
 - iOS Safari PWA login now works reliably with multiple worker-side fixes (#687, #690):
   - Session cookies relayed via `X-Session-Token` header to bypass ITP third-party cookie blocking
   - Query parameters stripped from Referer header to prevent upstream server rejections

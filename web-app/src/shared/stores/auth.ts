@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware'
 import {
   apiClient,
   captureSessionToken,
+  CAPTURE_SESSION_TOKEN_HEADER,
   clearSession,
   getSessionHeaders,
   getSessionToken,
@@ -277,6 +278,11 @@ async function handleSuccessfulLoginResult(
  *
  * This function proactively establishes a session by fetching an authenticated
  * endpoint (which triggers session creation even for unauthenticated users).
+ *
+ * iOS Safari PWA fix: Uses X-Capture-Session-Token header to request the proxy
+ * to convert redirect responses to JSON. This is necessary because fetch with
+ * `redirect: 'manual'` returns an opaque redirect for cross-origin requests,
+ * hiding all response headers including the session token.
  */
 async function ensureSessionEstablished(): Promise<void> {
   if (getSessionToken()) {
@@ -285,19 +291,48 @@ async function ensureSessionEstablished(): Promise<void> {
 
   // Fetch the dashboard endpoint to trigger session creation.
   // The Neos Flow framework creates a session when handling authenticated routes,
-  // even if the user is redirected to login. We use redirect: "manual" to avoid
-  // following the redirect but still capture the session token from the response.
+  // even if the user is redirected to login.
+  //
+  // We send X-Capture-Session-Token: true to request the proxy to convert
+  // redirect responses to JSON, which allows us to capture the session token
+  // from the headers (redirect responses with redirect: 'manual' would otherwise
+  // be opaque with inaccessible headers in iOS Safari PWA).
   const response = await fetch(
     `${API_BASE}/sportmanager.volleyball/main/dashboard`,
     {
       credentials: 'include',
       cache: 'no-store',
       redirect: 'manual',
-      headers: getSessionHeaders(),
+      headers: {
+        ...getSessionHeaders(),
+        [CAPTURE_SESSION_TOKEN_HEADER]: 'true',
+      },
     }
   )
 
+  // Capture session token from response headers.
+  // The proxy converts redirects with session tokens to JSON when we send
+  // X-Capture-Session-Token: true, so the headers are accessible.
   captureSessionToken(response)
+
+  // If the response is JSON (proxy converted a redirect), parse it.
+  // The session token is also in the X-Session-Token header, but we capture
+  // it above. The JSON response is mainly informational.
+  const contentType = response.headers.get('Content-Type')
+  if (contentType?.includes('application/json')) {
+    try {
+      const data = (await response.json()) as {
+        sessionCaptured?: boolean
+        redirectUrl?: string
+      }
+      logger.info('Session establishment response:', {
+        sessionCaptured: data.sessionCaptured,
+        hasToken: !!getSessionToken(),
+      })
+    } catch {
+      // JSON parsing failed, continue with fallback
+    }
+  }
 
   // If we still don't have a token, try fetching the login page itself.
   // Some server configurations may set the session cookie on the login page.

@@ -15,6 +15,7 @@
 import type { HeadersWithCookies } from "./types";
 import {
   AUTH_ENDPOINT,
+  CAPTURE_SESSION_TOKEN_HEADER,
   KILL_SWITCH_RETRY_AFTER_SECONDS,
   VOLLEYKIT_USER_AGENT,
   detectSessionIssue,
@@ -101,8 +102,9 @@ function corsHeaders(origin: string): HeadersInit {
     "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     // X-Session-Token is used for iOS Safari PWA cookie relay - see SESSION_TOKEN_HEADER
-    // This header bypasses iOS Safari's ITP which blocks third-party cookies in PWA mode
-    "Access-Control-Allow-Headers": "Content-Type, Accept, X-Session-Token",
+    // X-Capture-Session-Token is used to request session token capture from redirect responses
+    // These headers bypass iOS Safari's ITP which blocks third-party cookies in PWA mode
+    "Access-Control-Allow-Headers": `Content-Type, Accept, X-Session-Token, ${CAPTURE_SESSION_TOKEN_HEADER}`,
     // Expose X-Session-Token so JavaScript can read the session cookie relay
     "Access-Control-Expose-Headers": "X-Session-Token",
     "Access-Control-Allow-Credentials": "true",
@@ -1000,26 +1002,41 @@ export default {
             proxyRedirect.pathname = redirectUrl.pathname;
             proxyRedirect.search = redirectUrl.search;
 
-            // iOS Safari PWA fix: Convert POST auth redirects to 200 + JSON response
+            // iOS Safari PWA fix: Convert redirects to 200 + JSON response in two cases:
+            //
+            // 1. POST auth requests - Always convert because iOS Safari PWA doesn't
+            //    properly store cookies from redirect responses
+            //
+            // 2. Session capture requests - When client sends X-Capture-Session-Token header
+            //    AND there's a session token to relay. We require both conditions because:
+            //    - wantsSessionCapture alone would unnecessarily convert redirects that have
+            //      no session token (e.g., if upstream didn't set a cookie)
+            //    - hasSessionToken alone would convert all redirects with tokens, even when
+            //      the client doesn't need special handling
+            //    This allows capturing session tokens from redirect responses (which would
+            //    otherwise be opaqueredirect with hidden headers when using redirect: 'manual')
+            //
             // When using redirect: "manual", browsers return "opaqueredirect" which hides
-            // all headers including Set-Cookie from JavaScript. iOS Safari PWA doesn't
-            // properly store cookies from redirect responses. By returning 200 with JSON,
-            // the browser processes Set-Cookie normally and the client handles navigation.
-            //
-            // We convert ALL auth POST redirects (not just successful ones) because:
-            // 1. opaqueredirect hides all response details, making debugging impossible
-            // 2. The client can determine success/failure by fetching the redirect URL
-            // 3. This is more robust than trying to detect success server-side
-            //
-            // NOTE: Only convert POST requests - GET to /login should return the HTML
-            // login page, even when the server redirects (e.g., user already logged in).
-            if (isAuthReq && request.method === "POST") {
-              const isSuccess = isSuccessfulLoginResponse(response);
-              console.log("[iOS PWA Auth] Converting redirect to JSON:", {
+            // all headers including Set-Cookie from JavaScript. By returning 200 with JSON,
+            // the browser processes Set-Cookie normally and the client can read the session.
+            const wantsSessionCapture =
+              request.headers.get(CAPTURE_SESSION_TOKEN_HEADER) === "true";
+            const hasSessionToken = responseHeaders.has(SESSION_TOKEN_HEADER);
+            const shouldConvertToJson =
+              (isAuthReq && request.method === "POST") ||
+              (wantsSessionCapture && hasSessionToken);
+
+            if (shouldConvertToJson) {
+              const isSuccess =
+                isAuthReq && request.method === "POST"
+                  ? isSuccessfulLoginResponse(response)
+                  : true; // Session capture requests are informational
+              console.log("[iOS PWA] Converting redirect to JSON:", {
                 originalStatus: response.status,
                 location: location,
                 redirectUrl: proxyRedirect.toString(),
                 isSuccess,
+                reason: wantsSessionCapture ? "session-capture" : "auth-post",
               });
               responseHeaders.set("Content-Type", "application/json");
               responseHeaders.delete("Location"); // Remove redirect header
@@ -1027,6 +1044,9 @@ export default {
                 JSON.stringify({
                   success: isSuccess,
                   redirectUrl: proxyRedirect.toString(),
+                  // Include session token in body for redundancy
+                  // (also available in X-Session-Token header)
+                  sessionCaptured: hasSessionToken,
                 }),
                 {
                   status: 200,
