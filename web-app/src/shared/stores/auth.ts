@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { setCsrfToken, clearSession } from "@/api/client";
+import { setCsrfToken, clearSession, captureSessionToken, getSessionHeaders } from "@/api/client";
 import {
   filterRefereeOccupations,
   parseOccupationsFromActiveParty,
@@ -258,11 +258,15 @@ export const useAuthStore = create<AuthState>()(
           const loginPageResponse = await fetch(LOGIN_PAGE_URL, {
             credentials: "include",
             cache: "no-store",
+            headers: getSessionHeaders(),
           });
 
           if (!loginPageResponse.ok) {
             throw new Error("Failed to load login page");
           }
+
+          // Capture session token from response headers (iOS Safari PWA)
+          captureSessionToken(loginPageResponse);
 
           const html = await loginPageResponse.text();
           const existingCsrfToken = extractCsrfTokenFromPage(html);
@@ -272,8 +276,11 @@ export const useAuthStore = create<AuthState>()(
             // We need to fetch the dashboard explicitly to get the user's associations
             const dashboardResponse = await fetch(
               `${API_BASE}/sportmanager.volleyball/main/dashboard`,
-              { credentials: "include", cache: "no-store" },
+              { credentials: "include", cache: "no-store", headers: getSessionHeaders() },
             );
+
+            // Capture session token from response headers (iOS Safari PWA)
+            captureSessionToken(dashboardResponse);
 
             let activeParty = null;
             if (dashboardResponse.ok) {
@@ -462,10 +469,13 @@ export const useAuthStore = create<AuthState>()(
             try {
               const response = await fetch(
                 `${API_BASE}/sportmanager.volleyball/main/dashboard`,
-                { credentials: "include", redirect: "follow", signal: fetchSignal, cache: "no-store" },
+                { credentials: "include", redirect: "follow", signal: fetchSignal, cache: "no-store", headers: getSessionHeaders() },
               );
 
               clearTimeout(timeoutId);
+
+              // Capture session token from response headers (iOS Safari PWA)
+              captureSessionToken(response);
 
               // Detect stale session: if the server redirected us to the login page,
               // the session is invalid. This commonly happens when session cookies

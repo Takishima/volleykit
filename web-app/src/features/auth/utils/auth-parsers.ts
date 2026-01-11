@@ -4,6 +4,7 @@
  */
 
 import { authLogger as logger } from "@/shared/utils/auth-log-buffer";
+import { captureSessionToken, getSessionHeaders } from "@/api/client";
 
 /**
  * URL path pattern that indicates successful login redirect to dashboard.
@@ -183,7 +184,11 @@ async function fetchDashboardAfterLogin(dashboardUrl: string): Promise<LoginResu
     credentials: "include",
     redirect: "follow",
     cache: "no-store",
+    headers: getSessionHeaders(),
   });
+
+  // Capture session token from response headers (iOS Safari PWA)
+  captureSessionToken(dashboardResponse);
 
   if (!dashboardResponse.ok) {
     logger.warn("iOS PWA: Dashboard fetch failed after successful login redirect", {
@@ -343,9 +348,13 @@ export async function submitLoginCredentials(
     cache: "no-store",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
+      ...getSessionHeaders(),
     },
     body: formData,
   });
+
+  // Capture session token from response headers (iOS Safari PWA)
+  captureSessionToken(response);
 
   // Handle lockout response from proxy (auth brute-force protection)
   if (response.status === HTTP_STATUS_LOCKED) {

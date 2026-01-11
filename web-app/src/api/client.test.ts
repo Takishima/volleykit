@@ -103,11 +103,9 @@ describe("API Client", () => {
     it("clears session and throws on 401 response", async () => {
       setCsrfToken("some-token");
 
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-        statusText: "Unauthorized",
-      });
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({}, { ok: false, status: 401, statusText: "Unauthorized" }),
+      );
 
       await expect(api.searchAssignments({})).rejects.toThrow(
         "Session expired. Please log in again.",
@@ -117,11 +115,9 @@ describe("API Client", () => {
     it("clears session and throws on 403 response", async () => {
       setCsrfToken("some-token");
 
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 403,
-        statusText: "Forbidden",
-      });
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({}, { ok: false, status: 403, statusText: "Forbidden" }),
+      );
 
       await expect(api.searchAssignments({})).rejects.toThrow(
         "Session expired. Please log in again.",
@@ -131,11 +127,9 @@ describe("API Client", () => {
     it("clears session and throws on 406 response", async () => {
       setCsrfToken("some-token");
 
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 406,
-        statusText: "Not Acceptable",
-      });
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({}, { ok: false, status: 406, statusText: "Not Acceptable" }),
+      );
 
       await expect(api.searchAssignments({})).rejects.toThrow(
         "Session expired. Please log in again.",

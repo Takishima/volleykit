@@ -13,6 +13,9 @@ import {
   setCsrfToken as setToken,
   clearCsrfToken,
   getCsrfToken,
+  setSessionToken,
+  getSessionToken,
+  clearSessionToken,
 } from "./form-serialization";
 import { parseErrorResponse } from "./error-handling";
 import {
@@ -94,8 +97,36 @@ export function setCsrfToken(token: string | null) {
   setToken(token);
 }
 
+/**
+ * Session token header name used by the Cloudflare Worker for iOS Safari PWA.
+ * The worker sends session cookies via this header to bypass ITP cookie blocking.
+ */
+const SESSION_TOKEN_HEADER = "X-Session-Token";
+
+/**
+ * Capture session token from response headers.
+ * The Cloudflare Worker sends session cookies as X-Session-Token header
+ * to bypass iOS Safari ITP blocking third-party cookies in PWA mode.
+ */
+export function captureSessionToken(response: Response): void {
+  const token = response.headers.get(SESSION_TOKEN_HEADER);
+  if (token) {
+    setSessionToken(token);
+  }
+}
+
+/**
+ * Get headers for sending session token with requests.
+ * Returns the X-Session-Token header if a token is stored.
+ */
+export function getSessionHeaders(): Record<string, string> {
+  const token = getSessionToken();
+  return token ? { [SESSION_TOKEN_HEADER]: token } : {};
+}
+
 export function clearSession() {
   clearCsrfToken();
+  clearSessionToken();
 }
 
 // Generic fetch wrapper
@@ -106,8 +137,9 @@ async function apiRequest<T>(
 ): Promise<T> {
   let url = `${API_BASE}${endpoint}`;
 
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     Accept: "application/json",
+    ...getSessionHeaders(),
   };
 
   if (method === "GET" && body) {
@@ -125,6 +157,9 @@ async function apiRequest<T>(
     credentials: "include",
     body: method !== "GET" && body ? buildFormData(body) : undefined,
   });
+
+  // Capture session token from response headers (iOS Safari PWA)
+  captureSessionToken(response);
 
   if (!response.ok) {
     if (
@@ -630,8 +665,12 @@ export const api = {
     const response = await fetch(url, {
       method: "POST",
       credentials: "include",
+      headers: getSessionHeaders(),
       body: formData,
     });
+
+    // Capture session token from response headers (iOS Safari PWA)
+    captureSessionToken(response);
 
     if (!response.ok) {
       if (response.status === HttpStatus.UNAUTHORIZED || response.status === HttpStatus.FORBIDDEN) {
@@ -671,11 +710,15 @@ export const api = {
           Accept: "application/json",
           // The real site uses text/plain, not application/x-www-form-urlencoded
           "Content-Type": "text/plain;charset=UTF-8",
+          ...getSessionHeaders(),
         },
         credentials: "include",
         body: body.toString(),
       },
     );
+
+    // Capture session token from response headers (iOS Safari PWA)
+    captureSessionToken(response);
 
     if (!response.ok) {
       // 406 indicates session expiry in TYPO3 Neos/Flow (same as apiRequest)
