@@ -195,11 +195,12 @@ function findCompensationInCache(
  * Fetches compensations from the API and finds one matching the game number.
  */
 async function fetchCompensationByGameNumber(
-  gameNumber: number
+  gameNumber: number,
+  apiClient: typeof api
 ): Promise<CompensationRecord | null> {
   log.debug('Fetching compensations from API:', { gameNumber })
 
-  const compensations = await api.searchCompensations({
+  const compensations = await apiClient.searchCompensations({
     limit: COMPENSATION_LOOKUP_LIMIT,
   })
 
@@ -213,12 +214,14 @@ async function fetchCompensationByGameNumber(
  *
  * @param assignmentId - The assignment's __identity (convocation ID)
  * @param queryClient - TanStack Query client for cache access
+ * @param apiClient - The API client to use for fetching compensations
  * @returns The matching CompensationRecord
  * @throws Error if assignment or compensation cannot be found
  */
 async function findCompensationForAssignment(
   assignmentId: string,
-  queryClient: ReturnType<typeof useQueryClient>
+  queryClient: ReturnType<typeof useQueryClient>,
+  apiClient: typeof api
 ): Promise<CompensationRecord> {
   // Find the assignment in cache to get its game number
   const assignment = findAssignmentInCache(assignmentId, queryClient)
@@ -240,7 +243,7 @@ async function findCompensationForAssignment(
   }
 
   // Fetch from API if not in cache
-  const fetchedComp = await fetchCompensationByGameNumber(gameNumber)
+  const fetchedComp = await fetchCompensationByGameNumber(gameNumber, apiClient)
   if (fetchedComp) {
     log.debug('Found compensation via API:', {
       gameNumber,
@@ -266,6 +269,7 @@ export function useUpdateAssignmentCompensation(): UseMutationResult<
   const dataSource = useAuthStore((state) => state.dataSource)
   const isDemoMode = dataSource === 'demo'
   const updateAssignmentCompensation = useDemoStore((state) => state.updateAssignmentCompensation)
+  const apiClient = getApiClient(dataSource)
 
   return useMutation({
     mutationFn: async ({
@@ -288,7 +292,7 @@ export function useUpdateAssignmentCompensation(): UseMutationResult<
       })
 
       // findCompensationForAssignment throws if assignment or compensation not found
-      const compensation = await findCompensationForAssignment(assignmentId, queryClient)
+      const compensation = await findCompensationForAssignment(assignmentId, queryClient, apiClient)
       const compensationId = compensation.convocationCompensation?.__identity
 
       if (!compensationId) {
@@ -299,9 +303,10 @@ export function useUpdateAssignmentCompensation(): UseMutationResult<
         assignmentId,
         compensationId,
         data,
+        dataSource,
       })
 
-      await api.updateCompensation(compensationId, data)
+      await apiClient.updateCompensation(compensationId, data)
     },
     onSuccess: (_data, variables) => {
       // Invalidate targeted queries to refetch fresh data while avoiding unnecessary refetches

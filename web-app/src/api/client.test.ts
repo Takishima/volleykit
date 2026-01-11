@@ -380,14 +380,15 @@ describe('API Client', () => {
       )
     })
 
-    it('includes compensation ID in request body', async () => {
+    it('includes compensation ID nested in convocationCompensation', async () => {
       mockFetch.mockResolvedValueOnce(createMockResponse({}))
 
       await api.updateCompensation('comp-456', { distanceInMetres: 60000 })
 
       const [, options] = mockFetch.mock.calls[0]!
       const body = options.body as URLSearchParams
-      expect(body.get('__identity')).toBe('comp-456')
+      // __identity must be nested inside convocationCompensation per API requirements
+      expect(body.get('convocationCompensation[__identity]')).toBe('comp-456')
     })
 
     it('includes distanceInMetres in nested convocationCompensation object', async () => {

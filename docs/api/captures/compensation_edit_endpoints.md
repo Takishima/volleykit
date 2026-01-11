@@ -134,16 +134,20 @@ PUT /api/indoorvolleyball.refadmin/api\convocationcompensation
 
 **Request Format:**
 
-```
-Content-Type: application/x-www-form-urlencoded
+IMPORTANT: The `__identity` must be nested inside `convocationCompensation`, not at root level!
 
-__identity=<compensation-uuid>
+```
+Content-Type: text/plain;charset=UTF-8
+
+convocationCompensation[__identity]=<compensation-uuid>
+&convocationCompensation[distanceInMetres]=56000
+&convocationCompensation[correctionReason]=<reason-text>
 &convocationCompensation[payTravelExpenses]=1
 &convocationCompensation[travelExpensesPercentageWeighting]=1
 &__csrfToken=<token>
 ```
 
-**Response:** 200 OK on success
+**Response:** 200 OK on success with updated compensation record as JSON
 
 After saving, the assignments list is automatically refreshed via `searchMyRefereeConvocations`.
 

@@ -36,19 +36,22 @@ Likely uses the same 3 endpoints as match details:
 
 Opens compensation editing form.
 
-**Endpoint (hypothesized):**
+**Endpoint (confirmed):**
 
 ```
-PUT /api/indoorvolleyball.refadmin/api\refereeconvocationcompensation
+PUT /api/indoorvolleyball.refadmin/api\convocationcompensation
 ```
 
 **Request format:**
 
+IMPORTANT: The `__identity` must be nested inside `convocationCompensation`, not at root level!
+
 ```
-__identity=<compensation-uuid>
-&convocationCompensation[transportationMode]=car
-&convocationCompensation[distanceInMetres]=96317
-&convocationCompensation[travelExpenses]=20
+convocationCompensation[__identity]=<compensation-uuid>
+&convocationCompensation[distanceInMetres]=56000
+&convocationCompensation[correctionReason]=<reason-text>
+&convocationCompensation[payTravelExpenses]=1
+&convocationCompensation[travelExpensesPercentageWeighting]=1
 &__csrfToken=<token>
 ```
 
