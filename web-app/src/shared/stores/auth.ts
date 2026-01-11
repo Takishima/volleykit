@@ -33,6 +33,23 @@ import { useDemoStore } from './demo'
 import { useSettingsStore, DEMO_HOME_LOCATION } from './settings'
 
 /**
+ * Callback function to clear the React Query cache.
+ * Registered by App.tsx to ensure cache is cleared synchronously during logout.
+ */
+let cacheCleanupCallback: (() => void) | null = null
+
+/**
+ * Register a callback to clear the React Query cache.
+ * Called by App.tsx with queryClient.resetQueries.
+ */
+export function registerCacheCleanup(callback: () => void): () => void {
+  cacheCleanupCallback = callback
+  return () => {
+    cacheCleanupCallback = null
+  }
+}
+
+/**
  * Storage version for the auth store.
  * Increment this to invalidate all cached auth state and force re-login.
  *
@@ -538,6 +555,19 @@ export const useAuthStore = create<AuthState>()(
         }
 
         clearSession()
+
+        // Clear React Query cache synchronously to prevent stale data.
+        // This is called BEFORE updating state to ensure cache is cleared
+        // before any React re-renders can trigger new queries.
+        if (cacheCleanupCallback) {
+          cacheCleanupCallback()
+          logger.info('Query cache cleared during logout')
+        }
+
+        // Preserve activeOccupationId across logout/login so users return to their
+        // last-used association. The deriveUserWithOccupations function validates
+        // that the preserved ID exists in the new user's occupations, falling back
+        // to the first occupation if the ID is invalid (e.g., different user logs in).
         set({
           status: 'idle',
           user: null,
@@ -549,7 +579,7 @@ export const useAuthStore = create<AuthState>()(
           groupedEligibleAttributeValues: null,
           eligibleRoles: null,
           _lastAuthTimestamp: null,
-          activeOccupationId: null,
+          // Note: activeOccupationId intentionally NOT cleared - see comment above
         })
       },
 

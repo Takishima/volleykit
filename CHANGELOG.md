@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Compensation update API now sends `__identity` nested inside `convocationCompensation` object, matching the format expected by the VolleyManager API - this fixes 500 errors when saving compensation edits
 - Compensation API calls now work correctly when editing from the Assignments tab - the hook was incorrectly using the global `api` object instead of the data-source-aware `getApiClient()`, which could cause issues in calendar mode
 - Compensation edits now show error toast when save fails - previously, failed API calls were silently swallowed and the modal closed without feedback (#714)
+- Association selection now persists across logout/login - previously, switching associations (e.g., from SVRZ to SV), logging out, and logging back in would show stale data from the previous association while the dropdown displayed the default
 
 ## [1.1.1] - 2026-01-11
 
