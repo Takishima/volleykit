@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-01-11
+
 ### Added
 
 - Unified notification system with automatic fallback - notifications use browser notifications when available and automatically fall back to in-app notifications when browser permissions are denied or unavailable
@@ -129,7 +131,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Session-based authentication with CSRF protection
 - Content Security Policy headers
 
-[Unreleased]: https://github.com/Takishima/volleykit/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/Takishima/volleykit/compare/v1.2.0...HEAD
+
+[1.2.0]: https://github.com/Takishima/volleykit/compare/v1.1.1...v1.2.0
 
 [1.1.1]: https://github.com/Takishima/volleykit/compare/v1.1.0...v1.1.1
 
