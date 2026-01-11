@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `/pr-review` command for Claude Code - creates PR and automatically addresses Claude Code Review comments after 2-minute wait
 - Automated release workflow with semantic version auto-detection from changelog
 - PWA standalone mode detection - Settings now displays "PWA" instead of "Web" when running as installed app (#687)
 
@@ -29,6 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Broadened successful login detection to match any dashboard redirect path
 - OCR camera capture now auto-crops images to match the guide overlay, improving OCR accuracy by focusing on the scoresheet area
 - User now sees correct assignments after logging into a different association (#697)
+
+### Removed
+
+- Automatic PR review hooks (`address-pr-reviews.sh`, `address-pr-reviews-on-create.sh`) - replaced by manual `/pr-review` command
 
 ## [1.0.2] - 2026-01-10
 

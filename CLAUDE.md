@@ -68,31 +68,19 @@ npm run build         # Production build (includes tsc)
 
 ### Claude Code Post-Push Hooks (Claude Code Web Only)
 
-After a successful `git push`, these hooks run automatically in Claude Code web sessions. **IMPORTANT**: When these hooks return a `"decision": "block"` response, Claude MUST follow the instructions in the `reason` field immediately and autonomously.
+After a successful `git push`, hooks run automatically in Claude Code web sessions. When hooks return a `"decision": "block"` response, Claude MUST follow the instructions in the `reason` field immediately.
 
 1. **post-git-push.sh** - Generates PR links or updates existing PRs
    - If no PR exists: Outputs a clickable link to create one
    - If PR exists: Updates title/body via GitHub API (when `GITHUB_TOKEN` available)
 
-2. **address-pr-reviews.sh** - Automatically addresses PR review comments
-   - **Claude MUST**: Wait 2 minutes (`sleep 120`), then fetch and address review comments
-   - Fetches Claude Code Review comments from `claude[bot]`
-   - Parses "Issues Found" section and addresses each issue
-   - Creates a single `fix(review):` commit with all fixes
-   - **Anti-infinite-loop safeguards**:
-     - Skips if last commit has `fix(review):` prefix (won't re-trigger)
-     - Max 3 review cycles per session per PR
-     - 5-minute cooldown between checks
-     - Only processes unresolved issues from the latest review
+### PR Review Command
 
-3. **address-pr-reviews-on-create.sh** - Addresses reviews when PR is created
-   - Triggers when a new PR is created via GitHub API (curl POST to /pulls)
-   - **Claude MUST**: Wait 2 minutes, then fetch and address review comments (same as above)
-   - Shares state file with push hook to prevent duplicate processing
-
-The hooks are configured in `.claude/settings.json` and state is tracked in `.claude/.state/` (gitignored).
-
-**Hook Response Format**: Hooks return JSON with `decision` and `reason` fields. When `decision` is `"block"`, Claude must parse the `reason` field and execute the instructions contained within it.
+To create a PR and address Claude Code Review comments, use the `/pr-review` command. This is useful on mobile/iPhone where typing is limited. The command:
+- Creates or updates a PR for the current branch
+- Waits 2 minutes for Claude Code Review workflow
+- Fetches and addresses any issues found
+- Commits fixes with `fix(review):` prefix to prevent loops
 
 ## Tech Stack
 
