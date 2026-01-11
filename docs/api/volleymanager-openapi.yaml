@@ -633,7 +633,7 @@ paths:
           application/x-www-form-urlencoded:
             schema:
               type: object
-              required: [convocationCompensation[__identity], __csrfToken]
+              required: ["convocationCompensation[__identity]", __csrfToken]
               properties:
                 convocationCompensation[__identity]:
                   type: string
