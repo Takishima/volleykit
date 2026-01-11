@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Compensation API calls now work correctly when editing from the Assignments tab - the hook was incorrectly using the global `api` object instead of the data-source-aware `getApiClient()`, which could cause issues in calendar mode
+
 ## [1.1.1] - 2026-01-11
 
 ### Fixed
