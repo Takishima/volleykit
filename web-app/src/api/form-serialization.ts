@@ -24,19 +24,140 @@ export function clearCsrfToken() {
  * Session token for iOS Safari PWA mode.
  * The Cloudflare Worker extracts session cookies from Set-Cookie headers
  * and sends them as X-Session-Token header to bypass iOS Safari ITP.
+ *
+ * Security: Token is encrypted using Web Crypto API before storage.
+ * - Encryption key is stored in IndexedDB as a non-extractable CryptoKey
+ * - Encrypted token is stored in localStorage
+ * - Falls back to plaintext if Web Crypto is unavailable
  */
-let sessionToken: string | null = null;
+import {
+  encryptToken,
+  decryptToken,
+  isSecureStorageAvailable,
+  clearEncryptionKey,
+} from "./session-crypto";
 
-export function setSessionToken(token: string | null) {
-  sessionToken = token;
+const SESSION_TOKEN_STORAGE_KEY = "volleykit-session-token";
+
+/**
+ * In-memory cache for the session token (for performance).
+ * Initialized lazily from localStorage on first access.
+ */
+let sessionTokenCache: string | null | undefined = undefined;
+
+/**
+ * Set the session token (encrypts and stores asynchronously).
+ * The in-memory cache is updated immediately for sync access.
+ */
+export function setSessionToken(token: string | null): void {
+  sessionTokenCache = token;
+
+  if (!token) {
+    // Clear storage synchronously
+    try {
+      localStorage.removeItem(SESSION_TOKEN_STORAGE_KEY);
+    } catch {
+      // localStorage may not be available
+    }
+    return;
+  }
+
+  // Encrypt and store asynchronously
+  if (isSecureStorageAvailable()) {
+    encryptToken(token)
+      .then((encrypted) => {
+        try {
+          localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, encrypted);
+        } catch {
+          // localStorage may not be available
+        }
+      })
+      .catch(() => {
+        // Fallback to plaintext on encryption failure
+        console.warn(
+          "[session-token] Encryption failed, falling back to plaintext storage",
+        );
+        try {
+          localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, token);
+        } catch {
+          // localStorage may not be available
+        }
+      });
+  } else {
+    // Fallback to plaintext storage
+    console.warn(
+      "[session-token] Web Crypto not available, using plaintext storage",
+    );
+    try {
+      localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, token);
+    } catch {
+      // localStorage may not be available
+    }
+  }
 }
 
+/**
+ * Get the session token synchronously from cache.
+ * Call initSessionToken() at app startup to load from encrypted storage.
+ */
 export function getSessionToken(): string | null {
-  return sessionToken;
+  return sessionTokenCache ?? null;
 }
 
-export function clearSessionToken() {
-  sessionToken = null;
+/**
+ * Initialize session token from encrypted storage.
+ * Should be called at app startup before any API requests.
+ */
+export async function initSessionToken(): Promise<void> {
+  if (sessionTokenCache !== undefined) {
+    return; // Already initialized
+  }
+
+  try {
+    const stored = localStorage.getItem(SESSION_TOKEN_STORAGE_KEY);
+    if (!stored) {
+      sessionTokenCache = null;
+      return;
+    }
+
+    if (isSecureStorageAvailable()) {
+      // Try to decrypt
+      const decrypted = await decryptToken(stored);
+      if (decrypted !== null) {
+        sessionTokenCache = decrypted;
+      } else {
+        // Decryption failed - token may be plaintext (migration) or corrupted
+        // Try using as-is if it looks like a valid token (base64)
+        if (/^[A-Za-z0-9+/=]+$/.test(stored)) {
+          sessionTokenCache = stored;
+        } else {
+          sessionTokenCache = null;
+          localStorage.removeItem(SESSION_TOKEN_STORAGE_KEY);
+        }
+      }
+    } else {
+      // No crypto available, use plaintext
+      sessionTokenCache = stored;
+    }
+  } catch {
+    sessionTokenCache = null;
+  }
+}
+
+/**
+ * Clear the session token and encryption key.
+ */
+export function clearSessionToken(): void {
+  sessionTokenCache = null;
+  try {
+    localStorage.removeItem(SESSION_TOKEN_STORAGE_KEY);
+  } catch {
+    // localStorage may not be available
+  }
+  // Clear encryption key asynchronously (don't wait)
+  clearEncryptionKey().catch(() => {
+    // Ignore errors during cleanup
+  });
 }
 
 export interface BuildFormDataOptions {

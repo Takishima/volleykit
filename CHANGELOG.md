@@ -23,11 +23,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - iOS Safari PWA update detection - app now checks for updates when reopened after being suspended, ensuring users see the update prompt after quitting and reopening the PWA
+- iOS Safari PWA session persistence - session token now encrypted with Web Crypto API (AES-GCM) before storage in localStorage; encryption key stored as non-extractable CryptoKey in IndexedDB
 - iOS Safari PWA login now works reliably with multiple worker-side fixes (#687, #690):
   - Session cookies relayed via `X-Session-Token` header to bypass ITP third-party cookie blocking
   - Query parameters stripped from Referer header to prevent upstream server rejections
   - POST auth redirects converted to JSON responses, fixing `opaqueredirect` issue
   - Broadened successful login detection to match any dashboard redirect path
+  - Login success detection now checks for session cookie in redirect responses (fixes root path redirect)
 - OCR camera capture now auto-crops images to match the guide overlay, improving OCR accuracy by focusing on the scoresheet area
 - User now sees correct assignments after logging into a different association (#697)
 
