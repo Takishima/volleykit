@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Notification settings section in Settings page - users can now enable/disable browser notifications and configure reminder time preferences
+- Unified notification system with automatic fallback - notifications use browser notifications when available and automatically fall back to in-app notifications when browser permissions are denied or unavailable
+- Notification settings section in Settings page with single toggle for enabling game reminders and reminder time selection
 
 ### Fixed
 

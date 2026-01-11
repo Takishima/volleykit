@@ -31,6 +31,7 @@ const DEFAULT_MODE_SETTINGS: ModeSettings = {
   notificationSettings: {
     enabled: false,
     reminderTimes: ['1h'],
+    deliveryPreference: 'native',
   },
 }
 

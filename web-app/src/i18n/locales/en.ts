@@ -391,6 +391,10 @@ const en: Translations = {
       requesting: 'Requesting...',
       gameReminders: 'Game Reminders',
       gameRemindersDescription: 'Receive notifications before your scheduled games.',
+      usingBrowser: 'Using browser notifications',
+      usingInApp: 'Using in-app notifications',
+      browserDeniedUsingInApp:
+        'Browser notification permission was denied. Using in-app notifications instead.',
       reminderTimes: 'Remind me',
       reminderTimesHint: 'Select when you want to be reminded before each game.',
       foregroundNote:

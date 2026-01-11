@@ -399,6 +399,10 @@ const de: Translations = {
       requesting: 'Anfrage läuft...',
       gameReminders: 'Spielerinnerungen',
       gameRemindersDescription: 'Erhalte Benachrichtigungen vor deinen geplanten Spielen.',
+      usingBrowser: 'Browser-Benachrichtigungen werden verwendet',
+      usingInApp: 'In-App-Benachrichtigungen werden verwendet',
+      browserDeniedUsingInApp:
+        'Browser-Benachrichtigungserlaubnis wurde verweigert. Stattdessen werden In-App-Benachrichtigungen verwendet.',
       reminderTimes: 'Erinnere mich',
       reminderTimesHint: 'Wähle, wann du vor jedem Spiel erinnert werden möchtest.',
       foregroundNote:
