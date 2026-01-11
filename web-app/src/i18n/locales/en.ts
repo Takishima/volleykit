@@ -185,6 +185,11 @@ const en: Translations = {
     accountLocked: 'Account temporarily locked',
     lockoutRemainingTime: 'Try again in',
     lockoutSeconds: 'seconds',
+    updateRequired: 'App Update Required',
+    updateRequiredDescription:
+      'A new version is available. Please update before logging in to avoid errors.',
+    updateNow: 'Update Now',
+    updating: 'Updating...',
   },
   calendarError: {
     title: 'Calendar Error',

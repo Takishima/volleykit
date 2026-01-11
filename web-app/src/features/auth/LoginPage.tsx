@@ -3,10 +3,12 @@ import { useState, useRef, useEffect, useCallback, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useShallow } from 'zustand/react/shallow'
 
+import { usePWA } from '@/contexts/PWAContext'
 import {
   extractCalendarCode,
   validateCalendarCode,
 } from '@/features/assignments/utils/calendar-helpers'
+import { LoginUpdateBanner } from '@/features/auth/components/LoginUpdateBanner'
 import { Button } from '@/shared/components/Button'
 import { Volleyball } from '@/shared/components/icons'
 import { LanguageSwitcher } from '@/shared/components/LanguageSwitcher'
@@ -38,6 +40,7 @@ export function LoginPage() {
     )
   const initializeDemoData = useDemoStore((state) => state.initializeDemoData)
   const { t } = useTranslation()
+  const { needRefresh, updateApp } = usePWA()
 
   const [loginMode, setLoginMode] = useState<LoginMode>('calendar')
   const [username, setUsername] = useState('')
@@ -266,6 +269,9 @@ export function LoginPage() {
           </h1>
           <p className="mt-2 text-text-muted dark:text-text-muted-dark">{t('auth.subtitle')}</p>
         </div>
+
+        {/* Update banner - shown when PWA needs update to prevent login errors */}
+        {needRefresh && <LoginUpdateBanner onUpdate={updateApp} />}
 
         {/* Login form */}
         <div className="card p-6">

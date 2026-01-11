@@ -187,6 +187,11 @@ const de: Translations = {
     accountLocked: 'Konto vorübergehend gesperrt',
     lockoutRemainingTime: 'Versuchen Sie es in',
     lockoutSeconds: 'Sekunden erneut',
+    updateRequired: 'App-Update erforderlich',
+    updateRequiredDescription:
+      'Eine neue Version ist verfügbar. Bitte aktualisieren Sie vor der Anmeldung, um Fehler zu vermeiden.',
+    updateNow: 'Jetzt aktualisieren',
+    updating: 'Aktualisierung...',
   },
   calendarError: {
     title: 'Kalenderfehler',

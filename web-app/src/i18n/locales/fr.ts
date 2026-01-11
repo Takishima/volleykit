@@ -188,6 +188,11 @@ const fr: Translations = {
     accountLocked: 'Compte temporairement verrouillé',
     lockoutRemainingTime: 'Réessayez dans',
     lockoutSeconds: 'secondes',
+    updateRequired: 'Mise à jour requise',
+    updateRequiredDescription:
+      'Une nouvelle version est disponible. Veuillez mettre à jour avant de vous connecter pour éviter les erreurs.',
+    updateNow: 'Mettre à jour',
+    updating: 'Mise à jour...',
   },
   calendarError: {
     title: 'Erreur de calendrier',

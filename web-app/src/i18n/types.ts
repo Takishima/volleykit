@@ -84,6 +84,10 @@ export interface Translations {
     accountLocked: string
     lockoutRemainingTime: string
     lockoutSeconds: string
+    updateRequired: string
+    updateRequiredDescription: string
+    updateNow: string
+    updating: string
   }
   calendarError: {
     title: string
