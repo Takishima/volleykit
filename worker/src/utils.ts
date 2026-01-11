@@ -14,6 +14,8 @@ export const ALLOWED_EXACT_PATHS = ["/", "/login", "/logout"];
 export const ALLOWED_PREFIX_PATHS_NO_API = [
   "/sportmanager.security/",
   "/sportmanager.volleyball/",
+  // Static resources (profile pictures, uploaded files) served by Neos Flow
+  "/_Resources/",
 ];
 
 /** Prefix match paths that ARE prefixed with /api/ (API endpoints) */

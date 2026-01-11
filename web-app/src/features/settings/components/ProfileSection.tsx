@@ -79,7 +79,19 @@ function ProfileSectionComponent({ user }: ProfileSectionProps) {
           const data: PersonProfileResponse = await response.json()
           const person = data.person
           if (person?.profilePicture?.publicResourceUri) {
-            setProfilePictureUrl(person.profilePicture.publicResourceUri)
+            // Rewrite the full volleymanager URL to go through our proxy.
+            // This is necessary for PWA mode where cross-origin images from
+            // volleymanager.volleyball.ch are blocked by iOS Safari's ITP.
+            const fullUrl = person.profilePicture.publicResourceUri
+            try {
+              const url = new URL(fullUrl)
+              // Extract just the path (e.g., /_Resources/Persistent/<hash>/image.jpg)
+              // and prepend our API proxy base URL
+              setProfilePictureUrl(`${API_BASE}${url.pathname}`)
+            } catch {
+              // If URL parsing fails, use the original URL
+              setProfilePictureUrl(fullUrl)
+            }
           }
           // Check for svNumber first, fall back to associationId (same value, different property names)
           const svNum = person?.svNumber ?? person?.associationId

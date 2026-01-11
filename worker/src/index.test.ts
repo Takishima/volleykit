@@ -204,6 +204,15 @@ describe("Path Filtering", () => {
         isAllowedPath("/sportmanager.notificationcenter/api/notifications"),
       ).toBe(true);
     });
+
+    it("allows static resource paths (profile pictures, uploads)", () => {
+      expect(
+        isAllowedPath("/_Resources/Persistent/abc123/profile.jpg"),
+      ).toBe(true);
+      expect(
+        isAllowedPath("/_Resources/Static/Packages/some-asset.png"),
+      ).toBe(true);
+    });
   });
 
   describe("requiresApiPrefix", () => {
@@ -275,6 +284,12 @@ describe("Path Filtering", () => {
           "/indoorvolleyball.refadmin/refereestatementofexpenses/downloadrefereestatementofexpenses?refereeConvocation=abc-123",
         ),
       ).toBe(false);
+    });
+
+    it("returns false for static resource paths", () => {
+      expect(requiresApiPrefix("/_Resources/Persistent/abc123/image.jpg")).toBe(
+        false,
+      );
     });
   });
 });
