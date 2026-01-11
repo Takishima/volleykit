@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { setCsrfToken, clearSession, captureSessionToken, getSessionHeaders, apiClient } from "@/api/client";
+import { setCsrfToken, clearSession, captureSessionToken, getSessionHeaders, getSessionToken, apiClient } from "@/api/client";
 import {
   filterRefereeOccupations,
   parseOccupationsFromActiveParty,
@@ -261,9 +261,12 @@ export const useAuthStore = create<AuthState>()(
         set({ status: "loading", error: null, lockedUntil: null });
 
         try {
+          // Check if we already have a session token before fetching
+          const hadTokenBeforeRequest = !!getSessionToken();
+
           // cache: "no-store" is critical for iOS Safari PWA - prevents using stale cached cookies
           // See: https://developer.apple.com/forums/thread/89050
-          const loginPageResponse = await fetch(LOGIN_PAGE_URL, {
+          let loginPageResponse = await fetch(LOGIN_PAGE_URL, {
             credentials: "include",
             cache: "no-store",
             headers: getSessionHeaders(),
@@ -275,6 +278,26 @@ export const useAuthStore = create<AuthState>()(
 
           // Capture session token from response headers (iOS Safari PWA)
           captureSessionToken(loginPageResponse);
+
+          // iOS Safari PWA fix: If we didn't have a session token before this request
+          // but now we do, re-fetch the login page to ensure the form's __trustedProperties
+          // is generated for the established session. Without this, the first login after
+          // logout/fresh install fails because the session isn't fully recognized.
+          const capturedToken = getSessionToken();
+          if (!hadTokenBeforeRequest && capturedToken) {
+            // We just captured a new token - re-fetch to establish session
+            loginPageResponse = await fetch(LOGIN_PAGE_URL, {
+              credentials: "include",
+              cache: "no-store",
+              headers: getSessionHeaders(),
+            });
+
+            if (!loginPageResponse.ok) {
+              throw new Error("Failed to load login page");
+            }
+
+            captureSessionToken(loginPageResponse);
+          }
 
           const html = await loginPageResponse.text();
           const existingCsrfToken = extractCsrfTokenFromPage(html);

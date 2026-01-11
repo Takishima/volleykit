@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Favicon now matches PWA icon for consistent branding across browser tabs and installed app
 - iOS Safari PWA update detection - app now checks for updates when reopened after being suspended, ensuring users see the update prompt after quitting and reopening the PWA
 - iOS Safari PWA session persistence - session token now encrypted with Web Crypto API (AES-GCM) before storage in localStorage; encryption key stored as non-extractable CryptoKey in IndexedDB
+- iOS Safari PWA login after logout - first login attempt no longer fails; login flow now re-fetches the login page with the captured session token to ensure form fields are generated for an established session (#701)
 - iOS Safari PWA login now works reliably with multiple worker-side fixes (#687, #690):
   - Session cookies relayed via `X-Session-Token` header to bypass ITP third-party cookie blocking
   - Query parameters stripped from Referer header to prevent upstream server rejections

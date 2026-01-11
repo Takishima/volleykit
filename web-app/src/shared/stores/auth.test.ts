@@ -13,6 +13,7 @@ vi.mock("@/api/client", () => ({
   clearSession: vi.fn(),
   captureSessionToken: vi.fn(),
   getSessionHeaders: vi.fn(() => ({})),
+  getSessionToken: vi.fn(() => null),
   apiClient: {
     switchRoleAndAttribute: mockSwitchRoleAndAttribute,
   },

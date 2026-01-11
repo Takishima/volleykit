@@ -124,6 +124,9 @@ export function getSessionHeaders(): Record<string, string> {
   return token ? { [SESSION_TOKEN_HEADER]: token } : {};
 }
 
+// Re-export getSessionToken for use in login flow
+export { getSessionToken };
+
 export function clearSession() {
   clearCsrfToken();
   clearSessionToken();
