@@ -119,7 +119,7 @@ export function captureSessionToken(response: Response): void {
  * Get headers for sending session token with requests.
  * Returns the X-Session-Token header if a token is stored.
  */
-export function getSessionHeaders(): HeadersInit {
+export function getSessionHeaders(): Record<string, string> {
   const token = getSessionToken();
   return token ? { [SESSION_TOKEN_HEADER]: token } : {};
 }
@@ -137,8 +137,9 @@ async function apiRequest<T>(
 ): Promise<T> {
   let url = `${API_BASE}${endpoint}`;
 
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     Accept: "application/json",
+    ...getSessionHeaders(),
   };
 
   if (method === "GET" && body) {
@@ -156,6 +157,9 @@ async function apiRequest<T>(
     credentials: "include",
     body: method !== "GET" && body ? buildFormData(body) : undefined,
   });
+
+  // Capture session token from response headers (iOS Safari PWA)
+  captureSessionToken(response);
 
   if (!response.ok) {
     if (
@@ -661,8 +665,12 @@ export const api = {
     const response = await fetch(url, {
       method: "POST",
       credentials: "include",
+      headers: getSessionHeaders(),
       body: formData,
     });
+
+    // Capture session token from response headers (iOS Safari PWA)
+    captureSessionToken(response);
 
     if (!response.ok) {
       if (response.status === HttpStatus.UNAUTHORIZED || response.status === HttpStatus.FORBIDDEN) {
@@ -702,11 +710,15 @@ export const api = {
           Accept: "application/json",
           // The real site uses text/plain, not application/x-www-form-urlencoded
           "Content-Type": "text/plain;charset=UTF-8",
+          ...getSessionHeaders(),
         },
         credentials: "include",
         body: body.toString(),
       },
     );
+
+    // Capture session token from response headers (iOS Safari PWA)
+    captureSessionToken(response);
 
     if (!response.ok) {
       // 406 indicates session expiry in TYPO3 Neos/Flow (same as apiRequest)
