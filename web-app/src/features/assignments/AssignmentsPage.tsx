@@ -18,6 +18,7 @@ import {
 } from '@/features/validation/hooks/useConvocations'
 import type { CalendarAssignment } from '@/features/validation/hooks/useConvocations'
 import { LoadingState, ErrorState, EmptyState } from '@/shared/components/LoadingSpinner'
+import { PullToRefresh } from '@/shared/components/PullToRefresh'
 import { SwipeableCard } from '@/shared/components/SwipeableCard'
 import { WeekSeparator } from '@/shared/components/WeekSeparator'
 import { useTour } from '@/shared/hooks/useTour'
@@ -340,21 +341,27 @@ export function AssignmentsPage() {
     ]
   )
 
+  // Handler for pull-to-refresh - wraps refetch in async function
+  const handleRefresh = useCallback(async () => {
+    await refetch()
+  }, [refetch])
+
   return (
-    <div className="space-y-3">
-      {/* Tabs - WAI-ARIA tab pattern */}
-      <div
-        role="tablist"
-        aria-label={t('assignments.title')}
-        className="flex gap-2 border-b border-border-default dark:border-border-default-dark"
-      >
-        <button
-          role="tab"
-          aria-selected={activeTab === 'upcoming'}
-          aria-controls="tabpanel-upcoming"
-          id="tab-upcoming"
-          onClick={() => setActiveTab('upcoming')}
-          className={`
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div className="space-y-3">
+        {/* Tabs - WAI-ARIA tab pattern */}
+        <div
+          role="tablist"
+          aria-label={t('assignments.title')}
+          className="flex gap-2 border-b border-border-default dark:border-border-default-dark"
+        >
+          <button
+            role="tab"
+            aria-selected={activeTab === 'upcoming'}
+            aria-controls="tabpanel-upcoming"
+            id="tab-upcoming"
+            onClick={() => setActiveTab('upcoming')}
+            className={`
             px-4 py-2 text-sm font-medium border-b-2 transition-colors
             ${
               activeTab === 'upcoming'
@@ -362,26 +369,26 @@ export function AssignmentsPage() {
                 : 'border-transparent text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark'
             }
           `}
-        >
-          {t('assignments.upcoming')}
-          {(() => {
-            const regularCount = (isCalendarMode ? calendarUpcoming : upcomingData)?.length ?? 0
-            const onCallCount = isCalendarMode ? 0 : onCallAssignments.length
-            const totalCount = regularCount + onCallCount
-            return totalCount > 0 ? (
-              <span className="ml-2 px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200 text-xs">
-                {totalCount}
-              </span>
-            ) : null
-          })()}
-        </button>
-        <button
-          role="tab"
-          aria-selected={activeTab === 'validationClosed'}
-          aria-controls="tabpanel-validationClosed"
-          id="tab-validationClosed"
-          onClick={() => setActiveTab('validationClosed')}
-          className={`
+          >
+            {t('assignments.upcoming')}
+            {(() => {
+              const regularCount = (isCalendarMode ? calendarUpcoming : upcomingData)?.length ?? 0
+              const onCallCount = isCalendarMode ? 0 : onCallAssignments.length
+              const totalCount = regularCount + onCallCount
+              return totalCount > 0 ? (
+                <span className="ml-2 px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200 text-xs">
+                  {totalCount}
+                </span>
+              ) : null
+            })()}
+          </button>
+          <button
+            role="tab"
+            aria-selected={activeTab === 'validationClosed'}
+            aria-controls="tabpanel-validationClosed"
+            id="tab-validationClosed"
+            onClick={() => setActiveTab('validationClosed')}
+            className={`
             px-4 py-2 text-sm font-medium border-b-2 transition-colors
             ${
               activeTab === 'validationClosed'
@@ -389,85 +396,115 @@ export function AssignmentsPage() {
                 : 'border-transparent text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark'
             }
           `}
+          >
+            {isCalendarMode ? t('assignments.past') : t('assignments.validationClosed')}
+            {((isCalendarMode ? calendarPast : validationClosedData) ?? []).length > 0 && (
+              <span className="ml-2 px-2 py-0.5 rounded-full bg-surface-subtle dark:bg-surface-card-dark text-text-secondary dark:text-text-muted-dark text-xs">
+                {(isCalendarMode ? calendarPast : validationClosedData)?.length}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Content */}
+        <div
+          role="tabpanel"
+          id={activeTab === 'upcoming' ? 'tabpanel-upcoming' : 'tabpanel-validationClosed'}
+          aria-labelledby={activeTab === 'upcoming' ? 'tab-upcoming' : 'tab-validationClosed'}
+          className="space-y-3"
         >
-          {isCalendarMode ? t('assignments.past') : t('assignments.validationClosed')}
-          {((isCalendarMode ? calendarPast : validationClosedData) ?? []).length > 0 && (
-            <span className="ml-2 px-2 py-0.5 rounded-full bg-surface-subtle dark:bg-surface-card-dark text-text-secondary dark:text-text-muted-dark text-xs">
-              {(isCalendarMode ? calendarPast : validationClosedData)?.length}
-            </span>
+          {/* Skip loading state when showing dummy tour data (we already have data to show) */}
+          {isLoading && !showDummyData && <LoadingState message={t('assignments.loading')} />}
+
+          {error && (
+            <ErrorState
+              message={error instanceof Error ? error.message : t('assignments.failedToLoadData')}
+              onRetry={() => refetch()}
+            />
           )}
-        </button>
-      </div>
 
-      {/* Content */}
-      <div
-        role="tabpanel"
-        id={activeTab === 'upcoming' ? 'tabpanel-upcoming' : 'tabpanel-validationClosed'}
-        aria-labelledby={activeTab === 'upcoming' ? 'tab-upcoming' : 'tab-validationClosed'}
-        className="space-y-3"
-      >
-        {/* Skip loading state when showing dummy tour data (we already have data to show) */}
-        {isLoading && !showDummyData && <LoadingState message={t('assignments.loading')} />}
+          {(!isLoading || showDummyData) && !error && groupedData.length === 0 && (
+            <EmptyState
+              icon={activeTab === 'upcoming' ? 'calendar' : 'lock'}
+              {...getEmptyStateContent(
+                isCalendarMode,
+                activeTab,
+                (calendarData?.length ?? 0) > 0,
+                t
+              )}
+            />
+          )}
 
-        {error && (
-          <ErrorState
-            message={error instanceof Error ? error.message : t('assignments.failedToLoadData')}
-            onRetry={() => refetch()}
-          />
-        )}
+          {(!isLoading || showDummyData) && !error && groupedData.length > 0 && (
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {groupedData.map((group, groupIndex) => {
+                // Track global item index for tour data attribute
+                const itemsBeforeThisGroup = groupedData
+                  .slice(0, groupIndex)
+                  .reduce((sum, g) => sum + g.items.length, 0)
 
-        {(!isLoading || showDummyData) && !error && groupedData.length === 0 && (
-          <EmptyState
-            icon={activeTab === 'upcoming' ? 'calendar' : 'lock'}
-            {...getEmptyStateContent(isCalendarMode, activeTab, (calendarData?.length ?? 0) > 0, t)}
-          />
-        )}
-
-        {(!isLoading || showDummyData) && !error && groupedData.length > 0 && (
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {groupedData.map((group, groupIndex) => {
-              // Track global item index for tour data attribute
-              const itemsBeforeThisGroup = groupedData
-                .slice(0, groupIndex)
-                .reduce((sum, g) => sum + g.items.length, 0)
-
-              return (
-                <Fragment key={group.week.key}>
-                  {/* Only show separator if there's more than one week */}
-                  {groupedData.length > 1 && <WeekSeparator week={group.week} />}
-                  {isCalendarMode && !showDummyData
-                    ? // Calendar mode: same card component, limited swipe actions
-                      (group.items as CalendarAssignment[]).map((calendarAssignment, itemIndex) => {
-                        const assignment = mapCalendarAssignmentToAssignment(calendarAssignment)
-                        return (
-                          <SwipeableCard
-                            key={calendarAssignment.gameId}
-                            swipeConfig={getSwipeConfig(assignment)}
-                          >
-                            {({ isDrawerOpen }) => (
-                              <AssignmentCard
-                                assignment={assignment}
-                                disableExpansion={isDrawerOpen}
-                                dataTour={
-                                  itemsBeforeThisGroup + itemIndex === 0
-                                    ? 'assignment-card'
-                                    : undefined
-                                }
-                              />
-                            )}
-                          </SwipeableCard>
-                        )
-                      })
-                    : activeTab === 'upcoming' && !showDummyData
-                      ? // Upcoming tab (API/demo mode): render mixed DisplayItems
-                        (group.items as DisplayItem[]).map((displayItem, itemIndex) => {
-                          if (displayItem.type === 'onCall') {
+                return (
+                  <Fragment key={group.week.key}>
+                    {/* Only show separator if there's more than one week */}
+                    {groupedData.length > 1 && <WeekSeparator week={group.week} />}
+                    {isCalendarMode && !showDummyData
+                      ? // Calendar mode: same card component, limited swipe actions
+                        (group.items as CalendarAssignment[]).map(
+                          (calendarAssignment, itemIndex) => {
+                            const assignment = mapCalendarAssignmentToAssignment(calendarAssignment)
                             return (
-                              <OnCallCard key={displayItem.item.id} assignment={displayItem.item} />
+                              <SwipeableCard
+                                key={calendarAssignment.gameId}
+                                swipeConfig={getSwipeConfig(assignment)}
+                              >
+                                {({ isDrawerOpen }) => (
+                                  <AssignmentCard
+                                    assignment={assignment}
+                                    disableExpansion={isDrawerOpen}
+                                    dataTour={
+                                      itemsBeforeThisGroup + itemIndex === 0
+                                        ? 'assignment-card'
+                                        : undefined
+                                    }
+                                  />
+                                )}
+                              </SwipeableCard>
                             )
                           }
-                          const assignment = displayItem.item
-                          return (
+                        )
+                      : activeTab === 'upcoming' && !showDummyData
+                        ? // Upcoming tab (API/demo mode): render mixed DisplayItems
+                          (group.items as DisplayItem[]).map((displayItem, itemIndex) => {
+                            if (displayItem.type === 'onCall') {
+                              return (
+                                <OnCallCard
+                                  key={displayItem.item.id}
+                                  assignment={displayItem.item}
+                                />
+                              )
+                            }
+                            const assignment = displayItem.item
+                            return (
+                              <SwipeableCard
+                                key={assignment.__identity}
+                                swipeConfig={getSwipeConfig(assignment)}
+                              >
+                                {({ isDrawerOpen }) => (
+                                  <AssignmentCard
+                                    assignment={assignment}
+                                    disableExpansion={isDrawerOpen}
+                                    dataTour={
+                                      itemsBeforeThisGroup + itemIndex === 0
+                                        ? 'assignment-card'
+                                        : undefined
+                                    }
+                                  />
+                                )}
+                              </SwipeableCard>
+                            )
+                          })
+                        : // Validation closed tab or tour dummy: render regular assignments
+                          (group.items as Assignment[]).map((assignment, itemIndex) => (
                             <SwipeableCard
                               key={assignment.__identity}
                               swipeConfig={getSwipeConfig(assignment)}
@@ -484,67 +521,48 @@ export function AssignmentsPage() {
                                 />
                               )}
                             </SwipeableCard>
-                          )
-                        })
-                      : // Validation closed tab or tour dummy: render regular assignments
-                        (group.items as Assignment[]).map((assignment, itemIndex) => (
-                          <SwipeableCard
-                            key={assignment.__identity}
-                            swipeConfig={getSwipeConfig(assignment)}
-                          >
-                            {({ isDrawerOpen }) => (
-                              <AssignmentCard
-                                assignment={assignment}
-                                disableExpansion={isDrawerOpen}
-                                dataTour={
-                                  itemsBeforeThisGroup + itemIndex === 0
-                                    ? 'assignment-card'
-                                    : undefined
-                                }
-                              />
-                            )}
-                          </SwipeableCard>
-                        ))}
-                </Fragment>
-              )
-            })}
-          </div>
+                          ))}
+                  </Fragment>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Modals */}
+        {editCompensationModal.assignment && (
+          <Suspense fallback={null}>
+            <EditCompensationModal
+              assignment={editCompensationModal.assignment}
+              isOpen={editCompensationModal.isOpen}
+              onClose={editCompensationModal.close}
+            />
+          </Suspense>
+        )}
+
+        {validateGameModal.assignment && (
+          <Suspense fallback={null}>
+            <ValidateGameModal
+              key={validateGameModal.assignment.__identity}
+              assignment={validateGameModal.assignment}
+              isOpen={validateGameModal.isOpen}
+              onClose={validateGameModal.close}
+            />
+          </Suspense>
+        )}
+
+        {pdfReportModal.isOpen && (
+          <Suspense fallback={null}>
+            <PdfLanguageModal
+              isOpen={pdfReportModal.isOpen}
+              onClose={pdfReportModal.close}
+              onConfirm={pdfReportModal.onConfirm}
+              isLoading={pdfReportModal.isLoading}
+              defaultLanguage={pdfReportModal.defaultLanguage}
+            />
+          </Suspense>
         )}
       </div>
-
-      {/* Modals */}
-      {editCompensationModal.assignment && (
-        <Suspense fallback={null}>
-          <EditCompensationModal
-            assignment={editCompensationModal.assignment}
-            isOpen={editCompensationModal.isOpen}
-            onClose={editCompensationModal.close}
-          />
-        </Suspense>
-      )}
-
-      {validateGameModal.assignment && (
-        <Suspense fallback={null}>
-          <ValidateGameModal
-            key={validateGameModal.assignment.__identity}
-            assignment={validateGameModal.assignment}
-            isOpen={validateGameModal.isOpen}
-            onClose={validateGameModal.close}
-          />
-        </Suspense>
-      )}
-
-      {pdfReportModal.isOpen && (
-        <Suspense fallback={null}>
-          <PdfLanguageModal
-            isOpen={pdfReportModal.isOpen}
-            onClose={pdfReportModal.close}
-            onConfirm={pdfReportModal.onConfirm}
-            isLoading={pdfReportModal.isLoading}
-            defaultLanguage={pdfReportModal.defaultLanguage}
-          />
-        </Suspense>
-      )}
-    </div>
+    </PullToRefresh>
   )
 }

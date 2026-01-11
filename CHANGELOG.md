@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Pull-to-refresh for iOS PWA - assignments page now supports pull-to-refresh gesture when running as installed PWA on iPhone, where native browser refresh is unavailable
 - Prettier formatter and consistent import ordering for codebase - works in Claude Code web sessions without devenv (#704)
 - `/pr-review` command for Claude Code - creates PR and automatically addresses Claude Code Review comments after 2-minute wait
 - Automated release workflow with semantic version auto-detection from changelog
