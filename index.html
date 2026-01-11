@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/volleykit/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/volleykit/favicon.svg" sizes="any" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/volleykit/apple-touch-icon-180x180.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#ff6b00" />
+    <meta name="description" content="VolleyKit - Swiss Volleyball Referee Management PWA" />
+
+    <!-- Resource hints for faster API connections -->
+    <link rel="preconnect" href="https://volleymanager.volleyball.ch" crossorigin="use-credentials" />
+    <link rel="dns-prefetch" href="https://volleymanager.volleyball.ch" />
+
+    <!-- iOS PWA support -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="VolleyKit" />
+
+    <title>VolleyKit</title>
+  <script>
+    // GitHub Pages SPA redirect restoration
+    // If we were redirected from 404.html, restore the intended path
+    (function() {
+      const redirectPath = sessionStorage.getItem('redirectPath');
+      if (redirectPath) {
+        sessionStorage.removeItem('redirectPath');
+        history.replaceState(null, '', redirectPath);
+      }
+    })();
+  </script>
+    <script type="module" crossorigin src="/volleykit/assets/index-BTrs6aRv.js"></script>
+    <link rel="modulepreload" crossorigin href="/volleykit/assets/chunk-react-vendor-qkC6yhPU.js">
+    <link rel="modulepreload" crossorigin href="/volleykit/assets/chunk-router-BQypQwfi.js">
+    <link rel="modulepreload" crossorigin href="/volleykit/assets/chunk-state-FtA_4dUT.js">
+    <link rel="modulepreload" crossorigin href="/volleykit/assets/chunk-validation-zAOmSg2c.js">
+    <link rel="stylesheet" crossorigin href="/volleykit/assets/index-oAz5Abrx.css">
+  
+    <script>
+      // PWA Force Update: Check if cached version matches deployed version
+      (async function() {
+        var BUNDLED_GIT_HASH = 'ab0c80c';
+        var BASE_PATH = '/volleykit/';
+        try {
+          var res = await fetch(BASE_PATH + 'version.json?t=' + Date.now());
+          if (!res.ok) return;
+          var data = await res.json();
+          if (BUNDLED_GIT_HASH !== data.gitHash) {
+            // Prevent infinite reload loop: track attempted updates in sessionStorage
+            var reloadKey = 'pwa-update-attempted-' + data.gitHash;
+            if (sessionStorage.getItem(reloadKey)) {
+              console.warn('[PWA] Already attempted update to ' + data.gitHash + ', skipping to prevent loop');
+              return;
+            }
+            sessionStorage.setItem(reloadKey, '1');
+            console.log('[PWA] Version mismatch: ' + BUNDLED_GIT_HASH + ' → ' + data.gitHash + ', forcing update...');
+            var reg = await navigator.serviceWorker?.getRegistration();
+            if (reg?.waiting) {
+              reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            }
+            var cacheNames = await caches?.keys() || [];
+            await Promise.all(cacheNames.map(function(name) { return caches.delete(name); }));
+            location.reload();
+          }
+        } catch (e) {
+          // Network errors are expected when offline - ignore silently
+          // Log other errors for debugging
+          if (!(e instanceof TypeError)) {
+            console.warn('[PWA] Version check failed:', e);
+          }
+        }
+      })();
+    </script>
+  <link rel="manifest" href="/volleykit/manifest.webmanifest"></head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
