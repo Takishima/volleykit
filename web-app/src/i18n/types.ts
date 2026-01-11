@@ -184,6 +184,8 @@ export interface Translations {
     assignmentNotFoundInCache: string
     compensationNotFound: string
     compensationMissingId: string
+    saveError: string
+    saveSuccess: string
     unavailableInCalendarModeTitle: string
     unavailableInCalendarModeDescription: string
   }

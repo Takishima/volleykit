@@ -299,6 +299,8 @@ const fr: Translations = {
       "Enregistrement d'indemnité introuvable. Le match est peut-être trop éloigné dans le futur.",
     compensationMissingId:
       "L'enregistrement d'indemnité n'a pas d'identifiant. Veuillez réessayer plus tard.",
+    saveError: "Échec de l'enregistrement de l'indemnité. Veuillez réessayer.",
+    saveSuccess: 'Indemnité enregistrée avec succès.',
     unavailableInCalendarModeTitle: 'Non disponible en mode calendrier',
     unavailableInCalendarModeDescription:
       "Les données d'indemnités ne sont pas disponibles en mode calendrier. Utilisez la connexion complète pour accéder aux détails des indemnités.",

@@ -292,6 +292,8 @@ const en: Translations = {
       'Assignment not found in cache. Please refresh the page and try again.',
     compensationNotFound: 'Compensation record not found. The game may be too far in the future.',
     compensationMissingId: 'Compensation record is missing an identifier. Please try again later.',
+    saveError: 'Failed to save compensation. Please try again.',
+    saveSuccess: 'Compensation saved successfully.',
     unavailableInCalendarModeTitle: 'Not available in Calendar Mode',
     unavailableInCalendarModeDescription:
       'Compensation data is not available in calendar mode. Use full login to access compensation details.',
