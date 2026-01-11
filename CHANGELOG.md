@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- OCR POC TypeScript build now resolves React dependencies correctly when importing web-app components (#724)
 - Profile picture now displays correctly in PWA Settings page - image URLs are now proxied through the worker to bypass iOS Safari's cross-origin restrictions that blocked images from volleymanager.volleyball.ch in standalone PWA mode
 - PWA version detection now properly triggers refresh on iOS - added fallback reload mechanism when service worker is not ready, visibility change handler for app resume from background, and login buttons are disabled until update is applied to prevent authentication with stale code
 - PWA login page now shows prominent update banner when a new version is available - previously users could attempt login with stale cached code, causing confusing username/password errors; the banner prompts users to update before logging in
