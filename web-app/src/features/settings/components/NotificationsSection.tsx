@@ -75,7 +75,7 @@ function NotificationsSectionComponent({
       <Card>
         <CardHeader>
           <h2 className="font-semibold text-text-primary dark:text-text-primary-dark flex items-center gap-2">
-            <BellOff className="h-5 w-5" />
+            <BellOff className="h-5 w-5" aria-hidden="true" />
             {t('settings.notifications.title')}
           </h2>
         </CardHeader>
@@ -92,7 +92,7 @@ function NotificationsSectionComponent({
     <Card>
       <CardHeader>
         <h2 className="font-semibold text-text-primary dark:text-text-primary-dark flex items-center gap-2">
-          <Bell className="h-5 w-5" />
+          <Bell className="h-5 w-5" aria-hidden="true" />
           {t('settings.notifications.title')}
         </h2>
       </CardHeader>
@@ -164,7 +164,7 @@ function NotificationsSectionComponent({
                         `}
                         aria-pressed={isSelected}
                       >
-                        {isSelected && <Check className="h-3.5 w-3.5" />}
+                        {isSelected && <Check className="h-3.5 w-3.5" aria-hidden="true" />}
                         {t(`settings.notifications.reminderTime.${time}`)}
                       </button>
                     )
