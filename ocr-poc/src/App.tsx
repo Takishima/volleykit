@@ -10,9 +10,13 @@ import { useAppStore } from './stores/appStore'
 export function App() {
   const state = useAppStore((s) => s.state)
 
+  // ImageCropEditor uses fixed positioning for full-screen overlay
+  const isCropMode = state === 'crop' || state === 'roster-crop'
+
   return (
     <div className="app-shell min-h-screen flex flex-col bg-slate-50">
-      <Header />
+      {/* Hide header during crop mode - ImageCropEditor is full-screen */}
+      {!isCropMode && <Header />}
 
       <main className="flex-1 flex flex-col">
         {state === 'select-type' && <SheetTypeSelector />}
