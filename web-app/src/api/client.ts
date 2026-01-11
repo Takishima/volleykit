@@ -93,6 +93,14 @@ export function setCsrfToken(token: string | null) {
 const SESSION_TOKEN_HEADER = 'X-Session-Token'
 
 /**
+ * Header to request session token capture from redirect responses.
+ * When this header is present, the worker converts redirect responses with session tokens
+ * to JSON, allowing the client to capture tokens from redirects (which would otherwise
+ * be opaque due to redirect: 'manual').
+ */
+export const CAPTURE_SESSION_TOKEN_HEADER = 'X-Capture-Session-Token'
+
+/**
  * Capture session token from response headers.
  * The Cloudflare Worker sends session cookies as X-Session-Token header
  * to bypass iOS Safari ITP blocking third-party cookies in PWA mode.
