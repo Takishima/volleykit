@@ -50,7 +50,7 @@ export default tseslint.config(
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,
       'jsx-a11y': jsxA11y,
-      'security': security,
+      security,
       'no-unsanitized': noUnsanitized,
       'import-x': importX,
     },
