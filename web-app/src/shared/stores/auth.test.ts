@@ -670,6 +670,92 @@ describe("useAuthStore", () => {
       // Should make 3 calls: login page + auth POST + dashboard
       expect(mockFetch).toHaveBeenCalledTimes(3);
     });
+
+    it("resets stale activeOccupationId when it does not exist in new occupations", async () => {
+      // Simulate a persisted stale activeOccupationId from a previous session
+      // (e.g., demo mode ID or a different user's occupation)
+      useAuthStore.setState({
+        activeOccupationId: "stale-occupation-id-from-previous-session",
+      });
+
+      const dashboardUrl = "/sportmanager.volleyball/main/dashboard";
+
+      // First fetch: login page with form fields
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: createLoginPageHtml(),
+        })
+      );
+
+      // Second fetch: login POST returns 303 redirect
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: false,
+          status: 303,
+          headers: { Location: dashboardUrl },
+        })
+      );
+
+      // Third fetch: dashboard with a different occupation ID
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: createDashboardHtmlWithReferee("valid-csrf-token"),
+        })
+      );
+
+      const resultPromise = useAuthStore.getState().login("new-user", "pass");
+      await vi.advanceTimersByTimeAsync(100);
+      const result = await resultPromise;
+
+      expect(result).toBe(true);
+      const state = useAuthStore.getState();
+      // The stale ID should be replaced with a valid occupation from the new user
+      expect(state.activeOccupationId).not.toBe("stale-occupation-id-from-previous-session");
+      expect(state.activeOccupationId).toBe(state.user?.occupations?.[0]?.id);
+    });
+
+    it("preserves activeOccupationId when it exists in new occupations", async () => {
+      // Set up state with an activeOccupationId that matches the new user's occupation
+      // The occupation ID "attr-1" matches the one in createDashboardHtmlWithReferee
+      useAuthStore.setState({
+        activeOccupationId: "attr-1",
+      });
+
+      const dashboardUrl = "/sportmanager.volleyball/main/dashboard";
+
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: createLoginPageHtml(),
+        })
+      );
+
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: false,
+          status: 303,
+          headers: { Location: dashboardUrl },
+        })
+      );
+
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: createDashboardHtmlWithReferee("valid-csrf-token"),
+        })
+      );
+
+      const resultPromise = useAuthStore.getState().login("same-user", "pass");
+      await vi.advanceTimersByTimeAsync(100);
+      const result = await resultPromise;
+
+      expect(result).toBe(true);
+      const state = useAuthStore.getState();
+      // The valid activeOccupationId should be preserved
+      expect(state.activeOccupationId).toBe("attr-1");
+    });
   });
 
   describe("checkSession", () => {
@@ -761,6 +847,35 @@ describe("useAuthStore", () => {
       expect(state.groupedEligibleAttributeValues).toEqual(existingGroupedValues);
       expect(state.eligibleAttributeValues).toEqual(existingEligibleValues);
       expect(state.eligibleRoles).toEqual(existingEligibleRoles);
+    });
+
+    it("resets stale activeOccupationId when session check returns different occupations", async () => {
+      // Set up state with a stale activeOccupationId that won't exist in new data
+      useAuthStore.setState({
+        status: "authenticated",
+        user: {
+          id: "user-1",
+          firstName: "Test",
+          lastName: "User",
+          occupations: [{ id: "old-ref-1", type: "referee" as const, associationCode: "SV" }],
+        },
+        activeOccupationId: "old-ref-1",
+      });
+
+      // Mock dashboard response with NEW activeParty data containing different occupation
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: () => Promise.resolve(createDashboardHtmlWithReferee("new-csrf-token")),
+      });
+
+      const result = await useAuthStore.getState().checkSession();
+
+      expect(result).toBe(true);
+      const state = useAuthStore.getState();
+      // The stale occupation ID should be replaced with the new valid one
+      expect(state.activeOccupationId).not.toBe("old-ref-1");
+      // Should fall back to the first occupation from the new data
+      expect(state.activeOccupationId).toBe(state.user?.occupations?.[0]?.id);
     });
 
     it("returns false and sets idle on failed API call", async () => {

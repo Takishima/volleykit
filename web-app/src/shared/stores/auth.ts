@@ -181,7 +181,15 @@ function deriveUserWithOccupations(
       ? parsedOccupations
       : (currentUser?.occupations ?? []);
 
-  const activeOccupationId = currentActiveOccupationId ?? occupations[0]?.id ?? null;
+  // Validate that the persisted activeOccupationId exists in the new occupations list.
+  // This prevents stale occupation IDs from previous sessions/users from being used,
+  // which would cause the wrong association to be selected after login.
+  const isPersistedIdValid =
+    currentActiveOccupationId !== null &&
+    occupations.some((occ) => occ.id === currentActiveOccupationId);
+  const activeOccupationId = isPersistedIdValid
+    ? currentActiveOccupationId
+    : (occupations[0]?.id ?? null);
 
   // Use the person's __identity from activeParty as the user id
   // This matches the submittedByPerson.__identity format used in exchanges
