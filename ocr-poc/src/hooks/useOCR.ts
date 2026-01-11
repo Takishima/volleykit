@@ -1,25 +1,32 @@
 /**
  * useOCR Hook
  *
- * Provides OCR processing functionality using the OCR factory.
+ * Provides OCR processing functionality using the shared OCR services from web-app.
  * Handles initialization, processing, and cleanup of OCR engines.
  */
 
 import { useRef, useCallback } from 'react'
 
-// @ts-expect-error - JS module without types
-import { OCRFactory } from '@/services/ocr/index.js'
+import { OCRFactory } from '@/features/ocr/services/ocr-factory'
 
-import type { OCRResult, OCRProgress, OCREngine } from '@/services/ocr/types'
+import type { OCRResult, OCRProgress, OCREngine } from '@/features/ocr/types'
+
+/** Extended OCR result with PoC-specific metadata */
+export interface OCRResultWithMetadata extends OCRResult {
+  /** Overall confidence score (0-100) */
+  confidence: number
+  /** Processing time in milliseconds */
+  processingTime: number
+}
 
 interface UseOCROptions {
   onProgress?: (progress: OCRProgress) => void
-  onComplete?: (result: OCRResult) => void
+  onComplete?: (result: OCRResultWithMetadata) => void
   onError?: (error: Error) => void
 }
 
 interface UseOCRReturn {
-  processImage: (imageBlob: Blob) => Promise<OCRResult | null>
+  processImage: (imageBlob: Blob) => Promise<OCRResultWithMetadata | null>
   cancel: () => void
 }
 
@@ -40,7 +47,7 @@ export function useOCR(options: UseOCROptions = {}): UseOCRReturn {
   }, [])
 
   const processImage = useCallback(
-    async (imageBlob: Blob): Promise<OCRResult | null> => {
+    async (imageBlob: Blob): Promise<OCRResultWithMetadata | null> => {
       // Prevent concurrent processing
       if (processingRef.current) {
         console.warn('OCR processing already in progress')
@@ -58,7 +65,7 @@ export function useOCR(options: UseOCROptions = {}): UseOCRReturn {
 
         // Use createWithFallback to check proxy availability
         onProgress?.({ status: 'Checking OCR service...', progress: 0 })
-        const engine: OCREngine = await OCRFactory.createWithFallback('electronic', progressHandler)
+        const engine = await OCRFactory.createWithFallback(progressHandler)
         engineRef.current = engine
 
         // Initialize engine
@@ -67,16 +74,16 @@ export function useOCR(options: UseOCROptions = {}): UseOCRReturn {
         // Process image
         const result = await engine.recognize(imageBlob)
 
-        // Add processing time
+        // Add processing metadata
         const endTime = performance.now()
-        const resultWithTime: OCRResult = {
+        const resultWithMetadata: OCRResultWithMetadata = {
           ...result,
           processingTime: endTime - startTime,
           confidence: calculateOverallConfidence(result),
         }
 
-        onComplete?.(resultWithTime)
-        return resultWithTime
+        onComplete?.(resultWithMetadata)
+        return resultWithMetadata
       } catch (error) {
         const err = error instanceof Error ? error : new Error(String(error))
         onError?.(err)

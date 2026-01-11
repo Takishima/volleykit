@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-import type { OCRResult } from '@/services/ocr/types'
+import type { OCRResultWithMetadata } from '@/hooks/useOCR'
 
 /** Scoresheet types supported by the OCR */
 export type SheetType = 'electronic' | 'manuscript'
@@ -36,7 +36,7 @@ interface AppStoreState {
   croppedImage: Blob | null
 
   // OCR result
-  ocrResult: OCRResult | null
+  ocrResult: OCRResultWithMetadata | null
 
   // Processing error
   error: string | null
@@ -54,7 +54,7 @@ interface AppStoreActions {
   selectManuscriptMode: (mode: ManuscriptCaptureMode) => void
   setCapturedImage: (blob: Blob) => void
   setCroppedImage: (blob: Blob) => void
-  setOcrResult: (result: OCRResult) => void
+  setOcrResult: (result: OCRResultWithMetadata) => void
   setError: (error: string | null) => void
   setProgress: (progress: number, status?: string) => void
 
