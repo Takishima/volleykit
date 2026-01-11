@@ -55,9 +55,7 @@ export function LoginUpdateBanner({ onUpdate }: LoginUpdateBannerProps) {
           aria-busy={isUpdating}
           className="inline-flex items-center gap-2 rounded-md bg-warning-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-warning-700 focus:outline-none focus:ring-2 focus:ring-warning-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-warning-500 dark:hover:bg-warning-600"
         >
-          {isUpdating && (
-            <RefreshCw className="h-4 w-4 animate-spin" aria-hidden="true" />
-          )}
+          {isUpdating && <RefreshCw className="h-4 w-4 animate-spin" aria-hidden="true" />}
           {isUpdating ? t('auth.updating') : t('auth.updateNow')}
         </button>
       </div>

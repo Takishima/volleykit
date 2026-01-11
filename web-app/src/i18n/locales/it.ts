@@ -376,6 +376,10 @@ const it: Translations = {
     exchange: 'Scambi',
     settings: 'Impostazioni',
   },
+  notifications: {
+    gameReminder: 'Promemoria partita',
+    gameReminderBody: 'La tua partita {game} inizia {time} alle {gameTime}',
+  },
   settings: {
     title: 'Impostazioni',
     profile: 'Profilo',
@@ -383,6 +387,26 @@ const it: Translations = {
     language: 'Lingua',
     preferences: {
       title: 'Preferenze',
+    },
+    notifications: {
+      title: 'Notifiche',
+      description: 'Ricevi promemoria prima delle tue partite.',
+      notSupported: 'Le notifiche non sono supportate in questo browser.',
+      permissionDenied:
+        "L'autorizzazione alle notifiche è stata negata. Abilita le notifiche nelle impostazioni del browser.",
+      enableNotifications: 'Abilita notifiche',
+      requesting: 'Richiesta in corso...',
+      gameReminders: 'Promemoria partite',
+      gameRemindersDescription: 'Ricevi notifiche prima delle tue partite programmate.',
+      reminderTimes: 'Ricordami',
+      reminderTimesHint: 'Scegli quando vuoi essere avvisato prima di ogni partita.',
+      foregroundNote:
+        "Nota: Le notifiche vengono inviate solo quando l'app è aperta. Per i promemoria offline, aggiungi le partite al tuo calendario.",
+      reminderTime: {
+        '1h': '1 ora prima',
+        '2h': '2 ore prima',
+        '1d': '1 giorno prima',
+      },
     },
     locationTravel: {
       title: 'Posizione & Viaggio',

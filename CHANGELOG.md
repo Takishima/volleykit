@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Notification settings section in Settings page - users can now enable/disable browser notifications and configure reminder time preferences
+
 ### Fixed
 
 - PWA login page now shows prominent update banner when a new version is available - previously users could attempt login with stale cached code, causing confusing username/password errors; the banner prompts users to update before logging in

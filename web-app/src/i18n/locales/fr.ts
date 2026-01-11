@@ -378,6 +378,10 @@ const fr: Translations = {
     exchange: 'Échanges',
     settings: 'Paramètres',
   },
+  notifications: {
+    gameReminder: 'Rappel de match',
+    gameReminderBody: 'Votre match {game} commence {time} à {gameTime}',
+  },
   settings: {
     title: 'Paramètres',
     profile: 'Profil',
@@ -385,6 +389,26 @@ const fr: Translations = {
     language: 'Langue',
     preferences: {
       title: 'Préférences',
+    },
+    notifications: {
+      title: 'Notifications',
+      description: 'Recevez des rappels avant vos matchs.',
+      notSupported: 'Les notifications ne sont pas prises en charge dans ce navigateur.',
+      permissionDenied:
+        "L'autorisation de notification a été refusée. Veuillez activer les notifications dans les paramètres de votre navigateur.",
+      enableNotifications: 'Activer les notifications',
+      requesting: 'Demande en cours...',
+      gameReminders: 'Rappels de matchs',
+      gameRemindersDescription: 'Recevez des notifications avant vos matchs programmés.',
+      reminderTimes: 'Me rappeler',
+      reminderTimesHint: 'Choisissez quand vous souhaitez être rappelé avant chaque match.',
+      foregroundNote:
+        "Note : Les notifications ne sont envoyées que lorsque l'application est ouverte. Pour les rappels hors ligne, ajoutez les matchs à votre calendrier.",
+      reminderTime: {
+        '1h': '1 heure avant',
+        '2h': '2 heures avant',
+        '1d': '1 jour avant',
+      },
     },
     locationTravel: {
       title: 'Localisation & Déplacement',

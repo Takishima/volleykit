@@ -28,6 +28,10 @@ const DEFAULT_MODE_SETTINGS: ModeSettings = {
     sbbDestinationType: 'address',
   },
   levelFilterEnabled: false,
+  notificationSettings: {
+    enabled: false,
+    reminderTimes: ['1h'],
+  },
 }
 
 /** Helper to reset store to clean state */
@@ -52,6 +56,7 @@ function resetStore(mode: DataSource = 'api') {
     transportEnabledByAssociation: { ...DEFAULT_MODE_SETTINGS.transportEnabledByAssociation },
     travelTimeFilter: { ...DEFAULT_MODE_SETTINGS.travelTimeFilter },
     levelFilterEnabled: DEFAULT_MODE_SETTINGS.levelFilterEnabled,
+    notificationSettings: { ...DEFAULT_MODE_SETTINGS.notificationSettings },
   })
 }
 

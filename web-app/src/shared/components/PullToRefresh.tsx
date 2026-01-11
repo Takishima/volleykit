@@ -46,11 +46,7 @@ export function PullToRefresh({ onRefresh, children }: PullToRefreshProps) {
   // When refreshing, show full-page loading state overlay
   if (isRefreshing) {
     return (
-      <div
-        {...containerProps}
-        className="relative"
-        style={{ overscrollBehavior: 'none' }}
-      >
+      <div {...containerProps} className="relative" style={{ overscrollBehavior: 'none' }}>
         <LoadingState message={t('common.refreshing')} />
       </div>
     )

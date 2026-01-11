@@ -271,11 +271,9 @@ export const api = {
       convocationCompensation.correctionReason = data.correctionReason
     }
 
-    return apiRequest(
-      '/indoorvolleyball.refadmin/api%5cconvocationcompensation',
-      'PUT',
-      { convocationCompensation }
-    )
+    return apiRequest('/indoorvolleyball.refadmin/api%5cconvocationcompensation', 'PUT', {
+      convocationCompensation,
+    })
   },
 
   // Game Exchanges
