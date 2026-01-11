@@ -538,6 +538,11 @@ export const useAuthStore = create<AuthState>()(
         }
 
         clearSession()
+        // Preserve activeOccupationId across logout/login so users return to their
+        // last-used association. The deriveUserWithOccupations function validates
+        // that the preserved ID exists in the new user's occupations, falling back
+        // to the first occupation if the ID is invalid (e.g., different user logs in).
+        // Query cache is cleared separately in App.tsx on auth state transitions.
         set({
           status: 'idle',
           user: null,
@@ -549,7 +554,7 @@ export const useAuthStore = create<AuthState>()(
           groupedEligibleAttributeValues: null,
           eligibleRoles: null,
           _lastAuthTimestamp: null,
-          activeOccupationId: null,
+          // Note: activeOccupationId intentionally NOT cleared - see comment above
         })
       },
 

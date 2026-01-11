@@ -159,6 +159,52 @@ function createDashboardHtmlWithReferee(csrfToken = 'abcd1234efgh5678ijkl9012mno
   return `<html data-csrf-token='${csrfToken}'><body><main-layout :active-party="$convertFromBackendToFrontend(${encodedActiveParty})"></main-layout></body></html>`
 }
 
+// Helper to create dashboard HTML with multiple associations (for testing association persistence)
+function createDashboardHtmlWithMultipleAssociations(
+  csrfToken = 'abcd1234efgh5678ijkl9012mnop3456'
+) {
+  const activeParty = {
+    __identity: 'party-1',
+    eligibleAttributeValues: [
+      {
+        __identity: 'attr-svrz',
+        roleIdentifier: 'Indoorvolleyball.RefAdmin:Referee',
+        type: 'SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation',
+        value: 'assoc-uuid-svrz',
+        inflatedValue: { __identity: 'assoc-svrz', shortName: 'SVRZ' },
+      },
+      {
+        __identity: 'attr-sv',
+        roleIdentifier: 'Indoorvolleyball.RefAdmin:Referee',
+        type: 'SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation',
+        value: 'assoc-uuid-sv',
+        inflatedValue: { __identity: 'assoc-sv', shortName: 'SV' },
+      },
+    ],
+    groupedEligibleAttributeValues: [
+      {
+        __identity: 'attr-svrz',
+        roleIdentifier: 'Indoorvolleyball.RefAdmin:Referee',
+        type: 'SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation',
+        value: 'assoc-uuid-svrz',
+        inflatedValue: { __identity: 'assoc-svrz', shortName: 'SVRZ' },
+      },
+      {
+        __identity: 'attr-sv',
+        roleIdentifier: 'Indoorvolleyball.RefAdmin:Referee',
+        type: 'SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation',
+        value: 'assoc-uuid-sv',
+        inflatedValue: { __identity: 'assoc-sv', shortName: 'SV' },
+      },
+    ],
+    eligibleRoles: {
+      'Indoorvolleyball.RefAdmin:Referee': { identifier: 'Indoorvolleyball.RefAdmin:Referee' },
+    },
+  }
+  const encodedActiveParty = JSON.stringify(activeParty).replace(/"/g, '&quot;')
+  return `<html data-csrf-token='${csrfToken}'><body><main-layout :active-party="$convertFromBackendToFrontend(${encodedActiveParty})"></main-layout></body></html>`
+}
+
 describe('useAuthStore', () => {
   beforeEach(() => {
     // Reset store state before each test
@@ -243,6 +289,35 @@ describe('useAuthStore', () => {
       const state = useAuthStore.getState()
       expect(state.status).toBe('idle')
       expect(state.user).toBeNull()
+    })
+
+    it('preserves activeOccupationId for next login', async () => {
+      // This test verifies the fix for the bug where logging out and back in
+      // would show the wrong association's data because activeOccupationId was cleared.
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 303,
+        type: 'opaqueredirect',
+      })
+
+      // Set up authenticated state with a specific occupation selected
+      useAuthStore.setState({
+        status: 'authenticated',
+        user: { id: '1', firstName: 'Test', lastName: 'User', occupations: [] },
+        csrfToken: 'abc123',
+        activeOccupationId: 'selected-occupation-id',
+      })
+
+      // Logout
+      await useAuthStore.getState().logout()
+
+      // Verify activeOccupationId is preserved for next login
+      const state = useAuthStore.getState()
+      expect(state.status).toBe('idle')
+      expect(state.user).toBeNull()
+      expect(state.csrfToken).toBeNull()
+      // activeOccupationId should be preserved so user returns to same association on re-login
+      expect(state.activeOccupationId).toBe('selected-occupation-id')
     })
   })
 
@@ -857,6 +932,98 @@ describe('useAuthStore', () => {
       )
 
       consoleSpy.mockRestore()
+    })
+
+    it('restores persisted association selection after logout/login cycle', async () => {
+      // This integration test verifies the complete flow:
+      // 1. User with multiple associations logs in (defaults to first: SVRZ)
+      // 2. User switches to SV association
+      // 3. User logs out (activeOccupationId should be preserved)
+      // 4. User logs back in
+      // 5. User should see SV association, not SVRZ
+      const dashboardUrl = '/sportmanager.volleyball/main/dashboard'
+
+      // === Step 1: Initial login ===
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: createLoginPageHtml(),
+        })
+      )
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: false,
+          status: 303,
+          headers: { Location: dashboardUrl },
+        })
+      )
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: createDashboardHtmlWithMultipleAssociations('csrf-token-1'),
+        })
+      )
+
+      let resultPromise = useAuthStore.getState().login('user', 'pass')
+      await vi.advanceTimersByTimeAsync(100)
+      let result = await resultPromise
+      expect(result).toBe(true)
+
+      // After first login, should default to first occupation (SVRZ)
+      let state = useAuthStore.getState()
+      expect(state.activeOccupationId).toBe('attr-svrz')
+      expect(state.user?.occupations).toHaveLength(2)
+
+      // === Step 2: User switches to SV ===
+      useAuthStore.getState().setActiveOccupation('attr-sv')
+      expect(useAuthStore.getState().activeOccupationId).toBe('attr-sv')
+
+      // === Step 3: Logout ===
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 303,
+        type: 'opaqueredirect',
+      })
+      await useAuthStore.getState().logout()
+
+      // After logout, activeOccupationId should be preserved
+      state = useAuthStore.getState()
+      expect(state.status).toBe('idle')
+      expect(state.user).toBeNull()
+      expect(state.activeOccupationId).toBe('attr-sv') // <-- Key assertion
+
+      // === Step 4: Login again ===
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: createLoginPageHtml(),
+        })
+      )
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: false,
+          status: 303,
+          headers: { Location: dashboardUrl },
+        })
+      )
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: createDashboardHtmlWithMultipleAssociations('csrf-token-2'),
+        })
+      )
+
+      mockSwitchRoleAndAttribute.mockClear()
+      resultPromise = useAuthStore.getState().login('user', 'pass')
+      await vi.advanceTimersByTimeAsync(100)
+      result = await resultPromise
+      expect(result).toBe(true)
+
+      // === Step 5: Verify SV is still selected ===
+      state = useAuthStore.getState()
+      expect(state.activeOccupationId).toBe('attr-sv') // <-- Key assertion
+      // And the server should be synced to SV (not SVRZ)
+      expect(mockSwitchRoleAndAttribute).toHaveBeenCalledWith('attr-sv')
     })
   })
 
