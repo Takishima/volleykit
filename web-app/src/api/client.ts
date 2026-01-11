@@ -13,6 +13,9 @@ import {
   setCsrfToken as setToken,
   clearCsrfToken,
   getCsrfToken,
+  setSessionToken,
+  getSessionToken,
+  clearSessionToken,
 } from "./form-serialization";
 import { parseErrorResponse } from "./error-handling";
 import {
@@ -94,8 +97,36 @@ export function setCsrfToken(token: string | null) {
   setToken(token);
 }
 
+/**
+ * Session token header name used by the Cloudflare Worker for iOS Safari PWA.
+ * The worker sends session cookies via this header to bypass ITP cookie blocking.
+ */
+const SESSION_TOKEN_HEADER = "X-Session-Token";
+
+/**
+ * Capture session token from response headers.
+ * The Cloudflare Worker sends session cookies as X-Session-Token header
+ * to bypass iOS Safari ITP blocking third-party cookies in PWA mode.
+ */
+export function captureSessionToken(response: Response): void {
+  const token = response.headers.get(SESSION_TOKEN_HEADER);
+  if (token) {
+    setSessionToken(token);
+  }
+}
+
+/**
+ * Get headers for sending session token with requests.
+ * Returns the X-Session-Token header if a token is stored.
+ */
+export function getSessionHeaders(): HeadersInit {
+  const token = getSessionToken();
+  return token ? { [SESSION_TOKEN_HEADER]: token } : {};
+}
+
 export function clearSession() {
   clearCsrfToken();
+  clearSessionToken();
 }
 
 // Generic fetch wrapper

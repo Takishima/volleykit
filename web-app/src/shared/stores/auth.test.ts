@@ -6,6 +6,8 @@ import { setCsrfToken, clearSession } from "@/api/client";
 vi.mock("@/api/client", () => ({
   setCsrfToken: vi.fn(),
   clearSession: vi.fn(),
+  captureSessionToken: vi.fn(),
+  getSessionHeaders: vi.fn(() => ({})),
 }));
 
 

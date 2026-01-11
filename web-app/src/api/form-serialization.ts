@@ -20,6 +20,25 @@ export function clearCsrfToken() {
   csrfToken = null;
 }
 
+/**
+ * Session token for iOS Safari PWA mode.
+ * The Cloudflare Worker extracts session cookies from Set-Cookie headers
+ * and sends them as X-Session-Token header to bypass iOS Safari ITP.
+ */
+let sessionToken: string | null = null;
+
+export function setSessionToken(token: string | null) {
+  sessionToken = token;
+}
+
+export function getSessionToken(): string | null {
+  return sessionToken;
+}
+
+export function clearSessionToken() {
+  sessionToken = null;
+}
+
 export interface BuildFormDataOptions {
   /** Include CSRF token in params. Default true. Set false for GET requests. */
   includeCsrfToken?: boolean;
