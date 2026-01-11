@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - POST auth redirects converted to JSON responses, fixing `opaqueredirect` issue
   - Broadened successful login detection to match any dashboard redirect path
 - OCR camera capture now auto-crops images to match the guide overlay, improving OCR accuracy by focusing on the scoresheet area
-- User now sees correct assignments after logging into a different association (#682)
+- User now sees correct assignments after logging into a different association (#697)
 
 ## [1.0.2] - 2026-01-10
 

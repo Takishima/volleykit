@@ -281,12 +281,18 @@ export default function App() {
         useSettingsStore.getState()._setCurrentMode(state.dataSource);
       }
 
-      // Clear query cache on logout to prevent stale data from previous sessions.
-      // This ensures users don't see assignments from a previously logged-in association.
+      // Clear query cache on auth state transitions to prevent stale data.
+      // - On logout: prevents next user from seeing previous user's assignments
+      // - On login: prevents seeing stale cached data from previous sessions
+      //   (e.g., when persisted auth state restored an old activeOccupationId)
       const isAuthenticated = state.user !== null;
-      if (wasAuthenticated && !isAuthenticated) {
+      if (wasAuthenticated !== isAuthenticated) {
         queryClient.resetQueries();
-        logger.info("Query cache cleared on logout");
+        logger.info(
+          isAuthenticated
+            ? "Query cache cleared on login"
+            : "Query cache cleared on logout",
+        );
       }
       wasAuthenticated = isAuthenticated;
     });
