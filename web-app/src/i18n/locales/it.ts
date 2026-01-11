@@ -398,6 +398,10 @@ const it: Translations = {
       requesting: 'Richiesta in corso...',
       gameReminders: 'Promemoria partite',
       gameRemindersDescription: 'Ricevi notifiche prima delle tue partite programmate.',
+      usingBrowser: 'Utilizzo delle notifiche del browser',
+      usingInApp: 'Utilizzo delle notifiche in-app',
+      browserDeniedUsingInApp:
+        "L'autorizzazione alle notifiche del browser è stata negata. Verranno utilizzate le notifiche in-app.",
       reminderTimes: 'Ricordami',
       reminderTimesHint: 'Scegli quando vuoi essere avvisato prima di ogni partita.',
       foregroundNote:

@@ -279,6 +279,9 @@ export interface Translations {
       requesting: string
       gameReminders: string
       gameRemindersDescription: string
+      usingBrowser: string
+      usingInApp: string
+      browserDeniedUsingInApp: string
       reminderTimes: string
       reminderTimesHint: string
       foregroundNote: string

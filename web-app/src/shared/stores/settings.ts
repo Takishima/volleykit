@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist, subscribeWithSelector } from 'zustand/middleware'
 
-import type { ReminderTime } from '@/shared/services/notifications'
+import type { NotificationPreference, ReminderTime } from '@/shared/services/notifications'
 
 import type { DataSource } from './auth'
 
@@ -101,12 +101,20 @@ export interface NotificationSettings {
   enabled: boolean
   /** Selected reminder times before games */
   reminderTimes: ReminderTime[]
+  /**
+   * Delivery preference for notifications.
+   * - 'native': Prefer browser notifications, fall back to in-app
+   * - 'in-app': Always use in-app notifications only
+   * - 'both': Show both native and in-app notifications
+   */
+  deliveryPreference: NotificationPreference
 }
 
 /** Default notification settings */
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   enabled: false,
   reminderTimes: ['1h'],
+  deliveryPreference: 'native',
 }
 
 /**
@@ -215,6 +223,7 @@ interface SettingsState {
   // Notification settings
   setNotificationsEnabled: (enabled: boolean) => void
   setNotificationReminderTimes: (times: ReminderTime[]) => void
+  setNotificationDeliveryPreference: (preference: NotificationPreference) => void
 
   // Reset current mode's settings to defaults (keeps safe mode and other modes)
   resetLocationSettings: () => void
@@ -283,6 +292,9 @@ const ALL_MODES: DataSource[] = ['api', 'demo', 'calendar']
 
 /** Version that introduced notification settings */
 const NOTIFICATION_SETTINGS_VERSION = 5
+
+/** Version that added notification delivery preference */
+const NOTIFICATION_DELIVERY_PREFERENCE_VERSION = 6
 
 /** V1 state shape (flat settings) */
 interface V1State {
@@ -361,6 +373,21 @@ function addNotificationSettings(state: StateWithModes): void {
     const settings = state.settingsByMode[mode]
     if (settings && !settings.notificationSettings) {
       settings.notificationSettings = { ...DEFAULT_NOTIFICATION_SETTINGS }
+    }
+  }
+}
+
+/**
+ * Add notification delivery preference for v5→v6 migration.
+ */
+function addNotificationDeliveryPreference(state: StateWithModes): void {
+  if (!state.settingsByMode) return
+
+  for (const mode of ALL_MODES) {
+    const settings = state.settingsByMode[mode]
+    if (settings?.notificationSettings && !settings.notificationSettings.deliveryPreference) {
+      settings.notificationSettings.deliveryPreference =
+        DEFAULT_NOTIFICATION_SETTINGS.deliveryPreference
     }
   }
 }
@@ -614,6 +641,14 @@ export const useSettingsStore = create<SettingsState>()(
           )
         },
 
+        setNotificationDeliveryPreference: (preference: NotificationPreference) => {
+          set((state) =>
+            updateModeAndTopLevel(state, (current) => ({
+              notificationSettings: { ...current.notificationSettings, deliveryPreference: preference },
+            }))
+          )
+        },
+
         resetLocationSettings: () => {
           // Reset current mode's location-related settings to defaults
           // Keeps safe mode and other modes' settings unchanged
@@ -622,7 +657,7 @@ export const useSettingsStore = create<SettingsState>()(
       }),
       {
         name: 'volleykit-settings',
-        version: 5,
+        version: 6,
         partialize: (state) => ({
           // Global settings
           isSafeModeEnabled: state.isSafeModeEnabled,
@@ -650,6 +685,11 @@ export const useSettingsStore = create<SettingsState>()(
           // v4 → v5: Add notification settings
           if (version < NOTIFICATION_SETTINGS_VERSION) {
             addNotificationSettings(state as StateWithModes)
+          }
+
+          // v5 → v6: Add notification delivery preference
+          if (version < NOTIFICATION_DELIVERY_PREFERENCE_VERSION) {
+            addNotificationDeliveryPreference(state as StateWithModes)
           }
 
           return state

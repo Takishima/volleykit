@@ -12,10 +12,11 @@ vi.mock('@/shared/hooks/useTranslation', () => ({
 }))
 
 vi.mock('@/shared/services/notifications', () => ({
-  notificationService: {
-    isSupported: vi.fn(() => true),
-    getPermission: vi.fn(() => 'default'),
-    requestPermission: vi.fn(),
+  unifiedNotificationService: {
+    isNativeSupported: vi.fn(() => true),
+    isNativeAvailable: vi.fn(() => false),
+    getNativePermission: vi.fn(() => 'default'),
+    requestNativePermission: vi.fn(),
   },
   REMINDER_TIME_OPTIONS: ['1h', '2h', '1d'],
 }))
@@ -30,85 +31,12 @@ const defaultProps = {
 describe('NotificationsSection', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(notificationService.notificationService.isSupported).mockReturnValue(true)
-    vi.mocked(notificationService.notificationService.getPermission).mockReturnValue('default')
+    vi.mocked(notificationService.unifiedNotificationService.isNativeSupported).mockReturnValue(true)
+    vi.mocked(notificationService.unifiedNotificationService.isNativeAvailable).mockReturnValue(false)
+    vi.mocked(notificationService.unifiedNotificationService.getNativePermission).mockReturnValue('default')
   })
 
-  describe('when notifications not supported', () => {
-    it('shows not supported message', () => {
-      vi.mocked(notificationService.notificationService.isSupported).mockReturnValue(false)
-
-      render(<NotificationsSection {...defaultProps} />)
-
-      expect(screen.getByText('settings.notifications.notSupported')).toBeInTheDocument()
-    })
-  })
-
-  describe('when permission not yet requested', () => {
-    it('shows enable notifications button', () => {
-      render(<NotificationsSection {...defaultProps} />)
-
-      expect(screen.getByText('settings.notifications.enableNotifications')).toBeInTheDocument()
-    })
-
-    it('requests permission when button clicked', async () => {
-      vi.mocked(notificationService.notificationService.requestPermission).mockResolvedValue(
-        'granted'
-      )
-
-      render(<NotificationsSection {...defaultProps} />)
-
-      const button = screen.getByText('settings.notifications.enableNotifications')
-      fireEvent.click(button)
-
-      expect(notificationService.notificationService.requestPermission).toHaveBeenCalled()
-    })
-
-    it('enables notifications after permission granted', async () => {
-      vi.mocked(notificationService.notificationService.requestPermission).mockResolvedValue(
-        'granted'
-      )
-      const onSetNotificationsEnabled = vi.fn()
-
-      render(
-        <NotificationsSection {...defaultProps} onSetNotificationsEnabled={onSetNotificationsEnabled} />
-      )
-
-      const button = screen.getByText('settings.notifications.enableNotifications')
-      await fireEvent.click(button)
-
-      // Wait for async permission request to complete
-      await vi.waitFor(() => {
-        expect(onSetNotificationsEnabled).toHaveBeenCalledWith(true)
-      })
-    })
-  })
-
-  describe('when permission denied', () => {
-    it('shows permission denied warning', () => {
-      vi.mocked(notificationService.notificationService.getPermission).mockReturnValue('denied')
-
-      render(<NotificationsSection {...defaultProps} />)
-
-      expect(screen.getByText('settings.notifications.permissionDenied')).toBeInTheDocument()
-    })
-
-    it('does not show enable button', () => {
-      vi.mocked(notificationService.notificationService.getPermission).mockReturnValue('denied')
-
-      render(<NotificationsSection {...defaultProps} />)
-
-      expect(
-        screen.queryByText('settings.notifications.enableNotifications')
-      ).not.toBeInTheDocument()
-    })
-  })
-
-  describe('when permission granted', () => {
-    beforeEach(() => {
-      vi.mocked(notificationService.notificationService.getPermission).mockReturnValue('granted')
-    })
-
+  describe('notification toggle', () => {
     it('shows toggle switch for game reminders', () => {
       render(<NotificationsSection {...defaultProps} />)
 
@@ -116,7 +44,18 @@ describe('NotificationsSection', () => {
       expect(screen.getByRole('switch')).toBeInTheDocument()
     })
 
-    it('toggles notifications on switch click', () => {
+    it('requests permission when toggle clicked and native not yet requested', () => {
+      render(<NotificationsSection {...defaultProps} />)
+
+      const toggle = screen.getByRole('switch')
+      fireEvent.click(toggle)
+
+      // When native not yet requested, should request permission first
+      expect(notificationService.unifiedNotificationService.requestNativePermission).toHaveBeenCalled()
+    })
+
+    it('toggles notifications directly when native is available', () => {
+      vi.mocked(notificationService.unifiedNotificationService.isNativeAvailable).mockReturnValue(true)
       const onSetNotificationsEnabled = vi.fn()
 
       render(
@@ -133,94 +72,215 @@ describe('NotificationsSection', () => {
       expect(onSetNotificationsEnabled).toHaveBeenCalledWith(true)
     })
 
-    describe('when notifications enabled', () => {
-      it('shows reminder time options', () => {
-        render(<NotificationsSection {...defaultProps} notificationsEnabled={true} />)
+    it('toggles notifications directly when native is denied (falls back to in-app)', () => {
+      vi.mocked(notificationService.unifiedNotificationService.getNativePermission).mockReturnValue('denied')
+      const onSetNotificationsEnabled = vi.fn()
 
-        expect(screen.getByText('settings.notifications.reminderTimes')).toBeInTheDocument()
-        expect(screen.getByText('settings.notifications.reminderTime.1h')).toBeInTheDocument()
-        expect(screen.getByText('settings.notifications.reminderTime.2h')).toBeInTheDocument()
-        expect(screen.getByText('settings.notifications.reminderTime.1d')).toBeInTheDocument()
-      })
+      render(
+        <NotificationsSection
+          {...defaultProps}
+          notificationsEnabled={false}
+          onSetNotificationsEnabled={onSetNotificationsEnabled}
+        />
+      )
 
-      it('shows selected reminder times as pressed', () => {
-        render(
-          <NotificationsSection
-            {...defaultProps}
-            notificationsEnabled={true}
-            reminderTimes={['1h', '1d']}
-          />
-        )
+      const toggle = screen.getByRole('switch')
+      fireEvent.click(toggle)
 
-        const button1h = screen.getByText('settings.notifications.reminderTime.1h').closest('button')
-        const button2h = screen.getByText('settings.notifications.reminderTime.2h').closest('button')
-        const button1d = screen.getByText('settings.notifications.reminderTime.1d').closest('button')
+      expect(onSetNotificationsEnabled).toHaveBeenCalledWith(true)
+    })
 
-        expect(button1h).toHaveAttribute('aria-pressed', 'true')
-        expect(button2h).toHaveAttribute('aria-pressed', 'false')
-        expect(button1d).toHaveAttribute('aria-pressed', 'true')
-      })
+    it('toggles notifications directly when native is not supported (falls back to in-app)', () => {
+      vi.mocked(notificationService.unifiedNotificationService.isNativeSupported).mockReturnValue(false)
+      const onSetNotificationsEnabled = vi.fn()
 
-      it('adds reminder time when unselected time clicked', () => {
-        const onSetReminderTimes = vi.fn()
+      render(
+        <NotificationsSection
+          {...defaultProps}
+          notificationsEnabled={false}
+          onSetNotificationsEnabled={onSetNotificationsEnabled}
+        />
+      )
 
-        render(
-          <NotificationsSection
-            {...defaultProps}
-            notificationsEnabled={true}
-            reminderTimes={['1h']}
-            onSetReminderTimes={onSetReminderTimes}
-          />
-        )
+      const toggle = screen.getByRole('switch')
+      fireEvent.click(toggle)
 
-        const button2h = screen.getByText('settings.notifications.reminderTime.2h')
-        fireEvent.click(button2h)
+      expect(onSetNotificationsEnabled).toHaveBeenCalledWith(true)
+    })
+  })
 
-        expect(onSetReminderTimes).toHaveBeenCalledWith(['1h', '2h'])
-      })
+  describe('permission request', () => {
+    it('shows enable notifications button when native permission can be requested', () => {
+      render(<NotificationsSection {...defaultProps} />)
 
-      it('removes reminder time when selected time clicked', () => {
-        const onSetReminderTimes = vi.fn()
+      expect(screen.getByText('settings.notifications.enableNotifications')).toBeInTheDocument()
+    })
 
-        render(
-          <NotificationsSection
-            {...defaultProps}
-            notificationsEnabled={true}
-            reminderTimes={['1h', '2h']}
-            onSetReminderTimes={onSetReminderTimes}
-          />
-        )
+    it('does not show enable button when native is not supported', () => {
+      vi.mocked(notificationService.unifiedNotificationService.isNativeSupported).mockReturnValue(false)
 
-        const button1h = screen.getByText('settings.notifications.reminderTime.1h')
-        fireEvent.click(button1h)
+      render(<NotificationsSection {...defaultProps} />)
 
-        expect(onSetReminderTimes).toHaveBeenCalledWith(['2h'])
-      })
+      expect(screen.queryByText('settings.notifications.enableNotifications')).not.toBeInTheDocument()
+    })
 
-      it('does not remove last reminder time', () => {
-        const onSetReminderTimes = vi.fn()
+    it('does not show enable button when notifications already enabled', () => {
+      render(<NotificationsSection {...defaultProps} notificationsEnabled={true} />)
 
-        render(
-          <NotificationsSection
-            {...defaultProps}
-            notificationsEnabled={true}
-            reminderTimes={['1h']}
-            onSetReminderTimes={onSetReminderTimes}
-          />
-        )
+      expect(screen.queryByText('settings.notifications.enableNotifications')).not.toBeInTheDocument()
+    })
 
-        const button1h = screen.getByText('settings.notifications.reminderTime.1h')
-        fireEvent.click(button1h)
+    it('requests permission when button clicked', async () => {
+      vi.mocked(notificationService.unifiedNotificationService.requestNativePermission).mockResolvedValue(
+        'granted'
+      )
 
-        // Should not be called since it would result in empty array
-        expect(onSetReminderTimes).not.toHaveBeenCalled()
+      render(<NotificationsSection {...defaultProps} />)
+
+      const button = screen.getByText('settings.notifications.enableNotifications')
+      fireEvent.click(button)
+
+      expect(notificationService.unifiedNotificationService.requestNativePermission).toHaveBeenCalled()
+    })
+
+    it('enables notifications after permission granted', async () => {
+      vi.mocked(notificationService.unifiedNotificationService.requestNativePermission).mockResolvedValue(
+        'granted'
+      )
+      const onSetNotificationsEnabled = vi.fn()
+
+      render(
+        <NotificationsSection {...defaultProps} onSetNotificationsEnabled={onSetNotificationsEnabled} />
+      )
+
+      const button = screen.getByText('settings.notifications.enableNotifications')
+      await fireEvent.click(button)
+
+      await vi.waitFor(() => {
+        expect(onSetNotificationsEnabled).toHaveBeenCalledWith(true)
       })
     })
   })
 
-  it('shows foreground note in all states', () => {
-    vi.mocked(notificationService.notificationService.getPermission).mockReturnValue('granted')
+  describe('when native permission denied', () => {
+    beforeEach(() => {
+      vi.mocked(notificationService.unifiedNotificationService.getNativePermission).mockReturnValue('denied')
+    })
 
+    it('shows browser denied info message', () => {
+      render(<NotificationsSection {...defaultProps} />)
+
+      expect(screen.getByText('settings.notifications.browserDeniedUsingInApp')).toBeInTheDocument()
+    })
+
+    it('does not show enable button', () => {
+      render(<NotificationsSection {...defaultProps} />)
+
+      expect(screen.queryByText('settings.notifications.enableNotifications')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('when notifications enabled', () => {
+    it('shows browser notification indicator when native is available', () => {
+      vi.mocked(notificationService.unifiedNotificationService.isNativeAvailable).mockReturnValue(true)
+
+      render(<NotificationsSection {...defaultProps} notificationsEnabled={true} />)
+
+      expect(screen.getByText('settings.notifications.usingBrowser')).toBeInTheDocument()
+    })
+
+    it('shows in-app indicator when native not available', () => {
+      vi.mocked(notificationService.unifiedNotificationService.isNativeAvailable).mockReturnValue(false)
+
+      render(<NotificationsSection {...defaultProps} notificationsEnabled={true} />)
+
+      expect(screen.getByText('settings.notifications.usingInApp')).toBeInTheDocument()
+    })
+
+    it('shows reminder time options', () => {
+      render(<NotificationsSection {...defaultProps} notificationsEnabled={true} />)
+
+      expect(screen.getByText('settings.notifications.reminderTimes')).toBeInTheDocument()
+      expect(screen.getByText('settings.notifications.reminderTime.1h')).toBeInTheDocument()
+      expect(screen.getByText('settings.notifications.reminderTime.2h')).toBeInTheDocument()
+      expect(screen.getByText('settings.notifications.reminderTime.1d')).toBeInTheDocument()
+    })
+
+    it('shows selected reminder times as pressed', () => {
+      render(
+        <NotificationsSection
+          {...defaultProps}
+          notificationsEnabled={true}
+          reminderTimes={['1h', '1d']}
+        />
+      )
+
+      const button1h = screen.getByText('settings.notifications.reminderTime.1h').closest('button')
+      const button2h = screen.getByText('settings.notifications.reminderTime.2h').closest('button')
+      const button1d = screen.getByText('settings.notifications.reminderTime.1d').closest('button')
+
+      expect(button1h).toHaveAttribute('aria-pressed', 'true')
+      expect(button2h).toHaveAttribute('aria-pressed', 'false')
+      expect(button1d).toHaveAttribute('aria-pressed', 'true')
+    })
+
+    it('adds reminder time when unselected time clicked', () => {
+      const onSetReminderTimes = vi.fn()
+
+      render(
+        <NotificationsSection
+          {...defaultProps}
+          notificationsEnabled={true}
+          reminderTimes={['1h']}
+          onSetReminderTimes={onSetReminderTimes}
+        />
+      )
+
+      const button2h = screen.getByText('settings.notifications.reminderTime.2h')
+      fireEvent.click(button2h)
+
+      expect(onSetReminderTimes).toHaveBeenCalledWith(['1h', '2h'])
+    })
+
+    it('removes reminder time when selected time clicked', () => {
+      const onSetReminderTimes = vi.fn()
+
+      render(
+        <NotificationsSection
+          {...defaultProps}
+          notificationsEnabled={true}
+          reminderTimes={['1h', '2h']}
+          onSetReminderTimes={onSetReminderTimes}
+        />
+      )
+
+      const button1h = screen.getByText('settings.notifications.reminderTime.1h')
+      fireEvent.click(button1h)
+
+      expect(onSetReminderTimes).toHaveBeenCalledWith(['2h'])
+    })
+
+    it('does not remove last reminder time', () => {
+      const onSetReminderTimes = vi.fn()
+
+      render(
+        <NotificationsSection
+          {...defaultProps}
+          notificationsEnabled={true}
+          reminderTimes={['1h']}
+          onSetReminderTimes={onSetReminderTimes}
+        />
+      )
+
+      const button1h = screen.getByText('settings.notifications.reminderTime.1h')
+      fireEvent.click(button1h)
+
+      // Should not be called since it would result in empty array
+      expect(onSetReminderTimes).not.toHaveBeenCalled()
+    })
+  })
+
+  it('shows foreground note', () => {
     render(<NotificationsSection {...defaultProps} />)
 
     expect(screen.getByText('settings.notifications.foregroundNote')).toBeInTheDocument()

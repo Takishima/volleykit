@@ -400,6 +400,10 @@ const fr: Translations = {
       requesting: 'Demande en cours...',
       gameReminders: 'Rappels de matchs',
       gameRemindersDescription: 'Recevez des notifications avant vos matchs programmés.',
+      usingBrowser: 'Notifications du navigateur utilisées',
+      usingInApp: 'Notifications in-app utilisées',
+      browserDeniedUsingInApp:
+        "L'autorisation des notifications du navigateur a été refusée. Utilisation des notifications in-app.",
       reminderTimes: 'Me rappeler',
       reminderTimesHint: 'Choisissez quand vous souhaitez être rappelé avant chaque match.',
       foregroundNote:
