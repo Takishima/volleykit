@@ -14,13 +14,13 @@ interface SheetTypeOption {
 const options: SheetTypeOption[] = [
   {
     type: 'electronic',
-    icon: <FileText className="w-8 h-8" />,
+    icon: <FileText className="w-8 h-8" aria-hidden="true" />,
     title: 'Electronic Scoresheet',
     description: 'Digital scoresheet displayed on a tablet or screen',
   },
   {
     type: 'manuscript',
-    icon: <PenLine className="w-8 h-8" />,
+    icon: <PenLine className="w-8 h-8" aria-hidden="true" />,
     title: 'Manuscript Scoresheet',
     description: 'Physical paper scoresheet filled by hand',
   },

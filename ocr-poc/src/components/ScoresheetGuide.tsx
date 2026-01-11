@@ -5,6 +5,8 @@
  * Adapted from web-app version with hardcoded English text.
  */
 
+import { GUIDE_CONFIG } from '@/constants/guide-config'
+
 import type { SheetType, ManuscriptCaptureMode } from '@/stores/appStore'
 
 interface ScoresheetGuideProps {
@@ -13,25 +15,6 @@ interface ScoresheetGuideProps {
 }
 
 const PERCENT_MULTIPLIER = 100
-
-/**
- * Guide overlay dimensions for different scoresheet types.
- */
-const GUIDE_CONFIG: Record<
-  SheetType,
-  Record<ManuscriptCaptureMode | 'default', { widthPercent: number; aspectRatio: number }>
-> = {
-  electronic: {
-    default: { widthPercent: 0.7, aspectRatio: 4 / 5 },
-    full: { widthPercent: 0.7, aspectRatio: 4 / 5 },
-    'roster-only': { widthPercent: 0.7, aspectRatio: 4 / 5 },
-  },
-  manuscript: {
-    default: { widthPercent: 0.9, aspectRatio: 4 / 5 },
-    full: { widthPercent: 0.85, aspectRatio: 7 / 5 },
-    'roster-only': { widthPercent: 0.9, aspectRatio: 4 / 5 },
-  },
-}
 
 export function ScoresheetGuide({ sheetType, captureMode }: ScoresheetGuideProps) {
   const mode = captureMode ?? 'default'

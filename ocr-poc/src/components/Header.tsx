@@ -21,7 +21,7 @@ export function Header() {
           <ArrowLeft className="w-5 h-5" />
         </button>
       ) : (
-        <ScanLine className="w-6 h-6" />
+        <ScanLine className="w-6 h-6" aria-hidden="true" />
       )}
 
       <h1 className="text-lg font-semibold flex-1">Scoresheet Scanner</h1>

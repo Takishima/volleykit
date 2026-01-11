@@ -14,13 +14,13 @@ interface ModeOption {
 const options: ModeOption[] = [
   {
     mode: 'roster-only',
-    icon: <Crop className="w-8 h-8" />,
+    icon: <Crop className="w-8 h-8" aria-hidden="true" />,
     title: 'Roster Section Only',
     description: 'Capture just the player roster area (recommended)',
   },
   {
     mode: 'full',
-    icon: <ScanLine className="w-8 h-8" />,
+    icon: <ScanLine className="w-8 h-8" aria-hidden="true" />,
     title: 'Full Scoresheet',
     description: 'Capture the entire scoresheet, then crop to roster',
   },

@@ -175,15 +175,9 @@ export const useAppStore = create<AppStoreState & AppStoreActions>((set, get) =>
   },
 
   reset: () => {
-    // Revoke any object URLs to prevent memory leaks
-    const { capturedImage, croppedImage } = get()
-    if (capturedImage) {
-      URL.revokeObjectURL(URL.createObjectURL(capturedImage))
-    }
-    if (croppedImage) {
-      URL.revokeObjectURL(URL.createObjectURL(croppedImage))
-    }
-
+    // Note: Blobs are garbage collected automatically.
+    // Object URLs created from blobs (e.g., in ResultsScreen) should be
+    // cleaned up where they are created using useEffect cleanup.
     set(initialState)
   },
 }))

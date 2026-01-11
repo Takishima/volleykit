@@ -2,6 +2,7 @@ import { useRef, useState, useCallback, useEffect } from 'react'
 
 import { Camera, Image as ImageIcon, AlertCircle } from 'lucide-react'
 
+import { GUIDE_CONFIG } from '@/constants/guide-config'
 import { useAppStore } from '@/stores/appStore'
 
 import { ScoresheetGuide } from './ScoresheetGuide'
@@ -25,25 +26,6 @@ const VIDEO_CONSTRAINTS: MediaTrackConstraints = {
 const JPEG_QUALITY = 0.92
 
 type CaptureStep = 'select' | 'camera'
-
-/**
- * Guide overlay dimensions for different scoresheet types.
- */
-const GUIDE_CONFIG: Record<
-  SheetType,
-  Record<ManuscriptCaptureMode | 'default', { widthPercent: number; aspectRatio: number }>
-> = {
-  electronic: {
-    default: { widthPercent: 0.7, aspectRatio: 4 / 5 },
-    full: { widthPercent: 0.7, aspectRatio: 4 / 5 },
-    'roster-only': { widthPercent: 0.7, aspectRatio: 4 / 5 },
-  },
-  manuscript: {
-    default: { widthPercent: 0.9, aspectRatio: 4 / 5 },
-    full: { widthPercent: 0.85, aspectRatio: 7 / 5 }, // Full A4 landscape
-    'roster-only': { widthPercent: 0.9, aspectRatio: 4 / 5 }, // Just the roster
-  },
-}
 
 /**
  * Calculates the crop area corresponding to the guide overlay.

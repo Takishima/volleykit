@@ -4,12 +4,14 @@
  * Displays the OCR processing results.
  */
 
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 
 import { CheckCircle, RotateCcw, Copy, Check } from 'lucide-react'
-import { useState } from 'react'
 
 import { useAppStore } from '@/stores/appStore'
+
+/** Duration to show "Copied!" feedback in milliseconds */
+const COPY_FEEDBACK_DURATION_MS = 2000
 
 export function ResultsScreen() {
   const ocrResult = useAppStore((s) => s.ocrResult)
@@ -26,13 +28,22 @@ export function ResultsScreen() {
     return URL.createObjectURL(image)
   }, [croppedImage, capturedImage])
 
+  // Cleanup object URL to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (imageUrl) {
+        URL.revokeObjectURL(imageUrl)
+      }
+    }
+  }, [imageUrl])
+
   const handleCopy = async () => {
     if (!ocrResult?.fullText) return
 
     try {
       await navigator.clipboard.writeText(ocrResult.fullText)
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      setTimeout(() => setCopied(false), COPY_FEEDBACK_DURATION_MS)
     } catch (err) {
       console.error('Failed to copy:', err)
     }
@@ -119,7 +130,7 @@ export function ResultsScreen() {
             </div>
             <div className="divide-y divide-slate-100">
               {ocrResult.lines.map((line, index) => (
-                <div key={index} className="px-4 py-2 flex items-start gap-3">
+                <div key={`${index}-${line.text.slice(0, 20)}`} className="px-4 py-2 flex items-start gap-3">
                   <span className="text-xs text-slate-400 font-mono w-6 text-right flex-shrink-0 pt-0.5">
                     {index + 1}
                   </span>
