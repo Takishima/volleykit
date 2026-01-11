@@ -764,6 +764,10 @@ export const api = {
 
 export type ApiClient = typeof api;
 
+// Export the API client directly for use in auth store
+// (auth store calls switchRoleAndAttribute after login to sync server state)
+export { api as apiClient };
+
 // Re-export DataSource from auth store for consumers that import from client
 export type { DataSource } from "@/shared/stores/auth";
 

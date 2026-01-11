@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Login success detection now checks for session cookie in redirect responses (fixes root path redirect)
 - OCR camera capture now auto-crops images to match the guide overlay, improving OCR accuracy by focusing on the scoresheet area
 - User now sees correct assignments after logging into a different association (#697)
+- Association dropdown now stays in sync with displayed data after logout and re-login
 
 ### Removed
 
