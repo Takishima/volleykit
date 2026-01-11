@@ -21,6 +21,8 @@
     "paths": {
       /* Redirect dependencies to ocr-poc's node_modules for web-app imports */
       "react": ["./node_modules/@types/react"],
+      "react/jsx-runtime": ["./node_modules/@types/react/jsx-runtime"],
+      "react/jsx-dev-runtime": ["./node_modules/@types/react/jsx-dev-runtime"],
       "react-dom": ["./node_modules/@types/react-dom"],
       "react-easy-crop": ["./node_modules/react-easy-crop"],
       /* PoC and web-app path aliases */
