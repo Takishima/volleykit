@@ -49,7 +49,9 @@ export default function PWAProviderInternal({
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible" && registrationRef.current) {
-        registrationRef.current.update();
+        // Silently ignore errors - update check failures on visibility change are not critical
+        // (e.g., user returns to the app while offline)
+        registrationRef.current.update().catch(() => {});
       }
     };
 
