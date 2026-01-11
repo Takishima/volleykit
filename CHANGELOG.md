@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-01-11
+
 ### Added
 
 - Prettier formatter and consistent import ordering for codebase - works in Claude Code web sessions without devenv (#704)
@@ -104,7 +106,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Session-based authentication with CSRF protection
 - Content Security Policy headers
 
-[Unreleased]: https://github.com/Takishima/volleykit/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/Takishima/volleykit/compare/v1.1.0...HEAD
+
+[1.1.0]: https://github.com/Takishima/volleykit/compare/v1.0.2...v1.1.0
+
 [1.0.2]: https://github.com/Takishima/volleykit/compare/v1.0.1...v1.0.2
+
 [1.0.1]: https://github.com/Takishima/volleykit/compare/v1.0.0...v1.0.1
+
 [1.0.0]: https://github.com/Takishima/volleykit/releases/tag/v1.0.0
