@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* Custom CSS variables for volleyball theme */
 @theme {
@@ -27,8 +27,8 @@
   --color-primary-200: #f1ff90;
   --color-primary-300: #e2ff50;
   --color-primary-400: #d7ff37;
-  --color-primary-500: #b2e600;  /* Main brand color */
-  --color-primary-600: #8ab800;  /* Hover state */
+  --color-primary-500: #b2e600; /* Main brand color */
+  --color-primary-600: #8ab800; /* Hover state */
   --color-primary-700: #688b00;
   --color-primary-800: #526d07;
   --color-primary-900: #455c0b;
@@ -44,8 +44,8 @@
   --color-success-100: #ccfbf1;
   --color-success-200: #99f6e4;
   --color-success-400: #2dd4bf;
-  --color-success-500: #14b8a6;  /* Main success color */
-  --color-success-600: #0d9488;  /* Hover/emphasis */
+  --color-success-500: #14b8a6; /* Main success color */
+  --color-success-600: #0d9488; /* Hover/emphasis */
   --color-success-800: #115e59;
   --color-success-900: #134e4a;
 
@@ -54,8 +54,8 @@
   --color-warning-100: #ffedd5;
   --color-warning-200: #fed7aa;
   --color-warning-400: #fb923c;
-  --color-warning-500: #f97316;  /* Main warning color */
-  --color-warning-600: #ea580c;  /* Hover/emphasis */
+  --color-warning-500: #f97316; /* Main warning color */
+  --color-warning-600: #ea580c; /* Hover/emphasis */
   --color-warning-800: #9a3412;
   --color-warning-900: #7c2d12;
 
@@ -64,8 +64,8 @@
   --color-danger-100: #fee2e2;
   --color-danger-200: #fecaca;
   --color-danger-400: #f87171;
-  --color-danger-500: #ef4444;  /* Main danger color */
-  --color-danger-600: #dc2626;  /* Hover/emphasis */
+  --color-danger-500: #ef4444; /* Main danger color */
+  --color-danger-600: #dc2626; /* Hover/emphasis */
   --color-danger-800: #991b1b;
   --color-danger-900: #7f1d1d;
 
@@ -74,10 +74,10 @@
    * ============================================== */
 
   /* Light mode surfaces */
-  --color-surface-page: var(--color-gray-50);       /* Page background */
-  --color-surface-card: #ffffff;                     /* Cards, elevated surfaces */
-  --color-surface-subtle: var(--color-gray-100);    /* Hover states, subtle bg */
-  --color-surface-muted: var(--color-gray-200);     /* Disabled, secondary buttons */
+  --color-surface-page: var(--color-gray-50); /* Page background */
+  --color-surface-card: #ffffff; /* Cards, elevated surfaces */
+  --color-surface-subtle: var(--color-gray-100); /* Hover states, subtle bg */
+  --color-surface-muted: var(--color-gray-200); /* Disabled, secondary buttons */
 
   /* Dark mode surfaces (used via dark: prefix in components) */
   --color-surface-page-dark: var(--color-gray-900);
@@ -90,10 +90,10 @@
    * ============================================== */
 
   /* Light mode text */
-  --color-text-primary: var(--color-gray-900);      /* Headings, important text */
-  --color-text-secondary: var(--color-gray-700);    /* Body text */
-  --color-text-muted: var(--color-gray-500);        /* Labels, captions */
-  --color-text-subtle: var(--color-gray-400);       /* Hints, timestamps */
+  --color-text-primary: var(--color-gray-900); /* Headings, important text */
+  --color-text-secondary: var(--color-gray-700); /* Body text */
+  --color-text-muted: var(--color-gray-500); /* Labels, captions */
+  --color-text-subtle: var(--color-gray-400); /* Hints, timestamps */
 
   /* Dark mode text */
   --color-text-primary-dark: var(--color-gray-100);
@@ -106,9 +106,9 @@
    * ============================================== */
 
   /* Light mode borders */
-  --color-border-subtle: var(--color-gray-100);     /* Light dividers */
-  --color-border-default: var(--color-gray-200);    /* Card borders */
-  --color-border-strong: var(--color-gray-300);     /* Input borders */
+  --color-border-subtle: var(--color-gray-100); /* Light dividers */
+  --color-border-default: var(--color-gray-200); /* Card borders */
+  --color-border-strong: var(--color-gray-300); /* Input borders */
 
   /* Dark mode borders */
   --color-border-subtle-dark: var(--color-gray-700);
@@ -127,17 +127,17 @@
  *   Calendar primary-500: #98c400 (hsl 73, 100%, 38%)
  * ============================================== */
 .calendar-mode {
-  --color-primary-50: #f5fad6;   /* Base #fdffe4 lightness 95% → 91% */
-  --color-primary-100: #ebf5aa;  /* Base #f9ffc4 lightness 88% → 81% */
-  --color-primary-200: #dceb70;  /* Base #f1ff90 lightness 78% → 68% */
-  --color-primary-300: #c8dc38;  /* Base #e2ff50 lightness 66% → 54% */
-  --color-primary-400: #b8d020;  /* Base #d7ff37 lightness 61% → 47% */
-  --color-primary-500: #98c400;  /* Base #b2e600 lightness 45% → 38% */
-  --color-primary-600: #759c00;  /* Base #8ab800 lightness 36% → 31% */
-  --color-primary-700: #587500;  /* Base #688b00 lightness 27% → 23% */
-  --color-primary-800: #465d06;  /* Base #526d07 lightness 23% → 19% */
-  --color-primary-900: #3b4e09;  /* Base #455c0b lightness 20% → 17% */
-  --color-primary-950: #1e2c00;  /* Base #233400 lightness 10% → 9% */
+  --color-primary-50: #f5fad6; /* Base #fdffe4 lightness 95% → 91% */
+  --color-primary-100: #ebf5aa; /* Base #f9ffc4 lightness 88% → 81% */
+  --color-primary-200: #dceb70; /* Base #f1ff90 lightness 78% → 68% */
+  --color-primary-300: #c8dc38; /* Base #e2ff50 lightness 66% → 54% */
+  --color-primary-400: #b8d020; /* Base #d7ff37 lightness 61% → 47% */
+  --color-primary-500: #98c400; /* Base #b2e600 lightness 45% → 38% */
+  --color-primary-600: #759c00; /* Base #8ab800 lightness 36% → 31% */
+  --color-primary-700: #587500; /* Base #688b00 lightness 27% → 23% */
+  --color-primary-800: #465d06; /* Base #526d07 lightness 23% → 19% */
+  --color-primary-900: #3b4e09; /* Base #455c0b lightness 20% → 17% */
+  --color-primary-950: #1e2c00; /* Base #233400 lightness 10% → 9% */
 }
 
 /* Base styles */

@@ -2,20 +2,20 @@
  * Utilities for detecting single-ball halls in assignments.
  */
 
+import type { Assignment } from '@/api/client'
 import {
   SINGLE_BALL_HALLS,
   SINGLE_BALL_LEAGUES,
   SINGLE_BALL_PDF_PATHS,
   type SingleBallHall,
-} from "@/data/single-ball-halls";
-import type { Assignment } from "@/api/client";
-import type { Locale } from "@/i18n";
+} from '@/data/single-ball-halls'
+import type { Locale } from '@/i18n'
 
 export interface SingleBallHallMatch {
   /** The matched hall configuration */
-  hall: SingleBallHall;
+  hall: SingleBallHall
   /** Whether the rule is conditional (only applies when single sub-hall available) */
-  isConditional: boolean;
+  isConditional: boolean
 }
 
 /**
@@ -23,36 +23,34 @@ export interface SingleBallHallMatch {
  */
 function normalizeString(str: string): string {
   return str
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
-    .trim();
+    .trim()
 }
 
 /**
  * Checks if a city name matches any single-ball hall city.
  */
 function matchCity(city: string, hallCity: string): boolean {
-  return normalizeString(city) === normalizeString(hallCity);
+  return normalizeString(city) === normalizeString(hallCity)
 }
 
 /**
  * Checks if a hall name contains any of the keywords.
  */
 function matchHallKeywords(hallName: string, keywords: string[]): boolean {
-  const normalizedHallName = normalizeString(hallName);
-  return keywords.some((keyword) =>
-    normalizedHallName.includes(normalizeString(keyword))
-  );
+  const normalizedHallName = normalizeString(hallName)
+  return keywords.some((keyword) => normalizedHallName.includes(normalizeString(keyword)))
 }
 
 /**
  * Checks if the league category is NLA or NLB.
  */
 function isTopLeague(leagueCategory: string | undefined): boolean {
-  if (!leagueCategory) return false;
-  const normalized = leagueCategory.toUpperCase().trim();
-  return SINGLE_BALL_LEAGUES.some((league) => normalized === league);
+  if (!leagueCategory) return false
+  const normalized = leagueCategory.toUpperCase().trim()
+  return SINGLE_BALL_LEAGUES.some((league) => normalized === league)
 }
 
 /**
@@ -68,37 +66,32 @@ function isTopLeague(leagueCategory: string | undefined): boolean {
  * This strict matching avoids false positives since some keywords
  * like "Turnhalle" or "Gymnasium" are very common.
  */
-export function detectSingleBallHall(
-  assignment: Assignment
-): SingleBallHallMatch | null {
-  const game = assignment.refereeGame?.game;
-  if (!game) return null;
+export function detectSingleBallHall(assignment: Assignment): SingleBallHallMatch | null {
+  const game = assignment.refereeGame?.game
+  if (!game) return null
 
   // Only apply to NLA/NLB games
-  const leagueCategory = game.group?.phase?.league?.leagueCategory?.name;
-  if (!isTopLeague(leagueCategory)) return null;
+  const leagueCategory = game.group?.phase?.league?.leagueCategory?.name
+  if (!isTopLeague(leagueCategory)) return null
 
   // Get hall and city info
-  const city = game.hall?.primaryPostalAddress?.city;
-  const hallName = game.hall?.name;
+  const city = game.hall?.primaryPostalAddress?.city
+  const hallName = game.hall?.name
 
   // Require both city and hall name for accurate matching
-  if (!city || !hallName) return null;
+  if (!city || !hallName) return null
 
   // Find matching hall - requires BOTH city AND hall keyword match
   for (const hall of SINGLE_BALL_HALLS) {
-    if (
-      matchCity(city, hall.city) &&
-      matchHallKeywords(hallName, hall.hallKeywords)
-    ) {
+    if (matchCity(city, hall.city) && matchHallKeywords(hallName, hall.hallKeywords)) {
       return {
         hall,
         isConditional: hall.conditional,
-      };
+      }
     }
   }
 
-  return null;
+  return null
 }
 
 /**
@@ -106,8 +99,8 @@ export function detectSingleBallHall(
  * Includes the base URL for correct resolution on GitHub Pages.
  */
 export function getSingleBallHallsPdfPath(locale: Locale): string {
-  const basePath = import.meta.env.BASE_URL;
-  const pdfPath = SINGLE_BALL_PDF_PATHS[locale];
+  const basePath = import.meta.env.BASE_URL
+  const pdfPath = SINGLE_BALL_PDF_PATHS[locale]
   // Remove leading slash from pdfPath since BASE_URL already ends with /
-  return `${basePath}${pdfPath.slice(1)}`;
+  return `${basePath}${pdfPath.slice(1)}`
 }

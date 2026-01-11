@@ -1,47 +1,66 @@
-import { memo, useMemo } from "react";
-import { format, parseISO } from "date-fns";
-import { ExpandableCard } from "@/shared/components/ExpandableCard";
-import { TravelTimeBadge } from "@/shared/components/TravelTimeBadge";
-import { MapPin, MaleIcon, FemaleIcon, Car, Navigation, TrainFront, Loader2, User } from "@/shared/components/icons";
-import type { GameExchange } from "@/api/client";
-import { useDateLocale } from "@/shared/hooks/useDateFormat";
-import { useTranslation } from "@/shared/hooks/useTranslation";
-import { buildMapsUrls } from "@/shared/utils/maps-url";
-import { extractCoordinates } from "@/shared/utils/geo-location";
-import { getPositionLabel } from "@/shared/utils/position-labels";
-import { useSettingsStore } from "@/shared/stores/settings";
-import { useActiveAssociationCode } from "@/features/auth/hooks/useActiveAssociation";
-import { useSbbUrl } from "@/shared/hooks/useSbbUrl";
+import { memo, useMemo } from 'react'
 
-type RoleLabelKey = "positions.head-one" | "positions.head-two" | "positions.linesman-one" | "positions.linesman-two";
+import { format, parseISO } from 'date-fns'
+
+import type { GameExchange } from '@/api/client'
+import { useActiveAssociationCode } from '@/features/auth/hooks/useActiveAssociation'
+import { ExpandableCard } from '@/shared/components/ExpandableCard'
+import {
+  MapPin,
+  MaleIcon,
+  FemaleIcon,
+  Car,
+  Navigation,
+  TrainFront,
+  Loader2,
+  User,
+} from '@/shared/components/icons'
+import { TravelTimeBadge } from '@/shared/components/TravelTimeBadge'
+import { useDateLocale } from '@/shared/hooks/useDateFormat'
+import { useSbbUrl } from '@/shared/hooks/useSbbUrl'
+import { useTranslation } from '@/shared/hooks/useTranslation'
+import { useSettingsStore } from '@/shared/stores/settings'
+import { extractCoordinates } from '@/shared/utils/geo-location'
+import { buildMapsUrls } from '@/shared/utils/maps-url'
+import { getPositionLabel } from '@/shared/utils/position-labels'
+
+type RoleLabelKey =
+  | 'positions.head-one'
+  | 'positions.head-two'
+  | 'positions.linesman-one'
+  | 'positions.linesman-two'
 
 interface RoleEntry {
-  labelKey: RoleLabelKey;
-  name: string;
-  isSubmitter: boolean;
+  labelKey: RoleLabelKey
+  name: string
+  isSubmitter: boolean
 }
 
-type RefereeGameFields = "activeFirstHeadRefereeName" | "activeSecondHeadRefereeName" | "activeFirstLinesmanRefereeName" | "activeSecondLinesmanRefereeName";
+type RefereeGameFields =
+  | 'activeFirstHeadRefereeName'
+  | 'activeSecondHeadRefereeName'
+  | 'activeFirstLinesmanRefereeName'
+  | 'activeSecondLinesmanRefereeName'
 
 const ROLE_CONFIG: Array<{ field: RefereeGameFields; labelKey: RoleLabelKey }> = [
-  { field: "activeFirstHeadRefereeName", labelKey: "positions.head-one" },
-  { field: "activeSecondHeadRefereeName", labelKey: "positions.head-two" },
-  { field: "activeFirstLinesmanRefereeName", labelKey: "positions.linesman-one" },
-  { field: "activeSecondLinesmanRefereeName", labelKey: "positions.linesman-two" },
-];
+  { field: 'activeFirstHeadRefereeName', labelKey: 'positions.head-one' },
+  { field: 'activeSecondHeadRefereeName', labelKey: 'positions.head-two' },
+  { field: 'activeFirstLinesmanRefereeName', labelKey: 'positions.linesman-one' },
+  { field: 'activeSecondLinesmanRefereeName', labelKey: 'positions.linesman-two' },
+]
 
 interface ExchangeCardProps {
-  exchange: GameExchange;
+  exchange: GameExchange
   /** When true, expansion is disabled and the arrow is hidden */
-  disableExpansion?: boolean;
+  disableExpansion?: boolean
   /** Optional data-tour attribute for guided tours */
-  dataTour?: string;
+  dataTour?: string
   /** Estimated car distance from user's home location in kilometres (if available) */
-  carDistanceKm?: number | null;
+  carDistanceKm?: number | null
   /** Travel time in minutes (if available) */
-  travelTimeMinutes?: number | null;
+  travelTimeMinutes?: number | null
   /** Whether travel time is currently loading */
-  travelTimeLoading?: boolean;
+  travelTimeLoading?: boolean
 }
 
 function ExchangeCardComponent({
@@ -52,57 +71,57 @@ function ExchangeCardComponent({
   travelTimeMinutes,
   travelTimeLoading,
 }: ExchangeCardProps) {
-  const { t, tInterpolate, locale } = useTranslation();
-  const dateLocale = useDateLocale();
-  const associationCode = useActiveAssociationCode();
+  const { t, tInterpolate, locale } = useTranslation()
+  const dateLocale = useDateLocale()
+  const associationCode = useActiveAssociationCode()
 
-  const game = exchange.refereeGame?.game;
-  const startDate = game?.startingDateTime
-    ? parseISO(game.startingDateTime)
-    : null;
+  const game = exchange.refereeGame?.game
+  const startDate = game?.startingDateTime ? parseISO(game.startingDateTime) : null
 
   // Build list of role entries with submitter identification
   const roleEntries = useMemo((): RoleEntry[] => {
-    const refereeGame = exchange.refereeGame;
-    const submitter = exchange.submittedByPerson;
-    const submitterFullName = submitter ? `${submitter.firstName} ${submitter.lastName}` : null;
+    const refereeGame = exchange.refereeGame
+    const submitter = exchange.submittedByPerson
+    const submitterFullName = submitter ? `${submitter.firstName} ${submitter.lastName}` : null
 
-    return ROLE_CONFIG
-      .filter(({ field }) => refereeGame?.[field])
-      .map(({ field, labelKey }) => ({
-        labelKey,
-        name: refereeGame![field]!,
-        isSubmitter: refereeGame![field] === submitterFullName,
-      }));
-  }, [exchange.refereeGame, exchange.submittedByPerson]);
+    return ROLE_CONFIG.filter(({ field }) => refereeGame?.[field]).map(({ field, labelKey }) => ({
+      labelKey,
+      name: refereeGame![field]!,
+      isSubmitter: refereeGame![field] === submitterFullName,
+    }))
+  }, [exchange.refereeGame, exchange.submittedByPerson])
 
-  const homeTeam = game?.encounter?.teamHome?.name || t("common.tbd");
-  const awayTeam = game?.encounter?.teamAway?.name || t("common.tbd");
-  const hallName = game?.hall?.name || t("common.locationTbd");
-  const postalAddress = game?.hall?.primaryPostalAddress;
-  const city = postalAddress?.city;
+  const homeTeam = game?.encounter?.teamHome?.name || t('common.tbd')
+  const awayTeam = game?.encounter?.teamAway?.name || t('common.tbd')
+  const hallName = game?.hall?.name || t('common.locationTbd')
+  const postalAddress = game?.hall?.primaryPostalAddress
+  const city = postalAddress?.city
 
   // Build maps URLs using shared utility
-  const { googleMapsUrl, nativeMapsUrl: addressMapsUrl, fullAddress } = buildMapsUrls(postalAddress, hallName);
+  const {
+    googleMapsUrl,
+    nativeMapsUrl: addressMapsUrl,
+    fullAddress,
+  } = buildMapsUrls(postalAddress, hallName)
 
-  const requiredLevel = exchange.requiredRefereeLevel;
+  const requiredLevel = exchange.requiredRefereeLevel
 
   // Get the translated position label for the exchange
-  const positionLabel = getPositionLabel(exchange.refereePosition, t);
+  const positionLabel = getPositionLabel(exchange.refereePosition, t)
 
-  const leagueCategory = game?.group?.phase?.league?.leagueCategory?.name;
-  const gender = game?.group?.phase?.league?.gender;
+  const leagueCategory = game?.group?.phase?.league?.leagueCategory?.name
+  const gender = game?.group?.phase?.league?.gender
 
   // Get transport settings for the association
   const isTransportEnabled = useSettingsStore((state) =>
-    state.isTransportEnabledForAssociation(associationCode),
-  );
+    state.isTransportEnabledForAssociation(associationCode)
+  )
 
   // Extract hall coordinates and ID for travel time queries
-  const geoLocation = game?.hall?.primaryPostalAddress?.geographicalLocation;
-  const hallCoords = extractCoordinates(geoLocation);
-  const hallId = game?.hall?.__identity;
-  const gameStartingDateTime = game?.startingDateTime;
+  const geoLocation = game?.hall?.primaryPostalAddress?.geographicalLocation
+  const hallCoords = extractCoordinates(geoLocation)
+  const hallId = game?.hall?.__identity
+  const gameStartingDateTime = game?.startingDateTime
 
   // Hook to fetch trip data on demand and generate SBB URL with station ID
   const { isLoading: isSbbLoading, openSbbConnection } = useSbbUrl({
@@ -112,10 +131,10 @@ function ExchangeCardComponent({
     hallAddress: fullAddress,
     gameStartTime: gameStartingDateTime,
     language: locale,
-  });
+  })
 
   // Show SBB button if transport is enabled and we have the required data
-  const showSbbButton = isTransportEnabled && city && gameStartingDateTime;
+  const showSbbButton = isTransportEnabled && city && gameStartingDateTime
 
   return (
     <ExpandableCard
@@ -128,15 +147,13 @@ function ExchangeCardComponent({
           <div className="text-xs text-text-muted dark:text-text-muted-dark min-w-[4.5rem] shrink-0">
             {startDate ? (
               <>
-                <div>
-                  {format(startDate, "EEE, MMM d", { locale: dateLocale })}
-                </div>
+                <div>{format(startDate, 'EEE, MMM d', { locale: dateLocale })}</div>
                 <div className="font-medium text-text-secondary dark:text-text-secondary-dark">
-                  {format(startDate, "HH:mm", { locale: dateLocale })}
+                  {format(startDate, 'HH:mm', { locale: dateLocale })}
                 </div>
               </>
             ) : (
-              t("common.tbd")
+              t('common.tbd')
             )}
           </div>
 
@@ -145,22 +162,22 @@ function ExchangeCardComponent({
             {leagueCategory && (
               <div className="font-medium text-text-primary dark:text-text-primary-dark truncate text-sm flex items-center gap-1">
                 <span className="truncate">{leagueCategory}</span>
-                {gender === "m" && (
+                {gender === 'm' && (
                   <MaleIcon
                     className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400 shrink-0"
-                    aria-label={t("common.men")}
+                    aria-label={t('common.men')}
                   />
                 )}
-                {gender === "f" && (
+                {gender === 'f' && (
                   <FemaleIcon
                     className="w-3.5 h-3.5 text-pink-500 dark:text-pink-400 shrink-0"
-                    aria-label={t("common.women")}
+                    aria-label={t('common.women')}
                   />
                 )}
               </div>
             )}
             <div className="text-xs text-text-muted dark:text-text-muted-dark truncate">
-              {homeTeam} {t("common.vs")} {awayTeam}
+              {homeTeam} {t('common.vs')} {awayTeam}
             </div>
           </div>
 
@@ -170,8 +187,8 @@ function ExchangeCardComponent({
               {/* Car distance badge */}
               {carDistanceKm != null && (
                 <span className="text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 px-2 py-0.5 rounded-full flex items-center gap-1">
-                  <Car className="w-3 h-3" aria-hidden="true" />
-                  ~{carDistanceKm.toFixed(0)} {t("common.distanceUnit")}
+                  <Car className="w-3 h-3" aria-hidden="true" />~{carDistanceKm.toFixed(0)}{' '}
+                  {t('common.distanceUnit')}
                 </span>
               )}
               {/* Travel time badge */}
@@ -198,20 +215,21 @@ function ExchangeCardComponent({
                 {hallName}
               </div>
               {/* Full address - clickable to open in native maps app */}
-              {fullAddress && (
-                addressMapsUrl ? (
+              {fullAddress &&
+                (addressMapsUrl ? (
                   <a
                     href={addressMapsUrl}
                     className="text-primary-600 dark:text-primary-400 hover:underline focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded block"
                     onClick={(e) => e.stopPropagation()}
-                    aria-label={tInterpolate("assignments.openAddressInMaps", { address: fullAddress })}
+                    aria-label={tInterpolate('assignments.openAddressInMaps', {
+                      address: fullAddress,
+                    })}
                   >
                     {fullAddress}
                   </a>
                 ) : (
                   <span>{fullAddress}</span>
-                )
-              )}
+                ))}
             </div>
             {/* Navigation buttons */}
             <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -222,8 +240,8 @@ function ExchangeCardComponent({
                   rel="noopener noreferrer"
                   className="p-2 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-800/40 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded-lg transition-colors"
                   onClick={(e) => e.stopPropagation()}
-                  title={t("assignments.openInGoogleMaps")}
-                  aria-label={t("assignments.openInGoogleMaps")}
+                  title={t('assignments.openInGoogleMaps')}
+                  aria-label={t('assignments.openInGoogleMaps')}
                 >
                   <Navigation className="w-5 h-5" aria-hidden="true" />
                 </a>
@@ -233,12 +251,12 @@ function ExchangeCardComponent({
                   type="button"
                   className="p-2 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-800/40 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded-lg transition-colors disabled:opacity-50"
                   onClick={(e) => {
-                    e.stopPropagation();
-                    void openSbbConnection();
+                    e.stopPropagation()
+                    void openSbbConnection()
                   }}
                   disabled={isSbbLoading}
-                  title={t("assignments.openSbbConnection")}
-                  aria-label={t("assignments.openSbbConnection")}
+                  title={t('assignments.openSbbConnection')}
+                  aria-label={t('assignments.openSbbConnection')}
                 >
                   {isSbbLoading ? (
                     <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
@@ -255,8 +273,12 @@ function ExchangeCardComponent({
             <div className="flex items-center gap-2 text-sm text-text-muted dark:text-text-muted-dark">
               <User className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
               <div>
-                <span className="text-text-subtle dark:text-text-subtle-dark">{t("common.position")}: </span>
-                <span className="font-medium text-text-primary dark:text-text-primary-dark">{positionLabel}</span>
+                <span className="text-text-subtle dark:text-text-subtle-dark">
+                  {t('common.position')}:{' '}
+                </span>
+                <span className="font-medium text-text-primary dark:text-text-primary-dark">
+                  {positionLabel}
+                </span>
               </div>
             </div>
           )}
@@ -264,7 +286,7 @@ function ExchangeCardComponent({
           {/* Required level */}
           {requiredLevel && (
             <div className="text-xs text-text-subtle dark:text-text-subtle-dark">
-              {tInterpolate("exchange.levelRequired", { level: requiredLevel })}
+              {tInterpolate('exchange.levelRequired', { level: requiredLevel })}
             </div>
           )}
 
@@ -276,7 +298,11 @@ function ExchangeCardComponent({
                   <span className="text-text-subtle dark:text-text-subtle-dark">
                     {t(entry.labelKey)}:
                   </span>
-                  <span className={entry.isSubmitter ? "italic text-primary-600 dark:text-primary-400" : ""}>
+                  <span
+                    className={
+                      entry.isSubmitter ? 'italic text-primary-600 dark:text-primary-400' : ''
+                    }
+                  >
                     {entry.name}
                   </span>
                 </div>
@@ -286,7 +312,7 @@ function ExchangeCardComponent({
         </div>
       )}
     />
-  );
+  )
 }
 
-export const ExchangeCard = memo(ExchangeCardComponent);
+export const ExchangeCard = memo(ExchangeCardComponent)

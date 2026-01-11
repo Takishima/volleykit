@@ -1,13 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
-import { getApiClient, type PersonSearchFilter } from "@/api/client";
+import { useQuery } from '@tanstack/react-query'
+
+import { getApiClient, type PersonSearchFilter } from '@/api/client'
+import { queryKeys } from '@/api/queryKeys'
 import {
   validateResponse,
   personSearchResponseSchema,
   type ValidatedPersonSearchResult,
-} from "@/api/validation";
-import { useAuthStore } from "@/shared/stores/auth";
-import { queryKeys } from "@/api/queryKeys";
-import { ASSIGNMENTS_STALE_TIME_MS } from "@/shared/hooks/usePaginatedQuery";
+} from '@/api/validation'
+import { ASSIGNMENTS_STALE_TIME_MS } from '@/shared/hooks/usePaginatedQuery'
+import { useAuthStore } from '@/shared/stores/auth'
 
 /**
  * Parses a search input string into search filters.
@@ -28,42 +29,42 @@ import { ASSIGNMENTS_STALE_TIME_MS } from "@/shared/hooks/usePaginatedQuery";
  * parseSearchInput("hans müller 1985") // { firstName: "hans", lastName: "müller", yearOfBirth: "1985" }
  */
 export function parseSearchInput(input: string): PersonSearchFilter {
-  const trimmed = input.trim();
+  const trimmed = input.trim()
   if (!trimmed) {
-    return {};
+    return {}
   }
 
-  const tokens = trimmed.split(/\s+/);
-  const result: PersonSearchFilter = {};
+  const tokens = trimmed.split(/\s+/)
+  const result: PersonSearchFilter = {}
 
   // Check if last token is a year (4 digits)
-  const lastToken = tokens[tokens.length - 1];
+  const lastToken = tokens[tokens.length - 1]
   if (lastToken && /^\d{4}$/.test(lastToken)) {
-    result.yearOfBirth = lastToken;
-    tokens.pop();
+    result.yearOfBirth = lastToken
+    tokens.pop()
   }
 
   // Parse remaining name tokens
   if (tokens.length === 1) {
-    result.lastName = tokens[0];
+    result.lastName = tokens[0]
   } else if (tokens.length >= 2) {
     // First token as firstName, rest as lastName
-    result.firstName = tokens[0];
-    result.lastName = tokens.slice(1).join(" ");
+    result.firstName = tokens[0]
+    result.lastName = tokens.slice(1).join(' ')
   }
 
-  return result;
+  return result
 }
 
 interface UseScorerSearchOptions {
-  enabled?: boolean;
+  enabled?: boolean
 }
 
 interface UseScorerSearchResult {
-  data: ValidatedPersonSearchResult[] | undefined;
-  isLoading: boolean;
-  isError: boolean;
-  error: Error | null;
+  data: ValidatedPersonSearchResult[] | undefined
+  isLoading: boolean
+  isError: boolean
+  error: Error | null
 }
 
 /**
@@ -78,34 +79,28 @@ interface UseScorerSearchResult {
  */
 export function useScorerSearch(
   filters: PersonSearchFilter,
-  options: UseScorerSearchOptions = {},
+  options: UseScorerSearchOptions = {}
 ): UseScorerSearchResult {
-  const dataSource = useAuthStore((state) => state.dataSource);
-  const apiClient = getApiClient(dataSource);
+  const dataSource = useAuthStore((state) => state.dataSource)
+  const apiClient = getApiClient(dataSource)
 
-  const hasFilters = Boolean(
-    filters.firstName || filters.lastName || filters.yearOfBirth,
-  );
+  const hasFilters = Boolean(filters.firstName || filters.lastName || filters.yearOfBirth)
 
   const query = useQuery({
     queryKey: queryKeys.scorerSearch.search(filters),
     queryFn: async () => {
-      const response = await apiClient.searchPersons(filters);
-      const validated = validateResponse(
-        response,
-        personSearchResponseSchema,
-        "scorerSearch",
-      );
-      return validated.items ?? [];
+      const response = await apiClient.searchPersons(filters)
+      const validated = validateResponse(response, personSearchResponseSchema, 'scorerSearch')
+      return validated.items ?? []
     },
     enabled: options.enabled !== false && hasFilters,
     staleTime: ASSIGNMENTS_STALE_TIME_MS,
-  });
+  })
 
   return {
     data: query.data,
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error,
-  };
+  }
 }

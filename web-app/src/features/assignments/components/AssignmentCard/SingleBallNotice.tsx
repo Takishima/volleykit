@@ -1,14 +1,15 @@
-import { CircleAlert, ExternalLink } from "@/shared/components/icons";
-import { useTranslation } from "@/shared/hooks/useTranslation";
-import { useAssignmentCardContext } from "./context";
+import { CircleAlert, ExternalLink } from '@/shared/components/icons'
+import { useTranslation } from '@/shared/hooks/useTranslation'
+
+import { useAssignmentCardContext } from './context'
 
 /** Displays single-ball hall warning notice in details view */
 export function SingleBallNotice() {
-  const { t } = useTranslation();
-  const { singleBallMatch, singleBallPdfPath } = useAssignmentCardContext();
+  const { t } = useTranslation()
+  const { singleBallMatch, singleBallPdfPath } = useAssignmentCardContext()
 
   if (!singleBallMatch) {
-    return null;
+    return null
   }
 
   return (
@@ -22,13 +23,13 @@ export function SingleBallNotice() {
       <CircleAlert className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
       <span className="underline decoration-amber-400/50 group-hover:decoration-amber-500 underline-offset-2">
         {singleBallMatch.isConditional
-          ? t("assignments.singleBallHallConditional")
-          : t("assignments.singleBallHall")}
+          ? t('assignments.singleBallHallConditional')
+          : t('assignments.singleBallHall')}
       </span>
       <ExternalLink
         className="w-3 h-3 flex-shrink-0 opacity-60 group-hover:opacity-100"
         aria-hidden="true"
       />
     </a>
-  );
+  )
 }

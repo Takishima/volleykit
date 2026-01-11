@@ -1,883 +1,856 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, act } from "@testing-library/react";
-import { ScoresheetPanel } from "./ScoresheetPanel";
+import { render, screen, fireEvent, act } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-vi.mock("@/shared/stores/auth", () => ({
-  useAuthStore: vi.fn((selector) => selector({ dataSource: "api" })),
-}));
+import { ScoresheetPanel } from './ScoresheetPanel'
 
-const SIMULATED_UPLOAD_DURATION_MS = 1500;
-const PROGRESS_INTERVAL_MS = SIMULATED_UPLOAD_DURATION_MS / 10;
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+vi.mock('@/shared/stores/auth', () => ({
+  useAuthStore: vi.fn((selector) => selector({ dataSource: 'api' })),
+}))
 
-function createValidFile(
-  name = "test.jpg",
-  type = "image/jpeg",
-  size = 1024,
-): File {
-  const content = new Array(size).fill("a").join("");
-  return new File([content], name, { type });
+const SIMULATED_UPLOAD_DURATION_MS = 1500
+const PROGRESS_INTERVAL_MS = SIMULATED_UPLOAD_DURATION_MS / 10
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
+
+function createValidFile(name = 'test.jpg', type = 'image/jpeg', size = 1024): File {
+  const content = new Array(size).fill('a').join('')
+  return new File([content], name, { type })
 }
 
 function getFileInput(): HTMLInputElement {
-  const fileInput = document.querySelector(
-    'input[type="file"]:not([capture])',
-  ) as HTMLInputElement;
-  if (!fileInput) throw new Error("File input not found");
-  return fileInput;
+  const fileInput = document.querySelector('input[type="file"]:not([capture])') as HTMLInputElement
+  if (!fileInput) throw new Error('File input not found')
+  return fileInput
 }
 
 function getCameraInput(): HTMLInputElement {
   const cameraInput = document.querySelector(
-    'input[type="file"][capture="environment"]',
-  ) as HTMLInputElement;
-  if (!cameraInput) throw new Error("Camera input not found");
-  return cameraInput;
+    'input[type="file"][capture="environment"]'
+  ) as HTMLInputElement
+  if (!cameraInput) throw new Error('Camera input not found')
+  return cameraInput
 }
 
-describe("ScoresheetPanel - onScoresheetChange callback", () => {
+describe('ScoresheetPanel - onScoresheetChange callback', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    vi.useFakeTimers();
-  });
+    vi.clearAllMocks()
+    vi.useFakeTimers()
+  })
 
   afterEach(() => {
-    vi.useRealTimers();
-  });
+    vi.useRealTimers()
+  })
 
-  it("calls callback with (file, false) when upload starts", () => {
-    const onScoresheetChange = vi.fn();
-    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />);
+  it('calls callback with (file, false) when upload starts', () => {
+    const onScoresheetChange = vi.fn()
+    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />)
 
-    const fileInput = getFileInput();
-    const validFile = createValidFile();
+    const fileInput = getFileInput()
+    const validFile = createValidFile()
 
-    fireEvent.change(fileInput, { target: { files: [validFile] } });
+    fireEvent.change(fileInput, { target: { files: [validFile] } })
 
-    expect(onScoresheetChange).toHaveBeenCalledWith(validFile, false);
-  });
+    expect(onScoresheetChange).toHaveBeenCalledWith(validFile, false)
+  })
 
-  it("calls callback with (file, true) when upload completes", async () => {
-    const onScoresheetChange = vi.fn();
-    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />);
+  it('calls callback with (file, true) when upload completes', async () => {
+    const onScoresheetChange = vi.fn()
+    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />)
 
-    const fileInput = getFileInput();
-    const validFile = createValidFile();
+    const fileInput = getFileInput()
+    const validFile = createValidFile()
 
-    fireEvent.change(fileInput, { target: { files: [validFile] } });
-
-    act(() => {
-      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS);
-    });
-
-    expect(onScoresheetChange).toHaveBeenLastCalledWith(validFile, true);
-  });
-
-  it("calls callback with (null, false) when file is removed", async () => {
-    const onScoresheetChange = vi.fn();
-    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />);
-
-    const fileInput = getFileInput();
-    const validFile = createValidFile();
-
-    fireEvent.change(fileInput, { target: { files: [validFile] } });
+    fireEvent.change(fileInput, { target: { files: [validFile] } })
 
     act(() => {
-      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS);
-    });
+      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS)
+    })
 
-    onScoresheetChange.mockClear();
+    expect(onScoresheetChange).toHaveBeenLastCalledWith(validFile, true)
+  })
 
-    const removeButton = screen.getByRole("button", { name: /remove/i });
-    fireEvent.click(removeButton);
+  it('calls callback with (null, false) when file is removed', async () => {
+    const onScoresheetChange = vi.fn()
+    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />)
 
-    expect(onScoresheetChange).toHaveBeenCalledWith(null, false);
-  });
+    const fileInput = getFileInput()
+    const validFile = createValidFile()
 
-  it("does not call callback when no callback is provided", () => {
-    render(<ScoresheetPanel />);
+    fireEvent.change(fileInput, { target: { files: [validFile] } })
 
-    const fileInput = getFileInput();
-    const validFile = createValidFile();
+    act(() => {
+      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS)
+    })
+
+    onScoresheetChange.mockClear()
+
+    const removeButton = screen.getByRole('button', { name: /remove/i })
+    fireEvent.click(removeButton)
+
+    expect(onScoresheetChange).toHaveBeenCalledWith(null, false)
+  })
+
+  it('does not call callback when no callback is provided', () => {
+    render(<ScoresheetPanel />)
+
+    const fileInput = getFileInput()
+    const validFile = createValidFile()
 
     expect(() => {
-      fireEvent.change(fileInput, { target: { files: [validFile] } });
+      fireEvent.change(fileInput, { target: { files: [validFile] } })
       act(() => {
-        vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS);
-      });
-    }).not.toThrow();
-  });
+        vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS)
+      })
+    }).not.toThrow()
+  })
 
-  it("calls callback in correct order during full upload lifecycle", () => {
-    const onScoresheetChange = vi.fn();
-    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />);
+  it('calls callback in correct order during full upload lifecycle', () => {
+    const onScoresheetChange = vi.fn()
+    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />)
 
-    const fileInput = getFileInput();
-    const validFile = createValidFile();
+    const fileInput = getFileInput()
+    const validFile = createValidFile()
 
-    fireEvent.change(fileInput, { target: { files: [validFile] } });
+    fireEvent.change(fileInput, { target: { files: [validFile] } })
 
-    expect(onScoresheetChange).toHaveBeenCalledTimes(1);
-    expect(onScoresheetChange).toHaveBeenNthCalledWith(1, validFile, false);
-
-    act(() => {
-      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS);
-    });
-
-    expect(onScoresheetChange).toHaveBeenCalledTimes(2);
-    expect(onScoresheetChange).toHaveBeenNthCalledWith(2, validFile, true);
-
-    const removeButton = screen.getByRole("button", { name: /remove/i });
-    fireEvent.click(removeButton);
-
-    expect(onScoresheetChange).toHaveBeenCalledTimes(3);
-    expect(onScoresheetChange).toHaveBeenNthCalledWith(3, null, false);
-  });
-
-  it("calls callback with (null, false) when replace is clicked", () => {
-    const onScoresheetChange = vi.fn();
-    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />);
-
-    const fileInput = getFileInput();
-    const validFile = createValidFile();
-
-    fireEvent.change(fileInput, { target: { files: [validFile] } });
+    expect(onScoresheetChange).toHaveBeenCalledTimes(1)
+    expect(onScoresheetChange).toHaveBeenNthCalledWith(1, validFile, false)
 
     act(() => {
-      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS);
-    });
+      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS)
+    })
 
-    onScoresheetChange.mockClear();
+    expect(onScoresheetChange).toHaveBeenCalledTimes(2)
+    expect(onScoresheetChange).toHaveBeenNthCalledWith(2, validFile, true)
 
-    const replaceButton = screen.getByRole("button", { name: /replace/i });
-    fireEvent.click(replaceButton);
+    const removeButton = screen.getByRole('button', { name: /remove/i })
+    fireEvent.click(removeButton)
 
-    expect(onScoresheetChange).toHaveBeenCalledWith(null, false);
-  });
+    expect(onScoresheetChange).toHaveBeenCalledTimes(3)
+    expect(onScoresheetChange).toHaveBeenNthCalledWith(3, null, false)
+  })
 
-  it("does not call callback when file validation fails", () => {
-    const onScoresheetChange = vi.fn();
-    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />);
+  it('calls callback with (null, false) when replace is clicked', () => {
+    const onScoresheetChange = vi.fn()
+    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />)
 
-    const fileInput = getFileInput();
-    const invalidFile = createValidFile("test.txt", "text/plain");
+    const fileInput = getFileInput()
+    const validFile = createValidFile()
 
-    fireEvent.change(fileInput, { target: { files: [invalidFile] } });
+    fireEvent.change(fileInput, { target: { files: [validFile] } })
 
-    expect(onScoresheetChange).not.toHaveBeenCalled();
-  });
-});
+    act(() => {
+      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS)
+    })
 
-describe("ScoresheetPanel - upload progress simulation", () => {
+    onScoresheetChange.mockClear()
+
+    const replaceButton = screen.getByRole('button', { name: /replace/i })
+    fireEvent.click(replaceButton)
+
+    expect(onScoresheetChange).toHaveBeenCalledWith(null, false)
+  })
+
+  it('does not call callback when file validation fails', () => {
+    const onScoresheetChange = vi.fn()
+    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />)
+
+    const fileInput = getFileInput()
+    const invalidFile = createValidFile('test.txt', 'text/plain')
+
+    fireEvent.change(fileInput, { target: { files: [invalidFile] } })
+
+    expect(onScoresheetChange).not.toHaveBeenCalled()
+  })
+})
+
+describe('ScoresheetPanel - upload progress simulation', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    vi.useFakeTimers();
-  });
+    vi.clearAllMocks()
+    vi.useFakeTimers()
+  })
 
   afterEach(() => {
-    vi.useRealTimers();
-  });
+    vi.useRealTimers()
+  })
 
-  it("progress transitions through 0% → 10% → ... → 90% then completes", () => {
-    render(<ScoresheetPanel />);
+  it('progress transitions through 0% → 10% → ... → 90% then completes', () => {
+    render(<ScoresheetPanel />)
 
-    const fileInput = getFileInput();
-    const validFile = createValidFile();
+    const fileInput = getFileInput()
+    const validFile = createValidFile()
 
-    fireEvent.change(fileInput, { target: { files: [validFile] } });
+    fireEvent.change(fileInput, { target: { files: [validFile] } })
 
     // Initial progress should be 0%
-    expect(screen.getByText("0%")).toBeInTheDocument();
+    expect(screen.getByText('0%')).toBeInTheDocument()
 
     // Advance through progress increments (10% each interval)
     for (let expectedProgress = 10; expectedProgress <= 90; expectedProgress += 10) {
       act(() => {
-        vi.advanceTimersByTime(PROGRESS_INTERVAL_MS);
-      });
-      expect(screen.getByText(`${expectedProgress}%`)).toBeInTheDocument();
+        vi.advanceTimersByTime(PROGRESS_INTERVAL_MS)
+      })
+      expect(screen.getByText(`${expectedProgress}%`)).toBeInTheDocument()
     }
 
     // When the full duration completes, state changes to "complete"
     // The 100% progress and "complete" state are set simultaneously,
     // so the progress bar is replaced with the completion message
     act(() => {
-      vi.advanceTimersByTime(PROGRESS_INTERVAL_MS);
-    });
-    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
-    expect(screen.getByText("Upload complete")).toBeInTheDocument();
-  });
+      vi.advanceTimersByTime(PROGRESS_INTERVAL_MS)
+    })
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument()
+    expect(screen.getByText('Upload complete')).toBeInTheDocument()
+  })
 
-  it("progress bar aria-valuenow updates correctly during upload", () => {
-    render(<ScoresheetPanel />);
+  it('progress bar aria-valuenow updates correctly during upload', () => {
+    render(<ScoresheetPanel />)
 
-    const fileInput = getFileInput();
-    const validFile = createValidFile();
+    const fileInput = getFileInput()
+    const validFile = createValidFile()
 
-    fireEvent.change(fileInput, { target: { files: [validFile] } });
+    fireEvent.change(fileInput, { target: { files: [validFile] } })
 
-    const progressBar = screen.getByRole("progressbar");
-    expect(progressBar).toHaveAttribute("aria-valuenow", "0");
-
-    act(() => {
-      vi.advanceTimersByTime(PROGRESS_INTERVAL_MS * 5);
-    });
-    expect(progressBar).toHaveAttribute("aria-valuenow", "50");
+    const progressBar = screen.getByRole('progressbar')
+    expect(progressBar).toHaveAttribute('aria-valuenow', '0')
 
     act(() => {
-      vi.advanceTimersByTime(PROGRESS_INTERVAL_MS * 5);
-    });
+      vi.advanceTimersByTime(PROGRESS_INTERVAL_MS * 5)
+    })
+    expect(progressBar).toHaveAttribute('aria-valuenow', '50')
+
+    act(() => {
+      vi.advanceTimersByTime(PROGRESS_INTERVAL_MS * 5)
+    })
     // After full duration, upload completes and progress bar is removed
-    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
-  });
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument()
+  })
 
-  it("upload state transitions from idle → uploading → complete", () => {
-    render(<ScoresheetPanel />);
+  it('upload state transitions from idle → uploading → complete', () => {
+    render(<ScoresheetPanel />)
 
-    const fileInput = getFileInput();
-    const validFile = createValidFile();
+    const fileInput = getFileInput()
+    const validFile = createValidFile()
 
     // Initial state: idle (no uploading or complete status)
-    expect(screen.queryByText("Uploading...")).not.toBeInTheDocument();
-    expect(screen.queryByText("Upload complete")).not.toBeInTheDocument();
+    expect(screen.queryByText('Uploading...')).not.toBeInTheDocument()
+    expect(screen.queryByText('Upload complete')).not.toBeInTheDocument()
 
     // Select file: uploading state
-    fireEvent.change(fileInput, { target: { files: [validFile] } });
-    expect(screen.getByText("Uploading...")).toBeInTheDocument();
-    expect(screen.queryByText("Upload complete")).not.toBeInTheDocument();
+    fireEvent.change(fileInput, { target: { files: [validFile] } })
+    expect(screen.getByText('Uploading...')).toBeInTheDocument()
+    expect(screen.queryByText('Upload complete')).not.toBeInTheDocument()
 
     // Complete upload: complete state
     act(() => {
-      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS);
-    });
-    expect(screen.queryByText("Uploading...")).not.toBeInTheDocument();
-    expect(screen.getByText("Upload complete")).toBeInTheDocument();
-  });
-});
+      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS)
+    })
+    expect(screen.queryByText('Uploading...')).not.toBeInTheDocument()
+    expect(screen.getByText('Upload complete')).toBeInTheDocument()
+  })
+})
 
-describe("ScoresheetPanel - race condition prevention", () => {
+describe('ScoresheetPanel - race condition prevention', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    vi.useFakeTimers();
-  });
+    vi.clearAllMocks()
+    vi.useFakeTimers()
+  })
 
   afterEach(() => {
-    vi.useRealTimers();
-  });
+    vi.useRealTimers()
+  })
 
-  it("blocks file selection while upload is in progress", () => {
-    const onScoresheetChange = vi.fn();
-    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />);
+  it('blocks file selection while upload is in progress', () => {
+    const onScoresheetChange = vi.fn()
+    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />)
 
-    const fileInput = getFileInput();
-    const file1 = createValidFile("first.jpg");
-    const file2 = createValidFile("second.jpg");
+    const fileInput = getFileInput()
+    const file1 = createValidFile('first.jpg')
+    const file2 = createValidFile('second.jpg')
 
     // Start first upload
-    fireEvent.change(fileInput, { target: { files: [file1] } });
-    expect(onScoresheetChange).toHaveBeenCalledWith(file1, false);
-    expect(screen.getByText("first.jpg")).toBeInTheDocument();
+    fireEvent.change(fileInput, { target: { files: [file1] } })
+    expect(onScoresheetChange).toHaveBeenCalledWith(file1, false)
+    expect(screen.getByText('first.jpg')).toBeInTheDocument()
 
     // Attempt second upload while first is in progress - should be ignored
-    fireEvent.change(fileInput, { target: { files: [file2] } });
-    expect(screen.getByText("first.jpg")).toBeInTheDocument();
-    expect(screen.queryByText("second.jpg")).not.toBeInTheDocument();
+    fireEvent.change(fileInput, { target: { files: [file2] } })
+    expect(screen.getByText('first.jpg')).toBeInTheDocument()
+    expect(screen.queryByText('second.jpg')).not.toBeInTheDocument()
 
     // Callback should only have been called once (for first file)
-    expect(onScoresheetChange).toHaveBeenCalledTimes(1);
-  });
+    expect(onScoresheetChange).toHaveBeenCalledTimes(1)
+  })
 
-  it("allows new upload after previous upload completes", () => {
-    const onScoresheetChange = vi.fn();
-    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />);
+  it('allows new upload after previous upload completes', () => {
+    const onScoresheetChange = vi.fn()
+    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />)
 
-    const fileInput = getFileInput();
-    const file1 = createValidFile("first.jpg");
-    const file2 = createValidFile("second.jpg");
+    const fileInput = getFileInput()
+    const file1 = createValidFile('first.jpg')
+    const file2 = createValidFile('second.jpg')
 
     // First upload
-    fireEvent.change(fileInput, { target: { files: [file1] } });
+    fireEvent.change(fileInput, { target: { files: [file1] } })
     act(() => {
-      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS);
-    });
-    expect(onScoresheetChange).toHaveBeenLastCalledWith(file1, true);
+      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS)
+    })
+    expect(onScoresheetChange).toHaveBeenLastCalledWith(file1, true)
 
     // Reset to allow new upload
-    const removeButton = screen.getByRole("button", { name: /remove/i });
-    fireEvent.click(removeButton);
+    const removeButton = screen.getByRole('button', { name: /remove/i })
+    fireEvent.click(removeButton)
 
     // Second upload should now work
-    fireEvent.change(fileInput, { target: { files: [file2] } });
-    expect(screen.getByText("second.jpg")).toBeInTheDocument();
-    expect(onScoresheetChange).toHaveBeenCalledWith(file2, false);
-  });
+    fireEvent.change(fileInput, { target: { files: [file2] } })
+    expect(screen.getByText('second.jpg')).toBeInTheDocument()
+    expect(onScoresheetChange).toHaveBeenCalledWith(file2, false)
+  })
 
-  it("rapid successive selections only trigger one upload", () => {
-    const onScoresheetChange = vi.fn();
-    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />);
+  it('rapid successive selections only trigger one upload', () => {
+    const onScoresheetChange = vi.fn()
+    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />)
 
-    const fileInput = getFileInput();
+    const fileInput = getFileInput()
 
     // Rapid fire multiple file selections
     for (let i = 1; i <= 5; i++) {
-      const file = createValidFile(`file${i}.jpg`);
-      fireEvent.change(fileInput, { target: { files: [file] } });
+      const file = createValidFile(`file${i}.jpg`)
+      fireEvent.change(fileInput, { target: { files: [file] } })
     }
 
     // Only first file should be processed
-    expect(screen.getByText("file1.jpg")).toBeInTheDocument();
-    expect(onScoresheetChange).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('file1.jpg')).toBeInTheDocument()
+    expect(onScoresheetChange).toHaveBeenCalledTimes(1)
 
     // Complete upload
     act(() => {
-      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS);
-    });
+      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS)
+    })
 
     // Should complete with first file
-    expect(onScoresheetChange).toHaveBeenCalledTimes(2);
+    expect(onScoresheetChange).toHaveBeenCalledTimes(2)
     expect(onScoresheetChange).toHaveBeenLastCalledWith(
-      expect.objectContaining({ name: "file1.jpg" }),
-      true,
-    );
-  });
+      expect.objectContaining({ name: 'file1.jpg' }),
+      true
+    )
+  })
 
-  it("clears existing timers when new upload starts after reset", () => {
-    const clearIntervalSpy = vi.spyOn(globalThis, "clearInterval");
-    const clearTimeoutSpy = vi.spyOn(globalThis, "clearTimeout");
+  it('clears existing timers when new upload starts after reset', () => {
+    const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval')
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout')
 
-    render(<ScoresheetPanel />);
+    render(<ScoresheetPanel />)
 
-    const fileInput = getFileInput();
-    const file1 = createValidFile("first.jpg");
-    const file2 = createValidFile("second.jpg");
+    const fileInput = getFileInput()
+    const file1 = createValidFile('first.jpg')
+    const file2 = createValidFile('second.jpg')
 
     // First upload
-    fireEvent.change(fileInput, { target: { files: [file1] } });
+    fireEvent.change(fileInput, { target: { files: [file1] } })
     act(() => {
-      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS);
-    });
+      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS)
+    })
 
     // Reset
-    const removeButton = screen.getByRole("button", { name: /remove/i });
-    fireEvent.click(removeButton);
+    const removeButton = screen.getByRole('button', { name: /remove/i })
+    fireEvent.click(removeButton)
 
-    clearIntervalSpy.mockClear();
-    clearTimeoutSpy.mockClear();
+    clearIntervalSpy.mockClear()
+    clearTimeoutSpy.mockClear()
 
     // Start second upload - should clear any stale timers
-    fireEvent.change(fileInput, { target: { files: [file2] } });
+    fireEvent.change(fileInput, { target: { files: [file2] } })
 
     // simulateUpload clears existing timers before starting new ones
-    expect(clearIntervalSpy).toHaveBeenCalled();
-    expect(clearTimeoutSpy).toHaveBeenCalled();
+    expect(clearIntervalSpy).toHaveBeenCalled()
+    expect(clearTimeoutSpy).toHaveBeenCalled()
 
-    clearIntervalSpy.mockRestore();
-    clearTimeoutSpy.mockRestore();
-  });
-});
+    clearIntervalSpy.mockRestore()
+    clearTimeoutSpy.mockRestore()
+  })
+})
 
-describe("ScoresheetPanel - component cleanup", () => {
-  const mockRevokeObjectURL = vi.fn();
+describe('ScoresheetPanel - component cleanup', () => {
+  const mockRevokeObjectURL = vi.fn()
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    vi.useFakeTimers();
-    globalThis.URL.createObjectURL = vi.fn(() => "blob:mock-url");
-    globalThis.URL.revokeObjectURL = mockRevokeObjectURL;
-  });
+    vi.clearAllMocks()
+    vi.useFakeTimers()
+    globalThis.URL.createObjectURL = vi.fn(() => 'blob:mock-url')
+    globalThis.URL.revokeObjectURL = mockRevokeObjectURL
+  })
 
   afterEach(() => {
-    vi.useRealTimers();
-  });
+    vi.useRealTimers()
+  })
 
-  it("clears interval timer on unmount during upload", () => {
-    const clearIntervalSpy = vi.spyOn(globalThis, "clearInterval");
+  it('clears interval timer on unmount during upload', () => {
+    const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval')
 
-    const { unmount } = render(<ScoresheetPanel />);
+    const { unmount } = render(<ScoresheetPanel />)
 
-    const fileInput = getFileInput();
-    const validFile = createValidFile();
+    const fileInput = getFileInput()
+    const validFile = createValidFile()
 
-    fireEvent.change(fileInput, { target: { files: [validFile] } });
-
-    // Partially advance time (upload in progress)
-    act(() => {
-      vi.advanceTimersByTime(PROGRESS_INTERVAL_MS * 3);
-    });
-
-    clearIntervalSpy.mockClear();
-    unmount();
-
-    expect(clearIntervalSpy).toHaveBeenCalled();
-    clearIntervalSpy.mockRestore();
-  });
-
-  it("clears timeout on unmount during upload", () => {
-    const clearTimeoutSpy = vi.spyOn(globalThis, "clearTimeout");
-
-    const { unmount } = render(<ScoresheetPanel />);
-
-    const fileInput = getFileInput();
-    const validFile = createValidFile();
-
-    fireEvent.change(fileInput, { target: { files: [validFile] } });
+    fireEvent.change(fileInput, { target: { files: [validFile] } })
 
     // Partially advance time (upload in progress)
     act(() => {
-      vi.advanceTimersByTime(PROGRESS_INTERVAL_MS * 3);
-    });
+      vi.advanceTimersByTime(PROGRESS_INTERVAL_MS * 3)
+    })
 
-    clearTimeoutSpy.mockClear();
-    unmount();
+    clearIntervalSpy.mockClear()
+    unmount()
 
-    expect(clearTimeoutSpy).toHaveBeenCalled();
-    clearTimeoutSpy.mockRestore();
-  });
+    expect(clearIntervalSpy).toHaveBeenCalled()
+    clearIntervalSpy.mockRestore()
+  })
 
-  it("revokes preview URL on unmount", () => {
-    const { unmount } = render(<ScoresheetPanel />);
+  it('clears timeout on unmount during upload', () => {
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout')
 
-    const fileInput = getFileInput();
-    const validFile = createValidFile();
+    const { unmount } = render(<ScoresheetPanel />)
 
-    fireEvent.change(fileInput, { target: { files: [validFile] } });
+    const fileInput = getFileInput()
+    const validFile = createValidFile()
 
-    mockRevokeObjectURL.mockClear();
-    unmount();
+    fireEvent.change(fileInput, { target: { files: [validFile] } })
 
-    expect(mockRevokeObjectURL).toHaveBeenCalledWith("blob:mock-url");
-  });
+    // Partially advance time (upload in progress)
+    act(() => {
+      vi.advanceTimersByTime(PROGRESS_INTERVAL_MS * 3)
+    })
 
-  it("does not attempt state updates after unmount", () => {
-    const onScoresheetChange = vi.fn();
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    clearTimeoutSpy.mockClear()
+    unmount()
 
-    const { unmount } = render(
-      <ScoresheetPanel onScoresheetChange={onScoresheetChange} />,
-    );
+    expect(clearTimeoutSpy).toHaveBeenCalled()
+    clearTimeoutSpy.mockRestore()
+  })
 
-    const fileInput = getFileInput();
-    const validFile = createValidFile();
+  it('revokes preview URL on unmount', () => {
+    const { unmount } = render(<ScoresheetPanel />)
 
-    fireEvent.change(fileInput, { target: { files: [validFile] } });
-    expect(onScoresheetChange).toHaveBeenCalledWith(validFile, false);
+    const fileInput = getFileInput()
+    const validFile = createValidFile()
+
+    fireEvent.change(fileInput, { target: { files: [validFile] } })
+
+    mockRevokeObjectURL.mockClear()
+    unmount()
+
+    expect(mockRevokeObjectURL).toHaveBeenCalledWith('blob:mock-url')
+  })
+
+  it('does not attempt state updates after unmount', () => {
+    const onScoresheetChange = vi.fn()
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const { unmount } = render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />)
+
+    const fileInput = getFileInput()
+    const validFile = createValidFile()
+
+    fireEvent.change(fileInput, { target: { files: [validFile] } })
+    expect(onScoresheetChange).toHaveBeenCalledWith(validFile, false)
 
     // Unmount before upload completes
-    unmount();
+    unmount()
 
     // Advance timers to when upload would complete
     act(() => {
-      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS);
-    });
+      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS)
+    })
 
     // Callback should not be called after unmount (only the initial call)
-    expect(onScoresheetChange).toHaveBeenCalledTimes(1);
+    expect(onScoresheetChange).toHaveBeenCalledTimes(1)
 
     // No React errors should be logged
-    expect(consoleErrorSpy).not.toHaveBeenCalled();
-    consoleErrorSpy.mockRestore();
-  });
+    expect(consoleErrorSpy).not.toHaveBeenCalled()
+    consoleErrorSpy.mockRestore()
+  })
 
-  it("cleans up resources when reset is called after upload completes", () => {
-    const clearIntervalSpy = vi.spyOn(globalThis, "clearInterval");
-    const clearTimeoutSpy = vi.spyOn(globalThis, "clearTimeout");
+  it('cleans up resources when reset is called after upload completes', () => {
+    const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval')
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout')
 
-    render(<ScoresheetPanel />);
+    render(<ScoresheetPanel />)
 
-    const fileInput = getFileInput();
-    const validFile = createValidFile();
+    const fileInput = getFileInput()
+    const validFile = createValidFile()
 
-    fireEvent.change(fileInput, { target: { files: [validFile] } });
+    fireEvent.change(fileInput, { target: { files: [validFile] } })
 
     // Complete the upload
     act(() => {
-      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS);
-    });
+      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS)
+    })
 
-    clearIntervalSpy.mockClear();
-    clearTimeoutSpy.mockClear();
-    mockRevokeObjectURL.mockClear();
+    clearIntervalSpy.mockClear()
+    clearTimeoutSpy.mockClear()
+    mockRevokeObjectURL.mockClear()
 
     // Click remove after upload completes (buttons are only enabled after upload)
-    const removeButton = screen.getByRole("button", { name: /remove/i });
-    fireEvent.click(removeButton);
+    const removeButton = screen.getByRole('button', { name: /remove/i })
+    fireEvent.click(removeButton)
 
     // resetState clears any existing timers (even if already cleared)
-    expect(mockRevokeObjectURL).toHaveBeenCalledWith("blob:mock-url");
+    expect(mockRevokeObjectURL).toHaveBeenCalledWith('blob:mock-url')
 
-    clearIntervalSpy.mockRestore();
-    clearTimeoutSpy.mockRestore();
-  });
+    clearIntervalSpy.mockRestore()
+    clearTimeoutSpy.mockRestore()
+  })
 
-  it("buttons are disabled during upload preventing cleanup", () => {
-    render(<ScoresheetPanel />);
+  it('buttons are disabled during upload preventing cleanup', () => {
+    render(<ScoresheetPanel />)
 
-    const fileInput = getFileInput();
-    const validFile = createValidFile();
+    const fileInput = getFileInput()
+    const validFile = createValidFile()
 
-    fireEvent.change(fileInput, { target: { files: [validFile] } });
+    fireEvent.change(fileInput, { target: { files: [validFile] } })
 
     // During upload, buttons should be disabled
-    expect(screen.getByRole("button", { name: /remove/i })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /replace/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /remove/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /replace/i })).toBeDisabled()
 
     // Complete upload
     act(() => {
-      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS);
-    });
+      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS)
+    })
 
     // After upload, buttons should be enabled
-    expect(screen.getByRole("button", { name: /remove/i })).not.toBeDisabled();
-    expect(screen.getByRole("button", { name: /replace/i })).not.toBeDisabled();
-  });
-});
+    expect(screen.getByRole('button', { name: /remove/i })).not.toBeDisabled()
+    expect(screen.getByRole('button', { name: /replace/i })).not.toBeDisabled()
+  })
+})
 
-describe("ScoresheetPanel - file validation", () => {
+describe('ScoresheetPanel - file validation', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    vi.useFakeTimers();
-  });
+    vi.clearAllMocks()
+    vi.useFakeTimers()
+  })
 
   afterEach(() => {
-    vi.useRealTimers();
-  });
+    vi.useRealTimers()
+  })
 
-  it("shows error for unsupported file type (text file)", () => {
-    render(<ScoresheetPanel />);
+  it('shows error for unsupported file type (text file)', () => {
+    render(<ScoresheetPanel />)
 
-    const fileInput = getFileInput();
-    const textFile = createValidFile("document.txt", "text/plain");
+    const fileInput = getFileInput()
+    const textFile = createValidFile('document.txt', 'text/plain')
 
-    fireEvent.change(fileInput, { target: { files: [textFile] } });
+    fireEvent.change(fileInput, { target: { files: [textFile] } })
 
-    expect(screen.getByRole("alert")).toBeInTheDocument();
-    expect(
-      screen.getByText("Invalid file type. Please use JPEG, PNG, or PDF."),
-    ).toBeInTheDocument();
-  });
+    expect(screen.getByRole('alert')).toBeInTheDocument()
+    expect(screen.getByText('Invalid file type. Please use JPEG, PNG, or PDF.')).toBeInTheDocument()
+  })
 
-  it("shows error for unsupported file type (gif)", () => {
-    render(<ScoresheetPanel />);
+  it('shows error for unsupported file type (gif)', () => {
+    render(<ScoresheetPanel />)
 
-    const fileInput = getFileInput();
-    const gifFile = createValidFile("animation.gif", "image/gif");
+    const fileInput = getFileInput()
+    const gifFile = createValidFile('animation.gif', 'image/gif')
 
-    fireEvent.change(fileInput, { target: { files: [gifFile] } });
+    fireEvent.change(fileInput, { target: { files: [gifFile] } })
 
-    expect(screen.getByRole("alert")).toBeInTheDocument();
-  });
+    expect(screen.getByRole('alert')).toBeInTheDocument()
+  })
 
-  it("shows error when file exceeds size limit", () => {
-    render(<ScoresheetPanel />);
+  it('shows error when file exceeds size limit', () => {
+    render(<ScoresheetPanel />)
 
-    const fileInput = getFileInput();
-    const largeFile = createValidFile(
-      "large.jpg",
-      "image/jpeg",
-      MAX_FILE_SIZE_BYTES + 1,
-    );
+    const fileInput = getFileInput()
+    const largeFile = createValidFile('large.jpg', 'image/jpeg', MAX_FILE_SIZE_BYTES + 1)
 
-    fireEvent.change(fileInput, { target: { files: [largeFile] } });
+    fireEvent.change(fileInput, { target: { files: [largeFile] } })
 
-    expect(screen.getByRole("alert")).toBeInTheDocument();
-    expect(
-      screen.getByText("File is too large. Maximum size is 10 MB."),
-    ).toBeInTheDocument();
-  });
+    expect(screen.getByRole('alert')).toBeInTheDocument()
+    expect(screen.getByText('File is too large. Maximum size is 10 MB.')).toBeInTheDocument()
+  })
 
-  it("accepts valid JPEG file", () => {
-    render(<ScoresheetPanel />);
+  it('accepts valid JPEG file', () => {
+    render(<ScoresheetPanel />)
 
-    const fileInput = getFileInput();
-    const jpegFile = createValidFile("photo.jpg", "image/jpeg");
+    const fileInput = getFileInput()
+    const jpegFile = createValidFile('photo.jpg', 'image/jpeg')
 
-    fireEvent.change(fileInput, { target: { files: [jpegFile] } });
+    fireEvent.change(fileInput, { target: { files: [jpegFile] } })
 
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    expect(screen.getByText("photo.jpg")).toBeInTheDocument();
-    expect(screen.getByText("Uploading...")).toBeInTheDocument();
-  });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.getByText('photo.jpg')).toBeInTheDocument()
+    expect(screen.getByText('Uploading...')).toBeInTheDocument()
+  })
 
-  it("accepts valid PNG file", () => {
-    render(<ScoresheetPanel />);
+  it('accepts valid PNG file', () => {
+    render(<ScoresheetPanel />)
 
-    const fileInput = getFileInput();
-    const pngFile = createValidFile("image.png", "image/png");
+    const fileInput = getFileInput()
+    const pngFile = createValidFile('image.png', 'image/png')
 
-    fireEvent.change(fileInput, { target: { files: [pngFile] } });
+    fireEvent.change(fileInput, { target: { files: [pngFile] } })
 
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    expect(screen.getByText("image.png")).toBeInTheDocument();
-  });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.getByText('image.png')).toBeInTheDocument()
+  })
 
-  it("accepts valid PDF file", () => {
-    render(<ScoresheetPanel />);
+  it('accepts valid PDF file', () => {
+    render(<ScoresheetPanel />)
 
-    const fileInput = getFileInput();
-    const pdfFile = createValidFile("document.pdf", "application/pdf");
+    const fileInput = getFileInput()
+    const pdfFile = createValidFile('document.pdf', 'application/pdf')
 
-    fireEvent.change(fileInput, { target: { files: [pdfFile] } });
+    fireEvent.change(fileInput, { target: { files: [pdfFile] } })
 
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    expect(screen.getByText("document.pdf")).toBeInTheDocument();
-  });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.getByText('document.pdf')).toBeInTheDocument()
+  })
 
-  it("accepts file at exactly the size limit", () => {
-    render(<ScoresheetPanel />);
+  it('accepts file at exactly the size limit', () => {
+    render(<ScoresheetPanel />)
 
-    const fileInput = getFileInput();
-    const maxSizeFile = createValidFile(
-      "maxsize.jpg",
-      "image/jpeg",
-      MAX_FILE_SIZE_BYTES,
-    );
+    const fileInput = getFileInput()
+    const maxSizeFile = createValidFile('maxsize.jpg', 'image/jpeg', MAX_FILE_SIZE_BYTES)
 
-    fireEvent.change(fileInput, { target: { files: [maxSizeFile] } });
+    fireEvent.change(fileInput, { target: { files: [maxSizeFile] } })
 
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    expect(screen.getByText("maxsize.jpg")).toBeInTheDocument();
-  });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.getByText('maxsize.jpg')).toBeInTheDocument()
+  })
 
-  it("clears previous error when valid file is selected", () => {
-    render(<ScoresheetPanel />);
+  it('clears previous error when valid file is selected', () => {
+    render(<ScoresheetPanel />)
 
-    const fileInput = getFileInput();
+    const fileInput = getFileInput()
 
     // First select invalid file
-    const invalidFile = createValidFile("bad.txt", "text/plain");
-    fireEvent.change(fileInput, { target: { files: [invalidFile] } });
-    expect(screen.getByRole("alert")).toBeInTheDocument();
+    const invalidFile = createValidFile('bad.txt', 'text/plain')
+    fireEvent.change(fileInput, { target: { files: [invalidFile] } })
+    expect(screen.getByRole('alert')).toBeInTheDocument()
 
     // Then select valid file
-    const validFile = createValidFile("good.jpg", "image/jpeg");
-    fireEvent.change(fileInput, { target: { files: [validFile] } });
+    const validFile = createValidFile('good.jpg', 'image/jpeg')
+    fireEvent.change(fileInput, { target: { files: [validFile] } })
 
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    expect(screen.getByText("good.jpg")).toBeInTheDocument();
-  });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.getByText('good.jpg')).toBeInTheDocument()
+  })
 
-  it("does not start upload when validation fails", () => {
-    const onScoresheetChange = vi.fn();
-    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />);
+  it('does not start upload when validation fails', () => {
+    const onScoresheetChange = vi.fn()
+    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />)
 
-    const fileInput = getFileInput();
-    const invalidFile = createValidFile("bad.txt", "text/plain");
+    const fileInput = getFileInput()
+    const invalidFile = createValidFile('bad.txt', 'text/plain')
 
-    fireEvent.change(fileInput, { target: { files: [invalidFile] } });
+    fireEvent.change(fileInput, { target: { files: [invalidFile] } })
 
     // Callback should not be called
-    expect(onScoresheetChange).not.toHaveBeenCalled();
+    expect(onScoresheetChange).not.toHaveBeenCalled()
 
     // Upload state should remain idle
-    expect(screen.queryByText("Uploading...")).not.toBeInTheDocument();
-    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
-  });
-});
+    expect(screen.queryByText('Uploading...')).not.toBeInTheDocument()
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument()
+  })
+})
 
-describe("ScoresheetPanel - callback ref updates", () => {
+describe('ScoresheetPanel - callback ref updates', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    vi.useFakeTimers();
-  });
+    vi.clearAllMocks()
+    vi.useFakeTimers()
+  })
 
   afterEach(() => {
-    vi.useRealTimers();
-  });
+    vi.useRealTimers()
+  })
 
-  it("uses updated callback when prop changes mid-upload", () => {
-    const firstCallback = vi.fn();
-    const secondCallback = vi.fn();
+  it('uses updated callback when prop changes mid-upload', () => {
+    const firstCallback = vi.fn()
+    const secondCallback = vi.fn()
 
-    const { rerender } = render(
-      <ScoresheetPanel onScoresheetChange={firstCallback} />,
-    );
+    const { rerender } = render(<ScoresheetPanel onScoresheetChange={firstCallback} />)
 
-    const fileInput = getFileInput();
-    const validFile = createValidFile();
+    const fileInput = getFileInput()
+    const validFile = createValidFile()
 
     // Start upload with first callback
-    fireEvent.change(fileInput, { target: { files: [validFile] } });
-    expect(firstCallback).toHaveBeenCalledWith(validFile, false);
+    fireEvent.change(fileInput, { target: { files: [validFile] } })
+    expect(firstCallback).toHaveBeenCalledWith(validFile, false)
 
     // Change callback prop mid-upload
-    rerender(<ScoresheetPanel onScoresheetChange={secondCallback} />);
+    rerender(<ScoresheetPanel onScoresheetChange={secondCallback} />)
 
     // Complete upload - should use the new callback
     act(() => {
-      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS);
-    });
+      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS)
+    })
 
     // Second callback should receive the completion
-    expect(secondCallback).toHaveBeenCalledWith(validFile, true);
+    expect(secondCallback).toHaveBeenCalledWith(validFile, true)
     // First callback should not receive completion
-    expect(firstCallback).not.toHaveBeenCalledWith(validFile, true);
-  });
+    expect(firstCallback).not.toHaveBeenCalledWith(validFile, true)
+  })
 
-  it("uses updated callback for remove action after prop change", () => {
-    const firstCallback = vi.fn();
-    const secondCallback = vi.fn();
+  it('uses updated callback for remove action after prop change', () => {
+    const firstCallback = vi.fn()
+    const secondCallback = vi.fn()
 
-    const { rerender } = render(
-      <ScoresheetPanel onScoresheetChange={firstCallback} />,
-    );
+    const { rerender } = render(<ScoresheetPanel onScoresheetChange={firstCallback} />)
 
-    const fileInput = getFileInput();
-    const validFile = createValidFile();
+    const fileInput = getFileInput()
+    const validFile = createValidFile()
 
     // Complete upload with first callback
-    fireEvent.change(fileInput, { target: { files: [validFile] } });
+    fireEvent.change(fileInput, { target: { files: [validFile] } })
     act(() => {
-      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS);
-    });
+      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS)
+    })
 
     // Change callback prop
-    rerender(<ScoresheetPanel onScoresheetChange={secondCallback} />);
+    rerender(<ScoresheetPanel onScoresheetChange={secondCallback} />)
 
     // Remove file - should use the new callback
-    const removeButton = screen.getByRole("button", { name: /remove/i });
-    fireEvent.click(removeButton);
+    const removeButton = screen.getByRole('button', { name: /remove/i })
+    fireEvent.click(removeButton)
 
-    expect(secondCallback).toHaveBeenCalledWith(null, false);
-    expect(firstCallback).not.toHaveBeenCalledWith(null, false);
-  });
-});
+    expect(secondCallback).toHaveBeenCalledWith(null, false)
+    expect(firstCallback).not.toHaveBeenCalledWith(null, false)
+  })
+})
 
-describe("ScoresheetPanel - camera input", () => {
+describe('ScoresheetPanel - camera input', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    vi.useFakeTimers();
-    globalThis.URL.createObjectURL = vi.fn(() => "blob:mock-url");
-    globalThis.URL.revokeObjectURL = vi.fn();
-  });
+    vi.clearAllMocks()
+    vi.useFakeTimers()
+    globalThis.URL.createObjectURL = vi.fn(() => 'blob:mock-url')
+    globalThis.URL.revokeObjectURL = vi.fn()
+  })
 
   afterEach(() => {
-    vi.useRealTimers();
-  });
+    vi.useRealTimers()
+  })
 
-  it("handles file selection via camera input", () => {
-    const onScoresheetChange = vi.fn();
-    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />);
+  it('handles file selection via camera input', () => {
+    const onScoresheetChange = vi.fn()
+    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />)
 
-    const cameraInput = getCameraInput();
-    const photoFile = createValidFile("photo.jpg", "image/jpeg");
+    const cameraInput = getCameraInput()
+    const photoFile = createValidFile('photo.jpg', 'image/jpeg')
 
-    fireEvent.change(cameraInput, { target: { files: [photoFile] } });
+    fireEvent.change(cameraInput, { target: { files: [photoFile] } })
 
-    expect(onScoresheetChange).toHaveBeenCalledWith(photoFile, false);
-    expect(screen.getByText("photo.jpg")).toBeInTheDocument();
-  });
+    expect(onScoresheetChange).toHaveBeenCalledWith(photoFile, false)
+    expect(screen.getByText('photo.jpg')).toBeInTheDocument()
+  })
 
-  it("completes upload from camera input", () => {
-    const onScoresheetChange = vi.fn();
-    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />);
+  it('completes upload from camera input', () => {
+    const onScoresheetChange = vi.fn()
+    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />)
 
-    const cameraInput = getCameraInput();
-    const photoFile = createValidFile("camera-photo.jpg", "image/jpeg");
+    const cameraInput = getCameraInput()
+    const photoFile = createValidFile('camera-photo.jpg', 'image/jpeg')
 
-    fireEvent.change(cameraInput, { target: { files: [photoFile] } });
+    fireEvent.change(cameraInput, { target: { files: [photoFile] } })
 
     act(() => {
-      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS);
-    });
+      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS)
+    })
 
-    expect(onScoresheetChange).toHaveBeenLastCalledWith(photoFile, true);
-    expect(screen.getByRole("status")).toBeInTheDocument();
-  });
+    expect(onScoresheetChange).toHaveBeenLastCalledWith(photoFile, true)
+    expect(screen.getByRole('status')).toBeInTheDocument()
+  })
 
-  it("validates files from camera input", () => {
-    render(<ScoresheetPanel />);
+  it('validates files from camera input', () => {
+    render(<ScoresheetPanel />)
 
-    const cameraInput = getCameraInput();
+    const cameraInput = getCameraInput()
     // Camera input accepts image/jpeg and image/png only
-    const largePhoto = createValidFile(
-      "large-photo.jpg",
-      "image/jpeg",
-      MAX_FILE_SIZE_BYTES + 1,
-    );
+    const largePhoto = createValidFile('large-photo.jpg', 'image/jpeg', MAX_FILE_SIZE_BYTES + 1)
 
-    fireEvent.change(cameraInput, { target: { files: [largePhoto] } });
+    fireEvent.change(cameraInput, { target: { files: [largePhoto] } })
 
-    expect(screen.getByRole("alert")).toBeInTheDocument();
-  });
+    expect(screen.getByRole('alert')).toBeInTheDocument()
+  })
 
-  it("camera input has correct accept attribute", () => {
-    render(<ScoresheetPanel />);
+  it('camera input has correct accept attribute', () => {
+    render(<ScoresheetPanel />)
 
-    const cameraInput = getCameraInput();
-    expect(cameraInput).toHaveAttribute("accept", "image/jpeg,image/png");
-    expect(cameraInput).toHaveAttribute("capture", "environment");
-  });
-});
+    const cameraInput = getCameraInput()
+    expect(cameraInput).toHaveAttribute('accept', 'image/jpeg,image/png')
+    expect(cameraInput).toHaveAttribute('capture', 'environment')
+  })
+})
 
-describe("ScoresheetPanel - same file re-selection", () => {
+describe('ScoresheetPanel - same file re-selection', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    vi.useFakeTimers();
-    globalThis.URL.createObjectURL = vi.fn(() => "blob:mock-url");
-    globalThis.URL.revokeObjectURL = vi.fn();
-  });
+    vi.clearAllMocks()
+    vi.useFakeTimers()
+    globalThis.URL.createObjectURL = vi.fn(() => 'blob:mock-url')
+    globalThis.URL.revokeObjectURL = vi.fn()
+  })
 
   afterEach(() => {
-    vi.useRealTimers();
-  });
+    vi.useRealTimers()
+  })
 
-  it("allows re-selecting the same file after removal", () => {
-    const onScoresheetChange = vi.fn();
-    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />);
+  it('allows re-selecting the same file after removal', () => {
+    const onScoresheetChange = vi.fn()
+    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />)
 
-    const fileInput = getFileInput();
-    const file = createValidFile("document.jpg");
+    const fileInput = getFileInput()
+    const file = createValidFile('document.jpg')
 
     // First upload
-    fireEvent.change(fileInput, { target: { files: [file] } });
+    fireEvent.change(fileInput, { target: { files: [file] } })
     act(() => {
-      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS);
-    });
+      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS)
+    })
 
     // Remove file
-    fireEvent.click(screen.getByRole("button", { name: /remove/i }));
-    onScoresheetChange.mockClear();
+    fireEvent.click(screen.getByRole('button', { name: /remove/i }))
+    onScoresheetChange.mockClear()
 
     // Re-select the same file
-    fireEvent.change(fileInput, { target: { files: [file] } });
+    fireEvent.change(fileInput, { target: { files: [file] } })
 
-    expect(onScoresheetChange).toHaveBeenCalledWith(file, false);
-    expect(screen.getByText("document.jpg")).toBeInTheDocument();
-  });
+    expect(onScoresheetChange).toHaveBeenCalledWith(file, false)
+    expect(screen.getByText('document.jpg')).toBeInTheDocument()
+  })
 
-  it("clears input value after selection to allow same file re-selection", () => {
-    render(<ScoresheetPanel />);
+  it('clears input value after selection to allow same file re-selection', () => {
+    render(<ScoresheetPanel />)
 
-    const fileInput = getFileInput();
-    const file = createValidFile("test.jpg");
+    const fileInput = getFileInput()
+    const file = createValidFile('test.jpg')
 
     // Simulate file selection
-    fireEvent.change(fileInput, { target: { files: [file] } });
+    fireEvent.change(fileInput, { target: { files: [file] } })
 
     // Input value should be cleared (component sets e.target.value = "")
     // This allows the same file to trigger onChange again
-    expect(fileInput.value).toBe("");
-  });
+    expect(fileInput.value).toBe('')
+  })
 
-  it("allows replacing with the same file via replace button", () => {
-    const onScoresheetChange = vi.fn();
-    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />);
+  it('allows replacing with the same file via replace button', () => {
+    const onScoresheetChange = vi.fn()
+    render(<ScoresheetPanel onScoresheetChange={onScoresheetChange} />)
 
-    const fileInput = getFileInput();
-    const file = createValidFile("original.jpg");
+    const fileInput = getFileInput()
+    const file = createValidFile('original.jpg')
 
     // First upload
-    fireEvent.change(fileInput, { target: { files: [file] } });
+    fireEvent.change(fileInput, { target: { files: [file] } })
     act(() => {
-      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS);
-    });
+      vi.advanceTimersByTime(SIMULATED_UPLOAD_DURATION_MS)
+    })
 
     // Click replace
-    fireEvent.click(screen.getByRole("button", { name: /replace/i }));
-    onScoresheetChange.mockClear();
+    fireEvent.click(screen.getByRole('button', { name: /replace/i }))
+    onScoresheetChange.mockClear()
 
     // Re-select the same file
-    fireEvent.change(fileInput, { target: { files: [file] } });
+    fireEvent.change(fileInput, { target: { files: [file] } })
 
-    expect(onScoresheetChange).toHaveBeenCalledWith(file, false);
-  });
-});
+    expect(onScoresheetChange).toHaveBeenCalledWith(file, false)
+  })
+})

@@ -5,13 +5,12 @@
  * public transport schedules are consistent within each day type.
  */
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useMemo } from "react";
-import { MINUTES_PER_HOUR } from "@/shared/utils/constants";
-import { useAuthStore } from "@/shared/stores/auth";
-import { useSettingsStore } from "@/shared/stores/settings";
-import { useActiveAssociationCode } from "@/features/auth/hooks/useActiveAssociation";
-import { queryKeys } from "@/api/queryKeys";
+import { useCallback, useMemo } from 'react'
+
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+
+import { queryKeys } from '@/api/queryKeys'
+import { useActiveAssociationCode } from '@/features/auth/hooks/useActiveAssociation'
 import {
   calculateTravelTime,
   calculateMockTravelTime,
@@ -26,13 +25,16 @@ import {
   type Coordinates,
   type TravelTimeResult,
   type DayType,
-} from "@/shared/services/transport";
+} from '@/shared/services/transport'
+import { useAuthStore } from '@/shared/stores/auth'
+import { useSettingsStore } from '@/shared/stores/settings'
+import { MINUTES_PER_HOUR } from '@/shared/utils/constants'
 
 interface UseTravelTimeOptions {
   /** Date for the journey (used to determine day type). Defaults to today. */
-  date?: Date;
+  date?: Date
   /** Target arrival time - selects connection arriving closest to this time without being late */
-  targetArrivalTime?: Date;
+  targetArrivalTime?: Date
 }
 
 /**
@@ -47,89 +49,81 @@ interface UseTravelTimeOptions {
 export function useTravelTime(
   hallId: string | undefined,
   hallCoords: Coordinates | null,
-  options: UseTravelTimeOptions = {},
+  options: UseTravelTimeOptions = {}
 ) {
-  const { date, targetArrivalTime } = options;
-  const dataSource = useAuthStore((state) => state.dataSource);
-  const isDemoMode = dataSource === "demo";
-  const isCalendarMode = dataSource === "calendar";
-  const homeLocation = useSettingsStore((state) => state.homeLocation);
-  const transportEnabled = useSettingsStore((state) => state.transportEnabled);
+  const { date, targetArrivalTime } = options
+  const dataSource = useAuthStore((state) => state.dataSource)
+  const isDemoMode = dataSource === 'demo'
+  const isCalendarMode = dataSource === 'calendar'
+  const homeLocation = useSettingsStore((state) => state.homeLocation)
+  const transportEnabled = useSettingsStore((state) => state.transportEnabled)
   const transportEnabledByAssociation = useSettingsStore(
-    (state) => state.transportEnabledByAssociation,
-  );
-  const queryClient = useQueryClient();
-  const associationCode = useActiveAssociationCode();
+    (state) => state.transportEnabledByAssociation
+  )
+  const queryClient = useQueryClient()
+  const associationCode = useActiveAssociationCode()
 
   // Check if transport is enabled for current association
   // Use per-association setting if available, otherwise fall back to global
   const isTransportEnabled = useMemo(() => {
-    const enabledMap = transportEnabledByAssociation ?? {};
+    const enabledMap = transportEnabledByAssociation ?? {}
     if (associationCode && enabledMap[associationCode] !== undefined) {
-      return enabledMap[associationCode];
+      return enabledMap[associationCode]
     }
-    return transportEnabled;
-  }, [associationCode, transportEnabledByAssociation, transportEnabled]);
+    return transportEnabled
+  }, [associationCode, transportEnabledByAssociation, transportEnabled])
 
   // Create a hash of home location for cache key stability
-  const homeLocationHash = homeLocation ? hashLocation(homeLocation) : null;
+  const homeLocationHash = homeLocation ? hashLocation(homeLocation) : null
 
   // Determine day type for cache key (weekday/saturday/sunday)
-  const dayType: DayType = getDayType(date);
+  const dayType: DayType = getDayType(date)
 
   // Determine if we should fetch travel time
   // Demo mode uses mock transport, calendar/API mode uses real OJP when configured
   const shouldFetch = Boolean(
     isTransportEnabled &&
-      homeLocation &&
-      hallCoords &&
-      hallId &&
-      (isDemoMode || isCalendarMode || isOjpConfigured()),
-  );
+    homeLocation &&
+    hallCoords &&
+    hallId &&
+    (isDemoMode || isCalendarMode || isOjpConfigured())
+  )
 
-  const queryKey = queryKeys.travelTime.hall(
-    hallId ?? "",
-    homeLocationHash ?? "",
-    dayType,
-  );
+  const queryKey = queryKeys.travelTime.hall(hallId ?? '', homeLocationHash ?? '', dayType)
 
   const query = useQuery<TravelTimeResult>({
     queryKey,
     queryFn: async () => {
       if (!homeLocation || !hallCoords || !hallId) {
-        throw new Error("Missing home location or hall coordinates");
+        throw new Error('Missing home location or hall coordinates')
       }
 
       // Check localStorage cache first (survives browser sessions)
-      const cached = getCachedTravelTime(
-        hallId,
-        homeLocationHash ?? "",
-        dayType,
-      );
+      const cached = getCachedTravelTime(hallId, homeLocationHash ?? '', dayType)
       if (cached) {
-        return cached;
+        return cached
       }
 
       const fromCoords: Coordinates = {
         latitude: homeLocation.latitude,
         longitude: homeLocation.longitude,
-      };
+      }
 
       // Prefer real OJP API when configured, fall back to mock transport
       // This matches the logic in useSbbUrl for consistency
-      let result: TravelTimeResult;
+      let result: TravelTimeResult
       if (isOjpConfigured()) {
         result = await calculateTravelTime(fromCoords, hallCoords, {
           targetArrivalTime,
-        });
+        })
       } else {
-        result = await calculateMockTravelTime(fromCoords, hallCoords);
+        result = await calculateMockTravelTime(fromCoords, hallCoords)
       }
 
       // Persist successful result to localStorage
-      setCachedTravelTime(hallId, homeLocationHash ?? "", dayType, result);
+      setCachedTravelTime(hallId, homeLocationHash ?? '', dayType, result)
 
-      return result;
+      return result
     },
     enabled: shouldFetch,
 
@@ -142,23 +136,23 @@ export function useTravelTime(
 
     // Use TanStack Query defaults for retry (3 retries with exponential backoff)
     // Not setting retry here allows tests to override via QueryClient defaults
-  });
+  })
 
   // Function to manually refresh travel time (invalidates both caches)
   const refresh = useCallback(() => {
     if (hallId && homeLocationHash) {
       // Remove from localStorage first
-      removeCachedTravelTime(hallId, homeLocationHash, dayType);
+      removeCachedTravelTime(hallId, homeLocationHash, dayType)
     }
     // Then invalidate TanStack Query cache to trigger refetch
-    queryClient.invalidateQueries({ queryKey });
-  }, [queryClient, queryKey, hallId, homeLocationHash, dayType]);
+    queryClient.invalidateQueries({ queryKey })
+  }, [queryClient, queryKey, hallId, homeLocationHash, dayType])
 
   return {
     ...query,
     refresh,
     dayType,
-  };
+  }
 }
 
 /**
@@ -169,17 +163,17 @@ export function useTravelTime(
  */
 export function formatTravelTime(minutes: number): string {
   if (minutes < MINUTES_PER_HOUR) {
-    return `${minutes}'`;
+    return `${minutes}'`
   }
 
-  const hours = Math.floor(minutes / MINUTES_PER_HOUR);
-  const remainingMinutes = minutes % MINUTES_PER_HOUR;
+  const hours = Math.floor(minutes / MINUTES_PER_HOUR)
+  const remainingMinutes = minutes % MINUTES_PER_HOUR
 
   if (remainingMinutes === 0) {
-    return `${hours}h`;
+    return `${hours}h`
   }
 
-  return `${hours}h${remainingMinutes}'`;
+  return `${hours}h${remainingMinutes}'`
 }
 
 /**
@@ -190,6 +184,6 @@ export function formatTravelTime(minutes: number): string {
  * enabling transport calculations when OJP is configured.
  */
 export function useTravelTimeAvailable(): boolean {
-  const dataSource = useAuthStore((state) => state.dataSource);
-  return dataSource === "demo" || dataSource === "calendar" || isOjpConfigured();
+  const dataSource = useAuthStore((state) => state.dataSource)
+  return dataSource === 'demo' || dataSource === 'calendar' || isOjpConfigured()
 }

@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vitest'
+
 import {
   normalizeForComparison,
   calculateNameSimilarity,
@@ -6,321 +7,304 @@ import {
   compareRosters,
   compareTeamRosters,
   calculateMatchScore,
-} from './roster-comparison';
-import type { ParsedPlayer } from '../types';
-import type { RosterPlayerForComparison } from './roster-comparison';
+} from './roster-comparison'
+
+import type { ParsedPlayer } from '../types'
+import type { RosterPlayerForComparison } from './roster-comparison'
 
 describe('normalizeForComparison', () => {
   it('converts to lowercase', () => {
-    expect(normalizeForComparison('MÜLLER')).toBe('muller');
-  });
+    expect(normalizeForComparison('MÜLLER')).toBe('muller')
+  })
 
   it('removes accents', () => {
-    expect(normalizeForComparison('Müller')).toBe('muller');
-    expect(normalizeForComparison('François')).toBe('francois');
-    expect(normalizeForComparison('Schröder')).toBe('schroder');
-  });
+    expect(normalizeForComparison('Müller')).toBe('muller')
+    expect(normalizeForComparison('François')).toBe('francois')
+    expect(normalizeForComparison('Schröder')).toBe('schroder')
+  })
 
   it('removes special characters', () => {
-    expect(normalizeForComparison("O'Brien")).toBe('obrien');
-  });
+    expect(normalizeForComparison("O'Brien")).toBe('obrien')
+  })
 
   it('handles empty strings', () => {
-    expect(normalizeForComparison('')).toBe('');
-  });
+    expect(normalizeForComparison('')).toBe('')
+  })
 
   it('normalizes whitespace', () => {
-    expect(normalizeForComparison('Anna  Maria')).toBe('anna maria');
-  });
-});
+    expect(normalizeForComparison('Anna  Maria')).toBe('anna maria')
+  })
+})
 
 describe('calculateNameSimilarity', () => {
   it('returns 100 for exact match', () => {
-    expect(calculateNameSimilarity('Müller', 'Müller')).toBe(100);
-    expect(calculateNameSimilarity('MÜLLER', 'müller')).toBe(100);
-  });
+    expect(calculateNameSimilarity('Müller', 'Müller')).toBe(100)
+    expect(calculateNameSimilarity('MÜLLER', 'müller')).toBe(100)
+  })
 
   it('returns high score for contained names', () => {
     // 'Anna Maria' contains 'Anna Mar' (8/10 * 90 = 72)
-    const score = calculateNameSimilarity('Anna Mar', 'Anna Maria');
-    expect(score).toBeGreaterThan(70);
-  });
+    const score = calculateNameSimilarity('Anna Mar', 'Anna Maria')
+    expect(score).toBeGreaterThan(70)
+  })
 
   it('returns score for partial word match', () => {
-    const score = calculateNameSimilarity('Anna Müller', 'Anna Weber');
-    expect(score).toBeGreaterThan(40);
-  });
+    const score = calculateNameSimilarity('Anna Müller', 'Anna Weber')
+    expect(score).toBeGreaterThan(40)
+  })
 
   it('returns 0 for completely different names', () => {
-    const score = calculateNameSimilarity('Xyz', 'Abc');
-    expect(score).toBe(0);
-  });
+    const score = calculateNameSimilarity('Xyz', 'Abc')
+    expect(score).toBe(0)
+  })
 
   it('returns 0 for empty strings', () => {
-    expect(calculateNameSimilarity('', 'Anna')).toBe(0);
-    expect(calculateNameSimilarity('Anna', '')).toBe(0);
-  });
-});
+    expect(calculateNameSimilarity('', 'Anna')).toBe(0)
+    expect(calculateNameSimilarity('Anna', '')).toBe(0)
+  })
+})
 
 describe('calculateWordOrderIndependentSimilarity', () => {
   it('returns high score for exact match', () => {
-    const score = calculateWordOrderIndependentSimilarity('Emma van Berg', 'Emma van Berg');
-    expect(score).toBeGreaterThanOrEqual(90);
-  });
+    const score = calculateWordOrderIndependentSimilarity('Emma van Berg', 'Emma van Berg')
+    expect(score).toBeGreaterThanOrEqual(90)
+  })
 
   it('matches names with different word order', () => {
     // OCR: "Van Berg Emma" vs Roster: "Emma van Berg"
-    const score = calculateWordOrderIndependentSimilarity(
-      'Van Berg Emma',
-      'Emma van Berg',
-    );
-    expect(score).toBeGreaterThanOrEqual(90);
-  });
+    const score = calculateWordOrderIndependentSimilarity('Van Berg Emma', 'Emma van Berg')
+    expect(score).toBeGreaterThanOrEqual(90)
+  })
 
   it('matches names with extra middle names', () => {
     // OCR only has first name, roster has full name
     // "Emma" vs "Emma Sophie van Berg"
-    const score = calculateWordOrderIndependentSimilarity('Emma', 'Emma Sophie van Berg');
+    const score = calculateWordOrderIndependentSimilarity('Emma', 'Emma Sophie van Berg')
     // 1 word matches out of 4 = 25% → 25% * 95 = ~24
-    expect(score).toBeGreaterThan(20);
-  });
+    expect(score).toBeGreaterThan(20)
+  })
 
   it('matches compound surnames with particles', () => {
     // Both have the same words, different order
-    const score = calculateWordOrderIndependentSimilarity(
-      'Berg Emma Van',
-      'Emma Sophie van Berg',
-    );
+    const score = calculateWordOrderIndependentSimilarity('Berg Emma Van', 'Emma Sophie van Berg')
     // 3 words match (emma, van, berg) out of 4 = 75% → ~71
-    expect(score).toBeGreaterThanOrEqual(70);
-  });
+    expect(score).toBeGreaterThanOrEqual(70)
+  })
 
   it('handles nickname/partial matches (Alex vs Alexander)', () => {
-    const score = calculateWordOrderIndependentSimilarity('Schmidt Alex', 'Alexander Schmidt');
+    const score = calculateWordOrderIndependentSimilarity('Schmidt Alex', 'Alexander Schmidt')
     // "schmidt" matches exactly, "alex" partially matches "alexander" (prefix)
-    expect(score).toBeGreaterThanOrEqual(70);
-  });
+    expect(score).toBeGreaterThanOrEqual(70)
+  })
 
   it('handles officials with reversed name format', () => {
     // OCR: "Santos Maria Lucia" (Lastname Firstname format)
     // Roster: "Maria Lucia Santos" (also reversed or different format)
     const score = calculateWordOrderIndependentSimilarity(
       'Santos Maria Lucia',
-      'Maria Lucia Santos',
-    );
-    expect(score).toBeGreaterThanOrEqual(90);
-  });
+      'Maria Lucia Santos'
+    )
+    expect(score).toBeGreaterThanOrEqual(90)
+  })
 
   it('handles accented characters', () => {
-    const score = calculateWordOrderIndependentSimilarity(
-      'BÖHLER CÉLINE',
-      'Céline Böhler',
-    );
-    expect(score).toBeGreaterThanOrEqual(90);
-  });
+    const score = calculateWordOrderIndependentSimilarity('BÖHLER CÉLINE', 'Céline Böhler')
+    expect(score).toBeGreaterThanOrEqual(90)
+  })
 
   it('returns 0 for completely different names', () => {
-    const score = calculateWordOrderIndependentSimilarity('John Smith', 'Maria Garcia');
-    expect(score).toBe(0);
-  });
+    const score = calculateWordOrderIndependentSimilarity('John Smith', 'Maria Garcia')
+    expect(score).toBe(0)
+  })
 
   it('returns 0 for empty strings', () => {
-    expect(calculateWordOrderIndependentSimilarity('', 'Anna')).toBe(0);
-    expect(calculateWordOrderIndependentSimilarity('Anna', '')).toBe(0);
-  });
-});
+    expect(calculateWordOrderIndependentSimilarity('', 'Anna')).toBe(0)
+    expect(calculateWordOrderIndependentSimilarity('Anna', '')).toBe(0)
+  })
+})
 
 describe('compareRosters', () => {
-  const createOCRPlayer = (
-    firstName: string,
-    lastName: string,
-  ): ParsedPlayer => ({
+  const createOCRPlayer = (firstName: string, lastName: string): ParsedPlayer => ({
     shirtNumber: 1,
     firstName,
     lastName,
     displayName: `${firstName} ${lastName}`,
     rawName: `${lastName.toUpperCase()} ${firstName.toUpperCase()}`,
     licenseStatus: 'OK',
-  });
+  })
 
   const createRosterPlayer = (
     id: string,
     firstName: string,
-    lastName: string,
+    lastName: string
   ): RosterPlayerForComparison => ({
     id,
     displayName: `${firstName} ${lastName}`,
     firstName,
     lastName,
-  });
+  })
 
   it('matches identical players', () => {
-    const ocrPlayers = [createOCRPlayer('Anna', 'Müller')];
-    const rosterPlayers = [createRosterPlayer('1', 'Anna', 'Müller')];
+    const ocrPlayers = [createOCRPlayer('Anna', 'Müller')]
+    const rosterPlayers = [createRosterPlayer('1', 'Anna', 'Müller')]
 
-    const results = compareRosters(ocrPlayers, rosterPlayers);
+    const results = compareRosters(ocrPlayers, rosterPlayers)
 
-    expect(results).toHaveLength(1);
-    expect(results[0]!.status).toBe('match');
-    expect(results[0]!.confidence).toBe(100);
-    expect(results[0]!.rosterPlayerId).toBe('1');
-  });
+    expect(results).toHaveLength(1)
+    expect(results[0]!.status).toBe('match')
+    expect(results[0]!.confidence).toBe(100)
+    expect(results[0]!.rosterPlayerId).toBe('1')
+  })
 
   it('matches players with accent differences', () => {
-    const ocrPlayers = [createOCRPlayer('Anna', 'Muller')];
-    const rosterPlayers = [createRosterPlayer('1', 'Anna', 'Müller')];
+    const ocrPlayers = [createOCRPlayer('Anna', 'Muller')]
+    const rosterPlayers = [createRosterPlayer('1', 'Anna', 'Müller')]
 
-    const results = compareRosters(ocrPlayers, rosterPlayers);
+    const results = compareRosters(ocrPlayers, rosterPlayers)
 
-    expect(results[0]!.status).toBe('match');
-    expect(results[0]!.confidence).toBe(100);
-  });
+    expect(results[0]!.status).toBe('match')
+    expect(results[0]!.confidence).toBe(100)
+  })
 
   it('identifies OCR-only players', () => {
-    const ocrPlayers = [createOCRPlayer('Anna', 'Müller')];
-    const rosterPlayers: RosterPlayerForComparison[] = [];
+    const ocrPlayers = [createOCRPlayer('Anna', 'Müller')]
+    const rosterPlayers: RosterPlayerForComparison[] = []
 
-    const results = compareRosters(ocrPlayers, rosterPlayers);
+    const results = compareRosters(ocrPlayers, rosterPlayers)
 
-    expect(results).toHaveLength(1);
-    expect(results[0]!.status).toBe('ocr-only');
-    expect(results[0]!.rosterPlayerId).toBeNull();
-  });
+    expect(results).toHaveLength(1)
+    expect(results[0]!.status).toBe('ocr-only')
+    expect(results[0]!.rosterPlayerId).toBeNull()
+  })
 
   it('identifies roster-only players', () => {
-    const ocrPlayers: ParsedPlayer[] = [];
-    const rosterPlayers = [createRosterPlayer('1', 'Anna', 'Müller')];
+    const ocrPlayers: ParsedPlayer[] = []
+    const rosterPlayers = [createRosterPlayer('1', 'Anna', 'Müller')]
 
-    const results = compareRosters(ocrPlayers, rosterPlayers);
+    const results = compareRosters(ocrPlayers, rosterPlayers)
 
-    expect(results).toHaveLength(1);
-    expect(results[0]!.status).toBe('roster-only');
-    expect(results[0]!.ocrPlayer).toBeNull();
-  });
+    expect(results).toHaveLength(1)
+    expect(results[0]!.status).toBe('roster-only')
+    expect(results[0]!.ocrPlayer).toBeNull()
+  })
 
   it('matches multiple players correctly', () => {
-    const ocrPlayers = [
-      createOCRPlayer('Anna', 'Müller'),
-      createOCRPlayer('Lisa', 'Schmidt'),
-    ];
+    const ocrPlayers = [createOCRPlayer('Anna', 'Müller'), createOCRPlayer('Lisa', 'Schmidt')]
     const rosterPlayers = [
       createRosterPlayer('1', 'Anna', 'Müller'),
       createRosterPlayer('2', 'Lisa', 'Schmidt'),
       createRosterPlayer('3', 'Marie', 'Weber'),
-    ];
+    ]
 
-    const results = compareRosters(ocrPlayers, rosterPlayers);
+    const results = compareRosters(ocrPlayers, rosterPlayers)
 
-    expect(results.filter((r) => r.status === 'match')).toHaveLength(2);
-    expect(results.filter((r) => r.status === 'roster-only')).toHaveLength(1);
-  });
+    expect(results.filter((r) => r.status === 'match')).toHaveLength(2)
+    expect(results.filter((r) => r.status === 'roster-only')).toHaveLength(1)
+  })
 
   it('sorts results by status (match, ocr-only, roster-only)', () => {
-    const ocrPlayers = [
-      createOCRPlayer('Anna', 'Müller'),
-      createOCRPlayer('Unknown', 'Player'),
-    ];
+    const ocrPlayers = [createOCRPlayer('Anna', 'Müller'), createOCRPlayer('Unknown', 'Player')]
     const rosterPlayers = [
       createRosterPlayer('1', 'Anna', 'Müller'),
       createRosterPlayer('2', 'Missing', 'Person'),
-    ];
+    ]
 
-    const results = compareRosters(ocrPlayers, rosterPlayers);
+    const results = compareRosters(ocrPlayers, rosterPlayers)
 
-    expect(results[0]!.status).toBe('match');
-    expect(results[1]!.status).toBe('ocr-only');
-    expect(results[2]!.status).toBe('roster-only');
-  });
+    expect(results[0]!.status).toBe('match')
+    expect(results[1]!.status).toBe('ocr-only')
+    expect(results[2]!.status).toBe('roster-only')
+  })
 
   it('does not match the same roster player twice', () => {
     const ocrPlayers = [
       createOCRPlayer('Anna', 'Müller'),
       createOCRPlayer('Anna', 'Muller'), // Similar name
-    ];
-    const rosterPlayers = [createRosterPlayer('1', 'Anna', 'Müller')];
+    ]
+    const rosterPlayers = [createRosterPlayer('1', 'Anna', 'Müller')]
 
-    const results = compareRosters(ocrPlayers, rosterPlayers);
+    const results = compareRosters(ocrPlayers, rosterPlayers)
 
-    const matches = results.filter((r) => r.status === 'match');
-    expect(matches).toHaveLength(1);
-  });
+    const matches = results.filter((r) => r.status === 'match')
+    expect(matches).toHaveLength(1)
+  })
 
   // OCR matching scenarios with word-order variations
   describe('word-order-independent matching', () => {
     it('matches compound surnames with particles (van Berg)', () => {
       // OCR parses "VAN BERG EMMA" as lastName="Van", firstName="Berg Emma"
       // Roster has firstName="Emma Sophie", lastName="van Berg"
-      const ocrPlayers = [createOCRPlayer('Berg Emma', 'Van')];
-      const rosterPlayers = [createRosterPlayer('1', 'Emma Sophie', 'van Berg')];
+      const ocrPlayers = [createOCRPlayer('Berg Emma', 'Van')]
+      const rosterPlayers = [createRosterPlayer('1', 'Emma Sophie', 'van Berg')]
 
-      const results = compareRosters(ocrPlayers, rosterPlayers);
+      const results = compareRosters(ocrPlayers, rosterPlayers)
 
-      expect(results[0]!.status).toBe('match');
-      expect(results[0]!.confidence).toBeGreaterThanOrEqual(70);
-    });
+      expect(results[0]!.status).toBe('match')
+      expect(results[0]!.confidence).toBeGreaterThanOrEqual(70)
+    })
 
     it('matches officials with reversed name format (Lastname Firstname)', () => {
       // OCR: "Schmidt Alex" parsed as lastName="Alex", firstName="Schmidt" (wrong)
       // Roster: firstName="Alexander", lastName="Schmidt"
       // Word-order-independent should still match "Schmidt" + partial "Alex/Alexander"
-      const ocrPlayers = [createOCRPlayer('Schmidt', 'Alex')];
-      const rosterPlayers = [createRosterPlayer('1', 'Alexander', 'Schmidt')];
+      const ocrPlayers = [createOCRPlayer('Schmidt', 'Alex')]
+      const rosterPlayers = [createRosterPlayer('1', 'Alexander', 'Schmidt')]
 
-      const results = compareRosters(ocrPlayers, rosterPlayers);
+      const results = compareRosters(ocrPlayers, rosterPlayers)
 
-      expect(results[0]!.status).toBe('match');
-      expect(results[0]!.confidence).toBeGreaterThanOrEqual(50);
-    });
+      expect(results[0]!.status).toBe('match')
+      expect(results[0]!.confidence).toBeGreaterThanOrEqual(50)
+    })
 
     it('matches three-part names with reordering', () => {
       // OCR: "Santos Maria Lucia" parsed incorrectly
       // Roster: "Maria Lucia Santos"
-      const ocrPlayers = [createOCRPlayer('Maria Lucia', 'Santos')];
-      const rosterPlayers = [createRosterPlayer('1', 'Maria Lucia', 'Santos')];
+      const ocrPlayers = [createOCRPlayer('Maria Lucia', 'Santos')]
+      const rosterPlayers = [createRosterPlayer('1', 'Maria Lucia', 'Santos')]
 
-      const results = compareRosters(ocrPlayers, rosterPlayers);
+      const results = compareRosters(ocrPlayers, rosterPlayers)
 
-      expect(results[0]!.status).toBe('match');
-      expect(results[0]!.confidence).toBeGreaterThanOrEqual(90);
-    });
+      expect(results[0]!.status).toBe('match')
+      expect(results[0]!.confidence).toBeGreaterThanOrEqual(90)
+    })
 
     it('does not match when OCR has only one partial name word', () => {
       // OCR only captures "EMMA" but roster has "Emma Sophie van Berg"
       // 1 word out of 4 = 25% - below threshold, should NOT match to avoid false positives
-      const ocrPlayers = [createOCRPlayer('', 'Emma')];
-      const rosterPlayers = [createRosterPlayer('1', 'Emma Sophie', 'van Berg')];
+      const ocrPlayers = [createOCRPlayer('', 'Emma')]
+      const rosterPlayers = [createRosterPlayer('1', 'Emma Sophie', 'van Berg')]
 
-      const results = compareRosters(ocrPlayers, rosterPlayers);
+      const results = compareRosters(ocrPlayers, rosterPlayers)
 
       // Should NOT match - too little information to be confident
-      expect(results[0]!.status).toBe('ocr-only');
-    });
+      expect(results[0]!.status).toBe('ocr-only')
+    })
 
     it('matches when OCR has partial name with last name', () => {
       // OCR captures "Emma van Berg" but roster has "Emma Sophie van Berg"
       // 3 words out of 4 match = 75% - above threshold
-      const ocrPlayers = [createOCRPlayer('Emma', 'van Berg')];
-      const rosterPlayers = [createRosterPlayer('1', 'Emma Sophie', 'van Berg')];
+      const ocrPlayers = [createOCRPlayer('Emma', 'van Berg')]
+      const rosterPlayers = [createRosterPlayer('1', 'Emma Sophie', 'van Berg')]
 
-      const results = compareRosters(ocrPlayers, rosterPlayers);
+      const results = compareRosters(ocrPlayers, rosterPlayers)
 
-      expect(results[0]!.status).toBe('match');
-      expect(results[0]!.confidence).toBeGreaterThanOrEqual(70);
-    });
+      expect(results[0]!.status).toBe('match')
+      expect(results[0]!.confidence).toBeGreaterThanOrEqual(70)
+    })
 
     it('matches accented names from OCR', () => {
       // OCR: "BÖHLER CÉLINE" → firstName="Céline", lastName="Böhler"
       // Roster: firstName="Céline", lastName="Böhler"
-      const ocrPlayers = [createOCRPlayer('Céline', 'Böhler')];
-      const rosterPlayers = [createRosterPlayer('1', 'Céline', 'Böhler')];
+      const ocrPlayers = [createOCRPlayer('Céline', 'Böhler')]
+      const rosterPlayers = [createRosterPlayer('1', 'Céline', 'Böhler')]
 
-      const results = compareRosters(ocrPlayers, rosterPlayers);
+      const results = compareRosters(ocrPlayers, rosterPlayers)
 
-      expect(results[0]!.status).toBe('match');
-      expect(results[0]!.confidence).toBe(100);
-    });
-  });
-});
+      expect(results[0]!.status).toBe('match')
+      expect(results[0]!.confidence).toBe(100)
+    })
+  })
+})
 
 describe('compareTeamRosters', () => {
   it('returns complete comparison result', () => {
@@ -333,25 +317,20 @@ describe('compareTeamRosters', () => {
         rawName: 'MÜLLER ANNA',
         licenseStatus: 'OK',
       },
-    ];
+    ]
     const rosterPlayers: RosterPlayerForComparison[] = [
       { id: '1', displayName: 'Anna Müller', firstName: 'Anna', lastName: 'Müller' },
-    ];
+    ]
 
-    const result = compareTeamRosters(
-      'OCR Team',
-      ocrPlayers,
-      'Roster Team',
-      rosterPlayers,
-    );
+    const result = compareTeamRosters('OCR Team', ocrPlayers, 'Roster Team', rosterPlayers)
 
-    expect(result.ocrTeamName).toBe('OCR Team');
-    expect(result.rosterTeamName).toBe('Roster Team');
-    expect(result.counts.matched).toBe(1);
-    expect(result.counts.ocrOnly).toBe(0);
-    expect(result.counts.rosterOnly).toBe(0);
-  });
-});
+    expect(result.ocrTeamName).toBe('OCR Team')
+    expect(result.rosterTeamName).toBe('Roster Team')
+    expect(result.counts.matched).toBe(1)
+    expect(result.counts.ocrOnly).toBe(0)
+    expect(result.counts.rosterOnly).toBe(0)
+  })
+})
 
 describe('calculateMatchScore', () => {
   it('returns 100 for all matched', () => {
@@ -360,10 +339,10 @@ describe('calculateMatchScore', () => {
       rosterTeamName: 'B',
       playerResults: [],
       counts: { matched: 6, ocrOnly: 0, rosterOnly: 0 },
-    };
+    }
 
-    expect(calculateMatchScore(result)).toBe(100);
-  });
+    expect(calculateMatchScore(result)).toBe(100)
+  })
 
   it('returns 0 for no players', () => {
     const result = {
@@ -371,10 +350,10 @@ describe('calculateMatchScore', () => {
       rosterTeamName: 'B',
       playerResults: [],
       counts: { matched: 0, ocrOnly: 0, rosterOnly: 0 },
-    };
+    }
 
-    expect(calculateMatchScore(result)).toBe(0);
-  });
+    expect(calculateMatchScore(result)).toBe(0)
+  })
 
   it('calculates correct percentage', () => {
     const result = {
@@ -382,8 +361,8 @@ describe('calculateMatchScore', () => {
       rosterTeamName: 'B',
       playerResults: [],
       counts: { matched: 3, ocrOnly: 1, rosterOnly: 2 },
-    };
+    }
 
-    expect(calculateMatchScore(result)).toBe(50); // 3/6 = 50%
-  });
-});
+    expect(calculateMatchScore(result)).toBe(50) // 3/6 = 50%
+  })
+})

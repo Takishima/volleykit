@@ -10,11 +10,11 @@
  * - OnCallCard: UI component for displaying on-call assignments
  */
 
-export { useRefereeBackups } from "./hooks/useRefereeBackups";
+export { useRefereeBackups } from './hooks/useRefereeBackups'
 export {
   useMyOnCallAssignments,
   isUserAssignment,
   extractUserOnCallAssignments,
   type OnCallAssignment,
-} from "./hooks/useMyOnCallAssignments";
-export { OnCallCard } from "./components/OnCallCard";
+} from './hooks/useMyOnCallAssignments'
+export { OnCallCard } from './components/OnCallCard'

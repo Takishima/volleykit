@@ -1,11 +1,11 @@
 // Public API for settings feature
-export { SettingsPage } from "./SettingsPage";
+export { SettingsPage } from './SettingsPage'
 
 // Hooks
-export { useAssociationSettings, useActiveSeason } from "./hooks/useSettings";
+export { useAssociationSettings, useActiveSeason } from './hooks/useSettings'
 
 // Components
-export * from "./components";
+export * from './components'
 
 // Tour
-export { settingsTour } from "./settings";
+export { settingsTour } from './settings'

@@ -1,90 +1,84 @@
-import { useEffect, useState, useRef, lazy, Suspense } from "react";
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Navigate,
-  useNavigate,
-} from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useShallow } from "zustand/react/shallow";
-import { useAuthStore } from "@/shared/stores/auth";
-import { useDemoStore } from "@/shared/stores/demo";
-import { AppShell } from "@/shared/components/layout/AppShell";
-import { LoadingState } from "@/shared/components/LoadingSpinner";
-import { ErrorBoundary } from "@/shared/components/ErrorBoundary";
-import { PageErrorBoundary } from "@/shared/components/PageErrorBoundary";
-import { ReloadPrompt } from "@/shared/components/ReloadPrompt";
-import { ToastContainer } from "@/shared/components/Toast";
-import { PWAProvider } from "@/contexts/PWAContext";
+import { useEffect, useState, useRef, lazy, Suspense } from 'react'
+
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { useShallow } from 'zustand/react/shallow'
+
+import { PWAProvider } from '@/contexts/PWAContext'
+import { CalendarErrorHandler } from '@/features/assignments/components/CalendarErrorHandler'
+import { useCalendarTheme } from '@/features/assignments/hooks/useCalendarTheme'
+import { ErrorBoundary } from '@/shared/components/ErrorBoundary'
+import { AppShell } from '@/shared/components/layout/AppShell'
+import { LoadingState } from '@/shared/components/LoadingSpinner'
+import { PageErrorBoundary } from '@/shared/components/PageErrorBoundary'
+import { ReloadPrompt } from '@/shared/components/ReloadPrompt'
+import { ToastContainer } from '@/shared/components/Toast'
+import { ASSIGNMENTS_STALE_TIME_MS, SETTINGS_STALE_TIME_MS } from '@/shared/hooks/usePaginatedQuery'
+import { usePreloadLocales } from '@/shared/hooks/usePreloadLocales'
+import { useTranslation } from '@/shared/hooks/useTranslation'
+import { useViewportZoom } from '@/shared/hooks/useViewportZoom'
+import { useAuthStore } from '@/shared/stores/auth'
+import { useDemoStore } from '@/shared/stores/demo'
+import { useSettingsStore } from '@/shared/stores/settings'
+import { logger } from '@/shared/utils/logger'
 import {
   classifyQueryError,
   isRetryableError,
   calculateRetryDelay,
   isAuthError,
   RETRY_CONFIG,
-} from "@/shared/utils/query-error-utils";
-import { ASSIGNMENTS_STALE_TIME_MS, SETTINGS_STALE_TIME_MS } from "@/shared/hooks/usePaginatedQuery";
-import { usePreloadLocales } from "@/shared/hooks/usePreloadLocales";
-import { useTranslation } from "@/shared/hooks/useTranslation";
-import { useViewportZoom } from "@/shared/hooks/useViewportZoom";
-import { useCalendarTheme } from "@/features/assignments/hooks/useCalendarTheme";
-import { useSettingsStore } from "@/shared/stores/settings";
-import { logger } from "@/shared/utils/logger";
-import { CalendarErrorHandler } from "@/features/assignments/components/CalendarErrorHandler";
+} from '@/shared/utils/query-error-utils'
 
 // Lazy load pages to reduce initial bundle size
 // Each page becomes a separate chunk that loads on-demand
 const LoginPage = lazy(() =>
-  import("@/features/auth/LoginPage").then((m) => ({ default: m.LoginPage })),
-);
+  import('@/features/auth/LoginPage').then((m) => ({ default: m.LoginPage }))
+)
 const AssignmentsPage = lazy(() =>
-  import("@/features/assignments/AssignmentsPage").then((m) => ({ default: m.AssignmentsPage })),
-);
+  import('@/features/assignments/AssignmentsPage').then((m) => ({ default: m.AssignmentsPage }))
+)
 const CompensationsPage = lazy(() =>
-  import("@/features/compensations/CompensationsPage").then((m) => ({ default: m.CompensationsPage })),
-);
+  import('@/features/compensations/CompensationsPage').then((m) => ({
+    default: m.CompensationsPage,
+  }))
+)
 const ExchangePage = lazy(() =>
-  import("@/features/exchanges/ExchangePage").then((m) => ({ default: m.ExchangePage })),
-);
+  import('@/features/exchanges/ExchangePage').then((m) => ({ default: m.ExchangePage }))
+)
 const SettingsPage = lazy(() =>
-  import("@/features/settings/SettingsPage").then((m) => ({ default: m.SettingsPage })),
-);
+  import('@/features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage }))
+)
 
 // Lazy load TourProvider since it's only needed for first-time users
 const TourProvider = lazy(() =>
-  import("@/shared/components/tour").then((m) => ({ default: m.TourProvider })),
-);
+  import('@/shared/components/tour').then((m) => ({ default: m.TourProvider }))
+)
 
 /**
  * Global error handler for React Query mutations.
  * Logs errors with context for debugging. Network errors allow retry,
  * while other errors may need different handling.
  */
-function handleMutationError(
-  error: unknown,
-  variables: unknown,
-  context: unknown,
-): void {
-  const message = error instanceof Error ? error.message : "Unknown error";
-  const errorType = classifyQueryError(message);
-  const stack = error instanceof Error ? error.stack : undefined;
+function handleMutationError(error: unknown, variables: unknown, context: unknown): void {
+  const message = error instanceof Error ? error.message : 'Unknown error'
+  const errorType = classifyQueryError(message)
+  const stack = error instanceof Error ? error.stack : undefined
 
-  logger.error("Mutation error:", {
+  logger.error('Mutation error:', {
     message,
     errorType,
-    variables: variables ? "[redacted]" : undefined, // Don't log sensitive data
+    variables: variables ? '[redacted]' : undefined, // Don't log sensitive data
     hasContext: context !== undefined,
     stack: import.meta.env.DEV ? stack : undefined, // Only show stack in dev
-  });
+  })
 }
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: (failureCount, error) => {
-        if (!isRetryableError(error)) return false;
-        return failureCount < RETRY_CONFIG.MAX_QUERY_RETRIES;
+        if (!isRetryableError(error)) return false
+        return failureCount < RETRY_CONFIG.MAX_QUERY_RETRIES
       },
       // Use exponential backoff with jitter for retry delays
       retryDelay: calculateRetryDelay,
@@ -101,7 +95,7 @@ const queryClient = new QueryClient({
       retry: false,
     },
   },
-});
+})
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { status, checkSession, dataSource } = useAuthStore(
@@ -109,196 +103,186 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       status: state.status,
       checkSession: state.checkSession,
       dataSource: state.dataSource,
-    })),
-  );
-  const { assignments, activeAssociationCode, initializeDemoData } =
-    useDemoStore(
-      useShallow((state) => ({
-        assignments: state.assignments,
-        activeAssociationCode: state.activeAssociationCode,
-        initializeDemoData: state.initializeDemoData,
-      })),
-    );
-  const { t } = useTranslation();
-  const isDemoMode = dataSource === "demo";
+    }))
+  )
+  const { assignments, activeAssociationCode, initializeDemoData } = useDemoStore(
+    useShallow((state) => ({
+      assignments: state.assignments,
+      activeAssociationCode: state.activeAssociationCode,
+      initializeDemoData: state.initializeDemoData,
+    }))
+  )
+  const { t } = useTranslation()
+  const isDemoMode = dataSource === 'demo'
   // Only verify session for API mode - demo and calendar modes don't need server verification
-  const shouldVerifySession = status === "authenticated" && dataSource === "api";
-  const [isVerifying, setIsVerifying] = useState(() => shouldVerifySession);
-  const [verifyError, setVerifyError] = useState<string | null>(null);
+  const shouldVerifySession = status === 'authenticated' && dataSource === 'api'
+  const [isVerifying, setIsVerifying] = useState(() => shouldVerifySession)
+  const [verifyError, setVerifyError] = useState<string | null>(null)
 
   // Regenerate demo data on page load if demo mode is enabled but data is empty
   // This only runs once when data needs initialization, not on association changes
   // (association changes are handled by AppShell when user switches occupation)
   useEffect(() => {
     if (isDemoMode && assignments.length === 0) {
-      initializeDemoData(activeAssociationCode ?? "SV");
+      initializeDemoData(activeAssociationCode ?? 'SV')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Only run when data is empty, not on association changes
-  }, [isDemoMode, assignments.length, initializeDemoData]);
+  }, [isDemoMode, assignments.length, initializeDemoData])
 
   // Verify persisted session is still valid on mount
   useEffect(() => {
-    if (!isVerifying || dataSource !== "api") return;
+    if (!isVerifying || dataSource !== 'api') return
 
-    const controller = new AbortController();
+    const controller = new AbortController()
 
     checkSession(controller.signal)
       .catch((error: unknown) => {
         // Ignore AbortError - this is expected when component unmounts
-        if (error instanceof Error && error.name === "AbortError") {
-          return;
+        if (error instanceof Error && error.name === 'AbortError') {
+          return
         }
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Session verification failed";
-        setVerifyError(message);
+        const message = error instanceof Error ? error.message : 'Session verification failed'
+        setVerifyError(message)
       })
       .finally(() => {
         // Only update state if not aborted
         if (!controller.signal.aborted) {
-          setIsVerifying(false);
+          setIsVerifying(false)
         }
-      });
+      })
 
     return () => {
-      controller.abort();
-    };
-  }, [isVerifying, checkSession, dataSource]);
+      controller.abort()
+    }
+  }, [isVerifying, checkSession, dataSource])
 
   // Show loading state while verifying session
-  if (status === "loading" || isVerifying) {
-    return <LoadingState message={t("auth.checkingSession")} />;
+  if (status === 'loading' || isVerifying) {
+    return <LoadingState message={t('auth.checkingSession')} />
   }
 
   // If verification failed, redirect to login (session may be invalid)
   if (verifyError) {
-    logger.warn("Session verification failed:", verifyError);
-    return <Navigate to="/login" replace />;
+    logger.warn('Session verification failed:', verifyError)
+    return <Navigate to="/login" replace />
   }
 
-  if (status !== "authenticated") {
-    return <Navigate to="/login" replace />;
+  if (status !== 'authenticated') {
+    return <Navigate to="/login" replace />
   }
 
   // Wrap children in ErrorBoundary to catch route-level errors
-  return <ErrorBoundary>{children}</ErrorBoundary>;
+  return <ErrorBoundary>{children}</ErrorBoundary>
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const status = useAuthStore((state) => state.status);
+  const status = useAuthStore((state) => state.status)
 
-  if (status === "authenticated") {
-    return <Navigate to="/" replace />;
+  if (status === 'authenticated') {
+    return <Navigate to="/" replace />
   }
 
-  return <>{children}</>;
+  return <>{children}</>
 }
 
 // Base path for router - Vite sets BASE_URL from the `base` config
 // Remove trailing slash for React Router basename (it adds its own)
 // Handle edge case where BASE_URL is just "/" - use empty string instead
 function getBasename(): string {
-  const baseUrl = import.meta.env.BASE_URL;
-  if (baseUrl === "/") {
-    return "";
+  const baseUrl = import.meta.env.BASE_URL
+  if (baseUrl === '/') {
+    return ''
   }
-  return baseUrl.replace(/\/$/, "");
+  return baseUrl.replace(/\/$/, '')
 }
-const BASE_PATH = getBasename();
+const BASE_PATH = getBasename()
 
 /**
  * QueryErrorHandler monitors React Query errors and redirects to login on auth failures.
  * This catches stale session errors (401, 403, 406) that occur after initial auth check.
  */
 function QueryErrorHandler({ children }: { children: React.ReactNode }) {
-  const navigate = useNavigate();
-  const logout = useAuthStore((state) => state.logout);
-  const dataSource = useAuthStore((state) => state.dataSource);
-  const isRedirectingRef = useRef(false);
+  const navigate = useNavigate()
+  const logout = useAuthStore((state) => state.logout)
+  const dataSource = useAuthStore((state) => state.dataSource)
+  const isRedirectingRef = useRef(false)
 
   useEffect(() => {
     const handleQueryError = (error: unknown) => {
       // Only handle auth errors for API mode - demo and calendar modes don't use server auth
-      if (dataSource !== "api" || isRedirectingRef.current) return;
+      if (dataSource !== 'api' || isRedirectingRef.current) return
 
       if (isAuthError(error)) {
-        isRedirectingRef.current = true;
-        logger.warn("Authentication error detected, redirecting to login:", error);
+        isRedirectingRef.current = true
+        logger.warn('Authentication error detected, redirecting to login:', error)
         logout()
-          .catch((err) => logger.error("Logout failed during redirect:", err))
+          .catch((err) => logger.error('Logout failed during redirect:', err))
           .finally(() => {
-            navigate("/login", { replace: true });
-          });
+            navigate('/login', { replace: true })
+          })
       }
-    };
+    }
 
-    const unsubscribeQueries = queryClient
-      .getQueryCache()
-      .subscribe((event) => {
-        if (event.type === "updated" && event.query.state.error) {
-          handleQueryError(event.query.state.error);
-        }
-      });
+    const unsubscribeQueries = queryClient.getQueryCache().subscribe((event) => {
+      if (event.type === 'updated' && event.query.state.error) {
+        handleQueryError(event.query.state.error)
+      }
+    })
 
-    const unsubscribeMutations = queryClient
-      .getMutationCache()
-      .subscribe((event) => {
-        if (event.type === "updated" && event.mutation.state.error) {
-          handleQueryError(event.mutation.state.error);
-        }
-      });
+    const unsubscribeMutations = queryClient.getMutationCache().subscribe((event) => {
+      if (event.type === 'updated' && event.mutation.state.error) {
+        handleQueryError(event.mutation.state.error)
+      }
+    })
 
     return () => {
-      unsubscribeQueries();
-      unsubscribeMutations();
-    };
-  }, [navigate, logout, dataSource]);
+      unsubscribeQueries()
+      unsubscribeMutations()
+    }
+  }, [navigate, logout, dataSource])
 
-  return <>{children}</>;
+  return <>{children}</>
 }
 
 export default function App() {
-  usePreloadLocales();
-  useViewportZoom();
-  useCalendarTheme();
+  usePreloadLocales()
+  useViewportZoom()
+  useCalendarTheme()
 
   // Sync settings store with auth store and handle logout cache clearing.
   // Uses a single subscription for better performance.
   useEffect(() => {
     // Set initial mode from auth store
-    const initialDataSource = useAuthStore.getState().dataSource;
-    useSettingsStore.getState()._setCurrentMode(initialDataSource);
+    const initialDataSource = useAuthStore.getState().dataSource
+    useSettingsStore.getState()._setCurrentMode(initialDataSource)
 
     // Track state to detect changes
-    let previousDataSource = initialDataSource;
-    let wasAuthenticated = useAuthStore.getState().user !== null;
+    let previousDataSource = initialDataSource
+    let wasAuthenticated = useAuthStore.getState().user !== null
 
     const unsubscribe = useAuthStore.subscribe((state) => {
       // Sync dataSource changes to settings store
       if (state.dataSource !== previousDataSource) {
-        previousDataSource = state.dataSource;
-        useSettingsStore.getState()._setCurrentMode(state.dataSource);
+        previousDataSource = state.dataSource
+        useSettingsStore.getState()._setCurrentMode(state.dataSource)
       }
 
       // Clear query cache on auth state transitions to prevent stale data.
       // - On logout: prevents next user from seeing previous user's assignments
       // - On login: prevents seeing stale cached data from previous sessions
       //   (e.g., when persisted auth state restored an old activeOccupationId)
-      const isAuthenticated = state.user !== null;
+      const isAuthenticated = state.user !== null
       if (wasAuthenticated !== isAuthenticated) {
-        queryClient.resetQueries();
+        queryClient.resetQueries()
         logger.info(
-          isAuthenticated
-            ? "Query cache cleared on login"
-            : "Query cache cleared on logout",
-        );
+          isAuthenticated ? 'Query cache cleared on login' : 'Query cache cleared on logout'
+        )
       }
-      wasAuthenticated = isAuthenticated;
-    });
+      wasAuthenticated = isAuthenticated
+    })
 
-    return unsubscribe;
-  }, []);
+    return unsubscribe
+  }, [])
 
   return (
     <ErrorBoundary>
@@ -333,10 +317,46 @@ export default function App() {
                     </ProtectedRoute>
                   }
                 >
-                  <Route path="/" element={<PageErrorBoundary pageName="AssignmentsPage"><Suspense fallback={<LoadingState />}><AssignmentsPage /></Suspense></PageErrorBoundary>} />
-                  <Route path="/compensations" element={<PageErrorBoundary pageName="CompensationsPage"><Suspense fallback={<LoadingState />}><CompensationsPage /></Suspense></PageErrorBoundary>} />
-                  <Route path="/exchange" element={<PageErrorBoundary pageName="ExchangePage"><Suspense fallback={<LoadingState />}><ExchangePage /></Suspense></PageErrorBoundary>} />
-                  <Route path="/settings" element={<PageErrorBoundary pageName="SettingsPage"><Suspense fallback={<LoadingState />}><SettingsPage /></Suspense></PageErrorBoundary>} />
+                  <Route
+                    path="/"
+                    element={
+                      <PageErrorBoundary pageName="AssignmentsPage">
+                        <Suspense fallback={<LoadingState />}>
+                          <AssignmentsPage />
+                        </Suspense>
+                      </PageErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/compensations"
+                    element={
+                      <PageErrorBoundary pageName="CompensationsPage">
+                        <Suspense fallback={<LoadingState />}>
+                          <CompensationsPage />
+                        </Suspense>
+                      </PageErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/exchange"
+                    element={
+                      <PageErrorBoundary pageName="ExchangePage">
+                        <Suspense fallback={<LoadingState />}>
+                          <ExchangePage />
+                        </Suspense>
+                      </PageErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/settings"
+                    element={
+                      <PageErrorBoundary pageName="SettingsPage">
+                        <Suspense fallback={<LoadingState />}>
+                          <SettingsPage />
+                        </Suspense>
+                      </PageErrorBoundary>
+                    }
+                  />
                 </Route>
 
                 {/* Fallback */}
@@ -349,5 +369,5 @@ export default function App() {
         </QueryClientProvider>
       </PWAProvider>
     </ErrorBoundary>
-  );
+  )
 }

@@ -1,37 +1,38 @@
-import { useEffect, useRef, type ReactNode } from "react";
-import { useModalDismissal } from "@/shared/hooks/useModalDismissal";
+import { useEffect, useRef, type ReactNode } from 'react'
 
-export type ModalSize = "sm" | "md" | "lg" | "xl";
+import { useModalDismissal } from '@/shared/hooks/useModalDismissal'
+
+export type ModalSize = 'sm' | 'md' | 'lg' | 'xl'
 
 /** Default z-index for modal overlays */
-const DEFAULT_Z_INDEX = 50;
+const DEFAULT_Z_INDEX = 50
 
 const sizeClasses: Record<ModalSize, string> = {
-  sm: "max-w-sm",
-  md: "max-w-md",
-  lg: "max-w-lg",
-  xl: "max-w-xl",
-};
+  sm: 'max-w-sm',
+  md: 'max-w-md',
+  lg: 'max-w-lg',
+  xl: 'max-w-xl',
+}
 
 interface ModalProps {
   /** Whether the modal is currently open */
-  isOpen: boolean;
+  isOpen: boolean
   /** Callback to close the modal */
-  onClose: () => void;
+  onClose: () => void
   /** Content to render inside the modal */
-  children: ReactNode;
+  children: ReactNode
   /** ID for the modal title element (used for aria-labelledby) */
-  titleId: string;
+  titleId: string
   /** Modal width size variant */
-  size?: ModalSize;
+  size?: ModalSize
   /** Whether pressing Escape should close the modal */
-  closeOnEscape?: boolean;
+  closeOnEscape?: boolean
   /** Whether clicking the backdrop should close the modal */
-  closeOnBackdrop?: boolean;
+  closeOnBackdrop?: boolean
   /** When true, dismissal is disabled (e.g., during loading/submission) */
-  isLoading?: boolean;
+  isLoading?: boolean
   /** Custom z-index for the modal (default: 50) */
-  zIndex?: number;
+  zIndex?: number
 }
 
 /**
@@ -64,14 +65,14 @@ export function Modal({
   onClose,
   children,
   titleId,
-  size = "md",
+  size = 'md',
   closeOnEscape = true,
   closeOnBackdrop = true,
   isLoading = false,
   zIndex = DEFAULT_Z_INDEX,
 }: ModalProps) {
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const previousFocusRef = useRef<HTMLElement | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
 
   const { handleBackdropClick } = useModalDismissal({
     isOpen,
@@ -79,59 +80,59 @@ export function Modal({
     isLoading,
     closeOnEscape,
     closeOnBackdropClick: closeOnBackdrop,
-  });
+  })
 
   // Focus management: save previous focus and restore on close
   useEffect(() => {
     if (isOpen) {
-      previousFocusRef.current = document.activeElement as HTMLElement;
+      previousFocusRef.current = document.activeElement as HTMLElement
       // Focus the dialog container for screen reader announcement
-      dialogRef.current?.focus();
+      dialogRef.current?.focus()
     } else if (previousFocusRef.current) {
-      previousFocusRef.current.focus();
-      previousFocusRef.current = null;
+      previousFocusRef.current.focus()
+      previousFocusRef.current = null
     }
-  }, [isOpen]);
+  }, [isOpen])
 
   // Focus trap: keep focus within the modal
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) return
 
-    const dialog = dialogRef.current;
-    if (!dialog) return;
+    const dialog = dialogRef.current
+    if (!dialog) return
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== "Tab") return;
+      if (e.key !== 'Tab') return
 
       const focusableElements = dialog.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      );
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
 
-      if (focusableElements.length === 0) return;
+      if (focusableElements.length === 0) return
 
-      const firstElement = focusableElements[0];
-      const lastElement = focusableElements[focusableElements.length - 1];
+      const firstElement = focusableElements[0]
+      const lastElement = focusableElements[focusableElements.length - 1]
 
       if (e.shiftKey) {
         // Shift + Tab: if on first element, wrap to last
         if (document.activeElement === firstElement && lastElement) {
-          e.preventDefault();
-          lastElement.focus();
+          e.preventDefault()
+          lastElement.focus()
         }
       } else {
         // Tab: if on last element, wrap to first
         if (document.activeElement === lastElement && firstElement) {
-          e.preventDefault();
-          firstElement.focus();
+          e.preventDefault()
+          firstElement.focus()
         }
       }
-    };
+    }
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen])
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   // Backdrop pattern: aria-hidden="true" hides the backdrop from screen readers since it's
   // purely decorative. Click-to-close is a convenience feature; keyboard users close via Escape.
@@ -154,5 +155,5 @@ export function Modal({
         {children}
       </div>
     </div>
-  );
+  )
 }

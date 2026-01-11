@@ -1,13 +1,14 @@
-import { createElement } from "react";
-import type { Assignment, CompensationRecord } from "@/api/client";
-import { type SwipeAction, SWIPE_ACTION_ICON_SIZE } from "@/types/swipe";
-import { Wallet, FileText } from "@/shared/components/icons";
-import { isFromCalendarMode } from "@/features/assignments/utils/assignment-helpers";
+import { createElement } from 'react'
+
+import type { Assignment, CompensationRecord } from '@/api/client'
+import { isFromCalendarMode } from '@/features/assignments/utils/assignment-helpers'
+import { Wallet, FileText } from '@/shared/components/icons'
+import { type SwipeAction, SWIPE_ACTION_ICON_SIZE } from '@/types/swipe'
 
 /**
  * Disbursement method for compensation payments.
  */
-type DisbursementMethod = "payout_on_site" | "central_payout";
+type DisbursementMethod = 'payout_on_site' | 'central_payout'
 
 /**
  * Extended compensation type that includes lock flags and disbursement method.
@@ -15,10 +16,10 @@ type DisbursementMethod = "payout_on_site" | "central_payout";
  * and demo mode generates them for testing regional association behavior.
  */
 interface ConvocationCompensationWithLockFlags {
-  paymentDone?: boolean;
-  lockPayoutOnSiteCompensation?: boolean;
-  lockPayoutCentralPayoutCompensation?: boolean;
-  methodOfDisbursementArbitration?: DisbursementMethod;
+  paymentDone?: boolean
+  lockPayoutOnSiteCompensation?: boolean
+  lockPayoutCentralPayoutCompensation?: boolean
+  methodOfDisbursementArbitration?: DisbursementMethod
 }
 
 /**
@@ -29,24 +30,21 @@ interface ConvocationCompensationWithLockFlags {
  * - Central payout (SV national): Check lockPayoutCentralPayoutCompensation
  */
 function isCompensationLocked(cc: ConvocationCompensationWithLockFlags): boolean {
-  const method = cc.methodOfDisbursementArbitration;
+  const method = cc.methodOfDisbursementArbitration
 
-  if (method === "payout_on_site") {
+  if (method === 'payout_on_site') {
     // For on-site payout, check the on-site lock
-    return cc.lockPayoutOnSiteCompensation === true;
+    return cc.lockPayoutOnSiteCompensation === true
   }
 
-  if (method === "central_payout") {
+  if (method === 'central_payout') {
     // For central payout, check the central payout lock
-    return cc.lockPayoutCentralPayoutCompensation === true;
+    return cc.lockPayoutCentralPayoutCompensation === true
   }
 
   // If disbursement method is unknown, check both locks
   // This provides backwards compatibility when the field isn't requested
-  return (
-    cc.lockPayoutOnSiteCompensation === true ||
-    cc.lockPayoutCentralPayoutCompensation === true
-  );
+  return cc.lockPayoutOnSiteCompensation === true || cc.lockPayoutCentralPayoutCompensation === true
 }
 
 /**
@@ -62,16 +60,16 @@ function isCompensationLocked(cc: ConvocationCompensationWithLockFlags): boolean
 export function isCompensationEditable(compensation: CompensationRecord): boolean {
   const cc = compensation.convocationCompensation as
     | ConvocationCompensationWithLockFlags
-    | undefined;
-  if (!cc) return false;
+    | undefined
+  if (!cc) return false
 
   // Already paid - not editable
-  if (cc.paymentDone) return false;
+  if (cc.paymentDone) return false
 
   // Check the appropriate lock based on disbursement method
-  if (isCompensationLocked(cc)) return false;
+  if (isCompensationLocked(cc)) return false
 
-  return true;
+  return true
 }
 
 /**
@@ -87,113 +85,107 @@ export function isCompensationEditable(compensation: CompensationRecord): boolea
 export function isAssignmentCompensationEditable(assignment: Assignment): boolean {
   // Calendar mode assignments are read-only - compensation editing not available
   if (isFromCalendarMode(assignment)) {
-    return false;
+    return false
   }
 
-  const cc = assignment.convocationCompensation as
-    | ConvocationCompensationWithLockFlags
-    | undefined;
+  const cc = assignment.convocationCompensation as ConvocationCompensationWithLockFlags | undefined
   // If no compensation data but NOT calendar mode, default to editable
   // (for backwards compatibility and when the API doesn't return compensation properties)
-  if (!cc) return true;
+  if (!cc) return true
 
   // Already paid - not editable
-  if (cc.paymentDone) return false;
+  if (cc.paymentDone) return false
 
   // Check the appropriate lock based on disbursement method
-  if (isCompensationLocked(cc)) return false;
+  if (isCompensationLocked(cc)) return false
 
-  return true;
+  return true
 }
 
 // Pre-created icon elements to avoid recreating on each function call
-const ICON_WALLET = createElement(Wallet, { size: SWIPE_ACTION_ICON_SIZE });
-const ICON_FILE_TEXT = createElement(FileText, { size: SWIPE_ACTION_ICON_SIZE });
+const ICON_WALLET = createElement(Wallet, { size: SWIPE_ACTION_ICON_SIZE })
+const ICON_FILE_TEXT = createElement(FileText, { size: SWIPE_ACTION_ICON_SIZE })
 
 export interface CompensationActionConfig {
-  editCompensation: SwipeAction;
-  generatePDF: SwipeAction;
+  editCompensation: SwipeAction
+  generatePDF: SwipeAction
 }
 
 export interface CompensationActionHandlers {
-  onEditCompensation: (compensation: CompensationRecord) => void;
-  onGeneratePDF: (compensation: CompensationRecord) => void;
+  onEditCompensation: (compensation: CompensationRecord) => void
+  onGeneratePDF: (compensation: CompensationRecord) => void
 }
 
 export function createCompensationActions(
   compensation: CompensationRecord,
-  handlers: CompensationActionHandlers,
+  handlers: CompensationActionHandlers
 ): CompensationActionConfig {
   return {
     editCompensation: {
-      id: "edit-compensation",
-      label: "Edit Compensation",
-      shortLabel: "Edit",
-      color: "bg-primary-500",
+      id: 'edit-compensation',
+      label: 'Edit Compensation',
+      shortLabel: 'Edit',
+      color: 'bg-primary-500',
       icon: ICON_WALLET,
       onAction: () => handlers.onEditCompensation(compensation),
     },
     generatePDF: {
-      id: "generate-pdf",
-      label: "Generate PDF",
-      shortLabel: "PDF",
-      color: "bg-slate-500",
+      id: 'generate-pdf',
+      label: 'Generate PDF',
+      shortLabel: 'PDF',
+      color: 'bg-slate-500',
       icon: ICON_FILE_TEXT,
       onAction: () => handlers.onGeneratePDF(compensation),
     },
-  };
+  }
 }
 
-const API_BASE = import.meta.env.VITE_API_PROXY_URL || "";
+const API_BASE = import.meta.env.VITE_API_PROXY_URL || ''
 
-export async function downloadCompensationPDF(
-  compensationId: string,
-): Promise<void> {
-  const url = `${API_BASE}/indoorvolleyball.refadmin/refereestatementofexpenses/downloadrefereestatementofexpenses?refereeConvocation=${encodeURIComponent(compensationId)}`;
+export async function downloadCompensationPDF(compensationId: string): Promise<void> {
+  const url = `${API_BASE}/indoorvolleyball.refadmin/refereestatementofexpenses/downloadrefereestatementofexpenses?refereeConvocation=${encodeURIComponent(compensationId)}`
 
   try {
     const response = await fetch(url, {
-      method: "GET",
-      credentials: "include",
-    });
+      method: 'GET',
+      credentials: 'include',
+    })
 
     if (!response.ok) {
-      throw new Error(`Failed to download PDF: ${response.statusText}`);
+      throw new Error(`Failed to download PDF: ${response.statusText}`)
     }
 
-    const contentType = response.headers.get("Content-Type");
+    const contentType = response.headers.get('Content-Type')
     if (!contentType) {
-      throw new Error("Missing Content-Type header in response");
+      throw new Error('Missing Content-Type header in response')
     }
-    if (!contentType.startsWith("application/pdf")) {
-      throw new Error(
-        `Invalid response type: expected PDF but received ${contentType}`,
-      );
+    if (!contentType.startsWith('application/pdf')) {
+      throw new Error(`Invalid response type: expected PDF but received ${contentType}`)
     }
 
-    const blob = await response.blob();
-    const contentDisposition = response.headers.get("Content-Disposition");
-    let filename = "compensation.pdf";
+    const blob = await response.blob()
+    const contentDisposition = response.headers.get('Content-Disposition')
+    let filename = 'compensation.pdf'
 
     if (contentDisposition) {
-      const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+      const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/)
       if (filenameMatch && filenameMatch[1]) {
-        filename = filenameMatch[1];
+        filename = filenameMatch[1]
       }
     }
 
-    const blobUrl = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = blobUrl;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(blobUrl);
+    const blobUrl = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = blobUrl
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(blobUrl)
   } catch (error) {
     if (error instanceof Error) {
-      throw error;
+      throw error
     }
-    throw new Error("Unknown error occurred while downloading PDF");
+    throw new Error('Unknown error occurred while downloading PDF')
   }
 }

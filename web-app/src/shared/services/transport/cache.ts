@@ -9,21 +9,22 @@
  * We use day type in cache keys to reuse calculations across similar days.
  */
 
-import type { Coordinates } from "./types";
-import { MS_PER_HOUR, HOURS_PER_DAY } from "@/shared/utils/constants";
+import { MS_PER_HOUR, HOURS_PER_DAY } from '@/shared/utils/constants'
+
+import type { Coordinates } from './types'
 
 /** Day types for Swiss public transport schedules */
-export type DayType = "weekday" | "saturday" | "sunday";
+export type DayType = 'weekday' | 'saturday' | 'sunday'
 
 /** Cache TTL in days */
-const CACHE_TTL_DAYS = 14;
+const CACHE_TTL_DAYS = 14
 
 // Day of week values (JavaScript Date.getDay() returns 0=Sunday, 6=Saturday)
-const SUNDAY = 0;
-const SATURDAY = 6;
+const SUNDAY = 0
+const SATURDAY = 6
 
 // Coordinate precision multiplier (~100m precision with 3 decimal places)
-const COORD_PRECISION_MULTIPLIER = 1000;
+const COORD_PRECISION_MULTIPLIER = 1000
 
 /**
  * Cache TTL: 14 days in milliseconds.
@@ -32,16 +33,16 @@ const COORD_PRECISION_MULTIPLIER = 1000;
  * signed integer limit for setTimeout (~24.8 days max). Values above
  * ~2.147 billion ms cause silent clamping to 1ms.
  */
-export const TRAVEL_TIME_CACHE_TTL = CACHE_TTL_DAYS * HOURS_PER_DAY * MS_PER_HOUR;
+export const TRAVEL_TIME_CACHE_TTL = CACHE_TTL_DAYS * HOURS_PER_DAY * MS_PER_HOUR
 
 /** Cache stale time: 14 days (TanStack Query config) */
-export const TRAVEL_TIME_STALE_TIME = TRAVEL_TIME_CACHE_TTL;
+export const TRAVEL_TIME_STALE_TIME = TRAVEL_TIME_CACHE_TTL
 
 /** Garbage collection time: same as TTL */
-export const TRAVEL_TIME_GC_TIME = TRAVEL_TIME_CACHE_TTL;
+export const TRAVEL_TIME_GC_TIME = TRAVEL_TIME_CACHE_TTL
 
 /** LocalStorage key for persisted travel time cache */
-export const TRAVEL_TIME_STORAGE_KEY = "volleykit-travel-time-cache";
+export const TRAVEL_TIME_STORAGE_KEY = 'volleykit-travel-time-cache'
 
 /**
  * Get the day type for a given date.
@@ -54,10 +55,10 @@ export const TRAVEL_TIME_STORAGE_KEY = "volleykit-travel-time-cache";
  * @returns Day type: "weekday", "saturday", or "sunday"
  */
 export function getDayType(date: Date = new Date()): DayType {
-  const day = date.getDay();
-  if (day === SUNDAY) return "sunday";
-  if (day === SATURDAY) return "saturday";
-  return "weekday";
+  const day = date.getDay()
+  if (day === SUNDAY) return 'sunday'
+  if (day === SATURDAY) return 'saturday'
+  return 'weekday'
 }
 
 /**
@@ -69,9 +70,9 @@ export function getDayType(date: Date = new Date()): DayType {
  */
 export function hashLocation(coords: Coordinates): string {
   // Round to 3 decimal places (~100m precision)
-  const lat = Math.round(coords.latitude * COORD_PRECISION_MULTIPLIER) / COORD_PRECISION_MULTIPLIER;
-  const lon = Math.round(coords.longitude * COORD_PRECISION_MULTIPLIER) / COORD_PRECISION_MULTIPLIER;
-  return `${lat},${lon}`;
+  const lat = Math.round(coords.latitude * COORD_PRECISION_MULTIPLIER) / COORD_PRECISION_MULTIPLIER
+  const lon = Math.round(coords.longitude * COORD_PRECISION_MULTIPLIER) / COORD_PRECISION_MULTIPLIER
+  return `${lat},${lon}`
 }
 
 /**
@@ -84,15 +85,15 @@ export function hashLocation(coords: Coordinates): string {
  */
 export function getHallCacheKey(
   hallId: string | undefined,
-  hallCoords: Coordinates | null,
+  hallCoords: Coordinates | null
 ): string | null {
   if (hallId) {
-    return hallId;
+    return hallId
   }
 
   if (hallCoords) {
-    return `coords:${hashLocation(hallCoords)}`;
+    return `coords:${hashLocation(hallCoords)}`
   }
 
-  return null;
+  return null
 }

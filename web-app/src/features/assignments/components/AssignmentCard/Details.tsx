@@ -1,8 +1,8 @@
-import { Location } from "./Location";
-import { SingleBallNotice } from "./SingleBallNotice";
-import { Status } from "./Status";
-import { GameInfo } from "./GameInfo";
-import { Referees } from "./Referees";
+import { GameInfo } from './GameInfo'
+import { Location } from './Location'
+import { Referees } from './Referees'
+import { SingleBallNotice } from './SingleBallNotice'
+import { Status } from './Status'
 
 /**
  * Composed details section for the expanded view.
@@ -17,5 +17,5 @@ export function Details() {
       <GameInfo />
       <Referees />
     </div>
-  );
+  )
 }

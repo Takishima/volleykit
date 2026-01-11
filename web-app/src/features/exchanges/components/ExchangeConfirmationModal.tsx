@@ -1,20 +1,21 @@
-import { useCallback, useEffect, useRef, useState, memo } from "react";
-import type { GameExchange } from "@/api/client";
-import { useTranslation } from "@/shared/hooks/useTranslation";
-import { logger } from "@/shared/utils/logger";
-import { formatDateTime } from "@/shared/utils/date-helpers";
-import { Modal } from "@/shared/components/Modal";
-import { ModalHeader } from "@/shared/components/ModalHeader";
-import { ModalFooter } from "@/shared/components/ModalFooter";
-import { ModalErrorBoundary } from "@/shared/components/ModalErrorBoundary";
-import { Button } from "@/shared/components/Button";
+import { useCallback, useEffect, useRef, useState, memo } from 'react'
+
+import type { GameExchange } from '@/api/client'
+import { Button } from '@/shared/components/Button'
+import { Modal } from '@/shared/components/Modal'
+import { ModalErrorBoundary } from '@/shared/components/ModalErrorBoundary'
+import { ModalFooter } from '@/shared/components/ModalFooter'
+import { ModalHeader } from '@/shared/components/ModalHeader'
+import { useTranslation } from '@/shared/hooks/useTranslation'
+import { formatDateTime } from '@/shared/utils/date-helpers'
+import { logger } from '@/shared/utils/logger'
 
 interface ExchangeConfirmationModalProps {
-  exchange: GameExchange;
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void | Promise<void>;
-  variant: "takeOver" | "remove";
+  exchange: GameExchange
+  isOpen: boolean
+  onClose: () => void
+  onConfirm: () => void | Promise<void>
+  variant: 'takeOver' | 'remove'
 }
 
 function ExchangeConfirmationModalComponent({
@@ -24,65 +25,55 @@ function ExchangeConfirmationModalComponent({
   onConfirm,
   variant,
 }: ExchangeConfirmationModalProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
-  const isSubmittingRef = useRef(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const ignoreRef = useRef(false);
+  const isSubmittingRef = useRef(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const ignoreRef = useRef(false)
 
   useEffect(() => {
-    ignoreRef.current = false;
+    ignoreRef.current = false
     return () => {
-      ignoreRef.current = true;
-    };
-  }, []);
+      ignoreRef.current = true
+    }
+  }, [])
 
   const handleConfirm = useCallback(async () => {
-    if (isSubmittingRef.current) return;
-    isSubmittingRef.current = true;
-    setIsSubmitting(true);
+    if (isSubmittingRef.current) return
+    isSubmittingRef.current = true
+    setIsSubmitting(true)
 
     try {
-      await onConfirm();
+      await onConfirm()
     } catch (error) {
-      logger.error(
-        "[ExchangeConfirmationModal] Failed to confirm action:",
-        error,
-      );
+      logger.error('[ExchangeConfirmationModal] Failed to confirm action:', error)
       if (!ignoreRef.current) {
-        isSubmittingRef.current = false;
-        setIsSubmitting(false);
+        isSubmittingRef.current = false
+        setIsSubmitting(false)
       }
-      return;
+      return
     }
 
     if (!ignoreRef.current) {
-      isSubmittingRef.current = false;
-      setIsSubmitting(false);
-      onClose();
+      isSubmittingRef.current = false
+      setIsSubmitting(false)
+      onClose()
     }
-  }, [onConfirm, onClose]);
+  }, [onConfirm, onClose])
 
-  const game = exchange.refereeGame?.game;
-  const homeTeam = game?.encounter?.teamHome?.name || t("common.tbd");
-  const awayTeam = game?.encounter?.teamAway?.name || t("common.tbd");
-  const position = exchange.refereePosition;
-  const level = exchange.requiredRefereeLevel;
-  const location = game?.hall?.name || game?.hall?.primaryPostalAddress?.city;
-  const dateTime = game?.startingDateTime;
+  const game = exchange.refereeGame?.game
+  const homeTeam = game?.encounter?.teamHome?.name || t('common.tbd')
+  const awayTeam = game?.encounter?.teamAway?.name || t('common.tbd')
+  const position = exchange.refereePosition
+  const level = exchange.requiredRefereeLevel
+  const location = game?.hall?.name || game?.hall?.primaryPostalAddress?.city
+  const dateTime = game?.startingDateTime
 
-  const titleKey =
-    variant === "takeOver" ? "exchange.takeOverTitle" : "exchange.removeTitle";
-  const confirmKey =
-    variant === "takeOver"
-      ? "exchange.takeOverConfirm"
-      : "exchange.removeConfirm";
-  const buttonKey =
-    variant === "takeOver"
-      ? "exchange.takeOverButton"
-      : "exchange.removeButton";
-  const confirmVariant = variant === "takeOver" ? "success" : "danger";
-  const modalTitleId = `${variant}-exchange-title`;
+  const titleKey = variant === 'takeOver' ? 'exchange.takeOverTitle' : 'exchange.removeTitle'
+  const confirmKey = variant === 'takeOver' ? 'exchange.takeOverConfirm' : 'exchange.removeConfirm'
+  const buttonKey = variant === 'takeOver' ? 'exchange.takeOverButton' : 'exchange.removeButton'
+  const confirmVariant = variant === 'takeOver' ? 'success' : 'danger'
+  const modalTitleId = `${variant}-exchange-title`
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} titleId={modalTitleId} size="md">
@@ -92,17 +83,17 @@ function ExchangeConfirmationModalComponent({
         <div className="mb-6 space-y-3">
           <div>
             <div className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
-              {t("common.match")}
+              {t('common.match')}
             </div>
             <div className="text-base text-text-primary dark:text-text-primary-dark font-medium">
-              {homeTeam} {t("common.vs")} {awayTeam}
+              {homeTeam} {t('common.vs')} {awayTeam}
             </div>
           </div>
 
           {dateTime && (
             <div>
               <div className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
-                {t("common.dateTime")}
+                {t('common.dateTime')}
               </div>
               <div className="text-base text-text-primary dark:text-text-primary-dark">
                 {formatDateTime(dateTime)}
@@ -113,7 +104,7 @@ function ExchangeConfirmationModalComponent({
           {location && (
             <div>
               <div className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
-                {t("common.location")}
+                {t('common.location')}
               </div>
               <div className="text-base text-text-primary dark:text-text-primary-dark">
                 {location}
@@ -124,7 +115,7 @@ function ExchangeConfirmationModalComponent({
           {position && (
             <div>
               <div className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
-                {t("common.position")}
+                {t('common.position')}
               </div>
               <div className="text-base text-text-primary dark:text-text-primary-dark">
                 {position}
@@ -135,19 +126,15 @@ function ExchangeConfirmationModalComponent({
           {level && (
             <div>
               <div className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
-                {t("common.requiredLevel")}
+                {t('common.requiredLevel')}
               </div>
-              <div className="text-base text-text-primary dark:text-text-primary-dark">
-                {level}
-              </div>
+              <div className="text-base text-text-primary dark:text-text-primary-dark">{level}</div>
             </div>
           )}
         </div>
 
         <div className="border-t border-border-default dark:border-border-default-dark pt-4">
-          <p className="text-sm text-text-muted dark:text-text-muted-dark mb-4">
-            {t(confirmKey)}
-          </p>
+          <p className="text-sm text-text-muted dark:text-text-muted-dark mb-4">{t(confirmKey)}</p>
 
           <ModalFooter>
             <Button
@@ -156,7 +143,7 @@ function ExchangeConfirmationModalComponent({
               onClick={onClose}
               disabled={isSubmitting}
             >
-              {t("common.cancel")}
+              {t('common.cancel')}
             </Button>
             <Button
               variant={confirmVariant}
@@ -165,13 +152,13 @@ function ExchangeConfirmationModalComponent({
               disabled={isSubmitting}
               aria-busy={isSubmitting}
             >
-              {isSubmitting ? t("common.loading") : t(buttonKey)}
+              {isSubmitting ? t('common.loading') : t(buttonKey)}
             </Button>
           </ModalFooter>
         </div>
       </ModalErrorBoundary>
     </Modal>
-  );
+  )
 }
 
-export const ExchangeConfirmationModal = memo(ExchangeConfirmationModalComponent);
+export const ExchangeConfirmationModal = memo(ExchangeConfirmationModalComponent)

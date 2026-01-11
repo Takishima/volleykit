@@ -1,26 +1,35 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { setCsrfToken, clearSession, captureSessionToken, getSessionHeaders, getSessionToken, apiClient } from "@/api/client";
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+
 import {
-  filterRefereeOccupations,
-  parseOccupationsFromActiveParty,
-} from "@/features/auth/utils/parseOccupations";
-import { logger } from "@/shared/utils/logger";
-import {
-  extractLoginFormFields,
-  extractCsrfTokenFromPage,
-  submitLoginCredentials,
-  isDashboardHtmlContent,
-} from "@/features/auth/utils/auth-parsers";
+  apiClient,
+  captureSessionToken,
+  clearSession,
+  getSessionHeaders,
+  getSessionToken,
+  setCsrfToken,
+} from '@/api/client'
+import { fetchCalendarAssignments } from '@/features/assignments/api/calendar-api'
 import {
   extractActivePartyFromHtml,
   hasMultipleAssociations,
   type AttributeValue,
   type RoleDefinition,
-} from "@/features/auth/utils/active-party-parser";
-import { useDemoStore } from "./demo";
-import { useSettingsStore, DEMO_HOME_LOCATION } from "./settings";
-import { fetchCalendarAssignments } from "@/features/assignments/api/calendar-api";
+} from '@/features/auth/utils/active-party-parser'
+import {
+  extractLoginFormFields,
+  extractCsrfTokenFromPage,
+  submitLoginCredentials,
+  isDashboardHtmlContent,
+} from '@/features/auth/utils/auth-parsers'
+import {
+  filterRefereeOccupations,
+  parseOccupationsFromActiveParty,
+} from '@/features/auth/utils/parseOccupations'
+import { logger } from '@/shared/utils/logger'
+
+import { useDemoStore } from './demo'
+import { useSettingsStore, DEMO_HOME_LOCATION } from './settings'
 
 /**
  * Storage version for the auth store.
@@ -30,9 +39,9 @@ import { fetchCalendarAssignments } from "@/features/assignments/api/calendar-ap
  * - 1: Initial version (pre-groupedEligibleAttributeValues)
  * - 2: Added groupedEligibleAttributeValues for multi-association detection
  */
-const AUTH_STORE_VERSION = 2;
+const AUTH_STORE_VERSION = 2
 
-export type AuthStatus = "idle" | "loading" | "authenticated" | "error";
+export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'error'
 
 /**
  * Data source for assignments and compensations.
@@ -40,89 +49,89 @@ export type AuthStatus = "idle" | "loading" | "authenticated" | "error";
  * - 'demo': Demo mode with simulated data
  * - 'calendar': Calendar mode with read-only iCal feed access
  */
-export type DataSource = "api" | "demo" | "calendar";
+export type DataSource = 'api' | 'demo' | 'calendar'
 
 export interface UserProfile {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email?: string;
-  occupations: Occupation[];
-  profilePictureUrl?: string;
+  id: string
+  firstName: string
+  lastName: string
+  email?: string
+  occupations: Occupation[]
+  profilePictureUrl?: string
 }
 
 export interface Occupation {
-  id: string;
-  type: "referee" | "player" | "clubAdmin" | "associationAdmin";
-  associationCode?: string;
-  clubName?: string;
+  id: string
+  type: 'referee' | 'player' | 'clubAdmin' | 'associationAdmin'
+  associationCode?: string
+  clubName?: string
 }
 
 interface AuthState {
-  status: AuthStatus;
-  user: UserProfile | null;
-  error: string | null;
+  status: AuthStatus
+  user: UserProfile | null
+  error: string | null
   /** Seconds until lockout expires (for 423 Locked response from proxy) */
-  lockedUntil: number | null;
-  csrfToken: string | null;
+  lockedUntil: number | null
+  csrfToken: string | null
   /** The current data source for assignments and compensations */
-  dataSource: DataSource;
+  dataSource: DataSource
   /** Calendar code for calendar mode (6 characters) */
-  calendarCode: string | null;
-  activeOccupationId: string | null;
+  calendarCode: string | null
+  activeOccupationId: string | null
   /** True while switching associations - pages should show loading state */
-  isAssociationSwitching: boolean;
-  _checkSessionPromise: Promise<boolean> | null;
+  isAssociationSwitching: boolean
+  _checkSessionPromise: Promise<boolean> | null
   /** Timestamp of the last successful authentication (login or session check) */
-  _lastAuthTimestamp: number | null;
+  _lastAuthTimestamp: number | null
   // Active party data from embedded HTML (contains association memberships)
-  eligibleAttributeValues: AttributeValue[] | null;
+  eligibleAttributeValues: AttributeValue[] | null
   /** All associations the user belongs to, grouped by role - use this for multi-association detection */
-  groupedEligibleAttributeValues: AttributeValue[] | null;
-  eligibleRoles: Record<string, RoleDefinition> | null;
+  groupedEligibleAttributeValues: AttributeValue[] | null
+  eligibleRoles: Record<string, RoleDefinition> | null
 
-  login: (username: string, password: string) => Promise<boolean>;
-  logout: () => Promise<void>;
-  checkSession: (signal?: AbortSignal) => Promise<boolean>;
-  setUser: (user: UserProfile | null) => void;
-  setDemoAuthenticated: () => void;
-  setActiveOccupation: (id: string) => void;
-  setAssociationSwitching: (isSwitching: boolean) => void;
-  hasMultipleAssociations: () => boolean;
+  login: (username: string, password: string) => Promise<boolean>
+  logout: () => Promise<void>
+  checkSession: (signal?: AbortSignal) => Promise<boolean>
+  setUser: (user: UserProfile | null) => void
+  setDemoAuthenticated: () => void
+  setActiveOccupation: (id: string) => void
+  setAssociationSwitching: (isSwitching: boolean) => void
+  hasMultipleAssociations: () => boolean
   /** Returns true if in calendar mode */
-  isCalendarMode: () => boolean;
+  isCalendarMode: () => boolean
   /** Login with a calendar code. Validates the code format and fetches calendar data. */
-  loginWithCalendar: (code: string) => Promise<void>;
+  loginWithCalendar: (code: string) => Promise<void>
   /** Logout from calendar mode (alias for logout) */
-  logoutCalendar: () => Promise<void>;
+  logoutCalendar: () => Promise<void>
   /** Get the current authentication mode */
-  getAuthMode: () => "full" | "calendar" | "demo" | "none";
+  getAuthMode: () => 'full' | 'calendar' | 'demo' | 'none'
 }
 
-const API_BASE = import.meta.env.VITE_API_PROXY_URL || "";
-const LOGIN_PAGE_URL = `${API_BASE}/login`;
-const AUTH_URL = `${API_BASE}/sportmanager.security/authentication/authenticate`;
-const LOGOUT_URL = `${API_BASE}/logout`;
-const SESSION_CHECK_TIMEOUT_MS = 10_000;
+const API_BASE = import.meta.env.VITE_API_PROXY_URL || ''
+const LOGIN_PAGE_URL = `${API_BASE}/login`
+const AUTH_URL = `${API_BASE}/sportmanager.security/authentication/authenticate`
+const LOGOUT_URL = `${API_BASE}/logout`
+const SESSION_CHECK_TIMEOUT_MS = 10_000
 /** Grace period after login during which session checks are skipped */
-const SESSION_CHECK_GRACE_PERIOD_MS = 5_000;
+const SESSION_CHECK_GRACE_PERIOD_MS = 5_000
 
 /** Calendar codes are exactly 6 alphanumeric characters */
-const CALENDAR_CODE_PATTERN = /^[a-zA-Z0-9]{6}$/;
+const CALENDAR_CODE_PATTERN = /^[a-zA-Z0-9]{6}$/
 
 /**
  * Dummy association code for calendar mode transport settings.
  * Using a dedicated code ensures calendar mode settings don't interfere
  * with real API association settings if the user logs in later.
  */
-export const CALENDAR_ASSOCIATION = "CAL";
+export const CALENDAR_ASSOCIATION = 'CAL'
 
 /**
  * Error key for users without a referee role.
  * This key is used by LoginPage to display a translated error message.
  * The actual translations are in i18n/locales under auth.noRefereeRole.
  */
-export const NO_REFEREE_ROLE_ERROR_KEY = "auth.noRefereeRole";
+export const NO_REFEREE_ROLE_ERROR_KEY = 'auth.noRefereeRole'
 
 /**
  * Rejects a login attempt for users without a referee role.
@@ -130,18 +139,16 @@ export const NO_REFEREE_ROLE_ERROR_KEY = "auth.noRefereeRole";
  *
  * @returns false to indicate login was rejected
  */
-async function rejectNonRefereeUser(
-  set: (state: Partial<AuthState>) => void,
-): Promise<false> {
+async function rejectNonRefereeUser(set: (state: Partial<AuthState>) => void): Promise<false> {
   // Invalidate the server session
   try {
-    await fetch(LOGOUT_URL, { credentials: "include", redirect: "manual" });
+    await fetch(LOGOUT_URL, { credentials: 'include', redirect: 'manual' })
   } catch {
     // Ignore logout errors - we're rejecting the login anyway
   }
-  clearSession();
-  set({ status: "error", error: NO_REFEREE_ROLE_ERROR_KEY });
-  return false;
+  clearSession()
+  set({ status: 'error', error: NO_REFEREE_ROLE_ERROR_KEY })
+  return false
 }
 
 /**
@@ -158,53 +165,50 @@ async function rejectNonRefereeUser(
  */
 function deriveUserWithOccupations(
   activeParty: {
-    __identity?: string;
-    groupedEligibleAttributeValues?: AttributeValue[] | null;
-    eligibleAttributeValues?: AttributeValue[] | null;
+    __identity?: string
+    groupedEligibleAttributeValues?: AttributeValue[] | null
+    eligibleAttributeValues?: AttributeValue[] | null
   } | null,
   currentUser: UserProfile | null,
-  currentActiveOccupationId: string | null,
+  currentActiveOccupationId: string | null
 ): { user: UserProfile; activeOccupationId: string | null } {
   // Use groupedEligibleAttributeValues first, fall back to eligibleAttributeValues
-  const attributeValues =
-    activeParty?.groupedEligibleAttributeValues?.length
-      ? activeParty.groupedEligibleAttributeValues
-      : activeParty?.eligibleAttributeValues ?? null;
+  const attributeValues = activeParty?.groupedEligibleAttributeValues?.length
+    ? activeParty.groupedEligibleAttributeValues
+    : (activeParty?.eligibleAttributeValues ?? null)
 
-  const parsedOccupations = parseOccupationsFromActiveParty(attributeValues);
+  const parsedOccupations = parseOccupationsFromActiveParty(attributeValues)
 
   // Preserve existing occupations if parsing returns empty
   // This prevents the dropdown from disappearing when navigating to pages
   // that don't have complete activeParty data
   const occupations =
-    parsedOccupations.length > 0
-      ? parsedOccupations
-      : (currentUser?.occupations ?? []);
+    parsedOccupations.length > 0 ? parsedOccupations : (currentUser?.occupations ?? [])
 
   // Validate that the persisted activeOccupationId exists in the new occupations list.
   // This prevents stale occupation IDs from previous sessions/users from being used,
   // which would cause the wrong association to be selected after login.
   const isPersistedIdValid =
     currentActiveOccupationId !== null &&
-    occupations.some((occ) => occ.id === currentActiveOccupationId);
+    occupations.some((occ) => occ.id === currentActiveOccupationId)
   const activeOccupationId = isPersistedIdValid
     ? currentActiveOccupationId
-    : (occupations[0]?.id ?? null);
+    : (occupations[0]?.id ?? null)
 
   // Use the person's __identity from activeParty as the user id
   // This matches the submittedByPerson.__identity format used in exchanges
-  const userId = activeParty?.__identity ?? currentUser?.id ?? "user";
+  const userId = activeParty?.__identity ?? currentUser?.id ?? 'user'
 
   const user = currentUser
     ? { ...currentUser, id: userId, occupations }
     : {
         id: userId,
-        firstName: "",
-        lastName: "",
+        firstName: '',
+        lastName: '',
         occupations,
-      };
+      }
 
-  return { user, activeOccupationId };
+  return { user, activeOccupationId }
 }
 
 /**
@@ -216,21 +220,21 @@ function deriveUserWithOccupations(
  * @throws Error if fetching the login page fails
  */
 async function fetchLoginPageWithSessionHandling(): Promise<Response> {
-  const hadTokenBeforeRequest = !!getSessionToken();
+  const hadTokenBeforeRequest = !!getSessionToken()
 
   // cache: "no-store" is critical for iOS Safari PWA - prevents using stale cached cookies
   // See: https://developer.apple.com/forums/thread/89050
   let response = await fetch(LOGIN_PAGE_URL, {
-    credentials: "include",
-    cache: "no-store",
+    credentials: 'include',
+    cache: 'no-store',
     headers: getSessionHeaders(),
-  });
+  })
 
   if (!response.ok) {
-    throw new Error("Failed to load login page");
+    throw new Error('Failed to load login page')
   }
 
-  captureSessionToken(response);
+  captureSessionToken(response)
 
   // iOS Safari PWA fix: If we didn't have a session token before this request
   // but now we do, re-fetch the login page to ensure the form's __trustedProperties
@@ -238,19 +242,19 @@ async function fetchLoginPageWithSessionHandling(): Promise<Response> {
   // logout/fresh install fails because the session isn't fully recognized.
   if (!hadTokenBeforeRequest && getSessionToken()) {
     response = await fetch(LOGIN_PAGE_URL, {
-      credentials: "include",
-      cache: "no-store",
+      credentials: 'include',
+      cache: 'no-store',
       headers: getSessionHeaders(),
-    });
+    })
 
     if (!response.ok) {
-      throw new Error("Failed to load login page");
+      throw new Error('Failed to load login page')
     }
 
-    captureSessionToken(response);
+    captureSessionToken(response)
   }
 
-  return response;
+  return response
 }
 
 /**
@@ -258,9 +262,9 @@ async function fetchLoginPageWithSessionHandling(): Promise<Response> {
  * Used to detect stale sessions that redirect to login.
  */
 function isResponseUrlLoginPage(url: string | undefined): boolean {
-  if (!url) return false;
-  const pathname = new URL(url).pathname.toLowerCase();
-  return pathname === "/login" || pathname.endsWith("/login");
+  if (!url) return false
+  const pathname = new URL(url).pathname.toLowerCase()
+  return pathname === '/login' || pathname.endsWith('/login')
 }
 
 /**
@@ -276,24 +280,24 @@ function isLoginPageHtmlContent(html: string): boolean {
   // (dashboard pages may have login-related strings in navigation but aren't login pages)
   const hasLoginFormIndicators =
     html.includes('action="/login"') ||
-    (html.includes('id="username"') && html.includes('id="password"'));
+    (html.includes('id="username"') && html.includes('id="password"'))
 
   // Don't misidentify dashboard as login page in iOS PWA mode
   // Dashboard pages have CSRF tokens and authenticated content
-  const hasDashboardIndicators = isDashboardHtmlContent(html);
+  const hasDashboardIndicators = isDashboardHtmlContent(html)
 
-  return hasLoginFormIndicators && !hasDashboardIndicators;
+  return hasLoginFormIndicators && !hasDashboardIndicators
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
-      status: "idle",
+      status: 'idle',
       user: null,
       error: null,
       lockedUntil: null,
       csrfToken: null,
-      dataSource: "api",
+      dataSource: 'api',
       calendarCode: null,
       activeOccupationId: null,
       isAssociationSwitching: false,
@@ -304,46 +308,46 @@ export const useAuthStore = create<AuthState>()(
       eligibleRoles: null,
 
       login: async (username: string, password: string): Promise<boolean> => {
-        set({ status: "loading", error: null, lockedUntil: null });
+        set({ status: 'loading', error: null, lockedUntil: null })
 
         try {
-          const loginPageResponse = await fetchLoginPageWithSessionHandling();
-          const html = await loginPageResponse.text();
-          const existingCsrfToken = extractCsrfTokenFromPage(html);
+          const loginPageResponse = await fetchLoginPageWithSessionHandling()
+          const html = await loginPageResponse.text()
+          const existingCsrfToken = extractCsrfTokenFromPage(html)
 
           if (existingCsrfToken) {
             // Already logged in - the login page redirect doesn't contain activeParty data
             // We need to fetch the dashboard explicitly to get the user's associations
             const dashboardResponse = await fetch(
               `${API_BASE}/sportmanager.volleyball/main/dashboard`,
-              { credentials: "include", cache: "no-store", headers: getSessionHeaders() },
-            );
+              { credentials: 'include', cache: 'no-store', headers: getSessionHeaders() }
+            )
 
             // Capture session token from response headers (iOS Safari PWA)
-            captureSessionToken(dashboardResponse);
+            captureSessionToken(dashboardResponse)
 
-            let activeParty = null;
+            let activeParty = null
             if (dashboardResponse.ok) {
-              const dashboardHtml = await dashboardResponse.text();
-              activeParty = extractActivePartyFromHtml(dashboardHtml);
+              const dashboardHtml = await dashboardResponse.text()
+              activeParty = extractActivePartyFromHtml(dashboardHtml)
             }
 
-            setCsrfToken(existingCsrfToken);
+            setCsrfToken(existingCsrfToken)
 
-            const currentState = get();
+            const currentState = get()
             const { user, activeOccupationId } = deriveUserWithOccupations(
               activeParty,
               currentState.user,
-              currentState.activeOccupationId,
-            );
+              currentState.activeOccupationId
+            )
 
             // Reject users without referee role - this app is for referees only
             if (user.occupations.length === 0) {
-              return rejectNonRefereeUser(set);
+              return rejectNonRefereeUser(set)
             }
 
             set({
-              status: "authenticated",
+              status: 'authenticated',
               csrfToken: existingCsrfToken,
               eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
               groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
@@ -351,7 +355,7 @@ export const useAuthStore = create<AuthState>()(
               user,
               activeOccupationId,
               _lastAuthTimestamp: Date.now(),
-            });
+            })
 
             // Sync server-side active association with client's selection.
             // This ensures the API returns data for the correct association,
@@ -359,42 +363,42 @@ export const useAuthStore = create<AuthState>()(
             // may differ from the client's chosen occupation.
             if (activeOccupationId) {
               try {
-                await apiClient.switchRoleAndAttribute(activeOccupationId);
+                await apiClient.switchRoleAndAttribute(activeOccupationId)
               } catch (error) {
                 // Log but don't fail login - user can manually switch if needed
-                logger.warn("Failed to sync active association after login:", error);
+                logger.warn('Failed to sync active association after login:', error)
               }
             }
 
-            return true;
+            return true
           }
 
-          const formFields = extractLoginFormFields(html);
+          const formFields = extractLoginFormFields(html)
           if (!formFields) {
-            throw new Error("Could not extract form fields from login page");
+            throw new Error('Could not extract form fields from login page')
           }
 
-          const result = await submitLoginCredentials(AUTH_URL, username, password, formFields);
+          const result = await submitLoginCredentials(AUTH_URL, username, password, formFields)
 
           if (result.success) {
             // Parse activeParty from dashboard HTML after successful login
-            const activeParty = extractActivePartyFromHtml(result.dashboardHtml);
-            setCsrfToken(result.csrfToken);
+            const activeParty = extractActivePartyFromHtml(result.dashboardHtml)
+            setCsrfToken(result.csrfToken)
 
-            const currentState = get();
+            const currentState = get()
             const { user, activeOccupationId } = deriveUserWithOccupations(
               activeParty,
               currentState.user,
-              currentState.activeOccupationId,
-            );
+              currentState.activeOccupationId
+            )
 
             // Reject users without referee role - this app is for referees only
             if (user.occupations.length === 0) {
-              return rejectNonRefereeUser(set);
+              return rejectNonRefereeUser(set)
             }
 
             set({
-              status: "authenticated",
+              status: 'authenticated',
               csrfToken: result.csrfToken,
               eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
               groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
@@ -402,7 +406,7 @@ export const useAuthStore = create<AuthState>()(
               user,
               activeOccupationId,
               _lastAuthTimestamp: Date.now(),
-            });
+            })
 
             // Sync server-side active association with client's selection.
             // This ensures the API returns data for the correct association,
@@ -410,281 +414,278 @@ export const useAuthStore = create<AuthState>()(
             // may differ from the client's chosen occupation.
             if (activeOccupationId) {
               try {
-                await apiClient.switchRoleAndAttribute(activeOccupationId);
+                await apiClient.switchRoleAndAttribute(activeOccupationId)
               } catch (error) {
                 // Log but don't fail login - user can manually switch if needed
-                logger.warn("Failed to sync active association after login:", error);
+                logger.warn('Failed to sync active association after login:', error)
               }
             }
 
-            return true;
+            return true
           }
 
           set({
-            status: "error",
+            status: 'error',
             error: result.error,
             lockedUntil: result.lockedUntil ?? null,
-          });
-          return false;
+          })
+          return false
         } catch (error) {
-          const message = error instanceof Error ? error.message : "Login failed";
-          set({ status: "error", error: message, lockedUntil: null });
-          return false;
+          const message = error instanceof Error ? error.message : 'Login failed'
+          set({ status: 'error', error: message, lockedUntil: null })
+          return false
         }
       },
 
       logout: async () => {
-        const currentDataSource = get().dataSource;
+        const currentDataSource = get().dataSource
 
         // Only call server logout for API mode
-        if (currentDataSource === "api") {
+        if (currentDataSource === 'api') {
           try {
             await fetch(LOGOUT_URL, {
-              credentials: "include",
-              redirect: "manual",
-            });
+              credentials: 'include',
+              redirect: 'manual',
+            })
           } catch (error) {
-            logger.error("Logout request failed:", error);
+            logger.error('Logout request failed:', error)
           }
         }
 
-        if (currentDataSource === "demo") {
-          useDemoStore.getState().clearDemoData();
+        if (currentDataSource === 'demo') {
+          useDemoStore.getState().clearDemoData()
         }
 
-        clearSession();
+        clearSession()
         set({
-          status: "idle",
+          status: 'idle',
           user: null,
           error: null,
           csrfToken: null,
-          dataSource: "api",
+          dataSource: 'api',
           calendarCode: null,
           eligibleAttributeValues: null,
           groupedEligibleAttributeValues: null,
           eligibleRoles: null,
           _lastAuthTimestamp: null,
           activeOccupationId: null,
-        });
+        })
       },
 
       checkSession: async (signal?: AbortSignal): Promise<boolean> => {
         // Check if already aborted before starting
         if (signal?.aborted) {
-          throw new DOMException("Aborted", "AbortError");
+          throw new DOMException('Aborted', 'AbortError')
         }
 
-        const currentDataSource = get().dataSource;
+        const currentDataSource = get().dataSource
         // Demo and calendar modes don't need session verification
-        if (currentDataSource === "demo" || currentDataSource === "calendar") {
-          return true;
+        if (currentDataSource === 'demo' || currentDataSource === 'calendar') {
+          return true
         }
 
         // Skip session check if authentication happened very recently.
         // This prevents redundant network requests right after login.
-        const lastAuth = get()._lastAuthTimestamp;
+        const lastAuth = get()._lastAuthTimestamp
         if (lastAuth && Date.now() - lastAuth < SESSION_CHECK_GRACE_PERIOD_MS) {
-          logger.info("Session check: skipping, authenticated recently");
-          return true;
+          logger.info('Session check: skipping, authenticated recently')
+          return true
         }
 
-        const existingPromise = get()._checkSessionPromise;
+        const existingPromise = get()._checkSessionPromise
         if (existingPromise) {
           // If caller provided a signal, wrap the promise to handle abortion
           if (signal) {
             return new Promise<boolean>((resolve, reject) => {
-              const onAbort = () =>
-                reject(new DOMException("Aborted", "AbortError"));
-              signal.addEventListener("abort", onAbort, { once: true });
+              const onAbort = () => reject(new DOMException('Aborted', 'AbortError'))
+              signal.addEventListener('abort', onAbort, { once: true })
 
               existingPromise
                 .then(resolve)
                 .catch(reject)
-                .finally(() => signal.removeEventListener("abort", onAbort));
-            });
+                .finally(() => signal.removeEventListener('abort', onAbort))
+            })
           }
-          return existingPromise;
+          return existingPromise
         }
 
-        let resolvePromise!: (value: boolean) => void;
+        let resolvePromise!: (value: boolean) => void
         const promise = new Promise<boolean>((resolve) => {
-          resolvePromise = resolve;
-        });
+          resolvePromise = resolve
+        })
 
-        set({ _checkSessionPromise: promise });
-
-        (async () => {
+        set({ _checkSessionPromise: promise })
+        ;(async () => {
           // Helper to handle invalid session - clears state and resolves false
           const handleInvalidSession = (logMessage: string): void => {
-            logger.info(logMessage);
-            clearSession();
-            set({ status: "idle", user: null, csrfToken: null, _lastAuthTimestamp: null });
-            resolvePromise(false);
-          };
+            logger.info(logMessage)
+            clearSession()
+            set({ status: 'idle', user: null, csrfToken: null, _lastAuthTimestamp: null })
+            resolvePromise(false)
+          }
 
           try {
-            const timeoutController = new AbortController();
-            const timeoutId = setTimeout(
-              () => timeoutController.abort(),
-              SESSION_CHECK_TIMEOUT_MS,
-            );
+            const timeoutController = new AbortController()
+            const timeoutId = setTimeout(() => timeoutController.abort(), SESSION_CHECK_TIMEOUT_MS)
 
             // Combine timeout signal with external signal if provided
             const fetchSignal = signal
               ? AbortSignal.any([timeoutController.signal, signal])
-              : timeoutController.signal;
+              : timeoutController.signal
 
             try {
-              const response = await fetch(
-                `${API_BASE}/sportmanager.volleyball/main/dashboard`,
-                { credentials: "include", redirect: "follow", signal: fetchSignal, cache: "no-store", headers: getSessionHeaders() },
-              );
+              const response = await fetch(`${API_BASE}/sportmanager.volleyball/main/dashboard`, {
+                credentials: 'include',
+                redirect: 'follow',
+                signal: fetchSignal,
+                cache: 'no-store',
+                headers: getSessionHeaders(),
+              })
 
-              clearTimeout(timeoutId);
+              clearTimeout(timeoutId)
 
               // Capture session token from response headers (iOS Safari PWA)
-              captureSessionToken(response);
+              captureSessionToken(response)
 
               // Detect stale session: if the server redirected us to the login page,
               // the session is invalid. This commonly happens when session cookies
               // expire but the app still has persisted auth state.
               if (isResponseUrlLoginPage(response.url)) {
-                handleInvalidSession("Session check: redirected to login page, session is stale");
-                return;
+                handleInvalidSession('Session check: redirected to login page, session is stale')
+                return
               }
 
               // Read response body once - needed for PWA fallback and dashboard processing
-              const html = response.ok ? await response.text() : "";
+              const html = response.ok ? await response.text() : ''
 
               // iOS PWA standalone mode fix: In iOS Safari PWA standalone mode,
               // both response.url and response.redirected may be unreliable.
               // Use content-based detection as the most reliable fallback.
               // Check if the response is actually a login page regardless of redirect status.
               if (isLoginPageHtmlContent(html)) {
-                handleInvalidSession("Session check: detected login page via content analysis, session is stale");
-                return;
+                handleInvalidSession(
+                  'Session check: detected login page via content analysis, session is stale'
+                )
+                return
               }
 
               if (response.ok) {
-                const csrfToken = extractCsrfTokenFromPage(html);
-                const currentState = get();
+                const csrfToken = extractCsrfTokenFromPage(html)
+                const currentState = get()
 
                 // If we can't find a CSRF token and don't have one stored,
                 // the session is invalid (dashboard pages always have CSRF tokens).
                 if (!csrfToken && !currentState.csrfToken) {
-                  handleInvalidSession("Session check: no CSRF token found, session is invalid");
-                  return;
+                  handleInvalidSession('Session check: no CSRF token found, session is invalid')
+                  return
                 }
 
-                const activeParty = extractActivePartyFromHtml(html);
+                const activeParty = extractActivePartyFromHtml(html)
                 const { user, activeOccupationId } = deriveUserWithOccupations(
                   activeParty,
                   currentState.user,
-                  currentState.activeOccupationId,
-                );
+                  currentState.activeOccupationId
+                )
 
                 if (csrfToken) {
-                  setCsrfToken(csrfToken);
+                  setCsrfToken(csrfToken)
                 }
 
                 set({
-                  status: "authenticated",
+                  status: 'authenticated',
                   csrfToken: csrfToken ?? currentState.csrfToken,
                   // Preserve existing attribute values if new values are missing
                   // This prevents the association dropdown from disappearing when
                   // checkSession fetches a page without activeParty data
                   eligibleAttributeValues:
-                    activeParty?.eligibleAttributeValues ??
-                    currentState.eligibleAttributeValues,
+                    activeParty?.eligibleAttributeValues ?? currentState.eligibleAttributeValues,
                   groupedEligibleAttributeValues:
                     activeParty?.groupedEligibleAttributeValues ??
                     currentState.groupedEligibleAttributeValues,
-                  eligibleRoles:
-                    activeParty?.eligibleRoles ?? currentState.eligibleRoles,
+                  eligibleRoles: activeParty?.eligibleRoles ?? currentState.eligibleRoles,
                   user,
                   activeOccupationId,
                   _lastAuthTimestamp: Date.now(),
-                });
-                resolvePromise(true);
-                return;
+                })
+                resolvePromise(true)
+                return
               }
 
-              set({ status: "idle", user: null });
-              resolvePromise(false);
+              set({ status: 'idle', user: null })
+              resolvePromise(false)
             } catch (error) {
-              clearTimeout(timeoutId);
+              clearTimeout(timeoutId)
 
-              if (error instanceof Error && error.name === "AbortError") {
+              if (error instanceof Error && error.name === 'AbortError') {
                 // Check if this was an external abort (not timeout)
                 if (signal?.aborted) {
                   // External abort - don't log, don't update state
                   // Let the caller handle it via the wrapped promise
-                  resolvePromise(false);
-                  return;
+                  resolvePromise(false)
+                  return
                 }
                 // Timeout abort
-                logger.error("Session check timed out");
-                set({ status: "idle", user: null });
-                resolvePromise(false);
-                return;
+                logger.error('Session check timed out')
+                set({ status: 'idle', user: null })
+                resolvePromise(false)
+                return
               }
 
-              throw error;
+              throw error
             }
           } catch (error) {
-            logger.error("Session check failed:", error);
-            set({ status: "idle", user: null });
-            resolvePromise(false);
+            logger.error('Session check failed:', error)
+            set({ status: 'idle', user: null })
+            resolvePromise(false)
           } finally {
-            set({ _checkSessionPromise: null });
+            set({ _checkSessionPromise: null })
           }
-        })();
+        })()
 
         // If caller provided a signal, wrap the promise to handle abortion
         if (signal) {
           return new Promise<boolean>((resolve, reject) => {
-            const onAbort = () =>
-              reject(new DOMException("Aborted", "AbortError"));
-            signal.addEventListener("abort", onAbort, { once: true });
+            const onAbort = () => reject(new DOMException('Aborted', 'AbortError'))
+            signal.addEventListener('abort', onAbort, { once: true })
 
             promise
               .then(resolve)
               .catch(reject)
-              .finally(() => signal.removeEventListener("abort", onAbort));
-          });
+              .finally(() => signal.removeEventListener('abort', onAbort))
+          })
         }
 
-        return promise;
+        return promise
       },
 
       setUser: (user: UserProfile | null) => {
-        set({ user });
+        set({ user })
       },
 
       setDemoAuthenticated: () => {
         const rawDemoOccupations: Occupation[] = [
-          { id: "demo-referee-sv", type: "referee", associationCode: "SV" },
-          { id: "demo-referee-svrba", type: "referee", associationCode: "SVRBA" },
-          { id: "demo-referee-svrz", type: "referee", associationCode: "SVRZ" },
-          { id: "demo-player", type: "player", clubName: "VBC Demo" },
-        ];
+          { id: 'demo-referee-sv', type: 'referee', associationCode: 'SV' },
+          { id: 'demo-referee-svrba', type: 'referee', associationCode: 'SVRBA' },
+          { id: 'demo-referee-svrz', type: 'referee', associationCode: 'SVRZ' },
+          { id: 'demo-player', type: 'player', clubName: 'VBC Demo' },
+        ]
 
-        const demoOccupations = filterRefereeOccupations(rawDemoOccupations);
+        const demoOccupations = filterRefereeOccupations(rawDemoOccupations)
 
         // Set auth state to demo mode first
         set({
-          status: "authenticated",
-          dataSource: "demo",
+          status: 'authenticated',
+          dataSource: 'demo',
           user: {
-            id: "demo-user",
-            firstName: "Demo",
-            lastName: "User",
-            email: "demo@example.com",
+            id: 'demo-user',
+            firstName: 'Demo',
+            lastName: 'User',
+            email: 'demo@example.com',
             occupations: demoOccupations,
           },
           activeOccupationId: demoOccupations[0]!.id,
           error: null,
-        });
+        })
 
         // Set demo home location for distance filtering showcase
         // Must be called after dataSource is set to "demo" so the settings
@@ -692,51 +693,51 @@ export const useAuthStore = create<AuthState>()(
         // Note: We explicitly call _setCurrentMode here for immediate sync because
         // the App.tsx subscription fires asynchronously after state updates.
         // The idempotent nature of _setCurrentMode makes this double-call safe.
-        const settingsStore = useSettingsStore.getState();
-        settingsStore._setCurrentMode("demo");
-        settingsStore.setHomeLocation(DEMO_HOME_LOCATION);
+        const settingsStore = useSettingsStore.getState()
+        settingsStore._setCurrentMode('demo')
+        settingsStore.setHomeLocation(DEMO_HOME_LOCATION)
       },
 
       setActiveOccupation: (id: string) => {
-        set({ activeOccupationId: id });
+        set({ activeOccupationId: id })
       },
 
       setAssociationSwitching: (isSwitching: boolean) => {
-        set({ isAssociationSwitching: isSwitching });
+        set({ isAssociationSwitching: isSwitching })
       },
 
       hasMultipleAssociations: () => {
         // Use groupedEligibleAttributeValues which contains all user associations
-        return hasMultipleAssociations(get().groupedEligibleAttributeValues);
+        return hasMultipleAssociations(get().groupedEligibleAttributeValues)
       },
 
       isCalendarMode: () => {
-        return get().dataSource === "calendar";
+        return get().dataSource === 'calendar'
       },
 
       loginWithCalendar: async (code: string): Promise<void> => {
-        const trimmedCode = code.trim();
+        const trimmedCode = code.trim()
 
         // Validate calendar code format (6 alphanumeric characters)
         // Note: The calendar code should already be validated by LoginPage before
         // calling this function. This is just a safeguard for direct API calls.
         if (!CALENDAR_CODE_PATTERN.test(trimmedCode)) {
-          set({ status: "error", error: "auth.invalidCalendarCode" });
-          return;
+          set({ status: 'error', error: 'auth.invalidCalendarCode' })
+          return
         }
 
-        set({ status: "loading", error: null });
+        set({ status: 'loading', error: null })
 
         try {
           // Fetch calendar data to extract associations for transport settings
           // This unifies calendar mode with regular API mode - both have occupations
-          const assignments = await fetchCalendarAssignments(trimmedCode);
+          const assignments = await fetchCalendarAssignments(trimmedCode)
 
           // Extract unique associations from calendar assignments
-          const uniqueAssociations = new Set<string>();
+          const uniqueAssociations = new Set<string>()
           for (const assignment of assignments) {
             if (assignment.association) {
-              uniqueAssociations.add(assignment.association);
+              uniqueAssociations.add(assignment.association)
             }
           }
 
@@ -746,69 +747,69 @@ export const useAuthStore = create<AuthState>()(
             .sort()
             .map((assoc) => ({
               id: `calendar-${assoc}`,
-              type: "referee" as const,
+              type: 'referee' as const,
               associationCode: assoc,
-            }));
+            }))
 
           // Set authenticated state with occupations derived from calendar data
           set({
-            status: "authenticated",
-            dataSource: "calendar",
+            status: 'authenticated',
+            dataSource: 'calendar',
             calendarCode: trimmedCode,
             user: {
               id: `calendar-${trimmedCode}`,
-              firstName: "Calendar",
-              lastName: "User",
+              firstName: 'Calendar',
+              lastName: 'User',
               occupations,
             },
             // Set first occupation as active if any found
             activeOccupationId: occupations[0]?.id ?? null,
             error: null,
-          });
+          })
         } catch (error) {
           // If fetching fails, fall back to no occupations
           // This allows login to succeed even if calendar is empty or fails
-          logger.warn("Failed to fetch calendar for associations:", error);
+          logger.warn('Failed to fetch calendar for associations:', error)
 
           set({
-            status: "authenticated",
-            dataSource: "calendar",
+            status: 'authenticated',
+            dataSource: 'calendar',
             calendarCode: trimmedCode,
             user: {
               id: `calendar-${trimmedCode}`,
-              firstName: "Calendar",
-              lastName: "User",
+              firstName: 'Calendar',
+              lastName: 'User',
               occupations: [],
             },
             activeOccupationId: null,
             error: null,
-          });
+          })
         }
       },
 
       logoutCalendar: async () => {
         // Separate method for API clarity and future extensibility
         // (e.g., calendar-specific cleanup or analytics)
-        await get().logout();
+        await get().logout()
       },
 
       getAuthMode: () => {
-        const state = get();
-        if (state.status !== "authenticated") {
-          return "none";
+        const state = get()
+        if (state.status !== 'authenticated') {
+          return 'none'
         }
         switch (state.dataSource) {
-          case "demo":
-            return "demo";
-          case "calendar":
-            return "calendar";
-          case "api":
-            return "full";
+          case 'demo':
+            return 'demo'
+          case 'calendar':
+            return 'calendar'
+          case 'api':
+            return 'full'
         }
       },
     }),
     {
-      name: "volleykit-auth",
+      name: 'volleykit-auth',
       version: AUTH_STORE_VERSION,
       partialize: (state) => ({
         // Persist minimal user data for UX (immediate name display).
@@ -817,7 +818,7 @@ export const useAuthStore = create<AuthState>()(
         // groupedEligibleAttributeValues persisted for hasMultipleAssociations() on refresh.
         user: state.user,
         csrfToken: state.csrfToken,
-        _wasAuthenticated: state.status === "authenticated",
+        _wasAuthenticated: state.status === 'authenticated',
         dataSource: state.dataSource,
         calendarCode: state.calendarCode,
         activeOccupationId: state.activeOccupationId,
@@ -829,48 +830,47 @@ export const useAuthStore = create<AuthState>()(
       migrate: (persistedState, version) => {
         if (version < AUTH_STORE_VERSION) {
           // Return undefined to use defaults (forces re-login)
-          return undefined;
+          return undefined
         }
-        return persistedState;
+        return persistedState
       },
       merge: (persisted, current) => {
         const persistedState = persisted as
           | {
-              user?: UserProfile | null;
-              csrfToken?: string | null;
-              _wasAuthenticated?: boolean;
-              dataSource?: DataSource;
-              calendarCode?: string | null;
-              isDemoMode?: boolean;
-              activeOccupationId?: string | null;
-              eligibleAttributeValues?: AttributeValue[] | null;
-              groupedEligibleAttributeValues?: AttributeValue[] | null;
+              user?: UserProfile | null
+              csrfToken?: string | null
+              _wasAuthenticated?: boolean
+              dataSource?: DataSource
+              calendarCode?: string | null
+              isDemoMode?: boolean
+              activeOccupationId?: string | null
+              eligibleAttributeValues?: AttributeValue[] | null
+              groupedEligibleAttributeValues?: AttributeValue[] | null
             }
-          | undefined;
+          | undefined
 
-        const restoredCsrfToken = persistedState?.csrfToken ?? null;
+        const restoredCsrfToken = persistedState?.csrfToken ?? null
         if (restoredCsrfToken) {
-          setCsrfToken(restoredCsrfToken);
+          setCsrfToken(restoredCsrfToken)
         }
 
         // Derive dataSource from isDemoMode for backwards compatibility with old persisted state
         const dataSource: DataSource =
-          persistedState?.dataSource ??
-          (persistedState?.isDemoMode ? "demo" : "api");
+          persistedState?.dataSource ?? (persistedState?.isDemoMode ? 'demo' : 'api')
 
         return {
           ...current,
           user: persistedState?.user ?? null,
           csrfToken: restoredCsrfToken,
-          status: persistedState?._wasAuthenticated ? "authenticated" : "idle",
+          status: persistedState?._wasAuthenticated ? 'authenticated' : 'idle',
           dataSource,
           calendarCode: persistedState?.calendarCode ?? null,
           activeOccupationId: persistedState?.activeOccupationId ?? null,
           eligibleAttributeValues: persistedState?.eligibleAttributeValues ?? null,
           groupedEligibleAttributeValues: persistedState?.groupedEligibleAttributeValues ?? null,
           _checkSessionPromise: null,
-        };
+        }
       },
-    },
-  ),
-);
+    }
+  )
+)

@@ -5,52 +5,54 @@
  * The SDK is loaded lazily to reduce initial bundle size.
  */
 
-import type { Coordinates, TravelTimeResult, TravelTimeOptions, StationInfo } from "./types";
-import { TransportApiError } from "./types";
-import { MINUTES_PER_HOUR, SECONDS_PER_MINUTE } from "@/shared/utils/constants";
+import { MINUTES_PER_HOUR, SECONDS_PER_MINUTE } from '@/shared/utils/constants'
+
+import { TransportApiError } from './types'
+
+import type { Coordinates, TravelTimeResult, TravelTimeOptions, StationInfo } from './types'
 
 /** Lazily loaded OJP SDK module */
-let ojpSdk: typeof import("ojp-sdk-next") | null = null;
+let ojpSdk: typeof import('ojp-sdk-next') | null = null
 
 /**
  * Load the OJP SDK on demand.
  */
-async function loadOjpSdk(): Promise<typeof import("ojp-sdk-next")> {
+async function loadOjpSdk(): Promise<typeof import('ojp-sdk-next')> {
   if (!ojpSdk) {
-    ojpSdk = await import("ojp-sdk-next");
+    ojpSdk = await import('ojp-sdk-next')
   }
-  return ojpSdk;
+  return ojpSdk
 }
 
 /** OJP 2.0 API endpoint */
-const OJP_API_ENDPOINT = "https://api.opentransportdata.swiss/ojp20";
+const OJP_API_ENDPOINT = 'https://api.opentransportdata.swiss/ojp20'
 
 /** Minimum delay between API requests (50 req/min = 1.2s to be safe) */
-const RATE_LIMIT_DELAY_MS = 1200;
+const RATE_LIMIT_DELAY_MS = 1200
 
 /** Timestamp of the last API request */
-let lastRequestTime = 0;
+let lastRequestTime = 0
 
 /**
  * Wait if necessary to respect rate limits.
  */
 async function waitForRateLimit(): Promise<void> {
-  const now = Date.now();
-  const timeSinceLastRequest = now - lastRequestTime;
+  const now = Date.now()
+  const timeSinceLastRequest = now - lastRequestTime
 
   if (timeSinceLastRequest < RATE_LIMIT_DELAY_MS) {
-    const waitTime = RATE_LIMIT_DELAY_MS - timeSinceLastRequest;
-    await new Promise((resolve) => setTimeout(resolve, waitTime));
+    const waitTime = RATE_LIMIT_DELAY_MS - timeSinceLastRequest
+    await new Promise((resolve) => setTimeout(resolve, waitTime))
   }
-  lastRequestTime = Date.now();
+  lastRequestTime = Date.now()
 }
 
 /**
  * Check if the OJP API is configured.
  */
 export function isOjpConfigured(): boolean {
-  const apiKey = import.meta.env.VITE_OJP_API_KEY;
-  return Boolean(apiKey && apiKey !== "your_api_key_here");
+  const apiKey = import.meta.env.VITE_OJP_API_KEY
+  return Boolean(apiKey && apiKey !== 'your_api_key_here')
 }
 
 /**
@@ -65,68 +67,68 @@ export function isOjpConfigured(): boolean {
 export async function calculateTravelTime(
   from: Coordinates,
   to: Coordinates,
-  options: TravelTimeOptions = {},
+  options: TravelTimeOptions = {}
 ): Promise<TravelTimeResult> {
-  const apiKey = import.meta.env.VITE_OJP_API_KEY;
+  const apiKey = import.meta.env.VITE_OJP_API_KEY
 
-  if (!apiKey || apiKey === "your_api_key_here") {
-    throw new TransportApiError("OJP API key not configured", "API_NOT_CONFIGURED");
+  if (!apiKey || apiKey === 'your_api_key_here') {
+    throw new TransportApiError('OJP API key not configured', 'API_NOT_CONFIGURED')
   }
 
   // Wait for rate limit before making request
-  await waitForRateLimit();
+  await waitForRateLimit()
 
   try {
     // Load SDK lazily
-    const { SDK, TripRequest, Place } = await loadOjpSdk();
+    const { SDK, TripRequest, Place } = await loadOjpSdk()
 
     // Create SDK instance using static factory method
-    const sdk = SDK.create("VolleyKit", { url: OJP_API_ENDPOINT, authToken: apiKey }, "de");
+    const sdk = SDK.create('VolleyKit', { url: OJP_API_ENDPOINT, authToken: apiKey }, 'de')
 
     // Create places from coordinates
-    const fromPlace = Place.initWithCoords(from.longitude, from.latitude);
-    const toPlace = Place.initWithCoords(to.longitude, to.latitude);
+    const fromPlace = Place.initWithCoords(from.longitude, from.latitude)
+    const toPlace = Place.initWithCoords(to.longitude, to.latitude)
 
     // Create trip request
-    const tripRequest = TripRequest.initWithPlaces(fromPlace, toPlace);
+    const tripRequest = TripRequest.initWithPlaces(fromPlace, toPlace)
 
     // Set departure time if provided
-    const departureTime = options.departureTime ?? new Date();
-    tripRequest.setDepartureDatetime(departureTime);
+    const departureTime = options.departureTime ?? new Date()
+    tripRequest.setDepartureDatetime(departureTime)
 
     // Configure for public transport
-    tripRequest.setPublicTransportRequest();
+    tripRequest.setPublicTransportRequest()
 
     // Fetch trips using the new SDK API pattern
-    const response = await tripRequest.fetchResponse(sdk);
+    const response = await tripRequest.fetchResponse(sdk)
 
     // Check for errors
     if (!response.ok) {
-      throw new TransportApiError(response.error.message, "API_ERROR");
+      throw new TransportApiError(response.error.message, 'API_ERROR')
     }
 
     // Extract trips from response
-    const tripResults = response.value.tripResult ?? [];
+    const tripResults = response.value.tripResult ?? []
     if (tripResults.length === 0) {
-      throw new TransportApiError("No route found between locations", "NO_ROUTE");
+      throw new TransportApiError('No route found between locations', 'NO_ROUTE')
     }
 
     // Map trip results to our OjpTrip interface (each tripResult has a trip property)
-    const trips = tripResults.map((tr) => tr.trip as OjpTrip);
+    const trips = tripResults.map((tr) => tr.trip as OjpTrip)
 
     // Select the best trip based on target arrival time or take earliest departure
-    const trip = selectBestTrip(trips, options.targetArrivalTime);
+    const trip = selectBestTrip(trips, options.targetArrivalTime)
 
     // Parse duration from ISO 8601 duration string (e.g., "PT1H30M")
-    const durationMinutes = parseDurationToMinutes(trip.duration);
+    const durationMinutes = parseDurationToMinutes(trip.duration)
 
     // Extract origin and destination stations for SBB deep linking
-    const originStation = extractOriginStation(trip);
-    const destinationStation = extractDestinationStation(trip);
+    const originStation = extractOriginStation(trip)
+    const destinationStation = extractDestinationStation(trip)
 
     // Calculate actual arrival time including walking from final stop to destination
-    const arrivalTime = calculateActualArrivalTime(trip);
-    const finalWalkingMinutes = extractFinalWalkingMinutes(trip);
+    const arrivalTime = calculateActualArrivalTime(trip)
+    const finalWalkingMinutes = extractFinalWalkingMinutes(trip)
 
     return {
       durationMinutes,
@@ -137,15 +139,15 @@ export async function calculateTravelTime(
       destinationStation,
       finalWalkingMinutes,
       tripData: options.includeTrips ? trip : undefined,
-    };
+    }
   } catch (error) {
     if (error instanceof TransportApiError) {
-      throw error;
+      throw error
     }
 
     // Wrap unknown errors
-    const message = error instanceof Error ? error.message : "Unknown transport API error";
-    throw new TransportApiError(message, "API_ERROR");
+    const message = error instanceof Error ? error.message : 'Unknown transport API error'
+    throw new TransportApiError(message, 'API_ERROR')
   }
 }
 
@@ -153,21 +155,21 @@ export async function calculateTravelTime(
  * Stop point info from a timed leg's legBoard or legAlight.
  */
 interface OjpStopPoint {
-  stopPointRef: string;
+  stopPointRef: string
   stopPointName: {
-    text: string;
-  };
+    text: string
+  }
   nameSuffix?: {
-    text: string;
-  };
+    text: string
+  }
 }
 
 /**
  * Timed leg from OJP SDK representing a public transport segment.
  */
 interface OjpTimedLeg {
-  legBoard: OjpStopPoint;
-  legAlight: OjpStopPoint;
+  legBoard: OjpStopPoint
+  legAlight: OjpStopPoint
 }
 
 /**
@@ -176,7 +178,7 @@ interface OjpTimedLeg {
  */
 interface OjpContinuousLeg {
   /** ISO 8601 duration string (e.g., "PT5M" for 5 minutes walking) */
-  duration: string;
+  duration: string
 }
 
 /**
@@ -185,8 +187,8 @@ interface OjpContinuousLeg {
  * or continuousLeg (walking to/from stations).
  */
 interface OjpLeg {
-  timedLeg?: OjpTimedLeg;
-  continuousLeg?: OjpContinuousLeg;
+  timedLeg?: OjpTimedLeg
+  continuousLeg?: OjpContinuousLeg
 }
 
 /**
@@ -195,11 +197,11 @@ interface OjpLeg {
  * If the SDK's Trip type changes, this interface should be updated accordingly.
  */
 export interface OjpTrip {
-  duration: string;
-  startTime: string;
-  endTime: string;
-  transfers: number;
-  leg: OjpLeg[];
+  duration: string
+  startTime: string
+  endTime: string
+  transfers: number
+  leg: OjpLeg[]
 }
 
 /**
@@ -207,20 +209,20 @@ export interface OjpTrip {
  * Format: "ch:1:sloid:8507000" -> "8507000"
  */
 function extractDidokId(ref: string | undefined): string | undefined {
-  if (!ref) return undefined;
+  if (!ref) return undefined
 
   // Handle sloid format: "ch:1:sloid:8507000" or "ch:1:sloid:8507000:1"
-  const sloidMatch = ref.match(/sloid:(\d+)/);
+  const sloidMatch = ref.match(/sloid:(\d+)/)
   if (sloidMatch) {
-    return sloidMatch[1];
+    return sloidMatch[1]
   }
 
   // Handle direct numeric ID
   if (/^\d+$/.test(ref)) {
-    return ref;
+    return ref
   }
 
-  return undefined;
+  return undefined
 }
 
 /**
@@ -238,17 +240,17 @@ const OJP_ACCESSIBILITY_PATTERNS = [
   /\bALTERNATIVE_TRANSPORT\b/g,
   /\bSHUTTLE_BUS\b/g,
   /\bRAIL_REPLACEMENT\b/g,
-];
+]
 
 /**
  * Check if a string is entirely an OJP accessibility keyword.
  */
 function isAccessibilityKeyword(text: string): boolean {
   return OJP_ACCESSIBILITY_PATTERNS.some((pattern) => {
-    pattern.lastIndex = 0; // Reset regex state
-    const match = text.match(pattern);
-    return match !== null && match[0] === text;
-  });
+    pattern.lastIndex = 0 // Reset regex state
+    const match = text.match(pattern)
+    return match !== null && match[0] === text
+  })
 }
 
 /**
@@ -256,24 +258,24 @@ function isAccessibilityKeyword(text: string): boolean {
  * Returns undefined if the suffix is entirely an accessibility keyword.
  */
 function cleanNameSuffix(suffix: string | undefined): string | undefined {
-  if (!suffix) return undefined;
+  if (!suffix) return undefined
 
   // Check if the entire suffix is an accessibility keyword
   if (isAccessibilityKeyword(suffix)) {
-    return undefined;
+    return undefined
   }
 
   // Remove accessibility keywords from the suffix
-  let cleaned = suffix;
+  let cleaned = suffix
   for (const pattern of OJP_ACCESSIBILITY_PATTERNS) {
-    pattern.lastIndex = 0;
-    cleaned = cleaned.replace(pattern, "");
+    pattern.lastIndex = 0
+    cleaned = cleaned.replace(pattern, '')
   }
 
   // Clean up multiple spaces and trim
-  cleaned = cleaned.replace(/\s+/g, " ").trim();
+  cleaned = cleaned.replace(/\s+/g, ' ').trim()
 
-  return cleaned || undefined;
+  return cleaned || undefined
 }
 
 /**
@@ -283,28 +285,28 @@ function cleanNameSuffix(suffix: string | undefined): string | undefined {
  * Example: "Paradies" + "ALTERNATIVE_TRANSPORT" -> "Paradies" (keyword filtered)
  */
 function buildStationName(stopPoint: OjpStopPoint): string {
-  const baseName = stopPoint.stopPointName.text;
-  const suffix = cleanNameSuffix(stopPoint.nameSuffix?.text);
+  const baseName = stopPoint.stopPointName.text
+  const suffix = cleanNameSuffix(stopPoint.nameSuffix?.text)
 
   if (suffix) {
-    return `${baseName} ${suffix}`;
+    return `${baseName} ${suffix}`
   }
-  return baseName;
+  return baseName
 }
 
 /**
  * Extract station info from a stop point.
  */
 function extractStationFromStopPoint(stopPoint: OjpStopPoint | undefined): StationInfo | undefined {
-  if (!stopPoint) return undefined;
+  if (!stopPoint) return undefined
 
-  const id = extractDidokId(stopPoint.stopPointRef);
-  if (!id) return undefined;
+  const id = extractDidokId(stopPoint.stopPointRef)
+  if (!id) return undefined
 
   return {
     id,
     name: buildStationName(stopPoint),
-  };
+  }
 }
 
 /**
@@ -313,10 +315,10 @@ function extractStationFromStopPoint(stopPoint: OjpStopPoint | undefined): Stati
 function findFirstTimedLeg(trip: OjpTrip): OjpTimedLeg | undefined {
   for (const leg of trip.leg) {
     if (leg.timedLeg) {
-      return leg.timedLeg;
+      return leg.timedLeg
     }
   }
-  return undefined;
+  return undefined
 }
 
 /**
@@ -324,12 +326,12 @@ function findFirstTimedLeg(trip: OjpTrip): OjpTimedLeg | undefined {
  */
 function findLastTimedLeg(trip: OjpTrip): OjpTimedLeg | undefined {
   for (let i = trip.leg.length - 1; i >= 0; i--) {
-    const leg = trip.leg[i];
+    const leg = trip.leg[i]
     if (leg?.timedLeg) {
-      return leg.timedLeg;
+      return leg.timedLeg
     }
   }
-  return undefined;
+  return undefined
 }
 
 /**
@@ -341,29 +343,29 @@ function findLastTimedLeg(trip: OjpTrip): OjpTimedLeg | undefined {
  */
 export function extractFinalWalkingMinutes(trip: OjpTrip): number {
   // Find the index of the last timed leg
-  let lastTimedLegIndex = -1;
+  let lastTimedLegIndex = -1
   for (let i = trip.leg.length - 1; i >= 0; i--) {
     if (trip.leg[i]?.timedLeg) {
-      lastTimedLegIndex = i;
-      break;
+      lastTimedLegIndex = i
+      break
     }
   }
 
   // If no timed legs, there's no "final" walking (might be all walking trip)
   if (lastTimedLegIndex === -1) {
-    return 0;
+    return 0
   }
 
   // Sum up walking duration from all legs after the last timed leg
-  let totalWalkingMinutes = 0;
+  let totalWalkingMinutes = 0
   for (let i = lastTimedLegIndex + 1; i < trip.leg.length; i++) {
-    const leg = trip.leg[i];
+    const leg = trip.leg[i]
     if (leg?.continuousLeg?.duration) {
-      totalWalkingMinutes += parseDurationToMinutes(leg.continuousLeg.duration);
+      totalWalkingMinutes += parseDurationToMinutes(leg.continuousLeg.duration)
     }
   }
 
-  return totalWalkingMinutes;
+  return totalWalkingMinutes
 }
 
 /**
@@ -373,17 +375,17 @@ export function extractFinalWalkingMinutes(trip: OjpTrip): number {
  * @returns ISO 8601 timestamp of actual arrival at destination
  */
 export function calculateActualArrivalTime(trip: OjpTrip): string {
-  const finalWalkingMinutes = extractFinalWalkingMinutes(trip);
+  const finalWalkingMinutes = extractFinalWalkingMinutes(trip)
 
   if (finalWalkingMinutes === 0) {
-    return trip.endTime;
+    return trip.endTime
   }
 
   // Add walking time to the trip end time
-  const endTime = new Date(trip.endTime);
-  endTime.setMinutes(endTime.getMinutes() + finalWalkingMinutes);
+  const endTime = new Date(trip.endTime)
+  endTime.setMinutes(endTime.getMinutes() + finalWalkingMinutes)
 
-  return endTime.toISOString();
+  return endTime.toISOString()
 }
 
 /**
@@ -391,8 +393,8 @@ export function calculateActualArrivalTime(trip: OjpTrip): string {
  * Gets the boarding station from the first timed leg.
  */
 export function extractOriginStation(trip: OjpTrip): StationInfo | undefined {
-  const firstTimedLeg = findFirstTimedLeg(trip);
-  return extractStationFromStopPoint(firstTimedLeg?.legBoard);
+  const firstTimedLeg = findFirstTimedLeg(trip)
+  return extractStationFromStopPoint(firstTimedLeg?.legBoard)
 }
 
 /**
@@ -400,8 +402,8 @@ export function extractOriginStation(trip: OjpTrip): StationInfo | undefined {
  * Gets the alighting station from the last timed leg.
  */
 export function extractDestinationStation(trip: OjpTrip): StationInfo | undefined {
-  const lastTimedLeg = findLastTimedLeg(trip);
-  return extractStationFromStopPoint(lastTimedLeg?.legAlight);
+  const lastTimedLeg = findLastTimedLeg(trip)
+  return extractStationFromStopPoint(lastTimedLeg?.legAlight)
 }
 
 /**
@@ -421,36 +423,36 @@ export function extractDestinationStation(trip: OjpTrip): StationInfo | undefine
 export function selectBestTrip(trips: OjpTrip[], targetArrivalTime?: Date): OjpTrip {
   // If no target time, return first trip (earliest departure)
   if (!targetArrivalTime) {
-    return trips[0]!;
+    return trips[0]!
   }
 
-  const targetTime = targetArrivalTime.getTime();
+  const targetTime = targetArrivalTime.getTime()
 
   // Find trips that arrive on time (before or at target) - using actual arrival including walking
   const onTimeTrips = trips.filter((trip) => {
-    const actualArrivalTime = new Date(calculateActualArrivalTime(trip)).getTime();
-    return actualArrivalTime <= targetTime;
-  });
+    const actualArrivalTime = new Date(calculateActualArrivalTime(trip)).getTime()
+    return actualArrivalTime <= targetTime
+  })
 
   // If no trips arrive on time, return the first trip (earliest arrival)
   if (onTimeTrips.length === 0) {
-    return trips[0]!;
+    return trips[0]!
   }
 
   // Select best trip: fewer transfers first, then closest arrival to target
   return onTimeTrips.reduce((best, trip) => {
     // Prefer fewer transfers
     if (trip.transfers < best.transfers) {
-      return trip;
+      return trip
     }
     if (trip.transfers > best.transfers) {
-      return best;
+      return best
     }
     // Same transfers: prefer later arrival (closer to target time) - using actual arrival
-    const bestArrival = new Date(calculateActualArrivalTime(best)).getTime();
-    const tripArrival = new Date(calculateActualArrivalTime(trip)).getTime();
-    return tripArrival > bestArrival ? trip : best;
-  });
+    const bestArrival = new Date(calculateActualArrivalTime(best)).getTime()
+    const tripArrival = new Date(calculateActualArrivalTime(trip)).getTime()
+    return tripArrival > bestArrival ? trip : best
+  })
 }
 
 /**
@@ -458,19 +460,19 @@ export function selectBestTrip(trips: OjpTrip[], targetArrivalTime?: Date): OjpT
  * Uses string methods instead of regex to avoid backtracking concerns.
  */
 function extractDurationComponent(duration: string, unit: string): number {
-  const unitIndex = duration.indexOf(unit);
-  if (unitIndex === -1) return 0;
+  const unitIndex = duration.indexOf(unit)
+  if (unitIndex === -1) return 0
 
   // Find the start of the number by scanning backwards
-  let startIndex = unitIndex - 1;
-  while (startIndex >= 0 && duration[startIndex]! >= "0" && duration[startIndex]! <= "9") {
-    startIndex--;
+  let startIndex = unitIndex - 1
+  while (startIndex >= 0 && duration[startIndex]! >= '0' && duration[startIndex]! <= '9') {
+    startIndex--
   }
-  startIndex++; // Move back to first digit
+  startIndex++ // Move back to first digit
 
-  if (startIndex >= unitIndex) return 0;
+  if (startIndex >= unitIndex) return 0
 
-  return parseInt(duration.substring(startIndex, unitIndex), 10) || 0;
+  return parseInt(duration.substring(startIndex, unitIndex), 10) || 0
 }
 
 /**
@@ -480,13 +482,13 @@ function extractDurationComponent(duration: string, unit: string): number {
  * @returns Duration in minutes
  */
 function parseDurationToMinutes(duration: string): number {
-  if (!duration.startsWith("PT")) {
-    return 0;
+  if (!duration.startsWith('PT')) {
+    return 0
   }
 
-  const hours = extractDurationComponent(duration, "H");
-  const minutes = extractDurationComponent(duration, "M");
-  const seconds = extractDurationComponent(duration, "S");
+  const hours = extractDurationComponent(duration, 'H')
+  const minutes = extractDurationComponent(duration, 'M')
+  const seconds = extractDurationComponent(duration, 'S')
 
-  return hours * MINUTES_PER_HOUR + minutes + Math.ceil(seconds / SECONDS_PER_MINUTE);
+  return hours * MINUTES_PER_HOUR + minutes + Math.ceil(seconds / SECONDS_PER_MINUTE)
 }

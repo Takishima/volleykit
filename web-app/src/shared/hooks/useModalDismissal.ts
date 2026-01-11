@@ -1,21 +1,21 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect } from 'react'
 
 interface UseModalDismissalOptions {
   /** Whether the modal is currently open */
-  isOpen: boolean;
+  isOpen: boolean
   /** Callback to close the modal */
-  onClose: () => void;
+  onClose: () => void
   /** When true, dismissal is disabled (e.g., during loading) */
-  isLoading?: boolean;
+  isLoading?: boolean
   /** Whether pressing Escape should close the modal (default: true) */
-  closeOnEscape?: boolean;
+  closeOnEscape?: boolean
   /** Whether clicking the backdrop should close the modal (default: true) */
-  closeOnBackdropClick?: boolean;
+  closeOnBackdropClick?: boolean
 }
 
 interface UseModalDismissalResult {
   /** Click handler for the backdrop element */
-  handleBackdropClick: (e: React.MouseEvent<HTMLDivElement>) => void;
+  handleBackdropClick: (e: React.MouseEvent<HTMLDivElement>) => void
 }
 
 /**
@@ -43,40 +43,38 @@ interface UseModalDismissalResult {
  * }
  * ```
  */
-export function useModalDismissal(
-  options: UseModalDismissalOptions,
-): UseModalDismissalResult {
+export function useModalDismissal(options: UseModalDismissalOptions): UseModalDismissalResult {
   const {
     isOpen,
     onClose,
     isLoading = false,
     closeOnEscape = true,
     closeOnBackdropClick = true,
-  } = options;
+  } = options
 
   // Handle Escape key to close modal
   useEffect(() => {
-    if (!isOpen || !closeOnEscape) return;
+    if (!isOpen || !closeOnEscape) return
 
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !isLoading) {
-        onClose();
+      if (e.key === 'Escape' && !isLoading) {
+        onClose()
       }
-    };
+    }
 
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [isOpen, isLoading, closeOnEscape, onClose]);
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [isOpen, isLoading, closeOnEscape, onClose])
 
   // Handle backdrop click to close modal
   const handleBackdropClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       if (e.target === e.currentTarget && closeOnBackdropClick && !isLoading) {
-        onClose();
+        onClose()
       }
     },
-    [onClose, isLoading, closeOnBackdropClick],
-  );
+    [onClose, isLoading, closeOnBackdropClick]
+  )
 
-  return { handleBackdropClick };
+  return { handleBackdropClick }
 }

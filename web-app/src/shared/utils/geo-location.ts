@@ -11,15 +11,17 @@
  * library) has similar features but slightly larger bundle impact.
  */
 
-import { decode as decodePlusCode } from "pluscodes";
-import type { components } from "@/api/schema";
-import type { Coordinates } from "./distance";
+import { decode as decodePlusCode } from 'pluscodes'
+
+import type { components } from '@/api/schema'
+
+import type { Coordinates } from './distance'
 
 /**
  * Geographic location data from the API schema.
  * Using the schema type ensures this stays in sync with API changes.
  */
-type GeographicalLocation = components["schemas"]["GeographicalLocation"];
+type GeographicalLocation = components['schemas']['GeographicalLocation']
 
 /**
  * Extracts coordinates from a geographical location object.
@@ -47,28 +49,28 @@ type GeographicalLocation = components["schemas"]["GeographicalLocation"];
  * ```
  */
 export function extractCoordinates(
-  geoLocation: GeographicalLocation | null | undefined,
+  geoLocation: GeographicalLocation | null | undefined
 ): Coordinates | null {
-  if (!geoLocation) return null;
+  if (!geoLocation) return null
 
   // Priority 1: Use direct coordinates if available
   if (geoLocation.latitude != null && geoLocation.longitude != null) {
     return {
       latitude: geoLocation.latitude,
       longitude: geoLocation.longitude,
-    };
+    }
   }
 
   // Priority 2: Decode Plus Code as fallback
   if (geoLocation.plusCode) {
-    const decoded = decodePlusCode(geoLocation.plusCode);
+    const decoded = decodePlusCode(geoLocation.plusCode)
     if (decoded) {
       return {
         latitude: decoded.latitude,
         longitude: decoded.longitude,
-      };
+      }
     }
   }
 
-  return null;
+  return null
 }

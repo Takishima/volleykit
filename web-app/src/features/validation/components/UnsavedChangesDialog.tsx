@@ -1,16 +1,17 @@
-import { useRef, useEffect } from "react";
-import { useTranslation } from "@/shared/hooks/useTranslation";
-import { Button } from "@/shared/components/Button";
+import { useRef, useEffect } from 'react'
+
+import { Button } from '@/shared/components/Button'
+import { useTranslation } from '@/shared/hooks/useTranslation'
 
 /** Z-index for confirmation dialog (above main modal) */
-const Z_INDEX_CONFIRMATION_DIALOG = 60;
+const Z_INDEX_CONFIRMATION_DIALOG = 60
 
 interface UnsavedChangesDialogProps {
-  isOpen: boolean;
-  onSaveAndClose: () => void;
-  onDiscard: () => void;
-  onCancel: () => void;
-  isSaving: boolean;
+  isOpen: boolean
+  onSaveAndClose: () => void
+  onDiscard: () => void
+  onCancel: () => void
+  isSaving: boolean
 }
 
 /**
@@ -24,18 +25,18 @@ export function UnsavedChangesDialog({
   onCancel,
   isSaving,
 }: UnsavedChangesDialogProps) {
-  const { t } = useTranslation();
-  const dialogRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation()
+  const dialogRef = useRef<HTMLDivElement>(null)
 
   // Focus first button when dialog opens for accessibility
   useEffect(() => {
     if (isOpen && dialogRef.current) {
-      const firstButton = dialogRef.current.querySelector("button");
-      firstButton?.focus();
+      const firstButton = dialogRef.current.querySelector('button')
+      firstButton?.focus()
     }
-  }, [isOpen]);
+  }, [isOpen])
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   return (
     <div
@@ -55,26 +56,26 @@ export function UnsavedChangesDialog({
           id="unsaved-changes-title"
           className="text-lg font-semibold text-text-primary dark:text-text-primary-dark mb-2"
         >
-          {t("validation.state.unsavedChangesTitle")}
+          {t('validation.state.unsavedChangesTitle')}
         </h3>
         <p
           id="unsaved-changes-description"
           className="text-sm text-text-muted dark:text-text-muted-dark mb-4"
         >
-          {t("validation.state.unsavedChangesMessage")}
+          {t('validation.state.unsavedChangesMessage')}
         </p>
         <div className="flex justify-end gap-3">
           <Button variant="secondary" onClick={onCancel} disabled={isSaving}>
-            {t("validation.state.continueEditing")}
+            {t('validation.state.continueEditing')}
           </Button>
           <Button variant="danger" onClick={onDiscard} disabled={isSaving}>
-            {t("validation.state.discardChanges")}
+            {t('validation.state.discardChanges')}
           </Button>
           <Button variant="primary" onClick={onSaveAndClose} disabled={isSaving}>
-            {isSaving ? t("common.loading") : t("validation.state.saveAndClose")}
+            {isSaving ? t('common.loading') : t('validation.state.saveAndClose')}
           </Button>
         </div>
       </div>
     </div>
-  );
+  )
 }

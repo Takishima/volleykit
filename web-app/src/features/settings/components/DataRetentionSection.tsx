@@ -1,44 +1,45 @@
-import { useState, useCallback, memo } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { useShallow } from "zustand/react/shallow";
-import { useSettingsStore } from "@/shared/stores/settings";
-import { useTranslation } from "@/shared/hooks/useTranslation";
-import { queryKeys } from "@/api/queryKeys";
-import { Card, CardContent, CardHeader } from "@/shared/components/Card";
-import { Button } from "@/shared/components/Button";
+import { useState, useCallback, memo } from 'react'
+
+import { useQueryClient } from '@tanstack/react-query'
+import { useShallow } from 'zustand/react/shallow'
+
+import { queryKeys } from '@/api/queryKeys'
+import { Button } from '@/shared/components/Button'
+import { Card, CardContent, CardHeader } from '@/shared/components/Card'
+import { useTranslation } from '@/shared/hooks/useTranslation'
+import { useSettingsStore } from '@/shared/stores/settings'
 
 function DataRetentionSectionComponent() {
-  const { t } = useTranslation();
-  const queryClient = useQueryClient();
-  const [showConfirm, setShowConfirm] = useState(false);
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+  const [showConfirm, setShowConfirm] = useState(false)
 
-  const { homeLocation, transportEnabled, resetLocationSettings } =
-    useSettingsStore(
-      useShallow((state) => ({
-        homeLocation: state.homeLocation,
-        transportEnabled: state.transportEnabled,
-        resetLocationSettings: state.resetLocationSettings,
-      })),
-    );
+  const { homeLocation, transportEnabled, resetLocationSettings } = useSettingsStore(
+    useShallow((state) => ({
+      homeLocation: state.homeLocation,
+      transportEnabled: state.transportEnabled,
+      resetLocationSettings: state.resetLocationSettings,
+    }))
+  )
 
   const handleClearData = useCallback(() => {
     // Clear travel time cache from TanStack Query
-    queryClient.removeQueries({ queryKey: queryKeys.travelTime.all });
+    queryClient.removeQueries({ queryKey: queryKeys.travelTime.all })
 
     // Reset all location-related settings via Zustand store
     // This properly updates state and persists through the middleware
-    resetLocationSettings();
+    resetLocationSettings()
 
-    setShowConfirm(false);
-  }, [queryClient, resetLocationSettings]);
+    setShowConfirm(false)
+  }, [queryClient, resetLocationSettings])
 
   const handleShowConfirm = useCallback(() => {
-    setShowConfirm(true);
-  }, []);
+    setShowConfirm(true)
+  }, [])
 
   const handleCancelConfirm = useCallback(() => {
-    setShowConfirm(false);
-  }, []);
+    setShowConfirm(false)
+  }, [])
 
   return (
     <Card>
@@ -59,23 +60,23 @@ function DataRetentionSectionComponent() {
             />
           </svg>
           <h2 className="font-semibold text-text-primary dark:text-text-primary-dark">
-            {t("settings.dataRetention.title")}
+            {t('settings.dataRetention.title')}
           </h2>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Privacy statements */}
         <div className="space-y-2 text-sm text-text-muted dark:text-text-muted-dark">
-          <p>{t("settings.privacyNoCollection")}</p>
-          <p>{t("settings.privacyDirectComm")}</p>
-          <p>{t("settings.privacyNoAnalytics")}</p>
+          <p>{t('settings.privacyNoCollection')}</p>
+          <p>{t('settings.privacyDirectComm')}</p>
+          <p>{t('settings.privacyNoAnalytics')}</p>
         </div>
 
         {/* Separator */}
         <div className="border-t border-border-subtle dark:border-border-subtle-dark" />
 
         <p className="text-sm text-text-muted dark:text-text-muted-dark">
-          {t("settings.dataRetention.description")}
+          {t('settings.dataRetention.description')}
         </p>
 
         {/* Data stored locally */}
@@ -96,7 +97,7 @@ function DataRetentionSectionComponent() {
                   d="M5 13l4 4L19 7"
                 />
               </svg>
-              <span>{t("settings.dataRetention.homeLocation")}</span>
+              <span>{t('settings.dataRetention.homeLocation')}</span>
             </li>
             <li className="flex items-start gap-2">
               <svg
@@ -113,7 +114,7 @@ function DataRetentionSectionComponent() {
                   d="M5 13l4 4L19 7"
                 />
               </svg>
-              <span>{t("settings.dataRetention.filterPreferences")}</span>
+              <span>{t('settings.dataRetention.filterPreferences')}</span>
             </li>
             <li className="flex items-start gap-2">
               <svg
@@ -130,7 +131,7 @@ function DataRetentionSectionComponent() {
                   d="M5 13l4 4L19 7"
                 />
               </svg>
-              <span>{t("settings.dataRetention.travelTimeCache")}</span>
+              <span>{t('settings.dataRetention.travelTimeCache')}</span>
             </li>
             <li className="flex items-start gap-2">
               <svg
@@ -147,7 +148,7 @@ function DataRetentionSectionComponent() {
                   d="M5 13l4 4L19 7"
                 />
               </svg>
-              <span>{t("settings.dataRetention.languagePreference")}</span>
+              <span>{t('settings.dataRetention.languagePreference')}</span>
             </li>
           </ul>
         </div>
@@ -156,10 +157,10 @@ function DataRetentionSectionComponent() {
         {transportEnabled && (
           <div className="p-3 bg-surface-subtle dark:bg-surface-subtle-dark rounded-lg">
             <h3 className="text-sm font-medium text-text-primary dark:text-text-primary-dark mb-1">
-              {t("settings.dataRetention.externalServices")}
+              {t('settings.dataRetention.externalServices')}
             </h3>
             <p className="text-xs text-text-muted dark:text-text-muted-dark">
-              {t("settings.dataRetention.transportApiNote")}
+              {t('settings.dataRetention.transportApiNote')}
             </p>
           </div>
         )}
@@ -189,27 +190,19 @@ function DataRetentionSectionComponent() {
                   </svg>
                 }
               >
-                {t("settings.dataRetention.clearData")}
+                {t('settings.dataRetention.clearData')}
               </Button>
             ) : (
               <div className="space-y-3">
                 <p className="text-sm text-text-primary dark:text-text-primary-dark">
-                  {t("settings.dataRetention.clearDataConfirm")}
+                  {t('settings.dataRetention.clearDataConfirm')}
                 </p>
                 <div className="flex gap-2">
-                  <Button
-                    variant="secondary"
-                    onClick={handleCancelConfirm}
-                    className="flex-1"
-                  >
-                    {t("common.cancel")}
+                  <Button variant="secondary" onClick={handleCancelConfirm} className="flex-1">
+                    {t('common.cancel')}
                   </Button>
-                  <Button
-                    variant="primary"
-                    onClick={handleClearData}
-                    className="flex-1"
-                  >
-                    {t("common.confirm")}
+                  <Button variant="primary" onClick={handleClearData} className="flex-1">
+                    {t('common.confirm')}
                   </Button>
                 </div>
               </div>
@@ -218,7 +211,7 @@ function DataRetentionSectionComponent() {
         )}
       </CardContent>
     </Card>
-  );
+  )
 }
 
-export const DataRetentionSection = memo(DataRetentionSectionComponent);
+export const DataRetentionSection = memo(DataRetentionSectionComponent)

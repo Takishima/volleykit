@@ -5,14 +5,18 @@
  * assignments from the iCal calendar feed when in calendar mode.
  */
 
-import { useQuery, type UseQueryResult } from "@tanstack/react-query";
-import { useAuthStore } from "@/shared/stores/auth";
-import { queryKeys } from "@/api/queryKeys";
-import { fetchCalendarAssignments, type CalendarAssignment } from "@/features/assignments/api/calendar-api";
-import { ASSIGNMENTS_STALE_TIME_MS } from "@/shared/hooks/usePaginatedQuery";
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
+
+import { queryKeys } from '@/api/queryKeys'
+import {
+  fetchCalendarAssignments,
+  type CalendarAssignment,
+} from '@/features/assignments/api/calendar-api'
+import { ASSIGNMENTS_STALE_TIME_MS } from '@/shared/hooks/usePaginatedQuery'
+import { useAuthStore } from '@/shared/stores/auth'
 
 // Stable empty array to prevent unnecessary re-renders
-const EMPTY_ASSIGNMENTS: CalendarAssignment[] = [];
+const EMPTY_ASSIGNMENTS: CalendarAssignment[] = []
 
 /**
  * Fetches assignments from the calendar iCal feed.
@@ -42,25 +46,25 @@ const EMPTY_ASSIGNMENTS: CalendarAssignment[] = [];
  * ```
  */
 export function useCalendarAssignments(): UseQueryResult<CalendarAssignment[], Error> {
-  const dataSource = useAuthStore((state) => state.dataSource);
-  const calendarCode = useAuthStore((state) => state.calendarCode);
-  const isCalendarMode = dataSource === "calendar";
+  const dataSource = useAuthStore((state) => state.dataSource)
+  const calendarCode = useAuthStore((state) => state.calendarCode)
+  const isCalendarMode = dataSource === 'calendar'
 
   return useQuery({
-    queryKey: queryKeys.calendar.assignmentsByCode(calendarCode ?? ""),
+    queryKey: queryKeys.calendar.assignmentsByCode(calendarCode ?? ''),
     queryFn: ({ signal }) => {
       if (!calendarCode) {
-        return Promise.resolve(EMPTY_ASSIGNMENTS);
+        return Promise.resolve(EMPTY_ASSIGNMENTS)
       }
-      return fetchCalendarAssignments(calendarCode, signal);
+      return fetchCalendarAssignments(calendarCode, signal)
     },
     // Only fetch when in calendar mode with a valid code
     enabled: isCalendarMode && !!calendarCode,
     staleTime: ASSIGNMENTS_STALE_TIME_MS,
     // Use empty array as placeholder to avoid undefined data
     placeholderData: EMPTY_ASSIGNMENTS,
-  });
+  })
 }
 
 // Re-export types for convenience
-export type { CalendarAssignment } from "@/features/assignments/api/calendar-api";
+export type { CalendarAssignment } from '@/features/assignments/api/calendar-api'

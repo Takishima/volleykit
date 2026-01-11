@@ -1,26 +1,28 @@
-import { useEffect, useState } from 'react';
-import { useTranslation } from '@/shared/hooks/useTranslation';
-import { FileText } from 'lucide-react';
-import type { Language } from '@/shared/utils/pdf-form-filler';
-import { Modal } from '@/shared/components/Modal';
-import { ModalHeader } from '@/shared/components/ModalHeader';
-import { ModalFooter } from '@/shared/components/ModalFooter';
-import { Button } from '@/shared/components/Button';
+import { useEffect, useState } from 'react'
 
-const MODAL_TITLE_ID = 'pdf-lang-title';
+import { FileText } from 'lucide-react'
+
+import { Button } from '@/shared/components/Button'
+import { Modal } from '@/shared/components/Modal'
+import { ModalFooter } from '@/shared/components/ModalFooter'
+import { ModalHeader } from '@/shared/components/ModalHeader'
+import { useTranslation } from '@/shared/hooks/useTranslation'
+import type { Language } from '@/shared/utils/pdf-form-filler'
+
+const MODAL_TITLE_ID = 'pdf-lang-title'
 
 interface PdfLanguageModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: (language: Language) => void;
-  isLoading?: boolean;
-  defaultLanguage?: Language;
+  isOpen: boolean
+  onClose: () => void
+  onConfirm: (language: Language) => void
+  isLoading?: boolean
+  defaultLanguage?: Language
 }
 
 const LANGUAGES: Array<{ code: Language; name: string }> = [
   { code: 'de', name: 'Deutsch' },
   { code: 'fr', name: 'Français' },
-];
+]
 
 export function PdfLanguageModal({
   isOpen,
@@ -29,18 +31,18 @@ export function PdfLanguageModal({
   isLoading = false,
   defaultLanguage = 'de',
 }: PdfLanguageModalProps) {
-  const { t } = useTranslation();
-  const [selected, setSelected] = useState<Language>(defaultLanguage);
+  const { t } = useTranslation()
+  const [selected, setSelected] = useState<Language>(defaultLanguage)
 
   useEffect(() => {
-    if (isOpen) setSelected(defaultLanguage); // eslint-disable-line react-hooks/set-state-in-effect
-  }, [isOpen, defaultLanguage]);
+    if (isOpen) setSelected(defaultLanguage) // eslint-disable-line react-hooks/set-state-in-effect
+  }, [isOpen, defaultLanguage])
 
   const pdfIcon = (
     <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
       <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" aria-hidden="true" />
     </div>
-  );
+  )
 
   return (
     <Modal
@@ -106,5 +108,5 @@ export function PdfLanguageModal({
         </Button>
       </ModalFooter>
     </Modal>
-  );
+  )
 }

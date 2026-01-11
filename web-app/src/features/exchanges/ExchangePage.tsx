@@ -1,57 +1,54 @@
-import { useState, useCallback, useMemo, lazy, Suspense, Fragment } from "react";
-import { useShallow } from "zustand/react/shallow";
-import { useGameExchanges, type ExchangeStatus } from "@/features/validation/hooks/useConvocations";
-import { useExchangeActions } from "./hooks/useExchangeActions";
-import { useTravelTimeFilter } from "@/shared/hooks/useTravelTimeFilter";
-import { useDemoStore, DEMO_USER_PERSON_IDENTITY } from "@/shared/stores/demo";
-import { useAuthStore } from "@/shared/stores/auth";
-import { useSettingsStore } from "@/shared/stores/settings";
-import { createExchangeActions } from "./utils/exchange-actions";
-import { calculateCarDistanceKm } from "@/shared/utils/distance";
-import { extractCoordinates } from "@/shared/utils/geo-location";
-import { ExchangeCard } from "@/features/exchanges/components/ExchangeCard";
-import { SwipeableCard } from "@/shared/components/SwipeableCard";
-import { WeekSeparator } from "@/shared/components/WeekSeparator";
-import { groupByWeek } from "@/shared/utils/date-helpers";
-import { LevelFilterToggle } from "@/shared/components/LevelFilterToggle";
-import { DistanceFilterToggle } from "@/shared/components/DistanceFilterToggle";
-import { TravelTimeFilterToggle } from "@/shared/components/TravelTimeFilterToggle";
-import { FilterChip } from "@/shared/components/FilterChip";
-import { ExchangeSettingsSheet } from "@/features/exchanges/components/ExchangeSettingsSheet";
-import {
-  LoadingState,
-  ErrorState,
-  EmptyState,
-} from "@/shared/components/LoadingSpinner";
-import { Tabs, TabPanel } from "@/shared/components/Tabs";
-import type { SwipeConfig } from "@/types/swipe";
-import type { GameExchange } from "@/api/client";
-import { useTranslation } from "@/shared/hooks/useTranslation";
-import { useTour } from "@/shared/hooks/useTour";
-import { TOUR_DUMMY_EXCHANGE } from "@/features/exchanges/exchange";
+import { useState, useCallback, useMemo, lazy, Suspense, Fragment } from 'react'
 
-const TakeOverExchangeModal = lazy(
-  () =>
-    import("@/features/exchanges/components/TakeOverExchangeModal").then((m) => ({
-      default: m.TakeOverExchangeModal,
-    })),
-);
+import { useShallow } from 'zustand/react/shallow'
 
-const RemoveFromExchangeModal = lazy(
-  () =>
-    import("@/features/exchanges/components/RemoveFromExchangeModal").then((m) => ({
-      default: m.RemoveFromExchangeModal,
-    })),
-);
+import type { GameExchange } from '@/api/client'
+import { ExchangeCard } from '@/features/exchanges/components/ExchangeCard'
+import { ExchangeSettingsSheet } from '@/features/exchanges/components/ExchangeSettingsSheet'
+import { TOUR_DUMMY_EXCHANGE } from '@/features/exchanges/exchange'
+import { useGameExchanges, type ExchangeStatus } from '@/features/validation/hooks/useConvocations'
+import { DistanceFilterToggle } from '@/shared/components/DistanceFilterToggle'
+import { FilterChip } from '@/shared/components/FilterChip'
+import { LevelFilterToggle } from '@/shared/components/LevelFilterToggle'
+import { LoadingState, ErrorState, EmptyState } from '@/shared/components/LoadingSpinner'
+import { SwipeableCard } from '@/shared/components/SwipeableCard'
+import { Tabs, TabPanel } from '@/shared/components/Tabs'
+import { TravelTimeFilterToggle } from '@/shared/components/TravelTimeFilterToggle'
+import { WeekSeparator } from '@/shared/components/WeekSeparator'
+import { useTour } from '@/shared/hooks/useTour'
+import { useTranslation } from '@/shared/hooks/useTranslation'
+import { useTravelTimeFilter } from '@/shared/hooks/useTravelTimeFilter'
+import { useAuthStore } from '@/shared/stores/auth'
+import { useDemoStore, DEMO_USER_PERSON_IDENTITY } from '@/shared/stores/demo'
+import { useSettingsStore } from '@/shared/stores/settings'
+import { groupByWeek } from '@/shared/utils/date-helpers'
+import { calculateCarDistanceKm } from '@/shared/utils/distance'
+import { extractCoordinates } from '@/shared/utils/geo-location'
+import type { SwipeConfig } from '@/types/swipe'
+
+import { useExchangeActions } from './hooks/useExchangeActions'
+import { createExchangeActions } from './utils/exchange-actions'
+
+const TakeOverExchangeModal = lazy(() =>
+  import('@/features/exchanges/components/TakeOverExchangeModal').then((m) => ({
+    default: m.TakeOverExchangeModal,
+  }))
+)
+
+const RemoveFromExchangeModal = lazy(() =>
+  import('@/features/exchanges/components/RemoveFromExchangeModal').then((m) => ({
+    default: m.RemoveFromExchangeModal,
+  }))
+)
 
 export function ExchangePage() {
-  const [statusFilter, setStatusFilter] = useState<ExchangeStatus>("open");
-  const [hideOwnExchanges, setHideOwnExchanges] = useState(true);
-  const { t } = useTranslation();
+  const [statusFilter, setStatusFilter] = useState<ExchangeStatus>('open')
+  const [hideOwnExchanges, setHideOwnExchanges] = useState(true)
+  const { t } = useTranslation()
 
   // Initialize tour for this page (triggers auto-start on first visit)
   // Use showDummyData to show dummy data immediately, avoiding race condition with empty states
-  const { showDummyData } = useTour("exchange");
+  const { showDummyData } = useTour('exchange')
 
   const { dataSource, isAssociationSwitching, isCalendarMode, userId } = useAuthStore(
     useShallow((state) => ({
@@ -59,27 +56,27 @@ export function ExchangePage() {
       isAssociationSwitching: state.isAssociationSwitching,
       isCalendarMode: state.isCalendarMode(),
       userId: state.user?.id,
-    })),
-  );
-  const isDemoMode = dataSource === "demo";
+    }))
+  )
+  const isDemoMode = dataSource === 'demo'
 
   // Get current user's identity for checking exchange ownership
-  const currentUserIdentity = isDemoMode ? DEMO_USER_PERSON_IDENTITY : userId;
+  const currentUserIdentity = isDemoMode ? DEMO_USER_PERSON_IDENTITY : userId
 
   // Helper to check if an exchange was submitted by the current user
   const isOwnExchange = useCallback(
     (exchange: GameExchange) => {
-      if (!currentUserIdentity) return false;
-      return exchange.submittedByPerson?.__identity === currentUserIdentity;
+      if (!currentUserIdentity) return false
+      return exchange.submittedByPerson?.__identity === currentUserIdentity
     },
-    [currentUserIdentity],
-  );
+    [currentUserIdentity]
+  )
   const { userRefereeLevel, userRefereeLevelGradationValue } = useDemoStore(
     useShallow((state) => ({
       userRefereeLevel: state.userRefereeLevel,
       userRefereeLevelGradationValue: state.userRefereeLevelGradationValue,
-    })),
-  );
+    }))
+  )
   const {
     homeLocation,
     distanceFilter,
@@ -97,48 +94,50 @@ export function ExchangePage() {
       setTravelTimeFilterEnabled: state.setTravelTimeFilterEnabled,
       levelFilterEnabled: state.levelFilterEnabled,
       setLevelFilterEnabled: state.setLevelFilterEnabled,
-    })),
-  );
+    }))
+  )
 
-  const { data, isLoading: queryLoading, error, refetch } = useGameExchanges(statusFilter);
+  const { data, isLoading: queryLoading, error, refetch } = useGameExchanges(statusFilter)
   // Show loading when switching associations or when query is loading
-  const isLoading = isAssociationSwitching || queryLoading;
+  const isLoading = isAssociationSwitching || queryLoading
 
   // Get travel time data for exchanges
-  const { exchangesWithTravelTime, isAvailable: isTravelTimeAvailable } =
-    useTravelTimeFilter(data ?? null);
+  const { exchangesWithTravelTime, isAvailable: isTravelTimeAvailable } = useTravelTimeFilter(
+    data ?? null
+  )
 
   // Build travel time lookup map once for both filtering and rendering
   const travelTimeMap = useMemo(() => {
-    if (!exchangesWithTravelTime) return new Map<string, { minutes: number | null; isLoading: boolean }>();
+    if (!exchangesWithTravelTime)
+      return new Map<string, { minutes: number | null; isLoading: boolean }>()
     return new Map(
       exchangesWithTravelTime.map((e) => [
         e.item.__identity,
         { minutes: e.travelTimeMinutes, isLoading: e.isLoading },
-      ]),
-    );
-  }, [exchangesWithTravelTime]);
+      ])
+    )
+  }, [exchangesWithTravelTime])
 
   // Calculate car distance for each exchange from user's home location
   const exchangesWithDistance = useMemo(() => {
-    if (!data) return null;
-    if (!homeLocation) return data.map((e) => ({ exchange: e, carDistanceKm: null }));
+    if (!data) return null
+    if (!homeLocation) return data.map((e) => ({ exchange: e, carDistanceKm: null }))
 
     return data.map((exchange) => {
       const geoLocation =
-        exchange.refereeGame?.game?.hall?.primaryPostalAddress?.geographicalLocation;
-      const hallCoords = extractCoordinates(geoLocation);
+        exchange.refereeGame?.game?.hall?.primaryPostalAddress?.geographicalLocation
+      const hallCoords = extractCoordinates(geoLocation)
 
       if (!hallCoords) {
-        return { exchange, carDistanceKm: null };
+        return { exchange, carDistanceKm: null }
       }
 
-      const homeCoords = { latitude: homeLocation.latitude, longitude: homeLocation.longitude };
-      const carDistanceKm = calculateCarDistanceKm(homeCoords, hallCoords);
+      const homeCoords = { latitude: homeLocation.latitude, longitude: homeLocation.longitude }
+      const carDistanceKm = calculateCarDistanceKm(homeCoords, hallCoords)
 
-      return { exchange, carDistanceKm };
-    });
-  }, [data, homeLocation]);
+      return { exchange, carDistanceKm }
+    })
+  }, [data, homeLocation])
 
   // Filter exchanges by user's referee level and distance when filters are enabled
   const filteredData = useMemo(() => {
@@ -146,75 +145,71 @@ export function ExchangePage() {
     // to ensure tour works regardless of whether tabs have real data
     if (showDummyData) {
       // Safe cast: TourDummyExchange provides all fields used by ExchangeCard
-      const tourExchange = TOUR_DUMMY_EXCHANGE as unknown as GameExchange;
-      return [{ exchange: tourExchange, carDistanceKm: null }];
+      const tourExchange = TOUR_DUMMY_EXCHANGE as unknown as GameExchange
+      return [{ exchange: tourExchange, carDistanceKm: null }]
     }
 
-    if (!exchangesWithDistance) return null;
+    if (!exchangesWithDistance) return null
 
-    let result = exchangesWithDistance;
+    let result = exchangesWithDistance
 
     // Apply level filter (only on "open" tab in demo mode)
     if (
       levelFilterEnabled &&
-      statusFilter === "open" &&
+      statusFilter === 'open' &&
       isDemoMode &&
       userRefereeLevelGradationValue !== null
     ) {
       result = result.filter(({ exchange }) => {
-        const requiredGradationStr = exchange.requiredRefereeLevelGradationValue;
+        const requiredGradationStr = exchange.requiredRefereeLevelGradationValue
         // If no gradation value, show the exchange (conservative approach)
         if (requiredGradationStr === undefined || requiredGradationStr === null) {
-          return true;
+          return true
         }
         // Parse string to number for comparison (API returns string)
-        const requiredGradation = Number(requiredGradationStr);
+        const requiredGradation = Number(requiredGradationStr)
         if (isNaN(requiredGradation)) {
-          return true;
+          return true
         }
         // User can officiate if their level meets or exceeds required level
         // Lower gradation = higher level, so user.gradation <= required.gradation
-        return userRefereeLevelGradationValue <= requiredGradation;
-      });
+        return userRefereeLevelGradationValue <= requiredGradation
+      })
     }
 
     // Apply distance filter (only on "open" tab when home location is set)
     // Uses car distance for more accurate filtering
-    if (
-      distanceFilter.enabled &&
-      statusFilter === "open" &&
-      homeLocation
-    ) {
+    if (distanceFilter.enabled && statusFilter === 'open' && homeLocation) {
       result = result.filter(({ carDistanceKm }) => {
         // If no distance available, include the exchange (conservative)
-        if (carDistanceKm === null) return true;
-        return carDistanceKm <= distanceFilter.maxDistanceKm;
-      });
+        if (carDistanceKm === null) return true
+        return carDistanceKm <= distanceFilter.maxDistanceKm
+      })
     }
 
     // Apply travel time filter (only on "open" tab when transport is available)
     if (
       travelTimeFilter.enabled &&
-      statusFilter === "open" &&
+      statusFilter === 'open' &&
       isTravelTimeAvailable &&
       travelTimeMap.size > 0
     ) {
       result = result.filter(({ exchange }) => {
-        const travelTimeData = travelTimeMap.get(exchange.__identity);
+        const travelTimeData = travelTimeMap.get(exchange.__identity)
         // If no travel time available, include the exchange (conservative)
-        if (travelTimeData?.minutes === null || travelTimeData?.minutes === undefined) return true;
-        return travelTimeData.minutes <= travelTimeFilter.maxTravelTimeMinutes;
-      });
+        if (travelTimeData?.minutes === null || travelTimeData?.minutes === undefined) return true
+        return travelTimeData.minutes <= travelTimeFilter.maxTravelTimeMinutes
+      })
     }
 
     // Hide user's own exchanges in "open" tab when filter is enabled
-    if (hideOwnExchanges && statusFilter === "open" && currentUserIdentity) {
+    if (hideOwnExchanges && statusFilter === 'open' && currentUserIdentity) {
       result = result.filter(
-        ({ exchange }) => exchange.submittedByPerson?.__identity !== currentUserIdentity,
-      );
+        ({ exchange }) => exchange.submittedByPerson?.__identity !== currentUserIdentity
+      )
     }
 
-    return result;
+    return result
   }, [
     showDummyData,
     exchangesWithDistance,
@@ -231,104 +226,97 @@ export function ExchangePage() {
     travelTimeMap,
     hideOwnExchanges,
     currentUserIdentity,
-  ]);
+  ])
 
   // Group exchanges by week for visual separation
   const groupedData = useMemo(() => {
-    if (!filteredData || filteredData.length === 0) return [];
-    return groupByWeek(
-      filteredData,
-      (item) => item.exchange.refereeGame?.game?.startingDateTime,
-    );
-  }, [filteredData]);
+    if (!filteredData || filteredData.length === 0) return []
+    return groupByWeek(filteredData, (item) => item.exchange.refereeGame?.game?.startingDateTime)
+  }, [filteredData])
 
-  const {
-    takeOverModal,
-    removeFromExchangeModal,
-    handleTakeOver,
-    handleRemoveFromExchange,
-  } = useExchangeActions();
+  const { takeOverModal, removeFromExchangeModal, handleTakeOver, handleRemoveFromExchange } =
+    useExchangeActions()
 
   const getSwipeConfig = useCallback(
     (exchange: GameExchange): SwipeConfig => {
       const actions = createExchangeActions(exchange, {
         onTakeOver: takeOverModal.open,
         onRemoveFromExchange: removeFromExchangeModal.open,
-      });
+      })
 
       // Action array ordering: first item = furthest from card = full swipe default
 
       // "mine" tab: user's own submitted exchanges - allow removing them
-      if (statusFilter === "mine") {
+      if (statusFilter === 'mine') {
         // Swipe right reveals: card -> [Remove]
-        return { right: [actions.removeFromExchange] };
+        return { right: [actions.removeFromExchange] }
       }
 
       // "open" tab: check if it's user's own exchange first
       if (isOwnExchange(exchange)) {
         // User's own exchange in open tab - show remove action
         // Swipe right reveals: card -> [Remove]
-        return { right: [actions.removeFromExchange] };
+        return { right: [actions.removeFromExchange] }
       }
 
       // "open" tab: actions for other users' exchanges depend on status
       switch (exchange.status) {
-        case "open":
+        case 'open':
           // Open exchanges: swipe left to take over
           // Swipe left reveals: [Take Over] <- card
-          return { left: [actions.takeOver] };
-        case "applied":
+          return { left: [actions.takeOver] }
+        case 'applied':
           // Applied exchanges: swipe right to remove
           // Swipe right reveals: card -> [Remove]
-          return { right: [actions.removeFromExchange] };
+          return { right: [actions.removeFromExchange] }
         default:
           // No swipe actions for other statuses
-          return {};
+          return {}
       }
     },
-    [takeOverModal.open, removeFromExchangeModal.open, statusFilter, isOwnExchange],
-  );
+    [takeOverModal.open, removeFromExchangeModal.open, statusFilter, isOwnExchange]
+  )
 
   const tabs = [
-    { id: "open" as const, label: t("exchange.open") },
-    { id: "mine" as const, label: t("exchange.myApplications") },
-  ];
+    { id: 'open' as const, label: t('exchange.open') },
+    { id: 'mine' as const, label: t('exchange.myApplications') },
+  ]
 
   const handleTabChange = useCallback((tabId: string) => {
-    setStatusFilter(tabId as ExchangeStatus);
-  }, []);
+    setStatusFilter(tabId as ExchangeStatus)
+  }, [])
 
   const handleTakeOverConfirm = useCallback(() => {
     if (takeOverModal.exchange) {
-      handleTakeOver(takeOverModal.exchange);
+      handleTakeOver(takeOverModal.exchange)
     }
-  }, [takeOverModal.exchange, handleTakeOver]);
+  }, [takeOverModal.exchange, handleTakeOver])
 
   const handleRemoveConfirm = useCallback(() => {
     if (removeFromExchangeModal.exchange) {
-      handleRemoveFromExchange(removeFromExchangeModal.exchange);
+      handleRemoveFromExchange(removeFromExchangeModal.exchange)
     }
-  }, [removeFromExchangeModal.exchange, handleRemoveFromExchange]);
+  }, [removeFromExchangeModal.exchange, handleRemoveFromExchange])
 
   // Determine if filters are available
-  const isLevelFilterAvailable = isDemoMode && userRefereeLevel !== null;
-  const isDistanceFilterAvailable = homeLocation !== null;
+  const isLevelFilterAvailable = isDemoMode && userRefereeLevel !== null
+  const isDistanceFilterAvailable = homeLocation !== null
   // isTravelTimeAvailable from hook already includes association-specific transport check and homeLocation
-  const isTravelTimeFilterAvailable = isTravelTimeAvailable;
+  const isTravelTimeFilterAvailable = isTravelTimeAvailable
 
   const hasAnyFilter =
-    isLevelFilterAvailable || isDistanceFilterAvailable || isTravelTimeFilterAvailable;
+    isLevelFilterAvailable || isDistanceFilterAvailable || isTravelTimeFilterAvailable
 
   // Horizontal scrollable filter chips with settings gear - only show on "Open" tab when any filter is available
   // Always show filter bar on "open" tab (at minimum we have "hide own" filter)
   const filterContent =
-    statusFilter === "open" ? (
+    statusFilter === 'open' ? (
       <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
         {hasAnyFilter && <ExchangeSettingsSheet dataTour="exchange-settings" />}
         <FilterChip
           active={hideOwnExchanges}
           onToggle={() => setHideOwnExchanges((prev) => !prev)}
-          label={t("exchange.hideOwn")}
+          label={t('exchange.hideOwn')}
         />
         {isTravelTimeFilterAvailable && (
           <TravelTimeFilterToggle
@@ -355,45 +343,43 @@ export function ExchangePage() {
           />
         )}
       </div>
-    ) : undefined;
+    ) : undefined
 
   const renderContent = () => {
     // Skip loading state when showing dummy tour data (we already have data to show)
     if (isLoading && !showDummyData) {
-      return <LoadingState message={t("exchange.loading")} />;
+      return <LoadingState message={t('exchange.loading')} />
     }
 
     if (error) {
       return (
         <ErrorState
-          message={
-            error instanceof Error ? error.message : t("exchange.errorLoading")
-          }
+          message={error instanceof Error ? error.message : t('exchange.errorLoading')}
           onRetry={() => refetch()}
         />
-      );
+      )
     }
 
     if (groupedData.length === 0) {
       const hasActiveFilters =
-        hideOwnExchanges || levelFilterEnabled || distanceFilter.enabled || travelTimeFilter.enabled;
+        hideOwnExchanges || levelFilterEnabled || distanceFilter.enabled || travelTimeFilter.enabled
       return (
         <EmptyState
           icon="exchange"
           title={
-            statusFilter === "open"
-              ? t("exchange.noOpenExchangesTitle")
-              : t("exchange.noApplicationsTitle")
+            statusFilter === 'open'
+              ? t('exchange.noOpenExchangesTitle')
+              : t('exchange.noApplicationsTitle')
           }
           description={
-            statusFilter === "open"
+            statusFilter === 'open'
               ? hasActiveFilters
-                ? t("exchange.noExchangesWithFilters")
-                : t("exchange.noOpenExchangesDescription")
-              : t("exchange.noApplicationsDescription")
+                ? t('exchange.noExchangesWithFilters')
+                : t('exchange.noOpenExchangesDescription')
+              : t('exchange.noApplicationsDescription')
           }
         />
-      );
+      )
     }
 
     return (
@@ -402,29 +388,22 @@ export function ExchangePage() {
           // Track global item index for tour data attribute
           const itemsBeforeThisGroup = groupedData
             .slice(0, groupIndex)
-            .reduce((sum, g) => sum + g.items.length, 0);
+            .reduce((sum, g) => sum + g.items.length, 0)
 
           return (
             <Fragment key={group.week.key}>
               {/* Only show separator if there's more than one week */}
-              {groupedData.length > 1 && (
-                <WeekSeparator week={group.week} />
-              )}
+              {groupedData.length > 1 && <WeekSeparator week={group.week} />}
               {group.items.map(({ exchange, carDistanceKm }, itemIndex) => {
-                const travelTimeData = travelTimeMap.get(exchange.__identity);
+                const travelTimeData = travelTimeMap.get(exchange.__identity)
                 return (
-                  <SwipeableCard
-                    key={exchange.__identity}
-                    swipeConfig={getSwipeConfig(exchange)}
-                  >
+                  <SwipeableCard key={exchange.__identity} swipeConfig={getSwipeConfig(exchange)}>
                     {({ isDrawerOpen }) => (
                       <ExchangeCard
                         exchange={exchange}
                         disableExpansion={isDrawerOpen}
                         dataTour={
-                          itemsBeforeThisGroup + itemIndex === 0
-                            ? "exchange-card"
-                            : undefined
+                          itemsBeforeThisGroup + itemIndex === 0 ? 'exchange-card' : undefined
                         }
                         carDistanceKm={homeLocation ? carDistanceKm : null}
                         travelTimeMinutes={travelTimeData?.minutes}
@@ -432,14 +411,14 @@ export function ExchangePage() {
                       />
                     )}
                   </SwipeableCard>
-                );
+                )
               })}
             </Fragment>
-          );
+          )
         })}
       </div>
-    );
-  };
+    )
+  }
 
   // In calendar mode, show empty state since exchange features are not available
   if (isCalendarMode) {
@@ -447,11 +426,11 @@ export function ExchangePage() {
       <div className="space-y-3">
         <EmptyState
           icon="exchange"
-          title={t("exchange.unavailableInCalendarModeTitle")}
-          description={t("exchange.unavailableInCalendarModeDescription")}
+          title={t('exchange.unavailableInCalendarModeTitle')}
+          description={t('exchange.unavailableInCalendarModeDescription')}
         />
       </div>
-    );
+    )
   }
 
   return (
@@ -461,7 +440,7 @@ export function ExchangePage() {
         tabs={tabs}
         activeTab={statusFilter}
         onTabChange={handleTabChange}
-        ariaLabel={t("exchange.title")}
+        ariaLabel={t('exchange.title')}
         endContent={filterContent}
       />
 
@@ -493,5 +472,5 @@ export function ExchangePage() {
         </Suspense>
       )}
     </div>
-  );
+  )
 }

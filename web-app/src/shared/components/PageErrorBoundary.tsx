@@ -1,28 +1,29 @@
-import { Component, type ReactNode } from "react";
-import { AlertTriangle } from "@/shared/components/icons";
-import { Button } from "@/shared/components/Button";
-import { useTranslation } from "@/shared/hooks/useTranslation";
-import { classifyError, type ErrorType } from "@/shared/utils/error-helpers";
-import { logger } from "@/shared/utils/logger";
+import { Component, type ReactNode } from 'react'
+
+import { Button } from '@/shared/components/Button'
+import { AlertTriangle } from '@/shared/components/icons'
+import { useTranslation } from '@/shared/hooks/useTranslation'
+import { classifyError, type ErrorType } from '@/shared/utils/error-helpers'
+import { logger } from '@/shared/utils/logger'
 
 interface PageErrorBoundaryClassProps {
-  children: ReactNode;
-  pageName: string;
+  children: ReactNode
+  pageName: string
   translations: {
-    connectionProblem: string;
-    somethingWentWrong: string;
-    networkDescription: string;
-    errorDescription: string;
-    errorDetails: string;
-    tryAgain: string;
-    goHome: string;
-  };
+    connectionProblem: string
+    somethingWentWrong: string
+    networkDescription: string
+    errorDescription: string
+    errorDetails: string
+    tryAgain: string
+    goHome: string
+  }
 }
 
 interface State {
-  hasError: boolean;
-  error: Error | null;
-  errorType: ErrorType;
+  hasError: boolean
+  error: Error | null
+  errorType: ErrorType
 }
 
 /**
@@ -32,8 +33,8 @@ interface State {
  */
 class PageErrorBoundaryClass extends Component<PageErrorBoundaryClassProps, State> {
   constructor(props: PageErrorBoundaryClassProps) {
-    super(props);
-    this.state = { hasError: false, error: null, errorType: "application" };
+    super(props)
+    this.state = { hasError: false, error: null, errorType: 'application' }
   }
 
   static getDerivedStateFromError(error: Error): State {
@@ -41,7 +42,7 @@ class PageErrorBoundaryClass extends Component<PageErrorBoundaryClassProps, Stat
       hasError: true,
       error,
       errorType: classifyError(error),
-    };
+    }
   }
 
   override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
@@ -50,21 +51,21 @@ class PageErrorBoundaryClass extends Component<PageErrorBoundaryClassProps, Stat
       errorType: this.state.errorType,
       pageName: this.props.pageName,
       componentStack: errorInfo.componentStack,
-    });
+    })
   }
 
   handleReset = () => {
-    this.setState({ hasError: false, error: null, errorType: "application" });
-  };
+    this.setState({ hasError: false, error: null, errorType: 'application' })
+  }
 
   handleGoHome = () => {
-    window.location.href = "/";
-  };
+    window.location.href = '/'
+  }
 
   override render() {
     if (this.state.hasError) {
-      const { translations } = this.props;
-      const isNetworkError = this.state.errorType === "network";
+      const { translations } = this.props
+      const isNetworkError = this.state.errorType === 'network'
 
       return (
         <div
@@ -72,19 +73,12 @@ class PageErrorBoundaryClass extends Component<PageErrorBoundaryClassProps, Stat
           data-testid="page-error-boundary"
         >
           <div className="max-w-md w-full text-center">
-            <AlertTriangle
-              className="w-12 h-12 mx-auto mb-4 text-warning-500"
-              aria-hidden="true"
-            />
+            <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-warning-500" aria-hidden="true" />
             <h2 className="text-lg font-semibold text-text-primary dark:text-text-primary-dark mb-2">
-              {isNetworkError
-                ? translations.connectionProblem
-                : translations.somethingWentWrong}
+              {isNetworkError ? translations.connectionProblem : translations.somethingWentWrong}
             </h2>
             <p className="text-sm text-text-muted dark:text-text-muted-dark mb-4">
-              {isNetworkError
-                ? translations.networkDescription
-                : translations.errorDescription}
+              {isNetworkError ? translations.networkDescription : translations.errorDescription}
             </p>
             {this.state.error && (
               <details className="text-left mb-4 bg-surface-subtle dark:bg-surface-subtle-dark rounded-lg p-3">
@@ -106,16 +100,16 @@ class PageErrorBoundaryClass extends Component<PageErrorBoundaryClassProps, Stat
             </div>
           </div>
         </div>
-      );
+      )
     }
 
-    return this.props.children;
+    return this.props.children
   }
 }
 
 interface PageErrorBoundaryProps {
-  children: ReactNode;
-  pageName: string;
+  children: ReactNode
+  pageName: string
 }
 
 /**
@@ -124,21 +118,21 @@ interface PageErrorBoundaryProps {
  * Keeps the app shell (navigation, header) intact when a page crashes.
  */
 export function PageErrorBoundary({ children, pageName }: PageErrorBoundaryProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
   const translations = {
-    connectionProblem: t("errorBoundary.connectionProblem"),
-    somethingWentWrong: t("errorBoundary.somethingWentWrong"),
-    networkDescription: t("errorBoundary.page.networkDescription"),
-    errorDescription: t("errorBoundary.page.errorDescription"),
-    errorDetails: t("errorBoundary.errorDetails"),
-    tryAgain: t("errorBoundary.tryAgain"),
-    goHome: t("errorBoundary.page.goHome"),
-  };
+    connectionProblem: t('errorBoundary.connectionProblem'),
+    somethingWentWrong: t('errorBoundary.somethingWentWrong'),
+    networkDescription: t('errorBoundary.page.networkDescription'),
+    errorDescription: t('errorBoundary.page.errorDescription'),
+    errorDetails: t('errorBoundary.errorDetails'),
+    tryAgain: t('errorBoundary.tryAgain'),
+    goHome: t('errorBoundary.page.goHome'),
+  }
 
   return (
     <PageErrorBoundaryClass pageName={pageName} translations={translations}>
       {children}
     </PageErrorBoundaryClass>
-  );
+  )
 }

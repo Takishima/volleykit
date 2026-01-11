@@ -9,45 +9,44 @@
  *   const label = t('assignments.title');
  */
 
-import type { Translations } from "./types";
-import en from "./locales/en";
-import { logger } from "@/shared/utils/logger";
+import { logger } from '@/shared/utils/logger'
 
-export type { Translations };
-export type Locale = "de" | "fr" | "it" | "en";
+import en from './locales/en'
+
+import type { Translations } from './types'
+
+export type { Translations }
+export type Locale = 'de' | 'fr' | 'it' | 'en'
 
 /**
  * In-memory cache for translations (max 4 entries: de, fr, it, en).
  * English is pre-cached to prevent FOUC (Flash of Unstyled Content).
  */
-const translationCache = new Map<Locale, Translations>();
-translationCache.set("en", en);
+const translationCache = new Map<Locale, Translations>()
+translationCache.set('en', en)
 
-let currentLocale: Locale = "en";
-let currentTranslations: Translations = en;
-let localeRequestId = 0;
+let currentLocale: Locale = 'en'
+let currentTranslations: Translations = en
+let localeRequestId = 0
 
 const localeLoaders: Record<Locale, () => Promise<Translations>> = {
   en: () => Promise.resolve(en),
-  de: () => import("./locales/de").then((m) => m.default),
-  fr: () => import("./locales/fr").then((m) => m.default),
-  it: () => import("./locales/it").then((m) => m.default),
-};
+  de: () => import('./locales/de').then((m) => m.default),
+  fr: () => import('./locales/fr').then((m) => m.default),
+  it: () => import('./locales/it').then((m) => m.default),
+}
 
 async function loadTranslations(locale: Locale): Promise<Translations> {
-  const cached = translationCache.get(locale);
-  if (cached) return cached;
+  const cached = translationCache.get(locale)
+  if (cached) return cached
 
   try {
-    const translations = await localeLoaders[locale]();
-    translationCache.set(locale, translations);
-    return translations;
+    const translations = await localeLoaders[locale]()
+    translationCache.set(locale, translations)
+    return translations
   } catch (error) {
-    logger.error(
-      "[i18n] Failed to load translations, falling back to English:",
-      error,
-    );
-    return en;
+    logger.error('[i18n] Failed to load translations, falling back to English:', error)
+    return en
   }
 }
 
@@ -57,12 +56,12 @@ async function loadTranslations(locale: Locale): Promise<Translations> {
 export async function preloadTranslations(): Promise<void> {
   await Promise.all(
     (Object.keys(localeLoaders) as Locale[]).map(async (locale) => {
-      const translations = await loadTranslations(locale);
+      const translations = await loadTranslations(locale)
       if (locale === currentLocale) {
-        currentTranslations = translations;
+        currentTranslations = translations
       }
-    }),
-  );
+    })
+  )
 }
 
 /**
@@ -70,14 +69,14 @@ export async function preloadTranslations(): Promise<void> {
  * Defaults to German if a Swiss German locale is detected.
  */
 function detectLocale(): Locale {
-  const browserLang = navigator.language.toLowerCase();
+  const browserLang = navigator.language.toLowerCase()
 
   // gsw = Swiss German dialect
-  if (browserLang.startsWith("de") || browserLang === "gsw") return "de";
-  if (browserLang.startsWith("fr")) return "fr";
-  if (browserLang.startsWith("it")) return "it";
+  if (browserLang.startsWith('de') || browserLang === 'gsw') return 'de'
+  if (browserLang.startsWith('fr')) return 'fr'
+  if (browserLang.startsWith('it')) return 'it'
 
-  return "en";
+  return 'en'
 }
 
 /**
@@ -86,26 +85,26 @@ function detectLocale(): Locale {
  * Uses request ID to prevent race conditions if locale changes during initialization.
  */
 export function initLocale(): Locale {
-  const detectedLocale = detectLocale();
-  const requestId = ++localeRequestId;
-  currentLocale = detectedLocale;
+  const detectedLocale = detectLocale()
+  const requestId = ++localeRequestId
+  currentLocale = detectedLocale
   loadTranslations(detectedLocale)
     .then((translations) => {
       if (requestId === localeRequestId) {
-        currentTranslations = translations;
+        currentTranslations = translations
       }
     })
     .catch((error) => {
-      logger.error("[i18n] Failed to load initial translations:", error);
-    });
-  return detectedLocale;
+      logger.error('[i18n] Failed to load initial translations:', error)
+    })
+  return detectedLocale
 }
 
 /**
  * Get current locale.
  */
 export function getLocale(): Locale {
-  return currentLocale;
+  return currentLocale
 }
 
 /**
@@ -117,21 +116,21 @@ export function getLocale(): Locale {
  */
 export async function setLocale(locale: Locale): Promise<void> {
   if (localeLoaders[locale]) {
-    const requestId = ++localeRequestId;
-    currentLocale = locale;
-    const cached = translationCache.get(locale);
+    const requestId = ++localeRequestId
+    currentLocale = locale
+    const cached = translationCache.get(locale)
     if (cached) {
-      currentTranslations = cached;
+      currentTranslations = cached
     } else {
       try {
-        const translations = await loadTranslations(locale);
+        const translations = await loadTranslations(locale)
         if (requestId === localeRequestId) {
-          currentTranslations = translations;
+          currentTranslations = translations
         }
       } catch (error) {
-        logger.error("[i18n] Failed to set locale:", error);
+        logger.error('[i18n] Failed to set locale:', error)
         // Fall back to English if locale loading fails
-        currentTranslations = en;
+        currentTranslations = en
       }
     }
   }
@@ -145,21 +144,21 @@ export async function setLocale(locale: Locale): Promise<void> {
  */
 export function setLocaleImmediate(locale: Locale): void {
   if (localeLoaders[locale]) {
-    const requestId = ++localeRequestId;
-    currentLocale = locale;
-    const cached = translationCache.get(locale);
+    const requestId = ++localeRequestId
+    currentLocale = locale
+    const cached = translationCache.get(locale)
     if (cached) {
-      currentTranslations = cached;
+      currentTranslations = cached
     } else {
       loadTranslations(locale)
         .then((translations) => {
           if (requestId === localeRequestId) {
-            currentTranslations = translations;
+            currentTranslations = translations
           }
         })
         .catch((error) => {
-          logger.error("[i18n] Failed to load translations:", error);
-        });
+          logger.error('[i18n] Failed to load translations:', error)
+        })
     }
   }
 }
@@ -169,24 +168,24 @@ export function setLocaleImmediate(locale: Locale): void {
  */
 export function getAvailableLocales(): Array<{ code: Locale; name: string }> {
   return [
-    { code: "de", name: "Deutsch" },
-    { code: "fr", name: "Français" },
-    { code: "it", name: "Italiano" },
-    { code: "en", name: "English" },
-  ];
+    { code: 'de', name: 'Deutsch' },
+    { code: 'fr', name: 'Français' },
+    { code: 'it', name: 'Italiano' },
+    { code: 'en', name: 'English' },
+  ]
 }
 
-type PathKeys<T, Prefix extends string = ""> = T extends object
+type PathKeys<T, Prefix extends string = ''> = T extends object
   ? {
       [K in keyof T]: K extends string
         ? T[K] extends object
-          ? PathKeys<T[K], `${Prefix}${Prefix extends "" ? "" : "."}${K}`>
-          : `${Prefix}${Prefix extends "" ? "" : "."}${K}`
-        : never;
+          ? PathKeys<T[K], `${Prefix}${Prefix extends '' ? '' : '.'}${K}`>
+          : `${Prefix}${Prefix extends '' ? '' : '.'}${K}`
+        : never
     }[keyof T]
-  : never;
+  : never
 
-export type TranslationKey = PathKeys<Translations>;
+export type TranslationKey = PathKeys<Translations>
 
 /**
  * Get translation by dot-notation key.
@@ -195,29 +194,29 @@ export type TranslationKey = PathKeys<Translations>;
  * @example t('auth.login') // Returns "Login" or "Anmelden" depending on locale
  */
 export function t(key: TranslationKey): string {
-  const keys = key.split(".");
-  let result: unknown = currentTranslations;
+  const keys = key.split('.')
+  let result: unknown = currentTranslations
 
   for (const k of keys) {
-    if (result && typeof result === "object" && k in result) {
-      result = (result as Record<string, unknown>)[k];
+    if (result && typeof result === 'object' && k in result) {
+      result = (result as Record<string, unknown>)[k]
     } else {
-      result = en;
+      result = en
       for (const fallbackKey of keys) {
-        if (result && typeof result === "object" && fallbackKey in result) {
-          result = (result as Record<string, unknown>)[fallbackKey];
+        if (result && typeof result === 'object' && fallbackKey in result) {
+          result = (result as Record<string, unknown>)[fallbackKey]
         } else {
-          return key;
+          return key
         }
       }
-      break;
+      break
     }
   }
 
-  return typeof result === "string" ? result : key;
+  return typeof result === 'string' ? result : key
 }
 
-export type TranslationFunction = typeof t;
+export type TranslationFunction = typeof t
 
 /**
  * Get translation with interpolation support.
@@ -227,15 +226,12 @@ export type TranslationFunction = typeof t;
  * // Translation: "Found {count} results"
  * tInterpolate('search.results', { count: 5 }) // Returns "Found 5 results"
  */
-export function tInterpolate(
-  key: TranslationKey,
-  values: Record<string, string | number>,
-): string {
-  let result = t(key);
+export function tInterpolate(key: TranslationKey, values: Record<string, string | number>): string {
+  let result = t(key)
   for (const [placeholder, value] of Object.entries(values)) {
-    result = result.replace(`{${placeholder}}`, String(value));
+    result = result.replace(`{${placeholder}}`, String(value))
   }
-  return result;
+  return result
 }
 
-initLocale();
+initLocale()

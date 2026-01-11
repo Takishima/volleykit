@@ -1,27 +1,28 @@
-import { useCallback, useState } from "react";
-import { useAuthStore } from "@/shared/stores/auth";
-import { toast } from "@/shared/stores/toast";
-import { useTranslation } from "@/shared/hooks/useTranslation";
-import { classifyError } from "@/shared/utils/error-helpers";
-import { CalendarNotFoundError } from "@/features/assignments/api/calendar-api";
-import type { CalendarErrorType } from "@/features/assignments/components/CalendarErrorModal";
+import { useCallback, useState } from 'react'
+
+import { CalendarNotFoundError } from '@/features/assignments/api/calendar-api'
+import type { CalendarErrorType } from '@/features/assignments/components/CalendarErrorModal'
+import { useTranslation } from '@/shared/hooks/useTranslation'
+import { useAuthStore } from '@/shared/stores/auth'
+import { toast } from '@/shared/stores/toast'
+import { classifyError } from '@/shared/utils/error-helpers'
 
 interface CalendarErrorState {
   /** Whether the error modal is open */
-  isOpen: boolean;
+  isOpen: boolean
   /** Type of error that occurred */
-  errorType: CalendarErrorType;
+  errorType: CalendarErrorType
 }
 
 interface UseCalendarErrorHandlerResult {
   /** Current error state for the modal */
-  errorState: CalendarErrorState | null;
+  errorState: CalendarErrorState | null
   /** Handle a calendar fetch error */
-  handleError: (error: Error) => void;
+  handleError: (error: Error) => void
   /** Acknowledge the error and perform cleanup (logout for critical errors) */
-  acknowledgeError: () => Promise<void>;
+  acknowledgeError: () => Promise<void>
   /** Log a parse warning (non-critical) */
-  logParseWarning: (message: string) => void;
+  logParseWarning: (message: string) => void
 }
 
 /**
@@ -56,57 +57,57 @@ interface UseCalendarErrorHandlerResult {
  * ```
  */
 export function useCalendarErrorHandler(): UseCalendarErrorHandlerResult {
-  const [errorState, setErrorState] = useState<CalendarErrorState | null>(null);
-  const logout = useAuthStore((state) => state.logout);
-  const { t } = useTranslation();
+  const [errorState, setErrorState] = useState<CalendarErrorState | null>(null)
+  const logout = useAuthStore((state) => state.logout)
+  const { t } = useTranslation()
 
   const handleError = useCallback((error: Error) => {
     // Classify the error type
-    let errorType: CalendarErrorType;
+    let errorType: CalendarErrorType
 
     if (error instanceof CalendarNotFoundError) {
       // Calendar code is invalid or expired
-      errorType = "invalidCode";
-    } else if (classifyError(error) === "network") {
+      errorType = 'invalidCode'
+    } else if (classifyError(error) === 'network') {
       // Network-related error
-      errorType = "network";
+      errorType = 'network'
     } else {
       // Default to invalid code for other API errors
-      errorType = "invalidCode";
+      errorType = 'invalidCode'
     }
 
     setErrorState({
       isOpen: true,
       errorType,
-    });
-  }, []);
+    })
+  }, [])
 
   const acknowledgeError = useCallback(async () => {
-    const currentErrorType = errorState?.errorType;
+    const currentErrorType = errorState?.errorType
 
     // Close the modal first
-    setErrorState(null);
+    setErrorState(null)
 
     // For critical errors, logout and show toast
-    if (currentErrorType === "network" || currentErrorType === "invalidCode") {
+    if (currentErrorType === 'network' || currentErrorType === 'invalidCode') {
       // Show toast before logout
-      toast.error(t("calendarError.loggedOutToast"));
+      toast.error(t('calendarError.loggedOutToast'))
 
       // Logout will clear calendar code and redirect to login
-      await logout();
+      await logout()
     }
-  }, [errorState, logout, t]);
+  }, [errorState, logout, t])
 
   const logParseWarning = useCallback((message: string) => {
     // Parse errors are logged but don't show a modal
     // They result in partial data being displayed
-    console.warn("[Calendar Parse Warning]", message);
-  }, []);
+    console.warn('[Calendar Parse Warning]', message)
+  }, [])
 
   return {
     errorState,
     handleError,
     acknowledgeError,
     logParseWarning,
-  };
+  }
 }

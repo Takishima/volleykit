@@ -1,11 +1,11 @@
-import { useTranslation } from "@/shared/hooks/useTranslation";
-import { FilterChip } from "@/shared/components/FilterChip";
+import { FilterChip } from '@/shared/components/FilterChip'
+import { useTranslation } from '@/shared/hooks/useTranslation'
 
 interface LevelFilterToggleProps {
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-  userLevel?: string | null;
-  dataTour?: string;
+  checked: boolean
+  onChange: (checked: boolean) => void
+  userLevel?: string | null
+  dataTour?: string
 }
 
 export function LevelFilterToggle({
@@ -14,22 +14,22 @@ export function LevelFilterToggle({
   userLevel,
   dataTour,
 }: LevelFilterToggleProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
   const handleToggle = () => {
-    onChange(!checked);
-  };
+    onChange(!checked)
+  }
 
   // Show level suffix when active (e.g., "N2+")
-  const activeValue = userLevel ? `${userLevel}+` : undefined;
+  const activeValue = userLevel ? `${userLevel}+` : undefined
 
   return (
     <FilterChip
       active={checked}
       onToggle={handleToggle}
-      label={t("exchange.filterByLevel")}
+      label={t('exchange.filterByLevel')}
       activeValue={activeValue}
       dataTour={dataTour}
     />
-  );
+  )
 }

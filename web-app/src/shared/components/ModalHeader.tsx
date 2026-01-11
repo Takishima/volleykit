@@ -1,29 +1,30 @@
-import type { ReactNode } from "react";
-import { X } from "@/shared/components/icons";
-import { useTranslation } from "@/shared/hooks/useTranslation";
+import type { ReactNode } from 'react'
 
-type TitleSize = "base" | "lg" | "xl";
+import { X } from '@/shared/components/icons'
+import { useTranslation } from '@/shared/hooks/useTranslation'
+
+type TitleSize = 'base' | 'lg' | 'xl'
 
 interface ModalHeaderProps {
   /** Modal title text */
-  title: string;
+  title: string
   /** ID for the title element (must match Modal's titleId) */
-  titleId: string;
+  titleId: string
   /** Optional icon to display before the title */
-  icon?: ReactNode;
+  icon?: ReactNode
   /** Optional subtitle or additional content below the title */
-  subtitle?: ReactNode;
+  subtitle?: ReactNode
   /** Title text size variant */
-  titleSize?: TitleSize;
+  titleSize?: TitleSize
   /** Optional close handler - when provided, shows a close button */
-  onClose?: () => void;
+  onClose?: () => void
 }
 
 const titleSizeClasses: Record<TitleSize, string> = {
-  base: "text-base",
-  lg: "text-lg",
-  xl: "text-xl",
-};
+  base: 'text-base',
+  lg: 'text-lg',
+  xl: 'text-xl',
+}
 
 /**
  * Header component for modals with title and optional icon.
@@ -60,15 +61,15 @@ export function ModalHeader({
   titleId,
   icon,
   subtitle,
-  titleSize = "xl",
+  titleSize = 'xl',
   onClose,
 }: ModalHeaderProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
   return (
     <div className="mb-4 flex items-start justify-between gap-2">
       <div className="flex-1 min-w-0">
-        <div className={icon ? "flex items-center gap-3" : undefined}>
+        <div className={icon ? 'flex items-center gap-3' : undefined}>
           {icon}
           <h2
             id={titleId}
@@ -78,16 +79,14 @@ export function ModalHeader({
           </h2>
         </div>
         {subtitle && (
-          <div className="mt-1 text-sm text-text-muted dark:text-text-muted-dark">
-            {subtitle}
-          </div>
+          <div className="mt-1 text-sm text-text-muted dark:text-text-muted-dark">{subtitle}</div>
         )}
       </div>
       {onClose && (
         <button
           type="button"
           onClick={onClose}
-          aria-label={t("common.close")}
+          aria-label={t('common.close')}
           className="
             flex-shrink-0 p-2 -mt-1 -mr-2 rounded-lg
             text-text-muted hover:text-text-secondary dark:text-text-muted-dark dark:hover:text-text-secondary-dark
@@ -99,5 +98,5 @@ export function ModalHeader({
         </button>
       )}
     </div>
-  );
+  )
 }

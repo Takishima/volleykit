@@ -12,27 +12,27 @@
  * - Just the 6-character code
  */
 
-import type { Assignment } from "@/api/client";
-import type { CalendarAssignment, RefereeRole, Gender } from "@/features/assignments/api/ical/types";
-import { HttpStatus } from "@/shared/utils/constants";
+import type { Assignment } from '@/api/client'
+import type { CalendarAssignment, RefereeRole, Gender } from '@/features/assignments/api/ical/types'
+import { HttpStatus } from '@/shared/utils/constants'
 
 /**
  * Maps iCal Gender type to API gender format.
  * API uses 'm' for men and 'f' for women.
  */
-function mapGender(gender: Gender): "m" | "f" | undefined {
+function mapGender(gender: Gender): 'm' | 'f' | undefined {
   switch (gender) {
-    case "men":
-      return "m";
-    case "women":
-      return "f";
+    case 'men':
+      return 'm'
+    case 'women':
+      return 'f'
     default:
-      return undefined;
+      return undefined
   }
 }
 
 /** Calendar codes are exactly 6 alphanumeric characters */
-const CALENDAR_CODE_PATTERN = /^[a-zA-Z0-9]{6}$/;
+const CALENDAR_CODE_PATTERN = /^[a-zA-Z0-9]{6}$/
 
 /** Known VolleyManager calendar URL patterns */
 const CALENDAR_URL_PATTERNS = [
@@ -48,7 +48,7 @@ const CALENDAR_URL_PATTERNS = [
   /^https?:\/\/(?:www\.)?volleymanager\.volleyball\.ch\/indoor\/iCal\/referee\/([a-z0-9]{6})\/?$/i,
   // webcal://volleymanager.volleyball.ch/indoor/iCal/referee/XXXXXX
   /^webcal:\/\/(?:www\.)?volleymanager\.volleyball\.ch\/indoor\/iCal\/referee\/([a-z0-9]{6})\/?$/i,
-];
+]
 
 /**
  * Sanitizes input by removing invisible characters and normalizing whitespace.
@@ -58,12 +58,12 @@ function sanitizeInput(input: string): string {
   return (
     input
       // Remove zero-width characters (common in iOS copy-paste)
-      .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, "")
+      .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '')
       // Remove other invisible formatting characters
-      .replace(/[\u2060\u180E]/g, "")
+      .replace(/[\u2060\u180E]/g, '')
       // Normalize whitespace
       .trim()
-  );
+  )
 }
 
 /**
@@ -83,22 +83,22 @@ function sanitizeInput(input: string): string {
  * @returns The extracted 6-character code, or null if invalid format
  */
 export function extractCalendarCode(input: string): string | null {
-  const sanitized = sanitizeInput(input);
+  const sanitized = sanitizeInput(input)
 
   if (!sanitized) {
-    return null;
+    return null
   }
 
   // Check if it's already a valid 6-character code
   if (CALENDAR_CODE_PATTERN.test(sanitized)) {
-    return sanitized;
+    return sanitized
   }
 
   // Try to extract from URL patterns (handles most cases)
   for (const pattern of CALENDAR_URL_PATTERNS) {
-    const match = sanitized.match(pattern);
+    const match = sanitized.match(pattern)
     if (match?.[1]) {
-      return match[1];
+      return match[1]
     }
   }
 
@@ -106,49 +106,49 @@ export function extractCalendarCode(input: string): string | null {
   // This handles URLs with query strings, fragments, or unusual formatting
   try {
     // Handle webcal:// by converting to https:// for URL parsing
-    const urlString = sanitized.replace(/^webcal:\/\//i, "https://");
-    const url = new URL(urlString);
+    const urlString = sanitized.replace(/^webcal:\/\//i, 'https://')
+    const url = new URL(urlString)
 
     // Check if it's a volleymanager URL
-    if (!url.hostname.includes("volleymanager.volleyball.ch")) {
-      return null;
+    if (!url.hostname.includes('volleymanager.volleyball.ch')) {
+      return null
     }
 
     // Try to extract the last path segment as the code
-    const pathSegments = url.pathname.split("/").filter(Boolean);
-    const lastSegment = pathSegments[pathSegments.length - 1];
+    const pathSegments = url.pathname.split('/').filter(Boolean)
+    const lastSegment = pathSegments[pathSegments.length - 1]
 
     if (lastSegment && CALENDAR_CODE_PATTERN.test(lastSegment)) {
       // Verify the path looks like a calendar URL
-      const pathLower = url.pathname.toLowerCase();
+      const pathLower = url.pathname.toLowerCase()
       if (
-        pathLower.includes("/calendar/") ||
-        pathLower.includes("/ical/") ||
-        pathLower.includes("/referee/")
+        pathLower.includes('/calendar/') ||
+        pathLower.includes('/ical/') ||
+        pathLower.includes('/referee/')
       ) {
-        return lastSegment;
+        return lastSegment
       }
     }
   } catch {
     // URL parsing failed, input is not a valid URL
   }
 
-  return null;
+  return null
 }
 
 /**
  * Result of calendar code validation.
  */
 export interface CalendarValidationResult {
-  valid: boolean;
-  error?: string;
+  valid: boolean
+  error?: string
 }
 
 /**
  * Helper to create a referee convocation reference with display name.
  */
 function createRefereeConvocation(displayName: string | undefined) {
-  if (!displayName) return undefined;
+  if (!displayName) return undefined
   return {
     indoorAssociationReferee: {
       indoorReferee: {
@@ -157,7 +157,7 @@ function createRefereeConvocation(displayName: string | undefined) {
         },
       },
     },
-  };
+  }
 }
 
 /**
@@ -178,26 +178,25 @@ function createRefereeConvocation(displayName: string | undefined) {
  * - Compensation data
  */
 export function mapCalendarAssignmentToAssignment(
-  calendarAssignment: CalendarAssignment,
+  calendarAssignment: CalendarAssignment
 ): Assignment {
   // Map iCal role to API position key
-  const positionMap: Record<RefereeRole, Assignment["refereePosition"]> = {
-    referee1: "head-one",
-    referee2: "head-two",
-    lineReferee: "linesman-one", // Default to first linesman
-    scorer: "linesman-one", // Scorer treated as linesman position
-    unknown: "head-one", // Fallback
-  };
+  const positionMap: Record<RefereeRole, Assignment['refereePosition']> = {
+    referee1: 'head-one',
+    referee2: 'head-two',
+    lineReferee: 'linesman-one', // Default to first linesman
+    scorer: 'linesman-one', // Scorer treated as linesman position
+    unknown: 'head-one', // Fallback
+  }
 
   return {
     // Use gameId as identity - it's unique per assignment
     __identity: calendarAssignment.gameId,
     refereePosition: positionMap[calendarAssignment.role],
-    refereeConvocationStatus: "active", // All calendar assignments are active
+    refereeConvocationStatus: 'active', // All calendar assignments are active
     refereeGame: {
       __identity: calendarAssignment.gameId,
-      isGameInFuture:
-        new Date(calendarAssignment.startTime) > new Date() ? "1" : "0",
+      isGameInFuture: new Date(calendarAssignment.startTime) > new Date() ? '1' : '0',
       game: {
         __identity: calendarAssignment.gameId,
         startingDateTime: calendarAssignment.startTime,
@@ -220,43 +219,47 @@ export function mapCalendarAssignmentToAssignment(
               leagueCategory: calendarAssignment.leagueCategory
                 ? { name: calendarAssignment.leagueCategory }
                 : undefined,
-            } as { gender?: "m" | "f"; leagueCategory?: { name: string } },
+            } as { gender?: 'm' | 'f'; leagueCategory?: { name: string } },
           },
         },
         hall: {
           // Use hallId from description if available (enables single-ball hall detection)
-          __identity: calendarAssignment.hallId != null ? calendarAssignment.hallId : calendarAssignment.gameId,
+          __identity:
+            calendarAssignment.hallId != null
+              ? calendarAssignment.hallId
+              : calendarAssignment.gameId,
           name: calendarAssignment.hallName ?? undefined,
           primaryPostalAddress: calendarAssignment.address
             ? {
                 streetAndHouseNumber: calendarAssignment.address,
                 city: extractCityFromAddress(calendarAssignment.address),
-                geographicalLocation: calendarAssignment.coordinates || calendarAssignment.plusCode
-                  ? {
-                      latitude: calendarAssignment.coordinates?.latitude,
-                      longitude: calendarAssignment.coordinates?.longitude,
-                      plusCode: calendarAssignment.plusCode ?? undefined,
-                    }
-                  : undefined,
+                geographicalLocation:
+                  calendarAssignment.coordinates || calendarAssignment.plusCode
+                    ? {
+                        latitude: calendarAssignment.coordinates?.latitude,
+                        longitude: calendarAssignment.coordinates?.longitude,
+                        plusCode: calendarAssignment.plusCode ?? undefined,
+                      }
+                    : undefined,
               }
             : undefined,
         },
       },
       // Map referee names from iCal (if available)
       activeRefereeConvocationFirstHeadReferee: createRefereeConvocation(
-        calendarAssignment.referees?.referee1,
+        calendarAssignment.referees?.referee1
       ),
       activeRefereeConvocationSecondHeadReferee: createRefereeConvocation(
-        calendarAssignment.referees?.referee2,
+        calendarAssignment.referees?.referee2
       ),
       activeRefereeConvocationFirstLinesman: createRefereeConvocation(
-        calendarAssignment.referees?.lineReferee1,
+        calendarAssignment.referees?.lineReferee1
       ),
       activeRefereeConvocationSecondLinesman: createRefereeConvocation(
-        calendarAssignment.referees?.lineReferee2,
+        calendarAssignment.referees?.lineReferee2
       ),
     },
-  };
+  }
 }
 
 /**
@@ -269,30 +272,30 @@ export function mapCalendarAssignmentToAssignment(
 export function extractCityFromAddress(address: string): string | undefined {
   // Match Swiss postal code pattern (4 digits) followed by city name
   // Use atomic group pattern - match postal code then capture rest of string
-  const match = address.match(/\b(\d{4})\s+/);
+  const match = address.match(/\b(\d{4})\s+/)
   if (match) {
     // Extract everything after the postal code
-    const postalCodeEnd = address.indexOf(match[0]) + match[0].length;
-    const city = address.slice(postalCodeEnd).trim();
+    const postalCodeEnd = address.indexOf(match[0]) + match[0].length
+    const city = address.slice(postalCodeEnd).trim()
     if (city.length > 0) {
-      return city;
+      return city
     }
   }
 
   // Fallback: try to get last part after comma
-  const parts = address.split(",");
-  const lastPart = parts[parts.length - 1];
+  const parts = address.split(',')
+  const lastPart = parts[parts.length - 1]
   if (parts.length > 1 && lastPart) {
-    const trimmedLastPart = lastPart.trim();
+    const trimmedLastPart = lastPart.trim()
     // Remove postal code if present - use simple pattern
-    const postalMatch = trimmedLastPart.match(/^\d{4}\s+/);
+    const postalMatch = trimmedLastPart.match(/^\d{4}\s+/)
     if (postalMatch) {
-      return trimmedLastPart.slice(postalMatch[0].length).trim() || trimmedLastPart;
+      return trimmedLastPart.slice(postalMatch[0].length).trim() || trimmedLastPart
     }
-    return trimmedLastPart;
+    return trimmedLastPart
   }
 
-  return undefined;
+  return undefined
 }
 
 /**
@@ -306,35 +309,35 @@ export function extractCityFromAddress(address: string): string | undefined {
  */
 export async function validateCalendarCode(
   code: string,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ): Promise<CalendarValidationResult> {
   // Basic format validation first
   if (!CALENDAR_CODE_PATTERN.test(code)) {
-    return { valid: false, error: "auth.invalidCalendarCode" };
+    return { valid: false, error: 'auth.invalidCalendarCode' }
   }
 
-  const API_BASE = import.meta.env.VITE_API_PROXY_URL || "";
-  const calendarUrl = `${API_BASE}/iCal/referee/${code}`;
+  const API_BASE = import.meta.env.VITE_API_PROXY_URL || ''
+  const calendarUrl = `${API_BASE}/iCal/referee/${code}`
 
   try {
     const response = await fetch(calendarUrl, {
-      method: "HEAD",
+      method: 'HEAD',
       signal,
-    });
+    })
 
     if (response.ok) {
-      return { valid: true };
+      return { valid: true }
     }
 
     if (response.status === HttpStatus.NOT_FOUND) {
-      return { valid: false, error: "auth.calendarNotFound" };
+      return { valid: false, error: 'auth.calendarNotFound' }
     }
 
-    return { valid: false, error: "auth.calendarValidationFailed" };
+    return { valid: false, error: 'auth.calendarValidationFailed' }
   } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
-      throw error;
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw error
     }
-    return { valid: false, error: "auth.calendarValidationFailed" };
+    return { valid: false, error: 'auth.calendarValidationFailed' }
   }
 }

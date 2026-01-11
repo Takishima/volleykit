@@ -1,22 +1,23 @@
-import { format, isSameMonth, isSameYear } from "date-fns";
-import { useDateLocale } from "@/shared/hooks/useDateFormat";
-import type { WeekInfo } from "@/shared/utils/date-helpers";
+import { format, isSameMonth, isSameYear } from 'date-fns'
+
+import { useDateLocale } from '@/shared/hooks/useDateFormat'
+import type { WeekInfo } from '@/shared/utils/date-helpers'
 
 interface WeekSeparatorProps {
-  week: WeekInfo;
+  week: WeekInfo
 }
 
 export function WeekSeparator({ week }: WeekSeparatorProps) {
-  const locale = useDateLocale();
-  const { weekStart, weekEnd } = week;
+  const locale = useDateLocale()
+  const { weekStart, weekEnd } = week
 
-  let dateRange: string;
+  let dateRange: string
   if (isSameMonth(weekStart, weekEnd)) {
-    dateRange = `${format(weekStart, "MMM d", { locale })} – ${format(weekEnd, "d", { locale })}`;
+    dateRange = `${format(weekStart, 'MMM d', { locale })} – ${format(weekEnd, 'd', { locale })}`
   } else if (isSameYear(weekStart, weekEnd)) {
-    dateRange = `${format(weekStart, "MMM d", { locale })} – ${format(weekEnd, "MMM d", { locale })}`;
+    dateRange = `${format(weekStart, 'MMM d', { locale })} – ${format(weekEnd, 'MMM d', { locale })}`
   } else {
-    dateRange = `${format(weekStart, "MMM d, yyyy", { locale })} – ${format(weekEnd, "MMM d, yyyy", { locale })}`;
+    dateRange = `${format(weekStart, 'MMM d, yyyy', { locale })} – ${format(weekEnd, 'MMM d, yyyy', { locale })}`
   }
 
   return (
@@ -27,5 +28,5 @@ export function WeekSeparator({ week }: WeekSeparatorProps) {
       </span>
       <div className="h-px flex-1 bg-border-default dark:bg-border-default-dark" />
     </div>
-  );
+  )
 }

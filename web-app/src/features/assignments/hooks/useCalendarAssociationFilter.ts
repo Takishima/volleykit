@@ -8,33 +8,29 @@
  * components (e.g., AppShell dropdown and AssignmentsPage).
  */
 
-import { useMemo, useCallback, useEffect } from 'react';
-import type { CalendarAssignment } from '@/features/assignments/api/calendar-api';
-import {
-  useCalendarFilterStore,
-  ALL_ASSOCIATIONS,
-} from '@/shared/stores/calendar-filter';
+import { useMemo, useCallback, useEffect } from 'react'
+
+import type { CalendarAssignment } from '@/features/assignments/api/calendar-api'
+import { useCalendarFilterStore, ALL_ASSOCIATIONS } from '@/shared/stores/calendar-filter'
 
 // Re-export for backward compatibility
-export { ALL_ASSOCIATIONS } from '@/shared/stores/calendar-filter';
+export { ALL_ASSOCIATIONS } from '@/shared/stores/calendar-filter'
 
 export interface UseCalendarAssociationFilterResult {
   /** List of unique associations found in calendar data */
-  associations: string[];
+  associations: string[]
 
   /** Currently selected association filter (or ALL_ASSOCIATIONS) */
-  selectedAssociation: string;
+  selectedAssociation: string
 
   /** Set the selected association filter */
-  setSelectedAssociation: (association: string) => void;
+  setSelectedAssociation: (association: string) => void
 
   /** Filter calendar assignments by the selected association */
-  filterByAssociation: <T extends { association: string | null }>(
-    items: T[]
-  ) => T[];
+  filterByAssociation: <T extends { association: string | null }>(items: T[]) => T[]
 
   /** Whether there are multiple associations to filter */
-  hasMultipleAssociations: boolean;
+  hasMultipleAssociations: boolean
 }
 
 /**
@@ -75,62 +71,55 @@ export interface UseCalendarAssociationFilterResult {
 export function useCalendarAssociationFilter(
   calendarData: CalendarAssignment[]
 ): UseCalendarAssociationFilterResult {
-  const {
-    selectedAssociation,
-    setSelectedAssociation,
-    setAssociations,
-  } = useCalendarFilterStore();
+  const { selectedAssociation, setSelectedAssociation, setAssociations } = useCalendarFilterStore()
 
   // Extract unique associations from calendar data
   const associations = useMemo(() => {
-    const uniqueAssociations = new Set<string>();
+    const uniqueAssociations = new Set<string>()
 
     for (const item of calendarData) {
       if (item.association) {
-        uniqueAssociations.add(item.association);
+        uniqueAssociations.add(item.association)
       }
     }
 
     // Sort alphabetically for consistent ordering
-    return Array.from(uniqueAssociations).sort();
-  }, [calendarData]);
+    return Array.from(uniqueAssociations).sort()
+  }, [calendarData])
 
   // Sync extracted associations to store (only when they actually change)
-  const storeAssociations = useCalendarFilterStore((state) => state.associations);
+  const storeAssociations = useCalendarFilterStore((state) => state.associations)
   useEffect(() => {
     // Only update if the associations have actually changed
     const hasChanged =
       associations.length !== storeAssociations.length ||
-      associations.some((a, i) => a !== storeAssociations[i]);
+      associations.some((a, i) => a !== storeAssociations[i])
 
     if (hasChanged) {
-      setAssociations(associations);
+      setAssociations(associations)
     }
-  }, [associations, storeAssociations, setAssociations]);
+  }, [associations, storeAssociations, setAssociations])
 
-  const hasMultipleAssociations = associations.length >= 2;
+  const hasMultipleAssociations = associations.length >= 2
 
   // Derive effective selection: if selected association is no longer available,
   // treat as "all" without modifying state (derived during render)
   const effectiveSelection = useMemo(() => {
-    if (
-      selectedAssociation !== ALL_ASSOCIATIONS &&
-      !associations.includes(selectedAssociation)
-    ) {
-      return ALL_ASSOCIATIONS;
+    if (selectedAssociation !== ALL_ASSOCIATIONS && !associations.includes(selectedAssociation)) {
+      return ALL_ASSOCIATIONS
     }
-    return selectedAssociation;
-  }, [associations, selectedAssociation]);
+    return selectedAssociation
+  }, [associations, selectedAssociation])
 
   const filterByAssociation = useCallback(
     <T extends { association: string | null }>(items: T[]): T[] => {
       if (effectiveSelection === ALL_ASSOCIATIONS) {
-        return items;
+        return items
       }
-      return items.filter((item) => item.association === effectiveSelection);
+      return items.filter((item) => item.association === effectiveSelection)
     },
     [effectiveSelection]
-  );
+  )
 
   return {
     associations,
@@ -138,5 +127,5 @@ export function useCalendarAssociationFilter(
     setSelectedAssociation,
     filterByAssociation,
     hasMultipleAssociations,
-  };
+  }
 }

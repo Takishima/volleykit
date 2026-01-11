@@ -1,12 +1,13 @@
-import { useCallback } from "react";
-import { checkSafeMode } from "@/shared/utils/safe-mode-guard";
-import { useAuthStore } from "@/shared/stores/auth";
-import { useSettingsStore } from "@/shared/stores/settings";
+import { useCallback } from 'react'
+
+import { useAuthStore } from '@/shared/stores/auth'
+import { useSettingsStore } from '@/shared/stores/settings'
+import { checkSafeMode } from '@/shared/utils/safe-mode-guard'
 
 interface SafeModeGuardParams {
-  context: string;
-  action: string;
-  onBlocked?: () => void;
+  context: string
+  action: string
+  onBlocked?: () => void
 }
 
 interface UseSafeModeGuardResult {
@@ -20,9 +21,9 @@ interface UseSafeModeGuardResult {
    *   return; // Operation blocked
    * }
    */
-  guard: (params: SafeModeGuardParams) => boolean;
-  isDemoMode: boolean;
-  isSafeModeEnabled: boolean;
+  guard: (params: SafeModeGuardParams) => boolean
+  isDemoMode: boolean
+  isSafeModeEnabled: boolean
 }
 
 /**
@@ -41,11 +42,9 @@ interface UseSafeModeGuardResult {
  * }, [guard]);
  */
 export function useSafeModeGuard(): UseSafeModeGuardResult {
-  const dataSource = useAuthStore((state) => state.dataSource);
-  const isDemoMode = dataSource === "demo";
-  const isSafeModeEnabled = useSettingsStore(
-    (state) => state.isSafeModeEnabled,
-  );
+  const dataSource = useAuthStore((state) => state.dataSource)
+  const isDemoMode = dataSource === 'demo'
+  const isSafeModeEnabled = useSettingsStore((state) => state.isSafeModeEnabled)
 
   const guard = useCallback(
     ({ context, action, onBlocked }: SafeModeGuardParams): boolean => {
@@ -54,16 +53,16 @@ export function useSafeModeGuard(): UseSafeModeGuardResult {
         isSafeModeEnabled,
         context,
         action,
-      });
+      })
 
       if (isBlocked && onBlocked) {
-        onBlocked();
+        onBlocked()
       }
 
-      return isBlocked;
+      return isBlocked
     },
-    [isDemoMode, isSafeModeEnabled],
-  );
+    [isDemoMode, isSafeModeEnabled]
+  )
 
-  return { guard, isDemoMode, isSafeModeEnabled };
+  return { guard, isDemoMode, isSafeModeEnabled }
 }

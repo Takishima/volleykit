@@ -8,10 +8,12 @@
  * with push notifications to update badges when the app is closed.
  */
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import { isToday } from "date-fns";
-import { badgeService } from "@/shared/services/badge";
-import type { Assignment } from "@/api/client";
+import { useCallback, useEffect, useMemo, useRef } from 'react'
+
+import { isToday } from 'date-fns'
+
+import type { Assignment } from '@/api/client'
+import { badgeService } from '@/shared/services/badge'
 
 /**
  * Count the number of active games scheduled for today
@@ -19,38 +21,38 @@ import type { Assignment } from "@/api/client";
 export function countTodaysGames(assignments: Assignment[]): number {
   return assignments.filter((assignment) => {
     // Only count active assignments (not cancelled or archived)
-    if (assignment.refereeConvocationStatus !== "active") {
-      return false;
+    if (assignment.refereeConvocationStatus !== 'active') {
+      return false
     }
 
-    const gameDateTime = assignment.refereeGame?.game?.startingDateTime;
+    const gameDateTime = assignment.refereeGame?.game?.startingDateTime
     if (!gameDateTime) {
-      return false;
+      return false
     }
 
     try {
-      const gameDate = new Date(gameDateTime);
-      return isToday(gameDate);
+      const gameDate = new Date(gameDateTime)
+      return isToday(gameDate)
     } catch {
-      return false;
+      return false
     }
-  }).length;
+  }).length
 }
 
 export interface UseDailyGameBadgeOptions {
   /** Whether badge updates are enabled (default: true) */
-  enabled?: boolean;
+  enabled?: boolean
 }
 
 export interface UseDailyGameBadgeResult {
   /** Number of games scheduled for today */
-  todaysGameCount: number;
+  todaysGameCount: number
   /** Whether the Badging API is supported */
-  isSupported: boolean;
+  isSupported: boolean
   /** Manually update the badge */
-  updateBadge: () => Promise<void>;
+  updateBadge: () => Promise<void>
   /** Clear the badge */
-  clearBadge: () => Promise<void>;
+  clearBadge: () => Promise<void>
 }
 
 /**
@@ -78,56 +80,53 @@ export interface UseDailyGameBadgeResult {
  */
 export function useDailyGameBadge(
   assignments: Assignment[],
-  options: UseDailyGameBadgeOptions = {},
+  options: UseDailyGameBadgeOptions = {}
 ): UseDailyGameBadgeResult {
-  const { enabled = true } = options;
+  const { enabled = true } = options
 
   // Memoize the count to avoid recalculating on every render
-  const todaysGameCount = useMemo(
-    () => countTodaysGames(assignments),
-    [assignments],
-  );
+  const todaysGameCount = useMemo(() => countTodaysGames(assignments), [assignments])
 
   // Track if we've already set this count to avoid duplicate API calls
-  const lastSetCountRef = useRef<number | null>(null);
+  const lastSetCountRef = useRef<number | null>(null)
 
-  const isSupported = badgeService.isSupported();
+  const isSupported = badgeService.isSupported()
 
   // Update badge when count changes
   useEffect(() => {
     if (!enabled || !isSupported) {
-      return;
+      return
     }
 
     // Skip if count hasn't changed
     if (lastSetCountRef.current === todaysGameCount) {
-      return;
+      return
     }
 
     const updateBadge = async () => {
-      const result = await badgeService.setBadge(todaysGameCount);
+      const result = await badgeService.setBadge(todaysGameCount)
       if (result.success) {
-        lastSetCountRef.current = todaysGameCount;
+        lastSetCountRef.current = todaysGameCount
       }
-    };
+    }
 
-    void updateBadge();
-  }, [todaysGameCount, enabled, isSupported]);
+    void updateBadge()
+  }, [todaysGameCount, enabled, isSupported])
 
   const updateBadge = useCallback(async () => {
-    await badgeService.setBadge(todaysGameCount);
-    lastSetCountRef.current = todaysGameCount;
-  }, [todaysGameCount]);
+    await badgeService.setBadge(todaysGameCount)
+    lastSetCountRef.current = todaysGameCount
+  }, [todaysGameCount])
 
   const clearBadge = useCallback(async () => {
-    await badgeService.clearBadge();
-    lastSetCountRef.current = 0;
-  }, []);
+    await badgeService.clearBadge()
+    lastSetCountRef.current = 0
+  }, [])
 
   return {
     todaysGameCount,
     isSupported,
     updateBadge,
     clearBadge,
-  };
+  }
 }

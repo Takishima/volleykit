@@ -2,8 +2,9 @@
  * Hook to get the active association code from the current user session.
  */
 
-import { useShallow } from "zustand/react/shallow";
-import { useAuthStore, CALENDAR_ASSOCIATION } from "@/shared/stores/auth";
+import { useShallow } from 'zustand/react/shallow'
+
+import { useAuthStore, CALENDAR_ASSOCIATION } from '@/shared/stores/auth'
 
 /**
  * Returns the association code of the currently active occupation.
@@ -21,17 +22,16 @@ export function useActiveAssociationCode(): string | undefined {
       user: state.user,
       activeOccupationId: state.activeOccupationId,
       dataSource: state.dataSource,
-    })),
-  );
+    }))
+  )
 
   // In calendar mode, use a global association for transport settings
-  if (dataSource === "calendar") {
-    return CALENDAR_ASSOCIATION;
+  if (dataSource === 'calendar') {
+    return CALENDAR_ASSOCIATION
   }
 
   const activeOccupation =
-    user?.occupations?.find((o) => o.id === activeOccupationId) ??
-    user?.occupations?.[0];
+    user?.occupations?.find((o) => o.id === activeOccupationId) ?? user?.occupations?.[0]
 
-  return activeOccupation?.associationCode;
+  return activeOccupation?.associationCode
 }

@@ -1,22 +1,19 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from "react";
-import { useTranslation } from "@/shared/hooks/useTranslation";
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
+
 import {
   useOCRScoresheet,
   compareRosters,
   useEasterEggDetection,
   EasterEggModal,
-} from "@/features/ocr";
+} from '@/features/ocr'
 import type {
   ParsedGameSheet,
   PlayerComparisonResult,
   ParsedOfficial,
   OCRResult,
-} from "@/features/ocr";
-import type { ScoresheetType } from "@/features/ocr/utils/scoresheet-detector";
-import type { RosterPlayer } from "@/features/validation/hooks/useNominationList";
-import { OCRCaptureModal } from "./OCRCaptureModal";
-import { PlayerComparisonList } from "./PlayerComparisonList";
-import { LoadingSpinner } from "@/shared/components/LoadingSpinner";
+} from '@/features/ocr'
+import type { ScoresheetType } from '@/features/ocr/utils/scoresheet-detector'
+import type { RosterPlayer } from '@/features/validation/hooks/useNominationList'
 import {
   Camera,
   AlertCircle,
@@ -29,47 +26,52 @@ import {
   FileText,
   PenTool,
   Image,
-} from "@/shared/components/icons";
+} from '@/shared/components/icons'
+import { LoadingSpinner } from '@/shared/components/LoadingSpinner'
+import { useTranslation } from '@/shared/hooks/useTranslation'
 
-type OCREntryStep = "intro" | "capture" | "processing" | "results" | "error";
+import { OCRCaptureModal } from './OCRCaptureModal'
+import { PlayerComparisonList } from './PlayerComparisonList'
+
+type OCREntryStep = 'intro' | 'capture' | 'processing' | 'results' | 'error'
 
 /** Coach info for comparison */
 export interface CoachForComparison {
-  id: string;
-  displayName: string;
-  firstName?: string;
-  lastName?: string;
-  role: "head" | "firstAssistant" | "secondAssistant";
+  id: string
+  displayName: string
+  firstName?: string
+  lastName?: string
+  role: 'head' | 'firstAssistant' | 'secondAssistant'
 }
 
 /** Comparison result for a single team */
 interface TeamComparison {
-  teamName: string;
-  ocrTeamName: string;
-  playerResults: PlayerComparisonResult[];
-  coachResults: PlayerComparisonResult[];
+  teamName: string
+  ocrTeamName: string
+  playerResults: PlayerComparisonResult[]
+  coachResults: PlayerComparisonResult[]
 }
 
 interface OCREntryModalProps {
-  isOpen: boolean;
+  isOpen: boolean
   /** Home team name for display */
-  homeTeamName: string;
+  homeTeamName: string
   /** Away team name for display */
-  awayTeamName: string;
+  awayTeamName: string
   /** Home roster players for comparison */
-  homeRosterPlayers: RosterPlayer[];
+  homeRosterPlayers: RosterPlayer[]
   /** Away roster players for comparison */
-  awayRosterPlayers: RosterPlayer[];
+  awayRosterPlayers: RosterPlayer[]
   /** Home roster coaches for comparison */
-  homeRosterCoaches: CoachForComparison[];
+  homeRosterCoaches: CoachForComparison[]
   /** Away roster coaches for comparison */
-  awayRosterCoaches: CoachForComparison[];
+  awayRosterCoaches: CoachForComparison[]
   /** Callback when user skips OCR */
-  onSkip: () => void;
+  onSkip: () => void
   /** Callback when user completes OCR */
-  onComplete: () => void;
+  onComplete: () => void
   /** Callback to close */
-  onClose: () => void;
+  onClose: () => void
 }
 
 /**
@@ -82,8 +84,8 @@ function officialsToPlayers(officials: ParsedOfficial[]) {
     firstName: official.firstName,
     displayName: official.displayName,
     rawName: official.rawName,
-    licenseStatus: "",
-  }));
+    licenseStatus: '',
+  }))
 }
 
 /**
@@ -95,7 +97,7 @@ function coachesToRosterFormat(coaches: CoachForComparison[]) {
     displayName: coach.displayName,
     firstName: coach.firstName,
     lastName: coach.lastName,
-  }));
+  }))
 }
 
 /**
@@ -114,172 +116,151 @@ export function OCREntryModal({
   onComplete,
   onClose,
 }: OCREntryModalProps) {
-  const { t } = useTranslation();
-  const {
-    processImage,
-    progress,
-    error,
-    reset,
-    ocrResult: hookOcrResult,
-  } = useOCRScoresheet();
-  const { easterEgg, checkForEasterEggs, dismissEasterEgg } =
-    useEasterEggDetection();
+  const { t } = useTranslation()
+  const { processImage, progress, error, reset, ocrResult: hookOcrResult } = useOCRScoresheet()
+  const { easterEgg, checkForEasterEggs, dismissEasterEgg } = useEasterEggDetection()
 
-  const [step, setStep] = useState<OCREntryStep>("intro");
-  const [showCaptureModal, setShowCaptureModal] = useState(false);
-  const [scoresheetType, setScoresheetType] =
-    useState<ScoresheetType>("electronic");
+  const [step, setStep] = useState<OCREntryStep>('intro')
+  const [showCaptureModal, setShowCaptureModal] = useState(false)
+  const [scoresheetType, setScoresheetType] = useState<ScoresheetType>('electronic')
 
   // Comparison results for both teams
-  const [homeComparison, setHomeComparison] = useState<TeamComparison | null>(
-    null,
-  );
-  const [awayComparison, setAwayComparison] = useState<TeamComparison | null>(
-    null,
-  );
+  const [homeComparison, setHomeComparison] = useState<TeamComparison | null>(null)
+  const [awayComparison, setAwayComparison] = useState<TeamComparison | null>(null)
 
   // Raw OCR data for debugging/transparency
-  const [rawOcrData, setRawOcrData] = useState<ParsedGameSheet | null>(null);
+  const [rawOcrData, setRawOcrData] = useState<ParsedGameSheet | null>(null)
 
   // Stored OCR result with bounding boxes
-  const [storedOcrResult, setStoredOcrResult] = useState<OCRResult | null>(
-    null,
-  );
+  const [storedOcrResult, setStoredOcrResult] = useState<OCRResult | null>(null)
 
   // Image URL for displaying the captured scoresheet
-  const [capturedImageUrl, setCapturedImageUrl] = useState<string | null>(null);
+  const [capturedImageUrl, setCapturedImageUrl] = useState<string | null>(null)
 
   // Expanded sections state
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(["home-players", "away-players"]),
-  );
+    new Set(['home-players', 'away-players'])
+  )
 
   // Guard against rapid double-clicks
-  const isProcessingRef = useRef(false);
+  const isProcessingRef = useRef(false)
 
   // Handle Escape key
   useEffect(() => {
-    if (!isOpen || showCaptureModal) return;
+    if (!isOpen || showCaptureModal) return
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
+      if (event.key === 'Escape') {
+        onClose()
       }
-    };
+    }
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, showCaptureModal, onClose]);
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, showCaptureModal, onClose])
 
   // Reset when modal opens
   useEffect(() => {
     if (isOpen) {
-      setStep("intro");
-      setScoresheetType("electronic");
-      setHomeComparison(null);
-      setAwayComparison(null);
-      setRawOcrData(null);
-      setStoredOcrResult(null);
+      setStep('intro')
+      setScoresheetType('electronic')
+      setHomeComparison(null)
+      setAwayComparison(null)
+      setRawOcrData(null)
+      setStoredOcrResult(null)
       // Revoke previous image URL to prevent memory leaks
       if (capturedImageUrl) {
-        URL.revokeObjectURL(capturedImageUrl);
+        URL.revokeObjectURL(capturedImageUrl)
       }
-      setCapturedImageUrl(null);
-      setExpandedSections(new Set(["home-players", "away-players"]));
-      reset();
+      setCapturedImageUrl(null)
+      setExpandedSections(new Set(['home-players', 'away-players']))
+      reset()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- capturedImageUrl changes during reset
-  }, [isOpen, reset]);
+  }, [isOpen, reset])
 
   // Clean up image URL on unmount
   useEffect(() => {
     return () => {
       if (capturedImageUrl) {
-        URL.revokeObjectURL(capturedImageUrl);
+        URL.revokeObjectURL(capturedImageUrl)
       }
-    };
-  }, [capturedImageUrl]);
+    }
+  }, [capturedImageUrl])
 
   // Sync OCR result from hook when it updates
   useEffect(() => {
     if (hookOcrResult) {
-      setStoredOcrResult(hookOcrResult);
+      setStoredOcrResult(hookOcrResult)
     }
-  }, [hookOcrResult]);
+  }, [hookOcrResult])
 
   // Match OCR team to home/away based on team names
   const matchOCRTeams = useCallback(
     (parsed: ParsedGameSheet) => {
-      const teamANameLower = parsed.teamA.name.toLowerCase();
-      const teamBNameLower = parsed.teamB.name.toLowerCase();
-      const homeNameLower = homeTeamName.toLowerCase();
-      const awayNameLower = awayTeamName.toLowerCase();
+      const teamANameLower = parsed.teamA.name.toLowerCase()
+      const teamBNameLower = parsed.teamB.name.toLowerCase()
+      const homeNameLower = homeTeamName.toLowerCase()
+      const awayNameLower = awayTeamName.toLowerCase()
 
       // Check if teamA matches home or away
       const teamAMatchesHome =
-        teamANameLower.includes(homeNameLower) ||
-        homeNameLower.includes(teamANameLower);
+        teamANameLower.includes(homeNameLower) || homeNameLower.includes(teamANameLower)
       const teamAMatchesAway =
-        teamANameLower.includes(awayNameLower) ||
-        awayNameLower.includes(teamANameLower);
+        teamANameLower.includes(awayNameLower) || awayNameLower.includes(teamANameLower)
       const teamBMatchesHome =
-        teamBNameLower.includes(homeNameLower) ||
-        homeNameLower.includes(teamBNameLower);
+        teamBNameLower.includes(homeNameLower) || homeNameLower.includes(teamBNameLower)
       const teamBMatchesAway =
-        teamBNameLower.includes(awayNameLower) ||
-        awayNameLower.includes(teamBNameLower);
+        teamBNameLower.includes(awayNameLower) || awayNameLower.includes(teamBNameLower)
 
       // Determine which OCR team is home and which is away
       if (teamAMatchesHome && !teamAMatchesAway) {
-        return { homeOCR: parsed.teamA, awayOCR: parsed.teamB };
+        return { homeOCR: parsed.teamA, awayOCR: parsed.teamB }
       }
       if (teamAMatchesAway && !teamAMatchesHome) {
-        return { homeOCR: parsed.teamB, awayOCR: parsed.teamA };
+        return { homeOCR: parsed.teamB, awayOCR: parsed.teamA }
       }
       if (teamBMatchesHome && !teamBMatchesAway) {
-        return { homeOCR: parsed.teamB, awayOCR: parsed.teamA };
+        return { homeOCR: parsed.teamB, awayOCR: parsed.teamA }
       }
       if (teamBMatchesAway && !teamBMatchesHome) {
-        return { homeOCR: parsed.teamA, awayOCR: parsed.teamB };
+        return { homeOCR: parsed.teamA, awayOCR: parsed.teamB }
       }
 
       // Default: teamA = home, teamB = away (column order on scoresheet)
-      return { homeOCR: parsed.teamA, awayOCR: parsed.teamB };
+      return { homeOCR: parsed.teamA, awayOCR: parsed.teamB }
     },
-    [homeTeamName, awayTeamName],
-  );
+    [homeTeamName, awayTeamName]
+  )
 
   // Handle image selection
   const handleImageSelected = useCallback(
     async (blob: Blob) => {
-      if (isProcessingRef.current) return;
-      isProcessingRef.current = true;
+      if (isProcessingRef.current) return
+      isProcessingRef.current = true
 
-      setShowCaptureModal(false);
-      setStep("processing");
+      setShowCaptureModal(false)
+      setStep('processing')
 
       // Create object URL for displaying the image with bounding boxes
-      const imageUrl = URL.createObjectURL(blob);
-      setCapturedImageUrl(imageUrl);
+      const imageUrl = URL.createObjectURL(blob)
+      setCapturedImageUrl(imageUrl)
 
       try {
-        const parsed = await processImage(blob, scoresheetType);
+        const parsed = await processImage(blob, scoresheetType)
         if (parsed) {
           // Store raw OCR data for debugging/transparency
-          setRawOcrData(parsed);
+          setRawOcrData(parsed)
 
           // Store OCR result with bounding boxes (from hook state)
           // Note: We'll get this from the hook after processing completes
 
-          const { homeOCR, awayOCR } = matchOCRTeams(parsed);
+          const { homeOCR, awayOCR } = matchOCRTeams(parsed)
 
           // Check if we have any players
-          if (
-            homeOCR.players.length === 0 &&
-            awayOCR.players.length === 0
-          ) {
-            setStep("error");
-            return;
+          if (homeOCR.players.length === 0 && awayOCR.players.length === 0) {
+            setStep('error')
+            return
           }
 
           // Compare home team players
@@ -290,14 +271,14 @@ export function OCREntryModal({
               displayName: p.displayName,
               firstName: p.firstName,
               lastName: p.lastName,
-            })),
-          );
+            }))
+          )
 
           // Compare home team coaches
           const homeCoachResults = compareRosters(
             officialsToPlayers(homeOCR.officials),
-            coachesToRosterFormat(homeRosterCoaches),
-          );
+            coachesToRosterFormat(homeRosterCoaches)
+          )
 
           // Compare away team players
           const awayPlayerResults = compareRosters(
@@ -307,40 +288,40 @@ export function OCREntryModal({
               displayName: p.displayName,
               firstName: p.firstName,
               lastName: p.lastName,
-            })),
-          );
+            }))
+          )
 
           // Compare away team coaches
           const awayCoachResults = compareRosters(
             officialsToPlayers(awayOCR.officials),
-            coachesToRosterFormat(awayRosterCoaches),
-          );
+            coachesToRosterFormat(awayRosterCoaches)
+          )
 
           setHomeComparison({
             teamName: homeTeamName,
             ocrTeamName: homeOCR.name,
             playerResults: homePlayerResults,
             coachResults: homeCoachResults,
-          });
+          })
 
           setAwayComparison({
             teamName: awayTeamName,
             ocrTeamName: awayOCR.name,
             playerResults: awayPlayerResults,
             coachResults: awayCoachResults,
-          });
+          })
 
           // Check for Easter egg conditions
-          checkForEasterEggs(parsed);
+          checkForEasterEggs(parsed)
 
-          setStep("results");
+          setStep('results')
         } else {
-          setStep("error");
+          setStep('error')
         }
       } catch {
-        setStep("error");
+        setStep('error')
       } finally {
-        isProcessingRef.current = false;
+        isProcessingRef.current = false
       }
     },
     [
@@ -354,52 +335,52 @@ export function OCREntryModal({
       homeRosterCoaches,
       awayRosterCoaches,
       checkForEasterEggs,
-    ],
-  );
+    ]
+  )
 
   // Handle retry
   const handleRetry = useCallback(() => {
-    reset();
-    setHomeComparison(null);
-    setAwayComparison(null);
-    setRawOcrData(null);
-    setStoredOcrResult(null);
+    reset()
+    setHomeComparison(null)
+    setAwayComparison(null)
+    setRawOcrData(null)
+    setStoredOcrResult(null)
     if (capturedImageUrl) {
-      URL.revokeObjectURL(capturedImageUrl);
+      URL.revokeObjectURL(capturedImageUrl)
     }
-    setCapturedImageUrl(null);
-    setStep("capture");
-    setShowCaptureModal(true);
-  }, [reset, capturedImageUrl]);
+    setCapturedImageUrl(null)
+    setStep('capture')
+    setShowCaptureModal(true)
+  }, [reset, capturedImageUrl])
 
   // Start scanning with a specific type
   const handleStartScan = useCallback((type: ScoresheetType) => {
-    setScoresheetType(type);
-    setStep("capture");
-    setShowCaptureModal(true);
-  }, []);
+    setScoresheetType(type)
+    setStep('capture')
+    setShowCaptureModal(true)
+  }, [])
 
   // Toggle section expansion
   const toggleSection = useCallback((sectionId: string) => {
     setExpandedSections((prev) => {
-      const newSet = new Set(prev);
+      const newSet = new Set(prev)
       if (newSet.has(sectionId)) {
-        newSet.delete(sectionId);
+        newSet.delete(sectionId)
       } else {
-        newSet.add(sectionId);
+        newSet.add(sectionId)
       }
-      return newSet;
-    });
-  }, []);
+      return newSet
+    })
+  }, [])
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   // Count discrepancies for summary
   const countDiscrepancies = (results: PlayerComparisonResult[]) => {
-    const ocrOnly = results.filter((r) => r.status === "ocr-only").length;
-    const rosterOnly = results.filter((r) => r.status === "roster-only").length;
-    return ocrOnly + rosterOnly;
-  };
+    const ocrOnly = results.filter((r) => r.status === 'ocr-only').length
+    const rosterOnly = results.filter((r) => r.status === 'roster-only').length
+    return ocrOnly + rosterOnly
+  }
 
   const totalDiscrepancies =
     (homeComparison
@@ -409,7 +390,7 @@ export function OCREntryModal({
     (awayComparison
       ? countDiscrepancies(awayComparison.playerResults) +
         countDiscrepancies(awayComparison.coachResults)
-      : 0);
+      : 0)
 
   return (
     <div
@@ -421,18 +402,15 @@ export function OCREntryModal({
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
         <div>
-          <h1
-            id="ocr-entry-title"
-            className="text-lg font-semibold text-gray-900 dark:text-white"
-          >
-            {t("validation.ocr.scanScoresheet")}
+          <h1 id="ocr-entry-title" className="text-lg font-semibold text-gray-900 dark:text-white">
+            {t('validation.ocr.scanScoresheet')}
           </h1>
         </div>
         <button
           type="button"
           onClick={onClose}
           className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          aria-label={t("common.close")}
+          aria-label={t('common.close')}
         >
           <X className="w-5 h-5" aria-hidden="true" />
         </button>
@@ -441,24 +419,24 @@ export function OCREntryModal({
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4">
         {/* Intro step - type selection */}
-        {step === "intro" && (
+        {step === 'intro' && (
           <div className="flex flex-col items-center justify-center min-h-[50vh]">
             <Camera
               className="w-16 h-16 text-primary-400 dark:text-primary-500 mb-4"
               aria-hidden="true"
             />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              {t("validation.ocr.scanScoresheet")}
+              {t('validation.ocr.scanScoresheet')}
             </h2>
             <p className="text-center text-gray-600 dark:text-gray-300 max-w-md mb-6">
-              {t("validation.ocr.scoresheetType.title")}
+              {t('validation.ocr.scoresheetType.title')}
             </p>
 
             {/* Scoresheet type selection buttons */}
             <div className="flex flex-col gap-3 w-full max-w-sm mb-6">
               <button
                 type="button"
-                onClick={() => handleStartScan("electronic")}
+                onClick={() => handleStartScan('electronic')}
                 className="w-full flex items-start gap-4 p-4 bg-white dark:bg-gray-800 border-2 border-primary-500 rounded-xl hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors text-left"
               >
                 <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-lg bg-primary-100 dark:bg-primary-900/30">
@@ -469,17 +447,17 @@ export function OCREntryModal({
                 </div>
                 <div className="flex-1 min-w-0">
                   <span className="block text-base font-semibold text-gray-900 dark:text-white">
-                    {t("validation.ocr.scoresheetType.electronic")}
+                    {t('validation.ocr.scoresheetType.electronic')}
                   </span>
                   <span className="block text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                    {t("validation.ocr.scoresheetType.electronicDescription")}
+                    {t('validation.ocr.scoresheetType.electronicDescription')}
                   </span>
                 </div>
               </button>
 
               <button
                 type="button"
-                onClick={() => handleStartScan("manuscript")}
+                onClick={() => handleStartScan('manuscript')}
                 className="w-full flex items-start gap-4 p-4 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:border-primary-300 dark:hover:border-primary-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
               >
                 <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700">
@@ -490,10 +468,10 @@ export function OCREntryModal({
                 </div>
                 <div className="flex-1 min-w-0">
                   <span className="block text-base font-semibold text-gray-900 dark:text-white">
-                    {t("validation.ocr.scoresheetType.manuscript")}
+                    {t('validation.ocr.scoresheetType.manuscript')}
                   </span>
                   <span className="block text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                    {t("validation.ocr.scoresheetType.manuscriptDescription")}
+                    {t('validation.ocr.scoresheetType.manuscriptDescription')}
                   </span>
                 </div>
               </button>
@@ -506,13 +484,13 @@ export function OCREntryModal({
               className="flex items-center justify-center gap-2 px-6 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
             >
               <SkipForward className="w-4 h-4" aria-hidden="true" />
-              {t("tour.actions.skip")}
+              {t('tour.actions.skip')}
             </button>
           </div>
         )}
 
         {/* Processing step */}
-        {step === "processing" && (
+        {step === 'processing' && (
           <div
             className="flex flex-col items-center justify-center min-h-[50vh]"
             role="status"
@@ -520,10 +498,10 @@ export function OCREntryModal({
           >
             <LoadingSpinner size="lg" className="mb-6" />
             <p className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              {t("validation.ocr.processing")}
+              {t('validation.ocr.processing')}
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              {progress?.status ?? t("validation.ocr.processingDescription")}
+              {progress?.status ?? t('validation.ocr.processingDescription')}
             </p>
             {progress && progress.progress > 0 && (
               <div className="w-64 h-2 bg-gray-200 dark:bg-gray-700 rounded-full mt-6 overflow-hidden">
@@ -537,13 +515,11 @@ export function OCREntryModal({
         )}
 
         {/* Results step */}
-        {step === "results" && (
+        {step === 'results' && (
           <div className="max-w-2xl mx-auto">
             <div className="flex items-center gap-2 text-success-600 dark:text-success-400 mb-4">
               <CheckCircle className="w-6 h-6" aria-hidden="true" />
-              <span className="text-lg font-medium">
-                {t("validation.ocr.scanComplete")}
-              </span>
+              <span className="text-lg font-medium">{t('validation.ocr.scanComplete')}</span>
             </div>
 
             {totalDiscrepancies > 0 && (
@@ -569,13 +545,11 @@ export function OCREntryModal({
 
                 {/* Home Players */}
                 <CollapsibleSection
-                  title={t("validation.ocr.players")}
+                  title={t('validation.ocr.players')}
                   count={homeComparison.playerResults.length}
-                  discrepancies={countDiscrepancies(
-                    homeComparison.playerResults,
-                  )}
-                  expanded={expandedSections.has("home-players")}
-                  onToggle={() => toggleSection("home-players")}
+                  discrepancies={countDiscrepancies(homeComparison.playerResults)}
+                  expanded={expandedSections.has('home-players')}
+                  onToggle={() => toggleSection('home-players')}
                   sectionId="home-players"
                 >
                   <PlayerComparisonList
@@ -589,13 +563,11 @@ export function OCREntryModal({
                 {/* Home Coaches */}
                 {homeComparison.coachResults.length > 0 && (
                   <CollapsibleSection
-                    title={t("validation.ocr.coaches")}
+                    title={t('validation.ocr.coaches')}
                     count={homeComparison.coachResults.length}
-                    discrepancies={countDiscrepancies(
-                      homeComparison.coachResults,
-                    )}
-                    expanded={expandedSections.has("home-coaches")}
-                    onToggle={() => toggleSection("home-coaches")}
+                    discrepancies={countDiscrepancies(homeComparison.coachResults)}
+                    expanded={expandedSections.has('home-coaches')}
+                    onToggle={() => toggleSection('home-coaches')}
                     sectionId="home-coaches"
                   >
                     <PlayerComparisonList
@@ -624,13 +596,11 @@ export function OCREntryModal({
 
                 {/* Away Players */}
                 <CollapsibleSection
-                  title={t("validation.ocr.players")}
+                  title={t('validation.ocr.players')}
                   count={awayComparison.playerResults.length}
-                  discrepancies={countDiscrepancies(
-                    awayComparison.playerResults,
-                  )}
-                  expanded={expandedSections.has("away-players")}
-                  onToggle={() => toggleSection("away-players")}
+                  discrepancies={countDiscrepancies(awayComparison.playerResults)}
+                  expanded={expandedSections.has('away-players')}
+                  onToggle={() => toggleSection('away-players')}
                   sectionId="away-players"
                 >
                   <PlayerComparisonList
@@ -644,13 +614,11 @@ export function OCREntryModal({
                 {/* Away Coaches */}
                 {awayComparison.coachResults.length > 0 && (
                   <CollapsibleSection
-                    title={t("validation.ocr.coaches")}
+                    title={t('validation.ocr.coaches')}
                     count={awayComparison.coachResults.length}
-                    discrepancies={countDiscrepancies(
-                      awayComparison.coachResults,
-                    )}
-                    expanded={expandedSections.has("away-coaches")}
-                    onToggle={() => toggleSection("away-coaches")}
+                    discrepancies={countDiscrepancies(awayComparison.coachResults)}
+                    expanded={expandedSections.has('away-coaches')}
+                    onToggle={() => toggleSection('away-coaches')}
                     sectionId="away-coaches"
                   >
                     <PlayerComparisonList
@@ -670,28 +638,22 @@ export function OCREntryModal({
                 data={rawOcrData}
                 ocrResult={storedOcrResult}
                 imageUrl={capturedImageUrl}
-                expanded={expandedSections.has("raw-ocr-data")}
-                onToggle={() => toggleSection("raw-ocr-data")}
+                expanded={expandedSections.has('raw-ocr-data')}
+                onToggle={() => toggleSection('raw-ocr-data')}
               />
             )}
           </div>
         )}
 
         {/* Error step */}
-        {step === "error" && (
-          <div
-            className="flex flex-col items-center justify-center min-h-[50vh]"
-            role="alert"
-          >
-            <AlertCircle
-              className="w-16 h-16 text-danger-500 mb-6"
-              aria-hidden="true"
-            />
+        {step === 'error' && (
+          <div className="flex flex-col items-center justify-center min-h-[50vh]" role="alert">
+            <AlertCircle className="w-16 h-16 text-danger-500 mb-6" aria-hidden="true" />
             <p className="text-lg font-medium text-danger-700 dark:text-danger-400 mb-2">
-              {t("validation.ocr.scanFailed")}
+              {t('validation.ocr.scanFailed')}
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-400 text-center max-w-md mb-6">
-              {error?.message ?? t("validation.ocr.errors.processingFailed")}
+              {error?.message ?? t('validation.ocr.errors.processingFailed')}
             </p>
             <button
               type="button"
@@ -699,28 +661,28 @@ export function OCREntryModal({
               className="flex items-center gap-2 px-6 py-3 text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors font-medium"
             >
               <RefreshCw className="w-5 h-5" aria-hidden="true" />
-              {t("validation.ocr.retryCapture")}
+              {t('validation.ocr.retryCapture')}
             </button>
           </div>
         )}
       </div>
 
       {/* Footer - only in results step */}
-      {step === "results" && (
+      {step === 'results' && (
         <div className="flex gap-3 px-4 py-4 border-t border-gray-200 dark:border-gray-700">
           <button
             type="button"
             onClick={handleRetry}
             className="flex-1 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
           >
-            {t("validation.ocr.retryCapture")}
+            {t('validation.ocr.retryCapture')}
           </button>
           <button
             type="button"
             onClick={onComplete}
             className="flex-1 px-4 py-3 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
           >
-            {t("validation.ocr.continueToValidation")}
+            {t('validation.ocr.continueToValidation')}
           </button>
         </div>
       )}
@@ -730,9 +692,9 @@ export function OCREntryModal({
         isOpen={showCaptureModal}
         scoresheetType={scoresheetType}
         onClose={() => {
-          setShowCaptureModal(false);
-          if (step === "capture") {
-            setStep("intro");
+          setShowCaptureModal(false)
+          if (step === 'capture') {
+            setStep('intro')
           }
         }}
         onImageSelected={handleImageSelected}
@@ -747,18 +709,18 @@ export function OCREntryModal({
         />
       )}
     </div>
-  );
+  )
 }
 
 // Collapsible section component
 interface CollapsibleSectionProps {
-  title: string;
-  count: number;
-  discrepancies: number;
-  expanded: boolean;
-  onToggle: () => void;
-  sectionId: string;
-  children: React.ReactNode;
+  title: string
+  count: number
+  discrepancies: number
+  expanded: boolean
+  onToggle: () => void
+  sectionId: string
+  children: React.ReactNode
 }
 
 function CollapsibleSection({
@@ -770,7 +732,7 @@ function CollapsibleSection({
   sectionId,
   children,
 }: CollapsibleSectionProps) {
-  const Icon = expanded ? ChevronUp : ChevronDown;
+  const Icon = expanded ? ChevronUp : ChevronDown
 
   return (
     <div className="mb-3">
@@ -782,16 +744,9 @@ function CollapsibleSection({
         aria-controls={sectionId}
       >
         <div className="flex items-center gap-2">
-          <Icon
-            className="w-4 h-4 text-gray-500 dark:text-gray-400"
-            aria-hidden="true"
-          />
-          <span className="text-sm font-medium text-gray-900 dark:text-white">
-            {title}
-          </span>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            ({count})
-          </span>
+          <Icon className="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" />
+          <span className="text-sm font-medium text-gray-900 dark:text-white">{title}</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">({count})</span>
         </div>
         {discrepancies > 0 && (
           <span className="text-xs px-2 py-0.5 rounded-full bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-400">
@@ -805,27 +760,21 @@ function CollapsibleSection({
         </div>
       )}
     </div>
-  );
+  )
 }
 
 // Raw OCR data panel for debugging/transparency
 interface RawOcrDataPanelProps {
-  data: ParsedGameSheet;
-  ocrResult: OCRResult | null;
-  imageUrl: string | null;
-  expanded: boolean;
-  onToggle: () => void;
+  data: ParsedGameSheet
+  ocrResult: OCRResult | null
+  imageUrl: string | null
+  expanded: boolean
+  onToggle: () => void
 }
 
-function RawOcrDataPanel({
-  data,
-  ocrResult,
-  imageUrl,
-  expanded,
-  onToggle,
-}: RawOcrDataPanelProps) {
-  const { t } = useTranslation();
-  const Icon = expanded ? ChevronUp : ChevronDown;
+function RawOcrDataPanel({ data, ocrResult, imageUrl, expanded, onToggle }: RawOcrDataPanelProps) {
+  const { t } = useTranslation()
+  const Icon = expanded ? ChevronUp : ChevronDown
 
   return (
     <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -837,12 +786,9 @@ function RawOcrDataPanel({
         aria-controls="raw-ocr-data"
       >
         <div className="flex items-center gap-2">
-          <Icon
-            className="w-4 h-4 text-gray-500 dark:text-gray-400"
-            aria-hidden="true"
-          />
+          <Icon className="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" />
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            {t("validation.ocr.rawData.title")}
+            {t('validation.ocr.rawData.title')}
           </span>
         </div>
       </button>
@@ -850,30 +796,26 @@ function RawOcrDataPanel({
         <div id="raw-ocr-data" className="mt-3 space-y-4">
           {/* Image with bounding box overlay */}
           {imageUrl && ocrResult && (
-            <OCRImageOverlay
-              imageUrl={imageUrl}
-              ocrResult={ocrResult}
-              parsedData={data}
-            />
+            <OCRImageOverlay imageUrl={imageUrl} ocrResult={ocrResult} parsedData={data} />
           )}
           {/* Team A */}
-          <RawTeamData team={data.teamA} label={t("validation.ocr.rawData.teamA")} />
+          <RawTeamData team={data.teamA} label={t('validation.ocr.rawData.teamA')} />
           {/* Team B */}
-          <RawTeamData team={data.teamB} label={t("validation.ocr.rawData.teamB")} />
+          <RawTeamData team={data.teamB} label={t('validation.ocr.rawData.teamB')} />
         </div>
       )}
     </div>
-  );
+  )
 }
 
 // Raw team data display
 interface RawTeamDataProps {
-  team: ParsedGameSheet["teamA"];
-  label: string;
+  team: ParsedGameSheet['teamA']
+  label: string
 }
 
 function RawTeamData({ team, label }: RawTeamDataProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
   return (
     <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
@@ -881,29 +823,27 @@ function RawTeamData({ team, label }: RawTeamDataProps) {
         <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
           {label}
         </span>
-        <p className="text-sm font-medium text-gray-900 dark:text-white">
-          {team.name || "-"}
-        </p>
+        <p className="text-sm font-medium text-gray-900 dark:text-white">{team.name || '-'}</p>
       </div>
 
       {/* Players */}
       {team.players.length > 0 && (
         <div className="mb-3">
           <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-            {t("validation.ocr.rawData.players")} ({team.players.length})
+            {t('validation.ocr.rawData.players')} ({team.players.length})
           </span>
           <div className="mt-1 overflow-x-auto">
             <table className="min-w-full text-xs">
               <thead>
                 <tr className="text-gray-500 dark:text-gray-400">
                   <th scope="col" className="text-left pr-2 font-medium">
-                    {t("validation.ocr.rawData.shirtNumber")}
+                    {t('validation.ocr.rawData.shirtNumber')}
                   </th>
                   <th scope="col" className="text-left pr-2 font-medium">
-                    {t("validation.ocr.rawData.name")}
+                    {t('validation.ocr.rawData.name')}
                   </th>
                   <th scope="col" className="text-left font-medium">
-                    {t("validation.ocr.rawData.licenseStatus")}
+                    {t('validation.ocr.rawData.licenseStatus')}
                   </th>
                 </tr>
               </thead>
@@ -913,13 +853,11 @@ function RawTeamData({ team, label }: RawTeamDataProps) {
                     key={`${player.shirtNumber}-${player.rawName || player.displayName}`}
                     className="text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-700"
                   >
-                    <td className="pr-2 py-0.5">
-                      {player.shirtNumber ?? "-"}
-                    </td>
+                    <td className="pr-2 py-0.5">{player.shirtNumber ?? '-'}</td>
                     <td className="pr-2 py-0.5 font-mono">
                       {player.rawName || player.displayName}
                     </td>
-                    <td className="py-0.5">{player.licenseStatus || "-"}</td>
+                    <td className="py-0.5">{player.licenseStatus || '-'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -932,17 +870,17 @@ function RawTeamData({ team, label }: RawTeamDataProps) {
       {team.officials.length > 0 && (
         <div>
           <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-            {t("validation.ocr.rawData.officials")} ({team.officials.length})
+            {t('validation.ocr.rawData.officials')} ({team.officials.length})
           </span>
           <div className="mt-1 overflow-x-auto">
             <table className="min-w-full text-xs">
               <thead>
                 <tr className="text-gray-500 dark:text-gray-400">
                   <th scope="col" className="text-left pr-2 font-medium">
-                    {t("validation.ocr.rawData.role")}
+                    {t('validation.ocr.rawData.role')}
                   </th>
                   <th scope="col" className="text-left font-medium">
-                    {t("validation.ocr.rawData.name")}
+                    {t('validation.ocr.rawData.name')}
                   </th>
                 </tr>
               </thead>
@@ -953,9 +891,7 @@ function RawTeamData({ team, label }: RawTeamDataProps) {
                     className="text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-700"
                   >
                     <td className="pr-2 py-0.5">{official.role}</td>
-                    <td className="py-0.5 font-mono">
-                      {official.rawName || official.displayName}
-                    </td>
+                    <td className="py-0.5 font-mono">{official.rawName || official.displayName}</td>
                   </tr>
                 ))}
               </tbody>
@@ -964,86 +900,74 @@ function RawTeamData({ team, label }: RawTeamDataProps) {
         </div>
       )}
     </div>
-  );
+  )
 }
 
 // OCR Image overlay component showing bounding boxes
 interface OCRImageOverlayProps {
-  imageUrl: string;
-  ocrResult: OCRResult;
-  parsedData: ParsedGameSheet;
+  imageUrl: string
+  ocrResult: OCRResult
+  parsedData: ParsedGameSheet
 }
 
-function OCRImageOverlay({
-  imageUrl,
-  ocrResult,
-  parsedData,
-}: OCRImageOverlayProps) {
-  const { t } = useTranslation();
-  const containerRef = useRef<HTMLDivElement>(null);
+function OCRImageOverlay({ imageUrl, ocrResult, parsedData }: OCRImageOverlayProps) {
+  const { t } = useTranslation()
+  const containerRef = useRef<HTMLDivElement>(null)
   const [imageSize, setImageSize] = useState<{
-    width: number;
-    height: number;
-  } | null>(null);
-  const [containerWidth, setContainerWidth] = useState<number>(0);
-  const [showOverlay, setShowOverlay] = useState(true);
+    width: number
+    height: number
+  } | null>(null)
+  const [containerWidth, setContainerWidth] = useState<number>(0)
+  const [showOverlay, setShowOverlay] = useState(true)
 
   // Get all parsed names for highlighting
   const parsedNames = useMemo(() => {
-    const names = new Set<string>();
-    [...parsedData.teamA.players, ...parsedData.teamB.players].forEach((p) => {
-      if (p.rawName) names.add(p.rawName.toLowerCase());
-      if (p.displayName) names.add(p.displayName.toLowerCase());
-      if (p.lastName) names.add(p.lastName.toLowerCase());
-    });
-    [...parsedData.teamA.officials, ...parsedData.teamB.officials].forEach(
-      (o) => {
-        if (o.rawName) names.add(o.rawName.toLowerCase());
-        if (o.displayName) names.add(o.displayName.toLowerCase());
-        if (o.lastName) names.add(o.lastName.toLowerCase());
-      },
-    );
-    return names;
-  }, [parsedData]);
+    const names = new Set<string>()
+    ;[...parsedData.teamA.players, ...parsedData.teamB.players].forEach((p) => {
+      if (p.rawName) names.add(p.rawName.toLowerCase())
+      if (p.displayName) names.add(p.displayName.toLowerCase())
+      if (p.lastName) names.add(p.lastName.toLowerCase())
+    })
+    ;[...parsedData.teamA.officials, ...parsedData.teamB.officials].forEach((o) => {
+      if (o.rawName) names.add(o.rawName.toLowerCase())
+      if (o.displayName) names.add(o.displayName.toLowerCase())
+      if (o.lastName) names.add(o.lastName.toLowerCase())
+    })
+    return names
+  }, [parsedData])
 
   // Check if a word matches any parsed name
   const isMatchedWord = useCallback(
     (word: string) => {
-      const lower = word.toLowerCase();
-      return parsedNames.has(lower);
+      const lower = word.toLowerCase()
+      return parsedNames.has(lower)
     },
-    [parsedNames],
-  );
+    [parsedNames]
+  )
 
   // Handle image load to get dimensions and container width
-  const handleImageLoad = useCallback(
-    (e: React.SyntheticEvent<HTMLImageElement>) => {
-      const img = e.currentTarget;
-      setImageSize({ width: img.naturalWidth, height: img.naturalHeight });
-      // Get container width after image loads
-      if (containerRef.current) {
-        setContainerWidth(containerRef.current.offsetWidth);
-      }
-    },
-    [],
-  );
+  const handleImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget
+    setImageSize({ width: img.naturalWidth, height: img.naturalHeight })
+    // Get container width after image loads
+    if (containerRef.current) {
+      setContainerWidth(containerRef.current.offsetWidth)
+    }
+  }, [])
 
   // Calculate scale factor based on container width
   const scale = useMemo(() => {
-    if (!imageSize || containerWidth === 0) return 1;
-    return containerWidth / imageSize.width;
-  }, [imageSize, containerWidth]);
+    if (!imageSize || containerWidth === 0) return 1
+    return containerWidth / imageSize.width
+  }, [imageSize, containerWidth])
 
   return (
     <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <Image
-            className="w-4 h-4 text-gray-500 dark:text-gray-400"
-            aria-hidden="true"
-          />
+          <Image className="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" />
           <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-            {t("validation.ocr.rawData.imageOverlay")}
+            {t('validation.ocr.rawData.imageOverlay')}
           </span>
         </div>
         {ocrResult.hasPreciseBoundingBoxes && (
@@ -1053,8 +977,8 @@ function OCRImageOverlay({
             className="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
           >
             {showOverlay
-              ? t("validation.ocr.rawData.hideOverlay")
-              : t("validation.ocr.rawData.showOverlay")}
+              ? t('validation.ocr.rawData.hideOverlay')
+              : t('validation.ocr.rawData.showOverlay')}
           </button>
         )}
       </div>
@@ -1065,13 +989,13 @@ function OCRImageOverlay({
           <div className="flex items-center gap-1">
             <span className="w-3 h-3 rounded border-2 border-success-500 bg-success-500/20" />
             <span className="text-gray-600 dark:text-gray-400">
-              {t("validation.ocr.rawData.matchedWords")}
+              {t('validation.ocr.rawData.matchedWords')}
             </span>
           </div>
           <div className="flex items-center gap-1">
             <span className="w-3 h-3 rounded border-2 border-gray-400 bg-gray-400/20" />
             <span className="text-gray-600 dark:text-gray-400">
-              {t("validation.ocr.rawData.otherWords")}
+              {t('validation.ocr.rawData.otherWords')}
             </span>
           </div>
         </div>
@@ -1084,7 +1008,7 @@ function OCRImageOverlay({
       >
         <img
           src={imageUrl}
-          alt={t("validation.ocr.rawData.capturedImage")}
+          alt={t('validation.ocr.rawData.capturedImage')}
           onLoad={handleImageLoad}
           className="w-full h-auto"
         />
@@ -1101,7 +1025,7 @@ function OCRImageOverlay({
             preserveAspectRatio="none"
           >
             {ocrResult.words.map((word) => {
-              const isMatched = isMatchedWord(word.text);
+              const isMatched = isMatchedWord(word.text)
               return (
                 <g key={`${word.bbox.x0}-${word.bbox.y0}-${word.bbox.x1}-${word.bbox.y1}`}>
                   <rect
@@ -1109,13 +1033,13 @@ function OCRImageOverlay({
                     y={word.bbox.y0}
                     width={word.bbox.x1 - word.bbox.x0}
                     height={word.bbox.y1 - word.bbox.y0}
-                    fill={isMatched ? "rgba(34, 197, 94, 0.2)" : "rgba(156, 163, 175, 0.15)"}
-                    stroke={isMatched ? "#22c55e" : "#9ca3af"}
+                    fill={isMatched ? 'rgba(34, 197, 94, 0.2)' : 'rgba(156, 163, 175, 0.15)'}
+                    stroke={isMatched ? '#22c55e' : '#9ca3af'}
                     strokeWidth={isMatched ? 2 : 1}
                     rx={2}
                   />
                 </g>
-              );
+              )
             })}
           </svg>
         )}
@@ -1123,10 +1047,10 @@ function OCRImageOverlay({
 
       {/* Word count info */}
       <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-        {ocrResult.words.length} {t("validation.ocr.rawData.wordsDetected")}
-        {" • "}
-        {ocrResult.words.filter((w) => isMatchedWord(w.text)).length}{" "}
-        {t("validation.ocr.rawData.wordsMatched")}
+        {ocrResult.words.length} {t('validation.ocr.rawData.wordsDetected')}
+        {' • '}
+        {ocrResult.words.filter((w) => isMatchedWord(w.text)).length}{' '}
+        {t('validation.ocr.rawData.wordsMatched')}
       </div>
 
       {/* Raw OCR text - shown when bounding boxes are not precise */}
@@ -1134,7 +1058,7 @@ function OCRImageOverlay({
         <div className="mt-3">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-              {t("validation.ocr.rawData.rawText")}
+              {t('validation.ocr.rawData.rawText')}
             </span>
           </div>
           <pre className="text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700 overflow-auto max-h-64 whitespace-pre-wrap break-words">
@@ -1143,5 +1067,5 @@ function OCRImageOverlay({
         </div>
       )}
     </div>
-  );
+  )
 }

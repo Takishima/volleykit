@@ -5,14 +5,16 @@
  * Uses a dedicated storage key to avoid polluting other cached data.
  */
 
-import { TRAVEL_TIME_STORAGE_KEY, TRAVEL_TIME_CACHE_TTL } from "./cache";
-import type { TravelTimeResult } from "./types";
-import type { DayType } from "./cache";
-import { logger } from "@/shared/utils/logger";
+import { logger } from '@/shared/utils/logger'
+
+import { TRAVEL_TIME_STORAGE_KEY, TRAVEL_TIME_CACHE_TTL } from './cache'
+
+import type { DayType } from './cache'
+import type { TravelTimeResult } from './types'
 
 interface CachedTravelTime {
-  result: TravelTimeResult;
-  timestamp: number;
+  result: TravelTimeResult
+  timestamp: number
 }
 
 /**
@@ -21,7 +23,7 @@ interface CachedTravelTime {
  * - v1: Initial version
  * - v2: Invalidate cache due to station name cleanup (fix for PLATFORM_NOT_WHEELCHAIR_ACCESSIBLE leak)
  */
-const CACHE_VERSION = 2;
+const CACHE_VERSION = 2
 
 /**
  * Cache structure with version for future migrations.
@@ -29,19 +31,15 @@ const CACHE_VERSION = 2;
  * in loadCache() to handle upgrading old cache data.
  */
 interface TravelTimeCache {
-  version: number;
-  entries: Record<string, CachedTravelTime>;
+  version: number
+  entries: Record<string, CachedTravelTime>
 }
 
 /**
  * Build a cache key from the route parameters.
  */
-export function buildCacheKey(
-  hallId: string,
-  homeLocationHash: string,
-  dayType: DayType,
-): string {
-  return `${hallId}:${homeLocationHash}:${dayType}`;
+export function buildCacheKey(hallId: string, homeLocationHash: string, dayType: DayType): string {
+  return `${hallId}:${homeLocationHash}:${dayType}`
 }
 
 /**
@@ -50,21 +48,21 @@ export function buildCacheKey(
  */
 function loadCache(): TravelTimeCache {
   try {
-    const stored = localStorage.getItem(TRAVEL_TIME_STORAGE_KEY);
+    const stored = localStorage.getItem(TRAVEL_TIME_STORAGE_KEY)
     if (!stored) {
-      return { version: CACHE_VERSION, entries: {} };
+      return { version: CACHE_VERSION, entries: {} }
     }
 
-    const parsed = JSON.parse(stored) as TravelTimeCache;
+    const parsed = JSON.parse(stored) as TravelTimeCache
 
     // Validate structure and version - invalidate old versions
-    if (parsed.version !== CACHE_VERSION || typeof parsed.entries !== "object") {
-      return { version: CACHE_VERSION, entries: {} };
+    if (parsed.version !== CACHE_VERSION || typeof parsed.entries !== 'object') {
+      return { version: CACHE_VERSION, entries: {} }
     }
 
-    return parsed;
+    return parsed
   } catch {
-    return { version: CACHE_VERSION, entries: {} };
+    return { version: CACHE_VERSION, entries: {} }
   }
 }
 
@@ -73,11 +71,11 @@ function loadCache(): TravelTimeCache {
  */
 function saveCache(cache: TravelTimeCache): void {
   try {
-    localStorage.setItem(TRAVEL_TIME_STORAGE_KEY, JSON.stringify(cache));
+    localStorage.setItem(TRAVEL_TIME_STORAGE_KEY, JSON.stringify(cache))
   } catch (error) {
     // localStorage might be full or disabled - log for debugging but don't fail
-    if (error instanceof DOMException && error.name === "QuotaExceededError") {
-      logger.warn("Travel time cache: localStorage quota exceeded");
+    if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+      logger.warn('Travel time cache: localStorage quota exceeded')
     }
   }
 }
@@ -93,26 +91,26 @@ function saveCache(cache: TravelTimeCache): void {
 export function getCachedTravelTime(
   hallId: string,
   homeLocationHash: string,
-  dayType: DayType,
+  dayType: DayType
 ): TravelTimeResult | null {
-  const cache = loadCache();
-  const key = buildCacheKey(hallId, homeLocationHash, dayType);
-  const entry = cache.entries[key];
+  const cache = loadCache()
+  const key = buildCacheKey(hallId, homeLocationHash, dayType)
+  const entry = cache.entries[key]
 
   if (!entry) {
-    return null;
+    return null
   }
 
   // Check if entry has expired
-  const age = Date.now() - entry.timestamp;
+  const age = Date.now() - entry.timestamp
   if (age > TRAVEL_TIME_CACHE_TTL) {
     // Entry expired, remove it
-    delete cache.entries[key];
-    saveCache(cache);
-    return null;
+    delete cache.entries[key]
+    saveCache(cache)
+    return null
   }
 
-  return entry.result;
+  return entry.result
 }
 
 /**
@@ -127,25 +125,25 @@ export function setCachedTravelTime(
   hallId: string,
   homeLocationHash: string,
   dayType: DayType,
-  result: TravelTimeResult,
+  result: TravelTimeResult
 ): void {
-  const cache = loadCache();
-  const key = buildCacheKey(hallId, homeLocationHash, dayType);
+  const cache = loadCache()
+  const key = buildCacheKey(hallId, homeLocationHash, dayType)
 
   cache.entries[key] = {
     result,
     timestamp: Date.now(),
-  };
+  }
 
   // Clean up expired entries while we're at it
-  const now = Date.now();
+  const now = Date.now()
   for (const [entryKey, entry] of Object.entries(cache.entries)) {
     if (now - entry.timestamp > TRAVEL_TIME_CACHE_TTL) {
-      delete cache.entries[entryKey];
+      delete cache.entries[entryKey]
     }
   }
 
-  saveCache(cache);
+  saveCache(cache)
 }
 
 /**
@@ -158,12 +156,12 @@ export function setCachedTravelTime(
 export function removeCachedTravelTime(
   hallId: string,
   homeLocationHash: string,
-  dayType: DayType,
+  dayType: DayType
 ): void {
-  const cache = loadCache();
-  const key = buildCacheKey(hallId, homeLocationHash, dayType);
-  delete cache.entries[key];
-  saveCache(cache);
+  const cache = loadCache()
+  const key = buildCacheKey(hallId, homeLocationHash, dayType)
+  delete cache.entries[key]
+  saveCache(cache)
 }
 
 /**
@@ -171,7 +169,7 @@ export function removeCachedTravelTime(
  */
 export function clearTravelTimeCache(): void {
   try {
-    localStorage.removeItem(TRAVEL_TIME_STORAGE_KEY);
+    localStorage.removeItem(TRAVEL_TIME_STORAGE_KEY)
   } catch {
     // Ignore errors
   }
@@ -181,21 +179,21 @@ export function clearTravelTimeCache(): void {
  * Get cache statistics for display in settings.
  */
 export function getTravelTimeCacheStats(): {
-  entryCount: number;
-  oldestEntryAge: number | null;
+  entryCount: number
+  oldestEntryAge: number | null
 } {
-  const cache = loadCache();
-  const entries = Object.values(cache.entries);
+  const cache = loadCache()
+  const entries = Object.values(cache.entries)
 
   if (entries.length === 0) {
-    return { entryCount: 0, oldestEntryAge: null };
+    return { entryCount: 0, oldestEntryAge: null }
   }
 
-  const now = Date.now();
-  const oldestTimestamp = Math.min(...entries.map((e) => e.timestamp));
+  const now = Date.now()
+  const oldestTimestamp = Math.min(...entries.map((e) => e.timestamp))
 
   return {
     entryCount: entries.length,
     oldestEntryAge: now - oldestTimestamp,
-  };
+  }
 }

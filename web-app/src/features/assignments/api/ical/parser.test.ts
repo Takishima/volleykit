@@ -1,10 +1,8 @@
-import { describe, it, expect } from 'vitest';
-import {
-  parseICalFeed,
-  extractAssignment,
-  parseCalendarFeed,
-} from './parser';
-import type { ICalEvent } from './types';
+import { describe, it, expect } from 'vitest'
+
+import { parseICalFeed, extractAssignment, parseCalendarFeed } from './parser'
+
+import type { ICalEvent } from './types'
 
 // Sample iCal content for testing (using real API format)
 const SAMPLE_ICAL = `BEGIN:VCALENDAR
@@ -20,7 +18,7 @@ LOCATION:Sternenfeldstrasse 50\\, 4127 Birsfelden\\, Suisse
 X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-ADDRESS=Sternenfeldstrasse 50\\, 4127 Birsfelden\\, Suisse;X-APPLE-RADIUS=72;X-TITLE=Sporthalle Sternenfeld:47.5584;7.6277
 GEO:47.5584;7.6277
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
 // Sample with multiple events (using real API format)
 const MULTI_EVENT_ICAL = `BEGIN:VCALENDAR
@@ -42,64 +40,60 @@ DTEND:20250221T220000
 LOCATION:Address 2\\, Suisse
 X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-TITLE=Halle 2:47.0;8.0
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
 describe('parseICalFeed', () => {
   describe('basic parsing', () => {
     it('parses a single VEVENT from iCal content', () => {
-      const events = parseICalFeed(SAMPLE_ICAL);
+      const events = parseICalFeed(SAMPLE_ICAL)
 
-      expect(events).toHaveLength(1);
-      expect(events[0]!.uid).toBe('referee-convocation-for-game-392936');
-      expect(events[0]!.summary).toBe(
-        'ARB 1 | TV St. Johann 1 - VTV Horw 1 (Mobiliar Volley Cup)'
-      );
-    });
+      expect(events).toHaveLength(1)
+      expect(events[0]!.uid).toBe('referee-convocation-for-game-392936')
+      expect(events[0]!.summary).toBe('ARB 1 | TV St. Johann 1 - VTV Horw 1 (Mobiliar Volley Cup)')
+    })
 
     it('parses multiple VEVENTs from iCal content', () => {
-      const events = parseICalFeed(MULTI_EVENT_ICAL);
+      const events = parseICalFeed(MULTI_EVENT_ICAL)
 
-      expect(events).toHaveLength(2);
-      expect(events[0]!.uid).toBe('referee-convocation-for-game-100001');
-      expect(events[1]!.uid).toBe('referee-convocation-for-game-100002');
-    });
+      expect(events).toHaveLength(2)
+      expect(events[0]!.uid).toBe('referee-convocation-for-game-100001')
+      expect(events[1]!.uid).toBe('referee-convocation-for-game-100002')
+    })
 
     it('parses DTSTART and DTEND to ISO format', () => {
-      const events = parseICalFeed(SAMPLE_ICAL);
+      const events = parseICalFeed(SAMPLE_ICAL)
 
-      expect(events[0]!.dtstart).toBe('2025-02-15T14:00:00');
-      expect(events[0]!.dtend).toBe('2025-02-15T17:00:00');
-    });
+      expect(events[0]!.dtstart).toBe('2025-02-15T14:00:00')
+      expect(events[0]!.dtend).toBe('2025-02-15T17:00:00')
+    })
 
     it('parses LOCATION field', () => {
-      const events = parseICalFeed(SAMPLE_ICAL);
+      const events = parseICalFeed(SAMPLE_ICAL)
 
-      expect(events[0]!.location).toBe(
-        'Sternenfeldstrasse 50, 4127 Birsfelden, Suisse'
-      );
-    });
+      expect(events[0]!.location).toBe('Sternenfeldstrasse 50, 4127 Birsfelden, Suisse')
+    })
 
     it('parses X-APPLE-STRUCTURED-LOCATION X-TITLE', () => {
-      const events = parseICalFeed(SAMPLE_ICAL);
+      const events = parseICalFeed(SAMPLE_ICAL)
 
-      expect(events[0]!.appleLocationTitle).toBe('Sporthalle Sternenfeld');
-    });
+      expect(events[0]!.appleLocationTitle).toBe('Sporthalle Sternenfeld')
+    })
 
     it('parses GEO coordinates', () => {
-      const events = parseICalFeed(SAMPLE_ICAL);
+      const events = parseICalFeed(SAMPLE_ICAL)
 
       expect(events[0]!.geo).toEqual({
         latitude: 47.5584,
         longitude: 7.6277,
-      });
-    });
+      })
+    })
 
     it('handles events without GEO field', () => {
-      const events = parseICalFeed(MULTI_EVENT_ICAL);
+      const events = parseICalFeed(MULTI_EVENT_ICAL)
 
-      expect(events[1]!.geo).toBeNull();
-    });
-  });
+      expect(events[1]!.geo).toBeNull()
+    })
+  })
 
   describe('multi-line field handling (RFC 5545 unfolding)', () => {
     it('unfolds continuation lines starting with space', () => {
@@ -110,14 +104,12 @@ SUMMARY:This is a very long summary that continues
  on the next line
 DTSTART:20250215T140000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events[0]!.summary).toBe(
-        'This is a very long summary that continueson the next line'
-      );
-    });
+      expect(events[0]!.summary).toBe('This is a very long summary that continueson the next line')
+    })
 
     it('unfolds continuation lines starting with tab', () => {
       const ical = `BEGIN:VCALENDAR
@@ -127,13 +119,13 @@ SUMMARY:Summary with tab
 \tcontinuation
 DTSTART:20250215T140000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events[0]!.summary).toBe('Summary with tabcontinuation');
-    });
-  });
+      expect(events[0]!.summary).toBe('Summary with tabcontinuation')
+    })
+  })
 
   describe('escaped character handling', () => {
     it('unescapes newline characters in DESCRIPTION', () => {
@@ -144,12 +136,12 @@ SUMMARY:Test
 DESCRIPTION:Line 1\\nLine 2\\nLine 3
 DTSTART:20250215T140000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events[0]!.description).toBe('Line 1\nLine 2\nLine 3');
-    });
+      expect(events[0]!.description).toBe('Line 1\nLine 2\nLine 3')
+    })
 
     it('unescapes comma characters', () => {
       const ical = `BEGIN:VCALENDAR
@@ -159,12 +151,12 @@ SUMMARY:Team A\\, Division 1 | Match
 DESCRIPTION:Test
 DTSTART:20250215T140000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events[0]!.summary).toBe('Team A, Division 1 | Match');
-    });
+      expect(events[0]!.summary).toBe('Team A, Division 1 | Match')
+    })
 
     it('unescapes backslash characters', () => {
       const ical = `BEGIN:VCALENDAR
@@ -174,12 +166,12 @@ SUMMARY:Test\\\\Path
 DESCRIPTION:Test
 DTSTART:20250215T140000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events[0]!.summary).toBe('Test\\Path');
-    });
+      expect(events[0]!.summary).toBe('Test\\Path')
+    })
 
     it('handles escaped backslash followed by n without double-unescaping', () => {
       // \\\\n in the template literal = \\n in the actual string = escaped backslash + n
@@ -191,14 +183,14 @@ SUMMARY:Test
 DESCRIPTION:Path\\\\nName
 DTSTART:20250215T140000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
       // Should be backslash + 'n' + 'N' + 'a' + 'm' + 'e' (6 chars), not newline + 'Name' (5 chars)
-      expect(events[0]!.description).toBe('Path\\nName');
-      expect(events[0]!.description.length).toBe(10);
-    });
+      expect(events[0]!.description).toBe('Path\\nName')
+      expect(events[0]!.description.length).toBe(10)
+    })
 
     it('unescapes semicolon characters', () => {
       const ical = `BEGIN:VCALENDAR
@@ -208,13 +200,13 @@ SUMMARY:Test
 DESCRIPTION:Key\\;Value
 DTSTART:20250215T140000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events[0]!.description).toBe('Key;Value');
-    });
-  });
+      expect(events[0]!.description).toBe('Key;Value')
+    })
+  })
 
   describe('date format handling', () => {
     it('handles UTC dates with Z suffix', () => {
@@ -225,13 +217,13 @@ SUMMARY:Test
 DTSTART:20250215T140000Z
 DTEND:20250215T170000Z
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events[0]!.dtstart).toBe('2025-02-15T14:00:00Z');
-      expect(events[0]!.dtend).toBe('2025-02-15T17:00:00Z');
-    });
+      expect(events[0]!.dtstart).toBe('2025-02-15T14:00:00Z')
+      expect(events[0]!.dtend).toBe('2025-02-15T17:00:00Z')
+    })
 
     it('handles date-only format (all-day events)', () => {
       const ical = `BEGIN:VCALENDAR
@@ -241,13 +233,13 @@ SUMMARY:All Day Event
 DTSTART:20250215
 DTEND:20250216
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events[0]!.dtstart).toBe('2025-02-15');
-      expect(events[0]!.dtend).toBe('2025-02-16');
-    });
+      expect(events[0]!.dtstart).toBe('2025-02-15')
+      expect(events[0]!.dtend).toBe('2025-02-16')
+    })
 
     it('handles dates with TZID parameter', () => {
       const ical = `BEGIN:VCALENDAR
@@ -257,13 +249,13 @@ SUMMARY:Test
 DTSTART;TZID=Europe/Zurich:20250215T140000
 DTEND;TZID=Europe/Zurich:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events[0]!.dtstart).toBe('2025-02-15T14:00:00');
-      expect(events[0]!.dtend).toBe('2025-02-15T17:00:00');
-    });
+      expect(events[0]!.dtstart).toBe('2025-02-15T14:00:00')
+      expect(events[0]!.dtend).toBe('2025-02-15T17:00:00')
+    })
 
     it('uses DTSTART as DTEND when DTEND is missing', () => {
       const ical = `BEGIN:VCALENDAR
@@ -272,27 +264,27 @@ UID:test-123
 SUMMARY:Test
 DTSTART:20250215T140000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events[0]!.dtend).toBe('2025-02-15T14:00:00');
-    });
-  });
+      expect(events[0]!.dtend).toBe('2025-02-15T14:00:00')
+    })
+  })
 
   describe('edge cases', () => {
     it('returns empty array for empty input', () => {
-      expect(parseICalFeed('')).toEqual([]);
-    });
+      expect(parseICalFeed('')).toEqual([])
+    })
 
     it('returns empty array for null/undefined input', () => {
-      expect(parseICalFeed(null as unknown as string)).toEqual([]);
-      expect(parseICalFeed(undefined as unknown as string)).toEqual([]);
-    });
+      expect(parseICalFeed(null as unknown as string)).toEqual([])
+      expect(parseICalFeed(undefined as unknown as string)).toEqual([])
+    })
 
     it('returns empty array for non-string input', () => {
-      expect(parseICalFeed(123 as unknown as string)).toEqual([]);
-    });
+      expect(parseICalFeed(123 as unknown as string)).toEqual([])
+    })
 
     it('skips events without required UID field', () => {
       const ical = `BEGIN:VCALENDAR
@@ -300,12 +292,12 @@ BEGIN:VEVENT
 SUMMARY:No UID
 DTSTART:20250215T140000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events).toHaveLength(0);
-    });
+      expect(events).toHaveLength(0)
+    })
 
     it('skips events without required SUMMARY field', () => {
       const ical = `BEGIN:VCALENDAR
@@ -313,12 +305,12 @@ BEGIN:VEVENT
 UID:test-123
 DTSTART:20250215T140000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events).toHaveLength(0);
-    });
+      expect(events).toHaveLength(0)
+    })
 
     it('skips events without required DTSTART field', () => {
       const ical = `BEGIN:VCALENDAR
@@ -326,12 +318,12 @@ BEGIN:VEVENT
 UID:test-123
 SUMMARY:Test
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events).toHaveLength(0);
-    });
+      expect(events).toHaveLength(0)
+    })
 
     it('handles malformed iCal without END:VEVENT', () => {
       const ical = `BEGIN:VCALENDAR
@@ -339,12 +331,12 @@ BEGIN:VEVENT
 UID:test-123
 SUMMARY:Test
 DTSTART:20250215T140000
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events).toHaveLength(0);
-    });
+      expect(events).toHaveLength(0)
+    })
 
     it('handles invalid GEO format gracefully', () => {
       const ical = `BEGIN:VCALENDAR
@@ -354,12 +346,12 @@ SUMMARY:Test
 DTSTART:20250215T140000
 GEO:invalid
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events[0]!.geo).toBeNull();
-    });
+      expect(events[0]!.geo).toBeNull()
+    })
 
     it('handles GEO with non-numeric values', () => {
       const ical = `BEGIN:VCALENDAR
@@ -369,12 +361,12 @@ SUMMARY:Test
 DTSTART:20250215T140000
 GEO:abc;def
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events[0]!.geo).toBeNull();
-    });
+      expect(events[0]!.geo).toBeNull()
+    })
 
     it('handles events without DESCRIPTION', () => {
       const ical = `BEGIN:VCALENDAR
@@ -383,12 +375,12 @@ UID:test-123
 SUMMARY:Test
 DTSTART:20250215T140000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events[0]!.description).toBe('');
-    });
+      expect(events[0]!.description).toBe('')
+    })
 
     it('handles events without LOCATION', () => {
       const ical = `BEGIN:VCALENDAR
@@ -397,12 +389,12 @@ UID:test-123
 SUMMARY:Test
 DTSTART:20250215T140000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events[0]!.location).toBeNull();
-    });
+      expect(events[0]!.location).toBeNull()
+    })
 
     it('handles case-insensitive property names', () => {
       const ical = `BEGIN:VCALENDAR
@@ -411,14 +403,14 @@ uid:test-123
 SUMMARY:Test
 dtstart:20250215T140000
 end:vevent
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events).toHaveLength(1);
-      expect(events[0]!.uid).toBe('test-123');
-    });
-  });
+      expect(events).toHaveLength(1)
+      expect(events[0]!.uid).toBe('test-123')
+    })
+  })
 
   describe('Plus Code extraction', () => {
     it('extracts Plus Code from URL-encoded Google Maps URL in description', () => {
@@ -429,12 +421,12 @@ SUMMARY:Test
 DESCRIPTION:https://maps.google.com/?q=8FV9HH8J%2B49&hl=fr
 DTSTART:20250215T140000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events[0]!.plusCode).toBe('8FV9HH8J+49');
-    });
+      expect(events[0]!.plusCode).toBe('8FV9HH8J+49')
+    })
 
     it('extracts Plus Code from non-URL-encoded Google Maps URL', () => {
       const ical = `BEGIN:VCALENDAR
@@ -444,12 +436,12 @@ SUMMARY:Test
 DESCRIPTION:https://maps.google.com/?q=8FVC7HR7+C3
 DTSTART:20250215T140000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events[0]!.plusCode).toBe('8FVC7HR7+C3');
-    });
+      expect(events[0]!.plusCode).toBe('8FVC7HR7+C3')
+    })
 
     it('extracts Plus Code with language parameter', () => {
       const ical = `BEGIN:VCALENDAR
@@ -459,12 +451,12 @@ SUMMARY:Test
 DESCRIPTION:Maps: https://maps.google.com/?q=8FVCFH6H%2BV4&hl=de End
 DTSTART:20250215T140000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events[0]!.plusCode).toBe('8FVCFH6H+V4');
-    });
+      expect(events[0]!.plusCode).toBe('8FVCFH6H+V4')
+    })
 
     it('returns null when no Plus Code in URL', () => {
       const ical = `BEGIN:VCALENDAR
@@ -474,12 +466,12 @@ SUMMARY:Test
 DESCRIPTION:https://maps.google.com/?q=47.5,7.6
 DTSTART:20250215T140000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events[0]!.plusCode).toBeNull();
-    });
+      expect(events[0]!.plusCode).toBeNull()
+    })
 
     it('returns null when no Maps URL in description', () => {
       const ical = `BEGIN:VCALENDAR
@@ -489,12 +481,12 @@ SUMMARY:Test
 DESCRIPTION:No maps link here
 DTSTART:20250215T140000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events[0]!.plusCode).toBeNull();
-    });
+      expect(events[0]!.plusCode).toBeNull()
+    })
 
     it('handles Plus Code in description with other content', () => {
       const ical = `BEGIN:VCALENDAR
@@ -504,12 +496,12 @@ SUMMARY:Test
 DESCRIPTION:Address: Some Street 123\\nhttps://maps.google.com/?q=8FV9HMQ5%2BF5&hl=fr\\nMore info
 DTSTART:20250215T140000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events[0]!.plusCode).toBe('8FV9HMQ5+F5');
-    });
+      expect(events[0]!.plusCode).toBe('8FV9HMQ5+F5')
+    })
 
     it('decodes Plus Code to coordinates when GEO is missing', () => {
       // Plus Code 8FVC7HR7+C3 decodes to approximately 47.290, 8.560 (Thalwil, Switzerland)
@@ -520,16 +512,16 @@ SUMMARY:Test
 DESCRIPTION:https://maps.google.com/?q=8FVC7HR7%2BC3&hl=fr
 DTSTART:20250215T140000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
-      expect(events[0]!.plusCode).toBe('8FVC7HR7+C3');
-      expect(events[0]!.geo).not.toBeNull();
+      expect(events[0]!.plusCode).toBe('8FVC7HR7+C3')
+      expect(events[0]!.geo).not.toBeNull()
       // Plus Codes decode to approximate center of the code area
-      expect(events[0]!.geo?.latitude).toBeCloseTo(47.29, 1);
-      expect(events[0]!.geo?.longitude).toBeCloseTo(8.56, 1);
-    });
+      expect(events[0]!.geo?.latitude).toBeCloseTo(47.29, 1)
+      expect(events[0]!.geo?.longitude).toBeCloseTo(8.56, 1)
+    })
 
     it('does not override GEO when both GEO and Plus Code are present', () => {
       const ical = `BEGIN:VCALENDAR
@@ -540,16 +532,16 @@ DESCRIPTION:https://maps.google.com/?q=8FVC7HR7%2BC3&hl=fr
 DTSTART:20250215T140000
 GEO:47.5584;7.6277
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const events = parseICalFeed(ical);
+      const events = parseICalFeed(ical)
 
       // Original GEO should be preserved, not overwritten by Plus Code
-      expect(events[0]!.geo?.latitude).toBe(47.5584);
-      expect(events[0]!.geo?.longitude).toBe(7.6277);
-    });
-  });
-});
+      expect(events[0]!.geo?.latitude).toBe(47.5584)
+      expect(events[0]!.geo?.longitude).toBe(7.6277)
+    })
+  })
+})
 
 describe('extractAssignment', () => {
   // Helper to create a minimal valid ICalEvent (using real API format)
@@ -565,53 +557,51 @@ describe('extractAssignment', () => {
       geo: { latitude: 47.5584, longitude: 7.6277 },
       plusCode: null,
       ...overrides,
-    };
+    }
   }
 
   describe('game ID extraction', () => {
     it('extracts game ID from standard UID format', () => {
       const event = createEvent({
         uid: 'referee-convocation-for-game-392936',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.gameId).toBe('392936');
-      expect(result.parsedFields.gameId).toBe(true);
-    });
+      expect(result.assignment.gameId).toBe('392936')
+      expect(result.parsedFields.gameId).toBe(true)
+    })
 
     it('extracts game ID with many digits', () => {
       const event = createEvent({
         uid: 'referee-convocation-for-game-1234567890',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.gameId).toBe('1234567890');
-    });
+      expect(result.assignment.gameId).toBe('1234567890')
+    })
 
     it('adds warning when game ID cannot be extracted', () => {
       const event = createEvent({
         uid: 'some-other-format-abc',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.gameId).toBe('');
-      expect(result.parsedFields.gameId).toBe(false);
-      expect(result.warnings).toContain('Could not extract game ID from UID');
-    });
+      expect(result.assignment.gameId).toBe('')
+      expect(result.parsedFields.gameId).toBe(false)
+      expect(result.warnings).toContain('Could not extract game ID from UID')
+    })
 
     it('uses fallback pattern for IDs with hash prefix', () => {
       const event = createEvent({
         uid: 'event-#123456',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.gameId).toBe('123456');
-      expect(result.parsedFields.gameId).toBe(true);
-      expect(result.warnings).toContain(
-        'Game ID extracted using fallback pattern'
-      );
-    });
-  });
+      expect(result.assignment.gameId).toBe('123456')
+      expect(result.parsedFields.gameId).toBe(true)
+      expect(result.warnings).toContain('Game ID extracted using fallback pattern')
+    })
+  })
 
   describe('role extraction', () => {
     const roleTestCases = [
@@ -635,240 +625,236 @@ describe('extractAssignment', () => {
       { input: '2.SR', expected: 'referee2', raw: '2.SR' },
       { input: '1. LR', expected: 'lineReferee', raw: '1. LR' },
       { input: '2. LR', expected: 'lineReferee', raw: '2. LR' },
-    ];
+    ]
 
     roleTestCases.forEach(({ input, expected, raw }) => {
       it(`maps "${input}" to "${expected}"`, () => {
         const event = createEvent({
           summary: `${input} | Team A - Team B (League)`,
-        });
-        const result = extractAssignment(event);
+        })
+        const result = extractAssignment(event)
 
-        expect(result.assignment.role).toBe(expected);
-        expect(result.assignment.roleRaw).toBe(raw);
-        expect(result.parsedFields.role).toBe(true);
-      });
-    });
+        expect(result.assignment.role).toBe(expected)
+        expect(result.assignment.roleRaw).toBe(raw)
+        expect(result.parsedFields.role).toBe(true)
+      })
+    })
 
     it('handles case-insensitive role matching', () => {
       const event = createEvent({
         summary: 'arb 1 | Team A - Team B (League)',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.role).toBe('referee1');
-    });
+      expect(result.assignment.role).toBe('referee1')
+    })
 
     it('handles roles with extra whitespace', () => {
       const event = createEvent({
         summary: '  ARB  1  | Team A - Team B (League)',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.role).toBe('referee1');
-    });
+      expect(result.assignment.role).toBe('referee1')
+    })
 
     it('returns unknown for unrecognized roles', () => {
       const event = createEvent({
         summary: 'UNKNOWN | Team A - Team B (League)',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.role).toBe('unknown');
-      expect(result.assignment.roleRaw).toBe('UNKNOWN');
-      expect(result.parsedFields.role).toBe(false);
-      expect(result.warnings).toContain('Unknown role format: "UNKNOWN"');
-    });
-  });
+      expect(result.assignment.role).toBe('unknown')
+      expect(result.assignment.roleRaw).toBe('UNKNOWN')
+      expect(result.parsedFields.role).toBe(false)
+      expect(result.warnings).toContain('Unknown role format: "UNKNOWN"')
+    })
+  })
 
   describe('teams extraction', () => {
     it('extracts home and away teams from standard format', () => {
       const event = createEvent({
         summary: 'ARB 1 | TV St. Johann 1 - VTV Horw 1 (League)',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.homeTeam).toBe('TV St. Johann 1');
-      expect(result.assignment.awayTeam).toBe('VTV Horw 1');
-      expect(result.parsedFields.teams).toBe(true);
-    });
+      expect(result.assignment.homeTeam).toBe('TV St. Johann 1')
+      expect(result.assignment.awayTeam).toBe('VTV Horw 1')
+      expect(result.parsedFields.teams).toBe(true)
+    })
 
     it('handles teams with special characters', () => {
       const event = createEvent({
         summary: 'ARB 1 | VBC Zürich (W) - BC Bern/Köniz 2 (League)',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.homeTeam).toBe('VBC Zürich (W)');
-      expect(result.assignment.awayTeam).toBe('BC Bern/Köniz 2');
-    });
+      expect(result.assignment.homeTeam).toBe('VBC Zürich (W)')
+      expect(result.assignment.awayTeam).toBe('BC Bern/Köniz 2')
+    })
 
     it('handles teams with numbers in names', () => {
       const event = createEvent({
         summary: 'ARB 1 | Team 1 Basel 3 - FC 2000 Luzern 1 (League)',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.homeTeam).toBe('Team 1 Basel 3');
-      expect(result.assignment.awayTeam).toBe('FC 2000 Luzern 1');
-    });
+      expect(result.assignment.homeTeam).toBe('Team 1 Basel 3')
+      expect(result.assignment.awayTeam).toBe('FC 2000 Luzern 1')
+    })
 
     it('adds warning when teams cannot be extracted', () => {
       const event = createEvent({
         summary: 'ARB 1 | No separator here (League)',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.parsedFields.teams).toBe(false);
-      expect(result.warnings).toContain('Could not extract teams from summary');
-    });
+      expect(result.parsedFields.teams).toBe(false)
+      expect(result.warnings).toContain('Could not extract teams from summary')
+    })
 
     it('handles summary without pipe separator', () => {
       const event = createEvent({
         summary: 'Some random event title',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.homeTeam).toBe('');
-      expect(result.assignment.awayTeam).toBe('');
-      expect(result.parsedFields.teams).toBe(false);
-    });
+      expect(result.assignment.homeTeam).toBe('')
+      expect(result.assignment.awayTeam).toBe('')
+      expect(result.parsedFields.teams).toBe(false)
+    })
 
     it('handles pipe without spaces', () => {
       const event = createEvent({
         summary: 'ARB 1|Team A - Team B (League)',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.roleRaw).toBe('ARB 1');
-    });
-  });
+      expect(result.assignment.roleRaw).toBe('ARB 1')
+    })
+  })
 
   describe('league extraction', () => {
     it('extracts league from parentheses at end of summary', () => {
       const event = createEvent({
         summary: 'ARB 1 | Team A - Team B (Mobiliar Volley Cup)',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.league).toBe('Mobiliar Volley Cup');
-      expect(result.parsedFields.league).toBe(true);
-    });
+      expect(result.assignment.league).toBe('Mobiliar Volley Cup')
+      expect(result.parsedFields.league).toBe(true)
+    })
 
     it('handles leagues with special characters', () => {
       const event = createEvent({
         summary: 'ARB 1 | Team A - Team B (NLA Herren 2024/25)',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.league).toBe('NLA Herren 2024/25');
-    });
+      expect(result.assignment.league).toBe('NLA Herren 2024/25')
+    })
 
     it('adds warning when league cannot be extracted', () => {
       const event = createEvent({
         summary: 'ARB 1 | Team A - Team B',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.league).toBe('');
-      expect(result.parsedFields.league).toBe(false);
-      expect(result.warnings).toContain(
-        'Could not extract league from summary'
-      );
-    });
-  });
+      expect(result.assignment.league).toBe('')
+      expect(result.parsedFields.league).toBe(false)
+      expect(result.warnings).toContain('Could not extract league from summary')
+    })
+  })
 
   describe('location parsing', () => {
     it('extracts hall name from appleLocationTitle and address from location', () => {
       const event = createEvent({
         location: 'Sternenfeldstrasse 50, 4127 Birsfelden, Suisse',
         appleLocationTitle: 'Sporthalle Sternenfeld',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.hallName).toBe('Sporthalle Sternenfeld');
+      expect(result.assignment.hallName).toBe('Sporthalle Sternenfeld')
       // Address has ", Suisse" suffix stripped
-      expect(result.assignment.address).toBe(
-        'Sternenfeldstrasse 50, 4127 Birsfelden'
-      );
-      expect(result.parsedFields.venue).toBe(true);
-      expect(result.parsedFields.address).toBe(true);
-    });
+      expect(result.assignment.address).toBe('Sternenfeldstrasse 50, 4127 Birsfelden')
+      expect(result.parsedFields.venue).toBe(true)
+      expect(result.parsedFields.address).toBe(true)
+    })
 
     it('uses full location as address without splitting by comma', () => {
       const event = createEvent({
         location: 'Landskronstrasse 41, 4147 Aesch, Suisse',
         appleLocationTitle: 'MZH Löhrenacker',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.hallName).toBe('MZH Löhrenacker');
-      expect(result.assignment.address).toBe('Landskronstrasse 41, 4147 Aesch');
-    });
+      expect(result.assignment.hallName).toBe('MZH Löhrenacker')
+      expect(result.assignment.address).toBe('Landskronstrasse 41, 4147 Aesch')
+    })
 
     it('handles null appleLocationTitle', () => {
       const event = createEvent({
         location: 'Some Address 123, Suisse',
         appleLocationTitle: null,
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.hallName).toBeNull();
-      expect(result.assignment.address).toBe('Some Address 123');
-      expect(result.parsedFields.venue).toBe(false);
-      expect(result.parsedFields.address).toBe(true);
-    });
+      expect(result.assignment.hallName).toBeNull()
+      expect(result.assignment.address).toBe('Some Address 123')
+      expect(result.parsedFields.venue).toBe(false)
+      expect(result.parsedFields.address).toBe(true)
+    })
 
     it('handles null location', () => {
       const event = createEvent({
         location: null,
         appleLocationTitle: null,
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.hallName).toBeNull();
-      expect(result.assignment.address).toBeNull();
-      expect(result.parsedFields.venue).toBe(false);
-      expect(result.parsedFields.address).toBe(false);
-    });
+      expect(result.assignment.hallName).toBeNull()
+      expect(result.assignment.address).toBeNull()
+      expect(result.parsedFields.venue).toBe(false)
+      expect(result.parsedFields.address).toBe(false)
+    })
 
     it('prefers description-based hall name over appleLocationTitle', () => {
       const event = createEvent({
         location: 'Bergstrasse 2, 8800 Thalwil, Suisse',
         appleLocationTitle: 'Some Apple Title',
         description: 'Salle: #3661 | Turnhalle Sekundarschule Feld (H)',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.hallName).toBe('Turnhalle Sekundarschule Feld (H)');
-      expect(result.assignment.hallId).toBe('3661');
-    });
-  });
+      expect(result.assignment.hallName).toBe('Turnhalle Sekundarschule Feld (H)')
+      expect(result.assignment.hallId).toBe('3661')
+    })
+  })
 
   describe('coordinates handling', () => {
     it('includes coordinates from event geo field', () => {
       const event = createEvent({
         geo: { latitude: 47.5584, longitude: 7.6277 },
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
       expect(result.assignment.coordinates).toEqual({
         latitude: 47.5584,
         longitude: 7.6277,
-      });
-      expect(result.parsedFields.coordinates).toBe(true);
-    });
+      })
+      expect(result.parsedFields.coordinates).toBe(true)
+    })
 
     it('handles null coordinates', () => {
       const event = createEvent({
         geo: null,
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.coordinates).toBeNull();
-      expect(result.parsedFields.coordinates).toBe(false);
-    });
-  });
+      expect(result.assignment.coordinates).toBeNull()
+      expect(result.parsedFields.coordinates).toBe(false)
+    })
+  })
 
   describe('gender detection', () => {
     const genderTestCases = [
@@ -884,79 +870,71 @@ describe('extractAssignment', () => {
       { league: 'Some League', description: 'Match ♀', expected: 'women' },
       // Unknown when no pattern matches
       { league: 'Mobiliar Volley Cup', description: '', expected: 'unknown' },
-    ];
+    ]
 
     genderTestCases.forEach(({ league, description, expected }) => {
       it(`detects "${expected}" from league "${league}" and description "${description}"`, () => {
         const event = createEvent({
           summary: `ARB 1 | Team A - Team B (${league})`,
           description,
-        });
-        const result = extractAssignment(event);
+        })
+        const result = extractAssignment(event)
 
-        expect(result.assignment.gender).toBe(expected);
-      });
-    });
-  });
+        expect(result.assignment.gender).toBe(expected)
+      })
+    })
+  })
 
   describe('Plus Code extraction', () => {
     it('includes Plus Code from event in assignment', () => {
       const event = createEvent({
         plusCode: '8FV9HH8J+49',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.plusCode).toBe('8FV9HH8J+49');
-    });
+      expect(result.assignment.plusCode).toBe('8FV9HH8J+49')
+    })
 
     it('handles null Plus Code', () => {
       const event = createEvent({
         plusCode: null,
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.plusCode).toBeNull();
-    });
-  });
+      expect(result.assignment.plusCode).toBeNull()
+    })
+  })
 
   describe('maps URL handling', () => {
     it('extracts maps URL from description if present', () => {
       const event = createEvent({
-        description:
-          'Location: https://maps.google.com/maps?q=47.5,7.6 Details here',
+        description: 'Location: https://maps.google.com/maps?q=47.5,7.6 Details here',
         geo: null,
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.mapsUrl).toBe(
-        'https://maps.google.com/maps?q=47.5,7.6'
-      );
-    });
+      expect(result.assignment.mapsUrl).toBe('https://maps.google.com/maps?q=47.5,7.6')
+    })
 
     it('extracts google.com/maps URL from description', () => {
       const event = createEvent({
-        description:
-          'Location: https://www.google.com/maps/place/Test Details',
+        description: 'Location: https://www.google.com/maps/place/Test Details',
         geo: null,
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.mapsUrl).toBe(
-        'https://www.google.com/maps/place/Test'
-      );
-    });
+      expect(result.assignment.mapsUrl).toBe('https://www.google.com/maps/place/Test')
+    })
 
     it('builds maps URL from coordinates when not in description', () => {
       const event = createEvent({
         description: 'No maps link here',
         geo: { latitude: 47.5584, longitude: 7.6277 },
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.mapsUrl).toBe(
-        'https://www.google.com/maps?q=47.5584,7.6277'
-      );
-    });
+      expect(result.assignment.mapsUrl).toBe('https://www.google.com/maps?q=47.5584,7.6277')
+    })
 
     it('builds maps URL from address when no coordinates', () => {
       const event = createEvent({
@@ -964,13 +942,13 @@ describe('extractAssignment', () => {
         geo: null,
         location: 'Some Address 123, Suisse',
         appleLocationTitle: 'Hall',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
       expect(result.assignment.mapsUrl).toBe(
         'https://www.google.com/maps/search/?api=1&query=Some%20Address%20123'
-      );
-    });
+      )
+    })
 
     it('returns null when no maps info available', () => {
       const event = createEvent({
@@ -978,107 +956,107 @@ describe('extractAssignment', () => {
         geo: null,
         location: null,
         appleLocationTitle: null,
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.mapsUrl).toBeNull();
-    });
-  });
+      expect(result.assignment.mapsUrl).toBeNull()
+    })
+  })
 
   describe('confidence calculation', () => {
     it('returns high confidence when all critical and most optional fields are parsed', () => {
-      const event = createEvent(); // Default event has all fields
-      const result = extractAssignment(event);
+      const event = createEvent() // Default event has all fields
+      const result = extractAssignment(event)
 
-      expect(result.confidence).toBe('high');
-    });
+      expect(result.confidence).toBe('high')
+    })
 
     it('returns medium confidence when critical fields parsed but some optional missing', () => {
       const event = createEvent({
         geo: null,
         location: null,
         appleLocationTitle: null,
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.confidence).toBe('medium');
-    });
+      expect(result.confidence).toBe('medium')
+    })
 
     it('returns low confidence when critical fields are missing', () => {
       const event = createEvent({
         uid: 'invalid-uid',
         summary: 'Invalid summary format',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.confidence).toBe('low');
-    });
+      expect(result.confidence).toBe('low')
+    })
 
     it('returns low confidence when game ID cannot be extracted', () => {
       const event = createEvent({
         uid: 'no-game-id-here',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.confidence).toBe('low');
-    });
+      expect(result.confidence).toBe('low')
+    })
 
     it('returns low confidence when role is unknown', () => {
       const event = createEvent({
         summary: 'UNKNOWN | Team A - Team B (League)',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.confidence).toBe('low');
-    });
+      expect(result.confidence).toBe('low')
+    })
 
     it('returns low confidence when teams cannot be extracted', () => {
       const event = createEvent({
         summary: 'ARB 1 | No team separator (League)',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.confidence).toBe('low');
-    });
-  });
+      expect(result.confidence).toBe('low')
+    })
+  })
 
   describe('time handling', () => {
     it('includes start and end times from event', () => {
       const event = createEvent({
         dtstart: '2025-02-15T14:00:00',
         dtend: '2025-02-15T17:00:00',
-      });
-      const result = extractAssignment(event);
+      })
+      const result = extractAssignment(event)
 
-      expect(result.assignment.startTime).toBe('2025-02-15T14:00:00');
-      expect(result.assignment.endTime).toBe('2025-02-15T17:00:00');
-    });
-  });
-});
+      expect(result.assignment.startTime).toBe('2025-02-15T14:00:00')
+      expect(result.assignment.endTime).toBe('2025-02-15T17:00:00')
+    })
+  })
+})
 
 describe('parseCalendarFeed', () => {
   it('parses complete iCal feed and returns assignments', () => {
-    const results = parseCalendarFeed(SAMPLE_ICAL);
+    const results = parseCalendarFeed(SAMPLE_ICAL)
 
-    expect(results).toHaveLength(1);
-    expect(results[0]!.assignment.gameId).toBe('392936');
-    expect(results[0]!.assignment.homeTeam).toBe('TV St. Johann 1');
-    expect(results[0]!.assignment.awayTeam).toBe('VTV Horw 1');
-  });
+    expect(results).toHaveLength(1)
+    expect(results[0]!.assignment.gameId).toBe('392936')
+    expect(results[0]!.assignment.homeTeam).toBe('TV St. Johann 1')
+    expect(results[0]!.assignment.awayTeam).toBe('VTV Horw 1')
+  })
 
   it('parses multiple events and returns all assignments', () => {
-    const results = parseCalendarFeed(MULTI_EVENT_ICAL);
+    const results = parseCalendarFeed(MULTI_EVENT_ICAL)
 
-    expect(results).toHaveLength(2);
-    expect(results[0]!.assignment.gameId).toBe('100001');
-    expect(results[1]!.assignment.gameId).toBe('100002');
-  });
+    expect(results).toHaveLength(2)
+    expect(results[0]!.assignment.gameId).toBe('100001')
+    expect(results[1]!.assignment.gameId).toBe('100002')
+  })
 
   it('returns empty array for empty input', () => {
-    const results = parseCalendarFeed('');
+    const results = parseCalendarFeed('')
 
-    expect(results).toEqual([]);
-  });
+    expect(results).toEqual([])
+  })
 
   it('handles mixed valid and invalid events', () => {
     const mixedIcal = `BEGIN:VCALENDAR
@@ -1096,14 +1074,14 @@ UID:referee-convocation-for-game-100002
 SUMMARY:ARB 2 | Team C - Team D (League)
 DTSTART:20250215T180000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-    const results = parseCalendarFeed(mixedIcal);
+    const results = parseCalendarFeed(mixedIcal)
 
-    expect(results).toHaveLength(2);
-    expect(results[0]!.assignment.gameId).toBe('100001');
-    expect(results[1]!.assignment.gameId).toBe('100002');
-  });
+    expect(results).toHaveLength(2)
+    expect(results[0]!.assignment.gameId).toBe('100001')
+    expect(results[1]!.assignment.gameId).toBe('100002')
+  })
 
   it('allows filtering by confidence level', () => {
     const mixedIcal = `BEGIN:VCALENDAR
@@ -1120,16 +1098,16 @@ UID:bad-uid-format
 SUMMARY:UNKNOWN | Something (League)
 DTSTART:20250215T140000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-    const results = parseCalendarFeed(mixedIcal);
-    const highConfidence = results.filter((r) => r.confidence === 'high');
-    const lowConfidence = results.filter((r) => r.confidence === 'low');
+    const results = parseCalendarFeed(mixedIcal)
+    const highConfidence = results.filter((r) => r.confidence === 'high')
+    const lowConfidence = results.filter((r) => r.confidence === 'low')
 
-    expect(highConfidence).toHaveLength(1);
-    expect(lowConfidence).toHaveLength(1);
-  });
-});
+    expect(highConfidence).toHaveLength(1)
+    expect(lowConfidence).toHaveLength(1)
+  })
+})
 
 describe('integration scenarios', () => {
   it('handles a realistic German iCal feed with number-first role format', () => {
@@ -1154,43 +1132,43 @@ ACTION:DISPLAY
 TRIGGER:-PT60M
 END:VALARM
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-    const results = parseCalendarFeed(germanIcal);
+    const results = parseCalendarFeed(germanIcal)
 
-    expect(results).toHaveLength(1);
-    const assignment = results[0]!.assignment;
+    expect(results).toHaveLength(1)
+    const assignment = results[0]!.assignment
 
     // Role extraction - German format "1. SR"
-    expect(assignment.gameId).toBe('377762');
-    expect(assignment.role).toBe('referee1');
-    expect(assignment.roleRaw).toBe('1. SR');
-    expect(assignment.homeTeam).toBe('Volley Amriswil');
-    expect(assignment.awayTeam).toBe('Lausanne UC');
-    expect(assignment.league).toBe('NLA');
-    expect(assignment.gender).toBe('men');
-    expect(assignment.leagueCategory).toBe('NLA');
-    expect(assignment.gameNumber).toBe(377762);
+    expect(assignment.gameId).toBe('377762')
+    expect(assignment.role).toBe('referee1')
+    expect(assignment.roleRaw).toBe('1. SR')
+    expect(assignment.homeTeam).toBe('Volley Amriswil')
+    expect(assignment.awayTeam).toBe('Lausanne UC')
+    expect(assignment.league).toBe('NLA')
+    expect(assignment.gender).toBe('men')
+    expect(assignment.leagueCategory).toBe('NLA')
+    expect(assignment.gameNumber).toBe(377762)
 
     // Hall info from description
-    expect(assignment.hallId).toBe('10');
-    expect(assignment.hallName).toBe('Tellenfeld B (A)');
-    expect(assignment.address).toBe('Untere Grenzstrasse 10, 8580 Amriswil');
+    expect(assignment.hallId).toBe('10')
+    expect(assignment.hallName).toBe('Tellenfeld B (A)')
+    expect(assignment.address).toBe('Untere Grenzstrasse 10, 8580 Amriswil')
 
     // Referee names - German format "1. SR:", "2. SR:"
-    expect(assignment.referees.referee1).toBe('Laura Rüegg');
-    expect(assignment.referees.referee2).toBe('Alfio Sanapo');
-    expect(assignment.referees.lineReferee1).toBe('Martin Auricht');
-    expect(assignment.referees.lineReferee2).toBe('Sepp Signer');
+    expect(assignment.referees.referee1).toBe('Laura Rüegg')
+    expect(assignment.referees.referee2).toBe('Alfio Sanapo')
+    expect(assignment.referees.lineReferee1).toBe('Martin Auricht')
+    expect(assignment.referees.lineReferee2).toBe('Sepp Signer')
 
     // Association from Heimteam
-    expect(assignment.association).toBe('SV');
+    expect(assignment.association).toBe('SV')
 
     // Plus Code extraction
-    expect(assignment.plusCode).toBe('8FVFG7XQ+CP');
+    expect(assignment.plusCode).toBe('8FVFG7XQ+CP')
 
-    expect(results[0]!.confidence).toBe('high');
-  });
+    expect(results[0]!.confidence).toBe('high')
+  })
 
   it('handles a French iCal feed', () => {
     const frenchIcal = `BEGIN:VCALENDAR
@@ -1205,22 +1183,22 @@ LOCATION:Route de Valavran 10\\, 1293 Bellevue\\, Suisse
 X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-TITLE=Centre Sportif du Bois-des-Frères:46.2539;6.1589
 GEO:46.2539;6.1589
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-    const results = parseCalendarFeed(frenchIcal);
+    const results = parseCalendarFeed(frenchIcal)
 
-    expect(results).toHaveLength(1);
-    const assignment = results[0]!.assignment;
+    expect(results).toHaveLength(1)
+    const assignment = results[0]!.assignment
 
-    expect(assignment.gameId).toBe('789012');
-    expect(assignment.role).toBe('referee2');
-    expect(assignment.homeTeam).toBe('Genève Volley');
-    expect(assignment.awayTeam).toBe('Lausanne UC');
-    expect(assignment.league).toBe('Ligue Femmes A');
-    expect(assignment.gender).toBe('women');
-    expect(assignment.hallName).toBe('Centre Sportif du Bois-des-Frères');
-    expect(assignment.address).toBe('Route de Valavran 10, 1293 Bellevue');
-  });
+    expect(assignment.gameId).toBe('789012')
+    expect(assignment.role).toBe('referee2')
+    expect(assignment.homeTeam).toBe('Genève Volley')
+    expect(assignment.awayTeam).toBe('Lausanne UC')
+    expect(assignment.league).toBe('Ligue Femmes A')
+    expect(assignment.gender).toBe('women')
+    expect(assignment.hallName).toBe('Centre Sportif du Bois-des-Frères')
+    expect(assignment.address).toBe('Route de Valavran 10, 1293 Bellevue')
+  })
 
   it('handles events with gender symbols', () => {
     const icalWithSymbols = `BEGIN:VCALENDAR
@@ -1233,15 +1211,15 @@ DTEND:20250225T170000
 LOCATION:Main Street 1\\, Suisse
 X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-TITLE=Sportcenter:47.0;8.0
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-    const results = parseCalendarFeed(icalWithSymbols);
-    const assignment = results[0]!.assignment;
+    const results = parseCalendarFeed(icalWithSymbols)
+    const assignment = results[0]!.assignment
 
-    expect(assignment.role).toBe('scorer');
-    expect(assignment.gender).toBe('women');
-    expect(assignment.hallName).toBe('Sportcenter');
-  });
+    expect(assignment.role).toBe('scorer')
+    expect(assignment.gender).toBe('women')
+    expect(assignment.hallName).toBe('Sportcenter')
+  })
 
   it('handles line referee role', () => {
     const ical = `BEGIN:VCALENDAR
@@ -1251,15 +1229,15 @@ SUMMARY:LR 2 | Home Team - Away Team (League)
 DTSTART:20250228T160000
 DTEND:20250228T190000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-    const results = parseCalendarFeed(ical);
-    const assignment = results[0]!.assignment;
+    const results = parseCalendarFeed(ical)
+    const assignment = results[0]!.assignment
 
-    expect(assignment.role).toBe('lineReferee');
-    expect(assignment.roleRaw).toBe('LR 2');
-  });
-});
+    expect(assignment.role).toBe('lineReferee')
+    expect(assignment.roleRaw).toBe('LR 2')
+  })
+})
 
 describe('extended field parsing', () => {
   describe('parseGameNumber', () => {
@@ -1272,11 +1250,11 @@ DESCRIPTION:Match: #382360 | 05.02.2026 20:30 | OTA VOLLEY H1 — VBC Rämi H3
 DTSTART:20260205T203000
 DTEND:20260205T230000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.gameNumber).toBe(382360);
-    });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.gameNumber).toBe(382360)
+    })
 
     it('extracts game number from German Spiel pattern', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1287,11 +1265,11 @@ DESCRIPTION:Spiel: #123456 | Details
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.gameNumber).toBe(123456);
-    });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.gameNumber).toBe(123456)
+    })
 
     it('extracts game number from French Partie pattern', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1302,11 +1280,11 @@ DESCRIPTION:Partie: #789012
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.gameNumber).toBe(789012);
-    });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.gameNumber).toBe(789012)
+    })
 
     it('extracts game number without hash prefix', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1317,11 +1295,11 @@ DESCRIPTION:Match: 456789 | Details
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.gameNumber).toBe(456789);
-    });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.gameNumber).toBe(456789)
+    })
 
     it('returns null when no game number found', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1332,12 +1310,12 @@ DESCRIPTION:No game number here
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.gameNumber).toBeNull();
-    });
-  });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.gameNumber).toBeNull()
+    })
+  })
 
   describe('parseLeagueCategory', () => {
     it('extracts league category from French Ligue pattern', () => {
@@ -1349,11 +1327,11 @@ DESCRIPTION:Ligue: #6652 | 3L | ♂
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.leagueCategory).toBe('3L');
-    });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.leagueCategory).toBe('3L')
+    })
 
     it('extracts league category from German Liga pattern', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1364,11 +1342,11 @@ DESCRIPTION:Liga: #1234 | NLA | ♂
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.leagueCategory).toBe('NLA');
-    });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.leagueCategory).toBe('NLA')
+    })
 
     it('extracts league category from English League pattern', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1379,11 +1357,11 @@ DESCRIPTION:League: #5678 | NLB | ♀
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.leagueCategory).toBe('NLB');
-    });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.leagueCategory).toBe('NLB')
+    })
 
     it('extracts league category from Italian Lega pattern', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1394,11 +1372,11 @@ DESCRIPTION:Lega: #9999 | 2L | ♂
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.leagueCategory).toBe('2L');
-    });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.leagueCategory).toBe('2L')
+    })
 
     it('returns null when no league category found', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1409,11 +1387,11 @@ DESCRIPTION:No league info here
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.leagueCategory).toBeNull();
-    });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.leagueCategory).toBeNull()
+    })
 
     it('handles league line with insufficient parts', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1424,12 +1402,12 @@ DESCRIPTION:Ligue: #1234
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.leagueCategory).toBeNull();
-    });
-  });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.leagueCategory).toBeNull()
+    })
+  })
 
   describe('parseRefereeNames', () => {
     it('extracts referee1 name from ARB 1 pattern', () => {
@@ -1441,11 +1419,11 @@ DESCRIPTION:ARB convoqués:\\nARB 1: Damien Nguyen | ngn.damien@gmail.com | +417
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.referees.referee1).toBe('Damien Nguyen');
-    });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.referees.referee1).toBe('Damien Nguyen')
+    })
 
     it('extracts referee2 name from ARB 2 pattern', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1456,11 +1434,11 @@ DESCRIPTION:ARB 2: Peter Müller | peterc.mueller@icloud.com | +41791940964
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.referees.referee2).toBe('Peter Müller');
-    });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.referees.referee2).toBe('Peter Müller')
+    })
 
     it('extracts both referees when present', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1471,12 +1449,12 @@ DESCRIPTION:ARB 1: Damien Nguyen | email1\\nARB 2: Peter Müller | email2
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.referees.referee1).toBe('Damien Nguyen');
-      expect(results[0]!.assignment.referees.referee2).toBe('Peter Müller');
-    });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.referees.referee1).toBe('Damien Nguyen')
+      expect(results[0]!.assignment.referees.referee2).toBe('Peter Müller')
+    })
 
     it('extracts line referees from LR pattern', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1487,12 +1465,12 @@ DESCRIPTION:LR 1: Line Ref One | email1\\nLR 2: Line Ref Two | email2
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.referees.lineReferee1).toBe('Line Ref One');
-      expect(results[0]!.assignment.referees.lineReferee2).toBe('Line Ref Two');
-    });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.referees.lineReferee1).toBe('Line Ref One')
+      expect(results[0]!.assignment.referees.lineReferee2).toBe('Line Ref Two')
+    })
 
     it('extracts referees using SR pattern (German alternative)', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1503,11 +1481,11 @@ DESCRIPTION:SR 1: Hans Meier | email
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.referees.referee1).toBe('Hans Meier');
-    });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.referees.referee1).toBe('Hans Meier')
+    })
 
     it('extracts referees using German number-first pattern (1. SR, 2. SR)', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1518,12 +1496,12 @@ DESCRIPTION:Aufgebotene SR:\\n\\t1. SR: Laura Rüegg | laura.rueegg@me.com | +41
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.referees.referee1).toBe('Laura Rüegg');
-      expect(results[0]!.assignment.referees.referee2).toBe('Alfio Sanapo');
-    });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.referees.referee1).toBe('Laura Rüegg')
+      expect(results[0]!.assignment.referees.referee2).toBe('Alfio Sanapo')
+    })
 
     it('extracts line referees using German number-first pattern (1. LR, 2. LR)', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1534,12 +1512,12 @@ DESCRIPTION:Aufgebotene SR:\\n\\t1. LR: Martin Auricht | email1\\n\\t2. LR: Sepp
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.referees.lineReferee1).toBe('Martin Auricht');
-      expect(results[0]!.assignment.referees.lineReferee2).toBe('Sepp Signer');
-    });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.referees.lineReferee1).toBe('Martin Auricht')
+      expect(results[0]!.assignment.referees.lineReferee2).toBe('Sepp Signer')
+    })
 
     it('returns empty object when no referees found', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1550,12 +1528,12 @@ DESCRIPTION:No referee info here
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.referees).toEqual({});
-    });
-  });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.referees).toEqual({})
+    })
+  })
 
   describe('parseHallInfo', () => {
     it('extracts hall ID and name from French Salle pattern', () => {
@@ -1569,13 +1547,13 @@ DTEND:20250215T170000
 LOCATION:Bergstrasse 2\\, 8800 Thalwil\\, Suisse
 X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-TITLE=Some Apple Title:47.0;8.0
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.hallId).toBe('3661');
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.hallId).toBe('3661')
       // Description-based hall name takes priority over appleLocationTitle
-      expect(results[0]!.assignment.hallName).toBe('Turnhalle Sekundarschule Feld (H)');
-    });
+      expect(results[0]!.assignment.hallName).toBe('Turnhalle Sekundarschule Feld (H)')
+    })
 
     it('extracts hall ID from German Halle pattern', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1586,11 +1564,11 @@ DESCRIPTION:Halle: #1234 | Sporthalle Zürich
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.hallId).toBe('1234');
-    });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.hallId).toBe('1234')
+    })
 
     it('extracts hall ID from English Hall pattern', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1601,11 +1579,11 @@ DESCRIPTION:Hall: #5678 | Sports Center
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.hallId).toBe('5678');
-    });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.hallId).toBe('5678')
+    })
 
     it('extracts hall ID from Italian Sala pattern', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1616,11 +1594,11 @@ DESCRIPTION:Sala: #9999 | Palestra Comunale
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.hallId).toBe('9999');
-    });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.hallId).toBe('9999')
+    })
 
     it('handles hall info without hash prefix', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1631,11 +1609,11 @@ DESCRIPTION:Salle: 1234 | Hall Name
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.hallId).toBe('1234');
-    });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.hallId).toBe('1234')
+    })
 
     it('returns null for hall ID when no hall info found, uses appleLocationTitle for hall name', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1648,13 +1626,13 @@ DTEND:20250215T170000
 LOCATION:Some Address\\, Suisse
 X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-TITLE=Some Hall:47.0;8.0
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.hallId).toBeNull();
-      expect(results[0]!.assignment.hallName).toBe('Some Hall');
-    });
-  });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.hallId).toBeNull()
+      expect(results[0]!.assignment.hallName).toBe('Some Hall')
+    })
+  })
 
   describe('parseAssociation', () => {
     it('extracts association from French Equipe recevante pattern', () => {
@@ -1666,11 +1644,11 @@ DESCRIPTION:Equipe recevante: #10008 | TV St. Johann (3L, ♀, SVRBA)
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.association).toBe('SVRBA');
-    });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.association).toBe('SVRBA')
+    })
 
     it('extracts association from French Equipe visiteuse pattern', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1681,18 +1659,18 @@ DESCRIPTION:Equipe visiteuse: #10641 | VBC Therwil (U20, ♀, SVRZ)
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.association).toBe('SVRZ');
-    });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.association).toBe('SVRZ')
+    })
 
     it('extracts association with different codes', () => {
       const testCases = [
         { code: 'SVRI', description: 'Equipe recevante: #123 | Team (NLA, ♂, SVRI)' },
         { code: 'SVRNO', description: 'Equipe visiteuse: #456 | Team (NLB, ♀, SVRNO)' },
         { code: 'SV', description: 'Equipe recevante: #789 | Team (Cup, ♂, SV)' },
-      ];
+      ]
 
       for (const { code, description } of testCases) {
         const ical = `BEGIN:VCALENDAR
@@ -1703,12 +1681,12 @@ DESCRIPTION:${description}
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-        const results = parseCalendarFeed(ical);
-        expect(results[0]!.assignment.association).toBe(code);
+        const results = parseCalendarFeed(ical)
+        expect(results[0]!.assignment.association).toBe(code)
       }
-    });
+    })
 
     it('extracts association from German Heimteam pattern', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1719,11 +1697,11 @@ DESCRIPTION:Heimteam: #20 | Volley Amriswil (NLA, ♂, SV)
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.association).toBe('SV');
-    });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.association).toBe('SV')
+    })
 
     it('extracts association from German Gastteam pattern', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1734,11 +1712,11 @@ DESCRIPTION:Gastteam: #4 | Lausanne UC (NLA, ♂, SVRNO)
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.association).toBe('SVRNO');
-    });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.association).toBe('SVRNO')
+    })
 
     it('falls back to known association codes in description', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1749,11 +1727,11 @@ DESCRIPTION:Some text mentioning SVRBA in the content
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.association).toBe('SVRBA');
-    });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.association).toBe('SVRBA')
+    })
 
     it('returns null when no association found', () => {
       const ical = `BEGIN:VCALENDAR
@@ -1764,12 +1742,12 @@ DESCRIPTION:No association info here
 DTSTART:20250215T140000
 DTEND:20250215T170000
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results[0]!.assignment.association).toBeNull();
-    });
-  });
+      const results = parseCalendarFeed(ical)
+      expect(results[0]!.assignment.association).toBeNull()
+    })
+  })
 
   describe('combined realistic scenario', () => {
     it('parses all extended fields from a complete iCal entry', () => {
@@ -1785,25 +1763,25 @@ LOCATION:Bergstrasse 2\\, 8800 Thalwil\\, Suisse
 X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-TITLE=Some Apple Title:47.2900;8.5600
 GEO:47.2900;8.5600
 END:VEVENT
-END:VCALENDAR`;
+END:VCALENDAR`
 
-      const results = parseCalendarFeed(ical);
-      expect(results).toHaveLength(1);
+      const results = parseCalendarFeed(ical)
+      expect(results).toHaveLength(1)
 
-      const assignment = results[0]!.assignment;
-      expect(assignment.gameId).toBe('382360');
-      expect(assignment.gameNumber).toBe(382360);
-      expect(assignment.leagueCategory).toBe('3L');
-      expect(assignment.hallId).toBe('3661');
+      const assignment = results[0]!.assignment
+      expect(assignment.gameId).toBe('382360')
+      expect(assignment.gameNumber).toBe(382360)
+      expect(assignment.leagueCategory).toBe('3L')
+      expect(assignment.hallId).toBe('3661')
       // Description-based hall name takes priority over appleLocationTitle
-      expect(assignment.hallName).toBe('Turnhalle Sekundarschule Feld (H)');
-      expect(assignment.address).toBe('Bergstrasse 2, 8800 Thalwil');
-      expect(assignment.referees.referee1).toBe('Damien Nguyen');
-      expect(assignment.referees.referee2).toBe('Peter Müller');
-      expect(assignment.gender).toBe('men');
-      expect(assignment.association).toBe('SVRZ');
+      expect(assignment.hallName).toBe('Turnhalle Sekundarschule Feld (H)')
+      expect(assignment.address).toBe('Bergstrasse 2, 8800 Thalwil')
+      expect(assignment.referees.referee1).toBe('Damien Nguyen')
+      expect(assignment.referees.referee2).toBe('Peter Müller')
+      expect(assignment.gender).toBe('men')
+      expect(assignment.association).toBe('SVRZ')
       // Plus Code extracted from Google Maps URL
-      expect(assignment.plusCode).toBe('8FVC7HR7+C3');
-    });
-  });
-});
+      expect(assignment.plusCode).toBe('8FVC7HR7+C3')
+    })
+  })
+})

@@ -3,25 +3,25 @@
  */
 
 export interface PostalAddress {
-  combinedAddress?: string;
-  streetAndHouseNumber?: string;
-  postalCodeAndCity?: string;
-  postalCode?: string;
-  city?: string;
+  combinedAddress?: string
+  streetAndHouseNumber?: string
+  postalCodeAndCity?: string
+  postalCode?: string
+  city?: string
   geographicalLocation?: {
-    plusCode?: string;
-    latitude?: number;
-    longitude?: number;
-  };
+    plusCode?: string
+    latitude?: number
+    longitude?: number
+  }
 }
 
 export interface MapsUrls {
   /** Google Maps URL using Plus Code (opens in browser) */
-  googleMapsUrl: string | null;
+  googleMapsUrl: string | null
   /** Platform-specific URL for native maps app (iOS maps: / Android geo:) */
-  nativeMapsUrl: string | null;
+  nativeMapsUrl: string | null
   /** Full formatted address string */
-  fullAddress: string | null;
+  fullAddress: string | null
 }
 
 /**
@@ -30,38 +30,42 @@ export interface MapsUrls {
  * Always builds from components when available, since API's combinedAddress may only contain street.
  */
 export function buildFullAddress(postalAddress: PostalAddress | null | undefined): string | null {
-  if (!postalAddress) return null;
+  if (!postalAddress) return null
 
   // Build postalCodeAndCity from separate fields or use the combined field
-  const postalCodeAndCity = postalAddress.postalCodeAndCity
-    || (postalAddress.postalCode && postalAddress.city
+  const postalCodeAndCity =
+    postalAddress.postalCodeAndCity ||
+    (postalAddress.postalCode && postalAddress.city
       ? `${postalAddress.postalCode} ${postalAddress.city}`
-      : postalAddress.city || null);
+      : postalAddress.city || null)
 
   // If we have street and postal/city, combine them for the full address
   if (postalAddress.streetAndHouseNumber && postalCodeAndCity) {
-    return `${postalAddress.streetAndHouseNumber}, ${postalCodeAndCity}`;
+    return `${postalAddress.streetAndHouseNumber}, ${postalCodeAndCity}`
   }
 
   // If we only have streetAndHouseNumber, fall back to combinedAddress if it has more info
   if (postalAddress.streetAndHouseNumber) {
     // Only use combinedAddress if it's different (contains more than just street)
-    if (postalAddress.combinedAddress && postalAddress.combinedAddress !== postalAddress.streetAndHouseNumber) {
-      return postalAddress.combinedAddress;
+    if (
+      postalAddress.combinedAddress &&
+      postalAddress.combinedAddress !== postalAddress.streetAndHouseNumber
+    ) {
+      return postalAddress.combinedAddress
     }
-    return null;
+    return null
   }
 
   // Fall back to combinedAddress or just postal code and city
-  return postalAddress.combinedAddress || postalCodeAndCity;
+  return postalAddress.combinedAddress || postalCodeAndCity
 }
 
 /**
  * Build Google Maps URL from Plus Code.
  */
 export function buildGoogleMapsUrl(plusCode: string | null | undefined): string | null {
-  if (!plusCode) return null;
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(plusCode)}`;
+  if (!plusCode) return null
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(plusCode)}`
 }
 
 /**
@@ -71,24 +75,24 @@ export function buildGoogleMapsUrl(plusCode: string | null | undefined): string 
 export function buildNativeMapsUrl(
   fullAddress: string | null,
   coords: { latitude: number; longitude: number } | null,
-  hallName: string,
+  hallName: string
 ): string | null {
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
 
   if (fullAddress) {
     return isIOS
       ? `maps:?q=${encodeURIComponent(fullAddress)}`
-      : `geo:0,0?q=${encodeURIComponent(fullAddress)}`;
+      : `geo:0,0?q=${encodeURIComponent(fullAddress)}`
   }
 
   if (coords) {
-    const { latitude, longitude } = coords;
+    const { latitude, longitude } = coords
     return isIOS
       ? `maps:?q=${latitude},${longitude}&ll=${latitude},${longitude}`
-      : `geo:${latitude},${longitude}?q=${latitude},${longitude}(${encodeURIComponent(hallName)})`;
+      : `geo:${latitude},${longitude}?q=${latitude},${longitude}(${encodeURIComponent(hallName)})`
   }
 
-  return null;
+  return null
 }
 
 /**
@@ -96,24 +100,23 @@ export function buildNativeMapsUrl(
  */
 export function buildMapsUrls(
   postalAddress: PostalAddress | null | undefined,
-  hallName: string,
+  hallName: string
 ): MapsUrls {
-  const plusCode = postalAddress?.geographicalLocation?.plusCode;
-  const googleMapsUrl = buildGoogleMapsUrl(plusCode);
+  const plusCode = postalAddress?.geographicalLocation?.plusCode
+  const googleMapsUrl = buildGoogleMapsUrl(plusCode)
 
-  const fullAddress = buildFullAddress(postalAddress);
+  const fullAddress = buildFullAddress(postalAddress)
 
-  const geoLat = postalAddress?.geographicalLocation?.latitude;
-  const geoLon = postalAddress?.geographicalLocation?.longitude;
-  const coords = geoLat !== undefined && geoLon !== undefined
-    ? { latitude: geoLat, longitude: geoLon }
-    : null;
+  const geoLat = postalAddress?.geographicalLocation?.latitude
+  const geoLon = postalAddress?.geographicalLocation?.longitude
+  const coords =
+    geoLat !== undefined && geoLon !== undefined ? { latitude: geoLat, longitude: geoLon } : null
 
-  const nativeMapsUrl = buildNativeMapsUrl(fullAddress, coords, hallName);
+  const nativeMapsUrl = buildNativeMapsUrl(fullAddress, coords, hallName)
 
   return {
     googleMapsUrl,
     nativeMapsUrl,
     fullAddress,
-  };
+  }
 }

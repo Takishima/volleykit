@@ -1,11 +1,8 @@
-import {
-  type ReactNode,
-  useState,
-  useRef,
-  useCallback,
-  useEffect,
-  useMemo,
-} from "react";
+import { type ReactNode, useState, useRef, useCallback, useEffect, useMemo } from 'react'
+
+import { useSwipeGesture } from '@/shared/hooks/useSwipeGesture'
+import { useTranslation } from '@/shared/hooks/useTranslation'
+
 import {
   type SwipeConfig,
   type SwipeAction,
@@ -16,104 +13,98 @@ import {
   ACTION_BUTTON_WIDTH,
   ACTION_BUTTON_GAP,
   DRAWER_PADDING,
-} from "../../types/swipe";
-import { useTranslation } from "@/shared/hooks/useTranslation";
-import { useSwipeGesture } from "@/shared/hooks/useSwipeGesture";
+} from '../../types/swipe'
 
 // Layout constants for action buttons (others imported from types/swipe.ts)
-const MAX_DRAWER_WIDTH_RATIO = 0.8;
-const SWIPE_OVERSHOOT_MULTIPLIER = 1.2;
-const OPACITY_FADE_MULTIPLIER = 1.5;
-const MIN_CLICKABLE_WIDTH = 30;
+const MAX_DRAWER_WIDTH_RATIO = 0.8
+const SWIPE_OVERSHOOT_MULTIPLIER = 1.2
+const OPACITY_FADE_MULTIPLIER = 1.5
+const MIN_CLICKABLE_WIDTH = 30
 // Scale animation constants
-const SCALE_MIN = 0.8; // Minimum scale when action first appears
-const SCALE_RANGE = 0.2; // Scale grows from 0.8 to 1.0
+const SCALE_MIN = 0.8 // Minimum scale when action first appears
+const SCALE_RANGE = 0.2 // Scale grows from 0.8 to 1.0
 // Click blocking delay after drag ends (prevents unwanted expansion)
 // 150ms provides margin for click event to fire after mouseup
-const CLICK_BLOCK_DELAY_MS = 150;
+const CLICK_BLOCK_DELAY_MS = 150
 // Maximum opacity for action hint overlay
-const MAX_HINT_OPACITY = 0.3;
+const MAX_HINT_OPACITY = 0.3
 
 /** Calculate drawer width based on number of actions */
 function calculateDrawerWidth(actionsCount: number, containerWidth: number): number {
   return Math.min(
-    actionsCount * ACTION_BUTTON_WIDTH +
-      (actionsCount - 1) * ACTION_BUTTON_GAP +
-      DRAWER_PADDING,
-    containerWidth * MAX_DRAWER_WIDTH_RATIO,
-  );
+    actionsCount * ACTION_BUTTON_WIDTH + (actionsCount - 1) * ACTION_BUTTON_GAP + DRAWER_PADDING,
+    containerWidth * MAX_DRAWER_WIDTH_RATIO
+  )
 }
 
 /** Normalize swipe config actions to array format */
-function normalizeActions(
-  actions: SwipeAction | SwipeAction[] | undefined,
-): SwipeAction[] | null {
-  if (!actions) return null;
-  return Array.isArray(actions) ? actions : [actions];
+function normalizeActions(actions: SwipeAction | SwipeAction[] | undefined): SwipeAction[] | null {
+  if (!actions) return null
+  return Array.isArray(actions) ? actions : [actions]
 }
 
 /** Build legacy action from props */
 function buildLegacyAction(
-  direction: "left" | "right",
+  direction: 'left' | 'right',
   onAction: (() => void) | undefined,
   label: string,
-  color: string,
+  color: string
 ): SwipeAction[] | null {
-  if (!onAction) return null;
-  return [{ id: `legacy-${direction}`, label, color, onAction }];
+  if (!onAction) return null
+  return [{ id: `legacy-${direction}`, label, color, onAction }]
 }
 
 interface SwipeableCardRenderProps {
-  isDrawerOpen: boolean;
+  isDrawerOpen: boolean
 }
 
 interface SwipeableCardProps {
-  children: ReactNode | ((props: SwipeableCardRenderProps) => ReactNode);
-  onSwipeLeft?: () => void;
-  onSwipeRight?: () => void;
-  leftActionLabel?: string;
-  rightActionLabel?: string;
-  leftActionColor?: string;
-  rightActionColor?: string;
-  swipeConfig?: SwipeConfig;
-  className?: string;
+  children: ReactNode | ((props: SwipeableCardRenderProps) => ReactNode)
+  onSwipeLeft?: () => void
+  onSwipeRight?: () => void
+  leftActionLabel?: string
+  rightActionLabel?: string
+  leftActionColor?: string
+  rightActionColor?: string
+  swipeConfig?: SwipeConfig
+  className?: string
   /** Callback when drawer opens - can be used to close other open drawers */
-  onDrawerOpen?: () => void;
+  onDrawerOpen?: () => void
 }
 
 export function SwipeableCard({
   children,
   onSwipeLeft,
   onSwipeRight,
-  leftActionLabel = "Action",
-  rightActionLabel = "Action",
-  leftActionColor = "bg-danger-500",
-  rightActionColor = "bg-success-500",
+  leftActionLabel = 'Action',
+  rightActionLabel = 'Action',
+  leftActionColor = 'bg-danger-500',
+  rightActionColor = 'bg-success-500',
   swipeConfig,
-  className = "",
+  className = '',
   onDrawerOpen,
 }: SwipeableCardProps) {
-  const { t } = useTranslation();
-  const [showActions, setShowActions] = useState(false);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [blockClicks, setBlockClicks] = useState(false);
+  const { t } = useTranslation()
+  const [showActions, setShowActions] = useState(false)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [blockClicks, setBlockClicks] = useState(false)
 
-  const hasDraggedRef = useRef(false);
-  const clickBlockTimeoutRef = useRef<number | null>(null);
-  const currentTranslateRef = useRef(0);
+  const hasDraggedRef = useRef(false)
+  const clickBlockTimeoutRef = useRef<number | null>(null)
+  const currentTranslateRef = useRef(0)
 
   const getSwipeActions = useCallback(
-    (direction: "left" | "right"): SwipeAction[] | null => {
+    (direction: 'left' | 'right'): SwipeAction[] | null => {
       if (swipeConfig) {
-        return normalizeActions(swipeConfig[direction]);
+        return normalizeActions(swipeConfig[direction])
       }
-      const isLeft = direction === "left";
+      const isLeft = direction === 'left'
       return buildLegacyAction(
         direction,
         isLeft ? onSwipeLeft : onSwipeRight,
         isLeft ? leftActionLabel : rightActionLabel,
-        isLeft ? leftActionColor : rightActionColor,
-      );
+        isLeft ? leftActionColor : rightActionColor
+      )
     },
     [
       swipeConfig,
@@ -123,17 +114,17 @@ export function SwipeableCard({
       rightActionLabel,
       leftActionColor,
       rightActionColor,
-    ],
-  );
+    ]
+  )
 
-  const leftActions = getSwipeActions("left");
-  const rightActions = getSwipeActions("right");
-  const hasAnyAction = leftActions !== null || rightActions !== null;
+  const leftActions = getSwipeActions('left')
+  const rightActions = getSwipeActions('right')
+  const hasAnyAction = leftActions !== null || rightActions !== null
 
   // Use the swipe gesture hook
   // Max swipe should allow full swipe (70%) with overshoot (1.2x)
   // Since threshold defaults to 30% of container, multiplier = 0.7 * 1.2 / 0.3 = 2.8
-  const maxSwipeRatio = FULL_SWIPE_RATIO * SWIPE_OVERSHOOT_MULTIPLIER / DRAWER_OPEN_RATIO;
+  const maxSwipeRatio = (FULL_SWIPE_RATIO * SWIPE_OVERSHOOT_MULTIPLIER) / DRAWER_OPEN_RATIO
   const {
     containerRef,
     translateX,
@@ -147,228 +138,218 @@ export function SwipeableCard({
     getInitialTranslateX: () => (isDrawerOpen ? currentTranslateRef.current : 0),
     maxSwipeMultiplier: maxSwipeRatio,
     canSwipe: (_diffX, direction) => {
-      const actions = getSwipeActions(direction);
-      return actions !== null;
+      const actions = getSwipeActions(direction)
+      return actions !== null
     },
     onDragStart: () => {
       if (isDrawerOpen) {
-        currentTranslateRef.current = translateX;
+        currentTranslateRef.current = translateX
       } else {
-        currentTranslateRef.current = 0;
+        currentTranslateRef.current = 0
       }
     },
     onDragMove: () => {
-      hasDraggedRef.current = true;
+      hasDraggedRef.current = true
     },
     onDragEnd: (currentTranslateX, width) => {
       // Block clicks temporarily after a horizontal drag occurred
       if (hasDraggedRef.current) {
-        setBlockClicks(true);
+        setBlockClicks(true)
         if (clickBlockTimeoutRef.current !== null) {
-          clearTimeout(clickBlockTimeoutRef.current);
+          clearTimeout(clickBlockTimeoutRef.current)
         }
         clickBlockTimeoutRef.current = window.setTimeout(() => {
-          setBlockClicks(false);
-          hasDraggedRef.current = false;
-          clickBlockTimeoutRef.current = null;
-        }, CLICK_BLOCK_DELAY_MS);
+          setBlockClicks(false)
+          hasDraggedRef.current = false
+          clickBlockTimeoutRef.current = null
+        }, CLICK_BLOCK_DELAY_MS)
       }
 
-      const swipeAmount = Math.abs(currentTranslateX);
-      const swipeDirection = currentTranslateX > 0 ? "right" : "left";
-      const actions = getSwipeActions(swipeDirection);
-      const drawerThreshold = width * DRAWER_OPEN_RATIO;
-      const fullThreshold = width * FULL_SWIPE_RATIO;
+      const swipeAmount = Math.abs(currentTranslateX)
+      const swipeDirection = currentTranslateX > 0 ? 'right' : 'left'
+      const actions = getSwipeActions(swipeDirection)
+      const drawerThreshold = width * DRAWER_OPEN_RATIO
+      const fullThreshold = width * FULL_SWIPE_RATIO
 
       // Helper to reset drawer state
       const closeAndReset = () => {
-        currentTranslateRef.current = 0;
-        setIsDrawerOpen(false);
-        return false; // Hook resets position
-      };
+        currentTranslateRef.current = 0
+        setIsDrawerOpen(false)
+        return false // Hook resets position
+      }
 
       // No actions or below threshold - close drawer
       if (!actions || swipeAmount <= drawerThreshold) {
-        return closeAndReset();
+        return closeAndReset()
       }
 
       // Full swipe - trigger the primary action
       if (swipeAmount > fullThreshold) {
-        actions[0]?.onAction();
-        return closeAndReset();
+        actions[0]?.onAction()
+        return closeAndReset()
       }
 
       // Partial swipe past threshold - open drawer fully
-      const drawerWidth = calculateDrawerWidth(actions.length, width);
-      const targetPosition = swipeDirection === "left" ? -drawerWidth : drawerWidth;
-      setTranslateX(targetPosition);
-      currentTranslateRef.current = targetPosition;
-      setIsDrawerOpen(true);
-      onDrawerOpen?.();
-      return true; // Hook keeps position
+      const drawerWidth = calculateDrawerWidth(actions.length, width)
+      const targetPosition = swipeDirection === 'left' ? -drawerWidth : drawerWidth
+      setTranslateX(targetPosition)
+      currentTranslateRef.current = targetPosition
+      setIsDrawerOpen(true)
+      onDrawerOpen?.()
+      return true // Hook keeps position
     },
-  });
+  })
 
   const thresholds = useMemo(() => {
-    if (containerWidth === null || containerWidth === 0) return null;
+    if (containerWidth === null || containerWidth === 0) return null
     return {
       drawerOpen: containerWidth * DRAWER_OPEN_RATIO,
       full: containerWidth * FULL_SWIPE_RATIO,
       minVisibility: containerWidth * MINIMUM_SWIPE_RATIO,
-    };
-  }, [containerWidth]);
+    }
+  }, [containerWidth])
 
   // Not memoized with useCallback: React Compiler cannot preserve memoization when
   // closeDrawer depends on resetPosition (from hook), which creates a circular dependency.
   // The effects using closeDrawer inline the logic directly to avoid this issue.
   const closeDrawer = () => {
-    resetPosition();
-    currentTranslateRef.current = 0;
-    setIsDrawerOpen(false);
-  };
+    resetPosition()
+    currentTranslateRef.current = 0
+    setIsDrawerOpen(false)
+  }
 
   useEffect(() => {
-    if (!isDrawerOpen) return;
+    if (!isDrawerOpen) return
 
     const handleClickOutside = (e: MouseEvent | TouchEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
-        resetPosition();
-        currentTranslateRef.current = 0;
-        setIsDrawerOpen(false);
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        resetPosition()
+        currentTranslateRef.current = 0
+        setIsDrawerOpen(false)
       }
-    };
+    }
 
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("touchstart", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside)
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("touchstart", handleClickOutside);
-    };
-  }, [isDrawerOpen, containerRef, resetPosition]);
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+    }
+  }, [isDrawerOpen, containerRef, resetPosition])
 
   useEffect(() => {
     return () => {
       if (clickBlockTimeoutRef.current !== null) {
-        clearTimeout(clickBlockTimeoutRef.current);
+        clearTimeout(clickBlockTimeoutRef.current)
       }
-    };
-  }, []);
+    }
+  }, [])
 
   useEffect(() => {
-    if (!showActions) return;
+    if (!showActions) return
 
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setShowActions(false);
-        resetPosition();
-        currentTranslateRef.current = 0;
-        setIsDrawerOpen(false);
+      if (e.key === 'Escape') {
+        setShowActions(false)
+        resetPosition()
+        currentTranslateRef.current = 0
+        setIsDrawerOpen(false)
       }
-    };
+    }
 
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [showActions, resetPosition]);
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [showActions, resetPosition])
 
   // Listen for tour auto-swipe events to update state and render action buttons.
   // TourAutoSwipe dispatches 'tour-swipe-start' during guided tour demonstrations
   // so SwipeableCard can update its React state and render the action buttons.
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container || !hasAnyAction) return;
+    const container = containerRef.current
+    if (!container || !hasAnyAction) return
 
     const handleTourSwipe = (e: Event) => {
-      const { translateX: targetTranslate } = (e as TourSwipeStartEvent).detail;
+      const { translateX: targetTranslate } = (e as TourSwipeStartEvent).detail
       // Update React state so action buttons render
-      setTranslateX(targetTranslate);
-      currentTranslateRef.current = targetTranslate;
-      setIsDrawerOpen(true);
-    };
+      setTranslateX(targetTranslate)
+      currentTranslateRef.current = targetTranslate
+      setIsDrawerOpen(true)
+    }
 
-    container.addEventListener("tour-swipe-start", handleTourSwipe);
-    return () => container.removeEventListener("tour-swipe-start", handleTourSwipe);
-  }, [containerRef, hasAnyAction, setTranslateX]);
+    container.addEventListener('tour-swipe-start', handleTourSwipe)
+    return () => container.removeEventListener('tour-swipe-start', handleTourSwipe)
+  }, [containerRef, hasAnyAction, setTranslateX])
 
   // Capture phase click handler prevents card expansion when drawer is open
   const handleClickCapture = useCallback(
     (e: React.MouseEvent) => {
       if (isDrawerOpen) {
-        e.stopPropagation();
-        e.preventDefault();
+        e.stopPropagation()
+        e.preventDefault()
       }
     },
-    [isDrawerOpen],
-  );
+    [isDrawerOpen]
+  )
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      setShowActions((prev) => !prev);
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      setShowActions((prev) => !prev)
     }
-  }, []);
+  }, [])
 
   // Not memoized: depends on non-memoized closeDrawer (see comment above).
   // Only used for keyboard-accessible modal buttons, so re-creation on render is acceptable.
   const handleLeftAction = () => {
-    setShowActions(false);
-    closeDrawer();
+    setShowActions(false)
+    closeDrawer()
     if (leftActions?.[0]) {
-      leftActions[0].onAction();
+      leftActions[0].onAction()
     }
-  };
+  }
 
   // Not memoized: depends on non-memoized closeDrawer (see comment above).
   // Only used for keyboard-accessible modal buttons, so re-creation on render is acceptable.
   const handleRightAction = () => {
-    setShowActions(false);
-    closeDrawer();
+    setShowActions(false)
+    closeDrawer()
     if (rightActions?.[0]) {
-      rightActions[0].onAction();
+      rightActions[0].onAction()
     }
-  };
+  }
 
   // Determine which actions to show based on swipe direction
-  const currentDirection = translateX > 0 ? "right" : "left";
-  const currentActions =
-    currentDirection === "right" ? rightActions : leftActions;
-  const swipeAmount = Math.abs(translateX);
+  const currentDirection = translateX > 0 ? 'right' : 'left'
+  const currentActions = currentDirection === 'right' ? rightActions : leftActions
+  const swipeAmount = Math.abs(translateX)
   const showProgressiveActions =
-    thresholds && swipeAmount > thresholds.minVisibility && currentActions;
+    thresholds && swipeAmount > thresholds.minVisibility && currentActions
 
   // Not memoized: intentionally recalculates each render using current swipeAmount,
   // thresholds, containerWidth, and isDrawerOpen. All values change during drag animations.
   const getActionStyle = (totalActions: number) => {
-    if (!thresholds || !containerWidth) return {};
+    if (!thresholds || !containerWidth) return {}
 
     // Progressive reveal: actions expand from edge
-    const progress = Math.min(swipeAmount / thresholds.drawerOpen, 1);
+    const progress = Math.min(swipeAmount / thresholds.drawerOpen, 1)
 
     // Each action gets a portion of the revealed space
-    const revealedWidth = swipeAmount;
-    const actionShare = revealedWidth / totalActions;
+    const revealedWidth = swipeAmount
+    const actionShare = revealedWidth / totalActions
 
     // Width grows from 0 to ACTION_BUTTON_WIDTH as swipe progresses
-    const width = Math.min(
-      actionShare - ACTION_BUTTON_GAP,
-      ACTION_BUTTON_WIDTH,
-    );
+    const width = Math.min(actionShare - ACTION_BUTTON_GAP, ACTION_BUTTON_WIDTH)
 
     // Opacity fades in as action becomes visible
-    const opacity = Math.min(
-      (width / ACTION_BUTTON_WIDTH) * OPACITY_FADE_MULTIPLIER,
-      1,
-    );
+    const opacity = Math.min((width / ACTION_BUTTON_WIDTH) * OPACITY_FADE_MULTIPLIER, 1)
 
     return {
       width: isDrawerOpen ? ACTION_BUTTON_WIDTH : Math.max(0, width),
       opacity: isDrawerOpen ? 1 : opacity,
       transform: `scale(${isDrawerOpen ? 1 : SCALE_MIN + progress * SCALE_RANGE})`,
-    };
-  };
+    }
+  }
 
   return (
     <div
@@ -376,51 +357,48 @@ export function SwipeableCard({
       className={`relative overflow-hidden rounded-xl ${className}`}
       onKeyDown={hasAnyAction ? handleKeyDown : undefined}
       tabIndex={hasAnyAction ? 0 : undefined}
-      role={hasAnyAction ? "group" : undefined}
+      role={hasAnyAction ? 'group' : undefined}
       aria-label={
-        hasAnyAction
-          ? "Swipeable card with actions. Press Enter to show actions."
-          : undefined
+        hasAnyAction ? 'Swipeable card with actions. Press Enter to show actions.' : undefined
       }
     >
       {/* iOS-style progressive action reveal */}
       {showProgressiveActions && thresholds && (
         <div
-          className={`absolute inset-y-0 ${currentDirection === "right" ? "left-0" : "right-0"} flex items-stretch ${currentDirection === "right" ? "flex-row" : "flex-row-reverse"}`}
+          className={`absolute inset-y-0 ${currentDirection === 'right' ? 'left-0' : 'right-0'} flex items-stretch ${currentDirection === 'right' ? 'flex-row' : 'flex-row-reverse'}`}
           style={{
             width: Math.abs(translateX),
           }}
         >
           {currentActions.map((action, index) => {
-            const style = getActionStyle(currentActions.length);
-            const isFirstButton = index === 0;
+            const style = getActionStyle(currentActions.length)
+            const isFirstButton = index === 0
 
             return (
               <button
                 key={action.id}
                 onClick={(e) => {
-                  e.stopPropagation();
-                  action.onAction();
-                  closeDrawer();
+                  e.stopPropagation()
+                  action.onAction()
+                  closeDrawer()
                 }}
-                className={`${action.color} text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-white focus:ring-inset flex flex-col items-center justify-center gap-1 transition-transform overflow-hidden shrink-0 ${!isFirstButton ? "border-l border-white/25" : ""}`}
+                className={`${action.color} text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-white focus:ring-inset flex flex-col items-center justify-center gap-1 transition-transform overflow-hidden shrink-0 ${!isFirstButton ? 'border-l border-white/25' : ''}`}
                 style={{
                   width: style.width,
                   opacity: style.opacity,
                   pointerEvents:
-                    typeof style.width === "number" &&
-                    style.width > MIN_CLICKABLE_WIDTH
-                      ? "auto"
-                      : "none",
+                    typeof style.width === 'number' && style.width > MIN_CLICKABLE_WIDTH
+                      ? 'auto'
+                      : 'none',
                 }}
                 aria-label={action.label}
               >
                 {action.icon}
                 <span className="text-xs font-medium">
-                  {action.shortLabel || action.label.split(" ")[0]}
+                  {action.shortLabel || action.label.split(' ')[0]}
                 </span>
               </button>
-            );
+            )
           })}
 
           {/* Full swipe indicator - shows when approaching full swipe threshold */}
@@ -434,13 +412,11 @@ export function SwipeableCard({
                   opacity: Math.min(
                     (swipeAmount - thresholds.drawerOpen) /
                       (thresholds.full - thresholds.drawerOpen),
-                    MAX_HINT_OPACITY,
+                    MAX_HINT_OPACITY
                   ),
                 }}
               >
-                <div
-                  className={`${currentActions[0].color} absolute inset-0`}
-                />
+                <div className={`${currentActions[0].color} absolute inset-0`} />
               </div>
             )}
         </div>
@@ -455,19 +431,17 @@ export function SwipeableCard({
         onMouseUp={hasAnyAction ? handlers.onMouseUp : undefined}
         onMouseLeave={hasAnyAction ? handlers.onMouseLeave : undefined}
         onClickCapture={hasAnyAction ? handleClickCapture : undefined}
-        role={hasAnyAction ? "button" : undefined}
+        role={hasAnyAction ? 'button' : undefined}
         tabIndex={hasAnyAction ? -1 : undefined}
         style={{
           transform: `translateX(${translateX}px)`,
-          transition: isDragging
-            ? "none"
-            : "transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)",
-          cursor: isDragging ? "grabbing" : hasAnyAction ? "grab" : "default",
-          pointerEvents: blockClicks ? "none" : "auto",
+          transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
+          cursor: isDragging ? 'grabbing' : hasAnyAction ? 'grab' : 'default',
+          pointerEvents: blockClicks ? 'none' : 'auto',
         }}
         className="relative z-10 bg-white dark:bg-gray-800 rounded-xl"
       >
-        {typeof children === "function" ? children({ isDrawerOpen }) : children}
+        {typeof children === 'function' ? children({ isDrawerOpen }) : children}
       </div>
 
       {showActions && hasAnyAction && (
@@ -482,7 +456,7 @@ export function SwipeableCard({
           {/* Dialog content - positioned above backdrop */}
           <div
             role="dialog"
-            aria-label={t("common.cardActions")}
+            aria-label={t('common.cardActions')}
             aria-modal="true"
             className="absolute inset-0 z-20 flex items-center justify-center gap-2 p-4 pointer-events-none"
           >
@@ -499,7 +473,7 @@ export function SwipeableCard({
               {leftActions?.[0] && (
                 <button
                   ref={(el) => {
-                    if (!rightActions?.[0]) el?.focus();
+                    if (!rightActions?.[0]) el?.focus()
                   }}
                   onClick={handleLeftAction}
                   className={`${leftActions[0].color} text-white px-4 py-2 rounded-lg font-medium text-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-white ml-2`}
@@ -512,5 +486,5 @@ export function SwipeableCard({
         </>
       )}
     </div>
-  );
+  )
 }

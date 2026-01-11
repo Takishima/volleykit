@@ -9,33 +9,34 @@
  * - Manuscript (4:5 portrait): For roster section capture from physical scoresheets
  */
 
-import type { ScoresheetType } from "@/features/ocr/utils/scoresheet-detector";
-import { useTranslation } from "@/shared/hooks/useTranslation";
+import type { ScoresheetType } from '@/features/ocr/utils/scoresheet-detector'
+import { useTranslation } from '@/shared/hooks/useTranslation'
+
 import {
   ELECTRONIC_GUIDE_WIDTH_PERCENT,
   MANUSCRIPT_GUIDE_WIDTH_PERCENT,
   GUIDE_ASPECT_RATIO,
-} from "../constants/scoresheet-guide";
+} from '../constants/scoresheet-guide'
 
 interface ScoresheetGuideProps {
   /** Type of scoresheet being captured */
-  scoresheetType: ScoresheetType;
+  scoresheetType: ScoresheetType
 }
 
 /** Multiplier to convert decimal percentage to CSS percentage */
-const PERCENT_MULTIPLIER = 100;
+const PERCENT_MULTIPLIER = 100
 
 /**
  * Visual overlay guide for scoresheet image capture.
  * Shows a frame with the appropriate aspect ratio and alignment hints.
  */
 export function ScoresheetGuide({ scoresheetType }: ScoresheetGuideProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
-  const isElectronic = scoresheetType === "electronic";
+  const isElectronic = scoresheetType === 'electronic'
   const widthPercent = isElectronic
     ? ELECTRONIC_GUIDE_WIDTH_PERCENT
-    : MANUSCRIPT_GUIDE_WIDTH_PERCENT;
+    : MANUSCRIPT_GUIDE_WIDTH_PERCENT
 
   // Calculate frame dimensions using shared constants
   // Both electronic and manuscript use portrait orientation (4:5)
@@ -44,11 +45,11 @@ export function ScoresheetGuide({ scoresheetType }: ScoresheetGuideProps) {
   const frameStyle = {
     width: `${widthPercent * PERCENT_MULTIPLIER}%`,
     aspectRatio: `${GUIDE_ASPECT_RATIO}`,
-  };
+  }
 
   const hintText = isElectronic
-    ? t("validation.ocr.photoGuide.electronicHint")
-    : t("validation.ocr.photoGuide.manuscriptHint");
+    ? t('validation.ocr.photoGuide.electronicHint')
+    : t('validation.ocr.photoGuide.manuscriptHint')
 
   return (
     <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
@@ -83,9 +84,9 @@ export function ScoresheetGuide({ scoresheetType }: ScoresheetGuideProps) {
       {/* Alignment instruction at top */}
       <div className="absolute top-4 left-0 right-0 text-center z-10">
         <span className="text-sm font-medium text-white/90 bg-black/50 px-4 py-2 rounded-lg">
-          {t("validation.ocr.photoGuide.alignScoresheet")}
+          {t('validation.ocr.photoGuide.alignScoresheet')}
         </span>
       </div>
     </div>
-  );
+  )
 }

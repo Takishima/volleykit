@@ -8,9 +8,9 @@
  */
 export interface StationInfo {
   /** Didok station ID (e.g., "8507000" for Bern) */
-  id: string;
+  id: string
   /** Station name */
-  name: string;
+  name: string
 }
 
 /**
@@ -18,21 +18,21 @@ export interface StationInfo {
  */
 export interface TravelTimeResult {
   /** Total travel duration in minutes */
-  durationMinutes: number;
+  durationMinutes: number
   /** ISO 8601 departure time */
-  departureTime: string;
+  departureTime: string
   /** ISO 8601 arrival time (includes walking to final destination) */
-  arrivalTime: string;
+  arrivalTime: string
   /** Number of transfers required */
-  transfers: number;
+  transfers: number
   /** Origin station info for SBB deep linking */
-  originStation?: StationInfo;
+  originStation?: StationInfo
   /** Destination station info for SBB deep linking */
-  destinationStation?: StationInfo;
+  destinationStation?: StationInfo
   /** Walking time from last public transport stop to destination (minutes) */
-  finalWalkingMinutes?: number;
+  finalWalkingMinutes?: number
   /** Raw trip data for future itinerary display */
-  tripData?: unknown;
+  tripData?: unknown
 }
 
 /**
@@ -40,34 +40,34 @@ export interface TravelTimeResult {
  */
 export interface TravelTimeOptions {
   /** Desired departure time (defaults to now) */
-  departureTime?: Date;
+  departureTime?: Date
   /** Target arrival time - selects connection arriving closest to this time without being late */
-  targetArrivalTime?: Date;
+  targetArrivalTime?: Date
   /** Include raw trip data in result (for future itinerary display) */
-  includeTrips?: boolean;
+  includeTrips?: boolean
   /** Origin location label (for mock transport station names) */
-  originLabel?: string;
+  originLabel?: string
   /** Destination location label (for mock transport station names) */
-  destinationLabel?: string;
+  destinationLabel?: string
 }
 
 /**
  * Coordinates for location-based routing.
  */
 export interface Coordinates {
-  latitude: number;
-  longitude: number;
+  latitude: number
+  longitude: number
 }
 
 /**
  * Error thrown when transport API requests fail.
  */
 export class TransportApiError extends Error {
-  readonly code?: string;
+  readonly code?: string
 
   constructor(message: string, code?: string) {
-    super(message);
-    this.name = "TransportApiError";
-    this.code = code;
+    super(message)
+    this.name = 'TransportApiError'
+    this.code = code
   }
 }

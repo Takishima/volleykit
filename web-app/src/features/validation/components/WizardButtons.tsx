@@ -1,17 +1,17 @@
-import { useTranslation } from "@/shared/hooks/useTranslation";
-import { Button } from "@/shared/components/Button";
+import { Button } from '@/shared/components/Button'
+import { useTranslation } from '@/shared/hooks/useTranslation'
 
 interface WizardNavigationState {
-  isFirstStep: boolean;
-  isLastStep: boolean;
+  isFirstStep: boolean
+  isLastStep: boolean
 }
 
 interface ReadOnlyModeButtonsProps {
-  navigation: WizardNavigationState;
-  onBack: () => void;
-  onNext: () => void;
-  onClose: () => void;
-  closeLabel: string;
+  navigation: WizardNavigationState
+  onBack: () => void
+  onNext: () => void
+  onClose: () => void
+  closeLabel: string
 }
 
 /**
@@ -25,14 +25,14 @@ function ReadOnlyModeButtons({
   onClose,
   closeLabel,
 }: ReadOnlyModeButtonsProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
   return (
     <>
       <div>
         {!navigation.isFirstStep && (
           <Button variant="secondary" onClick={onBack}>
-            {t("validation.wizard.previous")}
+            {t('validation.wizard.previous')}
           </Button>
         )}
       </div>
@@ -43,19 +43,19 @@ function ReadOnlyModeButtons({
           </Button>
         ) : (
           <Button variant="primary" onClick={onNext}>
-            {t("validation.wizard.next")}
+            {t('validation.wizard.next')}
           </Button>
         )}
       </div>
     </>
-  );
+  )
 }
 
 interface ValidatedModeButtonsProps {
-  navigation: WizardNavigationState;
-  onBack: () => void;
-  onNext: () => void;
-  onClose: () => void;
+  navigation: WizardNavigationState
+  onBack: () => void
+  onNext: () => void
+  onClose: () => void
 }
 
 /**
@@ -63,15 +63,15 @@ interface ValidatedModeButtonsProps {
  * Read-only mode with Previous/Next/Close buttons.
  */
 export function ValidatedModeButtons(props: ValidatedModeButtonsProps) {
-  const { t } = useTranslation();
-  return <ReadOnlyModeButtons {...props} closeLabel={t("common.close")} />;
+  const { t } = useTranslation()
+  return <ReadOnlyModeButtons {...props} closeLabel={t('common.close')} />
 }
 
 interface SafeModeButtonsProps {
-  navigation: WizardNavigationState;
-  onBack: () => void;
-  onNext: () => void;
-  onClose: () => void;
+  navigation: WizardNavigationState
+  onBack: () => void
+  onNext: () => void
+  onClose: () => void
 }
 
 /**
@@ -80,26 +80,26 @@ interface SafeModeButtonsProps {
  * Dismiss closes without making any API calls.
  */
 export function SafeModeButtons(props: SafeModeButtonsProps) {
-  const { t } = useTranslation();
-  return <ReadOnlyModeButtons {...props} closeLabel={t("validation.wizard.dismiss")} />;
+  const { t } = useTranslation()
+  return <ReadOnlyModeButtons {...props} closeLabel={t('validation.wizard.dismiss')} />
 }
 
 interface EditModeState {
-  isFinalizing: boolean;
-  isLoadingGameDetails: boolean;
-  hasGameDetailsError: boolean;
-  canMarkCurrentStepDone: boolean;
-  allPreviousRequiredStepsDone: boolean;
-  currentStepIsOptional: boolean;
+  isFinalizing: boolean
+  isLoadingGameDetails: boolean
+  hasGameDetailsError: boolean
+  canMarkCurrentStepDone: boolean
+  allPreviousRequiredStepsDone: boolean
+  currentStepIsOptional: boolean
 }
 
 interface EditModeButtonsProps {
-  navigation: WizardNavigationState;
-  state: EditModeState;
-  onAttemptClose: () => void;
-  onBack: () => void;
-  onValidateAndNext: () => void;
-  onFinish: () => Promise<void>;
+  navigation: WizardNavigationState
+  state: EditModeState
+  onAttemptClose: () => void
+  onBack: () => void
+  onValidateAndNext: () => void
+  onFinish: () => Promise<void>
 }
 
 /**
@@ -114,32 +114,24 @@ export function EditModeButtons({
   onValidateAndNext,
   onFinish,
 }: EditModeButtonsProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
-  const isDisabled = state.isFinalizing || state.isLoadingGameDetails || state.hasGameDetailsError;
+  const isDisabled = state.isFinalizing || state.isLoadingGameDetails || state.hasGameDetailsError
   const finishDisabled =
     isDisabled ||
     !state.allPreviousRequiredStepsDone ||
-    (!state.currentStepIsOptional && !state.canMarkCurrentStepDone);
+    (!state.currentStepIsOptional && !state.canMarkCurrentStepDone)
 
   return (
     <>
       <div>
         {navigation.isFirstStep ? (
-          <Button
-            variant="secondary"
-            onClick={onAttemptClose}
-            disabled={state.isFinalizing}
-          >
-            {t("common.cancel")}
+          <Button variant="secondary" onClick={onAttemptClose} disabled={state.isFinalizing}>
+            {t('common.cancel')}
           </Button>
         ) : (
-          <Button
-            variant="secondary"
-            onClick={onBack}
-            disabled={state.isFinalizing}
-          >
-            {t("validation.wizard.previous")}
+          <Button variant="secondary" onClick={onBack} disabled={state.isFinalizing}>
+            {t('validation.wizard.previous')}
           </Button>
         )}
       </div>
@@ -152,13 +144,11 @@ export function EditModeButtons({
             disabled={finishDisabled}
             title={
               !state.allPreviousRequiredStepsDone
-                ? t("validation.state.markAllStepsTooltip")
+                ? t('validation.state.markAllStepsTooltip')
                 : undefined
             }
           >
-            {state.isFinalizing
-              ? t("common.loading")
-              : t("validation.wizard.finish")}
+            {state.isFinalizing ? t('common.loading') : t('validation.wizard.finish')}
           </Button>
         ) : (
           <Button
@@ -166,10 +156,10 @@ export function EditModeButtons({
             onClick={onValidateAndNext}
             disabled={isDisabled || !state.canMarkCurrentStepDone}
           >
-            {t("validation.wizard.validate")}
+            {t('validation.wizard.validate')}
           </Button>
         )}
       </div>
     </>
-  );
+  )
 }

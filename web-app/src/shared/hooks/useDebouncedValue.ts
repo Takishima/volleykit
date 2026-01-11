@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react'
 
 /**
  * Returns a debounced version of the provided value that only updates
@@ -9,15 +9,15 @@ import { useState, useEffect } from "react";
  * @returns The debounced value
  */
 export function useDebouncedValue<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState(value);
+  const [debouncedValue, setDebouncedValue] = useState(value)
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
+      setDebouncedValue(value)
+    }, delay)
 
-    return () => clearTimeout(timeoutId);
-  }, [value, delay]);
+    return () => clearTimeout(timeoutId)
+  }, [value, delay])
 
-  return debouncedValue;
+  return debouncedValue
 }

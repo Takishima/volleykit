@@ -1,0 +1,25 @@
+# Build outputs
+dist/
+dev-dist/
+coverage/
+playwright-report/
+test-results/
+
+# Generated files
+src/api/schema.ts
+
+# Dependencies
+node_modules/
+
+# Cache directories
+.vite/
+*.tsbuildinfo
+
+# Lock files (keep formatting stable)
+package-lock.json
+
+# PWA assets
+public/
+
+# Stats
+stats.html

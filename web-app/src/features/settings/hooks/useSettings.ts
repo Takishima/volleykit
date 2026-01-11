@@ -1,8 +1,9 @@
-import { useQuery, type UseQueryResult } from "@tanstack/react-query";
-import { api, type AssociationSettings, type Season } from "@/api/client";
-import { useAuthStore } from "@/shared/stores/auth";
-import { queryKeys } from "@/api/queryKeys";
-import { SETTINGS_STALE_TIME_MS, SEASON_STALE_TIME_MS } from "@/shared/hooks/usePaginatedQuery";
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
+
+import { api, type AssociationSettings, type Season } from '@/api/client'
+import { queryKeys } from '@/api/queryKeys'
+import { SETTINGS_STALE_TIME_MS, SEASON_STALE_TIME_MS } from '@/shared/hooks/usePaginatedQuery'
+import { useAuthStore } from '@/shared/stores/auth'
 
 /**
  * Hook to fetch association settings.
@@ -11,20 +12,17 @@ import { SETTINGS_STALE_TIME_MS, SEASON_STALE_TIME_MS } from "@/shared/hooks/use
  * Note: Disabled in demo mode as demo data doesn't need these settings.
  * Includes activeOccupationId in the query key to refetch when switching associations.
  */
-export function useAssociationSettings(): UseQueryResult<
-  AssociationSettings,
-  Error
-> {
-  const dataSource = useAuthStore((state) => state.dataSource);
-  const isDemoMode = dataSource === "demo";
-  const activeOccupationId = useAuthStore((state) => state.activeOccupationId);
+export function useAssociationSettings(): UseQueryResult<AssociationSettings, Error> {
+  const dataSource = useAuthStore((state) => state.dataSource)
+  const isDemoMode = dataSource === 'demo'
+  const activeOccupationId = useAuthStore((state) => state.activeOccupationId)
 
   return useQuery({
     queryKey: queryKeys.settings.association(activeOccupationId),
     queryFn: () => api.getAssociationSettings(),
     staleTime: SETTINGS_STALE_TIME_MS,
     enabled: !isDemoMode,
-  });
+  })
 }
 
 /**
@@ -35,14 +33,14 @@ export function useAssociationSettings(): UseQueryResult<
  * Includes activeOccupationId in the query key to refetch when switching associations.
  */
 export function useActiveSeason(): UseQueryResult<Season, Error> {
-  const dataSource = useAuthStore((state) => state.dataSource);
-  const isDemoMode = dataSource === "demo";
-  const activeOccupationId = useAuthStore((state) => state.activeOccupationId);
+  const dataSource = useAuthStore((state) => state.dataSource)
+  const isDemoMode = dataSource === 'demo'
+  const activeOccupationId = useAuthStore((state) => state.activeOccupationId)
 
   return useQuery({
     queryKey: queryKeys.seasons.active(activeOccupationId),
     queryFn: () => api.getActiveSeason(),
     staleTime: SEASON_STALE_TIME_MS,
     enabled: !isDemoMode,
-  });
+  })
 }

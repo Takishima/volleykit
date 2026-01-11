@@ -25,7 +25,7 @@
  * useQuery({ queryKey: queryKeys.assignments.list(config, demoCode) })
  */
 
-import type { SearchConfiguration, PersonSearchFilter } from "./client";
+import type { SearchConfiguration, PersonSearchFilter } from './client'
 
 export const queryKeys = {
   /**
@@ -33,21 +33,19 @@ export const queryKeys = {
    */
   assignments: {
     /** Base key - invalidates ALL assignment queries */
-    all: ["assignments"] as const,
+    all: ['assignments'] as const,
     /** Parent key for all list queries */
-    lists: () => [...queryKeys.assignments.all, "list"] as const,
+    lists: () => [...queryKeys.assignments.all, 'list'] as const,
     /**
      * Specific list query with search configuration.
      * @param config - Search configuration filters and sorting
      * @param associationKey - In demo mode: demoAssociationCode. In production: activeOccupationId.
      *                         This ensures cache invalidation when switching associations.
      */
-    list: (
-      config?: SearchConfiguration,
-      associationKey?: string | null,
-    ) => [...queryKeys.assignments.lists(), config, associationKey] as const,
+    list: (config?: SearchConfiguration, associationKey?: string | null) =>
+      [...queryKeys.assignments.lists(), config, associationKey] as const,
     /** Parent key for all detail queries */
-    details: () => [...queryKeys.assignments.all, "detail"] as const,
+    details: () => [...queryKeys.assignments.all, 'detail'] as const,
     /** Specific assignment detail query */
     detail: (id: string) => [...queryKeys.assignments.details(), id] as const,
     /**
@@ -62,11 +60,11 @@ export const queryKeys = {
       fromDate: string,
       toDate: string,
       deadlineHours: number,
-      associationKey?: string | null,
+      associationKey?: string | null
     ) =>
       [
         ...queryKeys.assignments.all,
-        "validationClosed",
+        'validationClosed',
         fromDate,
         toDate,
         deadlineHours,
@@ -79,18 +77,16 @@ export const queryKeys = {
    */
   compensations: {
     /** Base key - invalidates ALL compensation queries */
-    all: ["compensations"] as const,
+    all: ['compensations'] as const,
     /** Parent key for all list queries */
-    lists: () => [...queryKeys.compensations.all, "list"] as const,
+    lists: () => [...queryKeys.compensations.all, 'list'] as const,
     /**
      * Specific list query with search configuration.
      * @param config - Search configuration filters and sorting
      * @param associationKey - In demo mode: demoAssociationCode. In production: activeOccupationId.
      */
-    list: (
-      config?: SearchConfiguration,
-      associationKey?: string | null,
-    ) => [...queryKeys.compensations.lists(), config, associationKey] as const,
+    list: (config?: SearchConfiguration, associationKey?: string | null) =>
+      [...queryKeys.compensations.lists(), config, associationKey] as const,
   },
 
   /**
@@ -98,18 +94,16 @@ export const queryKeys = {
    */
   exchanges: {
     /** Base key - invalidates ALL exchange queries */
-    all: ["exchanges"] as const,
+    all: ['exchanges'] as const,
     /** Parent key for all list queries */
-    lists: () => [...queryKeys.exchanges.all, "list"] as const,
+    lists: () => [...queryKeys.exchanges.all, 'list'] as const,
     /**
      * Specific list query with search configuration.
      * @param config - Search configuration filters and sorting
      * @param associationKey - In demo mode: demoAssociationCode. In production: activeOccupationId.
      */
-    list: (
-      config?: SearchConfiguration,
-      associationKey?: string | null,
-    ) => [...queryKeys.exchanges.lists(), config, associationKey] as const,
+    list: (config?: SearchConfiguration, associationKey?: string | null) =>
+      [...queryKeys.exchanges.lists(), config, associationKey] as const,
   },
 
   /**
@@ -117,13 +111,13 @@ export const queryKeys = {
    */
   seasons: {
     /** Base key - invalidates ALL season queries */
-    all: ["seasons"] as const,
+    all: ['seasons'] as const,
     /**
      * Active season query.
      * @param associationKey - In demo mode: demoAssociationCode. In production: activeOccupationId.
      */
     active: (associationKey?: string | null) =>
-      [...queryKeys.seasons.all, "active", associationKey] as const,
+      [...queryKeys.seasons.all, 'active', associationKey] as const,
   },
 
   /**
@@ -131,13 +125,13 @@ export const queryKeys = {
    */
   settings: {
     /** Base key - invalidates ALL settings queries */
-    all: ["settings"] as const,
+    all: ['settings'] as const,
     /**
      * Association settings query.
      * @param associationKey - In demo mode: demoAssociationCode. In production: activeOccupationId.
      */
     association: (associationKey?: string | null) =>
-      [...queryKeys.settings.all, "association", associationKey] as const,
+      [...queryKeys.settings.all, 'association', associationKey] as const,
   },
 
   /**
@@ -145,9 +139,9 @@ export const queryKeys = {
    */
   nominations: {
     /** Base key - invalidates ALL nomination queries */
-    all: ["nominations"] as const,
+    all: ['nominations'] as const,
     /** Parent key for possible nomination queries */
-    possibles: () => [...queryKeys.nominations.all, "possible"] as const,
+    possibles: () => [...queryKeys.nominations.all, 'possible'] as const,
     /** Possible nominations for a nomination list */
     possible: (nominationListId: string) =>
       [...queryKeys.nominations.possibles(), nominationListId] as const,
@@ -158,12 +152,11 @@ export const queryKeys = {
    */
   validation: {
     /** Base key - invalidates ALL validation queries */
-    all: ["validation"] as const,
+    all: ['validation'] as const,
     /** Parent key for game detail queries */
-    gameDetails: () => [...queryKeys.validation.all, "gameDetails"] as const,
+    gameDetails: () => [...queryKeys.validation.all, 'gameDetails'] as const,
     /** Specific game details with scoresheet */
-    gameDetail: (gameId: string) =>
-      [...queryKeys.validation.gameDetails(), gameId] as const,
+    gameDetail: (gameId: string) => [...queryKeys.validation.gameDetails(), gameId] as const,
   },
 
   /**
@@ -171,10 +164,9 @@ export const queryKeys = {
    */
   scorerSearch: {
     /** Base key - invalidates ALL scorer search queries */
-    all: ["scorerSearch"] as const,
+    all: ['scorerSearch'] as const,
     /** Specific search query with filters */
-    search: (filters: PersonSearchFilter) =>
-      [...queryKeys.scorerSearch.all, filters] as const,
+    search: (filters: PersonSearchFilter) => [...queryKeys.scorerSearch.all, filters] as const,
   },
 
   /**
@@ -184,21 +176,12 @@ export const queryKeys = {
    */
   travelTime: {
     /** Base key - invalidates ALL travel time queries */
-    all: ["travelTime"] as const,
+    all: ['travelTime'] as const,
     /** Parent key for all hall travel time queries */
-    halls: () => [...queryKeys.travelTime.all, "hall"] as const,
+    halls: () => [...queryKeys.travelTime.all, 'hall'] as const,
     /** Travel time to a specific hall from user's home location for a day type */
-    hall: (
-      hallId: string,
-      homeLocationHash: string,
-      dayType: "weekday" | "saturday" | "sunday",
-    ) =>
-      [
-        ...queryKeys.travelTime.halls(),
-        hallId,
-        homeLocationHash,
-        dayType,
-      ] as const,
+    hall: (hallId: string, homeLocationHash: string, dayType: 'weekday' | 'saturday' | 'sunday') =>
+      [...queryKeys.travelTime.halls(), hallId, homeLocationHash, dayType] as const,
   },
 
   /**
@@ -207,15 +190,14 @@ export const queryKeys = {
    */
   calendar: {
     /** Base key - invalidates ALL calendar queries */
-    all: ["calendar"] as const,
+    all: ['calendar'] as const,
     /** Parent key for calendar assignment queries */
-    assignments: () => [...queryKeys.calendar.all, "assignments"] as const,
+    assignments: () => [...queryKeys.calendar.all, 'assignments'] as const,
     /**
      * Calendar assignments for a specific calendar code.
      * @param code - The 6-character calendar code
      */
-    assignmentsByCode: (code: string) =>
-      [...queryKeys.calendar.assignments(), code] as const,
+    assignmentsByCode: (code: string) => [...queryKeys.calendar.assignments(), code] as const,
   },
 
   /**
@@ -224,9 +206,9 @@ export const queryKeys = {
    */
   refereeBackup: {
     /** Base key - invalidates ALL referee backup queries */
-    all: ["refereeBackup"] as const,
+    all: ['refereeBackup'] as const,
     /** Parent key for all list queries */
-    lists: () => [...queryKeys.refereeBackup.all, "list"] as const,
+    lists: () => [...queryKeys.refereeBackup.all, 'list'] as const,
     /**
      * Specific list query with search configuration.
      * @param config - Search configuration filters and sorting
@@ -235,4 +217,4 @@ export const queryKeys = {
     list: (config?: SearchConfiguration, associationKey?: string | null) =>
       [...queryKeys.refereeBackup.lists(), config, associationKey] as const,
   },
-} as const;
+} as const

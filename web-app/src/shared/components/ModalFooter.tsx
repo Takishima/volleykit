@@ -1,10 +1,10 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react'
 
 interface ModalFooterProps {
   /** Footer content (typically Button components) */
-  children: ReactNode;
+  children: ReactNode
   /** Whether to show a divider line above the footer */
-  divider?: boolean;
+  divider?: boolean
 }
 
 /**
@@ -26,12 +26,10 @@ export function ModalFooter({ children, divider = false }: ModalFooterProps) {
   return (
     <div
       className={
-        divider
-          ? "border-t border-border-default dark:border-border-default-dark pt-4"
-          : undefined
+        divider ? 'border-t border-border-default dark:border-border-default-dark pt-4' : undefined
       }
     >
       <div className="flex gap-3">{children}</div>
     </div>
-  );
+  )
 }

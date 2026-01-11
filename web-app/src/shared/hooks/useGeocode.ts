@@ -1,40 +1,40 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef } from 'react'
 
 export interface GeocodedLocation {
   /** Unique identifier from Nominatim */
-  placeId: number;
-  latitude: number;
-  longitude: number;
-  displayName: string;
+  placeId: number
+  latitude: number
+  longitude: number
+  displayName: string
 }
 
 export interface GeocodeState {
   /** List of geocoded location results */
-  results: GeocodedLocation[];
+  results: GeocodedLocation[]
   /** Whether a geocoding request is in progress */
-  isLoading: boolean;
+  isLoading: boolean
   /** Error message if geocoding failed */
-  error: string | null;
+  error: string | null
 }
 
 export interface UseGeocodeResult extends GeocodeState {
   /** Search for locations matching the given address query */
-  search: (query: string) => void;
+  search: (query: string) => void
   /** Clear results and error */
-  clear: () => void;
+  clear: () => void
 }
 
 interface UseGeocodeOptions {
   /** Limit results to this country code (default: "ch" for Switzerland) */
-  countryCode?: string;
+  countryCode?: string
   /** Maximum number of results to return (default: 5) */
-  limit?: number;
+  limit?: number
 }
 
-const NOMINATIM_API_URL = "https://nominatim.openstreetmap.org/search";
-const DEFAULT_COUNTRY_CODE = "ch";
-const DEFAULT_LIMIT = 5;
-const MIN_QUERY_LENGTH = 3;
+const NOMINATIM_API_URL = 'https://nominatim.openstreetmap.org/search'
+const DEFAULT_COUNTRY_CODE = 'ch'
+const DEFAULT_LIMIT = 5
+const MIN_QUERY_LENGTH = 3
 
 /**
  * Hook for geocoding addresses using the OpenStreetMap Nominatim API.
@@ -73,56 +73,53 @@ const MIN_QUERY_LENGTH = 3;
  * ```
  */
 export function useGeocode(options: UseGeocodeOptions = {}): UseGeocodeResult {
-  const {
-    countryCode = DEFAULT_COUNTRY_CODE,
-    limit = DEFAULT_LIMIT,
-  } = options;
+  const { countryCode = DEFAULT_COUNTRY_CODE, limit = DEFAULT_LIMIT } = options
 
   const [state, setState] = useState<GeocodeState>({
     results: [],
     isLoading: false,
     error: null,
-  });
+  })
 
   // AbortController for cancelling pending requests
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   const search = useCallback(
     async (query: string) => {
       // Skip empty or too short queries
       if (query.trim().length < MIN_QUERY_LENGTH) {
-        setState({ results: [], isLoading: false, error: null });
-        return;
+        setState({ results: [], isLoading: false, error: null })
+        return
       }
 
       // Cancel previous request if still pending
-      abortControllerRef.current?.abort();
-      abortControllerRef.current = new AbortController();
+      abortControllerRef.current?.abort()
+      abortControllerRef.current = new AbortController()
 
-      setState((prev) => ({ ...prev, isLoading: true, error: null }));
+      setState((prev) => ({ ...prev, isLoading: true, error: null }))
 
       try {
         const params = new URLSearchParams({
           q: query,
-          format: "json",
+          format: 'json',
           countrycodes: countryCode,
           limit: String(limit),
-          addressdetails: "1",
-        });
+          addressdetails: '1',
+        })
 
         const response = await fetch(`${NOMINATIM_API_URL}?${params}`, {
           signal: abortControllerRef.current.signal,
           headers: {
             // Nominatim requires a user agent
-            "User-Agent": "VolleyKit/1.0",
+            'User-Agent': 'VolleyKit/1.0',
           },
-        });
+        })
 
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+          throw new Error(`HTTP ${response.status}`)
         }
 
-        const data: NominatimResult[] = await response.json();
+        const data: NominatimResult[] = await response.json()
 
         // AbortController prevents this from running if aborted
         setState({
@@ -134,62 +131,62 @@ export function useGeocode(options: UseGeocodeOptions = {}): UseGeocodeResult {
           })),
           isLoading: false,
           error: null,
-        });
+        })
       } catch (err) {
         // Ignore abort errors (expected when cancelling requests)
-        if (err instanceof Error && err.name === "AbortError") {
-          return;
+        if (err instanceof Error && err.name === 'AbortError') {
+          return
         }
 
         setState((prev) => ({
           ...prev,
           results: [],
           isLoading: false,
-          error: "geocode_failed",
-        }));
+          error: 'geocode_failed',
+        }))
       }
     },
-    [countryCode, limit],
-  );
+    [countryCode, limit]
+  )
 
   const clear = useCallback(() => {
-    abortControllerRef.current?.abort();
-    setState({ results: [], isLoading: false, error: null });
-  }, []);
+    abortControllerRef.current?.abort()
+    setState({ results: [], isLoading: false, error: null })
+  }, [])
 
   return {
     ...state,
     search,
     clear,
-  };
+  }
 }
 
 /** Nominatim address details structure */
 interface NominatimAddress {
-  house_number?: string;
-  road?: string;
-  pedestrian?: string;
-  footway?: string;
-  neighbourhood?: string;
-  suburb?: string;
-  city?: string;
-  town?: string;
-  village?: string;
-  municipality?: string;
-  state?: string;
-  postcode?: string;
-  country?: string;
+  house_number?: string
+  road?: string
+  pedestrian?: string
+  footway?: string
+  neighbourhood?: string
+  suburb?: string
+  city?: string
+  town?: string
+  village?: string
+  municipality?: string
+  state?: string
+  postcode?: string
+  country?: string
 }
 
 /** Nominatim API response item */
 interface NominatimResult {
-  lat: string;
-  lon: string;
-  display_name: string;
-  place_id: number;
-  type: string;
-  class: string;
-  address?: NominatimAddress;
+  lat: string
+  lon: string
+  display_name: string
+  place_id: number
+  type: string
+  class: string
+  address?: NominatimAddress
 }
 
 /**
@@ -200,29 +197,29 @@ interface NominatimResult {
  * Falls back to display_name if structured address data is insufficient.
  */
 function formatSwissAddress(result: NominatimResult): string {
-  const address = result.address;
+  const address = result.address
 
   if (!address) {
-    return result.display_name;
+    return result.display_name
   }
 
-  const houseNumber = address.house_number;
-  const street = address.road ?? address.pedestrian ?? address.footway;
-  const city = address.city ?? address.town ?? address.village ?? address.municipality;
-  const postcode = address.postcode;
+  const houseNumber = address.house_number
+  const street = address.road ?? address.pedestrian ?? address.footway
+  const city = address.city ?? address.town ?? address.village ?? address.municipality
+  const postcode = address.postcode
 
   // Need at least city and postcode for Swiss format
   if (!city || !postcode) {
-    return result.display_name;
+    return result.display_name
   }
 
   // Build the formatted address
-  const locationPart = `${postcode} ${city}`;
+  const locationPart = `${postcode} ${city}`
 
   if (street) {
-    const streetPart = houseNumber ? `${street} ${houseNumber}` : street;
-    return `${locationPart}, ${streetPart}`;
+    const streetPart = houseNumber ? `${street} ${houseNumber}` : street
+    return `${locationPart}, ${streetPart}`
   }
 
-  return locationPart;
+  return locationPart
 }

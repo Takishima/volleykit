@@ -1,56 +1,49 @@
-import { useMemo, useState, useEffect, useRef } from "react";
-import {
-  format,
-  parseISO,
-  isToday,
-  isTomorrow,
-  isPast,
-  isValid,
-} from "date-fns";
-import { type Locale as DateFnsLocale } from "date-fns/locale";
-import { enUS } from "date-fns/locale/en-US";
-import { t } from "@/i18n";
-import { useLanguageStore } from "@/shared/stores/language";
-import { createLogger } from "@/shared/utils/logger";
+import { useMemo, useState, useEffect, useRef } from 'react'
 
-const log = createLogger("useDateFormat");
+import { format, parseISO, isToday, isTomorrow, isPast, isValid } from 'date-fns'
+import { type Locale as DateFnsLocale } from 'date-fns/locale'
+import { enUS } from 'date-fns/locale/en-US'
+
+import { t } from '@/i18n'
+import { useLanguageStore } from '@/shared/stores/language'
+import { createLogger } from '@/shared/utils/logger'
+
+const log = createLogger('useDateFormat')
 
 /**
  * In-memory cache for date-fns locales (max 4 entries: de, fr, it, en).
  * English is pre-cached to prevent FOUC (Flash of Unstyled Content).
  */
-const localeCache = new Map<string, DateFnsLocale>();
-localeCache.set("en", enUS);
+const localeCache = new Map<string, DateFnsLocale>()
+localeCache.set('en', enUS)
 
 const localeLoaders: Record<string, () => Promise<DateFnsLocale>> = {
-  de: () => import("date-fns/locale/de").then((m) => m.de),
-  fr: () => import("date-fns/locale/fr").then((m) => m.fr),
-  it: () => import("date-fns/locale/it").then((m) => m.it),
+  de: () => import('date-fns/locale/de').then((m) => m.de),
+  fr: () => import('date-fns/locale/fr').then((m) => m.fr),
+  it: () => import('date-fns/locale/it').then((m) => m.it),
   en: () => Promise.resolve(enUS),
-};
+}
 
 export async function preloadDateLocales(): Promise<void> {
-  await Promise.all(
-    Object.keys(localeLoaders).map((locale) => loadDateLocale(locale)),
-  );
+  await Promise.all(Object.keys(localeLoaders).map((locale) => loadDateLocale(locale)))
 }
 
 async function loadDateLocale(locale: string): Promise<DateFnsLocale> {
-  const cached = localeCache.get(locale);
-  if (cached) return cached;
+  const cached = localeCache.get(locale)
+  if (cached) return cached
 
-  const loader = localeLoaders[locale];
+  const loader = localeLoaders[locale]
   if (!loader) {
-    return enUS;
+    return enUS
   }
 
   try {
-    const loadedLocale = await loader();
-    localeCache.set(locale, loadedLocale);
-    return loadedLocale;
+    const loadedLocale = await loader()
+    localeCache.set(locale, loadedLocale)
+    return loadedLocale
   } catch (error) {
-    log.error("Failed to load locale, falling back to English:", error);
-    return enUS;
+    log.error('Failed to load locale, falling back to English:', error)
+    return enUS
   }
 }
 
@@ -59,7 +52,7 @@ async function loadDateLocale(locale: string): Promise<DateFnsLocale> {
  * Returns the cached locale if available, otherwise falls back to English.
  */
 export function getDateLocale(locale: string): DateFnsLocale {
-  return localeCache.get(locale) ?? enUS;
+  return localeCache.get(locale) ?? enUS
 }
 
 /**
@@ -67,53 +60,49 @@ export function getDateLocale(locale: string): DateFnsLocale {
  * Handles async loading of locale data.
  */
 export function useDateLocale(): DateFnsLocale {
-  const currentLocale = useLanguageStore((state) => state.locale);
-  const [locale, setLocale] = useState<DateFnsLocale>(
-    () => localeCache.get(currentLocale) ?? enUS,
-  );
-  const requestIdRef = useRef(0);
+  const currentLocale = useLanguageStore((state) => state.locale)
+  const [locale, setLocale] = useState<DateFnsLocale>(() => localeCache.get(currentLocale) ?? enUS)
+  const requestIdRef = useRef(0)
 
   useEffect(() => {
-    const requestId = ++requestIdRef.current;
+    const requestId = ++requestIdRef.current
 
     loadDateLocale(currentLocale).then((loadedLocale) => {
       if (requestId === requestIdRef.current) {
-        setLocale(loadedLocale);
+        setLocale(loadedLocale)
       }
-    });
-  }, [currentLocale]);
+    })
+  }, [currentLocale])
 
-  return locale;
+  return locale
 }
 
 /**
  * Safely parse an ISO date string, returning null if invalid.
  */
-export function safeParseISO(
-  dateString: string | undefined | null,
-): Date | null {
-  if (!dateString) return null;
+export function safeParseISO(dateString: string | undefined | null): Date | null {
+  if (!dateString) return null
   try {
-    const date = parseISO(dateString);
-    return isValid(date) ? date : null;
+    const date = parseISO(dateString)
+    return isValid(date) ? date : null
   } catch {
-    return null;
+    return null
   }
 }
 
 interface FormattedDate {
   /** Parsed Date object or null if invalid */
-  date: Date | null;
+  date: Date | null
   /** Formatted date label (Today, Tomorrow, or formatted date) */
-  dateLabel: string;
+  dateLabel: string
   /** Formatted time (HH:mm) or empty string */
-  timeLabel: string;
+  timeLabel: string
   /** Whether the date is today */
-  isToday: boolean;
+  isToday: boolean
   /** Whether the date is tomorrow */
-  isTomorrow: boolean;
+  isTomorrow: boolean
   /** Whether the date is in the past */
-  isPast: boolean;
+  isPast: boolean
 }
 
 /**
@@ -125,57 +114,55 @@ interface FormattedDate {
  */
 export function useDateFormat(
   dateString: string | undefined | null,
-  formatPattern = "EEE, d. MMM",
+  formatPattern = 'EEE, d. MMM'
 ): FormattedDate {
-  const currentLocale = useLanguageStore((state) => state.locale);
-  const [locale, setLocale] = useState<DateFnsLocale>(
-    () => localeCache.get(currentLocale) ?? enUS,
-  );
-  const requestIdRef = useRef(0);
+  const currentLocale = useLanguageStore((state) => state.locale)
+  const [locale, setLocale] = useState<DateFnsLocale>(() => localeCache.get(currentLocale) ?? enUS)
+  const requestIdRef = useRef(0)
 
   useEffect(() => {
-    const requestId = ++requestIdRef.current;
+    const requestId = ++requestIdRef.current
 
     loadDateLocale(currentLocale).then((loadedLocale) => {
       if (requestId === requestIdRef.current) {
-        setLocale(loadedLocale);
+        setLocale(loadedLocale)
       }
-    });
-  }, [currentLocale]);
+    })
+  }, [currentLocale])
 
   return useMemo(() => {
-    const date = safeParseISO(dateString);
+    const date = safeParseISO(dateString)
 
     if (!date) {
       return {
         date: null,
-        dateLabel: "TBD",
-        timeLabel: "",
+        dateLabel: 'TBD',
+        timeLabel: '',
         isToday: false,
         isTomorrow: false,
         isPast: false,
-      };
+      }
     }
 
-    const todayCheck = isToday(date);
-    const tomorrowCheck = isTomorrow(date);
+    const todayCheck = isToday(date)
+    const tomorrowCheck = isTomorrow(date)
 
-    let dateLabel: string;
+    let dateLabel: string
     if (todayCheck) {
-      dateLabel = t("common.today");
+      dateLabel = t('common.today')
     } else if (tomorrowCheck) {
-      dateLabel = t("common.tomorrow");
+      dateLabel = t('common.tomorrow')
     } else {
-      dateLabel = format(date, formatPattern, { locale });
+      dateLabel = format(date, formatPattern, { locale })
     }
 
     return {
       date,
       dateLabel,
-      timeLabel: format(date, "HH:mm", { locale }),
+      timeLabel: format(date, 'HH:mm', { locale }),
       isToday: todayCheck,
       isTomorrow: tomorrowCheck,
       isPast: isPast(date),
-    };
-  }, [dateString, formatPattern, locale]);
+    }
+  }, [dateString, formatPattern, locale])
 }

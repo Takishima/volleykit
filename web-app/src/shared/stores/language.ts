@@ -1,10 +1,11 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { setLocale, setLocaleImmediate, getLocale, type Locale } from "@/i18n";
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+
+import { setLocale, setLocaleImmediate, getLocale, type Locale } from '@/i18n'
 
 interface LanguageState {
-  locale: Locale;
-  changeLocale: (locale: Locale) => void;
+  locale: Locale
+  changeLocale: (locale: Locale) => void
 }
 
 export const useLanguageStore = create<LanguageState>()(
@@ -12,18 +13,18 @@ export const useLanguageStore = create<LanguageState>()(
     (set) => ({
       locale: getLocale(),
       changeLocale: (locale: Locale) => {
-        setLocale(locale);
-        set({ locale });
+        setLocale(locale)
+        set({ locale })
       },
     }),
     {
-      name: "volleykit-language",
+      name: 'volleykit-language',
       partialize: (state) => ({ locale: state.locale }),
       onRehydrateStorage: () => (state) => {
         if (state?.locale) {
-          setLocaleImmediate(state.locale);
+          setLocaleImmediate(state.locale)
         }
       },
-    },
-  ),
-);
+    }
+  )
+)

@@ -1,5 +1,5 @@
 /** Minutes in one hour */
-export const MINUTES_PER_HOUR = 60;
+export const MINUTES_PER_HOUR = 60
 
 /**
  * Formats travel time in minutes to a display string.
@@ -11,15 +11,15 @@ export const MINUTES_PER_HOUR = 60;
 export function formatTravelTime(
   minutes: number,
   units: { minutesUnit: string; hoursUnit: string },
-  prefix = "",
+  prefix = ''
 ): string {
   if (minutes < MINUTES_PER_HOUR) {
-    return `${prefix}${minutes}${units.minutesUnit}`;
+    return `${prefix}${minutes}${units.minutesUnit}`
   }
-  const hours = Math.floor(minutes / MINUTES_PER_HOUR);
-  const mins = minutes % MINUTES_PER_HOUR;
+  const hours = Math.floor(minutes / MINUTES_PER_HOUR)
+  const mins = minutes % MINUTES_PER_HOUR
   if (mins === 0) {
-    return `${prefix}${hours}${units.hoursUnit}`;
+    return `${prefix}${hours}${units.hoursUnit}`
   }
-  return `${prefix}${hours}${units.hoursUnit} ${mins}${units.minutesUnit}`;
+  return `${prefix}${hours}${units.hoursUnit} ${mins}${units.minutesUnit}`
 }

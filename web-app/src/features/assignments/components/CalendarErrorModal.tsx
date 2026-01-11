@@ -1,22 +1,22 @@
-import { Modal } from "@/shared/components/Modal";
-import { ModalHeader } from "@/shared/components/ModalHeader";
-import { ModalFooter } from "@/shared/components/ModalFooter";
-import { Button } from "@/shared/components/Button";
-import { AlertTriangle } from "@/shared/components/icons";
-import { useTranslation } from "@/shared/hooks/useTranslation";
+import { Button } from '@/shared/components/Button'
+import { AlertTriangle } from '@/shared/components/icons'
+import { Modal } from '@/shared/components/Modal'
+import { ModalFooter } from '@/shared/components/ModalFooter'
+import { ModalHeader } from '@/shared/components/ModalHeader'
+import { useTranslation } from '@/shared/hooks/useTranslation'
 
 /**
  * Type of calendar error to display appropriate message.
  */
-export type CalendarErrorType = "network" | "invalidCode" | "parse";
+export type CalendarErrorType = 'network' | 'invalidCode' | 'parse'
 
 interface CalendarErrorModalProps {
   /** Whether the modal is open */
-  isOpen: boolean;
+  isOpen: boolean
   /** Type of error that occurred */
-  errorType: CalendarErrorType;
+  errorType: CalendarErrorType
   /** Callback when the user acknowledges the error */
-  onAcknowledge: () => void;
+  onAcknowledge: () => void
 }
 
 /**
@@ -35,23 +35,19 @@ interface CalendarErrorModalProps {
  * />
  * ```
  */
-export function CalendarErrorModal({
-  isOpen,
-  errorType,
-  onAcknowledge,
-}: CalendarErrorModalProps) {
-  const { t } = useTranslation();
+export function CalendarErrorModal({ isOpen, errorType, onAcknowledge }: CalendarErrorModalProps) {
+  const { t } = useTranslation()
 
   const getMessage = (): string => {
     switch (errorType) {
-      case "network":
-        return t("calendarError.networkMessage");
-      case "invalidCode":
-        return t("calendarError.invalidCodeMessage");
-      case "parse":
-        return t("calendarError.parseErrorMessage");
+      case 'network':
+        return t('calendarError.networkMessage')
+      case 'invalidCode':
+        return t('calendarError.invalidCodeMessage')
+      case 'parse':
+        return t('calendarError.parseErrorMessage')
     }
-  };
+  }
 
   return (
     <Modal
@@ -63,14 +59,11 @@ export function CalendarErrorModal({
       closeOnBackdrop={false}
     >
       <ModalHeader
-        title={t("calendarError.title")}
+        title={t('calendarError.title')}
         titleId="calendar-error-modal-title"
         icon={
           <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center">
-            <AlertTriangle
-              className="w-5 h-5 text-red-600 dark:text-red-400"
-              aria-hidden="true"
-            />
+            <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" aria-hidden="true" />
           </div>
         }
       />
@@ -78,14 +71,10 @@ export function CalendarErrorModal({
         {getMessage()}
       </p>
       <ModalFooter>
-        <Button
-          variant="primary"
-          onClick={onAcknowledge}
-          className="flex-1"
-        >
-          {t("calendarError.ok")}
+        <Button variant="primary" onClick={onAcknowledge} className="flex-1">
+          {t('calendarError.ok')}
         </Button>
       </ModalFooter>
     </Modal>
-  );
+  )
 }

@@ -10,9 +10,9 @@
  */
 export interface BadgeResult {
   /** Whether the operation succeeded */
-  success: boolean;
+  success: boolean
   /** Error message if operation failed */
-  error?: string;
+  error?: string
 }
 
 /**
@@ -21,11 +21,11 @@ export interface BadgeResult {
  */
 export interface BadgeService {
   /** Check if the Badging API is supported */
-  isSupported(): boolean;
+  isSupported(): boolean
   /** Set the badge to a specific count (0 clears the badge) */
-  setBadge(count: number): Promise<BadgeResult>;
+  setBadge(count: number): Promise<BadgeResult>
   /** Clear the badge */
-  clearBadge(): Promise<BadgeResult>;
+  clearBadge(): Promise<BadgeResult>
 }
 
 /**
@@ -33,5 +33,5 @@ export interface BadgeService {
  */
 export interface BadgeUpdateOptions {
   /** Only update if the count has changed from the previous value */
-  skipIfUnchanged?: boolean;
+  skipIfUnchanged?: boolean
 }

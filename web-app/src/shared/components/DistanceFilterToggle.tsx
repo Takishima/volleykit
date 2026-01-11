@@ -1,12 +1,12 @@
-import { useTranslation } from "@/shared/hooks/useTranslation";
-import { FilterChip } from "@/shared/components/FilterChip";
-import { MapPin } from "@/shared/components/icons";
+import { FilterChip } from '@/shared/components/FilterChip'
+import { MapPin } from '@/shared/components/icons'
+import { useTranslation } from '@/shared/hooks/useTranslation'
 
 interface DistanceFilterToggleProps {
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-  maxDistanceKm: number;
-  dataTour?: string;
+  checked: boolean
+  onChange: (checked: boolean) => void
+  maxDistanceKm: number
+  dataTour?: string
 }
 
 export function DistanceFilterToggle({
@@ -15,24 +15,24 @@ export function DistanceFilterToggle({
   maxDistanceKm,
   dataTour,
 }: DistanceFilterToggleProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
   const handleToggle = () => {
-    onChange(!checked);
-  };
+    onChange(!checked)
+  }
 
   // Show distance value when active (e.g., "≤50 km")
-  const activeValue = `≤${maxDistanceKm} ${t("common.distanceUnit")}`;
+  const activeValue = `≤${maxDistanceKm} ${t('common.distanceUnit')}`
 
   return (
     <FilterChip
       active={checked}
       onToggle={handleToggle}
       icon={<MapPin className="w-full h-full" />}
-      label={t("exchange.filterByDistance")}
+      label={t('exchange.filterByDistance')}
       activeValue={activeValue}
       showIconWhenActive
       dataTour={dataTour}
     />
-  );
+  )
 }

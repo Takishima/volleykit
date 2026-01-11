@@ -1,4 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+
+import type { Assignment } from '@/api/client'
+
 import {
   extractSportsHallReportData,
   getLeagueCategoryFromAssignment,
@@ -6,8 +9,7 @@ import {
   downloadPdf,
   fillSportsHallReportForm,
   type SportsHallReportData,
-} from './pdf-form-filler';
-import type { Assignment } from '@/api/client';
+} from './pdf-form-filler'
 
 describe('pdf-form-filler', () => {
   describe('extractSportsHallReportData', () => {
@@ -75,9 +77,9 @@ describe('pdf-form-filler', () => {
             },
           },
         },
-      };
+      }
 
-      const result = extractSportsHallReportData(assignment);
+      const result = extractSportsHallReportData(assignment)
 
       expect(result).toEqual({
         gameNumber: '123456',
@@ -89,8 +91,8 @@ describe('pdf-form-filler', () => {
         date: '15.12.25',
         firstRefereeName: 'Max Mustermann',
         secondRefereeName: 'Anna Schmidt',
-      });
-    });
+      })
+    })
 
     it('returns null for non-NLA/NLB leagues', () => {
       const assignment: Assignment = {
@@ -116,11 +118,11 @@ describe('pdf-form-filler', () => {
             },
           },
         },
-      };
+      }
 
-      const result = extractSportsHallReportData(assignment);
-      expect(result).toBeNull();
-    });
+      const result = extractSportsHallReportData(assignment)
+      expect(result).toBeNull()
+    })
 
     it('returns null when game is missing', () => {
       const assignment: Assignment = {
@@ -130,11 +132,11 @@ describe('pdf-form-filler', () => {
         refereeGame: {
           __identity: 'referee-game-id',
         },
-      };
+      }
 
-      const result = extractSportsHallReportData(assignment);
-      expect(result).toBeNull();
-    });
+      const result = extractSportsHallReportData(assignment)
+      expect(result).toBeNull()
+    })
 
     it('handles female league', () => {
       const assignment: Assignment = {
@@ -162,12 +164,12 @@ describe('pdf-form-filler', () => {
             },
           },
         },
-      };
+      }
 
-      const result = extractSportsHallReportData(assignment);
-      expect(result?.gender).toBe('f');
-    });
-  });
+      const result = extractSportsHallReportData(assignment)
+      expect(result?.gender).toBe('f')
+    })
+  })
 
   describe('getLeagueCategoryFromAssignment', () => {
     it('returns NLA for NLA league', () => {
@@ -191,10 +193,10 @@ describe('pdf-form-filler', () => {
             },
           },
         },
-      };
+      }
 
-      expect(getLeagueCategoryFromAssignment(assignment)).toBe('NLA');
-    });
+      expect(getLeagueCategoryFromAssignment(assignment)).toBe('NLA')
+    })
 
     it('returns NLB for NLB league', () => {
       const assignment: Assignment = {
@@ -217,10 +219,10 @@ describe('pdf-form-filler', () => {
             },
           },
         },
-      };
+      }
 
-      expect(getLeagueCategoryFromAssignment(assignment)).toBe('NLB');
-    });
+      expect(getLeagueCategoryFromAssignment(assignment)).toBe('NLB')
+    })
 
     it('returns null for other leagues', () => {
       const assignment: Assignment = {
@@ -243,92 +245,90 @@ describe('pdf-form-filler', () => {
             },
           },
         },
-      };
+      }
 
-      expect(getLeagueCategoryFromAssignment(assignment)).toBeNull();
-    });
-  });
+      expect(getLeagueCategoryFromAssignment(assignment)).toBeNull()
+    })
+  })
 
   describe('mapAppLocaleToPdfLanguage', () => {
     it('returns de for German locale', () => {
-      expect(mapAppLocaleToPdfLanguage('de')).toBe('de');
-    });
+      expect(mapAppLocaleToPdfLanguage('de')).toBe('de')
+    })
 
     it('returns fr for French locale', () => {
-      expect(mapAppLocaleToPdfLanguage('fr')).toBe('fr');
-    });
+      expect(mapAppLocaleToPdfLanguage('fr')).toBe('fr')
+    })
 
     it('returns fr for Italian locale', () => {
-      expect(mapAppLocaleToPdfLanguage('it')).toBe('fr');
-    });
+      expect(mapAppLocaleToPdfLanguage('it')).toBe('fr')
+    })
 
     it('returns de for English locale (fallback)', () => {
-      expect(mapAppLocaleToPdfLanguage('en')).toBe('de');
-    });
+      expect(mapAppLocaleToPdfLanguage('en')).toBe('de')
+    })
 
     it('returns de for unknown locale (fallback)', () => {
-      expect(mapAppLocaleToPdfLanguage('es')).toBe('de');
-    });
-  });
+      expect(mapAppLocaleToPdfLanguage('es')).toBe('de')
+    })
+  })
 
   describe('downloadPdf', () => {
-    let mockCreateObjectURL: ReturnType<typeof vi.fn>;
-    let mockRevokeObjectURL: ReturnType<typeof vi.fn>;
-    let mockLink: { href: string; download: string; click: ReturnType<typeof vi.fn> };
+    let mockCreateObjectURL: ReturnType<typeof vi.fn>
+    let mockRevokeObjectURL: ReturnType<typeof vi.fn>
+    let mockLink: { href: string; download: string; click: ReturnType<typeof vi.fn> }
 
     beforeEach(() => {
-      mockCreateObjectURL = vi.fn(() => 'blob:test-url');
-      mockRevokeObjectURL = vi.fn();
-      mockLink = { href: '', download: '', click: vi.fn() };
+      mockCreateObjectURL = vi.fn(() => 'blob:test-url')
+      mockRevokeObjectURL = vi.fn()
+      mockLink = { href: '', download: '', click: vi.fn() }
 
       vi.stubGlobal('URL', {
         createObjectURL: mockCreateObjectURL,
         revokeObjectURL: mockRevokeObjectURL,
-      });
+      })
 
-      vi.spyOn(document, 'createElement').mockReturnValue(mockLink as unknown as HTMLAnchorElement);
-      vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node);
-      vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node);
-    });
+      vi.spyOn(document, 'createElement').mockReturnValue(mockLink as unknown as HTMLAnchorElement)
+      vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node)
+      vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node)
+    })
 
     afterEach(() => {
-      vi.restoreAllMocks();
-    });
+      vi.restoreAllMocks()
+    })
 
     it('creates blob with correct type', () => {
-      const pdfBytes = new Uint8Array([1, 2, 3, 4]);
+      const pdfBytes = new Uint8Array([1, 2, 3, 4])
 
-      downloadPdf(pdfBytes, 'test.pdf');
+      downloadPdf(pdfBytes, 'test.pdf')
 
-      expect(mockCreateObjectURL).toHaveBeenCalledWith(
-        expect.any(Blob)
-      );
-    });
+      expect(mockCreateObjectURL).toHaveBeenCalledWith(expect.any(Blob))
+    })
 
     it('sets download filename on link', () => {
-      const pdfBytes = new Uint8Array([1, 2, 3]);
+      const pdfBytes = new Uint8Array([1, 2, 3])
 
-      downloadPdf(pdfBytes, 'my-report.pdf');
+      downloadPdf(pdfBytes, 'my-report.pdf')
 
-      expect(mockLink.download).toBe('my-report.pdf');
-    });
+      expect(mockLink.download).toBe('my-report.pdf')
+    })
 
     it('triggers click to download', () => {
-      const pdfBytes = new Uint8Array([1, 2, 3]);
+      const pdfBytes = new Uint8Array([1, 2, 3])
 
-      downloadPdf(pdfBytes, 'test.pdf');
+      downloadPdf(pdfBytes, 'test.pdf')
 
-      expect(mockLink.click).toHaveBeenCalled();
-    });
+      expect(mockLink.click).toHaveBeenCalled()
+    })
 
     it('cleans up by revoking URL', () => {
-      const pdfBytes = new Uint8Array([1, 2, 3]);
+      const pdfBytes = new Uint8Array([1, 2, 3])
 
-      downloadPdf(pdfBytes, 'test.pdf');
+      downloadPdf(pdfBytes, 'test.pdf')
 
-      expect(mockRevokeObjectURL).toHaveBeenCalledWith('blob:test-url');
-    });
-  });
+      expect(mockRevokeObjectURL).toHaveBeenCalledWith('blob:test-url')
+    })
+  })
 
   describe('fillSportsHallReportForm', () => {
     const mockReportData: SportsHallReportData = {
@@ -341,24 +341,27 @@ describe('pdf-form-filler', () => {
       date: '15.12.25',
       firstRefereeName: 'First Ref',
       secondRefereeName: 'Second Ref',
-    };
+    }
 
     afterEach(() => {
-      vi.restoreAllMocks();
-    });
+      vi.restoreAllMocks()
+    })
 
     it('throws error when PDF template fetch fails', async () => {
-      vi.stubGlobal('fetch', vi.fn(() =>
-        Promise.resolve({
-          ok: false,
-          statusText: 'Not Found',
-        })
-      ));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(() =>
+          Promise.resolve({
+            ok: false,
+            statusText: 'Not Found',
+          })
+        )
+      )
 
-      await expect(
-        fillSportsHallReportForm(mockReportData, 'NLA', 'de')
-      ).rejects.toThrow('Failed to fetch PDF template');
-    });
+      await expect(fillSportsHallReportForm(mockReportData, 'NLA', 'de')).rejects.toThrow(
+        'Failed to fetch PDF template'
+      )
+    })
 
     it('uses correct PDF path for NLA German', async () => {
       const mockFetch = vi.fn(() =>
@@ -366,15 +369,15 @@ describe('pdf-form-filler', () => {
           ok: false,
           statusText: 'Not Found',
         })
-      );
-      vi.stubGlobal('fetch', mockFetch);
+      )
+      vi.stubGlobal('fetch', mockFetch)
 
-      await expect(
-        fillSportsHallReportForm(mockReportData, 'NLA', 'de')
-      ).rejects.toThrow();
+      await expect(fillSportsHallReportForm(mockReportData, 'NLA', 'de')).rejects.toThrow()
 
-      expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('sports-hall-report-nla-de.pdf'));
-    });
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('sports-hall-report-nla-de.pdf')
+      )
+    })
 
     it('uses correct PDF path for NLB French', async () => {
       const mockFetch = vi.fn(() =>
@@ -382,17 +385,15 @@ describe('pdf-form-filler', () => {
           ok: false,
           statusText: 'Not Found',
         })
-      );
-      vi.stubGlobal('fetch', mockFetch);
+      )
+      vi.stubGlobal('fetch', mockFetch)
 
-      await expect(
-        fillSportsHallReportForm(mockReportData, 'NLB', 'fr')
-      ).rejects.toThrow();
+      await expect(fillSportsHallReportForm(mockReportData, 'NLB', 'fr')).rejects.toThrow()
 
       // NLB uses path without "nla-" prefix
-      expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('sports-hall-report-fr.pdf'));
-    });
-  });
+      expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('sports-hall-report-fr.pdf'))
+    })
+  })
 
   describe('extractSportsHallReportData - edge cases', () => {
     it('handles missing encounter data gracefully', () => {
@@ -417,12 +418,12 @@ describe('pdf-form-filler', () => {
             },
           },
         },
-      };
+      }
 
-      const result = extractSportsHallReportData(assignment);
-      expect(result?.homeTeam).toBe('');
-      expect(result?.awayTeam).toBe('');
-    });
+      const result = extractSportsHallReportData(assignment)
+      expect(result?.homeTeam).toBe('')
+      expect(result?.awayTeam).toBe('')
+    })
 
     it('handles missing hall data gracefully', () => {
       const assignment: Assignment = {
@@ -446,12 +447,12 @@ describe('pdf-form-filler', () => {
             },
           },
         },
-      };
+      }
 
-      const result = extractSportsHallReportData(assignment);
-      expect(result?.hallName).toBe('');
-      expect(result?.location).toBe('');
-    });
+      const result = extractSportsHallReportData(assignment)
+      expect(result?.hallName).toBe('')
+      expect(result?.location).toBe('')
+    })
 
     it('falls back to firstName/lastName when displayName missing', () => {
       const assignment: Assignment = {
@@ -487,11 +488,11 @@ describe('pdf-form-filler', () => {
             },
           },
         },
-      };
+      }
 
-      const result = extractSportsHallReportData(assignment);
-      expect(result?.firstRefereeName).toBe('John Doe');
-    });
+      const result = extractSportsHallReportData(assignment)
+      expect(result?.firstRefereeName).toBe('John Doe')
+    })
 
     it('returns undefined for referee when person is missing', () => {
       const assignment: Assignment = {
@@ -522,11 +523,11 @@ describe('pdf-form-filler', () => {
             },
           },
         },
-      };
+      }
 
-      const result = extractSportsHallReportData(assignment);
-      expect(result?.firstRefereeName).toBeUndefined();
-    });
+      const result = extractSportsHallReportData(assignment)
+      expect(result?.firstRefereeName).toBeUndefined()
+    })
 
     it('handles undefined startingDateTime', () => {
       const assignment: Assignment = {
@@ -551,11 +552,11 @@ describe('pdf-form-filler', () => {
             },
           },
         },
-      };
+      }
 
-      const result = extractSportsHallReportData(assignment);
-      expect(result?.date).toBe('');
-    });
+      const result = extractSportsHallReportData(assignment)
+      expect(result?.date).toBe('')
+    })
 
     it('handles invalid date format', () => {
       const assignment: Assignment = {
@@ -580,12 +581,12 @@ describe('pdf-form-filler', () => {
             },
           },
         },
-      };
+      }
 
-      const result = extractSportsHallReportData(assignment);
+      const result = extractSportsHallReportData(assignment)
       // Should return empty string for invalid date
-      expect(result?.date).toBe('');
-    });
+      expect(result?.date).toBe('')
+    })
 
     it('defaults to male gender when not specified', () => {
       const assignment: Assignment = {
@@ -610,10 +611,10 @@ describe('pdf-form-filler', () => {
             },
           },
         },
-      };
+      }
 
-      const result = extractSportsHallReportData(assignment);
-      expect(result?.gender).toBe('m');
-    });
-  });
-});
+      const result = extractSportsHallReportData(assignment)
+      expect(result?.gender).toBe('m')
+    })
+  })
+})

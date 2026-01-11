@@ -3,24 +3,29 @@ import {
   useMutation,
   useQueryClient,
   type UseMutationResult,
-} from "@tanstack/react-query";
+} from '@tanstack/react-query'
+
 import {
   api,
   getApiClient,
   type SearchConfiguration,
   type CompensationRecord,
   type Assignment,
-} from "@/api/client";
-import { useAuthStore } from "@/shared/stores/auth";
-import { useDemoStore } from "@/shared/stores/demo";
-import { createLogger } from "@/shared/utils/logger";
-import { queryKeys } from "@/api/queryKeys";
-import { DEFAULT_PAGE_SIZE, COMPENSATION_LOOKUP_LIMIT, COMPENSATIONS_STALE_TIME_MS } from "@/shared/hooks/usePaginatedQuery";
+} from '@/api/client'
+import { queryKeys } from '@/api/queryKeys'
+import {
+  DEFAULT_PAGE_SIZE,
+  COMPENSATION_LOOKUP_LIMIT,
+  COMPENSATIONS_STALE_TIME_MS,
+} from '@/shared/hooks/usePaginatedQuery'
+import { useAuthStore } from '@/shared/stores/auth'
+import { useDemoStore } from '@/shared/stores/demo'
+import { createLogger } from '@/shared/utils/logger'
 
-const log = createLogger("useCompensations");
+const log = createLogger('useCompensations')
 
 // Stable empty array for React Query selectors to prevent unnecessary re-renders.
-const EMPTY_COMPENSATIONS: CompensationRecord[] = [];
+const EMPTY_COMPENSATIONS: CompensationRecord[] = []
 
 /**
  * Error keys for compensation-related errors.
@@ -28,13 +33,13 @@ const EMPTY_COMPENSATIONS: CompensationRecord[] = [];
  * Use with translateCompensationError() to get localized messages.
  */
 export const COMPENSATION_ERROR_KEYS = {
-  ASSIGNMENT_NOT_FOUND: "compensations.assignmentNotFoundInCache",
-  COMPENSATION_NOT_FOUND: "compensations.compensationNotFound",
-  COMPENSATION_MISSING_ID: "compensations.compensationMissingId",
-} as const;
+  ASSIGNMENT_NOT_FOUND: 'compensations.assignmentNotFoundInCache',
+  COMPENSATION_NOT_FOUND: 'compensations.compensationNotFound',
+  COMPENSATION_MISSING_ID: 'compensations.compensationMissingId',
+} as const
 
 export type CompensationErrorKey =
-  (typeof COMPENSATION_ERROR_KEYS)[keyof typeof COMPENSATION_ERROR_KEYS];
+  (typeof COMPENSATION_ERROR_KEYS)[keyof typeof COMPENSATION_ERROR_KEYS]
 
 /**
  * Hook to fetch compensation records with optional paid/unpaid filtering.
@@ -46,16 +51,14 @@ export type CompensationErrorKey =
  * @param paidFilter - Optional filter: true for paid, false for unpaid, undefined for all
  */
 export function useCompensations(paidFilter?: boolean) {
-  const dataSource = useAuthStore((state) => state.dataSource);
-  const isDemoMode = dataSource === "demo";
-  const activeOccupationId = useAuthStore((state) => state.activeOccupationId);
-  const demoAssociationCode = useDemoStore(
-    (state) => state.activeAssociationCode,
-  );
-  const apiClient = getApiClient(dataSource);
+  const dataSource = useAuthStore((state) => state.dataSource)
+  const isDemoMode = dataSource === 'demo'
+  const activeOccupationId = useAuthStore((state) => state.activeOccupationId)
+  const demoAssociationCode = useDemoStore((state) => state.activeAssociationCode)
+  const apiClient = getApiClient(dataSource)
 
   // Use appropriate key for cache invalidation when switching associations
-  const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId;
+  const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId
 
   // Note: We don't send paymentDone filter to the API because the real API
   // doesn't support "true"/"false" values - it only supports "NOT_NULL".
@@ -66,49 +69,47 @@ export function useCompensations(paidFilter?: boolean) {
     propertyFilters: [],
     propertyOrderings: [
       {
-        propertyName: "refereeGame.game.startingDateTime",
+        propertyName: 'refereeGame.game.startingDateTime',
         descending: true,
         isSetByUser: true,
       },
     ],
-  };
+  }
 
   return useQuery({
     // All tabs share the same base query - filtering is done client-side via select
     queryKey: queryKeys.compensations.list(config, associationKey),
     queryFn: () => apiClient.searchCompensations(config),
     select: (data) => {
-      const items = data.items ?? EMPTY_COMPENSATIONS;
+      const items = data.items ?? EMPTY_COMPENSATIONS
       // Apply client-side filtering for paid/unpaid status
       if (paidFilter === undefined) {
-        return items;
+        return items
       }
-      return items.filter(
-        (record) => record.convocationCompensation?.paymentDone === paidFilter,
-      );
+      return items.filter((record) => record.convocationCompensation?.paymentDone === paidFilter)
     },
     staleTime: COMPENSATIONS_STALE_TIME_MS,
-  });
+  })
 }
 
 /**
  * Convenience hook for paid compensations.
  */
 export function usePaidCompensations() {
-  return useCompensations(true);
+  return useCompensations(true)
 }
 
 /**
  * Convenience hook for unpaid compensations.
  */
 export function useUnpaidCompensations() {
-  return useCompensations(false);
+  return useCompensations(false)
 }
 
 // Compensation update types
 export interface CompensationUpdateData {
-  distanceInMetres?: number;
-  correctionReason?: string;
+  distanceInMetres?: number
+  correctionReason?: string
 }
 
 /**
@@ -120,30 +121,30 @@ export function useUpdateCompensation(): UseMutationResult<
   Error,
   { compensationId: string; data: CompensationUpdateData }
 > {
-  const queryClient = useQueryClient();
-  const dataSource = useAuthStore((state) => state.dataSource);
-  const apiClient = getApiClient(dataSource);
+  const queryClient = useQueryClient()
+  const dataSource = useAuthStore((state) => state.dataSource)
+  const apiClient = getApiClient(dataSource)
 
   return useMutation({
     mutationFn: async ({
       compensationId,
       data,
     }: {
-      compensationId: string;
-      data: CompensationUpdateData;
+      compensationId: string
+      data: CompensationUpdateData
     }) => {
-      log.debug("Updating compensation:", {
+      log.debug('Updating compensation:', {
         compensationId,
         data,
         dataSource,
-      });
-      await apiClient.updateCompensation(compensationId, data);
+      })
+      await apiClient.updateCompensation(compensationId, data)
     },
     onSuccess: () => {
       // Invalidate compensation lists (not details) to refetch fresh data
-      queryClient.invalidateQueries({ queryKey: queryKeys.compensations.lists() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.compensations.lists() })
     },
-  });
+  })
 }
 
 /**
@@ -152,20 +153,20 @@ export function useUpdateCompensation(): UseMutationResult<
  */
 function findAssignmentInCache(
   assignmentId: string,
-  queryClient: ReturnType<typeof useQueryClient>,
+  queryClient: ReturnType<typeof useQueryClient>
 ): Assignment | null {
   // Get all cached queries that start with "assignments"
   const queries = queryClient.getQueriesData<{ items: Assignment[] }>({
     queryKey: queryKeys.assignments.all,
-  });
+  })
 
   for (const [, data] of queries) {
-    const assignment = data?.items?.find((a) => a.__identity === assignmentId);
+    const assignment = data?.items?.find((a) => a.__identity === assignmentId)
     if (assignment) {
-      return assignment;
+      return assignment
     }
   }
-  return null;
+  return null
 }
 
 /**
@@ -174,41 +175,35 @@ function findAssignmentInCache(
  */
 function findCompensationInCache(
   gameNumber: number,
-  queryClient: ReturnType<typeof useQueryClient>,
+  queryClient: ReturnType<typeof useQueryClient>
 ): CompensationRecord | null {
   // Get all cached queries that start with "compensations"
   const queries = queryClient.getQueriesData<{ items: CompensationRecord[] }>({
     queryKey: queryKeys.compensations.all,
-  });
+  })
 
   for (const [, data] of queries) {
-    const comp = data?.items?.find(
-      (c) => c.refereeGame?.game?.number === gameNumber,
-    );
+    const comp = data?.items?.find((c) => c.refereeGame?.game?.number === gameNumber)
     if (comp) {
-      return comp;
+      return comp
     }
   }
-  return null;
+  return null
 }
 
 /**
  * Fetches compensations from the API and finds one matching the game number.
  */
 async function fetchCompensationByGameNumber(
-  gameNumber: number,
+  gameNumber: number
 ): Promise<CompensationRecord | null> {
-  log.debug("Fetching compensations from API:", { gameNumber });
+  log.debug('Fetching compensations from API:', { gameNumber })
 
   const compensations = await api.searchCompensations({
     limit: COMPENSATION_LOOKUP_LIMIT,
-  });
+  })
 
-  return (
-    compensations.items.find(
-      (c) => c.refereeGame?.game?.number === gameNumber,
-    ) || null
-  );
+  return compensations.items.find((c) => c.refereeGame?.game?.number === gameNumber) || null
 }
 
 /**
@@ -223,38 +218,38 @@ async function fetchCompensationByGameNumber(
  */
 async function findCompensationForAssignment(
   assignmentId: string,
-  queryClient: ReturnType<typeof useQueryClient>,
+  queryClient: ReturnType<typeof useQueryClient>
 ): Promise<CompensationRecord> {
   // Find the assignment in cache to get its game number
-  const assignment = findAssignmentInCache(assignmentId, queryClient);
+  const assignment = findAssignmentInCache(assignmentId, queryClient)
 
   if (!assignment?.refereeGame?.game?.number) {
-    throw new Error(COMPENSATION_ERROR_KEYS.ASSIGNMENT_NOT_FOUND);
+    throw new Error(COMPENSATION_ERROR_KEYS.ASSIGNMENT_NOT_FOUND)
   }
 
-  const gameNumber = assignment.refereeGame.game.number;
+  const gameNumber = assignment.refereeGame.game.number
 
   // Try to find compensation in cache first
-  const cachedComp = findCompensationInCache(gameNumber, queryClient);
+  const cachedComp = findCompensationInCache(gameNumber, queryClient)
   if (cachedComp) {
-    log.debug("Found compensation in cache:", {
+    log.debug('Found compensation in cache:', {
       gameNumber,
       compensationId: cachedComp.convocationCompensation?.__identity,
-    });
-    return cachedComp;
+    })
+    return cachedComp
   }
 
   // Fetch from API if not in cache
-  const fetchedComp = await fetchCompensationByGameNumber(gameNumber);
+  const fetchedComp = await fetchCompensationByGameNumber(gameNumber)
   if (fetchedComp) {
-    log.debug("Found compensation via API:", {
+    log.debug('Found compensation via API:', {
       gameNumber,
       compensationId: fetchedComp.convocationCompensation?.__identity,
-    });
-    return fetchedComp;
+    })
+    return fetchedComp
   }
 
-  throw new Error(COMPENSATION_ERROR_KEYS.COMPENSATION_NOT_FOUND);
+  throw new Error(COMPENSATION_ERROR_KEYS.COMPENSATION_NOT_FOUND)
 }
 
 /**
@@ -267,62 +262,57 @@ export function useUpdateAssignmentCompensation(): UseMutationResult<
   Error,
   { assignmentId: string; data: CompensationUpdateData }
 > {
-  const queryClient = useQueryClient();
-  const dataSource = useAuthStore((state) => state.dataSource);
-  const isDemoMode = dataSource === "demo";
-  const updateAssignmentCompensation = useDemoStore(
-    (state) => state.updateAssignmentCompensation,
-  );
+  const queryClient = useQueryClient()
+  const dataSource = useAuthStore((state) => state.dataSource)
+  const isDemoMode = dataSource === 'demo'
+  const updateAssignmentCompensation = useDemoStore((state) => state.updateAssignmentCompensation)
 
   return useMutation({
     mutationFn: async ({
       assignmentId,
       data,
     }: {
-      assignmentId: string;
-      data: CompensationUpdateData;
+      assignmentId: string
+      data: CompensationUpdateData
     }) => {
       if (isDemoMode) {
         // Demo mode: update the demo store directly
-        updateAssignmentCompensation(assignmentId, data);
-        return;
+        updateAssignmentCompensation(assignmentId, data)
+        return
       }
 
       // Non-demo mode: find the corresponding compensation record and update it via API
-      log.debug("Looking up compensation for assignment:", {
+      log.debug('Looking up compensation for assignment:', {
         assignmentId,
         data,
-      });
+      })
 
       // findCompensationForAssignment throws if assignment or compensation not found
-      const compensation = await findCompensationForAssignment(
-        assignmentId,
-        queryClient,
-      );
-      const compensationId = compensation.convocationCompensation?.__identity;
+      const compensation = await findCompensationForAssignment(assignmentId, queryClient)
+      const compensationId = compensation.convocationCompensation?.__identity
 
       if (!compensationId) {
-        throw new Error(COMPENSATION_ERROR_KEYS.COMPENSATION_MISSING_ID);
+        throw new Error(COMPENSATION_ERROR_KEYS.COMPENSATION_MISSING_ID)
       }
 
-      log.debug("Updating compensation via API:", {
+      log.debug('Updating compensation via API:', {
         assignmentId,
         compensationId,
         data,
-      });
+      })
 
-      await api.updateCompensation(compensationId, data);
+      await api.updateCompensation(compensationId, data)
     },
     onSuccess: (_data, variables) => {
       // Invalidate targeted queries to refetch fresh data while avoiding unnecessary refetches
       // 1. Invalidate the specific assignment detail (if cached)
       queryClient.invalidateQueries({
         queryKey: queryKeys.assignments.detail(variables.assignmentId),
-      });
+      })
       // 2. Invalidate assignment lists (compensation data is embedded in list items)
-      queryClient.invalidateQueries({ queryKey: queryKeys.assignments.lists() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.assignments.lists() })
       // 3. Invalidate compensation lists
-      queryClient.invalidateQueries({ queryKey: queryKeys.compensations.lists() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.compensations.lists() })
     },
-  });
+  })
 }

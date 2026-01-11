@@ -1,81 +1,77 @@
-import { useState, useRef, useEffect, useCallback, lazy, Suspense, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
-import { useShallow } from "zustand/react/shallow";
-import { useAuthStore, NO_REFEREE_ROLE_ERROR_KEY } from "@/shared/stores/auth";
-import { useDemoStore } from "@/shared/stores/demo";
-import { useTranslation } from "@/shared/hooks/useTranslation";
-import { Button } from "@/shared/components/Button";
-import { LanguageSwitcher } from "@/shared/components/LanguageSwitcher";
-import { Volleyball } from "@/shared/components/icons";
+import { useState, useRef, useEffect, useCallback, lazy, Suspense, type FormEvent } from 'react'
+
+import { useNavigate } from 'react-router-dom'
+import { useShallow } from 'zustand/react/shallow'
+
 import {
   extractCalendarCode,
   validateCalendarCode,
-} from "@/features/assignments/utils/calendar-helpers";
-import { getHelpSiteUrl } from "@/shared/utils/constants";
+} from '@/features/assignments/utils/calendar-helpers'
+import { Button } from '@/shared/components/Button'
+import { Volleyball } from '@/shared/components/icons'
+import { LanguageSwitcher } from '@/shared/components/LanguageSwitcher'
+import { useTranslation } from '@/shared/hooks/useTranslation'
+import { useAuthStore, NO_REFEREE_ROLE_ERROR_KEY } from '@/shared/stores/auth'
+import { useDemoStore } from '@/shared/stores/demo'
+import { getHelpSiteUrl } from '@/shared/utils/constants'
 
 // Lazy-load debug panel to avoid bundle size impact
 const LoginDebugPanel = lazy(() =>
-  import("@/shared/components/debug/LoginDebugPanel").then((m) => ({
+  import('@/shared/components/debug/LoginDebugPanel').then((m) => ({
     default: m.LoginDebugPanel,
-  })),
-);
+  }))
+)
 
 // Demo-only mode restricts the app to demo mode (used in PR preview deployments)
-const DEMO_MODE_ONLY = import.meta.env.VITE_DEMO_MODE_ONLY === "true";
+const DEMO_MODE_ONLY = import.meta.env.VITE_DEMO_MODE_ONLY === 'true'
 
 /** Interval for lockout countdown timer (1 second in milliseconds) */
-const LOCKOUT_COUNTDOWN_INTERVAL_MS = 1000;
+const LOCKOUT_COUNTDOWN_INTERVAL_MS = 1000
 
-type LoginMode = "full" | "calendar";
+type LoginMode = 'full' | 'calendar'
 
 export function LoginPage() {
-  const navigate = useNavigate();
-  const {
-    login,
-    loginWithCalendar,
-    status,
-    error,
-    lockedUntil,
-    setDemoAuthenticated,
-  } = useAuthStore(
-    useShallow((state) => ({
-      login: state.login,
-      loginWithCalendar: state.loginWithCalendar,
-      status: state.status,
-      error: state.error,
-      lockedUntil: state.lockedUntil,
-      setDemoAuthenticated: state.setDemoAuthenticated,
-    })),
-  );
-  const initializeDemoData = useDemoStore((state) => state.initializeDemoData);
-  const { t } = useTranslation();
+  const navigate = useNavigate()
+  const { login, loginWithCalendar, status, error, lockedUntil, setDemoAuthenticated } =
+    useAuthStore(
+      useShallow((state) => ({
+        login: state.login,
+        loginWithCalendar: state.loginWithCalendar,
+        status: state.status,
+        error: state.error,
+        lockedUntil: state.lockedUntil,
+        setDemoAuthenticated: state.setDemoAuthenticated,
+      }))
+    )
+  const initializeDemoData = useDemoStore((state) => state.initializeDemoData)
+  const { t } = useTranslation()
 
-  const [loginMode, setLoginMode] = useState<LoginMode>("calendar");
-  const [username, setUsername] = useState("");
-  const [calendarInput, setCalendarInput] = useState("");
-  const [calendarError, setCalendarError] = useState<string | null>(null);
-  const [isValidatingCalendar, setIsValidatingCalendar] = useState(false);
-  const [lockoutCountdown, setLockoutCountdown] = useState<number | null>(null);
+  const [loginMode, setLoginMode] = useState<LoginMode>('calendar')
+  const [username, setUsername] = useState('')
+  const [calendarInput, setCalendarInput] = useState('')
+  const [calendarError, setCalendarError] = useState<string | null>(null)
+  const [isValidatingCalendar, setIsValidatingCalendar] = useState(false)
+  const [lockoutCountdown, setLockoutCountdown] = useState<number | null>(null)
   // Use ref for password to minimize memory exposure (avoids re-renders with password in state)
-  const passwordRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null)
   // Form ref for manual validation trigger (needed since button is type="button")
-  const formRef = useRef<HTMLFormElement>(null);
-  const calendarFormRef = useRef<HTMLFormElement>(null);
+  const formRef = useRef<HTMLFormElement>(null)
+  const calendarFormRef = useRef<HTMLFormElement>(null)
   // Ref to prevent race condition with double submission
   // State updates are async, so we need a synchronous guard
-  const isSubmittingRef = useRef(false);
+  const isSubmittingRef = useRef(false)
   // AbortController ref for cancelling calendar validation on unmount
-  const calendarValidationAbortRef = useRef<AbortController | null>(null);
+  const calendarValidationAbortRef = useRef<AbortController | null>(null)
 
-  const isLoading = status === "loading" || isValidatingCalendar;
+  const isLoading = status === 'loading' || isValidatingCalendar
 
   const handleDemoLogin = useCallback(() => {
     // Initialize with SV (Swiss Volley national) association as default
     // User can switch to other associations via the occupation dropdown
-    initializeDemoData("SV");
-    setDemoAuthenticated();
-    navigate("/");
-  }, [initializeDemoData, setDemoAuthenticated, navigate]);
+    initializeDemoData('SV')
+    setDemoAuthenticated()
+    navigate('/')
+  }, [initializeDemoData, setDemoAuthenticated, navigate])
 
   // In demo-only mode (PR previews), calendar mode is allowed but full login is not
   // No auto-redirect - let users choose between calendar mode and demo mode
@@ -83,40 +79,40 @@ export function LoginPage() {
   // Cleanup: abort any pending calendar validation on unmount
   useEffect(() => {
     return () => {
-      calendarValidationAbortRef.current?.abort();
-    };
-  }, []);
+      calendarValidationAbortRef.current?.abort()
+    }
+  }, [])
 
   // Countdown timer for lockout - ticks every second until lockout expires
   useEffect(() => {
     if (!lockedUntil || lockedUntil <= 0) {
-      setLockoutCountdown(null);
-      return;
+      setLockoutCountdown(null)
+      return
     }
 
-    setLockoutCountdown(lockedUntil);
+    setLockoutCountdown(lockedUntil)
 
     const interval = setInterval(() => {
       setLockoutCountdown((prev) => {
         if (!prev || prev <= 1) {
-          clearInterval(interval);
-          return null;
+          clearInterval(interval)
+          return null
         }
-        return prev - 1;
-      });
-    }, LOCKOUT_COUNTDOWN_INTERVAL_MS);
+        return prev - 1
+      })
+    }, LOCKOUT_COUNTDOWN_INTERVAL_MS)
 
-    return () => clearInterval(interval);
-  }, [lockedUntil]);
+    return () => clearInterval(interval)
+  }, [lockedUntil])
 
   // Determine if login should be disabled due to lockout
-  const isLockedOut = lockoutCountdown !== null && lockoutCountdown > 0;
+  const isLockedOut = lockoutCountdown !== null && lockoutCountdown > 0
 
   function handleCalendarInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setCalendarInput(e.target.value);
+    setCalendarInput(e.target.value)
     // Clear error when user starts typing
     if (calendarError) {
-      setCalendarError(null);
+      setCalendarError(null)
     }
   }
 
@@ -124,95 +120,95 @@ export function LoginPage() {
     // Prevent native form submission - critical for iOS autofill compatibility
     // iOS Safari's password autofill can trigger native form submission,
     // bypassing React's event handling in some cases
-    e.preventDefault();
-    e.stopPropagation();
-    await performLogin();
+    e.preventDefault()
+    e.stopPropagation()
+    await performLogin()
   }
 
   async function performLogin() {
     // Use ref for synchronous double-submit prevention (state updates are async)
-    if (isSubmittingRef.current || isLoading) return;
+    if (isSubmittingRef.current || isLoading) return
 
     // Trigger HTML5 form validation (needed since button is type="button")
     // reportValidity() shows validation messages and returns false if invalid
     if (formRef.current && !formRef.current.reportValidity()) {
-      return;
+      return
     }
 
-    isSubmittingRef.current = true;
+    isSubmittingRef.current = true
 
     try {
-      const password = passwordRef.current?.value || "";
-      const success = await login(username, password);
+      const password = passwordRef.current?.value || ''
+      const success = await login(username, password)
       if (success) {
         // Clear password field after successful login
         if (passwordRef.current) {
-          passwordRef.current.value = "";
+          passwordRef.current.value = ''
         }
-        navigate("/");
+        navigate('/')
       }
     } finally {
-      isSubmittingRef.current = false;
+      isSubmittingRef.current = false
     }
   }
 
   async function handleCalendarSubmit(e: FormEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    await performCalendarLogin();
+    e.preventDefault()
+    e.stopPropagation()
+    await performCalendarLogin()
   }
 
   async function performCalendarLogin() {
-    if (isSubmittingRef.current || isLoading) return;
+    if (isSubmittingRef.current || isLoading) return
 
     if (calendarFormRef.current && !calendarFormRef.current.reportValidity()) {
-      return;
+      return
     }
 
     // Extract calendar code from input (could be URL or just code)
-    const code = extractCalendarCode(calendarInput);
+    const code = extractCalendarCode(calendarInput)
     if (!code) {
-      setCalendarError("auth.invalidCalendarCode");
-      return;
+      setCalendarError('auth.invalidCalendarCode')
+      return
     }
 
     // Abort any previous validation request
-    calendarValidationAbortRef.current?.abort();
-    const abortController = new AbortController();
-    calendarValidationAbortRef.current = abortController;
+    calendarValidationAbortRef.current?.abort()
+    const abortController = new AbortController()
+    calendarValidationAbortRef.current = abortController
 
-    isSubmittingRef.current = true;
-    setIsValidatingCalendar(true);
-    setCalendarError(null);
+    isSubmittingRef.current = true
+    setIsValidatingCalendar(true)
+    setCalendarError(null)
 
     try {
       // Validate the calendar code by checking the API
-      const result = await validateCalendarCode(code, abortController.signal);
+      const result = await validateCalendarCode(code, abortController.signal)
 
       // Don't update state if the request was aborted (component unmounted)
       if (abortController.signal.aborted) {
-        return;
+        return
       }
 
       if (!result.valid) {
-        setCalendarError(result.error ?? "auth.calendarValidationFailed");
-        return;
+        setCalendarError(result.error ?? 'auth.calendarValidationFailed')
+        return
       }
 
       // Login with the validated calendar code
-      await loginWithCalendar(code);
-      navigate("/");
+      await loginWithCalendar(code)
+      navigate('/')
     } catch (error) {
       // Ignore AbortError - component was unmounted or new request started
-      if (error instanceof Error && error.name === "AbortError") {
-        return;
+      if (error instanceof Error && error.name === 'AbortError') {
+        return
       }
-      setCalendarError("auth.calendarValidationFailed");
+      setCalendarError('auth.calendarValidationFailed')
     } finally {
-      isSubmittingRef.current = false;
+      isSubmittingRef.current = false
       // Only update state if this controller wasn't aborted
       if (!abortController.signal.aborted) {
-        setIsValidatingCalendar(false);
+        setIsValidatingCalendar(false)
       }
     }
   }
@@ -220,47 +216,45 @@ export function LoginPage() {
   // Handle Enter key on password field to trigger login
   // This provides keyboard submit without relying on form submission
   function handlePasswordKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter" && !isLoading) {
-      e.preventDefault();
-      performLogin();
+    if (e.key === 'Enter' && !isLoading) {
+      e.preventDefault()
+      performLogin()
     }
   }
 
-  function handleCalendarInputKeyDown(
-    e: React.KeyboardEvent<HTMLInputElement>,
-  ) {
-    if (e.key === "Enter" && !isLoading) {
-      e.preventDefault();
-      performCalendarLogin();
+  function handleCalendarInputKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter' && !isLoading) {
+      e.preventDefault()
+      performCalendarLogin()
     }
   }
 
   // Get translated error message
   function getErrorMessage(errorKey: string): string {
     if (errorKey === NO_REFEREE_ROLE_ERROR_KEY) {
-      return t("auth.noRefereeRole");
+      return t('auth.noRefereeRole')
     }
-    if (errorKey === "auth.invalidCalendarCode") {
-      return t("auth.invalidCalendarCode");
+    if (errorKey === 'auth.invalidCalendarCode') {
+      return t('auth.invalidCalendarCode')
     }
-    if (errorKey === "auth.calendarNotFound") {
-      return t("auth.calendarNotFound");
+    if (errorKey === 'auth.calendarNotFound') {
+      return t('auth.calendarNotFound')
     }
-    if (errorKey === "auth.calendarValidationFailed") {
-      return t("auth.calendarValidationFailed");
+    if (errorKey === 'auth.calendarValidationFailed') {
+      return t('auth.calendarValidationFailed')
     }
     // Handle lockout error with countdown
     if (isLockedOut && lockoutCountdown) {
-      return `${t("auth.accountLocked")} - ${t("auth.lockoutRemainingTime")} ${lockoutCountdown} ${t("auth.lockoutSeconds")}`;
+      return `${t('auth.accountLocked')} - ${t('auth.lockoutRemainingTime')} ${lockoutCountdown} ${t('auth.lockoutSeconds')}`
     }
-    return errorKey;
+    return errorKey
   }
 
   // In demo-only mode (PR previews), we show the login form but only with
   // Calendar mode and Demo options - Full Login is hidden for security
   // (full login would require real credentials)
 
-  const displayError = loginMode === "calendar" ? calendarError : error;
+  const displayError = loginMode === 'calendar' ? calendarError : error
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-surface-page dark:bg-surface-page-dark px-4">
@@ -277,9 +271,7 @@ export function LoginPage() {
           <h1 className="mt-4 text-3xl font-bold text-text-primary dark:text-text-primary-dark">
             VolleyKit
           </h1>
-          <p className="mt-2 text-text-muted dark:text-text-muted-dark">
-            {t("auth.subtitle")}
-          </p>
+          <p className="mt-2 text-text-muted dark:text-text-muted-dark">{t('auth.subtitle')}</p>
         </div>
 
         {/* Login form */}
@@ -294,58 +286,49 @@ export function LoginPage() {
               <button
                 type="button"
                 role="tab"
-                aria-selected={loginMode === "calendar"}
+                aria-selected={loginMode === 'calendar'}
                 aria-controls="calendar-login-panel"
                 id="calendar-login-tab"
                 data-testid="calendar-login-tab"
-                onClick={() => setLoginMode("calendar")}
+                onClick={() => setLoginMode('calendar')}
                 className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
-                  loginMode === "calendar"
-                    ? "bg-surface-card dark:bg-surface-card-dark text-text-primary dark:text-text-primary-dark shadow-sm"
-                    : "text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark"
+                  loginMode === 'calendar'
+                    ? 'bg-surface-card dark:bg-surface-card-dark text-text-primary dark:text-text-primary-dark shadow-sm'
+                    : 'text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark'
                 }`}
               >
-                {t("auth.calendarMode")}
+                {t('auth.calendarMode')}
               </button>
               <button
                 type="button"
                 role="tab"
-                aria-selected={loginMode === "full"}
+                aria-selected={loginMode === 'full'}
                 aria-controls="full-login-panel"
                 id="full-login-tab"
                 data-testid="full-login-tab"
-                onClick={() => setLoginMode("full")}
+                onClick={() => setLoginMode('full')}
                 className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
-                  loginMode === "full"
-                    ? "bg-surface-card dark:bg-surface-card-dark text-text-primary dark:text-text-primary-dark shadow-sm"
-                    : "text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark"
+                  loginMode === 'full'
+                    ? 'bg-surface-card dark:bg-surface-card-dark text-text-primary dark:text-text-primary-dark shadow-sm'
+                    : 'text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark'
                 }`}
               >
-                {t("auth.fullLogin")}
+                {t('auth.fullLogin')}
               </button>
             </div>
           )}
 
           {/* Full Login Panel - only shown when tab is selected (tabs hidden in demo-only mode) */}
-          {loginMode === "full" && (
-            <div
-              id="full-login-panel"
-              role="tabpanel"
-              aria-labelledby="full-login-tab"
-            >
+          {loginMode === 'full' && (
+            <div id="full-login-panel" role="tabpanel" aria-labelledby="full-login-tab">
               {/* method="post" is defensive fallback if native submission somehow occurs */}
-              <form
-                ref={formRef}
-                onSubmit={handleSubmit}
-                method="post"
-                className="space-y-6"
-              >
+              <form ref={formRef} onSubmit={handleSubmit} method="post" className="space-y-6">
                 <div>
                   <label
                     htmlFor="username"
                     className="block text-sm font-medium text-text-secondary dark:text-text-secondary-dark mb-2"
                   >
-                    {t("auth.username")}
+                    {t('auth.username')}
                   </label>
                   <input
                     id="username"
@@ -365,7 +348,7 @@ export function LoginPage() {
                     htmlFor="password"
                     className="block text-sm font-medium text-text-secondary dark:text-text-secondary-dark mb-2"
                   >
-                    {t("auth.password")}
+                    {t('auth.password')}
                   </label>
                   <input
                     id="password"
@@ -397,7 +380,7 @@ export function LoginPage() {
                   onClick={performLogin}
                   data-testid="login-button"
                 >
-                  {isLoading ? t("auth.loggingIn") : t("auth.loginButton")}
+                  {isLoading ? t('auth.loggingIn') : t('auth.loginButton')}
                 </Button>
 
                 <div className="relative my-4">
@@ -406,7 +389,7 @@ export function LoginPage() {
                   </div>
                   <div className="relative flex justify-center text-sm">
                     <span className="bg-surface-card dark:bg-surface-card-dark px-2 text-text-muted dark:text-text-muted-dark">
-                      {t("auth.or")}
+                      {t('auth.or')}
                     </span>
                   </div>
                 </div>
@@ -418,19 +401,15 @@ export function LoginPage() {
                   fullWidth
                   data-testid="demo-button"
                 >
-                  {t("auth.demoMode")}
+                  {t('auth.demoMode')}
                 </Button>
               </form>
             </div>
           )}
 
           {/* Calendar Mode Panel */}
-          {loginMode === "calendar" && (
-            <div
-              id="calendar-login-panel"
-              role="tabpanel"
-              aria-labelledby="calendar-login-tab"
-            >
+          {loginMode === 'calendar' && (
+            <div id="calendar-login-panel" role="tabpanel" aria-labelledby="calendar-login-tab">
               <form
                 ref={calendarFormRef}
                 onSubmit={handleCalendarSubmit}
@@ -440,7 +419,7 @@ export function LoginPage() {
                 {/* Info box */}
                 <div className="p-3 rounded-lg bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800">
                   <p className="text-sm text-primary-700 dark:text-primary-300">
-                    {t("auth.calendarModeInfo")}
+                    {t('auth.calendarModeInfo')}
                   </p>
                 </div>
 
@@ -449,7 +428,7 @@ export function LoginPage() {
                     htmlFor="calendar-input"
                     className="block text-sm font-medium text-text-secondary dark:text-text-secondary-dark mb-2"
                   >
-                    {t("auth.calendarInputLabel")}
+                    {t('auth.calendarInputLabel')}
                   </label>
                   <input
                     id="calendar-input"
@@ -457,14 +436,14 @@ export function LoginPage() {
                     type="text"
                     value={calendarInput}
                     onChange={handleCalendarInputChange}
-                    placeholder={t("auth.calendarInputPlaceholder")}
+                    placeholder={t('auth.calendarInputPlaceholder')}
                     required
                     disabled={isLoading}
                     onKeyDown={handleCalendarInputKeyDown}
                     className="input"
                   />
                   <p className="mt-2 text-xs text-text-muted dark:text-text-muted-dark">
-                    {t("auth.calendarModeHint")}
+                    {t('auth.calendarModeHint')}
                   </p>
                 </div>
 
@@ -484,9 +463,7 @@ export function LoginPage() {
                   onClick={performCalendarLogin}
                   data-testid="calendar-login-button"
                 >
-                  {isLoading
-                    ? t("auth.enteringCalendarMode")
-                    : t("auth.enterCalendarMode")}
+                  {isLoading ? t('auth.enteringCalendarMode') : t('auth.enterCalendarMode')}
                 </Button>
 
                 <div className="relative my-4">
@@ -495,7 +472,7 @@ export function LoginPage() {
                   </div>
                   <div className="relative flex justify-center text-sm">
                     <span className="bg-surface-card dark:bg-surface-card-dark px-2 text-text-muted dark:text-text-muted-dark">
-                      {t("auth.or")}
+                      {t('auth.or')}
                     </span>
                   </div>
                 </div>
@@ -507,7 +484,7 @@ export function LoginPage() {
                   fullWidth
                   data-testid="demo-button"
                 >
-                  {t("auth.demoMode")}
+                  {t('auth.demoMode')}
                 </Button>
               </form>
             </div>
@@ -516,14 +493,14 @@ export function LoginPage() {
 
         {/* Info */}
         <p className="mt-6 text-center text-xs text-text-subtle dark:text-text-subtle-dark">
-          {loginMode === "full" ? (
+          {loginMode === 'full' ? (
             <>
-              {t("auth.loginInfo")}
+              {t('auth.loginInfo')}
               <br />
-              {t("auth.privacyNote")}
+              {t('auth.privacyNote')}
             </>
           ) : (
-            t("auth.calendarModeInfo")
+            t('auth.calendarModeInfo')
           )}
         </p>
 
@@ -535,7 +512,7 @@ export function LoginPage() {
             rel="noopener noreferrer"
             className="text-xs text-text-muted dark:text-text-muted-dark hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
           >
-            {t("auth.learnHowItWorks")} &rarr;
+            {t('auth.learnHowItWorks')} &rarr;
           </a>
         </p>
       </div>
@@ -545,5 +522,5 @@ export function LoginPage() {
         <LoginDebugPanel />
       </Suspense>
     </div>
-  );
+  )
 }

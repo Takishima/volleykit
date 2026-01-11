@@ -1,20 +1,20 @@
-import { useState, useCallback, lazy, Suspense, memo } from "react";
-import { useTranslation } from "@/shared/hooks/useTranslation";
-import { Card, CardContent, CardHeader } from "@/shared/components/Card";
-import { ToggleSwitch } from "@/shared/components/ToggleSwitch";
+import { useState, useCallback, lazy, Suspense, memo } from 'react'
 
-const SafeModeWarningModal = lazy(
-  () =>
-    import("@/shared/components/SafeModeWarningModal").then((m) => ({
-      default: m.SafeModeWarningModal,
-    })),
-);
+import { Card, CardContent, CardHeader } from '@/shared/components/Card'
+import { ToggleSwitch } from '@/shared/components/ToggleSwitch'
+import { useTranslation } from '@/shared/hooks/useTranslation'
+
+const SafeModeWarningModal = lazy(() =>
+  import('@/shared/components/SafeModeWarningModal').then((m) => ({
+    default: m.SafeModeWarningModal,
+  }))
+)
 
 interface DataProtectionSectionProps {
-  isSafeModeEnabled: boolean;
-  onSetSafeMode: (enabled: boolean) => void;
-  isSafeValidationEnabled: boolean;
-  onSetSafeValidation: (enabled: boolean) => void;
+  isSafeModeEnabled: boolean
+  onSetSafeMode: (enabled: boolean) => void
+  isSafeValidationEnabled: boolean
+  onSetSafeValidation: (enabled: boolean) => void
 }
 
 function DataProtectionSectionComponent({
@@ -23,28 +23,28 @@ function DataProtectionSectionComponent({
   isSafeValidationEnabled,
   onSetSafeValidation,
 }: DataProtectionSectionProps) {
-  const { t } = useTranslation();
-  const [showSafeModeWarning, setShowSafeModeWarning] = useState(false);
+  const { t } = useTranslation()
+  const [showSafeModeWarning, setShowSafeModeWarning] = useState(false)
 
   const handleToggleSafeMode = useCallback(() => {
     if (isSafeModeEnabled) {
-      setShowSafeModeWarning(true);
+      setShowSafeModeWarning(true)
     } else {
-      onSetSafeMode(true);
+      onSetSafeMode(true)
     }
-  }, [isSafeModeEnabled, onSetSafeMode]);
+  }, [isSafeModeEnabled, onSetSafeMode])
 
   const handleCloseSafeModeWarning = useCallback(() => {
-    setShowSafeModeWarning(false);
-  }, []);
+    setShowSafeModeWarning(false)
+  }, [])
 
   const handleConfirmDisableSafeMode = useCallback(() => {
-    onSetSafeMode(false);
-  }, [onSetSafeMode]);
+    onSetSafeMode(false)
+  }, [onSetSafeMode])
 
   const handleToggleSafeValidation = useCallback(() => {
-    onSetSafeValidation(!isSafeValidationEnabled);
-  }, [isSafeValidationEnabled, onSetSafeValidation]);
+    onSetSafeValidation(!isSafeValidationEnabled)
+  }, [isSafeValidationEnabled, onSetSafeValidation])
 
   return (
     <>
@@ -66,7 +66,7 @@ function DataProtectionSectionComponent({
               />
             </svg>
             <h2 className="font-semibold text-text-primary dark:text-text-primary-dark">
-              {t("settings.dataProtection.title")}
+              {t('settings.dataProtection.title')}
             </h2>
             {!isSafeModeEnabled && (
               <svg
@@ -90,22 +90,22 @@ function DataProtectionSectionComponent({
           {/* Safe Mode */}
           <div className="space-y-4">
             <div className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
-              {t("settings.safeMode")}
+              {t('settings.safeMode')}
             </div>
             <p className="text-sm text-text-muted dark:text-text-muted-dark">
-              {t("settings.safeModeDescription")}
+              {t('settings.safeModeDescription')}
             </p>
 
             <div className="flex items-center justify-between py-2">
               <div className="flex-1">
                 <div className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
                   {isSafeModeEnabled
-                    ? t("settings.safeModeEnabled")
-                    : t("settings.safeModeDisabled")}
+                    ? t('settings.safeModeEnabled')
+                    : t('settings.safeModeDisabled')}
                 </div>
                 {!isSafeModeEnabled && (
                   <div className="text-xs text-warning-600 dark:text-warning-400 mt-1">
-                    {t("settings.safeModeDangerous")}
+                    {t('settings.safeModeDangerous')}
                   </div>
                 )}
               </div>
@@ -113,7 +113,7 @@ function DataProtectionSectionComponent({
               <ToggleSwitch
                 checked={isSafeModeEnabled}
                 onChange={handleToggleSafeMode}
-                label={t("settings.safeMode")}
+                label={t('settings.safeMode')}
                 variant="success"
               />
             </div>
@@ -125,25 +125,25 @@ function DataProtectionSectionComponent({
           {/* Safe Validation */}
           <div className="space-y-4">
             <div className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
-              {t("settings.safeValidation")}
+              {t('settings.safeValidation')}
             </div>
             <p className="text-sm text-text-muted dark:text-text-muted-dark">
-              {t("settings.safeValidationDescription")}
+              {t('settings.safeValidationDescription')}
             </p>
 
             <div className="flex items-center justify-between py-2">
               <div className="flex-1">
                 <div className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
                   {isSafeValidationEnabled
-                    ? t("settings.safeValidationEnabled")
-                    : t("settings.safeValidationDisabled")}
+                    ? t('settings.safeValidationEnabled')
+                    : t('settings.safeValidationDisabled')}
                 </div>
               </div>
 
               <ToggleSwitch
                 checked={isSafeValidationEnabled}
                 onChange={handleToggleSafeValidation}
-                label={t("settings.safeValidation")}
+                label={t('settings.safeValidation')}
                 variant="success"
               />
             </div>
@@ -162,7 +162,7 @@ function DataProtectionSectionComponent({
         </Suspense>
       )}
     </>
-  );
+  )
 }
 
-export const DataProtectionSection = memo(DataProtectionSectionComponent);
+export const DataProtectionSection = memo(DataProtectionSectionComponent)

@@ -1,36 +1,33 @@
-import { useCallback, useRef } from "react";
-import { useTranslation } from "@/shared/hooks/useTranslation";
-import { Modal } from "@/shared/components/Modal";
-import { ModalHeader } from "@/shared/components/ModalHeader";
-import { ModalFooter } from "@/shared/components/ModalFooter";
-import { Button } from "@/shared/components/Button";
+import { useCallback, useRef } from 'react'
 
-const MODAL_TITLE_ID = "safe-mode-warning-title";
+import { Button } from '@/shared/components/Button'
+import { Modal } from '@/shared/components/Modal'
+import { ModalFooter } from '@/shared/components/ModalFooter'
+import { ModalHeader } from '@/shared/components/ModalHeader'
+import { useTranslation } from '@/shared/hooks/useTranslation'
+
+const MODAL_TITLE_ID = 'safe-mode-warning-title'
 
 interface SafeModeWarningModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
+  isOpen: boolean
+  onClose: () => void
+  onConfirm: () => void
 }
 
-export function SafeModeWarningModal({
-  isOpen,
-  onClose,
-  onConfirm,
-}: SafeModeWarningModalProps) {
-  const { t } = useTranslation();
-  const isConfirmingRef = useRef(false);
+export function SafeModeWarningModal({ isOpen, onClose, onConfirm }: SafeModeWarningModalProps) {
+  const { t } = useTranslation()
+  const isConfirmingRef = useRef(false)
 
   const handleConfirm = useCallback(() => {
-    if (isConfirmingRef.current) return;
-    isConfirmingRef.current = true;
+    if (isConfirmingRef.current) return
+    isConfirmingRef.current = true
     try {
-      onConfirm();
-      onClose();
+      onConfirm()
+      onClose()
     } finally {
-      isConfirmingRef.current = false;
+      isConfirmingRef.current = false
     }
-  }, [onConfirm, onClose]);
+  }, [onConfirm, onClose])
 
   const warningIcon = (
     <div className="flex-shrink-0 w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900 flex items-center justify-center">
@@ -49,45 +46,45 @@ export function SafeModeWarningModal({
         />
       </svg>
     </div>
-  );
+  )
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} titleId={MODAL_TITLE_ID} size="md">
       <ModalHeader
-        title={t("settings.safeModeWarningTitle")}
+        title={t('settings.safeModeWarningTitle')}
         titleId={MODAL_TITLE_ID}
         icon={warningIcon}
       />
 
       <div className="mb-6 space-y-3">
         <p className="text-sm text-text-secondary dark:text-text-secondary-dark">
-          {t("settings.safeModeWarningMessage")}
+          {t('settings.safeModeWarningMessage')}
         </p>
 
         <ul className="space-y-2 text-sm text-text-secondary dark:text-text-secondary-dark">
           <li className="flex items-start">
             <span className="text-yellow-600 dark:text-yellow-400 mr-2">•</span>
-            <span>{t("settings.safeModeWarningPoint1")}</span>
+            <span>{t('settings.safeModeWarningPoint1')}</span>
           </li>
           <li className="flex items-start">
             <span className="text-yellow-600 dark:text-yellow-400 mr-2">•</span>
-            <span>{t("settings.safeModeWarningPoint2")}</span>
+            <span>{t('settings.safeModeWarningPoint2')}</span>
           </li>
           <li className="flex items-start">
             <span className="text-yellow-600 dark:text-yellow-400 mr-2">•</span>
-            <span>{t("settings.safeModeWarningPoint3")}</span>
+            <span>{t('settings.safeModeWarningPoint3')}</span>
           </li>
         </ul>
       </div>
 
       <ModalFooter divider>
         <Button variant="secondary" className="flex-1 rounded-md" onClick={onClose}>
-          {t("common.cancel")}
+          {t('common.cancel')}
         </Button>
         <Button variant="danger" className="flex-1 rounded-md" onClick={handleConfirm}>
-          {t("settings.safeModeConfirmButton")}
+          {t('settings.safeModeConfirmButton')}
         </Button>
       </ModalFooter>
     </Modal>
-  );
+  )
 }

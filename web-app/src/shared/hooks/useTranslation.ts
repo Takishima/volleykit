@@ -1,5 +1,5 @@
-import { useLanguageStore } from "@/shared/stores/language";
-import { t, tInterpolate } from "@/i18n";
+import { t, tInterpolate } from '@/i18n'
+import { useLanguageStore } from '@/shared/stores/language'
 
 /**
  * Hook for translations that automatically re-renders when locale changes.
@@ -10,6 +10,6 @@ import { t, tInterpolate } from "@/i18n";
  * return <p>{tInterpolate('search.results', { count: 5 })}</p>;
  */
 export function useTranslation() {
-  const locale = useLanguageStore((state) => state.locale);
-  return { t, tInterpolate, locale };
+  const locale = useLanguageStore((state) => state.locale)
+  return { t, tInterpolate, locale }
 }

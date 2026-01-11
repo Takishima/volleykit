@@ -12,10 +12,10 @@
  * Bounding box coordinates for a recognized word
  */
 export interface OCRBoundingBox {
-  x0: number;
-  y0: number;
-  x1: number;
-  y1: number;
+  x0: number
+  y0: number
+  x1: number
+  y1: number
 }
 
 /**
@@ -23,11 +23,11 @@ export interface OCRBoundingBox {
  */
 export interface OCRWord {
   /** The recognized text */
-  text: string;
+  text: string
   /** Confidence score (0-100) */
-  confidence: number;
+  confidence: number
   /** Bounding box coordinates */
-  bbox: OCRBoundingBox;
+  bbox: OCRBoundingBox
 }
 
 /**
@@ -35,11 +35,11 @@ export interface OCRWord {
  */
 export interface OCRLine {
   /** The full line text */
-  text: string;
+  text: string
   /** Average confidence for the line (0-100) */
-  confidence: number;
+  confidence: number
   /** Individual words in the line */
-  words: OCRWord[];
+  words: OCRWord[]
 }
 
 /**
@@ -47,13 +47,13 @@ export interface OCRLine {
  */
 export interface OCRResult {
   /** Complete extracted text */
-  fullText: string;
+  fullText: string
   /** Lines with words and confidence */
-  lines: OCRLine[];
+  lines: OCRLine[]
   /** All words with confidence scores */
-  words: OCRWord[];
+  words: OCRWord[]
   /** Whether bounding boxes are precise pixel coordinates (false = estimated) */
-  hasPreciseBoundingBoxes: boolean;
+  hasPreciseBoundingBoxes: boolean
 }
 
 /**
@@ -61,26 +61,26 @@ export interface OCRResult {
  */
 export interface OCRProgress {
   /** Human-readable status message */
-  status: string;
+  status: string
   /** Progress percentage (0-100) */
-  progress: number;
+  progress: number
 }
 
 /**
  * Callback for OCR progress updates
  */
-export type OnProgressCallback = (progress: OCRProgress) => void;
+export type OnProgressCallback = (progress: OCRProgress) => void
 
 /**
  * Interface for OCR engine implementations
  */
 export interface OCREngine {
   /** Initialize the OCR engine */
-  initialize(): Promise<void>;
+  initialize(): Promise<void>
   /** Process an image and extract text */
-  recognize(imageBlob: Blob): Promise<OCRResult>;
+  recognize(imageBlob: Blob): Promise<OCRResult>
   /** Clean up resources and cancel pending operations */
-  terminate(): Promise<void>;
+  terminate(): Promise<void>
 }
 
 // =============================================================================
@@ -93,26 +93,26 @@ export interface OCREngine {
  * - AC, AC2, AC3, AC4: Assistant Coaches
  * - M: Medical Staff (Doctor)
  */
-export type OfficialRole = 'C' | 'AC' | 'AC2' | 'AC3' | 'AC4' | 'M';
+export type OfficialRole = 'C' | 'AC' | 'AC2' | 'AC3' | 'AC4' | 'M'
 
 /**
  * A player parsed from OCR text
  */
 export interface ParsedPlayer {
   /** Shirt number from OCR (for display only, not used for matching) */
-  shirtNumber: number | null;
+  shirtNumber: number | null
   /** Player's last name (normalized to title case) */
-  lastName: string;
+  lastName: string
   /** Player's first name (normalized to title case) */
-  firstName: string;
+  firstName: string
   /** Full display name (firstName lastName) */
-  displayName: string;
+  displayName: string
   /** Original name from OCR before normalization */
-  rawName: string;
+  rawName: string
   /** License status (e.g., "NOT", "LFP") */
-  licenseStatus: string;
+  licenseStatus: string
   /** Birth date in DD.MM.YY format (from Swiss manuscript scoresheets) */
-  birthDate?: string;
+  birthDate?: string
 }
 
 /**
@@ -120,15 +120,15 @@ export interface ParsedPlayer {
  */
 export interface ParsedOfficial {
   /** Role on the team */
-  role: OfficialRole;
+  role: OfficialRole
   /** Last name (normalized) */
-  lastName: string;
+  lastName: string
   /** First name (normalized) */
-  firstName: string;
+  firstName: string
   /** Full display name */
-  displayName: string;
+  displayName: string
   /** Original name from OCR */
-  rawName: string;
+  rawName: string
 }
 
 /**
@@ -136,11 +136,11 @@ export interface ParsedOfficial {
  */
 export interface ParsedTeam {
   /** Team name from scoresheet */
-  name: string;
+  name: string
   /** All players (including liberos) */
-  players: ParsedPlayer[];
+  players: ParsedPlayer[]
   /** Coaches and assistant coaches */
-  officials: ParsedOfficial[];
+  officials: ParsedOfficial[]
 }
 
 /**
@@ -148,11 +148,11 @@ export interface ParsedTeam {
  */
 export interface ParsedGameSheet {
   /** First team (left column on scoresheet) */
-  teamA: ParsedTeam;
+  teamA: ParsedTeam
   /** Second team (right column on scoresheet) */
-  teamB: ParsedTeam;
+  teamB: ParsedTeam
   /** Parsing warnings (e.g., missing players, unrecognized sections) */
-  warnings: string[];
+  warnings: string[]
 }
 
 // =============================================================================
@@ -162,21 +162,21 @@ export interface ParsedGameSheet {
 /**
  * Result of comparing an OCR player against a roster player
  */
-export type ComparisonStatus = 'match' | 'ocr-only' | 'roster-only';
+export type ComparisonStatus = 'match' | 'ocr-only' | 'roster-only'
 
 /**
  * Result of comparing a single player
  */
 export interface PlayerComparisonResult {
   /** Match status */
-  status: ComparisonStatus;
+  status: ComparisonStatus
   /** Player from OCR (null if roster-only) */
-  ocrPlayer: ParsedPlayer | null;
+  ocrPlayer: ParsedPlayer | null
   /** Player from roster (null if ocr-only) */
-  rosterPlayerId: string | null;
-  rosterPlayerName: string | null;
+  rosterPlayerId: string | null
+  rosterPlayerName: string | null
   /** Match confidence (0-100, 0 if no match) */
-  confidence: number;
+  confidence: number
 }
 
 /**
@@ -184,17 +184,17 @@ export interface PlayerComparisonResult {
  */
 export interface TeamComparisonResult {
   /** OCR team name */
-  ocrTeamName: string;
+  ocrTeamName: string
   /** Reference team name */
-  rosterTeamName: string;
+  rosterTeamName: string
   /** Individual player comparison results */
-  playerResults: PlayerComparisonResult[];
+  playerResults: PlayerComparisonResult[]
   /** Summary counts */
   counts: {
-    matched: number;
-    ocrOnly: number;
-    rosterOnly: number;
-  };
+    matched: number
+    ocrOnly: number
+    rosterOnly: number
+  }
 }
 
 // =============================================================================
@@ -206,15 +206,15 @@ export interface TeamComparisonResult {
  */
 export interface OCRScoresheetState {
   /** Whether OCR is currently processing */
-  isProcessing: boolean;
+  isProcessing: boolean
   /** Current progress (null if not processing) */
-  progress: OCRProgress | null;
+  progress: OCRProgress | null
   /** Parsed result (null if not yet processed) */
-  result: ParsedGameSheet | null;
+  result: ParsedGameSheet | null
   /** Raw OCR result with bounding boxes (null if not yet processed) */
-  ocrResult: OCRResult | null;
+  ocrResult: OCRResult | null
   /** Error if processing failed */
-  error: Error | null;
+  error: Error | null
 }
 
 /**
@@ -224,15 +224,15 @@ export interface OCRScoresheetActions {
   /** Process an image and extract player data */
   processImage: (
     imageBlob: Blob,
-    scoresheetType?: 'electronic' | 'manuscript',
-  ) => Promise<ParsedGameSheet | null>;
+    scoresheetType?: 'electronic' | 'manuscript'
+  ) => Promise<ParsedGameSheet | null>
   /** Reset state to initial values */
-  reset: () => void;
+  reset: () => void
   /** Cancel ongoing processing */
-  cancel: () => void;
+  cancel: () => void
 }
 
 /**
  * Complete return type for useOCRScoresheet hook
  */
-export type UseOCRScoresheetReturn = OCRScoresheetState & OCRScoresheetActions;
+export type UseOCRScoresheetReturn = OCRScoresheetState & OCRScoresheetActions

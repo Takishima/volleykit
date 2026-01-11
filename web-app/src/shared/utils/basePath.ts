@@ -16,21 +16,21 @@
  */
 export function normalizeBasePath(rawPath: string | undefined): string {
   // Treat empty string same as undefined - both default to "/"
-  if (!rawPath || rawPath === "/") {
-    return "/";
+  if (!rawPath || rawPath === '/') {
+    return '/'
   }
 
-  let normalized = rawPath;
+  let normalized = rawPath
 
   // Ensure starts with "/"
-  if (!normalized.startsWith("/")) {
-    normalized = "/" + normalized;
+  if (!normalized.startsWith('/')) {
+    normalized = '/' + normalized
   }
 
   // Ensure ends with "/"
-  if (!normalized.endsWith("/")) {
-    normalized = normalized + "/";
+  if (!normalized.endsWith('/')) {
+    normalized = normalized + '/'
   }
 
-  return normalized;
+  return normalized
 }
