@@ -1,33 +1,51 @@
-import { defineConfig } from 'vite';
-import { VitePWA } from 'vite-plugin-pwa';
-import path from 'path';
+import path from 'path'
+
+import tailwindcss from '@tailwindcss/vite'
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa'
 
 // Base path for GitHub Pages subdirectory deployment
 // In production, this app is served from /volleykit/ocr-poc/
-const BASE_PATH = process.env.VITE_BASE_PATH || '/ocr-poc/';
+const BASE_PATH = process.env.VITE_BASE_PATH || '/ocr-poc/'
 
 // Cache expiration constants
-const SECONDS_PER_DAY = 60 * 60 * 24;
-const CACHE_MAX_AGE_DAYS = 7;
+const SECONDS_PER_DAY = 60 * 60 * 24
+const CACHE_MAX_AGE_DAYS = 7
 
 // OCR service caching constants
-const API_CACHE_MAX_ENTRIES = 20;
-const MODEL_CACHE_MAX_ENTRIES = 10;
-const NETWORK_TIMEOUT_SECONDS = 10;
-const MODEL_CACHE_MAX_AGE_DAYS = 30;
+const API_CACHE_MAX_ENTRIES = 20
+const MODEL_CACHE_MAX_ENTRIES = 10
+const NETWORK_TIMEOUT_SECONDS = 10
+const MODEL_CACHE_MAX_AGE_DAYS = 30
 
 export default defineConfig({
   base: BASE_PATH,
   resolve: {
-    alias: {
-      // Allow importing TypeScript modules from the main web-app
-      '@volleykit/ocr': path.resolve(__dirname, '../web-app/src/features/ocr'),
+    // Use array format for aliases - order matters for matching!
+    alias: [
+      // CRITICAL: Deduplicate React - ensure all imports use ocr-poc's React
+      // This prevents "multiple React instances" errors when importing from web-app
+      { find: 'react', replacement: path.resolve(__dirname, 'node_modules/react') },
+      { find: 'react-dom', replacement: path.resolve(__dirname, 'node_modules/react-dom') },
+      { find: 'react-easy-crop', replacement: path.resolve(__dirname, 'node_modules/react-easy-crop') },
+      // Most specific aliases first
+      // Web-app shared components resolve to PoC stubs (translation, icons)
+      { find: '@/shared', replacement: path.resolve(__dirname, './src/shared') },
+      // Web-app features resolve to actual web-app code
+      { find: '@/features', replacement: path.resolve(__dirname, '../web-app/src/features') },
+      // PoC's own source files (must come after more specific paths)
+      { find: '@', replacement: path.resolve(__dirname, './src') },
+      // Legacy aliases for explicit imports
+      { find: '@volleykit/ocr', replacement: path.resolve(__dirname, '../web-app/src/features/ocr') },
+      { find: '@volleykit/validation', replacement: path.resolve(__dirname, '../web-app/src/features/validation') },
       // Ensure fuse.js resolves from ocr-poc's node_modules
-      // (needed because web-app imports are resolved relative to web-app)
-      'fuse.js': path.resolve(__dirname, 'node_modules/fuse.js'),
-    },
+      { find: 'fuse.js', replacement: path.resolve(__dirname, 'node_modules/fuse.js') },
+    ],
   },
   plugins: [
+    react(),
+    tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
       devOptions: {
@@ -52,12 +70,11 @@ export default defineConfig({
           },
           // External OCR service caching rules
           {
-            // Google Cloud Vision API responses
-            // Uses NetworkFirst since OCR results are dynamic, but cache for offline fallback
-            urlPattern: /^https:\/\/vision\.googleapis\.com\//,
+            // Mistral API responses via Cloudflare Worker proxy
+            urlPattern: /^https:\/\/ocr-proxy\..*\.workers\.dev\//,
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'ocr-google-vision-api',
+              cacheName: 'ocr-mistral-api',
               expiration: {
                 maxEntries: API_CACHE_MAX_ENTRIES,
                 maxAgeSeconds: SECONDS_PER_DAY,
@@ -69,24 +86,7 @@ export default defineConfig({
             },
           },
           {
-            // AWS Textract API responses
-            urlPattern: /^https:\/\/textract\.[a-z0-9-]+\.amazonaws\.com\//,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'ocr-aws-textract-api',
-              expiration: {
-                maxEntries: API_CACHE_MAX_ENTRIES,
-                maxAgeSeconds: SECONDS_PER_DAY,
-              },
-              networkTimeoutSeconds: NETWORK_TIMEOUT_SECONDS,
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-          {
-            // PaddleOCR or other self-hosted OCR model files (WASM, ONNX, etc.)
-            // These static assets can be cached aggressively
+            // OCR model files (WASM, ONNX, etc.) - cache aggressively
             urlPattern: /\.(wasm|onnx|bin|pb|pth|pt|weights)$/i,
             handler: 'CacheFirst',
             options: {
@@ -133,9 +133,7 @@ export default defineConfig({
     }),
   ],
   build: {
-    // Output directory for production build
     outDir: 'dist',
-    // Generate source maps for debugging
     sourcemap: false,
   },
-});
+})

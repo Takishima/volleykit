@@ -11,23 +11,14 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Scanner" />
 
-    <!-- Icons (placeholder SVGs - replace with PNG for production) -->
+    <!-- Icons -->
     <link rel="icon" type="image/svg+xml" href="./pwa-192x192.svg" />
     <link rel="apple-touch-icon" href="./pwa-192x192.svg" />
 
     <title>Scoresheet Scanner</title>
   </head>
   <body>
-    <div class="app-shell">
-      <header class="header">
-        <h1 class="header-title">Scoresheet Scanner</h1>
-      </header>
-
-      <main id="app" class="main-content">
-        <!-- App content will be rendered here -->
-      </main>
-    </div>
-
-    <script type="module" src="./src/main.js"></script>
+    <div id="root"></div>
+    <script type="module" src="./src/main.tsx"></script>
   </body>
 </html>
