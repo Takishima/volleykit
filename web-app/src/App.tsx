@@ -17,7 +17,7 @@ import { ASSIGNMENTS_STALE_TIME_MS, SETTINGS_STALE_TIME_MS } from '@/shared/hook
 import { usePreloadLocales } from '@/shared/hooks/usePreloadLocales'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useViewportZoom } from '@/shared/hooks/useViewportZoom'
-import { useAuthStore } from '@/shared/stores/auth'
+import { useAuthStore, registerCacheCleanup } from '@/shared/stores/auth'
 import { useDemoStore } from '@/shared/stores/demo'
 import { useSettingsStore } from '@/shared/stores/settings'
 import { logger } from '@/shared/utils/logger'
@@ -256,6 +256,13 @@ export default function App() {
     const initialDataSource = useAuthStore.getState().dataSource
     useSettingsStore.getState()._setCurrentMode(initialDataSource)
 
+    // Register cache cleanup callback so auth store can clear cache during logout.
+    // This ensures cache is cleared synchronously before state updates,
+    // preventing any race conditions with React re-renders.
+    const unregisterCacheCleanup = registerCacheCleanup(() => {
+      queryClient.resetQueries()
+    })
+
     // Track state to detect changes
     let previousDataSource = initialDataSource
     let wasAuthenticated = useAuthStore.getState().user !== null
@@ -268,20 +275,23 @@ export default function App() {
       }
 
       // Clear query cache on auth state transitions to prevent stale data.
-      // - On logout: prevents next user from seeing previous user's assignments
+      // - On logout: handled by cacheCleanupCallback in auth store (synchronous)
       // - On login: prevents seeing stale cached data from previous sessions
       //   (e.g., when persisted auth state restored an old activeOccupationId)
       const isAuthenticated = state.user !== null
-      if (wasAuthenticated !== isAuthenticated) {
+      if (wasAuthenticated !== isAuthenticated && isAuthenticated) {
+        // Only clear on login transition here - logout is handled synchronously
+        // in the auth store via cacheCleanupCallback
         queryClient.resetQueries()
-        logger.info(
-          isAuthenticated ? 'Query cache cleared on login' : 'Query cache cleared on logout'
-        )
+        logger.info('Query cache cleared on login')
       }
       wasAuthenticated = isAuthenticated
     })
 
-    return unsubscribe
+    return () => {
+      unsubscribe()
+      unregisterCacheCleanup()
+    }
   }, [])
 
   return (

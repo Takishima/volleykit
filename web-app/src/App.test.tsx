@@ -22,6 +22,7 @@ const { mockAuthStore, mockSettingsStore } = vi.hoisted(() => {
 
 vi.mock('@/shared/stores/auth', () => ({
   useAuthStore: mockAuthStore,
+  registerCacheCleanup: vi.fn(() => () => {}), // Returns unsubscribe function
 }))
 
 // Mock the demo store
