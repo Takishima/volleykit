@@ -64,11 +64,26 @@ jobs:
     outputs:
       version: ${{ steps.changelog.outputs.version }}
     steps:
+      - name: Verify RELEASE_TOKEN is configured
+        env:
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          if [ -z "$RELEASE_TOKEN" ]; then
+            echo "::error::RELEASE_TOKEN secret is not configured."
+            echo "::error::This token is required to bypass branch protection rules."
+            echo "::error::See: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens"
+            exit 1
+          fi
+          echo "RELEASE_TOKEN is configured"
+
       - name: Checkout
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Use RELEASE_TOKEN to bypass branch protection rules
+          # GITHUB_TOKEN cannot bypass protections even with contents:write
+          # See: https://docs.github.com/en/actions/security-for-github-actions/security-guides/automatic-token-authentication#granting-additional-permissions
+          token: ${{ secrets.RELEASE_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -202,7 +217,7 @@ jobs:
       - name: Create GitHub Release
         if: ${{ !inputs.dry_run }}
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: |
           cat << 'RELEASE_NOTES' > /tmp/release_notes.md
           ${{ steps.changelog.outputs.release-notes }}
