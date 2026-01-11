@@ -212,19 +212,126 @@ function deriveUserWithOccupations(
 }
 
 /**
- * Fetches the login page with iOS Safari PWA session token handling.
- * If a new session token is captured during the first fetch, re-fetches
- * to ensure the form's __trustedProperties is generated for an established session.
+ * Processes a successful login result: extracts user data, validates referee role,
+ * and syncs the active association with the server.
  *
- * @returns The final login page response after any necessary re-fetches
+ * This helper function reduces code duplication between the main login flow
+ * and the retry flow for first-login session token issues.
+ *
+ * @returns true if login completed successfully, false if rejected (non-referee)
+ */
+async function handleSuccessfulLoginResult(
+  result: { csrfToken: string; dashboardHtml: string },
+  get: () => AuthState,
+  set: (state: Partial<AuthState>) => void
+): Promise<boolean> {
+  const activeParty = extractActivePartyFromHtml(result.dashboardHtml)
+  setCsrfToken(result.csrfToken)
+
+  const currentState = get()
+  const { user, activeOccupationId } = deriveUserWithOccupations(
+    activeParty,
+    currentState.user,
+    currentState.activeOccupationId
+  )
+
+  // Reject users without referee role - this app is for referees only
+  if (user.occupations.length === 0) {
+    return rejectNonRefereeUser(set)
+  }
+
+  set({
+    status: 'authenticated',
+    csrfToken: result.csrfToken,
+    eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
+    groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
+    eligibleRoles: activeParty?.eligibleRoles ?? null,
+    user,
+    activeOccupationId,
+    _lastAuthTimestamp: Date.now(),
+  })
+
+  // Sync server-side active association with client's selection.
+  // This ensures the API returns data for the correct association,
+  // especially after logout/re-login when the server's default
+  // may differ from the client's chosen occupation.
+  if (activeOccupationId) {
+    try {
+      await apiClient.switchRoleAndAttribute(activeOccupationId)
+    } catch (error) {
+      // Log but don't fail login - user can manually switch if needed
+      logger.warn('Failed to sync active association after login:', error)
+    }
+  }
+
+  return true
+}
+
+/**
+ * Ensures a session is established before fetching the login page.
+ *
+ * The Neos Flow framework may not create a session on GET /login, but requires
+ * the form's __trustedProperties to match the session state when submitting.
+ * If no session exists when the form is generated, but one is created during
+ * authentication, the HMAC validation fails.
+ *
+ * This function proactively establishes a session by fetching an authenticated
+ * endpoint (which triggers session creation even for unauthenticated users).
+ */
+async function ensureSessionEstablished(): Promise<void> {
+  if (getSessionToken()) {
+    return // Already have a session
+  }
+
+  // Fetch the dashboard endpoint to trigger session creation.
+  // The Neos Flow framework creates a session when handling authenticated routes,
+  // even if the user is redirected to login. We use redirect: "manual" to avoid
+  // following the redirect but still capture the session token from the response.
+  const response = await fetch(
+    `${API_BASE}/sportmanager.volleyball/main/dashboard`,
+    {
+      credentials: 'include',
+      cache: 'no-store',
+      redirect: 'manual',
+      headers: getSessionHeaders(),
+    }
+  )
+
+  captureSessionToken(response)
+
+  // If we still don't have a token, try fetching the login page itself.
+  // Some server configurations may set the session cookie on the login page.
+  if (!getSessionToken()) {
+    const loginResponse = await fetch(LOGIN_PAGE_URL, {
+      credentials: 'include',
+      cache: 'no-store',
+      headers: getSessionHeaders(),
+    })
+    captureSessionToken(loginResponse)
+  }
+}
+
+/**
+ * Fetches the login page with iOS Safari PWA session token handling.
+ * Ensures a session is established before fetching to guarantee the form's
+ * __trustedProperties is generated correctly for the session state.
+ *
+ * @returns The login page response with form fields for the established session
  * @throws Error if fetching the login page fails
  */
 async function fetchLoginPageWithSessionHandling(): Promise<Response> {
   const hadTokenBeforeRequest = !!getSessionToken()
 
+  // Proactively establish a session before fetching the login page.
+  // This ensures the form's __trustedProperties matches the session state
+  // when we submit credentials.
+  if (!hadTokenBeforeRequest) {
+    await ensureSessionEstablished()
+  }
+
   // cache: "no-store" is critical for iOS Safari PWA - prevents using stale cached cookies
   // See: https://developer.apple.com/forums/thread/89050
-  let response = await fetch(LOGIN_PAGE_URL, {
+  const response = await fetch(LOGIN_PAGE_URL, {
     credentials: 'include',
     cache: 'no-store',
     headers: getSessionHeaders(),
@@ -235,24 +342,6 @@ async function fetchLoginPageWithSessionHandling(): Promise<Response> {
   }
 
   captureSessionToken(response)
-
-  // iOS Safari PWA fix: If we didn't have a session token before this request
-  // but now we do, re-fetch the login page to ensure the form's __trustedProperties
-  // is generated for the established session. Without this, the first login after
-  // logout/fresh install fails because the session isn't fully recognized.
-  if (!hadTokenBeforeRequest && getSessionToken()) {
-    response = await fetch(LOGIN_PAGE_URL, {
-      credentials: 'include',
-      cache: 'no-store',
-      headers: getSessionHeaders(),
-    })
-
-    if (!response.ok) {
-      throw new Error('Failed to load login page')
-    }
-
-    captureSessionToken(response)
-  }
 
   return response
 }
@@ -381,47 +470,7 @@ export const useAuthStore = create<AuthState>()(
           const result = await submitLoginCredentials(AUTH_URL, username, password, formFields)
 
           if (result.success) {
-            // Parse activeParty from dashboard HTML after successful login
-            const activeParty = extractActivePartyFromHtml(result.dashboardHtml)
-            setCsrfToken(result.csrfToken)
-
-            const currentState = get()
-            const { user, activeOccupationId } = deriveUserWithOccupations(
-              activeParty,
-              currentState.user,
-              currentState.activeOccupationId
-            )
-
-            // Reject users without referee role - this app is for referees only
-            if (user.occupations.length === 0) {
-              return rejectNonRefereeUser(set)
-            }
-
-            set({
-              status: 'authenticated',
-              csrfToken: result.csrfToken,
-              eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
-              groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
-              eligibleRoles: activeParty?.eligibleRoles ?? null,
-              user,
-              activeOccupationId,
-              _lastAuthTimestamp: Date.now(),
-            })
-
-            // Sync server-side active association with client's selection.
-            // This ensures the API returns data for the correct association,
-            // especially after logout/re-login when the server's default
-            // may differ from the client's chosen occupation.
-            if (activeOccupationId) {
-              try {
-                await apiClient.switchRoleAndAttribute(activeOccupationId)
-              } catch (error) {
-                // Log but don't fail login - user can manually switch if needed
-                logger.warn('Failed to sync active association after login:', error)
-              }
-            }
-
-            return true
+            return handleSuccessfulLoginResult(result, get, set)
           }
 
           set({

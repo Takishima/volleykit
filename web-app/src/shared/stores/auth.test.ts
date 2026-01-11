@@ -10,12 +10,17 @@ const { mockSwitchRoleAndAttribute } = vi.hoisted(() => ({
   mockSwitchRoleAndAttribute: vi.fn(),
 }))
 
+// Track mock session token state for tests
+let mockSessionToken: string | null = null
+
 vi.mock('@/api/client', () => ({
   setCsrfToken: vi.fn(),
   clearSession: vi.fn(),
   captureSessionToken: vi.fn(),
-  getSessionHeaders: vi.fn(() => ({})),
-  getSessionToken: vi.fn(() => null),
+  getSessionHeaders: vi.fn(() =>
+    mockSessionToken ? { 'X-Session-Token': mockSessionToken } : {}
+  ),
+  getSessionToken: vi.fn(() => mockSessionToken),
   apiClient: {
     switchRoleAndAttribute: mockSwitchRoleAndAttribute,
   },
@@ -24,6 +29,7 @@ vi.mock('@/api/client', () => ({
 // Mock fetch
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
+
 
 // Helper to create mock Response with proper headers (for redirect: manual)
 function createMockResponse(options: {
@@ -174,11 +180,16 @@ describe('useAuthStore', () => {
     vi.useFakeTimers()
     // Default: switchRoleAndAttribute succeeds (login sync is best-effort)
     mockSwitchRoleAndAttribute.mockResolvedValue(undefined)
+    // Default: session token exists so ensureSessionEstablished returns early
+    // This prevents extra fetch calls in most tests
+    mockSessionToken = 'existing-session-token'
   })
 
   afterEach(() => {
     vi.resetAllMocks()
     vi.useRealTimers()
+    // Reset mock session token
+    mockSessionToken = null
   })
 
   describe('initial state', () => {
