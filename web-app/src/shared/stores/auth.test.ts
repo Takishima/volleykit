@@ -3,11 +3,19 @@ import { useAuthStore, NO_REFEREE_ROLE_ERROR_KEY } from "./auth";
 import { setCsrfToken, clearSession } from "@/api/client";
 
 // Mock the API client
+// Use vi.hoisted to ensure the mock function is defined before vi.mock hoists
+const { mockSwitchRoleAndAttribute } = vi.hoisted(() => ({
+  mockSwitchRoleAndAttribute: vi.fn(),
+}));
+
 vi.mock("@/api/client", () => ({
   setCsrfToken: vi.fn(),
   clearSession: vi.fn(),
   captureSessionToken: vi.fn(),
   getSessionHeaders: vi.fn(() => ({})),
+  apiClient: {
+    switchRoleAndAttribute: mockSwitchRoleAndAttribute,
+  },
 }));
 
 
@@ -162,6 +170,8 @@ describe("useAuthStore", () => {
     });
     vi.clearAllMocks();
     vi.useFakeTimers();
+    // Default: switchRoleAndAttribute succeeds (login sync is best-effort)
+    mockSwitchRoleAndAttribute.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -755,6 +765,100 @@ describe("useAuthStore", () => {
       const state = useAuthStore.getState();
       // The valid activeOccupationId should be preserved
       expect(state.activeOccupationId).toBe("attr-1");
+    });
+
+    it("syncs server-side active association after login", async () => {
+      // This test verifies that after login, the client calls switchRoleAndAttribute
+      // to sync the server with the client's chosen association.
+      // This fixes the bug where dropdown shows one association but data is from another.
+      const dashboardUrl = "/sportmanager.volleyball/main/dashboard";
+
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: createLoginPageHtml(),
+        })
+      );
+
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: false,
+          status: 303,
+          headers: { Location: dashboardUrl },
+        })
+      );
+
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: createDashboardHtmlWithReferee("valid-csrf-token"),
+        })
+      );
+
+      // Reset the mock to track calls
+      mockSwitchRoleAndAttribute.mockClear();
+      mockSwitchRoleAndAttribute.mockResolvedValueOnce(undefined);
+
+      const resultPromise = useAuthStore.getState().login("referee-user", "pass");
+      await vi.advanceTimersByTimeAsync(100);
+      const result = await resultPromise;
+
+      expect(result).toBe(true);
+      // Verify that switchRoleAndAttribute was called with the activeOccupationId
+      expect(mockSwitchRoleAndAttribute).toHaveBeenCalledTimes(1);
+      expect(mockSwitchRoleAndAttribute).toHaveBeenCalledWith(
+        useAuthStore.getState().activeOccupationId
+      );
+    });
+
+    it("continues login successfully even if association sync fails", async () => {
+      // The association sync is a best-effort operation - login should succeed
+      // even if switchRoleAndAttribute fails
+      const dashboardUrl = "/sportmanager.volleyball/main/dashboard";
+
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: createLoginPageHtml(),
+        })
+      );
+
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: false,
+          status: 303,
+          headers: { Location: dashboardUrl },
+        })
+      );
+
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          body: createDashboardHtmlWithReferee("valid-csrf-token"),
+        })
+      );
+
+      // Mock switchRoleAndAttribute to fail
+      mockSwitchRoleAndAttribute.mockClear();
+      mockSwitchRoleAndAttribute.mockRejectedValueOnce(new Error("Network error"));
+
+      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      const resultPromise = useAuthStore.getState().login("referee-user", "pass");
+      await vi.advanceTimersByTimeAsync(100);
+      const result = await resultPromise;
+
+      // Login should still succeed
+      expect(result).toBe(true);
+      expect(useAuthStore.getState().status).toBe("authenticated");
+      // The error should be logged but not thrown
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "[VolleyKit][App]",
+        "Failed to sync active association after login:",
+        expect.any(Error)
+      );
+
+      consoleSpy.mockRestore();
     });
   });
 

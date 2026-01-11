@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { setCsrfToken, clearSession, captureSessionToken, getSessionHeaders } from "@/api/client";
+import { setCsrfToken, clearSession, captureSessionToken, getSessionHeaders, apiClient } from "@/api/client";
 import {
   filterRefereeOccupations,
   parseOccupationsFromActiveParty,
@@ -320,6 +320,20 @@ export const useAuthStore = create<AuthState>()(
               activeOccupationId,
               _lastAuthTimestamp: Date.now(),
             });
+
+            // Sync server-side active association with client's selection.
+            // This ensures the API returns data for the correct association,
+            // especially after logout/re-login when the server's default
+            // may differ from the client's chosen occupation.
+            if (activeOccupationId) {
+              try {
+                await apiClient.switchRoleAndAttribute(activeOccupationId);
+              } catch (error) {
+                // Log but don't fail login - user can manually switch if needed
+                logger.warn("Failed to sync active association after login:", error);
+              }
+            }
+
             return true;
           }
 
@@ -357,6 +371,20 @@ export const useAuthStore = create<AuthState>()(
               activeOccupationId,
               _lastAuthTimestamp: Date.now(),
             });
+
+            // Sync server-side active association with client's selection.
+            // This ensures the API returns data for the correct association,
+            // especially after logout/re-login when the server's default
+            // may differ from the client's chosen occupation.
+            if (activeOccupationId) {
+              try {
+                await apiClient.switchRoleAndAttribute(activeOccupationId);
+              } catch (error) {
+                // Log but don't fail login - user can manually switch if needed
+                logger.warn("Failed to sync active association after login:", error);
+              }
+            }
+
             return true;
           }
 
