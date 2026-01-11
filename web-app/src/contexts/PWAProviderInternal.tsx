@@ -42,6 +42,24 @@ export default function PWAProviderInternal({
   // Ref-based guard to prevent duplicate concurrent update checks
   const isCheckingRef = useRef(false);
 
+  // Check for updates when the app becomes visible again (e.g., reopening PWA on iOS).
+  // iOS Safari PWAs resume from a suspended state rather than reloading, so the
+  // service worker update check on page load doesn't run. This ensures users
+  // see update prompts when returning to the app after a new version is deployed.
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && registrationRef.current) {
+        registrationRef.current.update();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
   useEffect(() => {
     // Cancellation flag pattern for async operations in React 18+.
     // While React 18 safely handles setState on unmounted components (no-op instead of warning),

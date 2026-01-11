@@ -560,6 +560,128 @@ describe("PWAContext", () => {
     });
   });
 
+  describe("visibilitychange update check", () => {
+    it("checks for updates when app becomes visible (iOS PWA resume)", async () => {
+      const mockRegistration = {
+        update: vi.fn().mockResolvedValue(undefined),
+      };
+
+      let onRegisteredSWCallback:
+        | ((url: string, reg: ServiceWorkerRegistration) => void)
+        | undefined;
+      const mockRegisterSW = vi.fn((options) => {
+        onRegisteredSWCallback = options?.onRegisteredSW;
+        return vi.fn();
+      });
+      const { registerSW } = await import("virtual:pwa-register");
+      vi.mocked(registerSW).mockImplementation(mockRegisterSW);
+
+      render(
+        <PWAProvider>
+          <TestConsumer />
+        </PWAProvider>,
+      );
+
+      await waitFor(() => {
+        expect(onRegisteredSWCallback).toBeDefined();
+      });
+
+      // Simulate registration
+      act(() => {
+        onRegisteredSWCallback?.(
+          "sw.js",
+          mockRegistration as unknown as ServiceWorkerRegistration,
+        );
+      });
+
+      // Clear any initial calls
+      mockRegistration.update.mockClear();
+
+      // Simulate visibility change to visible
+      Object.defineProperty(document, "visibilityState", {
+        value: "visible",
+        writable: true,
+      });
+      act(() => {
+        document.dispatchEvent(new Event("visibilitychange"));
+      });
+
+      expect(mockRegistration.update).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not check for updates when app becomes hidden", async () => {
+      const mockRegistration = {
+        update: vi.fn().mockResolvedValue(undefined),
+      };
+
+      let onRegisteredSWCallback:
+        | ((url: string, reg: ServiceWorkerRegistration) => void)
+        | undefined;
+      const mockRegisterSW = vi.fn((options) => {
+        onRegisteredSWCallback = options?.onRegisteredSW;
+        return vi.fn();
+      });
+      const { registerSW } = await import("virtual:pwa-register");
+      vi.mocked(registerSW).mockImplementation(mockRegisterSW);
+
+      render(
+        <PWAProvider>
+          <TestConsumer />
+        </PWAProvider>,
+      );
+
+      await waitFor(() => {
+        expect(onRegisteredSWCallback).toBeDefined();
+      });
+
+      act(() => {
+        onRegisteredSWCallback?.(
+          "sw.js",
+          mockRegistration as unknown as ServiceWorkerRegistration,
+        );
+      });
+
+      mockRegistration.update.mockClear();
+
+      // Simulate visibility change to hidden
+      Object.defineProperty(document, "visibilityState", {
+        value: "hidden",
+        writable: true,
+      });
+      act(() => {
+        document.dispatchEvent(new Event("visibilitychange"));
+      });
+
+      expect(mockRegistration.update).not.toHaveBeenCalled();
+    });
+
+    it("removes visibilitychange listener on unmount", async () => {
+      const removeEventListenerSpy = vi.spyOn(document, "removeEventListener");
+      const mockRegisterSW = vi.fn().mockReturnValue(vi.fn());
+      const { registerSW } = await import("virtual:pwa-register");
+      vi.mocked(registerSW).mockImplementation(mockRegisterSW);
+
+      const { unmount } = render(
+        <PWAProvider>
+          <TestConsumer />
+        </PWAProvider>,
+      );
+
+      await waitFor(() => {
+        expect(mockRegisterSW).toHaveBeenCalled();
+      });
+
+      unmount();
+
+      expect(removeEventListenerSpy).toHaveBeenCalledWith(
+        "visibilitychange",
+        expect.any(Function),
+      );
+
+      removeEventListenerSpy.mockRestore();
+    });
+  });
+
   describe("updateApp", () => {
     it("logs warning when SW is not ready", async () => {
       const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
