@@ -187,6 +187,11 @@ const it: Translations = {
     accountLocked: 'Account temporaneamente bloccato',
     lockoutRemainingTime: 'Riprova tra',
     lockoutSeconds: 'secondi',
+    updateRequired: 'Aggiornamento richiesto',
+    updateRequiredDescription:
+      'È disponibile una nuova versione. Aggiorna prima di accedere per evitare errori.',
+    updateNow: 'Aggiorna ora',
+    updating: 'Aggiornamento...',
   },
   calendarError: {
     title: 'Errore calendario',

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- PWA login page now shows prominent update banner when a new version is available - previously users could attempt login with stale cached code, causing confusing username/password errors; the banner prompts users to update before logging in
 - Compensation update API now sends `__identity` nested inside `convocationCompensation` object, matching the format expected by the VolleyManager API - this fixes 500 errors when saving compensation edits
 - Compensation API calls now work correctly when editing from the Assignments tab - the hook was incorrectly using the global `api` object instead of the data-source-aware `getApiClient()`, which could cause issues in calendar mode
 - Compensation edits now show error toast when save fails - previously, failed API calls were silently swallowed and the modal closed without feedback (#714)
