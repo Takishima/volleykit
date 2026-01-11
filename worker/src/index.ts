@@ -742,11 +742,6 @@ export default {
       const lockoutStatus = checkLockoutStatus(lockoutState);
 
       if (lockoutStatus.isLocked) {
-        console.log("[Auth Lockout] Blocked locked-out IP:", {
-          ip: clientIP,
-          remainingSeconds: lockoutStatus.remainingSeconds,
-          failedAttempts: lockoutStatus.failedAttempts,
-        });
         return new Response(
           JSON.stringify({
             error: "Too many failed login attempts",
@@ -905,17 +900,9 @@ export default {
         if (isSuccess) {
           // Clear lockout on successful login
           await clearAuthLockout(env.AUTH_LOCKOUT, clientIP);
-          console.log("[Auth Lockout] Cleared lockout for IP:", clientIP);
         } else if (isFailed) {
           // Record failed attempt
-          const result = await recordFailedAttempt(env.AUTH_LOCKOUT, clientIP);
-          console.log("[Auth Lockout] Recorded failed attempt:", {
-            ip: clientIP,
-            failedAttempts: result.failedAttempts,
-            attemptsRemaining: result.attemptsRemaining,
-            isLocked: result.isLocked,
-            remainingSeconds: result.remainingSeconds,
-          });
+          await recordFailedAttempt(env.AUTH_LOCKOUT, clientIP);
         }
       }
 
@@ -1031,13 +1018,6 @@ export default {
                 isAuthReq && request.method === "POST"
                   ? isSuccessfulLoginResponse(response)
                   : true; // Session capture requests are informational
-              console.log("[iOS PWA] Converting redirect to JSON:", {
-                originalStatus: response.status,
-                location: location,
-                redirectUrl: proxyRedirect.toString(),
-                isSuccess,
-                reason: wantsSessionCapture ? "session-capture" : "auth-post",
-              });
               responseHeaders.set("Content-Type", "application/json");
               responseHeaders.delete("Location"); // Remove redirect header
               return new Response(
