@@ -401,6 +401,9 @@ export interface paths {
          * Update convocation compensation
          * @description Updates the compensation settings for a convocation.
          *     Used by the "Editer les frais et l'indemnité" dialog save action.
+         *
+         *     IMPORTANT: The `__identity` field must be nested inside `convocationCompensation`,
+         *     not at the root level. Example: `convocationCompensation[__identity]=uuid`
          */
         put: operations["updateConvocationCompensation"];
         post?: never;
@@ -4983,10 +4986,20 @@ export interface operations {
                 "application/x-www-form-urlencoded": {
                     /**
                      * Format: uuid
-                     * @description The compensation record identifier
+                     * @description The compensation record identifier (nested inside convocationCompensation)
                      * @example cccccccc-cccc-cccc-cccc-cccccccccccc
                      */
-                    __identity: string;
+                    "convocationCompensation[__identity]": string;
+                    /**
+                     * @description Distance in metres for travel expense calculation
+                     * @example 56000
+                     */
+                    "convocationCompensation[distanceInMetres]"?: number;
+                    /**
+                     * @description Reason for any correction to the compensation
+                     * @example Ich wohne in Oberengstringen
+                     */
+                    "convocationCompensation[correctionReason]"?: string;
                     /**
                      * @description Whether travel expenses should be paid
                      * @enum {string}
