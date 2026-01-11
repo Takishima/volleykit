@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `/pr-review` command for Claude Code - creates PR and automatically addresses Claude Code Review comments after 2-minute wait
 - Automated release workflow with semantic version auto-detection from changelog
 - PWA standalone mode detection - Settings now displays "PWA" instead of "Web" when running as installed app (#687)
 
