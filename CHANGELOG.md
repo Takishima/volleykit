@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - OCR POC now displays parsed roster data instead of comparing against dummy data, for debugging OCR recognition issues
+- Claude Code `/review` command now includes changelog status check
+- CLAUDE.md workflow now explicitly lists changelog update as step 2 before commit
+- Definition of Done moved changelog requirement to position 2 with clearer instructions
 
 ### Fixed
 

@@ -30,8 +30,9 @@ For code reviews and detailed examples, see:
 
 **Workflow**:
 1. **Implement features/fixes** - Complete the work as required
-2. **Commit** - The pre-commit hook automatically validates before allowing the commit
-3. **Push** - Push your changes to the remote
+2. **Update CHANGELOG.md** - Add entry to `[Unreleased]` section for any `feat:` or `fix:` changes (see [Changelog Maintenance](#changelog-maintenance-claude-instructions))
+3. **Commit** - The pre-commit hook automatically validates before allowing the commit
+4. **Push** - Push your changes to the remote
 
 ### Automatic Pre-Commit Validation (Claude Code Web Only)
 
@@ -67,14 +68,14 @@ npm run build         # Production build (includes tsc)
 
 ### Claude Code Post-Push Hooks (Claude Code Web Only)
 
-After a successful `git push`, these hooks run automatically in Claude Code web sessions:
+After a successful `git push`, these hooks run automatically in Claude Code web sessions. **IMPORTANT**: When these hooks return a `"decision": "block"` response, Claude MUST follow the instructions in the `reason` field immediately and autonomously.
 
 1. **post-git-push.sh** - Generates PR links or updates existing PRs
    - If no PR exists: Outputs a clickable link to create one
    - If PR exists: Updates title/body via GitHub API (when `GITHUB_TOKEN` available)
 
 2. **address-pr-reviews.sh** - Automatically addresses PR review comments
-   - Waits 2 minutes after push for review workflow to complete
+   - **Claude MUST**: Wait 2 minutes (`sleep 120`), then fetch and address review comments
    - Fetches Claude Code Review comments from `claude[bot]`
    - Parses "Issues Found" section and addresses each issue
    - Creates a single `fix(review):` commit with all fixes
@@ -86,10 +87,12 @@ After a successful `git push`, these hooks run automatically in Claude Code web 
 
 3. **address-pr-reviews-on-create.sh** - Addresses reviews when PR is created
    - Triggers when a new PR is created via GitHub API (curl POST to /pulls)
-   - Same 2-minute wait and review-addressing behavior as above
+   - **Claude MUST**: Wait 2 minutes, then fetch and address review comments (same as above)
    - Shares state file with push hook to prevent duplicate processing
 
 The hooks are configured in `.claude/settings.json` and state is tracked in `.claude/.state/` (gitignored).
+
+**Hook Response Format**: Hooks return JSON with `decision` and `reason` fields. When `decision` is `"block"`, Claude must parse the `reason` field and execute the instructions contained within it.
 
 ## Tech Stack
 
@@ -634,12 +637,12 @@ ESLint plugin `jsx-a11y` enforces many accessibility rules.
 ## Definition of Done
 
 1. Implementation follows React/TypeScript best practices
-1. Unit tests cover business logic and interactions
-1. E2E tests added for critical user flows (if applicable)
-1. Translations added for all 4 languages (de, en, fr, it)
-1. **Changelog updated** with `BREAKING:` prefix for breaking changes (see [Semantic Versioning & Changelog](#semantic-versioning--changelog))
-1. **All validation phases pass before push** (lint, knip, test, build - see [AI Development Workflow](#ai-development-workflow))
-1. Bundle size limits not exceeded
-1. Works across modern browsers (Chrome, Firefox, Safari)
-1. Accessible (keyboard navigation, screen reader compatible)
-1. No ESLint warnings (`--max-warnings 0`)
+2. **CHANGELOG.md updated** - Required for `feat:` and `fix:` commits. Add entry to `[Unreleased]` section with PR number. Use `BREAKING:` prefix for breaking changes. (see [Changelog Maintenance](#changelog-maintenance-claude-instructions))
+3. Unit tests cover business logic and interactions
+4. E2E tests added for critical user flows (if applicable)
+5. Translations added for all 4 languages (de, en, fr, it)
+6. **All validation phases pass before push** (lint, knip, test, build - see [AI Development Workflow](#ai-development-workflow))
+7. Bundle size limits not exceeded
+8. Works across modern browsers (Chrome, Firefox, Safari)
+9. Accessible (keyboard navigation, screen reader compatible)
+10. No ESLint warnings (`--max-warnings 0`)
