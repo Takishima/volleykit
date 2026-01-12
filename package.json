@@ -1,0 +1,14 @@
+{
+  "//": "Root package for changesets tooling. App dependencies belong in web-app/package.json",
+  "name": "volleykit",
+  "private": true,
+  "scripts": {
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:status": "changeset status"
+  },
+  "devDependencies": {
+    "@changesets/changelog-github": "^0.5.2",
+    "@changesets/cli": "^2.29.8"
+  }
+}
