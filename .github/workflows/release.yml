@@ -3,16 +3,6 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
-      version_type:
-        description: 'Version bump type (leave as "auto" to detect from changelog)'
-        required: true
-        type: choice
-        default: auto
-        options:
-          - auto
-          - patch
-          - minor
-          - major
       dry_run:
         description: 'Dry run (preview changes without committing)'
         required: false
@@ -62,7 +52,8 @@ jobs:
     needs: validate
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.changelog.outputs.version }}
+      version: ${{ steps.get_version.outputs.version }}
+      released: ${{ steps.get_version.outputs.released }}
     steps:
       - name: Verify RELEASE_TOKEN is configured
         env:
@@ -80,9 +71,6 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          # Use RELEASE_TOKEN to bypass branch protection rules
-          # GITHUB_TOKEN cannot bypass protections even with contents:write
-          # See: https://docs.github.com/en/actions/security-for-github-actions/security-guides/automatic-token-authentication#granting-additional-permissions
           token: ${{ secrets.RELEASE_TOKEN }}
 
       - name: Setup Node.js
@@ -90,97 +78,73 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Install dependencies
+        working-directory: web-app
+        run: npm ci
+
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Detect version type from changelog
-        id: detect
-        if: ${{ inputs.version_type == 'auto' }}
+      - name: Check for changesets
+        id: check_changesets
         run: |
-          # Extract content between [Unreleased] and the next version header
-          UNRELEASED=$(sed -n '/^## \[Unreleased\]/,/^## \[/p' CHANGELOG.md | sed '1d;$d')
+          # Count changeset files (excluding config.json and README.md)
+          CHANGESET_COUNT=$(find .changeset -name "*.md" ! -name "README.md" | wc -l)
+          echo "changeset_count=$CHANGESET_COUNT" >> "$GITHUB_OUTPUT"
 
-          if [ -z "$(echo "$UNRELEASED" | sed '/^$/d')" ]; then
-            echo "::error::No unreleased changes found in CHANGELOG.md"
-            exit 1
-          fi
-
-          # Detect version bump type from changelog content
-          # Priority: BREAKING > Added > everything else
-
-          # Check for breaking changes (BREAKING: or [BREAKING] markers)
-          if echo "$UNRELEASED" | grep -qiE '(BREAKING:|BREAKING CHANGE:|\[BREAKING\])'; then
-            echo "type=major" >> "$GITHUB_OUTPUT"
-            echo "Detected: MAJOR (breaking changes found)"
-          # Check for new features (### Added section with content)
-          elif echo "$UNRELEASED" | sed -n '/^### Added/,/^### /p' | grep -qE '^- '; then
-            echo "type=minor" >> "$GITHUB_OUTPUT"
-            echo "Detected: MINOR (new features in Added section)"
-          # Default to patch (bug fixes, changes, etc.)
+          if [ "$CHANGESET_COUNT" -eq 0 ]; then
+            echo "::warning::No changesets found. Nothing to release."
           else
-            echo "type=patch" >> "$GITHUB_OUTPUT"
-            echo "Detected: PATCH (bug fixes or minor changes)"
+            echo "Found $CHANGESET_COUNT changeset(s)"
           fi
 
-      - name: Determine version type
-        id: version_type
-        run: |
-          if [ "${{ inputs.version_type }}" = "auto" ]; then
-            echo "type=${{ steps.detect.outputs.type }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "type=${{ inputs.version_type }}" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Update changelog
-        id: changelog
-        uses: release-flow/keep-a-changelog-action@v3
-        with:
-          command: bump
-          version: ${{ steps.version_type.outputs.type }}
-          tag-prefix: v
-          keep-unreleased-section: true
-          fail-on-empty-release-notes: true
-
-      - name: Update package.json and package-lock.json
+      - name: Version packages (Changesets)
+        if: steps.check_changesets.outputs.changeset_count != '0'
         working-directory: web-app
         env:
-          NEW_VERSION: ${{ steps.changelog.outputs.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Updating package.json to version $NEW_VERSION"
-          npm version "$NEW_VERSION" --no-git-tag-version --allow-same-version
-          npm install --package-lock-only
+          # Run changeset version to:
+          # - Combine all changesets into CHANGELOG.md
+          # - Bump version in package.json
+          # - Delete changeset files
+          npx changeset version
 
-      - name: Verify versions match
-        env:
-          CHANGELOG_VERSION: ${{ steps.changelog.outputs.version }}
+      - name: Get new version
+        id: get_version
         run: |
-          PACKAGE_VERSION=$(node -p "require('./web-app/package.json').version")
-          LOCK_VERSION=$(node -p "require('./web-app/package-lock.json').version")
-
-          echo "Changelog version: $CHANGELOG_VERSION"
-          echo "package.json version: $PACKAGE_VERSION"
-          echo "package-lock.json version: $LOCK_VERSION"
-
-          if [ "$CHANGELOG_VERSION" != "$PACKAGE_VERSION" ]; then
-            echo "::error::Version mismatch: changelog=$CHANGELOG_VERSION, package.json=$PACKAGE_VERSION"
-            exit 1
+          if [ "${{ steps.check_changesets.outputs.changeset_count }}" -eq 0 ]; then
+            echo "released=false" >> "$GITHUB_OUTPUT"
+            echo "version=" >> "$GITHUB_OUTPUT"
+          else
+            VERSION=$(node -p "require('./web-app/package.json').version")
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+            echo "released=true" >> "$GITHUB_OUTPUT"
+            echo "New version: $VERSION"
           fi
 
-          if [ "$CHANGELOG_VERSION" != "$LOCK_VERSION" ]; then
-            echo "::error::Version mismatch: changelog=$CHANGELOG_VERSION, package-lock.json=$LOCK_VERSION"
-            exit 1
-          fi
+      - name: Extract release notes
+        if: steps.get_version.outputs.released == 'true'
+        id: release_notes
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
 
-          echo "All versions match: $CHANGELOG_VERSION"
+          # Extract content between the new version header and the next version header
+          # This gets the release notes for the version we're releasing
+          NOTES=$(sed -n "/^## \[$VERSION\]/,/^## \[/p" CHANGELOG.md | sed '1d;$d')
+
+          # Write to file for GitHub release
+          echo "$NOTES" > /tmp/release_notes.md
+
+          echo "Release notes extracted for v$VERSION"
 
       - name: Show changes (dry run)
-        if: ${{ inputs.dry_run }}
+        if: inputs.dry_run && steps.get_version.outputs.released == 'true'
         run: |
           echo "=== Version bump ==="
-          echo "Type: ${{ steps.version_type.outputs.type }}"
-          echo "New version: ${{ steps.changelog.outputs.version }}"
+          echo "New version: ${{ steps.get_version.outputs.version }}"
           echo ""
           echo "=== CHANGELOG.md changes ==="
           git diff CHANGELOG.md
@@ -189,69 +153,62 @@ jobs:
           git diff web-app/package.json
           echo ""
           echo "=== Release notes ==="
-          cat << 'RELEASE_NOTES'
-          ${{ steps.changelog.outputs.release-notes }}
-          RELEASE_NOTES
+          cat /tmp/release_notes.md
           echo ""
-          echo "=== Would create tag: v${{ steps.changelog.outputs.version }} ==="
+          echo "=== Would create tag: v${{ steps.get_version.outputs.version }} ==="
 
       - name: Commit changes
-        if: ${{ !inputs.dry_run }}
+        if: ${{ !inputs.dry_run && steps.get_version.outputs.released == 'true' }}
         run: |
-          git add CHANGELOG.md web-app/package.json web-app/package-lock.json
+          git add .
           git commit -m "$(cat <<'EOF'
-          chore(release): prepare v${{ steps.changelog.outputs.version }} release
+          chore(release): prepare v${{ steps.get_version.outputs.version }} release
           EOF
           )"
 
       - name: Create tag
-        if: ${{ !inputs.dry_run }}
-        run: git tag -a "v${{ steps.changelog.outputs.version }}" -m "Release v${{ steps.changelog.outputs.version }}"
+        if: ${{ !inputs.dry_run && steps.get_version.outputs.released == 'true' }}
+        run: git tag -a "v${{ steps.get_version.outputs.version }}" -m "Release v${{ steps.get_version.outputs.version }}"
 
       - name: Push changes
-        if: ${{ !inputs.dry_run }}
+        if: ${{ !inputs.dry_run && steps.get_version.outputs.released == 'true' }}
         run: |
           git push origin ${{ github.event.repository.default_branch }}
-          git push origin "v${{ steps.changelog.outputs.version }}"
+          git push origin "v${{ steps.get_version.outputs.version }}"
 
       - name: Create GitHub Release
-        if: ${{ !inputs.dry_run }}
+        if: ${{ !inputs.dry_run && steps.get_version.outputs.released == 'true' }}
         env:
           GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: |
-          cat << 'RELEASE_NOTES' > /tmp/release_notes.md
-          ${{ steps.changelog.outputs.release-notes }}
-          RELEASE_NOTES
-
-          gh release create "v${{ steps.changelog.outputs.version }}" \
-            --title "v${{ steps.changelog.outputs.version }}" \
+          gh release create "v${{ steps.get_version.outputs.version }}" \
+            --title "v${{ steps.get_version.outputs.version }}" \
             --notes-file /tmp/release_notes.md
 
       - name: Summary
         run: |
-          VERSION="${{ steps.changelog.outputs.version }}"
-          TYPE="${{ steps.version_type.outputs.type }}"
+          VERSION="${{ steps.get_version.outputs.version }}"
+          RELEASED="${{ steps.get_version.outputs.released }}"
 
-          if [ "${{ inputs.dry_run }}" = "true" ]; then
+          if [ "$RELEASED" != "true" ]; then
+            echo "## No Release" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "No changesets found. Nothing to release." >> "$GITHUB_STEP_SUMMARY"
+          elif [ "${{ inputs.dry_run }}" = "true" ]; then
             echo "## Dry Run Complete" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo "| Property | Value |" >> "$GITHUB_STEP_SUMMARY"
             echo "|----------|-------|" >> "$GITHUB_STEP_SUMMARY"
-            echo "| Version type | $TYPE |" >> "$GITHUB_STEP_SUMMARY"
             echo "| New version | v$VERSION |" >> "$GITHUB_STEP_SUMMARY"
-            echo "| Auto-detected | ${{ inputs.version_type == 'auto' && 'Yes' || 'No' }} |" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo "### Release Notes Preview" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
-            cat << 'RELEASE_NOTES' >> "$GITHUB_STEP_SUMMARY"
-          ${{ steps.changelog.outputs.release-notes }}
-          RELEASE_NOTES
+            cat /tmp/release_notes.md >> "$GITHUB_STEP_SUMMARY"
           else
             echo "## Release Complete" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo "| Property | Value |" >> "$GITHUB_STEP_SUMMARY"
             echo "|----------|-------|" >> "$GITHUB_STEP_SUMMARY"
-            echo "| Version type | $TYPE |" >> "$GITHUB_STEP_SUMMARY"
             echo "| New version | v$VERSION |" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo "[View Release](https://github.com/${{ github.repository }}/releases/tag/v$VERSION)" >> "$GITHUB_STEP_SUMMARY"

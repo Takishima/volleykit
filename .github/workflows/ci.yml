@@ -9,6 +9,7 @@ on:
   pull_request:
     paths:
       - 'web-app/**'
+      - '.changeset/**'
       - '.github/workflows/ci.yml'
       - '.github/actions/**'
 
@@ -28,6 +29,7 @@ on:
 #                              └──> lighthouse        │
 #                                                     │
 #   audit (independent) ──────────────────────────────┘
+#   changeset (PR only, independent) ─────────────────┘
 #
 # Key Design Decisions:
 # - setup job generates API types ONCE, shared via artifact to avoid 4x generation
@@ -356,3 +358,57 @@ jobs:
         with:
           uploadArtifacts: true
           configPath: ./web-app/lighthouserc.json
+
+  # Changeset check - ensures PRs include changelog entries
+  # Only runs on PRs, reports missing changesets (informational)
+  changeset:
+    name: Changeset
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install changeset CLI
+        run: npm install -g @changesets/cli
+
+      - name: Check for changesets
+        id: changeset_check
+        run: |
+          # Count changeset files (excluding config.json and README.md)
+          CHANGESET_COUNT=$(find .changeset -name "*.md" ! -name "README.md" 2>/dev/null | wc -l)
+
+          if [ "$CHANGESET_COUNT" -eq 0 ]; then
+            echo "has_changeset=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::No changeset found. If this PR includes user-facing changes, please run 'npx changeset' to add a changelog entry."
+          else
+            echo "has_changeset=true" >> "$GITHUB_OUTPUT"
+            echo "Found $CHANGESET_COUNT changeset(s)"
+          fi
+
+      - name: Summary
+        run: |
+          if [ "${{ steps.changeset_check.outputs.has_changeset }}" = "true" ]; then
+            echo "## Changeset Found" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "This PR includes changelog entries." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "## No Changeset" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "This PR does not include a changeset." >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "If this PR includes user-facing changes (features, fixes), please add a changeset:" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo '```bash' >> "$GITHUB_STEP_SUMMARY"
+            echo 'npx changeset' >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "If this PR is docs-only or internal, no changeset is needed." >> "$GITHUB_STEP_SUMMARY"
+          fi

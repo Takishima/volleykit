@@ -30,7 +30,7 @@ For code reviews and detailed examples, see:
 
 **Workflow**:
 1. **Implement features/fixes** - Complete the work as required
-2. **Update CHANGELOG.md** - Add entry to `[Unreleased]` section for any `feat:` or `fix:` changes (see [Changelog Maintenance](#changelog-maintenance-claude-instructions))
+2. **Add changeset** - For any `feat:` or `fix:` changes, run `npx changeset` to create a changelog entry (see [Adding Changesets](#adding-changesets-claude-instructions))
 3. **Commit** - The pre-commit hook automatically validates before allowing the commit
 4. **Push** - Push your changes to the remote
 
@@ -108,6 +108,10 @@ The project uses a **feature-based folder structure** for clear domain boundarie
 
 ```
 volleykit/
+├── .changeset/                 # Changelog staging (Changesets)
+│   ├── config.json            # Changesets configuration
+│   ├── README.md              # Instructions for adding changesets
+│   └── *.md                   # Pending changelog entries
 ├── web-app/                    # React PWA
 │   ├── e2e/                   # Playwright E2E tests
 │   │   ├── *.spec.ts          # Test specifications
@@ -445,7 +449,7 @@ npm run generate:api  # Generates src/api/schema.ts from OpenAPI spec
 
 ## Semantic Versioning & Changelog
 
-This project uses [Semantic Versioning](https://semver.org/) and maintains a [Changelog](CHANGELOG.md) following [Keep a Changelog](https://keepachangelog.com/) format.
+This project uses [Semantic Versioning](https://semver.org/) and [Changesets](https://github.com/changesets/changesets) for changelog management. The changelog follows [Keep a Changelog](https://keepachangelog.com/) format.
 
 ### Version Format: MAJOR.MINOR.PATCH
 
@@ -453,49 +457,53 @@ This project uses [Semantic Versioning](https://semver.org/) and maintains a [Ch
 - **MINOR**: New backwards-compatible features (e.g., new pages, settings, enhancements)
 - **PATCH**: Bug fixes and minor improvements (e.g., fixes, performance, translations)
 
-### Changelog Maintenance (Claude Instructions)
+### Adding Changesets (Claude Instructions)
 
-**When to update the changelog**:
+Changesets are stored as individual markdown files in `.changeset/` directory. This avoids merge conflicts when multiple PRs modify the changelog.
+
+**When to add a changeset**:
 - After implementing a new feature (`feat:` commits)
 - After fixing a bug (`fix:` commits)
 - After making breaking changes
 - After security-related changes
 
-**How to update**:
-1. Add entries to the `[Unreleased]` section in `CHANGELOG.md`
-2. Use the appropriate subsection: Added, Changed, Deprecated, Removed, Fixed, Security
-3. Include the PR/issue number: `- Description of change (#123)`
-4. Write user-facing descriptions (what users will notice, not implementation details)
-5. **For breaking changes**: Prefix the entry with `BREAKING:` (see below)
+**How to add a changeset**:
 
-**Entry format**:
-```markdown
-### Added
-- Calendar export to Google Calendar and Apple Calendar (#123)
-
-### Fixed
-- Assignment dates now display correctly in all timezones (#126)
-
-### Changed
-- BREAKING: Authentication now requires email instead of username (#130)
+```bash
+cd web-app
+npx changeset
 ```
 
-**Breaking change markers** (triggers MAJOR version bump):
-- `BREAKING:` - Prefix for breaking changes
-- `BREAKING CHANGE:` - Alternative prefix
-- `[BREAKING]` - Inline marker
+This interactive command will prompt you to:
+1. Select the version bump type (`major`, `minor`, or `patch`)
+2. Write a description of your changes
 
-**What counts as a breaking change** (use `BREAKING:` prefix):
+**Alternatively, create a changeset file manually** in `.changeset/`:
+
+```markdown
+---
+"volleykit-web": patch
+---
+
+Fixed PDF download for compensation statements - MIME type validation is now case-insensitive
+```
+
+**Version bump guidelines**:
+- **patch**: Bug fixes, performance improvements, internal refactoring
+- **minor**: New features, enhancements (backwards-compatible)
+- **major**: Breaking changes that require user action
+
+**What counts as a breaking change** (use `major`):
 - Removing or renaming public APIs, components, or props
 - Changing authentication or authorization flows
 - Removing features users depend on
 - Changing data formats that affect stored data
 - Requiring user action after update (re-login, clear cache, etc.)
 
-The release workflow auto-detects the version bump type:
-- **MAJOR**: Any entry contains `BREAKING:`, `BREAKING CHANGE:`, or `[BREAKING]`
-- **MINOR**: `### Added` section has entries (new features)
-- **PATCH**: Only `### Fixed`, `### Changed`, etc. without breaking markers
+**Changeset description guidelines**:
+- Write user-facing descriptions (what users will notice, not implementation details)
+- Be concise but descriptive
+- No need to include PR numbers (added automatically by GitHub integration)
 
 ### PWA Version Display
 
@@ -512,37 +520,35 @@ Releases are fully automated via the **Release workflow** (`.github/workflows/re
 **To create a release**:
 1. Go to **Actions** > **Release** workflow in GitHub
 2. Click **Run workflow**
-3. Leave version type as `auto` (recommended) or manually select:
-   - `auto` - **Automatically detects** from changelog content (default)
-   - `patch` - Bug fixes (1.0.0 -> 1.0.1)
-   - `minor` - New features (1.0.0 -> 1.1.0)
-   - `major` - Breaking changes (1.0.0 -> 2.0.0)
-4. Optionally enable **Dry run** to preview changes without committing
-
-**Auto-detection rules** (from changelog content):
-- **MAJOR**: Entry contains `BREAKING:`, `BREAKING CHANGE:`, or `[BREAKING]`
-- **MINOR**: `### Added` section has entries
-- **PATCH**: Only fixes, changes, or other non-breaking updates
+3. Optionally enable **Dry run** to preview changes without committing
 
 **What the workflow does**:
 1. Validates the codebase (lint, test, build)
-2. Auto-detects version bump type from changelog (or uses manual selection)
-3. Updates CHANGELOG.md using [keep-a-changelog-action](https://github.com/release-flow/keep-a-changelog-action):
-   - Moves `[Unreleased]` entries to new version section
-   - Updates comparison links
-   - Outputs the new version number
-4. Updates `web-app/package.json` and `package-lock.json` with the **same version**
-5. Verifies all three files have matching versions (fails if mismatch)
-6. Creates commit: `chore(release): prepare vX.Y.Z release`
-7. Creates git tag: `vX.Y.Z`
-8. Creates GitHub Release with changelog excerpt
-9. Deployment triggers automatically via `deploy-web.yml`
+2. Checks for pending changesets in `.changeset/`
+3. Runs `changeset version` to:
+   - Combine all changesets into CHANGELOG.md
+   - Bump version in `package.json` based on highest bump type
+   - Delete the changeset files
+4. Creates commit: `chore(release): prepare vX.Y.Z release`
+5. Creates git tag: `vX.Y.Z`
+6. Creates GitHub Release with changelog excerpt
+7. Deployment triggers automatically via `deploy-web.yml`
+
+**Version bump logic** (automatic from changesets):
+- If any changeset specifies `major` → MAJOR bump
+- Else if any changeset specifies `minor` → MINOR bump
+- Else → PATCH bump
 
 **Manual release** (if needed):
-1. Move `[Unreleased]` entries to a new version section with date
-2. Update version in `web-app/package.json`
-3. Update comparison links at the bottom of `CHANGELOG.md`
-4. Create a git tag: `git tag -a v1.1.0 -m "Release 1.1.0"`
+```bash
+cd web-app
+npx changeset version  # Combines changesets into CHANGELOG.md
+# Commit the changes
+git add .
+git commit -m "chore(release): prepare vX.Y.Z release"
+git tag -a vX.Y.Z -m "Release vX.Y.Z"
+git push origin main --tags
+```
 
 ## Commands Reference
 
@@ -648,7 +654,7 @@ ESLint plugin `jsx-a11y` enforces many accessibility rules.
 ## Definition of Done
 
 1. Implementation follows React/TypeScript best practices
-2. **CHANGELOG.md updated** - Required for `feat:` and `fix:` commits. Add entry to `[Unreleased]` section with PR number. Use `BREAKING:` prefix for breaking changes. (see [Changelog Maintenance](#changelog-maintenance-claude-instructions))
+2. **Changeset added** - Required for `feat:` and `fix:` commits. Run `npx changeset` to create a changelog entry. (see [Adding Changesets](#adding-changesets-claude-instructions))
 3. Unit tests cover business logic and interactions
 4. E2E tests added for critical user flows (if applicable)
 5. Translations added for all 4 languages (de, en, fr, it)
