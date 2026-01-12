@@ -159,7 +159,10 @@ export async function downloadCompensationPDF(compensationId: string): Promise<v
     if (!contentType) {
       throw new Error('Missing Content-Type header in response')
     }
-    if (!contentType.startsWith('application/pdf')) {
+    // MIME types are case-insensitive per RFC 2045, and may include parameters like charset
+    // Normalize by trimming whitespace and comparing lowercase
+    const normalizedContentType = contentType.trim().toLowerCase()
+    if (!normalizedContentType.startsWith('application/pdf')) {
       throw new Error(`Invalid response type: expected PDF but received ${contentType}`)
     }
 

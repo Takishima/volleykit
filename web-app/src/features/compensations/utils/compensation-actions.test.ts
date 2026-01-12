@@ -176,6 +176,78 @@ describe('downloadCompensationPDF', () => {
     )
   })
 
+  it('should accept PDF content type with charset parameter (PWA mode)', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      headers: {
+        get: (name: string) => {
+          if (name === 'Content-Type') return 'application/pdf; charset=utf-8'
+          return null
+        },
+      },
+      blob: () => Promise.resolve(new Blob(['mock pdf'], { type: 'application/pdf' })),
+    })
+
+    await downloadCompensationPDF('test-compensation-1')
+
+    expect(mockFetch).toHaveBeenCalled()
+    expect(URL.createObjectURL).toHaveBeenCalled()
+  })
+
+  it('should accept uppercase PDF content type (case-insensitive MIME)', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      headers: {
+        get: (name: string) => {
+          if (name === 'Content-Type') return 'Application/PDF'
+          return null
+        },
+      },
+      blob: () => Promise.resolve(new Blob(['mock pdf'], { type: 'application/pdf' })),
+    })
+
+    await downloadCompensationPDF('test-compensation-1')
+
+    expect(mockFetch).toHaveBeenCalled()
+    expect(URL.createObjectURL).toHaveBeenCalled()
+  })
+
+  it('should accept uppercase PDF content type with charset', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      headers: {
+        get: (name: string) => {
+          if (name === 'Content-Type') return 'APPLICATION/PDF; charset=UTF-8'
+          return null
+        },
+      },
+      blob: () => Promise.resolve(new Blob(['mock pdf'], { type: 'application/pdf' })),
+    })
+
+    await downloadCompensationPDF('test-compensation-1')
+
+    expect(mockFetch).toHaveBeenCalled()
+    expect(URL.createObjectURL).toHaveBeenCalled()
+  })
+
+  it('should handle content type with leading/trailing whitespace', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      headers: {
+        get: (name: string) => {
+          if (name === 'Content-Type') return ' application/pdf '
+          return null
+        },
+      },
+      blob: () => Promise.resolve(new Blob(['mock pdf'], { type: 'application/pdf' })),
+    })
+
+    await downloadCompensationPDF('test-compensation-1')
+
+    expect(mockFetch).toHaveBeenCalled()
+    expect(URL.createObjectURL).toHaveBeenCalled()
+  })
+
   it('should reject response without Content-Type header', async () => {
     mockFetch.mockResolvedValue({
       ok: true,
