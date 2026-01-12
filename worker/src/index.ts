@@ -187,7 +187,8 @@ export default {
       }
 
       // Check origin for version endpoint (required for CORS)
-      if (!isAllowedOrigin(origin, allowedOrigins)) {
+      // isAllowedOrigin returns false for null origin, so after this check origin is guaranteed non-null
+      if (!origin || !isAllowedOrigin(origin, allowedOrigins)) {
         const errorHeaders: HeadersInit = {
           "Content-Type": "text/plain",
           ...securityHeaders(),
@@ -201,11 +202,13 @@ export default {
         });
       }
 
+      // At this point, origin is guaranteed to be a non-null string
+
       // Handle CORS preflight for version endpoint
       if (request.method === "OPTIONS") {
         return new Response(null, {
           status: 204,
-          headers: corsHeaders(origin!),
+          headers: corsHeaders(origin),
         });
       }
 
@@ -224,7 +227,7 @@ export default {
             "Content-Type": "application/json",
             // Cache for 5 minutes - version doesn't change within a deployment
             "Cache-Control": "public, max-age=300",
-            ...corsHeaders(origin!),
+            ...corsHeaders(origin),
             ...securityHeaders(),
           },
         },

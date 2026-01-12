@@ -114,6 +114,7 @@ function versionFilePlugin(version: string, gitHash: string, basePath: string, a
         var BASE_PATH = '${basePath}';
         var API_PROXY_URL = '${apiProxyUrl}';
         var WORKER_VERSION_KEY = 'volleykit-worker-version';
+        var WORKER_VERSION_FETCH_TIMEOUT_MS = 5000;
 
         async function checkVersion() {
           try {
@@ -146,7 +147,7 @@ function versionFilePlugin(version: string, gitHash: string, basePath: string, a
             if (API_PROXY_URL) {
               try {
                 var controller = new AbortController();
-                var timeoutId = setTimeout(function() { controller.abort(); }, 5000);
+                var timeoutId = setTimeout(function() { controller.abort(); }, WORKER_VERSION_FETCH_TIMEOUT_MS);
                 var workerRes = await fetch(API_PROXY_URL + '/version?t=' + Date.now(), {
                   signal: controller.signal
                 });

@@ -215,6 +215,7 @@ export default function PWAProviderInternal({ children }: PWAProviderInternalPro
       }
     } else {
       // No API proxy URL configured - clear session for safety (shouldn't happen in production)
+      logger.warn('No API proxy URL configured, clearing session for safety')
       shouldClearSession = true
     }
 
