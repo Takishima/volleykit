@@ -1,5 +1,41 @@
 # Changelog
 
+## 1.5.0
+
+### Minor Changes
+
+- [#744](https://github.com/Takishima/volleykit/pull/744) [`8fd84bc`](https://github.com/Takishima/volleykit/commit/8fd84bc2a4e0b4dc834bd7209857b46b8d6aa56d) Thanks [@Takishima](https://github.com/Takishima)! - Added calendar sync indicator to profile section in settings page to show when calendar parsing is active for conflict detection
+
+- [#748](https://github.com/Takishima/volleykit/pull/748) [`0b8cd7c`](https://github.com/Takishima/volleykit/commit/0b8cd7c6efaec29aff8ccf022d3bb12cfa31f95a) Thanks [@Takishima](https://github.com/Takishima)! - Added game gap filter to exchanges - filter out exchange offers that are too close to your existing assignments
+
+- [#741](https://github.com/Takishima/volleykit/pull/741) [`995d8d5`](https://github.com/Takishima/volleykit/commit/995d8d59162d4e9007eabdd76912cf9690473235) Thanks [@Takishima](https://github.com/Takishima)! - Add assignment conflict detection to warn when games are scheduled too close together
+
+  - Detects assignments less than 1 hour apart using the calendar feed
+  - Shows warning indicator on AssignmentCard for conflicting assignments
+  - Displays conflict details in expanded view (association, time gap, hall)
+  - Works across all associations since calendar contains all assignments
+  - Demo mode shows example conflicts for testing
+  - Custom evaluator support for location-based or other conflict logic
+
+- [#745](https://github.com/Takishima/volleykit/pull/745) [`26c893f`](https://github.com/Takishima/volleykit/commit/26c893f9e21c755339bafdb8c77cf266c499adee) Thanks [@Takishima](https://github.com/Takishima)! - Extract calendar code from dashboard HTML during login for scheduling conflict detection
+
+- [#747](https://github.com/Takishima/volleykit/pull/747) [`70f7dc9`](https://github.com/Takishima/volleykit/commit/70f7dc9c241b6a3ec5eb998cc081d8fc8e751fbf) Thanks [@Takishima](https://github.com/Takishima)! - Add worker version tracking to preserve login sessions during web-app-only updates
+
+  Previously, any app version update would force users to log out. Now the app tracks the worker (CORS proxy) version separately:
+
+  - Worker version changes → clear session and reload (auth logic may have changed)
+  - Web app only changes → reload without clearing session (preserves login)
+
+  This improves user experience by avoiding unnecessary re-logins when only UI/feature changes are deployed.
+
+### Patch Changes
+
+- [#750](https://github.com/Takishima/volleykit/pull/750) [`d34f0bf`](https://github.com/Takishima/volleykit/commit/d34f0bfd861e7a3579020414cbd48f2daf475f89) Thanks [@Takishima](https://github.com/Takishima)! - Use primary app color for calendar sync indicator in settings for better visual consistency
+
+- [#743](https://github.com/Takishima/volleykit/pull/743) [`882d2a7`](https://github.com/Takishima/volleykit/commit/882d2a7d7ae8392c8289ec8cb98d158553cb10d4) Thanks [@Takishima](https://github.com/Takishima)! - Fixed conflict indicators not showing in demo mode - calendar assignment IDs now match the actual demo assignment IDs
+
+- [#742](https://github.com/Takishima/volleykit/pull/742) [`b11de70`](https://github.com/Takishima/volleykit/commit/b11de70e6e7d0a1ba43c385b9ca0ddb7ca9cc1c0) Thanks [@Takishima](https://github.com/Takishima)! - Added pull-to-refresh to Compensations and Exchanges pages for consistent refresh behavior across all main tabs
+
 ## 1.4.0
 
 ### Minor Changes
