@@ -272,6 +272,8 @@ const fr: Translations = {
     singleBallHallTooltip: 'Salle 1 ballon',
     conflictWarningTooltip: 'Conflit de planning',
     conflictWarningTitle: 'Conflit de planning possible',
+    conflictGap: 'écart',
+    conflictOverlap: 'chevauchement',
     hall: 'Salle',
   },
   compensations: {

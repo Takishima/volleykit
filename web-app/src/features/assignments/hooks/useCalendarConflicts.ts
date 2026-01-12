@@ -31,9 +31,10 @@ export type { ConflictMap, AssignmentConflict }
 /** Default conflict threshold in minutes */
 const DEFAULT_CONFLICT_THRESHOLD_MINUTES = 60
 
-/** Stale time for calendar conflicts - 5 minutes (background data) */
-// eslint-disable-next-line @typescript-eslint/no-magic-numbers
-const CALENDAR_CONFLICTS_STALE_TIME_MS = 5 * 60 * 1000
+/** Stale time configuration for calendar conflicts (background data) */
+const STALE_TIME_MINUTES = 5
+const MS_PER_MINUTE = 60000
+const CALENDAR_CONFLICTS_STALE_TIME_MS = STALE_TIME_MINUTES * MS_PER_MINUTE
 
 // Stable empty map for consistent references
 const EMPTY_CONFLICT_MAP: ConflictMap = new Map()

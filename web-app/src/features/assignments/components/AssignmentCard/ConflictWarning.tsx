@@ -1,9 +1,29 @@
 import { AlertTriangle } from 'lucide-react'
 
 import type { AssignmentConflict } from '@/features/assignments/utils/conflict-detection'
-import { formatGap } from '@/features/assignments/utils/conflict-detection'
+import { parseGap } from '@/features/assignments/utils/conflict-detection'
 import { useDateFormat } from '@/shared/hooks/useDateFormat'
 import { useTranslation } from '@/shared/hooks/useTranslation'
+
+/**
+ * Formats a gap using translations.
+ */
+function useFormatGap() {
+  const { t } = useTranslation()
+
+  return (gapMinutes: number): string => {
+    const { type, hours, minutes } = parseGap(gapMinutes)
+    const typeLabel = type === 'overlap' ? t('assignments.conflictOverlap') : t('assignments.conflictGap')
+
+    if (hours > 0 && minutes > 0) {
+      return `${hours}h ${minutes}min ${typeLabel}`
+    }
+    if (hours > 0) {
+      return `${hours}h ${typeLabel}`
+    }
+    return `${minutes}min ${typeLabel}`
+  }
+}
 
 interface ConflictWarningProps {
   conflicts: AssignmentConflict[]
@@ -36,6 +56,7 @@ export function ConflictIndicator({ conflicts }: ConflictWarningProps) {
  */
 function ConflictDetail({ conflict }: { conflict: AssignmentConflict }) {
   const { t } = useTranslation()
+  const formatGapText = useFormatGap()
   const { timeLabel } = useDateFormat(conflict.conflictingAssignment.startTime)
 
   const { conflictingAssignment } = conflict
@@ -51,7 +72,7 @@ function ConflictDetail({ conflict }: { conflict: AssignmentConflict }) {
       <span className="text-xs text-text-muted dark:text-text-muted-dark">
         {timeLabel} {associationLabel && <span className="font-medium">{associationLabel}</span>}
         {' · '}
-        {formatGap(conflict.gapMinutes)}
+        {formatGapText(conflict.gapMinutes)}
       </span>
       {conflictingAssignment.hallName && (
         <span className="text-xs text-text-subtle dark:text-text-subtle-dark">

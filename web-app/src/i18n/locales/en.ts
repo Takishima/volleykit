@@ -267,6 +267,8 @@ const en: Translations = {
     singleBallHallTooltip: 'Single ball hall',
     conflictWarningTooltip: 'Scheduling conflict',
     conflictWarningTitle: 'Potential scheduling conflict',
+    conflictGap: 'gap',
+    conflictOverlap: 'overlap',
     hall: 'Hall',
   },
   compensations: {

@@ -178,28 +178,52 @@ export function hasConflicts(assignmentId: string, conflictMap: ConflictMap): bo
 }
 
 /**
+ * Parsed time gap for display.
+ */
+export interface ParsedGap {
+  /** Type of gap: 'gap' means time between games, 'overlap' means games overlap */
+  type: 'gap' | 'overlap'
+  /** Hours component (0 if less than 1 hour) */
+  hours: number
+  /** Minutes component (remainder after hours) */
+  minutes: number
+}
+
+/**
+ * Parses the time gap into structured data for i18n-friendly display.
+ *
+ * @param gapMinutes - Gap in minutes (can be negative for overlaps)
+ * @returns Structured gap data for translation
+ */
+export function parseGap(gapMinutes: number): ParsedGap {
+  const isOverlap = gapMinutes < 0
+  const absoluteMinutes = Math.abs(gapMinutes)
+  const hours = Math.floor(absoluteMinutes / MINUTES_PER_HOUR)
+  const minutes = absoluteMinutes % MINUTES_PER_HOUR
+
+  return {
+    type: isOverlap ? 'overlap' : 'gap',
+    hours,
+    minutes,
+  }
+}
+
+/**
  * Formats the time gap for display.
  *
  * @param gapMinutes - Gap in minutes (can be negative for overlaps)
  * @returns Formatted string describing the gap
+ * @deprecated Use parseGap() and handle formatting in the component with translations
  */
 export function formatGap(gapMinutes: number): string {
-  if (gapMinutes < 0) {
-    // Overlapping
-    const overlap = Math.abs(gapMinutes)
-    if (overlap >= MINUTES_PER_HOUR) {
-      const hours = Math.floor(overlap / MINUTES_PER_HOUR)
-      const mins = overlap % MINUTES_PER_HOUR
-      return mins > 0 ? `${hours}h ${mins}min overlap` : `${hours}h overlap`
-    }
-    return `${overlap}min overlap`
-  }
+  const { type, hours, minutes } = parseGap(gapMinutes)
+  const typeLabel = type === 'overlap' ? 'overlap' : 'gap'
 
-  // Gap between assignments
-  if (gapMinutes >= MINUTES_PER_HOUR) {
-    const hours = Math.floor(gapMinutes / MINUTES_PER_HOUR)
-    const mins = gapMinutes % MINUTES_PER_HOUR
-    return mins > 0 ? `${hours}h ${mins}min gap` : `${hours}h gap`
+  if (hours > 0 && minutes > 0) {
+    return `${hours}h ${minutes}min ${typeLabel}`
   }
-  return `${gapMinutes}min gap`
+  if (hours > 0) {
+    return `${hours}h ${typeLabel}`
+  }
+  return `${minutes}min ${typeLabel}`
 }

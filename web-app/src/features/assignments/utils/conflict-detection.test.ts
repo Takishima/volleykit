@@ -7,6 +7,7 @@ import {
   getConflictsForAssignment,
   hasConflicts,
   formatGap,
+  parseGap,
 } from './conflict-detection'
 
 // Helper to create a test assignment
@@ -216,6 +217,48 @@ describe('conflict-detection', () => {
 
     it('should handle zero gap', () => {
       expect(formatGap(0)).toBe('0min gap')
+    })
+  })
+
+  describe('parseGap', () => {
+    it('should parse positive gap in minutes only', () => {
+      const result = parseGap(30)
+      expect(result).toEqual({ type: 'gap', hours: 0, minutes: 30 })
+    })
+
+    it('should parse positive gap in hours only', () => {
+      const result = parseGap(60)
+      expect(result).toEqual({ type: 'gap', hours: 1, minutes: 0 })
+    })
+
+    it('should parse positive gap in hours and minutes', () => {
+      const result = parseGap(90)
+      expect(result).toEqual({ type: 'gap', hours: 1, minutes: 30 })
+    })
+
+    it('should parse negative gap (overlap) in minutes only', () => {
+      const result = parseGap(-30)
+      expect(result).toEqual({ type: 'overlap', hours: 0, minutes: 30 })
+    })
+
+    it('should parse negative gap (overlap) in hours only', () => {
+      const result = parseGap(-60)
+      expect(result).toEqual({ type: 'overlap', hours: 1, minutes: 0 })
+    })
+
+    it('should parse negative gap (overlap) in hours and minutes', () => {
+      const result = parseGap(-90)
+      expect(result).toEqual({ type: 'overlap', hours: 1, minutes: 30 })
+    })
+
+    it('should handle zero as gap', () => {
+      const result = parseGap(0)
+      expect(result).toEqual({ type: 'gap', hours: 0, minutes: 0 })
+    })
+
+    it('should handle large values', () => {
+      const result = parseGap(150) // 2h 30min
+      expect(result).toEqual({ type: 'gap', hours: 2, minutes: 30 })
     })
   })
 })

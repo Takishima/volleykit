@@ -271,6 +271,8 @@ const it: Translations = {
     singleBallHallTooltip: 'Sala 1 pallone',
     conflictWarningTooltip: 'Conflitto di programmazione',
     conflictWarningTitle: 'Possibile conflitto di programmazione',
+    conflictGap: 'intervallo',
+    conflictOverlap: 'sovrapposizione',
     hall: 'Sala',
   },
   compensations: {

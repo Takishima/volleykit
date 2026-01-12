@@ -270,6 +270,8 @@ const de: Translations = {
     singleBallHallTooltip: '1-Ball-Halle',
     conflictWarningTooltip: 'Terminkonflikt',
     conflictWarningTitle: 'Möglicher Terminkonflikt',
+    conflictGap: 'Abstand',
+    conflictOverlap: 'Überlappung',
     hall: 'Halle',
   },
   compensations: {

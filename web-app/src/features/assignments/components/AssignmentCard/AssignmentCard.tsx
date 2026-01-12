@@ -136,6 +136,9 @@ function AssignmentCardComponent({
 
   // Get assignment conflicts from calendar data
   // Uses the game ID to match against calendar assignments across all associations
+  // Note: If performance becomes an issue with large lists, consider passing the
+  // conflict map via context from a parent component. TanStack Query deduplicates
+  // the fetch, but each card still creates its own filtered view.
   const gameId = game?.__identity
   const { conflicts } = useAssignmentConflicts(gameId)
 

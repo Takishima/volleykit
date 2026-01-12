@@ -160,6 +160,8 @@ export interface Translations {
     singleBallHallTooltip: string
     conflictWarningTooltip: string
     conflictWarningTitle: string
+    conflictGap: string
+    conflictOverlap: string
     hall: string
   }
   compensations: {
