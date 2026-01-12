@@ -1,3 +1,8 @@
+<!--
+  This is a template file with placeholder values.
+  Run `/speckit.constitution` to customize it with project-specific principles.
+-->
+
 # [PROJECT_NAME] Constitution
 <!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
 
