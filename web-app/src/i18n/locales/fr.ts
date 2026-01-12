@@ -273,6 +273,11 @@ const fr: Translations = {
     singleBallHallConditional:
       'Rencontre avec 1 ballon possible (seulement si exceptionnellement une seule salle partielle disponible)',
     singleBallHallTooltip: 'Salle 1 ballon',
+    conflictWarningTooltip: 'Conflit de planning',
+    conflictWarningTitle: 'Conflit de planning possible',
+    conflictGap: 'écart',
+    conflictOverlap: 'chevauchement',
+    hall: 'Salle',
   },
   compensations: {
     title: 'Indemnités',

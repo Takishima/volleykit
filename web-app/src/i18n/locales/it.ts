@@ -272,6 +272,11 @@ const it: Translations = {
     singleBallHallConditional:
       'Partita con 1 pallone possibile (solo se eccezionalmente disponibile una sola sala parziale)',
     singleBallHallTooltip: 'Sala 1 pallone',
+    conflictWarningTooltip: 'Conflitto di programmazione',
+    conflictWarningTitle: 'Possibile conflitto di programmazione',
+    conflictGap: 'intervallo',
+    conflictOverlap: 'sovrapposizione',
+    hall: 'Sala',
   },
   compensations: {
     title: 'Compensi',

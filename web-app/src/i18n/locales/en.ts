@@ -267,6 +267,11 @@ const en: Translations = {
     singleBallHallConditional:
       'Single ball game possible (only when exceptionally one sub-hall available)',
     singleBallHallTooltip: 'Single ball hall',
+    conflictWarningTooltip: 'Scheduling conflict',
+    conflictWarningTitle: 'Potential scheduling conflict',
+    conflictGap: 'gap',
+    conflictOverlap: 'overlap',
+    hall: 'Hall',
   },
   compensations: {
     title: 'Compensations',

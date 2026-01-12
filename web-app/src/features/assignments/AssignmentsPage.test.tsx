@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
@@ -8,6 +9,24 @@ import * as authStore from '@/shared/stores/auth'
 import { AssignmentsPage } from './AssignmentsPage'
 
 import type { UseQueryResult } from '@tanstack/react-query'
+
+// Create a test query client
+function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        gcTime: 0,
+      },
+    },
+  })
+}
+
+// Wrapper component for rendering with providers
+function renderWithProviders(ui: React.ReactElement) {
+  const queryClient = createTestQueryClient()
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
+}
 
 // Mock useTour to disable tour mode during tests (see src/test/mocks.ts for shared pattern)
 const mockUseTour = vi.hoisted(() => ({
@@ -200,7 +219,7 @@ describe('AssignmentsPage', () => {
 
   describe('Tab Navigation', () => {
     it('should default to Upcoming tab', () => {
-      render(<AssignmentsPage />)
+      renderWithProviders(<AssignmentsPage />)
 
       const upcomingTab = screen.getByRole('tab', { name: /upcoming/i })
       expect(upcomingTab).toHaveClass('border-primary-500')
@@ -208,7 +227,7 @@ describe('AssignmentsPage', () => {
     })
 
     it('should switch to Validation Closed tab when clicked', () => {
-      render(<AssignmentsPage />)
+      renderWithProviders(<AssignmentsPage />)
 
       fireEvent.click(screen.getByRole('tab', { name: /validation closed/i }))
 
@@ -220,7 +239,7 @@ describe('AssignmentsPage', () => {
     })
 
     it('should have proper ARIA attributes on tablist', () => {
-      render(<AssignmentsPage />)
+      renderWithProviders(<AssignmentsPage />)
 
       const tablist = screen.getByRole('tablist')
       expect(tablist).toHaveAttribute('aria-label')
@@ -231,7 +250,7 @@ describe('AssignmentsPage', () => {
         createMockQueryResult([createMockAssignment(), createMockAssignment()])
       )
 
-      render(<AssignmentsPage />)
+      renderWithProviders(<AssignmentsPage />)
 
       const upcomingTab = screen.getByRole('tab', { name: /upcoming/i })
       expect(upcomingTab).toHaveTextContent('2')
@@ -246,7 +265,7 @@ describe('AssignmentsPage', () => {
         ])
       )
 
-      render(<AssignmentsPage />)
+      renderWithProviders(<AssignmentsPage />)
 
       const validationClosedTab = screen.getByRole('tab', {
         name: /validation closed/i,
@@ -261,7 +280,7 @@ describe('AssignmentsPage', () => {
         createMockQueryResult(undefined, true)
       )
 
-      render(<AssignmentsPage />)
+      renderWithProviders(<AssignmentsPage />)
 
       expect(screen.getByText(/loading/i)).toBeInTheDocument()
     })
@@ -271,7 +290,7 @@ describe('AssignmentsPage', () => {
         createMockQueryResult(undefined, false, new Error('Failed to load'))
       )
 
-      render(<AssignmentsPage />)
+      renderWithProviders(<AssignmentsPage />)
 
       expect(screen.getByText(/failed to load/i)).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument()
@@ -280,7 +299,7 @@ describe('AssignmentsPage', () => {
     it('should show empty state when no upcoming assignments', () => {
       vi.mocked(useConvocations.useUpcomingAssignments).mockReturnValue(createMockQueryResult([]))
 
-      render(<AssignmentsPage />)
+      renderWithProviders(<AssignmentsPage />)
 
       expect(screen.getByRole('heading', { name: /no upcoming/i })).toBeInTheDocument()
     })
@@ -291,7 +310,7 @@ describe('AssignmentsPage', () => {
         createMockQueryResult([assignment])
       )
 
-      render(<AssignmentsPage />)
+      renderWithProviders(<AssignmentsPage />)
 
       expect(screen.getByText(/VBC Zürich/i)).toBeInTheDocument()
       expect(screen.getByText(/VBC Basel/i)).toBeInTheDocument()
@@ -304,7 +323,7 @@ describe('AssignmentsPage', () => {
         createMockQueryResult(undefined, true)
       )
 
-      render(<AssignmentsPage />)
+      renderWithProviders(<AssignmentsPage />)
       fireEvent.click(screen.getByRole('tab', { name: /validation closed/i }))
 
       expect(screen.getByText(/loading/i)).toBeInTheDocument()
@@ -315,7 +334,7 @@ describe('AssignmentsPage', () => {
         createMockQueryResult(undefined, false, new Error('Network error'))
       )
 
-      render(<AssignmentsPage />)
+      renderWithProviders(<AssignmentsPage />)
       fireEvent.click(screen.getByRole('tab', { name: /validation closed/i }))
 
       expect(screen.getByText(/network error/i)).toBeInTheDocument()
@@ -326,7 +345,7 @@ describe('AssignmentsPage', () => {
         createMockQueryResult([])
       )
 
-      render(<AssignmentsPage />)
+      renderWithProviders(<AssignmentsPage />)
       fireEvent.click(screen.getByRole('tab', { name: /validation closed/i }))
 
       expect(screen.getByRole('heading', { name: /no closed/i })).toBeInTheDocument()
@@ -350,7 +369,7 @@ describe('AssignmentsPage', () => {
         createMockQueryResult([assignment])
       )
 
-      render(<AssignmentsPage />)
+      renderWithProviders(<AssignmentsPage />)
       fireEvent.click(screen.getByRole('tab', { name: /validation closed/i }))
 
       expect(screen.getByText(/VBC Bern/i)).toBeInTheDocument()
@@ -360,7 +379,7 @@ describe('AssignmentsPage', () => {
 
   describe('Tab Panel Accessibility', () => {
     it('should have proper tabpanel aria attributes for upcoming tab', () => {
-      render(<AssignmentsPage />)
+      renderWithProviders(<AssignmentsPage />)
 
       const tabpanel = screen.getByRole('tabpanel')
       // Tab IDs follow the pattern: tab-{tabId}, tabpanel-{tabId}
@@ -369,7 +388,7 @@ describe('AssignmentsPage', () => {
     })
 
     it('should have proper tabpanel aria attributes for validation closed tab', () => {
-      render(<AssignmentsPage />)
+      renderWithProviders(<AssignmentsPage />)
       fireEvent.click(screen.getByRole('tab', { name: /validation closed/i }))
 
       const tabpanel = screen.getByRole('tabpanel')
@@ -387,7 +406,7 @@ describe('AssignmentsPage', () => {
         refetch: mockRefetch,
       } as unknown as UseQueryResult<Assignment[], Error>)
 
-      render(<AssignmentsPage />)
+      renderWithProviders(<AssignmentsPage />)
       fireEvent.click(screen.getByRole('button', { name: /retry/i }))
 
       expect(mockRefetch).toHaveBeenCalled()
@@ -400,7 +419,7 @@ describe('AssignmentsPage', () => {
         refetch: mockRefetch,
       } as unknown as UseQueryResult<Assignment[], Error>)
 
-      render(<AssignmentsPage />)
+      renderWithProviders(<AssignmentsPage />)
       fireEvent.click(screen.getByRole('tab', { name: /validation closed/i }))
       fireEvent.click(screen.getByRole('button', { name: /retry/i }))
 
@@ -459,7 +478,7 @@ describe('AssignmentsPage', () => {
 
     describe('Tab Labels', () => {
       it("should show 'Past' instead of 'Validation Closed' in calendar mode", () => {
-        render(<AssignmentsPage />)
+        renderWithProviders(<AssignmentsPage />)
 
         // Should have "Past" tab, not "Validation Closed"
         expect(screen.getByRole('tab', { name: /past/i })).toBeInTheDocument()
@@ -467,7 +486,7 @@ describe('AssignmentsPage', () => {
       })
 
       it("should still show 'Upcoming' tab in calendar mode", () => {
-        render(<AssignmentsPage />)
+        renderWithProviders(<AssignmentsPage />)
 
         expect(screen.getByRole('tab', { name: /upcoming/i })).toBeInTheDocument()
       })
@@ -479,7 +498,7 @@ describe('AssignmentsPage', () => {
           createMockCalendarQueryResult(undefined, true)
         )
 
-        render(<AssignmentsPage />)
+        renderWithProviders(<AssignmentsPage />)
 
         expect(screen.getByText(/loading/i)).toBeInTheDocument()
       })
@@ -493,7 +512,7 @@ describe('AssignmentsPage', () => {
           createMockCalendarQueryResult([calendarAssignment])
         )
 
-        render(<AssignmentsPage />)
+        renderWithProviders(<AssignmentsPage />)
 
         // Home team is shown directly
         expect(screen.getByText('Calendar Team A')).toBeInTheDocument()
@@ -509,7 +528,7 @@ describe('AssignmentsPage', () => {
           createMockCalendarQueryResult([calendarAssignment])
         )
 
-        render(<AssignmentsPage />)
+        renderWithProviders(<AssignmentsPage />)
 
         // AssignmentCard shows translated position - role "referee2" maps to "head-two"
         // which is translated to "2nd Referee" by our mock
@@ -524,7 +543,7 @@ describe('AssignmentsPage', () => {
           createMockCalendarQueryResult([calendarAssignment])
         )
 
-        render(<AssignmentsPage />)
+        renderWithProviders(<AssignmentsPage />)
 
         // AssignmentCard shows leagueCategory name - may appear in multiple places
         // (badge and league line), so we use getAllByText
@@ -539,7 +558,7 @@ describe('AssignmentsPage', () => {
           createMockCalendarQueryResult([])
         )
 
-        render(<AssignmentsPage />)
+        renderWithProviders(<AssignmentsPage />)
 
         // Should show calendar-specific empty message
         expect(
@@ -553,7 +572,7 @@ describe('AssignmentsPage', () => {
           createMockCalendarQueryResult([])
         )
 
-        render(<AssignmentsPage />)
+        renderWithProviders(<AssignmentsPage />)
 
         // Should find empty state heading
         const heading = screen.getByRole('heading')
@@ -569,7 +588,7 @@ describe('AssignmentsPage', () => {
           refetch: mockRefetch,
         } as unknown as ReturnType<typeof useConvocations.useCalendarAssignments>)
 
-        render(<AssignmentsPage />)
+        renderWithProviders(<AssignmentsPage />)
 
         expect(screen.getByText(/calendar fetch failed/i)).toBeInTheDocument()
         expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument()
@@ -582,7 +601,7 @@ describe('AssignmentsPage', () => {
           refetch: mockRefetch,
         } as unknown as ReturnType<typeof useConvocations.useCalendarAssignments>)
 
-        render(<AssignmentsPage />)
+        renderWithProviders(<AssignmentsPage />)
         fireEvent.click(screen.getByRole('button', { name: /retry/i }))
 
         expect(mockRefetch).toHaveBeenCalled()
@@ -599,7 +618,7 @@ describe('AssignmentsPage', () => {
           createMockCalendarQueryResult([calendarAssignment])
         )
 
-        render(<AssignmentsPage />)
+        renderWithProviders(<AssignmentsPage />)
 
         // Exchange action should not be visible in calendar mode
         expect(screen.queryByRole('button', { name: /exchange/i })).not.toBeInTheDocument()
@@ -624,7 +643,7 @@ describe('AssignmentsPage', () => {
           createMockCalendarQueryResult(assignments)
         )
 
-        render(<AssignmentsPage />)
+        renderWithProviders(<AssignmentsPage />)
 
         // Home teams are shown directly
         expect(screen.getByText('Team Alpha')).toBeInTheDocument()
@@ -644,7 +663,7 @@ describe('AssignmentsPage', () => {
           createMockCalendarQueryResult(assignments)
         )
 
-        render(<AssignmentsPage />)
+        renderWithProviders(<AssignmentsPage />)
 
         const upcomingTab = screen.getByRole('tab', { name: /upcoming/i })
         expect(upcomingTab).toHaveTextContent('3')
@@ -664,7 +683,7 @@ describe('AssignmentsPage', () => {
           createMockCalendarQueryResult([calendarAssignment])
         )
 
-        render(<AssignmentsPage />)
+        renderWithProviders(<AssignmentsPage />)
 
         // Time should be displayed (format may vary based on locale)
         expect(screen.getByText(/19:30/)).toBeInTheDocument()
@@ -678,7 +697,7 @@ describe('AssignmentsPage', () => {
           createMockCalendarQueryResult([calendarAssignment])
         )
 
-        render(<AssignmentsPage />)
+        renderWithProviders(<AssignmentsPage />)
 
         // AssignmentCard shows city extracted from address in compact view
         expect(screen.getAllByText(/Bern/).length).toBeGreaterThan(0)
@@ -693,7 +712,7 @@ describe('AssignmentsPage', () => {
           createMockCalendarQueryResult([calendarAssignment])
         )
 
-        render(<AssignmentsPage />)
+        renderWithProviders(<AssignmentsPage />)
 
         // Should use calendar data
         expect(useConvocations.useCalendarAssignments).toHaveBeenCalled()
@@ -707,7 +726,7 @@ describe('AssignmentsPage', () => {
           createMockQueryResult([apiAssignment])
         )
 
-        render(<AssignmentsPage />)
+        renderWithProviders(<AssignmentsPage />)
 
         // Should use API data
         expect(useConvocations.useUpcomingAssignments).toHaveBeenCalled()
