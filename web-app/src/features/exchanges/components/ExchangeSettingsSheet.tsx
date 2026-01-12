@@ -3,7 +3,7 @@ import { useState, useCallback, memo, useMemo } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 
 import { useActiveAssociationCode } from '@/features/auth/hooks/useActiveAssociation'
-import { Settings, X, MapPin, TrainFront } from '@/shared/components/icons'
+import { Settings, X, MapPin, TrainFront, Clock } from '@/shared/components/icons'
 import { ResponsiveSheet } from '@/shared/components/ResponsiveSheet'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useTravelTimeAvailable } from '@/shared/hooks/useTravelTime'
@@ -17,6 +17,10 @@ const DISTANCE_PRESETS = [10, 25, 50, 75, 100]
 /** Travel time presets for the slider (in minutes) */
 // eslint-disable-next-line @typescript-eslint/no-magic-numbers -- intentional UI presets
 const TRAVEL_TIME_PRESETS = [30, 45, 60, 90, 120]
+
+/** Game gap presets for the slider (in minutes) */
+// eslint-disable-next-line @typescript-eslint/no-magic-numbers -- intentional UI presets
+const GAME_GAP_PRESETS = [60, 90, 120, 150, 180]
 
 interface ExchangeSettingsSheetProps {
   dataTour?: string
@@ -35,6 +39,8 @@ function ExchangeSettingsSheetComponent({ dataTour }: ExchangeSettingsSheetProps
     setDistanceFilterForAssociation,
     travelTimeFilter,
     setMaxTravelTimeForAssociation,
+    gameGapFilter,
+    setMinGameGapMinutes,
   } = useSettingsStore(
     useShallow((state) => ({
       homeLocation: state.homeLocation,
@@ -43,6 +49,8 @@ function ExchangeSettingsSheetComponent({ dataTour }: ExchangeSettingsSheetProps
       setDistanceFilterForAssociation: state.setDistanceFilterForAssociation,
       travelTimeFilter: state.travelTimeFilter,
       setMaxTravelTimeForAssociation: state.setMaxTravelTimeForAssociation,
+      gameGapFilter: state.gameGapFilter,
+      setMinGameGapMinutes: state.setMinGameGapMinutes,
     }))
   )
 
@@ -87,17 +95,20 @@ function ExchangeSettingsSheetComponent({ dataTour }: ExchangeSettingsSheetProps
     [associationCode, setMaxTravelTimeForAssociation]
   )
 
+  const handleGameGapChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setMinGameGapMinutes(Number(e.target.value))
+    },
+    [setMinGameGapMinutes]
+  )
+
   // Determine which settings are available
   const hasHomeLocation = Boolean(homeLocation)
   const canShowDistanceSlider = hasHomeLocation
   // Use association-specific transport check for consistency with ExchangePage
   const isTransportEnabled = isTransportEnabledForAssociation(associationCode)
   const canShowTravelTimeSlider = hasHomeLocation && isTransportEnabled && isTravelTimeAvailable
-
-  // Don't show the gear icon if no settings are available
-  if (!canShowDistanceSlider && !canShowTravelTimeSlider) {
-    return null
-  }
+  // Game gap slider is always available since it works with user's calendar assignments
 
   // Format distance for display
   const formatDistance = (km: number): string => {
@@ -224,6 +235,42 @@ function ExchangeSettingsSheetComponent({ dataTour }: ExchangeSettingsSheetProps
               </div>
             </div>
           )}
+
+          {/* Min Game Gap slider - always shown */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Clock className="w-5 h-5 text-text-muted dark:text-text-muted-dark" />
+              <label
+                htmlFor="min-game-gap"
+                className="text-sm font-medium text-text-primary dark:text-text-primary-dark"
+              >
+                {t('exchange.settings.minGameGap')}
+              </label>
+              <span className="ml-auto text-sm font-semibold text-primary-600 dark:text-primary-400">
+                {formatTravelTime(gameGapFilter.minGapMinutes, timeUnits)}
+              </span>
+            </div>
+
+            <input
+              id="min-game-gap"
+              type="range"
+              min={GAME_GAP_PRESETS[0]}
+              max={GAME_GAP_PRESETS[GAME_GAP_PRESETS.length - 1]}
+              step={15}
+              value={gameGapFilter.minGapMinutes}
+              onChange={handleGameGapChange}
+              className="w-full h-2 bg-surface-muted dark:bg-surface-subtle-dark rounded-lg appearance-none cursor-pointer accent-primary-600"
+            />
+
+            {/* Preset labels */}
+            <div className="flex justify-between text-xs text-text-muted dark:text-text-muted-dark">
+              {GAME_GAP_PRESETS.map((preset) => (
+                <span key={preset}>
+                  {preset < MINUTES_PER_HOUR ? `${preset}m` : `${preset / MINUTES_PER_HOUR}h`}
+                </span>
+              ))}
+            </div>
+          </div>
 
           {/* Info text */}
           <p className="text-xs text-text-muted dark:text-text-muted-dark">

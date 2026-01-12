@@ -1645,7 +1645,11 @@ export function generateDemoCalendarAssignments(now = new Date()): DemoCalendarA
       gender: 'men',
       mapsUrl: 'https://maps.google.com/?q=47.379687,8.004062',
       plusCode: '8FVC92H3+VJ',
-      referees: { referee1: 'Sandra Keller', referee2: 'Michael Fischer', lineReferee1: 'Demo User' },
+      referees: {
+        referee1: 'Sandra Keller',
+        referee2: 'Michael Fischer',
+        lineReferee1: 'Demo User',
+      },
       association: 'SV',
     },
     // Assignment 3: Matches demo-g-3 (5 days from now)

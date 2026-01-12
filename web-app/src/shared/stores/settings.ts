@@ -61,6 +61,17 @@ export interface TravelTimeFilter {
   sbbDestinationType: SbbDestinationType
 }
 
+/**
+ * Game gap filter configuration for exchanges.
+ * Filters out exchanges that are too close to the user's existing assignments.
+ */
+export interface GameGapFilter {
+  /** Whether game gap filtering is active */
+  enabled: boolean
+  /** Minimum gap in minutes between games */
+  minGapMinutes: number
+}
+
 /** Default arrival buffer for SV (Swiss Volley national) - 60 minutes */
 export const DEFAULT_ARRIVAL_BUFFER_SV_MINUTES = 60
 
@@ -92,6 +103,9 @@ export const DEFAULT_MAX_TRAVEL_TIME_MINUTES = 120
 
 /** Default arrival buffer (minutes before game start) */
 const DEFAULT_ARRIVAL_BUFFER_MINUTES = 30
+
+/** Default minimum gap between games in minutes (2 hours) */
+export const DEFAULT_MIN_GAME_GAP_MINUTES = 120
 
 /**
  * Notification settings for game reminders.
@@ -132,6 +146,8 @@ export interface ModeSettings {
   levelFilterEnabled: boolean
   /** Notification settings for game reminders */
   notificationSettings: NotificationSettings
+  /** Game gap filter settings for exchanges */
+  gameGapFilter: GameGapFilter
 }
 
 /** Default mode-specific settings */
@@ -155,6 +171,10 @@ const DEFAULT_MODE_SETTINGS: ModeSettings = {
   },
   levelFilterEnabled: false,
   notificationSettings: { ...DEFAULT_NOTIFICATION_SETTINGS },
+  gameGapFilter: {
+    enabled: false,
+    minGapMinutes: DEFAULT_MIN_GAME_GAP_MINUTES,
+  },
 }
 
 interface SettingsState {
@@ -195,6 +215,7 @@ interface SettingsState {
   travelTimeFilter: TravelTimeFilter
   levelFilterEnabled: boolean
   notificationSettings: NotificationSettings
+  gameGapFilter: GameGapFilter
 
   // Setters that update current mode's settings
   setHomeLocation: (location: UserLocation | null) => void
@@ -224,6 +245,9 @@ interface SettingsState {
   setNotificationsEnabled: (enabled: boolean) => void
   setNotificationReminderTimes: (times: ReminderTime[]) => void
   setNotificationDeliveryPreference: (preference: NotificationPreference) => void
+  // Game gap filter settings
+  setGameGapFilterEnabled: (enabled: boolean) => void
+  setMinGameGapMinutes: (minutes: number) => void
 
   // Reset current mode's settings to defaults (keeps safe mode and other modes)
   resetLocationSettings: () => void
@@ -280,6 +304,7 @@ function syncFromMode(
     travelTimeFilter: modeSettings.travelTimeFilter,
     levelFilterEnabled: modeSettings.levelFilterEnabled,
     notificationSettings: modeSettings.notificationSettings,
+    gameGapFilter: modeSettings.gameGapFilter,
   }
 }
 
@@ -295,6 +320,9 @@ const NOTIFICATION_SETTINGS_VERSION = 5
 
 /** Version that added notification delivery preference */
 const NOTIFICATION_DELIVERY_PREFERENCE_VERSION = 6
+
+/** Version that added game gap filter */
+const GAME_GAP_FILTER_VERSION = 7
 
 /** V1 state shape (flat settings) */
 interface V1State {
@@ -330,6 +358,7 @@ function migrateV1ToV2(v1State: V1State): Record<string, unknown> {
     },
     levelFilterEnabled: v1State.levelFilterEnabled ?? false,
     notificationSettings: { ...DEFAULT_NOTIFICATION_SETTINGS },
+    gameGapFilter: { ...DEFAULT_MODE_SETTINGS.gameGapFilter },
   }
 
   return {
@@ -392,6 +421,23 @@ function addNotificationDeliveryPreference(state: StateWithModes): void {
   }
 }
 
+/**
+ * Add game gap filter for v6→v7 migration.
+ */
+function addGameGapFilter(state: StateWithModes): void {
+  if (!state.settingsByMode) return
+
+  for (const mode of ALL_MODES) {
+    const settings = state.settingsByMode[mode]
+    if (settings && !settings.gameGapFilter) {
+      settings.gameGapFilter = {
+        enabled: false,
+        minGapMinutes: DEFAULT_MIN_GAME_GAP_MINUTES,
+      }
+    }
+  }
+}
+
 export const useSettingsStore = create<SettingsState>()(
   subscribeWithSelector(
     persist(
@@ -419,6 +465,7 @@ export const useSettingsStore = create<SettingsState>()(
         travelTimeFilter: DEFAULT_MODE_SETTINGS.travelTimeFilter,
         levelFilterEnabled: DEFAULT_MODE_SETTINGS.levelFilterEnabled,
         notificationSettings: DEFAULT_MODE_SETTINGS.notificationSettings,
+        gameGapFilter: DEFAULT_MODE_SETTINGS.gameGapFilter,
 
         _setCurrentMode: (mode: DataSource) => {
           const state = get()
@@ -652,6 +699,22 @@ export const useSettingsStore = create<SettingsState>()(
           )
         },
 
+        setGameGapFilterEnabled: (enabled: boolean) => {
+          set((state) =>
+            updateModeAndTopLevel(state, (current) => ({
+              gameGapFilter: { ...current.gameGapFilter, enabled },
+            }))
+          )
+        },
+
+        setMinGameGapMinutes: (minutes: number) => {
+          set((state) =>
+            updateModeAndTopLevel(state, (current) => ({
+              gameGapFilter: { ...current.gameGapFilter, minGapMinutes: minutes },
+            }))
+          )
+        },
+
         resetLocationSettings: () => {
           // Reset current mode's location-related settings to defaults
           // Keeps safe mode and other modes' settings unchanged
@@ -660,7 +723,7 @@ export const useSettingsStore = create<SettingsState>()(
       }),
       {
         name: 'volleykit-settings',
-        version: 6,
+        version: 7,
         partialize: (state) => ({
           // Global settings
           isSafeModeEnabled: state.isSafeModeEnabled,
@@ -693,6 +756,11 @@ export const useSettingsStore = create<SettingsState>()(
           // v5 → v6: Add notification delivery preference
           if (version < NOTIFICATION_DELIVERY_PREFERENCE_VERSION) {
             addNotificationDeliveryPreference(state as StateWithModes)
+          }
+
+          // v6 → v7: Add game gap filter
+          if (version < GAME_GAP_FILTER_VERSION) {
+            addGameGapFilter(state as StateWithModes)
           }
 
           return state
@@ -754,6 +822,10 @@ export const useSettingsStore = create<SettingsState>()(
                   notificationSettings: {
                     ...DEFAULT_NOTIFICATION_SETTINGS,
                     ...(persistedModeSettings.notificationSettings ?? {}),
+                  },
+                  gameGapFilter: {
+                    ...DEFAULT_MODE_SETTINGS.gameGapFilter,
+                    ...(persistedModeSettings.gameGapFilter ?? {}),
                   },
                 }
               }

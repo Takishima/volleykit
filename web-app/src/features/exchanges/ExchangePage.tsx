@@ -3,6 +3,8 @@ import { useState, useCallback, useMemo, lazy, Suspense, Fragment } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 
 import type { GameExchange } from '@/api/client'
+import { useCalendarConflicts } from '@/features/assignments/hooks/useCalendarConflicts'
+import { hasMinimumGapFromAssignments } from '@/features/assignments/utils/conflict-detection'
 import { ExchangeCard } from '@/features/exchanges/components/ExchangeCard'
 import { ExchangeSettingsSheet } from '@/features/exchanges/components/ExchangeSettingsSheet'
 import { TOUR_DUMMY_EXCHANGE } from '@/features/exchanges/exchange'
@@ -24,6 +26,7 @@ import { useDemoStore, DEMO_USER_PERSON_IDENTITY } from '@/shared/stores/demo'
 import { useSettingsStore } from '@/shared/stores/settings'
 import { groupByWeek } from '@/shared/utils/date-helpers'
 import { calculateCarDistanceKm } from '@/shared/utils/distance'
+import { MINUTES_PER_HOUR } from '@/shared/utils/format-travel-time'
 import { extractCoordinates } from '@/shared/utils/geo-location'
 import type { SwipeConfig } from '@/types/swipe'
 
@@ -86,6 +89,8 @@ export function ExchangePage() {
     setTravelTimeFilterEnabled,
     levelFilterEnabled,
     setLevelFilterEnabled,
+    gameGapFilter,
+    setGameGapFilterEnabled,
   } = useSettingsStore(
     useShallow((state) => ({
       homeLocation: state.homeLocation,
@@ -95,12 +100,17 @@ export function ExchangePage() {
       setTravelTimeFilterEnabled: state.setTravelTimeFilterEnabled,
       levelFilterEnabled: state.levelFilterEnabled,
       setLevelFilterEnabled: state.setLevelFilterEnabled,
+      gameGapFilter: state.gameGapFilter,
+      setGameGapFilterEnabled: state.setGameGapFilterEnabled,
     }))
   )
 
   const { data, isLoading: queryLoading, error, refetch } = useGameExchanges(statusFilter)
   // Show loading when switching associations or when query is loading
   const isLoading = isAssociationSwitching || queryLoading
+
+  // Get calendar assignments for game gap filtering
+  const { assignments: calendarAssignments, hasCalendarCode } = useCalendarConflicts()
 
   // Get travel time data for exchanges
   const { exchangesWithTravelTime, isAvailable: isTravelTimeAvailable } = useTravelTimeFilter(
@@ -203,6 +213,23 @@ export function ExchangePage() {
       })
     }
 
+    // Apply game gap filter (only on "open" tab when calendar data is available)
+    if (
+      gameGapFilter.enabled &&
+      statusFilter === 'open' &&
+      hasCalendarCode &&
+      calendarAssignments.length > 0
+    ) {
+      result = result.filter(({ exchange }) => {
+        const gameStartTime = exchange.refereeGame?.game?.startingDateTime
+        return hasMinimumGapFromAssignments(
+          gameStartTime,
+          calendarAssignments,
+          gameGapFilter.minGapMinutes
+        )
+      })
+    }
+
     // Hide user's own exchanges in "open" tab when filter is enabled
     if (hideOwnExchanges && statusFilter === 'open' && currentUserIdentity) {
       result = result.filter(
@@ -227,6 +254,10 @@ export function ExchangePage() {
     travelTimeMap,
     hideOwnExchanges,
     currentUserIdentity,
+    gameGapFilter.enabled,
+    gameGapFilter.minGapMinutes,
+    hasCalendarCode,
+    calendarAssignments,
   ])
 
   // Group exchanges by week for visual separation
@@ -304,9 +335,14 @@ export function ExchangePage() {
   const isDistanceFilterAvailable = homeLocation !== null
   // isTravelTimeAvailable from hook already includes association-specific transport check and homeLocation
   const isTravelTimeFilterAvailable = isTravelTimeAvailable
+  // Game gap filter is available when calendar data exists (demo mode or calendar code)
+  const isGameGapFilterAvailable = hasCalendarCode && calendarAssignments.length > 0
 
   const hasAnyFilter =
-    isLevelFilterAvailable || isDistanceFilterAvailable || isTravelTimeFilterAvailable
+    isLevelFilterAvailable ||
+    isDistanceFilterAvailable ||
+    isTravelTimeFilterAvailable ||
+    isGameGapFilterAvailable
 
   // Handler for pull-to-refresh - wraps refetch in async function
   const handleRefresh = useCallback(async () => {
@@ -348,6 +384,14 @@ export function ExchangePage() {
             dataTour="exchange-filter"
           />
         )}
+        {isGameGapFilterAvailable && (
+          <FilterChip
+            active={gameGapFilter.enabled}
+            onToggle={() => setGameGapFilterEnabled(!gameGapFilter.enabled)}
+            label={t('exchange.filterByGameGap')}
+            activeValue={`≥${gameGapFilter.minGapMinutes / MINUTES_PER_HOUR}h`}
+          />
+        )}
       </div>
     ) : undefined
 
@@ -368,7 +412,11 @@ export function ExchangePage() {
 
     if (groupedData.length === 0) {
       const hasActiveFilters =
-        hideOwnExchanges || levelFilterEnabled || distanceFilter.enabled || travelTimeFilter.enabled
+        hideOwnExchanges ||
+        levelFilterEnabled ||
+        distanceFilter.enabled ||
+        travelTimeFilter.enabled ||
+        gameGapFilter.enabled
       return (
         <EmptyState
           icon="exchange"
