@@ -125,9 +125,24 @@ function versionFilePlugin(version: string, gitHash: string, basePath: string): 
               if (reg?.waiting) {
                 reg.waiting.postMessage({ type: 'SKIP_WAITING' });
               }
+              // Clear service worker caches
               var cacheNames = await caches?.keys() || [];
               await Promise.all(cacheNames.map(function(name) { return caches.delete(name); }));
-              location.reload();
+              // Clear session-related localStorage to prevent stale auth state after reload.
+              // This forces a fresh login, avoiding "invalid login" errors caused by
+              // stale CSRF tokens or session tokens that no longer exist on the server.
+              try {
+                localStorage.removeItem('volleykit-session-token');
+                localStorage.removeItem('volleykit-auth');
+              } catch (e) {
+                // localStorage may not be available, ignore
+              }
+              // Use cache-busting URL to bypass Safari's aggressive memory cache.
+              // Safari PWAs can serve stale content from memory even after reload().
+              // Adding a timestamp query parameter forces a fresh network request.
+              var url = new URL(location.href);
+              url.searchParams.set('_pwa_update', Date.now().toString());
+              location.replace(url.href);
             }
           } catch (e) {
             // Network errors are expected when offline - ignore silently

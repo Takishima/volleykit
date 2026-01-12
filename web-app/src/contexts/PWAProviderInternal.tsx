@@ -147,6 +147,17 @@ export default function PWAProviderInternal({ children }: PWAProviderInternalPro
   }
 
   const updateApp = async () => {
+    // Clear session-related localStorage to prevent stale auth state after reload.
+    // This forces a fresh login, avoiding "invalid login" errors caused by
+    // stale CSRF tokens or session tokens that no longer exist on the server.
+    // Must be done BEFORE the reload triggered by updateSW or location.replace.
+    try {
+      localStorage.removeItem('volleykit-session-token')
+      localStorage.removeItem('volleykit-auth')
+    } catch {
+      // localStorage may not be available, ignore
+    }
+
     if (updateSWRef.current) {
       // Use vite-plugin-pwa's built-in update mechanism
       // This posts SKIP_WAITING to waiting SW and reloads
@@ -165,8 +176,16 @@ export default function PWAProviderInternal({ children }: PWAProviderInternalPro
         // Ignore cache clearing errors - proceed with reload anyway
         logger.warn('Failed to clear caches during fallback update:', error)
       }
-      // Force reload to fetch fresh content from network
-      window.location.reload()
+      // Use cache-busting URL to bypass Safari's aggressive memory cache.
+      // Safari PWAs can serve stale content from memory even after reload().
+      try {
+        const url = new URL(window.location.href)
+        url.searchParams.set('_pwa_update', Date.now().toString())
+        window.location.replace(url.href)
+      } catch {
+        // Fallback for invalid URLs (e.g., in test environments)
+        window.location.reload()
+      }
     }
   }
 
