@@ -1,4 +1,5 @@
 {
+  "//": "Root workspace for changesets. App dependencies belong in web-app/package.json",
   "name": "volleykit",
   "private": true,
   "workspaces": ["web-app"],
