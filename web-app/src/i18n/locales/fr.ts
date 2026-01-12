@@ -540,6 +540,8 @@ const fr: Translations = {
     platform: 'Plateforme',
     openWebsite: 'Ouvrir le site VolleyManager',
     roles: 'Rôles',
+    calendarSynced: 'Calendrier synchronisé',
+    calendarSyncedTooltip: 'Votre calendrier est connecté pour la détection des conflits',
     dataSource: 'Données de volleymanager.volleyball.ch',
     disclaimer:
       'Application non officielle pour usage personnel. Toutes les données sont la propriété de Swiss Volley.',

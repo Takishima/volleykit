@@ -525,6 +525,8 @@ const en: Translations = {
     platform: 'Platform',
     openWebsite: 'Open VolleyManager website',
     roles: 'Roles',
+    calendarSynced: 'Calendar synced',
+    calendarSyncedTooltip: 'Your calendar is connected for conflict detection',
     dataSource: 'Data from volleymanager.volleyball.ch',
     disclaimer: 'Unofficial app for personal use. All data is property of Swiss Volley.',
     updates: 'Updates',
