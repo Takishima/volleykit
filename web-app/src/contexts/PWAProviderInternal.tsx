@@ -13,6 +13,19 @@ import { PWAContext, type PWAContextType } from './pwa-context-value'
  */
 const UPDATE_CHECK_INTERVAL_MS = MS_PER_HOUR
 
+/**
+ * localStorage key for storing the last known worker version.
+ * Used to detect when the CORS proxy worker has been updated,
+ * which may require clearing session tokens.
+ */
+const WORKER_VERSION_KEY = 'volleykit-worker-version'
+
+/**
+ * Timeout for worker version fetch (ms).
+ * We don't want to block updates if the worker is unreachable.
+ */
+const WORKER_VERSION_FETCH_TIMEOUT_MS = 5000
+
 interface PWAProviderInternalProps {
   children: ReactNode
 }
@@ -158,15 +171,63 @@ export default function PWAProviderInternal({ children }: PWAProviderInternalPro
   }
 
   const updateApp = async () => {
-    // Clear session-related localStorage to prevent stale auth state after reload.
-    // This forces a fresh login, avoiding "invalid login" errors caused by
-    // stale CSRF tokens or session tokens that no longer exist on the server.
-    // Must be done BEFORE the reload triggered by updateSW or location.replace.
-    try {
-      localStorage.removeItem('volleykit-session-token')
-      localStorage.removeItem('volleykit-auth')
-    } catch {
-      // localStorage may not be available, ignore
+    // Check if worker version changed to determine if session should be cleared.
+    // Only clear session if the CORS proxy worker was updated (auth logic may have changed).
+    // This allows web-app-only updates without forcing users to re-login.
+    let shouldClearSession = false
+    const apiProxyUrl = import.meta.env.VITE_API_PROXY_URL
+
+    if (apiProxyUrl) {
+      try {
+        const storedWorkerVersion = localStorage.getItem(WORKER_VERSION_KEY)
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), WORKER_VERSION_FETCH_TIMEOUT_MS)
+
+        const response = await fetch(`${apiProxyUrl}/version?t=${Date.now()}`, {
+          signal: controller.signal,
+        })
+        clearTimeout(timeoutId)
+
+        if (response.ok) {
+          const data = (await response.json()) as { workerGitHash: string }
+          const currentWorkerVersion = data.workerGitHash
+
+          // Store the new worker version
+          localStorage.setItem(WORKER_VERSION_KEY, currentWorkerVersion)
+
+          // Clear session only if worker version changed (or first time seeing it with existing session)
+          if (storedWorkerVersion && storedWorkerVersion !== currentWorkerVersion) {
+            logger.info('Worker version changed, will clear session:', {
+              from: storedWorkerVersion,
+              to: currentWorkerVersion,
+            })
+            shouldClearSession = true
+          }
+        }
+      } catch (error) {
+        // Worker unreachable - fall back to clearing session for safety
+        // This ensures we don't keep stale sessions if we can't verify worker version
+        const hasExistingSession = localStorage.getItem('volleykit-auth') !== null
+        if (hasExistingSession) {
+          logger.warn('Could not fetch worker version, clearing session for safety:', error)
+          shouldClearSession = true
+        }
+      }
+    } else {
+      // No API proxy URL configured - clear session for safety (shouldn't happen in production)
+      shouldClearSession = true
+    }
+
+    // Only clear session if worker version changed (or couldn't be verified)
+    if (shouldClearSession) {
+      try {
+        localStorage.removeItem('volleykit-session-token')
+        localStorage.removeItem('volleykit-auth')
+      } catch {
+        // localStorage may not be available, ignore
+      }
+    } else {
+      logger.info('Web app only update, preserving session')
     }
 
     if (updateSWRef.current) {

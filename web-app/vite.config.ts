@@ -81,8 +81,12 @@ function getGitHash(): string {
  * Plugin to generate version.json for PWA update detection.
  * This file is fetched (cache-busted) on app load to compare against
  * the bundled version. If they differ, the app forces an update.
+ *
+ * Version comparison logic:
+ * - Worker version change → clear session + reload (auth logic may have changed)
+ * - Web app only change → reload WITHOUT clearing session (preserves login)
  */
-function versionFilePlugin(version: string, gitHash: string, basePath: string): Plugin {
+function versionFilePlugin(version: string, gitHash: string, basePath: string, apiProxyUrl: string): Plugin {
   return {
     name: 'version-file',
     apply: 'build',
@@ -103,47 +107,110 @@ function versionFilePlugin(version: string, gitHash: string, basePath: string): 
       const versionCheckScript = `
     <script>
       // PWA Force Update: Check if cached version matches deployed version
+      // Worker version changes require session clear (auth logic may have changed)
+      // Web app only changes allow reload without losing login session
       (function() {
         var BUNDLED_GIT_HASH = '${gitHash}';
         var BASE_PATH = '${basePath}';
+        var API_PROXY_URL = '${apiProxyUrl}';
+        var WORKER_VERSION_KEY = 'volleykit-worker-version';
 
         async function checkVersion() {
           try {
-            var res = await fetch(BASE_PATH + 'version.json?t=' + Date.now());
-            if (!res.ok) return;
-            var data = await res.json();
-            if (BUNDLED_GIT_HASH !== data.gitHash) {
-              // Prevent infinite reload loop: track attempted updates in sessionStorage
-              var reloadKey = 'pwa-update-attempted-' + data.gitHash;
-              if (sessionStorage.getItem(reloadKey)) {
-                console.warn('[PWA] Already attempted update to ' + data.gitHash + ', skipping to prevent loop');
-                return;
+            // Fetch web app version
+            var appRes = await fetch(BASE_PATH + 'version.json?t=' + Date.now());
+            if (!appRes.ok) return;
+            var appData = await appRes.json();
+
+            // Check if web app version changed
+            var appVersionChanged = BUNDLED_GIT_HASH !== appData.gitHash;
+            if (!appVersionChanged) return; // No update needed
+
+            // Prevent infinite reload loop: track attempted updates in sessionStorage
+            var reloadKey = 'pwa-update-attempted-' + appData.gitHash;
+            if (sessionStorage.getItem(reloadKey)) {
+              console.warn('[PWA] Already attempted update to ' + appData.gitHash + ', skipping to prevent loop');
+              return;
+            }
+
+            // Check worker version to determine if session should be cleared
+            var workerVersionChanged = false;
+            var storedWorkerVersion = null;
+            try {
+              storedWorkerVersion = localStorage.getItem(WORKER_VERSION_KEY);
+            } catch (e) {
+              // localStorage may not be available
+            }
+
+            // Fetch worker version (with timeout to not block updates if worker is unreachable)
+            if (API_PROXY_URL) {
+              try {
+                var controller = new AbortController();
+                var timeoutId = setTimeout(function() { controller.abort(); }, 5000);
+                var workerRes = await fetch(API_PROXY_URL + '/version?t=' + Date.now(), {
+                  signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+
+                if (workerRes.ok) {
+                  var workerData = await workerRes.json();
+                  var currentWorkerVersion = workerData.workerGitHash;
+
+                  // Store the new worker version
+                  try {
+                    localStorage.setItem(WORKER_VERSION_KEY, currentWorkerVersion);
+                  } catch (e) {
+                    // localStorage may not be available
+                  }
+
+                  // Check if worker version changed (or first time seeing it)
+                  if (storedWorkerVersion && storedWorkerVersion !== currentWorkerVersion) {
+                    workerVersionChanged = true;
+                    console.log('[PWA] Worker version changed: ' + storedWorkerVersion + ' → ' + currentWorkerVersion);
+                  }
+                }
+              } catch (e) {
+                // Worker unreachable - fall back to clearing session for safety
+                // This ensures we don't keep stale sessions if we can't verify worker version
+                if (storedWorkerVersion) {
+                  console.warn('[PWA] Could not fetch worker version, clearing session for safety');
+                  workerVersionChanged = true;
+                }
               }
-              sessionStorage.setItem(reloadKey, '1');
-              console.log('[PWA] Version mismatch: ' + BUNDLED_GIT_HASH + ' → ' + data.gitHash + ', forcing update...');
-              var reg = await navigator.serviceWorker?.getRegistration();
-              if (reg?.waiting) {
-                reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-              }
-              // Clear service worker caches
-              var cacheNames = await caches?.keys() || [];
-              await Promise.all(cacheNames.map(function(name) { return caches.delete(name); }));
-              // Clear session-related localStorage to prevent stale auth state after reload.
-              // This forces a fresh login, avoiding "invalid login" errors caused by
-              // stale CSRF tokens or session tokens that no longer exist on the server.
+            }
+
+            sessionStorage.setItem(reloadKey, '1');
+            console.log('[PWA] App version mismatch: ' + BUNDLED_GIT_HASH + ' → ' + appData.gitHash + ', forcing update...');
+
+            var reg = await navigator.serviceWorker?.getRegistration();
+            if (reg?.waiting) {
+              reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            }
+
+            // Clear service worker caches
+            var cacheNames = await caches?.keys() || [];
+            await Promise.all(cacheNames.map(function(name) { return caches.delete(name); }));
+
+            // Only clear session if worker version changed (or couldn't be verified)
+            // This allows web-app-only updates without forcing users to re-login
+            if (workerVersionChanged) {
+              console.log('[PWA] Worker changed, clearing session tokens...');
               try {
                 localStorage.removeItem('volleykit-session-token');
                 localStorage.removeItem('volleykit-auth');
               } catch (e) {
                 // localStorage may not be available, ignore
               }
-              // Use cache-busting URL to bypass Safari's aggressive memory cache.
-              // Safari PWAs can serve stale content from memory even after reload().
-              // Adding a timestamp query parameter forces a fresh network request.
-              var url = new URL(location.href);
-              url.searchParams.set('_pwa_update', Date.now().toString());
-              location.replace(url.href);
+            } else {
+              console.log('[PWA] Web app only update, preserving session');
             }
+
+            // Use cache-busting URL to bypass Safari's aggressive memory cache.
+            // Safari PWAs can serve stale content from memory even after reload().
+            // Adding a timestamp query parameter forces a fresh network request.
+            var url = new URL(location.href);
+            url.searchParams.set('_pwa_update', Date.now().toString());
+            location.replace(url.href);
           } catch (e) {
             // Network errors are expected when offline - ignore silently
             // Log other errors for debugging
@@ -389,7 +456,7 @@ export default defineConfig(({ mode }) => {
       }),
       spaFallbackPlugin(basePath),
       // Generate version.json for PWA update detection (skip for PR previews)
-      !isPrPreview && versionFilePlugin(packageJson.version, gitHash, basePath),
+      !isPrPreview && versionFilePlugin(packageJson.version, gitHash, basePath, process.env.VITE_API_PROXY_URL || ''),
       // Bundle analyzer - generates stats.html after build
       visualizer({
         filename: 'stats.html',

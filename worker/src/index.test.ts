@@ -2147,6 +2147,97 @@ describe("Auth Lockout", () => {
   });
 });
 
+describe("Integration: /version endpoint", () => {
+  function createMockEnv() {
+    return {
+      ALLOWED_ORIGINS: "https://example.com",
+      TARGET_HOST: "https://volleymanager.volleyball.ch",
+      RATE_LIMITER: {
+        limit: vi.fn().mockResolvedValue({ success: true }),
+      },
+    };
+  }
+
+  it("returns 403 with CORS headers when origin is not allowed", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const request = new Request("https://proxy.example.com/version", {
+      headers: {
+        Origin: "https://malicious.com",
+      },
+    });
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.status).toBe(403);
+    expect(await response.text()).toBe("Forbidden: Origin not allowed");
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+      "https://malicious.com",
+    );
+  });
+
+  it("returns 403 without CORS headers when origin is missing", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const request = new Request("https://proxy.example.com/version");
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.status).toBe(403);
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBeNull();
+  });
+
+  it("returns version info for allowed origin", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const request = new Request("https://proxy.example.com/version", {
+      headers: {
+        Origin: "https://example.com",
+      },
+    });
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toBe("application/json");
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+      "https://example.com",
+    );
+    expect(response.headers.get("Cache-Control")).toBe("public, max-age=300");
+
+    const body = await response.json();
+    expect(body).toHaveProperty("workerGitHash");
+    expect(body).toHaveProperty("timestamp");
+    // Default value when not defined
+    expect(body.workerGitHash).toBe("dev");
+  });
+
+  it("handles CORS preflight request", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const request = new Request("https://proxy.example.com/version", {
+      method: "OPTIONS",
+      headers: {
+        Origin: "https://example.com",
+      },
+    });
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+      "https://example.com",
+    );
+    expect(response.headers.get("Access-Control-Allow-Methods")).toContain(
+      "GET",
+    );
+  });
+});
+
 describe("Integration: Auth Lockout in Worker", () => {
   function createMockEnv() {
     const kvStore = new Map<string, string>();
