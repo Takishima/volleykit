@@ -312,11 +312,15 @@ async function handleSuccessfulLoginResult(
     }
   }
 
-  // Extract calendar code directly from dashboard HTML for conflict detection.
-  // The calendar code (uniqueId) is embedded in the activeParty data.
-  const calendarCode = extractCalendarCodeFromDashboard(result.dashboardHtml)
-  if (calendarCode) {
-    set({ calendarCode })
+  // Extract calendar code from dashboard HTML if not already stored.
+  // The calendar code is unique per referee and doesn't change, so we only
+  // need to extract it once and persist it across sessions.
+  const currentCalendarCode = get().calendarCode
+  if (!currentCalendarCode) {
+    const calendarCode = extractCalendarCodeFromDashboard(result.dashboardHtml)
+    if (calendarCode) {
+      set({ calendarCode })
+    }
   }
 
   return true
@@ -502,12 +506,10 @@ export const useAuthStore = create<AuthState>()(
             captureSessionToken(dashboardResponse)
 
             let activeParty = null
-            let calendarCode: string | null = null
+            let dashboardHtml = ''
             if (dashboardResponse.ok) {
-              const dashboardHtml = await dashboardResponse.text()
+              dashboardHtml = await dashboardResponse.text()
               activeParty = extractActivePartyFromHtml(dashboardHtml)
-              // Extract calendar code from dashboard HTML
-              calendarCode = extractCalendarCodeFromDashboard(dashboardHtml)
             }
 
             setCsrfToken(existingCsrfToken)
@@ -523,6 +525,11 @@ export const useAuthStore = create<AuthState>()(
             if (user.occupations.length === 0) {
               return rejectNonRefereeUser(set)
             }
+
+            // Preserve existing calendar code or extract from dashboard if not stored
+            const calendarCode =
+              currentState.calendarCode ??
+              (dashboardHtml ? extractCalendarCodeFromDashboard(dashboardHtml) : null)
 
             set({
               status: 'authenticated',
