@@ -238,38 +238,38 @@ function ExchangeSettingsSheetComponent({ dataTour }: ExchangeSettingsSheetProps
 
           {/* Min Game Gap slider - always shown */}
           <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-text-muted dark:text-text-muted-dark" />
-                <label
-                  htmlFor="min-game-gap"
-                  className="text-sm font-medium text-text-primary dark:text-text-primary-dark"
-                >
-                  {t('exchange.settings.minGameGap')}
-                </label>
-                <span className="ml-auto text-sm font-semibold text-primary-600 dark:text-primary-400">
-                  {formatTravelTime(gameGapFilter.minGapMinutes, timeUnits)}
+            <div className="flex items-center gap-2">
+              <Clock className="w-5 h-5 text-text-muted dark:text-text-muted-dark" />
+              <label
+                htmlFor="min-game-gap"
+                className="text-sm font-medium text-text-primary dark:text-text-primary-dark"
+              >
+                {t('exchange.settings.minGameGap')}
+              </label>
+              <span className="ml-auto text-sm font-semibold text-primary-600 dark:text-primary-400">
+                {formatTravelTime(gameGapFilter.minGapMinutes, timeUnits)}
+              </span>
+            </div>
+
+            <input
+              id="min-game-gap"
+              type="range"
+              min={GAME_GAP_PRESETS[0]}
+              max={GAME_GAP_PRESETS[GAME_GAP_PRESETS.length - 1]}
+              step={15}
+              value={gameGapFilter.minGapMinutes}
+              onChange={handleGameGapChange}
+              className="w-full h-2 bg-surface-muted dark:bg-surface-subtle-dark rounded-lg appearance-none cursor-pointer accent-primary-600"
+            />
+
+            {/* Preset labels */}
+            <div className="flex justify-between text-xs text-text-muted dark:text-text-muted-dark">
+              {GAME_GAP_PRESETS.map((preset) => (
+                <span key={preset}>
+                  {preset < MINUTES_PER_HOUR ? `${preset}m` : `${preset / MINUTES_PER_HOUR}h`}
                 </span>
-              </div>
-
-              <input
-                id="min-game-gap"
-                type="range"
-                min={GAME_GAP_PRESETS[0]}
-                max={GAME_GAP_PRESETS[GAME_GAP_PRESETS.length - 1]}
-                step={15}
-                value={gameGapFilter.minGapMinutes}
-                onChange={handleGameGapChange}
-                className="w-full h-2 bg-surface-muted dark:bg-surface-subtle-dark rounded-lg appearance-none cursor-pointer accent-primary-600"
-              />
-
-              {/* Preset labels */}
-              <div className="flex justify-between text-xs text-text-muted dark:text-text-muted-dark">
-                {GAME_GAP_PRESETS.map((preset) => (
-                  <span key={preset}>
-                    {preset < MINUTES_PER_HOUR ? `${preset}m` : `${preset / MINUTES_PER_HOUR}h`}
-                  </span>
-                ))}
-              </div>
+              ))}
+            </div>
           </div>
 
           {/* Info text */}

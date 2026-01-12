@@ -360,11 +360,7 @@ describe('conflict-detection', () => {
     })
 
     it('should skip assignments with invalid times', () => {
-      const validAssignment = createAssignment(
-        '1',
-        '2024-01-15T10:00:00Z',
-        '2024-01-15T12:00:00Z'
-      )
+      const validAssignment = createAssignment('1', '2024-01-15T10:00:00Z', '2024-01-15T12:00:00Z')
       const invalidAssignment: CalendarAssignment = {
         ...validAssignment,
         gameId: '2',
