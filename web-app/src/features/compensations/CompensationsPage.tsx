@@ -8,6 +8,7 @@ import { TOUR_DUMMY_COMPENSATION } from '@/features/compensations/compensations'
 import { CompensationCard } from '@/features/compensations/components/CompensationCard'
 import { useCompensations } from '@/features/validation/hooks/useConvocations'
 import { LoadingState, ErrorState, EmptyState } from '@/shared/components/LoadingSpinner'
+import { PullToRefresh } from '@/shared/components/PullToRefresh'
 import { SwipeableCard } from '@/shared/components/SwipeableCard'
 import { Tabs, TabPanel } from '@/shared/components/Tabs'
 import { WeekSeparator } from '@/shared/components/WeekSeparator'
@@ -163,6 +164,11 @@ export function CompensationsPage() {
     [editCompensationModal.open, handleGeneratePDF]
   )
 
+  // Handler for pull-to-refresh - wraps refetch in async function
+  const handleRefresh = useCallback(async () => {
+    await refetch()
+  }, [refetch])
+
   const getEmptyStateContent = () => {
     switch (filter) {
       case 'pendingPast':
@@ -252,30 +258,32 @@ export function CompensationsPage() {
   }
 
   return (
-    <div className="space-y-3">
-      {/* Filter tabs with keyboard navigation */}
-      <Tabs
-        tabs={tabs}
-        activeTab={filter}
-        onTabChange={handleTabChange}
-        ariaLabel={t('compensations.title')}
-      />
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div className="space-y-3">
+        {/* Filter tabs with keyboard navigation */}
+        <Tabs
+          tabs={tabs}
+          activeTab={filter}
+          onTabChange={handleTabChange}
+          ariaLabel={t('compensations.title')}
+        />
 
-      {/* Content - single TabPanel since all tabs show same component with different data */}
-      <TabPanel tabId={filter} activeTab={filter}>
-        {renderContent()}
-      </TabPanel>
+        {/* Content - single TabPanel since all tabs show same component with different data */}
+        <TabPanel tabId={filter} activeTab={filter}>
+          {renderContent()}
+        </TabPanel>
 
-      {/* Edit Compensation Modal - compensation is guaranteed non-null by conditional render */}
-      {editCompensationModal.compensation && (
-        <Suspense fallback={null}>
-          <EditCompensationModal
-            isOpen={editCompensationModal.isOpen}
-            onClose={editCompensationModal.close}
-            compensation={editCompensationModal.compensation}
-          />
-        </Suspense>
-      )}
-    </div>
+        {/* Edit Compensation Modal - compensation is guaranteed non-null by conditional render */}
+        {editCompensationModal.compensation && (
+          <Suspense fallback={null}>
+            <EditCompensationModal
+              isOpen={editCompensationModal.isOpen}
+              onClose={editCompensationModal.close}
+              compensation={editCompensationModal.compensation}
+            />
+          </Suspense>
+        )}
+      </div>
+    </PullToRefresh>
   )
 }
