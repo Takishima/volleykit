@@ -21,5 +21,3 @@ export type {
   UnifiedNotificationResult,
   UnifiedNotificationService,
 } from './types'
-
-export { REMINDER_TIME_OPTIONS } from './types'

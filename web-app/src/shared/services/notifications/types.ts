@@ -33,9 +33,6 @@ const MS_PER_SECOND = 1000
 /** One day in milliseconds - used for max scheduling limit */
 export const ONE_DAY_MS = HOURS_PER_DAY * MINUTES_PER_HOUR * SECONDS_PER_MINUTE * MS_PER_SECOND
 
-/** Available reminder time options */
-export const REMINDER_TIME_OPTIONS: ReminderTime[] = ['1h', '2h', '1d']
-
 /** Notification permission status */
 export type NotificationPermission = 'granted' | 'denied' | 'default'
 

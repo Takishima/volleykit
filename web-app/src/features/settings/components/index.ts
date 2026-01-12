@@ -1,6 +1,5 @@
 export { ProfileSection } from './ProfileSection'
 export { PreferencesSection } from './PreferencesSection'
-export { NotificationsSection } from './NotificationsSection'
 export { HomeLocationSection } from './HomeLocationSection'
 export { TravelSettingsSection } from './TravelSettingsSection'
 export { DataProtectionSection } from './DataProtectionSection'

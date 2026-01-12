@@ -294,7 +294,12 @@ describe('unifiedNotificationService', () => {
   describe('getScheduled', () => {
     it('returns combined unified and native scheduled notifications', () => {
       vi.mocked(notificationService.getScheduledNotifications).mockReturnValue([
-        { id: 'native-1', assignmentId: 'a1', scheduledTime: 1000, timeoutId: 123 as unknown as ReturnType<typeof setTimeout> },
+        {
+          id: 'native-1',
+          assignmentId: 'a1',
+          scheduledTime: 1000,
+          timeoutId: 123 as unknown as ReturnType<typeof setTimeout>,
+        },
       ])
 
       const now = Date.now()
