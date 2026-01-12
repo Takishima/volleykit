@@ -181,7 +181,7 @@ function ProfileSectionComponent({ user }: ProfileSectionProps) {
         {calendarCode && (
           <div className="border-t border-border-subtle dark:border-border-subtle-dark pt-4">
             <div
-              className="flex items-center gap-2 text-sm text-success-600 dark:text-success-400"
+              className="flex items-center gap-2 text-sm text-primary-600 dark:text-primary-400"
               title={t('settings.calendarSyncedTooltip')}
             >
               <Calendar className="w-4 h-4" aria-hidden="true" />
