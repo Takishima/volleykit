@@ -1,0 +1,67 @@
+name: Update Spec-Kit
+
+on:
+  schedule:
+    # Run every Monday at 9:00 UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-speckit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install spec-kit CLI
+        run: uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
+
+      - name: Get current spec-kit version
+        id: current
+        run: |
+          if [ -f .specify/version ]; then
+            echo "version=$(cat .specify/version)" >> $GITHUB_OUTPUT
+          else
+            echo "version=unknown" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update spec-kit templates
+        run: |
+          # Re-initialize to get latest templates (auto-confirm overwrite)
+          echo "y" | specify init . --ai claude --no-git
+
+          # Store the installed version for tracking
+          specify version | grep -oP 'CLI Version:\s+\K[\d.]+' > .specify/version || true
+
+      - name: Check for changes
+        id: changes
+        run: |
+          git diff --quiet && git diff --staged --quiet || echo "has_changes=true" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        if: steps.changes.outputs.has_changes == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore(deps): update spec-kit templates'
+          title: 'chore(deps): update spec-kit templates'
+          body: |
+            ## Summary
+
+            - Automated weekly update of GitHub spec-kit templates
+            - Previous version: ${{ steps.current.outputs.version }}
+
+            ## Test Plan
+
+            - [ ] Verify slash commands still work in Claude Code
+            - [ ] Check for any breaking changes in spec-kit changelog
+          branch: chore/update-speckit
+          delete-branch: true
+          labels: dependencies
