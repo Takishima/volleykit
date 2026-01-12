@@ -35,7 +35,8 @@ jobs:
       - name: Update spec-kit templates
         run: |
           # Re-initialize to get latest templates (auto-confirm overwrite)
-          echo "y" | specify init . --ai claude --no-git
+          # --ignore-agent-tools: Skip claude CLI check (not available in CI)
+          echo "y" | specify init . --ai claude --no-git --ignore-agent-tools
 
           # Store the installed version for tracking
           specify version | grep -oP 'CLI Version:\s+\K[\d.]+' > .specify/version || true
