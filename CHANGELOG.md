@@ -7,15 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-
-- PDF download for compensation statements now works in PWA mode - the MIME type validation was case-sensitive and failed when servers returned `Application/PDF` or `application/pdf; charset=utf-8` instead of lowercase `application/pdf`
-- PWA auto-refresh after update now works correctly on iOS - previously users experienced "invalid login" errors after automatic updates because stale session tokens and auth state remained in localStorage; now the update process clears session data and uses cache-busting URLs to bypass Safari's aggressive memory cache
-
-### Removed
-
-- Notification settings section from Settings page - notifications can only be generated when the app is open, making them impractical for PWA users who expect notifications when the app is closed
-
 ## [1.2.0] - 2026-01-11
 
 ### Added
