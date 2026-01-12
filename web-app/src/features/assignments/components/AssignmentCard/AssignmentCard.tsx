@@ -1,6 +1,7 @@
 import { memo, useMemo } from 'react'
 
 import type { Assignment } from '@/api/client'
+import { useAssignmentConflicts } from '@/features/assignments/hooks/useCalendarConflicts'
 import { useActiveAssociationCode } from '@/features/auth/hooks/useActiveAssociation'
 import { ExpandableCard } from '@/shared/components/ExpandableCard'
 import { useDateFormat } from '@/shared/hooks/useDateFormat'
@@ -133,6 +134,11 @@ function AssignmentCardComponent({
   const singleBallMatch = detectSingleBallHall(assignment)
   const singleBallPdfPath = getSingleBallHallsPdfPath(locale)
 
+  // Get assignment conflicts from calendar data
+  // Uses the game ID to match against calendar assignments across all associations
+  const gameId = game?.__identity
+  const { conflicts } = useAssignmentConflicts(gameId)
+
   // Create context value
   const contextValue = useMemo(
     (): Omit<AssignmentCardContextValue, 'expandArrow'> => ({
@@ -160,6 +166,7 @@ function AssignmentCardComponent({
       openSbbConnection,
       singleBallMatch,
       singleBallPdfPath,
+      conflicts,
     }),
     [
       assignment,
@@ -186,6 +193,7 @@ function AssignmentCardComponent({
       openSbbConnection,
       singleBallMatch,
       singleBallPdfPath,
+      conflicts,
     ]
   )
 

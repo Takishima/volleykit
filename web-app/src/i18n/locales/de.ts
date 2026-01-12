@@ -268,6 +268,9 @@ const de: Translations = {
     singleBallHallConditional:
       'Spiel mit 1 Ball möglich (nur wenn ausnahmsweise nur eine Teilhalle zur Verfügung steht)',
     singleBallHallTooltip: '1-Ball-Halle',
+    conflictWarningTooltip: 'Terminkonflikt',
+    conflictWarningTitle: 'Möglicher Terminkonflikt',
+    hall: 'Halle',
   },
   compensations: {
     title: 'Entschädigungen',

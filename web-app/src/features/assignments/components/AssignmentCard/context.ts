@@ -2,6 +2,7 @@ import { createContext, useContext } from 'react'
 import type { ReactNode } from 'react'
 
 import type { Assignment } from '@/api/client'
+import type { AssignmentConflict } from '@/features/assignments/utils/conflict-detection'
 
 /** Helper to extract referee display name from deep nested structure */
 export function getRefereeDisplayName(
@@ -70,6 +71,8 @@ export interface AssignmentCardContextValue {
   singleBallPdfPath: string
   /** Pre-rendered expand arrow element */
   expandArrow: ReactNode | null
+  /** Scheduling conflicts with other assignments */
+  conflicts: AssignmentConflict[]
 }
 
 export const AssignmentCardContext = createContext<AssignmentCardContextValue | null>(null)

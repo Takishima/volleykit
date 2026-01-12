@@ -158,6 +158,9 @@ export interface Translations {
     singleBallHall: string
     singleBallHallConditional: string
     singleBallHallTooltip: string
+    conflictWarningTooltip: string
+    conflictWarningTitle: string
+    hall: string
   }
   compensations: {
     title: string

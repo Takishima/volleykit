@@ -1,9 +1,28 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, fireEvent } from '@testing-library/react'
+import type { ReactNode } from 'react'
 import { describe, it, expect, vi } from 'vitest'
 
 import type { Assignment } from '@/api/client'
 
 import { AssignmentCard } from './AssignmentCard'
+
+// Create a wrapper with QueryClientProvider for tests
+function createQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  })
+}
+
+// Wrapper function for rendering with QueryClientProvider
+function renderWithProviders(ui: ReactNode) {
+  const queryClient = createQueryClient()
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
+}
 
 // Helper to create mock assignment data
 function createMockAssignment(overrides: Partial<Assignment> = {}): Assignment {
@@ -37,7 +56,7 @@ function createMockAssignment(overrides: Partial<Assignment> = {}): Assignment {
 describe('AssignmentCard', () => {
   describe('rendering', () => {
     it('renders team names', () => {
-      render(<AssignmentCard assignment={createMockAssignment()} />)
+      renderWithProviders(<AssignmentCard assignment={createMockAssignment()} />)
 
       expect(screen.getByText('VBC Zürich')).toBeInTheDocument()
       // Away team is rendered as "vs TeamName" in compact view
@@ -45,7 +64,7 @@ describe('AssignmentCard', () => {
     })
 
     it('renders hall name in expanded view', () => {
-      render(<AssignmentCard assignment={createMockAssignment()} />)
+      renderWithProviders(<AssignmentCard assignment={createMockAssignment()} />)
 
       // Click to expand
       fireEvent.click(screen.getByRole('button'))
@@ -54,7 +73,7 @@ describe('AssignmentCard', () => {
     })
 
     it('renders formatted time', () => {
-      render(<AssignmentCard assignment={createMockAssignment()} />)
+      renderWithProviders(<AssignmentCard assignment={createMockAssignment()} />)
 
       // Time is formatted in local timezone (not UTC)
       // Match any valid HH:MM format since timezone varies by test environment
@@ -62,13 +81,13 @@ describe('AssignmentCard', () => {
     })
 
     it('renders position label in compact view', () => {
-      render(<AssignmentCard assignment={createMockAssignment()} />)
+      renderWithProviders(<AssignmentCard assignment={createMockAssignment()} />)
 
       expect(screen.getByText('1st Referee')).toBeInTheDocument()
     })
 
     it('renders status label in expanded view', () => {
-      render(<AssignmentCard assignment={createMockAssignment()} />)
+      renderWithProviders(<AssignmentCard assignment={createMockAssignment()} />)
 
       // Click to expand
       fireEvent.click(screen.getByRole('button'))
@@ -77,7 +96,7 @@ describe('AssignmentCard', () => {
     })
 
     it('renders league category in compact view', () => {
-      render(<AssignmentCard assignment={createMockAssignment()} />)
+      renderWithProviders(<AssignmentCard assignment={createMockAssignment()} />)
 
       // League category is visible in compact view (no expansion needed)
       expect(screen.getByText('NLA')).toBeInTheDocument()
@@ -107,7 +126,7 @@ describe('AssignmentCard', () => {
         },
       } as Partial<Assignment>)
 
-      render(<AssignmentCard assignment={assignment} />)
+      renderWithProviders(<AssignmentCard assignment={assignment} />)
 
       // Click to expand
       fireEvent.click(screen.getByRole('button'))
@@ -138,7 +157,7 @@ describe('AssignmentCard', () => {
         },
       } as Partial<Assignment>)
 
-      render(<AssignmentCard assignment={assignment} />)
+      renderWithProviders(<AssignmentCard assignment={assignment} />)
 
       // City appears in the address link
       expect(screen.getByRole('link', { name: /Zürich in maps/i })).toBeInTheDocument()
@@ -162,7 +181,7 @@ describe('AssignmentCard', () => {
         },
       } as Partial<Assignment>)
 
-      render(<AssignmentCard assignment={assignment} />)
+      renderWithProviders(<AssignmentCard assignment={assignment} />)
 
       // Should still render the expand button
       const button = screen.getByRole('button')
@@ -183,7 +202,7 @@ describe('AssignmentCard', () => {
         },
       } as Partial<Assignment>)
 
-      render(<AssignmentCard assignment={assignment} />)
+      renderWithProviders(<AssignmentCard assignment={assignment} />)
 
       expect(screen.getAllByText('TBD').length).toBeGreaterThan(0)
       expect(screen.getByText('Location TBD')).toBeInTheDocument()
@@ -192,7 +211,7 @@ describe('AssignmentCard', () => {
 
   describe('status colors', () => {
     it('shows green for active status in expanded view', () => {
-      render(
+      renderWithProviders(
         <AssignmentCard
           assignment={createMockAssignment({
             refereeConvocationStatus: 'active',
@@ -208,7 +227,7 @@ describe('AssignmentCard', () => {
     })
 
     it('shows red for cancelled status in expanded view', () => {
-      render(
+      renderWithProviders(
         <AssignmentCard
           assignment={createMockAssignment({
             refereeConvocationStatus: 'cancelled',
@@ -224,7 +243,7 @@ describe('AssignmentCard', () => {
     })
 
     it('shows gray for archived status in expanded view', () => {
-      render(
+      renderWithProviders(
         <AssignmentCard
           assignment={createMockAssignment({
             refereeConvocationStatus: 'archived',
@@ -243,7 +262,7 @@ describe('AssignmentCard', () => {
   describe('interactivity', () => {
     it('calls onClick when clicked', () => {
       const onClick = vi.fn()
-      render(<AssignmentCard assignment={createMockAssignment()} onClick={onClick} />)
+      renderWithProviders(<AssignmentCard assignment={createMockAssignment()} onClick={onClick} />)
 
       fireEvent.click(screen.getByRole('button'))
       expect(onClick).toHaveBeenCalledTimes(1)
@@ -251,7 +270,7 @@ describe('AssignmentCard', () => {
 
     it('handles keyboard activation (native button behavior)', () => {
       const onClick = vi.fn()
-      render(<AssignmentCard assignment={createMockAssignment()} onClick={onClick} />)
+      renderWithProviders(<AssignmentCard assignment={createMockAssignment()} onClick={onClick} />)
 
       // Native buttons handle Enter/Space automatically via click events
       const button = screen.getByRole('button')
@@ -260,7 +279,7 @@ describe('AssignmentCard', () => {
     })
 
     it('always has button role for expand/collapse functionality', () => {
-      render(<AssignmentCard assignment={createMockAssignment()} />)
+      renderWithProviders(<AssignmentCard assignment={createMockAssignment()} />)
 
       // Card is always interactive for expand/collapse even without onClick handler
       expect(screen.getByRole('button')).toBeInTheDocument()
@@ -269,7 +288,7 @@ describe('AssignmentCard', () => {
 
   describe('accessibility', () => {
     it('uses aria-expanded for disclosure pattern', () => {
-      render(<AssignmentCard assignment={createMockAssignment()} />)
+      renderWithProviders(<AssignmentCard assignment={createMockAssignment()} />)
 
       const button = screen.getByRole('button')
       expect(button).toHaveAttribute('aria-expanded', 'false')
@@ -277,7 +296,7 @@ describe('AssignmentCard', () => {
     })
 
     it('is naturally focusable as a native button', () => {
-      const { container } = render(<AssignmentCard assignment={createMockAssignment()} />)
+      const { container } = renderWithProviders(<AssignmentCard assignment={createMockAssignment()} />)
 
       // Native button elements are focusable by default
       const button = container.querySelector('button')
@@ -286,7 +305,7 @@ describe('AssignmentCard', () => {
     })
 
     it('hides location icon from screen readers', () => {
-      const { container } = render(<AssignmentCard assignment={createMockAssignment()} />)
+      const { container } = renderWithProviders(<AssignmentCard assignment={createMockAssignment()} />)
 
       // SVG icon should have aria-hidden for accessibility
       const svg = container.querySelector('svg[aria-hidden="true"]')
@@ -305,7 +324,7 @@ describe('AssignmentCard', () => {
 
     positions.forEach(({ key, label }) => {
       it(`renders correct label for ${key} in compact view`, () => {
-        render(<AssignmentCard assignment={createMockAssignment({ refereePosition: key })} />)
+        renderWithProviders(<AssignmentCard assignment={createMockAssignment({ refereePosition: key })} />)
         expect(screen.getByText(label)).toBeInTheDocument()
       })
     })
@@ -315,14 +334,14 @@ describe('AssignmentCard', () => {
       const assignment = createMockAssignment({
         refereePosition: 'unknown-position' as Assignment['refereePosition'],
       })
-      render(<AssignmentCard assignment={assignment} />)
+      renderWithProviders(<AssignmentCard assignment={assignment} />)
       expect(screen.getByText('unknown-position')).toBeInTheDocument()
     })
   })
 
   describe('expand/collapse', () => {
     it('expands on click', () => {
-      render(<AssignmentCard assignment={createMockAssignment()} />)
+      renderWithProviders(<AssignmentCard assignment={createMockAssignment()} />)
 
       const card = screen.getByRole('button')
       expect(card).toHaveAttribute('aria-expanded', 'false')
@@ -332,7 +351,7 @@ describe('AssignmentCard', () => {
     })
 
     it('collapses on second click', () => {
-      render(<AssignmentCard assignment={createMockAssignment()} />)
+      renderWithProviders(<AssignmentCard assignment={createMockAssignment()} />)
 
       const card = screen.getByRole('button')
       fireEvent.click(card) // expand
@@ -342,7 +361,7 @@ describe('AssignmentCard', () => {
     })
 
     it('aria-controls links to details section', () => {
-      const { container } = render(<AssignmentCard assignment={createMockAssignment()} />)
+      const { container } = renderWithProviders(<AssignmentCard assignment={createMockAssignment()} />)
 
       const button = screen.getByRole('button')
       const controlsId = button.getAttribute('aria-controls')
@@ -384,7 +403,7 @@ describe('AssignmentCard', () => {
         },
       } as Partial<Assignment>)
 
-      render(<AssignmentCard assignment={assignment} />)
+      renderWithProviders(<AssignmentCard assignment={assignment} />)
 
       // Expand to see location
       fireEvent.click(screen.getByRole('button'))
@@ -427,7 +446,7 @@ describe('AssignmentCard', () => {
         },
       } as Partial<Assignment>)
 
-      render(<AssignmentCard assignment={assignment} />)
+      renderWithProviders(<AssignmentCard assignment={assignment} />)
 
       // Expand to see location
       fireEvent.click(screen.getByRole('button'))
@@ -469,7 +488,7 @@ describe('AssignmentCard', () => {
         },
       } as Partial<Assignment>)
 
-      render(<AssignmentCard assignment={assignment} />)
+      renderWithProviders(<AssignmentCard assignment={assignment} />)
 
       // Expand to see location
       fireEvent.click(screen.getByRole('button'))
@@ -510,7 +529,7 @@ describe('AssignmentCard', () => {
         },
       } as Partial<Assignment>)
 
-      render(<AssignmentCard assignment={assignment} />)
+      renderWithProviders(<AssignmentCard assignment={assignment} />)
 
       const cardButton = screen.getByRole('button')
 
@@ -559,7 +578,7 @@ describe('AssignmentCard', () => {
         },
       } as Partial<Assignment>)
 
-      render(<AssignmentCard assignment={assignment} />)
+      renderWithProviders(<AssignmentCard assignment={assignment} />)
 
       // Expand to see location
       fireEvent.click(screen.getByRole('button'))
