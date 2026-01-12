@@ -11,6 +11,7 @@ import { DistanceFilterToggle } from '@/shared/components/DistanceFilterToggle'
 import { FilterChip } from '@/shared/components/FilterChip'
 import { LevelFilterToggle } from '@/shared/components/LevelFilterToggle'
 import { LoadingState, ErrorState, EmptyState } from '@/shared/components/LoadingSpinner'
+import { PullToRefresh } from '@/shared/components/PullToRefresh'
 import { SwipeableCard } from '@/shared/components/SwipeableCard'
 import { Tabs, TabPanel } from '@/shared/components/Tabs'
 import { TravelTimeFilterToggle } from '@/shared/components/TravelTimeFilterToggle'
@@ -307,6 +308,11 @@ export function ExchangePage() {
   const hasAnyFilter =
     isLevelFilterAvailable || isDistanceFilterAvailable || isTravelTimeFilterAvailable
 
+  // Handler for pull-to-refresh - wraps refetch in async function
+  const handleRefresh = useCallback(async () => {
+    await refetch()
+  }, [refetch])
+
   // Horizontal scrollable filter chips with settings gear - only show on "Open" tab when any filter is available
   // Always show filter bar on "open" tab (at minimum we have "hide own" filter)
   const filterContent =
@@ -434,43 +440,45 @@ export function ExchangePage() {
   }
 
   return (
-    <div className="space-y-3">
-      {/* Filter tabs with optional filters */}
-      <Tabs
-        tabs={tabs}
-        activeTab={statusFilter}
-        onTabChange={handleTabChange}
-        ariaLabel={t('exchange.title')}
-        endContent={filterContent}
-      />
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div className="space-y-3">
+        {/* Filter tabs with optional filters */}
+        <Tabs
+          tabs={tabs}
+          activeTab={statusFilter}
+          onTabChange={handleTabChange}
+          ariaLabel={t('exchange.title')}
+          endContent={filterContent}
+        />
 
-      {/* Content - single TabPanel since all tabs show same component with different data */}
-      <TabPanel tabId={statusFilter} activeTab={statusFilter}>
-        {renderContent()}
-      </TabPanel>
+        {/* Content - single TabPanel since all tabs show same component with different data */}
+        <TabPanel tabId={statusFilter} activeTab={statusFilter}>
+          {renderContent()}
+        </TabPanel>
 
-      {/* Modals - exchange is guaranteed non-null by conditional render */}
-      {takeOverModal.exchange && (
-        <Suspense fallback={null}>
-          <TakeOverExchangeModal
-            exchange={takeOverModal.exchange}
-            isOpen={takeOverModal.isOpen}
-            onClose={takeOverModal.close}
-            onConfirm={handleTakeOverConfirm}
-          />
-        </Suspense>
-      )}
+        {/* Modals - exchange is guaranteed non-null by conditional render */}
+        {takeOverModal.exchange && (
+          <Suspense fallback={null}>
+            <TakeOverExchangeModal
+              exchange={takeOverModal.exchange}
+              isOpen={takeOverModal.isOpen}
+              onClose={takeOverModal.close}
+              onConfirm={handleTakeOverConfirm}
+            />
+          </Suspense>
+        )}
 
-      {removeFromExchangeModal.exchange && (
-        <Suspense fallback={null}>
-          <RemoveFromExchangeModal
-            exchange={removeFromExchangeModal.exchange}
-            isOpen={removeFromExchangeModal.isOpen}
-            onClose={removeFromExchangeModal.close}
-            onConfirm={handleRemoveConfirm}
-          />
-        </Suspense>
-      )}
-    </div>
+        {removeFromExchangeModal.exchange && (
+          <Suspense fallback={null}>
+            <RemoveFromExchangeModal
+              exchange={removeFromExchangeModal.exchange}
+              isOpen={removeFromExchangeModal.isOpen}
+              onClose={removeFromExchangeModal.close}
+              onConfirm={handleRemoveConfirm}
+            />
+          </Suspense>
+        )}
+      </div>
+    </PullToRefresh>
   )
 }
