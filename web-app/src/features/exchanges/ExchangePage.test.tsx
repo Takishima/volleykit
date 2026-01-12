@@ -30,6 +30,16 @@ vi.mock('@/shared/stores/auth')
 vi.mock('@/shared/stores/demo')
 vi.mock('@/shared/stores/settings')
 vi.mock('@/shared/hooks/useTour', () => mockUseTour)
+vi.mock('@/features/assignments/hooks/useCalendarConflicts', () => ({
+  useCalendarConflicts: () => ({
+    conflicts: new Map(),
+    assignments: [],
+    isLoading: false,
+    isError: false,
+    error: null,
+    hasCalendarCode: false,
+  }),
+}))
 vi.mock('@/features/auth/hooks/useActiveAssociation', () => ({
   useActiveAssociationCode: () => 'TEST',
 }))
@@ -140,6 +150,8 @@ describe('ExchangePage', () => {
       setMaxTravelTimeMinutes: vi.fn(),
       levelFilterEnabled: false,
       setLevelFilterEnabled: mockSetLevelFilterEnabled,
+      gameGapFilter: { enabled: false, minGapMinutes: 120 },
+      setGameGapFilterEnabled: vi.fn(),
     }
     vi.mocked(settingsStore.useSettingsStore).mockImplementation(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -287,6 +299,8 @@ describe('ExchangePage', () => {
         setMaxTravelTimeMinutes: vi.fn(),
         levelFilterEnabled: true,
         setLevelFilterEnabled: mockSetLevelFilterEnabled,
+        gameGapFilter: { enabled: false, minGapMinutes: 120 },
+        setGameGapFilterEnabled: vi.fn(),
       }
       vi.mocked(settingsStore.useSettingsStore).mockImplementation(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -324,6 +338,8 @@ describe('ExchangePage', () => {
         setMaxTravelTimeMinutes: vi.fn(),
         levelFilterEnabled: true,
         setLevelFilterEnabled: mockSetLevelFilterEnabled,
+        gameGapFilter: { enabled: false, minGapMinutes: 120 },
+        setGameGapFilterEnabled: vi.fn(),
       }
       vi.mocked(settingsStore.useSettingsStore).mockImplementation(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

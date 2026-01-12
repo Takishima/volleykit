@@ -23,6 +23,7 @@ vi.mock('@/shared/hooks/useTranslation', () => ({
         'exchange.settings.title': 'Exchange Settings',
         'exchange.settings.maxDistance': 'Maximum Distance',
         'exchange.settings.maxTravelTime': 'Maximum Travel Time',
+        'exchange.settings.minGameGap': 'Minimum Game Gap',
         'exchange.settings.description':
           'Filter exchanges by distance or travel time from your home location.',
         'common.close': 'Close',
@@ -71,6 +72,11 @@ describe('ExchangeSettingsSheet', () => {
       enabled: true,
     },
     setMaxTravelTimeForAssociation: vi.fn(),
+    gameGapFilter: {
+      minGapMinutes: 120,
+      enabled: false,
+    },
+    setMinGameGapMinutes: vi.fn(),
   }
 
   beforeEach(() => {
@@ -79,15 +85,16 @@ describe('ExchangeSettingsSheet', () => {
     mockUseTravelTimeAvailable.mockReturnValue(true)
   })
 
-  it('returns null when no home location is set', () => {
+  it('renders settings button even without home location (game gap filter always available)', () => {
     mockSettingsState.mockReturnValue({
       ...defaultSettingsState,
       homeLocation: null,
     })
 
-    const { container } = render(<ExchangeSettingsSheet />)
+    render(<ExchangeSettingsSheet />)
 
-    expect(container.firstChild).toBeNull()
+    // Game gap filter is always available, so settings button should render
+    expect(screen.getByRole('button', { name: 'Exchange Settings' })).toBeInTheDocument()
   })
 
   it('renders settings button when home location is available', () => {
@@ -234,9 +241,9 @@ describe('ExchangeSettingsSheet', () => {
 
     expect(screen.getByText('30m')).toBeInTheDocument()
     expect(screen.getByText('45m')).toBeInTheDocument()
-    // "1h" might appear in both the current value and preset labels
+    // "1h" and "2h" might appear multiple times (current value, presets, game gap presets)
     expect(screen.getAllByText('1h').length).toBeGreaterThanOrEqual(1)
-    expect(screen.getByText('2h')).toBeInTheDocument()
+    expect(screen.getAllByText('2h').length).toBeGreaterThanOrEqual(1)
   })
 
   it('displays description text', async () => {

@@ -357,8 +357,10 @@ const en: Translations = {
       title: 'Filter Settings',
       maxDistance: 'Maximum distance',
       maxTravelTime: 'Maximum travel time',
+      minGameGap: 'Minimum gap between games',
       description: 'These settings control the filter thresholds when filtering exchange offers.',
     },
+    filterByGameGap: 'Game gap',
   },
   positions: {
     'head-one': '1st Referee',

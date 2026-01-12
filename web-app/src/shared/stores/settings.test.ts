@@ -33,6 +33,10 @@ const DEFAULT_MODE_SETTINGS: ModeSettings = {
     reminderTimes: ['1h'],
     deliveryPreference: 'native',
   },
+  gameGapFilter: {
+    enabled: false,
+    minGapMinutes: 120,
+  },
 }
 
 /** Helper to reset store to clean state */
