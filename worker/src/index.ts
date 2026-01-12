@@ -170,6 +170,70 @@ export default {
       });
     }
 
+    // Version endpoint - returns worker git hash for PWA version tracking.
+    // The web app compares this against its stored worker version to determine
+    // if session tokens need to be invalidated (worker auth logic changed).
+    // This endpoint is public and includes CORS headers for browser access.
+    if (url.pathname === "/version") {
+      const origin = request.headers.get("Origin");
+      let allowedOrigins: string[];
+      try {
+        allowedOrigins = parseAllowedOrigins(env.ALLOWED_ORIGINS);
+      } catch {
+        return new Response("Server configuration error", {
+          status: 500,
+          headers: { "Content-Type": "text/plain" },
+        });
+      }
+
+      // Check origin for version endpoint (required for CORS)
+      // isAllowedOrigin returns false for null origin, so after this check origin is guaranteed non-null
+      if (!origin || !isAllowedOrigin(origin, allowedOrigins)) {
+        const errorHeaders: HeadersInit = {
+          "Content-Type": "text/plain",
+          ...securityHeaders(),
+        };
+        if (origin) {
+          Object.assign(errorHeaders, corsHeaders(origin));
+        }
+        return new Response("Forbidden: Origin not allowed", {
+          status: 403,
+          headers: errorHeaders,
+        });
+      }
+
+      // At this point, origin is guaranteed to be a non-null string
+
+      // Handle CORS preflight for version endpoint
+      if (request.method === "OPTIONS") {
+        return new Response(null, {
+          status: 204,
+          headers: corsHeaders(origin),
+        });
+      }
+
+      // Return worker version info
+      // __WORKER_GIT_HASH__ is injected at deploy time via wrangler --define
+      const workerGitHash =
+        typeof __WORKER_GIT_HASH__ !== "undefined" ? __WORKER_GIT_HASH__ : "dev";
+      return new Response(
+        JSON.stringify({
+          workerGitHash,
+          timestamp: new Date().toISOString(),
+        }),
+        {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+            // Cache for 5 minutes - version doesn't change within a deployment
+            "Cache-Control": "public, max-age=300",
+            ...corsHeaders(origin),
+            ...securityHeaders(),
+          },
+        },
+      );
+    }
+
     // Kill switch - immediately disable proxy if requested by Swiss Volley
     if (env.KILL_SWITCH === "true") {
       return new Response(
