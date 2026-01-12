@@ -116,6 +116,12 @@ interface AuthState {
   setActiveOccupation: (id: string) => void
   setAssociationSwitching: (isSwitching: boolean) => void
   hasMultipleAssociations: () => boolean
+  /**
+   * Clears stale session data (CSRF token and session token).
+   * Call this when the login page is displayed to prevent stale tokens
+   * from causing authentication errors.
+   */
+  clearStaleSession: () => void
   /** Returns true if in calendar mode */
   isCalendarMode: () => boolean
   /** Login with a calendar code. Validates the code format and fetches calendar data. */
@@ -820,6 +826,14 @@ export const useAuthStore = create<AuthState>()(
       hasMultipleAssociations: () => {
         // Use groupedEligibleAttributeValues which contains all user associations
         return hasMultipleAssociations(get().groupedEligibleAttributeValues)
+      },
+
+      clearStaleSession: () => {
+        // Clear both the API client session (CSRF token + session token) and the store's csrfToken.
+        // This prevents stale tokens from causing authentication errors when the user
+        // arrives at the login page with outdated cached credentials.
+        clearSession()
+        set({ csrfToken: null })
       },
 
       isCalendarMode: () => {

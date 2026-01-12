@@ -28,17 +28,25 @@ type LoginMode = 'full' | 'calendar'
 
 export function LoginPage() {
   const navigate = useNavigate()
-  const { login, loginWithCalendar, status, error, lockedUntil, setDemoAuthenticated } =
-    useAuthStore(
-      useShallow((state) => ({
-        login: state.login,
-        loginWithCalendar: state.loginWithCalendar,
-        status: state.status,
-        error: state.error,
-        lockedUntil: state.lockedUntil,
-        setDemoAuthenticated: state.setDemoAuthenticated,
-      }))
-    )
+  const {
+    login,
+    loginWithCalendar,
+    status,
+    error,
+    lockedUntil,
+    setDemoAuthenticated,
+    clearStaleSession,
+  } = useAuthStore(
+    useShallow((state) => ({
+      login: state.login,
+      loginWithCalendar: state.loginWithCalendar,
+      status: state.status,
+      error: state.error,
+      lockedUntil: state.lockedUntil,
+      setDemoAuthenticated: state.setDemoAuthenticated,
+      clearStaleSession: state.clearStaleSession,
+    }))
+  )
   const initializeDemoData = useDemoStore((state) => state.initializeDemoData)
   const { t } = useTranslation()
   const { needRefresh, updateApp, checkForUpdate, isChecking: isCheckingForUpdate } = usePWA()
@@ -85,6 +93,13 @@ export function LoginPage() {
       calendarValidationAbortRef.current?.abort()
     }
   }, [])
+
+  // Clear stale session data on mount to prevent authentication errors.
+  // On iOS PWA, cached CSRF tokens can become stale and cause "invalid credentials"
+  // errors even with correct username/password.
+  useEffect(() => {
+    clearStaleSession()
+  }, [clearStaleSession])
 
   // Countdown timer for lockout - ticks every second until lockout expires
   useEffect(() => {
