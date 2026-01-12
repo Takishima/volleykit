@@ -123,6 +123,9 @@ jobs:
             require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
           "
 
+          # Sync package-lock.json with the new version in package.json
+          cd web-app && npm install --package-lock-only
+
       - name: Get new version
         id: get_version
         run: |
