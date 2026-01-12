@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.4.0
+
+### Minor Changes
+
+- [#738](https://github.com/Takishima/volleykit/pull/738) [`9ee0d4c`](https://github.com/Takishima/volleykit/commit/9ee0d4cee01c3ff19727b5a9f9ac6a766370a2b9) Thanks [@Takishima](https://github.com/Takishima)! - Added GitHub spec-kit integration for spec-driven development workflow with Claude Code slash commands
+
+### Patch Changes
+
+- [#739](https://github.com/Takishima/volleykit/pull/739) [`401ef73`](https://github.com/Takishima/volleykit/commit/401ef734b52d5be3585b78aeeaf9b9316492f650) Thanks [@Takishima](https://github.com/Takishima)! - Improved login experience on iOS PWA when app update is needed:
+
+  - Shows inline "Update Now" button when login fails, suggesting app update may fix the issue
+  - Clears stale CSRF tokens when login page loads or app resumes from suspension
+  - Added pageshow event fallback for more reliable update detection on iOS PWA
+
+- [#737](https://github.com/Takishima/volleykit/pull/737) [`f9e088b`](https://github.com/Takishima/volleykit/commit/f9e088b7a616e54922f43992fbe5ba6baedc8ea3) Thanks [@Takishima](https://github.com/Takishima)! - Fixed release workflow not extracting changelog entries for GitHub release notes - the sed pattern expected `## [1.3.0]` format but Changesets generates `## 1.3.0` without brackets. Also fixed package-lock.json not being updated during releases by adding `npm install --package-lock-only` after version bump
+
 ## 1.3.0
 
 ### Minor Changes
