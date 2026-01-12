@@ -11,7 +11,8 @@ echo '{"async": true, "asyncTimeout": 300000}'
 
 echo "Setting up VolleyKit development environment..."
 
-# Install root dependencies (workspaces + changesets CLI)
+# Install root dependencies (changesets CLI)
+# Uses npm install (not ci) because root package-lock.json is not tracked
 (
   cd "$CLAUDE_PROJECT_DIR"
   echo "Installing root dependencies..."
