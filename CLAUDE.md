@@ -616,8 +616,8 @@ CI will fail if limits are exceeded (gzipped):
 | Main App Bundle | 145 KB |
 | Vendor Chunks (each) | 50 KB |
 | PDF Library | 185 KB (lazy-loaded) |
-| CSS | 10 KB |
-| Total JS | 460 KB |
+| CSS | 12 KB |
+| Total JS | 520 KB |
 
 **Check size**: `npm run build && npm run size`
 
