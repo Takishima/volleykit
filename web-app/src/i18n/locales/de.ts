@@ -366,9 +366,11 @@ const de: Translations = {
       title: 'Filtereinstellungen',
       maxDistance: 'Maximale Entfernung',
       maxTravelTime: 'Maximale Reisezeit',
+      minGameGap: 'Mindestabstand zwischen Spielen',
       description:
         'Diese Einstellungen steuern die Filterschwellen beim Filtern von Tauschangeboten.',
     },
+    filterByGameGap: 'Spielabstand',
   },
   positions: {
     'head-one': '1. Schiedsrichter',

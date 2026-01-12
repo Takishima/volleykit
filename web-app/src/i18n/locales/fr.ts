@@ -366,9 +366,11 @@ const fr: Translations = {
       title: 'Paramètres des filtres',
       maxDistance: 'Distance maximale',
       maxTravelTime: 'Temps de trajet maximal',
+      minGameGap: 'Écart minimum entre les matchs',
       description:
         "Ces paramètres contrôlent les seuils des filtres lors du filtrage des offres d'échange.",
     },
+    filterByGameGap: 'Écart entre matchs',
   },
   positions: {
     'head-one': '1er Arbitre',

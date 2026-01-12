@@ -246,3 +246,82 @@ export function formatGap(gapMinutes: number): string {
   }
   return `${minutes}min ${typeLabel}`
 }
+
+/** Default game duration for gap calculation when endTime is not available (in minutes) */
+const DEFAULT_GAME_DURATION_MINUTES = 90
+
+/**
+ * Calculates the minimum gap between a game time and a list of existing assignments.
+ * Used for filtering exchanges that would be too close to existing assignments.
+ *
+ * @param gameStartTime - ISO date string of the potential game start time
+ * @param assignments - User's existing calendar assignments
+ * @param gameDurationMinutes - Estimated game duration if calculating gap to following games
+ * @returns Minimum gap in minutes to any assignment (can be negative for overlaps), or null if no assignments
+ */
+export function calculateMinGapToAssignments(
+  gameStartTime: string | undefined,
+  assignments: CalendarAssignment[],
+  gameDurationMinutes = DEFAULT_GAME_DURATION_MINUTES
+): number | null {
+  if (!gameStartTime || assignments.length === 0) {
+    return null
+  }
+
+  const gameStart = new Date(gameStartTime).getTime()
+  if (isNaN(gameStart)) {
+    return null
+  }
+
+  // Estimated end time for the potential game
+  const gameEnd = gameStart + gameDurationMinutes * MS_PER_MINUTE
+
+  let minGap: number | null = null
+
+  for (const assignment of assignments) {
+    const assignmentStart = new Date(assignment.startTime).getTime()
+    const assignmentEnd = new Date(assignment.endTime).getTime()
+
+    if (isNaN(assignmentStart) || isNaN(assignmentEnd)) {
+      continue
+    }
+
+    // Calculate gap: positive means there's time between games, negative means overlap
+    // Case 1: Game is before assignment -> gap = assignment start - game end
+    // Case 2: Game is after assignment -> gap = game start - assignment end
+    const gapBeforeAssignment = (assignmentStart - gameEnd) / MS_PER_MINUTE
+    const gapAfterAssignment = (gameStart - assignmentEnd) / MS_PER_MINUTE
+
+    // The effective gap is the larger of the two (since one will be very negative)
+    const effectiveGap = Math.max(gapBeforeAssignment, gapAfterAssignment)
+
+    if (minGap === null || effectiveGap < minGap) {
+      minGap = effectiveGap
+    }
+  }
+
+  return minGap
+}
+
+/**
+ * Checks if a game has sufficient gap from all existing assignments.
+ *
+ * @param gameStartTime - ISO date string of the potential game start time
+ * @param assignments - User's existing calendar assignments
+ * @param minGapMinutes - Minimum required gap in minutes
+ * @returns true if the game has sufficient gap (or no assignments exist), false otherwise
+ */
+export function hasMinimumGapFromAssignments(
+  gameStartTime: string | undefined,
+  assignments: CalendarAssignment[],
+  minGapMinutes: number
+): boolean {
+  const minGap = calculateMinGapToAssignments(gameStartTime, assignments)
+
+  // If no gap calculated (no assignments or invalid time), allow the game
+  if (minGap === null) {
+    return true
+  }
+
+  return minGap >= minGapMinutes
+}

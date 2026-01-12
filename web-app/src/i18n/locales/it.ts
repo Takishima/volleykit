@@ -364,9 +364,11 @@ const it: Translations = {
       title: 'Impostazioni filtri',
       maxDistance: 'Distanza massima',
       maxTravelTime: 'Tempo di viaggio massimo',
+      minGameGap: 'Intervallo minimo tra le partite',
       description:
         'Queste impostazioni controllano le soglie dei filtri quando si filtrano le offerte di scambio.',
     },
+    filterByGameGap: 'Intervallo partite',
   },
   positions: {
     'head-one': '1° Arbitro',

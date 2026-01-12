@@ -246,8 +246,10 @@ export interface Translations {
       title: string
       maxDistance: string
       maxTravelTime: string
+      minGameGap: string
       description: string
     }
+    filterByGameGap: string
   }
   positions: {
     'head-one': string
