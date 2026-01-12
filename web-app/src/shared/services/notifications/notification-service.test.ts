@@ -179,8 +179,16 @@ describe('notificationService', () => {
     it('cancels a specific scheduled notification', () => {
       const now = Date.now()
 
-      notificationService.scheduleNotification('test-1', { title: 'Test 1', body: 'Body 1' }, now + 5000)
-      notificationService.scheduleNotification('test-2', { title: 'Test 2', body: 'Body 2' }, now + 10000)
+      notificationService.scheduleNotification(
+        'test-1',
+        { title: 'Test 1', body: 'Body 1' },
+        now + 5000
+      )
+      notificationService.scheduleNotification(
+        'test-2',
+        { title: 'Test 2', body: 'Body 2' },
+        now + 10000
+      )
 
       expect(notificationService.getScheduledNotifications()).toHaveLength(2)
 
@@ -194,7 +202,11 @@ describe('notificationService', () => {
     it('does nothing for non-existent ID', () => {
       const now = Date.now()
 
-      notificationService.scheduleNotification('test-1', { title: 'Test', body: 'Body' }, now + 5000)
+      notificationService.scheduleNotification(
+        'test-1',
+        { title: 'Test', body: 'Body' },
+        now + 5000
+      )
 
       notificationService.cancelScheduledNotification('non-existent')
 
@@ -278,7 +290,10 @@ describe('notificationService', () => {
       })
 
       expect(result.success).toBe(true)
-      expect(window.Notification).toHaveBeenCalledWith('Test', expect.objectContaining({ body: 'Test body' }))
+      expect(window.Notification).toHaveBeenCalledWith(
+        'Test',
+        expect.objectContaining({ body: 'Test body' })
+      )
 
       // Restore service worker
       Object.defineProperty(navigator, 'serviceWorker', {

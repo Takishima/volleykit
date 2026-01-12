@@ -10,7 +10,6 @@ import { useSettingsStore } from '@/shared/stores/settings'
 import {
   ProfileSection,
   PreferencesSection,
-  NotificationsSection,
   HomeLocationSection,
   TravelSettingsSection,
   DataProtectionSection,
@@ -43,9 +42,6 @@ export function SettingsPage() {
     setSafeValidation,
     preventZoom,
     setPreventZoom,
-    notificationSettings,
-    setNotificationsEnabled,
-    setNotificationReminderTimes,
   } = useSettingsStore(
     useShallow((state) => ({
       isSafeModeEnabled: state.isSafeModeEnabled,
@@ -54,9 +50,6 @@ export function SettingsPage() {
       setSafeValidation: state.setSafeValidation,
       preventZoom: state.preventZoom,
       setPreventZoom: state.setPreventZoom,
-      notificationSettings: state.notificationSettings,
-      setNotificationsEnabled: state.setNotificationsEnabled,
-      setNotificationReminderTimes: state.setNotificationReminderTimes,
     }))
   )
   const { t } = useTranslation()
@@ -73,13 +66,6 @@ export function SettingsPage() {
       {user && <ProfileSection user={user} />}
 
       <PreferencesSection preventZoom={preventZoom} onSetPreventZoom={setPreventZoom} />
-
-      <NotificationsSection
-        notificationsEnabled={notificationSettings.enabled}
-        reminderTimes={notificationSettings.reminderTimes}
-        onSetNotificationsEnabled={setNotificationsEnabled}
-        onSetReminderTimes={setNotificationReminderTimes}
-      />
 
       <HomeLocationSection />
 

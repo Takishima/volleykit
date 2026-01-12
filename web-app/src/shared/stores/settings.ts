@@ -644,7 +644,10 @@ export const useSettingsStore = create<SettingsState>()(
         setNotificationDeliveryPreference: (preference: NotificationPreference) => {
           set((state) =>
             updateModeAndTopLevel(state, (current) => ({
-              notificationSettings: { ...current.notificationSettings, deliveryPreference: preference },
+              notificationSettings: {
+                ...current.notificationSettings,
+                deliveryPreference: preference,
+              },
             }))
           )
         },
