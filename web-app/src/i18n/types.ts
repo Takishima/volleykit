@@ -400,6 +400,8 @@ export interface Translations {
     platform: string
     openWebsite: string
     roles: string
+    calendarSynced: string
+    calendarSyncedTooltip: string
     dataSource: string
     disclaimer: string
     updates: string

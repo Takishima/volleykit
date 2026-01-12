@@ -2,6 +2,7 @@ import { memo, useState, useEffect } from 'react'
 
 import { Badge } from '@/shared/components/Badge'
 import { Card, CardContent, CardHeader } from '@/shared/components/Card'
+import { Calendar } from '@/shared/components/icons'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useAuthStore } from '@/shared/stores/auth'
 import type { UserProfile } from '@/shared/stores/auth'
@@ -34,6 +35,7 @@ const DEMO_LAST_NAME = 'User'
 function ProfileSectionComponent({ user }: ProfileSectionProps) {
   const { t } = useTranslation()
   const dataSource = useAuthStore((state) => state.dataSource)
+  const calendarCode = useAuthStore((state) => state.calendarCode)
   const isDemoMode = dataSource === 'demo'
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(
     user.profilePictureUrl ?? null
@@ -172,6 +174,18 @@ function ProfileSectionComponent({ user }: ProfileSectionProps) {
                   {occ.associationCode && ` (${occ.associationCode})`}
                 </Badge>
               ))}
+            </div>
+          </div>
+        )}
+
+        {calendarCode && (
+          <div className="border-t border-border-subtle dark:border-border-subtle-dark pt-4">
+            <div
+              className="flex items-center gap-2 text-sm text-success-600 dark:text-success-400"
+              title={t('settings.calendarSyncedTooltip')}
+            >
+              <Calendar className="w-4 h-4" aria-hidden="true" />
+              <span>{t('settings.calendarSynced')}</span>
             </div>
           </div>
         )}
