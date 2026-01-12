@@ -108,13 +108,7 @@ function ExchangeSettingsSheetComponent({ dataTour }: ExchangeSettingsSheetProps
   // Use association-specific transport check for consistency with ExchangePage
   const isTransportEnabled = isTransportEnabledForAssociation(associationCode)
   const canShowTravelTimeSlider = hasHomeLocation && isTransportEnabled && isTravelTimeAvailable
-  // Game gap slider is always available since it can filter against user's assignments
-  const canShowGameGapSlider = true
-
-  // Don't show the gear icon if no settings are available
-  if (!canShowDistanceSlider && !canShowTravelTimeSlider && !canShowGameGapSlider) {
-    return null
-  }
+  // Game gap slider is always available since it works with user's calendar assignments
 
   // Format distance for display
   const formatDistance = (km: number): string => {
@@ -242,9 +236,8 @@ function ExchangeSettingsSheetComponent({ dataTour }: ExchangeSettingsSheetProps
             </div>
           )}
 
-          {/* Min Game Gap slider */}
-          {canShowGameGapSlider && (
-            <div className="space-y-3">
+          {/* Min Game Gap slider - always shown */}
+          <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Clock className="w-5 h-5 text-text-muted dark:text-text-muted-dark" />
                 <label
@@ -277,8 +270,7 @@ function ExchangeSettingsSheetComponent({ dataTour }: ExchangeSettingsSheetProps
                   </span>
                 ))}
               </div>
-            </div>
-          )}
+          </div>
 
           {/* Info text */}
           <p className="text-xs text-text-muted dark:text-text-muted-dark">
