@@ -26,6 +26,7 @@ vi.mock('@/shared/hooks/useTranslation', () => ({
 const mockLogin = vi.fn()
 const mockLoginWithCalendar = vi.fn()
 const mockSetDemoAuthenticated = vi.fn()
+const mockClearStaleSession = vi.fn()
 const mockInitializeDemoData = vi.fn()
 
 function mockAuthStoreState(overrides = {}) {
@@ -34,7 +35,9 @@ function mockAuthStoreState(overrides = {}) {
     loginWithCalendar: mockLoginWithCalendar,
     status: 'idle' as const,
     error: null,
+    lockedUntil: null,
     setDemoAuthenticated: mockSetDemoAuthenticated,
+    clearStaleSession: mockClearStaleSession,
     ...overrides,
   }
   vi.mocked(authStore.useAuthStore).mockImplementation((selector?: unknown) => {

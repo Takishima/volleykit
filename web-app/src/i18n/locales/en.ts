@@ -190,6 +190,8 @@ const en: Translations = {
       'A new version is available. Please update before logging in to avoid errors.',
     updateNow: 'Update Now',
     updating: 'Updating...',
+    loginFailedTryUpdate: 'If the problem persists, try updating the app.',
+    loginFailedUpdateAvailable: 'An app update is available that may fix this issue.',
   },
   calendarError: {
     title: 'Calendar Error',

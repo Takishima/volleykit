@@ -193,6 +193,9 @@ const fr: Translations = {
       'Une nouvelle version est disponible. Veuillez mettre à jour avant de vous connecter pour éviter les erreurs.',
     updateNow: 'Mettre à jour',
     updating: 'Mise à jour...',
+    loginFailedTryUpdate: "Si le problème persiste, essayez de mettre à jour l'application.",
+    loginFailedUpdateAvailable:
+      "Une mise à jour de l'application est disponible qui peut résoudre ce problème.",
   },
   calendarError: {
     title: 'Erreur de calendrier',
