@@ -95,7 +95,7 @@
     "react-router-dom": "^7.10.1",
     "tailwindcss": "^4.1.17",
     "zod": "^4.3.5",
-    "zustand": "^5.0.9"
+    "zustand": "^5.0.10"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.2",
