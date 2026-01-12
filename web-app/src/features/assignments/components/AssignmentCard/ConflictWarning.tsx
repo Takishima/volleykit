@@ -13,7 +13,8 @@ function useFormatGap() {
 
   return (gapMinutes: number): string => {
     const { type, hours, minutes } = parseGap(gapMinutes)
-    const typeLabel = type === 'overlap' ? t('assignments.conflictOverlap') : t('assignments.conflictGap')
+    const typeLabel =
+      type === 'overlap' ? t('assignments.conflictOverlap') : t('assignments.conflictGap')
 
     if (hours > 0 && minutes > 0) {
       return `${hours}h ${minutes}min ${typeLabel}`

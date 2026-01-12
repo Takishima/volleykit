@@ -15,6 +15,16 @@ import type { CalendarAssignment } from '@/features/assignments/api/ical/types'
 /** Default minimum gap between assignments to avoid conflict (in minutes) */
 const DEFAULT_CONFLICT_THRESHOLD_MINUTES = 60
 
+/**
+ * Evaluator function to determine if two assignments conflict.
+ * Used to customize conflict detection logic beyond simple time gaps.
+ *
+ * @param a - First assignment
+ * @param b - Second assignment
+ * @returns true if the assignments conflict, false otherwise
+ */
+export type ConflictEvaluator = (a: CalendarAssignment, b: CalendarAssignment) => boolean
+
 /** Time conversion constants */
 const MINUTES_PER_HOUR = 60
 const MS_PER_MINUTE = 60000 // 60 * 1000
@@ -57,13 +67,18 @@ export type ConflictMap = Map<string, AssignmentConflict[]>
  * - The gap between end of one and start of another is less than the threshold
  * - They are not the same assignment
  *
+ * A custom evaluator can be provided to override the default time-based logic.
+ * This allows for location-based or other custom conflict detection.
+ *
  * @param assignments - All calendar assignments to check
  * @param thresholdMinutes - Minimum required gap between assignments (default: 60)
+ * @param evaluator - Optional custom function to determine if two assignments conflict
  * @returns Map of assignment IDs to their conflicts
  */
 export function detectConflicts(
   assignments: CalendarAssignment[],
-  thresholdMinutes = DEFAULT_CONFLICT_THRESHOLD_MINUTES
+  thresholdMinutes = DEFAULT_CONFLICT_THRESHOLD_MINUTES,
+  evaluator?: ConflictEvaluator
 ): ConflictMap {
   const conflicts: ConflictMap = new Map()
 
@@ -85,10 +100,11 @@ export function detectConflicts(
       const otherEnd = new Date(other.endTime)
 
       // If other starts more than threshold after current ends, no conflict possible
+      // (only use this optimization when no custom evaluator is provided)
       const gapFromCurrentEndToOtherStart =
         (otherStart.getTime() - currentEnd.getTime()) / MS_PER_MINUTE
 
-      if (gapFromCurrentEndToOtherStart >= thresholdMinutes) {
+      if (!evaluator && gapFromCurrentEndToOtherStart >= thresholdMinutes) {
         // Since sorted by start time, no more conflicts possible for current
         break
       }
@@ -101,7 +117,10 @@ export function detectConflicts(
       // The relevant gap depends on which assignment starts first
       const effectiveGap = Math.max(gapFromCurrentEndToOtherStart, gapFromOtherEndToCurrentStart)
 
-      if (effectiveGap < thresholdMinutes) {
+      // Determine if there's a conflict using custom evaluator or default time-based logic
+      const isConflict = evaluator ? evaluator(current, other) : effectiveGap < thresholdMinutes
+
+      if (isConflict) {
         // Found a conflict - add to both assignments
         const conflictForCurrent: AssignmentConflict = {
           assignmentId: current.gameId,

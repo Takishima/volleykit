@@ -144,6 +144,45 @@ describe('conflict-detection', () => {
       const conflicts = detectConflicts(assignments)
       expect(conflicts.size).toBe(2)
     })
+
+    it('should use custom evaluator when provided', () => {
+      const assignments = [
+        createAssignment('1', '2024-01-15T10:00:00Z', '2024-01-15T12:00:00Z'),
+        createAssignment('2', '2024-01-15T12:30:00Z', '2024-01-15T14:30:00Z'),
+      ]
+      // 30 min gap would normally be a conflict with default 60 min threshold
+      // But custom evaluator says no conflicts
+      const neverConflict = () => false
+      const conflicts = detectConflicts(assignments, 60, neverConflict)
+      expect(conflicts.size).toBe(0)
+    })
+
+    it('should detect conflicts when custom evaluator returns true', () => {
+      const assignments = [
+        createAssignment('1', '2024-01-15T10:00:00Z', '2024-01-15T12:00:00Z'),
+        createAssignment('2', '2024-01-15T15:00:00Z', '2024-01-15T17:00:00Z'),
+      ]
+      // 3 hour gap would not normally be a conflict with default 60 min threshold
+      // But custom evaluator says always conflict
+      const alwaysConflict = () => true
+      const conflicts = detectConflicts(assignments, 60, alwaysConflict)
+      expect(conflicts.size).toBe(2)
+    })
+
+    it('should pass assignments to custom evaluator in order', () => {
+      const assignments = [
+        createAssignment('1', '2024-01-15T10:00:00Z', '2024-01-15T12:00:00Z'),
+        createAssignment('2', '2024-01-15T12:30:00Z', '2024-01-15T14:30:00Z'),
+      ]
+      const evaluatorCalls: Array<[string, string]> = []
+      const trackingEvaluator = (a: CalendarAssignment, b: CalendarAssignment) => {
+        evaluatorCalls.push([a.gameId, b.gameId])
+        return false
+      }
+      detectConflicts(assignments, 60, trackingEvaluator)
+      // Should be called with first assignment first (sorted by start time)
+      expect(evaluatorCalls).toEqual([['1', '2']])
+    })
   })
 
   describe('getConflictsForAssignment', () => {

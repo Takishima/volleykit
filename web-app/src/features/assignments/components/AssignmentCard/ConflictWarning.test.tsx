@@ -208,7 +208,9 @@ describe('ConflictWarning components', () => {
     it('should have visual warning styling', () => {
       render(<ConflictDetails conflicts={[createMockConflict()]} />)
 
-      const container = screen.getByText('Potential scheduling conflict').closest('div')?.parentElement
+      const container = screen
+        .getByText('Potential scheduling conflict')
+        .closest('div')?.parentElement
       expect(container).toHaveClass('bg-red-50')
       expect(container).toHaveClass('border-red-200')
     })

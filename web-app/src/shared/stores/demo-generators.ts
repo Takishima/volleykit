@@ -1504,3 +1504,186 @@ export function updateCompensationRecord(
     },
   }
 }
+
+/**
+ * Demo calendar assignment for conflict detection.
+ * Matches the CalendarAssignment type from the iCal parser.
+ */
+export interface DemoCalendarAssignment {
+  gameId: string
+  gameNumber: number | null
+  role: 'referee1' | 'referee2' | 'lineReferee' | 'scorer' | 'unknown'
+  roleRaw: string
+  startTime: string
+  endTime: string
+  homeTeam: string
+  awayTeam: string
+  league: string
+  leagueCategory: string | null
+  address: string | null
+  coordinates: { latitude: number; longitude: number } | null
+  hallName: string | null
+  hallId: string | null
+  gender: 'men' | 'women' | 'mixed' | 'unknown'
+  mapsUrl: string | null
+  plusCode: string | null
+  referees: {
+    referee1?: string
+    referee2?: string
+    lineReferee1?: string
+    lineReferee2?: string
+  }
+  association: string | null
+}
+
+/**
+ * Generates demo calendar assignments with scheduling conflicts.
+ *
+ * Creates assignments across multiple associations to demonstrate
+ * cross-association conflict detection. Includes:
+ * - Two assignments on the same day with only 30 min gap (conflict)
+ * - One assignment from a different association (SVRZ) also conflicting
+ * - Several non-conflicting assignments
+ *
+ * @param now - Current date/time for relative date calculations
+ * @returns Array of CalendarAssignment objects with intentional conflicts
+ */
+export function generateDemoCalendarAssignments(now = new Date()): DemoCalendarAssignment[] {
+  // Game in 2 days at 14:00, ends ~16:00 (SV)
+  const game1Start = addDays(now, 2)
+  game1Start.setHours(14, 0, 0, 0)
+  const game1End = new Date(game1Start)
+  game1End.setHours(16, 0, 0, 0)
+
+  // Game in 2 days at 16:30 - only 30 min after game1 ends (SV) - CONFLICT!
+  const game2Start = addDays(now, 2)
+  game2Start.setHours(16, 30, 0, 0)
+  const game2End = new Date(game2Start)
+  game2End.setHours(18, 30, 0, 0)
+
+  // Game in 2 days at 17:00 from different association (SVRZ) - CONFLICT with game2!
+  const game3Start = addDays(now, 2)
+  game3Start.setHours(17, 0, 0, 0)
+  const game3End = new Date(game3Start)
+  game3End.setHours(19, 0, 0, 0)
+
+  // Game in 5 days - no conflict
+  const game4Start = addDays(now, 5)
+  game4Start.setHours(18, 0, 0, 0)
+  const game4End = new Date(game4Start)
+  game4End.setHours(20, 0, 0, 0)
+
+  // Game in 7 days - no conflict
+  const game5Start = addDays(now, 7)
+  game5Start.setHours(15, 0, 0, 0)
+  const game5End = new Date(game5Start)
+  game5End.setHours(17, 0, 0, 0)
+
+  return [
+    {
+      gameId: generateDemoUuid('demo-cal-1'),
+      gameNumber: 382700,
+      role: 'referee1',
+      roleRaw: 'ARB 1',
+      startTime: game1Start.toISOString(),
+      endTime: game1End.toISOString(),
+      homeTeam: 'NLZ Volleyball Academy',
+      awayTeam: 'Volley Luzern',
+      league: 'NLA Herren',
+      leagueCategory: 'NLA',
+      address: 'Talacherstrasse 2, 8302 Kloten',
+      coordinates: { latitude: 47.462187, longitude: 8.577813 },
+      hallName: 'Sporthalle Ruebisbach',
+      hallId: '3661',
+      gender: 'men',
+      mapsUrl: 'https://maps.google.com/?q=47.462187,8.577813',
+      plusCode: '8FVCFH6H+V4',
+      referees: { referee1: 'Demo User', referee2: 'Max Mustermann' },
+      association: 'SV',
+    },
+    {
+      gameId: generateDemoUuid('demo-cal-2'),
+      gameNumber: 382701,
+      role: 'referee1',
+      roleRaw: 'ARB 1',
+      startTime: game2Start.toISOString(),
+      endTime: game2End.toISOString(),
+      homeTeam: 'Volley Schönenwerd',
+      awayTeam: 'Traktor Basel',
+      league: 'NLA Herren',
+      leagueCategory: 'NLA',
+      address: 'Aarestrasse 20, 5012 Schönenwerd',
+      coordinates: { latitude: 47.379687, longitude: 8.004062 },
+      hallName: 'Betoncoupe Arena',
+      hallId: '3662',
+      gender: 'men',
+      mapsUrl: 'https://maps.google.com/?q=47.379687,8.004062',
+      plusCode: '8FVC92H3+VJ',
+      referees: { referee1: 'Demo User', referee2: 'Anna Schmidt' },
+      association: 'SV',
+    },
+    {
+      gameId: generateDemoUuid('demo-cal-3'),
+      gameNumber: 382702,
+      role: 'referee2',
+      roleRaw: 'ARB 2',
+      startTime: game3Start.toISOString(),
+      endTime: game3End.toISOString(),
+      homeTeam: 'VBC Zürich',
+      awayTeam: 'VBC Winterthur',
+      league: '2L Herren',
+      leagueCategory: '2L',
+      address: 'Wallisellerstrasse 57, 8050 Zürich',
+      coordinates: { latitude: 47.405062, longitude: 8.551313 },
+      hallName: 'Sporthalle Oerlikon',
+      hallId: '3663',
+      gender: 'men',
+      mapsUrl: 'https://maps.google.com/?q=47.405062,8.551313',
+      plusCode: null,
+      referees: { referee1: 'Thomas Weber', referee2: 'Demo User' },
+      association: 'SVRZ',
+    },
+    {
+      gameId: generateDemoUuid('demo-cal-4'),
+      gameNumber: 382703,
+      role: 'referee1',
+      roleRaw: 'ARB 1',
+      startTime: game4Start.toISOString(),
+      endTime: game4End.toISOString(),
+      homeTeam: 'Volley Näfels',
+      awayTeam: 'Volero Zürich',
+      league: 'NLB Damen',
+      leagueCategory: 'NLB',
+      address: 'Oberurnerstrasse 14, 8752 Näfels',
+      coordinates: { latitude: 47.108062, longitude: 9.065563 },
+      hallName: 'Lintharena',
+      hallId: '3664',
+      gender: 'women',
+      mapsUrl: 'https://maps.google.com/?q=47.108062,9.065563',
+      plusCode: '8FVF4358+66',
+      referees: { referee1: 'Demo User', referee2: 'Lisa Weber' },
+      association: 'SV',
+    },
+    {
+      gameId: generateDemoUuid('demo-cal-5'),
+      gameNumber: 382704,
+      role: 'referee1',
+      roleRaw: 'ARB 1',
+      startTime: game5Start.toISOString(),
+      endTime: game5End.toISOString(),
+      homeTeam: 'BTV Aarau',
+      awayTeam: 'TV Schönenwerd',
+      league: '3L Herren',
+      leagueCategory: '3L',
+      address: 'Tellistrasse 58, 5001 Aarau',
+      coordinates: { latitude: 47.396438, longitude: 8.057063 },
+      hallName: 'Berufsschule BSA',
+      hallId: '3665',
+      gender: 'men',
+      mapsUrl: 'https://maps.google.com/?q=47.396438,8.057063',
+      plusCode: '8FVC93W4+HR',
+      referees: { referee1: 'Demo User' },
+      association: 'SV',
+    },
+  ]
+}

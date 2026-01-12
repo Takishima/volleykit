@@ -296,7 +296,9 @@ describe('AssignmentCard', () => {
     })
 
     it('is naturally focusable as a native button', () => {
-      const { container } = renderWithProviders(<AssignmentCard assignment={createMockAssignment()} />)
+      const { container } = renderWithProviders(
+        <AssignmentCard assignment={createMockAssignment()} />
+      )
 
       // Native button elements are focusable by default
       const button = container.querySelector('button')
@@ -305,7 +307,9 @@ describe('AssignmentCard', () => {
     })
 
     it('hides location icon from screen readers', () => {
-      const { container } = renderWithProviders(<AssignmentCard assignment={createMockAssignment()} />)
+      const { container } = renderWithProviders(
+        <AssignmentCard assignment={createMockAssignment()} />
+      )
 
       // SVG icon should have aria-hidden for accessibility
       const svg = container.querySelector('svg[aria-hidden="true"]')
@@ -324,7 +328,9 @@ describe('AssignmentCard', () => {
 
     positions.forEach(({ key, label }) => {
       it(`renders correct label for ${key} in compact view`, () => {
-        renderWithProviders(<AssignmentCard assignment={createMockAssignment({ refereePosition: key })} />)
+        renderWithProviders(
+          <AssignmentCard assignment={createMockAssignment({ refereePosition: key })} />
+        )
         expect(screen.getByText(label)).toBeInTheDocument()
       })
     })
@@ -361,7 +367,9 @@ describe('AssignmentCard', () => {
     })
 
     it('aria-controls links to details section', () => {
-      const { container } = renderWithProviders(<AssignmentCard assignment={createMockAssignment()} />)
+      const { container } = renderWithProviders(
+        <AssignmentCard assignment={createMockAssignment()} />
+      )
 
       const button = screen.getByRole('button')
       const controlsId = button.getAttribute('aria-controls')

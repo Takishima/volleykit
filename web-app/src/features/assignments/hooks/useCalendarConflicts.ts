@@ -22,11 +22,13 @@ import {
   detectConflicts,
   type ConflictMap,
   type AssignmentConflict,
+  type ConflictEvaluator,
 } from '@/features/assignments/utils/conflict-detection'
 import { useAuthStore } from '@/shared/stores/auth'
+import { generateDemoCalendarAssignments } from '@/shared/stores/demo-generators'
 
 // Re-export types for convenience
-export type { ConflictMap, AssignmentConflict }
+export type { ConflictMap, AssignmentConflict, ConflictEvaluator }
 
 /** Default conflict threshold in minutes */
 const DEFAULT_CONFLICT_THRESHOLD_MINUTES = 60
@@ -38,6 +40,32 @@ const CALENDAR_CONFLICTS_STALE_TIME_MS = STALE_TIME_MINUTES * MS_PER_MINUTE
 
 // Stable empty map for consistent references
 const EMPTY_CONFLICT_MAP: ConflictMap = new Map()
+
+/**
+ * Default conflict evaluator based on time gap.
+ * Returns true if assignments are less than threshold minutes apart.
+ */
+export function createTimeGapEvaluator(thresholdMinutes: number): ConflictEvaluator {
+  return (a: CalendarAssignment, b: CalendarAssignment) => {
+    const aStart = new Date(a.startTime).getTime()
+    const aEnd = new Date(a.endTime).getTime()
+    const bStart = new Date(b.startTime).getTime()
+    const bEnd = new Date(b.endTime).getTime()
+
+    const msPerMinute = 60000
+    const thresholdMs = thresholdMinutes * msPerMinute
+
+    // Gap from a end to b start
+    const gapAToB = bStart - aEnd
+    // Gap from b end to a start
+    const gapBToA = aStart - bEnd
+
+    // Effective gap is the maximum of these (handles ordering)
+    const effectiveGap = Math.max(gapAToB, gapBToA)
+
+    return effectiveGap < thresholdMs
+  }
+}
 
 /**
  * Result of the calendar conflicts query.
@@ -53,8 +81,22 @@ export interface CalendarConflictsResult {
   isError: boolean
   /** Error object if query failed */
   error: Error | null
-  /** Whether the calendar code is available */
+  /** Whether the calendar code is available (or using demo mode) */
   hasCalendarCode: boolean
+}
+
+/**
+ * Options for the useCalendarConflicts hook.
+ */
+export interface UseCalendarConflictsOptions {
+  /** Minimum gap required between assignments in minutes (default: 60) */
+  thresholdMinutes?: number
+  /**
+   * Custom evaluator function to determine if two assignments conflict.
+   * When provided, overrides the default time-based evaluation.
+   * Can be used for location-based conflict detection or other custom logic.
+   */
+  evaluator?: ConflictEvaluator
 }
 
 /**
@@ -63,41 +105,65 @@ export interface CalendarConflictsResult {
  * This hook uses the calendar code stored in the auth store. The code
  * can be set during login (from the dashboard HTML) or manually.
  *
+ * In demo mode, this uses mock calendar data with intentional conflicts.
  * In calendar mode, this uses the same calendar code as the main app.
  * In API mode, this fetches the calendar in the background to detect
  * conflicts with assignments from other associations.
  *
- * @param thresholdMinutes - Minimum gap required between assignments (default: 60)
+ * @param options - Configuration options including threshold and custom evaluator
  * @returns Conflict detection result with map and loading state
  *
  * @example
  * ```tsx
+ * // Basic usage with default threshold
  * function AssignmentCard({ assignment }) {
- *   const { conflicts, isLoading } = useCalendarConflicts();
+ *   const { conflicts } = useCalendarConflicts();
  *   const assignmentConflicts = conflicts.get(assignment.gameId);
+ *   // ...
+ * }
  *
- *   if (assignmentConflicts?.length) {
- *     return <WarningBadge conflicts={assignmentConflicts} />;
- *   }
+ * // With custom evaluator (e.g., location-based)
+ * function AssignmentsPage() {
+ *   const myEvaluator = (a, b) => {
+ *     const timeConflict = createTimeGapEvaluator(60)(a, b);
+ *     const sameLocation = a.hallId === b.hallId;
+ *     return timeConflict && !sameLocation; // Only conflict if different venues
+ *   };
+ *   const { conflicts } = useCalendarConflicts({ evaluator: myEvaluator });
+ *   // ...
  * }
  * ```
  */
 export function useCalendarConflicts(
-  thresholdMinutes = DEFAULT_CONFLICT_THRESHOLD_MINUTES
+  options: UseCalendarConflictsOptions | number = {}
 ): CalendarConflictsResult {
+  // Support legacy signature: useCalendarConflicts(60)
+  const resolvedOptions: UseCalendarConflictsOptions =
+    typeof options === 'number' ? { thresholdMinutes: options } : options
+
+  const { thresholdMinutes = DEFAULT_CONFLICT_THRESHOLD_MINUTES, evaluator } = resolvedOptions
+
   const calendarCode = useAuthStore((state) => state.calendarCode)
   const isAuthenticated = useAuthStore((state) => state.status === 'authenticated')
+  const isDemoMode = useAuthStore((state) => state.dataSource === 'demo')
 
   const query: UseQueryResult<CalendarAssignment[], Error> = useQuery({
-    queryKey: queryKeys.calendar.assignmentsByCode(calendarCode ?? ''),
+    queryKey: isDemoMode
+      ? queryKeys.calendar.assignmentsByCode('demo')
+      : queryKeys.calendar.assignmentsByCode(calendarCode ?? ''),
     queryFn: ({ signal }) => {
+      // In demo mode, return mock calendar data with conflicts
+      if (isDemoMode) {
+        return Promise.resolve(generateDemoCalendarAssignments() as CalendarAssignment[])
+      }
+
       if (!calendarCode) {
         return Promise.resolve([])
       }
       return fetchCalendarAssignments(calendarCode, signal)
     },
-    // Only fetch when authenticated and have a calendar code
-    enabled: isAuthenticated && !!calendarCode,
+    // Enable for demo mode OR when authenticated with calendar code
+    enabled: isDemoMode || (isAuthenticated && !!calendarCode),
     staleTime: CALENDAR_CONFLICTS_STALE_TIME_MS,
     // Use empty array as placeholder
     placeholderData: [],
@@ -108,8 +174,8 @@ export function useCalendarConflicts(
     if (!query.data || query.data.length === 0) {
       return EMPTY_CONFLICT_MAP
     }
-    return detectConflicts(query.data, thresholdMinutes)
-  }, [query.data, thresholdMinutes])
+    return detectConflicts(query.data, thresholdMinutes, evaluator)
+  }, [query.data, thresholdMinutes, evaluator])
 
   return {
     conflicts,
@@ -117,7 +183,7 @@ export function useCalendarConflicts(
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error,
-    hasCalendarCode: !!calendarCode,
+    hasCalendarCode: isDemoMode || !!calendarCode,
   }
 }
 
