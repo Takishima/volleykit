@@ -49,10 +49,21 @@ export default function PWAProviderInternal({ children }: PWAProviderInternalPro
       }
     }
 
+    // pageshow event is more reliable on iOS Safari PWA for detecting
+    // app resume from suspension. The persisted property indicates if
+    // the page was restored from bfcache (back-forward cache).
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted && registrationRef.current) {
+        registrationRef.current.update().catch(() => {})
+      }
+    }
+
     document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('pageshow', handlePageShow)
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('pageshow', handlePageShow)
     }
   }, [])
 
