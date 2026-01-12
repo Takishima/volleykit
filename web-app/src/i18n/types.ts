@@ -88,6 +88,8 @@ export interface Translations {
     updateRequiredDescription: string
     updateNow: string
     updating: string
+    loginFailedTryUpdate: string
+    loginFailedUpdateAvailable: string
   }
   calendarError: {
     title: string

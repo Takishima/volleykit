@@ -192,6 +192,10 @@ const de: Translations = {
       'Eine neue Version ist verfügbar. Bitte aktualisieren Sie vor der Anmeldung, um Fehler zu vermeiden.',
     updateNow: 'Jetzt aktualisieren',
     updating: 'Aktualisierung...',
+    loginFailedTryUpdate:
+      'Falls das Problem weiterhin besteht, versuchen Sie die App zu aktualisieren.',
+    loginFailedUpdateAvailable:
+      'Ein App-Update ist verfügbar, das dieses Problem möglicherweise behebt.',
   },
   calendarError: {
     title: 'Kalenderfehler',

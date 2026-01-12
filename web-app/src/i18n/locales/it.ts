@@ -192,6 +192,9 @@ const it: Translations = {
       'È disponibile una nuova versione. Aggiorna prima di accedere per evitare errori.',
     updateNow: 'Aggiorna ora',
     updating: 'Aggiornamento...',
+    loginFailedTryUpdate: "Se il problema persiste, prova ad aggiornare l'app.",
+    loginFailedUpdateAvailable:
+      "È disponibile un aggiornamento dell'app che potrebbe risolvere questo problema.",
   },
   calendarError: {
     title: 'Errore calendario',

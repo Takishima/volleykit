@@ -8,6 +8,7 @@ import {
   extractCalendarCode,
   validateCalendarCode,
 } from '@/features/assignments/utils/calendar-helpers'
+import { LoginErrorWithUpdateHint } from '@/features/auth/components/LoginErrorWithUpdateHint'
 import { LoginUpdateBanner } from '@/features/auth/components/LoginUpdateBanner'
 import { Button } from '@/shared/components/Button'
 import { Volleyball } from '@/shared/components/icons'
@@ -40,7 +41,13 @@ export function LoginPage() {
     )
   const initializeDemoData = useDemoStore((state) => state.initializeDemoData)
   const { t } = useTranslation()
-  const { needRefresh, updateApp } = usePWA()
+  const { needRefresh, updateApp, checkForUpdate, isChecking: isCheckingForUpdate } = usePWA()
+
+  // Track if we've checked for updates after a login failure
+  // This helps show the update hint to users on iOS PWA where service worker
+  // update detection is unreliable
+  const [checkedForUpdateAfterError, setCheckedForUpdateAfterError] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
 
   const [loginMode, setLoginMode] = useState<LoginMode>('calendar')
   const [username, setUsername] = useState('')
@@ -100,6 +107,33 @@ export function LoginPage() {
 
     return () => clearInterval(interval)
   }, [lockedUntil])
+
+  // Check for updates when login fails - helps detect updates on iOS PWA
+  // where service worker update detection is unreliable
+  useEffect(() => {
+    const hasError = error || calendarError
+    if (hasError && !checkedForUpdateAfterError && !needRefresh) {
+      setCheckedForUpdateAfterError(true)
+      // Trigger update check - if an update is found, needRefresh will become true
+      checkForUpdate()
+    }
+    // Reset when error clears (user trying again)
+    if (!hasError) {
+      setCheckedForUpdateAfterError(false)
+    }
+  }, [error, calendarError, checkedForUpdateAfterError, needRefresh, checkForUpdate])
+
+  // Handle update button click
+  const handleUpdate = useCallback(async () => {
+    if (isUpdating) return
+    setIsUpdating(true)
+    try {
+      await updateApp()
+    } finally {
+      // Note: updateApp() typically reloads, so this may not execute
+      setIsUpdating(false)
+    }
+  }, [isUpdating, updateApp])
 
   // Determine if login should be disabled due to lockout
   const isLockedOut = lockoutCountdown !== null && lockoutCountdown > 0
@@ -363,11 +397,14 @@ export function LoginPage() {
                 </div>
 
                 {displayError && (
-                  <div className="p-3 rounded-lg bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800">
-                    <p className="text-sm text-danger-600 dark:text-danger-400">
-                      {getErrorMessage(displayError)}
-                    </p>
-                  </div>
+                  <LoginErrorWithUpdateHint
+                    errorMessage={getErrorMessage(displayError)}
+                    showUpdateHint={checkedForUpdateAfterError && !isLockedOut}
+                    updateAvailable={needRefresh}
+                    onUpdate={handleUpdate}
+                    isUpdating={isUpdating}
+                    isCheckingForUpdate={isCheckingForUpdate}
+                  />
                 )}
 
                 <Button
@@ -447,11 +484,14 @@ export function LoginPage() {
                 </div>
 
                 {displayError && (
-                  <div className="p-3 rounded-lg bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800">
-                    <p className="text-sm text-danger-600 dark:text-danger-400">
-                      {getErrorMessage(displayError)}
-                    </p>
-                  </div>
+                  <LoginErrorWithUpdateHint
+                    errorMessage={getErrorMessage(displayError)}
+                    showUpdateHint={checkedForUpdateAfterError}
+                    updateAvailable={needRefresh}
+                    onUpdate={handleUpdate}
+                    isUpdating={isUpdating}
+                    isCheckingForUpdate={isCheckingForUpdate}
+                  />
                 )}
 
                 <Button
