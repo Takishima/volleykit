@@ -105,13 +105,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Run changeset version from root (uses workspaces config)
+          # web-app/CHANGELOG.md is a symlink to ../CHANGELOG.md so
+          # changesets writes directly to root
           npx changeset version
-
-          # Changesets writes CHANGELOG.md to package directory (web-app/)
-          # Move it to root where we keep the project changelog
-          if [ -f web-app/CHANGELOG.md ]; then
-            mv web-app/CHANGELOG.md CHANGELOG.md
-          fi
 
       - name: Get new version
         id: get_version
