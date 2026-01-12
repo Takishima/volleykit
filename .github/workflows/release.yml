@@ -79,7 +79,6 @@ jobs:
           node-version: '22'
 
       - name: Install dependencies
-        working-directory: web-app
         run: npm ci
 
       - name: Configure Git
@@ -102,15 +101,17 @@ jobs:
 
       - name: Version packages (Changesets)
         if: steps.check_changesets.outputs.changeset_count != '0'
-        working-directory: web-app
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Run changeset version to:
-          # - Combine all changesets into CHANGELOG.md
-          # - Bump version in package.json
-          # - Delete changeset files
+          # Run changeset version from root (uses workspaces config)
           npx changeset version
+
+          # Changesets writes CHANGELOG.md to package directory (web-app/)
+          # Move it to root where we keep the project changelog
+          if [ -f web-app/CHANGELOG.md ]; then
+            mv web-app/CHANGELOG.md CHANGELOG.md
+          fi
 
       - name: Get new version
         id: get_version

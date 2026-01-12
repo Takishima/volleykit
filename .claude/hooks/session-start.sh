@@ -11,6 +11,13 @@ echo '{"async": true, "asyncTimeout": 300000}'
 
 echo "Setting up VolleyKit development environment..."
 
+# Install root dependencies (workspaces + changesets CLI)
+(
+  cd "$CLAUDE_PROJECT_DIR"
+  echo "Installing root dependencies..."
+  npm install
+)
+
 # Install web-app dependencies and generate API types
 (
   cd "$CLAUDE_PROJECT_DIR/web-app"
