@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.3.0
+
+### Minor Changes
+
+- [#729](https://github.com/Takishima/volleykit/pull/729) [`166bf02`](https://github.com/Takishima/volleykit/commit/166bf0291d5afffd6ef59249226bc17b40c9ac10) Thanks [@Takishima](https://github.com/Takishima)! - Added Changesets for changelog management - changelog entries are now staged as individual files in `.changeset/` directory, eliminating merge conflicts when multiple PRs modify the changelog
+
+### Patch Changes
+
+- [#729](https://github.com/Takishima/volleykit/pull/729) [`166bf02`](https://github.com/Takishima/volleykit/commit/166bf0291d5afffd6ef59249226bc17b40c9ac10) Thanks [@Takishima](https://github.com/Takishima)! - Fixed PDF download for compensation statements in PWA mode - the MIME type validation was case-sensitive and failed when servers returned `Application/PDF` or `application/pdf; charset=utf-8` instead of lowercase `application/pdf`
+
+- [#729](https://github.com/Takishima/volleykit/pull/729) [`166bf02`](https://github.com/Takishima/volleykit/commit/166bf0291d5afffd6ef59249226bc17b40c9ac10) Thanks [@Takishima](https://github.com/Takishima)! - PWA auto-refresh after update now works correctly on iOS - previously users experienced "invalid login" errors after automatic updates because stale session tokens and auth state remained in localStorage; now the update process clears session data and uses cache-busting URLs to bypass Safari's aggressive memory cache
+
+- [#729](https://github.com/Takishima/volleykit/pull/729) [`166bf02`](https://github.com/Takishima/volleykit/commit/166bf0291d5afffd6ef59249226bc17b40c9ac10) Thanks [@Takishima](https://github.com/Takishima)! - Removed notification settings section from Settings page - notifications can only be generated when the app is open, making them impractical for PWA users who expect notifications when the app is closed
+
 All notable changes to VolleyKit will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
@@ -132,15 +146,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Content Security Policy headers
 
 [Unreleased]: https://github.com/Takishima/volleykit/compare/v1.2.0...HEAD
-
 [1.2.0]: https://github.com/Takishima/volleykit/compare/v1.1.1...v1.2.0
-
 [1.1.1]: https://github.com/Takishima/volleykit/compare/v1.1.0...v1.1.1
-
 [1.1.0]: https://github.com/Takishima/volleykit/compare/v1.0.2...v1.1.0
-
 [1.0.2]: https://github.com/Takishima/volleykit/compare/v1.0.1...v1.0.2
-
 [1.0.1]: https://github.com/Takishima/volleykit/compare/v1.0.0...v1.0.1
-
 [1.0.0]: https://github.com/Takishima/volleykit/releases/tag/v1.0.0
