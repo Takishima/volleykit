@@ -104,10 +104,24 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Run changeset version from root (uses workspaces config)
-          # web-app/CHANGELOG.md is a symlink to ../CHANGELOG.md so
-          # changesets writes directly to root
+          # Temporarily add workspaces for changesets to find web-app
+          # (workspaces not in package.json to avoid npm ci issues in CI)
+          node -e "
+            const pkg = require('./package.json');
+            pkg.workspaces = ['web-app'];
+            require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+
+          # Run changeset version
+          # web-app/CHANGELOG.md is a symlink to ../CHANGELOG.md
           npx changeset version
+
+          # Remove workspaces from package.json
+          node -e "
+            const pkg = require('./package.json');
+            delete pkg.workspaces;
+            require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
 
       - name: Get new version
         id: get_version
