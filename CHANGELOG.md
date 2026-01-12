@@ -14,11 +14,6 @@
 
 - [#729](https://github.com/Takishima/volleykit/pull/729) [`166bf02`](https://github.com/Takishima/volleykit/commit/166bf0291d5afffd6ef59249226bc17b40c9ac10) Thanks [@Takishima](https://github.com/Takishima)! - Removed notification settings section from Settings page - notifications can only be generated when the app is open, making them impractical for PWA users who expect notifications when the app is closed
 
-All notable changes to VolleyKit will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
 ## [Unreleased]
 
 ## [1.2.0] - 2026-01-11
