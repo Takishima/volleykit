@@ -398,8 +398,8 @@ describe('useAuthStore', () => {
       expect(result).toBe(true)
       expect(useAuthStore.getState().status).toBe('authenticated')
       expect(setCsrfToken).toHaveBeenCalledWith('my-csrf-token-12345678901234567890')
-      // Should make 4 calls: login page + auth POST + dashboard + calendar code (background)
-      expect(mockFetch).toHaveBeenCalledTimes(4)
+      // Should make 3 calls: login page + auth POST + dashboard (calendar code extracted from dashboard)
+      expect(mockFetch).toHaveBeenCalledTimes(3)
     })
 
     it('failed login returns login page with error snackbar', async () => {
@@ -533,8 +533,8 @@ describe('useAuthStore', () => {
       expect(result).toBe(true)
       expect(useAuthStore.getState().status).toBe('authenticated')
       expect(setCsrfToken).toHaveBeenCalledWith('fresh-csrf-token-abcdef')
-      // 4 calls: login page fetch + auth POST + dashboard + calendar code (background)
-      expect(mockFetch).toHaveBeenCalledTimes(4)
+      // 3 calls: login page fetch + auth POST + dashboard (calendar code extracted from dashboard)
+      expect(mockFetch).toHaveBeenCalledTimes(3)
     })
 
     it('fails when auth request returns non-ok response', async () => {
@@ -750,8 +750,8 @@ describe('useAuthStore', () => {
       expect(useAuthStore.getState().status).toBe('authenticated')
       expect(useAuthStore.getState().user?.occupations).toHaveLength(1)
       expect(useAuthStore.getState().user?.occupations?.[0]?.type).toBe('referee')
-      // Should make 4 calls: login page + auth POST + dashboard + calendar code (background)
-      expect(mockFetch).toHaveBeenCalledTimes(4)
+      // Should make 3 calls: login page + auth POST + dashboard (calendar code extracted from dashboard)
+      expect(mockFetch).toHaveBeenCalledTimes(3)
     })
 
     it('resets stale activeOccupationId when it does not exist in new occupations', async () => {

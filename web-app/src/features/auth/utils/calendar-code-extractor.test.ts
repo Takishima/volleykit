@@ -57,6 +57,17 @@ describe('calendar-code-extractor', () => {
       expect(extractCalendarCodeFromHtml(html)).toBe('VUEABC')
     })
 
+    it('should extract code from uniqueId in dashboard JSON data', () => {
+      const html = '{"uniqueId":"BLYMVF","createdAt":"2019-11-12"}'
+      expect(extractCalendarCodeFromHtml(html)).toBe('BLYMVF')
+    })
+
+    it('should extract code from HTML-encoded uniqueId in dashboard', () => {
+      // Dashboard HTML encodes quotes as &quot; which becomes \" when parsed
+      const html = '&quot;uniqueId&quot;:&quot;ABCD12&quot;'
+      expect(extractCalendarCodeFromHtml(html)).toBe('ABCD12')
+    })
+
     it('should handle standard VolleyManager iCal path', () => {
       // Real VolleyManager uses "iCal" (capital C, lowercase al)
       const html = '/iCal/referee/UPPER1'

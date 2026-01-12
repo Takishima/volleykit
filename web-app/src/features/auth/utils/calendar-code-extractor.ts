@@ -51,6 +51,10 @@ const VUE_HASH_PATTERNS = [
   /"hash"\s*:\s*["']([a-zA-Z0-9]{6})["']/,
   // JSON property "calendarCode": "XXXXXX"
   /"calendar[Cc]ode"\s*:\s*["']([a-zA-Z0-9]{6})["']/,
+  // JSON property "uniqueId": "XXXXXX" (in dashboard active party data)
+  /"uniqueId"\s*:\s*\\?"([a-zA-Z0-9]{6})\\?"/,
+  // HTML-encoded uniqueId: &quot;uniqueId&quot;:&quot;XXXXXX&quot;
+  /&quot;uniqueId&quot;:&quot;([a-zA-Z0-9]{6})&quot;/,
 ]
 
 /**
