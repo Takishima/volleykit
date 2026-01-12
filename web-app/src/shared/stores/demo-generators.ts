@@ -1539,50 +1539,52 @@ export interface DemoCalendarAssignment {
 /**
  * Generates demo calendar assignments with scheduling conflicts.
  *
- * Creates assignments across multiple associations to demonstrate
- * cross-association conflict detection. Includes:
- * - Two assignments on the same day with only 30 min gap (conflict)
- * - One assignment from a different association (SVRZ) also conflicting
- * - Several non-conflicting assignments
+ * IMPORTANT: The gameId values MUST match the demo assignment game IDs
+ * (generated from 'demo-g-{index}') for conflict detection to work.
+ * The conflict map uses gameId as the key, and AssignmentCard looks up
+ * conflicts using refereeGame.game.__identity.
+ *
+ * Creates assignments that match the demo assignments page, plus an
+ * additional cross-association conflict from SVRZ.
  *
  * @param now - Current date/time for relative date calculations
  * @returns Array of CalendarAssignment objects with intentional conflicts
  */
 export function generateDemoCalendarAssignments(now = new Date()): DemoCalendarAssignment[] {
-  // Game in 2 days at 14:00, ends ~16:00 (SV)
+  // Assignment 1: 2 days from now at 14:00, ends ~16:00 (SV)
+  // This matches demo assignment index 1
   const game1Start = addDays(now, 2)
   game1Start.setHours(14, 0, 0, 0)
   const game1End = new Date(game1Start)
   game1End.setHours(16, 0, 0, 0)
 
-  // Game in 2 days at 16:30 - only 30 min after game1 ends (SV) - CONFLICT!
-  const game2Start = addDays(now, 2)
-  game2Start.setHours(16, 30, 0, 0)
+  // Assignment 2: Today + 3 hours (SV)
+  // This matches demo assignment index 2
+  const game2Start = addHours(now, 3)
+  // Round to nearest hour for cleaner display
+  game2Start.setMinutes(0, 0, 0)
   const game2End = new Date(game2Start)
-  game2End.setHours(18, 30, 0, 0)
+  game2End.setHours(game2Start.getHours() + 2, 0, 0, 0)
 
-  // Game in 2 days at 17:00 from different association (SVRZ) - CONFLICT with game2!
-  const game3Start = addDays(now, 2)
-  game3Start.setHours(17, 0, 0, 0)
+  // Assignment 3: 5 days from now (SV)
+  // This matches demo assignment index 3
+  const game3Start = addDays(now, 5)
+  game3Start.setHours(18, 0, 0, 0)
   const game3End = new Date(game3Start)
-  game3End.setHours(19, 0, 0, 0)
+  game3End.setHours(20, 0, 0, 0)
 
-  // Game in 5 days - no conflict
-  const game4Start = addDays(now, 5)
-  game4Start.setHours(18, 0, 0, 0)
-  const game4End = new Date(game4Start)
-  game4End.setHours(20, 0, 0, 0)
-
-  // Game in 7 days - no conflict
-  const game5Start = addDays(now, 7)
-  game5Start.setHours(15, 0, 0, 0)
-  const game5End = new Date(game5Start)
-  game5End.setHours(17, 0, 0, 0)
+  // Cross-association conflict: SVRZ game 30 min after assignment 1 ends
+  // This creates a conflict with assignment 1 (only 30 min gap < 60 min threshold)
+  const conflictStart = addDays(now, 2)
+  conflictStart.setHours(16, 30, 0, 0)
+  const conflictEnd = new Date(conflictStart)
+  conflictEnd.setHours(18, 30, 0, 0)
 
   return [
+    // Assignment 1: Matches demo-g-1 (2 days from now)
     {
-      gameId: generateDemoUuid('demo-cal-1'),
-      gameNumber: 382700,
+      gameId: generateDemoUuid('demo-g-1'),
+      gameNumber: DEMO_GAME_NUMBERS.ASSIGNMENTS[0],
       role: 'referee1',
       roleRaw: 'ARB 1',
       startTime: game1Start.toISOString(),
@@ -1598,37 +1600,18 @@ export function generateDemoCalendarAssignments(now = new Date()): DemoCalendarA
       gender: 'men',
       mapsUrl: 'https://maps.google.com/?q=47.462187,8.577813',
       plusCode: '8FVCFH6H+V4',
-      referees: { referee1: 'Demo User', referee2: 'Max Mustermann' },
+      referees: { referee1: 'Demo User', referee2: 'Thomas Meier' },
       association: 'SV',
     },
+    // Cross-association conflict from SVRZ - 30 min after assignment 1 ends
+    // This will show as a conflict on assignment 1's card
     {
-      gameId: generateDemoUuid('demo-cal-2'),
-      gameNumber: 382701,
-      role: 'referee1',
-      roleRaw: 'ARB 1',
-      startTime: game2Start.toISOString(),
-      endTime: game2End.toISOString(),
-      homeTeam: 'Volley Schönenwerd',
-      awayTeam: 'Traktor Basel',
-      league: 'NLA Herren',
-      leagueCategory: 'NLA',
-      address: 'Aarestrasse 20, 5012 Schönenwerd',
-      coordinates: { latitude: 47.379687, longitude: 8.004062 },
-      hallName: 'Betoncoupe Arena',
-      hallId: '3662',
-      gender: 'men',
-      mapsUrl: 'https://maps.google.com/?q=47.379687,8.004062',
-      plusCode: '8FVC92H3+VJ',
-      referees: { referee1: 'Demo User', referee2: 'Anna Schmidt' },
-      association: 'SV',
-    },
-    {
-      gameId: generateDemoUuid('demo-cal-3'),
-      gameNumber: 382702,
+      gameId: generateDemoUuid('demo-cal-conflict'),
+      gameNumber: 392001,
       role: 'referee2',
       roleRaw: 'ARB 2',
-      startTime: game3Start.toISOString(),
-      endTime: game3End.toISOString(),
+      startTime: conflictStart.toISOString(),
+      endTime: conflictEnd.toISOString(),
       homeTeam: 'VBC Zürich',
       awayTeam: 'VBC Winterthur',
       league: '2L Herren',
@@ -1643,17 +1626,40 @@ export function generateDemoCalendarAssignments(now = new Date()): DemoCalendarA
       referees: { referee1: 'Thomas Weber', referee2: 'Demo User' },
       association: 'SVRZ',
     },
+    // Assignment 2: Matches demo-g-2 (today + 3 hours)
     {
-      gameId: generateDemoUuid('demo-cal-4'),
-      gameNumber: 382703,
-      role: 'referee1',
-      roleRaw: 'ARB 1',
-      startTime: game4Start.toISOString(),
-      endTime: game4End.toISOString(),
+      gameId: generateDemoUuid('demo-g-2'),
+      gameNumber: DEMO_GAME_NUMBERS.ASSIGNMENTS[1],
+      role: 'lineReferee',
+      roleRaw: 'LR 1',
+      startTime: game2Start.toISOString(),
+      endTime: game2End.toISOString(),
+      homeTeam: 'Volley Schönenwerd',
+      awayTeam: 'Traktor Basel',
+      league: 'NLA Herren',
+      leagueCategory: 'NLA',
+      address: 'Aarestrasse 20, 5012 Schönenwerd',
+      coordinates: { latitude: 47.379687, longitude: 8.004062 },
+      hallName: 'Betoncoupe Arena',
+      hallId: '3662',
+      gender: 'men',
+      mapsUrl: 'https://maps.google.com/?q=47.379687,8.004062',
+      plusCode: '8FVC92H3+VJ',
+      referees: { referee1: 'Sandra Keller', referee2: 'Michael Fischer', lineReferee1: 'Demo User' },
+      association: 'SV',
+    },
+    // Assignment 3: Matches demo-g-3 (5 days from now)
+    {
+      gameId: generateDemoUuid('demo-g-3'),
+      gameNumber: DEMO_GAME_NUMBERS.ASSIGNMENTS[2],
+      role: 'referee2',
+      roleRaw: 'ARB 2',
+      startTime: game3Start.toISOString(),
+      endTime: game3End.toISOString(),
       homeTeam: 'Volley Näfels',
       awayTeam: 'Volero Zürich',
-      league: 'NLB Damen',
-      leagueCategory: 'NLB',
+      league: 'NLA Damen',
+      leagueCategory: 'NLA',
       address: 'Oberurnerstrasse 14, 8752 Näfels',
       coordinates: { latitude: 47.108062, longitude: 9.065563 },
       hallName: 'Lintharena',
@@ -1661,28 +1667,7 @@ export function generateDemoCalendarAssignments(now = new Date()): DemoCalendarA
       gender: 'women',
       mapsUrl: 'https://maps.google.com/?q=47.108062,9.065563',
       plusCode: '8FVF4358+66',
-      referees: { referee1: 'Demo User', referee2: 'Lisa Weber' },
-      association: 'SV',
-    },
-    {
-      gameId: generateDemoUuid('demo-cal-5'),
-      gameNumber: 382704,
-      role: 'referee1',
-      roleRaw: 'ARB 1',
-      startTime: game5Start.toISOString(),
-      endTime: game5End.toISOString(),
-      homeTeam: 'BTV Aarau',
-      awayTeam: 'TV Schönenwerd',
-      league: '3L Herren',
-      leagueCategory: '3L',
-      address: 'Tellistrasse 58, 5001 Aarau',
-      coordinates: { latitude: 47.396438, longitude: 8.057063 },
-      hallName: 'Berufsschule BSA',
-      hallId: '3665',
-      gender: 'men',
-      mapsUrl: 'https://maps.google.com/?q=47.396438,8.057063',
-      plusCode: '8FVC93W4+HR',
-      referees: { referee1: 'Demo User' },
+      referees: { referee1: 'Laura Brunner', referee2: 'Demo User' },
       association: 'SV',
     },
   ]
