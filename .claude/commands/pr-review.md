@@ -47,17 +47,31 @@ bash -c 'REMOTE=$(git remote get-url origin); if [[ "$REMOTE" =~ github\.com[:/]
 
 ### Step 4: Wait for Claude Code Review
 
-Inform the user, then wait 2 minutes for the review workflow:
+Inform the user, then wait 1 minute 30 seconds for the review workflow:
 
 ```bash
-sleep 120
+sleep 90
 ```
 
-### Step 5: Fetch Review Comments
+### Step 5: Fetch Review Comments (with retry)
+
+Fetch the latest review comment from Claude:
 
 ```bash
 bash -c 'REMOTE=$(git remote get-url origin); if [[ "$REMOTE" =~ github\.com[:/]([^/]+)/([^/.]+) ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; elif [[ "$REMOTE" =~ /git/([^/]+)/([^/]+)$ ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; fi; curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$OWNER/$REPO/issues/PR_NUMBER_HERE/comments" | jq "[.[] | select(.user.login == \"claude[bot]\") | {id, created_at, body}] | sort_by(.created_at) | last"'
 ```
+
+If no review comment is found (null result) or the comment is older than this PR update, wait 1 more minute and retry:
+
+```bash
+sleep 60
+```
+
+```bash
+bash -c 'REMOTE=$(git remote get-url origin); if [[ "$REMOTE" =~ github\.com[:/]([^/]+)/([^/.]+) ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; elif [[ "$REMOTE" =~ /git/([^/]+)/([^/]+)$ ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; fi; curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$OWNER/$REPO/issues/PR_NUMBER_HERE/comments" | jq "[.[] | select(.user.login == \"claude[bot]\") | {id, created_at, body}] | sort_by(.created_at) | last"'
+```
+
+If still no review after retry, inform the user and stop.
 
 ### Step 6: Parse and Address Issues
 
@@ -89,6 +103,7 @@ The `fix(review):` prefix prevents infinite review loops.
 ## Output
 
 - `Created PR #N: <url>` or `Updated PR #N: <url>`
-- `Waiting 2 minutes for review...`
+- `Waiting 1m30s for review...`
+- `Retrying in 1 minute...` (if no review found)
 - `Addressing N issues...` or `No issues found`
 - `Pushed fixes`
