@@ -94,11 +94,37 @@ export function LoginPage() {
     }
   }, [])
 
-  // Clear stale session data on mount to prevent authentication errors.
+  // Clear stale session data on mount and when app resumes from suspension.
   // On iOS PWA, cached CSRF tokens can become stale and cause "invalid credentials"
-  // errors even with correct username/password.
+  // errors even with correct username/password. This also handles the case where
+  // the app was suspended and resumed - the component doesn't remount, but the
+  // visibilitychange/pageshow events fire.
   useEffect(() => {
+    // Clear on mount
     clearStaleSession()
+
+    // Also clear when app resumes from background (iOS PWA suspension)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        clearStaleSession()
+      }
+    }
+
+    // pageshow event is more reliable on iOS Safari PWA for detecting
+    // app resume from suspension. The persisted property indicates if
+    // the page was restored from bfcache (back-forward cache).
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        clearStaleSession()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('pageshow', handlePageShow)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('pageshow', handlePageShow)
+    }
   }, [clearStaleSession])
 
   // Countdown timer for lockout - ticks every second until lockout expires
