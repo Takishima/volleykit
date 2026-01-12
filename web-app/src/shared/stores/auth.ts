@@ -177,25 +177,21 @@ async function rejectNonRefereeUser(set: (state: Partial<AuthState>) => void): P
 }
 
 /**
- * Extracts the calendar code directly from dashboard HTML.
+ * Extracts the calendar code from dashboard HTML.
  *
- * The calendar code (uniqueId) is embedded in the activeParty JSON data
- * in the dashboard HTML. This code is unique per referee and provides
- * access to ALL assignments across ALL associations, which is useful
- * for conflict detection.
+ * The dashboard HTML contains the calendar code (uniqueId) embedded in the
+ * active party JSON data. This is unique per referee and doesn't change.
  *
  * @param dashboardHtml - The dashboard HTML content
  * @returns The 6-character calendar code, or null if not found
  */
 function extractCalendarCodeFromDashboard(dashboardHtml: string): string | null {
   const code = extractCalendarCodeFromHtml(dashboardHtml)
-
   if (code) {
     logger.info('Extracted calendar code from dashboard HTML')
   } else {
     logger.info('Calendar code not found in dashboard HTML')
   }
-
   return code
 }
 
@@ -314,12 +310,11 @@ async function handleSuccessfulLoginResult(
 
   // Extract calendar code from dashboard HTML if not already stored.
   // The calendar code is unique per referee and doesn't change, so we only
-  // need to extract it once and persist it across sessions.
-  const currentCalendarCode = get().calendarCode
-  if (!currentCalendarCode) {
-    const calendarCode = extractCalendarCodeFromDashboard(result.dashboardHtml)
-    if (calendarCode) {
-      set({ calendarCode })
+  // need to extract it once and persist it across sessions in localStorage.
+  if (!get().calendarCode) {
+    const code = extractCalendarCodeFromDashboard(result.dashboardHtml)
+    if (code) {
+      set({ calendarCode: code })
     }
   }
 
@@ -526,15 +521,9 @@ export const useAuthStore = create<AuthState>()(
               return rejectNonRefereeUser(set)
             }
 
-            // Preserve existing calendar code or extract from dashboard if not stored
-            const calendarCode =
-              currentState.calendarCode ??
-              (dashboardHtml ? extractCalendarCodeFromDashboard(dashboardHtml) : null)
-
             set({
               status: 'authenticated',
               csrfToken: existingCsrfToken,
-              calendarCode,
               eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
               groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
               eligibleRoles: activeParty?.eligibleRoles ?? null,
@@ -553,6 +542,14 @@ export const useAuthStore = create<AuthState>()(
               } catch (error) {
                 // Log but don't fail login - user can manually switch if needed
                 logger.warn('Failed to sync active association after login:', error)
+              }
+            }
+
+            // Extract calendar code from dashboard HTML if not already stored
+            if (!currentState.calendarCode && dashboardHtml) {
+              const code = extractCalendarCodeFromDashboard(dashboardHtml)
+              if (code) {
+                set({ calendarCode: code })
               }
             }
 
@@ -750,14 +747,10 @@ export const useAuthStore = create<AuthState>()(
                   setCsrfToken(csrfToken)
                 }
 
-                // Extract calendar code from dashboard HTML if not already present
-                const calendarCode =
-                  currentState.calendarCode ?? extractCalendarCodeFromDashboard(html)
-
                 set({
                   status: 'authenticated',
                   csrfToken: csrfToken ?? currentState.csrfToken,
-                  calendarCode,
+                  // calendarCode is preserved from localStorage - no extraction needed
                   // Preserve existing attribute values if new values are missing
                   // This prevents the association dropdown from disappearing when
                   // checkSession fetches a page without activeParty data
