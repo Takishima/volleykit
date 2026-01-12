@@ -1,5 +1,3 @@
-import { useState } from 'react'
-
 import { RefreshCw } from '@/shared/components/icons'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 
@@ -28,23 +26,17 @@ export function LoginErrorWithUpdateHint({
   isCheckingForUpdate,
 }: LoginErrorWithUpdateHintProps) {
   const { t } = useTranslation()
-  const [isButtonLoading, setIsButtonLoading] = useState(false)
 
-  const handleUpdateClick = async () => {
-    if (isButtonLoading || isUpdating) return
-    setIsButtonLoading(true)
-    try {
-      await onUpdate()
-    } finally {
-      // Note: onUpdate() typically reloads, so this may not execute
-      setIsButtonLoading(false)
-    }
+  const handleUpdateClick = () => {
+    if (isUpdating) return
+    onUpdate()
   }
 
-  const loading = isButtonLoading || isUpdating
-
   return (
-    <div className="rounded-lg border border-danger-200 bg-danger-50 p-3 dark:border-danger-800 dark:bg-danger-900/20">
+    <div
+      role="alert"
+      className="rounded-lg border border-danger-200 bg-danger-50 p-3 dark:border-danger-800 dark:bg-danger-900/20"
+    >
       {/* Error message */}
       <p className="text-sm text-danger-600 dark:text-danger-400">{errorMessage}</p>
 
@@ -63,12 +55,12 @@ export function LoginErrorWithUpdateHint({
               <button
                 type="button"
                 onClick={handleUpdateClick}
-                disabled={loading}
-                aria-busy={loading}
+                disabled={isUpdating}
+                aria-busy={isUpdating}
                 className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-danger-100 px-3 py-1.5 text-xs font-medium text-danger-700 transition-colors hover:bg-danger-200 focus:outline-none focus:ring-2 focus:ring-danger-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-danger-800/50 dark:text-danger-300 dark:hover:bg-danger-800"
               >
-                {loading && <RefreshCw className="h-3 w-3 animate-spin" aria-hidden="true" />}
-                {loading ? t('auth.updating') : t('auth.updateNow')}
+                {isUpdating && <RefreshCw className="h-3 w-3 animate-spin" aria-hidden="true" />}
+                {isUpdating ? t('auth.updating') : t('auth.updateNow')}
               </button>
             </>
           )}
