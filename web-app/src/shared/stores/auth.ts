@@ -144,9 +144,6 @@ const SESSION_CHECK_GRACE_PERIOD_MS = 5_000
 /** Calendar codes are exactly 6 alphanumeric characters */
 const CALENDAR_CODE_PATTERN = /^[a-zA-Z0-9]{6}$/
 
-/** URL for the calendar settings page where the calendar code is embedded */
-const CALENDAR_SETTINGS_URL = `${API_BASE}/sportmanager.indoorvolleyball/icalhashgamepropertyfiltersettings/index`
-
 /**
  * Dummy association code for calendar mode transport settings.
  * Using a dedicated code ensures calendar mode settings don't interfere
@@ -180,44 +177,22 @@ async function rejectNonRefereeUser(set: (state: Partial<AuthState>) => void): P
 }
 
 /**
- * Fetches the calendar code from the calendar settings page.
+ * Extracts the calendar code from dashboard HTML.
  *
- * The calendar code is embedded in the HTML of the calendar settings page.
- * This code is unique per referee and provides access to ALL assignments
- * across ALL associations, which is useful for conflict detection.
+ * The dashboard HTML contains the calendar code (uniqueId) embedded in the
+ * active party JSON data. This is unique per referee and doesn't change.
  *
- * This function is called in the background after successful login to
- * extract and store the calendar code without blocking the login flow.
- *
+ * @param dashboardHtml - The dashboard HTML content
  * @returns The 6-character calendar code, or null if not found
  */
-async function fetchCalendarCode(): Promise<string | null> {
-  try {
-    const response = await fetch(CALENDAR_SETTINGS_URL, {
-      credentials: 'include',
-      cache: 'no-store',
-      headers: getSessionHeaders(),
-    })
-
-    if (!response.ok) {
-      logger.warn('Failed to fetch calendar settings page:', response.status)
-      return null
-    }
-
-    const html = await response.text()
-    const code = extractCalendarCodeFromHtml(html)
-
-    if (code) {
-      logger.info('Successfully extracted calendar code from settings page')
-    } else {
-      logger.info('Calendar code not found in settings page')
-    }
-
-    return code
-  } catch (error) {
-    logger.warn('Error fetching calendar code:', error)
-    return null
+function extractCalendarCodeFromDashboard(dashboardHtml: string): string | null {
+  const code = extractCalendarCodeFromHtml(dashboardHtml)
+  if (code) {
+    logger.info('Extracted calendar code from dashboard HTML')
+  } else {
+    logger.info('Calendar code not found in dashboard HTML')
   }
+  return code
 }
 
 /**
@@ -333,20 +308,15 @@ async function handleSuccessfulLoginResult(
     }
   }
 
-  // Fetch calendar code in the background for conflict detection.
-  // This doesn't block login - it's a background enhancement.
-  // The calendar code provides access to ALL assignments across ALL
-  // associations, which is needed to detect scheduling conflicts.
-  fetchCalendarCode()
-    .then((code) => {
-      if (code) {
-        set({ calendarCode: code })
-      }
-    })
-    .catch((error) => {
-      // Silent failure - calendar conflicts feature is optional
-      logger.info('Background calendar code fetch failed:', error)
-    })
+  // Extract calendar code from dashboard HTML if not already stored.
+  // The calendar code is unique per referee and doesn't change, so we only
+  // need to extract it once and persist it across sessions in localStorage.
+  if (!get().calendarCode) {
+    const code = extractCalendarCodeFromDashboard(result.dashboardHtml)
+    if (code) {
+      set({ calendarCode: code })
+    }
+  }
 
   return true
 }
@@ -531,8 +501,9 @@ export const useAuthStore = create<AuthState>()(
             captureSessionToken(dashboardResponse)
 
             let activeParty = null
+            let dashboardHtml = ''
             if (dashboardResponse.ok) {
-              const dashboardHtml = await dashboardResponse.text()
+              dashboardHtml = await dashboardResponse.text()
               activeParty = extractActivePartyFromHtml(dashboardHtml)
             }
 
@@ -571,6 +542,14 @@ export const useAuthStore = create<AuthState>()(
               } catch (error) {
                 // Log but don't fail login - user can manually switch if needed
                 logger.warn('Failed to sync active association after login:', error)
+              }
+            }
+
+            // Extract calendar code from dashboard HTML if not already stored
+            if (!currentState.calendarCode && dashboardHtml) {
+              const code = extractCalendarCodeFromDashboard(dashboardHtml)
+              if (code) {
+                set({ calendarCode: code })
               }
             }
 
@@ -771,6 +750,7 @@ export const useAuthStore = create<AuthState>()(
                 set({
                   status: 'authenticated',
                   csrfToken: csrfToken ?? currentState.csrfToken,
+                  // calendarCode is preserved from localStorage - no extraction needed
                   // Preserve existing attribute values if new values are missing
                   // This prevents the association dropdown from disappearing when
                   // checkSession fetches a page without activeParty data
