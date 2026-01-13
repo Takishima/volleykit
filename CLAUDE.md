@@ -663,3 +663,10 @@ ESLint plugin `jsx-a11y` enforces many accessibility rules.
 8. Works across modern browsers (Chrome, Firefox, Safari)
 9. Accessible (keyboard navigation, screen reader compatible)
 10. No ESLint warnings (`--max-warnings 0`)
+
+## Active Technologies
+- TypeScript 5.9, React Native 0.76+ (New Architecture) + React Native, TanStack Query 5, Zustand 5, Zod 4, date-fns 4, expo-secure-store, expo-calendar, react-native-widgetkit (001-react-native-app)
+- AsyncStorage (replacing localStorage), Secure Enclave/Keystore for credentials (001-react-native-app)
+
+## Recent Changes
+- 001-react-native-app: Added TypeScript 5.9, React Native 0.76+ (New Architecture) + React Native, TanStack Query 5, Zustand 5, Zod 4, date-fns 4, expo-secure-store, expo-calendar, react-native-widgetkit
