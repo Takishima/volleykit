@@ -180,7 +180,7 @@ The development team wants to maximize code sharing between the PWA and React Na
 - **FR-021**: System MUST track user location hourly when assignments are upcoming (within 6 hours) and smart reminders are enabled
 - **FR-022**: System MUST calculate public transport routes from current location to assignment venue using the OJP SDK
 - **FR-023**: System MUST send a local notification before the user needs to leave (configurable: 5/10/15/20/30 min, default 15), including: nearest stop, transport line/number, direction, and departure time
-- **FR-024**: System MUST detect when user is already at or near the venue and suppress unnecessary departure notifications
+- **FR-024**: System MUST detect when user is within 500 meters of the venue and suppress unnecessary departure notifications
 - **FR-025**: System MUST provide a fallback time-based reminder when location services are unavailable
 - **FR-026**: System MUST notify user with buffer time suggestion when no public transport route is available
 - **FR-026a**: System MUST retain location data only until assignment is completed, then delete it
@@ -234,6 +234,7 @@ The development team wants to maximize code sharing between the PWA and React Na
 - Q: How frequently should the app update location for departure calculations? → A: Every hour when assignments are upcoming (within 6 hours). Balances battery life with sufficient accuracy for departure alerts.
 - Q: Should the 15-minute departure buffer be fixed or configurable? → A: User-configurable (5/10/15/20/30 min) with 15-minute default. Respects user autonomy and different comfort levels.
 - Q: How long should location data be retained? → A: Keep until assignment is completed, then delete. Allows recalculation if user moves before departure while ensuring cleanup after the assignment.
+- Q: What distance defines "near the venue" for suppressing notifications? → A: 500 meters. Reasonable walking distance (~5-7 min) that accounts for GPS inaccuracy.
 - Q: How does calendar sync work with VolleyManager? → A: VolleyManager calendar is read-only. Data flows one-way: assignments are added TO the user's device calendar (not synced back to VolleyManager).
 - Q: How are calendar events updated when assignments change? → A: iCal subscription auto-updates (device calendar polls feed); direct events require manual re-sync by user.
 - Q: Should offline mode support queuing actions? → A: No. Offline action queuing is out of scope. Priority is on code sharing between PWA and native app. Offline mode is read-only (cached data viewing only).
