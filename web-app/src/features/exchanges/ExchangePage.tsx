@@ -214,6 +214,7 @@ export function ExchangePage() {
     }
 
     // Apply game gap filter (only on "open" tab when calendar data is available)
+    // Uses smart conflict detection: games at nearby venues (<=5km) don't trigger conflicts
     if (
       gameGapFilter.enabled &&
       statusFilter === 'open' &&
@@ -222,11 +223,15 @@ export function ExchangePage() {
     ) {
       result = result.filter(({ exchange }) => {
         const gameStartTime = exchange.refereeGame?.game?.startingDateTime
-        return hasMinimumGapFromAssignments(
-          gameStartTime,
-          calendarAssignments,
-          gameGapFilter.minGapMinutes
-        )
+        const geoLocation =
+          exchange.refereeGame?.game?.hall?.primaryPostalAddress?.geographicalLocation
+        const venueCoordinates = extractCoordinates(geoLocation)
+
+        return hasMinimumGapFromAssignments(gameStartTime, calendarAssignments, {
+          minGapMinutes: gameGapFilter.minGapMinutes,
+          venueCoordinates,
+          sameLocationDistanceKm: 5,
+        })
       })
     }
 
