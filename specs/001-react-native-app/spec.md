@@ -60,8 +60,10 @@ A referee wants their calendar app to include their VolleyKit assignments. The n
 
 1. **Given** the user is logged in, **When** they enable calendar integration in settings, **Then** they can choose to subscribe to their iCal feed or add events directly
 2. **Given** iCal subscription is chosen, **When** the user confirms, **Then** the device calendar app opens with the subscription URL pre-filled
-3. **Given** direct calendar events is chosen, **When** the user syncs, **Then** current assignments are added as events to a selected calendar
-4. **Given** an assignment exists as a calendar event, **When** the user taps it, **Then** they can deep-link back to the assignment in VolleyKit
+3. **Given** iCal subscription is active, **When** an assignment changes in VolleyManager, **Then** the device calendar automatically reflects the update (via feed polling)
+4. **Given** direct calendar events is chosen, **When** the user syncs, **Then** current assignments are added as events to a selected calendar
+5. **Given** direct calendar events exist and assignments have changed, **When** the user manually re-syncs, **Then** events are updated to reflect current assignment data
+6. **Given** an assignment exists as a calendar event, **When** the user taps it, **Then** they can deep-link back to the assignment in VolleyKit
 
 ---
 
@@ -148,28 +150,29 @@ The development team wants to maximize code sharing between the PWA and React Na
 - **FR-012**: System MUST invalidate stored credentials when device security settings change
 
 **Calendar Integration** (one-way: VolleyManager → device calendar, read-only source)
-- **FR-013**: System MUST support subscribing to the user's iCal feed via the device's calendar app
+- **FR-013**: System MUST support subscribing to the user's iCal feed via the device's calendar app (auto-updates via feed polling)
 - **FR-014**: System MUST support adding assignments as individual events to a user-selected device calendar
-- **FR-015**: System MUST support deep linking from calendar events back to assignments in the app
-- **FR-016**: Calendar events MUST be created from VolleyManager data only (no write-back to VolleyManager)
+- **FR-015**: System MUST provide manual re-sync option for direct calendar events to update changed assignments
+- **FR-016**: System MUST support deep linking from calendar events back to assignments in the app
+- **FR-017**: Calendar events MUST be created from VolleyManager data only (no write-back to VolleyManager)
 
 **Offline Capabilities**
-- **FR-017**: System MUST cache assignment data for offline viewing
-- **FR-018**: System MUST queue user actions (accept/decline) when offline
-- **FR-019**: System MUST sync queued actions when connectivity and valid session are available
-- **FR-020**: System MUST clearly indicate offline status and last sync time to users
-- **FR-021**: System MUST handle sync conflicts gracefully with user notification
+- **FR-018**: System MUST cache assignment data for offline viewing
+- **FR-019**: System MUST queue user actions (accept/decline) when offline
+- **FR-020**: System MUST sync queued actions when connectivity and valid session are available
+- **FR-021**: System MUST clearly indicate offline status and last sync time to users
+- **FR-022**: System MUST handle sync conflicts gracefully with user notification
 
 **Widget**
-- **FR-022**: System MUST provide a home screen widget showing upcoming assignments (iOS and Android)
-- **FR-023**: Widget MUST display cached data from the most recent app session
-- **FR-024**: Widget MUST support deep linking to specific assignments in the app
-- **FR-025**: Widget MUST indicate data freshness with "last updated" timestamp when data is stale
+- **FR-023**: System MUST provide a home screen widget showing upcoming assignments (iOS and Android)
+- **FR-024**: Widget MUST display cached data from the most recent app session
+- **FR-025**: Widget MUST support deep linking to specific assignments in the app
+- **FR-026**: Widget MUST indicate data freshness with "last updated" timestamp when data is stale
 
 **Code Architecture**
-- **FR-026**: System MUST share business logic, API clients, and state management with the PWA where possible
-- **FR-027**: System MUST use platform-specific implementations only for native features (biometrics, calendar, widgets)
-- **FR-028**: System MUST maintain a monorepo structure enabling code sharing between web and mobile
+- **FR-027**: System MUST share business logic, API clients, and state management with the PWA where possible
+- **FR-028**: System MUST use platform-specific implementations only for native features (biometrics, calendar, widgets)
+- **FR-029**: System MUST maintain a monorepo structure enabling code sharing between web and mobile
 
 ### Key Entities
 
@@ -207,6 +210,7 @@ The development team wants to maximize code sharing between the PWA and React Na
 ### Session 2026-01-13
 
 - Q: How does calendar sync work with VolleyManager? → A: VolleyManager calendar is read-only. Data flows one-way: assignments are added TO the user's device calendar (not synced back to VolleyManager).
+- Q: How are calendar events updated when assignments change? → A: iCal subscription auto-updates (device calendar polls feed); direct events require manual re-sync by user.
 
 ## Scope Boundaries
 
