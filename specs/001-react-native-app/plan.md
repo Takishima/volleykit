@@ -23,12 +23,16 @@ Build a React Native mobile app for iOS and Android that shares code with the ex
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-No project-specific constitution defined. Following standard practices:
-- [x] Code sharing between platforms (FR-025)
-- [x] Platform-specific implementations isolated (FR-026)
-- [x] Monorepo structure maintained (FR-027)
-- [x] TypeScript for type safety
-- [x] Test coverage for shared code
+Based on `.specify/memory/constitution.md`:
+
+- [x] **I. Code Quality**: Self-documenting code, naming conventions, function design enforced by ESLint
+- [x] **II. Testing Standards**: Jest/RNTL for unit (50-70% coverage), Detox for E2E
+- [x] **III. UX Consistency**: i18n (4 languages), accessibility, 70%+ code sharing target
+- [x] **IV. Performance**: Bundle size limits, <3s cold start, <3s biometric re-auth
+- [x] **V. Security First**: Secure Enclave/Keystore for credentials, foreground-only biometric access
+- [x] **VI. Simplicity**: Code sharing priority, interface-based adapters, no over-engineering
+
+**No violations identified.**
 
 ## Project Structure
 
