@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "VolleyKit",
+    "slug": "volleykit",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "volleykit",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ch.volleyball.volleykit",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "VolleyKit uses your location to calculate public transport routes to your assignment venues.",
+        "NSLocationAlwaysUsageDescription": "VolleyKit needs background location access to send smart departure reminders for your upcoming assignments."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "ch.volleyball.volleykit",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "VolleyKit needs background location access to send smart departure reminders."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

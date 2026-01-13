@@ -6,6 +6,16 @@ dist/
 build/
 *.tsbuildinfo
 
+# React Native / Expo
+packages/mobile/ios/
+packages/mobile/android/
+packages/mobile/.expo/
+*.jsbundle
+*.hbc
+
+# Expo EAS
+packages/mobile/eas.json
+
 # Environment files (keep .env.example)
 .env
 .env.local

@@ -1,0 +1,5 @@
+# Build outputs
+dist/
+
+# Generated API types
+src/api/schema.ts

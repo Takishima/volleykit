@@ -26,15 +26,15 @@ Based on plan.md monorepo structure:
 
 **Purpose**: Initialize monorepo structure and Expo project
 
-- [ ] T001 Create monorepo workspace structure with `packages/shared/`, `packages/web/`, `packages/mobile/` directories
-- [ ] T002 Initialize npm workspaces in root `package.json` with workspace configuration
-- [ ] T003 [P] Create Expo project in `packages/mobile/` using `npx create-expo-app --template expo-template-blank-typescript`
-- [ ] T004 [P] Configure TypeScript 5.9 in `packages/shared/tsconfig.json` with strict mode
-- [ ] T005 [P] Configure TypeScript 5.9 in `packages/mobile/tsconfig.json` extending shared config
-- [ ] T006 [P] Add ESLint configuration in `packages/mobile/.eslintrc.js` matching web-app patterns
-- [ ] T007 Configure Expo prebuild for native modules in `packages/mobile/app.json`
-- [ ] T008 [P] Add NativeWind (Tailwind CSS for RN) to `packages/mobile/package.json` and configure
-- [ ] T009 [P] Create `.env.example` in `packages/mobile/` with required environment variables
+- [x] T001 Create monorepo workspace structure with `packages/shared/`, `packages/web/`, `packages/mobile/` directories
+- [x] T002 Initialize npm workspaces in root `package.json` with workspace configuration
+- [x] T003 [P] Create Expo project in `packages/mobile/` using `npx create-expo-app --template expo-template-blank-typescript`
+- [x] T004 [P] Configure TypeScript 5.9 in `packages/shared/tsconfig.json` with strict mode
+- [x] T005 [P] Configure TypeScript 5.9 in `packages/mobile/tsconfig.json` extending shared config
+- [x] T006 [P] Add ESLint configuration in `packages/mobile/.eslintrc.js` matching web-app patterns
+- [x] T007 Configure Expo prebuild for native modules in `packages/mobile/app.json`
+- [x] T008 [P] Add NativeWind (Tailwind CSS for RN) to `packages/mobile/package.json` and configure
+- [x] T009 [P] Create `.env.example` in `packages/mobile/` with required environment variables
 
 ---
 

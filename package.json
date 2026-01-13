@@ -1,11 +1,24 @@
 {
-  "//": "Root package for changesets tooling. App dependencies belong in web-app/package.json",
   "name": "volleykit",
   "private": true,
+  "workspaces": [
+    "packages/shared",
+    "packages/mobile",
+    "web-app"
+  ],
   "scripts": {
     "changeset": "changeset",
     "changeset:version": "changeset version",
-    "changeset:status": "changeset status"
+    "changeset:status": "changeset status",
+    "generate:api": "npm run generate:api --workspace=web-app",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "mobile:start": "npm run start --workspace=@volleykit/mobile",
+    "mobile:ios": "npm run ios --workspace=@volleykit/mobile",
+    "mobile:android": "npm run android --workspace=@volleykit/mobile",
+    "shared:build": "npm run build --workspace=@volleykit/shared",
+    "shared:test": "npm run test --workspace=@volleykit/shared"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.2",
