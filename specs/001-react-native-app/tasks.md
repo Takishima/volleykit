@@ -50,53 +50,53 @@ Based on plan.md monorepo structure:
 
 - [ ] T010 [P] Create `packages/shared/api/client.ts` with platform-agnostic fetch wrapper (extract from web-app/src/api/client.ts)
 - [ ] T011 [P] Move `schema.ts` generation target to `packages/shared/api/schema.ts` in OpenAPI config
-- [ ] T012 [P] Create `packages/shared/api/validation.ts` with Zod schemas (extract from web-app/src/api/validation.ts)
+- [x] T012 [P] Create `packages/shared/api/validation.ts` with Zod schemas (extract from web-app/src/api/validation.ts)
 - [ ] T013 [P] Create `packages/shared/api/queryKeys.ts` with TanStack Query keys (extract from web-app/src/api/queryKeys.ts)
-- [ ] T014 Create `packages/shared/api/index.ts` barrel export for API module
+- [x] T014 Create `packages/shared/api/index.ts` barrel export for API module
 
 ### Shared State Management
 
 - [ ] T015 [P] Create `packages/shared/stores/auth.ts` without persist middleware (extract from web-app/src/shared/stores/auth.ts)
 - [ ] T016 [P] Create `packages/shared/stores/settings.ts` without persist middleware (extract platform-agnostic parts)
-- [ ] T017 [P] Create `packages/shared/stores/demo.ts` for demo mode state (extract from web-app/src/shared/stores/demo/)
-- [ ] T018 Create `packages/shared/stores/index.ts` barrel export for stores module
+- [x] T017 [P] Create `packages/shared/stores/demo.ts` for demo mode state (extract from web-app/src/shared/stores/demo/)
+- [x] T018 Create `packages/shared/stores/index.ts` barrel export for stores module
 
 ### Shared Hooks
 
 - [ ] T019 [P] Create `packages/shared/hooks/useAssignments.ts` with TanStack Query hook (extract from web-app)
 - [ ] T020 [P] Create `packages/shared/hooks/useCompensations.ts` with TanStack Query hook (extract from web-app)
 - [ ] T021 [P] Create `packages/shared/hooks/useExchanges.ts` with TanStack Query hook (extract from web-app)
-- [ ] T022 [P] Create `packages/shared/hooks/useAuth.ts` with auth state hook (extract from web-app)
-- [ ] T023 Create `packages/shared/hooks/index.ts` barrel export for hooks module
+- [x] T022 [P] Create `packages/shared/hooks/useAuth.ts` with auth state hook (extract from web-app)
+- [x] T023 Create `packages/shared/hooks/index.ts` barrel export for hooks module
 
 ### Shared Utilities
 
-- [ ] T024 [P] Create `packages/shared/utils/date-helpers.ts` (extract from web-app/src/shared/utils/date-helpers.ts)
+- [x] T024 [P] Create `packages/shared/utils/date-helpers.ts` (extract from web-app/src/shared/utils/date-helpers.ts)
 - [ ] T025 [P] Create `packages/shared/utils/assignment-helpers.ts` (extract from web-app)
 - [ ] T026 [P] Create `packages/shared/utils/error-helpers.ts` (extract from web-app)
-- [ ] T027 Create `packages/shared/utils/index.ts` barrel export for utils module
+- [x] T027 Create `packages/shared/utils/index.ts` barrel export for utils module
 
 ### Shared i18n
 
-- [ ] T028 [P] Create `packages/shared/i18n/types.ts` (extract from web-app/src/i18n/types.ts)
+- [x] T028 [P] Create `packages/shared/i18n/types.ts` (extract from web-app/src/i18n/types.ts)
 - [ ] T029 [P] Copy locale files to `packages/shared/i18n/locales/` (de.json, en.json, fr.json, it.json)
-- [ ] T030 [P] Create `packages/shared/i18n/index.ts` with translation functions (platform-agnostic)
-- [ ] T031 Create `packages/shared/i18n/useTranslation.ts` React hook wrapper
+- [x] T030 [P] Create `packages/shared/i18n/index.ts` with translation functions (platform-agnostic)
+- [x] T031 Create `packages/shared/i18n/useTranslation.ts` React hook wrapper
 
 ### Shared Types
 
-- [ ] T032 [P] Create `packages/shared/types/index.ts` with common TypeScript types (extract from web-app)
-- [ ] T033 [P] Create `packages/shared/types/platform.ts` with platform adapter interfaces (StorageAdapter, SecureStorageAdapter, BiometricAdapter)
+- [x] T032 [P] Create `packages/shared/types/index.ts` with common TypeScript types (extract from web-app)
+- [x] T033 [P] Create `packages/shared/types/platform.ts` with platform adapter interfaces (StorageAdapter, SecureStorageAdapter, BiometricAdapter)
 
 ### Platform Adapter Interfaces
 
-- [ ] T034 Create `packages/shared/adapters/storage.ts` with StorageAdapter interface definition
-- [ ] T035 Create `packages/shared/adapters/index.ts` barrel export for adapters
+- [x] T034 Create `packages/shared/adapters/storage.ts` with StorageAdapter interface definition
+- [x] T035 Create `packages/shared/adapters/index.ts` barrel export for adapters
 
 ### Package Configuration
 
-- [ ] T036 Create `packages/shared/package.json` with name `@volleykit/shared` and exports
-- [ ] T037 Create `packages/shared/index.ts` main barrel export for entire shared package
+- [x] T036 Create `packages/shared/package.json` with name `@volleykit/shared` and exports
+- [x] T037 Create `packages/shared/index.ts` main barrel export for entire shared package
 - [ ] T038 Update `packages/web/` to import from `@volleykit/shared` instead of local paths (refactor existing web-app)
 - [ ] T039 Verify web-app builds successfully with shared package imports
 
