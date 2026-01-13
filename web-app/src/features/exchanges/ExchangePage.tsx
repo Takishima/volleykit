@@ -4,7 +4,10 @@ import { useShallow } from 'zustand/react/shallow'
 
 import type { GameExchange } from '@/api/client'
 import { useCalendarConflicts } from '@/features/assignments/hooks/useCalendarConflicts'
-import { hasMinimumGapFromAssignments } from '@/features/assignments/utils/conflict-detection'
+import {
+  hasMinimumGapFromAssignments,
+  DEFAULT_SAME_LOCATION_DISTANCE_KM,
+} from '@/features/assignments/utils/conflict-detection'
 import { ExchangeCard } from '@/features/exchanges/components/ExchangeCard'
 import { ExchangeSettingsSheet } from '@/features/exchanges/components/ExchangeSettingsSheet'
 import { TOUR_DUMMY_EXCHANGE } from '@/features/exchanges/exchange'
@@ -230,7 +233,7 @@ export function ExchangePage() {
         return hasMinimumGapFromAssignments(gameStartTime, calendarAssignments, {
           minGapMinutes: gameGapFilter.minGapMinutes,
           venueCoordinates,
-          sameLocationDistanceKm: 5,
+          sameLocationDistanceKm: DEFAULT_SAME_LOCATION_DISTANCE_KM,
         })
       })
     }

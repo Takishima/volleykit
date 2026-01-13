@@ -50,7 +50,6 @@ function createAssignment(
 const ZURICH_COORDS = { latitude: 47.3769, longitude: 8.5417 }
 const ZURICH_NEARBY_COORDS = { latitude: 47.38, longitude: 8.545 } // ~0.5 km from Zurich
 const BERN_COORDS = { latitude: 46.948, longitude: 7.4474 } // ~95 km from Zurich
-const LAUSANNE_COORDS = { latitude: 46.5197, longitude: 6.6323 } // ~138 km from Zurich
 
 describe('conflict-detection', () => {
   describe('detectConflicts', () => {

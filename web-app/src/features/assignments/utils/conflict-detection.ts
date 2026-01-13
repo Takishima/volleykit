@@ -16,8 +16,12 @@ import { calculateDistanceKm, type Coordinates } from '@/shared/utils/distance'
 /** Default minimum gap between assignments to avoid conflict (in minutes) */
 const DEFAULT_CONFLICT_THRESHOLD_MINUTES = 60
 
-/** Default maximum distance in km for venues to be considered "same location" (no conflict) */
-const DEFAULT_SAME_LOCATION_DISTANCE_KM = 5
+/**
+ * Default maximum distance in km for venues to be considered "same location" (no conflict).
+ * 5km is chosen as it represents roughly the distance that can be covered quickly by car or
+ * public transport within a city, meaning back-to-back games at nearby venues are feasible.
+ */
+export const DEFAULT_SAME_LOCATION_DISTANCE_KM = 5
 
 /**
  * Evaluator function to determine if two assignments conflict.
