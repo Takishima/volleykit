@@ -85,21 +85,19 @@ A referee wants to see their upcoming assignments at a glance directly on their 
 
 ---
 
-### User Story 5 - Enhanced Offline Mode (Priority: P2)
+### User Story 5 - Offline Data Viewing (Priority: P3)
 
-A referee traveling to a venue with poor connectivity wants to access their assignment details offline and perform basic actions that sync when connectivity returns and they re-authenticate.
+A referee traveling to a venue with poor connectivity wants to access their assignment details offline. The app caches assignment data for read-only access when offline.
 
-**Why this priority**: Referees often travel to venues with poor cellular coverage. Robust offline support is critical for real-world usability and is better implemented in native apps.
+**Why this priority**: Referees often travel to venues with poor cellular coverage. Offline viewing of cached data provides essential utility without the complexity of offline action queuing.
 
-**Independent Test**: Can be fully tested by enabling airplane mode, opening the app, viewing assignment details, and verifying data is available. Delivers reliability in low-connectivity scenarios.
+**Independent Test**: Can be fully tested by enabling airplane mode, opening the app, and viewing assignment details. Delivers reliability in low-connectivity scenarios.
 
 **Acceptance Scenarios**:
 
 1. **Given** the user has previously viewed their assignments online, **When** they open the app offline, **Then** they can view all cached assignment details including venue addresses and contact info
-2. **Given** the user is offline, **When** they attempt to accept or decline an assignment, **Then** the action is queued locally and a message indicates it will sync when online
-3. **Given** the user performed offline actions, **When** connectivity is restored and they have a valid session, **Then** queued actions are synced and the user is notified of success/failure
-4. **Given** an offline action cannot be synced (session expired), **When** the user re-authenticates, **Then** pending actions are synced automatically
-5. **Given** an offline action conflicts with a server change (e.g., assignment was modified), **When** sync occurs, **Then** the user is notified of the conflict and can resolve it
+2. **Given** the user is offline, **When** they attempt to perform an action (accept/decline), **Then** a message indicates they need to be online to perform actions
+3. **Given** cached data exists, **When** the user views it offline, **Then** a "Last updated" timestamp is displayed to indicate data freshness
 
 ---
 
@@ -125,7 +123,6 @@ The development team wants to maximize code sharing between the PWA and React Na
 - What happens when the user's session expires during app use? (Show session expired message, offer biometric re-login if enabled)
 - How does the app handle being installed alongside the PWA on the same device? (Both should work independently)
 - How does offline mode handle data that has expired cache validity? (Show cached data with "last updated" indicator)
-- What happens when queued offline actions pile up and session is expired? (Prompt for login, then sync all pending actions)
 - How does the widget behave when the app is uninstalled but widget remains? (Show error state)
 - What happens if biometric credentials become invalid (password changed externally)? (Clear stored credentials, require manual login)
 
@@ -156,31 +153,28 @@ The development team wants to maximize code sharing between the PWA and React Na
 - **FR-016**: System MUST support deep linking from calendar events back to assignments in the app
 - **FR-017**: Calendar events MUST be created from VolleyManager data only (no write-back to VolleyManager)
 
-**Offline Capabilities**
+**Offline Capabilities** (read-only viewing, no action queuing)
 - **FR-018**: System MUST cache assignment data for offline viewing
-- **FR-019**: System MUST queue user actions (accept/decline) when offline
-- **FR-020**: System MUST sync queued actions when connectivity and valid session are available
-- **FR-021**: System MUST clearly indicate offline status and last sync time to users
-- **FR-022**: System MUST handle sync conflicts gracefully with user notification
+- **FR-019**: System MUST clearly indicate offline status and last sync time to users
+- **FR-020**: System MUST show a message when users attempt actions while offline, indicating online connectivity is required
 
 **Widget**
-- **FR-023**: System MUST provide a home screen widget showing upcoming assignments (iOS and Android)
-- **FR-024**: Widget MUST display cached data from the most recent app session
-- **FR-025**: Widget MUST support deep linking to specific assignments in the app
-- **FR-026**: Widget MUST indicate data freshness with "last updated" timestamp when data is stale
+- **FR-021**: System MUST provide a home screen widget showing upcoming assignments (iOS and Android)
+- **FR-022**: Widget MUST display cached data from the most recent app session
+- **FR-023**: Widget MUST support deep linking to specific assignments in the app
+- **FR-024**: Widget MUST indicate data freshness with "last updated" timestamp when data is stale
 
-**Code Architecture**
-- **FR-027**: System MUST share business logic, API clients, and state management with the PWA where possible
-- **FR-028**: System MUST use platform-specific implementations only for native features (biometrics, calendar, widgets)
-- **FR-029**: System MUST maintain a monorepo structure enabling code sharing between web and mobile
+**Code Architecture** (highest priority for maintainability)
+- **FR-025**: System MUST share business logic, API clients, and state management with the PWA where possible
+- **FR-026**: System MUST use platform-specific implementations only for native features (biometrics, calendar, widgets)
+- **FR-027**: System MUST maintain a monorepo structure enabling code sharing between web and mobile
 
 ### Key Entities
 
 - **User**: Authenticated volleyball referee with credentials and preferences
 - **Assignment**: Game assignment with date, time, venue, teams, role, and status (same as PWA)
 - **SecureCredential**: Encrypted user credentials stored in device secure storage for biometric login
-- **OfflineAction**: Queued user action performed while offline, pending synchronization
-- **CachedData**: Locally stored assignment and profile data with sync timestamps
+- **CachedData**: Locally stored assignment and profile data with sync timestamps (read-only when offline)
 
 ## Success Criteria *(mandatory)*
 
@@ -189,12 +183,11 @@ The development team wants to maximize code sharing between the PWA and React Na
 - **SC-001**: Native apps are successfully published and available on both App Store and Play Store
 - **SC-002**: Users can install and log in within 2 minutes of first launch
 - **SC-003**: Biometric re-authentication completes in under 3 seconds (including credential retrieval and fresh login)
-- **SC-004**: Offline mode provides access to at least the last 30 days of assignment data
+- **SC-004**: Offline mode provides read-only access to at least the last 30 days of cached assignment data
 - **SC-005**: Calendar subscription can be set up in under 1 minute
 - **SC-006**: At least 70% of business logic code is shared between PWA and native app
 - **SC-007**: Home screen widget displays data within 1 second of being added
 - **SC-008**: App startup time (cold start to interactive) is under 3 seconds on mid-range devices
-- **SC-009**: Queued offline actions sync successfully within 10 seconds of session restoration
 
 ## Assumptions
 
@@ -211,6 +204,7 @@ The development team wants to maximize code sharing between the PWA and React Na
 
 - Q: How does calendar sync work with VolleyManager? → A: VolleyManager calendar is read-only. Data flows one-way: assignments are added TO the user's device calendar (not synced back to VolleyManager).
 - Q: How are calendar events updated when assignments change? → A: iCal subscription auto-updates (device calendar polls feed); direct events require manual re-sync by user.
+- Q: Should offline mode support queuing actions? → A: No. Offline action queuing is out of scope. Priority is on code sharing between PWA and native app. Offline mode is read-only (cached data viewing only).
 
 ## Scope Boundaries
 
@@ -219,13 +213,14 @@ The development team wants to maximize code sharing between the PWA and React Na
 - Biometric quick login (using stored credentials)
 - Native calendar integration (iCal subscription and direct event creation)
 - Home screen widgets (cached data display)
-- Enhanced offline mode with action queuing
-- Shared codebase architecture with the existing PWA
+- Offline data viewing (read-only cached assignments)
+- Shared codebase architecture with the existing PWA (highest priority)
 - Same feature set as PWA for core functionality (assignments, compensations, exchanges, settings)
 
 **Out of Scope**:
 - Push notifications (no server infrastructure available)
 - Background data sync (session tokens too short-lived)
+- Offline action queuing (prioritizing code sharing over offline complexity)
 - Real-time widget updates (requires valid session)
 - Desktop native applications (macOS, Windows)
 - Features not currently in the PWA (new functionality beyond native enhancements)
