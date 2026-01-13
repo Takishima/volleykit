@@ -100,6 +100,7 @@ A referee wants to receive a notification 15 minutes before they need to leave f
 3. **Given** the user is already at or near the venue, **When** departure check runs, **Then** no notification is sent (already arrived)
 4. **Given** no public transport route is available, **When** departure check runs, **Then** a notification suggests leaving with sufficient buffer time for alternative transport
 5. **Given** location services are unavailable or denied, **When** departure check runs, **Then** the app falls back to a simple time-based reminder without transit details
+6. **Given** multiple assignments on the same day, **When** departure checks run, **Then** each assignment gets its own notification with venue-specific transit details (suppressed if within 500m of that venue)
 
 ---
 
@@ -184,6 +185,7 @@ The development team wants to maximize code sharing between the PWA and React Na
 - **FR-025**: System MUST provide a fallback time-based reminder when location services are unavailable
 - **FR-026**: System MUST notify user with buffer time suggestion when no public transport route is available
 - **FR-026a**: System MUST retain location data only until assignment is completed, then delete it
+- **FR-026b**: System MUST handle multiple assignments per day with individual notifications, each with venue-specific transit details
 
 **Widget**
 - **FR-027**: System MUST provide a home screen widget showing upcoming assignments (iOS and Android)
@@ -235,6 +237,7 @@ The development team wants to maximize code sharing between the PWA and React Na
 - Q: Should the 15-minute departure buffer be fixed or configurable? → A: User-configurable (5/10/15/20/30 min) with 15-minute default. Respects user autonomy and different comfort levels.
 - Q: How long should location data be retained? → A: Keep until assignment is completed, then delete. Allows recalculation if user moves before departure while ensuring cleanup after the assignment.
 - Q: What distance defines "near the venue" for suppressing notifications? → A: 500 meters. Reasonable walking distance (~5-7 min) that accounts for GPS inaccuracy.
+- Q: How are multiple assignments on the same day handled? → A: Individual notification per assignment, each with its own transit details. Notifications are suppressed if user is already within 500m of that specific venue.
 - Q: How does calendar sync work with VolleyManager? → A: VolleyManager calendar is read-only. Data flows one-way: assignments are added TO the user's device calendar (not synced back to VolleyManager).
 - Q: How are calendar events updated when assignments change? → A: iCal subscription auto-updates (device calendar polls feed); direct events require manual re-sync by user.
 - Q: Should offline mode support queuing actions? → A: No. Offline action queuing is out of scope. Priority is on code sharing between PWA and native app. Offline mode is read-only (cached data viewing only).
