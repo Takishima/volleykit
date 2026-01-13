@@ -85,7 +85,25 @@ A referee wants to see their upcoming assignments at a glance directly on their 
 
 ---
 
-### User Story 5 - Offline Data Viewing (Priority: P3)
+### User Story 5 - Smart Departure Reminder (Priority: P2)
+
+A referee wants to receive a notification 15 minutes before they need to leave for their assignment, regardless of their current location. The app periodically tracks their position, computes the public transport trip to the venue, and sends a local notification with the nearest stop, transport line, and direction.
+
+**Why this priority**: Referees often need to travel to unfamiliar venues and risk arriving late if they misjudge travel time. Proactive departure reminders with real-time transit info significantly reduce stress and improve punctuality.
+
+**Independent Test**: Can be fully tested by enabling smart reminders, being at a location different from the venue, and receiving a notification 15 minutes before needing to leave with correct transit details.
+
+**Acceptance Scenarios**:
+
+1. **Given** smart departure reminders are enabled and an assignment is within 6 hours, **When** the app checks location hourly, **Then** it calculates the public transport trip from current location to venue
+2. **Given** departure time is approaching, **When** 15 minutes remain before the user must leave, **Then** a local notification is sent with: nearest stop, transport line/number, direction, and departure time
+3. **Given** the user is already at or near the venue, **When** departure check runs, **Then** no notification is sent (already arrived)
+4. **Given** no public transport route is available, **When** departure check runs, **Then** a notification suggests leaving with sufficient buffer time for alternative transport
+5. **Given** location services are unavailable or denied, **When** departure check runs, **Then** the app falls back to a simple time-based reminder without transit details
+
+---
+
+### User Story 6 - Offline Data Viewing (Priority: P3)
 
 A referee traveling to a venue with poor connectivity wants to access their assignment details offline. The app caches assignment data for read-only access when offline.
 
@@ -101,7 +119,7 @@ A referee traveling to a venue with poor connectivity wants to access their assi
 
 ---
 
-### User Story 6 - Shared Code Architecture (Priority: P1)
+### User Story 7 - Shared Code Architecture (Priority: P1)
 
 The development team wants to maximize code sharing between the PWA and React Native app to reduce maintenance burden and ensure feature parity for common functionality.
 
@@ -158,16 +176,24 @@ The development team wants to maximize code sharing between the PWA and React Na
 - **FR-019**: System MUST clearly indicate offline status and last sync time to users
 - **FR-020**: System MUST show a message when users attempt actions while offline, indicating online connectivity is required
 
+**Smart Departure Reminder**
+- **FR-021**: System MUST track user location hourly when assignments are upcoming (within 6 hours) and smart reminders are enabled
+- **FR-022**: System MUST calculate public transport routes from current location to assignment venue using the OJP SDK
+- **FR-023**: System MUST send a local notification 15 minutes before the user needs to leave, including: nearest stop, transport line/number, direction, and departure time
+- **FR-024**: System MUST detect when user is already at or near the venue and suppress unnecessary departure notifications
+- **FR-025**: System MUST provide a fallback time-based reminder when location services are unavailable
+- **FR-026**: System MUST notify user with buffer time suggestion when no public transport route is available
+
 **Widget**
-- **FR-021**: System MUST provide a home screen widget showing upcoming assignments (iOS and Android)
-- **FR-022**: Widget MUST display cached data from the most recent app session
-- **FR-023**: Widget MUST support deep linking to specific assignments in the app
-- **FR-024**: Widget MUST indicate data freshness with "last updated" timestamp when data is stale
+- **FR-027**: System MUST provide a home screen widget showing upcoming assignments (iOS and Android)
+- **FR-028**: Widget MUST display cached data from the most recent app session
+- **FR-029**: Widget MUST support deep linking to specific assignments in the app
+- **FR-030**: Widget MUST indicate data freshness with "last updated" timestamp when data is stale
 
 **Code Architecture** (highest priority for maintainability)
-- **FR-025**: System MUST share business logic, API clients, and state management with the PWA where possible
-- **FR-026**: System MUST use platform-specific implementations only for native features (biometrics, calendar, widgets)
-- **FR-027**: System MUST maintain a monorepo structure enabling code sharing between web and mobile
+- **FR-031**: System MUST share business logic, API clients, and state management with the PWA where possible
+- **FR-032**: System MUST use platform-specific implementations only for native features (biometrics, calendar, widgets, smart reminders)
+- **FR-033**: System MUST maintain a monorepo structure enabling code sharing between web and mobile
 
 ### Key Entities
 
@@ -175,6 +201,7 @@ The development team wants to maximize code sharing between the PWA and React Na
 - **Assignment**: Game assignment with date, time, venue, teams, role, and status (same as PWA)
 - **SecureCredential**: Encrypted user credentials stored in device secure storage for biometric login
 - **CachedData**: Locally stored assignment and profile data with sync timestamps (read-only when offline)
+- **DepartureReminder**: Computed departure alert with user location, destination venue, calculated route (nearest stop, transport line, direction, departure time), and 15-minute buffer
 
 ## Success Criteria *(mandatory)*
 
@@ -203,6 +230,7 @@ The development team wants to maximize code sharing between the PWA and React Na
 
 ### Session 2026-01-13
 
+- Q: How frequently should the app update location for departure calculations? → A: Every hour when assignments are upcoming (within 6 hours). Balances battery life with sufficient accuracy for departure alerts.
 - Q: How does calendar sync work with VolleyManager? → A: VolleyManager calendar is read-only. Data flows one-way: assignments are added TO the user's device calendar (not synced back to VolleyManager).
 - Q: How are calendar events updated when assignments change? → A: iCal subscription auto-updates (device calendar polls feed); direct events require manual re-sync by user.
 - Q: Should offline mode support queuing actions? → A: No. Offline action queuing is out of scope. Priority is on code sharing between PWA and native app. Offline mode is read-only (cached data viewing only).
@@ -215,6 +243,7 @@ The development team wants to maximize code sharing between the PWA and React Na
 - Biometric quick login (using stored credentials)
 - Native calendar integration (iCal subscription and direct event creation)
 - Home screen widgets (cached data display)
+- Smart departure reminders (location-based public transport notifications)
 - Offline data viewing (read-only cached assignments)
 - Shared codebase architecture with the existing PWA (highest priority)
 - Same feature set as PWA for core functionality (assignments, compensations, exchanges, settings)
