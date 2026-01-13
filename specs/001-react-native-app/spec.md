@@ -50,9 +50,9 @@ A referee who frequently accesses the app wants to use Face ID, Touch ID, or fin
 
 ### User Story 3 - Native Calendar Integration (Priority: P2)
 
-A referee wants their calendar app to include their VolleyKit assignments. The native app provides a streamlined way to subscribe to the existing iCal feed or manually add events to the device calendar.
+A referee wants their calendar app to include their VolleyKit assignments. The native app provides a streamlined way to subscribe to the existing iCal feed or manually add events to the device calendar. This is a one-way flow: assignments from VolleyManager are added to the user's calendar (read-only source).
 
-**Why this priority**: Referees rely heavily on calendar integration for planning their schedules. Native apps provide better calendar integration than PWAs, including direct event creation.
+**Why this priority**: Referees rely heavily on calendar integration for planning their schedules. Native apps provide better calendar integration than PWAs, including direct event creation to the device calendar.
 
 **Independent Test**: Can be fully tested by enabling calendar integration, viewing device calendar, and verifying assignments appear as events. Delivers schedule visibility value.
 
@@ -147,28 +147,29 @@ The development team wants to maximize code sharing between the PWA and React Na
 - **FR-011**: System MUST provide password fallback when biometric authentication fails or is unavailable
 - **FR-012**: System MUST invalidate stored credentials when device security settings change
 
-**Calendar Integration**
+**Calendar Integration** (one-way: VolleyManager → device calendar, read-only source)
 - **FR-013**: System MUST support subscribing to the user's iCal feed via the device's calendar app
-- **FR-014**: System MUST support adding assignments as individual events to a device calendar
+- **FR-014**: System MUST support adding assignments as individual events to a user-selected device calendar
 - **FR-015**: System MUST support deep linking from calendar events back to assignments in the app
+- **FR-016**: Calendar events MUST be created from VolleyManager data only (no write-back to VolleyManager)
 
 **Offline Capabilities**
-- **FR-016**: System MUST cache assignment data for offline viewing
-- **FR-017**: System MUST queue user actions (accept/decline) when offline
-- **FR-018**: System MUST sync queued actions when connectivity and valid session are available
-- **FR-019**: System MUST clearly indicate offline status and last sync time to users
-- **FR-020**: System MUST handle sync conflicts gracefully with user notification
+- **FR-017**: System MUST cache assignment data for offline viewing
+- **FR-018**: System MUST queue user actions (accept/decline) when offline
+- **FR-019**: System MUST sync queued actions when connectivity and valid session are available
+- **FR-020**: System MUST clearly indicate offline status and last sync time to users
+- **FR-021**: System MUST handle sync conflicts gracefully with user notification
 
 **Widget**
-- **FR-021**: System MUST provide a home screen widget showing upcoming assignments (iOS and Android)
-- **FR-022**: Widget MUST display cached data from the most recent app session
-- **FR-023**: Widget MUST support deep linking to specific assignments in the app
-- **FR-024**: Widget MUST indicate data freshness with "last updated" timestamp when data is stale
+- **FR-022**: System MUST provide a home screen widget showing upcoming assignments (iOS and Android)
+- **FR-023**: Widget MUST display cached data from the most recent app session
+- **FR-024**: Widget MUST support deep linking to specific assignments in the app
+- **FR-025**: Widget MUST indicate data freshness with "last updated" timestamp when data is stale
 
 **Code Architecture**
-- **FR-025**: System MUST share business logic, API clients, and state management with the PWA where possible
-- **FR-026**: System MUST use platform-specific implementations only for native features (biometrics, calendar, widgets)
-- **FR-027**: System MUST maintain a monorepo structure enabling code sharing between web and mobile
+- **FR-026**: System MUST share business logic, API clients, and state management with the PWA where possible
+- **FR-027**: System MUST use platform-specific implementations only for native features (biometrics, calendar, widgets)
+- **FR-028**: System MUST maintain a monorepo structure enabling code sharing between web and mobile
 
 ### Key Entities
 
@@ -200,6 +201,12 @@ The development team wants to maximize code sharing between the PWA and React Na
 - App store approval processes will be followed for both iOS and Android
 - The existing iCal subscription URL from the PWA can be reused for native calendar integration
 - Background tasks cannot maintain active sessions due to token lifetime constraints
+
+## Clarifications
+
+### Session 2026-01-13
+
+- Q: How does calendar sync work with VolleyManager? → A: VolleyManager calendar is read-only. Data flows one-way: assignments are added TO the user's device calendar (not synced back to VolleyManager).
 
 ## Scope Boundaries
 
