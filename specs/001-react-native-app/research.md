@@ -220,3 +220,175 @@ TabNavigator
 - GitHub Actions triggers EAS Build
 - Automatic preview builds for PRs
 - Production builds on main branch tags
+
+## 11. Smart Departure Reminder - Location Tracking
+
+### Decision: expo-location with background permissions + expo-task-manager
+
+### Rationale
+- expo-location provides cross-platform geolocation APIs
+- expo-task-manager enables background task execution
+- Hourly location updates match spec requirement (battery-efficient)
+- Significant location change monitoring as alternative (more battery efficient)
+
+### Implementation
+| Feature | iOS | Android |
+|---------|-----|---------|
+| Background location | CLLocationManager | FusedLocationProviderClient |
+| Permissions | NSLocationWhenInUseUsageDescription, NSLocationAlwaysUsageDescription | ACCESS_FINE_LOCATION, ACCESS_BACKGROUND_LOCATION |
+| Frequency | Significant location change or timer | WorkManager periodic task |
+
+### Battery Optimization
+- Use `Accuracy.Balanced` (not `Accuracy.BestForNavigation`)
+- Hourly checks only when assignments within 6 hours
+- Stop tracking after assignment time passes
+- Respect iOS/Android battery saver modes
+
+### Alternatives Considered
+| Option | Pros | Cons | Why Rejected |
+|--------|------|------|--------------|
+| Continuous GPS | Real-time accuracy | Severe battery drain | Unnecessary for hourly checks |
+| Geofencing only | Battery efficient | Can't calculate routes from arbitrary location | Need location for OJP routing |
+| Push notifications | Server-side scheduling | No server infrastructure | Out of scope per spec |
+
+## 12. OJP SDK Integration for React Native
+
+### Decision: HTTP-based OJP API calls with existing web SDK patterns
+
+### Rationale
+- OJP SDK already exists in PWA (`web-app/src/shared/services/transport/`)
+- REST/XML API calls are platform-agnostic
+- Share OJP client code between web and mobile via packages/shared
+- No native module needed for HTTP requests
+
+### Implementation
+```typescript
+// packages/shared/services/transport/ojp-client.ts
+// Existing OJP client is platform-agnostic (uses fetch)
+// Can be shared directly with React Native
+
+interface TripRequest {
+  origin: { lat: number; lng: number }
+  destination: { lat: number; lng: number }
+  departureTime?: Date
+  arrivalTime?: Date
+}
+
+interface TripResult {
+  departureTime: Date
+  arrivalTime: Date
+  duration: number
+  legs: TripLeg[]
+  nearestStop: StopInfo
+}
+```
+
+### Key Considerations
+- OJP API returns Swiss public transport routes
+- Cache route calculations to reduce API calls
+- Handle offline gracefully (fall back to time-based reminder)
+- Rate limit: respect OJP API limits
+
+## 13. Local Notifications
+
+### Decision: expo-notifications for local notification scheduling
+
+### Rationale
+- expo-notifications provides cross-platform notification API
+- Local notifications don't require server infrastructure
+- Can be scheduled based on calculated departure time
+- Deep linking support for notification tap actions
+
+### Implementation
+| Feature | Method |
+|---------|--------|
+| Schedule notification | scheduleNotificationAsync() |
+| Departure alert | Trigger at (assignment_time - travel_duration - buffer) |
+| Notification content | Nearest stop, line number, direction, departure time |
+| Deep link | Open assignment detail on tap |
+
+### Notification Content Template
+```
+🚌 Leave for [Venue] in 15 min
+Take Bus 31 from Hauptbahnhof (direction: Flughafen)
+Departure: 14:23 → Arrival: 15:05
+```
+
+### Permissions
+- iOS: Request notification permission on first enable
+- Android: POST_NOTIFICATIONS (Android 13+)
+
+## 14. Venue Proximity Detection
+
+### Decision: Haversine distance calculation with 500m threshold
+
+### Rationale
+- Simple distance calculation from user location to venue coordinates
+- 500m threshold accounts for GPS drift (~10-50m accuracy)
+- No geofencing needed (simpler, less battery impact)
+- Venue coordinates available from Assignment.venue
+
+### Implementation
+```typescript
+function isNearVenue(
+  userLocation: { lat: number; lng: number },
+  venueLocation: { lat: number; lng: number },
+  thresholdMeters: number = 500
+): boolean {
+  const distance = haversineDistance(userLocation, venueLocation)
+  return distance <= thresholdMeters
+}
+
+function haversineDistance(
+  point1: { lat: number; lng: number },
+  point2: { lat: number; lng: number }
+): number {
+  // Standard haversine formula
+  // Returns distance in meters
+}
+```
+
+### Venue Clustering for Multiple Assignments
+- Group assignments with venues ≤500m apart
+- Calculate centroid for grouped venues
+- Single notification for venue cluster
+
+## 15. Departure Reminder Data Flow
+
+### Decision: Background task → OJP calculation → Local notification
+
+### Architecture
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Departure Reminder Flow                   │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐  │
+│  │   Hourly     │    │   Location   │    │   Check      │  │
+│  │   Background │───▶│   Update     │───▶│   Upcoming   │  │
+│  │   Task       │    │              │    │   Assignments│  │
+│  └──────────────┘    └──────────────┘    └──────┬───────┘  │
+│                                                  │          │
+│                                                  ▼          │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐  │
+│  │   Schedule   │    │   Calculate  │    │   Check      │  │
+│  │   Local      │◀───│   Departure  │◀───│   Venue      │  │
+│  │   Notification│    │   Time       │    │   Proximity  │  │
+│  └──────────────┘    └──────────────┘    └──────────────┘  │
+│         │                   ▲                              │
+│         │            ┌──────┴───────┐                      │
+│         │            │   OJP SDK    │                      │
+│         │            │   Route Calc │                      │
+│         │            └──────────────┘                      │
+│         ▼                                                  │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │   Notification: "Leave in 15min - Bus 31 @ 14:23"   │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Data Retention
+- Location stored only until assignment completed
+- No location history maintained
+- DepartureReminder entity deleted after assignment time

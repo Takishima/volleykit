@@ -153,6 +153,77 @@ Tracks locally created calendar events for updates.
 - Orphaned records cleaned up periodically
 - Calendar event ID used for updates/deletion
 
+### DepartureReminder
+
+Computed departure alert with route information.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| assignmentId | string (UUID) | Related assignment |
+| userLocation | { lat: number; lng: number } | User's current location |
+| venueLocation | { lat: number; lng: number } | Destination venue coordinates |
+| calculatedAt | string (ISO datetime) | When route was calculated |
+| departureTime | string (ISO datetime) | When user should leave |
+| arrivalTime | string (ISO datetime) | Expected arrival at venue |
+| travelDurationMinutes | number | Total travel time |
+| nearestStop | StopInfo | Closest transit stop to user |
+| route | TripLeg[] | Transit route details |
+| notificationScheduledAt | string (ISO datetime)? | When notification was scheduled |
+| notificationId | string? | Expo notification identifier |
+
+**StopInfo**:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| name | string | Stop name (e.g., "Hauptbahnhof") |
+| distance | number | Distance from user in meters |
+| walkTimeMinutes | number | Walking time to stop |
+
+**TripLeg**:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| mode | string | Transport mode (bus, train, tram, walk) |
+| line | string? | Line number (e.g., "31", "S3") |
+| direction | string? | Direction/terminus |
+| departureTime | string (ISO datetime) | Departure from this leg |
+| arrivalTime | string (ISO datetime) | Arrival at next point |
+| fromStop | string | Departure stop name |
+| toStop | string | Arrival stop name |
+
+**Storage**: AsyncStorage (transient, deleted after assignment)
+
+**Lifecycle**:
+- Created when background task calculates route
+- Updated hourly when user location changes
+- Notification scheduled when within buffer time
+- **Deleted when assignment time passes** (per FR-026a)
+- No location history retained
+
+### DepartureReminderSettings
+
+User preferences for smart departure reminders.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| enabled | boolean | Feature toggle |
+| bufferMinutes | number | Minutes before departure to notify (5/10/15/20/30, default 15) |
+| venueProximityMeters | number | Threshold for "near venue" (default 500) |
+
+**Storage**: AsyncStorage (part of SettingsState)
+
+### VenueCluster
+
+Groups nearby venues for consolidated notifications.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| assignmentIds | string[] | Grouped assignment IDs |
+| centroid | { lat: number; lng: number } | Center point of cluster |
+| venueNames | string[] | Names of venues in cluster |
+
+**Note**: Transient, computed when checking multiple same-day assignments. Venues within 500m are grouped.
+
 ## State Management
 
 ### Zustand Stores (Shared)
@@ -173,6 +244,9 @@ interface SettingsState {
   calendarSyncEnabled: boolean  // Mobile only
   selectedCalendarId: string | null  // Mobile only
   homeLocation: { lat: number; lng: number } | null
+  // Smart Departure Reminder settings (Mobile only)
+  departureReminderEnabled: boolean
+  departureReminderBufferMinutes: 5 | 10 | 15 | 20 | 30  // Default: 15
 }
 ```
 
@@ -200,6 +274,51 @@ interface BiometricAdapter {
   authenticate(promptMessage: string): Promise<boolean>
   getBiometricType(): Promise<'faceId' | 'touchId' | 'fingerprint' | null>
 }
+
+// Interface for location tracking (Mobile only)
+interface LocationAdapter {
+  requestPermissions(): Promise<'granted' | 'denied' | 'restricted'>
+  getCurrentLocation(): Promise<{ lat: number; lng: number } | null>
+  startBackgroundTracking(taskName: string): Promise<void>
+  stopBackgroundTracking(): Promise<void>
+  isTrackingActive(): Promise<boolean>
+}
+
+// Interface for local notifications (Mobile only)
+interface NotificationAdapter {
+  requestPermissions(): Promise<boolean>
+  scheduleNotification(options: {
+    title: string
+    body: string
+    triggerAt: Date
+    data?: Record<string, unknown>
+  }): Promise<string>  // Returns notification ID
+  cancelNotification(id: string): Promise<void>
+  cancelAllNotifications(): Promise<void>
+}
+
+// Interface for departure reminder service (Mobile only)
+interface DepartureReminderService {
+  calculateRoute(
+    origin: { lat: number; lng: number },
+    destination: { lat: number; lng: number },
+    arrivalTime: Date
+  ): Promise<TripResult | null>
+
+  isNearVenue(
+    userLocation: { lat: number; lng: number },
+    venueLocation: { lat: number; lng: number }
+  ): boolean
+
+  clusterNearbyVenues(
+    assignments: Assignment[]
+  ): VenueCluster[]
+
+  scheduleReminderNotification(
+    reminder: DepartureReminder,
+    bufferMinutes: number
+  ): Promise<string>  // Returns notification ID
+}
 ```
 
 ## Validation Rules
@@ -212,6 +331,10 @@ interface BiometricAdapter {
 | FR-009 | SecureCredential | Must use device secure enclave |
 | FR-018 | CachedData | Must cache 30 days of assignments |
 | FR-019 | CachedData | Must track lastSyncAt |
+| FR-021 | DepartureReminder | Track location only when assignments within 6 hours |
+| FR-023 | DepartureReminderSettings.bufferMinutes | Must be 5, 10, 15, 20, or 30 |
+| FR-024 | VenueCluster | Venues within 500m grouped together |
+| FR-026a | DepartureReminder | Delete location data after assignment completed |
 
 ### Cache Validation
 

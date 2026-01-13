@@ -5,13 +5,16 @@
 
 ## Summary
 
-Build a React Native mobile app for iOS and Android that shares code with the existing PWA. The app provides native features (biometric login, calendar integration, widgets) while reusing business logic, API clients, state management, and translations from the web app. Priority is on code sharing (70%+ target) over feature complexity.
+Build a React Native mobile app for iOS and Android that shares code with the existing PWA. The app provides native features (biometric login, calendar integration, widgets, smart departure reminders) while reusing business logic, API clients, state management, and translations from the web app. Priority is on code sharing (70%+ target) over feature complexity.
+
+**Smart Departure Reminder** (P2): Location-based notifications that alert users before they need to leave for assignments, with public transport routing via OJP SDK.
 
 ## Technical Context
 
 **Language/Version**: TypeScript 5.9, React Native 0.76+ (New Architecture)
-**Primary Dependencies**: React Native, TanStack Query 5, Zustand 5, Zod 4, date-fns 4, expo-secure-store, expo-calendar, react-native-widgetkit
+**Primary Dependencies**: React Native, TanStack Query 5, Zustand 5, Zod 4, date-fns 4, expo-secure-store, expo-calendar, react-native-widgetkit, expo-location, expo-notifications, expo-task-manager
 **Storage**: AsyncStorage (replacing localStorage), Secure Enclave/Keystore for credentials
+**Location Services**: expo-location with background permissions for hourly tracking
 **Testing**: Jest + React Native Testing Library (unit), Detox (E2E)
 **Target Platform**: iOS 15+, Android SDK 24+ (Android 7.0+)
 **Project Type**: Mobile (monorepo with shared packages)
@@ -26,11 +29,17 @@ Build a React Native mobile app for iOS and Android that shares code with the ex
 Based on `.specify/memory/constitution.md`:
 
 - [x] **I. Code Quality**: Self-documenting code, naming conventions, function design enforced by ESLint
+  - Smart Departure Reminder: Separate modules for background task, route calc, venue proximity, notifications
 - [x] **II. Testing Standards**: Jest/RNTL for unit (50-70% coverage), Detox for E2E
+  - Smart Departure Reminder: Unit tests for haversine distance, venue clustering, notification scheduling
 - [x] **III. UX Consistency**: i18n (4 languages), accessibility, 70%+ code sharing target
+  - Smart Departure Reminder: Notification messages translated; OJP SDK shared from PWA
 - [x] **IV. Performance**: Bundle size limits, <3s cold start, <3s biometric re-auth
+  - Smart Departure Reminder: Hourly location checks (battery-efficient), Accuracy.Balanced mode
 - [x] **V. Security First**: Secure Enclave/Keystore for credentials, foreground-only biometric access
+  - Smart Departure Reminder: Location data deleted after assignment (FR-026a), no location history
 - [x] **VI. Simplicity**: Code sharing priority, interface-based adapters, no over-engineering
+  - Smart Departure Reminder: Reuses existing OJP SDK, standard expo-* libraries, no custom native code
 
 **No violations identified.**
 
@@ -91,7 +100,15 @@ packages/
     │   │   ├── storage.ts     # AsyncStorage + SecureStore
     │   │   ├── biometrics.ts  # Face ID/Touch ID/fingerprint
     │   │   ├── calendar.ts    # Native calendar integration
+    │   │   ├── location.ts    # expo-location wrapper
+    │   │   ├── notifications.ts # expo-notifications wrapper
     │   │   └── widgets/       # Home screen widgets
+    │   ├── services/
+    │   │   └── departure-reminder/  # Smart departure reminder
+    │   │       ├── background-task.ts    # Hourly location check
+    │   │       ├── route-calculator.ts   # OJP SDK integration
+    │   │       ├── venue-proximity.ts    # 500m threshold logic
+    │   │       └── notification-scheduler.ts
     │   ├── screens/           # Screen components
     │   ├── navigation/        # React Navigation setup
     │   └── App.tsx
@@ -119,12 +136,18 @@ See [research.md](./research.md) for detailed findings.
 5. **Calendar Integration**: expo-calendar for direct events, URL scheme for iCal subscription
 6. **Widget Library**: react-native-widgetkit (iOS), react-native-android-widget (Android)
 7. **Navigation**: React Navigation 6 with native stack
+8. **Location Tracking**: expo-location with expo-task-manager for hourly background updates
+9. **Local Notifications**: expo-notifications for departure alerts (no server infrastructure needed)
+10. **OJP Integration**: Share existing OJP SDK from PWA via packages/shared (HTTP-based, platform-agnostic)
+11. **Venue Proximity**: Haversine distance calculation with 500m threshold for grouping/suppression
 
 ### Architecture Patterns
 
-1. **Platform Abstraction**: Interface-based adapters for storage, auth, calendar
+1. **Platform Abstraction**: Interface-based adapters for storage, auth, calendar, location, notifications
 2. **Dependency Injection**: Platform implementations injected at app root
 3. **Feature Flags**: Build-time flags to exclude web-only features from mobile bundle
+4. **Background Task**: Hourly location check via expo-task-manager when assignments within 6 hours
+5. **Data Lifecycle**: Location data deleted after assignment completion (privacy-first)
 
 ## Phase 1: Design Artifacts
 
