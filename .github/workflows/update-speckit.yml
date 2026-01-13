@@ -41,6 +41,25 @@ jobs:
           # Store the installed version for tracking
           specify version | grep -oP 'CLI Version:\s+\K[\d.]+' > .specify/version || true
 
+      - name: Preserve local customizations
+        run: |
+          # LOCAL CUSTOMIZATION: Remove branch validation from check_feature_branch
+          #
+          # Why: Upstream speckit enforces ###-feature-name branch naming pattern.
+          # We removed this restriction to allow speckit commands to run from any
+          # branch (e.g., claude/* branches used by Claude Code web sessions).
+          #
+          # This sed command replaces the check_feature_branch function body with
+          # a no-op that always returns success.
+          sed -i '/^check_feature_branch() {$/,/^}$/c\check_feature_branch() {\n    # Branch validation removed - speckit commands can run from any branch\n    return 0\n}' .specify/scripts/bash/common.sh
+
+      - name: Verify customization applied
+        run: |
+          grep -q "Branch validation removed" .specify/scripts/bash/common.sh || {
+            echo "ERROR: Failed to apply branch validation customization"
+            exit 1
+          }
+
       - name: Check for changes
         id: changes
         run: |
