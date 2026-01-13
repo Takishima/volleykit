@@ -96,7 +96,7 @@ A referee wants to receive a notification 15 minutes before they need to leave f
 **Acceptance Scenarios**:
 
 1. **Given** smart departure reminders are enabled and an assignment is within 6 hours, **When** the app checks location hourly, **Then** it calculates the public transport trip from current location to venue
-2. **Given** departure time is approaching, **When** 15 minutes remain before the user must leave, **Then** a local notification is sent with: nearest stop, transport line/number, direction, and departure time
+2. **Given** departure time is approaching, **When** the user-configured buffer time remains before they must leave (default 15 min), **Then** a local notification is sent with: nearest stop, transport line/number, direction, and departure time
 3. **Given** the user is already at or near the venue, **When** departure check runs, **Then** no notification is sent (already arrived)
 4. **Given** no public transport route is available, **When** departure check runs, **Then** a notification suggests leaving with sufficient buffer time for alternative transport
 5. **Given** location services are unavailable or denied, **When** departure check runs, **Then** the app falls back to a simple time-based reminder without transit details
@@ -179,10 +179,11 @@ The development team wants to maximize code sharing between the PWA and React Na
 **Smart Departure Reminder**
 - **FR-021**: System MUST track user location hourly when assignments are upcoming (within 6 hours) and smart reminders are enabled
 - **FR-022**: System MUST calculate public transport routes from current location to assignment venue using the OJP SDK
-- **FR-023**: System MUST send a local notification 15 minutes before the user needs to leave, including: nearest stop, transport line/number, direction, and departure time
+- **FR-023**: System MUST send a local notification before the user needs to leave (configurable: 5/10/15/20/30 min, default 15), including: nearest stop, transport line/number, direction, and departure time
 - **FR-024**: System MUST detect when user is already at or near the venue and suppress unnecessary departure notifications
 - **FR-025**: System MUST provide a fallback time-based reminder when location services are unavailable
 - **FR-026**: System MUST notify user with buffer time suggestion when no public transport route is available
+- **FR-026a**: System MUST retain location data only until assignment is completed, then delete it
 
 **Widget**
 - **FR-027**: System MUST provide a home screen widget showing upcoming assignments (iOS and Android)
@@ -231,6 +232,8 @@ The development team wants to maximize code sharing between the PWA and React Na
 ### Session 2026-01-13
 
 - Q: How frequently should the app update location for departure calculations? → A: Every hour when assignments are upcoming (within 6 hours). Balances battery life with sufficient accuracy for departure alerts.
+- Q: Should the 15-minute departure buffer be fixed or configurable? → A: User-configurable (5/10/15/20/30 min) with 15-minute default. Respects user autonomy and different comfort levels.
+- Q: How long should location data be retained? → A: Keep until assignment is completed, then delete. Allows recalculation if user moves before departure while ensuring cleanup after the assignment.
 - Q: How does calendar sync work with VolleyManager? → A: VolleyManager calendar is read-only. Data flows one-way: assignments are added TO the user's device calendar (not synced back to VolleyManager).
 - Q: How are calendar events updated when assignments change? → A: iCal subscription auto-updates (device calendar polls feed); direct events require manual re-sync by user.
 - Q: Should offline mode support queuing actions? → A: No. Offline action queuing is out of scope. Priority is on code sharing between PWA and native app. Offline mode is read-only (cached data viewing only).
