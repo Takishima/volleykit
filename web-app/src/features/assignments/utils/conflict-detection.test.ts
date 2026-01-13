@@ -10,6 +10,9 @@ import {
   parseGap,
   calculateMinGapToAssignments,
   hasMinimumGapFromAssignments,
+  createSmartConflictEvaluator,
+  calculateVenueDistance,
+  areVenuesClose,
 } from './conflict-detection'
 
 // Helper to create a test assignment
@@ -17,7 +20,8 @@ function createAssignment(
   gameId: string,
   startTime: string,
   endTime: string,
-  association: string | null = null
+  association: string | null = null,
+  coordinates: { latitude: number; longitude: number } | null = null
 ): CalendarAssignment {
   return {
     gameId,
@@ -35,12 +39,17 @@ function createAssignment(
     hallId: null,
     gameNumber: parseInt(gameId, 10),
     address: '123 Test St',
-    coordinates: null,
+    coordinates,
     plusCode: null,
     mapsUrl: null,
     referees: {},
   }
 }
+
+// Test coordinates for Swiss venues
+const ZURICH_COORDS = { latitude: 47.3769, longitude: 8.5417 }
+const ZURICH_NEARBY_COORDS = { latitude: 47.38, longitude: 8.545 } // ~0.5 km from Zurich
+const BERN_COORDS = { latitude: 46.948, longitude: 7.4474 } // ~95 km from Zurich
 
 describe('conflict-detection', () => {
   describe('detectConflicts', () => {
@@ -422,6 +431,275 @@ describe('conflict-detection', () => {
       // With higher threshold
       const result2 = hasMinimumGapFromAssignments('2024-01-15T12:00:00Z', assignments, 90)
       expect(result2).toBe(false)
+    })
+
+    it('should accept options object with venue coordinates', () => {
+      const assignments = [
+        createAssignment('1', '2024-01-15T12:00:00Z', '2024-01-15T14:00:00Z', null, ZURICH_COORDS),
+      ]
+      // Game at 14:30, only 30 min gap - normally would conflict
+      // But venues are at the same location, so no conflict
+      const result = hasMinimumGapFromAssignments('2024-01-15T14:30:00Z', assignments, {
+        minGapMinutes: 60,
+        venueCoordinates: ZURICH_NEARBY_COORDS, // Very close to Zurich
+        sameLocationDistanceKm: 5,
+      })
+      expect(result).toBe(true) // No conflict because venues are close
+    })
+
+    it('should consider distance when venues are far apart', () => {
+      const assignments = [
+        createAssignment('1', '2024-01-15T12:00:00Z', '2024-01-15T14:00:00Z', null, ZURICH_COORDS),
+      ]
+      // Game at 14:30, only 30 min gap - would conflict
+      // Venues are far apart (Zurich to Bern), so still conflicts
+      const result = hasMinimumGapFromAssignments('2024-01-15T14:30:00Z', assignments, {
+        minGapMinutes: 60,
+        venueCoordinates: BERN_COORDS, // ~95 km from Zurich
+        sameLocationDistanceKm: 5,
+      })
+      expect(result).toBe(false) // Conflict because venues are far
+    })
+
+    it('should ignore distance when venue coordinates are missing', () => {
+      const assignments = [
+        createAssignment('1', '2024-01-15T12:00:00Z', '2024-01-15T14:00:00Z', null, null), // No coordinates
+      ]
+      // Game at 14:30, only 30 min gap
+      const result = hasMinimumGapFromAssignments('2024-01-15T14:30:00Z', assignments, {
+        minGapMinutes: 60,
+        venueCoordinates: ZURICH_COORDS,
+        sameLocationDistanceKm: 5,
+      })
+      expect(result).toBe(false) // Still conflicts - can't determine distance
+    })
+  })
+
+  describe('createSmartConflictEvaluator', () => {
+    it('should not flag conflict when time gap is sufficient', () => {
+      const evaluator = createSmartConflictEvaluator({ thresholdMinutes: 60 })
+      const a = createAssignment('1', '2024-01-15T10:00:00Z', '2024-01-15T12:00:00Z')
+      const b = createAssignment('2', '2024-01-15T14:00:00Z', '2024-01-15T16:00:00Z')
+      // 2 hour gap
+      expect(evaluator(a, b)).toBe(false)
+    })
+
+    it('should flag conflict when time gap is insufficient and venues have no coordinates', () => {
+      const evaluator = createSmartConflictEvaluator({ thresholdMinutes: 60 })
+      const a = createAssignment('1', '2024-01-15T10:00:00Z', '2024-01-15T12:00:00Z')
+      const b = createAssignment('2', '2024-01-15T12:30:00Z', '2024-01-15T14:30:00Z')
+      // 30 min gap, no coordinates
+      expect(evaluator(a, b)).toBe(true)
+    })
+
+    it('should NOT flag conflict when venues are close even with small time gap', () => {
+      const evaluator = createSmartConflictEvaluator({
+        thresholdMinutes: 60,
+        sameLocationDistanceKm: 5,
+      })
+      const a = createAssignment(
+        '1',
+        '2024-01-15T10:00:00Z',
+        '2024-01-15T12:00:00Z',
+        null,
+        ZURICH_COORDS
+      )
+      const b = createAssignment(
+        '2',
+        '2024-01-15T12:30:00Z',
+        '2024-01-15T14:30:00Z',
+        null,
+        ZURICH_NEARBY_COORDS
+      )
+      // 30 min gap but venues are ~0.5 km apart
+      expect(evaluator(a, b)).toBe(false)
+    })
+
+    it('should flag conflict when venues are far apart with small time gap', () => {
+      const evaluator = createSmartConflictEvaluator({
+        thresholdMinutes: 60,
+        sameLocationDistanceKm: 5,
+      })
+      const a = createAssignment(
+        '1',
+        '2024-01-15T10:00:00Z',
+        '2024-01-15T12:00:00Z',
+        null,
+        ZURICH_COORDS
+      )
+      const b = createAssignment(
+        '2',
+        '2024-01-15T12:30:00Z',
+        '2024-01-15T14:30:00Z',
+        null,
+        BERN_COORDS
+      )
+      // 30 min gap and venues are ~95 km apart
+      expect(evaluator(a, b)).toBe(true)
+    })
+
+    it('should flag conflict when only one venue has coordinates', () => {
+      const evaluator = createSmartConflictEvaluator({
+        thresholdMinutes: 60,
+        sameLocationDistanceKm: 5,
+      })
+      const a = createAssignment(
+        '1',
+        '2024-01-15T10:00:00Z',
+        '2024-01-15T12:00:00Z',
+        null,
+        ZURICH_COORDS
+      )
+      const b = createAssignment(
+        '2',
+        '2024-01-15T12:30:00Z',
+        '2024-01-15T14:30:00Z',
+        null,
+        null // No coordinates
+      )
+      // 30 min gap, can't determine distance
+      expect(evaluator(a, b)).toBe(true)
+    })
+
+    it('should use custom sameLocationDistanceKm threshold', () => {
+      // With 3 km threshold, ~0.5 km apart should NOT conflict
+      const evaluator3km = createSmartConflictEvaluator({
+        thresholdMinutes: 60,
+        sameLocationDistanceKm: 3,
+      })
+      const a = createAssignment(
+        '1',
+        '2024-01-15T10:00:00Z',
+        '2024-01-15T12:00:00Z',
+        null,
+        ZURICH_COORDS
+      )
+      const b = createAssignment(
+        '2',
+        '2024-01-15T12:30:00Z',
+        '2024-01-15T14:30:00Z',
+        null,
+        ZURICH_NEARBY_COORDS // ~0.5 km from Zurich
+      )
+      expect(evaluator3km(a, b)).toBe(false)
+
+      // With 0.1 km threshold, ~0.5 km apart SHOULD conflict
+      const evaluator01km = createSmartConflictEvaluator({
+        thresholdMinutes: 60,
+        sameLocationDistanceKm: 0.1,
+      })
+      expect(evaluator01km(a, b)).toBe(true)
+    })
+
+    it('should work with detectConflicts', () => {
+      const evaluator = createSmartConflictEvaluator({
+        thresholdMinutes: 60,
+        sameLocationDistanceKm: 5,
+      })
+      const assignments = [
+        createAssignment(
+          '1',
+          '2024-01-15T10:00:00Z',
+          '2024-01-15T12:00:00Z',
+          null,
+          ZURICH_COORDS
+        ),
+        createAssignment(
+          '2',
+          '2024-01-15T12:30:00Z',
+          '2024-01-15T14:30:00Z',
+          null,
+          ZURICH_NEARBY_COORDS
+        ),
+      ]
+      // Close venues should not create conflicts
+      const conflicts = detectConflicts(assignments, 60, evaluator)
+      expect(conflicts.size).toBe(0)
+    })
+
+    it('should detect conflicts for far venues', () => {
+      const evaluator = createSmartConflictEvaluator({
+        thresholdMinutes: 60,
+        sameLocationDistanceKm: 5,
+      })
+      const assignments = [
+        createAssignment(
+          '1',
+          '2024-01-15T10:00:00Z',
+          '2024-01-15T12:00:00Z',
+          null,
+          ZURICH_COORDS
+        ),
+        createAssignment('2', '2024-01-15T12:30:00Z', '2024-01-15T14:30:00Z', null, BERN_COORDS),
+      ]
+      // Far venues should create conflicts
+      const conflicts = detectConflicts(assignments, 60, evaluator)
+      expect(conflicts.size).toBe(2)
+    })
+  })
+
+  describe('calculateVenueDistance', () => {
+    it('should return null when first coordinates are null', () => {
+      const result = calculateVenueDistance(null, ZURICH_COORDS)
+      expect(result).toBeNull()
+    })
+
+    it('should return null when second coordinates are null', () => {
+      const result = calculateVenueDistance(ZURICH_COORDS, null)
+      expect(result).toBeNull()
+    })
+
+    it('should return null when both coordinates are null', () => {
+      const result = calculateVenueDistance(null, null)
+      expect(result).toBeNull()
+    })
+
+    it('should calculate distance between Zurich and Bern', () => {
+      const result = calculateVenueDistance(ZURICH_COORDS, BERN_COORDS)
+      expect(result).not.toBeNull()
+      // Should be approximately 95 km
+      expect(result).toBeGreaterThan(90)
+      expect(result).toBeLessThan(100)
+    })
+
+    it('should calculate very small distance for nearby venues', () => {
+      const result = calculateVenueDistance(ZURICH_COORDS, ZURICH_NEARBY_COORDS)
+      expect(result).not.toBeNull()
+      // Should be less than 1 km
+      expect(result).toBeLessThan(1)
+    })
+  })
+
+  describe('areVenuesClose', () => {
+    it('should return false when first coordinates are null', () => {
+      const result = areVenuesClose(null, ZURICH_COORDS)
+      expect(result).toBe(false)
+    })
+
+    it('should return false when second coordinates are null', () => {
+      const result = areVenuesClose(ZURICH_COORDS, null)
+      expect(result).toBe(false)
+    })
+
+    it('should return true for nearby venues within default threshold', () => {
+      // Default is 5 km
+      const result = areVenuesClose(ZURICH_COORDS, ZURICH_NEARBY_COORDS)
+      expect(result).toBe(true)
+    })
+
+    it('should return false for far venues', () => {
+      const result = areVenuesClose(ZURICH_COORDS, BERN_COORDS)
+      expect(result).toBe(false)
+    })
+
+    it('should use custom threshold', () => {
+      // With 0.1 km threshold, ~0.5 km apart should be false
+      const result = areVenuesClose(ZURICH_COORDS, ZURICH_NEARBY_COORDS, 0.1)
+      expect(result).toBe(false)
+
+      // With 100 km threshold, even Zurich-Bern should be true
+      const result2 = areVenuesClose(ZURICH_COORDS, BERN_COORDS, 100)
+      expect(result2).toBe(true)
     })
   })
 })

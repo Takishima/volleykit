@@ -11,9 +11,17 @@
  */
 
 import type { CalendarAssignment } from '@/features/assignments/api/ical/types'
+import { calculateDistanceKm, type Coordinates } from '@/shared/utils/distance'
 
 /** Default minimum gap between assignments to avoid conflict (in minutes) */
 const DEFAULT_CONFLICT_THRESHOLD_MINUTES = 60
+
+/**
+ * Default maximum distance in km for venues to be considered "same location" (no conflict).
+ * 5km is chosen as it represents roughly the distance that can be covered quickly by car or
+ * public transport within a city, meaning back-to-back games at nearby venues are feasible.
+ */
+export const DEFAULT_SAME_LOCATION_DISTANCE_KM = 5
 
 /**
  * Evaluator function to determine if two assignments conflict.
@@ -247,6 +255,124 @@ export function formatGap(gapMinutes: number): string {
   return `${minutes}min ${typeLabel}`
 }
 
+/**
+ * Options for the smart conflict evaluator.
+ */
+export interface SmartConflictOptions {
+  /** Minimum gap required between assignments in minutes (default: 60) */
+  thresholdMinutes?: number
+  /** Maximum distance in km for venues to be considered "same location" (default: 5) */
+  sameLocationDistanceKm?: number
+}
+
+/**
+ * Creates a smart conflict evaluator that considers both time gap AND venue distance.
+ *
+ * Two assignments are NOT considered conflicting if:
+ * - They have less than thresholdMinutes gap (time conflict) BUT
+ * - Both venues have coordinates AND they are within sameLocationDistanceKm of each other
+ *
+ * This handles the common case where a referee has back-to-back games at the same
+ * or nearby venue - no travel time is needed, so a small gap is acceptable.
+ *
+ * @param options - Configuration for threshold and distance
+ * @returns Evaluator function for use with detectConflicts()
+ *
+ * @example
+ * ```ts
+ * // Default: 60 min threshold, 5 km same-location distance
+ * const evaluator = createSmartConflictEvaluator();
+ *
+ * // Custom: 90 min threshold, 3 km same-location distance
+ * const evaluator = createSmartConflictEvaluator({
+ *   thresholdMinutes: 90,
+ *   sameLocationDistanceKm: 3
+ * });
+ *
+ * const conflicts = detectConflicts(assignments, 60, evaluator);
+ * ```
+ */
+export function createSmartConflictEvaluator(options: SmartConflictOptions = {}): ConflictEvaluator {
+  const {
+    thresholdMinutes = DEFAULT_CONFLICT_THRESHOLD_MINUTES,
+    sameLocationDistanceKm = DEFAULT_SAME_LOCATION_DISTANCE_KM,
+  } = options
+
+  return (a: CalendarAssignment, b: CalendarAssignment): boolean => {
+    // First check if there's a time-based conflict
+    const aStart = new Date(a.startTime).getTime()
+    const aEnd = new Date(a.endTime).getTime()
+    const bStart = new Date(b.startTime).getTime()
+    const bEnd = new Date(b.endTime).getTime()
+
+    const thresholdMs = thresholdMinutes * MS_PER_MINUTE
+
+    // Gap from a end to b start
+    const gapAToB = bStart - aEnd
+    // Gap from b end to a start
+    const gapBToA = aStart - bEnd
+
+    // Effective gap is the maximum of these (handles ordering)
+    const effectiveGap = Math.max(gapAToB, gapBToA)
+
+    // No time conflict - no conflict at all
+    if (effectiveGap >= thresholdMs) {
+      return false
+    }
+
+    // There IS a time conflict - now check if venues are close enough to ignore it
+    // If both assignments have coordinates, check the distance
+    if (a.coordinates && b.coordinates) {
+      const distanceKm = calculateDistanceKm(a.coordinates, b.coordinates)
+
+      // If venues are within the "same location" distance, no conflict
+      if (distanceKm <= sameLocationDistanceKm) {
+        return false
+      }
+    }
+
+    // Time conflict exists and venues are not close (or coordinates unavailable)
+    return true
+  }
+}
+
+/**
+ * Calculates the distance between two venues from their coordinates.
+ *
+ * @param coordsA - First venue coordinates (or null)
+ * @param coordsB - Second venue coordinates (or null)
+ * @returns Distance in km, or null if either coordinates are missing
+ */
+export function calculateVenueDistance(
+  coordsA: Coordinates | null,
+  coordsB: Coordinates | null
+): number | null {
+  if (!coordsA || !coordsB) {
+    return null
+  }
+  return calculateDistanceKm(coordsA, coordsB)
+}
+
+/**
+ * Checks if two venues are within a "same location" distance threshold.
+ *
+ * @param coordsA - First venue coordinates (or null)
+ * @param coordsB - Second venue coordinates (or null)
+ * @param maxDistanceKm - Maximum distance to be considered same location (default: 5)
+ * @returns true if venues are close, false if far apart or coordinates unavailable
+ */
+export function areVenuesClose(
+  coordsA: Coordinates | null,
+  coordsB: Coordinates | null,
+  maxDistanceKm = DEFAULT_SAME_LOCATION_DISTANCE_KM
+): boolean {
+  const distance = calculateVenueDistance(coordsA, coordsB)
+  if (distance === null) {
+    return false
+  }
+  return distance <= maxDistanceKm
+}
+
 /** Default game duration for gap calculation when endTime is not available (in minutes) */
 const DEFAULT_GAME_DURATION_MINUTES = 90
 
@@ -304,24 +430,103 @@ export function calculateMinGapToAssignments(
 }
 
 /**
+ * Options for smart gap checking with distance consideration.
+ */
+export interface GapCheckOptions {
+  /** Minimum required gap in minutes */
+  minGapMinutes: number
+  /** Venue coordinates of the potential game (for distance-based filtering) */
+  venueCoordinates?: Coordinates | null
+  /** Maximum distance in km to consider venues as "same location" (default: 5) */
+  sameLocationDistanceKm?: number
+}
+
+/**
  * Checks if a game has sufficient gap from all existing assignments.
+ * Supports smart conflict detection by considering venue distance.
+ *
+ * When venue coordinates are provided, games at nearby venues (within sameLocationDistanceKm)
+ * are not considered conflicts even if the time gap is small, since no travel time is needed.
  *
  * @param gameStartTime - ISO date string of the potential game start time
  * @param assignments - User's existing calendar assignments
- * @param minGapMinutes - Minimum required gap in minutes
+ * @param minGapMinutesOrOptions - Minimum gap in minutes, or options object for smart checking
  * @returns true if the game has sufficient gap (or no assignments exist), false otherwise
+ *
+ * @example
+ * ```ts
+ * // Simple time-based check (backwards compatible)
+ * hasMinimumGapFromAssignments(startTime, assignments, 60)
+ *
+ * // Smart check with distance consideration
+ * hasMinimumGapFromAssignments(startTime, assignments, {
+ *   minGapMinutes: 60,
+ *   venueCoordinates: { latitude: 47.37, longitude: 8.54 },
+ *   sameLocationDistanceKm: 5
+ * })
+ * ```
  */
 export function hasMinimumGapFromAssignments(
   gameStartTime: string | undefined,
   assignments: CalendarAssignment[],
-  minGapMinutes: number
+  minGapMinutesOrOptions: number | GapCheckOptions
 ): boolean {
-  const minGap = calculateMinGapToAssignments(gameStartTime, assignments)
+  // Parse options (support both simple number and options object)
+  const options: GapCheckOptions =
+    typeof minGapMinutesOrOptions === 'number'
+      ? { minGapMinutes: minGapMinutesOrOptions }
+      : minGapMinutesOrOptions
 
-  // If no gap calculated (no assignments or invalid time), allow the game
-  if (minGap === null) {
+  const {
+    minGapMinutes,
+    venueCoordinates = null,
+    sameLocationDistanceKm = DEFAULT_SAME_LOCATION_DISTANCE_KM,
+  } = options
+
+  if (!gameStartTime || assignments.length === 0) {
     return true
   }
 
-  return minGap >= minGapMinutes
+  const gameStart = new Date(gameStartTime).getTime()
+  if (isNaN(gameStart)) {
+    return true
+  }
+
+  // Estimated end time for the potential game
+  const gameEnd = gameStart + DEFAULT_GAME_DURATION_MINUTES * MS_PER_MINUTE
+
+  for (const assignment of assignments) {
+    const assignmentStart = new Date(assignment.startTime).getTime()
+    const assignmentEnd = new Date(assignment.endTime).getTime()
+
+    if (isNaN(assignmentStart) || isNaN(assignmentEnd)) {
+      continue
+    }
+
+    // Calculate gap: positive means there's time between games, negative means overlap
+    const gapBeforeAssignment = (assignmentStart - gameEnd) / MS_PER_MINUTE
+    const gapAfterAssignment = (gameStart - assignmentEnd) / MS_PER_MINUTE
+    const effectiveGap = Math.max(gapBeforeAssignment, gapAfterAssignment)
+
+    // If there's enough time gap, this assignment doesn't conflict
+    if (effectiveGap >= minGapMinutes) {
+      continue
+    }
+
+    // Time gap is insufficient - check if venues are close enough to allow it
+    if (venueCoordinates && assignment.coordinates) {
+      const distanceKm = calculateDistanceKm(venueCoordinates, assignment.coordinates)
+
+      // If venues are within "same location" distance, no conflict for this assignment
+      if (distanceKm <= sameLocationDistanceKm) {
+        continue
+      }
+    }
+
+    // Found a conflicting assignment (insufficient time gap and venues not close)
+    return false
+  }
+
+  // No conflicts found
+  return true
 }

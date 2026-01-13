@@ -20,18 +20,23 @@ import { fetchCalendarAssignments } from '@/features/assignments/api/calendar-ap
 import type { CalendarAssignment } from '@/features/assignments/api/ical/types'
 import {
   detectConflicts,
+  createSmartConflictEvaluator,
   type ConflictMap,
   type AssignmentConflict,
   type ConflictEvaluator,
+  type SmartConflictOptions,
 } from '@/features/assignments/utils/conflict-detection'
 import { useAuthStore } from '@/shared/stores/auth'
 import { generateDemoCalendarAssignments } from '@/shared/stores/demo-generators'
 
 // Re-export types for convenience
-export type { ConflictMap, AssignmentConflict, ConflictEvaluator }
+export type { ConflictMap, AssignmentConflict, ConflictEvaluator, SmartConflictOptions }
 
 /** Default conflict threshold in minutes */
 const DEFAULT_CONFLICT_THRESHOLD_MINUTES = 60
+
+/** Default distance threshold for "same location" venues in km */
+const DEFAULT_SAME_LOCATION_DISTANCE_KM = 5
 
 /** Stale time configuration for calendar conflicts (background data) */
 const STALE_TIME_MINUTES = 5
@@ -92,9 +97,20 @@ export interface UseCalendarConflictsOptions {
   /** Minimum gap required between assignments in minutes (default: 60) */
   thresholdMinutes?: number
   /**
+   * Maximum distance in km for venues to be considered "same location" (default: 5).
+   * Games at nearby venues don't trigger conflict warnings since no travel is needed.
+   */
+  sameLocationDistanceKm?: number
+  /**
+   * Enable smart conflict detection that considers venue distance (default: true).
+   * When enabled, games at nearby venues (within sameLocationDistanceKm) won't
+   * be flagged as conflicts even with small time gaps.
+   */
+  useSmartConflictDetection?: boolean
+  /**
    * Custom evaluator function to determine if two assignments conflict.
-   * When provided, overrides the default time-based evaluation.
-   * Can be used for location-based conflict detection or other custom logic.
+   * When provided, overrides both default time-based and smart evaluation.
+   * Can be used for custom conflict detection logic.
    */
   evaluator?: ConflictEvaluator
 }
@@ -141,7 +157,20 @@ export function useCalendarConflicts(
   const resolvedOptions: UseCalendarConflictsOptions =
     typeof options === 'number' ? { thresholdMinutes: options } : options
 
-  const { thresholdMinutes = DEFAULT_CONFLICT_THRESHOLD_MINUTES, evaluator } = resolvedOptions
+  const {
+    thresholdMinutes = DEFAULT_CONFLICT_THRESHOLD_MINUTES,
+    sameLocationDistanceKm = DEFAULT_SAME_LOCATION_DISTANCE_KM,
+    useSmartConflictDetection = true,
+    evaluator: customEvaluator,
+  } = resolvedOptions
+
+  // Use smart evaluator by default (considers both time AND distance)
+  // Custom evaluator takes precedence if provided
+  const evaluator = customEvaluator
+    ? customEvaluator
+    : useSmartConflictDetection
+      ? createSmartConflictEvaluator({ thresholdMinutes, sameLocationDistanceKm })
+      : undefined
 
   const calendarCode = useAuthStore((state) => state.calendarCode)
   const isAuthenticated = useAuthStore((state) => state.status === 'authenticated')

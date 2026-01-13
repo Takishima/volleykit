@@ -4,7 +4,10 @@ import { useShallow } from 'zustand/react/shallow'
 
 import type { GameExchange } from '@/api/client'
 import { useCalendarConflicts } from '@/features/assignments/hooks/useCalendarConflicts'
-import { hasMinimumGapFromAssignments } from '@/features/assignments/utils/conflict-detection'
+import {
+  hasMinimumGapFromAssignments,
+  DEFAULT_SAME_LOCATION_DISTANCE_KM,
+} from '@/features/assignments/utils/conflict-detection'
 import { ExchangeCard } from '@/features/exchanges/components/ExchangeCard'
 import { ExchangeSettingsSheet } from '@/features/exchanges/components/ExchangeSettingsSheet'
 import { TOUR_DUMMY_EXCHANGE } from '@/features/exchanges/exchange'
@@ -215,6 +218,7 @@ export function ExchangePage() {
     }
 
     // Apply game gap filter (only on "open" tab when calendar data is available)
+    // Uses smart conflict detection: games at nearby venues (<=5km) don't trigger conflicts
     if (
       gameGapFilter.enabled &&
       statusFilter === 'open' &&
@@ -223,11 +227,15 @@ export function ExchangePage() {
     ) {
       result = result.filter(({ exchange }) => {
         const gameStartTime = exchange.refereeGame?.game?.startingDateTime
-        return hasMinimumGapFromAssignments(
-          gameStartTime,
-          calendarAssignments,
-          gameGapFilter.minGapMinutes
-        )
+        const geoLocation =
+          exchange.refereeGame?.game?.hall?.primaryPostalAddress?.geographicalLocation
+        const venueCoordinates = extractCoordinates(geoLocation)
+
+        return hasMinimumGapFromAssignments(gameStartTime, calendarAssignments, {
+          minGapMinutes: gameGapFilter.minGapMinutes,
+          venueCoordinates,
+          sameLocationDistanceKm: DEFAULT_SAME_LOCATION_DISTANCE_KM,
+        })
       })
     }
 
