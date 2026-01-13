@@ -224,7 +224,86 @@ Based on plan.md monorepo structure:
 
 ---
 
-## Phase 6: User Story 4 - Home Screen Widget (Priority: P3)
+## Phase 6: User Story 5 - Smart Departure Reminder (Priority: P2)
+
+**Goal**: Location-based notifications that alert users 15 min before they need to leave for assignments, with public transport routing via OJP SDK
+
+**Independent Test**: Enable smart reminders in settings, be at a location different from venue, receive notification with correct transit details (stop, line, direction) 15 min before needing to leave
+
+### Platform Adapters for Location & Notifications
+
+- [ ] T085 [P] [US5] Install expo-location, expo-notifications, expo-task-manager in `packages/mobile/package.json`
+- [ ] T086 [US5] Create `packages/mobile/src/platform/location.ts` implementing LocationAdapter with expo-location (requestPermissions, getCurrentLocation, startBackgroundTracking, stopBackgroundTracking)
+- [ ] T087 [US5] Create `packages/mobile/src/platform/notifications.ts` implementing NotificationAdapter with expo-notifications (requestPermissions, scheduleNotification, cancelNotification)
+- [ ] T088 [US5] Update `packages/mobile/src/platform/index.ts` to export location and notification adapters
+
+### DepartureReminder Entity & Settings
+
+- [ ] T089 [P] [US5] Create `packages/mobile/src/types/departureReminder.ts` with DepartureReminder, StopInfo, TripLeg, VenueCluster types
+- [ ] T090 [US5] Create `packages/mobile/src/stores/departureReminderSettings.ts` with Zustand store (enabled, bufferMinutes: 5|10|15|20|30)
+- [ ] T091 [US5] Create `packages/mobile/src/stores/departureReminders.ts` with active reminders state (transient, cleared after assignment)
+
+### OJP SDK Integration
+
+- [ ] T092 [US5] Verify `packages/shared/services/transport/` OJP client is platform-agnostic (uses fetch)
+- [ ] T093 [US5] Create `packages/mobile/src/services/departure-reminder/route-calculator.ts` wrapping shared OJP client for trip calculation
+- [ ] T094 [US5] Add route caching in route-calculator.ts to reduce OJP API calls (cache key: origin+destination+time)
+
+### Venue Proximity Detection
+
+- [ ] T095 [US5] Create `packages/shared/utils/geo.ts` with haversineDistance function (returns meters between two coordinates)
+- [ ] T096 [US5] Create `packages/mobile/src/services/departure-reminder/venue-proximity.ts` with isNearVenue (500m threshold) and clusterNearbyVenues functions
+- [ ] T097 [US5] Add unit tests for haversineDistance in `packages/shared/utils/geo.test.ts`
+
+### Background Task Implementation
+
+- [ ] T098 [US5] Create `packages/mobile/src/services/departure-reminder/background-task.ts` with hourly location check task using expo-task-manager
+- [ ] T099 [US5] Implement task logic: check assignments within 6 hours, get location, check venue proximity, calculate route if needed
+- [ ] T100 [US5] Configure task to only run when departureReminderEnabled is true and upcoming assignments exist
+- [ ] T101 [US5] Add battery optimization: use Accuracy.Balanced, stop tracking after assignment time
+
+### Notification Scheduling
+
+- [ ] T102 [US5] Create `packages/mobile/src/services/departure-reminder/notification-scheduler.ts` with scheduleReminderNotification function
+- [ ] T103 [US5] Create notification content template with i18n support: "[emoji] Leave for [Venue] in X min / Take [Line] from [Stop] (direction: [Terminus]) / Departure: [Time]"
+- [ ] T104 [US5] Add notification translations to `packages/shared/i18n/locales/` for all 4 languages (de, en, fr, it)
+- [ ] T105 [US5] Configure notification deep link to open assignment detail: `volleykit://assignment/{id}`
+
+### Multi-Assignment Handling
+
+- [ ] T106 [US5] Implement venue clustering in background-task.ts: group assignments with venues ≤500m apart
+- [ ] T107 [US5] Create grouped notification content for venue clusters (list all assignment times/venues)
+- [ ] T108 [US5] Suppress notifications when user already within 500m of venue (per FR-024)
+
+### Fallback Behavior
+
+- [ ] T109 [US5] Implement location unavailable fallback: simple time-based reminder without transit details
+- [ ] T110 [US5] Implement no-route-found fallback: suggest leaving with buffer time for alternative transport
+- [ ] T111 [US5] Add error handling for OJP API failures with graceful degradation
+
+### Settings UI
+
+- [ ] T112 [US5] Create `packages/mobile/src/screens/DepartureReminderSettingsScreen.tsx` with enable toggle and buffer time picker (5/10/15/20/30 min)
+- [ ] T113 [US5] Update `packages/mobile/src/screens/SettingsScreen.tsx` to link to DepartureReminderSettings
+- [ ] T114 [US5] Add location permission request flow in DepartureReminderSettingsScreen when enabling
+
+### Data Lifecycle & Privacy
+
+- [ ] T115 [US5] Create `packages/mobile/src/services/departure-reminder/cleanup.ts` to delete DepartureReminder data after assignment completion
+- [ ] T116 [US5] Register cleanup on app foreground and after assignment time passes
+- [ ] T117 [US5] Verify no location history is retained (per FR-026a)
+
+### App Configuration
+
+- [ ] T118 [US5] Add iOS location permissions to `packages/mobile/app.json` (NSLocationWhenInUseUsageDescription, NSLocationAlwaysUsageDescription)
+- [ ] T119 [US5] Add Android location permissions to `packages/mobile/app.json` (ACCESS_FINE_LOCATION, ACCESS_BACKGROUND_LOCATION)
+- [ ] T120 [US5] Add notification permissions configuration for iOS and Android 13+
+
+**Checkpoint**: User Story 5 complete - Smart departure reminders work independently with location tracking, OJP routing, and local notifications
+
+---
+
+## Phase 7: User Story 4 - Home Screen Widget (Priority: P3)
 
 **Goal**: iOS and Android home screen widgets showing next 3 upcoming assignments from cached data
 
@@ -232,40 +311,40 @@ Based on plan.md monorepo structure:
 
 ### WidgetData Entity Implementation
 
-- [ ] T085 [P] [US4] Install react-native-widgetkit in `packages/mobile/package.json`
-- [ ] T086 [US4] Create `packages/mobile/src/types/widget.ts` with WidgetData and WidgetAssignment types
-- [ ] T087 [US4] Create `packages/mobile/src/platform/widgets.ts` with shared widget data functions
+- [ ] T121 [P] [US4] Install react-native-widgetkit in `packages/mobile/package.json`
+- [ ] T122 [US4] Create `packages/mobile/src/types/widget.ts` with WidgetData and WidgetAssignment types
+- [ ] T123 [US4] Create `packages/mobile/src/platform/widgets.ts` with shared widget data functions
 
 ### iOS Widget Extension
 
-- [ ] T088 [US4] Create iOS widget extension in `packages/mobile/ios/VolleyKitWidget/` with Swift UI widget
-- [ ] T089 [US4] Configure App Group for data sharing between main app and widget in Xcode
-- [ ] T090 [US4] Create `packages/mobile/ios/VolleyKitWidget/VolleyKitWidget.swift` with widget view (next 3 assignments, last updated)
-- [ ] T091 [US4] Configure widget sizes (small, medium) in widget extension
+- [ ] T124 [US4] Create iOS widget extension in `packages/mobile/ios/VolleyKitWidget/` with Swift UI widget
+- [ ] T125 [US4] Configure App Group for data sharing between main app and widget in Xcode
+- [ ] T126 [US4] Create `packages/mobile/ios/VolleyKitWidget/VolleyKitWidget.swift` with widget view (next 3 assignments, last updated)
+- [ ] T127 [US4] Configure widget sizes (small, medium) in widget extension
 
 ### Android Widget
 
-- [ ] T092 [US4] Install react-native-android-widget in `packages/mobile/package.json`
-- [ ] T093 [US4] Create Android widget in `packages/mobile/android/app/src/main/java/.../widget/` with Kotlin implementation
-- [ ] T094 [US4] Create widget layout XML in `packages/mobile/android/app/src/main/res/layout/`
-- [ ] T095 [US4] Configure widget provider in AndroidManifest.xml
+- [ ] T128 [US4] Install react-native-android-widget in `packages/mobile/package.json`
+- [ ] T129 [US4] Create Android widget in `packages/mobile/android/app/src/main/java/.../widget/` with Kotlin implementation
+- [ ] T130 [US4] Create widget layout XML in `packages/mobile/android/app/src/main/res/layout/`
+- [ ] T131 [US4] Configure widget provider in AndroidManifest.xml
 
 ### Widget Data Bridge
 
-- [ ] T096 [US4] Create `packages/mobile/src/services/widgetDataBridge.ts` to write widget data on assignment refresh
-- [ ] T097 [US4] Update useAssignments hook to trigger widget data update after successful fetch
-- [ ] T098 [US4] Add "last updated" timestamp to widget data for staleness indicator
+- [ ] T132 [US4] Create `packages/mobile/src/services/widgetDataBridge.ts` to write widget data on assignment refresh
+- [ ] T133 [US4] Update useAssignments hook to trigger widget data update after successful fetch
+- [ ] T134 [US4] Add "last updated" timestamp to widget data for staleness indicator
 
 ### Widget Deep Linking
 
-- [ ] T099 [US4] Configure widget tap action to open `volleykit://assignment/{id}` deep link
-- [ ] T100 [US4] Handle empty state in widget ("Please open VolleyKit to sync")
+- [ ] T135 [US4] Configure widget tap action to open `volleykit://assignment/{id}` deep link
+- [ ] T136 [US4] Handle empty state in widget ("Please open VolleyKit to sync")
 
 **Checkpoint**: User Story 4 complete - Widgets work independently on both iOS and Android
 
 ---
 
-## Phase 7: User Story 5 - Offline Data Viewing (Priority: P3)
+## Phase 8: User Story 6 - Offline Data Viewing (Priority: P3)
 
 **Goal**: Read-only access to cached assignment data when offline with clear freshness indicators
 
@@ -273,75 +352,75 @@ Based on plan.md monorepo structure:
 
 ### CachedData Entity Implementation
 
-- [ ] T101 [P] [US5] Create `packages/mobile/src/types/cache.ts` with CachedData type definition
-- [ ] T102 [US5] Create `packages/mobile/src/services/cacheService.ts` with save/load/clear cache functions using AsyncStorage
+- [ ] T137 [P] [US6] Create `packages/mobile/src/types/cache.ts` with CachedData type definition
+- [ ] T138 [US6] Create `packages/mobile/src/services/cacheService.ts` with save/load/clear cache functions using AsyncStorage
 
 ### Offline Detection
 
-- [ ] T103 [US5] Install @react-native-community/netinfo in `packages/mobile/package.json`
-- [ ] T104 [US5] Create `packages/mobile/src/hooks/useNetworkStatus.ts` with online/offline state detection
-- [ ] T105 [US5] Create `packages/mobile/src/providers/NetworkProvider.tsx` with network context
+- [ ] T139 [US6] Install @react-native-community/netinfo in `packages/mobile/package.json`
+- [ ] T140 [US6] Create `packages/mobile/src/hooks/useNetworkStatus.ts` with online/offline state detection
+- [ ] T141 [US6] Create `packages/mobile/src/providers/NetworkProvider.tsx` with network context
 
 ### Cache Integration with TanStack Query
 
-- [ ] T106 [US5] Create `packages/mobile/src/services/queryPersistence.ts` with TanStack Query persistence adapter
-- [ ] T107 [US5] Update `packages/mobile/src/providers/AppProviders.tsx` to configure QueryClient with cache persistence
-- [ ] T108 [US5] Configure staleTime and cacheTime in query hooks for 30-day cache validity
+- [ ] T142 [US6] Create `packages/mobile/src/services/queryPersistence.ts` with TanStack Query persistence adapter
+- [ ] T143 [US6] Update `packages/mobile/src/providers/AppProviders.tsx` to configure QueryClient with cache persistence
+- [ ] T144 [US6] Configure staleTime and cacheTime in query hooks for 30-day cache validity
 
 ### Offline UI Feedback
 
-- [ ] T109 [US5] Create `packages/mobile/src/components/OfflineBanner.tsx` showing offline status
-- [ ] T110 [US5] Create `packages/mobile/src/components/LastUpdatedIndicator.tsx` showing cache freshness
-- [ ] T111 [US5] Update screen components to show LastUpdatedIndicator when data is from cache
+- [ ] T145 [US6] Create `packages/mobile/src/components/OfflineBanner.tsx` showing offline status
+- [ ] T146 [US6] Create `packages/mobile/src/components/LastUpdatedIndicator.tsx` showing cache freshness
+- [ ] T147 [US6] Update screen components to show LastUpdatedIndicator when data is from cache
 
 ### Offline Action Prevention
 
-- [ ] T112 [US5] Create `packages/mobile/src/components/OfflineActionBlocker.tsx` modal for offline action attempts
-- [ ] T113 [US5] Update action buttons (accept/decline assignment) to check network status before execution
+- [ ] T148 [US6] Create `packages/mobile/src/components/OfflineActionBlocker.tsx` modal for offline action attempts
+- [ ] T149 [US6] Update action buttons (accept/decline assignment) to check network status before execution
 
-**Checkpoint**: User Story 5 complete - Offline viewing works independently with clear freshness indicators
+**Checkpoint**: User Story 6 complete - Offline viewing works independently with clear freshness indicators
 
 ---
 
-## Phase 8: Polish & Cross-Cutting Concerns
+## Phase 9: Polish & Cross-Cutting Concerns
 
 **Purpose**: Final improvements affecting multiple user stories
 
 ### Performance Optimization
 
-- [ ] T114 [P] Optimize bundle size with lazy loading for heavy screens in navigation configuration
-- [ ] T115 [P] Profile and optimize cold start time to meet <3s target
-- [ ] T116 [P] Add splash screen configuration in `packages/mobile/app.json`
+- [ ] T150 [P] Optimize bundle size with lazy loading for heavy screens in navigation configuration
+- [ ] T151 [P] Profile and optimize cold start time to meet <3s target
+- [ ] T152 [P] Add splash screen configuration in `packages/mobile/app.json`
 
 ### Error Handling
 
-- [ ] T117 Create `packages/mobile/src/components/ErrorBoundary.tsx` for graceful error handling
-- [ ] T118 Create `packages/mobile/src/components/ErrorScreen.tsx` for fatal error display with retry
-- [ ] T119 Add error boundaries around each tab navigator screen
+- [ ] T153 Create `packages/mobile/src/components/ErrorBoundary.tsx` for graceful error handling
+- [ ] T154 Create `packages/mobile/src/components/ErrorScreen.tsx` for fatal error display with retry
+- [ ] T155 Add error boundaries around each tab navigator screen
 
 ### Accessibility
 
-- [ ] T120 [P] Audit all screens for accessibility (aria-labels, roles, focus management)
-- [ ] T121 [P] Add accessibility labels to all icon-only buttons across screens
-- [ ] T122 [P] Test with VoiceOver (iOS) and TalkBack (Android)
+- [ ] T156 [P] Audit all screens for accessibility (aria-labels, roles, focus management)
+- [ ] T157 [P] Add accessibility labels to all icon-only buttons across screens
+- [ ] T158 [P] Test with VoiceOver (iOS) and TalkBack (Android)
 
 ### Documentation
 
-- [ ] T123 [P] Update `packages/mobile/README.md` with setup and development instructions
-- [ ] T124 [P] Update root `CLAUDE.md` with mobile development commands
-- [ ] T125 [P] Create app store metadata (description, screenshots, keywords) in `docs/app-store/`
+- [ ] T159 [P] Update `packages/mobile/README.md` with setup and development instructions
+- [ ] T160 [P] Update root `CLAUDE.md` with mobile development commands
+- [ ] T161 [P] Create app store metadata (description, screenshots, keywords) in `docs/app-store/`
 
 ### CI/CD Integration
 
-- [ ] T126 Create `.github/workflows/ci-mobile.yml` for mobile build validation
-- [ ] T127 Configure EAS Build integration with GitHub Actions for preview builds
-- [ ] T128 Add mobile test commands to root `package.json` scripts
+- [ ] T162 Create `.github/workflows/ci-mobile.yml` for mobile build validation
+- [ ] T163 Configure EAS Build integration with GitHub Actions for preview builds
+- [ ] T164 Add mobile test commands to root `package.json` scripts
 
 ### Final Validation
 
-- [ ] T129 Run quickstart.md validation steps on fresh clone
-- [ ] T130 Verify 70%+ code sharing metric between web and mobile
-- [ ] T131 Performance test all user stories against success criteria (SC-001 to SC-008)
+- [ ] T165 Run quickstart.md validation steps on fresh clone
+- [ ] T166 Verify 70%+ code sharing metric between web and mobile
+- [ ] T167 Performance test all user stories against success criteria (SC-001 to SC-008)
 
 ---
 
@@ -352,33 +431,35 @@ Based on plan.md monorepo structure:
 ```
 Phase 1: Setup
     ↓
-Phase 2: Foundational (US6 - Shared Code Architecture) ← BLOCKS ALL STORIES
+Phase 2: Foundational (US7 - Shared Code Architecture) ← BLOCKS ALL STORIES
     ↓
-┌───────────────┬───────────────┬───────────────┬───────────────┐
-│   Phase 3     │   Phase 4     │   Phase 5     │   Phase 6/7   │
-│  US1 (P1) MVP │  US2 (P2)     │  US3 (P2)     │  US4/5 (P3)   │
-│  Core App     │  Biometrics   │  Calendar     │  Widget/Offline│
-└───────────────┴───────────────┴───────────────┴───────────────┘
-                            ↓
-                    Phase 8: Polish
+┌───────────────┬───────────────┬───────────────┬───────────────┬───────────────┐
+│   Phase 3     │   Phase 4     │   Phase 5     │   Phase 6     │   Phase 7/8   │
+│  US1 (P1) MVP │  US2 (P2)     │  US3 (P2)     │  US5 (P2)     │  US4/6 (P3)   │
+│  Core App     │  Biometrics   │  Calendar     │  Departure    │  Widget/Offline│
+└───────────────┴───────────────┴───────────────┴───────────────┴───────────────┘
+                                    ↓
+                            Phase 9: Polish
 ```
 
 ### User Story Dependencies
 
 | Story | Depends On | Can Start After |
 |-------|------------|-----------------|
-| US1 (Core App) | Foundational (US6) | Phase 2 complete |
+| US1 (Core App) | Foundational (US7) | Phase 2 complete |
 | US2 (Biometrics) | US1 (needs login flow) | Phase 3 complete |
-| US3 (Calendar) | Foundational (US6) | Phase 2 complete |
+| US3 (Calendar) | Foundational (US7) | Phase 2 complete |
 | US4 (Widget) | US1 (needs assignments) | Phase 3 complete |
-| US5 (Offline) | US1 (needs data to cache) | Phase 3 complete |
+| US5 (Smart Departure) | US1 (needs assignments) | Phase 3 complete |
+| US6 (Offline) | US1 (needs data to cache) | Phase 3 complete |
 
 ### Parallel Opportunities
 
 **Phase 1 (Setup)**: T003-T006, T008-T009 can run in parallel
 **Phase 2 (Foundational)**: T010-T013, T015-T017, T019-T022, T024-T026, T028-T030, T032-T033 can run in parallel
 **Phase 3 (US1)**: T040-T041, T049-T053 can run in parallel
-**Phase 4-7**: Each story can potentially run in parallel with different team members after Phase 3
+**Phase 6 (US5)**: T085, T089 can run in parallel
+**Phase 4-8**: Each story can potentially run in parallel with different team members after Phase 3
 
 ---
 
@@ -410,6 +491,19 @@ Task: "Create packages/mobile/src/screens/ExchangesScreen.tsx"
 Task: "Create packages/mobile/src/screens/SettingsScreen.tsx"
 ```
 
+### Phase 6: Smart Departure Reminder
+
+```bash
+# Launch parallel platform adapter and type tasks:
+Task: "Install expo-location, expo-notifications, expo-task-manager"
+Task: "Create packages/mobile/src/types/departureReminder.ts"
+
+# Launch all notification tasks together:
+Task: "Create notification-scheduler.ts"
+Task: "Add notification translations to locales/"
+Task: "Configure notification deep link"
+```
+
 ---
 
 ## Implementation Strategy
@@ -417,7 +511,7 @@ Task: "Create packages/mobile/src/screens/SettingsScreen.tsx"
 ### MVP First (Phases 1-3)
 
 1. Complete Phase 1: Setup (T001-T009)
-2. Complete Phase 2: Foundational/US6 (T010-T039) - **CRITICAL GATE**
+2. Complete Phase 2: Foundational/US7 (T010-T039) - **CRITICAL GATE**
 3. Complete Phase 3: US1 Core App (T040-T060)
 4. **STOP and VALIDATE**: App installable, login works, core data visible
 5. Submit to TestFlight/Internal Testing for early feedback
@@ -426,18 +520,20 @@ Task: "Create packages/mobile/src/screens/SettingsScreen.tsx"
 
 | Increment | Stories | Value Delivered |
 |-----------|---------|-----------------|
-| MVP | Setup + US6 + US1 | Installable app with login |
+| MVP | Setup + US7 + US1 | Installable app with login |
 | v1.1 | + US2 | Biometric convenience |
 | v1.2 | + US3 | Calendar integration |
-| v1.3 | + US4 + US5 | Widgets + offline |
-| v1.4 | Polish | Production-ready |
+| v1.3 | + US5 | Smart departure reminders |
+| v1.4 | + US4 + US6 | Widgets + offline |
+| v1.5 | Polish | Production-ready |
 
 ### Parallel Team Strategy
 
 With 2+ developers after Phase 2:
 
 - **Developer A**: US1 → US2 (auth expertise)
-- **Developer B**: US3 → US4/US5 (native features expertise)
+- **Developer B**: US3 → US5 (location/transport expertise)
+- **Developer C**: US4 → US6 (native widgets/offline expertise)
 
 ---
 
@@ -446,14 +542,15 @@ With 2+ developers after Phase 2:
 | Phase | Story | Task Count | Parallel Tasks |
 |-------|-------|------------|----------------|
 | 1 | Setup | 9 | 6 |
-| 2 | US6 Foundational | 30 | 22 |
+| 2 | US7 Foundational | 30 | 22 |
 | 3 | US1 Core App | 21 | 7 |
 | 4 | US2 Biometrics | 11 | 1 |
 | 5 | US3 Calendar | 13 | 1 |
-| 6 | US4 Widget | 16 | 1 |
-| 7 | US5 Offline | 13 | 1 |
-| 8 | Polish | 18 | 10 |
-| **Total** | | **131** | **49** |
+| 6 | US5 Smart Departure | 36 | 2 |
+| 7 | US4 Widget | 16 | 1 |
+| 8 | US6 Offline | 13 | 1 |
+| 9 | Polish | 18 | 10 |
+| **Total** | | **167** | **51** |
 
 ---
 
