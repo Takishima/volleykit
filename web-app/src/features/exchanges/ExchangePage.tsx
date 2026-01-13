@@ -11,6 +11,7 @@ import { TOUR_DUMMY_EXCHANGE } from '@/features/exchanges/exchange'
 import { useGameExchanges, type ExchangeStatus } from '@/features/validation/hooks/useConvocations'
 import { DistanceFilterToggle } from '@/shared/components/DistanceFilterToggle'
 import { FilterChip } from '@/shared/components/FilterChip'
+import { CalendarX2 } from '@/shared/components/icons'
 import { LevelFilterToggle } from '@/shared/components/LevelFilterToggle'
 import { LoadingState, ErrorState, EmptyState } from '@/shared/components/LoadingSpinner'
 import { PullToRefresh } from '@/shared/components/PullToRefresh'
@@ -388,6 +389,7 @@ export function ExchangePage() {
           <FilterChip
             active={gameGapFilter.enabled}
             onToggle={() => setGameGapFilterEnabled(!gameGapFilter.enabled)}
+            icon={<CalendarX2 className="w-full h-full" />}
             label={t('exchange.filterByGameGap')}
             activeValue={`≥${gameGapFilter.minGapMinutes / MINUTES_PER_HOUR}h`}
           />
