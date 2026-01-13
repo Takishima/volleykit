@@ -41,6 +41,12 @@ jobs:
           # Store the installed version for tracking
           specify version | grep -oP 'CLI Version:\s+\K[\d.]+' > .specify/version || true
 
+      - name: Preserve local customizations
+        run: |
+          # Remove branch validation from check_feature_branch (local customization)
+          # This allows speckit commands to run from any branch, not just ###-feature-name
+          sed -i '/^check_feature_branch() {$/,/^}$/c\check_feature_branch() {\n    # Branch validation removed - speckit commands can run from any branch\n    return 0\n}' .specify/scripts/bash/common.sh
+
       - name: Check for changes
         id: changes
         run: |
