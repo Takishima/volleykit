@@ -197,6 +197,7 @@ The development team wants to maximize code sharing between the PWA and React Na
 - App store approval processes will be followed for both iOS and Android
 - The existing iCal subscription URL from the PWA can be reused for native calendar integration
 - Background tasks cannot maintain active sessions due to token lifetime constraints
+- Secure Enclave biometric credentials require foreground app with user interaction (no background access)
 
 ## Clarifications
 
@@ -205,6 +206,7 @@ The development team wants to maximize code sharing between the PWA and React Na
 - Q: How does calendar sync work with VolleyManager? → A: VolleyManager calendar is read-only. Data flows one-way: assignments are added TO the user's device calendar (not synced back to VolleyManager).
 - Q: How are calendar events updated when assignments change? → A: iCal subscription auto-updates (device calendar polls feed); direct events require manual re-sync by user.
 - Q: Should offline mode support queuing actions? → A: No. Offline action queuing is out of scope. Priority is on code sharing between PWA and native app. Offline mode is read-only (cached data viewing only).
+- Q: Can biometric credentials be used in background processes? → A: No. Secure Enclave with biometrics does not allow access to secrets for background processes. Biometric authentication requires foreground app with active user interaction. This reinforces that background sync is not feasible.
 
 ## Scope Boundaries
 
