@@ -2,6 +2,7 @@
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-01-13
+**Updated**: 2026-01-13 (revised based on user clarifications)
 **Feature**: [spec.md](../spec.md)
 
 ## Content Quality
@@ -31,14 +32,36 @@
 
 ## Notes
 
-- Spec is ready for `/speckit.clarify` or `/speckit.plan`
-- 7 user stories covering P1-P3 priorities
-- 25 functional requirements across 6 feature areas
-- 10 measurable success criteria defined
-- Clear scope boundaries established (in/out of scope)
+- Spec revised based on user clarifications:
+  - **Push notifications removed** - No server infrastructure available
+  - **Session token constraints documented** - Tokens expire in 15-30 minutes
+  - **Biometric auth adjusted** - Stores credentials in Secure Enclave, performs fresh login
+  - **Background sync removed** - Relies on iCal subscription instead
+  - **Widgets show cached data** - Updated on app use only
+
+## Summary
+
+| Category | Count |
+|----------|-------|
+| User Stories | 6 (2x P1, 3x P2, 1x P3) |
+| Functional Requirements | 27 |
+| Success Criteria | 9 |
+
+### Native-Only Features (In Scope)
+
+1. **Biometric Quick Login** - Secure Enclave credential storage (P2)
+2. **Native Calendar Integration** - iCal subscription + direct events (P2)
+3. **Home Screen Widgets** - Cached data display (P3)
+4. **Enhanced Offline Mode** - Action queuing with sync (P2)
+
+### Explicitly Out of Scope
+
+- Push notifications
+- Background data sync
+- Real-time widget updates
 
 ## Validation Summary
 
 All checklist items pass. The specification is complete and ready for the next phase.
 
-**Recommendation**: Proceed to `/speckit.plan` for implementation planning, or `/speckit.clarify` if you want to refine any aspects further.
+**Recommendation**: Proceed to `/speckit.plan` for implementation planning.
