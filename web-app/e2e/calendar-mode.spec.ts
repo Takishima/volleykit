@@ -245,24 +245,37 @@ test.describe('Calendar Mode', () => {
     })
 
     test('shows error when calendar is not found', async ({ page }) => {
-      // Mock 404 response for calendar API - use regex for cross-browser compatibility
-      // The route pattern must match both direct API calls and proxied requests
-      await page.route(/iCal\/referee\//, (route) =>
-        route.fulfill({
-          status: 404,
-          contentType: 'text/plain',
-          body: 'Not Found',
-        })
-      )
+      // Inject a fetch mock at the JavaScript level BEFORE page loads
+      // This is more reliable than Playwright route interception in WebKit
+      await page.addInitScript(() => {
+        const originalFetch = window.fetch
+        window.fetch = async (input, init) => {
+          const url = typeof input === 'string' ? input : input.toString()
+          if (url.includes('/iCal/referee/')) {
+            // Return 404 for calendar validation requests
+            return new Response('Not Found', {
+              status: 404,
+              statusText: 'Not Found',
+            })
+          }
+          return originalFetch(input, init)
+        }
+      })
 
-      await loginPage.switchToCalendarMode()
-      await loginPage.calendarInput.fill('NOTFND')
-      await loginPage.calendarLoginButton.click()
+      // Navigate fresh to ensure the mock is active
+      const freshLoginPage = new LoginPage(page)
+      await freshLoginPage.goto()
+      await page.waitForLoadState('networkidle')
 
-      // Should show not found error - wait for the error to appear
-      // Use specific text to avoid matching PWA notification
+      await freshLoginPage.switchToCalendarMode()
+      await freshLoginPage.calendarInput.fill('NOTFND')
+      await freshLoginPage.calendarLoginButton.click()
+
+      // Wait for error state to appear
       await expect(page).toHaveURL(/login/)
-      const errorMessage = page.getByText(/calendar.*not.*found/i)
+
+      // Match both German "Kalender nicht gefunden" and English "Calendar not found"
+      const errorMessage = page.getByText(/kalender.*nicht.*gefunden|calendar.*not.*found/i)
       await expect(errorMessage).toBeVisible()
     })
   })
