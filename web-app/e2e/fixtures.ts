@@ -27,6 +27,25 @@ export async function disableTours(page: Page): Promise<void> {
 }
 
 /**
+ * Suppress PWA notifications to prevent them from blocking UI interactions.
+ *
+ * The PWA "App ready for offline use" notification appears as a fixed overlay
+ * that can intercept pointer events, causing test clicks to fail.
+ *
+ * This helper prevents the notification by mocking the service worker ready promise.
+ */
+export async function suppressPWANotifications(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    if ('serviceWorker' in navigator) {
+      // Override the ready promise to prevent PWA notifications
+      Object.defineProperty(navigator.serviceWorker, 'ready', {
+        get: () => new Promise(() => {}), // Never resolves
+      })
+    }
+  })
+}
+
+/**
  * Custom test fixtures for E2E tests.
  *
  * This extends the base Playwright test with additional setup
@@ -34,11 +53,14 @@ export async function disableTours(page: Page): Promise<void> {
  */
 export const test = base.extend({
   /**
-   * Override the page fixture to pre-configure localStorage.
-   * This runs before each test and sets up the browser state.
+   * Override the page fixture to pre-configure the browser environment.
+   * This runs before each test and sets up:
+   * - Disables tours to prevent navigation interference
+   * - Suppresses PWA notifications to prevent click interception
    */
   page: async ({ page }, use) => {
     await disableTours(page)
+    await suppressPWANotifications(page)
     await use(page)
   },
 })

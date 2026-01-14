@@ -245,10 +245,12 @@ test.describe('Calendar Mode', () => {
     })
 
     test('shows error when calendar is not found', async ({ page }) => {
-      // Mock 404 response for calendar API
-      await page.route('**/iCal/referee/*', (route) =>
+      // Mock 404 response for calendar API - use regex for cross-browser compatibility
+      // The route pattern must match both direct API calls and proxied requests
+      await page.route(/iCal\/referee\//, (route) =>
         route.fulfill({
           status: 404,
+          contentType: 'text/plain',
           body: 'Not Found',
         })
       )
@@ -257,9 +259,11 @@ test.describe('Calendar Mode', () => {
       await loginPage.calendarInput.fill('NOTFND')
       await loginPage.calendarLoginButton.click()
 
-      // Should show not found error
+      // Should show not found error - wait for the error to appear
+      // Use specific text to avoid matching PWA notification
       await expect(page).toHaveURL(/login/)
-      await expect(page.getByText(/not found|calendar.*not.*found/i)).toBeVisible()
+      const errorMessage = page.getByText(/calendar.*not.*found/i)
+      await expect(errorMessage).toBeVisible()
     })
   })
 

@@ -68,7 +68,12 @@ export default defineConfig({
     },
     {
       name: 'Mobile Safari',
-      use: { ...devices['iPhone 12'] },
+      use: {
+        ...devices['iPhone 12'],
+        // WebKit on mobile can be slower, increase timeouts
+        actionTimeout: 15000,
+        navigationTimeout: 20000,
+      },
     },
   ],
 

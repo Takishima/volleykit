@@ -23,8 +23,9 @@ export class BasePage {
    */
   protected async waitForContentReady(contentLocator: Locator, emptyStateLocator?: Locator) {
     // Wait for loading indicator to disappear (if present)
+    // Use expect().not.toBeVisible() which handles elements that don't exist gracefully
     const loadingIndicator = this.page.getByTestId('loading-state')
-    await loadingIndicator.waitFor({ state: 'hidden' })
+    await expect(loadingIndicator).not.toBeVisible()
 
     // Wait for content or empty state to be visible
     if (emptyStateLocator) {
