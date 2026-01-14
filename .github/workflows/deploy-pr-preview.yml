@@ -115,6 +115,7 @@ jobs:
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: help-site
+          node-version: '22'
 
       # Cache Astro build artifacts per branch
       - name: Cache Astro build
@@ -151,11 +152,6 @@ jobs:
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: ocr-poc
-
-      # Install web-app deps for shared component imports
-      - name: Install web-app dependencies
-        run: npm ci
-        working-directory: web-app
 
       # Cache ESLint results per branch
       - name: Cache ESLint
