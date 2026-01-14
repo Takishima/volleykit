@@ -6,7 +6,8 @@
     "packages/mobile",
     "web-app",
     "ocr-poc",
-    "help-site"
+    "help-site",
+    "worker"
   ],
   "scripts": {
     "changeset": "changeset",
