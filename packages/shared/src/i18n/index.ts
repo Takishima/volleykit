@@ -4,3 +4,4 @@
 
 export * from './types';
 export * from './useTranslation';
+export * from './locales';

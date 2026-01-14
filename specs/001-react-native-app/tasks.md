@@ -48,7 +48,7 @@ Based on plan.md monorepo structure:
 
 ### Shared API Layer
 
-- [ ] T010 [P] Create `packages/shared/api/client.ts` with platform-agnostic fetch wrapper (extract from web-app/src/api/client.ts)
+- [x] T010 [P] Create `packages/shared/api/client.ts` with platform-agnostic fetch wrapper (extract from web-app/src/api/client.ts)
 - [ ] T011 [P] Move `schema.ts` generation target to `packages/shared/api/schema.ts` in OpenAPI config
 - [x] T012 [P] Create `packages/shared/api/validation.ts` with Zod schemas (extract from web-app/src/api/validation.ts)
 - [x] T013 [P] Create `packages/shared/api/queryKeys.ts` with TanStack Query keys (extract from web-app/src/api/queryKeys.ts)
@@ -56,8 +56,8 @@ Based on plan.md monorepo structure:
 
 ### Shared State Management
 
-- [ ] T015 [P] Create `packages/shared/stores/auth.ts` without persist middleware (extract from web-app/src/shared/stores/auth.ts)
-- [ ] T016 [P] Create `packages/shared/stores/settings.ts` without persist middleware (extract platform-agnostic parts)
+- [x] T015 [P] Create `packages/shared/stores/auth.ts` without persist middleware (extract from web-app/src/shared/stores/auth.ts)
+- [x] T016 [P] Create `packages/shared/stores/settings.ts` without persist middleware (extract platform-agnostic parts)
 - [x] T017 [P] Create `packages/shared/stores/demo.ts` for demo mode state (extract from web-app/src/shared/stores/demo/)
 - [x] T018 Create `packages/shared/stores/index.ts` barrel export for stores module
 
@@ -72,14 +72,14 @@ Based on plan.md monorepo structure:
 ### Shared Utilities
 
 - [x] T024 [P] Create `packages/shared/utils/date-helpers.ts` (extract from web-app/src/shared/utils/date-helpers.ts)
-- [ ] T025 [P] Create `packages/shared/utils/assignment-helpers.ts` (extract from web-app)
-- [ ] T026 [P] Create `packages/shared/utils/error-helpers.ts` (extract from web-app)
+- [x] T025 [P] Create `packages/shared/utils/assignment-helpers.ts` (extract from web-app)
+- [x] T026 [P] Create `packages/shared/utils/error-helpers.ts` (extract from web-app)
 - [x] T027 Create `packages/shared/utils/index.ts` barrel export for utils module
 
 ### Shared i18n
 
 - [x] T028 [P] Create `packages/shared/i18n/types.ts` (extract from web-app/src/i18n/types.ts)
-- [ ] T029 [P] Copy locale files to `packages/shared/i18n/locales/` (de.json, en.json, fr.json, it.json)
+- [x] T029 [P] Copy locale files to `packages/shared/i18n/locales/` (de.json, en.json, fr.json, it.json)
 - [x] T030 [P] Create `packages/shared/i18n/index.ts` with translation functions (platform-agnostic)
 - [x] T031 Create `packages/shared/i18n/useTranslation.ts` React hook wrapper
 
