@@ -78,6 +78,10 @@ export interface Translations {
     biometricNotEnrolled: string;
     enableBiometric: string;
     disableBiometric: string;
+    enterCredentials: string;
+    loginFailed: string;
+    usernamePlaceholder: string;
+    passwordPlaceholder: string;
   };
   assignments: {
     title: string;
@@ -167,6 +171,11 @@ export interface Translations {
     profile: string;
     svNumber: string;
     language: string;
+    general: string;
+    security: string;
+    features: string;
+    calendarIntegration: string;
+    comingSoon: string;
     biometric: {
       title: string;
       description: string;

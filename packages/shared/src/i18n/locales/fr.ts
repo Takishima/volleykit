@@ -64,6 +64,10 @@ const fr: Translations = {
       'Aucune donnée biométrique enregistrée. Veuillez configurer Face ID ou empreinte digitale.',
     enableBiometric: 'Activer la connexion biométrique',
     disableBiometric: 'Désactiver la connexion biométrique',
+    enterCredentials: "Veuillez entrer votre nom d'utilisateur et mot de passe",
+    loginFailed: 'Connexion échouée. Veuillez vérifier vos identifiants.',
+    usernamePlaceholder: "Entrez votre nom d'utilisateur",
+    passwordPlaceholder: 'Entrez votre mot de passe',
   },
   assignments: {
     title: 'Désignations',
@@ -153,6 +157,11 @@ const fr: Translations = {
     profile: 'Profil',
     svNumber: 'Numéro SV',
     language: 'Langue',
+    general: 'Général',
+    security: 'Sécurité',
+    features: 'Fonctionnalités',
+    calendarIntegration: 'Intégration calendrier',
+    comingSoon: 'Bientôt disponible',
     biometric: {
       title: 'Connexion biométrique',
       description: 'Utilisez Face ID ou empreinte digitale pour vous connecter rapidement.',

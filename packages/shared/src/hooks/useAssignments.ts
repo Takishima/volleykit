@@ -29,6 +29,9 @@ export const NEXT_MONTH_DAYS = 30;
 /** Stale time for assignments list (5 minutes) */
 export const ASSIGNMENTS_STALE_TIME_MS = 5 * 60 * 1000;
 
+/** Stale time for assignment details (10 minutes - less frequent updates) */
+export const ASSIGNMENT_DETAILS_STALE_TIME_MS = 10 * 60 * 1000;
+
 /** Date period presets for assignment filtering */
 export type DatePeriod = 'upcoming' | 'past' | 'thisWeek' | 'nextMonth' | 'custom';
 
@@ -202,6 +205,6 @@ export function useAssignmentDetails(
       return apiClient.getAssignmentDetails(assignmentId);
     },
     enabled: !!assignmentId && !!apiClient.getAssignmentDetails,
-    staleTime: ASSIGNMENTS_STALE_TIME_MS * 2,
+    staleTime: ASSIGNMENT_DETAILS_STALE_TIME_MS,
   });
 }

@@ -64,6 +64,10 @@ const de: Translations = {
       'Keine biometrischen Daten hinterlegt. Bitte richten Sie Face ID oder Fingerabdruck ein.',
     enableBiometric: 'Biometrische Anmeldung aktivieren',
     disableBiometric: 'Biometrische Anmeldung deaktivieren',
+    enterCredentials: 'Bitte Benutzername und Passwort eingeben',
+    loginFailed: 'Anmeldung fehlgeschlagen. Bitte überprüfen Sie Ihre Anmeldedaten.',
+    usernamePlaceholder: 'Benutzername eingeben',
+    passwordPlaceholder: 'Passwort eingeben',
   },
   assignments: {
     title: 'Einsätze',
@@ -153,6 +157,11 @@ const de: Translations = {
     profile: 'Profil',
     svNumber: 'SV-Nummer',
     language: 'Sprache',
+    general: 'Allgemein',
+    security: 'Sicherheit',
+    features: 'Funktionen',
+    calendarIntegration: 'Kalenderintegration',
+    comingSoon: 'Demnächst',
     biometric: {
       title: 'Biometrische Anmeldung',
       description: 'Verwenden Sie Face ID oder Fingerabdruck für schnelle Anmeldung.',

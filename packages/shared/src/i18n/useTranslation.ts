@@ -1,30 +1,39 @@
 /**
  * useTranslation hook - React hook for translations
  *
- * This will be extracted from web-app/src/shared/hooks/useTranslation.ts
- * Placeholder for now - implementation in Phase 2
+ * Provides access to translated strings based on the current language setting.
  */
 
 import { useSettingsStore } from '../stores/settings';
-import type { TranslationKey, Language } from './types';
+import { locales } from './locales';
+import type { TranslationKey, Language, Translations } from './types';
 
-// Placeholder translations - will be populated from locale files in Phase 2
-const translations: Record<Language, Record<string, string>> = {
-  de: {},
-  en: {},
-  fr: {},
-  it: {},
-};
+/**
+ * Get a nested value from an object using dot notation.
+ */
+function getNestedValue(obj: Translations, path: string): string | undefined {
+  const keys = path.split('.');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let current: any = obj;
+
+  for (const key of keys) {
+    if (current === undefined || current === null) return undefined;
+    current = current[key];
+  }
+
+  return typeof current === 'string' ? current : undefined;
+}
 
 export const useTranslation = () => {
   const language = useSettingsStore((state) => state.language);
 
   const t = (key: TranslationKey, params?: Record<string, string | number>): string => {
-    let translation = translations[language][key] || key;
+    const translations = locales[language] || locales.en;
+    let translation = getNestedValue(translations, key) || key;
 
     if (params) {
       Object.entries(params).forEach(([paramKey, paramValue]) => {
-        translation = translation.replace(`{{${paramKey}}}`, String(paramValue));
+        translation = translation.replace(`{${paramKey}}`, String(paramValue));
       });
     }
 
@@ -33,3 +42,24 @@ export const useTranslation = () => {
 
   return { t, language };
 };
+
+/**
+ * Standalone translation function for non-React contexts.
+ * Falls back to English if the specified language is not available.
+ */
+export function translate(
+  key: TranslationKey,
+  language: Language,
+  params?: Record<string, string | number>
+): string {
+  const translations = locales[language] || locales.en;
+  let translation = getNestedValue(translations, key) || key;
+
+  if (params) {
+    Object.entries(params).forEach(([paramKey, paramValue]) => {
+      translation = translation.replace(`{${paramKey}}`, String(paramValue));
+    });
+  }
+
+  return translation;
+}

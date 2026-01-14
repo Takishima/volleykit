@@ -63,6 +63,10 @@ const en: Translations = {
     biometricNotEnrolled: 'No biometric credentials enrolled. Please set up Face ID or fingerprint.',
     enableBiometric: 'Enable biometric login',
     disableBiometric: 'Disable biometric login',
+    enterCredentials: 'Please enter username and password',
+    loginFailed: 'Login failed. Please check your credentials.',
+    usernamePlaceholder: 'Enter your username',
+    passwordPlaceholder: 'Enter your password',
   },
   assignments: {
     title: 'Assignments',
@@ -152,6 +156,11 @@ const en: Translations = {
     profile: 'Profile',
     svNumber: 'SV Number',
     language: 'Language',
+    general: 'General',
+    security: 'Security',
+    features: 'Features',
+    calendarIntegration: 'Calendar Integration',
+    comingSoon: 'Coming Soon',
     biometric: {
       title: 'Biometric Login',
       description: 'Use Face ID or fingerprint to log in quickly.',

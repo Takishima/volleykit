@@ -64,6 +64,10 @@ const it: Translations = {
       'Nessun dato biometrico registrato. Configura Face ID o impronta digitale.',
     enableBiometric: 'Attiva accesso biometrico',
     disableBiometric: 'Disattiva accesso biometrico',
+    enterCredentials: 'Inserisci nome utente e password',
+    loginFailed: 'Accesso fallito. Controlla le tue credenziali.',
+    usernamePlaceholder: 'Inserisci il tuo nome utente',
+    passwordPlaceholder: 'Inserisci la tua password',
   },
   assignments: {
     title: 'Designazioni',
@@ -153,6 +157,11 @@ const it: Translations = {
     profile: 'Profilo',
     svNumber: 'Numero SV',
     language: 'Lingua',
+    general: 'Generale',
+    security: 'Sicurezza',
+    features: 'Funzionalità',
+    calendarIntegration: 'Integrazione calendario',
+    comingSoon: 'Prossimamente',
     biometric: {
       title: 'Accesso biometrico',
       description: 'Usa Face ID o impronta digitale per accedere rapidamente.',
