@@ -156,7 +156,11 @@ export const refereeBackupResponseSchema = z.object({
  * This avoids type incompatibilities between versions.
  */
 interface ZodLikeSchema<T> {
-  safeParse(data: unknown): { success: true; data: T } | { success: false; error: { issues: Array<{ path: PropertyKey[]; message: string }> } }
+  safeParse(
+    data: unknown
+  ):
+    | { success: true; data: T }
+    | { success: false; error: { issues: Array<{ path: PropertyKey[]; message: string }> } }
 }
 
 /**

@@ -27,11 +27,11 @@ export {
   getMaxLastNameWidth,
   // Season utilities
   getSeasonDateRange,
-} from '@volleykit/shared/utils';
+} from '@volleykit/shared/utils'
 
 export type {
   WeekInfo,
   WeekGroup,
   RosterPlayerData,
   FormattedRosterEntry,
-} from '@volleykit/shared/utils';
+} from '@volleykit/shared/utils'

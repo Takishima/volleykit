@@ -292,7 +292,9 @@ export interface SmartConflictOptions {
  * const conflicts = detectConflicts(assignments, 60, evaluator);
  * ```
  */
-export function createSmartConflictEvaluator(options: SmartConflictOptions = {}): ConflictEvaluator {
+export function createSmartConflictEvaluator(
+  options: SmartConflictOptions = {}
+): ConflictEvaluator {
   const {
     thresholdMinutes = DEFAULT_CONFLICT_THRESHOLD_MINUTES,
     sameLocationDistanceKm = DEFAULT_SAME_LOCATION_DISTANCE_KM,
