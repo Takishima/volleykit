@@ -4,6 +4,8 @@ on:
     branches: [main]
     paths:
       - 'web-app/**'
+      - 'packages/shared/**'
+      - 'docs/api/volleymanager-openapi.yaml'
       - 'worker/**'
       - 'ocr-poc/**'
       - 'help-site/**'

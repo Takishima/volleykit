@@ -4,11 +4,15 @@ on:
     branches: [main]
     paths:
       - 'web-app/**'
+      - 'packages/shared/**'
+      - 'docs/api/volleymanager-openapi.yaml'
       - '.github/workflows/ci.yml'
       - '.github/actions/**'
   pull_request:
     paths:
       - 'web-app/**'
+      - 'packages/shared/**'
+      - 'docs/api/volleymanager-openapi.yaml'
       - '.changeset/**'
       - '.github/workflows/ci.yml'
       - '.github/actions/**'

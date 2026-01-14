@@ -4,6 +4,8 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - 'web-app/**'
+      - 'packages/shared/**'
+      - 'docs/api/volleymanager-openapi.yaml'
       - 'ocr-poc/**'
       - 'help-site/**'
       - '.github/workflows/deploy-pr-preview.yml'
