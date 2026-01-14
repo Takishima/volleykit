@@ -152,10 +152,18 @@ export const refereeBackupResponseSchema = z.object({
 // ============================================================================
 
 /**
+ * A structural type for Zod schemas that works with both Zod 3 and Zod 4.
+ * This avoids type incompatibilities between versions.
+ */
+interface ZodLikeSchema<T> {
+  safeParse(data: unknown): { success: true; data: T } | { success: false; error: { issues: Array<{ path: PropertyKey[]; message: string }> } }
+}
+
+/**
  * Validates API response data against a Zod schema.
  * Returns the validated data or throws a descriptive error.
  */
-export function validateResponse<T>(data: unknown, schema: z.ZodType<T>, context: string): T {
+export function validateResponse<T>(data: unknown, schema: ZodLikeSchema<T>, context: string): T {
   const result = schema.safeParse(data)
 
   if (!result.success) {
