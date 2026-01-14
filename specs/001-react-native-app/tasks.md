@@ -97,12 +97,18 @@ Based on plan.md monorepo structure:
 
 - [x] T036 Create `packages/shared/package.json` with name `@volleykit/shared` and exports
 - [x] T037 Create `packages/shared/index.ts` main barrel export for entire shared package
-- [ ] T038 ⏸️ Update `packages/web/` to import from `@volleykit/shared` instead of local paths (DEFERRED: blocked by monorepo React types compatibility - web-app continues to use local imports)
-- [ ] T039 ⏸️ Verify web-app builds successfully with shared package imports (DEFERRED: same blocker as T038)
+- [x] T038 Update `packages/web/` to import from `@volleykit/shared` instead of local paths
+- [x] T039 Verify web-app builds successfully with shared package imports
 
-**Checkpoint**: Shared package complete - mobile app can now import from @volleykit/shared
+**Checkpoint**: Shared package complete - both web-app and mobile app can now import from @volleykit/shared
 
-> **Note**: T038-T039 are deferred due to npm workspace hoisting issues causing @types/react version conflicts between packages. The mobile app can use @volleykit/shared imports; web-app continues to use local imports until the types issue is resolved.
+> **Migration Summary (T038-T039)**:
+> - Fixed npm `@types/react` version conflict with root overrides (`^19.0.0`)
+> - Updated `validation.ts` to import base schemas from shared, keeping web-specific backup schemas locally
+> - Updated `assignment-helpers.ts` to re-export from shared
+> - Updated `error-helpers.ts` to re-export from shared
+> - Updated `constants.ts` to re-export time constants from shared
+> - Net reduction: ~463 lines of duplicate code removed from web-app
 
 ---
 
