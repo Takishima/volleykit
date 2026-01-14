@@ -73,19 +73,23 @@ jobs:
         id: api-cache
         uses: actions/cache@v5
         with:
-          path: web-app/src/api/schema.ts
+          path: |
+            web-app/src/api/schema.ts
+            packages/shared/src/api/schema.ts
           key: ${{ steps.api-cache-key.outputs.key }}
 
       - name: Generate API types
         if: steps.api-cache.outputs.cache-hit != 'true'
         run: npm run generate:api
 
-      # Upload API types as artifact for downstream jobs
+      # Upload API types as artifact for downstream jobs (both locations)
       - name: Upload API types
         uses: actions/upload-artifact@v5
         with:
           name: api-types
-          path: web-app/src/api/schema.ts
+          path: |
+            web-app/src/api/schema.ts
+            packages/shared/src/api/schema.ts
           retention-days: 1
 
   # Security audit - runs independently (doesn't need API types)
@@ -128,7 +132,7 @@ jobs:
         uses: actions/download-artifact@v7
         with:
           name: api-types
-          path: web-app/src/api
+          path: .
 
       # Cache ESLint results (ESLint handles per-file invalidation internally)
       # Key based on ESLint config, TypeScript config, and plugins
@@ -164,7 +168,7 @@ jobs:
         uses: actions/download-artifact@v7
         with:
           name: api-types
-          path: web-app/src/api
+          path: .
 
       - name: Check for dead code
         run: npm run knip
@@ -195,7 +199,7 @@ jobs:
         uses: actions/download-artifact@v7
         with:
           name: api-types
-          path: web-app/src/api
+          path: .
 
       # Cache Vite/Vitest transform cache (Vitest stores cache in .vite/vitest)
       # Key based on tooling config - source file changes don't invalidate transforms
@@ -238,7 +242,7 @@ jobs:
         uses: actions/download-artifact@v7
         with:
           name: api-types
-          path: web-app/src/api
+          path: .
 
       # Cache Vite pre-bundled dependencies (shared key with test job)
       # Key based on dependencies and config - source changes don't affect dep pre-bundling

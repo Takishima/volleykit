@@ -11,19 +11,24 @@ echo '{"async": true, "asyncTimeout": 300000}'
 
 echo "Setting up VolleyKit development environment..."
 
-# Install root dependencies (changesets CLI)
-# Uses npm install (not ci) because root package-lock.json is not tracked
+# Install all dependencies from root (handles npm workspaces properly)
+# This installs root deps + all workspace deps (web-app, packages/shared, packages/mobile)
 (
   cd "$CLAUDE_PROJECT_DIR"
   echo "Installing root dependencies..."
   npm install
 )
 
-# Install web-app dependencies and generate API types
+# Install web-app specific node_modules if needed (for any local-only modules)
 (
   cd "$CLAUDE_PROJECT_DIR/web-app"
   echo "Installing web-app dependencies..."
   npm install
+)
+
+# Generate API types for both web-app and shared package
+(
+  cd "$CLAUDE_PROJECT_DIR"
   echo "Generating API types..."
   npm run generate:api
 )
