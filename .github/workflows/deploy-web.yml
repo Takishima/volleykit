@@ -135,6 +135,7 @@ jobs:
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: help-site
+          node-version: '22'
 
       # Cache Astro build artifacts
       - name: Cache Astro build
