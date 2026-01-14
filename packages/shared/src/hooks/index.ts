@@ -2,7 +2,13 @@
  * Shared hooks module - TanStack Query hooks for data fetching
  */
 
-export * from './useAssignments';
-export * from './useCompensations';
-export * from './useExchanges';
+// Export hooks - use explicit exports to avoid DEFAULT_PAGE_SIZE conflicts
+export {
+  useAssignments,
+  type UseAssignmentsOptions,
+  type DatePeriod,
+  DEFAULT_PAGE_SIZE,
+} from './useAssignments';
+export { useCompensations, type UseCompensationsOptions } from './useCompensations';
+export { useExchanges, type UseExchangesOptions } from './useExchanges';
 export * from './useAuth';

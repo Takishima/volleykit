@@ -50,7 +50,7 @@ export function useModalState<T>(options: UseModalStateOptions = {}): ModalState
 
   const [isOpen, setIsOpen] = useState(false)
   const [data, setData] = useState<T | null>(null)
-  const cleanupTimeoutRef = useRef<number | null>(null)
+  const cleanupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Cleanup timeout on unmount
   useEffect(() => {

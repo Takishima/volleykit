@@ -132,6 +132,11 @@ export interface UserData {
   occupations: OccupationData[];
 }
 
+// OccupationType is defined in stores/auth.ts to avoid circular imports
+// Re-export it here for API consumers
+import type { OccupationType } from '../stores/auth';
+export type { OccupationType };
+
 /**
  * User occupation/role data.
  */
@@ -142,16 +147,6 @@ export interface OccupationData {
   associationName?: string;
   level?: string;
 }
-
-/**
- * Occupation types in the system.
- */
-export type OccupationType =
-  | 'referee'
-  | 'linesmen'
-  | 'player'
-  | 'clubAdmin'
-  | 'associationAdmin';
 
 /**
  * Data for updating compensation.

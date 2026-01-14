@@ -206,7 +206,8 @@ export const compensationRecordSchema = z
   .passthrough();
 
 // Game exchange schema
-export const gameExchangeSchema = z
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Explicit any needed to avoid TS7056 (type serialization limit)
+export const gameExchangeSchema: z.ZodType<any> = z
   .object({
     __identity: uuidSchema,
     refereeGame: refereeGameForExchangeSchema,
@@ -264,6 +265,21 @@ export type ValidatedPersonSearchResult = z.infer<typeof personSearchResultSchem
 export type AssignmentsResponse = z.infer<typeof assignmentsResponseSchema>;
 export type CompensationsResponse = z.infer<typeof compensationsResponseSchema>;
 export type ExchangesResponse = z.infer<typeof exchangesResponseSchema>;
+
+// Association settings type (simplified for mobile)
+export interface AssociationSettings {
+  __identity?: string;
+  hoursAfterGameStartForRefereeToEditGameList?: number;
+  associationName?: string;
+}
+
+// Season type (simplified for mobile)
+export interface Season {
+  __identity?: string;
+  name?: string;
+  startDate?: string;
+  endDate?: string;
+}
 
 /**
  * Validates API response data against a Zod schema.

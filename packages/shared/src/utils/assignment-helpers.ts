@@ -6,7 +6,12 @@
  */
 
 import { MS_PER_HOUR } from './date-helpers';
-import type { Assignment, CompensationRecord } from '../api/validation';
+import type { components } from '../api/schema';
+
+// Use OpenAPI schema types which have full nested structure
+type Schemas = components['schemas'];
+type Assignment = Schemas['Assignment'];
+type CompensationRecord = Schemas['CompensationRecord'];
 
 /**
  * Modal animation delay in milliseconds.

@@ -206,7 +206,8 @@ export const assignmentSchema = z
   .passthrough()
 
 // Convocation compensation schema
-const convocationCompensationSchema = z
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Explicit any needed to avoid TS7056 (type serialization limit)
+const convocationCompensationSchema: z.ZodType<any> = z
   .object({
     __identity: uuidSchema.optional(),
     paymentDone: z.boolean().optional(),
@@ -240,7 +241,8 @@ export const compensationRecordSchema = z
   .passthrough()
 
 // Game exchange schema
-export const gameExchangeSchema = z
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Explicit any needed to avoid TS7056 (type serialization limit)
+export const gameExchangeSchema: z.ZodType<any> = z
   .object({
     __identity: uuidSchema,
     refereeGame: refereeGameForExchangeSchema,
