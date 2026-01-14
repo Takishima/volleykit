@@ -25,7 +25,7 @@
     "screenshots:help": "playwright test e2e/capture-screenshots.spec.ts --project=chromium",
     "size": "size-limit",
     "preview": "vite preview",
-    "generate:api": "openapi-typescript ../docs/api/volleymanager-openapi.yaml -o src/api/schema.ts",
+    "generate:api": "openapi-typescript ../docs/api/volleymanager-openapi.yaml -o ../packages/shared/src/api/schema.ts && openapi-typescript ../docs/api/volleymanager-openapi.yaml -o src/api/schema.ts",
     "knip": "knip",
     "changeset": "changeset",
     "changeset:version": "changeset version",

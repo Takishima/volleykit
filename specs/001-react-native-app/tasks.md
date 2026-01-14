@@ -49,7 +49,7 @@ Based on plan.md monorepo structure:
 ### Shared API Layer
 
 - [x] T010 [P] Create `packages/shared/api/client.ts` with platform-agnostic fetch wrapper (extract from web-app/src/api/client.ts)
-- [ ] T011 [P] Move `schema.ts` generation target to `packages/shared/api/schema.ts` in OpenAPI config
+- [x] T011 [P] Move `schema.ts` generation target to `packages/shared/api/schema.ts` in OpenAPI config
 - [x] T012 [P] Create `packages/shared/api/validation.ts` with Zod schemas (extract from web-app/src/api/validation.ts)
 - [x] T013 [P] Create `packages/shared/api/queryKeys.ts` with TanStack Query keys (extract from web-app/src/api/queryKeys.ts)
 - [x] T014 Create `packages/shared/api/index.ts` barrel export for API module
@@ -97,10 +97,12 @@ Based on plan.md monorepo structure:
 
 - [x] T036 Create `packages/shared/package.json` with name `@volleykit/shared` and exports
 - [x] T037 Create `packages/shared/index.ts` main barrel export for entire shared package
-- [ ] T038 Update `packages/web/` to import from `@volleykit/shared` instead of local paths (refactor existing web-app)
-- [ ] T039 Verify web-app builds successfully with shared package imports
+- [ ] T038 ⏸️ Update `packages/web/` to import from `@volleykit/shared` instead of local paths (DEFERRED: blocked by monorepo React types compatibility - web-app continues to use local imports)
+- [ ] T039 ⏸️ Verify web-app builds successfully with shared package imports (DEFERRED: same blocker as T038)
 
 **Checkpoint**: Shared package complete - mobile app can now import from @volleykit/shared
+
+> **Note**: T038-T039 are deferred due to npm workspace hoisting issues causing @types/react version conflicts between packages. The mobile app can use @volleykit/shared imports; web-app continues to use local imports until the types issue is resolved.
 
 ---
 

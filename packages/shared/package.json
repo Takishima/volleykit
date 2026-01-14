@@ -8,44 +8,49 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
     },
     "./api": {
-      "import": "./dist/api/index.mjs",
-      "require": "./dist/api/index.js",
-      "types": "./dist/api/index.d.ts"
+      "types": "./src/api/index.ts",
+      "import": "./src/api/index.ts",
+      "default": "./src/api/index.ts"
+    },
+    "./api/schema": {
+      "types": "./src/api/schema.ts",
+      "import": "./src/api/schema.ts",
+      "default": "./src/api/schema.ts"
     },
     "./stores": {
-      "import": "./dist/stores/index.mjs",
-      "require": "./dist/stores/index.js",
-      "types": "./dist/stores/index.d.ts"
+      "types": "./src/stores/index.ts",
+      "import": "./src/stores/index.ts",
+      "default": "./src/stores/index.ts"
     },
     "./hooks": {
-      "import": "./dist/hooks/index.mjs",
-      "require": "./dist/hooks/index.js",
-      "types": "./dist/hooks/index.d.ts"
+      "types": "./src/hooks/index.ts",
+      "import": "./src/hooks/index.ts",
+      "default": "./src/hooks/index.ts"
     },
     "./utils": {
-      "import": "./dist/utils/index.mjs",
-      "require": "./dist/utils/index.js",
-      "types": "./dist/utils/index.d.ts"
+      "types": "./src/utils/index.ts",
+      "import": "./src/utils/index.ts",
+      "default": "./src/utils/index.ts"
     },
     "./i18n": {
-      "import": "./dist/i18n/index.mjs",
-      "require": "./dist/i18n/index.js",
-      "types": "./dist/i18n/index.d.ts"
+      "types": "./src/i18n/index.ts",
+      "import": "./src/i18n/index.ts",
+      "default": "./src/i18n/index.ts"
     },
     "./types": {
-      "import": "./dist/types/index.mjs",
-      "require": "./dist/types/index.js",
-      "types": "./dist/types/index.d.ts"
+      "types": "./src/types/index.ts",
+      "import": "./src/types/index.ts",
+      "default": "./src/types/index.ts"
     },
     "./adapters": {
-      "import": "./dist/adapters/index.mjs",
-      "require": "./dist/adapters/index.js",
-      "types": "./dist/adapters/index.d.ts"
+      "types": "./src/adapters/index.ts",
+      "import": "./src/adapters/index.ts",
+      "default": "./src/adapters/index.ts"
     }
   },
   "scripts": {
