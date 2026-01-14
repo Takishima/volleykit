@@ -50,7 +50,7 @@ interface ToastItemProps {
 function ToastItem({ toast }: ToastItemProps) {
   const { t } = useTranslation()
   const removeToast = useToastStore((state) => state.removeToast)
-  const timerRef = useRef<number | null>(null)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     const duration = toast.duration ?? DEFAULT_DURATION_MS

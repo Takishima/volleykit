@@ -597,13 +597,7 @@ describe('conflict-detection', () => {
         sameLocationDistanceKm: 5,
       })
       const assignments = [
-        createAssignment(
-          '1',
-          '2024-01-15T10:00:00Z',
-          '2024-01-15T12:00:00Z',
-          null,
-          ZURICH_COORDS
-        ),
+        createAssignment('1', '2024-01-15T10:00:00Z', '2024-01-15T12:00:00Z', null, ZURICH_COORDS),
         createAssignment(
           '2',
           '2024-01-15T12:30:00Z',
@@ -623,13 +617,7 @@ describe('conflict-detection', () => {
         sameLocationDistanceKm: 5,
       })
       const assignments = [
-        createAssignment(
-          '1',
-          '2024-01-15T10:00:00Z',
-          '2024-01-15T12:00:00Z',
-          null,
-          ZURICH_COORDS
-        ),
+        createAssignment('1', '2024-01-15T10:00:00Z', '2024-01-15T12:00:00Z', null, ZURICH_COORDS),
         createAssignment('2', '2024-01-15T12:30:00Z', '2024-01-15T14:30:00Z', null, BERN_COORDS),
       ]
       // Far venues should create conflicts

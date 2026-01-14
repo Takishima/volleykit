@@ -24,11 +24,11 @@ export default defineConfig({
   resolve: {
     // Use array format for aliases - order matters for matching!
     alias: [
-      // CRITICAL: Deduplicate React - ensure all imports use ocr-poc's React
+      // CRITICAL: Deduplicate React - ensure all imports use root-hoisted React (npm workspaces)
       // This prevents "multiple React instances" errors when importing from web-app
-      { find: 'react', replacement: path.resolve(__dirname, 'node_modules/react') },
-      { find: 'react-dom', replacement: path.resolve(__dirname, 'node_modules/react-dom') },
-      { find: 'react-easy-crop', replacement: path.resolve(__dirname, 'node_modules/react-easy-crop') },
+      { find: 'react', replacement: path.resolve(__dirname, '../node_modules/react') },
+      { find: 'react-dom', replacement: path.resolve(__dirname, '../node_modules/react-dom') },
+      { find: 'react-easy-crop', replacement: path.resolve(__dirname, '../node_modules/react-easy-crop') },
       // Most specific aliases first
       // Web-app shared components resolve to PoC stubs (translation, icons)
       { find: '@/shared', replacement: path.resolve(__dirname, './src/shared') },
@@ -39,8 +39,8 @@ export default defineConfig({
       // Legacy aliases for explicit imports
       { find: '@volleykit/ocr', replacement: path.resolve(__dirname, '../web-app/src/features/ocr') },
       { find: '@volleykit/validation', replacement: path.resolve(__dirname, '../web-app/src/features/validation') },
-      // Ensure fuse.js resolves from ocr-poc's node_modules
-      { find: 'fuse.js', replacement: path.resolve(__dirname, 'node_modules/fuse.js') },
+      // Ensure fuse.js resolves from root node_modules (npm workspaces hoisting)
+      { find: 'fuse.js', replacement: path.resolve(__dirname, '../node_modules/fuse.js') },
     ],
   },
   plugins: [

@@ -4,6 +4,8 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - 'web-app/**'
+      - 'packages/shared/**'
+      - 'docs/api/volleymanager-openapi.yaml'
       - 'ocr-poc/**'
       - 'help-site/**'
       - '.github/workflows/deploy-pr-preview.yml'
@@ -36,8 +38,10 @@ jobs:
         id: api-cache
         uses: actions/cache@v5
         with:
-          path: web-app/src/api/schema.ts
-          key: api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'web-app/package-lock.json') }}
+          path: |
+            web-app/src/api/schema.ts
+            packages/shared/src/api/schema.ts
+          key: api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'package-lock.json') }}
 
       - name: Generate API types
         if: steps.api-cache.outputs.cache-hit != 'true'
@@ -111,6 +115,7 @@ jobs:
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: help-site
+          node-version: '22'
 
       # Cache Astro build artifacts per branch
       - name: Cache Astro build
@@ -147,11 +152,6 @@ jobs:
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: ocr-poc
-
-      # Install web-app deps for shared component imports
-      - name: Install web-app dependencies
-        run: npm ci
-        working-directory: web-app
 
       # Cache ESLint results per branch
       - name: Cache ESLint

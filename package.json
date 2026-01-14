@@ -1,14 +1,43 @@
 {
-  "//": "Root package for changesets tooling. App dependencies belong in web-app/package.json",
   "name": "volleykit",
   "private": true,
+  "workspaces": [
+    "packages/shared",
+    "packages/mobile",
+    "web-app",
+    "ocr-poc",
+    "help-site",
+    "worker"
+  ],
   "scripts": {
     "changeset": "changeset",
     "changeset:version": "changeset version",
-    "changeset:status": "changeset status"
+    "changeset:status": "changeset status",
+    "generate:api": "npm run generate:api --workspace=web-app",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "mobile:start": "npm run start --workspace=@volleykit/mobile",
+    "mobile:ios": "npm run ios --workspace=@volleykit/mobile",
+    "mobile:android": "npm run android --workspace=@volleykit/mobile",
+    "shared:build": "npm run build --workspace=@volleykit/shared",
+    "shared:test": "npm run test --workspace=@volleykit/shared"
+  },
+  "dependencies": {
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.2",
-    "@changesets/cli": "^2.29.8"
+    "@changesets/cli": "^2.29.8",
+    "@types/react": "^19.0.0",
+    "typescript": "~5.9.3"
+  },
+  "overrides": {
+    "@types/react": "^19.0.0",
+    "axios": "^1.12.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }

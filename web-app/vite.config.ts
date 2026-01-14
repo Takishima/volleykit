@@ -518,6 +518,10 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
+        // Fix React dual instance issue in monorepo
+        // Ensures all imports resolve to the same React instance (in root node_modules)
+        'react': path.resolve(__dirname, '../node_modules/react'),
+        'react-dom': path.resolve(__dirname, '../node_modules/react-dom'),
       },
       // Fix dual package hazard with react-router in Node v22.12+
       // See: https://github.com/vitest-dev/vitest/issues/7692

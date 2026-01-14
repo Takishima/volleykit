@@ -1,9 +1,9 @@
 name: Setup Node.js with Dependencies
-description: Sets up Node.js, caches node_modules per branch, and installs dependencies
+description: Sets up Node.js, caches node_modules, and installs dependencies for monorepo
 
 inputs:
   working-directory:
-    description: The working directory for npm commands
+    description: The working directory for npm commands (for backwards compatibility)
     required: true
   node-version:
     description: Node.js version to use
@@ -40,21 +40,33 @@ runs:
           echo "prefix=${basename}" >> $GITHUB_OUTPUT
         fi
 
-    # Cache node_modules per branch with fallback to main
-    # Cache version: increment to invalidate all caches (v2 = workspace fix)
+    # Cache root node_modules for monorepo workspaces
+    # This caches the hoisted dependencies that workspace packages use
+    - name: Cache root node_modules
+      id: cache-root-modules
+      uses: actions/cache@v5
+      with:
+        path: node_modules
+        key: root-node-modules-v3-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('package-lock.json') }}
+        restore-keys: |
+          root-node-modules-v3-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
+          root-node-modules-v3-${{ runner.os }}-main-
+          root-node-modules-v3-${{ runner.os }}-
+
+    # Cache workspace node_modules (for any local-only modules)
     - name: Cache node_modules
       id: cache-node-modules
       uses: actions/cache@v5
       with:
         path: ${{ inputs.working-directory }}/node_modules
-        key: ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v2-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles(format('{0}/package-lock.json', inputs.working-directory)) }}
+        key: ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v3-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('package-lock.json') }}
         restore-keys: |
-          ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v2-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
-          ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v2-${{ runner.os }}-main-
-          ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v2-${{ runner.os }}-
+          ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v3-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
+          ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v3-${{ runner.os }}-main-
+          ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v3-${{ runner.os }}-
 
+    # Install from root to handle workspaces correctly
     - name: Install dependencies
-      if: steps.cache-node-modules.outputs.cache-hit != 'true'
+      if: steps.cache-root-modules.outputs.cache-hit != 'true' || steps.cache-node-modules.outputs.cache-hit != 'true'
       shell: bash
-      working-directory: ${{ inputs.working-directory }}
       run: npm ci

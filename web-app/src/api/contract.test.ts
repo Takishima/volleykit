@@ -24,22 +24,25 @@ import {
   personSearchResponseSchema,
 } from './validation'
 
-import type { ZodError } from 'zod'
+/** Structural type for Zod validation errors that works with both Zod 3 and 4. */
+interface ZodLikeError {
+  issues: Array<{ path: PropertyKey[]; message: string }>
+}
 
 /** Format Zod validation errors into a readable string. */
-function formatZodErrors(error: ZodError): string {
+function formatZodErrors(error: ZodLikeError): string {
   return error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('\n')
 }
 
 /** Create a validation error with context about the failed item. */
-function validationError(label: string, index: number, error: ZodError, data: unknown): Error {
+function validationError(label: string, index: number, error: ZodLikeError, data: unknown): Error {
   return new Error(
     `${label} ${index} failed validation:\n${formatZodErrors(error)}\n\nData: ${JSON.stringify(data, null, 2)}`
   )
 }
 
 /** Create a validation error for API responses. */
-function responseValidationError(label: string, error: ZodError): Error {
+function responseValidationError(label: string, error: ZodLikeError): Error {
   return new Error(`${label} failed validation:\n${formatZodErrors(error)}`)
 }
 

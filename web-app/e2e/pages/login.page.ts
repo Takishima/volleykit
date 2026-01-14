@@ -50,12 +50,35 @@ export class LoginPage {
   }
 
   /**
+   * Dismiss any visible PWA notification that might block UI interactions.
+   * This handles the "App ready for offline use" notification.
+   * Waits briefly for the notification to appear before checking.
+   */
+  private async dismissPWANotification() {
+    // Give the PWA notification a moment to appear
+    const notification = this.page.getByRole('alert').filter({ hasText: /offline|ready/i })
+    const isVisible = await notification.isVisible({ timeout: 1000 }).catch(() => false)
+    if (isVisible) {
+      const closeButton = notification.getByRole('button', { name: /close/i })
+      await closeButton.click()
+      // Wait for the notification to disappear
+      await expect(notification)
+        .not.toBeVisible({ timeout: 2000 })
+        .catch(() => {})
+    }
+  }
+
+  /**
    * Enter demo mode - the primary way to access the app in E2E tests.
    * Demo mode provides consistent mock data for reliable testing.
    */
   async enterDemoMode() {
-    // Playwright auto-waits for the button to be actionable (visible + enabled)
-    await this.demoButton.click()
+    // Dismiss any PWA notification that might block the click
+    await this.dismissPWANotification()
+
+    // Use force click to bypass any remaining overlay issues
+    // This is necessary because PWA notifications can sometimes appear mid-click
+    await this.demoButton.click({ force: true })
 
     // Wait for navigation away from login page and main content to appear
     await expect(this.page).not.toHaveURL(/login/)

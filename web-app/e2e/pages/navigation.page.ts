@@ -28,27 +28,59 @@ export class NavigationPage extends BasePage {
   }
 
   /**
+   * Dismiss any visible PWA notification that might block UI interactions.
+   */
+  private async dismissPWANotification() {
+    const notification = this.page.getByRole('alert').filter({ hasText: /offline|ready/i })
+    const isVisible = await notification.isVisible({ timeout: 500 }).catch(() => false)
+    if (isVisible) {
+      const closeButton = notification.getByRole('button', { name: /close/i })
+      await closeButton.click().catch(() => {})
+      await expect(notification)
+        .not.toBeVisible({ timeout: 1000 })
+        .catch(() => {})
+    }
+  }
+
+  /**
    * Navigate to a page via bottom nav.
    * Uses element-based waits for reliability.
    */
-  private async navigateTo(link: Locator, expectedUrl: string | RegExp): Promise<void> {
-    // Playwright auto-waits for the link to be actionable before clicking
-    await link.click()
-    // Wait for URL and main content - no explicit delays needed
+  private async navigateTo(
+    link: Locator,
+    expectedUrl: string | RegExp,
+    waitForTablist = false
+  ): Promise<void> {
+    // Dismiss any PWA notification that might block the navigation
+    await this.dismissPWANotification()
+
+    // Ensure the link is visible and clickable
+    await expect(link).toBeVisible()
+
+    // Use force click to avoid interception issues with overlays
+    await link.click({ force: true })
+
+    // Wait for URL and main content
     await expect(this.page).toHaveURL(expectedUrl)
     await expect(this.page.getByRole('main')).toBeVisible()
+
+    // For pages with tabs, wait for the tablist to be visible
+    // This ensures the page is fully rendered before continuing
+    if (waitForTablist) {
+      await expect(this.page.getByRole('tablist')).toBeVisible()
+    }
   }
 
   async goToAssignments() {
-    await this.navigateTo(this.assignmentsLink, '/')
+    await this.navigateTo(this.assignmentsLink, '/', true)
   }
 
   async goToCompensations() {
-    await this.navigateTo(this.compensationsLink, '/compensations')
+    await this.navigateTo(this.compensationsLink, '/compensations', true)
   }
 
   async goToExchange() {
-    await this.navigateTo(this.exchangeLink, '/exchange')
+    await this.navigateTo(this.exchangeLink, '/exchange', true)
   }
 
   async goToSettings() {

@@ -3,7 +3,25 @@
   "entry": ["src/main.tsx", "e2e/**/*.ts", "src/features/*/index.ts"],
   "project": ["src/**/*.{ts,tsx}", "e2e/**/*.ts"],
   "ignore": ["src/types/**/*.d.ts", "src/api/schema.ts"],
-  "ignoreDependencies": ["tailwindcss", "@changesets/changelog-github"],
+  "ignoreDependencies": [
+    "tailwindcss",
+    "@volleykit/shared",
+    "@vite-pwa/assets-generator",
+    "eslint",
+    "openapi-typescript",
+    "size-limit"
+  ],
+  "ignoreBinaries": [
+    "vite",
+    "tsc",
+    "eslint",
+    "vitest",
+    "playwright",
+    "size-limit",
+    "openapi-typescript",
+    "knip",
+    "changeset"
+  ],
   "ignoreExportsUsedInFile": true,
   "rules": {
     "duplicates": "off"
