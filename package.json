@@ -4,7 +4,9 @@
   "workspaces": [
     "packages/shared",
     "packages/mobile",
-    "web-app"
+    "web-app",
+    "ocr-poc",
+    "help-site"
   ],
   "scripts": {
     "changeset": "changeset",
@@ -34,6 +36,7 @@
     "@types/react": "^19.0.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
+    "axios": "^1.12.0",
     "zod": "^4.3.5"
   },
   "engines": {
