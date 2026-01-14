@@ -63,9 +63,9 @@ Based on plan.md monorepo structure:
 
 ### Shared Hooks
 
-- [ ] T019 [P] Create `packages/shared/hooks/useAssignments.ts` with TanStack Query hook (extract from web-app)
-- [ ] T020 [P] Create `packages/shared/hooks/useCompensations.ts` with TanStack Query hook (extract from web-app)
-- [ ] T021 [P] Create `packages/shared/hooks/useExchanges.ts` with TanStack Query hook (extract from web-app)
+- [x] T019 [P] Create `packages/shared/hooks/useAssignments.ts` with TanStack Query hook (extract from web-app)
+- [x] T020 [P] Create `packages/shared/hooks/useCompensations.ts` with TanStack Query hook (extract from web-app)
+- [x] T021 [P] Create `packages/shared/hooks/useExchanges.ts` with TanStack Query hook (extract from web-app)
 - [x] T022 [P] Create `packages/shared/hooks/useAuth.ts` with auth state hook (extract from web-app)
 - [x] T023 Create `packages/shared/hooks/index.ts` barrel export for hooks module
 
