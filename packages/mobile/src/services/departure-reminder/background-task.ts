@@ -24,6 +24,9 @@ const LOOKAHEAD_WINDOW_MS = 6 * 60 * 60 * 1000;
 /** Battery optimization: accuracy level (balanced) */
 const LOCATION_ACCURACY = 'Balanced';
 
+/** Fallback travel time estimate in minutes when route calculation fails */
+const FALLBACK_TRAVEL_ESTIMATE_MINUTES = 45;
+
 /**
  * Assignment data needed for departure reminders.
  */
@@ -270,8 +273,8 @@ function createFallbackReminder(
   bufferMinutes: number
 ): DepartureReminder {
   const gameTime = new Date(assignment.gameTime);
-  // Estimate 45 minutes travel time as fallback
-  const estimatedTravelMinutes = 45;
+  // Use fallback travel time estimate when route calculation is unavailable
+  const estimatedTravelMinutes = FALLBACK_TRAVEL_ESTIMATE_MINUTES;
   const departureTime = new Date(gameTime.getTime() - (estimatedTravelMinutes + bufferMinutes) * 60 * 1000);
 
   return {
