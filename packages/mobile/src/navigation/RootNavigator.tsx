@@ -2,7 +2,7 @@
  * Root navigator with auth flow handling
  */
 
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, type LinkingOptions } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { useAuth } from '@volleykit/shared/hooks';
@@ -16,10 +16,12 @@ import type { RootStackParamList } from './types';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 // Deep linking configuration
-const linking = {
+const linking: LinkingOptions<RootStackParamList> = {
   prefixes: ['volleykit://'],
   config: {
     screens: {
+      Login: 'login',
+      Loading: 'loading',
       Main: {
         screens: {
           Assignments: 'assignments',
@@ -29,6 +31,9 @@ const linking = {
         },
       },
       AssignmentDetail: 'assignment/:id',
+      BiometricSettings: 'settings/biometric',
+      CalendarSettings: 'settings/calendar',
+      DepartureReminderSettings: 'settings/departure',
     },
   },
 };

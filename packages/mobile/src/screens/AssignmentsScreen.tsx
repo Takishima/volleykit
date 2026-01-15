@@ -1,29 +1,39 @@
 /**
  * Assignments list screen
+ *
+ * TODO(#US1): Connect to API client when implemented
  */
 
+import { useState, useCallback } from 'react';
 import { View, Text, FlatList, RefreshControl } from 'react-native';
 
-import { useAssignments } from '@volleykit/shared/hooks';
+import { useTranslation } from '@volleykit/shared/i18n';
 import type { MainTabScreenProps } from '../navigation/types';
 
 type Props = MainTabScreenProps<'Assignments'>;
 
+// Placeholder data until API client is implemented
+const PLACEHOLDER_ASSIGNMENTS = [
+  { id: '1', title: 'Game 1', date: '2026-01-20', venue: 'Sports Hall A' },
+  { id: '2', title: 'Game 2', date: '2026-01-25', venue: 'Sports Hall B' },
+  { id: '3', title: 'Game 3', date: '2026-02-01', venue: 'Sports Hall C' },
+];
+
 export function AssignmentsScreen(_props: Props) {
-  const { data: assignments, isLoading, refetch, isRefetching } = useAssignments();
+  const { t } = useTranslation();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const assignments = PLACEHOLDER_ASSIGNMENTS;
 
-  if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <Text className="text-gray-600">Loading assignments...</Text>
-      </View>
-    );
-  }
+  const onRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    // TODO(#US1): Implement actual refresh when API client is ready
+    setTimeout(() => setIsRefreshing(false), 1000);
+  }, []);
 
-  if (!assignments || assignments.length === 0) {
+  if (assignments.length === 0) {
     return (
       <View className="flex-1 items-center justify-center px-6">
-        <Text className="text-gray-600 text-center">No assignments found</Text>
+        <Text className="text-gray-600 text-center">{t('assignments.noAssignments')}</Text>
       </View>
     );
   }
@@ -33,14 +43,14 @@ export function AssignmentsScreen(_props: Props) {
       className="flex-1 bg-gray-50"
       contentContainerClassName="p-4 gap-3"
       data={assignments}
-      keyExtractor={(item) => String(item)}
+      keyExtractor={(item) => item.id}
       refreshControl={
-        <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+        <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
       }
       renderItem={({ item }) => (
         <View className="bg-white rounded-lg p-4 shadow-sm">
-          <Text className="text-gray-900 font-medium">Assignment {String(item)}</Text>
-          <Text className="text-gray-500 text-sm mt-1">Placeholder - will be populated in Phase 3</Text>
+          <Text className="text-gray-900 font-medium">{item.title}</Text>
+          <Text className="text-gray-500 text-sm mt-1">{item.date} - {item.venue}</Text>
         </View>
       )}
     />

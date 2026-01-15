@@ -120,42 +120,42 @@ Based on plan.md monorepo structure:
 
 ### Mobile Platform Adapters
 
-- [ ] T040 [P] [US1] Create `packages/mobile/src/platform/storage.ts` implementing StorageAdapter with AsyncStorage
-- [ ] T041 [P] [US1] Create `packages/mobile/src/platform/index.ts` barrel export for platform module
+- [x] T040 [P] [US1] Create `packages/mobile/src/platform/storage.ts` implementing StorageAdapter with AsyncStorage
+- [x] T041 [P] [US1] Create `packages/mobile/src/platform/index.ts` barrel export for platform module
 
 ### Mobile Navigation
 
-- [ ] T042 [US1] Install React Navigation dependencies in `packages/mobile/package.json` (@react-navigation/native, @react-navigation/native-stack, @react-navigation/bottom-tabs)
-- [ ] T043 [US1] Create `packages/mobile/src/navigation/types.ts` with navigation param types
-- [ ] T044 [US1] Create `packages/mobile/src/navigation/TabNavigator.tsx` with bottom tabs (Assignments, Compensations, Exchanges, Settings)
-- [ ] T045 [US1] Create `packages/mobile/src/navigation/RootNavigator.tsx` with auth flow (Login vs Main)
-- [ ] T046 [US1] Create `packages/mobile/src/navigation/index.ts` barrel export
+- [x] T042 [US1] Install React Navigation dependencies in `packages/mobile/package.json` (@react-navigation/native, @react-navigation/native-stack, @react-navigation/bottom-tabs)
+- [x] T043 [US1] Create `packages/mobile/src/navigation/types.ts` with navigation param types
+- [x] T044 [US1] Create `packages/mobile/src/navigation/TabNavigator.tsx` with bottom tabs (Assignments, Compensations, Exchanges, Settings)
+- [x] T045 [US1] Create `packages/mobile/src/navigation/RootNavigator.tsx` with auth flow (Login vs Main)
+- [x] T046 [US1] Create `packages/mobile/src/navigation/index.ts` barrel export
 
 ### Mobile Screens - Authentication
 
-- [ ] T047 [US1] Create `packages/mobile/src/screens/LoginScreen.tsx` with credential form matching PWA login
-- [ ] T048 [US1] Create `packages/mobile/src/screens/LoadingScreen.tsx` for app initialization state
+- [x] T047 [US1] Create `packages/mobile/src/screens/LoginScreen.tsx` with credential form matching PWA login
+- [x] T048 [US1] Create `packages/mobile/src/screens/LoadingScreen.tsx` for app initialization state
 
 ### Mobile Screens - Main Features
 
-- [ ] T049 [P] [US1] Create `packages/mobile/src/screens/AssignmentsScreen.tsx` displaying assignment list using shared hook
-- [ ] T050 [P] [US1] Create `packages/mobile/src/screens/AssignmentDetailScreen.tsx` with assignment details
-- [ ] T051 [P] [US1] Create `packages/mobile/src/screens/CompensationsScreen.tsx` displaying compensation list
-- [ ] T052 [P] [US1] Create `packages/mobile/src/screens/ExchangesScreen.tsx` displaying exchange list
-- [ ] T053 [P] [US1] Create `packages/mobile/src/screens/SettingsScreen.tsx` with basic settings (language, profile)
+- [x] T049 [P] [US1] Create `packages/mobile/src/screens/AssignmentsScreen.tsx` displaying assignment list using shared hook
+- [x] T050 [P] [US1] Create `packages/mobile/src/screens/AssignmentDetailScreen.tsx` with assignment details
+- [x] T051 [P] [US1] Create `packages/mobile/src/screens/CompensationsScreen.tsx` displaying compensation list
+- [x] T052 [P] [US1] Create `packages/mobile/src/screens/ExchangesScreen.tsx` displaying exchange list
+- [x] T053 [P] [US1] Create `packages/mobile/src/screens/SettingsScreen.tsx` with basic settings (language, profile)
 
 ### Mobile App Entry
 
-- [ ] T054 [US1] Create `packages/mobile/src/providers/AppProviders.tsx` with QueryClient, platform context providers
-- [ ] T055 [US1] Update `packages/mobile/App.tsx` with providers and root navigator
-- [ ] T056 [US1] Configure deep linking in `packages/mobile/app.json` with URL scheme `volleykit://`
+- [x] T054 [US1] Create `packages/mobile/src/providers/AppProviders.tsx` with QueryClient, platform context providers
+- [x] T055 [US1] Update `packages/mobile/App.tsx` with providers and root navigator
+- [x] T056 [US1] Configure deep linking in `packages/mobile/app.json` with URL scheme `volleykit://`
 
 ### Build Configuration
 
-- [ ] T057 [US1] Configure iOS build settings in `packages/mobile/app.json` (bundleIdentifier, version, icon)
-- [ ] T058 [US1] Configure Android build settings in `packages/mobile/app.json` (package, versionCode, icon)
-- [ ] T059 [US1] Run `npx expo prebuild` to generate native projects
-- [ ] T060 [US1] Create EAS Build configuration in `packages/mobile/eas.json` for development and production profiles
+- [x] T057 [US1] Configure iOS build settings in `packages/mobile/app.json` (bundleIdentifier, version, icon)
+- [x] T058 [US1] Configure Android build settings in `packages/mobile/app.json` (package, versionCode, icon)
+- [x] T059 [US1] Run `npx expo prebuild` to generate native projects
+- [x] T060 [US1] Create EAS Build configuration in `packages/mobile/eas.json` for development and production profiles
 
 **Checkpoint**: User Story 1 complete - App can be installed and user can log in and view all core data
 

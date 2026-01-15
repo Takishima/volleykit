@@ -1,29 +1,39 @@
 /**
  * Compensations list screen
+ *
+ * TODO(#US1): Connect to API client when implemented
  */
 
+import { useState, useCallback } from 'react';
 import { View, Text, FlatList, RefreshControl } from 'react-native';
 
-import { useCompensations } from '@volleykit/shared/hooks';
+import { useTranslation } from '@volleykit/shared/i18n';
 import type { MainTabScreenProps } from '../navigation/types';
 
 type Props = MainTabScreenProps<'Compensations'>;
 
+// Placeholder data until API client is implemented
+const PLACEHOLDER_COMPENSATIONS = [
+  { id: '1', game: 'Game 1', amount: '120.00', status: 'paid' },
+  { id: '2', game: 'Game 2', amount: '95.00', status: 'pending' },
+  { id: '3', game: 'Game 3', amount: '110.00', status: 'paid' },
+];
+
 export function CompensationsScreen(_props: Props) {
-  const { data: compensations, isLoading, refetch, isRefetching } = useCompensations();
+  const { t } = useTranslation();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const compensations = PLACEHOLDER_COMPENSATIONS;
 
-  if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <Text className="text-gray-600">Loading compensations...</Text>
-      </View>
-    );
-  }
+  const onRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    // TODO(#US1): Implement actual refresh when API client is ready
+    setTimeout(() => setIsRefreshing(false), 1000);
+  }, []);
 
-  if (!compensations || compensations.length === 0) {
+  if (compensations.length === 0) {
     return (
       <View className="flex-1 items-center justify-center px-6">
-        <Text className="text-gray-600 text-center">No compensations found</Text>
+        <Text className="text-gray-600 text-center">{t('compensations.noCompensations')}</Text>
       </View>
     );
   }
@@ -33,14 +43,17 @@ export function CompensationsScreen(_props: Props) {
       className="flex-1 bg-gray-50"
       contentContainerClassName="p-4 gap-3"
       data={compensations}
-      keyExtractor={(item) => String(item)}
+      keyExtractor={(item) => item.id}
       refreshControl={
-        <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+        <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
       }
       renderItem={({ item }) => (
         <View className="bg-white rounded-lg p-4 shadow-sm">
-          <Text className="text-gray-900 font-medium">Compensation {String(item)}</Text>
-          <Text className="text-gray-500 text-sm mt-1">Placeholder - will be populated in Phase 3</Text>
+          <View className="flex-row justify-between items-center">
+            <Text className="text-gray-900 font-medium">{item.game}</Text>
+            <Text className="text-gray-900 font-semibold">CHF {item.amount}</Text>
+          </View>
+          <Text className="text-gray-500 text-sm mt-1 capitalize">{item.status}</Text>
         </View>
       )}
     />

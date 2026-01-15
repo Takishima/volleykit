@@ -3,7 +3,7 @@
  */
 
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Calendar, DollarSign, Repeat, Settings } from 'lucide-react-native';
+import { Feather } from '@expo/vector-icons';
 
 import { AssignmentsScreen } from '../screens/AssignmentsScreen';
 import { CompensationsScreen } from '../screens/CompensationsScreen';
@@ -29,7 +29,7 @@ export function TabNavigator() {
         component={AssignmentsScreen}
         options={{
           title: 'Assignments',
-          tabBarIcon: ({ color }) => <Calendar size={ICON_SIZE} color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="calendar" size={ICON_SIZE} color={color} />,
         }}
       />
       <Tab.Screen
@@ -37,7 +37,7 @@ export function TabNavigator() {
         component={CompensationsScreen}
         options={{
           title: 'Compensations',
-          tabBarIcon: ({ color }) => <DollarSign size={ICON_SIZE} color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="dollar-sign" size={ICON_SIZE} color={color} />,
         }}
       />
       <Tab.Screen
@@ -45,7 +45,7 @@ export function TabNavigator() {
         component={ExchangesScreen}
         options={{
           title: 'Exchanges',
-          tabBarIcon: ({ color }) => <Repeat size={ICON_SIZE} color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="repeat" size={ICON_SIZE} color={color} />,
         }}
       />
       <Tab.Screen
@@ -53,7 +53,7 @@ export function TabNavigator() {
         component={SettingsScreen}
         options={{
           title: 'Settings',
-          tabBarIcon: ({ color }) => <Settings size={ICON_SIZE} color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="settings" size={ICON_SIZE} color={color} />,
         }}
       />
     </Tab.Navigator>
