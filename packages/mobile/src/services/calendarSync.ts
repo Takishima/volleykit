@@ -6,7 +6,7 @@
 
 import type { Assignment } from '@volleykit/shared/api';
 import { calendar } from '../platform/calendar';
-import { calendarMappingsStore, type CalendarMappingsStore } from '../stores/calendarMappings';
+import { calendarMappingsStore } from '../stores/calendarMappings';
 import type { CalendarEventMapping, CalendarEventData } from '../types/calendar';
 import {
   generateAssignmentDeepLink,

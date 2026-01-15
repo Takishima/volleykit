@@ -254,6 +254,10 @@ export interface Translations {
       noRoute: string;
       delayed: string;
       cancelled: string;
+      departureTime: string;
+      leaveIn: string;
+      leaveNow: string;
+      clustered: string;
     };
     widget: {
       title: string;

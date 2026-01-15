@@ -10,9 +10,9 @@ import { location } from '../../platform/location';
 import { departureReminderSettingsStore } from '../../stores/departureReminderSettings';
 import { departureRemindersStore } from '../../stores/departureReminders';
 import { storage } from '../../platform/storage';
-import type { Coordinates, DepartureReminder } from '../../types/departureReminder';
+import type { Coordinates, DepartureReminder, VenueCluster } from '../../types/departureReminder';
 import { calculateRoute, isOjpConfigured, RouteCalculationError } from './route-calculator';
-import { isNearVenue, shouldSendDepartureNotification, clusterNearbyVenues, type AssignmentWithVenue, type VenueCluster } from './venue-proximity';
+import { isNearVenue, shouldSendDepartureNotification, clusterNearbyVenues, type AssignmentWithVenue } from './venue-proximity';
 import { scheduleReminderNotification, cancelReminderNotification } from './notification-scheduler';
 
 /** Task name for the departure reminder background task */
@@ -328,7 +328,7 @@ async function scheduleTimeBasedReminders(): Promise<void> {
  */
 export async function processClusteredAssignments(
   assignments: UpcomingAssignment[],
-  userLocation: Coordinates
+  _userLocation: Coordinates
 ): Promise<VenueCluster[]> {
   const assignmentsWithVenue: AssignmentWithVenue[] = assignments.map((a) => ({
     id: a.id,

@@ -127,7 +127,7 @@ import { useState } from 'react';
  */
 export function withNetworkCheck<P extends object>(
   WrappedComponent: React.ComponentType<P & { disabled?: boolean }>,
-  actionName?: string
+  _actionName?: string
 ): React.FC<P & { onOfflineAttempt?: () => void }> {
   return function NetworkCheckedComponent(props: P & { onOfflineAttempt?: () => void }) {
     const { isOnline } = useNetwork();

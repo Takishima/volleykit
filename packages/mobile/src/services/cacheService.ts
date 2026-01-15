@@ -176,7 +176,8 @@ async function getCacheSize(): Promise<number> {
     const items = await AsyncStorage.multiGet(cacheKeys);
 
     let totalSize = 0;
-    for (const [_key, value] of items) {
+    for (const item of items) {
+      const value = item[1];
       if (value) {
         totalSize += new Blob([value]).size;
       }
