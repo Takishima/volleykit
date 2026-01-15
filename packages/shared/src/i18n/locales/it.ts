@@ -68,6 +68,9 @@ const it: Translations = {
     loginFailed: 'Accesso fallito. Controlla le tue credenziali.',
     usernamePlaceholder: 'Inserisci il tuo nome utente',
     passwordPlaceholder: 'Inserisci la tua password',
+    useBiometric: 'Usa {biometricType}',
+    authenticateWith: 'Autenticati con {biometricType}',
+    attemptsRemaining: '{count} tentativo rimanente',
   },
   assignments: {
     title: 'Designazioni',

@@ -82,6 +82,9 @@ export interface Translations {
     loginFailed: string;
     usernamePlaceholder: string;
     passwordPlaceholder: string;
+    useBiometric: string;
+    authenticateWith: string;
+    attemptsRemaining: string;
   };
   assignments: {
     title: string;

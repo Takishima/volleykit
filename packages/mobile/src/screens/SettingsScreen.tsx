@@ -3,11 +3,12 @@
  */
 
 import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { ChevronRight, Globe, Fingerprint, Calendar, Clock, Info } from 'lucide-react-native';
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { useSettingsStore } from '@volleykit/shared/stores';
 import { useTranslation, LANGUAGE_NAMES } from '@volleykit/shared/i18n';
 import type { MainTabScreenProps } from '../navigation/types';
+import { COLORS, SETTINGS_ICON_SIZE, SMALL_ICON_SIZE } from '../constants';
 
 type Props = MainTabScreenProps<'Settings'>;
 
@@ -46,13 +47,13 @@ function SettingRow({
       </View>
       {value && <Text className="text-gray-500 mr-2">{value}</Text>}
       {onPress && (
-        <ChevronRight size={20} color="#9ca3af" accessibilityElementsHidden importantForAccessibility="no" />
+        <Feather name="chevron-right" size={SMALL_ICON_SIZE} color={COLORS.gray400} accessibilityElementsHidden importantForAccessibility="no" />
       )}
     </TouchableOpacity>
   );
 }
 
-export function SettingsScreen({ navigation: _navigation }: Props) {
+export function SettingsScreen({ navigation }: Props) {
   const { t } = useTranslation();
   const language = useSettingsStore((state) => state.language);
 
@@ -68,7 +69,7 @@ export function SettingsScreen({ navigation: _navigation }: Props) {
         </Text>
         <View className="bg-white border-y border-gray-200">
           <SettingRow
-            icon={<Globe size={24} color="#6b7280" />}
+            icon={<Feather name="globe" size={SETTINGS_ICON_SIZE} color={COLORS.gray500} />}
             title={t('settings.language')}
             value={LANGUAGE_NAMES[language]}
             onPress={() => {
@@ -86,10 +87,10 @@ export function SettingsScreen({ navigation: _navigation }: Props) {
         </Text>
         <View className="bg-white border-y border-gray-200">
           <SettingRow
-            icon={<Fingerprint size={24} color="#6b7280" />}
+            icon={<MaterialCommunityIcons name="fingerprint" size={SETTINGS_ICON_SIZE} color={COLORS.gray500} />}
             title={t('settings.biometric.title')}
-            onPress={showComingSoon}
-            accessibilityHint={t('settings.comingSoon')}
+            onPress={() => navigation.navigate('BiometricSettings')}
+            accessibilityHint={t('settings.biometric.description')}
           />
         </View>
       </View>
@@ -100,14 +101,14 @@ export function SettingsScreen({ navigation: _navigation }: Props) {
         </Text>
         <View className="bg-white border-y border-gray-200">
           <SettingRow
-            icon={<Calendar size={24} color="#6b7280" />}
+            icon={<Feather name="calendar" size={SETTINGS_ICON_SIZE} color={COLORS.gray500} />}
             title={t('settings.calendarIntegration')}
             onPress={showComingSoon}
             accessibilityHint={t('settings.comingSoon')}
           />
           <View className="h-px bg-gray-200 ml-14" />
           <SettingRow
-            icon={<Clock size={24} color="#6b7280" />}
+            icon={<Feather name="clock" size={SETTINGS_ICON_SIZE} color={COLORS.gray500} />}
             title={t('settings.departure.title')}
             onPress={showComingSoon}
             accessibilityHint={t('settings.comingSoon')}
@@ -121,7 +122,7 @@ export function SettingsScreen({ navigation: _navigation }: Props) {
         </Text>
         <View className="bg-white border-y border-gray-200">
           <SettingRow
-            icon={<Info size={24} color="#6b7280" />}
+            icon={<Feather name="info" size={SETTINGS_ICON_SIZE} color={COLORS.gray500} />}
             title={t('settings.version')}
             value="1.0.0"
           />

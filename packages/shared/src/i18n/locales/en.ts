@@ -67,6 +67,9 @@ const en: Translations = {
     loginFailed: 'Login failed. Please check your credentials.',
     usernamePlaceholder: 'Enter your username',
     passwordPlaceholder: 'Enter your password',
+    useBiometric: 'Use {biometricType}',
+    authenticateWith: 'Authenticate with {biometricType}',
+    attemptsRemaining: '{count} attempt remaining',
   },
   assignments: {
     title: 'Assignments',

@@ -7,6 +7,7 @@ import type { ReactNode } from 'react';
 
 import { StorageContext } from '@volleykit/shared/adapters';
 import { storage } from '../platform/storage';
+import { secureStorage } from '../platform/secureStorage';
 
 // Create QueryClient with mobile-optimized settings
 const queryClient = new QueryClient({
@@ -19,14 +20,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-
-// Placeholder secure storage (will be implemented in Phase 4)
-const secureStorage = {
-  setCredentials: async () => {},
-  getCredentials: async () => null,
-  clearCredentials: async () => {},
-  hasCredentials: async () => false,
-};
 
 interface AppProvidersProps {
   children: ReactNode;
