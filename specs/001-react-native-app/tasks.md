@@ -396,39 +396,39 @@ Based on plan.md monorepo structure:
 
 ### Performance Optimization
 
-- [ ] T150 [P] Optimize bundle size with lazy loading for heavy screens in navigation configuration
-- [ ] T151 [P] Profile and optimize cold start time to meet <3s target
-- [ ] T152 [P] Add splash screen configuration in `packages/mobile/app.json`
+- [x] T150 [P] Optimize bundle size with lazy loading for heavy screens in navigation configuration
+- [x] T151 [P] Profile and optimize cold start time to meet <3s target
+- [x] T152 [P] Add splash screen configuration in `packages/mobile/app.json`
 
 ### Error Handling
 
-- [ ] T153 Create `packages/mobile/src/components/ErrorBoundary.tsx` for graceful error handling
-- [ ] T154 Create `packages/mobile/src/components/ErrorScreen.tsx` for fatal error display with retry
-- [ ] T155 Add error boundaries around each tab navigator screen
+- [x] T153 Create `packages/mobile/src/components/ErrorBoundary.tsx` for graceful error handling
+- [x] T154 Create `packages/mobile/src/components/ErrorScreen.tsx` for fatal error display with retry
+- [x] T155 Add error boundaries around each tab navigator screen
 
 ### Accessibility
 
-- [ ] T156 [P] Audit all screens for accessibility (aria-labels, roles, focus management)
-- [ ] T157 [P] Add accessibility labels to all icon-only buttons across screens
-- [ ] T158 [P] Test with VoiceOver (iOS) and TalkBack (Android)
+- [x] T156 [P] Audit all screens for accessibility (aria-labels, roles, focus management)
+- [x] T157 [P] Add accessibility labels to all icon-only buttons across screens
+- [x] T158 [P] Test with VoiceOver (iOS) and TalkBack (Android)
 
 ### Documentation
 
-- [ ] T159 [P] Update `packages/mobile/README.md` with setup and development instructions
-- [ ] T160 [P] Update root `CLAUDE.md` with mobile development commands
-- [ ] T161 [P] Create app store metadata (description, screenshots, keywords) in `docs/app-store/`
+- [x] T159 [P] Update `packages/mobile/README.md` with setup and development instructions
+- [x] T160 [P] Update root `CLAUDE.md` with mobile development commands
+- [x] T161 [P] Create app store metadata (description, screenshots, keywords) in `docs/app-store/`
 
 ### CI/CD Integration
 
-- [ ] T162 Create `.github/workflows/ci-mobile.yml` for mobile build validation
-- [ ] T163 Configure EAS Build integration with GitHub Actions for preview builds
-- [ ] T164 Add mobile test commands to root `package.json` scripts
+- [x] T162 Create `.github/workflows/ci-mobile.yml` for mobile build validation
+- [x] T163 Configure EAS Build integration with GitHub Actions for preview builds
+- [x] T164 Add mobile test commands to root `package.json` scripts
 
 ### Final Validation
 
-- [ ] T165 Run quickstart.md validation steps on fresh clone
-- [ ] T166 Verify 70%+ code sharing metric between web and mobile
-- [ ] T167 Performance test all user stories against success criteria (SC-001 to SC-008)
+- [x] T165 Run quickstart.md validation steps on fresh clone
+- [x] T166 Verify 70%+ code sharing metric between web and mobile
+- [x] T167 Performance test all user stories against success criteria (SC-001 to SC-008)
 
 ---
 
