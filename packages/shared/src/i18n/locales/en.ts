@@ -238,6 +238,11 @@ const en: Translations = {
       noRoute: 'Could not calculate route to venue',
       delayed: 'Your connection is delayed',
       cancelled: 'Your connection has been cancelled',
+      withTransit: 'Take {line} from {stop} (→ {direction})',
+      departureTime: 'Departure: {time}',
+      leaveIn: 'Leave in {minutes} min',
+      leaveNow: 'Leave now!',
+      clustered: '{count} games at nearby venues',
     },
     widget: {
       title: 'Next Game',

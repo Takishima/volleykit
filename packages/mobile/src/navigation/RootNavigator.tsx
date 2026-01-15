@@ -16,6 +16,7 @@ import { LoadingScreen } from '../screens/LoadingScreen';
 import { AssignmentDetailScreen } from '../screens/AssignmentDetailScreen';
 import { BiometricSettingsScreen } from '../screens/BiometricSettingsScreen';
 import { CalendarSettingsScreen } from '../screens/CalendarSettingsScreen';
+import { DepartureReminderSettingsScreen } from '../screens/DepartureReminderSettingsScreen';
 import { TabNavigator } from './TabNavigator';
 import { BiometricPrompt } from '../components/BiometricPrompt';
 import { useSessionMonitorContext } from '../contexts';
@@ -116,6 +117,11 @@ export function RootNavigator() {
               name="CalendarSettings"
               component={CalendarSettingsScreen}
               options={{ headerShown: true, title: 'Calendar Sync' }}
+            />
+            <Stack.Screen
+              name="DepartureReminderSettings"
+              component={DepartureReminderSettingsScreen}
+              options={{ headerShown: true, title: 'Smart Departure' }}
             />
           </>
         ) : (

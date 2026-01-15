@@ -29,7 +29,8 @@
       "package": "ch.volleyball.volleykit",
       "permissions": [
         "ACCESS_FINE_LOCATION",
-        "ACCESS_BACKGROUND_LOCATION"
+        "ACCESS_BACKGROUND_LOCATION",
+        "POST_NOTIFICATIONS"
       ]
     },
     "plugins": [
@@ -38,6 +39,13 @@
         "expo-location",
         {
           "locationAlwaysAndWhenInUsePermission": "VolleyKit needs background location access to send smart departure reminders."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#0ea5e9"
         }
       ]
     ],

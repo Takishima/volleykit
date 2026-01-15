@@ -240,72 +240,72 @@ Based on plan.md monorepo structure:
 
 ### Platform Adapters for Location & Notifications
 
-- [ ] T085 [P] [US5] Install expo-location, expo-notifications, expo-task-manager in `packages/mobile/package.json`
-- [ ] T086 [US5] Create `packages/mobile/src/platform/location.ts` implementing LocationAdapter with expo-location (requestPermissions, getCurrentLocation, startBackgroundTracking, stopBackgroundTracking)
-- [ ] T087 [US5] Create `packages/mobile/src/platform/notifications.ts` implementing NotificationAdapter with expo-notifications (requestPermissions, scheduleNotification, cancelNotification)
-- [ ] T088 [US5] Update `packages/mobile/src/platform/index.ts` to export location and notification adapters
+- [x] T085 [P] [US5] Install expo-location, expo-notifications, expo-task-manager in `packages/mobile/package.json`
+- [x] T086 [US5] Create `packages/mobile/src/platform/location.ts` implementing LocationAdapter with expo-location (requestPermissions, getCurrentLocation, startBackgroundTracking, stopBackgroundTracking)
+- [x] T087 [US5] Create `packages/mobile/src/platform/notifications.ts` implementing NotificationAdapter with expo-notifications (requestPermissions, scheduleNotification, cancelNotification)
+- [x] T088 [US5] Update `packages/mobile/src/platform/index.ts` to export location and notification adapters
 
 ### DepartureReminder Entity & Settings
 
-- [ ] T089 [P] [US5] Create `packages/mobile/src/types/departureReminder.ts` with DepartureReminder, StopInfo, TripLeg, VenueCluster types
-- [ ] T090 [US5] Create `packages/mobile/src/stores/departureReminderSettings.ts` with Zustand store (enabled, bufferMinutes: 5|10|15|20|30)
-- [ ] T091 [US5] Create `packages/mobile/src/stores/departureReminders.ts` with active reminders state (transient, cleared after assignment)
+- [x] T089 [P] [US5] Create `packages/mobile/src/types/departureReminder.ts` with DepartureReminder, StopInfo, TripLeg, VenueCluster types
+- [x] T090 [US5] Create `packages/mobile/src/stores/departureReminderSettings.ts` with Zustand store (enabled, bufferMinutes: 5|10|15|20|30)
+- [x] T091 [US5] Create `packages/mobile/src/stores/departureReminders.ts` with active reminders state (transient, cleared after assignment)
 
 ### OJP SDK Integration
 
-- [ ] T092 [US5] Verify `packages/shared/services/transport/` OJP client is platform-agnostic (uses fetch)
-- [ ] T093 [US5] Create `packages/mobile/src/services/departure-reminder/route-calculator.ts` wrapping shared OJP client for trip calculation
-- [ ] T094 [US5] Add route caching in route-calculator.ts to reduce OJP API calls (cache key: origin+destination+time)
+- [x] T092 [US5] Verify `packages/shared/services/transport/` OJP client is platform-agnostic (uses fetch)
+- [x] T093 [US5] Create `packages/mobile/src/services/departure-reminder/route-calculator.ts` wrapping shared OJP client for trip calculation
+- [x] T094 [US5] Add route caching in route-calculator.ts to reduce OJP API calls (cache key: origin+destination+time)
 
 ### Venue Proximity Detection
 
-- [ ] T095 [US5] Create `packages/shared/utils/geo.ts` with haversineDistance function (returns meters between two coordinates)
-- [ ] T096 [US5] Create `packages/mobile/src/services/departure-reminder/venue-proximity.ts` with isNearVenue (500m threshold) and clusterNearbyVenues functions
-- [ ] T097 [US5] Add unit tests for haversineDistance in `packages/shared/utils/geo.test.ts`
+- [x] T095 [US5] Create `packages/shared/utils/geo.ts` with haversineDistance function (returns meters between two coordinates)
+- [x] T096 [US5] Create `packages/mobile/src/services/departure-reminder/venue-proximity.ts` with isNearVenue (500m threshold) and clusterNearbyVenues functions
+- [x] T097 [US5] Add unit tests for haversineDistance in `packages/shared/utils/geo.test.ts`
 
 ### Background Task Implementation
 
-- [ ] T098 [US5] Create `packages/mobile/src/services/departure-reminder/background-task.ts` with hourly location check task using expo-task-manager
-- [ ] T099 [US5] Implement task logic: check assignments within 6 hours, get location, check venue proximity, calculate route if needed
-- [ ] T100 [US5] Configure task to only run when departureReminderEnabled is true and upcoming assignments exist
-- [ ] T101 [US5] Add battery optimization: use Accuracy.Balanced, stop tracking after assignment time
+- [x] T098 [US5] Create `packages/mobile/src/services/departure-reminder/background-task.ts` with hourly location check task using expo-task-manager
+- [x] T099 [US5] Implement task logic: check assignments within 6 hours, get location, check venue proximity, calculate route if needed
+- [x] T100 [US5] Configure task to only run when departureReminderEnabled is true and upcoming assignments exist
+- [x] T101 [US5] Add battery optimization: use Accuracy.Balanced, stop tracking after assignment time
 
 ### Notification Scheduling
 
-- [ ] T102 [US5] Create `packages/mobile/src/services/departure-reminder/notification-scheduler.ts` with scheduleReminderNotification function
-- [ ] T103 [US5] Create notification content template with i18n support: "[emoji] Leave for [Venue] in X min / Take [Line] from [Stop] (direction: [Terminus]) / Departure: [Time]"
-- [ ] T104 [US5] Add notification translations to `packages/shared/i18n/locales/` for all 4 languages (de, en, fr, it)
-- [ ] T105 [US5] Configure notification deep link to open assignment detail: `volleykit://assignment/{id}`
+- [x] T102 [US5] Create `packages/mobile/src/services/departure-reminder/notification-scheduler.ts` with scheduleReminderNotification function
+- [x] T103 [US5] Create notification content template with i18n support: "[emoji] Leave for [Venue] in X min / Take [Line] from [Stop] (direction: [Terminus]) / Departure: [Time]"
+- [x] T104 [US5] Add notification translations to `packages/shared/i18n/locales/` for all 4 languages (de, en, fr, it)
+- [x] T105 [US5] Configure notification deep link to open assignment detail: `volleykit://assignment/{id}`
 
 ### Multi-Assignment Handling
 
-- [ ] T106 [US5] Implement venue clustering in background-task.ts: group assignments with venues ≤500m apart
-- [ ] T107 [US5] Create grouped notification content for venue clusters (list all assignment times/venues)
-- [ ] T108 [US5] Suppress notifications when user already within 500m of venue (per FR-024)
+- [x] T106 [US5] Implement venue clustering in background-task.ts: group assignments with venues ≤500m apart
+- [x] T107 [US5] Create grouped notification content for venue clusters (list all assignment times/venues)
+- [x] T108 [US5] Suppress notifications when user already within 500m of venue (per FR-024)
 
 ### Fallback Behavior
 
-- [ ] T109 [US5] Implement location unavailable fallback: simple time-based reminder without transit details
-- [ ] T110 [US5] Implement no-route-found fallback: suggest leaving with buffer time for alternative transport
-- [ ] T111 [US5] Add error handling for OJP API failures with graceful degradation
+- [x] T109 [US5] Implement location unavailable fallback: simple time-based reminder without transit details
+- [x] T110 [US5] Implement no-route-found fallback: suggest leaving with buffer time for alternative transport
+- [x] T111 [US5] Add error handling for OJP API failures with graceful degradation
 
 ### Settings UI
 
-- [ ] T112 [US5] Create `packages/mobile/src/screens/DepartureReminderSettingsScreen.tsx` with enable toggle and buffer time picker (5/10/15/20/30 min)
-- [ ] T113 [US5] Update `packages/mobile/src/screens/SettingsScreen.tsx` to link to DepartureReminderSettings
-- [ ] T114 [US5] Add location permission request flow in DepartureReminderSettingsScreen when enabling
+- [x] T112 [US5] Create `packages/mobile/src/screens/DepartureReminderSettingsScreen.tsx` with enable toggle and buffer time picker (5/10/15/20/30 min)
+- [x] T113 [US5] Update `packages/mobile/src/screens/SettingsScreen.tsx` to link to DepartureReminderSettings
+- [x] T114 [US5] Add location permission request flow in DepartureReminderSettingsScreen when enabling
 
 ### Data Lifecycle & Privacy
 
-- [ ] T115 [US5] Create `packages/mobile/src/services/departure-reminder/cleanup.ts` to delete DepartureReminder data after assignment completion
-- [ ] T116 [US5] Register cleanup on app foreground and after assignment time passes
-- [ ] T117 [US5] Verify no location history is retained (per FR-026a)
+- [x] T115 [US5] Create `packages/mobile/src/services/departure-reminder/cleanup.ts` to delete DepartureReminder data after assignment completion
+- [x] T116 [US5] Register cleanup on app foreground and after assignment time passes
+- [x] T117 [US5] Verify no location history is retained (per FR-026a)
 
 ### App Configuration
 
-- [ ] T118 [US5] Add iOS location permissions to `packages/mobile/app.json` (NSLocationWhenInUseUsageDescription, NSLocationAlwaysUsageDescription)
-- [ ] T119 [US5] Add Android location permissions to `packages/mobile/app.json` (ACCESS_FINE_LOCATION, ACCESS_BACKGROUND_LOCATION)
-- [ ] T120 [US5] Add notification permissions configuration for iOS and Android 13+
+- [x] T118 [US5] Add iOS location permissions to `packages/mobile/app.json` (NSLocationWhenInUseUsageDescription, NSLocationAlwaysUsageDescription)
+- [x] T119 [US5] Add Android location permissions to `packages/mobile/app.json` (ACCESS_FINE_LOCATION, ACCESS_BACKGROUND_LOCATION)
+- [x] T120 [US5] Add notification permissions configuration for iOS and Android 13+
 
 **Checkpoint**: User Story 5 complete - Smart departure reminders work independently with location tracking, OJP routing, and local notifications
 

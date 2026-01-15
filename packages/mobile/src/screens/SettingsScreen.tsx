@@ -110,8 +110,8 @@ export function SettingsScreen({ navigation }: Props) {
           <SettingRow
             icon={<Feather name="clock" size={SETTINGS_ICON_SIZE} color={COLORS.gray500} />}
             title={t('settings.departure.title')}
-            onPress={showComingSoon}
-            accessibilityHint={t('settings.comingSoon')}
+            onPress={() => navigation.navigate('DepartureReminderSettings')}
+            accessibilityHint={t('settings.departure.description')}
           />
         </View>
       </View>

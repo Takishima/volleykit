@@ -241,6 +241,11 @@ const de: Translations = {
       noRoute: 'Route zum Spielort konnte nicht berechnet werden',
       delayed: 'Ihre Verbindung ist verspätet',
       cancelled: 'Ihre Verbindung wurde gestrichen',
+      withTransit: '{line} ab {stop} nehmen (→ {direction})',
+      departureTime: 'Abfahrt: {time}',
+      leaveIn: 'In {minutes} Min. aufbrechen',
+      leaveNow: 'Jetzt aufbrechen!',
+      clustered: '{count} Spiele in der Nähe',
     },
     widget: {
       title: 'Nächstes Spiel',

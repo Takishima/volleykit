@@ -243,6 +243,11 @@ const fr: Translations = {
       noRoute: "Impossible de calculer l'itinéraire vers le lieu",
       delayed: 'Votre connexion est retardée',
       cancelled: 'Votre connexion a été annulée',
+      withTransit: 'Prenez {line} depuis {stop} (→ {direction})',
+      departureTime: 'Départ : {time}',
+      leaveIn: 'Partez dans {minutes} min',
+      leaveNow: 'Partez maintenant !',
+      clustered: '{count} matchs dans les sites proches',
     },
     widget: {
       title: 'Prochain match',

@@ -242,6 +242,11 @@ const it: Translations = {
       noRoute: 'Impossibile calcolare il percorso verso la sede',
       delayed: 'Il tuo collegamento è in ritardo',
       cancelled: 'Il tuo collegamento è stato cancellato',
+      withTransit: 'Prendi {line} da {stop} (→ {direction})',
+      departureTime: 'Partenza: {time}',
+      leaveIn: 'Parti tra {minutes} min',
+      leaveNow: 'Parti subito!',
+      clustered: '{count} partite in sedi vicine',
     },
     widget: {
       title: 'Prossima partita',
