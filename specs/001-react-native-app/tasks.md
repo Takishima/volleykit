@@ -319,34 +319,34 @@ Based on plan.md monorepo structure:
 
 ### WidgetData Entity Implementation
 
-- [ ] T121 [P] [US4] Install react-native-widgetkit in `packages/mobile/package.json`
-- [ ] T122 [US4] Create `packages/mobile/src/types/widget.ts` with WidgetData and WidgetAssignment types
-- [ ] T123 [US4] Create `packages/mobile/src/platform/widgets.ts` with shared widget data functions
+- [x] T121 [P] [US4] Install react-native-widgetkit in `packages/mobile/package.json`
+- [x] T122 [US4] Create `packages/mobile/src/types/widget.ts` with WidgetData and WidgetAssignment types
+- [x] T123 [US4] Create `packages/mobile/src/platform/widgets.ts` with shared widget data functions
 
 ### iOS Widget Extension
 
-- [ ] T124 [US4] Create iOS widget extension in `packages/mobile/ios/VolleyKitWidget/` with Swift UI widget
-- [ ] T125 [US4] Configure App Group for data sharing between main app and widget in Xcode
-- [ ] T126 [US4] Create `packages/mobile/ios/VolleyKitWidget/VolleyKitWidget.swift` with widget view (next 3 assignments, last updated)
-- [ ] T127 [US4] Configure widget sizes (small, medium) in widget extension
+- [x] T124 [US4] Create iOS widget extension in `packages/mobile/ios/VolleyKitWidget/` with Swift UI widget
+- [x] T125 [US4] Configure App Group for data sharing between main app and widget in Xcode
+- [x] T126 [US4] Create `packages/mobile/ios/VolleyKitWidget/VolleyKitWidget.swift` with widget view (next 3 assignments, last updated)
+- [x] T127 [US4] Configure widget sizes (small, medium) in widget extension
 
 ### Android Widget
 
-- [ ] T128 [US4] Install react-native-android-widget in `packages/mobile/package.json`
-- [ ] T129 [US4] Create Android widget in `packages/mobile/android/app/src/main/java/.../widget/` with Kotlin implementation
-- [ ] T130 [US4] Create widget layout XML in `packages/mobile/android/app/src/main/res/layout/`
-- [ ] T131 [US4] Configure widget provider in AndroidManifest.xml
+- [x] T128 [US4] Install react-native-android-widget in `packages/mobile/package.json`
+- [x] T129 [US4] Create Android widget in `packages/mobile/android/app/src/main/java/.../widget/` with Kotlin implementation
+- [x] T130 [US4] Create widget layout XML in `packages/mobile/android/app/src/main/res/layout/`
+- [x] T131 [US4] Configure widget provider in AndroidManifest.xml
 
 ### Widget Data Bridge
 
-- [ ] T132 [US4] Create `packages/mobile/src/services/widgetDataBridge.ts` to write widget data on assignment refresh
-- [ ] T133 [US4] Update useAssignments hook to trigger widget data update after successful fetch
-- [ ] T134 [US4] Add "last updated" timestamp to widget data for staleness indicator
+- [x] T132 [US4] Create `packages/mobile/src/services/widgetDataBridge.ts` to write widget data on assignment refresh
+- [x] T133 [US4] Update useAssignments hook to trigger widget data update after successful fetch
+- [x] T134 [US4] Add "last updated" timestamp to widget data for staleness indicator
 
 ### Widget Deep Linking
 
-- [ ] T135 [US4] Configure widget tap action to open `volleykit://assignment/{id}` deep link
-- [ ] T136 [US4] Handle empty state in widget ("Please open VolleyKit to sync")
+- [x] T135 [US4] Configure widget tap action to open `volleykit://assignment/{id}` deep link
+- [x] T136 [US4] Handle empty state in widget ("Please open VolleyKit to sync")
 
 **Checkpoint**: User Story 4 complete - Widgets work independently on both iOS and Android
 

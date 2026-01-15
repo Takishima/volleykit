@@ -8,3 +8,4 @@ export * from './biometrics';
 export * from './calendar';
 export * from './location';
 export * from './notifications';
+export * from './widgets';

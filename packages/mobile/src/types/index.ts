@@ -4,3 +4,4 @@
 
 export * from './calendar';
 export * from './departureReminder';
+export * from './widget';
