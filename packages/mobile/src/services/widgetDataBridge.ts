@@ -7,7 +7,6 @@
 
 import { getWidgetAdapter, createWidgetData } from '../platform/widgets';
 import type { WidgetAssignment, WidgetData } from '../types/widget';
-import { EMPTY_WIDGET_DATA } from '../types/widget';
 
 /**
  * Assignment data from the app (before conversion to widget format).

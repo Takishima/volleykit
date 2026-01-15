@@ -21,9 +21,6 @@ export const DEPARTURE_REMINDER_TASK_NAME = 'VOLLEYKIT_DEPARTURE_REMINDER_TASK';
 /** How far ahead to look for assignments (6 hours in ms) */
 const LOOKAHEAD_WINDOW_MS = 6 * 60 * 60 * 1000;
 
-/** Battery optimization: accuracy level (balanced) */
-const LOCATION_ACCURACY = 'Balanced';
-
 /** Fallback travel time estimate in minutes when route calculation fails */
 const FALLBACK_TRAVEL_ESTIMATE_MINUTES = 45;
 

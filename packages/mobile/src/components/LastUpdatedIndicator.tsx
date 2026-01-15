@@ -7,9 +7,7 @@
 import type { JSX } from 'react';
 import { View, Text } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { formatDistanceToNow } from 'date-fns';
 
-import { useTranslation } from '@volleykit/shared/i18n';
 import { COLORS } from '../constants';
 import type { CacheStatus } from '../types/cache';
 import { getCacheStatus, formatCacheAge } from '../types/cache';
@@ -70,8 +68,6 @@ export function LastUpdatedIndicator({
   compact = false,
   label,
 }: LastUpdatedIndicatorProps): JSX.Element | null {
-  const { t } = useTranslation();
-
   if (!lastUpdatedAt) {
     return null;
   }
