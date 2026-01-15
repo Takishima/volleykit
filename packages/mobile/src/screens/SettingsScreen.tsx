@@ -4,6 +4,7 @@
 
 import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 
 import { useSettingsStore } from '@volleykit/shared/stores';
 import { useTranslation, LANGUAGE_NAMES } from '@volleykit/shared/i18n';
@@ -53,9 +54,19 @@ function SettingRow({
   );
 }
 
+function getAppVersion(): string {
+  const version = Constants.expoConfig?.version ?? 'unknown';
+  const buildNumber =
+    Constants.expoConfig?.ios?.buildNumber ??
+    Constants.expoConfig?.android?.versionCode?.toString();
+
+  return buildNumber ? `${version} (${buildNumber})` : version;
+}
+
 export function SettingsScreen({ navigation }: Props) {
   const { t } = useTranslation();
   const language = useSettingsStore((state) => state.language);
+  const appVersion = getAppVersion();
 
   const showComingSoon = () => {
     Alert.alert(t('settings.comingSoon'), undefined, [{ text: t('common.close') }]);
@@ -124,7 +135,7 @@ export function SettingsScreen({ navigation }: Props) {
           <SettingRow
             icon={<Feather name="info" size={SETTINGS_ICON_SIZE} color={COLORS.gray500} />}
             title={t('settings.version')}
-            value="1.0.0"
+            value={appVersion}
           />
         </View>
       </View>
