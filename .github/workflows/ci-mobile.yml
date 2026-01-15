@@ -1,0 +1,135 @@
+name: CI Mobile
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/mobile/**'
+      - 'packages/shared/**'
+      - 'docs/api/volleymanager-openapi.yaml'
+      - '.github/workflows/ci-mobile.yml'
+      - '.github/actions/**'
+  pull_request:
+    paths:
+      - 'packages/mobile/**'
+      - 'packages/shared/**'
+      - 'docs/api/volleymanager-openapi.yaml'
+      - '.github/workflows/ci-mobile.yml'
+      - '.github/actions/**'
+
+# =============================================================================
+# Mobile CI Pipeline
+# =============================================================================
+#
+# Job Dependency Graph:
+#
+#   setup ─────┬──> typecheck
+#   (API types)├──> lint
+#              └──> test
+#
+# =============================================================================
+
+jobs:
+  setup:
+    name: Setup
+    runs-on: ubuntu-latest
+    outputs:
+      api-cache-key: ${{ steps.api-cache-key.outputs.key }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
+        with:
+          working-directory: packages/mobile
+
+      - name: Generate API cache key
+        id: api-cache-key
+        run: echo "key=api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'package-lock.json') }}" >> $GITHUB_OUTPUT
+
+      - name: Cache generated API types
+        id: api-cache
+        uses: actions/cache@v4
+        with:
+          path: packages/shared/src/api/schema.ts
+          key: ${{ steps.api-cache-key.outputs.key }}
+
+      - name: Generate API types
+        if: steps.api-cache.outputs.cache-hit != 'true'
+        run: npm run generate:api
+
+  typecheck:
+    name: TypeScript Check
+    runs-on: ubuntu-latest
+    needs: setup
+    defaults:
+      run:
+        working-directory: packages/mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
+        with:
+          working-directory: packages/mobile
+
+      - name: Restore API types cache
+        uses: actions/cache@v4
+        with:
+          path: packages/shared/src/api/schema.ts
+          key: ${{ needs.setup.outputs.api-cache-key }}
+
+      - name: TypeScript Check
+        run: npm run typecheck
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    needs: setup
+    defaults:
+      run:
+        working-directory: packages/mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
+        with:
+          working-directory: packages/mobile
+
+      - name: Restore API types cache
+        uses: actions/cache@v4
+        with:
+          path: packages/shared/src/api/schema.ts
+          key: ${{ needs.setup.outputs.api-cache-key }}
+
+      - name: Run ESLint
+        run: npm run lint
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: setup
+    defaults:
+      run:
+        working-directory: packages/mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
+        with:
+          working-directory: packages/mobile
+
+      - name: Restore API types cache
+        uses: actions/cache@v4
+        with:
+          path: packages/shared/src/api/schema.ts
+          key: ${{ needs.setup.outputs.api-cache-key }}
+
+      - name: Run Tests
+        run: npm test -- --passWithNoTests
