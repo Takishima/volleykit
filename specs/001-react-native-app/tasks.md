@@ -181,14 +181,14 @@ Based on plan.md monorepo structure:
 ### Biometric Authentication Flow
 
 - [x] T066 [US2] Create `packages/mobile/src/hooks/useBiometricAuth.ts` with biometric check and credential retrieval logic
-- [ ] T067 [US2] Update `packages/mobile/src/navigation/RootNavigator.tsx` to check for biometric re-auth on session expiry
+- [x] T067 [US2] Update `packages/mobile/src/navigation/RootNavigator.tsx` to check for biometric re-auth on session expiry
 - [x] T068 [US2] Create `packages/mobile/src/components/BiometricPrompt.tsx` for biometric authentication UI
-- [ ] T069 [US2] Add fallback to password entry after 3 failed biometric attempts in LoginScreen
+- [x] T069 [US2] Add fallback to password entry after 3 failed biometric attempts in LoginScreen
 
 ### Session Expiry Handling
 
 - [x] T070 [US2] Create `packages/mobile/src/hooks/useSessionMonitor.ts` to detect session expiration and trigger biometric re-auth
-- [ ] T071 [US2] Update `packages/mobile/src/providers/AppProviders.tsx` to include session monitoring
+- [x] T071 [US2] Update `packages/mobile/src/providers/AppProviders.tsx` to include session monitoring
 
 **Checkpoint**: User Story 2 complete - Biometric login works independently, <3s re-authentication
 
@@ -202,31 +202,31 @@ Based on plan.md monorepo structure:
 
 ### CalendarEventMapping Entity Implementation
 
-- [ ] T072 [P] [US3] Install expo-calendar in `packages/mobile/package.json`
-- [ ] T073 [US3] Create `packages/mobile/src/platform/calendar.ts` with calendar access functions (getCalendars, createEvent, updateEvent)
-- [ ] T074 [US3] Create `packages/mobile/src/types/calendar.ts` with CalendarEventMapping type definition
+- [x] T072 [P] [US3] Install expo-calendar in `packages/mobile/package.json`
+- [x] T073 [US3] Create `packages/mobile/src/platform/calendar.ts` with calendar access functions (getCalendars, createEvent, updateEvent)
+- [x] T074 [US3] Create `packages/mobile/src/types/calendar.ts` with CalendarEventMapping type definition
 
 ### Calendar Settings UI
 
-- [ ] T075 [US3] Create `packages/mobile/src/screens/CalendarSettingsScreen.tsx` with iCal vs direct event choice
-- [ ] T076 [US3] Update `packages/mobile/src/screens/SettingsScreen.tsx` to link to CalendarSettings
-- [ ] T077 [US3] Create `packages/mobile/src/components/CalendarPicker.tsx` for selecting target calendar
+- [x] T075 [US3] Create `packages/mobile/src/screens/CalendarSettingsScreen.tsx` with iCal vs direct event choice
+- [x] T076 [US3] Update `packages/mobile/src/screens/SettingsScreen.tsx` to link to CalendarSettings
+- [x] T077 [US3] Create `packages/mobile/src/components/CalendarPicker.tsx` for selecting target calendar
 
 ### iCal Subscription Flow
 
-- [ ] T078 [US3] Create `packages/mobile/src/utils/calendar.ts` with iCal URL generation and Linking.openURL for webcal://
-- [ ] T079 [US3] Add iCal subscription button in CalendarSettingsScreen with URL scheme launch
+- [x] T078 [US3] Create `packages/mobile/src/utils/calendar.ts` with iCal URL generation and Linking.openURL for webcal://
+- [x] T079 [US3] Add iCal subscription button in CalendarSettingsScreen with URL scheme launch
 
 ### Direct Calendar Events Flow
 
-- [ ] T080 [US3] Create `packages/mobile/src/hooks/useCalendarSync.ts` with assignment-to-event mapping and sync logic
-- [ ] T081 [US3] Create `packages/mobile/src/services/calendarSync.ts` with createEventsFromAssignments, updateEvents, deleteOrphanedEvents
-- [ ] T082 [US3] Store CalendarEventMapping in AsyncStorage via `packages/mobile/src/stores/calendarMappings.ts`
+- [x] T080 [US3] Create `packages/mobile/src/hooks/useCalendarSync.ts` with assignment-to-event mapping and sync logic
+- [x] T081 [US3] Create `packages/mobile/src/services/calendarSync.ts` with createEventsFromAssignments, updateEvents, deleteOrphanedEvents
+- [x] T082 [US3] Store CalendarEventMapping in AsyncStorage via `packages/mobile/src/stores/calendarMappings.ts`
 
 ### Deep Linking from Calendar
 
-- [ ] T083 [US3] Update deep link handling in RootNavigator to parse `volleykit://assignment/{id}` URLs
-- [ ] T084 [US3] Add deep link URL to calendar event notes in calendarSync.ts for back-navigation
+- [x] T083 [US3] Update deep link handling in RootNavigator to parse `volleykit://assignment/{id}` URLs
+- [x] T084 [US3] Add deep link URL to calendar event notes in calendarSync.ts for back-navigation
 
 **Checkpoint**: User Story 3 complete - Calendar integration works independently, both iCal and direct events
 

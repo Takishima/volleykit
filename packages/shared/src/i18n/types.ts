@@ -194,6 +194,19 @@ export interface Translations {
       synced: string;
       selectCalendar: string;
       permissionDenied: string;
+      mode: string;
+      modeIcal: string;
+      modeDirect: string;
+      icalDescription: string;
+      directDescription: string;
+      subscribeIcal: string;
+      syncNow: string;
+      lastSync: string;
+      syncSuccess: string;
+      syncError: string;
+      noCalendars: string;
+      enabled: string;
+      disabled: string;
     };
     departure: {
       title: string;

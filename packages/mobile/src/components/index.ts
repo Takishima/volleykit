@@ -3,3 +3,4 @@
  */
 
 export * from './BiometricPrompt';
+export * from './CalendarPicker';
