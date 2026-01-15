@@ -6,6 +6,15 @@
 
 import { Linking, Platform } from 'react-native';
 
+/** Estimated volleyball match duration in hours */
+const ESTIMATED_MATCH_DURATION_HOURS = 2;
+
+/** Reminder time: 1 day before event in minutes */
+const REMINDER_ONE_DAY_MINUTES = 60 * 24;
+
+/** Reminder time: 2 hours before event in minutes */
+const REMINDER_TWO_HOURS_MINUTES = 120;
+
 /**
  * Configuration for the iCal URL
  */
@@ -122,9 +131,7 @@ export function formatCalendarNotes(assignment: {
  */
 export function calculateMatchEndTime(startDate: Date): Date {
   const endDate = new Date(startDate);
-  // Volleyball matches typically last 2-3 hours
-  // Use 3 hours as a safe estimate
-  endDate.setHours(endDate.getHours() + 3);
+  endDate.setHours(endDate.getHours() + ESTIMATED_MATCH_DURATION_HOURS);
   return endDate;
 }
 
@@ -135,7 +142,7 @@ export function calculateMatchEndTime(startDate: Date): Date {
  */
 export function getDefaultReminders(): number[] {
   // Remind 1 day before and 2 hours before
-  return [60 * 24, 120];
+  return [REMINDER_ONE_DAY_MINUTES, REMINDER_TWO_HOURS_MINUTES];
 }
 
 /**

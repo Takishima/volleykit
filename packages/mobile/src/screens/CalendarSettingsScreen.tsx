@@ -32,6 +32,9 @@ type Props = RootStackScreenProps<'CalendarSettings'>;
 /** Storage key for calendar settings */
 const CALENDAR_SETTINGS_KEY = 'calendar_settings';
 
+/** Simulated sync delay in milliseconds (for development/demo) */
+const SIMULATED_SYNC_DELAY_MS = 1000;
+
 /** Default calendar settings */
 const DEFAULT_SETTINGS: CalendarSettings = {
   enabled: false,
@@ -180,7 +183,7 @@ export function CalendarSettingsScreen(_props: Props) {
     try {
       // TODO(#72): Implement actual sync with useCalendarSync hook
       // For now, just simulate a sync
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, SIMULATED_SYNC_DELAY_MS));
 
       await saveSettings({
         ...settings,

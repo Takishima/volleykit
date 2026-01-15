@@ -5,7 +5,7 @@
  */
 
 import type { Assignment } from '@volleykit/shared/api';
-import { calendar, type CalendarAdapter } from '../platform/calendar';
+import { calendar } from '../platform/calendar';
 import { calendarMappingsStore, type CalendarMappingsStore } from '../stores/calendarMappings';
 import type { CalendarEventMapping, CalendarEventData } from '../types/calendar';
 import {
