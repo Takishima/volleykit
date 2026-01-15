@@ -10,6 +10,7 @@ import { useAuth } from '@volleykit/shared/hooks';
 import { LoginScreen } from '../screens/LoginScreen';
 import { LoadingScreen } from '../screens/LoadingScreen';
 import { AssignmentDetailScreen } from '../screens/AssignmentDetailScreen';
+import { BiometricSettingsScreen } from '../screens/BiometricSettingsScreen';
 import { TabNavigator } from './TabNavigator';
 import type { RootStackParamList } from './types';
 
@@ -53,6 +54,11 @@ export function RootNavigator() {
               name="AssignmentDetail"
               component={AssignmentDetailScreen}
               options={{ headerShown: true, title: 'Assignment' }}
+            />
+            <Stack.Screen
+              name="BiometricSettings"
+              component={BiometricSettingsScreen}
+              options={{ headerShown: true, title: 'Biometric Login' }}
             />
           </>
         ) : (

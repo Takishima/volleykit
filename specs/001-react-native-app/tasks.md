@@ -169,25 +169,25 @@ Based on plan.md monorepo structure:
 
 ### SecureCredential Entity Implementation
 
-- [ ] T061 [P] [US2] Install expo-secure-store and expo-local-authentication in `packages/mobile/package.json`
-- [ ] T062 [US2] Create `packages/mobile/src/platform/secureStorage.ts` implementing SecureStorageAdapter with expo-secure-store
-- [ ] T063 [US2] Create `packages/mobile/src/platform/biometrics.ts` implementing BiometricAdapter with expo-local-authentication
+- [x] T061 [P] [US2] Install expo-secure-store and expo-local-authentication in `packages/mobile/package.json`
+- [x] T062 [US2] Create `packages/mobile/src/platform/secureStorage.ts` implementing SecureStorageAdapter with expo-secure-store
+- [x] T063 [US2] Create `packages/mobile/src/platform/biometrics.ts` implementing BiometricAdapter with expo-local-authentication
 
 ### Biometric Settings UI
 
-- [ ] T064 [US2] Create `packages/mobile/src/screens/BiometricSettingsScreen.tsx` with enable/disable toggle
-- [ ] T065 [US2] Update `packages/mobile/src/screens/SettingsScreen.tsx` to link to BiometricSettings
+- [x] T064 [US2] Create `packages/mobile/src/screens/BiometricSettingsScreen.tsx` with enable/disable toggle
+- [x] T065 [US2] Update `packages/mobile/src/screens/SettingsScreen.tsx` to link to BiometricSettings
 
 ### Biometric Authentication Flow
 
-- [ ] T066 [US2] Create `packages/mobile/src/hooks/useBiometricAuth.ts` with biometric check and credential retrieval logic
+- [x] T066 [US2] Create `packages/mobile/src/hooks/useBiometricAuth.ts` with biometric check and credential retrieval logic
 - [ ] T067 [US2] Update `packages/mobile/src/navigation/RootNavigator.tsx` to check for biometric re-auth on session expiry
-- [ ] T068 [US2] Create `packages/mobile/src/components/BiometricPrompt.tsx` for biometric authentication UI
+- [x] T068 [US2] Create `packages/mobile/src/components/BiometricPrompt.tsx` for biometric authentication UI
 - [ ] T069 [US2] Add fallback to password entry after 3 failed biometric attempts in LoginScreen
 
 ### Session Expiry Handling
 
-- [ ] T070 [US2] Create `packages/mobile/src/hooks/useSessionMonitor.ts` to detect session expiration and trigger biometric re-auth
+- [x] T070 [US2] Create `packages/mobile/src/hooks/useSessionMonitor.ts` to detect session expiration and trigger biometric re-auth
 - [ ] T071 [US2] Update `packages/mobile/src/providers/AppProviders.tsx` to include session monitoring
 
 **Checkpoint**: User Story 2 complete - Biometric login works independently, <3s re-authentication

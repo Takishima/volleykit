@@ -53,7 +53,7 @@ function SettingRow({
   );
 }
 
-export function SettingsScreen({ navigation: _navigation }: Props) {
+export function SettingsScreen({ navigation }: Props) {
   const { t } = useTranslation();
   const language = useSettingsStore((state) => state.language);
 
@@ -89,8 +89,8 @@ export function SettingsScreen({ navigation: _navigation }: Props) {
           <SettingRow
             icon={<MaterialCommunityIcons name="fingerprint" size={SETTINGS_ICON_SIZE} color={COLORS.gray500} />}
             title={t('settings.biometric.title')}
-            onPress={showComingSoon}
-            accessibilityHint={t('settings.comingSoon')}
+            onPress={() => navigation.navigate('BiometricSettings')}
+            accessibilityHint={t('settings.biometric.description')}
           />
         </View>
       </View>
