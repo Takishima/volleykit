@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.7.0
+
+### Minor Changes
+
+- [#756](https://github.com/Takishima/volleykit/pull/756) [`37c1ca4`](https://github.com/Takishima/volleykit/commit/37c1ca41375377fbb49ef52c86d10e23e1d680f3) Thanks [@Takishima](https://github.com/Takishima)! - Add React Native mobile app foundation with shared code architecture
+
+  **Phase 1: Project Setup**
+
+  - Initialize monorepo workspace structure with packages/shared and packages/mobile
+  - Configure npm workspaces and Expo project with TypeScript 5.9
+  - Add NativeWind (Tailwind CSS for React Native)
+
+  **Phase 2: Shared Code Architecture**
+
+  - Extract platform-agnostic API client, validation schemas, and query keys to @volleykit/shared
+  - Extract TanStack Query hooks (useAssignments, useCompensations, useExchanges)
+  - Extract Zustand stores (auth, settings) with platform adapter interfaces
+  - Extract i18n translations and date/error helpers
+  - Migrate web-app to import from @volleykit/shared (~463 lines removed)
+
+  This enables 70%+ code sharing between the PWA and upcoming native mobile app.
+
+### Patch Changes
+
+- Updated dependencies [[`13845d8`](https://github.com/Takishima/volleykit/commit/13845d859f2207f768e81bfbfaae1dfa653d6ba4)]:
+  - @volleykit/shared@1.0.1
+
 ## 1.6.0
 
 ### Minor Changes
