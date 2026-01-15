@@ -2,10 +2,12 @@
  * Settings screen
  */
 
+import { useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { useSettingsStore } from '@volleykit/shared/stores';
+import { getAppVersion } from '../utils/version';
 import { useTranslation, LANGUAGE_NAMES } from '@volleykit/shared/i18n';
 import type { MainTabScreenProps } from '../navigation/types';
 import { COLORS, SETTINGS_ICON_SIZE, SMALL_ICON_SIZE } from '../constants';
@@ -56,6 +58,7 @@ function SettingRow({
 export function SettingsScreen({ navigation }: Props) {
   const { t } = useTranslation();
   const language = useSettingsStore((state) => state.language);
+  const appVersion = useMemo(() => getAppVersion(), []);
 
   const showComingSoon = () => {
     Alert.alert(t('settings.comingSoon'), undefined, [{ text: t('common.close') }]);
@@ -124,7 +127,7 @@ export function SettingsScreen({ navigation }: Props) {
           <SettingRow
             icon={<Feather name="info" size={SETTINGS_ICON_SIZE} color={COLORS.gray500} />}
             title={t('settings.version')}
-            value="1.0.0"
+            value={appVersion}
           />
         </View>
       </View>
