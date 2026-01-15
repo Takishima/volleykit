@@ -2,17 +2,25 @@
  * Root navigator with auth flow handling
  */
 
+import { useCallback } from 'react';
 import { NavigationContainer, type LinkingOptions } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { useAuth } from '@volleykit/shared/hooks';
+import { useTranslation } from '@volleykit/shared/i18n';
 
 import { LoginScreen } from '../screens/LoginScreen';
 import { LoadingScreen } from '../screens/LoadingScreen';
 import { AssignmentDetailScreen } from '../screens/AssignmentDetailScreen';
 import { BiometricSettingsScreen } from '../screens/BiometricSettingsScreen';
 import { TabNavigator } from './TabNavigator';
+import { BiometricPrompt } from '../components/BiometricPrompt';
+import { useSessionMonitor } from '../hooks/useSessionMonitor';
+import { useBiometricAuth } from '../hooks/useBiometricAuth';
 import type { RootStackParamList } from './types';
+
+/** Maximum biometric attempts before fallback */
+const MAX_BIOMETRIC_ATTEMPTS = 3;
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -40,7 +48,50 @@ const linking: LinkingOptions<RootStackParamList> = {
 };
 
 export function RootNavigator() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, logout } = useAuth();
+  const { t } = useTranslation();
+
+  // Biometric authentication state
+  const {
+    biometricType,
+    biometricTypeName,
+    failedAttempts,
+    isAuthenticating,
+    authenticate,
+    resetAttempts,
+  } = useBiometricAuth();
+
+  // Session monitoring state
+  const {
+    showBiometricPrompt,
+    handleBiometricSuccess,
+    dismissBiometricPrompt,
+  } = useSessionMonitor();
+
+  // Handle biometric authentication attempt
+  const handleBiometricAuthenticate = useCallback(async () => {
+    const result = await authenticate(t('auth.biometricPrompt'));
+
+    if (result.success && result.credentials) {
+      // Biometric verified - credentials retrieved successfully
+      // TODO(#47): Implement actual re-login with credentials when auth API is ready
+      // For now, just mark the session as refreshed
+      handleBiometricSuccess();
+      resetAttempts();
+    }
+  }, [authenticate, handleBiometricSuccess, resetAttempts, t]);
+
+  // Handle fallback to password entry (logs out to show login screen)
+  const handleFallbackToPassword = useCallback(() => {
+    dismissBiometricPrompt();
+    resetAttempts();
+    logout();
+  }, [dismissBiometricPrompt, resetAttempts, logout]);
+
+  // Handle cancel (just dismiss the prompt)
+  const handleCancel = useCallback(() => {
+    dismissBiometricPrompt();
+  }, [dismissBiometricPrompt]);
 
   return (
     <NavigationContainer linking={linking}>
@@ -65,6 +116,19 @@ export function RootNavigator() {
           <Stack.Screen name="Login" component={LoginScreen} />
         )}
       </Stack.Navigator>
+
+      {/* Biometric re-authentication prompt */}
+      <BiometricPrompt
+        visible={showBiometricPrompt}
+        biometricType={biometricType}
+        biometricTypeName={biometricTypeName}
+        failedAttempts={failedAttempts}
+        maxAttempts={MAX_BIOMETRIC_ATTEMPTS}
+        isAuthenticating={isAuthenticating}
+        onAuthenticate={handleBiometricAuthenticate}
+        onFallbackToPassword={handleFallbackToPassword}
+        onCancel={handleCancel}
+      />
     </NavigationContainer>
   );
 }
