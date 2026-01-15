@@ -360,31 +360,31 @@ Based on plan.md monorepo structure:
 
 ### CachedData Entity Implementation
 
-- [ ] T137 [P] [US6] Create `packages/mobile/src/types/cache.ts` with CachedData type definition
-- [ ] T138 [US6] Create `packages/mobile/src/services/cacheService.ts` with save/load/clear cache functions using AsyncStorage
+- [x] T137 [P] [US6] Create `packages/mobile/src/types/cache.ts` with CachedData type definition
+- [x] T138 [US6] Create `packages/mobile/src/services/cacheService.ts` with save/load/clear cache functions using AsyncStorage
 
 ### Offline Detection
 
-- [ ] T139 [US6] Install @react-native-community/netinfo in `packages/mobile/package.json`
-- [ ] T140 [US6] Create `packages/mobile/src/hooks/useNetworkStatus.ts` with online/offline state detection
-- [ ] T141 [US6] Create `packages/mobile/src/providers/NetworkProvider.tsx` with network context
+- [x] T139 [US6] Install @react-native-community/netinfo in `packages/mobile/package.json`
+- [x] T140 [US6] Create `packages/mobile/src/hooks/useNetworkStatus.ts` with online/offline state detection
+- [x] T141 [US6] Create `packages/mobile/src/providers/NetworkProvider.tsx` with network context
 
 ### Cache Integration with TanStack Query
 
-- [ ] T142 [US6] Create `packages/mobile/src/services/queryPersistence.ts` with TanStack Query persistence adapter
-- [ ] T143 [US6] Update `packages/mobile/src/providers/AppProviders.tsx` to configure QueryClient with cache persistence
-- [ ] T144 [US6] Configure staleTime and cacheTime in query hooks for 30-day cache validity
+- [x] T142 [US6] Create `packages/mobile/src/services/queryPersistence.ts` with TanStack Query persistence adapter
+- [x] T143 [US6] Update `packages/mobile/src/providers/AppProviders.tsx` to configure QueryClient with cache persistence
+- [x] T144 [US6] Configure staleTime and cacheTime in query hooks for 30-day cache validity
 
 ### Offline UI Feedback
 
-- [ ] T145 [US6] Create `packages/mobile/src/components/OfflineBanner.tsx` showing offline status
-- [ ] T146 [US6] Create `packages/mobile/src/components/LastUpdatedIndicator.tsx` showing cache freshness
-- [ ] T147 [US6] Update screen components to show LastUpdatedIndicator when data is from cache
+- [x] T145 [US6] Create `packages/mobile/src/components/OfflineBanner.tsx` showing offline status
+- [x] T146 [US6] Create `packages/mobile/src/components/LastUpdatedIndicator.tsx` showing cache freshness
+- [x] T147 [US6] Update screen components to show LastUpdatedIndicator when data is from cache
 
 ### Offline Action Prevention
 
-- [ ] T148 [US6] Create `packages/mobile/src/components/OfflineActionBlocker.tsx` modal for offline action attempts
-- [ ] T149 [US6] Update action buttons (accept/decline assignment) to check network status before execution
+- [x] T148 [US6] Create `packages/mobile/src/components/OfflineActionBlocker.tsx` modal for offline action attempts
+- [x] T149 [US6] Update action buttons (accept/decline assignment) to check network status before execution
 
 **Checkpoint**: User Story 6 complete - Offline viewing works independently with clear freshness indicators
 
