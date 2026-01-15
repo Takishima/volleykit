@@ -4,11 +4,12 @@
  * TODO(#US1): Connect to API client when implemented
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { View, Text, FlatList, RefreshControl } from 'react-native';
 
 import { useTranslation } from '@volleykit/shared/i18n';
 import type { MainTabScreenProps } from '../navigation/types';
+import { PLACEHOLDER_REFRESH_DELAY_MS } from '../constants';
 
 type Props = MainTabScreenProps<'Compensations'>;
 
@@ -23,11 +24,21 @@ export function CompensationsScreen(_props: Props) {
   const { t } = useTranslation();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const compensations = PLACEHOLDER_COMPENSATIONS;
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup timeout on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   const onRefresh = useCallback(() => {
     setIsRefreshing(true);
-    // TODO(#US1): Implement actual refresh when API client is ready
-    setTimeout(() => setIsRefreshing(false), 1000);
+    // TODO(#US1): Replace with TanStack Query refetch when API client is ready
+    timeoutRef.current = setTimeout(() => setIsRefreshing(false), PLACEHOLDER_REFRESH_DELAY_MS);
   }, []);
 
   if (compensations.length === 0) {

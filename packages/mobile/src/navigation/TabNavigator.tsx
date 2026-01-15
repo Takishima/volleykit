@@ -10,17 +10,16 @@ import { CompensationsScreen } from '../screens/CompensationsScreen';
 import { ExchangesScreen } from '../screens/ExchangesScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import type { MainTabParamList } from './types';
+import { COLORS, TAB_ICON_SIZE } from '../constants';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
-
-const ICON_SIZE = 24;
 
 export function TabNavigator() {
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarActiveTintColor: '#0ea5e9',
-        tabBarInactiveTintColor: '#64748b',
+        tabBarActiveTintColor: COLORS.primary,
+        tabBarInactiveTintColor: COLORS.gray500,
         headerShown: true,
       }}
     >
@@ -29,7 +28,7 @@ export function TabNavigator() {
         component={AssignmentsScreen}
         options={{
           title: 'Assignments',
-          tabBarIcon: ({ color }) => <Feather name="calendar" size={ICON_SIZE} color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="calendar" size={TAB_ICON_SIZE} color={color} />,
         }}
       />
       <Tab.Screen
@@ -37,7 +36,7 @@ export function TabNavigator() {
         component={CompensationsScreen}
         options={{
           title: 'Compensations',
-          tabBarIcon: ({ color }) => <Feather name="dollar-sign" size={ICON_SIZE} color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="dollar-sign" size={TAB_ICON_SIZE} color={color} />,
         }}
       />
       <Tab.Screen
@@ -45,7 +44,7 @@ export function TabNavigator() {
         component={ExchangesScreen}
         options={{
           title: 'Exchanges',
-          tabBarIcon: ({ color }) => <Feather name="repeat" size={ICON_SIZE} color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="repeat" size={TAB_ICON_SIZE} color={color} />,
         }}
       />
       <Tab.Screen
@@ -53,7 +52,7 @@ export function TabNavigator() {
         component={SettingsScreen}
         options={{
           title: 'Settings',
-          tabBarIcon: ({ color }) => <Feather name="settings" size={ICON_SIZE} color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="settings" size={TAB_ICON_SIZE} color={color} />,
         }}
       />
     </Tab.Navigator>
