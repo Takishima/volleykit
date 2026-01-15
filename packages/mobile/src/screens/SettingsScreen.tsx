@@ -103,15 +103,15 @@ export function SettingsScreen({ navigation }: Props) {
           <SettingRow
             icon={<Feather name="calendar" size={SETTINGS_ICON_SIZE} color={COLORS.gray500} />}
             title={t('settings.calendarIntegration')}
-            onPress={showComingSoon}
-            accessibilityHint={t('settings.comingSoon')}
+            onPress={() => navigation.navigate('CalendarSettings')}
+            accessibilityHint={t('settings.calendar.description')}
           />
           <View className="h-px bg-gray-200 ml-14" />
           <SettingRow
             icon={<Feather name="clock" size={SETTINGS_ICON_SIZE} color={COLORS.gray500} />}
             title={t('settings.departure.title')}
-            onPress={showComingSoon}
-            accessibilityHint={t('settings.comingSoon')}
+            onPress={() => navigation.navigate('DepartureReminderSettings')}
+            accessibilityHint={t('settings.departure.description')}
           />
         </View>
       </View>

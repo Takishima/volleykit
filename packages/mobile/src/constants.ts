@@ -25,9 +25,12 @@ export const COLORS = {
 
   // Status colors
   green100: '#dcfce7',
+  green500: '#22c55e',
   green700: '#15803d',
   blue100: '#dbeafe',
   blue700: '#1d4ed8',
+  amber500: '#f59e0b',
+  red500: '#ef4444',
 } as const;
 
 /** Icon size for navigation tabs */

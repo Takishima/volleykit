@@ -194,6 +194,19 @@ export interface Translations {
       synced: string;
       selectCalendar: string;
       permissionDenied: string;
+      mode: string;
+      modeIcal: string;
+      modeDirect: string;
+      icalDescription: string;
+      directDescription: string;
+      subscribeIcal: string;
+      syncNow: string;
+      lastSync: string;
+      syncSuccess: string;
+      syncError: string;
+      noCalendars: string;
+      enabled: string;
+      disabled: string;
     };
     departure: {
       title: string;
@@ -237,9 +250,14 @@ export interface Translations {
     notification: {
       title: string;
       body: string;
+      withTransit: string;
       noRoute: string;
       delayed: string;
       cancelled: string;
+      departureTime: string;
+      leaveIn: string;
+      leaveNow: string;
+      clustered: string;
     };
     widget: {
       title: string;

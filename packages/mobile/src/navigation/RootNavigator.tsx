@@ -1,5 +1,7 @@
 /**
  * Root navigator with auth flow handling
+ *
+ * Handles authentication flow and biometric re-authentication on session expiry.
  */
 
 import { useCallback } from 'react';
@@ -13,9 +15,11 @@ import { LoginScreen } from '../screens/LoginScreen';
 import { LoadingScreen } from '../screens/LoadingScreen';
 import { AssignmentDetailScreen } from '../screens/AssignmentDetailScreen';
 import { BiometricSettingsScreen } from '../screens/BiometricSettingsScreen';
+import { CalendarSettingsScreen } from '../screens/CalendarSettingsScreen';
+import { DepartureReminderSettingsScreen } from '../screens/DepartureReminderSettingsScreen';
 import { TabNavigator } from './TabNavigator';
 import { BiometricPrompt } from '../components/BiometricPrompt';
-import { useSessionMonitor } from '../hooks/useSessionMonitor';
+import { useSessionMonitorContext } from '../contexts';
 import { useBiometricAuth } from '../hooks/useBiometricAuth';
 import { MAX_BIOMETRIC_ATTEMPTS } from '../constants';
 import type { RootStackParamList } from './types';
@@ -59,12 +63,12 @@ export function RootNavigator() {
     resetAttempts,
   } = useBiometricAuth();
 
-  // Session monitoring state
+  // Session monitoring from context (integrates with QueryClient error handling)
   const {
     showBiometricPrompt,
     handleBiometricSuccess,
     dismissBiometricPrompt,
-  } = useSessionMonitor();
+  } = useSessionMonitorContext();
 
   // Handle biometric authentication attempt
   const handleBiometricAuthenticate = useCallback(async () => {
@@ -108,6 +112,16 @@ export function RootNavigator() {
               name="BiometricSettings"
               component={BiometricSettingsScreen}
               options={{ headerShown: true, title: 'Biometric Login' }}
+            />
+            <Stack.Screen
+              name="CalendarSettings"
+              component={CalendarSettingsScreen}
+              options={{ headerShown: true, title: 'Calendar Sync' }}
+            />
+            <Stack.Screen
+              name="DepartureReminderSettings"
+              component={DepartureReminderSettingsScreen}
+              options={{ headerShown: true, title: 'Smart Departure' }}
             />
           </>
         ) : (

@@ -181,14 +181,14 @@ Based on plan.md monorepo structure:
 ### Biometric Authentication Flow
 
 - [x] T066 [US2] Create `packages/mobile/src/hooks/useBiometricAuth.ts` with biometric check and credential retrieval logic
-- [ ] T067 [US2] Update `packages/mobile/src/navigation/RootNavigator.tsx` to check for biometric re-auth on session expiry
+- [x] T067 [US2] Update `packages/mobile/src/navigation/RootNavigator.tsx` to check for biometric re-auth on session expiry
 - [x] T068 [US2] Create `packages/mobile/src/components/BiometricPrompt.tsx` for biometric authentication UI
-- [ ] T069 [US2] Add fallback to password entry after 3 failed biometric attempts in LoginScreen
+- [x] T069 [US2] Add fallback to password entry after 3 failed biometric attempts in LoginScreen
 
 ### Session Expiry Handling
 
 - [x] T070 [US2] Create `packages/mobile/src/hooks/useSessionMonitor.ts` to detect session expiration and trigger biometric re-auth
-- [ ] T071 [US2] Update `packages/mobile/src/providers/AppProviders.tsx` to include session monitoring
+- [x] T071 [US2] Update `packages/mobile/src/providers/AppProviders.tsx` to include session monitoring
 
 **Checkpoint**: User Story 2 complete - Biometric login works independently, <3s re-authentication
 
@@ -202,31 +202,31 @@ Based on plan.md monorepo structure:
 
 ### CalendarEventMapping Entity Implementation
 
-- [ ] T072 [P] [US3] Install expo-calendar in `packages/mobile/package.json`
-- [ ] T073 [US3] Create `packages/mobile/src/platform/calendar.ts` with calendar access functions (getCalendars, createEvent, updateEvent)
-- [ ] T074 [US3] Create `packages/mobile/src/types/calendar.ts` with CalendarEventMapping type definition
+- [x] T072 [P] [US3] Install expo-calendar in `packages/mobile/package.json`
+- [x] T073 [US3] Create `packages/mobile/src/platform/calendar.ts` with calendar access functions (getCalendars, createEvent, updateEvent)
+- [x] T074 [US3] Create `packages/mobile/src/types/calendar.ts` with CalendarEventMapping type definition
 
 ### Calendar Settings UI
 
-- [ ] T075 [US3] Create `packages/mobile/src/screens/CalendarSettingsScreen.tsx` with iCal vs direct event choice
-- [ ] T076 [US3] Update `packages/mobile/src/screens/SettingsScreen.tsx` to link to CalendarSettings
-- [ ] T077 [US3] Create `packages/mobile/src/components/CalendarPicker.tsx` for selecting target calendar
+- [x] T075 [US3] Create `packages/mobile/src/screens/CalendarSettingsScreen.tsx` with iCal vs direct event choice
+- [x] T076 [US3] Update `packages/mobile/src/screens/SettingsScreen.tsx` to link to CalendarSettings
+- [x] T077 [US3] Create `packages/mobile/src/components/CalendarPicker.tsx` for selecting target calendar
 
 ### iCal Subscription Flow
 
-- [ ] T078 [US3] Create `packages/mobile/src/utils/calendar.ts` with iCal URL generation and Linking.openURL for webcal://
-- [ ] T079 [US3] Add iCal subscription button in CalendarSettingsScreen with URL scheme launch
+- [x] T078 [US3] Create `packages/mobile/src/utils/calendar.ts` with iCal URL generation and Linking.openURL for webcal://
+- [x] T079 [US3] Add iCal subscription button in CalendarSettingsScreen with URL scheme launch
 
 ### Direct Calendar Events Flow
 
-- [ ] T080 [US3] Create `packages/mobile/src/hooks/useCalendarSync.ts` with assignment-to-event mapping and sync logic
-- [ ] T081 [US3] Create `packages/mobile/src/services/calendarSync.ts` with createEventsFromAssignments, updateEvents, deleteOrphanedEvents
-- [ ] T082 [US3] Store CalendarEventMapping in AsyncStorage via `packages/mobile/src/stores/calendarMappings.ts`
+- [x] T080 [US3] Create `packages/mobile/src/hooks/useCalendarSync.ts` with assignment-to-event mapping and sync logic
+- [x] T081 [US3] Create `packages/mobile/src/services/calendarSync.ts` with createEventsFromAssignments, updateEvents, deleteOrphanedEvents
+- [x] T082 [US3] Store CalendarEventMapping in AsyncStorage via `packages/mobile/src/stores/calendarMappings.ts`
 
 ### Deep Linking from Calendar
 
-- [ ] T083 [US3] Update deep link handling in RootNavigator to parse `volleykit://assignment/{id}` URLs
-- [ ] T084 [US3] Add deep link URL to calendar event notes in calendarSync.ts for back-navigation
+- [x] T083 [US3] Update deep link handling in RootNavigator to parse `volleykit://assignment/{id}` URLs
+- [x] T084 [US3] Add deep link URL to calendar event notes in calendarSync.ts for back-navigation
 
 **Checkpoint**: User Story 3 complete - Calendar integration works independently, both iCal and direct events
 
@@ -240,72 +240,72 @@ Based on plan.md monorepo structure:
 
 ### Platform Adapters for Location & Notifications
 
-- [ ] T085 [P] [US5] Install expo-location, expo-notifications, expo-task-manager in `packages/mobile/package.json`
-- [ ] T086 [US5] Create `packages/mobile/src/platform/location.ts` implementing LocationAdapter with expo-location (requestPermissions, getCurrentLocation, startBackgroundTracking, stopBackgroundTracking)
-- [ ] T087 [US5] Create `packages/mobile/src/platform/notifications.ts` implementing NotificationAdapter with expo-notifications (requestPermissions, scheduleNotification, cancelNotification)
-- [ ] T088 [US5] Update `packages/mobile/src/platform/index.ts` to export location and notification adapters
+- [x] T085 [P] [US5] Install expo-location, expo-notifications, expo-task-manager in `packages/mobile/package.json`
+- [x] T086 [US5] Create `packages/mobile/src/platform/location.ts` implementing LocationAdapter with expo-location (requestPermissions, getCurrentLocation, startBackgroundTracking, stopBackgroundTracking)
+- [x] T087 [US5] Create `packages/mobile/src/platform/notifications.ts` implementing NotificationAdapter with expo-notifications (requestPermissions, scheduleNotification, cancelNotification)
+- [x] T088 [US5] Update `packages/mobile/src/platform/index.ts` to export location and notification adapters
 
 ### DepartureReminder Entity & Settings
 
-- [ ] T089 [P] [US5] Create `packages/mobile/src/types/departureReminder.ts` with DepartureReminder, StopInfo, TripLeg, VenueCluster types
-- [ ] T090 [US5] Create `packages/mobile/src/stores/departureReminderSettings.ts` with Zustand store (enabled, bufferMinutes: 5|10|15|20|30)
-- [ ] T091 [US5] Create `packages/mobile/src/stores/departureReminders.ts` with active reminders state (transient, cleared after assignment)
+- [x] T089 [P] [US5] Create `packages/mobile/src/types/departureReminder.ts` with DepartureReminder, StopInfo, TripLeg, VenueCluster types
+- [x] T090 [US5] Create `packages/mobile/src/stores/departureReminderSettings.ts` with Zustand store (enabled, bufferMinutes: 5|10|15|20|30)
+- [x] T091 [US5] Create `packages/mobile/src/stores/departureReminders.ts` with active reminders state (transient, cleared after assignment)
 
 ### OJP SDK Integration
 
-- [ ] T092 [US5] Verify `packages/shared/services/transport/` OJP client is platform-agnostic (uses fetch)
-- [ ] T093 [US5] Create `packages/mobile/src/services/departure-reminder/route-calculator.ts` wrapping shared OJP client for trip calculation
-- [ ] T094 [US5] Add route caching in route-calculator.ts to reduce OJP API calls (cache key: origin+destination+time)
+- [x] T092 [US5] Verify `packages/shared/services/transport/` OJP client is platform-agnostic (uses fetch)
+- [x] T093 [US5] Create `packages/mobile/src/services/departure-reminder/route-calculator.ts` wrapping shared OJP client for trip calculation
+- [x] T094 [US5] Add route caching in route-calculator.ts to reduce OJP API calls (cache key: origin+destination+time)
 
 ### Venue Proximity Detection
 
-- [ ] T095 [US5] Create `packages/shared/utils/geo.ts` with haversineDistance function (returns meters between two coordinates)
-- [ ] T096 [US5] Create `packages/mobile/src/services/departure-reminder/venue-proximity.ts` with isNearVenue (500m threshold) and clusterNearbyVenues functions
-- [ ] T097 [US5] Add unit tests for haversineDistance in `packages/shared/utils/geo.test.ts`
+- [x] T095 [US5] Create `packages/shared/utils/geo.ts` with haversineDistance function (returns meters between two coordinates)
+- [x] T096 [US5] Create `packages/mobile/src/services/departure-reminder/venue-proximity.ts` with isNearVenue (500m threshold) and clusterNearbyVenues functions
+- [x] T097 [US5] Add unit tests for haversineDistance in `packages/shared/utils/geo.test.ts`
 
 ### Background Task Implementation
 
-- [ ] T098 [US5] Create `packages/mobile/src/services/departure-reminder/background-task.ts` with hourly location check task using expo-task-manager
-- [ ] T099 [US5] Implement task logic: check assignments within 6 hours, get location, check venue proximity, calculate route if needed
-- [ ] T100 [US5] Configure task to only run when departureReminderEnabled is true and upcoming assignments exist
-- [ ] T101 [US5] Add battery optimization: use Accuracy.Balanced, stop tracking after assignment time
+- [x] T098 [US5] Create `packages/mobile/src/services/departure-reminder/background-task.ts` with hourly location check task using expo-task-manager
+- [x] T099 [US5] Implement task logic: check assignments within 6 hours, get location, check venue proximity, calculate route if needed
+- [x] T100 [US5] Configure task to only run when departureReminderEnabled is true and upcoming assignments exist
+- [x] T101 [US5] Add battery optimization: use Accuracy.Balanced, stop tracking after assignment time
 
 ### Notification Scheduling
 
-- [ ] T102 [US5] Create `packages/mobile/src/services/departure-reminder/notification-scheduler.ts` with scheduleReminderNotification function
-- [ ] T103 [US5] Create notification content template with i18n support: "[emoji] Leave for [Venue] in X min / Take [Line] from [Stop] (direction: [Terminus]) / Departure: [Time]"
-- [ ] T104 [US5] Add notification translations to `packages/shared/i18n/locales/` for all 4 languages (de, en, fr, it)
-- [ ] T105 [US5] Configure notification deep link to open assignment detail: `volleykit://assignment/{id}`
+- [x] T102 [US5] Create `packages/mobile/src/services/departure-reminder/notification-scheduler.ts` with scheduleReminderNotification function
+- [x] T103 [US5] Create notification content template with i18n support: "[emoji] Leave for [Venue] in X min / Take [Line] from [Stop] (direction: [Terminus]) / Departure: [Time]"
+- [x] T104 [US5] Add notification translations to `packages/shared/i18n/locales/` for all 4 languages (de, en, fr, it)
+- [x] T105 [US5] Configure notification deep link to open assignment detail: `volleykit://assignment/{id}`
 
 ### Multi-Assignment Handling
 
-- [ ] T106 [US5] Implement venue clustering in background-task.ts: group assignments with venues ≤500m apart
-- [ ] T107 [US5] Create grouped notification content for venue clusters (list all assignment times/venues)
-- [ ] T108 [US5] Suppress notifications when user already within 500m of venue (per FR-024)
+- [x] T106 [US5] Implement venue clustering in background-task.ts: group assignments with venues ≤500m apart
+- [x] T107 [US5] Create grouped notification content for venue clusters (list all assignment times/venues)
+- [x] T108 [US5] Suppress notifications when user already within 500m of venue (per FR-024)
 
 ### Fallback Behavior
 
-- [ ] T109 [US5] Implement location unavailable fallback: simple time-based reminder without transit details
-- [ ] T110 [US5] Implement no-route-found fallback: suggest leaving with buffer time for alternative transport
-- [ ] T111 [US5] Add error handling for OJP API failures with graceful degradation
+- [x] T109 [US5] Implement location unavailable fallback: simple time-based reminder without transit details
+- [x] T110 [US5] Implement no-route-found fallback: suggest leaving with buffer time for alternative transport
+- [x] T111 [US5] Add error handling for OJP API failures with graceful degradation
 
 ### Settings UI
 
-- [ ] T112 [US5] Create `packages/mobile/src/screens/DepartureReminderSettingsScreen.tsx` with enable toggle and buffer time picker (5/10/15/20/30 min)
-- [ ] T113 [US5] Update `packages/mobile/src/screens/SettingsScreen.tsx` to link to DepartureReminderSettings
-- [ ] T114 [US5] Add location permission request flow in DepartureReminderSettingsScreen when enabling
+- [x] T112 [US5] Create `packages/mobile/src/screens/DepartureReminderSettingsScreen.tsx` with enable toggle and buffer time picker (5/10/15/20/30 min)
+- [x] T113 [US5] Update `packages/mobile/src/screens/SettingsScreen.tsx` to link to DepartureReminderSettings
+- [x] T114 [US5] Add location permission request flow in DepartureReminderSettingsScreen when enabling
 
 ### Data Lifecycle & Privacy
 
-- [ ] T115 [US5] Create `packages/mobile/src/services/departure-reminder/cleanup.ts` to delete DepartureReminder data after assignment completion
-- [ ] T116 [US5] Register cleanup on app foreground and after assignment time passes
-- [ ] T117 [US5] Verify no location history is retained (per FR-026a)
+- [x] T115 [US5] Create `packages/mobile/src/services/departure-reminder/cleanup.ts` to delete DepartureReminder data after assignment completion
+- [x] T116 [US5] Register cleanup on app foreground and after assignment time passes
+- [x] T117 [US5] Verify no location history is retained (per FR-026a)
 
 ### App Configuration
 
-- [ ] T118 [US5] Add iOS location permissions to `packages/mobile/app.json` (NSLocationWhenInUseUsageDescription, NSLocationAlwaysUsageDescription)
-- [ ] T119 [US5] Add Android location permissions to `packages/mobile/app.json` (ACCESS_FINE_LOCATION, ACCESS_BACKGROUND_LOCATION)
-- [ ] T120 [US5] Add notification permissions configuration for iOS and Android 13+
+- [x] T118 [US5] Add iOS location permissions to `packages/mobile/app.json` (NSLocationWhenInUseUsageDescription, NSLocationAlwaysUsageDescription)
+- [x] T119 [US5] Add Android location permissions to `packages/mobile/app.json` (ACCESS_FINE_LOCATION, ACCESS_BACKGROUND_LOCATION)
+- [x] T120 [US5] Add notification permissions configuration for iOS and Android 13+
 
 **Checkpoint**: User Story 5 complete - Smart departure reminders work independently with location tracking, OJP routing, and local notifications
 
@@ -319,34 +319,34 @@ Based on plan.md monorepo structure:
 
 ### WidgetData Entity Implementation
 
-- [ ] T121 [P] [US4] Install react-native-widgetkit in `packages/mobile/package.json`
-- [ ] T122 [US4] Create `packages/mobile/src/types/widget.ts` with WidgetData and WidgetAssignment types
-- [ ] T123 [US4] Create `packages/mobile/src/platform/widgets.ts` with shared widget data functions
+- [x] T121 [P] [US4] Install react-native-widgetkit in `packages/mobile/package.json`
+- [x] T122 [US4] Create `packages/mobile/src/types/widget.ts` with WidgetData and WidgetAssignment types
+- [x] T123 [US4] Create `packages/mobile/src/platform/widgets.ts` with shared widget data functions
 
 ### iOS Widget Extension
 
-- [ ] T124 [US4] Create iOS widget extension in `packages/mobile/ios/VolleyKitWidget/` with Swift UI widget
-- [ ] T125 [US4] Configure App Group for data sharing between main app and widget in Xcode
-- [ ] T126 [US4] Create `packages/mobile/ios/VolleyKitWidget/VolleyKitWidget.swift` with widget view (next 3 assignments, last updated)
-- [ ] T127 [US4] Configure widget sizes (small, medium) in widget extension
+- [x] T124 [US4] Create iOS widget extension in `packages/mobile/ios/VolleyKitWidget/` with Swift UI widget
+- [x] T125 [US4] Configure App Group for data sharing between main app and widget in Xcode
+- [x] T126 [US4] Create `packages/mobile/ios/VolleyKitWidget/VolleyKitWidget.swift` with widget view (next 3 assignments, last updated)
+- [x] T127 [US4] Configure widget sizes (small, medium) in widget extension
 
 ### Android Widget
 
-- [ ] T128 [US4] Install react-native-android-widget in `packages/mobile/package.json`
-- [ ] T129 [US4] Create Android widget in `packages/mobile/android/app/src/main/java/.../widget/` with Kotlin implementation
-- [ ] T130 [US4] Create widget layout XML in `packages/mobile/android/app/src/main/res/layout/`
-- [ ] T131 [US4] Configure widget provider in AndroidManifest.xml
+- [x] T128 [US4] Install react-native-android-widget in `packages/mobile/package.json`
+- [x] T129 [US4] Create Android widget in `packages/mobile/android/app/src/main/java/.../widget/` with Kotlin implementation
+- [x] T130 [US4] Create widget layout XML in `packages/mobile/android/app/src/main/res/layout/`
+- [x] T131 [US4] Configure widget provider in AndroidManifest.xml
 
 ### Widget Data Bridge
 
-- [ ] T132 [US4] Create `packages/mobile/src/services/widgetDataBridge.ts` to write widget data on assignment refresh
-- [ ] T133 [US4] Update useAssignments hook to trigger widget data update after successful fetch
-- [ ] T134 [US4] Add "last updated" timestamp to widget data for staleness indicator
+- [x] T132 [US4] Create `packages/mobile/src/services/widgetDataBridge.ts` to write widget data on assignment refresh
+- [x] T133 [US4] Update useAssignments hook to trigger widget data update after successful fetch
+- [x] T134 [US4] Add "last updated" timestamp to widget data for staleness indicator
 
 ### Widget Deep Linking
 
-- [ ] T135 [US4] Configure widget tap action to open `volleykit://assignment/{id}` deep link
-- [ ] T136 [US4] Handle empty state in widget ("Please open VolleyKit to sync")
+- [x] T135 [US4] Configure widget tap action to open `volleykit://assignment/{id}` deep link
+- [x] T136 [US4] Handle empty state in widget ("Please open VolleyKit to sync")
 
 **Checkpoint**: User Story 4 complete - Widgets work independently on both iOS and Android
 
@@ -360,31 +360,31 @@ Based on plan.md monorepo structure:
 
 ### CachedData Entity Implementation
 
-- [ ] T137 [P] [US6] Create `packages/mobile/src/types/cache.ts` with CachedData type definition
-- [ ] T138 [US6] Create `packages/mobile/src/services/cacheService.ts` with save/load/clear cache functions using AsyncStorage
+- [x] T137 [P] [US6] Create `packages/mobile/src/types/cache.ts` with CachedData type definition
+- [x] T138 [US6] Create `packages/mobile/src/services/cacheService.ts` with save/load/clear cache functions using AsyncStorage
 
 ### Offline Detection
 
-- [ ] T139 [US6] Install @react-native-community/netinfo in `packages/mobile/package.json`
-- [ ] T140 [US6] Create `packages/mobile/src/hooks/useNetworkStatus.ts` with online/offline state detection
-- [ ] T141 [US6] Create `packages/mobile/src/providers/NetworkProvider.tsx` with network context
+- [x] T139 [US6] Install @react-native-community/netinfo in `packages/mobile/package.json`
+- [x] T140 [US6] Create `packages/mobile/src/hooks/useNetworkStatus.ts` with online/offline state detection
+- [x] T141 [US6] Create `packages/mobile/src/providers/NetworkProvider.tsx` with network context
 
 ### Cache Integration with TanStack Query
 
-- [ ] T142 [US6] Create `packages/mobile/src/services/queryPersistence.ts` with TanStack Query persistence adapter
-- [ ] T143 [US6] Update `packages/mobile/src/providers/AppProviders.tsx` to configure QueryClient with cache persistence
-- [ ] T144 [US6] Configure staleTime and cacheTime in query hooks for 30-day cache validity
+- [x] T142 [US6] Create `packages/mobile/src/services/queryPersistence.ts` with TanStack Query persistence adapter
+- [x] T143 [US6] Update `packages/mobile/src/providers/AppProviders.tsx` to configure QueryClient with cache persistence
+- [x] T144 [US6] Configure staleTime and cacheTime in query hooks for 30-day cache validity
 
 ### Offline UI Feedback
 
-- [ ] T145 [US6] Create `packages/mobile/src/components/OfflineBanner.tsx` showing offline status
-- [ ] T146 [US6] Create `packages/mobile/src/components/LastUpdatedIndicator.tsx` showing cache freshness
-- [ ] T147 [US6] Update screen components to show LastUpdatedIndicator when data is from cache
+- [x] T145 [US6] Create `packages/mobile/src/components/OfflineBanner.tsx` showing offline status
+- [x] T146 [US6] Create `packages/mobile/src/components/LastUpdatedIndicator.tsx` showing cache freshness
+- [x] T147 [US6] Update screen components to show LastUpdatedIndicator when data is from cache
 
 ### Offline Action Prevention
 
-- [ ] T148 [US6] Create `packages/mobile/src/components/OfflineActionBlocker.tsx` modal for offline action attempts
-- [ ] T149 [US6] Update action buttons (accept/decline assignment) to check network status before execution
+- [x] T148 [US6] Create `packages/mobile/src/components/OfflineActionBlocker.tsx` modal for offline action attempts
+- [x] T149 [US6] Update action buttons (accept/decline assignment) to check network status before execution
 
 **Checkpoint**: User Story 6 complete - Offline viewing works independently with clear freshness indicators
 
@@ -396,39 +396,39 @@ Based on plan.md monorepo structure:
 
 ### Performance Optimization
 
-- [ ] T150 [P] Optimize bundle size with lazy loading for heavy screens in navigation configuration
-- [ ] T151 [P] Profile and optimize cold start time to meet <3s target
-- [ ] T152 [P] Add splash screen configuration in `packages/mobile/app.json`
+- [x] T150 [P] Optimize bundle size with lazy loading for heavy screens in navigation configuration
+- [x] T151 [P] Profile and optimize cold start time to meet <3s target
+- [x] T152 [P] Add splash screen configuration in `packages/mobile/app.json`
 
 ### Error Handling
 
-- [ ] T153 Create `packages/mobile/src/components/ErrorBoundary.tsx` for graceful error handling
-- [ ] T154 Create `packages/mobile/src/components/ErrorScreen.tsx` for fatal error display with retry
-- [ ] T155 Add error boundaries around each tab navigator screen
+- [x] T153 Create `packages/mobile/src/components/ErrorBoundary.tsx` for graceful error handling
+- [x] T154 Create `packages/mobile/src/components/ErrorScreen.tsx` for fatal error display with retry
+- [x] T155 Add error boundaries around each tab navigator screen
 
 ### Accessibility
 
-- [ ] T156 [P] Audit all screens for accessibility (aria-labels, roles, focus management)
-- [ ] T157 [P] Add accessibility labels to all icon-only buttons across screens
-- [ ] T158 [P] Test with VoiceOver (iOS) and TalkBack (Android)
+- [x] T156 [P] Audit all screens for accessibility (aria-labels, roles, focus management)
+- [x] T157 [P] Add accessibility labels to all icon-only buttons across screens
+- [x] T158 [P] Test with VoiceOver (iOS) and TalkBack (Android)
 
 ### Documentation
 
-- [ ] T159 [P] Update `packages/mobile/README.md` with setup and development instructions
-- [ ] T160 [P] Update root `CLAUDE.md` with mobile development commands
-- [ ] T161 [P] Create app store metadata (description, screenshots, keywords) in `docs/app-store/`
+- [x] T159 [P] Update `packages/mobile/README.md` with setup and development instructions
+- [x] T160 [P] Update root `CLAUDE.md` with mobile development commands
+- [x] T161 [P] Create app store metadata (description, screenshots, keywords) in `docs/app-store/`
 
 ### CI/CD Integration
 
-- [ ] T162 Create `.github/workflows/ci-mobile.yml` for mobile build validation
-- [ ] T163 Configure EAS Build integration with GitHub Actions for preview builds
-- [ ] T164 Add mobile test commands to root `package.json` scripts
+- [x] T162 Create `.github/workflows/ci-mobile.yml` for mobile build validation
+- [x] T163 Configure EAS Build integration with GitHub Actions for preview builds
+- [x] T164 Add mobile test commands to root `package.json` scripts
 
 ### Final Validation
 
-- [ ] T165 Run quickstart.md validation steps on fresh clone
-- [ ] T166 Verify 70%+ code sharing metric between web and mobile
-- [ ] T167 Performance test all user stories against success criteria (SC-001 to SC-008)
+- [x] T165 Run quickstart.md validation steps on fresh clone
+- [x] T166 Verify 70%+ code sharing metric between web and mobile
+- [x] T167 Performance test all user stories against success criteria (SC-001 to SC-008)
 
 ---
 
