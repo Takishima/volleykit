@@ -37,7 +37,7 @@ jobs:
       api-cache-key: ${{ steps.api-cache-key.outputs.key }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
@@ -50,7 +50,7 @@ jobs:
 
       - name: Cache generated API types
         id: api-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: packages/shared/src/api/schema.ts
           key: ${{ steps.api-cache-key.outputs.key }}
@@ -68,7 +68,7 @@ jobs:
         working-directory: packages/mobile
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
@@ -76,7 +76,7 @@ jobs:
           working-directory: packages/mobile
 
       - name: Restore API types cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: packages/shared/src/api/schema.ts
           key: ${{ needs.setup.outputs.api-cache-key }}
@@ -93,7 +93,7 @@ jobs:
         working-directory: packages/mobile
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
@@ -101,7 +101,7 @@ jobs:
           working-directory: packages/mobile
 
       - name: Restore API types cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: packages/shared/src/api/schema.ts
           key: ${{ needs.setup.outputs.api-cache-key }}
@@ -118,7 +118,7 @@ jobs:
         working-directory: packages/mobile
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
@@ -126,7 +126,7 @@ jobs:
           working-directory: packages/mobile
 
       - name: Restore API types cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: packages/shared/src/api/schema.ts
           key: ${{ needs.setup.outputs.api-cache-key }}

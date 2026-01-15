@@ -163,7 +163,7 @@ export function LoginScreen(_props: Props) {
             onPress={handleBiometricLogin}
             disabled={isAuthenticating}
             accessibilityRole="button"
-            accessibilityLabel={`Login with ${biometricTypeName}`}
+            accessibilityLabel={t('auth.authenticateWith', { biometricType: biometricTypeName })}
           >
             <MaterialCommunityIcons
               name={biometricIcon}
@@ -173,7 +173,7 @@ export function LoginScreen(_props: Props) {
             <Text
               className={`ml-2 font-medium ${isAuthenticating ? 'text-gray-400' : 'text-sky-500'}`}
             >
-              {isAuthenticating ? t('common.loading') : `Use ${biometricTypeName}`}
+              {isAuthenticating ? t('common.loading') : t('auth.useBiometric', { biometricType: biometricTypeName })}
             </Text>
           </TouchableOpacity>
         )}

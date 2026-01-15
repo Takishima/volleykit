@@ -7,12 +7,7 @@
 import { useState, useCallback } from 'react';
 import { useStorage } from '@volleykit/shared/adapters';
 import { biometrics, getBiometricTypeName } from '../platform/biometrics';
-
-/** Storage key for biometric enabled preference */
-const BIOMETRIC_ENABLED_KEY = 'biometric_enabled';
-
-/** Maximum biometric attempts before falling back to password */
-const MAX_BIOMETRIC_ATTEMPTS = 3;
+import { BIOMETRIC_ENABLED_KEY, MAX_BIOMETRIC_ATTEMPTS } from '../constants';
 
 export interface BiometricAuthState {
   /** Whether biometric is available and enabled */

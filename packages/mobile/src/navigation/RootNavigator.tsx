@@ -17,10 +17,8 @@ import { TabNavigator } from './TabNavigator';
 import { BiometricPrompt } from '../components/BiometricPrompt';
 import { useSessionMonitor } from '../hooks/useSessionMonitor';
 import { useBiometricAuth } from '../hooks/useBiometricAuth';
+import { MAX_BIOMETRIC_ATTEMPTS } from '../constants';
 import type { RootStackParamList } from './types';
-
-/** Maximum biometric attempts before fallback */
-const MAX_BIOMETRIC_ATTEMPTS = 3;
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 

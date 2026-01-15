@@ -38,3 +38,14 @@ export const SETTINGS_ICON_SIZE = 24;
 
 /** Small icon size (chevrons, etc.) */
 export const SMALL_ICON_SIZE = 20;
+
+// === Biometric Authentication ===
+
+/** Storage key for biometric enabled preference */
+export const BIOMETRIC_ENABLED_KEY = 'biometric_enabled';
+
+/** Maximum biometric authentication attempts before falling back to password */
+export const MAX_BIOMETRIC_ATTEMPTS = 3;
+
+/** Icon size for biometric prompt modal */
+export const BIOMETRIC_ICON_SIZE = 64;

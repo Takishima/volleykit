@@ -68,6 +68,9 @@ const fr: Translations = {
     loginFailed: 'Connexion échouée. Veuillez vérifier vos identifiants.',
     usernamePlaceholder: "Entrez votre nom d'utilisateur",
     passwordPlaceholder: 'Entrez votre mot de passe',
+    useBiometric: 'Utiliser {biometricType}',
+    authenticateWith: "S'authentifier avec {biometricType}",
+    attemptsRemaining: '{count} tentative restante',
   },
   assignments: {
     title: 'Désignations',

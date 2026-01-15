@@ -9,7 +9,7 @@ import { View, Text, TouchableOpacity, Modal } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { useTranslation } from '@volleykit/shared/i18n';
-import { COLORS } from '../constants';
+import { COLORS, BIOMETRIC_ICON_SIZE } from '../constants';
 
 interface BiometricPromptProps {
   /** Whether the prompt is visible */
@@ -68,13 +68,16 @@ export function BiometricPrompt({
       animationType="fade"
       onRequestClose={onCancel}
     >
-      <View className="flex-1 bg-black/50 items-center justify-center px-6">
+      <View
+        className="flex-1 bg-black/50 items-center justify-center px-6"
+        accessibilityElementsHidden={true}
+      >
         <View className="bg-white rounded-2xl w-full max-w-sm p-6">
           {/* Icon */}
           <View className="items-center mb-4">
             <MaterialCommunityIcons
               name={iconName}
-              size={64}
+              size={BIOMETRIC_ICON_SIZE}
               color={isAuthenticating ? COLORS.primary : COLORS.gray500}
             />
           </View>
@@ -92,7 +95,7 @@ export function BiometricPrompt({
           {/* Failed attempts warning */}
           {failedAttempts > 0 && (
             <Text className="text-orange-600 text-center text-sm mb-4">
-              {t('auth.biometricFailed')} ({remainingAttempts} {remainingAttempts === 1 ? 'attempt' : 'attempts'} remaining)
+              {t('auth.biometricFailed')} ({t('auth.attemptsRemaining', { count: remainingAttempts })})
             </Text>
           )}
 
@@ -102,10 +105,10 @@ export function BiometricPrompt({
             onPress={onAuthenticate}
             disabled={isAuthenticating}
             accessibilityRole="button"
-            accessibilityLabel={`Authenticate with ${biometricTypeName}`}
+            accessibilityLabel={t('auth.authenticateWith', { biometricType: biometricTypeName })}
           >
             <Text className="text-white font-semibold text-center">
-              {isAuthenticating ? t('common.loading') : `Use ${biometricTypeName}`}
+              {isAuthenticating ? t('common.loading') : t('auth.useBiometric', { biometricType: biometricTypeName })}
             </Text>
           </TouchableOpacity>
 

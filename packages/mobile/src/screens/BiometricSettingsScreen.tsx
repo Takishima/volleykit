@@ -11,12 +11,9 @@ import { useTranslation } from '@volleykit/shared/i18n';
 import { useStorage } from '@volleykit/shared/adapters';
 import { biometrics, getBiometricTypeName } from '../platform/biometrics';
 import type { RootStackScreenProps } from '../navigation/types';
-import { COLORS } from '../constants';
+import { COLORS, BIOMETRIC_ENABLED_KEY } from '../constants';
 
 type Props = RootStackScreenProps<'BiometricSettings'>;
-
-/** Storage key for biometric enabled preference */
-const BIOMETRIC_ENABLED_KEY = 'biometric_enabled';
 
 export function BiometricSettingsScreen({ navigation: _navigation }: Props) {
   const { t } = useTranslation();

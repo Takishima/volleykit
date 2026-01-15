@@ -68,6 +68,9 @@ const de: Translations = {
     loginFailed: 'Anmeldung fehlgeschlagen. Bitte überprüfen Sie Ihre Anmeldedaten.',
     usernamePlaceholder: 'Benutzername eingeben',
     passwordPlaceholder: 'Passwort eingeben',
+    useBiometric: '{biometricType} verwenden',
+    authenticateWith: 'Mit {biometricType} authentifizieren',
+    attemptsRemaining: '{count} Versuch verbleibend',
   },
   assignments: {
     title: 'Einsätze',
