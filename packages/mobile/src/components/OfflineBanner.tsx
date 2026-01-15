@@ -4,9 +4,10 @@
  * Shows a banner when the device is offline.
  */
 
+import type { JSX } from 'react';
+import { useEffect, useRef } from 'react';
 import { View, Text, Animated } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { useEffect, useRef } from 'react';
 
 import { useTranslation } from '@volleykit/shared/i18n';
 import { useNetwork } from '../providers/NetworkProvider';

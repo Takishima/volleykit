@@ -12,7 +12,7 @@ import { departureRemindersStore } from '../../stores/departureReminders';
 import { storage } from '../../platform/storage';
 import type { Coordinates, DepartureReminder } from '../../types/departureReminder';
 import { calculateRoute, isOjpConfigured, RouteCalculationError } from './route-calculator';
-import { isNearVenue, shouldSendDepartureNotification, clusterNearbyVenues, type AssignmentWithVenue } from './venue-proximity';
+import { isNearVenue, shouldSendDepartureNotification, clusterNearbyVenues, type AssignmentWithVenue, type VenueCluster } from './venue-proximity';
 import { scheduleReminderNotification, cancelReminderNotification } from './notification-scheduler';
 
 /** Task name for the departure reminder background task */
@@ -64,10 +64,8 @@ export function defineBackgroundTask(): void {
   TaskManager.defineTask(DEPARTURE_REMINDER_TASK_NAME, async () => {
     try {
       await runDepartureReminderCheck();
-      return TaskManager.TaskManagerTaskBody;
     } catch (error) {
       console.error('Departure reminder task error:', error);
-      return TaskManager.TaskManagerTaskBody;
     }
   });
 }
@@ -111,17 +109,8 @@ export async function startBackgroundTask(): Promise<void> {
   }
 
   // Start location tracking with balanced accuracy
-  await location.startBackgroundTracking({
-    taskName: DEPARTURE_REMINDER_TASK_NAME,
-    accuracy: LOCATION_ACCURACY,
-    distanceInterval: 500, // Update every 500m
-    timeInterval: 60 * 60 * 1000, // Or every hour
-    deferredUpdatesInterval: 60 * 60 * 1000, // Defer updates for battery
-    foregroundService: {
-      notificationTitle: 'VolleyKit',
-      notificationBody: 'Monitoring for departure reminders',
-    },
-  });
+  // Settings are configured in location.ts
+  await location.startBackgroundTracking();
 
   departureRemindersStore.setTracking(true);
 }
@@ -149,7 +138,14 @@ export async function runDepartureReminderCheck(): Promise<void> {
   // Get current location
   let userLocation: Coordinates;
   try {
-    userLocation = await location.getCurrentLocation();
+    const currentLocation = await location.getCurrentLocation();
+    if (!currentLocation) {
+      console.log('Could not get current location');
+      // Fallback behavior: schedule time-based reminders without route info
+      await scheduleTimeBasedReminders();
+      return;
+    }
+    userLocation = currentLocation;
     departureRemindersStore.updateLocation(userLocation);
   } catch (error) {
     console.error('Failed to get location:', error);

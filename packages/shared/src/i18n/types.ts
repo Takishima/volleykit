@@ -250,6 +250,7 @@ export interface Translations {
     notification: {
       title: string;
       body: string;
+      withTransit: string;
       noRoute: string;
       delayed: string;
       cancelled: string;

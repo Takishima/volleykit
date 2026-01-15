@@ -4,6 +4,7 @@
  * Modal that blocks actions requiring network connectivity when offline.
  */
 
+import type { JSX } from 'react';
 import { View, Text, Modal, TouchableOpacity, Pressable } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 

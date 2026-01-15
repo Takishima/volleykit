@@ -4,6 +4,7 @@
  * Shows when data was last fetched/cached for freshness indication.
  */
 
+import type { JSX } from 'react';
 import { View, Text } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { formatDistanceToNow } from 'date-fns';

@@ -29,23 +29,31 @@ export interface WidgetAdapter {
   isSupported(): boolean;
 }
 
+/** Helper to reload iOS widget timelines */
+async function reloadIOSTimelines(): Promise<void> {
+  try {
+    const widgetkit = await import('react-native-widgetkit');
+    if (widgetkit.reloadAllTimelines) {
+      widgetkit.reloadAllTimelines();
+    }
+  } catch (error) {
+    console.error('Failed to reload widget timelines:', error);
+  }
+}
+
 /**
  * iOS widget adapter using react-native-widgetkit.
  */
 async function createIOSAdapter(): Promise<WidgetAdapter> {
   // Dynamic import to avoid issues on Android
-  const { SharedGroupPreferences } = await import('react-native-widgetkit');
+  const widgetkit = await import('react-native-widgetkit');
 
   return {
     async updateWidgetData(data: WidgetData): Promise<void> {
       try {
-        await SharedGroupPreferences.setItem(
-          'widgetData',
-          JSON.stringify(data),
-          IOS_APP_GROUP
-        );
+        await widgetkit.setItem('widgetData', JSON.stringify(data), IOS_APP_GROUP);
         // Reload widget timelines to show updated data
-        await this.reloadAllTimelines();
+        await reloadIOSTimelines();
       } catch (error) {
         console.error('Failed to update iOS widget data:', error);
       }
@@ -53,7 +61,7 @@ async function createIOSAdapter(): Promise<WidgetAdapter> {
 
     async getWidgetData(): Promise<WidgetData | null> {
       try {
-        const data = await SharedGroupPreferences.getItem('widgetData', IOS_APP_GROUP);
+        const data = await widgetkit.getItem('widgetData', IOS_APP_GROUP);
         if (data) {
           return JSON.parse(data) as WidgetData;
         }
@@ -65,32 +73,37 @@ async function createIOSAdapter(): Promise<WidgetAdapter> {
 
     async clearWidgetData(): Promise<void> {
       try {
-        await SharedGroupPreferences.setItem(
-          'widgetData',
-          JSON.stringify(EMPTY_WIDGET_DATA),
-          IOS_APP_GROUP
-        );
-        await this.reloadAllTimelines();
+        await widgetkit.setItem('widgetData', JSON.stringify(EMPTY_WIDGET_DATA), IOS_APP_GROUP);
+        await reloadIOSTimelines();
       } catch (error) {
         console.error('Failed to clear iOS widget data:', error);
       }
     },
 
     async reloadAllTimelines(): Promise<void> {
-      try {
-        const widgetkit = await import('react-native-widgetkit');
-        if (widgetkit.reloadAllTimelines) {
-          widgetkit.reloadAllTimelines();
-        }
-      } catch (error) {
-        console.error('Failed to reload widget timelines:', error);
-      }
+      await reloadIOSTimelines();
     },
 
     isSupported(): boolean {
       return true;
     },
   };
+}
+
+/** Helper to reload Android widget */
+async function reloadAndroidWidget(): Promise<void> {
+  try {
+    const { requestWidgetUpdate } = await import('react-native-android-widget');
+    await requestWidgetUpdate({
+      widgetName: 'VolleyKitWidget',
+      renderWidget: () => null, // Widget renders from stored data
+      widgetNotFound: () => {
+        // Widget not added to home screen yet
+      },
+    });
+  } catch (error) {
+    console.error('Failed to request Android widget update:', error);
+  }
 }
 
 /**
@@ -104,7 +117,7 @@ async function createAndroidAdapter(): Promise<WidgetAdapter> {
       try {
         await AsyncStorage.setItem(ANDROID_WIDGET_PREFS_KEY, JSON.stringify(data));
         // Request widget update
-        await this.reloadAllTimelines();
+        await reloadAndroidWidget();
       } catch (error) {
         console.error('Failed to update Android widget data:', error);
       }
@@ -125,25 +138,14 @@ async function createAndroidAdapter(): Promise<WidgetAdapter> {
     async clearWidgetData(): Promise<void> {
       try {
         await AsyncStorage.setItem(ANDROID_WIDGET_PREFS_KEY, JSON.stringify(EMPTY_WIDGET_DATA));
-        await this.reloadAllTimelines();
+        await reloadAndroidWidget();
       } catch (error) {
         console.error('Failed to clear Android widget data:', error);
       }
     },
 
     async reloadAllTimelines(): Promise<void> {
-      try {
-        const { requestWidgetUpdate } = await import('react-native-android-widget');
-        await requestWidgetUpdate({
-          widgetName: 'VolleyKitWidget',
-          renderWidget: () => null, // Widget renders from stored data
-          widgetNotFound: () => {
-            // Widget not added to home screen yet
-          },
-        });
-      } catch (error) {
-        console.error('Failed to request Android widget update:', error);
-      }
+      await reloadAndroidWidget();
     },
 
     isSupported(): boolean {

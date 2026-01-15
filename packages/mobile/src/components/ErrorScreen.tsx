@@ -4,6 +4,7 @@
  * Shows a user-friendly error message with retry option.
  */
 
+import type { JSX } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 

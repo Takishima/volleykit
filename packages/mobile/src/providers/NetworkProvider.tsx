@@ -4,7 +4,7 @@
  * Provides network connectivity context throughout the app.
  */
 
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext, type ReactNode, type JSX } from 'react';
 import { useNetworkStatus, type NetworkStatus } from '../hooks/useNetworkStatus';
 
 /**

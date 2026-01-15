@@ -53,6 +53,16 @@ export interface CalendarSyncService {
   ): Promise<{ created: number; updated: number; deleted: number }>;
 }
 
+/** Type guard for venue object with name property */
+function isVenueObject(venue: unknown): venue is { name?: string; address?: string } {
+  return typeof venue === 'object' && venue !== null;
+}
+
+/** Type guard for team object with name property */
+function isTeamObject(team: unknown): team is { name?: string } {
+  return typeof team === 'object' && team !== null;
+}
+
 /**
  * Convert an assignment to calendar event data.
  */
@@ -61,26 +71,33 @@ function assignmentToEventData(assignment: Assignment): CalendarEventData {
   const endDate = calculateMatchEndTime(startDate);
 
   // Get venue info - handle both object and string formats
-  const venue = typeof assignment.venue === 'string'
-    ? assignment.venue
-    : assignment.venue?.name ?? 'TBD';
+  const venueData = assignment.venue;
+  const venue = typeof venueData === 'string'
+    ? venueData
+    : isVenueObject(venueData) ? venueData.name ?? 'TBD' : 'TBD';
 
-  const location = typeof assignment.venue === 'object' && assignment.venue?.address
-    ? `${venue}, ${assignment.venue.address}`
+  const location = isVenueObject(venueData) && venueData.address
+    ? `${venue}, ${venueData.address}`
     : venue;
 
   // Get team names - handle both object and string formats
-  const teamHome = typeof assignment.teamHome === 'string'
-    ? assignment.teamHome
-    : assignment.teamHome?.name ?? '';
-  const teamAway = typeof assignment.teamAway === 'string'
-    ? assignment.teamAway
-    : assignment.teamAway?.name ?? '';
+  const teamHomeData = assignment.teamHome;
+  const teamAwayData = assignment.teamAway;
+  const teamHome = typeof teamHomeData === 'string'
+    ? teamHomeData
+    : isTeamObject(teamHomeData) ? teamHomeData.name ?? '' : '';
+  const teamAway = typeof teamAwayData === 'string'
+    ? teamAwayData
+    : isTeamObject(teamAwayData) ? teamAwayData.name ?? '' : '';
 
   // Build event title
   const title = teamHome && teamAway
     ? `${teamHome} vs ${teamAway}`
     : `Volleyball Assignment`;
+
+  // Get string values for notes
+  const leagueStr = typeof assignment.league === 'string' ? assignment.league : undefined;
+  const roleStr = typeof assignment.role === 'string' ? assignment.role : undefined;
 
   return {
     title,
@@ -89,8 +106,8 @@ function assignmentToEventData(assignment: Assignment): CalendarEventData {
     location,
     notes: formatCalendarNotes({
       id: assignment.__identity,
-      league: assignment.league,
-      role: assignment.role,
+      league: leagueStr,
+      role: roleStr,
       teamHome,
       teamAway,
     }),
@@ -104,8 +121,13 @@ function assignmentToEventData(assignment: Assignment): CalendarEventData {
  * Parse assignment date and time into a Date object.
  */
 function parseAssignmentDateTime(assignment: Assignment): Date {
-  const dateStr = assignment.gameDate;
-  const timeStr = assignment.gameTime ?? '00:00';
+  // Handle gameDate - could be string or unknown
+  const dateValue = assignment.gameDate;
+  const dateStr = typeof dateValue === 'string' ? dateValue : String(dateValue);
+
+  // Handle gameTime - could be string, unknown, or undefined
+  const timeValue = assignment.gameTime;
+  const timeStr = typeof timeValue === 'string' ? timeValue : '00:00';
 
   // Parse date (format: YYYY-MM-DD or similar)
   const date = new Date(dateStr);

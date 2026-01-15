@@ -106,7 +106,7 @@ export function useCalendarSync(): UseCalendarSyncResult {
     onSuccess: () => {
       setError(null);
       // Invalidate assignments query to refresh UI
-      queryClient.invalidateQueries({ queryKey: queryKeys.assignments.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.assignments.all });
     },
   });
 
