@@ -2,11 +2,12 @@
  * Settings screen
  */
 
+import { useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
-import Constants from 'expo-constants';
 
 import { useSettingsStore } from '@volleykit/shared/stores';
+import { getAppVersion } from '../utils/version';
 import { useTranslation, LANGUAGE_NAMES } from '@volleykit/shared/i18n';
 import type { MainTabScreenProps } from '../navigation/types';
 import { COLORS, SETTINGS_ICON_SIZE, SMALL_ICON_SIZE } from '../constants';
@@ -54,19 +55,10 @@ function SettingRow({
   );
 }
 
-function getAppVersion(): string {
-  const version = Constants.expoConfig?.version ?? 'unknown';
-  const buildNumber =
-    Constants.expoConfig?.ios?.buildNumber ??
-    Constants.expoConfig?.android?.versionCode?.toString();
-
-  return buildNumber ? `${version} (${buildNumber})` : version;
-}
-
 export function SettingsScreen({ navigation }: Props) {
   const { t } = useTranslation();
   const language = useSettingsStore((state) => state.language);
-  const appVersion = getAppVersion();
+  const appVersion = useMemo(() => getAppVersion(), []);
 
   const showComingSoon = () => {
     Alert.alert(t('settings.comingSoon'), undefined, [{ text: t('common.close') }]);
