@@ -2,8 +2,8 @@
  * Settings screen
  */
 
-import { useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { useMemo, useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { useSettingsStore } from '@volleykit/shared/stores';
@@ -11,6 +11,7 @@ import { getAppVersion } from '../utils/version';
 import { useTranslation, LANGUAGE_NAMES } from '@volleykit/shared/i18n';
 import type { MainTabScreenProps } from '../navigation/types';
 import { COLORS, SETTINGS_ICON_SIZE, SMALL_ICON_SIZE } from '../constants';
+import { LanguagePicker } from '../components/LanguagePicker';
 
 type Props = MainTabScreenProps<'Settings'>;
 
@@ -58,11 +59,9 @@ function SettingRow({
 export function SettingsScreen({ navigation }: Props) {
   const { t } = useTranslation();
   const language = useSettingsStore((state) => state.language);
+  const setLanguage = useSettingsStore((state) => state.setLanguage);
   const appVersion = useMemo(() => getAppVersion(), []);
-
-  const showComingSoon = () => {
-    Alert.alert(t('settings.comingSoon'), undefined, [{ text: t('common.close') }]);
-  };
+  const [isLanguagePickerVisible, setLanguagePickerVisible] = useState(false);
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
@@ -75,11 +74,8 @@ export function SettingsScreen({ navigation }: Props) {
             icon={<Feather name="globe" size={SETTINGS_ICON_SIZE} color={COLORS.gray500} />}
             title={t('settings.language')}
             value={LANGUAGE_NAMES[language]}
-            onPress={() => {
-              // TODO(#48): Implement language picker modal in Phase 3
-              showComingSoon();
-            }}
-            accessibilityHint={t('settings.comingSoon')}
+            onPress={() => setLanguagePickerVisible(true)}
+            accessibilityHint={t('settings.language')}
           />
         </View>
       </View>
@@ -131,6 +127,13 @@ export function SettingsScreen({ navigation }: Props) {
           />
         </View>
       </View>
+
+      <LanguagePicker
+        visible={isLanguagePickerVisible}
+        selectedLanguage={language}
+        onSelect={setLanguage}
+        onClose={() => setLanguagePickerVisible(false)}
+      />
     </ScrollView>
   );
 }
