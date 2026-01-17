@@ -1,46 +1,103 @@
 /**
  * Compensations list screen
  *
- * TODO(#US1): Connect to API client when implemented
+ * Displays referee compensation records fetched via the shared useCompensations hook.
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { View, Text, FlatList, RefreshControl } from 'react-native';
+import { useCallback } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  RefreshControl,
+  ActivityIndicator,
+  TouchableOpacity,
+} from 'react-native';
 
 import { useTranslation, type TranslationKey } from '@volleykit/shared/i18n';
+import { useCompensations } from '@volleykit/shared/hooks';
+import type { CompensationRecord } from '@volleykit/shared/api';
 import type { MainTabScreenProps } from '../navigation/types';
-import { PLACEHOLDER_REFRESH_DELAY_MS } from '../constants';
+import { useApiClient } from '../contexts';
 
 type Props = MainTabScreenProps<'Compensations'>;
 
-// Placeholder data until API client is implemented
-const PLACEHOLDER_COMPENSATIONS = [
-  { id: '1', game: 'Game 1', amount: '120.00', status: 'paid' },
-  { id: '2', game: 'Game 2', amount: '95.00', status: 'pending' },
-  { id: '3', game: 'Game 3', amount: '110.00', status: 'paid' },
-];
+/**
+ * Get display data from a compensation record.
+ */
+function getCompensationDisplay(record: CompensationRecord): {
+  id: string;
+  game: string;
+  amount: string;
+  status: 'paid' | 'pending';
+} {
+  const game = record.refereeGame?.game;
+  const homeTeam = game?.teamHome?.name ?? 'TBD';
+  const awayTeam = game?.teamAway?.name ?? 'TBD';
+  const compensation = record.convocationCompensation;
+
+  // Calculate total compensation
+  const gameComp = compensation?.gameCompensation ?? 0;
+  const travelExp = compensation?.travelExpenses ?? 0;
+  const total = gameComp + travelExp;
+
+  return {
+    id: record.__identity,
+    game: `${homeTeam} vs ${awayTeam}`,
+    amount: total.toFixed(2),
+    status: compensation?.paymentDone ? 'paid' : 'pending',
+  };
+}
 
 export function CompensationsScreen(_props: Props) {
   const { t } = useTranslation();
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const compensations = PLACEHOLDER_COMPENSATIONS;
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const apiClient = useApiClient();
 
-  // Cleanup timeout on unmount to prevent memory leaks
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
+  const {
+    data: compensations = [],
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+  } = useCompensations({
+    apiClient,
+    status: 'all',
+  });
 
   const onRefresh = useCallback(() => {
-    setIsRefreshing(true);
-    // TODO(#US1): Replace with TanStack Query refetch when API client is ready
-    timeoutRef.current = setTimeout(() => setIsRefreshing(false), PLACEHOLDER_REFRESH_DELAY_MS);
-  }, []);
+    refetch();
+  }, [refetch]);
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" accessibilityLabel={t('common.loading')} />
+      </View>
+    );
+  }
+
+  // Error state
+  if (isError) {
+    return (
+      <View className="flex-1 items-center justify-center px-6">
+        <Text className="text-red-600 text-center mb-4">
+          {error?.message ?? t('common.error')}
+        </Text>
+        <TouchableOpacity
+          className="bg-primary-600 rounded-lg px-6 py-3"
+          onPress={() => refetch()}
+          accessibilityRole="button"
+          accessibilityLabel={t('common.retry')}
+        >
+          <Text className="text-white font-medium">{t('common.retry')}</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // Empty state
   if (compensations.length === 0) {
     return (
       <View className="flex-1 items-center justify-center px-6">
@@ -54,19 +111,25 @@ export function CompensationsScreen(_props: Props) {
       className="flex-1 bg-gray-50"
       contentContainerClassName="p-4 gap-3"
       data={compensations}
-      keyExtractor={(item) => item.id}
+      keyExtractor={(item) => item.__identity}
       refreshControl={
-        <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+        <RefreshControl refreshing={isFetching && !isLoading} onRefresh={onRefresh} />
       }
-      renderItem={({ item }) => (
-        <View className="bg-white rounded-lg p-4 shadow-sm">
-          <View className="flex-row justify-between items-center">
-            <Text className="text-gray-900 font-medium">{item.game}</Text>
-            <Text className="text-gray-900 font-semibold">CHF {item.amount}</Text>
+      renderItem={({ item }) => {
+        const display = getCompensationDisplay(item);
+
+        return (
+          <View className="bg-white rounded-lg p-4 shadow-sm">
+            <View className="flex-row justify-between items-center">
+              <Text className="text-gray-900 font-medium">{display.game}</Text>
+              <Text className="text-gray-900 font-semibold">CHF {display.amount}</Text>
+            </View>
+            <Text className="text-gray-500 text-sm mt-1">
+              {t(`compensations.${display.status}` as TranslationKey)}
+            </Text>
           </View>
-          <Text className="text-gray-500 text-sm mt-1">{t(`compensations.${item.status}` as TranslationKey)}</Text>
-        </View>
-      )}
+        );
+      }}
     />
   );
 }

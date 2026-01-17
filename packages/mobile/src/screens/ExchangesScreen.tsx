@@ -1,32 +1,27 @@
 /**
  * Exchanges list screen
  *
- * TODO(#US1): Connect to API client when implemented
+ * Displays available referee exchanges fetched via the shared useExchanges hook.
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { View, Text, FlatList, RefreshControl } from 'react-native';
+import { useCallback } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  RefreshControl,
+  ActivityIndicator,
+  TouchableOpacity,
+} from 'react-native';
 
 import { useTranslation, type TranslationKey } from '@volleykit/shared/i18n';
+import { useExchanges } from '@volleykit/shared/hooks';
+import type { GameExchange } from '@volleykit/shared/api';
 import type { MainTabScreenProps } from '../navigation/types';
-import { PLACEHOLDER_REFRESH_DELAY_MS } from '../constants';
+import { useApiClient } from '../contexts';
+import { formatDate } from '../utils';
 
 type Props = MainTabScreenProps<'Exchanges'>;
-
-// Placeholder exchange type (matches API exchangeStatusSchema values)
-type PlaceholderExchange = {
-  id: string;
-  game: string;
-  date: string;
-  status: 'open' | 'applied' | 'closed';
-};
-
-// Placeholder data until API client is implemented
-const PLACEHOLDER_EXCHANGES: PlaceholderExchange[] = [
-  { id: '1', game: 'Game A', date: '2026-01-22', status: 'open' },
-  { id: '2', game: 'Game B', date: '2026-01-28', status: 'applied' },
-  { id: '3', game: 'Game C', date: '2026-02-05', status: 'open' },
-];
 
 // Status badge color mappings
 const STATUS_COLORS = {
@@ -35,27 +30,81 @@ const STATUS_COLORS = {
   closed: { bg: 'bg-gray-100', text: 'text-gray-700' },
 } as const;
 
-export function ExchangesScreen(_props: Props) {
-  const { t } = useTranslation();
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const exchanges = PLACEHOLDER_EXCHANGES;
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+/**
+ * Get display data from an exchange.
+ */
+function getExchangeDisplay(
+  exchange: GameExchange,
+  language: string
+): {
+  id: string;
+  game: string;
+  date: string;
+  venue: string;
+  status: 'open' | 'applied' | 'closed';
+} {
+  const game = exchange.refereeGame?.game;
+  const homeTeam = game?.teamHome?.name ?? 'TBD';
+  const awayTeam = game?.teamAway?.name ?? 'TBD';
 
-  // Cleanup timeout on unmount to prevent memory leaks
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
+  return {
+    id: exchange.__identity,
+    game: `${homeTeam} vs ${awayTeam}`,
+    date: formatDate(game?.startingDateTime, language),
+    venue: game?.hall?.name ?? '',
+    status: exchange.status,
+  };
+}
+
+export function ExchangesScreen(_props: Props) {
+  const { t, language } = useTranslation();
+  const apiClient = useApiClient();
+
+  const {
+    data: exchanges = [],
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+  } = useExchanges({
+    apiClient,
+    status: 'open',
+  });
 
   const onRefresh = useCallback(() => {
-    setIsRefreshing(true);
-    // TODO(#US1): Replace with TanStack Query refetch when API client is ready
-    timeoutRef.current = setTimeout(() => setIsRefreshing(false), PLACEHOLDER_REFRESH_DELAY_MS);
-  }, []);
+    refetch();
+  }, [refetch]);
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" accessibilityLabel={t('common.loading')} />
+      </View>
+    );
+  }
+
+  // Error state
+  if (isError) {
+    return (
+      <View className="flex-1 items-center justify-center px-6">
+        <Text className="text-red-600 text-center mb-4">
+          {error?.message ?? t('common.error')}
+        </Text>
+        <TouchableOpacity
+          className="bg-primary-600 rounded-lg px-6 py-3"
+          onPress={() => refetch()}
+          accessibilityRole="button"
+          accessibilityLabel={t('common.retry')}
+        >
+          <Text className="text-white font-medium">{t('common.retry')}</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // Empty state
   if (exchanges.length === 0) {
     return (
       <View className="flex-1 items-center justify-center px-6">
@@ -69,24 +118,27 @@ export function ExchangesScreen(_props: Props) {
       className="flex-1 bg-gray-50"
       contentContainerClassName="p-4 gap-3"
       data={exchanges}
-      keyExtractor={(item) => item.id}
+      keyExtractor={(item) => item.__identity}
       refreshControl={
-        <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+        <RefreshControl refreshing={isFetching && !isLoading} onRefresh={onRefresh} />
       }
       renderItem={({ item }) => {
-        const colors = STATUS_COLORS[item.status];
+        const display = getExchangeDisplay(item, language);
+        const colors = STATUS_COLORS[display.status];
 
         return (
           <View className="bg-white rounded-lg p-4 shadow-sm">
             <View className="flex-row justify-between items-center">
-              <Text className="text-gray-900 font-medium">{item.game}</Text>
+              <Text className="text-gray-900 font-medium">{display.game}</Text>
               <View className={`px-2 py-1 rounded ${colors.bg}`}>
                 <Text className={`text-xs font-medium ${colors.text}`}>
-                  {t(`exchange.${item.status}` as TranslationKey)}
+                  {t(`exchange.${display.status}` as TranslationKey)}
                 </Text>
               </View>
             </View>
-            <Text className="text-gray-500 text-sm mt-1">{item.date}</Text>
+            <Text className="text-gray-500 text-sm mt-1">
+              {display.date}{display.venue ? ` - ${display.venue}` : ''}
+            </Text>
           </View>
         );
       }}

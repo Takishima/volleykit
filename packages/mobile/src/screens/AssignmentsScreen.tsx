@@ -1,33 +1,27 @@
 /**
  * Assignments list screen
  *
- * TODO(#US1): Connect to API client when implemented
+ * Displays upcoming referee assignments fetched via the shared useAssignments hook.
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { View, Text, FlatList, RefreshControl } from 'react-native';
+import { useCallback } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  RefreshControl,
+  ActivityIndicator,
+  TouchableOpacity,
+} from 'react-native';
 
 import { useTranslation, type TranslationKey } from '@volleykit/shared/i18n';
+import { useAssignments } from '@volleykit/shared/hooks';
+import type { Assignment } from '@volleykit/shared/api';
 import type { MainTabScreenProps } from '../navigation/types';
-import { PLACEHOLDER_REFRESH_DELAY_MS } from '../constants';
+import { useApiClient } from '../contexts';
+import { formatDate } from '../utils';
 
 type Props = MainTabScreenProps<'Assignments'>;
-
-// Placeholder assignment type (matches API convocationStatusSchema values)
-type PlaceholderAssignment = {
-  id: string;
-  title: string;
-  date: string;
-  venue: string;
-  status: 'active' | 'cancelled' | 'archived';
-};
-
-// Placeholder data until API client is implemented
-const PLACEHOLDER_ASSIGNMENTS: PlaceholderAssignment[] = [
-  { id: '1', title: 'Game 1', date: '2026-01-20', venue: 'Sports Hall A', status: 'active' },
-  { id: '2', title: 'Game 2', date: '2026-01-25', venue: 'Sports Hall B', status: 'active' },
-  { id: '3', title: 'Game 3', date: '2026-02-01', venue: 'Sports Hall C', status: 'cancelled' },
-];
 
 // Status badge color mappings
 const STATUS_COLORS = {
@@ -36,27 +30,81 @@ const STATUS_COLORS = {
   archived: { bg: 'bg-gray-100', text: 'text-gray-700' },
 } as const;
 
-export function AssignmentsScreen(_props: Props) {
-  const { t } = useTranslation();
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const assignments = PLACEHOLDER_ASSIGNMENTS;
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+/**
+ * Get display data from an assignment.
+ */
+function getAssignmentDisplay(
+  assignment: Assignment,
+  language: string
+): {
+  id: string;
+  title: string;
+  date: string;
+  venue: string;
+  status: 'active' | 'cancelled' | 'archived';
+} {
+  const game = assignment.refereeGame?.game;
+  const homeTeam = game?.teamHome?.name ?? 'TBD';
+  const awayTeam = game?.teamAway?.name ?? 'TBD';
 
-  // Cleanup timeout on unmount to prevent memory leaks
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
+  return {
+    id: assignment.__identity,
+    title: `${homeTeam} vs ${awayTeam}`,
+    date: formatDate(game?.startingDateTime, language),
+    venue: game?.hall?.name ?? 'TBD',
+    status: assignment.refereeConvocationStatus,
+  };
+}
+
+export function AssignmentsScreen(_props: Props) {
+  const { t, language } = useTranslation();
+  const apiClient = useApiClient();
+
+  const {
+    data: assignments = [],
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+  } = useAssignments({
+    apiClient,
+    period: 'upcoming',
+  });
 
   const onRefresh = useCallback(() => {
-    setIsRefreshing(true);
-    // TODO(#US1): Replace with TanStack Query refetch when API client is ready
-    timeoutRef.current = setTimeout(() => setIsRefreshing(false), PLACEHOLDER_REFRESH_DELAY_MS);
-  }, []);
+    refetch();
+  }, [refetch]);
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" accessibilityLabel={t('common.loading')} />
+      </View>
+    );
+  }
+
+  // Error state
+  if (isError) {
+    return (
+      <View className="flex-1 items-center justify-center px-6">
+        <Text className="text-red-600 text-center mb-4">
+          {error?.message ?? t('common.error')}
+        </Text>
+        <TouchableOpacity
+          className="bg-primary-600 rounded-lg px-6 py-3"
+          onPress={() => refetch()}
+          accessibilityRole="button"
+          accessibilityLabel={t('common.retry')}
+        >
+          <Text className="text-white font-medium">{t('common.retry')}</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // Empty state
   if (assignments.length === 0) {
     return (
       <View className="flex-1 items-center justify-center px-6">
@@ -70,24 +118,25 @@ export function AssignmentsScreen(_props: Props) {
       className="flex-1 bg-gray-50"
       contentContainerClassName="p-4 gap-3"
       data={assignments}
-      keyExtractor={(item) => item.id}
+      keyExtractor={(item) => item.__identity}
       refreshControl={
-        <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+        <RefreshControl refreshing={isFetching && !isLoading} onRefresh={onRefresh} />
       }
       renderItem={({ item }) => {
-        const colors = STATUS_COLORS[item.status];
+        const display = getAssignmentDisplay(item, language);
+        const colors = STATUS_COLORS[display.status];
 
         return (
           <View className="bg-white rounded-lg p-4 shadow-sm">
             <View className="flex-row justify-between items-center">
-              <Text className="text-gray-900 font-medium">{item.title}</Text>
+              <Text className="text-gray-900 font-medium">{display.title}</Text>
               <View className={`px-2 py-1 rounded ${colors.bg}`}>
                 <Text className={`text-xs font-medium ${colors.text}`}>
-                  {t(`assignments.${item.status}` as TranslationKey)}
+                  {t(`assignments.${display.status}` as TranslationKey)}
                 </Text>
               </View>
             </View>
-            <Text className="text-gray-500 text-sm mt-1">{item.date} - {item.venue}</Text>
+            <Text className="text-gray-500 text-sm mt-1">{display.date} - {display.venue}</Text>
           </View>
         );
       }}
