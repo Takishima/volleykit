@@ -2,9 +2,6 @@
  * Mobile app constants
  */
 
-/** Placeholder refresh delay in milliseconds - will be removed when real API is integrated */
-export const PLACEHOLDER_REFRESH_DELAY_MS = 1000;
-
 /**
  * Theme colors for the mobile app
  * These match the Tailwind CSS color palette
