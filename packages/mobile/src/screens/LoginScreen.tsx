@@ -55,12 +55,16 @@ export function LoginScreen(_props: Props) {
     const result = await authenticate(t('auth.biometricPrompt'));
 
     if (result.success && result.credentials) {
+      // Clear any existing credentials first to ensure clean state,
+      // preventing race conditions if user had partially filled the form
+      setUsername('');
+      setPassword('');
+      setError(null);
       // Mark pending auto-login - the useEffect will trigger handleLogin
       // once the credentials state is updated
       pendingBiometricLoginRef.current = true;
       setUsername(result.credentials.username);
       setPassword(result.credentials.password);
-      setError(null);
     } else if (!result.success) {
       setError(t('auth.biometricFailed'));
     }
@@ -78,6 +82,9 @@ export function LoginScreen(_props: Props) {
   );
 
   const handleLogin = useCallback(async () => {
+    // Guard against concurrent calls (e.g., biometric auto-login + manual tap)
+    if (isLoading) return;
+
     if (!username || !password) {
       setError(t('auth.enterCredentials'));
       return;
@@ -94,7 +101,7 @@ export function LoginScreen(_props: Props) {
     } finally {
       setIsLoading(false);
     }
-  }, [username, password, t]);
+  }, [username, password, t, isLoading]);
 
   // Auto-login after biometric authentication fills credentials
   useEffect(() => {
