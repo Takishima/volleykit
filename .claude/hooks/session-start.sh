@@ -43,35 +43,21 @@ needs_api_generation() {
   return 1
 }
 
-# Install dependencies if needed (run in parallel)
+# Install dependencies if needed
 if needs_install; then
   echo "Installing dependencies (package-lock.json changed or first run)..."
 
-  # Run root and web-app installs in parallel
-  (
-    echo "Installing root dependencies..."
-    npm install
-  ) &
-  ROOT_PID=$!
+  # Remove stale marker to ensure fresh state on failure
+  rm -f "$INSTALL_MARKER"
 
-  (
-    cd web-app
-    echo "Installing web-app dependencies..."
-    npm install
-  ) &
-  WEBAPP_PID=$!
-
-  # Wait for both to complete
-  wait $ROOT_PID
-  ROOT_EXIT=$?
-  wait $WEBAPP_PID
-  WEBAPP_EXIT=$?
-
-  if [ $ROOT_EXIT -eq 0 ] && [ $WEBAPP_EXIT -eq 0 ]; then
+  # Single npm install at root handles all workspaces (web-app, packages/shared, packages/mobile)
+  # Running parallel installs could cause race conditions since workspaces share node_modules
+  if npm install; then
     # Store hash to skip install next time
     echo "$CURRENT_LOCK_HASH" > "$INSTALL_MARKER"
+    echo "Dependencies installed successfully"
   else
-    echo "Warning: npm install had issues (root: $ROOT_EXIT, web-app: $WEBAPP_EXIT)"
+    echo "Warning: npm install failed - will retry on next session"
   fi
 else
   echo "Dependencies already installed (skipping npm install)"
