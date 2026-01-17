@@ -5,7 +5,7 @@
  * Falls back to password entry after 3 failed biometric attempts.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -22,6 +22,9 @@ export function LoginScreen(_props: Props) {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Track pending auto-login after biometric authentication
+  const pendingBiometricLoginRef = useRef(false);
 
   // Biometric authentication
   const {
@@ -52,13 +55,16 @@ export function LoginScreen(_props: Props) {
     const result = await authenticate(t('auth.biometricPrompt'));
 
     if (result.success && result.credentials) {
-      // Auto-fill credentials and trigger login
+      // Clear any existing credentials first to ensure clean state,
+      // preventing race conditions if user had partially filled the form
+      setUsername('');
+      setPassword('');
+      setError(null);
+      // Mark pending auto-login - the useEffect will trigger handleLogin
+      // once the credentials state is updated
+      pendingBiometricLoginRef.current = true;
       setUsername(result.credentials.username);
       setPassword(result.credentials.password);
-      setError(null);
-
-      // TODO(#47): Implement actual login logic
-      // For now, credentials are filled and user can tap login
     } else if (!result.success) {
       setError(t('auth.biometricFailed'));
     }
@@ -75,7 +81,10 @@ export function LoginScreen(_props: Props) {
     [shouldFallbackToPassword, resetAttempts]
   );
 
-  const handleLogin = async () => {
+  const handleLogin = useCallback(async () => {
+    // Guard against concurrent calls (e.g., biometric auto-login + manual tap)
+    if (isLoading) return;
+
     if (!username || !password) {
       setError(t('auth.enterCredentials'));
       return;
@@ -92,7 +101,15 @@ export function LoginScreen(_props: Props) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [username, password, t, isLoading]);
+
+  // Auto-login after biometric authentication fills credentials
+  useEffect(() => {
+    if (pendingBiometricLoginRef.current && username && password) {
+      pendingBiometricLoginRef.current = false;
+      handleLogin();
+    }
+  }, [username, password, handleLogin]);
 
   return (
     <View className="flex-1 bg-white px-6 pt-20">
