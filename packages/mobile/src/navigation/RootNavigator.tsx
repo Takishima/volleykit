@@ -11,6 +11,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '@volleykit/shared/hooks';
 import { useTranslation } from '@volleykit/shared/i18n';
 
+import { login } from '../services/authService';
 import { LoginScreen } from '../screens/LoginScreen';
 import { LoadingScreen } from '../screens/LoadingScreen';
 import { AssignmentDetailScreen } from '../screens/AssignmentDetailScreen';
@@ -70,25 +71,35 @@ export function RootNavigator() {
     dismissBiometricPrompt,
   } = useSessionMonitorContext();
 
-  // Handle biometric authentication attempt
-  const handleBiometricAuthenticate = useCallback(async () => {
-    const result = await authenticate(t('auth.biometricPrompt'));
-
-    if (result.success && result.credentials) {
-      // Biometric verified - credentials retrieved successfully
-      // TODO(#47): Implement actual re-login with credentials when auth API is ready
-      // For now, just mark the session as refreshed
-      handleBiometricSuccess();
-      resetAttempts();
-    }
-  }, [authenticate, handleBiometricSuccess, resetAttempts, t]);
-
   // Handle fallback to password entry (logs out to show login screen)
   const handleFallbackToPassword = useCallback(() => {
     dismissBiometricPrompt();
     resetAttempts();
     logout();
   }, [dismissBiometricPrompt, resetAttempts, logout]);
+
+  // Handle biometric authentication attempt
+  const handleBiometricAuthenticate = useCallback(async () => {
+    const result = await authenticate(t('auth.biometricPrompt'));
+
+    if (result.success && result.credentials) {
+      // Biometric verified - credentials retrieved, now re-login
+      // Note: `login` is a module-level import and stable, so not included in deps
+      const loginResult = await login(
+        result.credentials.username,
+        result.credentials.password,
+        false // Don't save credentials again
+      );
+
+      if (loginResult.success) {
+        handleBiometricSuccess();
+        resetAttempts();
+      } else {
+        // Login failed (e.g., password changed on server) - fall back to password entry
+        handleFallbackToPassword();
+      }
+    }
+  }, [authenticate, handleBiometricSuccess, resetAttempts, t, handleFallbackToPassword]);
 
   // Handle cancel (just dismiss the prompt)
   const handleCancel = useCallback(() => {

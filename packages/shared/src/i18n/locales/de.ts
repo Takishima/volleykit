@@ -72,6 +72,8 @@ const de: Translations = {
     useBiometric: '{biometricType} verwenden',
     authenticateWith: 'Mit {biometricType} authentifizieren',
     attemptsRemaining: '{count} Versuch verbleibend',
+    accountLocked: 'Konto vorübergehend gesperrt wegen zu vieler Fehlversuche. Bitte versuchen Sie es später erneut.',
+    tfaNotSupported: 'Zwei-Faktor-Authentifizierung wird nicht unterstützt. Bitte deaktivieren Sie sie in Ihren VolleyManager-Einstellungen.',
   },
   assignments: {
     title: 'Einsätze',

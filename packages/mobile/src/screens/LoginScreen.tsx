@@ -11,6 +11,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { useTranslation } from '@volleykit/shared/i18n';
 import { useBiometricAuth } from '../hooks/useBiometricAuth';
+import { login } from '../services/authService';
 import { COLORS } from '../constants';
 import type { RootStackScreenProps } from '../navigation/types';
 
@@ -94,8 +95,21 @@ export function LoginScreen(_props: Props) {
     setError(null);
 
     try {
-      // TODO(#47): Implement login logic in Phase 3
-      // Login will be implemented when auth integration is complete
+      const result = await login(username, password);
+
+      if (!result.success) {
+        // Handle specific error messages
+        if (result.lockedUntil) {
+          setError(t('auth.accountLocked'));
+        } else if (result.error.includes('Two-factor')) {
+          setError(t('auth.tfaNotSupported'));
+        } else if (result.error.includes('No referee role')) {
+          setError(t('auth.noRefereeRole'));
+        } else {
+          setError(t('auth.invalidCredentials'));
+        }
+      }
+      // On success, the auth store is updated and navigation will happen automatically
     } catch {
       setError(t('auth.loginFailed'));
     } finally {

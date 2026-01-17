@@ -72,6 +72,8 @@ const fr: Translations = {
     useBiometric: 'Utiliser {biometricType}',
     authenticateWith: "S'authentifier avec {biometricType}",
     attemptsRemaining: '{count} tentative restante',
+    accountLocked: "Compte temporairement verrouillé en raison d'un trop grand nombre de tentatives. Veuillez réessayer plus tard.",
+    tfaNotSupported: "L'authentification à deux facteurs n'est pas prise en charge. Veuillez la désactiver dans vos paramètres VolleyManager.",
   },
   assignments: {
     title: 'Désignations',

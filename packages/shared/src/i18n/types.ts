@@ -86,6 +86,8 @@ export interface Translations {
     useBiometric: string;
     authenticateWith: string;
     attemptsRemaining: string;
+    accountLocked: string;
+    tfaNotSupported: string;
   };
   assignments: {
     title: string;
