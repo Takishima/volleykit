@@ -11,6 +11,12 @@ import Constants from 'expo-constants';
 import { createAuthService, type LoginResult } from '@volleykit/shared/auth';
 import { useAuthStore } from '@volleykit/shared/stores';
 import { secureStorage } from '../platform/secureStorage';
+import {
+  setSessionToken,
+  setCsrfToken,
+  clearTokens,
+  getSessionToken,
+} from '../api';
 
 /**
  * API base URL for authentication requests.
@@ -21,31 +27,36 @@ const API_BASE_URL =
   (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined) ??
   'https://proxy.volleykit.app';
 
-// Session token storage (in-memory for now, could use AsyncStorage)
-let sessionToken: string | null = null;
+/**
+ * Session token header name.
+ */
+const SESSION_TOKEN_HEADER = 'X-Session-Token';
 
 /**
  * Get session headers for API requests.
+ * Uses the centralized token storage in realClient.
  */
 function getSessionHeaders(): Record<string, string> {
-  return sessionToken ? { 'X-Session-Token': sessionToken } : {};
+  const token = getSessionToken();
+  return token ? { [SESSION_TOKEN_HEADER]: token } : {};
 }
 
 /**
  * Capture session token from response headers.
+ * Stores in the centralized token storage (realClient).
  */
 function captureSessionToken(response: Response): void {
-  const token = response.headers.get('X-Session-Token');
+  const token = response.headers.get(SESSION_TOKEN_HEADER);
   if (token) {
-    sessionToken = token;
+    setSessionToken(token);
   }
 }
 
 /**
- * Clear the session token.
+ * Clear the session token and all API tokens.
  */
 export function clearSessionToken(): void {
-  sessionToken = null;
+  clearTokens();
 }
 
 /**
@@ -102,6 +113,11 @@ export async function login(
     const result = await authService.login(username, password);
 
     if (result.success) {
+      // Sync CSRF token with the real API client for subsequent requests
+      if (result.csrfToken) {
+        setCsrfToken(result.csrfToken);
+      }
+
       // Get fresh state after async operation to avoid stale references
       const currentState = useAuthStore.getState();
 
@@ -209,6 +225,11 @@ export async function checkSession(): Promise<boolean> {
     const result = await authService.checkSession();
 
     if (result.valid && result.activeParty) {
+      // Sync CSRF token with the real API client
+      if (result.csrfToken) {
+        setCsrfToken(result.csrfToken);
+      }
+
       // Update user data from active party
       const { user, activeOccupationId } = authService.deriveUserFromActiveParty(
         result.activeParty,

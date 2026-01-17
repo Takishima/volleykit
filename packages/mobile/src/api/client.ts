@@ -1,10 +1,11 @@
 /**
- * Mobile API client implementation.
+ * Mock API client implementation for mobile app.
  *
  * Provides a mock implementation that returns placeholder data
- * while the real API integration is being developed.
+ * for demo mode and testing purposes.
  *
- * TODO(#775): Replace with real API client when auth integration is complete.
+ * For real API calls, see realClient.ts which is used when
+ * the user is authenticated with the 'api' data source.
  *
  * This client implements the interfaces required by the shared hooks
  * (AssignmentsApiClient, ExchangesApiClient, CompensationsApiClient).
