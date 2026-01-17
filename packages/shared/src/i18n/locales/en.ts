@@ -74,6 +74,9 @@ const en: Translations = {
   },
   assignments: {
     title: 'Assignments',
+    details: 'Assignment Details',
+    venue: 'Venue',
+    teams: 'Teams',
     upcoming: 'Upcoming',
     past: 'Past',
     loading: 'Loading assignments...',

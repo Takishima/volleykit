@@ -75,6 +75,9 @@ const de: Translations = {
   },
   assignments: {
     title: 'Einsätze',
+    details: 'Einsatzdetails',
+    venue: 'Spielort',
+    teams: 'Teams',
     upcoming: 'Bevorstehend',
     past: 'Vergangen',
     loading: 'Einsätze werden geladen...',

@@ -75,6 +75,9 @@ const it: Translations = {
   },
   assignments: {
     title: 'Designazioni',
+    details: 'Dettagli designazione',
+    venue: 'Sede',
+    teams: 'Squadre',
     upcoming: 'Prossime',
     past: 'Passate',
     loading: 'Caricamento designazioni...',

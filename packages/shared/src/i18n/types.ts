@@ -89,6 +89,9 @@ export interface Translations {
   };
   assignments: {
     title: string;
+    details: string;
+    venue: string;
+    teams: string;
     upcoming: string;
     past: string;
     loading: string;
