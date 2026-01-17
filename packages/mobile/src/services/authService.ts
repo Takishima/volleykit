@@ -11,6 +11,11 @@ import Constants from 'expo-constants';
 import { createAuthService, type LoginResult } from '@volleykit/shared/auth';
 import { useAuthStore } from '@volleykit/shared/stores';
 import { secureStorage } from '../platform/secureStorage';
+import {
+  setSessionToken as setApiSessionToken,
+  setCsrfToken as setApiCsrfToken,
+  clearTokens as clearApiTokens,
+} from '../api';
 
 /**
  * API base URL for authentication requests.
@@ -33,19 +38,25 @@ function getSessionHeaders(): Record<string, string> {
 
 /**
  * Capture session token from response headers.
+ * Syncs the token with both the local auth service and the real API client.
  */
 function captureSessionToken(response: Response): void {
   const token = response.headers.get('X-Session-Token');
   if (token) {
     sessionToken = token;
+    // Sync session token with real API client
+    setApiSessionToken(token);
   }
 }
 
 /**
  * Clear the session token.
+ * Clears both the local auth service token and the real API client tokens.
  */
 export function clearSessionToken(): void {
   sessionToken = null;
+  // Clear all tokens in the real API client
+  clearApiTokens();
 }
 
 /**
@@ -102,6 +113,11 @@ export async function login(
     const result = await authService.login(username, password);
 
     if (result.success) {
+      // Sync CSRF token with the real API client for subsequent requests
+      if (result.csrfToken) {
+        setApiCsrfToken(result.csrfToken);
+      }
+
       // Get fresh state after async operation to avoid stale references
       const currentState = useAuthStore.getState();
 
@@ -209,6 +225,11 @@ export async function checkSession(): Promise<boolean> {
     const result = await authService.checkSession();
 
     if (result.valid && result.activeParty) {
+      // Sync CSRF token with the real API client
+      if (result.csrfToken) {
+        setApiCsrfToken(result.csrfToken);
+      }
+
       // Update user data from active party
       const { user, activeOccupationId } = authService.deriveUserFromActiveParty(
         result.activeParty,
