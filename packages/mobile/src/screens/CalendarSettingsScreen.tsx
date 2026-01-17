@@ -17,11 +17,14 @@ import {
   Linking,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { useTranslation } from '@volleykit/shared/i18n';
 import { useStorage } from '@volleykit/shared/adapters';
+import { queryKeys, type Assignment } from '@volleykit/shared/api';
 
 import { calendar } from '../platform/calendar';
+import { useCalendarSync } from '../hooks';
 import { CalendarPicker } from '../components/CalendarPicker';
 import { COLORS, SETTINGS_ICON_SIZE } from '../constants';
 import type { CalendarInfo, CalendarSyncMode, CalendarSettings } from '../types/calendar';
@@ -31,9 +34,6 @@ type Props = RootStackScreenProps<'CalendarSettings'>;
 
 /** Storage key for calendar settings */
 const CALENDAR_SETTINGS_KEY = 'calendar_settings';
-
-/** Simulated sync delay in milliseconds (for development/demo) */
-const SIMULATED_SYNC_DELAY_MS = 1000;
 
 /** Default calendar settings */
 const DEFAULT_SETTINGS: CalendarSettings = {
@@ -46,12 +46,13 @@ const DEFAULT_SETTINGS: CalendarSettings = {
 export function CalendarSettingsScreen(_props: Props) {
   const { t } = useTranslation();
   const { storage } = useStorage();
+  const queryClient = useQueryClient();
+  const { syncAssignments, isSyncing } = useCalendarSync();
 
   const [settings, setSettings] = useState<CalendarSettings>(DEFAULT_SETTINGS);
   const [calendars, setCalendars] = useState<CalendarInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCalendarPicker, setShowCalendarPicker] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
 
   // Load settings and calendars on mount
   useEffect(() => {
@@ -179,28 +180,41 @@ export function CalendarSettingsScreen(_props: Props) {
       return;
     }
 
-    setIsSyncing(true);
+    // Get cached assignments from query client
+    const cachedAssignments = queryClient.getQueryData<Assignment[]>(
+      queryKeys.assignments.all
+    );
+
+    if (!cachedAssignments || cachedAssignments.length === 0) {
+      Alert.alert(t('common.error'), t('settings.calendar.noAssignmentsToSync'), [
+        { text: t('common.close') },
+      ]);
+      return;
+    }
+
     try {
-      // TODO(#72): Implement actual sync with useCalendarSync hook
-      // For now, just simulate a sync
-      await new Promise((resolve) => setTimeout(resolve, SIMULATED_SYNC_DELAY_MS));
+      const result = await syncAssignments(cachedAssignments);
 
       await saveSettings({
         ...settings,
         lastSyncAt: new Date().toISOString(),
       });
 
-      Alert.alert(t('settings.calendar.syncSuccess'), undefined, [
-        { text: t('common.close') },
-      ]);
+      Alert.alert(
+        t('settings.calendar.syncSuccess'),
+        t('settings.calendar.syncSummary', {
+          created: result.created,
+          updated: result.updated,
+          deleted: result.deleted,
+        }),
+        [{ text: t('common.close') }]
+      );
     } catch {
       Alert.alert(t('common.error'), t('settings.calendar.syncError'), [
         { text: t('common.close') },
       ]);
-    } finally {
-      setIsSyncing(false);
     }
-  }, [settings, saveSettings, t]);
+  }, [settings, saveSettings, t, queryClient, syncAssignments]);
 
   // Get selected calendar name
   const selectedCalendar = calendars.find(
