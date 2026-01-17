@@ -77,6 +77,7 @@ export function OfflineBanner({
  * Compact offline indicator for use in headers.
  */
 export function OfflineIndicator(): JSX.Element | null {
+  const { t } = useTranslation();
   const { isOnline, isKnown } = useNetwork();
 
   if (isOnline || !isKnown) {
@@ -87,10 +88,10 @@ export function OfflineIndicator(): JSX.Element | null {
     <View
       className="flex-row items-center bg-amber-100 rounded-full px-2 py-1"
       accessibilityRole="alert"
-      accessibilityLabel="Offline"
+      accessibilityLabel={t('common.offline')}
     >
       <Feather name="wifi-off" size={12} color={COLORS.amber500} />
-      <Text className="text-amber-600 text-xs ml-1">Offline</Text>
+      <Text className="text-amber-600 text-xs ml-1">{t('common.offline')}</Text>
     </View>
   );
 }

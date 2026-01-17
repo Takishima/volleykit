@@ -54,6 +54,7 @@ export interface Translations {
     minutesUnit: string;
     hoursUnit: string;
     dob: string;
+    offline: string;
   };
   auth: {
     login: string;
