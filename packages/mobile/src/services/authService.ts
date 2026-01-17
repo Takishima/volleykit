@@ -12,9 +12,10 @@ import { createAuthService, type LoginResult } from '@volleykit/shared/auth';
 import { useAuthStore } from '@volleykit/shared/stores';
 import { secureStorage } from '../platform/secureStorage';
 import {
-  setSessionToken as setApiSessionToken,
-  setCsrfToken as setApiCsrfToken,
-  clearTokens as clearApiTokens,
+  setSessionToken,
+  setCsrfToken,
+  clearTokens,
+  getSessionToken,
 } from '../api';
 
 /**
@@ -26,37 +27,36 @@ const API_BASE_URL =
   (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined) ??
   'https://proxy.volleykit.app';
 
-// Session token storage (in-memory for now, could use AsyncStorage)
-let sessionToken: string | null = null;
+/**
+ * Session token header name.
+ */
+const SESSION_TOKEN_HEADER = 'X-Session-Token';
 
 /**
  * Get session headers for API requests.
+ * Uses the centralized token storage in realClient.
  */
 function getSessionHeaders(): Record<string, string> {
-  return sessionToken ? { 'X-Session-Token': sessionToken } : {};
+  const token = getSessionToken();
+  return token ? { [SESSION_TOKEN_HEADER]: token } : {};
 }
 
 /**
  * Capture session token from response headers.
- * Syncs the token with both the local auth service and the real API client.
+ * Stores in the centralized token storage (realClient).
  */
 function captureSessionToken(response: Response): void {
-  const token = response.headers.get('X-Session-Token');
+  const token = response.headers.get(SESSION_TOKEN_HEADER);
   if (token) {
-    sessionToken = token;
-    // Sync session token with real API client
-    setApiSessionToken(token);
+    setSessionToken(token);
   }
 }
 
 /**
- * Clear the session token.
- * Clears both the local auth service token and the real API client tokens.
+ * Clear the session token and all API tokens.
  */
 export function clearSessionToken(): void {
-  sessionToken = null;
-  // Clear all tokens in the real API client
-  clearApiTokens();
+  clearTokens();
 }
 
 /**
@@ -115,7 +115,7 @@ export async function login(
     if (result.success) {
       // Sync CSRF token with the real API client for subsequent requests
       if (result.csrfToken) {
-        setApiCsrfToken(result.csrfToken);
+        setCsrfToken(result.csrfToken);
       }
 
       // Get fresh state after async operation to avoid stale references
@@ -227,7 +227,7 @@ export async function checkSession(): Promise<boolean> {
     if (result.valid && result.activeParty) {
       // Sync CSRF token with the real API client
       if (result.csrfToken) {
-        setApiCsrfToken(result.csrfToken);
+        setCsrfToken(result.csrfToken);
       }
 
       // Update user data from active party
