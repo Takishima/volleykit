@@ -5,13 +5,21 @@
  */
 
 import { useCallback } from 'react';
-import { View, Text, FlatList, RefreshControl, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  RefreshControl,
+  ActivityIndicator,
+  TouchableOpacity,
+} from 'react-native';
 
 import { useTranslation, type TranslationKey } from '@volleykit/shared/i18n';
 import { useAssignments } from '@volleykit/shared/hooks';
 import type { Assignment } from '@volleykit/shared/api';
 import type { MainTabScreenProps } from '../navigation/types';
 import { useApiClient } from '../contexts';
+import { formatDate } from '../utils';
 
 type Props = MainTabScreenProps<'Assignments'>;
 
@@ -23,22 +31,12 @@ const STATUS_COLORS = {
 } as const;
 
 /**
- * Format date from ISO string to display format.
- */
-function formatDate(isoDate: string | null | undefined): string {
-  if (!isoDate) return '';
-  const date = new Date(isoDate);
-  return date.toLocaleDateString('de-CH', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-}
-
-/**
  * Get display data from an assignment.
  */
-function getAssignmentDisplay(assignment: Assignment): {
+function getAssignmentDisplay(
+  assignment: Assignment,
+  language: string
+): {
   id: string;
   title: string;
   date: string;
@@ -52,14 +50,14 @@ function getAssignmentDisplay(assignment: Assignment): {
   return {
     id: assignment.__identity,
     title: `${homeTeam} vs ${awayTeam}`,
-    date: formatDate(game?.startingDateTime),
+    date: formatDate(game?.startingDateTime, language),
     venue: game?.hall?.name ?? 'TBD',
     status: assignment.refereeConvocationStatus,
   };
 }
 
 export function AssignmentsScreen(_props: Props) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const apiClient = useApiClient();
 
   const {
@@ -82,7 +80,7 @@ export function AssignmentsScreen(_props: Props) {
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center">
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" accessibilityLabel={t('common.loading')} />
       </View>
     );
   }
@@ -91,9 +89,17 @@ export function AssignmentsScreen(_props: Props) {
   if (isError) {
     return (
       <View className="flex-1 items-center justify-center px-6">
-        <Text className="text-red-600 text-center">
+        <Text className="text-red-600 text-center mb-4">
           {error?.message ?? t('common.error')}
         </Text>
+        <TouchableOpacity
+          className="bg-primary-600 rounded-lg px-6 py-3"
+          onPress={() => refetch()}
+          accessibilityRole="button"
+          accessibilityLabel={t('common.retry')}
+        >
+          <Text className="text-white font-medium">{t('common.retry')}</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -117,7 +123,7 @@ export function AssignmentsScreen(_props: Props) {
         <RefreshControl refreshing={isFetching && !isLoading} onRefresh={onRefresh} />
       }
       renderItem={({ item }) => {
-        const display = getAssignmentDisplay(item);
+        const display = getAssignmentDisplay(item, language);
         const colors = STATUS_COLORS[display.status];
 
         return (

@@ -5,7 +5,14 @@
  */
 
 import { useCallback } from 'react';
-import { View, Text, FlatList, RefreshControl, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  RefreshControl,
+  ActivityIndicator,
+  TouchableOpacity,
+} from 'react-native';
 
 import { useTranslation, type TranslationKey } from '@volleykit/shared/i18n';
 import { useCompensations } from '@volleykit/shared/hooks';
@@ -66,7 +73,7 @@ export function CompensationsScreen(_props: Props) {
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center">
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" accessibilityLabel={t('common.loading')} />
       </View>
     );
   }
@@ -75,9 +82,17 @@ export function CompensationsScreen(_props: Props) {
   if (isError) {
     return (
       <View className="flex-1 items-center justify-center px-6">
-        <Text className="text-red-600 text-center">
+        <Text className="text-red-600 text-center mb-4">
           {error?.message ?? t('common.error')}
         </Text>
+        <TouchableOpacity
+          className="bg-primary-600 rounded-lg px-6 py-3"
+          onPress={() => refetch()}
+          accessibilityRole="button"
+          accessibilityLabel={t('common.retry')}
+        >
+          <Text className="text-white font-medium">{t('common.retry')}</Text>
+        </TouchableOpacity>
       </View>
     );
   }

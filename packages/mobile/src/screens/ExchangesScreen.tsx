@@ -5,13 +5,21 @@
  */
 
 import { useCallback } from 'react';
-import { View, Text, FlatList, RefreshControl, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  RefreshControl,
+  ActivityIndicator,
+  TouchableOpacity,
+} from 'react-native';
 
 import { useTranslation, type TranslationKey } from '@volleykit/shared/i18n';
 import { useExchanges } from '@volleykit/shared/hooks';
 import type { GameExchange } from '@volleykit/shared/api';
 import type { MainTabScreenProps } from '../navigation/types';
 import { useApiClient } from '../contexts';
+import { formatDate } from '../utils';
 
 type Props = MainTabScreenProps<'Exchanges'>;
 
@@ -23,22 +31,12 @@ const STATUS_COLORS = {
 } as const;
 
 /**
- * Format date from ISO string to display format.
- */
-function formatDate(isoDate: string | null | undefined): string {
-  if (!isoDate) return '';
-  const date = new Date(isoDate);
-  return date.toLocaleDateString('de-CH', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-}
-
-/**
  * Get display data from an exchange.
  */
-function getExchangeDisplay(exchange: GameExchange): {
+function getExchangeDisplay(
+  exchange: GameExchange,
+  language: string
+): {
   id: string;
   game: string;
   date: string;
@@ -52,14 +50,14 @@ function getExchangeDisplay(exchange: GameExchange): {
   return {
     id: exchange.__identity,
     game: `${homeTeam} vs ${awayTeam}`,
-    date: formatDate(game?.startingDateTime),
+    date: formatDate(game?.startingDateTime, language),
     venue: game?.hall?.name ?? '',
     status: exchange.status,
   };
 }
 
 export function ExchangesScreen(_props: Props) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const apiClient = useApiClient();
 
   const {
@@ -82,7 +80,7 @@ export function ExchangesScreen(_props: Props) {
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center">
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" accessibilityLabel={t('common.loading')} />
       </View>
     );
   }
@@ -91,9 +89,17 @@ export function ExchangesScreen(_props: Props) {
   if (isError) {
     return (
       <View className="flex-1 items-center justify-center px-6">
-        <Text className="text-red-600 text-center">
+        <Text className="text-red-600 text-center mb-4">
           {error?.message ?? t('common.error')}
         </Text>
+        <TouchableOpacity
+          className="bg-primary-600 rounded-lg px-6 py-3"
+          onPress={() => refetch()}
+          accessibilityRole="button"
+          accessibilityLabel={t('common.retry')}
+        >
+          <Text className="text-white font-medium">{t('common.retry')}</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -117,7 +123,7 @@ export function ExchangesScreen(_props: Props) {
         <RefreshControl refreshing={isFetching && !isLoading} onRefresh={onRefresh} />
       }
       renderItem={({ item }) => {
-        const display = getExchangeDisplay(item);
+        const display = getExchangeDisplay(item, language);
         const colors = STATUS_COLORS[display.status];
 
         return (
