@@ -29,6 +29,13 @@ const PLACEHOLDER_ASSIGNMENTS: PlaceholderAssignment[] = [
   { id: '3', title: 'Game 3', date: '2026-02-01', venue: 'Sports Hall C', status: 'cancelled' },
 ];
 
+// Status badge color mappings
+const STATUS_COLORS = {
+  active: { bg: 'bg-green-100', text: 'text-green-700' },
+  cancelled: { bg: 'bg-red-100', text: 'text-red-700' },
+  archived: { bg: 'bg-gray-100', text: 'text-gray-700' },
+} as const;
+
 export function AssignmentsScreen(_props: Props) {
   const { t } = useTranslation();
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -68,12 +75,7 @@ export function AssignmentsScreen(_props: Props) {
         <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
       }
       renderItem={({ item }) => {
-        const statusColors = {
-          active: { bg: 'bg-green-100', text: 'text-green-700' },
-          cancelled: { bg: 'bg-red-100', text: 'text-red-700' },
-          archived: { bg: 'bg-gray-100', text: 'text-gray-700' },
-        };
-        const colors = statusColors[item.status];
+        const colors = STATUS_COLORS[item.status];
 
         return (
           <View className="bg-white rounded-lg p-4 shadow-sm">

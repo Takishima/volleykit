@@ -13,12 +13,27 @@ import { PLACEHOLDER_REFRESH_DELAY_MS } from '../constants';
 
 type Props = MainTabScreenProps<'Exchanges'>;
 
+// Placeholder exchange type (matches API exchangeStatusSchema values)
+type PlaceholderExchange = {
+  id: string;
+  game: string;
+  date: string;
+  status: 'open' | 'applied' | 'closed';
+};
+
 // Placeholder data until API client is implemented
-const PLACEHOLDER_EXCHANGES = [
+const PLACEHOLDER_EXCHANGES: PlaceholderExchange[] = [
   { id: '1', game: 'Game A', date: '2026-01-22', status: 'open' },
   { id: '2', game: 'Game B', date: '2026-01-28', status: 'applied' },
   { id: '3', game: 'Game C', date: '2026-02-05', status: 'open' },
 ];
+
+// Status badge color mappings
+const STATUS_COLORS = {
+  open: { bg: 'bg-green-100', text: 'text-green-700' },
+  applied: { bg: 'bg-blue-100', text: 'text-blue-700' },
+  closed: { bg: 'bg-gray-100', text: 'text-gray-700' },
+} as const;
 
 export function ExchangesScreen(_props: Props) {
   const { t } = useTranslation();
@@ -58,19 +73,23 @@ export function ExchangesScreen(_props: Props) {
       refreshControl={
         <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
       }
-      renderItem={({ item }) => (
-        <View className="bg-white rounded-lg p-4 shadow-sm">
-          <View className="flex-row justify-between items-center">
-            <Text className="text-gray-900 font-medium">{item.game}</Text>
-            <View className={`px-2 py-1 rounded ${item.status === 'open' ? 'bg-green-100' : 'bg-blue-100'}`}>
-              <Text className={`text-xs font-medium ${item.status === 'open' ? 'text-green-700' : 'text-blue-700'}`}>
-                {t(`exchange.${item.status}` as TranslationKey)}
-              </Text>
+      renderItem={({ item }) => {
+        const colors = STATUS_COLORS[item.status];
+
+        return (
+          <View className="bg-white rounded-lg p-4 shadow-sm">
+            <View className="flex-row justify-between items-center">
+              <Text className="text-gray-900 font-medium">{item.game}</Text>
+              <View className={`px-2 py-1 rounded ${colors.bg}`}>
+                <Text className={`text-xs font-medium ${colors.text}`}>
+                  {t(`exchange.${item.status}` as TranslationKey)}
+                </Text>
+              </View>
             </View>
+            <Text className="text-gray-500 text-sm mt-1">{item.date}</Text>
           </View>
-          <Text className="text-gray-500 text-sm mt-1">{item.date}</Text>
-        </View>
-      )}
+        );
+      }}
     />
   );
 }
