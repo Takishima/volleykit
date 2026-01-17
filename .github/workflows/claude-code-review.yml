@@ -62,77 +62,30 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Use review-specific settings with hooks that auto-load guidelines
+          # Note: Changes won't take effect until merged (GitHub runs base branch workflow)
+          settings: ".claude/settings-review.json"
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
             EVENT TYPE: ${{ github.event.action }}
 
-            CRITICAL: You MUST read these files FIRST and strictly enforce all guidelines during this review:
-            - CLAUDE.md (main guidelines)
-            - docs/SECURITY_CHECKLIST.md (security review)
-            - docs/CODE_PATTERNS.md (anti-patterns and examples)
+            Review this PR following the guidelines in docs/REVIEW_CHECKLIST.md.
 
-            ## CONSISTENCY REQUIREMENTS
+            BEFORE reviewing, check for previous review comments:
+            1. Run `gh pr view ${{ github.event.pull_request.number || inputs.pr_number }} --comments`
+            2. For re-reviews (EVENT TYPE is "synchronize"): acknowledge fixes, flag new issues only
 
-            BEFORE reviewing, check for previous review comments on this PR:
-            1. Run `gh pr view ${{ github.event.pull_request.number || inputs.pr_number }} --comments` to see all previous comments
-            2. Identify any previous Claude Code Review comments (they follow the format below)
-            3. Track which issues were previously raised
-
-            When re-reviewing (EVENT TYPE is "synchronize"):
-            - DO NOT repeat issues that are still present - only reference them briefly
-            - DO acknowledge issues that have been FIXED with "✅ Fixed: [issue]"
-            - DO flag any NEW issues introduced in the latest commits
-            - Focus your detailed comments on changes since the last review
-
-            ## REVIEW CHECKLIST (CLAUDE.md requirements)
-
-            Flag violations of:
-            - Naming conventions (PascalCase components, camelCase hooks/variables, SCREAMING_SNAKE_CASE constants)
-            - Magic numbers (must use named constants)
-            - Array index as React key (must use unique identifiers)
-            - Memory leaks (intervals/timeouts/subscriptions not cleaned up)
-            - Outdated patterns (isMountedRef instead of AbortController)
-            - Missing accessibility (ARIA attributes, keyboard navigation)
-            - Functions over 20-30 lines or with more than 3-4 parameters
-            - Unnecessary comments (code should be self-documenting)
-
-            Also review for:
-            - Potential bugs or issues
-            - Performance considerations
-            - Security concerns
-            - Test coverage for business logic
-
-            ## OUTPUT FORMAT
-
-            Output your review as plain markdown (NOT wrapped in code blocks). GitHub will render the markdown formatting automatically when posted via `gh pr comment`.
-
-            Use this structure:
-
-            ## Claude Code Review
-
-            **Review type:** [Initial review | Re-review after changes]
-
-            ### Summary
-            [1-2 sentence overview]
-
-            ### Issues Found
-            [List issues with file:line references, or "No issues found"]
-
-            ### Fixed Since Last Review (re-reviews only)
-            [List resolved issues, or omit section for initial reviews]
-
-            ### Recommendations
-            [Optional suggestions for improvement]
-
-            ---
-
-            Be constructive but firm - violations of CLAUDE.md guidelines should be explicitly called out.
-
-            Use `gh pr comment` with your Bash tool to leave your review as a comment on the PR. Pass the markdown content directly without wrapping in code blocks.
-          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
-          # or https://code.claude.com/docs/en/cli-reference for available options
-          claude_args: '--model opus --allowed-tools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"'
+            Post your review using `gh pr comment`. Output plain markdown (not wrapped in code blocks).
+          claude_args: '--model opus'
+          allowed_tools: |
+            Bash(gh issue view:*)
+            Bash(gh search:*)
+            Bash(gh issue list:*)
+            Bash(gh pr comment:*)
+            Bash(gh pr diff:*)
+            Bash(gh pr view:*)
+            Bash(gh pr list:*)
 
     outputs:
       guidelines_changed: ${{ steps.check-claude-md.outputs.guidelines_changed }}
