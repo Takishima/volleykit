@@ -38,6 +38,7 @@ const de: Translations = {
     minutesUnit: "'",
     hoursUnit: 'h',
     dob: 'Geb.',
+    offline: 'Offline',
   },
   auth: {
     login: 'Anmelden',
