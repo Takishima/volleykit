@@ -7,7 +7,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { View, Text, FlatList, RefreshControl } from 'react-native';
 
-import { useTranslation } from '@volleykit/shared/i18n';
+import { useTranslation, type TranslationKey } from '@volleykit/shared/i18n';
 import type { MainTabScreenProps } from '../navigation/types';
 import { PLACEHOLDER_REFRESH_DELAY_MS } from '../constants';
 
@@ -64,7 +64,7 @@ export function ExchangesScreen(_props: Props) {
             <Text className="text-gray-900 font-medium">{item.game}</Text>
             <View className={`px-2 py-1 rounded ${item.status === 'open' ? 'bg-green-100' : 'bg-blue-100'}`}>
               <Text className={`text-xs font-medium ${item.status === 'open' ? 'text-green-700' : 'text-blue-700'}`}>
-                {item.status.toUpperCase()}
+                {t(`exchange.${item.status}` as TranslationKey)}
               </Text>
             </View>
           </View>
