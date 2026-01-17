@@ -16,12 +16,14 @@ VolleyKit is a multi-platform app suite for Swiss volleyball referee management 
 
 ## Read When Needed
 
+**IMPORTANT**: You MUST read these files at the specified times:
+
 | When | Read |
 |------|------|
 | Before committing | [docs/VALIDATION.md](docs/VALIDATION.md) - validation commands, bundle limits |
-| Security review | [docs/SECURITY_CHECKLIST.md](docs/SECURITY_CHECKLIST.md) |
-| Code patterns | [docs/CODE_PATTERNS.md](docs/CODE_PATTERNS.md) |
-| Testing strategy | [docs/TESTING_STRATEGY.md](docs/TESTING_STRATEGY.md) |
+| Touching auth/API/worker code | [docs/SECURITY_CHECKLIST.md](docs/SECURITY_CHECKLIST.md) |
+| Unsure about patterns | [docs/CODE_PATTERNS.md](docs/CODE_PATTERNS.md) |
+| Writing tests | [docs/TESTING_STRATEGY.md](docs/TESTING_STRATEGY.md) |
 | API integration | [docs/api/](docs/api/) - OpenAPI spec, endpoint docs, captures |
 
 ## Development Workflow
