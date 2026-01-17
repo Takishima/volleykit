@@ -1,16 +1,25 @@
-# CLAUDE.md - VolleyKit Web App
+# CLAUDE.md - VolleyKit Monorepo
 
 ## Project Overview
 
-A progressive web application (PWA) that provides an improved interface for volleymanager.volleyball.ch, the Swiss volleyball referee management system.
+VolleyKit is a multi-platform application suite for Swiss volleyball referee management, providing improved interfaces for volleymanager.volleyball.ch.
 
 **Target**: https://volleymanager.volleyball.ch (Swiss volleyball referee management)
+
+**Applications**:
+- **Web App (PWA)**: Progressive web application at `web-app/`
+- **Mobile App**: React Native/Expo app at `packages/mobile/`
+- **Help Site**: Astro-based documentation at `help-site/`
+- **OCR POC**: Scoresheet OCR proof of concept at `ocr-poc/`
+- **CORS Proxy**: Cloudflare Worker at `worker/`
 
 ## Staying Current with Best Practices
 
 **IMPORTANT**: Always consult official documentation for the latest best practices before implementing features:
 
 - **React**: Check [react.dev](https://react.dev) for latest patterns and APIs
+- **React Native**: Check [reactnative.dev](https://reactnative.dev) for mobile patterns
+- **Expo**: Check [docs.expo.dev](https://docs.expo.dev) for Expo-specific APIs
 - **TypeScript**: Review [typescriptlang.org](https://www.typescriptlang.org/docs/) for current features
 - **Vite**: Check [vite.dev](https://vite.dev) for build configuration
 - **Packages**: Always check package documentation on [npmjs.com](https://www.npmjs.com) for latest version compatibility and migration guides
@@ -87,6 +96,7 @@ To create a PR and address Claude Code Review comments, use the `/pr-review` com
 
 ## Tech Stack
 
+### Web App (PWA)
 - **Framework**: React 19 with TypeScript 5.9
 - **Build Tool**: Vite 7
 - **Styling**: Tailwind CSS 4
@@ -96,97 +106,126 @@ To create a PR and address Claude Code Review comments, use the `/pr-review` com
 - **API Client**: Generated from OpenAPI spec with openapi-typescript
 - **Testing**: Vitest 4 + React Testing Library (unit/integration), Playwright (E2E)
 - **i18n**: Custom translation system (de, en, fr, it)
-- **CORS Proxy**: Cloudflare Workers (production)
 - **Icons**: Lucide React
 - **Dates**: date-fns 4
 - **PDF**: pdf-lib (lazy-loaded)
 - **Transport**: OJP SDK (Swiss public transport)
 
+### Mobile App (React Native)
+- **Framework**: React Native 0.79 with Expo 53
+- **Navigation**: React Navigation 7
+- **Styling**: NativeWind (Tailwind CSS for React Native)
+- **State Management**: Zustand 5 (via @volleykit/shared), TanStack Query 5
+- **Authentication**: expo-local-authentication (biometrics)
+- **Storage**: expo-secure-store, AsyncStorage
+- **Calendar**: expo-calendar
+- **Location**: expo-location
+- **Notifications**: expo-notifications
+- **Background Tasks**: expo-task-manager
+- **Widgets**: react-native-widgetkit (iOS), react-native-android-widget
+
+### Shared Package (@volleykit/shared)
+- Platform-agnostic API client, validation schemas, query keys
+- TanStack Query hooks (useAssignments, useCompensations, useExchanges)
+- Zustand stores (auth, settings) with platform adapter interfaces
+- i18n translations
+- Date and error helpers
+- ~70% code sharing between web and mobile
+
+### Infrastructure
+- **CORS Proxy**: Cloudflare Workers (production)
+- **Help Site**: Astro 6 with Pagefind search
+- **CI/CD**: GitHub Actions
+
 ## Project Structure
 
-The project uses a **feature-based folder structure** for clear domain boundaries and better code organization.
+The project is a **monorepo** using npm workspaces with a **feature-based folder structure** for clear domain boundaries.
 
 ```
 volleykit/
 ├── .changeset/                 # Changelog staging (Changesets)
 │   ├── config.json            # Changesets configuration
-│   ├── README.md              # Instructions for adding changesets
 │   └── *.md                   # Pending changelog entries
-├── web-app/                    # React PWA
+├── .claude/                    # Claude Code configuration
+│   ├── agents/                # Custom agent definitions
+│   ├── commands/              # Slash commands (e.g., /pr-review)
+│   ├── hooks/                 # Git hooks for Claude Code
+│   └── settings.json          # Claude Code settings
+├── .specify/                   # Spec-kit integration
+│   ├── memory/                # Feature memory
+│   ├── scripts/               # Spec-kit scripts
+│   └── templates/             # Spec templates
+├── packages/
+│   ├── shared/                # @volleykit/shared - shared code
+│   │   └── src/
+│   │       ├── adapters/      # Platform adapters (storage, etc.)
+│   │       ├── api/           # API client, schema, validation
+│   │       ├── hooks/         # Shared TanStack Query hooks
+│   │       ├── i18n/          # Translations (de, en, fr, it)
+│   │       ├── stores/        # Zustand stores
+│   │       ├── types/         # Shared TypeScript types
+│   │       └── utils/         # Shared utilities
+│   └── mobile/                # @volleykit/mobile - React Native app
+│       ├── src/
+│       │   ├── components/    # React Native components
+│       │   ├── contexts/      # React contexts
+│       │   ├── hooks/         # Mobile-specific hooks
+│       │   ├── navigation/    # React Navigation config
+│       │   ├── platform/      # Platform adapters
+│       │   ├── providers/     # App providers
+│       │   ├── screens/       # Screen components
+│       │   ├── services/      # Background services
+│       │   ├── stores/        # Mobile-specific stores
+│       │   ├── types/         # Mobile types
+│       │   └── utils/         # Mobile utilities
+│       └── app.json           # Expo configuration
+├── web-app/                    # volleykit-web - React PWA
 │   ├── e2e/                   # Playwright E2E tests
 │   │   ├── *.spec.ts          # Test specifications
 │   │   └── pages/             # Page Object Models
 │   ├── public/                # Static PWA assets (icons, manifest)
 │   ├── src/
-│   │   ├── api/               # Core API client and types
-│   │   │   ├── client.ts      # API fetch wrapper with error handling
-│   │   │   ├── mock-api.ts    # Demo mode API simulation
-│   │   │   ├── queryKeys.ts   # TanStack Query key definitions
-│   │   │   ├── schema.ts      # Generated OpenAPI types (do not edit)
-│   │   │   └── validation.ts  # Zod schemas for API responses
+│   │   ├── api/               # Web-specific API code
+│   │   │   ├── client.ts      # API fetch wrapper
+│   │   │   ├── mock-api.ts    # Demo mode simulation
+│   │   │   ├── queryKeys.ts   # Query key re-exports
+│   │   │   ├── schema.ts      # Generated OpenAPI types
+│   │   │   └── validation.ts  # Zod schemas
 │   │   ├── features/          # Feature modules (domain-driven)
-│   │   │   ├── assignments/   # Assignment management feature
-│   │   │   │   ├── components/    # AssignmentCard, CalendarErrorModal, etc.
-│   │   │   │   ├── hooks/         # useAssignments, useAssignmentActions
-│   │   │   │   ├── api/           # Calendar API client, iCal parser
-│   │   │   │   ├── utils/         # assignment-actions, assignment-helpers
-│   │   │   │   └── AssignmentsPage.tsx
-│   │   │   ├── compensations/ # Compensation management feature
-│   │   │   │   ├── components/    # CompensationCard, EditCompensationModal
-│   │   │   │   ├── hooks/         # useCompensations, useCompensationActions
-│   │   │   │   ├── utils/         # compensation-actions
-│   │   │   │   └── CompensationsPage.tsx
+│   │   │   ├── assignments/   # Assignment management
+│   │   │   ├── auth/          # Authentication
+│   │   │   ├── compensations/ # Compensation tracking
 │   │   │   ├── exchanges/     # Exchange/swap feature
-│   │   │   │   ├── components/    # ExchangeCard, ExchangeSettingsSheet
-│   │   │   │   ├── hooks/         # useExchanges, useExchangeActions
-│   │   │   │   ├── utils/         # exchange-actions
-│   │   │   │   └── ExchangePage.tsx
-│   │   │   ├── validation/    # Game validation wizard
-│   │   │   │   ├── components/    # ValidateGameModal, panels, wizard UI
-│   │   │   │   ├── hooks/         # useValidateGameWizard, useValidationState
-│   │   │   │   ├── api/           # Validation API helpers
-│   │   │   │   └── utils/         # roster-validation
-│   │   │   ├── settings/      # User settings feature
-│   │   │   │   ├── components/    # ProfileSection, LanguageSection, etc.
-│   │   │   │   ├── hooks/         # useSettings
-│   │   │   │   └── SettingsPage.tsx
-│   │   │   └── auth/          # Authentication feature
-│   │   │       ├── hooks/         # useActiveAssociation
-│   │   │       ├── utils/         # auth-parsers, parseOccupations
-│   │   │       └── LoginPage.tsx
-│   │   ├── shared/            # Shared/common code
+│   │   │   ├── ocr/           # OCR scoresheet scanning
+│   │   │   ├── referee-backup/# On-call (Pikett) feature
+│   │   │   ├── settings/      # User settings
+│   │   │   └── validation/    # Game validation wizard
+│   │   ├── shared/            # Web-specific shared code
 │   │   │   ├── components/    # Reusable UI components
-│   │   │   │   ├── layout/        # AppShell, navigation
-│   │   │   │   ├── tour/          # Onboarding tour system
-│   │   │   │   └── ...            # Button, Modal, Card, etc.
-│   │   │   ├── hooks/         # Common hooks
-│   │   │   │   ├── useTranslation.ts
-│   │   │   │   ├── useSwipeGesture.ts
-│   │   │   │   └── ...
-│   │   │   ├── utils/         # Common utilities
-│   │   │   │   ├── date-helpers.ts
-│   │   │   │   ├── error-helpers.ts
-│   │   │   │   └── ...
-│   │   │   ├── stores/        # Zustand stores
-│   │   │   │   ├── auth.ts        # Authentication state
-│   │   │   │   ├── demo/          # Demo mode state
-│   │   │   │   ├── settings.ts    # User preferences
-│   │   │   │   └── ...
-│   │   │   └── services/      # External service integrations
-│   │   │       └── transport/     # Swiss public transport (OJP)
-│   │   ├── contexts/          # React context providers (PWA)
-│   │   ├── i18n/              # Internationalization
-│   │   │   ├── types.ts       # Translation key types (edit this first)
-│   │   │   ├── index.ts       # Translation functions
-│   │   │   └── locales/       # Translation files (de, en, fr, it)
+│   │   │   ├── hooks/         # Web-specific hooks
+│   │   │   ├── utils/         # Web utilities
+│   │   │   ├── stores/        # Web-specific stores
+│   │   │   └── services/      # External integrations
+│   │   ├── contexts/          # React context providers
+│   │   ├── i18n/              # i18n re-exports
 │   │   ├── test/              # Test setup and utilities
-│   │   └── types/             # TypeScript type declarations
+│   │   └── types/             # Web type declarations
 │   ├── playwright.config.ts   # E2E test configuration
-│   ├── vite.config.ts         # Vite + PWA configuration
-│   └── package.json
-├── worker/                     # Cloudflare Worker CORS proxy
+│   └── vite.config.ts         # Vite + PWA configuration
+├── help-site/                  # volleykit-help - Astro docs
 │   └── src/
-│       └── index.ts           # Proxy with security, rate limiting
+│       ├── components/        # Astro components
+│       ├── data/              # Content data
+│       ├── i18n/              # Help site translations
+│       ├── layouts/           # Page layouts
+│       ├── pages/             # Astro pages
+│       ├── styles/            # CSS styles
+│       └── utils/             # Utilities
+├── ocr-poc/                    # OCR proof of concept
+│   └── src/                   # Vite + React app for OCR testing
+├── worker/                     # volleykit-proxy - Cloudflare Worker
+│   └── src/
+│       └── index.ts           # CORS proxy with security
 ├── docs/                       # Documentation
 │   ├── api/                   # API documentation
 │   │   ├── volleymanager-openapi.yaml  # Complete OpenAPI spec
@@ -194,15 +233,23 @@ volleykit/
 │   │   └── captures/          # Real API request/response examples
 │   ├── SECURITY_CHECKLIST.md  # Security review guide
 │   ├── CODE_PATTERNS.md       # Code examples and patterns
-│   └── DATA_RETENTION.md      # Data handling documentation
+│   ├── DATA_RETENTION.md      # Data handling documentation
+│   └── TESTING_STRATEGY.md    # Testing guidelines
+├── scripts/                    # Build/CI scripts
+│   └── pre-commit-validate.sh # Pre-commit validation
+├── specs/                      # Feature specifications
 ├── .github/workflows/         # CI/CD pipelines
-│   ├── ci.yml                 # Consolidated CI (lint, test, build, E2E, Lighthouse)
+│   ├── ci.yml                 # Web app CI (lint, test, build, E2E)
+│   ├── ci-mobile.yml          # Mobile app CI
 │   ├── ci-worker.yml          # Worker validation
 │   ├── deploy-web.yml         # Production deployment
 │   ├── deploy-pr-preview.yml  # PR preview builds
+│   ├── release.yml            # Release automation
 │   ├── codeql.yml             # Security analysis
 │   └── claude*.yml            # AI code review
-└── devenv.nix                  # Nix development environment
+├── devenv.nix                  # Nix development environment
+├── package.json               # Root workspace config
+└── wrangler.jsonc             # Cloudflare Worker config
 ```
 
 ### Feature Module Structure
@@ -215,6 +262,27 @@ Each feature module follows a consistent structure:
 
 Import from features using: `@/features/assignments`, `@/features/compensations`, etc.
 
+### Shared Package Imports
+
+Import shared code in both web and mobile apps:
+```typescript
+// API and types
+import { apiClient } from '@volleykit/shared/api';
+import type { Assignment } from '@volleykit/shared/types';
+
+// Hooks
+import { useAssignments } from '@volleykit/shared/hooks';
+
+// Stores
+import { useAuthStore } from '@volleykit/shared/stores';
+
+// i18n
+import { t } from '@volleykit/shared/i18n';
+
+// Utilities
+import { formatDate } from '@volleykit/shared/utils';
+```
+
 ## Development Environment
 
 ### Nix/devenv (Recommended)
@@ -226,7 +294,7 @@ The project uses [devenv](https://devenv.sh) for reproducible development enviro
 devenv shell
 
 # Available commands
-dev            # Start dev server
+dev            # Start web-app dev server
 build          # Production build
 run-tests      # Run unit tests
 lint           # Run ESLint
@@ -248,8 +316,13 @@ worker-deploy  # Deploy worker to Cloudflare
 ### Without Nix
 
 ```bash
+# Install all workspace dependencies from root
+npm install
+
+# Or install individually
 cd web-app && npm install
 cd worker && npm install
+cd packages/mobile && npm install
 ```
 
 ## Code Philosophy
@@ -290,16 +363,16 @@ This project uses React 19. Avoid outdated patterns:
 
 ### State Management
 
-- **Zustand** for global client state (auth, preferences) - see `src/shared/stores/`
-- **TanStack Query** for server state (API data) - see feature hooks in `src/features/*/hooks/`
+- **Zustand** for global client state (auth, preferences) - see `packages/shared/src/stores/`
+- **TanStack Query** for server state (API data) - see hooks in `packages/shared/src/hooks/`
 
 ### Query Keys Pattern
 
-Query keys are centralized in `src/api/queryKeys.ts`:
+Query keys are centralized in `packages/shared/src/api/queryKeys.ts`:
 
 ```typescript
 // Using query keys
-import { queryKeys } from '@/api/queryKeys';
+import { queryKeys } from '@volleykit/shared/api';
 
 useQuery({
   queryKey: queryKeys.assignments.all(),
@@ -338,7 +411,7 @@ Minimum thresholds enforced by Vitest (see `vite.config.ts`):
 - Branches: 70%
 - Statements: 50%
 
-### E2E Testing with Playwright
+### E2E Testing with Playwright (Web App)
 
 E2E tests use Page Object Models (POMs) in `web-app/e2e/pages/`.
 
@@ -350,6 +423,15 @@ E2E tests use Page Object Models (POMs) in `web-app/e2e/pages/`.
 - Retries: 2 on CI, 1 locally
 - Screenshots on failure
 - Trace on first retry
+
+### Mobile App Testing
+
+```bash
+cd packages/mobile
+npm test              # Run Jest tests
+npm run typecheck     # TypeScript type checking
+npm run lint          # ESLint
+```
 
 ## Internationalization (i18n)
 
@@ -366,8 +448,8 @@ function MyComponent() {
 ```
 
 **Adding Translations**:
-1. Add the key to `src/i18n/types.ts` for type safety
-2. Add translations to all 4 locale files in `src/i18n/locales/`
+1. Add the key to `packages/shared/src/i18n/types.ts` for type safety
+2. Add translations to all 4 locale files in `packages/shared/src/i18n/locales/`
 3. Use nested keys: `section.subsection.key`
 
 **Note**: Direct imports of `t` from `@/i18n` in `.tsx` files are blocked by ESLint to ensure proper reactivity.
@@ -377,9 +459,9 @@ function MyComponent() {
 The app supports demo mode for testing without API access.
 
 - **Enable**: `VITE_DEMO_MODE_ONLY=true` (PR previews use this automatically)
-- **Demo Store** (`src/stores/demo/`): Modular demo data with seeded UUIDs
-- **Mock API** (`src/api/mock-api.ts`): Simulates all endpoints
-- **Contract Tests** (`src/api/contract.test.ts`): Verify mock matches real API schema
+- **Demo Store** (`web-app/src/stores/demo/`): Modular demo data with seeded UUIDs
+- **Mock API** (`web-app/src/api/mock-api.ts`): Simulates all endpoints
+- **Contract Tests** (`web-app/src/api/contract.test.ts`): Verify mock matches real API schema
 
 ## API Integration
 
@@ -394,7 +476,7 @@ The app supports demo mode for testing without API access.
 ### Generated Types
 
 ```bash
-npm run generate:api  # Generates src/api/schema.ts from OpenAPI spec
+npm run generate:api  # Generates schema.ts in shared and web-app from OpenAPI spec
 ```
 
 **Important**: Always run this before lint/test/build. The `schema.ts` file is gitignored.
@@ -428,12 +510,14 @@ npm run generate:api  # Generates src/api/schema.ts from OpenAPI spec
 - Never log credentials or tokens
 - Environment variables in `.env.local` (never commit)
 - Use `URLSearchParams` for query parameters (never string interpolation)
+- Mobile: Use expo-secure-store for sensitive data
 
 ### Files with Elevated Security Sensitivity
 
 - `worker/src/index.ts` - CORS proxy, origin validation
-- `src/api/client.ts` - API requests, credential handling
-- `src/stores/auth.ts` - Authentication state
+- `web-app/src/api/client.ts` - API requests, credential handling
+- `packages/shared/src/stores/auth.ts` - Authentication state
+- `packages/mobile/src/stores/` - Mobile secure storage
 
 ## Git Conventions
 
@@ -444,6 +528,8 @@ npm run generate:api  # Generates src/api/schema.ts from OpenAPI spec
 - `test(scope): description` - Tests
 - `docs(scope): description` - Documentation
 - `chore(scope): description` - Maintenance
+
+**Scopes**: `web`, `mobile`, `shared`, `worker`, `docs`, `ci`
 
 **Branch Naming**: `feature/description`, `bugfix/description`, `refactor/description`
 
@@ -470,13 +556,13 @@ Changesets are stored as individual markdown files in `.changeset/` directory. T
 **How to add a changeset**:
 
 ```bash
-cd web-app
 npx changeset
 ```
 
 This interactive command will prompt you to:
-1. Select the version bump type (`major`, `minor`, or `patch`)
-2. Write a description of your changes
+1. Select which packages are affected
+2. Select the version bump type (`major`, `minor`, or `patch`)
+3. Write a description of your changes
 
 **Alternatively, create a changeset file manually** in `.changeset/`:
 
@@ -508,7 +594,7 @@ Fixed PDF download for compensation statements - MIME type validation is now cas
 ### PWA Version Display
 
 The app version is displayed in Settings > About. It shows:
-- **Version**: From `package.json` (e.g., "1.0.0")
+- **Version**: From `package.json` (e.g., "1.7.0")
 - **Git Hash**: Short commit hash for build identification
 
 The PWA automatically checks for updates and prompts users when a new version is deployed.
@@ -541,7 +627,6 @@ Releases are fully automated via the **Release workflow** (`.github/workflows/re
 
 **Manual release** (if needed):
 ```bash
-cd web-app
 npx changeset version  # Combines changesets into CHANGELOG.md
 # Commit the changes
 git add .
@@ -552,62 +637,88 @@ git push origin main --tags
 
 ## Commands Reference
 
-### CI Validation (Run Before Push and PRs)
-
-**CRITICAL**: Run validation before pushing source code changes (see [AI Development Workflow](#ai-development-workflow) for when to skip). Always run full validation before creating a pull request.
+### Monorepo Commands (from root)
 
 ```bash
-cd web-app
-npm run generate:api  # REQUIRED before lint/test/build
-npm run format:check  # Check formatting (Prettier)
-npm run lint          # Lint check (0 warnings allowed)
-npm run knip          # Dead code detection
-npm test              # Run all tests
-npm run build         # Production build (includes tsc)
-npm run size          # Check bundle size (before PRs)
+# Install all dependencies
+npm install
+
+# Run across all workspaces
+npm run lint          # Lint all packages
+npm run test          # Test all packages
+npm run build         # Build all packages
+
+# Generate API types
+npm run generate:api  # Generates to shared and web-app
+
+# Mobile app
+npm run mobile:start  # Start Expo dev server
+npm run mobile:ios    # Run on iOS simulator
+npm run mobile:android # Run on Android emulator
+
+# Shared package
+npm run shared:build  # Build shared package
+npm run shared:test   # Test shared package
+
+# Changesets
+npm run changeset        # Add a changeset
+npm run changeset:status # Check pending changesets
 ```
 
-### Formatting
-
-```bash
-cd web-app
-npm run format        # Auto-fix all formatting issues
-npm run format:check  # Check for formatting issues (CI)
-npm run lint:fix      # Auto-fix lint issues + import ordering
-```
-
-### Development
+### Web App Commands (web-app/)
 
 ```bash
 cd web-app
 npm run dev           # Start dev server with hot reload
+npm run build         # Production build (includes tsc)
+npm run preview       # Preview production build
+npm run format        # Auto-fix all formatting issues
+npm run format:check  # Check for formatting issues (CI)
+npm run lint          # Lint check (0 warnings allowed)
+npm run lint:fix      # Auto-fix lint issues
+npm run knip          # Dead code detection
+npm test              # Run all tests
 npm run test:watch    # Watch mode for tests
 npm run test:coverage # Tests with coverage report
+npm run test:e2e      # Run all E2E tests
+npm run test:e2e:ui   # Interactive Playwright UI mode
+npm run size          # Check bundle size
+npm run generate:api  # Generate API types from OpenAPI spec
 ```
 
-### E2E Testing
+### Mobile App Commands (packages/mobile/)
 
 ```bash
-cd web-app
-npm run build                           # Build first (required)
-npm run test:e2e                        # Run all E2E tests
-npm run test:e2e:ui                     # Interactive Playwright UI mode
-npx playwright test --project=chromium  # Single browser
+cd packages/mobile
+npm start             # Start Expo dev server
+npm run ios           # Run on iOS simulator
+npm run android       # Run on Android emulator
+npm run prebuild      # Generate native projects
+npm test              # Run Jest tests
+npm run lint          # Lint check
+npm run typecheck     # TypeScript check
 ```
 
-**Note**: E2E tests run against production build (`npm run preview`), not dev server.
-
-### Worker (CORS proxy)
+### Worker Commands (worker/)
 
 ```bash
 cd worker
 npm run dev           # Local worker dev
+npm run deploy        # Deploy to Cloudflare
 npm run lint          # Lint worker code
 npm test              # Test worker
-npx wrangler deploy   # Deploy to Cloudflare
 ```
 
-## Bundle Size Limits
+### Help Site Commands (help-site/)
+
+```bash
+cd help-site
+npm run dev           # Start dev server
+npm run build         # Build with Pagefind search
+npm run preview       # Preview production build
+```
+
+## Bundle Size Limits (Web App)
 
 CI will fail if limits are exceeded (gzipped):
 
@@ -616,10 +727,12 @@ CI will fail if limits are exceeded (gzipped):
 | Main App Bundle | 145 KB |
 | Vendor Chunks (each) | 50 KB |
 | PDF Library | 185 KB (lazy-loaded) |
+| OCR Feature | 12 KB (lazy-loaded) |
+| Image Cropper | 10 KB (lazy-loaded) |
 | CSS | 12 KB |
 | Total JS | 520 KB |
 
-**Check size**: `npm run build && npm run size`
+**Check size**: `cd web-app && npm run build && npm run size`
 
 **Bundle Analysis**: After build, open `stats.html` for detailed visualization.
 
@@ -631,6 +744,7 @@ Manual chunks defined in `vite.config.ts`:
 - `state`: Zustand, TanStack Query
 - `validation`: Zod
 - `pdf-lib`: PDF generation (lazy-loaded)
+- `cropper`: Image cropping (lazy-loaded)
 
 ## Accessibility
 
@@ -642,7 +756,7 @@ Manual chunks defined in `vite.config.ts`:
 
 ESLint plugin `jsx-a11y` enforces many accessibility rules.
 
-## PWA Features
+## PWA Features (Web App)
 
 - **Service Worker**: Auto-updating, precaches app shell
 - **Offline Support**: NetworkFirst for API, CacheFirst for assets
@@ -651,24 +765,25 @@ ESLint plugin `jsx-a11y` enforces many accessibility rules.
 
 **Note**: PWA is disabled for PR previews to avoid service worker scope conflicts.
 
+## Mobile App Features
+
+- **Biometric Authentication**: expo-local-authentication for Face ID/Touch ID
+- **Secure Storage**: expo-secure-store for credentials
+- **Calendar Integration**: expo-calendar for syncing assignments
+- **Home Screen Widgets**: iOS (WidgetKit) and Android widgets
+- **Push Notifications**: expo-notifications
+- **Background Location**: expo-location + expo-task-manager for departure reminders
+- **Offline Support**: TanStack Query persistence with AsyncStorage
+
 ## Definition of Done
 
 1. Implementation follows React/TypeScript best practices
-2. **Changeset added** - Required for `feat:` and `fix:` commits. Run `npx changeset` to create a changelog entry. (see [Adding Changesets](#adding-changesets-claude-instructions))
+2. **Changeset added** - Required for `feat:` and `fix:` commits. Run `npx changeset` to create a changelog entry.
 3. Unit tests cover business logic and interactions
-4. E2E tests added for critical user flows (if applicable)
+4. E2E tests added for critical user flows (web app, if applicable)
 5. Translations added for all 4 languages (de, en, fr, it)
-6. **All validation phases pass before push** (lint, knip, test, build - see [AI Development Workflow](#ai-development-workflow))
-7. Bundle size limits not exceeded
-8. Works across modern browsers (Chrome, Firefox, Safari)
+6. **All validation phases pass before push** (lint, knip, test, build)
+7. Bundle size limits not exceeded (web app)
+8. Works across modern browsers (Chrome, Firefox, Safari) for web
 9. Accessible (keyboard navigation, screen reader compatible)
 10. No ESLint warnings (`--max-warnings 0`)
-
-## Active Technologies
-- TypeScript 5.9, React Native 0.76+ (New Architecture) + React Native, TanStack Query 5, Zustand 5, Zod 4, date-fns 4, expo-secure-store, expo-calendar, react-native-widgetkit, expo-location, expo-notifications, expo-task-manager (001-react-native-app)
-- AsyncStorage (replacing localStorage), Secure Enclave/Keystore for credentials (001-react-native-app)
-- OJP SDK for Swiss public transport routing (shared from PWA) (001-react-native-app)
-
-## Recent Changes
-- 001-react-native-app: Added expo-location, expo-notifications, expo-task-manager for Smart Departure Reminder feature
-- 001-react-native-app: Added TypeScript 5.9, React Native 0.76+ (New Architecture) + React Native, TanStack Query 5, Zustand 5, Zod 4, date-fns 4, expo-secure-store, expo-calendar, react-native-widgetkit
