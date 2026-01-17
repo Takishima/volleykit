@@ -8,7 +8,7 @@ import { View, Text, TouchableOpacity, FlatList, Modal } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
 import { useTranslation, SUPPORTED_LANGUAGES, LANGUAGE_NAMES, type Language } from '@volleykit/shared/i18n';
-import { COLORS } from '../constants';
+import { COLORS, SETTINGS_ICON_SIZE } from '../constants';
 
 interface LanguagePickerProps {
   /** Whether the picker is visible */
@@ -47,7 +47,7 @@ export function LanguagePicker({
           <Text className="text-gray-900 text-base">{LANGUAGE_NAMES[item]}</Text>
         </View>
         {isSelected && (
-          <Feather name="check" size={24} color={COLORS.primary} />
+          <Feather name="check" size={SETTINGS_ICON_SIZE} color={COLORS.primary} />
         )}
       </TouchableOpacity>
     );
