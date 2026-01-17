@@ -4,6 +4,8 @@
  * Provides a mock implementation that returns placeholder data
  * while the real API integration is being developed.
  *
+ * TODO(#775): Replace with real API client when auth integration is complete.
+ *
  * This client implements the interfaces required by the shared hooks
  * (AssignmentsApiClient, ExchangesApiClient, CompensationsApiClient).
  */
