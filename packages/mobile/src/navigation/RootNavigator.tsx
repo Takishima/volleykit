@@ -11,6 +11,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '@volleykit/shared/hooks';
 import { useTranslation } from '@volleykit/shared/i18n';
 
+import { login } from '../services/authService';
 import { LoginScreen } from '../screens/LoginScreen';
 import { LoadingScreen } from '../screens/LoadingScreen';
 import { AssignmentDetailScreen } from '../screens/AssignmentDetailScreen';
@@ -75,11 +76,19 @@ export function RootNavigator() {
     const result = await authenticate(t('auth.biometricPrompt'));
 
     if (result.success && result.credentials) {
-      // Biometric verified - credentials retrieved successfully
-      // TODO(#47): Implement actual re-login with credentials when auth API is ready
-      // For now, just mark the session as refreshed
-      handleBiometricSuccess();
-      resetAttempts();
+      // Biometric verified - credentials retrieved, now re-login
+      const loginResult = await login(
+        result.credentials.username,
+        result.credentials.password,
+        false // Don't save credentials again
+      );
+
+      if (loginResult.success) {
+        handleBiometricSuccess();
+        resetAttempts();
+      }
+      // If login fails, the biometric prompt will remain visible
+      // and failedAttempts will increment, eventually falling back to password
     }
   }, [authenticate, handleBiometricSuccess, resetAttempts, t]);
 

@@ -25,3 +25,6 @@ export * from './types';
 
 // Adapter exports
 export * from './adapters';
+
+// Auth exports
+export * from './auth';
