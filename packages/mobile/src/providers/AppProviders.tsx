@@ -3,6 +3,7 @@
  *
  * Includes:
  * - StorageContext for platform storage adapters
+ * - ApiClientProvider for API client access
  * - QueryClient for data fetching with session expiry detection
  * - SessionMonitorProvider for biometric re-authentication
  */
@@ -20,7 +21,7 @@ import { StorageContext } from '@volleykit/shared/adapters';
 import { HttpStatus } from '@volleykit/shared/api';
 import { storage } from '../platform/storage';
 import { secureStorage } from '../platform/secureStorage';
-import { SessionMonitorProvider, useSessionMonitorContext } from '../contexts';
+import { SessionMonitorProvider, useSessionMonitorContext, ApiClientProvider } from '../contexts';
 
 interface AppProvidersProps {
   children: ReactNode;
@@ -91,9 +92,11 @@ function QueryClientWithSessionMonitor({ children }: { children: ReactNode }) {
 export function AppProviders({ children }: AppProvidersProps) {
   return (
     <StorageContext.Provider value={{ storage, secureStorage }}>
-      <SessionMonitorProvider>
-        <QueryClientWithSessionMonitor>{children}</QueryClientWithSessionMonitor>
-      </SessionMonitorProvider>
+      <ApiClientProvider>
+        <SessionMonitorProvider>
+          <QueryClientWithSessionMonitor>{children}</QueryClientWithSessionMonitor>
+        </SessionMonitorProvider>
+      </ApiClientProvider>
     </StorageContext.Provider>
   );
 }
