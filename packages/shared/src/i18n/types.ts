@@ -203,8 +203,10 @@ export interface Translations {
       syncNow: string;
       lastSync: string;
       syncSuccess: string;
+      syncSummary: string;
       syncError: string;
       noCalendars: string;
+      noAssignmentsToSync: string;
       enabled: string;
       disabled: string;
     };
