@@ -64,7 +64,7 @@ export function ExchangesScreen(_props: Props) {
             <Text className="text-gray-900 font-medium">{item.game}</Text>
             <View className={`px-2 py-1 rounded ${item.status === 'open' ? 'bg-green-100' : 'bg-blue-100'}`}>
               <Text className={`text-xs font-medium ${item.status === 'open' ? 'text-green-700' : 'text-blue-700'}`}>
-                {item.status.toUpperCase()}
+                {item.status === 'open' ? t('exchange.open') : t('exchange.applied')}
               </Text>
             </View>
           </View>

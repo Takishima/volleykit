@@ -64,7 +64,9 @@ export function CompensationsScreen(_props: Props) {
             <Text className="text-gray-900 font-medium">{item.game}</Text>
             <Text className="text-gray-900 font-semibold">CHF {item.amount}</Text>
           </View>
-          <Text className="text-gray-500 text-sm mt-1 capitalize">{item.status}</Text>
+          <Text className="text-gray-500 text-sm mt-1">
+            {item.status === 'paid' ? t('compensations.paid') : t('compensations.pending')}
+          </Text>
         </View>
       )}
     />
