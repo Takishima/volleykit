@@ -104,14 +104,17 @@ const ACTIVE_PARTY_PATTERN =
 
 /**
  * Regex pattern for Vue :active-party attribute.
+ * Uses [^"]* instead of .+? to avoid catastrophic backtracking (ReDoS).
+ * The JSON content is HTML-encoded so won't contain unescaped double quotes.
  */
 const VUE_ACTIVE_PARTY_PATTERN =
-  /:active-party="\$convertFromBackendToFrontend\((\{.+?\})\)"/gs;
+  /:active-party="\$convertFromBackendToFrontend\((\{[^"]*\})\)"/g;
 
 /**
  * Regex pattern for Vue :party attribute.
+ * Uses [^"]* instead of .+? to avoid catastrophic backtracking (ReDoS).
  */
-const VUE_PARTY_PATTERN = /:party="\$convertFromBackendToFrontend\((\{.+?\})\)"/gs;
+const VUE_PARTY_PATTERN = /:party="\$convertFromBackendToFrontend\((\{[^"]*\})\)"/g;
 
 /**
  * Decode HTML entities in a string.

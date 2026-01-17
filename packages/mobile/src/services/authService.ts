@@ -7,13 +7,19 @@
  * - Mobile-specific session handling
  */
 
+import Constants from 'expo-constants';
 import { createAuthService, type LoginResult } from '@volleykit/shared/auth';
 import { useAuthStore } from '@volleykit/shared/stores';
 import { secureStorage } from '../platform/secureStorage';
 
-// API base URL - uses the same CORS proxy as web
-// In production, this would be configured via environment variables
-const API_BASE_URL = 'https://proxy.volleykit.app';
+/**
+ * API base URL for authentication requests.
+ * Uses the CORS proxy configured in app.json extra settings.
+ * Falls back to production proxy URL if not configured.
+ */
+const API_BASE_URL =
+  (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined) ??
+  'https://proxy.volleykit.app';
 
 // Session token storage (in-memory for now, could use AsyncStorage)
 let sessionToken: string | null = null;
@@ -88,22 +94,23 @@ export async function login(
   password: string,
   saveCredentials = true
 ): Promise<LoginResult> {
-  const store = useAuthStore.getState();
-
-  // Set loading state
-  store.setStatus('loading');
-  store.setError(null);
+  // Set loading state (get fresh state reference for mutations)
+  useAuthStore.getState().setStatus('loading');
+  useAuthStore.getState().setError(null);
 
   try {
     const result = await authService.login(username, password);
 
     if (result.success) {
+      // Get fresh state after async operation to avoid stale references
+      const currentState = useAuthStore.getState();
+
       // Extract user data from dashboard HTML
       const activeParty = authService.extractActivePartyFromHtml(result.dashboardHtml);
       const { user, activeOccupationId } = authService.deriveUserFromActiveParty(
         activeParty,
-        store.user,
-        store.activeOccupationId
+        currentState.user,
+        currentState.activeOccupationId
       );
 
       // Check if user has referee role
@@ -112,16 +119,17 @@ export async function login(
         await authService.logout();
         clearSessionToken();
 
-        store.setError({
+        useAuthStore.getState().setError({
           message: 'No referee role found. This app is for referees only.',
           code: 'invalid_credentials',
         });
-        store.setStatus('error');
+        useAuthStore.getState().setStatus('error');
 
         return { success: false, error: 'No referee role found' };
       }
 
-      // Update auth store
+      // Update auth store (get fresh reference for mutations)
+      const store = useAuthStore.getState();
       store.setUser(user);
       if (activeOccupationId) {
         store.setActiveOccupation(activeOccupationId);
@@ -142,24 +150,24 @@ export async function login(
       return result;
     }
 
-    // Handle login failure
-    store.setError({
+    // Handle login failure (get fresh reference for mutations)
+    useAuthStore.getState().setError({
       message: result.error,
       code: result.lockedUntil ? 'locked' : 'invalid_credentials',
       lockedUntilSeconds: result.lockedUntil,
     });
-    store.setStatus('error');
+    useAuthStore.getState().setStatus('error');
 
     return result;
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Login failed';
     logger.error('Login error:', error);
 
-    store.setError({
+    useAuthStore.getState().setError({
       message,
       code: 'network_error',
     });
-    store.setStatus('error');
+    useAuthStore.getState().setStatus('error');
 
     return { success: false, error: message };
   }

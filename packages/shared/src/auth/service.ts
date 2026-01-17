@@ -17,8 +17,8 @@ import {
 } from './parsers';
 import type { UserProfile, Occupation } from '../stores/auth';
 
-/** Delay in ms to allow browser to process Set-Cookie headers */
-const COOKIE_PROCESSING_DELAY_MS = 100;
+/** Default delay in ms to allow browser to process Set-Cookie headers */
+const DEFAULT_COOKIE_PROCESSING_DELAY_MS = 100;
 
 /**
  * Default logger that does nothing.
@@ -40,6 +40,7 @@ export function createAuthService(config: AuthServiceConfig) {
     apiBaseUrl,
     getSessionHeaders = () => ({}),
     captureSessionToken = () => {},
+    cookieProcessingDelayMs = DEFAULT_COOKIE_PROCESSING_DELAY_MS,
     logger = noopLogger,
   } = config;
 
@@ -105,8 +106,8 @@ export function createAuthService(config: AuthServiceConfig) {
    * Fetch the dashboard after successful login.
    */
   async function fetchDashboard(): Promise<{ html: string; csrfToken: string | null }> {
-    // Small delay to allow cookie processing
-    await new Promise((resolve) => setTimeout(resolve, COOKIE_PROCESSING_DELAY_MS));
+    // Small delay to allow cookie processing (configurable via cookieProcessingDelayMs)
+    await new Promise((resolve) => setTimeout(resolve, cookieProcessingDelayMs));
 
     const response = await fetch(DASHBOARD_URL, {
       credentials: 'include',

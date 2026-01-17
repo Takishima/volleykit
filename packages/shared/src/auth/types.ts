@@ -96,6 +96,12 @@ export interface AuthServiceConfig {
   getSessionHeaders?: () => Record<string, string>;
   /** Function to capture session token from response */
   captureSessionToken?: (response: Response) => void;
+  /**
+   * Delay in ms to allow browser to process Set-Cookie headers after redirects.
+   * Increase this value if cookies are not being properly set on slower devices/networks.
+   * @default 100
+   */
+  cookieProcessingDelayMs?: number;
   /** Logger for debug output */
   logger?: {
     info: (...args: unknown[]) => void;

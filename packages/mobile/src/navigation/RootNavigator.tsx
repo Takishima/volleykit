@@ -71,12 +71,20 @@ export function RootNavigator() {
     dismissBiometricPrompt,
   } = useSessionMonitorContext();
 
+  // Handle fallback to password entry (logs out to show login screen)
+  const handleFallbackToPassword = useCallback(() => {
+    dismissBiometricPrompt();
+    resetAttempts();
+    logout();
+  }, [dismissBiometricPrompt, resetAttempts, logout]);
+
   // Handle biometric authentication attempt
   const handleBiometricAuthenticate = useCallback(async () => {
     const result = await authenticate(t('auth.biometricPrompt'));
 
     if (result.success && result.credentials) {
       // Biometric verified - credentials retrieved, now re-login
+      // Note: `login` is a module-level import and stable, so not included in deps
       const loginResult = await login(
         result.credentials.username,
         result.credentials.password,
@@ -86,18 +94,12 @@ export function RootNavigator() {
       if (loginResult.success) {
         handleBiometricSuccess();
         resetAttempts();
+      } else {
+        // Login failed (e.g., password changed on server) - fall back to password entry
+        handleFallbackToPassword();
       }
-      // If login fails, the biometric prompt will remain visible
-      // and failedAttempts will increment, eventually falling back to password
     }
-  }, [authenticate, handleBiometricSuccess, resetAttempts, t]);
-
-  // Handle fallback to password entry (logs out to show login screen)
-  const handleFallbackToPassword = useCallback(() => {
-    dismissBiometricPrompt();
-    resetAttempts();
-    logout();
-  }, [dismissBiometricPrompt, resetAttempts, logout]);
+  }, [authenticate, handleBiometricSuccess, resetAttempts, t, handleFallbackToPassword]);
 
   // Handle cancel (just dismiss the prompt)
   const handleCancel = useCallback(() => {
