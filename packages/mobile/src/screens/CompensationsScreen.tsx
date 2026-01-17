@@ -7,7 +7,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { View, Text, FlatList, RefreshControl } from 'react-native';
 
-import { useTranslation } from '@volleykit/shared/i18n';
+import { useTranslation, type TranslationKey } from '@volleykit/shared/i18n';
 import type { MainTabScreenProps } from '../navigation/types';
 import { PLACEHOLDER_REFRESH_DELAY_MS } from '../constants';
 
@@ -64,7 +64,7 @@ export function CompensationsScreen(_props: Props) {
             <Text className="text-gray-900 font-medium">{item.game}</Text>
             <Text className="text-gray-900 font-semibold">CHF {item.amount}</Text>
           </View>
-          <Text className="text-gray-500 text-sm mt-1 capitalize">{item.status}</Text>
+          <Text className="text-gray-500 text-sm mt-1">{t(`compensations.${item.status}` as TranslationKey)}</Text>
         </View>
       )}
     />
