@@ -6,7 +6,6 @@ import {
   detectConflicts,
   getConflictsForAssignment,
   hasConflicts,
-  formatGap,
   parseGap,
   calculateMinGapToAssignments,
   hasMinimumGapFromAssignments,
@@ -237,36 +236,6 @@ describe('conflict-detection', () => {
 
       expect(hasConflicts('1', conflictMap)).toBe(true)
       expect(hasConflicts('2', conflictMap)).toBe(true)
-    })
-  })
-
-  describe('formatGap', () => {
-    it('should format positive gap in minutes', () => {
-      expect(formatGap(30)).toBe('30min gap')
-    })
-
-    it('should format positive gap in hours', () => {
-      expect(formatGap(60)).toBe('1h gap')
-    })
-
-    it('should format positive gap in hours and minutes', () => {
-      expect(formatGap(90)).toBe('1h 30min gap')
-    })
-
-    it('should format negative gap (overlap) in minutes', () => {
-      expect(formatGap(-30)).toBe('30min overlap')
-    })
-
-    it('should format negative gap (overlap) in hours', () => {
-      expect(formatGap(-60)).toBe('1h overlap')
-    })
-
-    it('should format negative gap (overlap) in hours and minutes', () => {
-      expect(formatGap(-90)).toBe('1h 30min overlap')
-    })
-
-    it('should handle zero gap', () => {
-      expect(formatGap(0)).toBe('0min gap')
     })
   })
 

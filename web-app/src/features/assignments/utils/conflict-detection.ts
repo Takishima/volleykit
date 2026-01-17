@@ -236,26 +236,6 @@ export function parseGap(gapMinutes: number): ParsedGap {
 }
 
 /**
- * Formats the time gap for display.
- *
- * @param gapMinutes - Gap in minutes (can be negative for overlaps)
- * @returns Formatted string describing the gap
- * @deprecated Use parseGap() and handle formatting in the component with translations
- */
-export function formatGap(gapMinutes: number): string {
-  const { type, hours, minutes } = parseGap(gapMinutes)
-  const typeLabel = type === 'overlap' ? 'overlap' : 'gap'
-
-  if (hours > 0 && minutes > 0) {
-    return `${hours}h ${minutes}min ${typeLabel}`
-  }
-  if (hours > 0) {
-    return `${hours}h ${typeLabel}`
-  }
-  return `${minutes}min ${typeLabel}`
-}
-
-/**
  * Options for the smart conflict evaluator.
  */
 export interface SmartConflictOptions {
