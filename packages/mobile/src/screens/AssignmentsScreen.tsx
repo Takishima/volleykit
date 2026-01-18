@@ -35,7 +35,8 @@ const STATUS_COLORS = {
  */
 function getAssignmentDisplay(
   assignment: Assignment,
-  language: string
+  language: string,
+  tbd: string
 ): {
   id: string;
   title: string;
@@ -44,14 +45,14 @@ function getAssignmentDisplay(
   status: 'active' | 'cancelled' | 'archived';
 } {
   const game = assignment.refereeGame?.game;
-  const homeTeam = game?.teamHome?.name ?? 'TBD';
-  const awayTeam = game?.teamAway?.name ?? 'TBD';
+  const homeTeam = game?.teamHome?.name ?? tbd;
+  const awayTeam = game?.teamAway?.name ?? tbd;
 
   return {
     id: assignment.__identity,
     title: `${homeTeam} vs ${awayTeam}`,
     date: formatDate(game?.startingDateTime, language),
-    venue: game?.hall?.name ?? 'TBD',
+    venue: game?.hall?.name ?? tbd,
     status: assignment.refereeConvocationStatus,
   };
 }
@@ -123,7 +124,7 @@ export function AssignmentsScreen(_props: Props) {
         <RefreshControl refreshing={isFetching && !isLoading} onRefresh={onRefresh} />
       }
       renderItem={({ item }) => {
-        const display = getAssignmentDisplay(item, language);
+        const display = getAssignmentDisplay(item, language, t('common.tbd'));
         const colors = STATUS_COLORS[display.status];
 
         return (

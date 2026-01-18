@@ -25,15 +25,18 @@ type Props = MainTabScreenProps<'Compensations'>;
 /**
  * Get display data from a compensation record.
  */
-function getCompensationDisplay(record: CompensationRecord): {
+function getCompensationDisplay(
+  record: CompensationRecord,
+  tbd: string
+): {
   id: string;
   game: string;
   amount: string;
   status: 'paid' | 'pending';
 } {
   const game = record.refereeGame?.game;
-  const homeTeam = game?.teamHome?.name ?? 'TBD';
-  const awayTeam = game?.teamAway?.name ?? 'TBD';
+  const homeTeam = game?.teamHome?.name ?? tbd;
+  const awayTeam = game?.teamAway?.name ?? tbd;
   const compensation = record.convocationCompensation;
 
   // Calculate total compensation
@@ -116,7 +119,7 @@ export function CompensationsScreen(_props: Props) {
         <RefreshControl refreshing={isFetching && !isLoading} onRefresh={onRefresh} />
       }
       renderItem={({ item }) => {
-        const display = getCompensationDisplay(item);
+        const display = getCompensationDisplay(item, t('common.tbd'));
 
         return (
           <View className="bg-white rounded-lg p-4 shadow-sm">
