@@ -10,6 +10,12 @@
 import Constants from 'expo-constants';
 import type { SearchConfiguration } from '@volleykit/shared/api';
 import type { Assignment, CompensationRecord, GameExchange } from '@volleykit/shared/api';
+import {
+  buildFormData,
+  ASSIGNMENT_PROPERTIES,
+  EXCHANGE_PROPERTIES,
+  COMPENSATION_PROPERTIES,
+} from '@volleykit/shared/api';
 
 /**
  * API base URL for requests.
@@ -83,61 +89,16 @@ function captureSessionToken(response: Response): void {
 }
 
 /**
- * Maximum nesting depth for form serialization.
+ * Build form data with CSRF token for mobile.
  */
-const MAX_DEPTH = 10;
-
-/**
- * Build form data with nested bracket notation (Neos Flow format).
- */
-function buildFormData(
+function buildFormDataWithToken(
   data: Record<string, unknown>,
   options: { includeCsrfToken?: boolean } = {}
 ): URLSearchParams {
   const { includeCsrfToken = true } = options;
-  const params = new URLSearchParams();
-  const pathStack = new Set<object>();
-
-  function flatten(obj: unknown, prefix: string, depth: number): void {
-    if (depth > MAX_DEPTH) {
-      throw new Error(`Form data exceeds maximum nesting depth of ${MAX_DEPTH}`);
-    }
-
-    if (obj === null || obj === undefined) return;
-
-    if (typeof obj === 'object') {
-      if (pathStack.has(obj)) {
-        throw new Error('Circular reference detected in form data');
-      }
-      pathStack.add(obj);
-
-      try {
-        if (Array.isArray(obj)) {
-          obj.forEach((item: unknown, index: number) => {
-            flatten(item, `${prefix}[${index}]`, depth + 1);
-          });
-        } else {
-          Object.entries(obj as Record<string, unknown>).forEach(([key, value]) => {
-            flatten(value, prefix ? `${prefix}[${key}]` : key, depth + 1);
-          });
-        }
-      } finally {
-        pathStack.delete(obj);
-      }
-    } else {
-      params.append(prefix, String(obj));
-    }
-  }
-
-  Object.entries(data).forEach(([key, value]) => {
-    flatten(value, key, 0);
+  return buildFormData(data, {
+    csrfToken: includeCsrfToken ? csrfToken : null,
   });
-
-  if (includeCsrfToken && csrfToken) {
-    params.append('__csrfToken', csrfToken);
-  }
-
-  return params;
 }
 
 /**
@@ -165,7 +126,7 @@ async function apiRequest<T>(
   };
 
   if (method === 'GET' && body) {
-    const params = buildFormData(body, { includeCsrfToken: false });
+    const params = buildFormDataWithToken(body, { includeCsrfToken: false });
     url = `${url}?${params.toString()}`;
   }
 
@@ -177,7 +138,7 @@ async function apiRequest<T>(
     method,
     headers,
     credentials: 'include',
-    body: method !== 'GET' && body ? buildFormData(body) : undefined,
+    body: method !== 'GET' && body ? buildFormDataWithToken(body) : undefined,
   });
 
   captureSessionToken(response);
@@ -212,85 +173,6 @@ async function apiRequest<T>(
     );
   }
 }
-
-/**
- * Property configuration for assignments endpoint.
- */
-const ASSIGNMENT_PROPERTIES = [
-  'refereeConvocationStatus',
-  'refereeGame.game.startingDateTime',
-  'refereeGame.game.playingWeekday',
-  'isOpenEntryInRefereeGameExchange',
-  'confirmationStatus',
-  'hasLastMessageToReferee',
-  'hasLinkedDoubleConvocation',
-  'refereeGame.game.encounter.teamHome.name',
-  'refereeGame.game.encounter.teamAway.name',
-  'refereePosition',
-  'refereeGame.game.number',
-  'refereeGame.game.group.phase.league.leagueCategory.name',
-  'refereeGame.game.group.phase.league.gender',
-  'refereeGame.game.group.name',
-  'refereeGame.game.hall.name',
-  'refereeGame.game.hall.primaryPostalAddress.combinedAddress',
-  'refereeGame.game.hall.primaryPostalAddress.city',
-  'refereeGame.game.hall.primaryPostalAddress.geographicalLocation.latitude',
-  'refereeGame.game.hall.primaryPostalAddress.geographicalLocation.longitude',
-  'refereeGame.isGameInFuture',
-];
-
-/**
- * Property configuration for exchanges endpoint.
- */
-const EXCHANGE_PROPERTIES = [
-  'refereeGame.game.startingDateTime',
-  'refereeGame.game.playingWeekday',
-  'submittedAt',
-  'submittedByPerson',
-  'submittedByPerson.displayName',
-  'status',
-  'refereePosition',
-  'requiredRefereeLevel',
-  'appliedBy.indoorReferee.person.displayName',
-  'appliedAt',
-  'refereeGame.game.number',
-  'refereeGame.game.group.phase.league.leagueCategory.name',
-  'refereeGame.game.group.phase.league.gender',
-  'refereeGame.game.group.name',
-  'refereeGame.game.encounter.teamHome.name',
-  'refereeGame.game.encounter.teamAway.name',
-  'refereeGame.game.hall.name',
-  'refereeGame.game.hall.primaryPostalAddress.combinedAddress',
-  'refereeGame.game.hall.primaryPostalAddress.city',
-  'refereeGame.game.hall.primaryPostalAddress.geographicalLocation.latitude',
-  'refereeGame.game.hall.primaryPostalAddress.geographicalLocation.longitude',
-];
-
-/**
- * Property configuration for compensations endpoint.
- */
-const COMPENSATION_PROPERTIES = [
-  'refereeConvocationStatus',
-  'compensationDate',
-  'refereeGame.game.startingDateTime',
-  'refereeGame.game.playingWeekday',
-  'refereeGame.game.number',
-  'refereeGame.game.group.phase.league.leagueCategory.name',
-  'refereeGame.game.group.name',
-  'refereeGame.game.group.phase.league.gender',
-  'refereeGame.game.encounter.teamHome.name',
-  'refereeGame.game.encounter.teamAway.name',
-  'refereeGame.game.hall.name',
-  'refereeGame.game.hall.primaryPostalAddress.combinedAddress',
-  'refereeGame.game.hall.primaryPostalAddress.city',
-  'refereePosition',
-  'convocationCompensation.gameCompensationFormatted',
-  'convocationCompensation.travelExpensesFormatted',
-  'convocationCompensation.costFormatted',
-  'convocationCompensation.paymentDone',
-  'convocationCompensation.paymentValueDate',
-  'refereeGame.isGameInFuture',
-];
 
 /**
  * Assignments response from API.

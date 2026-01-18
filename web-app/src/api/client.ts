@@ -754,7 +754,7 @@ import {
   EXCHANGE_PROPERTIES,
   COMPENSATION_PROPERTIES,
   REFEREE_BACKUP_PROPERTIES,
-} from './property-configs'
+} from '@volleykit/shared/api'
 
 /**
  * Returns the appropriate API client based on the data source.
