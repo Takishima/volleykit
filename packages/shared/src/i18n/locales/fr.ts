@@ -39,6 +39,9 @@ const fr: Translations = {
     hoursUnit: 'h',
     dob: 'DDN',
     offline: 'Hors ligne',
+    lastUpdated: 'Dernière mise à jour',
+    updated: 'Mis à jour',
+    cached: 'En cache',
   },
   auth: {
     login: 'Connexion',
