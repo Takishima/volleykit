@@ -83,7 +83,7 @@ export function DepartureReminderSettingsScreen(_props: Props) {
       if (background !== 'granted') {
         Alert.alert(
           t('common.error'),
-          'Background location permission is required for departure reminders.',
+          t('settings.departure.backgroundLocationRequired'),
           [{ text: t('common.close') }]
         );
         return false;
@@ -92,7 +92,7 @@ export function DepartureReminderSettingsScreen(_props: Props) {
       // Request notification permission
       const notificationGranted = await notifications.requestPermissions();
       if (!notificationGranted) {
-        Alert.alert(t('common.error'), 'Notification permission is required.', [
+        Alert.alert(t('common.error'), t('settings.departure.notificationRequired'), [
           { text: t('common.close') },
         ]);
         return false;
@@ -256,25 +256,25 @@ export function DepartureReminderSettingsScreen(_props: Props) {
       {/* How it works */}
       <View className="mt-6 px-4 mb-8">
         <Text className="text-sm font-medium text-gray-500 mb-2 uppercase">
-          How it works
+          {t('settings.departure.howItWorks')}
         </Text>
         <View className="bg-white rounded-lg p-4 border border-gray-200">
           <View className="flex-row items-start mb-3">
             <Feather name="map-pin" size={16} color={COLORS.gray500} />
             <Text className="text-gray-600 ml-2 flex-1">
-              Your location is checked periodically when you have upcoming games
+              {t('settings.departure.howItWorksLocation')}
             </Text>
           </View>
           <View className="flex-row items-start mb-3">
             <Feather name="navigation" size={16} color={COLORS.gray500} />
             <Text className="text-gray-600 ml-2 flex-1">
-              Public transport routes are calculated automatically
+              {t('settings.departure.howItWorksRoutes')}
             </Text>
           </View>
           <View className="flex-row items-start">
             <Feather name="bell" size={16} color={COLORS.gray500} />
             <Text className="text-gray-600 ml-2 flex-1">
-              You get notified when it&apos;s time to leave
+              {t('settings.departure.howItWorksNotification')}
             </Text>
           </View>
         </View>

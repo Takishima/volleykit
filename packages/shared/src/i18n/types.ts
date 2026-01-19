@@ -228,6 +228,12 @@ export interface Translations {
       bufferTimeDescription: string;
       locationRequired: string;
       permissionDenied: string;
+      backgroundLocationRequired: string;
+      notificationRequired: string;
+      howItWorks: string;
+      howItWorksLocation: string;
+      howItWorksRoutes: string;
+      howItWorksNotification: string;
     };
     homeLocation: {
       title: string;
