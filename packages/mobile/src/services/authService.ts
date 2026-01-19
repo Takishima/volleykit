@@ -17,6 +17,7 @@ import {
   clearTokens,
   getSessionToken,
 } from '../api';
+import { SESSION_TOKEN_HEADER } from '../constants';
 
 /**
  * API base URL for authentication requests.
@@ -26,11 +27,6 @@ import {
 const API_BASE_URL =
   (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined) ??
   'https://proxy.volleykit.app';
-
-/**
- * Session token header name.
- */
-const SESSION_TOKEN_HEADER = 'X-Session-Token';
 
 /**
  * Get session headers for API requests.

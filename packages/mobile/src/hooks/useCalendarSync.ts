@@ -14,10 +14,8 @@ import type { Assignment } from '@volleykit/shared/api';
 import { calendarSyncService } from '../services/calendarSync';
 import { calendarMappingsStore } from '../stores/calendarMappings';
 import { calendar } from '../platform/calendar';
+import { CALENDAR_SETTINGS_KEY } from '../constants';
 import type { CalendarEventMapping, CalendarSettings } from '../types/calendar';
-
-/** Storage key for calendar settings */
-const CALENDAR_SETTINGS_KEY = 'calendar_settings';
 
 export interface UseCalendarSyncResult {
   /** Whether a sync is in progress */

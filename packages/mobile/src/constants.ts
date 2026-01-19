@@ -49,3 +49,13 @@ export const MAX_BIOMETRIC_ATTEMPTS = 3;
 
 /** Icon size for biometric prompt modal */
 export const BIOMETRIC_ICON_SIZE = 64;
+
+// === Calendar ===
+
+/** Storage key for calendar settings */
+export const CALENDAR_SETTINGS_KEY = 'calendar_settings';
+
+// === API ===
+
+/** Session token header name used by the Cloudflare Worker for iOS Safari PWA */
+export const SESSION_TOKEN_HEADER = 'X-Session-Token';
