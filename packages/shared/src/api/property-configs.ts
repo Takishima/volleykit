@@ -1,6 +1,8 @@
 /**
  * Property render configurations for API endpoints.
  * These arrays tell the API which fields to include in responses.
+ *
+ * Shared between web and mobile apps to ensure consistent data fetching.
  */
 
 /**
