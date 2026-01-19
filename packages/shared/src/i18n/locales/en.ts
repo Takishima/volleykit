@@ -213,6 +213,14 @@ const en: Translations = {
       bufferTimeDescription: 'Extra time before departure for preparation.',
       locationRequired: 'Home location is required for departure reminders.',
       permissionDenied: 'Location access is required for departure calculations.',
+      backgroundLocationRequired:
+        'Background location permission is required for departure reminders.',
+      notificationRequired: 'Notification permission is required.',
+      howItWorks: 'How it works',
+      howItWorksLocation:
+        'Your location is checked periodically when you have upcoming games',
+      howItWorksRoutes: 'Public transport routes are calculated automatically',
+      howItWorksNotification: "You get notified when it's time to leave",
     },
     homeLocation: {
       title: 'Home Location',

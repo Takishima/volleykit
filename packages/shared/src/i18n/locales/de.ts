@@ -214,6 +214,14 @@ const de: Translations = {
       bufferTimeDescription: 'Zusätzliche Zeit vor der Abfahrt zur Vorbereitung.',
       locationRequired: 'Heimatstandort ist für Abfahrtserinnerungen erforderlich.',
       permissionDenied: 'Standortzugriff ist für Abfahrtsberechnungen erforderlich.',
+      backgroundLocationRequired:
+        'Hintergrund-Standortberechtigung ist für Abfahrtserinnerungen erforderlich.',
+      notificationRequired: 'Benachrichtigungsberechtigung ist erforderlich.',
+      howItWorks: 'So funktioniert es',
+      howItWorksLocation:
+        'Ihr Standort wird regelmässig überprüft, wenn Sie bevorstehende Spiele haben',
+      howItWorksRoutes: 'ÖV-Verbindungen werden automatisch berechnet',
+      howItWorksNotification: 'Sie werden benachrichtigt, wenn es Zeit ist zu gehen',
     },
     homeLocation: {
       title: 'Heimatstandort',

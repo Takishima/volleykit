@@ -215,6 +215,14 @@ const it: Translations = {
       bufferTimeDescription: 'Tempo extra prima della partenza per prepararsi.',
       locationRequired: 'La posizione di casa è necessaria per i promemoria di partenza.',
       permissionDenied: "L'accesso alla posizione è necessario per i calcoli di partenza.",
+      backgroundLocationRequired:
+        "L'autorizzazione alla posizione in background è necessaria per i promemoria di partenza.",
+      notificationRequired: "L'autorizzazione alle notifiche è necessaria.",
+      howItWorks: 'Come funziona',
+      howItWorksLocation:
+        'La tua posizione viene controllata periodicamente quando hai partite in programma',
+      howItWorksRoutes: 'I percorsi dei trasporti pubblici vengono calcolati automaticamente',
+      howItWorksNotification: 'Ricevi una notifica quando è il momento di partire',
     },
     homeLocation: {
       title: 'Posizione casa',

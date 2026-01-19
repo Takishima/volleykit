@@ -216,6 +216,14 @@ const fr: Translations = {
       bufferTimeDescription: 'Temps supplémentaire avant le départ pour la préparation.',
       locationRequired: 'La position de domicile est requise pour les rappels de départ.',
       permissionDenied: "L'accès à la localisation est requis pour les calculs de départ.",
+      backgroundLocationRequired:
+        "L'autorisation de localisation en arrière-plan est requise pour les rappels de départ.",
+      notificationRequired: "L'autorisation de notification est requise.",
+      howItWorks: 'Comment ça marche',
+      howItWorksLocation:
+        'Votre position est vérifiée périodiquement lorsque vous avez des matchs à venir',
+      howItWorksRoutes: 'Les itinéraires de transport public sont calculés automatiquement',
+      howItWorksNotification: "Vous êtes notifié quand il est temps de partir",
     },
     homeLocation: {
       title: 'Emplacement domicile',
