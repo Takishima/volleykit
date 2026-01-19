@@ -9,6 +9,12 @@
 #
 set -euo pipefail
 
+# Check for required dependencies
+if ! command -v uv &> /dev/null; then
+    echo "ERROR: uv is required but not installed. See https://docs.astral.sh/uv/"
+    exit 1
+fi
+
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
@@ -33,8 +39,8 @@ echo ""
 echo "Updating templates..."
 echo "y" | specify init . --ai claude --no-git --ignore-agent-tools
 
-# Store the installed version
-specify version | grep -oP 'CLI Version:\s+\K[\d.]+' > .specify/version 2>/dev/null || true
+# Store the installed version (using sed for macOS compatibility)
+specify version | sed -n 's/.*CLI Version:[[:space:]]*\([0-9.]*\).*/\1/p' > .specify/version 2>/dev/null || true
 NEW_VERSION=$(cat .specify/version 2>/dev/null || echo "unknown")
 echo "New version: $NEW_VERSION"
 
