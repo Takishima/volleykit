@@ -151,6 +151,8 @@ export function LoginScreen(_props: Props) {
             onChangeText={handleUsernameChange}
             autoCapitalize="none"
             autoCorrect={false}
+            autoComplete="username"
+            textContentType="username"
             placeholder={t('auth.usernamePlaceholder')}
             accessibilityLabel={t('auth.username')}
             accessibilityHint={t('auth.usernamePlaceholder')}
@@ -164,6 +166,8 @@ export function LoginScreen(_props: Props) {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
+            autoComplete="password"
+            textContentType="password"
             placeholder={t('auth.passwordPlaceholder')}
             accessibilityLabel={t('auth.password')}
             accessibilityHint={t('auth.passwordPlaceholder')}
