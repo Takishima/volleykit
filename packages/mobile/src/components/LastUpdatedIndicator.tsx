@@ -8,6 +8,7 @@ import type { JSX } from 'react';
 import { View, Text } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
+import { useTranslation } from '@volleykit/shared/i18n';
 import { COLORS } from '../constants';
 import type { CacheStatus } from '../types/cache';
 import { getCacheStatus, formatCacheAge } from '../types/cache';
@@ -68,6 +69,8 @@ export function LastUpdatedIndicator({
   compact = false,
   label,
 }: LastUpdatedIndicatorProps): JSX.Element | null {
+  const { t } = useTranslation();
+
   if (!lastUpdatedAt) {
     return null;
   }
@@ -80,12 +83,13 @@ export function LastUpdatedIndicator({
   const color = getStatusColor(status);
   const icon = getStatusIcon(status);
   const timeAgo = formatCacheAge(lastUpdatedAt);
+  const defaultLabel = t('common.lastUpdated');
 
   if (compact) {
     return (
       <View
         className="flex-row items-center"
-        accessibilityLabel={`Last updated ${timeAgo}`}
+        accessibilityLabel={`${defaultLabel} ${timeAgo}`}
         accessibilityRole="text"
       >
         <Feather name={icon as keyof typeof Feather.glyphMap} size={12} color={color} />
@@ -97,19 +101,19 @@ export function LastUpdatedIndicator({
   return (
     <View
       className="flex-row items-center bg-gray-100 rounded-lg px-3 py-2"
-      accessibilityLabel={`${label ?? 'Last updated'} ${timeAgo}`}
+      accessibilityLabel={`${label ?? defaultLabel} ${timeAgo}`}
       accessibilityRole="text"
     >
       <Feather name={icon as keyof typeof Feather.glyphMap} size={14} color={color} />
       <View className="ml-2">
         <Text className="text-xs text-gray-500">
-          {label ?? 'Last updated'}
+          {label ?? defaultLabel}
         </Text>
         <Text className="text-sm text-gray-700 font-medium">{timeAgo}</Text>
       </View>
       {isFromCache && (
         <View className="ml-auto bg-gray-200 rounded px-2 py-0.5">
-          <Text className="text-xs text-gray-600">Cached</Text>
+          <Text className="text-xs text-gray-600">{t('common.cached')}</Text>
         </View>
       )}
     </View>
@@ -124,15 +128,18 @@ export function LastUpdatedText({
 }: {
   lastUpdatedAt: string | null;
 }): JSX.Element | null {
+  const { t } = useTranslation();
+
   if (!lastUpdatedAt) {
     return null;
   }
 
   const timeAgo = formatCacheAge(lastUpdatedAt);
+  const updatedLabel = t('common.updated');
 
   return (
-    <Text className="text-xs text-gray-400" accessibilityLabel={`Updated ${timeAgo}`}>
-      Updated {timeAgo}
+    <Text className="text-xs text-gray-400" accessibilityLabel={`${updatedLabel} ${timeAgo}`}>
+      {updatedLabel} {timeAgo}
     </Text>
   );
 }

@@ -55,6 +55,9 @@ export interface Translations {
     hoursUnit: string;
     dob: string;
     offline: string;
+    lastUpdated: string;
+    updated: string;
+    cached: string;
   };
   auth: {
     login: string;
