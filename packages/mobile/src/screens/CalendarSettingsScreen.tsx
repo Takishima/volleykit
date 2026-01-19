@@ -26,14 +26,11 @@ import { queryKeys, type Assignment } from '@volleykit/shared/api';
 import { calendar } from '../platform/calendar';
 import { useCalendarSync } from '../hooks';
 import { CalendarPicker } from '../components/CalendarPicker';
-import { COLORS, SETTINGS_ICON_SIZE } from '../constants';
+import { COLORS, SETTINGS_ICON_SIZE, CALENDAR_SETTINGS_KEY } from '../constants';
 import type { CalendarInfo, CalendarSyncMode, CalendarSettings } from '../types/calendar';
 import type { RootStackScreenProps } from '../navigation/types';
 
 type Props = RootStackScreenProps<'CalendarSettings'>;
-
-/** Storage key for calendar settings */
-const CALENDAR_SETTINGS_KEY = 'calendar_settings';
 
 /** Default calendar settings */
 const DEFAULT_SETTINGS: CalendarSettings = {

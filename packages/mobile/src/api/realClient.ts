@@ -16,6 +16,7 @@ import {
   EXCHANGE_PROPERTIES,
   COMPENSATION_PROPERTIES,
 } from '@volleykit/shared/api';
+import { SESSION_TOKEN_HEADER } from '../constants';
 
 /**
  * API base URL for requests.
@@ -24,11 +25,6 @@ import {
 const API_BASE_URL =
   (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined) ??
   'https://proxy.volleykit.app';
-
-/**
- * Session token header name used by the Cloudflare Worker for iOS Safari PWA.
- */
-const SESSION_TOKEN_HEADER = 'X-Session-Token';
 
 /**
  * In-memory session token storage.
