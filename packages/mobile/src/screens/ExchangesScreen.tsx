@@ -35,7 +35,8 @@ const STATUS_COLORS = {
  */
 function getExchangeDisplay(
   exchange: GameExchange,
-  language: string
+  language: string,
+  tbd: string
 ): {
   id: string;
   game: string;
@@ -44,8 +45,8 @@ function getExchangeDisplay(
   status: 'open' | 'applied' | 'closed';
 } {
   const game = exchange.refereeGame?.game;
-  const homeTeam = game?.teamHome?.name ?? 'TBD';
-  const awayTeam = game?.teamAway?.name ?? 'TBD';
+  const homeTeam = game?.teamHome?.name ?? tbd;
+  const awayTeam = game?.teamAway?.name ?? tbd;
 
   return {
     id: exchange.__identity,
@@ -123,7 +124,7 @@ export function ExchangesScreen(_props: Props) {
         <RefreshControl refreshing={isFetching && !isLoading} onRefresh={onRefresh} />
       }
       renderItem={({ item }) => {
-        const display = getExchangeDisplay(item, language);
+        const display = getExchangeDisplay(item, language, t('common.tbd'));
         const colors = STATUS_COLORS[display.status];
 
         return (
