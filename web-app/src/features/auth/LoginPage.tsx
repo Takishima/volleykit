@@ -395,8 +395,16 @@ export function LoginPage() {
           {/* Full Login Panel - only shown when tab is selected (tabs hidden in demo-only mode) */}
           {loginMode === 'full' && (
             <div id="full-login-panel" role="tabpanel" aria-labelledby="full-login-tab">
-              {/* method="post" is defensive fallback if native submission somehow occurs */}
-              <form ref={formRef} onSubmit={handleSubmit} method="post" className="space-y-6">
+              {/* method="post" and action are defensive fallback if native submission somehow occurs.
+                  action="https://volleymanager.volleyball.ch" tells password managers to associate
+                  credentials with volleymanager.volleyball.ch (same as the native app's associatedDomains). */}
+              <form
+                ref={formRef}
+                onSubmit={handleSubmit}
+                method="post"
+                action="https://volleymanager.volleyball.ch"
+                className="space-y-6"
+              >
                 <div>
                   <label
                     htmlFor="username"
@@ -406,6 +414,7 @@ export function LoginPage() {
                   </label>
                   <input
                     id="username"
+                    name="username"
                     data-testid="username-input"
                     type="text"
                     value={username}
@@ -426,6 +435,7 @@ export function LoginPage() {
                   </label>
                   <input
                     id="password"
+                    name="password"
                     data-testid="password-input"
                     type="password"
                     ref={passwordRef}

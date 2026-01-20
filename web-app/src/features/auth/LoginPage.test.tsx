@@ -273,6 +273,20 @@ describe('LoginPage', () => {
       expect(screen.getByLabelText(/password/i)).toHaveAttribute('autocomplete', 'current-password')
     })
 
+    it('has credential association attributes for password managers in full login mode', () => {
+      render(<LoginPage />)
+      switchToFullLogin()
+
+      // name attributes help password managers recognize credential fields
+      expect(screen.getByLabelText(/username/i)).toHaveAttribute('name', 'username')
+      expect(screen.getByLabelText(/password/i)).toHaveAttribute('name', 'password')
+
+      // form action associates credentials with volleymanager.volleyball.ch
+      // (mirrors native app's associatedDomains configuration)
+      const form = screen.getByLabelText(/username/i).closest('form')
+      expect(form).toHaveAttribute('action', 'https://volleymanager.volleyball.ch')
+    })
+
     it('has proper input types in full login mode', () => {
       render(<LoginPage />)
       switchToFullLogin()
