@@ -16,6 +16,9 @@ import {
 } from './useExchanges';
 import type { GameExchange } from '../api/validation';
 
+/** Small delay for tests that need to wait a tick without triggering queries */
+const TEST_TICK_MS = 50;
+
 // Helper to create a wrapper with QueryClient
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -244,7 +247,7 @@ describe('useExchanges', () => {
       { wrapper: createWrapper() }
     );
 
-    await new Promise((r) => setTimeout(r, 50));
+    await new Promise((r) => setTimeout(r, TEST_TICK_MS));
 
     expect(mockApiClient.searchExchanges).not.toHaveBeenCalled();
   });
