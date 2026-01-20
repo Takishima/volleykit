@@ -2,7 +2,7 @@
   "name": "volleykit-web",
   "description": "VolleyKit - Swiss Volleyball Referee Management PWA",
   "private": true,
-  "version": "1.7.0",
+  "version": "1.8.0",
   "type": "module",
   "engines": {
     "node": ">=20.0.0"

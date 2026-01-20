@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.8.0
+
+### Patch Changes
+
+- [#799](https://github.com/Takishima/volleykit/pull/799) [`b8290d2`](https://github.com/Takishima/volleykit/commit/b8290d2791412993d1da14f2ca0a783363593db1) Thanks [@Takishima](https://github.com/Takishima)! - Add unit tests for auth-log-buffer utility covering all logging methods, circular buffer behavior, and subscriber notifications
+
+- Updated dependencies [[`56e8d5f`](https://github.com/Takishima/volleykit/commit/56e8d5fe997b16fbca8b26a4b3d4800a750d0319), [`d0c0490`](https://github.com/Takishima/volleykit/commit/d0c0490e716e807a266c5c138e604e2ccea2c23f), [`5840a9f`](https://github.com/Takishima/volleykit/commit/5840a9fc37f95771b481561b20bc82c8ffb64c49)]:
+  - @volleykit/shared@1.8.0
+
 ## 1.7.0
 
 ### Minor Changes

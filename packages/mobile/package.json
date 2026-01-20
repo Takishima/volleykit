@@ -1,6 +1,6 @@
 {
   "name": "@volleykit/mobile",
-  "version": "1.0.1",
+  "version": "1.8.0",
   "description": "VolleyKit React Native mobile app",
   "private": true,
   "main": "expo-router/entry",

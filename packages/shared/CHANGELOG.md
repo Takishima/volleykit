@@ -1,5 +1,20 @@
 # @volleykit/shared
 
+## 1.8.0
+
+### Patch Changes
+
+- [#794](https://github.com/Takishima/volleykit/pull/794) [`56e8d5f`](https://github.com/Takishima/volleykit/commit/56e8d5fe997b16fbca8b26a4b3d4800a750d0319) Thanks [@Takishima](https://github.com/Takishima)! - Add missing i18n translations for DepartureReminderSettingsScreen
+
+  - Add translation keys for background location and notification permission denied messages
+  - Add translation keys for "How it works" section
+  - Replace hardcoded English strings with proper t() function calls
+  - Add translations for all 4 languages (de, en, fr, it)
+
+- [#771](https://github.com/Takishima/volleykit/pull/771) [`d0c0490`](https://github.com/Takishima/volleykit/commit/d0c0490e716e807a266c5c138e604e2ccea2c23f) Thanks [@Takishima](https://github.com/Takishima)! - Use i18n translations in AssignmentDetailScreen instead of hardcoded English text
+
+- [#789](https://github.com/Takishima/volleykit/pull/789) [`5840a9f`](https://github.com/Takishima/volleykit/commit/5840a9fc37f95771b481561b20bc82c8ffb64c49) Thanks [@Takishima](https://github.com/Takishima)! - Use i18n translations for LastUpdatedIndicator hardcoded strings
+
 ## 1.0.1
 
 ### Patch Changes
