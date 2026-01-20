@@ -180,30 +180,35 @@ describe('Exchanges Integration', () => {
       )
     })
 
-    it('prevents applying for own exchange', async () => {
+    it('prevents applying for own exchange when user has submitted one', async () => {
       const initialState = useDemoStore.getState()
+      const assignmentToExchange = initialState.assignments[0]
 
-      // Find an exchange submitted by the demo user
-      const ownExchange = initialState.exchanges.find(
+      // First, create an exchange from the demo user by adding an assignment to exchange
+      expect(assignmentToExchange).toBeDefined()
+      useDemoStore.getState().addAssignmentToExchange(assignmentToExchange!.__identity)
+
+      const stateAfterExchange = useDemoStore.getState()
+
+      // Find the exchange we just created (submitted by demo user)
+      const ownExchange = stateAfterExchange.exchanges.find(
         (e) => e.submittedByPerson?.__identity === DEMO_USER_PERSON_IDENTITY
       )
 
-      // If there's no own exchange, this test is not applicable
-      if (!ownExchange) {
-        return
-      }
+      expect(ownExchange).toBeDefined()
+      if (!ownExchange) return // Type guard for TypeScript
 
       const exchangeId = ownExchange.__identity
-      const initialExchangeCount = initialState.exchanges.length
-      const initialAssignmentCount = initialState.assignments.length
+      const exchangeCountBefore = stateAfterExchange.exchanges.length
+      const assignmentCountBefore = stateAfterExchange.assignments.length
 
-      // Try to apply for own exchange
+      // Try to apply for own exchange - should be blocked
       await mockApi.applyForExchange(exchangeId)
 
       // Should not change anything (applyForExchange checks for own exchange)
       const newState = useDemoStore.getState()
-      expect(newState.exchanges.length).toBe(initialExchangeCount)
-      expect(newState.assignments.length).toBe(initialAssignmentCount)
+      expect(newState.exchanges.length).toBe(exchangeCountBefore)
+      expect(newState.assignments.length).toBe(assignmentCountBefore)
     })
   })
 
@@ -221,10 +226,9 @@ describe('Exchanges Integration', () => {
         (e) => e.submittedByPerson?.__identity !== DEMO_USER_PERSON_IDENTITY && e.status === 'open'
       )
 
-      if (!exchange) {
-        // No suitable exchange for this test
-        return
-      }
+      // Demo data should include open exchanges from other users
+      expect(exchange).toBeDefined()
+      if (!exchange) return // Type guard for TypeScript
 
       const exchangeId = exchange.__identity
 
@@ -361,7 +365,9 @@ describe('Exchanges Integration', () => {
         (e) => e.submittedByPerson?.__identity !== DEMO_USER_PERSON_IDENTITY && e.status === 'open'
       )
 
-      if (!exchangeToApply) return
+      // Demo data should include open exchanges from other users
+      expect(exchangeToApply).toBeDefined()
+      if (!exchangeToApply) return // Type guard for TypeScript
 
       // Apply for exchange
       await mockApi.applyForExchange(exchangeToApply.__identity)

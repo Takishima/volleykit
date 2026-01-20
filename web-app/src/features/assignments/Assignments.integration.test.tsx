@@ -173,8 +173,7 @@ describe('Assignments Integration', () => {
       useDemoStore.getState().initializeDemoData('SV')
     })
 
-    it('invalidates queries when association changes', async () => {
-      const resetQueriesSpy = vi.spyOn(queryClient, 'resetQueries')
+    it('updates store state when association changes', async () => {
       renderAssignmentsPage()
 
       // Wait for initial data
@@ -194,6 +193,9 @@ describe('Assignments Integration', () => {
       await waitFor(() => {
         expect(useDemoStore.getState().activeAssociationCode).toBe('SVRBA')
       })
+
+      // Auth store should also reflect the new occupation
+      expect(useAuthStore.getState().activeOccupationId).toBe('demo-referee-svrba')
     })
   })
 })
