@@ -22,8 +22,8 @@ describe('authLogger', () => {
 
       const logs = getAuthLogs()
       expect(logs).toHaveLength(1)
-      expect(logs[0].level).toBe('debug')
-      expect(logs[0].message).toBe('test debug message')
+      expect(logs[0]!.level).toBe('debug')
+      expect(logs[0]!.message).toBe('test debug message')
     })
 
     it('should have info method that adds entry to buffer', () => {
@@ -31,8 +31,8 @@ describe('authLogger', () => {
 
       const logs = getAuthLogs()
       expect(logs).toHaveLength(1)
-      expect(logs[0].level).toBe('info')
-      expect(logs[0].message).toBe('test info message')
+      expect(logs[0]!.level).toBe('info')
+      expect(logs[0]!.message).toBe('test info message')
     })
 
     it('should have warn method that adds entry to buffer', () => {
@@ -40,8 +40,8 @@ describe('authLogger', () => {
 
       const logs = getAuthLogs()
       expect(logs).toHaveLength(1)
-      expect(logs[0].level).toBe('warn')
-      expect(logs[0].message).toBe('test warning message')
+      expect(logs[0]!.level).toBe('warn')
+      expect(logs[0]!.message).toBe('test warning message')
     })
 
     it('should have error method that adds entry to buffer', () => {
@@ -49,8 +49,8 @@ describe('authLogger', () => {
 
       const logs = getAuthLogs()
       expect(logs).toHaveLength(1)
-      expect(logs[0].level).toBe('error')
-      expect(logs[0].message).toBe('test error message')
+      expect(logs[0]!.level).toBe('error')
+      expect(logs[0]!.message).toBe('test error message')
     })
 
     it('should store additional data with log entry', () => {
@@ -58,7 +58,7 @@ describe('authLogger', () => {
       authLogger.info('login attempt', testData)
 
       const logs = getAuthLogs()
-      expect(logs[0].data).toEqual(testData)
+      expect(logs[0]!.data).toEqual(testData)
     })
 
     it('should store timestamp with log entry', () => {
@@ -67,8 +67,8 @@ describe('authLogger', () => {
       const after = Date.now()
 
       const logs = getAuthLogs()
-      expect(logs[0].timestamp).toBeGreaterThanOrEqual(before)
-      expect(logs[0].timestamp).toBeLessThanOrEqual(after)
+      expect(logs[0]!.timestamp).toBeGreaterThanOrEqual(before)
+      expect(logs[0]!.timestamp).toBeLessThanOrEqual(after)
     })
   })
 
@@ -84,9 +84,9 @@ describe('authLogger', () => {
 
       const logs = getAuthLogs()
       expect(logs).toHaveLength(3)
-      expect(logs[0].message).toBe('first')
-      expect(logs[1].message).toBe('second')
-      expect(logs[2].message).toBe('third')
+      expect(logs[0]!.message).toBe('first')
+      expect(logs[1]!.message).toBe('second')
+      expect(logs[2]!.message).toBe('third')
     })
 
     it('should return stable reference until logs change', () => {
@@ -208,8 +208,8 @@ describe('authLogger', () => {
       const logs = getAuthLogs()
       expect(logs).toHaveLength(50)
       // First 5 should have been removed (0-4)
-      expect(logs[0].message).toBe('message 5')
-      expect(logs[49].message).toBe('message 54')
+      expect(logs[0]!.message).toBe('message 5')
+      expect(logs[49]!.message).toBe('message 54')
     })
 
     it('should remove oldest entries first', () => {
@@ -223,9 +223,9 @@ describe('authLogger', () => {
 
       const logs = getAuthLogs()
       expect(logs).toHaveLength(50)
-      expect(logs[0].message).toBe('old 1')
-      expect(logs[49].message).toBe('new entry')
-      expect(logs[49].level).toBe('info')
+      expect(logs[0]!.message).toBe('old 1')
+      expect(logs[49]!.message).toBe('new entry')
+      expect(logs[49]!.level).toBe('info')
     })
   })
 })
