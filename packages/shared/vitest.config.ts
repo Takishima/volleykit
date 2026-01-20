@@ -12,5 +12,16 @@ export default defineConfig({
       ['src/utils/**/*.test.ts', 'node'],
     ],
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/',
+        '**/*.d.ts',
+        '**/*.test.{ts,tsx}',
+        '**/types/**',
+        '**/index.ts', // Re-export files
+      ],
+    },
   },
 });
