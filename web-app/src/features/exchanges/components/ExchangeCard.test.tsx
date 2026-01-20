@@ -248,8 +248,9 @@ describe('ExchangeCard', () => {
       const exchange = createMockExchange()
       render(<ExchangeCard exchange={exchange} travelTimeLoading={true} />)
 
-      // Should render TravelTimeBadge with loading state
-      // The badge component handles rendering
+      // Should render without travel time value when loading
+      // The TravelTimeBadge component handles the loading indicator internally
+      expect(screen.queryByText(/min/)).not.toBeInTheDocument()
     })
   })
 

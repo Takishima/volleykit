@@ -643,10 +643,9 @@ describe('ProtectedRoute', () => {
 
     render(<App />)
 
-    // Give time for any effects to run
-    await new Promise((resolve) => setTimeout(resolve, 100))
-
-    // Should not reinitialize when data exists
-    expect(mockInitializeDemoData).not.toHaveBeenCalled()
+    // Wait for any effects to run and verify no reinitialization
+    await waitFor(() => {
+      expect(mockInitializeDemoData).not.toHaveBeenCalled()
+    })
   })
 })
