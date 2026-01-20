@@ -12,4 +12,3 @@ and Android credential association behavior.
 Changes:
 - Added `action="https://volleymanager.volleyball.ch"` to the login form
 - Added `name` attributes to username and password inputs
-- Added `<link rel="origin">` meta tag for credential association
