@@ -806,10 +806,10 @@ describe('useSettingsStore', () => {
     it('should set notification reminder times', () => {
       const { setNotificationReminderTimes } = useSettingsStore.getState()
 
-      setNotificationReminderTimes(['30m', '1h', '2h'])
+      setNotificationReminderTimes(['1h', '2h', '1d'])
 
       const { notificationSettings } = useSettingsStore.getState()
-      expect(notificationSettings.reminderTimes).toEqual(['30m', '1h', '2h'])
+      expect(notificationSettings.reminderTimes).toEqual(['1h', '2h', '1d'])
     })
 
     it('should set notification delivery preference', () => {
@@ -829,12 +829,12 @@ describe('useSettingsStore', () => {
       } = useSettingsStore.getState()
 
       setNotificationsEnabled(true)
-      setNotificationReminderTimes(['15m', '30m'])
+      setNotificationReminderTimes(['1h', '2h'])
       setNotificationDeliveryPreference('both')
 
       const { notificationSettings } = useSettingsStore.getState()
       expect(notificationSettings.enabled).toBe(true)
-      expect(notificationSettings.reminderTimes).toEqual(['15m', '30m'])
+      expect(notificationSettings.reminderTimes).toEqual(['1h', '2h'])
       expect(notificationSettings.deliveryPreference).toBe('both')
     })
   })

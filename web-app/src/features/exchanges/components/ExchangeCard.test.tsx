@@ -65,8 +65,10 @@ vi.mock('@/shared/hooks/useDateFormat', () => ({
 const createMockExchange = (overrides: Partial<GameExchange> = {}): GameExchange => ({
   __identity: 'exchange-1',
   status: 'open',
-  refereePosition: 'first-head',
-  requiredRefereeLevel: 'A',
+  refereePosition: 'head-one',
+  requiredRefereeLevel: 'N3',
+  submittedAt: '2024-03-10T10:00:00Z',
+  submittingType: 'referee',
   submittedByPerson: {
     __identity: 'person-1',
     firstName: 'John',
@@ -83,9 +85,9 @@ const createMockExchange = (overrides: Partial<GameExchange> = {}): GameExchange
         __identity: 'hall-1',
         name: 'Sports Hall A',
         primaryPostalAddress: {
-          streetAddress: '123 Main St',
+          street: '123 Main St',
           city: 'Zurich',
-          zipCode: '8000',
+          postalCode: '8000',
           geographicalLocation: {
             latitude: 47.3769,
             longitude: 8.5417,
@@ -257,7 +259,6 @@ describe('ExchangeCard', () => {
   describe('expanded details', () => {
     // Helper to get the main expandable card button
     const getExpandButton = () => screen.getByRole('button', { expanded: false })
-    const getExpandedButton = () => screen.getByRole('button', { expanded: true })
 
     it('renders hall name in details', async () => {
       const user = userEvent.setup()
@@ -319,7 +320,7 @@ describe('ExchangeCard', () => {
 
       await user.click(getExpandButton())
 
-      expect(screen.getByText(/Level required: A/)).toBeInTheDocument()
+      expect(screen.getByText(/Level required: N3/)).toBeInTheDocument()
     })
 
     it('does not render required level when not set', async () => {

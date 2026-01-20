@@ -17,8 +17,12 @@ vi.mock('@/api/client', () => ({
 }))
 
 // Mock auth store
-const mockAuthStore = {
-  dataSource: 'api' as const,
+const mockAuthStore: {
+  dataSource: 'api' | 'demo' | 'calendar'
+  activeOccupationId: string
+  user: { id: string } | null
+} = {
+  dataSource: 'api',
   activeOccupationId: 'occupation-1',
   user: { id: 'user-123' },
 }
@@ -143,7 +147,7 @@ describe('useGameExchanges', () => {
       })
 
       expect(result.current.data).toHaveLength(1)
-      expect(result.current.data?.[0].__identity).toBe('ex-2')
+      expect(result.current.data![0]!.__identity).toBe('ex-2')
     })
 
     it('filters to demo user exchanges when status is "mine" in demo mode', async () => {
@@ -165,7 +169,7 @@ describe('useGameExchanges', () => {
       })
 
       expect(result.current.data).toHaveLength(1)
-      expect(result.current.data?.[0].__identity).toBe('ex-2')
+      expect(result.current.data![0]!.__identity).toBe('ex-2')
     })
 
     it('returns empty array when status is "mine" but no user identity', async () => {
@@ -219,7 +223,7 @@ describe('useGameExchanges', () => {
 
       // Only the one with matching user identity
       expect(result.current.data).toHaveLength(1)
-      expect(result.current.data?.[0].__identity).toBe('ex-2')
+      expect(result.current.data![0]!.__identity).toBe('ex-2')
     })
   })
 
@@ -235,7 +239,7 @@ describe('useGameExchanges', () => {
         expect(mockSearchExchanges).toHaveBeenCalled()
       })
 
-      const config = mockSearchExchanges.mock.calls[0][0]
+      const config = mockSearchExchanges.mock.calls[0]![0]
       expect(config.offset).toBe(0)
       expect(config.limit).toBeDefined()
       expect(config.propertyFilters).toBeDefined()
