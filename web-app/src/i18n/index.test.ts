@@ -198,4 +198,65 @@ describe('i18n module', () => {
       expect(getLocale()).toBe('en')
     })
   })
+
+  describe('setLocaleImmediate async loading', () => {
+    it('loads translations asynchronously when not cached', async () => {
+      // First ensure we're on English (cached)
+      await setLocale('en')
+
+      // Use setLocaleImmediate for a locale that needs async loading
+      // After the first setLocale calls in tests, locales may be cached
+      // We test that the function works regardless
+      setLocaleImmediate('de')
+      expect(getLocale()).toBe('de')
+
+      // Wait for async load to complete
+      await new Promise((resolve) => setTimeout(resolve, 100))
+
+      // Translations should now work
+      expect(t('auth.login')).toBe('Anmelden')
+    })
+
+    it('handles rapid setLocaleImmediate calls with race condition protection', async () => {
+      // Rapid calls - only the last should win
+      setLocaleImmediate('de')
+      setLocaleImmediate('fr')
+      setLocaleImmediate('it')
+
+      expect(getLocale()).toBe('it')
+
+      // Wait for async loads
+      await new Promise((resolve) => setTimeout(resolve, 100))
+
+      // Should have Italian translations
+      expect(t('auth.login')).toBe('Accesso')
+    })
+  })
+
+  describe('t() edge cases', () => {
+    it('handles empty object in translation path', () => {
+      // This tests the branch where result is an object but key is not in it
+      // @ts-expect-error - testing invalid key behavior
+      const result = t('auth.nonexistent.deeply.nested')
+      expect(result).toBe('auth.nonexistent.deeply.nested')
+    })
+
+    it('handles partial key path that exists in English fallback', async () => {
+      await setLocale('de')
+      // Test a valid nested key to ensure fallback mechanism works
+      expect(t('validation.roster.addPlayer')).toBe('Spieler hinzufügen')
+    })
+
+    it('returns key when traversing fails at any level', () => {
+      // @ts-expect-error - testing invalid path
+      expect(t('completely.invalid.path.that.does.not.exist')).toBe(
+        'completely.invalid.path.that.does.not.exist'
+      )
+    })
+
+    it('handles single-level invalid key', () => {
+      // @ts-expect-error - testing invalid key
+      expect(t('invalidTopLevelKey')).toBe('invalidTopLevelKey')
+    })
+  })
 })

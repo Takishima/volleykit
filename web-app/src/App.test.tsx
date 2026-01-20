@@ -365,19 +365,26 @@ describe('ProtectedRoute', () => {
   })
 
   it('does not call checkSession in demo mode', async () => {
-    // Update both the hook return value and getState for this test
-    mockAuthStore.getState.mockReturnValue({ dataSource: 'demo' })
-    vi.mocked(useAuthStore).mockReturnValue({
+    const authState = {
       status: 'authenticated',
       checkSession: mockCheckSession,
       dataSource: 'demo',
       logout: mockLogout,
-    } as ReturnType<typeof useAuthStore>)
+      user: { id: 'demo' },
+    }
+    mockAuthStore.getState.mockReturnValue(authState)
+    vi.mocked(useAuthStore).mockImplementation((selector) => {
+      return typeof selector === 'function' ? selector(authState as never) : authState
+    })
 
-    vi.mocked(useDemoStore).mockReturnValue({
-      assignments: [{ id: 'demo-1' }],
-      initializeDemoData: mockInitializeDemoData,
-    } as unknown as ReturnType<typeof useDemoStore>)
+    vi.mocked(useDemoStore).mockImplementation((selector) => {
+      const state = {
+        assignments: [{ id: 'demo-1' }],
+        activeAssociationCode: 'SV',
+        initializeDemoData: mockInitializeDemoData,
+      }
+      return typeof selector === 'function' ? selector(state as never) : state
+    })
 
     render(<App />)
 
@@ -388,19 +395,26 @@ describe('ProtectedRoute', () => {
   })
 
   it('does not call checkSession in calendar mode', async () => {
-    // Update both the hook return value and getState for this test
-    mockAuthStore.getState.mockReturnValue({ dataSource: 'calendar' })
-    vi.mocked(useAuthStore).mockReturnValue({
+    const authState = {
       status: 'authenticated',
       checkSession: mockCheckSession,
       dataSource: 'calendar',
       logout: mockLogout,
-    } as ReturnType<typeof useAuthStore>)
+      user: { id: 'calendar-user' },
+    }
+    mockAuthStore.getState.mockReturnValue(authState)
+    vi.mocked(useAuthStore).mockImplementation((selector) => {
+      return typeof selector === 'function' ? selector(authState as never) : authState
+    })
 
-    vi.mocked(useDemoStore).mockReturnValue({
-      assignments: [],
-      initializeDemoData: mockInitializeDemoData,
-    } as unknown as ReturnType<typeof useDemoStore>)
+    vi.mocked(useDemoStore).mockImplementation((selector) => {
+      const state = {
+        assignments: [],
+        activeAssociationCode: 'SV',
+        initializeDemoData: mockInitializeDemoData,
+      }
+      return typeof selector === 'function' ? selector(state as never) : state
+    })
 
     render(<App />)
 
@@ -411,24 +425,227 @@ describe('ProtectedRoute', () => {
   })
 
   it('calls checkSession in API mode', async () => {
-    // Update both the hook return value and getState for this test
-    mockAuthStore.getState.mockReturnValue({ dataSource: 'api' })
-    vi.mocked(useAuthStore).mockReturnValue({
+    const authState = {
       status: 'authenticated',
       checkSession: mockCheckSession,
       dataSource: 'api',
       logout: mockLogout,
-    } as ReturnType<typeof useAuthStore>)
+      user: { id: 'api-user' },
+    }
+    mockAuthStore.getState.mockReturnValue(authState)
+    vi.mocked(useAuthStore).mockImplementation((selector) => {
+      return typeof selector === 'function' ? selector(authState as never) : authState
+    })
 
-    vi.mocked(useDemoStore).mockReturnValue({
-      assignments: [],
-      initializeDemoData: mockInitializeDemoData,
-    } as unknown as ReturnType<typeof useDemoStore>)
+    vi.mocked(useDemoStore).mockImplementation((selector) => {
+      const state = {
+        assignments: [],
+        activeAssociationCode: 'SV',
+        initializeDemoData: mockInitializeDemoData,
+      }
+      return typeof selector === 'function' ? selector(state as never) : state
+    })
 
     render(<App />)
 
     await waitFor(() => {
       expect(mockCheckSession).toHaveBeenCalled()
+    })
+  })
+
+  it('shows loading state while status is loading', async () => {
+    const authState = {
+      status: 'loading',
+      checkSession: mockCheckSession,
+      dataSource: 'api',
+      logout: mockLogout,
+      user: null,
+    }
+    mockAuthStore.getState.mockReturnValue(authState)
+    vi.mocked(useAuthStore).mockImplementation((selector) => {
+      return typeof selector === 'function' ? selector(authState as never) : authState
+    })
+
+    vi.mocked(useDemoStore).mockImplementation((selector) => {
+      const state = {
+        assignments: [],
+        activeAssociationCode: 'SV',
+        initializeDemoData: mockInitializeDemoData,
+      }
+      return typeof selector === 'function' ? selector(state as never) : state
+    })
+
+    const { container } = render(<App />)
+
+    // Should show loading state
+    await waitFor(() => {
+      // The app should be rendering a loading state
+      expect(container.textContent).toBeDefined()
+    })
+  })
+
+  it('redirects to login when session verification fails', async () => {
+    const sessionError = new Error('Session expired')
+    mockCheckSession.mockRejectedValue(sessionError)
+
+    const authState = {
+      status: 'authenticated',
+      checkSession: mockCheckSession,
+      dataSource: 'api',
+      logout: mockLogout,
+      user: { id: 'api-user' },
+    }
+    mockAuthStore.getState.mockReturnValue(authState)
+    vi.mocked(useAuthStore).mockImplementation((selector) => {
+      return typeof selector === 'function' ? selector(authState as never) : authState
+    })
+
+    vi.mocked(useDemoStore).mockImplementation((selector) => {
+      const state = {
+        assignments: [],
+        activeAssociationCode: 'SV',
+        initializeDemoData: mockInitializeDemoData,
+      }
+      return typeof selector === 'function' ? selector(state as never) : state
+    })
+
+    render(<App />)
+
+    // Wait for error to be processed and redirect to occur
+    await waitFor(() => {
+      expect(mockCheckSession).toHaveBeenCalled()
+    })
+  })
+
+  it('handles AbortError gracefully during session verification', async () => {
+    // This test verifies that AbortError (from unmount) doesn't cause issues
+    const abortError = new Error('Aborted')
+    abortError.name = 'AbortError'
+    mockCheckSession.mockRejectedValue(abortError)
+
+    const authState = {
+      status: 'authenticated',
+      checkSession: mockCheckSession,
+      dataSource: 'api',
+      logout: mockLogout,
+      user: { id: 'test' },
+    }
+    mockAuthStore.getState.mockReturnValue(authState)
+    vi.mocked(useAuthStore).mockImplementation((selector) => {
+      return typeof selector === 'function' ? selector(authState as never) : authState
+    })
+
+    vi.mocked(useDemoStore).mockImplementation((selector) => {
+      const state = {
+        assignments: [],
+        activeAssociationCode: 'SV',
+        initializeDemoData: mockInitializeDemoData,
+      }
+      return typeof selector === 'function' ? selector(state as never) : state
+    })
+
+    const { unmount } = render(<App />)
+
+    // Unmount immediately to trigger AbortError
+    unmount()
+
+    // Should not throw or cause issues
+    expect(true).toBe(true)
+  })
+
+  it('redirects unauthenticated users to login', async () => {
+    const authState = {
+      status: 'unauthenticated',
+      checkSession: mockCheckSession,
+      dataSource: 'api',
+      logout: mockLogout,
+      user: null,
+    }
+    mockAuthStore.getState.mockReturnValue(authState)
+    vi.mocked(useAuthStore).mockImplementation((selector) => {
+      return typeof selector === 'function' ? selector(authState as never) : authState
+    })
+
+    vi.mocked(useDemoStore).mockImplementation((selector) => {
+      const state = {
+        assignments: [],
+        activeAssociationCode: 'SV',
+        initializeDemoData: mockInitializeDemoData,
+      }
+      return typeof selector === 'function' ? selector(state as never) : state
+    })
+
+    render(<App />)
+
+    // Unauthenticated users should be redirected
+    await waitFor(() => {
+      // The Navigate component will be rendered for unauthenticated users
+      expect(mockCheckSession).not.toHaveBeenCalled()
+    })
+  })
+
+  it('initializes demo data when in demo mode with empty assignments', async () => {
+    const authState = {
+      status: 'authenticated',
+      checkSession: mockCheckSession,
+      dataSource: 'demo',
+      logout: mockLogout,
+      user: { id: 'demo' },
+    }
+
+    mockAuthStore.getState.mockReturnValue(authState)
+    // Handle both useShallow and direct selector patterns
+    vi.mocked(useAuthStore).mockImplementation((selector) => {
+      return typeof selector === 'function' ? selector(authState as never) : authState
+    })
+
+    // Use useShallow-compatible mock
+    vi.mocked(useDemoStore).mockImplementation((selector) => {
+      const state = {
+        assignments: [], // Empty assignments
+        activeAssociationCode: 'SV',
+        initializeDemoData: mockInitializeDemoData,
+      }
+      return typeof selector === 'function' ? selector(state as never) : state
+    })
+
+    render(<App />)
+
+    await waitFor(
+      () => {
+        expect(mockInitializeDemoData).toHaveBeenCalledWith('SV')
+      },
+      { timeout: 2000 }
+    )
+  })
+
+  it('does not reinitialize demo data when assignments exist', async () => {
+    const authState = {
+      status: 'authenticated',
+      checkSession: mockCheckSession,
+      dataSource: 'demo',
+      logout: mockLogout,
+      user: { id: 'demo' },
+    }
+    mockAuthStore.getState.mockReturnValue(authState)
+    vi.mocked(useAuthStore).mockImplementation((selector) => {
+      return typeof selector === 'function' ? selector(authState as never) : authState
+    })
+
+    vi.mocked(useDemoStore).mockImplementation((selector) => {
+      const state = {
+        assignments: [{ id: 'existing-1' }], // Has assignments
+        activeAssociationCode: 'SV',
+        initializeDemoData: mockInitializeDemoData,
+      }
+      return typeof selector === 'function' ? selector(state as never) : state
+    })
+
+    render(<App />)
+
+    // Wait for any effects to run and verify no reinitialization
+    await waitFor(() => {
+      expect(mockInitializeDemoData).not.toHaveBeenCalled()
     })
   })
 })

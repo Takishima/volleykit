@@ -548,6 +548,338 @@ describe('useSettingsStore', () => {
     })
   })
 
+  describe('OCR settings', () => {
+    beforeEach(() => {
+      resetStore()
+    })
+
+    it('should have OCR disabled by default', () => {
+      const { isOCREnabled } = useSettingsStore.getState()
+      expect(isOCREnabled).toBe(false)
+    })
+
+    it('should allow enabling OCR', () => {
+      const { setOCREnabled } = useSettingsStore.getState()
+
+      setOCREnabled(true)
+
+      const { isOCREnabled } = useSettingsStore.getState()
+      expect(isOCREnabled).toBe(true)
+    })
+
+    it('should allow disabling OCR', () => {
+      const { setOCREnabled } = useSettingsStore.getState()
+
+      setOCREnabled(true)
+      setOCREnabled(false)
+
+      const { isOCREnabled } = useSettingsStore.getState()
+      expect(isOCREnabled).toBe(false)
+    })
+  })
+
+  describe('prevent zoom settings', () => {
+    beforeEach(() => {
+      resetStore()
+    })
+
+    it('should have prevent zoom disabled by default', () => {
+      const { preventZoom } = useSettingsStore.getState()
+      expect(preventZoom).toBe(false)
+    })
+
+    it('should allow enabling prevent zoom', () => {
+      const { setPreventZoom } = useSettingsStore.getState()
+
+      setPreventZoom(true)
+
+      const { preventZoom } = useSettingsStore.getState()
+      expect(preventZoom).toBe(true)
+    })
+  })
+
+  describe('per-association distance filter settings', () => {
+    beforeEach(() => {
+      resetStore()
+    })
+
+    it('should fall back to global distanceFilter when no per-association setting exists', () => {
+      const { getDistanceFilterForAssociation, setDistanceFilterEnabled, setMaxDistanceKm } =
+        useSettingsStore.getState()
+
+      setDistanceFilterEnabled(true)
+      setMaxDistanceKm(40)
+
+      const filter = getDistanceFilterForAssociation('SV')
+      expect(filter.enabled).toBe(true)
+      expect(filter.maxDistanceKm).toBe(40)
+    })
+
+    it('should use per-association setting when available', () => {
+      const { getDistanceFilterForAssociation, setDistanceFilterForAssociation } =
+        useSettingsStore.getState()
+
+      setDistanceFilterForAssociation('SV', { enabled: true, maxDistanceKm: 100 })
+
+      const filter = getDistanceFilterForAssociation('SV')
+      expect(filter.enabled).toBe(true)
+      expect(filter.maxDistanceKm).toBe(100)
+    })
+
+    it('should handle undefined association code', () => {
+      const { getDistanceFilterForAssociation, setDistanceFilterEnabled } =
+        useSettingsStore.getState()
+
+      setDistanceFilterEnabled(true)
+
+      const filter = getDistanceFilterForAssociation(undefined)
+      expect(filter.enabled).toBe(true)
+    })
+
+    it('should preserve settings for other associations', () => {
+      const { getDistanceFilterForAssociation, setDistanceFilterForAssociation } =
+        useSettingsStore.getState()
+
+      setDistanceFilterForAssociation('SV', { maxDistanceKm: 80 })
+      setDistanceFilterForAssociation('SVRBA', { maxDistanceKm: 60 })
+
+      expect(getDistanceFilterForAssociation('SV').maxDistanceKm).toBe(80)
+      expect(getDistanceFilterForAssociation('SVRBA').maxDistanceKm).toBe(60)
+    })
+
+    it('should merge partial filter updates', () => {
+      const { getDistanceFilterForAssociation, setDistanceFilterForAssociation } =
+        useSettingsStore.getState()
+
+      setDistanceFilterForAssociation('SV', { enabled: true })
+      setDistanceFilterForAssociation('SV', { maxDistanceKm: 75 })
+
+      const filter = getDistanceFilterForAssociation('SV')
+      expect(filter.enabled).toBe(true)
+      expect(filter.maxDistanceKm).toBe(75)
+    })
+  })
+
+  describe('per-association max travel time settings', () => {
+    beforeEach(() => {
+      resetStore()
+    })
+
+    it('should fall back to global maxTravelTimeMinutes when no per-association setting exists', () => {
+      const { getMaxTravelTimeForAssociation, setMaxTravelTimeMinutes } = useSettingsStore.getState()
+
+      setMaxTravelTimeMinutes(90)
+
+      expect(getMaxTravelTimeForAssociation('SV')).toBe(90)
+      expect(getMaxTravelTimeForAssociation('SVRBA')).toBe(90)
+    })
+
+    it('should use per-association setting when available', () => {
+      const { getMaxTravelTimeForAssociation, setMaxTravelTimeForAssociation } =
+        useSettingsStore.getState()
+
+      setMaxTravelTimeForAssociation('SV', 150)
+
+      expect(getMaxTravelTimeForAssociation('SV')).toBe(150)
+    })
+
+    it('should handle undefined association code', () => {
+      const { getMaxTravelTimeForAssociation, setMaxTravelTimeMinutes } = useSettingsStore.getState()
+
+      setMaxTravelTimeMinutes(60)
+
+      expect(getMaxTravelTimeForAssociation(undefined)).toBe(60)
+    })
+
+    it('should preserve settings for other associations', () => {
+      const { getMaxTravelTimeForAssociation, setMaxTravelTimeForAssociation } =
+        useSettingsStore.getState()
+
+      setMaxTravelTimeForAssociation('SV', 180)
+      setMaxTravelTimeForAssociation('SVRBA', 90)
+
+      expect(getMaxTravelTimeForAssociation('SV')).toBe(180)
+      expect(getMaxTravelTimeForAssociation('SVRBA')).toBe(90)
+    })
+  })
+
+  describe('travel time filter settings', () => {
+    beforeEach(() => {
+      resetStore()
+    })
+
+    it('should have travel time filter disabled by default', () => {
+      const { travelTimeFilter } = useSettingsStore.getState()
+      expect(travelTimeFilter.enabled).toBe(false)
+    })
+
+    it('should allow enabling travel time filter', () => {
+      const { setTravelTimeFilterEnabled } = useSettingsStore.getState()
+
+      setTravelTimeFilterEnabled(true)
+
+      const { travelTimeFilter } = useSettingsStore.getState()
+      expect(travelTimeFilter.enabled).toBe(true)
+    })
+
+    it('should invalidate travel time cache', () => {
+      const { invalidateTravelTimeCache } = useSettingsStore.getState()
+
+      // Initially should be null
+      expect(useSettingsStore.getState().travelTimeFilter.cacheInvalidatedAt).toBeNull()
+
+      invalidateTravelTimeCache()
+
+      const { travelTimeFilter } = useSettingsStore.getState()
+      expect(travelTimeFilter.cacheInvalidatedAt).not.toBeNull()
+      expect(typeof travelTimeFilter.cacheInvalidatedAt).toBe('number')
+    })
+
+    it('should set SBB destination type', () => {
+      const { setSbbDestinationType } = useSettingsStore.getState()
+
+      setSbbDestinationType('station')
+
+      const { travelTimeFilter } = useSettingsStore.getState()
+      expect(travelTimeFilter.sbbDestinationType).toBe('station')
+    })
+
+    it('should set global arrival buffer', () => {
+      const { setArrivalBufferMinutes } = useSettingsStore.getState()
+
+      setArrivalBufferMinutes(90)
+
+      const { travelTimeFilter } = useSettingsStore.getState()
+      expect(travelTimeFilter.arrivalBufferMinutes).toBe(90)
+    })
+  })
+
+  describe('level filter settings', () => {
+    beforeEach(() => {
+      resetStore()
+    })
+
+    it('should have level filter disabled by default', () => {
+      const { levelFilterEnabled } = useSettingsStore.getState()
+      expect(levelFilterEnabled).toBe(false)
+    })
+
+    it('should allow enabling level filter', () => {
+      const { setLevelFilterEnabled } = useSettingsStore.getState()
+
+      setLevelFilterEnabled(true)
+
+      const { levelFilterEnabled } = useSettingsStore.getState()
+      expect(levelFilterEnabled).toBe(true)
+    })
+
+    it('should allow disabling level filter', () => {
+      const { setLevelFilterEnabled } = useSettingsStore.getState()
+
+      setLevelFilterEnabled(true)
+      setLevelFilterEnabled(false)
+
+      const { levelFilterEnabled } = useSettingsStore.getState()
+      expect(levelFilterEnabled).toBe(false)
+    })
+  })
+
+  describe('notification settings', () => {
+    beforeEach(() => {
+      resetStore()
+    })
+
+    it('should have notifications disabled by default', () => {
+      const { notificationSettings } = useSettingsStore.getState()
+      expect(notificationSettings.enabled).toBe(false)
+    })
+
+    it('should allow enabling notifications', () => {
+      const { setNotificationsEnabled } = useSettingsStore.getState()
+
+      setNotificationsEnabled(true)
+
+      const { notificationSettings } = useSettingsStore.getState()
+      expect(notificationSettings.enabled).toBe(true)
+    })
+
+    it('should set notification reminder times', () => {
+      const { setNotificationReminderTimes } = useSettingsStore.getState()
+
+      setNotificationReminderTimes(['1h', '2h', '1d'])
+
+      const { notificationSettings } = useSettingsStore.getState()
+      expect(notificationSettings.reminderTimes).toEqual(['1h', '2h', '1d'])
+    })
+
+    it('should set notification delivery preference', () => {
+      const { setNotificationDeliveryPreference } = useSettingsStore.getState()
+
+      setNotificationDeliveryPreference('in-app')
+
+      const { notificationSettings } = useSettingsStore.getState()
+      expect(notificationSettings.deliveryPreference).toBe('in-app')
+    })
+
+    it('should preserve other settings when updating one field', () => {
+      const {
+        setNotificationsEnabled,
+        setNotificationReminderTimes,
+        setNotificationDeliveryPreference,
+      } = useSettingsStore.getState()
+
+      setNotificationsEnabled(true)
+      setNotificationReminderTimes(['1h', '2h'])
+      setNotificationDeliveryPreference('both')
+
+      const { notificationSettings } = useSettingsStore.getState()
+      expect(notificationSettings.enabled).toBe(true)
+      expect(notificationSettings.reminderTimes).toEqual(['1h', '2h'])
+      expect(notificationSettings.deliveryPreference).toBe('both')
+    })
+  })
+
+  describe('game gap filter settings', () => {
+    beforeEach(() => {
+      resetStore()
+    })
+
+    it('should have game gap filter disabled by default', () => {
+      const { gameGapFilter } = useSettingsStore.getState()
+      expect(gameGapFilter.enabled).toBe(false)
+      expect(gameGapFilter.minGapMinutes).toBe(120)
+    })
+
+    it('should allow enabling game gap filter', () => {
+      const { setGameGapFilterEnabled } = useSettingsStore.getState()
+
+      setGameGapFilterEnabled(true)
+
+      const { gameGapFilter } = useSettingsStore.getState()
+      expect(gameGapFilter.enabled).toBe(true)
+    })
+
+    it('should allow setting minimum game gap', () => {
+      const { setMinGameGapMinutes } = useSettingsStore.getState()
+
+      setMinGameGapMinutes(180)
+
+      const { gameGapFilter } = useSettingsStore.getState()
+      expect(gameGapFilter.minGapMinutes).toBe(180)
+    })
+
+    it('should preserve enabled state when setting min gap', () => {
+      const { setGameGapFilterEnabled, setMinGameGapMinutes } = useSettingsStore.getState()
+
+      setGameGapFilterEnabled(true)
+      setMinGameGapMinutes(90)
+
+      const { gameGapFilter } = useSettingsStore.getState()
+      expect(gameGapFilter.enabled).toBe(true)
+      expect(gameGapFilter.minGapMinutes).toBe(90)
+    })
+  })
+
   describe('persistence resilience', () => {
     const testLocation: UserLocation = {
       latitude: 47.3769,
