@@ -5,7 +5,7 @@ import { MemoryRouter, Route, Routes, Navigate } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import { setLocale } from '@/i18n'
-import { useAuthStore, type AuthStatus, type DataSource } from '@/shared/stores/auth'
+import { useAuthStore } from '@/shared/stores/auth'
 import { useDemoStore } from '@/shared/stores/demo'
 import { useToastStore } from '@/shared/stores/toast'
 

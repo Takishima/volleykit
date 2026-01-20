@@ -1,6 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
@@ -156,7 +155,9 @@ describe('Compensations Integration', () => {
       )
 
       expect(updatedCompensation?.convocationCompensation?.distanceInMetres).toBe(25000)
-      expect(updatedCompensation?.convocationCompensation?.correctionReason).toBe('Test correction')
+      // correctionReason is stored in demo store but not in base type - cast to access it
+      const convComp = updatedCompensation?.convocationCompensation as { correctionReason?: string }
+      expect(convComp?.correctionReason).toBe('Test correction')
     })
 
     it('persists compensation updates in demo store', async () => {
