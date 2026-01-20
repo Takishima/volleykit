@@ -105,6 +105,333 @@ describe('useDemoStore', () => {
     })
   })
 
+  describe('setActiveAssociation', () => {
+    it('regenerates data for a different association', () => {
+      useDemoStore.getState().initializeDemoData('SV')
+      expect(useDemoStore.getState().activeAssociationCode).toBe('SV')
+
+      useDemoStore.getState().setActiveAssociation('SVRBA')
+
+      expect(useDemoStore.getState().activeAssociationCode).toBe('SVRBA')
+      expect(useDemoStore.getState().assignments.length).toBeGreaterThan(0)
+    })
+  })
+
+  describe('initializeDemoData with association', () => {
+    it('skips initialization when data exists for same association', () => {
+      useDemoStore.getState().initializeDemoData('SV')
+      const firstAssignments = useDemoStore.getState().assignments
+
+      // Call again with same association
+      useDemoStore.getState().initializeDemoData('SV')
+      const secondAssignments = useDemoStore.getState().assignments
+
+      // Should be the exact same reference (not regenerated)
+      expect(secondAssignments).toBe(firstAssignments)
+    })
+
+    it('regenerates data when called with different association', () => {
+      useDemoStore.getState().initializeDemoData('SV')
+      const firstAssignments = useDemoStore.getState().assignments
+
+      // Call again with different association
+      useDemoStore.getState().initializeDemoData('SVRBA')
+      const secondAssignments = useDemoStore.getState().assignments
+
+      // Should be a different reference (regenerated)
+      expect(secondAssignments).not.toBe(firstAssignments)
+      expect(useDemoStore.getState().activeAssociationCode).toBe('SVRBA')
+    })
+  })
+
+  describe('exchange operations', () => {
+    beforeEach(() => {
+      useDemoStore.getState().initializeDemoData()
+    })
+
+    describe('applyForExchange', () => {
+      it('takes over an exchange and creates a new assignment', () => {
+        const { exchanges, assignments } = useDemoStore.getState()
+        // Find an exchange not submitted by the demo user
+        const exchange = exchanges.find(
+          (e) => e.submittedByPerson?.__identity !== 'demo-user-person-id'
+        )
+
+        if (!exchange) {
+          // Skip test if no suitable exchange exists
+          return
+        }
+
+        const initialAssignmentCount = assignments.length
+        const initialExchangeCount = exchanges.length
+
+        useDemoStore.getState().applyForExchange(exchange.__identity)
+
+        const state = useDemoStore.getState()
+        // Exchange should be removed
+        expect(state.exchanges.length).toBe(initialExchangeCount - 1)
+        // New assignment should be created
+        expect(state.assignments.length).toBe(initialAssignmentCount + 1)
+      })
+
+      it('handles non-existent exchange ID gracefully', () => {
+        const { exchanges } = useDemoStore.getState()
+        const initialCount = exchanges.length
+
+        useDemoStore.getState().applyForExchange('non-existent-id')
+
+        expect(useDemoStore.getState().exchanges.length).toBe(initialCount)
+      })
+    })
+
+    describe('withdrawFromExchange', () => {
+      it('sets exchange status back to open', () => {
+        const { exchanges } = useDemoStore.getState()
+        const exchange = exchanges[0]
+
+        useDemoStore.getState().withdrawFromExchange(exchange!.__identity)
+
+        const updatedExchange = useDemoStore
+          .getState()
+          .exchanges.find((e) => e.__identity === exchange!.__identity)
+
+        expect(updatedExchange?.status).toBe('open')
+      })
+
+      it('handles non-existent exchange ID gracefully', () => {
+        const { exchanges } = useDemoStore.getState()
+
+        useDemoStore.getState().withdrawFromExchange('non-existent-id')
+
+        // Exchanges should remain unchanged (same length)
+        expect(useDemoStore.getState().exchanges.length).toBe(exchanges.length)
+      })
+    })
+
+    describe('addAssignmentToExchange', () => {
+      it('moves an assignment to the exchange list', () => {
+        const { assignments, exchanges } = useDemoStore.getState()
+        const assignment = assignments[0]!
+        const initialAssignmentCount = assignments.length
+        const initialExchangeCount = exchanges.length
+
+        useDemoStore.getState().addAssignmentToExchange(assignment.__identity)
+
+        const state = useDemoStore.getState()
+        // Assignment should be removed from list
+        expect(state.assignments.length).toBe(initialAssignmentCount - 1)
+        // Exchange should be created
+        expect(state.exchanges.length).toBe(initialExchangeCount + 1)
+        // Original assignment should be stored for potential restoration
+        expect(Object.keys(state.exchangedAssignments).length).toBeGreaterThan(0)
+      })
+
+      it('handles non-existent assignment ID gracefully', () => {
+        const { assignments, exchanges } = useDemoStore.getState()
+        const initialAssignmentCount = assignments.length
+        const initialExchangeCount = exchanges.length
+
+        useDemoStore.getState().addAssignmentToExchange('non-existent-id')
+
+        expect(useDemoStore.getState().assignments.length).toBe(initialAssignmentCount)
+        expect(useDemoStore.getState().exchanges.length).toBe(initialExchangeCount)
+      })
+    })
+
+    describe('removeOwnExchange', () => {
+      it('restores original assignment when removing own exchange', () => {
+        const { assignments } = useDemoStore.getState()
+        const assignment = assignments[0]!
+
+        // First add assignment to exchange
+        useDemoStore.getState().addAssignmentToExchange(assignment.__identity)
+
+        const afterAdd = useDemoStore.getState()
+        const newExchangeId = afterAdd.exchanges[afterAdd.exchanges.length - 1]!.__identity
+
+        // Then remove the exchange
+        useDemoStore.getState().removeOwnExchange(newExchangeId)
+
+        const afterRemove = useDemoStore.getState()
+        // Exchange should be removed
+        expect(
+          afterRemove.exchanges.find((e) => e.__identity === newExchangeId)
+        ).toBeUndefined()
+        // Original assignment should be restored
+        expect(
+          afterRemove.assignments.find((a) => a.__identity === assignment.__identity)
+        ).toBeDefined()
+      })
+
+      it('handles non-existent exchange ID gracefully', () => {
+        const { exchanges, assignments } = useDemoStore.getState()
+
+        useDemoStore.getState().removeOwnExchange('non-existent-id')
+
+        expect(useDemoStore.getState().exchanges.length).toBe(exchanges.length)
+        expect(useDemoStore.getState().assignments.length).toBe(assignments.length)
+      })
+    })
+  })
+
+  describe('assignment compensation operations', () => {
+    beforeEach(() => {
+      useDemoStore.getState().initializeDemoData()
+    })
+
+    describe('updateAssignmentCompensation', () => {
+      it('creates a new compensation entry for an assignment', () => {
+        const { assignments } = useDemoStore.getState()
+        const assignmentId = assignments[0]!.__identity
+
+        useDemoStore.getState().updateAssignmentCompensation(assignmentId, {
+          distanceInMetres: 50000,
+        })
+
+        const compensation = useDemoStore.getState().getAssignmentCompensation(assignmentId)
+        expect(compensation).not.toBeNull()
+        expect(compensation?.distanceInMetres).toBe(50000)
+        expect(compensation?.updatedAt).toBeDefined()
+      })
+
+      it('updates existing compensation entry', () => {
+        const { assignments } = useDemoStore.getState()
+        const assignmentId = assignments[0]!.__identity
+
+        useDemoStore.getState().updateAssignmentCompensation(assignmentId, {
+          distanceInMetres: 30000,
+        })
+
+        useDemoStore.getState().updateAssignmentCompensation(assignmentId, {
+          correctionReason: 'Updated reason',
+        })
+
+        const compensation = useDemoStore.getState().getAssignmentCompensation(assignmentId)
+        expect(compensation?.distanceInMetres).toBe(30000)
+        expect(compensation?.correctionReason).toBe('Updated reason')
+      })
+    })
+
+    describe('getAssignmentCompensation', () => {
+      it('returns null for non-existent assignment', () => {
+        const compensation = useDemoStore.getState().getAssignmentCompensation('non-existent-id')
+        expect(compensation).toBeNull()
+      })
+
+      it('returns compensation for existing assignment', () => {
+        const { assignments } = useDemoStore.getState()
+        const assignmentId = assignments[0]!.__identity
+
+        useDemoStore.getState().updateAssignmentCompensation(assignmentId, {
+          distanceInMetres: 25000,
+          correctionReason: 'Test reason',
+        })
+
+        const compensation = useDemoStore.getState().getAssignmentCompensation(assignmentId)
+        expect(compensation?.distanceInMetres).toBe(25000)
+        expect(compensation?.correctionReason).toBe('Test reason')
+      })
+    })
+  })
+
+  describe('nomination operations', () => {
+    beforeEach(() => {
+      useDemoStore.getState().initializeDemoData()
+    })
+
+    describe('updateNominationListClosed', () => {
+      it('updates closed status for home team', () => {
+        const { nominationLists } = useDemoStore.getState()
+        const gameId = Object.keys(nominationLists)[0]
+
+        if (!gameId) return // Skip if no nomination lists
+
+        useDemoStore.getState().updateNominationListClosed(gameId, 'home', true)
+
+        const updated = useDemoStore.getState().nominationLists[gameId]
+        expect(updated?.home?.closed).toBe(true)
+        expect(updated?.home?.closedAt).toBeDefined()
+        expect(updated?.home?.closedBy).toBe('referee')
+      })
+
+      it('updates closed status for away team', () => {
+        const { nominationLists } = useDemoStore.getState()
+        const gameId = Object.keys(nominationLists)[0]
+
+        if (!gameId) return // Skip if no nomination lists
+
+        useDemoStore.getState().updateNominationListClosed(gameId, 'away', true)
+
+        const updated = useDemoStore.getState().nominationLists[gameId]
+        expect(updated?.away?.closed).toBe(true)
+      })
+
+      it('handles non-existent game ID gracefully', () => {
+        const { nominationLists } = useDemoStore.getState()
+
+        useDemoStore.getState().updateNominationListClosed('non-existent-id', 'home', true)
+
+        // State should remain unchanged
+        expect(useDemoStore.getState().nominationLists).toEqual(nominationLists)
+      })
+
+      it('can set closed to false', () => {
+        const { nominationLists } = useDemoStore.getState()
+        const gameId = Object.keys(nominationLists)[0]
+
+        if (!gameId) return // Skip if no nomination lists
+
+        // First close it
+        useDemoStore.getState().updateNominationListClosed(gameId, 'home', true)
+        // Then reopen
+        useDemoStore.getState().updateNominationListClosed(gameId, 'home', false)
+
+        const updated = useDemoStore.getState().nominationLists[gameId]
+        expect(updated?.home?.closed).toBe(false)
+      })
+    })
+
+    describe('updateNominationListPlayers', () => {
+      it('updates player nominations for a team', () => {
+        const { nominationLists, possiblePlayers } = useDemoStore.getState()
+        const gameId = Object.keys(nominationLists)[0]
+
+        if (!gameId || possiblePlayers.length === 0) return // Skip if no data
+
+        const playerIds = possiblePlayers
+          .slice(0, 3)
+          .map((p) => p.indoorPlayer?.__identity)
+          .filter((id): id is string => id !== undefined)
+
+        useDemoStore.getState().updateNominationListPlayers(gameId, 'home', playerIds)
+
+        const updated = useDemoStore.getState().nominationLists[gameId]
+        expect(updated?.home?.indoorPlayerNominations?.length).toBeGreaterThan(0)
+      })
+
+      it('handles non-existent game ID gracefully', () => {
+        const { nominationLists } = useDemoStore.getState()
+
+        useDemoStore.getState().updateNominationListPlayers('non-existent-id', 'home', [])
+
+        // State should remain unchanged
+        expect(useDemoStore.getState().nominationLists).toEqual(nominationLists)
+      })
+
+      it('handles empty player list', () => {
+        const { nominationLists } = useDemoStore.getState()
+        const gameId = Object.keys(nominationLists)[0]
+
+        if (!gameId) return // Skip if no nomination lists
+
+        useDemoStore.getState().updateNominationListPlayers(gameId, 'home', [])
+
+        const updated = useDemoStore.getState().nominationLists[gameId]
+        expect(updated?.home?.indoorPlayerNominations).toBeDefined()
+      })
+    })
+  })
+
   describe('updateCompensation', () => {
     const TRAVEL_EXPENSE_RATE_PER_KM = 0.7
 
