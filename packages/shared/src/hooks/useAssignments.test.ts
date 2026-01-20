@@ -2,7 +2,7 @@
  * Tests for useAssignments hook
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createElement, type ReactNode } from 'react';
@@ -436,6 +436,3 @@ describe('constants', () => {
     expect(NEXT_MONTH_DAYS).toBe(30);
   });
 });
-
-// Import afterEach at the top level
-import { afterEach } from 'vitest';
