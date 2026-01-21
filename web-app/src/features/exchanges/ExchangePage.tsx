@@ -8,19 +8,16 @@ import {
   hasMinimumGapFromAssignments,
   DEFAULT_SAME_LOCATION_DISTANCE_KM,
 } from '@/features/assignments/utils/conflict-detection'
+import { useActiveAssociationCode } from '@/features/auth/hooks/useActiveAssociation'
+import { ActiveFilterIcons } from '@/features/exchanges/components/ActiveFilterIcons'
 import { ExchangeCard } from '@/features/exchanges/components/ExchangeCard'
-import { ExchangeSettingsSheet } from '@/features/exchanges/components/ExchangeSettingsSheet'
+import { ExchangeFilterMenu } from '@/features/exchanges/components/ExchangeFilterMenu'
 import { TOUR_DUMMY_EXCHANGE } from '@/features/exchanges/exchange'
 import { useGameExchanges, type ExchangeStatus } from '@/features/validation/hooks/useConvocations'
-import { DistanceFilterToggle } from '@/shared/components/DistanceFilterToggle'
-import { FilterChip } from '@/shared/components/FilterChip'
-import { CalendarX2 } from '@/shared/components/icons'
-import { LevelFilterToggle } from '@/shared/components/LevelFilterToggle'
 import { LoadingState, ErrorState, EmptyState } from '@/shared/components/LoadingSpinner'
 import { PullToRefresh } from '@/shared/components/PullToRefresh'
 import { SwipeableCard } from '@/shared/components/SwipeableCard'
 import { Tabs, TabPanel } from '@/shared/components/Tabs'
-import { TravelTimeFilterToggle } from '@/shared/components/TravelTimeFilterToggle'
 import { WeekSeparator } from '@/shared/components/WeekSeparator'
 import { useTour } from '@/shared/hooks/useTour'
 import { useTranslation } from '@/shared/hooks/useTranslation'
@@ -30,7 +27,6 @@ import { useDemoStore, DEMO_USER_PERSON_IDENTITY } from '@/shared/stores/demo'
 import { useSettingsStore } from '@/shared/stores/settings'
 import { groupByWeek } from '@/shared/utils/date-helpers'
 import { calculateCarDistanceKm } from '@/shared/utils/distance'
-import { MINUTES_PER_HOUR } from '@/shared/utils/format-travel-time'
 import { extractCoordinates } from '@/shared/utils/geo-location'
 import type { SwipeConfig } from '@/types/swipe'
 
@@ -51,8 +47,8 @@ const RemoveFromExchangeModal = lazy(() =>
 
 export function ExchangePage() {
   const [statusFilter, setStatusFilter] = useState<ExchangeStatus>('open')
-  const [hideOwnExchanges, setHideOwnExchanges] = useState(true)
   const { t } = useTranslation()
+  const associationCode = useActiveAssociationCode()
 
   // Initialize tour for this page (triggers auto-start on first visit)
   // Use showDummyData to show dummy data immediately, avoiding race condition with empty states
@@ -85,29 +81,31 @@ export function ExchangePage() {
       userRefereeLevelGradationValue: state.userRefereeLevelGradationValue,
     }))
   )
-  const {
-    homeLocation,
-    distanceFilter,
-    setDistanceFilterEnabled,
-    travelTimeFilter,
-    setTravelTimeFilterEnabled,
-    levelFilterEnabled,
-    setLevelFilterEnabled,
-    gameGapFilter,
-    setGameGapFilterEnabled,
-  } = useSettingsStore(
-    useShallow((state) => ({
-      homeLocation: state.homeLocation,
-      distanceFilter: state.distanceFilter,
-      setDistanceFilterEnabled: state.setDistanceFilterEnabled,
-      travelTimeFilter: state.travelTimeFilter,
-      setTravelTimeFilterEnabled: state.setTravelTimeFilterEnabled,
-      levelFilterEnabled: state.levelFilterEnabled,
-      setLevelFilterEnabled: state.setLevelFilterEnabled,
-      gameGapFilter: state.gameGapFilter,
-      setGameGapFilterEnabled: state.setGameGapFilterEnabled,
-    }))
+  const { homeLocation, distanceFilter, travelTimeFilter, levelFilterEnabled, gameGapFilter } =
+    useSettingsStore(
+      useShallow((state) => ({
+        homeLocation: state.homeLocation,
+        distanceFilter: state.distanceFilter,
+        travelTimeFilter: state.travelTimeFilter,
+        levelFilterEnabled: state.levelFilterEnabled,
+        gameGapFilter: state.gameGapFilter,
+      }))
+    )
+
+  // Get hide own exchanges setting per-association
+  const isHideOwnExchangesForAssociation = useSettingsStore(
+    (state) => state.isHideOwnExchangesForAssociation
   )
+  const setHideOwnExchangesForAssociation = useSettingsStore(
+    (state) => state.setHideOwnExchangesForAssociation
+  )
+  const hideOwnExchanges = isHideOwnExchangesForAssociation(associationCode)
+
+  const handleHideOwnToggle = useCallback(() => {
+    if (associationCode) {
+      setHideOwnExchangesForAssociation(associationCode, !hideOwnExchanges)
+    }
+  }, [associationCode, hideOwnExchanges, setHideOwnExchangesForAssociation])
 
   const { data, isLoading: queryLoading, error, refetch } = useGameExchanges(statusFilter)
   // Show loading when switching associations or when query is loading
@@ -347,61 +345,32 @@ export function ExchangePage() {
   // Game gap filter is available when calendar data exists (demo mode or calendar code)
   const isGameGapFilterAvailable = hasCalendarCode && calendarAssignments.length > 0
 
-  const hasAnyFilter =
-    isLevelFilterAvailable ||
-    isDistanceFilterAvailable ||
-    isTravelTimeFilterAvailable ||
-    isGameGapFilterAvailable
-
   // Handler for pull-to-refresh - wraps refetch in async function
   const handleRefresh = useCallback(async () => {
     await refetch()
   }, [refetch])
 
-  // Horizontal scrollable filter chips with settings gear - only show on "Open" tab when any filter is available
-  // Always show filter bar on "open" tab (at minimum we have "hide own" filter)
+  // Filter menu button with active filter icons summary - only show on "Open" tab
   const filterContent =
     statusFilter === 'open' ? (
-      <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-        {hasAnyFilter && <ExchangeSettingsSheet dataTour="exchange-settings" />}
-        <FilterChip
-          active={hideOwnExchanges}
-          onToggle={() => setHideOwnExchanges((prev) => !prev)}
-          label={t('exchange.hideOwn')}
+      <div className="flex items-center gap-2">
+        <ExchangeFilterMenu
+          hideOwnExchanges={hideOwnExchanges}
+          onHideOwnToggle={handleHideOwnToggle}
+          isLevelFilterAvailable={isLevelFilterAvailable}
+          isDistanceFilterAvailable={isDistanceFilterAvailable}
+          isTravelTimeFilterAvailable={isTravelTimeFilterAvailable}
+          isGameGapFilterAvailable={isGameGapFilterAvailable}
+          userRefereeLevel={userRefereeLevel}
+          dataTour="exchange-settings"
         />
-        {isTravelTimeFilterAvailable && (
-          <TravelTimeFilterToggle
-            checked={travelTimeFilter.enabled}
-            onChange={setTravelTimeFilterEnabled}
-            maxTravelTimeMinutes={travelTimeFilter.maxTravelTimeMinutes}
-            dataTour="exchange-travel-time-filter"
-          />
-        )}
-        {isDistanceFilterAvailable && (
-          <DistanceFilterToggle
-            checked={distanceFilter.enabled}
-            onChange={setDistanceFilterEnabled}
-            maxDistanceKm={distanceFilter.maxDistanceKm}
-            dataTour="exchange-distance-filter"
-          />
-        )}
-        {isLevelFilterAvailable && (
-          <LevelFilterToggle
-            checked={levelFilterEnabled}
-            onChange={setLevelFilterEnabled}
-            userLevel={userRefereeLevel}
-            dataTour="exchange-filter"
-          />
-        )}
-        {isGameGapFilterAvailable && (
-          <FilterChip
-            active={gameGapFilter.enabled}
-            onToggle={() => setGameGapFilterEnabled(!gameGapFilter.enabled)}
-            icon={<CalendarX2 className="w-full h-full" />}
-            label={t('exchange.filterByGameGap')}
-            activeValue={`≥${gameGapFilter.minGapMinutes / MINUTES_PER_HOUR}h`}
-          />
-        )}
+        <ActiveFilterIcons
+          hideOwnActive={hideOwnExchanges}
+          distanceActive={isDistanceFilterAvailable && distanceFilter.enabled}
+          travelTimeActive={isTravelTimeFilterAvailable && travelTimeFilter.enabled}
+          gameGapActive={isGameGapFilterAvailable && gameGapFilter.enabled}
+          levelActive={isLevelFilterAvailable && levelFilterEnabled}
+        />
       </div>
     ) : undefined
 

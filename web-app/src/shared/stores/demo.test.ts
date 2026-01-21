@@ -259,9 +259,7 @@ describe('useDemoStore', () => {
 
         const afterRemove = useDemoStore.getState()
         // Exchange should be removed
-        expect(
-          afterRemove.exchanges.find((e) => e.__identity === newExchangeId)
-        ).toBeUndefined()
+        expect(afterRemove.exchanges.find((e) => e.__identity === newExchangeId)).toBeUndefined()
         // Original assignment should be restored
         expect(
           afterRemove.assignments.find((a) => a.__identity === assignment.__identity)

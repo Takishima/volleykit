@@ -37,6 +37,7 @@ const DEFAULT_MODE_SETTINGS: ModeSettings = {
     enabled: false,
     minGapMinutes: 120,
   },
+  hideOwnExchangesByAssociation: {},
 }
 
 /** Helper to reset store to clean state */
@@ -666,7 +667,8 @@ describe('useSettingsStore', () => {
     })
 
     it('should fall back to global maxTravelTimeMinutes when no per-association setting exists', () => {
-      const { getMaxTravelTimeForAssociation, setMaxTravelTimeMinutes } = useSettingsStore.getState()
+      const { getMaxTravelTimeForAssociation, setMaxTravelTimeMinutes } =
+        useSettingsStore.getState()
 
       setMaxTravelTimeMinutes(90)
 
@@ -684,7 +686,8 @@ describe('useSettingsStore', () => {
     })
 
     it('should handle undefined association code', () => {
-      const { getMaxTravelTimeForAssociation, setMaxTravelTimeMinutes } = useSettingsStore.getState()
+      const { getMaxTravelTimeForAssociation, setMaxTravelTimeMinutes } =
+        useSettingsStore.getState()
 
       setMaxTravelTimeMinutes(60)
 

@@ -148,6 +148,8 @@ export interface ModeSettings {
   notificationSettings: NotificationSettings
   /** Game gap filter settings for exchanges */
   gameGapFilter: GameGapFilter
+  /** Per-association "hide own exchanges" setting (association code -> enabled) */
+  hideOwnExchangesByAssociation: Record<string, boolean>
 }
 
 /** Default mode-specific settings */
@@ -175,6 +177,7 @@ const DEFAULT_MODE_SETTINGS: ModeSettings = {
     enabled: false,
     minGapMinutes: DEFAULT_MIN_GAME_GAP_MINUTES,
   },
+  hideOwnExchangesByAssociation: {},
 }
 
 interface SettingsState {
@@ -216,6 +219,7 @@ interface SettingsState {
   levelFilterEnabled: boolean
   notificationSettings: NotificationSettings
   gameGapFilter: GameGapFilter
+  hideOwnExchangesByAssociation: Record<string, boolean>
 
   // Setters that update current mode's settings
   setHomeLocation: (location: UserLocation | null) => void
@@ -248,6 +252,10 @@ interface SettingsState {
   // Game gap filter settings
   setGameGapFilterEnabled: (enabled: boolean) => void
   setMinGameGapMinutes: (minutes: number) => void
+
+  // Hide own exchanges per-association
+  setHideOwnExchangesForAssociation: (associationCode: string, enabled: boolean) => void
+  isHideOwnExchangesForAssociation: (associationCode: string | undefined) => boolean
 
   // Reset current mode's settings to defaults (keeps safe mode and other modes)
   resetLocationSettings: () => void
@@ -305,6 +313,7 @@ function syncFromMode(
     levelFilterEnabled: modeSettings.levelFilterEnabled,
     notificationSettings: modeSettings.notificationSettings,
     gameGapFilter: modeSettings.gameGapFilter,
+    hideOwnExchangesByAssociation: modeSettings.hideOwnExchangesByAssociation,
   }
 }
 
@@ -323,6 +332,9 @@ const NOTIFICATION_DELIVERY_PREFERENCE_VERSION = 6
 
 /** Version that added game gap filter */
 const GAME_GAP_FILTER_VERSION = 7
+
+/** Version that added hide own exchanges per-association */
+const HIDE_OWN_EXCHANGES_VERSION = 8
 
 /** V1 state shape (flat settings) */
 interface V1State {
@@ -359,6 +371,7 @@ function migrateV1ToV2(v1State: V1State): Record<string, unknown> {
     levelFilterEnabled: v1State.levelFilterEnabled ?? false,
     notificationSettings: { ...DEFAULT_NOTIFICATION_SETTINGS },
     gameGapFilter: { ...DEFAULT_MODE_SETTINGS.gameGapFilter },
+    hideOwnExchangesByAssociation: {},
   }
 
   return {
@@ -438,6 +451,20 @@ function addGameGapFilter(state: StateWithModes): void {
   }
 }
 
+/**
+ * Add hide own exchanges per-association for v7→v8 migration.
+ */
+function addHideOwnExchangesByAssociation(state: StateWithModes): void {
+  if (!state.settingsByMode) return
+
+  for (const mode of ALL_MODES) {
+    const settings = state.settingsByMode[mode]
+    if (settings && !settings.hideOwnExchangesByAssociation) {
+      settings.hideOwnExchangesByAssociation = {}
+    }
+  }
+}
+
 export const useSettingsStore = create<SettingsState>()(
   subscribeWithSelector(
     persist(
@@ -466,6 +493,7 @@ export const useSettingsStore = create<SettingsState>()(
         levelFilterEnabled: DEFAULT_MODE_SETTINGS.levelFilterEnabled,
         notificationSettings: DEFAULT_MODE_SETTINGS.notificationSettings,
         gameGapFilter: DEFAULT_MODE_SETTINGS.gameGapFilter,
+        hideOwnExchangesByAssociation: DEFAULT_MODE_SETTINGS.hideOwnExchangesByAssociation,
 
         _setCurrentMode: (mode: DataSource) => {
           const state = get()
@@ -715,6 +743,27 @@ export const useSettingsStore = create<SettingsState>()(
           )
         },
 
+        setHideOwnExchangesForAssociation: (associationCode: string, enabled: boolean) => {
+          set((state) =>
+            updateModeAndTopLevel(state, (current) => ({
+              hideOwnExchangesByAssociation: {
+                ...current.hideOwnExchangesByAssociation,
+                [associationCode]: enabled,
+              },
+            }))
+          )
+        },
+
+        isHideOwnExchangesForAssociation: (associationCode: string | undefined) => {
+          const state = get()
+          const enabledMap = state.hideOwnExchangesByAssociation ?? {}
+          if (associationCode && enabledMap[associationCode] !== undefined) {
+            return enabledMap[associationCode]
+          }
+          // Default to true (hide own exchanges by default)
+          return true
+        },
+
         resetLocationSettings: () => {
           // Reset current mode's location-related settings to defaults
           // Keeps safe mode and other modes' settings unchanged
@@ -723,7 +772,7 @@ export const useSettingsStore = create<SettingsState>()(
       }),
       {
         name: 'volleykit-settings',
-        version: 7,
+        version: 8,
         partialize: (state) => ({
           // Global settings
           isSafeModeEnabled: state.isSafeModeEnabled,
@@ -761,6 +810,11 @@ export const useSettingsStore = create<SettingsState>()(
           // v6 → v7: Add game gap filter
           if (version < GAME_GAP_FILTER_VERSION) {
             addGameGapFilter(state as StateWithModes)
+          }
+
+          // v7 → v8: Add hide own exchanges per-association
+          if (version < HIDE_OWN_EXCHANGES_VERSION) {
+            addHideOwnExchangesByAssociation(state as StateWithModes)
           }
 
           return state
@@ -827,6 +881,9 @@ export const useSettingsStore = create<SettingsState>()(
                     ...DEFAULT_MODE_SETTINGS.gameGapFilter,
                     ...(persistedModeSettings.gameGapFilter ?? {}),
                   },
+                  hideOwnExchangesByAssociation:
+                    persistedModeSettings.hideOwnExchangesByAssociation ??
+                    DEFAULT_MODE_SETTINGS.hideOwnExchangesByAssociation,
                 }
               }
             }
