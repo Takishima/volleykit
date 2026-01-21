@@ -338,7 +338,9 @@ describe('Exchanges Integration', () => {
       expect(state.assignments.find((a) => a.__identity === assignmentId)).toBeDefined()
 
       // Exchange should be removed
-      expect(state.exchanges.find((e) => e.__identity === createdExchange!.__identity)).toBeUndefined()
+      expect(
+        state.exchanges.find((e) => e.__identity === createdExchange!.__identity)
+      ).toBeUndefined()
     })
   })
 

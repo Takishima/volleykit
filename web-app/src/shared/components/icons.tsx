@@ -62,6 +62,7 @@ export { Volleyball } from 'lucide-react'
 // Indicator icons
 export { CircleAlert } from 'lucide-react'
 export { ExternalLink } from 'lucide-react'
+export { Award } from 'lucide-react'
 
 // Celebration/medical icons
 export { PartyPopper } from 'lucide-react'

@@ -127,8 +127,9 @@ describe('Assignments Integration', () => {
       })
 
       // Upcoming assignments should have future dates
-      expect(futureAssignments.every((a) => new Date(a.refereeGame!.game!.startingDateTime!) >= now))
-        .toBe(true)
+      expect(
+        futureAssignments.every((a) => new Date(a.refereeGame!.game!.startingDateTime!) >= now)
+      ).toBe(true)
     })
   })
 

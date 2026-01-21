@@ -49,10 +49,7 @@ vi.mock('@/api/queryKeys', () => ({
   },
 }))
 
-const createMockExchange = (
-  id: string,
-  submittedByIdentity?: string
-): GameExchange =>
+const createMockExchange = (id: string, submittedByIdentity?: string): GameExchange =>
   ({
     __identity: id,
     status: 'open',

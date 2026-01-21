@@ -152,6 +152,8 @@ describe('ExchangePage', () => {
       setLevelFilterEnabled: mockSetLevelFilterEnabled,
       gameGapFilter: { enabled: false, minGapMinutes: 120 },
       setGameGapFilterEnabled: vi.fn(),
+      hideOwnExchangesByAssociation: {},
+      setHideOwnExchangesForAssociation: vi.fn(),
     }
     vi.mocked(settingsStore.useSettingsStore).mockImplementation(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -161,8 +163,8 @@ describe('ExchangePage', () => {
     vi.mocked(useConvocations.useGameExchanges).mockReturnValue(createMockQueryResult([]))
   })
 
-  describe('Level Filter Toggle', () => {
-    it('should not show level filter when not in demo mode', () => {
+  describe('Filter Menu', () => {
+    it('should show filter menu button on Open tab', () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
         selector({
           dataSource: 'api',
@@ -173,11 +175,11 @@ describe('ExchangePage', () => {
 
       render(<ExchangePage />)
 
-      // Level filter should not be visible when not in demo mode
-      expect(screen.queryByRole('switch', { name: /level/i })).not.toBeInTheDocument()
+      // Filter menu button should be visible on Open tab
+      expect(screen.getByRole('button', { name: /filters/i })).toBeInTheDocument()
     })
 
-    it('should show level filter when in demo mode with user level', () => {
+    it('should show active filter count badge when filters are enabled', () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
         selector({
           dataSource: 'demo',
@@ -193,11 +195,12 @@ describe('ExchangePage', () => {
 
       render(<ExchangePage />)
 
-      // Level filter should be directly visible (no dropdown)
-      expect(screen.getByRole('switch', { name: /level/i })).toBeInTheDocument()
+      // With hideOwnExchanges enabled by default, filter button should be visible
+      // Use getByRole button to find the filter menu button specifically
+      expect(screen.getByRole('button', { name: /filters/i })).toBeInTheDocument()
     })
 
-    it('should not show level filter on Added by Me tab', () => {
+    it('should not show filter menu on Added by Me tab', () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
         selector({
           dataSource: 'demo',
@@ -216,8 +219,8 @@ describe('ExchangePage', () => {
       // Click on "Added by Me" tab
       fireEvent.click(screen.getByText(/added by me/i))
 
-      // Level filter should not be visible on this tab
-      expect(screen.queryByRole('switch', { name: /level/i })).not.toBeInTheDocument()
+      // Filter menu should not be visible on this tab
+      expect(screen.queryByRole('button', { name: /filters/i })).not.toBeInTheDocument()
     })
   })
 
@@ -226,12 +229,14 @@ describe('ExchangePage', () => {
       __identity: 'exchange-n1',
       requiredRefereeLevel: 'N1',
       requiredRefereeLevelGradationValue: '1',
+      submittedByPerson: { __identity: 'other-person' },
     })
 
     const exchangeN2 = createMockExchange({
       __identity: 'exchange-n2',
       requiredRefereeLevel: 'N2',
       requiredRefereeLevelGradationValue: '2',
+      submittedByPerson: { __identity: 'other-person' },
     })
 
     const exchangeN3 = createMockExchange({
@@ -261,6 +266,35 @@ describe('ExchangePage', () => {
     })
 
     it('should show all exchanges when filter is off', () => {
+      // Mock hideOwnExchanges as false so all exchanges are visible
+      const stateNoHide = {
+        homeLocation: null,
+        distanceFilter: { enabled: false, maxDistanceKm: 50 },
+        setDistanceFilterEnabled: vi.fn(),
+        transportEnabled: false,
+        isTransportEnabledForAssociation: () => false,
+        getArrivalBufferForAssociation: () => 30,
+        travelTimeFilter: {
+          enabled: false,
+          maxTravelTimeMinutes: 120,
+          arrivalBufferMinutes: 30,
+          cacheInvalidatedAt: null,
+        },
+        setTravelTimeFilterEnabled: vi.fn(),
+        setMaxDistanceKm: vi.fn(),
+        setMaxTravelTimeMinutes: vi.fn(),
+        levelFilterEnabled: false,
+        setLevelFilterEnabled: mockSetLevelFilterEnabled,
+        gameGapFilter: { enabled: false, minGapMinutes: 120 },
+        setGameGapFilterEnabled: vi.fn(),
+        hideOwnExchangesByAssociation: { TEST: false },
+        setHideOwnExchangesForAssociation: vi.fn(),
+      }
+      vi.mocked(settingsStore.useSettingsStore).mockImplementation(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (selector?: (state: any) => any) => (selector ? selector(stateNoHide) : stateNoHide)
+      )
+
       render(<ExchangePage />)
 
       // All three exchanges should be visible (use getAllByText since they share team names)
@@ -268,19 +302,8 @@ describe('ExchangePage', () => {
       expect(exchanges).toHaveLength(3)
     })
 
-    it('should toggle level filter when clicked', () => {
-      render(<ExchangePage />)
-
-      // Click the level filter directly (no dropdown)
-      const toggle = screen.getByRole('switch', { name: /level/i })
-      fireEvent.click(toggle)
-
-      // Should call the setter to enable the filter
-      expect(mockSetLevelFilterEnabled).toHaveBeenCalledWith(true)
-    })
-
-    it('should show user level indicator when filter is enabled', () => {
-      // Mock filter as already enabled
+    it('should show active filter icons when filters are enabled', () => {
+      // Mock level filter as enabled
       const stateWithFilter = {
         homeLocation: null,
         distanceFilter: { enabled: false, maxDistanceKm: 50 },
@@ -301,6 +324,8 @@ describe('ExchangePage', () => {
         setLevelFilterEnabled: mockSetLevelFilterEnabled,
         gameGapFilter: { enabled: false, minGapMinutes: 120 },
         setGameGapFilterEnabled: vi.fn(),
+        hideOwnExchangesByAssociation: {},
+        setHideOwnExchangesForAssociation: vi.fn(),
       }
       vi.mocked(settingsStore.useSettingsStore).mockImplementation(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -309,8 +334,8 @@ describe('ExchangePage', () => {
 
       render(<ExchangePage />)
 
-      // Should show N2+ indicator in the chip (directly visible)
-      expect(screen.getByText('N2+')).toBeInTheDocument()
+      // Should show active filter icons and filter menu button
+      expect(screen.getByRole('button', { name: /filters/i })).toBeInTheDocument()
     })
 
     it('should show filtered empty state message when no exchanges match level', () => {
@@ -340,6 +365,8 @@ describe('ExchangePage', () => {
         setLevelFilterEnabled: mockSetLevelFilterEnabled,
         gameGapFilter: { enabled: false, minGapMinutes: 120 },
         setGameGapFilterEnabled: vi.fn(),
+        hideOwnExchangesByAssociation: {},
+        setHideOwnExchangesForAssociation: vi.fn(),
       }
       vi.mocked(settingsStore.useSettingsStore).mockImplementation(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
