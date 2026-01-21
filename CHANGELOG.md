@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.9.0
+
+### Minor Changes
+
+- [#801](https://github.com/Takishima/volleykit/pull/801) [`dac0d43`](https://github.com/Takishima/volleykit/commit/dac0d43ea209d053bf4cae01943d5263d3bea8ca) Thanks [@Takishima](https://github.com/Takishima)! - Associate PWA login with volleymanager.volleyball.ch for password managers
+
+  Added credential association hints to the PWA login form so that password managers
+  (1Password, Bitwarden, browser autofill, etc.) will suggest volleymanager.volleyball.ch
+  credentials when logging in to the PWA. This mirrors the native app's iOS `associatedDomains`
+  and Android credential association behavior.
+
+  Changes:
+
+  - Added `action="https://volleymanager.volleyball.ch"` to the login form
+  - Added `name` attributes to username and password inputs
+
+- [#806](https://github.com/Takishima/volleykit/pull/806) [`5256b07`](https://github.com/Takishima/volleykit/commit/5256b07ba5661848b0b9b9b1960dac96cf85bf20) Thanks [@Takishima](https://github.com/Takishima)! - Redesigned exchange filters UI with compact filter menu
+
+  - Replaced horizontal filter pills with single "Filters" button that opens a menu
+  - Added icon-only summary showing active filters at a glance
+  - Filter settings (distance, travel time, game gap) now have integrated toggles and sliders
+  - "Hide own exchanges" preference is now saved per association
+  - Improved visual consistency with unified toggle rows in filter menu
+
 ## 1.8.0
 
 ### Patch Changes
