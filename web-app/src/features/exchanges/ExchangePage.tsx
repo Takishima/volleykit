@@ -81,25 +81,36 @@ export function ExchangePage() {
       userRefereeLevelGradationValue: state.userRefereeLevelGradationValue,
     }))
   )
-  const { homeLocation, distanceFilter, travelTimeFilter, levelFilterEnabled, gameGapFilter } =
-    useSettingsStore(
-      useShallow((state) => ({
-        homeLocation: state.homeLocation,
-        distanceFilter: state.distanceFilter,
-        travelTimeFilter: state.travelTimeFilter,
-        levelFilterEnabled: state.levelFilterEnabled,
-        gameGapFilter: state.gameGapFilter,
-      }))
-    )
+  const {
+    homeLocation,
+    distanceFilter,
+    travelTimeFilter,
+    levelFilterEnabled,
+    gameGapFilter,
+    hideOwnExchangesByAssociation,
+  } = useSettingsStore(
+    useShallow((state) => ({
+      homeLocation: state.homeLocation,
+      distanceFilter: state.distanceFilter,
+      travelTimeFilter: state.travelTimeFilter,
+      levelFilterEnabled: state.levelFilterEnabled,
+      gameGapFilter: state.gameGapFilter,
+      hideOwnExchangesByAssociation: state.hideOwnExchangesByAssociation,
+    }))
+  )
 
   // Get hide own exchanges setting per-association
-  const isHideOwnExchangesForAssociation = useSettingsStore(
-    (state) => state.isHideOwnExchangesForAssociation
-  )
   const setHideOwnExchangesForAssociation = useSettingsStore(
     (state) => state.setHideOwnExchangesForAssociation
   )
-  const hideOwnExchanges = isHideOwnExchangesForAssociation(associationCode)
+
+  // Derive hideOwnExchanges from the map - defaults to true if not set
+  const hideOwnExchanges = useMemo(() => {
+    if (associationCode && hideOwnExchangesByAssociation[associationCode] !== undefined) {
+      return hideOwnExchangesByAssociation[associationCode]
+    }
+    return true // Default to hiding own exchanges
+  }, [associationCode, hideOwnExchangesByAssociation])
 
   const handleHideOwnToggle = useCallback(() => {
     if (associationCode) {

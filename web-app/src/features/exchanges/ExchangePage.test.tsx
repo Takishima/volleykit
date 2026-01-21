@@ -152,7 +152,7 @@ describe('ExchangePage', () => {
       setLevelFilterEnabled: mockSetLevelFilterEnabled,
       gameGapFilter: { enabled: false, minGapMinutes: 120 },
       setGameGapFilterEnabled: vi.fn(),
-      isHideOwnExchangesForAssociation: () => true,
+      hideOwnExchangesByAssociation: {},
       setHideOwnExchangesForAssociation: vi.fn(),
     }
     vi.mocked(settingsStore.useSettingsStore).mockImplementation(
@@ -287,7 +287,7 @@ describe('ExchangePage', () => {
         setLevelFilterEnabled: mockSetLevelFilterEnabled,
         gameGapFilter: { enabled: false, minGapMinutes: 120 },
         setGameGapFilterEnabled: vi.fn(),
-        isHideOwnExchangesForAssociation: () => false,
+        hideOwnExchangesByAssociation: { TEST: false },
         setHideOwnExchangesForAssociation: vi.fn(),
       }
       vi.mocked(settingsStore.useSettingsStore).mockImplementation(
@@ -324,7 +324,7 @@ describe('ExchangePage', () => {
         setLevelFilterEnabled: mockSetLevelFilterEnabled,
         gameGapFilter: { enabled: false, minGapMinutes: 120 },
         setGameGapFilterEnabled: vi.fn(),
-        isHideOwnExchangesForAssociation: () => true,
+        hideOwnExchangesByAssociation: {},
         setHideOwnExchangesForAssociation: vi.fn(),
       }
       vi.mocked(settingsStore.useSettingsStore).mockImplementation(
@@ -365,7 +365,7 @@ describe('ExchangePage', () => {
         setLevelFilterEnabled: mockSetLevelFilterEnabled,
         gameGapFilter: { enabled: false, minGapMinutes: 120 },
         setGameGapFilterEnabled: vi.fn(),
-        isHideOwnExchangesForAssociation: () => true,
+        hideOwnExchangesByAssociation: {},
         setHideOwnExchangesForAssociation: vi.fn(),
       }
       vi.mocked(settingsStore.useSettingsStore).mockImplementation(
