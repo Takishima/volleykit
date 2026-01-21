@@ -10,6 +10,7 @@ import {
   TrainFront,
   User,
   CalendarX2,
+  Award,
 } from '@/shared/components/icons'
 import { ResponsiveSheet } from '@/shared/components/ResponsiveSheet'
 import { useTranslation } from '@/shared/hooks/useTranslation'
@@ -55,6 +56,9 @@ function FilterToggleRow({
     <div className="space-y-2">
       <button
         type="button"
+        role="switch"
+        aria-checked={enabled}
+        aria-label={label}
         onClick={onToggle}
         className="w-full flex items-center gap-3 p-3 rounded-lg bg-surface-subtle dark:bg-surface-subtle-dark hover:bg-surface-muted dark:hover:bg-surface-muted-dark transition-colors"
       >
@@ -388,7 +392,7 @@ function ExchangeFilterMenuComponent({
           {/* Level filter (demo mode only) */}
           {isLevelFilterAvailable && (
             <FilterToggleRow
-              icon={<User className="w-full h-full" />}
+              icon={<Award className="w-full h-full" />}
               label={t('exchange.filterByLevel')}
               enabled={levelFilterEnabled}
               onToggle={() => setLevelFilterEnabled(!levelFilterEnabled)}
