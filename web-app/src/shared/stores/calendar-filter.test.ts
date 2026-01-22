@@ -33,7 +33,7 @@ describe('useCalendarFilterStore', () => {
       expect(selectedAssociation).toBe('SV')
     })
 
-    it('can set to ANY_ASSOCIATIONS constant', () => {
+    it('can set to ALL_ASSOCIATIONS constant', () => {
       const { setSelectedAssociation } = useCalendarFilterStore.getState()
 
       // First set to a specific association
