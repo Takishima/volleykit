@@ -19,6 +19,7 @@ import {
   type AuthLockoutKV,
   type AuthLockoutState,
   KILL_SWITCH_RETRY_AFTER_SECONDS,
+  OCR_MAX_FILE_SIZE_BYTES,
   VOLLEYKIT_USER_AGENT,
   calculateLockoutDuration,
   checkKillSwitch,
@@ -2572,8 +2573,8 @@ describe("Integration: OCR Endpoint", () => {
     const { default: worker } = await import("./index");
     const mockEnv = createMockEnv();
 
-    // Create a file larger than 50MB
-    const largeContent = new Uint8Array(51 * 1024 * 1024);
+    // Create a file larger than the limit
+    const largeContent = new Uint8Array(OCR_MAX_FILE_SIZE_BYTES + 1);
     const formData = new FormData();
     formData.append(
       "image",
