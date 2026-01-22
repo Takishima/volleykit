@@ -62,25 +62,29 @@ jobs:
           node-version: '22'
 
       - name: Install npm-check-updates
-        run: npm install -g npm-check-updates
+        run: npm install -g npm-check-updates@17
 
-      - name: Check for updates
-        id: check-updates
+      - name: Determine update target
+        id: update-target
         run: |
-          # Determine update target based on input or default to minor
           UPDATE_TYPE="${{ github.event.inputs.update_type || 'minor' }}"
-
           case "$UPDATE_TYPE" in
             patch) NCU_TARGET="patch" ;;
             minor) NCU_TARGET="minor" ;;
             major) NCU_TARGET="latest" ;;
           esac
+          echo "ncu_target=$NCU_TARGET" >> "$GITHUB_OUTPUT"
+          echo "Update target: $NCU_TARGET"
 
-          echo "Checking for $UPDATE_TYPE updates..."
+      - name: Check for updates
+        id: check-updates
+        run: |
+          NCU_TARGET="${{ steps.update-target.outputs.ncu_target }}"
+          echo "Checking for updates with target: $NCU_TARGET"
 
           # Check web-app updates
           cd web-app
-          WEB_UPDATES=$(ncu --target "$NCU_TARGET" --format lines 2>/dev/null || true)
+          WEB_UPDATES=$(ncu --target "${NCU_TARGET}" --format lines 2>/dev/null || true)
           cd ..
 
           # Check packages/shared updates
@@ -119,13 +123,7 @@ jobs:
       - name: Apply updates
         if: steps.check-updates.outputs.has_updates == 'true'
         run: |
-          UPDATE_TYPE="${{ github.event.inputs.update_type || 'minor' }}"
-
-          case "$UPDATE_TYPE" in
-            patch) NCU_TARGET="patch" ;;
-            minor) NCU_TARGET="minor" ;;
-            major) NCU_TARGET="latest" ;;
-          esac
+          NCU_TARGET="${{ steps.update-target.outputs.ncu_target }}"
 
           # Update web-app dependencies
           cd web-app
@@ -172,14 +170,10 @@ jobs:
           name: updated-packages
           path: .
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
         with:
-          node-version: '22'
-
-      - name: Install dependencies
-        run: npm ci
-        working-directory: .
+          working-directory: web-app
 
       - name: Generate API types
         run: npm run generate:api
@@ -189,6 +183,10 @@ jobs:
 
       - name: Dead code check
         run: npm run knip
+
+      - name: Security audit
+        run: npm audit --audit-level=high --omit=dev
+        working-directory: .
 
       - name: Test
         run: npm test
@@ -202,6 +200,7 @@ jobs:
   create-pr:
     name: Create PR
     needs: [update, validate]
+    # Note: For scheduled runs, github.event.inputs.dry_run is empty/null, so this evaluates to true (create PR)
     if: needs.update.outputs.has_updates == 'true' && github.event.inputs.dry_run != 'true'
     runs-on: ubuntu-latest
     permissions:
@@ -237,6 +236,7 @@ jobs:
             All validations passed:
             - Lint
             - Dead code check (knip)
+            - Security audit
             - Tests
             - Build
             - Bundle size check
