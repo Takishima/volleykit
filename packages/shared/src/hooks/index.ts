@@ -5,6 +5,7 @@
 // Export hooks - use explicit exports to avoid DEFAULT_PAGE_SIZE conflicts
 export {
   useAssignments,
+  useAssignmentDetails,
   type UseAssignmentsOptions,
   type DatePeriod,
   DEFAULT_PAGE_SIZE,

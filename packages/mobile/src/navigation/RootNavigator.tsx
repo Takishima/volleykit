@@ -20,6 +20,7 @@ import { CalendarSettingsScreen } from '../screens/CalendarSettingsScreen';
 import { DepartureReminderSettingsScreen } from '../screens/DepartureReminderSettingsScreen';
 import { TabNavigator } from './TabNavigator';
 import { BiometricPrompt } from '../components/BiometricPrompt';
+import { OfflineBanner } from '../components/OfflineBanner';
 import { useSessionMonitorContext } from '../contexts';
 import { useBiometricAuth } from '../hooks/useBiometricAuth';
 import { MAX_BIOMETRIC_ATTEMPTS } from '../constants';
@@ -108,6 +109,9 @@ export function RootNavigator() {
 
   return (
     <NavigationContainer linking={linking}>
+      {/* Global offline indicator */}
+      <OfflineBanner />
+
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {isLoading ? (
           <Stack.Screen name="Loading" component={LoadingScreen} />

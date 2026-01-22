@@ -58,6 +58,7 @@ export interface Translations {
     lastUpdated: string;
     updated: string;
     cached: string;
+    openInMaps: string;
   };
   auth: {
     login: string;
@@ -116,6 +117,13 @@ export interface Translations {
     openSbbConnection: string;
     openInGoogleMaps: string;
     hall: string;
+    tapForDetails: string;
+    notFound: string;
+    gameNumber: string;
+    confirmationStatus: string;
+    exchangeOpen: string;
+    hasMessage: string;
+    doubleConvocation: string;
   };
   compensations: {
     title: string;
@@ -216,6 +224,7 @@ export interface Translations {
       syncError: string;
       noCalendars: string;
       noAssignmentsToSync: string;
+      noCalendarCode: string;
       enabled: string;
       disabled: string;
     };

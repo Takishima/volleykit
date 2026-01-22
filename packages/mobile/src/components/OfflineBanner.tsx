@@ -13,6 +13,12 @@ import { useTranslation } from '@volleykit/shared/i18n';
 import { useNetwork } from '../providers/NetworkProvider';
 import { COLORS } from '../constants';
 
+/** Banner height in pixels for slide animation */
+const BANNER_HEIGHT_PX = 50;
+
+/** Animation duration in milliseconds */
+const ANIMATION_DURATION_MS = 300;
+
 /**
  * Offline banner props.
  */
@@ -35,14 +41,14 @@ export function OfflineBanner({
   const { isOnline, isKnown } = useNetwork();
 
   // Animation for slide down
-  const slideAnim = useRef(new Animated.Value(-50)).current;
+  const slideAnim = useRef(new Animated.Value(-BANNER_HEIGHT_PX)).current;
 
   const showBanner = forceShow || (!isOnline && isKnown);
 
   useEffect(() => {
     Animated.timing(slideAnim, {
-      toValue: showBanner ? 0 : -50,
-      duration: 300,
+      toValue: showBanner ? 0 : -BANNER_HEIGHT_PX,
+      duration: ANIMATION_DURATION_MS,
       useNativeDriver: true,
     }).start();
   }, [showBanner, slideAnim]);
