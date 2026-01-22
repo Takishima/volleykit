@@ -27,7 +27,11 @@ export const COLORS = {
   blue100: '#dbeafe',
   blue700: '#1d4ed8',
   amber500: '#f59e0b',
+  amber600: '#d97706',
   red500: '#ef4444',
+  sky500: '#0ea5e9',
+  sky600: '#0284c7',
+  purple600: '#9333ea',
 } as const;
 
 /** Icon size for navigation tabs */

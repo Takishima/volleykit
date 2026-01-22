@@ -21,6 +21,7 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import { useTranslation } from '@volleykit/shared/i18n';
 import { useStorage } from '@volleykit/shared/adapters';
+import { useAuthStore } from '@volleykit/shared/stores';
 import { queryKeys, type Assignment } from '@volleykit/shared/api';
 
 import { calendar } from '../platform/calendar';
@@ -31,6 +32,20 @@ import type { CalendarInfo, CalendarSyncMode, CalendarSettings } from '../types/
 import type { RootStackScreenProps } from '../navigation/types';
 
 type Props = RootStackScreenProps<'CalendarSettings'>;
+
+/** API base URL for iCal subscriptions */
+const ICAL_BASE_URL =
+  process.env.EXPO_PUBLIC_API_BASE_URL ?? 'https://volleymanager.volleyball.ch';
+
+/**
+ * Construct the iCal URL for a given calendar code.
+ * Uses webcal:// protocol for native calendar app integration.
+ */
+function getIcalUrl(calendarCode: string): string {
+  // Convert https:// to webcal:// for native calendar integration
+  const webcalBase = ICAL_BASE_URL.replace(/^https?:\/\//, 'webcal://');
+  return `${webcalBase}/iCal/referee/${calendarCode}`;
+}
 
 /** Default calendar settings */
 const DEFAULT_SETTINGS: CalendarSettings = {
@@ -45,6 +60,7 @@ export function CalendarSettingsScreen(_props: Props) {
   const { storage } = useStorage();
   const queryClient = useQueryClient();
   const { syncAssignments, isSyncing } = useCalendarSync();
+  const calendarCode = useAuthStore((state) => state.calendarCode);
 
   const [settings, setSettings] = useState<CalendarSettings>(DEFAULT_SETTINGS);
   const [calendars, setCalendars] = useState<CalendarInfo[]>([]);
@@ -136,9 +152,14 @@ export function CalendarSettingsScreen(_props: Props) {
 
   // Handle iCal subscription
   const handleIcalSubscribe = useCallback(async () => {
-    // The iCal URL would come from the API
-    // For now, we'll use a placeholder that shows the concept
-    const icalUrl = 'webcal://volleymanager.volleyball.ch/calendar/my-assignments.ics';
+    if (!calendarCode) {
+      Alert.alert(t('common.error'), t('settings.calendar.noCalendarCode'), [
+        { text: t('common.close') },
+      ]);
+      return;
+    }
+
+    const icalUrl = getIcalUrl(calendarCode);
 
     try {
       const canOpen = await Linking.canOpenURL(icalUrl);
@@ -154,7 +175,7 @@ export function CalendarSettingsScreen(_props: Props) {
         { text: t('common.close') },
       ]);
     }
-  }, [t]);
+  }, [t, calendarCode]);
 
   // Handle calendar selection
   const handleCalendarSelect = useCallback(

@@ -20,6 +20,7 @@ import type { Assignment } from '@volleykit/shared/api';
 import type { MainTabScreenProps } from '../navigation/types';
 import { useApiClient } from '../contexts';
 import { formatDate } from '../utils';
+import { useNavigation } from '@react-navigation/native';
 
 type Props = MainTabScreenProps<'Assignments'>;
 
@@ -60,6 +61,7 @@ function getAssignmentDisplay(
 export function AssignmentsScreen(_props: Props) {
   const { t, language } = useTranslation();
   const apiClient = useApiClient();
+  const navigation = useNavigation();
 
   const {
     data: assignments = [],
@@ -128,7 +130,13 @@ export function AssignmentsScreen(_props: Props) {
         const colors = STATUS_COLORS[display.status];
 
         return (
-          <View className="bg-white rounded-lg p-4 shadow-sm">
+          <TouchableOpacity
+            className="bg-white rounded-lg p-4 shadow-sm"
+            onPress={() => navigation.navigate('AssignmentDetail', { id: display.id })}
+            accessibilityRole="button"
+            accessibilityLabel={`${display.title}, ${display.date}, ${display.venue}`}
+            accessibilityHint={t('assignments.tapForDetails')}
+          >
             <View className="flex-row justify-between items-center">
               <Text className="text-gray-900 font-medium">{display.title}</Text>
               <View className={`px-2 py-1 rounded ${colors.bg}`}>
@@ -138,7 +146,7 @@ export function AssignmentsScreen(_props: Props) {
               </View>
             </View>
             <Text className="text-gray-500 text-sm mt-1">{display.date} - {display.venue}</Text>
-          </View>
+          </TouchableOpacity>
         );
       }}
     />

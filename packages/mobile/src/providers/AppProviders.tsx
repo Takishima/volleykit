@@ -22,6 +22,7 @@ import { HttpStatus } from '@volleykit/shared/api';
 import { storage } from '../platform/storage';
 import { secureStorage } from '../platform/secureStorage';
 import { SessionMonitorProvider, useSessionMonitorContext, ApiClientProvider } from '../contexts';
+import { NetworkProvider } from './NetworkProvider';
 
 interface AppProvidersProps {
   children: ReactNode;
@@ -92,11 +93,13 @@ function QueryClientWithSessionMonitor({ children }: { children: ReactNode }) {
 export function AppProviders({ children }: AppProvidersProps) {
   return (
     <StorageContext.Provider value={{ storage, secureStorage }}>
-      <ApiClientProvider>
-        <SessionMonitorProvider>
-          <QueryClientWithSessionMonitor>{children}</QueryClientWithSessionMonitor>
-        </SessionMonitorProvider>
-      </ApiClientProvider>
+      <NetworkProvider>
+        <ApiClientProvider>
+          <SessionMonitorProvider>
+            <QueryClientWithSessionMonitor>{children}</QueryClientWithSessionMonitor>
+          </SessionMonitorProvider>
+        </ApiClientProvider>
+      </NetworkProvider>
     </StorageContext.Provider>
   );
 }
