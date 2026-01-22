@@ -111,6 +111,22 @@ jobs:
           # Sync package-lock.json with the new version in package.json
           npm install --package-lock-only
 
+      - name: Sync mobile app.json version
+        if: steps.check_changesets.outputs.changeset_count != '0'
+        run: |
+          # Get the new version from mobile package.json
+          MOBILE_VERSION=$(node -p "require('./packages/mobile/package.json').version")
+
+          # Update app.json expo.version to match
+          node -e "
+            const fs = require('fs');
+            const appJson = JSON.parse(fs.readFileSync('./packages/mobile/app.json', 'utf8'));
+            appJson.expo.version = '$MOBILE_VERSION';
+            fs.writeFileSync('./packages/mobile/app.json', JSON.stringify(appJson, null, 2) + '\n');
+          "
+
+          echo "Synced app.json version to $MOBILE_VERSION"
+
       - name: Get new version
         id: get_version
         run: |
