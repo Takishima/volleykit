@@ -16,6 +16,11 @@ on:
           - patch
           - minor
           - major
+      dry_run:
+        description: 'Dry run (check updates and validate without creating PR)'
+        required: false
+        default: false
+        type: boolean
 
 # =============================================================================
 # Mobile App Dependency Update Workflow
@@ -191,7 +196,7 @@ jobs:
   create-pr:
     name: Create PR
     needs: [update, validate]
-    if: needs.update.outputs.has_updates == 'true'
+    if: needs.update.outputs.has_updates == 'true' && github.event.inputs.dry_run != 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
