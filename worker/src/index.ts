@@ -17,6 +17,7 @@ import {
   AUTH_ENDPOINT,
   CAPTURE_SESSION_TOKEN_HEADER,
   KILL_SWITCH_RETRY_AFTER_SECONDS,
+  OCR_MAX_FILE_SIZE_BYTES,
   VOLLEYKIT_USER_AGENT,
   detectSessionIssue,
   extractICalCode,
@@ -43,7 +44,6 @@ import {
 } from "./utils";
 
 // OCR configuration constants
-const OCR_MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50MB - Mistral API limit
 const OCR_ALLOWED_MIME_TYPES = [
   "image/jpeg",
   "image/png",

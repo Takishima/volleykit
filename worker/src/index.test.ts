@@ -19,6 +19,7 @@ import {
   type AuthLockoutKV,
   type AuthLockoutState,
   KILL_SWITCH_RETRY_AFTER_SECONDS,
+  OCR_MAX_FILE_SIZE_BYTES,
   VOLLEYKIT_USER_AGENT,
   calculateLockoutDuration,
   checkKillSwitch,
@@ -2439,6 +2440,1371 @@ describe("Integration: Auth Lockout in Worker", () => {
     expect(storedData).toBeDefined();
     const storedState = JSON.parse(storedData!) as AuthLockoutState;
     expect(storedState.failedAttempts).toBe(1);
+
+    vi.unstubAllGlobals();
+  });
+});
+
+describe("Integration: OCR Endpoint", () => {
+  function createMockEnv() {
+    return {
+      ALLOWED_ORIGINS: "https://example.com",
+      TARGET_HOST: "https://volleymanager.volleyball.ch",
+      RATE_LIMITER: {
+        limit: vi.fn().mockResolvedValue({ success: true }),
+      },
+      MISTRAL_API_KEY: "test-api-key",
+    };
+  }
+
+  it("returns 405 for non-POST methods", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const request = new Request("https://proxy.example.com/ocr", {
+      method: "GET",
+      headers: {
+        Origin: "https://example.com",
+      },
+    });
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.status).toBe(405);
+    expect(await response.text()).toBe("Method Not Allowed");
+    expect(response.headers.get("Allow")).toBe("POST");
+  });
+
+  it("handles CORS preflight for OCR endpoint", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const request = new Request("https://proxy.example.com/ocr", {
+      method: "OPTIONS",
+      headers: {
+        Origin: "https://example.com",
+      },
+    });
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+      "https://example.com",
+    );
+    expect(response.headers.get("Access-Control-Allow-Methods")).toContain(
+      "POST",
+    );
+  });
+
+  it("returns 503 when Mistral API key is not configured", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = {
+      ...createMockEnv(),
+      MISTRAL_API_KEY: undefined,
+    };
+
+    const formData = new FormData();
+    formData.append("image", new Blob(["fake image"], { type: "image/jpeg" }));
+
+    const request = new Request("https://proxy.example.com/ocr", {
+      method: "POST",
+      headers: {
+        Origin: "https://example.com",
+      },
+      body: formData,
+    });
+
+    const response = await worker.fetch(request, mockEnv);
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.error).toBe("OCR service not configured");
+  });
+
+  it("returns 400 when image field is missing", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const formData = new FormData();
+    formData.append("other_field", "some value");
+
+    const request = new Request("https://proxy.example.com/ocr", {
+      method: "POST",
+      headers: {
+        Origin: "https://example.com",
+      },
+      body: formData,
+    });
+
+    const response = await worker.fetch(request, mockEnv);
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("Missing 'image' field in form data");
+  });
+
+  it("returns 400 for unsupported file types", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const formData = new FormData();
+    formData.append(
+      "image",
+      new Blob(["fake data"], { type: "application/octet-stream" }),
+    );
+
+    const request = new Request("https://proxy.example.com/ocr", {
+      method: "POST",
+      headers: {
+        Origin: "https://example.com",
+      },
+      body: formData,
+    });
+
+    const response = await worker.fetch(request, mockEnv);
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toContain("Unsupported file type");
+  });
+
+  it("returns 400 for files exceeding size limit", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    // Create a file larger than the limit
+    const largeContent = new Uint8Array(OCR_MAX_FILE_SIZE_BYTES + 1);
+    const formData = new FormData();
+    formData.append(
+      "image",
+      new Blob([largeContent], { type: "image/jpeg" }),
+    );
+
+    const request = new Request("https://proxy.example.com/ocr", {
+      method: "POST",
+      headers: {
+        Origin: "https://example.com",
+      },
+      body: formData,
+    });
+
+    const response = await worker.fetch(request, mockEnv);
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toContain("File too large");
+    expect(body.error).toContain("Maximum: 50MB");
+  });
+
+  it("returns 429 when rate limited", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = {
+      ...createMockEnv(),
+      RATE_LIMITER: {
+        limit: vi.fn().mockResolvedValue({ success: false }),
+      },
+    };
+
+    const formData = new FormData();
+    formData.append(
+      "image",
+      new Blob(["fake image"], { type: "image/jpeg" }),
+    );
+
+    const request = new Request("https://proxy.example.com/ocr", {
+      method: "POST",
+      headers: {
+        Origin: "https://example.com",
+      },
+      body: formData,
+    });
+
+    const response = await worker.fetch(request, mockEnv);
+    const body = await response.json();
+
+    expect(response.status).toBe(429);
+    expect(body.error).toBe("Too many requests");
+    expect(response.headers.get("Retry-After")).toBeDefined();
+  });
+
+  it("returns 503 when Mistral API returns 401", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    // Mock Mistral API returning 401
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response("Unauthorized", { status: 401 })),
+    );
+
+    const formData = new FormData();
+    formData.append(
+      "image",
+      new Blob(["fake image data"], { type: "image/jpeg" }),
+    );
+
+    const request = new Request("https://proxy.example.com/ocr", {
+      method: "POST",
+      headers: {
+        Origin: "https://example.com",
+      },
+      body: formData,
+    });
+
+    const response = await worker.fetch(request, mockEnv);
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.error).toBe("OCR service authentication failed");
+
+    vi.unstubAllGlobals();
+  });
+
+  it("returns 429 when Mistral API is rate limited", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    // Mock Mistral API returning 429
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response("Rate limited", { status: 429 })),
+    );
+
+    const formData = new FormData();
+    formData.append(
+      "image",
+      new Blob(["fake image data"], { type: "image/jpeg" }),
+    );
+
+    const request = new Request("https://proxy.example.com/ocr", {
+      method: "POST",
+      headers: {
+        Origin: "https://example.com",
+      },
+      body: formData,
+    });
+
+    const response = await worker.fetch(request, mockEnv);
+    const body = await response.json();
+
+    expect(response.status).toBe(429);
+    expect(body.error).toBe("OCR service rate limit exceeded");
+
+    vi.unstubAllGlobals();
+  });
+
+  it("returns 502 when Mistral API returns other errors", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    // Mock Mistral API returning 500
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response("Server Error", { status: 500 })),
+    );
+
+    const formData = new FormData();
+    formData.append(
+      "image",
+      new Blob(["fake image data"], { type: "image/jpeg" }),
+    );
+
+    const request = new Request("https://proxy.example.com/ocr", {
+      method: "POST",
+      headers: {
+        Origin: "https://example.com",
+      },
+      body: formData,
+    });
+
+    const response = await worker.fetch(request, mockEnv);
+    const body = await response.json();
+
+    expect(response.status).toBe(502);
+    expect(body.error).toBe("OCR processing failed");
+
+    vi.unstubAllGlobals();
+  });
+
+  it("returns OCR results on success", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const mockOcrResult = {
+      pages: [{ markdown: "Extracted text from image" }],
+    };
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify(mockOcrResult), { status: 200 }),
+      ),
+    );
+
+    const formData = new FormData();
+    formData.append(
+      "image",
+      new Blob(["fake image data"], { type: "image/jpeg" }),
+    );
+
+    const request = new Request("https://proxy.example.com/ocr", {
+      method: "POST",
+      headers: {
+        Origin: "https://example.com",
+      },
+      body: formData,
+    });
+
+    const response = await worker.fetch(request, mockEnv);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual(mockOcrResult);
+
+    vi.unstubAllGlobals();
+  });
+
+  it("accepts all supported MIME types", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const mockOcrResult = { pages: [{ markdown: "text" }] };
+
+    // Create a factory function that returns a new Response for each call
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(() =>
+        Promise.resolve(
+          new Response(JSON.stringify(mockOcrResult), { status: 200 }),
+        ),
+      ),
+    );
+
+    const supportedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "application/pdf",
+    ];
+
+    for (const mimeType of supportedTypes) {
+      const formData = new FormData();
+      formData.append(
+        "image",
+        new Blob(["fake data"], { type: mimeType }),
+      );
+
+      const request = new Request("https://proxy.example.com/ocr", {
+        method: "POST",
+        headers: {
+          Origin: "https://example.com",
+        },
+        body: formData,
+      });
+
+      const response = await worker.fetch(request, mockEnv);
+      expect(response.status).toBe(200);
+    }
+
+    vi.unstubAllGlobals();
+  });
+});
+
+describe("Session Token Relay", () => {
+  describe("extractSessionCookies (simulated)", () => {
+    // Simulates the extractSessionCookies function behavior
+    function extractSessionCookies(cookies: string[]): string | null {
+      if (cookies.length === 0) return null;
+
+      const cookieValues = cookies
+        .map((cookie) => {
+          const [nameValue] = cookie.split(";");
+          return nameValue?.trim();
+        })
+        .filter(Boolean);
+
+      if (cookieValues.length === 0) return null;
+      return btoa(cookieValues.join("; "));
+    }
+
+    it("returns null for empty cookie array", () => {
+      expect(extractSessionCookies([])).toBeNull();
+    });
+
+    it("extracts cookie name=value from Set-Cookie header", () => {
+      const cookies = ["session=abc123; Path=/; Secure; HttpOnly"];
+      const result = extractSessionCookies(cookies);
+      expect(result).toBeDefined();
+      expect(atob(result!)).toBe("session=abc123");
+    });
+
+    it("handles multiple cookies", () => {
+      const cookies = [
+        "session=abc123; Path=/; Secure",
+        "csrf_token=xyz789; Path=/",
+      ];
+      const result = extractSessionCookies(cookies);
+      expect(result).toBeDefined();
+      expect(atob(result!)).toBe("session=abc123; csrf_token=xyz789");
+    });
+
+    it("handles cookies with complex attributes", () => {
+      const cookies = [
+        "TYPO3_Flow_Session=abc; Domain=.volleyball.ch; Path=/; Secure; SameSite=Lax; HttpOnly",
+      ];
+      const result = extractSessionCookies(cookies);
+      expect(result).toBeDefined();
+      expect(atob(result!)).toBe("TYPO3_Flow_Session=abc");
+    });
+  });
+
+  describe("decodeSessionToken (simulated)", () => {
+    function decodeSessionToken(token: string): string | null {
+      try {
+        return atob(token);
+      } catch {
+        return null;
+      }
+    }
+
+    it("decodes valid base64 token", () => {
+      const token = btoa("session=abc123");
+      expect(decodeSessionToken(token)).toBe("session=abc123");
+    });
+
+    it("returns null for invalid base64", () => {
+      expect(decodeSessionToken("not valid base64!!!")).toBeNull();
+    });
+
+    it("handles empty string", () => {
+      const token = btoa("");
+      expect(decodeSessionToken(token)).toBe("");
+    });
+  });
+
+  describe("Integration: X-Session-Token header", () => {
+    function createMockEnv() {
+      return {
+        ALLOWED_ORIGINS: "https://example.com",
+        TARGET_HOST: "https://volleymanager.volleyball.ch",
+        RATE_LIMITER: {
+          limit: vi.fn().mockResolvedValue({ success: true }),
+        },
+      };
+    }
+
+    it("converts X-Session-Token header to Cookie header for upstream", async () => {
+      const { default: worker } = await import("./index");
+      const mockEnv = createMockEnv();
+
+      let capturedHeaders: Headers | null = null;
+      const mockResponse = new Response(JSON.stringify({ data: "test" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockImplementation((req: Request) => {
+          capturedHeaders = new Headers(req.headers);
+          return Promise.resolve(mockResponse);
+        }),
+      );
+
+      const sessionToken = btoa("Neos_Session=abc123");
+      const request = new Request(
+        "https://proxy.example.com/indoorvolleyball.refadmin/api/test",
+        {
+          headers: {
+            Origin: "https://example.com",
+            "X-Session-Token": sessionToken,
+          },
+        },
+      );
+
+      await worker.fetch(request, mockEnv);
+
+      expect(capturedHeaders).toBeDefined();
+      expect(capturedHeaders!.get("Cookie")).toContain("Neos_Session=abc123");
+
+      vi.unstubAllGlobals();
+    });
+
+    it("includes X-Session-Token in response when cookies are set", async () => {
+      const { default: worker } = await import("./index");
+      const mockEnv = createMockEnv();
+
+      const mockResponse = new Response(JSON.stringify({ data: "test" }), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Set-Cookie": "Neos_Session=newtoken123; Path=/; Secure; HttpOnly",
+        },
+      });
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
+
+      const request = new Request(
+        "https://proxy.example.com/indoorvolleyball.refadmin/api/test",
+        {
+          headers: {
+            Origin: "https://example.com",
+          },
+        },
+      );
+
+      const response = await worker.fetch(request, mockEnv);
+
+      expect(response.headers.get("X-Session-Token")).toBeDefined();
+      const decodedToken = atob(response.headers.get("X-Session-Token")!);
+      expect(decodedToken).toContain("Neos_Session=newtoken123");
+
+      vi.unstubAllGlobals();
+    });
+
+    it("merges X-Session-Token with existing Cookie header", async () => {
+      const { default: worker } = await import("./index");
+      const mockEnv = createMockEnv();
+
+      let capturedHeaders: Headers | null = null;
+      const mockResponse = new Response(JSON.stringify({ data: "test" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockImplementation((req: Request) => {
+          capturedHeaders = new Headers(req.headers);
+          return Promise.resolve(mockResponse);
+        }),
+      );
+
+      const sessionToken = btoa("Neos_Session=abc123");
+      const request = new Request(
+        "https://proxy.example.com/indoorvolleyball.refadmin/api/test",
+        {
+          headers: {
+            Origin: "https://example.com",
+            "X-Session-Token": sessionToken,
+            Cookie: "existing_cookie=value",
+          },
+        },
+      );
+
+      await worker.fetch(request, mockEnv);
+
+      expect(capturedHeaders).toBeDefined();
+      const cookieHeader = capturedHeaders!.get("Cookie");
+      expect(cookieHeader).toContain("existing_cookie=value");
+      expect(cookieHeader).toContain("Neos_Session=abc123");
+
+      vi.unstubAllGlobals();
+    });
+  });
+});
+
+describe("Security Headers", () => {
+  function createMockEnv() {
+    return {
+      ALLOWED_ORIGINS: "https://example.com",
+      TARGET_HOST: "https://volleymanager.volleyball.ch",
+      RATE_LIMITER: {
+        limit: vi.fn().mockResolvedValue({ success: true }),
+      },
+    };
+  }
+
+  it("includes Content-Security-Policy header", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const mockResponse = new Response(JSON.stringify({ data: "test" }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
+
+    const request = new Request(
+      "https://proxy.example.com/indoorvolleyball.refadmin/api/test",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.headers.get("Content-Security-Policy")).toBeDefined();
+    expect(response.headers.get("Content-Security-Policy")).toContain(
+      "default-src 'self'",
+    );
+
+    vi.unstubAllGlobals();
+  });
+
+  it("includes X-Frame-Options header", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const mockResponse = new Response(JSON.stringify({ data: "test" }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
+
+    const request = new Request(
+      "https://proxy.example.com/indoorvolleyball.refadmin/api/test",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.headers.get("X-Frame-Options")).toBe("SAMEORIGIN");
+
+    vi.unstubAllGlobals();
+  });
+
+  it("includes X-Content-Type-Options header", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const mockResponse = new Response(JSON.stringify({ data: "test" }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
+
+    const request = new Request(
+      "https://proxy.example.com/indoorvolleyball.refadmin/api/test",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff");
+
+    vi.unstubAllGlobals();
+  });
+
+  it("includes X-XSS-Protection header", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const mockResponse = new Response(JSON.stringify({ data: "test" }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
+
+    const request = new Request(
+      "https://proxy.example.com/indoorvolleyball.refadmin/api/test",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.headers.get("X-XSS-Protection")).toBe("1; mode=block");
+
+    vi.unstubAllGlobals();
+  });
+
+  it("includes Referrer-Policy header", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const mockResponse = new Response(JSON.stringify({ data: "test" }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
+
+    const request = new Request(
+      "https://proxy.example.com/indoorvolleyball.refadmin/api/test",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.headers.get("Referrer-Policy")).toBe(
+      "strict-origin-when-cross-origin",
+    );
+
+    vi.unstubAllGlobals();
+  });
+
+  it("includes security headers in error responses", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    // Request to disallowed path
+    const request = new Request("https://proxy.example.com/admin/secret", {
+      headers: {
+        Origin: "https://example.com",
+      },
+    });
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.status).toBe(404);
+    expect(response.headers.get("X-Frame-Options")).toBe("SAMEORIGIN");
+    expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff");
+  });
+
+  it("includes security headers in robots.txt response", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const request = new Request("https://proxy.example.com/robots.txt");
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("X-Frame-Options")).toBe("SAMEORIGIN");
+    expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff");
+  });
+});
+
+describe("Upstream Error Handling", () => {
+  function createMockEnv() {
+    return {
+      ALLOWED_ORIGINS: "https://example.com",
+      TARGET_HOST: "https://volleymanager.volleyball.ch",
+      RATE_LIMITER: {
+        limit: vi.fn().mockResolvedValue({ success: true }),
+      },
+    };
+  }
+
+  it("returns 502 when upstream fetch throws an error", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockRejectedValue(new Error("Connection refused")),
+    );
+
+    const request = new Request(
+      "https://proxy.example.com/indoorvolleyball.refadmin/api/test",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.status).toBe(502);
+    expect(await response.text()).toBe("Proxy Error");
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+      "https://example.com",
+    );
+
+    vi.unstubAllGlobals();
+  });
+
+  it("returns 502 for iCal upstream errors", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response("Server Error", { status: 500 })),
+    );
+
+    const request = new Request(
+      "https://proxy.example.com/iCal/referee/ABC123",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.status).toBe(502);
+    expect(await response.text()).toBe("Bad Gateway: Upstream error");
+
+    vi.unstubAllGlobals();
+  });
+
+  it("returns 404 for iCal calendar not found", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response("Not Found", { status: 404 })),
+    );
+
+    const request = new Request(
+      "https://proxy.example.com/iCal/referee/ABC123",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.status).toBe(404);
+    expect(await response.text()).toBe("Not Found: Calendar not found");
+
+    vi.unstubAllGlobals();
+  });
+
+  it("returns 502 when iCal fetch throws", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockRejectedValue(new Error("Network error")),
+    );
+
+    const request = new Request(
+      "https://proxy.example.com/iCal/referee/ABC123",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.status).toBe(502);
+    expect(await response.text()).toBe(
+      "Bad Gateway: Unable to reach calendar service",
+    );
+
+    vi.unstubAllGlobals();
+  });
+
+  it("preserves upstream status codes for allowed responses", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response("OK", { status: 200 })),
+    );
+
+    const request = new Request("https://proxy.example.com/login", {
+      headers: {
+        Origin: "https://example.com",
+      },
+    });
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.status).toBe(200);
+
+    vi.unstubAllGlobals();
+  });
+});
+
+describe("iOS Safari Authentication Workaround", () => {
+  function createMockEnv() {
+    return {
+      ALLOWED_ORIGINS: "https://example.com",
+      TARGET_HOST: "https://volleymanager.volleyball.ch",
+      RATE_LIMITER: {
+        limit: vi.fn().mockResolvedValue({ success: true }),
+      },
+    };
+  }
+
+  it("rewrites POST /login with credentials to auth endpoint", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    let capturedUrl: string | null = null;
+    let capturedBody: string | null = null;
+    const mockResponse = new Response(null, {
+      status: 302,
+      headers: {
+        Location: "https://volleymanager.volleyball.ch/sportmanager.volleyball/main/dashboard",
+      },
+    });
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (req: Request) => {
+        capturedUrl = req.url;
+        capturedBody = await req.text();
+        return Promise.resolve(mockResponse);
+      }),
+    );
+
+    const request = new Request("https://proxy.example.com/login", {
+      method: "POST",
+      headers: {
+        Origin: "https://example.com",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: "username=testuser&password=testpass",
+    });
+
+    await worker.fetch(request, mockEnv);
+
+    expect(capturedUrl).toBeDefined();
+    expect(capturedUrl).toContain(
+      "/sportmanager.security/authentication/authenticate",
+    );
+    expect(capturedBody).toContain(
+      "__authentication%5BNeos%5D%5BFlow%5D%5BSecurity%5D",
+    );
+
+    vi.unstubAllGlobals();
+  });
+
+  it("rewrites GET /login with credentials to POST auth endpoint", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    let capturedMethod: string | null = null;
+    let capturedUrl: string | null = null;
+    const mockResponse = new Response(null, {
+      status: 302,
+      headers: {
+        Location: "https://volleymanager.volleyball.ch/sportmanager.volleyball/main/dashboard",
+      },
+    });
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((req: Request) => {
+        capturedMethod = req.method;
+        capturedUrl = req.url;
+        return Promise.resolve(mockResponse);
+      }),
+    );
+
+    const request = new Request(
+      "https://proxy.example.com/login?username=testuser&password=testpass",
+      {
+        method: "GET",
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    await worker.fetch(request, mockEnv);
+
+    expect(capturedMethod).toBe("POST");
+    expect(capturedUrl).toContain(
+      "/sportmanager.security/authentication/authenticate",
+    );
+
+    vi.unstubAllGlobals();
+  });
+
+  it("converts successful auth redirect to JSON response", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const mockResponse = new Response(null, {
+      status: 302,
+      headers: {
+        Location: "https://volleymanager.volleyball.ch/sportmanager.volleyball/main/dashboard",
+        "Set-Cookie": "Neos_Session=abc123; Path=/",
+      },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
+
+    const request = new Request("https://proxy.example.com/login", {
+      method: "POST",
+      headers: {
+        Origin: "https://example.com",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: "username=testuser&password=testpass",
+    });
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toBe("application/json");
+    const body = await response.json();
+    expect(body.success).toBe(true);
+    expect(body.redirectUrl).toBeDefined();
+    expect(body.sessionCaptured).toBe(true);
+
+    vi.unstubAllGlobals();
+  });
+
+  it("preserves Neos Flow format credentials", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    let capturedBody: string | null = null;
+    const mockResponse = new Response(null, {
+      status: 302,
+      headers: {
+        Location: "https://volleymanager.volleyball.ch/sportmanager.volleyball/main/dashboard",
+      },
+    });
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (req: Request) => {
+        capturedBody = await req.text();
+        return Promise.resolve(mockResponse);
+      }),
+    );
+
+    const neosBody =
+      "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][username]=testuser&" +
+      "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][password]=testpass";
+
+    const request = new Request("https://proxy.example.com/login", {
+      method: "POST",
+      headers: {
+        Origin: "https://example.com",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: neosBody,
+    });
+
+    await worker.fetch(request, mockEnv);
+
+    // Should preserve Neos format, not re-transform
+    expect(capturedBody).toContain(
+      "__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][username]",
+    );
+
+    vi.unstubAllGlobals();
+  });
+});
+
+describe("X-Capture-Session-Token Header", () => {
+  function createMockEnv() {
+    return {
+      ALLOWED_ORIGINS: "https://example.com",
+      TARGET_HOST: "https://volleymanager.volleyball.ch",
+      RATE_LIMITER: {
+        limit: vi.fn().mockResolvedValue({ success: true }),
+      },
+    };
+  }
+
+  it("converts redirect to JSON when X-Capture-Session-Token is set and session token exists", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const mockResponse = new Response(null, {
+      status: 302,
+      headers: {
+        Location: "https://volleymanager.volleyball.ch/sportmanager.volleyball/main/dashboard",
+        "Set-Cookie": "Neos_Session=abc123; Path=/",
+      },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
+
+    const request = new Request(
+      "https://proxy.example.com/sportmanager.volleyball/main/dashboard",
+      {
+        headers: {
+          Origin: "https://example.com",
+          "X-Capture-Session-Token": "true",
+        },
+      },
+    );
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toBe("application/json");
+    const body = await response.json();
+    expect(body.sessionCaptured).toBe(true);
+    expect(body.redirectUrl).toBeDefined();
+
+    vi.unstubAllGlobals();
+  });
+
+  it("returns normal redirect when X-Capture-Session-Token is set but no session token", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const mockResponse = new Response(null, {
+      status: 302,
+      headers: {
+        Location: "https://volleymanager.volleyball.ch/sportmanager.volleyball/main/dashboard",
+        // No Set-Cookie header
+      },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
+
+    const request = new Request(
+      "https://proxy.example.com/sportmanager.volleyball/main/dashboard",
+      {
+        headers: {
+          Origin: "https://example.com",
+          "X-Capture-Session-Token": "true",
+        },
+      },
+    );
+
+    const response = await worker.fetch(request, mockEnv);
+
+    // Should be a normal redirect since no session token to capture
+    expect(response.status).toBe(302);
+    expect(response.headers.get("Location")).toBeDefined();
+
+    vi.unstubAllGlobals();
+  });
+});
+
+describe("Cookie Rewriting for Cross-Origin", () => {
+  function createMockEnv() {
+    return {
+      ALLOWED_ORIGINS: "https://example.com",
+      TARGET_HOST: "https://volleymanager.volleyball.ch",
+      RATE_LIMITER: {
+        limit: vi.fn().mockResolvedValue({ success: true }),
+      },
+    };
+  }
+
+  it("adds SameSite=None, Secure, and Partitioned to cookies", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const mockResponse = new Response(JSON.stringify({ data: "test" }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Set-Cookie": "session=abc123; Path=/; HttpOnly",
+      },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
+
+    const request = new Request(
+      "https://proxy.example.com/indoorvolleyball.refadmin/api/test",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    const response = await worker.fetch(request, mockEnv);
+
+    const setCookie = response.headers.get("Set-Cookie");
+    expect(setCookie).toContain("SameSite=None");
+    expect(setCookie).toContain("Secure");
+    expect(setCookie).toContain("Partitioned");
+
+    vi.unstubAllGlobals();
+  });
+
+  it("removes Domain attribute from cookies", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const mockResponse = new Response(JSON.stringify({ data: "test" }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Set-Cookie":
+          "session=abc123; Domain=.volleyball.ch; Path=/; HttpOnly",
+      },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
+
+    const request = new Request(
+      "https://proxy.example.com/indoorvolleyball.refadmin/api/test",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    const response = await worker.fetch(request, mockEnv);
+
+    const setCookie = response.headers.get("Set-Cookie");
+    expect(setCookie).not.toContain("Domain=");
+
+    vi.unstubAllGlobals();
+  });
+
+  it("replaces existing SameSite attribute", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const mockResponse = new Response(JSON.stringify({ data: "test" }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Set-Cookie": "session=abc123; Path=/; SameSite=Lax; Secure",
+      },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
+
+    const request = new Request(
+      "https://proxy.example.com/indoorvolleyball.refadmin/api/test",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    const response = await worker.fetch(request, mockEnv);
+
+    const setCookie = response.headers.get("Set-Cookie");
+    expect(setCookie).toContain("SameSite=None");
+    expect(setCookie).not.toContain("SameSite=Lax");
+
+    vi.unstubAllGlobals();
+  });
+});
+
+describe("Redirect Handling", () => {
+  function createMockEnv() {
+    return {
+      ALLOWED_ORIGINS: "https://example.com",
+      TARGET_HOST: "https://volleymanager.volleyball.ch",
+      RATE_LIMITER: {
+        limit: vi.fn().mockResolvedValue({ success: true }),
+      },
+    };
+  }
+
+  it("rewrites internal redirects to go through proxy", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    const mockResponse = new Response(null, {
+      status: 302,
+      headers: {
+        Location: "https://volleymanager.volleyball.ch/sportmanager.volleyball/main/dashboard",
+      },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
+
+    const request = new Request(
+      "https://proxy.example.com/sportmanager.volleyball/main/home",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.status).toBe(302);
+    const location = response.headers.get("Location");
+    expect(location).toBeDefined();
+    expect(location).toContain("proxy.example.com");
+    expect(location).toContain("/sportmanager.volleyball/main/dashboard");
+
+    vi.unstubAllGlobals();
+  });
+});
+
+describe("API Prefix Handling", () => {
+  function createMockEnv() {
+    return {
+      ALLOWED_ORIGINS: "https://example.com",
+      TARGET_HOST: "https://volleymanager.volleyball.ch",
+      RATE_LIMITER: {
+        limit: vi.fn().mockResolvedValue({ success: true }),
+      },
+    };
+  }
+
+  it("adds /api/ prefix to API paths", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    let capturedUrl: string | null = null;
+    const mockResponse = new Response(JSON.stringify({ data: "test" }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((req: Request) => {
+        capturedUrl = req.url;
+        return Promise.resolve(mockResponse);
+      }),
+    );
+
+    const request = new Request(
+      "https://proxy.example.com/indoorvolleyball.refadmin/api%5crefereeconvocation/search",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    await worker.fetch(request, mockEnv);
+
+    expect(capturedUrl).toBeDefined();
+    expect(capturedUrl).toContain("/api/indoorvolleyball.refadmin/");
+
+    vi.unstubAllGlobals();
+  });
+
+  it("does not add /api/ prefix to auth paths", async () => {
+    const { default: worker } = await import("./index");
+    const mockEnv = createMockEnv();
+
+    let capturedUrl: string | null = null;
+    const mockResponse = new Response("<html>Login</html>", {
+      status: 200,
+      headers: { "Content-Type": "text/html" },
+    });
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((req: Request) => {
+        capturedUrl = req.url;
+        return Promise.resolve(mockResponse);
+      }),
+    );
+
+    const request = new Request(
+      "https://proxy.example.com/sportmanager.security/authentication/authenticate",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+    );
+
+    await worker.fetch(request, mockEnv);
+
+    expect(capturedUrl).toBeDefined();
+    expect(capturedUrl).not.toContain("/api/sportmanager.security/");
 
     vi.unstubAllGlobals();
   });
