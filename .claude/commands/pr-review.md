@@ -100,6 +100,40 @@ git push
 
 The `fix(review):` prefix prevents infinite review loops.
 
+### Step 8: Check CI Status
+
+Wait for CI to start, then check status:
+
+```bash
+sleep 30
+```
+
+Fetch check runs for the PR head commit:
+
+```bash
+bash -c 'BRANCH=$(git rev-parse --abbrev-ref HEAD); SHA=$(git rev-parse HEAD); REMOTE=$(git remote get-url origin); if [[ "$REMOTE" =~ github\.com[:/]([^/]+)/([^/.]+) ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; elif [[ "$REMOTE" =~ /git/([^/]+)/([^/]+)$ ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; fi; curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$OWNER/$REPO/commits/$SHA/check-runs" | jq "{total_count, check_runs: [.check_runs[] | {name, status, conclusion, html_url}]}"'
+```
+
+If checks are still `in_progress`, wait 2 minutes and retry (up to 5 times):
+
+```bash
+sleep 120
+```
+
+```bash
+bash -c 'SHA=$(git rev-parse HEAD); REMOTE=$(git remote get-url origin); if [[ "$REMOTE" =~ github\.com[:/]([^/]+)/([^/.]+) ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; elif [[ "$REMOTE" =~ /git/([^/]+)/([^/]+)$ ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; fi; curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$OWNER/$REPO/commits/$SHA/check-runs" | jq "{total_count, check_runs: [.check_runs[] | {name, status, conclusion, html_url}]}"'
+```
+
+### Step 9: Handle CI Failures
+
+If any check has `conclusion: "failure"`:
+1. Review the failed check details via `html_url`
+2. Identify and fix the issue in the codebase
+3. Commit with message `fix(ci): address CI failure in <check_name>`
+4. Push and return to Step 8 to re-check CI
+
+If all checks pass (`conclusion: "success"`), inform user and complete.
+
 ## Output
 
 - `Created PR #N: <url>` or `Updated PR #N: <url>`
@@ -107,3 +141,6 @@ The `fix(review):` prefix prevents infinite review loops.
 - `Retrying in 1 minute...` (if no review found)
 - `Addressing N issues...` or `No issues found`
 - `Pushed fixes`
+- `Checking CI status...`
+- `CI in progress, waiting 2 minutes...` (up to 5 retries)
+- `CI passed` or `CI failed: <check_name> - fixing...`
