@@ -1,7 +1,19 @@
 import { renderHook, act, waitFor } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest'
+
+import { server } from '@/test/msw/server'
 
 import { useCombinedGeocode } from './useCombinedGeocode'
+
+// Close MSW server for this file since we use manual fetch mocking
+// These tests need fine-grained control over geocoding API responses
+beforeAll(() => {
+  server.close()
+})
+
+afterAll(() => {
+  server.listen({ onUnhandledRequest: 'bypass' })
+})
 
 describe('useCombinedGeocode', () => {
   const mockFetch = vi.fn()

@@ -1,8 +1,19 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest'
 
+import { server } from '@/test/msw/server'
 import { setCsrfToken, clearSession } from '@/api/client'
 
 import { useAuthStore, NO_REFEREE_ROLE_ERROR_KEY } from './auth'
+
+// Close MSW server for this file since we use manual fetch mocking
+// These tests need fine-grained control over Response objects that MSW can't provide
+beforeAll(() => {
+  server.close()
+})
+
+afterAll(() => {
+  server.listen({ onUnhandledRequest: 'bypass' })
+})
 
 // Mock the API client
 // Use vi.hoisted to ensure the mock function is defined before vi.mock hoists

@@ -1,4 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest'
+
+import { server } from '@/test/msw/server'
 
 import {
   fetchCalendarAssignments,
@@ -6,6 +8,16 @@ import {
   InvalidCalendarCodeError,
   CalendarNotFoundError,
 } from './calendar-api'
+
+// Close MSW server for this file since we use manual fetch mocking
+// These tests need fine-grained control over iCal responses that MSW can't provide
+beforeAll(() => {
+  server.close()
+})
+
+afterAll(() => {
+  server.listen({ onUnhandledRequest: 'bypass' })
+})
 
 // Mock fetch
 const mockFetch = vi.fn()

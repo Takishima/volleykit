@@ -474,7 +474,7 @@ export default defineConfig(({ mode }) => {
       environment: 'happy-dom',
       environmentMatchGlobs: [
         // Pure unit tests don't need DOM - run in faster node environment
-        ['src/api/**/*.test.ts', 'node'],
+        // Note: src/api tests use MSW which requires happy-dom for BroadcastChannel
         ['src/i18n/**/*.test.ts', 'node'],
         ['src/shared/stores/**/*.test.ts', 'node'],
         ['src/shared/utils/**/*.test.ts', 'node'],
@@ -483,7 +483,7 @@ export default defineConfig(({ mode }) => {
         ['src/features/**/api/**/*.test.ts', 'node'],
         ['src/test/**/*.test.ts', 'node'],
       ],
-      setupFiles: './src/test/setup.ts',
+      setupFiles: ['./src/test/polyfills.ts', './src/test/setup.ts'],
       include: ['src/**/*.{test,spec}.{ts,tsx}'],
       // Performance: vmThreads is much faster than default forks
       pool: 'vmThreads',
