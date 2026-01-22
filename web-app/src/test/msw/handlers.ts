@@ -10,7 +10,7 @@
  *
  * @see https://mswjs.io/docs/getting-started
  */
-import { http, HttpResponse, type PathParams, type DefaultBodyType } from 'msw'
+import { http, HttpResponse } from 'msw'
 
 // Default mock responses matching API schema
 export const defaultResponses = {
@@ -167,6 +167,7 @@ export function createHtmlRedirectHandler(path: string, redirectUrl: string) {
       status: 200,
       headers: {
         'Content-Type': 'text/html; charset=UTF-8',
+        'X-Final-URL': redirectUrl,
       },
     })
   })
