@@ -115,19 +115,29 @@ The `fix(review):` prefix prevents infinite review loops.
 If CI was failing in Step 6, fix those issues now:
 
 1. Review the failed check details via `html_url`
-2. Reproduce the failure locally by running the relevant commands:
+2. Reproduce the failure locally by running the relevant commands based on the failed check:
 
+**For web-app failures:**
 ```bash
-cd web-app && npm run lint
+cd web-app && npm run lint && npm test && npm run build
 ```
 
+**For shared library failures:**
 ```bash
-cd web-app && npm test
+cd packages/shared && npm run lint && npm test && npm run build
 ```
 
+**For mobile app failures:**
 ```bash
-cd web-app && npm run build
+cd packages/mobile && npm run typecheck && npm run lint && npm test
 ```
+
+**For worker failures:**
+```bash
+cd worker && npm run lint && npm test
+```
+
+Note: Match the local commands to the specific CI check that failed. The `html_url` will indicate which package/workflow failed.
 
 3. Fix the identified issues in the codebase
 4. Re-run the failed local commands to verify the fix
@@ -180,4 +190,4 @@ If any check fails, return to Step 9 to fix and push again.
 - `Committed CI fixes`
 - `Pushed all changes`
 - `Verifying remote CI...`
-- `CI passed` or `CI still failing - fixing...`
+- `Remote CI passed` or `Remote CI still failing - fixing...`
