@@ -1,8 +1,9 @@
 import { isValidElement } from 'react'
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest'
 
 import type { Assignment, CompensationRecord } from '@/api/client'
+import { server } from '@/test/msw/server'
 
 import {
   createCompensationActions,
@@ -10,6 +11,16 @@ import {
   isCompensationEditable,
   isAssignmentCompensationEditable,
 } from './compensation-actions'
+
+// Close MSW server for this file since we use manual fetch mocking
+// These tests need fine-grained control over PDF download responses that MSW can't provide
+beforeAll(() => {
+  server.close()
+})
+
+afterAll(() => {
+  server.listen({ onUnhandledRequest: 'bypass' })
+})
 
 const mockCompensation: CompensationRecord = {
   __identity: 'test-compensation-1',

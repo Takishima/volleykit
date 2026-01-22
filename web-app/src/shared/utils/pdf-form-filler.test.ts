@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest'
 
 import type { Assignment } from '@/api/client'
+import { server } from '@/test/msw/server'
 
 import {
   extractSportsHallReportData,
@@ -10,6 +11,15 @@ import {
   fillSportsHallReportForm,
   type SportsHallReportData,
 } from './pdf-form-filler'
+
+// Close MSW server for this file since we use manual fetch mocking in downloadPdf tests
+beforeAll(() => {
+  server.close()
+})
+
+afterAll(() => {
+  server.listen({ onUnhandledRequest: 'bypass' })
+})
 
 describe('pdf-form-filler', () => {
   describe('extractSportsHallReportData', () => {

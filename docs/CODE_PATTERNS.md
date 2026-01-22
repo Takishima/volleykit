@@ -473,3 +473,90 @@ async function getAssignments(): Promise<AssignmentsResponse> {
   return fetchWithErrorHandling('/api/assignments');
 }
 ```
+
+## API Mocking Patterns (MSW)
+
+We use MSW (Mock Service Worker) for API mocking. It intercepts requests at the network level, providing realistic testing.
+
+### Basic Handler Override
+
+```typescript
+import { server, http, HttpResponse } from '@/test/msw'
+
+describe('API tests', () => {
+  it('returns custom data', async () => {
+    // Override default handler for this test only
+    server.use(
+      http.post('*/api%5crefereeconvocation/*', () => {
+        return HttpResponse.json({
+          items: [mockAssignment],
+          totalItemsCount: 1
+        })
+      })
+    )
+
+    const result = await api.searchAssignments({})
+    expect(result.items).toHaveLength(1)
+  })
+})
+```
+
+### Testing Error Responses
+
+```typescript
+it('handles 401 unauthorized', async () => {
+  server.use(
+    http.post('*/api%5crefereeconvocation/*', () => {
+      return new HttpResponse(null, {
+        status: 401,
+        statusText: 'Unauthorized'
+      })
+    })
+  )
+
+  await expect(api.searchAssignments({})).rejects.toThrow(
+    'Session expired'
+  )
+})
+```
+
+### Inspecting Request Data
+
+```typescript
+it('sends correct request body', async () => {
+  let capturedBody: URLSearchParams | null = null
+
+  server.use(
+    http.post('*/api%5crefereeconvocation/*', async ({ request }) => {
+      // Capture request body for assertions
+      const text = await request.text()
+      capturedBody = new URLSearchParams(text)
+      return HttpResponse.json({ items: [], totalItemsCount: 0 })
+    })
+  )
+
+  await api.searchAssignments({ offset: 10, limit: 20 })
+
+  expect(capturedBody?.get('searchConfiguration[offset]')).toBe('10')
+  expect(capturedBody?.get('searchConfiguration[limit]')).toBe('20')
+})
+```
+
+### Testing File Uploads
+
+```typescript
+it('uploads file with FormData', async () => {
+  let capturedFormData: FormData | null = null
+
+  server.use(
+    http.post('*/api%5cpersistentresource/upload', async ({ request }) => {
+      capturedFormData = await request.formData()
+      return HttpResponse.json([{ __identity: 'res-1' }])
+    })
+  )
+
+  const file = new File(['content'], 'test.pdf', { type: 'application/pdf' })
+  await api.uploadResource(file)
+
+  expect(capturedFormData?.get('resource')).toBeInstanceOf(File)
+})

@@ -198,6 +198,88 @@ describe("AssignmentsPage", () => {
 });
 ```
 
+## API Mocking with MSW
+
+We use [Mock Service Worker (MSW)](https://mswjs.io/) for API mocking in tests. MSW intercepts requests at the network level, providing more realistic testing than manual fetch mocking.
+
+### Benefits
+
+- **Network-level interception**: Tests actual fetch calls through the network layer
+- **Catches serialization bugs**: Validates request/response serialization
+- **Single source of truth**: Centralized API mock handlers
+- **Browser DevTools compatible**: Works identically in browser for debugging
+
+### Setup
+
+MSW is configured globally in `src/test/setup.ts`:
+
+```typescript
+import { server } from './msw/server'
+
+beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }))
+afterEach(() => server.resetHandlers())
+afterAll(() => server.close())
+```
+
+### Basic Usage
+
+```typescript
+import { server, http, HttpResponse } from '@/test/msw'
+
+it('handles custom response', async () => {
+  server.use(
+    http.post('*/api%5crefereeconvocation/*', () => {
+      return HttpResponse.json({ items: [mockItem], totalItemsCount: 1 })
+    })
+  )
+
+  const result = await api.searchAssignments({})
+  expect(result.items).toHaveLength(1)
+})
+```
+
+### Testing Error Scenarios
+
+```typescript
+it('handles server error', async () => {
+  server.use(
+    http.post('*/api%5crefereeconvocation/*', () => {
+      return new HttpResponse(null, { status: 500, statusText: 'Internal Server Error' })
+    })
+  )
+
+  await expect(api.searchAssignments({})).rejects.toThrow('500')
+})
+```
+
+### Capturing Request Data
+
+```typescript
+it('sends correct request body', async () => {
+  let capturedBody: URLSearchParams | null = null
+
+  server.use(
+    http.post('*/api%5crefereeconvocation/*', async ({ request }) => {
+      const text = await request.text()
+      capturedBody = new URLSearchParams(text)
+      return HttpResponse.json({ items: [], totalItemsCount: 0 })
+    })
+  )
+
+  await api.searchAssignments({ offset: 0, limit: 10 })
+
+  expect(capturedBody?.get('searchConfiguration[offset]')).toBe('0')
+})
+```
+
+### File Locations
+
+| File | Purpose |
+|------|---------|
+| `src/test/msw/handlers.ts` | Default API handlers and helper factories |
+| `src/test/msw/server.ts` | MSW server setup for Node.js |
+| `src/test/polyfills.ts` | BroadcastChannel polyfill for happy-dom |
+
 ## Running Tests
 
 ```bash

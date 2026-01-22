@@ -1,8 +1,26 @@
+// Polyfills must be imported first (via setupFiles order in vite.config.ts)
 import '@testing-library/jest-dom'
-import { beforeAll } from 'vitest'
+import { afterAll, afterEach, beforeAll } from 'vitest'
 
 import { preloadTranslations } from '@/i18n'
 import { preloadDateLocales } from '@/shared/hooks/useDateFormat'
+
+import { server } from './msw/server'
+
+// Start MSW server before all tests
+beforeAll(() => {
+  server.listen({ onUnhandledRequest: 'bypass' })
+})
+
+// Reset handlers after each test to ensure test isolation
+afterEach(() => {
+  server.resetHandlers()
+})
+
+// Clean up after all tests
+afterAll(() => {
+  server.close()
+})
 
 // Preload all translations and date locales before each test file runs.
 // This ensures synchronous availability of localized strings during tests.

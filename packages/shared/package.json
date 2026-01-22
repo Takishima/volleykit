@@ -75,6 +75,7 @@
     "@vitest/coverage-v8": "^4.0.17",
     "eslint": "^9.39.0",
     "happy-dom": "^20.3.4",
+    "msw": "^2.12.7",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "tsup": "^8.0.0",
