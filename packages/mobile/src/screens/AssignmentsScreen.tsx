@@ -20,7 +20,6 @@ import type { Assignment } from '@volleykit/shared/api';
 import type { MainTabScreenProps } from '../navigation/types';
 import { useApiClient } from '../contexts';
 import { formatDate } from '../utils';
-import { useNavigation } from '@react-navigation/native';
 
 type Props = MainTabScreenProps<'Assignments'>;
 
@@ -58,10 +57,9 @@ function getAssignmentDisplay(
   };
 }
 
-export function AssignmentsScreen(_props: Props) {
+export function AssignmentsScreen({ navigation }: Props) {
   const { t, language } = useTranslation();
   const apiClient = useApiClient();
-  const navigation = useNavigation();
 
   const {
     data: assignments = [],
