@@ -86,9 +86,30 @@ For each issue:
 
 If "No issues found" or "LGTM", inform user and stop.
 
-### Step 7: Commit and Push Fixes
+### Step 7: Run Local CI Checks
 
-After addressing ALL issues:
+Before committing, run local validation to catch issues early:
+
+```bash
+cd web-app && npm run lint
+```
+
+```bash
+cd web-app && npm test
+```
+
+```bash
+cd web-app && npm run build
+```
+
+If any check fails:
+1. Fix the issue in the codebase
+2. Re-run the failed check until it passes
+3. Continue to Step 8
+
+### Step 8: Commit and Push Fixes
+
+After ALL local CI checks pass:
 
 ```bash
 git add -A && git commit -m "fix(review): address PR review comments"
@@ -100,9 +121,9 @@ git push
 
 The `fix(review):` prefix prevents infinite review loops.
 
-### Step 8: Check CI Status
+### Step 9: Monitor Remote CI Status
 
-Wait for CI to start, then check status:
+Wait for remote CI to start, then check status:
 
 ```bash
 sleep 30
@@ -124,13 +145,14 @@ sleep 120
 bash -c 'SHA=$(git rev-parse HEAD); REMOTE=$(git remote get-url origin); if [[ "$REMOTE" =~ github\.com[:/]([^/]+)/([^/.]+) ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; elif [[ "$REMOTE" =~ /git/([^/]+)/([^/]+)$ ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; fi; curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$OWNER/$REPO/commits/$SHA/check-runs" | jq "{total_count, check_runs: [.check_runs[] | {name, status, conclusion, html_url}]}"'
 ```
 
-### Step 9: Handle CI Failures
+### Step 10: Handle Remote CI Failures
 
 If any check has `conclusion: "failure"`:
 1. Review the failed check details via `html_url`
 2. Identify and fix the issue in the codebase
-3. Commit with message `fix(ci): address CI failure in <check_name>`
-4. Push and return to Step 8 to re-check CI
+3. Run local CI checks (Step 7)
+4. Commit with message `fix(ci): address CI failure in <check_name>`
+5. Push and return to Step 9 to re-check remote CI
 
 The `fix(ci):` prefix (like `fix(review):`) prevents infinite review loops.
 
@@ -142,7 +164,9 @@ If all checks pass (`conclusion: "success"`), inform user and complete.
 - `Waiting 1m30s for review...`
 - `Retrying in 1 minute...` (if no review found)
 - `Addressing N issues...` or `No issues found`
+- `Running local CI checks...`
+- `Local CI passed` or `Local CI failed: <check> - fixing...`
 - `Pushed fixes`
-- `Checking CI status...`
-- `CI in progress, waiting 2 minutes...` (up to 5 retries)
-- `CI passed` or `CI failed: <check_name> - fixing...`
+- `Monitoring remote CI status...`
+- `Remote CI in progress, waiting 2 minutes...` (up to 5 retries)
+- `CI passed` or `Remote CI failed: <check_name> - fixing...`
