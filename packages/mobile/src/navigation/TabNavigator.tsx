@@ -2,15 +2,16 @@
  * Bottom tab navigator for main app screens
  */
 
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Feather } from '@expo/vector-icons';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
+import { COLORS, TAB_ICON_SIZE } from '../constants';
 import { AssignmentsScreen } from '../screens/AssignmentsScreen';
 import { CompensationsScreen } from '../screens/CompensationsScreen';
 import { ExchangesScreen } from '../screens/ExchangesScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
+
 import type { MainTabParamList } from './types';
-import { COLORS, TAB_ICON_SIZE } from '../constants';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 

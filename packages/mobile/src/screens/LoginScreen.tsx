@@ -6,13 +6,17 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { useTranslation } from '@volleykit/shared/i18n';
+
+import { COLORS } from '../constants';
 import { useBiometricAuth } from '../hooks/useBiometricAuth';
 import { login } from '../services/authService';
-import { COLORS } from '../constants';
+
 import type { RootStackScreenProps } from '../navigation/types';
 
 type Props = RootStackScreenProps<'Login'>;

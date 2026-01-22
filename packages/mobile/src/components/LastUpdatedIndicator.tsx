@@ -5,13 +5,17 @@
  */
 
 import type { JSX } from 'react';
+
 import { View, Text } from 'react-native';
+
 import { Feather } from '@expo/vector-icons';
 
 import { useTranslation } from '@volleykit/shared/i18n';
+
 import { COLORS } from '../constants';
-import type { CacheStatus } from '../types/cache';
 import { getCacheStatus, formatCacheAge } from '../types/cache';
+
+import type { CacheStatus } from '../types/cache';
 
 /**
  * Last updated indicator props.

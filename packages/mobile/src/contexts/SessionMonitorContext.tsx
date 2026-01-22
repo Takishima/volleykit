@@ -14,10 +14,13 @@ import {
   useEffect,
   type ReactNode,
 } from 'react';
+
 import { AppState, type AppStateStatus } from 'react-native';
+
 import { useStorage } from '@volleykit/shared/adapters';
-import { biometrics } from '../platform/biometrics';
+
 import { BIOMETRIC_ENABLED_KEY } from '../constants';
+import { biometrics } from '../platform/biometrics';
 
 export interface SessionMonitorState {
   /** Whether the session has expired */

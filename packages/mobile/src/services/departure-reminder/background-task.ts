@@ -6,14 +6,16 @@
  */
 
 import * as TaskManager from 'expo-task-manager';
-import { location } from '../../platform/location';
-import { departureReminderSettingsStore } from '../../stores/departureReminderSettings';
-import { departureRemindersStore } from '../../stores/departureReminders';
-import { storage } from '../../platform/storage';
-import type { Coordinates, DepartureReminder, VenueCluster } from '../../types/departureReminder';
+
+import { scheduleReminderNotification, cancelReminderNotification } from './notification-scheduler';
 import { calculateRoute, isOjpConfigured, RouteCalculationError } from './route-calculator';
 import { isNearVenue, shouldSendDepartureNotification, clusterNearbyVenues, type AssignmentWithVenue } from './venue-proximity';
-import { scheduleReminderNotification, cancelReminderNotification } from './notification-scheduler';
+import { location } from '../../platform/location';
+import { storage } from '../../platform/storage';
+import { departureRemindersStore } from '../../stores/departureReminders';
+import { departureReminderSettingsStore } from '../../stores/departureReminderSettings';
+
+import type { Coordinates, DepartureReminder, VenueCluster } from '../../types/departureReminder';
 
 /** Task name for the departure reminder background task */
 export const DEPARTURE_REMINDER_TASK_NAME = 'VOLLEYKIT_DEPARTURE_REMINDER_TASK';

@@ -6,9 +6,11 @@
  */
 
 import { View, Text, TouchableOpacity, Modal } from 'react-native';
+
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { useTranslation } from '@volleykit/shared/i18n';
+
 import { COLORS, BIOMETRIC_ICON_SIZE } from '../constants';
 
 interface BiometricPromptProps {

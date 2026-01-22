@@ -13,15 +13,18 @@ import {
   TouchableOpacity,
   Linking,
 } from 'react-native';
+
 import { Feather } from '@expo/vector-icons';
 
-import { useTranslation, type TranslationKey } from '@volleykit/shared/i18n';
-import { useAssignmentDetails } from '@volleykit/shared/hooks';
 import type { Assignment } from '@volleykit/shared/api';
-import type { RootStackScreenProps } from '../navigation/types';
+import { useAssignmentDetails } from '@volleykit/shared/hooks';
+import { useTranslation, type TranslationKey } from '@volleykit/shared/i18n';
+
+import { COLORS } from '../constants';
 import { useApiClient } from '../contexts';
 import { formatDateTime } from '../utils';
-import { COLORS } from '../constants';
+
+import type { RootStackScreenProps } from '../navigation/types';
 
 type Props = RootStackScreenProps<'AssignmentDetail'>;
 

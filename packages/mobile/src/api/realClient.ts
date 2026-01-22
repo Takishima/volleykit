@@ -8,14 +8,15 @@
  */
 
 import Constants from 'expo-constants';
-import type { SearchConfiguration } from '@volleykit/shared/api';
-import type { Assignment, CompensationRecord, GameExchange } from '@volleykit/shared/api';
+
+import type { SearchConfiguration, Assignment, CompensationRecord, GameExchange  } from '@volleykit/shared/api';
 import {
   buildFormData,
   ASSIGNMENT_PROPERTIES,
   EXCHANGE_PROPERTIES,
   COMPENSATION_PROPERTIES,
 } from '@volleykit/shared/api';
+
 import { SESSION_TOKEN_HEADER } from '../constants';
 
 /**

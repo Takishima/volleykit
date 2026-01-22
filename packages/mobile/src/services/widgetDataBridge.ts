@@ -6,6 +6,7 @@
  */
 
 import { getWidgetAdapter, createWidgetData } from '../platform/widgets';
+
 import type { WidgetAssignment, WidgetData } from '../types/widget';
 
 /**

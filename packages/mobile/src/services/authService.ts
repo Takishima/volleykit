@@ -8,9 +8,10 @@
  */
 
 import Constants from 'expo-constants';
+
 import { createAuthService, type LoginResult } from '@volleykit/shared/auth';
 import { useAuthStore } from '@volleykit/shared/stores';
-import { secureStorage } from '../platform/secureStorage';
+
 import {
   setSessionToken,
   setCsrfToken,
@@ -18,6 +19,7 @@ import {
   getSessionToken,
 } from '../api';
 import { SESSION_TOKEN_HEADER } from '../constants';
+import { secureStorage } from '../platform/secureStorage';
 
 /**
  * API base URL for authentication requests.

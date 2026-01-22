@@ -5,9 +5,9 @@
  * to maintain privacy (per FR-026a: no location history retained).
  */
 
-import { departureRemindersStore } from '../../stores/departureReminders';
-import { cancelReminderNotification, cancelAllDepartureNotifications } from './notification-scheduler';
 import { stopBackgroundTask } from './background-task';
+import { cancelReminderNotification, cancelAllDepartureNotifications } from './notification-scheduler';
+import { departureRemindersStore } from '../../stores/departureReminders';
 
 /**
  * Cleanup options.

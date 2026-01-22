@@ -11,8 +11,7 @@
  * (AssignmentsApiClient, ExchangesApiClient, CompensationsApiClient).
  */
 
-import type { SearchConfiguration } from '@volleykit/shared/api';
-import type { Assignment, CompensationRecord, GameExchange } from '@volleykit/shared/api';
+import type { SearchConfiguration, Assignment, CompensationRecord, GameExchange  } from '@volleykit/shared/api';
 
 /** Network delay for realistic behavior */
 const MOCK_NETWORK_DELAY_MS = 100;

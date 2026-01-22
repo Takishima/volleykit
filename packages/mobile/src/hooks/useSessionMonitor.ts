@@ -6,7 +6,9 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
+
 import { AppState, type AppStateStatus } from 'react-native';
+
 import { useBiometricAuth } from './useBiometricAuth';
 
 export interface SessionMonitorState {

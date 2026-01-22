@@ -5,6 +5,7 @@
  */
 
 import { createContext, useContext, type ReactNode, type JSX } from 'react';
+
 import { useNetworkStatus, type NetworkStatus } from '../hooks/useNetworkStatus';
 
 /**

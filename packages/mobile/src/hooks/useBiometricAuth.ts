@@ -5,9 +5,11 @@
  */
 
 import { useState, useCallback } from 'react';
+
 import { useStorage } from '@volleykit/shared/adapters';
-import { biometrics, getBiometricTypeName } from '../platform/biometrics';
+
 import { BIOMETRIC_ENABLED_KEY, MAX_BIOMETRIC_ATTEMPTS } from '../constants';
+import { biometrics, getBiometricTypeName } from '../platform/biometrics';
 
 export interface BiometricAuthState {
   /** Whether biometric is available and enabled */

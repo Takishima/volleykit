@@ -4,8 +4,9 @@
  * Provides local notification services using expo-notifications for Smart Departure Reminder.
  */
 
-import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+
+import * as Notifications from 'expo-notifications';
 
 /**
  * Notification content for scheduling.

@@ -5,6 +5,7 @@
  */
 
 import { haversineDistance, isWithinDistance, VENUE_PROXIMITY_THRESHOLD_METERS } from '@volleykit/shared/utils/geo';
+
 import type { Coordinates, VenueCluster } from '../../types/departureReminder';
 
 /**

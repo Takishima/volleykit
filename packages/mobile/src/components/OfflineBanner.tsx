@@ -6,12 +6,15 @@
 
 import type { JSX } from 'react';
 import { useEffect, useRef } from 'react';
+
 import { View, Text, Animated } from 'react-native';
+
 import { Feather } from '@expo/vector-icons';
 
 import { useTranslation } from '@volleykit/shared/i18n';
-import { useNetwork } from '../providers/NetworkProvider';
+
 import { COLORS } from '../constants';
+import { useNetwork } from '../providers/NetworkProvider';
 
 /** Banner height in pixels for slide animation */
 const BANNER_HEIGHT_PX = 50;

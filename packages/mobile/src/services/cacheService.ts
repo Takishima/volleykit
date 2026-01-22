@@ -5,13 +5,15 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import { DEFAULT_CACHE_CONFIG, getCacheStatus } from '../types/cache';
+
 import type {
   CachedData,
   CacheMetadata,
   CacheKey,
   CacheConfig,
 } from '../types/cache';
-import { DEFAULT_CACHE_CONFIG, getCacheStatus } from '../types/cache';
 
 /**
  * Cache service interface.

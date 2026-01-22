@@ -5,25 +5,27 @@
  */
 
 import { useCallback } from 'react';
+
 import { NavigationContainer, type LinkingOptions } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { useAuth } from '@volleykit/shared/hooks';
 import { useTranslation } from '@volleykit/shared/i18n';
 
-import { login } from '../services/authService';
-import { LoginScreen } from '../screens/LoginScreen';
-import { LoadingScreen } from '../screens/LoadingScreen';
+import { TabNavigator } from './TabNavigator';
+import { BiometricPrompt } from '../components/BiometricPrompt';
+import { OfflineBanner } from '../components/OfflineBanner';
+import { MAX_BIOMETRIC_ATTEMPTS } from '../constants';
+import { useSessionMonitorContext } from '../contexts';
+import { useBiometricAuth } from '../hooks/useBiometricAuth';
 import { AssignmentDetailScreen } from '../screens/AssignmentDetailScreen';
 import { BiometricSettingsScreen } from '../screens/BiometricSettingsScreen';
 import { CalendarSettingsScreen } from '../screens/CalendarSettingsScreen';
 import { DepartureReminderSettingsScreen } from '../screens/DepartureReminderSettingsScreen';
-import { TabNavigator } from './TabNavigator';
-import { BiometricPrompt } from '../components/BiometricPrompt';
-import { OfflineBanner } from '../components/OfflineBanner';
-import { useSessionMonitorContext } from '../contexts';
-import { useBiometricAuth } from '../hooks/useBiometricAuth';
-import { MAX_BIOMETRIC_ATTEMPTS } from '../constants';
+import { LoadingScreen } from '../screens/LoadingScreen';
+import { LoginScreen } from '../screens/LoginScreen';
+import { login } from '../services/authService';
+
 import type { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();

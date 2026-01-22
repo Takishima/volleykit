@@ -5,15 +5,17 @@
  */
 
 import type { Assignment } from '@volleykit/shared/api';
+
 import { calendar } from '../platform/calendar';
 import { calendarMappingsStore } from '../stores/calendarMappings';
-import type { CalendarEventMapping, CalendarEventData } from '../types/calendar';
 import {
   generateAssignmentDeepLink,
   formatCalendarNotes,
   calculateMatchEndTime,
   getDefaultReminders,
 } from '../utils/calendar';
+
+import type { CalendarEventMapping, CalendarEventData } from '../types/calendar';
 
 /** Storage adapter interface */
 interface StorageAdapter {

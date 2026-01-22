@@ -5,10 +5,13 @@
  */
 
 import type { JSX } from 'react';
+
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+
 import { Feather } from '@expo/vector-icons';
 
 import { useTranslation } from '@volleykit/shared/i18n';
+
 import { COLORS } from '../constants';
 
 /**

@@ -3,15 +3,20 @@
  */
 
 import { useMemo, useState } from 'react';
+
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 
-import { useSettingsStore } from '@volleykit/shared/stores';
-import { getAppVersion } from '../utils/version';
 import { useTranslation, LANGUAGE_NAMES } from '@volleykit/shared/i18n';
-import type { MainTabScreenProps } from '../navigation/types';
-import { COLORS, SETTINGS_ICON_SIZE, SMALL_ICON_SIZE } from '../constants';
+import { useSettingsStore } from '@volleykit/shared/stores';
+
 import { LanguagePicker } from '../components/LanguagePicker';
+import { COLORS, SETTINGS_ICON_SIZE, SMALL_ICON_SIZE } from '../constants';
+import { getAppVersion } from '../utils/version';
+
+import type { MainTabScreenProps } from '../navigation/types';
+
 
 type Props = MainTabScreenProps<'Settings'>;
 

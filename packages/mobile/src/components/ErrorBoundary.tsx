@@ -5,6 +5,7 @@
  */
 
 import { Component, type ReactNode, type ErrorInfo } from 'react';
+
 import { ErrorScreen } from './ErrorScreen';
 
 /**
