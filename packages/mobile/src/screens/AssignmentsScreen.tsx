@@ -19,7 +19,6 @@ import type { Assignment } from '@volleykit/shared/api';
 import { useAssignments } from '@volleykit/shared/hooks';
 import { useTranslation, type TranslationKey } from '@volleykit/shared/i18n';
 
-
 import { useApiClient } from '../contexts';
 import { formatDate } from '../utils';
 

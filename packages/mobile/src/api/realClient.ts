@@ -9,7 +9,7 @@
 
 import Constants from 'expo-constants';
 
-import type { SearchConfiguration, Assignment, CompensationRecord, GameExchange  } from '@volleykit/shared/api';
+import type { SearchConfiguration, Assignment, CompensationRecord, GameExchange } from '@volleykit/shared/api';
 import {
   buildFormData,
   ASSIGNMENT_PROPERTIES,

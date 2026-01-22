@@ -16,7 +16,6 @@ import { biometrics, getBiometricTypeName } from '../platform/biometrics';
 
 import type { RootStackScreenProps } from '../navigation/types';
 
-
 type Props = RootStackScreenProps<'BiometricSettings'>;
 
 export function BiometricSettingsScreen({ navigation: _navigation }: Props) {

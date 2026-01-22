@@ -17,7 +17,6 @@ import { getAppVersion } from '../utils/version';
 
 import type { MainTabScreenProps } from '../navigation/types';
 
-
 type Props = MainTabScreenProps<'Settings'>;
 
 interface SettingRowProps {

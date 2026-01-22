@@ -19,7 +19,6 @@ import type { GameExchange } from '@volleykit/shared/api';
 import { useExchanges } from '@volleykit/shared/hooks';
 import { useTranslation, type TranslationKey } from '@volleykit/shared/i18n';
 
-
 import { useApiClient } from '../contexts';
 import { formatDate } from '../utils';
 
