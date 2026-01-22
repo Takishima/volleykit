@@ -35,10 +35,4 @@ export const server = setupServer(...handlers)
 
 // Re-export utilities for convenient test imports
 export { http, HttpResponse } from 'msw'
-export {
-  createHandlers,
-  createErrorHandler,
-  createHtmlRedirectHandler,
-  createInvalidJsonHandler,
-  defaultResponses,
-} from './handlers'
+export { createHandlers, defaultResponses } from './handlers'
