@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+
 import {
   View,
   Text,
@@ -15,24 +16,26 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+
 import { Feather } from '@expo/vector-icons';
 
-import { useTranslation } from '@volleykit/shared/i18n';
 import { useStorage } from '@volleykit/shared/adapters';
+import { useTranslation } from '@volleykit/shared/i18n';
 
+import { COLORS, SETTINGS_ICON_SIZE } from '../constants';
 import { location } from '../platform/location';
 import { notifications } from '../platform/notifications';
 import { departureReminderSettingsStore } from '../stores/departureReminderSettings';
-import { COLORS, SETTINGS_ICON_SIZE } from '../constants';
-import type {
-  DepartureReminderSettings,
-  BufferTimeOption,
-} from '../types/departureReminder';
 import {
   DEFAULT_DEPARTURE_REMINDER_SETTINGS,
   BUFFER_TIME_OPTIONS,
 } from '../types/departureReminder';
+
 import type { RootStackScreenProps } from '../navigation/types';
+import type {
+  DepartureReminderSettings,
+  BufferTimeOption,
+} from '../types/departureReminder';
 
 type Props = RootStackScreenProps<'DepartureReminderSettings'>;
 

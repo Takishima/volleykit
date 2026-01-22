@@ -4,11 +4,12 @@
  * Manages user preferences for the Smart Departure Reminder feature.
  */
 
+import { DEFAULT_DEPARTURE_REMINDER_SETTINGS } from '../types/departureReminder';
+
 import type {
   DepartureReminderSettings,
   BufferTimeOption,
 } from '../types/departureReminder';
-import { DEFAULT_DEPARTURE_REMINDER_SETTINGS } from '../types/departureReminder';
 
 /** Storage key for departure reminder settings */
 const SETTINGS_KEY = 'departure_reminder_settings';

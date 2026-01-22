@@ -5,13 +5,16 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+
 import { View, Text, ScrollView, Switch, Alert } from 'react-native';
 
-import { useTranslation } from '@volleykit/shared/i18n';
 import { useStorage } from '@volleykit/shared/adapters';
-import { biometrics, getBiometricTypeName } from '../platform/biometrics';
-import type { RootStackScreenProps } from '../navigation/types';
+import { useTranslation } from '@volleykit/shared/i18n';
+
 import { COLORS, BIOMETRIC_ENABLED_KEY } from '../constants';
+import { biometrics, getBiometricTypeName } from '../platform/biometrics';
+
+import type { RootStackScreenProps } from '../navigation/types';
 
 type Props = RootStackScreenProps<'BiometricSettings'>;
 

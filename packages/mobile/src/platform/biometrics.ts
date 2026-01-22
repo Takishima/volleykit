@@ -6,6 +6,7 @@
  */
 
 import * as LocalAuthentication from 'expo-local-authentication';
+
 import type { BiometricAdapter } from '@volleykit/shared/types/platform';
 
 /**

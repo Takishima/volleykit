@@ -6,6 +6,7 @@
  */
 
 import * as SecureStore from 'expo-secure-store';
+
 import type { SecureStorageAdapter } from '@volleykit/shared/types/platform';
 
 /** Key for storing username in secure storage */

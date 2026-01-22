@@ -5,7 +5,9 @@
  */
 
 import { format, differenceInMinutes } from 'date-fns';
+
 import { notifications } from '../../platform/notifications';
+
 import type { DepartureReminder, TripLeg, VenueCluster } from '../../types/departureReminder';
 
 /**

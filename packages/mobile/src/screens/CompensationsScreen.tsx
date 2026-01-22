@@ -5,6 +5,7 @@
  */
 
 import { useCallback } from 'react';
+
 import {
   View,
   Text,
@@ -14,11 +15,13 @@ import {
   TouchableOpacity,
 } from 'react-native';
 
-import { useTranslation, type TranslationKey } from '@volleykit/shared/i18n';
-import { useCompensations } from '@volleykit/shared/hooks';
 import type { CompensationRecord } from '@volleykit/shared/api';
-import type { MainTabScreenProps } from '../navigation/types';
+import { useCompensations } from '@volleykit/shared/hooks';
+import { useTranslation, type TranslationKey } from '@volleykit/shared/i18n';
+
 import { useApiClient } from '../contexts';
+
+import type { MainTabScreenProps } from '../navigation/types';
 
 type Props = MainTabScreenProps<'Compensations'>;
 

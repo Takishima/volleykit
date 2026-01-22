@@ -7,6 +7,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+
 import {
   View,
   Text,
@@ -16,20 +17,22 @@ import {
   ActivityIndicator,
   Linking,
 } from 'react-native';
+
 import { Feather } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { useTranslation } from '@volleykit/shared/i18n';
 import { useStorage } from '@volleykit/shared/adapters';
-import { useAuthStore } from '@volleykit/shared/stores';
 import { queryKeys, type Assignment } from '@volleykit/shared/api';
+import { useTranslation } from '@volleykit/shared/i18n';
+import { useAuthStore } from '@volleykit/shared/stores';
 
-import { calendar } from '../platform/calendar';
-import { useCalendarSync } from '../hooks';
 import { CalendarPicker } from '../components/CalendarPicker';
 import { COLORS, SETTINGS_ICON_SIZE, CALENDAR_SETTINGS_KEY } from '../constants';
-import type { CalendarInfo, CalendarSyncMode, CalendarSettings } from '../types/calendar';
+import { useCalendarSync } from '../hooks';
+import { calendar } from '../platform/calendar';
+
 import type { RootStackScreenProps } from '../navigation/types';
+import type { CalendarInfo, CalendarSyncMode, CalendarSettings } from '../types/calendar';
 
 type Props = RootStackScreenProps<'CalendarSettings'>;
 

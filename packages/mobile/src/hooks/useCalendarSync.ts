@@ -5,16 +5,18 @@
  */
 
 import { useState, useCallback } from 'react';
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { useStorage } from '@volleykit/shared/adapters';
 import { queryKeys } from '@volleykit/shared/api';
 import type { Assignment } from '@volleykit/shared/api';
 
+import { CALENDAR_SETTINGS_KEY } from '../constants';
+import { calendar } from '../platform/calendar';
 import { calendarSyncService } from '../services/calendarSync';
 import { calendarMappingsStore } from '../stores/calendarMappings';
-import { calendar } from '../platform/calendar';
-import { CALENDAR_SETTINGS_KEY } from '../constants';
+
 import type { CalendarEventMapping, CalendarSettings } from '../types/calendar';
 
 export interface UseCalendarSyncResult {

@@ -4,8 +4,10 @@
  * Provides calendar access functions using expo-calendar for native calendar integration.
  */
 
-import * as Calendar from 'expo-calendar';
 import { Platform } from 'react-native';
+
+import * as Calendar from 'expo-calendar';
+
 import type { CalendarInfo, CalendarEventData } from '../types/calendar';
 
 /**

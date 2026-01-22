@@ -5,13 +5,15 @@
  */
 
 import { Platform } from 'react-native';
-import type { WidgetData, WidgetAssignment } from '../types/widget';
+
 import {
   EMPTY_WIDGET_DATA,
   MAX_WIDGET_ASSIGNMENTS,
   IOS_APP_GROUP,
   ANDROID_WIDGET_PREFS_KEY,
 } from '../types/widget';
+
+import type { WidgetData, WidgetAssignment } from '../types/widget';
 
 /**
  * Widget adapter interface.

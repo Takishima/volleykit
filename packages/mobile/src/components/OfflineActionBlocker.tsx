@@ -5,12 +5,16 @@
  */
 
 import type { JSX } from 'react';
+import { useState } from 'react';
+
 import { View, Text, Modal, TouchableOpacity, Pressable } from 'react-native';
+
 import { Feather } from '@expo/vector-icons';
 
 import { useTranslation } from '@volleykit/shared/i18n';
-import { useNetwork } from '../providers/NetworkProvider';
+
 import { COLORS } from '../constants';
+import { useNetwork } from '../providers/NetworkProvider';
 
 /**
  * Offline action blocker props.
@@ -118,9 +122,6 @@ export function useOfflineActionGuard(): {
     dismissBlocker,
   };
 }
-
-// Import useState for the hook
-import { useState } from 'react';
 
 /**
  * Higher-order component for actions requiring network.

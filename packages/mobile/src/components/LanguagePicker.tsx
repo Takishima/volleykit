@@ -5,9 +5,11 @@
  */
 
 import { View, Text, TouchableOpacity, FlatList, Modal } from 'react-native';
+
 import { Feather } from '@expo/vector-icons';
 
 import { useTranslation, SUPPORTED_LANGUAGES, LANGUAGE_NAMES, type Language } from '@volleykit/shared/i18n';
+
 import { COLORS, SETTINGS_ICON_SIZE } from '../constants';
 
 interface LanguagePickerProps {

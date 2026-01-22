@@ -5,11 +5,14 @@
  */
 
 import { View, Text, TouchableOpacity, FlatList, Modal } from 'react-native';
+
 import { Feather } from '@expo/vector-icons';
 
 import { useTranslation } from '@volleykit/shared/i18n';
-import type { CalendarInfo } from '../types/calendar';
+
 import { COLORS } from '../constants';
+
+import type { CalendarInfo } from '../types/calendar';
 
 interface CalendarPickerProps {
   /** Whether the picker is visible */

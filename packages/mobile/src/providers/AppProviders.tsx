@@ -9,20 +9,22 @@
  */
 
 import { useMemo, useRef, useEffect } from 'react';
+import type { ReactNode } from 'react';
+
 import {
   QueryClient,
   QueryClientProvider,
   QueryCache,
   MutationCache,
 } from '@tanstack/react-query';
-import type { ReactNode } from 'react';
 
 import { StorageContext } from '@volleykit/shared/adapters';
 import { HttpStatus } from '@volleykit/shared/api';
-import { storage } from '../platform/storage';
-import { secureStorage } from '../platform/secureStorage';
+
 import { SessionMonitorProvider, useSessionMonitorContext, ApiClientProvider } from '../contexts';
 import { NetworkProvider } from './NetworkProvider';
+import { secureStorage } from '../platform/secureStorage';
+import { storage } from '../platform/storage';
 
 interface AppProvidersProps {
   children: ReactNode;
