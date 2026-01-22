@@ -215,7 +215,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RELEASE_TOKEN }}
           commit-message: 'chore(web): update npm dependencies'
           title: 'chore(web): update npm dependencies'
           body: |
