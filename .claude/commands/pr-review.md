@@ -73,7 +73,19 @@ bash -c 'REMOTE=$(git remote get-url origin); if [[ "$REMOTE" =~ github\.com[:/]
 
 If still no review after retry, inform the user and stop.
 
-### Step 6: Parse and Address Issues
+### Step 6: Check CI Status
+
+Check if CI is failing on the current commit (before making any changes). Note any failures to address after fixing review issues.
+
+```bash
+bash -c 'SHA=$(git rev-parse HEAD); REMOTE=$(git remote get-url origin); if [[ "$REMOTE" =~ github\.com[:/]([^/]+)/([^/.]+) ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; elif [[ "$REMOTE" =~ /git/([^/]+)/([^/]+)$ ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; fi; curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$OWNER/$REPO/commits/$SHA/check-runs" | jq "{total_count, check_runs: [.check_runs[] | {name, status, conclusion, html_url}]}"'
+```
+
+If checks are still `in_progress`, wait 2 minutes and retry (max 5 retries).
+
+Record any failed checks (`conclusion: "failure"`) to address in Step 9.
+
+### Step 7: Parse and Address Review Issues
 
 From the review comment body, find the `### Issues Found` section.
 
@@ -84,11 +96,26 @@ For each issue:
 2. Understand and implement the fix
 3. Move to next issue
 
-If "No issues found" or "LGTM", inform user and stop.
+If "No issues found" or "LGTM", skip to Step 9 (or Step 10 if no CI failures).
 
-### Step 7: Run Local CI Checks
+### Step 8: Commit Review Fixes (don't push yet)
 
-Before committing, run local validation to catch issues early:
+After addressing ALL review issues:
+
+```bash
+git add -A && git commit -m "fix(review): address PR review comments"
+```
+
+Do NOT push yet - wait until CI fixes are also committed.
+
+The `fix(review):` prefix prevents infinite review loops.
+
+### Step 9: Fix CI Failures (if any)
+
+If CI was failing in Step 6, fix those issues now:
+
+1. Review the failed check details via `html_url`
+2. Reproduce the failure locally by running the relevant commands:
 
 ```bash
 cd web-app && npm run lint
@@ -102,71 +129,55 @@ cd web-app && npm test
 cd web-app && npm run build
 ```
 
-If any check fails:
-1. Fix the issue in the codebase
-2. Re-run the failed check until it passes
-3. Continue to Step 8
-
-### Step 8: Commit and Push Fixes
-
-After ALL local CI checks pass:
+3. Fix the identified issues in the codebase
+4. Re-run the failed local commands to verify the fix
+5. Commit the CI fixes:
 
 ```bash
-git add -A && git commit -m "fix(review): address PR review comments"
+git add -A && git commit -m "fix(ci): address CI failure in <check_name>"
 ```
+
+The `fix(ci):` prefix (like `fix(review):`) prevents infinite review loops.
+
+If no CI failures were found in Step 6, skip this step.
+
+### Step 10: Push All Changes
+
+After all review and CI fixes are committed:
 
 ```bash
 git push
 ```
 
-The `fix(review):` prefix prevents infinite review loops.
+### Step 11: Verify Remote CI Passes
 
-### Step 9: Monitor Remote CI Status
-
-Wait for remote CI to start, then check status:
+Wait for remote CI to run on pushed changes:
 
 ```bash
 sleep 30
 ```
 
-Fetch check runs for the PR head commit:
-
 ```bash
 bash -c 'SHA=$(git rev-parse HEAD); REMOTE=$(git remote get-url origin); if [[ "$REMOTE" =~ github\.com[:/]([^/]+)/([^/.]+) ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; elif [[ "$REMOTE" =~ /git/([^/]+)/([^/]+)$ ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; fi; curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$OWNER/$REPO/commits/$SHA/check-runs" | jq "{total_count, check_runs: [.check_runs[] | {name, status, conclusion, html_url}]}"'
 ```
 
-If checks are still `in_progress`, wait 2 minutes and retry. Track retry count (max 5 retries, ~10.5 minutes total wait):
-
-```bash
-sleep 120
-```
-
-```bash
-bash -c 'SHA=$(git rev-parse HEAD); REMOTE=$(git remote get-url origin); if [[ "$REMOTE" =~ github\.com[:/]([^/]+)/([^/.]+) ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; elif [[ "$REMOTE" =~ /git/([^/]+)/([^/]+)$ ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; fi; curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$OWNER/$REPO/commits/$SHA/check-runs" | jq "{total_count, check_runs: [.check_runs[] | {name, status, conclusion, html_url}]}"'
-```
-
-### Step 10: Handle Remote CI Failures
-
-If any check has `conclusion: "failure"`:
-1. Review the failed check details via `html_url`
-2. Identify and fix the issue in the codebase
-3. Run local CI checks (Step 7)
-4. Commit with message `fix(ci): address CI failure in <check_name>`
-5. Push and return to Step 9 to re-check remote CI
-
-The `fix(ci):` prefix (like `fix(review):`) prevents infinite review loops.
+If checks are still `in_progress`, wait 2 minutes and retry (max 5 retries, ~10.5 minutes total).
 
 If all checks pass (`conclusion: "success"`), inform user and complete.
+
+If any check fails, return to Step 9 to fix and push again.
 
 ## Output
 
 - `Created PR #N: <url>` or `Updated PR #N: <url>`
 - `Waiting 1m30s for review...`
 - `Retrying in 1 minute...` (if no review found)
-- `Addressing N issues...` or `No issues found`
-- `Running local CI checks...`
-- `Local CI passed` or `Local CI failed: <check> - fixing...`
-- `Pushed fixes`
-- `Monitoring remote CI status...`
-- `Remote CI in progress, waiting 2 minutes...` (up to 5 retries)
-- `CI passed` or `Remote CI failed: <check_name> - fixing...`
+- `Checking CI status...`
+- `CI failing: <check_name>` or `CI passing`
+- `Addressing N review issues...` or `No issues found`
+- `Committed review fixes`
+- `Fixing CI failures...` or `No CI failures to fix`
+- `Committed CI fixes`
+- `Pushed all changes`
+- `Verifying remote CI...`
+- `CI passed` or `CI still failing - fixing...`
