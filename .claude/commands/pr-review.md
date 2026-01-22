@@ -111,10 +111,10 @@ sleep 30
 Fetch check runs for the PR head commit:
 
 ```bash
-bash -c 'BRANCH=$(git rev-parse --abbrev-ref HEAD); SHA=$(git rev-parse HEAD); REMOTE=$(git remote get-url origin); if [[ "$REMOTE" =~ github\.com[:/]([^/]+)/([^/.]+) ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; elif [[ "$REMOTE" =~ /git/([^/]+)/([^/]+)$ ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; fi; curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$OWNER/$REPO/commits/$SHA/check-runs" | jq "{total_count, check_runs: [.check_runs[] | {name, status, conclusion, html_url}]}"'
+bash -c 'SHA=$(git rev-parse HEAD); REMOTE=$(git remote get-url origin); if [[ "$REMOTE" =~ github\.com[:/]([^/]+)/([^/.]+) ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; elif [[ "$REMOTE" =~ /git/([^/]+)/([^/]+)$ ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; fi; curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$OWNER/$REPO/commits/$SHA/check-runs" | jq "{total_count, check_runs: [.check_runs[] | {name, status, conclusion, html_url}]}"'
 ```
 
-If checks are still `in_progress`, wait 2 minutes and retry (up to 5 times):
+If checks are still `in_progress`, wait 2 minutes and retry. Track retry count (max 5 retries, ~10.5 minutes total wait):
 
 ```bash
 sleep 120
@@ -131,6 +131,8 @@ If any check has `conclusion: "failure"`:
 2. Identify and fix the issue in the codebase
 3. Commit with message `fix(ci): address CI failure in <check_name>`
 4. Push and return to Step 8 to re-check CI
+
+The `fix(ci):` prefix (like `fix(review):`) prevents infinite review loops.
 
 If all checks pass (`conclusion: "success"`), inform user and complete.
 
