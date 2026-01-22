@@ -1,0 +1,247 @@
+name: Update Dependencies (Web)
+
+on:
+  # Run weekly on Mondays at 6:00 UTC
+  schedule:
+    - cron: '0 6 * * 1'
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      update_type:
+        description: 'Update type'
+        required: true
+        default: 'minor'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      dry_run:
+        description: 'Dry run (check updates and validate without creating PR)'
+        required: false
+        default: false
+        type: boolean
+
+# =============================================================================
+# Web App Dependency Update Workflow
+# =============================================================================
+#
+# This workflow automatically updates npm dependencies for the web app,
+# runs full validation, and creates a PR if successful.
+#
+# Flow:
+#   1. Check for updates using npm-check-updates
+#   2. If updates found, install and run validation
+#   3. Generate API types (in case openapi-typescript updated)
+#   4. Run lint, knip, test, and build
+#   5. Create PR with changes if all validations pass
+#
+# =============================================================================
+
+concurrency:
+  group: update-deps-web
+  cancel-in-progress: true
+
+jobs:
+  update:
+    name: Update Dependencies
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      has_updates: ${{ steps.check-updates.outputs.has_updates }}
+      updates_summary: ${{ steps.check-updates.outputs.updates_summary }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install npm-check-updates
+        run: npm install -g npm-check-updates@17
+
+      - name: Determine update target
+        id: update-target
+        run: |
+          UPDATE_TYPE="${{ github.event.inputs.update_type || 'minor' }}"
+          case "$UPDATE_TYPE" in
+            patch) NCU_TARGET="patch" ;;
+            minor) NCU_TARGET="minor" ;;
+            major) NCU_TARGET="latest" ;;
+          esac
+          echo "ncu_target=$NCU_TARGET" >> "$GITHUB_OUTPUT"
+          echo "Update target: $NCU_TARGET"
+
+      - name: Check for updates
+        id: check-updates
+        run: |
+          NCU_TARGET="${{ steps.update-target.outputs.ncu_target }}"
+          echo "Checking for updates with target: $NCU_TARGET"
+
+          # Check web-app updates
+          cd web-app
+          WEB_UPDATES=$(ncu --target "${NCU_TARGET}" --format lines 2>/dev/null || true)
+          cd ..
+
+          # Check packages/shared updates
+          cd packages/shared
+          SHARED_UPDATES=$(ncu --target "$NCU_TARGET" --format lines 2>/dev/null || true)
+          cd ..
+
+          # Combine updates
+          ALL_UPDATES=""
+          if [ -n "$WEB_UPDATES" ]; then
+            ALL_UPDATES="**web-app:**\n$WEB_UPDATES"
+          fi
+          if [ -n "$SHARED_UPDATES" ]; then
+            if [ -n "$ALL_UPDATES" ]; then
+              ALL_UPDATES="$ALL_UPDATES\n\n**packages/shared:**\n$SHARED_UPDATES"
+            else
+              ALL_UPDATES="**packages/shared:**\n$SHARED_UPDATES"
+            fi
+          fi
+
+          if [ -n "$WEB_UPDATES" ] || [ -n "$SHARED_UPDATES" ]; then
+            echo "has_updates=true" >> "$GITHUB_OUTPUT"
+            # Escape for multiline output
+            {
+              echo "updates_summary<<EOF"
+              echo -e "$ALL_UPDATES"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+            echo "Updates found:"
+            echo -e "$ALL_UPDATES"
+          else
+            echo "has_updates=false" >> "$GITHUB_OUTPUT"
+            echo "No updates available"
+          fi
+
+      - name: Apply updates
+        if: steps.check-updates.outputs.has_updates == 'true'
+        run: |
+          NCU_TARGET="${{ steps.update-target.outputs.ncu_target }}"
+
+          # Update web-app dependencies
+          cd web-app
+          ncu --target "$NCU_TARGET" -u
+          cd ..
+
+          # Update packages/shared dependencies
+          cd packages/shared
+          ncu --target "$NCU_TARGET" -u
+          cd ..
+
+          # Install updated dependencies
+          npm install
+
+          # Regenerate package-lock.json
+          npm install --package-lock-only
+
+      - name: Upload updated files
+        if: steps.check-updates.outputs.has_updates == 'true'
+        uses: actions/upload-artifact@v5
+        with:
+          name: updated-packages
+          path: |
+            package-lock.json
+            web-app/package.json
+            packages/shared/package.json
+          retention-days: 1
+
+  validate:
+    name: Validate
+    needs: update
+    if: needs.update.outputs.has_updates == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web-app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Download updated packages
+        uses: actions/download-artifact@v7
+        with:
+          name: updated-packages
+          path: .
+
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
+        with:
+          working-directory: web-app
+
+      - name: Generate API types
+        run: npm run generate:api
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Dead code check
+        run: npm run knip
+
+      - name: Security audit
+        run: npm audit --audit-level=high --omit=dev
+        working-directory: .
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Bundle size check
+        run: npm run size
+
+  create-pr:
+    name: Create PR
+    needs: [update, validate]
+    # Note: For scheduled runs, github.event.inputs.dry_run is empty/null, so this evaluates to true (create PR)
+    if: needs.update.outputs.has_updates == 'true' && github.event.inputs.dry_run != 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Download updated packages
+        uses: actions/download-artifact@v7
+        with:
+          name: updated-packages
+          path: .
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.RELEASE_TOKEN }}
+          commit-message: 'chore(web): update npm dependencies'
+          title: 'chore(web): update npm dependencies'
+          body: |
+            ## Dependency Updates
+
+            This PR was automatically generated by the dependency update workflow.
+
+            ### Updated Packages
+
+            ${{ needs.update.outputs.updates_summary }}
+
+            ### Validation
+
+            All validations passed:
+            - Lint
+            - Dead code check (knip)
+            - Security audit
+            - Tests
+            - Build
+            - Bundle size check
+          branch: chore/update-web-deps
+          delete-branch: true
+          labels: |
+            dependencies
+            automated
