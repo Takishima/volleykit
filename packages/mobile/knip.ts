@@ -1,6 +1,5 @@
-import type { KnipConfig } from 'knip';
-
-const config: KnipConfig = {
+/** @type {import('knip').KnipConfig} */
+const config = {
   entry: ['App.tsx', 'src/**/*.{ts,tsx}'],
   project: ['src/**/*.{ts,tsx}', '*.{ts,tsx,js,cjs}'],
   ignore: ['src/types/**/*.d.ts', 'nativewind-env.d.ts'],
