@@ -7,9 +7,9 @@
     "tailwindcss",
     "@volleykit/shared",
     "@vite-pwa/assets-generator",
-    "eslint",
     "openapi-typescript",
-    "size-limit"
+    "size-limit",
+    "prettier"
   ],
   "ignoreBinaries": [
     "vite",
@@ -20,7 +20,8 @@
     "size-limit",
     "openapi-typescript",
     "knip",
-    "changeset"
+    "changeset",
+    "prettier"
   ],
   "ignoreExportsUsedInFile": true,
   "rules": {
