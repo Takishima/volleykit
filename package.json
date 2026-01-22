@@ -40,7 +40,9 @@
       "miniflare": {
         "zod": "^3.25.76"
       }
-    }
+    },
+    "jsdom": "^27.4.0",
+    "@xmldom/xmldom": "^0.8.11"
   },
   "engines": {
     "node": ">=22.0.0"
