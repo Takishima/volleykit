@@ -7,13 +7,13 @@
  *
  * Extracted from web-app/src/api/validation.ts for cross-platform use.
  */
-import { z } from 'zod';
+import { z } from 'zod'
 
 // Common field schemas
-const uuidSchema = z.string().uuid();
-const dateTimeSchema = z.string().datetime({ offset: true }).optional().nullable();
+const uuidSchema = z.string().uuid()
+const dateTimeSchema = z.string().datetime({ offset: true }).optional().nullable()
 
-const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
 // Date schema that accepts:
 // - ISO date format: "2024-01-15"
@@ -23,7 +23,7 @@ const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 export const dateSchema = z
   .union([z.literal(''), z.string().regex(ISO_DATE_PATTERN), z.string().datetime({ offset: true })])
   .optional()
-  .nullable();
+  .nullable()
 
 // Boolean-like schema for API fields that return "0"/"1" strings instead of booleans
 const booleanLikeSchema = z
@@ -31,19 +31,19 @@ const booleanLikeSchema = z
   .optional()
   .nullable()
   .transform((val) => {
-    if (val === '1' || val === true) return true;
-    if (val === '0' || val === false) return false;
-    return null;
-  });
+    if (val === '1' || val === true) return true
+    if (val === '0' || val === false) return false
+    return null
+  })
 
 // Referee position - accept any string from API
-export const refereePositionSchema = z.string();
+export const refereePositionSchema = z.string()
 
 // Convocation status enum
-export const convocationStatusSchema = z.enum(['active', 'cancelled', 'archived']);
+export const convocationStatusSchema = z.enum(['active', 'cancelled', 'archived'])
 
 // Exchange status enum
-export const exchangeStatusSchema = z.enum(['open', 'applied', 'closed']);
+export const exchangeStatusSchema = z.enum(['open', 'applied', 'closed'])
 
 // Permissions schema
 const permissionsSchema = z
@@ -53,7 +53,7 @@ const permissionsSchema = z
     canView: z.boolean().optional(),
   })
   .passthrough()
-  .optional();
+  .optional()
 
 // Team schema
 const teamSchema = z
@@ -62,7 +62,7 @@ const teamSchema = z
     name: z.string().optional(),
     shortName: z.string().optional().nullable(),
   })
-  .passthrough();
+  .passthrough()
 
 // Hall schema
 const hallSchema = z
@@ -87,7 +87,7 @@ const hallSchema = z
       .passthrough()
       .optional(),
   })
-  .passthrough();
+  .passthrough()
 
 // Game schema (nested in referee game)
 const gameSchema = z
@@ -99,7 +99,7 @@ const gameSchema = z
     teamAway: teamSchema.optional(),
     hall: hallSchema.optional(),
   })
-  .passthrough();
+  .passthrough()
 
 // Person summary schema
 const personSummarySchema = z
@@ -110,7 +110,7 @@ const personSummarySchema = z
     shortName: z.string().optional().nullable(),
     displayName: z.string().optional(),
   })
-  .passthrough();
+  .passthrough()
 
 // Referee convocation reference schema
 const refereeConvocationRefSchema = z
@@ -128,7 +128,7 @@ const refereeConvocationRefSchema = z
       .optional(),
   })
   .passthrough()
-  .nullable();
+  .nullable()
 
 // Referee game schema
 const refereeGameSchema = z
@@ -136,7 +136,7 @@ const refereeGameSchema = z
     __identity: uuidSchema.optional(),
     game: gameSchema.optional(),
   })
-  .passthrough();
+  .passthrough()
 
 // Referee game for exchange (includes more details)
 const refereeGameForExchangeSchema = z
@@ -152,7 +152,7 @@ const refereeGameForExchangeSchema = z
     activeRefereeConvocationStandbyHeadReferee: refereeConvocationRefSchema.optional(),
     activeRefereeConvocationStandbyLinesman: refereeConvocationRefSchema.optional(),
   })
-  .passthrough();
+  .passthrough()
 
 // Assignment schema
 export const assignmentSchema = z
@@ -169,7 +169,7 @@ export const assignmentSchema = z
     linkedDoubleConvocationGameNumberAndRefereePosition: z.string().optional().nullable(),
     _permissions: permissionsSchema,
   })
-  .passthrough();
+  .passthrough()
 
 // Convocation compensation schema
 const convocationCompensationSchema = z
@@ -190,7 +190,7 @@ const convocationCompensationSchema = z
     costFormatted: z.string().optional(),
     distanceFormatted: z.string().optional().nullable(),
   })
-  .passthrough();
+  .passthrough()
 
 // Compensation record schema
 export const compensationRecordSchema = z
@@ -203,7 +203,7 @@ export const compensationRecordSchema = z
     refereePosition: refereePositionSchema,
     _permissions: permissionsSchema,
   })
-  .passthrough();
+  .passthrough()
 
 // Game exchange schema
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Explicit any needed to avoid TS7056 (type serialization limit)
@@ -220,7 +220,7 @@ export const gameExchangeSchema: z.ZodType<any> = z
     requiredRefereeLevel: z.string().optional().nullable(),
     _permissions: permissionsSchema,
   })
-  .passthrough();
+  .passthrough()
 
 // Person search result schema
 export const personSearchResultSchema = z
@@ -234,51 +234,51 @@ export const personSearchResultSchema = z
     gender: z.enum(['m', 'f']).optional().nullable(),
     _permissions: permissionsSchema,
   })
-  .passthrough();
+  .passthrough()
 
 // Response schemas
 export const assignmentsResponseSchema = z.object({
   items: z.array(assignmentSchema),
   totalItemsCount: z.number(),
-});
+})
 
 export const compensationsResponseSchema = z.object({
   items: z.array(compensationRecordSchema),
   totalItemsCount: z.number(),
-});
+})
 
 export const exchangesResponseSchema = z.object({
   items: z.array(gameExchangeSchema),
   totalItemsCount: z.number(),
-});
+})
 
 export const personSearchResponseSchema = z.object({
   items: z.array(personSearchResultSchema).optional(),
   totalItemsCount: z.number().optional(),
-});
+})
 
 // Type exports inferred from Zod schemas
-export type Assignment = z.infer<typeof assignmentSchema>;
-export type CompensationRecord = z.infer<typeof compensationRecordSchema>;
-export type GameExchange = z.infer<typeof gameExchangeSchema>;
-export type ValidatedPersonSearchResult = z.infer<typeof personSearchResultSchema>;
-export type AssignmentsResponse = z.infer<typeof assignmentsResponseSchema>;
-export type CompensationsResponse = z.infer<typeof compensationsResponseSchema>;
-export type ExchangesResponse = z.infer<typeof exchangesResponseSchema>;
+export type Assignment = z.infer<typeof assignmentSchema>
+export type CompensationRecord = z.infer<typeof compensationRecordSchema>
+export type GameExchange = z.infer<typeof gameExchangeSchema>
+export type ValidatedPersonSearchResult = z.infer<typeof personSearchResultSchema>
+export type AssignmentsResponse = z.infer<typeof assignmentsResponseSchema>
+export type CompensationsResponse = z.infer<typeof compensationsResponseSchema>
+export type ExchangesResponse = z.infer<typeof exchangesResponseSchema>
 
 // Association settings type (simplified for mobile)
 export interface AssociationSettings {
-  __identity?: string;
-  hoursAfterGameStartForRefereeToEditGameList?: number;
-  associationName?: string;
+  __identity?: string
+  hoursAfterGameStartForRefereeToEditGameList?: number
+  associationName?: string
 }
 
 // Season type (simplified for mobile)
 export interface Season {
-  __identity?: string;
-  name?: string;
-  startDate?: string;
-  endDate?: string;
+  __identity?: string
+  name?: string
+  startDate?: string
+  endDate?: string
 }
 
 /**
@@ -286,7 +286,11 @@ export interface Season {
  * This avoids type incompatibilities between versions.
  */
 interface ZodLikeSchema<T> {
-  safeParse(data: unknown): { success: true; data: T } | { success: false; error: { issues: Array<{ path: PropertyKey[]; message: string }> } };
+  safeParse(
+    data: unknown
+  ):
+    | { success: true; data: T }
+    | { success: false; error: { issues: Array<{ path: PropertyKey[]; message: string }> } }
 }
 
 /**
@@ -294,16 +298,16 @@ interface ZodLikeSchema<T> {
  * Returns the validated data or throws a descriptive error.
  */
 export function validateResponse<T>(data: unknown, schema: ZodLikeSchema<T>, context: string): T {
-  const result = schema.safeParse(data);
+  const result = schema.safeParse(data)
 
   if (!result.success) {
     const errorDetails = result.error.issues
       .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
-      .join('; ');
+      .join('; ')
 
-    console.error(`API validation error (${context}):`, result.error.issues);
-    throw new Error(`Invalid API response for ${context}: ${errorDetails}`);
+    console.error(`API validation error (${context}):`, result.error.issues)
+    throw new Error(`Invalid API response for ${context}: ${errorDetails}`)
   }
 
-  return result.data;
+  return result.data
 }

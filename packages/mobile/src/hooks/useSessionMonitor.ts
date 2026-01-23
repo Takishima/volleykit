@@ -5,79 +5,79 @@
  * and triggers biometric re-authentication when enabled.
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react'
 
-import { AppState, type AppStateStatus } from 'react-native';
+import { AppState, type AppStateStatus } from 'react-native'
 
-import { useBiometricAuth } from './useBiometricAuth';
+import { useBiometricAuth } from './useBiometricAuth'
 
 export interface SessionMonitorState {
   /** Whether the session has expired */
-  isSessionExpired: boolean;
+  isSessionExpired: boolean
   /** Whether we're showing the biometric prompt */
-  showBiometricPrompt: boolean;
+  showBiometricPrompt: boolean
 }
 
 export interface UseSessionMonitorResult extends SessionMonitorState {
   /** Mark session as expired (e.g., from 401 response) */
-  handleSessionExpired: () => void;
+  handleSessionExpired: () => void
   /** Called when biometric auth succeeds */
-  handleBiometricSuccess: () => void;
+  handleBiometricSuccess: () => void
   /** Called when user dismisses biometric prompt */
-  dismissBiometricPrompt: () => void;
+  dismissBiometricPrompt: () => void
 }
 
 export function useSessionMonitor(): UseSessionMonitorResult {
-  const { isEnabled: biometricEnabled, checkBiometricStatus } = useBiometricAuth();
+  const { isEnabled: biometricEnabled, checkBiometricStatus } = useBiometricAuth()
 
   const [state, setState] = useState<SessionMonitorState>({
     isSessionExpired: false,
     showBiometricPrompt: false,
-  });
+  })
 
   // Check biometric status when app becomes active
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
-        checkBiometricStatus();
+        checkBiometricStatus()
       }
-    });
+    })
 
     // Initial check
-    checkBiometricStatus();
+    checkBiometricStatus()
 
     return () => {
-      subscription.remove();
-    };
-  }, [checkBiometricStatus]);
+      subscription.remove()
+    }
+  }, [checkBiometricStatus])
 
   const handleSessionExpired = useCallback(() => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       isSessionExpired: true,
       showBiometricPrompt: biometricEnabled,
-    }));
-  }, [biometricEnabled]);
+    }))
+  }, [biometricEnabled])
 
   const handleBiometricSuccess = useCallback(() => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       isSessionExpired: false,
       showBiometricPrompt: false,
-    }));
-  }, []);
+    }))
+  }, [])
 
   const dismissBiometricPrompt = useCallback(() => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       showBiometricPrompt: false,
-    }));
-  }, []);
+    }))
+  }, [])
 
   return {
     ...state,
     handleSessionExpired,
     handleBiometricSuccess,
     dismissBiometricPrompt,
-  };
+  }
 }

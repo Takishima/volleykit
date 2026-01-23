@@ -1,5 +1,5 @@
 ---
-"volleykit-web": patch
+'volleykit-web': patch
 ---
 
 Fix compensation editing to respect API permissions

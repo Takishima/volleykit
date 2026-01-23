@@ -14,12 +14,12 @@ button "profilePicture [User Name] Arbitre: [Association]"
 
 The menu shows all roles/parties available to the logged-in user:
 
-| Role | Description |
-|------|-------------|
-| Arbitre: SV | Swiss Volley national referee |
-| Arbitre: SVRBA | Regional association referee (Bern-Aargau) |
-| Arbitre: SVRZ | Regional association referee (Zurich) |
-| Joueur de volleyball | Volleyball player role |
+| Role                 | Description                                |
+| -------------------- | ------------------------------------------ |
+| Arbitre: SV          | Swiss Volley national referee              |
+| Arbitre: SVRBA       | Regional association referee (Bern-Aargau) |
+| Arbitre: SVRZ        | Regional association referee (Zurich)      |
+| Joueur de volleyball | Volleyball player role                     |
 
 ## Technical Implementation
 
@@ -32,6 +32,7 @@ Opening the role selection menu does **NOT** trigger any API calls. The availabl
 When clicking a different role, the app makes a `PUT` request to switch the active party:
 
 **Endpoint:**
+
 ```
 PUT /api/sportmanager.security/api\party/switchRoleAndAttribute
 ```
@@ -39,6 +40,7 @@ PUT /api/sportmanager.security/api\party/switchRoleAndAttribute
 **Important:** The URL path requires the `/api/` prefix. This is different from other `/sportmanager.security/` endpoints (like authentication) which do NOT have the `/api/` prefix.
 
 **Request Headers:**
+
 ```
 Content-Type: text/plain;charset=UTF-8
 ```
@@ -46,16 +48,18 @@ Content-Type: text/plain;charset=UTF-8
 Note: The `Content-Type` is `text/plain`, NOT `application/x-www-form-urlencoded`, even though the body is URL-encoded. The real site also sends a `window-unique-id` header, but it appears to be optional.
 
 **Request Body (URL-encoded):**
+
 ```
 attributeValueAsArray[0]=<occupation-uuid>&__csrfToken=<csrf-token>
 ```
 
-| Parameter | Description |
-|-----------|-------------|
+| Parameter                  | Description                                                           |
+| -------------------------- | --------------------------------------------------------------------- |
 | `attributeValueAsArray[0]` | The `__identity` UUID of the AttributeValue (occupation) to switch to |
-| `__csrfToken` | CSRF token from the session |
+| `__csrfToken`              | CSRF token from the session                                           |
 
 **Response:**
+
 - `200 OK` - Successfully switched (empty response or JSON)
 - `500 Internal Server Error` - Switch failed (often due to wrong URL path or Content-Type)
 

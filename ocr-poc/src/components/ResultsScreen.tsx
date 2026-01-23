@@ -24,7 +24,9 @@ export function ResultsScreen() {
   // Create preview URL for the processed image
   const imageUrl = useMemo(() => {
     const image = croppedImage ?? capturedImage
-    if (!image) {return null}
+    if (!image) {
+      return null
+    }
     return URL.createObjectURL(image)
   }, [croppedImage, capturedImage])
 
@@ -38,7 +40,9 @@ export function ResultsScreen() {
   }, [imageUrl])
 
   const handleCopy = async () => {
-    if (!ocrResult?.fullText) {return}
+    if (!ocrResult?.fullText) {
+      return
+    }
 
     try {
       await navigator.clipboard.writeText(ocrResult.fullText)
@@ -124,13 +128,14 @@ export function ResultsScreen() {
         {ocrResult.lines.length > 0 && (
           <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
             <div className="px-4 py-2 bg-slate-50 border-b border-slate-200">
-              <h3 className="font-medium text-slate-700">
-                Lines ({ocrResult.lines.length})
-              </h3>
+              <h3 className="font-medium text-slate-700">Lines ({ocrResult.lines.length})</h3>
             </div>
             <div className="divide-y divide-slate-100">
               {ocrResult.lines.map((line, index) => (
-                <div key={`${index}-${line.text.slice(0, 20)}`} className="px-4 py-2 flex items-start gap-3">
+                <div
+                  key={`${index}-${line.text.slice(0, 20)}`}
+                  className="px-4 py-2 flex items-start gap-3"
+                >
                   <span className="text-xs text-slate-400 font-mono w-6 text-right flex-shrink-0 pt-0.5">
                     {index + 1}
                   </span>

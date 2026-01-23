@@ -143,21 +143,21 @@ searchConfiguration[propertyFilters][0][propertyName]=date
 
 ### RefereeBackupEntry
 
-| Field | Description |
-|-------|-------------|
-| `__identity` | Unique ID for the backup entry (date-based) |
-| `date` | ISO 8601 date for the backup assignment |
-| `weekday` | Short weekday name (e.g., "So" for Sunday) |
-| `calendarWeek` | Calendar week number (1-53) |
+| Field               | Description                                    |
+| ------------------- | ---------------------------------------------- |
+| `__identity`        | Unique ID for the backup entry (date-based)    |
+| `date`              | ISO 8601 date for the backup assignment        |
+| `weekday`           | Short weekday name (e.g., "So" for Sunday)     |
+| `calendarWeek`      | Calendar week number (1-53)                    |
 | `joinedNlaReferees` | Formatted string with NLA referee contact info |
 | `joinedNlbReferees` | Formatted string with NLB referee contact info |
-| `nlaReferees` | Array of detailed NLA referee assignments |
-| `nlbReferees` | Array of detailed NLB referee assignments |
+| `nlaReferees`       | Array of detailed NLA referee assignments      |
+| `nlbReferees`       | Array of detailed NLB referee assignments      |
 
 ### Custom Filters
 
-| Filter | Description |
-|--------|-------------|
+| Filter       | Description                                           |
+| ------------ | ----------------------------------------------------- |
 | `myReferees` | Only show referees managed by the current association |
 
 ## Notes

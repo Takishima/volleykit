@@ -8,8 +8,8 @@
  * Location coordinates.
  */
 export interface Coordinates {
-  latitude: number;
-  longitude: number;
+  latitude: number
+  longitude: number
 }
 
 /**
@@ -17,11 +17,11 @@ export interface Coordinates {
  */
 export interface StopInfo {
   /** Stop name (e.g., "Hauptbahnhof") */
-  name: string;
+  name: string
   /** Distance from user in meters */
-  distanceMeters: number;
+  distanceMeters: number
   /** Walking time to stop in minutes */
-  walkTimeMinutes: number;
+  walkTimeMinutes: number
 }
 
 /**
@@ -29,19 +29,19 @@ export interface StopInfo {
  */
 export interface TripLeg {
   /** Transport mode (bus, train, tram, walk) */
-  mode: 'bus' | 'train' | 'tram' | 'walk' | 'metro' | 'ferry';
+  mode: 'bus' | 'train' | 'tram' | 'walk' | 'metro' | 'ferry'
   /** Line number (e.g., "31", "S3") - null for walking */
-  line: string | null;
+  line: string | null
   /** Direction/terminus - null for walking */
-  direction: string | null;
+  direction: string | null
   /** Departure time from this leg */
-  departureTime: string;
+  departureTime: string
   /** Arrival time at next point */
-  arrivalTime: string;
+  arrivalTime: string
   /** Departure stop name */
-  fromStop: string;
+  fromStop: string
   /** Arrival stop name */
-  toStop: string;
+  toStop: string
 }
 
 /**
@@ -49,21 +49,21 @@ export interface TripLeg {
  */
 export interface RouteResult {
   /** Total travel duration in minutes */
-  durationMinutes: number;
+  durationMinutes: number
   /** When user should leave */
-  departureTime: string;
+  departureTime: string
   /** When user will arrive */
-  arrivalTime: string;
+  arrivalTime: string
   /** Walking time to first stop */
-  walkTimeMinutes: number;
+  walkTimeMinutes: number
   /** Nearest transit stop */
-  nearestStop: StopInfo;
+  nearestStop: StopInfo
   /** Full route legs */
-  legs: TripLeg[];
+  legs: TripLeg[]
   /** Whether route is cached */
-  isCached: boolean;
+  isCached: boolean
   /** Cache timestamp if cached */
-  cachedAt?: string;
+  cachedAt?: string
 }
 
 /**
@@ -71,29 +71,29 @@ export interface RouteResult {
  */
 export interface DepartureReminder {
   /** Related assignment ID */
-  assignmentId: string;
+  assignmentId: string
   /** User's current location */
-  userLocation: Coordinates;
+  userLocation: Coordinates
   /** Destination venue coordinates */
-  venueLocation: Coordinates;
+  venueLocation: Coordinates
   /** Venue name */
-  venueName: string;
+  venueName: string
   /** When route was calculated */
-  calculatedAt: string;
+  calculatedAt: string
   /** When user should leave */
-  departureTime: string;
+  departureTime: string
   /** Expected arrival at venue */
-  arrivalTime: string;
+  arrivalTime: string
   /** Total travel time in minutes */
-  travelDurationMinutes: number;
+  travelDurationMinutes: number
   /** Closest transit stop to user */
-  nearestStop: StopInfo;
+  nearestStop: StopInfo
   /** Transit route details */
-  route: TripLeg[];
+  route: TripLeg[]
   /** When notification was scheduled */
-  notificationScheduledAt: string | null;
+  notificationScheduledAt: string | null
   /** Expo notification identifier */
-  notificationId: string | null;
+  notificationId: string | null
 }
 
 /**
@@ -101,13 +101,13 @@ export interface DepartureReminder {
  */
 export interface VenueCluster {
   /** Grouped assignment IDs */
-  assignmentIds: string[];
+  assignmentIds: string[]
   /** Center point of cluster */
-  centroid: Coordinates;
+  centroid: Coordinates
   /** Names of venues in cluster */
-  venueNames: string[];
+  venueNames: string[]
   /** Earliest game time in cluster */
-  earliestGameTime: string;
+  earliestGameTime: string
 }
 
 /**
@@ -115,11 +115,11 @@ export interface VenueCluster {
  */
 export interface DepartureReminderSettings {
   /** Feature toggle */
-  enabled: boolean;
+  enabled: boolean
   /** Minutes before departure to notify (5/10/15/20/30) */
-  bufferMinutes: 5 | 10 | 15 | 20 | 30;
+  bufferMinutes: 5 | 10 | 15 | 20 | 30
   /** Threshold for "near venue" in meters */
-  venueProximityMeters: number;
+  venueProximityMeters: number
 }
 
 /**
@@ -129,10 +129,10 @@ export const DEFAULT_DEPARTURE_REMINDER_SETTINGS: DepartureReminderSettings = {
   enabled: false,
   bufferMinutes: 15,
   venueProximityMeters: 500,
-};
+}
 
 /**
  * Buffer time options in minutes.
  */
-export const BUFFER_TIME_OPTIONS = [5, 10, 15, 20, 30] as const;
-export type BufferTimeOption = (typeof BUFFER_TIME_OPTIONS)[number];
+export const BUFFER_TIME_OPTIONS = [5, 10, 15, 20, 30] as const
+export type BufferTimeOption = (typeof BUFFER_TIME_OPTIONS)[number]

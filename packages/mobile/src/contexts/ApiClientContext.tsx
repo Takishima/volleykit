@@ -11,31 +11,31 @@
  * - 'calendar': Mock API client (calendar mode uses limited data)
  */
 
-import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useMemo, type ReactNode } from 'react'
 
-import { useAuthStore } from '@volleykit/shared/stores';
+import { useAuthStore } from '@volleykit/shared/stores'
 
-import { mobileApiClient, realApiClient, type MobileApiClient } from '../api';
+import { mobileApiClient, realApiClient, type MobileApiClient } from '../api'
 
 /**
  * API client context value type.
  */
 export interface ApiClientContextValue {
-  apiClient: MobileApiClient;
+  apiClient: MobileApiClient
 }
 
 /**
  * API client context.
  */
-const ApiClientContext = createContext<ApiClientContextValue | null>(null);
+const ApiClientContext = createContext<ApiClientContextValue | null>(null)
 
 /**
  * Props for ApiClientProvider.
  */
 interface ApiClientProviderProps {
-  children: ReactNode;
+  children: ReactNode
   /** Optional custom API client (useful for testing) */
-  apiClient?: MobileApiClient;
+  apiClient?: MobileApiClient
 }
 
 /**
@@ -49,23 +49,19 @@ export function ApiClientProvider({
   children,
   apiClient: customApiClient,
 }: ApiClientProviderProps) {
-  const dataSource = useAuthStore((state) => state.dataSource);
+  const dataSource = useAuthStore((state) => state.dataSource)
 
   const apiClient = useMemo(() => {
     // Use custom client if provided (for testing)
     if (customApiClient) {
-      return customApiClient;
+      return customApiClient
     }
 
     // Select client based on data source
-    return dataSource === 'api' ? realApiClient : mobileApiClient;
-  }, [customApiClient, dataSource]);
+    return dataSource === 'api' ? realApiClient : mobileApiClient
+  }, [customApiClient, dataSource])
 
-  return (
-    <ApiClientContext.Provider value={{ apiClient }}>
-      {children}
-    </ApiClientContext.Provider>
-  );
+  return <ApiClientContext.Provider value={{ apiClient }}>{children}</ApiClientContext.Provider>
 }
 
 /**
@@ -74,11 +70,11 @@ export function ApiClientProvider({
  * @throws Error if used outside of ApiClientProvider
  */
 export function useApiClient(): MobileApiClient {
-  const context = useContext(ApiClientContext);
+  const context = useContext(ApiClientContext)
 
   if (!context) {
-    throw new Error('useApiClient must be used within an ApiClientProvider');
+    throw new Error('useApiClient must be used within an ApiClientProvider')
   }
 
-  return context.apiClient;
+  return context.apiClient
 }

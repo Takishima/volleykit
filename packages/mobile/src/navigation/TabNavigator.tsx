@@ -2,18 +2,18 @@
  * Bottom tab navigator for main app screens
  */
 
-import { Feather } from '@expo/vector-icons';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Feather } from '@expo/vector-icons'
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 
-import { COLORS, TAB_ICON_SIZE } from '../constants';
-import { AssignmentsScreen } from '../screens/AssignmentsScreen';
-import { CompensationsScreen } from '../screens/CompensationsScreen';
-import { ExchangesScreen } from '../screens/ExchangesScreen';
-import { SettingsScreen } from '../screens/SettingsScreen';
+import { COLORS, TAB_ICON_SIZE } from '../constants'
+import { AssignmentsScreen } from '../screens/AssignmentsScreen'
+import { CompensationsScreen } from '../screens/CompensationsScreen'
+import { ExchangesScreen } from '../screens/ExchangesScreen'
+import { SettingsScreen } from '../screens/SettingsScreen'
 
-import type { MainTabParamList } from './types';
+import type { MainTabParamList } from './types'
 
-const Tab = createBottomTabNavigator<MainTabParamList>();
+const Tab = createBottomTabNavigator<MainTabParamList>()
 
 export function TabNavigator() {
   return (
@@ -37,7 +37,9 @@ export function TabNavigator() {
         component={CompensationsScreen}
         options={{
           title: 'Compensations',
-          tabBarIcon: ({ color }) => <Feather name="dollar-sign" size={TAB_ICON_SIZE} color={color} />,
+          tabBarIcon: ({ color }) => (
+            <Feather name="dollar-sign" size={TAB_ICON_SIZE} color={color} />
+          ),
         }}
       />
       <Tab.Screen
@@ -57,5 +59,5 @@ export function TabNavigator() {
         }}
       />
     </Tab.Navigator>
-  );
+  )
 }

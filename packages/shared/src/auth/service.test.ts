@@ -2,13 +2,13 @@
  * Tests for authentication service
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { createAuthService } from './service';
-import type { AuthServiceConfig, LoginFormFields } from './types';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { createAuthService } from './service'
+import type { AuthServiceConfig, LoginFormFields } from './types'
 
 // Mock fetch globally
-const mockFetch = vi.fn();
-global.fetch = mockFetch;
+const mockFetch = vi.fn()
+global.fetch = mockFetch
 
 describe('createAuthService', () => {
   const mockConfig: AuthServiceConfig = {
@@ -21,16 +21,16 @@ describe('createAuthService', () => {
       warn: vi.fn(),
       error: vi.fn(),
     },
-  };
+  }
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    vi.useFakeTimers();
-  });
+    vi.clearAllMocks()
+    vi.useFakeTimers()
+  })
 
   afterEach(() => {
-    vi.useRealTimers();
-  });
+    vi.useRealTimers()
+  })
 
   describe('login', () => {
     it('should return success with CSRF token on successful login', async () => {
@@ -39,16 +39,16 @@ describe('createAuthService', () => {
           <input name="__trustedProperties" value="trusted-token" />
           <input name="__referrer[@package]" value="SportManager.Volleyball" />
         </form>
-      `;
+      `
 
-      const dashboardHtml = '<div data-csrf-token="csrf-12345">Dashboard</div>';
+      const dashboardHtml = '<div data-csrf-token="csrf-12345">Dashboard</div>'
 
       // First call: fetch login page
       mockFetch.mockResolvedValueOnce({
         ok: true,
         text: () => Promise.resolve(loginPageHtml),
         headers: new Headers(),
-      });
+      })
 
       // Second call: submit credentials - redirect to dashboard
       mockFetch.mockResolvedValueOnce({
@@ -57,44 +57,44 @@ describe('createAuthService', () => {
         type: 'default',
         headers: new Headers({ Location: '/sportmanager.volleyball/main/dashboard' }),
         text: () => Promise.resolve(''),
-      });
+      })
 
       // Third call: fetch dashboard
       mockFetch.mockResolvedValueOnce({
         ok: true,
         text: () => Promise.resolve(dashboardHtml),
         headers: new Headers(),
-      });
+      })
 
-      const authService = createAuthService(mockConfig);
-      const resultPromise = authService.login('testuser', 'testpass');
+      const authService = createAuthService(mockConfig)
+      const resultPromise = authService.login('testuser', 'testpass')
 
       // Advance timers for the cookie processing delay
-      await vi.runAllTimersAsync();
+      await vi.runAllTimersAsync()
 
-      const result = await resultPromise;
+      const result = await resultPromise
 
-      expect(result.success).toBe(true);
+      expect(result.success).toBe(true)
       if (result.success) {
-        expect(result.csrfToken).toBe('csrf-12345');
-        expect(result.dashboardHtml).toContain('Dashboard');
+        expect(result.csrfToken).toBe('csrf-12345')
+        expect(result.dashboardHtml).toContain('Dashboard')
       }
-    });
+    })
 
     it('should return error for invalid credentials', async () => {
       const loginPageHtml = `
         <form>
           <input name="__trustedProperties" value="trusted-token" />
         </form>
-      `;
+      `
 
-      const errorPageHtml = '<div color="error">Invalid credentials</div>';
+      const errorPageHtml = '<div color="error">Invalid credentials</div>'
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
         text: () => Promise.resolve(loginPageHtml),
         headers: new Headers(),
-      });
+      })
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -102,29 +102,29 @@ describe('createAuthService', () => {
         type: 'default',
         headers: new Headers(),
         text: () => Promise.resolve(errorPageHtml),
-      });
+      })
 
-      const authService = createAuthService(mockConfig);
-      const result = await authService.login('baduser', 'badpass');
+      const authService = createAuthService(mockConfig)
+      const result = await authService.login('baduser', 'badpass')
 
-      expect(result.success).toBe(false);
+      expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error).toBe('Invalid username or password');
+        expect(result.error).toBe('Invalid username or password')
       }
-    });
+    })
 
     it('should handle lockout response', async () => {
       const loginPageHtml = `
         <form>
           <input name="__trustedProperties" value="trusted-token" />
         </form>
-      `;
+      `
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
         text: () => Promise.resolve(loginPageHtml),
         headers: new Headers(),
-      });
+      })
 
       mockFetch.mockResolvedValueOnce({
         ok: false,
@@ -135,32 +135,32 @@ describe('createAuthService', () => {
             lockedUntil: Date.now() + 300000,
           }),
         headers: new Headers(),
-      });
+      })
 
-      const authService = createAuthService(mockConfig);
-      const result = await authService.login('user', 'pass');
+      const authService = createAuthService(mockConfig)
+      const result = await authService.login('user', 'pass')
 
-      expect(result.success).toBe(false);
+      expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error).toBe('Account locked for 5 minutes');
-        expect(result.lockedUntil).toBeDefined();
+        expect(result.error).toBe('Account locked for 5 minutes')
+        expect(result.lockedUntil).toBeDefined()
       }
-    });
+    })
 
     it('should handle TFA page response', async () => {
       const loginPageHtml = `
         <form>
           <input name="__trustedProperties" value="trusted-token" />
         </form>
-      `;
+      `
 
-      const tfaPageHtml = '<input name="secondFactorToken" />';
+      const tfaPageHtml = '<input name="secondFactorToken" />'
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
         text: () => Promise.resolve(loginPageHtml),
         headers: new Headers(),
-      });
+      })
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -168,133 +168,133 @@ describe('createAuthService', () => {
         type: 'default',
         headers: new Headers(),
         text: () => Promise.resolve(tfaPageHtml),
-      });
+      })
 
-      const authService = createAuthService(mockConfig);
-      const result = await authService.login('user', 'pass');
+      const authService = createAuthService(mockConfig)
+      const result = await authService.login('user', 'pass')
 
-      expect(result.success).toBe(false);
+      expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error).toContain('Two-factor authentication is not supported');
+        expect(result.error).toContain('Two-factor authentication is not supported')
       }
-    });
+    })
 
     it('should handle failed login page fetch', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
         headers: new Headers(),
-      });
+      })
 
-      const authService = createAuthService(mockConfig);
-      const result = await authService.login('user', 'pass');
+      const authService = createAuthService(mockConfig)
+      const result = await authService.login('user', 'pass')
 
-      expect(result.success).toBe(false);
+      expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error).toBe('Failed to load login page');
+        expect(result.error).toBe('Failed to load login page')
       }
-    });
+    })
 
     it('should handle missing form fields', async () => {
-      const invalidLoginPageHtml = '<div>No form fields</div>';
+      const invalidLoginPageHtml = '<div>No form fields</div>'
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
         text: () => Promise.resolve(invalidLoginPageHtml),
         headers: new Headers(),
-      });
+      })
 
-      const authService = createAuthService(mockConfig);
-      const result = await authService.login('user', 'pass');
+      const authService = createAuthService(mockConfig)
+      const result = await authService.login('user', 'pass')
 
-      expect(result.success).toBe(false);
+      expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error).toBe('Could not extract form fields from login page');
+        expect(result.error).toBe('Could not extract form fields from login page')
       }
-    });
+    })
 
     it('should detect already logged in state', async () => {
       // Login page that shows CSRF token (already authenticated)
-      const loginPageWithCsrf = '<div data-csrf-token="existing-token">Already logged in</div>';
-      const dashboardHtml = '<div data-csrf-token="dashboard-token">Dashboard</div>';
+      const loginPageWithCsrf = '<div data-csrf-token="existing-token">Already logged in</div>'
+      const dashboardHtml = '<div data-csrf-token="dashboard-token">Dashboard</div>'
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
         text: () => Promise.resolve(loginPageWithCsrf),
         headers: new Headers(),
-      });
+      })
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
         text: () => Promise.resolve(dashboardHtml),
         headers: new Headers(),
-      });
+      })
 
-      const authService = createAuthService(mockConfig);
-      const resultPromise = authService.login('user', 'pass');
+      const authService = createAuthService(mockConfig)
+      const resultPromise = authService.login('user', 'pass')
 
-      await vi.runAllTimersAsync();
+      await vi.runAllTimersAsync()
 
-      const result = await resultPromise;
+      const result = await resultPromise
 
-      expect(result.success).toBe(true);
+      expect(result.success).toBe(true)
       if (result.success) {
-        expect(result.csrfToken).toBe('dashboard-token');
+        expect(result.csrfToken).toBe('dashboard-token')
       }
-    });
+    })
 
     it('should handle opaqueredirect response', async () => {
       const loginPageHtml = `
         <form>
           <input name="__trustedProperties" value="trusted-token" />
         </form>
-      `;
-      const dashboardHtml = '<div data-csrf-token="csrf-opaque">Dashboard</div>';
+      `
+      const dashboardHtml = '<div data-csrf-token="csrf-opaque">Dashboard</div>'
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
         text: () => Promise.resolve(loginPageHtml),
         headers: new Headers(),
-      });
+      })
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
         type: 'opaqueredirect',
         headers: new Headers(),
-      });
+      })
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
         text: () => Promise.resolve(dashboardHtml),
         headers: new Headers(),
-      });
+      })
 
-      const authService = createAuthService(mockConfig);
-      const resultPromise = authService.login('user', 'pass');
+      const authService = createAuthService(mockConfig)
+      const resultPromise = authService.login('user', 'pass')
 
-      await vi.runAllTimersAsync();
+      await vi.runAllTimersAsync()
 
-      const result = await resultPromise;
+      const result = await resultPromise
 
-      expect(result.success).toBe(true);
+      expect(result.success).toBe(true)
       if (result.success) {
-        expect(result.csrfToken).toBe('csrf-opaque');
+        expect(result.csrfToken).toBe('csrf-opaque')
       }
-    });
+    })
 
     it('should handle JSON response from proxy', async () => {
       const loginPageHtml = `
         <form>
           <input name="__trustedProperties" value="trusted-token" />
         </form>
-      `;
-      const dashboardHtml = '<div data-csrf-token="csrf-json">Dashboard</div>';
+      `
+      const dashboardHtml = '<div data-csrf-token="csrf-json">Dashboard</div>'
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
         text: () => Promise.resolve(loginPageHtml),
         headers: new Headers(),
-      });
+      })
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -306,46 +306,46 @@ describe('createAuthService', () => {
             success: true,
             redirectUrl: '/sportmanager.volleyball/main/dashboard',
           }),
-      });
+      })
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
         text: () => Promise.resolve(dashboardHtml),
         headers: new Headers(),
-      });
+      })
 
-      const authService = createAuthService(mockConfig);
-      const resultPromise = authService.login('user', 'pass');
+      const authService = createAuthService(mockConfig)
+      const resultPromise = authService.login('user', 'pass')
 
-      await vi.runAllTimersAsync();
+      await vi.runAllTimersAsync()
 
-      const result = await resultPromise;
+      const result = await resultPromise
 
-      expect(result.success).toBe(true);
-    });
+      expect(result.success).toBe(true)
+    })
 
     it('should handle network errors gracefully', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'));
+      mockFetch.mockRejectedValueOnce(new Error('Network error'))
 
-      const authService = createAuthService(mockConfig);
-      const result = await authService.login('user', 'pass');
+      const authService = createAuthService(mockConfig)
+      const result = await authService.login('user', 'pass')
 
-      expect(result.success).toBe(false);
+      expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error).toBe('Network error');
+        expect(result.error).toBe('Network error')
       }
-    });
-  });
+    })
+  })
 
   describe('logout', () => {
     it('should call logout endpoint', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         headers: new Headers(),
-      });
+      })
 
-      const authService = createAuthService(mockConfig);
-      await authService.logout();
+      const authService = createAuthService(mockConfig)
+      await authService.logout()
 
       expect(mockFetch).toHaveBeenCalledWith(
         'https://api.test.com/logout',
@@ -353,18 +353,18 @@ describe('createAuthService', () => {
           credentials: 'include',
           redirect: 'manual',
         })
-      );
-    });
+      )
+    })
 
     it('should handle logout errors gracefully', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Logout failed'));
+      mockFetch.mockRejectedValueOnce(new Error('Logout failed'))
 
-      const authService = createAuthService(mockConfig);
+      const authService = createAuthService(mockConfig)
 
       // Should not throw
-      await expect(authService.logout()).resolves.toBeUndefined();
-    });
-  });
+      await expect(authService.logout()).resolves.toBeUndefined()
+    })
+  })
 
   describe('checkSession', () => {
     it('should return valid true with CSRF token for authenticated session', async () => {
@@ -374,21 +374,21 @@ describe('createAuthService', () => {
             window.activeParty = JSON.parse('{"__identity":"user-123","eligibleRoles":{}}');
           </script>
         </div>
-      `;
+      `
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
         text: () => Promise.resolve(dashboardHtml),
         headers: new Headers(),
-      });
+      })
 
-      const authService = createAuthService(mockConfig);
-      const result = await authService.checkSession();
+      const authService = createAuthService(mockConfig)
+      const result = await authService.checkSession()
 
-      expect(result.valid).toBe(true);
-      expect(result.csrfToken).toBe('session-csrf');
-      expect(result.activeParty).toBeDefined();
-    });
+      expect(result.valid).toBe(true)
+      expect(result.csrfToken).toBe('session-csrf')
+      expect(result.activeParty).toBeDefined()
+    })
 
     it('should return valid false for login page redirect', async () => {
       const loginPageHtml = `
@@ -396,57 +396,57 @@ describe('createAuthService', () => {
           <input id="username" />
           <input id="password" />
         </form>
-      `;
+      `
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
         text: () => Promise.resolve(loginPageHtml),
         headers: new Headers(),
-      });
+      })
 
-      const authService = createAuthService(mockConfig);
-      const result = await authService.checkSession();
+      const authService = createAuthService(mockConfig)
+      const result = await authService.checkSession()
 
-      expect(result.valid).toBe(false);
-    });
+      expect(result.valid).toBe(false)
+    })
 
     it('should return valid false for failed request', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 401,
         headers: new Headers(),
-      });
+      })
 
-      const authService = createAuthService(mockConfig);
-      const result = await authService.checkSession();
+      const authService = createAuthService(mockConfig)
+      const result = await authService.checkSession()
 
-      expect(result.valid).toBe(false);
-    });
+      expect(result.valid).toBe(false)
+    })
 
     it('should return valid false on network error', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'));
+      mockFetch.mockRejectedValueOnce(new Error('Network error'))
 
-      const authService = createAuthService(mockConfig);
-      const result = await authService.checkSession();
+      const authService = createAuthService(mockConfig)
+      const result = await authService.checkSession()
 
-      expect(result.valid).toBe(false);
-    });
+      expect(result.valid).toBe(false)
+    })
 
     it('should return valid false if CSRF token is missing', async () => {
-      const dashboardHtml = '<div>Dashboard without CSRF token</div>';
+      const dashboardHtml = '<div>Dashboard without CSRF token</div>'
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
         text: () => Promise.resolve(dashboardHtml),
         headers: new Headers(),
-      });
+      })
 
-      const authService = createAuthService(mockConfig);
-      const result = await authService.checkSession();
+      const authService = createAuthService(mockConfig)
+      const result = await authService.checkSession()
 
-      expect(result.valid).toBe(false);
-    });
-  });
+      expect(result.valid).toBe(false)
+    })
+  })
 
   describe('deriveUserFromActiveParty', () => {
     it('should derive user with occupations from activeParty', () => {
@@ -459,42 +459,38 @@ describe('createAuthService', () => {
             inflatedValue: { shortName: 'RVNO' },
           },
         ],
-      };
+      }
 
-      const authService = createAuthService(mockConfig);
-      const result = authService.deriveUserFromActiveParty(activeParty, null, null);
+      const authService = createAuthService(mockConfig)
+      const result = authService.deriveUserFromActiveParty(activeParty, null, null)
 
-      expect(result.user.id).toBe('party-123');
-      expect(result.user.occupations).toHaveLength(1);
-      expect(result.user.occupations[0].associationCode).toBe('RVNO');
-      expect(result.activeOccupationId).toBe('occ-1');
-    });
+      expect(result.user.id).toBe('party-123')
+      expect(result.user.occupations).toHaveLength(1)
+      expect(result.user.occupations[0].associationCode).toBe('RVNO')
+      expect(result.activeOccupationId).toBe('occ-1')
+    })
 
     it('should preserve existing user data', () => {
       const activeParty = {
         __identity: 'party-new',
         groupedEligibleAttributeValues: [],
-      };
+      }
 
       const existingUser = {
         id: 'user-old',
         firstName: 'John',
         lastName: 'Doe',
         occupations: [{ id: 'occ-1', type: 'referee' as const }],
-      };
+      }
 
-      const authService = createAuthService(mockConfig);
-      const result = authService.deriveUserFromActiveParty(
-        activeParty,
-        existingUser,
-        'occ-1'
-      );
+      const authService = createAuthService(mockConfig)
+      const result = authService.deriveUserFromActiveParty(activeParty, existingUser, 'occ-1')
 
-      expect(result.user.firstName).toBe('John');
-      expect(result.user.lastName).toBe('Doe');
-      expect(result.user.id).toBe('party-new'); // Updated from activeParty
-      expect(result.user.occupations).toHaveLength(1); // Preserved
-    });
+      expect(result.user.firstName).toBe('John')
+      expect(result.user.lastName).toBe('Doe')
+      expect(result.user.id).toBe('party-new') // Updated from activeParty
+      expect(result.user.occupations).toHaveLength(1) // Preserved
+    })
 
     it('should validate existing activeOccupationId', () => {
       const activeParty = {
@@ -506,18 +502,14 @@ describe('createAuthService', () => {
             inflatedValue: { shortName: 'RVSZ' },
           },
         ],
-      };
+      }
 
-      const authService = createAuthService(mockConfig);
+      const authService = createAuthService(mockConfig)
       // Invalid occupation ID should be replaced with first available
-      const result = authService.deriveUserFromActiveParty(
-        activeParty,
-        null,
-        'invalid-occ-id'
-      );
+      const result = authService.deriveUserFromActiveParty(activeParty, null, 'invalid-occ-id')
 
-      expect(result.activeOccupationId).toBe('occ-2');
-    });
+      expect(result.activeOccupationId).toBe('occ-2')
+    })
 
     it('should handle null activeParty', () => {
       const existingUser = {
@@ -525,14 +517,14 @@ describe('createAuthService', () => {
         firstName: 'Jane',
         lastName: 'Smith',
         occupations: [{ id: 'occ-1', type: 'referee' as const }],
-      };
+      }
 
-      const authService = createAuthService(mockConfig);
-      const result = authService.deriveUserFromActiveParty(null, existingUser, 'occ-1');
+      const authService = createAuthService(mockConfig)
+      const result = authService.deriveUserFromActiveParty(null, existingUser, 'occ-1')
 
-      expect(result.user.id).toBe('user-1');
-      expect(result.user.occupations).toEqual(existingUser.occupations);
-    });
+      expect(result.user.id).toBe('user-1')
+      expect(result.user.occupations).toEqual(existingUser.occupations)
+    })
 
     it('should fallback to eligibleAttributeValues if groupedEligibleAttributeValues empty', () => {
       const activeParty = {
@@ -545,13 +537,13 @@ describe('createAuthService', () => {
             inflatedValue: { shortName: 'SV' },
           },
         ],
-      };
+      }
 
-      const authService = createAuthService(mockConfig);
-      const result = authService.deriveUserFromActiveParty(activeParty, null, null);
+      const authService = createAuthService(mockConfig)
+      const result = authService.deriveUserFromActiveParty(activeParty, null, null)
 
-      expect(result.user.occupations).toHaveLength(1);
-      expect(result.user.occupations[0].id).toBe('occ-fallback');
-    });
-  });
-});
+      expect(result.user.occupations).toHaveLength(1)
+      expect(result.user.occupations[0].id).toBe('occ-fallback')
+    })
+  })
+})

@@ -10,8 +10,8 @@ import type {
   ActiveParty,
   AttributeValue,
   InflatedAssociationValue,
-} from './types';
-import type { Occupation } from '../stores/auth';
+} from './types'
+import type { Occupation } from '../stores/auth'
 
 // ============================================================================
 // HTML Parsing - Login Form Fields
@@ -26,19 +26,17 @@ import type { Occupation } from '../stores/auth';
 export function extractLoginFormFields(html: string): LoginFormFields | null {
   try {
     // Extract trustedProperties (required)
-    const trustedPropsMatch = html.match(
-      /name="__trustedProperties"\s+value="([^"]*)"/
-    );
+    const trustedPropsMatch = html.match(/name="__trustedProperties"\s+value="([^"]*)"/)
     if (!trustedPropsMatch?.[1]) {
-      return null;
+      return null
     }
 
     // Extract referrer fields with defaults
     const getFieldValue = (name: string, defaultValue: string): string => {
-      const regex = new RegExp(`name="${name}"\\s+value="([^"]*)"`, 'i');
-      const match = html.match(regex);
-      return match?.[1] ?? defaultValue;
-    };
+      const regex = new RegExp(`name="${name}"\\s+value="([^"]*)"`, 'i')
+      const match = html.match(regex)
+      return match?.[1] ?? defaultValue
+    }
 
     return {
       trustedProperties: trustedPropsMatch[1],
@@ -47,9 +45,9 @@ export function extractLoginFormFields(html: string): LoginFormFields | null {
       referrerController: getFieldValue('__referrer[@controller]', 'Public'),
       referrerAction: getFieldValue('__referrer[@action]', 'login'),
       referrerArguments: getFieldValue('__referrer[arguments]', ''),
-    };
+    }
   } catch {
-    return null;
+    return null
   }
 }
 
@@ -59,10 +57,10 @@ export function extractLoginFormFields(html: string): LoginFormFields | null {
  */
 export function extractCsrfTokenFromPage(html: string): string | null {
   try {
-    const match = html.match(/data-csrf-token="([^"]*)"/);
-    return match?.[1] ?? null;
+    const match = html.match(/data-csrf-token="([^"]*)"/)
+    return match?.[1] ?? null
   } catch {
-    return null;
+    return null
   }
 }
 
@@ -71,12 +69,12 @@ export function extractCsrfTokenFromPage(html: string): string | null {
  * Used to detect successful login.
  */
 export function isDashboardHtmlContent(html: string): boolean {
-  const hasCsrfToken = html.includes('data-csrf-token');
+  const hasCsrfToken = html.includes('data-csrf-token')
   const hasLoginForm =
     html.includes('action="/login"') ||
-    (html.includes('id="username"') && html.includes('id="password"'));
+    (html.includes('id="username"') && html.includes('id="password"'))
 
-  return hasCsrfToken && !hasLoginForm;
+  return hasCsrfToken && !hasLoginForm
 }
 
 /**
@@ -85,11 +83,11 @@ export function isDashboardHtmlContent(html: string): boolean {
 export function isLoginPageHtmlContent(html: string): boolean {
   const hasLoginFormIndicators =
     html.includes('action="/login"') ||
-    (html.includes('id="username"') && html.includes('id="password"'));
+    (html.includes('id="username"') && html.includes('id="password"'))
 
-  const hasDashboardIndicators = isDashboardHtmlContent(html);
+  const hasDashboardIndicators = isDashboardHtmlContent(html)
 
-  return hasLoginFormIndicators && !hasDashboardIndicators;
+  return hasLoginFormIndicators && !hasDashboardIndicators
 }
 
 // ============================================================================
@@ -99,22 +97,20 @@ export function isLoginPageHtmlContent(html: string): boolean {
 /**
  * Regex pattern to match window.activeParty = JSON.parse('...') in HTML.
  */
-const ACTIVE_PARTY_PATTERN =
-  /window\.activeParty\s*=\s*JSON\.parse\s*\(\s*'((?:[^'\\]|\\.)*)'\s*\)/;
+const ACTIVE_PARTY_PATTERN = /window\.activeParty\s*=\s*JSON\.parse\s*\(\s*'((?:[^'\\]|\\.)*)'\s*\)/
 
 /**
  * Regex pattern for Vue :active-party attribute.
  * Uses [^"]* instead of .+? to avoid catastrophic backtracking (ReDoS).
  * The JSON content is HTML-encoded so won't contain unescaped double quotes.
  */
-const VUE_ACTIVE_PARTY_PATTERN =
-  /:active-party="\$convertFromBackendToFrontend\((\{[^"]*\})\)"/g;
+const VUE_ACTIVE_PARTY_PATTERN = /:active-party="\$convertFromBackendToFrontend\((\{[^"]*\})\)"/g
 
 /**
  * Regex pattern for Vue :party attribute.
  * Uses [^"]* instead of .+? to avoid catastrophic backtracking (ReDoS).
  */
-const VUE_PARTY_PATTERN = /:party="\$convertFromBackendToFrontend\((\{[^"]*\})\)"/g;
+const VUE_PARTY_PATTERN = /:party="\$convertFromBackendToFrontend\((\{[^"]*\})\)"/g
 
 /**
  * Decode HTML entities in a string.
@@ -130,14 +126,14 @@ function decodeHtmlEntities(str: string): string {
     '&#x27;': "'",
     '&#34;': '"',
     '&#x22;': '"',
-  };
-
-  let decoded = str;
-  for (const [entity, char] of Object.entries(entities)) {
-    decoded = decoded.split(entity).join(char);
   }
 
-  return decoded;
+  let decoded = str
+  for (const [entity, char] of Object.entries(entities)) {
+    decoded = decoded.split(entity).join(char)
+  }
+
+  return decoded
 }
 
 /**
@@ -145,16 +141,16 @@ function decodeHtmlEntities(str: string): string {
  */
 function looksLikeActiveParty(parsed: unknown): parsed is Record<string, unknown> {
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    return false;
+    return false
   }
-  const obj = parsed as Record<string, unknown>;
+  const obj = parsed as Record<string, unknown>
   return (
     'eligibleAttributeValues' in obj ||
     'groupedEligibleAttributeValues' in obj ||
     'eligibleRoles' in obj ||
     'activeRoleIdentifier' in obj ||
     'activeAttributeValue' in obj
-  );
+  )
 }
 
 /**
@@ -167,34 +163,34 @@ function looksLikeActiveParty(parsed: unknown): parsed is Record<string, unknown
  */
 export function extractActivePartyFromHtml(html: string): ActiveParty | null {
   if (!html) {
-    return null;
+    return null
   }
 
   try {
     // Try the script tag pattern first (legacy format)
-    const scriptMatch = ACTIVE_PARTY_PATTERN.exec(html);
+    const scriptMatch = ACTIVE_PARTY_PATTERN.exec(html)
     if (scriptMatch?.[1]) {
-      const decodedJson = decodeHtmlEntities(scriptMatch[1]);
-      const parsed = JSON.parse(decodedJson) as unknown;
+      const decodedJson = decodeHtmlEntities(scriptMatch[1])
+      const parsed = JSON.parse(decodedJson) as unknown
       if (looksLikeActiveParty(parsed)) {
-        return parsed as ActiveParty;
+        return parsed as ActiveParty
       }
     }
 
     // Try the Vue :active-party pattern
-    VUE_ACTIVE_PARTY_PATTERN.lastIndex = 0;
-    let vueMatch: RegExpExecArray | null;
+    VUE_ACTIVE_PARTY_PATTERN.lastIndex = 0
+    let vueMatch: RegExpExecArray | null
 
     while ((vueMatch = VUE_ACTIVE_PARTY_PATTERN.exec(html)) !== null) {
-      const encodedJson = vueMatch[1];
-      if (!encodedJson) continue;
+      const encodedJson = vueMatch[1]
+      if (!encodedJson) continue
 
       try {
-        const decodedJson = decodeHtmlEntities(encodedJson);
-        const parsed = JSON.parse(decodedJson) as unknown;
+        const decodedJson = decodeHtmlEntities(encodedJson)
+        const parsed = JSON.parse(decodedJson) as unknown
 
         if (looksLikeActiveParty(parsed)) {
-          return parsed as ActiveParty;
+          return parsed as ActiveParty
         }
       } catch {
         // Continue to next match
@@ -202,27 +198,27 @@ export function extractActivePartyFromHtml(html: string): ActiveParty | null {
     }
 
     // Try the Vue :party pattern
-    VUE_PARTY_PATTERN.lastIndex = 0;
+    VUE_PARTY_PATTERN.lastIndex = 0
 
     while ((vueMatch = VUE_PARTY_PATTERN.exec(html)) !== null) {
-      const encodedJson = vueMatch[1];
-      if (!encodedJson) continue;
+      const encodedJson = vueMatch[1]
+      if (!encodedJson) continue
 
       try {
-        const decodedJson = decodeHtmlEntities(encodedJson);
-        const parsed = JSON.parse(decodedJson) as unknown;
+        const decodedJson = decodeHtmlEntities(encodedJson)
+        const parsed = JSON.parse(decodedJson) as unknown
 
         if (looksLikeActiveParty(parsed)) {
-          return parsed as ActiveParty;
+          return parsed as ActiveParty
         }
       } catch {
         // Continue to next match
       }
     }
 
-    return null;
+    return null
   } catch {
-    return null;
+    return null
   }
 }
 
@@ -231,10 +227,10 @@ export function extractActivePartyFromHtml(html: string): ActiveParty | null {
 // ============================================================================
 
 /** Role identifier for referee role in the VolleyManager system */
-const REFEREE_ROLE_IDENTIFIER = 'Indoorvolleyball.RefAdmin:Referee';
+const REFEREE_ROLE_IDENTIFIER = 'Indoorvolleyball.RefAdmin:Referee'
 
 /** Type suffix for association memberships */
-const ASSOCIATION_TYPE_SUFFIX = 'AbstractAssociation';
+const ASSOCIATION_TYPE_SUFFIX = 'AbstractAssociation'
 
 /**
  * Role identifier patterns from the VolleyManager API.
@@ -244,7 +240,7 @@ const ROLE_PATTERNS = {
   player: /:Player$/,
   clubAdmin: /:ClubAdmin$/,
   associationAdmin: /:AssociationAdmin$/,
-} as const;
+} as const
 
 /**
  * Type guard to check if inflatedValue is an object.
@@ -252,54 +248,54 @@ const ROLE_PATTERNS = {
 export function isInflatedObject(
   value: InflatedAssociationValue | boolean | null | string | number | undefined
 ): value is InflatedAssociationValue {
-  return value !== null && typeof value === 'object';
+  return value !== null && typeof value === 'object'
 }
 
 /**
  * Words to exclude when deriving association code from name.
  */
-const EXCLUDED_WORDS = new Set(['de', 'du', 'des', 'la', 'le', 'les', 'et', 'und', 'of', 'the']);
+const EXCLUDED_WORDS = new Set(['de', 'du', 'des', 'la', 'le', 'les', 'et', 'und', 'of', 'the'])
 
 /**
  * Derives an association code from the full name by extracting first letters.
  */
 export function deriveAssociationCodeFromName(name: string | undefined): string | undefined {
   if (!name) {
-    return undefined;
+    return undefined
   }
 
-  const words = name.split(/\s+/);
+  const words = name.split(/\s+/)
   const initials = words
     .filter((word) => !EXCLUDED_WORDS.has(word.toLowerCase()))
     .map((word) => word.charAt(0).toUpperCase())
-    .join('');
+    .join('')
 
-  return initials || undefined;
+  return initials || undefined
 }
 
 /**
  * Parses an ActiveParty AttributeValue into an Occupation with association code.
  */
 export function parseOccupationFromActiveParty(attr: AttributeValue): Occupation | null {
-  const roleIdentifier = attr.roleIdentifier;
+  const roleIdentifier = attr.roleIdentifier
   if (!roleIdentifier || !attr.__identity) {
-    return null;
+    return null
   }
 
   // Only parse referee roles
   if (!ROLE_PATTERNS.referee.test(roleIdentifier)) {
-    return null;
+    return null
   }
 
   // Extract association code: prefer shortName, fall back to derived from name
-  const inflated = isInflatedObject(attr.inflatedValue) ? attr.inflatedValue : undefined;
-  const associationCode = inflated?.shortName ?? deriveAssociationCodeFromName(inflated?.name);
+  const inflated = isInflatedObject(attr.inflatedValue) ? attr.inflatedValue : undefined
+  const associationCode = inflated?.shortName ?? deriveAssociationCodeFromName(inflated?.name)
 
   return {
     id: attr.__identity,
     type: 'referee',
     associationCode,
-  };
+  }
 }
 
 /**
@@ -310,23 +306,23 @@ export function parseOccupationsFromActiveParty(
   attributeValues: AttributeValue[] | null | undefined
 ): Occupation[] {
   if (!attributeValues || attributeValues.length === 0) {
-    return [];
+    return []
   }
 
   const occupations = attributeValues
     .map((attr) => parseOccupationFromActiveParty(attr))
-    .filter((occ): occ is Occupation => occ !== null);
+    .filter((occ): occ is Occupation => occ !== null)
 
   // Deduplicate by association code
-  const seen = new Set<string>();
+  const seen = new Set<string>()
   return occupations.filter((occ) => {
-    const key = occ.associationCode ?? occ.id;
+    const key = occ.associationCode ?? occ.id
     if (seen.has(key)) {
-      return false;
+      return false
     }
-    seen.add(key);
-    return true;
-  });
+    seen.add(key)
+    return true
+  })
 }
 
 /**
@@ -336,13 +332,13 @@ export function filterRefereeAssociations(
   attributeValues: AttributeValue[] | null | undefined
 ): AttributeValue[] {
   if (!attributeValues) {
-    return [];
+    return []
   }
 
   return attributeValues.filter(
     (av) =>
       av.roleIdentifier === REFEREE_ROLE_IDENTIFIER && av.type?.includes(ASSOCIATION_TYPE_SUFFIX)
-  );
+  )
 }
 
 /**
@@ -351,15 +347,15 @@ export function filterRefereeAssociations(
 export function hasMultipleAssociations(
   attributeValues: AttributeValue[] | null | undefined
 ): boolean {
-  const refereeAssociations = filterRefereeAssociations(attributeValues);
+  const refereeAssociations = filterRefereeAssociations(attributeValues)
 
   const uniqueAssociations = new Set(
     refereeAssociations
       .map((av) => (isInflatedObject(av.inflatedValue) ? av.inflatedValue.__identity : undefined))
       .filter(Boolean)
-  );
+  )
 
-  return uniqueAssociations.size > 1;
+  return uniqueAssociations.size > 1
 }
 
 // ============================================================================
@@ -369,7 +365,7 @@ export function hasMultipleAssociations(
 /**
  * HTML patterns that indicate authentication failure.
  */
-const AUTH_ERROR_INDICATORS = ['color="error"', "color='error'"] as const;
+const AUTH_ERROR_INDICATORS = ['color="error"', "color='error'"] as const
 
 /**
  * HTML patterns that indicate Two-Factor Authentication is required.
@@ -380,17 +376,17 @@ const TFA_PAGE_INDICATORS = [
   'TwoFactorAuthentication',
   'totp',
   'TOTP',
-] as const;
+] as const
 
 /**
  * Analyzes HTML content to determine if it contains auth errors or TFA.
  */
 export function analyzeAuthResponseHtml(html: string): {
-  hasAuthError: boolean;
-  hasTfaPage: boolean;
+  hasAuthError: boolean
+  hasTfaPage: boolean
 } {
-  const hasAuthError = AUTH_ERROR_INDICATORS.some((indicator) => html.includes(indicator));
-  const hasTfaPage = TFA_PAGE_INDICATORS.some((indicator) => html.includes(indicator));
+  const hasAuthError = AUTH_ERROR_INDICATORS.some((indicator) => html.includes(indicator))
+  const hasTfaPage = TFA_PAGE_INDICATORS.some((indicator) => html.includes(indicator))
 
-  return { hasAuthError, hasTfaPage };
+  return { hasAuthError, hasTfaPage }
 }

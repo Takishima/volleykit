@@ -4,25 +4,29 @@
  * Detects when user is near a venue and clusters nearby venues.
  */
 
-import { haversineDistance, isWithinDistance, VENUE_PROXIMITY_THRESHOLD_METERS } from '@volleykit/shared/utils/geo';
+import {
+  haversineDistance,
+  isWithinDistance,
+  VENUE_PROXIMITY_THRESHOLD_METERS,
+} from '@volleykit/shared/utils/geo'
 
-import type { Coordinates, VenueCluster } from '../../types/departureReminder';
+import type { Coordinates, VenueCluster } from '../../types/departureReminder'
 
 /**
  * Assignment with venue location for proximity checks.
  */
 export interface AssignmentWithVenue {
-  id: string;
-  venueName: string;
-  venueLocation: Coordinates;
-  gameTime: string;
+  id: string
+  venueName: string
+  venueLocation: Coordinates
+  gameTime: string
 }
 
 /**
  * Convert between coordinate formats.
  */
 function toGeoCoordinates(coords: Coordinates): { lat: number; lng: number } {
-  return { lat: coords.latitude, lng: coords.longitude };
+  return { lat: coords.latitude, lng: coords.longitude }
 }
 
 /**
@@ -42,7 +46,7 @@ export function isNearVenue(
     toGeoCoordinates(userLocation),
     toGeoCoordinates(venueLocation),
     thresholdMeters
-  );
+  )
 }
 
 /**
@@ -52,14 +56,8 @@ export function isNearVenue(
  * @param venueLocation Venue coordinates
  * @returns Distance in meters
  */
-export function distanceToVenue(
-  userLocation: Coordinates,
-  venueLocation: Coordinates
-): number {
-  return haversineDistance(
-    toGeoCoordinates(userLocation),
-    toGeoCoordinates(venueLocation)
-  );
+export function distanceToVenue(userLocation: Coordinates, venueLocation: Coordinates): number {
+  return haversineDistance(toGeoCoordinates(userLocation), toGeoCoordinates(venueLocation))
 }
 
 /**
@@ -77,7 +75,7 @@ export function findNearbyVenues(
 ): string[] {
   return venues
     .filter((venue) => isNearVenue(userLocation, venue.venueLocation, thresholdMeters))
-    .map((venue) => venue.id);
+    .map((venue) => venue.id)
 }
 
 /**
@@ -85,7 +83,7 @@ export function findNearbyVenues(
  */
 function calculateCentroid(locations: Coordinates[]): Coordinates {
   if (locations.length === 0) {
-    return { latitude: 0, longitude: 0 };
+    return { latitude: 0, longitude: 0 }
   }
 
   const sum = locations.reduce(
@@ -94,12 +92,12 @@ function calculateCentroid(locations: Coordinates[]): Coordinates {
       longitude: acc.longitude + loc.longitude,
     }),
     { latitude: 0, longitude: 0 }
-  );
+  )
 
   return {
     latitude: sum.latitude / locations.length,
     longitude: sum.longitude / locations.length,
-  };
+  }
 }
 
 /**
@@ -116,9 +114,9 @@ export function clusterNearbyVenues(
   assignments: AssignmentWithVenue[],
   thresholdMeters = VENUE_PROXIMITY_THRESHOLD_METERS
 ): VenueCluster[] {
-  if (assignments.length === 0) return [];
+  if (assignments.length === 0) return []
   if (assignments.length === 1) {
-    const assignment = assignments[0]!;
+    const assignment = assignments[0]!
     return [
       {
         assignmentIds: [assignment.id],
@@ -126,28 +124,28 @@ export function clusterNearbyVenues(
         venueNames: [assignment.venueName],
         earliestGameTime: assignment.gameTime,
       },
-    ];
+    ]
   }
 
   // Track which assignments have been clustered
-  const clustered = new Set<string>();
-  const clusters: VenueCluster[] = [];
+  const clustered = new Set<string>()
+  const clusters: VenueCluster[] = []
 
   // Sort by game time to prioritize earlier games
   const sorted = [...assignments].sort(
     (a, b) => new Date(a.gameTime).getTime() - new Date(b.gameTime).getTime()
-  );
+  )
 
   for (const assignment of sorted) {
-    if (clustered.has(assignment.id)) continue;
+    if (clustered.has(assignment.id)) continue
 
     // Start a new cluster with this assignment
-    const clusterAssignments: AssignmentWithVenue[] = [assignment];
-    clustered.add(assignment.id);
+    const clusterAssignments: AssignmentWithVenue[] = [assignment]
+    clustered.add(assignment.id)
 
     // Find other unclustered assignments within threshold
     for (const other of sorted) {
-      if (clustered.has(other.id)) continue;
+      if (clustered.has(other.id)) continue
 
       // Check if close to any assignment in current cluster
       const isCloseToCluster = clusterAssignments.some((member) =>
@@ -156,30 +154,30 @@ export function clusterNearbyVenues(
           toGeoCoordinates(other.venueLocation),
           thresholdMeters
         )
-      );
+      )
 
       if (isCloseToCluster) {
-        clusterAssignments.push(other);
-        clustered.add(other.id);
+        clusterAssignments.push(other)
+        clustered.add(other.id)
       }
     }
 
     // Create cluster from collected assignments
-    const venueLocations = clusterAssignments.map((a) => a.venueLocation);
+    const venueLocations = clusterAssignments.map((a) => a.venueLocation)
     const earliestTime = clusterAssignments.reduce(
       (earliest, a) => (a.gameTime < earliest ? a.gameTime : earliest),
       clusterAssignments[0]!.gameTime
-    );
+    )
 
     clusters.push({
       assignmentIds: clusterAssignments.map((a) => a.id),
       centroid: calculateCentroid(venueLocations),
       venueNames: clusterAssignments.map((a) => a.venueName),
       earliestGameTime: earliestTime,
-    });
+    })
   }
 
-  return clusters;
+  return clusters
 }
 
 /**
@@ -197,5 +195,5 @@ export function shouldSendDepartureNotification(
   venueLocation: Coordinates,
   thresholdMeters = VENUE_PROXIMITY_THRESHOLD_METERS
 ): boolean {
-  return !isNearVenue(userLocation, venueLocation, thresholdMeters);
+  return !isNearVenue(userLocation, venueLocation, thresholdMeters)
 }

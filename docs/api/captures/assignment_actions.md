@@ -6,21 +6,21 @@ When clicking the "more_horiz" (⋯) button on an assignment row in "Mes convoca
 
 ### Available Actions
 
-| Action (FR) | Action (EN) | Icon | Description |
-|-------------|-------------|------|-------------|
-| Rechercher ARB évtl. disponibles | Search available referees | sports | Find referees who might be available for this game |
-| Informations de convocation | Assignment information | info | View detailed assignment/convocation info |
-| Editer les frais et l'indemnité | Edit fees and compensation | commute | Modify travel expenses and game compensation |
-| Ajouter convocation à la bourse | Add to exchange | published_with_changes | Post this assignment to the exchange marketplace |
+| Action (FR)                      | Action (EN)                | Icon                   | Description                                        |
+| -------------------------------- | -------------------------- | ---------------------- | -------------------------------------------------- |
+| Rechercher ARB évtl. disponibles | Search available referees  | sports                 | Find referees who might be available for this game |
+| Informations de convocation      | Assignment information     | info                   | View detailed assignment/convocation info          |
+| Editer les frais et l'indemnité  | Edit fees and compensation | commute                | Modify travel expenses and game compensation       |
+| Ajouter convocation à la bourse  | Add to exchange            | published_with_changes | Post this assignment to the exchange marketplace   |
 
 ### Conditional/Disabled Actions
 
-| Action (FR) | Action (EN) | Icon | Condition |
-|-------------|-------------|------|-----------|
+| Action (FR)                                            | Action (EN)                             | Icon            | Condition                                    |
+| ------------------------------------------------------ | --------------------------------------- | --------------- | -------------------------------------------- |
 | Les listes d'engagement sont gérées par le 1er arbitre | Engagement lists managed by 1st referee | manage_accounts | Shown when user is ARB 2 (not first referee) |
-| Annoncer résultat | Announce result | scoreboard | Only available after game is played |
+| Annoncer résultat                                      | Announce result                         | scoreboard      | Only available after game is played          |
 
-______________________________________________________________________
+---
 
 ## Action Endpoints (To Be Captured)
 
@@ -94,7 +94,7 @@ Submit game result (only available for completed games when user is first refere
 POST /api/sportmanager.indoorvolleyball/api\gameresult
 ```
 
-______________________________________________________________________
+---
 
 ## Notes
 

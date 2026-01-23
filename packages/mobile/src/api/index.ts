@@ -2,7 +2,7 @@
  * API module exports for mobile app.
  */
 
-export { mobileApiClient, type MobileApiClient } from './client';
+export { mobileApiClient, type MobileApiClient } from './client'
 export {
   realApiClient,
   type RealApiClient,
@@ -10,4 +10,4 @@ export {
   setCsrfToken,
   clearTokens,
   getSessionToken,
-} from './realClient';
+} from './realClient'

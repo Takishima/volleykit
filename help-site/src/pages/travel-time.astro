@@ -1,15 +1,12 @@
 ---
-import DocLayout from '../layouts/DocLayout.astro';
-import Screenshot from '../components/Screenshot.astro';
-import InfoBox from '../components/InfoBox.astro';
-import StepList from '../components/StepList.astro';
-import { t } from '../i18n';
+import DocLayout from '../layouts/DocLayout.astro'
+import Screenshot from '../components/Screenshot.astro'
+import InfoBox from '../components/InfoBox.astro'
+import StepList from '../components/StepList.astro'
+import { t } from '../i18n'
 ---
 
-<DocLayout
-  title={t('pages.travelTime.title')}
-  description={t('pages.travelTime.description')}
->
+<DocLayout title={t('pages.travelTime.title')} description={t('pages.travelTime.description')}>
   <h1 data-i18n="travelTime.heading">{t('travelTime.heading')}</h1>
 
   <p class="lead text-text-secondary dark:text-text-secondary-dark" data-i18n="travelTime.lead">
@@ -21,10 +18,18 @@ import { t } from '../i18n';
   <p data-i18n="travelTime.howItWorks.description">{t('travelTime.howItWorks.description')}</p>
 
   <ul>
-    <li data-i18n="travelTime.howItWorks.considerations.schedules">{t('travelTime.howItWorks.considerations.schedules')}</li>
-    <li data-i18n="travelTime.howItWorks.considerations.walkingTime">{t('travelTime.howItWorks.considerations.walkingTime')}</li>
-    <li data-i18n="travelTime.howItWorks.considerations.transferTimes">{t('travelTime.howItWorks.considerations.transferTimes')}</li>
-    <li data-i18n="travelTime.howItWorks.considerations.gameStartTime">{t('travelTime.howItWorks.considerations.gameStartTime')}</li>
+    <li data-i18n="travelTime.howItWorks.considerations.schedules">
+      {t('travelTime.howItWorks.considerations.schedules')}
+    </li>
+    <li data-i18n="travelTime.howItWorks.considerations.walkingTime">
+      {t('travelTime.howItWorks.considerations.walkingTime')}
+    </li>
+    <li data-i18n="travelTime.howItWorks.considerations.transferTimes">
+      {t('travelTime.howItWorks.considerations.transferTimes')}
+    </li>
+    <li data-i18n="travelTime.howItWorks.considerations.gameStartTime">
+      {t('travelTime.howItWorks.considerations.gameStartTime')}
+    </li>
   </ul>
 
   <InfoBox type="info">
@@ -94,23 +99,41 @@ import { t } from '../i18n';
     instructions="Take a screenshot of an assignment card or detail view showing the travel time prominently. Include the duration in minutes/hours and any public transport icon."
   />
 
-  <h3 data-i18n="travelTime.viewingTimes.whatsShown.title">{t('travelTime.viewingTimes.whatsShown.title')}</h3>
+  <h3 data-i18n="travelTime.viewingTimes.whatsShown.title">
+    {t('travelTime.viewingTimes.whatsShown.title')}
+  </h3>
 
   <ul>
-    <li data-i18n="travelTime.viewingTimes.whatsShown.duration">{t('travelTime.viewingTimes.whatsShown.duration')}</li>
-    <li data-i18n="travelTime.viewingTimes.whatsShown.departureTime">{t('travelTime.viewingTimes.whatsShown.departureTime')}</li>
-    <li data-i18n="travelTime.viewingTimes.whatsShown.transportType">{t('travelTime.viewingTimes.whatsShown.transportType')}</li>
+    <li data-i18n="travelTime.viewingTimes.whatsShown.duration">
+      {t('travelTime.viewingTimes.whatsShown.duration')}
+    </li>
+    <li data-i18n="travelTime.viewingTimes.whatsShown.departureTime">
+      {t('travelTime.viewingTimes.whatsShown.departureTime')}
+    </li>
+    <li data-i18n="travelTime.viewingTimes.whatsShown.transportType">
+      {t('travelTime.viewingTimes.whatsShown.transportType')}
+    </li>
   </ul>
 
   <h2 data-i18n="travelTime.journeyDetails.title">{t('travelTime.journeyDetails.title')}</h2>
 
-  <p data-i18n="travelTime.journeyDetails.description">{t('travelTime.journeyDetails.description')}</p>
+  <p data-i18n="travelTime.journeyDetails.description">
+    {t('travelTime.journeyDetails.description')}
+  </p>
 
   <ul>
-    <li data-i18n="travelTime.journeyDetails.features.stepByStep">{t('travelTime.journeyDetails.features.stepByStep')}</li>
-    <li data-i18n="travelTime.journeyDetails.features.connectionDetails">{t('travelTime.journeyDetails.features.connectionDetails')}</li>
-    <li data-i18n="travelTime.journeyDetails.features.walkingSegments">{t('travelTime.journeyDetails.features.walkingSegments')}</li>
-    <li data-i18n="travelTime.journeyDetails.features.transferTimes">{t('travelTime.journeyDetails.features.transferTimes')}</li>
+    <li data-i18n="travelTime.journeyDetails.features.stepByStep">
+      {t('travelTime.journeyDetails.features.stepByStep')}
+    </li>
+    <li data-i18n="travelTime.journeyDetails.features.connectionDetails">
+      {t('travelTime.journeyDetails.features.connectionDetails')}
+    </li>
+    <li data-i18n="travelTime.journeyDetails.features.walkingSegments">
+      {t('travelTime.journeyDetails.features.walkingSegments')}
+    </li>
+    <li data-i18n="travelTime.journeyDetails.features.transferTimes">
+      {t('travelTime.journeyDetails.features.transferTimes')}
+    </li>
   </ul>
 
   <p data-i18n="travelTime.journeyDetails.sbbLink">{t('travelTime.journeyDetails.sbbLink')}</p>
@@ -126,12 +149,20 @@ import { t } from '../i18n';
 
   <h2 data-i18n="travelTime.arrivalBuffer.title">{t('travelTime.arrivalBuffer.title')}</h2>
 
-  <p data-i18n="travelTime.arrivalBuffer.description">{t('travelTime.arrivalBuffer.description')}</p>
+  <p data-i18n="travelTime.arrivalBuffer.description">
+    {t('travelTime.arrivalBuffer.description')}
+  </p>
 
   <ul>
-    <li data-i18n="travelTime.arrivalBuffer.details.standardBuffer">{t('travelTime.arrivalBuffer.details.standardBuffer')}</li>
-    <li data-i18n="travelTime.arrivalBuffer.details.timeFor">{t('travelTime.arrivalBuffer.details.timeFor')}</li>
-    <li data-i18n="travelTime.arrivalBuffer.details.accountForDelays">{t('travelTime.arrivalBuffer.details.accountForDelays')}</li>
+    <li data-i18n="travelTime.arrivalBuffer.details.standardBuffer">
+      {t('travelTime.arrivalBuffer.details.standardBuffer')}
+    </li>
+    <li data-i18n="travelTime.arrivalBuffer.details.timeFor">
+      {t('travelTime.arrivalBuffer.details.timeFor')}
+    </li>
+    <li data-i18n="travelTime.arrivalBuffer.details.accountForDelays">
+      {t('travelTime.arrivalBuffer.details.accountForDelays')}
+    </li>
   </ul>
 
   <InfoBox type="warning">
@@ -140,14 +171,24 @@ import { t } from '../i18n';
     </p>
   </InfoBox>
 
-  <h2 data-i18n="travelTime.offlineAvailability.title">{t('travelTime.offlineAvailability.title')}</h2>
+  <h2 data-i18n="travelTime.offlineAvailability.title">
+    {t('travelTime.offlineAvailability.title')}
+  </h2>
 
-  <p data-i18n="travelTime.offlineAvailability.description">{t('travelTime.offlineAvailability.description')}</p>
+  <p data-i18n="travelTime.offlineAvailability.description">
+    {t('travelTime.offlineAvailability.description')}
+  </p>
 
   <ul>
-    <li data-i18n="travelTime.offlineAvailability.details.cachedAvailable">{t('travelTime.offlineAvailability.details.cachedAvailable')}</li>
-    <li data-i18n="travelTime.offlineAvailability.details.requiresConnection">{t('travelTime.offlineAvailability.details.requiresConnection')}</li>
-    <li data-i18n="travelTime.offlineAvailability.details.outdatedIndicator">{t('travelTime.offlineAvailability.details.outdatedIndicator')}</li>
+    <li data-i18n="travelTime.offlineAvailability.details.cachedAvailable">
+      {t('travelTime.offlineAvailability.details.cachedAvailable')}
+    </li>
+    <li data-i18n="travelTime.offlineAvailability.details.requiresConnection">
+      {t('travelTime.offlineAvailability.details.requiresConnection')}
+    </li>
+    <li data-i18n="travelTime.offlineAvailability.details.outdatedIndicator">
+      {t('travelTime.offlineAvailability.details.outdatedIndicator')}
+    </li>
   </ul>
 
   <InfoBox type="tip">

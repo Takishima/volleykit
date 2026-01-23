@@ -5,9 +5,9 @@
  * Used for quick re-authentication after session expiry.
  */
 
-import * as LocalAuthentication from 'expo-local-authentication';
+import * as LocalAuthentication from 'expo-local-authentication'
 
-import type { BiometricAdapter } from '@volleykit/shared/types/platform';
+import type { BiometricAdapter } from '@volleykit/shared/types/platform'
 
 /**
  * Map LocalAuthentication authentication type to our BiometricType
@@ -16,19 +16,19 @@ function mapAuthenticationType(
   types: LocalAuthentication.AuthenticationType[]
 ): 'faceId' | 'touchId' | 'fingerprint' | null {
   if (types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
-    return 'faceId';
+    return 'faceId'
   }
   if (types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
     // iOS Touch ID or Android fingerprint
     // We can't distinguish between iOS Touch ID and Android fingerprint easily,
     // but we'll use 'fingerprint' for Android and 'touchId' for iOS
-    return 'fingerprint';
+    return 'fingerprint'
   }
   if (types.includes(LocalAuthentication.AuthenticationType.IRIS)) {
     // Treat iris as fingerprint for simplicity
-    return 'fingerprint';
+    return 'fingerprint'
   }
-  return null;
+  return null
 }
 
 /**
@@ -41,13 +41,13 @@ export const biometrics: BiometricAdapter = {
    * Requires both hardware support and enrolled biometrics
    */
   async isAvailable(): Promise<boolean> {
-    const hasHardware = await LocalAuthentication.hasHardwareAsync();
+    const hasHardware = await LocalAuthentication.hasHardwareAsync()
     if (!hasHardware) {
-      return false;
+      return false
     }
 
-    const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-    return isEnrolled;
+    const isEnrolled = await LocalAuthentication.isEnrolledAsync()
+    return isEnrolled
   },
 
   /**
@@ -63,9 +63,9 @@ export const biometrics: BiometricAdapter = {
       cancelLabel: 'Cancel',
       disableDeviceFallback: true, // Don't fall back to passcode
       fallbackLabel: '', // Hide the fallback option
-    });
+    })
 
-    return result.success;
+    return result.success
   },
 
   /**
@@ -73,10 +73,10 @@ export const biometrics: BiometricAdapter = {
    * Returns the primary biometric type available on the device
    */
   async getBiometricType(): Promise<'faceId' | 'touchId' | 'fingerprint' | null> {
-    const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
-    return mapAuthenticationType(types);
+    const types = await LocalAuthentication.supportedAuthenticationTypesAsync()
+    return mapAuthenticationType(types)
   },
-};
+}
 
 /**
  * Get user-friendly name for biometric type
@@ -85,12 +85,12 @@ export const biometrics: BiometricAdapter = {
 export function getBiometricTypeName(type: 'faceId' | 'touchId' | 'fingerprint' | null): string {
   switch (type) {
     case 'faceId':
-      return 'Face ID';
+      return 'Face ID'
     case 'touchId':
-      return 'Touch ID';
+      return 'Touch ID'
     case 'fingerprint':
-      return 'Fingerprint';
+      return 'Fingerprint'
     default:
-      return 'Biometric';
+      return 'Biometric'
   }
 }

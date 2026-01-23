@@ -2,5 +2,5 @@
  * Mobile app utilities
  */
 
-export * from './calendar';
-export * from './date';
+export * from './calendar'
+export * from './date'

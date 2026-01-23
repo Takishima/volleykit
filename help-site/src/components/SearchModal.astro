@@ -4,7 +4,7 @@
  * Full-screen modal on mobile, centered modal on desktop
  * Integrates with Pagefind for search functionality
  */
-import { BASE_PATH, TIMING, MAX_SEARCH_RESULTS } from '../constants';
+import { BASE_PATH, TIMING, MAX_SEARCH_RESULTS } from '../constants'
 ---
 
 <div
@@ -25,9 +25,13 @@ import { BASE_PATH, TIMING, MAX_SEARCH_RESULTS } from '../constants';
   </div>
 
   <!-- Modal -->
-  <div class="fixed inset-4 mx-auto flex max-w-2xl flex-col overflow-hidden rounded-xl bg-surface-card shadow-2xl dark:bg-surface-card-dark sm:inset-auto sm:left-1/2 sm:top-[10%] sm:max-h-[80vh] sm:w-full sm:-translate-x-1/2">
+  <div
+    class="fixed inset-4 mx-auto flex max-w-2xl flex-col overflow-hidden rounded-xl bg-surface-card shadow-2xl dark:bg-surface-card-dark sm:inset-auto sm:left-1/2 sm:top-[10%] sm:max-h-[80vh] sm:w-full sm:-translate-x-1/2"
+  >
     <!-- Search input -->
-    <div class="flex items-center gap-3 border-b border-border-default px-4 dark:border-border-default-dark">
+    <div
+      class="flex items-center gap-3 border-b border-border-default px-4 dark:border-border-default-dark"
+    >
       <svg
         class="h-5 w-5 shrink-0 text-text-muted dark:text-text-muted-dark"
         fill="none"
@@ -39,8 +43,7 @@ import { BASE_PATH, TIMING, MAX_SEARCH_RESULTS } from '../constants';
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
-          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-        />
+          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
       </svg>
       <input
         type="search"
@@ -62,10 +65,7 @@ import { BASE_PATH, TIMING, MAX_SEARCH_RESULTS } from '../constants';
     </div>
 
     <!-- Results container -->
-    <div
-      class="flex-1 overflow-y-auto p-4"
-      data-search-results
-    >
+    <div class="flex-1 overflow-y-auto p-4" data-search-results>
       <!-- Initial state -->
       <div class="py-12 text-center text-text-muted dark:text-text-muted-dark" data-search-initial>
         <svg
@@ -79,21 +79,29 @@ import { BASE_PATH, TIMING, MAX_SEARCH_RESULTS } from '../constants';
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="1.5"
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-          />
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
         </svg>
         <p>Type to start searching</p>
         <p class="mt-2 text-sm">Search across all documentation pages</p>
       </div>
 
       <!-- Loading state -->
-      <div class="hidden py-12 text-center text-text-muted dark:text-text-muted-dark" data-search-loading>
-        <div class="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent"></div>
+      <div
+        class="hidden py-12 text-center text-text-muted dark:text-text-muted-dark"
+        data-search-loading
+      >
+        <div
+          class="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent"
+        >
+        </div>
         <p>Searching...</p>
       </div>
 
       <!-- No results state -->
-      <div class="hidden py-12 text-center text-text-muted dark:text-text-muted-dark" data-search-empty>
+      <div
+        class="hidden py-12 text-center text-text-muted dark:text-text-muted-dark"
+        data-search-empty
+      >
         <svg
           class="mx-auto mb-4 h-12 w-12 opacity-50"
           fill="none"
@@ -106,7 +114,7 @@ import { BASE_PATH, TIMING, MAX_SEARCH_RESULTS } from '../constants';
             stroke-linejoin="round"
             stroke-width="1.5"
             d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
+          ></path>
         </svg>
         <p>No results found</p>
         <p class="mt-2 text-sm">Try different keywords</p>
@@ -116,7 +124,10 @@ import { BASE_PATH, TIMING, MAX_SEARCH_RESULTS } from '../constants';
       <ul class="hidden space-y-2" data-search-list role="listbox"></ul>
 
       <!-- Not available state (dev mode) -->
-      <div class="hidden py-12 text-center text-text-muted dark:text-text-muted-dark" data-search-unavailable>
+      <div
+        class="hidden py-12 text-center text-text-muted dark:text-text-muted-dark"
+        data-search-unavailable
+      >
         <svg
           class="mx-auto mb-4 h-12 w-12 opacity-50"
           fill="none"
@@ -129,7 +140,7 @@ import { BASE_PATH, TIMING, MAX_SEARCH_RESULTS } from '../constants';
             stroke-linejoin="round"
             stroke-width="1.5"
             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-          />
+          ></path>
         </svg>
         <p>Search not available</p>
         <p class="mt-2 text-sm">Run a production build to enable search</p>
@@ -137,15 +148,26 @@ import { BASE_PATH, TIMING, MAX_SEARCH_RESULTS } from '../constants';
     </div>
 
     <!-- Footer -->
-    <div class="flex items-center justify-between border-t border-border-default px-4 py-2 text-xs text-text-muted dark:border-border-default-dark dark:text-text-muted-dark">
+    <div
+      class="flex items-center justify-between border-t border-border-default px-4 py-2 text-xs text-text-muted dark:border-border-default-dark dark:text-text-muted-dark"
+    >
       <div class="flex items-center gap-4">
         <span class="flex items-center gap-1">
-          <kbd class="rounded border border-border-default bg-surface-subtle px-1 dark:border-border-default-dark dark:bg-surface-muted-dark">↑</kbd>
-          <kbd class="rounded border border-border-default bg-surface-subtle px-1 dark:border-border-default-dark dark:bg-surface-muted-dark">↓</kbd>
+          <kbd
+            class="rounded border border-border-default bg-surface-subtle px-1 dark:border-border-default-dark dark:bg-surface-muted-dark"
+            >↑</kbd
+          >
+          <kbd
+            class="rounded border border-border-default bg-surface-subtle px-1 dark:border-border-default-dark dark:bg-surface-muted-dark"
+            >↓</kbd
+          >
           to navigate
         </span>
         <span class="flex items-center gap-1">
-          <kbd class="rounded border border-border-default bg-surface-subtle px-1 dark:border-border-default-dark dark:bg-surface-muted-dark">↵</kbd>
+          <kbd
+            class="rounded border border-border-default bg-surface-subtle px-1 dark:border-border-default-dark dark:bg-surface-muted-dark"
+            >↵</kbd
+          >
           to select
         </span>
       </div>
@@ -155,10 +177,10 @@ import { BASE_PATH, TIMING, MAX_SEARCH_RESULTS } from '../constants';
 </div>
 
 <script>
-  import type { PagefindAPI, PagefindResultData } from '../types/pagefind';
+  import type { PagefindAPI, PagefindResultData } from '../types/pagefind'
 
   // Pagefind instance (lazy-loaded)
-  let pagefind: PagefindAPI | null = null;
+  let pagefind: PagefindAPI | null = null
 
   /**
    * Sanitize HTML to prevent XSS attacks.
@@ -166,220 +188,222 @@ import { BASE_PATH, TIMING, MAX_SEARCH_RESULTS } from '../constants';
    */
   function sanitizeExcerpt(html: string): string {
     // Create a temporary element to parse the HTML
-    const temp = document.createElement('div');
-    temp.textContent = html;
-    const escaped = temp.innerHTML;
+    const temp = document.createElement('div')
+    temp.textContent = html
+    const escaped = temp.innerHTML
 
     // Re-enable only <mark> tags which Pagefind uses for highlighting
-    return escaped
-      .replace(/&lt;mark&gt;/g, '<mark>')
-      .replace(/&lt;\/mark&gt;/g, '</mark>');
+    return escaped.replace(/&lt;mark&gt;/g, '<mark>').replace(/&lt;\/mark&gt;/g, '</mark>')
   }
 
   /**
    * Create a search result element safely using DOM methods to prevent XSS.
    */
   function createResultElement(result: PagefindResultData, index: number): HTMLLIElement {
-    const li = document.createElement('li');
-    li.setAttribute('role', 'option');
-    li.className = 'rounded-lg border border-transparent';
+    const li = document.createElement('li')
+    li.setAttribute('role', 'option')
+    li.className = 'rounded-lg border border-transparent'
 
-    const link = document.createElement('a');
-    link.href = result.url;
-    link.className = 'block rounded-lg p-3 transition-colors hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark';
-    link.setAttribute('data-search-result', String(index));
+    const link = document.createElement('a')
+    link.href = result.url
+    link.className =
+      'block rounded-lg p-3 transition-colors hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark'
+    link.setAttribute('data-search-result', String(index))
 
-    const titleDiv = document.createElement('div');
-    titleDiv.className = 'font-medium text-text-primary dark:text-text-primary-dark';
+    const titleDiv = document.createElement('div')
+    titleDiv.className = 'font-medium text-text-primary dark:text-text-primary-dark'
     // Use textContent for title to prevent XSS - no HTML allowed
-    titleDiv.textContent = result.meta?.title || 'Untitled';
+    titleDiv.textContent = result.meta?.title || 'Untitled'
 
-    const excerptDiv = document.createElement('div');
-    excerptDiv.className = 'mt-1 text-sm text-text-secondary line-clamp-2 dark:text-text-secondary-dark';
+    const excerptDiv = document.createElement('div')
+    excerptDiv.className =
+      'mt-1 text-sm text-text-secondary line-clamp-2 dark:text-text-secondary-dark'
     // Sanitize excerpt - only allow <mark> tags for Pagefind highlighting
-    excerptDiv.innerHTML = sanitizeExcerpt(result.excerpt || '');
+    excerptDiv.innerHTML = sanitizeExcerpt(result.excerpt || '')
 
-    link.appendChild(titleDiv);
-    link.appendChild(excerptDiv);
-    li.appendChild(link);
+    link.appendChild(titleDiv)
+    link.appendChild(excerptDiv)
+    li.appendChild(link)
 
-    return li;
+    return li
   }
 
   async function loadPagefind(basePath: string): Promise<PagefindAPI | null> {
-    if (pagefind) return pagefind;
+    if (pagefind) return pagefind
 
     try {
       // Dynamic import of Pagefind (generated at build time)
-      pagefind = await import(/* @vite-ignore */ `${basePath}/_pagefind/pagefind.js`);
-      await pagefind!.init();
-      return pagefind;
+      pagefind = await import(/* @vite-ignore */ `${basePath}/_pagefind/pagefind.js`)
+      await pagefind!.init()
+      return pagefind
     } catch (e) {
-      console.warn('Pagefind not available:', e);
-      return null;
+      console.warn('Pagefind not available:', e)
+      return null
     }
   }
 
   function initSearchModal() {
-    const modal = document.querySelector('[data-search-modal]');
-    const backdrop = document.querySelector('[data-search-backdrop]');
-    const closeBtn = document.querySelector('[data-search-close]');
-    const input = document.querySelector('[data-search-input]') as HTMLInputElement;
-    const resultsContainer = document.querySelector('[data-search-results]');
-    const initialState = document.querySelector('[data-search-initial]');
-    const loadingState = document.querySelector('[data-search-loading]');
-    const emptyState = document.querySelector('[data-search-empty]');
-    const resultsList = document.querySelector('[data-search-list]');
-    const unavailableState = document.querySelector('[data-search-unavailable]');
+    const modal = document.querySelector('[data-search-modal]')
+    const backdrop = document.querySelector('[data-search-backdrop]')
+    const closeBtn = document.querySelector('[data-search-close]')
+    const input = document.querySelector('[data-search-input]') as HTMLInputElement
+    const resultsContainer = document.querySelector('[data-search-results]')
+    const initialState = document.querySelector('[data-search-initial]')
+    const loadingState = document.querySelector('[data-search-loading]')
+    const emptyState = document.querySelector('[data-search-empty]')
+    const resultsList = document.querySelector('[data-search-list]')
+    const unavailableState = document.querySelector('[data-search-unavailable]')
 
-    if (!modal || !input || !resultsContainer) return;
+    if (!modal || !input || !resultsContainer) return
 
     // Read configuration from data attributes (populated from constants)
-    const basePath = modal.getAttribute('data-base-path') || '/volleykit/help';
-    const debounceMs = parseInt(modal.getAttribute('data-debounce-ms') || '200', 10);
-    const maxResults = parseInt(modal.getAttribute('data-max-results') || '10', 10);
+    const basePath = modal.getAttribute('data-base-path') || '/volleykit/help'
+    const debounceMs = parseInt(modal.getAttribute('data-debounce-ms') || '200', 10)
+    const maxResults = parseInt(modal.getAttribute('data-max-results') || '10', 10)
 
-    let selectedIndex = -1;
-    let results: PagefindResultData[] = [];
+    let selectedIndex = -1
+    let results: PagefindResultData[] = []
 
     function showState(state: 'initial' | 'loading' | 'empty' | 'results' | 'unavailable') {
-      initialState?.classList.toggle('hidden', state !== 'initial');
-      loadingState?.classList.toggle('hidden', state !== 'loading');
-      emptyState?.classList.toggle('hidden', state !== 'empty');
-      resultsList?.classList.toggle('hidden', state !== 'results');
-      unavailableState?.classList.toggle('hidden', state !== 'unavailable');
+      initialState?.classList.toggle('hidden', state !== 'initial')
+      loadingState?.classList.toggle('hidden', state !== 'loading')
+      emptyState?.classList.toggle('hidden', state !== 'empty')
+      resultsList?.classList.toggle('hidden', state !== 'results')
+      unavailableState?.classList.toggle('hidden', state !== 'unavailable')
     }
 
     function openModal() {
-      modal.classList.remove('hidden');
-      document.body.style.overflow = 'hidden';
-      input.focus();
+      modal.classList.remove('hidden')
+      document.body.style.overflow = 'hidden'
+      input.focus()
       loadPagefind(basePath).then((pf) => {
-        if (!pf) showState('unavailable');
-      });
+        if (!pf) showState('unavailable')
+      })
     }
 
     function closeModal() {
-      modal.classList.add('hidden');
-      document.body.style.overflow = '';
-      input.value = '';
-      showState('initial');
-      selectedIndex = -1;
-      results = [];
+      modal.classList.add('hidden')
+      document.body.style.overflow = ''
+      input.value = ''
+      showState('initial')
+      selectedIndex = -1
+      results = []
     }
 
     function renderResults(searchResults: PagefindResultData[]) {
-      if (!resultsList) return;
+      if (!resultsList) return
 
-      results = searchResults;
-      selectedIndex = -1;
+      results = searchResults
+      selectedIndex = -1
 
       if (results.length === 0) {
-        showState('empty');
-        return;
+        showState('empty')
+        return
       }
 
-      showState('results');
+      showState('results')
       // Clear previous results safely using replaceChildren
-      resultsList.replaceChildren();
+      resultsList.replaceChildren()
 
       results.forEach((result, index) => {
-        const li = createResultElement(result, index);
-        resultsList.appendChild(li);
-      });
+        const li = createResultElement(result, index)
+        resultsList.appendChild(li)
+      })
     }
 
     function updateSelection() {
-      const items = resultsList?.querySelectorAll('[data-search-result]');
+      const items = resultsList?.querySelectorAll('[data-search-result]')
       items?.forEach((item, index) => {
-        const li = item.parentElement;
+        const li = item.parentElement
         if (li) {
-          li.classList.toggle('border-primary-500', index === selectedIndex);
-          li.classList.toggle('dark:border-primary-400', index === selectedIndex);
-          li.classList.toggle('bg-surface-subtle', index === selectedIndex);
-          li.classList.toggle('dark:bg-surface-subtle-dark', index === selectedIndex);
+          li.classList.toggle('border-primary-500', index === selectedIndex)
+          li.classList.toggle('dark:border-primary-400', index === selectedIndex)
+          li.classList.toggle('bg-surface-subtle', index === selectedIndex)
+          li.classList.toggle('dark:bg-surface-subtle-dark', index === selectedIndex)
         }
-      });
+      })
 
       // Scroll selected into view
       if (selectedIndex >= 0 && items?.[selectedIndex]) {
-        items[selectedIndex].scrollIntoView({ block: 'nearest' });
+        items[selectedIndex].scrollIntoView({ block: 'nearest' })
       }
     }
 
     // Event listeners
-    document.addEventListener('open-search', openModal);
-    backdrop?.addEventListener('click', closeModal);
-    closeBtn?.addEventListener('click', closeModal);
+    document.addEventListener('open-search', openModal)
+    backdrop?.addEventListener('click', closeModal)
+    closeBtn?.addEventListener('click', closeModal)
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
-        closeModal();
+        closeModal()
       }
-    });
+    })
 
     // Search input handling with debounce
-    let debounceTimer: ReturnType<typeof setTimeout>;
+    let debounceTimer: ReturnType<typeof setTimeout>
 
     input.addEventListener('input', async () => {
-      const query = input.value.trim();
+      const query = input.value.trim()
 
-      clearTimeout(debounceTimer);
+      clearTimeout(debounceTimer)
 
       if (!query) {
-        showState('initial');
-        return;
+        showState('initial')
+        return
       }
 
-      showState('loading');
+      showState('loading')
 
       debounceTimer = setTimeout(async () => {
-        const pf = await loadPagefind(basePath);
+        const pf = await loadPagefind(basePath)
         if (!pf) {
-          showState('unavailable');
-          return;
+          showState('unavailable')
+          return
         }
 
         try {
-          const search = await pf.search(query);
+          const search = await pf.search(query)
           const searchResults = await Promise.all(
             search.results.slice(0, maxResults).map((r) => r.data())
-          );
-          renderResults(searchResults);
+          )
+          renderResults(searchResults)
         } catch (e) {
-          console.error('Search error:', e);
-          showState('empty');
+          console.error('Search error:', e)
+          showState('empty')
         }
-      }, debounceMs);
-    });
+      }, debounceMs)
+    })
 
     // Keyboard navigation
     input.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowDown') {
-        e.preventDefault();
+        e.preventDefault()
         if (selectedIndex < results.length - 1) {
-          selectedIndex++;
-          updateSelection();
+          selectedIndex++
+          updateSelection()
         }
       } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
+        e.preventDefault()
         if (selectedIndex > 0) {
-          selectedIndex--;
-          updateSelection();
+          selectedIndex--
+          updateSelection()
         }
       } else if (e.key === 'Enter' && selectedIndex >= 0) {
-        e.preventDefault();
-        const link = resultsList?.querySelector(`[data-search-result="${selectedIndex}"]`) as HTMLAnchorElement;
+        e.preventDefault()
+        const link = resultsList?.querySelector(
+          `[data-search-result="${selectedIndex}"]`
+        ) as HTMLAnchorElement
         if (link) {
-          closeModal();
-          window.location.href = link.href;
+          closeModal()
+          window.location.href = link.href
         }
       }
-    });
+    })
   }
 
-  initSearchModal();
-  document.addEventListener('astro:after-swap', initSearchModal);
+  initSearchModal()
+  document.addEventListener('astro:after-swap', initSearchModal)
 </script>
 
 <style>

@@ -87,9 +87,12 @@ export function createHandlers(overrides: MockResponseOverrides = {}) {
     }),
 
     // Settings
-    http.get('*/api%5crefereeassociationsettings/getRefereeAssociationSettingsOfActiveParty', () => {
-      return HttpResponse.json(responses.associationSettings)
-    }),
+    http.get(
+      '*/api%5crefereeassociationsettings/getRefereeAssociationSettingsOfActiveParty',
+      () => {
+        return HttpResponse.json(responses.associationSettings)
+      }
+    ),
 
     http.get('*/api%5cindoorseason/getActiveIndoorSeason', () => {
       return HttpResponse.json(responses.activeSeason)

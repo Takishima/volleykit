@@ -5,25 +5,25 @@
  * Updates widget data whenever assignments are fetched or changed.
  */
 
-import { getWidgetAdapter, createWidgetData } from '../platform/widgets';
+import { getWidgetAdapter, createWidgetData } from '../platform/widgets'
 
-import type { WidgetAssignment, WidgetData } from '../types/widget';
+import type { WidgetAssignment, WidgetData } from '../types/widget'
 
 /**
  * Assignment data from the app (before conversion to widget format).
  */
 export interface AppAssignment {
-  id: string;
-  gameTime: string;
-  homeTeam: string;
-  awayTeam: string;
+  id: string
+  gameTime: string
+  homeTeam: string
+  awayTeam: string
   venue?: {
-    name: string;
-    address?: string;
-  };
-  position?: string;
-  league?: string;
-  status?: 'confirmed' | 'pending' | 'cancelled';
+    name: string
+    address?: string
+  }
+  position?: string
+  league?: string
+  status?: 'confirmed' | 'pending' | 'cancelled'
 }
 
 /**
@@ -39,7 +39,7 @@ function convertToWidgetAssignment(assignment: AppAssignment): WidgetAssignment 
     position: assignment.position ?? '',
     league: assignment.league ?? '',
     status: assignment.status === 'confirmed' ? 'confirmed' : 'pending',
-  };
+  }
 }
 
 /**
@@ -51,13 +51,13 @@ export interface WidgetDataBridgeService {
     assignments: AppAssignment[],
     isLoggedIn: boolean,
     userName?: string
-  ): Promise<void>;
+  ): Promise<void>
   /** Clear widget data (e.g., on logout) */
-  clearData(): Promise<void>;
+  clearData(): Promise<void>
   /** Get current widget data */
-  getData(): Promise<WidgetData | null>;
+  getData(): Promise<WidgetData | null>
   /** Force widget refresh */
-  refresh(): Promise<void>;
+  refresh(): Promise<void>
 }
 
 /**
@@ -68,61 +68,61 @@ async function updateAssignments(
   isLoggedIn: boolean,
   userName?: string
 ): Promise<void> {
-  const adapter = await getWidgetAdapter();
+  const adapter = await getWidgetAdapter()
 
   if (!adapter.isSupported()) {
-    return;
+    return
   }
 
   // Convert assignments to widget format
   const widgetAssignments = assignments
     .filter((a) => a.status !== 'cancelled')
-    .map(convertToWidgetAssignment);
+    .map(convertToWidgetAssignment)
 
   // Create widget data
-  const widgetData = createWidgetData(widgetAssignments, isLoggedIn, userName);
+  const widgetData = createWidgetData(widgetAssignments, isLoggedIn, userName)
 
   // Update widget
-  await adapter.updateWidgetData(widgetData);
+  await adapter.updateWidgetData(widgetData)
 }
 
 /**
  * Clear widget data.
  */
 async function clearData(): Promise<void> {
-  const adapter = await getWidgetAdapter();
+  const adapter = await getWidgetAdapter()
 
   if (!adapter.isSupported()) {
-    return;
+    return
   }
 
-  await adapter.clearWidgetData();
+  await adapter.clearWidgetData()
 }
 
 /**
  * Get current widget data.
  */
 async function getData(): Promise<WidgetData | null> {
-  const adapter = await getWidgetAdapter();
+  const adapter = await getWidgetAdapter()
 
   if (!adapter.isSupported()) {
-    return null;
+    return null
   }
 
-  return adapter.getWidgetData();
+  return adapter.getWidgetData()
 }
 
 /**
  * Force widget refresh.
  */
 async function refresh(): Promise<void> {
-  const adapter = await getWidgetAdapter();
+  const adapter = await getWidgetAdapter()
 
   if (!adapter.isSupported()) {
-    return;
+    return
   }
 
-  await adapter.reloadAllTimelines();
+  await adapter.reloadAllTimelines()
 }
 
 /**
@@ -133,7 +133,7 @@ export const widgetDataBridge: WidgetDataBridgeService = {
   clearData,
   getData,
   refresh,
-};
+}
 
 /**
  * Hook callback to update widget after successful assignment fetch.
@@ -145,10 +145,10 @@ export async function onAssignmentsFetched(
   userName?: string
 ): Promise<void> {
   try {
-    await widgetDataBridge.updateAssignments(assignments, isLoggedIn, userName);
+    await widgetDataBridge.updateAssignments(assignments, isLoggedIn, userName)
   } catch (error) {
     // Don't fail the main flow if widget update fails
-    console.warn('Widget update failed:', error);
+    console.warn('Widget update failed:', error)
   }
 }
 
@@ -157,8 +157,8 @@ export async function onAssignmentsFetched(
  */
 export async function onUserLogout(): Promise<void> {
   try {
-    await widgetDataBridge.clearData();
+    await widgetDataBridge.clearData()
   } catch (error) {
-    console.warn('Widget clear failed:', error);
+    console.warn('Widget clear failed:', error)
   }
 }

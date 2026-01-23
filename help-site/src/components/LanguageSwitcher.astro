@@ -4,14 +4,14 @@
  * Dropdown to switch between available languages
  * Persists selection to localStorage
  */
-import { languages, defaultLanguage } from '../i18n';
+import { languages, defaultLanguage } from '../i18n'
 
 interface Props {
   /** Compact mode for mobile menu */
-  compact?: boolean;
+  compact?: boolean
 }
 
-const { compact = false } = Astro.props;
+const { compact = false } = Astro.props
 ---
 
 <div class="relative" data-language-switcher>
@@ -39,7 +39,7 @@ const { compact = false } = Astro.props;
         stroke-linejoin="round"
         stroke-width="2"
         d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
-      />
+      ></path>
     </svg>
     <span class="text-text-primary dark:text-text-primary-dark" data-current-language>
       {languages[defaultLanguage]}
@@ -52,7 +52,8 @@ const { compact = false } = Astro.props;
       aria-hidden="true"
       data-chevron
     >
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"
+      ></path>
     </svg>
   </button>
 
@@ -82,109 +83,112 @@ const { compact = false } = Astro.props;
 </div>
 
 <script>
-  import { getLanguage, setLanguage, languages, type Language } from '../i18n';
+  import { getLanguage, setLanguage, languages, type Language } from '../i18n'
 
   function initLanguageSwitcher() {
-    const switchers = document.querySelectorAll('[data-language-switcher]');
+    const switchers = document.querySelectorAll('[data-language-switcher]')
 
     switchers.forEach((switcher) => {
-      const trigger = switcher.querySelector('[data-language-trigger]');
-      const menu = switcher.querySelector('[data-language-menu]');
-      const currentLabel = switcher.querySelector('[data-current-language]');
-      const chevron = switcher.querySelector('[data-chevron]');
-      const options = switcher.querySelectorAll('[data-language-option]');
+      const trigger = switcher.querySelector('[data-language-trigger]')
+      const menu = switcher.querySelector('[data-language-menu]')
+      const currentLabel = switcher.querySelector('[data-current-language]')
+      const chevron = switcher.querySelector('[data-chevron]')
+      const options = switcher.querySelectorAll('[data-language-option]')
 
-      if (!trigger || !menu || !currentLabel) return;
+      if (!trigger || !menu || !currentLabel) return
 
       // Set initial language
-      const currentLang = getLanguage();
-      currentLabel.textContent = languages[currentLang];
-      updateChecks(currentLang);
+      const currentLang = getLanguage()
+      currentLabel.textContent = languages[currentLang]
+      updateChecks(currentLang)
 
       function updateChecks(lang: Language) {
         options.forEach((option) => {
-          const check = option.querySelector('[data-check]');
+          const check = option.querySelector('[data-check]')
           if (check) {
-            check.classList.toggle('invisible', option.getAttribute('data-language-option') !== lang);
+            check.classList.toggle(
+              'invisible',
+              option.getAttribute('data-language-option') !== lang
+            )
           }
-        });
+        })
       }
 
       function openMenu() {
-        menu.classList.remove('hidden');
-        trigger.setAttribute('aria-expanded', 'true');
-        chevron?.classList.add('rotate-180');
+        menu.classList.remove('hidden')
+        trigger.setAttribute('aria-expanded', 'true')
+        chevron?.classList.add('rotate-180')
       }
 
       function closeMenu() {
-        menu.classList.add('hidden');
-        trigger.setAttribute('aria-expanded', 'false');
-        chevron?.classList.remove('rotate-180');
+        menu.classList.add('hidden')
+        trigger.setAttribute('aria-expanded', 'false')
+        chevron?.classList.remove('rotate-180')
       }
 
       function toggleMenu() {
         if (menu.classList.contains('hidden')) {
-          openMenu();
+          openMenu()
         } else {
-          closeMenu();
+          closeMenu()
         }
       }
 
       // Toggle menu on trigger click
       trigger.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleMenu();
-      });
+        e.stopPropagation()
+        toggleMenu()
+      })
 
       // Handle option selection
       options.forEach((option) => {
         option.addEventListener('click', () => {
-          const lang = option.getAttribute('data-language-option') as Language;
-          setLanguage(lang);
-          currentLabel.textContent = languages[lang];
-          updateChecks(lang);
-          closeMenu();
+          const lang = option.getAttribute('data-language-option') as Language
+          setLanguage(lang)
+          currentLabel.textContent = languages[lang]
+          updateChecks(lang)
+          closeMenu()
           // Reload page to apply translations (since Astro is SSG)
-          window.location.reload();
-        });
-      });
+          window.location.reload()
+        })
+      })
 
       // Close menu on outside click
       document.addEventListener('click', (e) => {
         if (!switcher.contains(e.target as Node)) {
-          closeMenu();
+          closeMenu()
         }
-      });
+      })
 
       // Close menu on escape
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-          closeMenu();
+          closeMenu()
         }
-      });
-    });
+      })
+    })
 
     // Listen for language changes from other components
     window.addEventListener('language-change', ((e: CustomEvent<{ language: Language }>) => {
       switchers.forEach((switcher) => {
-        const currentLabel = switcher.querySelector('[data-current-language]');
-        const options = switcher.querySelectorAll('[data-language-option]');
+        const currentLabel = switcher.querySelector('[data-current-language]')
+        const options = switcher.querySelectorAll('[data-language-option]')
         if (currentLabel) {
-          currentLabel.textContent = languages[e.detail.language];
+          currentLabel.textContent = languages[e.detail.language]
         }
         options.forEach((option) => {
-          const check = option.querySelector('[data-check]');
+          const check = option.querySelector('[data-check]')
           if (check) {
             check.classList.toggle(
               'invisible',
               option.getAttribute('data-language-option') !== e.detail.language
-            );
+            )
           }
-        });
-      });
-    }) as EventListener);
+        })
+      })
+    }) as EventListener)
   }
 
-  initLanguageSwitcher();
-  document.addEventListener('astro:after-swap', initLanguageSwitcher);
+  initLanguageSwitcher()
+  document.addEventListener('astro:after-swap', initLanguageSwitcher)
 </script>

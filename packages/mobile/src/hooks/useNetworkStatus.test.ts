@@ -5,22 +5,22 @@
  * These tests cover the pure utility functions.
  */
 
-import NetInfo from '@react-native-community/netinfo';
+import NetInfo from '@react-native-community/netinfo'
 
-import { checkNetworkStatus, isOnline } from './useNetworkStatus';
+import { checkNetworkStatus, isOnline } from './useNetworkStatus'
 
 // Mock NetInfo
 jest.mock('@react-native-community/netinfo', () => ({
   fetch: jest.fn(),
   addEventListener: jest.fn(() => jest.fn()),
-}));
+}))
 
-const mockedNetInfo = jest.mocked(NetInfo);
+const mockedNetInfo = jest.mocked(NetInfo)
 
 describe('checkNetworkStatus', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-  });
+    jest.clearAllMocks()
+  })
 
   it('returns connected status for wifi', async () => {
     mockedNetInfo.fetch.mockResolvedValue({
@@ -28,16 +28,16 @@ describe('checkNetworkStatus', () => {
       isConnected: true,
       isInternetReachable: true,
       details: null,
-    } as never);
+    } as never)
 
-    const status = await checkNetworkStatus();
+    const status = await checkNetworkStatus()
 
-    expect(status.isConnected).toBe(true);
-    expect(status.isWifi).toBe(true);
-    expect(status.isCellular).toBe(false);
-    expect(status.type).toBe('wifi');
-    expect(status.isKnown).toBe(true);
-  });
+    expect(status.isConnected).toBe(true)
+    expect(status.isWifi).toBe(true)
+    expect(status.isCellular).toBe(false)
+    expect(status.type).toBe('wifi')
+    expect(status.isKnown).toBe(true)
+  })
 
   it('returns connected status for cellular', async () => {
     mockedNetInfo.fetch.mockResolvedValue({
@@ -45,15 +45,15 @@ describe('checkNetworkStatus', () => {
       isConnected: true,
       isInternetReachable: true,
       details: null,
-    } as never);
+    } as never)
 
-    const status = await checkNetworkStatus();
+    const status = await checkNetworkStatus()
 
-    expect(status.isConnected).toBe(true);
-    expect(status.isWifi).toBe(false);
-    expect(status.isCellular).toBe(true);
-    expect(status.type).toBe('cellular');
-  });
+    expect(status.isConnected).toBe(true)
+    expect(status.isWifi).toBe(false)
+    expect(status.isCellular).toBe(true)
+    expect(status.type).toBe('cellular')
+  })
 
   it('returns disconnected status when not connected', async () => {
     mockedNetInfo.fetch.mockResolvedValue({
@@ -61,15 +61,15 @@ describe('checkNetworkStatus', () => {
       isConnected: false,
       isInternetReachable: false,
       details: null,
-    } as never);
+    } as never)
 
-    const status = await checkNetworkStatus();
+    const status = await checkNetworkStatus()
 
-    expect(status.isConnected).toBe(false);
-    expect(status.isWifi).toBe(false);
-    expect(status.isCellular).toBe(false);
-    expect(status.type).toBe('none');
-  });
+    expect(status.isConnected).toBe(false)
+    expect(status.isWifi).toBe(false)
+    expect(status.isCellular).toBe(false)
+    expect(status.type).toBe('none')
+  })
 
   it('handles null isConnected as connected (defensive)', async () => {
     mockedNetInfo.fetch.mockResolvedValue({
@@ -77,14 +77,14 @@ describe('checkNetworkStatus', () => {
       isConnected: null,
       isInternetReachable: null,
       details: null,
-    } as never);
+    } as never)
 
-    const status = await checkNetworkStatus();
+    const status = await checkNetworkStatus()
 
     // Default to connected when unknown
-    expect(status.isConnected).toBe(true);
-    expect(status.isKnown).toBe(false);
-  });
+    expect(status.isConnected).toBe(true)
+    expect(status.isKnown).toBe(false)
+  })
 
   it('handles unknown connection types', async () => {
     mockedNetInfo.fetch.mockResolvedValue({
@@ -92,15 +92,15 @@ describe('checkNetworkStatus', () => {
       isConnected: true,
       isInternetReachable: null,
       details: null,
-    } as never);
+    } as never)
 
-    const status = await checkNetworkStatus();
+    const status = await checkNetworkStatus()
 
-    expect(status.isConnected).toBe(true);
-    expect(status.isWifi).toBe(false);
-    expect(status.isCellular).toBe(false);
-    expect(status.type).toBe('unknown');
-  });
+    expect(status.isConnected).toBe(true)
+    expect(status.isWifi).toBe(false)
+    expect(status.isCellular).toBe(false)
+    expect(status.type).toBe('unknown')
+  })
 
   it('handles ethernet connection', async () => {
     mockedNetInfo.fetch.mockResolvedValue({
@@ -108,21 +108,21 @@ describe('checkNetworkStatus', () => {
       isConnected: true,
       isInternetReachable: true,
       details: null,
-    } as never);
+    } as never)
 
-    const status = await checkNetworkStatus();
+    const status = await checkNetworkStatus()
 
-    expect(status.isConnected).toBe(true);
-    expect(status.isWifi).toBe(false);
-    expect(status.isCellular).toBe(false);
-    expect(status.type).toBe('ethernet');
-  });
-});
+    expect(status.isConnected).toBe(true)
+    expect(status.isWifi).toBe(false)
+    expect(status.isCellular).toBe(false)
+    expect(status.type).toBe('ethernet')
+  })
+})
 
 describe('isOnline', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-  });
+    jest.clearAllMocks()
+  })
 
   it('returns true when connected', async () => {
     mockedNetInfo.fetch.mockResolvedValue({
@@ -130,12 +130,12 @@ describe('isOnline', () => {
       isConnected: true,
       isInternetReachable: true,
       details: null,
-    } as never);
+    } as never)
 
-    const result = await isOnline();
+    const result = await isOnline()
 
-    expect(result).toBe(true);
-  });
+    expect(result).toBe(true)
+  })
 
   it('returns false when not connected', async () => {
     mockedNetInfo.fetch.mockResolvedValue({
@@ -143,12 +143,12 @@ describe('isOnline', () => {
       isConnected: false,
       isInternetReachable: false,
       details: null,
-    } as never);
+    } as never)
 
-    const result = await isOnline();
+    const result = await isOnline()
 
-    expect(result).toBe(false);
-  });
+    expect(result).toBe(false)
+  })
 
   it('returns true when connection state is unknown (defensive)', async () => {
     mockedNetInfo.fetch.mockResolvedValue({
@@ -156,11 +156,11 @@ describe('isOnline', () => {
       isConnected: null,
       isInternetReachable: null,
       details: null,
-    } as never);
+    } as never)
 
-    const result = await isOnline();
+    const result = await isOnline()
 
     // Default to online when unknown to avoid blocking the user
-    expect(result).toBe(true);
-  });
-});
+    expect(result).toBe(true)
+  })
+})

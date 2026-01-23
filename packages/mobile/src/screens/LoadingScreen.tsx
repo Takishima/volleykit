@@ -2,11 +2,11 @@
  * Loading screen for app initialization
  */
 
-import { View, Text, ActivityIndicator } from 'react-native';
+import { View, Text, ActivityIndicator } from 'react-native'
 
-import type { RootStackScreenProps } from '../navigation/types';
+import type { RootStackScreenProps } from '../navigation/types'
 
-type Props = RootStackScreenProps<'Loading'>;
+type Props = RootStackScreenProps<'Loading'>
 
 export function LoadingScreen(_props: Props) {
   return (
@@ -14,5 +14,5 @@ export function LoadingScreen(_props: Props) {
       <ActivityIndicator size="large" color="#0ea5e9" />
       <Text className="text-gray-600 mt-4">Loading...</Text>
     </View>
-  );
+  )
 }

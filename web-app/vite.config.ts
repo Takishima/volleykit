@@ -10,7 +10,6 @@ import { visualizer } from 'rollup-plugin-visualizer'
 import { defineConfig, type Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-
 import packageJson from './package.json' with { type: 'json' }
 import { normalizeBasePath } from './src/shared/utils/basePath'
 
@@ -18,8 +17,8 @@ import { normalizeBasePath } from './src/shared/utils/basePath'
 // Zod v4 includes ~50 locale files for i18n error messages that we don't use.
 // This saves ~12-15 KB gzipped. The app uses default English error messages.
 function zodLocalesStubPlugin(): Plugin {
-  const ZOD_LOCALES_INDEX = /[/\\]zod[/\\]v4[/\\]locales[/\\]index\.js$/;
-  const STUB_CODE = 'export {};'; // Empty module - only English locale is loaded by default
+  const ZOD_LOCALES_INDEX = /[/\\]zod[/\\]v4[/\\]locales[/\\]index\.js$/
+  const STUB_CODE = 'export {};' // Empty module - only English locale is loaded by default
 
   return {
     name: 'zod-locales-stub',
@@ -27,11 +26,11 @@ function zodLocalesStubPlugin(): Plugin {
     load(id) {
       // Replace zod's locales index with an empty module to exclude all non-English locales
       if (ZOD_LOCALES_INDEX.test(id)) {
-        return STUB_CODE;
+        return STUB_CODE
       }
-      return null;
+      return null
     },
-  };
+  }
 }
 
 // Plugin to handle 404.html for GitHub Pages SPA routing
@@ -41,25 +40,27 @@ function spaFallbackPlugin(basePath: string): Plugin {
     apply: 'build', // Only run during build, not during tests or dev
     closeBundle() {
       try {
-        const source404Path = path.resolve(__dirname, '404.html');
-        const dist404Path = path.resolve(__dirname, 'dist', '404.html');
+        const source404Path = path.resolve(__dirname, '404.html')
+        const dist404Path = path.resolve(__dirname, 'dist', '404.html')
 
         if (!existsSync(source404Path)) {
-          throw new Error('404.html not found - SPA fallback is required for GitHub Pages deployment');
+          throw new Error(
+            '404.html not found - SPA fallback is required for GitHub Pages deployment'
+          )
         }
 
-        const content = readFileSync(source404Path, 'utf-8');
-        const processedContent = content.replaceAll('{{BASE_URL}}', basePath);
+        const content = readFileSync(source404Path, 'utf-8')
+        const processedContent = content.replaceAll('{{BASE_URL}}', basePath)
 
-        writeFileSync(dist404Path, processedContent);
+        writeFileSync(dist404Path, processedContent)
 
-        console.log(`✓ Generated 404.html with base path: "${basePath}"`);
+        console.log(`✓ Generated 404.html with base path: "${basePath}"`)
       } catch (error) {
-        console.error('Failed to generate 404.html:', error);
-        throw error;  // Fail build if this critical file can't be created
+        console.error('Failed to generate 404.html:', error)
+        throw error // Fail build if this critical file can't be created
       }
     },
-  };
+  }
 }
 
 /**
@@ -70,10 +71,10 @@ function spaFallbackPlugin(basePath: string): Plugin {
 function getGitHash(): string {
   try {
     // eslint-disable-next-line sonarjs/no-os-command-from-path -- Build-time only, git is always available in CI
-    return execSync('git rev-parse --short HEAD').toString().trim();
+    return execSync('git rev-parse --short HEAD').toString().trim()
   } catch {
-    console.warn('\x1b[33m⚠ Warning: Could not get git hash, using "dev"\x1b[0m');
-    return 'dev';
+    console.warn('\x1b[33m⚠ Warning: Could not get git hash, using "dev"\x1b[0m')
+    return 'dev'
   }
 }
 
@@ -86,7 +87,12 @@ function getGitHash(): string {
  * - Worker version change → clear session + reload (auth logic may have changed)
  * - Web app only change → reload WITHOUT clearing session (preserves login)
  */
-function versionFilePlugin(version: string, gitHash: string, basePath: string, apiProxyUrl: string): Plugin {
+function versionFilePlugin(
+  version: string,
+  gitHash: string,
+  basePath: string,
+  apiProxyUrl: string
+): Plugin {
   return {
     name: 'version-file',
     apply: 'build',
@@ -95,12 +101,12 @@ function versionFilePlugin(version: string, gitHash: string, basePath: string, a
         version,
         gitHash,
         buildTime: new Date().toISOString(),
-      };
+      }
 
-      const versionPath = path.resolve(__dirname, 'dist', 'version.json');
-      writeFileSync(versionPath, JSON.stringify(versionData, null, 2));
+      const versionPath = path.resolve(__dirname, 'dist', 'version.json')
+      writeFileSync(versionPath, JSON.stringify(versionData, null, 2))
 
-      console.log(`\x1b[32m✓ Generated version.json: v${version} (${gitHash})\x1b[0m`);
+      console.log(`\x1b[32m✓ Generated version.json: v${version} (${gitHash})\x1b[0m`)
     },
     // Inject version check script into index.html
     transformIndexHtml(html) {
@@ -234,16 +240,16 @@ function versionFilePlugin(version: string, gitHash: string, basePath: string, a
           }
         });
       })();
-    </script>`;
+    </script>`
 
       // Insert after the existing redirect script in <head>
-      return html.replace('</head>', versionCheckScript + '\n  </head>');
+      return html.replace('</head>', versionCheckScript + '\n  </head>')
     },
-  };
+  }
 }
 
 // Target API server for development proxy
-const VOLLEYMANAGER_API = 'https://volleymanager.volleyball.ch';
+const VOLLEYMANAGER_API = 'https://volleymanager.volleyball.ch'
 
 /**
  * Creates proxy configuration for development server.
@@ -255,7 +261,7 @@ const VOLLEYMANAGER_API = 'https://volleymanager.volleyball.ch';
  * fetch() API calls should be proxied.
  */
 function createDevProxy(paths: string[]): Record<string, object> {
-  const proxyConfig: Record<string, object> = {};
+  const proxyConfig: Record<string, object> = {}
   for (const proxyPath of paths) {
     proxyConfig[proxyPath] = {
       target: VOLLEYMANAGER_API,
@@ -267,72 +273,70 @@ function createDevProxy(paths: string[]): Record<string, object> {
       // API fetch calls send "*/*" or specific content types.
       // Return a path string to serve that file instead of proxying.
       bypass(req: { headers: { accept?: string } }) {
-        const accept = req.headers.accept || '';
+        const accept = req.headers.accept || ''
         if (accept.startsWith('text/html')) {
           // Return index.html path to serve SPA for page navigation
-          return '/index.html';
+          return '/index.html'
         }
         // Return undefined to proceed with proxying for API calls
-        return undefined;
+        return undefined
       },
-    };
+    }
   }
-  return proxyConfig;
+  return proxyConfig
 }
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   // Get git hash for version tracking (used in PWA update detection)
-  const gitHash = getGitHash();
+  const gitHash = getGitHash()
 
   // Warn if proxy URL is not configured for production (runtime check in client.ts handles the actual failure)
   if (mode === 'production' && !process.env.VITE_API_PROXY_URL) {
     console.warn(
       '\x1b[33m⚠ Warning: VITE_API_PROXY_URL is not set for production build.\n' +
-      '  API calls will fail unless configured. Set it to your Cloudflare Worker URL.\x1b[0m'
-    );
+        '  API calls will fail unless configured. Set it to your Cloudflare Worker URL.\x1b[0m'
+    )
   }
 
   // Normalize base path for deployment
-  const rawBasePath = process.env.VITE_BASE_PATH;
-  const basePath = normalizeBasePath(rawBasePath);
+  const rawBasePath = process.env.VITE_BASE_PATH
+  const basePath = normalizeBasePath(rawBasePath)
 
   // Detect if this is a PR preview build (path contains /pr-{number}/)
   // PR previews don't need service workers - they're for testing only
   // Also, the main site's service worker scope (/volleykit/) would intercept
   // PR preview requests (/volleykit/pr-XX/), causing navigation issues
   // Note: normalizeBasePath() guarantees trailing slash, so we can safely require it in the regex
-  const isPrPreview = /\/pr-\d+\//.test(basePath);
+  const isPrPreview = /\/pr-\d+\//.test(basePath)
 
   if (mode === 'production') {
     if (!rawBasePath) {
       console.warn(
         '\x1b[33m⚠ Warning: VITE_BASE_PATH is not set for production build.\n' +
-        '  Defaulting to "/" - set VITE_BASE_PATH in deployment workflow for GitHub Pages.\n' +
-        '  Example: VITE_BASE_PATH="/volleykit/"\x1b[0m'
-      );
+          '  Defaulting to "/" - set VITE_BASE_PATH in deployment workflow for GitHub Pages.\n' +
+          '  Example: VITE_BASE_PATH="/volleykit/"\x1b[0m'
+      )
     } else if (basePath !== rawBasePath) {
       // Log the normalized path for debugging
-      console.log(
-        `\x1b[36mℹ VITE_BASE_PATH normalized: "${rawBasePath}" → "${basePath}"\x1b[0m`
-      );
+      console.log(`\x1b[36mℹ VITE_BASE_PATH normalized: "${rawBasePath}" → "${basePath}"\x1b[0m`)
     }
 
-    console.log(`\x1b[32m✓ Building with base path: "${basePath}"\x1b[0m`);
+    console.log(`\x1b[32m✓ Building with base path: "${basePath}"\x1b[0m`)
 
     if (isPrPreview) {
-      console.log(`\x1b[36mℹ PR preview detected - service worker disabled\x1b[0m`);
+      console.log(`\x1b[36mℹ PR preview detected - service worker disabled\x1b[0m`)
     }
   }
 
   return {
     define: {
       // Expose PWA enabled state to the app
-      '__PWA_ENABLED__': JSON.stringify(!isPrPreview),
+      __PWA_ENABLED__: JSON.stringify(!isPrPreview),
       // Expose app version from package.json
-      '__APP_VERSION__': JSON.stringify(packageJson.version),
+      __APP_VERSION__: JSON.stringify(packageJson.version),
       // Expose git hash for version display and PWA update detection
-      '__GIT_HASH__': JSON.stringify(gitHash),
+      __GIT_HASH__: JSON.stringify(gitHash),
     },
     build: {
       rollupOptions: {
@@ -353,11 +357,11 @@ export default defineConfig(({ mode }) => {
           //   - Total JS Bundle:                  ~480 kB, limit 510 kB (+30 kB headroom)
           manualChunks: {
             'react-vendor': ['react', 'react-dom'],
-            'router': ['react-router-dom'],
-            'state': ['zustand', '@tanstack/react-query'],
-            'validation': ['zod'],
+            router: ['react-router-dom'],
+            state: ['zustand', '@tanstack/react-query'],
+            validation: ['zod'],
             'pdf-lib': ['pdf-lib'],
-            'cropper': ['react-easy-crop'],
+            cropper: ['react-easy-crop'],
           },
         },
       },
@@ -368,96 +372,103 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       // Disable PWA for PR previews to avoid service worker scope conflicts
       // The main site's SW scope (/volleykit/) would intercept PR preview requests
-      !isPrPreview && VitePWA({
-        registerType: 'autoUpdate',
-        // Include the service worker in development for testing
-        devOptions: {
-          enabled: true,
-        },
-        workbox: {
-          // Precache all static assets (app shell)
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
-          // Don't precache API responses, large files, or version.json (must be fetched fresh)
-          globIgnores: ['**/node_modules/**/*', 'version.json'],
-          // Use NetworkFirst for navigation requests to ensure fresh content
-          // but fall back to cache during deployment/network issues
-          // navigateFallback defaults to 'index.html' with correct base path handling
-          navigateFallbackDenylist: [
-            // Don't intercept API routes (with or without basePath)
-            /\/neos/,
-            /\/indoorvolleyball\.refadmin/,
-            /\/sportmanager\.indoorvolleyball/,
-            // Don't intercept security/auth routes - critical for login flow
-            /\/sportmanager\.security/,
-            /\/login$/,
-            /\/logout$/,
-            // Don't intercept PR preview routes - let them load their own assets
-            /\/pr-\d+/,
-            // Don't intercept OCR POC routes - it's a separate app
-            /\/ocr-poc/,
-            // Don't intercept help site routes - it's a separate Astro app
-            /\/help/,
-            // Don't intercept PDF files - let browser handle natively
-            /\.pdf$/,
-          ],
-          // Runtime caching for API responses
-          runtimeCaching: [
-            {
-              // Cache API responses with NetworkFirst strategy
-              // This ensures fresh data when online, cached data when offline/deploying
-              urlPattern: /^https:\/\/volleymanager\.volleyball\.ch\/.*/i,
-              handler: 'NetworkFirst',
-              options: {
-                cacheName: 'api-cache',
-                expiration: {
-                  maxEntries: 100,
-                  maxAgeSeconds: 60 * 60 * 24, // 24 hours
+      !isPrPreview &&
+        VitePWA({
+          registerType: 'autoUpdate',
+          // Include the service worker in development for testing
+          devOptions: {
+            enabled: true,
+          },
+          workbox: {
+            // Precache all static assets (app shell)
+            globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+            // Don't precache API responses, large files, or version.json (must be fetched fresh)
+            globIgnores: ['**/node_modules/**/*', 'version.json'],
+            // Use NetworkFirst for navigation requests to ensure fresh content
+            // but fall back to cache during deployment/network issues
+            // navigateFallback defaults to 'index.html' with correct base path handling
+            navigateFallbackDenylist: [
+              // Don't intercept API routes (with or without basePath)
+              /\/neos/,
+              /\/indoorvolleyball\.refadmin/,
+              /\/sportmanager\.indoorvolleyball/,
+              // Don't intercept security/auth routes - critical for login flow
+              /\/sportmanager\.security/,
+              /\/login$/,
+              /\/logout$/,
+              // Don't intercept PR preview routes - let them load their own assets
+              /\/pr-\d+/,
+              // Don't intercept OCR POC routes - it's a separate app
+              /\/ocr-poc/,
+              // Don't intercept help site routes - it's a separate Astro app
+              /\/help/,
+              // Don't intercept PDF files - let browser handle natively
+              /\.pdf$/,
+            ],
+            // Runtime caching for API responses
+            runtimeCaching: [
+              {
+                // Cache API responses with NetworkFirst strategy
+                // This ensures fresh data when online, cached data when offline/deploying
+                urlPattern: /^https:\/\/volleymanager\.volleyball\.ch\/.*/i,
+                handler: 'NetworkFirst',
+                options: {
+                  cacheName: 'api-cache',
+                  expiration: {
+                    maxEntries: 100,
+                    maxAgeSeconds: 60 * 60 * 24, // 24 hours
+                  },
+                  cacheableResponse: {
+                    statuses: [0, 200],
+                  },
+                  networkTimeoutSeconds: 10,
                 },
-                cacheableResponse: {
-                  statuses: [0, 200],
-                },
-                networkTimeoutSeconds: 10,
               },
-            },
-          ],
-        },
-        manifest: {
-          name: 'VolleyKit',
-          short_name: 'VolleyKit',
-          description: 'Swiss Volleyball Referee Management PWA',
-          theme_color: '#ff6b00',
-          background_color: '#ffffff',
-          display: 'standalone',
-          scope: basePath,
-          start_url: basePath,
-          icons: [
-            {
-              src: 'pwa-64x64.png',
-              sizes: '64x64',
-              type: 'image/png',
-            },
-            {
-              src: 'pwa-192x192.png',
-              sizes: '192x192',
-              type: 'image/png',
-            },
-            {
-              src: 'pwa-512x512.png',
-              sizes: '512x512',
-              type: 'image/png',
-            },
-            {
-              src: 'maskable-icon-512x512.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'maskable',
-            },
-          ],
-        },
-      }),
+            ],
+          },
+          manifest: {
+            name: 'VolleyKit',
+            short_name: 'VolleyKit',
+            description: 'Swiss Volleyball Referee Management PWA',
+            theme_color: '#ff6b00',
+            background_color: '#ffffff',
+            display: 'standalone',
+            scope: basePath,
+            start_url: basePath,
+            icons: [
+              {
+                src: 'pwa-64x64.png',
+                sizes: '64x64',
+                type: 'image/png',
+              },
+              {
+                src: 'pwa-192x192.png',
+                sizes: '192x192',
+                type: 'image/png',
+              },
+              {
+                src: 'pwa-512x512.png',
+                sizes: '512x512',
+                type: 'image/png',
+              },
+              {
+                src: 'maskable-icon-512x512.png',
+                sizes: '512x512',
+                type: 'image/png',
+                purpose: 'maskable',
+              },
+            ],
+          },
+        }),
       spaFallbackPlugin(basePath),
       // Generate version.json for PWA update detection (skip for PR previews)
-      !isPrPreview && versionFilePlugin(packageJson.version, gitHash, basePath, process.env.VITE_API_PROXY_URL || ''),
+      !isPrPreview &&
+        versionFilePlugin(
+          packageJson.version,
+          gitHash,
+          basePath,
+          process.env.VITE_API_PROXY_URL || ''
+        ),
       // Bundle analyzer - generates stats.html after build
       visualizer({
         filename: 'stats.html',
@@ -527,7 +538,7 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(__dirname, './src'),
         // Fix React dual instance issue in monorepo
         // Ensures all imports resolve to the same React instance (in root node_modules)
-        'react': path.resolve(__dirname, '../node_modules/react'),
+        react: path.resolve(__dirname, '../node_modules/react'),
         'react-dom': path.resolve(__dirname, '../node_modules/react-dom'),
       },
       // Fix dual package hazard with react-router in Node v22.12+
@@ -547,5 +558,5 @@ export default defineConfig(({ mode }) => {
         '/sportmanager.indoorvolleyball',
       ]),
     },
-  };
+  }
 })

@@ -5,46 +5,48 @@
  * Used when session expires and biometric re-auth is enabled.
  */
 
-import { View, Text, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, Modal } from 'react-native'
 
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons'
 
-import { useTranslation } from '@volleykit/shared/i18n';
+import { useTranslation } from '@volleykit/shared/i18n'
 
-import { COLORS, BIOMETRIC_ICON_SIZE } from '../constants';
+import { COLORS, BIOMETRIC_ICON_SIZE } from '../constants'
 
 interface BiometricPromptProps {
   /** Whether the prompt is visible */
-  visible: boolean;
+  visible: boolean
   /** Biometric type for display */
-  biometricType: 'faceId' | 'touchId' | 'fingerprint' | null;
+  biometricType: 'faceId' | 'touchId' | 'fingerprint' | null
   /** Biometric type name for display */
-  biometricTypeName: string;
+  biometricTypeName: string
   /** Number of failed attempts */
-  failedAttempts: number;
+  failedAttempts: number
   /** Maximum attempts before fallback */
-  maxAttempts: number;
+  maxAttempts: number
   /** Whether authentication is in progress */
-  isAuthenticating: boolean;
+  isAuthenticating: boolean
   /** Called when user taps to authenticate */
-  onAuthenticate: () => void;
+  onAuthenticate: () => void
   /** Called when user chooses to enter password instead */
-  onFallbackToPassword: () => void;
+  onFallbackToPassword: () => void
   /** Called when user cancels */
-  onCancel: () => void;
+  onCancel: () => void
 }
 
 /**
  * Get the icon name for the biometric type
  */
-function getBiometricIcon(type: 'faceId' | 'touchId' | 'fingerprint' | null): 'face-recognition' | 'fingerprint' {
+function getBiometricIcon(
+  type: 'faceId' | 'touchId' | 'fingerprint' | null
+): 'face-recognition' | 'fingerprint' {
   switch (type) {
     case 'faceId':
-      return 'face-recognition';
+      return 'face-recognition'
     case 'touchId':
     case 'fingerprint':
     default:
-      return 'fingerprint';
+      return 'fingerprint'
   }
 }
 
@@ -59,17 +61,12 @@ export function BiometricPrompt({
   onFallbackToPassword,
   onCancel,
 }: BiometricPromptProps) {
-  const { t } = useTranslation();
-  const iconName = getBiometricIcon(biometricType);
-  const remainingAttempts = maxAttempts - failedAttempts;
+  const { t } = useTranslation()
+  const iconName = getBiometricIcon(biometricType)
+  const remainingAttempts = maxAttempts - failedAttempts
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onCancel}
-    >
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <View
         className="flex-1 bg-black/50 items-center justify-center px-6"
         accessibilityElementsHidden={true}
@@ -90,14 +87,13 @@ export function BiometricPrompt({
           </Text>
 
           {/* Description */}
-          <Text className="text-gray-500 text-center mb-6">
-            {t('auth.sessionExpired')}
-          </Text>
+          <Text className="text-gray-500 text-center mb-6">{t('auth.sessionExpired')}</Text>
 
           {/* Failed attempts warning */}
           {failedAttempts > 0 && (
             <Text className="text-orange-600 text-center text-sm mb-4">
-              {t('auth.biometricFailed')} ({t('auth.attemptsRemaining', { count: remainingAttempts })})
+              {t('auth.biometricFailed')} (
+              {t('auth.attemptsRemaining', { count: remainingAttempts })})
             </Text>
           )}
 
@@ -110,7 +106,9 @@ export function BiometricPrompt({
             accessibilityLabel={t('auth.authenticateWith', { biometricType: biometricTypeName })}
           >
             <Text className="text-white font-semibold text-center">
-              {isAuthenticating ? t('common.loading') : t('auth.useBiometric', { biometricType: biometricTypeName })}
+              {isAuthenticating
+                ? t('common.loading')
+                : t('auth.useBiometric', { biometricType: biometricTypeName })}
             </Text>
           </TouchableOpacity>
 
@@ -133,12 +131,10 @@ export function BiometricPrompt({
             accessibilityRole="button"
             accessibilityLabel={t('common.cancel')}
           >
-            <Text className="text-gray-500 text-center">
-              {t('common.cancel')}
-            </Text>
+            <Text className="text-gray-500 text-center">{t('common.cancel')}</Text>
           </TouchableOpacity>
         </View>
       </View>
     </Modal>
-  );
+  )
 }

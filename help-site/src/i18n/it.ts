@@ -1,4 +1,4 @@
-import type { TranslationKeys } from './types';
+import type { TranslationKeys } from './types'
 
 export const it: TranslationKeys = {
   nav: {
@@ -28,7 +28,7 @@ export const it: TranslationKeys = {
 
   home: {
     title: 'Aiuto VolleyKit',
-    subtitle: 'La tua guida all\'app VolleyKit',
+    subtitle: "La tua guida all'app VolleyKit",
     description:
       'Scopri come utilizzare VolleyKit per gestire le tue designazioni arbitrali, gli scambi e i compensi.',
     ctaOpenApp: 'Apri App',
@@ -38,43 +38,35 @@ export const it: TranslationKeys = {
     features: {
       gettingStarted: {
         title: 'Primi passi',
-        description:
-          'Guida rapida per configurare e utilizzare VolleyKit per la prima volta.',
+        description: 'Guida rapida per configurare e utilizzare VolleyKit per la prima volta.',
       },
       assignments: {
         title: 'Designazioni',
-        description:
-          'Visualizza e gestisci le tue prossime partite arbitrali di pallavolo.',
+        description: 'Visualizza e gestisci le tue prossime partite arbitrali di pallavolo.',
       },
       exchanges: {
         title: 'Scambi',
-        description:
-          'Richiedi scambi di partite e offri le tue designazioni ad altri arbitri.',
+        description: 'Richiedi scambi di partite e offri le tue designazioni ad altri arbitri.',
       },
       compensations: {
         title: 'Compensi',
-        description:
-          'Monitora i tuoi guadagni arbitrali e lo storico dei compensi.',
+        description: 'Monitora i tuoi guadagni arbitrali e lo storico dei compensi.',
       },
       calendarMode: {
         title: 'Modalità calendario',
-        description:
-          'Accesso in sola lettura alle designazioni senza effettuare il login.',
+        description: 'Accesso in sola lettura alle designazioni senza effettuare il login.',
       },
       travelTime: {
         title: 'Tempo di viaggio',
-        description:
-          'Calcola i tempi di viaggio con i trasporti pubblici svizzeri.',
+        description: 'Calcola i tempi di viaggio con i trasporti pubblici svizzeri.',
       },
       offlinePwa: {
         title: 'Offline & PWA',
-        description:
-          'Installa l\'app e usala offline sul tuo dispositivo.',
+        description: "Installa l'app e usala offline sul tuo dispositivo.",
       },
       settings: {
         title: 'Impostazioni',
-        description:
-          'Personalizza lingua, tema e preferenze di notifica.',
+        description: 'Personalizza lingua, tema e preferenze di notifica.',
       },
     },
   },
@@ -87,23 +79,20 @@ export const it: TranslationKeys = {
     },
     assignments: {
       title: 'Designazioni',
-      description:
-        'Scopri come visualizzare e gestire le tue designazioni arbitrali in VolleyKit.',
+      description: 'Scopri come visualizzare e gestire le tue designazioni arbitrali in VolleyKit.',
     },
     exchanges: {
       title: 'Scambi',
-      description:
-        'Scopri come richiedere e gestire gli scambi di designazioni con altri arbitri.',
+      description: 'Scopri come richiedere e gestire gli scambi di designazioni con altri arbitri.',
     },
     compensations: {
       title: 'Compensi',
-      description:
-        'Scopri come monitorare e comprendere i tuoi compensi arbitrali.',
+      description: 'Scopri come monitorare e comprendere i tuoi compensi arbitrali.',
     },
     calendarMode: {
       title: 'Modalità calendario',
       description:
-        'Scopri la modalità calendario per l\'accesso in sola lettura alle designazioni arbitrali.',
+        "Scopri la modalità calendario per l'accesso in sola lettura alle designazioni arbitrali.",
     },
     travelTime: {
       title: 'Tempo di viaggio',
@@ -112,13 +101,11 @@ export const it: TranslationKeys = {
     },
     offlinePwa: {
       title: 'Offline & PWA',
-      description:
-        'Scopri come usare VolleyKit offline e installarlo come app progressiva.',
+      description: 'Scopri come usare VolleyKit offline e installarlo come app progressiva.',
     },
     settings: {
       title: 'Impostazioni',
-      description:
-        'Scopri come personalizzare le impostazioni e le preferenze di VolleyKit.',
+      description: 'Scopri come personalizzare le impostazioni e le preferenze di VolleyKit.',
     },
   },
 
@@ -131,8 +118,7 @@ export const it: TranslationKeys = {
     initialSubhint: 'Cerca in tutte le pagine della documentazione',
     searching: 'Ricerca in corso...',
     unavailable: 'Ricerca non disponibile',
-    unavailableHint:
-      'Esegui una build di produzione per abilitare la ricerca',
+    unavailableHint: 'Esegui una build di produzione per abilitare la ricerca',
     resultsCount: '{count} risultati',
     navigateHint: 'per navigare',
     selectHint: 'per selezionare',
@@ -177,7 +163,8 @@ export const it: TranslationKeys = {
     lead: "VolleyKit è un'applicazione web progressiva che offre un'interfaccia migliorata per gestire le tue designazioni arbitrali di pallavolo tramite il sistema volleymanager della Federazione Svizzera di Pallavolo.",
     whatIs: {
       title: "Cos'è VolleyKit?",
-      description: "VolleyKit si connette alla piattaforma ufficiale volleymanager.volleyball.ch e offre agli arbitri un'interfaccia moderna e ottimizzata per dispositivi mobili per:",
+      description:
+        "VolleyKit si connette alla piattaforma ufficiale volleymanager.volleyball.ch e offre agli arbitri un'interfaccia moderna e ottimizzata per dispositivi mobili per:",
       features: {
         viewAssignments: 'Visualizzare le prossime designazioni',
         manageExchanges: 'Richiedere e gestire scambi con altri arbitri',
@@ -185,33 +172,40 @@ export const it: TranslationKeys = {
         offlineAccess: 'Accedere alle designazioni offline',
         travelTime: 'Calcolare i tempi di viaggio con i trasporti pubblici svizzeri',
       },
-      infoBox: "VolleyKit è un'app non ufficiale creata per migliorare l'esperienza degli arbitri. Tutti i dati provengono dal sistema volleymanager ufficiale.",
+      infoBox:
+        "VolleyKit è un'app non ufficiale creata per migliorare l'esperienza degli arbitri. Tutti i dati provengono dal sistema volleymanager ufficiale.",
     },
     howToLogin: {
       title: 'Come accedere',
       description: 'VolleyKit offre due modi per accedere alle tue designazioni:',
       calendarMode: {
         title: 'Opzione 1: Modalità calendario (Consigliata)',
-        description: "Per un accesso rapido al tuo calendario senza inserire la password, puoi usare la modalità calendario con il tuo URL o codice calendario univoco da volleymanager.",
+        description:
+          'Per un accesso rapido al tuo calendario senza inserire la password, puoi usare la modalità calendario con il tuo URL o codice calendario univoco da volleymanager.',
         steps: {
           findUrl: {
             title: 'Trova il tuo URL calendario',
-            description: 'In volleymanager, vai su "Le mie designazioni" e copia il tuo URL di abbonamento al calendario.',
+            description:
+              'In volleymanager, vai su "Le mie designazioni" e copia il tuo URL di abbonamento al calendario.',
           },
           selectMode: {
             title: 'Seleziona Modalità calendario',
-            description: 'Nella pagina di login di VolleyKit, tocca la scheda "Modalità calendario".',
+            description:
+              'Nella pagina di login di VolleyKit, tocca la scheda "Modalità calendario".',
           },
           pasteUrl: {
             title: 'Incolla il tuo URL o codice',
-            description: 'Inserisci il tuo URL calendario o solo il codice per accedere al tuo programma.',
+            description:
+              'Inserisci il tuo URL calendario o solo il codice per accedere al tuo programma.',
           },
         },
-        infoBox: "La modalità calendario offre accesso in sola lettura – puoi vedere le designazioni ma non puoi confermare partite, richiedere scambi o accedere ai compensi. Vedi la guida alla modalità calendario per maggiori dettagli.",
+        infoBox:
+          'La modalità calendario offre accesso in sola lettura – puoi vedere le designazioni ma non puoi confermare partite, richiedere scambi o accedere ai compensi. Vedi la guida alla modalità calendario per maggiori dettagli.',
       },
       fullLogin: {
         title: 'Opzione 2: Login completo',
-        description: "Usa le tue credenziali volleymanager.volleyball.ch per l'accesso completo a tutte le funzionalità.",
+        description:
+          "Usa le tue credenziali volleymanager.volleyball.ch per l'accesso completo a tutte le funzionalità.",
         steps: {
           openApp: {
             title: 'Apri VolleyKit',
@@ -229,32 +223,39 @@ export const it: TranslationKeys = {
         screenshotAlt: 'Pagina di login VolleyKit con campi nome utente e password',
         screenshotCaption: 'La pagina di login VolleyKit',
         tipTitle: 'Password dimenticata?',
-        tipContent: 'VolleyKit usa le stesse credenziali di volleymanager.volleyball.ch. Usa la funzione di recupero password sul sito ufficiale se hai dimenticato la password.',
+        tipContent:
+          'VolleyKit usa le stesse credenziali di volleymanager.volleyball.ch. Usa la funzione di recupero password sul sito ufficiale se hai dimenticato la password.',
       },
     },
     quickTour: {
       title: 'Tour rapido',
-      description: 'Dopo il login, vedrai la dashboard principale con le tue prossime designazioni. Ecco una panoramica rapida delle sezioni principali:',
+      description:
+        'Dopo il login, vedrai la dashboard principale con le tue prossime designazioni. Ecco una panoramica rapida delle sezioni principali:',
       assignments: {
         title: 'Designazioni',
-        description: 'Visualizza tutte le tue prossime partite arbitrali. Ogni designazione mostra data, ora, squadre, sede e il tuo ruolo (1° arbitro, 2° arbitro o giudice di linea).',
+        description:
+          'Visualizza tutte le tue prossime partite arbitrali. Ogni designazione mostra data, ora, squadre, sede e il tuo ruolo (1° arbitro, 2° arbitro o giudice di linea).',
       },
       exchanges: {
         title: 'Scambi',
-        description: 'Sfoglia gli scambi disponibili da altri arbitri o richiedi uno scambio per una delle tue designazioni.',
+        description:
+          'Sfoglia gli scambi disponibili da altri arbitri o richiedi uno scambio per una delle tue designazioni.',
       },
       compensations: {
         title: 'Compensi',
-        description: "Monitora i tuoi pagamenti arbitrali e lo storico dei compensi. Filtra per periodo ed esporta i tuoi dati.",
+        description:
+          'Monitora i tuoi pagamenti arbitrali e lo storico dei compensi. Filtra per periodo ed esporta i tuoi dati.',
       },
       settings: {
         title: 'Impostazioni',
-        description: 'Personalizza la tua esperienza includendo lingua, posizione di casa per i calcoli di viaggio e preferenze di notifica.',
+        description:
+          'Personalizza la tua esperienza includendo lingua, posizione di casa per i calcoli di viaggio e preferenze di notifica.',
       },
     },
     nextSteps: {
       title: 'Prossimi passi',
-      description: 'Ora che hai familiarità con le basi, esplora le guide dettagliate per ogni funzionalità:',
+      description:
+        'Ora che hai familiarità con le basi, esplora le guide dettagliate per ogni funzionalità:',
       links: {
         assignments: 'Gestire le tue designazioni',
         exchanges: 'Richiedere e accettare scambi',
@@ -268,7 +269,8 @@ export const it: TranslationKeys = {
     lead: 'La sezione Designazioni è il tuo centro principale per visualizzare tutte le tue prossime partite arbitrali di pallavolo e gestire il tuo programma.',
     whatAre: {
       title: 'Cosa sono le designazioni?',
-      description: 'Le designazioni sono le partite per cui sei stato programmato come arbitro. Ogni designazione include:',
+      description:
+        'Le designazioni sono le partite per cui sei stato programmato come arbitro. Ogni designazione include:',
       details: {
         dateTime: 'Data e ora – Quando si svolge la partita',
         teams: 'Squadre – Nomi delle squadre di casa e ospite',
@@ -279,13 +281,15 @@ export const it: TranslationKeys = {
     },
     viewing: {
       title: 'Visualizzare le tue designazioni',
-      description: "La lista delle designazioni mostra tutte le tue prossime partite in ordine cronologico. Le partite sono raggruppate per data per vedere facilmente cosa c'è in arrivo.",
+      description:
+        "La lista delle designazioni mostra tutte le tue prossime partite in ordine cronologico. Le partite sono raggruppate per data per vedere facilmente cosa c'è in arrivo.",
       screenshotAlt: 'Lista designazioni con più partite in arrivo raggruppate per data',
       screenshotCaption: 'La vista lista designazioni con le prossime partite',
     },
     details: {
       title: 'Dettagli designazione',
-      description: 'Tocca una designazione per vedere tutti i dettagli. La vista dettagliata include:',
+      description:
+        'Tocca una designazione per vedere tutti i dettagli. La vista dettagliata include:',
       items: {
         gameInfo: 'Informazioni complete della partita',
         venueAddress: 'Indirizzo sede con link mappa',
@@ -298,18 +302,23 @@ export const it: TranslationKeys = {
     },
     actions: {
       title: 'Eseguire azioni',
-      description: 'VolleyKit usa gesti di scorrimento per accedere rapidamente alle azioni sulle tue schede designazione. A seconda dello stato della partita, potrebbero essere disponibili azioni diverse.',
+      description:
+        'VolleyKit usa gesti di scorrimento per accedere rapidamente alle azioni sulle tue schede designazione. A seconda dello stato della partita, potrebbero essere disponibili azioni diverse.',
       swipeRight: {
         title: 'Scorri a destra – Aggiungi allo scambio',
-        description: 'Scorri una scheda designazione verso destra per rivelare l\'azione di scambio. Se non puoi partecipare a una partita, puoi aggiungerla alla bacheca scambi per altri arbitri.',
+        description:
+          "Scorri una scheda designazione verso destra per rivelare l'azione di scambio. Se non puoi partecipare a una partita, puoi aggiungerla alla bacheca scambi per altri arbitri.",
         screenshotAlt: 'Scheda designazione scorsa a destra che mostra azione di scambio',
         screenshotCaption: 'Scorri a destra per aggiungere una designazione alla bacheca scambi',
-        warning: 'Assicurati di richiedere uno scambio con largo anticipo. Le richieste dell\'ultimo minuto potrebbero non trovare un sostituto in tempo.',
+        warning:
+          "Assicurati di richiedere uno scambio con largo anticipo. Le richieste dell'ultimo minuto potrebbero non trovare un sostituto in tempo.",
       },
       swipeLeft: {
         title: 'Scorri a sinistra – Valida & Modifica',
-        description: 'Scorri una scheda designazione verso sinistra per rivelare azioni aggiuntive:',
-        validate: 'Valida – Invia i risultati della partita e valida (disponibile per i primi arbitri dopo la partita)',
+        description:
+          'Scorri una scheda designazione verso sinistra per rivelare azioni aggiuntive:',
+        validate:
+          'Valida – Invia i risultati della partita e valida (disponibile per i primi arbitri dopo la partita)',
         edit: 'Modifica – Modifica i dettagli del tuo compenso per questa designazione',
         screenshotAlt: 'Scheda designazione scorsa a sinistra che mostra azioni valida e modifica',
         screenshotCaption: 'Scorri a sinistra per rivelare le azioni valida e modifica',
@@ -317,7 +326,8 @@ export const it: TranslationKeys = {
       },
       directions: {
         title: 'Ottieni indicazioni',
-        description: 'Tocca una scheda designazione per espanderla, poi usa il pulsante indicazioni per aprire la tua app mappe preferita con le indicazioni per la sede.',
+        description:
+          'Tocca una scheda designazione per espanderla, poi usa il pulsante indicazioni per aprire la tua app mappe preferita con le indicazioni per la sede.',
       },
     },
     upcomingPast: {
@@ -334,17 +344,20 @@ export const it: TranslationKeys = {
     lead: 'Il sistema di scambio permette agli arbitri di scambiare partite quando non possono partecipare alle loro designazioni programmate. Puoi richiedere scambi per le tue partite o prendere partite da altri arbitri.',
     whatAre: {
       title: 'Cosa sono gli scambi?',
-      description: 'Uno scambio è una richiesta da un arbitro che non può partecipare alla sua partita programmata e cerca un sostituto. Il sistema volleymanager mantiene una bacheca scambi dove gli arbitri possono:',
+      description:
+        'Uno scambio è una richiesta da un arbitro che non può partecipare alla sua partita programmata e cerca un sostituto. Il sistema volleymanager mantiene una bacheca scambi dove gli arbitri possono:',
       features: {
         postGames: 'Pubblicare le loro partite per lo scambio',
         browseGames: 'Sfogliare le partite disponibili da altri arbitri',
         acceptGames: 'Accettare partite che si adattano al loro programma',
       },
-      infoBox: 'Gli scambi sono gestiti tramite il sistema volleymanager ufficiale. VolleyKit offre un\'interfaccia più user-friendly alla stessa bacheca scambi.',
+      infoBox:
+        "Gli scambi sono gestiti tramite il sistema volleymanager ufficiale. VolleyKit offre un'interfaccia più user-friendly alla stessa bacheca scambi.",
     },
     requesting: {
       title: 'Richiedere uno scambio',
-      description: 'Quando non puoi partecipare a una delle tue partite programmate, puoi richiedere uno scambio per trovare un arbitro sostituto.',
+      description:
+        'Quando non puoi partecipare a una delle tue partite programmate, puoi richiedere uno scambio per trovare un arbitro sostituto.',
       steps: {
         findAssignment: {
           title: 'Trova la designazione',
@@ -352,25 +365,32 @@ export const it: TranslationKeys = {
         },
         swipeRight: {
           title: 'Scorri a destra sulla scheda',
-          description: "Scorri la scheda designazione verso destra per rivelare l'azione di scambio, poi toccala. La partita verrà pubblicata sulla bacheca scambi.",
+          description:
+            "Scorri la scheda designazione verso destra per rivelare l'azione di scambio, poi toccala. La partita verrà pubblicata sulla bacheca scambi.",
         },
       },
       screenshotAlt: 'Scheda designazione con azione di scorrimento scambio rivelata',
       screenshotCaption: 'Richiedere uno scambio per una partita',
       warningTitle: 'Richiedi presto',
-      warningContent: 'Prima richiedi uno scambio, più probabilità hai di trovare un sostituto. Le richieste dell\'ultimo minuto spesso restano senza risposta.',
+      warningContent:
+        "Prima richiedi uno scambio, più probabilità hai di trovare un sostituto. Le richieste dell'ultimo minuto spesso restano senza risposta.",
     },
     viewing: {
       title: 'Visualizzare gli scambi disponibili',
-      description: 'La scheda Scambi mostra tutte le partite attualmente disponibili per lo scambio. Queste sono partite che altri arbitri hanno pubblicato e per cui cercano sostituti.',
+      description:
+        'La scheda Scambi mostra tutte le partite attualmente disponibili per lo scambio. Queste sono partite che altri arbitri hanno pubblicato e per cui cercano sostituti.',
       screenshotAlt: 'Lista delle partite di scambio disponibili da altri arbitri',
       screenshotCaption: 'Partite disponibili sulla bacheca scambi',
       filtering: {
         title: 'Filtrare gli scambi',
-        description: 'Filtra la lista scambi per trovare partite che ti convengono. I filtri diventano disponibili dopo aver configurato le impostazioni richieste:',
-        distance: 'Distanza – Filtra per distanza massima dalla tua posizione di casa. Richiede di impostare la posizione di casa nelle Impostazioni.',
-        travelTime: "Tempo di viaggio – Filtra per tempo di viaggio massimo con i trasporti pubblici. Richiede sia una posizione di casa che l'attivazione dell'API dei trasporti pubblici nelle Impostazioni.",
-        usage: "Una volta disponibili, i filtri appaiono come chip toggle accanto all'icona ingranaggio. Tocca l'ingranaggio per configurare i valori massimi per ogni filtro.",
+        description:
+          'Filtra la lista scambi per trovare partite che ti convengono. I filtri diventano disponibili dopo aver configurato le impostazioni richieste:',
+        distance:
+          'Distanza – Filtra per distanza massima dalla tua posizione di casa. Richiede di impostare la posizione di casa nelle Impostazioni.',
+        travelTime:
+          "Tempo di viaggio – Filtra per tempo di viaggio massimo con i trasporti pubblici. Richiede sia una posizione di casa che l'attivazione dell'API dei trasporti pubblici nelle Impostazioni.",
+        usage:
+          "Una volta disponibili, i filtri appaiono come chip toggle accanto all'icona ingranaggio. Tocca l'ingranaggio per configurare i valori massimi per ogni filtro.",
         tip: "Imposta la tua posizione di casa nelle Impostazioni per sbloccare il filtraggio per distanza. Attiva l'API dei trasporti pubblici per filtrare anche per tempo di viaggio.",
       },
     },
@@ -384,7 +404,8 @@ export const it: TranslationKeys = {
         },
         swipeLeft: {
           title: 'Scorri a sinistra sulla scheda',
-          description: "Scorri la scheda scambio verso sinistra per rivelare l'azione di presa in carico, poi toccala.",
+          description:
+            "Scorri la scheda scambio verso sinistra per rivelare l'azione di presa in carico, poi toccala.",
         },
         confirm: {
           title: 'Conferma la tua accettazione',
@@ -399,17 +420,21 @@ export const it: TranslationKeys = {
     },
     managing: {
       title: 'Gestire le tue richieste di scambio',
-      description: "Puoi visualizzare e gestire le tue richieste di scambio attive dalla scheda Scambi. Se non hai più bisogno di uno scambio (es. il tuo programma è cambiato), puoi annullare la richiesta prima che qualcuno la accetti.",
+      description:
+        'Puoi visualizzare e gestire le tue richieste di scambio attive dalla scheda Scambi. Se non hai più bisogno di uno scambio (es. il tuo programma è cambiato), puoi annullare la richiesta prima che qualcuno la accetti.',
       canceling: {
         title: 'Annullare una richiesta',
         description: 'Per annullare una richiesta di scambio che hai fatto:',
         steps: {
           goToExchanges: 'Vai alla scheda Scambi',
-          selectAddedByMe: 'Seleziona la scheda "Aggiunti da me" per vedere le tue richieste in sospeso',
-          swipeRight: "Scorri a destra sulla scheda richiesta per rivelare l'azione di rimozione, poi toccala",
+          selectAddedByMe:
+            'Seleziona la scheda "Aggiunti da me" per vedere le tue richieste in sospeso',
+          swipeRight:
+            "Scorri a destra sulla scheda richiesta per rivelare l'azione di rimozione, poi toccala",
           confirmCancellation: "Conferma l'annullamento",
         },
-        infoBox: "Puoi annullare una richiesta di scambio solo se nessuno l'ha ancora accettata. Una volta accettato, lo scambio è definitivo.",
+        infoBox:
+          "Puoi annullare una richiesta di scambio solo se nessuno l'ha ancora accettata. Una volta accettato, lo scambio è definitivo.",
       },
     },
   },
@@ -419,19 +444,22 @@ export const it: TranslationKeys = {
     lead: 'La sezione Compensi ti aiuta a monitorare i tuoi guadagni arbitrali e lo storico dei pagamenti. Visualizza i pagamenti passati, filtra per periodo ed esporta i tuoi dati per i tuoi archivi.',
     whatAre: {
       title: 'Cosa sono i compensi?',
-      description: 'I compensi sono i pagamenti che ricevi per arbitrare partite di pallavolo. Ogni voce di compenso include tipicamente:',
+      description:
+        'I compensi sono i pagamenti che ricevi per arbitrare partite di pallavolo. Ogni voce di compenso include tipicamente:',
       details: {
         gameDetails: 'Dettagli partita – La partita che hai arbitrato',
         date: 'Data – Quando si è svolta la partita',
-        amount: 'Importo – L\'importo del compenso in CHF',
+        amount: "Importo – L'importo del compenso in CHF",
         paymentStatus: 'Stato pagamento – In sospeso, pagato o elaborato',
         role: 'Ruolo – La tua funzione nella partita',
       },
-      infoBox: 'Gli importi dei compensi sono stabiliti da Swiss Volley e variano in base al livello di lega e al tuo ruolo nella partita.',
+      infoBox:
+        'Gli importi dei compensi sono stabiliti da Swiss Volley e variano in base al livello di lega e al tuo ruolo nella partita.',
     },
     viewing: {
       title: 'Visualizzare i tuoi compensi',
-      description: "La lista compensi mostra tutti i tuoi pagamenti registrati in ordine cronologico. Ogni voce mostra le informazioni chiave a colpo d'occhio.",
+      description:
+        "La lista compensi mostra tutti i tuoi pagamenti registrati in ordine cronologico. Ogni voce mostra le informazioni chiave a colpo d'occhio.",
       screenshotAlt: 'Lista compensi che mostra lo storico pagamenti con importi e date',
       screenshotCaption: 'Il tuo storico compensi',
       paymentStatus: {
@@ -455,19 +483,25 @@ export const it: TranslationKeys = {
     },
     exportPdf: {
       title: 'Esporta in PDF',
-      description: "Puoi esportare singoli record di compenso come documenti PDF. Scorri a sinistra su una scheda compenso per rivelare l'azione di esportazione PDF.",
-      usage: "Il PDF esportato include i dettagli della partita e le informazioni sul compenso in un documento formattato. Questo è utile per le squadre che devono pagare l'arbitro direttamente.",
-      infoBox: "L'esportazione PDF crea un documento dall'aspetto ufficiale con tutti i dettagli della partita e del compenso che le squadre potrebbero richiedere per i loro archivi.",
+      description:
+        "Puoi esportare singoli record di compenso come documenti PDF. Scorri a sinistra su una scheda compenso per rivelare l'azione di esportazione PDF.",
+      usage:
+        "Il PDF esportato include i dettagli della partita e le informazioni sul compenso in un documento formattato. Questo è utile per le squadre che devono pagare l'arbitro direttamente.",
+      infoBox:
+        "L'esportazione PDF crea un documento dall'aspetto ufficiale con tutti i dettagli della partita e del compenso che le squadre potrebbero richiedere per i loro archivi.",
     },
     paymentSchedule: {
       title: 'Calendario pagamenti',
-      description: 'I pagamenti dei compensi sono tipicamente elaborati mensilmente da Swiss Volley. Il calendario esatto può variare, ma generalmente:',
+      description:
+        'I pagamenti dei compensi sono tipicamente elaborati mensilmente da Swiss Volley. Il calendario esatto può variare, ma generalmente:',
       details: {
         processing: "Le partite del mese precedente vengono elaborate all'inizio di ogni mese",
-        bankTransfer: 'I pagamenti vengono effettuati tramite bonifico bancario sul tuo conto registrato',
+        bankTransfer:
+          'I pagamenti vengono effettuati tramite bonifico bancario sul tuo conto registrato',
         timing: "L'elaborazione può richiedere 2-4 settimane dopo la fine del mese",
       },
-      warning: 'Assicurati che i tuoi dati bancari siano aggiornati nel sistema volleymanager per evitare ritardi nei pagamenti.',
+      warning:
+        'Assicurati che i tuoi dati bancari siano aggiornati nel sistema volleymanager per evitare ritardi nei pagamenti.',
     },
   },
 
@@ -476,7 +510,8 @@ export const it: TranslationKeys = {
     lead: 'La modalità calendario offre accesso in sola lettura per visualizzare le designazioni arbitrali senza un login completo. Perfetta per controllare rapidamente il tuo programma o condividerlo con i familiari.',
     whatIs: {
       title: "Cos'è la modalità calendario?",
-      description: "La modalità calendario è un metodo di accesso leggero in sola lettura che ti permette di vedere le tue prossime designazioni senza inserire la password. Usa un codice calendario univoco collegato al tuo account arbitro.",
+      description:
+        'La modalità calendario è un metodo di accesso leggero in sola lettura che ti permette di vedere le tue prossime designazioni senza inserire la password. Usa un codice calendario univoco collegato al tuo account arbitro.',
       features: {
         viewAssignments: 'Visualizzare le tue prossime designazioni di partite',
         seeDetails: 'Vedere i dettagli delle partite inclusi data, ora, squadre e sede',
@@ -497,11 +532,13 @@ export const it: TranslationKeys = {
     },
     howToAccess: {
       title: 'Come accedere alla modalità calendario',
-      description: 'Per usare la modalità calendario, hai bisogno del tuo codice calendario univoco dal sistema volleymanager.',
+      description:
+        'Per usare la modalità calendario, hai bisogno del tuo codice calendario univoco dal sistema volleymanager.',
       steps: {
         findCode: {
           title: 'Trova il tuo codice calendario',
-          description: 'Accedi a volleymanager.volleyball.ch e trova il tuo codice calendario nelle impostazioni del profilo.',
+          description:
+            'Accedi a volleymanager.volleyball.ch e trova il tuo codice calendario nelle impostazioni del profilo.',
         },
         openApp: {
           title: 'Apri VolleyKit',
@@ -513,21 +550,25 @@ export const it: TranslationKeys = {
         },
         enterCode: {
           title: 'Inserisci il tuo codice',
-          description: 'Inserisci il tuo codice calendario per accedere al tuo programma in sola lettura.',
+          description:
+            'Inserisci il tuo codice calendario per accedere al tuo programma in sola lettura.',
         },
       },
-      screenshotAlt: "Schermata di ingresso modalità calendario con campo inserimento codice",
+      screenshotAlt: 'Schermata di ingresso modalità calendario con campo inserimento codice',
       screenshotCaption: 'Entrare in modalità calendario con il tuo codice',
     },
     viewingSchedule: {
       title: 'Visualizzare il tuo programma',
-      description: 'In modalità calendario, vedrai le tue prossime designazioni in una vista semplificata. L\'interfaccia mostra le informazioni essenziali per ogni partita.',
-      screenshotAlt: 'Modalità calendario che mostra le prossime designazioni in vista sola lettura',
+      description:
+        "In modalità calendario, vedrai le tue prossime designazioni in una vista semplificata. L'interfaccia mostra le informazioni essenziali per ogni partita.",
+      screenshotAlt:
+        'Modalità calendario che mostra le prossime designazioni in vista sola lettura',
       screenshotCaption: 'Vista designazioni in modalità calendario',
     },
     limitations: {
       title: 'Limitazioni vs login completo',
-      description: 'La modalità calendario è in sola lettura, il che significa che alcune funzionalità non sono disponibili:',
+      description:
+        'La modalità calendario è in sola lettura, il che significa che alcune funzionalità non sono disponibili:',
       table: {
         feature: 'Funzionalità',
         fullLogin: 'Login completo',
@@ -540,17 +581,20 @@ export const it: TranslationKeys = {
         viewCompensations: 'Visualizza compensi',
         acceptExchanges: 'Accetta scambi',
       },
-      infoBox: 'Per azioni come confermare designazioni o richiedere scambi, dovrai accedere con le tue credenziali complete.',
+      infoBox:
+        'Per azioni come confermare designazioni o richiedere scambi, dovrai accedere con le tue credenziali complete.',
     },
     security: {
       title: 'Mantenere il tuo codice sicuro',
-      description: 'Anche se la modalità calendario è in sola lettura, il tuo codice calendario dovrebbe comunque essere trattato con cura:',
+      description:
+        'Anche se la modalità calendario è in sola lettura, il tuo codice calendario dovrebbe comunque essere trattato con cura:',
       tips: {
         shareWithTrust: 'Condividi solo con persone di fiducia',
         dontPostPublicly: 'Non pubblicare il tuo codice pubblicamente online',
         ifCompromised: 'Se sospetti che il tuo codice sia stato compromesso, contatta Swiss Volley',
       },
-      warning: 'Il tuo codice calendario rivela il tuo programma completo di partite. Condividilo solo con persone con cui ti fidi di condividere i tuoi spostamenti.',
+      warning:
+        'Il tuo codice calendario rivela il tuo programma completo di partite. Condividilo solo con persone con cui ti fidi di condividere i tuoi spostamenti.',
     },
   },
 
@@ -559,18 +603,21 @@ export const it: TranslationKeys = {
     lead: 'VolleyKit integra i dati dei trasporti pubblici svizzeri per mostrarti quanto tempo ci vuole per raggiungere ogni sede di partita. Pianifica meglio i tuoi viaggi e non arrivare mai in ritardo a una partita.',
     howItWorks: {
       title: 'Come funziona',
-      description: "La funzionalità tempo di viaggio usa l'API dei trasporti pubblici svizzeri (FFS/öV) per calcolare i tempi di viaggio dalla tua posizione di casa a ogni sede di partita. Considera:",
+      description:
+        "La funzionalità tempo di viaggio usa l'API dei trasporti pubblici svizzeri (FFS/öV) per calcolare i tempi di viaggio dalla tua posizione di casa a ogni sede di partita. Considera:",
       considerations: {
         schedules: 'Orari in tempo reale di treni, bus e tram',
         walkingTime: 'Tempo di cammino da/per le stazioni',
         transferTimes: 'Tempi di cambio tra connessioni',
         gameStartTime: "L'ora effettiva di inizio partita",
       },
-      infoBox: 'I tempi di viaggio sono calcolati usando i trasporti pubblici. Se guidi abitualmente, usa i tempi come stima approssimativa o per pianificare opzioni di trasporto alternative.',
+      infoBox:
+        'I tempi di viaggio sono calcolati usando i trasporti pubblici. Se guidi abitualmente, usa i tempi come stima approssimativa o per pianificare opzioni di trasporto alternative.',
     },
     settingHome: {
       title: 'Impostare la tua posizione di casa',
-      description: "Per ottenere tempi di viaggio accurati, devi impostare la tua posizione di casa nelle impostazioni dell'app.",
+      description:
+        "Per ottenere tempi di viaggio accurati, devi impostare la tua posizione di casa nelle impostazioni dell'app.",
       steps: {
         openSettings: {
           title: 'Apri Impostazioni',
@@ -595,7 +642,8 @@ export const it: TranslationKeys = {
     },
     viewingTimes: {
       title: 'Visualizzare i tempi di viaggio',
-      description: 'Una volta impostata la posizione di casa, i tempi di viaggio appaiono sulle tue schede designazione e nella vista dettagliata della designazione.',
+      description:
+        'Una volta impostata la posizione di casa, i tempi di viaggio appaiono sulle tue schede designazione e nella vista dettagliata della designazione.',
       screenshotAlt: 'Scheda designazione che mostra informazioni sul tempo di viaggio',
       screenshotCaption: 'Tempo di viaggio visualizzato su una designazione',
       whatsShown: {
@@ -614,23 +662,27 @@ export const it: TranslationKeys = {
         walkingSegments: 'Segmenti a piedi',
         transferTimes: 'Tempi di cambio',
       },
-      sbbLink: "Puoi anche aprire il viaggio direttamente nell'app o sito FFS per aggiornamenti in tempo reale e acquisto biglietti.",
+      sbbLink:
+        "Puoi anche aprire il viaggio direttamente nell'app o sito FFS per aggiornamenti in tempo reale e acquisto biglietti.",
       screenshotAlt: 'Informazioni dettagliate del viaggio con connessioni e orari',
       screenshotCaption: 'Dettagli completi del viaggio per la pianificazione',
     },
     arrivalBuffer: {
       title: "Margine d'arrivo",
-      description: "L'ora di partenza suggerita include un margine per assicurarsi di arrivare prima dell'inizio della partita:",
+      description:
+        "L'ora di partenza suggerita include un margine per assicurarsi di arrivare prima dell'inizio della partita:",
       details: {
         standardBuffer: "Margine standard: 15-30 minuti prima dell'ora della partita",
         timeFor: 'Tempo per trovare la sede, cambiarsi e riscaldarsi',
         accountForDelays: 'Tenere conto di potenziali piccoli ritardi',
       },
-      warning: 'Prevedi sempre tempo extra per partite importanti o sedi sconosciute. I trasporti pubblici possono subire ritardi imprevisti.',
+      warning:
+        'Prevedi sempre tempo extra per partite importanti o sedi sconosciute. I trasporti pubblici possono subire ritardi imprevisti.',
     },
     offlineAvailability: {
       title: 'Disponibilità offline',
-      description: 'I tempi di viaggio vengono memorizzati nella cache quando li visualizzi online. Se sei offline:',
+      description:
+        'I tempi di viaggio vengono memorizzati nella cache quando li visualizzi online. Se sei offline:',
       details: {
         cachedAvailable: 'I tempi di viaggio visualizzati in precedenza restano disponibili',
         requiresConnection: 'I nuovi calcoli richiedono una connessione internet',
@@ -642,10 +694,11 @@ export const it: TranslationKeys = {
 
   offlinePwa: {
     heading: 'Funzionalità offline & PWA',
-    lead: "VolleyKit è una Progressive Web App (PWA) che puoi installare sul tuo dispositivo e usare offline. Accedi alle tue designazioni anche senza connessione internet.",
+    lead: 'VolleyKit è una Progressive Web App (PWA) che puoi installare sul tuo dispositivo e usare offline. Accedi alle tue designazioni anche senza connessione internet.',
     whatIsPwa: {
       title: "Cos'è una PWA?",
-      description: "Una Progressive Web App è un sito web che funziona come un'app nativa. Quando installi VolleyKit:",
+      description:
+        "Una Progressive Web App è un sito web che funziona come un'app nativa. Quando installi VolleyKit:",
       benefits: {
         homeScreen: "Appare sulla tua schermata home come un'app normale",
         ownWindow: 'Si apre in una propria finestra senza interfaccia browser',
@@ -657,7 +710,8 @@ export const it: TranslationKeys = {
     },
     installing: {
       title: "Installare l'app",
-      description: 'Puoi installare VolleyKit su qualsiasi dispositivo moderno – telefoni, tablet o computer.',
+      description:
+        'Puoi installare VolleyKit su qualsiasi dispositivo moderno – telefoni, tablet o computer.',
       ios: {
         title: 'Su iOS (iPhone/iPad)',
         steps: {
@@ -687,7 +741,7 @@ export const it: TranslationKeys = {
             description: "Altri browser come Firefox supportano anche l'installazione PWA.",
           },
           lookForPrompt: {
-            title: "Cerca il prompt di installazione",
+            title: 'Cerca il prompt di installazione',
             description: "Dovrebbe apparire un banner o prompt che chiede di installare l'app.",
           },
           tapInstall: {
@@ -700,12 +754,14 @@ export const it: TranslationKeys = {
       screenshotCaption: 'Installare VolleyKit sul tuo dispositivo',
       desktop: {
         title: 'Su Desktop (Chrome/Edge)',
-        description: "Cerca l'icona di installazione nella barra degli indirizzi (di solito un + o icona computer), o usa il menu del browser per trovare \"Installa VolleyKit\".",
+        description:
+          'Cerca l\'icona di installazione nella barra degli indirizzi (di solito un + o icona computer), o usa il menu del browser per trovare "Installa VolleyKit".',
       },
     },
     whatWorksOffline: {
       title: 'Cosa funziona offline',
-      description: 'Quando sei offline, puoi ancora accedere ai contenuti che hai visualizzato in precedenza:',
+      description:
+        'Quando sei offline, puoi ancora accedere ai contenuti che hai visualizzato in precedenza:',
       table: {
         feature: 'Funzionalità',
         offline: 'Offline',
@@ -723,17 +779,20 @@ export const it: TranslationKeys = {
         viewCompensations: 'Visualizza compensi',
         viewCompensationsNote: 'Se caricati in precedenza',
       },
-      infoBox: "L'app si sincronizza automaticamente quando torni online. Qualsiasi modifica ai dati verrà recuperata e visualizzata.",
+      infoBox:
+        "L'app si sincronizza automaticamente quando torni online. Qualsiasi modifica ai dati verrà recuperata e visualizzata.",
     },
     offlineIndicator: {
       title: 'Indicatore offline',
-      description: "Quando sei offline, VolleyKit mostra un indicatore visivo per farti sapere che stai visualizzando dati in cache. Cerca il badge offline nell'intestazione o un banner in cima allo schermo.",
+      description:
+        "Quando sei offline, VolleyKit mostra un indicatore visivo per farti sapere che stai visualizzando dati in cache. Cerca il badge offline nell'intestazione o un banner in cima allo schermo.",
       screenshotAlt: "Indicatore offline che mostra che l'app funziona senza internet",
       screenshotCaption: 'Indicatore modalità offline',
     },
     updating: {
       title: "Aggiornare l'app",
-      description: 'VolleyKit si aggiorna automaticamente in background. Quando una nuova versione è disponibile:',
+      description:
+        'VolleyKit si aggiorna automaticamente in background. Quando una nuova versione è disponibile:',
       steps: {
         backgroundDownload: "L'app scarica l'aggiornamento in background",
         notificationAppears: "Appare una notifica quando l'aggiornamento è pronto",
@@ -745,8 +804,10 @@ export const it: TranslationKeys = {
     },
     storage: {
       title: 'Utilizzo dello spazio',
-      description: "VolleyKit usa spazio di archiviazione minimo sul tuo dispositivo – tipicamente meno di 5MB per l'app stessa più i dati in cache. Puoi svuotare la cache dalle impostazioni del browser se necessario.",
-      warning: 'Svuotare i dati del browser o "Svuota cache" rimuoverà i tuoi dati offline. Potresti dover ricaricare le designazioni la prossima volta che apri l\'app.',
+      description:
+        "VolleyKit usa spazio di archiviazione minimo sul tuo dispositivo – tipicamente meno di 5MB per l'app stessa più i dati in cache. Puoi svuotare la cache dalle impostazioni del browser se necessario.",
+      warning:
+        'Svuotare i dati del browser o "Svuota cache" rimuoverà i tuoi dati offline. Potresti dover ricaricare le designazioni la prossima volta che apri l\'app.',
     },
   },
 
@@ -755,7 +816,8 @@ export const it: TranslationKeys = {
     lead: 'Personalizza VolleyKit secondo le tue preferenze. Configura lingua, posizione di casa e opzioni di privacy.',
     accessing: {
       title: 'Accedere alle impostazioni',
-      description: 'Apri le impostazioni toccando l\'icona ingranaggio nella barra di navigazione, o selezionando "Impostazioni" dal menu principale.',
+      description:
+        'Apri le impostazioni toccando l\'icona ingranaggio nella barra di navigazione, o selezionando "Impostazioni" dal menu principale.',
       screenshotAlt: 'Pagina impostazioni che mostra tutte le opzioni disponibili',
       screenshotCaption: 'Pagina impostazioni VolleyKit',
     },
@@ -768,10 +830,12 @@ export const it: TranslationKeys = {
         email: 'Email – Il tuo indirizzo email registrato',
         sessionStatus: 'Stato sessione – Il tuo stato di login attuale',
       },
-      infoBox: 'Le informazioni del profilo provengono da volleymanager e possono essere modificate solo sul sito ufficiale, non in VolleyKit.',
+      infoBox:
+        'Le informazioni del profilo provengono da volleymanager e possono essere modificate solo sul sito ufficiale, non in VolleyKit.',
       loggingOut: {
         title: 'Disconnessione',
-        description: 'Tocca "Disconnetti" per uscire dal tuo account. Questo cancella la tua sessione e tutti i dati memorizzati localmente.',
+        description:
+          'Tocca "Disconnetti" per uscire dal tuo account. Questo cancella la tua sessione e tutti i dati memorizzati localmente.',
       },
     },
     language: {
@@ -783,13 +847,15 @@ export const it: TranslationKeys = {
         francais: 'Français – Francese',
         italiano: 'Italiano – Italiano',
       },
-      autoDetect: "L'app userà automaticamente la lingua del tuo browser se supportata, ma puoi cambiarla nelle impostazioni.",
+      autoDetect:
+        "L'app userà automaticamente la lingua del tuo browser se supportata, ma puoi cambiarla nelle impostazioni.",
       screenshotAlt: 'Selezione lingua che mostra le opzioni disponibili',
       screenshotCaption: "Cambiare la lingua dell'app",
     },
     homeLocation: {
       title: 'Posizione casa',
-      description: 'Imposta la tua posizione di casa per abilitare i calcoli dei tempi di viaggio. Questo viene usato per mostrare quanto tempo ci vuole per raggiungere ogni sede di partita.',
+      description:
+        'Imposta la tua posizione di casa per abilitare i calcoli dei tempi di viaggio. Questo viene usato per mostrare quanto tempo ci vuole per raggiungere ogni sede di partita.',
       instructions: {
         enterAddress: 'Inserisci il tuo indirizzo o la stazione più vicina',
         useAutocomplete: "Usa i suggerimenti di autocompletamento per l'accuratezza",
@@ -805,7 +871,8 @@ export const it: TranslationKeys = {
       description: 'Controlla come vengono gestiti i tuoi dati:',
       localStorage: {
         title: 'Archiviazione locale',
-        description: "VolleyKit memorizza dati localmente per abilitare l'accesso offline e migliorare le prestazioni:",
+        description:
+          "VolleyKit memorizza dati localmente per abilitare l'accesso offline e migliorare le prestazioni:",
         items: {
           assignmentCache: 'Cache designazioni – Le tue designazioni recenti',
           preferences: 'Preferenze – Le tue impostazioni e preferenze',
@@ -814,13 +881,15 @@ export const it: TranslationKeys = {
       },
       clearData: {
         title: 'Cancella dati locali',
-        description: 'Puoi cancellare tutti i dati memorizzati localmente dalla pagina impostazioni. Questo:',
+        description:
+          'Puoi cancellare tutti i dati memorizzati localmente dalla pagina impostazioni. Questo:',
         effects: {
           removeCached: 'Rimuoverà designazioni in cache e dati di viaggio',
           resetPreferences: 'Ripristinerà tutte le preferenze ai valori predefiniti',
           requireLogin: 'Richiederà un nuovo login',
         },
-        warning: "La cancellazione dei dati locali non può essere annullata. Dovrai ricaricare le tue designazioni la prossima volta che apri l'app.",
+        warning:
+          "La cancellazione dei dati locali non può essere annullata. Dovrai ricaricare le tue designazioni la prossima volta che apri l'app.",
       },
       screenshotAlt: 'Sezione impostazioni dati e privacy con pulsante cancella dati',
       screenshotCaption: 'Opzioni dati e privacy',
@@ -833,7 +902,8 @@ export const it: TranslationKeys = {
         lastUpdated: "Ultimo aggiornamento – Quando l'app è stata aggiornata l'ultima volta",
         links: 'Link – Repository GitHub, tracker problemi, sito aiuto',
       },
-      infoBox: 'Controlla il numero di versione quando segnali problemi – ci aiuta a identificare e risolvere i problemi più velocemente.',
+      infoBox:
+        'Controlla il numero di versione quando segnali problemi – ci aiuta a identificare e risolvere i problemi più velocemente.',
     },
   },
-};
+}

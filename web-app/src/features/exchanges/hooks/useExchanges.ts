@@ -130,11 +130,7 @@ export function useGameExchanges(status: ExchangeStatus = 'all') {
 /**
  * Mutation hook to apply for an exchange.
  */
-export function useApplyForExchange(): UseMutationResult<
-  PickExchangeResponse,
-  Error,
-  string
-> {
+export function useApplyForExchange(): UseMutationResult<PickExchangeResponse, Error, string> {
   const queryClient = useQueryClient()
   const dataSource = useAuthStore((state) => state.dataSource)
   const apiClient = getApiClient(dataSource)

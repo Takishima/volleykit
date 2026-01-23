@@ -5,16 +5,16 @@
  * Extracted from web-app/src/i18n/types.ts with mobile-relevant translations.
  */
 
-export type Language = 'de' | 'en' | 'fr' | 'it';
+export type Language = 'de' | 'en' | 'fr' | 'it'
 
-export const SUPPORTED_LANGUAGES: Language[] = ['de', 'en', 'fr', 'it'];
+export const SUPPORTED_LANGUAGES: Language[] = ['de', 'en', 'fr', 'it']
 
 export const LANGUAGE_NAMES: Record<Language, string> = {
   de: 'Deutsch',
   en: 'English',
   fr: 'Français',
   it: 'Italiano',
-};
+}
 
 /**
  * Translation keys organized by feature.
@@ -22,292 +22,292 @@ export const LANGUAGE_NAMES: Record<Language, string> = {
  */
 export interface Translations {
   common: {
-    loading: string;
-    error: string;
-    retry: string;
-    cancel: string;
-    save: string;
-    close: string;
-    done: string;
-    confirm: string;
-    noResults: string;
-    today: string;
-    tomorrow: string;
-    home: string;
-    away: string;
-    men: string;
-    women: string;
-    match: string;
-    dateTime: string;
-    location: string;
-    position: string;
-    requiredLevel: string;
-    demoModeBanner: string;
-    optional: string;
-    tbd: string;
-    locationTbd: string;
-    vs: string;
-    unknown: string;
-    unknownDate: string;
-    currencyChf: string;
-    distanceUnit: string;
-    minutesUnit: string;
-    hoursUnit: string;
-    dob: string;
-    offline: string;
-    lastUpdated: string;
-    updated: string;
-    cached: string;
-    openInMaps: string;
-  };
+    loading: string
+    error: string
+    retry: string
+    cancel: string
+    save: string
+    close: string
+    done: string
+    confirm: string
+    noResults: string
+    today: string
+    tomorrow: string
+    home: string
+    away: string
+    men: string
+    women: string
+    match: string
+    dateTime: string
+    location: string
+    position: string
+    requiredLevel: string
+    demoModeBanner: string
+    optional: string
+    tbd: string
+    locationTbd: string
+    vs: string
+    unknown: string
+    unknownDate: string
+    currencyChf: string
+    distanceUnit: string
+    minutesUnit: string
+    hoursUnit: string
+    dob: string
+    offline: string
+    lastUpdated: string
+    updated: string
+    cached: string
+    openInMaps: string
+  }
   auth: {
-    login: string;
-    logout: string;
-    username: string;
-    password: string;
-    loginButton: string;
-    loggingIn: string;
-    invalidCredentials: string;
-    sessionExpired: string;
-    checkingSession: string;
-    subtitle: string;
-    or: string;
-    demoMode: string;
-    loginInfo: string;
-    privacyNote: string;
-    loadingDemo: string;
-    noRefereeRole: string;
-    biometricPrompt: string;
-    biometricFailed: string;
-    biometricNotAvailable: string;
-    biometricNotEnrolled: string;
-    enableBiometric: string;
-    disableBiometric: string;
-    enterCredentials: string;
-    loginFailed: string;
-    usernamePlaceholder: string;
-    passwordPlaceholder: string;
-    useBiometric: string;
-    authenticateWith: string;
-    attemptsRemaining: string;
-    accountLocked: string;
-    tfaNotSupported: string;
-  };
+    login: string
+    logout: string
+    username: string
+    password: string
+    loginButton: string
+    loggingIn: string
+    invalidCredentials: string
+    sessionExpired: string
+    checkingSession: string
+    subtitle: string
+    or: string
+    demoMode: string
+    loginInfo: string
+    privacyNote: string
+    loadingDemo: string
+    noRefereeRole: string
+    biometricPrompt: string
+    biometricFailed: string
+    biometricNotAvailable: string
+    biometricNotEnrolled: string
+    enableBiometric: string
+    disableBiometric: string
+    enterCredentials: string
+    loginFailed: string
+    usernamePlaceholder: string
+    passwordPlaceholder: string
+    useBiometric: string
+    authenticateWith: string
+    attemptsRemaining: string
+    accountLocked: string
+    tfaNotSupported: string
+  }
   assignments: {
-    title: string;
-    details: string;
-    venue: string;
-    teams: string;
-    upcoming: string;
-    past: string;
-    loading: string;
-    noAssignments: string;
-    noUpcomingTitle: string;
-    noUpcomingDescription: string;
-    confirmed: string;
-    pending: string;
-    cancelled: string;
-    active: string;
-    archived: string;
-    editCompensation: string;
-    validateGame: string;
-    addToExchange: string;
-    kilometers: string;
-    reason: string;
-    openSbbConnection: string;
-    openInGoogleMaps: string;
-    hall: string;
-    tapForDetails: string;
-    notFound: string;
-    gameNumber: string;
-    confirmationStatus: string;
-    exchangeOpen: string;
-    hasMessage: string;
-    doubleConvocation: string;
-  };
+    title: string
+    details: string
+    venue: string
+    teams: string
+    upcoming: string
+    past: string
+    loading: string
+    noAssignments: string
+    noUpcomingTitle: string
+    noUpcomingDescription: string
+    confirmed: string
+    pending: string
+    cancelled: string
+    active: string
+    archived: string
+    editCompensation: string
+    validateGame: string
+    addToExchange: string
+    kilometers: string
+    reason: string
+    openSbbConnection: string
+    openInGoogleMaps: string
+    hall: string
+    tapForDetails: string
+    notFound: string
+    gameNumber: string
+    confirmationStatus: string
+    exchangeOpen: string
+    hasMessage: string
+    doubleConvocation: string
+  }
   compensations: {
-    title: string;
-    noCompensations: string;
-    paid: string;
-    unpaid: string;
-    pending: string;
-    total: string;
-    gameFee: string;
-    travel: string;
-    distance: string;
-    status: string;
-    received: string;
-    loading: string;
-  };
+    title: string
+    noCompensations: string
+    paid: string
+    unpaid: string
+    pending: string
+    total: string
+    gameFee: string
+    travel: string
+    distance: string
+    status: string
+    received: string
+    loading: string
+  }
   exchange: {
-    title: string;
-    noExchanges: string;
-    apply: string;
-    withdraw: string;
-    open: string;
-    applied: string;
-    closed: string;
-    all: string;
-    myApplications: string;
-    loading: string;
-    takeOverTitle: string;
-    takeOverConfirm: string;
-    takeOverButton: string;
-    filters: string;
-    filterByLevel: string;
-    filterByDistance: string;
-    filterByTravelTime: string;
-    travelTime: string;
-    applySuccess: string;
-    applyError: string;
-    withdrawSuccess: string;
-    withdrawError: string;
-    submittedBy: string;
-    levelRequired: string;
-    hideOwn: string;
-  };
+    title: string
+    noExchanges: string
+    apply: string
+    withdraw: string
+    open: string
+    applied: string
+    closed: string
+    all: string
+    myApplications: string
+    loading: string
+    takeOverTitle: string
+    takeOverConfirm: string
+    takeOverButton: string
+    filters: string
+    filterByLevel: string
+    filterByDistance: string
+    filterByTravelTime: string
+    travelTime: string
+    applySuccess: string
+    applyError: string
+    withdrawSuccess: string
+    withdrawError: string
+    submittedBy: string
+    levelRequired: string
+    hideOwn: string
+  }
   positions: {
-    'head-one': string;
-    'head-two': string;
-    'linesman-one': string;
-    'linesman-two': string;
-    'linesman-three': string;
-    'linesman-four': string;
-    'standby-head': string;
-    'standby-linesman': string;
-  };
+    'head-one': string
+    'head-two': string
+    'linesman-one': string
+    'linesman-two': string
+    'linesman-three': string
+    'linesman-four': string
+    'standby-head': string
+    'standby-linesman': string
+  }
   nav: {
-    assignments: string;
-    compensations: string;
-    exchange: string;
-    settings: string;
-  };
+    assignments: string
+    compensations: string
+    exchange: string
+    settings: string
+  }
   notifications: {
-    gameReminder: string;
-    gameReminderBody: string;
-  };
+    gameReminder: string
+    gameReminderBody: string
+  }
   settings: {
-    title: string;
-    profile: string;
-    svNumber: string;
-    language: string;
-    general: string;
-    security: string;
-    features: string;
-    calendarIntegration: string;
-    comingSoon: string;
+    title: string
+    profile: string
+    svNumber: string
+    language: string
+    general: string
+    security: string
+    features: string
+    calendarIntegration: string
+    comingSoon: string
     biometric: {
-      title: string;
-      description: string;
-      enable: string;
-      disable: string;
-      notAvailable: string;
-      notEnrolled: string;
-    };
+      title: string
+      description: string
+      enable: string
+      disable: string
+      notAvailable: string
+      notEnrolled: string
+    }
     calendar: {
-      title: string;
-      description: string;
-      sync: string;
-      synced: string;
-      selectCalendar: string;
-      permissionDenied: string;
-      mode: string;
-      modeIcal: string;
-      modeDirect: string;
-      icalDescription: string;
-      directDescription: string;
-      subscribeIcal: string;
-      syncNow: string;
-      lastSync: string;
-      syncSuccess: string;
-      syncSummary: string;
-      syncError: string;
-      noCalendars: string;
-      noAssignmentsToSync: string;
-      noCalendarCode: string;
-      enabled: string;
-      disabled: string;
-    };
+      title: string
+      description: string
+      sync: string
+      synced: string
+      selectCalendar: string
+      permissionDenied: string
+      mode: string
+      modeIcal: string
+      modeDirect: string
+      icalDescription: string
+      directDescription: string
+      subscribeIcal: string
+      syncNow: string
+      lastSync: string
+      syncSuccess: string
+      syncSummary: string
+      syncError: string
+      noCalendars: string
+      noAssignmentsToSync: string
+      noCalendarCode: string
+      enabled: string
+      disabled: string
+    }
     departure: {
-      title: string;
-      description: string;
-      enable: string;
-      disable: string;
-      bufferTime: string;
-      bufferTimeDescription: string;
-      locationRequired: string;
-      permissionDenied: string;
-      backgroundLocationRequired: string;
-      notificationRequired: string;
-      howItWorks: string;
-      howItWorksLocation: string;
-      howItWorksRoutes: string;
-      howItWorksNotification: string;
-    };
+      title: string
+      description: string
+      enable: string
+      disable: string
+      bufferTime: string
+      bufferTimeDescription: string
+      locationRequired: string
+      permissionDenied: string
+      backgroundLocationRequired: string
+      notificationRequired: string
+      howItWorks: string
+      howItWorksLocation: string
+      howItWorksRoutes: string
+      howItWorksNotification: string
+    }
     homeLocation: {
-      title: string;
-      description: string;
-      currentLocation: string;
-      useCurrentLocation: string;
-      locating: string;
-      searchLabel: string;
-      searchPlaceholder: string;
-      clear: string;
-      errorPermissionDenied: string;
-      errorPositionUnavailable: string;
-      errorTimeout: string;
-    };
+      title: string
+      description: string
+      currentLocation: string
+      useCurrentLocation: string
+      locating: string
+      searchLabel: string
+      searchPlaceholder: string
+      clear: string
+      errorPermissionDenied: string
+      errorPositionUnavailable: string
+      errorTimeout: string
+    }
     transport: {
-      title: string;
-      description: string;
-      enableCalculations: string;
-      maxTravelTime: string;
-      arrivalTime: string;
-    };
-    privacy: string;
-    privacyNoCollection: string;
-    privacyDirectComm: string;
-    privacyNoAnalytics: string;
-    about: string;
-    version: string;
-    logout: string;
-  };
+      title: string
+      description: string
+      enableCalculations: string
+      maxTravelTime: string
+      arrivalTime: string
+    }
+    privacy: string
+    privacyNoCollection: string
+    privacyDirectComm: string
+    privacyNoAnalytics: string
+    about: string
+    version: string
+    logout: string
+  }
   departure: {
     notification: {
-      title: string;
-      body: string;
-      withTransit: string;
-      noRoute: string;
-      delayed: string;
-      cancelled: string;
-      departureTime: string;
-      leaveIn: string;
-      leaveNow: string;
-      clustered: string;
-    };
+      title: string
+      body: string
+      withTransit: string
+      noRoute: string
+      delayed: string
+      cancelled: string
+      departureTime: string
+      leaveIn: string
+      leaveNow: string
+      clustered: string
+    }
     widget: {
-      title: string;
-      nextGame: string;
-      departIn: string;
-      noUpcoming: string;
-      routeUnavailable: string;
-    };
-  };
+      title: string
+      nextGame: string
+      departIn: string
+      noUpcoming: string
+      routeUnavailable: string
+    }
+  }
   errorBoundary: {
-    connectionProblem: string;
-    somethingWentWrong: string;
-    networkErrorDescription: string;
-    applicationErrorDescription: string;
-    tryAgain: string;
-    refreshPage: string;
-  };
+    connectionProblem: string
+    somethingWentWrong: string
+    networkErrorDescription: string
+    applicationErrorDescription: string
+    tryAgain: string
+    refreshPage: string
+  }
 }
 
 /**
  * Flat translation key type for dot-notation access.
  * e.g., 'common.loading', 'auth.login'
  */
-export type TranslationKey = FlattenKeys<Translations>;
+export type TranslationKey = FlattenKeys<Translations>
 
 /**
  * Helper type to flatten nested object keys with dot notation.
@@ -320,6 +320,6 @@ type FlattenKeys<T, Prefix extends string = ''> = T extends object
           : Prefix extends ''
             ? K
             : `${Prefix}.${K}`
-        : never;
+        : never
     }[keyof T]
-  : never;
+  : never

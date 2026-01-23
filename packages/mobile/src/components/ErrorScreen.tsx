@@ -4,37 +4,37 @@
  * Shows a user-friendly error message with retry option.
  */
 
-import type { JSX } from 'react';
+import type { JSX } from 'react'
 
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native'
 
-import { Feather } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons'
 
-import { useTranslation } from '@volleykit/shared/i18n';
+import { useTranslation } from '@volleykit/shared/i18n'
 
-import { COLORS } from '../constants';
+import { COLORS } from '../constants'
 
 /**
  * Error type determines the icon and message.
  */
-export type ErrorType = 'network' | 'application' | 'unknown';
+export type ErrorType = 'network' | 'application' | 'unknown'
 
 /**
  * Error screen props.
  */
 export interface ErrorScreenProps {
   /** The error that occurred */
-  error?: Error | null;
+  error?: Error | null
   /** Error type for icon selection */
-  type?: ErrorType;
+  type?: ErrorType
   /** Title override */
-  title?: string;
+  title?: string
   /** Description override */
-  description?: string;
+  description?: string
   /** Callback when retry is pressed */
-  onRetry?: () => void;
+  onRetry?: () => void
   /** Show error details (dev mode) */
-  showDetails?: boolean;
+  showDetails?: boolean
 }
 
 /**
@@ -43,11 +43,11 @@ export interface ErrorScreenProps {
 function getErrorIcon(type: ErrorType): keyof typeof Feather.glyphMap {
   switch (type) {
     case 'network':
-      return 'wifi-off';
+      return 'wifi-off'
     case 'application':
-      return 'alert-triangle';
+      return 'alert-triangle'
     default:
-      return 'alert-circle';
+      return 'alert-circle'
   }
 }
 
@@ -57,11 +57,11 @@ function getErrorIcon(type: ErrorType): keyof typeof Feather.glyphMap {
 function getErrorColor(type: ErrorType): string {
   switch (type) {
     case 'network':
-      return COLORS.amber500;
+      return COLORS.amber500
     case 'application':
-      return COLORS.red500;
+      return COLORS.red500
     default:
-      return COLORS.gray500;
+      return COLORS.gray500
   }
 }
 
@@ -77,22 +77,22 @@ export function ErrorScreen({
   onRetry,
   showDetails = __DEV__,
 }: ErrorScreenProps): JSX.Element {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
-  const icon = getErrorIcon(type);
-  const color = getErrorColor(type);
+  const icon = getErrorIcon(type)
+  const color = getErrorColor(type)
 
   const displayTitle =
     title ??
     (type === 'network'
       ? t('errorBoundary.connectionProblem')
-      : t('errorBoundary.somethingWentWrong'));
+      : t('errorBoundary.somethingWentWrong'))
 
   const displayDescription =
     description ??
     (type === 'network'
       ? t('errorBoundary.networkErrorDescription')
-      : t('errorBoundary.applicationErrorDescription'));
+      : t('errorBoundary.applicationErrorDescription'))
 
   return (
     <View className="flex-1 bg-gray-50 items-center justify-center p-6">
@@ -126,9 +126,7 @@ export function ErrorScreen({
           >
             <View className="flex-row items-center">
               <Feather name="refresh-cw" size={18} color="white" />
-              <Text className="text-white font-semibold ml-2">
-                {t('errorBoundary.tryAgain')}
-              </Text>
+              <Text className="text-white font-semibold ml-2">{t('errorBoundary.tryAgain')}</Text>
             </View>
           </TouchableOpacity>
         )}
@@ -151,7 +149,7 @@ export function ErrorScreen({
         )}
       </View>
     </View>
-  );
+  )
 }
 
 /**
@@ -161,22 +159,18 @@ export function ErrorBanner({
   message,
   onRetry,
 }: {
-  message: string;
-  onRetry?: () => void;
+  message: string
+  onRetry?: () => void
 }): JSX.Element {
   return (
     <View className="bg-red-50 border border-red-200 rounded-lg p-4 flex-row items-center">
       <Feather name="alert-circle" size={20} color={COLORS.red500} />
       <Text className="flex-1 text-red-700 ml-3">{message}</Text>
       {onRetry && (
-        <TouchableOpacity
-          onPress={onRetry}
-          accessibilityRole="button"
-          accessibilityLabel="Retry"
-        >
+        <TouchableOpacity onPress={onRetry} accessibilityRole="button" accessibilityLabel="Retry">
           <Feather name="refresh-cw" size={18} color={COLORS.red500} />
         </TouchableOpacity>
       )}
     </View>
-  );
+  )
 }

@@ -24,6 +24,7 @@ This document describes the testing strategy for VolleyKit, explaining when to u
 **Location**: `src/**/*.test.tsx`
 
 **Use for**:
+
 - Component rendering and state
 - Tab navigation and ARIA attributes
 - Form validation and error states
@@ -33,6 +34,7 @@ This document describes the testing strategy for VolleyKit, explaining when to u
 - Keyboard navigation
 
 **Example coverage**:
+
 ```typescript
 // src/pages/AssignmentsPage.test.tsx
 describe("Tab Navigation", () => {
@@ -45,6 +47,7 @@ describe("Tab Navigation", () => {
 ```
 
 **Characteristics**:
+
 - Fast execution (<1s per file)
 - All external dependencies mocked
 - No browser required
@@ -55,6 +58,7 @@ describe("Tab Navigation", () => {
 **Location**: `src/**/*.integration.test.tsx`
 
 **Use for**:
+
 - Multi-component interactions
 - Store mutations with real Zustand stores
 - API call verification with mock API
@@ -62,24 +66,26 @@ describe("Tab Navigation", () => {
 - Query invalidation
 
 **Example coverage**:
+
 ```typescript
 // src/components/layout/AppShell.integration.test.tsx
-describe("association switching", () => {
-  it("calls switchRoleAndAttribute API when switching associations", async () => {
-    const user = userEvent.setup();
-    renderAppShell();
+describe('association switching', () => {
+  it('calls switchRoleAndAttribute API when switching associations', async () => {
+    const user = userEvent.setup()
+    renderAppShell()
 
-    await user.click(screen.getByRole("button", { name: /referee.*SV/i }));
-    await user.click(await screen.findByRole("option", { name: /SVRBA/i }));
+    await user.click(screen.getByRole('button', { name: /referee.*SV/i }))
+    await user.click(await screen.findByRole('option', { name: /SVRBA/i }))
 
     await waitFor(() => {
-      expect(mockApi.switchRoleAndAttribute).toHaveBeenCalledWith("demo-referee-svrba");
-    });
-  });
-});
+      expect(mockApi.switchRoleAndAttribute).toHaveBeenCalledWith('demo-referee-svrba')
+    })
+  })
+})
 ```
 
 **Characteristics**:
+
 - Uses real stores (Zustand) and query client
 - Uses mock API (`mockApi`) instead of real network
 - Still runs in jsdom (no browser)
@@ -90,6 +96,7 @@ describe("association switching", () => {
 **Location**: `web-app/e2e/*.spec.ts`
 
 **Use for**:
+
 - Cross-page navigation with URL verification
 - Route protection (auth redirects)
 - Full user journeys (login → navigate → action)
@@ -98,17 +105,19 @@ describe("association switching", () => {
 - Features requiring real browser (cookies, service workers)
 
 **Example coverage**:
+
 ```typescript
 // e2e/app.spec.ts
-describe("Route Protection", () => {
-  test("unauthenticated user is redirected to login", async ({ page }) => {
-    await page.goto("/assignments");
-    await expect(page).toHaveURL(/login/);
-  });
-});
+describe('Route Protection', () => {
+  test('unauthenticated user is redirected to login', async ({ page }) => {
+    await page.goto('/assignments')
+    await expect(page).toHaveURL(/login/)
+  })
+})
 ```
 
 **Characteristics**:
+
 - Slow execution (30s+ timeout per test)
 - Runs in real browsers (Chromium, Firefox, WebKit)
 - Tests actual page navigation and routing
@@ -118,15 +127,15 @@ describe("Route Protection", () => {
 
 Avoid duplicating unit test coverage in E2E tests. The following should **only** be tested at the unit level:
 
-| Pattern | Test in Unit | NOT in E2E |
-|---------|--------------|------------|
-| Tab switching | ✅ Component state changes | ❌ Redundant |
-| ARIA attributes | ✅ `toHaveAttribute()` | ❌ Redundant |
-| Form validation | ✅ Required attributes | ❌ Slow for no benefit |
-| Loading states | ✅ Mock loading data | ❌ Redundant |
-| Error states | ✅ Mock error responses | ❌ Redundant |
-| Empty states | ✅ Mock empty data | ❌ Redundant |
-| Card rendering | ✅ Mock data → visible | ❌ Redundant |
+| Pattern         | Test in Unit               | NOT in E2E             |
+| --------------- | -------------------------- | ---------------------- |
+| Tab switching   | ✅ Component state changes | ❌ Redundant           |
+| ARIA attributes | ✅ `toHaveAttribute()`     | ❌ Redundant           |
+| Form validation | ✅ Required attributes     | ❌ Slow for no benefit |
+| Loading states  | ✅ Mock loading data       | ❌ Redundant           |
+| Error states    | ✅ Mock error responses    | ❌ Redundant           |
+| Empty states    | ✅ Mock empty data         | ❌ Redundant           |
+| Card rendering  | ✅ Mock data → visible     | ❌ Redundant           |
 
 ## Decision Flowchart
 
@@ -154,17 +163,18 @@ Otherwise → Unit test
 
 ## File Naming Conventions
 
-| Type | Pattern | Example |
-|------|---------|---------|
-| Unit | `*.test.tsx` | `LoginPage.test.tsx` |
+| Type        | Pattern                  | Example                         |
+| ----------- | ------------------------ | ------------------------------- |
+| Unit        | `*.test.tsx`             | `LoginPage.test.tsx`            |
 | Integration | `*.integration.test.tsx` | `AppShell.integration.test.tsx` |
-| E2E | `e2e/*.spec.ts` | `e2e/app.spec.ts` |
+| E2E         | `e2e/*.spec.ts`          | `e2e/app.spec.ts`               |
 
 ## Test Organization
 
 ### E2E Tests Structure
 
 Each E2E spec file should:
+
 1. Document what unit tests cover in a header comment
 2. Focus only on browser-specific behavior
 3. Use Page Object Models for maintainability
@@ -176,26 +186,35 @@ Each E2E spec file should:
  * Tab navigation, ARIA attributes, card rendering, and accessibility
  * are covered by unit tests in src/pages/AssignmentsPage.test.tsx
  */
-test.describe("Assignments Journey", () => {
+test.describe('Assignments Journey', () => {
   // Only page loading and navigation tests
-});
+})
 ```
 
 ### Unit Tests Structure
 
 Each unit test file should:
+
 1. Test all component states (loading, error, empty, success)
 2. Test all user interactions (tab clicks, form inputs)
 3. Test accessibility attributes
 4. Use mock factories for consistent test data
 
 ```typescript
-describe("AssignmentsPage", () => {
-  describe("Tab Navigation", () => { /* ... */ });
-  describe("Content Display", () => { /* ... */ });
-  describe("Error Handling", () => { /* ... */ });
-  describe("Accessibility", () => { /* ... */ });
-});
+describe('AssignmentsPage', () => {
+  describe('Tab Navigation', () => {
+    /* ... */
+  })
+  describe('Content Display', () => {
+    /* ... */
+  })
+  describe('Error Handling', () => {
+    /* ... */
+  })
+  describe('Accessibility', () => {
+    /* ... */
+  })
+})
 ```
 
 ## API Mocking with MSW
@@ -274,11 +293,11 @@ it('sends correct request body', async () => {
 
 ### File Locations
 
-| File | Purpose |
-|------|---------|
+| File                       | Purpose                                   |
+| -------------------------- | ----------------------------------------- |
 | `src/test/msw/handlers.ts` | Default API handlers and helper factories |
-| `src/test/msw/server.ts` | MSW server setup for Node.js |
-| `src/test/polyfills.ts` | BroadcastChannel polyfill for happy-dom |
+| `src/test/msw/server.ts`   | MSW server setup for Node.js              |
+| `src/test/polyfills.ts`    | BroadcastChannel polyfill for happy-dom   |
 
 ## Running Tests
 
@@ -299,6 +318,7 @@ npx playwright test --project=chromium
 ## Coverage Requirements
 
 See `vite.config.ts` for thresholds:
+
 - Lines: 50%
 - Functions: 70%
 - Branches: 70%

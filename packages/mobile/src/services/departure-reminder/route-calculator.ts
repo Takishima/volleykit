@@ -4,94 +4,90 @@
  * Wraps the OJP SDK for Swiss public transport routing with caching.
  */
 
-import type { Coordinates, RouteResult, TripLeg } from '../../types/departureReminder';
+import type { Coordinates, RouteResult, TripLeg } from '../../types/departureReminder'
 
 /** OJP 2.0 API endpoint */
-const OJP_API_ENDPOINT = 'https://api.opentransportdata.swiss/ojp20';
+const OJP_API_ENDPOINT = 'https://api.opentransportdata.swiss/ojp20'
 
 /** Minimum delay between API requests (50 req/min = 1.2s to be safe) */
-const RATE_LIMIT_DELAY_MS = 1200;
+const RATE_LIMIT_DELAY_MS = 1200
 
 /** Cache TTL in milliseconds (5 minutes) */
-const CACHE_TTL_MS = 5 * 60 * 1000;
+const CACHE_TTL_MS = 5 * 60 * 1000
 
 /** Timestamp of the last API request */
-let lastRequestTime = 0;
+let lastRequestTime = 0
 
 /** Lazily loaded OJP SDK module */
-let ojpSdk: typeof import('ojp-sdk-next') | null = null;
+let ojpSdk: typeof import('ojp-sdk-next') | null = null
 
 /**
  * Route cache entry.
  */
 interface CacheEntry {
-  result: RouteResult;
-  cachedAt: number;
-  expiresAt: number;
+  result: RouteResult
+  cachedAt: number
+  expiresAt: number
 }
 
 /**
  * Route cache keyed by origin+destination+time.
  */
-const routeCache = new Map<string, CacheEntry>();
+const routeCache = new Map<string, CacheEntry>()
 
 /**
  * Generate cache key from route parameters.
  */
-function getCacheKey(
-  from: Coordinates,
-  to: Coordinates,
-  targetArrivalTime: Date
-): string {
+function getCacheKey(from: Coordinates, to: Coordinates, targetArrivalTime: Date): string {
   // Round time to 5-minute intervals for better cache hits
-  const roundedTime = new Date(targetArrivalTime);
-  roundedTime.setMinutes(Math.floor(roundedTime.getMinutes() / 5) * 5);
-  roundedTime.setSeconds(0);
-  roundedTime.setMilliseconds(0);
+  const roundedTime = new Date(targetArrivalTime)
+  roundedTime.setMinutes(Math.floor(roundedTime.getMinutes() / 5) * 5)
+  roundedTime.setSeconds(0)
+  roundedTime.setMilliseconds(0)
 
   // Round coordinates to ~100m precision
-  const fromLat = from.latitude.toFixed(3);
-  const fromLon = from.longitude.toFixed(3);
-  const toLat = to.latitude.toFixed(3);
-  const toLon = to.longitude.toFixed(3);
+  const fromLat = from.latitude.toFixed(3)
+  const fromLon = from.longitude.toFixed(3)
+  const toLat = to.latitude.toFixed(3)
+  const toLon = to.longitude.toFixed(3)
 
-  return `${fromLat},${fromLon}|${toLat},${toLon}|${roundedTime.getTime()}`;
+  return `${fromLat},${fromLon}|${toLat},${toLon}|${roundedTime.getTime()}`
 }
 
 /**
  * Get route from cache if valid.
  */
 function getFromCache(key: string): RouteResult | null {
-  const entry = routeCache.get(key);
-  if (!entry) return null;
+  const entry = routeCache.get(key)
+  if (!entry) return null
 
   if (Date.now() > entry.expiresAt) {
-    routeCache.delete(key);
-    return null;
+    routeCache.delete(key)
+    return null
   }
 
   return {
     ...entry.result,
     isCached: true,
     cachedAt: new Date(entry.cachedAt).toISOString(),
-  };
+  }
 }
 
 /**
  * Save route to cache.
  */
 function saveToCache(key: string, result: RouteResult): void {
-  const now = Date.now();
+  const now = Date.now()
   routeCache.set(key, {
     result: { ...result, isCached: false },
     cachedAt: now,
     expiresAt: now + CACHE_TTL_MS,
-  });
+  })
 
   // Clean expired entries
   for (const [k, entry] of routeCache) {
     if (Date.now() > entry.expiresAt) {
-      routeCache.delete(k);
+      routeCache.delete(k)
     }
   }
 }
@@ -101,23 +97,23 @@ function saveToCache(key: string, result: RouteResult): void {
  */
 async function loadOjpSdk(): Promise<typeof import('ojp-sdk-next')> {
   if (!ojpSdk) {
-    ojpSdk = await import('ojp-sdk-next');
+    ojpSdk = await import('ojp-sdk-next')
   }
-  return ojpSdk;
+  return ojpSdk
 }
 
 /**
  * Wait if necessary to respect rate limits.
  */
 async function waitForRateLimit(): Promise<void> {
-  const now = Date.now();
-  const timeSinceLastRequest = now - lastRequestTime;
+  const now = Date.now()
+  const timeSinceLastRequest = now - lastRequestTime
 
   if (timeSinceLastRequest < RATE_LIMIT_DELAY_MS) {
-    const waitTime = RATE_LIMIT_DELAY_MS - timeSinceLastRequest;
-    await new Promise((resolve) => setTimeout(resolve, waitTime));
+    const waitTime = RATE_LIMIT_DELAY_MS - timeSinceLastRequest
+    await new Promise((resolve) => setTimeout(resolve, waitTime))
   }
-  lastRequestTime = Date.now();
+  lastRequestTime = Date.now()
 }
 
 /**
@@ -126,27 +122,27 @@ async function waitForRateLimit(): Promise<void> {
 function getApiKey(): string | undefined {
   // React Native uses process.env.EXPO_PUBLIC_* for env variables
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (process.env as any).EXPO_PUBLIC_OJP_API_KEY as string | undefined;
+  return (process.env as any).EXPO_PUBLIC_OJP_API_KEY as string | undefined
 }
 
 /**
  * Check if the OJP API is configured.
  */
 export function isOjpConfigured(): boolean {
-  const apiKey = getApiKey();
-  return Boolean(apiKey && apiKey !== 'your_api_key_here');
+  const apiKey = getApiKey()
+  return Boolean(apiKey && apiKey !== 'your_api_key_here')
 }
 
 /**
  * Route calculation error.
  */
 export class RouteCalculationError extends Error {
-  readonly code: string;
+  readonly code: string
 
   constructor(message: string, code: string) {
-    super(message);
-    this.name = 'RouteCalculationError';
-    this.code = code;
+    super(message)
+    this.name = 'RouteCalculationError'
+    this.code = code
   }
 }
 
@@ -154,58 +150,58 @@ export class RouteCalculationError extends Error {
  * OJP stop point structure.
  */
 interface OjpStopPoint {
-  stopPointRef: string;
-  stopPointName: { text: string };
+  stopPointRef: string
+  stopPointName: { text: string }
 }
 
 /**
  * OJP timed leg structure.
  */
 interface OjpTimedLeg {
-  legBoard: OjpStopPoint;
-  legAlight: OjpStopPoint;
+  legBoard: OjpStopPoint
+  legAlight: OjpStopPoint
   service?: {
-    publishedServiceName?: { text: string };
-    destinationText?: { text: string };
+    publishedServiceName?: { text: string }
+    destinationText?: { text: string }
     serviceSection?: {
-      publishedServiceName?: { text: string };
-      mode?: { ptMode?: string };
-    };
-  };
+      publishedServiceName?: { text: string }
+      mode?: { ptMode?: string }
+    }
+  }
   legTrack?: {
     trackSection?: {
-      departure?: { timetabledTime?: string };
-      arrival?: { timetabledTime?: string };
-    };
-  };
-  boardingTime?: string;
-  alightingTime?: string;
+      departure?: { timetabledTime?: string }
+      arrival?: { timetabledTime?: string }
+    }
+  }
+  boardingTime?: string
+  alightingTime?: string
 }
 
 /**
  * OJP continuous leg structure.
  */
 interface OjpContinuousLeg {
-  duration: string;
+  duration: string
 }
 
 /**
  * OJP leg structure.
  */
 interface OjpLeg {
-  timedLeg?: OjpTimedLeg;
-  continuousLeg?: OjpContinuousLeg;
+  timedLeg?: OjpTimedLeg
+  continuousLeg?: OjpContinuousLeg
 }
 
 /**
  * OJP trip structure.
  */
 interface OjpTrip {
-  duration: string;
-  startTime: string;
-  endTime: string;
-  transfers: number;
-  leg: OjpLeg[];
+  duration: string
+  startTime: string
+  endTime: string
+  transfers: number
+  leg: OjpLeg[]
 }
 
 /**
@@ -214,9 +210,9 @@ interface OjpTrip {
 function convertToTripLeg(leg: OjpLeg): TripLeg | null {
   if (leg.continuousLeg) {
     // Walking leg
-    const durationMinutes = parseDurationToMinutes(leg.continuousLeg.duration);
-    const now = new Date();
-    const later = new Date(now.getTime() + durationMinutes * 60 * 1000);
+    const durationMinutes = parseDurationToMinutes(leg.continuousLeg.duration)
+    const now = new Date()
+    const later = new Date(now.getTime() + durationMinutes * 60 * 1000)
 
     return {
       mode: 'walk',
@@ -226,14 +222,14 @@ function convertToTripLeg(leg: OjpLeg): TripLeg | null {
       arrivalTime: later.toISOString(),
       fromStop: 'Current location',
       toStop: 'Transit stop',
-    };
+    }
   }
 
   if (leg.timedLeg) {
-    const timedLeg = leg.timedLeg;
-    const mode = detectTransportMode(timedLeg);
-    const line = timedLeg.service?.publishedServiceName?.text ?? null;
-    const direction = timedLeg.service?.destinationText?.text ?? null;
+    const timedLeg = leg.timedLeg
+    const mode = detectTransportMode(timedLeg)
+    const line = timedLeg.service?.publishedServiceName?.text ?? null
+    const direction = timedLeg.service?.destinationText?.text ?? null
 
     return {
       mode,
@@ -243,10 +239,10 @@ function convertToTripLeg(leg: OjpLeg): TripLeg | null {
       arrivalTime: timedLeg.alightingTime ?? '',
       fromStop: timedLeg.legBoard.stopPointName.text,
       toStop: timedLeg.legAlight.stopPointName.text,
-    };
+    }
   }
 
-  return null;
+  return null
 }
 
 /**
@@ -255,44 +251,44 @@ function convertToTripLeg(leg: OjpLeg): TripLeg | null {
 function detectTransportMode(
   leg: OjpTimedLeg
 ): 'bus' | 'train' | 'tram' | 'walk' | 'metro' | 'ferry' {
-  const ptMode = leg.service?.serviceSection?.mode?.ptMode?.toLowerCase() ?? '';
+  const ptMode = leg.service?.serviceSection?.mode?.ptMode?.toLowerCase() ?? ''
 
-  if (ptMode.includes('rail') || ptMode.includes('train')) return 'train';
-  if (ptMode.includes('bus')) return 'bus';
-  if (ptMode.includes('tram')) return 'tram';
-  if (ptMode.includes('metro') || ptMode.includes('underground')) return 'metro';
-  if (ptMode.includes('ferry') || ptMode.includes('water')) return 'ferry';
+  if (ptMode.includes('rail') || ptMode.includes('train')) return 'train'
+  if (ptMode.includes('bus')) return 'bus'
+  if (ptMode.includes('tram')) return 'tram'
+  if (ptMode.includes('metro') || ptMode.includes('underground')) return 'metro'
+  if (ptMode.includes('ferry') || ptMode.includes('water')) return 'ferry'
 
-  return 'bus'; // Default to bus for unknown modes
+  return 'bus' // Default to bus for unknown modes
 }
 
 /**
  * Parse ISO 8601 duration string to minutes.
  */
 function parseDurationToMinutes(duration: string): number {
-  if (!duration.startsWith('PT')) return 0;
+  if (!duration.startsWith('PT')) return 0
 
-  let totalMinutes = 0;
+  let totalMinutes = 0
 
   // Extract hours
-  const hoursMatch = duration.match(/(\d+)H/);
+  const hoursMatch = duration.match(/(\d+)H/)
   if (hoursMatch) {
-    totalMinutes += parseInt(hoursMatch[1]!, 10) * 60;
+    totalMinutes += parseInt(hoursMatch[1]!, 10) * 60
   }
 
   // Extract minutes
-  const minutesMatch = duration.match(/(\d+)M/);
+  const minutesMatch = duration.match(/(\d+)M/)
   if (minutesMatch) {
-    totalMinutes += parseInt(minutesMatch[1]!, 10);
+    totalMinutes += parseInt(minutesMatch[1]!, 10)
   }
 
   // Extract seconds (round up to minutes)
-  const secondsMatch = duration.match(/(\d+)S/);
+  const secondsMatch = duration.match(/(\d+)S/)
   if (secondsMatch) {
-    totalMinutes += Math.ceil(parseInt(secondsMatch[1]!, 10) / 60);
+    totalMinutes += Math.ceil(parseInt(secondsMatch[1]!, 10) / 60)
   }
 
-  return totalMinutes;
+  return totalMinutes
 }
 
 /**
@@ -300,9 +296,9 @@ function parseDurationToMinutes(duration: string): number {
  */
 function findFirstTimedLeg(trip: OjpTrip): OjpTimedLeg | null {
   for (const leg of trip.leg) {
-    if (leg.timedLeg) return leg.timedLeg;
+    if (leg.timedLeg) return leg.timedLeg
   }
-  return null;
+  return null
 }
 
 /**
@@ -310,9 +306,9 @@ function findFirstTimedLeg(trip: OjpTrip): OjpTimedLeg | null {
  */
 function calculateWalkTimeMinutes(trip: OjpTrip): number {
   if (trip.leg[0]?.continuousLeg) {
-    return parseDurationToMinutes(trip.leg[0].continuousLeg.duration);
+    return parseDurationToMinutes(trip.leg[0].continuousLeg.duration)
   }
-  return 0;
+  return 0
 }
 
 /**
@@ -329,58 +325,58 @@ export async function calculateRoute(
   targetArrivalTime: Date
 ): Promise<RouteResult> {
   // Check cache first
-  const cacheKey = getCacheKey(from, to, targetArrivalTime);
-  const cached = getFromCache(cacheKey);
-  if (cached) return cached;
+  const cacheKey = getCacheKey(from, to, targetArrivalTime)
+  const cached = getFromCache(cacheKey)
+  if (cached) return cached
 
-  const apiKey = getApiKey();
+  const apiKey = getApiKey()
   if (!apiKey || apiKey === 'your_api_key_here') {
-    throw new RouteCalculationError('OJP API key not configured', 'API_NOT_CONFIGURED');
+    throw new RouteCalculationError('OJP API key not configured', 'API_NOT_CONFIGURED')
   }
 
   // Respect rate limits
-  await waitForRateLimit();
+  await waitForRateLimit()
 
   try {
-    const { SDK, TripRequest, Place } = await loadOjpSdk();
+    const { SDK, TripRequest, Place } = await loadOjpSdk()
 
     // Create SDK instance
-    const sdk = SDK.create('VolleyKit', { url: OJP_API_ENDPOINT, authToken: apiKey }, 'de');
+    const sdk = SDK.create('VolleyKit', { url: OJP_API_ENDPOINT, authToken: apiKey }, 'de')
 
     // Create places from coordinates
-    const fromPlace = Place.initWithCoords(from.longitude, from.latitude);
-    const toPlace = Place.initWithCoords(to.longitude, to.latitude);
+    const fromPlace = Place.initWithCoords(from.longitude, from.latitude)
+    const toPlace = Place.initWithCoords(to.longitude, to.latitude)
 
     // Create trip request with arrival time
-    const tripRequest = TripRequest.initWithPlaces(fromPlace, toPlace);
-    tripRequest.setArrivalDatetime(targetArrivalTime);
-    tripRequest.setPublicTransportRequest();
+    const tripRequest = TripRequest.initWithPlaces(fromPlace, toPlace)
+    tripRequest.setArrivalDatetime(targetArrivalTime)
+    tripRequest.setPublicTransportRequest()
 
     // Fetch trips
-    const response = await tripRequest.fetchResponse(sdk);
+    const response = await tripRequest.fetchResponse(sdk)
 
     if (!response.ok) {
-      throw new RouteCalculationError(response.error.message, 'API_ERROR');
+      throw new RouteCalculationError(response.error.message, 'API_ERROR')
     }
 
-    const tripResults = response.value.tripResult ?? [];
+    const tripResults = response.value.tripResult ?? []
     if (tripResults.length === 0) {
-      throw new RouteCalculationError('No route found between locations', 'NO_ROUTE');
+      throw new RouteCalculationError('No route found between locations', 'NO_ROUTE')
     }
 
     // Get the first/best trip
-    const trip = tripResults[0]!.trip as OjpTrip;
+    const trip = tripResults[0]!.trip as OjpTrip
 
     // Extract route information
-    const durationMinutes = parseDurationToMinutes(trip.duration);
-    const walkTimeMinutes = calculateWalkTimeMinutes(trip);
-    const firstTimedLeg = findFirstTimedLeg(trip);
+    const durationMinutes = parseDurationToMinutes(trip.duration)
+    const walkTimeMinutes = calculateWalkTimeMinutes(trip)
+    const firstTimedLeg = findFirstTimedLeg(trip)
 
     // Convert legs
-    const legs: TripLeg[] = [];
+    const legs: TripLeg[] = []
     for (const leg of trip.leg) {
-      const converted = convertToTripLeg(leg);
-      if (converted) legs.push(converted);
+      const converted = convertToTripLeg(leg)
+      if (converted) legs.push(converted)
     }
 
     // Build result
@@ -396,17 +392,17 @@ export async function calculateRoute(
       },
       legs,
       isCached: false,
-    };
+    }
 
     // Save to cache
-    saveToCache(cacheKey, result);
+    saveToCache(cacheKey, result)
 
-    return result;
+    return result
   } catch (error) {
-    if (error instanceof RouteCalculationError) throw error;
+    if (error instanceof RouteCalculationError) throw error
 
-    const message = error instanceof Error ? error.message : 'Route calculation failed';
-    throw new RouteCalculationError(message, 'API_ERROR');
+    const message = error instanceof Error ? error.message : 'Route calculation failed'
+    throw new RouteCalculationError(message, 'API_ERROR')
   }
 }
 
@@ -414,7 +410,7 @@ export async function calculateRoute(
  * Clear the route cache.
  */
 export function clearRouteCache(): void {
-  routeCache.clear();
+  routeCache.clear()
 }
 
 /**
@@ -424,5 +420,5 @@ export function getCacheStats(): { size: number; keys: string[] } {
   return {
     size: routeCache.size,
     keys: Array.from(routeCache.keys()),
-  };
+  }
 }

@@ -8,39 +8,34 @@
  * - SessionMonitorProvider for biometric re-authentication
  */
 
-import { useMemo, useRef, useEffect } from 'react';
-import type { ReactNode } from 'react';
+import { useMemo, useRef, useEffect } from 'react'
+import type { ReactNode } from 'react'
 
-import {
-  QueryClient,
-  QueryClientProvider,
-  QueryCache,
-  MutationCache,
-} from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from '@tanstack/react-query'
 
-import { StorageContext } from '@volleykit/shared/adapters';
-import { HttpStatus } from '@volleykit/shared/api';
+import { StorageContext } from '@volleykit/shared/adapters'
+import { HttpStatus } from '@volleykit/shared/api'
 
-import { SessionMonitorProvider, useSessionMonitorContext, ApiClientProvider } from '../contexts';
-import { NetworkProvider } from './NetworkProvider';
-import { secureStorage } from '../platform/secureStorage';
-import { storage } from '../platform/storage';
+import { SessionMonitorProvider, useSessionMonitorContext, ApiClientProvider } from '../contexts'
+import { NetworkProvider } from './NetworkProvider'
+import { secureStorage } from '../platform/secureStorage'
+import { storage } from '../platform/storage'
 
 interface AppProvidersProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 /**
  * Inner component that sets up QueryClient with session monitoring
  */
 function QueryClientWithSessionMonitor({ children }: { children: ReactNode }) {
-  const { handleSessionExpired } = useSessionMonitorContext();
+  const { handleSessionExpired } = useSessionMonitorContext()
 
   // Use ref to always have latest handler without recreating QueryClient
-  const sessionExpiredRef = useRef(handleSessionExpired);
+  const sessionExpiredRef = useRef(handleSessionExpired)
   useEffect(() => {
-    sessionExpiredRef.current = handleSessionExpired;
-  }, [handleSessionExpired]);
+    sessionExpiredRef.current = handleSessionExpired
+  }, [handleSessionExpired])
 
   // Create QueryClient with session expiry detection
   const queryClient = useMemo(() => {
@@ -50,12 +45,11 @@ function QueryClientWithSessionMonitor({ children }: { children: ReactNode }) {
         error &&
         typeof error === 'object' &&
         'status' in error &&
-        (error.status === HttpStatus.UNAUTHORIZED ||
-          error.status === HttpStatus.FORBIDDEN)
+        (error.status === HttpStatus.UNAUTHORIZED || error.status === HttpStatus.FORBIDDEN)
       ) {
-        sessionExpiredRef.current();
+        sessionExpiredRef.current()
       }
-    };
+    }
 
     return new QueryClient({
       queryCache: new QueryCache({
@@ -74,22 +68,19 @@ function QueryClientWithSessionMonitor({ children }: { children: ReactNode }) {
               error &&
               typeof error === 'object' &&
               'status' in error &&
-              (error.status === HttpStatus.UNAUTHORIZED ||
-                error.status === HttpStatus.FORBIDDEN)
+              (error.status === HttpStatus.UNAUTHORIZED || error.status === HttpStatus.FORBIDDEN)
             ) {
-              return false;
+              return false
             }
-            return failureCount < 2;
+            return failureCount < 2
           },
           refetchOnWindowFocus: false, // No window focus on mobile
         },
       },
-    });
-  }, []);
+    })
+  }, [])
 
-  return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 }
 
 export function AppProviders({ children }: AppProvidersProps) {
@@ -103,5 +94,5 @@ export function AppProviders({ children }: AppProvidersProps) {
         </ApiClientProvider>
       </NetworkProvider>
     </StorageContext.Provider>
-  );
+  )
 }

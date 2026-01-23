@@ -5,22 +5,24 @@
  */
 
 interface Step {
-  title: string;
-  description?: string;
+  title: string
+  description?: string
   /** i18n key for client-side language switching */
-  titleKey?: string;
+  titleKey?: string
   /** i18n key for client-side language switching */
-  descriptionKey?: string;
+  descriptionKey?: string
 }
 
 interface Props {
-  steps: Step[];
+  steps: Step[]
 }
 
-const { steps } = Astro.props;
+const { steps } = Astro.props
 ---
 
-<ol class="relative my-8 list-none space-y-8 border-l-2 border-border-default pl-8 dark:border-border-default-dark">
+<ol
+  class="relative my-8 list-none space-y-8 border-l-2 border-border-default pl-8 dark:border-border-default-dark"
+>
   {
     steps.map((step, index) => (
       <li class="relative">

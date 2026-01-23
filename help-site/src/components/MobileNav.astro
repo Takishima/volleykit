@@ -1,16 +1,16 @@
 ---
-import { navItems } from '../data/navItems';
-import LanguageSwitcher from './LanguageSwitcher.astro';
-import { BASE_PATH } from '../constants';
+import { navItems } from '../data/navItems'
+import LanguageSwitcher from './LanguageSwitcher.astro'
+import { BASE_PATH } from '../constants'
 
-const currentPath = Astro.url.pathname;
+const currentPath = Astro.url.pathname
 
 // Helper to check if a nav item is active
 function isActive(href: string): boolean {
   if (href === `${BASE_PATH}/`) {
-    return currentPath === href || currentPath === BASE_PATH;
+    return currentPath === href || currentPath === BASE_PATH
   }
-  return currentPath.startsWith(href);
+  return currentPath.startsWith(href)
 }
 
 // Icon SVGs mapped by name
@@ -24,7 +24,7 @@ const icons: Record<string, string> = {
   train: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4h8l2 4v8a2 2 0 01-2 2H6a2 2 0 01-2-2V8l2-4zm0 12h.01M16 16h.01M12 4v4m-4 8l-2 4m12-4l2 4"/>`,
   'wifi-off': `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0119 12.55M5 12.55a10.94 10.94 0 015.17-2.39M10.71 5.05A16 16 0 0122.58 9M1.42 9a15.91 15.91 0 014.7-2.88M8.53 16.11a6 6 0 016.95 0M12 20h.01"/>`,
   settings: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>`,
-};
+}
 ---
 
 <!-- Mobile navigation drawer -->
@@ -50,10 +50,15 @@ const icons: Record<string, string> = {
     data-mobile-nav-panel
   >
     <!-- Header with close button -->
-    <div class="flex h-14 items-center justify-between border-b border-border-default px-4 dark:border-border-default-dark">
+    <div
+      class="flex h-14 items-center justify-between border-b border-border-default px-4 dark:border-border-default-dark"
+    >
       <a href={`${BASE_PATH}/`} class="flex items-center gap-2">
         <img src={`${BASE_PATH}/favicon.svg`} alt="" class="h-7 w-7" aria-hidden="true" />
-        <span class="font-semibold text-text-primary dark:text-text-primary-dark" data-i18n="home.title">VolleyKit Help</span>
+        <span
+          class="font-semibold text-text-primary dark:text-text-primary-dark"
+          data-i18n="home.title">VolleyKit Help</span
+        >
       </a>
       <button
         type="button"
@@ -62,18 +67,32 @@ const icons: Record<string, string> = {
         data-i18n-aria-label="a11y.closeMenu"
         data-mobile-nav-close
       >
-        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        <svg
+          class="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"></path>
         </svg>
       </button>
     </div>
 
     <!-- Navigation links -->
-    <nav class="flex-1 overflow-y-auto p-4" aria-label="Mobile navigation" data-i18n-aria-label="a11y.mobileNavigation">
+    <nav
+      class="flex-1 overflow-y-auto p-4"
+      aria-label="Mobile navigation"
+      data-i18n-aria-label="a11y.mobileNavigation"
+    >
       <ul class="space-y-1">
         {
           navItems.map((item) => {
-            const active = isActive(item.href);
+            const active = isActive(item.href)
             return (
               <li>
                 <a
@@ -98,7 +117,7 @@ const icons: Record<string, string> = {
                   <span data-i18n={item.i18nKey}>{item.title}</span>
                 </a>
               </li>
-            );
+            )
           })
         }
       </ul>
@@ -114,13 +133,18 @@ const icons: Record<string, string> = {
         class="flex items-center justify-center gap-2 rounded-lg bg-primary-500 px-4 py-2.5 text-sm font-medium text-primary-950 transition-colors hover:bg-primary-600"
       >
         <span data-i18n="common.openApp">Open App</span>
-        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <svg
+          class="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
-            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-          />
+            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
         </svg>
       </a>
     </div>
@@ -129,63 +153,63 @@ const icons: Record<string, string> = {
 
 <script>
   function initMobileNav() {
-    const mobileNav = document.querySelector('[data-mobile-nav]');
-    const backdrop = document.querySelector('[data-mobile-nav-backdrop]');
-    const closeBtn = document.querySelector('[data-mobile-nav-close]');
-    const panel = document.querySelector('[data-mobile-nav-panel]');
-    const links = document.querySelectorAll('[data-mobile-nav-link]');
+    const mobileNav = document.querySelector('[data-mobile-nav]')
+    const backdrop = document.querySelector('[data-mobile-nav-backdrop]')
+    const closeBtn = document.querySelector('[data-mobile-nav-close]')
+    const panel = document.querySelector('[data-mobile-nav-panel]')
+    const links = document.querySelectorAll('[data-mobile-nav-link]')
 
-    if (!mobileNav || !backdrop || !closeBtn || !panel) return;
+    if (!mobileNav || !backdrop || !closeBtn || !panel) return
 
     function openNav(focusSearch = false) {
-      mobileNav.classList.remove('hidden');
+      mobileNav.classList.remove('hidden')
       // Trigger reflow for animation
-      void panel.offsetWidth;
-      document.body.style.overflow = 'hidden';
+      void panel.offsetWidth
+      document.body.style.overflow = 'hidden'
 
       // Focus search input if requested
       if (focusSearch) {
-        const searchInput = mobileNav.querySelector('input[type="search"]');
+        const searchInput = mobileNav.querySelector('input[type="search"]')
         if (searchInput instanceof HTMLInputElement) {
-          setTimeout(() => searchInput.focus(), 100);
+          setTimeout(() => searchInput.focus(), 100)
         }
       }
     }
 
     function closeNav() {
-      mobileNav.classList.add('hidden');
-      document.body.style.overflow = '';
+      mobileNav.classList.add('hidden')
+      document.body.style.overflow = ''
     }
 
     // Listen for open event from Header
     document.addEventListener('open-mobile-nav', ((e: CustomEvent<{ focusSearch?: boolean }>) => {
-      openNav(e.detail?.focusSearch);
-    }) as EventListener);
+      openNav(e.detail?.focusSearch)
+    }) as EventListener)
 
     // Close on backdrop click
-    backdrop.addEventListener('click', closeNav);
+    backdrop.addEventListener('click', closeNav)
 
     // Close on close button click
-    closeBtn.addEventListener('click', closeNav);
+    closeBtn.addEventListener('click', closeNav)
 
     // Close on link click
     links.forEach((link) => {
-      link.addEventListener('click', closeNav);
-    });
+      link.addEventListener('click', closeNav)
+    })
 
     // Close on escape key
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && !mobileNav.classList.contains('hidden')) {
-        closeNav();
+        closeNav()
       }
-    });
+    })
   }
 
   // Initialize on page load
-  initMobileNav();
+  initMobileNav()
 
   // Re-initialize on Astro page transitions
-  document.addEventListener('astro:after-swap', initMobileNav);
+  document.addEventListener('astro:after-swap', initMobileNav)
 </script>
 
 <style>

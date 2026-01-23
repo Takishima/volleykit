@@ -4,13 +4,13 @@
 
 VolleyKit is a multi-platform app suite for Swiss volleyball referee management (volleymanager.volleyball.ch).
 
-| Application | Location | Description |
-|-------------|----------|-------------|
-| Web App (PWA) | `web-app/` | React 19 + Vite 7 + Tailwind 4 |
-| Mobile App | `packages/mobile/` | React Native 0.79 + Expo 53 |
+| Application    | Location           | Description                                         |
+| -------------- | ------------------ | --------------------------------------------------- |
+| Web App (PWA)  | `web-app/`         | React 19 + Vite 7 + Tailwind 4                      |
+| Mobile App     | `packages/mobile/` | React Native 0.79 + Expo 53                         |
 | Shared Package | `packages/shared/` | API client, hooks, stores, i18n (~70% code sharing) |
-| Help Site | `help-site/` | Astro 6 documentation |
-| CORS Proxy | `worker/` | Cloudflare Worker |
+| Help Site      | `help-site/`       | Astro 6 documentation                               |
+| CORS Proxy     | `worker/`          | Cloudflare Worker                                   |
 
 **Always check official docs**: [react.dev](https://react.dev), [reactnative.dev](https://reactnative.dev), [docs.expo.dev](https://docs.expo.dev), [vite.dev](https://vite.dev)
 
@@ -18,13 +18,13 @@ VolleyKit is a multi-platform app suite for Swiss volleyball referee management 
 
 **IMPORTANT**: You MUST read these files at the specified times:
 
-| When | Read |
-|------|------|
-| Before committing | [docs/VALIDATION.md](docs/VALIDATION.md) - validation commands, bundle limits |
-| Touching auth/API/worker code | [docs/SECURITY_CHECKLIST.md](docs/SECURITY_CHECKLIST.md) |
-| Unsure about patterns | [docs/CODE_PATTERNS.md](docs/CODE_PATTERNS.md) |
-| Writing tests | [docs/TESTING_STRATEGY.md](docs/TESTING_STRATEGY.md) |
-| API integration | [docs/api/](docs/api/) - OpenAPI spec, endpoint docs, captures |
+| When                          | Read                                                                          |
+| ----------------------------- | ----------------------------------------------------------------------------- |
+| Before committing             | [docs/VALIDATION.md](docs/VALIDATION.md) - validation commands, bundle limits |
+| Touching auth/API/worker code | [docs/SECURITY_CHECKLIST.md](docs/SECURITY_CHECKLIST.md)                      |
+| Unsure about patterns         | [docs/CODE_PATTERNS.md](docs/CODE_PATTERNS.md)                                |
+| Writing tests                 | [docs/TESTING_STRATEGY.md](docs/TESTING_STRATEGY.md)                          |
+| API integration               | [docs/api/](docs/api/) - OpenAPI spec, endpoint docs, captures                |
 
 ## Development Workflow
 
@@ -72,10 +72,12 @@ npx changeset  # Interactive
 ```
 
 Or create `.changeset/<name>.md`:
+
 ```markdown
 ---
-"volleykit-web": minor
+'volleykit-web': minor
 ---
+
 Added dark mode toggle
 ```
 

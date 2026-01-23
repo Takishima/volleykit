@@ -4,24 +4,24 @@
  * Handles synchronization of assignments to device calendar.
  */
 
-import type { Assignment } from '@volleykit/shared/api';
+import type { Assignment } from '@volleykit/shared/api'
 
-import { calendar } from '../platform/calendar';
-import { calendarMappingsStore } from '../stores/calendarMappings';
+import { calendar } from '../platform/calendar'
+import { calendarMappingsStore } from '../stores/calendarMappings'
 import {
   generateAssignmentDeepLink,
   formatCalendarNotes,
   calculateMatchEndTime,
   getDefaultReminders,
-} from '../utils/calendar';
+} from '../utils/calendar'
 
-import type { CalendarEventMapping, CalendarEventData } from '../types/calendar';
+import type { CalendarEventMapping, CalendarEventData } from '../types/calendar'
 
 /** Storage adapter interface */
 interface StorageAdapter {
-  getItem(key: string): Promise<string | null>;
-  setItem(key: string, value: string): Promise<void>;
-  removeItem(key: string): Promise<void>;
+  getItem(key: string): Promise<string | null>
+  setItem(key: string, value: string): Promise<void>
+  removeItem(key: string): Promise<void>
 }
 
 /**
@@ -33,73 +33,73 @@ export interface CalendarSyncService {
     storage: StorageAdapter,
     calendarId: string,
     assignments: Assignment[]
-  ): Promise<CalendarEventMapping[]>;
+  ): Promise<CalendarEventMapping[]>
 
   /** Update existing calendar events */
-  updateEvents(
-    storage: StorageAdapter,
-    assignments: Assignment[]
-  ): Promise<void>;
+  updateEvents(storage: StorageAdapter, assignments: Assignment[]): Promise<void>
 
   /** Delete orphaned events (events without corresponding assignments) */
-  deleteOrphanedEvents(
-    storage: StorageAdapter,
-    currentAssignmentIds: string[]
-  ): Promise<void>;
+  deleteOrphanedEvents(storage: StorageAdapter, currentAssignmentIds: string[]): Promise<void>
 
   /** Sync all assignments to calendar */
   syncAll(
     storage: StorageAdapter,
     calendarId: string,
     assignments: Assignment[]
-  ): Promise<{ created: number; updated: number; deleted: number }>;
+  ): Promise<{ created: number; updated: number; deleted: number }>
 }
 
 /** Type guard for venue object with name property */
 function isVenueObject(venue: unknown): venue is { name?: string; address?: string } {
-  return typeof venue === 'object' && venue !== null;
+  return typeof venue === 'object' && venue !== null
 }
 
 /** Type guard for team object with name property */
 function isTeamObject(team: unknown): team is { name?: string } {
-  return typeof team === 'object' && team !== null;
+  return typeof team === 'object' && team !== null
 }
 
 /**
  * Convert an assignment to calendar event data.
  */
 function assignmentToEventData(assignment: Assignment): CalendarEventData {
-  const startDate = parseAssignmentDateTime(assignment);
-  const endDate = calculateMatchEndTime(startDate);
+  const startDate = parseAssignmentDateTime(assignment)
+  const endDate = calculateMatchEndTime(startDate)
 
   // Get venue info - handle both object and string formats
-  const venueData = assignment.venue;
-  const venue = typeof venueData === 'string'
-    ? venueData
-    : isVenueObject(venueData) ? venueData.name ?? 'TBD' : 'TBD';
+  const venueData = assignment.venue
+  const venue =
+    typeof venueData === 'string'
+      ? venueData
+      : isVenueObject(venueData)
+        ? (venueData.name ?? 'TBD')
+        : 'TBD'
 
-  const location = isVenueObject(venueData) && venueData.address
-    ? `${venue}, ${venueData.address}`
-    : venue;
+  const location =
+    isVenueObject(venueData) && venueData.address ? `${venue}, ${venueData.address}` : venue
 
   // Get team names - handle both object and string formats
-  const teamHomeData = assignment.teamHome;
-  const teamAwayData = assignment.teamAway;
-  const teamHome = typeof teamHomeData === 'string'
-    ? teamHomeData
-    : isTeamObject(teamHomeData) ? teamHomeData.name ?? '' : '';
-  const teamAway = typeof teamAwayData === 'string'
-    ? teamAwayData
-    : isTeamObject(teamAwayData) ? teamAwayData.name ?? '' : '';
+  const teamHomeData = assignment.teamHome
+  const teamAwayData = assignment.teamAway
+  const teamHome =
+    typeof teamHomeData === 'string'
+      ? teamHomeData
+      : isTeamObject(teamHomeData)
+        ? (teamHomeData.name ?? '')
+        : ''
+  const teamAway =
+    typeof teamAwayData === 'string'
+      ? teamAwayData
+      : isTeamObject(teamAwayData)
+        ? (teamAwayData.name ?? '')
+        : ''
 
   // Build event title
-  const title = teamHome && teamAway
-    ? `${teamHome} vs ${teamAway}`
-    : `Volleyball Assignment`;
+  const title = teamHome && teamAway ? `${teamHome} vs ${teamAway}` : `Volleyball Assignment`
 
   // Get string values for notes
-  const leagueStr = typeof assignment.league === 'string' ? assignment.league : undefined;
-  const roleStr = typeof assignment.role === 'string' ? assignment.role : undefined;
+  const leagueStr = typeof assignment.league === 'string' ? assignment.league : undefined
+  const roleStr = typeof assignment.role === 'string' ? assignment.role : undefined
 
   return {
     title,
@@ -116,7 +116,7 @@ function assignmentToEventData(assignment: Assignment): CalendarEventData {
     url: generateAssignmentDeepLink(assignment.__identity),
     timeZone: 'Europe/Zurich',
     alarms: getDefaultReminders(),
-  };
+  }
 }
 
 /**
@@ -124,21 +124,21 @@ function assignmentToEventData(assignment: Assignment): CalendarEventData {
  */
 function parseAssignmentDateTime(assignment: Assignment): Date {
   // Handle gameDate - could be string or unknown
-  const dateValue = assignment.gameDate;
-  const dateStr = typeof dateValue === 'string' ? dateValue : String(dateValue);
+  const dateValue = assignment.gameDate
+  const dateStr = typeof dateValue === 'string' ? dateValue : String(dateValue)
 
   // Handle gameTime - could be string, unknown, or undefined
-  const timeValue = assignment.gameTime;
-  const timeStr = typeof timeValue === 'string' ? timeValue : '00:00';
+  const timeValue = assignment.gameTime
+  const timeStr = typeof timeValue === 'string' ? timeValue : '00:00'
 
   // Parse date (format: YYYY-MM-DD or similar)
-  const date = new Date(dateStr);
+  const date = new Date(dateStr)
 
   // Parse time (format: HH:mm)
-  const [hours, minutes] = timeStr.split(':').map(Number);
-  date.setHours(hours || 0, minutes || 0, 0, 0);
+  const [hours, minutes] = timeStr.split(':').map(Number)
+  date.setHours(hours || 0, minutes || 0, 0, 0)
 
-  return date;
+  return date
 }
 
 /**
@@ -150,22 +150,19 @@ export const calendarSyncService: CalendarSyncService = {
     calendarId: string,
     assignments: Assignment[]
   ): Promise<CalendarEventMapping[]> {
-    const createdMappings: CalendarEventMapping[] = [];
+    const createdMappings: CalendarEventMapping[] = []
 
     for (const assignment of assignments) {
       // Check if event already exists
-      const existingMapping = await calendarMappingsStore.getMapping(
-        storage,
-        assignment.__identity
-      );
+      const existingMapping = await calendarMappingsStore.getMapping(storage, assignment.__identity)
 
       if (existingMapping) {
-        continue; // Skip if already mapped
+        continue // Skip if already mapped
       }
 
       try {
-        const eventData = assignmentToEventData(assignment);
-        const eventId = await calendar.createEvent(calendarId, eventData);
+        const eventData = assignmentToEventData(assignment)
+        const eventId = await calendar.createEvent(calendarId, eventData)
 
         const mapping: CalendarEventMapping = {
           assignmentId: assignment.__identity,
@@ -173,45 +170,39 @@ export const calendarSyncService: CalendarSyncService = {
           calendarId,
           createdAt: new Date().toISOString(),
           lastUpdatedAt: new Date().toISOString(),
-        };
+        }
 
-        await calendarMappingsStore.setMapping(storage, mapping);
-        createdMappings.push(mapping);
+        await calendarMappingsStore.setMapping(storage, mapping)
+        createdMappings.push(mapping)
       } catch {
         // Skip failed events, continue with others
-        console.warn(`Failed to create event for assignment ${assignment.__identity}`);
+        console.warn(`Failed to create event for assignment ${assignment.__identity}`)
       }
     }
 
-    return createdMappings;
+    return createdMappings
   },
 
-  async updateEvents(
-    storage: StorageAdapter,
-    assignments: Assignment[]
-  ): Promise<void> {
+  async updateEvents(storage: StorageAdapter, assignments: Assignment[]): Promise<void> {
     for (const assignment of assignments) {
-      const mapping = await calendarMappingsStore.getMapping(
-        storage,
-        assignment.__identity
-      );
+      const mapping = await calendarMappingsStore.getMapping(storage, assignment.__identity)
 
       if (!mapping) {
-        continue; // No mapping, nothing to update
+        continue // No mapping, nothing to update
       }
 
       try {
-        const eventData = assignmentToEventData(assignment);
-        await calendar.updateEvent(mapping.calendarEventId, eventData);
+        const eventData = assignmentToEventData(assignment)
+        await calendar.updateEvent(mapping.calendarEventId, eventData)
 
         // Update the mapping timestamp
         await calendarMappingsStore.setMapping(storage, {
           ...mapping,
           lastUpdatedAt: new Date().toISOString(),
-        });
+        })
       } catch {
         // Event may have been deleted by user, remove mapping
-        await calendarMappingsStore.removeMapping(storage, assignment.__identity);
+        await calendarMappingsStore.removeMapping(storage, assignment.__identity)
       }
     }
   },
@@ -220,17 +211,17 @@ export const calendarSyncService: CalendarSyncService = {
     storage: StorageAdapter,
     currentAssignmentIds: string[]
   ): Promise<void> {
-    const allMappings = await calendarMappingsStore.getMappings(storage);
-    const currentIdSet = new Set(currentAssignmentIds);
+    const allMappings = await calendarMappingsStore.getMappings(storage)
+    const currentIdSet = new Set(currentAssignmentIds)
 
     for (const mapping of allMappings) {
       if (!currentIdSet.has(mapping.assignmentId)) {
         try {
-          await calendar.deleteEvent(mapping.calendarEventId);
+          await calendar.deleteEvent(mapping.calendarEventId)
         } catch {
           // Event may already be deleted, ignore error
         }
-        await calendarMappingsStore.removeMapping(storage, mapping.assignmentId);
+        await calendarMappingsStore.removeMapping(storage, mapping.assignmentId)
       }
     }
   },
@@ -240,38 +231,28 @@ export const calendarSyncService: CalendarSyncService = {
     calendarId: string,
     assignments: Assignment[]
   ): Promise<{ created: number; updated: number; deleted: number }> {
-    const currentAssignmentIds = assignments.map((a) => a.__identity);
+    const currentAssignmentIds = assignments.map((a) => a.__identity)
 
     // First, delete orphaned events
-    const mappingsBefore = await calendarMappingsStore.getMappings(storage);
-    await this.deleteOrphanedEvents(storage, currentAssignmentIds);
-    const mappingsAfterDelete = await calendarMappingsStore.getMappings(storage);
-    const deleted = mappingsBefore.length - mappingsAfterDelete.length;
+    const mappingsBefore = await calendarMappingsStore.getMappings(storage)
+    await this.deleteOrphanedEvents(storage, currentAssignmentIds)
+    const mappingsAfterDelete = await calendarMappingsStore.getMappings(storage)
+    const deleted = mappingsBefore.length - mappingsAfterDelete.length
 
     // Then, update existing events
-    const existingAssignmentIds = new Set(
-      mappingsAfterDelete.map((m) => m.assignmentId)
-    );
-    const assignmentsToUpdate = assignments.filter((a) =>
-      existingAssignmentIds.has(a.__identity)
-    );
-    await this.updateEvents(storage, assignmentsToUpdate);
-    const updated = assignmentsToUpdate.length;
+    const existingAssignmentIds = new Set(mappingsAfterDelete.map((m) => m.assignmentId))
+    const assignmentsToUpdate = assignments.filter((a) => existingAssignmentIds.has(a.__identity))
+    await this.updateEvents(storage, assignmentsToUpdate)
+    const updated = assignmentsToUpdate.length
 
     // Finally, create new events
-    const assignmentsToCreate = assignments.filter(
-      (a) => !existingAssignmentIds.has(a.__identity)
-    );
-    const created = await this.createEventsFromAssignments(
-      storage,
-      calendarId,
-      assignmentsToCreate
-    );
+    const assignmentsToCreate = assignments.filter((a) => !existingAssignmentIds.has(a.__identity))
+    const created = await this.createEventsFromAssignments(storage, calendarId, assignmentsToCreate)
 
     return {
       created: created.length,
       updated,
       deleted,
-    };
+    }
   },
-};
+}

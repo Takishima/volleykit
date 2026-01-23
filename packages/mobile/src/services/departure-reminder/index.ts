@@ -8,7 +8,7 @@ export {
   getCacheStats,
   isOjpConfigured,
   RouteCalculationError,
-} from './route-calculator';
+} from './route-calculator'
 
 export {
   isNearVenue,
@@ -17,7 +17,7 @@ export {
   clusterNearbyVenues,
   shouldSendDepartureNotification,
   type AssignmentWithVenue,
-} from './venue-proximity';
+} from './venue-proximity'
 
 export {
   DEPARTURE_REMINDER_TASK_NAME,
@@ -30,7 +30,7 @@ export {
   processClusteredAssignments,
   type UpcomingAssignment,
   type AssignmentProvider,
-} from './background-task';
+} from './background-task'
 
 export {
   scheduleReminderNotification,
@@ -38,7 +38,7 @@ export {
   cancelReminderNotification,
   cancelAllDepartureNotifications,
   registerTranslationFunction,
-} from './notification-scheduler';
+} from './notification-scheduler'
 
 export {
   cleanupAssignmentReminder,
@@ -50,4 +50,4 @@ export {
   verifyNoLocationHistory,
   schedulePeriodicCleanup,
   type CleanupOptions,
-} from './cleanup';
+} from './cleanup'

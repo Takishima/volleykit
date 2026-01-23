@@ -6,10 +6,10 @@
 
 interface Props {
   /** Variant for different layouts */
-  variant?: 'desktop' | 'mobile';
+  variant?: 'desktop' | 'mobile'
 }
 
-const { variant = 'desktop' } = Astro.props;
+const { variant = 'desktop' } = Astro.props
 ---
 
 {
@@ -46,13 +46,7 @@ const { variant = 'desktop' } = Astro.props;
       data-search-trigger
       aria-label="Search documentation"
     >
-      <svg
-        class="h-5 w-5"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-      >
+      <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path
           stroke-linecap="round"
           stroke-linejoin="round"
@@ -66,23 +60,23 @@ const { variant = 'desktop' } = Astro.props;
 
 <script>
   function initSearchTriggers() {
-    const triggers = document.querySelectorAll('[data-search-trigger]');
+    const triggers = document.querySelectorAll('[data-search-trigger]')
 
     triggers.forEach((trigger) => {
       trigger.addEventListener('click', () => {
-        document.dispatchEvent(new CustomEvent('open-search'));
-      });
-    });
+        document.dispatchEvent(new CustomEvent('open-search'))
+      })
+    })
 
     // Keyboard shortcut: Cmd/Ctrl + K
     document.addEventListener('keydown', (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        document.dispatchEvent(new CustomEvent('open-search'));
+        e.preventDefault()
+        document.dispatchEvent(new CustomEvent('open-search'))
       }
-    });
+    })
   }
 
-  initSearchTriggers();
-  document.addEventListener('astro:after-swap', initSearchTriggers);
+  initSearchTriggers()
+  document.addEventListener('astro:after-swap', initSearchTriggers)
 </script>

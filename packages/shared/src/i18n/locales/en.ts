@@ -2,7 +2,7 @@
  * English translations for VolleyKit mobile app.
  */
 
-import type { Translations } from '../types';
+import type { Translations } from '../types'
 
 const en: Translations = {
   common: {
@@ -65,7 +65,8 @@ const en: Translations = {
     biometricPrompt: 'Authenticate to access your account',
     biometricFailed: 'Biometric authentication failed',
     biometricNotAvailable: 'Biometric authentication is not available on this device',
-    biometricNotEnrolled: 'No biometric credentials enrolled. Please set up Face ID or fingerprint.',
+    biometricNotEnrolled:
+      'No biometric credentials enrolled. Please set up Face ID or fingerprint.',
     enableBiometric: 'Enable biometric login',
     disableBiometric: 'Disable biometric login',
     enterCredentials: 'Please enter username and password',
@@ -75,8 +76,10 @@ const en: Translations = {
     useBiometric: 'Use {biometricType}',
     authenticateWith: 'Authenticate with {biometricType}',
     attemptsRemaining: '{count} attempt remaining',
-    accountLocked: 'Account temporarily locked due to too many failed attempts. Please try again later.',
-    tfaNotSupported: 'Two-factor authentication is not supported. Please disable it in your VolleyManager settings.',
+    accountLocked:
+      'Account temporarily locked due to too many failed attempts. Please try again later.',
+    tfaNotSupported:
+      'Two-factor authentication is not supported. Please disable it in your VolleyManager settings.',
   },
   assignments: {
     title: 'Assignments',
@@ -199,7 +202,8 @@ const en: Translations = {
       mode: 'Sync Mode',
       modeIcal: 'iCal Subscription',
       modeDirect: 'Direct Sync',
-      icalDescription: 'Subscribe to a calendar feed. Updates automatically when VolleyManager changes.',
+      icalDescription:
+        'Subscribe to a calendar feed. Updates automatically when VolleyManager changes.',
       directDescription: 'Add events directly to your calendar. Requires manual sync.',
       subscribeIcal: 'Subscribe to iCal Feed',
       syncNow: 'Sync Now',
@@ -226,8 +230,7 @@ const en: Translations = {
         'Background location permission is required for departure reminders.',
       notificationRequired: 'Notification permission is required.',
       howItWorks: 'How it works',
-      howItWorksLocation:
-        'Your location is checked periodically when you have upcoming games',
+      howItWorksLocation: 'Your location is checked periodically when you have upcoming games',
       howItWorksRoutes: 'Public transport routes are calculated automatically',
       howItWorksNotification: "You get notified when it's time to leave",
     },
@@ -289,6 +292,6 @@ const en: Translations = {
     tryAgain: 'Try Again',
     refreshPage: 'Restart App',
   },
-};
+}
 
-export default en;
+export default en

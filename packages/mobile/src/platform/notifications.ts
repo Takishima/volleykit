@@ -4,24 +4,24 @@
  * Provides local notification services using expo-notifications for Smart Departure Reminder.
  */
 
-import { Platform } from 'react-native';
+import { Platform } from 'react-native'
 
-import * as Notifications from 'expo-notifications';
+import * as Notifications from 'expo-notifications'
 
 /**
  * Notification content for scheduling.
  */
 export interface NotificationContent {
   /** Notification title */
-  title: string;
+  title: string
   /** Notification body text */
-  body: string;
+  body: string
   /** Optional data payload */
-  data?: Record<string, unknown>;
+  data?: Record<string, unknown>
   /** Optional sound (true for default, false for silent) */
-  sound?: boolean;
+  sound?: boolean
   /** Optional badge count (iOS) */
-  badge?: number;
+  badge?: number
 }
 
 /**
@@ -29,22 +29,19 @@ export interface NotificationContent {
  */
 export interface NotificationAdapter {
   /** Request notification permissions */
-  requestPermissions(): Promise<boolean>;
+  requestPermissions(): Promise<boolean>
   /** Check if notification permission is granted */
-  hasPermissions(): Promise<boolean>;
+  hasPermissions(): Promise<boolean>
   /** Schedule a notification for a specific time */
-  scheduleNotification(
-    content: NotificationContent,
-    triggerAt: Date
-  ): Promise<string>;
+  scheduleNotification(content: NotificationContent, triggerAt: Date): Promise<string>
   /** Cancel a scheduled notification */
-  cancelNotification(id: string): Promise<void>;
+  cancelNotification(id: string): Promise<void>
   /** Cancel all scheduled notifications */
-  cancelAllNotifications(): Promise<void>;
+  cancelAllNotifications(): Promise<void>
   /** Get all scheduled notifications */
-  getScheduledNotifications(): Promise<{ id: string; date: Date | null }[]>;
+  getScheduledNotifications(): Promise<{ id: string; date: Date | null }[]>
   /** Configure notification handler */
-  configureHandler(): void;
+  configureHandler(): void
 }
 
 /**
@@ -52,11 +49,10 @@ export interface NotificationAdapter {
  */
 async function requestPermissions(): Promise<boolean> {
   try {
-    const { status: existingStatus } =
-      await Notifications.getPermissionsAsync();
+    const { status: existingStatus } = await Notifications.getPermissionsAsync()
 
     if (existingStatus === 'granted') {
-      return true;
+      return true
     }
 
     const { status } = await Notifications.requestPermissionsAsync({
@@ -65,11 +61,11 @@ async function requestPermissions(): Promise<boolean> {
         allowBadge: true,
         allowSound: true,
       },
-    });
+    })
 
-    return status === 'granted';
+    return status === 'granted'
   } catch {
-    return false;
+    return false
   }
 }
 
@@ -78,10 +74,10 @@ async function requestPermissions(): Promise<boolean> {
  */
 async function hasPermissions(): Promise<boolean> {
   try {
-    const { status } = await Notifications.getPermissionsAsync();
-    return status === 'granted';
+    const { status } = await Notifications.getPermissionsAsync()
+    return status === 'granted'
   } catch {
-    return false;
+    return false
   }
 }
 
@@ -104,32 +100,30 @@ async function scheduleNotification(
       type: Notifications.SchedulableTriggerInputTypes.DATE,
       date: triggerAt,
     },
-  });
+  })
 
-  return notificationId;
+  return notificationId
 }
 
 /**
  * Cancel a scheduled notification.
  */
 async function cancelNotification(id: string): Promise<void> {
-  await Notifications.cancelScheduledNotificationAsync(id);
+  await Notifications.cancelScheduledNotificationAsync(id)
 }
 
 /**
  * Cancel all scheduled notifications.
  */
 async function cancelAllNotifications(): Promise<void> {
-  await Notifications.cancelAllScheduledNotificationsAsync();
+  await Notifications.cancelAllScheduledNotificationsAsync()
 }
 
 /**
  * Get all scheduled notifications.
  */
-async function getScheduledNotifications(): Promise<
-  { id: string; date: Date | null }[]
-> {
-  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+async function getScheduledNotifications(): Promise<{ id: string; date: Date | null }[]> {
+  const scheduled = await Notifications.getAllScheduledNotificationsAsync()
 
   return scheduled.map((notification) => ({
     id: notification.identifier,
@@ -139,7 +133,7 @@ async function getScheduledNotifications(): Promise<
       'value' in notification.trigger
         ? new Date(notification.trigger.value as number)
         : null,
-  }));
+  }))
 }
 
 /**
@@ -154,7 +148,7 @@ function configureHandler(): void {
       shouldShowBanner: true,
       shouldShowList: true,
     }),
-  });
+  })
 }
 
 /**
@@ -164,9 +158,8 @@ function configureHandler(): void {
 export function addNotificationResponseListener(
   callback: (response: Notifications.NotificationResponse) => void
 ): () => void {
-  const subscription =
-    Notifications.addNotificationResponseReceivedListener(callback);
-  return () => subscription.remove();
+  const subscription = Notifications.addNotificationResponseReceivedListener(callback)
+  return () => subscription.remove()
 }
 
 /**
@@ -175,7 +168,7 @@ export function addNotificationResponseListener(
  */
 export async function ensureNotificationChannel(): Promise<void> {
   if (Platform.OS !== 'android') {
-    return;
+    return
   }
 
   await Notifications.setNotificationChannelAsync('departure-reminders', {
@@ -184,7 +177,7 @@ export async function ensureNotificationChannel(): Promise<void> {
     importance: Notifications.AndroidImportance.HIGH,
     vibrationPattern: [0, 250, 250, 250],
     lightColor: '#0ea5e9',
-  });
+  })
 }
 
 /**
@@ -198,4 +191,4 @@ export const notifications: NotificationAdapter = {
   cancelAllNotifications,
   getScheduledNotifications,
   configureHandler,
-};
+}

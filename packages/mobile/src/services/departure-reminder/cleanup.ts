@@ -5,18 +5,21 @@
  * to maintain privacy (per FR-026a: no location history retained).
  */
 
-import { stopBackgroundTask } from './background-task';
-import { cancelReminderNotification, cancelAllDepartureNotifications } from './notification-scheduler';
-import { departureRemindersStore } from '../../stores/departureReminders';
+import { stopBackgroundTask } from './background-task'
+import {
+  cancelReminderNotification,
+  cancelAllDepartureNotifications,
+} from './notification-scheduler'
+import { departureRemindersStore } from '../../stores/departureReminders'
 
 /**
  * Cleanup options.
  */
 export interface CleanupOptions {
   /** Cancel all pending notifications */
-  cancelNotifications?: boolean;
+  cancelNotifications?: boolean
   /** Stop background tracking */
-  stopTracking?: boolean;
+  stopTracking?: boolean
 }
 
 /**
@@ -27,16 +30,16 @@ export interface CleanupOptions {
  * @param assignmentId The assignment ID to clean up
  */
 export async function cleanupAssignmentReminder(assignmentId: string): Promise<void> {
-  const reminder = departureRemindersStore.getReminder(assignmentId);
+  const reminder = departureRemindersStore.getReminder(assignmentId)
 
   if (reminder) {
     // Cancel scheduled notification
     if (reminder.notificationId) {
-      await cancelReminderNotification(reminder.notificationId);
+      await cancelReminderNotification(reminder.notificationId)
     }
 
     // Remove from store
-    departureRemindersStore.removeReminder(assignmentId);
+    departureRemindersStore.removeReminder(assignmentId)
   }
 }
 
@@ -46,14 +49,14 @@ export async function cleanupAssignmentReminder(assignmentId: string): Promise<v
  * @param currentTime The current time to compare against
  */
 export async function cleanupPastReminders(currentTime: Date = new Date()): Promise<void> {
-  const reminders = departureRemindersStore.getActiveReminders();
+  const reminders = departureRemindersStore.getActiveReminders()
 
   for (const reminder of reminders) {
-    const arrivalTime = new Date(reminder.arrivalTime);
+    const arrivalTime = new Date(reminder.arrivalTime)
 
     // Clean up if assignment time has passed
     if (arrivalTime < currentTime) {
-      await cleanupAssignmentReminder(reminder.assignmentId);
+      await cleanupAssignmentReminder(reminder.assignmentId)
     }
   }
 }
@@ -65,23 +68,21 @@ export async function cleanupPastReminders(currentTime: Date = new Date()): Prom
  *
  * @param options Cleanup options
  */
-export async function cleanupAllReminders(
-  options: CleanupOptions = {}
-): Promise<void> {
-  const { cancelNotifications = true, stopTracking = true } = options;
+export async function cleanupAllReminders(options: CleanupOptions = {}): Promise<void> {
+  const { cancelNotifications = true, stopTracking = true } = options
 
   // Cancel all notifications
   if (cancelNotifications) {
-    await cancelAllDepartureNotifications();
+    await cancelAllDepartureNotifications()
   }
 
   // Stop background tracking
   if (stopTracking) {
-    await stopBackgroundTask();
+    await stopBackgroundTask()
   }
 
   // Clear all reminders from store
-  departureRemindersStore.clearAll();
+  departureRemindersStore.clearAll()
 }
 
 /**
@@ -91,7 +92,7 @@ export async function cleanupAllReminders(
  * to clean up any stale reminder data.
  */
 export async function onAppForeground(): Promise<void> {
-  await cleanupPastReminders();
+  await cleanupPastReminders()
 }
 
 /**
@@ -103,7 +104,7 @@ export async function onFeatureDisabled(): Promise<void> {
   await cleanupAllReminders({
     cancelNotifications: true,
     stopTracking: true,
-  });
+  })
 }
 
 /**
@@ -116,10 +117,10 @@ export async function onUserLogout(): Promise<void> {
   await cleanupAllReminders({
     cancelNotifications: true,
     stopTracking: true,
-  });
+  })
 
   // Reset the store completely
-  departureRemindersStore.reset();
+  departureRemindersStore.reset()
 }
 
 /**
@@ -129,11 +130,11 @@ export async function onUserLogout(): Promise<void> {
  * Returns true if no location data is stored.
  */
 export function verifyNoLocationHistory(): boolean {
-  const state = departureRemindersStore.getState();
+  const state = departureRemindersStore.getState()
 
   // Check that no location is stored (should be null or transient)
   // Location is only kept in memory, not persisted
-  return state.lastKnownLocation === null || !state.isTracking;
+  return state.lastKnownLocation === null || !state.isTracking
 }
 
 /**
@@ -143,6 +144,6 @@ export function verifyNoLocationHistory(): boolean {
  */
 export function schedulePeriodicCleanup(intervalMs: number = 60 * 60 * 1000): NodeJS.Timeout {
   return setInterval(async () => {
-    await cleanupPastReminders();
-  }, intervalMs);
+    await cleanupPastReminders()
+  }, intervalMs)
 }

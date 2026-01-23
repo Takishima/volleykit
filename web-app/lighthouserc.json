@@ -6,7 +6,12 @@
       "numberOfRuns": 3,
       "settings": {
         "preset": "desktop",
-        "onlyCategories": ["performance", "accessibility", "best-practices", "seo"],
+        "onlyCategories": [
+          "performance",
+          "accessibility",
+          "best-practices",
+          "seo"
+        ],
         "skipAudits": ["screenshot-thumbnails", "final-screenshot"]
       }
     },

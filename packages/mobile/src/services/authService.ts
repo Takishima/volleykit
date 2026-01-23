@@ -7,19 +7,14 @@
  * - Mobile-specific session handling
  */
 
-import Constants from 'expo-constants';
+import Constants from 'expo-constants'
 
-import { createAuthService, type LoginResult } from '@volleykit/shared/auth';
-import { useAuthStore } from '@volleykit/shared/stores';
+import { createAuthService, type LoginResult } from '@volleykit/shared/auth'
+import { useAuthStore } from '@volleykit/shared/stores'
 
-import {
-  setSessionToken,
-  setCsrfToken,
-  clearTokens,
-  getSessionToken,
-} from '../api';
-import { SESSION_TOKEN_HEADER } from '../constants';
-import { secureStorage } from '../platform/secureStorage';
+import { setSessionToken, setCsrfToken, clearTokens, getSessionToken } from '../api'
+import { SESSION_TOKEN_HEADER } from '../constants'
+import { secureStorage } from '../platform/secureStorage'
 
 /**
  * API base URL for authentication requests.
@@ -27,16 +22,15 @@ import { secureStorage } from '../platform/secureStorage';
  * Falls back to production proxy URL if not configured.
  */
 const API_BASE_URL =
-  (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined) ??
-  'https://proxy.volleykit.app';
+  (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined) ?? 'https://proxy.volleykit.app'
 
 /**
  * Get session headers for API requests.
  * Uses the centralized token storage in realClient.
  */
 function getSessionHeaders(): Record<string, string> {
-  const token = getSessionToken();
-  return token ? { [SESSION_TOKEN_HEADER]: token } : {};
+  const token = getSessionToken()
+  return token ? { [SESSION_TOKEN_HEADER]: token } : {}
 }
 
 /**
@@ -44,9 +38,9 @@ function getSessionHeaders(): Record<string, string> {
  * Stores in the centralized token storage (realClient).
  */
 function captureSessionToken(response: Response): void {
-  const token = response.headers.get(SESSION_TOKEN_HEADER);
+  const token = response.headers.get(SESSION_TOKEN_HEADER)
   if (token) {
-    setSessionToken(token);
+    setSessionToken(token)
   }
 }
 
@@ -54,7 +48,7 @@ function captureSessionToken(response: Response): void {
  * Clear the session token and all API tokens.
  */
 export function clearSessionToken(): void {
-  clearTokens();
+  clearTokens()
 }
 
 /**
@@ -63,18 +57,18 @@ export function clearSessionToken(): void {
 const logger = {
   info: (...args: unknown[]) => {
     if (__DEV__) {
-      console.log('[Auth]', ...args);
+      console.log('[Auth]', ...args)
     }
   },
   warn: (...args: unknown[]) => {
     if (__DEV__) {
-      console.warn('[Auth]', ...args);
+      console.warn('[Auth]', ...args)
     }
   },
   error: (...args: unknown[]) => {
-    console.error('[Auth]', ...args);
+    console.error('[Auth]', ...args)
   },
-};
+}
 
 /**
  * Create the auth service instance.
@@ -84,7 +78,7 @@ const authService = createAuthService({
   getSessionHeaders,
   captureSessionToken,
   logger,
-});
+})
 
 /**
  * Login with username and password.
@@ -104,64 +98,64 @@ export async function login(
   saveCredentials = true
 ): Promise<LoginResult> {
   // Set loading state (get fresh state reference for mutations)
-  useAuthStore.getState().setStatus('loading');
-  useAuthStore.getState().setError(null);
+  useAuthStore.getState().setStatus('loading')
+  useAuthStore.getState().setError(null)
 
   try {
-    const result = await authService.login(username, password);
+    const result = await authService.login(username, password)
 
     if (result.success) {
       // Sync CSRF token with the real API client for subsequent requests
       if (result.csrfToken) {
-        setCsrfToken(result.csrfToken);
+        setCsrfToken(result.csrfToken)
       }
 
       // Get fresh state after async operation to avoid stale references
-      const currentState = useAuthStore.getState();
+      const currentState = useAuthStore.getState()
 
       // Extract user data from dashboard HTML
-      const activeParty = authService.extractActivePartyFromHtml(result.dashboardHtml);
+      const activeParty = authService.extractActivePartyFromHtml(result.dashboardHtml)
       const { user, activeOccupationId } = authService.deriveUserFromActiveParty(
         activeParty,
         currentState.user,
         currentState.activeOccupationId
-      );
+      )
 
       // Check if user has referee role
       if (user.occupations.length === 0) {
         // Logout from server
-        await authService.logout();
-        clearSessionToken();
+        await authService.logout()
+        clearSessionToken()
 
         useAuthStore.getState().setError({
           message: 'No referee role found. This app is for referees only.',
           code: 'invalid_credentials',
-        });
-        useAuthStore.getState().setStatus('error');
+        })
+        useAuthStore.getState().setStatus('error')
 
-        return { success: false, error: 'No referee role found' };
+        return { success: false, error: 'No referee role found' }
       }
 
       // Update auth store (get fresh reference for mutations)
-      const store = useAuthStore.getState();
-      store.setUser(user);
+      const store = useAuthStore.getState()
+      store.setUser(user)
       if (activeOccupationId) {
-        store.setActiveOccupation(activeOccupationId);
+        store.setActiveOccupation(activeOccupationId)
       }
-      store.setDataSource('api');
+      store.setDataSource('api')
 
       // Save credentials for biometric login
       if (saveCredentials) {
         try {
-          await secureStorage.setCredentials(username, password);
-          logger.info('Credentials saved for biometric login');
+          await secureStorage.setCredentials(username, password)
+          logger.info('Credentials saved for biometric login')
         } catch (error) {
-          logger.warn('Failed to save credentials:', error);
+          logger.warn('Failed to save credentials:', error)
           // Don't fail login if credential storage fails
         }
       }
 
-      return result;
+      return result
     }
 
     // Handle login failure (get fresh reference for mutations)
@@ -169,21 +163,21 @@ export async function login(
       message: result.error,
       code: result.lockedUntil ? 'locked' : 'invalid_credentials',
       lockedUntilSeconds: result.lockedUntil,
-    });
-    useAuthStore.getState().setStatus('error');
+    })
+    useAuthStore.getState().setStatus('error')
 
-    return result;
+    return result
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Login failed';
-    logger.error('Login error:', error);
+    const message = error instanceof Error ? error.message : 'Login failed'
+    logger.error('Login error:', error)
 
     useAuthStore.getState().setError({
       message,
       code: 'network_error',
-    });
-    useAuthStore.getState().setStatus('error');
+    })
+    useAuthStore.getState().setStatus('error')
 
-    return { success: false, error: message };
+    return { success: false, error: message }
   }
 }
 
@@ -191,19 +185,19 @@ export async function login(
  * Logout from the current session.
  */
 export async function logout(): Promise<void> {
-  const store = useAuthStore.getState();
+  const store = useAuthStore.getState()
 
   try {
-    await authService.logout();
+    await authService.logout()
   } catch (error) {
-    logger.error('Logout error:', error);
+    logger.error('Logout error:', error)
   }
 
   // Clear session token
-  clearSessionToken();
+  clearSessionToken()
 
   // Clear auth store
-  store.logout();
+  store.logout()
 }
 
 /**
@@ -212,20 +206,20 @@ export async function logout(): Promise<void> {
  * @returns True if session is valid
  */
 export async function checkSession(): Promise<boolean> {
-  const store = useAuthStore.getState();
+  const store = useAuthStore.getState()
 
   // Skip check for demo/calendar modes
   if (store.dataSource !== 'api') {
-    return true;
+    return true
   }
 
   try {
-    const result = await authService.checkSession();
+    const result = await authService.checkSession()
 
     if (result.valid && result.activeParty) {
       // Sync CSRF token with the real API client
       if (result.csrfToken) {
-        setCsrfToken(result.csrfToken);
+        setCsrfToken(result.csrfToken)
       }
 
       // Update user data from active party
@@ -233,24 +227,24 @@ export async function checkSession(): Promise<boolean> {
         result.activeParty,
         store.user,
         store.activeOccupationId
-      );
+      )
 
-      store.setUser(user);
+      store.setUser(user)
       if (activeOccupationId) {
-        store.setActiveOccupation(activeOccupationId);
+        store.setActiveOccupation(activeOccupationId)
       }
 
-      return true;
+      return true
     }
 
     // Session invalid - clear auth state
-    store.logout();
-    clearSessionToken();
+    store.logout()
+    clearSessionToken()
 
-    return false;
+    return false
   } catch (error) {
-    logger.error('Session check error:', error);
-    return false;
+    logger.error('Session check error:', error)
+    return false
   }
 }
 
@@ -261,17 +255,17 @@ export async function checkSession(): Promise<boolean> {
  */
 export async function reloginWithStoredCredentials(): Promise<boolean> {
   try {
-    const credentials = await secureStorage.getCredentials();
+    const credentials = await secureStorage.getCredentials()
     if (!credentials) {
-      logger.info('No stored credentials for re-login');
-      return false;
+      logger.info('No stored credentials for re-login')
+      return false
     }
 
-    const result = await login(credentials.username, credentials.password, false);
-    return result.success;
+    const result = await login(credentials.username, credentials.password, false)
+    return result.success
   } catch (error) {
-    logger.error('Re-login error:', error);
-    return false;
+    logger.error('Re-login error:', error)
+    return false
   }
 }
 
@@ -280,10 +274,10 @@ export async function reloginWithStoredCredentials(): Promise<boolean> {
  */
 export async function clearStoredCredentials(): Promise<void> {
   try {
-    await secureStorage.clearCredentials();
-    logger.info('Stored credentials cleared');
+    await secureStorage.clearCredentials()
+    logger.info('Stored credentials cleared')
   } catch (error) {
-    logger.warn('Failed to clear credentials:', error);
+    logger.warn('Failed to clear credentials:', error)
   }
 }
 
@@ -292,8 +286,8 @@ export async function clearStoredCredentials(): Promise<void> {
  */
 export async function hasStoredCredentials(): Promise<boolean> {
   try {
-    return await secureStorage.hasCredentials();
+    return await secureStorage.hasCredentials()
   } catch {
-    return false;
+    return false
   }
 }

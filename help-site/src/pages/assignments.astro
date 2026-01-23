@@ -1,14 +1,11 @@
 ---
-import DocLayout from '../layouts/DocLayout.astro';
-import DeviceScreenshot from '../components/DeviceScreenshot.astro';
-import InfoBox from '../components/InfoBox.astro';
-import { t } from '../i18n';
+import DocLayout from '../layouts/DocLayout.astro'
+import DeviceScreenshot from '../components/DeviceScreenshot.astro'
+import InfoBox from '../components/InfoBox.astro'
+import { t } from '../i18n'
 ---
 
-<DocLayout
-  title={t('pages.assignments.title')}
-  description={t('pages.assignments.description')}
->
+<DocLayout title={t('pages.assignments.title')} description={t('pages.assignments.description')}>
   <h1 data-i18n="assignments.heading">{t('assignments.heading')}</h1>
 
   <p class="lead text-text-secondary dark:text-text-secondary-dark" data-i18n="assignments.lead">
@@ -20,11 +17,15 @@ import { t } from '../i18n';
   <p data-i18n="assignments.whatAre.description">{t('assignments.whatAre.description')}</p>
 
   <ul>
-    <li data-i18n="assignments.whatAre.details.dateTime">{t('assignments.whatAre.details.dateTime')}</li>
+    <li data-i18n="assignments.whatAre.details.dateTime">
+      {t('assignments.whatAre.details.dateTime')}
+    </li>
     <li data-i18n="assignments.whatAre.details.teams">{t('assignments.whatAre.details.teams')}</li>
     <li data-i18n="assignments.whatAre.details.venue">{t('assignments.whatAre.details.venue')}</li>
     <li data-i18n="assignments.whatAre.details.role">{t('assignments.whatAre.details.role')}</li>
-    <li data-i18n="assignments.whatAre.details.league">{t('assignments.whatAre.details.league')}</li>
+    <li data-i18n="assignments.whatAre.details.league">
+      {t('assignments.whatAre.details.league')}
+    </li>
   </ul>
 
   <h2 data-i18n="assignments.viewing.title">{t('assignments.viewing.title')}</h2>
@@ -45,11 +46,21 @@ import { t } from '../i18n';
   <p data-i18n="assignments.details.description">{t('assignments.details.description')}</p>
 
   <ul>
-    <li data-i18n="assignments.details.items.gameInfo">{t('assignments.details.items.gameInfo')}</li>
-    <li data-i18n="assignments.details.items.venueAddress">{t('assignments.details.items.venueAddress')}</li>
-    <li data-i18n="assignments.details.items.travelTime">{t('assignments.details.items.travelTime')}</li>
-    <li data-i18n="assignments.details.items.otherReferees">{t('assignments.details.items.otherReferees')}</li>
-    <li data-i18n="assignments.details.items.swipeActions">{t('assignments.details.items.swipeActions')}</li>
+    <li data-i18n="assignments.details.items.gameInfo">
+      {t('assignments.details.items.gameInfo')}
+    </li>
+    <li data-i18n="assignments.details.items.venueAddress">
+      {t('assignments.details.items.venueAddress')}
+    </li>
+    <li data-i18n="assignments.details.items.travelTime">
+      {t('assignments.details.items.travelTime')}
+    </li>
+    <li data-i18n="assignments.details.items.otherReferees">
+      {t('assignments.details.items.otherReferees')}
+    </li>
+    <li data-i18n="assignments.details.items.swipeActions">
+      {t('assignments.details.items.swipeActions')}
+    </li>
   </ul>
 
   <DeviceScreenshot
@@ -65,9 +76,13 @@ import { t } from '../i18n';
 
   <p data-i18n="assignments.actions.description">{t('assignments.actions.description')}</p>
 
-  <h3 data-i18n="assignments.actions.swipeRight.title">{t('assignments.actions.swipeRight.title')}</h3>
+  <h3 data-i18n="assignments.actions.swipeRight.title">
+    {t('assignments.actions.swipeRight.title')}
+  </h3>
 
-  <p data-i18n="assignments.actions.swipeRight.description">{t('assignments.actions.swipeRight.description')}</p>
+  <p data-i18n="assignments.actions.swipeRight.description">
+    {t('assignments.actions.swipeRight.description')}
+  </p>
 
   <DeviceScreenshot
     id="swipe-right-exchange"
@@ -84,13 +99,21 @@ import { t } from '../i18n';
     </p>
   </InfoBox>
 
-  <h3 data-i18n="assignments.actions.swipeLeft.title">{t('assignments.actions.swipeLeft.title')}</h3>
+  <h3 data-i18n="assignments.actions.swipeLeft.title">
+    {t('assignments.actions.swipeLeft.title')}
+  </h3>
 
-  <p data-i18n="assignments.actions.swipeLeft.description">{t('assignments.actions.swipeLeft.description')}</p>
+  <p data-i18n="assignments.actions.swipeLeft.description">
+    {t('assignments.actions.swipeLeft.description')}
+  </p>
 
   <ul>
-    <li data-i18n="assignments.actions.swipeLeft.validate">{t('assignments.actions.swipeLeft.validate')}</li>
-    <li data-i18n="assignments.actions.swipeLeft.edit">{t('assignments.actions.swipeLeft.edit')}</li>
+    <li data-i18n="assignments.actions.swipeLeft.validate">
+      {t('assignments.actions.swipeLeft.validate')}
+    </li>
+    <li data-i18n="assignments.actions.swipeLeft.edit">
+      {t('assignments.actions.swipeLeft.edit')}
+    </li>
   </ul>
 
   <DeviceScreenshot
@@ -108,16 +131,24 @@ import { t } from '../i18n';
     </p>
   </InfoBox>
 
-  <h3 data-i18n="assignments.actions.directions.title">{t('assignments.actions.directions.title')}</h3>
-  <p data-i18n="assignments.actions.directions.description">{t('assignments.actions.directions.description')}</p>
+  <h3 data-i18n="assignments.actions.directions.title">
+    {t('assignments.actions.directions.title')}
+  </h3>
+  <p data-i18n="assignments.actions.directions.description">
+    {t('assignments.actions.directions.description')}
+  </p>
 
   <h2 data-i18n="assignments.upcomingPast.title">{t('assignments.upcomingPast.title')}</h2>
 
-  <p data-i18n="assignments.upcomingPast.description">{t('assignments.upcomingPast.description')}</p>
+  <p data-i18n="assignments.upcomingPast.description">
+    {t('assignments.upcomingPast.description')}
+  </p>
 
   <ul>
     <li data-i18n="assignments.upcomingPast.upcoming">{t('assignments.upcomingPast.upcoming')}</li>
-    <li data-i18n="assignments.upcomingPast.validationClosed">{t('assignments.upcomingPast.validationClosed')}</li>
+    <li data-i18n="assignments.upcomingPast.validationClosed">
+      {t('assignments.upcomingPast.validationClosed')}
+    </li>
   </ul>
 
   <InfoBox type="tip">

@@ -4,7 +4,7 @@ A specialized agent for running pre-push validation with parallel execution.
 
 ## Description
 
-Runs lint, knip, and tests in parallel using subagents, then builds if all pass. Optimized for speed on Claude Code web.
+Runs format, then lint, knip, and tests in parallel using subagents, then builds if all pass. Optimized for speed on Claude Code web.
 
 ## Instructions
 
@@ -20,10 +20,12 @@ git diff --name-only --cached 2>/dev/null || echo "no-staged"
 ```
 
 **Skip validation if**:
+
 - Only `.md` files changed (documentation)
 - No source files changed
 
 **Run only lint if**:
+
 - Only `.json` files in `i18n/locales/` changed
 
 ### Step 2: Generate API Types (if needed)
@@ -34,31 +36,44 @@ If `docs/api/volleymanager-openapi.yaml` changed:
 cd web-app && npm run generate:api
 ```
 
-### Step 3: Parallel Validation
+### Step 3: Format (Auto-fix)
+
+Run prettier to auto-fix formatting issues before other validations:
+
+```bash
+npm run format
+```
+
+This automatically fixes formatting issues rather than just checking.
+
+### Step 4: Parallel Validation
 
 **CRITICAL**: Launch these THREE subagents IN PARALLEL using a SINGLE response with multiple Task tool calls.
 
 Each subagent should use `subagent_type: "Bash"` for direct command execution:
 
 **Subagent 1 - Lint**:
+
 ```
 subagent_type: Bash
 prompt: cd web-app && npm run lint
 ```
 
 **Subagent 2 - Knip**:
+
 ```
 subagent_type: Bash
 prompt: cd web-app && npm run knip
 ```
 
 **Subagent 3 - Test**:
+
 ```
 subagent_type: Bash
 prompt: cd web-app && npm test
 ```
 
-### Step 4: Build (Sequential)
+### Step 5: Build (Sequential)
 
 **Only if ALL parallel checks passed**, run the build:
 
@@ -66,24 +81,26 @@ prompt: cd web-app && npm test
 cd web-app && npm run build
 ```
 
-### Step 5: Summary
+### Step 6: Summary
 
 Output a concise mobile-friendly summary:
 
 **All pass**:
+
 ```
 ## Validation Complete
 
-✓ Lint  ✓ Knip  ✓ Test  ✓ Build
+✓ Format  ✓ Lint  ✓ Knip  ✓ Test  ✓ Build
 
 Ready to push!
 ```
 
 **With failures**:
+
 ```
 ## Validation Complete
 
-✓ Lint  ✗ Knip  ✓ Test  ⊘ Build
+✓ Format  ✓ Lint  ✗ Knip  ✓ Test  ⊘ Build
 
 Issues:
 - Knip: [brief error summary]
@@ -92,6 +109,7 @@ Issues:
 ## Error Handling
 
 If a subagent times out or fails unexpectedly:
+
 - Note the failure in the summary with `✗` status
 - Include a brief error description
 - Suggest manual execution: `cd web-app && npm run <command>`

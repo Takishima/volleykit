@@ -46,6 +46,6 @@ const config = {
     unlisted: 'off',
     unresolved: 'off',
   },
-};
+}
 
-export default config;
+export default config

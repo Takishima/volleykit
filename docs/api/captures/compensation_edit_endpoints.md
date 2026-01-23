@@ -31,7 +31,7 @@ GET /api/indoorvolleyball.refadmin/api\refereeconvocation/findConvocationCompens
 GET ...findConvocationCompensationSettingsForRefereeConvocation?refereeConvocation=<convocation-uuid>
 ```
 
-______________________________________________________________________
+---
 
 ### 2. Get Association Compensation Settings
 
@@ -52,7 +52,7 @@ GET /api/indoorvolleyball.refadmin/api\associationcompensationsettings/getAssoci
 GET ...getAssociationCompensationSettingsByRefereeConvocation?refereeConvocation=<convocation-uuid>
 ```
 
-______________________________________________________________________
+---
 
 ### 3. Show Convocation Compensation with Nested Objects
 
@@ -84,7 +84,7 @@ GET ...convocationcompensation/showWithNestedObjects
   &propertyRenderConfiguration[2]=lockPayoutCentralPayoutCompensationBy
 ```
 
-______________________________________________________________________
+---
 
 ### 4. Search Flexible Additional Compensations
 
@@ -104,16 +104,16 @@ searchConfiguration[offset]=0
 &__csrfToken=<token>
 ```
 
-______________________________________________________________________
+---
 
 ## Dialog Fields
 
 ### Indemnité réglementaire (Regulatory Compensation)
 
-| Field | Type | Description |
-|-------|------|-------------|
+| Field           | Type     | Description                          |
+| --------------- | -------- | ------------------------------------ |
 | Frais de voyage | Checkbox | Whether travel expenses are included |
-| Exigible | Dropdown | Claimable percentage (e.g., 100%) |
+| Exigible        | Dropdown | Claimable percentage (e.g., 100%)    |
 
 ### Indemnités complémentaires variables (Variable Additional Compensations)
 
@@ -122,7 +122,7 @@ A table where referees can add additional compensation items:
 - "Ajouter" button to add new entries
 - Empty by default ("Aucune donnée disponible")
 
-______________________________________________________________________
+---
 
 ## Save Action (Confirmed)
 
@@ -151,7 +151,7 @@ convocationCompensation[__identity]=<compensation-uuid>
 
 After saving, the assignments list is automatically refreshed via `searchMyRefereeConvocations`.
 
-______________________________________________________________________
+---
 
 ## Related Data
 
@@ -165,7 +165,7 @@ From the compensations search response, a typical record includes:
 - `gameCompensation`: 50 CHF
 - `travelExpensesPercentageWeighting`: 1 (100%)
 
-______________________________________________________________________
+---
 
 ## Notes
 

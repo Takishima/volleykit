@@ -28,10 +28,12 @@ const translations: Record<string, string> = {
   'validation.ocr.photoGuide.manuscriptHint': 'Align roster section within the frame',
 
   // Errors
-  'validation.ocr.errors.cameraNotAvailable': 'Camera not available. Please select an image instead.',
+  'validation.ocr.errors.cameraNotAvailable':
+    'Camera not available. Please select an image instead.',
   'validation.ocr.errors.imageTooLarge': 'Image is too large. Please select an image under 10MB.',
   'validation.ocr.errors.processingFailed': 'Failed to process image. Please try again.',
-  'validation.scoresheetUpload.invalidFileType': 'Invalid file type. Please select a JPG, PNG, or WebP image.',
+  'validation.scoresheetUpload.invalidFileType':
+    'Invalid file type. Please select a JPG, PNG, or WebP image.',
 }
 
 /**

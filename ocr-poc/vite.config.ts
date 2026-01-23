@@ -28,7 +28,10 @@ export default defineConfig({
       // This prevents "multiple React instances" errors when importing from web-app
       { find: 'react', replacement: path.resolve(__dirname, '../node_modules/react') },
       { find: 'react-dom', replacement: path.resolve(__dirname, '../node_modules/react-dom') },
-      { find: 'react-easy-crop', replacement: path.resolve(__dirname, '../node_modules/react-easy-crop') },
+      {
+        find: 'react-easy-crop',
+        replacement: path.resolve(__dirname, '../node_modules/react-easy-crop'),
+      },
       // Most specific aliases first
       // Web-app shared components resolve to PoC stubs (translation, icons)
       { find: '@/shared', replacement: path.resolve(__dirname, './src/shared') },
@@ -37,8 +40,14 @@ export default defineConfig({
       // PoC's own source files (must come after more specific paths)
       { find: '@', replacement: path.resolve(__dirname, './src') },
       // Legacy aliases for explicit imports
-      { find: '@volleykit/ocr', replacement: path.resolve(__dirname, '../web-app/src/features/ocr') },
-      { find: '@volleykit/validation', replacement: path.resolve(__dirname, '../web-app/src/features/validation') },
+      {
+        find: '@volleykit/ocr',
+        replacement: path.resolve(__dirname, '../web-app/src/features/ocr'),
+      },
+      {
+        find: '@volleykit/validation',
+        replacement: path.resolve(__dirname, '../web-app/src/features/validation'),
+      },
       // Ensure fuse.js resolves from root node_modules (npm workspaces hoisting)
       { find: 'fuse.js', replacement: path.resolve(__dirname, '../node_modules/fuse.js') },
     ],

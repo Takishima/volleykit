@@ -5,8 +5,8 @@
  * Used by both web and mobile applications.
  */
 
-import type { LoginFormFields, LoginResult, AuthServiceConfig, ActiveParty } from './types';
-import { HTTP_STATUS, AUTH_ENDPOINTS } from './types';
+import type { LoginFormFields, LoginResult, AuthServiceConfig, ActiveParty } from './types'
+import { HTTP_STATUS, AUTH_ENDPOINTS } from './types'
 import {
   extractLoginFormFields,
   extractCsrfTokenFromPage,
@@ -14,11 +14,11 @@ import {
   isDashboardHtmlContent,
   analyzeAuthResponseHtml,
   parseOccupationsFromActiveParty,
-} from './parsers';
-import type { UserProfile, Occupation } from '../stores/auth';
+} from './parsers'
+import type { UserProfile, Occupation } from '../stores/auth'
 
 /** Default delay in ms to allow browser to process Set-Cookie headers */
-const DEFAULT_COOKIE_PROCESSING_DELAY_MS = 100;
+const DEFAULT_COOKIE_PROCESSING_DELAY_MS = 100
 
 /**
  * Default logger that does nothing.
@@ -27,7 +27,7 @@ const noopLogger = {
   info: () => {},
   warn: () => {},
   error: () => {},
-};
+}
 
 /**
  * Creates an authentication service instance.
@@ -42,12 +42,12 @@ export function createAuthService(config: AuthServiceConfig) {
     captureSessionToken = () => {},
     cookieProcessingDelayMs = DEFAULT_COOKIE_PROCESSING_DELAY_MS,
     logger = noopLogger,
-  } = config;
+  } = config
 
-  const LOGIN_PAGE_URL = `${apiBaseUrl}${AUTH_ENDPOINTS.LOGIN_PAGE}`;
-  const AUTH_URL = `${apiBaseUrl}${AUTH_ENDPOINTS.AUTHENTICATE}`;
-  const LOGOUT_URL = `${apiBaseUrl}${AUTH_ENDPOINTS.LOGOUT}`;
-  const DASHBOARD_URL = `${apiBaseUrl}${AUTH_ENDPOINTS.DASHBOARD}`;
+  const LOGIN_PAGE_URL = `${apiBaseUrl}${AUTH_ENDPOINTS.LOGIN_PAGE}`
+  const AUTH_URL = `${apiBaseUrl}${AUTH_ENDPOINTS.AUTHENTICATE}`
+  const LOGOUT_URL = `${apiBaseUrl}${AUTH_ENDPOINTS.LOGOUT}`
+  const DASHBOARD_URL = `${apiBaseUrl}${AUTH_ENDPOINTS.DASHBOARD}`
 
   /**
    * Build form data for login submission.
@@ -57,29 +57,29 @@ export function createAuthService(config: AuthServiceConfig) {
     password: string,
     formFields: LoginFormFields
   ): URLSearchParams {
-    const formData = new URLSearchParams();
+    const formData = new URLSearchParams()
 
     // Add referrer fields (required by Neos Flow)
-    formData.append('__referrer[@package]', formFields.referrerPackage);
-    formData.append('__referrer[@subpackage]', formFields.referrerSubpackage);
-    formData.append('__referrer[@controller]', formFields.referrerController);
-    formData.append('__referrer[@action]', formFields.referrerAction);
-    formData.append('__referrer[arguments]', formFields.referrerArguments);
+    formData.append('__referrer[@package]', formFields.referrerPackage)
+    formData.append('__referrer[@subpackage]', formFields.referrerSubpackage)
+    formData.append('__referrer[@controller]', formFields.referrerController)
+    formData.append('__referrer[@action]', formFields.referrerAction)
+    formData.append('__referrer[arguments]', formFields.referrerArguments)
 
     // Add CSRF protection token
-    formData.append('__trustedProperties', formFields.trustedProperties);
+    formData.append('__trustedProperties', formFields.trustedProperties)
 
     // Add credentials with Neos Flow authentication token format
     formData.append(
       '__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][username]',
       username
-    );
+    )
     formData.append(
       '__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][password]',
       password
-    );
+    )
 
-    return formData;
+    return formData
   }
 
   /**
@@ -90,16 +90,16 @@ export function createAuthService(config: AuthServiceConfig) {
       credentials: 'include',
       cache: 'no-store',
       headers: getSessionHeaders(),
-    });
+    })
 
     if (!response.ok) {
-      throw new Error('Failed to load login page');
+      throw new Error('Failed to load login page')
     }
 
-    captureSessionToken(response);
-    const html = await response.text();
+    captureSessionToken(response)
+    const html = await response.text()
 
-    return { html, response };
+    return { html, response }
   }
 
   /**
@@ -107,25 +107,25 @@ export function createAuthService(config: AuthServiceConfig) {
    */
   async function fetchDashboard(): Promise<{ html: string; csrfToken: string | null }> {
     // Small delay to allow cookie processing (configurable via cookieProcessingDelayMs)
-    await new Promise((resolve) => setTimeout(resolve, cookieProcessingDelayMs));
+    await new Promise((resolve) => setTimeout(resolve, cookieProcessingDelayMs))
 
     const response = await fetch(DASHBOARD_URL, {
       credentials: 'include',
       cache: 'no-store',
       redirect: 'follow',
       headers: getSessionHeaders(),
-    });
+    })
 
-    captureSessionToken(response);
+    captureSessionToken(response)
 
     if (!response.ok) {
-      throw new Error('Failed to load dashboard');
+      throw new Error('Failed to load dashboard')
     }
 
-    const html = await response.text();
-    const csrfToken = extractCsrfTokenFromPage(html);
+    const html = await response.text()
+    const csrfToken = extractCsrfTokenFromPage(html)
 
-    return { html, csrfToken };
+    return { html, csrfToken }
   }
 
   /**
@@ -136,7 +136,7 @@ export function createAuthService(config: AuthServiceConfig) {
     password: string,
     formFields: LoginFormFields
   ): Promise<LoginResult> {
-    const formData = buildLoginFormData(username, password, formFields);
+    const formData = buildLoginFormData(username, password, formFields)
 
     const response = await fetch(AUTH_URL, {
       method: 'POST',
@@ -148,55 +148,55 @@ export function createAuthService(config: AuthServiceConfig) {
         ...getSessionHeaders(),
       },
       body: formData,
-    });
+    })
 
-    captureSessionToken(response);
+    captureSessionToken(response)
 
     // Handle lockout response
     if (response.status === HTTP_STATUS.LOCKED) {
       try {
         const lockoutData = (await response.json()) as {
-          lockedUntil?: number;
-          message?: string;
-        };
+          lockedUntil?: number
+          message?: string
+        }
         return {
           success: false,
           error: lockoutData.message ?? 'Account temporarily locked',
           lockedUntil: lockoutData.lockedUntil,
-        };
+        }
       } catch {
         return {
           success: false,
           error: 'Account temporarily locked due to too many failed attempts',
-        };
+        }
       }
     }
 
     logger.info('Auth response received', {
       status: response.status,
       type: response.type,
-    });
+    })
 
     // Handle JSON response from proxy (iOS Safari PWA fix)
-    const contentType = response.headers.get('Content-Type');
+    const contentType = response.headers.get('Content-Type')
     if (response.status === HTTP_STATUS.OK && contentType?.includes('application/json')) {
       try {
         const jsonResponse = (await response.json()) as {
-          success?: boolean;
-          redirectUrl?: string;
-        };
+          success?: boolean
+          redirectUrl?: string
+        }
 
         if (jsonResponse.redirectUrl && jsonResponse.success) {
           // Successful login - fetch dashboard for CSRF token
-          const { html, csrfToken } = await fetchDashboard();
+          const { html, csrfToken } = await fetchDashboard()
           if (csrfToken) {
-            return { success: true, csrfToken, dashboardHtml: html };
+            return { success: true, csrfToken, dashboardHtml: html }
           }
-          return { success: false, error: 'Login succeeded but session could not be established' };
+          return { success: false, error: 'Login succeeded but session could not be established' }
         }
 
         if (jsonResponse.redirectUrl && !jsonResponse.success) {
-          return { success: false, error: 'Invalid username or password' };
+          return { success: false, error: 'Invalid username or password' }
         }
       } catch {
         // Not valid JSON, continue with other handling
@@ -207,61 +207,61 @@ export function createAuthService(config: AuthServiceConfig) {
     const isRedirectResponse =
       response.status >= HTTP_STATUS.REDIRECT_MIN &&
       response.status < HTTP_STATUS.REDIRECT_MAX &&
-      response.type !== 'opaqueredirect';
+      response.type !== 'opaqueredirect'
 
-    const locationHeader = response.headers.get('Location');
+    const locationHeader = response.headers.get('Location')
     const isRedirectToDashboard =
       isRedirectResponse &&
       locationHeader !== null &&
-      locationHeader.includes(AUTH_ENDPOINTS.DASHBOARD);
+      locationHeader.includes(AUTH_ENDPOINTS.DASHBOARD)
 
     // Handle opaqueredirect
     if (response.type === 'opaqueredirect') {
-      logger.info('Got opaqueredirect response, assuming successful login...');
+      logger.info('Got opaqueredirect response, assuming successful login...')
       try {
-        const { html, csrfToken } = await fetchDashboard();
+        const { html, csrfToken } = await fetchDashboard()
         if (csrfToken) {
-          return { success: true, csrfToken, dashboardHtml: html };
+          return { success: true, csrfToken, dashboardHtml: html }
         }
       } catch {
-        return { success: false, error: 'Login succeeded but could not load dashboard' };
+        return { success: false, error: 'Login succeeded but could not load dashboard' }
       }
     }
 
     // If redirected to dashboard, fetch it for CSRF token
     if (isRedirectToDashboard) {
-      logger.info('Login successful (detected from redirect), fetching dashboard...');
+      logger.info('Login successful (detected from redirect), fetching dashboard...')
       try {
-        const { html, csrfToken } = await fetchDashboard();
+        const { html, csrfToken } = await fetchDashboard()
         if (csrfToken) {
-          return { success: true, csrfToken, dashboardHtml: html };
+          return { success: true, csrfToken, dashboardHtml: html }
         }
-        return { success: false, error: 'Login succeeded but session could not be established' };
+        return { success: false, error: 'Login succeeded but session could not be established' }
       } catch {
-        return { success: false, error: 'Login succeeded but could not load dashboard' };
+        return { success: false, error: 'Login succeeded but could not load dashboard' }
       }
     }
 
     // Not a redirect - analyze response HTML
     if (!response.ok) {
-      return { success: false, error: 'Authentication request failed' };
+      return { success: false, error: 'Authentication request failed' }
     }
 
-    const html = await response.text();
+    const html = await response.text()
 
     // Check if this is actually the dashboard (content-based detection)
     if (isDashboardHtmlContent(html)) {
-      const csrfToken = extractCsrfTokenFromPage(html);
+      const csrfToken = extractCsrfTokenFromPage(html)
       if (csrfToken) {
-        return { success: true, csrfToken, dashboardHtml: html };
+        return { success: true, csrfToken, dashboardHtml: html }
       }
     }
 
     // Check for errors in HTML
-    const { hasAuthError, hasTfaPage } = analyzeAuthResponseHtml(html);
+    const { hasAuthError, hasTfaPage } = analyzeAuthResponseHtml(html)
 
     if (hasAuthError) {
-      return { success: false, error: 'Invalid username or password' };
+      return { success: false, error: 'Invalid username or password' }
     }
 
     if (hasTfaPage) {
@@ -269,10 +269,10 @@ export function createAuthService(config: AuthServiceConfig) {
         success: false,
         error:
           'Two-factor authentication is not supported. Please disable it in your VolleyManager account settings.',
-      };
+      }
     }
 
-    return { success: false, error: 'Login failed - please try again' };
+    return { success: false, error: 'Login failed - please try again' }
   }
 
   /**
@@ -282,36 +282,33 @@ export function createAuthService(config: AuthServiceConfig) {
    * @param password - Password
    * @returns Login result with CSRF token and user data on success
    */
-  async function login(
-    username: string,
-    password: string
-  ): Promise<LoginResult> {
+  async function login(username: string, password: string): Promise<LoginResult> {
     try {
       // Step 1: Fetch login page to get form fields
-      const { html: loginPageHtml } = await fetchLoginPage();
+      const { html: loginPageHtml } = await fetchLoginPage()
 
       // Check if already logged in (login page has CSRF token)
-      const existingCsrfToken = extractCsrfTokenFromPage(loginPageHtml);
+      const existingCsrfToken = extractCsrfTokenFromPage(loginPageHtml)
       if (existingCsrfToken) {
-        logger.info('Already logged in, fetching dashboard...');
-        const { html: dashboardHtml, csrfToken } = await fetchDashboard();
+        logger.info('Already logged in, fetching dashboard...')
+        const { html: dashboardHtml, csrfToken } = await fetchDashboard()
         if (csrfToken) {
-          return { success: true, csrfToken, dashboardHtml };
+          return { success: true, csrfToken, dashboardHtml }
         }
       }
 
       // Step 2: Extract form fields
-      const formFields = extractLoginFormFields(loginPageHtml);
+      const formFields = extractLoginFormFields(loginPageHtml)
       if (!formFields) {
-        return { success: false, error: 'Could not extract form fields from login page' };
+        return { success: false, error: 'Could not extract form fields from login page' }
       }
 
       // Step 3: Submit credentials
-      return await submitCredentials(username, password, formFields);
+      return await submitCredentials(username, password, formFields)
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Login failed';
-      logger.error('Login error:', error);
-      return { success: false, error: message };
+      const message = error instanceof Error ? error.message : 'Login failed'
+      logger.error('Login error:', error)
+      return { success: false, error: message }
     }
   }
 
@@ -323,9 +320,9 @@ export function createAuthService(config: AuthServiceConfig) {
       await fetch(LOGOUT_URL, {
         credentials: 'include',
         redirect: 'manual',
-      });
+      })
     } catch (error) {
-      logger.error('Logout request failed:', error);
+      logger.error('Logout request failed:', error)
     }
   }
 
@@ -335,9 +332,9 @@ export function createAuthService(config: AuthServiceConfig) {
    * @returns True if session is valid, false otherwise
    */
   async function checkSession(): Promise<{
-    valid: boolean;
-    csrfToken?: string;
-    activeParty?: ActiveParty | null;
+    valid: boolean
+    csrfToken?: string
+    activeParty?: ActiveParty | null
   }> {
     try {
       const response = await fetch(DASHBOARD_URL, {
@@ -345,32 +342,32 @@ export function createAuthService(config: AuthServiceConfig) {
         redirect: 'follow',
         cache: 'no-store',
         headers: getSessionHeaders(),
-      });
+      })
 
-      captureSessionToken(response);
+      captureSessionToken(response)
 
       if (!response.ok) {
-        return { valid: false };
+        return { valid: false }
       }
 
-      const html = await response.text();
+      const html = await response.text()
 
       // Check if we got the login page instead
       if (!isDashboardHtmlContent(html)) {
-        return { valid: false };
+        return { valid: false }
       }
 
-      const csrfToken = extractCsrfTokenFromPage(html);
-      const activeParty = extractActivePartyFromHtml(html);
+      const csrfToken = extractCsrfTokenFromPage(html)
+      const activeParty = extractActivePartyFromHtml(html)
 
       if (!csrfToken) {
-        return { valid: false };
+        return { valid: false }
       }
 
-      return { valid: true, csrfToken, activeParty };
+      return { valid: true, csrfToken, activeParty }
     } catch (error) {
-      logger.error('Session check failed:', error);
-      return { valid: false };
+      logger.error('Session check failed:', error)
+      return { valid: false }
     }
   }
 
@@ -385,24 +382,24 @@ export function createAuthService(config: AuthServiceConfig) {
     // Use groupedEligibleAttributeValues first, fall back to eligibleAttributeValues
     const attributeValues = activeParty?.groupedEligibleAttributeValues?.length
       ? activeParty.groupedEligibleAttributeValues
-      : (activeParty?.eligibleAttributeValues ?? null);
+      : (activeParty?.eligibleAttributeValues ?? null)
 
-    const parsedOccupations = parseOccupationsFromActiveParty(attributeValues);
+    const parsedOccupations = parseOccupationsFromActiveParty(attributeValues)
 
     // Preserve existing occupations if parsing returns empty
     const occupations: Occupation[] =
-      parsedOccupations.length > 0 ? parsedOccupations : (existingUser?.occupations ?? []);
+      parsedOccupations.length > 0 ? parsedOccupations : (existingUser?.occupations ?? [])
 
     // Validate that the persisted activeOccupationId exists
     const isPersistedIdValid =
       existingActiveOccupationId !== null &&
-      occupations.some((occ) => occ.id === existingActiveOccupationId);
+      occupations.some((occ) => occ.id === existingActiveOccupationId)
     const activeOccupationId = isPersistedIdValid
       ? existingActiveOccupationId
-      : (occupations[0]?.id ?? null);
+      : (occupations[0]?.id ?? null)
 
     // Use the person's __identity from activeParty as the user id
-    const userId = activeParty?.__identity ?? existingUser?.id ?? 'user';
+    const userId = activeParty?.__identity ?? existingUser?.id ?? 'user'
 
     const user: UserProfile = existingUser
       ? { ...existingUser, id: userId, occupations }
@@ -411,9 +408,9 @@ export function createAuthService(config: AuthServiceConfig) {
           firstName: '',
           lastName: '',
           occupations,
-        };
+        }
 
-    return { user, activeOccupationId };
+    return { user, activeOccupationId }
   }
 
   return {
@@ -425,10 +422,10 @@ export function createAuthService(config: AuthServiceConfig) {
     submitCredentials,
     deriveUserFromActiveParty,
     extractActivePartyFromHtml,
-  };
+  }
 }
 
 /**
  * Type for the auth service instance.
  */
-export type AuthService = ReturnType<typeof createAuthService>;
+export type AuthService = ReturnType<typeof createAuthService>

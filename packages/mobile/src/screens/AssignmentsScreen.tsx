@@ -4,7 +4,7 @@
  * Displays upcoming referee assignments fetched via the shared useAssignments hook.
  */
 
-import { useCallback } from 'react';
+import { useCallback } from 'react'
 
 import {
   View,
@@ -13,25 +13,25 @@ import {
   RefreshControl,
   ActivityIndicator,
   TouchableOpacity,
-} from 'react-native';
+} from 'react-native'
 
-import type { Assignment } from '@volleykit/shared/api';
-import { useAssignments } from '@volleykit/shared/hooks';
-import { useTranslation, type TranslationKey } from '@volleykit/shared/i18n';
+import type { Assignment } from '@volleykit/shared/api'
+import { useAssignments } from '@volleykit/shared/hooks'
+import { useTranslation, type TranslationKey } from '@volleykit/shared/i18n'
 
-import { useApiClient } from '../contexts';
-import { formatDate } from '../utils';
+import { useApiClient } from '../contexts'
+import { formatDate } from '../utils'
 
-import type { MainTabScreenProps } from '../navigation/types';
+import type { MainTabScreenProps } from '../navigation/types'
 
-type Props = MainTabScreenProps<'Assignments'>;
+type Props = MainTabScreenProps<'Assignments'>
 
 // Status badge color mappings
 const STATUS_COLORS = {
   active: { bg: 'bg-green-100', text: 'text-green-700' },
   cancelled: { bg: 'bg-red-100', text: 'text-red-700' },
   archived: { bg: 'bg-gray-100', text: 'text-gray-700' },
-} as const;
+} as const
 
 /**
  * Get display data from an assignment.
@@ -41,15 +41,15 @@ function getAssignmentDisplay(
   language: string,
   tbd: string
 ): {
-  id: string;
-  title: string;
-  date: string;
-  venue: string;
-  status: 'active' | 'cancelled' | 'archived';
+  id: string
+  title: string
+  date: string
+  venue: string
+  status: 'active' | 'cancelled' | 'archived'
 } {
-  const game = assignment.refereeGame?.game;
-  const homeTeam = game?.teamHome?.name ?? tbd;
-  const awayTeam = game?.teamAway?.name ?? tbd;
+  const game = assignment.refereeGame?.game
+  const homeTeam = game?.teamHome?.name ?? tbd
+  const awayTeam = game?.teamAway?.name ?? tbd
 
   return {
     id: assignment.__identity,
@@ -57,12 +57,12 @@ function getAssignmentDisplay(
     date: formatDate(game?.startingDateTime, language),
     venue: game?.hall?.name ?? tbd,
     status: assignment.refereeConvocationStatus,
-  };
+  }
 }
 
 export function AssignmentsScreen({ navigation }: Props) {
-  const { t, language } = useTranslation();
-  const apiClient = useApiClient();
+  const { t, language } = useTranslation()
+  const apiClient = useApiClient()
 
   const {
     data: assignments = [],
@@ -74,11 +74,11 @@ export function AssignmentsScreen({ navigation }: Props) {
   } = useAssignments({
     apiClient,
     period: 'upcoming',
-  });
+  })
 
   const onRefresh = useCallback(() => {
-    refetch();
-  }, [refetch]);
+    refetch()
+  }, [refetch])
 
   // Loading state
   if (isLoading) {
@@ -86,16 +86,14 @@ export function AssignmentsScreen({ navigation }: Props) {
       <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" accessibilityLabel={t('common.loading')} />
       </View>
-    );
+    )
   }
 
   // Error state
   if (isError) {
     return (
       <View className="flex-1 items-center justify-center px-6">
-        <Text className="text-red-600 text-center mb-4">
-          {error?.message ?? t('common.error')}
-        </Text>
+        <Text className="text-red-600 text-center mb-4">{error?.message ?? t('common.error')}</Text>
         <TouchableOpacity
           className="bg-primary-600 rounded-lg px-6 py-3"
           onPress={() => refetch()}
@@ -105,7 +103,7 @@ export function AssignmentsScreen({ navigation }: Props) {
           <Text className="text-white font-medium">{t('common.retry')}</Text>
         </TouchableOpacity>
       </View>
-    );
+    )
   }
 
   // Empty state
@@ -114,7 +112,7 @@ export function AssignmentsScreen({ navigation }: Props) {
       <View className="flex-1 items-center justify-center px-6">
         <Text className="text-gray-600 text-center">{t('assignments.noAssignments')}</Text>
       </View>
-    );
+    )
   }
 
   return (
@@ -127,8 +125,8 @@ export function AssignmentsScreen({ navigation }: Props) {
         <RefreshControl refreshing={isFetching && !isLoading} onRefresh={onRefresh} />
       }
       renderItem={({ item }) => {
-        const display = getAssignmentDisplay(item, language, t('common.tbd'));
-        const colors = STATUS_COLORS[display.status];
+        const display = getAssignmentDisplay(item, language, t('common.tbd'))
+        const colors = STATUS_COLORS[display.status]
 
         return (
           <TouchableOpacity
@@ -146,10 +144,12 @@ export function AssignmentsScreen({ navigation }: Props) {
                 </Text>
               </View>
             </View>
-            <Text className="text-gray-500 text-sm mt-1">{display.date} - {display.venue}</Text>
+            <Text className="text-gray-500 text-sm mt-1">
+              {display.date} - {display.venue}
+            </Text>
           </TouchableOpacity>
-        );
+        )
       }}
     />
-  );
+  )
 }

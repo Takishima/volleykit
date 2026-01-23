@@ -4,27 +4,27 @@
  * Modal for selecting a target calendar from available device calendars.
  */
 
-import { View, Text, TouchableOpacity, FlatList, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, Modal } from 'react-native'
 
-import { Feather } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons'
 
-import { useTranslation } from '@volleykit/shared/i18n';
+import { useTranslation } from '@volleykit/shared/i18n'
 
-import { COLORS } from '../constants';
+import { COLORS } from '../constants'
 
-import type { CalendarInfo } from '../types/calendar';
+import type { CalendarInfo } from '../types/calendar'
 
 interface CalendarPickerProps {
   /** Whether the picker is visible */
-  visible: boolean;
+  visible: boolean
   /** List of available calendars */
-  calendars: CalendarInfo[];
+  calendars: CalendarInfo[]
   /** Currently selected calendar ID */
-  selectedCalendarId: string | null;
+  selectedCalendarId: string | null
   /** Called when a calendar is selected */
-  onSelect: (calendarId: string) => void;
+  onSelect: (calendarId: string) => void
   /** Called when the picker is closed */
-  onClose: () => void;
+  onClose: () => void
 }
 
 export function CalendarPicker({
@@ -34,10 +34,10 @@ export function CalendarPicker({
   onSelect,
   onClose,
 }: CalendarPickerProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
   const renderCalendarItem = ({ item }: { item: CalendarInfo }) => {
-    const isSelected = item.id === selectedCalendarId;
+    const isSelected = item.id === selectedCalendarId
 
     return (
       <TouchableOpacity
@@ -56,16 +56,12 @@ export function CalendarPicker({
           <Text className="text-gray-900 text-base">{item.title}</Text>
           <Text className="text-gray-500 text-sm">{item.source}</Text>
         </View>
-        {isSelected && (
-          <Feather name="check" size={24} color={COLORS.primary} />
-        )}
+        {isSelected && <Feather name="check" size={24} color={COLORS.primary} />}
       </TouchableOpacity>
-    );
-  };
+    )
+  }
 
-  const renderSeparator = () => (
-    <View className="h-px bg-gray-200 ml-14" />
-  );
+  const renderSeparator = () => <View className="h-px bg-gray-200 ml-14" />
 
   return (
     <Modal
@@ -109,5 +105,5 @@ export function CalendarPicker({
         )}
       </View>
     </Modal>
-  );
+  )
 }

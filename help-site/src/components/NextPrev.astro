@@ -5,20 +5,20 @@
  */
 
 interface NavLink {
-  title: string;
-  href: string;
+  title: string
+  href: string
 }
 
 interface Props {
-  prev?: NavLink;
-  next?: NavLink;
+  prev?: NavLink
+  next?: NavLink
 }
 
-const { prev, next } = Astro.props;
+const { prev, next } = Astro.props
 
 // Don't render if no prev or next
 if (!prev && !next) {
-  return null;
+  return null
 }
 ---
 

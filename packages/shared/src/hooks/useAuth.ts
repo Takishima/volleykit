@@ -5,13 +5,13 @@
  * Placeholder for now - implementation in Phase 2
  */
 
-import { useAuthStore } from '../stores/auth';
+import { useAuthStore } from '../stores/auth'
 
 export const useAuth = () => {
-  const status = useAuthStore((state) => state.status);
-  const user = useAuthStore((state) => state.user);
-  const error = useAuthStore((state) => state.error);
-  const logout = useAuthStore((state) => state.logout);
+  const status = useAuthStore((state) => state.status)
+  const user = useAuthStore((state) => state.user)
+  const error = useAuthStore((state) => state.error)
+  const logout = useAuthStore((state) => state.logout)
 
   return {
     status,
@@ -20,5 +20,5 @@ export const useAuth = () => {
     isAuthenticated: status === 'authenticated',
     isLoading: status === 'loading',
     logout,
-  };
-};
+  }
+}

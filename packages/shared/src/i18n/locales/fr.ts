@@ -2,7 +2,7 @@
  * French translations for VolleyKit mobile app.
  */
 
-import type { Translations } from '../types';
+import type { Translations } from '../types'
 
 const fr: Translations = {
   common: {
@@ -76,8 +76,10 @@ const fr: Translations = {
     useBiometric: 'Utiliser {biometricType}',
     authenticateWith: "S'authentifier avec {biometricType}",
     attemptsRemaining: '{count} tentative restante',
-    accountLocked: "Compte temporairement verrouillé en raison d'un trop grand nombre de tentatives. Veuillez réessayer plus tard.",
-    tfaNotSupported: "L'authentification à deux facteurs n'est pas prise en charge. Veuillez la désactiver dans vos paramètres VolleyManager.",
+    accountLocked:
+      "Compte temporairement verrouillé en raison d'un trop grand nombre de tentatives. Veuillez réessayer plus tard.",
+    tfaNotSupported:
+      "L'authentification à deux facteurs n'est pas prise en charge. Veuillez la désactiver dans vos paramètres VolleyManager.",
   },
   assignments: {
     title: 'Désignations',
@@ -201,8 +203,9 @@ const fr: Translations = {
       mode: 'Mode de synchronisation',
       modeIcal: 'Abonnement iCal',
       modeDirect: 'Synchronisation directe',
-      icalDescription: "Abonnez-vous à un flux de calendrier. Se met à jour automatiquement.",
-      directDescription: 'Ajouter des événements directement au calendrier. Synchronisation manuelle requise.',
+      icalDescription: 'Abonnez-vous à un flux de calendrier. Se met à jour automatiquement.',
+      directDescription:
+        'Ajouter des événements directement au calendrier. Synchronisation manuelle requise.',
       subscribeIcal: "S'abonner au flux iCal",
       syncNow: 'Synchroniser maintenant',
       lastSync: 'Dernière synchronisation : {date}',
@@ -210,15 +213,15 @@ const fr: Translations = {
       syncSummary: '{created} créé(s), {updated} mis à jour, {deleted} supprimé(s)',
       syncError: 'Échec de la synchronisation. Veuillez réessayer.',
       noCalendars: 'Aucun calendrier disponible. Veuillez en créer un.',
-      noAssignmentsToSync: 'Aucune désignation à synchroniser. Veuillez consulter vos désignations.',
+      noAssignmentsToSync:
+        'Aucune désignation à synchroniser. Veuillez consulter vos désignations.',
       noCalendarCode: 'Code calendrier non disponible. Veuillez vous reconnecter.',
       enabled: 'Activé',
       disabled: 'Désactivé',
     },
     departure: {
       title: 'Rappel de départ intelligent',
-      description:
-        'Recevez des notifications basées sur les données de transport en temps réel.',
+      description: 'Recevez des notifications basées sur les données de transport en temps réel.',
       enable: 'Activer',
       disable: 'Désactiver',
       bufferTime: 'Temps tampon',
@@ -232,7 +235,7 @@ const fr: Translations = {
       howItWorksLocation:
         'Votre position est vérifiée périodiquement lorsque vous avez des matchs à venir',
       howItWorksRoutes: 'Les itinéraires de transport public sont calculés automatiquement',
-      howItWorksNotification: "Vous êtes notifié quand il est temps de partir",
+      howItWorksNotification: 'Vous êtes notifié quand il est temps de partir',
     },
     homeLocation: {
       title: 'Emplacement domicile',
@@ -294,6 +297,6 @@ const fr: Translations = {
     tryAgain: 'Réessayer',
     refreshPage: "Redémarrer l'application",
   },
-};
+}
 
-export default fr;
+export default fr

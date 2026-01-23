@@ -5,8 +5,8 @@
  */
 
 export interface Coordinates {
-  lat: number;
-  lng: number;
+  lat: number
+  lng: number
 }
 
 /**
@@ -17,23 +17,23 @@ export interface Coordinates {
  * @returns Distance in meters
  */
 export const haversineDistance = (point1: Coordinates, point2: Coordinates): number => {
-  const R = 6371000; // Earth's radius in meters
+  const R = 6371000 // Earth's radius in meters
 
-  const toRadians = (degrees: number): number => degrees * (Math.PI / 180);
+  const toRadians = (degrees: number): number => degrees * (Math.PI / 180)
 
-  const lat1Rad = toRadians(point1.lat);
-  const lat2Rad = toRadians(point2.lat);
-  const deltaLat = toRadians(point2.lat - point1.lat);
-  const deltaLng = toRadians(point2.lng - point1.lng);
+  const lat1Rad = toRadians(point1.lat)
+  const lat2Rad = toRadians(point2.lat)
+  const deltaLat = toRadians(point2.lat - point1.lat)
+  const deltaLng = toRadians(point2.lng - point1.lng)
 
   const a =
     Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
-    Math.cos(lat1Rad) * Math.cos(lat2Rad) * Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2);
+    Math.cos(lat1Rad) * Math.cos(lat2Rad) * Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2)
 
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 
-  return R * c;
-};
+  return R * c
+}
 
 /**
  * Check if a point is within a certain distance of another point
@@ -48,10 +48,10 @@ export const isWithinDistance = (
   point2: Coordinates,
   thresholdMeters = 500
 ): boolean => {
-  return haversineDistance(point1, point2) <= thresholdMeters;
-};
+  return haversineDistance(point1, point2) <= thresholdMeters
+}
 
 /**
  * Default venue proximity threshold in meters (per spec FR-024)
  */
-export const VENUE_PROXIMITY_THRESHOLD_METERS = 500;
+export const VENUE_PROXIMITY_THRESHOLD_METERS = 500

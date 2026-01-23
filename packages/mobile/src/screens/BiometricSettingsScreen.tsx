@@ -4,100 +4,96 @@
  * Allows users to enable/disable biometric authentication for quick re-login.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react'
 
-import { View, Text, ScrollView, Switch, Alert } from 'react-native';
+import { View, Text, ScrollView, Switch, Alert } from 'react-native'
 
-import { useStorage } from '@volleykit/shared/adapters';
-import { useTranslation } from '@volleykit/shared/i18n';
+import { useStorage } from '@volleykit/shared/adapters'
+import { useTranslation } from '@volleykit/shared/i18n'
 
-import { COLORS, BIOMETRIC_ENABLED_KEY } from '../constants';
-import { biometrics, getBiometricTypeName } from '../platform/biometrics';
+import { COLORS, BIOMETRIC_ENABLED_KEY } from '../constants'
+import { biometrics, getBiometricTypeName } from '../platform/biometrics'
 
-import type { RootStackScreenProps } from '../navigation/types';
+import type { RootStackScreenProps } from '../navigation/types'
 
-type Props = RootStackScreenProps<'BiometricSettings'>;
+type Props = RootStackScreenProps<'BiometricSettings'>
 
 export function BiometricSettingsScreen({ navigation: _navigation }: Props) {
-  const { t } = useTranslation();
-  const { storage, secureStorage } = useStorage();
+  const { t } = useTranslation()
+  const { storage, secureStorage } = useStorage()
 
-  const [isAvailable, setIsAvailable] = useState(false);
-  const [isEnabled, setIsEnabled] = useState(false);
-  const [biometricType, setBiometricType] = useState<'faceId' | 'touchId' | 'fingerprint' | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasCredentials, setHasCredentials] = useState(false);
+  const [isAvailable, setIsAvailable] = useState(false)
+  const [isEnabled, setIsEnabled] = useState(false)
+  const [biometricType, setBiometricType] = useState<'faceId' | 'touchId' | 'fingerprint' | null>(
+    null
+  )
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasCredentials, setHasCredentials] = useState(false)
 
   // Check biometric availability and current settings
   useEffect(() => {
     async function checkBiometricStatus() {
       try {
-        const available = await biometrics.isAvailable();
-        setIsAvailable(available);
+        const available = await biometrics.isAvailable()
+        setIsAvailable(available)
 
         if (available) {
-          const type = await biometrics.getBiometricType();
-          setBiometricType(type);
+          const type = await biometrics.getBiometricType()
+          setBiometricType(type)
 
-          const storedEnabled = await storage.getItem(BIOMETRIC_ENABLED_KEY);
-          setIsEnabled(storedEnabled === 'true');
+          const storedEnabled = await storage.getItem(BIOMETRIC_ENABLED_KEY)
+          setIsEnabled(storedEnabled === 'true')
 
-          const hasCreds = await secureStorage.hasCredentials();
-          setHasCredentials(hasCreds);
+          const hasCreds = await secureStorage.hasCredentials()
+          setHasCredentials(hasCreds)
         }
       } catch {
-        setIsAvailable(false);
+        setIsAvailable(false)
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
     }
 
-    checkBiometricStatus();
-  }, [storage, secureStorage]);
+    checkBiometricStatus()
+  }, [storage, secureStorage])
 
   const handleToggle = useCallback(
     async (value: boolean) => {
       if (value) {
         // Enabling biometric - verify it works first
-        const success = await biometrics.authenticate(
-          t('auth.biometricPrompt')
-        );
+        const success = await biometrics.authenticate(t('auth.biometricPrompt'))
 
         if (!success) {
-          Alert.alert(
-            t('settings.biometric.title'),
-            t('auth.biometricFailed'),
-            [{ text: t('common.close') }]
-          );
-          return;
+          Alert.alert(t('settings.biometric.title'), t('auth.biometricFailed'), [
+            { text: t('common.close') },
+          ])
+          return
         }
 
         // Check if we have stored credentials
         if (!hasCredentials) {
-          Alert.alert(
-            t('settings.biometric.title'),
-            t('auth.enterCredentials'),
-            [{ text: t('common.close') }]
-          );
-          return;
+          Alert.alert(t('settings.biometric.title'), t('auth.enterCredentials'), [
+            { text: t('common.close') },
+          ])
+          return
         }
       }
 
-      await storage.setItem(BIOMETRIC_ENABLED_KEY, value ? 'true' : 'false');
-      setIsEnabled(value);
+      await storage.setItem(BIOMETRIC_ENABLED_KEY, value ? 'true' : 'false')
+      setIsEnabled(value)
     },
     [storage, hasCredentials, t]
-  );
+  )
 
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-gray-50">
         <Text className="text-gray-500">{t('common.loading')}</Text>
       </View>
-    );
+    )
   }
 
-  const biometricName = getBiometricTypeName(biometricType);
+  const biometricName = getBiometricTypeName(biometricType)
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
@@ -112,9 +108,7 @@ export function BiometricSettingsScreen({ navigation: _navigation }: Props) {
           <Text className="text-gray-900 font-medium mb-2">
             {t('settings.biometric.notAvailable')}
           </Text>
-          <Text className="text-gray-500 text-sm">
-            {t('settings.biometric.notEnrolled')}
-          </Text>
+          <Text className="text-gray-500 text-sm">{t('settings.biometric.notEnrolled')}</Text>
         </View>
       ) : (
         <>
@@ -142,19 +136,15 @@ export function BiometricSettingsScreen({ navigation: _navigation }: Props) {
 
           {!hasCredentials && (
             <View className="px-4 mt-4">
-              <Text className="text-orange-600 text-sm">
-                {t('auth.enterCredentials')}
-              </Text>
+              <Text className="text-orange-600 text-sm">{t('auth.enterCredentials')}</Text>
             </View>
           )}
         </>
       )}
 
       <View className="px-4 mt-6">
-        <Text className="text-gray-500 text-sm">
-          {t('settings.biometric.description')}
-        </Text>
+        <Text className="text-gray-500 text-sm">{t('settings.biometric.description')}</Text>
       </View>
     </ScrollView>
-  );
+  )
 }

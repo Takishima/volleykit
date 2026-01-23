@@ -4,31 +4,31 @@
  * Handles authentication flow and biometric re-authentication on session expiry.
  */
 
-import { useCallback } from 'react';
+import { useCallback } from 'react'
 
-import { NavigationContainer, type LinkingOptions } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { NavigationContainer, type LinkingOptions } from '@react-navigation/native'
+import { createNativeStackNavigator } from '@react-navigation/native-stack'
 
-import { useAuth } from '@volleykit/shared/hooks';
-import { useTranslation } from '@volleykit/shared/i18n';
+import { useAuth } from '@volleykit/shared/hooks'
+import { useTranslation } from '@volleykit/shared/i18n'
 
-import { TabNavigator } from './TabNavigator';
-import { BiometricPrompt } from '../components/BiometricPrompt';
-import { OfflineBanner } from '../components/OfflineBanner';
-import { MAX_BIOMETRIC_ATTEMPTS } from '../constants';
-import { useSessionMonitorContext } from '../contexts';
-import { useBiometricAuth } from '../hooks/useBiometricAuth';
-import { AssignmentDetailScreen } from '../screens/AssignmentDetailScreen';
-import { BiometricSettingsScreen } from '../screens/BiometricSettingsScreen';
-import { CalendarSettingsScreen } from '../screens/CalendarSettingsScreen';
-import { DepartureReminderSettingsScreen } from '../screens/DepartureReminderSettingsScreen';
-import { LoadingScreen } from '../screens/LoadingScreen';
-import { LoginScreen } from '../screens/LoginScreen';
-import { login } from '../services/authService';
+import { TabNavigator } from './TabNavigator'
+import { BiometricPrompt } from '../components/BiometricPrompt'
+import { OfflineBanner } from '../components/OfflineBanner'
+import { MAX_BIOMETRIC_ATTEMPTS } from '../constants'
+import { useSessionMonitorContext } from '../contexts'
+import { useBiometricAuth } from '../hooks/useBiometricAuth'
+import { AssignmentDetailScreen } from '../screens/AssignmentDetailScreen'
+import { BiometricSettingsScreen } from '../screens/BiometricSettingsScreen'
+import { CalendarSettingsScreen } from '../screens/CalendarSettingsScreen'
+import { DepartureReminderSettingsScreen } from '../screens/DepartureReminderSettingsScreen'
+import { LoadingScreen } from '../screens/LoadingScreen'
+import { LoginScreen } from '../screens/LoginScreen'
+import { login } from '../services/authService'
 
-import type { RootStackParamList } from './types';
+import type { RootStackParamList } from './types'
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
+const Stack = createNativeStackNavigator<RootStackParamList>()
 
 // Deep linking configuration
 const linking: LinkingOptions<RootStackParamList> = {
@@ -51,11 +51,11 @@ const linking: LinkingOptions<RootStackParamList> = {
       DepartureReminderSettings: 'settings/departure',
     },
   },
-};
+}
 
 export function RootNavigator() {
-  const { isAuthenticated, isLoading, logout } = useAuth();
-  const { t } = useTranslation();
+  const { isAuthenticated, isLoading, logout } = useAuth()
+  const { t } = useTranslation()
 
   // Biometric authentication state
   const {
@@ -65,25 +65,22 @@ export function RootNavigator() {
     isAuthenticating,
     authenticate,
     resetAttempts,
-  } = useBiometricAuth();
+  } = useBiometricAuth()
 
   // Session monitoring from context (integrates with QueryClient error handling)
-  const {
-    showBiometricPrompt,
-    handleBiometricSuccess,
-    dismissBiometricPrompt,
-  } = useSessionMonitorContext();
+  const { showBiometricPrompt, handleBiometricSuccess, dismissBiometricPrompt } =
+    useSessionMonitorContext()
 
   // Handle fallback to password entry (logs out to show login screen)
   const handleFallbackToPassword = useCallback(() => {
-    dismissBiometricPrompt();
-    resetAttempts();
-    logout();
-  }, [dismissBiometricPrompt, resetAttempts, logout]);
+    dismissBiometricPrompt()
+    resetAttempts()
+    logout()
+  }, [dismissBiometricPrompt, resetAttempts, logout])
 
   // Handle biometric authentication attempt
   const handleBiometricAuthenticate = useCallback(async () => {
-    const result = await authenticate(t('auth.biometricPrompt'));
+    const result = await authenticate(t('auth.biometricPrompt'))
 
     if (result.success && result.credentials) {
       // Biometric verified - credentials retrieved, now re-login
@@ -92,22 +89,22 @@ export function RootNavigator() {
         result.credentials.username,
         result.credentials.password,
         false // Don't save credentials again
-      );
+      )
 
       if (loginResult.success) {
-        handleBiometricSuccess();
-        resetAttempts();
+        handleBiometricSuccess()
+        resetAttempts()
       } else {
         // Login failed (e.g., password changed on server) - fall back to password entry
-        handleFallbackToPassword();
+        handleFallbackToPassword()
       }
     }
-  }, [authenticate, handleBiometricSuccess, resetAttempts, t, handleFallbackToPassword]);
+  }, [authenticate, handleBiometricSuccess, resetAttempts, t, handleFallbackToPassword])
 
   // Handle cancel (just dismiss the prompt)
   const handleCancel = useCallback(() => {
-    dismissBiometricPrompt();
-  }, [dismissBiometricPrompt]);
+    dismissBiometricPrompt()
+  }, [dismissBiometricPrompt])
 
   return (
     <NavigationContainer linking={linking}>
@@ -159,5 +156,5 @@ export function RootNavigator() {
         onCancel={handleCancel}
       />
     </NavigationContainer>
-  );
+  )
 }

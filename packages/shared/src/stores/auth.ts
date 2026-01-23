@@ -8,12 +8,12 @@
  * Extracted from web-app/src/shared/stores/auth.ts
  */
 
-import { create } from 'zustand';
+import { create } from 'zustand'
 
 /**
  * Authentication status states.
  */
-export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'error';
+export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'error'
 
 /**
  * Data source for assignments and compensations.
@@ -21,29 +21,29 @@ export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'error';
  * - 'demo': Demo mode with simulated data
  * - 'calendar': Calendar mode with read-only iCal feed access
  */
-export type DataSource = 'api' | 'demo' | 'calendar';
+export type DataSource = 'api' | 'demo' | 'calendar'
 
 /**
  * Occupation types for volleyball referees and administrators.
  */
-export type OccupationType = 'referee' | 'linesmen' | 'player' | 'clubAdmin' | 'associationAdmin';
+export type OccupationType = 'referee' | 'linesmen' | 'player' | 'clubAdmin' | 'associationAdmin'
 
 /**
  * User occupation (role within an association or club).
  */
 export interface Occupation {
   /** Unique identifier for this occupation */
-  id: string;
+  id: string
   /** Type of occupation */
-  type: OccupationType;
+  type: OccupationType
   /** Association code (e.g., 'SV', 'RVNO', 'RVSZ') */
-  associationCode?: string;
+  associationCode?: string
   /** Association name */
-  associationName?: string;
+  associationName?: string
   /** Club name (for club-level occupations) */
-  clubName?: string;
+  clubName?: string
   /** Referee level (e.g., 'National', 'Regional') */
-  level?: string;
+  level?: string
 }
 
 /**
@@ -51,19 +51,19 @@ export interface Occupation {
  */
 export interface UserProfile {
   /** Unique identifier (SwissVolley person ID) */
-  id: string;
+  id: string
   /** First name */
-  firstName: string;
+  firstName: string
   /** Last name */
-  lastName: string;
+  lastName: string
   /** Email address */
-  email?: string;
+  email?: string
   /** SwissVolley license number */
-  svNumber?: string;
+  svNumber?: string
   /** User's occupations/roles */
-  occupations: Occupation[];
+  occupations: Occupation[]
   /** Profile picture URL */
-  profilePictureUrl?: string;
+  profilePictureUrl?: string
 }
 
 /**
@@ -71,11 +71,11 @@ export interface UserProfile {
  */
 export interface AuthError {
   /** Error message */
-  message: string;
+  message: string
   /** Error code (for programmatic handling) */
-  code?: 'invalid_credentials' | 'session_expired' | 'network_error' | 'locked' | 'unknown';
+  code?: 'invalid_credentials' | 'session_expired' | 'network_error' | 'locked' | 'unknown'
   /** Seconds until lockout expires (for rate limiting) */
-  lockedUntilSeconds?: number;
+  lockedUntilSeconds?: number
 }
 
 /**
@@ -83,53 +83,53 @@ export interface AuthError {
  */
 export interface AuthState {
   /** Current authentication status */
-  status: AuthStatus;
+  status: AuthStatus
   /** Authenticated user profile (null if not authenticated) */
-  user: UserProfile | null;
+  user: UserProfile | null
   /** Current data source */
-  dataSource: DataSource;
+  dataSource: DataSource
   /** Authentication error (null if no error) */
-  error: AuthError | null;
+  error: AuthError | null
   /** Currently active occupation ID */
-  activeOccupationId: string | null;
+  activeOccupationId: string | null
   /** Calendar code for calendar mode (6 characters) */
-  calendarCode: string | null;
+  calendarCode: string | null
   /** True while switching associations */
-  isAssociationSwitching: boolean;
+  isAssociationSwitching: boolean
 
   // === Actions ===
 
   /** Set authenticated user */
-  setUser: (user: UserProfile) => void;
+  setUser: (user: UserProfile) => void
   /** Set authentication status */
-  setStatus: (status: AuthStatus) => void;
+  setStatus: (status: AuthStatus) => void
   /** Set authentication error */
-  setError: (error: AuthError | null) => void;
+  setError: (error: AuthError | null) => void
   /** Set data source */
-  setDataSource: (source: DataSource) => void;
+  setDataSource: (source: DataSource) => void
   /** Set active occupation */
-  setActiveOccupation: (id: string) => void;
+  setActiveOccupation: (id: string) => void
   /** Set calendar code (for calendar mode) */
-  setCalendarCode: (code: string | null) => void;
+  setCalendarCode: (code: string | null) => void
   /** Set association switching state */
-  setAssociationSwitching: (isSwitching: boolean) => void;
+  setAssociationSwitching: (isSwitching: boolean) => void
   /** Clear auth state (logout) */
-  logout: () => void;
+  logout: () => void
   /** Reset to initial state */
-  reset: () => void;
+  reset: () => void
 
   // === Derived getters ===
 
   /** Check if user has multiple associations */
-  hasMultipleAssociations: () => boolean;
+  hasMultipleAssociations: () => boolean
   /** Check if in calendar mode */
-  isCalendarMode: () => boolean;
+  isCalendarMode: () => boolean
   /** Check if in demo mode */
-  isDemoMode: () => boolean;
+  isDemoMode: () => boolean
   /** Get current auth mode */
-  getAuthMode: () => 'full' | 'calendar' | 'demo' | 'none';
+  getAuthMode: () => 'full' | 'calendar' | 'demo' | 'none'
   /** Get active occupation */
-  getActiveOccupation: () => Occupation | null;
+  getActiveOccupation: () => Occupation | null
 }
 
 /**
@@ -143,7 +143,7 @@ const initialState = {
   activeOccupationId: null as string | null,
   calendarCode: null as string | null,
   isAssociationSwitching: false,
-};
+}
 
 /**
  * Authentication store.
@@ -192,13 +192,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   reset: () => set(initialState),
 
   hasMultipleAssociations: () => {
-    const { user } = get();
-    if (!user) return false;
+    const { user } = get()
+    if (!user) return false
 
     const associations = new Set(
       user.occupations.filter((o) => o.associationCode).map((o) => o.associationCode)
-    );
-    return associations.size > 1;
+    )
+    return associations.size > 1
   },
 
   isCalendarMode: () => get().dataSource === 'calendar',
@@ -206,31 +206,31 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isDemoMode: () => get().dataSource === 'demo',
 
   getAuthMode: () => {
-    const { status, dataSource } = get();
-    if (status !== 'authenticated') return 'none';
-    if (dataSource === 'demo') return 'demo';
-    if (dataSource === 'calendar') return 'calendar';
-    return 'full';
+    const { status, dataSource } = get()
+    if (status !== 'authenticated') return 'none'
+    if (dataSource === 'demo') return 'demo'
+    if (dataSource === 'calendar') return 'calendar'
+    return 'full'
   },
 
   getActiveOccupation: () => {
-    const { user, activeOccupationId } = get();
-    if (!user || !activeOccupationId) return null;
-    return user.occupations.find((o) => o.id === activeOccupationId) ?? null;
+    const { user, activeOccupationId } = get()
+    if (!user || !activeOccupationId) return null
+    return user.occupations.find((o) => o.id === activeOccupationId) ?? null
   },
-}));
+}))
 
 /**
  * Get the active association code from the current occupation.
  */
 export function getActiveAssociationCode(): string | undefined {
-  const occupation = useAuthStore.getState().getActiveOccupation();
-  return occupation?.associationCode;
+  const occupation = useAuthStore.getState().getActiveOccupation()
+  return occupation?.associationCode
 }
 
 /**
  * Filter occupations to only include referee-type occupations.
  */
 export function filterRefereeOccupations(occupations: Occupation[]): Occupation[] {
-  return occupations.filter((o) => o.type === 'referee' || o.type === 'linesmen');
+  return occupations.filter((o) => o.type === 'referee' || o.type === 'linesmen')
 }
