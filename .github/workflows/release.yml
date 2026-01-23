@@ -134,10 +134,21 @@ jobs:
             echo "released=false" >> "$GITHUB_OUTPUT"
             echo "version=" >> "$GITHUB_OUTPUT"
           else
-            VERSION=$(node -p "require('./web-app/package.json').version")
+            # Get versions from all linked packages and use the highest
+            # This handles cases where changesets only bump some packages
+            VERSION=$(node -e "
+              const semver = require('semver');
+              const versions = [
+                require('./web-app/package.json').version,
+                require('./packages/shared/package.json').version,
+                require('./packages/mobile/package.json').version
+              ];
+              const sorted = versions.sort(semver.rcompare);
+              console.log(sorted[0]);
+            ")
             echo "version=$VERSION" >> "$GITHUB_OUTPUT"
             echo "released=true" >> "$GITHUB_OUTPUT"
-            echo "New version: $VERSION"
+            echo "New version: $VERSION (highest across linked packages)"
           fi
 
       - name: Extract release notes
@@ -172,9 +183,24 @@ jobs:
       - name: Show changes (dry run)
         if: inputs.dry_run && steps.get_version.outputs.released == 'true'
         run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          TAG="v$VERSION"
+
           echo "=== Version bump ==="
-          echo "New version: ${{ steps.get_version.outputs.version }}"
+          echo "New version: $VERSION"
           echo ""
+          echo "=== Package versions ==="
+          echo "  - volleykit-web: $(node -p \"require('./web-app/package.json').version\")"
+          echo "  - @volleykit/shared: $(node -p \"require('./packages/shared/package.json').version\")"
+          echo "  - @volleykit/mobile: $(node -p \"require('./packages/mobile/package.json').version\")"
+          echo ""
+
+          # Check if tag already exists
+          if git tag -l "$TAG" | grep -q "$TAG" || git ls-remote --tags origin "$TAG" | grep -q "$TAG"; then
+            echo "::warning::Tag $TAG already exists! Release would fail."
+            echo "::warning::Linked packages may have divergent versions."
+          fi
+
           echo "=== CHANGELOG.md changes ==="
           git diff CHANGELOG.md
           echo ""
@@ -184,7 +210,7 @@ jobs:
           echo "=== Release notes ==="
           cat /tmp/release_notes.md
           echo ""
-          echo "=== Would create tag: v${{ steps.get_version.outputs.version }} ==="
+          echo "=== Would create tag: $TAG ==="
 
       - name: Commit changes
         if: ${{ !inputs.dry_run && steps.get_version.outputs.released == 'true' }}
@@ -197,7 +223,26 @@ jobs:
 
       - name: Create tag
         if: ${{ !inputs.dry_run && steps.get_version.outputs.released == 'true' }}
-        run: git tag -a "v${{ steps.get_version.outputs.version }}" -m "Release v${{ steps.get_version.outputs.version }}"
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          TAG="v$VERSION"
+
+          # Check if tag already exists (locally or remotely)
+          if git tag -l "$TAG" | grep -q "$TAG" || git ls-remote --tags origin "$TAG" | grep -q "$TAG"; then
+            echo "::error::Tag $TAG already exists!"
+            echo "::error::This usually means the linked packages have divergent versions."
+            echo "::error::Check that volleykit-web, @volleykit/shared, and @volleykit/mobile have consistent versions."
+            echo ""
+            echo "Current package versions:"
+            echo "  - volleykit-web: $(node -p \"require('./web-app/package.json').version\")"
+            echo "  - @volleykit/shared: $(node -p \"require('./packages/shared/package.json').version\")"
+            echo "  - @volleykit/mobile: $(node -p \"require('./packages/mobile/package.json').version\")"
+            echo ""
+            echo "To fix: Ensure all linked packages have the same version, or manually bump versions."
+            exit 1
+          fi
+
+          git tag -a "$TAG" -m "Release $TAG"
 
       - name: Push changes
         if: ${{ !inputs.dry_run && steps.get_version.outputs.released == 'true' }}
