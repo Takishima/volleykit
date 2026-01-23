@@ -42,6 +42,7 @@ import type {
   PersonSearchResponse,
   PersonSearchResult,
   RefereeBackupSearchResponse,
+  PickExchangeResponse,
 } from './client'
 
 // Network delay constants for realistic demo behavior
@@ -394,6 +395,34 @@ export const mockApi = {
     } else {
       // Withdraw application from someone else's exchange
       store.withdrawFromExchange(exchangeId)
+    }
+  },
+
+  async pickFromExchange(exchangeId: string): Promise<PickExchangeResponse> {
+    await delay(MOCK_MUTATION_DELAY_MS)
+
+    const store = useDemoStore.getState()
+    const exchange = store.exchanges.find((e) => e.__identity === exchangeId)
+
+    if (!exchange) {
+      throw new Error(`Exchange not found: ${exchangeId}`)
+    }
+
+    // In demo mode, simulate picking the applicant by returning a mock response
+    // The real API would update the exchange status and assign the position
+    return {
+      refereeGameExchange: {
+        __identity: exchangeId,
+        persistenceObjectIdentifier: exchangeId,
+        status: 'applied',
+        refereePosition: exchange.refereePosition ?? 'head-one',
+        submittingType: exchange.submittingType ?? 'referee',
+        submittedAt: exchange.submittedAt ?? new Date().toISOString(),
+        appliedAt: new Date().toISOString(),
+        createdAt: exchange.submittedAt ?? new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        lastUpdatedByRealUser: false,
+      },
     }
   },
 

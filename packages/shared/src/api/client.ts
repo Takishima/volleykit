@@ -102,6 +102,7 @@ export interface ApiClient {
   ): Promise<PaginatedResponse<GameExchange>>;
   applyForExchange(exchangeId: string): Promise<void>;
   withdrawFromExchange(exchangeId: string): Promise<void>;
+  pickFromExchange(exchangeId: string): Promise<PickFromExchangeResult>;
   addToExchange(assignmentId: string, reason?: string): Promise<void>;
 
   // Settings
@@ -154,6 +155,18 @@ export interface OccupationData {
 export interface CompensationUpdateData {
   kilometers?: number;
   reason?: string;
+}
+
+/**
+ * Result of picking an applicant from an exchange.
+ */
+export interface PickFromExchangeResult {
+  refereeGameExchange: {
+    __identity: string;
+    status: 'open' | 'applied' | 'closed';
+    appliedAt: string | null;
+    [key: string]: unknown;
+  };
 }
 
 /**
