@@ -7,33 +7,60 @@ When clicking the "more_horiz" (⋯) button on an exchange row, a popup menu app
 1. **Détails du match** (Match details) - View match details
 1. **Reprendre engagement** (Take over assignment) - Apply to take over the referee position
 
-## Apply for Exchange (Reprendre engagement)
+## Apply for Exchange / Take Over Assignment (Reprendre engagement) - Confirmed
 
-Based on the response structure and permissions, applying for an exchange updates the `appliedBy` field.
+Taking over a referee position from the exchange marketplace.
 
-### Endpoint (Hypothesized)
+### Endpoint
 
 ```
-PUT /api/indoorvolleyball.refadmin/api\refereegameexchange
+PUT /api/indoorvolleyball.refadmin/api\refereegameexchange/pickFromRefereeGameExchange
 ```
 
-### Request Format
+### Request Format (Confirmed)
 
 ```
 Content-Type: application/x-www-form-urlencoded
 
-__identity=<exchange-uuid>
-&appliedBy[indoorReferee][__identity]=<current-user-referee-uuid>
+refereeGameExchange[__identity]=<exchange-uuid>
 &__csrfToken=<csrf-token>
 ```
 
-Or possibly a simpler format:
+**Example:**
 
 ```
-__identity=<exchange-uuid>
-&apply=1
+refereeGameExchange%5B__identity%5D=eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee
 &__csrfToken=<csrf-token>
 ```
+
+### Response (200 OK)
+
+```json
+{
+  "refereeGameExchange": {
+    "__identity": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+    "persistenceObjectIdentifier": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+    "status": "applied",
+    "refereePosition": "head-two",
+    "submittingType": "referee",
+    "submittedAt": "2025-01-22T12:58:18.000000+00:00",
+    "appliedAt": "2025-01-23T20:38:41.954034+00:00",
+    "requiredRefereeLevel": "N3",
+    "requiredRefereeLevelGradationValue": 4,
+    "createdAt": "2025-01-22T12:58:18.000000+00:00",
+    "createdBy": "user_name",
+    "updatedAt": "2025-01-23T13:00:16.000000+00:00",
+    "updatedBy": "System",
+    "_permissions": { ... }
+  }
+}
+```
+
+**Notes:**
+
+- The endpoint name `pickFromRefereeGameExchange` suggests "picking" the assignment from the exchange
+- Status changes to `applied` after the action
+- `appliedAt` is set to the current timestamp
 
 ### Permissions Check
 
@@ -141,16 +168,11 @@ refereeConvocation=aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
 
 ______________________________________________________________________
 
-## TODO: Capture Actual Requests
-
-Remaining items to confirm:
-
-1. Network request when clicking "Reprendre engagement" (carefully - will actually apply!)
-
-### Completed
+## Completed Captures
 
 - ✓ Delete from exchange: `deleteFromRefereeGameExchange` (batch array format)
 - ✓ Add to exchange: `putRefereeConvocationIntoRefereeGameExchange` (single item format)
+- ✓ Take over assignment: `pickFromRefereeGameExchange` (confirmed Jan 2026)
 
 ## Exchange Status Flow
 
