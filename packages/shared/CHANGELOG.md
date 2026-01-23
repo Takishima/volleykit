@@ -1,11 +1,16 @@
 # @volleykit/shared
 
+## 1.10.0
+
+### Patch Changes
+
+- [#808](https://github.com/Takishima/volleykit/pull/808) [`b1f31f7`](https://github.com/Takishima/volleykit/commit/b1f31f79b3d1e55de71fcf90c0c04208ddb53733) Thanks [@Takishima](https://github.com/Takishima)! - Complete mobile app testing readiness fixes: tappable assignment items with navigation, fully implemented AssignmentDetailScreen, dynamic iCal URL using calendar code, NetworkProvider integration for offline detection, and global OfflineBanner component
+
 ## 1.8.0
 
 ### Patch Changes
 
 - [#794](https://github.com/Takishima/volleykit/pull/794) [`56e8d5f`](https://github.com/Takishima/volleykit/commit/56e8d5fe997b16fbca8b26a4b3d4800a750d0319) Thanks [@Takishima](https://github.com/Takishima)! - Add missing i18n translations for DepartureReminderSettingsScreen
-
   - Add translation keys for background location and notification permission denied messages
   - Add translation keys for "How it works" section
   - Replace hardcoded English strings with proper t() function calls
@@ -20,7 +25,6 @@
 ### Patch Changes
 
 - [#754](https://github.com/Takishima/volleykit/pull/754) [`13845d8`](https://github.com/Takishima/volleykit/commit/13845d859f2207f768e81bfbfaae1dfa653d6ba4) Thanks [@Takishima](https://github.com/Takishima)! - Fix mobile app i18n and accessibility issues
-
   - Fix useTranslation hook to properly load translations from locale files
   - Add missing translation keys for auth and settings screens
   - Add accessibility attributes to LoginScreen and SettingsScreen

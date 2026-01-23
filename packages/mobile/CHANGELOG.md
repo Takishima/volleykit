@@ -1,11 +1,32 @@
 # @volleykit/mobile
 
+## 1.10.0
+
+### Minor Changes
+
+- [#814](https://github.com/Takishima/volleykit/pull/814) [`d5a9361`](https://github.com/Takishima/volleykit/commit/d5a9361ee5c2d0b03797f4936e431d9bbdeb4275) Thanks [@Takishima](https://github.com/Takishima)! - Add ESLint with sonarjs, import-x, and security plugins, plus Knip for dead code detection
+
+- [#811](https://github.com/Takishima/volleykit/pull/811) [`66e5480`](https://github.com/Takishima/volleykit/commit/66e5480efcc9346ad26ffc78d5903c59cc0ae0e6) Thanks [@Takishima](https://github.com/Takishima)! - Upgrade to Expo SDK 54 with React Native 0.81.5
+  - Upgraded Expo SDK from 53 to 54
+  - Upgraded React Native from 0.79.0 to 0.81.5
+  - Upgraded React from 19.0.0 to 19.1.0
+  - Updated all expo-\* packages to SDK 54 compatible versions
+  - Added npm overrides for jsdom and @xmldom/xmldom to reduce deprecation warnings
+
+- [#808](https://github.com/Takishima/volleykit/pull/808) [`b1f31f7`](https://github.com/Takishima/volleykit/commit/b1f31f79b3d1e55de71fcf90c0c04208ddb53733) Thanks [@Takishima](https://github.com/Takishima)! - Complete mobile app testing readiness fixes: tappable assignment items with navigation, fully implemented AssignmentDetailScreen, dynamic iCal URL using calendar code, NetworkProvider integration for offline detection, and global OfflineBanner component
+
+### Patch Changes
+
+- [#816](https://github.com/Takishima/volleykit/pull/816) [`efe569d`](https://github.com/Takishima/volleykit/commit/efe569d48adc9243a8fc232c9298c842cfc841d8) Thanks [@Takishima](https://github.com/Takishima)! - Fix version mismatch between app.json and package.json (1.0.1 → 1.8.0)
+
+- Updated dependencies [[`b1f31f7`](https://github.com/Takishima/volleykit/commit/b1f31f79b3d1e55de71fcf90c0c04208ddb53733)]:
+  - @volleykit/shared@1.10.0
+
 ## 1.8.0
 
 ### Minor Changes
 
 - [#760](https://github.com/Takishima/volleykit/pull/760) [`c2a8218`](https://github.com/Takishima/volleykit/commit/c2a8218efbf5940979a4966366bd2bd2c5cbcc18) Thanks [@Takishima](https://github.com/Takishima)! - Add biometric authentication for quick re-login
-
   - Secure credential storage using device Keychain/Keystore via expo-secure-store
   - Face ID, Touch ID, and fingerprint authentication support via expo-local-authentication
   - Biometric settings screen to enable/disable the feature
@@ -17,7 +38,6 @@
 
   Configured the login form to advertise volleymanager.volleyball.ch as the associated website,
   enabling password managers to suggest saved credentials from the web app.
-
   - Added `autoComplete` and `textContentType` props to username/password inputs
   - Added iOS Associated Domains configuration for webcredentials
 
@@ -32,14 +52,12 @@
   Previously, biometric authentication would fill in credentials but require a manual tap on the login button. Now, when biometric auth succeeds and retrieves stored credentials, the login is automatically triggered.
 
 - [#764](https://github.com/Takishima/volleykit/pull/764) [`a19ade7`](https://github.com/Takishima/volleykit/commit/a19ade7de1404a4aa4002a17a0b65a2cb13170eb) Thanks [@Takishima](https://github.com/Takishima)! - Implement calendar sync with useCalendarSync hook
-
   - Integrate useCalendarSync hook into CalendarSettingsScreen for actual sync functionality
   - Display sync summary showing created/updated/deleted calendar events after sync
   - Handle case when no assignments are cached with user-friendly error message
   - Add translations for new sync-related UI strings in all 4 languages
 
 - [#794](https://github.com/Takishima/volleykit/pull/794) [`56e8d5f`](https://github.com/Takishima/volleykit/commit/56e8d5fe997b16fbca8b26a4b3d4800a750d0319) Thanks [@Takishima](https://github.com/Takishima)! - Add missing i18n translations for DepartureReminderSettingsScreen
-
   - Add translation keys for background location and notification permission denied messages
   - Add translation keys for "How it works" section
   - Replace hardcoded English strings with proper t() function calls
@@ -61,7 +79,6 @@
 ### Patch Changes
 
 - [#754](https://github.com/Takishima/volleykit/pull/754) [`13845d8`](https://github.com/Takishima/volleykit/commit/13845d859f2207f768e81bfbfaae1dfa653d6ba4) Thanks [@Takishima](https://github.com/Takishima)! - Fix mobile app i18n and accessibility issues
-
   - Fix useTranslation hook to properly load translations from locale files
   - Add missing translation keys for auth and settings screens
   - Add accessibility attributes to LoginScreen and SettingsScreen
