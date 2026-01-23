@@ -190,9 +190,12 @@ jobs:
           echo "New version: $VERSION"
           echo ""
           echo "=== Package versions ==="
-          echo "  - volleykit-web: $(node -p \"require('./web-app/package.json').version\")"
-          echo "  - @volleykit/shared: $(node -p \"require('./packages/shared/package.json').version\")"
-          echo "  - @volleykit/mobile: $(node -p \"require('./packages/mobile/package.json').version\")"
+          WEB_VERSION=$(node -p "require('./web-app/package.json').version")
+          SHARED_VERSION=$(node -p "require('./packages/shared/package.json').version")
+          MOBILE_VERSION=$(node -p "require('./packages/mobile/package.json').version")
+          echo "  - volleykit-web: $WEB_VERSION"
+          echo "  - @volleykit/shared: $SHARED_VERSION"
+          echo "  - @volleykit/mobile: $MOBILE_VERSION"
           echo ""
 
           # Check if tag already exists
@@ -234,9 +237,12 @@ jobs:
             echo "::error::Check that volleykit-web, @volleykit/shared, and @volleykit/mobile have consistent versions."
             echo ""
             echo "Current package versions:"
-            echo "  - volleykit-web: $(node -p \"require('./web-app/package.json').version\")"
-            echo "  - @volleykit/shared: $(node -p \"require('./packages/shared/package.json').version\")"
-            echo "  - @volleykit/mobile: $(node -p \"require('./packages/mobile/package.json').version\")"
+            WEB_VERSION=$(node -p "require('./web-app/package.json').version")
+            SHARED_VERSION=$(node -p "require('./packages/shared/package.json').version")
+            MOBILE_VERSION=$(node -p "require('./packages/mobile/package.json').version")
+            echo "  - volleykit-web: $WEB_VERSION"
+            echo "  - @volleykit/shared: $SHARED_VERSION"
+            echo "  - @volleykit/mobile: $MOBILE_VERSION"
             echo ""
             echo "To fix: Ensure all linked packages have the same version, or manually bump versions."
             exit 1
