@@ -50,6 +50,7 @@ import type {
   PossibleNominationsResponse,
   PersonSearchResponse,
   RefereeBackupSearchResponse,
+  PickExchangeResponse,
 } from '@/api/client'
 import type { components } from '@/api/schema'
 import { useAuthStore } from '@/shared/stores/auth'
@@ -225,7 +226,7 @@ export const calendarApi = {
     throw new CalendarModeNotSupportedError('Exchanges')
   },
 
-  async applyForExchange(): Promise<void> {
+  async applyForExchange(): Promise<PickExchangeResponse> {
     throw new CalendarModeNotSupportedError('Exchange applications')
   },
 

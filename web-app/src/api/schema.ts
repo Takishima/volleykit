@@ -224,6 +224,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/indoorvolleyball.refadmin/api\\refereegameexchange/pickFromRefereeGameExchange": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Pick an applicant for a referee game exchange
+         * @description Allows a dispatcher or admin to pick/confirm an applicant for a referee position exchange.
+         *     This finalizes the exchange by assigning the position to the selected applicant.
+         */
+        put: operations["pickFromRefereeGameExchange"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sportmanager.indoorvolleyball/api\\indoorseason/getActiveIndoorSeason": {
         parameters: {
             query?: never;
@@ -1285,6 +1306,121 @@ export interface components {
             items: components["schemas"]["GameExchange"][];
             /** @example 7 */
             totalItemsCount: number;
+        };
+        /** @description Response from picking an applicant for a referee game exchange */
+        PickExchangeResponse: {
+            refereeGameExchange: components["schemas"]["RefereeGameExchangeDetail"];
+        };
+        /** @description Detailed referee game exchange object with audit information */
+        RefereeGameExchangeDetail: {
+            /**
+             * Format: uuid
+             * @description Unique identifier for this exchange
+             * @example d5a2a8e1-2ae7-4400-be39-8da8ecbce16f
+             */
+            __identity: string;
+            /**
+             * Format: uuid
+             * @description Persistence identifier (same as __identity)
+             */
+            persistenceObjectIdentifier?: string;
+            /**
+             * @description Current status of the exchange
+             * @example applied
+             * @enum {string}
+             */
+            status: "open" | "applied" | "closed";
+            refereePosition: components["schemas"]["RefereePosition"];
+            /** @description Reference to the referee game (if included) */
+            refereeGame?: Record<string, never> | null;
+            /**
+             * @description Who submitted the exchange request
+             * @example referee
+             * @enum {string}
+             */
+            submittingType: "referee" | "admin";
+            /**
+             * Format: date-time
+             * @description When the exchange was submitted
+             * @example 2026-01-22T12:58:18.000000+00:00
+             */
+            submittedAt: string;
+            /** @description Person who submitted the exchange */
+            submittedByPerson?: Record<string, never> | null;
+            /** @description Person who applied for this exchange */
+            appliedBy?: Record<string, never> | null;
+            /**
+             * Format: date-time
+             * @description When someone applied for this exchange
+             * @example 2026-01-23T20:38:41.954034+00:00
+             */
+            appliedAt?: string | null;
+            requiredRefereeLevel?: components["schemas"]["RefereeLevel"];
+            /**
+             * @description Gradation value for required referee level (1-4)
+             * @example 4
+             */
+            requiredRefereeLevelGradationValue?: number;
+            /** @description Club responsible for the exchange if applicable */
+            responsibleClubIfApplicable?: Record<string, never> | null;
+            /** @description Linked double convocation info if applicable */
+            linkedDoubleConvocationGameNumberAndRefereePosition?: string | null;
+            /**
+             * Format: date-time
+             * @description When the last reminder was sent to championship owner
+             */
+            latestReminderToChampionshipOwnerSentAt?: string | null;
+            /**
+             * Format: date-time
+             * @description When the last reminder was sent to submitting party
+             */
+            latestReminderToSubmittingTypeSentAt?: string | null;
+            /**
+             * Format: date-time
+             * @description Creation timestamp
+             * @example 2026-01-22T12:58:18.000000+00:00
+             */
+            createdAt?: string;
+            /**
+             * @description Username who created this exchange
+             * @example yannic_weber
+             */
+            createdBy?: string;
+            /**
+             * Format: uuid
+             * @description Persistence identifier of the creator
+             */
+            createdByPersistenceIdentifier?: string;
+            /**
+             * @description IP address of the creator
+             * @example 193.47.169.32
+             */
+            createdByIpAddress?: string | null;
+            /**
+             * Format: date-time
+             * @description Last update timestamp
+             */
+            updatedAt?: string;
+            /**
+             * @description Username who last updated this exchange
+             * @example System
+             */
+            updatedBy?: string;
+            /** @description Persistence identifier of the last updater */
+            updatedByPersistenceIdentifier?: string;
+            /** @description IP address of the last updater */
+            updatedByIpAddress?: string | null;
+            /**
+             * Format: date-time
+             * @description Soft delete timestamp (null if not deleted)
+             */
+            deletedAt?: string | null;
+            /**
+             * @description Whether last update was by a real user vs system
+             * @example false
+             */
+            lastUpdatedByRealUser?: boolean;
+            _permissions?: components["schemas"]["Permissions"];
         };
         /** @description Response containing referee backup (Pikett) entries */
         RefereeBackupSearchResponse: {
@@ -4711,6 +4847,39 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    pickFromRefereeGameExchange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": {
+                    /**
+                     * Format: uuid
+                     * @description The exchange ID to pick from
+                     */
+                    "refereeGameExchange[__identity]"?: string;
+                    /** @description CSRF token for request validation */
+                    __csrfToken: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Exchange pick successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PickExchangeResponse"];
+                };
             };
             401: components["responses"]["Unauthorized"];
         };

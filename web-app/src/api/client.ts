@@ -54,6 +54,7 @@ export type PersonSearchResponse = Schemas['PersonSearchResponse']
 export type RefereeBackupEntry = Schemas['RefereeBackupEntry']
 export type RefereeBackupSearchResponse = Schemas['RefereeBackupSearchResponse']
 export type BackupRefereeAssignment = Schemas['BackupRefereeAssignment']
+export type PickExchangeResponse = Schemas['PickExchangeResponse']
 
 export interface PersonSearchFilter {
   firstName?: string
@@ -290,11 +291,14 @@ export const api = {
     return data as ExchangesResponse
   },
 
-  async applyForExchange(exchangeId: string): Promise<void> {
-    return apiRequest('/indoorvolleyball.refadmin/api%5crefereegameexchange', 'PUT', {
-      __identity: exchangeId,
-      apply: '1',
-    })
+  async applyForExchange(exchangeId: string): Promise<PickExchangeResponse> {
+    return apiRequest<PickExchangeResponse>(
+      '/indoorvolleyball.refadmin/api%5crefereegameexchange/pickFromRefereeGameExchange',
+      'PUT',
+      {
+        'refereeGameExchange[__identity]': exchangeId,
+      }
+    )
   },
 
   async withdrawFromExchange(exchangeId: string): Promise<void> {

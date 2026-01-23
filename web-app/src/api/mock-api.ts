@@ -42,6 +42,7 @@ import type {
   PersonSearchResponse,
   PersonSearchResult,
   RefereeBackupSearchResponse,
+  PickExchangeResponse,
 } from './client'
 
 // Network delay constants for realistic demo behavior
@@ -372,11 +373,36 @@ export const mockApi = {
     return response
   },
 
-  async applyForExchange(exchangeId: string): Promise<void> {
+  async applyForExchange(exchangeId: string): Promise<PickExchangeResponse> {
     await delay(MOCK_MUTATION_DELAY_MS)
 
     const store = useDemoStore.getState()
+    const exchange = store.exchanges.find((e) => e.__identity === exchangeId)
+
+    if (!exchange) {
+      throw new Error(`Exchange not found: ${exchangeId}`)
+    }
+
+    // Update demo store state
     store.applyForExchange(exchangeId)
+
+    // Return response matching the real API schema (RefereeGameExchangeDetail)
+    // All required fields from the schema are explicitly included
+    const now = new Date().toISOString()
+    return {
+      refereeGameExchange: {
+        __identity: exchangeId,
+        persistenceObjectIdentifier: exchangeId,
+        status: 'applied' as const,
+        refereePosition: exchange.refereePosition ?? 'head-one',
+        submittingType: (exchange.submittingType as 'referee' | 'admin') ?? 'referee',
+        submittedAt: exchange.submittedAt ?? now,
+        appliedAt: now,
+        createdAt: exchange.submittedAt ?? now,
+        updatedAt: now,
+        lastUpdatedByRealUser: false,
+      },
+    }
   },
 
   async withdrawFromExchange(exchangeId: string): Promise<void> {
