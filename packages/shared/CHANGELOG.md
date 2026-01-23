@@ -1,5 +1,14 @@
 # @volleykit/shared
 
+## 1.11.0
+
+### Minor Changes
+
+- [#825](https://github.com/Takishima/volleykit/pull/825) [`72856fc`](https://github.com/Takishima/volleykit/commit/72856fc9b94780c052d0ca836891017e5493d73d) Thanks [@Takishima](https://github.com/Takishima)! - Add pickFromRefereeGameExchange endpoint for exchange takeover
+  - Add PUT endpoint to OpenAPI spec for taking over referee assignments from the exchange
+  - Update `applyForExchange` API method to use the confirmed endpoint
+  - Add `PickExchangeResponse` type for the API response
+
 ## 1.10.0
 
 ### Patch Changes
