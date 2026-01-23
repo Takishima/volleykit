@@ -503,6 +503,13 @@ export default defineConfig(({ mode }) => {
           '**/*.d.ts',
           '**/*.test.{ts,tsx}',
           '**/types/**',
+          // Re-export files (just re-export from @volleykit/shared, no logic to test)
+          'src/shared/utils/date-helpers.ts',
+          'src/shared/utils/error-helpers.ts',
+          // Index files that only re-export (barrel files)
+          'src/shared/services/badge/index.ts',
+          'src/shared/services/transport/index.ts',
+          'src/shared/services/notifications/index.ts',
         ],
         thresholds: {
           // Prevent coverage regressions - enforce minimum coverage
