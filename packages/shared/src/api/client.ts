@@ -100,9 +100,8 @@ export interface ApiClient {
   searchExchanges(
     config: SearchConfiguration
   ): Promise<PaginatedResponse<GameExchange>>;
-  applyForExchange(exchangeId: string): Promise<void>;
+  applyForExchange(exchangeId: string): Promise<PickFromExchangeResult>;
   withdrawFromExchange(exchangeId: string): Promise<void>;
-  pickFromExchange(exchangeId: string): Promise<PickFromExchangeResult>;
   addToExchange(assignmentId: string, reason?: string): Promise<void>;
 
   // Settings

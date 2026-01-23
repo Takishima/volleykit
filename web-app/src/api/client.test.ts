@@ -368,24 +368,37 @@ describe('API Client', () => {
   })
 
   describe('applyForExchange', () => {
-    it('sends PUT request with __identity and apply=1 per OpenAPI spec', async () => {
+    it('sends PUT request with refereeGameExchange[__identity] per confirmed API spec', async () => {
       let capturedBody: URLSearchParams | null = null
       let capturedMethod: string | null = null
+      let capturedUrl: string | null = null
 
       server.use(
-        http.put('*/api%5crefereegameexchange', async ({ request }) => {
-          capturedMethod = request.method
-          const text = await request.text()
-          capturedBody = new URLSearchParams(text)
-          return HttpResponse.json({})
-        })
+        http.put(
+          '*/api%5crefereegameexchange/pickFromRefereeGameExchange',
+          async ({ request }) => {
+            capturedMethod = request.method
+            capturedUrl = request.url
+            const text = await request.text()
+            capturedBody = new URLSearchParams(text)
+            return HttpResponse.json({
+              refereeGameExchange: {
+                __identity: 'exchange-123',
+                status: 'applied',
+                appliedAt: new Date().toISOString(),
+              },
+            })
+          }
+        )
       )
 
-      await api.applyForExchange('exchange-123')
+      const result = await api.applyForExchange('exchange-123')
 
       expect(capturedMethod).toBe('PUT')
-      expect(capturedBody?.get('__identity')).toBe('exchange-123')
-      expect(capturedBody?.get('apply')).toBe('1')
+      expect(capturedUrl).toContain('pickFromRefereeGameExchange')
+      expect(capturedBody?.get('refereeGameExchange[__identity]')).toBe('exchange-123')
+      expect(result.refereeGameExchange.__identity).toBe('exchange-123')
+      expect(result.refereeGameExchange.status).toBe('applied')
     })
   })
 

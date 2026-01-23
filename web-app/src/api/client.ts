@@ -292,21 +292,7 @@ export const api = {
     return data as ExchangesResponse
   },
 
-  async applyForExchange(exchangeId: string): Promise<void> {
-    return apiRequest('/indoorvolleyball.refadmin/api%5crefereegameexchange', 'PUT', {
-      __identity: exchangeId,
-      apply: '1',
-    })
-  },
-
-  async withdrawFromExchange(exchangeId: string): Promise<void> {
-    return apiRequest('/indoorvolleyball.refadmin/api%5crefereegameexchange', 'PUT', {
-      __identity: exchangeId,
-      withdrawApplication: '1',
-    })
-  },
-
-  async pickFromExchange(exchangeId: string): Promise<PickExchangeResponse> {
+  async applyForExchange(exchangeId: string): Promise<PickExchangeResponse> {
     return apiRequest<PickExchangeResponse>(
       '/indoorvolleyball.refadmin/api%5crefereegameexchange/pickFromRefereeGameExchange',
       'PUT',
@@ -314,6 +300,13 @@ export const api = {
         'refereeGameExchange[__identity]': exchangeId,
       }
     )
+  },
+
+  async withdrawFromExchange(exchangeId: string): Promise<void> {
+    return apiRequest('/indoorvolleyball.refadmin/api%5crefereegameexchange', 'PUT', {
+      __identity: exchangeId,
+      withdrawApplication: '1',
+    })
   },
 
   // Settings
