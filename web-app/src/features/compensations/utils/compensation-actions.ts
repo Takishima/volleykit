@@ -51,6 +51,7 @@ function isCompensationLocked(cc: ConvocationCompensationWithLockFlags): boolean
  * Checks if a compensation record can be edited.
  *
  * Editability rules (based on disbursement method):
+ * - Non-editable: API explicitly denies update permission (_permissions.properties.convocationCompensation.update === false)
  * - Non-editable: paymentDone=true (already paid)
  * - Non-editable: relevant lock is true based on methodOfDisbursementArbitration
  *   - payout_on_site: check lockPayoutOnSiteCompensation
@@ -58,6 +59,11 @@ function isCompensationLocked(cc: ConvocationCompensationWithLockFlags): boolean
  * - Editable: not paid AND relevant lock is false
  */
 export function isCompensationEditable(compensation: CompensationRecord): boolean {
+  // Check API-level permissions first - server knows best
+  if (compensation._permissions?.properties?.convocationCompensation?.update === false) {
+    return false
+  }
+
   const cc = compensation.convocationCompensation as
     | ConvocationCompensationWithLockFlags
     | undefined
@@ -77,6 +83,7 @@ export function isCompensationEditable(compensation: CompensationRecord): boolea
  *
  * Editability rules (same as isCompensationEditable):
  * - Non-editable: Calendar mode assignments (missing compensation data entirely)
+ * - Non-editable: API explicitly denies update permission (_permissions.properties.convocationCompensation.update === false)
  * - Non-editable: paymentDone=true (already paid)
  * - Non-editable: relevant lock is true based on methodOfDisbursementArbitration
  * - Editable: convocationCompensation not present but NOT calendar mode (defaults to editable for backwards compatibility)
@@ -85,6 +92,11 @@ export function isCompensationEditable(compensation: CompensationRecord): boolea
 export function isAssignmentCompensationEditable(assignment: Assignment): boolean {
   // Calendar mode assignments are read-only - compensation editing not available
   if (isFromCalendarMode(assignment)) {
+    return false
+  }
+
+  // Check API-level permissions first - server knows best
+  if (assignment._permissions?.properties?.convocationCompensation?.update === false) {
     return false
   }
 

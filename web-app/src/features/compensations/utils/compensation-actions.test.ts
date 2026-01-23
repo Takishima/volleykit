@@ -376,6 +376,82 @@ describe('downloadCompensationPDF', () => {
 })
 
 describe('isCompensationEditable', () => {
+  describe('API permissions (_permissions field)', () => {
+    it('returns false when API explicitly denies update permission', () => {
+      const compensation = {
+        __identity: 'test-1',
+        convocationCompensation: {
+          paymentDone: false,
+          methodOfDisbursementArbitration: 'central_payout',
+          lockPayoutCentralPayoutCompensation: false,
+        },
+        refereeGame: {},
+        _permissions: {
+          properties: {
+            convocationCompensation: {
+              update: false,
+              create: true,
+            },
+          },
+        },
+      } as unknown as CompensationRecord
+
+      expect(isCompensationEditable(compensation)).toBe(false)
+    })
+
+    it('returns true when API explicitly allows update permission', () => {
+      const compensation = {
+        __identity: 'test-1',
+        convocationCompensation: {
+          paymentDone: false,
+          methodOfDisbursementArbitration: 'central_payout',
+          lockPayoutCentralPayoutCompensation: false,
+        },
+        refereeGame: {},
+        _permissions: {
+          properties: {
+            convocationCompensation: {
+              update: true,
+              create: true,
+            },
+          },
+        },
+      } as unknown as CompensationRecord
+
+      expect(isCompensationEditable(compensation)).toBe(true)
+    })
+
+    it('falls back to lock checks when _permissions is not present', () => {
+      const compensation = {
+        __identity: 'test-1',
+        convocationCompensation: {
+          paymentDone: false,
+          methodOfDisbursementArbitration: 'central_payout',
+          lockPayoutCentralPayoutCompensation: false,
+        },
+        refereeGame: {},
+        // No _permissions field
+      } as unknown as CompensationRecord
+
+      expect(isCompensationEditable(compensation)).toBe(true)
+    })
+
+    it('falls back to lock checks when _permissions.properties is not present', () => {
+      const compensation = {
+        __identity: 'test-1',
+        convocationCompensation: {
+          paymentDone: false,
+        },
+        refereeGame: {},
+        _permissions: {
+          object: { delete: false },
+        },
+      } as unknown as CompensationRecord
+
+      expect(isCompensationEditable(compensation)).toBe(true)
+    })
+  })
+
   it('returns true for unpaid compensation with central payout method', () => {
     const compensation = {
       __identity: 'test-1',
@@ -499,6 +575,87 @@ describe('isAssignmentCompensationEditable', () => {
         },
       },
     },
+  })
+
+  describe('API permissions (_permissions field)', () => {
+    it('returns false when API explicitly denies update permission', () => {
+      const assignment = {
+        __identity: 'test-1',
+        convocationCompensation: {
+          paymentDone: false,
+          methodOfDisbursementArbitration: 'central_payout',
+          lockPayoutCentralPayoutCompensation: false,
+        },
+        refereeGame: createRefereeGameWithLeague(),
+        _permissions: {
+          properties: {
+            convocationCompensation: {
+              update: false,
+              create: true,
+            },
+          },
+        },
+      } as unknown as Assignment
+
+      expect(isAssignmentCompensationEditable(assignment)).toBe(false)
+    })
+
+    it('returns true when API explicitly allows update permission', () => {
+      const assignment = {
+        __identity: 'test-1',
+        convocationCompensation: {
+          paymentDone: false,
+          methodOfDisbursementArbitration: 'central_payout',
+          lockPayoutCentralPayoutCompensation: false,
+        },
+        refereeGame: createRefereeGameWithLeague(),
+        _permissions: {
+          properties: {
+            convocationCompensation: {
+              update: true,
+              create: true,
+            },
+          },
+        },
+      } as unknown as Assignment
+
+      expect(isAssignmentCompensationEditable(assignment)).toBe(true)
+    })
+
+    it('falls back to lock checks when _permissions is not present', () => {
+      const assignment = {
+        __identity: 'test-1',
+        convocationCompensation: {
+          paymentDone: false,
+          methodOfDisbursementArbitration: 'central_payout',
+          lockPayoutCentralPayoutCompensation: false,
+        },
+        refereeGame: createRefereeGameWithLeague(),
+        // No _permissions field
+      } as unknown as Assignment
+
+      expect(isAssignmentCompensationEditable(assignment)).toBe(true)
+    })
+
+    it('checks _permissions before calendar mode check', () => {
+      // Even with league data, API permissions should be checked
+      const assignment = {
+        __identity: 'test-1',
+        convocationCompensation: {
+          paymentDone: false,
+        },
+        refereeGame: createRefereeGameWithLeague(),
+        _permissions: {
+          properties: {
+            convocationCompensation: {
+              update: false,
+            },
+          },
+        },
+      } as unknown as Assignment
+
+      expect(isAssignmentCompensationEditable(assignment)).toBe(false)
+    })
   })
 
   describe('calendar mode assignments', () => {
