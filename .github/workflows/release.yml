@@ -157,28 +157,61 @@ jobs:
         run: |
           VERSION="${{ steps.get_version.outputs.version }}"
 
-          # Extract content between the new version header and the next version header
-          # This gets the release notes for the version we're releasing
-          # Supports both formats:
-          #   - Changesets format: "## 1.3.0" (no brackets)
-          #   - Keep a Changelog format: "## [1.2.0] - date" (with brackets and date)
-          NOTES=$(awk -v ver="$VERSION" '
-            BEGIN { printing=0 }
-            /^## / {
-              if (printing) { exit }
-              # Match: "## 1.3.0" or "## [1.3.0]" (with optional date suffix)
-              if (index($0, "## " ver) == 1 || index($0, "## [" ver "]") == 1) {
-                printing=1
-                next
+          # Function to extract notes for a version from a changelog file
+          extract_notes() {
+            local changelog="$1"
+            local ver="$2"
+            awk -v ver="$ver" '
+              BEGIN { printing=0 }
+              /^## / {
+                if (printing) { exit }
+                # Match: "## 1.3.0" or "## [1.3.0]" (with optional date suffix)
+                if (index($0, "## " ver) == 1 || index($0, "## [" ver "]") == 1) {
+                  printing=1
+                  next
+                }
               }
-            }
-            printing { print }
-          ' CHANGELOG.md)
+              printing { print }
+            ' "$changelog"
+          }
 
-          # Write to file for GitHub release
-          echo "$NOTES" > /tmp/release_notes.md
+          # Collect release notes from all package CHANGELOGs
+          # Each package may have different changes for the same version
+          > /tmp/release_notes.md
 
-          echo "Release notes extracted for v$VERSION"
+          # Define packages and their changelog paths
+          declare -A PACKAGES=(
+            ["volleykit-web"]="CHANGELOG.md"
+            ["@volleykit/shared"]="packages/shared/CHANGELOG.md"
+            ["@volleykit/mobile"]="packages/mobile/CHANGELOG.md"
+          )
+
+          FOUND_NOTES=false
+
+          for pkg in "volleykit-web" "@volleykit/shared" "@volleykit/mobile"; do
+            changelog="${PACKAGES[$pkg]}"
+            if [ -f "$changelog" ]; then
+              notes=$(extract_notes "$changelog" "$VERSION")
+              if [ -n "$notes" ]; then
+                if [ "$FOUND_NOTES" = true ]; then
+                  echo "" >> /tmp/release_notes.md
+                  echo "---" >> /tmp/release_notes.md
+                  echo "" >> /tmp/release_notes.md
+                fi
+                echo "### $pkg" >> /tmp/release_notes.md
+                echo "" >> /tmp/release_notes.md
+                echo "$notes" >> /tmp/release_notes.md
+                FOUND_NOTES=true
+              fi
+            fi
+          done
+
+          if [ "$FOUND_NOTES" = true ]; then
+            echo "Release notes extracted for v$VERSION"
+          else
+            echo "::warning::No release notes found for v$VERSION in any CHANGELOG"
+            echo "No release notes found for v$VERSION" > /tmp/release_notes.md
+          fi
 
       - name: Show changes (dry run)
         if: inputs.dry_run && steps.get_version.outputs.released == 'true'
@@ -204,11 +237,24 @@ jobs:
             echo "::warning::Linked packages may have divergent versions."
           fi
 
-          echo "=== CHANGELOG.md changes ==="
-          git diff CHANGELOG.md
+          echo "=== CHANGELOG changes ==="
+          # Show changelog changes from all packages
+          for changelog in CHANGELOG.md packages/shared/CHANGELOG.md packages/mobile/CHANGELOG.md; do
+            if [ -n "$(git diff "$changelog" 2>/dev/null)" ]; then
+              echo "--- $changelog ---"
+              git diff "$changelog"
+              echo ""
+            fi
+          done
           echo ""
           echo "=== package.json changes ==="
-          git diff web-app/package.json
+          for pkg in web-app/package.json packages/shared/package.json packages/mobile/package.json; do
+            if [ -n "$(git diff "$pkg" 2>/dev/null)" ]; then
+              echo "--- $pkg ---"
+              git diff "$pkg"
+              echo ""
+            fi
+          done
           echo ""
           echo "=== Release notes ==="
           cat /tmp/release_notes.md
