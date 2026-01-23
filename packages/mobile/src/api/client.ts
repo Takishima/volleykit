@@ -11,16 +11,21 @@
  * (AssignmentsApiClient, ExchangesApiClient, CompensationsApiClient).
  */
 
-import type { SearchConfiguration, Assignment, CompensationRecord, GameExchange } from '@volleykit/shared/api';
+import type {
+  SearchConfiguration,
+  Assignment,
+  CompensationRecord,
+  GameExchange,
+} from '@volleykit/shared/api'
 
 /** Network delay for realistic behavior */
-const MOCK_NETWORK_DELAY_MS = 100;
+const MOCK_NETWORK_DELAY_MS = 100
 
 /**
  * Helper to simulate network delay.
  */
 function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 /**
@@ -106,7 +111,7 @@ const MOCK_ASSIGNMENTS: Assignment[] = [
     hasLastMessageToReferee: false,
     hasLinkedDoubleConvocation: false,
   },
-];
+]
 
 /**
  * Mock exchange data.
@@ -147,7 +152,7 @@ const MOCK_EXCHANGES: GameExchange[] = [
         gameNumber: 'G005',
         startingDateTime: '2026-01-28T17:00:00.000+01:00',
         teamHome: { __identity: 'th5', name: 'VBC Therwil' },
-        teamAway: { __identity: 'ta5', name: 'Sm\'Aesch Pfeffingen' },
+        teamAway: { __identity: 'ta5', name: "Sm'Aesch Pfeffingen" },
         hall: {
           __identity: 'h5',
           name: 'Sporthalle Therwil',
@@ -187,7 +192,7 @@ const MOCK_EXCHANGES: GameExchange[] = [
     submittedByPerson: { __identity: 'p3', displayName: 'Peter Test' },
     exchangeReason: 'Krankheit',
   },
-];
+]
 
 /**
  * Mock compensation data.
@@ -274,7 +279,7 @@ const MOCK_COMPENSATIONS: CompensationRecord[] = [
       paymentValueDate: '2025-12-28',
     },
   },
-];
+]
 
 /**
  * Mobile API client.
@@ -289,23 +294,23 @@ export const mobileApiClient = {
   async searchAssignments(
     _config: SearchConfiguration = {}
   ): Promise<{ items: Assignment[]; totalItemsCount: number }> {
-    await delay(MOCK_NETWORK_DELAY_MS);
+    await delay(MOCK_NETWORK_DELAY_MS)
     return {
       items: MOCK_ASSIGNMENTS,
       totalItemsCount: MOCK_ASSIGNMENTS.length,
-    };
+    }
   },
 
   /**
    * Get assignment details by ID.
    */
   async getAssignmentDetails(id: string): Promise<Assignment> {
-    await delay(MOCK_NETWORK_DELAY_MS);
-    const assignment = MOCK_ASSIGNMENTS.find((a) => a.__identity === id);
+    await delay(MOCK_NETWORK_DELAY_MS)
+    const assignment = MOCK_ASSIGNMENTS.find((a) => a.__identity === id)
     if (!assignment) {
-      throw new Error(`Assignment not found: ${id}`);
+      throw new Error(`Assignment not found: ${id}`)
     }
-    return assignment;
+    return assignment
   },
 
   /**
@@ -314,11 +319,11 @@ export const mobileApiClient = {
   async searchExchanges(
     _config: SearchConfiguration = {}
   ): Promise<{ items: GameExchange[]; totalItemsCount: number }> {
-    await delay(MOCK_NETWORK_DELAY_MS);
+    await delay(MOCK_NETWORK_DELAY_MS)
     return {
       items: MOCK_EXCHANGES,
       totalItemsCount: MOCK_EXCHANGES.length,
-    };
+    }
   },
 
   /**
@@ -327,12 +332,12 @@ export const mobileApiClient = {
   async searchCompensations(
     _config: SearchConfiguration = {}
   ): Promise<{ items: CompensationRecord[]; totalItemsCount: number }> {
-    await delay(MOCK_NETWORK_DELAY_MS);
+    await delay(MOCK_NETWORK_DELAY_MS)
     return {
       items: MOCK_COMPENSATIONS,
       totalItemsCount: MOCK_COMPENSATIONS.length,
-    };
+    }
   },
-};
+}
 
-export type MobileApiClient = typeof mobileApiClient;
+export type MobileApiClient = typeof mobileApiClient

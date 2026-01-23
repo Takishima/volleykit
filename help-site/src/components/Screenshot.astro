@@ -3,27 +3,27 @@
  * Screenshot component
  * Shows a screenshot image or placeholder with capture instructions
  */
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
-import { BASE_PATH } from '../constants';
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
+import { BASE_PATH } from '../constants'
 
 interface Props {
   /** Unique identifier for the screenshot (used as filename) */
-  id: string;
+  id: string
   /** Alt text describing the screenshot */
-  alt: string;
+  alt: string
   /** Optional caption displayed below the image */
-  caption?: string;
+  caption?: string
   /** Instructions for capturing the screenshot (for Claude Code) */
-  instructions: string;
+  instructions: string
 }
 
-const { id, alt, caption, instructions } = Astro.props;
+const { id, alt, caption, instructions } = Astro.props
 
 // Check if screenshot exists
-const imagePath = `${BASE_PATH}/images/screenshots/${id}.png`;
-const absolutePath = join(process.cwd(), 'public', 'images', 'screenshots', `${id}.png`);
-const imageExists = existsSync(absolutePath);
+const imagePath = `${BASE_PATH}/images/screenshots/${id}.png`
+const absolutePath = join(process.cwd(), 'public', 'images', 'screenshots', `${id}.png`)
+const imageExists = existsSync(absolutePath)
 ---
 
 <figure class="my-8">

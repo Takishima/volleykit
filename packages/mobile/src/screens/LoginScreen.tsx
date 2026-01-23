@@ -5,31 +5,31 @@
  * Falls back to password entry after 3 failed biometric attempts.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react'
 
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native'
 
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons'
 
-import { useTranslation } from '@volleykit/shared/i18n';
+import { useTranslation } from '@volleykit/shared/i18n'
 
-import { COLORS } from '../constants';
-import { useBiometricAuth } from '../hooks/useBiometricAuth';
-import { login } from '../services/authService';
+import { COLORS } from '../constants'
+import { useBiometricAuth } from '../hooks/useBiometricAuth'
+import { login } from '../services/authService'
 
-import type { RootStackScreenProps } from '../navigation/types';
+import type { RootStackScreenProps } from '../navigation/types'
 
-type Props = RootStackScreenProps<'Login'>;
+type Props = RootStackScreenProps<'Login'>
 
 export function LoginScreen(_props: Props) {
-  const { t } = useTranslation();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation()
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Track pending auto-login after biometric authentication
-  const pendingBiometricLoginRef = useRef(false);
+  const pendingBiometricLoginRef = useRef(false)
 
   // Biometric authentication
   const {
@@ -41,93 +41,93 @@ export function LoginScreen(_props: Props) {
     checkBiometricStatus,
     authenticate,
     resetAttempts,
-  } = useBiometricAuth();
+  } = useBiometricAuth()
 
   // Check biometric status on mount
   useEffect(() => {
-    checkBiometricStatus();
-  }, [checkBiometricStatus]);
+    checkBiometricStatus()
+  }, [checkBiometricStatus])
 
   // Show biometric option if enabled and not fallen back to password
-  const showBiometricOption = biometricEnabled && !shouldFallbackToPassword;
+  const showBiometricOption = biometricEnabled && !shouldFallbackToPassword
 
   // Get biometric icon name
   const biometricIcon: 'face-recognition' | 'fingerprint' =
-    biometricType === 'faceId' ? 'face-recognition' : 'fingerprint';
+    biometricType === 'faceId' ? 'face-recognition' : 'fingerprint'
 
   // Handle biometric login
   const handleBiometricLogin = useCallback(async () => {
-    const result = await authenticate(t('auth.biometricPrompt'));
+    const result = await authenticate(t('auth.biometricPrompt'))
 
     if (result.success && result.credentials) {
       // Clear any existing credentials first to ensure clean state,
       // preventing race conditions if user had partially filled the form
-      setUsername('');
-      setPassword('');
-      setError(null);
+      setUsername('')
+      setPassword('')
+      setError(null)
       // Mark pending auto-login - the useEffect will trigger handleLogin
       // once the credentials state is updated
-      pendingBiometricLoginRef.current = true;
-      setUsername(result.credentials.username);
-      setPassword(result.credentials.password);
+      pendingBiometricLoginRef.current = true
+      setUsername(result.credentials.username)
+      setPassword(result.credentials.password)
     } else if (!result.success) {
-      setError(t('auth.biometricFailed'));
+      setError(t('auth.biometricFailed'))
     }
-  }, [authenticate, t]);
+  }, [authenticate, t])
 
   // Reset biometric attempts when user starts typing (manual password entry)
   const handleUsernameChange = useCallback(
     (text: string) => {
-      setUsername(text);
+      setUsername(text)
       if (shouldFallbackToPassword) {
-        resetAttempts();
+        resetAttempts()
       }
     },
     [shouldFallbackToPassword, resetAttempts]
-  );
+  )
 
   const handleLogin = useCallback(async () => {
     // Guard against concurrent calls (e.g., biometric auto-login + manual tap)
-    if (isLoading) return;
+    if (isLoading) return
 
     if (!username || !password) {
-      setError(t('auth.enterCredentials'));
-      return;
+      setError(t('auth.enterCredentials'))
+      return
     }
 
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true)
+    setError(null)
 
     try {
-      const result = await login(username, password);
+      const result = await login(username, password)
 
       if (!result.success) {
         // Handle specific error messages
         if (result.lockedUntil) {
-          setError(t('auth.accountLocked'));
+          setError(t('auth.accountLocked'))
         } else if (result.error.includes('Two-factor')) {
-          setError(t('auth.tfaNotSupported'));
+          setError(t('auth.tfaNotSupported'))
         } else if (result.error.includes('No referee role')) {
-          setError(t('auth.noRefereeRole'));
+          setError(t('auth.noRefereeRole'))
         } else {
-          setError(t('auth.invalidCredentials'));
+          setError(t('auth.invalidCredentials'))
         }
       }
       // On success, the auth store is updated and navigation will happen automatically
     } catch {
-      setError(t('auth.loginFailed'));
+      setError(t('auth.loginFailed'))
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [username, password, t, isLoading]);
+  }, [username, password, t, isLoading])
 
   // Auto-login after biometric authentication fills credentials
   useEffect(() => {
     if (pendingBiometricLoginRef.current && username && password) {
-      pendingBiometricLoginRef.current = false;
-      handleLogin();
+      pendingBiometricLoginRef.current = false
+      handleLogin()
     }
-  }, [username, password, handleLogin]);
+  }, [username, password, handleLogin])
 
   return (
     <View className="flex-1 bg-white px-6 pt-20">
@@ -212,7 +212,9 @@ export function LoginScreen(_props: Props) {
             <Text
               className={`ml-2 font-medium ${isAuthenticating ? 'text-gray-400' : 'text-sky-500'}`}
             >
-              {isAuthenticating ? t('common.loading') : t('auth.useBiometric', { biometricType: biometricTypeName })}
+              {isAuthenticating
+                ? t('common.loading')
+                : t('auth.useBiometric', { biometricType: biometricTypeName })}
             </Text>
           </TouchableOpacity>
         )}
@@ -225,5 +227,5 @@ export function LoginScreen(_props: Props) {
         )}
       </View>
     </View>
-  );
+  )
 }

@@ -2,4 +2,4 @@
  * Shared TypeScript types
  */
 
-export * from './platform';
+export * from './platform'

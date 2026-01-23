@@ -2,7 +2,7 @@
  * Italian translations for VolleyKit mobile app.
  */
 
-import type { Translations } from '../types';
+import type { Translations } from '../types'
 
 const it: Translations = {
   common: {
@@ -76,8 +76,10 @@ const it: Translations = {
     useBiometric: 'Usa {biometricType}',
     authenticateWith: 'Autenticati con {biometricType}',
     attemptsRemaining: '{count} tentativo rimanente',
-    accountLocked: 'Account temporaneamente bloccato a causa di troppi tentativi falliti. Riprova più tardi.',
-    tfaNotSupported: "L'autenticazione a due fattori non è supportata. Disattivala nelle impostazioni di VolleyManager.",
+    accountLocked:
+      'Account temporaneamente bloccato a causa di troppi tentativi falliti. Riprova più tardi.',
+    tfaNotSupported:
+      "L'autenticazione a due fattori non è supportata. Disattivala nelle impostazioni di VolleyManager.",
   },
   assignments: {
     title: 'Designazioni',
@@ -188,7 +190,7 @@ const it: Translations = {
       enable: 'Attiva',
       disable: 'Disattiva',
       notAvailable: "L'autenticazione biometrica non è disponibile su questo dispositivo.",
-      notEnrolled: "Configura Face ID o impronta digitale nelle impostazioni del dispositivo.",
+      notEnrolled: 'Configura Face ID o impronta digitale nelle impostazioni del dispositivo.',
     },
     calendar: {
       title: 'Sincronizzazione calendario',
@@ -196,13 +198,13 @@ const it: Translations = {
       sync: 'Sincronizza con calendario',
       synced: 'Sincronizzato',
       selectCalendar: 'Seleziona calendario',
-      permissionDenied:
-        "L'accesso al calendario è stato negato. Abilitalo nelle Impostazioni.",
+      permissionDenied: "L'accesso al calendario è stato negato. Abilitalo nelle Impostazioni.",
       mode: 'Modalità di sincronizzazione',
       modeIcal: 'Abbonamento iCal',
       modeDirect: 'Sincronizzazione diretta',
       icalDescription: 'Iscriviti a un feed calendario. Si aggiorna automaticamente.',
-      directDescription: 'Aggiungi eventi direttamente al calendario. Richiede sincronizzazione manuale.',
+      directDescription:
+        'Aggiungi eventi direttamente al calendario. Richiede sincronizzazione manuale.',
       subscribeIcal: 'Abbonati al feed iCal',
       syncNow: 'Sincronizza ora',
       lastSync: 'Ultima sincronizzazione: {date}',
@@ -210,7 +212,8 @@ const it: Translations = {
       syncSummary: '{created} creato/i, {updated} aggiornato/i, {deleted} eliminato/i',
       syncError: 'Sincronizzazione fallita. Riprova.',
       noCalendars: 'Nessun calendario disponibile. Creane uno prima.',
-      noAssignmentsToSync: 'Nessuna designazione da sincronizzare. Visualizza prima le tue designazioni.',
+      noAssignmentsToSync:
+        'Nessuna designazione da sincronizzare. Visualizza prima le tue designazioni.',
       noCalendarCode: 'Codice calendario non disponibile. Effettua nuovamente il login.',
       enabled: 'Attivato',
       disabled: 'Disattivato',
@@ -293,6 +296,6 @@ const it: Translations = {
     tryAgain: 'Riprova',
     refreshPage: "Riavvia l'app",
   },
-};
+}
 
-export default it;
+export default it

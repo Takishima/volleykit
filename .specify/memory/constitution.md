@@ -5,7 +5,8 @@
 ### I. Code Quality
 
 **Self-Documenting Code Over Comments**
-- Write code that explains itself; comments explain *why*, not *what*
+
+- Write code that explains itself; comments explain _why_, not _what_
 - Use TODOs with ticket references: `// TODO(#123): Remove after API migration`
 - Max 20-30 lines per function (extract if longer)
 - Max 3-4 parameters (use object parameter if more)
@@ -13,6 +14,7 @@
 - Prefer early returns over deep nesting
 
 **Naming Conventions** (ESLint enforced):
+
 - Components: PascalCase (`AssignmentCard`)
 - Hooks: camelCase with `use` prefix (`useAssignments`)
 - Types/Interfaces: PascalCase (`Assignment`, `AssignmentStatus`)
@@ -23,12 +25,14 @@
 ### II. Testing Standards
 
 **Coverage Requirements** (enforced by Vitest):
+
 - Lines: 50%
 - Functions: 70%
 - Branches: 70%
 - Statements: 50%
 
 **Test Philosophy**:
+
 - Test: Business logic, custom hooks, component interactions, edge cases that caused bugs
 - Skip: Simple presentational components, third-party wrappers, trivial getters/setters
 
@@ -43,12 +47,14 @@
 ### III. User Experience Consistency
 
 **Internationalization** (i18n):
+
 - Support 4 languages: German (de), English (en), French (fr), Italian (it)
 - Add keys to types.ts first for type safety
 - All user-facing text must be translated
 - Use `useTranslation()` hook in components (ESLint enforced)
 
 **Accessibility**:
+
 - Use `aria-label` on icon-only buttons
 - Use `aria-labelledby` to associate modal titles with dialogs
 - Handle Escape key for modals via `useEffect`
@@ -56,6 +62,7 @@
 - All interactive elements must be keyboard accessible
 
 **Cross-Platform Parity**:
+
 - PWA and mobile app share business logic (70%+ code sharing target)
 - Platform-specific code isolated in adapter modules
 - Consistent UI patterns across platforms via NativeWind/Tailwind
@@ -72,11 +79,13 @@
 | Total JS | 520 KB |
 
 **Mobile Performance Goals**:
+
 - Cold start: < 3 seconds
 - Biometric re-auth: < 3 seconds
 - Widget data refresh: Background-safe (cached data only)
 
 **Optimization Strategies**:
+
 - Lazy-load heavy dependencies (PDF generation)
 - Manual chunk splitting for vendor libraries
 - Platform adapters for storage/auth differences
@@ -84,10 +93,12 @@
 ### V. Security First
 
 **ESLint Security Plugins**:
+
 - `eslint-plugin-security`: Common security issues
 - `eslint-plugin-no-unsanitized`: XSS prevention via DOM manipulation
 
 **Credential Handling**:
+
 - Session cookies managed by API (httpOnly)
 - CSRF tokens included in requests
 - Never log credentials or tokens
@@ -95,6 +106,7 @@
 - Biometric credentials: foreground-only access, no background processes
 
 **Sensitive Files** (elevated review required):
+
 - `worker/src/index.ts` - CORS proxy, origin validation
 - `src/api/client.ts` - API requests, credential handling
 - `src/stores/auth.ts` - Authentication state
@@ -103,6 +115,7 @@
 ### VI. Simplicity
 
 **YAGNI Principles**:
+
 - Start simple, expand only when needed
 - No premature abstraction - three similar lines > early abstraction
 - Don't add features beyond what was asked
@@ -110,6 +123,7 @@
 - Delete unused code completely (no backwards-compatibility hacks)
 
 **Code Sharing Priority**:
+
 - Prefer shared package over platform duplication
 - Platform-specific code only where truly necessary
 - Interface-based adapters for platform differences
@@ -117,6 +131,7 @@
 ## Quality Gates
 
 **Pre-Commit Validation** (automatic in Claude Code web):
+
 1. Generate API types (if OpenAPI changed)
 2. Format check (Prettier)
 3. Lint check (0 warnings allowed)
@@ -125,6 +140,7 @@
 6. Production build
 
 **Definition of Done**:
+
 1. Implementation follows React/TypeScript best practices
 2. Changeset added for `feat:` and `fix:` commits
 3. Unit tests cover business logic and interactions
@@ -139,6 +155,7 @@
 ## Development Workflow
 
 **Commit Messages** (convco enforced):
+
 - `feat(scope):` - New features
 - `fix(scope):` - Bug fixes
 - `refactor(scope):` - Code refactoring
@@ -147,6 +164,7 @@
 - `chore(scope):` - Maintenance
 
 **Modern React Guidelines** (React 19):
+
 - No `isMountedRef` pattern - use `AbortController` or TanStack Query
 - Prefer TanStack Query for data fetching
 - Function components with hooks exclusively

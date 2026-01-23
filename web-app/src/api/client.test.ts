@@ -374,22 +374,19 @@ describe('API Client', () => {
       let capturedUrl: string | null = null
 
       server.use(
-        http.put(
-          '*/api%5crefereegameexchange/pickFromRefereeGameExchange',
-          async ({ request }) => {
-            capturedMethod = request.method
-            capturedUrl = request.url
-            const text = await request.text()
-            capturedBody = new URLSearchParams(text)
-            return HttpResponse.json({
-              refereeGameExchange: {
-                __identity: 'exchange-123',
-                status: 'applied',
-                appliedAt: new Date().toISOString(),
-              },
-            })
-          }
-        )
+        http.put('*/api%5crefereegameexchange/pickFromRefereeGameExchange', async ({ request }) => {
+          capturedMethod = request.method
+          capturedUrl = request.url
+          const text = await request.text()
+          capturedBody = new URLSearchParams(text)
+          return HttpResponse.json({
+            refereeGameExchange: {
+              __identity: 'exchange-123',
+              status: 'applied',
+              appliedAt: new Date().toISOString(),
+            },
+          })
+        })
       )
 
       const result = await api.applyForExchange('exchange-123')
@@ -999,11 +996,14 @@ describe('API Client', () => {
       let capturedMethod: string | null = null
 
       server.use(
-        http.get('*/api%5crefereeassociationsettings/getRefereeAssociationSettingsOfActiveParty', ({ request }) => {
-          capturedUrl = request.url
-          capturedMethod = request.method
-          return HttpResponse.json({})
-        })
+        http.get(
+          '*/api%5crefereeassociationsettings/getRefereeAssociationSettingsOfActiveParty',
+          ({ request }) => {
+            capturedUrl = request.url
+            capturedMethod = request.method
+            return HttpResponse.json({})
+          }
+        )
       )
 
       await api.getAssociationSettings()

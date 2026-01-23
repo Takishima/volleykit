@@ -10,8 +10,9 @@ The pre-commit hook (`scripts/pre-commit-validate.sh`) runs automatically in Cla
 
 1. **Detect staged changes** - Skip validation for docs-only changes (`.md` files only)
 2. **Generate API types** - If `volleymanager-openapi.yaml` is staged
-3. **Run in PARALLEL**: format:check, lint, knip, test
-4. **Run build** - Production build (only if parallel steps pass)
+3. **Format (auto-fix)** - Run `npm run format` to auto-fix formatting issues
+4. **Run in PARALLEL**: lint, knip, test
+5. **Run build** - Production build (only if parallel steps pass)
 
 The commit is **blocked** if any step fails. Fix issues and commit again.
 
@@ -46,12 +47,14 @@ npm run build         # Production build (includes tsc)
 ### When Validation Runs
 
 **Triggers validation**:
+
 - Adding, modifying, or deleting `.ts`, `.tsx`, `.js`, `.jsx` files
 - Modifying imports, exports, or dependencies
 - Changing type definitions or interfaces
 - Updating configuration files (`vite.config.ts`, `tsconfig.json`, etc.)
 
 **Skips validation**:
+
 - Changes to `.md` documentation files only
 - No source files changed
 
@@ -105,15 +108,15 @@ npm run size
 
 ### Size Limits (gzipped)
 
-| Component | Limit |
-|-----------|-------|
-| Main App Bundle | 145 KB |
-| Vendor Chunks (each) | 50 KB |
-| PDF Library (lazy) | 185 KB |
-| OCR Feature (lazy) | 12 KB |
-| Image Cropper (lazy) | 10 KB |
-| CSS | 12 KB |
-| Total JS | 520 KB |
+| Component            | Limit  |
+| -------------------- | ------ |
+| Main App Bundle      | 145 KB |
+| Vendor Chunks (each) | 50 KB  |
+| PDF Library (lazy)   | 185 KB |
+| OCR Feature (lazy)   | 12 KB  |
+| Image Cropper (lazy) | 10 KB  |
+| CSS                  | 12 KB  |
+| Total JS             | 520 KB |
 
 ### Bundle Analysis
 
@@ -123,9 +126,9 @@ After build, open `stats.html` for detailed visualization of chunk contents.
 
 Minimum thresholds enforced by Vitest (see `vite.config.ts`):
 
-| Metric | Threshold |
-|--------|-----------|
-| Lines | 50% |
-| Functions | 70% |
-| Branches | 70% |
-| Statements | 50% |
+| Metric     | Threshold |
+| ---------- | --------- |
+| Lines      | 50%       |
+| Functions  | 70%       |
+| Branches   | 70%       |
+| Statements | 50%       |

@@ -1,4 +1,5 @@
 Read these files first:
+
 - docs/SECURITY_CHECKLIST.md
 - docs/CODE_PATTERNS.md
 - CHANGELOG.md (check if updates are needed)
@@ -15,13 +16,17 @@ Then review the current uncommitted changes (use `git diff`) for:
 Format your review as:
 
 ## Review Summary
+
 [1-2 sentences]
 
 ## Issues Found
+
 [List with file:line references, or "None"]
 
 ## Changelog Status
+
 [✓ Updated | ⚠️ Needs update: describe what entry to add | N/A (docs only)]
 
 ## Recommendations
+
 [Optional improvements]

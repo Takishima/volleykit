@@ -2,7 +2,7 @@
  * German translations for VolleyKit mobile app.
  */
 
-import type { Translations } from '../types';
+import type { Translations } from '../types'
 
 const de: Translations = {
   common: {
@@ -76,8 +76,10 @@ const de: Translations = {
     useBiometric: '{biometricType} verwenden',
     authenticateWith: 'Mit {biometricType} authentifizieren',
     attemptsRemaining: '{count} Versuch verbleibend',
-    accountLocked: 'Konto vorübergehend gesperrt wegen zu vieler Fehlversuche. Bitte versuchen Sie es später erneut.',
-    tfaNotSupported: 'Zwei-Faktor-Authentifizierung wird nicht unterstützt. Bitte deaktivieren Sie sie in Ihren VolleyManager-Einstellungen.',
+    accountLocked:
+      'Konto vorübergehend gesperrt wegen zu vieler Fehlversuche. Bitte versuchen Sie es später erneut.',
+    tfaNotSupported:
+      'Zwei-Faktor-Authentifizierung wird nicht unterstützt. Bitte deaktivieren Sie sie in Ihren VolleyManager-Einstellungen.',
   },
   assignments: {
     title: 'Einsätze',
@@ -201,7 +203,8 @@ const de: Translations = {
       modeIcal: 'iCal-Abonnement',
       modeDirect: 'Direkte Synchronisierung',
       icalDescription: 'Abonnieren Sie einen Kalender-Feed. Wird automatisch aktualisiert.',
-      directDescription: 'Termine direkt zum Kalender hinzufügen. Manuelle Synchronisierung erforderlich.',
+      directDescription:
+        'Termine direkt zum Kalender hinzufügen. Manuelle Synchronisierung erforderlich.',
       subscribeIcal: 'iCal-Feed abonnieren',
       syncNow: 'Jetzt synchronisieren',
       lastSync: 'Zuletzt synchronisiert: {date}',
@@ -209,7 +212,8 @@ const de: Translations = {
       syncSummary: '{created} erstellt, {updated} aktualisiert, {deleted} gelöscht',
       syncError: 'Synchronisierung fehlgeschlagen. Bitte erneut versuchen.',
       noCalendars: 'Keine Kalender verfügbar. Bitte erstellen Sie zuerst einen Kalender.',
-      noAssignmentsToSync: 'Keine Einsätze zum Synchronisieren. Bitte sehen Sie zuerst Ihre Einsätze an.',
+      noAssignmentsToSync:
+        'Keine Einsätze zum Synchronisieren. Bitte sehen Sie zuerst Ihre Einsätze an.',
       noCalendarCode: 'Kalendercode nicht verfügbar. Bitte erneut anmelden.',
       enabled: 'Aktiviert',
       disabled: 'Deaktiviert',
@@ -292,6 +296,6 @@ const de: Translations = {
     tryAgain: 'Erneut versuchen',
     refreshPage: 'App neu starten',
   },
-};
+}
 
-export default de;
+export default de

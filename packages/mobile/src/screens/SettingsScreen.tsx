@@ -2,30 +2,30 @@
  * Settings screen
  */
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react'
 
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native'
 
-import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons'
 
-import { useTranslation, LANGUAGE_NAMES } from '@volleykit/shared/i18n';
-import { useSettingsStore } from '@volleykit/shared/stores';
+import { useTranslation, LANGUAGE_NAMES } from '@volleykit/shared/i18n'
+import { useSettingsStore } from '@volleykit/shared/stores'
 
-import { LanguagePicker } from '../components/LanguagePicker';
-import { COLORS, SETTINGS_ICON_SIZE, SMALL_ICON_SIZE } from '../constants';
-import { getAppVersion } from '../utils/version';
+import { LanguagePicker } from '../components/LanguagePicker'
+import { COLORS, SETTINGS_ICON_SIZE, SMALL_ICON_SIZE } from '../constants'
+import { getAppVersion } from '../utils/version'
 
-import type { MainTabScreenProps } from '../navigation/types';
+import type { MainTabScreenProps } from '../navigation/types'
 
-type Props = MainTabScreenProps<'Settings'>;
+type Props = MainTabScreenProps<'Settings'>
 
 interface SettingRowProps {
-  icon: React.ReactNode;
-  title: string;
-  value?: string;
-  onPress?: () => void;
-  accessibilityLabel?: string;
-  accessibilityHint?: string;
+  icon: React.ReactNode
+  title: string
+  value?: string
+  onPress?: () => void
+  accessibilityLabel?: string
+  accessibilityHint?: string
 }
 
 function SettingRow({
@@ -54,18 +54,24 @@ function SettingRow({
       </View>
       {value && <Text className="text-gray-500 mr-2">{value}</Text>}
       {onPress && (
-        <Feather name="chevron-right" size={SMALL_ICON_SIZE} color={COLORS.gray400} accessibilityElementsHidden importantForAccessibility="no" />
+        <Feather
+          name="chevron-right"
+          size={SMALL_ICON_SIZE}
+          color={COLORS.gray400}
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+        />
       )}
     </TouchableOpacity>
-  );
+  )
 }
 
 export function SettingsScreen({ navigation }: Props) {
-  const { t } = useTranslation();
-  const language = useSettingsStore((state) => state.language);
-  const setLanguage = useSettingsStore((state) => state.setLanguage);
-  const appVersion = useMemo(() => getAppVersion(), []);
-  const [isLanguagePickerVisible, setLanguagePickerVisible] = useState(false);
+  const { t } = useTranslation()
+  const language = useSettingsStore((state) => state.language)
+  const setLanguage = useSettingsStore((state) => state.setLanguage)
+  const appVersion = useMemo(() => getAppVersion(), [])
+  const [isLanguagePickerVisible, setLanguagePickerVisible] = useState(false)
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
@@ -90,7 +96,13 @@ export function SettingsScreen({ navigation }: Props) {
         </Text>
         <View className="bg-white border-y border-gray-200">
           <SettingRow
-            icon={<MaterialCommunityIcons name="fingerprint" size={SETTINGS_ICON_SIZE} color={COLORS.gray500} />}
+            icon={
+              <MaterialCommunityIcons
+                name="fingerprint"
+                size={SETTINGS_ICON_SIZE}
+                color={COLORS.gray500}
+              />
+            }
             title={t('settings.biometric.title')}
             onPress={() => navigation.navigate('BiometricSettings')}
             accessibilityHint={t('settings.biometric.description')}
@@ -139,5 +151,5 @@ export function SettingsScreen({ navigation }: Props) {
         onClose={() => setLanguagePickerVisible(false)}
       />
     </ScrollView>
-  );
+  )
 }

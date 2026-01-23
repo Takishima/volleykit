@@ -3,9 +3,9 @@
  * Header component with responsive desktop/mobile layouts
  * Includes integrated search functionality and language switcher
  */
-import Search from './Search.astro';
-import LanguageSwitcher from './LanguageSwitcher.astro';
-import { BASE_PATH } from '../constants';
+import Search from './Search.astro'
+import LanguageSwitcher from './LanguageSwitcher.astro'
+import { BASE_PATH } from '../constants'
 ---
 
 <header
@@ -22,13 +22,7 @@ import { BASE_PATH } from '../constants';
       data-i18n-aria-label="a11y.openMenu"
       data-menu-toggle
     >
-      <svg
-        class="h-5 w-5"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-      >
+      <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path
           stroke-linecap="round"
           stroke-linejoin="round"
@@ -81,8 +75,7 @@ import { BASE_PATH } from '../constants';
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
-            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-          ></path>
+            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
         </svg>
       </a>
     </div>
@@ -94,20 +87,20 @@ import { BASE_PATH } from '../constants';
 
 <script>
   function initHeader() {
-    const header = document.querySelector('[data-header]');
-    if (!header) return;
+    const header = document.querySelector('[data-header]')
+    if (!header) return
 
-    const menuToggle = header.querySelector('[data-menu-toggle]');
+    const menuToggle = header.querySelector('[data-menu-toggle]')
 
     // Hamburger button opens mobile nav drawer
     menuToggle?.addEventListener('click', () => {
-      document.dispatchEvent(new CustomEvent('open-mobile-nav'));
-    });
+      document.dispatchEvent(new CustomEvent('open-mobile-nav'))
+    })
   }
 
   // Initialize on page load
-  initHeader();
+  initHeader()
 
   // Re-initialize on Astro page transitions
-  document.addEventListener('astro:after-swap', initHeader);
+  document.addEventListener('astro:after-swap', initHeader)
 </script>

@@ -4,21 +4,18 @@
  * Manages user preferences for the Smart Departure Reminder feature.
  */
 
-import { DEFAULT_DEPARTURE_REMINDER_SETTINGS } from '../types/departureReminder';
+import { DEFAULT_DEPARTURE_REMINDER_SETTINGS } from '../types/departureReminder'
 
-import type {
-  DepartureReminderSettings,
-  BufferTimeOption,
-} from '../types/departureReminder';
+import type { DepartureReminderSettings, BufferTimeOption } from '../types/departureReminder'
 
 /** Storage key for departure reminder settings */
-const SETTINGS_KEY = 'departure_reminder_settings';
+const SETTINGS_KEY = 'departure_reminder_settings'
 
 /** Storage adapter interface */
 interface StorageAdapter {
-  getItem(key: string): Promise<string | null>;
-  setItem(key: string, value: string): Promise<void>;
-  removeItem(key: string): Promise<void>;
+  getItem(key: string): Promise<string | null>
+  setItem(key: string, value: string): Promise<void>
+  removeItem(key: string): Promise<void>
 }
 
 /**
@@ -26,40 +23,35 @@ interface StorageAdapter {
  */
 export interface DepartureReminderSettingsStore {
   /** Load settings from storage */
-  loadSettings(storage: StorageAdapter): Promise<DepartureReminderSettings>;
+  loadSettings(storage: StorageAdapter): Promise<DepartureReminderSettings>
   /** Save settings to storage */
-  saveSettings(
-    storage: StorageAdapter,
-    settings: DepartureReminderSettings
-  ): Promise<void>;
+  saveSettings(storage: StorageAdapter, settings: DepartureReminderSettings): Promise<void>
   /** Enable the feature */
-  enable(storage: StorageAdapter): Promise<DepartureReminderSettings>;
+  enable(storage: StorageAdapter): Promise<DepartureReminderSettings>
   /** Disable the feature */
-  disable(storage: StorageAdapter): Promise<DepartureReminderSettings>;
+  disable(storage: StorageAdapter): Promise<DepartureReminderSettings>
   /** Set buffer time */
   setBufferTime(
     storage: StorageAdapter,
     minutes: BufferTimeOption
-  ): Promise<DepartureReminderSettings>;
+  ): Promise<DepartureReminderSettings>
   /** Reset to defaults */
-  reset(storage: StorageAdapter): Promise<DepartureReminderSettings>;
+  reset(storage: StorageAdapter): Promise<DepartureReminderSettings>
 }
 
 /**
  * Load settings from storage.
  */
-async function loadSettings(
-  storage: StorageAdapter
-): Promise<DepartureReminderSettings> {
+async function loadSettings(storage: StorageAdapter): Promise<DepartureReminderSettings> {
   try {
-    const data = await storage.getItem(SETTINGS_KEY);
-    if (!data) return { ...DEFAULT_DEPARTURE_REMINDER_SETTINGS };
+    const data = await storage.getItem(SETTINGS_KEY)
+    if (!data) return { ...DEFAULT_DEPARTURE_REMINDER_SETTINGS }
     return {
       ...DEFAULT_DEPARTURE_REMINDER_SETTINGS,
       ...(JSON.parse(data) as Partial<DepartureReminderSettings>),
-    };
+    }
   } catch {
-    return { ...DEFAULT_DEPARTURE_REMINDER_SETTINGS };
+    return { ...DEFAULT_DEPARTURE_REMINDER_SETTINGS }
   }
 }
 
@@ -70,31 +62,27 @@ async function saveSettings(
   storage: StorageAdapter,
   settings: DepartureReminderSettings
 ): Promise<void> {
-  await storage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  await storage.setItem(SETTINGS_KEY, JSON.stringify(settings))
 }
 
 /**
  * Enable the feature.
  */
-async function enable(
-  storage: StorageAdapter
-): Promise<DepartureReminderSettings> {
-  const settings = await loadSettings(storage);
-  const updated = { ...settings, enabled: true };
-  await saveSettings(storage, updated);
-  return updated;
+async function enable(storage: StorageAdapter): Promise<DepartureReminderSettings> {
+  const settings = await loadSettings(storage)
+  const updated = { ...settings, enabled: true }
+  await saveSettings(storage, updated)
+  return updated
 }
 
 /**
  * Disable the feature.
  */
-async function disable(
-  storage: StorageAdapter
-): Promise<DepartureReminderSettings> {
-  const settings = await loadSettings(storage);
-  const updated = { ...settings, enabled: false };
-  await saveSettings(storage, updated);
-  return updated;
+async function disable(storage: StorageAdapter): Promise<DepartureReminderSettings> {
+  const settings = await loadSettings(storage)
+  const updated = { ...settings, enabled: false }
+  await saveSettings(storage, updated)
+  return updated
 }
 
 /**
@@ -104,21 +92,19 @@ async function setBufferTime(
   storage: StorageAdapter,
   minutes: BufferTimeOption
 ): Promise<DepartureReminderSettings> {
-  const settings = await loadSettings(storage);
-  const updated = { ...settings, bufferMinutes: minutes };
-  await saveSettings(storage, updated);
-  return updated;
+  const settings = await loadSettings(storage)
+  const updated = { ...settings, bufferMinutes: minutes }
+  await saveSettings(storage, updated)
+  return updated
 }
 
 /**
  * Reset to defaults.
  */
-async function reset(
-  storage: StorageAdapter
-): Promise<DepartureReminderSettings> {
-  const defaults = { ...DEFAULT_DEPARTURE_REMINDER_SETTINGS };
-  await saveSettings(storage, defaults);
-  return defaults;
+async function reset(storage: StorageAdapter): Promise<DepartureReminderSettings> {
+  const defaults = { ...DEFAULT_DEPARTURE_REMINDER_SETTINGS }
+  await saveSettings(storage, defaults)
+  return defaults
 }
 
 /**
@@ -131,4 +117,4 @@ export const departureReminderSettingsStore: DepartureReminderSettingsStore = {
   disable,
   setBufferTime,
   reset,
-};
+}

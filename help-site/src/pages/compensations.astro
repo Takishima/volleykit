@@ -1,9 +1,9 @@
 ---
-import DocLayout from '../layouts/DocLayout.astro';
-import Screenshot from '../components/Screenshot.astro';
-import DeviceScreenshot from '../components/DeviceScreenshot.astro';
-import InfoBox from '../components/InfoBox.astro';
-import { t } from '../i18n';
+import DocLayout from '../layouts/DocLayout.astro'
+import Screenshot from '../components/Screenshot.astro'
+import DeviceScreenshot from '../components/DeviceScreenshot.astro'
+import InfoBox from '../components/InfoBox.astro'
+import { t } from '../i18n'
 ---
 
 <DocLayout
@@ -21,11 +21,21 @@ import { t } from '../i18n';
   <p data-i18n="compensations.whatAre.description">{t('compensations.whatAre.description')}</p>
 
   <ul>
-    <li data-i18n="compensations.whatAre.details.gameDetails">{t('compensations.whatAre.details.gameDetails')}</li>
-    <li data-i18n="compensations.whatAre.details.date">{t('compensations.whatAre.details.date')}</li>
-    <li data-i18n="compensations.whatAre.details.amount">{t('compensations.whatAre.details.amount')}</li>
-    <li data-i18n="compensations.whatAre.details.paymentStatus">{t('compensations.whatAre.details.paymentStatus')}</li>
-    <li data-i18n="compensations.whatAre.details.role">{t('compensations.whatAre.details.role')}</li>
+    <li data-i18n="compensations.whatAre.details.gameDetails">
+      {t('compensations.whatAre.details.gameDetails')}
+    </li>
+    <li data-i18n="compensations.whatAre.details.date">
+      {t('compensations.whatAre.details.date')}
+    </li>
+    <li data-i18n="compensations.whatAre.details.amount">
+      {t('compensations.whatAre.details.amount')}
+    </li>
+    <li data-i18n="compensations.whatAre.details.paymentStatus">
+      {t('compensations.whatAre.details.paymentStatus')}
+    </li>
+    <li data-i18n="compensations.whatAre.details.role">
+      {t('compensations.whatAre.details.role')}
+    </li>
   </ul>
 
   <InfoBox type="info">
@@ -47,14 +57,22 @@ import { t } from '../i18n';
     instructions="Take a screenshot of the compensations page showing several payment entries. Show game info, dates, amounts in CHF, and payment status indicators."
   />
 
-  <h3 data-i18n="compensations.viewing.paymentStatus.title">{t('compensations.viewing.paymentStatus.title')}</h3>
+  <h3 data-i18n="compensations.viewing.paymentStatus.title">
+    {t('compensations.viewing.paymentStatus.title')}
+  </h3>
 
   <p data-i18n="compensations.viewing.description">{t('compensations.viewing.description')}</p>
 
   <ul>
-    <li data-i18n="compensations.viewing.paymentStatus.pending">{t('compensations.viewing.paymentStatus.pending')}</li>
-    <li data-i18n="compensations.viewing.paymentStatus.processing">{t('compensations.viewing.paymentStatus.processing')}</li>
-    <li data-i18n="compensations.viewing.paymentStatus.paid">{t('compensations.viewing.paymentStatus.paid')}</li>
+    <li data-i18n="compensations.viewing.paymentStatus.pending">
+      {t('compensations.viewing.paymentStatus.pending')}
+    </li>
+    <li data-i18n="compensations.viewing.paymentStatus.processing">
+      {t('compensations.viewing.paymentStatus.processing')}
+    </li>
+    <li data-i18n="compensations.viewing.paymentStatus.paid">
+      {t('compensations.viewing.paymentStatus.paid')}
+    </li>
   </ul>
 
   <h2 data-i18n="compensations.filtering.title">{t('compensations.filtering.title')}</h2>
@@ -62,9 +80,15 @@ import { t } from '../i18n';
   <p data-i18n="compensations.filtering.description">{t('compensations.filtering.description')}</p>
 
   <ul>
-    <li data-i18n="compensations.filtering.tabs.pendingPast">{t('compensations.filtering.tabs.pendingPast')}</li>
-    <li data-i18n="compensations.filtering.tabs.pendingFuture">{t('compensations.filtering.tabs.pendingFuture')}</li>
-    <li data-i18n="compensations.filtering.tabs.closed">{t('compensations.filtering.tabs.closed')}</li>
+    <li data-i18n="compensations.filtering.tabs.pendingPast">
+      {t('compensations.filtering.tabs.pendingPast')}
+    </li>
+    <li data-i18n="compensations.filtering.tabs.pendingFuture">
+      {t('compensations.filtering.tabs.pendingFuture')}
+    </li>
+    <li data-i18n="compensations.filtering.tabs.closed">
+      {t('compensations.filtering.tabs.closed')}
+    </li>
   </ul>
 
   <Screenshot
@@ -94,14 +118,24 @@ import { t } from '../i18n';
     </p>
   </InfoBox>
 
-  <h2 data-i18n="compensations.paymentSchedule.title">{t('compensations.paymentSchedule.title')}</h2>
+  <h2 data-i18n="compensations.paymentSchedule.title">
+    {t('compensations.paymentSchedule.title')}
+  </h2>
 
-  <p data-i18n="compensations.paymentSchedule.description">{t('compensations.paymentSchedule.description')}</p>
+  <p data-i18n="compensations.paymentSchedule.description">
+    {t('compensations.paymentSchedule.description')}
+  </p>
 
   <ul>
-    <li data-i18n="compensations.paymentSchedule.details.processing">{t('compensations.paymentSchedule.details.processing')}</li>
-    <li data-i18n="compensations.paymentSchedule.details.bankTransfer">{t('compensations.paymentSchedule.details.bankTransfer')}</li>
-    <li data-i18n="compensations.paymentSchedule.details.timing">{t('compensations.paymentSchedule.details.timing')}</li>
+    <li data-i18n="compensations.paymentSchedule.details.processing">
+      {t('compensations.paymentSchedule.details.processing')}
+    </li>
+    <li data-i18n="compensations.paymentSchedule.details.bankTransfer">
+      {t('compensations.paymentSchedule.details.bankTransfer')}
+    </li>
+    <li data-i18n="compensations.paymentSchedule.details.timing">
+      {t('compensations.paymentSchedule.details.timing')}
+    </li>
   </ul>
 
   <InfoBox type="warning">

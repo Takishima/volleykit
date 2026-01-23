@@ -1,9 +1,9 @@
-import { navItems } from '../data/navItems';
-import { BASE_PATH } from '../constants';
+import { navItems } from '../data/navItems'
+import { BASE_PATH } from '../constants'
 
 interface PageNavigation {
-  prev?: { title: string; href: string };
-  next?: { title: string; href: string };
+  prev?: { title: string; href: string }
+  next?: { title: string; href: string }
 }
 
 /**
@@ -12,40 +12,40 @@ interface PageNavigation {
  */
 export function getPageNavigation(currentPath: string): PageNavigation {
   // Normalize path (remove trailing slash for comparison)
-  const normalizedPath = currentPath.endsWith('/') ? currentPath.slice(0, -1) : currentPath;
+  const normalizedPath = currentPath.endsWith('/') ? currentPath.slice(0, -1) : currentPath
 
   // Find current page index in navItems
   const currentIndex = navItems.findIndex((item) => {
-    const itemPath = item.href.endsWith('/') ? item.href.slice(0, -1) : item.href;
-    return itemPath === normalizedPath;
-  });
+    const itemPath = item.href.endsWith('/') ? item.href.slice(0, -1) : item.href
+    return itemPath === normalizedPath
+  })
 
   // If not found in navItems, return empty
   if (currentIndex === -1) {
-    return {};
+    return {}
   }
 
-  const result: PageNavigation = {};
+  const result: PageNavigation = {}
 
   // Get previous item
   if (currentIndex > 0) {
-    const prevItem = navItems[currentIndex - 1];
+    const prevItem = navItems[currentIndex - 1]
     result.prev = {
       title: prevItem.title,
       href: prevItem.href,
-    };
+    }
   }
 
   // Get next item
   if (currentIndex < navItems.length - 1) {
-    const nextItem = navItems[currentIndex + 1];
+    const nextItem = navItems[currentIndex + 1]
     result.next = {
       title: nextItem.title,
       href: nextItem.href,
-    };
+    }
   }
 
-  return result;
+  return result
 }
 
 /**
@@ -58,23 +58,23 @@ export function getBreadcrumbs(
 ): Array<{ label: string; href?: string }> {
   // Find current nav item for context
   const currentNavItem = navItems.find((item) => {
-    const normalizedPath = currentPath.endsWith('/') ? currentPath.slice(0, -1) : currentPath;
-    const itemPath = item.href.endsWith('/') ? item.href.slice(0, -1) : item.href;
-    return itemPath === normalizedPath;
-  });
+    const normalizedPath = currentPath.endsWith('/') ? currentPath.slice(0, -1) : currentPath
+    const itemPath = item.href.endsWith('/') ? item.href.slice(0, -1) : item.href
+    return itemPath === normalizedPath
+  })
 
-  const homePath = `${BASE_PATH}/`;
+  const homePath = `${BASE_PATH}/`
 
   // For home page, just return Home
   if (currentPath === homePath || currentPath === BASE_PATH) {
-    return [{ label: 'Home' }];
+    return [{ label: 'Home' }]
   }
 
   // For known nav items, return Home > Item
   if (currentNavItem) {
-    return [{ label: 'Home', href: homePath }, { label: currentNavItem.title }];
+    return [{ label: 'Home', href: homePath }, { label: currentNavItem.title }]
   }
 
   // For unknown pages, use the provided title
-  return [{ label: 'Home', href: homePath }, { label: pageTitle }];
+  return [{ label: 'Home', href: homePath }, { label: pageTitle }]
 }

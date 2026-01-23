@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers -- Config file with timeout/retry values */
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test'
 
 /**
  * Playwright E2E test configuration.
@@ -25,9 +25,7 @@ export default defineConfig({
   // Reporter to use
   // CI: github (inline annotations) + html (artifact upload)
   // Local: html only
-  reporter: process.env.CI
-    ? [['github'], ['html', { open: 'never' }]]
-    : 'html',
+  reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'html',
   // Shared settings for all the projects below
   use: {
     // Base URL for navigation actions like `await page.goto('/')`
@@ -84,4 +82,4 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
   },
-});
+})

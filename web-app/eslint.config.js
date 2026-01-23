@@ -31,11 +31,7 @@ export default tseslint.config(
     },
   },
   {
-    extends: [
-      js.configs.recommended,
-      ...tseslint.configs.recommended,
-      sonarjs.configs.recommended,
-    ],
+    extends: [js.configs.recommended, ...tseslint.configs.recommended, sonarjs.configs.recommended],
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2020,
@@ -173,5 +169,5 @@ export default tseslint.config(
       // Import ordering is relaxed for tests - mocks need to be set up before imports
       'import-x/order': 'off',
     },
-  },
+  }
 )

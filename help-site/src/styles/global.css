@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 @plugin "@tailwindcss/typography";
 
 /* Configure dark mode to use .dark class instead of media query */
@@ -17,8 +17,8 @@
   --color-primary-200: #f1ff90;
   --color-primary-300: #e2ff50;
   --color-primary-400: #d7ff37;
-  --color-primary-500: #b2e600;  /* Main brand color */
-  --color-primary-600: #8ab800;  /* Hover state */
+  --color-primary-500: #b2e600; /* Main brand color */
+  --color-primary-600: #8ab800; /* Hover state */
   --color-primary-700: #688b00;
   --color-primary-800: #526d07;
   --color-primary-900: #455c0b;

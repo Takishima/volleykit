@@ -7,73 +7,73 @@
  * Extracted from web-app/src/shared/stores/settings.ts
  */
 
-import { create } from 'zustand';
+import { create } from 'zustand'
 
-import type { Language } from '../i18n/types';
+import type { Language } from '../i18n/types'
 
 /**
  * Source of the user's home location.
  */
-export type LocationSource = 'geolocation' | 'geocoded' | 'manual';
+export type LocationSource = 'geolocation' | 'geocoded' | 'manual'
 
 /**
  * User's home location for distance/travel time filtering.
  */
 export interface UserLocation {
-  latitude: number;
-  longitude: number;
+  latitude: number
+  longitude: number
   /** Display label: address or "Current location" */
-  label: string;
+  label: string
   /** How the location was obtained */
-  source: LocationSource;
+  source: LocationSource
 }
 
 /**
  * Distance filter configuration for exchanges.
  */
 export interface DistanceFilter {
-  enabled: boolean;
-  maxDistanceKm: number;
+  enabled: boolean
+  maxDistanceKm: number
 }
 
 /**
  * Travel time filter configuration for exchanges.
  */
 export interface TravelTimeFilter {
-  enabled: boolean;
-  maxTravelTimeMinutes: number;
+  enabled: boolean
+  maxTravelTimeMinutes: number
   /** Minutes before game start to arrive (buffer time) */
-  arrivalBufferMinutes: number;
+  arrivalBufferMinutes: number
 }
 
 /**
  * Notification settings for game reminders.
  */
 export interface NotificationSettings {
-  enabled: boolean;
+  enabled: boolean
   /** Selected reminder times before games */
-  reminderTimes: ('1h' | '2h' | '1d')[];
+  reminderTimes: ('1h' | '2h' | '1d')[]
 }
 
 /**
  * Departure reminder buffer options in minutes.
  */
-export type DepartureReminderBuffer = 5 | 10 | 15 | 20 | 30;
+export type DepartureReminderBuffer = 5 | 10 | 15 | 20 | 30
 
 /** Default max distance in kilometers */
-export const DEFAULT_MAX_DISTANCE_KM = 50;
+export const DEFAULT_MAX_DISTANCE_KM = 50
 
 /** Default max travel time in minutes (2 hours) */
-export const DEFAULT_MAX_TRAVEL_TIME_MINUTES = 120;
+export const DEFAULT_MAX_TRAVEL_TIME_MINUTES = 120
 
 /** Default arrival buffer (minutes before game start) */
-export const DEFAULT_ARRIVAL_BUFFER_MINUTES = 30;
+export const DEFAULT_ARRIVAL_BUFFER_MINUTES = 30
 
 /** Default notification settings */
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   enabled: false,
   reminderTimes: ['1h'],
-};
+}
 
 /**
  * Settings state interface.
@@ -82,53 +82,53 @@ export interface SettingsState {
   // === Global settings ===
 
   /** UI language */
-  language: Language;
+  language: Language
 
   // === Location settings ===
 
   /** User's home location for filtering */
-  homeLocation: UserLocation | null;
+  homeLocation: UserLocation | null
   /** Distance filter settings */
-  distanceFilter: DistanceFilter;
+  distanceFilter: DistanceFilter
   /** Travel time filter settings */
-  travelTimeFilter: TravelTimeFilter;
+  travelTimeFilter: TravelTimeFilter
 
   // === Notification settings ===
 
   /** Game reminder notification settings */
-  notificationSettings: NotificationSettings;
+  notificationSettings: NotificationSettings
 
   // === Mobile-specific settings ===
 
   /** Biometric authentication enabled */
-  biometricEnabled: boolean;
+  biometricEnabled: boolean
   /** Calendar sync enabled */
-  calendarSyncEnabled: boolean;
+  calendarSyncEnabled: boolean
   /** Selected calendar ID for sync */
-  selectedCalendarId: string | null;
+  selectedCalendarId: string | null
   /** Smart Departure Reminder enabled */
-  departureReminderEnabled: boolean;
+  departureReminderEnabled: boolean
   /** Buffer time for departure reminder */
-  departureReminderBufferMinutes: DepartureReminderBuffer;
+  departureReminderBufferMinutes: DepartureReminderBuffer
 
   // === Actions ===
 
-  setLanguage: (language: Language) => void;
-  setHomeLocation: (location: UserLocation | null) => void;
-  setDistanceFilterEnabled: (enabled: boolean) => void;
-  setMaxDistanceKm: (km: number) => void;
-  setTravelTimeFilterEnabled: (enabled: boolean) => void;
-  setMaxTravelTimeMinutes: (minutes: number) => void;
-  setArrivalBufferMinutes: (minutes: number) => void;
-  setNotificationsEnabled: (enabled: boolean) => void;
-  setNotificationReminderTimes: (times: ('1h' | '2h' | '1d')[]) => void;
-  setBiometricEnabled: (enabled: boolean) => void;
-  setCalendarSyncEnabled: (enabled: boolean) => void;
-  setSelectedCalendarId: (id: string | null) => void;
-  setDepartureReminderEnabled: (enabled: boolean) => void;
-  setDepartureReminderBufferMinutes: (minutes: DepartureReminderBuffer) => void;
+  setLanguage: (language: Language) => void
+  setHomeLocation: (location: UserLocation | null) => void
+  setDistanceFilterEnabled: (enabled: boolean) => void
+  setMaxDistanceKm: (km: number) => void
+  setTravelTimeFilterEnabled: (enabled: boolean) => void
+  setMaxTravelTimeMinutes: (minutes: number) => void
+  setArrivalBufferMinutes: (minutes: number) => void
+  setNotificationsEnabled: (enabled: boolean) => void
+  setNotificationReminderTimes: (times: ('1h' | '2h' | '1d')[]) => void
+  setBiometricEnabled: (enabled: boolean) => void
+  setCalendarSyncEnabled: (enabled: boolean) => void
+  setSelectedCalendarId: (id: string | null) => void
+  setDepartureReminderEnabled: (enabled: boolean) => void
+  setDepartureReminderBufferMinutes: (minutes: DepartureReminderBuffer) => void
   /** Reset all settings to defaults */
-  reset: () => void;
+  reset: () => void
 }
 
 /**
@@ -152,7 +152,7 @@ const initialState = {
   selectedCalendarId: null as string | null,
   departureReminderEnabled: false,
   departureReminderBufferMinutes: 15 as DepartureReminderBuffer,
-};
+}
 
 /**
  * Settings store.
@@ -214,7 +214,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     set({ departureReminderBufferMinutes }),
 
   reset: () => set(initialState),
-}));
+}))
 
 /**
  * Demo mode default location: Bern (central Switzerland).
@@ -225,4 +225,4 @@ export const DEMO_HOME_LOCATION: UserLocation = {
   longitude: 7.4474,
   label: 'Bern',
   source: 'geocoded',
-};
+}

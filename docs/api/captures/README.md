@@ -53,16 +53,23 @@ Paste this in the Console tab while on the page:
 
 ```javascript
 // After the page loads and API call completes
-copy(JSON.stringify({
-  requests: performance.getEntriesByType('resource')
-    .filter(r => r.name.includes('/api/'))
-    .map(r => ({
-      url: r.name,
-      method: 'POST', // Most are POST
-      duration: r.duration,
-      size: r.transferSize
-    }))
-}, null, 2))
+copy(
+  JSON.stringify(
+    {
+      requests: performance
+        .getEntriesByType('resource')
+        .filter((r) => r.name.includes('/api/'))
+        .map((r) => ({
+          url: r.name,
+          method: 'POST', // Most are POST
+          duration: r.duration,
+          size: r.transferSize,
+        })),
+    },
+    null,
+    2
+  )
+)
 ```
 
 This copies a summary to clipboard.

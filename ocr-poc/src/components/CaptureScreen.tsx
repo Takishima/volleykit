@@ -186,14 +186,18 @@ export function CaptureScreen() {
   // Capture photo from camera
   const capturePhoto = useCallback(async () => {
     const video = videoRef.current
-    if (!video || !sheetType) {return}
+    if (!video || !sheetType) {
+      return
+    }
 
     const fullCanvas = document.createElement('canvas')
     fullCanvas.width = video.videoWidth
     fullCanvas.height = video.videoHeight
 
     const ctx = fullCanvas.getContext('2d')
-    if (!ctx) {return}
+    if (!ctx) {
+      return
+    }
 
     ctx.drawImage(video, 0, 0, fullCanvas.width, fullCanvas.height)
 
@@ -232,7 +236,9 @@ export function CaptureScreen() {
   const handleFileChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0]
-      if (!file) {return}
+      if (!file) {
+        return
+      }
 
       event.target.value = ''
       setError(null)
@@ -312,9 +318,7 @@ export function CaptureScreen() {
       <div className="max-w-md w-full space-y-6">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-slate-900">Capture Scoresheet</h2>
-          <p className="mt-2 text-slate-600">
-            Take a photo or select an image of the scoresheet
-          </p>
+          <p className="mt-2 text-slate-600">Take a photo or select an image of the scoresheet</p>
         </div>
 
         {/* Error message */}

@@ -4,41 +4,43 @@
  * Handles biometric check and credential retrieval for quick re-login.
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react'
 
-import { useStorage } from '@volleykit/shared/adapters';
+import { useStorage } from '@volleykit/shared/adapters'
 
-import { BIOMETRIC_ENABLED_KEY, MAX_BIOMETRIC_ATTEMPTS } from '../constants';
-import { biometrics, getBiometricTypeName } from '../platform/biometrics';
+import { BIOMETRIC_ENABLED_KEY, MAX_BIOMETRIC_ATTEMPTS } from '../constants'
+import { biometrics, getBiometricTypeName } from '../platform/biometrics'
 
 export interface BiometricAuthState {
   /** Whether biometric is available and enabled */
-  isEnabled: boolean;
+  isEnabled: boolean
   /** Whether biometric hardware is available */
-  isAvailable: boolean;
+  isAvailable: boolean
   /** The type of biometric available */
-  biometricType: 'faceId' | 'touchId' | 'fingerprint' | null;
+  biometricType: 'faceId' | 'touchId' | 'fingerprint' | null
   /** User-friendly name for biometric type */
-  biometricTypeName: string;
+  biometricTypeName: string
   /** Number of failed attempts */
-  failedAttempts: number;
+  failedAttempts: number
   /** Whether we should fall back to password entry */
-  shouldFallbackToPassword: boolean;
+  shouldFallbackToPassword: boolean
   /** Whether authentication is in progress */
-  isAuthenticating: boolean;
+  isAuthenticating: boolean
 }
 
 export interface UseBiometricAuthResult extends BiometricAuthState {
   /** Check biometric status */
-  checkBiometricStatus: () => Promise<void>;
+  checkBiometricStatus: () => Promise<void>
   /** Attempt biometric authentication */
-  authenticate: (promptMessage: string) => Promise<{ success: boolean; credentials?: { username: string; password: string } }>;
+  authenticate: (
+    promptMessage: string
+  ) => Promise<{ success: boolean; credentials?: { username: string; password: string } }>
   /** Reset failed attempts counter */
-  resetAttempts: () => void;
+  resetAttempts: () => void
 }
 
 export function useBiometricAuth(): UseBiometricAuthResult {
-  const { storage, secureStorage } = useStorage();
+  const { storage, secureStorage } = useStorage()
 
   const [state, setState] = useState<BiometricAuthState>({
     isEnabled: false,
@@ -48,97 +50,102 @@ export function useBiometricAuth(): UseBiometricAuthResult {
     failedAttempts: 0,
     shouldFallbackToPassword: false,
     isAuthenticating: false,
-  });
+  })
 
   const checkBiometricStatus = useCallback(async () => {
     try {
-      const available = await biometrics.isAvailable();
+      const available = await biometrics.isAvailable()
 
       if (!available) {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           isAvailable: false,
           isEnabled: false,
           biometricType: null,
           biometricTypeName: 'Biometric',
-        }));
-        return;
+        }))
+        return
       }
 
-      const type = await biometrics.getBiometricType();
-      const storedEnabled = await storage.getItem(BIOMETRIC_ENABLED_KEY);
-      const hasCredentials = await secureStorage.hasCredentials();
+      const type = await biometrics.getBiometricType()
+      const storedEnabled = await storage.getItem(BIOMETRIC_ENABLED_KEY)
+      const hasCredentials = await secureStorage.hasCredentials()
 
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isAvailable: true,
         isEnabled: storedEnabled === 'true' && hasCredentials,
         biometricType: type,
         biometricTypeName: getBiometricTypeName(type),
-      }));
+      }))
     } catch {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isAvailable: false,
         isEnabled: false,
-      }));
+      }))
     }
-  }, [storage, secureStorage]);
+  }, [storage, secureStorage])
 
-  const authenticate = useCallback(async (promptMessage: string): Promise<{ success: boolean; credentials?: { username: string; password: string } }> => {
-    if (!state.isEnabled || state.shouldFallbackToPassword) {
-      return { success: false };
-    }
+  const authenticate = useCallback(
+    async (
+      promptMessage: string
+    ): Promise<{ success: boolean; credentials?: { username: string; password: string } }> => {
+      if (!state.isEnabled || state.shouldFallbackToPassword) {
+        return { success: false }
+      }
 
-    setState(prev => ({ ...prev, isAuthenticating: true }));
+      setState((prev) => ({ ...prev, isAuthenticating: true }))
 
-    try {
-      const success = await biometrics.authenticate(promptMessage);
+      try {
+        const success = await biometrics.authenticate(promptMessage)
 
-      if (!success) {
-        const newFailedAttempts = state.failedAttempts + 1;
-        setState(prev => ({
+        if (!success) {
+          const newFailedAttempts = state.failedAttempts + 1
+          setState((prev) => ({
+            ...prev,
+            failedAttempts: newFailedAttempts,
+            shouldFallbackToPassword: newFailedAttempts >= MAX_BIOMETRIC_ATTEMPTS,
+            isAuthenticating: false,
+          }))
+          return { success: false }
+        }
+
+        // Get stored credentials
+        const credentials = await secureStorage.getCredentials()
+
+        if (!credentials) {
+          setState((prev) => ({ ...prev, isAuthenticating: false }))
+          return { success: false }
+        }
+
+        setState((prev) => ({
           ...prev,
-          failedAttempts: newFailedAttempts,
-          shouldFallbackToPassword: newFailedAttempts >= MAX_BIOMETRIC_ATTEMPTS,
+          failedAttempts: 0,
           isAuthenticating: false,
-        }));
-        return { success: false };
+        }))
+
+        return { success: true, credentials }
+      } catch {
+        setState((prev) => ({ ...prev, isAuthenticating: false }))
+        return { success: false }
       }
-
-      // Get stored credentials
-      const credentials = await secureStorage.getCredentials();
-
-      if (!credentials) {
-        setState(prev => ({ ...prev, isAuthenticating: false }));
-        return { success: false };
-      }
-
-      setState(prev => ({
-        ...prev,
-        failedAttempts: 0,
-        isAuthenticating: false,
-      }));
-
-      return { success: true, credentials };
-    } catch {
-      setState(prev => ({ ...prev, isAuthenticating: false }));
-      return { success: false };
-    }
-  }, [state.isEnabled, state.shouldFallbackToPassword, state.failedAttempts, secureStorage]);
+    },
+    [state.isEnabled, state.shouldFallbackToPassword, state.failedAttempts, secureStorage]
+  )
 
   const resetAttempts = useCallback(() => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       failedAttempts: 0,
       shouldFallbackToPassword: false,
-    }));
-  }, []);
+    }))
+  }, [])
 
   return {
     ...state,
     checkBiometricStatus,
     authenticate,
     resetAttempts,
-  };
+  }
 }

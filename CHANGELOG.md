@@ -12,12 +12,10 @@
   and Android credential association behavior.
 
   Changes:
-
   - Added `action="https://volleymanager.volleyball.ch"` to the login form
   - Added `name` attributes to username and password inputs
 
 - [#806](https://github.com/Takishima/volleykit/pull/806) [`5256b07`](https://github.com/Takishima/volleykit/commit/5256b07ba5661848b0b9b9b1960dac96cf85bf20) Thanks [@Takishima](https://github.com/Takishima)! - Redesigned exchange filters UI with compact filter menu
-
   - Replaced horizontal filter pills with single "Filters" button that opens a menu
   - Added icon-only summary showing active filters at a glance
   - Filter settings (distance, travel time, game gap) now have integrated toggles and sliders
@@ -40,13 +38,11 @@
 - [#756](https://github.com/Takishima/volleykit/pull/756) [`37c1ca4`](https://github.com/Takishima/volleykit/commit/37c1ca41375377fbb49ef52c86d10e23e1d680f3) Thanks [@Takishima](https://github.com/Takishima)! - Add React Native mobile app foundation with shared code architecture
 
   **Phase 1: Project Setup**
-
   - Initialize monorepo workspace structure with packages/shared and packages/mobile
   - Configure npm workspaces and Expo project with TypeScript 5.9
   - Add NativeWind (Tailwind CSS for React Native)
 
   **Phase 2: Shared Code Architecture**
-
   - Extract platform-agnostic API client, validation schemas, and query keys to @volleykit/shared
   - Extract TanStack Query hooks (useAssignments, useCompensations, useExchanges)
   - Extract Zustand stores (auth, settings) with platform adapter interfaces
@@ -75,7 +71,6 @@
 - [#748](https://github.com/Takishima/volleykit/pull/748) [`0b8cd7c`](https://github.com/Takishima/volleykit/commit/0b8cd7c6efaec29aff8ccf022d3bb12cfa31f95a) Thanks [@Takishima](https://github.com/Takishima)! - Added game gap filter to exchanges - filter out exchange offers that are too close to your existing assignments
 
 - [#741](https://github.com/Takishima/volleykit/pull/741) [`995d8d5`](https://github.com/Takishima/volleykit/commit/995d8d59162d4e9007eabdd76912cf9690473235) Thanks [@Takishima](https://github.com/Takishima)! - Add assignment conflict detection to warn when games are scheduled too close together
-
   - Detects assignments less than 1 hour apart using the calendar feed
   - Shows warning indicator on AssignmentCard for conflicting assignments
   - Displays conflict details in expanded view (association, time gap, hall)
@@ -88,7 +83,6 @@
 - [#747](https://github.com/Takishima/volleykit/pull/747) [`70f7dc9`](https://github.com/Takishima/volleykit/commit/70f7dc9c241b6a3ec5eb998cc081d8fc8e751fbf) Thanks [@Takishima](https://github.com/Takishima)! - Add worker version tracking to preserve login sessions during web-app-only updates
 
   Previously, any app version update would force users to log out. Now the app tracks the worker (CORS proxy) version separately:
-
   - Worker version changes → clear session and reload (auth logic may have changed)
   - Web app only changes → reload without clearing session (preserves login)
 
@@ -111,7 +105,6 @@
 ### Patch Changes
 
 - [#739](https://github.com/Takishima/volleykit/pull/739) [`401ef73`](https://github.com/Takishima/volleykit/commit/401ef734b52d5be3585b78aeeaf9b9316492f650) Thanks [@Takishima](https://github.com/Takishima)! - Improved login experience on iOS PWA when app update is needed:
-
   - Shows inline "Update Now" button when login fails, suggesting app update may fix the issue
   - Clears stale CSRF tokens when login page loads or app resumes from suspension
   - Added pageshow event fallback for more reliable update detection on iOS PWA

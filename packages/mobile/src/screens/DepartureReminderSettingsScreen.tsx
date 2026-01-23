@@ -5,7 +5,7 @@
  * notifications and buffer time preferences.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react'
 
 import {
   View,
@@ -15,97 +15,90 @@ import {
   Switch,
   Alert,
   ActivityIndicator,
-} from 'react-native';
+} from 'react-native'
 
-import { Feather } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons'
 
-import { useStorage } from '@volleykit/shared/adapters';
-import { useTranslation } from '@volleykit/shared/i18n';
+import { useStorage } from '@volleykit/shared/adapters'
+import { useTranslation } from '@volleykit/shared/i18n'
 
-import { COLORS, SETTINGS_ICON_SIZE } from '../constants';
-import { location } from '../platform/location';
-import { notifications } from '../platform/notifications';
-import { departureReminderSettingsStore } from '../stores/departureReminderSettings';
+import { COLORS, SETTINGS_ICON_SIZE } from '../constants'
+import { location } from '../platform/location'
+import { notifications } from '../platform/notifications'
+import { departureReminderSettingsStore } from '../stores/departureReminderSettings'
 import {
   DEFAULT_DEPARTURE_REMINDER_SETTINGS,
   BUFFER_TIME_OPTIONS,
-} from '../types/departureReminder';
+} from '../types/departureReminder'
 
-import type { RootStackScreenProps } from '../navigation/types';
-import type {
-  DepartureReminderSettings,
-  BufferTimeOption,
-} from '../types/departureReminder';
+import type { RootStackScreenProps } from '../navigation/types'
+import type { DepartureReminderSettings, BufferTimeOption } from '../types/departureReminder'
 
-type Props = RootStackScreenProps<'DepartureReminderSettings'>;
+type Props = RootStackScreenProps<'DepartureReminderSettings'>
 
 export function DepartureReminderSettingsScreen(_props: Props) {
-  const { t } = useTranslation();
-  const { storage } = useStorage();
+  const { t } = useTranslation()
+  const { storage } = useStorage()
 
   const [settings, setSettings] = useState<DepartureReminderSettings>(
     DEFAULT_DEPARTURE_REMINDER_SETTINGS
-  );
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRequestingPermissions, setIsRequestingPermissions] = useState(false);
+  )
+  const [isLoading, setIsLoading] = useState(true)
+  const [isRequestingPermissions, setIsRequestingPermissions] = useState(false)
 
   // Load settings on mount
   useEffect(() => {
     async function loadData() {
       try {
-        const loadedSettings = await departureReminderSettingsStore.loadSettings(
-          storage
-        );
-        setSettings(loadedSettings);
+        const loadedSettings = await departureReminderSettingsStore.loadSettings(storage)
+        setSettings(loadedSettings)
       } catch {
         // Use defaults
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
     }
 
-    loadData();
-  }, [storage]);
+    loadData()
+  }, [storage])
 
   // Request permissions when enabling
   const requestPermissions = useCallback(async (): Promise<boolean> => {
-    setIsRequestingPermissions(true);
+    setIsRequestingPermissions(true)
 
     try {
       // Request foreground location
-      const foreground = await location.requestForegroundPermissions();
+      const foreground = await location.requestForegroundPermissions()
       if (foreground !== 'granted') {
         Alert.alert(t('common.error'), t('settings.departure.permissionDenied'), [
           { text: t('common.close') },
-        ]);
-        return false;
+        ])
+        return false
       }
 
       // Request background location
-      const background = await location.requestBackgroundPermissions();
+      const background = await location.requestBackgroundPermissions()
       if (background !== 'granted') {
-        Alert.alert(
-          t('common.error'),
-          t('settings.departure.backgroundLocationRequired'),
-          [{ text: t('common.close') }]
-        );
-        return false;
+        Alert.alert(t('common.error'), t('settings.departure.backgroundLocationRequired'), [
+          { text: t('common.close') },
+        ])
+        return false
       }
 
       // Request notification permission
-      const notificationGranted = await notifications.requestPermissions();
+      const notificationGranted = await notifications.requestPermissions()
       if (!notificationGranted) {
         Alert.alert(t('common.error'), t('settings.departure.notificationRequired'), [
           { text: t('common.close') },
-        ]);
-        return false;
+        ])
+        return false
       }
 
-      return true;
+      return true
     } finally {
-      setIsRequestingPermissions(false);
+      setIsRequestingPermissions(false)
     }
-  }, [t]);
+  }, [t])
 
   // Handle enable toggle
   const handleToggle = useCallback(
@@ -113,56 +106,52 @@ export function DepartureReminderSettingsScreen(_props: Props) {
       if (enabled) {
         // Check permissions first
         const hasPermissions =
-          (await location.hasBackgroundPermissions()) &&
-          (await notifications.hasPermissions());
+          (await location.hasBackgroundPermissions()) && (await notifications.hasPermissions())
 
         if (!hasPermissions) {
-          const granted = await requestPermissions();
-          if (!granted) return;
+          const granted = await requestPermissions()
+          if (!granted) return
         }
 
-        const updated = await departureReminderSettingsStore.enable(storage);
-        setSettings(updated);
+        const updated = await departureReminderSettingsStore.enable(storage)
+        setSettings(updated)
 
         // Start background tracking
         try {
-          await location.startBackgroundTracking();
+          await location.startBackgroundTracking()
         } catch {
           // Ignore errors, tracking will start on next app launch
         }
       } else {
-        const updated = await departureReminderSettingsStore.disable(storage);
-        setSettings(updated);
+        const updated = await departureReminderSettingsStore.disable(storage)
+        setSettings(updated)
 
         // Stop background tracking
         try {
-          await location.stopBackgroundTracking();
+          await location.stopBackgroundTracking()
         } catch {
           // Ignore errors
         }
       }
     },
     [storage, requestPermissions]
-  );
+  )
 
   // Handle buffer time selection
   const handleBufferTimeSelect = useCallback(
     async (minutes: BufferTimeOption) => {
-      const updated = await departureReminderSettingsStore.setBufferTime(
-        storage,
-        minutes
-      );
-      setSettings(updated);
+      const updated = await departureReminderSettingsStore.setBufferTime(storage, minutes)
+      setSettings(updated)
     },
     [storage]
-  );
+  )
 
   if (isLoading) {
     return (
       <View className="flex-1 bg-gray-50 items-center justify-center">
         <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
-    );
+    )
   }
 
   return (
@@ -177,11 +166,7 @@ export function DepartureReminderSettingsScreen(_props: Props) {
         <View className="bg-white border-y border-gray-200">
           <View className="flex-row items-center py-4 px-4">
             <View className="mr-4">
-              <Feather
-                name="bell"
-                size={SETTINGS_ICON_SIZE}
-                color={COLORS.gray500}
-              />
+              <Feather name="bell" size={SETTINGS_ICON_SIZE} color={COLORS.gray500} />
             </View>
             <View className="flex-1">
               <Text className="text-gray-900 text-base font-medium">
@@ -283,5 +268,5 @@ export function DepartureReminderSettingsScreen(_props: Props) {
         </View>
       </View>
     </ScrollView>
-  );
+  )
 }

@@ -1,12 +1,12 @@
-import { BASE_PATH } from '../constants';
+import { BASE_PATH } from '../constants'
 
 export interface NavItem {
   /** Default title (English) - used as fallback */
-  title: string;
+  title: string
   /** Translation key for i18n lookup */
-  i18nKey: string;
-  href: string;
-  icon: string;
+  i18nKey: string
+  href: string
+  icon: string
 }
 
 export const navItems: NavItem[] = [
@@ -64,4 +64,4 @@ export const navItems: NavItem[] = [
     href: `${BASE_PATH}/settings/`,
     icon: 'settings',
   },
-];
+]

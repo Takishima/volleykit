@@ -2,7 +2,7 @@
 
 These endpoints support search functionality and file management across the VolleyManager platform.
 
-______________________________________________________________________
+---
 
 ## Person Search (Elasticsearch)
 
@@ -16,19 +16,19 @@ GET /api/sportmanager.core/api\elasticsearchperson/search
 
 ### Query Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| searchConfiguration[propertyFilters][0][propertyName] | string | First filter property (e.g., "associationId") |
-| searchConfiguration[propertyFilters][0][text] | string | Search text for first filter |
-| searchConfiguration[propertyFilters][1][propertyName] | string | Second filter property (e.g., "firstName") |
-| searchConfiguration[propertyFilters][1][text] | string | Search text for second filter |
-| searchConfiguration[propertyFilters][2][propertyName] | string | Third filter property (e.g., "lastName") |
-| searchConfiguration[propertyFilters][2][text] | string | Search text for third filter |
-| searchConfiguration[propertyFilters][3][propertyName] | string | Fourth filter property (e.g., "yearOfBirth") |
-| searchConfiguration[propertyFilters][3][text] | string | Search text for fourth filter |
-| searchConfiguration[offset] | integer | Pagination offset (default: 0) |
-| searchConfiguration[limit] | integer | Results per page (default: 50) |
-| propertyRenderConfiguration[] | array | Properties to include in response |
+| Parameter                                             | Type    | Description                                   |
+| ----------------------------------------------------- | ------- | --------------------------------------------- |
+| searchConfiguration[propertyFilters][0][propertyName] | string  | First filter property (e.g., "associationId") |
+| searchConfiguration[propertyFilters][0][text]         | string  | Search text for first filter                  |
+| searchConfiguration[propertyFilters][1][propertyName] | string  | Second filter property (e.g., "firstName")    |
+| searchConfiguration[propertyFilters][1][text]         | string  | Search text for second filter                 |
+| searchConfiguration[propertyFilters][2][propertyName] | string  | Third filter property (e.g., "lastName")      |
+| searchConfiguration[propertyFilters][2][text]         | string  | Search text for third filter                  |
+| searchConfiguration[propertyFilters][3][propertyName] | string  | Fourth filter property (e.g., "yearOfBirth")  |
+| searchConfiguration[propertyFilters][3][text]         | string  | Search text for fourth filter                 |
+| searchConfiguration[offset]                           | integer | Pagination offset (default: 0)                |
+| searchConfiguration[limit]                            | integer | Results per page (default: 50)                |
+| propertyRenderConfiguration[]                         | array   | Properties to include in response             |
 
 ### Example Request
 
@@ -102,7 +102,7 @@ Used for autocomplete in:
 - Finding coaches for nomination lists
 - General person lookup
 
-______________________________________________________________________
+---
 
 ## File Upload
 
@@ -118,9 +118,9 @@ POST /api/sportmanager.resourcemanagement/api\persistentresource/upload
 
 Content-Type: `multipart/form-data`
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| resource | file | The file to upload |
+| Parameter     | Type   | Description           |
+| ------------- | ------ | --------------------- |
+| resource      | file   | The file to upload    |
 | \_\_csrfToken | string | CSRF protection token |
 
 ### Example (using cURL)
@@ -168,14 +168,14 @@ Returns an array with the uploaded file resource(s).
 
 ### File Resource Properties
 
-| Property | Description |
-|----------|-------------|
-| \_\_identity | UUID to reference this file in other entities |
-| persistentResource | Internal resource details |
-| publicResourceUri | Public URL to access the file |
-| filename | Original filename |
-| mediaType | MIME type |
-| fileSize | Size in bytes |
+| Property           | Description                                   |
+| ------------------ | --------------------------------------------- |
+| \_\_identity       | UUID to reference this file in other entities |
+| persistentResource | Internal resource details                     |
+| publicResourceUri  | Public URL to access the file                 |
+| filename           | Original filename                             |
+| mediaType          | MIME type                                     |
+| fileSize           | Size in bytes                                 |
 
 ### After Upload
 
@@ -185,7 +185,7 @@ The returned `__identity` is used to attach the file to other entities:
 scoresheet[file][__identity]=<file-resource-uuid>
 ```
 
-______________________________________________________________________
+---
 
 ## Filter Settings
 
@@ -199,16 +199,16 @@ GET /api/sportmanager.core/api\filtersettings/listFilterSettingsForCurrentList
 
 ### Query Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
+| Parameter   | Type   | Description               |
+| ----------- | ------ | ------------------------- |
 | dataTableId | string | The data table identifier |
 
 ### Common Data Table IDs
 
-| ID | Used For |
-|----|----------|
-| editNominationList.indoorPlayerNominations | Current player nominations in list |
-| editNominationList.indoorPlayerNominationWhichCanBeAddedList | Available players to add |
+| ID                                                           | Used For                           |
+| ------------------------------------------------------------ | ---------------------------------- |
+| editNominationList.indoorPlayerNominations                   | Current player nominations in list |
+| editNominationList.indoorPlayerNominationWhichCanBeAddedList | Available players to add           |
 
 ### Example Request
 
@@ -242,7 +242,7 @@ Used to restore user's preferred:
 - Sort order
 - Filter presets
 
-______________________________________________________________________
+---
 
 ## Notes
 

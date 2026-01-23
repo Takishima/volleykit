@@ -1,31 +1,31 @@
 ---
-import BaseLayout from './BaseLayout.astro';
-import Header from '../components/Header.astro';
-import Sidebar from '../components/Sidebar.astro';
-import MobileNav from '../components/MobileNav.astro';
-import Footer from '../components/Footer.astro';
-import Breadcrumbs from '../components/Breadcrumbs.astro';
-import NextPrev from '../components/NextPrev.astro';
-import { getPageNavigation, getBreadcrumbs } from '../utils/navigation';
+import BaseLayout from './BaseLayout.astro'
+import Header from '../components/Header.astro'
+import Sidebar from '../components/Sidebar.astro'
+import MobileNav from '../components/MobileNav.astro'
+import Footer from '../components/Footer.astro'
+import Breadcrumbs from '../components/Breadcrumbs.astro'
+import NextPrev from '../components/NextPrev.astro'
+import { getPageNavigation, getBreadcrumbs } from '../utils/navigation'
 
 interface BreadcrumbItem {
-  label: string;
-  href?: string;
+  label: string
+  href?: string
 }
 
 interface NavLink {
-  title: string;
-  href: string;
+  title: string
+  href: string
 }
 
 interface Props {
-  title: string;
-  description?: string;
-  breadcrumbs?: BreadcrumbItem[];
-  prev?: NavLink;
-  next?: NavLink;
+  title: string
+  description?: string
+  breadcrumbs?: BreadcrumbItem[]
+  prev?: NavLink
+  next?: NavLink
   /** Set to false to disable auto-generated prev/next navigation */
-  showNavigation?: boolean;
+  showNavigation?: boolean
 }
 
 const {
@@ -35,15 +35,15 @@ const {
   prev: customPrev,
   next: customNext,
   showNavigation = true,
-} = Astro.props;
+} = Astro.props
 
 // Auto-generate breadcrumbs if not provided
-const breadcrumbs = customBreadcrumbs ?? getBreadcrumbs(Astro.url.pathname, title);
+const breadcrumbs = customBreadcrumbs ?? getBreadcrumbs(Astro.url.pathname, title)
 
 // Auto-generate prev/next if not provided and navigation is enabled
-const autoNav = showNavigation ? getPageNavigation(Astro.url.pathname) : {};
-const prev = customPrev ?? autoNav.prev;
-const next = customNext ?? autoNav.next;
+const autoNav = showNavigation ? getPageNavigation(Astro.url.pathname) : {}
+const prev = customPrev ?? autoNav.prev
+const next = customNext ?? autoNav.next
 ---
 
 <BaseLayout title={title} description={description}>

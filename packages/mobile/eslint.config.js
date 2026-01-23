@@ -1,21 +1,17 @@
-import js from '@eslint/js';
-import tseslint from 'typescript-eslint';
-import reactPlugin from 'eslint-plugin-react';
-import reactHooksPlugin from 'eslint-plugin-react-hooks';
-import sonarjs from 'eslint-plugin-sonarjs';
-import importX from 'eslint-plugin-import-x';
-import security from 'eslint-plugin-security';
+import js from '@eslint/js'
+import tseslint from 'typescript-eslint'
+import reactPlugin from 'eslint-plugin-react'
+import reactHooksPlugin from 'eslint-plugin-react-hooks'
+import sonarjs from 'eslint-plugin-sonarjs'
+import importX from 'eslint-plugin-import-x'
+import security from 'eslint-plugin-security'
 
 export default tseslint.config(
   {
     ignores: ['node_modules/', 'dist/', 'ios/', 'android/', '.expo/', 'coverage/'],
   },
   {
-    extends: [
-      js.configs.recommended,
-      ...tseslint.configs.recommended,
-      sonarjs.configs.recommended,
-    ],
+    extends: [js.configs.recommended, ...tseslint.configs.recommended, sonarjs.configs.recommended],
     files: ['**/*.{ts,tsx}'],
     plugins: {
       react: reactPlugin,
@@ -55,13 +51,7 @@ export default tseslint.config(
       'import-x/order': [
         'warn',
         {
-          groups: [
-            'builtin',
-            'external',
-            'internal',
-            ['parent', 'sibling', 'index'],
-            'type',
-          ],
+          groups: ['builtin', 'external', 'internal', ['parent', 'sibling', 'index'], 'type'],
           'newlines-between': 'always',
           alphabetize: {
             order: 'asc',
@@ -134,4 +124,4 @@ export default tseslint.config(
       'import-x/order': 'off',
     },
   }
-);
+)

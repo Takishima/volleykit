@@ -32,34 +32,34 @@ export const COLORS = {
   sky500: '#0ea5e9',
   sky600: '#0284c7',
   purple600: '#9333ea',
-} as const;
+} as const
 
 /** Icon size for navigation tabs */
-export const TAB_ICON_SIZE = 24;
+export const TAB_ICON_SIZE = 24
 
 /** Standard icon size for settings rows */
-export const SETTINGS_ICON_SIZE = 24;
+export const SETTINGS_ICON_SIZE = 24
 
 /** Small icon size (chevrons, etc.) */
-export const SMALL_ICON_SIZE = 20;
+export const SMALL_ICON_SIZE = 20
 
 // === Biometric Authentication ===
 
 /** Storage key for biometric enabled preference */
-export const BIOMETRIC_ENABLED_KEY = 'biometric_enabled';
+export const BIOMETRIC_ENABLED_KEY = 'biometric_enabled'
 
 /** Maximum biometric authentication attempts before falling back to password */
-export const MAX_BIOMETRIC_ATTEMPTS = 3;
+export const MAX_BIOMETRIC_ATTEMPTS = 3
 
 /** Icon size for biometric prompt modal */
-export const BIOMETRIC_ICON_SIZE = 64;
+export const BIOMETRIC_ICON_SIZE = 64
 
 // === Calendar ===
 
 /** Storage key for calendar settings */
-export const CALENDAR_SETTINGS_KEY = 'calendar_settings';
+export const CALENDAR_SETTINGS_KEY = 'calendar_settings'
 
 // === API ===
 
 /** Session token header name used by the Cloudflare Worker for iOS Safari PWA */
-export const SESSION_TOKEN_HEADER = 'X-Session-Token';
+export const SESSION_TOKEN_HEADER = 'X-Session-Token'

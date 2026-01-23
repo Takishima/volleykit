@@ -5,36 +5,41 @@
  * for upcoming assignments using expo-task-manager.
  */
 
-import * as TaskManager from 'expo-task-manager';
+import * as TaskManager from 'expo-task-manager'
 
-import { scheduleReminderNotification, cancelReminderNotification } from './notification-scheduler';
-import { calculateRoute, isOjpConfigured, RouteCalculationError } from './route-calculator';
-import { isNearVenue, shouldSendDepartureNotification, clusterNearbyVenues, type AssignmentWithVenue } from './venue-proximity';
-import { location } from '../../platform/location';
-import { storage } from '../../platform/storage';
-import { departureRemindersStore } from '../../stores/departureReminders';
-import { departureReminderSettingsStore } from '../../stores/departureReminderSettings';
+import { scheduleReminderNotification, cancelReminderNotification } from './notification-scheduler'
+import { calculateRoute, isOjpConfigured, RouteCalculationError } from './route-calculator'
+import {
+  isNearVenue,
+  shouldSendDepartureNotification,
+  clusterNearbyVenues,
+  type AssignmentWithVenue,
+} from './venue-proximity'
+import { location } from '../../platform/location'
+import { storage } from '../../platform/storage'
+import { departureRemindersStore } from '../../stores/departureReminders'
+import { departureReminderSettingsStore } from '../../stores/departureReminderSettings'
 
-import type { Coordinates, DepartureReminder, VenueCluster } from '../../types/departureReminder';
+import type { Coordinates, DepartureReminder, VenueCluster } from '../../types/departureReminder'
 
 /** Task name for the departure reminder background task */
-export const DEPARTURE_REMINDER_TASK_NAME = 'VOLLEYKIT_DEPARTURE_REMINDER_TASK';
+export const DEPARTURE_REMINDER_TASK_NAME = 'VOLLEYKIT_DEPARTURE_REMINDER_TASK'
 
 /** How far ahead to look for assignments (6 hours in ms) */
-const LOOKAHEAD_WINDOW_MS = 6 * 60 * 60 * 1000;
+const LOOKAHEAD_WINDOW_MS = 6 * 60 * 60 * 1000
 
 /** Fallback travel time estimate in minutes when route calculation fails */
-const FALLBACK_TRAVEL_ESTIMATE_MINUTES = 45;
+const FALLBACK_TRAVEL_ESTIMATE_MINUTES = 45
 
 /**
  * Assignment data needed for departure reminders.
  */
 export interface UpcomingAssignment {
-  id: string;
-  gameTime: string;
-  venueName: string;
-  venueLocation: Coordinates;
-  venueAddress?: string;
+  id: string
+  gameTime: string
+  venueName: string
+  venueLocation: Coordinates
+  venueAddress?: string
 }
 
 /**
@@ -42,17 +47,17 @@ export interface UpcomingAssignment {
  * This should be implemented to fetch assignments from the app's data layer.
  */
 export interface AssignmentProvider {
-  getUpcomingAssignments(withinMs: number): Promise<UpcomingAssignment[]>;
+  getUpcomingAssignments(withinMs: number): Promise<UpcomingAssignment[]>
 }
 
 /** Registered assignment provider */
-let assignmentProvider: AssignmentProvider | null = null;
+let assignmentProvider: AssignmentProvider | null = null
 
 /**
  * Register the assignment provider for the background task.
  */
 export function registerAssignmentProvider(provider: AssignmentProvider): void {
-  assignmentProvider = provider;
+  assignmentProvider = provider
 }
 
 /**
@@ -62,18 +67,18 @@ export function registerAssignmentProvider(provider: AssignmentProvider): void {
 export function defineBackgroundTask(): void {
   TaskManager.defineTask(DEPARTURE_REMINDER_TASK_NAME, async () => {
     try {
-      await runDepartureReminderCheck();
+      await runDepartureReminderCheck()
     } catch (error) {
-      console.error('Departure reminder task error:', error);
+      console.error('Departure reminder task error:', error)
     }
-  });
+  })
 }
 
 /**
  * Check if the background task is registered.
  */
 export async function isTaskRegistered(): Promise<boolean> {
-  return TaskManager.isTaskRegisteredAsync(DEPARTURE_REMINDER_TASK_NAME);
+  return TaskManager.isTaskRegisteredAsync(DEPARTURE_REMINDER_TASK_NAME)
 }
 
 /**
@@ -82,44 +87,44 @@ export async function isTaskRegistered(): Promise<boolean> {
  */
 export async function startBackgroundTask(): Promise<void> {
   // Check if feature is enabled
-  const settings = await departureReminderSettingsStore.loadSettings(storage);
+  const settings = await departureReminderSettingsStore.loadSettings(storage)
   if (!settings.enabled) {
-    console.log('Departure reminders disabled, not starting task');
-    return;
+    console.log('Departure reminders disabled, not starting task')
+    return
   }
 
   // Check for assignments
   if (!assignmentProvider) {
-    console.log('No assignment provider registered');
-    return;
+    console.log('No assignment provider registered')
+    return
   }
 
-  const assignments = await assignmentProvider.getUpcomingAssignments(LOOKAHEAD_WINDOW_MS);
+  const assignments = await assignmentProvider.getUpcomingAssignments(LOOKAHEAD_WINDOW_MS)
   if (assignments.length === 0) {
-    console.log('No upcoming assignments, not starting task');
-    return;
+    console.log('No upcoming assignments, not starting task')
+    return
   }
 
   // Check permissions
-  const hasBgPermissions = await location.hasBackgroundPermissions();
+  const hasBgPermissions = await location.hasBackgroundPermissions()
   if (!hasBgPermissions) {
-    console.log('No background location permissions');
-    return;
+    console.log('No background location permissions')
+    return
   }
 
   // Start location tracking with balanced accuracy
   // Settings are configured in location.ts
-  await location.startBackgroundTracking();
+  await location.startBackgroundTracking()
 
-  departureRemindersStore.setTracking(true);
+  departureRemindersStore.setTracking(true)
 }
 
 /**
  * Stop the background task.
  */
 export async function stopBackgroundTask(): Promise<void> {
-  await location.stopBackgroundTracking();
-  departureRemindersStore.setTracking(false);
+  await location.stopBackgroundTracking()
+  departureRemindersStore.setTracking(false)
 }
 
 /**
@@ -128,48 +133,48 @@ export async function stopBackgroundTask(): Promise<void> {
  */
 export async function runDepartureReminderCheck(): Promise<void> {
   // Verify feature is still enabled
-  const settings = await departureReminderSettingsStore.loadSettings(storage);
+  const settings = await departureReminderSettingsStore.loadSettings(storage)
   if (!settings.enabled) {
-    await stopBackgroundTask();
-    return;
+    await stopBackgroundTask()
+    return
   }
 
   // Get current location
-  let userLocation: Coordinates;
+  let userLocation: Coordinates
   try {
-    const currentLocation = await location.getCurrentLocation();
+    const currentLocation = await location.getCurrentLocation()
     if (!currentLocation) {
-      console.log('Could not get current location');
+      console.log('Could not get current location')
       // Fallback behavior: schedule time-based reminders without route info
-      await scheduleTimeBasedReminders();
-      return;
+      await scheduleTimeBasedReminders()
+      return
     }
-    userLocation = currentLocation;
-    departureRemindersStore.updateLocation(userLocation);
+    userLocation = currentLocation
+    departureRemindersStore.updateLocation(userLocation)
   } catch (error) {
-    console.error('Failed to get location:', error);
+    console.error('Failed to get location:', error)
     // Fallback behavior: schedule time-based reminders without route info
-    await scheduleTimeBasedReminders();
-    return;
+    await scheduleTimeBasedReminders()
+    return
   }
 
   // Get upcoming assignments
-  if (!assignmentProvider) return;
-  const assignments = await assignmentProvider.getUpcomingAssignments(LOOKAHEAD_WINDOW_MS);
+  if (!assignmentProvider) return
+  const assignments = await assignmentProvider.getUpcomingAssignments(LOOKAHEAD_WINDOW_MS)
 
   if (assignments.length === 0) {
     // No assignments in window, stop tracking
-    await stopBackgroundTask();
-    return;
+    await stopBackgroundTask()
+    return
   }
 
   // Check each assignment
   for (const assignment of assignments) {
-    await processAssignment(assignment, userLocation, settings.bufferMinutes);
+    await processAssignment(assignment, userLocation, settings.bufferMinutes)
   }
 
   // Cleanup past reminders
-  departureRemindersStore.cleanupPastReminders(new Date());
+  departureRemindersStore.cleanupPastReminders(new Date())
 }
 
 /**
@@ -183,38 +188,34 @@ async function processAssignment(
   // Check if already near venue (suppress notification per FR-024)
   if (!shouldSendDepartureNotification(userLocation, assignment.venueLocation)) {
     // Cancel any existing notification
-    const existing = departureRemindersStore.getReminder(assignment.id);
+    const existing = departureRemindersStore.getReminder(assignment.id)
     if (existing?.notificationId) {
-      await cancelReminderNotification(existing.notificationId);
-      departureRemindersStore.removeReminder(assignment.id);
+      await cancelReminderNotification(existing.notificationId)
+      departureRemindersStore.removeReminder(assignment.id)
     }
-    return;
+    return
   }
 
   // Check if we already have a recent reminder
-  const existing = departureRemindersStore.getReminder(assignment.id);
+  const existing = departureRemindersStore.getReminder(assignment.id)
   if (existing) {
     // Check if location changed significantly (>200m)
-    const locationChanged = !isNearVenue(userLocation, existing.userLocation, 200);
+    const locationChanged = !isNearVenue(userLocation, existing.userLocation, 200)
     if (!locationChanged) {
       // Skip recalculation if location hasn't changed much
-      return;
+      return
     }
   }
 
   // Calculate route
-  const gameTime = new Date(assignment.gameTime);
-  const targetArrivalTime = new Date(gameTime.getTime() - bufferMinutes * 60 * 1000);
+  const gameTime = new Date(assignment.gameTime)
+  const targetArrivalTime = new Date(gameTime.getTime() - bufferMinutes * 60 * 1000)
 
-  let reminder: DepartureReminder;
+  let reminder: DepartureReminder
 
   if (isOjpConfigured()) {
     try {
-      const route = await calculateRoute(
-        userLocation,
-        assignment.venueLocation,
-        targetArrivalTime
-      );
+      const route = await calculateRoute(userLocation, assignment.venueLocation, targetArrivalTime)
 
       reminder = {
         assignmentId: assignment.id,
@@ -229,32 +230,32 @@ async function processAssignment(
         route: route.legs,
         notificationScheduledAt: null,
         notificationId: null,
-      };
+      }
     } catch (error) {
       if (error instanceof RouteCalculationError) {
         // Use fallback reminder without route info
-        reminder = createFallbackReminder(assignment, userLocation, bufferMinutes);
+        reminder = createFallbackReminder(assignment, userLocation, bufferMinutes)
       } else {
-        throw error;
+        throw error
       }
     }
   } else {
     // OJP not configured, use fallback
-    reminder = createFallbackReminder(assignment, userLocation, bufferMinutes);
+    reminder = createFallbackReminder(assignment, userLocation, bufferMinutes)
   }
 
   // Store reminder
-  departureRemindersStore.upsertReminder(reminder);
+  departureRemindersStore.upsertReminder(reminder)
 
   // Schedule notification if not already scheduled
   if (!reminder.notificationId) {
-    const notificationId = await scheduleReminderNotification(reminder, bufferMinutes);
+    const notificationId = await scheduleReminderNotification(reminder, bufferMinutes)
     if (notificationId) {
       departureRemindersStore.upsertReminder({
         ...reminder,
         notificationId,
         notificationScheduledAt: new Date().toISOString(),
-      });
+      })
     }
   }
 }
@@ -267,10 +268,12 @@ function createFallbackReminder(
   userLocation: Coordinates,
   bufferMinutes: number
 ): DepartureReminder {
-  const gameTime = new Date(assignment.gameTime);
+  const gameTime = new Date(assignment.gameTime)
   // Use fallback travel time estimate when route calculation is unavailable
-  const estimatedTravelMinutes = FALLBACK_TRAVEL_ESTIMATE_MINUTES;
-  const departureTime = new Date(gameTime.getTime() - (estimatedTravelMinutes + bufferMinutes) * 60 * 1000);
+  const estimatedTravelMinutes = FALLBACK_TRAVEL_ESTIMATE_MINUTES
+  const departureTime = new Date(
+    gameTime.getTime() - (estimatedTravelMinutes + bufferMinutes) * 60 * 1000
+  )
 
   return {
     assignmentId: assignment.id,
@@ -289,38 +292,34 @@ function createFallbackReminder(
     route: [],
     notificationScheduledAt: null,
     notificationId: null,
-  };
+  }
 }
 
 /**
  * Schedule time-based reminders when location is unavailable.
  */
 async function scheduleTimeBasedReminders(): Promise<void> {
-  if (!assignmentProvider) return;
+  if (!assignmentProvider) return
 
-  const settings = await departureReminderSettingsStore.loadSettings(storage);
-  const assignments = await assignmentProvider.getUpcomingAssignments(LOOKAHEAD_WINDOW_MS);
+  const settings = await departureReminderSettingsStore.loadSettings(storage)
+  const assignments = await assignmentProvider.getUpcomingAssignments(LOOKAHEAD_WINDOW_MS)
 
   for (const assignment of assignments) {
-    const existing = departureRemindersStore.getReminder(assignment.id);
-    if (existing?.notificationId) continue; // Already scheduled
+    const existing = departureRemindersStore.getReminder(assignment.id)
+    if (existing?.notificationId) continue // Already scheduled
 
-    const fallbackLocation: Coordinates = { latitude: 0, longitude: 0 };
-    const reminder = createFallbackReminder(
-      assignment,
-      fallbackLocation,
-      settings.bufferMinutes
-    );
+    const fallbackLocation: Coordinates = { latitude: 0, longitude: 0 }
+    const reminder = createFallbackReminder(assignment, fallbackLocation, settings.bufferMinutes)
 
-    departureRemindersStore.upsertReminder(reminder);
+    departureRemindersStore.upsertReminder(reminder)
 
-    const notificationId = await scheduleReminderNotification(reminder, settings.bufferMinutes);
+    const notificationId = await scheduleReminderNotification(reminder, settings.bufferMinutes)
     if (notificationId) {
       departureRemindersStore.upsertReminder({
         ...reminder,
         notificationId,
         notificationScheduledAt: new Date().toISOString(),
-      });
+      })
     }
   }
 }
@@ -337,7 +336,7 @@ export async function processClusteredAssignments(
     venueName: a.venueName,
     venueLocation: a.venueLocation,
     gameTime: a.gameTime,
-  }));
+  }))
 
-  return clusterNearbyVenues(assignmentsWithVenue);
+  return clusterNearbyVenues(assignmentsWithVenue)
 }

@@ -4,4 +4,4 @@
  * Exports adapter interfaces and factory functions
  */
 
-export * from './storage';
+export * from './storage'

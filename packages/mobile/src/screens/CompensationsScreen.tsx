@@ -4,7 +4,7 @@
  * Displays referee compensation records fetched via the shared useCompensations hook.
  */
 
-import { useCallback } from 'react';
+import { useCallback } from 'react'
 
 import {
   View,
@@ -13,17 +13,17 @@ import {
   RefreshControl,
   ActivityIndicator,
   TouchableOpacity,
-} from 'react-native';
+} from 'react-native'
 
-import type { CompensationRecord } from '@volleykit/shared/api';
-import { useCompensations } from '@volleykit/shared/hooks';
-import { useTranslation, type TranslationKey } from '@volleykit/shared/i18n';
+import type { CompensationRecord } from '@volleykit/shared/api'
+import { useCompensations } from '@volleykit/shared/hooks'
+import { useTranslation, type TranslationKey } from '@volleykit/shared/i18n'
 
-import { useApiClient } from '../contexts';
+import { useApiClient } from '../contexts'
 
-import type { MainTabScreenProps } from '../navigation/types';
+import type { MainTabScreenProps } from '../navigation/types'
 
-type Props = MainTabScreenProps<'Compensations'>;
+type Props = MainTabScreenProps<'Compensations'>
 
 /**
  * Get display data from a compensation record.
@@ -32,32 +32,32 @@ function getCompensationDisplay(
   record: CompensationRecord,
   tbd: string
 ): {
-  id: string;
-  game: string;
-  amount: string;
-  status: 'paid' | 'pending';
+  id: string
+  game: string
+  amount: string
+  status: 'paid' | 'pending'
 } {
-  const game = record.refereeGame?.game;
-  const homeTeam = game?.teamHome?.name ?? tbd;
-  const awayTeam = game?.teamAway?.name ?? tbd;
-  const compensation = record.convocationCompensation;
+  const game = record.refereeGame?.game
+  const homeTeam = game?.teamHome?.name ?? tbd
+  const awayTeam = game?.teamAway?.name ?? tbd
+  const compensation = record.convocationCompensation
 
   // Calculate total compensation
-  const gameComp = compensation?.gameCompensation ?? 0;
-  const travelExp = compensation?.travelExpenses ?? 0;
-  const total = gameComp + travelExp;
+  const gameComp = compensation?.gameCompensation ?? 0
+  const travelExp = compensation?.travelExpenses ?? 0
+  const total = gameComp + travelExp
 
   return {
     id: record.__identity,
     game: `${homeTeam} vs ${awayTeam}`,
     amount: total.toFixed(2),
     status: compensation?.paymentDone ? 'paid' : 'pending',
-  };
+  }
 }
 
 export function CompensationsScreen(_props: Props) {
-  const { t } = useTranslation();
-  const apiClient = useApiClient();
+  const { t } = useTranslation()
+  const apiClient = useApiClient()
 
   const {
     data: compensations = [],
@@ -69,11 +69,11 @@ export function CompensationsScreen(_props: Props) {
   } = useCompensations({
     apiClient,
     status: 'all',
-  });
+  })
 
   const onRefresh = useCallback(() => {
-    refetch();
-  }, [refetch]);
+    refetch()
+  }, [refetch])
 
   // Loading state
   if (isLoading) {
@@ -81,16 +81,14 @@ export function CompensationsScreen(_props: Props) {
       <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" accessibilityLabel={t('common.loading')} />
       </View>
-    );
+    )
   }
 
   // Error state
   if (isError) {
     return (
       <View className="flex-1 items-center justify-center px-6">
-        <Text className="text-red-600 text-center mb-4">
-          {error?.message ?? t('common.error')}
-        </Text>
+        <Text className="text-red-600 text-center mb-4">{error?.message ?? t('common.error')}</Text>
         <TouchableOpacity
           className="bg-primary-600 rounded-lg px-6 py-3"
           onPress={() => refetch()}
@@ -100,7 +98,7 @@ export function CompensationsScreen(_props: Props) {
           <Text className="text-white font-medium">{t('common.retry')}</Text>
         </TouchableOpacity>
       </View>
-    );
+    )
   }
 
   // Empty state
@@ -109,7 +107,7 @@ export function CompensationsScreen(_props: Props) {
       <View className="flex-1 items-center justify-center px-6">
         <Text className="text-gray-600 text-center">{t('compensations.noCompensations')}</Text>
       </View>
-    );
+    )
   }
 
   return (
@@ -122,7 +120,7 @@ export function CompensationsScreen(_props: Props) {
         <RefreshControl refreshing={isFetching && !isLoading} onRefresh={onRefresh} />
       }
       renderItem={({ item }) => {
-        const display = getCompensationDisplay(item, t('common.tbd'));
+        const display = getCompensationDisplay(item, t('common.tbd'))
 
         return (
           <View className="bg-white rounded-lg p-4 shadow-sm">
@@ -134,8 +132,8 @@ export function CompensationsScreen(_props: Props) {
               {t(`compensations.${display.status}` as TranslationKey)}
             </Text>
           </View>
-        );
+        )
       }}
     />
-  );
+  )
 }

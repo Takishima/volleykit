@@ -28,6 +28,7 @@ bash -c 'BRANCH=$(git rev-parse --abbrev-ref HEAD); REMOTE=$(git remote get-url 
 ### Step 3a: Create PR (if none exists)
 
 Generate title and body from commits:
+
 - Title: Conventional commit format (e.g., `feat(scope): description`)
 - Body: `## Summary` (bullet points) + `## Test plan` (checklist)
 
@@ -89,9 +90,10 @@ Record any failed checks (`conclusion: "failure"`) to address in Step 9.
 
 From the review comment body, find the `### Issues Found` section.
 
-Format: `1. **\`file.ts:123\` - Description**`
+Format: `1. **\`file.ts:123\` - Description\*\*`
 
 For each issue:
+
 1. Read the file at the specified line
 2. Understand and implement the fix
 3. Move to next issue
@@ -118,21 +120,25 @@ If CI was failing in Step 6, fix those issues now:
 2. Reproduce the failure locally by running the relevant commands based on the failed check:
 
 **For web-app failures:**
+
 ```bash
 cd web-app && npm run lint && npm test && npm run build
 ```
 
 **For shared library failures:**
+
 ```bash
 cd packages/shared && npm run lint && npm test && npm run build
 ```
 
 **For mobile app failures:**
+
 ```bash
 cd packages/mobile && npm run typecheck && npm run lint && npm test
 ```
 
 **For worker failures:**
+
 ```bash
 cd worker && npm run lint && npm test
 ```

@@ -4,54 +4,45 @@
  * Uses AsyncStorage to persist and retrieve cached data with metadata.
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
-import { DEFAULT_CACHE_CONFIG, getCacheStatus } from '../types/cache';
+import { DEFAULT_CACHE_CONFIG, getCacheStatus } from '../types/cache'
 
-import type {
-  CachedData,
-  CacheMetadata,
-  CacheKey,
-  CacheConfig,
-} from '../types/cache';
+import type { CachedData, CacheMetadata, CacheKey, CacheConfig } from '../types/cache'
 
 /**
  * Cache service interface.
  */
 export interface CacheService {
   /** Save data to cache */
-  save<T>(key: CacheKey, data: T, ttlMs?: number): Promise<void>;
+  save<T>(key: CacheKey, data: T, ttlMs?: number): Promise<void>
   /** Load data from cache */
-  load<T>(key: CacheKey): Promise<CachedData<T> | null>;
+  load<T>(key: CacheKey): Promise<CachedData<T> | null>
   /** Get cache metadata without loading data */
-  getMetadata(key: CacheKey): Promise<CacheMetadata | null>;
+  getMetadata(key: CacheKey): Promise<CacheMetadata | null>
   /** Check if cache is valid (not expired) */
-  isValid(key: CacheKey): Promise<boolean>;
+  isValid(key: CacheKey): Promise<boolean>
   /** Clear specific cache entry */
-  clear(key: CacheKey): Promise<void>;
+  clear(key: CacheKey): Promise<void>
   /** Clear all cache entries */
-  clearAll(): Promise<void>;
+  clearAll(): Promise<void>
   /** Get total cache size */
-  getCacheSize(): Promise<number>;
+  getCacheSize(): Promise<number>
 }
 
 /**
  * Create a cache entry.
  */
-function createCacheEntry<T>(
-  data: T,
-  config: CacheConfig,
-  ttlMs?: number
-): CachedData<T> {
-  const now = new Date();
-  const expiresAt = new Date(now.getTime() + (ttlMs ?? config.defaultTtlMs));
+function createCacheEntry<T>(data: T, config: CacheConfig, ttlMs?: number): CachedData<T> {
+  const now = new Date()
+  const expiresAt = new Date(now.getTime() + (ttlMs ?? config.defaultTtlMs))
 
   return {
     data,
     cachedAt: now.toISOString(),
     expiresAt: expiresAt.toISOString(),
     version: config.version,
-  };
+  }
 }
 
 /**
@@ -64,19 +55,19 @@ async function save<T>(
   config: CacheConfig = DEFAULT_CACHE_CONFIG
 ): Promise<void> {
   try {
-    const cacheEntry = createCacheEntry(data, config, ttlMs);
-    const jsonString = JSON.stringify(cacheEntry);
+    const cacheEntry = createCacheEntry(data, config, ttlMs)
+    const jsonString = JSON.stringify(cacheEntry)
 
     // Check size limit
-    const sizeBytes = new Blob([jsonString]).size;
+    const sizeBytes = new Blob([jsonString]).size
     if (sizeBytes > config.maxSizeBytes) {
-      console.warn(`Cache entry for ${key} exceeds size limit, skipping`);
-      return;
+      console.warn(`Cache entry for ${key} exceeds size limit, skipping`)
+      return
     }
 
-    await AsyncStorage.setItem(key, jsonString);
+    await AsyncStorage.setItem(key, jsonString)
   } catch (error) {
-    console.error(`Failed to save cache for ${key}:`, error);
+    console.error(`Failed to save cache for ${key}:`, error)
   }
 }
 
@@ -88,21 +79,21 @@ async function load<T>(
   config: CacheConfig = DEFAULT_CACHE_CONFIG
 ): Promise<CachedData<T> | null> {
   try {
-    const jsonString = await AsyncStorage.getItem(key);
-    if (!jsonString) return null;
+    const jsonString = await AsyncStorage.getItem(key)
+    if (!jsonString) return null
 
-    const cacheEntry = JSON.parse(jsonString) as CachedData<T>;
+    const cacheEntry = JSON.parse(jsonString) as CachedData<T>
 
     // Check version - invalidate if version mismatch
     if (cacheEntry.version !== config.version) {
-      await clear(key);
-      return null;
+      await clear(key)
+      return null
     }
 
-    return cacheEntry;
+    return cacheEntry
   } catch (error) {
-    console.error(`Failed to load cache for ${key}:`, error);
-    return null;
+    console.error(`Failed to load cache for ${key}:`, error)
+    return null
   }
 }
 
@@ -114,14 +105,14 @@ async function getMetadata(
   config: CacheConfig = DEFAULT_CACHE_CONFIG
 ): Promise<CacheMetadata | null> {
   try {
-    const jsonString = await AsyncStorage.getItem(key);
-    if (!jsonString) return null;
+    const jsonString = await AsyncStorage.getItem(key)
+    if (!jsonString) return null
 
-    const cacheEntry = JSON.parse(jsonString) as CachedData<unknown>;
+    const cacheEntry = JSON.parse(jsonString) as CachedData<unknown>
 
     // Check version
     if (cacheEntry.version !== config.version) {
-      return null;
+      return null
     }
 
     return {
@@ -129,9 +120,9 @@ async function getMetadata(
       expiresAt: cacheEntry.expiresAt,
       version: cacheEntry.version,
       sizeBytes: new Blob([jsonString]).size,
-    };
+    }
   } catch {
-    return null;
+    return null
   }
 }
 
@@ -139,9 +130,9 @@ async function getMetadata(
  * Check if cache is valid (not expired).
  */
 async function isValid(key: CacheKey): Promise<boolean> {
-  const metadata = await getMetadata(key);
-  const status = getCacheStatus(metadata);
-  return status !== 'expired' && status !== 'missing';
+  const metadata = await getMetadata(key)
+  const status = getCacheStatus(metadata)
+  return status !== 'expired' && status !== 'missing'
 }
 
 /**
@@ -149,9 +140,9 @@ async function isValid(key: CacheKey): Promise<boolean> {
  */
 async function clear(key: CacheKey): Promise<void> {
   try {
-    await AsyncStorage.removeItem(key);
+    await AsyncStorage.removeItem(key)
   } catch (error) {
-    console.error(`Failed to clear cache for ${key}:`, error);
+    console.error(`Failed to clear cache for ${key}:`, error)
   }
 }
 
@@ -160,11 +151,11 @@ async function clear(key: CacheKey): Promise<void> {
  */
 async function clearAll(): Promise<void> {
   try {
-    const allKeys = await AsyncStorage.getAllKeys();
-    const cacheKeys = allKeys.filter((key) => key.startsWith('cache_'));
-    await AsyncStorage.multiRemove(cacheKeys);
+    const allKeys = await AsyncStorage.getAllKeys()
+    const cacheKeys = allKeys.filter((key) => key.startsWith('cache_'))
+    await AsyncStorage.multiRemove(cacheKeys)
   } catch (error) {
-    console.error('Failed to clear all cache:', error);
+    console.error('Failed to clear all cache:', error)
   }
 }
 
@@ -173,21 +164,21 @@ async function clearAll(): Promise<void> {
  */
 async function getCacheSize(): Promise<number> {
   try {
-    const allKeys = await AsyncStorage.getAllKeys();
-    const cacheKeys = allKeys.filter((key) => key.startsWith('cache_'));
-    const items = await AsyncStorage.multiGet(cacheKeys);
+    const allKeys = await AsyncStorage.getAllKeys()
+    const cacheKeys = allKeys.filter((key) => key.startsWith('cache_'))
+    const items = await AsyncStorage.multiGet(cacheKeys)
 
-    let totalSize = 0;
+    let totalSize = 0
     for (const item of items) {
-      const value = item[1];
+      const value = item[1]
       if (value) {
-        totalSize += new Blob([value]).size;
+        totalSize += new Blob([value]).size
       }
     }
 
-    return totalSize;
+    return totalSize
   } catch {
-    return 0;
+    return 0
   }
 }
 
@@ -202,4 +193,4 @@ export const cacheService: CacheService = {
   clear,
   clearAll,
   getCacheSize,
-};
+}

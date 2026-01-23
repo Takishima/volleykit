@@ -5,20 +5,20 @@
  * Reminders are cleared after assignment completion.
  */
 
-import type { DepartureReminder, Coordinates } from '../types/departureReminder';
+import type { DepartureReminder, Coordinates } from '../types/departureReminder'
 
 /**
  * Departure reminders state.
  */
 export interface DepartureRemindersState {
   /** Active reminders keyed by assignment ID */
-  reminders: Map<string, DepartureReminder>;
+  reminders: Map<string, DepartureReminder>
   /** Last known user location */
-  lastKnownLocation: Coordinates | null;
+  lastKnownLocation: Coordinates | null
   /** Last location update timestamp */
-  locationUpdatedAt: string | null;
+  locationUpdatedAt: string | null
   /** Whether location tracking is active */
-  isTracking: boolean;
+  isTracking: boolean
 }
 
 /**
@@ -29,24 +29,24 @@ const initialState: DepartureRemindersState = {
   lastKnownLocation: null,
   locationUpdatedAt: null,
   isTracking: false,
-};
+}
 
 /**
  * In-memory state (not persisted).
  */
-let state: DepartureRemindersState = { ...initialState };
+let state: DepartureRemindersState = { ...initialState }
 
 /**
  * State change listeners.
  */
-type Listener = (state: DepartureRemindersState) => void;
-const listeners = new Set<Listener>();
+type Listener = (state: DepartureRemindersState) => void
+const listeners = new Set<Listener>()
 
 /**
  * Notify all listeners of state change.
  */
 function notifyListeners(): void {
-  listeners.forEach((listener) => listener(state));
+  listeners.forEach((listener) => listener(state))
 }
 
 /**
@@ -54,81 +54,81 @@ function notifyListeners(): void {
  */
 export interface DepartureRemindersStore {
   /** Get current state */
-  getState(): DepartureRemindersState;
+  getState(): DepartureRemindersState
   /** Subscribe to state changes */
-  subscribe(listener: Listener): () => void;
+  subscribe(listener: Listener): () => void
   /** Add or update a reminder */
-  upsertReminder(reminder: DepartureReminder): void;
+  upsertReminder(reminder: DepartureReminder): void
   /** Remove a reminder by assignment ID */
-  removeReminder(assignmentId: string): void;
+  removeReminder(assignmentId: string): void
   /** Remove reminders for past assignments */
-  cleanupPastReminders(currentTime: Date): void;
+  cleanupPastReminders(currentTime: Date): void
   /** Get reminder for assignment */
-  getReminder(assignmentId: string): DepartureReminder | undefined;
+  getReminder(assignmentId: string): DepartureReminder | undefined
   /** Get all active reminders */
-  getActiveReminders(): DepartureReminder[];
+  getActiveReminders(): DepartureReminder[]
   /** Update user location */
-  updateLocation(location: Coordinates): void;
+  updateLocation(location: Coordinates): void
   /** Set tracking status */
-  setTracking(isTracking: boolean): void;
+  setTracking(isTracking: boolean): void
   /** Clear all reminders */
-  clearAll(): void;
+  clearAll(): void
   /** Reset to initial state */
-  reset(): void;
+  reset(): void
 }
 
 /**
  * Get current state.
  */
 function getState(): DepartureRemindersState {
-  return state;
+  return state
 }
 
 /**
  * Subscribe to state changes.
  */
 function subscribe(listener: Listener): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
+  listeners.add(listener)
+  return () => listeners.delete(listener)
 }
 
 /**
  * Add or update a reminder.
  */
 function upsertReminder(reminder: DepartureReminder): void {
-  const newReminders = new Map(state.reminders);
-  newReminders.set(reminder.assignmentId, reminder);
-  state = { ...state, reminders: newReminders };
-  notifyListeners();
+  const newReminders = new Map(state.reminders)
+  newReminders.set(reminder.assignmentId, reminder)
+  state = { ...state, reminders: newReminders }
+  notifyListeners()
 }
 
 /**
  * Remove a reminder by assignment ID.
  */
 function removeReminder(assignmentId: string): void {
-  const newReminders = new Map(state.reminders);
-  newReminders.delete(assignmentId);
-  state = { ...state, reminders: newReminders };
-  notifyListeners();
+  const newReminders = new Map(state.reminders)
+  newReminders.delete(assignmentId)
+  state = { ...state, reminders: newReminders }
+  notifyListeners()
 }
 
 /**
  * Remove reminders for past assignments.
  */
 function cleanupPastReminders(currentTime: Date): void {
-  const newReminders = new Map<string, DepartureReminder>();
-  const cutoffTime = currentTime.toISOString();
+  const newReminders = new Map<string, DepartureReminder>()
+  const cutoffTime = currentTime.toISOString()
 
   state.reminders.forEach((reminder, id) => {
     // Keep reminder if arrival time is in the future
     if (reminder.arrivalTime > cutoffTime) {
-      newReminders.set(id, reminder);
+      newReminders.set(id, reminder)
     }
-  });
+  })
 
   if (newReminders.size !== state.reminders.size) {
-    state = { ...state, reminders: newReminders };
-    notifyListeners();
+    state = { ...state, reminders: newReminders }
+    notifyListeners()
   }
 }
 
@@ -136,14 +136,14 @@ function cleanupPastReminders(currentTime: Date): void {
  * Get reminder for assignment.
  */
 function getReminder(assignmentId: string): DepartureReminder | undefined {
-  return state.reminders.get(assignmentId);
+  return state.reminders.get(assignmentId)
 }
 
 /**
  * Get all active reminders.
  */
 function getActiveReminders(): DepartureReminder[] {
-  return Array.from(state.reminders.values());
+  return Array.from(state.reminders.values())
 }
 
 /**
@@ -154,16 +154,16 @@ function updateLocation(location: Coordinates): void {
     ...state,
     lastKnownLocation: location,
     locationUpdatedAt: new Date().toISOString(),
-  };
-  notifyListeners();
+  }
+  notifyListeners()
 }
 
 /**
  * Set tracking status.
  */
 function setTracking(isTracking: boolean): void {
-  state = { ...state, isTracking };
-  notifyListeners();
+  state = { ...state, isTracking }
+  notifyListeners()
 }
 
 /**
@@ -173,8 +173,8 @@ function clearAll(): void {
   state = {
     ...state,
     reminders: new Map(),
-  };
-  notifyListeners();
+  }
+  notifyListeners()
 }
 
 /**
@@ -186,8 +186,8 @@ function reset(): void {
     lastKnownLocation: null,
     locationUpdatedAt: null,
     isTracking: false,
-  };
-  notifyListeners();
+  }
+  notifyListeners()
 }
 
 /**
@@ -205,4 +205,4 @@ export const departureRemindersStore: DepartureRemindersStore = {
   setTracking,
   clearAll,
   reset,
-};
+}

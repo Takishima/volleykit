@@ -18,7 +18,7 @@ When navigating to "Mon profil" (My Profile), multiple API calls are made to loa
 1. **Mentions légales/Conditions** - Legal notices/Terms
 1. **Données ARB** - Referee data (ARB = Arbitre)
 
-______________________________________________________________________
+---
 
 ## API Calls on Profile Load
 
@@ -93,7 +93,7 @@ GET ...person/showWithNestedObjects
 }
 ```
 
-______________________________________________________________________
+---
 
 ### 2. Get Indoor Referee by Active Person
 
@@ -146,35 +146,120 @@ x-powered-by: PHP/7.4.33
       "transportationMode": { "create": true, "read": true, "update": true, "required": false },
       "validated": { "create": true, "read": true, "update": true, "required": false },
       "hasPlusCode": { "create": true, "read": true, "update": true, "required": false },
-      "otherRefereeConvocationOnSameDay": { "create": true, "read": true, "update": true, "required": false },
+      "otherRefereeConvocationOnSameDay": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "required": false
+      },
       "refereeMutationStatus": { "create": true, "read": true, "update": true, "required": false },
-      "communicationAssociation": { "create": true, "read": true, "update": true, "required": false },
-      "primaryPaymentConnection": { "create": true, "read": true, "update": true, "required": false },
+      "communicationAssociation": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "required": false
+      },
+      "primaryPaymentConnection": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "required": false
+      },
       "paymentConnections": { "create": true, "read": true, "update": true, "required": false },
-      "indoorAssociationReferees": { "create": true, "read": true, "update": true, "required": false },
+      "indoorAssociationReferees": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "required": false
+      },
       "isInternationalReferee": { "create": true, "read": true, "update": true, "required": false },
-      "activeSeasonalRefereeData": { "create": true, "read": true, "update": true, "required": false },
-      "seasonalRefereeDataCollection": { "create": true, "read": true, "update": true, "required": false },
-      "numberOfPastActiveRefereeSeasonsUntil2022": { "create": true, "read": true, "update": true, "required": false },
-      "dateOfFirstRefereeCertification": { "create": true, "read": true, "update": true, "required": false },
-      "dateOfFirstInternationalRefereeCertification": { "create": true, "read": true, "update": true, "required": false },
+      "activeSeasonalRefereeData": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "required": false
+      },
+      "seasonalRefereeDataCollection": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "required": false
+      },
+      "numberOfPastActiveRefereeSeasonsUntil2022": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "required": false
+      },
+      "dateOfFirstRefereeCertification": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "required": false
+      },
+      "dateOfFirstInternationalRefereeCertification": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "required": false
+      },
       "linesmanCertifications": { "create": true, "read": true, "update": true, "required": false },
       "refereeCertifications": { "create": true, "read": true, "update": true, "required": false },
       "hasNotes": { "create": true, "read": true, "update": true, "required": false },
-      "hasSubmittedCollectionForm": { "create": true, "read": true, "update": true, "required": false },
-      "showPhoneNumberForTwintPaymentOnRefereeStatementOfExpenses": { "create": true, "read": true, "update": true, "required": false },
+      "hasSubmittedCollectionForm": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "required": false
+      },
+      "showPhoneNumberForTwintPaymentOnRefereeStatementOfExpenses": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "required": false
+      },
       "createdAt": { "create": true, "read": true, "update": true, "required": false },
       "createdBy": { "create": true, "read": true, "update": true, "required": false },
-      "createdByPersistenceIdentifier": { "create": true, "read": true, "update": true, "required": false },
+      "createdByPersistenceIdentifier": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "required": false
+      },
       "createdByIpAddress": { "create": true, "read": true, "update": true, "required": false },
       "updatedAt": { "create": true, "read": true, "update": true, "required": false },
       "updatedBy": { "create": true, "read": true, "update": true, "required": false },
-      "updatedByPersistenceIdentifier": { "create": true, "read": true, "update": true, "required": false },
+      "updatedByPersistenceIdentifier": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "required": false
+      },
       "updatedByIpAddress": { "create": true, "read": true, "update": true, "required": false },
-      "covid19CertificateAvailability": { "create": true, "read": true, "update": true, "required": false },
-      "covid19CertificateValidUntil": { "create": true, "read": true, "update": true, "required": false },
-      "lastCovid19VaccinationDate": { "create": true, "read": true, "update": true, "required": false },
-      "willingToGetTestedForCovid19Until": { "create": true, "read": true, "update": true, "required": false },
+      "covid19CertificateAvailability": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "required": false
+      },
+      "covid19CertificateValidUntil": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "required": false
+      },
+      "lastCovid19VaccinationDate": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "required": false
+      },
+      "willingToGetTestedForCovid19Until": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "required": false
+      },
       "notes": { "create": true, "read": true, "update": true, "required": false }
     }
   },
@@ -294,30 +379,31 @@ x-powered-by: PHP/7.4.33
 
 **Key Response Fields:**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `refereeInformation` | string | Formatted string: "Name (SV#, DOB, )" |
-| `transportationMode` | string | "car", "train", "public_transport", etc. |
-| `validated` | boolean | Whether referee profile is validated |
-| `isInternationalReferee` | boolean | International referee status |
-| `hasLinesmanCertification` | boolean | Linesman certification status |
-| `hasPlusCode` | boolean | Whether address has Plus Code geocoding |
-| `paymentConnections` | array | Bank accounts for compensation payments |
-| `mobilePhoneNumbers` | string | Formatted phone number |
-| `privatePostalAddresses` | string | Formatted address |
-| `showPhoneNumberForTwintPaymentOnRefereeStatementOfExpenses` | boolean | TWINT visibility setting |
-| `dateOfFirstRefereeCertification` | datetime | ISO 8601 timestamp |
+| Field                                                        | Type     | Description                              |
+| ------------------------------------------------------------ | -------- | ---------------------------------------- |
+| `refereeInformation`                                         | string   | Formatted string: "Name (SV#, DOB, )"    |
+| `transportationMode`                                         | string   | "car", "train", "public_transport", etc. |
+| `validated`                                                  | boolean  | Whether referee profile is validated     |
+| `isInternationalReferee`                                     | boolean  | International referee status             |
+| `hasLinesmanCertification`                                   | boolean  | Linesman certification status            |
+| `hasPlusCode`                                                | boolean  | Whether address has Plus Code geocoding  |
+| `paymentConnections`                                         | array    | Bank accounts for compensation payments  |
+| `mobilePhoneNumbers`                                         | string   | Formatted phone number                   |
+| `privatePostalAddresses`                                     | string   | Formatted address                        |
+| `showPhoneNumberForTwintPaymentOnRefereeStatementOfExpenses` | boolean  | TWINT visibility setting                 |
+| `dateOfFirstRefereeCertification`                            | datetime | ISO 8601 timestamp                       |
 
 **Payment Connection Structure:**
 
 Each payment connection includes:
+
 - `iban`: Bank account IBAN (formatted with spaces)
 - `payee`: Name on account
 - `isPrimaryPaymentConnection`: Primary account flag
 - `payeePostalAddress`: Full address with geocoding
 - `type`: "bank" or "postal"
 
-______________________________________________________________________
+---
 
 ### 3. Get Country List
 
@@ -329,7 +415,7 @@ GET /api/sportmanager.core/api\country
 
 **No parameters required.**
 
-______________________________________________________________________
+---
 
 ### 4. Check Referee Data Management Permission
 
@@ -341,7 +427,7 @@ GET /api/indoorvolleyball.refadmin/api\refereeassociationsettings/isRefereeDataM
 
 **No parameters required.**
 
-______________________________________________________________________
+---
 
 ### 5. Get Indoor Association Referee of Active Party
 
@@ -353,7 +439,7 @@ GET /api/indoorvolleyball.refadmin/api\indoorassociationreferee/getIndoorAssocia
 
 **No parameters required.**
 
-______________________________________________________________________
+---
 
 ### 6. Get Seasonal Referee Data
 
@@ -365,7 +451,7 @@ POST /api/indoorvolleyball.refadmin/api\indoorassociationrefereeseasonalrefereed
 
 **Request format:** Form-encoded with CSRF token
 
-______________________________________________________________________
+---
 
 ### 7. Get Referee Mandates by Managing Association
 
@@ -386,21 +472,21 @@ GET /api/indoorvolleyball.refadmin/api\refereemandate/getRefereeMandatesByManagi
 GET ...getRefereeMandatesByManagingAssociation?managingAssociation=<association-uuid>
 ```
 
-______________________________________________________________________
+---
 
 ## Personal Data Tab Fields
 
-| Field (FR) | Field (EN) | Editable | Example |
-|------------|------------|----------|---------|
-| Numéro SV | SV Number | No | 12345 |
-| Genre | Gender | No | masculin |
-| Prénom | First name | Yes | Jean |
-| Nom | Last name | Yes | Dupont |
-| Date de naissance | Birth date | No | 01.01.1990 |
-| Nationalité | Nationality | No | Suisse |
-| Langue de correspondance | Correspondence language | Yes | fr |
+| Field (FR)               | Field (EN)              | Editable | Example    |
+| ------------------------ | ----------------------- | -------- | ---------- |
+| Numéro SV                | SV Number               | No       | 12345      |
+| Genre                    | Gender                  | No       | masculin   |
+| Prénom                   | First name              | Yes      | Jean       |
+| Nom                      | Last name               | Yes      | Dupont     |
+| Date de naissance        | Birth date              | No       | 01.01.1990 |
+| Nationalité              | Nationality             | No       | Suisse     |
+| Langue de correspondance | Correspondence language | Yes      | fr         |
 
-______________________________________________________________________
+---
 
 ## Profile Picture
 
@@ -421,7 +507,7 @@ Actions available:
 - **add_photo_alternate** - Upload new photo
 - **delete** - Delete current photo
 
-______________________________________________________________________
+---
 
 ## Notes
 

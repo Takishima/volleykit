@@ -9,16 +9,16 @@
  * Application error interface with optional code and status.
  */
 export interface AppError {
-  message: string;
-  code?: string;
-  status?: number;
+  message: string
+  code?: string
+  status?: number
 }
 
 /**
  * Error classification type for error boundaries.
  * Network errors typically allow retry, while application errors may need a refresh.
  */
-export type ErrorType = 'network' | 'application';
+export type ErrorType = 'network' | 'application'
 
 /**
  * Classify an error as network-related or application-related.
@@ -28,8 +28,8 @@ export type ErrorType = 'network' | 'application';
  * @returns 'network' for network-related errors, 'application' for others
  */
 export function classifyError(error: Error): ErrorType {
-  const message = error.message.toLowerCase();
-  const name = error.name.toLowerCase();
+  const message = error.message.toLowerCase()
+  const name = error.name.toLowerCase()
 
   // Network-related errors
   if (
@@ -42,10 +42,10 @@ export function classifyError(error: Error): ErrorType {
     message.includes('cors') ||
     message.includes('offline')
   ) {
-    return 'network';
+    return 'network'
   }
 
-  return 'application';
+  return 'application'
 }
 
 /**
@@ -56,10 +56,10 @@ export function classifyError(error: Error): ErrorType {
  */
 export const isNetworkError = (error: unknown): boolean => {
   if (error instanceof Error) {
-    return classifyError(error) === 'network';
+    return classifyError(error) === 'network'
   }
-  return false;
-};
+  return false
+}
 
 /**
  * Extracts a human-readable message from any error type.
@@ -69,13 +69,13 @@ export const isNetworkError = (error: unknown): boolean => {
  */
 export const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) {
-    return error.message;
+    return error.message
   }
   if (typeof error === 'string') {
-    return error;
+    return error
   }
-  return 'An unknown error occurred';
-};
+  return 'An unknown error occurred'
+}
 
 /**
  * Creates an AppError object with the given parameters.
@@ -89,7 +89,7 @@ export const createAppError = (message: string, code?: string, status?: number):
   message,
   code,
   status,
-});
+})
 
 /**
  * Checks if a value is an Error instance.
@@ -99,7 +99,7 @@ export const createAppError = (message: string, code?: string, status?: number):
  * @returns true if the value is an Error instance
  */
 export function isError(value: unknown): value is Error {
-  return value instanceof Error;
+  return value instanceof Error
 }
 
 /**
@@ -111,10 +111,10 @@ export function isError(value: unknown): value is Error {
  */
 export function ensureError(value: unknown): Error {
   if (value instanceof Error) {
-    return value;
+    return value
   }
   if (typeof value === 'string') {
-    return new Error(value);
+    return new Error(value)
   }
-  return new Error(getErrorMessage(value));
+  return new Error(getErrorMessage(value))
 }

@@ -4,30 +4,30 @@
  * Catches JavaScript errors in child components and displays fallback UI.
  */
 
-import { Component, type ReactNode, type ErrorInfo } from 'react';
+import { Component, type ReactNode, type ErrorInfo } from 'react'
 
-import { ErrorScreen } from './ErrorScreen';
+import { ErrorScreen } from './ErrorScreen'
 
 /**
  * Error boundary props.
  */
 export interface ErrorBoundaryProps {
   /** Child components to wrap */
-  children: ReactNode;
+  children: ReactNode
   /** Fallback UI to show on error (optional, uses ErrorScreen by default) */
-  fallback?: ReactNode;
+  fallback?: ReactNode
   /** Callback when error is caught */
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void
   /** Reset key - change to reset the boundary */
-  resetKey?: string | number;
+  resetKey?: string | number
 }
 
 /**
  * Error boundary state.
  */
 export interface ErrorBoundaryState {
-  hasError: boolean;
-  error: Error | null;
+  hasError: boolean
+  error: Error | null
 }
 
 /**
@@ -36,49 +36,43 @@ export interface ErrorBoundaryState {
  */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = { hasError: false, error: null };
+    super(props)
+    this.state = { hasError: false, error: null }
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error };
+    return { hasError: true, error }
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // Log error to console
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    console.error('ErrorBoundary caught an error:', error, errorInfo)
 
     // Call onError callback if provided
-    this.props.onError?.(error, errorInfo);
+    this.props.onError?.(error, errorInfo)
   }
 
   componentDidUpdate(prevProps: ErrorBoundaryProps): void {
     // Reset error state if resetKey changes
     if (prevProps.resetKey !== this.props.resetKey && this.state.hasError) {
-      this.setState({ hasError: false, error: null });
+      this.setState({ hasError: false, error: null })
     }
   }
 
   handleReset = (): void => {
-    this.setState({ hasError: false, error: null });
-  };
+    this.setState({ hasError: false, error: null })
+  }
 
   render(): ReactNode {
     if (this.state.hasError) {
       if (this.props.fallback) {
-        return this.props.fallback;
+        return this.props.fallback
       }
 
-      return (
-        <ErrorScreen
-          error={this.state.error}
-          onRetry={this.handleReset}
-          type="application"
-        />
-      );
+      return <ErrorScreen error={this.state.error} onRetry={this.handleReset} type="application" />
     }
 
-    return this.props.children;
+    return this.props.children
   }
 }
 
@@ -94,6 +88,6 @@ export function withErrorBoundary<P extends object>(
       <ErrorBoundary {...boundaryProps}>
         <WrappedComponent {...props} />
       </ErrorBoundary>
-    );
-  };
+    )
+  }
 }

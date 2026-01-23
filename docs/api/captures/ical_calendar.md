@@ -37,22 +37,22 @@ Standard iCal (.ics) format containing:
 
 The iCal feed is localized based on the user's language preference. Key differences:
 
-| Field | French | German |
-|-------|--------|--------|
-| Calendar name | `Convocations d'arbitre` | `SR-Aufgebote` |
-| Referee role in SUMMARY | `ARB 1`, `ARB 2` | `1. SR`, `2. SR` |
-| Line referee role | `JL 1`, `JL 2` | `1. LR`, `2. LR` |
-| Role label | `Engagé en tant que:` | `Einsatz als:` |
-| Match label | `Match:` | `Spiel:` |
-| League label | `Ligue:` | `Liga:` |
-| Hall label | `Salle:` | `Halle:` |
-| Address label | `Adresse:` | `Adresse:` |
-| Home team | `Equipe recevante:` | `Heimteam:` |
-| Away team | `Equipe visiteuse:` | `Gastteam:` |
-| Team manager | `Responsable d'équipe:` | `Teamverantwortlicher:` |
-| Convener | `Convocateur:` | `Aufbieter:` |
-| Assigned referees | `ARB convoqués:` | `Aufgebotene SR:` |
-| No convener | `Aucun convocateur (convocation de la bourse)` | `Kein Aufbieter (Aufgebot aus der SR-Börse)` |
+| Field                   | French                                         | German                                       |
+| ----------------------- | ---------------------------------------------- | -------------------------------------------- |
+| Calendar name           | `Convocations d'arbitre`                       | `SR-Aufgebote`                               |
+| Referee role in SUMMARY | `ARB 1`, `ARB 2`                               | `1. SR`, `2. SR`                             |
+| Line referee role       | `JL 1`, `JL 2`                                 | `1. LR`, `2. LR`                             |
+| Role label              | `Engagé en tant que:`                          | `Einsatz als:`                               |
+| Match label             | `Match:`                                       | `Spiel:`                                     |
+| League label            | `Ligue:`                                       | `Liga:`                                      |
+| Hall label              | `Salle:`                                       | `Halle:`                                     |
+| Address label           | `Adresse:`                                     | `Adresse:`                                   |
+| Home team               | `Equipe recevante:`                            | `Heimteam:`                                  |
+| Away team               | `Equipe visiteuse:`                            | `Gastteam:`                                  |
+| Team manager            | `Responsable d'équipe:`                        | `Teamverantwortlicher:`                      |
+| Convener                | `Convocateur:`                                 | `Aufbieter:`                                 |
+| Assigned referees       | `ARB convoqués:`                               | `Aufgebotene SR:`                            |
+| No convener             | `Aucun convocateur (convocation de la bourse)` | `Kein Aufbieter (Aufgebot aus der SR-Börse)` |
 
 ## Real Examples
 
@@ -129,23 +129,23 @@ END:VEVENT
 Format: `{role} | {homeTeam} - {awayTeam} ({league})`
 
 - **Role**: `ARB 1`, `ARB 2` (French) or `1. SR`, `2. SR` (German)
-- **Home team**: Text before ` - `
-- **Away team**: Text after ` - ` and before ` (`
+- **Home team**: Text before `-`
+- **Away team**: Text after `-` and before ` (`
 - **League**: Text in parentheses at end
 
 ### From DESCRIPTION
 
 The description contains structured data in `Label: Value` format, separated by `|`:
 
-| Pattern | Example | Extracted Value |
-|---------|---------|-----------------|
-| `Match: #{id}` / `Spiel: #{id}` | `Match: #392936` | Game number: `392936` |
-| `Ligue: #{id} \| {category} \| {gender}` | `Ligue: #6758 \| Mobilière Volley Cup \| ♀` | League category, gender symbol |
-| `Salle: #{id} \| {name}` / `Halle: #{id} \| {name}` | `Salle: #1477 \| TH St. Johann (E)` | Hall ID: `1477`, Hall name |
-| `ARB 1: {name} \| {email} \| {phone}` | `ARB 1: Pierre Martin \| pierre.martin@example.org \| +41795678901` | Referee name |
-| `1. SR: {name} \| {email} \| {phone}` | `1. SR: Sandra Huber \| sandra.huber@example.com \| +41799012345` | Referee name (German) |
-| `Equipe recevante: #{id} \| {team} ({cat}, {gender}, {assoc})` | `Equipe recevante: #10008 \| TV St. Johann (3L, ♀, SVRBA)` | Association code: `SVRBA` |
-| `Heimteam: #{id} \| {team} ({cat}, {gender}, {assoc})` | `Heimteam: #20 \| Volley Amriswil (NLA, ♂, SV)` | Association code: `SV` |
+| Pattern                                                        | Example                                                             | Extracted Value                |
+| -------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------ |
+| `Match: #{id}` / `Spiel: #{id}`                                | `Match: #392936`                                                    | Game number: `392936`          |
+| `Ligue: #{id} \| {category} \| {gender}`                       | `Ligue: #6758 \| Mobilière Volley Cup \| ♀`                         | League category, gender symbol |
+| `Salle: #{id} \| {name}` / `Halle: #{id} \| {name}`            | `Salle: #1477 \| TH St. Johann (E)`                                 | Hall ID: `1477`, Hall name     |
+| `ARB 1: {name} \| {email} \| {phone}`                          | `ARB 1: Pierre Martin \| pierre.martin@example.org \| +41795678901` | Referee name                   |
+| `1. SR: {name} \| {email} \| {phone}`                          | `1. SR: Sandra Huber \| sandra.huber@example.com \| +41799012345`   | Referee name (German)          |
+| `Equipe recevante: #{id} \| {team} ({cat}, {gender}, {assoc})` | `Equipe recevante: #10008 \| TV St. Johann (3L, ♀, SVRBA)`          | Association code: `SVRBA`      |
+| `Heimteam: #{id} \| {team} ({cat}, {gender}, {assoc})`         | `Heimteam: #20 \| Volley Amriswil (NLA, ♂, SV)`                     | Association code: `SV`         |
 
 ### From GEO
 

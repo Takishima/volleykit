@@ -166,7 +166,7 @@ refereeConvocation=aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
 - Only supports adding one convocation at a time
 - A confirmation dialog is shown before the action is executed
 
-______________________________________________________________________
+---
 
 ## Completed Captures
 

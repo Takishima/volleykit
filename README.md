@@ -44,17 +44,17 @@ A mobile-friendly Progressive Web App (PWA) for Swiss volleyball referees, provi
 
 ## Tech Stack
 
-| Category | Technology |
-|----------|------------|
-| Framework | React 19 with TypeScript 5.9 |
-| Build | Vite 7 |
-| Styling | Tailwind CSS 4 |
-| State | Zustand 5 (client), TanStack Query 5 (server) |
-| Routing | React Router 7 |
-| Validation | Zod 4 |
-| Testing | Vitest 4, React Testing Library, Playwright |
-| CORS Proxy | Cloudflare Workers |
-| Transport | OJP SDK (Swiss public transport) |
+| Category   | Technology                                    |
+| ---------- | --------------------------------------------- |
+| Framework  | React 19 with TypeScript 5.9                  |
+| Build      | Vite 7                                        |
+| Styling    | Tailwind CSS 4                                |
+| State      | Zustand 5 (client), TanStack Query 5 (server) |
+| Routing    | React Router 7                                |
+| Validation | Zod 4                                         |
+| Testing    | Vitest 4, React Testing Library, Playwright   |
+| CORS Proxy | Cloudflare Workers                            |
+| Transport  | OJP SDK (Swiss public transport)              |
 
 ## Project Structure
 

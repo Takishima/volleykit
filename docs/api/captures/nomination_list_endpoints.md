@@ -9,7 +9,7 @@ Nomination lists contain the team lineup for a game, including players, coaches,
 1. **Update Nomination List** - Add/remove players and coaches
 1. **Finalize Nomination List** - Lock the list (by team or referee)
 
-______________________________________________________________________
+---
 
 ## 1. Update Nomination List
 
@@ -25,22 +25,22 @@ PUT /api/sportmanager.indoorvolleyball/api\nominationlist
 
 Content-Type: `application/x-www-form-urlencoded`
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| nominationList[\_\_identity] | UUID | The nomination list identifier |
-| nominationList[game][\_\_identity] | UUID | The game identifier |
-| nominationList[team][\_\_identity] | UUID | The team identifier |
-| nominationList[coachPerson][\_\_identity] | UUID | Head coach person ID |
-| nominationList[firstAssistantCoachPerson][\_\_identity] | UUID | First assistant coach (optional) |
-| nominationList[secondAssistantCoachPerson] | string | Second assistant coach or empty |
-| nominationList[indoorPlayerNominations][N][\_\_identity] | UUID | Player nomination IDs (array) |
-| nominationList[closed] | boolean | Whether the list is closed |
-| nominationList[closedAt] | datetime | When closed (empty if open) |
-| nominationList[closedBy] | string | Who closed it (empty if open) |
-| nominationList[checked] | boolean | Whether checked by referee |
-| nominationList[isClosedForTeam] | boolean | Whether team can still edit |
-| nominationList[nominationListValidation][\_\_identity] | UUID | Validation record |
-| \_\_csrfToken | string | CSRF protection token |
+| Parameter                                                | Type     | Description                      |
+| -------------------------------------------------------- | -------- | -------------------------------- |
+| nominationList[\_\_identity]                             | UUID     | The nomination list identifier   |
+| nominationList[game][\_\_identity]                       | UUID     | The game identifier              |
+| nominationList[team][\_\_identity]                       | UUID     | The team identifier              |
+| nominationList[coachPerson][\_\_identity]                | UUID     | Head coach person ID             |
+| nominationList[firstAssistantCoachPerson][\_\_identity]  | UUID     | First assistant coach (optional) |
+| nominationList[secondAssistantCoachPerson]               | string   | Second assistant coach or empty  |
+| nominationList[indoorPlayerNominations][N][\_\_identity] | UUID     | Player nomination IDs (array)    |
+| nominationList[closed]                                   | boolean  | Whether the list is closed       |
+| nominationList[closedAt]                                 | datetime | When closed (empty if open)      |
+| nominationList[closedBy]                                 | string   | Who closed it (empty if open)    |
+| nominationList[checked]                                  | boolean  | Whether checked by referee       |
+| nominationList[isClosedForTeam]                          | boolean  | Whether team can still edit      |
+| nominationList[nominationListValidation][\_\_identity]   | UUID     | Validation record                |
+| \_\_csrfToken                                            | string   | CSRF protection token            |
 
 ### Example Request (URL-decoded)
 
@@ -127,7 +127,7 @@ Returns the updated nomination list with all nested objects.
 }
 ```
 
-______________________________________________________________________
+---
 
 ## 2. Finalize Nomination List
 
@@ -173,13 +173,13 @@ Returns a wrapper object with the finalized nomination list.
 
 ### Who Can Finalize
 
-| Role | Can Finalize | Notes |
-|------|-------------|-------|
-| Team Responsible | Yes | Before game, for their own team |
-| Referee | Yes | At game time, for both teams |
-| Club Admin | Yes | For teams in their club |
+| Role             | Can Finalize | Notes                           |
+| ---------------- | ------------ | ------------------------------- |
+| Team Responsible | Yes          | Before game, for their own team |
+| Referee          | Yes          | At game time, for both teams    |
+| Club Admin       | Yes          | For teams in their club         |
 
-______________________________________________________________________
+---
 
 ## 3. Get Possible Player Nominations
 
@@ -195,12 +195,12 @@ POST /api/sportmanager.indoorvolleyball/api\nominationlist/getPossibleIndoorPlay
 
 Content-Type: `application/x-www-form-urlencoded`
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| nominationList | UUID | The nomination list identifier |
-| onlyFromMyTeam | boolean | Only show players from the team |
+| Parameter          | Type    | Description                              |
+| ------------------ | ------- | ---------------------------------------- |
+| nominationList     | UUID    | The nomination list identifier           |
+| onlyFromMyTeam     | boolean | Only show players from the team          |
 | onlyRelevantGender | boolean | Only show players matching league gender |
-| \_\_csrfToken | string | CSRF protection token |
+| \_\_csrfToken      | string  | CSRF protection token                    |
 
 ### Example Request
 
@@ -242,7 +242,7 @@ __csrfToken=<csrf-token>
 }
 ```
 
-______________________________________________________________________
+---
 
 ## 4. Get Persons with Valid Licenses
 
@@ -285,52 +285,52 @@ This endpoint returns a large list (all licensed persons). The frontend typicall
 1. Uses it for client-side filtering in autocomplete fields
 1. Matches by `displayName` or `associationId`
 
-______________________________________________________________________
+---
 
 ## Player Nomination Fields
 
 Each player nomination contains:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| \_\_identity | UUID | Nomination record ID |
-| indoorPlayer | object | Reference to the player |
-| shirtNumber | integer | Jersey number for the game |
-| isCaptain | boolean | Team captain designation |
-| isLibero | boolean | Libero player designation |
-| isEligible | boolean | Whether the player is eligible to play |
-| doubleLicenseTeam | object/null | Team reference if player has a double license |
-| indoorPlayerLicenseCategory | object | License category (SEN, JUN, etc.) |
-| indoorPlayerNominationValidation | object | Validation issues for this player |
+| Field                            | Type        | Description                                   |
+| -------------------------------- | ----------- | --------------------------------------------- |
+| \_\_identity                     | UUID        | Nomination record ID                          |
+| indoorPlayer                     | object      | Reference to the player                       |
+| shirtNumber                      | integer     | Jersey number for the game                    |
+| isCaptain                        | boolean     | Team captain designation                      |
+| isLibero                         | boolean     | Libero player designation                     |
+| isEligible                       | boolean     | Whether the player is eligible to play        |
+| doubleLicenseTeam                | object/null | Team reference if player has a double license |
+| indoorPlayerLicenseCategory      | object      | License category (SEN, JUN, etc.)             |
+| indoorPlayerNominationValidation | object      | Validation issues for this player             |
 
 ### Indoor Player Fields
 
 The `indoorPlayer` object contains:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| \_\_identity | UUID | Player record ID |
-| person | object | Person details (name, birthday, etc.) |
-| hasAcceptedDopingDeclaration | boolean | Whether player accepted doping declaration |
-| hasActivatedIndoorLicense | boolean | Whether indoor license is activated |
-| hasValidatedIndoorLicense | boolean | Whether indoor license is validated |
-| hasPlayerPicture | boolean | Whether player has a profile picture |
+| Field                         | Type    | Description                                       |
+| ----------------------------- | ------- | ------------------------------------------------- |
+| \_\_identity                  | UUID    | Player record ID                                  |
+| person                        | object  | Person details (name, birthday, etc.)             |
+| hasAcceptedDopingDeclaration  | boolean | Whether player accepted doping declaration        |
+| hasActivatedIndoorLicense     | boolean | Whether indoor license is activated               |
+| hasValidatedIndoorLicense     | boolean | Whether indoor license is validated               |
+| hasPlayerPicture              | boolean | Whether player has a profile picture              |
 | isClassifiedAsLocallyEducated | boolean | Locally educated classification (foreigner rules) |
-| isForeignerRegardingGamePlay | boolean | Counts as foreigner for game play rules |
-| totalLicensesCount | integer | Total licenses held by the player |
+| isForeignerRegardingGamePlay  | boolean | Counts as foreigner for game play rules           |
+| totalLicensesCount            | integer | Total licenses held by the player                 |
 
 ### License Categories
 
 | Code | Description |
-|------|-------------|
-| SEN | Senior |
-| JUN | Junior |
-| U23 | Under 23 |
-| U21 | Under 21 |
-| U19 | Under 19 |
-| U17 | Under 17 |
+| ---- | ----------- |
+| SEN  | Senior      |
+| JUN  | Junior      |
+| U23  | Under 23    |
+| U21  | Under 21    |
+| U19  | Under 19    |
+| U17  | Under 17    |
 
-______________________________________________________________________
+---
 
 ## Validation Issues
 
@@ -368,7 +368,7 @@ Player nominations can have validation issues:
 - Age restriction violations
 - Missing required license
 
-______________________________________________________________________
+---
 
 ## Notes
 

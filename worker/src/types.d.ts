@@ -10,12 +10,12 @@
 
 // Helper type to access getSetCookie on Headers instances
 export type HeadersWithCookies = Headers & {
-  getSetCookie(): string[];
-};
+  getSetCookie(): string[]
+}
 
 /**
  * Worker git hash injected at deploy time via `wrangler deploy --define`.
  * Used for version tracking - the web app checks this to determine if
  * session tokens need to be invalidated (worker auth logic changed).
  */
-declare const __WORKER_GIT_HASH__: string;
+declare const __WORKER_GIT_HASH__: string

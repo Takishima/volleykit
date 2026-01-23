@@ -7,81 +7,85 @@
  * Resolves TODO(#775): Replace mock API client with real implementation.
  */
 
-import Constants from 'expo-constants';
+import Constants from 'expo-constants'
 
-import type { SearchConfiguration, Assignment, CompensationRecord, GameExchange } from '@volleykit/shared/api';
+import type {
+  SearchConfiguration,
+  Assignment,
+  CompensationRecord,
+  GameExchange,
+} from '@volleykit/shared/api'
 import {
   buildFormData,
   ASSIGNMENT_PROPERTIES,
   EXCHANGE_PROPERTIES,
   COMPENSATION_PROPERTIES,
-} from '@volleykit/shared/api';
+} from '@volleykit/shared/api'
 
-import { SESSION_TOKEN_HEADER } from '../constants';
+import { SESSION_TOKEN_HEADER } from '../constants'
 
 /**
  * API base URL for requests.
  * Uses the CORS proxy configured in app.json extra settings.
  */
 const API_BASE_URL =
-  (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined) ??
-  'https://proxy.volleykit.app';
+  (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined) ?? 'https://proxy.volleykit.app'
 
 /**
  * In-memory session token storage.
  * Managed by the auth service, shared here for API requests.
  */
-let sessionToken: string | null = null;
+let sessionToken: string | null = null
 
 /**
  * CSRF token for state-changing requests.
  * Extracted from the login response.
  */
-let csrfToken: string | null = null;
+let csrfToken: string | null = null
 
 /**
  * Set the session token (called by auth service).
  */
 export function setSessionToken(token: string | null): void {
-  sessionToken = token;
+  sessionToken = token
 }
 
 /**
  * Get the current session token.
  */
 export function getSessionToken(): string | null {
-  return sessionToken;
+  return sessionToken
 }
 
 /**
  * Set the CSRF token (called by auth service after login).
  */
 export function setCsrfToken(token: string | null): void {
-  csrfToken = token;
+  csrfToken = token
 }
 
 /**
  * Clear all tokens (called on logout).
  */
 export function clearTokens(): void {
-  sessionToken = null;
-  csrfToken = null;
+  sessionToken = null
+  csrfToken = null
 }
 
 /**
  * Get session headers for API requests.
  */
 function getSessionHeaders(): Record<string, string> {
-  return sessionToken ? { [SESSION_TOKEN_HEADER]: sessionToken } : {};
+  return sessionToken ? { [SESSION_TOKEN_HEADER]: sessionToken } : {}
 }
 
 /**
  * Capture session token from response headers.
  */
 function captureSessionToken(response: Response): void {
-  const token = response.headers.get(SESSION_TOKEN_HEADER);
+  const token = response.headers.get(SESSION_TOKEN_HEADER)
   if (token) {
-    sessionToken = token;
+    sessionToken = token
   }
 }
 
@@ -92,10 +96,10 @@ function buildFormDataWithToken(
   data: Record<string, unknown>,
   options: { includeCsrfToken?: boolean } = {}
 ): URLSearchParams {
-  const { includeCsrfToken = true } = options;
+  const { includeCsrfToken = true } = options
   return buildFormData(data, {
     csrfToken: includeCsrfToken ? csrfToken : null,
-  });
+  })
 }
 
 /**
@@ -105,7 +109,7 @@ const HttpStatus = {
   UNAUTHORIZED: 401,
   FORBIDDEN: 403,
   NOT_ACCEPTABLE: 406,
-} as const;
+} as const
 
 /**
  * Generic fetch wrapper for API requests.
@@ -115,20 +119,20 @@ async function apiRequest<T>(
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
   body?: Record<string, unknown>
 ): Promise<T> {
-  let url = `${API_BASE_URL}${endpoint}`;
+  let url = `${API_BASE_URL}${endpoint}`
 
   const headers: Record<string, string> = {
     Accept: 'application/json',
     ...getSessionHeaders(),
-  };
+  }
 
   if (method === 'GET' && body) {
-    const params = buildFormDataWithToken(body, { includeCsrfToken: false });
-    url = `${url}?${params.toString()}`;
+    const params = buildFormDataWithToken(body, { includeCsrfToken: false })
+    url = `${url}?${params.toString()}`
   }
 
   if (method !== 'GET' && body) {
-    headers['Content-Type'] = 'application/x-www-form-urlencoded';
+    headers['Content-Type'] = 'application/x-www-form-urlencoded'
   }
 
   const response = await fetch(url, {
@@ -136,9 +140,9 @@ async function apiRequest<T>(
     headers,
     credentials: 'include',
     body: method !== 'GET' && body ? buildFormDataWithToken(body) : undefined,
-  });
+  })
 
-  captureSessionToken(response);
+  captureSessionToken(response)
 
   if (!response.ok) {
     if (
@@ -146,28 +150,28 @@ async function apiRequest<T>(
       response.status === HttpStatus.FORBIDDEN ||
       response.status === HttpStatus.NOT_ACCEPTABLE
     ) {
-      clearTokens();
-      throw new Error('Session expired. Please log in again.');
+      clearTokens()
+      throw new Error('Session expired. Please log in again.')
     }
-    throw new Error(`${method} ${endpoint}: ${response.status} ${response.statusText}`);
+    throw new Error(`${method} ${endpoint}: ${response.status} ${response.statusText}`)
   }
 
-  const contentType = response.headers.get('Content-Type') || '';
+  const contentType = response.headers.get('Content-Type') || ''
 
   try {
-    return await response.json();
+    return await response.json()
   } catch {
     if (contentType.includes('text/html')) {
-      const pathname = new URL(response.url).pathname.toLowerCase();
-      const isLoginPage = pathname === '/login' || pathname.endsWith('/login');
+      const pathname = new URL(response.url).pathname.toLowerCase()
+      const isLoginPage = pathname === '/login' || pathname.endsWith('/login')
       if (isLoginPage) {
-        clearTokens();
-        throw new Error('Session expired. Please log in again.');
+        clearTokens()
+        throw new Error('Session expired. Please log in again.')
       }
     }
     throw new Error(
       `${method} ${endpoint}: Invalid JSON response (Content-Type: ${contentType || 'unknown'})`
-    );
+    )
   }
 }
 
@@ -175,24 +179,24 @@ async function apiRequest<T>(
  * Assignments response from API.
  */
 interface AssignmentsResponse {
-  items?: Assignment[];
-  totalItemsCount?: number;
+  items?: Assignment[]
+  totalItemsCount?: number
 }
 
 /**
  * Exchanges response from API.
  */
 interface ExchangesResponse {
-  items?: GameExchange[];
-  totalItemsCount?: number;
+  items?: GameExchange[]
+  totalItemsCount?: number
 }
 
 /**
  * Compensations response from API.
  */
 interface CompensationsResponse {
-  items?: CompensationRecord[];
-  totalItemsCount?: number;
+  items?: CompensationRecord[]
+  totalItemsCount?: number
 }
 
 /**
@@ -214,24 +218,24 @@ export const realApiClient = {
         searchConfiguration: config,
         propertyRenderConfiguration: ASSIGNMENT_PROPERTIES,
       }
-    );
+    )
     return {
       items: data.items ?? [],
       totalItemsCount: data.totalItemsCount ?? 0,
-    };
+    }
   },
 
   /**
    * Get assignment details by ID.
    */
   async getAssignmentDetails(id: string): Promise<Assignment> {
-    const query = new URLSearchParams();
-    query.set('convocation', id);
-    ASSIGNMENT_PROPERTIES.forEach((prop, i) => query.set(`nestedPropertyNames[${i}]`, prop));
+    const query = new URLSearchParams()
+    query.set('convocation', id)
+    ASSIGNMENT_PROPERTIES.forEach((prop, i) => query.set(`nestedPropertyNames[${i}]`, prop))
 
     return apiRequest<Assignment>(
       `/indoorvolleyball.refadmin/api%5crefereeconvocation/showWithNestedObjects?${query}`
-    );
+    )
   },
 
   /**
@@ -247,11 +251,11 @@ export const realApiClient = {
         searchConfiguration: config,
         propertyRenderConfiguration: EXCHANGE_PROPERTIES,
       }
-    );
+    )
     return {
       items: data.items ?? [],
       totalItemsCount: data.totalItemsCount ?? 0,
-    };
+    }
   },
 
   /**
@@ -267,12 +271,12 @@ export const realApiClient = {
         searchConfiguration: config,
         propertyRenderConfiguration: COMPENSATION_PROPERTIES,
       }
-    );
+    )
     return {
       items: data.items ?? [],
       totalItemsCount: data.totalItemsCount ?? 0,
-    };
+    }
   },
-};
+}
 
-export type RealApiClient = typeof realApiClient;
+export type RealApiClient = typeof realApiClient

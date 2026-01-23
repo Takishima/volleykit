@@ -6,20 +6,20 @@
  * Extracted from web-app/src/features/exchanges/hooks/useExchanges.ts
  */
 
-import { useMemo } from 'react';
-import { useQuery, type UseQueryResult } from '@tanstack/react-query';
+import { useMemo } from 'react'
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
-import { queryKeys, type SearchConfiguration } from '../api/queryKeys';
-import type { GameExchange } from '../api/validation';
+import { queryKeys, type SearchConfiguration } from '../api/queryKeys'
+import type { GameExchange } from '../api/validation'
 
 /** Stale time for exchanges list (2 minutes - shorter since exchanges change frequently) */
-export const EXCHANGES_STALE_TIME_MS = 2 * 60 * 1000;
+export const EXCHANGES_STALE_TIME_MS = 2 * 60 * 1000
 
 /** Default page size for API requests */
-export const DEFAULT_PAGE_SIZE = 50;
+export const DEFAULT_PAGE_SIZE = 50
 
 /** Exchange status filter options */
-export type ExchangeStatusFilter = 'open' | 'applied' | 'closed' | 'all';
+export type ExchangeStatusFilter = 'open' | 'applied' | 'closed' | 'all'
 
 /**
  * API client interface for fetching exchanges.
@@ -27,27 +27,27 @@ export type ExchangeStatusFilter = 'open' | 'applied' | 'closed' | 'all';
 export interface ExchangesApiClient {
   searchExchanges: (
     config: SearchConfiguration
-  ) => Promise<{ items: GameExchange[]; totalItemsCount: number }>;
-  applyForExchange?: (exchangeId: string) => Promise<void>;
-  withdrawFromExchange?: (exchangeId: string) => Promise<void>;
+  ) => Promise<{ items: GameExchange[]; totalItemsCount: number }>
+  applyForExchange?: (exchangeId: string) => Promise<void>
+  withdrawFromExchange?: (exchangeId: string) => Promise<void>
 }
 
 /** Stable empty array for React Query selectors */
-const EMPTY_EXCHANGES: GameExchange[] = [];
+const EMPTY_EXCHANGES: GameExchange[] = []
 
 export interface UseExchangesOptions {
   /** API client for fetching exchanges */
-  apiClient: ExchangesApiClient;
+  apiClient: ExchangesApiClient
   /** Filter by exchange status */
-  status?: ExchangeStatusFilter;
+  status?: ExchangeStatusFilter
   /** Association key for cache invalidation */
-  associationKey?: string | null;
+  associationKey?: string | null
   /** Whether to enable the query */
-  enabled?: boolean;
+  enabled?: boolean
   /** Filter out exchanges submitted by the current user */
-  hideOwn?: boolean;
+  hideOwn?: boolean
   /** Current user ID for filtering own exchanges */
-  currentUserId?: string;
+  currentUserId?: string
 }
 
 /**
@@ -56,9 +56,7 @@ export interface UseExchangesOptions {
  * @param options - Configuration options including API client
  * @returns Query result with exchanges array
  */
-export function useExchanges(
-  options: UseExchangesOptions
-): UseQueryResult<GameExchange[], Error> {
+export function useExchanges(options: UseExchangesOptions): UseQueryResult<GameExchange[], Error> {
   const {
     apiClient,
     status = 'open',
@@ -66,7 +64,7 @@ export function useExchanges(
     enabled = true,
     hideOwn = false,
     currentUserId,
-  } = options;
+  } = options
 
   const config = useMemo<SearchConfiguration>(
     () => ({
@@ -77,42 +75,40 @@ export function useExchanges(
       sortDirection: 'asc',
     }),
     [status]
-  );
+  )
 
   return useQuery({
     queryKey: queryKeys.exchanges.list(config, associationKey),
     queryFn: async () => {
-      const response = await apiClient.searchExchanges(config);
-      let items = response.items ?? EMPTY_EXCHANGES;
+      const response = await apiClient.searchExchanges(config)
+      let items = response.items ?? EMPTY_EXCHANGES
 
       // Filter out own exchanges if requested
       if (hideOwn && currentUserId) {
-        items = items.filter(
-          (exchange) => exchange.submittedByPerson?.__identity !== currentUserId
-        );
+        items = items.filter((exchange) => exchange.submittedByPerson?.__identity !== currentUserId)
       }
 
-      return items;
+      return items
     },
     staleTime: EXCHANGES_STALE_TIME_MS,
     enabled,
-  });
+  })
 }
 
 /**
  * Get display info for an exchange.
  */
 export function getExchangeDisplayInfo(exchange: GameExchange): {
-  gameNumber: string;
-  dateTime: string | null;
-  homeTeam: string;
-  awayTeam: string;
-  hall: string;
-  position: string;
-  submittedBy: string;
-  reason: string | null;
+  gameNumber: string
+  dateTime: string | null
+  homeTeam: string
+  awayTeam: string
+  hall: string
+  position: string
+  submittedBy: string
+  reason: string | null
 } {
-  const game = exchange.refereeGame?.game;
+  const game = exchange.refereeGame?.game
 
   return {
     gameNumber: game?.gameNumber ?? '',
@@ -123,5 +119,5 @@ export function getExchangeDisplayInfo(exchange: GameExchange): {
     position: exchange.refereePosition ?? '',
     submittedBy: exchange.submittedByPerson?.displayName ?? '',
     reason: exchange.exchangeReason ?? null,
-  };
+  }
 }

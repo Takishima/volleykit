@@ -13,9 +13,9 @@ export type {
   InflatedAssociationValue,
   RoleDefinition,
   AuthServiceConfig,
-} from './types';
+} from './types'
 
-export { HTTP_STATUS, AUTH_ENDPOINTS } from './types';
+export { HTTP_STATUS, AUTH_ENDPOINTS } from './types'
 
 // Parsers
 export {
@@ -31,7 +31,7 @@ export {
   filterRefereeAssociations,
   hasMultipleAssociations,
   analyzeAuthResponseHtml,
-} from './parsers';
+} from './parsers'
 
 // Service
-export { createAuthService, type AuthService } from './service';
+export { createAuthService, type AuthService } from './service'

@@ -1,15 +1,12 @@
 ---
-import DocLayout from '../layouts/DocLayout.astro';
-import DeviceScreenshot from '../components/DeviceScreenshot.astro';
-import InfoBox from '../components/InfoBox.astro';
-import StepList from '../components/StepList.astro';
-import { t } from '../i18n';
+import DocLayout from '../layouts/DocLayout.astro'
+import DeviceScreenshot from '../components/DeviceScreenshot.astro'
+import InfoBox from '../components/InfoBox.astro'
+import StepList from '../components/StepList.astro'
+import { t } from '../i18n'
 ---
 
-<DocLayout
-  title={t('pages.exchanges.title')}
-  description={t('pages.exchanges.description')}
->
+<DocLayout title={t('pages.exchanges.title')} description={t('pages.exchanges.description')}>
   <h1 data-i18n="exchanges.heading">{t('exchanges.heading')}</h1>
 
   <p class="lead text-text-secondary dark:text-text-secondary-dark" data-i18n="exchanges.lead">
@@ -21,9 +18,15 @@ import { t } from '../i18n';
   <p data-i18n="exchanges.whatAre.description">{t('exchanges.whatAre.description')}</p>
 
   <ul>
-    <li data-i18n="exchanges.whatAre.features.postGames">{t('exchanges.whatAre.features.postGames')}</li>
-    <li data-i18n="exchanges.whatAre.features.browseGames">{t('exchanges.whatAre.features.browseGames')}</li>
-    <li data-i18n="exchanges.whatAre.features.acceptGames">{t('exchanges.whatAre.features.acceptGames')}</li>
+    <li data-i18n="exchanges.whatAre.features.postGames">
+      {t('exchanges.whatAre.features.postGames')}
+    </li>
+    <li data-i18n="exchanges.whatAre.features.browseGames">
+      {t('exchanges.whatAre.features.browseGames')}
+    </li>
+    <li data-i18n="exchanges.whatAre.features.acceptGames">
+      {t('exchanges.whatAre.features.acceptGames')}
+    </li>
   </ul>
 
   <InfoBox type="info">
@@ -62,7 +65,11 @@ import { t } from '../i18n';
     instructions="Take a screenshot showing an assignment card with the exchange swipe action revealed on the right side."
   />
 
-  <InfoBox type="warning" title={t('exchanges.requesting.warningTitle')} titleKey="exchanges.requesting.warningTitle">
+  <InfoBox
+    type="warning"
+    title={t('exchanges.requesting.warningTitle')}
+    titleKey="exchanges.requesting.warningTitle"
+  >
     <p data-i18n="exchanges.requesting.warningContent">
       {t('exchanges.requesting.warningContent')}
     </p>
@@ -83,11 +90,17 @@ import { t } from '../i18n';
 
   <h3 data-i18n="exchanges.viewing.filtering.title">{t('exchanges.viewing.filtering.title')}</h3>
 
-  <p data-i18n="exchanges.viewing.filtering.description">{t('exchanges.viewing.filtering.description')}</p>
+  <p data-i18n="exchanges.viewing.filtering.description">
+    {t('exchanges.viewing.filtering.description')}
+  </p>
 
   <ul>
-    <li data-i18n="exchanges.viewing.filtering.distance">{t('exchanges.viewing.filtering.distance')}</li>
-    <li data-i18n="exchanges.viewing.filtering.travelTime">{t('exchanges.viewing.filtering.travelTime')}</li>
+    <li data-i18n="exchanges.viewing.filtering.distance">
+      {t('exchanges.viewing.filtering.distance')}
+    </li>
+    <li data-i18n="exchanges.viewing.filtering.travelTime">
+      {t('exchanges.viewing.filtering.travelTime')}
+    </li>
   </ul>
 
   <p data-i18n="exchanges.viewing.filtering.usage">{t('exchanges.viewing.filtering.usage')}</p>
@@ -143,13 +156,23 @@ import { t } from '../i18n';
 
   <h3 data-i18n="exchanges.managing.canceling.title">{t('exchanges.managing.canceling.title')}</h3>
 
-  <p data-i18n="exchanges.managing.canceling.description">{t('exchanges.managing.canceling.description')}</p>
+  <p data-i18n="exchanges.managing.canceling.description">
+    {t('exchanges.managing.canceling.description')}
+  </p>
 
   <ol>
-    <li data-i18n="exchanges.managing.canceling.steps.goToExchanges">{t('exchanges.managing.canceling.steps.goToExchanges')}</li>
-    <li data-i18n="exchanges.managing.canceling.steps.selectAddedByMe">{t('exchanges.managing.canceling.steps.selectAddedByMe')}</li>
-    <li data-i18n="exchanges.managing.canceling.steps.swipeRight">{t('exchanges.managing.canceling.steps.swipeRight')}</li>
-    <li data-i18n="exchanges.managing.canceling.steps.confirmCancellation">{t('exchanges.managing.canceling.steps.confirmCancellation')}</li>
+    <li data-i18n="exchanges.managing.canceling.steps.goToExchanges">
+      {t('exchanges.managing.canceling.steps.goToExchanges')}
+    </li>
+    <li data-i18n="exchanges.managing.canceling.steps.selectAddedByMe">
+      {t('exchanges.managing.canceling.steps.selectAddedByMe')}
+    </li>
+    <li data-i18n="exchanges.managing.canceling.steps.swipeRight">
+      {t('exchanges.managing.canceling.steps.swipeRight')}
+    </li>
+    <li data-i18n="exchanges.managing.canceling.steps.confirmCancellation">
+      {t('exchanges.managing.canceling.steps.confirmCancellation')}
+    </li>
   </ol>
 
   <InfoBox type="info">

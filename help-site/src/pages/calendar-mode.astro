@@ -1,15 +1,12 @@
 ---
-import DocLayout from '../layouts/DocLayout.astro';
-import Screenshot from '../components/Screenshot.astro';
-import InfoBox from '../components/InfoBox.astro';
-import StepList from '../components/StepList.astro';
-import { t } from '../i18n';
+import DocLayout from '../layouts/DocLayout.astro'
+import Screenshot from '../components/Screenshot.astro'
+import InfoBox from '../components/InfoBox.astro'
+import StepList from '../components/StepList.astro'
+import { t } from '../i18n'
 ---
 
-<DocLayout
-  title={t('pages.calendarMode.title')}
-  description={t('pages.calendarMode.description')}
->
+<DocLayout title={t('pages.calendarMode.title')} description={t('pages.calendarMode.description')}>
   <h1 data-i18n="calendarMode.heading">{t('calendarMode.heading')}</h1>
 
   <p class="lead text-text-secondary dark:text-text-secondary-dark" data-i18n="calendarMode.lead">
@@ -20,13 +17,23 @@ import { t } from '../i18n';
 
   <p data-i18n="calendarMode.whatIs.description">{t('calendarMode.whatIs.description')}</p>
 
-  <h3 data-i18n="calendarMode.whatIs.features.viewAssignments">{t('calendarMode.whatIs.features.viewAssignments')}</h3>
+  <h3 data-i18n="calendarMode.whatIs.features.viewAssignments">
+    {t('calendarMode.whatIs.features.viewAssignments')}
+  </h3>
 
   <ul>
-    <li data-i18n="calendarMode.whatIs.features.viewAssignments">{t('calendarMode.whatIs.features.viewAssignments')}</li>
-    <li data-i18n="calendarMode.whatIs.features.seeDetails">{t('calendarMode.whatIs.features.seeDetails')}</li>
-    <li data-i18n="calendarMode.whatIs.features.noPassword">{t('calendarMode.whatIs.features.noPassword')}</li>
-    <li data-i18n="calendarMode.whatIs.features.safeToShare">{t('calendarMode.whatIs.features.safeToShare')}</li>
+    <li data-i18n="calendarMode.whatIs.features.viewAssignments">
+      {t('calendarMode.whatIs.features.viewAssignments')}
+    </li>
+    <li data-i18n="calendarMode.whatIs.features.seeDetails">
+      {t('calendarMode.whatIs.features.seeDetails')}
+    </li>
+    <li data-i18n="calendarMode.whatIs.features.noPassword">
+      {t('calendarMode.whatIs.features.noPassword')}
+    </li>
+    <li data-i18n="calendarMode.whatIs.features.safeToShare">
+      {t('calendarMode.whatIs.features.safeToShare')}
+    </li>
   </ul>
 
   <h2 data-i18n="calendarMode.whoIsFor.title">{t('calendarMode.whoIsFor.title')}</h2>
@@ -34,10 +41,18 @@ import { t } from '../i18n';
   <p data-i18n="calendarMode.whoIsFor.description">{t('calendarMode.whoIsFor.description')}</p>
 
   <ul>
-    <li data-i18n="calendarMode.whoIsFor.useCases.quickChecks">{t('calendarMode.whoIsFor.useCases.quickChecks')}</li>
-    <li data-i18n="calendarMode.whoIsFor.useCases.familyMembers">{t('calendarMode.whoIsFor.useCases.familyMembers')}</li>
-    <li data-i18n="calendarMode.whoIsFor.useCases.calendarIntegration">{t('calendarMode.whoIsFor.useCases.calendarIntegration')}</li>
-    <li data-i18n="calendarMode.whoIsFor.useCases.publicDevices">{t('calendarMode.whoIsFor.useCases.publicDevices')}</li>
+    <li data-i18n="calendarMode.whoIsFor.useCases.quickChecks">
+      {t('calendarMode.whoIsFor.useCases.quickChecks')}
+    </li>
+    <li data-i18n="calendarMode.whoIsFor.useCases.familyMembers">
+      {t('calendarMode.whoIsFor.useCases.familyMembers')}
+    </li>
+    <li data-i18n="calendarMode.whoIsFor.useCases.calendarIntegration">
+      {t('calendarMode.whoIsFor.useCases.calendarIntegration')}
+    </li>
+    <li data-i18n="calendarMode.whoIsFor.useCases.publicDevices">
+      {t('calendarMode.whoIsFor.useCases.publicDevices')}
+    </li>
   </ul>
 
   <InfoBox type="tip">
@@ -48,7 +63,9 @@ import { t } from '../i18n';
 
   <h2 data-i18n="calendarMode.howToAccess.title">{t('calendarMode.howToAccess.title')}</h2>
 
-  <p data-i18n="calendarMode.howToAccess.description">{t('calendarMode.howToAccess.description')}</p>
+  <p data-i18n="calendarMode.howToAccess.description">
+    {t('calendarMode.howToAccess.description')}
+  </p>
 
   <StepList
     steps={[
@@ -90,7 +107,9 @@ import { t } from '../i18n';
 
   <h2 data-i18n="calendarMode.viewingSchedule.title">{t('calendarMode.viewingSchedule.title')}</h2>
 
-  <p data-i18n="calendarMode.viewingSchedule.description">{t('calendarMode.viewingSchedule.description')}</p>
+  <p data-i18n="calendarMode.viewingSchedule.description">
+    {t('calendarMode.viewingSchedule.description')}
+  </p>
 
   <Screenshot
     id="calendar-mode-view"
@@ -103,49 +122,71 @@ import { t } from '../i18n';
 
   <h2 data-i18n="calendarMode.limitations.title">{t('calendarMode.limitations.title')}</h2>
 
-  <p data-i18n="calendarMode.limitations.description">{t('calendarMode.limitations.description')}</p>
+  <p data-i18n="calendarMode.limitations.description">
+    {t('calendarMode.limitations.description')}
+  </p>
 
   <table class="w-full text-sm">
     <thead>
       <tr class="border-b border-border-default dark:border-border-default-dark">
-        <th class="py-2 text-left" data-i18n="calendarMode.limitations.table.feature">{t('calendarMode.limitations.table.feature')}</th>
-        <th class="py-2 text-center" data-i18n="calendarMode.limitations.table.fullLogin">{t('calendarMode.limitations.table.fullLogin')}</th>
-        <th class="py-2 text-center" data-i18n="calendarMode.limitations.table.calendarMode">{t('calendarMode.limitations.table.calendarMode')}</th>
+        <th class="py-2 text-left" data-i18n="calendarMode.limitations.table.feature"
+          >{t('calendarMode.limitations.table.feature')}</th
+        >
+        <th class="py-2 text-center" data-i18n="calendarMode.limitations.table.fullLogin"
+          >{t('calendarMode.limitations.table.fullLogin')}</th
+        >
+        <th class="py-2 text-center" data-i18n="calendarMode.limitations.table.calendarMode"
+          >{t('calendarMode.limitations.table.calendarMode')}</th
+        >
       </tr>
     </thead>
     <tbody>
       <tr class="border-b border-border-subtle dark:border-border-subtle-dark">
-        <td class="py-2" data-i18n="calendarMode.limitations.table.viewAssignments">{t('calendarMode.limitations.table.viewAssignments')}</td>
+        <td class="py-2" data-i18n="calendarMode.limitations.table.viewAssignments"
+          >{t('calendarMode.limitations.table.viewAssignments')}</td
+        >
         <td class="py-2 text-center">✓</td>
         <td class="py-2 text-center">✓</td>
       </tr>
       <tr class="border-b border-border-subtle dark:border-border-subtle-dark">
-        <td class="py-2" data-i18n="calendarMode.limitations.table.viewDetails">{t('calendarMode.limitations.table.viewDetails')}</td>
+        <td class="py-2" data-i18n="calendarMode.limitations.table.viewDetails"
+          >{t('calendarMode.limitations.table.viewDetails')}</td
+        >
         <td class="py-2 text-center">✓</td>
         <td class="py-2 text-center">✓</td>
       </tr>
       <tr class="border-b border-border-subtle dark:border-border-subtle-dark">
-        <td class="py-2" data-i18n="calendarMode.limitations.table.travelTime">{t('calendarMode.limitations.table.travelTime')}</td>
+        <td class="py-2" data-i18n="calendarMode.limitations.table.travelTime"
+          >{t('calendarMode.limitations.table.travelTime')}</td
+        >
         <td class="py-2 text-center">✓</td>
         <td class="py-2 text-center">✓</td>
       </tr>
       <tr class="border-b border-border-subtle dark:border-border-subtle-dark">
-        <td class="py-2" data-i18n="calendarMode.limitations.table.confirmAssignments">{t('calendarMode.limitations.table.confirmAssignments')}</td>
+        <td class="py-2" data-i18n="calendarMode.limitations.table.confirmAssignments"
+          >{t('calendarMode.limitations.table.confirmAssignments')}</td
+        >
         <td class="py-2 text-center">✓</td>
         <td class="py-2 text-center">✗</td>
       </tr>
       <tr class="border-b border-border-subtle dark:border-border-subtle-dark">
-        <td class="py-2" data-i18n="calendarMode.limitations.table.requestExchanges">{t('calendarMode.limitations.table.requestExchanges')}</td>
+        <td class="py-2" data-i18n="calendarMode.limitations.table.requestExchanges"
+          >{t('calendarMode.limitations.table.requestExchanges')}</td
+        >
         <td class="py-2 text-center">✓</td>
         <td class="py-2 text-center">✗</td>
       </tr>
       <tr class="border-b border-border-subtle dark:border-border-subtle-dark">
-        <td class="py-2" data-i18n="calendarMode.limitations.table.viewCompensations">{t('calendarMode.limitations.table.viewCompensations')}</td>
+        <td class="py-2" data-i18n="calendarMode.limitations.table.viewCompensations"
+          >{t('calendarMode.limitations.table.viewCompensations')}</td
+        >
         <td class="py-2 text-center">✓</td>
         <td class="py-2 text-center">✗</td>
       </tr>
       <tr>
-        <td class="py-2" data-i18n="calendarMode.limitations.table.acceptExchanges">{t('calendarMode.limitations.table.acceptExchanges')}</td>
+        <td class="py-2" data-i18n="calendarMode.limitations.table.acceptExchanges"
+          >{t('calendarMode.limitations.table.acceptExchanges')}</td
+        >
         <td class="py-2 text-center">✓</td>
         <td class="py-2 text-center">✗</td>
       </tr>
@@ -163,9 +204,15 @@ import { t } from '../i18n';
   <p data-i18n="calendarMode.security.description">{t('calendarMode.security.description')}</p>
 
   <ul>
-    <li data-i18n="calendarMode.security.tips.shareWithTrust">{t('calendarMode.security.tips.shareWithTrust')}</li>
-    <li data-i18n="calendarMode.security.tips.dontPostPublicly">{t('calendarMode.security.tips.dontPostPublicly')}</li>
-    <li data-i18n="calendarMode.security.tips.ifCompromised">{t('calendarMode.security.tips.ifCompromised')}</li>
+    <li data-i18n="calendarMode.security.tips.shareWithTrust">
+      {t('calendarMode.security.tips.shareWithTrust')}
+    </li>
+    <li data-i18n="calendarMode.security.tips.dontPostPublicly">
+      {t('calendarMode.security.tips.dontPostPublicly')}
+    </li>
+    <li data-i18n="calendarMode.security.tips.ifCompromised">
+      {t('calendarMode.security.tips.ifCompromised')}
+    </li>
   </ul>
 
   <InfoBox type="warning">

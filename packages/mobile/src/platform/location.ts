@@ -4,18 +4,18 @@
  * Provides location services using expo-location for Smart Departure Reminder feature.
  */
 
-import * as Location from 'expo-location';
-import * as TaskManager from 'expo-task-manager';
+import * as Location from 'expo-location'
+import * as TaskManager from 'expo-task-manager'
 
 /** Background location task name */
-export const LOCATION_TASK_NAME = 'volleykit-background-location';
+export const LOCATION_TASK_NAME = 'volleykit-background-location'
 
 /**
  * Location coordinates
  */
 export interface Coordinates {
-  latitude: number;
-  longitude: number;
+  latitude: number
+  longitude: number
 }
 
 /**
@@ -23,35 +23,33 @@ export interface Coordinates {
  */
 export interface LocationAdapter {
   /** Request foreground location permissions */
-  requestForegroundPermissions(): Promise<'granted' | 'denied' | 'restricted'>;
+  requestForegroundPermissions(): Promise<'granted' | 'denied' | 'restricted'>
   /** Request background location permissions (requires foreground first) */
-  requestBackgroundPermissions(): Promise<'granted' | 'denied' | 'restricted'>;
+  requestBackgroundPermissions(): Promise<'granted' | 'denied' | 'restricted'>
   /** Check if foreground permission is granted */
-  hasForegroundPermissions(): Promise<boolean>;
+  hasForegroundPermissions(): Promise<boolean>
   /** Check if background permission is granted */
-  hasBackgroundPermissions(): Promise<boolean>;
+  hasBackgroundPermissions(): Promise<boolean>
   /** Get current location */
-  getCurrentLocation(): Promise<Coordinates | null>;
+  getCurrentLocation(): Promise<Coordinates | null>
   /** Start background location tracking */
-  startBackgroundTracking(): Promise<void>;
+  startBackgroundTracking(): Promise<void>
   /** Stop background location tracking */
-  stopBackgroundTracking(): Promise<void>;
+  stopBackgroundTracking(): Promise<void>
   /** Check if background tracking is active */
-  isTrackingActive(): Promise<boolean>;
+  isTrackingActive(): Promise<boolean>
 }
 
 /**
  * Request foreground location permissions.
  */
-async function requestForegroundPermissions(): Promise<
-  'granted' | 'denied' | 'restricted'
-> {
+async function requestForegroundPermissions(): Promise<'granted' | 'denied' | 'restricted'> {
   try {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status === 'granted') return 'granted';
-    return 'denied';
+    const { status } = await Location.requestForegroundPermissionsAsync()
+    if (status === 'granted') return 'granted'
+    return 'denied'
   } catch {
-    return 'denied';
+    return 'denied'
   }
 }
 
@@ -59,21 +57,19 @@ async function requestForegroundPermissions(): Promise<
  * Request background location permissions.
  * Must have foreground permissions first.
  */
-async function requestBackgroundPermissions(): Promise<
-  'granted' | 'denied' | 'restricted'
-> {
+async function requestBackgroundPermissions(): Promise<'granted' | 'denied' | 'restricted'> {
   try {
     // Check foreground first
-    const foreground = await hasForegroundPermissions();
+    const foreground = await hasForegroundPermissions()
     if (!foreground) {
-      return 'denied';
+      return 'denied'
     }
 
-    const { status } = await Location.requestBackgroundPermissionsAsync();
-    if (status === 'granted') return 'granted';
-    return 'denied';
+    const { status } = await Location.requestBackgroundPermissionsAsync()
+    if (status === 'granted') return 'granted'
+    return 'denied'
   } catch {
-    return 'denied';
+    return 'denied'
   }
 }
 
@@ -82,10 +78,10 @@ async function requestBackgroundPermissions(): Promise<
  */
 async function hasForegroundPermissions(): Promise<boolean> {
   try {
-    const { status } = await Location.getForegroundPermissionsAsync();
-    return status === 'granted';
+    const { status } = await Location.getForegroundPermissionsAsync()
+    return status === 'granted'
   } catch {
-    return false;
+    return false
   }
 }
 
@@ -94,10 +90,10 @@ async function hasForegroundPermissions(): Promise<boolean> {
  */
 async function hasBackgroundPermissions(): Promise<boolean> {
   try {
-    const { status } = await Location.getBackgroundPermissionsAsync();
-    return status === 'granted';
+    const { status } = await Location.getBackgroundPermissionsAsync()
+    return status === 'granted'
   } catch {
-    return false;
+    return false
   }
 }
 
@@ -106,21 +102,21 @@ async function hasBackgroundPermissions(): Promise<boolean> {
  */
 async function getCurrentLocation(): Promise<Coordinates | null> {
   try {
-    const hasPermission = await hasForegroundPermissions();
+    const hasPermission = await hasForegroundPermissions()
     if (!hasPermission) {
-      return null;
+      return null
     }
 
     const location = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.Balanced,
-    });
+    })
 
     return {
       latitude: location.coords.latitude,
       longitude: location.coords.longitude,
-    };
+    }
   } catch {
-    return null;
+    return null
   }
 }
 
@@ -129,14 +125,14 @@ async function getCurrentLocation(): Promise<Coordinates | null> {
  * Uses significant location changes for battery efficiency.
  */
 async function startBackgroundTracking(): Promise<void> {
-  const hasPermission = await hasBackgroundPermissions();
+  const hasPermission = await hasBackgroundPermissions()
   if (!hasPermission) {
-    throw new Error('Background location permission not granted');
+    throw new Error('Background location permission not granted')
   }
 
-  const isTracking = await isTrackingActive();
+  const isTracking = await isTrackingActive()
   if (isTracking) {
-    return; // Already tracking
+    return // Already tracking
   }
 
   await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
@@ -151,19 +147,19 @@ async function startBackgroundTracking(): Promise<void> {
       notificationColor: '#0ea5e9',
     },
     pausesUpdatesAutomatically: true,
-  });
+  })
 }
 
 /**
  * Stop background location tracking.
  */
 async function stopBackgroundTracking(): Promise<void> {
-  const isTracking = await isTrackingActive();
+  const isTracking = await isTrackingActive()
   if (!isTracking) {
-    return; // Not tracking
+    return // Not tracking
   }
 
-  await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+  await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
 }
 
 /**
@@ -171,9 +167,9 @@ async function stopBackgroundTracking(): Promise<void> {
  */
 async function isTrackingActive(): Promise<boolean> {
   try {
-    return await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+    return await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)
   } catch {
-    return false;
+    return false
   }
 }
 
@@ -189,34 +185,32 @@ export const location: LocationAdapter = {
   startBackgroundTracking,
   stopBackgroundTracking,
   isTrackingActive,
-};
+}
 
 /**
  * Define the background location task.
  * This must be called at module scope (outside any component).
  */
-export function defineLocationTask(
-  callback: (locations: Coordinates[]) => Promise<void>
-): void {
+export function defineLocationTask(callback: (locations: Coordinates[]) => Promise<void>): void {
   TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
     if (error) {
-      console.warn('Background location error:', error);
-      return;
+      console.warn('Background location error:', error)
+      return
     }
 
     if (!data) {
-      return;
+      return
     }
 
-    const { locations } = data as { locations: Location.LocationObject[] };
+    const { locations } = data as { locations: Location.LocationObject[] }
 
     if (locations && locations.length > 0) {
       const coords = locations.map((loc) => ({
         latitude: loc.coords.latitude,
         longitude: loc.coords.longitude,
-      }));
+      }))
 
-      await callback(coords);
+      await callback(coords)
     }
-  });
+  })
 }

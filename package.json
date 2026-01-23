@@ -15,6 +15,8 @@
     "changeset:status": "changeset status",
     "generate:api": "npm run generate:api --workspace=web-app",
     "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,mjs,json,css,md,astro}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mjs,json,css,md,astro}\"",
     "test": "npm run test --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
     "mobile:start": "npm run start --workspace=@volleykit/mobile",
@@ -31,6 +33,7 @@
     "@changesets/changelog-github": "^0.5.2",
     "@changesets/cli": "^2.29.8",
     "@types/react": "^19.0.0",
+    "prettier": "^3.7.4",
     "typescript": "~5.9.3"
   },
   "overrides": {

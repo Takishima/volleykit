@@ -4,24 +4,24 @@
  * Uses @react-native-community/netinfo to detect network connectivity.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react'
 
-import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
+import NetInfo, { NetInfoState } from '@react-native-community/netinfo'
 
 /**
  * Network status information.
  */
 export interface NetworkStatus {
   /** Whether device has network connectivity */
-  isConnected: boolean;
+  isConnected: boolean
   /** Whether device is connected to WiFi */
-  isWifi: boolean;
+  isWifi: boolean
   /** Whether device is connected to cellular */
-  isCellular: boolean;
+  isCellular: boolean
   /** Whether connection is known (not initial state) */
-  isKnown: boolean;
+  isKnown: boolean
   /** Connection type (wifi, cellular, none, etc.) */
-  type: string;
+  type: string
 }
 
 /**
@@ -33,7 +33,7 @@ const DEFAULT_STATUS: NetworkStatus = {
   isCellular: false,
   isKnown: false,
   type: 'unknown',
-};
+}
 
 /**
  * Convert NetInfo state to NetworkStatus.
@@ -45,7 +45,7 @@ function convertNetInfoState(state: NetInfoState): NetworkStatus {
     isCellular: state.type === 'cellular',
     isKnown: state.isConnected !== null,
     type: state.type,
-  };
+  }
 }
 
 /**
@@ -54,25 +54,25 @@ function convertNetInfoState(state: NetInfoState): NetworkStatus {
  * @returns Current network status
  */
 export function useNetworkStatus(): NetworkStatus {
-  const [status, setStatus] = useState<NetworkStatus>(DEFAULT_STATUS);
+  const [status, setStatus] = useState<NetworkStatus>(DEFAULT_STATUS)
 
   useEffect(() => {
     // Get initial state
     NetInfo.fetch().then((state) => {
-      setStatus(convertNetInfoState(state));
-    });
+      setStatus(convertNetInfoState(state))
+    })
 
     // Subscribe to changes
     const unsubscribe = NetInfo.addEventListener((state) => {
-      setStatus(convertNetInfoState(state));
-    });
+      setStatus(convertNetInfoState(state))
+    })
 
     return () => {
-      unsubscribe();
-    };
-  }, []);
+      unsubscribe()
+    }
+  }, [])
 
-  return status;
+  return status
 }
 
 /**
@@ -81,39 +81,39 @@ export function useNetworkStatus(): NetworkStatus {
  * @returns Whether device has network connectivity
  */
 export function useIsOnline(): boolean {
-  const { isConnected } = useNetworkStatus();
-  return isConnected;
+  const { isConnected } = useNetworkStatus()
+  return isConnected
 }
 
 /**
  * Hook for getting network status with refresh capability.
  */
 export function useNetworkStatusWithRefresh(): {
-  status: NetworkStatus;
-  refresh: () => Promise<NetworkStatus>;
+  status: NetworkStatus
+  refresh: () => Promise<NetworkStatus>
 } {
-  const status = useNetworkStatus();
+  const status = useNetworkStatus()
 
   const refresh = useCallback(async (): Promise<NetworkStatus> => {
-    const state = await NetInfo.fetch();
-    return convertNetInfoState(state);
-  }, []);
+    const state = await NetInfo.fetch()
+    return convertNetInfoState(state)
+  }, [])
 
-  return { status, refresh };
+  return { status, refresh }
 }
 
 /**
  * Check network status imperatively (without hook).
  */
 export async function checkNetworkStatus(): Promise<NetworkStatus> {
-  const state = await NetInfo.fetch();
-  return convertNetInfoState(state);
+  const state = await NetInfo.fetch()
+  return convertNetInfoState(state)
 }
 
 /**
  * Check if online imperatively.
  */
 export async function isOnline(): Promise<boolean> {
-  const status = await checkNetworkStatus();
-  return status.isConnected;
+  const status = await checkNetworkStatus()
+  return status.isConnected
 }

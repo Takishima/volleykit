@@ -1,15 +1,12 @@
 ---
-import DocLayout from '../layouts/DocLayout.astro';
-import Screenshot from '../components/Screenshot.astro';
-import InfoBox from '../components/InfoBox.astro';
-import StepList from '../components/StepList.astro';
-import { t } from '../i18n';
+import DocLayout from '../layouts/DocLayout.astro'
+import Screenshot from '../components/Screenshot.astro'
+import InfoBox from '../components/InfoBox.astro'
+import StepList from '../components/StepList.astro'
+import { t } from '../i18n'
 ---
 
-<DocLayout
-  title={t('pages.offlinePwa.title')}
-  description={t('pages.offlinePwa.description')}
->
+<DocLayout title={t('pages.offlinePwa.title')} description={t('pages.offlinePwa.description')}>
   <h1 data-i18n="offlinePwa.heading">{t('offlinePwa.heading')}</h1>
 
   <p class="lead text-text-secondary dark:text-text-secondary-dark" data-i18n="offlinePwa.lead">
@@ -21,11 +18,21 @@ import { t } from '../i18n';
   <p data-i18n="offlinePwa.whatIsPwa.description">{t('offlinePwa.whatIsPwa.description')}</p>
 
   <ul>
-    <li data-i18n="offlinePwa.whatIsPwa.benefits.homeScreen">{t('offlinePwa.whatIsPwa.benefits.homeScreen')}</li>
-    <li data-i18n="offlinePwa.whatIsPwa.benefits.ownWindow">{t('offlinePwa.whatIsPwa.benefits.ownWindow')}</li>
-    <li data-i18n="offlinePwa.whatIsPwa.benefits.worksOffline">{t('offlinePwa.whatIsPwa.benefits.worksOffline')}</li>
-    <li data-i18n="offlinePwa.whatIsPwa.benefits.autoUpdates">{t('offlinePwa.whatIsPwa.benefits.autoUpdates')}</li>
-    <li data-i18n="offlinePwa.whatIsPwa.benefits.minimalStorage">{t('offlinePwa.whatIsPwa.benefits.minimalStorage')}</li>
+    <li data-i18n="offlinePwa.whatIsPwa.benefits.homeScreen">
+      {t('offlinePwa.whatIsPwa.benefits.homeScreen')}
+    </li>
+    <li data-i18n="offlinePwa.whatIsPwa.benefits.ownWindow">
+      {t('offlinePwa.whatIsPwa.benefits.ownWindow')}
+    </li>
+    <li data-i18n="offlinePwa.whatIsPwa.benefits.worksOffline">
+      {t('offlinePwa.whatIsPwa.benefits.worksOffline')}
+    </li>
+    <li data-i18n="offlinePwa.whatIsPwa.benefits.autoUpdates">
+      {t('offlinePwa.whatIsPwa.benefits.autoUpdates')}
+    </li>
+    <li data-i18n="offlinePwa.whatIsPwa.benefits.minimalStorage">
+      {t('offlinePwa.whatIsPwa.benefits.minimalStorage')}
+    </li>
   </ul>
 
   <InfoBox type="tip">
@@ -69,7 +76,9 @@ import { t } from '../i18n';
     ]}
   />
 
-  <h3 data-i18n="offlinePwa.installing.android.title">{t('offlinePwa.installing.android.title')}</h3>
+  <h3 data-i18n="offlinePwa.installing.android.title">
+    {t('offlinePwa.installing.android.title')}
+  </h3>
 
   <StepList
     steps={[
@@ -103,52 +112,88 @@ import { t } from '../i18n';
     instructions="Take a screenshot of the PWA install prompt or banner. Show the VolleyKit icon, name, and install button. If possible, show both iOS and Android versions."
   />
 
-  <h3 data-i18n="offlinePwa.installing.desktop.title">{t('offlinePwa.installing.desktop.title')}</h3>
+  <h3 data-i18n="offlinePwa.installing.desktop.title">
+    {t('offlinePwa.installing.desktop.title')}
+  </h3>
 
-  <p data-i18n="offlinePwa.installing.desktop.description">{t('offlinePwa.installing.desktop.description')}</p>
+  <p data-i18n="offlinePwa.installing.desktop.description">
+    {t('offlinePwa.installing.desktop.description')}
+  </p>
 
   <h2 data-i18n="offlinePwa.whatWorksOffline.title">{t('offlinePwa.whatWorksOffline.title')}</h2>
 
-  <p data-i18n="offlinePwa.whatWorksOffline.description">{t('offlinePwa.whatWorksOffline.description')}</p>
+  <p data-i18n="offlinePwa.whatWorksOffline.description">
+    {t('offlinePwa.whatWorksOffline.description')}
+  </p>
 
   <table class="w-full text-sm">
     <thead>
       <tr class="border-b border-border-default dark:border-border-default-dark">
-        <th class="py-2 text-left" data-i18n="offlinePwa.whatWorksOffline.table.feature">{t('offlinePwa.whatWorksOffline.table.feature')}</th>
-        <th class="py-2 text-center" data-i18n="offlinePwa.whatWorksOffline.table.offline">{t('offlinePwa.whatWorksOffline.table.offline')}</th>
-        <th class="py-2 text-left" data-i18n="offlinePwa.whatWorksOffline.table.notes">{t('offlinePwa.whatWorksOffline.table.notes')}</th>
+        <th class="py-2 text-left" data-i18n="offlinePwa.whatWorksOffline.table.feature"
+          >{t('offlinePwa.whatWorksOffline.table.feature')}</th
+        >
+        <th class="py-2 text-center" data-i18n="offlinePwa.whatWorksOffline.table.offline"
+          >{t('offlinePwa.whatWorksOffline.table.offline')}</th
+        >
+        <th class="py-2 text-left" data-i18n="offlinePwa.whatWorksOffline.table.notes"
+          >{t('offlinePwa.whatWorksOffline.table.notes')}</th
+        >
       </tr>
     </thead>
     <tbody>
       <tr class="border-b border-border-subtle dark:border-border-subtle-dark">
-        <td class="py-2" data-i18n="offlinePwa.whatWorksOffline.table.viewAssignments">{t('offlinePwa.whatWorksOffline.table.viewAssignments')}</td>
+        <td class="py-2" data-i18n="offlinePwa.whatWorksOffline.table.viewAssignments"
+          >{t('offlinePwa.whatWorksOffline.table.viewAssignments')}</td
+        >
         <td class="py-2 text-center">✓</td>
-        <td class="py-2" data-i18n="offlinePwa.whatWorksOffline.table.viewAssignmentsNote">{t('offlinePwa.whatWorksOffline.table.viewAssignmentsNote')}</td>
+        <td class="py-2" data-i18n="offlinePwa.whatWorksOffline.table.viewAssignmentsNote"
+          >{t('offlinePwa.whatWorksOffline.table.viewAssignmentsNote')}</td
+        >
       </tr>
       <tr class="border-b border-border-subtle dark:border-border-subtle-dark">
-        <td class="py-2" data-i18n="offlinePwa.whatWorksOffline.table.viewDetails">{t('offlinePwa.whatWorksOffline.table.viewDetails')}</td>
+        <td class="py-2" data-i18n="offlinePwa.whatWorksOffline.table.viewDetails"
+          >{t('offlinePwa.whatWorksOffline.table.viewDetails')}</td
+        >
         <td class="py-2 text-center">✓</td>
-        <td class="py-2" data-i18n="offlinePwa.whatWorksOffline.table.viewDetailsNote">{t('offlinePwa.whatWorksOffline.table.viewDetailsNote')}</td>
+        <td class="py-2" data-i18n="offlinePwa.whatWorksOffline.table.viewDetailsNote"
+          >{t('offlinePwa.whatWorksOffline.table.viewDetailsNote')}</td
+        >
       </tr>
       <tr class="border-b border-border-subtle dark:border-border-subtle-dark">
-        <td class="py-2" data-i18n="offlinePwa.whatWorksOffline.table.travelTimes">{t('offlinePwa.whatWorksOffline.table.travelTimes')}</td>
+        <td class="py-2" data-i18n="offlinePwa.whatWorksOffline.table.travelTimes"
+          >{t('offlinePwa.whatWorksOffline.table.travelTimes')}</td
+        >
         <td class="py-2 text-center">✓</td>
-        <td class="py-2" data-i18n="offlinePwa.whatWorksOffline.table.travelTimesNote">{t('offlinePwa.whatWorksOffline.table.travelTimesNote')}</td>
+        <td class="py-2" data-i18n="offlinePwa.whatWorksOffline.table.travelTimesNote"
+          >{t('offlinePwa.whatWorksOffline.table.travelTimesNote')}</td
+        >
       </tr>
       <tr class="border-b border-border-subtle dark:border-border-subtle-dark">
-        <td class="py-2" data-i18n="offlinePwa.whatWorksOffline.table.confirmAssignments">{t('offlinePwa.whatWorksOffline.table.confirmAssignments')}</td>
+        <td class="py-2" data-i18n="offlinePwa.whatWorksOffline.table.confirmAssignments"
+          >{t('offlinePwa.whatWorksOffline.table.confirmAssignments')}</td
+        >
         <td class="py-2 text-center">✗</td>
-        <td class="py-2" data-i18n="offlinePwa.whatWorksOffline.table.confirmAssignmentsNote">{t('offlinePwa.whatWorksOffline.table.confirmAssignmentsNote')}</td>
+        <td class="py-2" data-i18n="offlinePwa.whatWorksOffline.table.confirmAssignmentsNote"
+          >{t('offlinePwa.whatWorksOffline.table.confirmAssignmentsNote')}</td
+        >
       </tr>
       <tr class="border-b border-border-subtle dark:border-border-subtle-dark">
-        <td class="py-2" data-i18n="offlinePwa.whatWorksOffline.table.requestExchanges">{t('offlinePwa.whatWorksOffline.table.requestExchanges')}</td>
+        <td class="py-2" data-i18n="offlinePwa.whatWorksOffline.table.requestExchanges"
+          >{t('offlinePwa.whatWorksOffline.table.requestExchanges')}</td
+        >
         <td class="py-2 text-center">✗</td>
-        <td class="py-2" data-i18n="offlinePwa.whatWorksOffline.table.requestExchangesNote">{t('offlinePwa.whatWorksOffline.table.requestExchangesNote')}</td>
+        <td class="py-2" data-i18n="offlinePwa.whatWorksOffline.table.requestExchangesNote"
+          >{t('offlinePwa.whatWorksOffline.table.requestExchangesNote')}</td
+        >
       </tr>
       <tr>
-        <td class="py-2" data-i18n="offlinePwa.whatWorksOffline.table.viewCompensations">{t('offlinePwa.whatWorksOffline.table.viewCompensations')}</td>
+        <td class="py-2" data-i18n="offlinePwa.whatWorksOffline.table.viewCompensations"
+          >{t('offlinePwa.whatWorksOffline.table.viewCompensations')}</td
+        >
         <td class="py-2 text-center">✓</td>
-        <td class="py-2" data-i18n="offlinePwa.whatWorksOffline.table.viewCompensationsNote">{t('offlinePwa.whatWorksOffline.table.viewCompensationsNote')}</td>
+        <td class="py-2" data-i18n="offlinePwa.whatWorksOffline.table.viewCompensationsNote"
+          >{t('offlinePwa.whatWorksOffline.table.viewCompensationsNote')}</td
+        >
       </tr>
     </tbody>
   </table>
@@ -161,7 +206,9 @@ import { t } from '../i18n';
 
   <h2 data-i18n="offlinePwa.offlineIndicator.title">{t('offlinePwa.offlineIndicator.title')}</h2>
 
-  <p data-i18n="offlinePwa.offlineIndicator.description">{t('offlinePwa.offlineIndicator.description')}</p>
+  <p data-i18n="offlinePwa.offlineIndicator.description">
+    {t('offlinePwa.offlineIndicator.description')}
+  </p>
 
   <Screenshot
     id="offline-indicator"
@@ -177,9 +224,15 @@ import { t } from '../i18n';
   <p data-i18n="offlinePwa.updating.description">{t('offlinePwa.updating.description')}</p>
 
   <ol>
-    <li data-i18n="offlinePwa.updating.steps.backgroundDownload">{t('offlinePwa.updating.steps.backgroundDownload')}</li>
-    <li data-i18n="offlinePwa.updating.steps.notificationAppears">{t('offlinePwa.updating.steps.notificationAppears')}</li>
-    <li data-i18n="offlinePwa.updating.steps.tapReload">{t('offlinePwa.updating.steps.tapReload')}</li>
+    <li data-i18n="offlinePwa.updating.steps.backgroundDownload">
+      {t('offlinePwa.updating.steps.backgroundDownload')}
+    </li>
+    <li data-i18n="offlinePwa.updating.steps.notificationAppears">
+      {t('offlinePwa.updating.steps.notificationAppears')}
+    </li>
+    <li data-i18n="offlinePwa.updating.steps.tapReload">
+      {t('offlinePwa.updating.steps.tapReload')}
+    </li>
   </ol>
 
   <Screenshot

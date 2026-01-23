@@ -14,9 +14,9 @@ GET /indoorvolleyball.refadmin/refereestatementofexpenses/downloadrefereestateme
 
 ### Query Parameters
 
-| Parameter | Type | Required | Description |
-| ------------------ | ---- | -------- | -------------------------------- |
-| refereeConvocation | UUID | Yes | The referee convocation identifier |
+| Parameter          | Type | Required | Description                        |
+| ------------------ | ---- | -------- | ---------------------------------- |
+| refereeConvocation | UUID | Yes      | The referee convocation identifier |
 
 ### Example Request
 
@@ -26,11 +26,11 @@ GET /indoorvolleyball.refadmin/refereestatementofexpenses/downloadrefereestateme
 
 ### Request Headers
 
-| Header | Value |
-| ------- | ------------------------------------------------------------ |
-| Accept | text/html,application/xhtml+xml,application/xml;q=0.9,\*/\*;q=0.8 |
+| Header  | Value                                                                                              |
+| ------- | -------------------------------------------------------------------------------------------------- |
+| Accept  | text/html,application/xhtml+xml,application/xml;q=0.9,\*/\*;q=0.8                                  |
 | Referer | https://volleymanager.volleyball.ch/indoorvolleyball.refadmin/refereeconvocationcompensation/index |
-| Cookie | Neos_Flow_Session=\<session-id> |
+| Cookie  | Neos_Flow_Session=\<session-id>                                                                    |
 
 ## Response
 
@@ -40,13 +40,13 @@ Returns a PDF document as binary data.
 
 #### Response Headers
 
-| Header | Value |
-| ------------------------- | -------------------------------------------------------------- |
-| content-type | application/pdf; charset=utf-8 |
-| content-disposition | attachment; filename="YYYY-MM-DD_HH-MM_Quittung_fuer_Spiel_XXXXXX.pdf" |
-| content-description | File Transfer |
-| content-transfer-encoding | binary |
-| expires | 0 |
+| Header                    | Value                                                                  |
+| ------------------------- | ---------------------------------------------------------------------- |
+| content-type              | application/pdf; charset=utf-8                                         |
+| content-disposition       | attachment; filename="YYYY-MM-DD_HH-MM_Quittung_fuer_Spiel_XXXXXX.pdf" |
+| content-description       | File Transfer                                                          |
+| content-transfer-encoding | binary                                                                 |
+| expires                   | 0                                                                      |
 
 #### Filename Format
 
@@ -66,10 +66,10 @@ Example: `2025-01-15_14-30_Quittung_fuer_Spiel_384889.pdf`
 
 ### Error Responses
 
-| Status | Description |
-| ------ | --------------------------------------------------------------------- |
-| 401 | Unauthorized - User not authenticated |
-| 404 | Convocation not found or user not authorized to access this resource |
+| Status | Description                                                          |
+| ------ | -------------------------------------------------------------------- |
+| 401    | Unauthorized - User not authenticated                                |
+| 404    | Convocation not found or user not authorized to access this resource |
 
 ## PDF Content
 

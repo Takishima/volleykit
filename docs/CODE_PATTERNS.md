@@ -10,13 +10,13 @@ Detailed code examples for common patterns in this codebase. Reference this when
 
 ```typescript
 // src/stores/auth.ts pattern
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 interface AuthState {
-  isAuthenticated: boolean;
-  login: (credentials: Credentials) => Promise<void>;
-  logout: () => void;
+  isAuthenticated: boolean
+  login: (credentials: Credentials) => Promise<void>
+  logout: () => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -24,39 +24,39 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       isAuthenticated: false,
       login: async (credentials) => {
-        await api.login(credentials);
-        set({ isAuthenticated: true });
+        await api.login(credentials)
+        set({ isAuthenticated: true })
       },
       logout: () => set({ isAuthenticated: false }),
     }),
     { name: 'auth-storage' }
   )
-);
+)
 ```
 
 **TanStack Query for Server State**
 
 ```typescript
 // src/hooks/useAssignments.ts pattern
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 
 export function useAssignments() {
   return useQuery({
     queryKey: ['assignments'],
     queryFn: () => api.getAssignments(),
     staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+  })
 }
 
 export function useConfirmAssignment() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (id: string) => api.confirmAssignment(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['assignments'] })
     },
-  });
+  })
 }
 ```
 
@@ -67,25 +67,31 @@ export function useConfirmAssignment() {
 ```typescript
 // Bad: Logic mixed in component
 function AssignmentCard({ assignment }: Props) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [translateX, setTranslateX] = useState(0);
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [translateX, setTranslateX] = useState(0)
 
-  const handleSwipeStart = (e: TouchEvent) => { /* 20 lines */ };
-  const handleSwipeMove = (e: TouchEvent) => { /* 20 lines */ };
-  const handleSwipeEnd = (e: TouchEvent) => { /* 20 lines */ };
+  const handleSwipeStart = (e: TouchEvent) => {
+    /* 20 lines */
+  }
+  const handleSwipeMove = (e: TouchEvent) => {
+    /* 20 lines */
+  }
+  const handleSwipeEnd = (e: TouchEvent) => {
+    /* 20 lines */
+  }
 
   // Component is now 100+ lines
 }
 
 // Good: Extract to custom hook
 function useSwipeGesture(onSwipeLeft: () => void, onSwipeRight: () => void) {
-  const [translateX, setTranslateX] = useState(0);
+  const [translateX, setTranslateX] = useState(0)
   // ... gesture logic
-  return { translateX, handlers };
+  return { translateX, handlers }
 }
 
 function AssignmentCard({ assignment }: Props) {
-  const { translateX, handlers } = useSwipeGesture(onConfirm, onReject);
+  const { translateX, handlers } = useSwipeGesture(onConfirm, onReject)
   // Component stays focused on rendering
 }
 ```
@@ -125,18 +131,18 @@ Tabs.Panel = function TabPanel({ id, children }) { /* ... */ };
 ```typescript
 // Bad: What does 20 mean? What does 300 mean?
 if (Math.abs(translateX) > 20) {
-  setShowActions(true);
+  setShowActions(true)
 }
-setTimeout(cleanup, 300);
+setTimeout(cleanup, 300)
 
 // Good: Self-documenting constants
-const MINIMUM_SWIPE_DISTANCE_PX = 20;
-const ANIMATION_DURATION_MS = 300;
+const MINIMUM_SWIPE_DISTANCE_PX = 20
+const ANIMATION_DURATION_MS = 300
 
 if (Math.abs(translateX) > MINIMUM_SWIPE_DISTANCE_PX) {
-  setShowActions(true);
+  setShowActions(true)
 }
-setTimeout(cleanup, ANIMATION_DURATION_MS);
+setTimeout(cleanup, ANIMATION_DURATION_MS)
 ```
 
 ### React Keys
@@ -165,17 +171,17 @@ interface ListItem {
 // Bad: Interval never cleared
 useEffect(() => {
   setInterval(() => {
-    checkForUpdates();
-  }, 60000);
-}, []);
+    checkForUpdates()
+  }, 60000)
+}, [])
 
 // Good: Named constant + cleanup function
-const CHECK_INTERVAL_MS = 60000;
+const CHECK_INTERVAL_MS = 60000
 
 useEffect(() => {
-  const intervalId = setInterval(checkForUpdates, CHECK_INTERVAL_MS);
-  return () => clearInterval(intervalId);
-}, []);
+  const intervalId = setInterval(checkForUpdates, CHECK_INTERVAL_MS)
+  return () => clearInterval(intervalId)
+}, [])
 ```
 
 ### Race Conditions
@@ -214,36 +220,38 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 ```typescript
 // Bad: Outdated isMountedRef pattern (React 16/17 era)
-const isMountedRef = useRef(true);
+const isMountedRef = useRef(true)
 useEffect(() => {
   fetchData().then((data) => {
     if (isMountedRef.current) {
-      setData(data);
+      setData(data)
     }
-  });
-  return () => { isMountedRef.current = false; };
-}, []);
+  })
+  return () => {
+    isMountedRef.current = false
+  }
+}, [])
 
 // Good: AbortController for fetch cancellation
 useEffect(() => {
-  const controller = new AbortController();
+  const controller = new AbortController()
 
   fetchData({ signal: controller.signal })
     .then(setData)
     .catch((error) => {
       if (error.name !== 'AbortError') {
-        setError(error);
+        setError(error)
       }
-    });
+    })
 
-  return () => controller.abort();
-}, []);
+  return () => controller.abort()
+}, [])
 
 // Best: TanStack Query handles this automatically
 const { data, error, isLoading } = useQuery({
   queryKey: ['data', id],
   queryFn: ({ signal }) => fetchData(id, { signal }),
-});
+})
 ```
 
 ## Accessibility Patterns
@@ -335,47 +343,47 @@ function Modal({ isOpen, onClose, title, children }: ModalProps) {
 
 ```typescript
 // e2e/pages/assignments.page.ts
-import { Page, Locator } from '@playwright/test';
+import { Page, Locator } from '@playwright/test'
 
 export class AssignmentsPage {
-  readonly page: Page;
-  readonly assignmentsList: Locator;
-  readonly filterButton: Locator;
+  readonly page: Page
+  readonly assignmentsList: Locator
+  readonly filterButton: Locator
 
   constructor(page: Page) {
-    this.page = page;
-    this.assignmentsList = page.getByTestId('assignments-list');
-    this.filterButton = page.getByRole('button', { name: /filter/i });
+    this.page = page
+    this.assignmentsList = page.getByTestId('assignments-list')
+    this.filterButton = page.getByRole('button', { name: /filter/i })
   }
 
   async goto() {
-    await this.page.goto('/assignments');
-    await this.assignmentsList.waitFor();
+    await this.page.goto('/assignments')
+    await this.assignmentsList.waitFor()
   }
 
   async getAssignmentCard(id: string) {
-    return this.page.getByTestId(`assignment-${id}`);
+    return this.page.getByTestId(`assignment-${id}`)
   }
 
   async confirmAssignment(id: string) {
-    const card = await this.getAssignmentCard(id);
-    await card.getByRole('button', { name: /confirm/i }).click();
+    const card = await this.getAssignmentCard(id)
+    await card.getByRole('button', { name: /confirm/i }).click()
   }
 }
 
 // e2e/assignments.spec.ts
-import { test, expect } from '@playwright/test';
-import { AssignmentsPage } from './pages';
+import { test, expect } from '@playwright/test'
+import { AssignmentsPage } from './pages'
 
 test('user can confirm an assignment', async ({ page }) => {
-  const assignmentsPage = new AssignmentsPage(page);
-  await assignmentsPage.goto();
+  const assignmentsPage = new AssignmentsPage(page)
+  await assignmentsPage.goto()
 
-  await assignmentsPage.confirmAssignment('123');
+  await assignmentsPage.confirmAssignment('123')
 
-  const card = await assignmentsPage.getAssignmentCard('123');
-  await expect(card).toContainText('Confirmed');
-});
+  const card = await assignmentsPage.getAssignmentCard('123')
+  await expect(card).toContainText('Confirmed')
+})
 ```
 
 ## i18n Patterns
@@ -423,10 +431,10 @@ function MyComponent() {
 
 ```typescript
 // Define with placeholder
-confirmMessage: 'Are you sure you want to confirm {count} assignments?';
+confirmMessage: 'Are you sure you want to confirm {count} assignments?'
 
 // Use with values
-t('assignments.confirmMessage', { count: 5 });
+t('assignments.confirmMessage', { count: 5 })
 // Result: "Are you sure you want to confirm 5 assignments?"
 ```
 
@@ -436,27 +444,24 @@ t('assignments.confirmMessage', { count: 5 });
 
 ```typescript
 // src/api/client.ts pattern
-async function fetchWithErrorHandling<T>(
-  url: string,
-  options?: RequestInit
-): Promise<T> {
+async function fetchWithErrorHandling<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(url, {
     ...options,
     credentials: 'include', // For cookies
-  });
+  })
 
   if (!response.ok) {
     // Don't expose internal details
     if (response.status === 401) {
-      throw new AuthenticationError('Session expired');
+      throw new AuthenticationError('Session expired')
     }
     if (response.status === 403) {
-      throw new AuthorizationError('Access denied');
+      throw new AuthorizationError('Access denied')
     }
-    throw new ApiError(`Request failed: ${response.status}`);
+    throw new ApiError(`Request failed: ${response.status}`)
   }
 
-  return response.json();
+  return response.json()
 }
 ```
 
@@ -464,13 +469,13 @@ async function fetchWithErrorHandling<T>(
 
 ```typescript
 // Using generated types from OpenAPI spec
-import type { paths } from './schema';
+import type { paths } from './schema'
 
 type AssignmentsResponse =
-  paths['/api/assignments']['get']['responses']['200']['content']['application/json'];
+  paths['/api/assignments']['get']['responses']['200']['content']['application/json']
 
 async function getAssignments(): Promise<AssignmentsResponse> {
-  return fetchWithErrorHandling('/api/assignments');
+  return fetchWithErrorHandling('/api/assignments')
 }
 ```
 
@@ -490,7 +495,7 @@ describe('API tests', () => {
       http.post('*/api%5crefereeconvocation/*', () => {
         return HttpResponse.json({
           items: [mockAssignment],
-          totalItemsCount: 1
+          totalItemsCount: 1,
         })
       })
     )
@@ -509,14 +514,12 @@ it('handles 401 unauthorized', async () => {
     http.post('*/api%5crefereeconvocation/*', () => {
       return new HttpResponse(null, {
         status: 401,
-        statusText: 'Unauthorized'
+        statusText: 'Unauthorized',
       })
     })
   )
 
-  await expect(api.searchAssignments({})).rejects.toThrow(
-    'Session expired'
-  )
+  await expect(api.searchAssignments({})).rejects.toThrow('Session expired')
 })
 ```
 
@@ -560,3 +563,4 @@ it('uploads file with FormData', async () => {
 
   expect(capturedFormData?.get('resource')).toBeInstanceOf(File)
 })
+```

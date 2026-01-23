@@ -3,25 +3,20 @@
  * Footer component
  * Site footer with links and copyright
  */
-import { BASE_PATH } from '../constants';
+import { BASE_PATH } from '../constants'
 
-const currentYear = new Date().getFullYear();
+const currentYear = new Date().getFullYear()
 ---
 
-<footer class="border-t border-border-default bg-surface-card dark:border-border-default-dark dark:bg-surface-card-dark">
+<footer
+  class="border-t border-border-default bg-surface-card dark:border-border-default-dark dark:bg-surface-card-dark"
+>
   <div class="container mx-auto px-4 py-8">
     <div class="flex flex-col items-center gap-6 md:flex-row md:justify-between">
       <!-- Branding -->
       <div class="flex items-center gap-2">
-        <img
-          src={`${BASE_PATH}/favicon.svg`}
-          alt=""
-          class="h-6 w-6"
-          aria-hidden="true"
-        />
-        <span class="font-semibold text-text-primary dark:text-text-primary-dark">
-          VolleyKit
-        </span>
+        <img src={`${BASE_PATH}/favicon.svg`} alt="" class="h-6 w-6" aria-hidden="true" />
+        <span class="font-semibold text-text-primary dark:text-text-primary-dark"> VolleyKit </span>
       </div>
 
       <!-- Links -->

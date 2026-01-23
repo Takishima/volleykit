@@ -1,11 +1,11 @@
 ---
-import DocLayout from '../layouts/DocLayout.astro';
-import Screenshot from '../components/Screenshot.astro';
-import DeviceScreenshot from '../components/DeviceScreenshot.astro';
-import InfoBox from '../components/InfoBox.astro';
-import StepList from '../components/StepList.astro';
-import { BASE_PATH } from '../constants';
-import { t } from '../i18n';
+import DocLayout from '../layouts/DocLayout.astro'
+import Screenshot from '../components/Screenshot.astro'
+import DeviceScreenshot from '../components/DeviceScreenshot.astro'
+import InfoBox from '../components/InfoBox.astro'
+import StepList from '../components/StepList.astro'
+import { BASE_PATH } from '../constants'
+import { t } from '../i18n'
 ---
 
 <DocLayout
@@ -23,11 +23,21 @@ import { t } from '../i18n';
   <p data-i18n="gettingStarted.whatIs.description">{t('gettingStarted.whatIs.description')}</p>
 
   <ul>
-    <li data-i18n="gettingStarted.whatIs.features.viewAssignments">{t('gettingStarted.whatIs.features.viewAssignments')}</li>
-    <li data-i18n="gettingStarted.whatIs.features.manageExchanges">{t('gettingStarted.whatIs.features.manageExchanges')}</li>
-    <li data-i18n="gettingStarted.whatIs.features.trackCompensations">{t('gettingStarted.whatIs.features.trackCompensations')}</li>
-    <li data-i18n="gettingStarted.whatIs.features.offlineAccess">{t('gettingStarted.whatIs.features.offlineAccess')}</li>
-    <li data-i18n="gettingStarted.whatIs.features.travelTime">{t('gettingStarted.whatIs.features.travelTime')}</li>
+    <li data-i18n="gettingStarted.whatIs.features.viewAssignments">
+      {t('gettingStarted.whatIs.features.viewAssignments')}
+    </li>
+    <li data-i18n="gettingStarted.whatIs.features.manageExchanges">
+      {t('gettingStarted.whatIs.features.manageExchanges')}
+    </li>
+    <li data-i18n="gettingStarted.whatIs.features.trackCompensations">
+      {t('gettingStarted.whatIs.features.trackCompensations')}
+    </li>
+    <li data-i18n="gettingStarted.whatIs.features.offlineAccess">
+      {t('gettingStarted.whatIs.features.offlineAccess')}
+    </li>
+    <li data-i18n="gettingStarted.whatIs.features.travelTime">
+      {t('gettingStarted.whatIs.features.travelTime')}
+    </li>
   </ul>
 
   <InfoBox type="info">
@@ -38,11 +48,17 @@ import { t } from '../i18n';
 
   <h2 data-i18n="gettingStarted.howToLogin.title">{t('gettingStarted.howToLogin.title')}</h2>
 
-  <p data-i18n="gettingStarted.howToLogin.description">{t('gettingStarted.howToLogin.description')}</p>
+  <p data-i18n="gettingStarted.howToLogin.description">
+    {t('gettingStarted.howToLogin.description')}
+  </p>
 
-  <h3 data-i18n="gettingStarted.howToLogin.calendarMode.title">{t('gettingStarted.howToLogin.calendarMode.title')}</h3>
+  <h3 data-i18n="gettingStarted.howToLogin.calendarMode.title">
+    {t('gettingStarted.howToLogin.calendarMode.title')}
+  </h3>
 
-  <p data-i18n="gettingStarted.howToLogin.calendarMode.description">{t('gettingStarted.howToLogin.calendarMode.description')}</p>
+  <p data-i18n="gettingStarted.howToLogin.calendarMode.description">
+    {t('gettingStarted.howToLogin.calendarMode.description')}
+  </p>
 
   <StepList
     steps={[
@@ -74,9 +90,13 @@ import { t } from '../i18n';
     </p>
   </InfoBox>
 
-  <h3 data-i18n="gettingStarted.howToLogin.fullLogin.title">{t('gettingStarted.howToLogin.fullLogin.title')}</h3>
+  <h3 data-i18n="gettingStarted.howToLogin.fullLogin.title">
+    {t('gettingStarted.howToLogin.fullLogin.title')}
+  </h3>
 
-  <p data-i18n="gettingStarted.howToLogin.fullLogin.description">{t('gettingStarted.howToLogin.fullLogin.description')}</p>
+  <p data-i18n="gettingStarted.howToLogin.fullLogin.description">
+    {t('gettingStarted.howToLogin.fullLogin.description')}
+  </p>
 
   <StepList
     steps={[
@@ -110,7 +130,11 @@ import { t } from '../i18n';
     instructions="Take a screenshot of the login page with empty form fields. Show the VolleyKit branding, username/password inputs, and login button."
   />
 
-  <InfoBox type="tip" title={t('gettingStarted.howToLogin.fullLogin.tipTitle')} titleKey="gettingStarted.howToLogin.fullLogin.tipTitle">
+  <InfoBox
+    type="tip"
+    title={t('gettingStarted.howToLogin.fullLogin.tipTitle')}
+    titleKey="gettingStarted.howToLogin.fullLogin.tipTitle"
+  >
     <p data-i18n="gettingStarted.howToLogin.fullLogin.tipContent">
       {t('gettingStarted.howToLogin.fullLogin.tipContent')}
     </p>
@@ -118,27 +142,61 @@ import { t } from '../i18n';
 
   <h2 data-i18n="gettingStarted.quickTour.title">{t('gettingStarted.quickTour.title')}</h2>
 
-  <p data-i18n="gettingStarted.quickTour.description">{t('gettingStarted.quickTour.description')}</p>
+  <p data-i18n="gettingStarted.quickTour.description">
+    {t('gettingStarted.quickTour.description')}
+  </p>
 
-  <h3 data-i18n="gettingStarted.quickTour.assignments.title">{t('gettingStarted.quickTour.assignments.title')}</h3>
-  <p data-i18n="gettingStarted.quickTour.assignments.description">{t('gettingStarted.quickTour.assignments.description')}</p>
+  <h3 data-i18n="gettingStarted.quickTour.assignments.title">
+    {t('gettingStarted.quickTour.assignments.title')}
+  </h3>
+  <p data-i18n="gettingStarted.quickTour.assignments.description">
+    {t('gettingStarted.quickTour.assignments.description')}
+  </p>
 
-  <h3 data-i18n="gettingStarted.quickTour.exchanges.title">{t('gettingStarted.quickTour.exchanges.title')}</h3>
-  <p data-i18n="gettingStarted.quickTour.exchanges.description">{t('gettingStarted.quickTour.exchanges.description')}</p>
+  <h3 data-i18n="gettingStarted.quickTour.exchanges.title">
+    {t('gettingStarted.quickTour.exchanges.title')}
+  </h3>
+  <p data-i18n="gettingStarted.quickTour.exchanges.description">
+    {t('gettingStarted.quickTour.exchanges.description')}
+  </p>
 
-  <h3 data-i18n="gettingStarted.quickTour.compensations.title">{t('gettingStarted.quickTour.compensations.title')}</h3>
-  <p data-i18n="gettingStarted.quickTour.compensations.description">{t('gettingStarted.quickTour.compensations.description')}</p>
+  <h3 data-i18n="gettingStarted.quickTour.compensations.title">
+    {t('gettingStarted.quickTour.compensations.title')}
+  </h3>
+  <p data-i18n="gettingStarted.quickTour.compensations.description">
+    {t('gettingStarted.quickTour.compensations.description')}
+  </p>
 
-  <h3 data-i18n="gettingStarted.quickTour.settings.title">{t('gettingStarted.quickTour.settings.title')}</h3>
-  <p data-i18n="gettingStarted.quickTour.settings.description">{t('gettingStarted.quickTour.settings.description')}</p>
+  <h3 data-i18n="gettingStarted.quickTour.settings.title">
+    {t('gettingStarted.quickTour.settings.title')}
+  </h3>
+  <p data-i18n="gettingStarted.quickTour.settings.description">
+    {t('gettingStarted.quickTour.settings.description')}
+  </p>
 
   <h2 data-i18n="gettingStarted.nextSteps.title">{t('gettingStarted.nextSteps.title')}</h2>
 
-  <p data-i18n="gettingStarted.nextSteps.description">{t('gettingStarted.nextSteps.description')}</p>
+  <p data-i18n="gettingStarted.nextSteps.description">
+    {t('gettingStarted.nextSteps.description')}
+  </p>
 
   <ul>
-    <li><a href={`${BASE_PATH}/assignments/`} data-i18n="gettingStarted.nextSteps.links.assignments">{t('gettingStarted.nextSteps.links.assignments')}</a></li>
-    <li><a href={`${BASE_PATH}/exchanges/`} data-i18n="gettingStarted.nextSteps.links.exchanges">{t('gettingStarted.nextSteps.links.exchanges')}</a></li>
-    <li><a href={`${BASE_PATH}/compensations/`} data-i18n="gettingStarted.nextSteps.links.compensations">{t('gettingStarted.nextSteps.links.compensations')}</a></li>
+    <li>
+      <a href={`${BASE_PATH}/assignments/`} data-i18n="gettingStarted.nextSteps.links.assignments"
+        >{t('gettingStarted.nextSteps.links.assignments')}</a
+      >
+    </li>
+    <li>
+      <a href={`${BASE_PATH}/exchanges/`} data-i18n="gettingStarted.nextSteps.links.exchanges"
+        >{t('gettingStarted.nextSteps.links.exchanges')}</a
+      >
+    </li>
+    <li>
+      <a
+        href={`${BASE_PATH}/compensations/`}
+        data-i18n="gettingStarted.nextSteps.links.compensations"
+        >{t('gettingStarted.nextSteps.links.compensations')}</a
+      >
+    </li>
   </ul>
 </DocLayout>

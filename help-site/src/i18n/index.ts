@@ -1,33 +1,33 @@
-import { en } from './en';
-import { de } from './de';
-import { fr } from './fr';
-import { it } from './it';
-import { defaultLanguage, type Language, type TranslationKeys } from './types';
+import { en } from './en'
+import { de } from './de'
+import { fr } from './fr'
+import { it } from './it'
+import { defaultLanguage, type Language, type TranslationKeys } from './types'
 
-export { type Language, type TranslationKeys, languages, defaultLanguage } from './types';
+export { type Language, type TranslationKeys, languages, defaultLanguage } from './types'
 
 const translations: Record<Language, TranslationKeys> = {
   en,
   de,
   fr,
   it,
-};
+}
 
 /**
  * Get a nested value from an object using a dot-separated path
  */
 function getNestedValue(obj: unknown, path: string): string | undefined {
-  const keys = path.split('.');
-  let current: unknown = obj;
+  const keys = path.split('.')
+  let current: unknown = obj
 
   for (const key of keys) {
     if (current === null || current === undefined || typeof current !== 'object') {
-      return undefined;
+      return undefined
     }
-    current = (current as Record<string, unknown>)[key];
+    current = (current as Record<string, unknown>)[key]
   }
 
-  return typeof current === 'string' ? current : undefined;
+  return typeof current === 'string' ? current : undefined
 }
 
 /**
@@ -37,48 +37,48 @@ function getNestedValue(obj: unknown, path: string): string | undefined {
  */
 export function getLanguage(): Language {
   if (typeof window === 'undefined') {
-    return defaultLanguage;
+    return defaultLanguage
   }
 
   // Check URL parameter first (allows main app to pass language)
-  const urlParams = new URLSearchParams(window.location.search);
-  const urlLang = urlParams.get('lang');
+  const urlParams = new URLSearchParams(window.location.search)
+  const urlLang = urlParams.get('lang')
   if (urlLang && isValidLanguage(urlLang)) {
     // Persist the URL language to localStorage for subsequent page loads
-    localStorage.setItem('help-site-language', urlLang);
-    return urlLang;
+    localStorage.setItem('help-site-language', urlLang)
+    return urlLang
   }
 
   // Check localStorage second
-  const stored = localStorage.getItem('help-site-language');
+  const stored = localStorage.getItem('help-site-language')
   if (stored && isValidLanguage(stored)) {
-    return stored;
+    return stored
   }
 
   // Check browser language
-  const browserLang = navigator.language.split('-')[0];
+  const browserLang = navigator.language.split('-')[0]
   if (isValidLanguage(browserLang)) {
-    return browserLang;
+    return browserLang
   }
 
-  return defaultLanguage;
+  return defaultLanguage
 }
 
 /**
  * Set the current language and persist to localStorage
  */
 export function setLanguage(lang: Language): void {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem('help-site-language', lang);
+  if (typeof window === 'undefined') return
+  localStorage.setItem('help-site-language', lang)
   // Dispatch event for components to react to language change
-  window.dispatchEvent(new CustomEvent('language-change', { detail: { language: lang } }));
+  window.dispatchEvent(new CustomEvent('language-change', { detail: { language: lang } }))
 }
 
 /**
  * Check if a string is a valid language code
  */
 export function isValidLanguage(lang: string): lang is Language {
-  return lang === 'en' || lang === 'de' || lang === 'fr' || lang === 'it';
+  return lang === 'en' || lang === 'de' || lang === 'fr' || lang === 'it'
 }
 
 /**
@@ -96,20 +96,20 @@ export function t(
   variables?: Record<string, string | number>,
   lang?: Language
 ): string {
-  const language = lang ?? getLanguage();
-  const translation = getNestedValue(translations[language], key);
+  const language = lang ?? getLanguage()
+  const translation = getNestedValue(translations[language], key)
 
   if (translation === undefined) {
     // Fallback to English if translation not found
-    const fallback = getNestedValue(translations.en, key);
+    const fallback = getNestedValue(translations.en, key)
     if (fallback === undefined) {
-      console.warn(`Translation key not found: ${key}`);
-      return key;
+      console.warn(`Translation key not found: ${key}`)
+      return key
     }
-    return interpolate(fallback, variables);
+    return interpolate(fallback, variables)
   }
 
-  return interpolate(translation, variables);
+  return interpolate(translation, variables)
 }
 
 /**
@@ -117,11 +117,11 @@ export function t(
  * Replaces {variable} with the corresponding value
  */
 function interpolate(text: string, variables?: Record<string, string | number>): string {
-  if (!variables) return text;
+  if (!variables) return text
 
   return text.replace(/\{(\w+)\}/g, (match, key) => {
-    return variables[key]?.toString() ?? match;
-  });
+    return variables[key]?.toString() ?? match
+  })
 }
 
 /**
@@ -129,7 +129,7 @@ function interpolate(text: string, variables?: Record<string, string | number>):
  * Useful for passing to client-side scripts
  */
 export function getTranslations(lang?: Language): TranslationKeys {
-  return translations[lang ?? getLanguage()];
+  return translations[lang ?? getLanguage()]
 }
 
 /**
@@ -141,5 +141,5 @@ export function createTranslator(lang: Language = defaultLanguage) {
     t: (key: string, variables?: Record<string, string | number>) => t(key, variables, lang),
     language: lang,
     translations: translations[lang],
-  };
+  }
 }

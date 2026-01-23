@@ -15,14 +15,12 @@ This document outlines what we need to capture from the browser to build an accu
 For each endpoint, we need to capture:
 
 1. **Exact Request Parameters**
-
    - Open browser DevTools Network tab
    - Find the POST request
    - Copy the Form Data section
    - Paste into the corresponding API doc file
 
 1. **Complete Response Structure**
-
    - In the Network tab, click on the request
    - Go to "Response" tab
    - Copy the full JSON response
@@ -30,7 +28,6 @@ For each endpoint, we need to capture:
    - Note any nested structures, optional fields, etc.
 
 1. **CSRF Token Handling**
-
    - Where does the token come from?
    - Is it in a cookie, meta tag, or initial page load?
    - How is it validated?

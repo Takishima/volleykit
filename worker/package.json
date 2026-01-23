@@ -8,6 +8,8 @@
     "deploy": "wrangler deploy",
     "tail": "wrangler tail",
     "lint": "eslint .",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json}\"",
     "test": "vitest run",
     "test:watch": "vitest"
   },

@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build && npx pagefind --site dist --output-subdir _pagefind",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md,astro}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md,astro}\""
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.19",
@@ -15,6 +17,7 @@
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
-    "pagefind": "^1.4.0"
+    "pagefind": "^1.4.0",
+    "prettier-plugin-astro": "^0.14.1"
   }
 }

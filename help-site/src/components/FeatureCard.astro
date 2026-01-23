@@ -6,15 +6,15 @@
  */
 
 interface Props {
-  title: string;
-  description: string;
-  href: string;
-  icon: string;
-  titleKey?: string;
-  descriptionKey?: string;
+  title: string
+  description: string
+  href: string
+  icon: string
+  titleKey?: string
+  descriptionKey?: string
 }
 
-const { title, description, href, icon, titleKey, descriptionKey } = Astro.props;
+const { title, description, href, icon, titleKey, descriptionKey } = Astro.props
 
 // Icon SVGs mapped by name
 const icons: Record<string, string> = {
@@ -31,9 +31,9 @@ const icons: Record<string, string> = {
   'help-circle': `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>`,
   zap: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>`,
   shield: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>`,
-};
+}
 
-const iconSvg = icons[icon] || icons['help-circle'];
+const iconSvg = icons[icon] || icons['help-circle']
 ---
 
 <a
@@ -41,7 +41,9 @@ const iconSvg = icons[icon] || icons['help-circle'];
   class="group flex flex-col rounded-xl border border-border-default bg-surface-card p-6 transition-all hover:-translate-y-1 hover:border-primary-500 hover:shadow-lg dark:border-border-default-dark dark:bg-surface-card-dark dark:hover:border-primary-400"
 >
   <!-- Icon -->
-  <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary-100 text-primary-600 dark:bg-primary-950 dark:text-primary-400">
+  <div
+    class="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary-100 text-primary-600 dark:bg-primary-950 dark:text-primary-400"
+  >
     <svg
       class="h-6 w-6"
       fill="none"
@@ -61,10 +63,7 @@ const iconSvg = icons[icon] || icons['help-circle'];
   </h3>
 
   <!-- Description -->
-  <p
-    class="text-sm text-text-secondary dark:text-text-secondary-dark"
-    data-i18n={descriptionKey}
-  >
+  <p class="text-sm text-text-secondary dark:text-text-secondary-dark" data-i18n={descriptionKey}>
     {description}
   </p>
 
@@ -78,7 +77,7 @@ const iconSvg = icons[icon] || icons['help-circle'];
       viewBox="0 0 24 24"
       aria-hidden="true"
     >
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
     </svg>
   </div>
 </a>

@@ -32,23 +32,23 @@
  * Matches the API's expected filter format.
  */
 export interface SearchConfiguration {
-  fromDate?: string;
-  toDate?: string;
-  status?: string;
-  sortField?: string;
-  sortDirection?: 'asc' | 'desc';
-  limit?: number;
-  offset?: number;
+  fromDate?: string
+  toDate?: string
+  status?: string
+  sortField?: string
+  sortDirection?: 'asc' | 'desc'
+  limit?: number
+  offset?: number
 }
 
 /**
  * Person search filter configuration.
  */
 export interface PersonSearchFilter {
-  searchTerm?: string;
-  firstName?: string;
-  lastName?: string;
-  associationId?: number;
+  searchTerm?: string
+  firstName?: string
+  lastName?: string
+  associationId?: number
 }
 
 export const queryKeys = {
@@ -248,4 +248,4 @@ export const queryKeys = {
     /** User profile query */
     profile: () => ['user', 'profile'] as const,
   },
-} as const;
+} as const

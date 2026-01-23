@@ -10,21 +10,21 @@
  */
 export interface WidgetAssignment {
   /** Assignment ID for deep linking */
-  id: string;
+  id: string
   /** Game date/time in ISO 8601 format */
-  gameTime: string;
+  gameTime: string
   /** Home team name */
-  homeTeam: string;
+  homeTeam: string
   /** Away team name */
-  awayTeam: string;
+  awayTeam: string
   /** Venue/hall name */
-  venueName: string;
+  venueName: string
   /** Referee position (e.g., "1. Schiedsrichter") */
-  position: string;
+  position: string
   /** League name */
-  league: string;
+  league: string
   /** Assignment status */
-  status: 'confirmed' | 'pending';
+  status: 'confirmed' | 'pending'
 }
 
 /**
@@ -32,24 +32,24 @@ export interface WidgetAssignment {
  */
 export interface WidgetData {
   /** List of upcoming assignments (max 3) */
-  assignments: WidgetAssignment[];
+  assignments: WidgetAssignment[]
   /** Last data update timestamp in ISO 8601 format */
-  lastUpdatedAt: string;
+  lastUpdatedAt: string
   /** User's display name (optional) */
-  userName?: string;
+  userName?: string
   /** Whether the user is logged in */
-  isLoggedIn: boolean;
+  isLoggedIn: boolean
 }
 
 /**
  * Widget size variants.
  */
-export type WidgetSize = 'small' | 'medium' | 'large';
+export type WidgetSize = 'small' | 'medium' | 'large'
 
 /**
  * Widget family for iOS.
  */
-export type IOSWidgetFamily = 'systemSmall' | 'systemMedium' | 'systemLarge';
+export type IOSWidgetFamily = 'systemSmall' | 'systemMedium' | 'systemLarge'
 
 /**
  * Default empty widget data.
@@ -58,19 +58,19 @@ export const EMPTY_WIDGET_DATA: WidgetData = {
   assignments: [],
   lastUpdatedAt: new Date().toISOString(),
   isLoggedIn: false,
-};
+}
 
 /**
  * Maximum number of assignments to show in widget.
  */
-export const MAX_WIDGET_ASSIGNMENTS = 3;
+export const MAX_WIDGET_ASSIGNMENTS = 3
 
 /**
  * App group identifier for iOS data sharing.
  */
-export const IOS_APP_GROUP = 'group.ch.volleyball.volleykit';
+export const IOS_APP_GROUP = 'group.ch.volleyball.volleykit'
 
 /**
  * Shared preferences key for Android widget data.
  */
-export const ANDROID_WIDGET_PREFS_KEY = 'volleykit_widget_data';
+export const ANDROID_WIDGET_PREFS_KEY = 'volleykit_widget_data'
