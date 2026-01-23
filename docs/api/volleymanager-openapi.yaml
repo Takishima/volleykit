@@ -356,6 +356,38 @@ paths:
           description: Operation successful
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /indoorvolleyball.refadmin/api\refereegameexchange/pickFromRefereeGameExchange:
+    put:
+      tags: [Exchanges]
+      summary: Pick an applicant for a referee game exchange
+      description: |
+        Allows a dispatcher or admin to pick/confirm an applicant for a referee position exchange.
+        This finalizes the exchange by assigning the position to the selected applicant.
+      operationId: pickFromRefereeGameExchange
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [refereeGameExchange, __csrfToken]
+              properties:
+                refereeGameExchange[__identity]:
+                  type: string
+                  format: uuid
+                  description: The exchange ID to pick from
+                __csrfToken:
+                  type: string
+                  description: CSRF token for request validation
+      responses:
+        '200':
+          description: Exchange pick successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickExchangeResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /sportmanager.indoorvolleyball/api\indoorseason/getActiveIndoorSeason:
     get:
       tags: [Settings]
@@ -1876,6 +1908,132 @@ components:
           type: integer
           minimum: 0
           example: 7
+    PickExchangeResponse:
+      type: object
+      description: Response from picking an applicant for a referee game exchange
+      required: [refereeGameExchange]
+      properties:
+        refereeGameExchange:
+          $ref: '#/components/schemas/RefereeGameExchangeDetail'
+    RefereeGameExchangeDetail:
+      type: object
+      description: Detailed referee game exchange object with audit information
+      required: [__identity, status, refereePosition, submittingType, submittedAt]
+      properties:
+        __identity:
+          type: string
+          format: uuid
+          description: Unique identifier for this exchange
+          example: "d5a2a8e1-2ae7-4400-be39-8da8ecbce16f"
+        persistenceObjectIdentifier:
+          type: string
+          format: uuid
+          description: Persistence identifier (same as __identity)
+        status:
+          type: string
+          enum: [open, applied, closed]
+          description: Current status of the exchange
+          example: "applied"
+        refereePosition:
+          $ref: '#/components/schemas/RefereePosition'
+        refereeGame:
+          type: object
+          nullable: true
+          description: Reference to the referee game (if included)
+        submittingType:
+          type: string
+          enum: [referee, admin]
+          description: Who submitted the exchange request
+          example: "referee"
+        submittedAt:
+          type: string
+          format: date-time
+          description: When the exchange was submitted
+          example: "2026-01-22T12:58:18.000000+00:00"
+        submittedByPerson:
+          type: object
+          nullable: true
+          description: Person who submitted the exchange
+        appliedBy:
+          type: object
+          nullable: true
+          description: Person who applied for this exchange
+        appliedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When someone applied for this exchange
+          example: "2026-01-23T20:38:41.954034+00:00"
+        requiredRefereeLevel:
+          $ref: '#/components/schemas/RefereeLevel'
+        requiredRefereeLevelGradationValue:
+          type: integer
+          description: Gradation value for required referee level (1-4)
+          minimum: 1
+          maximum: 4
+          example: 4
+        responsibleClubIfApplicable:
+          type: object
+          nullable: true
+          description: Club responsible for the exchange if applicable
+        linkedDoubleConvocationGameNumberAndRefereePosition:
+          type: string
+          nullable: true
+          description: Linked double convocation info if applicable
+        latestReminderToChampionshipOwnerSentAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the last reminder was sent to championship owner
+        latestReminderToSubmittingTypeSentAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the last reminder was sent to submitting party
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: "2026-01-22T12:58:18.000000+00:00"
+        createdBy:
+          type: string
+          description: Username who created this exchange
+          example: "yannic_weber"
+        createdByPersistenceIdentifier:
+          type: string
+          format: uuid
+          description: Persistence identifier of the creator
+        createdByIpAddress:
+          type: string
+          nullable: true
+          description: IP address of the creator
+          example: "193.47.169.32"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+        updatedBy:
+          type: string
+          description: Username who last updated this exchange
+          example: "System"
+        updatedByPersistenceIdentifier:
+          type: string
+          description: Persistence identifier of the last updater
+        updatedByIpAddress:
+          type: string
+          nullable: true
+          description: IP address of the last updater
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Soft delete timestamp (null if not deleted)
+        lastUpdatedByRealUser:
+          type: boolean
+          description: Whether last update was by a real user vs system
+          example: false
+        _permissions:
+          $ref: '#/components/schemas/Permissions'
     # ==================== Referee Backup Response Schemas ====================
     RefereeBackupSearchResponse:
       type: object
