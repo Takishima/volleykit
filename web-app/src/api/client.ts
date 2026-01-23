@@ -55,7 +55,6 @@ export type RefereeBackupEntry = Schemas['RefereeBackupEntry']
 export type RefereeBackupSearchResponse = Schemas['RefereeBackupSearchResponse']
 export type BackupRefereeAssignment = Schemas['BackupRefereeAssignment']
 export type PickExchangeResponse = Schemas['PickExchangeResponse']
-export type RefereeGameExchangeDetail = Schemas['RefereeGameExchangeDetail']
 
 export interface PersonSearchFilter {
   firstName?: string

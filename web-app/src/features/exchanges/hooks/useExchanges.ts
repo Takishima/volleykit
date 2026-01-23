@@ -8,7 +8,12 @@ import {
 } from '@tanstack/react-query'
 import { startOfDay, endOfDay, format } from 'date-fns'
 
-import { getApiClient, type SearchConfiguration, type GameExchange } from '@/api/client'
+import {
+  getApiClient,
+  type SearchConfiguration,
+  type GameExchange,
+  type PickExchangeResponse,
+} from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
 import { DEFAULT_PAGE_SIZE } from '@/shared/hooks/usePaginatedQuery'
 import { useAuthStore } from '@/shared/stores/auth'
@@ -125,7 +130,11 @@ export function useGameExchanges(status: ExchangeStatus = 'all') {
 /**
  * Mutation hook to apply for an exchange.
  */
-export function useApplyForExchange(): UseMutationResult<void, Error, string> {
+export function useApplyForExchange(): UseMutationResult<
+  PickExchangeResponse,
+  Error,
+  string
+> {
   const queryClient = useQueryClient()
   const dataSource = useAuthStore((state) => state.dataSource)
   const apiClient = getApiClient(dataSource)

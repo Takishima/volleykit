@@ -386,18 +386,20 @@ export const mockApi = {
     // Update demo store state
     store.applyForExchange(exchangeId)
 
-    // Return response matching the real API
+    // Return response matching the real API schema (RefereeGameExchangeDetail)
+    // All required fields from the schema are explicitly included
+    const now = new Date().toISOString()
     return {
       refereeGameExchange: {
         __identity: exchangeId,
         persistenceObjectIdentifier: exchangeId,
-        status: 'applied',
+        status: 'applied' as const,
         refereePosition: exchange.refereePosition ?? 'head-one',
-        submittingType: exchange.submittingType ?? 'referee',
-        submittedAt: exchange.submittedAt ?? new Date().toISOString(),
-        appliedAt: new Date().toISOString(),
-        createdAt: exchange.submittedAt ?? new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        submittingType: (exchange.submittingType as 'referee' | 'admin') ?? 'referee',
+        submittedAt: exchange.submittedAt ?? now,
+        appliedAt: now,
+        createdAt: exchange.submittedAt ?? now,
+        updatedAt: now,
         lastUpdatedByRealUser: false,
       },
     }

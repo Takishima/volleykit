@@ -100,7 +100,7 @@ export interface ApiClient {
   searchExchanges(
     config: SearchConfiguration
   ): Promise<PaginatedResponse<GameExchange>>;
-  applyForExchange(exchangeId: string): Promise<PickFromExchangeResult>;
+  applyForExchange(exchangeId: string): Promise<PickExchangeResponse>;
   withdrawFromExchange(exchangeId: string): Promise<void>;
   addToExchange(assignmentId: string, reason?: string): Promise<void>;
 
@@ -157,12 +157,16 @@ export interface CompensationUpdateData {
 }
 
 /**
- * Result of picking an applicant from an exchange.
+ * Response from applying for/picking a referee game exchange.
+ * Matches the PickExchangeResponse schema from the OpenAPI spec.
  */
-export interface PickFromExchangeResult {
+export interface PickExchangeResponse {
   refereeGameExchange: {
     __identity: string;
     status: 'open' | 'applied' | 'closed';
+    refereePosition: string;
+    submittingType: 'referee' | 'admin';
+    submittedAt: string;
     appliedAt: string | null;
     [key: string]: unknown;
   };
