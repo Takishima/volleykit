@@ -132,40 +132,23 @@
       programs = {
         nixfmt.enable = true;
         yamlfmt.enable = true;
-        mdformat.enable = true;
         shfmt = {
           enable = true;
           indent_size = 2;
         };
+        # Use Prettier for the same file types as npm run format
         prettier = {
           enable = true;
           includes = [
-            # Web app
-            "web-app/**/*.ts"
-            "web-app/**/*.tsx"
-            "web-app/**/*.js"
-            "web-app/**/*.jsx"
-            "web-app/**/*.json"
-            "web-app/**/*.css"
-            # Shared package
-            "packages/shared/**/*.ts"
-            "packages/shared/**/*.tsx"
-            "packages/shared/**/*.js"
-            "packages/shared/**/*.json"
-            # Mobile app
-            "packages/mobile/**/*.ts"
-            "packages/mobile/**/*.tsx"
-            "packages/mobile/**/*.js"
-            "packages/mobile/**/*.json"
-            # Worker
-            "worker/**/*.ts"
-            "worker/**/*.json"
-            # Help site
-            "help-site/**/*.ts"
-            "help-site/**/*.js"
-            "help-site/**/*.astro"
-            "help-site/**/*.json"
-            "help-site/**/*.css"
+            "**/*.ts"
+            "**/*.tsx"
+            "**/*.js"
+            "**/*.jsx"
+            "**/*.mjs"
+            "**/*.json"
+            "**/*.css"
+            "**/*.md"
+            "**/*.astro"
           ];
         };
       };
