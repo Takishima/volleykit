@@ -2422,7 +2422,7 @@ describe('Integration: OCR Endpoint', () => {
     const body = (await response.json()) as JsonBody
 
     expect(response.status).toBe(503)
-    expect(body.error).toBe('OCR service not configured')
+    expect(body.error).toBe('Mistral OCR service not configured')
   })
 
   it('returns 400 when image field is missing', async () => {
@@ -2597,8 +2597,8 @@ describe('Integration: OCR Endpoint', () => {
     const response = await worker.fetch(request, mockEnv)
     const body = (await response.json()) as JsonBody
 
-    expect(response.status).toBe(502)
-    expect(body.error).toBe('OCR processing failed')
+    expect(response.status).toBe(500)
+    expect(body.error).toBe('Internal server error during OCR processing')
 
     vi.unstubAllGlobals()
   })
@@ -2607,13 +2607,13 @@ describe('Integration: OCR Endpoint', () => {
     const { default: worker } = await import('./index')
     const mockEnv = createMockEnv()
 
-    const mockOcrResult = {
-      pages: [{ markdown: 'Extracted text from image' }],
+    const mockMistralResponse = {
+      pages: [{ markdown: 'Extracted text from image', index: 0 }],
     }
 
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue(new Response(JSON.stringify(mockOcrResult), { status: 200 }))
+      vi.fn().mockResolvedValue(new Response(JSON.stringify(mockMistralResponse), { status: 200 }))
     )
 
     const formData = new FormData()
@@ -2631,7 +2631,13 @@ describe('Integration: OCR Endpoint', () => {
     const body = (await response.json()) as JsonBody
 
     expect(response.status).toBe(200)
-    expect(body).toEqual(mockOcrResult)
+    // Verify the unified OcrResult format
+    expect(body).toEqual({
+      provider: 'mistral',
+      text: 'Extracted text from image',
+      pages: [{ text: 'Extracted text from image', index: 0 }],
+      raw: mockMistralResponse,
+    })
 
     vi.unstubAllGlobals()
   })

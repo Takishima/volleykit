@@ -12,6 +12,7 @@
  * @see https://developers.cloudflare.com/waf/rate-limiting-rules/
  */
 
+import { AwsClient } from 'aws4fetch'
 import type { HeadersWithCookies } from './types'
 import {
   AUTH_ENDPOINT,
@@ -56,6 +57,9 @@ interface RateLimiter {
   limit(options: { key: string }): Promise<{ success: boolean }>
 }
 
+// OCR provider options
+type OcrProvider = 'mistral' | 'aws'
+
 interface Env {
   ALLOWED_ORIGINS: string
   TARGET_HOST: string
@@ -63,6 +67,12 @@ interface Env {
   KILL_SWITCH?: string // Set to "true" to disable the proxy
   MISTRAL_API_KEY?: string // API key for Mistral OCR
   AUTH_LOCKOUT?: AuthLockoutKV // KV namespace for auth lockout state
+  // AWS Textract credentials
+  AWS_ACCESS_KEY_ID?: string
+  AWS_SECRET_ACCESS_KEY?: string
+  AWS_REGION?: string // e.g., "eu-central-1"
+  // OCR provider selection: "mistral" (default) or "aws"
+  OCR_PROVIDER?: OcrProvider
 }
 
 function validateEnv(env: Env): void {
@@ -148,6 +158,147 @@ function decodeSessionToken(token: string): string | null {
   } catch {
     return null
   }
+}
+
+// OCR result interface for unified response format
+interface OcrResult {
+  provider: OcrProvider
+  text: string
+  pages?: Array<{ text: string; index: number }>
+  raw?: unknown // Original provider response for debugging
+}
+
+/**
+ * Process document with AWS Textract
+ */
+async function processWithTextract(imageBuffer: ArrayBuffer, env: Env): Promise<OcrResult> {
+  if (!env.AWS_ACCESS_KEY_ID || !env.AWS_SECRET_ACCESS_KEY || !env.AWS_REGION) {
+    throw new Error('AWS credentials not configured')
+  }
+
+  const aws = new AwsClient({
+    accessKeyId: env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
+    region: env.AWS_REGION,
+  })
+
+  // AWS Textract DetectDocumentText API
+  const textractUrl = `https://textract.${env.AWS_REGION}.amazonaws.com/`
+
+  const response = await aws.fetch(textractUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-amz-json-1.1',
+      'X-Amz-Target': 'Textract.DetectDocumentText',
+    },
+    body: JSON.stringify({
+      Document: {
+        Bytes: arrayBufferToBase64(imageBuffer),
+      },
+    }),
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    console.error('AWS Textract error:', response.status, errorText)
+    throw new Error(`Textract error: ${response.status}`)
+  }
+
+  const result = (await response.json()) as {
+    Blocks?: Array<{ BlockType: string; Text?: string }>
+  }
+
+  // Extract text from LINE blocks (preserves reading order)
+  const lines =
+    result.Blocks?.filter((block) => block.BlockType === 'LINE').map((block) => block.Text || '') || []
+
+  return {
+    provider: 'aws',
+    text: lines.join('\n'),
+    raw: result,
+  }
+}
+
+/**
+ * Process document with Mistral OCR
+ */
+async function processWithMistral(imageBuffer: ArrayBuffer, mimeType: string, env: Env): Promise<OcrResult> {
+  if (!env.MISTRAL_API_KEY) {
+    throw new Error('Mistral API key not configured')
+  }
+
+  // Convert image to base64 using chunked approach
+  const bytes = new Uint8Array(imageBuffer)
+  const CHUNK_SIZE = 8192
+  let base64Image = ''
+  for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+    const chunk = bytes.subarray(i, i + CHUNK_SIZE)
+    base64Image += String.fromCharCode(...chunk)
+  }
+  base64Image = btoa(base64Image)
+  const dataUrl = `data:${mimeType};base64,${base64Image}`
+
+  const mistralResponse = await fetch('https://api.mistral.ai/v1/ocr', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${env.MISTRAL_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'mistral-ocr-latest',
+      document: {
+        type: 'image_url',
+        image_url: { url: dataUrl },
+      },
+      include_image_base64: false,
+      table_format: 'html',
+    }),
+  })
+
+  if (!mistralResponse.ok) {
+    const errorText = await mistralResponse.text()
+    console.error('Mistral OCR error:', mistralResponse.status, errorText)
+
+    if (mistralResponse.status === 401) {
+      throw new Error('Mistral authentication failed')
+    }
+    if (mistralResponse.status === 429) {
+      throw new Error('Mistral rate limit exceeded')
+    }
+    throw new Error(`Mistral error: ${mistralResponse.status}`)
+  }
+
+  const result = (await mistralResponse.json()) as {
+    pages?: Array<{ markdown: string; index: number }>
+  }
+
+  // Extract text from pages
+  const pages =
+    result.pages?.map((page) => ({
+      text: page.markdown || '',
+      index: page.index,
+    })) || []
+
+  return {
+    provider: 'mistral',
+    text: pages.map((p) => p.text).join('\n\n'),
+    pages,
+    raw: result,
+  }
+}
+
+/**
+ * Convert ArrayBuffer to base64 string
+ */
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer)
+  const CHUNK_SIZE = 8192
+  let binary = ''
+  for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+    const chunk = bytes.subarray(i, i + CHUNK_SIZE)
+    binary += String.fromCharCode(...chunk)
+  }
+  return btoa(binary)
 }
 
 export default {
@@ -348,8 +499,8 @@ export default {
       )
     }
 
-    // OCR endpoint - proxy to Mistral OCR API
-    // Accepts POST with image data and returns OCR results
+    // OCR endpoint - supports Mistral OCR and AWS Textract
+    // Provider selection via OCR_PROVIDER env var (default: "mistral") or ?provider query param
     if (url.pathname === '/ocr') {
       const origin = request.headers.get('Origin')
       let allowedOrigins: string[]
@@ -418,9 +569,28 @@ export default {
         })
       }
 
-      // Check if Mistral API key is configured
-      if (!env.MISTRAL_API_KEY) {
-        return new Response(JSON.stringify({ error: 'OCR service not configured' }), {
+      // Determine OCR provider from request or env (default: "mistral")
+      // Request can override via ?provider=aws or ?provider=mistral query param
+      const requestedProvider = url.searchParams.get('provider')
+      const provider: OcrProvider =
+        requestedProvider === 'aws' || requestedProvider === 'mistral'
+          ? requestedProvider
+          : env.OCR_PROVIDER || 'mistral'
+
+      // Validate provider credentials are configured
+      if (provider === 'mistral' && !env.MISTRAL_API_KEY) {
+        return new Response(JSON.stringify({ error: 'Mistral OCR service not configured' }), {
+          status: 503,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders(origin!),
+            ...securityHeaders(),
+          },
+        })
+      }
+
+      if (provider === 'aws' && (!env.AWS_ACCESS_KEY_ID || !env.AWS_SECRET_ACCESS_KEY || !env.AWS_REGION)) {
+        return new Response(JSON.stringify({ error: 'AWS Textract service not configured' }), {
           status: 503,
           headers: {
             'Content-Type': 'application/json',
@@ -447,11 +617,7 @@ export default {
         }
 
         // Validate file type
-        if (
-          !OCR_ALLOWED_MIME_TYPES.includes(
-            imageFile.type as (typeof OCR_ALLOWED_MIME_TYPES)[number]
-          )
-        ) {
+        if (!OCR_ALLOWED_MIME_TYPES.includes(imageFile.type as (typeof OCR_ALLOWED_MIME_TYPES)[number])) {
           return new Response(
             JSON.stringify({
               error: `Unsupported file type: ${imageFile.type}. Allowed: ${OCR_ALLOWED_MIME_TYPES.join(', ')}`,
@@ -484,81 +650,16 @@ export default {
           )
         }
 
-        // Convert image to base64 for Mistral API
-        // Use chunked approach to avoid stack overflow with large files
         const imageBuffer = await imageFile.arrayBuffer()
-        const bytes = new Uint8Array(imageBuffer)
-        const CHUNK_SIZE = 8192
-        let base64Image = ''
-        for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
-          const chunk = bytes.subarray(i, i + CHUNK_SIZE)
-          base64Image += String.fromCharCode(...chunk)
-        }
-        base64Image = btoa(base64Image)
-        const dataUrl = `data:${imageFile.type};base64,${base64Image}`
 
-        // Call Mistral OCR API
-        const mistralResponse = await fetch('https://api.mistral.ai/v1/ocr', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${env.MISTRAL_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'mistral-ocr-latest',
-            document: {
-              type: 'image_url',
-              image_url: {
-                url: dataUrl,
-              },
-            },
-            include_image_base64: false,
-            // Enable HTML table formatting for structured table extraction
-            // Scoresheets contain player lists and scores that benefit from table structure
-            table_format: 'html',
-          }),
-        })
-
-        if (!mistralResponse.ok) {
-          const errorText = await mistralResponse.text()
-          console.error('Mistral OCR error:', mistralResponse.status, errorText)
-
-          // Return appropriate error based on status
-          if (mistralResponse.status === 401) {
-            return new Response(JSON.stringify({ error: 'OCR service authentication failed' }), {
-              status: 503,
-              headers: {
-                'Content-Type': 'application/json',
-                ...corsHeaders(origin!),
-                ...securityHeaders(),
-              },
-            })
-          }
-
-          if (mistralResponse.status === 429) {
-            return new Response(JSON.stringify({ error: 'OCR service rate limit exceeded' }), {
-              status: 429,
-              headers: {
-                'Content-Type': 'application/json',
-                'Retry-After': String(OCR_RATE_LIMIT_RETRY_SECONDS),
-                ...corsHeaders(origin!),
-                ...securityHeaders(),
-              },
-            })
-          }
-
-          return new Response(JSON.stringify({ error: 'OCR processing failed' }), {
-            status: 502,
-            headers: {
-              'Content-Type': 'application/json',
-              ...corsHeaders(origin!),
-              ...securityHeaders(),
-            },
-          })
+        // Process with selected provider
+        let ocrResult: OcrResult
+        if (provider === 'aws') {
+          ocrResult = await processWithTextract(imageBuffer, env)
+        } else {
+          ocrResult = await processWithMistral(imageBuffer, imageFile.type, env)
         }
 
-        // Return the Mistral OCR response
-        const ocrResult = await mistralResponse.json()
         return new Response(JSON.stringify(ocrResult), {
           status: 200,
           headers: {
@@ -569,17 +670,41 @@ export default {
         })
       } catch (error) {
         console.error('OCR proxy error:', error)
-        return new Response(
-          JSON.stringify({ error: 'Internal server error during OCR processing' }),
-          {
-            status: 500,
+
+        // Handle specific error types
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+
+        if (errorMessage.includes('rate limit')) {
+          return new Response(JSON.stringify({ error: 'OCR service rate limit exceeded' }), {
+            status: 429,
+            headers: {
+              'Content-Type': 'application/json',
+              'Retry-After': String(OCR_RATE_LIMIT_RETRY_SECONDS),
+              ...corsHeaders(origin!),
+              ...securityHeaders(),
+            },
+          })
+        }
+
+        if (errorMessage.includes('authentication')) {
+          return new Response(JSON.stringify({ error: 'OCR service authentication failed' }), {
+            status: 503,
             headers: {
               'Content-Type': 'application/json',
               ...corsHeaders(origin!),
               ...securityHeaders(),
             },
-          }
-        )
+          })
+        }
+
+        return new Response(JSON.stringify({ error: 'Internal server error during OCR processing' }), {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders(origin!),
+            ...securityHeaders(),
+          },
+        })
       }
     }
 
