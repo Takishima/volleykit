@@ -16,7 +16,7 @@
 set -euo pipefail
 
 # =============================================================================
-# CONFIGURATION - Edit these to change skip behavior
+# CONFIGURATION - Edit these to change behavior
 # =============================================================================
 
 # File patterns that require validation (regex for grep -E)
@@ -27,6 +27,10 @@ SKIP_PATTERNS='\.(md|txt|json|yaml|yml|sh|css|svg|png|jpg|jpeg|gif|ico)$'
 
 # Files that always trigger validation regardless of SKIP_PATTERNS
 FORCE_VALIDATE_PATTERNS='(package\.json|tsconfig\.json|vite\.config|eslint\.config)'
+
+# Timeout settings (in seconds)
+MAX_VALIDATION_TIME_S=300  # 5 minutes - consider validation hung after this
+STALE_VALIDATION_AGE_S=600 # 10 minutes - cleanup stale validation state
 
 # =============================================================================
 # HELPER FUNCTIONS
@@ -39,12 +43,21 @@ allow() {
 
 block() {
     local reason="$1"
-    # Escape for JSON
+    # Escape for JSON - handle backslashes, quotes, and newlines
     reason=$(echo "$reason" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
     cat << EOF
 {"decision": "block", "reason": "$reason"}
 EOF
     exit 0
+}
+
+# Sanitize output for safe inclusion in messages
+# Removes control characters and limits length
+sanitize_output() {
+    local input="$1"
+    local max_length="${2:-2000}"
+    # Remove ANSI escape codes and control characters, limit length
+    echo "$input" | sed 's/\x1b\[[0-9;]*m//g' | tr -cd '[:print:]\n' | head -c "$max_length"
 }
 
 get_staged_files() {
@@ -71,6 +84,18 @@ needs_validation() {
     return 1
 }
 
+# Extract command from JSON input with jq fallback
+extract_command() {
+    local input="$1"
+    # Try jq first, fall back to grep/sed if jq unavailable
+    if command -v jq &>/dev/null; then
+        echo "$input" | jq -r '.tool_input.command // empty' 2>/dev/null || echo ""
+    else
+        # Fallback: basic extraction without jq
+        echo "$input" | grep -o '"command"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"command"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo ""
+    fi
+}
+
 # =============================================================================
 # MAIN LOGIC
 # =============================================================================
@@ -78,8 +103,8 @@ needs_validation() {
 # Read the tool input from stdin
 INPUT=$(cat)
 
-# Extract the command being run
-COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
+# Extract the command being run (with jq fallback)
+COMMAND=$(extract_command "$INPUT")
 
 # --- Gate 1: Only process git commit commands ---
 if [[ "$COMMAND" != *"git commit"* ]] && [[ "$COMMAND" != *"git add"*"&&"*"commit"* ]]; then
@@ -123,15 +148,35 @@ VALIDATION_STEPS_DIR="$VALIDATION_DIR/steps"
 # Failure output directory (persists for Claude to read)
 FAILURE_DIR="/tmp/claude-validation-failure"
 
+# --- Check for stale validation state and cleanup ---
+if [[ -f "$VALIDATION_START_FILE" ]]; then
+    START_TIME=$(cat "$VALIDATION_START_FILE" 2>/dev/null || echo "0")
+    NOW=$(date +%s)
+    AGE=$((NOW - START_TIME))
+
+    if [[ $AGE -gt $STALE_VALIDATION_AGE_S ]]; then
+        # Stale validation state from previous session - cleanup
+        rm -rf "$VALIDATION_DIR"
+    fi
+fi
+
 # --- Check if validation is already running or completed ---
 if [[ -f "$VALIDATION_PID_FILE" ]]; then
     PID=$(cat "$VALIDATION_PID_FILE")
+    START_TIME=$(cat "$VALIDATION_START_FILE" 2>/dev/null || echo "0")
+    NOW=$(date +%s)
+    ELAPSED=$((NOW - START_TIME))
 
     if kill -0 "$PID" 2>/dev/null; then
+        # Check if validation has been running too long (hung)
+        if [[ $ELAPSED -gt $MAX_VALIDATION_TIME_S ]]; then
+            # Kill hung validation and cleanup
+            kill "$PID" 2>/dev/null || true
+            rm -rf "$VALIDATION_DIR"
+            block "Validation timed out after ${MAX_VALIDATION_TIME_S}s. The process may be hung. Cleaned up stale state - please retry your commit."
+        fi
+
         # Still running - show elapsed time
-        START_TIME=$(cat "$VALIDATION_START_FILE" 2>/dev/null || echo "0")
-        NOW=$(date +%s)
-        ELAPSED=$((NOW - START_TIME))
         block "Validation in progress (${ELAPSED}s elapsed)... The checks run in parallel for speed. Please retry your commit in a few seconds."
     fi
 
@@ -165,11 +210,13 @@ if [[ -f "$VALIDATION_PID_FILE" ]]; then
     # Cleanup validation dir
     rm -rf "$VALIDATION_DIR"
 
-    # Extract summary (key failure indicators)
+    # Extract and sanitize summary (key failure indicators)
     SUMMARY=$(echo "$OUTPUT" | grep -E "(✗|failed|error|Error)" | head -10)
     if [[ -z "$SUMMARY" ]]; then
         SUMMARY=$(echo "$OUTPUT" | tail -20)
     fi
+    # Sanitize to prevent command injection via crafted output
+    SUMMARY=$(sanitize_output "$SUMMARY" 1500)
 
     block "Validation failed. Summary:
 
