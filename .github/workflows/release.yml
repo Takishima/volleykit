@@ -8,8 +8,13 @@ on:
         required: false
         type: boolean
         default: false
+      build_android:
+        description: 'Build Android app (requires EAS to be configured)'
+        required: false
+        type: boolean
+        default: false
       build_ios:
-        description: 'Build iOS app (requires Apple credentials to be configured)'
+        description: 'Build iOS app (requires EAS and Apple credentials to be configured)'
         required: false
         type: boolean
         default: false
@@ -348,7 +353,7 @@ jobs:
   # Build Android APK and attach to release
   build-android:
     needs: release
-    if: needs.release.outputs.released == 'true' && !inputs.dry_run
+    if: needs.release.outputs.released == 'true' && !inputs.dry_run && inputs.build_android
     uses: ./.github/workflows/build-mobile-reusable.yml
     with:
       platform: android
