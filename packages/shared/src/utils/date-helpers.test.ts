@@ -7,6 +7,7 @@ import {
   MS_PER_SECOND,
   MS_PER_MINUTE,
   MS_PER_HOUR,
+  MS_PER_DAY,
   SECONDS_PER_MINUTE,
   MINUTES_PER_HOUR,
   HOURS_PER_DAY,
@@ -46,6 +47,10 @@ describe('Time Conversion Constants', () => {
 
   it('should have correct MS_PER_HOUR', () => {
     expect(MS_PER_HOUR).toBe(3600000)
+  })
+
+  it('should have correct MS_PER_DAY', () => {
+    expect(MS_PER_DAY).toBe(86400000)
   })
 })
 

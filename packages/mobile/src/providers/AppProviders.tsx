@@ -15,6 +15,7 @@ import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from '@ta
 
 import { StorageContext } from '@volleykit/shared/adapters'
 import { HttpStatus } from '@volleykit/shared/api'
+import { MS_PER_MINUTE, MS_PER_DAY } from '@volleykit/shared/utils'
 
 import { SessionMonitorProvider, useSessionMonitorContext, ApiClientProvider } from '../contexts'
 import { NetworkProvider } from './NetworkProvider'
@@ -60,8 +61,8 @@ function QueryClientWithSessionMonitor({ children }: { children: ReactNode }) {
       }),
       defaultOptions: {
         queries: {
-          staleTime: 1000 * 60 * 5, // 5 minutes
-          gcTime: 1000 * 60 * 60 * 24, // 24 hours
+          staleTime: MS_PER_MINUTE * 5, // 5 minutes
+          gcTime: MS_PER_DAY, // 24 hours
           retry: (failureCount, error) => {
             // Don't retry on auth errors
             if (
