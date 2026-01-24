@@ -17,11 +17,13 @@ describe('sbb-url', () => {
 
         expect(url).toContain('https://www.sbb.ch/de?')
         expect(url).toContain('nach=Bern')
-        // Date and time should be quoted and encoded
-        expect(url).toContain('date=%222024-12-28%22')
-        expect(url).toContain('time=%2214:30%22')
-        // Should use arrival time mode
-        expect(url).toContain('moment=%22ARRIVAL%22')
+        // Date should be in European format (dd.MM.yyyy)
+        expect(url).toContain('datum=28.12.2024')
+        expect(url).toContain('zeit=14:30')
+        // Should use arrival time mode (an=false means arrival)
+        expect(url).toContain('an=false')
+        // Should trigger the search
+        expect(url).toContain('suche=true')
         // Should NOT contain stops JSON
         expect(url).not.toContain('stops=')
       })
@@ -207,14 +209,14 @@ describe('sbb-url', () => {
     })
 
     describe('date formatting', () => {
-      it('formats date as YYYY-MM-DD with leading zeros and quotes', () => {
+      it('formats date as dd.MM.yyyy with leading zeros', () => {
         const params = {
           ...baseParams,
           date: new Date('2024-01-05T10:00:00'),
           arrivalTime: new Date('2024-01-05T10:00:00'),
         }
         const url = generateSbbUrl(params)
-        expect(url).toContain('date=%222024-01-05%22')
+        expect(url).toContain('datum=05.01.2024')
       })
 
       it('formats single-digit month with leading zero', () => {
@@ -224,27 +226,27 @@ describe('sbb-url', () => {
           arrivalTime: new Date('2024-03-15T10:00:00'),
         }
         const url = generateSbbUrl(params)
-        expect(url).toContain('date=%222024-03-15%22')
+        expect(url).toContain('datum=15.03.2024')
       })
     })
 
     describe('time formatting', () => {
-      it('formats single-digit hours with leading zero and quotes', () => {
+      it('formats single-digit hours with leading zero', () => {
         const params = {
           ...baseParams,
           arrivalTime: new Date('2024-12-28T09:05:00'),
         }
         const url = generateSbbUrl(params)
-        expect(url).toContain('time=%2209:05%22')
+        expect(url).toContain('zeit=09:05')
       })
 
-      it('formats midnight correctly with quotes', () => {
+      it('formats midnight correctly', () => {
         const params = {
           ...baseParams,
           arrivalTime: new Date('2024-12-28T00:00:00'),
         }
         const url = generateSbbUrl(params)
-        expect(url).toContain('time=%2200:00%22')
+        expect(url).toContain('zeit=00:00')
       })
     })
   })
