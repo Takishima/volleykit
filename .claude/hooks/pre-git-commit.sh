@@ -61,6 +61,8 @@ VALIDATION_PID_FILE="$VALIDATION_DIR/pid"
 VALIDATION_OUTPUT_FILE="$VALIDATION_DIR/output"
 VALIDATION_RESULT_FILE="$VALIDATION_DIR/result"
 VALIDATION_START_FILE="$VALIDATION_DIR/started"
+# Per-step output files (for Claude to read full details)
+VALIDATION_STEPS_DIR="$VALIDATION_DIR/steps"
 
 # Check if validation is already running or completed
 if [[ -f "$VALIDATION_PID_FILE" ]]; then
@@ -85,10 +87,9 @@ EOF
         RESULT=$(cat "$VALIDATION_RESULT_FILE" 2>/dev/null || echo "1")
         OUTPUT=$(cat "$VALIDATION_OUTPUT_FILE" 2>/dev/null || echo "No output captured")
 
-        # Cleanup
-        rm -rf "$VALIDATION_DIR"
-
         if [[ "$RESULT" == "0" ]]; then
+            # Cleanup on success
+            rm -rf "$VALIDATION_DIR"
             # Success - allow commit
             cat << 'EOF'
 {
@@ -97,13 +98,40 @@ EOF
 EOF
             exit 0
         else
-            # Failed - show errors
-            # Escape special characters for JSON
-            ESCAPED_OUTPUT=$(echo "$OUTPUT" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+            # Failed - save outputs to persistent location for Claude to read
+            FAILURE_DIR="/tmp/claude-validation-failure"
+            rm -rf "$FAILURE_DIR"
+            mkdir -p "$FAILURE_DIR"
+
+            # Save full output
+            FAILURE_LOG="$FAILURE_DIR/full-output.log"
+            echo "$OUTPUT" > "$FAILURE_LOG"
+
+            # Copy per-step logs if they exist
+            STEP_LOGS=""
+            if [[ -d "$VALIDATION_STEPS_DIR" ]]; then
+                cp -r "$VALIDATION_STEPS_DIR"/* "$FAILURE_DIR/" 2>/dev/null || true
+                for log in "$FAILURE_DIR"/*.log; do
+                    [[ -f "$log" ]] && STEP_LOGS="$STEP_LOGS\\n  - $log"
+                done
+            fi
+
+            # Now cleanup the validation dir
+            rm -rf "$VALIDATION_DIR"
+
+            # Extract summary (key failure indicators)
+            SUMMARY=$(echo "$OUTPUT" | grep -E "(✗|failed|error|Error)" | head -10)
+            if [[ -z "$SUMMARY" ]]; then
+                SUMMARY=$(echo "$OUTPUT" | tail -20)
+            fi
+
+            # Escape for JSON
+            ESCAPED_SUMMARY=$(echo "$SUMMARY" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+
             cat << EOF
 {
   "decision": "block",
-  "reason": "Validation failed. Fix the issues and retry:\n\n$ESCAPED_OUTPUT"
+  "reason": "Validation failed. Summary:\\n\\n$ESCAPED_SUMMARY\\n\\nLogs saved to $FAILURE_DIR/:\\n  - full-output.log (complete validation output)$STEP_LOGS\\n\\nUse Read tool to see complete error details."
 }
 EOF
             exit 0
@@ -117,8 +145,11 @@ mkdir -p "$VALIDATION_DIR"
 echo "$(date +%s)" > "$VALIDATION_START_FILE"
 
 # Start validation in background
+# Pass VALIDATION_STEPS_DIR so per-step outputs are saved on failure
 (
-    CLAUDE_CODE_REMOTE=true "$VALIDATION_SCRIPT" > "$VALIDATION_OUTPUT_FILE" 2>&1
+    mkdir -p "$VALIDATION_STEPS_DIR"
+    CLAUDE_CODE_REMOTE=true VALIDATION_STEPS_DIR="$VALIDATION_STEPS_DIR" \
+        "$VALIDATION_SCRIPT" > "$VALIDATION_OUTPUT_FILE" 2>&1
     echo $? > "$VALIDATION_RESULT_FILE"
 ) &
 
