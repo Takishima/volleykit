@@ -94,6 +94,10 @@ fi
 TEMP_DIR=$(mktemp -d)
 trap "rm -rf \"$TEMP_DIR\"" EXIT
 
+# Optional: persist step outputs for external tools (e.g., Claude hooks)
+# Set VALIDATION_STEPS_DIR to save per-step outputs (format.log, lint.log, etc.)
+STEPS_DIR="${VALIDATION_STEPS_DIR:-}"
+
 # Function to run a validation step and capture result
 run_validation() {
     local name=$1
@@ -239,6 +243,17 @@ print_status "Build" "$BUILD_RESULT"
 
 # Exit with error if any check failed
 if [ "$FORMAT_RESULT" -ne 0 ] || [ "$LINT_RESULT" -ne 0 ] || [ "$KNIP_RESULT" -ne 0 ] || [ "$TEST_RESULT" -ne 0 ] || [ "$BUILD_RESULT" -eq 1 ]; then
+    # Save per-step outputs if STEPS_DIR is set (for Claude hooks)
+    if [ -n "$STEPS_DIR" ]; then
+        mkdir -p "$STEPS_DIR"
+        [ -f "$TEMP_DIR/format.out" ] && cp "$TEMP_DIR/format.out" "$STEPS_DIR/format.log"
+        [ -f "$TEMP_DIR/lint.out" ] && cp "$TEMP_DIR/lint.out" "$STEPS_DIR/lint.log"
+        [ -f "$TEMP_DIR/knip.out" ] && cp "$TEMP_DIR/knip.out" "$STEPS_DIR/knip.log"
+        [ -f "$TEMP_DIR/test.out" ] && cp "$TEMP_DIR/test.out" "$STEPS_DIR/test.log"
+        # Build output goes to stdout, capture separately if needed
+        echo "Step outputs saved to $STEPS_DIR"
+    fi
+
     echo ""
     echo -e "${RED}Commit blocked: Fix the issues above before committing${NC}"
     exit 1
