@@ -3,9 +3,10 @@
 # Claude MUST act on these instructions without waiting for user input.
 # Supports automatic PR updates via GitHub API when GITHUB_TOKEN is available.
 
-# Only run in Claude Code web sessions
-if [ "$CLAUDE_CODE_REMOTE" != "true" ]; then
-  exit 0
+# Only run in Claude Code web sessions (skip for CLI)
+if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
+    echo '{"decision": "allow"}'
+    exit 0
 fi
 
 # Check jq is available

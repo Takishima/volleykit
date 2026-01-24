@@ -1,5 +1,5 @@
 #!/bin/bash
-# Pre-git-commit hook for Claude Code
+# Pre-git-commit hook for Claude Code (web only)
 # Runs validation asynchronously using a two-phase approach:
 #
 # Phase 1 (first attempt):
@@ -12,6 +12,12 @@
 #   - If still running: block with progress message
 #   - If done + passed: allow commit
 #   - If done + failed: block with error details
+
+# Only run in Claude Code web sessions (skip for CLI)
+if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
+    echo '{"decision": "allow"}'
+    exit 0
+fi
 
 set -euo pipefail
 
