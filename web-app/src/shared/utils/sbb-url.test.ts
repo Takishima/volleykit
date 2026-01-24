@@ -20,8 +20,8 @@ describe('sbb-url', () => {
         // Date should be in European format (dd.MM.yyyy)
         expect(url).toContain('datum=28.12.2024')
         expect(url).toContain('zeit=14:30')
-        // Should use arrival time mode (an=false means arrival)
-        expect(url).toContain('an=false')
+        // Should use arrival time mode (an=true = Ankunft/arrival)
+        expect(url).toContain('an=true')
         // Should trigger the search
         expect(url).toContain('suche=true')
         // Should NOT contain stops JSON

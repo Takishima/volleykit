@@ -122,9 +122,9 @@ export function generateSbbUrl(params: SbbUrlParams): string {
   // Parameters per SBB Deep Linking documentation:
   // - datum: date in dd.MM.yyyy format
   // - zeit: time in HH:mm format
-  // - an: false for arrival time (true = departure)
+  // - an: true for arrival time (an = Ankunft), false for departure
   // - suche: true to trigger the search
-  const baseParams = `datum=${formattedDate}&zeit=${formattedTime}&an=false&suche=true`
+  const baseParams = `datum=${formattedDate}&zeit=${formattedTime}&an=true&suche=true`
 
   // When both stations have IDs and no destination address override, use precise routing
   // If destinationAddress is provided, we want to route to the actual address, not just the station
