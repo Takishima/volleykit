@@ -15,7 +15,7 @@
     jq
   ];
 
-  # Node.js for React web app and Cloudflare Worker
+  # Node.js for React web app, React Native mobile, and Cloudflare Worker
   languages.javascript = {
     enable = true;
     package = pkgs.nodejs_22;
@@ -23,73 +23,100 @@
       enable = true;
       install.enable = true;
     };
-    # Primary project directory for automatic npm install
-    directory = "web-app";
+    # Root directory for npm workspaces - installs all workspace dependencies
+    directory = ".";
   };
 
   # Dotenv support
   dotenv.enable = true;
   dotenv.disableHint = true;
 
-  # Auto-install worker dependencies
-  # Note: web-app uses languages.javascript.npm.install (built-in feature)
-  # Worker requires custom script because devenv's npm.install only supports
-  # a single directory (specified in languages.javascript.directory)
-  # Uses a marker file for reliable freshness detection (comparing against directories is unreliable)
-  enterShell = ''
-    if [ -d "worker" ] && [ -f "worker/package.json" ]; then
-      if [ ! -f "worker/node_modules/.installed" ] || \
-         [ "worker/package.json" -nt "worker/node_modules/.installed" ] || \
-         { [ -f "worker/package-lock.json" ] && [ "worker/package-lock.json" -nt "worker/node_modules/.installed" ]; }; then
-        echo "Installing worker dependencies..."
-        if (cd worker && npm install --loglevel=error); then
-          touch worker/node_modules/.installed
-        else
-          echo "⚠️  Warning: Failed to install worker dependencies"
-          echo "   Run 'cd worker && npm install' manually to see the full error"
-        fi
-      fi
-    fi
-  '';
-
   # Scripts for development
   scripts = {
-    # Web app development
-    dev.exec = ''
-      cd web-app && npm run dev
+    # Workspace-wide commands
+    lint.exec = ''
+      npm run lint
+    '';
+
+    test.exec = ''
+      npm run test
     '';
 
     build.exec = ''
+      npm run build
+    '';
+
+    format.exec = ''
+      npm run format
+    '';
+
+    format-check.exec = ''
+      npm run format:check
+    '';
+
+    # Web app
+    web-dev.exec = ''
+      cd web-app && npm run dev
+    '';
+
+    web-build.exec = ''
       cd web-app && VITE_BASE_PATH=/volleykit/ npm run build
     '';
 
-    preview.exec = ''
+    web-preview.exec = ''
       cd web-app && VITE_BASE_PATH=/volleykit/ npm run preview
     '';
 
-    run-tests.exec = ''
+    web-test.exec = ''
       cd web-app && npm test
     '';
 
-    lint.exec = ''
+    web-lint.exec = ''
       cd web-app && npm run lint
     '';
 
     generate-api.exec = ''
-      cd web-app && npm run generate:api
+      npm run generate:api
+    '';
+
+    # Shared package
+    shared-build.exec = ''
+      npm run shared:build
+    '';
+
+    shared-test.exec = ''
+      npm run shared:test
+    '';
+
+    # Mobile app
+    mobile-start.exec = ''
+      npm run mobile:start
+    '';
+
+    mobile-ios.exec = ''
+      npm run mobile:ios
+    '';
+
+    mobile-android.exec = ''
+      npm run mobile:android
     '';
 
     # Cloudflare Worker
-    worker-install.exec = ''
-      cd worker && npm install && touch node_modules/.installed
-    '';
-
     worker-dev.exec = ''
       cd worker && npm run dev
     '';
 
     worker-deploy.exec = ''
       cd worker && npx wrangler deploy
+    '';
+
+    # Help site
+    help-dev.exec = ''
+      cd help-site && npm run dev
+    '';
+
+    help-build.exec = ''
+      cd help-site && npm run build
     '';
   };
 
@@ -113,13 +140,32 @@
         prettier = {
           enable = true;
           includes = [
+            # Web app
             "web-app/**/*.ts"
             "web-app/**/*.tsx"
             "web-app/**/*.js"
             "web-app/**/*.jsx"
             "web-app/**/*.json"
             "web-app/**/*.css"
+            # Shared package
+            "packages/shared/**/*.ts"
+            "packages/shared/**/*.tsx"
+            "packages/shared/**/*.js"
+            "packages/shared/**/*.json"
+            # Mobile app
+            "packages/mobile/**/*.ts"
+            "packages/mobile/**/*.tsx"
+            "packages/mobile/**/*.js"
+            "packages/mobile/**/*.json"
+            # Worker
             "worker/**/*.ts"
+            "worker/**/*.json"
+            # Help site
+            "help-site/**/*.ts"
+            "help-site/**/*.js"
+            "help-site/**/*.astro"
+            "help-site/**/*.json"
+            "help-site/**/*.css"
           ];
         };
       };
@@ -133,10 +179,12 @@
           "devenv.lock"
           "*.har"
           ".claude"
-          "web-app/node_modules"
-          "web-app/dist"
+          # Node modules and build outputs
+          "**/node_modules"
+          "**/dist"
+          "**/.expo"
+          # Generated files
           "web-app/src/api/schema.ts"
-          "worker/node_modules"
         ];
       };
     };
