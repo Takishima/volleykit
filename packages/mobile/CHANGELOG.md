@@ -1,5 +1,18 @@
 # @volleykit/mobile
 
+## 1.12.0
+
+### Minor Changes
+
+- [#826](https://github.com/Takishima/volleykit/pull/826) [`107ef41`](https://github.com/Takishima/volleykit/commit/107ef4183df2c669e90d08b55ffce57b684ffc0d) Thanks [@Takishima](https://github.com/Takishima)! - Added addToExchange endpoint and UI integration for posting assignments to the exchange marketplace
+
+### Patch Changes
+
+- [#832](https://github.com/Takishima/volleykit/pull/832) [`5a962ae`](https://github.com/Takishima/volleykit/commit/5a962ae990d2e3f873b1dd007b9b5233265c6681) Thanks [@Takishima](https://github.com/Takishima)! - Add missing expo-router dependency required for EAS builds
+
+- Updated dependencies [[`317ea10`](https://github.com/Takishima/volleykit/commit/317ea109b07b03768337f3ee5e311dea8ad85f34)]:
+  - @volleykit/shared@1.12.0
+
 ## 1.10.0
 
 ### Minor Changes

@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.12.0
+
+### Minor Changes
+
+- [#826](https://github.com/Takishima/volleykit/pull/826) [`107ef41`](https://github.com/Takishima/volleykit/commit/107ef4183df2c669e90d08b55ffce57b684ffc0d) Thanks [@Takishima](https://github.com/Takishima)! - Added addToExchange endpoint and UI integration for posting assignments to the exchange marketplace
+
+### Patch Changes
+
+- [#831](https://github.com/Takishima/volleykit/pull/831) [`1c73f31`](https://github.com/Takishima/volleykit/commit/1c73f31cad40ae7813db95ca3a0f8cc062f80f4d) Thanks [@Takishima](https://github.com/Takishima)! - Fix SBB button using departure time instead of arrival time
+
+- [#829](https://github.com/Takishima/volleykit/pull/829) [`9d0805b`](https://github.com/Takishima/volleykit/commit/9d0805b4ff57338b9a4d4459e8280d6f2ea4ee55) Thanks [@Takishima](https://github.com/Takishima)! - Fixed SBB button to correctly use arrival time instead of departure time. Updated URL parameters to use the correct SBB format (`datum`, `zeit`, `an=false`) per the official SBB Deep Linking documentation.
+
+- Updated dependencies [[`317ea10`](https://github.com/Takishima/volleykit/commit/317ea109b07b03768337f3ee5e311dea8ad85f34)]:
+  - @volleykit/shared@1.12.0
+
 ## 1.11.0
 
 ### Minor Changes

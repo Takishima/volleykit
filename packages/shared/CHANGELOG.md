@@ -1,5 +1,13 @@
 # @volleykit/shared
 
+## 1.12.0
+
+### Patch Changes
+
+- [#830](https://github.com/Takishima/volleykit/pull/830) [`317ea10`](https://github.com/Takishima/volleykit/commit/317ea109b07b03768337f3ee5e311dea8ad85f34) Thanks [@Takishima](https://github.com/Takishima)! - Add MS_PER_DAY constant to date-helpers for time conversion consistency
+
+  Added `MS_PER_DAY` constant (86400000 milliseconds) to the shared date-helpers module, completing the set of time conversion constants. Updated mobile app to use shared constants (`MS_PER_MINUTE`, `MS_PER_HOUR`, `MS_PER_DAY`) instead of inline magic numbers for improved code readability and maintainability.
+
 ## 1.11.0
 
 ### Minor Changes
