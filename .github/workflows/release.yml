@@ -8,6 +8,11 @@ on:
         required: false
         type: boolean
         default: false
+      build_ios:
+        description: 'Build iOS app (requires Apple credentials to be configured)'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -339,3 +344,33 @@ jobs:
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo "[View Release](https://github.com/${{ github.repository }}/releases/tag/v$VERSION)" >> "$GITHUB_STEP_SUMMARY"
           fi
+
+  # Build Android APK and attach to release
+  build-android:
+    needs: release
+    if: needs.release.outputs.released == 'true' && !inputs.dry_run
+    uses: ./.github/workflows/build-mobile-reusable.yml
+    with:
+      platform: android
+      ref: v${{ needs.release.outputs.version }}
+      version: ${{ needs.release.outputs.version }}
+      upload_to_release: true
+      release_tag: v${{ needs.release.outputs.version }}
+    secrets:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+
+  # Build iOS app and attach to release (optional - requires Apple credentials)
+  build-ios:
+    needs: release
+    if: needs.release.outputs.released == 'true' && !inputs.dry_run && inputs.build_ios
+    uses: ./.github/workflows/build-mobile-reusable.yml
+    with:
+      platform: ios
+      ref: v${{ needs.release.outputs.version }}
+      version: ${{ needs.release.outputs.version }}
+      upload_to_release: true
+      release_tag: v${{ needs.release.outputs.version }}
+    secrets:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}

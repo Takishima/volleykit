@@ -1,0 +1,117 @@
+name: Build Mobile Apps
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: 'Commit SHA to build (must be on main branch)'
+        required: false
+        type: string
+        default: ''
+      platform:
+        description: 'Platform to build'
+        required: true
+        type: choice
+        options:
+          - android
+          - ios
+          - both
+        default: android
+
+permissions:
+  contents: write
+
+# Prevent concurrent builds
+concurrency:
+  group: build-mobile-${{ github.event.inputs.commit || github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  # Verify actor is authorized
+  authorize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check authorization
+        run: |
+          if [ "${{ github.actor }}" != "${{ github.repository_owner }}" ]; then
+            echo "::error::This workflow can only be triggered by the repository owner (${{ github.repository_owner }})."
+            exit 1
+          fi
+          echo "Authorized: ${{ github.actor }}"
+
+  # Validate commit is on main
+  validate:
+    needs: authorize
+    runs-on: ubuntu-latest
+    outputs:
+      commit_sha: ${{ steps.resolve.outputs.sha }}
+      short_sha: ${{ steps.resolve.outputs.short_sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Resolve and validate commit
+        id: resolve
+        run: |
+          COMMIT="${{ github.event.inputs.commit }}"
+
+          # If no commit specified, use HEAD of main
+          if [ -z "$COMMIT" ]; then
+            COMMIT=$(git rev-parse origin/main)
+            echo "No commit specified, using main HEAD: $COMMIT"
+          else
+            # Validate SHA format to prevent command injection
+            if ! echo "$COMMIT" | grep -qE '^[0-9a-fA-F]{7,40}$'; then
+              echo "::error::Invalid commit SHA format: $COMMIT"
+              exit 1
+            fi
+          fi
+
+          # Validate commit exists
+          if ! git cat-file -e "$COMMIT^{commit}" 2>/dev/null; then
+            echo "::error::Commit $COMMIT does not exist"
+            exit 1
+          fi
+
+          # Validate commit is on main branch
+          if ! git merge-base --is-ancestor "$COMMIT" origin/main 2>/dev/null; then
+            # Check if commit IS main HEAD or ancestor
+            MAIN_SHA=$(git rev-parse origin/main)
+            if [ "$COMMIT" != "$MAIN_SHA" ] && ! git merge-base --is-ancestor "$COMMIT" "$MAIN_SHA"; then
+              echo "::error::Commit $COMMIT is not on the main branch"
+              exit 1
+            fi
+          fi
+
+          FULL_SHA=$(git rev-parse "$COMMIT")
+          SHORT_SHA=$(git rev-parse --short "$COMMIT")
+
+          echo "sha=$FULL_SHA" >> "$GITHUB_OUTPUT"
+          echo "short_sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
+          echo "Building commit: $FULL_SHA ($SHORT_SHA)"
+
+  # Build Android APK
+  build-android:
+    needs: validate
+    if: github.event.inputs.platform == 'both' || github.event.inputs.platform == 'android'
+    uses: ./.github/workflows/build-mobile-reusable.yml
+    with:
+      platform: android
+      ref: ${{ needs.validate.outputs.commit_sha }}
+      version: ${{ needs.validate.outputs.short_sha }}
+    secrets:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+  # Build iOS app
+  build-ios:
+    needs: validate
+    if: github.event.inputs.platform == 'both' || github.event.inputs.platform == 'ios'
+    uses: ./.github/workflows/build-mobile-reusable.yml
+    with:
+      platform: ios
+      ref: ${{ needs.validate.outputs.commit_sha }}
+      version: ${{ needs.validate.outputs.short_sha }}
+    secrets:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
