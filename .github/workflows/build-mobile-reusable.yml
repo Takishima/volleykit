@@ -1,0 +1,143 @@
+name: Build Mobile App (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      platform:
+        description: 'Platform to build (android or ios)'
+        required: true
+        type: string
+      ref:
+        description: 'Git ref to checkout'
+        required: true
+        type: string
+      version:
+        description: 'Version label for artifact filename'
+        required: true
+        type: string
+      upload_to_release:
+        description: 'Upload artifact to GitHub release'
+        required: false
+        type: boolean
+        default: false
+      release_tag:
+        description: 'Release tag to upload to (required if upload_to_release is true)'
+        required: false
+        type: string
+        default: ''
+    secrets:
+      EXPO_TOKEN:
+        required: true
+      RELEASE_TOKEN:
+        required: false
+
+jobs:
+  build-android:
+    if: inputs.platform == 'android'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
+        with:
+          working-directory: packages/mobile
+
+      - name: Generate API types
+        run: npm run generate:api
+        working-directory: .
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build Android APK
+        run: eas build --platform android --profile production --non-interactive --local --output ./volleykit-${{ inputs.version }}.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk-${{ inputs.version }}
+          path: packages/mobile/volleykit-${{ inputs.version }}.apk
+          retention-days: 30
+
+      - name: Upload APK to Release
+        if: inputs.upload_to_release && inputs.release_tag != ''
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          gh release upload "${{ inputs.release_tag }}" \
+            "./volleykit-${{ inputs.version }}.apk" \
+            --clobber
+
+      - name: Summary
+        run: |
+          echo "## Android Build Complete" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Property | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|----------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Ref | \`${{ inputs.ref }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Artifact | \`volleykit-${{ inputs.version }}.apk\` |" >> "$GITHUB_STEP_SUMMARY"
+
+  build-ios:
+    if: inputs.platform == 'ios'
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: packages/mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
+        with:
+          working-directory: packages/mobile
+
+      - name: Generate API types
+        run: npm run generate:api
+        working-directory: .
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build iOS
+        run: eas build --platform ios --profile production --non-interactive --local --output ./volleykit-${{ inputs.version }}.ipa
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa-${{ inputs.version }}
+          path: packages/mobile/volleykit-${{ inputs.version }}.ipa
+          retention-days: 30
+
+      - name: Upload IPA to Release
+        if: inputs.upload_to_release && inputs.release_tag != ''
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          gh release upload "${{ inputs.release_tag }}" \
+            "./volleykit-${{ inputs.version }}.ipa" \
+            --clobber
+
+      - name: Summary
+        run: |
+          echo "## iOS Build Complete" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Property | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|----------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Ref | \`${{ inputs.ref }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Artifact | \`volleykit-${{ inputs.version }}.ipa\` |" >> "$GITHUB_STEP_SUMMARY"

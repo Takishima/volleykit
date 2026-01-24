@@ -96,94 +96,22 @@ jobs:
   build-android:
     needs: validate
     if: github.event.inputs.platform == 'both' || github.event.inputs.platform == 'android'
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/mobile
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.validate.outputs.commit_sha }}
-
-      - name: Setup Node.js with dependencies
-        uses: ./.github/actions/setup-node-deps
-        with:
-          working-directory: packages/mobile
-
-      - name: Generate API types
-        run: npm run generate:api
-        working-directory: .
-
-      - name: Setup EAS
-        uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Build Android APK
-        run: eas build --platform android --profile production --non-interactive --local --output ./volleykit-${{ needs.validate.outputs.short_sha }}.apk
-
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-apk-${{ needs.validate.outputs.short_sha }}
-          path: packages/mobile/volleykit-${{ needs.validate.outputs.short_sha }}.apk
-          retention-days: 30
-
-      - name: Summary
-        run: |
-          echo "## Android Build Complete" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Property | Value |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|----------|-------|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Commit | \`${{ needs.validate.outputs.commit_sha }}\` |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Artifact | \`volleykit-${{ needs.validate.outputs.short_sha }}.apk\` |" >> "$GITHUB_STEP_SUMMARY"
+    uses: ./.github/workflows/build-mobile-reusable.yml
+    with:
+      platform: android
+      ref: ${{ needs.validate.outputs.commit_sha }}
+      version: ${{ needs.validate.outputs.short_sha }}
+    secrets:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
   # Build iOS app
   build-ios:
     needs: validate
     if: github.event.inputs.platform == 'both' || github.event.inputs.platform == 'ios'
-    runs-on: macos-latest
-    defaults:
-      run:
-        working-directory: packages/mobile
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.validate.outputs.commit_sha }}
-
-      - name: Setup Node.js with dependencies
-        uses: ./.github/actions/setup-node-deps
-        with:
-          working-directory: packages/mobile
-
-      - name: Generate API types
-        run: npm run generate:api
-        working-directory: .
-
-      - name: Setup EAS
-        uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Build iOS
-        run: eas build --platform ios --profile production --non-interactive --local --output ./volleykit-${{ needs.validate.outputs.short_sha }}.ipa
-
-      - name: Upload IPA artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-ipa-${{ needs.validate.outputs.short_sha }}
-          path: packages/mobile/volleykit-${{ needs.validate.outputs.short_sha }}.ipa
-          retention-days: 30
-
-      - name: Summary
-        run: |
-          echo "## iOS Build Complete" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Property | Value |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|----------|-------|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Commit | \`${{ needs.validate.outputs.commit_sha }}\` |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Artifact | \`volleykit-${{ needs.validate.outputs.short_sha }}.ipa\` |" >> "$GITHUB_STEP_SUMMARY"
+    uses: ./.github/workflows/build-mobile-reusable.yml
+    with:
+      platform: ios
+      ref: ${{ needs.validate.outputs.commit_sha }}
+      version: ${{ needs.validate.outputs.short_sha }}
+    secrets:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
