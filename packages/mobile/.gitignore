@@ -16,5 +16,5 @@ dist/
 .env.local
 .env.*.local
 
-# Sensitive EAS configuration
-eas.json
+# Note: eas.json is committed (contains build profiles, not secrets)
+# Sensitive credentials should use EAS managed credentials or EXPO_TOKEN

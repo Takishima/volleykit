@@ -1,0 +1,183 @@
+name: Build Mobile Apps
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: 'Commit SHA to build (must be on main branch)'
+        required: false
+        type: string
+        default: ''
+      platform:
+        description: 'Platform to build'
+        required: true
+        type: choice
+        options:
+          - android
+          - ios
+          - both
+        default: android
+
+permissions:
+  contents: write
+
+# Prevent concurrent builds
+concurrency:
+  group: build-mobile-${{ github.event.inputs.commit || github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  # Verify actor is authorized
+  authorize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check authorization
+        run: |
+          if [ "${{ github.actor }}" != "Takishima" ]; then
+            echo "::error::This workflow can only be triggered by the repository owner (Takishima)."
+            exit 1
+          fi
+          echo "Authorized: ${{ github.actor }}"
+
+  # Validate commit is on main
+  validate:
+    needs: authorize
+    runs-on: ubuntu-latest
+    outputs:
+      commit_sha: ${{ steps.resolve.outputs.sha }}
+      short_sha: ${{ steps.resolve.outputs.short_sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Resolve and validate commit
+        id: resolve
+        run: |
+          COMMIT="${{ github.event.inputs.commit }}"
+
+          # If no commit specified, use HEAD of main
+          if [ -z "$COMMIT" ]; then
+            COMMIT=$(git rev-parse origin/main)
+            echo "No commit specified, using main HEAD: $COMMIT"
+          fi
+
+          # Validate commit exists
+          if ! git cat-file -e "$COMMIT^{commit}" 2>/dev/null; then
+            echo "::error::Commit $COMMIT does not exist"
+            exit 1
+          fi
+
+          # Validate commit is on main branch
+          if ! git merge-base --is-ancestor "$COMMIT" origin/main 2>/dev/null; then
+            # Check if commit IS main HEAD or ancestor
+            MAIN_SHA=$(git rev-parse origin/main)
+            if [ "$COMMIT" != "$MAIN_SHA" ] && ! git merge-base --is-ancestor "$COMMIT" "$MAIN_SHA"; then
+              echo "::error::Commit $COMMIT is not on the main branch"
+              exit 1
+            fi
+          fi
+
+          FULL_SHA=$(git rev-parse "$COMMIT")
+          SHORT_SHA=$(git rev-parse --short "$COMMIT")
+
+          echo "sha=$FULL_SHA" >> "$GITHUB_OUTPUT"
+          echo "short_sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
+          echo "Building commit: $FULL_SHA ($SHORT_SHA)"
+
+  # Build Android APK
+  build-android:
+    needs: validate
+    if: github.event.inputs.platform == 'both' || github.event.inputs.platform == 'android'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.validate.outputs.commit_sha }}
+
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
+        with:
+          working-directory: packages/mobile
+
+      - name: Generate API types
+        run: npm run generate:api
+        working-directory: .
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build Android APK
+        run: eas build --platform android --profile production --non-interactive --local --output ./volleykit-${{ needs.validate.outputs.short_sha }}.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk-${{ needs.validate.outputs.short_sha }}
+          path: packages/mobile/volleykit-${{ needs.validate.outputs.short_sha }}.apk
+          retention-days: 30
+
+      - name: Summary
+        run: |
+          echo "## Android Build Complete" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Property | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|----------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Commit | \`${{ needs.validate.outputs.commit_sha }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Artifact | \`volleykit-${{ needs.validate.outputs.short_sha }}.apk\` |" >> "$GITHUB_STEP_SUMMARY"
+
+  # Build iOS app
+  build-ios:
+    needs: validate
+    if: github.event.inputs.platform == 'both' || github.event.inputs.platform == 'ios'
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: packages/mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.validate.outputs.commit_sha }}
+
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
+        with:
+          working-directory: packages/mobile
+
+      - name: Generate API types
+        run: npm run generate:api
+        working-directory: .
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build iOS
+        run: eas build --platform ios --profile production --non-interactive --local --output ./volleykit-${{ needs.validate.outputs.short_sha }}.ipa
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa-${{ needs.validate.outputs.short_sha }}
+          path: packages/mobile/volleykit-${{ needs.validate.outputs.short_sha }}.ipa
+          retention-days: 30
+
+      - name: Summary
+        run: |
+          echo "## iOS Build Complete" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Property | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|----------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Commit | \`${{ needs.validate.outputs.commit_sha }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Artifact | \`volleykit-${{ needs.validate.outputs.short_sha }}.ipa\` |" >> "$GITHUB_STEP_SUMMARY"
