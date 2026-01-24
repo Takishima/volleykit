@@ -6,6 +6,7 @@ export {
   useGameExchanges,
   useApplyForExchange,
   useWithdrawFromExchange,
+  useAddToExchange,
 } from './hooks/useExchanges'
 export { useExchangeActions } from './hooks/useExchangeActions'
 

@@ -234,6 +234,10 @@ export const calendarApi = {
     throw new CalendarModeNotSupportedError('Exchange withdrawals')
   },
 
+  async addToExchange(): Promise<void> {
+    throw new CalendarModeNotSupportedError('Adding to exchange')
+  },
+
   // Settings - return mock data for UI compatibility
   async getAssociationSettings(): Promise<AssociationSettings> {
     // Return sensible defaults for calendar mode

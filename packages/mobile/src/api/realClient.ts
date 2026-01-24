@@ -277,6 +277,20 @@ export const realApiClient = {
       totalItemsCount: data.totalItemsCount ?? 0,
     }
   },
+
+  /**
+   * Add an assignment to the exchange marketplace.
+   * This puts your own assignment on the exchange so another referee can take it over.
+   */
+  async addToExchange(convocationId: string): Promise<void> {
+    await apiRequest(
+      '/indoorvolleyball.refadmin/api%5crefereeconvocation/putRefereeConvocationIntoRefereeGameExchange',
+      'POST',
+      {
+        refereeConvocation: convocationId,
+      }
+    )
+  },
 }
 
 export type RealApiClient = typeof realApiClient

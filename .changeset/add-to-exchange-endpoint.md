@@ -1,5 +1,6 @@
 ---
 'volleykit-web': minor
+'@volleykit/mobile': minor
 ---
 
-Added addToExchange endpoint for posting assignments to the exchange marketplace
+Added addToExchange endpoint and UI integration for posting assignments to the exchange marketplace

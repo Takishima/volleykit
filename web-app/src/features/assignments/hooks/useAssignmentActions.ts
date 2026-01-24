@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 
 import type { Assignment } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
+import { useAddToExchange } from '@/features/exchanges'
 import { useModalState } from '@/shared/hooks/useModalState'
 import { useSafeModeGuard } from '@/shared/hooks/useSafeModeGuard'
 import { useTranslation } from '@/shared/hooks/useTranslation'
@@ -58,6 +59,7 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
   const { guard, isDemoMode } = useSafeModeGuard()
   const locale = useLanguageStore((state) => state.locale)
   const addAssignmentToExchange = useDemoStore((state) => state.addAssignmentToExchange)
+  const addToExchangeMutation = useAddToExchange()
 
   const editCompensationModal = useModalState<Assignment>()
   const validateGameModal = useModalState<Assignment>()
@@ -167,14 +169,24 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
         return
       }
 
-      log.debug('Mock add to exchange:', {
+      // Use real API to add assignment to exchange
+      log.debug('Adding to exchange:', {
         assignmentId: assignment.__identity,
         game: `${homeTeam} vs ${awayTeam}`,
       })
 
-      toast.success(t('exchange.addedToExchangeSuccess'))
+      addToExchangeMutation.mutate(assignment.__identity, {
+        onSuccess: () => {
+          log.debug('Successfully added to exchange:', assignment.__identity)
+          toast.success(t('exchange.addedToExchangeSuccess'))
+        },
+        onError: (error) => {
+          log.error('Failed to add to exchange:', error)
+          toast.error(t('exchange.addedToExchangeError'))
+        },
+      })
     },
-    [guard, isDemoMode, addAssignmentToExchange, queryClient, t]
+    [guard, isDemoMode, addAssignmentToExchange, queryClient, t, addToExchangeMutation]
   )
 
   return {
