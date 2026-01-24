@@ -1,5 +1,5 @@
 #!/bin/bash
-# Pre-git-commit hook for Claude Code
+# Pre-git-commit hook for Claude Code (web only)
 # Runs validation asynchronously using a two-phase approach:
 #
 # Phase 1 (first attempt):
@@ -12,6 +12,12 @@
 #   - If still running: block with progress message
 #   - If done + passed: allow commit
 #   - If done + failed: block with error details
+
+# Only run in Claude Code web sessions (skip for CLI)
+if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
+    echo '{"decision": "allow"}'
+    exit 0
+fi
 
 set -euo pipefail
 
@@ -44,10 +50,10 @@ allow() {
 block() {
     local reason="$1"
     # Escape for JSON - handle backslashes, quotes, and newlines
-    reason=$(echo "$reason" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
-    cat << EOF
-{"decision": "block", "reason": "$reason"}
-EOF
+    # Use printf '%s' to avoid echo's escape sequence interpretation
+    reason=$(printf '%s' "$reason" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+    # Use printf to avoid heredoc variable expansion issues
+    printf '{"decision": "block", "reason": "%s"}\n' "$reason"
     exit 0
 }
 
@@ -238,13 +244,15 @@ echo "$(date +%s)" > "$VALIDATION_START_FILE"
 
 # Start validation in background
 (
+    # Disable errexit inside subshell to ensure exit code is captured even on failure
+    set +e
     CLAUDE_CODE_REMOTE=true VALIDATION_STEPS_DIR="$VALIDATION_STEPS_DIR" \
         "$VALIDATION_SCRIPT" > "$VALIDATION_OUTPUT_FILE" 2>&1
-    echo $? > "$VALIDATION_RESULT_FILE"
+    echo "$?" > "$VALIDATION_RESULT_FILE"
 ) &
 
 # Save the background process PID
-echo $! > "$VALIDATION_PID_FILE"
+echo "$!" > "$VALIDATION_PID_FILE"
 
 block "Validation started in background. Running format, lint, knip, test in PARALLEL, then build.
 
