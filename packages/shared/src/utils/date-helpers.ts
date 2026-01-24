@@ -27,6 +27,9 @@ export const MS_PER_MINUTE = MS_PER_SECOND * SECONDS_PER_MINUTE
 /** Milliseconds in one hour */
 export const MS_PER_HOUR = MS_PER_MINUTE * MINUTES_PER_HOUR
 
+/** Milliseconds in one day */
+export const MS_PER_DAY = MS_PER_HOUR * HOURS_PER_DAY
+
 const DATE_TIME_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
   weekday: 'short',
   year: 'numeric',

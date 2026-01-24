@@ -7,6 +7,8 @@
 import * as Location from 'expo-location'
 import * as TaskManager from 'expo-task-manager'
 
+import { MS_PER_HOUR } from '@volleykit/shared/utils'
+
 /** Background location task name */
 export const LOCATION_TASK_NAME = 'volleykit-background-location'
 
@@ -139,7 +141,7 @@ async function startBackgroundTracking(): Promise<void> {
     accuracy: Location.Accuracy.Balanced,
     // Use significant changes for battery efficiency
     distanceInterval: 500, // 500 meters
-    deferredUpdatesInterval: 1000 * 60 * 60, // 1 hour
+    deferredUpdatesInterval: MS_PER_HOUR, // 1 hour
     showsBackgroundLocationIndicator: false,
     foregroundService: {
       notificationTitle: 'VolleyKit',

@@ -4,6 +4,8 @@
  * Defines types for cached data with metadata for freshness indicators.
  */
 
+import { MS_PER_MINUTE, MS_PER_HOUR, MS_PER_DAY } from '@volleykit/shared/utils'
+
 /**
  * Generic cached data wrapper with metadata.
  */
@@ -53,7 +55,7 @@ export interface CacheConfig {
  * Default cache configuration.
  */
 export const DEFAULT_CACHE_CONFIG: CacheConfig = {
-  defaultTtlMs: 30 * 24 * 60 * 60 * 1000, // 30 days
+  defaultTtlMs: MS_PER_DAY * 30, // 30 days
   maxSizeBytes: 10 * 1024 * 1024, // 10 MB
   version: 1,
 }
@@ -86,8 +88,7 @@ export function getCacheStatus(metadata: CacheMetadata | null): CacheStatus {
   }
 
   // Check if stale (older than 1 hour)
-  const staleThreshold = 60 * 60 * 1000 // 1 hour
-  if (now.getTime() - cachedAt.getTime() > staleThreshold) {
+  if (now.getTime() - cachedAt.getTime() > MS_PER_HOUR) {
     return 'stale'
   }
 
@@ -101,9 +102,9 @@ export function formatCacheAge(cachedAt: string): string {
   const cached = new Date(cachedAt)
   const now = new Date()
   const diffMs = now.getTime() - cached.getTime()
-  const diffMinutes = Math.floor(diffMs / (1000 * 60))
-  const diffHours = Math.floor(diffMinutes / 60)
-  const diffDays = Math.floor(diffHours / 24)
+  const diffMinutes = Math.floor(diffMs / MS_PER_MINUTE)
+  const diffHours = Math.floor(diffMs / MS_PER_HOUR)
+  const diffDays = Math.floor(diffMs / MS_PER_DAY)
 
   if (diffMinutes < 1) return 'just now'
   if (diffMinutes < 60) return `${diffMinutes}m ago`
