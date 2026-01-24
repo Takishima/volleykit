@@ -338,6 +338,15 @@ export const mobileApiClient = {
       totalItemsCount: MOCK_COMPENSATIONS.length,
     }
   },
+
+  /**
+   * Add an assignment to the exchange marketplace (mock).
+   * In demo mode, this just simulates success.
+   */
+  async addToExchange(_convocationId: string): Promise<void> {
+    await delay(MOCK_NETWORK_DELAY_MS)
+    // Mock implementation - just simulates success
+  },
 }
 
 export type MobileApiClient = typeof mobileApiClient

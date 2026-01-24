@@ -423,6 +423,13 @@ export const mockApi = {
     }
   },
 
+  async addToExchange(convocationId: string): Promise<void> {
+    await delay(MOCK_MUTATION_DELAY_MS)
+
+    const store = useDemoStore.getState()
+    store.addAssignmentToExchange(convocationId)
+  },
+
   async getAssociationSettings(): Promise<AssociationSettings> {
     await delay(MOCK_NETWORK_DELAY_MS)
 

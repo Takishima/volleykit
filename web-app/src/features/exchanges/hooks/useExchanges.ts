@@ -158,3 +158,22 @@ export function useWithdrawFromExchange(): UseMutationResult<void, Error, string
     },
   })
 }
+
+/**
+ * Mutation hook to add an assignment to the exchange marketplace.
+ * This moves the assignment from your assignments to the exchange.
+ */
+export function useAddToExchange(): UseMutationResult<void, Error, string> {
+  const queryClient = useQueryClient()
+  const dataSource = useAuthStore((state) => state.dataSource)
+  const apiClient = getApiClient(dataSource)
+
+  return useMutation({
+    mutationFn: (convocationId: string) => apiClient.addToExchange(convocationId),
+    onSuccess: () => {
+      // Invalidate both exchanges and assignments since the assignment moves between them
+      queryClient.invalidateQueries({ queryKey: queryKeys.exchanges.lists() })
+      queryClient.invalidateQueries({ queryKey: queryKeys.assignments.lists() })
+    },
+  })
+}

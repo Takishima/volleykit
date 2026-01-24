@@ -42,6 +42,15 @@ vi.mock('@/shared/stores/toast', () => ({
     warning: vi.fn(),
   },
 }))
+
+// Mock the useAddToExchange mutation hook
+const mockMutate = vi.fn()
+vi.mock('@/features/exchanges', () => ({
+  useAddToExchange: () => ({
+    mutate: mockMutate,
+    isPending: false,
+  }),
+}))
 vi.mock('@/shared/hooks/useTranslation', () => ({
   useTranslation: () => ({
     t: (key: string) => key,
@@ -91,6 +100,7 @@ describe('useAssignmentActions', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     vi.clearAllMocks()
+    mockMutate.mockReset()
 
     // Default: not in demo mode, safe mode disabled
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
@@ -361,12 +371,18 @@ describe('useAssignmentActions', () => {
   })
 
   it('should handle add to exchange action', () => {
+    // Mock mutate to immediately call onSuccess
+    mockMutate.mockImplementation((_id: string, options?: { onSuccess?: () => void }) => {
+      options?.onSuccess?.()
+    })
+
     const { result } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() })
 
     act(() => {
       result.current.handleAddToExchange(mockAssignment)
     })
 
+    expect(mockMutate).toHaveBeenCalledWith(mockAssignment.__identity, expect.any(Object))
     expect(toast.success).toHaveBeenCalledWith('exchange.addedToExchangeSuccess')
   })
 

@@ -308,6 +308,23 @@ export const api = {
     })
   },
 
+  /**
+   * Add an assignment to the exchange marketplace (bourse aux arbitrages).
+   * This puts your own assignment on the exchange so another referee can take it over.
+   *
+   * @param convocationId - The UUID of the referee convocation (assignment) to add to exchange
+   * @returns Promise that resolves when the assignment is added to the exchange
+   */
+  async addToExchange(convocationId: string): Promise<void> {
+    return apiRequest(
+      '/indoorvolleyball.refadmin/api%5crefereeconvocation/putRefereeConvocationIntoRefereeGameExchange',
+      'POST',
+      {
+        refereeConvocation: convocationId,
+      }
+    )
+  },
+
   // Settings
   async getAssociationSettings(): Promise<Schemas['AssociationSettings']> {
     return apiRequest(
