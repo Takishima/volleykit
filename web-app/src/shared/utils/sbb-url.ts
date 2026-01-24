@@ -58,13 +58,14 @@ function normalizeSwissStationId(id: string): string {
 }
 
 /**
- * Format a date as YYYY-MM-DD for SBB URL parameters.
+ * Format a date as dd.MM.yyyy for SBB URL parameters.
+ * SBB expects European date format, not ISO format.
  */
 function formatDateSbb(date: Date): string {
   const day = String(date.getDate()).padStart(2, '0')
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const year = date.getFullYear()
-  return `${year}-${month}-${day}`
+  return `${day}.${month}.${year}`
 }
 
 /**
@@ -118,10 +119,12 @@ export function generateSbbUrl(params: SbbUrlParams): string {
   const dest = destinationAddress ?? destinationStation?.name ?? destination
 
   // Generate SBB website URL
-  // Common time/date parameters (quoted per SBB spec)
-  const quotedDate = `%22${formattedDate}%22`
-  const quotedTime = `%22${formattedTime}%22`
-  const baseParams = `date=${quotedDate}&time=${quotedTime}&moment=%22ARRIVAL%22`
+  // Parameters per SBB Deep Linking documentation:
+  // - datum: date in dd.MM.yyyy format
+  // - zeit: time in HH:mm format
+  // - an: false for arrival time (true = departure)
+  // - suche: true to trigger the search
+  const baseParams = `datum=${formattedDate}&zeit=${formattedTime}&an=false&suche=true`
 
   // When both stations have IDs and no destination address override, use precise routing
   // If destinationAddress is provided, we want to route to the actual address, not just the station
