@@ -54,6 +54,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "owner": "tachikoma",
+    "extra": {
+      "eas": {
+        "projectId": "8945a048-340b-4033-bb56-cb00b057d4c8"
+      }
     }
   }
 }
