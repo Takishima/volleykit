@@ -6,8 +6,8 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
-      time: "09:00"
-      timezone: "Europe/Zurich"
+      time: "07:00"
+      timezone: "UTC"
     open-pull-requests-limit: 10
     reviewers:
       - "Takishima"
@@ -35,8 +35,8 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
-      time: "09:00"
-      timezone: "Europe/Zurich"
+      time: "07:00"
+      timezone: "UTC"
     open-pull-requests-limit: 5
     reviewers:
       - "Takishima"
@@ -53,8 +53,8 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
-      time: "09:00"
-      timezone: "Europe/Zurich"
+      time: "07:00"
+      timezone: "UTC"
     open-pull-requests-limit: 10
     reviewers:
       - "Takishima"
@@ -70,8 +70,8 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
-      time: "09:00"
-      timezone: "Europe/Zurich"
+      time: "07:00"
+      timezone: "UTC"
     commit-message:
       prefix: "chore"
       prefix-development: "chore"
