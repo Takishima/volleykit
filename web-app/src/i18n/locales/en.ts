@@ -306,6 +306,7 @@ const en: Translations = {
     compensationMissingId: 'Compensation record is missing an identifier. Please try again later.',
     saveError: 'Failed to save compensation. Please try again.',
     saveSuccess: 'Compensation saved successfully.',
+    distanceNotEditable: 'Distance is calculated automatically and cannot be changed.',
     unavailableInCalendarModeTitle: 'Not available in Calendar Mode',
     unavailableInCalendarModeDescription:
       'Compensation data is not available in calendar mode. Use full login to access compensation details.',

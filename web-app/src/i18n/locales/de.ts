@@ -314,6 +314,7 @@ const de: Translations = {
       'Entschädigungseintrag hat keine Kennung. Bitte versuchen Sie es später erneut.',
     saveError: 'Entschädigung konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.',
     saveSuccess: 'Entschädigung erfolgreich gespeichert.',
+    distanceNotEditable: 'Die Distanz wird automatisch berechnet und kann nicht geändert werden.',
     unavailableInCalendarModeTitle: 'Im Kalender-Modus nicht verfügbar',
     unavailableInCalendarModeDescription:
       'Entschädigungsdaten sind im Kalender-Modus nicht verfügbar. Verwenden Sie die vollständige Anmeldung, um auf Entschädigungsdetails zuzugreifen.',

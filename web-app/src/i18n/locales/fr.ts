@@ -314,6 +314,7 @@ const fr: Translations = {
       "L'enregistrement d'indemnité n'a pas d'identifiant. Veuillez réessayer plus tard.",
     saveError: "Échec de l'enregistrement de l'indemnité. Veuillez réessayer.",
     saveSuccess: 'Indemnité enregistrée avec succès.',
+    distanceNotEditable: 'La distance est calculée automatiquement et ne peut pas être modifiée.',
     unavailableInCalendarModeTitle: 'Non disponible en mode calendrier',
     unavailableInCalendarModeDescription:
       "Les données d'indemnités ne sont pas disponibles en mode calendrier. Utilisez la connexion complète pour accéder aux détails des indemnités.",
