@@ -45,7 +45,10 @@
       }
     },
     "jsdom": "^27.4.0",
-    "@xmldom/xmldom": "^0.8.11"
+    "@xmldom/xmldom": "^0.8.11",
+    "react": "^19.2.3",
+    "@expo/vector-icons": "^15.0.3",
+    "react-native-screens": "~4.16.0"
   },
   "engines": {
     "node": ">=22.0.0"
