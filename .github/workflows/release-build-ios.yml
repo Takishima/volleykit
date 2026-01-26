@@ -1,0 +1,71 @@
+name: Release Build (iOS)
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+# Prevent concurrent builds for the same release
+concurrency:
+  group: release-build-ios-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  # Extract version number from tag (removes 'v' prefix)
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract.outputs.version }}
+    steps:
+      - name: Extract version from tag
+        id: extract
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          # Remove 'v' prefix if present
+          VERSION="${TAG#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Extracted version: $VERSION from tag: $TAG"
+
+  # TODO: Re-enable EAS build once Expo issues are fixed
+  # build:
+  #   needs: prepare
+  #   uses: ./.github/workflows/build-mobile-reusable.yml
+  #   with:
+  #     platform: ios
+  #     ref: ${{ github.event.release.tag_name }}
+  #     version: ${{ needs.prepare.outputs.version }}
+  #     upload_to_release: true
+  #     release_tag: ${{ github.event.release.tag_name }}
+  #   secrets:
+  #     EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+  #     RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+
+  build:
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log build info (EAS build temporarily disabled)
+        run: |
+          echo "=================================================="
+          echo "iOS Release Build - EAS build temporarily disabled"
+          echo "=================================================="
+          echo ""
+          echo "Release tag: ${{ github.event.release.tag_name }}"
+          echo "Version: ${{ needs.prepare.outputs.version }}"
+          echo "Release URL: ${{ github.event.release.html_url }}"
+          echo ""
+          echo "TODO: Re-enable EAS build once Expo issues are fixed"
+          echo "=================================================="
+
+      - name: Summary
+        run: |
+          echo "## iOS Release Build (Disabled)" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "EAS build is temporarily disabled due to Expo issues." >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Property | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|----------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Release Tag | \`${{ github.event.release.tag_name }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Version | \`${{ needs.prepare.outputs.version }}\` |" >> "$GITHUB_STEP_SUMMARY"
