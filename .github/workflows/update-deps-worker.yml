@@ -83,7 +83,7 @@ jobs:
 
           # Check worker updates
           cd worker
-          WORKER_UPDATES=$(ncu --target "$NCU_TARGET" --format lines 2>/dev/null || true)
+          WORKER_UPDATES=$(ncu --target "${NCU_TARGET}" --format lines 2>/dev/null || true)
           cd ..
 
           if [ -n "$WORKER_UPDATES" ]; then
@@ -146,14 +146,10 @@ jobs:
           name: updated-packages-worker
           path: .
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
         with:
-          node-version: '22'
-
-      - name: Install dependencies
-        run: npm ci
-        working-directory: .
+          working-directory: worker
 
       - name: TypeScript check
         run: npx tsc --noEmit
@@ -167,6 +163,9 @@ jobs:
 
       - name: Test
         run: npm test
+
+      - name: Build (dry-run)
+        run: npx wrangler deploy --dry-run
 
   create-pr:
     name: Create PR
@@ -188,7 +187,7 @@ jobs:
           path: .
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.RELEASE_TOKEN }}
           commit-message: 'chore(worker): update npm dependencies'
@@ -209,6 +208,7 @@ jobs:
             - Lint
             - Security audit
             - Tests
+            - Build (dry-run)
           branch: chore/update-worker-deps
           delete-branch: true
           labels: |
