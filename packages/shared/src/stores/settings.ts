@@ -160,7 +160,7 @@ const initialState = {
  * Platform-agnostic store for user preferences.
  * Persistence is handled by platform-specific adapters.
  */
-export const useSettingsStore = create<SettingsState>((set, get) => ({
+export const useSettingsStore = create<SettingsState>((set) => ({
   ...initialState,
 
   setLanguage: (language) => set({ language }),

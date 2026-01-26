@@ -17,7 +17,6 @@ import {
   THIS_WEEK_DAYS,
   NEXT_MONTH_DAYS,
   type AssignmentsApiClient,
-  type DatePeriod,
 } from './useAssignments'
 
 /** Small delay for tests that need to wait a tick without triggering queries */
@@ -330,6 +329,7 @@ describe('useAssignments', () => {
 
   it('should return empty array when API returns null items', async () => {
     vi.mocked(mockApiClient.searchAssignments).mockResolvedValue({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Testing edge case: API returns undefined instead of array
       items: undefined as any,
       totalItemsCount: 0,
     })
@@ -386,6 +386,7 @@ describe('useAssignmentDetails', () => {
       },
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Partial mock object for testing
     vi.mocked(mockApiClient.getAssignmentDetails!).mockResolvedValue(mockAssignment as any)
 
     const { result } = renderHook(() => useAssignmentDetails('assign-123', mockApiClient), {

@@ -12,7 +12,6 @@ import {
   EXCHANGES_STALE_TIME_MS,
   DEFAULT_PAGE_SIZE,
   type ExchangesApiClient,
-  type ExchangeStatusFilter,
 } from './useExchanges'
 import type { GameExchange } from '../api/validation'
 
@@ -272,6 +271,7 @@ describe('useExchanges', () => {
 
   it('should return empty array when items is undefined', async () => {
     vi.mocked(mockApiClient.searchExchanges).mockResolvedValue({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Testing edge case: API returns undefined instead of array
       items: undefined as any,
       totalItemsCount: 0,
     })

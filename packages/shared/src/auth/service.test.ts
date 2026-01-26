@@ -4,7 +4,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createAuthService } from './service'
-import type { AuthServiceConfig, LoginFormFields } from './types'
+import type { AuthServiceConfig } from './types'
 
 // Mock fetch globally
 const mockFetch = vi.fn()
