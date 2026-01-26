@@ -115,3 +115,6 @@ jobs:
       version: ${{ needs.validate.outputs.short_sha }}
     secrets:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      IOS_DIST_CERT_BASE64: ${{ secrets.IOS_DIST_CERT_BASE64 }}
+      IOS_DIST_CERT_PASSWORD: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+      IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}

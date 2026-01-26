@@ -18,3 +18,7 @@ dist/
 
 # Note: eas.json is committed (contains build profiles, not secrets)
 # Sensitive credentials should use EAS managed credentials or EXPO_TOKEN
+
+# Local iOS credentials (generated in CI from secrets)
+certs/
+credentials.json

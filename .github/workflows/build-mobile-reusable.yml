@@ -30,6 +30,15 @@ on:
         required: true
       RELEASE_TOKEN:
         required: false
+      IOS_DIST_CERT_BASE64:
+        required: false
+        description: 'Base64-encoded iOS distribution certificate (.p12)'
+      IOS_DIST_CERT_PASSWORD:
+        required: false
+        description: 'Password for iOS distribution certificate'
+      IOS_PROVISIONING_PROFILE_BASE64:
+        required: false
+        description: 'Base64-encoded iOS provisioning profile (.mobileprovision)'
 
 jobs:
   build-android:
@@ -113,6 +122,29 @@ jobs:
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Setup iOS credentials
+        env:
+          IOS_DIST_CERT_BASE64: ${{ secrets.IOS_DIST_CERT_BASE64 }}
+          IOS_DIST_CERT_PASSWORD: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          mkdir -p certs
+          echo "$IOS_DIST_CERT_BASE64" | base64 --decode > certs/distribution.p12
+          echo "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode > certs/profile.mobileprovision
+          cat > credentials.json << EOF
+          {
+            "ios": {
+              "ch.volleyball.volleykit": {
+                "distributionCertificate": {
+                  "path": "./certs/distribution.p12",
+                  "password": "$IOS_DIST_CERT_PASSWORD"
+                },
+                "provisioningProfilePath": "./certs/profile.mobileprovision"
+              }
+            }
+          }
+          EOF
 
       - name: Build iOS
         run: eas build --platform ios --profile production --non-interactive --local --output ./volleykit-${{ inputs.version }}.ipa

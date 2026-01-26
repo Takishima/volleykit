@@ -34,7 +34,7 @@
       },
       "ios": {
         "resourceClass": "m-medium",
-        "credentialsSource": "remote"
+        "credentialsSource": "local"
       }
     }
   },
