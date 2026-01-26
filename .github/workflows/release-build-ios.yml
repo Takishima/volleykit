@@ -1,0 +1,42 @@
+name: Release Build (iOS)
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+# Prevent concurrent builds for the same release
+concurrency:
+  group: release-build-ios-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  # Extract version number from tag (removes 'v' prefix)
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract.outputs.version }}
+    steps:
+      - name: Extract version from tag
+        id: extract
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          # Remove 'v' prefix if present
+          VERSION="${TAG#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Extracted version: $VERSION from tag: $TAG"
+
+  build:
+    needs: prepare
+    uses: ./.github/workflows/build-mobile-reusable.yml
+    with:
+      platform: ios
+      ref: ${{ github.event.release.tag_name }}
+      version: ${{ needs.prepare.outputs.version }}
+      upload_to_release: true
+      release_tag: ${{ github.event.release.tag_name }}
+    secrets:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
