@@ -364,6 +364,88 @@ describe('EditCompensationModal', () => {
       const reasonInput = screen.getByLabelText('Reason')
       expect(reasonInput).toHaveValue('Detour due to road closure')
     })
+
+    it('disables distance field when hasFlexibleTravelExpenses is false', async () => {
+      mockGetCompensationDetails.mockResolvedValue({
+        convocationCompensation: {
+          distanceInMetres: 112120,
+          correctionReason: '',
+          hasFlexibleTravelExpenses: false,
+        },
+      })
+
+      render(
+        <EditCompensationModal
+          compensation={createMockCompensation()}
+          isOpen={true}
+          onClose={mockOnClose}
+        />,
+        { wrapper: createWrapper() }
+      )
+
+      await waitFor(() => {
+        const kmInput = screen.getByLabelText('Kilometers')
+        expect(kmInput).toBeDisabled()
+      })
+
+      // Should show the explanation hint
+      expect(
+        screen.getByText('Distance is calculated automatically and cannot be changed.')
+      ).toBeInTheDocument()
+    })
+
+    it('enables distance field when hasFlexibleTravelExpenses is true', async () => {
+      mockGetCompensationDetails.mockResolvedValue({
+        convocationCompensation: {
+          distanceInMetres: 50000,
+          correctionReason: '',
+          hasFlexibleTravelExpenses: true,
+        },
+      })
+
+      render(
+        <EditCompensationModal
+          compensation={createMockCompensation()}
+          isOpen={true}
+          onClose={mockOnClose}
+        />,
+        { wrapper: createWrapper() }
+      )
+
+      await waitFor(() => {
+        const kmInput = screen.getByLabelText('Kilometers')
+        expect(kmInput).not.toBeDisabled()
+      })
+
+      // Should NOT show the explanation hint
+      expect(
+        screen.queryByText('Distance is calculated automatically and cannot be changed.')
+      ).not.toBeInTheDocument()
+    })
+
+    it('enables distance field by default when hasFlexibleTravelExpenses is undefined', async () => {
+      mockGetCompensationDetails.mockResolvedValue({
+        convocationCompensation: {
+          distanceInMetres: 50000,
+          correctionReason: '',
+          // hasFlexibleTravelExpenses not set (undefined)
+        },
+      })
+
+      render(
+        <EditCompensationModal
+          compensation={createMockCompensation()}
+          isOpen={true}
+          onClose={mockOnClose}
+        />,
+        { wrapper: createWrapper() }
+      )
+
+      await waitFor(() => {
+        const kmInput = screen.getByLabelText('Kilometers')
+        expect(kmInput).not.toBeDisabled()
+      })
+    })
   })
 
   describe('form validation', () => {

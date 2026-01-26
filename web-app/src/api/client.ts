@@ -249,6 +249,7 @@ export const api = {
     query.append('propertyRenderConfiguration[]', 'correctionReason')
     query.append('propertyRenderConfiguration[]', 'distanceInMetres')
     query.append('propertyRenderConfiguration[]', 'distanceFormatted')
+    query.append('propertyRenderConfiguration[]', 'hasFlexibleTravelExpenses')
 
     return apiRequest<ConvocationCompensationDetailed>(
       `/indoorvolleyball.refadmin/api%5cconvocationcompensation/showWithNestedObjects?${query}`

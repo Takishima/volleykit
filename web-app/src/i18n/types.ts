@@ -197,6 +197,7 @@ export interface Translations {
     compensationMissingId: string
     saveError: string
     saveSuccess: string
+    distanceNotEditable: string
     unavailableInCalendarModeTitle: string
     unavailableInCalendarModeDescription: string
   }

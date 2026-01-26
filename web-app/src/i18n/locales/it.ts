@@ -312,6 +312,7 @@ const it: Translations = {
     compensationMissingId: 'Il record di compenso non ha un identificatore. Riprova più tardi.',
     saveError: 'Impossibile salvare il compenso. Riprova.',
     saveSuccess: 'Compenso salvato con successo.',
+    distanceNotEditable: 'La distanza viene calcolata automaticamente e non può essere modificata.',
     unavailableInCalendarModeTitle: 'Non disponibile in modalità calendario',
     unavailableInCalendarModeDescription:
       "I dati dei compensi non sono disponibili in modalità calendario. Usa l'accesso completo per accedere ai dettagli dei compensi.",

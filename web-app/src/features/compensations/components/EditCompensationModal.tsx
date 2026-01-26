@@ -79,6 +79,7 @@ function EditCompensationModalComponent({
   const [errors, setErrors] = useState<{ kilometers?: string }>({})
   const [isLoading, setIsLoading] = useState(false)
   const [fetchError, setFetchError] = useState<string | null>(null)
+  const [isDistanceEditable, setIsDistanceEditable] = useState(true)
 
   // Determine if we're editing an assignment or a compensation record
   const isAssignmentEdit = !!assignment && !compensation
@@ -110,6 +111,12 @@ function EditCompensationModalComponent({
           storedData
         )
       }
+      // Check if distance is editable based on hasFlexibleTravelExpenses from assignment's compensation
+      // Demo mode defaults to editable (true) unless explicitly set to false
+      const hasFlexibleTravelExpenses = (
+        assignment.convocationCompensation as { hasFlexibleTravelExpenses?: boolean } | undefined
+      )?.hasFlexibleTravelExpenses
+      setIsDistanceEditable(hasFlexibleTravelExpenses !== false)
       return
     }
 
@@ -172,6 +179,12 @@ function EditCompensationModalComponent({
             setReason(existingReason)
           }
 
+          // Check if distance is editable based on hasFlexibleTravelExpenses
+          // When false, the backend (volleymanager) does not allow editing the distance
+          const hasFlexibleTravelExpenses =
+            details.convocationCompensation?.hasFlexibleTravelExpenses
+          setIsDistanceEditable(hasFlexibleTravelExpenses !== false)
+
           logger.debug(
             '[EditCompensationModal] Loaded compensation details for assignment:',
             details
@@ -229,6 +242,11 @@ function EditCompensationModalComponent({
           setReason(existingReason)
         }
 
+        // Check if distance is editable based on hasFlexibleTravelExpenses
+        // When false, the backend (volleymanager) does not allow editing the distance
+        const hasFlexibleTravelExpenses = details.convocationCompensation?.hasFlexibleTravelExpenses
+        setIsDistanceEditable(hasFlexibleTravelExpenses !== false)
+
         logger.debug('[EditCompensationModal] Loaded compensation details:', details)
       } catch (error) {
         if (cancelled) return
@@ -272,6 +290,7 @@ function EditCompensationModalComponent({
       setReason('')
       setErrors({})
       setFetchError(null)
+      setIsDistanceEditable(true)
     }
   }, [isOpen])
 
@@ -414,9 +433,16 @@ function EditCompensationModalComponent({
                   pattern={DECIMAL_INPUT_PATTERN}
                   value={kilometers}
                   onChange={(e) => setKilometers(e.target.value)}
-                  className="w-full px-3 py-2 pr-10 border border-border-strong dark:border-border-strong-dark rounded-md bg-surface-card dark:bg-surface-subtle-dark text-text-primary dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  disabled={!isDistanceEditable}
+                  className={`w-full px-3 py-2 pr-10 border border-border-strong dark:border-border-strong-dark rounded-md bg-surface-card dark:bg-surface-subtle-dark text-text-primary dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary-500 ${!isDistanceEditable ? 'opacity-50 cursor-not-allowed' : ''}`}
                   aria-invalid={errors.kilometers ? 'true' : 'false'}
-                  aria-describedby={errors.kilometers ? 'kilometers-error' : undefined}
+                  aria-describedby={
+                    errors.kilometers
+                      ? 'kilometers-error'
+                      : !isDistanceEditable
+                        ? 'kilometers-readonly-hint'
+                        : undefined
+                  }
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted dark:text-text-muted-dark text-sm pointer-events-none">
                   {t('common.distanceUnit')}
@@ -428,6 +454,14 @@ function EditCompensationModalComponent({
                   className="mt-1 text-sm text-danger-600 dark:text-danger-400"
                 >
                   {errors.kilometers}
+                </p>
+              )}
+              {!isDistanceEditable && (
+                <p
+                  id="kilometers-readonly-hint"
+                  className="mt-1 text-sm text-text-muted dark:text-text-muted-dark"
+                >
+                  {t('compensations.distanceNotEditable')}
                 </p>
               )}
             </div>
