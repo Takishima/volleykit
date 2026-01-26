@@ -1,9 +1,9 @@
 name: Update Dependencies (Worker)
 
 on:
-  # Run weekly on Mondays at 8:00 UTC (offset from web/mobile, before Dependabot at 9:00 UTC)
+  # Run weekly on Sundays at 15:00 UTC (offset from web/mobile, before Dependabot on Monday 07:00 UTC)
   schedule:
-    - cron: '0 8 * * 1'
+    - cron: '0 15 * * 0'
   # Allow manual trigger
   workflow_dispatch:
     inputs:

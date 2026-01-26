@@ -1,9 +1,9 @@
 name: Update Dependencies (Web)
 
 on:
-  # Run weekly on Mondays at 6:00 UTC
+  # Run weekly on Sundays at 14:00 UTC (before Dependabot on Monday 07:00 UTC)
   schedule:
-    - cron: '0 6 * * 1'
+    - cron: '0 14 * * 0'
   # Allow manual trigger
   workflow_dispatch:
     inputs:
