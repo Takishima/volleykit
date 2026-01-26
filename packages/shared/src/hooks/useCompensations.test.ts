@@ -12,7 +12,6 @@ import {
   COMPENSATIONS_STALE_TIME_MS,
   DEFAULT_PAGE_SIZE,
   type CompensationsApiClient,
-  type CompensationStatus,
 } from './useCompensations'
 import type { CompensationRecord } from '../api/validation'
 
@@ -171,6 +170,7 @@ describe('useCompensations', () => {
 
   it('should return empty array when items is undefined', async () => {
     vi.mocked(mockApiClient.searchCompensations).mockResolvedValue({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Testing edge case: API returns undefined instead of array
       items: undefined as any,
       totalItemsCount: 0,
     })
@@ -274,6 +274,7 @@ describe('calculateTotalCompensation', () => {
       {
         __identity: '1',
         convocationCompensation: {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Testing edge case: API returns null instead of number
           gameCompensation: null as any,
           travelExpenses: 20,
         },

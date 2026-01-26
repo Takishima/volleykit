@@ -20,7 +20,6 @@ import {
   formatRosterEntries,
   getMaxLastNameWidth,
   getSeasonDateRange,
-  type WeekGroup,
   type RosterPlayerData,
 } from './date-helpers'
 
