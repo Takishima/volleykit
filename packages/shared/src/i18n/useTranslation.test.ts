@@ -2,18 +2,12 @@
  * Tests for useTranslation hook and translate function
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { renderHook, act } from '@testing-library/react'
+import { describe, it, expect, beforeEach } from 'vitest'
 
-import { translate } from './useTranslation'
-import type { Language } from './types'
+import { useSettingsStore } from '../stores/settings'
 
-// Mock the settings store for useTranslation hook tests
-vi.mock('../stores/settings', () => ({
-  useSettingsStore: vi.fn((selector) => {
-    const state = { language: 'en' as Language }
-    return selector ? selector(state) : state
-  }),
-}))
+import { translate, useTranslation } from './useTranslation'
 
 describe('translate', () => {
   describe('basic translations', () => {
@@ -130,26 +124,65 @@ describe('translate', () => {
 })
 
 describe('useTranslation hook', () => {
-  let mockLanguage: Language = 'en'
-
   beforeEach(() => {
-    mockLanguage = 'en'
-    // Re-mock with dynamic language
-    vi.doMock('../stores/settings', () => ({
-      useSettingsStore: vi.fn((selector) => {
-        const state = { language: mockLanguage }
-        return selector ? selector(state) : state
-      }),
-    }))
+    // Reset store to default state before each test
+    useSettingsStore.getState().reset()
   })
 
-  afterEach(() => {
-    vi.resetModules()
+  it('should return translation function and current language', () => {
+    const { result } = renderHook(() => useTranslation())
+
+    expect(result.current.t).toBeDefined()
+    expect(typeof result.current.t).toBe('function')
+    expect(result.current.language).toBe('de') // Default language
   })
 
-  it('should be importable', async () => {
-    const { useTranslation } = await import('./useTranslation')
-    expect(useTranslation).toBeDefined()
-    expect(typeof useTranslation).toBe('function')
+  it('should translate keys correctly', () => {
+    const { result } = renderHook(() => useTranslation())
+
+    // Default language is German
+    expect(result.current.t('common.loading')).toBe('Laden...')
+  })
+
+  it('should update translations when language changes', () => {
+    const { result } = renderHook(() => useTranslation())
+
+    // Initial state (German)
+    expect(result.current.t('auth.login')).toBe('Anmelden')
+
+    // Change to English
+    act(() => {
+      useSettingsStore.getState().setLanguage('en')
+    })
+
+    expect(result.current.language).toBe('en')
+    expect(result.current.t('auth.login')).toBe('Login')
+  })
+
+  it('should handle parameter substitution', () => {
+    act(() => {
+      useSettingsStore.getState().setLanguage('en')
+    })
+
+    const { result } = renderHook(() => useTranslation())
+
+    const translated = result.current.t('auth.useBiometric', { biometricType: 'Face ID' })
+    expect(translated).toBe('Use Face ID')
+  })
+
+  it('should work with all supported languages', () => {
+    const { result } = renderHook(() => useTranslation())
+
+    const languages = ['de', 'en', 'fr', 'it'] as const
+    const expectedLoading = ['Laden...', 'Loading...', 'Chargement...', 'Caricamento...']
+
+    languages.forEach((lang, index) => {
+      act(() => {
+        useSettingsStore.getState().setLanguage(lang)
+      })
+
+      expect(result.current.language).toBe(lang)
+      expect(result.current.t('common.loading')).toBe(expectedLoading[index])
+    })
   })
 })
