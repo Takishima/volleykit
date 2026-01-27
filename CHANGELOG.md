@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.12.1
+
+### Patch Changes
+
+- [#847](https://github.com/Takishima/volleykit/pull/847) [`4f0626a`](https://github.com/Takishima/volleykit/commit/4f0626a3b567e90c1a82d959d9e8e88f2bc021c7) Thanks [@Takishima](https://github.com/Takishima)! - Add release-triggered workflows for Android and iOS builds (currently disabled pending Expo fixes)
+
+- Updated dependencies [[`a521870`](https://github.com/Takishima/volleykit/commit/a52187065f5703c77f7eba0252210e68d98634f4)]:
+  - @volleykit/shared@1.12.1
+
 ## 1.12.0
 
 ### Minor Changes

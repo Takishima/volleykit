@@ -1,5 +1,16 @@
 # @volleykit/mobile
 
+## 1.12.1
+
+### Patch Changes
+
+- [#858](https://github.com/Takishima/volleykit/pull/858) [`aaa767d`](https://github.com/Takishima/volleykit/commit/aaa767d770adfbe3ffd4f19b6e424087210dd7fc) Thanks [@Takishima](https://github.com/Takishima)! - Fix biometric type mapping to correctly distinguish iOS Touch ID from Android fingerprint using platform detection
+
+- [#849](https://github.com/Takishima/volleykit/pull/849) [`645313b`](https://github.com/Takishima/volleykit/commit/645313b4839e6ac0513f891d53409a2d80c1c9a2) Thanks [@Takishima](https://github.com/Takishima)! - Fix expo doctor configuration issues: add missing assets, update dependencies to match Expo SDK 54, resolve duplicate native module versions
+
+- Updated dependencies [[`a521870`](https://github.com/Takishima/volleykit/commit/a52187065f5703c77f7eba0252210e68d98634f4)]:
+  - @volleykit/shared@1.12.1
+
 ## 1.12.0
 
 ### Minor Changes

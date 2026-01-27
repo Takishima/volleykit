@@ -1,13 +1,17 @@
 {
   "name": "@volleykit/mobile",
-  "version": "1.12.0",
+  "version": "1.12.1",
   "expo": {
     "install": {
-      "exclude": ["react"]
+      "exclude": [
+        "react"
+      ]
     },
     "doctor": {
       "reactNativeDirectoryCheck": {
-        "exclude": ["react-native-widgetkit"]
+        "exclude": [
+          "react-native-widgetkit"
+        ]
       }
     }
   },

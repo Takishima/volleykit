@@ -1,5 +1,11 @@
 # @volleykit/shared
 
+## 1.12.1
+
+### Patch Changes
+
+- [#861](https://github.com/Takishima/volleykit/pull/861) [`a521870`](https://github.com/Takishima/volleykit/commit/a52187065f5703c77f7eba0252210e68d98634f4) Thanks [@Takishima](https://github.com/Takishima)! - Add toggleDemoMode convenience method to demo store
+
 ## 1.12.0
 
 ### Patch Changes
