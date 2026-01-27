@@ -184,6 +184,20 @@ describe('assignmentSchema', () => {
     }
   })
 
+  it('transforms non-standard boolean-like strings to null', () => {
+    const result = assignmentSchema.safeParse({
+      ...validAssignment,
+      isOpenEntryInRefereeGameExchange: 'true',
+      hasLastMessageToReferee: 'yes',
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      // Non-"0"/"1" strings are transformed to null
+      expect(result.data.isOpenEntryInRefereeGameExchange).toBe(null)
+      expect(result.data.hasLastMessageToReferee).toBe(null)
+    }
+  })
+
   it('rejects assignment with invalid UUID', () => {
     const result = assignmentSchema.safeParse({
       ...validAssignment,
@@ -403,8 +417,8 @@ describe('personSearchResultSchema', () => {
   })
 
   it('rejects missing __identity', () => {
-    const { __identity: _unused, ...personWithoutId } = validPerson
-    void _unused
+    const { __identity: _, ...personWithoutId } = validPerson
+    void _
     const result = personSearchResultSchema.safeParse(personWithoutId)
     expect(result.success).toBe(false)
   })
