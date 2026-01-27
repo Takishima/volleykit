@@ -10,9 +10,11 @@ import { create } from 'zustand'
 export interface DemoState {
   isDemoMode: boolean
   setDemoMode: (enabled: boolean) => void
+  toggleDemoMode: () => void
 }
 
 export const useDemoStore = create<DemoState>((set) => ({
   isDemoMode: false,
   setDemoMode: (isDemoMode) => set({ isDemoMode }),
+  toggleDemoMode: () => set((state) => ({ isDemoMode: !state.isDemoMode })),
 }))

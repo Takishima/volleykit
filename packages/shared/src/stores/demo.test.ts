@@ -71,4 +71,50 @@ describe('useDemoStore', () => {
       expect(useDemoStore.getState().isDemoMode).toBe(true)
     })
   })
+
+  describe('toggleDemoMode', () => {
+    it('should toggle from false to true', () => {
+      expect(useDemoStore.getState().isDemoMode).toBe(false)
+
+      act(() => {
+        useDemoStore.getState().toggleDemoMode()
+      })
+
+      expect(useDemoStore.getState().isDemoMode).toBe(true)
+    })
+
+    it('should toggle from true to false', () => {
+      // First set to true
+      act(() => {
+        useDemoStore.getState().setDemoMode(true)
+      })
+      expect(useDemoStore.getState().isDemoMode).toBe(true)
+
+      // Toggle should set to false
+      act(() => {
+        useDemoStore.getState().toggleDemoMode()
+      })
+
+      expect(useDemoStore.getState().isDemoMode).toBe(false)
+    })
+
+    it('should handle multiple consecutive toggles', () => {
+      expect(useDemoStore.getState().isDemoMode).toBe(false)
+
+      act(() => {
+        useDemoStore.getState().toggleDemoMode()
+      })
+      expect(useDemoStore.getState().isDemoMode).toBe(true)
+
+      act(() => {
+        useDemoStore.getState().toggleDemoMode()
+      })
+      expect(useDemoStore.getState().isDemoMode).toBe(false)
+
+      act(() => {
+        useDemoStore.getState().toggleDemoMode()
+      })
+      expect(useDemoStore.getState().isDemoMode).toBe(true)
+    })
+  })
 })
