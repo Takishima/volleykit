@@ -5,6 +5,8 @@
  * Used for quick re-authentication after session expiry.
  */
 
+import { Platform } from 'react-native'
+
 import * as LocalAuthentication from 'expo-local-authentication'
 
 import type { BiometricAdapter } from '@volleykit/shared/types/platform'
@@ -19,10 +21,8 @@ function mapAuthenticationType(
     return 'faceId'
   }
   if (types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
-    // iOS Touch ID or Android fingerprint
-    // We can't distinguish between iOS Touch ID and Android fingerprint easily,
-    // but we'll use 'fingerprint' for Android and 'touchId' for iOS
-    return 'fingerprint'
+    // Use platform detection to distinguish iOS Touch ID from Android fingerprint
+    return Platform.OS === 'ios' ? 'touchId' : 'fingerprint'
   }
   if (types.includes(LocalAuthentication.AuthenticationType.IRIS)) {
     // Treat iris as fingerprint for simplicity
