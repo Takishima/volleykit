@@ -7,15 +7,6 @@ on:
   # Allow manual trigger
   workflow_dispatch:
     inputs:
-      update_type:
-        description: 'Update type'
-        required: true
-        default: 'minor'
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
       dry_run:
         description: 'Dry run (check updates and validate without creating PR)'
         required: false
@@ -23,17 +14,20 @@ on:
         type: boolean
 
 # =============================================================================
-# Mobile App Dependency Update Workflow
+# Mobile App Dependency Update Workflow (Expo-based)
 # =============================================================================
 #
-# This workflow automatically updates npm dependencies for the mobile app,
-# runs full validation, and creates a PR if successful.
+# This workflow uses Expo's native dependency management to ensure compatibility
+# between React Native, Expo SDK, and related packages.
 #
 # Flow:
-#   1. Check for updates using npm-check-updates
-#   2. If updates found, install and run validation
-#   3. Run typecheck, lint, and test
-#   4. Create PR with changes if all validations pass
+#   1. Check for Expo-managed updates using `npx expo install --check`
+#   2. Check for dev dependency updates using npm-check-updates
+#   3. Apply Expo updates using `npx expo install --fix`
+#   4. Apply dev dependency updates
+#   5. Run expo-doctor for verification
+#   6. Run typecheck, lint, and test
+#   7. Create PR with changes if all validations pass
 #
 # =============================================================================
 
@@ -60,42 +54,57 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Install root dependencies
+        run: npm ci
+
       - name: Install npm-check-updates
         run: npm install -g npm-check-updates@17
 
-      - name: Determine update target
-        id: update-target
-        run: |
-          UPDATE_TYPE="${{ github.event.inputs.update_type || 'minor' }}"
-          case "$UPDATE_TYPE" in
-            patch) NCU_TARGET="patch" ;;
-            minor) NCU_TARGET="minor" ;;
-            major) NCU_TARGET="latest" ;;
-          esac
-          echo "ncu_target=$NCU_TARGET" >> "$GITHUB_OUTPUT"
-          echo "Update target: $NCU_TARGET"
-
       - name: Check for updates
         id: check-updates
+        working-directory: packages/mobile
         run: |
-          NCU_TARGET="${{ steps.update-target.outputs.ncu_target }}"
-          echo "Checking for updates with target: $NCU_TARGET"
+          echo "Checking for Expo-managed package updates..."
 
-          # Check packages/mobile updates
-          cd packages/mobile
-          MOBILE_UPDATES=$(ncu --target "$NCU_TARGET" --format lines 2>/dev/null || true)
-          cd ../..
+          # Check Expo-managed packages (captures output for summary)
+          # --check returns non-zero if updates needed, but we want to continue
+          EXPO_CHECK_OUTPUT=$(npx expo install --check 2>&1) || true
+          echo "$EXPO_CHECK_OUTPUT"
 
-          # Check packages/shared updates
-          cd packages/shared
-          SHARED_UPDATES=$(ncu --target "$NCU_TARGET" --format lines 2>/dev/null || true)
-          cd ../..
+          # Determine if Expo found updates (look for "Some dependencies are incompatible")
+          if echo "$EXPO_CHECK_OUTPUT" | grep -q "incompatible\|expected\|outdated"; then
+            EXPO_HAS_UPDATES=true
+            EXPO_UPDATES=$(echo "$EXPO_CHECK_OUTPUT" | grep -E "^[\s]*[a-z@].*expected" || echo "$EXPO_CHECK_OUTPUT")
+          else
+            EXPO_HAS_UPDATES=false
+            EXPO_UPDATES=""
+          fi
+
+          echo ""
+          echo "Checking for dev dependency updates..."
+
+          # Check dev dependencies only (Expo doesn't manage these)
+          # Filter to only devDependencies using --dep dev
+          DEV_UPDATES=$(ncu --target minor --dep dev --format lines 2>/dev/null || true)
+
+          # Check packages/shared updates (use absolute path from workspace root)
+          SHARED_UPDATES=$(cd "$GITHUB_WORKSPACE/packages/shared" && ncu --target minor --format lines 2>/dev/null || true)
 
           # Combine updates
           ALL_UPDATES=""
-          if [ -n "$MOBILE_UPDATES" ]; then
-            ALL_UPDATES="**packages/mobile:**\n$MOBILE_UPDATES"
+
+          if [ "$EXPO_HAS_UPDATES" = "true" ]; then
+            ALL_UPDATES="**Expo-managed packages (packages/mobile):**\n\`npx expo install --fix\` will update packages to SDK-compatible versions.\n\n$EXPO_UPDATES"
           fi
+
+          if [ -n "$DEV_UPDATES" ]; then
+            if [ -n "$ALL_UPDATES" ]; then
+              ALL_UPDATES="$ALL_UPDATES\n\n**Dev dependencies (packages/mobile):**\n$DEV_UPDATES"
+            else
+              ALL_UPDATES="**Dev dependencies (packages/mobile):**\n$DEV_UPDATES"
+            fi
+          fi
+
           if [ -n "$SHARED_UPDATES" ]; then
             if [ -n "$ALL_UPDATES" ]; then
               ALL_UPDATES="$ALL_UPDATES\n\n**packages/shared:**\n$SHARED_UPDATES"
@@ -104,9 +113,8 @@ jobs:
             fi
           fi
 
-          if [ -n "$MOBILE_UPDATES" ] || [ -n "$SHARED_UPDATES" ]; then
+          if [ "$EXPO_HAS_UPDATES" = "true" ] || [ -n "$DEV_UPDATES" ] || [ -n "$SHARED_UPDATES" ]; then
             echo "has_updates=true" >> "$GITHUB_OUTPUT"
-            # Escape for multiline output
             {
               echo "updates_summary<<EOF"
               echo -e "$ALL_UPDATES"
@@ -119,26 +127,48 @@ jobs:
             echo "No updates available"
           fi
 
-      - name: Apply updates
+      - name: Apply Expo updates
         if: steps.check-updates.outputs.has_updates == 'true'
+        working-directory: packages/mobile
         run: |
-          NCU_TARGET="${{ steps.update-target.outputs.ncu_target }}"
+          echo "Applying Expo-managed package updates..."
+          npx expo install --fix
 
-          # Update packages/mobile dependencies
-          cd packages/mobile
-          ncu --target "$NCU_TARGET" -u
-          cd ../..
+      - name: Update mobile dev dependencies
+        if: steps.check-updates.outputs.has_updates == 'true'
+        working-directory: packages/mobile
+        run: ncu --target minor --dep dev -u
 
-          # Update packages/shared dependencies
-          cd packages/shared
-          ncu --target "$NCU_TARGET" -u
-          cd ../..
+      - name: Update shared dependencies
+        if: steps.check-updates.outputs.has_updates == 'true'
+        working-directory: packages/shared
+        run: ncu --target minor -u
 
-          # Install updated dependencies
-          npm install
+      - name: Reinstall dependencies
+        if: steps.check-updates.outputs.has_updates == 'true'
+        run: npm install
 
-          # Regenerate package-lock.json
-          npm install --package-lock-only
+      - name: Run Expo Doctor
+        if: steps.check-updates.outputs.has_updates == 'true'
+        working-directory: packages/mobile
+        run: |
+          echo "Running expo-doctor to verify configuration..."
+          # Capture output and exit code separately
+          # expo-doctor returns non-zero for warnings, but we only want to fail on errors
+          set +e
+          DOCTOR_OUTPUT=$(npx expo-doctor 2>&1)
+          DOCTOR_EXIT=$?
+          set -e
+
+          echo "$DOCTOR_OUTPUT"
+
+          # Check for critical errors (not just warnings)
+          if echo "$DOCTOR_OUTPUT" | grep -qi "error:"; then
+            echo "::error::Expo Doctor found critical errors"
+            exit 1
+          elif [ $DOCTOR_EXIT -ne 0 ]; then
+            echo "::warning::Expo Doctor found warnings (exit code $DOCTOR_EXIT)"
+          fi
 
       - name: Upload updated files
         if: steps.check-updates.outputs.has_updates == 'true'
@@ -214,12 +244,12 @@ jobs:
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.RELEASE_TOKEN }}
-          commit-message: 'chore(mobile): update npm dependencies'
-          title: 'chore(mobile): update npm dependencies'
+          commit-message: 'chore(mobile): update dependencies via Expo'
+          title: 'chore(mobile): update dependencies via Expo'
           body: |
             ## Dependency Updates
 
-            This PR was automatically generated by the dependency update workflow.
+            This PR was automatically generated by the dependency update workflow using Expo's native dependency management.
 
             ### Updated Packages
 
@@ -228,6 +258,7 @@ jobs:
             ### Validation
 
             All validations passed:
+            - Expo Doctor
             - TypeScript check
             - Lint
             - Security audit
