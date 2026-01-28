@@ -87,10 +87,8 @@ jobs:
           # Filter to only devDependencies using --dep dev
           DEV_UPDATES=$(ncu --target minor --dep dev --format lines 2>/dev/null || true)
 
-          # Check packages/shared updates
-          cd ../../packages/shared
-          SHARED_UPDATES=$(ncu --target minor --format lines 2>/dev/null || true)
-          cd ../mobile
+          # Check packages/shared updates (use absolute path from workspace root)
+          SHARED_UPDATES=$(cd "$GITHUB_WORKSPACE/packages/shared" && ncu --target minor --format lines 2>/dev/null || true)
 
           # Combine updates
           ALL_UPDATES=""
@@ -136,28 +134,41 @@ jobs:
           echo "Applying Expo-managed package updates..."
           npx expo install --fix
 
-      - name: Apply dev dependency updates
+      - name: Update mobile dev dependencies
         if: steps.check-updates.outputs.has_updates == 'true'
-        run: |
-          # Update dev dependencies in packages/mobile
-          cd packages/mobile
-          ncu --target minor --dep dev -u
-          cd ../..
+        working-directory: packages/mobile
+        run: ncu --target minor --dep dev -u
 
-          # Update packages/shared dependencies
-          cd packages/shared
-          ncu --target minor -u
-          cd ../..
+      - name: Update shared dependencies
+        if: steps.check-updates.outputs.has_updates == 'true'
+        working-directory: packages/shared
+        run: ncu --target minor -u
 
-          # Reinstall all dependencies
-          npm install
+      - name: Reinstall dependencies
+        if: steps.check-updates.outputs.has_updates == 'true'
+        run: npm install
 
       - name: Run Expo Doctor
         if: steps.check-updates.outputs.has_updates == 'true'
         working-directory: packages/mobile
         run: |
           echo "Running expo-doctor to verify configuration..."
-          npx expo-doctor || true
+          # Capture output and exit code separately
+          # expo-doctor returns non-zero for warnings, but we only want to fail on errors
+          set +e
+          DOCTOR_OUTPUT=$(npx expo-doctor 2>&1)
+          DOCTOR_EXIT=$?
+          set -e
+
+          echo "$DOCTOR_OUTPUT"
+
+          # Check for critical errors (not just warnings)
+          if echo "$DOCTOR_OUTPUT" | grep -qi "error:"; then
+            echo "::error::Expo Doctor found critical errors"
+            exit 1
+          elif [ $DOCTOR_EXIT -ne 0 ]; then
+            echo "::warning::Expo Doctor found warnings (exit code $DOCTOR_EXIT)"
+          fi
 
       - name: Upload updated files
         if: steps.check-updates.outputs.has_updates == 'true'
