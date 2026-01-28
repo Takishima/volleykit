@@ -18,4 +18,6 @@ export type HeadersWithCookies = Headers & {
  * Used for version tracking - the web app checks this to determine if
  * session tokens need to be invalidated (worker auth logic changed).
  */
-declare const __WORKER_GIT_HASH__: string
+declare global {
+  const __WORKER_GIT_HASH__: string
+}

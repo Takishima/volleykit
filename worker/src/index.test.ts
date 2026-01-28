@@ -10,6 +10,30 @@
  * - Session issue detection
  */
 import { describe, it, expect, vi } from 'vitest'
+
+/**
+ * Generic JSON body type for test assertions.
+ * Uses index signature to allow accessing any property while satisfying ESLint.
+ */
+interface JsonBody {
+  [key: string]: unknown
+  // Common properties across different response types
+  status?: string
+  timestamp?: string
+  services?: {
+    proxy?: string
+    mistral_ocr?: string
+    mistral_ocr_error?: string
+  }
+  workerGitHash?: string
+  success?: boolean
+  redirectUrl?: string
+  sessionCaptured?: boolean
+  error?: string
+  lockedUntil?: number
+  message?: string
+  pages?: unknown[]
+}
 import {
   AUTH_ENDPOINT,
   AUTH_LOCKOUT_ATTEMPT_WINDOW_SECONDS,
@@ -1138,13 +1162,13 @@ describe('Integration: Origin Validation Error Responses', () => {
         })
 
         const response = await worker.fetch(request, mockEnv)
-        const body = await response.json()
+        const body = (await response.json()) as JsonBody
 
         expect(response.status).toBe(200)
         expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://example.com')
         expect(body.status).toBe('ok')
-        expect(body.services.proxy).toBe('ok')
-        expect(body.services.mistral_ocr).toBe('ok')
+        expect(body.services!.proxy).toBe('ok')
+        expect(body.services!.mistral_ocr).toBe('ok')
       } finally {
         globalThis.fetch = originalFetch
       }
@@ -1166,13 +1190,13 @@ describe('Integration: Origin Validation Error Responses', () => {
         })
 
         const response = await worker.fetch(request, mockEnv)
-        const body = await response.json()
+        const body = (await response.json()) as JsonBody
 
         expect(response.status).toBe(503)
         expect(body.status).toBe('degraded')
-        expect(body.services.proxy).toBe('ok')
-        expect(body.services.mistral_ocr).toBe('error')
-        expect(body.services.mistral_ocr_error).toBe('Invalid API key')
+        expect(body.services!.proxy).toBe('ok')
+        expect(body.services!.mistral_ocr).toBe('error')
+        expect(body.services!.mistral_ocr_error).toBe('Invalid API key')
       } finally {
         globalThis.fetch = originalFetch
       }
@@ -1192,12 +1216,12 @@ describe('Integration: Origin Validation Error Responses', () => {
       })
 
       const response = await worker.fetch(request, mockEnv)
-      const body = await response.json()
+      const body = (await response.json()) as JsonBody
 
       expect(response.status).toBe(503)
       expect(body.status).toBe('degraded')
-      expect(body.services.proxy).toBe('ok')
-      expect(body.services.mistral_ocr).toBe('not_configured')
+      expect(body.services!.proxy).toBe('ok')
+      expect(body.services!.mistral_ocr).toBe('not_configured')
     })
 
     it('returns 503 degraded status when Mistral API connection fails', async () => {
@@ -1216,13 +1240,13 @@ describe('Integration: Origin Validation Error Responses', () => {
         })
 
         const response = await worker.fetch(request, mockEnv)
-        const body = await response.json()
+        const body = (await response.json()) as JsonBody
 
         expect(response.status).toBe(503)
         expect(body.status).toBe('degraded')
-        expect(body.services.proxy).toBe('ok')
-        expect(body.services.mistral_ocr).toBe('error')
-        expect(body.services.mistral_ocr_error).toBe('Network error')
+        expect(body.services!.proxy).toBe('ok')
+        expect(body.services!.mistral_ocr).toBe('error')
+        expect(body.services!.mistral_ocr_error).toBe('Network error')
       } finally {
         globalThis.fetch = originalFetch
       }
@@ -1248,13 +1272,13 @@ describe('Integration: Origin Validation Error Responses', () => {
         })
 
         const response = await worker.fetch(request, mockEnv)
-        const body = await response.json()
+        const body = (await response.json()) as JsonBody
 
         expect(response.status).toBe(503)
         expect(body.status).toBe('degraded')
-        expect(body.services.proxy).toBe('ok')
-        expect(body.services.mistral_ocr).toBe('error')
-        expect(body.services.mistral_ocr_error).toBe('Health check timed out')
+        expect(body.services!.proxy).toBe('ok')
+        expect(body.services!.mistral_ocr).toBe('error')
+        expect(body.services!.mistral_ocr_error).toBe('Health check timed out')
       } finally {
         globalThis.fetch = originalFetch
       }
@@ -2094,7 +2118,7 @@ describe('Integration: /version endpoint', () => {
     expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://example.com')
     expect(response.headers.get('Cache-Control')).toBe('public, max-age=300')
 
-    const body = await response.json()
+    const body = (await response.json()) as JsonBody
     expect(body).toHaveProperty('workerGitHash')
     expect(body).toHaveProperty('timestamp')
     // Default value when not defined
@@ -2171,7 +2195,7 @@ describe('Integration: Auth Lockout in Worker', () => {
     expect(response.headers.get('Content-Type')).toBe('application/json')
     expect(response.headers.get('Retry-After')).toBeDefined()
 
-    const body = await response.json()
+    const body = (await response.json()) as JsonBody
     expect(body).toHaveProperty('error', 'Too many failed login attempts')
     expect(body).toHaveProperty('lockedUntil')
   })
@@ -2206,7 +2230,7 @@ describe('Integration: Auth Lockout in Worker', () => {
     // This allows iOS Safari PWA to properly process Set-Cookie headers
     expect(response.status).toBe(200)
     expect(response.headers.get('Content-Type')).toBe('application/json')
-    const body = await response.json()
+    const body = (await response.json()) as JsonBody
     expect(body).toHaveProperty('success', true)
     expect(body).toHaveProperty('redirectUrl')
 
@@ -2243,7 +2267,7 @@ describe('Integration: Auth Lockout in Worker', () => {
     // and the client can determine success/failure from the JSON
     expect(response.status).toBe(200)
     expect(response.headers.get('Content-Type')).toBe('application/json')
-    const body = await response.json()
+    const body = (await response.json()) as JsonBody
     expect(body).toHaveProperty('success', false)
     expect(body).toHaveProperty('redirectUrl')
 
@@ -2394,7 +2418,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = await response.json()
+    const body = (await response.json()) as JsonBody
 
     expect(response.status).toBe(503)
     expect(body.error).toBe('OCR service not configured')
@@ -2416,7 +2440,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = await response.json()
+    const body = (await response.json()) as JsonBody
 
     expect(response.status).toBe(400)
     expect(body.error).toBe("Missing 'image' field in form data")
@@ -2438,7 +2462,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = await response.json()
+    const body = (await response.json()) as JsonBody
 
     expect(response.status).toBe(400)
     expect(body.error).toContain('Unsupported file type')
@@ -2462,7 +2486,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = await response.json()
+    const body = (await response.json()) as JsonBody
 
     expect(response.status).toBe(400)
     expect(body.error).toContain('File too large')
@@ -2490,7 +2514,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = await response.json()
+    const body = (await response.json()) as JsonBody
 
     expect(response.status).toBe(429)
     expect(body.error).toBe('Too many requests')
@@ -2516,7 +2540,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = await response.json()
+    const body = (await response.json()) as JsonBody
 
     expect(response.status).toBe(503)
     expect(body.error).toBe('OCR service authentication failed')
@@ -2543,7 +2567,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = await response.json()
+    const body = (await response.json()) as JsonBody
 
     expect(response.status).toBe(429)
     expect(body.error).toBe('OCR service rate limit exceeded')
@@ -2570,7 +2594,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = await response.json()
+    const body = (await response.json()) as JsonBody
 
     expect(response.status).toBe(502)
     expect(body.error).toBe('OCR processing failed')
@@ -2603,7 +2627,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = await response.json()
+    const body = (await response.json()) as JsonBody
 
     expect(response.status).toBe(200)
     expect(body).toEqual(mockOcrResult)
@@ -3218,7 +3242,7 @@ describe('iOS Safari Authentication Workaround', () => {
 
     expect(response.status).toBe(200)
     expect(response.headers.get('Content-Type')).toBe('application/json')
-    const body = await response.json()
+    const body = (await response.json()) as JsonBody
     expect(body.success).toBe(true)
     expect(body.redirectUrl).toBeDefined()
     expect(body.sessionCaptured).toBe(true)
@@ -3308,7 +3332,7 @@ describe('X-Capture-Session-Token Header', () => {
 
     expect(response.status).toBe(200)
     expect(response.headers.get('Content-Type')).toBe('application/json')
-    const body = await response.json()
+    const body = (await response.json()) as JsonBody
     expect(body.sessionCaptured).toBe(true)
     expect(body.redirectUrl).toBeDefined()
 
