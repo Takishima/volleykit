@@ -172,6 +172,7 @@ jobs:
   # Runs monthly (1st of month) or on manual trigger with squash_history=true
   squash-history:
     runs-on: ubuntu-latest
+    needs: cleanup
     # Run on monthly schedule (second cron) or manual trigger with squash_history
     if: github.event.schedule == '0 4 1 * *' || inputs.squash_history == true
     steps:
