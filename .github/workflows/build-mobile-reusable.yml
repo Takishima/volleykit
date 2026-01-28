@@ -32,9 +32,8 @@ on:
         required: false
 
 jobs:
-  build-android:
-    if: inputs.platform == 'android'
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ${{ inputs.platform == 'ios' && 'macos-latest' || 'ubuntu-latest' }}
     defaults:
       run:
         working-directory: packages/mobile
@@ -58,86 +57,64 @@ jobs:
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
+          eas-cache: false
 
       - name: Build Android APK
+        if: inputs.platform == 'android'
         run: eas build --platform android --profile production --non-interactive --local --output ./volleykit-${{ inputs.version }}.apk
 
+      - name: Build iOS IPA
+        if: inputs.platform == 'ios'
+        run: eas build --platform ios --profile development --non-interactive --local --output ./volleykit-${{ inputs.version }}.ipa
+
       - name: Upload APK artifact
+        if: inputs.platform == 'android'
         uses: actions/upload-artifact@v4
         with:
           name: android-apk-${{ inputs.version }}
           path: packages/mobile/volleykit-${{ inputs.version }}.apk
           retention-days: 30
 
-      - name: Upload APK to Release
-        if: inputs.upload_to_release && inputs.release_tag != ''
-        env:
-          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-        run: |
-          gh release upload "${{ inputs.release_tag }}" \
-            "./volleykit-${{ inputs.version }}.apk" \
-            --clobber
-
-      - name: Summary
-        run: |
-          echo "## Android Build Complete" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Property | Value |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|----------|-------|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Ref | \`${{ inputs.ref }}\` |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Artifact | \`volleykit-${{ inputs.version }}.apk\` |" >> "$GITHUB_STEP_SUMMARY"
-
-  build-ios:
-    if: inputs.platform == 'ios'
-    runs-on: macos-latest
-    defaults:
-      run:
-        working-directory: packages/mobile
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ inputs.ref }}
-
-      - name: Setup Node.js with dependencies
-        uses: ./.github/actions/setup-node-deps
-        with:
-          working-directory: packages/mobile
-
-      - name: Generate API types
-        run: npm run generate:api
-        working-directory: .
-
-      - name: Setup EAS
-        uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Build iOS
-        run: eas build --platform ios --profile production --non-interactive --local --output ./volleykit-${{ inputs.version }}.ipa
-
       - name: Upload IPA artifact
+        if: inputs.platform == 'ios'
         uses: actions/upload-artifact@v4
         with:
           name: ios-ipa-${{ inputs.version }}
           path: packages/mobile/volleykit-${{ inputs.version }}.ipa
           retention-days: 30
 
-      - name: Upload IPA to Release
+      - name: Upload to Release
         if: inputs.upload_to_release && inputs.release_tag != ''
         env:
           GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: |
-          gh release upload "${{ inputs.release_tag }}" \
-            "./volleykit-${{ inputs.version }}.ipa" \
-            --clobber
+          if [ "${{ inputs.platform }}" = "android" ]; then
+            gh release upload "${{ inputs.release_tag }}" \
+              "./volleykit-${{ inputs.version }}.apk" \
+              --clobber
+          else
+            gh release upload "${{ inputs.release_tag }}" \
+              "./volleykit-${{ inputs.version }}.ipa" \
+              --clobber
+          fi
 
       - name: Summary
         run: |
-          echo "## iOS Build Complete" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Property | Value |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|----------|-------|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Ref | \`${{ inputs.ref }}\` |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Artifact | \`volleykit-${{ inputs.version }}.ipa\` |" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ inputs.platform }}" = "android" ]; then
+            echo "## Android Build Complete" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "| Property | Value |" >> "$GITHUB_STEP_SUMMARY"
+            echo "|----------|-------|" >> "$GITHUB_STEP_SUMMARY"
+            echo "| Ref | \`${{ inputs.ref }}\` |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| Artifact | \`volleykit-${{ inputs.version }}.apk\` |" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "## iOS Build Complete" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "| Property | Value |" >> "$GITHUB_STEP_SUMMARY"
+            echo "|----------|-------|" >> "$GITHUB_STEP_SUMMARY"
+            echo "| Ref | \`${{ inputs.ref }}\` |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| Profile | \`development\` (dev client, internal distribution) |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| Artifact | \`volleykit-${{ inputs.version }}.ipa\` |" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "> Register devices at [expo.dev](https://expo.dev) to install this IPA" >> "$GITHUB_STEP_SUMMARY"
+          fi
