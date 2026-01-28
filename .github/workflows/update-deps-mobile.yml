@@ -81,9 +81,14 @@ jobs:
           NCU_TARGET="${{ steps.update-target.outputs.ncu_target }}"
           echo "Checking for updates with target: $NCU_TARGET"
 
+          # Packages to exclude from auto-update:
+          # - react-native: Must be updated in coordination with Expo SDK version
+          # - nativewind: Type definitions depend on specific react-native version
+          REJECT_PACKAGES="react-native,nativewind"
+
           # Check packages/mobile updates
           cd packages/mobile
-          MOBILE_UPDATES=$(ncu --target "$NCU_TARGET" --format lines 2>/dev/null || true)
+          MOBILE_UPDATES=$(ncu --target "$NCU_TARGET" --reject "$REJECT_PACKAGES" --format lines 2>/dev/null || true)
           cd ../..
 
           # Check packages/shared updates
@@ -124,9 +129,12 @@ jobs:
         run: |
           NCU_TARGET="${{ steps.update-target.outputs.ncu_target }}"
 
+          # Packages to exclude from auto-update (must match check-updates step)
+          REJECT_PACKAGES="react-native,nativewind"
+
           # Update packages/mobile dependencies
           cd packages/mobile
-          ncu --target "$NCU_TARGET" -u
+          ncu --target "$NCU_TARGET" --reject "$REJECT_PACKAGES" -u
           cd ../..
 
           # Update packages/shared dependencies
