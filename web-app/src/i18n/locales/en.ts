@@ -600,6 +600,7 @@ const en: Translations = {
       permission_denied: 'You no longer have permission for this action.',
       unknown: 'An unexpected error occurred.',
     },
+    viewPendingOperations: 'View pending sync operations',
   },
   pdf: {
     exportTitle: 'Generate Sports Hall Report',

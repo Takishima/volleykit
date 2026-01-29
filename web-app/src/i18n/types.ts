@@ -472,6 +472,7 @@ export interface Translations {
       permission_denied: string
       unknown: string
     }
+    viewPendingOperations: string
   }
   pdf: {
     exportTitle: string

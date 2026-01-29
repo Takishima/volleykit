@@ -622,6 +622,7 @@ const de: Translations = {
       permission_denied: 'Sie haben keine Berechtigung mehr für diese Aktion.',
       unknown: 'Ein unerwarteter Fehler ist aufgetreten.',
     },
+    viewPendingOperations: 'Ausstehende Synchronisierungen anzeigen',
   },
   pdf: {
     exportTitle: 'Hallenrapport erstellen',

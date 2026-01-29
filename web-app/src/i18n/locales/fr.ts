@@ -617,6 +617,7 @@ const fr: Translations = {
       permission_denied: "Vous n'avez plus la permission pour cette action.",
       unknown: 'Une erreur inattendue est survenue.',
     },
+    viewPendingOperations: 'Voir les synchronisations en attente',
   },
   pdf: {
     exportTitle: 'Générer rapport de salle',

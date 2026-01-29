@@ -61,6 +61,7 @@ export function SyncStatusIndicator({
     <div
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
+      aria-label={onClick ? t('sync.viewPendingOperations' as never) : undefined}
       onClick={onClick ? handleClick : undefined}
       onKeyDown={onClick ? handleKeyDown : undefined}
       className={`flex items-center gap-1.5 text-sm ${className}`}

@@ -6,7 +6,9 @@
     "src/types/**/*.d.ts",
     "src/api/schema.ts",
     "src/shared/hooks/useOfflineMutation.ts",
-    "src/shared/services/syncStorage.ts"
+    "src/shared/hooks/useNetworkStatus.ts",
+    "src/shared/services/syncStorage.ts",
+    "src/contexts/SyncContext.tsx"
   ],
   "ignoreDependencies": [
     "tailwindcss",

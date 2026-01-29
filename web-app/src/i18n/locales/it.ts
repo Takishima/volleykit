@@ -612,6 +612,7 @@ const it: Translations = {
       permission_denied: 'Non hai più i permessi per questa azione.',
       unknown: 'Si è verificato un errore imprevisto.',
     },
+    viewPendingOperations: 'Visualizza sincronizzazioni in sospeso',
   },
   pdf: {
     exportTitle: 'Genera rapporto sala',

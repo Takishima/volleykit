@@ -46,6 +46,7 @@ function resetStore(mode: DataSource = 'api') {
     // Global settings
     isSafeModeEnabled: true,
     isSafeValidationEnabled: true,
+    isOfflineSyncEnabled: true,
     preventZoom: false,
     // Mode tracking
     currentMode: mode,
@@ -147,6 +148,45 @@ describe('useSettingsStore', () => {
     if (persistedData) {
       const parsed = JSON.parse(persistedData)
       expect(parsed.state.isSafeValidationEnabled).toBe(false)
+    }
+  })
+
+  it('should have offline sync enabled by default', () => {
+    const { isOfflineSyncEnabled } = useSettingsStore.getState()
+    expect(isOfflineSyncEnabled).toBe(true)
+  })
+
+  it('should allow disabling offline sync', () => {
+    const { setOfflineSync } = useSettingsStore.getState()
+
+    setOfflineSync(false)
+
+    const { isOfflineSyncEnabled } = useSettingsStore.getState()
+    expect(isOfflineSyncEnabled).toBe(false)
+  })
+
+  it('should allow enabling offline sync', () => {
+    const { setOfflineSync } = useSettingsStore.getState()
+
+    setOfflineSync(false)
+    setOfflineSync(true)
+
+    const { isOfflineSyncEnabled } = useSettingsStore.getState()
+    expect(isOfflineSyncEnabled).toBe(true)
+  })
+
+  it('should persist offline sync setting', () => {
+    const { setOfflineSync } = useSettingsStore.getState()
+
+    setOfflineSync(false)
+
+    const storageKey = 'volleykit-settings'
+    const persistedData = localStorage.getItem(storageKey)
+    expect(persistedData).toBeTruthy()
+
+    if (persistedData) {
+      const parsed = JSON.parse(persistedData)
+      expect(parsed.state.isOfflineSyncEnabled).toBe(false)
     }
   })
 
