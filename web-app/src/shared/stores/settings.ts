@@ -191,6 +191,10 @@ interface SettingsState {
   isSafeValidationEnabled: boolean
   setSafeValidation: (enabled: boolean) => void
 
+  // Offline sync mode (queue mutations when offline)
+  isOfflineSyncEnabled: boolean
+  setOfflineSync: (enabled: boolean) => void
+
   // OCR feature toggle (experimental)
   isOCREnabled: boolean
   setOCREnabled: (enabled: boolean) => void
@@ -472,6 +476,7 @@ export const useSettingsStore = create<SettingsState>()(
         // Global settings
         isSafeModeEnabled: true,
         isSafeValidationEnabled: true,
+        isOfflineSyncEnabled: true,
         isOCREnabled: false,
         preventZoom: false,
 
@@ -510,6 +515,10 @@ export const useSettingsStore = create<SettingsState>()(
 
         setSafeValidation: (enabled: boolean) => {
           set({ isSafeValidationEnabled: enabled })
+        },
+
+        setOfflineSync: (enabled: boolean) => {
+          set({ isOfflineSyncEnabled: enabled })
         },
 
         setOCREnabled: (enabled: boolean) => {
@@ -777,6 +786,7 @@ export const useSettingsStore = create<SettingsState>()(
           // Global settings
           isSafeModeEnabled: state.isSafeModeEnabled,
           isSafeValidationEnabled: state.isSafeValidationEnabled,
+          isOfflineSyncEnabled: state.isOfflineSyncEnabled,
           isOCREnabled: state.isOCREnabled,
           preventZoom: state.preventZoom,
           // Mode-specific settings stored per mode
@@ -826,6 +836,7 @@ export const useSettingsStore = create<SettingsState>()(
             | {
                 isSafeModeEnabled?: boolean
                 isSafeValidationEnabled?: boolean
+                isOfflineSyncEnabled?: boolean
                 isOCREnabled?: boolean
                 preventZoom?: boolean
                 settingsByMode?: Record<DataSource, Partial<ModeSettings>>
@@ -895,6 +906,8 @@ export const useSettingsStore = create<SettingsState>()(
             isSafeModeEnabled: persistedState?.isSafeModeEnabled ?? current.isSafeModeEnabled,
             isSafeValidationEnabled:
               persistedState?.isSafeValidationEnabled ?? current.isSafeValidationEnabled,
+            isOfflineSyncEnabled:
+              persistedState?.isOfflineSyncEnabled ?? current.isOfflineSyncEnabled,
             isOCREnabled: persistedState?.isOCREnabled ?? current.isOCREnabled,
             preventZoom: persistedState?.preventZoom ?? current.preventZoom,
             // Preserve mode-specific settings

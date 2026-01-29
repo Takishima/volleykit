@@ -394,6 +394,10 @@ export interface Translations {
     safeValidationCompleteTitle: string
     safeValidationCompleteMessage: string
     safeValidationCompleteButton: string
+    offlineSync: string
+    offlineSyncDescription: string
+    offlineSyncEnabled: string
+    offlineSyncDisabled: string
     privacy: string
     privacyNoCollection: string
     privacyDirectComm: string
@@ -452,6 +456,7 @@ export interface Translations {
     synced: string
     syncFailed: string
     savedOffline: string
+    offlineNotAvailable: string
     backOnline: string
     allSynced: string
     someConflicts: string

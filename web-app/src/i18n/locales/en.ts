@@ -519,6 +519,11 @@ const en: Translations = {
     safeValidationCompleteMessage:
       'Your changes have been saved. Please go to VolleyManager to complete the validation and finalize the game.',
     safeValidationCompleteButton: 'Open VolleyManager',
+    offlineSync: 'Offline Sync',
+    offlineSyncDescription:
+      'When enabled, operations performed while offline are queued and automatically synced when you reconnect. Disable to require an active connection for all operations.',
+    offlineSyncEnabled: 'Offline sync is enabled',
+    offlineSyncDisabled: 'Offline sync is disabled',
     privacy: 'Privacy',
     privacyNoCollection: 'VolleyKit does not collect or store any personal data.',
     privacyDirectComm: "All data flows directly between your browser and Swiss Volley's servers.",
@@ -579,6 +584,7 @@ const en: Translations = {
     synced: 'Synced',
     syncFailed: 'Sync failed',
     savedOffline: 'Saved offline - will sync when connected',
+    offlineNotAvailable: 'You are offline. Please connect to the internet to perform this action.',
     backOnline: 'Back online - syncing changes...',
     allSynced: 'All changes synced',
     someConflicts: 'Some changes could not be synced',

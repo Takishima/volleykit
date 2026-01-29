@@ -15,6 +15,8 @@ interface DataProtectionSectionProps {
   onSetSafeMode: (enabled: boolean) => void
   isSafeValidationEnabled: boolean
   onSetSafeValidation: (enabled: boolean) => void
+  isOfflineSyncEnabled: boolean
+  onSetOfflineSync: (enabled: boolean) => void
 }
 
 function DataProtectionSectionComponent({
@@ -22,6 +24,8 @@ function DataProtectionSectionComponent({
   onSetSafeMode,
   isSafeValidationEnabled,
   onSetSafeValidation,
+  isOfflineSyncEnabled,
+  onSetOfflineSync,
 }: DataProtectionSectionProps) {
   const { t } = useTranslation()
   const [showSafeModeWarning, setShowSafeModeWarning] = useState(false)
@@ -45,6 +49,10 @@ function DataProtectionSectionComponent({
   const handleToggleSafeValidation = useCallback(() => {
     onSetSafeValidation(!isSafeValidationEnabled)
   }, [isSafeValidationEnabled, onSetSafeValidation])
+
+  const handleToggleOfflineSync = useCallback(() => {
+    onSetOfflineSync(!isOfflineSyncEnabled)
+  }, [isOfflineSyncEnabled, onSetOfflineSync])
 
   return (
     <>
@@ -144,6 +152,36 @@ function DataProtectionSectionComponent({
                 checked={isSafeValidationEnabled}
                 onChange={handleToggleSafeValidation}
                 label={t('settings.safeValidation')}
+                variant="success"
+              />
+            </div>
+          </div>
+
+          {/* Separator */}
+          <div className="border-t border-border-subtle dark:border-border-subtle-dark" />
+
+          {/* Offline Sync */}
+          <div className="space-y-4">
+            <div className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
+              {t('settings.offlineSync')}
+            </div>
+            <p className="text-sm text-text-muted dark:text-text-muted-dark">
+              {t('settings.offlineSyncDescription')}
+            </p>
+
+            <div className="flex items-center justify-between py-2">
+              <div className="flex-1">
+                <div className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
+                  {isOfflineSyncEnabled
+                    ? t('settings.offlineSyncEnabled')
+                    : t('settings.offlineSyncDisabled')}
+                </div>
+              </div>
+
+              <ToggleSwitch
+                checked={isOfflineSyncEnabled}
+                onChange={handleToggleOfflineSync}
+                label={t('settings.offlineSync')}
                 variant="success"
               />
             </div>

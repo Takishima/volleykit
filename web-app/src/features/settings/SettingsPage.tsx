@@ -40,6 +40,8 @@ export function SettingsPage() {
     setSafeMode,
     isSafeValidationEnabled,
     setSafeValidation,
+    isOfflineSyncEnabled,
+    setOfflineSync,
     preventZoom,
     setPreventZoom,
   } = useSettingsStore(
@@ -48,6 +50,8 @@ export function SettingsPage() {
       setSafeMode: state.setSafeMode,
       isSafeValidationEnabled: state.isSafeValidationEnabled,
       setSafeValidation: state.setSafeValidation,
+      isOfflineSyncEnabled: state.isOfflineSyncEnabled,
+      setOfflineSync: state.setOfflineSync,
       preventZoom: state.preventZoom,
       setPreventZoom: state.setPreventZoom,
     }))
@@ -85,6 +89,8 @@ export function SettingsPage() {
           onSetSafeMode={setSafeMode}
           isSafeValidationEnabled={isSafeValidationEnabled}
           onSetSafeValidation={setSafeValidation}
+          isOfflineSyncEnabled={isOfflineSyncEnabled}
+          onSetOfflineSync={setOfflineSync}
         />
       )}
 

@@ -530,6 +530,11 @@ const it: Translations = {
     safeValidationCompleteMessage:
       'Le tue modifiche sono state salvate. Vai su VolleyManager per completare la convalida e finalizzare la partita.',
     safeValidationCompleteButton: 'Apri VolleyManager',
+    offlineSync: 'Sincronizzazione offline',
+    offlineSyncDescription:
+      'Quando attivata, le operazioni eseguite offline vengono messe in coda e sincronizzate automaticamente quando ti riconnetti. Disattiva per richiedere una connessione attiva per tutte le operazioni.',
+    offlineSyncEnabled: 'Sincronizzazione offline attivata',
+    offlineSyncDisabled: 'Sincronizzazione offline disattivata',
     privacy: 'Privacy',
     privacyNoCollection: 'VolleyKit non raccoglie né memorizza alcun dato personale.',
     privacyDirectComm:
@@ -591,6 +596,7 @@ const it: Translations = {
     synced: 'Sincronizzato',
     syncFailed: 'Sincronizzazione fallita',
     savedOffline: 'Salvato offline - verrà sincronizzato alla riconnessione',
+    offlineNotAvailable: 'Sei offline. Connettiti a Internet per eseguire questa azione.',
     backOnline: 'Di nuovo online - sincronizzazione delle modifiche...',
     allSynced: 'Tutte le modifiche sincronizzate',
     someConflicts: 'Alcune modifiche non sono state sincronizzate',

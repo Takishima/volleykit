@@ -5,6 +5,8 @@
  * pending operations waiting to be synced.
  */
 
+import type { ReactElement } from 'react'
+
 import { useSyncStore } from '@volleykit/shared'
 
 import { useTranslation } from '@/shared/hooks/useTranslation'
@@ -31,7 +33,7 @@ interface PendingSyncBadgeProps {
 export function PendingSyncBadge({
   entityId,
   className = '',
-}: PendingSyncBadgeProps): JSX.Element | null {
+}: PendingSyncBadgeProps): ReactElement | null {
   const { t } = useTranslation()
   const items = useSyncStore((state) => state.items)
 

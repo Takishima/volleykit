@@ -43,8 +43,8 @@ export function useExchangeActions(): UseExchangeActionsResult {
       mutationType: 'applyForExchange',
       getEntityId: (exchange) => exchange.__identity,
       getDisplayLabel: (exchange) =>
-        exchange.refereeGame?.game?.homeTeam?.shortName
-          ? `${exchange.refereeGame.game.homeTeam.shortName} vs ${exchange.refereeGame.game.awayTeam?.shortName ?? '?'}`
+        exchange.refereeGame?.game?.encounter?.teamHome?.name
+          ? `${exchange.refereeGame.game.encounter.teamHome.name} vs ${exchange.refereeGame.game.encounter?.teamAway?.name ?? '?'}`
           : 'Take over game',
       getEntityLabel: (exchange) => exchange.refereeGame?.game?.startingDateTime,
       successMessage: 'exchange.applySuccess',
@@ -67,8 +67,8 @@ export function useExchangeActions(): UseExchangeActionsResult {
       mutationType: 'withdrawFromExchange',
       getEntityId: (exchange) => exchange.__identity,
       getDisplayLabel: (exchange) =>
-        exchange.refereeGame?.game?.homeTeam?.shortName
-          ? `${exchange.refereeGame.game.homeTeam.shortName} vs ${exchange.refereeGame.game.awayTeam?.shortName ?? '?'}`
+        exchange.refereeGame?.game?.encounter?.teamHome?.name
+          ? `${exchange.refereeGame.game.encounter.teamHome.name} vs ${exchange.refereeGame.game.encounter?.teamAway?.name ?? '?'}`
           : 'Withdraw from exchange',
       getEntityLabel: (exchange) => exchange.refereeGame?.game?.startingDateTime,
       successMessage: 'exchange.withdrawSuccess',

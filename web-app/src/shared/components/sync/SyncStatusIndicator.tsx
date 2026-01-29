@@ -8,6 +8,8 @@
  * - Spinning icon when syncing
  */
 
+import type { ReactElement } from 'react'
+
 import { useSyncStore } from '@volleykit/shared'
 
 import { useIsOnline } from '@/shared/hooks/useNetworkStatus'
@@ -33,8 +35,8 @@ interface SyncStatusIndicatorProps {
 export function SyncStatusIndicator({
   onClick,
   className = '',
-}: SyncStatusIndicatorProps): JSX.Element | null {
-  const { t } = useTranslation()
+}: SyncStatusIndicatorProps): ReactElement | null {
+  const { t, tInterpolate } = useTranslation()
   const isOnline = useIsOnline()
   const { items, isSyncing } = useSyncStore()
   const pendingCount = items.filter((i) => i.status === 'pending').length
@@ -86,7 +88,7 @@ export function SyncStatusIndicator({
           data-testid="sync-status-pending"
         >
           <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-          <span>{t('sync.pendingCount' as never, { count: pendingCount })}</span>
+          <span>{tInterpolate('sync.pendingCount', { count: pendingCount })}</span>
         </span>
       )}
 

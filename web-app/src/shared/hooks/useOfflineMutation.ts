@@ -16,6 +16,7 @@ import {
 
 import type { TranslationKey } from '@/i18n'
 import { useTranslation } from '@/shared/hooks/useTranslation'
+import { useSettingsStore } from '@/shared/stores/settings'
 import { toast } from '@/shared/stores/toast'
 import { createLogger, type Logger } from '@/shared/utils/logger'
 
@@ -108,6 +109,7 @@ export function useOfflineMutation<TArg, TResult = void>(
   const { t } = useTranslation()
   const { guard, isDemoMode } = useSafeModeGuard()
   const isOnline = useIsOnline()
+  const isOfflineSyncEnabled = useSettingsStore((state) => state.isOfflineSyncEnabled)
   const addItem = useSyncStore((state) => state.addItem)
 
   const isExecutingRef = useRef(false)
@@ -149,8 +151,15 @@ export function useOfflineMutation<TArg, TResult = void>(
         return undefined
       }
 
-      // If offline, queue the operation
+      // If offline, either queue the operation or show error based on setting
       if (!isOnline) {
+        // If offline sync is disabled, show error and return
+        if (!isOfflineSyncEnabled) {
+          log.debug('Offline sync disabled, cannot execute while offline')
+          toast.error(t('sync.offlineNotAvailable' as TranslationKey))
+          return undefined
+        }
+
         const queueItem: SyncQueueItem = {
           id: generateItemId(),
           type: mutationType,
@@ -209,6 +218,7 @@ export function useOfflineMutation<TArg, TResult = void>(
       guard,
       log,
       isOnline,
+      isOfflineSyncEnabled,
       mutationType,
       getEntityId,
       getDisplayLabel,
