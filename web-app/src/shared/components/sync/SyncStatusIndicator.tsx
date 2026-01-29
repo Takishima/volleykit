@@ -10,8 +10,8 @@
 
 import { useSyncStore } from '@volleykit/shared'
 
-import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useIsOnline } from '@/shared/hooks/useNetworkStatus'
+import { useTranslation } from '@/shared/hooks/useTranslation'
 
 import { CloudOff, RefreshCw, CheckCircle } from '../icons'
 
@@ -62,10 +62,14 @@ export function SyncStatusIndicator({
       onClick={onClick ? handleClick : undefined}
       onKeyDown={onClick ? handleKeyDown : undefined}
       className={`flex items-center gap-1.5 text-sm ${className}`}
+      data-testid="sync-status-indicator"
     >
       {/* Offline indicator */}
       {!isOnline && (
-        <span className="flex items-center gap-1 text-warning-600 dark:text-warning-400">
+        <span
+          className="flex items-center gap-1 text-warning-600 dark:text-warning-400"
+          data-testid="sync-status-offline"
+        >
           <CloudOff className="h-4 w-4" />
           <span>{t('sync.offline' as never)}</span>
         </span>
@@ -74,26 +78,24 @@ export function SyncStatusIndicator({
       {/* Pending items indicator */}
       {pendingCount > 0 && (
         <span
-          className={`flex items-center gap-1 ${
-            onClick ? 'cursor-pointer hover:underline' : ''
-          } ${
+          className={`flex items-center gap-1 ${onClick ? 'cursor-pointer hover:underline' : ''} ${
             isOnline
               ? 'text-warning-600 dark:text-warning-400'
               : 'text-text-secondary dark:text-text-secondary-dark'
           }`}
+          data-testid="sync-status-pending"
         >
-          <RefreshCw
-            className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`}
-          />
-          <span>
-            {t('sync.pendingCount' as never, { count: pendingCount })}
-          </span>
+          <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+          <span>{t('sync.pendingCount' as never, { count: pendingCount })}</span>
         </span>
       )}
 
       {/* Just synced indicator (briefly shows success) */}
       {isOnline && pendingCount === 0 && isSyncing && (
-        <span className="flex items-center gap-1 text-success-600 dark:text-success-400">
+        <span
+          className="flex items-center gap-1 text-success-600 dark:text-success-400"
+          data-testid="sync-status-syncing"
+        >
           <CheckCircle className="h-4 w-4" />
           <span>{t('sync.syncing' as never)}</span>
         </span>

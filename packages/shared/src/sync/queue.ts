@@ -56,9 +56,7 @@ export function addToQueue(item: SyncQueueItem, queue: SyncQueueItem[]): SyncQue
   }
 
   // Find existing item of same type + entity
-  const existingIndex = queue.findIndex(
-    (q) => q.entityId === item.entityId && q.type === item.type
-  )
+  const existingIndex = queue.findIndex((q) => q.entityId === item.entityId && q.type === item.type)
 
   if (existingIndex !== -1) {
     if (config.strategy === 'deduplicate') {

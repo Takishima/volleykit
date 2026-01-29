@@ -6,7 +6,11 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
+
 import type { NetworkStatus } from '@volleykit/shared'
+
+/** Timeout for connectivity verification requests in ms */
+const VERIFY_CONNECTIVITY_TIMEOUT_MS = 5000
 
 /**
  * Returns the current network connectivity status.
@@ -123,7 +127,7 @@ export async function verifyConnectivity(pingUrl?: string): Promise<boolean> {
     const response = await fetch(url, {
       method: 'HEAD',
       cache: 'no-store',
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(VERIFY_CONNECTIVITY_TIMEOUT_MS),
     })
 
     return response.ok
@@ -146,10 +150,7 @@ export async function verifyConnectivity(pingUrl?: string): Promise<boolean> {
  * )
  * ```
  */
-export function useNetworkChangeCallback(
-  onOnline?: () => void,
-  onOffline?: () => void
-): void {
+export function useNetworkChangeCallback(onOnline?: () => void, onOffline?: () => void): void {
   const handleOnline = useCallback(() => {
     onOnline?.()
   }, [onOnline])

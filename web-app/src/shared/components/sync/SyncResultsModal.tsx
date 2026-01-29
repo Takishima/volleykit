@@ -7,16 +7,17 @@
  * - Auto-dismisses if all operations succeeded
  */
 
-import { useEffect } from 'react'
+import { useEffect, type ReactElement } from 'react'
+
 import { useSyncStore, type SyncResult, type ConflictReason } from '@volleykit/shared'
 
 import { useTranslation } from '@/shared/hooks/useTranslation'
 
-import { Modal } from '../Modal'
-import { ModalHeader } from '../ModalHeader'
-import { ModalFooter } from '../ModalFooter'
 import { Button } from '../Button'
 import { CheckCircle, AlertTriangle } from '../icons'
+import { Modal } from '../Modal'
+import { ModalFooter } from '../ModalFooter'
+import { ModalHeader } from '../ModalHeader'
 
 /** Auto-dismiss delay for success-only results (in ms) */
 const AUTO_DISMISS_DELAY = 5000
@@ -27,8 +28,8 @@ const AUTO_DISMISS_DELAY = 5000
  * Opens automatically when there are sync results to display.
  * Auto-dismisses if all operations were successful.
  */
-export function SyncResultsModal(): JSX.Element | null {
-  const { t } = useTranslation()
+export function SyncResultsModal(): ReactElement | null {
+  const { t, tInterpolate } = useTranslation()
   const { lastSyncResults, clearResults } = useSyncStore()
 
   const successes = lastSyncResults.filter((r) => r.status === 'success')
@@ -49,12 +50,7 @@ export function SyncResultsModal(): JSX.Element | null {
   }
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={clearResults}
-      titleId="sync-results-title"
-      size="md"
-    >
+    <Modal isOpen={isOpen} onClose={clearResults} titleId="sync-results-title" size="md">
       <ModalHeader
         title={t('sync.resultsTitle' as never)}
         titleId="sync-results-title"
@@ -66,9 +62,7 @@ export function SyncResultsModal(): JSX.Element | null {
         {successes.length > 0 && (
           <div className="flex items-center gap-2 text-success-600 dark:text-success-400">
             <CheckCircle className="h-5 w-5 flex-shrink-0" />
-            <span>
-              {t('sync.successCount' as never, { count: successes.length })}
-            </span>
+            <span>{tInterpolate('sync.successCount', { count: successes.length })}</span>
           </div>
         )}
 
@@ -77,9 +71,7 @@ export function SyncResultsModal(): JSX.Element | null {
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-warning-600 dark:text-warning-400">
               <AlertTriangle className="h-5 w-5 flex-shrink-0" />
-              <span>
-                {t('sync.conflictCount' as never, { count: conflicts.length })}
-              </span>
+              <span>{tInterpolate('sync.conflictCount', { count: conflicts.length })}</span>
             </div>
 
             <div className="space-y-2">
@@ -103,7 +95,7 @@ export function SyncResultsModal(): JSX.Element | null {
 /**
  * Individual conflict item display.
  */
-function ConflictItem({ result }: { result: SyncResult }): JSX.Element {
+function ConflictItem({ result }: { result: SyncResult }): ReactElement {
   const { t } = useTranslation()
 
   const getConflictMessage = (reason: ConflictReason | undefined): string => {

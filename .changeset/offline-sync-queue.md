@@ -17,6 +17,7 @@ Implements offline mutation queuing with automatic sync when connectivity is res
 - Translations in all 4 languages (de/en/fr/it)
 
 Key features:
+
 - Opposing operations cancel out (apply + withdraw = nothing)
 - Deduplication for idempotent actions, replacement for data-carrying actions
 - Conflict categorization (already_taken, not_found, expired, etc.)

@@ -3,13 +3,7 @@
  */
 
 import { describe, it, expect, vi } from 'vitest'
-import {
-  createApiError,
-  isApiError,
-  wrapApiCall,
-  HttpStatus,
-  type ApiError,
-} from './client'
+import { createApiError, isApiError, wrapApiCall, HttpStatus, type ApiError } from './client'
 
 describe('createApiError', () => {
   it('should create an ApiError with required fields', () => {

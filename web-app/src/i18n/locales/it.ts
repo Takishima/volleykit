@@ -597,7 +597,7 @@ const it: Translations = {
     resultsTitle: 'Risultati sincronizzazione',
     successCount: '{{count}} modifica sincronizzata',
     successCount_other: '{{count}} modifiche sincronizzate',
-    conflictCount: "{{count}} azione non completata",
+    conflictCount: '{{count}} azione non completata',
     conflictCount_other: '{{count}} azioni non completate',
     conflict: {
       already_taken: 'Questa partita è stata presa da un altro arbitro mentre eri offline.',

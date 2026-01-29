@@ -9,10 +9,12 @@
 Mutations fail immediately if the user is offline - there is no queuing mechanism. A referee validating a game or taking over an exchange while traveling could lose their work if the connection drops.
 
 **Current behavior:**
+
 - Mobile: Has network detection and UI blockers, but mutations still fail
 - Web (PWA): No network detection at all, mutations fail silently
 
 **Desired behavior:**
+
 - Queue mutations when offline
 - Sync automatically when back online
 - Handle conflicts gracefully (e.g., exchange already taken)
@@ -47,10 +49,10 @@ Mutations fail immediately if the user is offline - there is no queuing mechanis
 
 ## Offline Detection
 
-| Platform | Current State | Detection Method |
-|----------|--------------|------------------|
-| **Mobile** | ✅ Implemented | `@react-native-community/netinfo` at `packages/mobile/src/hooks/useNetworkStatus.ts` |
-| **Web (PWA)** | ❌ Not implemented | Need `navigator.onLine` + `online`/`offline` events |
+| Platform      | Current State      | Detection Method                                                                     |
+| ------------- | ------------------ | ------------------------------------------------------------------------------------ |
+| **Mobile**    | ✅ Implemented     | `@react-native-community/netinfo` at `packages/mobile/src/hooks/useNetworkStatus.ts` |
+| **Web (PWA)** | ❌ Not implemented | Need `navigator.onLine` + `online`/`offline` events                                  |
 
 ### Web Implementation Required
 
@@ -64,8 +66,8 @@ export function useNetworkStatus(): NetworkStatus {
   }))
 
   useEffect(() => {
-    const handleOnline = () => setStatus(prev => ({ ...prev, isConnected: true }))
-    const handleOffline = () => setStatus(prev => ({ ...prev, isConnected: false, type: 'none' }))
+    const handleOnline = () => setStatus((prev) => ({ ...prev, isConnected: true }))
+    const handleOffline = () => setStatus((prev) => ({ ...prev, isConnected: false, type: 'none' }))
 
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
@@ -86,28 +88,31 @@ export function useNetworkStatus(): NetworkStatus {
 
 ## Mutation Types and Deduplication
 
-| Mutation | Idempotent? | Strategy | Opposing Operation |
-|----------|-------------|----------|-------------------|
-| `applyForExchange(exchangeId)` | Yes | **Deduplicate** | `withdrawFromExchange` |
-| `withdrawFromExchange(exchangeId)` | Yes | **Deduplicate** | `applyForExchange` |
-| `addToExchange(assignmentId, reason)` | Mostly | **Replace** | - |
-| `updateCompensation(id, data)` | No | **Replace** | - |
+| Mutation                              | Idempotent? | Strategy        | Opposing Operation     |
+| ------------------------------------- | ----------- | --------------- | ---------------------- |
+| `applyForExchange(exchangeId)`        | Yes         | **Deduplicate** | `withdrawFromExchange` |
+| `withdrawFromExchange(exchangeId)`    | Yes         | **Deduplicate** | `applyForExchange`     |
+| `addToExchange(assignmentId, reason)` | Mostly      | **Replace**     | -                      |
+| `updateCompensation(id, data)`        | No          | **Replace**     | -                      |
 
 ### Deduplication Strategies
 
 **1. `deduplicate`** - For idempotent actions
+
 ```
 Queue: [applyForExchange(game-123), applyForExchange(game-123)]
 Result: [applyForExchange(game-123)]  // Keep first, ignore duplicate
 ```
 
 **2. `replace`** - For actions where latest value wins
+
 ```
 Queue: [updateCompensation(comp-1, {km: 50}), updateCompensation(comp-1, {km: 60})]
 Result: [updateCompensation(comp-1, {km: 60})]  // Keep latest only
 ```
 
 **3. Opposing operations cancel out**
+
 ```
 Queue: [applyForExchange(game-123), withdrawFromExchange(game-123)]
 Result: []  // They cancel out - net effect is nothing
@@ -141,22 +146,22 @@ Sync starts ─────────┘
 
 ### Conflict Types
 
-| Conflict Reason | HTTP Status | Description |
-|-----------------|-------------|-------------|
-| `already_taken` | 409 | Another user completed the action |
-| `not_found` | 404 | Entity was deleted or cancelled |
-| `expired` | 400 | Time window closed |
-| `permission_denied` | 403 | User no longer has access |
-| `unknown` | Other | Unrecognized error |
+| Conflict Reason     | HTTP Status | Description                       |
+| ------------------- | ----------- | --------------------------------- |
+| `already_taken`     | 409         | Another user completed the action |
+| `not_found`         | 404         | Entity was deleted or cancelled   |
+| `expired`           | 400         | Time window closed                |
+| `permission_denied` | 403         | User no longer has access         |
+| `unknown`           | Other       | Unrecognized error                |
 
 ### Error Classification
 
-| Error Type | Retryable? | Action |
-|------------|------------|--------|
-| Network error (no status) | Yes | Keep in queue, retry later |
-| 5xx Server error | Yes | Keep in queue, retry with backoff |
-| 429 Rate limited | Yes | Keep in queue, retry after delay |
-| 400/404/409 Conflict | No | Remove from queue, notify user |
+| Error Type                | Retryable? | Action                            |
+| ------------------------- | ---------- | --------------------------------- |
+| Network error (no status) | Yes        | Keep in queue, retry later        |
+| 5xx Server error          | Yes        | Keep in queue, retry with backoff |
+| 429 Rate limited          | Yes        | Keep in queue, retry after delay  |
+| 400/404/409 Conflict      | No         | Remove from queue, notify user    |
 
 ---
 
@@ -209,6 +214,7 @@ Sync starts ─────────┘
 ### Phase 1: Core Sync Queue Infrastructure (Shared)
 
 **Files to create:**
+
 ```
 packages/shared/src/sync/
 ├── types.ts                 # Type definitions
@@ -247,7 +253,7 @@ export interface SyncQueueItem {
   status: SyncItemStatus
   retryCount: number
   displayLabel: string
-  entityLabel?: string  // e.g., "HC Luzern vs VBC Steinhausen"
+  entityLabel?: string // e.g., "HC Luzern vs VBC Steinhausen"
 }
 
 export interface SyncResult {
@@ -283,10 +289,13 @@ export interface NetworkStatus {
 ```typescript
 import type { SyncQueueItem, MutationType, DeduplicationStrategy } from './types'
 
-const MUTATION_CONFIG: Record<MutationType, {
-  strategy: DeduplicationStrategy
-  opposingType?: MutationType
-}> = {
+const MUTATION_CONFIG: Record<
+  MutationType,
+  {
+    strategy: DeduplicationStrategy
+    opposingType?: MutationType
+  }
+> = {
   applyForExchange: { strategy: 'deduplicate', opposingType: 'withdrawFromExchange' },
   withdrawFromExchange: { strategy: 'deduplicate', opposingType: 'applyForExchange' },
   addToExchange: { strategy: 'replace' },
@@ -297,8 +306,8 @@ export function addToQueue(item: SyncQueueItem, queue: SyncQueueItem[]): SyncQue
   const config = MUTATION_CONFIG[item.type]
 
   // Check for opposing operations that cancel out
-  const opposingIndex = queue.findIndex(q =>
-    q.entityId === item.entityId && q.type === config.opposingType
+  const opposingIndex = queue.findIndex(
+    (q) => q.entityId === item.entityId && q.type === config.opposingType
   )
 
   if (opposingIndex !== -1) {
@@ -306,9 +315,7 @@ export function addToQueue(item: SyncQueueItem, queue: SyncQueueItem[]): SyncQue
   }
 
   // Find existing item of same type + entity
-  const existingIndex = queue.findIndex(q =>
-    q.entityId === item.entityId && q.type === item.type
-  )
+  const existingIndex = queue.findIndex((q) => q.entityId === item.entityId && q.type === item.type)
 
   if (existingIndex !== -1) {
     if (config.strategy === 'deduplicate') {
@@ -322,11 +329,11 @@ export function addToQueue(item: SyncQueueItem, queue: SyncQueueItem[]): SyncQue
 }
 
 export function removeFromQueue(itemId: string, queue: SyncQueueItem[]): SyncQueueItem[] {
-  return queue.filter(item => item.id !== itemId)
+  return queue.filter((item) => item.id !== itemId)
 }
 
 export function getPendingItems(queue: SyncQueueItem[]): SyncQueueItem[] {
-  return queue.filter(item => item.status === 'pending')
+  return queue.filter((item) => item.status === 'pending')
 }
 
 export function generateItemId(): string {
@@ -363,9 +370,9 @@ export function categorizeConflict(
 
 export function isRetryableError(error: Error & { status?: number }): boolean {
   const status = error.status
-  if (!status) return true  // Network error
-  if (status >= 500) return true  // Server error
-  if (status === 429) return true  // Rate limited
+  if (!status) return true // Network error
+  if (status >= 500) return true // Server error
+  if (status === 429) return true // Rate limited
   return false
 }
 
@@ -378,12 +385,7 @@ export function isConflictError(error: Error & { status?: number }): boolean {
 #### `syncEngine.ts`
 
 ```typescript
-import type {
-  SyncQueueItem,
-  SyncResult,
-  SyncStorageAdapter,
-  NetworkStatus
-} from './types'
+import type { SyncQueueItem, SyncResult, SyncStorageAdapter, NetworkStatus } from './types'
 import { removeFromQueue, getPendingItems } from './queue'
 import { categorizeConflict, isRetryableError, isConflictError } from './conflictResolver'
 
@@ -448,7 +450,7 @@ export class SyncEngine {
         if (updatedItem.retryCount >= (this.config.maxRetries ?? 3)) {
           this.queue = removeFromQueue(item.id, this.queue)
         } else {
-          this.queue = this.queue.map(q => q.id === item.id ? updatedItem : q)
+          this.queue = this.queue.map((q) => (q.id === item.id ? updatedItem : q))
         }
       }
     }
@@ -477,7 +479,7 @@ export class SyncEngine {
           item,
           status: 'conflict',
           conflictReason: categorizeConflict(err, item.type),
-          error: err
+          error: err,
         }
       }
 
@@ -565,7 +567,7 @@ export const webSyncStorage: SyncStorageAdapter = {
       tx.oncomplete = () => resolve()
       tx.onerror = () => reject(tx.error)
     })
-  }
+  },
 }
 ```
 
@@ -591,7 +593,7 @@ export const mobileSyncStorage: SyncStorageAdapter = {
 
   async clear(): Promise<void> {
     await AsyncStorage.removeItem(STORAGE_KEY)
-  }
+  },
 }
 ```
 
@@ -614,11 +616,11 @@ export function useNetworkStatus(): NetworkStatus {
 
   useEffect(() => {
     const handleOnline = () => {
-      setStatus(prev => ({ ...prev, isConnected: true, isKnown: true }))
+      setStatus((prev) => ({ ...prev, isConnected: true, isKnown: true }))
     }
 
     const handleOffline = () => {
-      setStatus(prev => ({ ...prev, isConnected: false, isKnown: true, type: 'none' }))
+      setStatus((prev) => ({ ...prev, isConnected: false, isKnown: true, type: 'none' }))
     }
 
     window.addEventListener('online', handleOnline)
@@ -645,7 +647,7 @@ export async function verifyConnectivity(pingUrl?: string): Promise<boolean> {
     const response = await fetch(url, {
       method: 'HEAD',
       cache: 'no-store',
-      signal: AbortSignal.timeout(5000)
+      signal: AbortSignal.timeout(5000),
     })
     return response.ok
   } catch {
@@ -681,22 +683,25 @@ export const useSyncStore = create<SyncStore>((set) => ({
   lastSyncAt: null,
   lastSyncResults: [],
 
-  addItem: (item) => set((state) => ({
-    items: [...state.items, item]
-  })),
+  addItem: (item) =>
+    set((state) => ({
+      items: [...state.items, item],
+    })),
 
-  removeItem: (id) => set((state) => ({
-    items: state.items.filter(i => i.id !== id)
-  })),
+  removeItem: (id) =>
+    set((state) => ({
+      items: state.items.filter((i) => i.id !== id),
+    })),
 
   setItems: (items) => set({ items }),
 
   setSyncing: (isSyncing) => set({ isSyncing }),
 
-  setLastSyncResults: (results) => set({
-    lastSyncResults: results,
-    lastSyncAt: Date.now()
-  }),
+  setLastSyncResults: (results) =>
+    set({
+      lastSyncResults: results,
+      lastSyncAt: Date.now(),
+    }),
 
   clearResults: () => set({ lastSyncResults: [] }),
 }))
@@ -720,7 +725,7 @@ interface UseOfflineMutationOptions<TData, TVariables> {
   getEntityLabel?: (variables: TVariables) => string
   onSuccess?: (data: TData, variables: TVariables) => void
   invalidateKeys?: unknown[][]
-  isOnline: boolean  // Injected from platform-specific hook
+  isOnline: boolean // Injected from platform-specific hook
 }
 
 export function useOfflineMutation<TData, TVariables>({
@@ -924,15 +929,15 @@ export function SyncResultsModal() {
 
 ### Test Summary
 
-| Category | Location | Framework | Count |
-|----------|----------|-----------|-------|
-| Unit - Queue Logic | `packages/shared/src/sync/__tests__/` | Vitest | ~50 |
-| Unit - Storage | `web-app/src/services/__tests__/` | Vitest | ~15 |
-| Unit - Hooks | `web-app/src/hooks/__tests__/` | Vitest | ~15 |
-| Unit - Components | `web-app/src/shared/components/SyncStatus/__tests__/` | Vitest | ~25 |
-| Integration | `web-app/src/features/**/*.integration.test.tsx` | Vitest + MSW | ~15 |
-| E2E | `web-app/e2e/offline-sync.spec.ts` | Playwright | ~8 |
-| **Total** | | | **~128** |
+| Category           | Location                                              | Framework    | Count    |
+| ------------------ | ----------------------------------------------------- | ------------ | -------- |
+| Unit - Queue Logic | `packages/shared/src/sync/__tests__/`                 | Vitest       | ~50      |
+| Unit - Storage     | `web-app/src/services/__tests__/`                     | Vitest       | ~15      |
+| Unit - Hooks       | `web-app/src/hooks/__tests__/`                        | Vitest       | ~15      |
+| Unit - Components  | `web-app/src/shared/components/SyncStatus/__tests__/` | Vitest       | ~25      |
+| Integration        | `web-app/src/features/**/*.integration.test.tsx`      | Vitest + MSW | ~15      |
+| E2E                | `web-app/e2e/offline-sync.spec.ts`                    | Playwright   | ~8       |
+| **Total**          |                                                       |              | **~128** |
 
 ### Unit Tests
 
@@ -983,13 +988,13 @@ describe('addToQueue', () => {
         id: 'item-1',
         type: 'updateCompensation',
         entityId: 'comp-1',
-        payload: { kilometers: 50 }
+        payload: { kilometers: 50 },
       })
       const newer = createItem({
         id: 'item-2',
         type: 'updateCompensation',
         entityId: 'comp-1',
-        payload: { kilometers: 60 }
+        payload: { kilometers: 60 },
       })
 
       const result = addToQueue(newer, [existing])
@@ -1016,7 +1021,10 @@ describe('addToQueue', () => {
       queue = addToQueue(createItem({ id: '1', type: 'applyForExchange', entityId: 'ex-1' }), queue)
       expect(queue).toHaveLength(1)
 
-      queue = addToQueue(createItem({ id: '2', type: 'withdrawFromExchange', entityId: 'ex-1' }), queue)
+      queue = addToQueue(
+        createItem({ id: '2', type: 'withdrawFromExchange', entityId: 'ex-1' }),
+        queue
+      )
       expect(queue).toHaveLength(0)
 
       queue = addToQueue(createItem({ id: '3', type: 'applyForExchange', entityId: 'ex-1' }), queue)
@@ -1104,16 +1112,18 @@ describe('SyncEngine', () => {
   })
 
   it('processes pending items when online', async () => {
-    vi.mocked(storage.load).mockResolvedValue([{
-      id: 'item-1',
-      type: 'applyForExchange',
-      entityId: 'ex-1',
-      payload: {},
-      timestamp: Date.now(),
-      status: 'pending',
-      retryCount: 0,
-      displayLabel: 'Test',
-    }])
+    vi.mocked(storage.load).mockResolvedValue([
+      {
+        id: 'item-1',
+        type: 'applyForExchange',
+        entityId: 'ex-1',
+        payload: {},
+        timestamp: Date.now(),
+        status: 'pending',
+        retryCount: 0,
+        displayLabel: 'Test',
+      },
+    ])
 
     const engine = new SyncEngine({ storage, executors })
     await engine.initialize()
@@ -1126,16 +1136,18 @@ describe('SyncEngine', () => {
   })
 
   it('handles conflicts by removing from queue', async () => {
-    vi.mocked(storage.load).mockResolvedValue([{
-      id: 'item-1',
-      type: 'applyForExchange',
-      entityId: 'ex-1',
-      payload: {},
-      timestamp: Date.now(),
-      status: 'pending',
-      retryCount: 0,
-      displayLabel: 'Test',
-    }])
+    vi.mocked(storage.load).mockResolvedValue([
+      {
+        id: 'item-1',
+        type: 'applyForExchange',
+        entityId: 'ex-1',
+        payload: {},
+        timestamp: Date.now(),
+        status: 'pending',
+        retryCount: 0,
+        displayLabel: 'Test',
+      },
+    ])
     executors.applyForExchange.mockRejectedValue(
       Object.assign(new Error('Already taken'), { status: 409 })
     )
@@ -1258,7 +1270,10 @@ test.describe('Offline Sync', () => {
     await page.getByRole('link', { name: /exchange/i }).click()
     await context.setOffline(true)
 
-    await page.getByRole('button', { name: /take over/i }).first().click()
+    await page
+      .getByRole('button', { name: /take over/i })
+      .first()
+      .click()
     await page.getByRole('button', { name: /confirm/i }).click()
 
     await expect(page.getByText(/1 pending/i)).toBeVisible()
@@ -1268,7 +1283,10 @@ test.describe('Offline Sync', () => {
     await page.getByRole('link', { name: /exchange/i }).click()
     await context.setOffline(true)
 
-    await page.getByRole('button', { name: /take over/i }).first().click()
+    await page
+      .getByRole('button', { name: /take over/i })
+      .first()
+      .click()
     await page.getByRole('button', { name: /confirm/i }).click()
 
     await context.setOffline(false)
@@ -1280,7 +1298,10 @@ test.describe('Offline Sync', () => {
     await page.getByRole('link', { name: /exchange/i }).click()
     await context.setOffline(true)
 
-    await page.getByRole('button', { name: /take over/i }).first().click()
+    await page
+      .getByRole('button', { name: /take over/i })
+      .first()
+      .click()
     await page.getByRole('button', { name: /confirm/i }).click()
 
     await page.reload()
@@ -1332,34 +1353,34 @@ sync: {
 
 ### New Files
 
-| Path | Description |
-|------|-------------|
-| `packages/shared/src/sync/types.ts` | Type definitions |
-| `packages/shared/src/sync/queue.ts` | Queue manipulation logic |
-| `packages/shared/src/sync/conflictResolver.ts` | Conflict detection |
-| `packages/shared/src/sync/syncEngine.ts` | Sync orchestration |
-| `packages/shared/src/sync/index.ts` | Public exports |
-| `packages/shared/src/stores/sync.ts` | Zustand store |
-| `packages/shared/src/hooks/useOfflineMutation.ts` | Mutation hook |
-| `web-app/src/services/syncStorage.ts` | IndexedDB adapter |
-| `web-app/src/hooks/useNetworkStatus.ts` | Network detection |
-| `web-app/src/shared/components/SyncStatus/SyncStatusIndicator.tsx` | Header indicator |
-| `web-app/src/shared/components/SyncStatus/PendingSyncBadge.tsx` | Item badge |
-| `web-app/src/shared/components/SyncStatus/SyncResultsModal.tsx` | Results modal |
-| `packages/mobile/src/services/syncStorage.ts` | AsyncStorage adapter |
+| Path                                                               | Description              |
+| ------------------------------------------------------------------ | ------------------------ |
+| `packages/shared/src/sync/types.ts`                                | Type definitions         |
+| `packages/shared/src/sync/queue.ts`                                | Queue manipulation logic |
+| `packages/shared/src/sync/conflictResolver.ts`                     | Conflict detection       |
+| `packages/shared/src/sync/syncEngine.ts`                           | Sync orchestration       |
+| `packages/shared/src/sync/index.ts`                                | Public exports           |
+| `packages/shared/src/stores/sync.ts`                               | Zustand store            |
+| `packages/shared/src/hooks/useOfflineMutation.ts`                  | Mutation hook            |
+| `web-app/src/services/syncStorage.ts`                              | IndexedDB adapter        |
+| `web-app/src/hooks/useNetworkStatus.ts`                            | Network detection        |
+| `web-app/src/shared/components/SyncStatus/SyncStatusIndicator.tsx` | Header indicator         |
+| `web-app/src/shared/components/SyncStatus/PendingSyncBadge.tsx`    | Item badge               |
+| `web-app/src/shared/components/SyncStatus/SyncResultsModal.tsx`    | Results modal            |
+| `packages/mobile/src/services/syncStorage.ts`                      | AsyncStorage adapter     |
 
 ### Test Files
 
-| Path | Tests |
-|------|-------|
-| `packages/shared/src/sync/__tests__/queue.test.ts` | ~25 |
-| `packages/shared/src/sync/__tests__/conflictResolver.test.ts` | ~15 |
-| `packages/shared/src/sync/__tests__/syncEngine.test.ts` | ~20 |
-| `web-app/src/hooks/__tests__/useNetworkStatus.test.ts` | ~10 |
-| `web-app/src/services/__tests__/syncStorage.test.ts` | ~10 |
-| `web-app/src/shared/components/SyncStatus/__tests__/*.test.tsx` | ~25 |
-| `web-app/src/features/**/SyncFlow.integration.test.tsx` | ~15 |
-| `web-app/e2e/offline-sync.spec.ts` | ~8 |
+| Path                                                            | Tests |
+| --------------------------------------------------------------- | ----- |
+| `packages/shared/src/sync/__tests__/queue.test.ts`              | ~25   |
+| `packages/shared/src/sync/__tests__/conflictResolver.test.ts`   | ~15   |
+| `packages/shared/src/sync/__tests__/syncEngine.test.ts`         | ~20   |
+| `web-app/src/hooks/__tests__/useNetworkStatus.test.ts`          | ~10   |
+| `web-app/src/services/__tests__/syncStorage.test.ts`            | ~10   |
+| `web-app/src/shared/components/SyncStatus/__tests__/*.test.tsx` | ~25   |
+| `web-app/src/features/**/SyncFlow.integration.test.tsx`         | ~15   |
+| `web-app/e2e/offline-sync.spec.ts`                              | ~8    |
 
 ---
 

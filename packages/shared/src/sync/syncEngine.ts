@@ -57,9 +57,7 @@ const DEFAULT_MAX_RETRIES = 3
 export class SyncEngine {
   private queue: SyncQueueItem[] = []
   private isSyncing = false
-  private config: Required<
-    Pick<SyncEngineConfig, 'storage' | 'executors' | 'maxRetries'>
-  > &
+  private config: Required<Pick<SyncEngineConfig, 'storage' | 'executors' | 'maxRetries'>> &
     Omit<SyncEngineConfig, 'storage' | 'executors' | 'maxRetries'>
 
   constructor(config: SyncEngineConfig) {
@@ -133,9 +131,7 @@ export class SyncEngine {
    * @returns True if there's a pending operation for this entity
    */
   hasPendingOperation(entityId: string): boolean {
-    return this.queue.some(
-      (item) => item.entityId === entityId && item.status === 'pending'
-    )
+    return this.queue.some((item) => item.entityId === entityId && item.status === 'pending')
   }
 
   /**
@@ -178,9 +174,7 @@ export class SyncEngine {
           this.queue = removeFromQueue(item.id, this.queue)
         } else {
           // Update item in queue with incremented retry count
-          this.queue = this.queue.map((q) =>
-            q.id === item.id ? updatedItem : q
-          )
+          this.queue = this.queue.map((q) => (q.id === item.id ? updatedItem : q))
         }
       }
     }

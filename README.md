@@ -7,13 +7,13 @@ A multi-platform app suite for Swiss volleyball referees, providing an improved 
 
 ## Applications
 
-| App | Location | Description |
-|-----|----------|-------------|
-| Web App (PWA) | [`web-app/`](./web-app/) | React 19 + Vite 7 + Tailwind 4 |
-| Mobile App | [`packages/mobile/`](./packages/mobile/) | React Native 0.81 + Expo 54 |
+| App            | Location                                 | Description                     |
+| -------------- | ---------------------------------------- | ------------------------------- |
+| Web App (PWA)  | [`web-app/`](./web-app/)                 | React 19 + Vite 7 + Tailwind 4  |
+| Mobile App     | [`packages/mobile/`](./packages/mobile/) | React Native 0.81 + Expo 54     |
 | Shared Package | [`packages/shared/`](./packages/shared/) | API client, hooks, stores, i18n |
-| Help Site | [`help-site/`](./help-site/) | Astro 6 documentation |
-| CORS Proxy | [`worker/`](./worker/) | Cloudflare Worker |
+| Help Site      | [`help-site/`](./help-site/)             | Astro 6 documentation           |
+| CORS Proxy     | [`worker/`](./worker/)                   | Cloudflare Worker               |
 
 ## Quick Start
 
@@ -25,14 +25,14 @@ cd packages/mobile && npm start    # Start Expo dev server
 
 ## Documentation
 
-| Document | Description |
-|----------|-------------|
-| [CLAUDE.md](./CLAUDE.md) | Development guide and conventions |
-| [API Docs](./docs/api/README.md) | OpenAPI spec and endpoints |
-| [Code Patterns](./docs/CODE_PATTERNS.md) | Code examples and best practices |
-| [Testing Strategy](./docs/TESTING_STRATEGY.md) | Testing guidelines |
-| [Security Checklist](./docs/SECURITY_CHECKLIST.md) | Security review guide |
-| [Validation](./docs/VALIDATION.md) | Build validation and bundle limits |
+| Document                                           | Description                        |
+| -------------------------------------------------- | ---------------------------------- |
+| [CLAUDE.md](./CLAUDE.md)                           | Development guide and conventions  |
+| [API Docs](./docs/api/README.md)                   | OpenAPI spec and endpoints         |
+| [Code Patterns](./docs/CODE_PATTERNS.md)           | Code examples and best practices   |
+| [Testing Strategy](./docs/TESTING_STRATEGY.md)     | Testing guidelines                 |
+| [Security Checklist](./docs/SECURITY_CHECKLIST.md) | Security review guide              |
+| [Validation](./docs/VALIDATION.md)                 | Build validation and bundle limits |
 
 ## Legal & Privacy
 

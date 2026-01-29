@@ -11,25 +11,24 @@ import {
   useEffect,
   useRef,
   type ReactNode,
+  type ReactElement,
 } from 'react'
+
 import { useQueryClient } from '@tanstack/react-query'
 import {
   SyncEngine,
   useSyncStore,
+  useAuthStore,
   queryKeys,
   type SyncResult,
   type MutationType,
 } from '@volleykit/shared'
 
 import { getApiClient } from '@/api/client'
-import { useAuthStore } from '@volleykit/shared'
-import { toast } from '@/shared/stores/toast'
+import { useNetworkStatus, useNetworkChangeCallback } from '@/shared/hooks/useNetworkStatus'
 import { useTranslation } from '@/shared/hooks/useTranslation'
-import {
-  useNetworkStatus,
-  useNetworkChangeCallback,
-} from '@/shared/hooks/useNetworkStatus'
 import { webSyncStorage } from '@/shared/services/syncStorage'
+import { toast } from '@/shared/stores/toast'
 
 /**
  * Sync context value.
@@ -46,6 +45,7 @@ const SyncContext = createContext<SyncContextValue | null>(null)
 /**
  * Hook to access sync context.
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useSync(): SyncContextValue {
   const context = useContext(SyncContext)
   if (!context) {
@@ -65,8 +65,8 @@ interface SyncProviderProps {
  * - Automatically syncs when connectivity is restored
  * - Shows notifications for sync results
  */
-export function SyncProvider({ children }: SyncProviderProps): JSX.Element {
-  const { t } = useTranslation()
+export function SyncProvider({ children }: SyncProviderProps): ReactElement {
+  const { t, tInterpolate } = useTranslation()
   const queryClient = useQueryClient()
   const networkStatus = useNetworkStatus()
   const dataSource = useAuthStore((state) => state.dataSource)
@@ -82,23 +82,28 @@ export function SyncProvider({ children }: SyncProviderProps): JSX.Element {
 
     const apiClient = getApiClient(dataSource)
 
-    const executors: Partial<Record<MutationType, (item: { payload: unknown }) => Promise<unknown>>> = {
+    const executors: Partial<
+      Record<MutationType, (item: { payload: unknown }) => Promise<unknown>>
+    > = {
       applyForExchange: async (item) => {
-        const exchangeId = (item.payload as { exchangeId?: string })?.exchangeId ??
-          (item.payload as string)
+        const exchangeId =
+          (item.payload as { exchangeId?: string })?.exchangeId ?? (item.payload as string)
         return apiClient.applyForExchange(exchangeId)
       },
       withdrawFromExchange: async (item) => {
-        const exchangeId = (item.payload as { exchangeId?: string })?.exchangeId ??
-          (item.payload as string)
+        const exchangeId =
+          (item.payload as { exchangeId?: string })?.exchangeId ?? (item.payload as string)
         return apiClient.withdrawFromExchange(exchangeId)
       },
       addToExchange: async (item) => {
-        const payload = item.payload as { assignmentId: string; reason?: string }
-        return apiClient.addToExchange(payload.assignmentId, payload.reason)
+        const payload = item.payload as { assignmentId: string }
+        return apiClient.addToExchange(payload.assignmentId)
       },
       updateCompensation: async (item) => {
-        const payload = item.payload as { id: string; data: { kilometers?: number; reason?: string } }
+        const payload = item.payload as {
+          id: string
+          data: { distanceInMetres?: number; correctionReason?: string }
+        }
         return apiClient.updateCompensation(payload.id, payload.data)
       },
     }
@@ -127,7 +132,7 @@ export function SyncProvider({ children }: SyncProviderProps): JSX.Element {
     return () => {
       engineRef.current = null
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataSource])
 
   // Handle sync results - show notifications and invalidate queries
@@ -144,14 +149,10 @@ export function SyncProvider({ children }: SyncProviderProps): JSX.Element {
 
     // Show summary notifications
     if (successes.length > 0 && conflicts.length === 0) {
-      toast.success(
-        t('sync.allSynced' as never, { count: successes.length })
-      )
+      toast.success(tInterpolate('sync.allSynced', { count: successes.length }))
     } else if (conflicts.length > 0) {
       // Conflicts are shown in the SyncResultsModal
-      toast.warning(
-        t('sync.someConflicts' as never, { count: conflicts.length })
-      )
+      toast.warning(tInterpolate('sync.someConflicts', { count: conflicts.length }))
     }
   }
 
@@ -184,9 +185,5 @@ export function SyncProvider({ children }: SyncProviderProps): JSX.Element {
     }
   }
 
-  return (
-    <SyncContext.Provider value={{ syncNow, clearQueue }}>
-      {children}
-    </SyncContext.Provider>
-  )
+  return <SyncContext.Provider value={{ syncNow, clearQueue }}>{children}</SyncContext.Provider>
 }

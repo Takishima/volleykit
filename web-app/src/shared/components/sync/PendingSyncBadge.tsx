@@ -35,9 +35,7 @@ export function PendingSyncBadge({
   const { t } = useTranslation()
   const items = useSyncStore((state) => state.items)
 
-  const isPending = items.some(
-    (item) => item.entityId === entityId && item.status === 'pending'
-  )
+  const isPending = items.some((item) => item.entityId === entityId && item.status === 'pending')
 
   if (!isPending) {
     return null
@@ -49,6 +47,7 @@ export function PendingSyncBadge({
         bg-warning-100 text-warning-800
         dark:bg-warning-900 dark:text-warning-200
         ${className}`}
+      data-testid="pending-sync-badge"
     >
       <Clock className="h-3 w-3" />
       {t('sync.pendingSync' as never)}

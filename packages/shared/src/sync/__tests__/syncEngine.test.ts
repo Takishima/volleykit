@@ -4,12 +4,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { SyncEngine } from '../syncEngine'
-import type {
-  SyncQueueItem,
-  SyncStorageAdapter,
-  NetworkStatus,
-  MutationType,
-} from '../types'
+import type { SyncQueueItem, SyncStorageAdapter, NetworkStatus, MutationType } from '../types'
 import { generateItemId } from '../queue'
 
 /**
@@ -175,9 +170,9 @@ describe('SyncEngine', () => {
       vi.mocked(storage.load).mockResolvedValue([item])
 
       // Make the executor slow
-      executors.applyForExchange = vi.fn().mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 100))
-      )
+      executors.applyForExchange = vi
+        .fn()
+        .mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 100)))
 
       const engine = new SyncEngine({ storage, executors })
       await engine.initialize()
@@ -211,9 +206,9 @@ describe('SyncEngine', () => {
     it('removes conflicting items from queue', async () => {
       const item = createItem({ id: 'item-1' })
       vi.mocked(storage.load).mockResolvedValue([item])
-      executors.applyForExchange = vi.fn().mockRejectedValue(
-        Object.assign(new Error('Already taken'), { status: 409 })
-      )
+      executors.applyForExchange = vi
+        .fn()
+        .mockRejectedValue(Object.assign(new Error('Already taken'), { status: 409 }))
 
       const engine = new SyncEngine({ storage, executors })
       await engine.initialize()
@@ -228,9 +223,9 @@ describe('SyncEngine', () => {
     it('keeps retryable errors in queue with incremented count', async () => {
       const item = createItem({ id: 'item-1', retryCount: 0 })
       vi.mocked(storage.load).mockResolvedValue([item])
-      executors.applyForExchange = vi.fn().mockRejectedValue(
-        Object.assign(new Error('Server error'), { status: 500 })
-      )
+      executors.applyForExchange = vi
+        .fn()
+        .mockRejectedValue(Object.assign(new Error('Server error'), { status: 500 }))
 
       const engine = new SyncEngine({ storage, executors, maxRetries: 3 })
       await engine.initialize()
@@ -245,9 +240,9 @@ describe('SyncEngine', () => {
     it('removes items after max retries exceeded', async () => {
       const item = createItem({ id: 'item-1', retryCount: 2 })
       vi.mocked(storage.load).mockResolvedValue([item])
-      executors.applyForExchange = vi.fn().mockRejectedValue(
-        Object.assign(new Error('Server error'), { status: 500 })
-      )
+      executors.applyForExchange = vi
+        .fn()
+        .mockRejectedValue(Object.assign(new Error('Server error'), { status: 500 }))
 
       const engine = new SyncEngine({ storage, executors, maxRetries: 3 })
       await engine.initialize()
@@ -280,9 +275,7 @@ describe('SyncEngine', () => {
 
       await engine.sync(onlineStatus)
 
-      expect(onSyncComplete).toHaveBeenCalledWith([
-        expect.objectContaining({ status: 'success' }),
-      ])
+      expect(onSyncComplete).toHaveBeenCalledWith([expect.objectContaining({ status: 'success' })])
     })
 
     it('calls onItemProcessed callback for each item', async () => {

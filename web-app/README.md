@@ -14,14 +14,14 @@ A Progressive Web App (PWA) for Swiss volleyball referee management.
 
 ## Features
 
-| Feature | Description |
-|---------|-------------|
-| Assignments | View/validate match assignments with swipe gestures |
-| Compensations | Track fees, expenses, export PDF reports |
-| Game Exchange | Browse marketplace, filter by distance/level |
-| Transport | Swiss public transport integration (OJP SDK) |
-| OCR | Receipt scanning for expense entry |
-| Offline | Service worker caching, installable PWA |
+| Feature       | Description                                         |
+| ------------- | --------------------------------------------------- |
+| Assignments   | View/validate match assignments with swipe gestures |
+| Compensations | Track fees, expenses, export PDF reports            |
+| Game Exchange | Browse marketplace, filter by distance/level        |
+| Transport     | Swiss public transport integration (OJP SDK)        |
+| OCR           | Receipt scanning for expense entry                  |
+| Offline       | Service worker caching, installable PWA             |
 
 ## Development
 
