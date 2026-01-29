@@ -354,20 +354,16 @@ function EditCompensationModalComponent({
   }, [isOpen])
 
   /**
-   * Handles batch update success/failure and shows appropriate toast message.
+   * Shows appropriate toast message based on batch update result.
    */
-  const handleBatchUpdateResult = useCallback(
+  const showBatchUpdateToast = useCallback(
     (result: BatchUpdateResult) => {
-      // Total updated = current compensation + batch results
       const totalUpdated = 1 + result.successCount
-
       if (result.failedCount === 0) {
-        // All succeeded
         toast.success(
           tInterpolate('compensations.batchUpdateSuccess', { count: String(totalUpdated) })
         )
       } else {
-        // Partial success
         toast.warning(
           tInterpolate('compensations.batchUpdatePartialSuccess', {
             success: String(totalUpdated),
@@ -378,6 +374,54 @@ function EditCompensationModalComponent({
       }
     },
     [tInterpolate]
+  )
+
+  /**
+   * Triggers batch update for other compensations at the same hall.
+   */
+  const triggerBatchUpdate = useCallback(
+    (distanceInMetres: number) => {
+      const otherIds = otherCompensationsAtSameHall
+        .map((c) => c.convocationCompensation?.__identity)
+        .filter((id): id is string => !!id)
+
+      batchUpdateMutation.mutate(
+        { compensationIds: otherIds, data: { distanceInMetres } },
+        {
+          onSuccess: (result) => {
+            showBatchUpdateToast(result)
+            onClose()
+          },
+          onError: (error) => {
+            logger.error('[EditCompensationModal] Batch update failed:', error)
+            toast.warning(
+              tInterpolate('compensations.batchUpdatePartialSuccess', {
+                success: '1',
+                total: String(1 + otherIds.length),
+                failed: String(otherIds.length),
+              })
+            )
+            onClose()
+          },
+        }
+      )
+    },
+    [batchUpdateMutation, otherCompensationsAtSameHall, showBatchUpdateToast, onClose, tInterpolate]
+  )
+
+  /**
+   * Handles successful compensation update, optionally triggering batch update.
+   */
+  const handleCompensationSuccess = useCallback(
+    (updateData: { distanceInMetres?: number }) => {
+      if (applyToSameHall && updateData.distanceInMetres && otherCompensationsAtSameHall.length > 0) {
+        triggerBatchUpdate(updateData.distanceInMetres)
+      } else {
+        toast.success(t('compensations.saveSuccess'))
+        onClose()
+      }
+    },
+    [applyToSameHall, otherCompensationsAtSameHall.length, triggerBatchUpdate, onClose, t]
   )
 
   const handleSubmit = useCallback(
@@ -392,100 +436,43 @@ function EditCompensationModalComponent({
       }
 
       const updateData: { distanceInMetres?: number; correctionReason?: string } = {}
+      if (kilometers) updateData.distanceInMetres = kilometresToMetres(km)
+      if (reason) updateData.correctionReason = reason
 
-      if (kilometers) {
-        updateData.distanceInMetres = kilometresToMetres(km)
-      }
-      if (reason) {
-        updateData.correctionReason = reason
-      }
-
-      if (Object.keys(updateData).length > 0) {
-        if (isAssignmentEdit && assignment) {
-          // Use assignment-specific mutation for assignments
-          updateAssignmentCompensationMutation.mutate(
-            { assignmentId: assignment.__identity, data: updateData },
-            {
-              onSuccess: () => {
-                logger.debug('[EditCompensationModal] Updated assignment compensation:', {
-                  assignmentId: assignment.__identity,
-                  ...updateData,
-                })
-                toast.success(t('compensations.saveSuccess'))
-                onClose()
-              },
-              onError: (error) => {
-                logger.error('[EditCompensationModal] Failed to update assignment compensation:', {
-                  assignmentId: assignment.__identity,
-                  error,
-                })
-                toast.error(t('compensations.saveError'))
-              },
-            }
-          )
-        } else if (compensationId) {
-          // Use compensation mutation for compensation records
-          updateCompensationMutation.mutate(
-            { compensationId, data: updateData },
-            {
-              onSuccess: () => {
-                logger.debug('[EditCompensationModal] Updated compensation:', {
-                  compensationId,
-                  ...updateData,
-                })
-
-                // If "apply to same hall" is checked and we have distance data, batch update others
-                if (
-                  applyToSameHall &&
-                  updateData.distanceInMetres &&
-                  otherCompensationsAtSameHall.length > 0
-                ) {
-                  const otherIds = otherCompensationsAtSameHall
-                    .map((c) => c.convocationCompensation?.__identity)
-                    .filter((id): id is string => !!id)
-
-                  // Only update distance for batch (not correction reason)
-                  const batchData = { distanceInMetres: updateData.distanceInMetres }
-
-                  batchUpdateMutation.mutate(
-                    { compensationIds: otherIds, data: batchData },
-                    {
-                      onSuccess: (result) => {
-                        handleBatchUpdateResult(result)
-                        onClose()
-                      },
-                      onError: (error) => {
-                        logger.error('[EditCompensationModal] Batch update failed:', error)
-                        // Primary update succeeded, but batch failed
-                        toast.warning(
-                          tInterpolate('compensations.batchUpdatePartialSuccess', {
-                            success: '1',
-                            total: String(1 + otherIds.length),
-                            failed: String(otherIds.length),
-                          })
-                        )
-                        onClose()
-                      },
-                    }
-                  )
-                } else {
-                  toast.success(t('compensations.saveSuccess'))
-                  onClose()
-                }
-              },
-              onError: (error) => {
-                logger.error('[EditCompensationModal] Failed to update compensation:', {
-                  compensationId,
-                  error,
-                })
-                toast.error(t('compensations.saveError'))
-              },
-            }
-          )
-        }
-      } else {
-        // No changes to save, just close
+      if (Object.keys(updateData).length === 0) {
         onClose()
+        return
+      }
+
+      if (isAssignmentEdit && assignment) {
+        updateAssignmentCompensationMutation.mutate(
+          { assignmentId: assignment.__identity, data: updateData },
+          {
+            onSuccess: () => {
+              logger.debug('[EditCompensationModal] Updated assignment compensation')
+              toast.success(t('compensations.saveSuccess'))
+              onClose()
+            },
+            onError: (error) => {
+              logger.error('[EditCompensationModal] Failed to update assignment compensation:', error)
+              toast.error(t('compensations.saveError'))
+            },
+          }
+        )
+      } else if (compensationId) {
+        updateCompensationMutation.mutate(
+          { compensationId, data: updateData },
+          {
+            onSuccess: () => {
+              logger.debug('[EditCompensationModal] Updated compensation')
+              handleCompensationSuccess(updateData)
+            },
+            onError: (error) => {
+              logger.error('[EditCompensationModal] Failed to update compensation:', error)
+              toast.error(t('compensations.saveError'))
+            },
+          }
+        )
       }
     },
     [
@@ -496,13 +483,9 @@ function EditCompensationModalComponent({
       isAssignmentEdit,
       updateAssignmentCompensationMutation,
       updateCompensationMutation,
-      batchUpdateMutation,
-      applyToSameHall,
-      otherCompensationsAtSameHall,
-      handleBatchUpdateResult,
+      handleCompensationSuccess,
       onClose,
       t,
-      tInterpolate,
     ]
   )
 
@@ -605,6 +588,7 @@ function EditCompensationModalComponent({
                     type="checkbox"
                     checked={applyToSameHall}
                     onChange={(e) => setApplyToSameHall(e.target.checked)}
+                    aria-describedby="apply-to-same-hall-description"
                     className="mt-0.5 h-4 w-4 rounded border-border-strong dark:border-border-strong-dark text-primary-600 focus:ring-primary-500 focus:ring-2"
                   />
                   <label
@@ -614,7 +598,10 @@ function EditCompensationModalComponent({
                     <span className="block font-medium text-text-primary dark:text-text-primary-dark">
                       {tInterpolate('compensations.applyToSameHall', { hallName })}
                     </span>
-                    <span className="text-text-muted dark:text-text-muted-dark">
+                    <span
+                      id="apply-to-same-hall-description"
+                      className="text-text-muted dark:text-text-muted-dark"
+                    >
                       {tInterpolate('compensations.applyToSameHallCount', {
                         count: String(otherCompensationsAtSameHall.length),
                       })}
