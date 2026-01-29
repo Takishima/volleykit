@@ -14,6 +14,7 @@ import {
   ChevronDown,
   Calendar,
 } from '@/shared/components/icons'
+import { SyncStatusIndicator } from '@/shared/components/sync'
 import { TourModeBanner } from '@/shared/components/tour/TourModeBanner'
 import { prefetchAllTabData } from '@/shared/hooks/usePrefetchTabData'
 import { useTranslation } from '@/shared/hooks/useTranslation'
@@ -249,6 +250,9 @@ export function AppShell() {
 
             {isAuthenticated && (
               <div className="flex items-center gap-3">
+                {/* Sync Status Indicator */}
+                <SyncStatusIndicator />
+
                 {/* Calendar Mode Indicator */}
                 {dataSource === 'calendar' && (
                   <div
