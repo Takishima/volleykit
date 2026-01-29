@@ -55,7 +55,7 @@ vi.mock('@/shared/hooks/useTravelTimeFilter', () => ({
     isAvailable: false,
   }),
 }))
-vi.mock('@/shared/hooks/useExchangeActions', () => ({
+vi.mock('./hooks/useExchangeActions', () => ({
   useExchangeActions: () => ({
     takeOverModal: {
       isOpen: false,

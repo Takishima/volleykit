@@ -1,12 +1,12 @@
 import { useCallback } from 'react'
 
-import type { GameExchange } from '@/api/client'
-import {
-  useApplyForExchange,
-  useWithdrawFromExchange,
-} from '@/features/validation/hooks/useConvocations'
+import { useQueryClient } from '@tanstack/react-query'
+
+import { getApiClient, type GameExchange } from '@/api/client'
+import { queryKeys } from '@/api/queryKeys'
 import { useModalState } from '@/shared/hooks/useModalState'
-import { useSafeMutation } from '@/shared/hooks/useSafeMutation'
+import { useOfflineMutation } from '@/shared/hooks/useOfflineMutation'
+import { useAuthStore } from '@/shared/stores/auth'
 
 interface UseExchangeActionsResult {
   takeOverModal: {
@@ -28,34 +28,52 @@ interface UseExchangeActionsResult {
 export function useExchangeActions(): UseExchangeActionsResult {
   const takeOverModal = useModalState<GameExchange>()
   const removeFromExchangeModal = useModalState<GameExchange>()
+  const queryClient = useQueryClient()
+  const dataSource = useAuthStore((state) => state.dataSource)
+  const apiClient = getApiClient(dataSource)
 
-  const applyMutation = useApplyForExchange()
-  const withdrawMutation = useWithdrawFromExchange()
-
-  const takeOverMutation = useSafeMutation(
+  const takeOverMutation = useOfflineMutation(
     async (exchange: GameExchange, log) => {
-      await applyMutation.mutateAsync(exchange.__identity)
+      await apiClient.applyForExchange(exchange.__identity)
       log.debug('Successfully applied for exchange:', exchange.__identity)
+      queryClient.invalidateQueries({ queryKey: queryKeys.exchanges.lists() })
     },
     {
       logContext: 'useExchangeActions',
+      mutationType: 'applyForExchange',
+      getEntityId: (exchange) => exchange.__identity,
+      getDisplayLabel: (exchange) =>
+        exchange.refereeGame?.game?.homeTeam?.shortName
+          ? `${exchange.refereeGame.game.homeTeam.shortName} vs ${exchange.refereeGame.game.awayTeam?.shortName ?? '?'}`
+          : 'Take over game',
+      getEntityLabel: (exchange) => exchange.refereeGame?.game?.startingDateTime,
       successMessage: 'exchange.applySuccess',
       errorMessage: 'exchange.applyError',
+      queuedMessage: 'sync.savedOffline',
       safeGuard: { context: 'useExchangeActions', action: 'taking exchange' },
       skipSuccessToastInDemoMode: true,
       onSuccess: () => takeOverModal.close(),
     }
   )
 
-  const withdrawSafeMutation = useSafeMutation(
+  const withdrawMutation = useOfflineMutation(
     async (exchange: GameExchange, log) => {
-      await withdrawMutation.mutateAsync(exchange.__identity)
+      await apiClient.withdrawFromExchange(exchange.__identity)
       log.debug('Successfully withdrawn from exchange:', exchange.__identity)
+      queryClient.invalidateQueries({ queryKey: queryKeys.exchanges.lists() })
     },
     {
       logContext: 'useExchangeActions',
+      mutationType: 'withdrawFromExchange',
+      getEntityId: (exchange) => exchange.__identity,
+      getDisplayLabel: (exchange) =>
+        exchange.refereeGame?.game?.homeTeam?.shortName
+          ? `${exchange.refereeGame.game.homeTeam.shortName} vs ${exchange.refereeGame.game.awayTeam?.shortName ?? '?'}`
+          : 'Withdraw from exchange',
+      getEntityLabel: (exchange) => exchange.refereeGame?.game?.startingDateTime,
       successMessage: 'exchange.withdrawSuccess',
       errorMessage: 'exchange.withdrawError',
+      queuedMessage: 'sync.savedOffline',
       safeGuard: {
         context: 'useExchangeActions',
         action: 'withdrawing from exchange',
@@ -74,9 +92,9 @@ export function useExchangeActions(): UseExchangeActionsResult {
 
   const handleRemoveFromExchange = useCallback(
     async (exchange: GameExchange) => {
-      await withdrawSafeMutation.execute(exchange)
+      await withdrawMutation.execute(exchange)
     },
-    [withdrawSafeMutation]
+    [withdrawMutation]
   )
 
   return {

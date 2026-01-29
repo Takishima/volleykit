@@ -5,9 +5,7 @@
   "ignore": [
     "src/types/**/*.d.ts",
     "src/api/schema.ts",
-    "src/contexts/SyncContext.tsx",
     "src/shared/hooks/useOfflineMutation.ts",
-    "src/shared/hooks/useNetworkStatus.ts",
     "src/shared/services/syncStorage.ts"
   ],
   "ignoreDependencies": [

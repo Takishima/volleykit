@@ -1,20 +1,39 @@
 import { renderHook, act } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import type { GameExchange } from '@/api/client'
 import { MODAL_CLEANUP_DELAY } from '@/features/assignments/utils/assignment-helpers'
-import * as useConvocations from '@/features/validation/hooks/useConvocations'
 import * as authStore from '@/shared/stores/auth'
 import * as settingsStore from '@/shared/stores/settings'
 import { toast } from '@/shared/stores/toast'
 
 import { useExchangeActions } from './useExchangeActions'
 
-import type { UseMutationResult } from '@tanstack/react-query'
+import type { ReactNode } from 'react'
 
-vi.mock('@/features/validation/hooks/useConvocations')
+// Create trackable mock functions
+const mockApplyForExchange = vi.fn().mockResolvedValue(undefined)
+const mockWithdrawFromExchange = vi.fn().mockResolvedValue(undefined)
+
+// Mock modules
+vi.mock('@/api/client', () => ({
+  getApiClient: () => ({
+    applyForExchange: mockApplyForExchange,
+    withdrawFromExchange: mockWithdrawFromExchange,
+  }),
+}))
 vi.mock('@/shared/stores/auth')
 vi.mock('@/shared/stores/settings')
+vi.mock('@/shared/hooks/useNetworkStatus', () => ({
+  useIsOnline: () => true,
+}))
+vi.mock('@volleykit/shared', () => ({
+  useSyncStore: () => ({
+    addItem: vi.fn(),
+  }),
+  generateItemId: () => 'mock-id',
+}))
 vi.mock('@/shared/stores/toast', () => ({
   toast: {
     success: vi.fn(),
@@ -31,6 +50,7 @@ vi.mock('@/shared/hooks/useTranslation', () => ({
 }))
 vi.mock('@/i18n', () => ({
   t: (key: string) => key,
+  tInterpolate: (key: string) => key,
   getLocale: () => 'en',
   setLocale: vi.fn(),
   setLocaleImmediate: vi.fn(),
@@ -59,13 +79,27 @@ const mockExchange = createMockExchange()
 
 const MOCK_ASYNC_OPERATION_DELAY_MS = 100
 
-describe('useExchangeActions', () => {
-  const mockApplyMutate = vi.fn()
-  const mockWithdrawMutate = vi.fn()
+// Create wrapper with QueryClient
+function createWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  })
+  return function Wrapper({ children }: { children: ReactNode }) {
+    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  }
+}
 
+describe('useExchangeActions', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     vi.clearAllMocks()
+
+    // Reset API mocks
+    mockApplyForExchange.mockReset().mockResolvedValue(undefined)
+    mockWithdrawFromExchange.mockReset().mockResolvedValue(undefined)
 
     // Default: not in demo mode, safe mode disabled
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
@@ -77,14 +111,6 @@ describe('useExchangeActions', () => {
         typeof settingsStore.useSettingsStore.getState
       >)
     )
-
-    vi.mocked(useConvocations.useApplyForExchange).mockReturnValue({
-      mutateAsync: mockApplyMutate,
-    } as unknown as UseMutationResult<void, Error, string>)
-
-    vi.mocked(useConvocations.useWithdrawFromExchange).mockReturnValue({
-      mutateAsync: mockWithdrawMutate,
-    } as unknown as UseMutationResult<void, Error, string>)
   })
 
   afterEach(() => {
@@ -92,7 +118,7 @@ describe('useExchangeActions', () => {
   })
 
   it('should initialize with closed modals', () => {
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     expect(result.current.takeOverModal.isOpen).toBe(false)
     expect(result.current.takeOverModal.exchange).toBeNull()
@@ -101,7 +127,7 @@ describe('useExchangeActions', () => {
   })
 
   it('should open and close take over modal', () => {
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     act(() => {
       result.current.takeOverModal.open(mockExchange)
@@ -118,7 +144,7 @@ describe('useExchangeActions', () => {
   })
 
   it('should open and close remove from exchange modal', () => {
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     act(() => {
       result.current.removeFromExchangeModal.open(mockExchange)
@@ -135,7 +161,7 @@ describe('useExchangeActions', () => {
   })
 
   it('should cleanup exchange data after modal close delay', () => {
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     act(() => {
       result.current.takeOverModal.open(mockExchange)
@@ -159,7 +185,7 @@ describe('useExchangeActions', () => {
   })
 
   it('should cleanup timeout on unmount', () => {
-    const { result, unmount } = renderHook(() => useExchangeActions())
+    const { result, unmount } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     act(() => {
       result.current.takeOverModal.open(mockExchange)
@@ -179,7 +205,7 @@ describe('useExchangeActions', () => {
   })
 
   it('should clear previous timeout when closing multiple times', () => {
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     act(() => {
       result.current.takeOverModal.open(mockExchange)
@@ -212,67 +238,67 @@ describe('useExchangeActions', () => {
 
   it('should handle take over action successfully', async () => {
     vi.useRealTimers()
-    mockApplyMutate.mockResolvedValue(undefined)
+    mockApplyForExchange.mockResolvedValue(undefined)
 
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     await act(async () => {
       await result.current.handleTakeOver(mockExchange)
     })
 
-    expect(mockApplyMutate).toHaveBeenCalledWith(mockExchange.__identity)
+    expect(mockApplyForExchange).toHaveBeenCalledWith(mockExchange.__identity)
     expect(toast.success).toHaveBeenCalledWith('exchange.applySuccess')
   })
 
   it('should handle take over action failure', async () => {
     vi.useRealTimers()
-    mockApplyMutate.mockRejectedValue(new Error('Network error'))
+    mockApplyForExchange.mockRejectedValue(new Error('Network error'))
 
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     await act(async () => {
       await result.current.handleTakeOver(mockExchange)
     })
 
-    expect(mockApplyMutate).toHaveBeenCalledWith(mockExchange.__identity)
+    expect(mockApplyForExchange).toHaveBeenCalledWith(mockExchange.__identity)
     expect(toast.error).toHaveBeenCalledWith('exchange.applyError')
   })
 
   it('should handle remove from exchange action successfully', async () => {
     vi.useRealTimers()
-    mockWithdrawMutate.mockResolvedValue(undefined)
+    mockWithdrawFromExchange.mockResolvedValue(undefined)
 
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     await act(async () => {
       await result.current.handleRemoveFromExchange(mockExchange)
     })
 
-    expect(mockWithdrawMutate).toHaveBeenCalledWith(mockExchange.__identity)
+    expect(mockWithdrawFromExchange).toHaveBeenCalledWith(mockExchange.__identity)
     expect(toast.success).toHaveBeenCalledWith('exchange.withdrawSuccess')
   })
 
   it('should handle remove from exchange action failure', async () => {
     vi.useRealTimers()
-    mockWithdrawMutate.mockRejectedValue(new Error('Network error'))
+    mockWithdrawFromExchange.mockRejectedValue(new Error('Network error'))
 
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     await act(async () => {
       await result.current.handleRemoveFromExchange(mockExchange)
     })
 
-    expect(mockWithdrawMutate).toHaveBeenCalledWith(mockExchange.__identity)
+    expect(mockWithdrawFromExchange).toHaveBeenCalledWith(mockExchange.__identity)
     expect(toast.error).toHaveBeenCalledWith('exchange.withdrawError')
   })
 
   it('should prevent duplicate take over actions', async () => {
     vi.useRealTimers()
-    mockApplyMutate.mockImplementation(
+    mockApplyForExchange.mockImplementation(
       () => new Promise((resolve) => setTimeout(resolve, MOCK_ASYNC_OPERATION_DELAY_MS))
     )
 
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     // Try to trigger action twice concurrently
     await act(async () => {
@@ -283,16 +309,16 @@ describe('useExchangeActions', () => {
     })
 
     // Should only be called once
-    expect(mockApplyMutate).toHaveBeenCalledTimes(1)
+    expect(mockApplyForExchange).toHaveBeenCalledTimes(1)
   })
 
   it('should prevent duplicate remove from exchange actions', async () => {
     vi.useRealTimers()
-    mockWithdrawMutate.mockImplementation(
+    mockWithdrawFromExchange.mockImplementation(
       () => new Promise((resolve) => setTimeout(resolve, MOCK_ASYNC_OPERATION_DELAY_MS))
     )
 
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     // Try to trigger action twice concurrently
     await act(async () => {
@@ -303,11 +329,11 @@ describe('useExchangeActions', () => {
     })
 
     // Should only be called once
-    expect(mockWithdrawMutate).toHaveBeenCalledTimes(1)
+    expect(mockWithdrawFromExchange).toHaveBeenCalledTimes(1)
   })
 
   it('should handle rapid open/close cycles correctly', () => {
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     // Rapidly toggle modal
     act(() => {
@@ -325,7 +351,7 @@ describe('useExchangeActions', () => {
   })
 
   it('should handle rapid open/close cycles for removeFromExchange modal', () => {
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     // Rapidly toggle modal
     act(() => {
@@ -351,7 +377,7 @@ describe('useExchangeActions', () => {
     })
 
     it('should use mutation for take over in demo mode (routed to mock API)', async () => {
-      const { result } = renderHook(() => useExchangeActions())
+      const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
       await act(async () => {
         await result.current.handleTakeOver(mockExchange)
@@ -359,11 +385,11 @@ describe('useExchangeActions', () => {
 
       // In the new architecture, demo mode uses the same mutations
       // which are routed to the mock API via getApiClient
-      expect(mockApplyMutate).toHaveBeenCalledWith(mockExchange.__identity)
+      expect(mockApplyForExchange).toHaveBeenCalledWith(mockExchange.__identity)
     })
 
     it('should use mutation for remove from exchange in demo mode (routed to mock API)', async () => {
-      const { result } = renderHook(() => useExchangeActions())
+      const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
       await act(async () => {
         await result.current.handleRemoveFromExchange(mockExchange)
@@ -371,11 +397,11 @@ describe('useExchangeActions', () => {
 
       // In the new architecture, demo mode uses the same mutations
       // which are routed to the mock API via getApiClient
-      expect(mockWithdrawMutate).toHaveBeenCalledWith(mockExchange.__identity)
+      expect(mockWithdrawFromExchange).toHaveBeenCalledWith(mockExchange.__identity)
     })
 
     it('should close modal after demo mode take over', async () => {
-      const { result } = renderHook(() => useExchangeActions())
+      const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
       act(() => {
         result.current.takeOverModal.open(mockExchange)
@@ -391,7 +417,7 @@ describe('useExchangeActions', () => {
     })
 
     it('should close modal after demo mode remove from exchange', async () => {
-      const { result } = renderHook(() => useExchangeActions())
+      const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
       act(() => {
         result.current.removeFromExchangeModal.open(mockExchange)
@@ -421,24 +447,24 @@ describe('useExchangeActions', () => {
     })
 
     it('should block take over when safe mode is enabled', async () => {
-      const { result } = renderHook(() => useExchangeActions())
+      const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
       await act(async () => {
         await result.current.handleTakeOver(mockExchange)
       })
 
-      expect(mockApplyMutate).not.toHaveBeenCalled()
+      expect(mockApplyForExchange).not.toHaveBeenCalled()
       expect(toast.warning).toHaveBeenCalledWith('settings.safeModeBlocked')
     })
 
     it('should block remove from exchange when safe mode is enabled', async () => {
-      const { result } = renderHook(() => useExchangeActions())
+      const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
       await act(async () => {
         await result.current.handleRemoveFromExchange(mockExchange)
       })
 
-      expect(mockWithdrawMutate).not.toHaveBeenCalled()
+      expect(mockWithdrawFromExchange).not.toHaveBeenCalled()
       expect(toast.warning).toHaveBeenCalledWith('settings.safeModeBlocked')
     })
 
@@ -447,7 +473,7 @@ describe('useExchangeActions', () => {
         selector({ dataSource: 'demo' } as ReturnType<typeof authStore.useAuthStore.getState>)
       )
 
-      const { result } = renderHook(() => useExchangeActions())
+      const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
       await act(async () => {
         await result.current.handleTakeOver(mockExchange)
@@ -455,7 +481,7 @@ describe('useExchangeActions', () => {
 
       // In demo mode, operations are allowed even with safe mode enabled
       // because demo mode uses local data and poses no risk
-      expect(mockApplyMutate).toHaveBeenCalledWith(mockExchange.__identity)
+      expect(mockApplyForExchange).toHaveBeenCalledWith(mockExchange.__identity)
     })
   })
 })

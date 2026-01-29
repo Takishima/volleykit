@@ -43,13 +43,25 @@ vi.mock('@/shared/stores/toast', () => ({
   },
 }))
 
-// Mock the useAddToExchange mutation hook
-const mockMutate = vi.fn()
-vi.mock('@/features/exchanges', () => ({
-  useAddToExchange: () => ({
-    mutate: mockMutate,
-    isPending: false,
+// Mock the API client's addToExchange method
+const mockAddToExchange = vi.fn().mockResolvedValue(undefined)
+vi.mock('@/api/client', () => ({
+  getApiClient: () => ({
+    addToExchange: mockAddToExchange,
   }),
+}))
+
+// Mock network status
+vi.mock('@/shared/hooks/useNetworkStatus', () => ({
+  useIsOnline: () => true,
+}))
+
+// Mock sync store
+vi.mock('@volleykit/shared', () => ({
+  useSyncStore: () => ({
+    addItem: vi.fn(),
+  }),
+  generateItemId: () => 'mock-id',
 }))
 vi.mock('@/shared/hooks/useTranslation', () => ({
   useTranslation: () => ({
@@ -100,7 +112,7 @@ describe('useAssignmentActions', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     vi.clearAllMocks()
-    mockMutate.mockReset()
+    mockAddToExchange.mockReset().mockResolvedValue(undefined)
 
     // Default: not in demo mode, safe mode disabled
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
@@ -370,19 +382,16 @@ describe('useAssignmentActions', () => {
     expect(result.current.pdfReportModal.assignment).toBeNull()
   })
 
-  it('should handle add to exchange action', () => {
-    // Mock mutate to immediately call onSuccess
-    mockMutate.mockImplementation((_id: string, options?: { onSuccess?: () => void }) => {
-      options?.onSuccess?.()
-    })
+  it('should handle add to exchange action', async () => {
+    vi.useRealTimers()
 
     const { result } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() })
 
-    act(() => {
-      result.current.handleAddToExchange(mockAssignment)
+    await act(async () => {
+      await result.current.handleAddToExchange(mockAssignment)
     })
 
-    expect(mockMutate).toHaveBeenCalledWith(mockAssignment.__identity, expect.any(Object))
+    expect(mockAddToExchange).toHaveBeenCalledWith(mockAssignment.__identity)
     expect(toast.success).toHaveBeenCalledWith('exchange.addedToExchangeSuccess')
   })
 

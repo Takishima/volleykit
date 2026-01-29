@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import { useShallow } from 'zustand/react/shallow'
 
 import { PWAProvider } from '@/contexts/PWAContext'
+import { SyncProvider } from '@/contexts/SyncContext'
 import { CalendarErrorHandler } from '@/features/assignments/components/CalendarErrorHandler'
 import { useCalendarTheme } from '@/features/assignments/hooks/useCalendarTheme'
 import { ErrorBoundary } from '@/shared/components/ErrorBoundary'
@@ -12,6 +13,7 @@ import { AppShell } from '@/shared/components/layout/AppShell'
 import { LoadingState } from '@/shared/components/LoadingSpinner'
 import { PageErrorBoundary } from '@/shared/components/PageErrorBoundary'
 import { ReloadPrompt } from '@/shared/components/ReloadPrompt'
+import { SyncResultsModal } from '@/shared/components/sync'
 import { ToastContainer } from '@/shared/components/Toast'
 import { ASSIGNMENTS_STALE_TIME_MS, SETTINGS_STALE_TIME_MS } from '@/shared/hooks/usePaginatedQuery'
 import { usePreloadLocales } from '@/shared/hooks/usePreloadLocales'
@@ -317,13 +319,16 @@ export default function App() {
                 <Route
                   element={
                     <ProtectedRoute>
-                      <CalendarErrorHandler>
-                        <Suspense fallback={null}>
-                          <TourProvider>
-                            <AppShell />
-                          </TourProvider>
-                        </Suspense>
-                      </CalendarErrorHandler>
+                      <SyncProvider>
+                        <CalendarErrorHandler>
+                          <Suspense fallback={null}>
+                            <TourProvider>
+                              <AppShell />
+                              <SyncResultsModal />
+                            </TourProvider>
+                          </Suspense>
+                        </CalendarErrorHandler>
+                      </SyncProvider>
                     </ProtectedRoute>
                   }
                 >

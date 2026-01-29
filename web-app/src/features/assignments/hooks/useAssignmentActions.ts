@@ -2,12 +2,13 @@ import { useState, useCallback } from 'react'
 
 import { useQueryClient } from '@tanstack/react-query'
 
-import type { Assignment } from '@/api/client'
+import { getApiClient, type Assignment } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
-import { useAddToExchange } from '@/features/exchanges'
 import { useModalState } from '@/shared/hooks/useModalState'
+import { useOfflineMutation } from '@/shared/hooks/useOfflineMutation'
 import { useSafeModeGuard } from '@/shared/hooks/useSafeModeGuard'
 import { useTranslation } from '@/shared/hooks/useTranslation'
+import { useAuthStore } from '@/shared/stores/auth'
 import { useDemoStore } from '@/shared/stores/demo'
 import { useLanguageStore } from '@/shared/stores/language'
 import { toast } from '@/shared/stores/toast'
@@ -58,13 +59,39 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
   const queryClient = useQueryClient()
   const { guard, isDemoMode } = useSafeModeGuard()
   const locale = useLanguageStore((state) => state.locale)
+  const dataSource = useAuthStore((state) => state.dataSource)
+  const apiClient = getApiClient(dataSource)
   const addAssignmentToExchange = useDemoStore((state) => state.addAssignmentToExchange)
-  const addToExchangeMutation = useAddToExchange()
 
   const editCompensationModal = useModalState<Assignment>()
   const validateGameModal = useModalState<Assignment>()
   const pdfReportModal = useModalState<Assignment>()
   const [pdfReportLoading, setPdfReportLoading] = useState(false)
+
+  // Offline-aware mutation for adding to exchange
+  const addToExchangeOffline = useOfflineMutation(
+    async (assignment: Assignment, logFn) => {
+      await apiClient.addToExchange(assignment.__identity)
+      logFn.debug('Successfully added to exchange:', assignment.__identity)
+      // Invalidate both exchanges and assignments since the assignment moves between them
+      queryClient.invalidateQueries({ queryKey: queryKeys.exchanges.lists() })
+      queryClient.invalidateQueries({ queryKey: queryKeys.assignments.lists() })
+    },
+    {
+      logContext: 'useAssignmentActions',
+      mutationType: 'addToExchange',
+      getEntityId: (assignment) => assignment.__identity,
+      getDisplayLabel: (assignment) => {
+        const { homeTeam, awayTeam } = getTeamNames(assignment)
+        return `${homeTeam} vs ${awayTeam}`
+      },
+      getEntityLabel: (assignment) => assignment.refereeGame?.game?.startingDateTime,
+      successMessage: 'exchange.addedToExchangeSuccess',
+      errorMessage: 'exchange.addedToExchangeError',
+      queuedMessage: 'sync.savedOffline',
+      // Note: safeGuard is handled separately in handleAddToExchange for demo mode
+    }
+  )
 
   const openValidateGame = useCallback(
     (assignment: Assignment) => {
@@ -169,24 +196,15 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
         return
       }
 
-      // Use real API to add assignment to exchange
+      // Use offline-aware mutation for real API
       log.debug('Adding to exchange:', {
         assignmentId: assignment.__identity,
         game: `${homeTeam} vs ${awayTeam}`,
       })
 
-      addToExchangeMutation.mutate(assignment.__identity, {
-        onSuccess: () => {
-          log.debug('Successfully added to exchange:', assignment.__identity)
-          toast.success(t('exchange.addedToExchangeSuccess'))
-        },
-        onError: (error) => {
-          log.error('Failed to add to exchange:', error)
-          toast.error(t('exchange.addedToExchangeError'))
-        },
-      })
+      addToExchangeOffline.execute(assignment)
     },
-    [guard, isDemoMode, addAssignmentToExchange, queryClient, t, addToExchangeMutation]
+    [guard, isDemoMode, addAssignmentToExchange, queryClient, t, addToExchangeOffline]
   )
 
   return {
