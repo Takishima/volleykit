@@ -28,3 +28,6 @@ export * from './adapters'
 
 // Auth exports
 export * from './auth'
+
+// Sync exports
+export * from './sync'

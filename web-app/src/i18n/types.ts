@@ -443,6 +443,31 @@ export interface Translations {
     dismissAriaLabel: string
     closeAriaLabel: string
   }
+  sync: {
+    offline: string
+    pendingCount: string
+    pendingCount_other: string
+    pendingSync: string
+    syncing: string
+    synced: string
+    syncFailed: string
+    savedOffline: string
+    backOnline: string
+    allSynced: string
+    someConflicts: string
+    resultsTitle: string
+    successCount: string
+    successCount_other: string
+    conflictCount: string
+    conflictCount_other: string
+    conflict: {
+      already_taken: string
+      not_found: string
+      expired: string
+      permission_denied: string
+      unknown: string
+    }
+  }
   pdf: {
     exportTitle: string
     selectLanguage: string

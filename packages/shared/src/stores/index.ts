@@ -5,3 +5,4 @@
 export * from './auth'
 export * from './settings'
 export * from './demo'
+export * from './sync'
