@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, memo } from 'react'
+import { useState, useCallback, useEffect, useMemo, memo } from 'react'
 
 import { useQueryClient } from '@tanstack/react-query'
 
@@ -9,6 +9,11 @@ import {
   getTeamNames,
   getTeamNamesFromCompensation,
 } from '@/features/assignments/utils/assignment-helpers'
+import {
+  useBatchUpdateCompensations,
+  type BatchUpdateResult,
+} from '@/features/compensations/hooks/useCompensations'
+import { isCompensationEditable } from '@/features/compensations/utils/compensation-actions'
 import {
   useUpdateCompensation,
   useUpdateAssignmentCompensation,
@@ -61,18 +66,58 @@ function findCompensationInCache(
   return null
 }
 
+/**
+ * Finds all editable compensations in cache that are at the same hall.
+ * Excludes the current compensation from the results.
+ */
+function findOtherEditableCompensationsAtSameHall(
+  currentCompensationId: string | undefined,
+  hallId: string | undefined,
+  queryClient: ReturnType<typeof useQueryClient>
+): CompensationRecord[] {
+  if (!hallId || !currentCompensationId) return []
+
+  const queries = queryClient.getQueriesData<{ items: CompensationRecord[] }>({
+    queryKey: queryKeys.compensations.all,
+  })
+
+  const results: CompensationRecord[] = []
+  const seenIds = new Set<string>()
+
+  for (const [, data] of queries) {
+    if (!data?.items) continue
+    for (const comp of data.items) {
+      const compId = comp.convocationCompensation?.__identity
+      const compHallId = comp.refereeGame?.game?.hall?.__identity
+
+      // Skip current compensation, already seen, or different hall
+      if (!compId || compId === currentCompensationId || seenIds.has(compId)) continue
+      if (compHallId !== hallId) continue
+
+      // Only include if editable
+      if (isCompensationEditable(comp)) {
+        seenIds.add(compId)
+        results.push(comp)
+      }
+    }
+  }
+
+  return results
+}
+
 function EditCompensationModalComponent({
   assignment,
   compensation,
   isOpen,
   onClose,
 }: EditCompensationModalProps) {
-  const { t } = useTranslation()
+  const { t, tInterpolate } = useTranslation()
   const queryClient = useQueryClient()
   const dataSource = useAuthStore((state) => state.dataSource)
   const getAssignmentCompensation = useDemoStore((state) => state.getAssignmentCompensation)
   const updateCompensationMutation = useUpdateCompensation()
   const updateAssignmentCompensationMutation = useUpdateAssignmentCompensation()
+  const batchUpdateMutation = useBatchUpdateCompensations()
 
   const [kilometers, setKilometers] = useState('')
   const [reason, setReason] = useState('')
@@ -80,17 +125,30 @@ function EditCompensationModalComponent({
   const [isLoading, setIsLoading] = useState(false)
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [isDistanceEditable, setIsDistanceEditable] = useState(true)
+  const [applyToSameHall, setApplyToSameHall] = useState(false)
 
   // Determine if we're editing an assignment or a compensation record
   const isAssignmentEdit = !!assignment && !compensation
 
   // Track saving state to disable buttons during save
   const isSaving =
-    updateCompensationMutation.isPending || updateAssignmentCompensationMutation.isPending
+    updateCompensationMutation.isPending ||
+    updateAssignmentCompensationMutation.isPending ||
+    batchUpdateMutation.isPending
 
   // Get the compensation ID from the compensation record
   // Assignments don't have convocationCompensation, only CompensationRecord does
   const compensationId = compensation?.convocationCompensation?.__identity
+
+  // Get hall information for "apply to same hall" feature
+  const hallId = compensation?.refereeGame?.game?.hall?.__identity
+  const hallName = compensation?.refereeGame?.game?.hall?.name
+
+  // Find other editable compensations at the same hall (only for compensation edits, not assignment edits)
+  const otherCompensationsAtSameHall = useMemo(() => {
+    if (isAssignmentEdit || !isOpen) return []
+    return findOtherEditableCompensationsAtSameHall(compensationId, hallId, queryClient)
+  }, [isAssignmentEdit, isOpen, compensationId, hallId, queryClient])
 
   // Fetch detailed compensation data when modal opens
   useEffect(() => {
@@ -291,8 +349,36 @@ function EditCompensationModalComponent({
       setErrors({})
       setFetchError(null)
       setIsDistanceEditable(true)
+      setApplyToSameHall(false)
     }
   }, [isOpen])
+
+  /**
+   * Handles batch update success/failure and shows appropriate toast message.
+   */
+  const handleBatchUpdateResult = useCallback(
+    (result: BatchUpdateResult) => {
+      // Total updated = current compensation + batch results
+      const totalUpdated = 1 + result.successCount
+
+      if (result.failedCount === 0) {
+        // All succeeded
+        toast.success(
+          tInterpolate('compensations.batchUpdateSuccess', { count: String(totalUpdated) })
+        )
+      } else {
+        // Partial success
+        toast.warning(
+          tInterpolate('compensations.batchUpdatePartialSuccess', {
+            success: String(totalUpdated),
+            total: String(1 + result.totalCount),
+            failed: String(result.failedCount),
+          })
+        )
+      }
+    },
+    [tInterpolate]
+  )
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -347,8 +433,45 @@ function EditCompensationModalComponent({
                   compensationId,
                   ...updateData,
                 })
-                toast.success(t('compensations.saveSuccess'))
-                onClose()
+
+                // If "apply to same hall" is checked and we have distance data, batch update others
+                if (
+                  applyToSameHall &&
+                  updateData.distanceInMetres &&
+                  otherCompensationsAtSameHall.length > 0
+                ) {
+                  const otherIds = otherCompensationsAtSameHall
+                    .map((c) => c.convocationCompensation?.__identity)
+                    .filter((id): id is string => !!id)
+
+                  // Only update distance for batch (not correction reason)
+                  const batchData = { distanceInMetres: updateData.distanceInMetres }
+
+                  batchUpdateMutation.mutate(
+                    { compensationIds: otherIds, data: batchData },
+                    {
+                      onSuccess: (result) => {
+                        handleBatchUpdateResult(result)
+                        onClose()
+                      },
+                      onError: (error) => {
+                        logger.error('[EditCompensationModal] Batch update failed:', error)
+                        // Primary update succeeded, but batch failed
+                        toast.warning(
+                          tInterpolate('compensations.batchUpdatePartialSuccess', {
+                            success: '1',
+                            total: String(1 + otherIds.length),
+                            failed: String(otherIds.length),
+                          })
+                        )
+                        onClose()
+                      },
+                    }
+                  )
+                } else {
+                  toast.success(t('compensations.saveSuccess'))
+                  onClose()
+                }
               },
               onError: (error) => {
                 logger.error('[EditCompensationModal] Failed to update compensation:', {
@@ -373,8 +496,13 @@ function EditCompensationModalComponent({
       isAssignmentEdit,
       updateAssignmentCompensationMutation,
       updateCompensationMutation,
+      batchUpdateMutation,
+      applyToSameHall,
+      otherCompensationsAtSameHall,
+      handleBatchUpdateResult,
       onClose,
       t,
+      tInterpolate,
     ]
   )
 
@@ -465,6 +593,35 @@ function EditCompensationModalComponent({
                 </p>
               )}
             </div>
+
+            {/* Apply to same hall checkbox - only shown for compensation edits with other games at same hall */}
+            {!isAssignmentEdit &&
+              isDistanceEditable &&
+              otherCompensationsAtSameHall.length > 0 &&
+              hallName && (
+                <div className="flex items-start gap-3 p-3 bg-surface-subtle dark:bg-surface-subtle-dark rounded-md">
+                  <input
+                    id="apply-to-same-hall"
+                    type="checkbox"
+                    checked={applyToSameHall}
+                    onChange={(e) => setApplyToSameHall(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-border-strong dark:border-border-strong-dark text-primary-600 focus:ring-primary-500 focus:ring-2"
+                  />
+                  <label
+                    htmlFor="apply-to-same-hall"
+                    className="text-sm text-text-secondary dark:text-text-secondary-dark cursor-pointer"
+                  >
+                    <span className="block font-medium text-text-primary dark:text-text-primary-dark">
+                      {tInterpolate('compensations.applyToSameHall', { hallName })}
+                    </span>
+                    <span className="text-text-muted dark:text-text-muted-dark">
+                      {tInterpolate('compensations.applyToSameHallCount', {
+                        count: String(otherCompensationsAtSameHall.length),
+                      })}
+                    </span>
+                  </label>
+                </div>
+              )}
 
             <div>
               <label

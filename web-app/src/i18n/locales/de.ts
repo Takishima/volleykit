@@ -318,6 +318,11 @@ const de: Translations = {
     unavailableInCalendarModeTitle: 'Im Kalender-Modus nicht verfügbar',
     unavailableInCalendarModeDescription:
       'Entschädigungsdaten sind im Kalender-Modus nicht verfügbar. Verwenden Sie die vollständige Anmeldung, um auf Entschädigungsdetails zuzugreifen.',
+    applyToSameHall: 'Auf alle Spiele in {hallName} anwenden',
+    applyToSameHallCount: '{count} weitere Spiele',
+    batchUpdateSuccess: '{count} Entschädigungen erfolgreich aktualisiert.',
+    batchUpdatePartialSuccess:
+      '{success} von {total} Entschädigungen aktualisiert. {failed} fehlgeschlagen.',
   },
   exchange: {
     title: 'Tauschbörse',
