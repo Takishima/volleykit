@@ -29,6 +29,19 @@
         history.replaceState(null, '', redirectPath);
       }
     })();
+
+    // Unregister service workers for PR previews to avoid scope conflicts
+    // The main site's SW (/volleykit/) would otherwise intercept PR preview requests
+    (function() {
+      if (/\/pr-\d+\//.test(window.location.pathname) && 'serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          registrations.forEach(function(registration) {
+            registration.unregister();
+            console.log('[PR Preview] Unregistered service worker:', registration.scope);
+          });
+        });
+      }
+    })();
   </script>
   </head>
   <body>
