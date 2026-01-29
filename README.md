@@ -10,7 +10,7 @@ A multi-platform app suite for Swiss volleyball referees, providing an improved 
 | App | Location | Description |
 |-----|----------|-------------|
 | Web App (PWA) | [`web-app/`](./web-app/) | React 19 + Vite 7 + Tailwind 4 |
-| Mobile App | [`packages/mobile/`](./packages/mobile/) | React Native 0.79 + Expo 53 |
+| Mobile App | [`packages/mobile/`](./packages/mobile/) | React Native 0.81 + Expo 54 |
 | Shared Package | [`packages/shared/`](./packages/shared/) | API client, hooks, stores, i18n |
 | Help Site | [`help-site/`](./help-site/) | Astro 6 documentation |
 | CORS Proxy | [`worker/`](./worker/) | Cloudflare Worker |
