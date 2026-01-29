@@ -310,6 +310,10 @@ const en: Translations = {
     unavailableInCalendarModeTitle: 'Not available in Calendar Mode',
     unavailableInCalendarModeDescription:
       'Compensation data is not available in calendar mode. Use full login to access compensation details.',
+    applyToSameHall: 'Apply to all games at {hallName}',
+    applyToSameHallCount: '{count} other games',
+    batchUpdateSuccess: 'Updated {count} compensations successfully.',
+    batchUpdatePartialSuccess: 'Updated {success} of {total} compensations. {failed} failed.',
   },
   exchange: {
     title: 'Exchange',

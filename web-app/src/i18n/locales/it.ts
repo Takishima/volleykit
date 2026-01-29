@@ -316,6 +316,10 @@ const it: Translations = {
     unavailableInCalendarModeTitle: 'Non disponibile in modalità calendario',
     unavailableInCalendarModeDescription:
       "I dati dei compensi non sono disponibili in modalità calendario. Usa l'accesso completo per accedere ai dettagli dei compensi.",
+    applyToSameHall: 'Applica a tutte le partite a {hallName}',
+    applyToSameHallCount: '{count} altre partite',
+    batchUpdateSuccess: '{count} compensi aggiornati con successo.',
+    batchUpdatePartialSuccess: '{success} su {total} compensi aggiornati. {failed} non riusciti.',
   },
   exchange: {
     title: 'Borsa scambi',
