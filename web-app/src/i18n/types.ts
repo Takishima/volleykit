@@ -200,6 +200,10 @@ export interface Translations {
     distanceNotEditable: string
     unavailableInCalendarModeTitle: string
     unavailableInCalendarModeDescription: string
+    applyToSameHall: string
+    applyToSameHallCount: string
+    batchUpdateSuccess: string
+    batchUpdatePartialSuccess: string
   }
   exchange: {
     title: string

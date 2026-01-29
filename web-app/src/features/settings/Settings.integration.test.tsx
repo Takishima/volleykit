@@ -380,7 +380,11 @@ describe('Settings Integration', () => {
           sbbDestinationType: 'address' as const,
         },
         levelFilterEnabled: false,
-        notificationSettings: { enabled: false, reminderTimes: ['1h' as const], deliveryPreference: 'native' as const },
+        notificationSettings: {
+          enabled: false,
+          reminderTimes: ['1h' as const],
+          deliveryPreference: 'native' as const,
+        },
         gameGapFilter: { enabled: false, minGapMinutes: 120 },
         hideOwnExchangesByAssociation: {},
       }

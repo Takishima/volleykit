@@ -148,6 +148,69 @@ export function useUpdateCompensation(): UseMutationResult<
 }
 
 /**
+ * Result of a batch compensation update operation.
+ */
+export interface BatchUpdateResult {
+  successCount: number
+  failedCount: number
+  totalCount: number
+}
+
+/**
+ * Mutation hook to update multiple compensations in a batch.
+ * Used for updating all compensations at the same hall with the same distance.
+ */
+export function useBatchUpdateCompensations(): UseMutationResult<
+  BatchUpdateResult,
+  Error,
+  { compensationIds: string[]; data: CompensationUpdateData }
+> {
+  const queryClient = useQueryClient()
+  const dataSource = useAuthStore((state) => state.dataSource)
+  const apiClient = getApiClient(dataSource)
+
+  return useMutation({
+    mutationFn: async ({
+      compensationIds,
+      data,
+    }: {
+      compensationIds: string[]
+      data: CompensationUpdateData
+    }): Promise<BatchUpdateResult> => {
+      log.debug('Batch updating compensations:', {
+        count: compensationIds.length,
+        data,
+        dataSource,
+      })
+
+      let successCount = 0
+      let failedCount = 0
+
+      // Update each compensation sequentially to avoid overwhelming the API
+      for (const compensationId of compensationIds) {
+        try {
+          await apiClient.updateCompensation(compensationId, data)
+          successCount++
+        } catch (error) {
+          log.error('Failed to update compensation in batch:', { compensationId, error })
+          failedCount++
+        }
+      }
+
+      return {
+        successCount,
+        failedCount,
+        totalCount: compensationIds.length,
+      }
+    },
+    onSuccess: () => {
+      // Invalidate compensation lists to refetch fresh data
+      queryClient.invalidateQueries({ queryKey: queryKeys.compensations.lists() })
+    },
+  })
+}
+
+/**
  * Searches all cached assignment queries for a specific assignment by ID.
  * Uses partial key matching to find assignments regardless of search configuration.
  */
