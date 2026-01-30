@@ -6,20 +6,17 @@
   "ignoreDependencies": [
     "tailwindcss",
     "@volleykit/shared",
-    "@vite-pwa/assets-generator",
+    "eslint",
     "openapi-typescript",
     "size-limit",
     "prettier"
   ],
   "ignoreBinaries": [
-    "vite",
     "tsc",
     "eslint",
-    "vitest",
     "playwright",
     "size-limit",
     "openapi-typescript",
-    "knip",
     "changeset",
     "prettier"
   ],
