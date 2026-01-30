@@ -5,18 +5,18 @@
 
 # Only run in Claude Code web sessions (skip for CLI)
 if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
-    echo '{"decision": "allow"}'
-    exit 0
+  echo '{}'
+  exit 0
 fi
 
 # Check jq is available
-if ! command -v jq &> /dev/null; then
+if ! command -v jq &>/dev/null; then
   exit 0
 fi
 
 # Read and validate input
 input=$(cat)
-if ! echo "$input" | jq -e . &> /dev/null; then
+if ! echo "$input" | jq -e . &>/dev/null; then
   exit 0
 fi
 
@@ -24,7 +24,7 @@ fi
 command=$(echo "$input" | jq -r '.tool_input.command // ""')
 
 # Detect successful git push
-if [[ "$command" == *"git push"* ]]; then
+if [[ $command == *"git push"* ]]; then
   # Get current branch
   current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
 
@@ -35,10 +35,10 @@ if [[ "$command" == *"git push"* ]]; then
   # SSH: git@github.com:owner/repo.git
   # HTTPS: https://github.com/owner/repo.git
   # Local proxy: http://...@127.0.0.1:.../git/owner/repo
-  if [[ "$remote_url" =~ github\.com[:/]([^/]+)/([^/.]+)(\.git)?$ ]]; then
+  if [[ $remote_url =~ github\.com[:/]([^/]+)/([^/.]+)(\.git)?$ ]]; then
     owner="${BASH_REMATCH[1]}"
     repo="${BASH_REMATCH[2]}"
-  elif [[ "$remote_url" =~ /git/([^/]+)/([^/]+)$ ]]; then
+  elif [[ $remote_url =~ /git/([^/]+)/([^/]+)$ ]]; then
     owner="${BASH_REMATCH[1]}"
     repo="${BASH_REMATCH[2]}"
   else
@@ -57,7 +57,7 @@ if [[ "$command" == *"git push"* ]]; then
     # Check if PR already exists using GitHub API (works for public repos)
     pr_exists="false"
     pr_number=""
-    if command -v curl &> /dev/null; then
+    if command -v curl &>/dev/null; then
       pr_response=$(curl -s "https://api.github.com/repos/${owner}/${repo}/pulls?head=${owner}:${encoded_branch}&state=open" 2>/dev/null)
       if [ -n "$pr_response" ] && [ "$pr_response" != "[]" ] && echo "$pr_response" | jq -e '.[0].html_url' &>/dev/null; then
         pr_exists="true"
