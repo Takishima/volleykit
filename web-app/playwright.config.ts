@@ -7,6 +7,8 @@ import { defineConfig, devices } from '@playwright/test'
  */
 export default defineConfig({
   testDir: './e2e',
+  // Exclude screenshot capture tests from regular runs (use npm run screenshots:help)
+  testIgnore: ['**/capture-screenshots.spec.ts'],
   // Global timeout for each test (prevents hanging tests)
   timeout: 30000,
   // Timeout for expect assertions (allows slower browsers like Firefox)
