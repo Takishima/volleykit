@@ -34,10 +34,10 @@ test.describe('Exchanges Journey', () => {
       await expect(exchangesPage.myApplicationsTab).toBeVisible()
     })
 
-    test('loads exchange data or shows empty state', async () => {
+    test('loads exchange data or shows empty state', async ({ page }) => {
       await exchangesPage.waitForExchangesLoaded()
       const hasCards = (await exchangesPage.getExchangeCount()) > 0
-      const hasEmptyState = (await exchangesPage.page.getByText(/no.*exchange/i).count()) > 0
+      const hasEmptyState = (await page.getByTestId('empty-state').count()) > 0
       expect(hasCards || hasEmptyState).toBe(true)
     })
   })
