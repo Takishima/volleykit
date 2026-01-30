@@ -8,6 +8,10 @@ import type { StateCreator } from 'zustand'
 
 export type AssignmentsSlice = DemoAssignmentsState
 
-export const createAssignmentsSlice: StateCreator<DemoState, [], [], AssignmentsSlice> = () => ({
+export const createAssignmentsSlice: StateCreator<DemoState, [], [], AssignmentsSlice> = (
+  _set,
+  _get,
+  _api
+) => ({
   assignments: [],
 })

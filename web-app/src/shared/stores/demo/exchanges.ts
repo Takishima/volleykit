@@ -40,7 +40,11 @@ function createAssignmentFromExchange(exchange: GameExchange): Assignment {
   }
 }
 
-export const createExchangesSlice: StateCreator<DemoState, [], [], ExchangesSlice> = (set) => ({
+export const createExchangesSlice: StateCreator<DemoState, [], [], ExchangesSlice> = (
+  set,
+  _get,
+  _api
+) => ({
   exchanges: [],
   exchangedAssignments: {},
 
@@ -127,7 +131,6 @@ export const createExchangesSlice: StateCreator<DemoState, [], [], ExchangesSlic
       const originalAssignment = state.exchangedAssignments[exchangeId]
 
       // Create new exchangedAssignments without this entry
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Destructuring to omit key
       const { [exchangeId]: _removed, ...remainingExchangedAssignments } =
         state.exchangedAssignments
 

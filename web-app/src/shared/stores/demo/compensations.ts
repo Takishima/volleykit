@@ -22,7 +22,8 @@ export interface CompensationsSlice extends DemoCompensationsState {
 
 export const createCompensationsSlice: StateCreator<DemoState, [], [], CompensationsSlice> = (
   set,
-  get
+  get,
+  _api
 ) => ({
   compensations: [],
   assignmentCompensations: {},

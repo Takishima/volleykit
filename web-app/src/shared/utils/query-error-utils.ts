@@ -64,11 +64,7 @@ export const RETRY_CONFIG = {
  * @param _error - Error that triggered the retry (unused, accepted for TanStack Query compatibility)
  * @returns Delay in milliseconds before next retry
  */
-export function calculateRetryDelay(
-  attemptIndex: number,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _error?: unknown
-): number {
+export function calculateRetryDelay(attemptIndex: number, _error?: unknown): number {
   const exponentialDelay = RETRY_CONFIG.BASE_RETRY_DELAY_MS * Math.pow(2, attemptIndex)
   const jitter = exponentialDelay * Math.random() * RETRY_CONFIG.JITTER_FACTOR
   return Math.min(exponentialDelay + jitter, RETRY_CONFIG.MAX_RETRY_DELAY_MS)

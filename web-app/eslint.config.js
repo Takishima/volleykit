@@ -124,6 +124,14 @@ export default tseslint.config(
           enforceConst: true,
         },
       ],
+      // Allow underscore-prefixed unused variables (standard pattern for intentionally unused params)
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+        },
+      ],
       // SonarJS rules - code quality and complexity
       // Disable rules with high false positive rates in this codebase:
       // - no-hardcoded-passwords: Flags translation labels like "Password:" in locale files

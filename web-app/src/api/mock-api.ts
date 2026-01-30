@@ -288,11 +288,7 @@ export const mockApi = {
     return response
   },
 
-  async getAssignmentDetails(
-    convocationId: string,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required for API interface compatibility; mock data already contains all properties
-    _properties: string[]
-  ): Promise<Assignment> {
+  async getAssignmentDetails(convocationId: string, _properties: string[]): Promise<Assignment> {
     await delay(MOCK_NETWORK_DELAY_MS)
 
     const store = useDemoStore.getState()
@@ -456,9 +452,7 @@ export const mockApi = {
   },
 
   async getPossiblePlayerNominations(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required for API interface compatibility
     _nominationListId: string,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required for API interface compatibility
     _options?: { onlyFromMyTeam?: boolean; onlyRelevantGender?: boolean }
   ): Promise<PossibleNominationsResponse> {
     await delay(MOCK_NETWORK_DELAY_MS)
@@ -616,7 +610,6 @@ export const mockApi = {
     gameId: string,
     teamId: string,
     playerNominationIds: string[],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required for API interface compatibility
     _validationId?: string
   ): Promise<NominationListFinalizeResponse> {
     await delay(MOCK_MUTATION_DELAY_MS)
@@ -785,7 +778,6 @@ export const mockApi = {
    * In demo mode, returns an empty list since this feature is admin-only.
    */
   async searchRefereeBackups(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required for API interface compatibility
     _config: SearchConfiguration = {}
   ): Promise<RefereeBackupSearchResponse> {
     await delay(MOCK_NETWORK_DELAY_MS)

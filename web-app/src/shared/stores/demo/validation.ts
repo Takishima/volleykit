@@ -26,7 +26,8 @@ export interface ValidationSlice extends DemoValidationState {
 
 export const createValidationSlice: StateCreator<DemoState, [], [], ValidationSlice> = (
   set,
-  get
+  get,
+  _api
 ) => ({
   validatedGames: {},
   pendingScorers: {},
@@ -76,7 +77,6 @@ export const createValidationSlice: StateCreator<DemoState, [], [], ValidationSl
 
   clearPendingScorer: (gameId: string) =>
     set((state) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Destructuring to remove key
       const { [gameId]: _removed, ...rest } = state.pendingScorers
       return { pendingScorers: rest }
     }),
