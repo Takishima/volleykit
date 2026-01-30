@@ -52,7 +52,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/pre-git-commit.sh"
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/pre-git-commit.sh"
           }
         ]
       }
@@ -63,7 +63,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/post-git-push.sh"
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/post-git-push.sh"
           }
         ]
       },
@@ -72,7 +72,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/post-read-validation.sh"
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/post-read-validation.sh"
           }
         ]
       }
