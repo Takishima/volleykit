@@ -15,7 +15,11 @@ export interface NominationsSlice extends DemoNominationsState {
   ) => void
 }
 
-export const createNominationsSlice: StateCreator<DemoState, [], [], NominationsSlice> = (set) => ({
+export const createNominationsSlice: StateCreator<DemoState, [], [], NominationsSlice> = (
+  set,
+  _get,
+  _api
+) => ({
   nominationLists: {},
   possiblePlayers: [],
   scorers: [],
