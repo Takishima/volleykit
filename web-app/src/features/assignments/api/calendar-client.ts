@@ -155,10 +155,7 @@ function calendarAssignmentToAssignment(calendarAssignment: CalendarAssignment):
  * Implements the same interface as the regular API client but uses iCal data.
  */
 export const calendarApi = {
-  async searchAssignments(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required for API interface compatibility
-    _config: SearchConfiguration = {}
-  ): Promise<AssignmentsResponse> {
+  async searchAssignments(_config: SearchConfiguration = {}): Promise<AssignmentsResponse> {
     // Get calendar code from auth store
     const calendarCode = useAuthStore.getState().calendarCode
 
@@ -181,11 +178,7 @@ export const calendarApi = {
     }
   },
 
-  async getAssignmentDetails(
-    convocationId: string,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required for API interface compatibility
-    _properties: string[]
-  ): Promise<Assignment> {
+  async getAssignmentDetails(convocationId: string, _properties: string[]): Promise<Assignment> {
     // Get calendar code from auth store
     const calendarCode = useAuthStore.getState().calendarCode
 
