@@ -15,8 +15,8 @@
 
 # Only run in Claude Code web sessions (skip for CLI)
 if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
-    echo '{"decision": "allow"}'
-    exit 0
+  echo '{"decision": "approve"}'
+  exit 0
 fi
 
 set -euo pipefail
@@ -43,63 +43,63 @@ STALE_VALIDATION_AGE_S=600 # 10 minutes - cleanup stale validation state
 # =============================================================================
 
 allow() {
-    echo '{"decision": "allow"}'
-    exit 0
+  echo '{"decision": "approve"}'
+  exit 0
 }
 
 block() {
-    local reason="$1"
-    # Escape for JSON - handle backslashes, quotes, and newlines
-    # Use printf '%s' to avoid echo's escape sequence interpretation
-    reason=$(printf '%s' "$reason" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
-    # Use printf to avoid heredoc variable expansion issues
-    printf '{"decision": "block", "reason": "%s"}\n' "$reason"
-    exit 0
+  local reason="$1"
+  # Escape for JSON - handle backslashes, quotes, and newlines
+  # Use printf '%s' to avoid echo's escape sequence interpretation
+  reason=$(printf '%s' "$reason" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+  # Use printf to avoid heredoc variable expansion issues
+  printf '{"decision": "block", "reason": "%s"}\n' "$reason"
+  exit 0
 }
 
 # Sanitize output for safe inclusion in messages
 # Removes control characters and limits length
 sanitize_output() {
-    local input="$1"
-    local max_length="${2:-2000}"
-    # Remove ANSI escape codes and control characters, limit length
-    echo "$input" | sed 's/\x1b\[[0-9;]*m//g' | tr -cd '[:print:]\n' | head -c "$max_length"
+  local input="$1"
+  local max_length="${2:-2000}"
+  # Remove ANSI escape codes and control characters, limit length
+  echo "$input" | sed 's/\x1b\[[0-9;]*m//g' | tr -cd '[:print:]\n' | head -c "$max_length"
 }
 
 get_staged_files() {
-    git diff --name-only --cached 2>/dev/null || echo ""
+  git diff --name-only --cached 2>/dev/null || echo ""
 }
 
 needs_validation() {
-    local staged_files="$1"
+  local staged_files="$1"
 
-    # No files staged - skip
-    [[ -z "$staged_files" ]] && return 1
+  # No files staged - skip
+  [[ -z $staged_files ]] && return 1
 
-    # Check for files that force validation (config files, etc.)
-    if echo "$staged_files" | grep -qE "$FORCE_VALIDATE_PATTERNS"; then
-        return 0
-    fi
+  # Check for files that force validation (config files, etc.)
+  if echo "$staged_files" | grep -qE "$FORCE_VALIDATE_PATTERNS"; then
+    return 0
+  fi
 
-    # Check for source files that need validation
-    if echo "$staged_files" | grep -qE "$SOURCE_PATTERNS"; then
-        return 0
-    fi
+  # Check for source files that need validation
+  if echo "$staged_files" | grep -qE "$SOURCE_PATTERNS"; then
+    return 0
+  fi
 
-    # All files match skip patterns - no validation needed
-    return 1
+  # All files match skip patterns - no validation needed
+  return 1
 }
 
 # Extract command from JSON input with jq fallback
 extract_command() {
-    local input="$1"
-    # Try jq first, fall back to grep/sed if jq unavailable
-    if command -v jq &>/dev/null; then
-        echo "$input" | jq -r '.tool_input.command // empty' 2>/dev/null || echo ""
-    else
-        # Fallback: basic extraction without jq
-        echo "$input" | grep -o '"command"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"command"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo ""
-    fi
+  local input="$1"
+  # Try jq first, fall back to grep/sed if jq unavailable
+  if command -v jq &>/dev/null; then
+    echo "$input" | jq -r '.tool_input.command // empty' 2>/dev/null || echo ""
+  else
+    # Fallback: basic extraction without jq
+    echo "$input" | grep -o '"command"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"command"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo ""
+  fi
 }
 
 # =============================================================================
@@ -113,30 +113,30 @@ INPUT=$(cat)
 COMMAND=$(extract_command "$INPUT")
 
 # --- Gate 1: Only process git commit commands ---
-if [[ "$COMMAND" != *"git commit"* ]] && [[ "$COMMAND" != *"git add"*"&&"*"commit"* ]]; then
-    allow
+if [[ $COMMAND != *"git commit"* ]] && [[ $COMMAND != *"git add"*"&&"*"commit"* ]]; then
+  allow
 fi
 
 # --- Gate 2: Ensure validation docs were read (first-commit gate) ---
 SESSION_MARKER="/tmp/.claude-validation-read"
-if [[ ! -f "$SESSION_MARKER" ]]; then
-    block "STOP: Before your first commit, you MUST read docs/VALIDATION.md to understand the validation process. The pre-commit hook runs: format → lint → knip → test → build. After reading the file, retry your commit."
+if [[ ! -f $SESSION_MARKER ]]; then
+  block "STOP: Before your first commit, you MUST read docs/VALIDATION.md to understand the validation process. The pre-commit hook runs: format → lint → knip → test → build. After reading the file, retry your commit."
 fi
 
 # --- Gate 3: Check if validation script exists ---
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}"
 VALIDATION_SCRIPT="$PROJECT_DIR/scripts/pre-commit-validate.sh"
 
-if [[ ! -x "$VALIDATION_SCRIPT" ]]; then
-    allow
+if [[ ! -x $VALIDATION_SCRIPT ]]; then
+  allow
 fi
 
 # --- Gate 4: Check if validation can be skipped based on staged files ---
 STAGED_FILES=$(get_staged_files)
 
 if ! needs_validation "$STAGED_FILES"; then
-    # No source files - allow without validation
-    allow
+  # No source files - allow without validation
+  allow
 fi
 
 # =============================================================================
@@ -155,76 +155,76 @@ VALIDATION_STEPS_DIR="$VALIDATION_DIR/steps"
 FAILURE_DIR="/tmp/claude-validation-failure"
 
 # --- Check for stale validation state and cleanup ---
-if [[ -f "$VALIDATION_START_FILE" ]]; then
-    START_TIME=$(cat "$VALIDATION_START_FILE" 2>/dev/null || echo "0")
-    NOW=$(date +%s)
-    AGE=$((NOW - START_TIME))
+if [[ -f $VALIDATION_START_FILE ]]; then
+  START_TIME=$(cat "$VALIDATION_START_FILE" 2>/dev/null || echo "0")
+  NOW=$(date +%s)
+  AGE=$((NOW - START_TIME))
 
-    if [[ $AGE -gt $STALE_VALIDATION_AGE_S ]]; then
-        # Stale validation state from previous session - cleanup
-        rm -rf "$VALIDATION_DIR"
-    fi
+  if [[ $AGE -gt $STALE_VALIDATION_AGE_S ]]; then
+    # Stale validation state from previous session - cleanup
+    rm -rf "$VALIDATION_DIR"
+  fi
 fi
 
 # --- Check if validation is already running or completed ---
-if [[ -f "$VALIDATION_PID_FILE" ]]; then
-    PID=$(cat "$VALIDATION_PID_FILE")
-    START_TIME=$(cat "$VALIDATION_START_FILE" 2>/dev/null || echo "0")
-    NOW=$(date +%s)
-    ELAPSED=$((NOW - START_TIME))
+if [[ -f $VALIDATION_PID_FILE ]]; then
+  PID=$(cat "$VALIDATION_PID_FILE")
+  START_TIME=$(cat "$VALIDATION_START_FILE" 2>/dev/null || echo "0")
+  NOW=$(date +%s)
+  ELAPSED=$((NOW - START_TIME))
 
-    if kill -0 "$PID" 2>/dev/null; then
-        # Check if validation has been running too long (hung)
-        if [[ $ELAPSED -gt $MAX_VALIDATION_TIME_S ]]; then
-            # Kill hung validation and cleanup
-            kill "$PID" 2>/dev/null || true
-            rm -rf "$VALIDATION_DIR"
-            block "Validation timed out after ${MAX_VALIDATION_TIME_S}s. The process may be hung. Cleaned up stale state - please retry your commit."
-        fi
-
-        # Still running - show elapsed time
-        block "Validation in progress (${ELAPSED}s elapsed)... The checks run in parallel for speed. Please retry your commit in a few seconds."
+  if kill -0 "$PID" 2>/dev/null; then
+    # Check if validation has been running too long (hung)
+    if [[ $ELAPSED -gt $MAX_VALIDATION_TIME_S ]]; then
+      # Kill hung validation and cleanup
+      kill "$PID" 2>/dev/null || true
+      rm -rf "$VALIDATION_DIR"
+      block "Validation timed out after ${MAX_VALIDATION_TIME_S}s. The process may be hung. Cleaned up stale state - please retry your commit."
     fi
 
-    # Process finished - check result
-    RESULT=$(cat "$VALIDATION_RESULT_FILE" 2>/dev/null || echo "1")
-    OUTPUT=$(cat "$VALIDATION_OUTPUT_FILE" 2>/dev/null || echo "No output captured")
+    # Still running - show elapsed time
+    block "Validation in progress (${ELAPSED}s elapsed)... The checks run in parallel for speed. Please retry your commit in a few seconds."
+  fi
 
-    if [[ "$RESULT" == "0" ]]; then
-        # Success - cleanup and allow
-        rm -rf "$VALIDATION_DIR"
-        allow
-    fi
+  # Process finished - check result
+  RESULT=$(cat "$VALIDATION_RESULT_FILE" 2>/dev/null || echo "1")
+  OUTPUT=$(cat "$VALIDATION_OUTPUT_FILE" 2>/dev/null || echo "No output captured")
 
-    # --- Validation failed - prepare error report ---
-    rm -rf "$FAILURE_DIR"
-    mkdir -p "$FAILURE_DIR"
-
-    # Save full output
-    echo "$OUTPUT" > "$FAILURE_DIR/full-output.log"
-
-    # Copy per-step logs if they exist
-    STEP_LOGS=""
-    if [[ -d "$VALIDATION_STEPS_DIR" ]]; then
-        cp -r "$VALIDATION_STEPS_DIR"/* "$FAILURE_DIR/" 2>/dev/null || true
-        for log in "$FAILURE_DIR"/*.log; do
-            [[ -f "$log" ]] && STEP_LOGS="$STEP_LOGS
-  - $log"
-        done
-    fi
-
-    # Cleanup validation dir
+  if [[ $RESULT == "0" ]]; then
+    # Success - cleanup and allow
     rm -rf "$VALIDATION_DIR"
+    allow
+  fi
 
-    # Extract and sanitize summary (key failure indicators)
-    SUMMARY=$(echo "$OUTPUT" | grep -E "(✗|failed|error|Error)" | head -10)
-    if [[ -z "$SUMMARY" ]]; then
-        SUMMARY=$(echo "$OUTPUT" | tail -20)
-    fi
-    # Sanitize to prevent command injection via crafted output
-    SUMMARY=$(sanitize_output "$SUMMARY" 1500)
+  # --- Validation failed - prepare error report ---
+  rm -rf "$FAILURE_DIR"
+  mkdir -p "$FAILURE_DIR"
 
-    block "Validation failed. Summary:
+  # Save full output
+  echo "$OUTPUT" >"$FAILURE_DIR/full-output.log"
+
+  # Copy per-step logs if they exist
+  STEP_LOGS=""
+  if [[ -d $VALIDATION_STEPS_DIR ]]; then
+    cp -r "$VALIDATION_STEPS_DIR"/* "$FAILURE_DIR/" 2>/dev/null || true
+    for log in "$FAILURE_DIR"/*.log; do
+      [[ -f $log ]] && STEP_LOGS="$STEP_LOGS
+  - $log"
+    done
+  fi
+
+  # Cleanup validation dir
+  rm -rf "$VALIDATION_DIR"
+
+  # Extract and sanitize summary (key failure indicators)
+  SUMMARY=$(echo "$OUTPUT" | grep -E "(✗|failed|error|Error)" | head -10)
+  if [[ -z $SUMMARY ]]; then
+    SUMMARY=$(echo "$OUTPUT" | tail -20)
+  fi
+  # Sanitize to prevent command injection via crafted output
+  SUMMARY=$(sanitize_output "$SUMMARY" 1500)
+
+  block "Validation failed. Summary:
 
 $SUMMARY
 
@@ -240,19 +240,19 @@ fi
 
 mkdir -p "$VALIDATION_DIR"
 mkdir -p "$VALIDATION_STEPS_DIR"
-echo "$(date +%s)" > "$VALIDATION_START_FILE"
+echo "$(date +%s)" >"$VALIDATION_START_FILE"
 
 # Start validation in background
 (
-    # Disable errexit inside subshell to ensure exit code is captured even on failure
-    set +e
-    CLAUDE_CODE_REMOTE=true VALIDATION_STEPS_DIR="$VALIDATION_STEPS_DIR" \
-        "$VALIDATION_SCRIPT" > "$VALIDATION_OUTPUT_FILE" 2>&1
-    echo "$?" > "$VALIDATION_RESULT_FILE"
+  # Disable errexit inside subshell to ensure exit code is captured even on failure
+  set +e
+  CLAUDE_CODE_REMOTE=true VALIDATION_STEPS_DIR="$VALIDATION_STEPS_DIR" \
+    "$VALIDATION_SCRIPT" >"$VALIDATION_OUTPUT_FILE" 2>&1
+  echo "$?" >"$VALIDATION_RESULT_FILE"
 ) &
 
 # Save the background process PID
-echo "$!" > "$VALIDATION_PID_FILE"
+echo "$!" >"$VALIDATION_PID_FILE"
 
 block "Validation started in background. Running format, lint, knip, test in PARALLEL, then build.
 
