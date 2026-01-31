@@ -77,12 +77,3 @@ function getServerSnapshot(): boolean {
 export function useNetworkStatus(): boolean {
   return useSyncExternalStore(subscribeToNetworkStatus, getNetworkSnapshot, getServerSnapshot)
 }
-
-/**
- * Get current network status without subscribing to updates.
- * Useful for one-time checks outside of React components.
- */
-export function getNetworkStatus(): boolean {
-  if (typeof navigator === 'undefined') return true
-  return navigator.onLine
-}

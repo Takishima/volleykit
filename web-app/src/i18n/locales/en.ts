@@ -349,6 +349,7 @@ const en: Translations = {
     withdrawSuccess: 'Successfully removed from exchange',
     withdrawError: 'Failed to remove from exchange. Please try again.',
     addedToExchangeSuccess: 'Assignment added to exchange list',
+    addedToExchangeQueued: 'Assignment will be added to exchange when online',
     addedToExchangeError: 'Failed to add assignment to exchange',
     cannotExchangeValidatedGame: 'Validated games cannot be added to the exchange',
     submittedBy: 'By:',

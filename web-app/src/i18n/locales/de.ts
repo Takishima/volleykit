@@ -358,6 +358,7 @@ const de: Translations = {
     withdrawSuccess: 'Erfolgreich vom Tausch zurückgezogen',
     withdrawError: 'Rückzug vom Tausch fehlgeschlagen. Bitte erneut versuchen.',
     addedToExchangeSuccess: 'Einsatz zur Tauschbörse hinzugefügt',
+    addedToExchangeQueued: 'Einsatz wird zur Tauschbörse hinzugefügt, sobald online',
     addedToExchangeError: 'Einsatz konnte nicht zur Tauschbörse hinzugefügt werden',
     cannotExchangeValidatedGame:
       'Bereits validierte Spiele können nicht zur Tauschbörse hinzugefügt werden',
@@ -609,7 +610,8 @@ const de: Translations = {
     syncing: 'Wird synchronisiert...',
     syncComplete: '{count} Änderungen erfolgreich synchronisiert',
     syncFailed: '{count} Änderungen konnten nicht synchronisiert werden',
-    sessionExpired: 'Sitzung abgelaufen. Bitte melden Sie sich erneut an, um Änderungen zu synchronisieren.',
+    sessionExpired:
+      'Sitzung abgelaufen. Bitte melden Sie sich erneut an, um Änderungen zu synchronisieren.',
     actions: {
       updateCompensation: 'Entschädigung aktualisieren',
       batchUpdateCompensations: 'Entschädigungen aktualisieren',
