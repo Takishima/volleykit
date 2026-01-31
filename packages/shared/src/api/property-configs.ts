@@ -49,6 +49,8 @@ export const ASSIGNMENT_PROPERTIES = [
   // Compensation data for eager loading (avoids separate API call when opening dialog)
   // Parent object must be requested before nested properties to ensure
   // the API populates the nested structure correctly.
+  // Note: Only database fields work here - computed fields like *Formatted and
+  // hasFlexible* are only available via the compensations endpoint.
   'convocationCompensation',
   'convocationCompensation.__identity',
   // Lock flags for editability check
@@ -57,16 +59,8 @@ export const ASSIGNMENT_PROPERTIES = [
   'convocationCompensation.lockPayoutCentralPayoutCompensation',
   'convocationCompensation.methodOfDisbursementArbitration',
   // Distance and travel data for compensation editing
-  // Note: distanceFormatted is not available via assignments endpoint (computed field),
-  // so we use distanceInMetres and format client-side
   'convocationCompensation.distanceInMetres',
-  'convocationCompensation.hasFlexibleTravelExpenses',
   'convocationCompensation.transportationMode',
-  // Compensation amounts for display
-  'convocationCompensation.costFormatted',
-  'convocationCompensation.gameCompensationFormatted',
-  'convocationCompensation.travelExpensesFormatted',
-  'convocationCompensation.hasFlexibleGameCompensations',
   // Validation status for swipe button color.
   // Parent object must be requested before nested property to ensure
   // the API populates the nested structure correctly.
