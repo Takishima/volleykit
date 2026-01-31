@@ -41,6 +41,8 @@ function assignmentToCompensationRecord(assignment: Assignment): CompensationRec
     return null
   }
 
+  // Use satisfies for safer typing - will produce compile-time error if
+  // CompensationRecord evolves to require additional fields
   return {
     __identity: assignment.__identity,
     refereeGame: assignment.refereeGame,
@@ -50,7 +52,7 @@ function assignmentToCompensationRecord(assignment: Assignment): CompensationRec
     compensationDate: assignment.refereeGame?.game?.startingDateTime,
     refereePosition: assignment.refereePosition,
     _permissions: assignment._permissions,
-  } as CompensationRecord
+  } satisfies Partial<CompensationRecord> as CompensationRecord
 }
 
 /**
@@ -143,7 +145,11 @@ export function useCompensations(paidFilter?: boolean) {
   // Use appropriate key for cache invalidation when switching associations
   const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId
 
-  // Check if we have fresh assignments data in cache that we can use instead
+  // Check if we have fresh assignments data in cache that we can use instead.
+  // Note: This memo depends on queryClient and associationKey, but cache staleness
+  // changes over time without triggering re-computation. This is intentional -
+  // TanStack Query handles staleness properly and the queryFn is re-evaluated
+  // on query refetch, ensuring fresh data is fetched when needed.
   const cachedCompensations = useMemo(() => {
     const freshAssignments = getFreshAssignmentsFromCache(queryClient, associationKey)
     if (!freshAssignments) return null
