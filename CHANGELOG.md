@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.13.0
+
+### Minor Changes
+
+- [#876](https://github.com/Takishima/volleykit/pull/876) [`98cfdf1`](https://github.com/Takishima/volleykit/commit/98cfdf15c7f1583d2acb1e71394ec975e07ae032) Thanks [@Takishima](https://github.com/Takishima)! - Added batch update for compensations at the same sports hall. When editing a compensation, if there are other editable compensations at the same venue, a checkbox appears to apply the distance to all of them at once.
+
+- [#881](https://github.com/Takishima/volleykit/pull/881) [`36041a5`](https://github.com/Takishima/volleykit/commit/36041a5e0fdc2d0aa93375a81c6523ac963f6639) Thanks [@Takishima](https://github.com/Takishima)! - Eager load compensation data with assignments to improve performance
+
+  Assignments now include compensation data (distance, amounts, editability flags) from the API response, eliminating the need for a separate API call when opening the compensation edit dialog. This enables:
+  - Faster compensation dialog opening (no loading spinner for most cases)
+  - Foundation for offline compensation editing
+  - Reduced API traffic by fetching compensation data with assignments
+
+  The `correctionReason` field is still fetched separately via `getCompensationDetails` as it's only available through the `showWithNestedObjects` endpoint.
+
+### Patch Changes
+
+- Updated dependencies [[`36041a5`](https://github.com/Takishima/volleykit/commit/36041a5e0fdc2d0aa93375a81c6523ac963f6639)]:
+  - @volleykit/shared@1.13.0
+
 ## 1.12.1
 
 ### Patch Changes

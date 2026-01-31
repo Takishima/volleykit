@@ -1,5 +1,18 @@
 # @volleykit/shared
 
+## 1.13.0
+
+### Minor Changes
+
+- [#881](https://github.com/Takishima/volleykit/pull/881) [`36041a5`](https://github.com/Takishima/volleykit/commit/36041a5e0fdc2d0aa93375a81c6523ac963f6639) Thanks [@Takishima](https://github.com/Takishima)! - Eager load compensation data with assignments to improve performance
+
+  Assignments now include compensation data (distance, amounts, editability flags) from the API response, eliminating the need for a separate API call when opening the compensation edit dialog. This enables:
+  - Faster compensation dialog opening (no loading spinner for most cases)
+  - Foundation for offline compensation editing
+  - Reduced API traffic by fetching compensation data with assignments
+
+  The `correctionReason` field is still fetched separately via `getCompensationDetails` as it's only available through the `showWithNestedObjects` endpoint.
+
 ## 1.12.1
 
 ### Patch Changes

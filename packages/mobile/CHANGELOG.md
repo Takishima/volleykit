@@ -1,5 +1,16 @@
 # @volleykit/mobile
 
+## 1.13.0
+
+### Patch Changes
+
+- [#872](https://github.com/Takishima/volleykit/pull/872) [`676ab00`](https://github.com/Takishima/volleykit/commit/676ab00e71a2fc1d39d6f2f10ea02c354d866753) Thanks [@Takishima](https://github.com/Takishima)! - Use dynamic dates in mock API client for demo mode
+
+  The mobile app's mock API client now generates dates relative to the current date instead of using hardcoded dates. This ensures demo mode always shows realistic "upcoming" and "past" assignments, exchanges, and compensations.
+
+- Updated dependencies [[`36041a5`](https://github.com/Takishima/volleykit/commit/36041a5e0fdc2d0aa93375a81c6523ac963f6639)]:
+  - @volleykit/shared@1.13.0
+
 ## 1.12.1
 
 ### Patch Changes
