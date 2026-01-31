@@ -28,7 +28,7 @@ import { ModalFooter } from '@/shared/components/ModalFooter'
 import { ModalHeader } from '@/shared/components/ModalHeader'
 import { COMPENSATION_LOOKUP_LIMIT } from '@/shared/hooks/usePaginatedQuery'
 import { useTranslation } from '@/shared/hooks/useTranslation'
-import { useAuthStore } from '@/shared/stores/auth'
+import { useAuthStore, type DataSource } from '@/shared/stores/auth'
 import { useDemoStore } from '@/shared/stores/demo'
 import { toast } from '@/shared/stores/toast'
 import {
@@ -50,7 +50,7 @@ interface EditCompensationModalProps {
  * Searches cached compensation queries to find a compensation matching the game number.
  */
 function findCompensationInCache(
-  gameNumber: number,
+  gameNumber: string | number,
   queryClient: ReturnType<typeof useQueryClient>
 ): CompensationRecord | null {
   const queries = queryClient.getQueriesData<{ items: CompensationRecord[] }>({
@@ -58,7 +58,10 @@ function findCompensationInCache(
   })
 
   for (const [, data] of queries) {
-    const comp = data?.items?.find((c) => c.refereeGame?.game?.number === gameNumber)
+    // Compare as strings to handle both string and number game numbers from different sources
+    const comp = data?.items?.find(
+      (c) => String(c.refereeGame?.game?.number) === String(gameNumber)
+    )
     if (comp) {
       return comp
     }
@@ -132,9 +135,6 @@ function getEagerLoadedCompensationData(assignment: Assignment): {
   }
 }
 
-/** Data source type for API client */
-type DataSourceType = 'production' | 'demo' | 'calendar'
-
 /** State setters interface for data fetching helpers */
 interface FormStateSetters {
   setKilometers: (value: string) => void
@@ -150,7 +150,7 @@ interface FormStateSetters {
  */
 function fetchCorrectionReasonOnly(
   compensationId: string,
-  dataSource: DataSourceType,
+  dataSource: DataSource,
   setters: Pick<FormStateSetters, 'setReason'>
 ): () => void {
   let cancelled = false
@@ -184,11 +184,12 @@ function fetchCorrectionReasonOnly(
  * Used as fallback when eager-loaded data is not available.
  */
 function fetchCompensationByGameNumber(
-  gameNumber: string,
-  dataSource: DataSourceType,
+  gameNumber: string | number,
+  dataSource: DataSource,
   queryClient: ReturnType<typeof useQueryClient>,
   setters: FormStateSetters,
-  t: (key: string) => string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Accept any translation function
+  t: (key: any) => string
 ): () => void {
   let cancelled = false
 
@@ -210,7 +211,7 @@ function fetchCompensationByGameNumber(
         if (cancelled) return
 
         const matchingComp = compensations.items.find(
-          (c) => c.refereeGame?.game?.number === gameNumber
+          (c) => String(c.refereeGame?.game?.number) === String(gameNumber)
         )
         foundCompensationId = matchingComp?.convocationCompensation?.__identity
       }
@@ -270,9 +271,10 @@ function fetchCompensationByGameNumber(
  */
 function fetchCompensationDetailsById(
   compensationId: string,
-  dataSource: DataSourceType,
+  dataSource: DataSource,
   setters: FormStateSetters,
-  t: (key: string) => string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Accept any translation function
+  t: (key: any) => string
 ): () => void {
   let cancelled = false
 
@@ -415,7 +417,10 @@ function EditCompensationModalComponent({
           }
           setIsDistanceEditable(eagerData.isDistanceEditable)
         })
-        logger.debug('[EditCompensationModal] Using eager-loaded data:', assignment.convocationCompensation)
+        logger.debug(
+          '[EditCompensationModal] Using eager-loaded data:',
+          assignment.convocationCompensation
+        )
 
         // Fetch correctionReason separately (only available via showWithNestedObjects)
         if (eagerData.compensationId) {
