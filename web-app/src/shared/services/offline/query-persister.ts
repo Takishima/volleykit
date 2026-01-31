@@ -10,7 +10,6 @@ import { logger } from '@/shared/utils/logger'
 
 import { getDB, STORES, isIndexedDBSupported } from './indexed-db'
 
-
 import type { PersistedClient, Persister } from '@tanstack/react-query-persist-client'
 
 /** Storage key for persisted query cache */
@@ -146,11 +145,15 @@ async function doPersist(client: PersistedClient): Promise<void> {
 
     const serialized = JSON.stringify(client)
 
-    await db.put(STORES.QUERY_CACHE, {
-      data: serialized,
-      timestamp: Date.now(),
-      version: CACHE_VERSION,
-    }, PERSISTED_CACHE_KEY)
+    await db.put(
+      STORES.QUERY_CACHE,
+      {
+        data: serialized,
+        timestamp: Date.now(),
+        version: CACHE_VERSION,
+      },
+      PERSISTED_CACHE_KEY
+    )
 
     lastPersistTime = Date.now()
   } catch (error) {
