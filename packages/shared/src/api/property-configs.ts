@@ -47,7 +47,9 @@ export const ASSIGNMENT_PROPERTIES = [
   'refereeGame.game.lastPostponement.createdAt',
   'refereeGame.isGameInFuture',
   // Compensation data for eager loading (avoids separate API call when opening dialog)
-  // Identity for fetching correctionReason separately
+  // Parent object must be requested before nested properties to ensure
+  // the API populates the nested structure correctly.
+  'convocationCompensation',
   'convocationCompensation.__identity',
   // Lock flags for editability check
   'convocationCompensation.paymentDone',

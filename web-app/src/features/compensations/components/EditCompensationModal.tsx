@@ -132,6 +132,196 @@ function getEagerLoadedCompensationData(assignment: Assignment): {
   }
 }
 
+/** Data source type for API client */
+type DataSourceType = 'production' | 'demo' | 'calendar'
+
+/** State setters interface for data fetching helpers */
+interface FormStateSetters {
+  setKilometers: (value: string) => void
+  setReason: (value: string) => void
+  setIsDistanceEditable: (value: boolean) => void
+  setIsLoading: (value: boolean) => void
+  setFetchError: (value: string | null) => void
+}
+
+/**
+ * Fetches only the correctionReason field for an assignment with eager-loaded data.
+ * Returns a cleanup function.
+ */
+function fetchCorrectionReasonOnly(
+  compensationId: string,
+  dataSource: DataSourceType,
+  setters: Pick<FormStateSetters, 'setReason'>
+): () => void {
+  let cancelled = false
+
+  const fetchData = async () => {
+    const apiClient = getApiClient(dataSource)
+    try {
+      const details = await apiClient.getCompensationDetails(compensationId)
+      if (cancelled) return
+
+      const existingReason = details.convocationCompensation?.correctionReason
+      if (existingReason) {
+        setters.setReason(existingReason)
+      }
+    } catch (error) {
+      // Non-critical: correctionReason is optional, log but don't show error
+      if (!cancelled) {
+        logger.debug('[EditCompensationModal] Could not fetch correctionReason:', error)
+      }
+    }
+  }
+
+  fetchData()
+  return () => {
+    cancelled = true
+  }
+}
+
+/**
+ * Fetches compensation details by looking up via game number.
+ * Used as fallback when eager-loaded data is not available.
+ */
+function fetchCompensationByGameNumber(
+  gameNumber: string,
+  dataSource: DataSourceType,
+  queryClient: ReturnType<typeof useQueryClient>,
+  setters: FormStateSetters,
+  t: (key: string) => string
+): () => void {
+  let cancelled = false
+
+  const fetchData = async () => {
+    setters.setIsLoading(true)
+    setters.setFetchError(null)
+    const apiClient = getApiClient(dataSource)
+
+    try {
+      // Try to find compensation in cache first
+      let foundCompensationId = findCompensationInCache(gameNumber, queryClient)
+        ?.convocationCompensation?.__identity
+
+      // If not in cache, fetch compensations from API
+      if (!foundCompensationId) {
+        const compensations = await apiClient.searchCompensations({
+          limit: COMPENSATION_LOOKUP_LIMIT,
+        })
+        if (cancelled) return
+
+        const matchingComp = compensations.items.find(
+          (c) => c.refereeGame?.game?.number === gameNumber
+        )
+        foundCompensationId = matchingComp?.convocationCompensation?.__identity
+      }
+
+      if (!foundCompensationId) {
+        logger.debug('[EditCompensationModal] No compensation found for game number:', gameNumber)
+        return
+      }
+
+      // Fetch detailed compensation data
+      const details = await apiClient.getCompensationDetails(foundCompensationId)
+      if (cancelled) return
+
+      const distanceInMetres = details.convocationCompensation?.distanceInMetres
+      if (distanceInMetres !== undefined && distanceInMetres > 0) {
+        setters.setKilometers(formatDistanceKm(distanceInMetres))
+      }
+
+      const existingReason = details.convocationCompensation?.correctionReason
+      if (existingReason) {
+        setters.setReason(existingReason)
+      }
+
+      const hasFlexibleTravelExpenses = details.convocationCompensation?.hasFlexibleTravelExpenses
+      setters.setIsDistanceEditable(hasFlexibleTravelExpenses !== false)
+
+      logger.debug('[EditCompensationModal] Loaded compensation details for assignment:', details)
+    } catch (error) {
+      if (cancelled) return
+
+      logger.error(
+        '[EditCompensationModal] Failed to fetch compensation details for assignment:',
+        error
+      )
+      const errorMessage = error instanceof Error ? error.message : ''
+      const knownErrorKeys = Object.values(COMPENSATION_ERROR_KEYS)
+      const isKnownErrorKey = knownErrorKeys.includes(errorMessage as CompensationErrorKey)
+      setters.setFetchError(
+        isKnownErrorKey ? t(errorMessage) : errorMessage || t('assignments.failedToLoadData')
+      )
+    } finally {
+      if (!cancelled) {
+        setters.setIsLoading(false)
+      }
+    }
+  }
+
+  fetchData()
+  return () => {
+    cancelled = true
+  }
+}
+
+/**
+ * Fetches compensation details directly by compensation ID.
+ * Used for compensation record edits.
+ */
+function fetchCompensationDetailsById(
+  compensationId: string,
+  dataSource: DataSourceType,
+  setters: FormStateSetters,
+  t: (key: string) => string
+): () => void {
+  let cancelled = false
+
+  const fetchData = async () => {
+    setters.setIsLoading(true)
+    setters.setFetchError(null)
+    const apiClient = getApiClient(dataSource)
+
+    try {
+      const details = await apiClient.getCompensationDetails(compensationId)
+      if (cancelled) return
+
+      const distanceInMetres = details.convocationCompensation?.distanceInMetres
+      if (distanceInMetres !== undefined && distanceInMetres > 0) {
+        setters.setKilometers(formatDistanceKm(distanceInMetres))
+      }
+
+      const existingReason = details.convocationCompensation?.correctionReason
+      if (existingReason) {
+        setters.setReason(existingReason)
+      }
+
+      const hasFlexibleTravelExpenses = details.convocationCompensation?.hasFlexibleTravelExpenses
+      setters.setIsDistanceEditable(hasFlexibleTravelExpenses !== false)
+
+      logger.debug('[EditCompensationModal] Loaded compensation details:', details)
+    } catch (error) {
+      if (cancelled) return
+
+      logger.error('[EditCompensationModal] Failed to fetch compensation details:', error)
+      const errorMessage = error instanceof Error ? error.message : ''
+      const knownErrorKeys = Object.values(COMPENSATION_ERROR_KEYS)
+      const isKnownErrorKey = knownErrorKeys.includes(errorMessage as CompensationErrorKey)
+      setters.setFetchError(
+        isKnownErrorKey ? t(errorMessage) : errorMessage || t('assignments.failedToLoadData')
+      )
+    } finally {
+      if (!cancelled) {
+        setters.setIsLoading(false)
+      }
+    }
+  }
+
+  fetchData()
+  return () => {
+    cancelled = true
+  }
+}
+
 function EditCompensationModalComponent({
   assignment,
   compensation,
@@ -183,227 +373,69 @@ function EditCompensationModalComponent({
   useEffect(() => {
     if (!isOpen) return
 
-    // For assignment edits in demo mode, load from stored assignment compensations
+    const formSetters: FormStateSetters = {
+      setKilometers,
+      setReason,
+      setIsDistanceEditable,
+      setIsLoading,
+      setFetchError,
+    }
+
+    // Strategy 1: Demo mode - load from stored assignment compensations
     if (isAssignmentEdit && dataSource === 'demo' && assignment) {
       const storedData = getAssignmentCompensation(assignment.__identity)
-      if (storedData) {
-        if (storedData.distanceInMetres !== undefined && storedData.distanceInMetres > 0) {
-          setKilometers(formatDistanceKm(storedData.distanceInMetres))
-        }
-        if (storedData.correctionReason) {
-          setReason(storedData.correctionReason)
-        }
-        logger.debug(
-          '[EditCompensationModal] Loaded assignment compensation from store:',
-          storedData
-        )
-      }
-      // Check if distance is editable based on hasFlexibleTravelExpenses from assignment's compensation
-      // Demo mode defaults to editable (true) unless explicitly set to false
       const hasFlexibleTravelExpenses = (
         assignment.convocationCompensation as { hasFlexibleTravelExpenses?: boolean } | undefined
       )?.hasFlexibleTravelExpenses
-      setIsDistanceEditable(hasFlexibleTravelExpenses !== false)
+
+      // Defer state updates to avoid cascading renders (satisfies react-hooks/set-state-in-effect)
+      queueMicrotask(() => {
+        if (storedData) {
+          if (storedData.distanceInMetres !== undefined && storedData.distanceInMetres > 0) {
+            setKilometers(formatDistanceKm(storedData.distanceInMetres))
+          }
+          if (storedData.correctionReason) {
+            setReason(storedData.correctionReason)
+          }
+          logger.debug('[EditCompensationModal] Loaded from demo store:', storedData)
+        }
+        setIsDistanceEditable(hasFlexibleTravelExpenses !== false)
+      })
       return
     }
 
-    // For assignment edits in production/calendar mode, use eager-loaded data
+    // Strategy 2: Eager-loaded data from assignment (production/calendar mode)
     if (isAssignmentEdit && dataSource !== 'demo' && assignment) {
-      // Try to use eager-loaded compensation data from assignment
       const eagerData = getEagerLoadedCompensationData(assignment)
       if (eagerData) {
-        if (eagerData.distanceKm) {
-          setKilometers(eagerData.distanceKm)
-        }
-        setIsDistanceEditable(eagerData.isDistanceEditable)
+        // Defer state updates to avoid cascading renders (satisfies react-hooks/set-state-in-effect)
+        queueMicrotask(() => {
+          if (eagerData.distanceKm) {
+            setKilometers(eagerData.distanceKm)
+          }
+          setIsDistanceEditable(eagerData.isDistanceEditable)
+        })
+        logger.debug('[EditCompensationModal] Using eager-loaded data:', assignment.convocationCompensation)
 
-        logger.debug(
-          '[EditCompensationModal] Using eager-loaded compensation data from assignment:',
-          assignment.convocationCompensation
-        )
-
-        // Fetch correctionReason separately if compensation ID is available
-        // (correctionReason is only available via showWithNestedObjects)
+        // Fetch correctionReason separately (only available via showWithNestedObjects)
         if (eagerData.compensationId) {
-          let cancelled = false
-
-          const fetchCorrectionReason = async () => {
-            const apiClient = getApiClient(dataSource)
-            try {
-              const details = await apiClient.getCompensationDetails(eagerData.compensationId!)
-              if (cancelled) return
-
-              const existingReason = details.convocationCompensation?.correctionReason
-              if (existingReason) {
-                setReason(existingReason)
-              }
-            } catch (error) {
-              // Non-critical: correctionReason is optional, log but don't show error
-              if (!cancelled) {
-                logger.debug('[EditCompensationModal] Could not fetch correctionReason:', error)
-              }
-            }
-          }
-
-          fetchCorrectionReason()
-          return () => {
-            cancelled = true
-          }
+          return fetchCorrectionReasonOnly(eagerData.compensationId, dataSource, { setReason })
         }
         return
       }
 
-      // Fallback: if assignment doesn't have eager-loaded data, fetch from API
+      // Strategy 3: Fallback fetch by game number when no eager-loaded data
       const gameNumber = assignment.refereeGame?.game?.number
       if (!gameNumber) {
-        logger.debug(
-          '[EditCompensationModal] Assignment has no game number, cannot fetch compensation'
-        )
+        logger.debug('[EditCompensationModal] Assignment has no game number')
         return
       }
-
-      let cancelled = false
-
-      const fetchDetailsForAssignment = async () => {
-        setIsLoading(true)
-        setFetchError(null)
-        const apiClient = getApiClient(dataSource)
-
-        try {
-          // Try to find compensation in cache first
-          let foundCompensationId = findCompensationInCache(gameNumber, queryClient)
-            ?.convocationCompensation?.__identity
-
-          // If not in cache, fetch compensations from API
-          if (!foundCompensationId) {
-            const compensations = await apiClient.searchCompensations({
-              limit: COMPENSATION_LOOKUP_LIMIT,
-            })
-            if (cancelled) return
-
-            const matchingComp = compensations.items.find(
-              (c) => c.refereeGame?.game?.number === gameNumber
-            )
-            foundCompensationId = matchingComp?.convocationCompensation?.__identity
-          }
-
-          if (!foundCompensationId) {
-            // No compensation found for this assignment - this is OK for future games
-            // that haven't had compensation recorded yet
-            logger.debug(
-              '[EditCompensationModal] No compensation found for game number:',
-              gameNumber
-            )
-            return
-          }
-
-          // Fetch detailed compensation data
-          const details = await apiClient.getCompensationDetails(foundCompensationId)
-          if (cancelled) return
-
-          const distanceInMetres = details.convocationCompensation?.distanceInMetres
-          if (distanceInMetres !== undefined && distanceInMetres > 0) {
-            setKilometers(formatDistanceKm(distanceInMetres))
-          }
-
-          const existingReason = details.convocationCompensation?.correctionReason
-          if (existingReason) {
-            setReason(existingReason)
-          }
-
-          // Check if distance is editable based on hasFlexibleTravelExpenses
-          // When false, the backend (volleymanager) does not allow editing the distance
-          const hasFlexibleTravelExpenses =
-            details.convocationCompensation?.hasFlexibleTravelExpenses
-          setIsDistanceEditable(hasFlexibleTravelExpenses !== false)
-
-          logger.debug(
-            '[EditCompensationModal] Loaded compensation details for assignment:',
-            details
-          )
-        } catch (error) {
-          if (cancelled) return
-
-          logger.error(
-            '[EditCompensationModal] Failed to fetch compensation details for assignment:',
-            error
-          )
-          const errorMessage = error instanceof Error ? error.message : ''
-          const knownErrorKeys = Object.values(COMPENSATION_ERROR_KEYS)
-          const isKnownErrorKey = knownErrorKeys.includes(errorMessage as CompensationErrorKey)
-          setFetchError(
-            isKnownErrorKey
-              ? t(errorMessage as CompensationErrorKey)
-              : errorMessage || t('assignments.failedToLoadData')
-          )
-        } finally {
-          if (!cancelled) {
-            setIsLoading(false)
-          }
-        }
-      }
-
-      fetchDetailsForAssignment()
-      return () => {
-        cancelled = true
-      }
+      return fetchCompensationByGameNumber(gameNumber, dataSource, queryClient, formSetters, t)
     }
 
-    // For compensation record edits, fetch from API using the compensation ID directly
+    // Strategy 4: Compensation record edit - fetch directly by ID
     if (!compensationId) return
-
-    let cancelled = false
-
-    const fetchDetails = async () => {
-      setIsLoading(true)
-      setFetchError(null)
-      const apiClient = getApiClient(dataSource)
-
-      try {
-        const details = await apiClient.getCompensationDetails(compensationId)
-        if (cancelled) return
-
-        // Pre-fill form with existing values
-        const distanceInMetres = details.convocationCompensation?.distanceInMetres
-        if (distanceInMetres !== undefined && distanceInMetres > 0) {
-          setKilometers(formatDistanceKm(distanceInMetres))
-        }
-
-        const existingReason = details.convocationCompensation?.correctionReason
-        if (existingReason) {
-          setReason(existingReason)
-        }
-
-        // Check if distance is editable based on hasFlexibleTravelExpenses
-        // When false, the backend (volleymanager) does not allow editing the distance
-        const hasFlexibleTravelExpenses = details.convocationCompensation?.hasFlexibleTravelExpenses
-        setIsDistanceEditable(hasFlexibleTravelExpenses !== false)
-
-        logger.debug('[EditCompensationModal] Loaded compensation details:', details)
-      } catch (error) {
-        if (cancelled) return
-
-        logger.error('[EditCompensationModal] Failed to fetch compensation details:', error)
-        // Check if error message is a known i18n key and translate it
-        const errorMessage = error instanceof Error ? error.message : ''
-        const knownErrorKeys = Object.values(COMPENSATION_ERROR_KEYS)
-        const isKnownErrorKey = knownErrorKeys.includes(errorMessage as CompensationErrorKey)
-        setFetchError(
-          isKnownErrorKey
-            ? t(errorMessage as CompensationErrorKey)
-            : errorMessage || t('assignments.failedToLoadData')
-        )
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false)
-        }
-      }
-    }
-
-    fetchDetails()
-    return () => {
-      cancelled = true
-    }
+    return fetchCompensationDetailsById(compensationId, dataSource, formSetters, t)
   }, [
     isOpen,
     compensationId,
@@ -418,12 +450,15 @@ function EditCompensationModalComponent({
   // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
-      setKilometers('')
-      setReason('')
-      setErrors({})
-      setFetchError(null)
-      setIsDistanceEditable(true)
-      setApplyToSameHall(false)
+      // Defer state resets to avoid cascading renders (satisfies react-hooks/set-state-in-effect)
+      queueMicrotask(() => {
+        setKilometers('')
+        setReason('')
+        setErrors({})
+        setFetchError(null)
+        setIsDistanceEditable(true)
+        setApplyToSameHall(false)
+      })
     }
   }, [isOpen])
 
