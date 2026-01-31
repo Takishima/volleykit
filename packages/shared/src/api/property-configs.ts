@@ -57,8 +57,9 @@ export const ASSIGNMENT_PROPERTIES = [
   'convocationCompensation.lockPayoutCentralPayoutCompensation',
   'convocationCompensation.methodOfDisbursementArbitration',
   // Distance and travel data for compensation editing
+  // Note: distanceFormatted is not available via assignments endpoint (computed field),
+  // so we use distanceInMetres and format client-side
   'convocationCompensation.distanceInMetres',
-  'convocationCompensation.distanceFormatted',
   'convocationCompensation.hasFlexibleTravelExpenses',
   'convocationCompensation.transportationMode',
   // Compensation amounts for display
