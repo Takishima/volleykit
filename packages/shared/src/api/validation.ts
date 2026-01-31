@@ -154,24 +154,7 @@ const refereeGameForExchangeSchema = z
   })
   .passthrough()
 
-// Assignment schema
-export const assignmentSchema = z
-  .object({
-    __identity: uuidSchema,
-    refereeGame: refereeGameSchema,
-    refereeConvocationStatus: convocationStatusSchema,
-    refereePosition: refereePositionSchema,
-    confirmationStatus: z.string().optional().nullable(),
-    confirmationDate: dateTimeSchema,
-    isOpenEntryInRefereeGameExchange: booleanLikeSchema,
-    hasLastMessageToReferee: booleanLikeSchema,
-    hasLinkedDoubleConvocation: booleanLikeSchema,
-    linkedDoubleConvocationGameNumberAndRefereePosition: z.string().optional().nullable(),
-    _permissions: permissionsSchema,
-  })
-  .passthrough()
-
-// Convocation compensation schema
+// Convocation compensation schema (must be defined before assignmentSchema)
 const convocationCompensationSchema = z
   .object({
     __identity: uuidSchema.optional(),
@@ -189,6 +172,26 @@ const convocationCompensationSchema = z
     travelExpensesFormatted: z.string().optional(),
     costFormatted: z.string().optional(),
     distanceFormatted: z.string().optional().nullable(),
+    hasFlexibleTravelExpenses: z.boolean().optional(),
+  })
+  .passthrough()
+
+// Assignment schema
+export const assignmentSchema = z
+  .object({
+    __identity: uuidSchema,
+    refereeGame: refereeGameSchema,
+    refereeConvocationStatus: convocationStatusSchema,
+    refereePosition: refereePositionSchema,
+    confirmationStatus: z.string().optional().nullable(),
+    confirmationDate: dateTimeSchema,
+    isOpenEntryInRefereeGameExchange: booleanLikeSchema,
+    hasLastMessageToReferee: booleanLikeSchema,
+    hasLinkedDoubleConvocation: booleanLikeSchema,
+    linkedDoubleConvocationGameNumberAndRefereePosition: z.string().optional().nullable(),
+    // Compensation data eagerly loaded with assignments to avoid separate API call
+    convocationCompensation: convocationCompensationSchema.optional(),
+    _permissions: permissionsSchema,
   })
   .passthrough()
 
