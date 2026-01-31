@@ -591,6 +591,16 @@ const fr: Translations = {
     dismissAriaLabel: 'Ignorer la notification de mise à jour',
     closeAriaLabel: 'Fermer la notification',
   },
+  offline: {
+    youAreOffline: 'Vous êtes hors ligne',
+    cachedDataAvailable: 'Affichage des données en cache',
+    justNow: "à l'instant",
+    oneMinuteAgo: 'il y a 1 minute',
+    minutesAgo: 'il y a {minutes} minutes',
+    oneHourAgo: 'il y a 1 heure',
+    hoursAgo: 'il y a {hours} heures',
+    dismissAriaLabel: 'Ignorer la notification hors ligne',
+  },
   pdf: {
     exportTitle: 'Générer rapport de salle',
     selectLanguage: 'Sélectionner la langue du rapport :',

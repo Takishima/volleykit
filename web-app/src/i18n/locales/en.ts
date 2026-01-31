@@ -574,6 +574,16 @@ const en: Translations = {
     dismissAriaLabel: 'Dismiss update notification',
     closeAriaLabel: 'Close notification',
   },
+  offline: {
+    youAreOffline: 'You are offline',
+    cachedDataAvailable: 'Viewing cached data',
+    justNow: 'just now',
+    oneMinuteAgo: '1 minute ago',
+    minutesAgo: '{minutes} minutes ago',
+    oneHourAgo: '1 hour ago',
+    hoursAgo: '{hours} hours ago',
+    dismissAriaLabel: 'Dismiss offline notification',
+  },
   pdf: {
     exportTitle: 'Generate Sports Hall Report',
     selectLanguage: 'Select the language for the report:',

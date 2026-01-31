@@ -586,6 +586,16 @@ const it: Translations = {
     dismissAriaLabel: 'Ignora notifica di aggiornamento',
     closeAriaLabel: 'Chiudi notifica',
   },
+  offline: {
+    youAreOffline: 'Sei offline',
+    cachedDataAvailable: 'Visualizzazione dati in cache',
+    justNow: 'proprio ora',
+    oneMinuteAgo: '1 minuto fa',
+    minutesAgo: '{minutes} minuti fa',
+    oneHourAgo: "1 ora fa",
+    hoursAgo: '{hours} ore fa',
+    dismissAriaLabel: 'Ignora notifica offline',
+  },
   pdf: {
     exportTitle: 'Genera rapporto sala',
     selectLanguage: 'Seleziona la lingua del rapporto:',

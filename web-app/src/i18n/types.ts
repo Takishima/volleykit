@@ -447,6 +447,16 @@ export interface Translations {
     dismissAriaLabel: string
     closeAriaLabel: string
   }
+  offline: {
+    youAreOffline: string
+    cachedDataAvailable: string
+    justNow: string
+    oneMinuteAgo: string
+    minutesAgo: string
+    oneHourAgo: string
+    hoursAgo: string
+    dismissAriaLabel: string
+  }
   pdf: {
     exportTitle: string
     selectLanguage: string
