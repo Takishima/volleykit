@@ -1756,15 +1756,53 @@ components:
         convocationCompensation:
           type: object
           description: |
-            Compensation lock flags for editability check.
+            Compensation data eagerly loaded with assignments.
+            Includes lock flags for editability check and compensation amounts for display.
             Only populated when convocationCompensation properties are requested.
           properties:
+            __identity:
+              type: string
+              format: uuid
+              description: Unique identifier for the compensation record
             paymentDone:
               type: boolean
               description: Whether payment has been processed
             lockPayoutOnSiteCompensation:
               type: boolean
               description: Whether on-site payout is locked (regional associations)
+            lockPayoutCentralPayoutCompensation:
+              type: boolean
+              description: Whether central payout is locked
+            methodOfDisbursementArbitration:
+              type: string
+              description: Method of disbursement for the compensation
+            distanceInMetres:
+              type: number
+              description: Distance in metres for travel expense calculation
+            distanceFormatted:
+              type: string
+              nullable: true
+              description: Human-readable formatted distance (e.g., "96.3 km")
+            hasFlexibleTravelExpenses:
+              type: boolean
+              description: Whether travel expenses can be edited
+            transportationMode:
+              type: string
+              enum: [car, train, public_transport, other]
+              nullable: true
+              description: Mode of transportation used
+            costFormatted:
+              type: string
+              description: Total compensation formatted (e.g., "70.00")
+            gameCompensationFormatted:
+              type: string
+              description: Game fee portion formatted (e.g., "50.00")
+            travelExpensesFormatted:
+              type: string
+              description: Travel expenses portion formatted (e.g., "20.00")
+            hasFlexibleGameCompensations:
+              type: boolean
+              description: Whether game compensation can be edited
         _permissions:
           $ref: '#/components/schemas/Permissions'
     CompensationsResponse:

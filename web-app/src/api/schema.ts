@@ -1196,14 +1196,43 @@ export interface components {
             hasLinkedDoubleConvocation?: boolean;
             linkedDoubleConvocationGameNumberAndRefereePosition?: string | null;
             /**
-             * @description Compensation lock flags for editability check.
+             * @description Compensation data eagerly loaded with assignments.
+             *     Includes lock flags for editability check and compensation amounts for display.
              *     Only populated when convocationCompensation properties are requested.
              */
             convocationCompensation?: {
+                /**
+                 * Format: uuid
+                 * @description Unique identifier for the compensation record
+                 */
+                __identity?: string;
                 /** @description Whether payment has been processed */
                 paymentDone?: boolean;
                 /** @description Whether on-site payout is locked (regional associations) */
                 lockPayoutOnSiteCompensation?: boolean;
+                /** @description Whether central payout is locked */
+                lockPayoutCentralPayoutCompensation?: boolean;
+                /** @description Method of disbursement for the compensation */
+                methodOfDisbursementArbitration?: string;
+                /** @description Distance in metres for travel expense calculation */
+                distanceInMetres?: number;
+                /** @description Human-readable formatted distance (e.g., "96.3 km") */
+                distanceFormatted?: string | null;
+                /** @description Whether travel expenses can be edited */
+                hasFlexibleTravelExpenses?: boolean;
+                /**
+                 * @description Mode of transportation used
+                 * @enum {string|null}
+                 */
+                transportationMode?: "car" | "train" | "public_transport" | "other" | null;
+                /** @description Total compensation formatted (e.g., "70.00") */
+                costFormatted?: string;
+                /** @description Game fee portion formatted (e.g., "50.00") */
+                gameCompensationFormatted?: string;
+                /** @description Travel expenses portion formatted (e.g., "20.00") */
+                travelExpensesFormatted?: string;
+                /** @description Whether game compensation can be edited */
+                hasFlexibleGameCompensations?: boolean;
             };
             _permissions?: components["schemas"]["Permissions"];
         };

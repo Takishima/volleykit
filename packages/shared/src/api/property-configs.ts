@@ -46,11 +46,24 @@ export const ASSIGNMENT_PROPERTIES = [
   'refereeGame.game.lastPostponement.activeRefereeConvocationsAtTimeOfAcceptedPostponement.*.indoorAssociationReferee.indoorReferee.person',
   'refereeGame.game.lastPostponement.createdAt',
   'refereeGame.isGameInFuture',
-  // Compensation lock flags for editability check
+  // Compensation data for eager loading (avoids separate API call when opening dialog)
+  // Identity for fetching correctionReason separately
+  'convocationCompensation.__identity',
+  // Lock flags for editability check
   'convocationCompensation.paymentDone',
   'convocationCompensation.lockPayoutOnSiteCompensation',
   'convocationCompensation.lockPayoutCentralPayoutCompensation',
   'convocationCompensation.methodOfDisbursementArbitration',
+  // Distance and travel data for compensation editing
+  'convocationCompensation.distanceInMetres',
+  'convocationCompensation.distanceFormatted',
+  'convocationCompensation.hasFlexibleTravelExpenses',
+  'convocationCompensation.transportationMode',
+  // Compensation amounts for display
+  'convocationCompensation.costFormatted',
+  'convocationCompensation.gameCompensationFormatted',
+  'convocationCompensation.travelExpensesFormatted',
+  'convocationCompensation.hasFlexibleGameCompensations',
   // Validation status for swipe button color.
   // Parent object must be requested before nested property to ensure
   // the API populates the nested structure correctly.

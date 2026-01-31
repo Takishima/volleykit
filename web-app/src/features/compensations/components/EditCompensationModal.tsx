@@ -105,6 +105,33 @@ function findOtherEditableCompensationsAtSameHall(
   return results
 }
 
+/**
+ * Extracts compensation data from an assignment's eager-loaded convocationCompensation.
+ * Returns distance in km format and editability flag.
+ */
+function getEagerLoadedCompensationData(assignment: Assignment): {
+  distanceKm: string
+  isDistanceEditable: boolean
+  compensationId: string | undefined
+} | null {
+  const compensation = assignment.convocationCompensation
+  if (!compensation) return null
+
+  const distanceInMetres = compensation.distanceInMetres
+  const distanceKm =
+    distanceInMetres !== undefined && distanceInMetres > 0 ? formatDistanceKm(distanceInMetres) : ''
+
+  // When hasFlexibleTravelExpenses is false, the backend does not allow editing
+  const hasFlexibleTravelExpenses = compensation.hasFlexibleTravelExpenses
+  const isDistanceEditable = hasFlexibleTravelExpenses !== false
+
+  return {
+    distanceKm,
+    isDistanceEditable,
+    compensationId: compensation.__identity,
+  }
+}
+
 function EditCompensationModalComponent({
   assignment,
   compensation,
@@ -136,9 +163,11 @@ function EditCompensationModalComponent({
     updateAssignmentCompensationMutation.isPending ||
     batchUpdateMutation.isPending
 
-  // Get the compensation ID from the compensation record
-  // Assignments don't have convocationCompensation, only CompensationRecord does
-  const compensationId = compensation?.convocationCompensation?.__identity
+  // Get the compensation ID from the compensation record or assignment
+  // Assignments now include eager-loaded convocationCompensation data
+  const compensationId =
+    compensation?.convocationCompensation?.__identity ||
+    assignment?.convocationCompensation?.__identity
 
   // Get hall information for "apply to same hall" feature
   const hallId = compensation?.refereeGame?.game?.hall?.__identity
@@ -178,8 +207,53 @@ function EditCompensationModalComponent({
       return
     }
 
-    // For assignment edits in production/calendar mode, find compensation by game number
+    // For assignment edits in production/calendar mode, use eager-loaded data
     if (isAssignmentEdit && dataSource !== 'demo' && assignment) {
+      // Try to use eager-loaded compensation data from assignment
+      const eagerData = getEagerLoadedCompensationData(assignment)
+      if (eagerData) {
+        if (eagerData.distanceKm) {
+          setKilometers(eagerData.distanceKm)
+        }
+        setIsDistanceEditable(eagerData.isDistanceEditable)
+
+        logger.debug(
+          '[EditCompensationModal] Using eager-loaded compensation data from assignment:',
+          assignment.convocationCompensation
+        )
+
+        // Fetch correctionReason separately if compensation ID is available
+        // (correctionReason is only available via showWithNestedObjects)
+        if (eagerData.compensationId) {
+          let cancelled = false
+
+          const fetchCorrectionReason = async () => {
+            const apiClient = getApiClient(dataSource)
+            try {
+              const details = await apiClient.getCompensationDetails(eagerData.compensationId!)
+              if (cancelled) return
+
+              const existingReason = details.convocationCompensation?.correctionReason
+              if (existingReason) {
+                setReason(existingReason)
+              }
+            } catch (error) {
+              // Non-critical: correctionReason is optional, log but don't show error
+              if (!cancelled) {
+                logger.debug('[EditCompensationModal] Could not fetch correctionReason:', error)
+              }
+            }
+          }
+
+          fetchCorrectionReason()
+          return () => {
+            cancelled = true
+          }
+        }
+        return
+      }
+
+      // Fallback: if assignment doesn't have eager-loaded data, fetch from API
       const gameNumber = assignment.refereeGame?.game?.number
       if (!gameNumber) {
         logger.debug(
@@ -414,7 +488,11 @@ function EditCompensationModalComponent({
    */
   const handleCompensationSuccess = useCallback(
     (updateData: { distanceInMetres?: number }) => {
-      if (applyToSameHall && updateData.distanceInMetres && otherCompensationsAtSameHall.length > 0) {
+      if (
+        applyToSameHall &&
+        updateData.distanceInMetres &&
+        otherCompensationsAtSameHall.length > 0
+      ) {
         triggerBatchUpdate(updateData.distanceInMetres)
       } else {
         toast.success(t('compensations.saveSuccess'))
@@ -454,7 +532,10 @@ function EditCompensationModalComponent({
               onClose()
             },
             onError: (error) => {
-              logger.error('[EditCompensationModal] Failed to update assignment compensation:', error)
+              logger.error(
+                '[EditCompensationModal] Failed to update assignment compensation:',
+                error
+              )
               toast.error(t('compensations.saveError'))
             },
           }
