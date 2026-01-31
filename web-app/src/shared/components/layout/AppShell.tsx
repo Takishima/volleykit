@@ -14,6 +14,7 @@ import {
   ChevronDown,
   Calendar,
 } from '@/shared/components/icons'
+import { OfflineIndicator } from '@/shared/components/OfflineIndicator'
 import { TourModeBanner } from '@/shared/components/tour/TourModeBanner'
 import { prefetchAllTabData } from '@/shared/hooks/usePrefetchTabData'
 import { useTranslation } from '@/shared/hooks/useTranslation'
@@ -396,6 +397,9 @@ export function AppShell() {
 
       {/* Spacer to account for fixed header height plus safe area inset */}
       <div className="header-spacer" aria-hidden="true" />
+
+      {/* Offline indicator - shows when network is unavailable */}
+      <OfflineIndicator />
 
       {/* Demo mode banner */}
       {dataSource === 'demo' && (

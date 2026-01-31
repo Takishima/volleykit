@@ -596,6 +596,16 @@ const de: Translations = {
     dismissAriaLabel: 'Update-Benachrichtigung schliessen',
     closeAriaLabel: 'Benachrichtigung schliessen',
   },
+  offline: {
+    youAreOffline: 'Sie sind offline',
+    cachedDataAvailable: 'Gespeicherte Daten werden angezeigt',
+    justNow: 'gerade eben',
+    oneMinuteAgo: 'vor 1 Minute',
+    minutesAgo: 'vor {minutes} Minuten',
+    oneHourAgo: 'vor 1 Stunde',
+    hoursAgo: 'vor {hours} Stunden',
+    dismissAriaLabel: 'Offline-Benachrichtigung schliessen',
+  },
   pdf: {
     exportTitle: 'Hallenrapport erstellen',
     selectLanguage: 'Sprache für den Rapport auswählen:',
