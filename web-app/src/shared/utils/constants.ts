@@ -15,6 +15,7 @@ export {
   HOURS_PER_DAY,
   MS_PER_MINUTE,
   MS_PER_HOUR,
+  MS_PER_DAY,
 } from '@volleykit/shared/utils'
 
 // ============================================================================
