@@ -341,12 +341,17 @@ describe('useCompensations cache-first strategy', () => {
     const mockAssignment = createMockAssignment()
 
     // Seed the cache with assignments data
-    queryClient.setQueryData(
-      ['assignments', 'list', { offset: 0 }, 'test-occupation'],
-      { items: [mockAssignment], totalItemsCount: 1 }
-    )
+    queryClient.setQueryData(['assignments', 'list', { offset: 0 }, 'test-occupation'], {
+      items: [mockAssignment],
+      totalItemsCount: 1,
+    })
     // Set the query state to be fresh (updated just now)
-    const queryState = queryClient.getQueryState(['assignments', 'list', { offset: 0 }, 'test-occupation'])
+    const queryState = queryClient.getQueryState([
+      'assignments',
+      'list',
+      { offset: 0 },
+      'test-occupation',
+    ])
     if (queryState) {
       queryState.dataUpdatedAt = Date.now()
     }
@@ -422,12 +427,17 @@ describe('useCompensations cache-first strategy', () => {
     const mockAssignment = createMockAssignment()
 
     // Seed the cache with assignments data
-    queryClient.setQueryData(
-      ['assignments', 'list', { offset: 0 }, 'test-occupation'],
-      { items: [mockAssignment], totalItemsCount: 1 }
-    )
+    queryClient.setQueryData(['assignments', 'list', { offset: 0 }, 'test-occupation'], {
+      items: [mockAssignment],
+      totalItemsCount: 1,
+    })
     // Set the query state to be stale (updated 10 minutes ago)
-    const queryState = queryClient.getQueryState(['assignments', 'list', { offset: 0 }, 'test-occupation'])
+    const queryState = queryClient.getQueryState([
+      'assignments',
+      'list',
+      { offset: 0 },
+      'test-occupation',
+    ])
     if (queryState) {
       queryState.dataUpdatedAt = Date.now() - 10 * 60 * 1000 // 10 minutes ago
     }
@@ -467,11 +477,16 @@ describe('useCompensations cache-first strategy', () => {
       convocationCompensation: undefined,
     })
 
-    queryClient.setQueryData(
-      ['assignments', 'list', { offset: 0 }, 'test-occupation'],
-      { items: [assignmentWithCompensation, assignmentWithoutCompensation], totalItemsCount: 2 }
-    )
-    const queryState = queryClient.getQueryState(['assignments', 'list', { offset: 0 }, 'test-occupation'])
+    queryClient.setQueryData(['assignments', 'list', { offset: 0 }, 'test-occupation'], {
+      items: [assignmentWithCompensation, assignmentWithoutCompensation],
+      totalItemsCount: 2,
+    })
+    const queryState = queryClient.getQueryState([
+      'assignments',
+      'list',
+      { offset: 0 },
+      'test-occupation',
+    ])
     if (queryState) {
       queryState.dataUpdatedAt = Date.now()
     }
@@ -514,11 +529,16 @@ describe('useCompensations cache-first strategy', () => {
       convocationCompensation: { __identity: 'c2', paymentDone: false },
     })
 
-    queryClient.setQueryData(
-      ['assignments', 'list', { offset: 0 }, 'test-occupation'],
-      { items: [paidAssignment, unpaidAssignment], totalItemsCount: 2 }
-    )
-    const queryState = queryClient.getQueryState(['assignments', 'list', { offset: 0 }, 'test-occupation'])
+    queryClient.setQueryData(['assignments', 'list', { offset: 0 }, 'test-occupation'], {
+      items: [paidAssignment, unpaidAssignment],
+      totalItemsCount: 2,
+    })
+    const queryState = queryClient.getQueryState([
+      'assignments',
+      'list',
+      { offset: 0 },
+      'test-occupation',
+    ])
     if (queryState) {
       queryState.dataUpdatedAt = Date.now()
     }
