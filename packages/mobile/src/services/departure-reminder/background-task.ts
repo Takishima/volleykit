@@ -89,26 +89,22 @@ export async function startBackgroundTask(): Promise<void> {
   // Check if feature is enabled
   const settings = await departureReminderSettingsStore.loadSettings(storage)
   if (!settings.enabled) {
-    console.log('Departure reminders disabled, not starting task')
     return
   }
 
   // Check for assignments
   if (!assignmentProvider) {
-    console.log('No assignment provider registered')
     return
   }
 
   const assignments = await assignmentProvider.getUpcomingAssignments(LOOKAHEAD_WINDOW_MS)
   if (assignments.length === 0) {
-    console.log('No upcoming assignments, not starting task')
     return
   }
 
   // Check permissions
   const hasBgPermissions = await location.hasBackgroundPermissions()
   if (!hasBgPermissions) {
-    console.log('No background location permissions')
     return
   }
 
@@ -144,7 +140,6 @@ export async function runDepartureReminderCheck(): Promise<void> {
   try {
     const currentLocation = await location.getCurrentLocation()
     if (!currentLocation) {
-      console.log('Could not get current location')
       // Fallback behavior: schedule time-based reminders without route info
       await scheduleTimeBasedReminders()
       return
