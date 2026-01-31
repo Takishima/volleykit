@@ -583,6 +583,18 @@ const en: Translations = {
     oneHourAgo: '1 hour ago',
     hoursAgo: '{hours} hours ago',
     dismissAriaLabel: 'Dismiss offline notification',
+    pendingActions: '{count} pending changes',
+    syncing: 'Syncing...',
+    syncComplete: '{count} changes synced successfully',
+    syncFailed: '{count} changes failed to sync',
+    sessionExpired: 'Session expired. Please log in again to sync changes.',
+    actions: {
+      updateCompensation: 'Update compensation',
+      batchUpdateCompensations: 'Update compensations',
+      applyForExchange: 'Apply for exchange',
+      withdrawFromExchange: 'Withdraw from exchange',
+      addToExchange: 'Add to exchange',
+    },
   },
   pdf: {
     exportTitle: 'Generate Sports Hall Report',

@@ -456,6 +456,18 @@ export interface Translations {
     oneHourAgo: string
     hoursAgo: string
     dismissAriaLabel: string
+    pendingActions: string
+    syncing: string
+    syncComplete: string
+    syncFailed: string
+    sessionExpired: string
+    actions: {
+      updateCompensation: string
+      batchUpdateCompensations: string
+      applyForExchange: string
+      withdrawFromExchange: string
+      addToExchange: string
+    }
   }
   pdf: {
     exportTitle: string

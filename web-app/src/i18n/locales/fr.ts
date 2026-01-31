@@ -600,6 +600,18 @@ const fr: Translations = {
     oneHourAgo: 'il y a 1 heure',
     hoursAgo: 'il y a {hours} heures',
     dismissAriaLabel: 'Ignorer la notification hors ligne',
+    pendingActions: '{count} modifications en attente',
+    syncing: 'Synchronisation...',
+    syncComplete: '{count} modifications synchronisées avec succès',
+    syncFailed: '{count} modifications n\'ont pas pu être synchronisées',
+    sessionExpired: 'Session expirée. Veuillez vous reconnecter pour synchroniser les modifications.',
+    actions: {
+      updateCompensation: 'Mettre à jour l\'indemnisation',
+      batchUpdateCompensations: 'Mettre à jour les indemnisations',
+      applyForExchange: 'Postuler pour un échange',
+      withdrawFromExchange: 'Se retirer de l\'échange',
+      addToExchange: 'Ajouter à l\'échange',
+    },
   },
   pdf: {
     exportTitle: 'Générer rapport de salle',

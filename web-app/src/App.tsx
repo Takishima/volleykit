@@ -19,7 +19,7 @@ import { ASSIGNMENTS_STALE_TIME_MS, OFFLINE_GC_TIME_MS } from '@/shared/hooks/us
 import { usePreloadLocales } from '@/shared/hooks/usePreloadLocales'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useViewportZoom } from '@/shared/hooks/useViewportZoom'
-import { persistOptions, clearPersistedCache } from '@/shared/services/offline'
+import { persistOptions, clearPersistedCache, clearAllActions } from '@/shared/services/offline'
 import { useAuthStore, registerCacheCleanup } from '@/shared/stores/auth'
 import { useDemoStore } from '@/shared/stores/demo'
 import { useSettingsStore } from '@/shared/stores/settings'
@@ -268,8 +268,9 @@ export default function App() {
     // preventing any race conditions with React re-renders.
     const unregisterCacheCleanup = registerCacheCleanup(() => {
       queryClient.resetQueries()
-      // Also clear the persisted IndexedDB cache (async, but fire-and-forget is fine here)
+      // Also clear the persisted IndexedDB cache and action queue (async, but fire-and-forget is fine here)
       clearPersistedCache().catch((err) => logger.warn('Failed to clear persisted cache:', err))
+      clearAllActions().catch((err) => logger.warn('Failed to clear action queue:', err))
     })
 
     // Track state to detect changes

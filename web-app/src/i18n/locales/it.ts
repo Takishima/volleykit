@@ -595,6 +595,18 @@ const it: Translations = {
     oneHourAgo: "1 ora fa",
     hoursAgo: '{hours} ore fa',
     dismissAriaLabel: 'Ignora notifica offline',
+    pendingActions: '{count} modifiche in sospeso',
+    syncing: 'Sincronizzazione...',
+    syncComplete: '{count} modifiche sincronizzate con successo',
+    syncFailed: '{count} modifiche non sincronizzate',
+    sessionExpired: 'Sessione scaduta. Effettua nuovamente il login per sincronizzare le modifiche.',
+    actions: {
+      updateCompensation: 'Aggiorna compenso',
+      batchUpdateCompensations: 'Aggiorna compensi',
+      applyForExchange: 'Candidati per lo scambio',
+      withdrawFromExchange: 'Ritirati dallo scambio',
+      addToExchange: 'Aggiungi allo scambio',
+    },
   },
   pdf: {
     exportTitle: 'Genera rapporto sala',

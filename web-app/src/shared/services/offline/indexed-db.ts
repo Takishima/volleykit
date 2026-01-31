@@ -13,8 +13,10 @@ import { openDB, type IDBPDatabase, type DBSchema } from 'idb'
 
 import { logger } from '@/shared/utils/logger'
 
+import type { OfflineAction } from './action-types'
+
 /** Current database version - increment when schema changes */
-const DB_VERSION = 1
+const DB_VERSION = 2
 
 /** Database name */
 const DB_NAME = 'volleykit-offline'
@@ -25,6 +27,8 @@ export const STORES = {
   QUERY_CACHE: 'query-cache',
   /** Metadata like last sync time, cache version */
   METADATA: 'metadata',
+  /** Offline action queue for mutations */
+  ACTION_QUEUE: 'action-queue',
 } as const
 
 /** Schema definition for type safety */
@@ -49,6 +53,14 @@ interface VolleyKitDB extends DBSchema {
       value: unknown
       /** Last updated timestamp */
       updatedAt: number
+    }
+  }
+  [STORES.ACTION_QUEUE]: {
+    key: string
+    value: OfflineAction
+    indexes: {
+      'by-status': string
+      'by-created': number
     }
   }
 }
@@ -106,6 +118,13 @@ export async function getDB(): Promise<IDBPDatabase<VolleyKitDB> | null> {
         }
         if (!db.objectStoreNames.contains(STORES.METADATA)) {
           db.createObjectStore(STORES.METADATA, { keyPath: 'key' })
+        }
+
+        // v2: Add action queue store
+        if (!db.objectStoreNames.contains(STORES.ACTION_QUEUE)) {
+          const actionStore = db.createObjectStore(STORES.ACTION_QUEUE, { keyPath: 'id' })
+          actionStore.createIndex('by-status', 'status')
+          actionStore.createIndex('by-created', 'createdAt')
         }
       },
       blocked() {

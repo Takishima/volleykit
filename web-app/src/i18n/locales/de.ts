@@ -605,6 +605,18 @@ const de: Translations = {
     oneHourAgo: 'vor 1 Stunde',
     hoursAgo: 'vor {hours} Stunden',
     dismissAriaLabel: 'Offline-Benachrichtigung schliessen',
+    pendingActions: '{count} ausstehende Änderungen',
+    syncing: 'Wird synchronisiert...',
+    syncComplete: '{count} Änderungen erfolgreich synchronisiert',
+    syncFailed: '{count} Änderungen konnten nicht synchronisiert werden',
+    sessionExpired: 'Sitzung abgelaufen. Bitte melden Sie sich erneut an, um Änderungen zu synchronisieren.',
+    actions: {
+      updateCompensation: 'Entschädigung aktualisieren',
+      batchUpdateCompensations: 'Entschädigungen aktualisieren',
+      applyForExchange: 'Für Tausch bewerben',
+      withdrawFromExchange: 'Vom Tausch zurückziehen',
+      addToExchange: 'Zum Tausch hinzufügen',
+    },
   },
   pdf: {
     exportTitle: 'Hallenrapport erstellen',
