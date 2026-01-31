@@ -1329,7 +1329,7 @@ export interface components {
              * @description Distance in km with one decimal
              * @example 96.3
              */
-            distanceFormatted?: string;
+            distanceFormatted?: string | null;
         };
         ExchangesResponse: {
             items: components["schemas"]["GameExchange"][];

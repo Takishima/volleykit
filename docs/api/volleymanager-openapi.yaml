@@ -1932,6 +1932,7 @@ components:
           example: "70.00"
         distanceFormatted:
           type: string
+          nullable: true
           description: Distance in km with one decimal
           example: "96.3"
     ExchangesResponse:

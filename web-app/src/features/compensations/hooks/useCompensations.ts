@@ -41,9 +41,8 @@ function assignmentToCompensationRecord(assignment: Assignment): CompensationRec
     return null
   }
 
-  // Note: We use type assertion here because Assignment and CompensationRecord
-  // have slightly different nullable types for nested fields (null vs undefined).
-  // The core fields are compatible, but satisfies operator fails due to these differences.
+  // Use satisfies for safer typing - will produce compile-time error if
+  // CompensationRecord evolves to require additional fields
   return {
     __identity: assignment.__identity,
     refereeGame: assignment.refereeGame,
@@ -53,7 +52,7 @@ function assignmentToCompensationRecord(assignment: Assignment): CompensationRec
     compensationDate: assignment.refereeGame?.game?.startingDateTime,
     refereePosition: assignment.refereePosition,
     _permissions: assignment._permissions,
-  } as CompensationRecord
+  } satisfies Partial<CompensationRecord> as CompensationRecord
 }
 
 /**
