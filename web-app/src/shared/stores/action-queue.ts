@@ -20,7 +20,6 @@ import { syncPendingActions, type SyncResult } from '@/shared/services/offline/a
 import type { OfflineAction } from '@/shared/services/offline/action-types'
 import { createLogger } from '@/shared/utils/logger'
 
-
 const log = createLogger('action-queue-store')
 
 interface ActionQueueState {
@@ -54,10 +53,7 @@ export const useActionQueueStore = create<ActionQueueState>((set, get) => ({
   lastSyncResult: null,
 
   refresh: async () => {
-    const [pending, failed] = await Promise.all([
-      getPendingActions(),
-      getActionsByStatus('failed'),
-    ])
+    const [pending, failed] = await Promise.all([getPendingActions(), getActionsByStatus('failed')])
 
     set({
       pendingCount: pending.length,

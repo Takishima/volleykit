@@ -8,7 +8,6 @@
  * - Session expiry detection
  */
 
-
 import { api } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
 import { createLogger } from '@/shared/utils/logger'
@@ -277,12 +276,4 @@ export async function syncPendingActions(queryClient?: QueryClient): Promise<Syn
     requiresReauth,
     results,
   }
-}
-
-/**
- * Check if there are any pending actions that need syncing.
- */
-export async function hasPendingActions(): Promise<boolean> {
-  const pending = await getPendingActions()
-  return pending.length > 0
 }

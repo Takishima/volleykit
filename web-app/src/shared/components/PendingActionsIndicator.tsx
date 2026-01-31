@@ -13,10 +13,7 @@ import { useEffect, useRef } from 'react'
 
 import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus'
 import { useTranslation } from '@/shared/hooks/useTranslation'
-import {
-  useActionQueueStore,
-  initializeActionQueueStore,
-} from '@/shared/stores/action-queue'
+import { useActionQueueStore, initializeActionQueueStore } from '@/shared/stores/action-queue'
 import { useToastStore } from '@/shared/stores/toast'
 import { createLogger } from '@/shared/utils/logger'
 
@@ -102,9 +99,7 @@ export function PendingActionsBadge() {
         aria-hidden="true"
       />
       <span>{pendingCount}</span>
-      {isSyncing && (
-        <span className="sr-only">{t('offline.syncing')}</span>
-      )}
+      {isSyncing && <span className="sr-only">{t('offline.syncing')}</span>}
     </div>
   )
 }

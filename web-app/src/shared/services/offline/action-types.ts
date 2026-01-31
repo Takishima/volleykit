@@ -125,19 +125,6 @@ export type ActionType = OfflineAction['type']
 export type ActionPayload<T extends ActionType> = Extract<OfflineAction, { type: T }>['payload']
 
 /**
- * Human-readable labels for action types (for UI display).
- * Keys correspond to i18n translation keys.
- */
-export const ACTION_TYPE_LABELS: Record<ActionType, string> = {
-  updateCompensation: 'offline.actions.updateCompensation',
-  updateAssignmentCompensation: 'offline.actions.updateCompensation',
-  batchUpdateCompensations: 'offline.actions.batchUpdateCompensations',
-  applyForExchange: 'offline.actions.applyForExchange',
-  withdrawFromExchange: 'offline.actions.withdrawFromExchange',
-  addToExchange: 'offline.actions.addToExchange',
-}
-
-/**
  * Maximum retry attempts before marking action as permanently failed.
  */
 export const MAX_RETRY_COUNT = 3

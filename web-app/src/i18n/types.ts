@@ -239,6 +239,7 @@ export interface Translations {
     withdrawSuccess: string
     withdrawError: string
     addedToExchangeSuccess: string
+    addedToExchangeQueued: string
     addedToExchangeError: string
     cannotExchangeValidatedGame: string
     submittedBy: string

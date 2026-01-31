@@ -15,20 +15,7 @@ export { getMetadata, setMetadata } from './indexed-db'
 export { persistOptions, clearPersistedCache } from './query-persister'
 
 // Action queue for offline mutations
-export type {
-  OfflineAction,
-  ActionType,
-  ActionPayload,
-  ActionStatus,
-} from './action-types'
-export { ACTION_TYPE_LABELS, MAX_RETRY_COUNT } from './action-types'
-export {
-  createAction,
-  getAction,
-  getAllActions,
-  getPendingActions,
-  getPendingActionCount,
-  deleteAction,
-  clearAllActions,
-} from './action-store'
-export { syncPendingActions, hasPendingActions, type SyncResult } from './action-sync'
+export type { OfflineAction, ActionType, ActionPayload, ActionStatus } from './action-types'
+export { MAX_RETRY_COUNT } from './action-types'
+export { createAction, getPendingActions, deleteAction, clearAllActions } from './action-store'
+export { syncPendingActions, type SyncResult } from './action-sync'

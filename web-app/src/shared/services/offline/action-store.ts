@@ -9,12 +9,7 @@ import { createLogger } from '@/shared/utils/logger'
 
 import { getDB, STORES } from './indexed-db'
 
-import type {
-  OfflineAction,
-  ActionType,
-  ActionPayload,
-  ActionStatus,
-} from './action-types'
+import type { OfflineAction, ActionType, ActionPayload, ActionStatus } from './action-types'
 
 const log = createLogger('action-store')
 
@@ -69,37 +64,6 @@ export async function createAction<T extends ActionType>(
 }
 
 /**
- * Get an action by ID.
- */
-export async function getAction(id: string): Promise<OfflineAction | null> {
-  const db = await getDB()
-  if (!db) return null
-
-  try {
-    const action = await db.get(STORES.ACTION_QUEUE, id)
-    return action ?? null
-  } catch (error) {
-    log.error('Failed to get action:', error)
-    return null
-  }
-}
-
-/**
- * Get all actions in the queue.
- */
-export async function getAllActions(): Promise<OfflineAction[]> {
-  const db = await getDB()
-  if (!db) return []
-
-  try {
-    return await db.getAll(STORES.ACTION_QUEUE)
-  } catch (error) {
-    log.error('Failed to get all actions:', error)
-    return []
-  }
-}
-
-/**
  * Get actions by status.
  */
 export async function getActionsByStatus(status: ActionStatus): Promise<OfflineAction[]> {
@@ -119,21 +83,6 @@ export async function getActionsByStatus(status: ActionStatus): Promise<OfflineA
  */
 export async function getPendingActions(): Promise<OfflineAction[]> {
   return getActionsByStatus('pending')
-}
-
-/**
- * Get count of pending actions.
- */
-export async function getPendingActionCount(): Promise<number> {
-  const db = await getDB()
-  if (!db) return 0
-
-  try {
-    return await db.countFromIndex(STORES.ACTION_QUEUE, 'by-status', 'pending')
-  } catch (error) {
-    log.error('Failed to count pending actions:', error)
-    return 0
-  }
 }
 
 /**
@@ -225,16 +174,4 @@ export async function clearAllActions(): Promise<boolean> {
     log.error('Failed to clear action queue:', error)
     return false
   }
-}
-
-/**
- * Clear completed/synced actions older than a threshold.
- * This is a no-op since we delete actions immediately after successful sync.
- * Kept for potential future use with action history.
- */
-export async function pruneOldActions(_maxAgeMs: number): Promise<number> {
-  // Currently we delete actions immediately after sync,
-  // so there's nothing to prune. This function exists for
-  // potential future use if we want to keep an action history.
-  return 0
 }

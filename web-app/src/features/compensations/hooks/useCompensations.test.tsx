@@ -810,7 +810,7 @@ describe('useUpdateAssignmentCompensation', () => {
     })
   })
 
-  it('invalidates both assignment and compensation queries on success', async () => {
+  it('updates demo store directly in demo mode (no query invalidation)', async () => {
     const mockDemoUpdate = vi.fn()
     const { useAuthStore } = await import('@/shared/stores/auth')
     const { useDemoStore } = await import('@/shared/stores/demo')
@@ -840,8 +840,9 @@ describe('useUpdateAssignmentCompensation', () => {
       })
     })
 
-    // Should invalidate assignment detail, assignment lists, and compensation lists
-    expect(invalidateSpy).toHaveBeenCalledTimes(3)
+    // Demo mode updates the demo store directly, no query invalidation
+    expect(mockDemoUpdate).toHaveBeenCalledWith('assignment-1', { distanceInMetres: 5000 })
+    expect(invalidateSpy).not.toHaveBeenCalled()
   })
 })
 
